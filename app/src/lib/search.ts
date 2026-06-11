@@ -1,0 +1,201 @@
+// Search engine — operates on the prebuilt inverted indexes from Stage 6.
+//
+// Greek search: input is Unicode Greek (with optional * wildcards).
+//   Converted to fold form (base Beta Code letters only) to match the index.
+// English search: whitespace-tokenized, lowercase.
+// Phrase search: after intersection, verify token adjacency in segment data.
+// Cross-language: AND (intersection) or OR (union) the two result sets.
+
+const BASE = '/data/search';
+
+// -- Data types -----------------------------------------------------------
+
+export interface SegMeta {
+  id: string;
+  book: number;
+  column: string;
+  greek_head: string;
+  greek_tokens: string;  // space-joined fold token sequence
+  english_head: string;
+}
+
+type GrkIndex = Record<string, [number, number][]>; // fold → [[seg_idx, pos], ...]
+type EngIndex = Record<string, number[]>;            // word → [seg_idx, ...]
+
+// -- Lazy loaders ---------------------------------------------------------
+
+let _meta: SegMeta[] | null = null;
+let _grk: GrkIndex | null = null;
+let _eng: EngIndex | null = null;
+
+async function loadMeta(): Promise<SegMeta[]> {
+  if (_meta) return _meta;
+  const r = await fetch(`${BASE}/meta.json`);
+  _meta = await r.json();
+  return _meta!;
+}
+
+async function loadGrk(): Promise<GrkIndex> {
+  if (_grk) return _grk;
+  const r = await fetch(`${BASE}/greek.json`);
+  _grk = await r.json();
+  return _grk!;
+}
+
+async function loadEng(): Promise<EngIndex> {
+  if (_eng) return _eng;
+  const r = await fetch(`${BASE}/english.json`);
+  _eng = await r.json();
+  return _eng!;
+}
+
+// -- Unicode Greek → Beta Code fold form ----------------------------------
+
+const GREEK_BETA: Record<string, string> = {
+  α:'a',β:'b',γ:'g',δ:'d',ε:'e',ζ:'z',η:'h',θ:'q',ι:'i',κ:'k',
+  λ:'l',μ:'m',ν:'n',ξ:'c',ο:'o',π:'p',ρ:'r',σ:'s',ς:'s',τ:'t',
+  υ:'u',φ:'f',χ:'x',ψ:'y',ω:'w',ϝ:'v',
+};
+
+export function greekFold(input: string): string {
+  const out: string[] = [];
+  for (const ch of input.normalize('NFD')) {
+    const b = GREEK_BETA[ch.toLowerCase()];
+    if (b) out.push(b);
+    else if (ch === "'") out.push("'");
+    // skip combining marks, punctuation, asterisk (handled by caller)
+  }
+  return out.join('');
+}
+
+// -- Posting-list helpers -------------------------------------------------
+
+function grkPosting(idx: GrkIndex, term: string): Set<number> {
+  const wildcard = term.indexOf('*');
+  if (wildcard === -1) {
+    const fold = greekFold(term);
+    return new Set((idx[fold] ?? []).map(([si]) => si));
+  }
+  // Prefix wildcard: fold the part before *, match all keys with that prefix
+  const prefix = greekFold(term.slice(0, wildcard));
+  const result = new Set<number>();
+  for (const key of Object.keys(idx)) {
+    if (key.startsWith(prefix)) {
+      for (const [si] of idx[key]) result.add(si);
+    }
+  }
+  return result;
+}
+
+function engPosting(idx: EngIndex, term: string): Set<number> {
+  const word = term.toLowerCase().replace(/[^a-z'*]/g, '');
+  if (!word || word === '*') return new Set(Object.values(idx).flat());
+  if (word.endsWith('*')) {
+    const prefix = word.slice(0, -1);
+    const result = new Set<number>();
+    for (const key of Object.keys(idx)) {
+      if (key.startsWith(prefix)) for (const si of idx[key]) result.add(si);
+    }
+    return result;
+  }
+  return new Set(idx[word] ?? []);
+}
+
+function intersect(a: Set<number>, b: Set<number>): Set<number> {
+  return new Set([...a].filter(x => b.has(x)));
+}
+
+function union(a: Set<number>, b: Set<number>): Set<number> {
+  return new Set([...a, ...b]);
+}
+
+// Phrase check: do all folded terms appear in order (adjacent, space-separated)?
+function phraseMatches(foldTokenSeq: string, foldTerms: string[]): boolean {
+  if (foldTerms.length === 0) return true;
+  const pattern = foldTerms.join(' ');
+  return foldTokenSeq.includes(pattern);
+}
+
+// English phrase: do all terms appear in order in the text?
+function engPhraseMatches(text: string, terms: string[]): boolean {
+  if (terms.length === 0) return true;
+  const lower = text.toLowerCase();
+  const phrase = terms.map(t => t.toLowerCase().replace(/[^a-z']/g, '')).join(' ');
+  return lower.includes(phrase);
+}
+
+// -- Public search API ----------------------------------------------------
+
+export type SearchMode = 'all' | 'any' | 'phrase';
+export type LangOp = 'and' | 'or';
+
+export interface SearchResult {
+  meta: SegMeta;
+  grkMatch: boolean;
+  engMatch: boolean;
+}
+
+export async function search(
+  grkQuery: string,
+  engQuery: string,
+  mode: SearchMode,
+  langOp: LangOp,
+): Promise<SearchResult[]> {
+  if (!grkQuery.trim() && !engQuery.trim()) return [];
+
+  const [meta, grkIdx, engIdx] = await Promise.all([
+    loadMeta(),
+    loadGrk(),
+    loadEng(),
+  ]);
+
+  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean);
+  const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
+
+  let grkHits: Set<number> | null = null;
+  let engHits: Set<number> | null = null;
+
+  if (grkTerms.length > 0) {
+    const postings = grkTerms.map(t => grkPosting(grkIdx, t));
+    if (mode === 'any') {
+      grkHits = postings.reduce(union);
+    } else {
+      grkHits = postings.reduce(intersect);
+      if (mode === 'phrase' && grkTerms.length > 1) {
+        const foldTerms = grkTerms.map(t => greekFold(t.replace('*', '')));
+        grkHits = new Set([...grkHits].filter(si =>
+          phraseMatches(meta[si].greek_tokens, foldTerms)
+        ));
+      }
+    }
+  }
+
+  if (engTerms.length > 0) {
+    const postings = engTerms.map(t => engPosting(engIdx, t));
+    if (mode === 'any') {
+      engHits = postings.reduce(union);
+    } else {
+      engHits = postings.reduce(intersect);
+      if (mode === 'phrase' && engTerms.length > 1) {
+        engHits = new Set([...engHits].filter(si =>
+          engPhraseMatches(meta[si].english_head, engTerms)
+        ));
+      }
+    }
+  }
+
+  let combined: Set<number>;
+  if (grkHits !== null && engHits !== null) {
+    combined = langOp === 'and' ? intersect(grkHits, engHits) : union(grkHits, engHits);
+  } else {
+    combined = grkHits ?? engHits ?? new Set();
+  }
+
+  return [...combined]
+    .sort((a, b) => a - b)
+    .map(si => ({
+      meta: meta[si],
+      grkMatch: grkHits?.has(si) ?? false,
+      engMatch: engHits?.has(si) ?? false,
+    }));
+}

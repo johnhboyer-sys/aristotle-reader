@@ -71,6 +71,14 @@ def _stage5(manifest):
     print("stage5: " + " ".join(f"{k}={v}" for k, v in summary.items()))
 
 
+def _stage6(manifest):
+    from . import stage6_search
+
+    out_dir = stage6_search.run(manifest)
+    summary = json.loads((out_dir / "summary.json").read_text())
+    print("stage6: " + " ".join(f"{k}={v}" for k, v in summary.items()))
+
+
 def _stage7(manifest):
     from . import stage7_emit
 
@@ -87,6 +95,7 @@ _STAGES = {
     "stage3": _stage3,
     "stage4": _stage4,
     "stage5": _stage5,
+    "stage6": _stage6,
     "stage7": _stage7,
 }
 

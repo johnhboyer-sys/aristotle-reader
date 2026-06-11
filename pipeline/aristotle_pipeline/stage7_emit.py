@@ -113,6 +113,10 @@ def run(manifest: Manifest) -> Path:
     for shard in sorted((BUILD_DIR / "stage5" / "lsj").glob("*.json")):
         shutil.copy(shard, out_dir / "lsj" / shard.name)
 
+    (out_dir / "search").mkdir(exist_ok=True)
+    for f in ["greek.json", "english.json", "meta.json"]:
+        shutil.copy(BUILD_DIR / "stage6" / f, out_dir / "search" / f)
+
     work = manifest.data["work"]
     (out_dir / "manifest.json").write_text(
         json.dumps(

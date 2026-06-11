@@ -3,9 +3,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --font-greek:   "GFS Didot", "Gentium Plus", "Gentium Book Basic",
-                  "Noto Serif", Georgia, serif;
-  --font-english: Georgia, "Times New Roman", serif;
+  /* Cardo and EB Garamond loaded from Google Fonts in each page <head>.
+     Fallback chain works without the network load. */
+  --font-greek:   "Cardo", "Gentium Plus", "Noto Serif", Georgia, serif;
+  --font-english: "EB Garamond", Georgia, "Times New Roman", serif;
   --font-ui:      system-ui, -apple-system, sans-serif;
 
   --col-bg:       #faf8f3;
@@ -290,15 +291,55 @@ body {
   padding: 0.5rem 0;
 }
 
+/* ── search link in book nav ─────────────────────────────────────── */
+.search-link {
+  margin-left: 0.5rem;
+  padding-left: 0.75rem !important;
+  border-left: 1px solid var(--border);
+}
+
 /* ── Responsive ───────────────────────────────────────────────────── */
 
 @media (max-width: 680px) {
+  :root {
+    --fs-greek: 1rem;
+    --fs-english: 0.9rem;
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .page-header .book-nav {
+    margin-left: 0;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .reader-body {
+    padding: 1rem 0.75rem 3rem;
+  }
+
   .segment {
     grid-template-columns: 1fr;
+    gap: 0;
   }
+
+  .seg-ref { font-size: 0.72rem; }
+
   .english-col {
     border-top: 1px solid var(--border);
-    padding-top: 0.5rem;
-    margin-top: 0.5rem;
+    padding-top: 0.6rem;
+    margin-top: 0.6rem;
+    color: var(--text-mid);
+  }
+
+  .popup {
+    width: calc(100vw - 1rem);
+    left: 0.5rem !important;
+    top: auto !important;
+    bottom: 0.5rem;
+    position: fixed;
+    max-height: 55vh;
   }
 }

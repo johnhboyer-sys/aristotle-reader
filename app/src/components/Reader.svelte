@@ -20,6 +20,15 @@
       error = String(e);
     } finally {
       loading = false;
+      // After Svelte renders the segments, scroll to the URL hash if present
+      // (browser already tried when the page loaded but the elements didn't exist yet)
+      const hash = window.location.hash.slice(1);
+      if (hash) {
+        // Use a microtask delay so Svelte finishes its DOM updates first
+        setTimeout(() => {
+          document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 0);
+      }
     }
   });
 
@@ -50,7 +59,7 @@
 {:else}
   <div class="reader-body" role="main">
     {#each segments as seg (seg.id)}
-      <div class="segment">
+      <div class="segment" id="col-{seg.column}">
         <div class="seg-ref">
           {seg.column}
         </div>
