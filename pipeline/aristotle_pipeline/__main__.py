@@ -11,7 +11,7 @@ from .config import BUILD_DIR, Manifest
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="aristotle_pipeline")
-    parser.add_argument("stage", choices=["stage1"])
+    parser.add_argument("stage", choices=["stage1", "stage2"])
     args = parser.parse_args(argv)
     manifest = Manifest.load()
 
@@ -35,6 +35,18 @@ def main(argv=None):
               f"english_only={len(align['english_only'])}")
         if unmatched:
             print(f"  unmatched segments: {unmatched[:10]}")
+
+    elif args.stage == "stage2":
+        from . import stage2_validate
+
+        md_path = stage2_validate.run(manifest)
+        report = json.loads(
+            (BUILD_DIR / "stage2" / "validation_report.json").read_text()
+        )
+        print(f"report: {md_path}")
+        for name, check in report["checks"].items():
+            print(f"  {name}: {'ok' if check['ok'] else 'FAIL'}")
+        print(f"overall: {'PASS' if report['ok'] else 'FAIL'}")
 
 
 if __name__ == "__main__":
