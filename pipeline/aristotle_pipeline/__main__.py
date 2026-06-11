@@ -1,4 +1,4 @@
-"""Pipeline CLI: python -m aristotle_pipeline <stage> [...]"""
+"""Pipeline CLI: python -m aristotle_pipeline <stage>|all"""
 
 from __future__ import annotations
 
@@ -9,79 +9,98 @@ import sys
 from .config import BUILD_DIR, Manifest
 
 
+def _stage1(manifest):
+    from . import stage1_english, stage1_greek
+
+    spine_path = stage1_greek.run(manifest)
+    spine = json.loads(spine_path.read_text(encoding="utf-8"))
+    eng_path, align_path = stage1_english.run(manifest, spine)
+    n_lines = sum(len(s["lines"]) for s in spine["segments"])
+    print(f"stage1: segments={len(spine['segments'])} lines={n_lines} "
+          f"unassigned={len(spine['unassigned_lines'])}")
+    align = json.loads(align_path.read_text(encoding="utf-8"))
+    unmatched = [p["segment"] for p in align["pairs"] if p["english"] is None]
+    print(f"  alignment pairs={len(align['pairs'])} unmatched={len(unmatched)} "
+          f"english_only={len(align['english_only'])}")
+    if unmatched:
+        print(f"  unmatched segments: {unmatched[:10]}")
+
+
+def _stage2(manifest):
+    from . import stage2_validate
+
+    stage2_validate.run(manifest)
+    report = json.loads(
+        (BUILD_DIR / "stage2" / "validation_report.json").read_text()
+    )
+    checks = " ".join(
+        f"{name}={'ok' if c['ok'] else 'FAIL'}" for name, c in report["checks"].items()
+    )
+    print(f"stage2: {checks}")
+    print(f"  overall: {'PASS' if report['ok'] else 'FAIL'}")
+    if not report["ok"]:
+        raise SystemExit("stage2 validation failed")
+
+
+def _stage3(manifest):
+    from . import stage3_tokenize
+
+    out = stage3_tokenize.run(manifest)
+    tokens = json.loads(out.read_text(encoding="utf-8"))
+    n = sum(len(l["tokens"]) for s in tokens["segments"] for l in s["lines"])
+    sigla = json.loads((BUILD_DIR / "stage3" / "sigla_log.json").read_text())
+    failures = json.loads((BUILD_DIR / "stage3" / "key_failures.json").read_text())
+    print(f"stage3: tokens={n} sigla_strips={len(sigla)} key_failures={len(failures)}")
+    for fail in failures[:10]:
+        print(f"  FAIL {fail['ref']}: {fail['token']} — {fail['error']}")
+
+
+def _stage4(manifest):
+    from . import stage4_morphology
+
+    stage4_morphology.run(manifest)
+    summary = json.loads((BUILD_DIR / "stage4" / "summary.json").read_text())
+    print("stage4: " + " ".join(f"{k}={v}" for k, v in summary.items()))
+
+
+def _stage5(manifest):
+    from . import stage5_lsj
+
+    out_dir = stage5_lsj.run(manifest)
+    summary = json.loads((out_dir / "summary.json").read_text())
+    print("stage5: " + " ".join(f"{k}={v}" for k, v in summary.items()))
+
+
+def _stage7(manifest):
+    from . import stage7_emit
+
+    out_dir = stage7_emit.run(manifest)
+    man = json.loads((out_dir / "manifest.json").read_text(encoding="utf-8"))
+    print(f"stage7: {out_dir}")
+    print(f"  books={len(man['books'])} token_keys={man['analyses']['token_keys']} "
+          f"lsj_entries={man['lsj']['lsj_entries_kept']}")
+
+
+_STAGES = {
+    "stage1": _stage1,
+    "stage2": _stage2,
+    "stage3": _stage3,
+    "stage4": _stage4,
+    "stage5": _stage5,
+    "stage7": _stage7,
+}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="aristotle_pipeline")
-    parser.add_argument(
-        "stage", choices=["stage1", "stage2", "stage3", "stage4", "stage5"]
-    )
+    parser.add_argument("stage", choices=[*_STAGES, "all"])
     args = parser.parse_args(argv)
     manifest = Manifest.load()
-
-    if args.stage == "stage1":
-        from . import stage1_english, stage1_greek
-
-        spine_path = stage1_greek.run(manifest)
-        spine = json.loads(spine_path.read_text(encoding="utf-8"))
-        eng_path, align_path = stage1_english.run(manifest, spine)
-        n_lines = sum(len(s["lines"]) for s in spine["segments"])
-        print(f"greek spine : {spine_path}")
-        print(f"  segments={len(spine['segments'])} lines={n_lines} "
-              f"unassigned={len(spine['unassigned_lines'])}")
-        eng = json.loads(eng_path.read_text(encoding="utf-8"))
-        print(f"english     : {eng_path}")
-        print(f"  chunks={len(eng['chunks'])}")
-        align = json.loads(align_path.read_text(encoding="utf-8"))
-        unmatched = [p["segment"] for p in align["pairs"] if p["english"] is None]
-        print(f"alignment   : {align_path}")
-        print(f"  pairs={len(align['pairs'])} unmatched={len(unmatched)} "
-              f"english_only={len(align['english_only'])}")
-        if unmatched:
-            print(f"  unmatched segments: {unmatched[:10]}")
-
-    elif args.stage == "stage2":
-        from . import stage2_validate
-
-        md_path = stage2_validate.run(manifest)
-        report = json.loads(
-            (BUILD_DIR / "stage2" / "validation_report.json").read_text()
-        )
-        print(f"report: {md_path}")
-        for name, check in report["checks"].items():
-            print(f"  {name}: {'ok' if check['ok'] else 'FAIL'}")
-        print(f"overall: {'PASS' if report['ok'] else 'FAIL'}")
-
-    elif args.stage == "stage3":
-        from . import stage3_tokenize
-
-        out = stage3_tokenize.run(manifest)
-        tokens = json.loads(out.read_text(encoding="utf-8"))
-        n = sum(
-            len(l["tokens"]) for s in tokens["segments"] for l in s["lines"]
-        )
-        sigla = json.loads((BUILD_DIR / "stage3" / "sigla_log.json").read_text())
-        failures = json.loads((BUILD_DIR / "stage3" / "key_failures.json").read_text())
-        print(f"tokens: {out}")
-        print(f"  tokens={n} sigla_strips={len(sigla)} key_failures={len(failures)}")
-        for fail in failures[:10]:
-            print(f"  FAIL {fail['ref']}: {fail['token']} — {fail['error']}")
-
-    elif args.stage == "stage4":
-        from . import stage4_morphology
-
-        out = stage4_morphology.run(manifest)
-        summary = json.loads((BUILD_DIR / "stage4" / "summary.json").read_text())
-        print(f"analyses: {out}")
-        for k, v in summary.items():
-            print(f"  {k}: {v}")
-
-    elif args.stage == "stage5":
-        from . import stage5_lsj
-
-        out_dir = stage5_lsj.run(manifest)
-        summary = json.loads((out_dir / "summary.json").read_text())
-        print(f"lsj: {out_dir}")
-        for k, v in summary.items():
-            print(f"  {k}: {v}")
+    if args.stage == "all":
+        for fn in _STAGES.values():
+            fn(manifest)
+    else:
+        _STAGES[args.stage](manifest)
 
 
 if __name__ == "__main__":
