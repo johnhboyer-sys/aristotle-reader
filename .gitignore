@@ -14,3 +14,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+app/node_modules/
+app/dist/
+app/.astro/
