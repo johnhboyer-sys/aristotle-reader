@@ -11,7 +11,7 @@ from .config import BUILD_DIR, Manifest
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="aristotle_pipeline")
-    parser.add_argument("stage", choices=["stage1", "stage2"])
+    parser.add_argument("stage", choices=["stage1", "stage2", "stage3", "stage4"])
     args = parser.parse_args(argv)
     manifest = Manifest.load()
 
@@ -47,6 +47,30 @@ def main(argv=None):
         for name, check in report["checks"].items():
             print(f"  {name}: {'ok' if check['ok'] else 'FAIL'}")
         print(f"overall: {'PASS' if report['ok'] else 'FAIL'}")
+
+    elif args.stage == "stage3":
+        from . import stage3_tokenize
+
+        out = stage3_tokenize.run(manifest)
+        tokens = json.loads(out.read_text(encoding="utf-8"))
+        n = sum(
+            len(l["tokens"]) for s in tokens["segments"] for l in s["lines"]
+        )
+        sigla = json.loads((BUILD_DIR / "stage3" / "sigla_log.json").read_text())
+        failures = json.loads((BUILD_DIR / "stage3" / "key_failures.json").read_text())
+        print(f"tokens: {out}")
+        print(f"  tokens={n} sigla_strips={len(sigla)} key_failures={len(failures)}")
+        for fail in failures[:10]:
+            print(f"  FAIL {fail['ref']}: {fail['token']} — {fail['error']}")
+
+    elif args.stage == "stage4":
+        from . import stage4_morphology
+
+        out = stage4_morphology.run(manifest)
+        summary = json.loads((BUILD_DIR / "stage4" / "summary.json").read_text())
+        print(f"analyses: {out}")
+        for k, v in summary.items():
+            print(f"  {k}: {v}")
 
 
 if __name__ == "__main__":

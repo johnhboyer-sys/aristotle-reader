@@ -1,0 +1,13 @@
+{
+  "_comment": "Hand-reviewed analyses for forms Morpheus does not know. Single and double letters are Aristotle's variable labels in the Book V discussion of proportion (1131a-1133b) and similar passages; they are labels, not words.",
+  "a": [{"lemma_id": 0, "form": "a", "lemma": "", "gloss": "the letter Α used as a label (term in a proportion)", "parse": "letter label"}],
+  "b": [{"lemma_id": 0, "form": "b", "lemma": "", "gloss": "the letter Β used as a label (term in a proportion)", "parse": "letter label"}],
+  "g": [{"lemma_id": 0, "form": "g", "lemma": "", "gloss": "the letter Γ used as a label (term in a proportion)", "parse": "letter label"}],
+  "d": [{"lemma_id": 0, "form": "d", "lemma": "", "gloss": "the letter Δ used as a label (term in a proportion)", "parse": "letter label"}],
+  "e": [{"lemma_id": 0, "form": "e", "lemma": "", "gloss": "the letter Ε used as a label (term in a proportion)", "parse": "letter label"}],
+  "z": [{"lemma_id": 0, "form": "z", "lemma": "", "gloss": "the letter Ζ used as a label (term in a proportion)", "parse": "letter label"}],
+  "aa": [{"lemma_id": 0, "form": "aa", "lemma": "", "gloss": "the line/segment ΑΑ (pair of labelled terms)", "parse": "letter label"}],
+  "bb": [{"lemma_id": 0, "form": "bb", "lemma": "", "gloss": "the line/segment ΒΒ (pair of labelled terms)", "parse": "letter label"}],
+  "gg": [{"lemma_id": 0, "form": "gg", "lemma": "", "gloss": "the line/segment ΓΓ (pair of labelled terms)", "parse": "letter label"}],
+  "gd": [{"lemma_id": 0, "form": "gd", "lemma": "", "gloss": "the line/segment ΓΔ (pair of labelled terms)", "parse": "letter label"}]
+}
