@@ -12,11 +12,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.4.6"
+    "astro": "^5.18.2"
   },
   "devDependencies": {
-    "@astrojs/svelte": "^8.1.2",
-    "playwright": "^1.60.0",
+    "@astrojs/svelte": "^7.2.5",
     "svelte": "^5.56.3"
   }
 }

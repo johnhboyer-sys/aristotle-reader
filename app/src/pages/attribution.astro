@@ -1,0 +1,184 @@
+---
+import '../styles/global.css';
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Texts &amp; Licences — Nicomachean Ethics</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    .attr-body {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+      font-family: var(--font-english);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+    h2 {
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 2rem 0 0.4rem;
+      letter-spacing: .02em;
+    }
+    h2:first-of-type { margin-top: 1rem; }
+    p { margin: 0 0 0.6rem; }
+    a { color: var(--accent); }
+    .licence-badge {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      background: var(--border);
+      border-radius: 3px;
+      padding: 0.1em 0.5em;
+      margin-left: 0.4em;
+      vertical-align: middle;
+      color: var(--text-mid);
+    }
+    .licence-badge.cc { background: #e8f4e8; color: #2a6a2a; }
+    .licence-badge.pd { background: #e8eef4; color: #2a4a6a; }
+    .licence-badge.mit { background: #f4f0e8; color: #6a4a2a; }
+    blockquote {
+      border-left: 3px solid var(--border);
+      margin: 0.75rem 0 0.75rem 1rem;
+      padding: 0.25rem 0 0.25rem 1rem;
+      color: var(--text-mid);
+      font-size: 0.9rem;
+    }
+    .greek { font-family: var(--font-greek); }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <h1><a href="/" style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
+    <nav class="book-nav" aria-label="Navigation">
+      {Array.from({ length: 10 }, (_, i) => (
+        <a href={`/book/${i + 1}`}>
+          {['I','II','III','IV','V','VI','VII','VIII','IX','X'][i]}
+        </a>
+      ))}
+      <a href="/search" class="search-link">Search</a>
+    </nav>
+  </header>
+
+  <div class="attr-body">
+    <h2>Texts &amp; Licences</h2>
+    <p>
+      This reader presents three bodies of text compiled from public-domain
+      editions and openly licensed reference works. Their sources and licence
+      terms are listed below.
+    </p>
+
+    <h2>
+      Greek Lexicon (LSJ)
+      <span class="licence-badge cc">CC BY-SA 3.0</span>
+    </h2>
+    <p>
+      The word popups and lemma entries are drawn from the
+      <em>Greek–English Lexicon</em> of Henry George Liddell and Robert Scott,
+      revised by Sir Henry Stuart Jones with the assistance of Roderick McKenzie
+      (Oxford: Clarendon Press, 9th ed. 1940; supplement 1996).
+    </p>
+    <p>
+      The machine-readable edition used here is the XML transcription prepared
+      by the <a href="https://www.perseus.tufts.edu/">Perseus Digital Library</a>
+      at Tufts University and is made available under a
+      <a href="https://creativecommons.org/licenses/by-sa/3.0/us/">
+        Creative Commons Attribution-ShareAlike 3.0 United States</a> licence.
+    </p>
+    <blockquote>
+      Liddell, Henry George, and Robert Scott.
+      <em>A Greek-English Lexicon.</em>
+      Revised and augmented by Henry Stuart Jones.
+      Oxford: Clarendon Press, 1940.
+      Machine-readable version: Perseus Digital Library,
+      Trustees of Tufts University.
+      <a href="https://creativecommons.org/licenses/by-sa/3.0/us/">CC BY-SA 3.0 US</a>.
+    </blockquote>
+    <p>
+      The CC BY-SA licence requires that any derivative work be distributed
+      under the same terms. This application's lexical data is a subset and
+      derivative of that work; users who redistribute it must carry this
+      attribution notice and the same CC BY-SA licence.
+    </p>
+
+    <h2>
+      English Translation
+      <span class="licence-badge pd">Public Domain</span>
+    </h2>
+    <p>
+      The English text is H. Rackham's translation of the
+      <span class="greek">Ἠθικὰ Νικομάχεια</span>, first published in the
+      Loeb Classical Library (Cambridge, MA: Harvard University Press, 1926).
+      This translation was published in the United States in 1926 and is in
+      the public domain.
+    </p>
+    <blockquote>
+      Aristotle. <em>Nicomachean Ethics.</em>
+      Translated by H. Rackham.
+      Loeb Classical Library 73.
+      Cambridge, MA: Harvard University Press, 1926.
+    </blockquote>
+    <p>
+      The TEI XML edition used as the source is hosted by the
+      <a href="https://www.perseus.tufts.edu/">Perseus Digital Library</a>
+      (canonical-greekLit repository, file
+      <code>tlg0086.tlg010.perseus-eng2.xml</code>).
+    </p>
+
+    <h2>
+      Greek Text
+      <span class="licence-badge pd">Public Domain</span>
+    </h2>
+    <p>
+      The Greek text is the edition of Ingram Bywater:
+    </p>
+    <blockquote>
+      Aristotle. <span class="greek">Ἀριστοτέλους Ἠθικὰ Νικομάχεια.</span>
+      Edited by Ingram Bywater.
+      Oxford: Clarendon Press (Oxford Classical Texts), 1894.
+      Reprinted 1962.
+    </blockquote>
+    <p>
+      The electronic text is generated from the Thesaurus Linguae Graecae (TLG)
+      digital corpus via the
+      <a href="https://d.iogen.es/">Diogenes</a> export tool. The TLG corpus
+      is separately licensed from the
+      <a href="https://stephanus.tlg.uci.edu/">University of California, Irvine</a>;
+      it is not redistributed by this application.
+    </p>
+
+    <h2>
+      Morphological Data
+      <span class="licence-badge pd">Open</span>
+    </h2>
+    <p>
+      Morphological analyses (lemma, gloss, grammatical parse) are produced
+      by the Morpheus morphological analyser as distributed with
+      <a href="https://d.iogen.es/">Diogenes</a>.
+      See the Diogenes and Perseus project pages for applicable terms.
+    </p>
+
+    <h2>
+      Application Code
+      <span class="licence-badge mit">MIT</span>
+    </h2>
+    <p>
+      The pipeline and web application source code (Python and TypeScript/Svelte)
+      are released under the
+      <a href="https://opensource.org/licenses/MIT">MIT Licence</a>.
+      Data files derived from CC BY-SA sources are excluded from this grant
+      and remain subject to CC BY-SA.
+    </p>
+  </div>
+</body>
+</html>
