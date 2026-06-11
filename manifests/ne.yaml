@@ -1,0 +1,53 @@
+# Nicomachean Ethics — pipeline manifest
+#
+# Book boundaries are the standard Bekker ranges (Bywater OCT). The Stage 2
+# validator checks parsed output against this table; the English TEI's book
+# divs are the runtime source of truth for book assignment, so a mismatch
+# here is surfaced as a validation finding, not silently trusted.
+
+work:
+  id: ne
+  title: "Nicomachean Ethics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "010"
+  greek_edition: "Bywater, Aristotelis Ethica Nicomachea (OCT, 1894)"
+  english_source: "tlg0086.tlg010.perseus-eng2.xml"
+  english_translation: "H. Rackham (Loeb, 1926)"
+
+bekker_range:
+  first_column: "1094a"
+  last_column: "1181b"
+
+# Columns where a new book starts mid-column. The English TEI emits a
+# duplicate page milestone at these restarts — except Book II (1103a14),
+# which has none and must be detected via its enclosing book div.
+mid_column_book_starts:
+  - { book: 2, column: "1103a", duplicate_milestone: false }
+  - { book: 3, column: "1109b", duplicate_milestone: true }
+  - { book: 4, column: "1119b", duplicate_milestone: true }
+  - { book: 6, column: "1138b", duplicate_milestone: true }
+  - { book: 9, column: "1163b", duplicate_milestone: true }
+  - { book: 10, column: "1172a", duplicate_milestone: true }
+
+books:
+  - { n: 1,  start: "1094a1",  end: "1103a10" }
+  - { n: 2,  start: "1103a14", end: "1109b26" }
+  - { n: 3,  start: "1109b30", end: "1119b18" }
+  - { n: 4,  start: "1119b22", end: "1128b35" }
+  - { n: 5,  start: "1129a1",  end: "1138b14" }
+  - { n: 6,  start: "1138b18", end: "1145a11" }
+  - { n: 7,  start: "1145a15", end: "1154b34" }
+  - { n: 8,  start: "1155a1",  end: "1163b28" }
+  - { n: 9,  start: "1163b32", end: "1172a15" }
+  - { n: 10, start: "1172a19", end: "1181b23" }
+
+sources:
+  # Absolute paths stay out of the manifest; these are resolved relative to
+  # the repo root or overridden by environment variables (see pipeline docs).
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
+  perseus_eng: "/tmp/perseus-ne/tlg0086.tlg010.perseus-eng2.xml"
+  perseus_eng_fallback_url: "https://raw.githubusercontent.com/PerseusDL/canonical-greekLit/master/data/tlg0086/tlg010/tlg0086.tlg010.perseus-eng2.xml"
