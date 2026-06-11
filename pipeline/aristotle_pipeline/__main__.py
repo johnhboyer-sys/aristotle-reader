@@ -11,7 +11,9 @@ from .config import BUILD_DIR, Manifest
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="aristotle_pipeline")
-    parser.add_argument("stage", choices=["stage1", "stage2", "stage3", "stage4"])
+    parser.add_argument(
+        "stage", choices=["stage1", "stage2", "stage3", "stage4", "stage5"]
+    )
     args = parser.parse_args(argv)
     manifest = Manifest.load()
 
@@ -69,6 +71,15 @@ def main(argv=None):
         out = stage4_morphology.run(manifest)
         summary = json.loads((BUILD_DIR / "stage4" / "summary.json").read_text())
         print(f"analyses: {out}")
+        for k, v in summary.items():
+            print(f"  {k}: {v}")
+
+    elif args.stage == "stage5":
+        from . import stage5_lsj
+
+        out_dir = stage5_lsj.run(manifest)
+        summary = json.loads((out_dir / "summary.json").read_text())
+        print(f"lsj: {out_dir}")
         for k, v in summary.items():
             print(f"  {k}: {v}")
 
