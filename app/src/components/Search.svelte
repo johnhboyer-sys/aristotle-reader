@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { search, type SearchMode, type LangOp, type SearchResult, greekFold } from '../lib/search';
+  import { search, type SearchMode, type LangOp, type SearchResult } from '../lib/search';
+  import { fetchBook, type Segment } from '../lib/data';
+
+  interface DisplayResult extends SearchResult {
+    grkHtml: string;
+    engHtml: string;
+  }
 
   let grkQuery = '';
   let engQuery = '';
   let mode: SearchMode = 'all';
   let langOp: LangOp = 'and';
-  let results: SearchResult[] = [];
+  let display: DisplayResult[] = [];
   let loading = false;
   let searched = false;
   let error = '';
@@ -74,7 +80,29 @@
     error = '';
     searched = false;
     try {
-      results = await search(grkQuery, engQuery, mode, langOp);
+      const results = await search(grkQuery, engQuery, mode, langOp);
+      // Load the segment text for the books that have results, so each card
+      // can show a snippet centered on the actual match (not the column head).
+      const books = [...new Set(results.map(r => r.meta.book))];
+      const segMap = new Map<string, Segment>();
+      await Promise.all(
+        books.map(async b => {
+          const data = await fetchBook(b);
+          for (const s of data.segments) segMap.set(s.id, s);
+        }),
+      );
+      display = results.map(r => {
+        const seg = segMap.get(r.meta.id);
+        return {
+          ...r,
+          grkHtml: r.grkMatch && seg
+            ? greekKwic(seg, r.grkPositions)
+            : esc(r.meta.greek_head),
+          engHtml: r.engMatch && seg
+            ? englishKwic(seg, engTerms)
+            : esc(r.meta.english_head),
+        };
+      });
       searched = true;
     } catch (err) {
       error = String(err);
@@ -83,22 +111,65 @@
     }
   }
 
-  // Highlight fold-matched terms in a preview string.
-  // Works on English (plain) and Greek (surface form).
-  function highlightGreek(text: string, terms: string[]): string {
-    if (!terms.length) return esc(text);
-    // Match surface form by doing a fold-insensitive find
-    // Simple approach: bold any token whose fold matches a query fold
-    const queryFolds = new Set(
-      terms.flatMap(t => {
-        const base = t.replace('*', '');
-        return [greekFold(base)];
-      })
-    );
-    return text.split(/(\s+)/).map(word => {
-      const fold = greekFold(word);
-      return queryFolds.has(fold) ? `<mark>${esc(word)}</mark>` : esc(word);
-    }).join('');
+  // Greek keyword-in-context: a window of surface tokens around the match,
+  // with the matched token(s) highlighted. Positions come from the index.
+  const GRK_WINDOW = 8;
+  function greekKwic(seg: Segment, positions: number[]): string {
+    const toks: string[] = [];
+    for (const line of seg.greek) for (const tok of line.tokens) toks.push(tok.t);
+    if (!positions.length) {
+      const head = toks.slice(0, 2 * GRK_WINDOW + 1);
+      return esc(head.join(' ')) + (toks.length > head.length ? ' …' : '');
+    }
+    const posSet = new Set(positions);
+    const center = positions[0];
+    const start = Math.max(0, center - GRK_WINDOW);
+    const end = Math.min(toks.length, center + GRK_WINDOW + 1);
+    const win = [];
+    for (let i = start; i < end; i++) {
+      const w = esc(toks[i]);
+      win.push(posSet.has(i) ? `<mark>${w}</mark>` : w);
+    }
+    let html = win.join(' ');
+    if (start > 0) html = '… ' + html;
+    if (end < toks.length) html = html + ' …';
+    return html;
+  }
+
+  // English keyword-in-context: a character window around the first matched
+  // word in the full chunk text, with all query terms highlighted.
+  const ENG_WINDOW = 140;
+  function escapeRe(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  function englishKwic(seg: Segment, terms: string[]): string {
+    const text = seg.english?.text ?? '';
+    if (!text) return '';
+    let earliest = -1;
+    for (const t of terms) {
+      const clean = t.replace(/[^a-z'*]/gi, '').replace(/\*+$/, '');
+      if (!clean) continue;
+      const m = new RegExp(`\\b${escapeRe(clean)}`, 'i').exec(text);
+      if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
+    }
+    if (earliest < 0) {
+      const head = text.slice(0, 300);
+      return esc(head) + (text.length > head.length ? ' …' : '');
+    }
+    let start = Math.max(0, earliest - ENG_WINDOW);
+    let end = Math.min(text.length, earliest + ENG_WINDOW);
+    if (start > 0) {
+      const sp = text.indexOf(' ', start);
+      if (sp >= 0 && sp < earliest) start = sp + 1;
+    }
+    if (end < text.length) {
+      const sp = text.lastIndexOf(' ', end);
+      if (sp > earliest) end = sp;
+    }
+    let html = highlightEnglish(text.slice(start, end), terms);
+    if (start > 0) html = '… ' + html;
+    if (end < text.length) html = html + ' …';
+    return html;
   }
 
   function highlightEnglish(text: string, terms: string[]): string {
@@ -121,7 +192,6 @@
     return `/book/${meta.book}#col-${meta.column}`;
   }
 
-  $: grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean);
   $: engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
   function onEnter(e: KeyboardEvent) {
@@ -253,13 +323,13 @@
     <p class="search-error">{error}</p>
   {:else if searched}
     <p class="result-count">
-      {results.length === 0
+      {display.length === 0
         ? 'No passages found.'
-        : `${results.length} passage${results.length === 1 ? '' : 's'} found`}
+        : `${display.length} passage${display.length === 1 ? '' : 's'} found`}
     </p>
 
     <ul class="result-list">
-      {#each results as r}
+      {#each display as r}
         <li class="result-card">
           <a class="result-ref" href={bookLink(r.meta)}>
             <span class="result-col">{r.meta.column}</span>
@@ -268,13 +338,13 @@
           {#if r.grkMatch}
             <p class="result-greek">
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html highlightGreek(r.meta.greek_head, grkTerms)}
+              {@html r.grkHtml}
             </p>
           {/if}
           {#if r.engMatch}
             <p class="result-english">
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html highlightEnglish(r.meta.english_head, engTerms)}
+              {@html r.engHtml}
             </p>
           {/if}
         </li>

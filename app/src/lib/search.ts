@@ -139,6 +139,64 @@ export interface SearchResult {
   meta: SegMeta;
   grkMatch: boolean;
   engMatch: boolean;
+  grkPositions: number[]; // token positions in the segment where a Greek term matched
+}
+
+// Positions of a single term across segments: seg_idx → [token positions].
+function termPositions(idx: GrkIndex, term: string): Map<number, number[]> {
+  const m = new Map<number, number[]>();
+  const add = (posts: [number, number][]) => {
+    for (const [si, pos] of posts) {
+      const arr = m.get(si);
+      if (arr) arr.push(pos);
+      else m.set(si, [pos]);
+    }
+  };
+  const wildcard = term.indexOf('*');
+  if (wildcard === -1) {
+    add(idx[greekFold(term)] ?? []);
+  } else {
+    const prefix = greekFold(term.slice(0, wildcard));
+    for (const key of Object.keys(idx)) if (key.startsWith(prefix)) add(idx[key]);
+  }
+  return m;
+}
+
+// For each segment in `hits`, the token positions to highlight in a KWIC snippet.
+function greekPositions(
+  idx: GrkIndex,
+  meta: SegMeta[],
+  terms: string[],
+  mode: SearchMode,
+  hits: Set<number>,
+): Map<number, number[]> {
+  const out = new Map<number, number[]>();
+  if (mode === 'phrase' && terms.length > 1) {
+    const foldTerms = terms.map(t => greekFold(t.replace('*', '')));
+    for (const si of hits) {
+      const toks = meta[si].greek_tokens.split(' ');
+      const ps: number[] = [];
+      for (let i = 0; i + foldTerms.length <= toks.length; i++) {
+        let ok = true;
+        for (let j = 0; j < foldTerms.length; j++) {
+          if (toks[i + j] !== foldTerms[j]) { ok = false; break; }
+        }
+        if (ok) for (let j = 0; j < foldTerms.length; j++) ps.push(i + j);
+      }
+      out.set(si, ps);
+    }
+  } else {
+    for (const t of terms) {
+      for (const [si, ps] of termPositions(idx, t)) {
+        if (!hits.has(si)) continue;
+        const arr = out.get(si);
+        if (arr) arr.push(...ps);
+        else out.set(si, [...ps]);
+      }
+    }
+  }
+  for (const [si, ps] of out) out.set(si, [...new Set(ps)].sort((a, b) => a - b));
+  return out;
 }
 
 export async function search(
@@ -199,11 +257,16 @@ export async function search(
     combined = grkHits ?? engHits ?? new Set();
   }
 
+  const grkPos = grkHits
+    ? greekPositions(grkIdx, meta, grkTerms, mode, grkHits)
+    : new Map<number, number[]>();
+
   return [...combined]
     .sort((a, b) => a - b)
     .map(si => ({
       meta: meta[si],
       grkMatch: grkHits?.has(si) ?? false,
       engMatch: engHits?.has(si) ?? false,
+      grkPositions: grkPos.get(si) ?? [],
     }));
 }

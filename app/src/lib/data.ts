@@ -50,11 +50,17 @@ const BASE = '/data';
 
 const _analyses: { data: Record<string, Analysis[]> | null } = { data: null };
 const _lsjCache = new Map<string, Record<string, LsjEntry>>();
+const _bookCache = new Map<number, Promise<BookData>>();
 
-export async function fetchBook(n: number): Promise<BookData> {
-  const r = await fetch(`${BASE}/book-${String(n).padStart(2, '0')}.json`);
-  if (!r.ok) throw new Error(`book ${n}: ${r.status}`);
-  return r.json();
+export function fetchBook(n: number): Promise<BookData> {
+  const cached = _bookCache.get(n);
+  if (cached) return cached;
+  const p = fetch(`${BASE}/book-${String(n).padStart(2, '0')}.json`).then(r => {
+    if (!r.ok) throw new Error(`book ${n}: ${r.status}`);
+    return r.json();
+  });
+  _bookCache.set(n, p);
+  return p;
 }
 
 export async function fetchAnalyses(): Promise<Record<string, Analysis[]>> {
