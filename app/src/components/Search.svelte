@@ -1,21 +1,50 @@
 <script lang="ts">
-  import { search, type SearchMode, type LangOp, type SearchResult } from '../lib/search';
-  import { fetchBook, type Segment } from '../lib/data';
+  import { search, type SearchMode, type LangOp } from '../lib/search';
+  import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
 
-  interface DisplayResult extends SearchResult {
-    grkHtml: string;
-    engHtml: string;
+  // One match occurrence, located precisely enough to label and jump to.
+  interface Instance {
+    lang: 'grk' | 'eng';
+    column: string;
+    line: number;
+    ref: string;       // e.g. "1097a15"
+    html: string;      // KWIC snippet
+    jumpUrl: string;
+  }
+  // All instances within one chapter, merged into a single (collapsible) card.
+  interface ChapterGroup {
+    key: string;
+    book: number;
+    chapter: string;
+    bekker: string;
+    order: number;     // chapter position within the book, for sorting
+    instances: Instance[];
   }
 
   let grkQuery = '';
   let engQuery = '';
   let mode: SearchMode = 'all';
   let langOp: LangOp = 'and';
-  let display: DisplayResult[] = [];
+  let groups: ChapterGroup[] = [];
+  let totalInstances = 0;
+  let expanded = new Set<string>();
   let loading = false;
   let searched = false;
   let error = '';
   let showHelp = false;
+
+  // Books present in the results, in order, each with its chapter groups.
+  $: groupsByBook = (() => {
+    const m = new Map<number, ChapterGroup[]>();
+    for (const g of groups) (m.get(g.book) ?? m.set(g.book, []).get(g.book)!).push(g);
+    return [...m.entries()].sort((a, b) => a[0] - b[0]);
+  })();
+
+  function toggle(key: string) {
+    if (expanded.has(key)) expanded.delete(key);
+    else expanded.add(key);
+    expanded = expanded; // trigger reactivity
+  }
 
   const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 
@@ -73,6 +102,52 @@
     if (e.key === 'Escape') showHelp = false;
   }
 
+  // Map a hit's (column, line) to the chapter it falls in, for one book.
+  // Chapters are ordered by document position; pick the last whose start is
+  // at or before the hit.
+  function chapterLookup(bookData: { segments: Segment[] }, chapters: ChapterRef[]) {
+    const colIdx = new Map<string, number>();
+    bookData.segments.forEach((s, i) => { if (!colIdx.has(s.column)) colIdx.set(s.column, i); });
+    const chs = chapters
+      .map((c, i) => ({ ...c, ci: colIdx.get(c.column) ?? 0, ln: parseInt(c.line), order: i }))
+      .sort((a, b) => a.ci - b.ci || a.ln - b.ln);
+    return (column: string, line: number) => {
+      const ci = colIdx.get(column) ?? 0;
+      let found = chs[0];
+      for (const c of chs) {
+        if (c.ci < ci || (c.ci === ci && c.ln <= line)) found = c;
+        else break;
+      }
+      return found;
+    };
+  }
+
+  // Bekker line number of the token at index `pos` within a segment.
+  function lineOfPosition(seg: Segment, pos: number): number {
+    let count = 0;
+    for (const line of seg.greek) {
+      if (pos < count + line.tokens.length) return line.n;
+      count += line.tokens.length;
+    }
+    return seg.greek[seg.greek.length - 1]?.n ?? 1;
+  }
+
+  // Approximate Bekker line of the earliest English match (for chapter grouping).
+  function englishLine(seg: Segment, terms: string[]): number {
+    const text = seg.english?.text ?? '';
+    let earliest = -1;
+    for (const t of terms) {
+      const clean = t.replace(/[^a-z'*]/gi, '').replace(/\*+$/, '');
+      if (!clean) continue;
+      const m = new RegExp(`\\b${escapeRe(clean)}`, 'i').exec(text);
+      if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
+    }
+    const lines = seg.greek;
+    if (earliest < 0 || !lines.length) return lines[0]?.n ?? 1;
+    const idx = Math.min(lines.length - 1, Math.floor(earliest / Math.max(1, text.length) * lines.length));
+    return lines[idx].n;
+  }
+
   async function doSearch(e?: Event) {
     e?.preventDefault();
     if (!grkQuery.trim() && !engQuery.trim()) return;
@@ -81,28 +156,51 @@
     searched = false;
     try {
       const results = await search(grkQuery, engQuery, mode, langOp);
-      // Load the segment text for the books that have results, so each card
-      // can show a snippet centered on the actual match (not the column head).
       const books = [...new Set(results.map(r => r.meta.book))];
+      const [chaptersAll, ...bookDatas] = await Promise.all([
+        fetchChapters(),
+        ...books.map(b => fetchBook(b)),
+      ]);
       const segMap = new Map<string, Segment>();
-      await Promise.all(
-        books.map(async b => {
-          const data = await fetchBook(b);
-          for (const s of data.segments) segMap.set(s.id, s);
-        }),
-      );
-      display = results.map(r => {
-        const seg = segMap.get(r.meta.id);
-        return {
-          ...r,
-          grkHtml: r.grkMatch && seg
-            ? greekKwic(seg, r.grkPositions)
-            : esc(r.meta.greek_head),
-          engHtml: r.engMatch && seg
-            ? englishKwic(seg, engTerms)
-            : esc(r.meta.english_head),
-        };
+      const lookups = new Map<number, ReturnType<typeof chapterLookup>>();
+      books.forEach((b, i) => {
+        const data = bookDatas[i];
+        for (const s of data.segments) segMap.set(s.id, s);
+        lookups.set(b, chapterLookup(data, chaptersAll[String(b)] ?? []));
       });
+
+      const gmap = new Map<string, ChapterGroup>();
+      const add = (book: number, ch: { chapter: string; bekker: string; order: number }, inst: Instance) => {
+        const key = `${book}:${ch.chapter}`;
+        let g = gmap.get(key);
+        if (!g) { g = { key, book, chapter: ch.chapter, bekker: ch.bekker, order: ch.order, instances: [] }; gmap.set(key, g); }
+        g.instances.push(inst);
+      };
+
+      for (const r of results) {
+        const seg = segMap.get(r.meta.id);
+        const lookup = lookups.get(r.meta.book);
+        if (!seg || !lookup) continue;
+        const jump = `/book/${r.meta.book}#col-${seg.column}`;
+        if (r.grkMatch) {
+          for (const pos of r.grkPositions) {
+            const line = lineOfPosition(seg, pos);
+            const ch = lookup(seg.column, line);
+            add(r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jump });
+          }
+        }
+        if (r.engMatch) {
+          const line = englishLine(seg, engTerms);
+          const ch = lookup(seg.column, line);
+          add(r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, engTerms), jumpUrl: jump });
+        }
+      }
+
+      for (const g of gmap.values()) g.instances.sort((a, b) => a.line - b.line);
+      groups = [...gmap.values()].sort((a, b) => a.book - b.book || a.order - b.order);
+      totalInstances = groups.reduce((n, g) => n + g.instances.length, 0);
+      // Single-hit chapters open by default; merged (multi-hit) start collapsed.
+      expanded = new Set(groups.filter(g => g.instances.length === 1).map(g => g.key));
       searched = true;
     } catch (err) {
       error = String(err);
@@ -186,10 +284,6 @@
 
   function esc(s: string): string {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function bookLink(meta: SearchResult['meta']): string {
-    return `/book/${meta.book}#col-${meta.column}`;
   }
 
   $: engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
@@ -323,33 +417,44 @@
     <p class="search-error">{error}</p>
   {:else if searched}
     <p class="result-count">
-      {display.length === 0
+      {totalInstances === 0
         ? 'No passages found.'
-        : `${display.length} passage${display.length === 1 ? '' : 's'} found`}
+        : `${totalInstances} instance${totalInstances === 1 ? '' : 's'} in ${groups.length} chapter${groups.length === 1 ? '' : 's'}`}
     </p>
 
-    <ul class="result-list">
-      {#each display as r}
-        <li class="result-card">
-          <a class="result-ref" href={bookLink(r.meta)}>
-            <span class="result-col">{r.meta.column}</span>
-            <span class="result-book">Book {ROMAN[r.meta.book - 1]}</span>
-          </a>
-          {#if r.grkMatch}
-            <p class="result-greek">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html r.grkHtml}
-            </p>
-          {/if}
-          {#if r.engMatch}
-            <p class="result-english">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html r.engHtml}
-            </p>
-          {/if}
-        </li>
-      {/each}
-    </ul>
+    {#each groupsByBook as [book, bookGroups]}
+      <section class="book-section">
+        <h2 class="book-header">
+          <span class="work-name">Nicomachean Ethics</span>
+          <span class="book-name">Book {ROMAN[book - 1]}</span>
+        </h2>
+
+        {#each bookGroups as g (g.key)}
+          <div class="chapter-group">
+            <button class="group-head" on:click={() => toggle(g.key)} aria-expanded={expanded.has(g.key)}>
+              <span class="caret">{expanded.has(g.key) ? '▾' : '▸'}</span>
+              <span class="group-label">Chapter {g.chapter}</span>
+              <span class="group-bekker">{g.bekker}</span>
+              <span class="group-count">{g.instances.length} {g.instances.length === 1 ? 'instance' : 'instances'}</span>
+            </button>
+
+            {#if expanded.has(g.key)}
+              <ul class="instance-list">
+                {#each g.instances as inst}
+                  <li class="instance">
+                    <a class="inst-ref" href={inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{inst.ref}</a>
+                    <span class="inst-snippet" class:greek={inst.lang === 'grk'}>
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      {@html inst.html}
+                    </span>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+          </div>
+        {/each}
+      </section>
+    {/each}
   {/if}
 </div>
 
@@ -647,53 +752,90 @@
     margin-bottom: 0.75rem;
   }
 
-  .result-list {
-    list-style: none;
+  /* ── Grouped results: Work → Book → Chapter ──────────────────────── */
+
+  .book-section { margin-bottom: 1.5rem; }
+
+  .book-header {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .result-card {
-    background: var(--col-bg);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 0.75rem 1rem;
-  }
-
-  .result-ref {
-    display: inline-flex;
     align-items: baseline;
-    gap: 0.5rem;
-    text-decoration: none;
-    margin-bottom: 0.4rem;
+    gap: 0.6rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.35rem;
+    margin: 0 0 0.6rem;
   }
-  .result-ref:hover .result-col { text-decoration: underline; }
-
-  .result-col {
+  .work-name {
     font-family: var(--font-ui);
     font-size: 0.95rem;
     font-weight: 700;
-    color: var(--accent);
+    color: var(--text);
   }
-  .result-book {
+  .book-name {
     font-family: var(--font-ui);
-    font-size: 0.75rem;
-    color: var(--text-light);
+    font-size: 0.85rem;
+    color: var(--text-mid);
   }
 
-  .result-greek {
-    font-family: var(--font-greek);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    color: var(--text);
-    margin-bottom: 0.25rem;
+  .chapter-group {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+    background: var(--col-bg);
+    overflow: hidden;
   }
-  .result-english {
+  .group-head {
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.55rem 0.85rem;
+    text-align: left;
+    font-family: var(--font-ui);
+  }
+  .group-head:hover { background: var(--border); }
+  .caret { color: var(--text-light); font-size: 0.75rem; width: 0.8rem; flex-shrink: 0; }
+  .group-label { font-weight: 700; color: var(--accent); font-size: 0.9rem; }
+  .group-bekker { font-size: 0.8rem; color: var(--text-light); }
+  .group-count { margin-left: auto; font-size: 0.78rem; color: var(--text-mid); }
+
+  .instance-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 0.85rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .instance {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+  }
+  .inst-ref {
+    flex-shrink: 0;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+    min-width: 4.5rem;
+  }
+  .inst-ref:hover { text-decoration: underline; }
+  .inst-snippet {
     font-family: var(--font-english);
     font-size: 0.88rem;
-    line-height: 1.55;
+    line-height: 1.5;
     color: var(--text-mid);
+  }
+  .inst-snippet.greek {
+    font-family: var(--font-greek);
+    font-size: 0.95rem;
+    color: var(--text);
   }
 
   :global(mark) {
