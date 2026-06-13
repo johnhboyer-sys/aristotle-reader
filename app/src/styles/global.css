@@ -202,9 +202,6 @@ body {
 
 .line-text {
   flex: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2em 0;
 }
 
 /* ── Tokens ───────────────────────────────────────────────────────── */
@@ -218,7 +215,6 @@ body {
 }
 .tok:hover  { background: var(--greek-hover); }
 .tok.active { background: var(--greek-active); }
-.tok + .tok::before { content: " "; }
 
 /* ── English chunk ────────────────────────────────────────────────── */
 

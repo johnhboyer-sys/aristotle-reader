@@ -13,6 +13,30 @@
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
   interface Block { chapter: string | null; lines: GreekLine[]; english: string; }
 
+  // Split a line into clickable words and the verbatim text between them.
+  // The tokens hold bare words (for the popup lookup); the line `text` keeps
+  // the original punctuation AND the OCT editorial sigla ( ) [ ] < > † " — so
+  // we locate each word in `text` and render the gaps (sigla/punctuation) as
+  // plain, non-clickable text, preserving the critical edition faithfully.
+  interface LinePart { text: string; tok: Token | null; }
+  function lineParts(line: GreekLine): LinePart[] {
+    const parts: LinePart[] = [];
+    const text = line.text;
+    let ptr = 0;
+    for (const tok of line.tokens) {
+      const i = text.indexOf(tok.t, ptr);
+      if (i < 0) {            // shouldn't happen; keep the word clickable anyway
+        parts.push({ text: tok.t, tok });
+        continue;
+      }
+      if (i > ptr) parts.push({ text: text.slice(ptr, i), tok: null });
+      parts.push({ text: tok.t, tok });
+      ptr = i + tok.t.length;
+    }
+    if (ptr < text.length) parts.push({ text: text.slice(ptr), tok: null });
+    return parts;
+  }
+
   function splitSegment(seg: Segment): Block[] {
     const greek = seg.greek;
     const text = seg.english?.text ?? '';
@@ -105,17 +129,11 @@
               {#each block.lines as line}
                 <div class="greek-line">
                   <span class="line-num">{showLineNum(line.n)}</span>
-                  <span class="line-text">
-                    {#each line.tokens as tok}
-                      <!-- svelte-ignore a11y-click-events-have-key-events -->
-                      <!-- svelte-ignore a11y-no-static-element-interactions -->
-                      <span
+                  <span class="line-text">{#each lineParts(line) as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
                         class="tok"
-                        class:active={popup?.token === tok}
-                        on:click={(e) => handleTokenClick(e, tok)}
-                      >{tok.t}</span>
-                    {/each}
-                  </span>
+                        class:active={popup?.token === part.tok}
+                        on:click={(e) => handleTokenClick(e, part.tok)}
+                      >{part.text}</span>{:else}{part.text}{/if}{/each}</span>
                 </div>
               {/each}
             </div>
