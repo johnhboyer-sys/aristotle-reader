@@ -81,17 +81,37 @@ body {
   color: #fff;
 }
 
-/* "Jump to Bekker line" citation box in the global header. */
+/* "Jump to Bekker line" citation lookup in the global header.
+   Collapsed by default as a labeled button; expands into the input. */
+.bekker-toggle {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--col-bg);
+  color: var(--text-mid);
+}
+.bekker-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .bekker-jump {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
   font-family: var(--font-ui);
   font-size: 0.8rem;
 }
+.bekker-label {
+  color: var(--text-light);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
 .bekker-jump input {
   font: inherit;
-  width: 7.5rem;
+  width: 7rem;
   padding: 0.18rem 0.4rem;
   border: 1px solid var(--border);
   border-radius: 3px;
@@ -102,7 +122,7 @@ body {
   outline: none;
   border-color: var(--accent);
 }
-.bekker-jump button {
+.bekker-jump button[type="submit"] {
   font: inherit;
   cursor: pointer;
   padding: 0.18rem 0.55rem;
@@ -111,7 +131,17 @@ body {
   background: var(--accent);
   color: #fff;
 }
-.bekker-jump button:hover { filter: brightness(1.08); }
+.bekker-jump button[type="submit"]:hover { filter: brightness(1.08); }
+.bekker-close {
+  font: inherit;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+  border: none;
+  background: none;
+  color: var(--text-light);
+}
+.bekker-close:hover { color: var(--text); }
 .bekker-err {
   color: #b23;
   font-size: 0.72rem;
