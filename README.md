@@ -72,6 +72,17 @@ npm run build     # static build → app/dist/
 npm run preview   # preview the static build
 ```
 
+### Review screenshots
+
+With the dev server running, capture key views as PNGs (handy for reviewing changes remotely):
+
+```bash
+npm run shots                # all scenes → app/.shots/
+npm run shots -- /book/3     # one ad-hoc shot of a path
+```
+
+Uses Playwright from the local or npx cache (no project dependency); edit the `scenes` list in `app/scripts/shoot.mjs` to add views.
+
 The `app/public/data` symlink points at `../build/dist/ne/`, so no copy step is needed in development. For a production deployment, copy or serve `build/dist/ne/` at the `/data/` path.
 
 ---

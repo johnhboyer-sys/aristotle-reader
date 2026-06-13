@@ -1,0 +1,102 @@
+// Headless screenshots of the running dev server, for showing changes to a
+// reviewer who is away from the machine ("remote control").
+//
+// Usage (dev server must be running — `npm run dev`):
+//   npm run shots                 # capture all scenes below into app/.shots/
+//   npm run shots -- /book/3      # one ad-hoc shot of a single path
+//   npm run shots -- /book/3 book3 out.png
+//
+// Playwright is resolved from the local install if present, otherwise from the
+// npx cache (no project dependency required). Browsers come from the shared
+// ms-playwright cache. To make it first-class instead: npm i -D playwright.
+
+import { createRequire } from 'node:module';
+import { existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
+const BASE = process.env.SHOOT_BASE || 'http://localhost:4321';
+const OUT_DIR = join(process.cwd(), '.shots');
+
+// --- Locate Playwright without requiring a project dependency --------------
+function resolvePlaywright() {
+  const require = createRequire(import.meta.url);
+  try {
+    return require('playwright');
+  } catch {}
+  const npxRoot = join(homedir(), '.npm', '_npx');
+  if (existsSync(npxRoot)) {
+    for (const hash of readdirSync(npxRoot)) {
+      const p = join(npxRoot, hash, 'node_modules', 'playwright');
+      if (existsSync(p)) return require(p);
+    }
+  }
+  throw new Error(
+    'Playwright not found. Install it (npm i -D playwright) or run `npx playwright --version` once to populate the cache.',
+  );
+}
+
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
+  const cache = join(homedir(), 'Library', 'Caches', 'ms-playwright');
+  if (existsSync(cache)) process.env.PLAYWRIGHT_BROWSERS_PATH = cache;
+}
+
+// --- Scenes: edit/add freely. `run` may interact before the shot. ----------
+const scenes = [
+  { name: 'home', path: '/' },
+  { name: 'book1', path: '/book/1' },
+  {
+    name: 'search-greek',
+    path: '/search',
+    async run(page) {
+      await page.fill('#grk-input', 'areth');
+      await page.click('.search-btn');
+      await page.waitForSelector('.result-card', { timeout: 10000 });
+    },
+  },
+  {
+    name: 'search-help',
+    path: '/search',
+    async run(page) {
+      await page.click('.help-btn');
+      await page.waitForSelector('.help-modal');
+    },
+  },
+  {
+    name: 'search-english',
+    path: '/search',
+    async run(page) {
+      await page.fill('#eng-input', 'pleasure');
+      await page.click('.search-btn');
+      await page.waitForSelector('.result-card', { timeout: 10000 });
+    },
+  },
+];
+
+async function shoot(browser, scene, outName) {
+  const page = await browser.newPage({ viewport: { width: 1100, height: 1400 } });
+  await page.goto(BASE + scene.path, { waitUntil: 'networkidle' });
+  if (scene.run) await scene.run(page);
+  await page.waitForTimeout(400);
+  const out = join(OUT_DIR, outName || `${scene.name}.png`);
+  await page.screenshot({ path: out });
+  await page.close();
+  console.log('  ' + out);
+}
+
+const { chromium } = resolvePlaywright();
+
+mkdirSync(OUT_DIR, { recursive: true });
+const [argPath, argName, argOut] = process.argv.slice(2);
+
+const browser = await chromium.launch();
+try {
+  console.log(`Shooting ${BASE} →`);
+  if (argPath) {
+    await shoot(browser, { name: argName || 'shot', path: argPath }, argOut);
+  } else {
+    for (const scene of scenes) await shoot(browser, scene);
+  }
+} finally {
+  await browser.close();
+}

@@ -2,6 +2,8 @@
 dist/
 # generated types
 .astro/
+# review screenshots (scripts/shoot.mjs)
+.shots/
 
 # dependencies
 node_modules/
