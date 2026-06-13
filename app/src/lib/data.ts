@@ -25,6 +25,7 @@ export interface ChapterStart {
   chapter: string;
   beforeLine: number;  // insert the heading before the Greek line with this n
   engOffset: number;   // char offset in the English chunk where the chapter begins
+  bekker: string;      // Bekker span, e.g. "1097a–1098b" (single column if equal)
 }
 
 export interface Segment {
@@ -39,6 +40,7 @@ export interface ChapterRef {
   chapter: string;
   column: string;
   line: string;
+  bekker: string;
 }
 
 export interface BookData {

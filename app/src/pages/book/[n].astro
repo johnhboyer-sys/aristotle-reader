@@ -47,7 +47,7 @@ const chapters = allChapters[String(n)] ?? [];
       <nav class="chapter-nav" aria-label={`Book ${bookLabel} chapters`}>
         <span class="chapter-nav-label">Book {bookLabel} · Chapters</span>
         {chapters.map((c) => (
-          <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.column}`}>{c.chapter}</a>
+          <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.bekker}`}>{c.chapter}</a>
         ))}
       </nav>
     )}

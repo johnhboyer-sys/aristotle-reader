@@ -11,7 +11,7 @@
 
   // A segment renders as one or more blocks split at chapter boundaries.
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
-  interface Block { chapter: string | null; lines: GreekLine[]; english: string; }
+  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; english: string; }
 
   // Split a line into clickable words and the verbatim text between them.
   // The tokens hold bare words (for the popup lookup); the line `text` keeps
@@ -41,7 +41,7 @@
     const greek = seg.greek;
     const text = seg.english?.text ?? '';
     const starts = (seg.chapterStarts ?? []).slice().sort((a, b) => a.beforeLine - b.beforeLine);
-    if (!starts.length) return [{ chapter: null, lines: greek, english: text }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, english: text }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -51,13 +51,13 @@
     const firstIdx = lineIdx(starts[0].beforeLine);
     // Lines/English before the first chapter start continue the previous chapter.
     if (firstIdx > 0 || starts[0].engOffset > 0) {
-      blocks.push({ chapter: null, lines: greek.slice(0, firstIdx), english: text.slice(0, starts[0].engOffset) });
+      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), english: text.slice(0, starts[0].engOffset) });
     }
     for (let i = 0; i < starts.length; i++) {
       const from = lineIdx(starts[i].beforeLine);
       const to = i + 1 < starts.length ? lineIdx(starts[i + 1].beforeLine) : greek.length;
       const engTo = i + 1 < starts.length ? starts[i + 1].engOffset : text.length;
-      blocks.push({ chapter: starts[i].chapter, lines: greek.slice(from, to), english: text.slice(starts[i].engOffset, engTo) });
+      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), english: text.slice(starts[i].engOffset, engTo) });
     }
     return blocks;
   }
@@ -121,6 +121,7 @@
           {#if block.chapter}
             <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
               <span class="chapter-label">Chapter {block.chapter}</span>
+              {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
             </div>
           {/if}
           <div class="seg-row">

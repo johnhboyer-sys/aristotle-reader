@@ -27,7 +27,7 @@ def _load(rel: str):
     return json.loads((BUILD_DIR / rel).read_text(encoding="utf-8"))
 
 
-def _chapter_starts(seg_column, line_ns, eng, chapters_in_col) -> list[dict]:
+def _chapter_starts(seg_column, line_ns, eng, chapters_in_col, range_map) -> list[dict]:
     """For each chapter starting in this Bekker column, where to break the
     reader. The chapter boundary is the English section marker's char offset;
     the matching Greek line is found proportionally (offset / chunk length ->
@@ -49,13 +49,37 @@ def _chapter_starts(seg_column, line_ns, eng, chapters_in_col) -> list[dict]:
         else:
             before = 1
         starts.append(
-            {"chapter": ch["chapter"], "beforeLine": before, "engOffset": off}
+            {
+                "chapter": ch["chapter"],
+                "beforeLine": before,
+                "engOffset": off,
+                "bekker": range_map[(ch["book"], ch["chapter"])],
+            }
         )
     starts.sort(key=lambda s: s["beforeLine"])
     return starts
 
 
-def emit_books(spine, tokens_doc, english, out_dir: Path) -> list[dict]:
+def chapter_ranges(spine, chapters) -> dict[tuple, str]:
+    """(book, chapter) -> Bekker span 'startCol–endCol' (single col if a chapter
+    begins and ends in the same column). End = the next chapter's start column,
+    or the book's last column for the final chapter of a book."""
+    book_last_col: dict[int, str] = {}
+    for seg in spine["segments"]:
+        book_last_col[seg["book"]] = seg["column"]  # segments are in order
+    by_book: dict[int, list[dict]] = defaultdict(list)
+    for ch in chapters:
+        by_book[ch["book"]].append(ch)
+    ranges: dict[tuple, str] = {}
+    for book, chs in by_book.items():
+        for i, ch in enumerate(chs):
+            start = ch["column"]
+            end = chs[i + 1]["column"] if i + 1 < len(chs) else book_last_col.get(book, start)
+            ranges[(book, ch["chapter"])] = start if start == end else f"{start}–{end}"
+    return ranges
+
+
+def emit_books(spine, tokens_doc, english, range_map, out_dir: Path) -> list[dict]:
     tokens_by_id = {s["id"]: s for s in tokens_doc["segments"]}
     english_by_id = {c["id"]: c for c in english["chunks"]}
     chapters_by_col: dict[tuple, list[dict]] = defaultdict(list)
@@ -70,6 +94,7 @@ def emit_books(spine, tokens_doc, english, out_dir: Path) -> list[dict]:
         chapter_starts = _chapter_starts(
             seg["column"], line_ns, eng,
             chapters_by_col.get((seg["book"], seg["column"]), []),
+            range_map,
         )
         by_book[seg["book"]].append(
             {
@@ -144,14 +169,20 @@ def run(manifest: Manifest) -> Path:
     tokens_doc = _load("stage3/tokens.json")
     english = _load("stage1/english_chunks.json")
 
-    book_stats = emit_books(spine, tokens_doc, english, out_dir)
+    range_map = chapter_ranges(spine, english.get("chapters", []))
+    book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir)
     analyses_stats = emit_analyses(out_dir)
 
     # Per-book ordered chapter list for navigation (Work → Book → Chapter).
     chapters_by_book: dict[str, list[dict]] = defaultdict(list)
     for ch in english.get("chapters", []):
         chapters_by_book[str(ch["book"])].append(
-            {"chapter": ch["chapter"], "column": ch["column"], "line": ch["line"]}
+            {
+                "chapter": ch["chapter"],
+                "column": ch["column"],
+                "line": ch["line"],
+                "bekker": range_map[(ch["book"], ch["chapter"])],
+            }
         )
     (out_dir / "chapters.json").write_text(
         json.dumps(chapters_by_book, ensure_ascii=False, indent=1), encoding="utf-8"

@@ -168,6 +168,13 @@ body {
   color: var(--accent, #8a5a2b);
   text-transform: uppercase;
 }
+.chapter-bekker {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-light);
+  letter-spacing: .01em;
+}
 
 .greek-col {
   font-family: var(--font-greek);
