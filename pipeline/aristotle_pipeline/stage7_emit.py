@@ -61,21 +61,46 @@ def _chapter_starts(seg_column, line_ns, eng, chapters_in_col, range_map) -> lis
 
 
 def chapter_ranges(spine, chapters) -> dict[tuple, str]:
-    """(book, chapter) -> Bekker span 'startCol–endCol' (single col if a chapter
-    begins and ends in the same column). End = the next chapter's start column,
-    or the book's last column for the final chapter of a book."""
-    book_last_col: dict[int, str] = {}
+    """(book, chapter) -> Bekker line span, e.g. '1094a1–17' (same column) or
+    '1097a15–1098b8' (crossing pages). End = one Bekker line before the next
+    chapter begins; the book's last line for the final chapter of a book."""
+    book_cols: dict[int, list[str]] = defaultdict(list)
+    col_min: dict[tuple, int] = {}
+    col_max: dict[tuple, int] = {}
     for seg in spine["segments"]:
-        book_last_col[seg["book"]] = seg["column"]  # segments are in order
+        b, c = seg["book"], seg["column"]
+        if c not in book_cols[b]:
+            book_cols[b].append(c)
+        ns = [l["n"] for l in seg["lines"]]
+        col_min[(b, c)], col_max[(b, c)] = min(ns), max(ns)
+
+    def step_back(book, col, line):
+        """The Bekker position one line before (col, line) within this book."""
+        if line > col_min[(book, col)]:
+            return col, line - 1
+        cols = book_cols[book]
+        i = cols.index(col)
+        if i > 0:
+            pcol = cols[i - 1]
+            return pcol, col_max[(book, pcol)]
+        return col, line
+
     by_book: dict[int, list[dict]] = defaultdict(list)
     for ch in chapters:
         by_book[ch["book"]].append(ch)
     ranges: dict[tuple, str] = {}
     for book, chs in by_book.items():
         for i, ch in enumerate(chs):
-            start = ch["column"]
-            end = chs[i + 1]["column"] if i + 1 < len(chs) else book_last_col.get(book, start)
-            ranges[(book, ch["chapter"])] = start if start == end else f"{start}–{end}"
+            scol, sline = ch["column"], int(ch["line"])
+            if i + 1 < len(chs):
+                ecol, eline = step_back(book, chs[i + 1]["column"], int(chs[i + 1]["line"]))
+            else:
+                ecol = book_cols[book][-1]
+                eline = col_max[(book, ecol)]
+            ranges[(book, ch["chapter"])] = (
+                f"{scol}{sline}–{eline}" if scol == ecol
+                else f"{scol}{sline}–{ecol}{eline}"
+            )
     return ranges
 
 
