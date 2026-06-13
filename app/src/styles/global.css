@@ -63,6 +63,14 @@ body {
   color: var(--accent);
   letter-spacing: .02em;
 }
+
+/* Desktop: the bar/panel wrappers dissolve so h1, the Bekker box, book-nav and
+   chapter-nav lay out as direct flex children of .page-header (unchanged). The
+   menu button is mobile-only. The mobile media query re-materialises the
+   wrappers into a collapsible menu. */
+.header-bar,
+.nav-panel { display: contents; }
+.nav-toggle { display: none; }
 .page-header .book-nav {
   font-family: var(--font-ui);
   font-size: 0.8rem;
@@ -190,11 +198,55 @@ body {
 
 /* ── Reading-view toggle (bilingual / Greek only / English only) ──── */
 
+.reader-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* English translation picker (Rackham / Ross). */
+.trans-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--text-mid);
+}
+.trans-label {
+  font-weight: 600;
+  letter-spacing: .03em;
+  color: var(--text-light);
+}
+.trans-picker select {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  padding: 0.22rem 1.6rem 0.22rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--col-bg);
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%237a4e2d' stroke-width='1.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+}
+.trans-picker select:focus { outline: none; border-color: var(--accent); }
+
 .view-toggle {
   display: flex;
   justify-content: flex-end;
   gap: 0;
-  margin-bottom: 1.5rem;
+}
+
+/* Ross: chapter-anchored prose, no gutter (overrides the grid layout). */
+.english-text.ross {
+  display: block;
 }
 .view-toggle button {
   font-family: var(--font-ui);
@@ -223,6 +275,30 @@ body {
 .reader-body.view-greek .seg-row { grid-template-columns: 1fr; }
 .reader-body.view-english .english-col,
 .reader-body.view-greek .greek-col { max-width: 42rem; margin: 0 auto; }
+
+/* Compare both: Greek | Rackham | Ross (or Rackham | Ross in English-only).
+   A third translation column joins the seg-row grid. */
+.reader-body.trans-compare.view-both .seg-row { grid-template-columns: 1fr 1fr 1fr; }
+.reader-body.trans-compare.view-english .seg-row { grid-template-columns: 1fr 1fr; }
+.reader-body.trans-compare.view-english .english-col { max-width: none; margin: 0; }
+.ross-col {
+  font-family: var(--font-english);
+  font-size: var(--fs-english);
+  line-height: var(--lh-english);
+  color: var(--text-mid);
+}
+/* Column identity. Hidden on desktop (the gutter vs. its absence makes Rackham
+   vs. Ross obvious); shown when the columns stack on a phone. */
+.col-label {
+  display: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-ref);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin-bottom: 0.3rem;
+}
 
 /* ── Column segments ──────────────────────────────────────────────── */
 
@@ -514,30 +590,126 @@ body {
   .page-header {
     flex-wrap: wrap;
     gap: 0.4rem;
+    padding: 0.55rem 0.9rem;
   }
+
+  /* Collapse the nav into a one-line bar (title + Menu); the panel drops down
+     only when opened. */
+  .header-bar {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.4rem 0.7rem;
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--col-bg);
+    color: var(--text-mid);
+  }
+  .nav-toggle-icon { font-size: 1rem; line-height: 1; }
+  .page-header.nav-open .nav-toggle {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .nav-panel {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-top: 0.5rem;
+  }
+  .page-header.nav-open .nav-panel { display: flex; }
+
   .page-header .book-nav {
     margin-left: 0;
     width: 100%;
     flex-wrap: wrap;
+    gap: 0.3rem 0.4rem;
+  }
+  /* Comfortable tap targets for the book numerals + chapter chips. */
+  .page-header .book-nav a {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.6rem;
+  }
+  .page-header .chapter-nav { padding-top: 0.6rem; }
+  .page-header .chapter-nav a {
+    min-width: 2rem;
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.45rem;
   }
 
   .reader-body {
-    padding: 1rem 0.75rem 3rem;
-  }
-
-  .seg-row {
-    grid-template-columns: 1fr;
-    gap: 0;
+    padding: 1rem 0.6rem 3rem;
   }
 
   .seg-ref { font-size: 0.72rem; }
 
-  .english-col {
+  /* Bigger, easier-to-hit reading-view toggle (the main control on a phone, now
+     that English-only is the default). */
+  .view-toggle { margin-bottom: 1rem; }
+  .view-toggle button {
+    font-size: 0.82rem;
+    padding: 0.45rem 0.85rem;
+    min-height: 40px;
+  }
+
+  /* Monolingual (the phone default): comfortable single column. Bilingual stays
+     a real two-column layout — see below — rather than the old stack. */
+
+  /* Workable two-column bilingual on a phone. Keep Greek + English side by side
+     (no stacking), but tighten gutters and shrink type a notch so two narrow
+     measures stay legible at ~390px. Scoped to .view-both so the monolingual
+     views keep the larger, comfortable type. */
+  .reader-body.view-both .seg-row { gap: 0 0.5rem; }
+  .reader-body.view-both .greek-col { font-size: 0.9rem; line-height: 1.6; }
+  .reader-body.view-both .english-col { font-size: 0.9rem; line-height: 1.55; }
+  .reader-body.view-both .greek-line { gap: 0.2rem; }
+  .reader-body.view-both .line-num { min-width: 0.9rem; font-size: 0.6rem; }
+  .reader-body.view-both .english-text {
+    grid-template-columns: 1.15rem 1fr;
+    column-gap: 0.3rem;
+  }
+  .reader-body.view-both .eng-num { font-size: 0.6rem; }
+
+  /* Compare both can't fit 2–3 columns on a phone: stack Greek, Rackham and Ross
+     full-width with their labels, at the comfortable single-column type (these
+     rules come after the .view-both shrink above, so they win in compare+both). */
+  .reader-body.trans-compare .seg-row { grid-template-columns: 1fr !important; gap: 0; }
+  .reader-body.trans-compare .col-label { display: block; }
+  .reader-body.trans-compare .greek-col {
+    font-size: var(--fs-greek); line-height: var(--lh-greek);
+  }
+  .reader-body.trans-compare .greek-line { gap: 0.35rem; }
+  .reader-body.trans-compare .line-num { min-width: 1.8rem; font-size: var(--fs-linenum); }
+  .reader-body.trans-compare .english-col,
+  .reader-body.trans-compare .ross-col {
+    font-size: var(--fs-english);
     border-top: 1px solid var(--border);
     padding-top: 0.6rem;
     margin-top: 0.6rem;
-    color: var(--text-mid);
   }
+  .reader-body.trans-compare .english-text {
+    grid-template-columns: 1.9rem 1fr; column-gap: 0.7rem;
+  }
+  .reader-body.trans-compare .eng-num { font-size: var(--fs-linenum); }
 
   .popup {
     width: calc(100vw - 1rem);

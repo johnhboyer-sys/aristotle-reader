@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { fetchBook, type Segment, type GreekLine, type Token } from '../lib/data';
+  import { onMount, onDestroy, tick } from 'svelte';
+  import { fetchBook, parseBekker, type Segment, type GreekLine, type Token } from '../lib/data';
   import { greekFold } from '../lib/search';
   import WordPopup from './WordPopup.svelte';
 
@@ -18,12 +18,111 @@
   // Reading view: bilingual (default), Greek only, or English only. Persisted
   // per reader in localStorage; a citation/search jump forces 'both' so the
   // targeted Greek line is visible.
+  // Which English translation fills the English column. Rackham (Loeb, TEI,
+  // Bekker-anchored per line), Ross (MIT, chapter-anchored prose), or 'compare'
+  // = both side by side (three columns with Greek). Persisted.
+  type Trans = 'rackham' | 'ross' | 'compare';
+  let trans: Trans = 'rackham';
+  function setTrans(t: Trans) {
+    trans = t;
+    try { localStorage.setItem('ne-trans', t); } catch {}
+  }
+
   type View = 'both' | 'greek' | 'english';
   let view: View = 'both';
-  function setView(v: View) {
+  async function setView(v: View) {
     view = v;
     try { localStorage.setItem('ne-view', v); } catch {}
+    // The tracked anchors differ by view (Greek lines vs. whole columns), so
+    // rebuild the scroll-spy once the DOM reflects the new view.
+    await tick();
+    if (spyArmed) setupScrollSpy();
   }
+
+  // ── Live URL tracking (aquinas.cc style) ─────────────────────────────────
+  // As the reader scrolls, rewrite the location hash to the Bekker citation at
+  // the top of the reading area, so any position is a citable link. Line-level
+  // when the Greek column is visible (our lineation is canonical Bekker);
+  // column-level in English-only view (its line numbers are interpolated
+  // estimates). history.replaceState keeps this out of back-history and avoids
+  // jumping the scroll. We arm the spy only on the first user scroll so an
+  // opened #citation link isn't overwritten before the reader actually moves.
+  let spyObserver: IntersectionObserver | null = null;
+  let spyState = new Map<Element, number | null>();
+  let spyArmed = false;
+  let lastCite = '';
+  let suppressArmUntil = 0;   // ignore scroll-events from our own programmatic scrolls
+  let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function citeOf(el: Element): string | null {
+    const lm = el.id.match(/^L(.+)-(\d+)$/);   // greek line: L{col}-{n} → {col}{n}
+    if (lm) return `${lm[1]}${lm[2]}`;
+    const cm = el.id.match(/^col-(.+)$/);       // segment: col-{column} → {column}
+    return cm ? cm[1] : null;
+  }
+
+  function updateHash(cite: string | null) {
+    if (!cite || cite === lastCite) return;
+    lastCite = cite;
+    try { history.replaceState(history.state, '', `#${cite}`); } catch {}
+  }
+
+  function setupScrollSpy() {
+    spyObserver?.disconnect();
+    spyState = new Map();
+    const greekVisible = view === 'greek' || view === 'both';
+    const els = Array.from(document.querySelectorAll(greekVisible ? '.greek-line[id]' : '.segment[id]'));
+    if (!els.length) return;
+    const headerH = Math.round(document.querySelector('.page-header')?.getBoundingClientRect().height ?? 60);
+    // Detection band: a strip just below the sticky header. The intersecting
+    // anchor highest on screen is the line currently at the top of the reading area.
+    spyObserver = new IntersectionObserver((entries) => {
+      for (const e of entries) spyState.set(e.target, e.isIntersecting ? e.boundingClientRect.top : null);
+      let best: Element | null = null;
+      let bestTop = Infinity;
+      for (const [el, top] of spyState) {
+        if (top != null && top < bestTop) { bestTop = top; best = el; }
+      }
+      if (best) updateHash(citeOf(best));
+    }, { rootMargin: `-${headerH + 8}px 0px -82% 0px`, threshold: 0 });
+    els.forEach((el) => spyObserver!.observe(el));
+  }
+
+  // Arm on the first genuine user scroll. Scroll events from our own
+  // programmatic jumps (citation/search) fall inside the suppression window and
+  // are ignored, so an opened #citation stays put until the reader moves.
+  function onScrollArm() {
+    if (Date.now() < suppressArmUntil) return;
+    window.removeEventListener('scroll', onScrollArm);
+    spyArmed = true;
+    setupScrollSpy();
+  }
+
+  function onResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { if (spyArmed) setupScrollSpy(); }, 200);
+  }
+
+  // Open at a Bekker citation from the URL hash: the exact Greek line if it's
+  // present and visible, otherwise the owning column. Instant (no animation) so
+  // it doesn't stream scroll-events, and suppressed so it doesn't self-arm.
+  function scrollToCitation(column: string, line: number) {
+    suppressArmUntil = Date.now() + 800;
+    const lineEl = document.getElementById(`L${column}-${line}`);
+    if (lineEl && (lineEl as HTMLElement).offsetParent !== null) {
+      lineEl.scrollIntoView({ behavior: 'auto', block: 'center' });
+    } else {
+      document.getElementById(`col-${column}`)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  }
+
+  onDestroy(() => {
+    spyObserver?.disconnect();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('scroll', onScrollArm);
+      window.removeEventListener('resize', onResize);
+    }
+  });
 
   function isHit(surface: string): boolean {
     if (!hlGrkFolds.length) return false;
@@ -48,7 +147,39 @@
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
   // `rows` lay the English prose out beside its Bekker-line gutter (see below).
   interface EngRow { n: number | null; real: boolean; text: string; }
-  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; rows: EngRow[]; }
+  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; rows: EngRow[]; ross: string; }
+
+  // The gutter renders each tick as its own block row, so a row boundary forces
+  // a visual line break. To avoid splitting a sentence (which happens when an
+  // estimated tick lands mid-sentence), snap every tick to the nearest sentence
+  // boundary in the slice, then drop ticks that collapse onto an earlier row.
+  // Numbers stay as approximate margin references; breaks fall only at sentence
+  // ends. Boundaries are positions after . ? ! (optionally a closing quote) + space.
+  function snapTicksToSentences(
+    text: string,
+    ticks: { n: number; real: boolean; off: number }[],
+  ): { n: number; real: boolean; off: number }[] {
+    if (!ticks.length) return ticks;
+    const bounds = [0];
+    const re = /[.?!]["'”’)\]]?\s+/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text))) bounds.push(m.index + m[0].length);
+    bounds.push(text.length);
+    const nearest = (off: number) => {
+      let best = bounds[0], bestD = Infinity;
+      for (const b of bounds) { const d = Math.abs(b - off); if (d < bestD) { bestD = d; best = b; } }
+      return best;
+    };
+    const out: { n: number; real: boolean; off: number }[] = [];
+    let lastOff = -1;
+    for (const t of ticks) {
+      const off = nearest(t.off);
+      if (off <= lastOff) continue; // collapsed into a row already begun — drop
+      out.push({ ...t, off });
+      lastOff = off;
+    }
+    return out;
+  }
 
   // Break an English slice into gutter rows at its Bekker ticks. Each row is the
   // prose from one tick to the next, labelled with that tick's Bekker line; a
@@ -95,14 +226,21 @@
     const allTicks = seg.english?.bekker ?? [];
     // English rows for the slice [a, b), with Bekker ticks rebased into it.
     const rowsFor = (a: number, b: number): EngRow[] => {
+      const slice = text.slice(a, b);
       const ticks = allTicks
         .filter(t => t.offset >= a && t.offset < b)
         .map(t => ({ n: t.n, real: t.real, off: t.offset - a }))
         .sort((x, y) => x.off - y.off);
-      return buildRows(text.slice(a, b), ticks);
+      return buildRows(slice, snapTicksToSentences(slice, ticks));
     };
+    // Ross slices for this column, paired to blocks: the continuation slice
+    // (a chapter begun in an earlier column) and one per chapter that starts here.
+    const rossPieces = seg.ross ?? [];
+    const rossCont = () => rossPieces.find(p => p.cont)?.text ?? rossPieces[0]?.text ?? '';
+    const rossFor = (chapter: string) => rossPieces.find(p => !p.cont && p.chapter === chapter)?.text ?? '';
+
     const starts = (seg.chapterStarts ?? []).slice().sort((a, b) => a.beforeLine - b.beforeLine);
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length) }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), ross: rossCont() }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -112,13 +250,13 @@
     const firstIdx = lineIdx(starts[0].beforeLine);
     // Lines/English before the first chapter start continue the previous chapter.
     if (firstIdx > 0 || starts[0].engOffset > 0) {
-      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), rows: rowsFor(0, starts[0].engOffset) });
+      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), rows: rowsFor(0, starts[0].engOffset), ross: rossCont() });
     }
     for (let i = 0; i < starts.length; i++) {
       const from = lineIdx(starts[i].beforeLine);
       const to = i + 1 < starts.length ? lineIdx(starts[i + 1].beforeLine) : greek.length;
       const engTo = i + 1 < starts.length ? starts[i + 1].engOffset : text.length;
-      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), rows: rowsFor(starts[i].engOffset, engTo) });
+      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), rows: rowsFor(starts[i].engOffset, engTo), ross: rossFor(starts[i].chapter) });
     }
     return blocks;
   }
@@ -147,7 +285,13 @@
     } else {
       const saved = (() => { try { return localStorage.getItem('ne-view'); } catch { return null; } })();
       if (saved === 'greek' || saved === 'english' || saved === 'both') view = saved;
+      // No saved choice: a phone defaults to English only (the bilingual columns
+      // are cramped on a narrow screen); desktop stays bilingual. The toggle —
+      // and any saved choice — overrides this on either.
+      else if (window.matchMedia('(max-width: 680px)').matches) view = 'english';
     }
+    const savedTrans = (() => { try { return localStorage.getItem('ne-trans'); } catch { return null; } })();
+    if (savedTrans === 'rackham' || savedTrans === 'ross' || savedTrans === 'compare') trans = savedTrans;
     try {
       const data = await fetchBook(bookNum);
       segments = data.segments;
@@ -155,7 +299,8 @@
       error = String(e);
     } finally {
       loading = false;
-      // After Svelte renders, scroll to the jumped-to line (loc) or URL hash.
+      // After Svelte renders, scroll to the jumped-to line (loc), a Bekker
+      // citation in the hash, or a plain element-id hash.
       const hash = window.location.hash.slice(1);
       setTimeout(() => {
         if (targetId) {
@@ -174,9 +319,22 @@
             });
             if (best) { el = best as HTMLElement; targetId = (best as HTMLElement).id; }
           }
-          if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+          if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        } else if (hash) {
+          const ref = parseBekker(hash);
+          if (ref) {
+            scrollToCitation(ref.column, ref.line);
+            lastCite = `${ref.column}${ref.line}`;
+            // Tint the cited line so a shared link makes the passage obvious.
+            targetId = `L${ref.column}-${ref.line}`;
+          } else {
+            document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         }
-        if (hash) document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Begin live URL tracking once the reader actually scrolls (programmatic
+        // jumps above are suppressed), so an opened #citation isn't overwritten.
+        window.addEventListener('scroll', onScrollArm, { passive: true });
+        window.addEventListener('resize', onResize);
       }, 0);
     }
   });
@@ -206,11 +364,23 @@
 {:else if error}
   <p style="padding:2rem;color:red">{error}</p>
 {:else}
-  <div class="reader-body view-{view}" role="main">
-    <div class="view-toggle" role="group" aria-label="Reading view">
-      <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
-      <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
-      <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
+  <div class="reader-body view-{view} trans-{trans}" role="main">
+    <div class="reader-controls">
+      {#if view !== 'greek'}
+        <label class="trans-picker">
+          <span class="trans-label">Translation</span>
+          <select bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+            <option value="rackham">Rackham (Loeb)</option>
+            <option value="ross">Ross (Oxford)</option>
+            <option value="compare">Compare both</option>
+          </select>
+        </label>
+      {/if}
+      <div class="view-toggle" role="group" aria-label="Reading view">
+        <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
+        <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
+        <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
+      </div>
     </div>
     {#each segments as seg (seg.id)}
       <div class="segment" id="col-{seg.column}">
@@ -244,17 +414,39 @@
             <!-- English column: prose laid out beside its Bekker-line gutter.
                  Real anchors (column start / ~line 20) are full weight; estimated
                  ticks are lighter/italic. -->
+            <!-- English column: Ross alone when selected, else Rackham (also the
+                 left English column in Compare). -->
             <div class="english-col">
-              {#if block.rows.length}
-                <div class="english-text">
-                  {#each block.rows as row}
-                    <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
-                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                    <div class="eng-seg">{@html highlightEng(row.text)}</div>
-                  {/each}
-                </div>
+              {#if trans === 'ross'}
+                {#if block.ross}
+                  <!-- Ross is chapter-anchored prose: no Bekker gutter. -->
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  <div class="english-text ross">{@html highlightEng(block.ross)}</div>
+                {/if}
+              {:else}
+                {#if trans === 'compare'}<div class="col-label">Rackham</div>{/if}
+                {#if block.rows.length}
+                  <div class="english-text">
+                    {#each block.rows as row}
+                      <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                    {/each}
+                  </div>
+                {/if}
               {/if}
             </div>
+
+            <!-- Third column: Ross beside Rackham in Compare (hidden in Greek-only). -->
+            {#if trans === 'compare' && view !== 'greek'}
+              <div class="ross-col">
+                <div class="col-label">Ross</div>
+                {#if block.ross}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  <div class="english-text ross">{@html highlightEng(block.ross)}</div>
+                {/if}
+              </div>
+            {/if}
           </div>
         {/each}
       </div>

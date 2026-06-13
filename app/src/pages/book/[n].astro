@@ -30,30 +30,48 @@ const chapters = allChapters[String(n)] ?? [];
 </head>
 <body>
   <header class="page-header">
-    <h1><a href="/" style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
-    <BekkerJump client:load />
-    <nav class="book-nav" aria-label="Navigation">
-      {Array.from({ length: 10 }, (_, i) => (
-        <a
-          href={`/book/${i + 1}`}
-          class={i + 1 === n ? 'current' : ''}
-          aria-current={i + 1 === n ? 'page' : undefined}
-        >
-          {['I','II','III','IV','V','VI','VII','VIII','IX','X'][i]}
-        </a>
-      ))}
-      <a href="/search" class="search-link">Search</a>
-      <a href="/attribution" class="search-link">Texts &amp; Licences</a>
-    </nav>
-    {chapters.length > 0 && (
-      <nav class="chapter-nav" aria-label={`Book ${bookLabel} chapters`}>
-        <span class="chapter-nav-label">Book {bookLabel} · Chapters</span>
-        {chapters.map((c) => (
-          <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.bekker}`}>{c.chapter}</a>
+    <div class="header-bar">
+      <h1><a href="/" style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
+      <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
+        <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
+      </button>
+    </div>
+    <div class="nav-panel" id="nav-panel">
+      <BekkerJump client:load />
+      <nav class="book-nav" aria-label="Navigation">
+        {Array.from({ length: 10 }, (_, i) => (
+          <a
+            href={`/book/${i + 1}`}
+            class={i + 1 === n ? 'current' : ''}
+            aria-current={i + 1 === n ? 'page' : undefined}
+          >
+            {['I','II','III','IV','V','VI','VII','VIII','IX','X'][i]}
+          </a>
         ))}
+        <a href="/search" class="search-link">Search</a>
+        <a href="/attribution" class="search-link">Texts &amp; Licences</a>
       </nav>
-    )}
+      {chapters.length > 0 && (
+        <nav class="chapter-nav" aria-label={`Book ${bookLabel} chapters`}>
+          <span class="chapter-nav-label">Book {bookLabel} · Chapters</span>
+          {chapters.map((c) => (
+            <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.bekker}`}>{c.chapter}</a>
+          ))}
+        </nav>
+      )}
+    </div>
   </header>
+
+  <script>
+    // Mobile only: the menu button shows/hides the nav panel. On desktop the
+    // panel is always visible (CSS), so the button is hidden and this is inert.
+    const header = document.querySelector('.page-header');
+    const toggle = header?.querySelector('.nav-toggle');
+    toggle?.addEventListener('click', () => {
+      const open = header!.classList.toggle('nav-open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+  </script>
 
   <Reader bookNum={n} client:load />
 </body>
