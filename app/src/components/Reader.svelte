@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fetchBook, type Segment, type GreekLine, type Token } from '../lib/data';
+  import { greekFold } from '../lib/search';
   import WordPopup from './WordPopup.svelte';
 
   export let bookNum: number = 1;
@@ -8,6 +9,30 @@
   let segments: Segment[] = [];
   let loading = true;
   let error = '';
+
+  // Search jump-in: highlight query terms + scroll to a line (?hlg=&hle=&loc=).
+  let hlGrkFolds: string[] = [];
+  let hlEngTerms: string[] = [];
+  let targetId: string | null = null;
+
+  function isHit(surface: string): boolean {
+    if (!hlGrkFolds.length) return false;
+    const f = greekFold(surface);
+    return f.length > 0 && hlGrkFolds.some(q => f.startsWith(q));
+  }
+  function esc(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function highlightEng(text: string): string {
+    if (!hlEngTerms.length) return esc(text);
+    let out = esc(text);
+    for (const t of hlEngTerms) {
+      const clean = t.replace(/[^a-z'*]/gi, '').replace(/\*+$/, '');
+      if (!clean) continue;
+      out = out.replace(new RegExp(`\\b(${clean}\\w*)\\b`, 'gi'), '<mark>$1</mark>');
+    }
+    return out;
+  }
 
   // A segment renders as one or more blocks split at chapter boundaries.
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
@@ -66,6 +91,15 @@
   let popup: { token: Token; anchor: { x: number; y: number } } | null = null;
 
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search);
+    hlGrkFolds = (params.get('hlg') ?? '').trim().split(/\s+/).filter(Boolean)
+      .map(t => greekFold(t.replace(/\*/g, ''))).filter(Boolean);
+    hlEngTerms = (params.get('hle') ?? '').trim().split(/\s+/).filter(Boolean);
+    const loc = params.get('loc');
+    if (loc) {
+      const [col, ln] = loc.split(':');
+      targetId = `L${col}-${ln}`;
+    }
     try {
       const data = await fetchBook(bookNum);
       segments = data.segments;
@@ -73,15 +107,15 @@
       error = String(e);
     } finally {
       loading = false;
-      // After Svelte renders the segments, scroll to the URL hash if present
-      // (browser already tried when the page loaded but the elements didn't exist yet)
+      // After Svelte renders, scroll to the jumped-to line (loc) or URL hash.
       const hash = window.location.hash.slice(1);
-      if (hash) {
-        // Use a microtask delay so Svelte finishes its DOM updates first
-        setTimeout(() => {
-          document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 0);
-      }
+      setTimeout(() => {
+        if (targetId) {
+          const el = document.getElementById(targetId);
+          if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+        }
+        if (hash) document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
     }
   });
 
@@ -128,11 +162,12 @@
             <!-- Greek column -->
             <div class="greek-col">
               {#each block.lines as line}
-                <div class="greek-line">
+                <div class="greek-line" id="L{seg.column}-{line.n}" class:target={targetId === `L${seg.column}-${line.n}`}>
                   <span class="line-num">{showLineNum(line.n)}</span>
                   <span class="line-text">{#each lineParts(line) as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
                         class="tok"
                         class:active={popup?.token === part.tok}
+                        class:hit={isHit(part.text)}
                         on:click={(e) => handleTokenClick(e, part.tok)}
                       >{part.text}</span>{:else}{part.text}{/if}{/each}</span>
                 </div>
@@ -142,7 +177,8 @@
             <!-- English column -->
             <div class="english-col">
               {#if block.english}
-                <p>{block.english}</p>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                <p>{@html highlightEng(block.english)}</p>
               {/if}
             </div>
           </div>

@@ -222,6 +222,18 @@ body {
 }
 .tok:hover  { background: var(--greek-hover); }
 .tok.active { background: var(--greek-active); }
+.tok.hit    { background: #ffe082; }
+
+/* Jumped-to line + highlighted terms from a search result */
+.greek-line.target {
+  background: #fff6d6;
+  border-radius: 3px;
+}
+.english-col mark {
+  background: #ffe082;
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
 
 /* ── English chunk ────────────────────────────────────────────────── */
 

@@ -177,22 +177,29 @@
         g.instances.push(inst);
       };
 
+      // Carry the queries so the reader can highlight them; loc scrolls to the line.
+      const qs = new URLSearchParams();
+      if (grkQuery.trim()) qs.set('hlg', grkQuery.trim());
+      if (engQuery.trim()) qs.set('hle', engQuery.trim());
+      const base = qs.toString();
+      const jumpFor = (book: number, column: string, line: number) =>
+        `/book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+
       for (const r of results) {
         const seg = segMap.get(r.meta.id);
         const lookup = lookups.get(r.meta.book);
         if (!seg || !lookup) continue;
-        const jump = `/book/${r.meta.book}#col-${seg.column}`;
         if (r.grkMatch) {
           for (const pos of r.grkPositions) {
             const line = lineOfPosition(seg, pos);
             const ch = lookup(seg.column, line);
-            add(r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jump });
+            add(r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.meta.book, seg.column, line) });
           }
         }
         if (r.engMatch) {
           const line = englishLine(seg, engTerms);
           const ch = lookup(seg.column, line);
-          add(r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, engTerms), jumpUrl: jump });
+          add(r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, engTerms), jumpUrl: jumpFor(r.meta.book, seg.column, line) });
         }
       }
 
