@@ -140,6 +140,7 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path) -> list[dic
                         "text": eng["text"],
                         "notes": eng["notes"],
                         "markers": eng["markers"],
+                        "bekker": eng.get("bekker", []),
                     }
                     if eng
                     else None

@@ -19,6 +19,9 @@ export interface EnglishChunk {
   text: string;
   notes: { offset: number; text: string }[];
   markers: { kind: string; n: string; offset: number }[];
+  // Bekker line ticks for the English gutter; `real` = a true TEI milestone
+  // (column start / ~line 20), otherwise a proportional estimate.
+  bekker?: { n: number; offset: number; real: boolean }[];
 }
 
 export interface ChapterStart {

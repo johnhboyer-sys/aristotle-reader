@@ -304,9 +304,34 @@ body {
   padding: 0 0.1em;
 }
 
-/* ── English chunk ────────────────────────────────────────────────── */
+/* ── English chunk + Bekker gutter ────────────────────────────────── */
 
-.english-col p { margin: 0; }
+/* Two columns: a narrow Bekker-line gutter (mirroring the Greek line numbers)
+   and the prose. Each tick segment is one grid row; row-gap 0 keeps the prose
+   reading as one continuous passage with numbers down the left. */
+.english-text {
+  display: grid;
+  grid-template-columns: 1.9rem 1fr;
+  column-gap: 0.7rem;
+  row-gap: 0;
+  align-items: baseline;
+}
+.english-text p { margin: 0; }
+.eng-num {
+  font-family: var(--font-ui);
+  font-size: var(--fs-linenum);
+  color: var(--text-light);
+  text-align: right;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Estimated (interpolated) ticks: lighter + italic so they read as approximate,
+   while real TEI anchors (column start / ~line 20) stay full weight. */
+.eng-num.approx {
+  font-style: italic;
+  opacity: 0.5;
+}
+.eng-seg { margin: 0; }
 
 /* ── Word popup ───────────────────────────────────────────────────── */
 

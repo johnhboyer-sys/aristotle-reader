@@ -36,7 +36,24 @@
 
   // A segment renders as one or more blocks split at chapter boundaries.
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
-  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; english: string; }
+  // `rows` lay the English prose out beside its Bekker-line gutter (see below).
+  interface EngRow { n: number | null; real: boolean; text: string; }
+  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; rows: EngRow[]; }
+
+  // Break an English slice into gutter rows at its Bekker ticks. Each row is the
+  // prose from one tick to the next, labelled with that tick's Bekker line; a
+  // leading numberless row holds any text before the first tick.
+  function buildRows(text: string, ticks: { n: number; real: boolean; off: number }[]): EngRow[] {
+    if (!ticks.length) return text ? [{ n: null, real: false, text }] : [];
+    const rows: EngRow[] = [];
+    if (ticks[0].off > 0) rows.push({ n: null, real: false, text: text.slice(0, ticks[0].off) });
+    for (let i = 0; i < ticks.length; i++) {
+      const off = Math.max(0, Math.min(ticks[i].off, text.length));
+      const end = i + 1 < ticks.length ? Math.max(0, Math.min(ticks[i + 1].off, text.length)) : text.length;
+      rows.push({ n: ticks[i].n, real: ticks[i].real, text: text.slice(off, end) });
+    }
+    return rows;
+  }
 
   // Split a line into clickable words and the verbatim text between them.
   // The tokens hold bare words (for the popup lookup); the line `text` keeps
@@ -65,8 +82,17 @@
   function splitSegment(seg: Segment): Block[] {
     const greek = seg.greek;
     const text = seg.english?.text ?? '';
+    const allTicks = seg.english?.bekker ?? [];
+    // English rows for the slice [a, b), with Bekker ticks rebased into it.
+    const rowsFor = (a: number, b: number): EngRow[] => {
+      const ticks = allTicks
+        .filter(t => t.offset >= a && t.offset < b)
+        .map(t => ({ n: t.n, real: t.real, off: t.offset - a }))
+        .sort((x, y) => x.off - y.off);
+      return buildRows(text.slice(a, b), ticks);
+    };
     const starts = (seg.chapterStarts ?? []).slice().sort((a, b) => a.beforeLine - b.beforeLine);
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, english: text }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length) }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -76,13 +102,13 @@
     const firstIdx = lineIdx(starts[0].beforeLine);
     // Lines/English before the first chapter start continue the previous chapter.
     if (firstIdx > 0 || starts[0].engOffset > 0) {
-      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), english: text.slice(0, starts[0].engOffset) });
+      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), rows: rowsFor(0, starts[0].engOffset) });
     }
     for (let i = 0; i < starts.length; i++) {
       const from = lineIdx(starts[i].beforeLine);
       const to = i + 1 < starts.length ? lineIdx(starts[i + 1].beforeLine) : greek.length;
       const engTo = i + 1 < starts.length ? starts[i + 1].engOffset : text.length;
-      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), english: text.slice(starts[i].engOffset, engTo) });
+      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), rows: rowsFor(starts[i].engOffset, engTo) });
     }
     return blocks;
   }
@@ -192,11 +218,18 @@
               {/each}
             </div>
 
-            <!-- English column -->
+            <!-- English column: prose laid out beside its Bekker-line gutter.
+                 Real anchors (column start / ~line 20) are full weight; estimated
+                 ticks are lighter/italic. -->
             <div class="english-col">
-              {#if block.english}
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                <p>{@html highlightEng(block.english)}</p>
+              {#if block.rows.length}
+                <div class="english-text">
+                  {#each block.rows as row}
+                    <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                  {/each}
+                </div>
               {/if}
             </div>
           </div>

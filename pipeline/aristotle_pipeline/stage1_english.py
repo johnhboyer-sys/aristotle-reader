@@ -165,6 +165,65 @@ def _interp_line(line_ms, off, last_line, text_len):
     return pts[0][0] if pts and off < pts[0][1] else last_line
 
 
+def _interp_offset(pts, target):
+    """Char offset for a Bekker line `target`, piecewise-linear between known
+    (line, offset) points. Inverse of _interp_line; used to place gutter ticks."""
+    for (l0, o0), (l1, o1) in zip(pts, pts[1:]):
+        if l0 <= target <= l1 and l1 > l0:
+            return o0 + (target - l0) / (l1 - l0) * (o1 - o0)
+    return pts[0][1] if target < pts[0][0] else pts[-1][1]
+
+
+def _snap_word(text: str, off: int) -> int:
+    """Snap a char offset to the nearest word start, so an estimated tick never
+    splits a word (and the highlighter never sees a half word)."""
+    off = max(0, min(off, len(text)))
+    if off == 0 or off >= len(text) or text[off] == " ":
+        return off + 1 if 0 < off < len(text) and text[off] == " " else off
+    left = text.rfind(" ", 0, off)
+    right = text.find(" ", off)
+    cands = [c + 1 for c in (left, right) if c != -1]
+    return min(cands, key=lambda c: abs(c - off)) if cands else off
+
+
+def add_bekker_gutter(english: dict, spine: dict) -> None:
+    """Attach to each English chunk a `bekker` list of {n, offset, real}: Bekker
+    line ticks at the Greek's cadence (line 1, then every 5th line) down the
+    English prose. Real anchors are the TEI line milestones (column start + the
+    ~line-20 mark); intervening ticks are proportional estimates (real=False),
+    word-snapped. The reader renders them as a left gutter beside the prose."""
+    line_ms = english.get("_line_ms", {})
+    greek_by_id = {s["id"]: s["lines"] for s in spine["segments"]}
+    for c in english["chunks"]:
+        greek = greek_by_id.get(c["id"])
+        if not greek:
+            continue
+        text, tlen = c["text"], len(c["text"])
+        first_line, last = greek[0]["n"], greek[-1]["n"]
+        reals = {int(n): off for n, off in line_ms.get(c["id"], [])}
+        reals.setdefault(first_line, 0)  # the column starts at its first Bekker line
+        pts = sorted(set(list(reals.items()) + [(last, tlen)]))
+        # Cadence mirrors the Greek line numbers: multiples of 5 in the column,
+        # plus line 1 at the very top when the column begins at line 1.
+        start5 = ((first_line + 4) // 5) * 5
+        targets = list(range(start5, last + 1, 5))
+        if first_line <= 1 and 1 not in targets:
+            targets.insert(0, 1)
+        ticks, seen = [], set()
+        for t in targets:
+            if t in reals:
+                off, real = reals[t], True
+            else:
+                off, real = _snap_word(text, round(_interp_offset(pts, t))), False
+            off = max(0, min(off, tlen))
+            if off in seen:
+                continue
+            seen.add(off)
+            ticks.append({"n": t, "offset": off, "real": real})
+        ticks.sort(key=lambda x: x["offset"])
+        c["bekker"] = ticks
+
+
 def _snap_to_sentence(greek_lines, target_line):
     """The Greek line whose sentence-start sits nearest `target_line`. Chapters
     always begin a new sentence, so this pins the heading to the true incipit."""
@@ -258,6 +317,7 @@ def build_alignment(spine: dict, english: dict) -> dict:
 
 def run(manifest: Manifest, spine: dict) -> tuple[Path, Path]:
     english = parse_english(manifest.perseus_eng(), manifest)
+    add_bekker_gutter(english, spine)        # uses _line_ms before refine pops it
     refine_chapter_lines(english, spine)
     out_dir = BUILD_DIR / "stage1"
     out_dir.mkdir(parents=True, exist_ok=True)
