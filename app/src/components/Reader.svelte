@@ -15,6 +15,16 @@
   let hlEngTerms: string[] = [];
   let targetId: string | null = null;
 
+  // Reading view: bilingual (default), Greek only, or English only. Persisted
+  // per reader in localStorage; a citation/search jump forces 'both' so the
+  // targeted Greek line is visible.
+  type View = 'both' | 'greek' | 'english';
+  let view: View = 'both';
+  function setView(v: View) {
+    view = v;
+    try { localStorage.setItem('ne-view', v); } catch {}
+  }
+
   function isHit(surface: string): boolean {
     if (!hlGrkFolds.length) return false;
     const f = greekFold(surface);
@@ -130,6 +140,14 @@
       locLine = Number(ln);
       targetId = `L${col}-${ln}`;
     }
+    // Restore saved view, but a jump-in (loc/highlight) forces bilingual so the
+    // target Greek line is on screen.
+    if (loc || hlGrkFolds.length) {
+      view = 'both';
+    } else {
+      const saved = (() => { try { return localStorage.getItem('ne-view'); } catch { return null; } })();
+      if (saved === 'greek' || saved === 'english' || saved === 'both') view = saved;
+    }
     try {
       const data = await fetchBook(bookNum);
       segments = data.segments;
@@ -188,7 +206,12 @@
 {:else if error}
   <p style="padding:2rem;color:red">{error}</p>
 {:else}
-  <div class="reader-body" role="main">
+  <div class="reader-body view-{view}" role="main">
+    <div class="view-toggle" role="group" aria-label="Reading view">
+      <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
+      <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
+      <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
+    </div>
     {#each segments as seg (seg.id)}
       <div class="segment" id="col-{seg.column}">
         <div class="seg-ref">

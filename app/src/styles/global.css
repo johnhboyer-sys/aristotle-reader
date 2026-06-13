@@ -188,6 +188,42 @@ body {
   padding: 1.5rem 1rem 4rem;
 }
 
+/* ── Reading-view toggle (bilingual / Greek only / English only) ──── */
+
+.view-toggle {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
+  margin-bottom: 1.5rem;
+}
+.view-toggle button {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0.22rem 0.7rem;
+  border: 1px solid var(--border);
+  background: var(--col-bg);
+  color: var(--text-mid);
+}
+.view-toggle button + button { border-left: none; }
+.view-toggle button:first-child { border-radius: 4px 0 0 4px; }
+.view-toggle button:last-child { border-radius: 0 4px 4px 0; }
+.view-toggle button:hover { background: var(--border); }
+.view-toggle button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Monolingual: hide one column and let the other read full-width, centred at a
+   comfortable measure (the Bekker column ref and gutter are kept). */
+.reader-body.view-english .greek-col,
+.reader-body.view-greek .english-col { display: none; }
+.reader-body.view-english .seg-row,
+.reader-body.view-greek .seg-row { grid-template-columns: 1fr; }
+.reader-body.view-english .english-col,
+.reader-body.view-greek .greek-col { max-width: 42rem; margin: 0 auto; }
+
 /* ── Column segments ──────────────────────────────────────────────── */
 
 .segment {
