@@ -50,7 +50,8 @@ body {
   padding: 0.6rem 1.5rem;
   display: flex;
   align-items: baseline;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
 }
 .page-header h1 {
   font-family: var(--font-ui);
@@ -80,6 +81,38 @@ body {
   color: #fff;
 }
 
+.page-header .chapter-nav {
+  flex-basis: 100%;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.45rem;
+}
+.chapter-nav-label {
+  color: var(--text-light);
+  font-weight: 600;
+  letter-spacing: .03em;
+  margin-right: 0.4rem;
+}
+.page-header .chapter-nav a {
+  color: var(--text-mid);
+  text-decoration: none;
+  min-width: 1.4rem;
+  text-align: center;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.page-header .chapter-nav a:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 .reader-body {
   max-width: 1080px;
   margin: 0 auto;
@@ -89,17 +122,20 @@ body {
 /* ── Column segments ──────────────────────────────────────────────── */
 
 .segment {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto 1fr;
-  gap: 0 2rem;
   margin-bottom: 2.5rem;
   border-top: 1px solid var(--border);
   padding-top: 0.8rem;
+  scroll-margin-top: 6rem;
 }
 
+.seg-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 2rem;
+}
+.seg-row + .seg-row { margin-top: 0.4rem; }
+
 .seg-ref {
-  grid-column: 1 / -1;
   font-family: var(--font-ui);
   font-size: var(--fs-ref);
   color: var(--text-light);
@@ -107,6 +143,30 @@ body {
   letter-spacing: .06em;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
+}
+
+/* ── Chapter headings ─────────────────────────────────────────────── */
+
+.chapter-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.4rem 0 0.9rem;
+  scroll-margin-top: 6rem;
+}
+.chapter-head::after {
+  content: "";
+  flex: 1;
+  border-top: 2px solid var(--accent, #8a5a2b);
+  opacity: 0.35;
+}
+.chapter-label {
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--accent, #8a5a2b);
+  text-transform: uppercase;
 }
 
 .greek-col {
@@ -320,7 +380,7 @@ body {
     padding: 1rem 0.75rem 3rem;
   }
 
-  .segment {
+  .seg-row {
     grid-template-columns: 1fr;
     gap: 0;
   }

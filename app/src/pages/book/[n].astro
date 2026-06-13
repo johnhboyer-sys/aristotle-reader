@@ -1,4 +1,5 @@
 ---
+import { readFileSync } from 'node:fs';
 import Reader from '../../components/Reader.svelte';
 import '../../styles/global.css';
 
@@ -9,6 +10,12 @@ export function getStaticPaths() {
 const n = Number(Astro.params.n);
 const romanNumerals = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 const bookLabel = romanNumerals[n - 1] ?? String(n);
+
+interface ChapterRef { chapter: string; column: string; line: string; }
+const allChapters: Record<string, ChapterRef[]> = JSON.parse(
+  readFileSync('public/data/chapters.json', 'utf-8'),
+);
+const chapters = allChapters[String(n)] ?? [];
 ---
 <html lang="en">
 <head>
@@ -36,6 +43,14 @@ const bookLabel = romanNumerals[n - 1] ?? String(n);
       <a href="/search" class="search-link">Search</a>
       <a href="/attribution" class="search-link">Texts &amp; Licences</a>
     </nav>
+    {chapters.length > 0 && (
+      <nav class="chapter-nav" aria-label={`Book ${bookLabel} chapters`}>
+        <span class="chapter-nav-label">Book {bookLabel} · Chapters</span>
+        {chapters.map((c) => (
+          <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.column}`}>{c.chapter}</a>
+        ))}
+      </nav>
+    )}
   </header>
 
   <Reader bookNum={n} client:load />

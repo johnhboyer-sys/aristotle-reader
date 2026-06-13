@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fetchBook, type Segment, type Token } from '../lib/data';
+  import { fetchBook, type Segment, type GreekLine, type Token } from '../lib/data';
   import WordPopup from './WordPopup.svelte';
 
   export let bookNum: number = 1;
@@ -8,6 +8,35 @@
   let segments: Segment[] = [];
   let loading = true;
   let error = '';
+
+  // A segment renders as one or more blocks split at chapter boundaries.
+  // `chapter` is non-null on the block that begins a new chapter (heading shown).
+  interface Block { chapter: string | null; lines: GreekLine[]; english: string; }
+
+  function splitSegment(seg: Segment): Block[] {
+    const greek = seg.greek;
+    const text = seg.english?.text ?? '';
+    const starts = (seg.chapterStarts ?? []).slice().sort((a, b) => a.beforeLine - b.beforeLine);
+    if (!starts.length) return [{ chapter: null, lines: greek, english: text }];
+
+    const lineIdx = (beforeLine: number) => {
+      const i = greek.findIndex(l => l.n >= beforeLine);
+      return i === -1 ? greek.length : i;
+    };
+    const blocks: Block[] = [];
+    const firstIdx = lineIdx(starts[0].beforeLine);
+    // Lines/English before the first chapter start continue the previous chapter.
+    if (firstIdx > 0 || starts[0].engOffset > 0) {
+      blocks.push({ chapter: null, lines: greek.slice(0, firstIdx), english: text.slice(0, starts[0].engOffset) });
+    }
+    for (let i = 0; i < starts.length; i++) {
+      const from = lineIdx(starts[i].beforeLine);
+      const to = i + 1 < starts.length ? lineIdx(starts[i + 1].beforeLine) : greek.length;
+      const engTo = i + 1 < starts.length ? starts[i + 1].engOffset : text.length;
+      blocks.push({ chapter: starts[i].chapter, lines: greek.slice(from, to), english: text.slice(starts[i].engOffset, engTo) });
+    }
+    return blocks;
+  }
 
   // Active popup state
   let popup: { token: Token; anchor: { x: number; y: number } } | null = null;
@@ -64,32 +93,41 @@
           {seg.column}
         </div>
 
-        <!-- Greek column -->
-        <div class="greek-col">
-          {#each seg.greek as line}
-            <div class="greek-line">
-              <span class="line-num">{showLineNum(line.n)}</span>
-              <span class="line-text">
-                {#each line.tokens as tok}
-                  <!-- svelte-ignore a11y-click-events-have-key-events -->
-                  <!-- svelte-ignore a11y-no-static-element-interactions -->
-                  <span
-                    class="tok"
-                    class:active={popup?.token === tok}
-                    on:click={(e) => handleTokenClick(e, tok)}
-                  >{tok.t}</span>
-                {/each}
-              </span>
+        {#each splitSegment(seg) as block}
+          {#if block.chapter}
+            <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
+              <span class="chapter-label">Chapter {block.chapter}</span>
             </div>
-          {/each}
-        </div>
-
-        <!-- English column -->
-        <div class="english-col">
-          {#if seg.english}
-            <p>{seg.english.text}</p>
           {/if}
-        </div>
+          <div class="seg-row">
+            <!-- Greek column -->
+            <div class="greek-col">
+              {#each block.lines as line}
+                <div class="greek-line">
+                  <span class="line-num">{showLineNum(line.n)}</span>
+                  <span class="line-text">
+                    {#each line.tokens as tok}
+                      <!-- svelte-ignore a11y-click-events-have-key-events -->
+                      <!-- svelte-ignore a11y-no-static-element-interactions -->
+                      <span
+                        class="tok"
+                        class:active={popup?.token === tok}
+                        on:click={(e) => handleTokenClick(e, tok)}
+                      >{tok.t}</span>
+                    {/each}
+                  </span>
+                </div>
+              {/each}
+            </div>
+
+            <!-- English column -->
+            <div class="english-col">
+              {#if block.english}
+                <p>{block.english}</p>
+              {/if}
+            </div>
+          </div>
+        {/each}
       </div>
     {/each}
   </div>

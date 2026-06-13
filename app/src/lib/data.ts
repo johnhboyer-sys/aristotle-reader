@@ -21,11 +21,24 @@ export interface EnglishChunk {
   markers: { kind: string; n: string; offset: number }[];
 }
 
+export interface ChapterStart {
+  chapter: string;
+  beforeLine: number;  // insert the heading before the Greek line with this n
+  engOffset: number;   // char offset in the English chunk where the chapter begins
+}
+
 export interface Segment {
   id: string;
   column: string;
   greek: GreekLine[];
   english: EnglishChunk | null;
+  chapterStarts?: ChapterStart[];
+}
+
+export interface ChapterRef {
+  chapter: string;
+  column: string;
+  line: string;
 }
 
 export interface BookData {
@@ -61,6 +74,16 @@ export function fetchBook(n: number): Promise<BookData> {
   });
   _bookCache.set(n, p);
   return p;
+}
+
+const _chapters: { data: Record<string, ChapterRef[]> | null } = { data: null };
+
+export async function fetchChapters(): Promise<Record<string, ChapterRef[]>> {
+  if (_chapters.data) return _chapters.data;
+  const r = await fetch(`${BASE}/chapters.json`);
+  if (!r.ok) throw new Error(`chapters: ${r.status}`);
+  _chapters.data = await r.json();
+  return _chapters.data!;
 }
 
 export async function fetchAnalyses(): Promise<Record<string, Analysis[]>> {

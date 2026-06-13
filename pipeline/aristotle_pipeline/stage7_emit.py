@@ -27,18 +27,55 @@ def _load(rel: str):
     return json.loads((BUILD_DIR / rel).read_text(encoding="utf-8"))
 
 
+def _chapter_starts(seg_column, line_ns, eng, chapters_in_col) -> list[dict]:
+    """For each chapter starting in this Bekker column, where to break the
+    reader. The chapter boundary is the English section marker's char offset;
+    the matching Greek line is found proportionally (offset / chunk length ->
+    line index), which tracks the actual incipit within ~1 line and handles
+    mid-column book starts (offset 0 -> the segment's first line, e.g. 14)."""
+    eng_text = eng["text"] if eng else ""
+    eng_len = max(1, len(eng_text))
+    section_offset = {}
+    if eng:
+        for m in eng["markers"]:
+            if m["kind"] == "section":
+                section_offset.setdefault(m["n"], m["offset"])
+    starts = []
+    for ch in chapters_in_col:
+        off = section_offset.get(ch["chapter"], 0)
+        if line_ns:
+            idx = min(len(line_ns) - 1, int(off / eng_len * len(line_ns)))
+            before = line_ns[idx]
+        else:
+            before = 1
+        starts.append(
+            {"chapter": ch["chapter"], "beforeLine": before, "engOffset": off}
+        )
+    starts.sort(key=lambda s: s["beforeLine"])
+    return starts
+
+
 def emit_books(spine, tokens_doc, english, out_dir: Path) -> list[dict]:
     tokens_by_id = {s["id"]: s for s in tokens_doc["segments"]}
     english_by_id = {c["id"]: c for c in english["chunks"]}
+    chapters_by_col: dict[tuple, list[dict]] = defaultdict(list)
+    for ch in english.get("chapters", []):
+        chapters_by_col[(ch["book"], ch["column"])].append(ch)
     by_book: dict[int, list[dict]] = defaultdict(list)
     for seg in spine["segments"]:
         tok_seg = tokens_by_id[seg["id"]]
         tok_lines = {l["n"]: l["tokens"] for l in tok_seg["lines"]}
         eng = english_by_id.get(seg["id"])
+        line_ns = [line["n"] for line in seg["lines"]]
+        chapter_starts = _chapter_starts(
+            seg["column"], line_ns, eng,
+            chapters_by_col.get((seg["book"], seg["column"]), []),
+        )
         by_book[seg["book"]].append(
             {
                 "id": seg["id"],
                 "column": seg["column"],
+                **({"chapterStarts": chapter_starts} if chapter_starts else {}),
                 "greek": [
                     {
                         "n": line["n"],
@@ -109,6 +146,16 @@ def run(manifest: Manifest) -> Path:
 
     book_stats = emit_books(spine, tokens_doc, english, out_dir)
     analyses_stats = emit_analyses(out_dir)
+
+    # Per-book ordered chapter list for navigation (Work → Book → Chapter).
+    chapters_by_book: dict[str, list[dict]] = defaultdict(list)
+    for ch in english.get("chapters", []):
+        chapters_by_book[str(ch["book"])].append(
+            {"chapter": ch["chapter"], "column": ch["column"], "line": ch["line"]}
+        )
+    (out_dir / "chapters.json").write_text(
+        json.dumps(chapters_by_book, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
 
     for shard in sorted((BUILD_DIR / "stage5" / "lsj").glob("*.json")):
         shutil.copy(shard, out_dir / "lsj" / shard.name)

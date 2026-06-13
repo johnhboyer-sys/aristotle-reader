@@ -35,8 +35,16 @@ class _Walker:
         self.manifest = manifest
         self.book: int | None = None
         self.column: str = manifest.first_column
+        self.line: str | None = None
         self.chunks: list[dict] = []
         self._by_key: dict[tuple, dict] = {}
+        # Chapter starts as (book, chapter) -> {column, line}. A chapter's start
+        # Bekker reference is the running (page, line) when its <div subtype=
+        # "section"> opens — EXCEPT a book's first chapter, whose exact start
+        # line only appears at the next line milestone inside it (e.g. 1103a14).
+        self.chapters: list[dict] = []
+        self._book_first_section = False
+        self._pending_first: tuple | None = None
 
     def _chunk(self) -> dict:
         key = (self.book, self.column)
@@ -94,15 +102,38 @@ class _Walker:
             self.add_text(el.tail)
             return
         if tag == "milestone":
-            if el.get("unit") == "page" and el.get("resp") == "Bekker":
-                self.column = el.get("n")
+            if el.get("resp") == "Bekker":
+                if el.get("unit") == "page":
+                    self.column = el.get("n")
+                elif el.get("unit") == "line":
+                    self.line = el.get("n")
+                    if self._pending_first is not None:
+                        book, chap = self._pending_first
+                        self.chapters.append(
+                            {"book": book, "chapter": chap,
+                             "column": self.column, "line": self.line}
+                        )
+                        self._pending_first = None
             self.add_text(el.tail)
             return
         if tag == "div":
             subtype = el.get("subtype")
             if subtype == "book":
                 self.book = int(el.get("n"))
-            elif subtype in ("section", "subsection"):
+                self._book_first_section = True
+            elif subtype == "section":
+                chap = el.get("n")
+                if self._book_first_section:
+                    # Defer to the next line milestone for the exact start line.
+                    self._pending_first = (self.book, chap)
+                    self._book_first_section = False
+                else:
+                    self.chapters.append(
+                        {"book": self.book, "chapter": chap,
+                         "column": self.column, "line": self.line}
+                    )
+                self.add_marker(subtype, chap)
+            elif subtype == "subsection":
                 self.add_marker(subtype, el.get("n"))
         self.add_text(el.text)
         for child in el:
@@ -125,6 +156,7 @@ def parse_english(xml_path: Path, manifest: Manifest) -> dict:
         "source": xml_path.name,
         "translation": manifest.data["work"]["english_translation"],
         "chunks": chunks,
+        "chapters": walker.chapters,
     }
 
 
