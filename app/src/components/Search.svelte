@@ -9,8 +9,63 @@
   let loading = false;
   let searched = false;
   let error = '';
+  let showHelp = false;
 
   const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+
+  // Beta Code reference for the "How to type Greek" chart. Keys are the same
+  // letters the search index uses, so anything typed here matches directly.
+  const BETA_LETTERS: { beta: string; greek: string; name: string }[] = [
+    { beta: 'a', greek: 'α', name: 'alpha' },
+    { beta: 'b', greek: 'β', name: 'beta' },
+    { beta: 'g', greek: 'γ', name: 'gamma' },
+    { beta: 'd', greek: 'δ', name: 'delta' },
+    { beta: 'e', greek: 'ε', name: 'epsilon' },
+    { beta: 'z', greek: 'ζ', name: 'zeta' },
+    { beta: 'h', greek: 'η', name: 'eta' },
+    { beta: 'q', greek: 'θ', name: 'theta' },
+    { beta: 'i', greek: 'ι', name: 'iota' },
+    { beta: 'k', greek: 'κ', name: 'kappa' },
+    { beta: 'l', greek: 'λ', name: 'lambda' },
+    { beta: 'm', greek: 'μ', name: 'mu' },
+    { beta: 'n', greek: 'ν', name: 'nu' },
+    { beta: 'c', greek: 'ξ', name: 'xi' },
+    { beta: 'o', greek: 'ο', name: 'omicron' },
+    { beta: 'p', greek: 'π', name: 'pi' },
+    { beta: 'r', greek: 'ρ', name: 'rho' },
+    { beta: 's', greek: 'σ / ς', name: 'sigma' },
+    { beta: 't', greek: 'τ', name: 'tau' },
+    { beta: 'u', greek: 'υ', name: 'upsilon' },
+    { beta: 'f', greek: 'φ', name: 'phi' },
+    { beta: 'x', greek: 'χ', name: 'chi' },
+    { beta: 'y', greek: 'ψ', name: 'psi' },
+    { beta: 'w', greek: 'ω', name: 'omega' },
+  ];
+
+  // Diacritics are typed AFTER the vowel. They're stripped before matching,
+  // so they're optional — but they show how full Beta Code is written.
+  const BETA_MARKS: { beta: string; example: string; name: string }[] = [
+    { beta: ')', example: 'a) → ἀ', name: 'smooth breathing' },
+    { beta: '(', example: 'a( → ἁ', name: 'rough breathing' },
+    { beta: '/', example: 'a/ → ά', name: 'acute accent' },
+    { beta: '\\', example: 'a\\ → ὰ', name: 'grave accent' },
+    { beta: '=', example: 'a= → ᾶ', name: 'circumflex' },
+    { beta: '|', example: 'a| → ᾳ', name: 'iota subscript' },
+    { beta: '+', example: 'i+ → ϊ', name: 'diaeresis' },
+  ];
+
+  const BETA_EXAMPLES: { beta: string; greek: string }[] = [
+    { beta: 'a)reth/', greek: 'ἀρετή' },
+    { beta: 'lo/gos', greek: 'λόγος' },
+    { beta: 'yuxh/', greek: 'ψυχή' },
+    { beta: 'h(donh/', greek: 'ἡδονή' },
+    { beta: 'eu)daimoni/a', greek: 'εὐδαιμονία' },
+    { beta: 'fron*', greek: 'φρόν… (wildcard)' },
+  ];
+
+  function onHelpKey(e: KeyboardEvent) {
+    if (e.key === 'Escape') showHelp = false;
+  }
 
   async function doSearch(e?: Event) {
     e?.preventDefault();
@@ -74,6 +129,8 @@
   }
 </script>
 
+<svelte:window on:keydown={onHelpKey} />
+
 <div class="search-page">
   <form class="search-form" on:submit={doSearch} novalidate>
 
@@ -83,7 +140,7 @@
         id="grk-input"
         class="query-input greek-input"
         type="search"
-        placeholder="τέχνη, φρόνησις*, …"
+        placeholder="τέχνη or texnh, fronhsis*, …"
         bind:value={grkQuery}
         on:keydown={onEnter}
         autocomplete="off"
@@ -91,6 +148,9 @@
         autocapitalize="none"
         spellcheck="false"
       />
+      <button type="button" class="help-btn" on:click={() => (showHelp = true)} aria-haspopup="dialog" title="How to type Greek">
+        ⌨ Type Greek
+      </button>
     </div>
 
     <div class="query-row">
@@ -131,9 +191,63 @@
     </div>
 
     <p class="search-hint">
-      Use <code>*</code> for a wildcard on Greek lemmata: <code>φρον*</code> matches all forms of φρόνησις, φρόνιμος, etc.
+      Type Greek in Greek letters or <button type="button" class="link-btn" on:click={() => (showHelp = true)}>Beta Code</button>
+      (<code>texnh</code> = τέχνη). Use <code>*</code> for a wildcard: <code>fron*</code> matches φρόνησις, φρόνιμος, etc.
     </p>
   </form>
+
+  {#if showHelp}
+    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+    <div class="help-backdrop" on:click={() => (showHelp = false)}>
+      <div
+        class="help-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="How to type Greek"
+        on:click|stopPropagation
+      >
+        <div class="help-head">
+          <h2>How to type Greek</h2>
+          <button type="button" class="help-close" on:click={() => (showHelp = false)} aria-label="Close">×</button>
+        </div>
+
+        <p class="help-intro">
+          The Greek box accepts Greek letters <em>or</em> <strong>Beta Code</strong> — a plain-ASCII
+          transliteration. Each Greek letter is one Latin key:
+        </p>
+
+        <div class="beta-grid">
+          {#each BETA_LETTERS as L}
+            <div class="beta-cell">
+              <span class="beta-key">{L.beta}</span>
+              <span class="beta-grk">{L.greek}</span>
+              <span class="beta-name">{L.name}</span>
+            </div>
+          {/each}
+        </div>
+
+        <h3>Accents &amp; breathings <span class="help-note">(optional — ignored when matching)</span></h3>
+        <p class="help-sub">Type the mark right after the vowel:</p>
+        <ul class="mark-list">
+          {#each BETA_MARKS as M}
+            <li><span class="beta-key">{M.beta}</span> <span class="mark-ex">{M.example}</span> <span class="beta-name">{M.name}</span></li>
+          {/each}
+        </ul>
+
+        <h3>Examples</h3>
+        <ul class="example-list">
+          {#each BETA_EXAMPLES as E}
+            <li><code>{E.beta}</code> <span class="ex-arrow">→</span> <span class="ex-grk">{E.greek}</span></li>
+          {/each}
+        </ul>
+
+        <p class="help-foot">
+          Long vowels are distinct: <code>h</code> = η (not <code>e</code> = ε), <code>w</code> = ω (not <code>o</code> = ο).
+          Type them exactly. Accents and breathings may be included or left off.
+        </p>
+      </div>
+    </div>
+  {/if}
 
   {#if error}
     <p class="search-error">{error}</p>
@@ -279,11 +393,179 @@
     color: var(--text-light);
     margin-top: -0.25rem;
   }
-  .search-hint code {
+  .search-hint code,
+  .help-modal code {
     background: var(--border);
     border-radius: 2px;
     padding: 0 0.25em;
     font-size: 0.85em;
+  }
+
+  .help-btn {
+    flex-shrink: 0;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .help-btn:hover { background: var(--col-bg); border-color: var(--accent-light); }
+
+  .link-btn {
+    font: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  /* --- Help modal --- */
+  .help-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+    z-index: 50;
+  }
+  .help-modal {
+    background: #fff;
+    border-radius: 8px;
+    max-width: 540px;
+    width: 100%;
+    padding: 1.25rem 1.5rem 1.75rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    font-family: var(--font-ui);
+    color: var(--text);
+  }
+  .help-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  .help-head h2 {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--text);
+  }
+  .help-close {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0 0.25rem;
+  }
+  .help-close:hover { color: var(--text); }
+
+  .help-intro {
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    line-height: 1.5;
+    margin: 0 0 0.9rem;
+  }
+
+  .beta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 0.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .beta-cell {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: baseline;
+    column-gap: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.3rem 0.45rem;
+  }
+  .beta-key {
+    font-family: var(--font-english);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent);
+  }
+  .beta-grk {
+    font-family: var(--font-greek);
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+  .beta-name {
+    grid-column: 1 / -1;
+    font-size: 0.68rem;
+    color: var(--text-light);
+    letter-spacing: .02em;
+  }
+
+  .help-modal h3 {
+    font-size: 0.9rem;
+    margin: 1rem 0 0.35rem;
+    color: var(--text);
+  }
+  .help-note {
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--text-light);
+  }
+  .help-sub {
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    margin: 0 0 0.4rem;
+  }
+
+  .mark-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.3rem 0.75rem;
+    margin: 0;
+    padding: 0;
+  }
+  .mark-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .mark-ex { font-family: var(--font-greek); color: var(--text); }
+
+  .example-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .example-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+  .ex-arrow { color: var(--text-light); }
+  .ex-grk { font-family: var(--font-greek); font-size: 1rem; }
+
+  .help-foot {
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    line-height: 1.5;
+    margin: 1rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
   }
 
   .search-error { color: #c00; font-family: var(--font-ui); font-size: 0.9rem; }

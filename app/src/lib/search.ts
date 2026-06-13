@@ -1,7 +1,10 @@
 // Search engine — operates on the prebuilt inverted indexes from Stage 6.
 //
-// Greek search: input is Unicode Greek (with optional * wildcards).
+// Greek search: input is Unicode Greek OR TLG Beta Code (with optional * wildcards).
 //   Converted to fold form (base Beta Code letters only) to match the index.
+//   Beta Code letters already ARE the fold form (θ→q, φ→f, χ→x, ψ→y, ξ→c,
+//   η→h, ω→w, …), so Latin input passes straight through; accents/breathings
+//   (the ) ( / \ = | + markers) are stripped, matching the index's fold form.
 // English search: whitespace-tokenized, lowercase.
 // Phrase search: after intersection, verify token adjacency in segment data.
 // Cross-language: AND (intersection) or OR (union) the two result sets.
@@ -60,10 +63,13 @@ const GREEK_BETA: Record<string, string> = {
 export function greekFold(input: string): string {
   const out: string[] = [];
   for (const ch of input.normalize('NFD')) {
-    const b = GREEK_BETA[ch.toLowerCase()];
-    if (b) out.push(b);
+    const lower = ch.toLowerCase();
+    const b = GREEK_BETA[lower];
+    if (b) out.push(b);                          // Unicode Greek → fold letter
+    else if (lower >= 'a' && lower <= 'z') out.push(lower); // Beta Code Latin input
     else if (ch === "'") out.push("'");
-    // skip combining marks, punctuation, asterisk (handled by caller)
+    // skip combining marks, punctuation, Beta Code diacritics ) ( / \ = | +,
+    // asterisk (handled by caller), and sigma-variant digits
   }
   return out.join('');
 }
@@ -149,7 +155,9 @@ export async function search(
     loadEng(),
   ]);
 
-  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean);
+  // Strip a leading '*' (Beta Code capital marker, e.g. *a)nqrwpos); the fold
+  // form is caseless, and a leading wildcard would match everything anyway.
+  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean).map(t => t.replace(/^\*+/, ''));
   const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
   let grkHits: Set<number> | null = null;
