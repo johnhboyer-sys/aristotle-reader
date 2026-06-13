@@ -1,5 +1,6 @@
 ---
 import Search from '../components/Search.svelte';
+import BekkerJump from '../components/BekkerJump.svelte';
 import '../styles/global.css';
 ---
 <html lang="en">
@@ -15,6 +16,7 @@ import '../styles/global.css';
 <body>
   <header class="page-header">
     <h1><a href="/" style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
+    <BekkerJump client:load />
     <nav class="book-nav" aria-label="Books">
       {Array.from({ length: 10 }, (_, i) => (
         <a href={`/book/${i + 1}`}>

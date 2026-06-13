@@ -88,6 +88,46 @@ export async function fetchChapters(): Promise<Record<string, ChapterRef[]>> {
   return _chapters.data!;
 }
 
+// Bekker column -> owning book(s) with each book's line span in that column.
+export interface ColumnRef { book: number; lo: number; hi: number; }
+const _columns: { data: Record<string, ColumnRef[]> | null } = { data: null };
+
+export async function fetchColumns(): Promise<Record<string, ColumnRef[]>> {
+  if (_columns.data) return _columns.data;
+  const r = await fetch(`${BASE}/columns.json`);
+  if (!r.ok) throw new Error(`columns: ${r.status}`);
+  _columns.data = await r.json();
+  return _columns.data!;
+}
+
+// Parse a raw Bekker citation (e.g. "1097a15", "1097a 15", "1097a.15") into
+// its column ("1097a") and line (15). Returns null if it isn't a citation.
+export function parseBekker(raw: string): { column: string; line: number } | null {
+  const m = raw.trim().toLowerCase().replace(/\s+/g, '').match(/^(\d{3,4})([ab])\.?(\d+)$/);
+  if (!m) return null;
+  return { column: m[1] + m[2], line: Number(m[3]) };
+}
+
+// Resolve a parsed citation to the book that owns it. For a column shared by
+// two books (a book that starts mid-column) the line picks the right one,
+// snapping to the nearer book if the line falls in the gap between them.
+export function resolveBekker(
+  columns: Record<string, ColumnRef[]>,
+  column: string,
+  line: number,
+): number | null {
+  const entries = columns[column];
+  if (!entries || entries.length === 0) return null;
+  if (entries.length === 1) return entries[0].book;
+  let best = entries[0];
+  let bestDist = Infinity;
+  for (const e of entries) {
+    const d = line < e.lo ? e.lo - line : line > e.hi ? line - e.hi : 0;
+    if (d < bestDist) { bestDist = d; best = e; }
+  }
+  return best.book;
+}
+
 export async function fetchAnalyses(): Promise<Record<string, Analysis[]>> {
   if (_analyses.data) return _analyses.data;
   const r = await fetch(`${BASE}/analyses.json`);

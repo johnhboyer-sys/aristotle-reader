@@ -96,8 +96,12 @@
       .map(t => greekFold(t.replace(/\*/g, ''))).filter(Boolean);
     hlEngTerms = (params.get('hle') ?? '').trim().split(/\s+/).filter(Boolean);
     const loc = params.get('loc');
+    let locCol = '';
+    let locLine = NaN;
     if (loc) {
       const [col, ln] = loc.split(':');
+      locCol = col;
+      locLine = Number(ln);
       targetId = `L${col}-${ln}`;
     }
     try {
@@ -111,7 +115,21 @@
       const hash = window.location.hash.slice(1);
       setTimeout(() => {
         if (targetId) {
-          const el = document.getElementById(targetId);
+          let el = document.getElementById(targetId);
+          // Snap to the nearest existing line in the column if the exact
+          // citation line isn't a Greek line break (e.g. mid-line citations).
+          if (!el && locCol && !Number.isNaN(locLine)) {
+            const seg = document.getElementById(`col-${locCol}`);
+            let best: Element | null = null;
+            let bestDist = Infinity;
+            seg?.querySelectorAll('.greek-line').forEach((node) => {
+              const m = node.id.match(/-(\d+)$/);
+              if (!m) return;
+              const d = Math.abs(Number(m[1]) - locLine);
+              if (d < bestDist) { bestDist = d; best = node; }
+            });
+            if (best) { el = best as HTMLElement; targetId = (best as HTMLElement).id; }
+          }
           if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
         }
         if (hash) document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });

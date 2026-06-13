@@ -71,6 +71,19 @@ const scenes = [
       await page.waitForSelector('.result-card', { timeout: 10000 });
     },
   },
+  {
+    // Type a Bekker citation in the header box and jump to that line.
+    name: 'bekker-jump',
+    path: '/book/1',
+    async run(page) {
+      await page.fill('.bekker-jump input', '1097a15');
+      await Promise.all([
+        page.waitForURL(/loc=1097a:15/, { timeout: 10000 }),
+        page.click('.bekker-jump button'),
+      ]);
+      await page.waitForSelector('.greek-line.target', { timeout: 10000 });
+    },
+  },
 ];
 
 async function shoot(browser, scene, outName) {

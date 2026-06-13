@@ -213,6 +213,25 @@ def run(manifest: Manifest) -> Path:
         json.dumps(chapters_by_book, ensure_ascii=False, indent=1), encoding="utf-8"
     )
 
+    # Bekker column -> owning book(s), with each book's line span in that column.
+    # Boundary columns (a book starting mid-column) list more than one book, so a
+    # citation like 1103a5 can be resolved to the right book by its line number.
+    col_ranges: dict[str, dict[int, list]] = defaultdict(dict)
+    for seg in spine["segments"]:
+        ns = [line["n"] for line in seg["lines"]]
+        if ns:
+            col_ranges[seg["column"]][seg["book"]] = [min(ns), max(ns)]
+    columns_out = {
+        col: [
+            {"book": b, "lo": rng[0], "hi": rng[1]}
+            for b, rng in sorted(books.items())
+        ]
+        for col, books in col_ranges.items()
+    }
+    (out_dir / "columns.json").write_text(
+        json.dumps(columns_out, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+
     for shard in sorted((BUILD_DIR / "stage5" / "lsj").glob("*.json")):
         shutil.copy(shard, out_dir / "lsj" / shard.name)
 

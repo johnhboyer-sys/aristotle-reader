@@ -81,6 +81,42 @@ body {
   color: #fff;
 }
 
+/* "Jump to Bekker line" citation box in the global header. */
+.bekker-jump {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+}
+.bekker-jump input {
+  font: inherit;
+  width: 7.5rem;
+  padding: 0.18rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--col-bg);
+  color: var(--text);
+}
+.bekker-jump input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.bekker-jump button {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--accent);
+  color: #fff;
+}
+.bekker-jump button:hover { filter: brightness(1.08); }
+.bekker-err {
+  color: #b23;
+  font-size: 0.72rem;
+}
+
 .page-header .chapter-nav {
   flex-basis: 100%;
   display: flex;
