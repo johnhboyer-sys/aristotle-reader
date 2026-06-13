@@ -22,10 +22,13 @@
   --greek-hover:  #fff3e0;
   --greek-active: #ffe0b2;
 
-  --lh-greek:     1.85;
-  --lh-english:   1.7;
+  /* Greek (Cardo) and English (EB Garamond) balanced so neither column
+     dominates: equal-ish optical size, and Greek verse leading compressed
+     toward the English so the two columns sit at roughly the same height. */
+  --lh-greek:     1.7;
+  --lh-english:   1.72;
   --fs-greek:     1.05rem;
-  --fs-english:   0.95rem;
+  --fs-english:   1.08rem;  /* nudged up: EB Garamond x-height < Cardo, so 1.08 reads equal to Greek 1.05 */
   --fs-ref:       0.78rem;
   --fs-linenum:   0.72rem;
 }
@@ -444,7 +447,7 @@ body {
 @media (max-width: 680px) {
   :root {
     --fs-greek: 1rem;
-    --fs-english: 0.9rem;
+    --fs-english: 1.02rem;  /* keep English at parity with Greek (see desktop note) */
   }
 
   .page-header {
