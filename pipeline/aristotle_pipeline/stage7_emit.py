@@ -104,9 +104,10 @@ def chapter_ranges(spine, chapters) -> dict[tuple, str]:
     return ranges
 
 
-def emit_books(spine, tokens_doc, english, range_map, out_dir: Path) -> list[dict]:
+def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None) -> list[dict]:
     tokens_by_id = {s["id"]: s for s in tokens_doc["segments"]}
     english_by_id = {c["id"]: c for c in english["chunks"]}
+    ross = ross or {}
     chapters_by_col: dict[tuple, list[dict]] = defaultdict(list)
     for ch in english.get("chapters", []):
         chapters_by_col[(ch["book"], ch["column"])].append(ch)
@@ -145,6 +146,10 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path) -> list[dic
                     if eng
                     else None
                 ),
+                # Second translation (Ross), chapter-anchored: per chapter-block
+                # slices the reader pairs to its blocks (cont = continuation of a
+                # chapter begun in an earlier column).
+                **({"ross": ross[seg["id"]]} if ross.get(seg["id"]) else {}),
             }
         )
     stats = []
@@ -194,9 +199,11 @@ def run(manifest: Manifest) -> Path:
     spine = _load("stage1/greek_spine.json")
     tokens_doc = _load("stage3/tokens.json")
     english = _load("stage1/english_chunks.json")
+    ross_path = BUILD_DIR / "stage1" / "ross_chunks.json"
+    ross = json.loads(ross_path.read_text(encoding="utf-8")) if ross_path.exists() else {}
 
     range_map = chapter_ranges(spine, english.get("chapters", []))
-    book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir)
+    book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross)
     analyses_stats = emit_analyses(out_dir)
 
     # Per-book ordered chapter list for navigation (Work → Book → Chapter).

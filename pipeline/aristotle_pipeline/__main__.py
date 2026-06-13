@@ -10,11 +10,16 @@ from .config import BUILD_DIR, Manifest
 
 
 def _stage1(manifest):
-    from . import stage1_english, stage1_greek
+    from . import stage1_english, stage1_greek, stage1_ross
 
     spine_path = stage1_greek.run(manifest)
     spine = json.loads(spine_path.read_text(encoding="utf-8"))
     eng_path, align_path = stage1_english.run(manifest, spine)
+    english = json.loads(eng_path.read_text(encoding="utf-8"))
+    ross_path = stage1_ross.run(manifest, spine, english)
+    ross = json.loads(ross_path.read_text(encoding="utf-8"))
+    print(f"  ross: segments_with_text={len(ross)} "
+          f"pieces={sum(len(v) for v in ross.values())}")
     n_lines = sum(len(s["lines"]) for s in spine["segments"])
     print(f"stage1: segments={len(spine['segments'])} lines={n_lines} "
           f"unassigned={len(spine['unassigned_lines'])}")

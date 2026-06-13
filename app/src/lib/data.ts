@@ -31,12 +31,22 @@ export interface ChapterStart {
   bekker: string;      // Bekker span, e.g. "1097a–1098b" (single column if equal)
 }
 
+// A slice of the Ross translation paired to a chapter block in this column.
+// `cont` = the tail of a chapter that began in an earlier column. Ross is
+// chapter-anchored (no per-line Bekker gutter), distributed across columns.
+export interface RossPiece {
+  chapter: string;
+  text: string;
+  cont: boolean;
+}
+
 export interface Segment {
   id: string;
   column: string;
   greek: GreekLine[];
   english: EnglishChunk | null;
   chapterStarts?: ChapterStart[];
+  ross?: RossPiece[];
 }
 
 export interface ChapterRef {
