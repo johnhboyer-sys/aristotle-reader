@@ -51,7 +51,7 @@ const scenes = [
     async run(page) {
       await page.fill('#grk-input', 'areth');
       await page.click('.search-btn');
-      await page.waitForSelector('.result-card', { timeout: 10000 });
+      await page.waitForSelector('.chapter-group', { timeout: 10000 });
     },
   },
   {
@@ -68,7 +68,7 @@ const scenes = [
     async run(page) {
       await page.fill('#eng-input', 'pleasure');
       await page.click('.search-btn');
-      await page.waitForSelector('.result-card', { timeout: 10000 });
+      await page.waitForSelector('.chapter-group', { timeout: 10000 });
     },
   },
   {
@@ -109,7 +109,17 @@ try {
   if (argPath) {
     await shoot(browser, { name: argName || 'shot', path: argPath }, argOut);
   } else {
-    for (const scene of scenes) await shoot(browser, scene);
+    // Keep going if one scene fails so a single broken shot doesn't abort the run.
+    let failed = 0;
+    for (const scene of scenes) {
+      try {
+        await shoot(browser, scene);
+      } catch (e) {
+        failed++;
+        console.error(`  ✗ ${scene.name}: ${e.message.split('\n')[0]}`);
+      }
+    }
+    if (failed) console.error(`\n${failed} scene(s) failed; the rest were captured.`);
   }
 } finally {
   await browser.close();
