@@ -2,9 +2,19 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { fetchBook, parseBekker, type Segment, type GreekLine, type Token } from '../lib/data';
   import { greekFold } from '../lib/search';
+  import { getWork } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
 
+  export let work: string = 'EN';
   export let bookNum: number = 1;
+
+  const workMeta = getWork(work);
+  const translations = workMeta?.translations ?? [];
+  // The two display slots the reader can render: the primary parallel chunk
+  // ('english') and the secondary chapter-anchored overlay ('ross').
+  const engSlot = translations.find(t => t.slot === 'english');
+  const rossSlot = translations.find(t => t.slot === 'ross');
+  const canCompare = !!engSlot && !!rossSlot;
 
   let segments: Segment[] = [];
   let loading = true;
@@ -15,24 +25,24 @@
   let hlEngTerms: string[] = [];
   let targetId: string | null = null;
 
-  // Reading view: bilingual (default), Greek only, or English only. Persisted
-  // per reader in localStorage; a citation/search jump forces 'both' so the
-  // targeted Greek line is visible.
-  // Which English translation fills the English column. Rackham (Loeb, TEI,
-  // Bekker-anchored per line), Ross (MIT, chapter-anchored prose), or 'compare'
-  // = both side by side (three columns with Greek). Persisted.
-  type Trans = 'rackham' | 'ross' | 'compare';
-  let trans: Trans = 'rackham';
-  function setTrans(t: Trans) {
+  // Which translation fills the English column: a translation id from the
+  // registry (its slot decides what renders) or 'compare' = both slots side by
+  // side. Persisted per work (works carry different translations).
+  let trans: string = engSlot?.id ?? translations[0]?.id ?? 'english';
+  $: selectedSlot = trans === 'compare'
+    ? null
+    : (translations.find(t => t.id === trans)?.slot ?? 'english');
+  const TRANS_KEY = `reader-trans-${work}`;
+  function setTrans(t: string) {
     trans = t;
-    try { localStorage.setItem('ne-trans', t); } catch {}
+    try { localStorage.setItem(TRANS_KEY, t); } catch {}
   }
 
   type View = 'both' | 'greek' | 'english';
   let view: View = 'both';
   async function setView(v: View) {
     view = v;
-    try { localStorage.setItem('ne-view', v); } catch {}
+    try { localStorage.setItem('reader-view', v); } catch {}
     // The tracked anchors differ by view (Greek lines vs. whole columns), so
     // rebuild the scroll-spy once the DOM reflects the new view.
     await tick();
@@ -65,6 +75,8 @@
     if (!cite || cite === lastCite) return;
     lastCite = cite;
     try { history.replaceState(history.state, '', `#${cite}`); } catch {}
+    // Remember the last position per work so the work-switcher can resume here.
+    try { localStorage.setItem(`reader-loc-${work}`, cite); } catch {}
   }
 
   function setupScrollSpy() {
@@ -146,8 +158,38 @@
   // A segment renders as one or more blocks split at chapter boundaries.
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
   // `rows` lay the English prose out beside its Bekker-line gutter (see below).
-  interface EngRow { n: number | null; real: boolean; text: string; }
-  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; rows: EngRow[]; rossRows: EngRow[]; }
+  // A GreekLine may be a partial slice of a real line (cont = its tail half,
+  // after a mid-line chapter split): it suppresses the repeated line number/id.
+  type RLine = GreekLine & { cont?: boolean };
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; rows: EngRow[]; rossRows: EngRow[]; }
+
+  // The char position where token `w` begins in a line's text (0 at the start,
+  // text.length at/after the end), so a cut preserves the verbatim
+  // punctuation/sigla between words on the correct side.
+  function tokenPos(line: GreekLine, w: number): number {
+    if (w <= 0) return 0;
+    if (w >= line.tokens.length) return line.text.length;
+    let ptr = 0;
+    for (let i = 0; i < w; i++) {
+      const idx = line.text.indexOf(line.tokens[i].t, ptr);
+      if (idx >= 0) ptr = idx + line.tokens[i].t.length;
+    }
+    const cut = line.text.indexOf(line.tokens[w].t, ptr);
+    return cut >= 0 ? cut : ptr;
+  }
+
+  // The sub-line covering tokens [fromW, toW) — used to split a Greek line at a
+  // chapter boundary that falls mid-line (most chapters start mid-line). A
+  // partial tail (fromW>0) is marked `cont` so the line number/id isn't repeated.
+  function lineSlice(line: GreekLine, fromW: number, toW: number): RLine {
+    fromW = Math.max(0, fromW);
+    toW = Math.min(line.tokens.length, toW);
+    if (fromW === 0 && toW === line.tokens.length) return line;
+    let text = line.text.slice(tokenPos(line, fromW), tokenPos(line, toW));
+    if (fromW > 0) text = text.replace(/^\s+/, '');
+    if (toW < line.tokens.length) text = text.replace(/\s+$/, '');
+    return { n: line.n, text, tokens: line.tokens.slice(fromW, toW), cont: fromW > 0 };
+  }
 
   // The gutter renders each tick as its own block row, so a row boundary forces
   // a visual line break. To avoid splitting a sentence (which happens when an
@@ -246,24 +288,55 @@
     const rossCont = () => rossRowsOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
     const rossFor = (chapter: string) => rossRowsOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
 
-    const starts = (seg.chapterStarts ?? []).slice().sort((a, b) => a.beforeLine - b.beforeLine);
+    const starts = (seg.chapterStarts ?? []).slice()
+      .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
     if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont() }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
       return i === -1 ? greek.length : i;
     };
+    // Each chapter boundary is a cut at (line index, word index within the line).
+    const bounds = starts.map(s => ({
+      chapter: s.chapter, bekker: s.bekker, engOffset: s.engOffset,
+      idx: lineIdx(s.beforeLine), word: s.wordIndex || 0,
+    }));
+
+    // The Greek lines spanning a block from cut (idxA,wA) to cut (idxB,wB),
+    // splitting the boundary lines mid-line where wA/wB > 0.
+    const linesFor = (idxA: number, wA: number, idxB: number, wB: number): RLine[] => {
+      if (idxA >= greek.length) return [];
+      if (idxA === idxB) {                       // block lies within one line
+        const sl = lineSlice(greek[idxA], wA, wB);
+        return sl.tokens.length || sl.text.trim() ? [sl] : [];
+      }
+      const res: RLine[] = [];
+      for (let i = idxA; i < idxB && i < greek.length; i++) {
+        res.push(i === idxA && wA > 0 ? lineSlice(greek[i], wA, greek[i].tokens.length) : greek[i]);
+      }
+      if (wB > 0 && idxB < greek.length) res.push(lineSlice(greek[idxB], 0, wB));
+      return res;
+    };
+
     const blocks: Block[] = [];
-    const firstIdx = lineIdx(starts[0].beforeLine);
+    const first = bounds[0];
     // Lines/English before the first chapter start continue the previous chapter.
-    if (firstIdx > 0 || starts[0].engOffset > 0) {
-      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont() });
+    if (first.idx > 0 || first.word > 0 || starts[0].engOffset > 0) {
+      blocks.push({
+        chapter: null, bekker: '',
+        lines: linesFor(0, 0, first.idx, first.word),
+        rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont(),
+      });
     }
-    for (let i = 0; i < starts.length; i++) {
-      const from = lineIdx(starts[i].beforeLine);
-      const to = i + 1 < starts.length ? lineIdx(starts[i + 1].beforeLine) : greek.length;
-      const engTo = i + 1 < starts.length ? starts[i + 1].engOffset : text.length;
-      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), rows: rowsFor(starts[i].engOffset, engTo), rossRows: rossFor(starts[i].chapter) });
+    for (let i = 0; i < bounds.length; i++) {
+      const b = bounds[i];
+      const next = bounds[i + 1];
+      const engTo = next ? next.engOffset : text.length;
+      blocks.push({
+        chapter: b.chapter, bekker: b.bekker,
+        lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
+        rows: rowsFor(b.engOffset, engTo), rossRows: rossFor(b.chapter),
+      });
     }
     return blocks;
   }
@@ -272,6 +345,8 @@
   let popup: { token: Token; anchor: { x: number; y: number } } | null = null;
 
   onMount(async () => {
+    // Remember which book of this work was last open, for the work switcher.
+    try { localStorage.setItem(`reader-book-${work}`, String(bookNum)); } catch {}
     const params = new URLSearchParams(window.location.search);
     hlGrkFolds = (params.get('hlg') ?? '').trim().split(/\s+/).filter(Boolean)
       .map(t => greekFold(t.replace(/\*/g, ''))).filter(Boolean);
@@ -290,17 +365,23 @@
     if (loc || hlGrkFolds.length) {
       view = 'both';
     } else {
-      const saved = (() => { try { return localStorage.getItem('ne-view'); } catch { return null; } })();
+      const saved = (() => { try { return localStorage.getItem('reader-view'); } catch { return null; } })();
       if (saved === 'greek' || saved === 'english' || saved === 'both') view = saved;
       // No saved choice: a phone defaults to English only (the bilingual columns
       // are cramped on a narrow screen); desktop stays bilingual. The toggle —
       // and any saved choice — overrides this on either.
       else if (window.matchMedia('(max-width: 680px)').matches) view = 'english';
     }
-    const savedTrans = (() => { try { return localStorage.getItem('ne-trans'); } catch { return null; } })();
-    if (savedTrans === 'rackham' || savedTrans === 'ross' || savedTrans === 'compare') trans = savedTrans;
+    const validTrans = new Set([...translations.map(t => t.id), ...(canCompare ? ['compare'] : [])]);
+    const savedTrans = (() => { try { return localStorage.getItem(TRANS_KEY); } catch { return null; } })();
+    if (savedTrans && validTrans.has(savedTrans)) trans = savedTrans;
+    // The home index links can preselect a view/translation via query params.
+    const qView = params.get('view');
+    if (qView === 'greek' || qView === 'both' || qView === 'english') view = qView;
+    const qTrans = params.get('trans');
+    if (qTrans && validTrans.has(qTrans)) { trans = qTrans; if (view === 'greek') view = 'both'; }
     try {
-      const data = await fetchBook(bookNum);
+      const data = await fetchBook(work, bookNum);
       segments = data.segments;
     } catch (e) {
       error = String(e);
@@ -373,13 +454,14 @@
 {:else}
   <div class="reader-body view-{view} trans-{trans}" role="main">
     <div class="reader-controls">
-      {#if view !== 'greek'}
+      {#if view !== 'greek' && translations.length > 1}
         <label class="trans-picker">
           <span class="trans-label">Translation</span>
           <select bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
-            <option value="rackham">Rackham (Loeb)</option>
-            <option value="ross">Ross (Oxford)</option>
-            <option value="compare">Compare both</option>
+            {#each translations as t}
+              <option value={t.id}>{t.short}</option>
+            {/each}
+            {#if canCompare}<option value="compare">Compare both</option>{/if}
           </select>
         </label>
       {/if}
@@ -406,8 +488,8 @@
             <!-- Greek column -->
             <div class="greek-col">
               {#each block.lines as line}
-                <div class="greek-line" id="L{seg.column}-{line.n}" class:target={targetId === `L${seg.column}-${line.n}`}>
-                  <span class="line-num">{showLineNum(line.n)}</span>
+                <div class="greek-line" id={line.cont ? `L${seg.column}-${line.n}-c` : `L${seg.column}-${line.n}`} class:target={!line.cont && targetId === `L${seg.column}-${line.n}`}>
+                  <span class="line-num">{line.cont ? '' : showLineNum(line.n)}</span>
                   <span class="line-text">{#each lineParts(line) as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
                         class="tok"
                         class:active={popup?.token === part.tok}
@@ -424,9 +506,9 @@
             <!-- English column: Ross alone when selected, else Rackham (also the
                  left English column in Compare). -->
             <div class="english-col">
-              {#if trans === 'ross'}
+              {#if selectedSlot === 'ross'}
                 {#if block.rossRows.length}
-                  <!-- Ross with an interpolated Bekker gutter (all estimates). -->
+                  <!-- Secondary translation with an interpolated Bekker gutter. -->
                   <div class="english-text">
                     {#each block.rossRows as row}
                       <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
@@ -436,7 +518,7 @@
                   </div>
                 {/if}
               {:else}
-                {#if trans === 'compare'}<div class="col-label">Rackham</div>{/if}
+                {#if trans === 'compare'}<div class="col-label">{engSlot?.short ?? 'English'}</div>{/if}
                 {#if block.rows.length}
                   <div class="english-text">
                     {#each block.rows as row}
@@ -449,10 +531,11 @@
               {/if}
             </div>
 
-            <!-- Third column: Ross beside Rackham in Compare (hidden in Greek-only). -->
+            <!-- Third column: the secondary translation beside the primary in
+                 Compare (hidden in Greek-only). -->
             {#if trans === 'compare' && view !== 'greek'}
               <div class="ross-col">
-                <div class="col-label">Ross</div>
+                <div class="col-label">{rossSlot?.short ?? ''}</div>
                 {#if block.rossRows.length}
                   <div class="english-text">
                     {#each block.rossRows as row}
@@ -473,6 +556,7 @@
 
 {#if popup}
   <WordPopup
+    {work}
     token={popup.token}
     anchor={popup.anchor}
     onClose={closePopup}

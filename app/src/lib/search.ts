@@ -10,7 +10,8 @@
 // Cross-language: AND (intersection) or OR (union) the two result sets.
 
 // Honour Astro's base path. BASE_URL may lack a trailing slash, so strip + join.
-const BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data/search`;
+const ROOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
+const searchBase = (work: string) => `${ROOT}/${work}/search`;
 
 // -- Data types -----------------------------------------------------------
 
@@ -26,31 +27,25 @@ export interface SegMeta {
 type GrkIndex = Record<string, [number, number][]>; // fold → [[seg_idx, pos], ...]
 type EngIndex = Record<string, number[]>;            // word → [seg_idx, ...]
 
-// -- Lazy loaders ---------------------------------------------------------
+// Greek search can match by dictionary headword ('lemma', every inflected form)
+// or by the exact surface form as written ('form').
+export type MatchMode = 'lemma' | 'form';
 
-let _meta: SegMeta[] | null = null;
-let _grk: GrkIndex | null = null;
-let _eng: EngIndex | null = null;
+// -- Per-work index loading (cached) --------------------------------------
 
-async function loadMeta(): Promise<SegMeta[]> {
-  if (_meta) return _meta;
-  const r = await fetch(`${BASE}/meta.json`);
-  _meta = await r.json();
-  return _meta!;
-}
+interface WorkIndex { meta: SegMeta[]; lemma: GrkIndex; form: GrkIndex; eng: EngIndex; }
+const _workCache = new Map<string, Promise<WorkIndex>>();
 
-async function loadGrk(): Promise<GrkIndex> {
-  if (_grk) return _grk;
-  const r = await fetch(`${BASE}/greek.json`);
-  _grk = await r.json();
-  return _grk!;
-}
-
-async function loadEng(): Promise<EngIndex> {
-  if (_eng) return _eng;
-  const r = await fetch(`${BASE}/english.json`);
-  _eng = await r.json();
-  return _eng!;
+function loadWork(work: string): Promise<WorkIndex> {
+  const cached = _workCache.get(work);
+  if (cached) return cached;
+  const base = searchBase(work);
+  const grab = (f: string) => fetch(`${base}/${f}`).then(r => r.json());
+  const p = Promise.all([
+    grab('meta.json'), grab('greek_lemma.json'), grab('greek_form.json'), grab('english.json'),
+  ]).then(([meta, lemma, form, eng]) => ({ meta, lemma, form, eng } as WorkIndex));
+  _workCache.set(work, p);
+  return p;
 }
 
 // -- Unicode Greek → Beta Code fold form ----------------------------------
@@ -137,6 +132,7 @@ export type SearchMode = 'all' | 'any' | 'phrase';
 export type LangOp = 'and' | 'or';
 
 export interface SearchResult {
+  work: string;           // which work this hit belongs to
   meta: SegMeta;
   grkMatch: boolean;
   engMatch: boolean;
@@ -200,24 +196,17 @@ function greekPositions(
   return out;
 }
 
-export async function search(
-  grkQuery: string,
-  engQuery: string,
+// Search one work, returning hits tagged with that work.
+async function searchWork(
+  work: string,
+  grkTerms: string[],
+  engTerms: string[],
   mode: SearchMode,
   langOp: LangOp,
+  matchMode: MatchMode,
 ): Promise<SearchResult[]> {
-  if (!grkQuery.trim() && !engQuery.trim()) return [];
-
-  const [meta, grkIdx, engIdx] = await Promise.all([
-    loadMeta(),
-    loadGrk(),
-    loadEng(),
-  ]);
-
-  // Strip a leading '*' (Beta Code capital marker, e.g. *a)nqrwpos); the fold
-  // form is caseless, and a leading wildcard would match everything anyway.
-  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean).map(t => t.replace(/^\*+/, ''));
-  const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
+  const { meta, lemma, form, eng: engIdx } = await loadWork(work);
+  const grkIdx = matchMode === 'form' ? form : lemma;
 
   let grkHits: Set<number> | null = null;
   let engHits: Set<number> | null = null;
@@ -265,9 +254,34 @@ export async function search(
   return [...combined]
     .sort((a, b) => a - b)
     .map(si => ({
+      work,
       meta: meta[si],
       grkMatch: grkHits?.has(si) ?? false,
       engMatch: engHits?.has(si) ?? false,
       grkPositions: grkPos.get(si) ?? [],
     }));
+}
+
+// Unified search across one or more works. `matchMode` chooses the Greek index
+// (lemma = all forms of a headword, form = the exact inflected token).
+export async function search(
+  grkQuery: string,
+  engQuery: string,
+  mode: SearchMode,
+  langOp: LangOp,
+  works: string[],
+  matchMode: MatchMode = 'lemma',
+): Promise<SearchResult[]> {
+  if (!grkQuery.trim() && !engQuery.trim()) return [];
+  if (!works.length) return [];
+
+  // Strip a leading '*' (Beta Code capital marker, e.g. *a)nqrwpos); the fold
+  // form is caseless, and a leading wildcard would match everything anyway.
+  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean).map(t => t.replace(/^\*+/, ''));
+  const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
+
+  const perWork = await Promise.all(
+    works.map(w => searchWork(w, grkTerms, engTerms, mode, langOp, matchMode)),
+  );
+  return perWork.flat();
 }

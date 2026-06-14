@@ -64,6 +64,44 @@ body {
   letter-spacing: .02em;
 }
 
+/* Header title group: a quiet "Aristotle" home link, then the work switcher. */
+.header-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: var(--font-ui);
+}
+.header-title .home-link {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: .02em;
+  text-decoration: none;
+}
+.header-title .home-link:hover { color: var(--accent-light); }
+.header-title .title-sep { color: var(--text-light); font-size: 0.85rem; }
+.header-title .header-static { font-weight: 600; color: var(--text); font-size: 0.95rem; }
+.work-switcher {
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.1rem 1.4rem 0.1rem 0.3rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-mid) 50%),
+                    linear-gradient(135deg, var(--text-mid) 50%, transparent 50%);
+  background-position: right 0.55rem center, right 0.4rem center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.work-switcher:hover { border-color: var(--border); background-color: var(--col-bg); }
+.work-switcher:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 1px; }
+
 /* Desktop: the bar/panel wrappers dissolve so h1, the Bekker box, book-nav and
    chapter-nav lay out as direct flex children of .page-header (unchanged). The
    menu button is mobile-only. The mobile media query re-materialises the

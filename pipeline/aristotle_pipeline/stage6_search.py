@@ -1,11 +1,17 @@
 """Stage 6: build the search index for the Astro frontend.
 
-Emits three files under build/stage6/:
+Emits these files under build/stage6/:
 
-  greek.json   — {fold_lemma: [[seg_idx, token_pos], ...]}
-                 fold_lemma strips all accents, breathings, iotasubscript,
-                 macrons from the Beta Code key (only base letters remain),
-                 so wildcard prefix matching works uniformly.
+  greek_lemma.json — {fold_lemma: [[seg_idx, token_pos], ...]}
+                 keyed by the token's dictionary HEADWORD (lemma), so a query
+                 finds every inflected form of a word. fold_lemma strips all
+                 accents, breathings, iotasubscript, macrons from the Beta Code
+                 key (only base letters remain), so wildcard prefix matching
+                 works uniformly.
+
+  greek_form.json — {fold(surface): [[seg_idx, token_pos], ...]}
+                 keyed by the SURFACE form as written (the inflected token), so
+                 a query can match the exact form rather than the whole lemma.
 
   english.json — {word: [seg_idx, ...]}
                  Lowercased, punctuation-stripped English words.
@@ -78,35 +84,47 @@ def run(manifest: Manifest) -> Path:
                     folds.append(fold_lemma(key))
         fold_seq_by_id[seg["id"]] = " ".join(folds)
 
-    # -- Greek inverted index -------------------------------------------------
-    # fold_lemma -> list of (seg_idx, token_position_within_segment)
-    greek_posts: dict[str, list] = defaultdict(list)
+    # -- Greek inverted indexes ----------------------------------------------
+    # Two parallel indexes, both fold_lemma -> [(seg_idx, token_pos), ...]:
+    #   lemma_posts: keyed by each token's dictionary headword(s) — "all forms".
+    #   form_posts:  keyed by the token's surface form as written — "exact form".
+    lemma_posts: dict[str, list] = defaultdict(list)
+    form_posts: dict[str, list] = defaultdict(list)
     for seg in segments:
         si = seg_idx[seg["id"]]
         pos = 0
         for line in seg["lines"]:
             for tok in line["tokens"]:
                 key = tok.get("k")
+                if key:
+                    sf = fold_lemma(key)  # surface form as written
+                    if sf:
+                        form_posts[sf].append([si, pos])
                 stored = key_map.get(key) if key else None
                 if stored:
                     for a in analyses.get(stored, []):
                         fl = fold_lemma(a["lemma"]) if a["lemma"] else fold_lemma(stored)
                         if fl:
-                            greek_posts[fl].append([si, pos])
+                            lemma_posts[fl].append([si, pos])
                 pos += 1
 
-    # Deduplicate (lemma may appear multiple times from homonyms)
-    # Keep only the first occurrence per (si, pos) pair per lemma.
-    greek_deduped: dict[str, list] = {}
-    for fl, posts in greek_posts.items():
-        seen: set[tuple] = set()
-        deduped = []
-        for pair in posts:
-            t = tuple(pair)
-            if t not in seen:
-                seen.add(t)
-                deduped.append(pair)
-        greek_deduped[fl] = deduped
+    # Deduplicate each index (a lemma may repeat from homonym analyses; a
+    # surface key is added once per token but dedupe defensively).
+    def _dedupe(posts: dict[str, list]) -> dict[str, list]:
+        out: dict[str, list] = {}
+        for fl, plist in posts.items():
+            seen: set[tuple] = set()
+            deduped = []
+            for pair in plist:
+                t = tuple(pair)
+                if t not in seen:
+                    seen.add(t)
+                    deduped.append(pair)
+            out[fl] = deduped
+        return out
+
+    greek_lemma = _dedupe(lemma_posts)
+    greek_form = _dedupe(form_posts)
 
     # -- English inverted index -----------------------------------------------
     # word -> sorted list of unique seg_idxs
@@ -144,8 +162,11 @@ def run(manifest: Manifest) -> Path:
 
     out_dir = BUILD_DIR / "stage6"
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "greek.json").write_text(
-        json.dumps(greek_deduped, ensure_ascii=False), encoding="utf-8"
+    (out_dir / "greek_lemma.json").write_text(
+        json.dumps(greek_lemma, ensure_ascii=False), encoding="utf-8"
+    )
+    (out_dir / "greek_form.json").write_text(
+        json.dumps(greek_form, ensure_ascii=False), encoding="utf-8"
     )
     (out_dir / "english.json").write_text(
         json.dumps(english_idx, ensure_ascii=False), encoding="utf-8"
@@ -154,7 +175,8 @@ def run(manifest: Manifest) -> Path:
         json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8"
     )
     summary = {
-        "greek_terms": len(greek_deduped),
+        "greek_lemmata": len(greek_lemma),
+        "greek_forms": len(greek_form),
         "english_terms": len(english_idx),
         "segments": len(meta),
     }

@@ -27,6 +27,14 @@ _ROSS_DIR = SOURCES_DIR / "ross"
 # quote/paren) followed by whitespace.
 _SENT = re.compile(r"[.?!][\"')\]]?\s")
 
+# A chapter marker on its own line. The MIT Internet Classics Archive uses two
+# styles: a bare number (Ross's NE) or "Part N" (Smith's De Anima). Both are
+# matched to a capture group holding the chapter number.
+_CHAPTER_MARKERS = {
+    "number": re.compile(r"\d{1,2}"),
+    "part": re.compile(r"Part\s+(\d{1,2})"),
+}
+
 
 def _book_text(path: Path) -> str:
     raw = path.read_text(encoding="utf-8", errors="replace")
@@ -36,16 +44,18 @@ def _book_text(path: Path) -> str:
     return html.unescape(_TAG.sub("\n", body))
 
 
-def parse_book(path: Path) -> dict[int, str]:
-    """{chapter_number: prose} for one Ross book file. Chapters start with a
-    standalone number line in ascending sequence; stray numbers in the prose
-    (years, counts) aren't alone on a line in sequence and are ignored."""
+def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
+    """{chapter_number: prose} for one archive book file. Chapters start with a
+    standalone marker line (bare number, or "Part N") in ascending sequence;
+    stray numbers in the prose (years, counts) aren't alone on a line in
+    sequence and are ignored."""
+    pat = _CHAPTER_MARKERS[marker]
     txt = _book_text(path)
     i = txt.find("Translated by")
     if i >= 0:
         txt = txt[i:]
-    for marker in ("Commentary:", "How to cite", "-THE END-", "Buy Books", "Browse and Comment"):
-        j = txt.find(marker, 200)
+    for end in ("Commentary:", "How to cite", "-THE END-", "Buy Books", "Browse and Comment"):
+        j = txt.find(end, 200)
         if j > 0:
             txt = txt[:j]
     chapters: dict[int, str] = {}
@@ -53,8 +63,9 @@ def parse_book(path: Path) -> dict[int, str]:
     buf: list[str] = []
     started = False
     for ln in (l.strip() for l in txt.split("\n")):
-        if re.fullmatch(r"\d{1,2}", ln):
-            num = int(ln)
+        m = pat.fullmatch(ln)
+        if m:
+            num = int(m.group(m.lastindex or 0))
             if (cur is None and num == 1) or (cur is not None and num == cur + 1):
                 if cur is not None:
                     chapters[cur] = " ".join(" ".join(buf).split())
@@ -67,16 +78,21 @@ def parse_book(path: Path) -> dict[int, str]:
     return chapters
 
 
-def parse_ross() -> dict[tuple[int, int], str]:
-    """{(book, chapter): prose} across all ten Ross book files."""
+def parse_translation(src_dir: Path, books: int, marker: str = "number") -> dict[tuple[int, int], str]:
+    """{(book, chapter): prose} across an archive translation's book files."""
     out: dict[tuple[int, int], str] = {}
-    for n in range(1, 11):
-        path = _ROSS_DIR / f"book-{n:02d}.html"
+    for n in range(1, books + 1):
+        path = src_dir / f"book-{n:02d}.html"
         if not path.exists():
             continue
-        for ch, text in parse_book(path).items():
+        for ch, text in parse_book(path, marker).items():
             out[(n, ch)] = text
     return out
+
+
+def parse_ross() -> dict[tuple[int, int], str]:
+    """{(book, chapter): prose} across all ten Ross book files."""
+    return parse_translation(_ROSS_DIR, 10, "number")
 
 
 def _snap_word(text: str, off: int) -> int:
@@ -186,11 +202,13 @@ def _chapter_segments(spine: dict, chapters: list[dict]):
     return result, chapter_key
 
 
-def build_ross_chunks(spine: dict, chapters: list[dict]) -> dict[str, list[dict]]:
-    """{segment_id: [{chapter, text, cont}]}. `cont` marks the slice of a
-    chapter that began in an earlier column (a continuation block)."""
-    ross = parse_ross()
+def build_chunks(spine: dict, chapters: list[dict],
+                 prose: dict[tuple[int, int], str]) -> dict[str, list[dict]]:
+    """{segment_id: [{chapter, text, cont}]} for any chapter-keyed prose dict.
+    `cont` marks the slice of a chapter that began in an earlier column (a
+    continuation block). Each piece carries an interpolated Bekker gutter."""
     seg_chapters, chapter_key = _chapter_segments(spine, chapters)
+    ross = prose
     by_seg: dict[str, list[dict]] = defaultdict(list)
     for gidx, segs in seg_chapters.items():
         book, chap = chapter_key[gidx]
@@ -218,6 +236,11 @@ def build_ross_chunks(spine: dict, chapters: list[dict]) -> dict[str, list[dict]
             p.pop("_g", None)
         out[seg_id] = pieces
     return out
+
+
+def build_ross_chunks(spine: dict, chapters: list[dict]) -> dict[str, list[dict]]:
+    """{segment_id: [{chapter, text, cont}]} for the Ross (NE) translation."""
+    return build_chunks(spine, chapters, parse_ross())
 
 
 def run(manifest, spine: dict, english: dict) -> Path:

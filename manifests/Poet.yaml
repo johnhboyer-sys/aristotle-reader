@@ -1,0 +1,46 @@
+# Poetics — pipeline manifest
+#
+# A single-book work (26 chapters, no book divisions). Greek spine from the
+# cached TLG export; chapter structure from the Perseus grc TEI; English from
+# the Perseus eng TEI (W. H. Fyfe) via the chapter-anchored archive path.
+
+work:
+  id: Poet
+  title: "Poetics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "034"
+  greek_edition: "Kassel, Aristotelis De Arte Poetica (OCT, 1965)"
+  english_translation: "W. H. Fyfe (Loeb, 1932)"
+
+bekker_range:
+  first_column: "1447a"
+  last_column: "1462b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg034.perseus-grc2.xml"
+  chapter_subtype: chapter
+
+english:
+  primary:
+    id: fyfe
+    name: "W. H. Fyfe (Loeb, 1932)"
+    model: perseus_tei
+    source: "tlg0086.tlg034.perseus-eng2.xml"
+    chapter_subtype: chapter
+
+# The TLG edition's line numbering skips these single line numbers (the Greek
+# text is continuous across them — verified); declared so the validator passes.
+expected_line_gaps:
+  - { column: "1449a", after: 28, next: 30 }
+  - { column: "1454b", after: 33, next: 35 }
+
+books:
+  - { n: 1, start: "1447a1", end: "1462b19" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

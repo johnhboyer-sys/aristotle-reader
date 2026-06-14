@@ -29,34 +29,31 @@ def _load(rel: str):
 
 def _chapter_starts(seg_column, line_ns, eng, chapters_in_col, range_map) -> list[dict]:
     """For each chapter starting in this Bekker column, where to break the
-    reader. The chapter boundary is the English section marker's char offset;
-    the matching Greek line is found proportionally (offset / chunk length ->
-    line index), which tracks the actual incipit within ~1 line and handles
-    mid-column book starts (offset 0 -> the segment's first line, e.g. 14)."""
-    eng_text = eng["text"] if eng else ""
-    eng_len = max(1, len(eng_text))
+    reader. The Greek heading goes before the chapter's ACTUAL Bekker line
+    (ch['line'] — exact for grc-aligned chapters); the reader matches the first
+    Greek line >= beforeLine, so an exact line lands exactly. The English column
+    heading uses the section marker's char offset. (This replaced an earlier
+    proportional offset->line estimate that drifted within a column.)"""
     section_offset = {}
     if eng:
         for m in eng["markers"]:
             if m["kind"] == "section":
                 section_offset.setdefault(m["n"], m["offset"])
+    first_line = line_ns[0] if line_ns else 1
     starts = []
     for ch in chapters_in_col:
         off = section_offset.get(ch["chapter"], 0)
-        if line_ns:
-            idx = min(len(line_ns) - 1, int(off / eng_len * len(line_ns)))
-            before = line_ns[idx]
-        else:
-            before = 1
+        before = int(ch["line"]) if str(ch.get("line", "")).lstrip("-").isdigit() else first_line
         starts.append(
             {
                 "chapter": ch["chapter"],
                 "beforeLine": before,
+                "wordIndex": int(ch.get("wordIndex", 0) or 0),
                 "engOffset": off,
                 "bekker": range_map[(ch["book"], ch["chapter"])],
             }
         )
-    starts.sort(key=lambda s: s["beforeLine"])
+    starts.sort(key=lambda s: (s["beforeLine"], s["wordIndex"]))
     return starts
 
 
@@ -244,7 +241,7 @@ def run(manifest: Manifest) -> Path:
         shutil.copy(shard, out_dir / "lsj" / shard.name)
 
     (out_dir / "search").mkdir(exist_ok=True)
-    for f in ["greek.json", "english.json", "meta.json"]:
+    for f in ["greek_lemma.json", "greek_form.json", "english.json", "meta.json"]:
         shutil.copy(BUILD_DIR / "stage6" / f, out_dir / "search" / f)
 
     work = manifest.data["work"]

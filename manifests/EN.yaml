@@ -6,7 +6,7 @@
 # here is surfaced as a validation finding, not silently trusted.
 
 work:
-  id: ne
+  id: EN
   title: "Nicomachean Ethics"
   author: "Aristotle"
   tlg_author: "0086"
@@ -18,6 +18,15 @@ work:
 bekker_range:
   first_column: "1094a"
   last_column: "1181b"
+
+# Chapter heading placement. Rackham stays the English (real Bekker gutter), but
+# chapter START LINES are text-aligned onto the Greek spine from this grc TEI's
+# section divs (exact), replacing the older milestone-interpolated estimate that
+# drifted within a column. `source` is intentionally NOT grc_tei (that would swap
+# the English path); only the chapter lines are overridden.
+chapters:
+  grc_tei: "tlg0086.tlg010.perseus-grc2.xml"
+  chapter_subtype: section
 
 # Columns where a new book starts mid-column. The English TEI emits a
 # duplicate page milestone at these restarts — except Books II (1103a14)
@@ -43,6 +52,21 @@ books:
   - { n: 8,  start: "1155a1",  end: "1163b28" }
   - { n: 9,  start: "1163b32", end: "1172a15" }
   - { n: 10, start: "1172a19", end: "1181b23" }
+
+# Names frequent enough in the NE to anchor a cross-language spot check (Stage
+# 2). Greek is matched diacritic-stripped/lowercased; absent for works without a
+# curated list, which simply skips the check.
+proper_names:
+  - ["σωκρατ", "Socrates"]
+  - ["περικλ", "Pericles"]
+  - ["ομηρ", "Homer"]
+  - ["μιλων", "Milo"]
+  - ["πριαμ", "Priam"]
+  - ["φειδι", "Pheidias"]
+  - ["πλατων", "Plato"]
+  - ["σπευσιππ", "Speusippus"]
+  - ["ευδοξ", "Eudoxus"]
+  - ["ησιοδ", "Hesiod"]
 
 sources:
   # Absolute paths stay out of the manifest; these are resolved relative to

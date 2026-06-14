@@ -10,16 +10,46 @@ from .config import BUILD_DIR, Manifest
 
 
 def _stage1(manifest):
-    from . import stage1_english, stage1_greek, stage1_ross
+    from . import stage1_greek
 
     spine_path = stage1_greek.run(manifest)
     spine = json.loads(spine_path.read_text(encoding="utf-8"))
-    eng_path, align_path = stage1_english.run(manifest, spine)
-    english = json.loads(eng_path.read_text(encoding="utf-8"))
-    ross_path = stage1_ross.run(manifest, spine, english)
-    ross = json.loads(ross_path.read_text(encoding="utf-8"))
-    print(f"  ross: segments_with_text={len(ross)} "
-          f"pieces={sum(len(v) for v in ross.values())}")
+
+    chapters_cfg = manifest.data.get("chapters", {})
+    if chapters_cfg.get("source") == "grc_tei":
+        # Greek-sourced chapters + a chapter-anchored archive English (e.g. DA).
+        from . import stage1_archive, stage1_chapters
+
+        chapters = stage1_chapters.extract_chapters_grc(
+            spine, chapters_cfg["grc_tei"],
+            chapters_cfg.get("chapter_subtype", "chapter"),
+            chapters_cfg.get("book_subtype", "book"),
+        )
+        eng_path, align_path = stage1_archive.run(manifest, spine, chapters)
+        english = json.loads(eng_path.read_text(encoding="utf-8"))
+        print(f"  chapters: {len(chapters)} (grc-aligned) "
+              f"english chunks={len(english['chunks'])} ({english['translation']})")
+    else:
+        # Rackham primary + Ross secondary (EN). Chapters come from the English
+        # TEI milestones by default, but if the manifest declares a grc TEI we
+        # text-align chapter lines onto the spine (exact) and override.
+        from . import stage1_english, stage1_ross
+
+        override = None
+        if chapters_cfg.get("grc_tei"):
+            from . import stage1_chapters
+            override = stage1_chapters.extract_chapters_grc(
+                spine, chapters_cfg["grc_tei"],
+                chapters_cfg.get("chapter_subtype", "chapter"),
+                chapters_cfg.get("book_subtype", "book"),
+            )
+            print(f"  chapters: {len(override)} (grc-aligned, overriding milestones)")
+        eng_path, align_path = stage1_english.run(manifest, spine, override)
+        english = json.loads(eng_path.read_text(encoding="utf-8"))
+        ross_path = stage1_ross.run(manifest, spine, english)
+        ross = json.loads(ross_path.read_text(encoding="utf-8"))
+        print(f"  ross: segments_with_text={len(ross)} "
+              f"pieces={sum(len(v) for v in ross.values())}")
     n_lines = sum(len(s["lines"]) for s in spine["segments"])
     print(f"stage1: segments={len(spine['segments'])} lines={n_lines} "
           f"unassigned={len(spine['unassigned_lines'])}")
@@ -108,8 +138,12 @@ _STAGES = {
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="aristotle_pipeline")
     parser.add_argument("stage", choices=[*_STAGES, "all"])
+    parser.add_argument(
+        "--work", default="EN",
+        help="work slug = manifest filename stem (default: EN)",
+    )
     args = parser.parse_args(argv)
-    manifest = Manifest.load()
+    manifest = Manifest.for_work(args.work)
     if args.stage == "all":
         for fn in _STAGES.values():
             fn(manifest)

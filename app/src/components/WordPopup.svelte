@@ -1,6 +1,7 @@
 <script lang="ts">
   import { lookupWord, type Analysis, type LsjEntry } from '../lib/data';
 
+  export let work: string = 'EN';
   export let token: { t: string; k: string };
   export let anchor: { x: number; y: number };
   export let onClose: () => void;
@@ -21,7 +22,7 @@
 
   $: pos = clampedPos(anchor.x, anchor.y);
 
-  lookupWord(token.k)
+  lookupWord(work, token.k)
     .then(r => { analyses = r.analyses; lsj = r.lsj; })
     .catch(e => { error = String(e); })
     .finally(() => { loading = false; });

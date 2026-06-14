@@ -44,12 +44,37 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
 // --- Scenes: edit/add freely. `run` may interact before the shot. ----------
 const scenes = [
   { name: 'home', path: '/' },
-  { name: 'book1', path: '/book/1' },
   {
+    // The corpus picker with the De Anima work expanded to show its translations.
+    name: 'home-expanded',
+    path: '/',
+    async run(page) {
+      await page.click('.works li:nth-child(2) summary');
+      await page.waitForTimeout(300);
+    },
+  },
+  { name: 'en-book1', path: '/EN/book/1' },
+  { name: 'da-book1', path: '/DA/book/1' },
+  { name: 'da-book2', path: '/DA/book/2' },
+  {
+    // Cross-work Greek search: ἀρετή occurs in both works → grouped by work.
     name: 'search-greek',
     path: '/search',
     async run(page) {
       await page.fill('#grk-input', 'areth');
+      await page.click('.search-btn');
+      await page.waitForSelector('.chapter-group', { timeout: 10000 });
+    },
+  },
+  {
+    // Exact-form match mode + a single-work filter (De Anima only).
+    name: 'search-form-filter',
+    path: '/search',
+    async run(page) {
+      await page.fill('#grk-input', 'logos');
+      // Deselect EN so only DA is searched.
+      await page.click('.work-chip:has-text("EN")');
+      await page.check('input[name="matchmode"][value="form"]');
       await page.click('.search-btn');
       await page.waitForSelector('.chapter-group', { timeout: 10000 });
     },
@@ -63,23 +88,14 @@ const scenes = [
     },
   },
   {
-    name: 'search-english',
-    path: '/search',
-    async run(page) {
-      await page.fill('#eng-input', 'pleasure');
-      await page.click('.search-btn');
-      await page.waitForSelector('.chapter-group', { timeout: 10000 });
-    },
-  },
-  {
-    // Type a Bekker citation in the header box and jump to that line.
-    name: 'bekker-jump',
-    path: '/book/1',
+    // Bekker citation jump in De Anima: 412a27, the entelecheia definition.
+    name: 'da-bekker-jump',
+    path: '/DA/book/2',
     async run(page) {
       await page.click('.bekker-toggle');
-      await page.fill('.bekker-jump input', '1097a15');
+      await page.fill('.bekker-jump input', '412a27');
       await Promise.all([
-        page.waitForURL(/loc=1097a:15/, { timeout: 10000 }),
+        page.waitForURL(/loc=412a:27/, { timeout: 10000 }),
         page.click('.bekker-jump button[type="submit"]'),
       ]);
       await page.waitForSelector('.greek-line.target', { timeout: 10000 });

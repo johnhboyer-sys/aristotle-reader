@@ -27,6 +27,8 @@ export interface EnglishChunk {
 export interface ChapterStart {
   chapter: string;
   beforeLine: number;  // insert the heading before the Greek line with this n
+  wordIndex: number;   // word index within that line where the chapter begins
+                       // (>0 means the chapter starts mid-line → split the line)
   engOffset: number;   // char offset in the English chunk where the chapter begins
   bekker: string;      // Bekker span, e.g. "1097a–1098b" (single column if equal)
 }
@@ -79,44 +81,53 @@ export interface LsjEntry {
 
 // Honour Astro's base path so data fetches work under a project Pages site as
 // well as at the root. BASE_URL may or may not carry a trailing slash, so strip
-// it and join explicitly.
-const BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
+// it and join explicitly. Each work's data lives under /data/<work>/.
+const ROOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
+const workBase = (work: string) => `${ROOT}/${work}`;
 
-const _analyses: { data: Record<string, Analysis[]> | null } = { data: null };
+// All caches are keyed by work so two works loaded in one session (e.g. unified
+// search) never collide.
+const _analysesCache = new Map<string, Promise<Record<string, Analysis[]>>>();
 const _lsjCache = new Map<string, Record<string, LsjEntry>>();
-const _bookCache = new Map<number, Promise<BookData>>();
+const _bookCache = new Map<string, Promise<BookData>>();
+const _chaptersCache = new Map<string, Promise<Record<string, ChapterRef[]>>>();
+const _columnsCache = new Map<string, Promise<Record<string, ColumnRef[]>>>();
 
-export function fetchBook(n: number): Promise<BookData> {
-  const cached = _bookCache.get(n);
+export function fetchBook(work: string, n: number): Promise<BookData> {
+  const key = `${work}:${n}`;
+  const cached = _bookCache.get(key);
   if (cached) return cached;
-  const p = fetch(`${BASE}/book-${String(n).padStart(2, '0')}.json`).then(r => {
-    if (!r.ok) throw new Error(`book ${n}: ${r.status}`);
+  const p = fetch(`${workBase(work)}/book-${String(n).padStart(2, '0')}.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} book ${n}: ${r.status}`);
     return r.json();
   });
-  _bookCache.set(n, p);
+  _bookCache.set(key, p);
   return p;
 }
 
-const _chapters: { data: Record<string, ChapterRef[]> | null } = { data: null };
-
-export async function fetchChapters(): Promise<Record<string, ChapterRef[]>> {
-  if (_chapters.data) return _chapters.data;
-  const r = await fetch(`${BASE}/chapters.json`);
-  if (!r.ok) throw new Error(`chapters: ${r.status}`);
-  _chapters.data = await r.json();
-  return _chapters.data!;
+export function fetchChapters(work: string): Promise<Record<string, ChapterRef[]>> {
+  const cached = _chaptersCache.get(work);
+  if (cached) return cached;
+  const p = fetch(`${workBase(work)}/chapters.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} chapters: ${r.status}`);
+    return r.json();
+  });
+  _chaptersCache.set(work, p);
+  return p;
 }
 
 // Bekker column -> owning book(s) with each book's line span in that column.
 export interface ColumnRef { book: number; lo: number; hi: number; }
-const _columns: { data: Record<string, ColumnRef[]> | null } = { data: null };
 
-export async function fetchColumns(): Promise<Record<string, ColumnRef[]>> {
-  if (_columns.data) return _columns.data;
-  const r = await fetch(`${BASE}/columns.json`);
-  if (!r.ok) throw new Error(`columns: ${r.status}`);
-  _columns.data = await r.json();
-  return _columns.data!;
+export function fetchColumns(work: string): Promise<Record<string, ColumnRef[]>> {
+  const cached = _columnsCache.get(work);
+  if (cached) return cached;
+  const p = fetch(`${workBase(work)}/columns.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} columns: ${r.status}`);
+    return r.json();
+  });
+  _columnsCache.set(work, p);
+  return p;
 }
 
 // Parse a raw Bekker citation (e.g. "1097a15", "1097a 15", "1097a.15") into
@@ -147,12 +158,15 @@ export function resolveBekker(
   return best.book;
 }
 
-export async function fetchAnalyses(): Promise<Record<string, Analysis[]>> {
-  if (_analyses.data) return _analyses.data;
-  const r = await fetch(`${BASE}/analyses.json`);
-  if (!r.ok) throw new Error(`analyses: ${r.status}`);
-  _analyses.data = await r.json();
-  return _analyses.data!;
+export function fetchAnalyses(work: string): Promise<Record<string, Analysis[]>> {
+  const cached = _analysesCache.get(work);
+  if (cached) return cached;
+  const p = fetch(`${workBase(work)}/analyses.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} analyses: ${r.status}`);
+    return r.json();
+  });
+  _analysesCache.set(work, p);
+  return p;
 }
 
 export function lsjShard(key: string): string {
@@ -163,19 +177,21 @@ export function lsjShard(key: string): string {
   return '_';
 }
 
-export async function fetchLsjShard(letter: string): Promise<Record<string, LsjEntry>> {
-  if (_lsjCache.has(letter)) return _lsjCache.get(letter)!;
-  const r = await fetch(`${BASE}/lsj/${letter}.json`);
+export async function fetchLsjShard(work: string, letter: string): Promise<Record<string, LsjEntry>> {
+  const key = `${work}:${letter}`;
+  if (_lsjCache.has(key)) return _lsjCache.get(key)!;
+  const r = await fetch(`${workBase(work)}/lsj/${letter}.json`);
   if (!r.ok) return {};
   const shard = await r.json();
-  _lsjCache.set(letter, shard);
+  _lsjCache.set(key, shard);
   return shard;
 }
 
 export async function lookupWord(
+  work: string,
   key: string
 ): Promise<{ analyses: Analysis[]; lsj: LsjEntry[] }> {
-  const allAnalyses = await fetchAnalyses();
+  const allAnalyses = await fetchAnalyses(work);
   const entries = allAnalyses[key] ?? [];
   const lsjEntries: LsjEntry[] = [];
   const seen = new Set<string>();
@@ -184,7 +200,7 @@ export async function lookupWord(
       if (seen.has(lsjKey)) continue;
       seen.add(lsjKey);
       const letter = lsjShard(lsjKey);
-      const shard = await fetchLsjShard(letter);
+      const shard = await fetchLsjShard(work, letter);
       if (shard[lsjKey]) lsjEntries.push(shard[lsjKey]);
     }
   }

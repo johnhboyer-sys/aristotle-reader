@@ -29,9 +29,14 @@ class Manifest:
 
     @classmethod
     def load(cls, path: Path | None = None) -> "Manifest":
-        path = path or REPO_ROOT / "manifests" / "ne.yaml"
+        path = path or REPO_ROOT / "manifests" / "EN.yaml"
         with open(path, encoding="utf-8") as f:
             return cls(yaml.safe_load(f), path)
+
+    @classmethod
+    def for_work(cls, work: str) -> "Manifest":
+        """Load the manifest for a work slug, e.g. 'EN' or 'DA'."""
+        return cls.load(REPO_ROOT / "manifests" / f"{work}.yaml")
 
     @property
     def work_id(self) -> str:

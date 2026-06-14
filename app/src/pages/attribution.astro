@@ -1,5 +1,4 @@
 ---
-import BekkerJump from '../components/BekkerJump.svelte';
 import '../styles/global.css';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
@@ -7,7 +6,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Texts &amp; Licences — Nicomachean Ethics</title>
+  <title>Texts &amp; Licences — Aristotle</title>
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -61,14 +60,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 </head>
 <body>
   <header class="page-header">
-    <h1><a href={`${base}/`} style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
-    <BekkerJump client:load />
+    <div class="header-title">
+      <a class="home-link" href={`${base}/`} title="All works">Aristotle</a>
+      <span class="title-sep">›</span>
+      <span class="header-static">Texts &amp; Licences</span>
+    </div>
     <nav class="book-nav" aria-label="Navigation">
-      {Array.from({ length: 10 }, (_, i) => (
-        <a href={`${base}/book/${i + 1}`}>
-          {['I','II','III','IV','V','VI','VII','VIII','IX','X'][i]}
-        </a>
-      ))}
+      <a href={`${base}/`} class="search-link">All works</a>
       <a href={`${base}/search`} class="search-link">Search</a>
     </nav>
   </header>
@@ -76,9 +74,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <div class="attr-body">
     <h2>Texts &amp; Licences</h2>
     <p>
-      This reader presents three bodies of text compiled from public-domain
-      editions and openly licensed reference works. Their sources and licence
-      terms are listed below.
+      This reader presents Greek texts, English translations, and reference
+      works compiled from public-domain editions and openly licensed sources.
+      Their sources and licence terms are listed below.
     </p>
 
     <h2>
@@ -119,10 +117,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <span class="licence-badge pd">Public Domain</span>
     </h2>
     <p>
-      Two translations, chosen from the <em>Translation</em> menu:
+      Each work offers its translation(s) from the <em>Translation</em> menu in
+      the reader.
     </p>
 
-    <p><strong>H. Rackham</strong> (Loeb Classical Library):</p>
+    <p><strong>Nicomachean Ethics — H. Rackham</strong> (Loeb Classical Library):</p>
     <blockquote>
       Aristotle. <em>Nicomachean Ethics.</em>
       Translated by H. Rackham.
@@ -130,11 +129,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       Cambridge, MA: Harvard University Press, 1926.
     </blockquote>
 
-    <p><strong>W. D. Ross</strong> (Oxford):</p>
+    <p><strong>Nicomachean Ethics — W. D. Ross</strong> (Oxford):</p>
     <blockquote>
       Aristotle. <em>Nicomachean Ethics.</em>
       Translated by W. D. Ross. In <em>The Works of Aristotle Translated into
       English</em>, vol. IX. Oxford: Clarendon Press, 1925.
+    </blockquote>
+
+    <p><strong>De Anima — J. A. Smith</strong> (Oxford):</p>
+    <blockquote>
+      Aristotle. <em>On the Soul (De Anima).</em>
+      Translated by J. A. Smith. In <em>The Works of Aristotle Translated into
+      English</em>, vol. III. Oxford: Clarendon Press, 1931.
+      Text from the <a href="http://classics.mit.edu/">Internet Classics Archive</a>.
     </blockquote>
 
     <h2>
@@ -142,7 +149,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <span class="licence-badge pd">Public Domain</span>
     </h2>
     <p>
-      The Greek text is the edition of Ingram Bywater:
+      The <em>Nicomachean Ethics</em> Greek is the edition of Ingram Bywater:
     </p>
     <blockquote>
       Aristotle. <span class="greek">Ἀριστοτέλους Ἠθικὰ Νικομάχεια.</span>
@@ -150,6 +157,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       Oxford: Clarendon Press (Oxford Classical Texts), 1894.
       Reprinted 1962.
     </blockquote>
+    <p>
+      The <em>De Anima</em> Greek is the edition of W. D. Ross:
+    </p>
+    <blockquote>
+      Aristotle. <span class="greek">Περὶ Ψυχῆς.</span>
+      Edited by W. D. Ross.
+      Oxford: Clarendon Press (Oxford Classical Texts), 1956.
+    </blockquote>
+    <p>
+      Chapter divisions for <em>De Anima</em> follow the TEI markup of the
+      <a href="https://opengreekandlatin.github.io/First1KGreek/">Open Greek and
+      Latin First1KGreek</a> edition, aligned onto the Bekker-lineated Greek.
+    </p>
 
     <h2>
       Morphological Data

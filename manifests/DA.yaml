@@ -1,0 +1,71 @@
+# De Anima — pipeline manifest
+#
+# Unlike EN, De Anima has no Bekker-milestoned English TEI on Perseus. So:
+#   - chapter divisions come from the First1KGreek Greek TEI, text-aligned onto
+#     the Bekker-keyed TLG spine (chapters.source: grc_tei);
+#   - the English (J. A. Smith) is a chapter-anchored archive text distributed
+#     across the Bekker columns with an interpolated gutter (english.model:
+#     archive), the same way Ross is handled for EN.
+# Book boundaries are the standard Bekker ranges; 424b is a mid-column book
+# start (Book II runs 424b1-21, Book III begins 424b22).
+
+work:
+  id: DA
+  title: "De Anima"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "002"
+  greek_edition: "Ross, Aristotelis De Anima (OCT, 1956)"
+  english_translation: "J. A. Smith (Oxford, 1931)"
+
+bekker_range:
+  first_column: "402a"
+  last_column: "435b"
+
+# Where chapter divisions come from. For DA we have no English TEI milestones,
+# so we read the chapter <div>s from the Greek TEI and text-align their openings
+# onto the TLG spine to recover each chapter's exact (column, line).
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg002.1st1K-grc1.xml"
+
+# The English translation(s). `model: archive` = chapter-anchored prose from the
+# MIT Internet Classics Archive (no inline Bekker milestones; gutter interpolated,
+# optionally seeded by a hand-keyed anchors file). The first entry is the primary
+# parallel English; later entries populate the secondary/compare slot.
+english:
+  primary:
+    id: smith
+    name: "J. A. Smith (Oxford, 1931)"
+    model: archive
+    dir: "da-smith"
+    books: 3
+    chapter_marker: part          # "Part N" lines (Ross archive uses bare numbers)
+    # anchors: "da-smith/anchors.yaml"   # optional hand-keyed Bekker anchors
+  # secondary:                          # e.g. R. D. Hicks (1907) when sourced
+  #   id: hicks
+  #   name: "R. D. Hicks (Cambridge, 1907)"
+  #   model: archive
+  #   dir: "da-hicks"
+  #   books: 3
+  #   chapter_marker: part
+
+mid_column_book_starts:
+  - { book: 3, column: "424b" }
+
+# Non-book-boundary line-number gaps that are real features of this Greek
+# edition (verified against the TLG export), so the Stage 2 validator treats
+# them as expected rather than flagging them. 430b numbers a line 20 twice.
+expected_line_gaps:
+  - { column: "430b", after: 20, next: 20 }
+
+books:
+  - { n: 1, start: "402a1",  end: "411b30" }
+  - { n: 2, start: "412a1",  end: "424b18" }   # 424b19-21 absent; Book III starts 424b22
+  - { n: 3, start: "424b22", end: "435b25" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

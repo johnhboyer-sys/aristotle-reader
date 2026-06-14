@@ -1,6 +1,10 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { fetchColumns, parseBekker, resolveBekker, type ColumnRef } from '../lib/data';
+  import { getWork } from '../lib/works';
+
+  export let work: string = 'EN';
+  const workMeta = getWork(work);
 
   let open = false;
   let value = '';
@@ -9,7 +13,7 @@
   let inputEl: HTMLInputElement | undefined;
 
   // Preload the column index so the first lookup is instant.
-  onMount(() => { fetchColumns().then(c => (columns = c)).catch(() => {}); });
+  onMount(() => { fetchColumns(work).then(c => (columns = c)).catch(() => {}); });
 
   async function openBox() {
     open = true;
@@ -31,15 +35,15 @@
       error = 'Enter a Bekker citation, e.g. 1097a15';
       return;
     }
-    const cols = columns ?? (await fetchColumns().catch(() => null));
+    const cols = columns ?? (await fetchColumns(work).catch(() => null));
     if (!cols) { error = 'Could not load the index — try again'; return; }
     const book = resolveBekker(cols, ref.column, ref.line);
     if (book == null) {
-      error = `${ref.column} is not in the Nicomachean Ethics`;
+      error = `${ref.column} is not in the ${workMeta?.title ?? 'text'}`;
       return;
     }
     // Same-tab navigation; the reader snaps to the nearest line if exact is absent.
-    window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/book/${book}?loc=${ref.column}:${ref.line}`;
+    window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${work}/book/${book}?loc=${ref.column}:${ref.line}`;
   }
 
   function onKey(e: KeyboardEvent) {

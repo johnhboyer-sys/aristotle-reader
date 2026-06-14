@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { search, type SearchMode, type LangOp } from '../lib/search';
+  import { search, type SearchMode, type LangOp, type MatchMode } from '../lib/search';
   import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
+  import { WORKS, getWork } from '../lib/works';
 
   // One match occurrence, located precisely enough to label and jump to.
   interface Instance {
@@ -14,6 +15,7 @@
   // All instances within one chapter, merged into a single (collapsible) card.
   interface ChapterGroup {
     key: string;
+    work: string;
     book: number;
     chapter: string;
     bekker: string;
@@ -25,6 +27,9 @@
   let engQuery = '';
   let mode: SearchMode = 'all';
   let langOp: LangOp = 'and';
+  let matchMode: MatchMode = 'lemma';
+  // Which works to search. Default: all. Multi-select chips below the query.
+  let selectedWorks = new Set<string>(WORKS.map(w => w.id));
   let groups: ChapterGroup[] = [];
   let totalInstances = 0;
   let expanded = new Set<string>();
@@ -33,11 +38,27 @@
   let error = '';
   let showHelp = false;
 
-  // Books present in the results, in order, each with its chapter groups.
-  $: groupsByBook = (() => {
-    const m = new Map<number, ChapterGroup[]>();
-    for (const g of groups) (m.get(g.book) ?? m.set(g.book, []).get(g.book)!).push(g);
-    return [...m.entries()].sort((a, b) => a[0] - b[0]);
+  const workOrder = new Map(WORKS.map((w, i) => [w.id, i]));
+
+  function toggleWork(id: string) {
+    if (selectedWorks.has(id)) { if (selectedWorks.size > 1) selectedWorks.delete(id); }
+    else selectedWorks.add(id);
+    selectedWorks = selectedWorks; // reactivity
+  }
+
+  // Results grouped Work → Book → chapter groups, in corpus then numeric order.
+  $: groupsByWork = (() => {
+    const byWork = new Map<string, Map<number, ChapterGroup[]>>();
+    for (const g of groups) {
+      const books = byWork.get(g.work) ?? byWork.set(g.work, new Map()).get(g.work)!;
+      (books.get(g.book) ?? books.set(g.book, []).get(g.book)!).push(g);
+    }
+    return [...byWork.entries()]
+      .sort((a, b) => (workOrder.get(a[0]) ?? 0) - (workOrder.get(b[0]) ?? 0))
+      .map(([work, books]) => ({
+        work,
+        books: [...books.entries()].sort((a, b) => a[0] - b[0]),
+      }));
   })();
 
   function toggle(key: string) {
@@ -45,8 +66,6 @@
     else expanded.add(key);
     expanded = expanded; // trigger reactivity
   }
-
-  const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 
   // Beta Code reference for the "How to type Greek" chart. Keys are the same
   // letters the search index uses, so anything typed here matches directly.
@@ -155,25 +174,29 @@
     error = '';
     searched = false;
     try {
-      const results = await search(grkQuery, engQuery, mode, langOp);
-      const books = [...new Set(results.map(r => r.meta.book))];
-      const [chaptersAll, ...bookDatas] = await Promise.all([
-        fetchChapters(),
-        ...books.map(b => fetchBook(b)),
-      ]);
-      const segMap = new Map<string, Segment>();
-      const lookups = new Map<number, ReturnType<typeof chapterLookup>>();
-      books.forEach((b, i) => {
-        const data = bookDatas[i];
-        for (const s of data.segments) segMap.set(s.id, s);
-        lookups.set(b, chapterLookup(data, chaptersAll[String(b)] ?? []));
-      });
+      const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
+      const results = await search(grkQuery, engQuery, mode, langOp, works, matchMode);
+
+      // Load each (work, book) present in the results, plus each work's chapters.
+      const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
+      const workSet = [...new Set(results.map(r => r.work))];
+      const chaptersByWork = new Map<string, Record<string, ChapterRef[]>>();
+      await Promise.all(workSet.map(async w => chaptersByWork.set(w, await fetchChapters(w))));
+      const segMap = new Map<string, Segment>();             // key: work:segId
+      const lookups = new Map<string, ReturnType<typeof chapterLookup>>(); // key: work:book
+      await Promise.all(wbPairs.map(async pair => {
+        const [w, bStr] = pair.split(':');
+        const b = Number(bStr);
+        const data = await fetchBook(w, b);
+        for (const s of data.segments) segMap.set(`${w}:${s.id}`, s);
+        lookups.set(pair, chapterLookup(data, chaptersByWork.get(w)?.[String(b)] ?? []));
+      }));
 
       const gmap = new Map<string, ChapterGroup>();
-      const add = (book: number, ch: { chapter: string; bekker: string; order: number }, inst: Instance) => {
-        const key = `${book}:${ch.chapter}`;
+      const add = (work: string, book: number, ch: { chapter: string; bekker: string; order: number }, inst: Instance) => {
+        const key = `${work}:${book}:${ch.chapter}`;
         let g = gmap.get(key);
-        if (!g) { g = { key, book, chapter: ch.chapter, bekker: ch.bekker, order: ch.order, instances: [] }; gmap.set(key, g); }
+        if (!g) { g = { key, work, book, chapter: ch.chapter, bekker: ch.bekker, order: ch.order, instances: [] }; gmap.set(key, g); }
         g.instances.push(inst);
       };
 
@@ -183,29 +206,29 @@
       if (engQuery.trim()) qs.set('hle', engQuery.trim());
       const base = qs.toString();
       const root = import.meta.env.BASE_URL.replace(/\/$/, '');
-      const jumpFor = (book: number, column: string, line: number) =>
-        `${root}/book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+      const jumpFor = (work: string, book: number, column: string, line: number) =>
+        `${root}/${work}/book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
 
       for (const r of results) {
-        const seg = segMap.get(r.meta.id);
-        const lookup = lookups.get(r.meta.book);
+        const seg = segMap.get(`${r.work}:${r.meta.id}`);
+        const lookup = lookups.get(`${r.work}:${r.meta.book}`);
         if (!seg || !lookup) continue;
         if (r.grkMatch) {
           for (const pos of r.grkPositions) {
             const line = lineOfPosition(seg, pos);
             const ch = lookup(seg.column, line);
-            add(r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.meta.book, seg.column, line) });
+            add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
           }
         }
         if (r.engMatch) {
           const line = englishLine(seg, engTerms);
           const ch = lookup(seg.column, line);
-          add(r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, engTerms), jumpUrl: jumpFor(r.meta.book, seg.column, line) });
+          add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, engTerms), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
         }
       }
 
       for (const g of gmap.values()) g.instances.sort((a, b) => a.line - b.line);
-      groups = [...gmap.values()].sort((a, b) => a.book - b.book || a.order - b.order);
+      groups = [...gmap.values()].sort((a, b) => (workOrder.get(a.work)! - workOrder.get(b.work)!) || a.book - b.book || a.order - b.order);
       totalInstances = groups.reduce((n, g) => n + g.instances.length, 0);
       // Single-hit chapters open by default; merged (multi-hit) start collapsed.
       expanded = new Set(groups.filter(g => g.instances.length === 1).map(g => g.key));
@@ -338,6 +361,20 @@
       />
     </div>
 
+    <div class="works-row" role="group" aria-label="Works to search">
+      <span class="works-label">Works</span>
+      {#each WORKS as w}
+        <button
+          type="button"
+          class="work-chip"
+          class:on={selectedWorks.has(w.id)}
+          aria-pressed={selectedWorks.has(w.id)}
+          on:click={() => toggleWork(w.id)}
+          title={w.title}
+        >{w.abbr} · {w.title}</button>
+      {/each}
+    </div>
+
     <div class="controls-row">
       <fieldset class="mode-group">
         <legend>Mode</legend>
@@ -348,6 +385,14 @@
           </label>
         {/each}
       </fieldset>
+
+      {#if grkQuery.trim()}
+        <fieldset class="mode-group" title="Lemma matches every inflected form of a headword; Exact form matches the word only as written">
+          <legend>Greek match</legend>
+          <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Lemma</label>
+          <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Exact form</label>
+        </fieldset>
+      {/if}
 
       {#if grkQuery.trim() && engQuery.trim()}
         <fieldset class="op-group">
@@ -430,11 +475,12 @@
         : `${totalInstances} instance${totalInstances === 1 ? '' : 's'} in ${groups.length} chapter${groups.length === 1 ? '' : 's'}`}
     </p>
 
-    {#each groupsByBook as [book, bookGroups]}
+    {#each groupsByWork as wg}
+      {#each wg.books as [book, bookGroups]}
       <section class="book-section">
         <h2 class="book-header">
-          <span class="work-name">Nicomachean Ethics</span>
-          <span class="book-name">Book {ROMAN[book - 1]}</span>
+          <span class="work-name">{getWork(wg.work)?.title ?? wg.work}</span>
+          <span class="book-name">Book {getWork(wg.work)?.bookLabels[book - 1] ?? book}</span>
         </h2>
 
         {#each bookGroups as g (g.key)}
@@ -462,6 +508,7 @@
           </div>
         {/each}
       </section>
+      {/each}
     {/each}
   {/if}
 </div>
@@ -523,6 +570,39 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
+  }
+
+  .works-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .works-label {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text-mid);
+    width: 3.5rem;
+    flex-shrink: 0;
+  }
+  .work-chip {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .work-chip:hover { border-color: var(--accent-light); }
+  .work-chip.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
   }
 
   fieldset {

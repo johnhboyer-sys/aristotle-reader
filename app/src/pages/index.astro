@@ -1,6 +1,196 @@
 ---
-// Redirect to Book I (honouring the configured base path).
+import { WORKS } from '../lib/works';
+import '../styles/global.css';
+
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const href = (work: string, q = '') => `${base}/${work}/book/1${q}`;
 ---
-<meta http-equiv="refresh" content={`0;url=${base}/book/1`} />
-<a href={`${base}/book/1`}>Book I</a>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aristotle — Greek reader</title>
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body class="home">
+  <main class="corpus">
+    <header class="masthead">
+      <p class="eyebrow">Aristotle</p>
+      <h1>The Greek Library</h1>
+      <p class="lede">A parallel-text reader with morphology, dictionary, and Bekker citation. Choose a work to begin.</p>
+    </header>
+
+    <ul class="works">
+      {WORKS.map((w) => (
+        <li>
+          <details class="work">
+            <summary>
+              <span class="work-name">{w.title}</span>
+              <span class="work-meta">{w.abbr} · {w.books} book{w.books > 1 ? 's' : ''}</span>
+              <span class="chev" aria-hidden="true"></span>
+            </summary>
+            <div class="panel">
+              <p class="blurb">{w.blurb}</p>
+              <ul class="editions">
+                {w.translations.map((t) => (
+                  <li>
+                    <a href={href(w.id, `?trans=${t.id}`)}>
+                      <span class="ed-name">{t.short}</span>
+                      <span class="ed-kind">Greek &amp; English · {t.name}</span>
+                    </a>
+                  </li>
+                ))}
+                {w.translations.length > 1 && (
+                  <li>
+                    <a href={href(w.id, '?trans=compare')}>
+                      <span class="ed-name">Compare</span>
+                      <span class="ed-kind">Both translations side by side</span>
+                    </a>
+                  </li>
+                )}
+                <li>
+                  <a href={href(w.id, '?view=greek')}>
+                    <span class="ed-name">Greek only</span>
+                    <span class="ed-kind">{w.greekEdition}</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </details>
+        </li>
+      ))}
+    </ul>
+
+    <nav class="home-foot">
+      <a href={`${base}/search`}>Search the corpus</a>
+      <span aria-hidden="true">·</span>
+      <a href={`${base}/attribution`}>Texts &amp; Licences</a>
+    </nav>
+  </main>
+
+  <style>
+    body.home { background: var(--page-bg); color: var(--text); }
+    .corpus {
+      max-width: 40rem;
+      margin: 0 auto;
+      padding: clamp(2.5rem, 8vh, 6rem) 1.5rem 4rem;
+    }
+    .masthead { text-align: center; margin-bottom: 2.75rem; }
+    .eyebrow {
+      font-family: var(--font-ui);
+      text-transform: uppercase;
+      letter-spacing: .28em;
+      font-size: .72rem;
+      color: var(--accent-light);
+      margin-bottom: .6rem;
+    }
+    .masthead h1 {
+      font-family: var(--font-greek);
+      font-weight: 400;
+      font-size: clamp(2.1rem, 6vw, 2.9rem);
+      letter-spacing: .01em;
+      color: var(--text);
+    }
+    .lede {
+      font-family: var(--font-english);
+      color: var(--text-mid);
+      font-size: 1.02rem;
+      max-width: 28rem;
+      margin: .9rem auto 0;
+      line-height: 1.5;
+    }
+
+    .works { list-style: none; display: flex; flex-direction: column; gap: .9rem; }
+
+    .work {
+      background: var(--col-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .work[open] { box-shadow: 0 6px 22px rgba(0,0,0,.05); border-color: var(--accent-light); }
+    .work:hover { border-color: var(--accent-light); }
+
+    summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: baseline;
+      gap: .75rem;
+      padding: 1.05rem 1.3rem;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    .work-name {
+      font-family: var(--font-greek);
+      font-size: 1.4rem;
+      color: var(--text);
+    }
+    .work-meta {
+      font-family: var(--font-ui);
+      font-size: .76rem;
+      letter-spacing: .04em;
+      color: var(--text-light);
+      text-transform: uppercase;
+    }
+    .chev {
+      margin-left: auto;
+      width: .5rem; height: .5rem;
+      border-right: 1.5px solid var(--text-light);
+      border-bottom: 1.5px solid var(--text-light);
+      transform: rotate(45deg) translateY(-2px);
+      transition: transform .18s ease;
+      align-self: center;
+    }
+    .work[open] .chev { transform: rotate(225deg); }
+
+    .panel { padding: 0 1.3rem 1.1rem; }
+    .blurb {
+      font-family: var(--font-english);
+      color: var(--text-mid);
+      font-size: .98rem;
+      margin: 0 0 .85rem;
+      padding-top: .25rem;
+      border-top: 1px solid var(--border);
+    }
+    .editions { list-style: none; display: flex; flex-direction: column; gap: .35rem; }
+    .editions a {
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+      padding: .55rem .7rem;
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text);
+      transition: background .12s ease;
+    }
+    .editions a:hover { background: var(--page-bg); }
+    .ed-name {
+      font-family: var(--font-english);
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+    .ed-kind {
+      font-family: var(--font-ui);
+      font-size: .78rem;
+      color: var(--text-light);
+    }
+
+    .home-foot {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-family: var(--font-ui);
+      font-size: .85rem;
+      color: var(--text-light);
+      display: flex; justify-content: center; gap: .7rem;
+    }
+    .home-foot a { color: var(--text-mid); text-decoration: none; }
+    .home-foot a:hover { color: var(--accent); }
+  </style>
+</body>
+</html>

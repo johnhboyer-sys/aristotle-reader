@@ -91,7 +91,7 @@ def run(manifest: Manifest) -> Path:
 
     # Hand-reviewed overrides for forms Morpheus doesn't know (letter
     # labels in the Book V proportions, odd compounds).
-    patch_path = manifest.path.parent / "ne-analyses-patch.json"
+    patch_path = manifest.path.parent / f"{manifest.work_id}-analyses-patch.json"
     patches: dict[str, list] = {}
     if patch_path.exists():
         patches = json.loads(patch_path.read_text(encoding="utf-8"))

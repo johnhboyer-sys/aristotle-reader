@@ -25,23 +25,6 @@ from pathlib import Path
 from .config import BUILD_DIR, Manifest
 from .refs import column_key, column_range, ref_key
 
-# Names frequent enough in the NE to anchor a cross-language spot check.
-# Greek side is matched diacritic-stripped and lowercased, because accents
-# move under declension (Ὅμηρος -> Ὁμήρου). Rackham spells "Pheidias".
-PROPER_NAMES = [
-    ("σωκρατ", "Socrates"),
-    ("περικλ", "Pericles"),
-    ("ομηρ", "Homer"),
-    ("μιλων", "Milo"),
-    ("πριαμ", "Priam"),
-    ("φειδι", "Pheidias"),
-    ("πλατων", "Plato"),
-    ("σπευσιππ", "Speusippus"),
-    ("ευδοξ", "Eudoxus"),
-    ("ησιοδ", "Hesiod"),
-]
-
-
 def _base(text: str) -> str:
     decomposed = unicodedata.normalize("NFD", text)
     return "".join(c for c in decomposed if not unicodedata.combining(c)).lower()
@@ -92,6 +75,9 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
         s_page, s_side, s_line = ref_key(nxt["start"])
         if (e_page, e_side) == (s_page, s_side):
             expected_gaps.add((f"{e_page}{e_side}", e_line, s_line))
+    # Edition quirks declared in the manifest (e.g. a repeated line number).
+    for g in manifest.data.get("expected_line_gaps", []):
+        expected_gaps.add((g["column"], g["after"], g["next"]))
     gaps = []
     lines_by_col: dict[str, list[int]] = defaultdict(list)
     for seg in segments:
@@ -155,8 +141,9 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
     for c in english["chunks"]:
         eng_text_by_col[c["column"]] += c["text"]
     greek_base_by_col = {c: _base(t) for c, t in greek_text_by_col.items()}
+    proper_names = [tuple(p) for p in manifest.data.get("proper_names", [])]
     name_results = []
-    for grc, eng_name in PROPER_NAMES:
+    for grc, eng_name in proper_names:
         grc_cols = {c for c, t in greek_base_by_col.items() if grc in t}
         eng_cols = {c for c, t in eng_text_by_col.items() if eng_name in t}
         # English chunk boundaries sit exactly at milestones, but a sentence
