@@ -39,7 +39,7 @@
       return;
     }
     // Same-tab navigation; the reader snaps to the nearest line if exact is absent.
-    window.location.href = `${import.meta.env.BASE_URL}book/${book}?loc=${ref.column}:${ref.line}`;
+    window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/book/${book}?loc=${ref.column}:${ref.line}`;
   }
 
   function onKey(e: KeyboardEvent) {

@@ -182,8 +182,9 @@
       if (grkQuery.trim()) qs.set('hlg', grkQuery.trim());
       if (engQuery.trim()) qs.set('hle', engQuery.trim());
       const base = qs.toString();
+      const root = import.meta.env.BASE_URL.replace(/\/$/, '');
       const jumpFor = (book: number, column: string, line: number) =>
-        `${import.meta.env.BASE_URL}book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+        `${root}/book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
 
       for (const r of results) {
         const seg = segMap.get(r.meta.id);

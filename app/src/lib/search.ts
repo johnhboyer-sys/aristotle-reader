@@ -9,8 +9,8 @@
 // Phrase search: after intersection, verify token adjacency in segment data.
 // Cross-language: AND (intersection) or OR (union) the two result sets.
 
-// Honour Astro's base path (e.g. '/nicomachean-ethics/'). BASE_URL ends with '/'.
-const BASE = `${import.meta.env.BASE_URL}data/search`.replace(/\/{2,}/g, '/');
+// Honour Astro's base path. BASE_URL may lack a trailing slash, so strip + join.
+const BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data/search`;
 
 // -- Data types -----------------------------------------------------------
 
