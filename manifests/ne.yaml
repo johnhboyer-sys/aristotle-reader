@@ -19,6 +19,14 @@ bekker_range:
   first_column: "1094a"
   last_column: "1181b"
 
+# Chapter heading placement. Rackham stays the English; chapter START lines are
+# text-aligned onto the Greek spine from this grc TEI's section divs (exact line
+# + in-line word index), replacing the milestone-interpolated estimate that
+# drifted within a column.
+chapters:
+  grc_tei: "tlg0086.tlg010.perseus-grc2.xml"
+  chapter_subtype: section
+
 # Columns where a new book starts mid-column. The English TEI emits a
 # duplicate page milestone at these restarts — except Books II (1103a14)
 # and VII (1145a15), which have none and must be detected via their

@@ -146,8 +146,39 @@
   // A segment renders as one or more blocks split at chapter boundaries.
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
   // `rows` lay the English prose out beside its Bekker-line gutter (see below).
+  // A GreekLine may be a partial slice of a real line (cont = its tail half,
+  // after a mid-line chapter split): it suppresses the repeated line number/id.
+  type RLine = GreekLine & { cont?: boolean };
   interface EngRow { n: number | null; real: boolean; text: string; }
-  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; rows: EngRow[]; rossRows: EngRow[]; }
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; rows: EngRow[]; rossRows: EngRow[]; }
+
+  // The char position where token `w` begins in a line's text (0 at the start,
+  // text.length at/after the end), so a cut preserves the verbatim
+  // punctuation/sigla between words on the correct side.
+  function tokenPos(line: GreekLine, w: number): number {
+    if (w <= 0) return 0;
+    if (w >= line.tokens.length) return line.text.length;
+    let ptr = 0;
+    for (let i = 0; i < w; i++) {
+      const idx = line.text.indexOf(line.tokens[i].t, ptr);
+      if (idx >= 0) ptr = idx + line.tokens[i].t.length;
+    }
+    const cut = line.text.indexOf(line.tokens[w].t, ptr);
+    return cut >= 0 ? cut : ptr;
+  }
+
+  // The sub-line covering tokens [fromW, toW) — used to split a Greek line at a
+  // chapter boundary that falls mid-line (most chapters start mid-line). A
+  // partial tail (fromW>0) is marked `cont` so the line number/id isn't repeated.
+  function lineSlice(line: GreekLine, fromW: number, toW: number): RLine {
+    fromW = Math.max(0, fromW);
+    toW = Math.min(line.tokens.length, toW);
+    if (fromW === 0 && toW === line.tokens.length) return line;
+    let text = line.text.slice(tokenPos(line, fromW), tokenPos(line, toW));
+    if (fromW > 0) text = text.replace(/^\s+/, '');
+    if (toW < line.tokens.length) text = text.replace(/\s+$/, '');
+    return { n: line.n, text, tokens: line.tokens.slice(fromW, toW), cont: fromW > 0 };
+  }
 
   // The gutter renders each tick as its own block row, so a row boundary forces
   // a visual line break. To avoid splitting a sentence (which happens when an
@@ -246,24 +277,55 @@
     const rossCont = () => rossRowsOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
     const rossFor = (chapter: string) => rossRowsOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
 
-    const starts = (seg.chapterStarts ?? []).slice().sort((a, b) => a.beforeLine - b.beforeLine);
+    const starts = (seg.chapterStarts ?? []).slice()
+      .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
     if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont() }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
       return i === -1 ? greek.length : i;
     };
+    // Each chapter boundary is a cut at (line index, word index within the line).
+    const bounds = starts.map(s => ({
+      chapter: s.chapter, bekker: s.bekker, engOffset: s.engOffset,
+      idx: lineIdx(s.beforeLine), word: s.wordIndex || 0,
+    }));
+
+    // The Greek lines spanning a block from cut (idxA,wA) to cut (idxB,wB),
+    // splitting the boundary lines mid-line where wA/wB > 0.
+    const linesFor = (idxA: number, wA: number, idxB: number, wB: number): RLine[] => {
+      if (idxA >= greek.length) return [];
+      if (idxA === idxB) {                       // block lies within one line
+        const sl = lineSlice(greek[idxA], wA, wB);
+        return sl.tokens.length || sl.text.trim() ? [sl] : [];
+      }
+      const res: RLine[] = [];
+      for (let i = idxA; i < idxB && i < greek.length; i++) {
+        res.push(i === idxA && wA > 0 ? lineSlice(greek[i], wA, greek[i].tokens.length) : greek[i]);
+      }
+      if (wB > 0 && idxB < greek.length) res.push(lineSlice(greek[idxB], 0, wB));
+      return res;
+    };
+
     const blocks: Block[] = [];
-    const firstIdx = lineIdx(starts[0].beforeLine);
+    const first = bounds[0];
     // Lines/English before the first chapter start continue the previous chapter.
-    if (firstIdx > 0 || starts[0].engOffset > 0) {
-      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont() });
+    if (first.idx > 0 || first.word > 0 || starts[0].engOffset > 0) {
+      blocks.push({
+        chapter: null, bekker: '',
+        lines: linesFor(0, 0, first.idx, first.word),
+        rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont(),
+      });
     }
-    for (let i = 0; i < starts.length; i++) {
-      const from = lineIdx(starts[i].beforeLine);
-      const to = i + 1 < starts.length ? lineIdx(starts[i + 1].beforeLine) : greek.length;
-      const engTo = i + 1 < starts.length ? starts[i + 1].engOffset : text.length;
-      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), rows: rowsFor(starts[i].engOffset, engTo), rossRows: rossFor(starts[i].chapter) });
+    for (let i = 0; i < bounds.length; i++) {
+      const b = bounds[i];
+      const next = bounds[i + 1];
+      const engTo = next ? next.engOffset : text.length;
+      blocks.push({
+        chapter: b.chapter, bekker: b.bekker,
+        lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
+        rows: rowsFor(b.engOffset, engTo), rossRows: rossFor(b.chapter),
+      });
     }
     return blocks;
   }
@@ -406,8 +468,8 @@
             <!-- Greek column -->
             <div class="greek-col">
               {#each block.lines as line}
-                <div class="greek-line" id="L{seg.column}-{line.n}" class:target={targetId === `L${seg.column}-${line.n}`}>
-                  <span class="line-num">{showLineNum(line.n)}</span>
+                <div class="greek-line" id={line.cont ? `L${seg.column}-${line.n}-c` : `L${seg.column}-${line.n}`} class:target={!line.cont && targetId === `L${seg.column}-${line.n}`}>
+                  <span class="line-num">{line.cont ? '' : showLineNum(line.n)}</span>
                   <span class="line-text">{#each lineParts(line) as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
                         class="tok"
                         class:active={popup?.token === part.tok}

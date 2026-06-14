@@ -27,6 +27,8 @@ export interface EnglishChunk {
 export interface ChapterStart {
   chapter: string;
   beforeLine: number;  // insert the heading before the Greek line with this n
+  wordIndex: number;   // word index within that line where the chapter begins
+                       // (>0 means the chapter starts mid-line → split the line)
   engOffset: number;   // char offset in the English chunk where the chapter begins
   bekker: string;      // Bekker span, e.g. "1097a–1098b" (single column if equal)
 }

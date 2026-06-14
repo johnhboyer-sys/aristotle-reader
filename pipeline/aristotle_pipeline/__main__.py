@@ -14,7 +14,21 @@ def _stage1(manifest):
 
     spine_path = stage1_greek.run(manifest)
     spine = json.loads(spine_path.read_text(encoding="utf-8"))
-    eng_path, align_path = stage1_english.run(manifest, spine)
+    # Chapter heading lines come from the English TEI milestones by default, but
+    # if the manifest declares a grc TEI we text-align chapter incipits onto the
+    # Greek spine (exact line + in-line word index) and override — fixes headings
+    # that the milestone interpolation placed on the wrong line / mid-line.
+    override = None
+    chapters_cfg = manifest.data.get("chapters", {})
+    if chapters_cfg.get("grc_tei"):
+        from . import stage1_chapters
+        override = stage1_chapters.extract_chapters_grc(
+            spine, chapters_cfg["grc_tei"],
+            chapters_cfg.get("chapter_subtype", "chapter"),
+            chapters_cfg.get("book_subtype", "book"),
+        )
+        print(f"  chapters: {len(override)} (grc-aligned, overriding milestones)")
+    eng_path, align_path = stage1_english.run(manifest, spine, override)
     english = json.loads(eng_path.read_text(encoding="utf-8"))
     ross_path = stage1_ross.run(manifest, spine, english)
     ross = json.loads(ross_path.read_text(encoding="utf-8"))

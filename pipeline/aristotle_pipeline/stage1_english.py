@@ -315,10 +315,17 @@ def build_alignment(spine: dict, english: dict) -> dict:
     }
 
 
-def run(manifest: Manifest, spine: dict) -> tuple[Path, Path]:
+def run(manifest: Manifest, spine: dict, chapters_override=None) -> tuple[Path, Path]:
     english = parse_english(manifest.perseus_eng(), manifest)
     add_bekker_gutter(english, spine)        # uses _line_ms before refine pops it
-    refine_chapter_lines(english, spine)
+    if chapters_override is not None:
+        # Exact chapter lines (+ in-line word index) from grc text-alignment
+        # replace the milestone-interpolated estimate. English section markers
+        # (the English-column heading offsets) still come from the TEI walker.
+        english.pop("_line_ms", None)
+        english["chapters"] = chapters_override
+    else:
+        refine_chapter_lines(english, spine)
     out_dir = BUILD_DIR / "stage1"
     out_dir.mkdir(parents=True, exist_ok=True)
     eng_path = out_dir / "english_chunks.json"
