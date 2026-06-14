@@ -1,4 +1,6 @@
 ---
+import ThemeInit from '../components/ThemeInit.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
@@ -6,6 +8,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
   <title>Texts &amp; Licences — Aristotle</title>
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -48,6 +51,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     .licence-badge.cc { background: #e8f4e8; color: #2a6a2a; }
     .licence-badge.pd { background: #e8eef4; color: #2a4a6a; }
     .licence-badge.mit { background: #f4f0e8; color: #6a4a2a; }
+    :global(html[data-theme="dark"]) .licence-badge.cc { background: #1f3320; color: #9ed3a0; }
+    :global(html[data-theme="dark"]) .licence-badge.pd { background: #1c2a3a; color: #9cc2e6; }
+    :global(html[data-theme="dark"]) .licence-badge.mit { background: #33291c; color: #e0b483; }
     blockquote {
       border-left: 3px solid var(--border);
       margin: 0.75rem 0 0.75rem 1rem;
@@ -65,6 +71,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <span class="title-sep">›</span>
       <span class="header-static">Texts &amp; Licences</span>
     </div>
+    <ThemeToggle />
     <nav class="book-nav" aria-label="Navigation">
       <a href={`${base}/`} class="search-link">All works</a>
       <a href={`${base}/search`} class="search-link">Search</a>

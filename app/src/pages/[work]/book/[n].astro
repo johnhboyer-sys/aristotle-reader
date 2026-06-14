@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import Reader from '../../../components/Reader.svelte';
 import BekkerJump from '../../../components/BekkerJump.svelte';
 import WorkSwitcher from '../../../components/WorkSwitcher.svelte';
+import ThemeInit from '../../../components/ThemeInit.astro';
+import ThemeToggle from '../../../components/ThemeToggle.astro';
 import { WORKS, getWork, bookLabel } from '../../../lib/works';
 import '../../../styles/global.css';
 
@@ -30,6 +32,7 @@ const chapters = allChapters[String(n)] ?? [];
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
   <title>{work.title} · Book {label}</title>
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -44,9 +47,12 @@ const chapters = allChapters[String(n)] ?? [];
         <span class="title-sep">›</span>
         <WorkSwitcher work={workId} client:load />
       </div>
-      <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
-        <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
-      </button>
+      <div class="bar-actions">
+        <ThemeToggle />
+        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
+          <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
+        </button>
+      </div>
     </div>
     <div class="nav-panel" id="nav-panel">
       <BekkerJump work={workId} client:load />

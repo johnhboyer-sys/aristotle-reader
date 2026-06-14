@@ -1,0 +1,17 @@
+---
+// No-flash theme setup. Runs in <head> before paint so the page renders in the
+// correct theme immediately. Honours a saved choice, else the OS preference.
+---
+<script is:inline>
+  (function () {
+    try {
+      var saved = localStorage.getItem('ne-theme');
+      var dark = saved
+        ? saved === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    } catch (e) {
+      /* localStorage/matchMedia unavailable: fall back to light (CSS default). */
+    }
+  })();
+</script>

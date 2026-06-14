@@ -1,5 +1,7 @@
 ---
 import { WORKS } from '../lib/works';
+import ThemeInit from '../components/ThemeInit.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -9,6 +11,7 @@ const href = (work: string, q = '') => `${base}/${work}/book/1${q}`;
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
   <title>Aristotle — Greek reader</title>
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,6 +19,7 @@ const href = (work: string, q = '') => `${base}/${work}/book/1${q}`;
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
 </head>
 <body class="home">
+  <div class="home-theme"><ThemeToggle /></div>
   <main class="corpus">
     <header class="masthead">
       <p class="eyebrow">Aristotle</p>
@@ -73,6 +77,7 @@ const href = (work: string, q = '') => `${base}/${work}/book/1${q}`;
 
   <style>
     body.home { background: var(--page-bg); color: var(--text); }
+    .home-theme { position: fixed; top: 1rem; right: 1rem; z-index: 10; }
     .corpus {
       max-width: 40rem;
       margin: 0 auto;
