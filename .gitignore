@@ -17,3 +17,6 @@ __pycache__/
 app/node_modules/
 app/dist/
 app/.astro/
+
+# Local planning roadmap — not published
+planned changes.md
