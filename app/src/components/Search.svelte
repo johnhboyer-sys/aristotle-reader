@@ -183,7 +183,7 @@
       if (engQuery.trim()) qs.set('hle', engQuery.trim());
       const base = qs.toString();
       const jumpFor = (book: number, column: string, line: number) =>
-        `/book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+        `${import.meta.env.BASE_URL}book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
 
       for (const r of results) {
         const seg = segMap.get(r.meta.id);

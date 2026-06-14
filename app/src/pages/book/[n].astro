@@ -8,6 +8,7 @@ export function getStaticPaths() {
   return Array.from({ length: 10 }, (_, i) => ({ params: { n: String(i + 1) } }));
 }
 
+const base = import.meta.env.BASE_URL;  // e.g. '/nicomachean-ethics/'
 const n = Number(Astro.params.n);
 const romanNumerals = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 const bookLabel = romanNumerals[n - 1] ?? String(n);
@@ -23,7 +24,7 @@ const chapters = allChapters[String(n)] ?? [];
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nicomachean Ethics · Book {bookLabel}</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
@@ -31,7 +32,7 @@ const chapters = allChapters[String(n)] ?? [];
 <body>
   <header class="page-header">
     <div class="header-bar">
-      <h1><a href="/" style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
+      <h1><a href={base} style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
       <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
         <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
       </button>
@@ -41,15 +42,15 @@ const chapters = allChapters[String(n)] ?? [];
       <nav class="book-nav" aria-label="Navigation">
         {Array.from({ length: 10 }, (_, i) => (
           <a
-            href={`/book/${i + 1}`}
+            href={`${base}book/${i + 1}`}
             class={i + 1 === n ? 'current' : ''}
             aria-current={i + 1 === n ? 'page' : undefined}
           >
             {['I','II','III','IV','V','VI','VII','VIII','IX','X'][i]}
           </a>
         ))}
-        <a href="/search" class="search-link">Search</a>
-        <a href="/attribution" class="search-link">Texts &amp; Licences</a>
+        <a href={`${base}search`} class="search-link">Search</a>
+        <a href={`${base}attribution`} class="search-link">Texts &amp; Licences</a>
       </nav>
       {chapters.length > 0 && (
         <nav class="chapter-nav" aria-label={`Book ${bookLabel} chapters`}>

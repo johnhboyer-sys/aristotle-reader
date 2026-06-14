@@ -74,7 +74,9 @@ export interface LsjEntry {
   html: string;
 }
 
-const BASE = '/data';
+// Honour Astro's base path (e.g. '/nicomachean-ethics/') so data fetches work
+// under a project Pages site as well as at the root. BASE_URL ends with '/'.
+const BASE = `${import.meta.env.BASE_URL}data`.replace(/\/{2,}/g, '/');
 
 const _analyses: { data: Record<string, Analysis[]> | null } = { data: null };
 const _lsjCache = new Map<string, Record<string, LsjEntry>>();

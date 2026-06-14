@@ -1,13 +1,14 @@
 ---
 import BekkerJump from '../components/BekkerJump.svelte';
 import '../styles/global.css';
+const base = import.meta.env.BASE_URL;
 ---
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Texts &amp; Licences — Nicomachean Ethics</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
@@ -60,15 +61,15 @@ import '../styles/global.css';
 </head>
 <body>
   <header class="page-header">
-    <h1><a href="/" style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
+    <h1><a href={base} style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
     <BekkerJump client:load />
     <nav class="book-nav" aria-label="Navigation">
       {Array.from({ length: 10 }, (_, i) => (
-        <a href={`/book/${i + 1}`}>
+        <a href={`${base}book/${i + 1}`}>
           {['I','II','III','IV','V','VI','VII','VIII','IX','X'][i]}
         </a>
       ))}
-      <a href="/search" class="search-link">Search</a>
+      <a href={`${base}search`} class="search-link">Search</a>
     </nav>
   </header>
 
@@ -114,15 +115,20 @@ import '../styles/global.css';
     </p>
 
     <h2>
-      English Translation
+      English Translations
       <span class="licence-badge pd">Public Domain</span>
     </h2>
     <p>
-      The English text is H. Rackham's translation of the
+      The reader offers two English translations, chosen from the
+      <em>Translation</em> menu.
+    </p>
+
+    <p>
+      <strong>H. Rackham.</strong>
+      The Loeb Classical Library translation of the
       <span class="greek">Ἠθικὰ Νικομάχεια</span>, first published in the
-      Loeb Classical Library (Cambridge, MA: Harvard University Press, 1926).
-      This translation was published in the United States in 1926 and is in
-      the public domain.
+      United States in 1926 and in the public domain. It is anchored to the
+      Bekker line numbers, which appear in the gutter beside it.
     </p>
     <blockquote>
       Aristotle. <em>Nicomachean Ethics.</em>
@@ -137,12 +143,33 @@ import '../styles/global.css';
       <code>tlg0086.tlg010.perseus-eng2.xml</code>).
     </p>
 
+    <p>
+      <strong>W. D. Ross.</strong>
+      The Oxford translation, first published in 1908 and revised in
+      <em>The Works of Aristotle Translated into English</em> (vol. IX,
+      Oxford: Clarendon Press, 1925); in the public domain in the United States.
+      Ross is presented chapter by chapter (it carries no Bekker line numbers of
+      its own).
+    </p>
+    <blockquote>
+      Aristotle. <em>Nicomachean Ethics.</em>
+      Translated by W. D. Ross. In <em>The Works of Aristotle Translated into
+      English</em>, vol. IX. Oxford: Clarendon Press, 1925.
+    </blockquote>
+    <p>
+      The text is transcribed from the
+      <a href="https://classics.mit.edu/Aristotle/nicomachaen.html">MIT
+      Internet Classics Archive</a>.
+    </p>
+
     <h2>
       Greek Text
       <span class="licence-badge pd">Public Domain</span>
     </h2>
     <p>
-      The Greek text is the edition of Ingram Bywater:
+      The Greek presented here is the ancient text of Aristotle's own words — a
+      public-domain work — in the edition of Ingram Bywater, <strong>without</strong>
+      the critical apparatus, editorial notes, or commentary:
     </p>
     <blockquote>
       Aristotle. <span class="greek">Ἀριστοτέλους Ἠθικὰ Νικομάχεια.</span>
@@ -151,12 +178,13 @@ import '../styles/global.css';
       Reprinted 1962.
     </blockquote>
     <p>
-      The electronic text is generated from the Thesaurus Linguae Graecae (TLG)
-      digital corpus via the
-      <a href="https://d.iogen.es/">Diogenes</a> export tool. The TLG corpus
-      is separately licensed from the
-      <a href="https://stephanus.tlg.uci.edu/">University of California, Irvine</a>;
-      it is not redistributed by this application.
+      The electronic text was generated from the Thesaurus Linguae Graecae (TLG)
+      digitisation via the <a href="https://d.iogen.es/">Diogenes</a> export tool.
+      The TLG corpus is separately licensed from the
+      <a href="https://stephanus.tlg.uci.edu/">University of California, Irvine</a>.
+      Only the bare Greek text — the public-domain words of Aristotle — is
+      included here; none of the TLG's apparatus, notes, or other database
+      content is reproduced.
     </p>
 
     <h2>

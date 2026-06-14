@@ -1,5 +1,6 @@
 ---
-// Redirect to Book I
+// Redirect to Book I (honouring the configured base path).
+const base = import.meta.env.BASE_URL;
 ---
-<meta http-equiv="refresh" content="0;url=/book/1" />
-<a href="/book/1">Book I</a>
+<meta http-equiv="refresh" content={`0;url=${base}book/1`} />
+<a href={`${base}book/1`}>Book I</a>

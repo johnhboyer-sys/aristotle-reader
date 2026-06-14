@@ -2,29 +2,30 @@
 import Search from '../components/Search.svelte';
 import BekkerJump from '../components/BekkerJump.svelte';
 import '../styles/global.css';
+const base = import.meta.env.BASE_URL;
 ---
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Search — Nicomachean Ethics</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
 </head>
 <body>
   <header class="page-header">
-    <h1><a href="/" style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
+    <h1><a href={base} style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
     <BekkerJump client:load />
     <nav class="book-nav" aria-label="Books">
       {Array.from({ length: 10 }, (_, i) => (
-        <a href={`/book/${i + 1}`}>
+        <a href={`${base}book/${i + 1}`}>
           {['I','II','III','IV','V','VI','VII','VIII','IX','X'][i]}
         </a>
       ))}
-      <a href="/search" class="current search-link" aria-current="page">Search</a>
-      <a href="/attribution" class="search-link">Texts &amp; Licences</a>
+      <a href={`${base}search`} class="current search-link" aria-current="page">Search</a>
+      <a href={`${base}attribution`} class="search-link">Texts &amp; Licences</a>
     </nav>
   </header>
   <Search client:load />
