@@ -243,11 +243,6 @@ body {
   justify-content: flex-end;
   gap: 0;
 }
-
-/* Ross: chapter-anchored prose, no gutter (overrides the grid layout). */
-.english-text.ross {
-  display: block;
-}
 .view-toggle button {
   font-family: var(--font-ui);
   font-size: 0.78rem;

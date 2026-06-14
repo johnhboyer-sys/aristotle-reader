@@ -147,7 +147,7 @@
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
   // `rows` lay the English prose out beside its Bekker-line gutter (see below).
   interface EngRow { n: number | null; real: boolean; text: string; }
-  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; rows: EngRow[]; ross: string; }
+  interface Block { chapter: string | null; bekker: string; lines: GreekLine[]; rows: EngRow[]; rossRows: EngRow[]; }
 
   // The gutter renders each tick as its own block row, so a row boundary forces
   // a visual line break. To avoid splitting a sentence (which happens when an
@@ -234,13 +234,20 @@
       return buildRows(slice, snapTicksToSentences(slice, ticks));
     };
     // Ross slices for this column, paired to blocks: the continuation slice
-    // (a chapter begun in an earlier column) and one per chapter that starts here.
+    // (a chapter begun in an earlier column) and one per chapter that starts
+    // here. Each slice lays out as gutter rows like Rackham, with its
+    // interpolated Bekker ticks (snapped to sentences so prose stays continuous).
     const rossPieces = seg.ross ?? [];
-    const rossCont = () => rossPieces.find(p => p.cont)?.text ?? rossPieces[0]?.text ?? '';
-    const rossFor = (chapter: string) => rossPieces.find(p => !p.cont && p.chapter === chapter)?.text ?? '';
+    const rossRowsOf = (p: typeof rossPieces[number] | undefined): EngRow[] => {
+      if (!p || !p.text) return [];
+      const ticks = (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset }));
+      return buildRows(p.text, snapTicksToSentences(p.text, ticks));
+    };
+    const rossCont = () => rossRowsOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
+    const rossFor = (chapter: string) => rossRowsOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
 
     const starts = (seg.chapterStarts ?? []).slice().sort((a, b) => a.beforeLine - b.beforeLine);
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), ross: rossCont() }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont() }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -250,13 +257,13 @@
     const firstIdx = lineIdx(starts[0].beforeLine);
     // Lines/English before the first chapter start continue the previous chapter.
     if (firstIdx > 0 || starts[0].engOffset > 0) {
-      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), rows: rowsFor(0, starts[0].engOffset), ross: rossCont() });
+      blocks.push({ chapter: null, bekker: '', lines: greek.slice(0, firstIdx), rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont() });
     }
     for (let i = 0; i < starts.length; i++) {
       const from = lineIdx(starts[i].beforeLine);
       const to = i + 1 < starts.length ? lineIdx(starts[i + 1].beforeLine) : greek.length;
       const engTo = i + 1 < starts.length ? starts[i + 1].engOffset : text.length;
-      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), rows: rowsFor(starts[i].engOffset, engTo), ross: rossFor(starts[i].chapter) });
+      blocks.push({ chapter: starts[i].chapter, bekker: starts[i].bekker, lines: greek.slice(from, to), rows: rowsFor(starts[i].engOffset, engTo), rossRows: rossFor(starts[i].chapter) });
     }
     return blocks;
   }
@@ -418,10 +425,15 @@
                  left English column in Compare). -->
             <div class="english-col">
               {#if trans === 'ross'}
-                {#if block.ross}
-                  <!-- Ross is chapter-anchored prose: no Bekker gutter. -->
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  <div class="english-text ross">{@html highlightEng(block.ross)}</div>
+                {#if block.rossRows.length}
+                  <!-- Ross with an interpolated Bekker gutter (all estimates). -->
+                  <div class="english-text">
+                    {#each block.rossRows as row}
+                      <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                    {/each}
+                  </div>
                 {/if}
               {:else}
                 {#if trans === 'compare'}<div class="col-label">Rackham</div>{/if}
@@ -441,9 +453,14 @@
             {#if trans === 'compare' && view !== 'greek'}
               <div class="ross-col">
                 <div class="col-label">Ross</div>
-                {#if block.ross}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  <div class="english-text ross">{@html highlightEng(block.ross)}</div>
+                {#if block.rossRows.length}
+                  <div class="english-text">
+                    {#each block.rossRows as row}
+                      <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                    {/each}
+                  </div>
                 {/if}
               </div>
             {/if}

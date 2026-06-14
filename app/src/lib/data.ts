@@ -38,6 +38,9 @@ export interface RossPiece {
   chapter: string;
   text: string;
   cont: boolean;
+  // Interpolated Bekker-line ticks down this slice (all estimates — Ross has no
+  // milestones of its own). Same shape as EnglishChunk.bekker.
+  bekker?: { n: number; offset: number; real: boolean }[];
 }
 
 export interface Segment {

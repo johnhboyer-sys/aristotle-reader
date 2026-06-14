@@ -79,6 +79,47 @@ def parse_ross() -> dict[tuple[int, int], str]:
     return out
 
 
+def _snap_word(text: str, off: int) -> int:
+    """Snap a char offset to the nearest word start (so a gutter tick never
+    splits a word)."""
+    off = max(0, min(off, len(text)))
+    if off <= 0 or off >= len(text):
+        return off
+    if text[off] == " ":
+        return off + 1
+    left = text.rfind(" ", 0, off)
+    right = text.find(" ", off)
+    cands = [c + 1 for c in (left, right) if c != -1]
+    return min(cands, key=lambda c: abs(c - off)) if cands else off
+
+
+def _ross_ticks(text: str, line_ns: list[int]) -> list[dict]:
+    """Bekker line ticks down a Ross slice. Ross carries no Bekker milestones,
+    so every tick is an estimate (real=False): the slice spans the Greek lines
+    `line_ns` of its column, and ticks at the Greek cadence (line 1, then every
+    5th) are placed proportionally by character offset, word-snapped."""
+    L = len(text)
+    if not line_ns or L == 0:
+        return []
+    first, last = line_ns[0], line_ns[-1]
+    if last <= first:
+        return [{"n": first, "offset": 0, "real": False}]
+    start5 = ((first + 4) // 5) * 5
+    targets = list(range(start5, last + 1, 5))
+    if first <= 1 and 1 not in targets:
+        targets.insert(0, 1)
+    ticks, seen = [], set()
+    for t in targets:
+        off = _snap_word(text, round((t - first) / (last - first) * L))
+        off = max(0, min(off, L))
+        if off in seen:
+            continue
+        seen.add(off)
+        ticks.append({"n": t, "offset": off, "real": False})
+    ticks.sort(key=lambda x: x["offset"])
+    return ticks
+
+
 def _snap(text: str, target: int, low: int) -> int:
     """A cut position > `low`, near `target`, preferring a sentence boundary,
     then a word boundary, so a column break falls between sentences/words."""
@@ -98,10 +139,11 @@ def _snap(text: str, target: int, low: int) -> int:
     return target
 
 
-def _chapter_segments(spine: dict, chapters: list[dict]) -> dict[int, list[tuple[str, int]]]:
+def _chapter_segments(spine: dict, chapters: list[dict]):
     """Per book, walk segments in order and assign each Greek line to the
-    running chapter, yielding {chapter_global_index: [(segment_id, n_lines), ...]}
-    in document order. Returns a flat map keyed by a global chapter index."""
+    running chapter, yielding {chapter_global_index: [(segment_id, column,
+    [line_n, ...]), ...]} in document order, plus {global_index: (book, chapter)}.
+    The line numbers let each Ross slice carry an interpolated Bekker gutter."""
     # Order chapters per book by their Greek start (column then line).
     by_book: dict[int, list[dict]] = defaultdict(list)
     for ch in chapters:
@@ -111,7 +153,7 @@ def _chapter_segments(spine: dict, chapters: list[dict]) -> dict[int, list[tuple
     for seg in spine["segments"]:
         segs_by_book[seg["book"]].append(seg)
 
-    result: dict[int, list[tuple[str, int]]] = defaultdict(list)
+    result: dict[int, list[tuple[str, str, list[int]]]] = defaultdict(list)
     chapter_key: dict[int, tuple[int, int]] = {}  # global idx -> (book, chapter)
     gidx = 0
     for book, chs in by_book.items():
@@ -129,18 +171,18 @@ def _chapter_segments(spine: dict, chapters: list[dict]) -> dict[int, list[tuple
         bi = 0
         cur = bounds[0][2] if bounds else None
         for ci, seg in enumerate(segs):
-            count = 0
+            run: list[int] = []
             for line in seg["lines"]:
                 # Advance to the last chapter whose start is <= (ci, line.n).
                 while bi + 1 < len(bounds) and (bounds[bi + 1][0], bounds[bi + 1][1]) <= (ci, line["n"]):
-                    if count:
-                        result[cur].append((seg["id"], count))
-                        count = 0
+                    if run:
+                        result[cur].append((seg["id"], seg["column"], run))
+                        run = []
                     bi += 1
                     cur = bounds[bi][2]
-                count += 1
-            if count and cur is not None:
-                result[cur].append((seg["id"], count))
+                run.append(line["n"])
+            if run and cur is not None:
+                result[cur].append((seg["id"], seg["column"], run))
     return result, chapter_key
 
 
@@ -153,11 +195,11 @@ def build_ross_chunks(spine: dict, chapters: list[dict]) -> dict[str, list[dict]
     for gidx, segs in seg_chapters.items():
         book, chap = chapter_key[gidx]
         text = ross.get((book, chap), "")
-        total = sum(n for _, n in segs) or 1
+        total = sum(len(lns) for _, _, lns in segs) or 1
         prev = 0
         cum = 0
-        for i, (seg_id, n) in enumerate(segs):
-            cum += n
+        for i, (seg_id, column, lns) in enumerate(segs):
+            cum += len(lns)
             cut = len(text) if i == len(segs) - 1 else _snap(text, round(len(text) * cum / total), prev)
             piece = text[prev:cut].strip()
             prev = cut
@@ -165,6 +207,7 @@ def build_ross_chunks(spine: dict, chapters: list[dict]) -> dict[str, list[dict]
                 "chapter": str(chap),
                 "text": piece,
                 "cont": i > 0,
+                "bekker": _ross_ticks(piece, lns),
                 "_g": gidx,
             })
     # Keep each segment's pieces in document (chapter) order; drop the sort key.
