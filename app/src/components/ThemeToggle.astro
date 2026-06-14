@@ -1,0 +1,48 @@
+---
+// Night-mode toggle button. The icon shows the theme you'll switch TO:
+// a moon in light mode, a sun in dark mode. Choice is persisted in localStorage
+// and, until the reader makes an explicit choice, the OS preference is followed.
+---
+<button
+  type="button"
+  class="theme-toggle"
+  aria-label="Toggle night mode"
+  title="Toggle night mode"
+>
+  <span class="theme-icon" aria-hidden="true">🌙</span>
+</button>
+
+<script is:inline>
+  (function () {
+    var btn = document.querySelector('.theme-toggle');
+    if (!btn) return;
+    var icon = btn.querySelector('.theme-icon');
+    var mql = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function render() {
+      var dark = document.documentElement.dataset.theme === 'dark';
+      icon.textContent = dark ? '☀︎' : '🌙';
+      btn.setAttribute('aria-pressed', String(dark));
+    }
+    render();
+
+    btn.addEventListener('click', function () {
+      var next =
+        document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem('ne-theme', next);
+      } catch (e) {}
+      render();
+    });
+
+    // Track the OS while the reader hasn't pinned a choice.
+    mql.addEventListener('change', function (e) {
+      try {
+        if (localStorage.getItem('ne-theme')) return;
+      } catch (err) {}
+      document.documentElement.dataset.theme = e.matches ? 'dark' : 'light';
+      render();
+    });
+  })();
+</script>

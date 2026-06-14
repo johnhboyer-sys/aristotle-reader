@@ -2,6 +2,8 @@
 import { readFileSync } from 'node:fs';
 import Reader from '../../components/Reader.svelte';
 import BekkerJump from '../../components/BekkerJump.svelte';
+import ThemeInit from '../../components/ThemeInit.astro';
+import ThemeToggle from '../../components/ThemeToggle.astro';
 import '../../styles/global.css';
 
 export function getStaticPaths() {
@@ -23,6 +25,7 @@ const chapters = allChapters[String(n)] ?? [];
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
   <title>Nicomachean Ethics · Book {bookLabel}</title>
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -33,9 +36,12 @@ const chapters = allChapters[String(n)] ?? [];
   <header class="page-header">
     <div class="header-bar">
       <h1><a href={`${base}/`} style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
-      <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
-        <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
-      </button>
+      <div class="bar-actions">
+        <ThemeToggle />
+        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
+          <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
+        </button>
+      </div>
     </div>
     <div class="nav-panel" id="nav-panel">
       <BekkerJump client:load />

@@ -507,7 +507,7 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 0.4rem 0.6rem;
-    background: #fff;
+    background: var(--input-bg);
     color: var(--text);
     appearance: none;
     -webkit-appearance: none;
@@ -560,7 +560,7 @@
     font-size: 0.9rem;
     font-weight: 600;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     border: none;
     border-radius: 4px;
     padding: 0.45rem 1.25rem;
@@ -622,7 +622,7 @@
     z-index: 50;
   }
   .help-modal {
-    background: #fff;
+    background: var(--popup-bg);
     border-radius: 8px;
     max-width: 540px;
     width: 100%;
@@ -751,7 +751,7 @@
     border-top: 1px solid var(--border);
   }
 
-  .search-error { color: #c00; font-family: var(--font-ui); font-size: 0.9rem; }
+  .search-error { color: var(--error); font-family: var(--font-ui); font-size: 0.9rem; }
 
   .result-count {
     font-family: var(--font-ui);
@@ -847,9 +847,10 @@
   }
 
   :global(mark) {
-    background: #ffe082;
+    background: var(--mark-bg);
     border-radius: 2px;
     padding: 0 0.1em;
+    color: inherit;
   }
 
   @media (max-width: 500px) {

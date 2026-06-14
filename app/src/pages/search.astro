@@ -1,6 +1,8 @@
 ---
 import Search from '../components/Search.svelte';
 import BekkerJump from '../components/BekkerJump.svelte';
+import ThemeInit from '../components/ThemeInit.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
@@ -8,6 +10,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
   <title>Search — Nicomachean Ethics</title>
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,6 +20,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <body>
   <header class="page-header">
     <h1><a href={`${base}/`} style="text-decoration:none;color:inherit">Nicomachean Ethics</a></h1>
+    <ThemeToggle />
     <BekkerJump client:load />
     <nav class="book-nav" aria-label="Books">
       {Array.from({ length: 10 }, (_, i) => (

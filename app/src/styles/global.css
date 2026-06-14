@@ -22,6 +22,16 @@
   --greek-hover:  #fff3e0;
   --greek-active: #ffe0b2;
 
+  /* Semantic colours used in a few hardcoded spots; aliased here so the dark
+     theme can remap them. */
+  --on-accent:    #ffffff;   /* text/icon sitting on an --accent fill */
+  --input-bg:     #ffffff;   /* text inputs, modals */
+  --hit-bg:       #ffe082;   /* search-hit token highlight */
+  --target-bg:    #fff6d6;   /* jumped-to line tint */
+  --mark-bg:      #ffe082;   /* <mark> in English/search results */
+  --error:        #b22323;
+  color-scheme:   light;
+
   /* Greek (Cardo) and English (EB Garamond) balanced so neither column
      dominates: equal-ish optical size, and Greek verse leading compressed
      toward the English so the two columns sit at roughly the same height. */
@@ -33,6 +43,37 @@
   --fs-linenum:   0.72rem;
 }
 
+/* ── Night mode ───────────────────────────────────────────────────────
+   Warm dark palette (not pure black) to keep the parchment-reader feel.
+   Activated by data-theme="dark" on <html>, set by ThemeInit before paint. */
+:root[data-theme="dark"] {
+  --col-bg:       #211d18;
+  --page-bg:      #181511;
+  --text:         #e9e2d4;
+  --text-mid:     #b6ac9b;
+  --text-light:   #837a6c;
+  --accent:       #cf9d68;
+  --accent-light: #e6bd8a;
+  --border:       #3a342b;
+  --popup-bg:     #26221b;
+  --popup-shadow: 0 6px 28px rgba(0,0,0,.55);
+  --greek-hover:  #38301f;
+  --greek-active: #4a3c22;
+
+  --on-accent:    #211d18;   /* dark text reads on the lighter dark-mode accent */
+  --input-bg:     #26221b;
+  --hit-bg:       rgba(255,206,84,.30);   /* translucent so light text stays readable */
+  --target-bg:    rgba(255,206,84,.14);
+  --mark-bg:      rgba(255,206,84,.32);
+  --error:        #f08a82;
+  color-scheme:   dark;
+}
+
+/* Dark-mode select chevron (lighter stroke to match the dark accent). */
+:root[data-theme="dark"] .trans-picker select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23cf9d68' stroke-width='1.5'/></svg>");
+}
+
 html { font-size: 16px; }
 
 body {
@@ -40,6 +81,7 @@ body {
   background: var(--page-bg);
   color: var(--text);
   line-height: var(--lh-english);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* ── Layout ───────────────────────────────────────────────────────── */
@@ -71,6 +113,33 @@ body {
 .header-bar,
 .nav-panel { display: contents; }
 .nav-toggle { display: none; }
+
+/* Theme (night-mode) toggle — sits next to the wordmark on desktop, and is
+   grouped with the menu button on mobile (see .bar-actions). */
+.bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--col-bg);
+  color: var(--text-mid);
+}
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .page-header .book-nav {
   font-family: var(--font-ui);
   font-size: 0.8rem;
@@ -89,7 +158,7 @@ body {
 .page-header .book-nav a:hover { background: var(--border); }
 .page-header .book-nav a.current {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* "Jump to Bekker line" citation lookup in the global header.
@@ -140,7 +209,7 @@ body {
   border: 1px solid var(--accent);
   border-radius: 3px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .bekker-jump button[type="submit"]:hover { filter: brightness(1.08); }
 .bekker-close {
@@ -154,7 +223,7 @@ body {
 }
 .bekker-close:hover { color: var(--text); }
 .bekker-err {
-  color: #b23;
+  color: var(--error);
   font-size: 0.72rem;
 }
 
@@ -186,7 +255,7 @@ body {
 }
 .page-header .chapter-nav a:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -259,7 +328,7 @@ body {
 .view-toggle button.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Monolingual: hide one column and let the other read full-width, centred at a
@@ -398,17 +467,18 @@ body {
 }
 .tok:hover  { background: var(--greek-hover); }
 .tok.active { background: var(--greek-active); }
-.tok.hit    { background: #ffe082; }
+.tok.hit    { background: var(--hit-bg); }
 
 /* Jumped-to line + highlighted terms from a search result */
 .greek-line.target {
-  background: #fff6d6;
+  background: var(--target-bg);
   border-radius: 3px;
 }
 .english-col mark {
-  background: #ffe082;
+  background: var(--mark-bg);
   border-radius: 2px;
   padding: 0 0.1em;
+  color: inherit;
 }
 
 /* ── English chunk + Bekker gutter ────────────────────────────────── */
@@ -616,7 +686,7 @@ body {
   .page-header.nav-open .nav-toggle {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
 
   .nav-panel {
