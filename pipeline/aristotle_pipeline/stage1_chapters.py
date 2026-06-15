@@ -57,6 +57,22 @@ def _local(el) -> str:
     return etree.QName(el).localname if isinstance(el.tag, str) else ""
 
 
+def _first_word_at(owner, column: str, line) -> int | None:
+    """Index in the spine word stream of the first word at (column, >= line) —
+    used to pin a chapter at an authoritative Bekker milestone when text
+    alignment misses. `line` may be coarse (the last cadence line milestone)."""
+    if column is None or line is None:
+        return None
+    try:
+        ln = int(line)
+    except (TypeError, ValueError):
+        return None
+    for i, (col, lno, _wi) in enumerate(owner):
+        if col == column and lno >= ln:
+            return i
+    return None
+
+
 def _div_opening(div, k_chars=400) -> str:
     """First ~k chars of text under a chapter div, dropping note/head subtrees
     and a leading single-letter book label."""
@@ -107,15 +123,78 @@ def _chapter_openings(grc_path: Path, chapter_subtype: str = "chapter",
     return out
 
 
+def _chapter_openings_milestone(grc_path: Path, unit: str = "section",
+                                book_subtype: str = "book"):
+    """(book, chapter, opening_text, column, line) per <milestone unit=`unit`>,
+    in document order. Some Perseus TEIs (e.g. Politics) carry no chapter <div>s
+    — chapters are inline section milestones. The chapter number is each book's
+    running section index; the opening text is what follows the milestone (for
+    text-aligning onto the spine), and (column, line) is the running Bekker
+    position at the milestone — an authoritative fallback when the opening's
+    orthography diverges from the spine and text alignment misses."""
+    tree = etree.parse(str(grc_path))
+    body = tree.find(".//{*}body")
+    if body is None:
+        body = tree.getroot()
+    buf: list[str] = []
+    marks: list[tuple[int, str, int, str, str]] = []
+    state = {"book": 1, "counts": {}, "page": None, "line": None}
+
+    def walk(node):
+        ln = _local(node)
+        if ln == "div" and node.get("subtype") == book_subtype and (node.get("n") or "").isdigit():
+            state["book"] = int(node.get("n"))
+        if ln == "milestone":
+            unit_attr = node.get("unit")
+            if unit_attr == "page":
+                state["page"] = node.get("n")
+            elif unit_attr == "line":
+                state["line"] = node.get("n")
+            elif unit_attr == unit:
+                b = state["book"]
+                c = state["counts"].get(b, 0) + 1
+                state["counts"][b] = c
+                marks.append((b, str(c), sum(len(x) for x in buf),
+                              state["page"], state["line"]))
+        if ln in ("note", "head"):
+            if node.tail:
+                buf.append(node.tail)
+            return
+        if node.text:
+            buf.append(node.text)
+        for ch in node:
+            walk(ch)
+        if node.tail:
+            buf.append(node.tail)
+
+    walk(body)
+    full = "".join(buf)
+    out = []
+    for b, chap, pos, col, line in marks:
+        seg = re.sub(r"\s+", " ", full[pos:pos + 800]).strip()
+        out.append((b, chap, re.sub(r"^\s*[Α-Ω][.·]?\s", " ", seg)[:400], col, line))
+    return out
+
+
 def extract_chapters_grc(spine: dict, grc_rel: str,
                          chapter_subtype: str = "chapter",
-                         book_subtype: str = "book") -> list[dict]:
-    """List of {book, chapter, column, line, bookstart} aligned onto the spine."""
+                         book_subtype: str = "book",
+                         chapter_marker: str = "div") -> list[dict]:
+    """List of {book, chapter, column, line, bookstart} aligned onto the spine.
+    `chapter_marker` selects how chapters are read from the grc TEI: "div"
+    (<div subtype=chapter_subtype>, default) or "milestone"
+    (<milestone unit=chapter_subtype>, for TEIs with no chapter divs)."""
     grc_path = SOURCES_DIR / grc_rel
     joined, owner, wstart = _spine_words(spine)
+    if chapter_marker == "milestone":
+        openings = _chapter_openings_milestone(grc_path, chapter_subtype, book_subtype)
+    else:
+        # Normalize div openings to the 5-tuple shape (no milestone fallback pos).
+        openings = [(b, c, o, None, None)
+                    for b, c, o in _chapter_openings(grc_path, chapter_subtype, book_subtype)]
     chapters: list[dict] = []
     after = 0
-    for book, chap, opening in _chapter_openings(grc_path, chapter_subtype, book_subtype):
+    for book, chap, opening, mcol, mline in openings:
         if not chapters:
             col, line, word = owner[0]  # the work's first chapter starts the spine
         else:
@@ -129,6 +208,12 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                     widx = joined[:p].count(" ")
                     loc, after = owner[widx], wstart[widx]
                     break
+            if loc is None and mcol is not None:
+                # Orthographic divergence missed the text match; fall back to the
+                # milestone's own Bekker position (heading pinned at line start).
+                widx = _first_word_at(owner, mcol, mline)
+                if widx is not None:
+                    loc, after = owner[widx], wstart[widx]
             if loc is None:
                 continue  # unmatched chapter (surfaced by the caller as a gap)
             col, line, word = loc

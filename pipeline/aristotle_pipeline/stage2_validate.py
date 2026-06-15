@@ -101,11 +101,18 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
 
     # --- 3. alignment coverage -------------------------------------------
     unmatched = [p["segment"] for p in alignment["pairs"] if p["english"] is None]
+    # Columns the English TEI demonstrably cannot cover (Perseus omitted a Bekker
+    # page milestone, or assigns a book-straddling column to a single book) are
+    # declared in the manifest so they're surfaced but don't fail the build.
+    allowed = set(manifest.data.get("alignment_allow_unmatched", []))
+    unexpected_unmatched = [s for s in unmatched if s not in allowed]
     report["checks"]["alignment"] = {
         "pairs": len(alignment["pairs"]),
         "unmatched_segments": unmatched,
+        "allowed_unmatched": sorted(allowed & set(unmatched)),
+        "unexpected_unmatched": unexpected_unmatched,
         "english_only": alignment["english_only"],
-        "ok": not unmatched and not alignment["english_only"],
+        "ok": not unexpected_unmatched and not alignment["english_only"],
     }
 
     # --- 4. length-ratio outliers ------------------------------------------

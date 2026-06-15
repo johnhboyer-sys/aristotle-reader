@@ -17,8 +17,10 @@ from .config import BUILD_DIR, Manifest
 
 # Stripped silently from token edges: ordinary punctuation. The pipe `|` marks
 # verse-line divisions inside quoted hexameter (e.g. the Empedocles fragments in
-# Metaphysics) — a metrical separator, not part of any word.
-_PUNCT = ".,·;—()|\"" + "·;"  # ano teleia, Greek question mark
+# Metaphysics) — a metrical separator, not part of any word. ‘ (U+2018) opens a
+# quotation (e.g. the poets quoted in the Politics); its mate ’ (U+2019) is left
+# out because it doubles as the elision apostrophe, which the surface form keeps.
+_PUNCT = ".,·;—()|\"‘" + "·;"  # ano teleia, Greek question mark
 # Stripped but logged: editorial sigla found by the stage 2 inventory.
 _SIGLA = "†*<>[]"
 

@@ -1,0 +1,88 @@
+# Politics — pipeline manifest
+#
+# 8 books. Greek spine from the cached TLG export; chapter structure from the
+# Perseus grc TEI's Ross section milestones (this TEI carries no chapter <div>s);
+# primary English = H. Rackham (Loeb), the Bekker-milestoned Perseus eng2, via
+# the perseus-primary path. Secondary English = Benjamin Jowett (MIT archive),
+# unmarked, aligned onto the spine via Rackham as the Bekker reference.
+#
+# Rackham is US-copyright until ~2027; built in as primary but kept toggleable so
+# it can be withheld from the public deploy until cleared.
+#
+# Book boundaries are the canonical Bekker ranges, derived from the TLG line
+# sequence cut at the grc TEI book-div starts (Stage 2 validates them).
+
+work:
+  id: Pol
+  title: "Politics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "035"
+  greek_edition: "Ross, Aristotelis Politica (OCT, 1957)"
+  english_source: "tlg0086.tlg035.perseus-eng2.xml"
+  english_translation: "H. Rackham (Loeb, 1932)"
+
+bekker_range:
+  first_column: "1252a"
+  last_column: "1342b"
+
+# Chapter starts are text-aligned onto the Greek spine from this grc TEI's Ross
+# section milestones (chapter_marker: milestone — the TEI has no chapter <div>s).
+# `source` is intentionally NOT grc_tei (that would swap to the archive English
+# path); only the chapter lines are overridden, Rackham stays primary.
+chapters:
+  grc_tei: "tlg0086.tlg035.perseus-grc2.xml"
+  chapter_marker: milestone
+  chapter_subtype: section
+
+# Second (unmarked) translation: Benjamin Jowett from the MIT Internet Classics
+# Archive ("Part <Roman>" chapter markers), aligned via the Rackham primary as
+# Bekker reference. NB Jowett's Book 5 has only 11 chapters to Ross's 12 (Jowett
+# folds/omits the closing critique of Plato, 1315b10ff); per John we keep Ross's
+# numbering, so Jowett Book 5's last Ross-chapter carries no secondary overlay.
+english:
+  secondary:
+    id: jowett
+    name: "Benjamin Jowett (Oxford, 1885)"
+    dir: pol-jowett
+    books: 8
+    marker: part_roman
+
+# Spine columns Rackham's Perseus TEI cannot pair: it omits the Bekker page
+# milestone for 1254b/1279a/1297a/1297b/1314b (their English is merged into the
+# preceding column), and it assigns the book-straddling columns 1301a/1323a/
+# 1337a to a single book, leaving the other book's segment unpaired. Declared so
+# the validator surfaces but tolerates them; the reader shows those Greek columns
+# with the English carried in the adjacent column.
+alignment_allow_unmatched:
+  - "1:1254b"
+  - "3:1279a"
+  - "4:1297a"
+  - "4:1297b"
+  - "4:1301a"
+  - "5:1314b"
+  - "6:1323a"
+  - "7:1337a"
+
+books:
+  - { n: 1, start: "1252a1",  end: "1260b24" }
+  - { n: 2, start: "1260b27", end: "1274b28" }
+  - { n: 3, start: "1274b32", end: "1288b6" }
+  - { n: 4, start: "1288b10", end: "1301a15" }
+  - { n: 5, start: "1301a19", end: "1316b27" }
+  - { n: 6, start: "1316b31", end: "1323a10" }
+  - { n: 7, start: "1323a14", end: "1337a7" }
+  - { n: 8, start: "1337a11", end: "1342b34" }
+
+# Names frequent enough in the Politics to anchor a cross-language spot check
+# (Stage 2). Greek is matched diacritic-stripped/lowercased.
+proper_names:
+  - ["σωκρατ", "Socrates"]
+  - ["σολων", "Solon"]
+  - ["λυκουργ", "Lycurgus"]
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

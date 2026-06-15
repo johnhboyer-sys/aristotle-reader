@@ -32,13 +32,29 @@ _ROSS_DIR = SOURCES_DIR / "ross"
 # quote/paren) followed by whitespace.
 _SENT = re.compile(r"[.?!][\"')\]]?\s")
 
-# A chapter marker on its own line. The MIT Internet Classics Archive uses two
-# styles: a bare number (Ross's NE) or "Part N" (Smith's De Anima). Both are
-# matched to a capture group holding the chapter number.
+# A chapter marker on its own line. The MIT Internet Classics Archive uses a few
+# styles: a bare number (Ross's NE), "Part N" (Smith's De Anima, Ross's
+# Metaphysics), or "Part <Roman>" (Jowett's Politics). Each is matched to a
+# capture group holding the chapter number (Arabic or Roman).
 _CHAPTER_MARKERS = {
     "number": re.compile(r"\d{1,2}"),
     "part": re.compile(r"Part\s+(\d{1,2})"),
+    "part_roman": re.compile(r"Part\s+([IVXLC]+)"),
 }
+
+_ROMAN = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
+
+
+def _marker_int(s: str) -> int:
+    """A chapter marker's value: an Arabic number as-is, else Roman numerals."""
+    if s.isdigit():
+        return int(s)
+    total = prev = 0
+    for ch in reversed(s):
+        v = _ROMAN[ch]
+        total += -v if v < prev else v
+        prev = max(prev, v)
+    return total
 
 
 def _book_text(path: Path) -> str:
@@ -70,7 +86,7 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
     for ln in (l.strip() for l in txt.split("\n")):
         m = pat.fullmatch(ln)
         if m:
-            num = int(m.group(m.lastindex or 0))
+            num = _marker_int(m.group(m.lastindex or 0))
             if (cur is None and num == 1) or (cur is not None and num == cur + 1):
                 if cur is not None:
                     chapters[cur] = " ".join(" ".join(buf).split())

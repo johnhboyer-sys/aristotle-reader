@@ -107,6 +107,18 @@ def load_chapters(target_prose: dict[tuple[int, int], str]) -> list[ChapterRef]:
     by_bc = {(c["book"], c["column"]): c for c in chunks}
     col_index = {(c["book"], c["column"]): i for i, c in enumerate(chunks)}
 
+    def resolve_idx(book: int, column: str):
+        """Chunk index for (book, column). When the English TEI omitted that
+        Bekker page milestone (its text merged into the preceding column), snap
+        to the nearest preceding chunk in the same book; None if none precedes."""
+        if (book, column) in col_index:
+            return col_index[(book, column)]
+        from ..refs import column_key
+        ck = column_key(column)
+        cand = [i for (b, c), i in col_index.items()
+                if b == book and column_key(c) <= ck]
+        return max(cand, key=lambda i: column_key(chunks[i]["column"])) if cand else None
+
     # Greek line text + cumulative word counts, grouped per chapter (doc order).
     seg_lines = {
         s["id"]: {ln["n"]: ln["text"] for ln in s["lines"]} for s in spine["segments"]
@@ -121,13 +133,16 @@ def load_chapters(target_prose: dict[tuple[int, int], str]) -> list[ChapterRef]:
             continue
 
         start_col = ch["column"]
-        start_idx = col_index[(book, start_col)]
-        start_off = _section_offset(by_bc[(book, start_col)], chap)
+        start_idx = resolve_idx(book, start_col)
+        if start_idx is None:
+            continue
+        start_off = _section_offset(by_bc.get((book, start_col), chunks[start_idx]), chap)
 
         nxt = eng_chapters[i + 1] if i + 1 < len(eng_chapters) else None
-        if nxt is not None:
-            end_idx = col_index[(nxt["book"], nxt["column"])]
-            end_off = _section_offset(by_bc[(nxt["book"], nxt["column"])], str(nxt["chapter"]))
+        end_idx = resolve_idx(nxt["book"], nxt["column"]) if nxt is not None else None
+        if end_idx is not None and nxt is not None:
+            end_off = _section_offset(
+                by_bc.get((nxt["book"], nxt["column"]), chunks[end_idx]), str(nxt["chapter"]))
         else:
             end_idx = len(chunks) - 1
             end_off = len(chunks[-1]["text"])

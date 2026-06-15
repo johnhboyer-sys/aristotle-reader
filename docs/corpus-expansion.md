@@ -112,8 +112,33 @@ Regression: EN build is byte-identical to shipped main (276 real ticks among
 - ⚠ Tredennick US-copyright to 2029 — built in as primary but withhold from the
   public deploy until John clears (toggle/registry gate still TODO if deploying).
 
+## Politics (035) — ✅ BUILT + REGISTERED
+8 books. Rackham (perseus eng2) primary, Jowett (MIT archive) secondary aligned
+via Rackham. Spot-checks + warts:
+- **Chapters via section milestones, not divs.** Politics' grc TEI has NO chapter
+  `<div>`s — chapters are `<milestone unit="section" resp="Ross">` (103, reset per
+  book; counts match traditional chapters 13,12,18,16,12,8,17,7). Generalized
+  `stage1_chapters`: `chapter_marker: milestone` reads section milestones, carries
+  each milestone's Bekker (col,line) as an authoritative fallback when the opening
+  text's orthography diverges from the spine (3 chapters needed it).
+- **Jowett markers are "Part <Roman>"** → new `part_roman` marker + Roman→int in
+  `stage1_ross`.
+- **Jowett Book 5 = 11 chapters to Ross's 12** (Jowett folds/omits the closing
+  Plato critique 1315b10ff). Per John: keep Ross's numbering; Ross-ch12 of book 5
+  carries no Jowett overlay (degrades to empty, no crash).
+- **Rackham TEI can't pair 8 columns**: omits Bekker page milestones for
+  1254b/1279a/1297a/1297b/1314b (English merged into preceding column) and assigns
+  book-straddling 1301a/1323a/1337a to one book. New manifest key
+  `alignment_allow_unmatched` lists them so stage2 surfaces-but-tolerates;
+  aligner `reference.resolve_idx` snaps missing cols to the preceding chunk.
+- stage3 now strips ‘ (U+2018) opening-quote (poets quoted in Politics).
+- Clean build (stage2 PASS, key_failures=0). Registered in works.ts (Roman I–VIII,
+  Rackham+Jowett). App prerenders 8 pages. ⚠ Rackham US-copyright ~2027 — withhold
+  from public deploy like Tredennick.
+
 ## Per-work progress
 - Poetics (034) ✅ built+registered (pre-existing)
-- Aligner port ✅ wiring complete (this session)
-- Metaphysics (025) ✅ built + registered (this session)
-- Next authentic Tier-A: Politica (035, 8 bk), Rhetorica (038, 3 bk).
+- Aligner port ✅ wiring complete
+- Metaphysics (025) ✅ built + registered
+- Politics (035) ✅ built + registered
+- Next authentic Tier-A: Rhetorica (038, 3 bk). Eudemia (009) shares books w/ NE → defer.
