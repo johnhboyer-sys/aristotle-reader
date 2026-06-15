@@ -40,13 +40,41 @@ De interpretatione (18), De motu animalium (14), De memoria (9), etc.
 Athenaion Politeia (003 — not Bekker-paginated), Magna moralia / Protrepticus /
 fragments (no Bekker divs).
 
-## Plan
-1. Vendor Perseus grc2+eng2 for Tier-A candidates → `sources/`.
-2. Per work: `manifests/<SLUG>.yaml` (copy DA/Poet; seed standard Bekker book
-   ranges, let stage2 correct), `python -m aristotle_pipeline all --work <SLUG>`,
-   spot-check canonical anchors, register in `app/src/lib/works.ts`, `npm run build`.
-3. Order easiest→hardest: Virt → Oec → Rhet → Pol → Meta. EE last (shared books).
-4. Commit per work.
+## Strategy (per John, 2026-06-15)
+- **Authentic works only** — drop works of dubious authorship: Oeconomica,
+  De virtutibus et vitiis, Problemata, De mundo, Mechanica, Magna Moralia,
+  Rhet. ad Alexandrum, the minor spuria. (Oec manifest deleted.)
+- **Big works first** — they drive interest. **Metaphysics is the priority.**
+- **Gradual git rollout**, one work per commit/checkpoint.
+- **Metaphysics should feature multiple translations** to showcase the project's
+  alignment value-add.
+
+## Aligner port (prerequisite for multi-translation)
+The translation aligner shipped on `main` only. To show any *unmarked* PD
+translation with real Bekker ticks, port `pipeline/aristotle_pipeline/align/`
+here and generalize it (currently NE/Rackham-hardcoded) to: work-scoped, with the
+Bekker-milestoned Perseus eng as the alignment *reference*. Then each work can
+carry N translations: the milestoned one (if PD) shown directly + unmarked PD
+ones aligned to it.
+
+## Metaphysics (025) — target, 14 books, chapter_subtype: section
+Translations:
+- **W. D. Ross (1924)** — PD, gold standard, MIT archive (unmarked → align).
+- **Hugh Tredennick (Loeb 1933)** — Perseus eng2, Bekker-milestoned. Great
+  alignment *reference*, but **US copyright until 2029** → scaffold only, do not
+  publish as display text unless licensing cleared.
+- **J. H. M'Mahon (1857)** — PD, archaic (optional 3rd).
+DECISION NEEDED: which translations to display; whether to port aligner now.
+
+## Build steps per work
+1. Vendor TEI (done for 009/025/035/038; 029/045 dropped as spurious).
+2. `manifests/<SLUG>.yaml` (copy Poet/DA; seed Bekker book ranges, stage2 corrects).
+3. `python -m aristotle_pipeline all --work <SLUG>`; spot-check canonical anchors.
+4. Register in `app/src/lib/works.ts`; `npm run build`; commit.
+
+## Remaining authentic Tier-A (after Metaphysics)
+Politica (035, 8 bk), Rhetorica (038, 3 bk). Eudemia (009) — shares books with NE.
 
 ## Per-work progress
-- (filled in as works land)
+- Poetics (034) ✅ built+registered (pre-existing)
+- Metaphysics (025) — in progress
