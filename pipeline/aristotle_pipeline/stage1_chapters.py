@@ -97,29 +97,54 @@ def _div_opening(div, k_chars=400) -> str:
     return re.sub(r"^\s*[Α-Ω][.·]?\s", " ", seg)[:k_chars]
 
 
+def _first_bekker_in(div, run_page, run_line):
+    """The Bekker (page, line) at the start of a chapter div: the first line
+    milestone inside it (with any preceding inner page milestone), falling back
+    to the position running when the div opened."""
+    page, line = run_page, run_line
+    for el in div.iter():
+        if _local(el) != "milestone":
+            continue
+        if el.get("unit") == "page":
+            page = el.get("n")
+        elif el.get("unit") == "line":
+            return page, el.get("n")
+    return page, line
+
+
 def _chapter_openings(grc_path: Path, chapter_subtype: str = "chapter",
                       book_subtype: str = "book"):
-    """(book, chapter, opening_text) for every chapter div, in document order.
-    Works with no book divisions default to book 1. lxml-based, so it's robust
-    to attribute order (Perseus inserts xml:base between subtype and n)."""
+    """(book, chapter, opening_text, column, line) for every chapter div, in
+    document order. Works with no book divisions default to book 1. The (column,
+    line) is the chapter div's first Bekker milestone — an authoritative fallback
+    when the opening text's orthography diverges from the spine. Document-order
+    walk so the running Bekker position is tracked across milestones."""
     tree = etree.parse(str(grc_path))
     body = tree.find(".//{*}body")
     if body is None:
         body = tree.getroot()
     out = []
-    for div in body.iter("{*}div"):
-        sub = div.get("subtype")
-        n = div.get("n")
-        if sub != chapter_subtype or not (n and n.lstrip("-").isdigit()):
-            continue
-        book = 1
-        anc = div.getparent()
-        while anc is not None:
-            if anc.get("subtype") == book_subtype and (anc.get("n") or "").isdigit():
-                book = int(anc.get("n"))
-                break
-            anc = anc.getparent()
-        out.append((book, n, _div_opening(div)))
+    state = {"book": 1, "page": None, "line": None}
+
+    def walk(node):
+        ln = _local(node)
+        if ln == "milestone":
+            if node.get("unit") == "page":
+                state["page"] = node.get("n")
+            elif node.get("unit") == "line":
+                state["line"] = node.get("n")
+        elif ln == "div":
+            sub, n = node.get("subtype"), node.get("n")
+            if sub == book_subtype and (n or "").isdigit():
+                state["book"] = int(n)
+            elif sub == chapter_subtype and n and n.lstrip("-").isdigit():
+                col, line = _first_bekker_in(node, state["page"], state["line"])
+                out.append((state["book"], n, _div_opening(node), col, line))
+        for ch in node:
+            walk(ch)
+
+    walk(body)
+    return out
     return out
 
 
@@ -189,9 +214,7 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
     if chapter_marker == "milestone":
         openings = _chapter_openings_milestone(grc_path, chapter_subtype, book_subtype)
     else:
-        # Normalize div openings to the 5-tuple shape (no milestone fallback pos).
-        openings = [(b, c, o, None, None)
-                    for b, c, o in _chapter_openings(grc_path, chapter_subtype, book_subtype)]
+        openings = _chapter_openings(grc_path, chapter_subtype, book_subtype)
     chapters: list[dict] = []
     after = 0
     for book, chap, opening, mcol, mline in openings:

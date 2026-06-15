@@ -15,6 +15,12 @@ def _stage1(manifest):
     spine_path = stage1_greek.run(manifest)
     spine = json.loads(spine_path.read_text(encoding="utf-8"))
 
+    # build/stage1 is single-work scratch; drop any secondary-translation chunks
+    # left by a previous work's build so stage7 never emits a stale overlay. It
+    # is rewritten below only when this work declares english.secondary.
+    stale_ross = BUILD_DIR / "stage1" / "ross_chunks.json"
+    stale_ross.unlink(missing_ok=True)
+
     chapters_cfg = manifest.data.get("chapters", {})
     if chapters_cfg.get("source") == "grc_tei":
         # Greek-sourced chapters + a chapter-anchored archive English (e.g. DA).
@@ -48,23 +54,24 @@ def _stage1(manifest):
             print(f"  chapters: {len(override)} (grc-aligned, overriding milestones)")
         eng_path, align_path = stage1_english.run(manifest, spine, override)
         english = json.loads(eng_path.read_text(encoding="utf-8"))
-        # Align the unmarked secondary translation (Ross) onto the spine via the
-        # Bekker-milestoned primary as reference, writing the standoff map that
-        # stage1_ross reads for real column/line-20 ticks. Needs stage1 spine +
-        # english_chunks on disk (just written above).
-        from .align.aligner import align as align_secondary
-        from .align.reference import default_target
+        # A second (unmarked) translation is optional. When the manifest declares
+        # english.secondary, align it onto the spine via the Bekker-milestoned
+        # primary as reference (writing the standoff map stage1_ross reads for
+        # real ticks) then chunk it; otherwise the work ships primary-only.
+        if (manifest.data.get("english") or {}).get("secondary"):
+            from .align.aligner import align as align_secondary
+            from .align.reference import default_target
 
-        version_id, prose = default_target(manifest.work_id)
-        stats = align_secondary(manifest.work_id, version_id=version_id,
-                                target_prose=prose)
-        print(f"  align({version_id}): chapters={stats['chapters']} "
-              f"anchors={stats['anchors']} tiers={stats['tiers']} "
-              f"review={stats['review']}")
-        ross_path = stage1_ross.run(manifest, spine, english)
-        ross = json.loads(ross_path.read_text(encoding="utf-8"))
-        print(f"  ross: segments_with_text={len(ross)} "
-              f"pieces={sum(len(v) for v in ross.values())}")
+            version_id, prose = default_target(manifest.work_id)
+            stats = align_secondary(manifest.work_id, version_id=version_id,
+                                    target_prose=prose)
+            print(f"  align({version_id}): chapters={stats['chapters']} "
+                  f"anchors={stats['anchors']} tiers={stats['tiers']} "
+                  f"review={stats['review']}")
+            ross_path = stage1_ross.run(manifest, spine, english)
+            ross = json.loads(ross_path.read_text(encoding="utf-8"))
+            print(f"  ross: segments_with_text={len(ross)} "
+                  f"pieces={sum(len(v) for v in ross.values())}")
     n_lines = sum(len(s["lines"]) for s in spine["segments"])
     print(f"stage1: segments={len(spine['segments'])} lines={n_lines} "
           f"unassigned={len(spine['unassigned_lines'])}")

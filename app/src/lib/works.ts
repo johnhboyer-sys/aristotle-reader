@@ -90,6 +90,19 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
   },
   {
+    id: 'Rhet',
+    title: 'Rhetoric',
+    abbr: 'Rhet.',
+    author: 'Aristotle',
+    books: 3,
+    bookLabels: ROMAN.slice(0, 3),
+    greekEdition: 'Ross, Aristotelis Ars Rhetorica (OCT, 1959)',
+    translations: [
+      { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
+    ],
+    blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
+  },
+  {
     id: 'Poet',
     title: 'Poetics',
     abbr: 'Poet.',

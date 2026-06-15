@@ -1,0 +1,70 @@
+# Rhetoric — pipeline manifest
+#
+# 3 books. Greek spine from the cached TLG export; chapter structure from the
+# Perseus grc TEI's chapter <div>s (60 = 15+26+19); English = J. H. Freese
+# (Loeb, 1926) from the Perseus eng2, via the perseus-primary path.
+#
+# Single translation: Freese (1926) is public domain in the US (1926 works
+# entered the PD in 2022), so unlike Metaphysics/Politics this work is fully
+# deployable. The only PD secondary on the MIT archive (W. Rhys Roberts) uses a
+# coarser, non-standard part division (8/16/15 vs the 15/26/19 Bekker chapters)
+# that won't chapter-anchor cleanly, so it is omitted.
+#
+# Book boundaries are the canonical Bekker ranges, derived from the TLG line
+# sequence cut at the grc TEI book-div starts (Stage 2 validates them).
+
+work:
+  id: Rhet
+  title: "Rhetoric"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "038"
+  greek_edition: "Ross, Aristotelis Ars Rhetorica (OCT, 1959)"
+  english_source: "tlg0086.tlg038.perseus-eng2.xml"
+  english_translation: "J. H. Freese (Loeb, 1926)"
+
+bekker_range:
+  first_column: "1354a"
+  last_column: "1420a"
+
+# Chapter starts are text-aligned onto the Greek spine from this grc TEI's
+# chapter <div>s. `source` is intentionally NOT grc_tei (that would swap to the
+# archive English path); only the chapter lines are overridden, Freese stays the
+# primary milestoned English. No english.secondary → primary-only build.
+chapters:
+  grc_tei: "tlg0086.tlg038.perseus-grc2.xml"
+  chapter_subtype: chapter
+
+books:
+  - { n: 1, start: "1354a1",  end: "1378a15" }
+  - { n: 2, start: "1378a16", end: "1404a5" }
+  - { n: 3, start: "1404a6",  end: "1420a8" }
+
+# TLG line-numbering gaps (the Greek is continuous across them — verified).
+expected_line_gaps:
+  - { column: "1377b", after: 12, next: 16 }
+  - { column: "1403b", after: 3,  next: 6 }
+
+# Freese's TEI places the book I/II and II/III divisions one column earlier than
+# the Greek (at 1377b and 1403b vs the Bekker 1378a16 / 1404a6), so each boundary
+# leaves an unpaired Greek segment and an unpaired English chunk. Surfaced but
+# tolerated; the reader carries the English from the adjacent column.
+alignment_allow_unmatched:
+  - "1:1378a"
+  - "2:1377b"
+  - "2:1404a"
+  - "3:1403b"
+
+# Names frequent enough in the Rhetoric to anchor a cross-language spot check
+# (Stage 2). Greek is matched diacritic-stripped/lowercased. Socrates/Homer are
+# omitted — Freese supplies/drops them in a few columns where the Greek differs.
+proper_names:
+  - ["γοργ", "Gorgias"]
+  - ["ισοκρατ", "Isocrates"]
+  - ["περικλ", "Pericles"]
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

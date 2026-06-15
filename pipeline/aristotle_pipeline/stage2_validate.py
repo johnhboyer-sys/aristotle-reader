@@ -106,13 +106,18 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
     # declared in the manifest so they're surfaced but don't fail the build.
     allowed = set(manifest.data.get("alignment_allow_unmatched", []))
     unexpected_unmatched = [s for s in unmatched if s not in allowed]
+    # A book-boundary edition mismatch is symmetric: the English TEI places a
+    # book division a column off from the Greek, leaving both an unpaired Greek
+    # segment and an unpaired English chunk. The allowance covers either side.
+    unexpected_english_only = [s for s in alignment["english_only"] if s not in allowed]
     report["checks"]["alignment"] = {
         "pairs": len(alignment["pairs"]),
         "unmatched_segments": unmatched,
-        "allowed_unmatched": sorted(allowed & set(unmatched)),
+        "allowed_unmatched": sorted(allowed & (set(unmatched) | set(alignment["english_only"]))),
         "unexpected_unmatched": unexpected_unmatched,
         "english_only": alignment["english_only"],
-        "ok": not unexpected_unmatched and not alignment["english_only"],
+        "unexpected_english_only": unexpected_english_only,
+        "ok": not unexpected_unmatched and not unexpected_english_only,
     }
 
     # --- 4. length-ratio outliers ------------------------------------------

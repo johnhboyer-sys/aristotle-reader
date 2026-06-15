@@ -136,9 +136,31 @@ via Rackham. Spot-checks + warts:
   Rackham+Jowett). App prerenders 8 pages. ⚠ Rackham US-copyright ~2027 — withhold
   from public deploy like Tredennick.
 
+## Rhetoric (038) — ✅ BUILT + REGISTERED
+3 books, single translation. **Freese (Loeb 1926) is public-domain** (1926 works
+entered US PD in 2022) → first new work that's fully **deployable**. Chapters are
+`<div subtype="chapter">` (60 = 15+26+19), div path. Notes:
+- **Secondary made optional.** `__main__._stage1` only aligns/chunks a secondary
+  when the manifest declares `english.secondary`; else primary-only. It also
+  clears a stale `build/stage1/ross_chunks.json` at entry (single-work scratch)
+  so a prior work's overlay can't leak into stage7 — latent bug, now fixed.
+- **No usable PD secondary:** MIT's Roberts uses a coarse non-standard part
+  division (8/16/15 vs 15/26/19) that won't chapter-anchor; omitted.
+- **Div path got the Bekker-position fallback too.** `_chapter_openings` now
+  returns (book,chap,opening,col,line) from each chapter div's first line
+  milestone, so a chapter whose opening orthography diverges (Rhet II.3 had two
+  words fused with no space in the TEI) still pins via its milestone.
+- Freese's TEI places the I/II + II/III book divisions one column before the
+  Greek → 2 unpaired Greek segs + 2 unpaired English chunks; `stage2` allowance
+  now covers english_only too. `expected_line_gaps`: 1377b(13-15), 1403b(4-5).
+- Clean build (stage2 PASS, key_failures=0); registered (Roman I–III, Freese).
+  App prerenders 3 pages; home index now lists all 6 works.
+
 ## Per-work progress
 - Poetics (034) ✅ built+registered (pre-existing)
 - Aligner port ✅ wiring complete
-- Metaphysics (025) ✅ built + registered
-- Politics (035) ✅ built + registered
-- Next authentic Tier-A: Rhetorica (038, 3 bk). Eudemia (009) shares books w/ NE → defer.
+- Metaphysics (025) ✅ built + registered  (Tredennick — withhold till 2029)
+- Politics (035) ✅ built + registered     (Rackham — withhold till ~2028)
+- Rhetoric (038) ✅ built + registered     (Freese PD — DEPLOYABLE)
+- All 5 prior works regression-pass identical after each change.
+- Remaining authentic: Eudemian Ethics (009) shares books IV–VI with NE V–VII → defer/special-case.
