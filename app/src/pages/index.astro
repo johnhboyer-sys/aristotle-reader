@@ -6,6 +6,8 @@ import '../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const href = (work: string, q = '') => `${base}/${work}/book/1${q}`;
+// Where "report an error / suggest" points — John's x.com.
+const FEEDBACK_URL = 'https://x.com/johnhboyer';
 ---
 <html lang="en">
 <head>
@@ -25,6 +27,11 @@ const href = (work: string, q = '') => `${base}/${work}/book/1${q}`;
       <p class="eyebrow">Aristotle</p>
       <h1>The Greek Library</h1>
       <p class="lede">A parallel-text reader with morphology, dictionary, and Bekker citation. Choose a work to begin.</p>
+      <p class="wip-note">
+        <strong>Work in progress.</strong> The corpus is expanding and the
+        translation alignment is still being refined. Spotted an error or have a
+        suggestion? <a href={FEEDBACK_URL}>Let me know</a>.
+      </p>
     </header>
 
     <ul class="works">
@@ -72,8 +79,20 @@ const href = (work: string, q = '') => `${base}/${work}/book/1${q}`;
       <a href={`${base}/search`}>Search the corpus</a>
       <span aria-hidden="true">·</span>
       <a href={`${base}/attribution`}>Texts &amp; Licences</a>
+      <span aria-hidden="true">·</span>
+      <a href={FEEDBACK_URL}>Suggest / report an error</a>
     </nav>
   </main>
+  <style>
+    .wip-note {
+      margin: 1rem auto 0;
+      max-width: 40rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      opacity: 0.8;
+    }
+    .wip-note a { text-decoration: underline; }
+  </style>
 
   <style>
     body.home { background: var(--page-bg); color: var(--text); }
