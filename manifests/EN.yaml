@@ -28,6 +28,18 @@ chapters:
   grc_tei: "tlg0086.tlg010.perseus-grc2.xml"
   chapter_subtype: section
 
+# Second (unmarked) translation: W. D. Ross from the MIT Internet Classics
+# Archive, distributed across the Bekker columns. It carries no Bekker
+# milestones, so the aligner maps it onto the spine via the Bekker-milestoned
+# Rackham primary as reference; this block tells the pipeline where to read it.
+english:
+  secondary:
+    id: ross
+    name: "W. D. Ross (Oxford, 1925)"
+    dir: ross
+    books: 10
+    marker: number
+
 # Columns where a new book starts mid-column. The English TEI emits a
 # duplicate page milestone at these restarts — except Books II (1103a14)
 # and VII (1145a15), which have none and must be detected via their

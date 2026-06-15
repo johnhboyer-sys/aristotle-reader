@@ -46,6 +46,19 @@ def _stage1(manifest):
             print(f"  chapters: {len(override)} (grc-aligned, overriding milestones)")
         eng_path, align_path = stage1_english.run(manifest, spine, override)
         english = json.loads(eng_path.read_text(encoding="utf-8"))
+        # Align the unmarked secondary translation (Ross) onto the spine via the
+        # Bekker-milestoned primary as reference, writing the standoff map that
+        # stage1_ross reads for real column/line-20 ticks. Needs stage1 spine +
+        # english_chunks on disk (just written above).
+        from .align.aligner import align as align_secondary
+        from .align.reference import default_target
+
+        version_id, prose = default_target(manifest.work_id)
+        stats = align_secondary(manifest.work_id, version_id=version_id,
+                                target_prose=prose)
+        print(f"  align({version_id}): chapters={stats['chapters']} "
+              f"anchors={stats['anchors']} tiers={stats['tiers']} "
+              f"review={stats['review']}")
         ross_path = stage1_ross.run(manifest, spine, english)
         ross = json.loads(ross_path.read_text(encoding="utf-8"))
         print(f"  ross: segments_with_text={len(ross)} "
