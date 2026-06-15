@@ -17,9 +17,16 @@ def main(argv=None):
                    help="lexical (zero-dep) | fast | quality | <sbert model id>")
     p.add_argument("--books", default="", help="comma-separated book numbers, e.g. 1,2")
     p.add_argument("--eval", action="store_true", help="run the offset-error eval harness")
+    p.add_argument("--html", action="store_true", help="write a side-by-side Rackham|Ross review page")
     args = p.parse_args(argv)
 
     books = [int(b) for b in args.books.split(",") if b.strip()] or None
+
+    if args.html:
+        from .review_html import write_html
+        path = write_html(args.work, args.version, args.backend, books)
+        print(f"wrote {path}")
+        return
 
     if args.eval:
         from .eval import run_eval
