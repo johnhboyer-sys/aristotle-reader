@@ -69,9 +69,11 @@ export const WORKS: Work[] = [
     // "lesser alpha" (α elatton), distinct from Book 1 (Α).
     bookLabels: ['Α','α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν'],
     greekEdition: 'Ross, Aristotle’s Metaphysics (OCT, 1924)',
+    // Public build ships the public-domain Ross (1924) only. The copyrighted
+    // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
+    // for the local/private build and are NOT deployed (see publish-plan).
     translations: [
-      { id: 'tredennick', name: 'Hugh Tredennick (Loeb, 1933)', short: 'Tredennick', slot: 'english' },
-      { id: 'ross', name: 'W. D. Ross (Oxford, 1924)', short: 'Ross', slot: 'ross' },
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1924)', short: 'Ross', slot: 'english' },
     ],
     blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
   },
@@ -83,9 +85,11 @@ export const WORKS: Work[] = [
     books: 8,
     bookLabels: ROMAN.slice(0, 8),
     greekEdition: 'Ross, Aristotelis Politica (OCT, 1957)',
+    // Public build ships the public-domain Jowett (1885) only. The copyrighted
+    // Rackham (Loeb 1932) primary + aligned-Jowett overlay live in Pol.yaml for
+    // the local/private build and are NOT deployed (see publish-plan).
     translations: [
-      { id: 'rackham', name: 'H. Rackham (Loeb, 1932)', short: 'Rackham', slot: 'english' },
-      { id: 'jowett', name: 'Benjamin Jowett (Oxford, 1885)', short: 'Jowett', slot: 'ross' },
+      { id: 'jowett', name: 'Benjamin Jowett (Oxford, 1885)', short: 'Jowett', slot: 'english' },
     ],
     blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
   },

@@ -1,0 +1,73 @@
+# Metaphysics — PUBLIC build (public-domain translation only)
+#
+# Same work as Meta.yaml, but for the live/public deploy: the copyrighted
+# Tredennick (Loeb 1933) primary is dropped entirely. W. D. Ross (1924, US public
+# domain) becomes the sole English, via the chapter-anchored archive path (like
+# De Anima) — so the Tredennick text never enters the published data OR the
+# search index. Tradeoff vs Meta.yaml: Ross is chapter-anchored (interpolated
+# gutter), no per-line Bekker, no two-translation compare. The Greek is identical.
+#
+# Build this (not Meta.yaml) for the public deploy. Keep Meta.yaml for the local
+# full build (Tredennick primary + aligned Ross), which must NOT be published.
+
+work:
+  id: Meta
+  title: "Metaphysics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "025"
+  greek_edition: "Ross, Aristotle's Metaphysics (OCT, 1924)"
+  english_translation: "W. D. Ross (Oxford, 1924)"
+
+bekker_range:
+  first_column: "980a"
+  last_column: "1093b"
+
+# Chapters from the grc TEI section divs, text-aligned onto the spine; the
+# archive English (Ross) is distributed across the Bekker columns (source:
+# grc_tei selects the archive primary path).
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg025.perseus-grc2.xml"
+  chapter_subtype: section
+
+english:
+  primary:
+    id: ross
+    name: "W. D. Ross (Oxford, 1924)"
+    model: archive
+    dir: meta-ross
+    books: 14
+    chapter_marker: part
+
+expected_line_gaps:
+  - { column: "993a",  after: 27, next: 29 }
+  - { column: "1029b", after: 12, next: 1 }
+  - { column: "1029b", after: 2,  next: 13 }
+
+books:
+  - { n:  1, start: "980a21",  end: "993a29" }
+  - { n:  2, start: "993a30",  end: "995a20" }
+  - { n:  3, start: "995a24",  end: "1003a17" }
+  - { n:  4, start: "1003a21", end: "1012b31" }
+  - { n:  5, start: "1012b34", end: "1025a34" }
+  - { n:  6, start: "1025b3",  end: "1028a6" }
+  - { n:  7, start: "1028a10", end: "1041b33" }
+  - { n:  8, start: "1042a3",  end: "1045b23" }
+  - { n:  9, start: "1045b27", end: "1052a11" }
+  - { n: 10, start: "1052a15", end: "1059a14" }
+  - { n: 11, start: "1059a18", end: "1069a14" }
+  - { n: 12, start: "1069a18", end: "1076a4" }
+  - { n: 13, start: "1076a8",  end: "1087a25" }
+  - { n: 14, start: "1087a29", end: "1093b29" }
+
+proper_names:
+  - ["σωκρατ", "Socrates"]
+  - ["αναξαγορ", "Anaxagoras"]
+  - ["εμπεδοκλ", "Empedocles"]
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

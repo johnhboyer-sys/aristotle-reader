@@ -1,0 +1,70 @@
+# Politics — PUBLIC build (public-domain translation only)
+#
+# Same work as Pol.yaml, but for the live deploy: the copyrighted Rackham (Loeb
+# 1932) primary is dropped. Benjamin Jowett (1885, US public domain) becomes the
+# sole English, via the chapter-anchored archive path — so Rackham never enters
+# the published data or search index. Tradeoff vs Pol.yaml: Jowett is
+# chapter-anchored (interpolated gutter), no per-line Bekker, no two-translation
+# compare. The Greek is identical. NB Jowett Book 5 has 11 chapters to Ross's 12
+# (folds the closing Plato critique); that Ross-chapter shows no English.
+#
+# Build this (not Pol.yaml) for the public deploy. Keep Pol.yaml for the local
+# full build (Rackham primary + aligned Jowett), which must NOT be published.
+
+work:
+  id: Pol
+  title: "Politics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "035"
+  greek_edition: "Ross, Aristotelis Politica (OCT, 1957)"
+  english_translation: "Benjamin Jowett (Oxford, 1885)"
+
+bekker_range:
+  first_column: "1252a"
+  last_column: "1342b"
+
+# Chapters from the grc TEI Ross section milestones (chapter_marker: milestone);
+# the archive English (Jowett) is distributed across the Bekker columns.
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg035.perseus-grc2.xml"
+  chapter_marker: milestone
+  chapter_subtype: section
+
+english:
+  primary:
+    id: jowett
+    name: "Benjamin Jowett (Oxford, 1885)"
+    model: archive
+    dir: pol-jowett
+    books: 8
+    chapter_marker: part_roman
+
+books:
+  - { n: 1, start: "1252a1",  end: "1260b24" }
+  - { n: 2, start: "1260b27", end: "1274b28" }
+  - { n: 3, start: "1274b32", end: "1288b6" }
+  - { n: 4, start: "1288b10", end: "1301a15" }
+  - { n: 5, start: "1301a19", end: "1316b27" }
+  - { n: 6, start: "1316b31", end: "1323a10" }
+  - { n: 7, start: "1323a14", end: "1337a7" }
+  - { n: 8, start: "1337a11", end: "1342b34" }
+
+# Jowett omits the close of Book 5 (the critique of Plato, 1315b10ff = Ross's
+# section 12), so columns 1316a/1316b carry Greek with no Jowett English.
+alignment_allow_unmatched:
+  - "5:1316a"
+  - "5:1316b"
+
+# Socrates omitted: its only Greek-without-English columns are 1316a/1316b, the
+# Plato critique Jowett doesn't translate (see above).
+proper_names:
+  - ["σολων", "Solon"]
+  - ["λυκουργ", "Lycurgus"]
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
