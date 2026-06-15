@@ -24,22 +24,23 @@ _CONF = {"certain": "#2563eb", "reliable": "#15803d", "uncertain": "#b45309",
          "interpolated": "#999"}
 
 
-def _segs(text, offsets):
-    bounds = list(offsets) + [len(text)]
-    return [text[bounds[i]:bounds[i + 1]].strip() for i in range(len(offsets))]
+def _sentence_at(text: str, off: int) -> tuple[str, str]:
+    """The sentence starting at `off` (placements are sentence-start snapped),
+    plus a little following context. Computed from the offset directly so two
+    anchors that land in the same sentence both show it (instead of one going
+    blank when sliced between coincident offsets)."""
+    off = max(0, min(off, len(text)))
+    m = re.match(r'[^.!?]*[.!?]+(?:["\')\]]+)?', text[off:])
+    end = off + (m.end() if m else len(text) - off)
+    return text[off:end].strip(), text[end:end + 160].strip()
 
 
-def _lead(text: str) -> str:
-    """Bold the first sentence (the beginning we actually align on) and dim the
-    trailing context — an anchor marks a *start*, so only the beginnings should
-    line up across the two columns."""
-    text = text.strip()
-    if not text:
+def _cell(lead: str, ctx: str = "") -> str:
+    """Bold lead sentence + dimmed trailing context."""
+    if not lead and not ctx:
         return ""
-    m = re.match(r'[^.!?]*[.!?]+(?:["\')\]]+)?', text)
-    lead, rest = (m.group(), text[m.end():]) if m else (text, "")
-    return (f'<b class="lead">{html.escape(lead)}</b>'
-            f'<span class="ctx">{html.escape(rest)}</span>')
+    tail = f'<span class="ctx"> {html.escape(ctx)}…</span>' if ctx else ""
+    return f'<b class="lead">{html.escape(lead)}</b>{tail}'
 
 
 def build_html(work_id="ne", version_id="ross", backend="lexical", books=None) -> str:
@@ -51,9 +52,10 @@ def build_html(work_id="ne", version_id="ross", backend="lexical", books=None) -
     for ch in chapters:
         anchors = [a for a in align_chapter(ch, backend) if a.tier != "line"]
         anchors.sort(key=lambda a: a.offset)
-        rack = _segs(ch.ref_text, [a.off for a in ch.ref_anchors])
-        rack_by_cit = {a.citation: rack[i] for i, a in enumerate(ch.ref_anchors)}
-        ross = _segs(ch.ross_text, [a.offset for a in anchors])
+        # Rackham side: show the whole sentence the tick falls in (the unit the
+        # aligner matches on), so half-column rows aren't a mid-sentence fragment.
+        fps = ch.ref_incipits()
+        rack_by_cit = {a.citation: fps[i] for i, a in enumerate(ch.ref_anchors)}
         body = []
         for i, a in enumerate(anchors):
             flag = (" · " + ", ".join(a.flags)) if a.flags else ""
@@ -73,8 +75,8 @@ def build_html(work_id="ne", version_id="ross", backend="lexical", books=None) -
                 f'<span class="conf" style="color:{_CONF.get(a.confidence,"#000")}">'
                 f'{a.confidence}</span>'
                 f'<span class="flag">{html.escape(flag)}</span></td>'
-                f'<td class="rk">{_lead(rack_by_cit.get(a.citation,""))}</td>'
-                f'<td class="rs">{_lead(ross[i])}</td></tr>'
+                f'<td class="rk">{_cell(rack_by_cit.get(a.citation,""))}</td>'
+                f'<td class="rs">{_cell(*_sentence_at(ch.ross_text, a.offset))}</td></tr>'
             )
         rows_by_book.setdefault(ch.book, []).append(
             f'<tr class="chap"><td colspan="4">Book {ch.book}, '
@@ -118,9 +120,10 @@ _TEMPLATE = """<!doctype html><meta charset=utf-8>
  tr.row.good .g,tr.row.close .c,tr.row.off .o{{font-weight:bold;border-color:#333}}
 </style>
 <h1>Nicomachean Ethics — alignment review</h1>
-<p class=lede>An anchor marks a <b>start</b>, so judge the <b>bold first sentence</b> of each
-row: does Ross <i>begin</i> at the same content as Rackham? (Ross is terser, so the
-dimmed tails won't line up — that's fine; ignore them.)
+<p class=lede>Each row compares one Bekker line. Left shows the <b>Rackham sentence that
+the line falls in</b>; right shows the <b>Ross sentence the tool matched</b> (bold),
+plus dimmed context. They should be the same thought — judge the bold sentences.
+(Ross is terser, so the dimmed tails won't line up; ignore them.)
 Rate each row <b>good / close / off</b> (click, or focus a row and press
 <b>1 / 2 / 3</b> — that also jumps to the next row). Single interpolated lines are
 omitted. Backend: {backend}.</p>
