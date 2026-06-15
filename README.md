@@ -8,10 +8,11 @@ A static web application for reading Aristotle's *Nicomachean Ethics* with the G
 
 | Feature | Detail |
 |---|---|
-| Parallel text | Bywater Greek (OCT 1894) and Rackham English (Loeb 1926), aligned at every Bekker column |
+| Parallel text | Greek and English side by side, aligned at every Bekker column |
+| Translations | Rackham (Loeb 1926) and Ross (1925) — switch or compare. Ross ships as an unmarked text mapped onto the Greek spine by the **translation aligner**, so it carries real Bekker ticks (see below) |
 | Word popups | Click any Greek word: lemma, short gloss, parse (from Diogenes / Morpheus), and the full LSJ entry |
 | Search | Separate Greek and English boxes; All words / Any word / Phrase modes; `*` wildcard on Greek lemmata; AND/OR combination across languages |
-| Navigation | Book I–X; deep-link to any Bekker column from search results |
+| Navigation | Book I–X; deep-link to any Bekker column from search results; jump to any Bekker line |
 
 ---
 
@@ -47,7 +48,7 @@ This runs all seven stages in order and writes the frontend data set to `build/d
 
 | Stage | What it does |
 |---|---|
-| 1 | Exports Greek from TLG via Diogenes, parses verse-mode TEI; chunks Rackham English at Bekker milestones; builds standoff alignment |
+| 1 | Exports Greek from TLG via Diogenes, parses verse-mode TEI; chunks Rackham English at Bekker milestones; aligns the unmarked Ross translation onto the spine (translation aligner) and slices it across columns with real Bekker ticks; builds standoff alignment |
 | 2 | Validates column completeness, line gaps, alignment coverage, length ratios, proper-name spot check, sigla inventory |
 | 3 | Tokenizes Greek text; converts surface forms to Beta Code lookup keys |
 | 4 | Single targeted pass over `greek-analyses.txt`; matches 99.9% of tokens; writes `unmatched.json` for review |
@@ -58,6 +59,29 @@ This runs all seven stages in order and writes the frontend data set to `build/d
 To run a single stage: `uv run python -m aristotle_pipeline stage2` (useful after editing the manifest or patch file).
 
 **Patch file:** `manifests/ne-analyses-patch.json` holds hand-reviewed analyses for forms Morpheus does not know (Aristotle's algebraic variable letters in Book V, etc.).
+
+### Translation aligner
+
+`pipeline/aristotle_pipeline/align/` maps an *unmarked* translation (Ross 1925)
+onto the Greek spine, so any Bekker citation resolves to a position in it — a
+standoff alignment map; the text is never mutated. It runs automatically inside
+stage 1, but can also be driven directly:
+
+```bash
+cd pipeline
+python -m aristotle_pipeline.align            # write build/align/ne_ross_map.json
+python -m aristotle_pipeline.align --eval     # offset-error harness
+python -m aristotle_pipeline.align --html     # side-by-side Rackham|Ross review page
+```
+
+It uses the already-anchored Rackham translation as the reference (no API key):
+per chapter, each real Bekker anchor's sentence is matched to the Ross sentence
+that begins the same content by a monotonic DP over cosine similarity, with
+single lines interpolated by Greek word-count. The zero-dependency lexical
+backend is the default; `sentence-transformers` is optional. See
+[`align/README.md`](pipeline/aristotle_pipeline/align/README.md). Validated on
+Books 1–2 against hand ratings: 0 % off-rate among the anchors shipped as real
+ticks.
 
 ### 2. Run the app
 
@@ -100,6 +124,8 @@ aristotle-reader/
 │   └── aristotle_pipeline/
 │       ├── stage1_greek.py      # TLG export + spine parser
 │       ├── stage1_english.py    # Perseus TEI chunker + alignment
+│       ├── stage1_ross.py       # Ross translation sliced across columns (uses align map)
+│       ├── align/               # translation aligner (Ross → spine) + review page
 │       ├── stage2_validate.py   # six-check validation suite
 │       ├── stage3_tokenize.py   # Greek tokenizer
 │       ├── beta.py              # Unicode → Beta Code conversion
@@ -134,6 +160,7 @@ See [`/attribution`](app/src/pages/attribution.astro) in the running app, or the
 
 - **LSJ** — CC BY-SA 3.0 (Perseus Digital Library / Trustees of Tufts University). This app uses a derivative; downstream use must also carry CC BY-SA.
 - **Rackham translation** — Public domain (published 1926, US copyright expired).
+- **Ross translation** — Public domain (published 1925), via the MIT Internet Classics Archive.
 - **Bywater Greek text** — Public domain (published 1894).
 - **TLG electronic corpus** — Separately licensed; not redistributed by this project. Users must hold their own TLG licence.
 - **Morpheus morphological data** — Distributed with Diogenes; see Diogenes licence.
