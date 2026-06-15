@@ -64,7 +64,12 @@ Translations:
   alignment *reference*, but **US copyright until 2029** → scaffold only, do not
   publish as display text unless licensing cleared.
 - **J. H. M'Mahon (1857)** — PD, archaic (optional 3rd).
-DECISION NEEDED: which translations to display; whether to port aligner now.
+DECISION (John 2026-06-15): **display Tredennick + Ross.** PD risk accepted for
+now; the Tredennick TEI is "clutch" (Bekker-milestoned). Build it in but keep it
+toggleable so Tredennick can be withheld from the public deploy until John clears
+the risk (or it goes PD in 2029). → Metaphysics mirrors NE: Tredennick = primary
+(perseus_tei, real ticks from TEI), Ross = secondary (aligned via aligner, with
+Tredennick as the Bekker reference). Aligner port: YES.
 
 ## Build steps per work
 1. Vendor TEI (done for 009/025/035/038; 029/045 dropped as spurious).
@@ -75,6 +80,38 @@ DECISION NEEDED: which translations to display; whether to port aligner now.
 ## Remaining authentic Tier-A (after Metaphysics)
 Politica (035, 8 bk), Rhetorica (038, 3 bk). Eudemia (009) — shares books with NE.
 
+## Aligner port — status (commit 110de85)
+DONE: `align/` package ported to this branch + generalized —
+`reference.load_chapters(target_prose)` takes injected prose;
+`reference.default_target(work_id)` reads manifest `english.secondary` (NE Ross
+fallback); `aligner.align(work_id, version_id=None, target_prose=None, …)`;
+eval/review_html/CLI threaded. Verified: runs on build/stage1, NE Book 1 → map.
+
+TODO to finish wiring (next session):
+1. `stage1_ross.build_chunks(spine, chapters, prose, anchors=None)` — port the
+   real-tick logic from main (`_load_align_map`, `_real_ticks`, anchor-based
+   column cuts; `_REAL_CONF={certain,reliable}`). `run()` reads manifest
+   `english.secondary` for the prose + version id (NE Ross fallback).
+2. `__main__._stage1` (else branch): after `stage1_english.run`, call
+   `align(manifest.work_id, target_prose=<secondary prose>)` before
+   `stage1_ross.run` so the map exists. (Mirror main's wiring.)
+3. Add `english.secondary` block to `EN.yaml` (id ross, dir ross, books 10,
+   marker number) so EN keeps working via the generalized path.
+
+## Metaphysics build — next steps
+1. Vendor Ross Metaphysics: MIT archive `classics.mit.edu/Aristotle/metaphysics.html`
+   (single HTML, "Book/Part" markers — may need a per-book splitter or a new
+   `chapter_marker`) → `sources/meta-ross/book-0N.html` (14 books).
+2. `manifests/Meta.yaml`: tlg_work 025, chapters grc_tei
+   tlg0086.tlg025.perseus-grc2.xml chapter_subtype section, English primary =
+   Tredennick perseus eng2 (the perseus path, NOT grc_tei source), secondary =
+   ross (meta-ross). 14 books — get Bekker ranges from the grc TEI book divs +
+   let stage2 correct mid-column starts.
+3. `all --work Meta`; spot-check (e.g. Book Λ/12 1072a "unmoved mover").
+4. Register in `app/src/lib/works.ts` (2 translations: Tredennick english slot +
+   Ross ross slot). `npm run build`. Commit.
+
 ## Per-work progress
 - Poetics (034) ✅ built+registered (pre-existing)
-- Metaphysics (025) — in progress
+- Aligner port ✅ (110de85) — wiring TODO above
+- Metaphysics (025) — data vendored (Perseus grc+eng); manifest + Ross + build pending
