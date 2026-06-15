@@ -14,6 +14,7 @@ gold set.
 from __future__ import annotations
 
 import html
+import re
 
 from ..config import BUILD_DIR
 from .aligner import align_chapter
@@ -26,6 +27,19 @@ _CONF = {"certain": "#2563eb", "reliable": "#15803d", "uncertain": "#b45309",
 def _segs(text, offsets):
     bounds = list(offsets) + [len(text)]
     return [text[bounds[i]:bounds[i + 1]].strip() for i in range(len(offsets))]
+
+
+def _lead(text: str) -> str:
+    """Bold the first sentence (the beginning we actually align on) and dim the
+    trailing context — an anchor marks a *start*, so only the beginnings should
+    line up across the two columns."""
+    text = text.strip()
+    if not text:
+        return ""
+    m = re.match(r'[^.!?]*[.!?]+(?:["\')\]]+)?', text)
+    lead, rest = (m.group(), text[m.end():]) if m else (text, "")
+    return (f'<b class="lead">{html.escape(lead)}</b>'
+            f'<span class="ctx">{html.escape(rest)}</span>')
 
 
 def build_html(work_id="ne", version_id="ross", backend="lexical", books=None) -> str:
@@ -49,18 +63,18 @@ def build_html(work_id="ne", version_id="ross", backend="lexical", books=None) -
                 f'data-book="{ch.book}" data-chapter="{html.escape(str(ch.chapter))}" '
                 f'data-cit="{html.escape(a.citation)}" data-tier="{a.tier}" '
                 f'data-conf="{a.confidence}">'
+                f'<td class="rate">'
+                f'<button class="g" data-v="good"  title="key 1">good</button>'
+                f'<button class="c" data-v="close" title="key 2">close</button>'
+                f'<button class="o" data-v="off"   title="key 3">off</button>'
+                f'</td>'
                 f'<td class="cit"><b>{html.escape(a.citation)}</b><br>'
                 f'<span class="tier">{a.tier}</span><br>'
                 f'<span class="conf" style="color:{_CONF.get(a.confidence,"#000")}">'
                 f'{a.confidence}</span>'
                 f'<span class="flag">{html.escape(flag)}</span></td>'
-                f'<td class="rk">{html.escape(rack_by_cit.get(a.citation,""))}</td>'
-                f'<td class="rs">{html.escape(ross[i])}</td>'
-                f'<td class="rate">'
-                f'<button class="g" data-v="good"  title="key 1">good</button>'
-                f'<button class="c" data-v="close" title="key 2">close</button>'
-                f'<button class="o" data-v="off"   title="key 3">off</button>'
-                f'</td></tr>'
+                f'<td class="rk">{_lead(rack_by_cit.get(a.citation,""))}</td>'
+                f'<td class="rs">{_lead(ross[i])}</td></tr>'
             )
         rows_by_book.setdefault(ch.book, []).append(
             f'<tr class="chap"><td colspan="4">Book {ch.book}, '
@@ -70,8 +84,8 @@ def build_html(work_id="ne", version_id="ross", backend="lexical", books=None) -
     nav = " ".join(f'<a href="#b{b}">Book {b}</a>' for b in sorted(rows_by_book))
     sections = "".join(
         f'<h2 id="b{b}">Book {b}</h2><table>'
-        f'<tr><th>Bekker</th><th>Rackham (reference, anchored)</th>'
-        f'<th>Ross (aligned)</th><th>rating</th></tr>{"".join(rows)}</table>'
+        f'<tr><th>rating</th><th>Bekker</th><th>Rackham (reference, anchored)</th>'
+        f'<th>Ross (aligned)</th></tr>{"".join(rows)}</table>'
         for b, rows in sorted(rows_by_book.items())
     )
     return _TEMPLATE.format(work=work_id, version=version_id, backend=backend,
@@ -92,9 +106,11 @@ _TEMPLATE = """<!doctype html><meta charset=utf-8>
  th{{font:12px sans-serif;color:#666;border-bottom:1px solid #ccc}}
  .cit{{width:104px;font:11px sans-serif}} .tier{{color:#888}} .conf{{font-weight:bold}}
  .flag{{display:block;color:#b45309;font-size:10px;margin-top:2px}}
- .rk,.rs{{width:42%}} .rs{{background:#fcfbf7}}
- .rate{{width:74px}} .rate button{{display:block;width:100%;margin:0 0 3px;font:11px sans-serif;
-   padding:3px 0;cursor:pointer;border:1px solid #ccc;background:#fafafa;border-radius:3px}}
+ .rk,.rs{{width:40%}} .rs{{background:#fcfbf7}}
+ .lead{{font-weight:600;color:#111}} .ctx{{color:#aaa}}
+ .rate{{width:96px}} .rate button{{display:block;width:100%;margin:0 0 6px;font:14px sans-serif;
+   padding:11px 0;cursor:pointer;border:1px solid #bbb;background:#f3f3f3;border-radius:6px}}
+ .rate .g{{color:#15803d}} .rate .c{{color:#b45309}} .rate .o{{color:#b91c1c}}
  tr.chap td{{background:#1f2937;color:#fff;font:13px sans-serif;font-weight:bold;padding:.4rem .6rem}}
  tr.row:focus{{outline:2px solid #2563eb;outline-offset:-2px}}
  tr.row.good td{{background:#eafbe7}} tr.row.close td{{background:#fff7e0}} tr.row.off td{{background:#fdeaea}}
@@ -102,8 +118,9 @@ _TEMPLATE = """<!doctype html><meta charset=utf-8>
  tr.row.good .g,tr.row.close .c,tr.row.off .o{{font-weight:bold;border-color:#333}}
 </style>
 <h1>Nicomachean Ethics — alignment review</h1>
-<p class=lede>Each row is one real Bekker anchor. The two columns should read as the
-same content; if Ross drifts out of step with Rackham, the alignment is off.
+<p class=lede>An anchor marks a <b>start</b>, so judge the <b>bold first sentence</b> of each
+row: does Ross <i>begin</i> at the same content as Rackham? (Ross is terser, so the
+dimmed tails won't line up — that's fine; ignore them.)
 Rate each row <b>good / close / off</b> (click, or focus a row and press
 <b>1 / 2 / 3</b> — that also jumps to the next row). Single interpolated lines are
 omitted. Backend: {backend}.</p>
@@ -116,10 +133,17 @@ omitted. Backend: {backend}.</p>
  <button id=exp>Export JSON</button>
  <button id=clr>Clear all</button>
 </div>
+<noscript><p style="background:#fdeaea;padding:.6rem;font:13px sans-serif">
+ ⚠ JavaScript is off (or this is a static preview) — the rating buttons won't work.
+ Open this file in a real browser (Safari/Chrome).</p></noscript>
 {sections}
 <script>
 const KEY = "align_ratings_{work}_{version}";
-const load = () => JSON.parse(localStorage.getItem(KEY) || "{{}}");
+// localStorage can throw (file://, private mode) — fall back to in-memory so the
+// buttons still work for the session.
+let store; try {{ localStorage.setItem("_t","1"); localStorage.removeItem("_t"); store = localStorage; }}
+catch(e) {{ const mem={{}}; store = {{getItem:k=>mem[k]??null, setItem:(k,v)=>mem[k]=v, removeItem:k=>delete mem[k]}}; }}
+const load = () => {{ try {{ return JSON.parse(store.getItem(KEY) || "{{}}"); }} catch(e) {{ return {{}}; }} }};
 let R = load();
 const rows = [...document.querySelectorAll("tr.row")];
 
@@ -136,7 +160,7 @@ function counts(){{
 }}
 function rate(tr,v){{
   if(R[tr.dataset.id]===v) delete R[tr.dataset.id]; else R[tr.dataset.id]=v;
-  localStorage.setItem(KEY, JSON.stringify(R));
+  store.setItem(KEY, JSON.stringify(R));
   paint(tr); counts();
 }}
 rows.forEach(tr=>{{
@@ -164,7 +188,7 @@ exp.onclick=()=>{{
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob); a.download="{work}_{version}_ratings.json"; a.click();
 }};
-clr.onclick=()=>{{ if(confirm("Clear all ratings?")){{ R={{}}; localStorage.removeItem(KEY);
+clr.onclick=()=>{{ if(confirm("Clear all ratings?")){{ R={{}}; store.removeItem(KEY);
   rows.forEach(paint); counts(); }} }};
 </script>
 """
