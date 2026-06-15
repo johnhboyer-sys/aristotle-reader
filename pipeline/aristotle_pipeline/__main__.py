@@ -30,6 +30,13 @@ def _stage1(manifest):
         print(f"  chapters: {len(override)} (grc-aligned, overriding milestones)")
     eng_path, align_path = stage1_english.run(manifest, spine, override)
     english = json.loads(eng_path.read_text(encoding="utf-8"))
+    # Align the unmarked Ross translation onto the spine (Rackham as reference,
+    # zero-dep lexical backend) so Ross gets real Bekker ticks, not just
+    # interpolation. Writes build/align/<work>_ross_map.json, read by stage1_ross.
+    from .align import align as run_align
+    asum = run_align(manifest.work_id, "ross", "lexical")
+    print(f"  align(ross): {asum['anchors']} anchors {asum['tiers']} "
+          f"({asum['review']} flagged)")
     ross_path = stage1_ross.run(manifest, spine, english)
     ross = json.loads(ross_path.read_text(encoding="utf-8"))
     print(f"  ross: segments_with_text={len(ross)} "

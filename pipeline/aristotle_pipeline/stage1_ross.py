@@ -21,6 +21,11 @@ from pathlib import Path
 
 from .config import BUILD_DIR, SOURCES_DIR
 
+# Confidence levels the aligner produces that we trust as *real* Bekker ticks
+# (vs. pure interpolation). Validated on Book 1 review: chapter/column/half_column
+# at these levels read good; "uncertain" is downgraded to approximate.
+_REAL_CONF = {"certain", "reliable"}
+
 _TAG = re.compile(r"<[^>]+>")
 _ROSS_DIR = SOURCES_DIR / "ross"
 # Sentence boundary in English prose: end punctuation (+ optional closing
@@ -186,28 +191,75 @@ def _chapter_segments(spine: dict, chapters: list[dict]):
     return result, chapter_key
 
 
-def build_ross_chunks(spine: dict, chapters: list[dict]) -> dict[str, list[dict]]:
+def _load_align_map(work_id: str) -> dict:
+    """The aligner's standoff map {("book:chapter"): {anchors:[...]}} if present.
+    Absent → empty, and we fall back to pure proportional interpolation."""
+    path = BUILD_DIR / "align" / f"{work_id}_ross_map.json"
+    if path.exists():
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (ValueError, OSError):
+            return {}
+    return {}
+
+
+def _real_ticks(piece: str, lns: list[int], column: str,
+                anchors: dict[str, dict], piece_start: int) -> list[dict]:
+    """Bekker ticks for a Ross piece, upgrading the column-start (line 1) and
+    line-20 ticks to `real` where the alignment map has a confident anchor for
+    them; the rest stay interpolated. `piece_start` is the piece's offset in the
+    chapter's Ross text, so map offsets can be rebased into the piece."""
+    by_n = {t["n"]: t for t in _ross_ticks(piece, lns)}
+    for n in (1, 20):
+        a = anchors.get(f"{column}{n}")
+        if not a:
+            continue
+        rel = a["offset"] - piece_start
+        if 0 <= rel <= len(piece):
+            by_n[n] = {"n": n, "offset": _snap_word(piece, rel), "real": True}
+    return sorted(by_n.values(), key=lambda t: t["offset"])
+
+
+def build_ross_chunks(spine: dict, chapters: list[dict], work_id: str = "ne") -> dict[str, list[dict]]:
     """{segment_id: [{chapter, text, cont}]}. `cont` marks the slice of a
-    chapter that began in an earlier column (a continuation block)."""
+    chapter that began in an earlier column (a continuation block). When the
+    alignment map is present, column boundaries and the line 1/20 ticks come from
+    real anchors; otherwise everything is proportionally interpolated."""
     ross = parse_ross()
+    amap = _load_align_map(work_id)
     seg_chapters, chapter_key = _chapter_segments(spine, chapters)
     by_seg: dict[str, list[dict]] = defaultdict(list)
     for gidx, segs in seg_chapters.items():
         book, chap = chapter_key[gidx]
         text = ross.get((book, chap), "")
+        anchors = {a["citation"]: a
+                   for a in (amap.get(f"{book}:{chap}") or {}).get("anchors", [])
+                   if a.get("confidence") in _REAL_CONF}
         total = sum(len(lns) for _, _, lns in segs) or 1
-        prev = 0
+        # Piece-end offsets: a column's start anchor where confident, else the
+        # proportional estimate (kept strictly increasing).
+        cuts = [0]
         cum = 0
-        for i, (seg_id, column, lns) in enumerate(segs):
+        for i, (_seg_id, column, lns) in enumerate(segs):
             cum += len(lns)
-            cut = len(text) if i == len(segs) - 1 else _snap(text, round(len(text) * cum / total), prev)
-            piece = text[prev:cut].strip()
-            prev = cut
+            if i == len(segs) - 1:
+                cuts.append(len(text))
+                continue
+            nxt_col = segs[i + 1][1]
+            a = anchors.get(f"{nxt_col}1")
+            cut = a["offset"] if a else None
+            if cut is None or not (cuts[-1] < cut < len(text)):
+                cut = _snap(text, round(len(text) * cum / total), cuts[-1])
+            cuts.append(cut)
+        for i, (seg_id, column, lns) in enumerate(segs):
+            raw = text[cuts[i]:cuts[i + 1]]
+            lead = len(raw) - len(raw.lstrip())
+            piece = raw.strip()
             by_seg[seg_id].append({
                 "chapter": str(chap),
                 "text": piece,
                 "cont": i > 0,
-                "bekker": _ross_ticks(piece, lns),
+                "bekker": _real_ticks(piece, lns, column, anchors, cuts[i] + lead),
                 "_g": gidx,
             })
     # Keep each segment's pieces in document (chapter) order; drop the sort key.
@@ -221,7 +273,7 @@ def build_ross_chunks(spine: dict, chapters: list[dict]) -> dict[str, list[dict]
 
 
 def run(manifest, spine: dict, english: dict) -> Path:
-    chunks = build_ross_chunks(spine, english.get("chapters", []))
+    chunks = build_ross_chunks(spine, english.get("chapters", []), manifest.work_id)
     out_dir = BUILD_DIR / "stage1"
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "ross_chunks.json"

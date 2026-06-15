@@ -115,9 +115,12 @@ _TEMPLATE = """<!doctype html><meta charset=utf-8>
  .rate .g{{color:#15803d}} .rate .c{{color:#b45309}} .rate .o{{color:#b91c1c}}
  tr.chap td{{background:#1f2937;color:#fff;font:13px sans-serif;font-weight:bold;padding:.4rem .6rem}}
  tr.row:focus{{outline:2px solid #2563eb;outline-offset:-2px}}
- tr.row.good td{{background:#eafbe7}} tr.row.close td{{background:#fff7e0}} tr.row.off td{{background:#fdeaea}}
- tr.row.good .rs{{background:#dff5da}} tr.row.close .rs{{background:#fdeec2}} tr.row.off .rs{{background:#f9d9d9}}
- tr.row.good .g,tr.row.close .c,tr.row.off .o{{font-weight:bold;border-color:#333}}
+ tr.row.good td{{background:#9be88f}} tr.row.close td{{background:#ffd24d}} tr.row.off td{{background:#ff7a7a}}
+ tr.row.good .rs{{background:#7fdd72}} tr.row.close .rs{{background:#ffc21f}} tr.row.off .rs{{background:#ff5e5e}}
+ tr.row.good .ctx,tr.row.close .ctx,tr.row.off .ctx{{color:#5a5a5a}}
+ tr.row.good .g{{background:#1f9d57;color:#fff;border-color:#147a41;font-weight:bold}}
+ tr.row.close .c{{background:#e0890a;color:#fff;border-color:#b56d00;font-weight:bold}}
+ tr.row.off .o{{background:#d62828;color:#fff;border-color:#a81f1f;font-weight:bold}}
 </style>
 <h1>Nicomachean Ethics — alignment review</h1>
 <p class=lede>Each row compares one Bekker line. Left shows the <b>Rackham sentence that
