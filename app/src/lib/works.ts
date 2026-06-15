@@ -60,6 +60,22 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
   },
   {
+    id: 'Meta',
+    title: 'Metaphysics',
+    abbr: 'Met.',
+    author: 'Aristotle',
+    books: 14,
+    // Scholarly convention labels the books by Greek letter; Book 2 is the
+    // "lesser alpha" (α elatton), distinct from Book 1 (Α).
+    bookLabels: ['Α','α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν'],
+    greekEdition: 'Ross, Aristotle’s Metaphysics (OCT, 1924)',
+    translations: [
+      { id: 'tredennick', name: 'Hugh Tredennick (Loeb, 1933)', short: 'Tredennick', slot: 'english' },
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1924)', short: 'Ross', slot: 'ross' },
+    ],
+    blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
+  },
+  {
     id: 'Poet',
     title: 'Poetics',
     abbr: 'Poet.',

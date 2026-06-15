@@ -15,8 +15,10 @@ from pathlib import Path
 from .beta import to_beta_key
 from .config import BUILD_DIR, Manifest
 
-# Stripped silently from token edges: ordinary punctuation.
-_PUNCT = ".,·;—()\"" + "·;"  # ano teleia, Greek question mark
+# Stripped silently from token edges: ordinary punctuation. The pipe `|` marks
+# verse-line divisions inside quoted hexameter (e.g. the Empedocles fragments in
+# Metaphysics) — a metrical separator, not part of any word.
+_PUNCT = ".,·;—()|\"" + "·;"  # ano teleia, Greek question mark
 # Stripped but logged: editorial sigla found by the stage 2 inventory.
 _SIGLA = "†*<>[]"
 

@@ -1,0 +1,88 @@
+# Metaphysics — pipeline manifest
+#
+# 14 books. Greek spine from the cached TLG export; chapter (section) structure
+# from the Perseus grc TEI; primary English = Hugh Tredennick (Loeb), the
+# Bekker-milestoned Perseus eng2, via the perseus-primary path (like NE Rackham).
+# Secondary English = W. D. Ross (MIT archive), unmarked, aligned onto the spine
+# via Tredennick as the Bekker reference.
+#
+# Tredennick is US-copyright until 2029; it is built in as primary but kept
+# toggleable so it can be withheld from the public deploy until cleared.
+#
+# Book boundaries are the canonical Bekker ranges, derived from the TLG line
+# sequence cut at the grc TEI book-div starts (Stage 2 validates them).
+
+work:
+  id: Meta
+  title: "Metaphysics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "025"
+  greek_edition: "Ross, Aristotle's Metaphysics (OCT, 1924)"
+  english_source: "tlg0086.tlg025.perseus-eng2.xml"
+  english_translation: "Hugh Tredennick (Loeb, 1933)"
+
+bekker_range:
+  first_column: "980a"
+  last_column: "1093b"
+
+# Chapter (section) starts are text-aligned onto the Greek spine from this grc
+# TEI's section divs (exact). `source` is intentionally NOT grc_tei (that would
+# swap to the archive English path); only the chapter lines are overridden, and
+# Tredennick (perseus eng2) stays the primary English.
+chapters:
+  grc_tei: "tlg0086.tlg025.perseus-grc2.xml"
+  chapter_subtype: section
+
+# Second (unmarked) translation: W. D. Ross from the MIT Internet Classics
+# Archive ("Part N" chapter markers), distributed across the Bekker columns and
+# aligned via the Tredennick primary as Bekker reference.
+english:
+  secondary:
+    id: ross
+    name: "W. D. Ross (Oxford, 1924)"
+    dir: meta-ross
+    books: 14
+    marker: part
+
+books:
+  - { n:  1, start: "980a21",  end: "993a29" }
+  - { n:  2, start: "993a30",  end: "995a20" }
+  - { n:  3, start: "995a24",  end: "1003a17" }
+  - { n:  4, start: "1003a21", end: "1012b31" }
+  - { n:  5, start: "1012b34", end: "1025a34" }
+  - { n:  6, start: "1025b3",  end: "1028a6" }
+  - { n:  7, start: "1028a10", end: "1041b33" }
+  - { n:  8, start: "1042a3",  end: "1045b23" }
+  - { n:  9, start: "1045b27", end: "1052a11" }
+  - { n: 10, start: "1052a15", end: "1059a14" }
+  - { n: 11, start: "1059a18", end: "1069a14" }
+  - { n: 12, start: "1069a18", end: "1076a4" }
+  - { n: 13, start: "1076a8",  end: "1087a25" }
+  - { n: 14, start: "1087a29", end: "1093b29" }
+
+# TLG/OCT line-numbering features the validator must expect:
+#  - 993a skips line 28 (Bekker numbering gap; the Greek is continuous).
+#  - 1029b is non-monotonic — the Z.1 transposition: modern editions print
+#    1029b3-12 before 1029b1-2 but keep Bekker's original line numbers, so the
+#    column runs 3..12, 1, 2, 13.. (two declared "gaps", 12→1 and 2→13).
+expected_line_gaps:
+  - { column: "993a",  after: 27, next: 29 }
+  - { column: "1029b", after: 12, next: 1 }
+  - { column: "1029b", after: 2,  next: 13 }
+
+# Names frequent enough in the Metaphysics to anchor a cross-language spot check
+# (Stage 2). Greek is matched diacritic-stripped/lowercased. Plato is omitted:
+# Tredennick supplies "Plato"/"the Platonists" across the Books M-N number-theory
+# critique where the Greek uses bare pronouns/school terms, which the strict
+# co-occurrence check would flag.
+proper_names:
+  - ["σωκρατ", "Socrates"]
+  - ["αναξαγορ", "Anaxagoras"]
+  - ["εμπεδοκλ", "Empedocles"]
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

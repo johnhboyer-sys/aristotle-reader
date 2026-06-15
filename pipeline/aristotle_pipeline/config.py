@@ -68,10 +68,17 @@ class Manifest:
         return Path(self.data["sources"]["diogenes_data"])
 
     def perseus_eng(self) -> Path:
-        vendored = SOURCES_DIR / "tlg0086.tlg010.perseus-eng2.xml"
+        # Vendored Perseus eng TEI for this work: an explicit work.english_source
+        # name, else derived from the TLG work number. Falls back to the legacy
+        # sources.perseus_eng path (NE-only download location).
+        name = self.data["work"].get("english_source")
+        if not name:
+            name = f"tlg0086.tlg{self.data['work']['tlg_work']}.perseus-eng2.xml"
+        vendored = SOURCES_DIR / name
         if vendored.exists():
             return vendored
-        return Path(self.data["sources"]["perseus_eng"])
+        legacy = (self.data.get("sources") or {}).get("perseus_eng")
+        return Path(legacy) if legacy else vendored
 
     def book_for_line(self, column: str, line: int) -> int | None:
         """Book number containing Bekker position (column, line), or None

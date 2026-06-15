@@ -80,38 +80,40 @@ Tredennick as the Bekker reference). Aligner port: YES.
 ## Remaining authentic Tier-A (after Metaphysics)
 Politica (035, 8 bk), Rhetorica (038, 3 bk). Eudemia (009) — shares books with NE.
 
-## Aligner port — status (commit 110de85)
-DONE: `align/` package ported to this branch + generalized —
-`reference.load_chapters(target_prose)` takes injected prose;
-`reference.default_target(work_id)` reads manifest `english.secondary` (NE Ross
-fallback); `aligner.align(work_id, version_id=None, target_prose=None, …)`;
-eval/review_html/CLI threaded. Verified: runs on build/stage1, NE Book 1 → map.
+## Aligner port — status ✅ COMPLETE
+Package ported + generalized (110de85), then wiring finished this session:
+1. ✅ `stage1_ross.build_chunks(spine, chapters, prose, align_map=None)` — real-
+   tick logic restored from main (`_load_align_map(work_id, version_id)`,
+   `_real_ticks`, anchor-based column cuts; `_REAL_CONF={certain,reliable}`).
+   `run()` reads `english.secondary` via `reference.default_target` (NE Ross
+   fallback) for the prose + version id, loads `{work}_{version}_map.json`.
+2. ✅ `__main__._stage1` (else branch): after `stage1_english.run`, calls
+   `align(work_id, version_id, target_prose=prose)` before `stage1_ross.run`.
+3. ✅ `EN.yaml` `english.secondary` block (id ross, dir ross, books 10).
+Regression: EN build is byte-identical to shipped main (276 real ticks among
+1327; stage2 PASS, stage3 key_failures=0).
 
-TODO to finish wiring (next session):
-1. `stage1_ross.build_chunks(spine, chapters, prose, anchors=None)` — port the
-   real-tick logic from main (`_load_align_map`, `_real_ticks`, anchor-based
-   column cuts; `_REAL_CONF={certain,reliable}`). `run()` reads manifest
-   `english.secondary` for the prose + version id (NE Ross fallback).
-2. `__main__._stage1` (else branch): after `stage1_english.run`, call
-   `align(manifest.work_id, target_prose=<secondary prose>)` before
-   `stage1_ross.run` so the map exists. (Mirror main's wiring.)
-3. Add `english.secondary` block to `EN.yaml` (id ross, dir ross, books 10,
-   marker number) so EN keeps working via the generalized path.
-
-## Metaphysics build — next steps
-1. Vendor Ross Metaphysics: MIT archive `classics.mit.edu/Aristotle/metaphysics.html`
-   (single HTML, "Book/Part" markers — may need a per-book splitter or a new
-   `chapter_marker`) → `sources/meta-ross/book-0N.html` (14 books).
-2. `manifests/Meta.yaml`: tlg_work 025, chapters grc_tei
-   tlg0086.tlg025.perseus-grc2.xml chapter_subtype section, English primary =
-   Tredennick perseus eng2 (the perseus path, NOT grc_tei source), secondary =
-   ross (meta-ross). 14 books — get Bekker ranges from the grc TEI book divs +
-   let stage2 correct mid-column starts.
-3. `all --work Meta`; spot-check (e.g. Book Λ/12 1072a "unmoved mover").
-4. Register in `app/src/lib/works.ts` (2 translations: Tredennick english slot +
-   Ross ross slot). `npm run build`. Commit.
+## Metaphysics build — ✅ BUILT + REGISTERED
+- Ross vendored: MIT archive `metaphysics.<n>.<roman>.html` per book →
+  `sources/meta-ross/book-01..14.html` ("Part N" markers, parsed with marker
+  `part`). 142 chapters, counts match grc TEI sections exactly.
+- `manifests/Meta.yaml`: tlg_work 025, Tredennick (perseus eng2) primary via the
+  perseus path, Ross secondary (meta-ross), grc_tei section chapter override, 14
+  canonical Bekker book ranges (derived from TLG line seq cut at grc book divs).
+  `expected_line_gaps`: 993a (28 skip) + 1029b (Z.1 transposition, non-monotonic
+  3..12,1,2,13..). proper_names: Socrates/Anaxagoras/Empedocles (Plato omitted —
+  Tredennick over-supplies it in Books M–N).
+- Enablers: `config.perseus_eng()` generalized (work.english_source / tlg_work,
+  no longer tlg010-hardcoded); stage3 strips `|` verse-divider (Empedocles frr.).
+- `all --work Meta` clean: stage2 PASS, key_failures=0, 14 books emitted.
+  Spot-check Λ/12 1072a25 ἔστι τι ὃ οὐ κινούμενον κινεῖ ✓ (unmoved mover; Ross
+  real tick at 1072a1). Registered in works.ts (Greek-letter book labels). App
+  builds, all 14 pages prerender.
+- ⚠ Tredennick US-copyright to 2029 — built in as primary but withhold from the
+  public deploy until John clears (toggle/registry gate still TODO if deploying).
 
 ## Per-work progress
 - Poetics (034) ✅ built+registered (pre-existing)
-- Aligner port ✅ (110de85) — wiring TODO above
-- Metaphysics (025) — data vendored (Perseus grc+eng); manifest + Ross + build pending
+- Aligner port ✅ wiring complete (this session)
+- Metaphysics (025) ✅ built + registered (this session)
+- Next authentic Tier-A: Politica (035, 8 bk), Rhetorica (038, 3 bk).
