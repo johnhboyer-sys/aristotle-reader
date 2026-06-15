@@ -30,11 +30,16 @@ def run_eval(work_id="ne", backend="lexical", books=None):
         n_chapters += 1
         refs = ch.ref_incipits()
         sents = split_sentences(ch.ref_text)            # Rackham as the target
+        starts = [s for s, _ in sents]
         S = similarity.cos_matrix(refs, [s for _, s in sents], backend)
         for i, j, _score, _margin in monotonic_align(S):
             ra = ch.ref_anchors[i]
             pred = sents[j][0]
-            err = abs(pred - ra.off)
+            # Gold = start of the sentence that *contains* the true tick. At
+            # sentence granularity that is the best achievable target; scoring
+            # against the raw mid-sentence tick would penalise correct snapping.
+            gold = max((s for s in starts if s <= ra.off), default=starts[0])
+            err = abs(pred - gold)
             err_by_tier.setdefault(ra.tier, []).append(err)
 
     report = {"backend": backend, "chapters": n_chapters, "by_tier": {}}

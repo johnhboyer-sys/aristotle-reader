@@ -52,21 +52,22 @@ class ChapterRef:
         return [self.ref_text[bounds[i]:bounds[i + 1]] for i in range(len(self.ref_anchors))]
 
     def ref_incipits(self, max_chars: int = 240) -> list[str]:
-        """The text right *after* each anchor (its incipit), parallel to
-        ref_anchors. An anchor marks a position, so the sentence(s) that begin
-        there are its fingerprint — matching those to the target finds the
-        boundary, not a representative sentence somewhere mid-span."""
-        bounds = [a.off for a in self.ref_anchors] + [len(self.ref_text)]
+        """Fingerprint each anchor by the whole sentence *containing* its Bekker
+        tick (extended if very short), parallel to ref_anchors. Column-start
+        ticks begin a sentence; line-20 ticks fall mid-sentence, so anchoring on
+        the enclosing sentence (not the raw fragment after the tick) gives the DP
+        a clean unit to match against the target's sentences."""
+        spans = [(m.start(), m.end()) for m in
+                 re.finditer(r'[^.!?]*[.!?]+(?:["\')\]]+)?\s*', self.ref_text)]
+        spans = [s for s in spans if self.ref_text[s[0]:s[1]].strip()] or [(0, len(self.ref_text))]
         out = []
-        for i in range(len(self.ref_anchors)):
-            seg = self.ref_text[bounds[i]:bounds[i + 1]]
-            sents = re.findall(r'[^.!?]*[.!?]+(?:["\')\]]+)?\s*', seg) or [seg]
-            inc = sents[0]
-            k = 1
-            while len(inc) < 80 and k < len(sents):    # too short to fingerprint
-                inc += sents[k]
-                k += 1
-            out.append(inc[:max_chars])
+        for a in self.ref_anchors:
+            i = next((k for k, (s, e) in enumerate(spans) if s <= a.off < e), len(spans) - 1)
+            fp = self.ref_text[spans[i][0]:spans[i][1]]
+            while len(fp.strip()) < 80 and i + 1 < len(spans):   # too short to fingerprint
+                i += 1
+                fp += self.ref_text[spans[i][0]:spans[i][1]]
+            out.append(fp.strip()[:max_chars])
         return out
 
 
