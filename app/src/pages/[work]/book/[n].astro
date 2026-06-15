@@ -27,6 +27,24 @@ const allChapters: Record<string, ChapterRef[]> = JSON.parse(
   readFileSync(`public/data/${workId}/chapters.json`, 'utf-8'),
 );
 const chapters = allChapters[String(n)] ?? [];
+
+// Optional one-line chapter titles/descriptions for the outline sidebar, keyed
+// {book: {chapter: "…"}}. The file is written by hand/curation per work and may
+// not exist yet — the outline degrades to chapter number + Bekker range.
+let chapterTitles: Record<string, Record<string, string>> = {};
+try {
+  chapterTitles = JSON.parse(
+    readFileSync(`public/data/${workId}/chapter-titles.json`, 'utf-8'),
+  );
+} catch { /* no titles yet */ }
+
+// The full-work outline for the sidebar: every book, its chapters in order.
+const outline = Array.from({ length: work.books }, (_, i) => {
+  const b = i + 1;
+  return { book: b, label: bookLabel(work, b), chapters: allChapters[String(b)] ?? [] };
+});
+const chapterHref = (b: number, chapter: string) =>
+  b === n ? `#ch-${b}-${chapter}` : `${base}/${workId}/book/${b}#ch-${b}-${chapter}`;
 ---
 <html lang="en">
 <head>
@@ -48,6 +66,9 @@ const chapters = allChapters[String(n)] ?? [];
         <WorkSwitcher work={workId} client:load />
       </div>
       <div class="bar-actions">
+        <button type="button" class="toc-toggle" aria-expanded="false" aria-controls="toc-sidebar">
+          <span class="toc-toggle-icon" aria-hidden="true">☰</span><span class="toc-toggle-text">Contents</span>
+        </button>
         <ThemeToggle />
         <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
           <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
@@ -80,6 +101,39 @@ const chapters = allChapters[String(n)] ?? [];
     </div>
   </header>
 
+  <div class="toc-backdrop" id="toc-backdrop" hidden></div>
+  <aside class="toc-sidebar" id="toc-sidebar" aria-label={`${work.title} — table of contents`} aria-hidden="true">
+    <div class="toc-head">
+      <span class="toc-work">{work.title}</span>
+      <button type="button" class="toc-close" aria-label="Close contents">×</button>
+    </div>
+    <nav class="toc-outline">
+      {outline.map((b) => (
+        <details class="toc-book" open={b.book === n}>
+          <summary>
+            <span class="toc-book-label">Book {b.label}</span>
+            <span class="toc-book-count">{b.chapters.length} ch.</span>
+          </summary>
+          <ul>
+            {b.chapters.map((c) => (
+              <li>
+                <a href={chapterHref(b.book, c.chapter)} data-ch={`ch-${b.book}-${c.chapter}`}>
+                  <span class="toc-ch-n">{c.chapter}</span>
+                  <span class="toc-ch-body">
+                    {chapterTitles[String(b.book)]?.[c.chapter] && (
+                      <span class="toc-ch-title">{chapterTitles[String(b.book)][c.chapter]}</span>
+                    )}
+                    <span class="toc-ch-bekker">{c.bekker}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ))}
+    </nav>
+  </aside>
+
   <script>
     // Mobile only: the menu button shows/hides the nav panel. On desktop the
     // panel is always visible (CSS), so the button is hidden and this is inert.
@@ -88,6 +142,29 @@ const chapters = allChapters[String(n)] ?? [];
     toggle?.addEventListener('click', () => {
       const open = header!.classList.toggle('nav-open');
       toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    // Contents sidebar (full-work outline) drawer.
+    const tocToggle = header?.querySelector('.toc-toggle');
+    const sidebar = document.getElementById('toc-sidebar');
+    const backdrop = document.getElementById('toc-backdrop');
+    const setToc = (open: boolean) => {
+      document.body.classList.toggle('toc-open', open);
+      sidebar?.setAttribute('aria-hidden', String(!open));
+      tocToggle?.setAttribute('aria-expanded', String(open));
+      if (backdrop) backdrop.hidden = !open;
+    };
+    tocToggle?.addEventListener('click', () =>
+      setToc(!document.body.classList.contains('toc-open')));
+    backdrop?.addEventListener('click', () => setToc(false));
+    sidebar?.querySelector('.toc-close')?.addEventListener('click', () => setToc(false));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('toc-open')) setToc(false);
+    });
+    // Clicking a chapter that's on this page (a #hash link) just scrolls — close
+    // the drawer so the reader is visible. Cross-book links navigate away anyway.
+    sidebar?.querySelectorAll<HTMLAnchorElement>('.toc-outline a').forEach((a) => {
+      if (a.getAttribute('href')?.startsWith('#')) a.addEventListener('click', () => setToc(false));
     });
   </script>
 
