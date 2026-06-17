@@ -626,7 +626,7 @@ body {
 .lsj-entry .lsj-bibl { font-size: .82em; color: var(--text-mid); }
 .lsj-entry .lsj-greek { font-family: var(--font-greek); }
 .lsj-entry .lsj-quote { font-family: var(--font-greek); font-style: italic; }
-.lsj-entry .lsj-cit  { display: block; margin: 0.2em 0 0.2em 1em; }
+.lsj-entry .lsj-cit  { display: inline; }
 .lsj-entry .lsj-tr   { font-style: italic; }
 .lsj-entry .lsj-title { font-style: italic; }
 
