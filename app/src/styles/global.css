@@ -774,8 +774,8 @@ body {
     padding: 0.55rem 0.9rem;
   }
 
-  /* Collapse the nav into a one-line bar (title + Menu); the panel drops down
-     only when opened. */
+  /* One-line bar: title (left) + icon buttons (right). The Menu dropdown is gone
+     on mobile — the Contents sidebar is the single navigation hub. */
   .header-bar {
     display: flex;
     width: 100%;
@@ -783,27 +783,13 @@ body {
     justify-content: space-between;
     gap: 0.5rem;
   }
-  .nav-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-family: var(--font-ui);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 0.4rem 0.7rem;
-    min-height: 40px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: var(--col-bg);
-    color: var(--text-mid);
-  }
-  .nav-toggle-icon { font-size: 1rem; line-height: 1; }
-  .page-header.nav-open .nav-toggle {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--on-accent);
-  }
+  /* Contents goes icon-only so the title + ☰ + ☾ always fit. */
+  .toc-toggle-text { display: none; }
+  /* Drop the "Aristotle ›" prefix (the sidebar has an "All works" link) and let
+     the work title ellipsize rather than push the icons off-screen. */
+  .header-title { min-width: 0; flex: 1 1 auto; overflow: hidden; }
+  .header-title .home-link,
+  .header-title .title-sep { display: none; }
 
   .nav-panel {
     display: none;
@@ -968,6 +954,72 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   padding: 0 0.3rem;
 }
 .toc-close:hover { color: var(--text); }
+.toc-home {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--text-mid);
+  text-decoration: none;
+}
+.toc-home:hover { color: var(--accent); }
+
+/* Work title heading above the outline (was in .toc-head; moved below the top
+   action band per the mobile sidebar layout). */
+.toc-work-head {
+  flex: 0 0 auto;
+  padding: 0.85rem 1rem 0.5rem;
+}
+
+/* Sidebar action bands (Go to Bekker / Search above the outline; Texts &
+   Licences / Help below it). One action per row, stacked. Mobile-only — desktop
+   already has these inline in the header nav panel. */
+.toc-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.toc-actions-top { border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+.toc-actions-bottom { border-top: 1px solid var(--border); padding-top: 0.3rem; }
+.toc-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  width: 100%;
+  text-align: left;
+  min-height: 40px;
+  justify-content: center;
+  padding: 0.45rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-ui);
+  color: var(--text);
+}
+.toc-action:hover { background: var(--border); }
+.toc-action-name { font-size: 0.9rem; font-weight: 600; color: var(--accent); }
+.toc-action-hint { font-size: 0.72rem; color: var(--text-light); }
+/* The Bekker box lives in the top band; give it the same row padding/affordance
+   as the .toc-action rows, and let its form expand full-width when opened. */
+.toc-actions .bekker-toggle {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0.45rem 1rem;
+  min-height: 40px;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.toc-actions .bekker-toggle:hover { background: var(--border); }
+.toc-actions .bekker-jump { flex-wrap: wrap; padding: 0.45rem 1rem; gap: 0.4rem; }
+
+/* The action bands are mobile-only; desktop has the same items inline in the
+   header. */
+@media (min-width: 681px) {
+  .toc-actions { display: none; }
+}
 
 .toc-outline {
   flex: 1 1 auto;

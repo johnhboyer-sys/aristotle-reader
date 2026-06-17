@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import Reader from './Reader.svelte';
 import BekkerJump from './BekkerJump.svelte';
+import HelpButton from './HelpButton.svelte';
 import WorkSwitcher from './WorkSwitcher.svelte';
 import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
@@ -70,9 +71,7 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
           <span class="toc-toggle-icon" aria-hidden="true">☰</span><span class="toc-toggle-text">Contents</span>
         </button>
         <ThemeToggle />
-        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-panel">
-          <span class="nav-toggle-icon" aria-hidden="true">☰</span><span class="nav-toggle-text">Menu</span>
-        </button>
+        <HelpButton client:load />
       </div>
     </div>
     <div class="nav-panel" id="nav-panel">
@@ -104,9 +103,17 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
   <div class="toc-backdrop" id="toc-backdrop" hidden></div>
   <aside class="toc-sidebar" id="toc-sidebar" aria-label={`${work.title} — table of contents`} aria-hidden="true">
     <div class="toc-head">
-      <span class="toc-work">{work.title}</span>
+      <a class="toc-home" href={`${base}/`}>‹ All works</a>
       <button type="button" class="toc-close" aria-label="Close contents">×</button>
     </div>
+    <div class="toc-actions toc-actions-top">
+      <BekkerJump work={workId} client:load />
+      <a class="toc-action" href={`${base}/search`}>
+        <span class="toc-action-name">Search</span>
+        <span class="toc-action-hint">Greek &amp; English</span>
+      </a>
+    </div>
+    <div class="toc-work-head"><span class="toc-work">{work.title}</span></div>
     <nav class="toc-outline">
       {bookless ? (
         <ul class="toc-flat">
@@ -150,19 +157,22 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
         ))
       )}
     </nav>
+    <div class="toc-actions toc-actions-bottom">
+      <a class="toc-action" href={`${base}/attribution`}>
+        <span class="toc-action-name">Texts &amp; Licences</span>
+      </a>
+      <button type="button" class="toc-action toc-help">
+        <span class="toc-action-name">Help</span>
+        <span class="toc-action-hint">How to use this reader</span>
+      </button>
+    </div>
   </aside>
 
   <script>
-    // Mobile only: the menu button shows/hides the nav panel. On desktop the
-    // panel is always visible (CSS), so the button is hidden and this is inert.
+    // Contents sidebar (full-work outline) drawer. On mobile this is the single
+    // navigation hub (the old Menu dropdown is gone); on desktop the nav panel is
+    // always visible (CSS) and the sidebar holds just the outline.
     const header = document.querySelector('.page-header');
-    const toggle = header?.querySelector('.nav-toggle');
-    toggle?.addEventListener('click', () => {
-      const open = header!.classList.toggle('nav-open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-
-    // Contents sidebar (full-work outline) drawer.
     const tocToggle = header?.querySelector('.toc-toggle');
     const sidebar = document.getElementById('toc-sidebar');
     const backdrop = document.getElementById('toc-backdrop');
@@ -183,6 +193,12 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
     // the drawer so the reader is visible. Cross-book links navigate away anyway.
     sidebar?.querySelectorAll<HTMLAnchorElement>('.toc-outline a').forEach((a) => {
       if (a.getAttribute('href')?.startsWith('#')) a.addEventListener('click', () => setToc(false));
+    });
+    // The sidebar "Help" entry opens the shared Help modal (HelpButton listens for
+    // this event) and closes the drawer so the modal isn't hidden behind it.
+    sidebar?.querySelector('.toc-help')?.addEventListener('click', () => {
+      setToc(false);
+      window.dispatchEvent(new CustomEvent('open-help'));
     });
   </script>
 
