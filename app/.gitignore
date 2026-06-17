@@ -4,6 +4,8 @@ dist/
 .astro/
 # review screenshots (scripts/shoot.mjs)
 .shots/
+# playwright test artifacts
+test-results/
 
 # dependencies
 node_modules/
