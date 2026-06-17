@@ -56,10 +56,15 @@ for (b, cp), cr in sorted(chapters.items()):
             continue
         cits = wc.get(a.citation, [a.citation])
         lo = 0 if ALL else max(0, a.offset - PAD)
+        # `gloss` is the TICK line's own gloss (the precise placement target);
+        # `context_gloss` is the 3-line window for sense only. Earlier the window
+        # gloss was passed as `gloss`, so ticks beginning mid-sentence anchored to
+        # the line ABOVE (the sentence start) — the bug this fixes.
         tick = {
             "citation": a.citation,
             "greek": " / ".join(gk.get(c, "") for c in cits),
-            "gloss": " ".join((g.get(c, "") or "").strip() for c in cits),
+            "gloss": (g.get(a.citation, "") or "").strip(),
+            "context_gloss": " ".join((g.get(c, "") or "").strip() for c in cits),
         }
         if not ALL:  # windowed mode carries its own excerpt; ALL mode shares chapter text
             tick["excerpt"] = text[lo:min(len(text), a.offset + PAD)]

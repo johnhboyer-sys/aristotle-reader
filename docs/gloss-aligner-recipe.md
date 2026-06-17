@@ -83,8 +83,11 @@ sentence start, so verify **all** real ticks (not just `uncertain`):
 VERIFY_ALL=1 uv run python tools/verify_gather.py <book>          # per book
 ```
 → `build/align/verify_tasks/<SLUG>/<b>-<c>.json` (one file per chapter; carries the
-**full chapter text** + every tick's `{citation, greek (window), gloss}`) and merges
-`build/align/verify_meta.json`.
+**full chapter text** + every tick's `{citation, greek (window), gloss, context_gloss}`)
+and merges `build/align/verify_meta.json`. **Critical:** `gloss` is the **tick line's
+own** gloss (the precise placement target); `context_gloss` is the 3-line window for
+sense only. (Passing the *window* gloss as the target was a bug — ticks beginning
+mid-sentence then anchored to the line above, i.e. the sentence start.)
 *(Cheaper option: omit `VERIFY_ALL=1` to gather only `uncertain` ticks with a ±600-char
 window. Optional args: `verify_gather.py <book> <PAD> <chapters>` to re-gather a few
 chapters with a wider window.)*
@@ -94,14 +97,23 @@ Spawn **one sub-agent per chapter** → `build/align/verify_out/<SLUG>/<b>-<c>.j
 
 > You are placing Bekker line-marks in **<TRANSLATOR>**'s translation by direct
 > reading — the authoritative placement. Read `build/align/verify_tasks/<SLUG>/<B>-<C>.json`:
-> it has "text" (the full chapter prose) and "ticks" `{citation, greek, gloss}` in
-> Bekker order. For each tick the line to place is the MIDDLE of "greek" (or the first,
-> if two); "gloss" is its meaning. For EACH tick, copy a SHORT verbatim phrase (5–10
-> words) from "text" starting exactly where that line's content begins — copied
-> character-for-character (exact search must find it), placed even mid-sentence (do NOT
-> default to a sentence start), with phrases in increasing order. If a tick's content
-> genuinely isn't in this chapter, use "". Write the flat JSON `{citation: phrase}` to
-> `build/align/verify_out/<SLUG>/<B>-<C>.json`.
+> it has "text" (the full chapter prose) and "ticks" `{citation, greek, gloss, context_gloss}`
+> in Bekker order. "greek" is a 3-line window (lines split by " / "); the MIDDLE line is
+> the one to place. **"gloss" = the English of THAT MIDDLE line only — your placement
+> target.** "context_gloss" = the whole window's meaning, for sense only (do NOT anchor
+> to it). For EACH tick, copy a SHORT verbatim phrase (5–10 words) from "text" that begins
+> EXACTLY where the middle line's own content ("gloss") begins.
+>
+> **CRITICAL — place at the tick LINE's start, NOT the SENTENCE's start.** A tick usually
+> falls mid-sentence; if the sentence began on an earlier line, do NOT include those
+> earlier words — your phrase must begin with the English rendering the "gloss"'s opening.
+> Example: sentence "Now fine and just actions, which political science investigates,
+> admit of much variety", gloss "which political science investigates…" → start at
+> "which political science investigates", NOT "Now fine and just actions".
+>
+> Copy character-for-character (exact search must find it); phrases in increasing order;
+> if a tick's content truly isn't in this chapter, use "". Write the flat JSON
+> `{citation: phrase}` to `build/align/verify_out/<SLUG>/<B>-<C>.json`.
 
 ## 5. Fold + re-align + persist (per book)
 ```bash
@@ -120,6 +132,10 @@ around them. `persist_book` saves the per-book map, glosses, and a dark-mode
   (+ `tools/bakeoff.py` to compare gloss styles, `tools/verify_score.py` for the
   verifier's before/after lift).
 - **Human spot-check** (any translation): open the per-book `review/book-NN.html`.
+  Watch specifically for **sentence-start anchoring** — a tick whose line begins
+  mid-sentence but that was placed at the start of the sentence (one clause/line too
+  early). If you see it, re-gather + re-verify those chapters
+  (`verify_gather.py <book> 4000 <chapters>`) with the line-precise prompt above.
 
 ---
 
