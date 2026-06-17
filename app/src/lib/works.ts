@@ -44,81 +44,11 @@ const ACKRILL: TranslationRef[] = HIDE_PRIVATE ? [] : [
   { id: 'ackrill', name: 'J. L. Ackrill (Oxford, 1963)', short: 'Ackrill', slot: 'third', private: true },
 ];
 
+// Display order follows the traditional arrangement of the corpus: the Organon
+// (Categories, De Interpretatione, …) first, then De Anima, Metaphysics, the
+// Ethics, Politics, Rhetoric, and Poetics. Everything else keys off `id`, so
+// this array's order only controls the home index, search, and work switcher.
 export const WORKS: Work[] = [
-  {
-    id: 'EN',
-    title: 'Nicomachean Ethics',
-    abbr: 'EN',
-    author: 'Aristotle',
-    books: 10,
-    bookLabels: ROMAN.slice(0, 10),
-    greekEdition: 'Bywater, Aristotelis Ethica Nicomachea (OCT, 1894)',
-    translations: [
-      { id: 'rackham', name: 'H. Rackham (Loeb, 1926)', short: 'Rackham', slot: 'english' },
-      { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'ross' },
-    ],
-    blurb: 'Aristotle’s central work of moral philosophy, in ten books.',
-  },
-  {
-    id: 'DA',
-    title: 'De Anima',
-    abbr: 'DA',
-    author: 'Aristotle',
-    books: 3,
-    bookLabels: ['I', 'II', 'III'],
-    greekEdition: 'Ross, Aristotelis De Anima (OCT, 1956)',
-    translations: [
-      { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
-    ],
-    blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
-  },
-  {
-    id: 'Meta',
-    title: 'Metaphysics',
-    abbr: 'Met.',
-    author: 'Aristotle',
-    books: 14,
-    // Scholarly convention labels the books by Greek letter; Book 2 is the
-    // "lesser alpha" (α elatton), distinct from Book 1 (Α).
-    bookLabels: ['Α','α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν'],
-    greekEdition: 'Ross, Aristotle’s Metaphysics (OCT, 1924)',
-    // Public build ships the public-domain Ross (1924) only. The copyrighted
-    // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
-    // for the local/private build and are NOT deployed (see publish-plan).
-    translations: [
-      { id: 'ross', name: 'W. D. Ross (Oxford, 1924)', short: 'Ross', slot: 'english' },
-    ],
-    blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
-  },
-  {
-    id: 'Pol',
-    title: 'Politics',
-    abbr: 'Pol.',
-    author: 'Aristotle',
-    books: 8,
-    bookLabels: ROMAN.slice(0, 8),
-    greekEdition: 'Ross, Aristotelis Politica (OCT, 1957)',
-    // Public build ships the public-domain Jowett (1885) only. The copyrighted
-    // Rackham (Loeb 1932) primary + aligned-Jowett overlay live in Pol.yaml for
-    // the local/private build and are NOT deployed (see publish-plan).
-    translations: [
-      { id: 'jowett', name: 'Benjamin Jowett (Oxford, 1885)', short: 'Jowett', slot: 'english' },
-    ],
-    blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
-  },
-  {
-    id: 'Rhet',
-    title: 'Rhetoric',
-    abbr: 'Rhet.',
-    author: 'Aristotle',
-    books: 3,
-    bookLabels: ROMAN.slice(0, 3),
-    greekEdition: 'Ross, Aristotelis Ars Rhetorica (OCT, 1959)',
-    translations: [
-      { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
-    ],
-    blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
-  },
   {
     id: 'Cat',
     title: 'Categories',
@@ -155,6 +85,80 @@ export const WORKS: Work[] = [
       ...ACKRILL,   // dropped from the public build (see HIDE_PRIVATE above)
     ],
     blurb: 'Aristotle on statements, truth, negation, and future contingents — the second work of the Organon.',
+  },
+  {
+    id: 'DA',
+    title: 'De Anima',
+    abbr: 'DA',
+    author: 'Aristotle',
+    books: 3,
+    bookLabels: ['I', 'II', 'III'],
+    greekEdition: 'Ross, Aristotelis De Anima (OCT, 1956)',
+    translations: [
+      { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
+    ],
+    blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
+  },
+  {
+    id: 'Meta',
+    title: 'Metaphysics',
+    abbr: 'Met.',
+    author: 'Aristotle',
+    books: 14,
+    // Scholarly convention labels the books by Greek letter; Book 2 is the
+    // "lesser alpha" (α elatton), distinct from Book 1 (Α).
+    bookLabels: ['Α','α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν'],
+    greekEdition: 'Ross, Aristotle’s Metaphysics (OCT, 1924)',
+    // Public build ships the public-domain Ross (1924) only. The copyrighted
+    // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
+    // for the local/private build and are NOT deployed (see publish-plan).
+    translations: [
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1924)', short: 'Ross', slot: 'english' },
+    ],
+    blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
+  },
+  {
+    id: 'EN',
+    title: 'Nicomachean Ethics',
+    abbr: 'EN',
+    author: 'Aristotle',
+    books: 10,
+    bookLabels: ROMAN.slice(0, 10),
+    greekEdition: 'Bywater, Aristotelis Ethica Nicomachea (OCT, 1894)',
+    translations: [
+      { id: 'rackham', name: 'H. Rackham (Loeb, 1926)', short: 'Rackham', slot: 'english' },
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'ross' },
+    ],
+    blurb: 'Aristotle’s central work of moral philosophy, in ten books.',
+  },
+  {
+    id: 'Pol',
+    title: 'Politics',
+    abbr: 'Pol.',
+    author: 'Aristotle',
+    books: 8,
+    bookLabels: ROMAN.slice(0, 8),
+    greekEdition: 'Ross, Aristotelis Politica (OCT, 1957)',
+    // Public build ships the public-domain Jowett (1885) only. The copyrighted
+    // Rackham (Loeb 1932) primary + aligned-Jowett overlay live in Pol.yaml for
+    // the local/private build and are NOT deployed (see publish-plan).
+    translations: [
+      { id: 'jowett', name: 'Benjamin Jowett (Oxford, 1885)', short: 'Jowett', slot: 'english' },
+    ],
+    blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
+  },
+  {
+    id: 'Rhet',
+    title: 'Rhetoric',
+    abbr: 'Rhet.',
+    author: 'Aristotle',
+    books: 3,
+    bookLabels: ROMAN.slice(0, 3),
+    greekEdition: 'Ross, Aristotelis Ars Rhetorica (OCT, 1959)',
+    translations: [
+      { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
+    ],
+    blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
   },
   {
     id: 'Poet',
