@@ -14,7 +14,11 @@ export interface TranslationRef {
   id: string;
   name: string;     // full citation, for the picker + attribution
   short: string;    // chip label
-  slot: 'english' | 'ross';
+  slot: 'english' | 'ross' | 'third';
+  // Copyright-encumbered translations carried only in the local/full build.
+  // The public deploy sets PUBLIC_HIDE_PRIVATE=1 to drop them from the registry
+  // (and is built from the work's -public manifest, so their text is absent too).
+  private?: boolean;
 }
 
 export interface Work {
@@ -30,6 +34,15 @@ export interface Work {
 }
 
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+
+// The public deploy sets PUBLIC_HIDE_PRIVATE=1; this is a compile-time constant
+// (Vite inlines import.meta.env.PUBLIC_*), so gating a copyright-encumbered
+// translation entry behind it lets the minifier drop the entry — and its
+// citation — from the public bundle entirely, not just hide it at runtime.
+const HIDE_PRIVATE = import.meta.env.PUBLIC_HIDE_PRIVATE === '1';
+const ACKRILL: TranslationRef[] = HIDE_PRIVATE ? [] : [
+  { id: 'ackrill', name: 'J. L. Ackrill (Oxford, 1963)', short: 'Ackrill', slot: 'third', private: true },
+];
 
 export const WORKS: Work[] = [
   {
@@ -107,6 +120,43 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
   },
   {
+    id: 'Cat',
+    title: 'Categories',
+    abbr: 'Cat.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Minio-Paluello, Aristotelis Categoriae (OCT, 1949)',
+    // Edghill (1928) + Taylor (1812) are public domain and ship publicly. Ackrill
+    // (1963) is US-copyright: carried in Cat.yaml for the local build and gated
+    // out of the public deploy (private flag + Cat-public.yaml). All three are
+    // keyed to Bekker via Ackrill's per-paragraph stamps.
+    translations: [
+      { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
+      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
+      ...ACKRILL,   // dropped from the public build (see HIDE_PRIVATE above)
+    ],
+    blurb: 'Aristotle on the ten kinds of predication — the opening work of the Organon.',
+  },
+  {
+    id: 'Int',
+    title: 'De Interpretatione',
+    abbr: 'Int.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Minio-Paluello, Aristotelis De Interpretatione (OCT, 1949)',
+    // Edghill (1928) + Taylor (1812) public domain; Ackrill (1963) US-copyright,
+    // local build only (same gating as Categories). Taylor ch14 reconstructed
+    // from the 1812 Organon scan (CLAA's ch14 page was a broken duplicate).
+    translations: [
+      { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
+      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
+      ...ACKRILL,   // dropped from the public build (see HIDE_PRIVATE above)
+    ],
+    blurb: 'Aristotle on statements, truth, negation, and future contingents — the second work of the Organon.',
+  },
+  {
     id: 'Poet',
     title: 'Poetics',
     abbr: 'Poet.',
@@ -129,4 +179,27 @@ export function getWork(id: string): Work | undefined {
 
 export function bookLabel(work: Work, n: number): string {
   return work.bookLabels[n - 1] ?? String(n);
+}
+
+// A single-book work (Categories, Poetics) is a single treatise divided only
+// into chapters — it has no book level, so it lives at /<work> with no
+// /book/<n> subfolder, and the reader hides all book-level navigation.
+export function isBookless(work: Work): boolean {
+  return work.books === 1;
+}
+
+// The base-relative path to a work's reader (caller prepends BASE_URL). Bookless
+// works route at /<work>; multi-book works at /<work>/book/<n>. The single
+// source of truth for reader URLs — used by the home index, work switcher,
+// Bekker jump, search jumps, and cross-book outline links.
+export function workPath(workId: string, book = 1): string {
+  const w = BY_ID.get(workId);
+  return w && isBookless(w) ? `/${workId}` : `/${workId}/book/${book}`;
+}
+
+// Translations visible in the current build. Private (copyright-encumbered)
+// entries are already dropped from WORKS at compile time in the public build
+// (see HIDE_PRIVATE / ACKRILL above); this filter is a runtime backstop.
+export function visibleTranslations(work: Work): TranslationRef[] {
+  return work.translations.filter(t => !t.private || !HIDE_PRIVATE);
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { WORKS } from '../lib/works';
+  import { WORKS, workPath } from '../lib/works';
 
   // The work currently open in the reader. Switching navigates to that work,
   // resuming the last book (and Bekker position) read there if known.
@@ -15,7 +15,7 @@
       book = localStorage.getItem(`reader-book-${id}`) || '1';
       loc = localStorage.getItem(`reader-loc-${id}`) || '';
     } catch {}
-    window.location.href = `${base}/${id}/book/${book}${loc ? `#${loc}` : ''}`;
+    window.location.href = `${base}${workPath(id, Number(book))}${loc ? `#${loc}` : ''}`;
   }
 </script>
 

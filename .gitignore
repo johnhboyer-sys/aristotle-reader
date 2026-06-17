@@ -20,3 +20,9 @@ app/.astro/
 
 # Local planning roadmap — not published
 planned changes.md
+
+# Copyright-encumbered translation sources — kept LOCAL ONLY for the full build,
+# never committed/published (the -public manifests don't use them). J. L. Ackrill
+# (Clarendon, 1963): the Bekker-key guide + a local-only third translation.
+sources/cat-ackrill/
+sources/int-ackrill/

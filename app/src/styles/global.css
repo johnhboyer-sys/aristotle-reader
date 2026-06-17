@@ -314,6 +314,18 @@ body {
   flex-wrap: wrap;
 }
 
+/* Disclaimer: which translation Bekker numbers are fixed vs approximate. */
+.bekker-note {
+  margin: -0.75rem 0 1.6rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-light);
+  max-width: 46rem;
+}
+.bekker-note .bk-fixed { color: var(--text-mid); font-weight: 600; }
+.bekker-note .bk-approx { color: var(--text-light); font-style: italic; opacity: 0.85; }
+
 /* English translation picker (Rackham / Ross). */
 .trans-picker {
   display: inline-flex;
@@ -494,6 +506,24 @@ body {
   flex: 1;
 }
 
+/* Greek inline table (the TLG ⎪ column square, e.g. the De Int 22a modal
+   square). Cells render as real columns with a vertical divider replacing the
+   raw ⎪ glyph; tokens stay clickable. */
+.greek-table {
+  border-collapse: collapse;
+  margin: 0.35rem 0 0.6rem;
+}
+.greek-table td {
+  vertical-align: baseline;
+  padding: 0.12rem 0;
+}
+.greek-table td.line-text { padding-right: 1rem; }
+.greek-table td.line-text + td.line-text {
+  border-left: 1px solid var(--border);
+  padding-left: 1rem;
+}
+.greek-table tr.target { background: var(--target-bg); }
+
 /* ── Tokens ───────────────────────────────────────────────────────── */
 
 .tok {
@@ -547,6 +577,22 @@ body {
   opacity: 0.5;
 }
 .eng-seg { margin: 0; }
+
+/* A translation's diagram (Ackrill's square of opposition / modal table),
+   rendered as a real grid spanning the full English column width. */
+.eng-table {
+  grid-column: 1 / -1;
+  border-collapse: collapse;
+  margin: 0.5rem 0 0.7rem;
+  font-family: var(--font-english);
+  font-size: var(--fs-english);
+  color: var(--text-mid);
+}
+.eng-table td {
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.7rem;
+  vertical-align: top;
+}
 
 /* ── Word popup ───────────────────────────────────────────────────── */
 
@@ -922,6 +968,9 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 .toc-book-count { font-size: 0.72rem; color: var(--text-light); font-weight: 400; }
 
 .toc-outline ul { list-style: none; margin: 0; padding: 0 0 0.4rem; }
+/* Bookless works (Categories, Poetics) list chapters flat, with no per-book
+   <details> wrapper, so give the list a little top breathing room. */
+.toc-outline .toc-flat { padding-top: 0.5rem; }
 .toc-outline li a {
   display: flex;
   gap: 0.55rem;

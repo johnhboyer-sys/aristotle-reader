@@ -22,7 +22,9 @@ from .config import BUILD_DIR, Manifest
 # out because it doubles as the elision apostrophe, which the surface form keeps.
 _PUNCT = ".,·;—()|\"‘" + "·;"  # ano teleia, Greek question mark
 # Stripped but logged: editorial sigla found by the stage 2 inventory.
-_SIGLA = "†*<>[]"
+# ⎪ (U+23AA) is the column divider the TLG uses inside Aristotle's inline tables
+# (e.g. the De Int 22a modal-opposition square); strip it so the cells tokenize.
+_SIGLA = "†*<>[]⎪"
 
 _STRIP = _PUNCT + _SIGLA
 _APOSTROPHE_END = re.compile(r"['’᾽ʼ]$")

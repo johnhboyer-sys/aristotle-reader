@@ -1,7 +1,7 @@
 <script lang="ts">
   import { search, type SearchMode, type LangOp, type MatchMode } from '../lib/search';
   import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
-  import { WORKS, getWork } from '../lib/works';
+  import { WORKS, getWork, workPath } from '../lib/works';
 
   // One match occurrence, located precisely enough to label and jump to.
   interface Instance {
@@ -207,7 +207,7 @@
       const base = qs.toString();
       const root = import.meta.env.BASE_URL.replace(/\/$/, '');
       const jumpFor = (work: string, book: number, column: string, line: number) =>
-        `${root}/${work}/book/${book}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+        `${root}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${line}`;
 
       for (const r of results) {
         const seg = segMap.get(`${r.work}:${r.meta.id}`);

@@ -13,6 +13,10 @@ export interface GreekLine {
   text: string;
   joined?: boolean;
   tokens: Token[];
+  // Table row: present when the Greek line is part of an inline table (the TLG
+  // ⎪ column divider, e.g. the De Int 22a modal square). Each cell carries its
+  // own text + clickable tokens (offsets rebased to the cell).
+  cells?: { text: string; tokens: Token[] }[];
 }
 
 export interface EnglishChunk {
@@ -43,6 +47,10 @@ export interface RossPiece {
   // Interpolated Bekker-line ticks down this slice (all estimates — Ross has no
   // milestones of its own). Same shape as EnglishChunk.bekker.
   bekker?: { n: number; offset: number; real: boolean }[];
+  // Structured diagram tables (e.g. Ackrill's squares of opposition), each
+  // anchored to the Bekker line `n` of the segment it belongs to; rendered as a
+  // grid after that segment's row.
+  tables?: { n: number; rows: string[][] }[];
 }
 
 export interface Segment {
@@ -52,6 +60,9 @@ export interface Segment {
   english: EnglishChunk | null;
   chapterStarts?: ChapterStart[];
   ross?: RossPiece[];
+  // Optional third translation (same overlay shape as ross), e.g. Categories'
+  // Ackrill beside Edghill + Taylor. Absent in works with fewer translations.
+  third?: RossPiece[];
 }
 
 export interface ChapterRef {

@@ -18,23 +18,32 @@ def _stage1(manifest):
     # build/stage1 is single-work scratch; drop any secondary-translation chunks
     # left by a previous work's build so stage7 never emits a stale overlay. It
     # is rewritten below only when this work declares english.secondary.
-    stale_ross = BUILD_DIR / "stage1" / "ross_chunks.json"
-    stale_ross.unlink(missing_ok=True)
+    for scratch in ("ross_chunks.json", "third_chunks.json"):
+        (BUILD_DIR / "stage1" / scratch).unlink(missing_ok=True)
 
     chapters_cfg = manifest.data.get("chapters", {})
-    if chapters_cfg.get("source") == "grc_tei":
-        # Greek-sourced chapters + a chapter-anchored archive English (e.g. DA).
+    if chapters_cfg.get("source") in ("grc_tei", "explicit"):
+        # Chapter-anchored archive English. Chapters come either from a grc TEI
+        # text-aligned onto the spine (e.g. DA) or declared directly as Bekker
+        # starts in the manifest (e.g. Categories, keyed from a Bekker-stamped
+        # translation). The archive path then handles primary + optional
+        # secondary/third translations, each with its own dense anchor gutter.
         from . import stage1_archive, stage1_chapters
 
-        chapters = stage1_chapters.extract_chapters_grc(
-            spine, chapters_cfg["grc_tei"],
-            chapters_cfg.get("chapter_subtype", "chapter"),
-            chapters_cfg.get("book_subtype", "book"),
-            chapters_cfg.get("chapter_marker", "div"),
-        )
+        if chapters_cfg["source"] == "explicit":
+            chapters = stage1_chapters.extract_chapters_explicit(
+                spine, chapters_cfg["list"])
+        else:
+            chapters = stage1_chapters.extract_chapters_grc(
+                spine, chapters_cfg["grc_tei"],
+                chapters_cfg.get("chapter_subtype", "chapter"),
+                chapters_cfg.get("book_subtype", "book"),
+                chapters_cfg.get("chapter_marker", "div"),
+            )
         eng_path, align_path = stage1_archive.run(manifest, spine, chapters)
         english = json.loads(eng_path.read_text(encoding="utf-8"))
-        print(f"  chapters: {len(chapters)} (grc-aligned) "
+        how = "explicit" if chapters_cfg["source"] == "explicit" else "grc-aligned"
+        print(f"  chapters: {len(chapters)} ({how}) "
               f"english chunks={len(english['chunks'])} ({english['translation']})")
     else:
         # Rackham primary + Ross secondary (EN). Chapters come from the English

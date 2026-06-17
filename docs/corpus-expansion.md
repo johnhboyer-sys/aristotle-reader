@@ -156,6 +156,56 @@ entered US PD in 2022) → first new work that's fully **deployable**. Chapters 
 - Clean build (stage2 PASS, key_failures=0); registered (Roman I–III, Freese).
   App prerenders 3 pages; home index now lists all 6 works.
 
+## Categories (006) — ✅ built + registered (THREE translations, 2026-06-16)
+First work with **three parallel translations**, all keyed to Bekker via the
+**Bekker-stamped guide** approach the user asked for:
+- **Edghill** (1928, PD) primary · **Taylor** (1812, PD) secondary · **Ackrill**
+  (1963, *US-copyright*) third — Ackrill is the alignment guide AND a displayed
+  translation, gated out of the public build.
+- **New pipeline capabilities** (all manifest-gated, prior 6 works regression-pass):
+  - `chapters.source: explicit` — chapter divisions declared as Bekker starts in
+    the manifest (`stage1_chapters.extract_chapters_explicit`); no grc TEI needed.
+  - `english.third` + per-translation `anchors` on secondary/third — the archive
+    overlay path (`stage1_archive.build_overlay` / `_inject_real_ticks`) now gives
+    a secondary/third its own **dense real Bekker gutter** from a hand-keyed
+    anchors file, not just interpolation. stage7 emits a `third` overlay.
+  - `add_bekker_gutter(dense=…)` — a densely-anchored primary ticks at every
+    resolved anchor line, not just the 5-line cadence (gated; Rackham/TEI works
+    keep their cadence — EN regression-identical).
+- **Keying:** Ackrill's 93 per-paragraph Bekker stamps are authoritative; Edghill
+  & Taylor were aligned to those 93 points (one verbatim anchor phrase each per
+  point). Resolution: Taylor 93/93, Ackrill 93/93, Edghill 91/93 (2 near a column
+  edge interpolate). 15 chapters, Bekker 1a–15b, 12 `expected_line_gaps`.
+- **Gating:** `Cat.yaml` (3 translations, local) + `Cat-public.yaml` (Edghill +
+  Taylor only — Ackrill text absent from data/search). Registry: `ACKRILL` entry
+  in works.ts is behind a compile-time `HIDE_PRIVATE` (PUBLIC_HIDE_PRIVATE=1) so
+  the public bundle drops it entirely. Verified: public dist has no "Ackrill".
+- Clean build (stage2 PASS, key_failures=0, token match 99.9%). Frontend: 3rd
+  translation slot in Reader (picker + solo render); Compare stays Edghill+Taylor.
+
+## De Interpretatione (017) — ✅ built + registered (2026-06-16)
+Second 3-translation work, same pattern as Categories: Edghill (1928, PD)
+primary + Taylor (1812, PD) secondary + Ackrill (1963, US-copyright) third
+(local-only, gated). Bekker 16a–24b9, 14 chapters, bookless route `/Int`. All
+three keyed to Ackrill's 68 Bekker segments (Edghill 68/68, Taylor 68/68,
+Ackrill 68/68) via 14 per-chapter alignment subagents.
+- **Taylor ch14 gap:** CLAA's chapter-14 page is a broken duplicate of ch13;
+  Taylor's actual ch14 was reconstructed from the 1812 *Organon* scan on
+  archive.org (OCR cleaned of commentary/footnotes) — flagged in Int.yaml.
+- **Inline table rendering (new, reusable):** these chapters have tables.
+  - The Greek itself carries the ch13 modal square at 22a24–31, encoded with the
+    `⎪` (U+23AA) column divider — added to stage3 sigla; stage7 `_greek_cells`
+    splits such lines into cells; the reader renders them as a real 2-col table
+    (vertical divider, clickable tokens per cell).
+  - Ackrill's diagrams (ch10 squares of opposition, ch13 implications I/II/III/IV)
+    are extracted from the markdown as structured `sources/int-ackrill/tables.json`,
+    attached to overlay pieces by Bekker line (`_attach_tables`), and rendered as
+    grids after their segment's row. Edghill/Taylor render these as prose in their
+    originals (no diagram), so nothing to gridify there.
+  - `_find_phrase` prefix-fallback added so an anchor phrase split across a column
+    cut still resolves.
+- Gating: `Int.yaml` (3 translations) local + `Int-public.yaml` (Edghill+Taylor).
+
 ## Per-work progress
 - Poetics (034) ✅ built+registered (pre-existing)
 - Aligner port ✅ wiring complete

@@ -1,0 +1,91 @@
+# De Interpretatione — pipeline manifest (local/full build: three translations)
+#
+# A single-book work (14 chapters, no book divisions). Greek spine from the
+# cached TLG export (tlg0086017); chapter divisions declared as Bekker starts
+# (chapters.source: explicit), keyed from the Bekker-stamped guide (Ackrill).
+#
+# Three translations, chapter-anchored archive prose with a dense real Bekker
+# gutter from per-segment anchors keyed to Ackrill's Bekker stamps:
+#   primary   = E. M. Edghill (Oxford, 1928) — public domain
+#   secondary = Thomas Taylor (London, 1812) — public domain (ch14 reconstructed
+#               from the 1812 Organon scan; CLAA's ch14 page was a broken dup)
+#   third     = J. L. Ackrill (Oxford, 1963) — US-copyright, LOCAL BUILD ONLY.
+# Build Int-public.yaml (Edghill + Taylor only) for the public deploy.
+
+work:
+  id: Int
+  title: "De Interpretatione"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "017"
+  greek_edition: "Minio-Paluello, Aristotelis Categoriae et Liber de Interpretatione (OCT, 1949)"
+  english_translation: "E. M. Edghill (Oxford, 1928)"
+
+bekker_range:
+  first_column: "16a"
+  last_column: "24b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1,  bekker: "16a1" }
+    - { n: 2,  bekker: "16a19" }
+    - { n: 3,  bekker: "16b6" }
+    - { n: 4,  bekker: "16b26" }
+    - { n: 5,  bekker: "17a8" }
+    - { n: 6,  bekker: "17a25" }
+    - { n: 7,  bekker: "17a38" }
+    - { n: 8,  bekker: "18a13" }
+    - { n: 9,  bekker: "18a28" }
+    - { n: 10, bekker: "19b5" }
+    - { n: 11, bekker: "20b12" }
+    - { n: 12, bekker: "21a34" }
+    - { n: 13, bekker: "22a14" }
+    - { n: 14, bekker: "23a27" }
+
+english:
+  primary:
+    id: edghill
+    name: "E. M. Edghill (Oxford, 1928)"
+    model: archive
+    dir: "int-edghill"
+    books: 1
+    chapter_marker: part
+    anchors: "int-edghill/anchors.yaml"
+  secondary:
+    id: taylor
+    name: "Thomas Taylor (London, 1812)"
+    model: archive
+    dir: "int-taylor"
+    books: 1
+    chapter_marker: part
+    anchors: "int-taylor/anchors.yaml"
+  third:
+    id: ackrill
+    name: "J. L. Ackrill (Oxford, 1963)"
+    model: archive
+    dir: "int-ackrill"
+    books: 1
+    chapter_marker: part
+    anchors: "int-ackrill/anchors.yaml"
+
+# Single line numbers the TLG/OCT edition skips (the Greek is continuous across
+# them — verified against the export); declared so the validator passes.
+expected_line_gaps:
+  - { column: "16b", after: 13, next: 15 }
+  - { column: "17b", after: 23, next: 25 }
+  - { column: "17b", after: 38, next: 40 }
+  - { column: "18a", after: 13, next: 15 }
+  - { column: "18b", after: 23, next: 25 }
+  - { column: "21a", after: 3,  next: 5 }
+  - { column: "21b", after: 18, next: 20 }
+  - { column: "21b", after: 33, next: 35 }
+
+books:
+  - { n: 1, start: "16a1", end: "24b9" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

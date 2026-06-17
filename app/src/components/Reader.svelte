@@ -2,18 +2,20 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { fetchBook, parseBekker, type Segment, type GreekLine, type Token } from '../lib/data';
   import { greekFold } from '../lib/search';
-  import { getWork } from '../lib/works';
+  import { getWork, visibleTranslations } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
 
   export let work: string = 'EN';
   export let bookNum: number = 1;
 
   const workMeta = getWork(work);
-  const translations = workMeta?.translations ?? [];
-  // The two display slots the reader can render: the primary parallel chunk
-  // ('english') and the secondary chapter-anchored overlay ('ross').
+  const translations = workMeta ? visibleTranslations(workMeta) : [];
+  // The display slots the reader can render: the primary parallel chunk
+  // ('english'), the secondary chapter-anchored overlay ('ross'), and an
+  // optional third overlay ('third', e.g. Categories' Ackrill).
   const engSlot = translations.find(t => t.slot === 'english');
   const rossSlot = translations.find(t => t.slot === 'ross');
+  const thirdSlot = translations.find(t => t.slot === 'third');
   const canCompare = !!engSlot && !!rossSlot;
 
   let segments: Segment[] = [];
@@ -32,6 +34,16 @@
   $: selectedSlot = trans === 'compare'
     ? null
     : (translations.find(t => t.id === trans)?.slot ?? 'english');
+  // Whether the translation(s) currently shown actually carry any approximate
+  // (interpolated) Bekker ticks — drives the gutter disclaimer. Overlay
+  // translations whose gutter is fully anchored show no approximate ticks, so
+  // the note is suppressed for them.
+  $: shownSlots = trans === 'compare' ? ['english', 'ross'] : [selectedSlot];
+  $: hasApproxTicks = view !== 'greek' && segments.some((seg) =>
+    (shownSlots.includes('english') && seg.english?.bekker?.some((t) => !t.real)) ||
+    (shownSlots.includes('ross') && seg.ross?.some((p) => p.bekker?.some((t) => !t.real))) ||
+    (shownSlots.includes('third') && seg.third?.some((p) => p.bekker?.some((t) => !t.real)))
+  );
   const TRANS_KEY = `reader-trans-${work}`;
   function setTrans(t: string) {
     trans = t;
@@ -161,7 +173,7 @@
   // A GreekLine may be a partial slice of a real line (cont = its tail half,
   // after a mid-line chapter split): it suppresses the repeated line number/id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { chapter: string | null; bekker: string; lines: RLine[]; rows: EngRow[]; rossRows: EngRow[]; }
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; rows: EngRow[]; rossRows: EngRow[]; thirdRows: EngRow[]; thirdTables: { n: number; rows: string[][] }[]; }
 
   // The char position where token `w` begins in a line's text (0 at the start,
   // text.length at/after the end), so a cut preserves the verbatim
@@ -262,6 +274,26 @@
     return parts;
   }
 
+  // Clickable parts for a table cell (same shape as a line: text + tokens).
+  function cellParts(cell: { text: string; tokens: Token[] }): LinePart[] {
+    return lineParts(cell as unknown as GreekLine);
+  }
+  // Group a block's Greek lines into render items: runs of table rows (lines
+  // carrying `cells`, e.g. the De Int 22a modal square) become one table; other
+  // lines render individually.
+  type GreekItem = { table: false; line: RLine } | { table: true; rows: RLine[] };
+  function greekItems(lines: RLine[]): GreekItem[] {
+    const items: GreekItem[] = [];
+    let run: RLine[] = [];
+    for (const l of lines) {
+      if (l.cells && l.cells.length) { run.push(l); continue; }
+      if (run.length) { items.push({ table: true, rows: run }); run = []; }
+      items.push({ table: false, line: l });
+    }
+    if (run.length) items.push({ table: true, rows: run });
+    return items;
+  }
+
   function splitSegment(seg: Segment): Block[] {
     const greek = seg.greek;
     const text = seg.english?.text ?? '';
@@ -287,10 +319,22 @@
     };
     const rossCont = () => rossRowsOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
     const rossFor = (chapter: string) => rossRowsOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
+    // Third translation overlay, same chapter-anchored shape as ross.
+    const thirdPieces = seg.third ?? [];
+    const thirdRowsOf = (p: typeof thirdPieces[number] | undefined): EngRow[] => {
+      if (!p || !p.text) return [];
+      const ticks = (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset }));
+      return buildRows(p.text, snapTicksToSentences(p.text, ticks));
+    };
+    const thirdCont = () => thirdRowsOf(thirdPieces.find(p => p.cont) ?? thirdPieces[0]);
+    const thirdFor = (chapter: string) => thirdRowsOf(thirdPieces.find(p => !p.cont && p.chapter === chapter));
+    const thirdTablesOf = (p: typeof thirdPieces[number] | undefined) => p?.tables ?? [];
+    const thirdContTables = () => thirdTablesOf(thirdPieces.find(p => p.cont) ?? thirdPieces[0]);
+    const thirdTablesFor = (chapter: string) => thirdTablesOf(thirdPieces.find(p => !p.cont && p.chapter === chapter));
 
     const starts = (seg.chapterStarts ?? []).slice()
       .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont() }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont(), thirdRows: thirdCont(), thirdTables: thirdContTables() }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -325,7 +369,7 @@
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont(),
+        rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont(), thirdRows: thirdCont(), thirdTables: thirdContTables(),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
@@ -335,7 +379,7 @@
       blocks.push({
         chapter: b.chapter, bekker: b.bekker,
         lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
-        rows: rowsFor(b.engOffset, engTo), rossRows: rossFor(b.chapter),
+        rows: rowsFor(b.engOffset, engTo), rossRows: rossFor(b.chapter), thirdRows: thirdFor(b.chapter), thirdTables: thirdTablesFor(b.chapter),
       });
     }
     return blocks;
@@ -452,6 +496,12 @@
 {:else if error}
   <p style="padding:2rem;color:red">{error}</p>
 {:else}
+  {#snippet greekToks(parts: LinePart[])}{#each parts as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
+        class="tok"
+        class:active={popup?.token === part.tok}
+        class:hit={isHit(part.text)}
+        on:click={(e) => handleTokenClick(e, part.tok)}
+      >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main">
     <div class="reader-controls">
       {#if view !== 'greek' && translations.length > 1}
@@ -471,6 +521,15 @@
         <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
       </div>
     </div>
+    {#if hasApproxTicks}
+      <p class="bekker-note">
+        Greek line numbers are exact. The translations carry no Bekker numbers of
+        their own, so those beside the English are aligned to the Greek:
+        <span class="bk-fixed">upright</span> = fixed (anchored to this point in
+        the text), <span class="bk-approx">italic grey</span> = approximate
+        (interpolated estimate).
+      </p>
+    {/if}
     {#each segments as seg (seg.id)}
       <div class="segment" id="col-{seg.column}">
         <div class="seg-ref">
@@ -487,16 +546,25 @@
           <div class="seg-row">
             <!-- Greek column -->
             <div class="greek-col">
-              {#each block.lines as line}
-                <div class="greek-line" id={line.cont ? `L${seg.column}-${line.n}-c` : `L${seg.column}-${line.n}`} class:target={!line.cont && targetId === `L${seg.column}-${line.n}`}>
-                  <span class="line-num">{line.cont ? '' : showLineNum(line.n)}</span>
-                  <span class="line-text">{#each lineParts(line) as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
-                        class="tok"
-                        class:active={popup?.token === part.tok}
-                        class:hit={isHit(part.text)}
-                        on:click={(e) => handleTokenClick(e, part.tok)}
-                      >{part.text}</span>{:else}{part.text}{/if}{/each}</span>
-                </div>
+              {#each greekItems(block.lines) as item}
+                {#if item.table}
+                  <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->
+                  <table class="greek-table"><tbody>
+                    {#each item.rows as row}
+                      <tr id={`L${seg.column}-${row.n}`} class:target={targetId === `L${seg.column}-${row.n}`}>
+                        <td class="line-num">{showLineNum(row.n)}</td>
+                        {#each (row.cells ?? []) as cell}
+                          <td class="line-text">{@render greekToks(cellParts(cell))}</td>
+                        {/each}
+                      </tr>
+                    {/each}
+                  </tbody></table>
+                {:else}
+                  <div class="greek-line" id={item.line.cont ? `L${seg.column}-${item.line.n}-c` : `L${seg.column}-${item.line.n}`} class:target={!item.line.cont && targetId === `L${seg.column}-${item.line.n}`}>
+                    <span class="line-num">{item.line.cont ? '' : showLineNum(item.line.n)}</span>
+                    <span class="line-text">{@render greekToks(lineParts(item.line))}</span>
+                  </div>
+                {/if}
               {/each}
             </div>
 
@@ -506,14 +574,26 @@
             <!-- English column: Ross alone when selected, else Rackham (also the
                  left English column in Compare). -->
             <div class="english-col">
-              {#if selectedSlot === 'ross'}
-                {#if block.rossRows.length}
-                  <!-- Secondary translation with an interpolated Bekker gutter. -->
+              {#if selectedSlot === 'ross' || selectedSlot === 'third'}
+                {@const overlayRows = selectedSlot === 'third' ? block.thirdRows : block.rossRows}
+                {#if overlayRows.length}
+                  <!-- Secondary/third translation with its Bekker gutter. A
+                       third-translation diagram (Ackrill's square of opposition)
+                       renders as a full-width grid after its segment's row. -->
                   <div class="english-text">
-                    {#each block.rossRows as row}
+                    {#each overlayRows as row}
                       <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                       <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                      {#if selectedSlot === 'third'}
+                        {#each block.thirdTables.filter(t => t.n === row.n) as tbl}
+                          <table class="eng-table"><tbody>
+                            {#each tbl.rows as trow}
+                              <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
+                            {/each}
+                          </tbody></table>
+                        {/each}
+                      {/if}
                     {/each}
                   </div>
                 {/if}

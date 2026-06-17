@@ -201,6 +201,32 @@ def _chapter_openings_milestone(grc_path: Path, unit: str = "section",
     return out
 
 
+def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dict]:
+    """Chapters declared directly as Bekker starts in the manifest, e.g.
+    `[{n: 1, bekker: "1a1"}, {n: 2, bekker: "1a16"}, ...]`. Used for works whose
+    chapter divisions are known exactly (e.g. keyed from a Bekker-stamped
+    translation) so no grc TEI text-alignment is needed. Returns the same
+    {book, chapter, column, line, wordIndex, bookstart} shape as the grc path.
+    The Greek spine is Bekker-lineated, so each (column, line) is authoritative;
+    a single book (book 1) is assumed for these single-treatise works."""
+    cols = {s["column"] for s in spine["segments"]}
+    chapters: list[dict] = []
+    for entry in chapter_list:
+        ref = str(entry["bekker"]).strip()
+        m = re.match(r"^(\d{1,4}[ab])(\d{1,3})$", ref)
+        if not m:
+            print(f"  chapters: bad explicit bekker {ref!r}")
+            continue
+        column, line = m.group(1), m.group(2)
+        if column not in cols:
+            print(f"  chapters: explicit column {column} absent from spine")
+        chapters.append({
+            "book": 1, "chapter": str(entry["n"]), "column": column,
+            "line": line, "wordIndex": 0, "bookstart": not chapters,
+        })
+    return chapters
+
+
 def extract_chapters_grc(spine: dict, grc_rel: str,
                          chapter_subtype: str = "chapter",
                          book_subtype: str = "book",

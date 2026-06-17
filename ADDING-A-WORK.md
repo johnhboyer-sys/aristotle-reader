@@ -65,5 +65,32 @@ search pick it up automatically.
 cd app && npm run build      # Node 22; getStaticPaths enumerates the new work
 ```
 
-That's it — the new work appears on the home page, gets `/SLUG/book/N` routes, and
+That's it — the new work appears on the home page, gets its reader route, and
 joins unified search. No component code is touched.
+
+## Variations (added for the Organon works — Categories, De Interpretatione)
+
+All manifest-driven; no component changes needed unless noted.
+
+- **Explicit chapters** — instead of a grc TEI, declare chapter starts as Bekker
+  references in the manifest: `chapters: { source: explicit, list: [{n: 1,
+  bekker: "1a1"}, …] }`. Use when the divisions are known exactly (e.g. keyed
+  from a Bekker-stamped translation).
+- **Two or three translations, each Bekker-keyed** — `english.primary` +
+  `english.secondary` + optional `english.third`, each `model: archive` with its
+  own `anchors:` file (a YAML list of `{bekker, at: "verbatim phrase"}`). Dense
+  anchors give every overlay translation a real per-segment Bekker gutter. The
+  `third` slot needs a `slot: 'third'` entry in works.ts.
+- **Copyright gating** — for a work with a copyrighted translation: keep `<Work>.yaml`
+  (all translations, local) AND `<Work>-public.yaml` (PD only). Flag the
+  copyrighted registry entry `private: true` (it's dropped at compile time when
+  the app is built with `PUBLIC_HIDE_PRIVATE=1`). Deploy = rebuild data with
+  `--work <Work>-public` + build the app with `PUBLIC_HIDE_PRIVATE=1`, so the
+  copyrighted text never enters the published data, search index, or bundle.
+- **Single-book (bookless) works** — set `books: 1`. The work routes at `/<slug>`
+  (no `/book/1`), with no book-level navigation (`isBookless`/`workPath` in
+  works.ts handle this automatically).
+- **Inline tables** — Greek lines with the `⎪` (U+23AA) divider render as 2-col
+  tables automatically (stage7 `_greek_cells`). A translation's diagrams render
+  as grids if you provide `sources/<dir>/tables.json` (a list of
+  `{bekker, rows: [[cells]]}`), attached by Bekker line.

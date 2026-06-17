@@ -1,0 +1,79 @@
+# Categories — PUBLIC deploy manifest (public-domain translations only).
+#
+# Build THIS (not Cat.yaml) for the public site, with PUBLIC_HIDE_PRIVATE=1 in
+# the app build. Identical to Cat.yaml except the copyrighted Ackrill (1963)
+# third translation is dropped, so its text never enters the published data or
+# search index. Edghill (1928) + Taylor (1812) are both public domain.
+
+work:
+  id: Cat
+  title: "Categories"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "006"
+  greek_edition: "Minio-Paluello, Aristotelis Categoriae et Liber de Interpretatione (OCT, 1949)"
+  english_translation: "E. M. Edghill (Oxford, 1928)"
+
+bekker_range:
+  first_column: "1a"
+  last_column: "15b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1,  bekker: "1a1" }
+    - { n: 2,  bekker: "1a16" }
+    - { n: 3,  bekker: "1b10" }
+    - { n: 4,  bekker: "1b25" }
+    - { n: 5,  bekker: "2a11" }
+    - { n: 6,  bekker: "4b20" }
+    - { n: 7,  bekker: "6a36" }
+    - { n: 8,  bekker: "8b25" }
+    - { n: 9,  bekker: "11b1" }
+    - { n: 10, bekker: "11b15" }
+    - { n: 11, bekker: "13b36" }
+    - { n: 12, bekker: "14a26" }
+    - { n: 13, bekker: "14b24" }
+    - { n: 14, bekker: "15a13" }
+    - { n: 15, bekker: "15b17" }
+
+english:
+  primary:
+    id: edghill
+    name: "E. M. Edghill (Oxford, 1928)"
+    model: archive
+    dir: "cat-edghill"
+    books: 1
+    chapter_marker: part
+    anchors: "cat-edghill/anchors.yaml"
+  secondary:
+    id: taylor
+    name: "Thomas Taylor (London, 1812)"
+    model: archive
+    dir: "cat-taylor"
+    books: 1
+    chapter_marker: part
+    anchors: "cat-taylor/anchors.yaml"
+
+expected_line_gaps:
+  - { column: "3b",  after: 28, next: 30 }
+  - { column: "6a",  after: 13, next: 15 }
+  - { column: "6b",  after: 23, next: 25 }
+  - { column: "10a", after: 23, next: 25 }
+  - { column: "12b", after: 8,  next: 10 }
+  - { column: "12b", after: 13, next: 15 }
+  - { column: "13a", after: 18, next: 20 }
+  - { column: "14a", after: 8,  next: 10 }
+  - { column: "14a", after: 18, next: 20 }
+  - { column: "14b", after: 31, next: 33 }
+  - { column: "15a", after: 8,  next: 10 }
+  - { column: "15a", after: 18, next: 20 }
+
+books:
+  - { n: 1, start: "1a1", end: "15b32" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

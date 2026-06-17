@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { fetchColumns, parseBekker, resolveBekker, type ColumnRef } from '../lib/data';
-  import { getWork } from '../lib/works';
+  import { getWork, workPath } from '../lib/works';
 
   export let work: string = 'EN';
   const workMeta = getWork(work);
@@ -43,7 +43,7 @@
       return;
     }
     // Same-tab navigation; the reader snaps to the nearest line if exact is absent.
-    window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${work}/book/${book}?loc=${ref.column}:${ref.line}`;
+    window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}${workPath(work, book)}?loc=${ref.column}:${ref.line}`;
   }
 
   function onKey(e: KeyboardEvent) {

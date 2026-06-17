@@ -1,0 +1,99 @@
+# Categories — pipeline manifest (local/full build: three translations)
+#
+# A single-book work (15 chapters, no book divisions). Greek spine from the
+# cached TLG export (tlg0086006); chapter divisions are declared directly as
+# Bekker starts (chapters.source: explicit), keyed from the Bekker-stamped
+# guide translation (Ackrill) rather than text-aligned from a grc TEI.
+#
+# Three translations, all chapter-anchored archive prose with a dense real
+# Bekker gutter from per-segment anchors keyed to Ackrill's Bekker stamps:
+#   primary   = E. M. Edghill (Oxford, 1928) — public domain
+#   secondary = Thomas Taylor (London, 1812) — public domain
+#   third     = J. L. Ackrill (Oxford, 1963) — US-copyright, LOCAL BUILD ONLY.
+# Build Cat-public.yaml (Edghill + Taylor only) for the public deploy so the
+# Ackrill text never enters the published data or search index.
+
+work:
+  id: Cat
+  title: "Categories"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "006"
+  greek_edition: "Minio-Paluello, Aristotelis Categoriae et Liber de Interpretatione (OCT, 1949)"
+  english_translation: "E. M. Edghill (Oxford, 1928)"
+
+bekker_range:
+  first_column: "1a"
+  last_column: "15b"
+
+# Chapter starts as exact Bekker references (from Ackrill's per-paragraph
+# stamps); the Bekker-lineated Greek spine makes each (column, line) exact.
+chapters:
+  source: explicit
+  list:
+    - { n: 1,  bekker: "1a1" }
+    - { n: 2,  bekker: "1a16" }
+    - { n: 3,  bekker: "1b10" }
+    - { n: 4,  bekker: "1b25" }
+    - { n: 5,  bekker: "2a11" }
+    - { n: 6,  bekker: "4b20" }
+    - { n: 7,  bekker: "6a36" }
+    - { n: 8,  bekker: "8b25" }
+    - { n: 9,  bekker: "11b1" }
+    - { n: 10, bekker: "11b15" }
+    - { n: 11, bekker: "13b36" }
+    - { n: 12, bekker: "14a26" }
+    - { n: 13, bekker: "14b24" }
+    - { n: 14, bekker: "15a13" }
+    - { n: 15, bekker: "15b17" }
+
+english:
+  primary:
+    id: edghill
+    name: "E. M. Edghill (Oxford, 1928)"
+    model: archive
+    dir: "cat-edghill"
+    books: 1
+    chapter_marker: part
+    anchors: "cat-edghill/anchors.yaml"
+  secondary:
+    id: taylor
+    name: "Thomas Taylor (London, 1812)"
+    model: archive
+    dir: "cat-taylor"
+    books: 1
+    chapter_marker: part
+    anchors: "cat-taylor/anchors.yaml"
+  third:
+    id: ackrill
+    name: "J. L. Ackrill (Oxford, 1963)"
+    model: archive
+    dir: "cat-ackrill"
+    books: 1
+    chapter_marker: part
+    anchors: "cat-ackrill/anchors.yaml"
+
+# Single line numbers the TLG/OCT edition skips (the Greek is continuous across
+# them — verified against the export); declared so the validator passes.
+expected_line_gaps:
+  - { column: "3b",  after: 28, next: 30 }
+  - { column: "6a",  after: 13, next: 15 }
+  - { column: "6b",  after: 23, next: 25 }
+  - { column: "10a", after: 23, next: 25 }
+  - { column: "12b", after: 8,  next: 10 }
+  - { column: "12b", after: 13, next: 15 }
+  - { column: "13a", after: 18, next: 20 }
+  - { column: "14a", after: 8,  next: 10 }
+  - { column: "14a", after: 18, next: 20 }
+  - { column: "14b", after: 31, next: 33 }
+  - { column: "15a", after: 8,  next: 10 }
+  - { column: "15a", after: 18, next: 20 }
+
+books:
+  - { n: 1, start: "1a1", end: "15b32" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

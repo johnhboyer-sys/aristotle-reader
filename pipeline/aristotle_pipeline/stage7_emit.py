@@ -27,6 +27,29 @@ def _load(rel: str):
     return json.loads((BUILD_DIR / rel).read_text(encoding="utf-8"))
 
 
+_COLSEP = "⎪"  # U+23AA — the TLG column divider inside Aristotle's inline tables
+
+
+def _greek_cells(text: str, tokens: list[dict]):
+    """If a Greek line is a table row (contains the ⎪ column divider), split it
+    into cells, partitioning the clickable tokens by their char offset and
+    rebasing each cell's token offsets to the cell text. Returns a list of
+    {text, tokens} cells, or None for an ordinary (non-table) line."""
+    if _COLSEP not in text:
+        return None
+    cells, start = [], 0
+    for end in [m for m, ch in enumerate(text) if ch == _COLSEP] + [len(text)]:
+        cell_text = text[start:end]
+        lead = len(cell_text) - len(cell_text.lstrip())
+        cell_toks = [
+            {**t, "o": t["o"] - start - lead}
+            for t in tokens if start <= t["o"] < end
+        ]
+        cells.append({"text": cell_text.strip(), "tokens": cell_toks})
+        start = end + 1
+    return cells
+
+
 def _chapter_starts(seg_column, line_ns, eng, chapters_in_col, range_map) -> list[dict]:
     """For each chapter starting in this Bekker column, where to break the
     reader. The Greek heading goes before the chapter's ACTUAL Bekker line
@@ -101,10 +124,12 @@ def chapter_ranges(spine, chapters) -> dict[tuple, str]:
     return ranges
 
 
-def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None) -> list[dict]:
+def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
+               third=None) -> list[dict]:
     tokens_by_id = {s["id"]: s for s in tokens_doc["segments"]}
     english_by_id = {c["id"]: c for c in english["chunks"]}
     ross = ross or {}
+    third = third or {}
     chapters_by_col: dict[tuple, list[dict]] = defaultdict(list)
     for ch in english.get("chapters", []):
         chapters_by_col[(ch["book"], ch["column"])].append(ch)
@@ -130,6 +155,7 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None) 
                         "text": line["text"],
                         **({"joined": True} if line.get("joined") else {}),
                         "tokens": tok_lines[line["n"]],
+                        **({"cells": cells} if (cells := _greek_cells(line["text"], tok_lines[line["n"]])) else {}),
                     }
                     for line in seg["lines"]
                 ],
@@ -147,6 +173,8 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None) 
                 # slices the reader pairs to its blocks (cont = continuation of a
                 # chapter begun in an earlier column).
                 **({"ross": ross[seg["id"]]} if ross.get(seg["id"]) else {}),
+                # Optional third translation (same overlay shape as ross).
+                **({"third": third[seg["id"]]} if third.get(seg["id"]) else {}),
             }
         )
     stats = []
@@ -198,9 +226,11 @@ def run(manifest: Manifest) -> Path:
     english = _load("stage1/english_chunks.json")
     ross_path = BUILD_DIR / "stage1" / "ross_chunks.json"
     ross = json.loads(ross_path.read_text(encoding="utf-8")) if ross_path.exists() else {}
+    third_path = BUILD_DIR / "stage1" / "third_chunks.json"
+    third = json.loads(third_path.read_text(encoding="utf-8")) if third_path.exists() else {}
 
     range_map = chapter_ranges(spine, english.get("chapters", []))
-    book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross)
+    book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross, third)
     analyses_stats = emit_analyses(out_dir)
 
     # Per-book ordered chapter list for navigation (Work → Book → Chapter).

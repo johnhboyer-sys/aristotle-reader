@@ -186,7 +186,7 @@ def _snap_word(text: str, off: int) -> int:
     return min(cands, key=lambda c: abs(c - off)) if cands else off
 
 
-def add_bekker_gutter(english: dict, spine: dict) -> None:
+def add_bekker_gutter(english: dict, spine: dict, dense: bool = False) -> None:
     """Attach to each English chunk a `bekker` list of {n, offset, real}: Bekker
     line ticks at the Greek's cadence (line 1, then every 5th line) down the
     English prose. Real anchors are the TEI line milestones (column start + the
@@ -209,6 +209,12 @@ def add_bekker_gutter(english: dict, spine: dict) -> None:
         targets = list(range(start5, last + 1, 5))
         if first_line <= 1 and 1 not in targets:
             targets.insert(0, 1)
+        # For densely hand-anchored translations (e.g. Categories' per-segment
+        # Bekker anchors) also tick at every real anchor line, not just the
+        # 5-line cadence, so the gutter shows its true Bekker points. Gated so
+        # the milestone-anchored Rackham/TEI works keep their canonical cadence.
+        if dense:
+            targets = sorted(set(targets) | {n for n in reals if first_line <= n <= last})
         ticks, seen = [], set()
         for t in targets:
             if t in reals:
