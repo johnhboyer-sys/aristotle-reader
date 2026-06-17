@@ -173,7 +173,10 @@
   // A GreekLine may be a partial slice of a real line (cont = its tail half,
   // after a mid-line chapter split): it suppresses the repeated line number/id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { chapter: string | null; bekker: string; lines: RLine[]; rows: EngRow[]; rossRows: EngRow[]; thirdRows: EngRow[]; thirdTables: { n: number; rows: string[][] }[]; }
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; rows: EngRow[]; rossRows: EngRow[]; rossFlow: FlowPart[]; thirdRows: EngRow[]; thirdTables: { n: number; rows: string[][] }[]; }
+  // A flowing-prose part: either a text run (n null) or a Bekker margin marker
+  // (text null) placed at an exact mid-sentence offset — no row break.
+  interface FlowPart { text: string | null; n: number | null; real: boolean; }
 
   // The char position where token `w` begins in a line's text (0 at the start,
   // text.length at/after the end), so a cut preserves the verbatim
@@ -250,6 +253,22 @@
     return rows;
   }
 
+  // Flowing prose with Bekker numbers floated into the margin at their EXACT
+  // offsets (no row break, no in-text number, no sentence-boundary snapping).
+  // Used for precisely-placed translations like the gloss-aligned Ross.
+  function flowParts(text: string, ticks: { n: number; real: boolean; off: number }[]): FlowPart[] {
+    const ts = [...ticks].sort((a, b) => a.off - b.off);
+    const parts: FlowPart[] = [];
+    let cur = 0;
+    for (const t of ts) {
+      const off = Math.max(0, Math.min(t.off, text.length));
+      if (off > cur) { parts.push({ text: text.slice(cur, off), n: null, real: false }); cur = off; }
+      parts.push({ text: null, n: t.n, real: t.real });
+    }
+    if (cur < text.length) parts.push({ text: text.slice(cur), n: null, real: false });
+    return parts;
+  }
+
   // Split a line into clickable words and the verbatim text between them.
   // The tokens hold bare words (for the popup lookup); the line `text` keeps
   // the original punctuation AND the OCT editorial sigla ( ) [ ] < > † " — so
@@ -319,6 +338,11 @@
     };
     const rossCont = () => rossRowsOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
     const rossFor = (chapter: string) => rossRowsOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
+    // Flowing-prose variant: numbers float in the margin at exact offsets.
+    const rossFlowOf = (p: typeof rossPieces[number] | undefined): FlowPart[] =>
+      (!p || !p.text) ? [] : flowParts(p.text, (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset })));
+    const rossFlowCont = () => rossFlowOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
+    const rossFlowFor = (chapter: string) => rossFlowOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
     // Third translation overlay, same chapter-anchored shape as ross.
     const thirdPieces = seg.third ?? [];
     const thirdRowsOf = (p: typeof thirdPieces[number] | undefined): EngRow[] => {
@@ -334,7 +358,7 @@
 
     const starts = (seg.chapterStarts ?? []).slice()
       .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont(), thirdRows: thirdCont(), thirdTables: thirdContTables() }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont(), rossFlow: rossFlowCont(), thirdRows: thirdCont(), thirdTables: thirdContTables() }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -369,7 +393,7 @@
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont(), thirdRows: thirdCont(), thirdTables: thirdContTables(),
+        rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont(), rossFlow: rossFlowCont(), thirdRows: thirdCont(), thirdTables: thirdContTables(),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
@@ -379,7 +403,7 @@
       blocks.push({
         chapter: b.chapter, bekker: b.bekker,
         lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
-        rows: rowsFor(b.engOffset, engTo), rossRows: rossFor(b.chapter), thirdRows: thirdFor(b.chapter), thirdTables: thirdTablesFor(b.chapter),
+        rows: rowsFor(b.engOffset, engTo), rossRows: rossFor(b.chapter), rossFlow: rossFlowFor(b.chapter), thirdRows: thirdFor(b.chapter), thirdTables: thirdTablesFor(b.chapter),
       });
     }
     return blocks;
@@ -583,26 +607,36 @@
             <!-- English column: Ross alone when selected, else Rackham (also the
                  left English column in Compare). -->
             <div class="english-col">
-              {#if selectedSlot === 'ross' || selectedSlot === 'third'}
-                {@const overlayRows = selectedSlot === 'third' ? block.thirdRows : block.rossRows}
-                {#if overlayRows.length}
-                  <!-- Secondary/third translation with its Bekker gutter. A
-                       third-translation diagram (Ackrill's square of opposition)
-                       renders as a full-width grid after its segment's row. -->
+              {#if selectedSlot === 'ross'}
+                {#if block.rossFlow.length}
+                  <!-- Precisely gloss-aligned Ross: flowing prose with Bekker
+                       numbers floated into the margin at their exact offsets. -->
+                  <div class="ross-prose">
+                    {#each block.rossFlow as part}
+                      {#if part.text !== null}
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        <span class="bk-seg">{@html highlightEng(part.text)}</span>
+                      {:else}
+                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
+                      {/if}
+                    {/each}
+                  </div>
+                {/if}
+              {:else if selectedSlot === 'third'}
+                {#if block.thirdRows.length}
+                  <!-- Third translation with its Bekker gutter + diagrams. -->
                   <div class="english-text">
-                    {#each overlayRows as row}
+                    {#each block.thirdRows as row}
                       <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                       <div class="eng-seg">{@html highlightEng(row.text)}</div>
-                      {#if selectedSlot === 'third'}
-                        {#each block.thirdTables.filter(t => t.n === row.n) as tbl}
-                          <table class="eng-table"><tbody>
-                            {#each tbl.rows as trow}
-                              <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
-                            {/each}
-                          </tbody></table>
-                        {/each}
-                      {/if}
+                      {#each block.thirdTables.filter(t => t.n === row.n) as tbl}
+                        <table class="eng-table"><tbody>
+                          {#each tbl.rows as trow}
+                            <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
+                          {/each}
+                        </tbody></table>
+                      {/each}
                     {/each}
                   </div>
                 {/if}
@@ -625,12 +659,15 @@
             {#if trans === 'compare' && view !== 'greek'}
               <div class="ross-col">
                 <div class="col-label">{rossSlot?.short ?? ''}</div>
-                {#if block.rossRows.length}
-                  <div class="english-text">
-                    {#each block.rossRows as row}
-                      <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
-                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                      <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                {#if block.rossFlow.length}
+                  <div class="ross-prose">
+                    {#each block.rossFlow as part}
+                      {#if part.text !== null}
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        <span class="bk-seg">{@html highlightEng(part.text)}</span>
+                      {:else}
+                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
+                      {/if}
                     {/each}
                   </div>
                 {/if}

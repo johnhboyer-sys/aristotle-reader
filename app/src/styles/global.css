@@ -578,6 +578,38 @@ body {
 }
 .eng-seg { margin: 0; }
 
+/* Flowing-prose translation (precisely gloss-aligned Ross): the prose reads as
+   one unbroken passage; each Bekker number is floated into the left margin at
+   its EXACT character offset. The marker span is empty and absolutely
+   positioned with only `left` set, so it keeps its static vertical position
+   (the line it falls on) while shifting into the gutter — no row break, no
+   in-text number, no sentence-boundary snapping, no JS measurement. */
+.ross-prose {
+  position: relative;
+  padding-left: 2.6rem;
+  line-height: 1.75;
+}
+.ross-prose .bk-seg { /* inline text run — flows normally */ }
+.bk-num {
+  position: absolute;
+  left: 0;
+  width: 2.1rem;
+  text-align: right;
+  font-family: var(--font-ui);
+  /* Size + vertical drop are BOTH em-relative to the inherited prose font, so the
+     number stays proportionally sized and stays centred on its line at every
+     breakpoint (desktop 1.08rem, mobile 1.02rem, both-view 0.9rem) with no
+     per-breakpoint tuning. font-size:0.66em ≈ the old 0.72rem on desktop.
+     The absolute marker's box sits at the top of its line box; translateY drops
+     it ~half a line so it reads centred on the line it marks. */
+  font-size: 0.66em;
+  color: var(--text-light);
+  user-select: none;
+  -webkit-user-select: none;
+  transform: translateY(0.56em);
+}
+.bk-num.approx { font-style: italic; opacity: 0.5; }
+
 /* A translation's diagram (Ackrill's square of opposition / modal table),
    rendered as a real grid spanning the full English column width. */
 .eng-table {

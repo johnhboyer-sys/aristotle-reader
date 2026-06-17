@@ -45,6 +45,7 @@ class ChapterRef:
     ref_text: str               # assembled Rackham reference text for this chapter
     ref_anchors: list[RefAnchor]  # in order; ref_anchors[k] spans to ref_anchors[k+1]
     greek_lines: list[GreekLine] = field(default_factory=list)
+    gloss_incipits: list | None = None  # gloss mode: fingerprints parallel to ref_anchors
 
     def ref_segments(self) -> list[str]:
         """Rackham text between consecutive anchors (parallel to ref_anchors)."""
@@ -52,11 +53,15 @@ class ChapterRef:
         return [self.ref_text[bounds[i]:bounds[i + 1]] for i in range(len(self.ref_anchors))]
 
     def ref_incipits(self, max_chars: int = 240) -> list[str]:
-        """Fingerprint each anchor by the whole sentence *containing* its Bekker
-        tick (extended if very short), parallel to ref_anchors. Column-start
-        ticks begin a sentence; line-20 ticks fall mid-sentence, so anchoring on
-        the enclosing sentence (not the raw fragment after the tick) gives the DP
-        a clean unit to match against the target's sentences."""
+        """Fingerprint each anchor, parallel to ref_anchors.
+
+        Gloss mode: the fingerprints are the per-tick glosses themselves.
+        Milestoned mode: the whole sentence *containing* each Bekker tick
+        (extended if very short). Column-start ticks begin a sentence; line-20
+        ticks fall mid-sentence, so anchoring on the enclosing sentence (not the
+        raw fragment after the tick) gives the DP a clean unit to match."""
+        if self.gloss_incipits is not None:
+            return [g[:max_chars] for g in self.gloss_incipits]
         spans = [(m.start(), m.end()) for m in
                  re.finditer(r'[^.!?]*[.!?]+(?:["\')\]]+)?\s*', self.ref_text)]
         spans = [s for s in spans if self.ref_text[s[0]:s[1]].strip()] or [(0, len(self.ref_text))]
@@ -187,4 +192,52 @@ def load_chapters(target_prose: dict[tuple[int, int], str]) -> list[ChapterRef]:
 
         out.append(ChapterRef(book, chap, chap_citation, ross_text,
                               "".join(assembled), anchors, glines))
+    return out
+
+
+def load_gloss_chapters(target_prose: dict[tuple[int, int], str],
+                        work_id: str = "EN", books=None) -> list[ChapterRef]:
+    """Gloss-provider inputs: the reference is the per-tick Greek glosses Claude
+    Code produced (read from `build/align/glosses/<work>/`), not a milestoned
+    English. Each tick (line 1 + every 5th line) becomes a `column`/`five_line`
+    anchor whose fingerprint is its own gloss; the DP places it in `target_prose`.
+    Chapters with no gloss file are skipped (they fall back to the milestoned
+    path / interpolation elsewhere)."""
+    from .glossing import chapter_lines, load_gloss, tick_windows
+
+    out: list[ChapterRef] = []
+    for ch in chapter_lines(books):
+        book, chap = ch.book, ch.chapter
+        ross_text = target_prose.get((book, chap), "")
+        gloss = load_gloss(work_id, book, chap)
+        if not ross_text or not gloss or not ch.lines:
+            continue
+
+        chap_citation = ch.lines[0].citation       # first line of the chapter
+        anchors: list[RefAnchor] = [RefAnchor(chap_citation, 0, "chapter")]
+        incipits: list[str] = [gloss.get(chap_citation, "").strip()]
+        ref_parts: list[str] = []
+        base = 0
+        for w in tick_windows(ch):
+            if not gloss.get(w.tick, "").strip() or w.tick == chap_citation:
+                continue  # skip empty tick + the chapter-coincident tick
+            # Fingerprint = the whole glossed window (line above + tick + below).
+            # The tick alone often begins mid-sentence; the window disambiguates
+            # and tames the worst mismatches (verified on the eval harness).
+            fp = " ".join(gloss.get(ln.citation, "").strip() for ln in w.lines).strip()
+            tier = "column" if w.is_column_start else "five_line"
+            anchors.append(RefAnchor(w.tick, base, tier))
+            incipits.append(fp)
+            ref_parts.append(fp)
+            base += len(fp) + 1
+
+        glines = []
+        cum = 0
+        for ln in ch.lines:
+            glines.append(GreekLine(ln.citation, cum))
+            cum += len(ln.text.split())
+
+        out.append(ChapterRef(book, str(chap), chap_citation, ross_text,
+                              " ".join(ref_parts), anchors, glines,
+                              gloss_incipits=incipits))
     return out

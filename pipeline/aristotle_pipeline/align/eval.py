@@ -13,8 +13,8 @@ from __future__ import annotations
 import statistics
 
 from . import similarity
-from .aligner import monotonic_align, split_sentences
-from .reference import default_target, load_chapters
+from .aligner import align_chapter, monotonic_align, split_sentences
+from .reference import default_target, load_chapters, load_gloss_chapters
 
 
 def run_eval(work_id="EN", backend="lexical", books=None):
@@ -62,3 +62,69 @@ def run_eval(work_id="EN", backend="lexical", books=None):
             "exact_pct": round(100 * sum(1 for e in all_err if e == 0) / len(all_err), 1),
         }
     return report
+
+
+def _summarise(err_by_tier: dict[str, list[int]], extra: dict) -> dict:
+    report = {**extra, "by_tier": {}}
+    all_err: list[int] = []
+    for tier, errs in sorted(err_by_tier.items()):
+        all_err += errs
+        report["by_tier"][tier] = {
+            "n": len(errs),
+            "mean_chars": round(statistics.mean(errs), 1),
+            "median_chars": statistics.median(errs),
+            "max_chars": max(errs),
+            "exact": sum(1 for e in errs if e == 0),
+        }
+    if all_err:
+        report["overall"] = {
+            "n": len(all_err),
+            "mean_chars": round(statistics.mean(all_err), 1),
+            "median_chars": statistics.median(all_err),
+            "max_chars": max(all_err),
+            "exact_pct": round(100 * sum(1 for e in all_err if e == 0) / len(all_err), 1),
+        }
+    return report
+
+
+def run_gloss_eval(work_id="EN", backend="lexical", books=None):
+    """Honest cross-method eval for the gloss provider. We take the *milestoned*
+    English (Rackham) as the target — but treat it as unmarked — gloss-align it,
+    and score each predicted tick against Rackham's own real embedded Bekker tick
+    (column = line 1, half_column ~ line 20). Those are true gold offsets, not a
+    self-referential bound: the gloss fingerprints come from the Greek, the gold
+    from Rackham's milestones. Only ticks Rackham actually carries are scored
+    (column starts + the ~line-20 marks), which is exactly where it can verify."""
+    _vid, target = default_target(work_id)
+    mile = {(c.book, int(c.chapter)): c for c in load_chapters(target)}
+    if books:
+        mile = {k: c for k, c in mile.items() if c.book in books}
+
+    # Target prose = each chapter's assembled Rackham; gold = its real tick offsets,
+    # snapped to the start of the containing sentence (best achievable granularity).
+    rackham_prose = {k: c.ref_text for k, c in mile.items()}
+    gloss_chapters = load_gloss_chapters(rackham_prose, work_id, books)
+
+    err_by_tier: dict[str, list[int]] = {}
+    matched = unmatched = 0
+    for ch in gloss_chapters:
+        mc = mile.get((ch.book, int(ch.chapter)))
+        if mc is None:
+            continue
+        starts = [s for s, _ in split_sentences(mc.ref_text)] or [0]
+        gold = {a.citation: max((s for s in starts if s <= a.off), default=starts[0])
+                for a in mc.ref_anchors if a.tier != "chapter"}
+        for a in align_chapter(ch, backend):
+            if a.tier in ("chapter", "line"):
+                continue
+            if a.citation in gold:
+                err_by_tier.setdefault(a.tier, []).append(abs(a.offset - gold[a.citation]))
+                matched += 1
+            else:
+                unmatched += 1
+
+    return _summarise(err_by_tier, {
+        "mode": "gloss-vs-milestoned", "backend": backend,
+        "chapters": len(gloss_chapters), "scored_ticks": matched,
+        "gloss_ticks_without_gold": unmatched,
+    })

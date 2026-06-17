@@ -98,7 +98,7 @@ def _snap_word(text: str, off: int) -> int:
 
 
 # ---- per-chapter alignment ------------------------------------------------
-def align_chapter(ch: ChapterRef, backend: str) -> list[Anchor]:
+def align_chapter(ch: ChapterRef, backend: str, overrides: dict | None = None) -> list[Anchor]:
     refs = ch.ref_incipits()
     sents = split_sentences(ch.ross_text)
     S = similarity.cos_matrix(refs, [s for _, s in sents], backend)
@@ -113,6 +113,15 @@ def align_chapter(ch: ChapterRef, backend: str) -> list[Anchor]:
         anchors.append(a)
     _flag_ratio_outliers(ch, anchors, refs, sents)
     _flag_proper_names(ch, anchors, refs)
+    # Apply verifier overrides (offsets re-placed by direct reading) before
+    # de-dup + interpolation so single lines re-interpolate around the fix.
+    if overrides:
+        for a in anchors:
+            if a.citation in overrides:
+                a.offset = max(0, min(overrides[a.citation], len(ch.ross_text)))
+                a.confidence = "confirmed"
+                a.flags = [f for f in a.flags if not f.startswith("low_margin")]
+                a.flags.append("verified")
     # de-dup offsets keeping the most confident; keep monotonic non-decreasing
     anchors = _dedup_monotonic(anchors)
     anchors += interpolate(ch, anchors)
@@ -169,17 +178,28 @@ def check_roundtrip(ch: ChapterRef, anchors: list[Anchor]):
     assert "".join(segs) == ch.ross_text, f"round-trip failed in {ch.book}:{ch.chapter}"
 
 
-def align(work_id="EN", version_id=None, target_prose=None, backend="lexical", books=None):
+def align(work_id="EN", version_id=None, target_prose=None, backend="lexical",
+          books=None, provider="milestoned"):
     if target_prose is None:
         from .reference import default_target
         version_id, target_prose = default_target(work_id)
-    chapters = load_chapters(target_prose)
-    if books:
-        chapters = [c for c in chapters if c.book in books]
+    if provider == "gloss":
+        from .reference import load_gloss_chapters
+        chapters = load_gloss_chapters(target_prose, work_id, books)
+    else:
+        chapters = load_chapters(target_prose)
+        if books:
+            chapters = [c for c in chapters if c.book in books]
+    overrides_all = {}
+    if provider == "gloss":
+        ovr_path = BUILD_DIR / "align" / f"{work_id}_{version_id}_gloss_overrides.json"
+        if ovr_path.exists():
+            overrides_all = json.loads(ovr_path.read_text(encoding="utf-8"))
+
     out: dict[str, dict] = {}
     review: list[dict] = []
     for ch in chapters:
-        anchors = align_chapter(ch, backend)
+        anchors = align_chapter(ch, backend, overrides_all.get(f"{ch.book}:{ch.chapter}"))
         check_roundtrip(ch, anchors)
         key = f"{ch.book}:{ch.chapter}"
         out[key] = {"ross_len": len(ch.ross_text),
@@ -193,9 +213,10 @@ def align(work_id="EN", version_id=None, target_prose=None, backend="lexical", b
 
     out_dir = BUILD_DIR / "align"
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / f"{work_id}_{version_id}_map.json").write_text(
+    tag = version_id if provider == "milestoned" else f"{version_id}_gloss"
+    (out_dir / f"{work_id}_{tag}_map.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
-    (out_dir / f"{work_id}_{version_id}_review.json").write_text(
+    (out_dir / f"{work_id}_{tag}_review.json").write_text(
         json.dumps(review, ensure_ascii=False, indent=1), encoding="utf-8")
 
     tiers = {}

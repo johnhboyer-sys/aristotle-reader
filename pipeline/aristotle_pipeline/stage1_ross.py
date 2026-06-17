@@ -24,7 +24,7 @@ from .config import BUILD_DIR, SOURCES_DIR
 # Confidence levels the aligner produces that we trust as *real* Bekker ticks
 # (vs. pure interpolation). Validated on NE Book 1 review: chapter/column/
 # half_column at these levels read good; "uncertain" is downgraded to approximate.
-_REAL_CONF = {"certain", "reliable"}
+_REAL_CONF = {"certain", "reliable", "confirmed"}  # confirmed = verifier-placed (gloss aligner)
 
 _TAG = re.compile(r"<[^>]+>")
 _ROSS_DIR = SOURCES_DIR / "ross"
@@ -225,13 +225,21 @@ def _chapter_segments(spine: dict, chapters: list[dict]):
 
 def _load_align_map(work_id: str, version_id: str) -> dict:
     """The aligner's standoff map {("book:chapter"): {anchors:[...]}} if present.
-    Absent → empty, and we fall back to pure proportional interpolation."""
-    path = BUILD_DIR / "align" / f"{work_id}_{version_id}_map.json"
-    if path.exists():
-        try:
-            return json.loads(path.read_text(encoding="utf-8"))
-        except (ValueError, OSError):
-            return {}
+    Prefers the durable gloss map under `alignment-results/<version>/` (every
+    5-line tick anchored), then a build-dir gloss map, then the older milestoned
+    map. Absent → empty, and we fall back to pure proportional interpolation."""
+    repo = Path(__file__).resolve().parents[2]
+    candidates = [
+        repo / "alignment-results" / version_id / f"{work_id}_{version_id}_gloss_map.json",
+        BUILD_DIR / "align" / f"{work_id}_{version_id}_gloss_map.json",
+        BUILD_DIR / "align" / f"{work_id}_{version_id}_map.json",
+    ]
+    for path in candidates:
+        if path.exists():
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except (ValueError, OSError):
+                return {}
     return {}
 
 
@@ -242,13 +250,16 @@ def _real_ticks(piece: str, lns: list[int], column: str,
     for them; the rest stay interpolated. `piece_start` is the piece's offset in
     the chapter's prose, so map offsets can be rebased into the piece."""
     by_n = {t["n"]: t for t in _ross_ticks(piece, lns)}
-    for n in (1, 20):
+    # Upgrade every cadence tick (line 1 + each 5th) that has a confident anchor
+    # in the gloss map; the rest stay interpolated estimates.
+    for n, t in by_n.items():
         a = anchors.get(f"{column}{n}")
         if not a:
             continue
         rel = a["offset"] - piece_start
         if 0 <= rel <= len(piece):
-            by_n[n] = {"n": n, "offset": _snap_word(piece, rel), "real": True}
+            t["offset"] = _snap_word(piece, rel)
+            t["real"] = True
     return sorted(by_n.values(), key=lambda t: t["offset"])
 
 

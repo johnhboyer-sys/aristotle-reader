@@ -17,11 +17,33 @@ def main(argv=None):
     p.add_argument("--backend", default="lexical",
                    help="lexical (zero-dep) | fast | quality | <sbert model id>")
     p.add_argument("--books", default="", help="comma-separated book numbers, e.g. 1,2")
+    p.add_argument("--provider", default="milestoned", choices=["milestoned", "gloss"],
+                   help="alignment reference: milestoned English (default) | Greek glosses")
     p.add_argument("--eval", action="store_true", help="run the offset-error eval harness")
+    p.add_argument("--emit-gloss-tasks", action="store_true",
+                   help="write per-chapter tick-window Greek for Claude Code to gloss")
+    p.add_argument("--gloss-eval", action="store_true",
+                   help="score the gloss aligner against the milestoned English's real ticks")
     p.add_argument("--html", action="store_true", help="write a side-by-side Rackham|Ross review page")
     args = p.parse_args(argv)
 
     books = [int(b) for b in args.books.split(",") if b.strip()] or None
+
+    if args.emit_gloss_tasks:
+        from .glossing import GLOSS_TASK_DIR, emit_gloss_tasks
+        n = emit_gloss_tasks(args.work, books)
+        print(f"wrote {n} gloss-task file(s) -> {GLOSS_TASK_DIR / args.work}/")
+        return
+
+    if args.gloss_eval:
+        from .eval import run_gloss_eval
+        for backend in ("lexical", "quality"):
+            print(f"=== backend: {backend} ===")
+            try:
+                print(json.dumps(run_gloss_eval(args.work, backend, books), indent=2))
+            except ImportError as e:
+                print(f"  skipped ({e})")
+        return
 
     if args.html:
         from .review_html import write_html
@@ -35,7 +57,8 @@ def main(argv=None):
         print(json.dumps(report, indent=2))
         return
 
-    summary = align(args.work, version_id=args.version, backend=args.backend, books=books)
+    summary = align(args.work, version_id=args.version, backend=args.backend,
+                    books=books, provider=args.provider)
     print(f"aligned {summary['chapters']} chapters -> {summary['anchors']} anchors "
           f"({summary['tiers']}); {summary['review']} flagged for review")
     print(f"  wrote {summary['out_dir']}/ ({args.work} map)")
