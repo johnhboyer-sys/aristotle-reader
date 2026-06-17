@@ -502,6 +502,12 @@
         class:hit={isHit(part.text)}
         on:click={(e) => handleTokenClick(e, part.tok)}
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
+  {#snippet chapterHead(block: Block)}
+    <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
+      <span class="chapter-label">Chapter {block.chapter}</span>
+      {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
+    </div>
+  {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main">
     <div class="reader-controls">
       {#if view !== 'greek' && translations.length > 1}
@@ -531,17 +537,20 @@
       </p>
     {/if}
     {#each segments as seg (seg.id)}
+      {@const blocks = splitSegment(seg)}
+      {@const leadChapter = blocks[0]?.chapter ? blocks[0] : null}
       <div class="segment" id="col-{seg.column}">
+        <!-- A chapter that opens this column heads the segment, ABOVE the column
+             reference (the column ref is a marker within the chapter, not a
+             heading over it). Mid-column chapter starts render inline below. -->
+        {#if leadChapter}{@render chapterHead(leadChapter)}{/if}
         <div class="seg-ref">
           {seg.column}
         </div>
 
-        {#each splitSegment(seg) as block}
-          {#if block.chapter}
-            <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-              <span class="chapter-label">Chapter {block.chapter}</span>
-              {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
-            </div>
+        {#each blocks as block, bi}
+          {#if block.chapter && !(bi === 0 && leadChapter)}
+            {@render chapterHead(block)}
           {/if}
           <div class="seg-row">
             <!-- Greek column -->
