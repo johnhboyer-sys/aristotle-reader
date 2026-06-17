@@ -33,9 +33,11 @@ def cit_key(cit):
 
 
 def find_from(text, phrase, start):
-    """First occurrence of `phrase` at/after `start`, shrinking to prefixes."""
+    """First occurrence of `phrase` at/after `start`, shrinking to prefixes.
+    Floor is min(len, 3) words so short verifier phrases (e.g. a 3-word
+    'with being happy') are still searched, not silently dropped."""
     words = phrase.split()
-    for k in range(len(words), 3, -1):
+    for k in range(len(words), min(len(words), 3) - 1, -1):
         i = text.find(" ".join(words[:k]), start)
         if i != -1:
             return i
@@ -44,7 +46,7 @@ def find_from(text, phrase, start):
 
 def find_nearest(text, phrase, near):
     words = phrase.split()
-    for k in range(len(words), 3, -1):
+    for k in range(len(words), min(len(words), 3) - 1, -1):
         sub = " ".join(words[:k])
         i, best = text.find(sub), None
         while i != -1:
