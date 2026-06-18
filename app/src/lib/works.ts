@@ -131,6 +131,19 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle’s theory of the syllogism and deductive inference, in two books.',
   },
   {
+    id: 'APo',
+    title: 'Posterior Analytics',
+    abbr: 'APo.',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
+    translations: [
+      { id: 'mure', name: 'G. R. G. Mure (Oxford, 1928)', short: 'Mure', slot: 'english' },
+    ],
+    blurb: 'Aristotle on demonstration, scientific knowledge, and first principles, in two books.',
+  },
+  {
     id: 'EN',
     title: 'Nicomachean Ethics',
     abbr: 'EN',

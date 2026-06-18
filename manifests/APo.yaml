@@ -1,0 +1,70 @@
+# Posterior Analytics — pipeline manifest
+#
+# Shares the TLG export tlg0086001 (Analytica priora et posteriora, 24a-100b)
+# with Prior Analytics. Posterior is the 71a-100b slice; the `books` table
+# assigns only those columns, so the Prior lines (24a-70b) fall outside every
+# range and are dropped from this work's spine.
+#
+# Like Prior Analytics / De Anima:
+#   - chapter divisions from the First1KGreek Greek TEI, text-aligned onto the
+#     spine. That TEI nests book(priora|posteriora) > part(1|2) > chapter, so
+#     book_subtype: part numbers the books and grc_book: posteriora restricts
+#     emission to this work (the posteriora parts are Books I & II).
+#   - English = G. R. G. Mure (Oxford, 1928, public domain via the MIT archive),
+#     chapter-anchored archive prose with an interpolated gutter.
+# Book II begins mid-column at 89b23 (Book I ends 89b22); the work ends 100b17.
+
+work:
+  id: APo
+  title: "Posterior Analytics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "001"
+  greek_edition: "Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)"
+  english_translation: "G. R. G. Mure (Oxford, 1928)"
+
+bekker_range:
+  first_column: "71a"
+  last_column: "100b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg001.1st1K-grc1.xml"
+  book_subtype: part
+  grc_book: posteriora   # the TEI holds both Analytics; restrict to Posterior
+
+# G. R. G. Mure's translation (MIT Internet Classics Archive): "Part N" markers,
+# one HTML file per book (Book I = 34 chapters, Book II = 19 chapters). Public
+# domain (1928 Oxford translation).
+english:
+  primary:
+    id: mure
+    name: "G. R. G. Mure (Oxford, 1928)"
+    model: archive
+    dir: "apo-mure"
+    books: 2
+    chapter_marker: part
+
+mid_column_book_starts:
+  - { book: 2, column: "89b" }
+
+# Line-number sequence features of Ross's OCT text (verified against the TLG
+# export), declared so the Stage 2 validator treats them as expected:
+#   - 89b: lines 21-22 absent (the Book I/II boundary region; Book I ends 89b20,
+#     Book II resumes 89b23).
+#   - 97b: line 26 absent.
+# (99b8-14 — ch. II.18 — use compound line numbers "8,9"…"13,14" that the spine
+# parser reconstructs into exact Bekker lines 8-14, so no gap is needed there.)
+expected_line_gaps:
+  - { column: "89b", after: 20, next: 23 }
+  - { column: "97b", after: 25, next: 27 }
+
+books:
+  - { n: 1, start: "71a1",  end: "89b22" }
+  - { n: 2, start: "89b23", end: "100b17" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
