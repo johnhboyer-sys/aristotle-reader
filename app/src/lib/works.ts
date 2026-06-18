@@ -157,6 +157,19 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle’s manual of dialectical argument and the topoi, in eight books.',
   },
   {
+    id: 'SE',
+    title: 'Sophistical Refutations',
+    abbr: 'SE',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
+    translations: [
+      { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
+    ],
+    blurb: 'Aristotle on fallacies and sophistical argument — the closing work of the Organon, in thirty-four chapters.',
+  },
+  {
     id: 'EN',
     title: 'Nicomachean Ethics',
     abbr: 'EN',

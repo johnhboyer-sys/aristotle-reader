@@ -40,6 +40,7 @@ def _stage1(manifest):
                 chapters_cfg.get("book_subtype", "book"),
                 chapters_cfg.get("chapter_marker", "div"),
                 chapters_cfg.get("grc_book"),
+                chapters_cfg.get("extra"),
             )
         eng_path, align_path = stage1_archive.run(manifest, spine, chapters)
         english = json.loads(eng_path.read_text(encoding="utf-8"))

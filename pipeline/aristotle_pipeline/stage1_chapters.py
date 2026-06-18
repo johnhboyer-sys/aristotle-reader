@@ -240,13 +240,16 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                          chapter_subtype: str = "chapter",
                          book_subtype: str = "book",
                          chapter_marker: str = "div",
-                         top_book: str | None = None) -> list[dict]:
+                         top_book: str | None = None,
+                         extra: list[dict] | None = None) -> list[dict]:
     """List of {book, chapter, column, line, bookstart} aligned onto the spine.
     `chapter_marker` selects how chapters are read from the grc TEI: "div"
     (<div subtype=chapter_subtype>, default) or "milestone"
     (<milestone unit=chapter_subtype>, for TEIs with no chapter divs).
     `top_book` restricts the div path to one top-level `<div subtype="book">`
-    when several works share a TEI file (the Analytics)."""
+    when several works share a TEI file (the Analytics). `extra` adds chapter
+    divisions the TEI omits — a list of {n, bekker[, book]} — re-sorted into
+    document order (e.g. SophRef 34, which First1KGreek folds into its ch33)."""
     grc_path = SOURCES_DIR / grc_rel
     joined, owner, wstart = _spine_words(spine)
     if chapter_marker == "milestone":
@@ -307,4 +310,30 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
             "book": book, "chapter": chap, "column": col,
             "line": str(line), "wordIndex": word, "bookstart": bookstart,
         })
+
+    if extra:
+        from .refs import line_key
+        cols = {s["column"] for s in spine["segments"]}
+        for e in extra:
+            ref = str(e["bekker"]).strip()
+            m = re.match(r"^(\d{1,4}[ab])(\d{1,3})$", ref)
+            if not m:
+                print(f"  chapters: bad extra bekker {ref!r}")
+                continue
+            column, line = m.group(1), m.group(2)
+            if column not in cols:
+                print(f"  chapters: extra column {column} absent from spine")
+            chapters.append({
+                "book": int(e.get("book", 1)), "chapter": str(e["n"]),
+                "column": column, "line": line, "wordIndex": 0, "bookstart": False,
+            })
+        chapters.sort(key=lambda c: (c["book"], line_key(c["column"], int(c["line"])),
+                                     c["wordIndex"]))
+        for c in chapters:
+            c["bookstart"] = False
+        seen: set[int] = set()
+        for c in chapters:
+            if c["book"] not in seen:
+                c["bookstart"] = True
+                seen.add(c["book"])
     return chapters

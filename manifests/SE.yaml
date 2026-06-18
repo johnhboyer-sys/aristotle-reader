@@ -1,0 +1,49 @@
+# Sophistical Refutations (Sophistici Elenchi) — pipeline manifest
+#
+# Standalone TLG export tlg0086040, Bekker 164a-184b, a single book of 34
+# chapters (bookless route /SE, like Categories / De Interpretatione).
+#   - chapter divisions from the First1KGreek Greek TEI, text-aligned onto the
+#     spine. That TEI has no book divs (single book) and divides the work into
+#     33 chapters — it folds the standard final two (33 + 34) into one. The
+#     standard 34th chapter (the closing review of the whole inquiry, "ἐκ πόσων
+#     μὲν οὖν…") begins 183a27; it is supplied via chapters.extra so the Greek
+#     matches the 34-chapter scholarly standard and Pickard-Cambridge's 34 Parts.
+#   - English = W. A. Pickard-Cambridge (Oxford, 1928, public domain via the MIT
+#     archive), chapter-anchored archive prose with an interpolated gutter.
+
+work:
+  id: SE
+  title: "Sophistical Refutations"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "040"
+  greek_edition: "Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)"
+  english_translation: "W. A. Pickard-Cambridge (Oxford, 1928)"
+
+bekker_range:
+  first_column: "164a"
+  last_column: "184b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg040.1st1K-grc1.xml"
+  extra:
+    - { n: 34, bekker: "183a27" }   # the closing chapter the TEI folds into ch33
+
+english:
+  primary:
+    id: pickard
+    name: "W. A. Pickard-Cambridge (Oxford, 1928)"
+    model: archive
+    dir: "sr-pickard"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "164a20", end: "184b8" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
