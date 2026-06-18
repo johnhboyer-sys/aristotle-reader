@@ -168,7 +168,7 @@ body {
   width: 100%;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.4rem 0.9rem;
+  gap: 0.4rem 0.5rem;
   border-top: 1px solid var(--border);
   padding-top: 0.5rem;
 }
@@ -221,14 +221,16 @@ body {
   border-color: var(--accent);
   color: var(--accent);
 }
+/* On desktop the book-nav and chapter-nav dissolve their own boxes
+   (display: contents) so the Bekker jump, book links and chapter chips all flow
+   as ONE wrapping stream in the nav-panel — the chapters fill the line next to
+   the books instead of each <nav> wrapping as an atomic block. Mobile restores
+   real rows (see the responsive block). */
 .page-header .book-nav {
+  display: contents;
   font-family: var(--font-ui);
   font-size: 0.8rem;
   color: var(--text-mid);
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-  flex-wrap: wrap;
 }
 .book-nav-label {
   color: var(--text-light);
@@ -314,22 +316,22 @@ body {
   font-size: 0.72rem;
 }
 
+/* Chapter links flow on the SAME nav row as the Bekker jump + book selector
+   (no forced row break) so the navigation bar fills out instead of leaving the
+   Bekker/Books line nearly empty. A quiet left divider separates the chapter
+   group from the books group when they share a line. */
 .page-header .chapter-nav {
-  flex-basis: 100%;
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.3rem;
+  display: contents;
   font-family: var(--font-ui);
   font-size: 0.78rem;
-  border-top: 1px solid var(--border);
-  padding-top: 0.45rem;
 }
 .chapter-nav-label {
   color: var(--text-light);
   font-weight: 600;
   letter-spacing: .03em;
   margin-right: 0.4rem;
+  padding-left: 0.9rem;
+  border-left: 1px solid var(--border);
 }
 .page-header .chapter-nav a {
   color: var(--text-mid);
@@ -371,6 +373,20 @@ body {
   padding: 0.5rem 0;
   background: var(--page-bg);
   border-bottom: 1px solid var(--border);
+}
+/* Cover band: paints page-bg in the slice directly above the pinned strip so
+   reading text can never bleed through if a browser (Safari, notably) leaves a
+   sub-pixel/rubber-band gap between the two stacked sticky elements. The header
+   (z-index 10) paints over the top of this band, so it's invisible at rest. */
+.reader-controls::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 3rem;
+  background: var(--page-bg);
+  pointer-events: none;
 }
 .rc-cite {
   font-family: var(--font-ui);
@@ -901,6 +917,8 @@ body {
   .page-header.nav-open .nav-panel { display: flex; }
 
   .page-header .book-nav {
+    display: flex;
+    align-items: baseline;
     margin-left: 0;
     width: 100%;
     flex-wrap: wrap;
@@ -913,7 +931,18 @@ body {
     align-items: center;
     padding: 0.3rem 0.6rem;
   }
-  .page-header .chapter-nav { padding-top: 0.6rem; }
+  /* Stacked nav: the chapter group sits on its own row again, so the inline
+     left divider becomes a top border instead. */
+  .page-header .chapter-nav {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0.3rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
+  }
+  .chapter-nav-label { padding-left: 0; border-left: none; }
   .page-header .chapter-nav a {
     min-width: 2rem;
     min-height: 34px;

@@ -216,6 +216,9 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
     setHeaderH();
     if (header && 'ResizeObserver' in window) new ResizeObserver(setHeaderH).observe(header);
     window.addEventListener('resize', setHeaderH);
+    window.addEventListener('load', setHeaderH);
+    // Web fonts swap in after first paint and reflow the header height.
+    if (document.fonts?.ready) document.fonts.ready.then(setHeaderH);
   </script>
 
   <Reader work={workId} bookNum={n} client:load />
