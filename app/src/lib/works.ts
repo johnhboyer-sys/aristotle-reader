@@ -118,6 +118,19 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
   },
   {
+    id: 'APr',
+    title: 'Prior Analytics',
+    abbr: 'APr.',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
+    translations: [
+      { id: 'jenkinson', name: 'A. J. Jenkinson (Oxford, 1928)', short: 'Jenkinson', slot: 'english' },
+    ],
+    blurb: 'Aristotle’s theory of the syllogism and deductive inference, in two books.',
+  },
+  {
     id: 'EN',
     title: 'Nicomachean Ethics',
     abbr: 'EN',

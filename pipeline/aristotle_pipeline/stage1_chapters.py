@@ -113,18 +113,24 @@ def _first_bekker_in(div, run_page, run_line):
 
 
 def _chapter_openings(grc_path: Path, chapter_subtype: str = "chapter",
-                      book_subtype: str = "book"):
+                      book_subtype: str = "book", top_book: str | None = None):
     """(book, chapter, opening_text, column, line) for every chapter div, in
     document order. Works with no book divisions default to book 1. The (column,
     line) is the chapter div's first Bekker milestone — an authoritative fallback
     when the opening text's orthography diverges from the spine. Document-order
-    walk so the running Bekker position is tracked across milestones."""
+    walk so the running Bekker position is tracked across milestones.
+
+    `top_book` restricts emission to chapters under the `<div subtype="book"
+    n="top_book">` div. Used when one TEI file holds several works (the Analytics
+    TEI nests book(priora|posteriora) > part(1|2) > chapter): pass the work's
+    top-level book name and book_subtype="part" so only that work's chapters are
+    returned, numbered by their part."""
     tree = etree.parse(str(grc_path))
     body = tree.find(".//{*}body")
     if body is None:
         body = tree.getroot()
     out = []
-    state = {"book": 1, "page": None, "line": None}
+    state = {"book": 1, "page": None, "line": None, "top": None}
 
     def walk(node):
         ln = _local(node)
@@ -135,11 +141,14 @@ def _chapter_openings(grc_path: Path, chapter_subtype: str = "chapter",
                 state["line"] = node.get("n")
         elif ln == "div":
             sub, n = node.get("subtype"), node.get("n")
+            if sub == "book":
+                state["top"] = n
             if sub == book_subtype and (n or "").isdigit():
                 state["book"] = int(n)
             elif sub == chapter_subtype and n and n.lstrip("-").isdigit():
-                col, line = _first_bekker_in(node, state["page"], state["line"])
-                out.append((state["book"], n, _div_opening(node), col, line))
+                if top_book is None or state["top"] == top_book:
+                    col, line = _first_bekker_in(node, state["page"], state["line"])
+                    out.append((state["book"], n, _div_opening(node), col, line))
         for ch in node:
             walk(ch)
 
@@ -230,17 +239,20 @@ def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dic
 def extract_chapters_grc(spine: dict, grc_rel: str,
                          chapter_subtype: str = "chapter",
                          book_subtype: str = "book",
-                         chapter_marker: str = "div") -> list[dict]:
+                         chapter_marker: str = "div",
+                         top_book: str | None = None) -> list[dict]:
     """List of {book, chapter, column, line, bookstart} aligned onto the spine.
     `chapter_marker` selects how chapters are read from the grc TEI: "div"
     (<div subtype=chapter_subtype>, default) or "milestone"
-    (<milestone unit=chapter_subtype>, for TEIs with no chapter divs)."""
+    (<milestone unit=chapter_subtype>, for TEIs with no chapter divs).
+    `top_book` restricts the div path to one top-level `<div subtype="book">`
+    when several works share a TEI file (the Analytics)."""
     grc_path = SOURCES_DIR / grc_rel
     joined, owner, wstart = _spine_words(spine)
     if chapter_marker == "milestone":
         openings = _chapter_openings_milestone(grc_path, chapter_subtype, book_subtype)
     else:
-        openings = _chapter_openings(grc_path, chapter_subtype, book_subtype)
+        openings = _chapter_openings(grc_path, chapter_subtype, book_subtype, top_book)
     chapters: list[dict] = []
     after = 0
     for book, chap, opening, mcol, mline in openings:
@@ -262,6 +274,16 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 # milestone's own Bekker position (heading pinned at line start).
                 widx = _first_word_at(owner, mcol, mline)
                 if widx is not None:
+                    loc, after = owner[widx], wstart[widx]
+            if loc is None and mcol is None and len(ow) >= 3:
+                # Last resort for grc TEIs with no Bekker milestones (no fallback
+                # above): a 3-word opening match. A single orthographic divergence
+                # in word 4 otherwise drops the chapter (e.g. APr I.4, where the
+                # spine reads λέγωμεν for the TEI's λέγομεν). The monotonic `after`
+                # pointer keeps this from matching before the previous chapter.
+                p = joined.find(" ".join(ow[:3]), after)
+                if p >= 0:
+                    widx = joined[:p].count(" ")
                     loc, after = owner[widx], wstart[widx]
             if loc is None:
                 continue  # unmatched chapter (surfaced by the caller as a gap)

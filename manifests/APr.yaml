@@ -1,0 +1,80 @@
+# Prior Analytics — pipeline manifest
+#
+# The TLG export tlg0086001 holds BOTH Analytics (Analytica priora et
+# posteriora, Bekker 24a-100b). Prior Analytics is the 24a-70b slice; the
+# manifest `books` table assigns only those columns to a book, so the Posterior
+# lines (71a-100b) fall outside every range and are dropped from this work's
+# spine. Posterior Analytics is built separately from the same file (71a-100b).
+#
+# No Bekker-milestoned English TEI exists, so (like De Anima):
+#   - chapter divisions come from the First1KGreek Greek TEI, text-aligned onto
+#     the Bekker-keyed TLG spine (chapters.source: grc_tei). That TEI nests as
+#     book(priora/posteriora) > part(1|2) > chapter, so the numbered books are
+#     the `part` divs (book_subtype: part) — the priora parts are Books I & II
+#     here; the posteriora parts don't align to this slice and are ignored.
+#   - the English (A. J. Jenkinson, 1928, public domain via the MIT archive) is
+#     chapter-anchored archive prose with an interpolated gutter (model: archive).
+# Book II begins mid-column at 52b38 (Book I ends 52b37); Prior Analytics ends at
+# the close of column 70b, and Posterior Analytics begins cleanly at 71a1.
+
+work:
+  id: APr
+  title: "Prior Analytics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "001"
+  greek_edition: "Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)"
+  english_translation: "A. J. Jenkinson (Oxford, 1928)"
+
+bekker_range:
+  first_column: "24a"
+  last_column: "70b"
+
+# Chapter divisions from the First1KGreek Greek TEI, text-aligned onto the spine.
+# The numbered books are the `part` divs (priora > part 1|2).
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg001.1st1K-grc1.xml"
+  book_subtype: part
+  grc_book: priora   # the TEI holds both Analytics; restrict to Prior
+
+# A. J. Jenkinson's translation (MIT Internet Classics Archive), chapter-anchored
+# archive prose: "Part N" markers, one HTML file per book (Book I = 46 chapters,
+# Book II = 27 chapters). Public domain (1928 Oxford translation).
+english:
+  primary:
+    id: jenkinson
+    name: "A. J. Jenkinson (Oxford, 1928)"
+    model: archive
+    dir: "apr-jenkinson"
+    books: 2
+    chapter_marker: part
+
+mid_column_book_starts:
+  - { book: 2, column: "52b" }
+
+# Line-number sequence features of Ross's OCT text (verified against the TLG
+# export), declared so the Stage 2 validator treats them as expected:
+#   - 52b: lines 35-37 are absent — this is the Book I/II boundary (Book I ends
+#     52b34, Book II resumes 52b38).
+#   - 68a, 70a: short line transpositions in the OCT (a few lines printed out of
+#     strict ascending order; 68a numbers line 16 twice), mirrored from the
+#     export's own ordering.
+expected_line_gaps:
+  - { column: "52b", after: 34, next: 38 }
+  - { column: "68a", after: 8,  next: 11 }
+  - { column: "68a", after: 16, next: 9 }
+  - { column: "68a", after: 10, next: 16 }
+  - { column: "70a", after: 2,  next: 10 }
+  - { column: "70a", after: 10, next: 3 }
+  - { column: "70a", after: 9,  next: 11 }
+
+books:
+  - { n: 1, start: "24a10", end: "52b37" }
+  - { n: 2, start: "52b38", end: "70b38" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
