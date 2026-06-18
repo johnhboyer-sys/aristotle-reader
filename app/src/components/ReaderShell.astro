@@ -97,9 +97,11 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
       {chapters.length > 0 && (
         <nav class="chapter-nav" aria-label={bookless ? 'Chapters' : `Book ${label} chapters`}>
           <span class="chapter-nav-label">{bookless ? 'Chapters' : `Book ${label} · Chapters`}</span>
-          {chapters.map((c) => (
-            <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.bekker}`}>{c.chapter}</a>
-          ))}
+          <span class="chapter-list">
+            {chapters.map((c) => (
+              <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.bekker}`}>{c.chapter}</a>
+            ))}
+          </span>
         </nav>
       )}
     </div>

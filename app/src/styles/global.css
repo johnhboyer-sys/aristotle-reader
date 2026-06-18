@@ -320,18 +320,30 @@ body {
    (no forced row break) so the navigation bar fills out instead of leaving the
    Bekker/Books line nearly empty. A quiet left divider separates the chapter
    group from the books group when they share a line. */
+/* The chapter list gets its own nav row laid out as a two-track grid:
+   the label sits in a max-content column, the chips wrap inside a 1fr column.
+   Because the chips wrap *within* their own track, every wrapped row begins
+   under the first chip — a hanging indent, like a bullet's continuation lines —
+   instead of running back under "Go to Bekker line". */
 .page-header .chapter-nav {
-  display: contents;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 0.6rem;
+  width: 100%;
   font-family: var(--font-ui);
   font-size: 0.78rem;
+}
+.page-header .chapter-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
 }
 .chapter-nav-label {
   color: var(--text-light);
   font-weight: 600;
   letter-spacing: .03em;
-  margin-right: 0.4rem;
-  padding-left: 0.9rem;
-  border-left: 1px solid var(--border);
 }
 .page-header .chapter-nav a {
   color: var(--text-mid);
