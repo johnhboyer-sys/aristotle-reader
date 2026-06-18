@@ -436,6 +436,7 @@ body {
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--text-light);
+  text-align: center;
 }
 
 /* Disclaimer: which translation Bekker numbers are fixed vs approximate. */
@@ -976,6 +977,9 @@ body {
   .rc-cite { display: none; }
   .rc-trans-abbr { display: inline-block; }
   .reader-controls { justify-content: flex-end; }
+  /* The "Translation" label pushes the picker off the edge on a phone — the
+     dropdown's own options make its purpose clear, so drop the label. */
+  .trans-label { display: none; }
 
   /* Bigger, easier-to-hit reading-view toggle (the main control on a phone, now
      that English-only is the default). */
