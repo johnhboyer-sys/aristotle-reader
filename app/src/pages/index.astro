@@ -1,5 +1,5 @@
 ---
-import { WORKS, workPath } from '../lib/works';
+import { CATEGORIES, getWork, workPath, visibleTranslations, type Work } from '../lib/works';
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
@@ -8,6 +8,33 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const href = (work: string, q = '') => `${base}${workPath(work)}${q}`;
 // Where "report an error / suggest" points — John's x.com.
 const FEEDBACK_URL = 'https://x.com/johnhboyer';
+
+// Flatten the corpus taxonomy into a single render sequence: category and
+// sub-category headings interleaved with work cards (existing works) and
+// "coming soon" placeholders (works not yet added). Nesting is visual (headings
+// + indentation), so all styling stays in this one file.
+type Row =
+  | { kind: 'cat'; numeral: string; title: string }
+  | { kind: 'sub'; ref: string; label: string }
+  | { kind: 'work'; work: Work }
+  | { kind: 'soon'; title: string };
+
+const rows: Row[] = [];
+for (const cat of CATEGORIES) {
+  rows.push({ kind: 'cat', numeral: cat.numeral, title: cat.title });
+  const add = (ws: { id?: string; title?: string }[]) => {
+    for (const cw of ws) {
+      const w = cw.id ? getWork(cw.id) : undefined;
+      if (w) rows.push({ kind: 'work', work: w });
+      else if (cw.title) rows.push({ kind: 'soon', title: cw.title });
+    }
+  };
+  if (cat.works) add(cat.works);
+  for (const sub of cat.subcategories ?? []) {
+    rows.push({ kind: 'sub', ref: sub.ref, label: sub.label });
+    add(sub.works);
+  }
+}
 ---
 <html lang="en">
 <head>
@@ -43,46 +70,55 @@ const FEEDBACK_URL = 'https://x.com/johnhboyer';
     <hr class="home-rule" />
     <h2 class="works-heading">Open a Work</h2>
 
-    <ul class="works">
-      {WORKS.map((w) => (
-        <li>
+    <div class="toc">
+      {rows.map((r) => (
+        r.kind === 'cat' ? (
+          <h3 class="cat-head"><span class="cat-num">{r.numeral}.</span> {r.title}</h3>
+        ) : r.kind === 'sub' ? (
+          <h4 class="subcat-head"><span class="subcat-ref">{r.ref}</span> {r.label}</h4>
+        ) : r.kind === 'work' ? (
           <details class="work">
             <summary>
-              <span class="work-name">{w.title}</span>
-              <span class="work-meta">{w.abbr} · {w.books} book{w.books > 1 ? 's' : ''}</span>
+              <span class="work-name">{r.work.title}</span>
+              <span class="work-meta">{r.work.abbr} · {r.work.books} book{r.work.books > 1 ? 's' : ''}</span>
               <span class="chev" aria-hidden="true"></span>
             </summary>
             <div class="panel">
-              <p class="blurb">{w.blurb}</p>
+              <p class="blurb">{r.work.blurb}</p>
               <ul class="editions">
-                {w.translations.map((t) => (
+                {visibleTranslations(r.work).map((t) => (
                   <li>
-                    <a href={href(w.id, `?trans=${t.id}`)}>
+                    <a href={href(r.work.id, `?trans=${t.id}`)}>
                       <span class="ed-name">{t.short}</span>
                       <span class="ed-kind">Greek &amp; English · {t.name}</span>
                     </a>
                   </li>
                 ))}
-                {w.translations.length > 1 && (
+                {visibleTranslations(r.work).length > 1 && (
                   <li>
-                    <a href={href(w.id, '?trans=compare')}>
+                    <a href={href(r.work.id, '?trans=compare')}>
                       <span class="ed-name">Compare</span>
                       <span class="ed-kind">Both translations side by side</span>
                     </a>
                   </li>
                 )}
                 <li>
-                  <a href={href(w.id, '?view=greek')}>
+                  <a href={href(r.work.id, '?view=greek')}>
                     <span class="ed-name">Greek only</span>
-                    <span class="ed-kind">{w.greekEdition}</span>
+                    <span class="ed-kind">{r.work.greekEdition}</span>
                   </a>
                 </li>
               </ul>
             </div>
           </details>
-        </li>
+        ) : (
+          <div class="work soon" aria-disabled="true">
+            <span class="work-name">{r.title}</span>
+            <span class="soon-tag">Coming soon</span>
+          </div>
+        )
       ))}
-    </ul>
+    </div>
 
     <nav class="home-foot">
       <a href={`${base}/search`}>Search the corpus</a>
@@ -185,7 +221,41 @@ const FEEDBACK_URL = 'https://x.com/johnhboyer';
       margin-bottom: 1rem;
     }
 
-    .works { list-style: none; display: flex; flex-direction: column; gap: .9rem; }
+    .toc { display: flex; flex-direction: column; gap: .55rem; }
+
+    .cat-head {
+      font-family: var(--font-greek);
+      font-weight: 400;
+      font-size: 1.5rem;
+      color: var(--text);
+      margin: 1.9rem 0 .55rem;
+      padding-bottom: .35rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: .55rem;
+    }
+    .toc > .cat-head:first-child { margin-top: 0; }
+    .cat-num {
+      font-family: var(--font-ui);
+      font-size: .95rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      color: var(--accent-light);
+    }
+    .subcat-head {
+      font-family: var(--font-ui);
+      font-size: .76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text-light);
+      margin: 1rem 0 .15rem .15rem;
+      display: flex;
+      align-items: baseline;
+      gap: .5rem;
+    }
+    .subcat-ref { color: var(--accent-light); letter-spacing: .04em; }
 
     .work {
       background: var(--col-bg);
@@ -195,7 +265,37 @@ const FEEDBACK_URL = 'https://x.com/johnhboyer';
       transition: border-color .15s ease, box-shadow .15s ease;
     }
     .work[open] { box-shadow: 0 6px 22px rgba(0,0,0,.05); border-color: var(--accent-light); }
-    .work:hover { border-color: var(--accent-light); }
+    .work:not(.soon):hover { border-color: var(--accent-light); }
+
+    /* Not-yet-added works: a quiet, non-interactive placeholder. */
+    .work.soon {
+      display: flex;
+      align-items: baseline;
+      gap: .75rem;
+      padding: .8rem 1.3rem;
+      background: transparent;
+      border-style: dashed;
+      border-color: var(--border);
+      cursor: default;
+    }
+    .work.soon .work-name {
+      font-size: 1.15rem;
+      color: var(--text-light);
+    }
+    .work.soon .soon-tag {
+      margin-left: auto;
+      align-self: center;
+      font-family: var(--font-ui);
+      font-size: .66rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text-light);
+      opacity: .8;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: .12rem .5rem;
+      white-space: nowrap;
+    }
 
     summary {
       list-style: none;

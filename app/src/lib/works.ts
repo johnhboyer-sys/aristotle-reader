@@ -259,3 +259,109 @@ export function workPath(workId: string, book = 1): string {
 export function visibleTranslations(work: Work): TranslationRef[] {
   return work.translations.filter(t => !t.private || !HIDE_PRIVATE);
 }
+
+// ---------------------------------------------------------------------------
+// Home-page taxonomy. The corpus is organised into the five traditional
+// divisions of the Aristotelian corpus (Logic, Natural Philosophy,
+// Metaphysics, Moral & Political Philosophy, Rhetoric & Poetics), some with
+// sub-divisions. A `CategoryWork` is either an existing work (`id`, resolved
+// against WORKS) or a not-yet-added work shown as a "coming soon" placeholder
+// (`title` only). This drives only the home index; routing/search are unchanged.
+
+export interface CategoryWork {
+  id?: string;      // an existing work (in WORKS) — clickable
+  title?: string;   // a planned work — greyed-out placeholder
+}
+
+export interface SubCategory {
+  ref: string;      // e.g. 'II.a'
+  label: string;    // e.g. 'Major Works on Nature'
+  works: CategoryWork[];
+}
+
+export interface Category {
+  numeral: string;  // 'I'
+  title: string;    // 'Logic (Organon)'
+  works?: CategoryWork[];          // direct works (no sub-division)
+  subcategories?: SubCategory[];
+}
+
+export const CATEGORIES: Category[] = [
+  {
+    numeral: 'I',
+    title: 'Logic (Organon)',
+    works: [
+      { id: 'Cat' },
+      { id: 'Int' },
+      { id: 'APr' },
+      { id: 'APo' },
+      { id: 'Top' },
+      { id: 'SE' },
+    ],
+  },
+  {
+    numeral: 'II',
+    title: 'Natural Philosophy',
+    subcategories: [
+      {
+        ref: 'II.a',
+        label: 'Major Works on Nature',
+        works: [
+          { title: 'Physics' },
+          { title: 'On the Heavens' },
+          { title: 'On Generation and Corruption' },
+          { title: 'Meteorology' },
+          { id: 'DA' },
+        ],
+      },
+      {
+        ref: 'II.b',
+        label: 'Short Works on Nature (Parva Naturalia)',
+        works: [
+          { title: 'Sense and Sensibilia' },
+          { title: 'On Memory' },
+          { title: 'On Sleep' },
+          { title: 'On Dreams' },
+          { title: 'On Divination in Sleep' },
+          { title: 'On Length and Shortness of Life' },
+          { title: 'On Youth, Old Age, Life and Death, and Respiration' },
+        ],
+      },
+      {
+        ref: 'II.c',
+        label: 'Biological Works',
+        works: [
+          { title: 'History of Animals' },
+          { title: 'Parts of Animals' },
+          { title: 'Movement of Animals' },
+          { title: 'Progression of Animals' },
+          { title: 'Generation of Animals' },
+        ],
+      },
+    ],
+  },
+  {
+    numeral: 'III',
+    title: 'Metaphysics',
+    works: [
+      { id: 'Meta' },
+    ],
+  },
+  {
+    numeral: 'IV',
+    title: 'Moral and Political Philosophy',
+    works: [
+      { id: 'EN' },
+      { title: 'Eudemian Ethics' },
+      { id: 'Pol' },
+    ],
+  },
+  {
+    numeral: 'V',
+    title: 'Rhetoric and Poetics',
+    works: [
+      { id: 'Rhet' },
+      { id: 'Poet' },
+    ],
+  },
+];
