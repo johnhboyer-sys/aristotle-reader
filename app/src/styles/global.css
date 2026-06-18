@@ -980,6 +980,10 @@ body {
   /* The "Translation" label pushes the picker off the edge on a phone — the
      dropdown's own options make its purpose clear, so drop the label. */
   .trans-label { display: none; }
+  /* Compare on a phone stacks into one column (each block carries its own
+     inline label), so the sticky's column-name row is redundant — hide it.
+     Needs the .trans-compare specificity to beat the desktop compare rule. */
+  .reader-body.trans-compare .rc-cite { display: none; }
 
   /* Bigger, easier-to-hit reading-view toggle (the main control on a phone, now
      that English-only is the default). */
