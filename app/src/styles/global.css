@@ -221,6 +221,8 @@ body {
   border-color: var(--accent);
   color: var(--accent);
 }
+.theme-icon { display: inline-flex; }
+.theme-icon svg { display: block; }
 /* On desktop the book-nav and chapter-nav dissolve their own boxes
    (display: contents) so the Bekker jump, book links and chapter chips all flow
    as ONE wrapping stream in the nav-panel — the chapters fill the line next to

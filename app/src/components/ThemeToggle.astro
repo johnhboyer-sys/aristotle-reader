@@ -9,7 +9,7 @@
   aria-label="Toggle night mode"
   title="Toggle night mode"
 >
-  <span class="theme-icon" aria-hidden="true">🌙</span>
+  <span class="theme-icon" aria-hidden="true"></span>
 </button>
 
 <script is:inline>
@@ -19,9 +19,17 @@
     var icon = btn.querySelector('.theme-icon');
     var mql = window.matchMedia('(prefers-color-scheme: dark)');
 
+    // Sleek, stroked line icons (Feather-style) that inherit currentColor, so
+    // they read as a refined monochrome glyph rather than a gold emoji.
+    var MOON =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var SUN =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.4 4.4l1.6 1.6M18 18l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.4 19.6l1.6-1.6M18 6l1.6-1.6"/></svg>';
+
     function render() {
       var dark = document.documentElement.dataset.theme === 'dark';
-      icon.textContent = dark ? '☀︎' : '🌙';
+      // Icon shows the theme you'll switch TO: moon in light, sun in dark.
+      icon.innerHTML = dark ? SUN : MOON;
       btn.setAttribute('aria-pressed', String(dark));
     }
     render();
