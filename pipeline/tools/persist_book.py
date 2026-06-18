@@ -13,21 +13,24 @@ sys.path.insert(0, str(REPO / "pipeline"))
 from aristotle_pipeline.align.gloss_review import write_html
 from aristotle_pipeline.align.reference import default_target
 
+import os
+
 BOOK = int(sys.argv[1])
-vid, _ = default_target("EN")
-RES = REPO / "alignment-results/ross"
+WORK = os.environ.get("WORK", "EN")
+vid, _ = default_target(WORK)
+RES = REPO / "alignment-results" / vid
 for sub in ("maps", "glosses", "review"):
     (RES / sub).mkdir(parents=True, exist_ok=True)
 
-amap = json.loads((REPO / "build/align" / f"EN_{vid}_gloss_map.json").read_text())
+amap = json.loads((REPO / "build/align" / f"{WORK}_{vid}_gloss_map.json").read_text())
 book_map = {k: v for k, v in amap.items() if int(k.split(":")[0]) == BOOK}
 (RES / "maps" / f"book-{BOOK:02d}.json").write_text(
     json.dumps(book_map, ensure_ascii=False, indent=1), encoding="utf-8")
 
-for g in sorted((REPO / "build/align/glosses/EN").glob(f"{BOOK}-*.json")):
+for g in sorted((REPO / "build/align/glosses" / WORK).glob(f"{BOOK}-*.json")):
     shutil.copy(g, RES / "glosses" / g.name)
 
-html = write_html("EN", [BOOK])
+html = write_html(WORK, [BOOK])
 shutil.copy(html, RES / "review" / f"book-{BOOK:02d}.html")
 
 # stats
@@ -42,4 +45,4 @@ for rec in book_map.values():
 real = sum(conf.values())
 print(f"book {BOOK:02d}: chapters={len(book_map)} tiers={dict(tiers)}")
 print(f"  real ticks (column+five_line)={real}  by confidence={dict(conf)}")
-print(f"  saved -> alignment-results/ross/{{maps,glosses,review}}/book-{BOOK:02d}.*")
+print(f"  saved -> alignment-results/{vid}/{{maps,glosses,review}}/book-{BOOK:02d}.*")

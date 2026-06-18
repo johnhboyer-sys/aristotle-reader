@@ -40,6 +40,10 @@ english:
     dir: pol-jowett
     books: 8
     chapter_marker: part_roman
+    # Real per-line Bekker ticks for Jowett, from the gloss/verifier aligner
+    # (docs/gloss-aligner-recipe.md): {bekker, at: verbatim Jowett phrase},
+    # resolved per column → dense gutter, replacing the interpolated estimate.
+    anchors: pol-jowett/anchors.yaml
 
 books:
   - { n: 1, start: "1252a1",  end: "1260b24" }

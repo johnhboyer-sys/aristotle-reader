@@ -17,11 +17,14 @@ sys.path.insert(0, str(REPO / "pipeline"))
 
 from aristotle_pipeline.align.reference import default_target
 
+import os
+
 BOOK = int(sys.argv[1])
-vid, ross = default_target("EN")
-OUT = REPO / "build/align/verify_out/EN"
-META = json.loads((REPO / "build/align/verify_meta.json").read_text())
-OVR_PATH = REPO / "build/align" / f"EN_{vid}_gloss_overrides.json"
+WORK = os.environ.get("WORK", "EN")
+vid, ross = default_target(WORK)
+OUT = REPO / "build/align/verify_out" / WORK
+META = json.loads((REPO / "build/align" / f"verify_meta_{WORK}.json").read_text())
+OVR_PATH = REPO / "build/align" / f"{WORK}_{vid}_gloss_overrides.json"
 overrides = json.loads(OVR_PATH.read_text()) if OVR_PATH.exists() else {}
 
 _CIT = re.compile(r"(\d+[ab])(\d+)")

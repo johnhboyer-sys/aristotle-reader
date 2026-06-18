@@ -25,12 +25,13 @@ CHAP_FILTER = set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None
 # chapter text, so flagged-but-reliable ticks that snapped to a sentence start
 # (e.g. 1094a20) also get direct-reading placement.
 ALL = bool(os.environ.get("VERIFY_ALL"))
-TASK_DIR = REPO / "build/align/verify_tasks/EN"
+WORK = os.environ.get("WORK", "EN")
+TASK_DIR = REPO / "build/align/verify_tasks" / WORK
 TASK_DIR.mkdir(parents=True, exist_ok=True)
-META = REPO / "build/align/verify_meta.json"
+META = REPO / "build/align" / f"verify_meta_{WORK}.json"
 
-_vid, ross = default_target("EN")
-chapters = {(c.book, int(c.chapter)): c for c in load_gloss_chapters(ross, "EN", [BOOK])}
+_vid, ross = default_target(WORK)
+chapters = {(c.book, int(c.chapter)): c for c in load_gloss_chapters(ross, WORK, [BOOK])}
 
 # Greek line text + window citations per chapter (for the verifier's context).
 greek = {}
@@ -44,7 +45,7 @@ n_tasks = n_unc = 0
 for (b, cp), cr in sorted(chapters.items()):
     if CHAP_FILTER and str(cp) not in CHAP_FILTER:
         continue
-    g = load_gloss("EN", b, cp)
+    g = load_gloss(WORK, b, cp)
     gk = greek.get((b, cp), {})
     wc = wins.get((b, cp), {})
     text = cr.ross_text
