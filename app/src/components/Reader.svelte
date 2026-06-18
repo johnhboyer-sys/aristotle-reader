@@ -50,6 +50,25 @@
     try { localStorage.setItem(TRANS_KEY, t); } catch {}
   }
 
+  // ── Citation shown in the controls strip ─────────────────────────────────
+  // The strip is filled with the bibliographic provenance so it reads as a
+  // header, not a lone toggle. The Greek source comes from the registry; the
+  // translation citation from the currently-selected translation. `short` forms
+  // ("Ross (1908)") sit beside the controls in bilingual view; the full forms
+  // fill the otherwise-empty bar in Greek-only / English-only.
+  const greekSrc = workMeta?.greekSource;
+  $: selectedTrans = trans === 'compare'
+    ? null
+    : (translations.find(t => t.id === trans) ?? null);
+  const yearOf = (s: string) => { const m = s.match(/(\d{4})/); return m ? m[1] : ''; };
+  const citeShort = (t: { short: string; name: string } | null | undefined) => {
+    if (!t) return '';
+    const y = yearOf(t.name);
+    return y ? `${t.short} (${y})` : t.short;
+  };
+  // Bilingual strip: short Greek source · short translation (omit either if absent).
+  $: pairText = [greekSrc?.short, citeShort(selectedTrans)].filter(Boolean).join(' · ');
+
   type View = 'both' | 'greek' | 'english';
   let view: View = 'both';
   async function setView(v: View) {
@@ -98,7 +117,11 @@
     const els = Array.from(document.querySelectorAll(greekVisible ? '.greek-line[id]' : '.segment[id]'));
     if (!els.length) return;
     const headerH = Math.round(document.querySelector('.page-header')?.getBoundingClientRect().height ?? 60);
-    // Detection band: a strip just below the sticky header. The intersecting
+    // The reading area starts below the sticky header AND the sticky controls
+    // strip pinned beneath it, so the detection band begins at the strip's bottom.
+    const ctrlBottom = document.querySelector('.reader-controls')?.getBoundingClientRect().bottom ?? 0;
+    const topInset = Math.max(headerH, Math.round(ctrlBottom));
+    // Detection band: a strip just below the sticky chrome. The intersecting
     // anchor highest on screen is the line currently at the top of the reading area.
     spyObserver = new IntersectionObserver((entries) => {
       for (const e of entries) spyState.set(e.target, e.isIntersecting ? e.boundingClientRect.top : null);
@@ -108,7 +131,7 @@
         if (top != null && top < bestTop) { bestTop = top; best = el; }
       }
       if (best) updateHash(citeOf(best));
-    }, { rootMargin: `-${headerH + 8}px 0px -82% 0px`, threshold: 0 });
+    }, { rootMargin: `-${topInset + 8}px 0px -82% 0px`, threshold: 0 });
     els.forEach((el) => spyObserver!.observe(el));
   }
 
@@ -534,26 +557,41 @@
   {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main">
     <div class="reader-controls">
-      {#if view !== 'greek' && translations.length > 1}
-        <label class="trans-picker">
-          <span class="trans-label">Translation</span>
-          <select bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
-            {#each translations as t}
-              <option value={t.id}>{t.short}</option>
-            {/each}
-            {#if canCompare}<option value="compare">Compare both</option>{/if}
-          </select>
-        </label>
-      {/if}
-      <div class="view-toggle" role="group" aria-label="Reading view">
-        <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
-        <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
-        <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
+      <div class="rc-cite">
+        {#if view === 'greek'}
+          {#if greekSrc}<span class="rc-greek">{greekSrc.full}</span>{/if}
+        {:else if trans === 'compare'}
+          {#if view === 'both'}<span class="rc-col-spacer" aria-hidden="true"></span>{/if}
+          <span class="rc-col-name">{citeShort(engSlot)}</span>
+          <span class="rc-col-name">{citeShort(rossSlot)}</span>
+        {:else if view === 'both'}
+          <span class="rc-pair">{pairText}</span>
+        {:else if selectedTrans}
+          <span class="rc-full">{selectedTrans.name}</span>
+        {/if}
+      </div>
+      <div class="rc-controls">
+        {#if view !== 'greek' && translations.length === 1}
+          <span class="rc-trans-abbr">{citeShort(translations[0])}</span>
+        {/if}
+        {#if view !== 'greek' && translations.length > 1}
+          <label class="trans-picker">
+            <span class="trans-label">Translation</span>
+            <select bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+              {#each translations as t}
+                <option value={t.id}>{t.short}</option>
+              {/each}
+              {#if canCompare}<option value="compare">Compare both</option>{/if}
+            </select>
+          </label>
+        {/if}
+        <div class="view-toggle" role="group" aria-label="Reading view">
+          <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
+          <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
+          <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
+        </div>
       </div>
     </div>
-    {#if view !== 'greek' && translations.length === 1}
-      <p class="trans-attribution">Translation: {translations[0].name}</p>
-    {/if}
     {#if hasApproxTicks}
       <p class="bekker-note">
         Greek line numbers are exact. The translations carry no Bekker numbers of

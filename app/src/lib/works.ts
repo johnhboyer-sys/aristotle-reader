@@ -29,6 +29,10 @@ export interface Work {
   books: number;
   bookLabels: string[];   // per-book display labels (Roman for EN, Arabic for DA)
   greekEdition: string;
+  // The print edition the TLG text was digitised from, in two lengths: `short`
+  // for the reader's bilingual strip, `full` for the Greek-only strip and the
+  // Texts & Licences page (both driven off this one field so they can't drift).
+  greekSource: { short: string; full: string };
   translations: TranslationRef[];
   blurb: string;    // one line for the home index
 }
@@ -57,6 +61,10 @@ export const WORKS: Work[] = [
     books: 1,
     bookLabels: ['1'],
     greekEdition: 'Minio-Paluello, Aristotelis Categoriae (OCT, 1949)',
+    greekSource: {
+      short: 'Minio-Paluello (OCT, 1949)',
+      full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
+    },
     // Edghill (1928) + Taylor (1812) are public domain and ship publicly. Ackrill
     // (1963) is US-copyright: carried in Cat.yaml for the local build and gated
     // out of the public deploy (private flag + Cat-public.yaml). All three are
@@ -76,6 +84,10 @@ export const WORKS: Work[] = [
     books: 1,
     bookLabels: ['1'],
     greekEdition: 'Minio-Paluello, Aristotelis De Interpretatione (OCT, 1949)',
+    greekSource: {
+      short: 'Minio-Paluello (OCT, 1949)',
+      full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
+    },
     // Edghill (1928) + Taylor (1812) public domain; Ackrill (1963) US-copyright,
     // local build only (same gating as Categories). Taylor ch14 reconstructed
     // from the 1812 Organon scan (CLAA's ch14 page was a broken duplicate).
@@ -94,6 +106,10 @@ export const WORKS: Work[] = [
     books: 3,
     bookLabels: ['I', 'II', 'III'],
     greekEdition: 'Ross, Aristotelis De Anima (OCT, 1956)',
+    greekSource: {
+      short: 'Ross (OCT, 1956)',
+      full: 'W. D. Ross, ed. Aristotle, De Anima. Oxford: Clarendon Press (Oxford Classical Texts), 1956.',
+    },
     translations: [
       { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
     ],
@@ -109,6 +125,10 @@ export const WORKS: Work[] = [
     // "lesser alpha" (α elatton), distinct from Book 1 (Α).
     bookLabels: ['Α','α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν'],
     greekEdition: 'Ross, Aristotle’s Metaphysics (OCT, 1924)',
+    greekSource: {
+      short: 'Ross (OCT, 1953)',
+      full: 'W. D. Ross, ed. Aristotle’s Metaphysics. 2 vols. Oxford: Clarendon Press, 1953.',
+    },
     // Public build ships the public-domain Ross (1924) only. The copyrighted
     // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
     // for the local/private build and are NOT deployed (see publish-plan).
@@ -125,6 +145,10 @@ export const WORKS: Work[] = [
     books: 2,
     bookLabels: ROMAN.slice(0, 2),
     greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
+    greekSource: {
+      short: 'Ross (OCT, 1964)',
+      full: 'W. D. Ross, ed. Aristotelis analytica priora et posteriora. Oxford: Clarendon Press, 1964.',
+    },
     translations: [
       { id: 'jenkinson', name: 'A. J. Jenkinson (Oxford, 1928)', short: 'Jenkinson', slot: 'english' },
     ],
@@ -138,6 +162,10 @@ export const WORKS: Work[] = [
     books: 2,
     bookLabels: ROMAN.slice(0, 2),
     greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
+    greekSource: {
+      short: 'Ross (OCT, 1964)',
+      full: 'W. D. Ross, ed. Aristotelis analytica priora et posteriora. Oxford: Clarendon Press, 1964.',
+    },
     translations: [
       { id: 'mure', name: 'G. R. G. Mure (Oxford, 1928)', short: 'Mure', slot: 'english' },
     ],
@@ -151,6 +179,10 @@ export const WORKS: Work[] = [
     books: 8,
     bookLabels: ROMAN.slice(0, 8),
     greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
+    greekSource: {
+      short: 'Ross (OCT, 1958)',
+      full: 'W. D. Ross, ed. Aristotelis topica et sophistici elenchi. Oxford: Clarendon Press, 1958.',
+    },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
     ],
@@ -164,6 +196,10 @@ export const WORKS: Work[] = [
     books: 1,
     bookLabels: ['1'],
     greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
+    greekSource: {
+      short: 'Ross (OCT, 1958)',
+      full: 'W. D. Ross, ed. Aristotelis topica et sophistici elenchi. Oxford: Clarendon Press, 1958.',
+    },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
     ],
@@ -177,6 +213,10 @@ export const WORKS: Work[] = [
     books: 10,
     bookLabels: ROMAN.slice(0, 10),
     greekEdition: 'Bywater, Aristotelis Ethica Nicomachea (OCT, 1894)',
+    greekSource: {
+      short: 'Bywater (OCT, 1894)',
+      full: 'Ingram Bywater, ed. Aristotelis Ethica Nicomachea. Oxford: Clarendon Press (Oxford Classical Texts), 1894; repr. 1962.',
+    },
     translations: [
       { id: 'rackham', name: 'H. Rackham (Loeb, 1926)', short: 'Rackham', slot: 'english' },
       { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'ross' },
@@ -191,6 +231,10 @@ export const WORKS: Work[] = [
     books: 8,
     bookLabels: ROMAN.slice(0, 8),
     greekEdition: 'Ross, Aristotelis Politica (OCT, 1957)',
+    greekSource: {
+      short: 'Ross (OCT, 1957)',
+      full: 'W. D. Ross, ed. Aristotelis politica. Oxford: Clarendon Press, 1957.',
+    },
     // Public build ships the public-domain Jowett (1885) only. The copyrighted
     // Rackham (Loeb 1932) primary + aligned-Jowett overlay live in Pol.yaml for
     // the local/private build and are NOT deployed (see publish-plan).
@@ -207,6 +251,10 @@ export const WORKS: Work[] = [
     books: 3,
     bookLabels: ROMAN.slice(0, 3),
     greekEdition: 'Ross, Aristotelis Ars Rhetorica (OCT, 1959)',
+    greekSource: {
+      short: 'Ross (OCT, 1959)',
+      full: 'W. D. Ross, ed. Aristotelis ars rhetorica. Oxford: Clarendon Press, 1959.',
+    },
     translations: [
       { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
     ],
@@ -220,6 +268,10 @@ export const WORKS: Work[] = [
     books: 1,
     bookLabels: ['1'],
     greekEdition: 'Kassel, Aristotelis De Arte Poetica (OCT, 1965)',
+    greekSource: {
+      short: 'Kassel (OCT, 1966)',
+      full: 'R. Kassel, ed. Aristotelis de arte poetica liber. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
+    },
     translations: [
       { id: 'fyfe', name: 'W. H. Fyfe (Loeb, 1932)', short: 'Fyfe', slot: 'english' },
     ],

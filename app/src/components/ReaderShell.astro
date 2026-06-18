@@ -67,28 +67,33 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
         <WorkSwitcher work={workId} client:load />
       </div>
       <div class="bar-actions">
+        <a class="header-search" href={`${base}/search`} title="Search Greek &amp; English" aria-label="Search Greek &amp; English">
+          <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.8" cy="6.8" r="4.6"/><line x1="10.4" y1="10.4" x2="14" y2="14"/></svg>
+          <span class="hs-text">Search</span>
+        </a>
         <button type="button" class="toc-toggle" aria-expanded="false" aria-controls="toc-sidebar">
           <span class="toc-toggle-icon" aria-hidden="true">☰</span><span class="toc-toggle-text">Contents</span>
         </button>
-        <ThemeToggle />
         <HelpButton client:load />
+        <ThemeToggle />
       </div>
     </div>
     <div class="nav-panel" id="nav-panel">
       <BekkerJump work={workId} client:load />
-      <nav class="book-nav" aria-label="Navigation">
-        {!bookless && Array.from({ length: work.books }, (_, i) => (
-          <a
-            href={`${base}${workPath(workId, i + 1)}`}
-            class={i + 1 === n ? 'current' : ''}
-            aria-current={i + 1 === n ? 'page' : undefined}
-          >
-            {bookLabel(work, i + 1)}
-          </a>
-        ))}
-        <a href={`${base}/search`} class="search-link">Search</a>
-        <a href={`${base}/attribution`} class="search-link">Texts &amp; Licences</a>
-      </nav>
+      {!bookless && (
+        <nav class="book-nav" aria-label="Books">
+          <span class="book-nav-label">Books</span>
+          {Array.from({ length: work.books }, (_, i) => (
+            <a
+              href={`${base}${workPath(workId, i + 1)}`}
+              class={i + 1 === n ? 'current' : ''}
+              aria-current={i + 1 === n ? 'page' : undefined}
+            >
+              {bookLabel(work, i + 1)}
+            </a>
+          ))}
+        </nav>
+      )}
       {chapters.length > 0 && (
         <nav class="chapter-nav" aria-label={bookless ? 'Chapters' : `Book ${label} chapters`}>
           <span class="chapter-nav-label">{bookless ? 'Chapters' : `Book ${label} · Chapters`}</span>
@@ -200,6 +205,17 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
       setToc(false);
       window.dispatchEvent(new CustomEvent('open-help'));
     });
+
+    // Publish the header's height as --header-h so the reader's sticky controls
+    // strip can pin directly beneath it. The header is two rows on desktop and
+    // its height shifts with viewport width and work switches, so re-measure.
+    const setHeaderH = () => {
+      if (header) document.documentElement.style.setProperty(
+        '--header-h', `${Math.round(header.getBoundingClientRect().height)}px`);
+    };
+    setHeaderH();
+    if (header && 'ResizeObserver' in window) new ResizeObserver(setHeaderH).observe(header);
+    window.addEventListener('resize', setHeaderH);
   </script>
 
   <Reader work={workId} bookNum={n} client:load />

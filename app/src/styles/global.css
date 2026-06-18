@@ -75,6 +75,9 @@
 :root[data-theme="dark"] .trans-picker select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23cf9d68' stroke-width='1.5'/></svg>");
 }
+:root[data-theme="dark"] .work-switcher {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.75l5 5 5-5' fill='none' stroke='%23cf9d68' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
 
 html { font-size: 16px; }
 
@@ -125,34 +128,72 @@ body {
 .header-title .home-link:hover { color: var(--accent-light); }
 .header-title .title-sep { color: var(--text-light); font-size: 0.85rem; }
 .header-title .header-static { font-weight: 600; color: var(--text); font-size: 0.95rem; }
+/* The work switcher reads as a real control: a quiet pill with a persistent
+   border and one clear chevron (not the old faked double-triangle caret). */
 .work-switcher {
   font-family: var(--font-ui);
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 0.1rem 1.4rem 0.1rem 0.3rem;
+  background-color: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.22rem 1.85rem 0.22rem 0.6rem;
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--text-mid) 50%),
-                    linear-gradient(135deg, var(--text-mid) 50%, transparent 50%);
-  background-position: right 0.55rem center, right 0.4rem center;
-  background-size: 5px 5px, 5px 5px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.75l5 5 5-5' fill='none' stroke='%237a4e2d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat: no-repeat;
+  background-position: right 0.6rem center;
 }
-.work-switcher:hover { border-color: var(--border); background-color: var(--col-bg); }
+.work-switcher:hover { border-color: var(--accent); color: var(--accent); }
 .work-switcher:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 1px; }
 
-/* Desktop: the bar/panel wrappers dissolve so h1, the Bekker box, book-nav and
-   chapter-nav lay out as direct flex children of .page-header (unchanged). The
-   menu button is mobile-only. The mobile media query re-materialises the
-   wrappers into a collapsible menu. */
-.header-bar,
-.nav-panel { display: contents; }
+/* Desktop: two intentional rows. The header-bar (identity + global actions) and
+   the nav-panel (navigation) each take a full row of the wrapping .page-header,
+   so the book selector reads as navigation, not a top-bar item. (.page-header
+   itself is left as a wrapping flex row — it's shared by the attribution/search/
+   home headers, which have no bar/panel wrappers.) The mobile media query hides
+   the nav-panel; navigation there lives in the Contents sidebar. */
+.header-bar {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.nav-panel {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+}
 .nav-toggle { display: none; }
+
+/* Search action in the top-bar cluster: magnifying-glass icon + label on
+   desktop (icon-only on mobile — see the responsive block). */
+.header-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0.4rem 0.7rem;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--col-bg);
+  color: var(--text-mid);
+}
+.header-search:hover { border-color: var(--accent); color: var(--accent); }
+.header-search .hs-icon { display: block; flex-shrink: 0; }
 
 /* Theme (night-mode) toggle — sits next to the wordmark on desktop, and is
    grouped with the menu button on mobile (see .bar-actions). */
@@ -184,10 +225,16 @@ body {
   font-family: var(--font-ui);
   font-size: 0.8rem;
   color: var(--text-mid);
-  margin-left: auto;
   display: flex;
+  align-items: baseline;
   gap: 0.3rem;
   flex-wrap: wrap;
+}
+.book-nav-label {
+  color: var(--text-light);
+  font-weight: 600;
+  letter-spacing: .03em;
+  margin-right: 0.4rem;
 }
 .page-header .book-nav a {
   color: var(--text-mid);
@@ -307,21 +354,59 @@ body {
 
 /* ── Reading-view toggle (bilingual / Greek only / English only) ──── */
 
+/* The reading controls live in a strip pinned just beneath the sticky header,
+   so the view toggle / translation picker stay in reach while reading. The
+   strip is filled out with the source citation (left) so it reads as a header
+   band rather than a lone floating toggle; the controls sit at the right. */
 .reader-controls {
+  position: sticky;
+  top: var(--header-h, 92px);
+  z-index: 5;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
   flex-wrap: wrap;
+  margin: 0 0 1.5rem;
+  padding: 0.5rem 0;
+  background: var(--page-bg);
+  border-bottom: 1px solid var(--border);
 }
-
-/* Single-translation works have no picker — name the translator here instead. */
-.trans-attribution {
-  text-align: right;
-  margin: -1rem 0 1.5rem;
+.rc-cite {
   font-family: var(--font-ui);
   font-size: 0.76rem;
+  color: var(--text-light);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.rc-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+/* The abbreviated translation name shown beside the toggle on mobile, where the
+   single-translation works have no picker and the citation strip is hidden. */
+.rc-trans-abbr {
+  display: none;
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  color: var(--text-light);
+}
+
+/* Compare: stack the controls above a row of column names aligned to the
+   columns below (Greek | primary | secondary), matching the seg-row grid. */
+.reader-body.trans-compare .reader-controls { flex-direction: column; align-items: stretch; }
+.reader-body.trans-compare .rc-controls { order: -1; justify-content: flex-end; }
+.reader-body.trans-compare .rc-cite { display: grid; gap: 0 2rem; align-items: baseline; }
+.reader-body.trans-compare.view-both .rc-cite { grid-template-columns: 1fr 1fr 1fr; }
+.reader-body.trans-compare.view-english .rc-cite { grid-template-columns: 1fr 1fr; }
+.rc-col-name {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
   color: var(--text-light);
 }
 
@@ -431,7 +516,8 @@ body {
   margin-bottom: 2.5rem;
   border-top: 1px solid var(--border);
   padding-top: 0.8rem;
-  scroll-margin-top: 6rem;
+  /* clear the sticky header + the controls strip when jumped to */
+  scroll-margin-top: calc(var(--header-h, 92px) + 3.5rem);
 }
 
 .seg-row {
@@ -458,7 +544,7 @@ body {
   align-items: center;
   gap: 0.75rem;
   margin: 1.4rem 0 0.9rem;
-  scroll-margin-top: 6rem;
+  scroll-margin-top: calc(var(--header-h, 92px) + 3.5rem);
 }
 .chapter-head::after {
   content: "";
@@ -795,8 +881,10 @@ body {
     justify-content: space-between;
     gap: 0.5rem;
   }
-  /* Contents goes icon-only so the title + ☰ + ☾ always fit. */
+  /* Contents + Search go icon-only so the title + ☰ + 🔍 + ☾ always fit. */
   .toc-toggle-text { display: none; }
+  .header-search .hs-text { display: none; }
+  .header-search { padding: 0.4rem 0.5rem; }
   /* Drop the "Aristotle ›" prefix (the sidebar has an "All works" link) and let
      the work title ellipsize rather than push the icons off-screen. */
   .header-title { min-width: 0; flex: 1 1 auto; overflow: hidden; }
@@ -841,9 +929,16 @@ body {
 
   .seg-ref { font-size: 0.72rem; }
 
+  /* On a phone the strip drops the citation line (too tall) and keeps just the
+     controls, right-aligned. Single-translation works (no picker) show the
+     abbreviated translation name beside the toggle instead. */
+  .rc-cite { display: none; }
+  .rc-trans-abbr { display: inline-block; }
+  .reader-controls { justify-content: flex-end; }
+
   /* Bigger, easier-to-hit reading-view toggle (the main control on a phone, now
      that English-only is the default). */
-  .view-toggle { margin-bottom: 1rem; }
+  .view-toggle { margin-bottom: 0; }
   .view-toggle button {
     font-size: 0.82rem;
     padding: 0.45rem 0.85rem;
@@ -1027,10 +1122,13 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 .toc-actions .bekker-toggle:hover { background: var(--border); }
 .toc-actions .bekker-jump { flex-wrap: wrap; padding: 0.45rem 1rem; gap: 0.4rem; }
 
-/* The action bands are mobile-only; desktop has the same items inline in the
-   header. */
+/* On desktop the header already carries Search + Bekker (top band) and Help (a
+   top-bar icon), so those are hidden here. Texts & Licences has no header home,
+   so its bottom-band row is kept — sitting at the foot of the outline, as on
+   mobile. */
 @media (min-width: 681px) {
-  .toc-actions { display: none; }
+  .toc-actions-top { display: none; }
+  .toc-actions-bottom .toc-help { display: none; }
 }
 
 .toc-outline {
