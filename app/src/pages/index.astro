@@ -14,7 +14,7 @@ const FEEDBACK_URL = 'https://x.com/johnhboyer';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
-  <title>Aristotle — Greek reader</title>
+  <title>The Aristotle Reader</title>
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,7 +25,7 @@ const FEEDBACK_URL = 'https://x.com/johnhboyer';
   <main class="corpus">
     <header class="masthead">
       <p class="eyebrow">Aristotle</p>
-      <h1>The Greek Library</h1>
+      <h1>The Aristotle Reader</h1>
       <p class="lede">A parallel-text reader with morphology, dictionary, and Bekker citation. Choose a work to begin.</p>
       <p class="wip-note">
         <strong>Work in progress.</strong> The corpus is expanding and the
@@ -33,6 +33,15 @@ const FEEDBACK_URL = 'https://x.com/johnhboyer';
         suggestion? <a href={FEEDBACK_URL}>Let me know</a>.
       </p>
     </header>
+
+    <a class="search-card" href={`${base}/search`}>
+      <span class="search-card-name">Search the Corpus</span>
+      <span class="search-card-meta">Greek &amp; English · all works</span>
+      <span class="chev-right" aria-hidden="true">›</span>
+    </a>
+
+    <hr class="home-rule" />
+    <h2 class="works-heading">Open a Work</h2>
 
     <ul class="works">
       {WORKS.map((w) => (
@@ -125,6 +134,55 @@ const FEEDBACK_URL = 'https://x.com/johnhboyer';
       max-width: 28rem;
       margin: .9rem auto 0;
       line-height: 1.5;
+    }
+
+    .search-card {
+      display: flex;
+      align-items: baseline;
+      gap: .75rem;
+      background: var(--col-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.05rem 1.3rem;
+      text-decoration: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .search-card:hover { border-color: var(--accent-light); box-shadow: 0 6px 22px rgba(0,0,0,.05); }
+    .search-card-name {
+      font-family: var(--font-english);
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+    .search-card-meta {
+      font-family: var(--font-ui);
+      font-size: .76rem;
+      letter-spacing: .04em;
+      color: var(--text-light);
+      text-transform: uppercase;
+    }
+    .search-card .chev-right {
+      margin-left: auto;
+      align-self: center;
+      color: var(--text-light);
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .search-card:hover .chev-right { color: var(--accent-light); }
+
+    .home-rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.6rem 0 1.3rem;
+    }
+    .works-heading {
+      font-family: var(--font-ui);
+      font-size: .78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--text-light);
+      margin-bottom: 1rem;
     }
 
     .works { list-style: none; display: flex; flex-direction: column; gap: .9rem; }

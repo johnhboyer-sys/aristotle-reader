@@ -46,6 +46,14 @@
     selectedWorks = selectedWorks; // reactivity
   }
 
+  // "Select all" reflects the true all-selected state: deselecting any single
+  // work flips it off automatically (no fire-and-forget flag). Toggling it on
+  // selects every work; toggling it off clears the selection.
+  $: allSelected = selectedWorks.size === WORKS.length;
+  function toggleAll() {
+    selectedWorks = allSelected ? new Set() : new Set(WORKS.map(w => w.id));
+  }
+
   // Results grouped Work → Book → chapter groups, in corpus then numeric order.
   $: groupsByWork = (() => {
     const byWork = new Map<string, Map<number, ChapterGroup[]>>();
@@ -363,6 +371,14 @@
 
     <div class="works-row" role="group" aria-label="Works to search">
       <span class="works-label">Works</span>
+      <button
+        type="button"
+        class="work-chip select-all"
+        class:on={allSelected}
+        aria-pressed={allSelected}
+        on:click={toggleAll}
+      >Select all</button>
+      <span class="works-divider" aria-hidden="true"></span>
       {#each WORKS as w}
         <button
           type="button"
@@ -599,6 +615,13 @@
     transition: background .12s ease, color .12s ease, border-color .12s ease;
   }
   .work-chip:hover { border-color: var(--accent-light); }
+  .work-chip.select-all { font-weight: 600; }
+  .works-divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--border);
+    margin: 0 0.2rem;
+  }
   .work-chip.on {
     background: var(--accent);
     border-color: var(--accent);

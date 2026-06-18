@@ -551,6 +551,9 @@
         <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
       </div>
     </div>
+    {#if view !== 'greek' && translations.length === 1}
+      <p class="trans-attribution">Translation: {translations[0].name}</p>
+    {/if}
     {#if hasApproxTicks}
       <p class="bekker-note">
         Greek line numbers are exact. The translations carry no Bekker numbers of

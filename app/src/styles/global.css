@@ -19,7 +19,8 @@
   --border:       #d8d0c4;
   --popup-bg:     #ffffff;
   --popup-shadow: 0 4px 24px rgba(0,0,0,.18);
-  --greek-hover:  #fff3e0;
+  --greek-hover:        rgba(0, 0, 0, 0.08);
+  --greek-hover-border: rgba(0, 0, 0, 0.15);
   --greek-active: #ffe0b2;
 
   /* Semantic colours used in a few hardcoded spots; aliased here so the dark
@@ -57,7 +58,8 @@
   --border:       #3a342b;
   --popup-bg:     #26221b;
   --popup-shadow: 0 6px 28px rgba(0,0,0,.55);
-  --greek-hover:  #38301f;
+  --greek-hover:        rgba(255, 255, 255, 0.10);
+  --greek-hover-border: rgba(255, 255, 255, 0.18);
   --greek-active: #4a3c22;
 
   --on-accent:    #211d18;   /* dark text reads on the lighter dark-mode accent */
@@ -314,6 +316,15 @@ body {
   flex-wrap: wrap;
 }
 
+/* Single-translation works have no picker — name the translator here instead. */
+.trans-attribution {
+  text-align: right;
+  margin: -1rem 0 1.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  color: var(--text-light);
+}
+
 /* Disclaimer: which translation Bekker numbers are fixed vs approximate. */
 .bekker-note {
   margin: -0.75rem 0 1.6rem;
@@ -528,12 +539,13 @@ body {
 
 .tok {
   cursor: pointer;
-  border-radius: 2px;
+  border: 1px solid transparent;
+  border-radius: 3px;
   padding: 0 0.1em;
-  transition: background 0.1s;
+  transition: background 0.1s, border-color 0.1s;
   white-space: pre;
 }
-.tok:hover  { background: var(--greek-hover); }
+.tok:hover  { background: var(--greek-hover); border-color: var(--greek-hover-border); }
 .tok.active { background: var(--greek-active); }
 .tok.hit    { background: var(--hit-bg); }
 
