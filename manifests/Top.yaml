@@ -1,0 +1,75 @@
+# Topics — pipeline manifest
+#
+# Standalone TLG export tlg0086044, Bekker 100a-164b, 8 books, 83 chapters.
+# Like De Anima / the Analytics:
+#   - chapter divisions from the First1KGreek Greek TEI, text-aligned onto the
+#     spine. Its books are plain digit divs (n="1".."8"), so the default
+#     book_subtype works and no grc_book restriction is needed.
+#   - English = W. A. Pickard-Cambridge (Oxford, 1928, public domain via the MIT
+#     archive), chapter-anchored archive prose with an interpolated gutter.
+# Every book after the first begins mid-column.
+
+work:
+  id: Top
+  title: "Topics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "044"
+  greek_edition: "Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)"
+  english_translation: "W. A. Pickard-Cambridge (Oxford, 1928)"
+
+bekker_range:
+  first_column: "100a"
+  last_column: "164b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg044.1st1K-grc1.xml"
+
+# W. A. Pickard-Cambridge's translation (MIT Internet Classics Archive): "Part N"
+# markers, one HTML file per book (18,11,6,6,9,14,5,14 chapters). Public domain
+# (1928 Oxford translation). NB: the MIT digitisation dropped the Book V "Part 9"
+# marker (its text survived, folded into Part 8); restored in book-05.html per
+# the printed Pickard-Cambridge so Book V matches the Greek's 9 chapters.
+english:
+  primary:
+    id: pickard
+    name: "W. A. Pickard-Cambridge (Oxford, 1928)"
+    model: archive
+    dir: "top-pickard"
+    books: 8
+    chapter_marker: part
+
+# Line numbers the OCT skips at the mid-column book boundaries (the Greek is
+# continuous across them — verified against the export), declared so the
+# validator passes.
+expected_line_gaps:
+  - { column: "120b", after: 8,  next: 12 }   # III→IV
+  - { column: "128b", after: 10, next: 14 }   # IV→V
+  - { column: "139a", after: 20, next: 24 }   # V→VI
+  - { column: "151b", after: 24, next: 28 }   # VI→VII
+
+mid_column_book_starts:
+  - { book: 2, column: "108b" }
+  - { book: 3, column: "116a" }
+  - { book: 4, column: "120b" }
+  - { book: 5, column: "128b" }
+  - { book: 6, column: "139a" }
+  - { book: 7, column: "151b" }
+  - { book: 8, column: "155b" }
+
+books:
+  - { n: 1, start: "100a18", end: "108b33" }
+  - { n: 2, start: "108b34", end: "116a2" }
+  - { n: 3, start: "116a3",  end: "120b11" }
+  - { n: 4, start: "120b12", end: "128b13" }
+  - { n: 5, start: "128b14", end: "139a23" }
+  - { n: 6, start: "139a24", end: "151b27" }
+  - { n: 7, start: "151b28", end: "155b2" }
+  - { n: 8, start: "155b3",  end: "164b19" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

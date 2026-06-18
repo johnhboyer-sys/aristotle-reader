@@ -275,16 +275,30 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 widx = _first_word_at(owner, mcol, mline)
                 if widx is not None:
                     loc, after = owner[widx], wstart[widx]
-            if loc is None and mcol is None and len(ow) >= 3:
+            if loc is None and mcol is None:
                 # Last resort for grc TEIs with no Bekker milestones (no fallback
-                # above): a 3-word opening match. A single orthographic divergence
-                # in word 4 otherwise drops the chapter (e.g. APr I.4, where the
-                # spine reads λέγωμεν for the TEI's λέγομεν). The monotonic `after`
-                # pointer keeps this from matching before the previous chapter.
-                p = joined.find(" ".join(ow[:3]), after)
-                if p >= 0:
-                    widx = joined[:p].count(" ")
-                    loc, after = owner[widx], wstart[widx]
+                # above). A single orthographic divergence in the opening words
+                # otherwise drops the chapter, and it bites at different offsets:
+                # APr I.4 diverges at word 4 (spine λέγωμεν vs TEI λέγομεν), so a
+                # 3-word prefix saves it; Top VIII.13 diverges at word 2 (spine
+                # δὲ vs TEI δ᾿), so we must skip leading particles and match a
+                # later window, then step back to the true opening. Longer windows
+                # are tried first (more specific), and the monotonic `after`
+                # pointer keeps a short window from matching before the previous
+                # chapter. The step-back assumes the skipped leading words exist
+                # in the spine (just spelled differently), which holds for elision.
+                for kk in (4, 3):
+                    for start in (0, 1, 2, 3):
+                        if len(ow) < start + kk:
+                            continue
+                        p = joined.find(" ".join(ow[start:start + kk]), after)
+                        if p >= 0:
+                            w = joined[:p].count(" ")
+                            loc = owner[max(0, w - start)]
+                            after = wstart[w]
+                            break
+                    if loc is not None:
+                        break
             if loc is None:
                 continue  # unmatched chapter (surfaced by the caller as a gap)
             col, line, word = loc

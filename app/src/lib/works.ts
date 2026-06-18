@@ -144,6 +144,19 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on demonstration, scientific knowledge, and first principles, in two books.',
   },
   {
+    id: 'Top',
+    title: 'Topics',
+    abbr: 'Top.',
+    author: 'Aristotle',
+    books: 8,
+    bookLabels: ROMAN.slice(0, 8),
+    greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
+    translations: [
+      { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
+    ],
+    blurb: 'Aristotle’s manual of dialectical argument and the topoi, in eight books.',
+  },
+  {
     id: 'EN',
     title: 'Nicomachean Ethics',
     abbr: 'EN',
