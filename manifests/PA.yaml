@@ -1,0 +1,74 @@
+# Parts of Animals (De Partibus Animalium) — pipeline manifest
+#
+# Aristotle's four-book treatise on the parts of animals (639a–697b). The Greek
+# spine is the TLG export; chapters come from the First1KGreek grc TEI (50 in
+# all), text-aligned onto the spine. English is William Ogle's Oxford 1882
+# translation via the MIT Internet Classics Archive, divided into "Part N"
+# chapters per book.
+#
+# Books II–IV each begin partway down a Bekker column (the previous book ends a
+# few lines up the same column): II at 646a8, III at 661a34, IV at 676a22.
+work:
+  id: PA
+  title: "Parts of Animals"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "030"
+  greek_edition: "Louis, Aristote: Les parties des animaux (Budé, 1956)"
+  english_translation: "William Ogle (Oxford, 1912)"
+
+bekker_range:
+  first_column: "639a"
+  last_column: "697b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg030.1st1K-grc1.xml"
+  # Two Book IV chapter starts the grc text-alignment misses, restored so the
+  # Greek matches the English 5/17/15/14 (Bekker/Barnes/Lennox/Ogle):
+  #  - ch12 (the birds chapter): First1KGreek opens it "Οἱ δʼ ὄρνιθες ἀλλήλων…",
+  #    but the TLG/Louis spine has a different recension's wording at 692b3
+  #    ("Ἐν δὲ τοῖς ὄρνισιν ἡ πρὸς ἄλληλα διαφορά…"), so the text match fails.
+  #  - ch14 (the Libyan-ostrich coda) at 697b14, which First1KGreek folds into 13.
+  extra:
+    - { n: 12, book: 4, bekker: "692b3" }
+    - { n: 14, book: 4, bekker: "697b14" }
+
+english:
+  primary:
+    id: ogle
+    name: "William Ogle (Oxford, 1882)"
+    model: archive
+    dir: "pa-ogle"
+    books: 4
+    chapter_marker: number
+
+mid_column_book_starts:
+  - { book: 2, column: "646a" }
+  - { book: 3, column: "661a" }
+  - { book: 4, column: "676a" }
+
+# Mid-book Bekker line-number skips in the TLG text (faithful to the edition).
+expected_line_gaps:
+  - { column: "668b", after: 12, next: 15 }
+  - { column: "669b", after: 2,  next: 5  }
+  - { column: "670b", after: 7,  next: 10 }
+  - { column: "674b", after: 27, next: 30 }
+  - { column: "677a", after: 32, next: 35 }
+  - { column: "677b", after: 17, next: 20 }
+  - { column: "678a", after: 18, next: 21 }
+  - { column: "678b", after: 5,  next: 7  }
+  - { column: "689a", after: 12, next: 15 }
+  - { column: "697b", after: 27, next: 30 }
+
+books:
+  - { n: 1, start: "639a1",  end: "646a4"  }
+  - { n: 2, start: "646a8",  end: "661a30" }
+  - { n: 3, start: "661a34", end: "676a18" }
+  - { n: 4, start: "676a22", end: "697b30" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

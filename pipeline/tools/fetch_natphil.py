@@ -48,6 +48,8 @@ WORKS = [
     # text dump (history_anim.mb.txt) and split it on its "BOOK N" headers — see
     # the wid == "HA" branch in main().
     ("HA", ["014"], "ha-thompson", ["history_anim.mb.txt"], "mb"),
+    # Parts of Animals (Ogle) is vendored separately from LacusCurtius/Penelope,
+    # which carries the modern 5/17/15/14 chapter division — see fetch_pa_ogle.py.
 ]
 
 # BOOK <roman> headers in the .mb.txt full-text dump, in order.

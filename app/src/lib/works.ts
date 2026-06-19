@@ -328,6 +328,23 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle’s great survey of animal life — anatomy, reproduction, habits, and behaviour — in nine books.',
   },
   {
+    id: 'PA',
+    title: 'Parts of Animals',
+    abbr: 'PA',
+    author: 'Aristotle',
+    books: 4,
+    bookLabels: ROMAN.slice(0, 4),
+    greekEdition: 'Louis, Aristote: Les parties des animaux (Budé, 1956)',
+    greekSource: {
+      short: 'Louis (Budé, 1956)',
+      full: 'P. Louis, ed. Aristote: Les parties des animaux. Paris: Les Belles Lettres (Budé), 1956.',
+    },
+    translations: [
+      { id: 'ogle', name: 'William Ogle (Oxford, 1912)', short: 'Ogle', slot: 'english' },
+    ],
+    blurb: 'Aristotle’s study of the causes and functions of animal parts — the foundational work of his biology — in four books.',
+  },
+  {
     id: 'Meta',
     title: 'Metaphysics',
     abbr: 'Met.',
@@ -596,7 +613,7 @@ export const CATEGORIES: Category[] = [
         label: 'Biological Works',
         works: [
           { id: 'HA' },
-          { title: 'Parts of Animals' },
+          { id: 'PA' },
           { title: 'Movement of Animals' },
           { title: 'Progression of Animals' },
           { title: 'Generation of Animals' },
