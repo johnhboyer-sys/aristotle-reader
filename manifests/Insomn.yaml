@@ -1,0 +1,44 @@
+# On Dreams (De Insomniis) — pipeline manifest
+#
+# A single-book Parva Naturalia treatise (no book divisions). Greek spine from
+# the cached TLG export; chapter structure from the First1KGreek grc TEI;
+# English from the MIT archive (J. I. Beare) via the chapter-anchored archive path.
+
+work:
+  id: Insomn
+  title: "On Dreams"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "016"
+  greek_edition: "Ross, Aristotle: Parva Naturalia (OCT, 1955)"
+  english_translation: "J. I. Beare (Oxford, 1908)"
+
+bekker_range:
+  first_column: "458a"
+  last_column: "462b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg016.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: beare
+    name: "J. I. Beare (Oxford, 1908)"
+    model: archive
+    dir: "insomn-beare"
+    books: 1
+    chapter_marker: part
+
+# Single Bekker line-number skip in the TLG text (continuous Greek, verified).
+expected_line_gaps:
+  - { column: "462b", after: 2, next: 4 }
+
+books:
+  - { n: 1, start: "458a33", end: "462b11" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

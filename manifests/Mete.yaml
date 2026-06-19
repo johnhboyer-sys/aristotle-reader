@@ -1,0 +1,43 @@
+# Meteorology (Meteorologica) — pipeline manifest
+work:
+  id: Mete
+  title: "Meteorology"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "026"
+  greek_edition: "Fobes, Aristotelis Meteorologicorum libri quattuor (Cambridge, Mass., 1919)"
+  english_translation: "E. W. Webster (Oxford, 1923)"
+
+bekker_range:
+  first_column: "338a"
+  last_column: "390b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg026.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: webster
+    name: "E. W. Webster (Oxford, 1923)"
+    model: archive
+    dir: "mete-webster"
+    books: 4
+    chapter_marker: part
+
+mid_column_book_starts:
+  - { book: 2, column: "353a" }
+  - { book: 3, column: "370b" }
+  - { book: 4, column: "378b" }
+
+books:
+  - { n: 1, start: "338a20", end: "353a28" }
+  - { n: 2, start: "353a32", end: "370b2" }
+  - { n: 3, start: "370b3",  end: "378b6" }
+  - { n: 4, start: "378b10", end: "390b22" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

@@ -1,0 +1,40 @@
+# Sense and Sensibilia (De Sensu) — pipeline manifest
+#
+# A single-book Parva Naturalia treatise (no book divisions). Greek spine from
+# the cached TLG export; chapter structure from the First1KGreek grc TEI;
+# English from the MIT archive (J. I. Beare) via the chapter-anchored archive path.
+
+work:
+  id: Sens
+  title: "Sense and Sensibilia"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "041"
+  greek_edition: "Ross, Aristotle: Parva Naturalia (OCT, 1955)"
+  english_translation: "J. I. Beare (Oxford, 1908)"
+
+bekker_range:
+  first_column: "436a"
+  last_column: "449b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg041.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: beare
+    name: "J. I. Beare (Oxford, 1908)"
+    model: archive
+    dir: "sens-beare"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "436a1", end: "449b4" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

@@ -1,0 +1,51 @@
+# On the Heavens (De Caelo) — pipeline manifest
+work:
+  id: Cael
+  title: "On the Heavens"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "005"
+  greek_edition: "Moraux, Aristote: Du ciel (Budé, 1965)"
+  english_translation: "J. L. Stocks (Oxford, 1922)"
+
+bekker_range:
+  first_column: "268a"
+  last_column: "313b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg005.1st1K-grc1.xml"
+  # First1KGreek folds De Caelo IV.5–6 into one chapter; Stocks (and the OCT)
+  # divide them, so restore IV.6.
+  extra:
+    - { n: 6, book: 4, bekker: "313a16" }
+
+english:
+  primary:
+    id: stocks
+    name: "J. L. Stocks (Oxford, 1922)"
+    model: archive
+    dir: "cael-stocks"
+    books: 4
+    chapter_marker: part
+
+mid_column_book_starts:
+  - { book: 2, column: "283b" }
+  - { book: 3, column: "298a" }
+  - { book: 4, column: "307b" }
+
+# Mid-book Bekker line-number skip in the TLG text (faithful to the edition).
+expected_line_gaps:
+  - { column: "294a", after: 25, next: 28 }
+
+books:
+  - { n: 1, start: "268a1",  end: "283b22" }
+  - { n: 2, start: "283b26", end: "298a20" }
+  - { n: 3, start: "298a24", end: "307b24" }
+  - { n: 4, start: "307b28", end: "313b23" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

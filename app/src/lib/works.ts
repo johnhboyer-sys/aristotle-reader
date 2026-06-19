@@ -116,6 +116,23 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on nature, change, place, time, and the prime mover, in eight books.',
   },
   {
+    id: 'Cael',
+    title: 'On the Heavens',
+    abbr: 'Cael.',
+    author: 'Aristotle',
+    books: 4,
+    bookLabels: ROMAN.slice(0, 4),
+    greekEdition: 'Moraux, Aristote: Du ciel (Budé, 1965)',
+    greekSource: {
+      short: 'Moraux (Budé, 1965)',
+      full: 'P. Moraux, ed. Aristote: Du ciel. Paris: Les Belles Lettres (Budé), 1965.',
+    },
+    translations: [
+      { id: 'stocks', name: 'J. L. Stocks (Oxford, 1922)', short: 'Stocks', slot: 'english' },
+    ],
+    blurb: 'Aristotle on the cosmos, the elements, and the eternity of the heavens, in four books.',
+  },
+  {
     id: 'GC',
     title: 'On Generation and Corruption',
     abbr: 'GC',
@@ -133,6 +150,23 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on coming-to-be, passing-away, mixture, and the elements, in two books.',
   },
   {
+    id: 'Mete',
+    title: 'Meteorology',
+    abbr: 'Mete.',
+    author: 'Aristotle',
+    books: 4,
+    bookLabels: ROMAN.slice(0, 4),
+    greekEdition: 'Fobes, Aristotelis Meteorologicorum libri quattuor (1919)',
+    greekSource: {
+      short: 'Fobes (1919)',
+      full: 'F. H. Fobes, ed. Aristotelis meteorologicorum libri quattuor. Cambridge, Mass.: Harvard University Press, 1919; repr. 1967.',
+    },
+    translations: [
+      { id: 'webster', name: 'E. W. Webster (Oxford, 1923)', short: 'Webster', slot: 'english' },
+    ],
+    blurb: 'Aristotle on the phenomena of the upper air and the earth — weather, comets, rivers, and the sea, in four books.',
+  },
+  {
     id: 'DA',
     title: 'De Anima',
     abbr: 'DA',
@@ -148,6 +182,130 @@ export const WORKS: Work[] = [
       { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
     ],
     blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
+  },
+  // The Parva Naturalia — Aristotle's short treatises on psycho-physical
+  // topics. All single-book (bookless) works whose TLG Greek comes from Ross's
+  // OCT Parva Naturalia (1955); the Oxford translations (Beare / G. R. T. Ross,
+  // 1908) are public domain. "On Youth…" (Juv) splices the TLG's De juventute
+  // and De respiratione into one continuous treatise (see manifests/Juv.yaml).
+  {
+    id: 'Sens',
+    title: 'Sense and Sensibilia',
+    abbr: 'Sens.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekSource: {
+      short: 'Ross (OCT, 1955)',
+      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+    },
+    translations: [
+      { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
+    ],
+    blurb: 'Aristotle on perception and its objects — colour, sound, flavour, and smell.',
+  },
+  {
+    id: 'Mem',
+    title: 'On Memory',
+    abbr: 'Mem.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekSource: {
+      short: 'Ross (OCT, 1955)',
+      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+    },
+    translations: [
+      { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
+    ],
+    blurb: 'Aristotle on memory and recollection.',
+  },
+  {
+    id: 'Somn',
+    title: 'On Sleep',
+    abbr: 'Somn.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekSource: {
+      short: 'Ross (OCT, 1955)',
+      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+    },
+    translations: [
+      { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
+    ],
+    blurb: 'Aristotle on sleep and waking.',
+  },
+  {
+    id: 'Insomn',
+    title: 'On Dreams',
+    abbr: 'Insom.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekSource: {
+      short: 'Ross (OCT, 1955)',
+      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+    },
+    translations: [
+      { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
+    ],
+    blurb: 'Aristotle on dreams and their causes.',
+  },
+  {
+    id: 'DivSomn',
+    title: 'On Divination in Sleep',
+    abbr: 'Div. Somn.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekSource: {
+      short: 'Ross (OCT, 1955)',
+      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+    },
+    translations: [
+      { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
+    ],
+    blurb: 'Aristotle on prophecy and divination through dreams.',
+  },
+  {
+    id: 'Long',
+    title: 'On Length and Shortness of Life',
+    abbr: 'Long.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekSource: {
+      short: 'Ross (OCT, 1955)',
+      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+    },
+    translations: [
+      { id: 'ross', name: 'G. R. T. Ross (Oxford, 1908)', short: 'Ross', slot: 'english' },
+    ],
+    blurb: 'Aristotle on why some living things are long-lived and others short-lived.',
+  },
+  {
+    id: 'Juv',
+    title: 'On Youth, Old Age, Life and Death, and Respiration',
+    abbr: 'Juv.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekSource: {
+      short: 'Ross (OCT, 1955)',
+      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+    },
+    translations: [
+      { id: 'ross', name: 'G. R. T. Ross (Oxford, 1908)', short: 'Ross', slot: 'english' },
+    ],
+    blurb: 'Aristotle on youth and old age, life and death, and the role of respiration.',
   },
   {
     id: 'Meta',
@@ -394,9 +552,9 @@ export const CATEGORIES: Category[] = [
         label: 'Major Works on Nature',
         works: [
           { id: 'Phys' },
-          { title: 'On the Heavens' },
+          { id: 'Cael' },
           { id: 'GC' },
-          { title: 'Meteorology' },
+          { id: 'Mete' },
           { id: 'DA' },
         ],
       },
@@ -404,13 +562,13 @@ export const CATEGORIES: Category[] = [
         ref: 'II.b',
         label: 'Short Works on Nature (Parva Naturalia)',
         works: [
-          { title: 'Sense and Sensibilia' },
-          { title: 'On Memory' },
-          { title: 'On Sleep' },
-          { title: 'On Dreams' },
-          { title: 'On Divination in Sleep' },
-          { title: 'On Length and Shortness of Life' },
-          { title: 'On Youth, Old Age, Life and Death, and Respiration' },
+          { id: 'Sens' },
+          { id: 'Mem' },
+          { id: 'Somn' },
+          { id: 'Insomn' },
+          { id: 'DivSomn' },
+          { id: 'Long' },
+          { id: 'Juv' },
         ],
       },
       {

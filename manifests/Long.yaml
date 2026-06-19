@@ -1,0 +1,40 @@
+# On Length and Shortness of Life (De Longitudine et Brevitate Vitae) — pipeline manifest
+#
+# A single-book Parva Naturalia treatise (no book divisions). Greek spine from
+# the cached TLG export; chapter structure from the First1KGreek grc TEI;
+# English from the MIT archive (G. R. T. Ross) via the chapter-anchored archive path.
+
+work:
+  id: Long
+  title: "On Length and Shortness of Life"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "020"
+  greek_edition: "Ross, Aristotle: Parva Naturalia (OCT, 1955)"
+  english_translation: "G. R. T. Ross (Oxford, 1908)"
+
+bekker_range:
+  first_column: "464b"
+  last_column: "467b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg020.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: ross
+    name: "G. R. T. Ross (Oxford, 1908)"
+    model: archive
+    dir: "long-ross"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "464b19", end: "467b9" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

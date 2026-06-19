@@ -1,0 +1,46 @@
+# On Youth, Old Age, Life and Death, and Respiration — pipeline manifest
+#
+# Traditionally one treatise but carried by the TLG as two works: De juventute
+# et senectute / De vita et morte (tlg018, chapters 1-6) and De respiratione
+# (tlg037, chapters 7-27). tools/merge_juv.py splices them into the synthetic
+# work number 918 — one continuous Bekker spine (467b-480b) and one chapter TEI
+# numbered 1-27 — matching G. R. T. Ross's continuous Parts 1-27.
+
+work:
+  id: Juv
+  title: "On Youth, Old Age, Life and Death, and Respiration"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "918"
+  greek_edition: "Ross, Aristotle: Parva Naturalia (OCT, 1955)"
+  english_translation: "G. R. T. Ross (Oxford, 1908)"
+
+bekker_range:
+  first_column: "467b"
+  last_column: "480b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg918.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: ross
+    name: "G. R. T. Ross (Oxford, 1908)"
+    model: archive
+    dir: "juv-ross"
+    books: 1
+    chapter_marker: part
+
+# Single Bekker line-number skip in the TLG text (continuous Greek, verified).
+expected_line_gaps:
+  - { column: "469a", after: 27, next: 29 }
+
+books:
+  - { n: 1, start: "467b10", end: "480b30" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

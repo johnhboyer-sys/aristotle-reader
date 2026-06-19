@@ -1,0 +1,40 @@
+# On Memory (De Memoria) — pipeline manifest
+#
+# A single-book Parva Naturalia treatise (no book divisions). Greek spine from
+# the cached TLG export; chapter structure from the First1KGreek grc TEI;
+# English from the MIT archive (J. I. Beare) via the chapter-anchored archive path.
+
+work:
+  id: Mem
+  title: "On Memory"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "024"
+  greek_edition: "Ross, Aristotle: Parva Naturalia (OCT, 1955)"
+  english_translation: "J. I. Beare (Oxford, 1908)"
+
+bekker_range:
+  first_column: "449b"
+  last_column: "453b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg024.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: beare
+    name: "J. I. Beare (Oxford, 1908)"
+    model: archive
+    dir: "mem-beare"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "449b4", end: "453b11" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
