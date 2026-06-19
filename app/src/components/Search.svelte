@@ -1,7 +1,7 @@
 <script lang="ts">
   import { search, type SearchMode, type LangOp, type MatchMode } from '../lib/search';
   import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
-  import { WORKS, getWork, workPath } from '../lib/works';
+  import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
 
   // One match occurrence, located precisely enough to label and jump to.
   interface Instance {
@@ -25,11 +25,14 @@
 
   let grkQuery = '';
   let engQuery = '';
-  let mode: SearchMode = 'all';
+  // Greek and English each get an independent match mode (Change 5).
+  let grkMode: SearchMode = 'all';
+  let engMode: SearchMode = 'all';
   let langOp: LangOp = 'and';
   let matchMode: MatchMode = 'lemma';
-  // Which works to search. Default: all. Multi-select chips below the query.
+  // Which works to search. Default: all. Selected in the collapsible panel below.
   let selectedWorks = new Set<string>(WORKS.map(w => w.id));
+  let worksOpen = false;  // is the works "Refine" panel expanded?
   let groups: ChapterGroup[] = [];
   let totalInstances = 0;
   let expanded = new Set<string>();
@@ -38,7 +41,12 @@
   let error = '';
   let showHelp = false;
 
-  const workOrder = new Map(WORKS.map((w, i) => [w.id, i]));
+  // Shared option list for the per-language mode selectors.
+  const MODE_OPTS: { v: SearchMode; l: string }[] = [
+    { v: 'all', l: 'All words' },
+    { v: 'any', l: 'Any word' },
+    { v: 'phrase', l: 'Exact phrase' },
+  ];
 
   function toggleWork(id: string) {
     if (selectedWorks.has(id)) { if (selectedWorks.size > 1) selectedWorks.delete(id); }
@@ -50,9 +58,26 @@
   // work flips it off automatically (no fire-and-forget flag). Toggling it on
   // selects every work; toggling it off clears the selection.
   $: allSelected = selectedWorks.size === WORKS.length;
-  function toggleAll() {
-    selectedWorks = allSelected ? new Set() : new Set(WORKS.map(w => w.id));
+  function selectAll() { selectedWorks = new Set(WORKS.map(w => w.id)); }
+  function clearWorks() { selectedWorks = new Set(); }
+
+  // Per-group scope helpers for the works panel. "only" narrows the selection to
+  // exactly this division; "add" unions the division into the current selection.
+  function groupState(ids: string[]): 'all' | 'some' | 'none' {
+    const n = ids.filter(id => selectedWorks.has(id)).length;
+    return n === 0 ? 'none' : n === ids.length ? 'all' : 'some';
   }
+  function selectOnly(ids: string[]) { selectedWorks = new Set(ids); }
+  function addGroup(ids: string[]) {
+    for (const id of ids) selectedWorks.add(id);
+    selectedWorks = selectedWorks;
+  }
+  // Compact summary for the collapsed trigger.
+  $: worksSummary = allSelected
+    ? 'All works'
+    : selectedWorks.size === 0
+      ? 'None selected'
+      : `${selectedWorks.size} of ${WORKS.length}`;
 
   // Results grouped Work → Book → chapter groups, in corpus then numeric order.
   $: groupsByWork = (() => {
@@ -62,7 +87,7 @@
       (books.get(g.book) ?? books.set(g.book, []).get(g.book)!).push(g);
     }
     return [...byWork.entries()]
-      .sort((a, b) => (workOrder.get(a[0]) ?? 0) - (workOrder.get(b[0]) ?? 0))
+      .sort((a, b) => (WORK_ORDER.get(a[0]) ?? 0) - (WORK_ORDER.get(b[0]) ?? 0))
       .map(([work, books]) => ({
         work,
         books: [...books.entries()].sort((a, b) => a[0] - b[0]),
@@ -183,7 +208,7 @@
     searched = false;
     try {
       const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
-      const results = await search(grkQuery, engQuery, mode, langOp, works, matchMode);
+      const results = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
 
       // Load each (work, book) present in the results, plus each work's chapters.
       const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
@@ -235,8 +260,9 @@
         }
       }
 
-      for (const g of gmap.values()) g.instances.sort((a, b) => a.line - b.line);
-      groups = [...gmap.values()].sort((a, b) => (workOrder.get(a.work)! - workOrder.get(b.work)!) || a.book - b.book || a.order - b.order);
+      for (const g of gmap.values()) g.instances.sort(bekkerCmp);
+      groups = [...gmap.values()].sort((a, b) =>
+        ((WORK_ORDER.get(a.work) ?? 0) - (WORK_ORDER.get(b.work) ?? 0)) || a.book - b.book || a.order - b.order);
       totalInstances = groups.reduce((n, g) => n + g.instances.length, 0);
       // Single-hit chapters open by default; merged (multi-hit) start collapsed.
       expanded = new Set(groups.filter(g => g.instances.length === 1).map(g => g.key));
@@ -327,6 +353,57 @@
 
   $: engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
+  // Bekker order within a chapter: page number, then column half (a < b), then
+  // line. Sorting by line alone mis-orders hits that span two columns of one
+  // chapter (e.g. 1097b3 before 1097a15). Works for grk and eng instances alike.
+  function bekkerCmp(a: Instance, b: Instance): number {
+    const pa = parseInt(a.column, 10) || 0;
+    const pb = parseInt(b.column, 10) || 0;
+    if (pa !== pb) return pa - pb;
+    const ha = a.column.slice(-1), hb = b.column.slice(-1);
+    if (ha !== hb) return ha < hb ? -1 : 1;
+    return a.line - b.line;
+  }
+
+  // --- CSV export of the current results -----------------------------------
+  function stripHtml(html: string): string {
+    return html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .trim();
+  }
+  function csvCell(v: string): string {
+    return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+  }
+  function exportCsv() {
+    const origin = typeof location !== 'undefined' ? location.origin : '';
+    const rows: string[][] = [['Work', 'Book', 'Chapter', 'Bekker', 'Language', 'Snippet', 'URL']];
+    for (const g of groups) {
+      const w = getWork(g.work);
+      const workTitle = w?.title ?? g.work;
+      const book = w?.bookLabels[g.book - 1] ?? String(g.book);
+      for (const inst of g.instances) {
+        rows.push([
+          workTitle, String(book), g.chapter, inst.ref,
+          inst.lang === 'grk' ? 'Greek' : 'English',
+          stripHtml(inst.html),
+          origin + inst.jumpUrl,
+        ]);
+      }
+    }
+    const csv = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+    // Prepend a UTF-8 BOM so Excel renders Greek correctly.
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aristotle-search-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   function onEnter(e: KeyboardEvent) {
     if (e.key === 'Enter') doSearch();
   }
@@ -356,6 +433,20 @@
       </button>
     </div>
 
+    <div class="below-query">
+      <fieldset class="mode-group">
+        <legend>Greek match</legend>
+        {#each MODE_OPTS as opt}
+          <label><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} /> {opt.l}</label>
+        {/each}
+      </fieldset>
+      <fieldset class="mode-group" title="Lemma matches every inflected form of a headword; Exact form matches the word only as written">
+        <legend>Form</legend>
+        <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Lemma</label>
+        <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Exact form</label>
+      </fieldset>
+    </div>
+
     <div class="query-row">
       <label class="query-label" for="eng-input">English</label>
       <input
@@ -369,54 +460,71 @@
       />
     </div>
 
-    <div class="works-row" role="group" aria-label="Works to search">
-      <span class="works-label">Works</span>
+    <div class="below-query">
+      <fieldset class="mode-group">
+        <legend>English match</legend>
+        {#each MODE_OPTS as opt}
+          <label><input type="radio" name="engmode" value={opt.v} bind:group={engMode} /> {opt.l}</label>
+        {/each}
+      </fieldset>
+    </div>
+
+    <div class="works-panel" role="group" aria-label="Works to search">
       <button
         type="button"
-        class="work-chip select-all"
-        class:on={allSelected}
-        aria-pressed={allSelected}
-        on:click={toggleAll}
-      >Select all</button>
-      <span class="works-divider" aria-hidden="true"></span>
-      {#each WORKS as w}
-        <button
-          type="button"
-          class="work-chip"
-          class:on={selectedWorks.has(w.id)}
-          aria-pressed={selectedWorks.has(w.id)}
-          on:click={() => toggleWork(w.id)}
-          title={w.title}
-        >{w.abbr} · {w.title}</button>
-      {/each}
+        class="works-trigger"
+        aria-expanded={worksOpen}
+        on:click={() => (worksOpen = !worksOpen)}
+      >
+        <span class="works-label">Works</span>
+        <span class="works-summary">{worksSummary}</span>
+        <span class="works-caret">{worksOpen ? 'Hide ▴' : 'Refine ▾'}</span>
+      </button>
+
+      {#if worksOpen}
+        <div class="works-body">
+          <div class="works-actions">
+            <button type="button" class="works-action" on:click={selectAll} disabled={allSelected}>Select all</button>
+            <button type="button" class="works-action" on:click={clearWorks} disabled={selectedWorks.size === 0}>Clear</button>
+          </div>
+
+          {#each WORK_GROUPS as grp}
+            {@const gs = groupState(grp.ids)}
+            <div class="works-group">
+              <div class="works-group-head">
+                <span class="works-group-name">{grp.ref}. {grp.label}</span>
+                <span class="works-group-scope">
+                  <button type="button" class="scope-btn" class:on={gs === 'all'} on:click={() => selectOnly(grp.ids)} title="Search only this division">only</button>
+                  <button type="button" class="scope-btn" on:click={() => addGroup(grp.ids)} title="Add this division to the selection">+ add</button>
+                </span>
+              </div>
+              <div class="works-chips">
+                {#each grp.ids as id}
+                  {@const w = getWork(id)}
+                  {#if w}
+                    <button
+                      type="button"
+                      class="work-chip"
+                      class:on={selectedWorks.has(id)}
+                      aria-pressed={selectedWorks.has(id)}
+                      on:click={() => toggleWork(id)}
+                      title={w.title}
+                    >{w.abbr} · {w.title}</button>
+                  {/if}
+                {/each}
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
 
     <div class="controls-row">
-      <fieldset class="mode-group">
-        <legend>Mode</legend>
-        {#each [{v:'all',l:'All words'},{v:'any',l:'Any word'},{v:'phrase',l:'Phrase'}] as opt}
-          <label>
-            <input type="radio" name="mode" value={opt.v} bind:group={mode} />
-            {opt.l}
-          </label>
-        {/each}
+      <fieldset class="op-group" class:inactive={!(grkQuery.trim() && engQuery.trim())}>
+        <legend>Greek + English</legend>
+        <label title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /> Both queries</label>
+        <label title="Passages matching either query"><input type="radio" name="op" value="or"  bind:group={langOp} /> Either query</label>
       </fieldset>
-
-      {#if grkQuery.trim()}
-        <fieldset class="mode-group" title="Lemma matches every inflected form of a headword; Exact form matches the word only as written">
-          <legend>Greek match</legend>
-          <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Lemma</label>
-          <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Exact form</label>
-        </fieldset>
-      {/if}
-
-      {#if grkQuery.trim() && engQuery.trim()}
-        <fieldset class="op-group">
-          <legend>Combine</legend>
-          <label><input type="radio" name="op" value="and" bind:group={langOp} /> AND</label>
-          <label><input type="radio" name="op" value="or"  bind:group={langOp} /> OR</label>
-        </fieldset>
-      {/if}
 
       <button type="submit" class="search-btn" disabled={loading}>
         {loading ? 'Searching…' : 'Search'}
@@ -485,11 +593,16 @@
   {#if error}
     <p class="search-error">{error}</p>
   {:else if searched}
-    <p class="result-count">
-      {totalInstances === 0
-        ? 'No passages found.'
-        : `${totalInstances} instance${totalInstances === 1 ? '' : 's'} in ${groups.length} chapter${groups.length === 1 ? '' : 's'}`}
-    </p>
+    <div class="result-bar">
+      <p class="result-count">
+        {totalInstances === 0
+          ? 'No passages found.'
+          : `${totalInstances} instance${totalInstances === 1 ? '' : 's'} in ${groups.length} chapter${groups.length === 1 ? '' : 's'}`}
+      </p>
+      {#if totalInstances > 0}
+        <button type="button" class="export-btn" on:click={exportCsv}>Export results as CSV</button>
+      {/if}
+    </div>
 
     {#each groupsByWork as wg}
       {#each wg.books as [book, bookGroups]}
@@ -588,20 +701,99 @@
     gap: 1rem;
   }
 
-  .works-row {
+  /* Per-language mode selectors sitting directly below each query box. */
+  .below-query {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.4rem;
+    gap: 1rem;
+    margin: -0.3rem 0 0.1rem 4.25rem;  /* align under the input, past the label */
+  }
+
+  /* --- Collapsible works selector --------------------------------------- */
+  .works-panel {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--input-bg);
+  }
+  .works-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.45rem 0.75rem;
+    text-align: left;
+    font-family: var(--font-ui);
   }
   .works-label {
-    font-family: var(--font-ui);
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: .04em;
     color: var(--text-mid);
-    width: 3.5rem;
-    flex-shrink: 0;
+  }
+  .works-summary { font-size: 0.85rem; color: var(--text); }
+  .works-caret {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .works-body {
+    padding: 0.25rem 0.75rem 0.75rem;
+    border-top: 1px solid var(--border);
+    max-height: 18rem;
+    overflow-y: auto;
+  }
+  .works-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0 0.25rem;
+  }
+  .works-action {
+    font-family: var(--font-ui);
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+  }
+  .works-action:disabled { opacity: 0.45; cursor: default; }
+  .works-group { margin-top: 0.6rem; }
+  .works-group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.3rem;
+  }
+  .works-group-name {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-mid);
+  }
+  .works-group-scope { margin-left: auto; display: flex; gap: 0.3rem; }
+  .scope-btn {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    color: var(--text-light);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05rem 0.4rem;
+    cursor: pointer;
+  }
+  .scope-btn:hover { border-color: var(--accent-light); color: var(--accent); }
+  .scope-btn.on { color: var(--accent); border-color: var(--accent-light); }
+  .works-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
   .work-chip {
     font-family: var(--font-ui);
@@ -615,13 +807,6 @@
     transition: background .12s ease, color .12s ease, border-color .12s ease;
   }
   .work-chip:hover { border-color: var(--accent-light); }
-  .work-chip.select-all { font-weight: 600; }
-  .works-divider {
-    width: 1px;
-    align-self: stretch;
-    background: var(--border);
-    margin: 0 0.2rem;
-  }
   .work-chip.on {
     background: var(--accent);
     border-color: var(--accent);
@@ -656,6 +841,10 @@
     cursor: pointer;
     color: var(--text);
   }
+
+  /* The Greek/English combine choice only applies when both boxes have text;
+     keep it visible (for discoverability) but dimmed until then. */
+  .op-group.inactive { opacity: 0.5; }
 
   .search-btn {
     margin-left: auto;
@@ -856,12 +1045,33 @@
 
   .search-error { color: var(--error); font-family: var(--font-ui); font-size: 0.9rem; }
 
+  .result-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
   .result-count {
     font-family: var(--font-ui);
     font-size: 0.85rem;
     color: var(--text-mid);
-    margin-bottom: 0.75rem;
+    margin: 0;
   }
+  .export-btn {
+    margin-left: auto;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .export-btn:hover { background: var(--col-bg); border-color: var(--accent-light); }
 
   /* ── Grouped results: Work → Book → Chapter ──────────────────────── */
 
@@ -960,6 +1170,7 @@
     .search-form { padding: 1rem; }
     .query-row { flex-direction: column; align-items: stretch; }
     .query-label { width: auto; }
+    .below-query { margin-left: 0; gap: 0.75rem; }
     .controls-row { gap: 0.5rem; }
     .search-btn { margin-left: 0; width: 100%; margin-top: 0.25rem; }
   }

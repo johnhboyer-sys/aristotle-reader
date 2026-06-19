@@ -646,3 +646,40 @@ export const CATEGORIES: Category[] = [
     ],
   },
 ];
+
+// A named group of works for the search "works to include" selector: one entry
+// per home-page (sub)division, in home-page order, holding only the existing
+// works (placeholders dropped). Categories with subcategories contribute one
+// group per subcategory; categories without contribute a single group.
+export interface WorkGroup {
+  ref: string;    // 'I', 'II.a', … (the numeral or subcategory ref)
+  label: string;  // the division's title/label
+  ids: string[];  // existing work ids in this group, in order
+}
+
+export const WORK_GROUPS: WorkGroup[] = (() => {
+  const groups: WorkGroup[] = [];
+  const ids = (ws: CategoryWork[]) => ws.filter(w => w.id && BY_ID.has(w.id)).map(w => w.id!);
+  for (const cat of CATEGORIES) {
+    if (cat.works) {
+      const g = ids(cat.works);
+      if (g.length) groups.push({ ref: cat.numeral, label: cat.title, ids: g });
+    }
+    for (const sub of cat.subcategories ?? []) {
+      const g = ids(sub.works);
+      if (g.length) groups.push({ ref: sub.ref, label: sub.label, ids: g });
+    }
+  }
+  return groups;
+})();
+
+// Cross-work ordering for search results, matching the home page's CATEGORIES
+// flatten order (which differs from the raw WORKS/corpus order). Any real work
+// not referenced by CATEGORIES is appended in WORKS order so every searchable
+// work has a defined index.
+export const WORK_ORDER: Map<string, number> = (() => {
+  const order: string[] = [];
+  for (const g of WORK_GROUPS) for (const id of g.ids) order.push(id);
+  for (const w of WORKS) if (!order.includes(w.id)) order.push(w.id);
+  return new Map(order.map((id, i) => [id, i]));
+})();

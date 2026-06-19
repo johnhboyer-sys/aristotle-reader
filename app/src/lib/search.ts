@@ -201,7 +201,8 @@ async function searchWork(
   work: string,
   grkTerms: string[],
   engTerms: string[],
-  mode: SearchMode,
+  grkMode: SearchMode,
+  engMode: SearchMode,
   langOp: LangOp,
   matchMode: MatchMode,
 ): Promise<SearchResult[]> {
@@ -213,11 +214,11 @@ async function searchWork(
 
   if (grkTerms.length > 0) {
     const postings = grkTerms.map(t => grkPosting(grkIdx, t));
-    if (mode === 'any') {
+    if (grkMode === 'any') {
       grkHits = postings.reduce(union);
     } else {
       grkHits = postings.reduce(intersect);
-      if (mode === 'phrase' && grkTerms.length > 1) {
+      if (grkMode === 'phrase' && grkTerms.length > 1) {
         const foldTerms = grkTerms.map(t => greekFold(t.replace('*', '')));
         grkHits = new Set([...grkHits].filter(si =>
           phraseMatches(meta[si].greek_tokens, foldTerms)
@@ -228,11 +229,11 @@ async function searchWork(
 
   if (engTerms.length > 0) {
     const postings = engTerms.map(t => engPosting(engIdx, t));
-    if (mode === 'any') {
+    if (engMode === 'any') {
       engHits = postings.reduce(union);
     } else {
       engHits = postings.reduce(intersect);
-      if (mode === 'phrase' && engTerms.length > 1) {
+      if (engMode === 'phrase' && engTerms.length > 1) {
         engHits = new Set([...engHits].filter(si =>
           engPhraseMatches(meta[si].english_head, engTerms)
         ));
@@ -248,7 +249,7 @@ async function searchWork(
   }
 
   const grkPos = grkHits
-    ? greekPositions(grkIdx, meta, grkTerms, mode, grkHits)
+    ? greekPositions(grkIdx, meta, grkTerms, grkMode, grkHits)
     : new Map<number, number[]>();
 
   return [...combined]
@@ -267,7 +268,8 @@ async function searchWork(
 export async function search(
   grkQuery: string,
   engQuery: string,
-  mode: SearchMode,
+  grkMode: SearchMode,
+  engMode: SearchMode,
   langOp: LangOp,
   works: string[],
   matchMode: MatchMode = 'lemma',
@@ -281,7 +283,7 @@ export async function search(
   const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
   const perWork = await Promise.all(
-    works.map(w => searchWork(w, grkTerms, engTerms, mode, langOp, matchMode)),
+    works.map(w => searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode)),
   );
   return perWork.flat();
 }
