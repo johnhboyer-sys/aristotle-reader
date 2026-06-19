@@ -320,13 +320,22 @@ export async function search(
 
   // Bound how many works load at once, and let a single work's failed index
   // load drop just that work (logged) instead of rejecting the whole search.
+  let failures = 0;
   const perWork = await pool(works, 8, async w => {
     try {
       return await searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode);
     } catch (err) {
       console.warn(`search: skipping ${w} —`, err);
+      failures++;
       return [] as SearchResult[];
     }
   });
+  // If EVERY work failed to load (e.g. offline, or a transient window mid-deploy
+  // when the index JSONs are briefly unavailable), surface it as an error to
+  // retry — not as an empty result that reads as a misleading "No passages
+  // found." A partial failure still returns what loaded.
+  if (failures === works.length) {
+    throw new Error('Could not load the search index — check your connection and try again.');
+  }
   return perWork.flat();
 }

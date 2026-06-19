@@ -391,7 +391,7 @@
       if (pages.length) await renderPage(0);
       else { groups = []; pageIdx = 0; }
     } catch (err) {
-      error = String(err);
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
     }
