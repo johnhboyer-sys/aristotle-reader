@@ -42,6 +42,11 @@ def _stage1(manifest):
                 chapters_cfg.get("grc_book"),
                 chapters_cfg.get("extra"),
             )
+        # Drop chapters from books the manifest doesn't carry — e.g. History of
+        # Animals' spurious, untranslated Book X, whose grc chapter divs would
+        # otherwise align past the spine's last assigned book.
+        valid_books = {b["n"] for b in manifest.books}
+        chapters = [c for c in chapters if c["book"] in valid_books]
         eng_path, align_path = stage1_archive.run(manifest, spine, chapters)
         english = json.loads(eng_path.read_text(encoding="utf-8"))
         how = "explicit" if chapters_cfg["source"] == "explicit" else "grc-aligned"

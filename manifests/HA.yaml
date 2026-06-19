@@ -1,0 +1,62 @@
+# History of Animals (Historia Animalium) — pipeline manifest
+#
+# The longest Aristotelian work (486a–638b). The TLG/Bekker text carries ten
+# books, but Book X (633b–638b, on the causes of sterility) is spurious and was
+# left untranslated by D'Arcy Wentworth Thompson; like modern editions we omit
+# it and present Books I–IX. There is no book transposition here: Thompson's
+# Book N corresponds to grc Book N exactly (chapter counts match book-for-book),
+# so the English (per-book MIT pages) aligns straight onto the spine.
+work:
+  id: HA
+  title: "History of Animals"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "014"
+  greek_edition: "Louis, Aristote: Histoire des animaux (Budé, 1964–69)"
+  english_translation: "D'Arcy Wentworth Thompson (Oxford, 1910)"
+
+bekker_range:
+  first_column: "486a"
+  last_column: "633b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg014.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: thompson
+    name: "D'Arcy Wentworth Thompson (Oxford, 1910)"
+    model: archive
+    dir: "ha-thompson"
+    books: 9
+    chapter_marker: part
+
+# Books II–IX each begin partway down a Bekker column (the previous book ends a
+# few lines into the same column).
+mid_column_book_starts:
+  - { book: 2, column: "497b" }
+  - { book: 3, column: "509a" }
+  - { book: 4, column: "523a" }
+  - { book: 5, column: "538b" }
+  - { book: 6, column: "558b" }
+  - { book: 7, column: "581a" }
+  - { book: 8, column: "588a" }
+  - { book: 9, column: "608a" }
+
+books:
+  - { n: 1, start: "486a1",  end: "497b2"  }
+  - { n: 2, start: "497b6",  end: "509a23" }
+  - { n: 3, start: "509a27", end: "523a27" }
+  - { n: 4, start: "523a31", end: "538b24" }
+  - { n: 5, start: "538b28", end: "558b4"  }
+  - { n: 6, start: "558b8",  end: "581a5"  }
+  - { n: 7, start: "581a9",  end: "588a12" }
+  - { n: 8, start: "588a16", end: "608a7"  }
+  - { n: 9, start: "608a11", end: "633b8"  }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

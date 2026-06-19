@@ -42,7 +42,16 @@ WORKS = [
     ("DivSomn", ["008"], "divsomn-beare", ["prophesying"], False),
     ("Long", ["020"], "long-ross", ["longev_short"], False),
     ("Juv", ["018", "037"], "juv-ross", ["youth_old.1.1", "youth_old.2.2"], False),
+    # History of Animals: grc Book X (spurious, on sterility) is untranslated and
+    # omitted; MIT Book N = grc N. The per-book MIT HTML pages are truncated for
+    # the long books (V/VI/VIII/IX paginate), so we take the complete single-file
+    # text dump (history_anim.mb.txt) and split it on its "BOOK N" headers — see
+    # the wid == "HA" branch in main().
+    ("HA", ["014"], "ha-thompson", ["history_anim.mb.txt"], "mb"),
 ]
+
+# BOOK <roman> headers in the .mb.txt full-text dump, in order.
+_ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
 
 
 def _get(url: str) -> str:
@@ -80,7 +89,20 @@ def main() -> None:
             print(f"  grc tlg{n} -> {dest.name} ({dest.stat().st_size} B)")
         ddir = SOURCES / edir
         ddir.mkdir(exist_ok=True)
-        if multi:
+        if multi == "mb":
+            # Single full-text dump: split on "BOOK <roman>" headers into one
+            # plain-text book-0N.html per book (parse_book strips tags, so the
+            # ascending "Part N" stream reads straight through).
+            txt = _get(MIT.format(page=pages[0])[:-len(".html")])
+            pat = re.compile(r"^BOOK ([IVXL]+)\s*$", re.M)
+            hits = [(m.group(1), m.start(), m.end()) for m in pat.finditer(txt)]
+            for i, (roman, _, body_start) in enumerate(hits):
+                end = hits[i + 1][1] if i + 1 < len(hits) else len(txt)
+                n = _ROMAN.index(roman) + 1
+                (ddir / f"book-{n:02d}.html").write_text(
+                    txt[body_start:end].strip(), encoding="utf-8")
+            print(f"  {wid}: {len(hits)} book files split from {pages[0]} in {edir}/")
+        elif multi:
             for i, page in enumerate(pages, 1):
                 (ddir / f"book-{i:02d}.html").write_text(_get(MIT.format(page=page)), encoding="utf-8")
             print(f"  {wid}: {len(pages)} book files in {edir}/")

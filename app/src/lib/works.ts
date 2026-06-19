@@ -308,6 +308,26 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on youth and old age, life and death, and the role of respiration.',
   },
   {
+    id: 'HA',
+    title: 'History of Animals',
+    abbr: 'HA',
+    author: 'Aristotle',
+    // The TLG/Bekker text carries ten books, but Book X (on the causes of
+    // sterility) is spurious and untranslated; like modern editions we present
+    // the genuine Books I–IX.
+    books: 9,
+    bookLabels: ROMAN.slice(0, 9),
+    greekEdition: 'Louis, Aristote: Histoire des animaux (Budé, 1964–69)',
+    greekSource: {
+      short: 'Louis (Budé, 1964–69)',
+      full: 'P. Louis, ed. Aristote: Histoire des animaux. 3 vols. Paris: Les Belles Lettres (Budé), 1964–69.',
+    },
+    translations: [
+      { id: 'thompson', name: 'D’Arcy Wentworth Thompson (Oxford, 1910)', short: 'Thompson', slot: 'english' },
+    ],
+    blurb: 'Aristotle’s great survey of animal life — anatomy, reproduction, habits, and behaviour — in nine books.',
+  },
+  {
     id: 'Meta',
     title: 'Metaphysics',
     abbr: 'Met.',
@@ -575,7 +595,7 @@ export const CATEGORIES: Category[] = [
         ref: 'II.c',
         label: 'Biological Works',
         works: [
-          { title: 'History of Animals' },
+          { id: 'HA' },
           { title: 'Parts of Animals' },
           { title: 'Movement of Animals' },
           { title: 'Progression of Animals' },
