@@ -1,0 +1,39 @@
+# On Generation and Corruption — pipeline manifest (DRAFT: single book)
+work:
+  id: GC
+  title: "On Generation and Corruption"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "013"
+  greek_edition: "Joachim, Aristotelis De Generatione et Corruptione (Oxford, 1922)"
+  english_translation: "H. H. Joachim (Oxford, 1922)"
+
+bekker_range:
+  first_column: "314a"
+  last_column: "338b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg013.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: joachim
+    name: "H. H. Joachim (Oxford, 1922)"
+    model: archive
+    dir: "gc-joachim"
+    books: 2
+    chapter_marker: part
+
+mid_column_book_starts:
+  - { book: 2, column: "328b" }
+
+books:
+  - { n: 1, start: "314a1",  end: "328b22" }
+  - { n: 2, start: "328b26", end: "338b19" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

@@ -20,7 +20,9 @@ from .config import BUILD_DIR, Manifest
 # Metaphysics) — a metrical separator, not part of any word. ‘ (U+2018) opens a
 # quotation (e.g. the poets quoted in the Politics); its mate ’ (U+2019) is left
 # out because it doubles as the elision apostrophe, which the surface form keeps.
-_PUNCT = ".,·;—()|\"‘" + "·;"  # ano teleia, Greek question mark
+# « » (U+00AB/U+00BB) wrap quoted verse in the TLG (e.g. the Empedocles fragments
+# in On Generation and Corruption) — edge punctuation, stripped silently.
+_PUNCT = ".,·;—()|\"‘«»" + "·;"  # ano teleia, Greek question mark
 # Stripped but logged: editorial sigla found by the stage 2 inventory.
 # ⎪ (U+23AA) is the column divider the TLG uses inside Aristotle's inline tables
 # (e.g. the De Int 22a modal-opposition square); strip it so the cells tokenize.

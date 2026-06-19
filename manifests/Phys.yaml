@@ -1,0 +1,70 @@
+# Physics — pipeline manifest (DRAFT: single book, used to derive boundaries)
+work:
+  id: Phys
+  title: "Physics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "031"
+  greek_edition: "Ross, Aristotelis Physica (OCT, 1950)"
+  english_translation: "R. P. Hardie and R. K. Gaye (Oxford, 1930)"
+
+bekker_range:
+  first_column: "184a"
+  last_column: "267b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg031.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: hardie
+    name: "R. P. Hardie and R. K. Gaye (Oxford, 1930)"
+    model: archive
+    dir: "phys-hardie"
+    books: 8
+    chapter_marker: part
+
+mid_column_book_starts:
+  - { book: 2, column: "192b" }
+  - { book: 3, column: "200b" }
+  - { book: 4, column: "208a" }
+  - { book: 5, column: "224a" }
+  - { book: 6, column: "231a" }
+  - { book: 7, column: "241b" }
+  - { book: 8, column: "250b" }
+
+# Edition (OCT) line-numbering quirks within a book — faithful to the TLG/Diogenes
+# export, declared so the validator treats them as expected rather than failures:
+#   - 205a/205b/226b: duplicated and transposed Bekker line numbers in the Ross
+#     OCT (a doubled line, and short out-of-order runs).
+#   - 227a: the column opens 7-10 then 1-6 before resuming at 10 (transposition).
+#   - 243a: Book VII survives in two recensions; the OCT prints both, so the line
+#     numbering runs 30-40 then restarts at 11.
+expected_line_gaps:
+  - { column: "205a", after: 25, next: 30 }
+  - { column: "205a", after: 35, next: 25 }
+  - { column: "205b", after: 1,  next: 1 }
+  - { column: "226b", after: 23, next: 26 }
+  - { column: "226b", after: 26, next: 26 }
+  - { column: "226b", after: 27, next: 23 }
+  - { column: "226b", after: 25, next: 27 }
+  - { column: "227a", after: 10, next: 1 }
+  - { column: "227a", after: 6,  next: 10 }
+  - { column: "243a", after: 40, next: 11 }
+
+books:
+  - { n: 1, start: "184a10", end: "192b4" }
+  - { n: 2, start: "192b8",  end: "200b8" }
+  - { n: 3, start: "200b12", end: "208a23" }
+  - { n: 4, start: "208a27", end: "224a17" }
+  - { n: 5, start: "224a21", end: "231a17" }
+  - { n: 6, start: "231a21", end: "241b20" }
+  - { n: 7, start: "241b34", end: "250b7" }
+  - { n: 8, start: "250b11", end: "267b26" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

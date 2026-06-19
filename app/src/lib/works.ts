@@ -99,6 +99,40 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on statements, truth, negation, and future contingents — the second work of the Organon.',
   },
   {
+    id: 'Phys',
+    title: 'Physics',
+    abbr: 'Phys.',
+    author: 'Aristotle',
+    books: 8,
+    bookLabels: ROMAN.slice(0, 8),
+    greekEdition: 'Ross, Aristotelis Physica (OCT, 1950)',
+    greekSource: {
+      short: 'Ross (OCT, 1950)',
+      full: 'W. D. Ross, ed. Aristotelis Physica. Oxford: Clarendon Press (Oxford Classical Texts), 1950.',
+    },
+    translations: [
+      { id: 'hardie', name: 'R. P. Hardie and R. K. Gaye (Oxford, 1930)', short: 'Hardie & Gaye', slot: 'english' },
+    ],
+    blurb: 'Aristotle on nature, change, place, time, and the prime mover, in eight books.',
+  },
+  {
+    id: 'GC',
+    title: 'On Generation and Corruption',
+    abbr: 'GC',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'Joachim, Aristotelis De Generatione et Corruptione (Oxford, 1922)',
+    greekSource: {
+      short: 'Joachim (Oxford, 1922)',
+      full: 'H. H. Joachim, ed. Aristotle on Coming-to-be and Passing-away (De Generatione et Corruptione). Oxford: Clarendon Press, 1922.',
+    },
+    translations: [
+      { id: 'joachim', name: 'H. H. Joachim (Oxford, 1922)', short: 'Joachim', slot: 'english' },
+    ],
+    blurb: 'Aristotle on coming-to-be, passing-away, mixture, and the elements, in two books.',
+  },
+  {
     id: 'DA',
     title: 'De Anima',
     abbr: 'DA',
@@ -359,9 +393,9 @@ export const CATEGORIES: Category[] = [
         ref: 'II.a',
         label: 'Major Works on Nature',
         works: [
-          { title: 'Physics' },
+          { id: 'Phys' },
           { title: 'On the Heavens' },
-          { title: 'On Generation and Corruption' },
+          { id: 'GC' },
           { title: 'Meteorology' },
           { id: 'DA' },
         ],
