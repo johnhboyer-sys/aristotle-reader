@@ -31,21 +31,43 @@ type EngIndex = Record<string, number[]>;            // word → [seg_idx, ...]
 // or by the exact surface form as written ('form').
 export type MatchMode = 'lemma' | 'form';
 
-// -- Per-work index loading (cached) --------------------------------------
+// -- Per-work index loading (cached, lazy per file) -----------------------
+//
+// Each index file is fetched and cached on its own, and only when a query
+// actually needs it (a Greek-only query never loads english.json, and only the
+// lemma OR form index per its match mode). This keeps the request burst small:
+// a Greek search over all works loads ~2 files/work, not 4 — which matters on
+// Safari/WebKit, where a large simultaneous fetch burst can drop a request with
+// "TypeError: Load failed" and (via Promise.all) sink the whole search.
 
-interface WorkIndex { meta: SegMeta[]; lemma: GrkIndex; form: GrkIndex; eng: EngIndex; }
-const _workCache = new Map<string, Promise<WorkIndex>>();
+const _fileCache = new Map<string, Promise<unknown>>();
 
-function loadWork(work: string): Promise<WorkIndex> {
-  const cached = _workCache.get(work);
-  if (cached) return cached;
-  const base = searchBase(work);
-  const grab = (f: string) => fetch(`${base}/${f}`).then(r => r.json());
-  const p = Promise.all([
-    grab('meta.json'), grab('greek_lemma.json'), grab('greek_form.json'), grab('english.json'),
-  ]).then(([meta, lemma, form, eng]) => ({ meta, lemma, form, eng } as WorkIndex));
-  _workCache.set(work, p);
-  return p;
+function loadIndex<T>(work: string, file: string): Promise<T> {
+  const key = `${work}/${file}`;
+  const cached = _fileCache.get(key);
+  if (cached) return cached as Promise<T>;
+  const p = fetch(`${searchBase(work)}/${file}`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ${key}`);
+    return r.json();
+  });
+  _fileCache.set(key, p);
+  return p as Promise<T>;
+}
+
+// Run `fn` over `items` with at most `limit` in flight at once (bounds the
+// concurrent-fetch burst). Rejections propagate; callers that want per-item
+// tolerance pass an `fn` that catches.
+async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  });
+  await Promise.all(workers);
+  return out;
 }
 
 // -- Unicode Greek → Beta Code fold form ----------------------------------
@@ -206,13 +228,24 @@ async function searchWork(
   langOp: LangOp,
   matchMode: MatchMode,
 ): Promise<SearchResult[]> {
-  const { meta, lemma, form, eng: engIdx } = await loadWork(work);
-  const grkIdx = matchMode === 'form' ? form : lemma;
+  // Fetch only what this query needs: meta always; the lemma OR form Greek
+  // index iff there are Greek terms; the English index iff there are English
+  // terms. Kick them off together, then await.
+  const metaP = loadIndex<SegMeta[]>(work, 'meta.json');
+  const grkP: Promise<GrkIndex | null> = grkTerms.length
+    ? loadIndex<GrkIndex>(work, matchMode === 'form' ? 'greek_form.json' : 'greek_lemma.json')
+    : Promise.resolve(null);
+  const engP: Promise<EngIndex | null> = engTerms.length
+    ? loadIndex<EngIndex>(work, 'english.json')
+    : Promise.resolve(null);
+  const meta = await metaP;
+  const grkIdx = await grkP;
+  const engIdx = await engP;
 
   let grkHits: Set<number> | null = null;
   let engHits: Set<number> | null = null;
 
-  if (grkTerms.length > 0) {
+  if (grkTerms.length > 0 && grkIdx) {
     const postings = grkTerms.map(t => grkPosting(grkIdx, t));
     if (grkMode === 'any') {
       grkHits = postings.reduce(union);
@@ -227,7 +260,7 @@ async function searchWork(
     }
   }
 
-  if (engTerms.length > 0) {
+  if (engTerms.length > 0 && engIdx) {
     const postings = engTerms.map(t => engPosting(engIdx, t));
     if (engMode === 'any') {
       engHits = postings.reduce(union);
@@ -248,7 +281,7 @@ async function searchWork(
     combined = grkHits ?? engHits ?? new Set();
   }
 
-  const grkPos = grkHits
+  const grkPos = grkHits && grkIdx
     ? greekPositions(grkIdx, meta, grkTerms, grkMode, grkHits)
     : new Map<number, number[]>();
 
@@ -282,8 +315,15 @@ export async function search(
   const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean).map(t => t.replace(/^\*+/, ''));
   const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
-  const perWork = await Promise.all(
-    works.map(w => searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode)),
-  );
+  // Bound how many works load at once, and let a single work's failed index
+  // load drop just that work (logged) instead of rejecting the whole search.
+  const perWork = await pool(works, 8, async w => {
+    try {
+      return await searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode);
+    } catch (err) {
+      console.warn(`search: skipping ${w} —`, err);
+      return [] as SearchResult[];
+    }
+  });
   return perWork.flat();
 }

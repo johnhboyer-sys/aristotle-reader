@@ -100,6 +100,16 @@
     expanded = expanded; // trigger reactivity
   }
 
+  // Run `fn` over `items` with at most `limit` in flight (bounds the concurrent
+  // fetch burst that can make Safari drop requests with "Load failed").
+  async function pool<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
+    let next = 0;
+    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) await fn(items[next++]);
+    });
+    await Promise.all(workers);
+  }
+
   // Beta Code reference for the "How to type Greek" chart. Keys are the same
   // letters the search index uses, so anything typed here matches directly.
   const BETA_LETTERS: { beta: string; greek: string; name: string }[] = [
@@ -211,19 +221,28 @@
       const results = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
 
       // Load each (work, book) present in the results, plus each work's chapters.
+      // Bounded concurrency + per-item tolerance: a dropped fetch (Safari's
+      // "Load failed" under a big burst) skips that work/book instead of
+      // sinking the whole search. Missing data is handled below (seg/lookup
+      // guard), so the rest of the results still render.
       const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
       const workSet = [...new Set(results.map(r => r.work))];
       const chaptersByWork = new Map<string, Record<string, ChapterRef[]>>();
-      await Promise.all(workSet.map(async w => chaptersByWork.set(w, await fetchChapters(w))));
+      await pool(workSet, 8, async w => {
+        try { chaptersByWork.set(w, await fetchChapters(w)); }
+        catch (err) { console.warn(`search: chapters failed for ${w} —`, err); }
+      });
       const segMap = new Map<string, Segment>();             // key: work:segId
       const lookups = new Map<string, ReturnType<typeof chapterLookup>>(); // key: work:book
-      await Promise.all(wbPairs.map(async pair => {
+      await pool(wbPairs, 8, async pair => {
         const [w, bStr] = pair.split(':');
         const b = Number(bStr);
-        const data = await fetchBook(w, b);
-        for (const s of data.segments) segMap.set(`${w}:${s.id}`, s);
-        lookups.set(pair, chapterLookup(data, chaptersByWork.get(w)?.[String(b)] ?? []));
-      }));
+        try {
+          const data = await fetchBook(w, b);
+          for (const s of data.segments) segMap.set(`${w}:${s.id}`, s);
+          lookups.set(pair, chapterLookup(data, chaptersByWork.get(w)?.[String(b)] ?? []));
+        } catch (err) { console.warn(`search: book failed for ${pair} —`, err); }
+      });
 
       const gmap = new Map<string, ChapterGroup>();
       const add = (work: string, book: number, ch: { chapter: string; bekker: string; order: number }, inst: Instance) => {
