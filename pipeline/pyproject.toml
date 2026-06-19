@@ -7,3 +7,11 @@ dependencies = [
     "lxml>=6.1.1",
     "pyyaml>=6.0.3",
 ]
+
+[project.optional-dependencies]
+# Heavy ML deps used only by the alignment / gloss-aligner tooling
+# (sentence_transformers is lazy-imported in align/similarity.py and pulls in
+# torch, transformers, scipy, numpy, etc.). Install with: uv sync --extra align
+align = [
+    "sentence-transformers>=2.2",
+]
