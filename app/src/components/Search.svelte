@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { search, type SearchMode, type LangOp, type MatchMode } from '../lib/search';
+  import { search, type SearchMode, type LangOp, type MatchMode, type SearchResult } from '../lib/search';
   import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
   import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
 
@@ -33,13 +33,33 @@
   // Which works to search. Default: all. Selected in the collapsible panel below.
   let selectedWorks = new Set<string>(WORKS.map(w => w.id));
   let worksOpen = false;  // is the works "Refine" panel expanded?
-  let groups: ChapterGroup[] = [];
-  let totalInstances = 0;
+  let groups: ChapterGroup[] = [];        // chapter groups of the CURRENT page
+  let totalInstances = 0;                 // across the whole result set (all pages)
   let expanded = new Set<string>();
-  let loading = false;
+  let loading = false;                    // running the index search
   let searched = false;
   let error = '';
   let showHelp = false;
+
+  // Pagination. search() returns the complete hit list (index-only); we render
+  // it a page at a time, snapping page breaks to whole books so a chapter never
+  // splits across pages — and so only the current page's books/chapters are
+  // fetched. That keeps the request burst tiny regardless of how broad the
+  // query is, instead of loading every result's book at once.
+  const PAGE_TARGET = 40;                 // ~instances per page (whole books)
+  let pages: SearchResult[][] = [];       // each page's slice of the result set
+  let pageIdx = 0;
+  let pageLoading = false;                // fetching the current page's books
+  let pageError = '';                     // partial-load notice for this page
+  let csvBusy = false;
+  let csvNote = '';
+
+  // Immutable snapshot of the SUBMITTED query. Pagination and CSV build snippets
+  // and jump-links after the search completes, so they must use the query that
+  // produced the results — not whatever is currently typed in the boxes (a user
+  // can edit the inputs without re-submitting, then page/retry/export).
+  interface SearchCtx { grkQuery: string; engQuery: string; engTerms: string[]; }
+  let searchCtx: SearchCtx = { grkQuery: '', engQuery: '', engTerms: [] };
 
   // Shared option list for the per-language mode selectors.
   const MODE_OPTS: { v: SearchMode; l: string }[] = [
@@ -173,7 +193,11 @@
     const chs = chapters
       .map((c, i) => ({ ...c, ci: colIdx.get(c.column) ?? 0, ln: parseInt(c.line), order: i }))
       .sort((a, b) => a.ci - b.ci || a.ln - b.ln);
-    return (column: string, line: number) => {
+    return (column: string, line: number): { chapter: string; bekker: string; order: number } => {
+      // Defensive: never return undefined (callers deref .chapter). If the
+      // chapter list is empty, group the hit under a placeholder rather than
+      // throwing and collapsing the whole page.
+      if (!chs.length) return { chapter: '—', bekker: column, order: 0 };
       const ci = colIdx.get(column) ?? 0;
       let found = chs[0];
       for (const c of chs) {
@@ -210,82 +234,162 @@
     return lines[idx].n;
   }
 
+  // Instances a result contributes (mirrors how `buildGroups` adds them): one
+  // per Greek match position, plus one for an English match. Lets us count the
+  // total and lay out pages from the index alone, before any book is fetched.
+  function instCount(r: SearchResult): number {
+    return (r.grkMatch ? r.grkPositions.length : 0) + (r.engMatch ? 1 : 0);
+  }
+
+  // Build the chapter groups for a slice of results: load the books + chapters
+  // they touch (bounded concurrency), then assemble and sort. A failed book or
+  // chapter fetch is evicted (see data.ts) and its work:book key collected in
+  // `failed` — NOT swallowed as a successful empty result — so the caller can
+  // show an incomplete-results notice and offer a retry.
+  async function buildGroups(results: SearchResult[], ctx: SearchCtx): Promise<{ groups: ChapterGroup[]; failed: string[] }> {
+    const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
+    const workSet = [...new Set(results.map(r => r.work))];
+    const failed: string[] = [];
+
+    const chaptersByWork = new Map<string, Record<string, ChapterRef[]>>();
+    await pool(workSet, 8, async w => {
+      try { chaptersByWork.set(w, await fetchChapters(w)); }
+      catch (err) { console.warn(`search: chapters failed for ${w} —`, err); failed.push(w); }
+    });
+    const segMap = new Map<string, Segment>();             // key: work:segId
+    const lookups = new Map<string, ReturnType<typeof chapterLookup>>(); // key: work:book
+    await pool(wbPairs, 8, async pair => {
+      const [w, bStr] = pair.split(':');
+      const b = Number(bStr);
+      // If the work's chapters never loaded we can't group its hits — mark the
+      // pair failed and skip (don't feed an empty list into chapterLookup),
+      // so the page shows the partial-results notice instead of crashing.
+      const chapters = chaptersByWork.get(w)?.[String(b)];
+      if (!chapters) { failed.push(pair); return; }
+      try {
+        const data = await fetchBook(w, b);
+        for (const s of data.segments) segMap.set(`${w}:${s.id}`, s);
+        lookups.set(pair, chapterLookup(data, chapters));
+      } catch (err) { console.warn(`search: book failed for ${pair} —`, err); failed.push(pair); }
+    });
+
+    const gmap = new Map<string, ChapterGroup>();
+    const add = (work: string, book: number, ch: { chapter: string; bekker: string; order: number }, inst: Instance) => {
+      const key = `${work}:${book}:${ch.chapter}`;
+      let g = gmap.get(key);
+      if (!g) { g = { key, work, book, chapter: ch.chapter, bekker: ch.bekker, order: ch.order, instances: [] }; gmap.set(key, g); }
+      g.instances.push(inst);
+    };
+
+    // Carry the SUBMITTED queries so the reader can highlight them; loc scrolls
+    // to the line. Use the snapshot (ctx), not live input state.
+    const qs = new URLSearchParams();
+    if (ctx.grkQuery) qs.set('hlg', ctx.grkQuery);
+    if (ctx.engQuery) qs.set('hle', ctx.engQuery);
+    const base = qs.toString();
+    const root = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const jumpFor = (work: string, book: number, column: string, line: number) =>
+      `${root}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+
+    for (const r of results) {
+      const seg = segMap.get(`${r.work}:${r.meta.id}`);
+      const lookup = lookups.get(`${r.work}:${r.meta.book}`);
+      if (!seg || !lookup) continue;
+      if (r.grkMatch) {
+        for (const pos of r.grkPositions) {
+          const line = lineOfPosition(seg, pos);
+          const ch = lookup(seg.column, line);
+          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
+        }
+      }
+      if (r.engMatch) {
+        const line = englishLine(seg, ctx.engTerms);
+        const ch = lookup(seg.column, line);
+        add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, ctx.engTerms), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
+      }
+    }
+
+    for (const g of gmap.values()) g.instances.sort(bekkerCmp);
+    const out = [...gmap.values()].sort((a, b) =>
+      ((WORK_ORDER.get(a.work) ?? 0) - (WORK_ORDER.get(b.work) ?? 0)) || a.book - b.book || a.order - b.order);
+    return { groups: out, failed: [...new Set(failed)] };
+  }
+
+  // Split the full result set into pages of whole books (~PAGE_TARGET instances
+  // each). Ordered by home-page work order then book; a stable sort keeps each
+  // book's hits in document order. Whole books per page ⇒ no chapter splits and
+  // only a handful of books fetched per page.
+  function paginate(results: SearchResult[]): SearchResult[][] {
+    const sorted = [...results].sort((a, b) =>
+      ((WORK_ORDER.get(a.work) ?? 0) - (WORK_ORDER.get(b.work) ?? 0)) || (a.meta.book - b.meta.book));
+    const blocks: { results: SearchResult[]; count: number }[] = [];
+    let key = '';
+    for (const r of sorted) {
+      const k = `${r.work}:${r.meta.book}`;
+      if (k !== key) { blocks.push({ results: [], count: 0 }); key = k; }
+      const blk = blocks[blocks.length - 1];
+      blk.results.push(r); blk.count += instCount(r);
+    }
+    const out: SearchResult[][] = [];
+    let page: SearchResult[] = []; let count = 0;
+    for (const blk of blocks) {
+      if (page.length && count + blk.count > PAGE_TARGET) { out.push(page); page = []; count = 0; }
+      page.push(...blk.results); count += blk.count;
+    }
+    if (page.length) out.push(page);
+    return out;
+  }
+
+  async function renderPage(i: number) {
+    pageIdx = i;
+    pageLoading = true;
+    pageError = '';
+    try {
+      const { groups: g, failed } = await buildGroups(pages[i] ?? [], searchCtx);
+      groups = g;
+      // Single-hit chapters open by default; merged (multi-hit) start collapsed.
+      expanded = new Set(groups.filter(x => x.instances.length === 1).map(x => x.key));
+      if (failed.length) {
+        pageError = `${failed.length} passage source${failed.length === 1 ? '' : 's'} on this page didn’t load — some hits may be missing.`;
+      }
+    } catch (err) {
+      pageError = String(err);
+      groups = [];
+    } finally {
+      pageLoading = false;
+    }
+  }
+
+  function goPage(i: number) {
+    if (i < 0 || i >= pages.length || i === pageIdx || pageLoading) return;
+    renderPage(i);
+    if (typeof document !== 'undefined') {
+      document.querySelector('.result-bar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   async function doSearch(e?: Event) {
     e?.preventDefault();
     if (!grkQuery.trim() && !engQuery.trim()) return;
     loading = true;
     error = '';
+    pageError = '';
+    csvNote = '';
     searched = false;
     try {
       const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
-      const results = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
-
-      // Load each (work, book) present in the results, plus each work's chapters.
-      // Bounded concurrency + per-item tolerance: a dropped fetch (Safari's
-      // "Load failed" under a big burst) skips that work/book instead of
-      // sinking the whole search. Missing data is handled below (seg/lookup
-      // guard), so the rest of the results still render.
-      const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
-      const workSet = [...new Set(results.map(r => r.work))];
-      const chaptersByWork = new Map<string, Record<string, ChapterRef[]>>();
-      await pool(workSet, 8, async w => {
-        try { chaptersByWork.set(w, await fetchChapters(w)); }
-        catch (err) { console.warn(`search: chapters failed for ${w} —`, err); }
-      });
-      const segMap = new Map<string, Segment>();             // key: work:segId
-      const lookups = new Map<string, ReturnType<typeof chapterLookup>>(); // key: work:book
-      await pool(wbPairs, 8, async pair => {
-        const [w, bStr] = pair.split(':');
-        const b = Number(bStr);
-        try {
-          const data = await fetchBook(w, b);
-          for (const s of data.segments) segMap.set(`${w}:${s.id}`, s);
-          lookups.set(pair, chapterLookup(data, chaptersByWork.get(w)?.[String(b)] ?? []));
-        } catch (err) { console.warn(`search: book failed for ${pair} —`, err); }
-      });
-
-      const gmap = new Map<string, ChapterGroup>();
-      const add = (work: string, book: number, ch: { chapter: string; bekker: string; order: number }, inst: Instance) => {
-        const key = `${work}:${book}:${ch.chapter}`;
-        let g = gmap.get(key);
-        if (!g) { g = { key, work, book, chapter: ch.chapter, bekker: ch.bekker, order: ch.order, instances: [] }; gmap.set(key, g); }
-        g.instances.push(inst);
+      // Snapshot the submitted query for all deferred (per-page / CSV) rendering.
+      searchCtx = {
+        grkQuery: grkQuery.trim(),
+        engQuery: engQuery.trim(),
+        engTerms: engQuery.trim().split(/\s+/).filter(Boolean),
       };
-
-      // Carry the queries so the reader can highlight them; loc scrolls to the line.
-      const qs = new URLSearchParams();
-      if (grkQuery.trim()) qs.set('hlg', grkQuery.trim());
-      if (engQuery.trim()) qs.set('hle', engQuery.trim());
-      const base = qs.toString();
-      const root = import.meta.env.BASE_URL.replace(/\/$/, '');
-      const jumpFor = (work: string, book: number, column: string, line: number) =>
-        `${root}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${line}`;
-
-      for (const r of results) {
-        const seg = segMap.get(`${r.work}:${r.meta.id}`);
-        const lookup = lookups.get(`${r.work}:${r.meta.book}`);
-        if (!seg || !lookup) continue;
-        if (r.grkMatch) {
-          for (const pos of r.grkPositions) {
-            const line = lineOfPosition(seg, pos);
-            const ch = lookup(seg.column, line);
-            add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
-          }
-        }
-        if (r.engMatch) {
-          const line = englishLine(seg, engTerms);
-          const ch = lookup(seg.column, line);
-          add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, engTerms), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
-        }
-      }
-
-      for (const g of gmap.values()) g.instances.sort(bekkerCmp);
-      groups = [...gmap.values()].sort((a, b) =>
-        ((WORK_ORDER.get(a.work) ?? 0) - (WORK_ORDER.get(b.work) ?? 0)) || a.book - b.book || a.order - b.order);
-      totalInstances = groups.reduce((n, g) => n + g.instances.length, 0);
-      // Single-hit chapters open by default; merged (multi-hit) start collapsed.
-      expanded = new Set(groups.filter(g => g.instances.length === 1).map(g => g.key));
+      const results = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
+      totalInstances = results.reduce((n, r) => n + instCount(r), 0);
+      pages = paginate(results);
       searched = true;
+      if (pages.length) await renderPage(0);
+      else { groups = []; pageIdx = 0; }
     } catch (err) {
       error = String(err);
     } finally {
@@ -370,8 +474,6 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  $: engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
-
   // Bekker order within a chapter: page number, then column half (a < b), then
   // line. Sorting by line alone mis-orders hits that span two columns of one
   // chapter (e.g. 1097b3 before 1097a15). Works for grk and eng instances alike.
@@ -384,7 +486,7 @@
     return a.line - b.line;
   }
 
-  // --- CSV export of the current results -----------------------------------
+  // --- CSV export (the FULL result set, every page) ------------------------
   function stripHtml(html: string): string {
     return html
       .replace(/<[^>]*>/g, '')
@@ -394,33 +496,50 @@
   function csvCell(v: string): string {
     return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
   }
-  function exportCsv() {
-    const origin = typeof location !== 'undefined' ? location.origin : '';
-    const rows: string[][] = [['Work', 'Book', 'Chapter', 'Bekker', 'Language', 'Snippet', 'URL']];
-    for (const g of groups) {
-      const w = getWork(g.work);
-      const workTitle = w?.title ?? g.work;
-      const book = w?.bookLabels[g.book - 1] ?? String(g.book);
-      for (const inst of g.instances) {
-        rows.push([
-          workTitle, String(book), g.chapter, inst.ref,
-          inst.lang === 'grk' ? 'Greek' : 'English',
-          stripHtml(inst.html),
-          origin + inst.jumpUrl,
-        ]);
+  async function exportCsv() {
+    if (csvBusy) return;
+    csvBusy = true;
+    csvNote = '';
+    try {
+      // Export every result, not just the current page — so build groups over
+      // the whole set (loads any not-yet-fetched books on demand, bounded +
+      // retried). If some book truly can't load, the CSV omits those rows and
+      // we say so rather than silently shipping a short file.
+      const { groups: allGroups, failed } = await buildGroups(pages.flat(), searchCtx);
+      const origin = typeof location !== 'undefined' ? location.origin : '';
+      const rows: string[][] = [['Work', 'Book', 'Chapter', 'Bekker', 'Language', 'Snippet', 'URL']];
+      for (const g of allGroups) {
+        const w = getWork(g.work);
+        const workTitle = w?.title ?? g.work;
+        const book = w?.bookLabels[g.book - 1] ?? String(g.book);
+        for (const inst of g.instances) {
+          rows.push([
+            workTitle, String(book), g.chapter, inst.ref,
+            inst.lang === 'grk' ? 'Greek' : 'English',
+            stripHtml(inst.html),
+            origin + inst.jumpUrl,
+          ]);
+        }
       }
+      const csv = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+      // Prepend a UTF-8 BOM so Excel renders Greek correctly.
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `aristotle-search-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      if (failed.length) {
+        csvNote = `Exported, but ${failed.length} passage source${failed.length === 1 ? '' : 's'} couldn’t load — the CSV may be missing some rows. Try again to retry those.`;
+      }
+    } catch (err) {
+      csvNote = `Export failed: ${String(err)}`;
+    } finally {
+      csvBusy = false;
     }
-    const csv = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
-    // Prepend a UTF-8 BOM so Excel renders Greek correctly.
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `aristotle-search-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
   }
 
   function onEnter(e: KeyboardEvent) {
@@ -616,12 +735,33 @@
       <p class="result-count">
         {totalInstances === 0
           ? 'No passages found.'
-          : `${totalInstances} instance${totalInstances === 1 ? '' : 's'} in ${groups.length} chapter${groups.length === 1 ? '' : 's'}`}
+          : `${totalInstances} instance${totalInstances === 1 ? '' : 's'}` +
+            (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '')}
       </p>
       {#if totalInstances > 0}
-        <button type="button" class="export-btn" on:click={exportCsv}>Export results as CSV</button>
+        <button type="button" class="export-btn" on:click={exportCsv} disabled={csvBusy}>
+          {csvBusy ? 'Preparing CSV…' : 'Export results as CSV'}
+        </button>
       {/if}
     </div>
+    {#if csvNote}
+      <p class="search-note">{csvNote}</p>
+    {/if}
+
+    {#if pages.length > 1}
+      <nav class="pager" aria-label="Result pages">
+        <button type="button" class="pager-btn" on:click={() => goPage(pageIdx - 1)} disabled={pageIdx === 0 || pageLoading}>‹ Prev</button>
+        <span class="pager-status">{pageLoading ? 'Loading…' : `Page ${pageIdx + 1} of ${pages.length}`}</span>
+        <button type="button" class="pager-btn" on:click={() => goPage(pageIdx + 1)} disabled={pageIdx >= pages.length - 1 || pageLoading}>Next ›</button>
+      </nav>
+    {/if}
+
+    {#if pageError}
+      <p class="search-note warn">
+        {pageError}
+        <button type="button" class="retry-btn" on:click={() => renderPage(pageIdx)} disabled={pageLoading}>Retry</button>
+      </p>
+    {/if}
 
     {#each groupsByWork as wg}
       {#each wg.books as [book, bookGroups]}
@@ -658,6 +798,14 @@
       </section>
       {/each}
     {/each}
+
+    {#if pages.length > 1}
+      <nav class="pager pager-bottom" aria-label="Result pages">
+        <button type="button" class="pager-btn" on:click={() => goPage(pageIdx - 1)} disabled={pageIdx === 0 || pageLoading}>‹ Prev</button>
+        <span class="pager-status">{pageLoading ? 'Loading…' : `Page ${pageIdx + 1} of ${pages.length}`}</span>
+        <button type="button" class="pager-btn" on:click={() => goPage(pageIdx + 1)} disabled={pageIdx >= pages.length - 1 || pageLoading}>Next ›</button>
+      </nav>
+    {/if}
   {/if}
 </div>
 
@@ -1090,7 +1238,59 @@
     cursor: pointer;
     white-space: nowrap;
   }
-  .export-btn:hover { background: var(--col-bg); border-color: var(--accent-light); }
+  .export-btn:hover:not(:disabled) { background: var(--col-bg); border-color: var(--accent-light); }
+  .export-btn:disabled { opacity: 0.6; cursor: default; }
+
+  .search-note {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    margin: 0 0 0.75rem;
+  }
+  .search-note.warn { color: var(--error); display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .retry-btn {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.6rem;
+    cursor: pointer;
+  }
+  .retry-btn:hover:not(:disabled) { border-color: var(--accent-light); }
+  .retry-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Result pagination */
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 0.5rem 0 1.25rem;
+  }
+  .pager-bottom { margin: 1.5rem 0 0.5rem; }
+  .pager-btn {
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.3rem 0.9rem;
+    cursor: pointer;
+  }
+  .pager-btn:hover:not(:disabled) { background: var(--col-bg); border-color: var(--accent-light); }
+  .pager-btn:disabled { opacity: 0.4; cursor: default; }
+  .pager-status {
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    min-width: 8rem;
+    text-align: center;
+  }
 
   /* ── Grouped results: Work → Book → Chapter ──────────────────────── */
 

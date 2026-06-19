@@ -112,6 +112,8 @@ export function fetchBook(work: string, n: number): Promise<BookData> {
     if (!r.ok) throw new Error(`${work} book ${n}: ${r.status}`);
     return r.json();
   });
+  // Evict a rejected fetch so it can be retried (don't cache the failure).
+  p.catch(() => { if (_bookCache.get(key) === p) _bookCache.delete(key); });
   _bookCache.set(key, p);
   return p;
 }
@@ -123,6 +125,8 @@ export function fetchChapters(work: string): Promise<Record<string, ChapterRef[]
     if (!r.ok) throw new Error(`${work} chapters: ${r.status}`);
     return r.json();
   });
+  // Evict a rejected fetch so it can be retried (don't cache the failure).
+  p.catch(() => { if (_chaptersCache.get(work) === p) _chaptersCache.delete(work); });
   _chaptersCache.set(work, p);
   return p;
 }

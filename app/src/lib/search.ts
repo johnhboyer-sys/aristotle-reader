@@ -50,6 +50,9 @@ function loadIndex<T>(work: string, file: string): Promise<T> {
     if (!r.ok) throw new Error(`HTTP ${r.status} for ${key}`);
     return r.json();
   });
+  // Evict on failure so a transient drop can be retried — a rejected promise
+  // must NOT stay cached (that would poison every later search in the tab).
+  p.catch(() => { if (_fileCache.get(key) === p) _fileCache.delete(key); });
   _fileCache.set(key, p);
   return p as Promise<T>;
 }
