@@ -4,6 +4,7 @@
   import { greekFold } from '../lib/search';
   import { getWork, visibleTranslations } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
+  import FootnotePopup from './FootnotePopup.svelte';
 
   export let work: string = 'EN';
   export let bookNum: number = 1;
@@ -188,6 +189,15 @@
       out = out.replace(new RegExp(`\\b(${clean}\\w*)\\b`, 'gi'), '<mark>$1</mark>');
     }
     return out;
+  }
+  // The third translation (Ostwald) carries inline `[^N]` footnote references;
+  // turn each into a clickable superscript. A delegated click handler on the
+  // column reads `data-fn` and opens the footnote popup.
+  function renderThird(text: string): string {
+    return highlightEng(text).replace(
+      /\[\^(\d+)\]/g,
+      '<sup class="fn-marker" data-fn="$1" role="button" tabindex="0" aria-label="Footnote $1">$1</sup>',
+    );
   }
 
   // A segment renders as one or more blocks split at chapter boundaries.
@@ -434,6 +444,40 @@
 
   // Active popup state
   let popup: { token: Token; anchor: { x: number; y: number } } | null = null;
+  // Active footnote popup (third-translation `[^N]` markers). Opens on hover,
+  // with a short close-delay so the cursor can travel from the marker into the
+  // popup without it vanishing; click/Enter also open it (touch + keyboard).
+  let footnote: { n: string; anchor: { x: number; y: number } } | null = null;
+  let fnCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  function cancelFnClose() {
+    if (fnCloseTimer) { clearTimeout(fnCloseTimer); fnCloseTimer = null; }
+  }
+  function scheduleFnClose() {
+    cancelFnClose();
+    fnCloseTimer = setTimeout(() => { footnote = null; fnCloseTimer = null; }, 180);
+  }
+  function showFootnote(marker: Element) {
+    cancelFnClose();
+    const n = marker.getAttribute('data-fn') ?? '';
+    if (footnote?.n === n) return;
+    const r = marker.getBoundingClientRect();
+    footnote = { n, anchor: { x: r.left, y: r.bottom } };
+  }
+  function onFootnoteOver(e: MouseEvent) {
+    const marker = (e.target as HTMLElement | null)?.closest?.('.fn-marker');
+    if (marker) showFootnote(marker);
+  }
+  function onFootnoteOut(e: MouseEvent) {
+    if ((e.target as HTMLElement | null)?.closest?.('.fn-marker')) scheduleFnClose();
+  }
+  function onFootnoteClick(e: MouseEvent | KeyboardEvent) {
+    const marker = (e.target as HTMLElement | null)?.closest?.('.fn-marker');
+    if (!marker) return;
+    if (e instanceof KeyboardEvent && e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    showFootnote(marker);
+  }
+  function closeFootnote() { cancelFnClose(); footnote = null; }
 
   onMount(async () => {
     // Remember which book of this work was last open, for the work switcher.
@@ -665,12 +709,13 @@
                 {/if}
               {:else if selectedSlot === 'third'}
                 {#if block.thirdRows.length}
-                  <!-- Third translation with its Bekker gutter + diagrams. -->
-                  <div class="english-text">
+                  <!-- Third translation with its Bekker gutter + diagrams. Its
+                       `[^N]` footnote markers are clickable (delegated handler). -->
+                  <div class="english-text" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
                     {#each block.thirdRows as row}
                       <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                      <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                      <div class="eng-seg">{@html renderThird(row.text)}</div>
                       {#each block.thirdTables.filter(t => t.n === row.n) as tbl}
                         <table class="eng-table"><tbody>
                           {#each tbl.rows as trow}
@@ -727,5 +772,16 @@
     token={popup.token}
     anchor={popup.anchor}
     onClose={closePopup}
+  />
+{/if}
+
+{#if footnote}
+  <FootnotePopup
+    {work}
+    n={footnote.n}
+    anchor={footnote.anchor}
+    onClose={closeFootnote}
+    onHoverIn={cancelFnClose}
+    onHoverOut={scheduleFnClose}
   />
 {/if}

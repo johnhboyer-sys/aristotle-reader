@@ -103,6 +103,7 @@ const _lsjCache = new Map<string, Record<string, LsjEntry>>();
 const _bookCache = new Map<string, Promise<BookData>>();
 const _chaptersCache = new Map<string, Promise<Record<string, ChapterRef[]>>>();
 const _columnsCache = new Map<string, Promise<Record<string, ColumnRef[]>>>();
+const _footnotesCache = new Map<string, Promise<Record<string, string>>>();
 
 export function fetchBook(work: string, n: number): Promise<BookData> {
   const key = `${work}:${n}`;
@@ -128,6 +129,22 @@ export function fetchChapters(work: string): Promise<Record<string, ChapterRef[]
   // Evict a rejected fetch so it can be retried (don't cache the failure).
   p.catch(() => { if (_chaptersCache.get(work) === p) _chaptersCache.delete(work); });
   _chaptersCache.set(work, p);
+  return p;
+}
+
+// Translator footnotes for a work: { footnote number -> pre-rendered HTML }.
+// Present only for works whose translation carries notes (NE Ostwald). Loaded
+// lazily the first time a `[^N]` marker is clicked, then cached for the session.
+export function fetchFootnotes(work: string): Promise<Record<string, string>> {
+  const cached = _footnotesCache.get(work);
+  if (cached) return cached;
+  const p = fetch(`${workBase(work)}/footnotes.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} footnotes: ${r.status}`);
+    return r.json();
+  });
+  // Evict a rejected fetch so it can be retried (don't cache the failure).
+  p.catch(() => { if (_footnotesCache.get(work) === p) _footnotesCache.delete(work); });
+  _footnotesCache.set(work, p);
   return p;
 }
 

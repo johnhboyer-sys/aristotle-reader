@@ -18,7 +18,7 @@ def _stage1(manifest):
     # build/stage1 is single-work scratch; drop any secondary-translation chunks
     # left by a previous work's build so stage7 never emits a stale overlay. It
     # is rewritten below only when this work declares english.secondary.
-    for scratch in ("ross_chunks.json", "third_chunks.json"):
+    for scratch in ("ross_chunks.json", "third_chunks.json", "third_footnotes.json"):
         (BUILD_DIR / "stage1" / scratch).unlink(missing_ok=True)
 
     chapters_cfg = manifest.data.get("chapters", {})
@@ -88,6 +88,14 @@ def _stage1(manifest):
             ross = json.loads(ross_path.read_text(encoding="utf-8"))
             print(f"  ross: segments_with_text={len(ross)} "
                   f"pieces={sum(len(v) for v in ross.values())}")
+        # A third translation (NE Ostwald) whose Markdown carries the Bekker
+        # apparatus inline — parsed straight into a real per-line gutter, no
+        # aligner needed (see stage1_ostwald). Writes third_chunks.json plus a
+        # {N: html} footnote map that stage7 copies into the work's data dir.
+        if (manifest.data.get("english") or {}).get("third"):
+            from . import stage1_ostwald
+
+            stage1_ostwald.run(manifest, spine, english)
     n_lines = sum(len(s["lines"]) for s in spine["segments"])
     print(f"stage1: segments={len(spine['segments'])} lines={n_lines} "
           f"unassigned={len(spine['unassigned_lines'])}")

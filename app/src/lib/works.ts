@@ -449,6 +449,10 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'rackham', name: 'H. Rackham (Loeb, 1926)', short: 'Rackham', slot: 'english' },
       { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'ross' },
+      // Public domain (Bobbs-Merrill 1962, copyright not renewed — verified), so
+      // it ships in the public build. Bekker-keyed from its inline apparatus and
+      // carries Ostwald's 505 footnotes (shown as popups in the reader).
+      { id: 'ostwald', name: 'Martin Ostwald (Bobbs-Merrill, 1962)', short: 'Ostwald', slot: 'third' },
     ],
     blurb: 'Aristotle’s central work of moral philosophy, in ten books.',
   },

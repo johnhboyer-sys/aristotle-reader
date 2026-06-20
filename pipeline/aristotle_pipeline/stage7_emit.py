@@ -228,6 +228,11 @@ def run(manifest: Manifest) -> Path:
     ross = json.loads(ross_path.read_text(encoding="utf-8")) if ross_path.exists() else {}
     third_path = BUILD_DIR / "stage1" / "third_chunks.json"
     third = json.loads(third_path.read_text(encoding="utf-8")) if third_path.exists() else {}
+    # A third translation may ship footnotes (NE Ostwald): a {N: html} map the
+    # reader loads to fill the footnote popups. Emit it alongside the books.
+    footnotes_path = BUILD_DIR / "stage1" / "third_footnotes.json"
+    if footnotes_path.exists():
+        shutil.copy(footnotes_path, out_dir / "footnotes.json")
 
     range_map = chapter_ranges(spine, english.get("chapters", []))
     book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross, third)

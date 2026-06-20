@@ -39,6 +39,17 @@ english:
     dir: ross
     books: 10
     marker: number
+  # Third translation: Martin Ostwald (Bobbs-Merrill, 1962; public domain by
+  # non-renewal — verified). Unlike Ross, the Ostwald Markdown carries the Bekker
+  # apparatus inline (a bare page label per column, a bare line number every 5th
+  # line), so stage1_ostwald parses those markers into a synthetic alignment map
+  # and gets a real per-line Bekker gutter without the aligner. Its 505 footnotes
+  # are emitted to footnotes.json and shown as popups in the reader.
+  third:
+    id: ostwald
+    name: "Martin Ostwald (Bobbs-Merrill, 1962)"
+    dir: ostwald
+    file: ostwald-ethics.md
 
 # Columns where a new book starts mid-column. The English TEI emits a
 # duplicate page milestone at these restarts — except Books II (1103a14)

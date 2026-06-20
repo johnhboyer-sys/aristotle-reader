@@ -882,6 +882,38 @@ body {
   padding: 0.5rem 0;
 }
 
+/* ── translator footnotes (Ostwald) ──────────────────────────────── */
+/* Inline `[^N]` reference, rendered as a clickable superscript marker. */
+.fn-marker {
+  font-family: var(--font-ui);
+  font-size: 0.62em;
+  font-weight: 600;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0 0.05em;
+}
+.fn-marker:hover { text-decoration: underline; }
+.fn-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+
+.footnote-popup { width: min(440px, calc(100vw - 2rem)); }
+.footnote-num {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-light);
+}
+.footnote-text {
+  font-family: var(--font-english);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.footnote-text em { font-style: italic; }
+
 /* ── search link in book nav ─────────────────────────────────────── */
 .search-link {
   margin-left: 0.5rem;
