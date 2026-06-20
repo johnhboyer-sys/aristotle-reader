@@ -34,6 +34,10 @@ export interface Work {
   // Texts & Licences page (both driven off this one field so they can't drift).
   greekSource: { short: string; full: string };
   translations: TranslationRef[];
+  // Which translation the reader shows by default (a translations[].id). When
+  // omitted the reader falls back to the primary 'english'-slot translation.
+  // Used to surface a preferred overlay (e.g. NE → Ostwald) on first load.
+  defaultTranslation?: string;
   blurb: string;    // one line for the home index
 }
 
@@ -454,6 +458,8 @@ export const WORKS: Work[] = [
       // carries Ostwald's 505 footnotes (shown as popups in the reader).
       { id: 'ostwald', name: 'Martin Ostwald (Bobbs-Merrill, 1962)', short: 'Ostwald', slot: 'third' },
     ],
+    // The modern, Bekker-keyed Ostwald is the default English on first load.
+    defaultTranslation: 'ostwald',
     blurb: 'Aristotle’s central work of moral philosophy, in ten books.',
   },
   {

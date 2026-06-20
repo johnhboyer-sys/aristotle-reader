@@ -31,7 +31,11 @@
   // Which translation fills the English column: a translation id from the
   // registry (its slot decides what renders) or 'compare' = both slots side by
   // side. Persisted per work (works carry different translations).
-  let trans: string = engSlot?.id ?? translations[0]?.id ?? 'english';
+  // First-load translation: the work's preferred default if it names one (and
+  // it's actually visible in this build), else the primary 'english' slot. A
+  // saved choice or ?trans= query param overrides this in onMount.
+  const defaultTrans = translations.find(t => t.id === workMeta?.defaultTranslation)?.id;
+  let trans: string = defaultTrans ?? engSlot?.id ?? translations[0]?.id ?? 'english';
   $: selectedSlot = trans === 'compare'
     ? null
     : (translations.find(t => t.id === trans)?.slot ?? 'english');
