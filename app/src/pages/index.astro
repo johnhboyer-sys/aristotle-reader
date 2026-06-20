@@ -87,12 +87,24 @@ for (const cat of CATEGORIES) {
               <p class="blurb">{r.work.blurb}</p>
               <ul class="editions">
                 {visibleTranslations(r.work).map((t) => (
-                  <li>
-                    <a href={href(r.work.id, `?trans=${t.id}`)}>
-                      <span class="ed-name">{t.short}</span>
-                      <span class="ed-kind">Greek &amp; English · {t.name}</span>
-                    </a>
-                  </li>
+                  <>
+                    <li>
+                      <a href={href(r.work.id, `?trans=${t.id}`)}>
+                        <span class="ed-name">{t.short}</span>
+                        <span class="ed-kind">Greek &amp; English · {t.name}</span>
+                      </a>
+                    </li>
+                    {/* Ostwald's edition (EN only) carries a glossary of technical
+                        terms — a standalone reference page, shown under its entry. */}
+                    {t.id === 'ostwald' && (
+                      <li>
+                        <a href={`${base}/EN/glossary`}>
+                          <span class="ed-name">Glossary of Technical Terms</span>
+                          <span class="ed-kind">Ostwald’s Greek–English term glossary</span>
+                        </a>
+                      </li>
+                    )}
+                  </>
                 ))}
                 {visibleTranslations(r.work).length > 1 && (
                   <li>

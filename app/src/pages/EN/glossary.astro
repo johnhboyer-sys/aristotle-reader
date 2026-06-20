@@ -1,0 +1,143 @@
+---
+// Standalone glossary page for the Nicomachean Ethics — Ostwald's "Glossary of
+// Technical Terms" (Bobbs-Merrill, 1962), the back matter of his translation.
+// It is NOT part of the parallel-text reader or search: it is a reference page
+// associated with EN, reachable from the home card (under the Ostwald edition).
+// Content lives as Markdown in src/glossary/EN.md and is rendered through
+// Astro's Markdown pipeline (the inline small-caps spans and the single footnote
+// come straight from that file).
+import ThemeInit from '../../components/ThemeInit.astro';
+import ThemeToggle from '../../components/ThemeToggle.astro';
+import { GLOSSARY_TITLE, GLOSSARY_NOTE, GLOSSARY_ENTRIES } from '../../lib/glossary';
+import { workPath } from '../../lib/works';
+import '../../styles/global.css';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const readerHref = `${base}${workPath('EN')}`;
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
+  <title>Glossary of Technical Terms — Nicomachean Ethics</title>
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    .glossary-body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+      font-family: var(--font-english);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    .glossary-title {
+      font-family: var(--font-ui);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: .05em;
+      color: var(--accent);
+      margin: 0 0 1.2rem;
+    }
+    .glossary-note-ref {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.7em;
+      vertical-align: super;
+      margin-left: .1em;
+    }
+    .glossary-intro {
+      color: var(--text-mid);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin: 0 0 1.6rem;
+    }
+    .glossary-list { margin: 0; }
+    /* Each entry has its own id (URL fragment) and an anchor handle in the left
+       gutter that appears on hover — the glossary analogue of a Bekker line. */
+    .gloss-entry {
+      position: relative;
+      margin: 0 0 .75rem;
+      padding-left: 1.5rem;
+      scroll-margin-top: 5rem;
+    }
+    .gloss-entry dd { margin: 0; }
+    .gloss-entry :global(em) { font-style: italic; }
+    .gloss-anchor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.2rem;
+      font-family: var(--font-ui);
+      color: var(--text-light);
+      text-decoration: none;
+      opacity: 0;
+      transition: opacity .12s ease;
+    }
+    .gloss-entry:hover .gloss-anchor,
+    .gloss-entry:focus-within .gloss-anchor { opacity: .5; }
+    .gloss-anchor:hover { opacity: 1; color: var(--accent); }
+    /* Highlight the entry you arrived at via #slug (footnote link or shared URL). */
+    .gloss-entry:target {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border-radius: 6px;
+      box-shadow: 0 0 0 .45rem color-mix(in srgb, var(--accent) 12%, transparent);
+    }
+    .glossary-note {
+      margin-top: 2.2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      line-height: 1.6;
+    }
+    .glossary-note-mark { color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-title">
+      <a class="home-link" href={`${base}/`} title="All works">Aristotle</a>
+      <span class="title-sep">›</span>
+      <a class="home-link" href={readerHref}>Nicomachean Ethics</a>
+      <span class="title-sep">›</span>
+      <span class="header-static">Glossary</span>
+    </div>
+    <ThemeToggle />
+    <nav class="book-nav" aria-label="Navigation">
+      <a href={readerHref} class="search-link">Read the Ethics</a>
+      <a href={`${base}/`} class="search-link">All works</a>
+      <a href={`${base}/search`} class="search-link">Search</a>
+    </nav>
+  </header>
+
+  <div class="glossary-body">
+    <h1 class="glossary-title">
+      {GLOSSARY_TITLE}{GLOSSARY_NOTE && (<a class="glossary-note-ref" href="#glossary-note" aria-label="Note on conventions">*</a>)}
+    </h1>
+    <p class="glossary-intro">
+      From Martin Ostwald's translation of the <em>Nicomachean Ethics</em>
+      (Bobbs-Merrill, 1962). Aristotle's key Greek terms, with Ostwald's English
+      renderings (set in small capitals) and his explanatory notes. Each entry
+      has its own link — Ostwald's footnotes in the reader point here.
+    </p>
+    <dl class="glossary-list">
+      {GLOSSARY_ENTRIES.map((e) => (
+        <div class="gloss-entry" id={e.slug}>
+          <dd set:html={e.html} />
+          <a class="gloss-anchor" href={`#${e.slug}`} aria-label={`Link to ${e.terms[0]}`}>#</a>
+        </div>
+      ))}
+    </dl>
+    {GLOSSARY_NOTE && (
+      <p class="glossary-note" id="glossary-note">
+        <span class="glossary-note-mark">*</span> <Fragment set:html={GLOSSARY_NOTE} />
+      </p>
+    )}
+  </div>
+</body>
+</html>

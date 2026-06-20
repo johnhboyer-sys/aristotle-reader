@@ -1,6 +1,7 @@
 // Data-fetch helpers. All paths relative to /data (public symlink to
 // build/dist/ne). Shards are cached in module-level Maps so a single
 // click won't re-fetch the same shard twice in a session.
+import { linkifyGlossaryRefs } from './glossary';
 
 export interface Token {
   t: string;   // surface form (Unicode Greek)
@@ -141,7 +142,13 @@ export function fetchFootnotes(work: string): Promise<Record<string, string>> {
   const p = fetch(`${workBase(work)}/footnotes.json`).then(r => {
     if (!r.ok) throw new Error(`${work} footnotes: ${r.status}`);
     return r.json();
-  });
+  }).then((map: Record<string, string>) =>
+    // The NE (Ostwald) footnotes reference glossary entries ("see Glossary,
+    // <term>"); turn those into links to the standalone glossary page.
+    work === 'EN'
+      ? Object.fromEntries(Object.entries(map).map(([k, v]) => [k, linkifyGlossaryRefs(v)]))
+      : map
+  );
   // Evict a rejected fetch so it can be retried (don't cache the failure).
   p.catch(() => { if (_footnotesCache.get(work) === p) _footnotesCache.delete(work); });
   _footnotesCache.set(work, p);

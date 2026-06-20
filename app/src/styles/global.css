@@ -913,6 +913,9 @@ body {
   color: var(--text);
 }
 .footnote-text em { font-style: italic; }
+/* Glossary cross-reference link injected into Ostwald's footnotes. */
+.footnote-text a.gloss-ref { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.footnote-text a.gloss-ref:hover { border-bottom-color: var(--accent); }
 
 /* ── search link in book nav ─────────────────────────────────────── */
 .search-link {
