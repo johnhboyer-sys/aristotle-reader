@@ -42,6 +42,11 @@ WORKS = [
     ("DivSomn", ["008"], "divsomn-beare", ["prophesying"], False),
     ("Long", ["020"], "long-ross", ["longev_short"], False),
     ("Juv", ["018", "037"], "juv-ross", ["youth_old.1.1", "youth_old.2.2"], False),
+    # Movement / Progression of Animals — single-page bookless works, both in
+    # A. S. L. Farquharson's Oxford translation (1912). The MIT pages are one
+    # ascending "Part N" stream each, so save as-is (parse_book strips boilerplate).
+    ("MA", ["021"], "ma-farquharson", ["motion_animals"], False),
+    ("IA", ["015"], "ia-farquharson", ["gait_anim"], False),
     # History of Animals: grc Book X (spurious, on sterility) is untranslated and
     # omitted; MIT Book N = grc N. The per-book MIT HTML pages are truncated for
     # the long books (V/VI/VIII/IX paginate), so we take the complete single-file

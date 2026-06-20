@@ -206,6 +206,32 @@ Ackrill 68/68) via 14 per-chapter alignment subagents.
     cut still resolves.
 - Gating: `Int.yaml` (3 translations) local + `Int-public.yaml` (Edghill+Taylor).
 
+## Biological works II.c — Movement / Progression / Generation of Animals (✅ built + registered)
+Completes division II.c (joining HA + PA). Translations chosen per the copyright
+findings (all Oxford Translation, PD now): **Movement of Animals** (`MA`, tlg021,
+698a–704b, 11 ch, bookless) and **Progression of Animals** (`IA`, tlg015,
+704a–714b, 19 ch, bookless) — both A. S. L. Farquharson (Oxford, 1912), Greek =
+Jaeger (Teubner, 1913); **Generation of Animals** (`GA`, tlg012, 715a–789b, 5
+books, 23/8/11/10/8 = 60 ch) — Arthur Platt (Oxford, 1910), Greek = Drossaart
+Lulofs (OCT, 1965). Standard grc-TEI/archive recipe (like Phys/HA/PA).
+- **Sources.** MA/IA English from the MIT archive (`motion_animals` / `gait_anim`,
+  added to `fetch_natphil.py`). GA is **not on the MIT archive** → English vendored
+  from the eBooks@Adelaide "complete.html" web edition via the Wayback Machine
+  (`tools/fetch_ga_platt.py`), split into 5 book files on its `<h3>Book N</h3>` /
+  `<h4>N</h4>` markers (number marker). grc TEIs from First1KGreek; spine from the
+  cached TLG export. Chapter counts match the Greek book-for-book, no digitization
+  drift.
+- **GA book boundaries** fall on the edition's own line-number gaps at the shared
+  transition columns (731b 14→18, 749a 6→10, 763b 16→20, 778a 12→16); one mid-book
+  gap declared (`expected_line_gaps` 775a 10→12).
+- **Pipeline change:** stage3 `_SIGLA` now strips `⟦ ⟧` (U+27E6/27E7), the double
+  brackets marking editorially secluded text in GA's Greek. Regression-clean
+  (EN + Cat unchanged, key_failures=0).
+- All three stage2 PASS, key_failures=0 (MA 99.3% / IA 99.6% / GA 99.6% token
+  match). App builds (102 pages), home II.c shows all 5 biological works as
+  clickable, reader renders Greek‖English correctly (screenshots verified). All PD
+  → deployable. **NOT committed/pushed (awaiting John's review).**
+
 ## Per-work progress
 - Poetics (034) ✅ built+registered (pre-existing)
 - Aligner port ✅ wiring complete
