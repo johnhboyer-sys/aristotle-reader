@@ -57,16 +57,25 @@ for (b, cp), cr in sorted(chapters.items()):
             continue
         cits = wc.get(a.citation, [a.citation])
         lo = 0 if ALL else max(0, a.offset - PAD)
-        # `gloss` is the TICK line's own gloss (the precise placement target);
-        # `context_gloss` is the 3-line window for sense only. Earlier the window
-        # gloss was passed as `gloss`, so ticks beginning mid-sentence anchored to
-        # the line ABOVE (the sentence start) — the bug this fixes.
+        # The Greek tick line is the AUTHORITATIVE placement target; the verifier
+        # anchors at the English rendering of `greek_tick`'s first word, using the
+        # neighbours only to fix the boundary. (`gloss` is now a sense aid only —
+        # passing it as the target made ticks drift when the gloss itself started
+        # mid-line or couldn't be lexically matched.) Locate the tick within the
+        # window by citation, not by index: edge windows have 2 lines.
+        ti = cits.index(a.citation) if a.citation in cits else 0
         tick = {
             "citation": a.citation,
+            "greek_above": gk.get(cits[ti - 1], "") if ti > 0 else "",
+            "greek_tick": gk.get(cits[ti], ""),
+            "greek_below": gk.get(cits[ti + 1], "") if ti + 1 < len(cits) else "",
             "greek": " / ".join(gk.get(c, "") for c in cits),
             "gloss": (g.get(a.citation, "") or "").strip(),
             "context_gloss": " ".join((g.get(c, "") or "").strip() for c in cits),
         }
+        # The pass-1 lexical guess, so a judge-style verifier can confirm/correct
+        # an existing placement rather than produce one from scratch.
+        tick["current_placement"] = text[a.offset:a.offset + 90]
         if not ALL:  # windowed mode carries its own excerpt; ALL mode shares chapter text
             tick["excerpt"] = text[lo:min(len(text), a.offset + PAD)]
         ticks.append(tick)

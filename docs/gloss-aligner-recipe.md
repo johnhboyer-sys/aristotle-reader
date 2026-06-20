@@ -59,8 +59,14 @@ Each agent reads its task file and writes `build/align/glosses/<SLUG>/<b>-<c>.js
 > (a list of "windows"; each has "lines": `{citation, greek}` — line above the tick,
 > the tick line, the line below; edge windows have 2). Translate EACH Greek line into
 > its OWN English line (verse mode — one English line per Greek line, keyed by its
-> citation, kept on its own line even if longer). Use neighbours only to get a
-> mid-sentence line's sense right. Keep proper names as names (Καλλίας→Callias). Do
+> citation, kept on its own line even if longer). **Each English line must BEGIN with
+> the rendering of its Greek line's FIRST word** — do not pull a line's opening word up
+> into the previous line, nor borrow the next line's opening; the English line
+> boundaries must coincide with the Greek line boundaries even if a line then starts
+> mid-clause (Greek line opens διαφέρειν → that English line starts "differ…"). This is
+> what the verifier anchors on downstream, so a shifted boundary here becomes a
+> mis-placed tick. Use neighbours only to get a mid-sentence line's sense right. Keep
+> proper names as names (Καλλίας→Callias). Do
 > not merge, reorder, or annotate; each citation appears once. Render Aristotle's
 > technical vocabulary with conventional scholarly English, used consistently —
 > ἀρετή=virtue, εὐδαιμονία=happiness, ἔργον=function, ἐνέργεια=activity, ἕξις=state,
@@ -83,37 +89,54 @@ sentence start, so verify **all** real ticks (not just `uncertain`):
 VERIFY_ALL=1 uv run python tools/verify_gather.py <book>          # per book
 ```
 → `build/align/verify_tasks/<SLUG>/<b>-<c>.json` (one file per chapter; carries the
-**full chapter text** + every tick's `{citation, greek (window), gloss, context_gloss}`)
-and merges `build/align/verify_meta.json`. **Critical:** `gloss` is the **tick line's
-own** gloss (the precise placement target); `context_gloss` is the 3-line window for
-sense only. (Passing the *window* gloss as the target was a bug — ticks beginning
-mid-sentence then anchored to the line above, i.e. the sentence start.)
-*(Cheaper option: omit `VERIFY_ALL=1` to gather only `uncertain` ticks with a ±600-char
-window. Optional args: `verify_gather.py <book> <PAD> <chapters>` to re-gather a few
-chapters with a wider window.)*
+**full chapter text** + every tick's `{citation, greek_above, greek_tick, greek_below,
+gloss, context_gloss, current_placement}`) and merges `build/align/verify_meta_<WORK>.json`.
+**The Greek tick line is the placement target — NOT the gloss.** `greek_tick` is the raw
+Greek of the line the tick marks; `greek_above`/`greek_below` are its neighbours;
+`gloss` is now a **sense hint only**; `current_placement` is the ~90 chars of translation
+at the pass-1 offset, so the verifier can *confirm or correct* an existing placement
+rather than produce one cold.
+> Why this matters (learned the hard way on Ross-EN **and** Pol-Jowett): anchoring on the
+> *gloss* drifts, because (a) the gloss sometimes starts a word off its Greek line, and
+> (b) lexical un-matches make the agent grab the nearest strong phrase. Anchoring on
+> `greek_tick`'s first word is the fix.
+*(Cheaper option: omit `VERIFY_ALL=1` to gather only `uncertain` ticks. Optional args:
+`verify_gather.py <book> <PAD> <chapters>` to re-gather a few chapters.)*
 
-Spawn **one sub-agent per chapter** → `build/align/verify_out/<SLUG>/<b>-<c>.json`
-= `{citation: phrase}`. Verifier prompt:
+Run **as a Workflow fan-out, one agent per chapter, with a JSON schema** (forces
+structured output → no chatty prose, no malformed JSON, no retries). The workflow
+collects the validated results; you write `build/align/verify_out/<SLUG>/<b>-<c>.json`
+= `{citation: phrase}` from them. **Lean schema — verdict + phrase, NO free-form `reason`
+field** (reasons are the single biggest token sink; omit them):
+```json
+{ "type":"object","additionalProperties":false,"required":["chapter","ticks"],
+  "properties":{ "chapter":{"type":"string"},
+    "ticks":{"type":"array","items":{ "type":"object","additionalProperties":false,
+      "required":["citation","verdict","phrase"],
+      "properties":{ "citation":{"type":"string"},
+        "verdict":{"enum":["ok","early","late","unsure"]},
+        "phrase":{"type":"string","maxLength":120} }}}}}
+```
+Judge-style verifier prompt:
 
-> You are placing Bekker line-marks in **<TRANSLATOR>**'s translation by direct
-> reading — the authoritative placement. Read `build/align/verify_tasks/<SLUG>/<B>-<C>.json`:
-> it has "text" (the full chapter prose) and "ticks" `{citation, greek, gloss, context_gloss}`
-> in Bekker order. "greek" is a 3-line window (lines split by " / "); the MIDDLE line is
-> the one to place. **"gloss" = the English of THAT MIDDLE line only — your placement
-> target.** "context_gloss" = the whole window's meaning, for sense only (do NOT anchor
-> to it). For EACH tick, copy a SHORT verbatim phrase (5–10 words) from "text" that begins
-> EXACTLY where the middle line's own content ("gloss") begins.
+> You are checking Bekker line-marks in **<TRANSLATOR>**'s translation against the GREEK
+> (the Greek is authoritative; the gloss is only a sense hint). Read
+> `build/align/verify_tasks/<SLUG>/<B>-<C>.json`: "text" (full chapter prose) + "ticks" in
+> Bekker order, each with `greek_above`/`greek_tick`/`greek_below` (raw Greek of the line
+> before / the tick line / the line after), `gloss` (hint), and `current_placement` (the
+> translation text now sitting at the tick).
 >
-> **CRITICAL — place at the tick LINE's start, NOT the SENTENCE's start.** A tick usually
-> falls mid-sentence; if the sentence began on an earlier line, do NOT include those
-> earlier words — your phrase must begin with the English rendering the "gloss"'s opening.
-> Example: sentence "Now fine and just actions, which political science investigates,
-> admit of much variety", gloss "which political science investigates…" → start at
-> "which political science investigates", NOT "Now fine and just actions".
->
-> Copy character-for-character (exact search must find it); phrases in increasing order;
-> if a tick's content truly isn't in this chapter, use "". Write the flat JSON
-> `{citation: phrase}` to `build/align/verify_out/<SLUG>/<B>-<C>.json`.
+> For EACH tick judge whether `current_placement` BEGINS exactly at the English rendering
+> of **`greek_tick`'s FIRST word**: `ok` = it does; `early` = it begins on content that
+> belongs to `greek_above` (one clause/line too high); `late` = a clause into `greek_tick`
+> or onto `greek_below`; `unsure` = the translation condenses/omits `greek_tick`. ALWAYS
+> return a corrected `phrase`: a SHORT verbatim phrase (5–10 words) copied EXACTLY from
+> "text" that begins precisely where `greek_tick`'s first word is rendered (so an exact
+> string search finds it; for `ok` it matches `current_placement`'s start). Your phrase
+> must NOT include anything rendering `greek_above`, and must NOT start as late as
+> `greek_below`. Judge by the GREEK, not by which reading sounds smoothest. Example:
+> `greek_tick` opens διαφέρειν → start at the English for "differ", even if the gloss put
+> "differ" on the line above. Return every tick. **No explanations.**
 
 ## 5. Fold + re-align + persist (per book)
 ```bash
@@ -126,16 +149,33 @@ uv run python tools/persist_book.py <book>                                   # �
 around them. `persist_book` saves the per-book map, glosses, and a dark-mode
 3-line-window review HTML to the **tracked** `alignment-results/<vid>/`.
 
-## 6. Validate (optional but recommended)
-- **Numeric eval** (needs a Bekker-milestoned translation as gold, e.g. Rackham):
-  `uv run python -m aristotle_pipeline.align --gloss-eval --work <SLUG> --books 1`
-  (+ `tools/bakeoff.py` to compare gloss styles, `tools/verify_score.py` for the
-  verifier's before/after lift).
-- **Human spot-check** (any translation): open the per-book `review/book-NN.html`.
-  Watch specifically for **sentence-start anchoring** — a tick whose line begins
-  mid-sentence but that was placed at the start of the sentence (one clause/line too
-  early). If you see it, re-gather + re-verify those chapters
-  (`verify_gather.py <book> 4000 <chapters>`) with the line-precise prompt above.
+## 5b. One cheap correction pass (built in, run once)
+**No single pass is clean** — measured against Rackham's real line numbers, even the
+judge-style §4 lands the *median* tick exactly but still misses ~1 in 5 of the harder
+ticks by a sentence (and the gloss-eval gold is itself soft, so trust column-starts
+most). The quality we ship comes from **one** correction pass on top — do it, but keep
+it cheap and bounded:
+1. After §5 fold+pass-2+persist, **re-run §4 exactly as above** — `verify_gather` now
+   emits `current_placement` from the *pass-2* offsets, so the second run is a true
+   confirm/correct of real placements (this is the "audit" we used to run as a separate
+   sprawling stage — it is now just §4 a second time).
+2. Keep only the `early`/`late` verdicts; overwrite those phrases in `verify_out` and
+   re-run §5 (fold+pass-2+persist) **once**. Leave `ok`/`unsure` alone.
+3. **Do NOT loop.** One correction pass, then ship. Iterating agent rounds is where the
+   tokens went; the recipe is built to converge in two §4 passes, not N.
+**Token rules:** lean schema (no `reason`), schema-validated output, correction pass run
+**once**, and for a re-check after corrections you may **sample** (1–2 chapters/book via
+the `<chapters>` arg) rather than re-judge the whole work.
+
+## 6. Validate (optional)
+- **Numeric eval** (needs a Bekker-milestoned gold, e.g. Rackham): `--gloss-eval --work
+  <SLUG> --books 1`. Gold is soft (its own mid-column ticks are approximate) — **trust
+  the `column` tier over `five_line`**; a median error of 0 with a few sentence-sized
+  outliers is the expected shape, not a failure.
+- **Human spot-check** (any translation): open `review/book-NN.html`. Watch for
+  **early drift** — a tick placed on the line *above* its Greek line. The §4 + correction
+  pass removes most; a residual few are normal. This is incremental — refine the prompts
+  over successive works rather than chasing a perfect single run.
 
 ---
 
@@ -176,12 +216,21 @@ from §3). Only the combined **map** is needed for the app build itself.
 - **Gloss style:** standard-terminology = robust default; translator-style = booster
   only for translations the model knows well (it reproduces their wording on famous
   lines — fine when that translation is the target, useless for obscure ones).
-- **Verify scope:** verify **every** tick (`VERIFY_ALL=1`) for shipping quality;
-  uncertain-only is the cheap tail-clean. Re-verify a few chapters with a wider
-  window (`verify_gather.py <book> 4000 <chapters>`) if the verifier returns empties
-  because Method A placed the window off (often a chapter-boundary mismatch).
+- **Verify = Greek-anchored, judge-structured (the §4 rewrite).** The target is the raw
+  `greek_tick` line, not the gloss; the agent judges/corrects `current_placement` (the
+  pass-1 offset) and returns a lean `{verdict, phrase}` under a schema. This replaced the
+  old "gloss = target, free-form phrase" verifier that drifted ~40% (early, onto the line
+  above) and forced the sprawling correction rounds on Ross-EN and Pol-Jowett.
+- **One correction pass, not N.** §4 run a second time (now confirming real pass-2
+  placements) is the whole "audit" — keep only `early`/`late` fixes, fold once, ship. Do
+  not loop. A post-correction re-check may **sample** 1–2 chapters/book.
+- **Token rules:** schema-validated output everywhere; **no `reason` field** (the biggest
+  sink); correction pass run once; sample the re-check.
+- **No single pass is clean.** Measured against external (Rackham) gold, even the judge
+  pass lands the *median* tick exactly but misses ~1 in 5 hard ticks — the correction
+  pass and a human eye on `review/*.html` are load-bearing, not optional polish.
 - **Soft gold:** a milestoned reference's own ~line-20 ticks are approximate, so the
-  numeric eval slightly *understates* `five_line` accuracy. Trust column-starts most.
+  numeric eval *understates* `five_line` accuracy. Trust the `column` tier most.
 - **Honest estimates:** ticks the verifier can't place (translator condenses the
   passage; chapter-boundary divergence) stay `reliable`/`uncertain` → shown italic/grey.
 - **Reuse:** gloss a work **once**; align every translation of it against the same
@@ -194,12 +243,19 @@ uv run python -m aristotle_pipeline stage1 --work <SLUG>                       #
 uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>     # 1
 # 2: sub-agent per chapter → build/align/glosses/<SLUG>/<b>-<c>.json
 for b in <books>; do
-  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 3
-  VERIFY_ALL=1 uv run python tools/verify_gather.py $b                          # 4 gather
-  # 4: sub-agent per chapter → build/align/verify_out/<SLUG>/<b>-<c>.json
-  uv run python tools/verify_to_offsets.py $b                                   # 5 fold
+  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 3 pass 1
+  WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b              # 4 gather (greek + current_placement)
+  # 4: judge-structured Workflow fan-out (schema {citation,verdict,phrase}, NO reason)
+  #    → write build/align/verify_out/<SLUG>/<b>-<c>.json = {citation: phrase}
+  WORK=<SLUG> uv run python tools/verify_to_offsets.py $b                       # 5 fold
   uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 5 pass 2
   uv run python tools/persist_book.py $b                                        # 5 persist
+  # 5b CORRECTION (run §4 ONCE more — current_placement now = pass-2 offsets):
+  WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b              #   re-gather
+  #    judge Workflow again → overwrite only early/late phrases → fold/pass2/persist once
+  WORK=<SLUG> uv run python tools/verify_to_offsets.py $b
+  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b
+  uv run python tools/persist_book.py $b
 done
 uv run python tools/make_index.py <SLUG> <vid>                                  # 7 combined map + index
 uv run python -m aristotle_pipeline all --work <SLUG>                           # 7 rebuild data
