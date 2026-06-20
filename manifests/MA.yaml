@@ -1,0 +1,42 @@
+# Movement of Animals (De Motu Animalium) — pipeline manifest
+#
+# A single-book treatise (no book divisions) on the common cause of animal
+# locomotion (698a–704b). Greek spine from the cached TLG export; chapter
+# structure (11 chapters) from the First1KGreek grc TEI; English is A. S. L.
+# Farquharson's Oxford translation (1912) from the MIT Internet Classics Archive
+# via the chapter-anchored archive path ("Part N" markers).
+
+work:
+  id: MA
+  title: "Movement of Animals"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "021"
+  greek_edition: "Jaeger, Aristotelis De animalium motione (Teubner, 1913)"
+  english_translation: "A. S. L. Farquharson (Oxford, 1912)"
+
+bekker_range:
+  first_column: "698a"
+  last_column: "704b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg021.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: farquharson
+    name: "A. S. L. Farquharson (Oxford, 1912)"
+    model: archive
+    dir: "ma-farquharson"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "698a1", end: "704b3" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

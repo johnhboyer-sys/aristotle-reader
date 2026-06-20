@@ -1,0 +1,60 @@
+# Generation of Animals (De Generatione Animalium) — pipeline manifest
+#
+# Aristotle's five-book treatise on animal reproduction (715a–789b). The Greek
+# spine is the cached TLG export; chapters (23/8/11/10/8 = 60) come from the
+# First1KGreek grc TEI, text-aligned onto the spine. English is Arthur Platt's
+# Oxford translation (1910); the MIT archive does not carry this work, so it is
+# vendored from the eBooks@Adelaide web edition (see tools/fetch_ga_platt.py),
+# whose <h4>N</h4> chapter markers the "number" marker reads.
+#
+# Each of Books II–V begins partway down a Bekker column (the previous book ends
+# a few lines up the same column, leaving a numbering gap there): II at 731b18,
+# III at 749a10, IV at 763b20, V at 778a16.
+work:
+  id: GA
+  title: "Generation of Animals"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "012"
+  greek_edition: "Drossaart Lulofs, Aristotelis De Generatione Animalium (OCT, 1965)"
+  english_translation: "Arthur Platt (Oxford, 1910)"
+
+bekker_range:
+  first_column: "715a"
+  last_column: "789b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg012.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: platt
+    name: "Arthur Platt (Oxford, 1910)"
+    model: archive
+    dir: "ga-platt"
+    books: 5
+    chapter_marker: number
+
+mid_column_book_starts:
+  - { book: 2, column: "731b" }
+  - { book: 3, column: "749a" }
+  - { book: 4, column: "763b" }
+  - { book: 5, column: "778a" }
+
+# Mid-book Bekker line-number skip in the TLG text (faithful to the edition).
+expected_line_gaps:
+  - { column: "775a", after: 10, next: 12 }
+
+books:
+  - { n: 1, start: "715a1",  end: "731b14" }
+  - { n: 2, start: "731b18", end: "749a6"  }
+  - { n: 3, start: "749a10", end: "763b16" }
+  - { n: 4, start: "763b20", end: "778a12" }
+  - { n: 5, start: "778a16", end: "789b20" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

@@ -1,0 +1,42 @@
+# Progression of Animals (De Incessu Animalium) — pipeline manifest
+#
+# A single-book treatise (no book divisions) on the parts animals use for
+# locomotion (704a–714b). Greek spine from the cached TLG export; chapter
+# structure (19 chapters) from the First1KGreek grc TEI; English is A. S. L.
+# Farquharson's Oxford translation (1912) from the MIT Internet Classics Archive
+# via the chapter-anchored archive path ("Part N" markers).
+
+work:
+  id: IA
+  title: "Progression of Animals"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "015"
+  greek_edition: "Jaeger, Aristotelis De animalium incessu (Teubner, 1913)"
+  english_translation: "A. S. L. Farquharson (Oxford, 1912)"
+
+bekker_range:
+  first_column: "704a"
+  last_column: "714b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg015.1st1K-grc1.xml"
+
+english:
+  primary:
+    id: farquharson
+    name: "A. S. L. Farquharson (Oxford, 1912)"
+    model: archive
+    dir: "ia-farquharson"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "704a4", end: "714b23" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

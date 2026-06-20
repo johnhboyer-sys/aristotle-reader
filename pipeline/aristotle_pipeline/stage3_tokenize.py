@@ -26,7 +26,9 @@ _PUNCT = ".,·;—()|\"‘«»" + "·;"  # ano teleia, Greek question mark
 # Stripped but logged: editorial sigla found by the stage 2 inventory.
 # ⎪ (U+23AA) is the column divider the TLG uses inside Aristotle's inline tables
 # (e.g. the De Int 22a modal-opposition square); strip it so the cells tokenize.
-_SIGLA = "†*<>[]⎪"
+# ⟦ ⟧ (U+27E6/U+27E7) are the double brackets marking editorially secluded text
+# (e.g. the deleted passages in De Generatione Animalium); treat like [ ].
+_SIGLA = "†*<>[]⎪⟦⟧"
 
 _STRIP = _PUNCT + _SIGLA
 _APOSTROPHE_END = re.compile(r"['’᾽ʼ]$")
