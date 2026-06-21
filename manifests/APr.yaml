@@ -49,6 +49,10 @@ english:
     dir: "apr-jenkinson"
     books: 2
     chapter_marker: part
+    # Real per-line Bekker ticks for Jenkinson, from the gloss/verifier aligner
+    # (docs/gloss-aligner-recipe.md): {bekker, at: verbatim Jenkinson phrase},
+    # resolved per column → dense gutter, replacing the interpolated estimate.
+    anchors: "apr-jenkinson/anchors.yaml"
 
 mid_column_book_starts:
   - { book: 2, column: "52b" }
