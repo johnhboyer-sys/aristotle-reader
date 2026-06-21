@@ -169,12 +169,16 @@ def _attach_tables(chunks: dict[str, list[dict]], cfg: dict) -> None:
                 break
 
 
-def build_overlay(spine: dict, chapters: list[dict], cfg: dict) -> dict[str, list[dict]]:
+def build_overlay(spine: dict, chapters: list[dict], cfg: dict,
+                  work_id: str | None = None) -> dict[str, list[dict]]:
     """A secondary/third translation as chapter-anchored overlay pieces
     ({seg_id: [{chapter, text, cont, bekker, tables?}]}), with a dense real-anchor
-    gutter when cfg declares `anchors`, else the proportional interpolation."""
-    chunks = build_chunks(spine, chapters, _load_prose(cfg))
-    if cfg.get("anchors"):
+    gutter. Prefers a gloss-aligner map (every-5-line ticks) when one exists for
+    this work/version; falls back to the hand-keyed anchors.yaml."""
+    from .stage1_ross import _load_align_map
+    align_map = _load_align_map(work_id, cfg["id"]) if work_id else {}
+    chunks = build_chunks(spine, chapters, _load_prose(cfg), align_map or None)
+    if cfg.get("anchors") and not align_map:
         _inject_real_ticks(chunks, cfg["anchors"], cfg.get("id", "overlay"))
     _attach_tables(chunks, cfg)
     return chunks
@@ -232,7 +236,7 @@ def run(manifest: Manifest, spine: dict, chapters: list[dict]) -> tuple[Path, Pa
     # Always (re)write ross_chunks.json so a prior EN build can't leak through
     # this shared scratch file; empty when the work has only one translation.
     sec = eng_cfg.get("secondary")
-    ross = build_overlay(spine, chapters, sec) if sec else {}
+    ross = build_overlay(spine, chapters, sec, manifest.work_id) if sec else {}
     (out_dir / "ross_chunks.json").write_text(
         json.dumps(ross, ensure_ascii=False, indent=1), encoding="utf-8"
     )
@@ -240,7 +244,7 @@ def run(manifest: Manifest, spine: dict, chapters: list[dict]) -> tuple[Path, Pa
     # Taylor). Same overlay shape; emitted to third_chunks.json. Always rewritten
     # (empty when absent) so a prior work's third overlay can't leak through.
     third = eng_cfg.get("third")
-    third_chunks = build_overlay(spine, chapters, third) if third else {}
+    third_chunks = build_overlay(spine, chapters, third, manifest.work_id) if third else {}
     (out_dir / "third_chunks.json").write_text(
         json.dumps(third_chunks, ensure_ascii=False, indent=1), encoding="utf-8"
     )
