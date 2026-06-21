@@ -149,10 +149,45 @@ def parse_ostwald(md_path: Path):
     return prose, align, footnotes, counts
 
 
+def _bekker_key(cit: str):
+    m = re.match(r"(\d+)([ab])(\d+)", cit)
+    return (int(m[1]), m[2], int(m[3])) if m else (0, "", 0)
+
+
+def apply_corrections(prose, align, corrections) -> int:
+    """Relocate Bekker markers from their raw OCR position (which sits ~1 clause
+    late — the marginal number is OCR'd after the line it labels) to the semantic
+    Greek-line start, found by direct reading (see tools/feasibility/). Each entry
+    is a verbatim phrase resolved with str.find at build time, so it survives
+    re-parsing. A phrase is applied only if found and order-preserving; otherwise
+    that marker keeps its original position. Returns the number relocated."""
+    n = 0
+    for key, rec in align.items():
+        b, c = (int(x) for x in key.split(":"))
+        text = prose.get((b, c), "")
+        cmap = corrections.get(key) or {}
+        last = -1
+        for a in sorted(rec["anchors"], key=lambda a: _bekker_key(a["citation"])):
+            ph = cmap.get(a["citation"])
+            if ph:
+                idx = text.find(ph)
+                if idx >= 0 and idx > last:
+                    a["offset"] = idx
+                    n += 1
+            last = max(last, a["offset"])
+        rec["anchors"].sort(key=lambda a: a["offset"])
+    return n
+
+
 def run(manifest, spine: dict, english: dict) -> Path:
     cfg = (manifest.data.get("english") or {}).get("third") or {}
     src = SOURCES_DIR / cfg.get("dir", "ostwald") / cfg.get("file", "ostwald-ethics.md")
     prose, align, footnotes, counts = parse_ostwald(src)
+
+    corr_path = SOURCES_DIR / cfg.get("dir", "ostwald") / "bekker_corrections.json"
+    if corr_path.exists():
+        n = apply_corrections(prose, align, json.loads(corr_path.read_text(encoding="utf-8")))
+        print(f"  ostwald: applied {n} Bekker-marker corrections from {corr_path.name}")
 
     chunks = build_chunks(spine, english.get("chapters", []), prose, align)
 
