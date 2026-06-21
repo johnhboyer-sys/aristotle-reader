@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { WORKS, workPath } from '../lib/works';
+  import { WORKS, WORK_ORDER, workPath } from '../lib/works';
+  const SORTED_WORKS = [...WORKS].sort((a, b) =>
+    (WORK_ORDER.get(a.id) ?? 999) - (WORK_ORDER.get(b.id) ?? 999)
+  );
 
   // The work currently open in the reader. Switching navigates to that work,
   // resuming the last book (and Bekker position) read there if known.
@@ -20,7 +23,7 @@
 </script>
 
 <select class="work-switcher" value={work} on:change={go} aria-label="Choose a work">
-  {#each WORKS as w}
+  {#each SORTED_WORKS as w}
     <option value={w.id}>{w.title}</option>
   {/each}
 </select>
