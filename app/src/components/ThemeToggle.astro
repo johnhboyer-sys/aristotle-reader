@@ -34,7 +34,12 @@
     }
     render();
 
-    btn.addEventListener('click', function () {
+    // Flip the theme. Wrapped in a View Transition so the browser snapshots the
+    // page, applies the change, then crossfades old→new as ONE uniform fade —
+    // chrome, borders, text and the icon swap all dissolve together instead of
+    // the body fading while everything else snaps. Browsers without the API (or
+    // with reduce-motion on) fall back to a clean instant flip.
+    function applyTheme() {
       var next =
         document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
@@ -42,6 +47,15 @@
         localStorage.setItem('ne-theme', next);
       } catch (e) {}
       render();
+    }
+
+    btn.addEventListener('click', function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (document.startViewTransition && !reduce) {
+        document.startViewTransition(applyTheme);
+      } else {
+        applyTheme();
+      }
     });
 
     // Track the OS while the reader hasn't pinned a choice.

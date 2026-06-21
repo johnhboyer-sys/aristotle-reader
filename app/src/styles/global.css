@@ -79,14 +79,33 @@
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.75l5 5 5-5' fill='none' stroke='%23cf9d68' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
 }
 
-html { font-size: 16px; }
+html {
+  font-size: 16px;
+  /* macOS renders text heavier than intended by default; antialiased smoothing
+     at the root makes the serif body + Greek read crisper and thinner. Ignored
+     off macOS, so safe to apply universally. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Theme-switch crossfade (View Transitions API, triggered in ThemeToggle.astro):
+   a gentle, uniform dissolve of the whole page between light and dark. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.28s;
+  animation-timing-function: ease;
+}
 
 body {
   font-family: var(--font-english);
   background: var(--page-bg);
   color: var(--text);
   line-height: var(--lh-english);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  /* No per-element colour transition on theme change: it only faded the body,
+     while the header, borders, cards and chips (recoloured via CSS variables)
+     snapped instantly — a half-animated, janky switch. The toggle now crossfades
+     the WHOLE page uniformly via the View Transitions API (see ThemeToggle.astro);
+     browsers without it get a clean instant flip. */
 }
 
 /* ── Layout ───────────────────────────────────────────────────────── */
@@ -461,6 +480,7 @@ body {
   line-height: 1.5;
   color: var(--text-light);
   max-width: 46rem;
+  text-wrap: pretty;
 }
 .bekker-note .bk-fixed { color: var(--text-mid); font-weight: 600; }
 .bekker-note .bk-approx { color: var(--text-light); font-style: italic; opacity: 0.85; }
@@ -539,6 +559,7 @@ body {
   font-size: var(--fs-english);
   line-height: var(--lh-english);
   color: var(--text-mid);
+  text-wrap: pretty;
 }
 /* Column identity. Hidden on desktop (the gutter vs. its absence makes Rackham
    vs. Ross obvious); shown when the columns stack on a phone. */
@@ -609,6 +630,7 @@ body {
   font-weight: 500;
   color: var(--text-light);
   letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
 }
 
 .greek-col {
@@ -622,6 +644,8 @@ body {
   font-size: var(--fs-english);
   line-height: var(--lh-english);
   color: var(--text-mid);
+  /* Avoid a lone orphaned word on the last line of a prose run. */
+  text-wrap: pretty;
 }
 
 /* ── Greek lines ──────────────────────────────────────────────────── */
@@ -640,6 +664,9 @@ body {
   text-align: right;
   flex-shrink: 0;
   user-select: none;
+  /* Equal-width digits so the right-aligned Bekker numerals form a clean
+     vertical column (5, 10, 15… 100 line up on the same advance). */
+  font-variant-numeric: tabular-nums;
 }
 
 .line-text {
@@ -710,6 +737,7 @@ body {
   text-align: right;
   user-select: none;
   -webkit-user-select: none;
+  font-variant-numeric: tabular-nums;
 }
 /* Estimated (interpolated) ticks: lighter + italic so they read as approximate,
    while real TEI anchors (column start / ~line 20) stay full weight. */
@@ -748,6 +776,7 @@ body {
   user-select: none;
   -webkit-user-select: none;
   transform: translateY(0.56em);
+  font-variant-numeric: tabular-nums;
 }
 .bk-num.approx { font-style: italic; opacity: 0.5; }
 
@@ -1308,6 +1337,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   text-align: right;
   font-weight: 600;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 .toc-ch-body { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
 .toc-ch-title { color: var(--text); }
@@ -1315,6 +1345,117 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 .toc-outline li a.current { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .toc-outline li a.current .toc-ch-n { color: var(--accent); }
 
+/* ── Minimum hit area ─────────────────────────────────────────────────
+   The icon-only close glyphs (✕ / ×) read small on purpose, but their click
+   target should still be a comfortable ~40px. Extend it with a centred
+   pseudo-element so the touch/hit zone grows without changing the glyph size
+   or disturbing the surrounding baseline layout. (These sit in their own
+   corner, so the enlarged area never overlaps another control.) */
+.popup-close,
+.help-close,
+.toc-close,
+.bekker-close {
+  position: relative;
+}
+.popup-close::after,
+.help-close::after,
+.toc-close::after,
+.bekker-close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+}
+
+/* ── Tactile press feedback ───────────────────────────────────────────
+   A subtle scale-down on click gives the buttons physical feedback. Always
+   0.96 (anything below 0.95 reads as exaggerated). The transition lists only
+   the properties each control actually animates — never `all` — so the press
+   is interruptible (releasing mid-press eases back). global.css is unscoped,
+   so these class rules also reach the buttons defined in the Svelte
+   components (.search-btn, .help-btn, …). */
+.view-toggle button,
+.search-btn,
+.export-btn,
+.pager-btn,
+.retry-btn,
+.help-btn,
+.works-action,
+.work-chip,
+.scope-btn,
+.works-trigger,
+.theme-toggle,
+.help-trigger,
+.toc-toggle,
+.header-search,
+.bekker-toggle,
+.work-switcher,
+.bekker-jump button[type="submit"],
+.group-head,
+.toc-action {
+  transition-property: scale, background-color, border-color, color, box-shadow;
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
+}
+.view-toggle button:active:not(:disabled),
+.search-btn:active:not(:disabled),
+.export-btn:active:not(:disabled),
+.pager-btn:active:not(:disabled),
+.retry-btn:active:not(:disabled),
+.help-btn:active,
+.works-action:active:not(:disabled),
+.work-chip:active,
+.scope-btn:active,
+.works-trigger:active,
+.theme-toggle:active,
+.help-trigger:active,
+.toc-toggle:active,
+.header-search:active,
+.bekker-toggle:active,
+.work-switcher:active,
+.bekker-jump button[type="submit"]:active,
+.group-head:active,
+.toc-action:active {
+  scale: 0.96;
+}
+
+/* ── Word popup enter ─────────────────────────────────────────────────
+   The parse/dictionary popup rises a few px with a soft fade instead of
+   snapping in — a one-shot entrance, so a keyframe is the right tool. */
+@keyframes popup-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.popup {
+  animation: popup-in 0.16s cubic-bezier(0.2, 0, 0, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .toc-sidebar, .toc-backdrop { transition: none; }
+  /* Honour reduced-motion: no press-scale, no popup rise. */
+  .popup { animation: none; }
+  .view-toggle button:active:not(:disabled),
+  .search-btn:active:not(:disabled),
+  .export-btn:active:not(:disabled),
+  .pager-btn:active:not(:disabled),
+  .retry-btn:active:not(:disabled),
+  .help-btn:active,
+  .works-action:active:not(:disabled),
+  .work-chip:active,
+  .scope-btn:active,
+  .works-trigger:active,
+  .theme-toggle:active,
+  .help-trigger:active,
+  .toc-toggle:active,
+  .header-search:active,
+  .bekker-toggle:active,
+  .work-switcher:active,
+  .bekker-jump button[type="submit"]:active,
+  .group-head:active,
+  .toc-action:active {
+    scale: 1;
+  }
 }

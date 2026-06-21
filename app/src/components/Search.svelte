@@ -971,7 +971,7 @@
     border-radius: 999px;
     padding: 0.2rem 0.7rem;
     cursor: pointer;
-    transition: background .12s ease, color .12s ease, border-color .12s ease;
+    transition: background .12s ease, color .12s ease, border-color .12s ease, scale .12s ease;
   }
   .work-chip:hover { border-color: var(--accent-light); }
   .work-chip.on {
@@ -1034,6 +1034,7 @@
     font-size: 0.75rem;
     color: var(--text-light);
     margin-top: -0.25rem;
+    text-wrap: pretty;
   }
   .search-hint code,
   .help-modal code {
@@ -1079,6 +1080,7 @@
     padding: 2rem 1rem;
     overflow-y: auto;
     z-index: 50;
+    animation: backdrop-in 0.18s ease-out;
   }
   .help-modal {
     background: var(--popup-bg);
@@ -1089,6 +1091,19 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
     font-family: var(--font-ui);
     color: var(--text);
+    /* Soft rise + fade as it opens, matching the reader's Help modal. */
+    animation: modal-in 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+  @keyframes backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .help-backdrop, .help-modal { animation: none; }
   }
   .help-head {
     display: flex;
@@ -1117,6 +1132,7 @@
     color: var(--text-mid);
     line-height: 1.5;
     margin: 0 0 0.9rem;
+    text-wrap: pretty;
   }
 
   .beta-grid {
@@ -1208,6 +1224,7 @@
     margin: 1rem 0 0;
     padding-top: 0.75rem;
     border-top: 1px solid var(--border);
+    text-wrap: pretty;
   }
 
   .search-error { color: var(--error); font-family: var(--font-ui); font-size: 0.9rem; }
@@ -1224,6 +1241,7 @@
     font-size: 0.85rem;
     color: var(--text-mid);
     margin: 0;
+    font-variant-numeric: tabular-nums;
   }
   .export-btn {
     margin-left: auto;
@@ -1290,6 +1308,7 @@
     color: var(--text-mid);
     min-width: 8rem;
     text-align: center;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ── Grouped results: Work → Book → Chapter ──────────────────────── */
@@ -1338,7 +1357,7 @@
   .group-head:hover { background: var(--border); }
   .caret { color: var(--text-light); font-size: 0.75rem; width: 0.8rem; flex-shrink: 0; }
   .group-label { font-weight: 700; color: var(--accent); font-size: 0.9rem; }
-  .group-bekker { font-size: 0.8rem; color: var(--text-light); }
+  .group-bekker { font-size: 0.8rem; color: var(--text-light); font-variant-numeric: tabular-nums; }
   .group-count { margin-left: auto; font-size: 0.78rem; color: var(--text-mid); }
 
   .instance-list {
@@ -1364,6 +1383,8 @@
     color: var(--accent);
     text-decoration: none;
     min-width: 4.5rem;
+    /* Bekker citations (1097a15) line up as a clean left column of refs. */
+    font-variant-numeric: tabular-nums;
   }
   .inst-ref:hover { text-decoration: underline; }
   .inst-snippet {

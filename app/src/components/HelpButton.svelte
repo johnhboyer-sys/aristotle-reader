@@ -153,6 +153,9 @@
     left: 50%;
     bottom: 1.25rem;
     transform: translateX(-50%);
+    /* Rise gently into view rather than snapping in. One-shot entrance ⇒
+       keyframe; the X-centring is preserved by animating from a lower Y. */
+    animation: tip-in 0.24s cubic-bezier(0.2, 0, 0, 1);
     z-index: 60;
     display: flex;
     align-items: center;
@@ -208,6 +211,7 @@
     padding: 2rem 1rem;
     overflow-y: auto;
     z-index: 50;
+    animation: backdrop-in 0.18s ease-out;
   }
   .help-modal {
     background: var(--popup-bg);
@@ -218,6 +222,23 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
     font-family: var(--font-ui);
     color: var(--text);
+    /* Soft rise + fade as it opens (one-shot ⇒ keyframe). */
+    animation: modal-in 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+  @keyframes tip-in {
+    from { opacity: 0; transform: translate(-50%, 12px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
+  @keyframes backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reader-tip, .help-backdrop, .help-modal { animation: none; }
   }
   .help-head {
     display: flex;
@@ -245,6 +266,7 @@
     color: var(--text-mid);
     line-height: 1.5;
     margin: 0 0 0.9rem;
+    text-wrap: pretty;
   }
 
   .help-feature {
@@ -269,6 +291,7 @@
     font-size: 0.85rem;
     color: var(--text-mid);
     line-height: 1.5;
+    text-wrap: pretty;
   }
   .feat-desc strong { color: var(--text); font-weight: 600; }
   .feat-grk { font-family: var(--font-english); color: var(--text); }
