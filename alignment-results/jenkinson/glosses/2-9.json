@@ -1,0 +1,23 @@
+{
+  "60a15": "In the second figure the premiss relative to the major extreme cannot be refuted by a contrary, whichever way",
+  "60a16": "it is posited; but the other premiss can be refuted in the same way as before by conversion. I mean",
+  "60a19": "we shall refute the other premiss similarly by conversion. By 'similarly' I mean:",
+  "60a20": "if the premiss converts to a contrary, then by a contrary; if it converts to an opposite, then by an opposite.",
+  "60a21": "Let A belong to all B and to no C: the conclusion is BC. If then one assumes",
+  "60a24": "C will belong; for the first figure is produced. But if B belongs to all",
+  "60a25": "C, and A to no C, then A does not belong to all B; this is the last figure.",
+  "60a26": "If BC is converted to its opposite,",
+  "60a29": "B will not belong. Again, if B belongs to some C, and A to all",
+  "60a30": "B, then A belongs to some C; so the opposite syllogism is produced.",
+  "60a31": "Similarly it will be shown also if the premisses stand in the reverse relation.",
+  "60a34": "is refuted, just as not in the first figure either,",
+  "60a35": "but both are refuted to the opposite. Let A be supposed to belong to no B",
+  "60a36": "and to some C; the conclusion is BC. If then one assumes",
+  "60a39": "the original has been refuted; for it is possible to belong to some and not to belong to some.",
+  "60a40": "Again, if B belongs to some C and A to some C, there will be no",
+  "60a41": "syllogism; for neither of the premisses taken is universal.",
+  "60b1": "So AB is not refuted. But if BC is converted to its opposite,",
+  "60b2": "both premisses are refuted. For if B belongs to all C, and",
+  "60b4": "if B belongs to all C, and A to some C, then A belongs to some B.",
+  "60b5": "The same demonstration holds also if the universal premiss is affirmative."
+}

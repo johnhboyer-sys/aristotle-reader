@@ -84,17 +84,25 @@ def _section_offset(chunk: dict, chapter: str) -> int:
 
 
 def default_target(work_id: str) -> tuple[str, dict[tuple[int, int], str]]:
-    """(version_id, prose) for a work's secondary (unmarked) translation, from
-    its manifest `english.secondary` block; falls back to the NE Ross corpus."""
+    """(version_id, prose) for a work's unmarked translation to align. Prefers the
+    manifest's `english.secondary` (NE-style: Bekker-milestoned primary + unmarked
+    secondary); for primary-only works (no secondary — e.g. APr/Jenkinson,
+    Cat/Edghill) falls back to `english.primary`; finally to the NE Ross corpus."""
     from ..config import SOURCES_DIR, Manifest
     from ..stage1_ross import parse_translation
     try:
-        sec = (Manifest.for_work(work_id).data.get("english") or {}).get("secondary")
+        eng = Manifest.for_work(work_id).data.get("english") or {}
     except (FileNotFoundError, OSError):
-        sec = None
+        eng = {}
+    sec = eng.get("secondary")
     if sec:
         return sec.get("id", "sec"), parse_translation(
             SOURCES_DIR / sec["dir"], sec["books"], sec.get("marker", "number"))
+    prim = eng.get("primary")
+    if prim and prim.get("dir"):
+        marker = prim.get("chapter_marker", prim.get("marker", "number"))
+        return prim.get("id", "prim"), parse_translation(
+            SOURCES_DIR / prim["dir"], prim["books"], marker)
     return "ross", parse_translation(SOURCES_DIR / "ross", 10, "number")
 
 

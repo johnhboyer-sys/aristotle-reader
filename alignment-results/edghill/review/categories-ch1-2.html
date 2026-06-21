@@ -1,0 +1,243 @@
+<!doctype html><html><head><meta charset='utf-8'><title>Categories · Edghill alignment review</title><style>
+:root{--bg:#15171c;--panel:#1c1f26;--line:#2b2f39;--ink:#d6dae2;--dim:#8b93a1;
+--grk:#e9dcc0;--gls:#bcd2f0;--tick:#ffe08a;--on:#5ec98f;--early:#f0a35e;--late:#e06c75;--acc:#7fb0ff}
+*{box-sizing:border-box}
+body{font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);
+margin:0;padding:0 0 6rem}
+header{position:sticky;top:0;z-index:5;background:#11131890;backdrop-filter:blur(8px);
+border-bottom:1px solid var(--line);padding:.9rem 1.4rem;display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap}
+h1{font-size:1.05rem;margin:0;font-weight:600}
+.prog{font:13px/1 ui-monospace,monospace;color:var(--dim)}
+.prog b{color:var(--ink)}
+button.exp{margin-left:auto;background:var(--acc);color:#0a0d12;border:0;border-radius:7px;
+padding:.5rem .9rem;font-weight:600;cursor:pointer}
+button.exp:hover{filter:brightness(1.1)}
+.wrap{max-width:1180px;margin:1.4rem auto;padding:0 1.2rem;display:flex;flex-direction:column;gap:1rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.card.done{border-color:#384150}
+.card .bar{display:flex;gap:.7rem;align-items:center;padding:.55rem .9rem;border-bottom:1px solid var(--line);
+background:#191c22}
+.cit{font:600 14px/1 ui-monospace,monospace;color:var(--tick)}
+.meta{font:12px/1 ui-monospace,monospace;color:var(--dim)}
+.badge{font:11px/1 ui-monospace,monospace;padding:.2rem .45rem;border-radius:5px;background:#222732;color:var(--dim)}
+.badge.uncertain{background:#3a2a1d;color:#f0b886}.badge.reliable{background:#1f3327;color:#8fd6a8}
+.flag{font:11px/1 ui-monospace,monospace;color:var(--late)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.col{padding:.7rem .9rem}
+.col+.col{border-left:1px solid var(--line)}
+.lab{font:11px/1 ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);margin-bottom:.45rem}
+.ln{margin:.15rem 0}
+.ln .n{font:10px/1 ui-monospace,monospace;color:#5a626f;margin-right:.5rem}
+.greek .t{color:var(--grk);font-size:.97rem}
+.gloss .t{color:var(--gls)}
+.ln.tk .t{font-weight:600}
+.greek .ln.tk .t{color:#fff4d6;background:#3a3115;padding:0 3px;border-radius:3px}
+.gloss .ln.tk .t{color:#dbe8ff;background:#1f2c46;padding:0 3px;border-radius:3px}
+.edg{padding:.8rem .9rem;border-top:1px solid var(--line);background:#171a20}
+.edg .lab{margin-bottom:.5rem}
+.edg-txt{font:15px/1.6 Georgia,serif;color:#c2c8d2}
+.edg-txt .b{color:#7a828f}
+.mark{color:#0a0d12;background:var(--tick);font-weight:700;border-radius:3px;padding:0 4px;margin:0 2px}
+.actions{display:flex;gap:.5rem;align-items:center;padding:.7rem .9rem;border-top:1px solid var(--line);flex-wrap:wrap}
+.v{border:1px solid var(--line);background:#20242d;color:var(--ink);border-radius:7px;padding:.45rem .8rem;
+cursor:pointer;font-weight:600;font-size:.9rem}
+.v:hover{filter:brightness(1.15)}
+.v[data-v=on].sel{background:var(--on);color:#08120c;border-color:var(--on)}
+.v[data-v=early].sel{background:var(--early);color:#1a1206;border-color:var(--early)}
+.v[data-v=late].sel{background:var(--late);color:#1a0a0c;border-color:var(--late)}
+.note{flex:1;min-width:160px;background:#13161b;border:1px solid var(--line);border-radius:7px;
+color:var(--ink);padding:.45rem .6rem;font:13px/1.4 inherit}
+.hint{font-size:12px;color:var(--dim);max-width:1180px;margin:0 auto;padding:.2rem 1.2rem}
+.legend{font-size:12.5px;color:var(--dim)}
+.legend b{color:var(--ink)}
+</style></head><body><header>
+  <h1>Categories · Edghill — Bekker gloss-alignment review</h1>
+  <span class="prog" id="prog"></span>
+  <button class="exp" id="exp">⬇ Export JSON</button>
+</header>
+<p class="hint legend">Does the <b>gloss window</b> (meaning of the Greek at this tick) match the Edghill text
+right at the <span class="mark">▸</span> marker? <b>Spot on</b> = yes. <b>Early</b> = the matching content
+appears <i>after</i> the marker (tick placed too early). <b>Late</b> = it appears <i>before</i> the marker
+(placed too late). Verdicts auto-save in this browser; hit Export when done.</p><div class='wrap'>
+<div class="card" data-id="1:1:1a5" data-cit="1a5" data-chap="1:1">
+  <div class="bar">
+    <span class="cit">1a5</span>
+    <span class="meta">ch 1:1 · five_line</span>
+    <span class="badge uncertain">uncertain · 0.3261</span>
+    <span class='flag'>⚑ low_margin:0.046</span>
+  </div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek window</div><div class='ln '><span class='n'>1a4</span><span class='t'>ὁ δὲ κατὰ τοὔνομα λόγος τῆς οὐσίας ἕτερος· ἐὰν γὰρ</span></div><div class='ln tk'><span class='n'>1a5</span><span class='t'>ἀποδιδῷ τις τί ἐστιν αὐτῶν ἑκατέρῳ τὸ ζῴῳ εἶναι, ἴδιον</span></div><div class='ln '><span class='n'>1a6</span><span class='t'>ἑκατέρου λόγον ἀποδώσει. συνώνυμα δὲ λέγεται ὧν τό τε</span></div></div>
+    <div class="col gloss"><div class="lab">Gloss window</div><div class='ln '><span class='n'>1a4</span><span class='t'>while the account of being corresponding to the name is different; for if</span></div><div class='ln tk'><span class='n'>1a5</span><span class='t'>someone should render, for each of them, what being an animal is, he will give a distinct</span></div><div class='ln '><span class='n'>1a6</span><span class='t'>account for each. And things are called synonymous of which both the name is common and the</span></div></div>
+  </div>
+  <div class="edg">
+    <div class="lab">Edghill — ▸ marks the placed line (1a5)</div>
+    <div class="edg-txt"><span class='b'>… in what sense each is an animal, his definition in the one case will be appropriate to that case only. On the other hand, things are said to be named &#x27;univocally&#x27; which have both the name and the definition answering to the name in common. </span><span class='mark'>▸</span><span>A man and an ox are both &#x27;animal&#x27;, and these are univocally so named, inasmuch as not only the name, but also the definition, is the same in both cases: for if a man should state in what sense each is an animal, the statement in the one case would be identical with that in the other. Things are said to be named &#x27;derivatively&#x27;, which derive their name from so …</span></div>
+  </div>
+  <div class="actions">
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early (content is after ▸)</button>
+    <button class="v" data-v="late">Late (content is before ▸) ▶</button>
+    <input class="note" placeholder="note (optional)…">
+  </div>
+</div>
+<div class="card" data-id="1:1:1a10" data-cit="1a10" data-chap="1:1">
+  <div class="bar">
+    <span class="cit">1a10</span>
+    <span class="meta">ch 1:1 · five_line</span>
+    <span class="badge reliable">reliable · 0.3485</span>
+    
+  </div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek window</div><div class='ln '><span class='n'>1a9</span><span class='t'>κοινῷ ὀνόματι προσαγορεύεται ζῷον, καὶ ὁ λόγος δὲ</span></div><div class='ln tk'><span class='n'>1a10</span><span class='t'>τῆς οὐσίας ὁ αὐτός· ἐὰν γὰρ ἀποδιδῷ τις τὸν ἑκατέρου</span></div><div class='ln '><span class='n'>1a11</span><span class='t'>λόγον τί ἐστιν αὐτῶν ἑκατέρῳ τὸ ζῴῳ εἶναι, τὸν αὐτὸν</span></div></div>
+    <div class="col gloss"><div class="lab">Gloss window</div><div class='ln '><span class='n'>1a9</span><span class='t'>by the common name is called &#x27;animal,&#x27; and the account too</span></div><div class='ln tk'><span class='n'>1a10</span><span class='t'>of being is the same; for if someone should render the account of each</span></div><div class='ln '><span class='n'>1a11</span><span class='t'>as to what being an animal is for each of them, he will give the same account.</span></div></div>
+  </div>
+  <div class="edg">
+    <div class="lab">Edghill — ▸ marks the placed line (1a10)</div>
+    <div class="edg-txt"><span class='b'>… in what sense each is an animal, his definition in the one case will be appropriate to that case only. On the other hand, things are said to be named &#x27;univocally&#x27; which have both the name and the definition answering to the name in common. </span><span class='mark'>▸</span><span>A man and an ox are both &#x27;animal&#x27;, and these are univocally so named, inasmuch as not only the name, but also the definition, is the same in both cases: for if a man should state in what sense each is an animal, the statement in the one case would be identical with that in the other. Things are said to be named &#x27;derivatively&#x27;, which derive their name from so …</span></div>
+  </div>
+  <div class="actions">
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early (content is after ▸)</button>
+    <button class="v" data-v="late">Late (content is before ▸) ▶</button>
+    <input class="note" placeholder="note (optional)…">
+  </div>
+</div>
+<div class="card" data-id="1:1:1a15" data-cit="1a15" data-chap="1:1">
+  <div class="bar">
+    <span class="cit">1a15</span>
+    <span class="meta">ch 1:1 · five_line</span>
+    <span class="badge reliable">reliable · 0.6911</span>
+    
+  </div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek window</div><div class='ln '><span class='n'>1a14</span><span class='t'>οἷον ἀπὸ τῆς γραμματικῆς ὁ γραμματικὸς καὶ ἀπὸ τῆς</span></div><div class='ln tk'><span class='n'>1a15</span><span class='t'>ἀνδρείας ὁ ἀνδρεῖος.</span></div></div>
+    <div class="col gloss"><div class="lab">Gloss window</div><div class='ln '><span class='n'>1a14</span><span class='t'>as from &#x27;grammar&#x27; the grammarian, and from</span></div><div class='ln tk'><span class='n'>1a15</span><span class='t'>&#x27;courage&#x27; the courageous man.</span></div></div>
+  </div>
+  <div class="edg">
+    <div class="lab">Edghill — ▸ marks the placed line (1a15)</div>
+    <div class="edg-txt"><span class='b'>… ld state in what sense each is an animal, the statement in the one case would be identical with that in the other. Things are said to be named &#x27;derivatively&#x27;, which derive their name from some other name, but differ from it in termination. </span><span class='mark'>▸</span><span>Thus the grammarian derives his name from the word &#x27;grammar&#x27;, and the courageous man from the word &#x27;courage&#x27;.</span></div>
+  </div>
+  <div class="actions">
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early (content is after ▸)</button>
+    <button class="v" data-v="late">Late (content is before ▸) ▶</button>
+    <input class="note" placeholder="note (optional)…">
+  </div>
+</div>
+<div class="card" data-id="1:2:1a20" data-cit="1a20" data-chap="1:2">
+  <div class="bar">
+    <span class="cit">1a20</span>
+    <span class="meta">ch 1:2 · five_line</span>
+    <span class="badge uncertain">uncertain · 0.4885</span>
+    <span class='flag'>⚑ low_margin:0.035</span>
+  </div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek window</div><div class='ln '><span class='n'>1a19</span><span class='t'>οἷον ἄνθρωπος, βοῦς, τρέχει, νικᾷ.</span></div><div class='ln tk'><span class='n'>1a20</span><span class='t'>Τῶν ὄντων τὰ μὲν καθ&#x27; ὑποκειμένου τινὸς λέγεται, ἐν</span></div><div class='ln '><span class='n'>1a21</span><span class='t'>ὑποκειμένῳ δὲ οὐδενί ἐστιν, οἷον ἄνθρωπος καθ&#x27; ὑποκειμένου</span></div></div>
+    <div class="col gloss"><div class="lab">Gloss window</div><div class='ln '><span class='n'>1a19</span><span class='t'>as man, ox, runs, wins.</span></div><div class='ln tk'><span class='n'>1a20</span><span class='t'>Of things that are, some are said of a subject, but in</span></div><div class='ln '><span class='n'>1a21</span><span class='t'>a subject are not present at all — as man is said of a subject,</span></div></div>
+  </div>
+  <div class="edg">
+    <div class="lab">Edghill — ▸ marks the placed line (1a20)</div>
+    <div class="edg-txt"><span class='b'>Forms of speech are either simple or composite. Examples of the latter are such expressions as &#x27;the man runs&#x27;, &#x27;the man wins&#x27;; of the former &#x27;man&#x27;, &#x27;ox&#x27;, &#x27;runs&#x27;, &#x27;wins&#x27;. </span><span class='mark'>▸</span><span>Of things themselves some are predicable of a subject, and are never present in a subject. Thus &#x27;man&#x27; is predicable of the individual man, and is never present in a subject. By being &#x27;present in a subject&#x27; I do not mean present as parts are present in a whole, but being incapable of existence apart from the said subject. Some things, again, are present in a  …</span></div>
+  </div>
+  <div class="actions">
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early (content is after ▸)</button>
+    <button class="v" data-v="late">Late (content is before ▸) ▶</button>
+    <input class="note" placeholder="note (optional)…">
+  </div>
+</div>
+<div class="card" data-id="1:2:1a25" data-cit="1a25" data-chap="1:2">
+  <div class="bar">
+    <span class="cit">1a25</span>
+    <span class="meta">ch 1:2 · five_line</span>
+    <span class="badge reliable">reliable · 0.5589</span>
+    
+  </div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek window</div><div class='ln '><span class='n'>1a24</span><span class='t'>λέγεται, —ἐν ὑποκειμένῳ δὲ λέγω ὃ ἔν τινι μὴ ὡς μέρος</span></div><div class='ln tk'><span class='n'>1a25</span><span class='t'>ὑπάρχον ἀδύνατον χωρὶς εἶναι τοῦ ἐν ᾧ ἐστίν,— οἷον ἡ τὶς</span></div><div class='ln '><span class='n'>1a26</span><span class='t'>γραμματικὴ ἐν ὑποκειμένῳ μέν ἐστι τῇ ψυχῇ, καθ&#x27; ὑποκειμένου</span></div></div>
+    <div class="col gloss"><div class="lab">Gloss window</div><div class='ln '><span class='n'>1a24</span><span class='t'>is said, — and by &#x27;in a subject&#x27; I mean what is in something, not as a part</span></div><div class='ln tk'><span class='n'>1a25</span><span class='t'>being present, and incapable of existing apart from that in which it is, — as a certain</span></div><div class='ln '><span class='n'>1a26</span><span class='t'>piece of grammar is in a subject, the soul, but of a subject</span></div></div>
+  </div>
+  <div class="edg">
+    <div class="lab">Edghill — ▸ marks the placed line (1a25)</div>
+    <div class="edg-txt"><span class='b'>… runs&#x27;, &#x27;the man wins&#x27;; of the former &#x27;man&#x27;, &#x27;ox&#x27;, &#x27;runs&#x27;, &#x27;wins&#x27;. Of things themselves some are predicable of a subject, and are never present in a subject. Thus &#x27;man&#x27; is predicable of the individual man, and is never present in a subject. </span><span class='mark'>▸</span><span>By being &#x27;present in a subject&#x27; I do not mean present as parts are present in a whole, but being incapable of existence apart from the said subject. Some things, again, are present in a subject, but are never predicable of a subject. For instance, a certain point of grammatical knowledge is present in the mind, but is not predicable of any subject; or again, …</span></div>
+  </div>
+  <div class="actions">
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early (content is after ▸)</button>
+    <button class="v" data-v="late">Late (content is before ▸) ▶</button>
+    <input class="note" placeholder="note (optional)…">
+  </div>
+</div>
+<div class="card" data-id="1:2:1b1" data-cit="1b1" data-chap="1:2">
+  <div class="bar">
+    <span class="cit">1b1</span>
+    <span class="meta">ch 1:2 · column</span>
+    <span class="badge uncertain">uncertain · 0.5412</span>
+    <span class='flag'>⚑ low_margin:0.017</span>
+  </div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek window</div><div class='ln '><span class='n'>1a29</span><span class='t'>ὑποκειμένου δὲ οὐδενὸς λέγεται· τὰ δὲ καθ&#x27; ὑποκειμένου τε</span></div><div class='ln tk'><span class='n'>1b1</span><span class='t'>λέγεται καὶ ἐν ὑποκειμένῳ ἐστίν, οἷον ἡ ἐπιστήμη ἐν ὑποκειμένῳ</span></div><div class='ln '><span class='n'>1b2</span><span class='t'>μέν ἐστι τῇ ψυχῇ, καθ&#x27; ὑποκειμένου δὲ λέγεται</span></div></div>
+    <div class="col gloss"><div class="lab">Gloss window</div><div class='ln '><span class='n'>1a29</span><span class='t'>of no subject is it said; and some things are both said of a subject</span></div><div class='ln tk'><span class='n'>1b1</span><span class='t'>and are in a subject, as knowledge is in a subject,</span></div><div class='ln '><span class='n'>1b2</span><span class='t'>the soul, and is said of a subject —</span></div></div>
+  </div>
+  <div class="edg">
+    <div class="lab">Edghill — ▸ marks the placed line (1b1)</div>
+    <div class="edg-txt"><span class='b'>… a certain point of grammatical knowledge is present in the mind, but is not predicable of any subject; or again, a certain whiteness may be present in the body (for colour requires a material basis), yet it is never predicable of anything. </span><span class='mark'>▸</span><span>Other things, again, are both predicable of a subject and present in a subject. Thus while knowledge is present in the human mind, it is predicable of grammar. There is, lastly, a class of things which are neither present in a subject nor predicable of a subject, such as the individual man or the individual horse. But, to speak more generally, that which is  …</span></div>
+  </div>
+  <div class="actions">
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early (content is after ▸)</button>
+    <button class="v" data-v="late">Late (content is before ▸) ▶</button>
+    <input class="note" placeholder="note (optional)…">
+  </div>
+</div>
+<div class="card" data-id="1:2:1b5" data-cit="1b5" data-chap="1:2">
+  <div class="bar">
+    <span class="cit">1b5</span>
+    <span class="meta">ch 1:2 · five_line</span>
+    <span class="badge uncertain">uncertain · 0.4296</span>
+    <span class='flag'>⚑ low_margin:0.038</span>
+  </div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek window</div><div class='ln '><span class='n'>1b4</span><span class='t'>ὑποκειμένου λέγεται, οἷον ὁ τὶς ἄνθρωπος ἢ ὁ τὶς ἵππος,</span></div><div class='ln tk'><span class='n'>1b5</span><span class='t'>—οὐδὲν γὰρ τῶν τοιούτων οὔτε ἐν ὑποκειμένῳ ἐστὶν</span></div><div class='ln '><span class='n'>1b6</span><span class='t'>οὔτε καθ&#x27; ὑποκειμένου λέγεται·— ἁπλῶς δὲ τὰ ἄτομα καὶ ἓν</span></div></div>
+    <div class="col gloss"><div class="lab">Gloss window</div><div class='ln '><span class='n'>1b4</span><span class='t'>of a subject are said, as a certain man or a certain horse,</span></div><div class='ln tk'><span class='n'>1b5</span><span class='t'>— for none of such things is either in a subject</span></div><div class='ln '><span class='n'>1b6</span><span class='t'>nor said of a subject; — and without qualification, individuals and what is numerically one</span></div></div>
+  </div>
+  <div class="edg">
+    <div class="lab">Edghill — ▸ marks the placed line (1b5)</div>
+    <div class="edg-txt"><span class='b'>… (for colour requires a material basis), yet it is never predicable of anything. Other things, again, are both predicable of a subject and present in a subject. Thus while knowledge is present in the human mind, it is predicable of grammar. </span><span class='mark'>▸</span><span>There is, lastly, a class of things which are neither present in a subject nor predicable of a subject, such as the individual man or the individual horse. But, to speak more generally, that which is individual and has the character of a unit is never predicable of a subject. Yet in some cases there is nothing to prevent such being present in a subject. Thus …</span></div>
+  </div>
+  <div class="actions">
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early (content is after ▸)</button>
+    <button class="v" data-v="late">Late (content is before ▸) ▶</button>
+    <input class="note" placeholder="note (optional)…">
+  </div>
+</div></div><script>
+const KEY='cat_edghill_verdicts_v1';
+const store=JSON.parse(localStorage.getItem(KEY)||'{}');
+function count(){const n=Object.keys(store).length,t=document.querySelectorAll('.card').length;
+  document.getElementById('prog').innerHTML='<b>'+n+'</b> / '+t+' reviewed';}
+function paint(id){const c=document.querySelector('.card[data-id="'+CSS.escape(id)+'"]');
+  if(!c)return;const v=store[id]&&store[id].verdict;
+  c.querySelectorAll('.v').forEach(b=>b.classList.toggle('sel',b.dataset.v===v));
+  c.classList.toggle('done',!!v);}
+document.querySelectorAll('.card').forEach(c=>{
+  const id=c.dataset.id;
+  c.querySelectorAll('.v').forEach(b=>b.addEventListener('click',()=>{
+    const cur=store[id]||{};cur.verdict=b.dataset.v;cur.citation=c.dataset.cit;
+    cur.chapter=c.dataset.chap;cur.ts=new Date().toISOString();store[id]=cur;
+    localStorage.setItem(KEY,JSON.stringify(store));paint(id);count();}));
+  const nt=c.querySelector('.note');
+  nt.addEventListener('input',()=>{const cur=store[id]||{};cur.note=nt.value;
+    cur.citation=c.dataset.cit;cur.chapter=c.dataset.chap;store[id]=cur;
+    localStorage.setItem(KEY,JSON.stringify(store));});
+  if(store[id]&&store[id].note)nt.value=store[id].note;
+  paint(id);
+});
+count();
+document.getElementById('exp').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({work:'Cat',version:'edghill',
+    exported:new Date().toISOString(),verdicts:store},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='categories-edghill-verdicts.json';a.click();});
+</script></body></html>
