@@ -251,6 +251,18 @@ body {
   background: var(--accent);
   color: var(--on-accent);
 }
+/* The "common books" gap link in the book row (Eudemian Ethics IV–VI → NE). */
+.page-header .book-nav a.book-nav-missing {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.74rem;
+  border: 1px dashed var(--border);
+}
+.page-header .book-nav a.book-nav-missing:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: transparent;
+}
 
 /* "Jump to Bekker line" citation lookup in the global header.
    Collapsed by default as a labeled button; expands into the input. */
@@ -1222,6 +1234,35 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   overflow-y: auto;
   padding: 0.25rem 0 1.5rem;
 }
+/* The "common books" note in the sidebar outline, between Books III and VII of
+   the Eudemian Ethics (its IV–VI are the Nicomachean Ethics' V–VII). */
+.toc-missing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-ui);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.toc-missing-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+.toc-missing-note {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-light);
+  line-height: 1.35;
+}
+.toc-missing a {
+  font-size: 0.8rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+.toc-missing a:hover { text-decoration: underline; }
+
 .toc-book { border-bottom: 1px solid var(--border); }
 .toc-book > summary {
   display: flex;

@@ -21,6 +21,21 @@ export interface TranslationRef {
   private?: boolean;
 }
 
+// A gap in a work's book sequence worth annotating in the reader. The Eudemian
+// Ethics is numbered I–VIII, but Books IV–VI are the "common books" — they ARE
+// Nicomachean Ethics V–VII and are not reprinted in the Eudemian text. We carry
+// the five Eudemian-proper books as contiguous indices 1..5 (labels I/II/III/
+// VII/VIII) and show this note where the missing books would fall, linking to
+// the other work.
+export interface MissingBooks {
+  after: number;      // render the note after this (contiguous) book index
+  label: string;      // the missing books' labels, e.g. 'IV–VI'
+  note: string;       // one line explaining the gap
+  linkWork: string;   // id of the work that carries the text (e.g. 'EN')
+  linkBook: number;   // book to jump to in that work
+  linkLabel: string;  // link text, e.g. 'Nicomachean Ethics V–VII'
+}
+
 export interface Work {
   id: string;       // slug + data dir, e.g. 'EN'
   title: string;
@@ -28,6 +43,7 @@ export interface Work {
   author: string;
   books: number;
   bookLabels: string[];   // per-book display labels (Roman for EN, Arabic for DA)
+  missingBooks?: MissingBooks;  // annotate a gap in the book sequence (EE)
   greekEdition: string;
   // The print edition the TLG text was digitised from, in two lengths: `short`
   // for the reader's bilingual strip, `full` for the Greek-only strip and the
@@ -50,6 +66,11 @@ const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 const HIDE_PRIVATE = import.meta.env.PUBLIC_HIDE_PRIVATE === '1';
 const ACKRILL: TranslationRef[] = HIDE_PRIVATE ? [] : [
   { id: 'ackrill', name: 'J. L. Ackrill (Oxford, 1963)', short: 'Ackrill', slot: 'third', private: true },
+];
+// Rackham's Loeb (1935) Eudemian Ethics is US-copyright until ~2031; carried as
+// the secondary overlay in the local build, gated out of the public deploy.
+const EE_RACKHAM: TranslationRef[] = HIDE_PRIVATE ? [] : [
+  { id: 'rackham', name: 'H. Rackham (Loeb, 1935)', short: 'Rackham', slot: 'ross', private: true },
 ];
 
 // Display order follows the traditional arrangement of the corpus: the Organon
@@ -514,6 +535,39 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle’s central work of moral philosophy, in ten books.',
   },
   {
+    id: 'EE',
+    title: 'Eudemian Ethics',
+    abbr: 'EE',
+    author: 'Aristotle',
+    // The treatise has eight books, but IV–VI are the "common books" — they ARE
+    // Nicomachean Ethics V–VII and are not reprinted in the Eudemian text. We
+    // carry the five Eudemian-proper books as contiguous indices, labelled by
+    // their traditional Roman numerals (I, II, III, VII, VIII).
+    books: 5,
+    bookLabels: ['I', 'II', 'III', 'VII', 'VIII'],
+    missingBooks: {
+      after: 3,
+      label: 'IV–VI',
+      note: 'The “common books”, shared with the Nicomachean Ethics and not reprinted here.',
+      linkWork: 'EN',
+      linkBook: 5,
+      linkLabel: 'Nicomachean Ethics V–VII',
+    },
+    greekEdition: 'Susemihl, Aristotelis Ethica Eudemia (Teubner, 1884)',
+    greekSource: {
+      short: 'Susemihl (Teubner, 1884)',
+      full: 'F. Susemihl, ed. Aristotelis ethica Eudemia. Leipzig: Teubner, 1884.',
+    },
+    // Public build ships the public-domain Solomon (1915) only. The copyrighted
+    // Rackham (Loeb 1935) overlay lives in EE.yaml for the local/private build
+    // and is gated out of the public deploy (private flag + EE-public.yaml).
+    translations: [
+      { id: 'solomon', name: 'J. Solomon (Oxford, 1915)', short: 'Solomon', slot: 'english' },
+      ...EE_RACKHAM,   // dropped from the public build (see HIDE_PRIVATE above)
+    ],
+    blurb: 'Aristotle’s other ethical treatise, closely related to the Nicomachean Ethics.',
+  },
+  {
     id: 'Pol',
     title: 'Politics',
     abbr: 'Pol.',
@@ -694,7 +748,7 @@ export const CATEGORIES: Category[] = [
     title: 'Moral and Political Philosophy',
     works: [
       { id: 'EN' },
-      { title: 'Eudemian Ethics' },
+      { id: 'EE' },
       { id: 'Pol' },
     ],
   },

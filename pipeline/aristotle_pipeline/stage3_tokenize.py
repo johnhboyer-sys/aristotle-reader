@@ -28,7 +28,10 @@ _PUNCT = ".,·;—()|\"‘«»" + "·;"  # ano teleia, Greek question mark
 # (e.g. the De Int 22a modal-opposition square); strip it so the cells tokenize.
 # ⟦ ⟧ (U+27E6/U+27E7) are the double brackets marking editorially secluded text
 # (e.g. the deleted passages in De Generatione Animalium); treat like [ ].
-_SIGLA = "†*<>[]⎪⟦⟧"
+# ⌜ ⌞ ⌝ ⌟ (U+231C/231E/231D/231F) are the half/corner brackets the TLG uses to
+# mark editorial supplements and transpositions (e.g. in the Eudemian Ethics);
+# strip like the other seclusion brackets so the bracketed words tokenize.
+_SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟"
 
 _STRIP = _PUNCT + _SIGLA
 _APOSTROPHE_END = re.compile(r"['’᾽ʼ]$")

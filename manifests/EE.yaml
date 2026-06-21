@@ -1,0 +1,77 @@
+# Eudemian Ethics — pipeline manifest (local/full build)
+#
+# Aristotle's other ethical treatise. The manuscript tradition numbers its books
+# I, II, III, [IV–VI], VII, VIII, but Books IV–VI are the "common books" — they
+# ARE Nicomachean Ethics V–VII (Bekker 1129a–1154b) and are not reprinted in the
+# Eudemian text. So the TLG Greek (tlg009) runs continuously 1214a–1249b and
+# carries only the five Eudemian-proper books. We renumber them to the reader's
+# contiguous 1..5 (the display labels I/II/III/VII/VIII live in works.ts).
+#
+# Primary English = J. Solomon (Oxford 1915, public domain), chapter-anchored
+# archive prose distributed across the Bekker columns. Secondary = H. Rackham
+# (Loeb 1935), carried with a dense real Bekker gutter generated directly from
+# its Perseus eng2 milestones (tools/build_ee_rackham.py). Rackham is US-copyright
+# until ~2031, so it is gated out of the public deploy (see EE-public.yaml).
+#
+# Greek-edition citation flagged for John to confirm (TLG's tlg009 source).
+
+work:
+  id: EE
+  title: "Eudemian Ethics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "009"
+  greek_edition: "Susemihl, Aristotelis Ethica Eudemia (Teubner, 1884)"
+  english_translation: "J. Solomon (Oxford, 1915)"
+
+bekker_range:
+  first_column: "1214a"
+  last_column: "1249b"
+
+# Chapters are text-aligned onto the Greek spine from the Perseus grc2 TEI's
+# section divs (= the traditional chapter divisions), book-renumbered 7->4, 8->5
+# to match the reader's contiguous book indices. The grc2 carries real Bekker
+# page/line milestones, so each chapter div also has an authoritative (col,line)
+# fallback when the opening orthography diverges from the TLG spine.
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg009.perseus-grc2-eebooks.xml"
+  chapter_subtype: section
+  book_subtype: book
+
+english:
+  primary:
+    id: solomon
+    name: "J. Solomon (Oxford, 1915)"
+    model: archive
+    dir: ee-solomon
+    books: 5
+    chapter_marker: number
+    # Phase 2: real per-line Bekker gutter from the gloss aligner.
+    # anchors: ee-solomon/anchors.yaml
+  secondary:
+    id: rackham
+    name: "H. Rackham (Loeb, 1935)"
+    dir: ee-rackham
+    books: 5
+    marker: number
+    # Dense real ticks lifted straight from Rackham's Perseus eng2 Bekker
+    # milestones (no aligner needed — it is already Bekker-milestoned).
+    anchors: ee-rackham/anchors.yaml
+
+# The five Eudemian-proper books, renumbered 1..5 (display I/II/III/VII/VIII).
+# All but Book I begin mid-column; the boundary columns (1218b/1228a/1234b/1246a)
+# are split between the two books they straddle. Boundaries derived from the
+# Perseus book/section divs aligned onto the spine (Stage 2 validates them).
+books:
+  - { n: 1, start: "1214a1",  end: "1218b27" }
+  - { n: 2, start: "1218b31", end: "1228a19" }
+  - { n: 3, start: "1228a23", end: "1234b14" }
+  - { n: 4, start: "1234b18", end: "1246a25" }
+  - { n: 5, start: "1246a26", end: "1249b25" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

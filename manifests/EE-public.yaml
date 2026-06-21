@@ -1,0 +1,51 @@
+# Eudemian Ethics — PUBLIC build (public-domain translation only)
+#
+# Same work as EE.yaml, but for the live deploy: the copyrighted Rackham (Loeb
+# 1935) secondary is dropped. J. Solomon (Oxford 1915, US public domain) is the
+# sole English, so Rackham's text never enters the published data or search
+# index. The Greek and chapter structure are identical.
+#
+# Build this (not EE.yaml) for the public deploy, with PUBLIC_HIDE_PRIVATE=1 so
+# the Rackham registry entry is dropped from the app bundle too.
+
+work:
+  id: EE
+  title: "Eudemian Ethics"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "009"
+  greek_edition: "Susemihl, Aristotelis Ethica Eudemia (Teubner, 1884)"
+  english_translation: "J. Solomon (Oxford, 1915)"
+
+bekker_range:
+  first_column: "1214a"
+  last_column: "1249b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg009.perseus-grc2-eebooks.xml"
+  chapter_subtype: section
+  book_subtype: book
+
+english:
+  primary:
+    id: solomon
+    name: "J. Solomon (Oxford, 1915)"
+    model: archive
+    dir: ee-solomon
+    books: 5
+    chapter_marker: number
+    # anchors: ee-solomon/anchors.yaml   # Phase 2 (gloss aligner)
+
+books:
+  - { n: 1, start: "1214a1",  end: "1218b27" }
+  - { n: 2, start: "1218b31", end: "1228a19" }
+  - { n: 3, start: "1228a23", end: "1234b14" }
+  - { n: 4, start: "1234b18", end: "1246a25" }
+  - { n: 5, start: "1246a26", end: "1249b25" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

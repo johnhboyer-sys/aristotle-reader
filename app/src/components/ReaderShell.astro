@@ -84,13 +84,24 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
         <nav class="book-nav" aria-label="Books">
           <span class="book-nav-label">Books</span>
           {Array.from({ length: work.books }, (_, i) => (
-            <a
-              href={`${base}${workPath(workId, i + 1)}`}
-              class={i + 1 === n ? 'current' : ''}
-              aria-current={i + 1 === n ? 'page' : undefined}
-            >
-              {bookLabel(work, i + 1)}
-            </a>
+            <>
+              <a
+                href={`${base}${workPath(workId, i + 1)}`}
+                class={i + 1 === n ? 'current' : ''}
+                aria-current={i + 1 === n ? 'page' : undefined}
+              >
+                {bookLabel(work, i + 1)}
+              </a>
+              {work.missingBooks && work.missingBooks.after === i + 1 && (
+                <a
+                  class="book-nav-missing"
+                  href={`${base}${workPath(work.missingBooks.linkWork, work.missingBooks.linkBook)}`}
+                  title={`${work.missingBooks.label}: ${work.missingBooks.note} → ${work.missingBooks.linkLabel}`}
+                >
+                  {work.missingBooks.label}&nbsp;→
+                </a>
+              )}
+            </>
           ))}
         </nav>
       )}
@@ -140,27 +151,38 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
         </ul>
       ) : (
         outline.map((b) => (
-          <details class="toc-book" open={b.book === n}>
-            <summary>
-              <span class="toc-book-label">Book {b.label}</span>
-              <span class="toc-book-count">{b.chapters.length} ch.</span>
-            </summary>
-            <ul>
-              {b.chapters.map((c) => (
-                <li>
-                  <a href={chapterHref(b.book, c.chapter)} data-ch={`ch-${b.book}-${c.chapter}`}>
-                    <span class="toc-ch-n">{c.chapter}</span>
-                    <span class="toc-ch-body">
-                      {chapterTitles[String(b.book)]?.[c.chapter] && (
-                        <span class="toc-ch-title">{chapterTitles[String(b.book)][c.chapter]}</span>
-                      )}
-                      <span class="toc-ch-bekker">{c.bekker}</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </details>
+          <>
+            <details class="toc-book" open={b.book === n}>
+              <summary>
+                <span class="toc-book-label">Book {b.label}</span>
+                <span class="toc-book-count">{b.chapters.length} ch.</span>
+              </summary>
+              <ul>
+                {b.chapters.map((c) => (
+                  <li>
+                    <a href={chapterHref(b.book, c.chapter)} data-ch={`ch-${b.book}-${c.chapter}`}>
+                      <span class="toc-ch-n">{c.chapter}</span>
+                      <span class="toc-ch-body">
+                        {chapterTitles[String(b.book)]?.[c.chapter] && (
+                          <span class="toc-ch-title">{chapterTitles[String(b.book)][c.chapter]}</span>
+                        )}
+                        <span class="toc-ch-bekker">{c.bekker}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+            {work.missingBooks && work.missingBooks.after === b.book && (
+              <div class="toc-missing">
+                <span class="toc-missing-label">Books {work.missingBooks.label}</span>
+                <span class="toc-missing-note">{work.missingBooks.note}</span>
+                <a href={`${base}${workPath(work.missingBooks.linkWork, work.missingBooks.linkBook)}`}>
+                  {work.missingBooks.linkLabel} →
+                </a>
+              </div>
+            )}
+          </>
         ))
       )}
     </nav>
