@@ -29,6 +29,7 @@ english:
     dir: "mem-beare"
     books: 1
     chapter_marker: part
+    anchors: "mem-beare/anchors.yaml"
 
 books:
   - { n: 1, start: "449b4", end: "453b11" }

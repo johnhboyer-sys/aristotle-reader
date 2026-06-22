@@ -29,6 +29,7 @@ english:
     dir: "sens-beare"
     books: 1
     chapter_marker: part
+    anchors: "sens-beare/anchors.yaml"
 
 books:
   - { n: 1, start: "436a1", end: "449b4" }

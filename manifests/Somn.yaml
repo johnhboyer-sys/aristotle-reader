@@ -29,6 +29,7 @@ english:
     dir: "somn-beare"
     books: 1
     chapter_marker: part
+    anchors: "somn-beare/anchors.yaml"
 
 books:
   - { n: 1, start: "453b11", end: "458a32" }

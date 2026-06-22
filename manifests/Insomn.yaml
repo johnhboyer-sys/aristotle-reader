@@ -29,6 +29,7 @@ english:
     dir: "insomn-beare"
     books: 1
     chapter_marker: part
+    anchors: "insomn-beare/anchors.yaml"
 
 # Single Bekker line-number skip in the TLG text (continuous Greek, verified).
 expected_line_gaps:
