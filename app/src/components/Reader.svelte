@@ -206,11 +206,12 @@
 
   // A segment renders as one or more blocks split at chapter boundaries.
   // `chapter` is non-null on the block that begins a new chapter (heading shown).
-  // `rows` lay the English prose out beside its Bekker-line gutter (see below).
-  // A GreekLine may be a partial slice of a real line (cont = its tail half,
-  // after a mid-line chapter split): it suppresses the repeated line number/id.
+  // Every English slot (primary / Ross / third) lays out as flowing prose with
+  // its Bekker numbers floated into the margin at their exact offsets (see
+  // flowParts). A GreekLine may be a partial slice of a real line (cont = its
+  // tail half, after a mid-line chapter split): it suppresses the repeated id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { chapter: string | null; bekker: string; lines: RLine[]; rows: EngRow[]; rossRows: EngRow[]; rossFlow: FlowPart[]; thirdRows: EngRow[]; thirdTables: { n: number; rows: string[][] }[]; }
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; rossFlow: FlowPart[]; thirdFlow: FlowPart[]; thirdTables: { n: number; rows: string[][] }[]; }
   // A flowing-prose part: either a text run (n null) or a Bekker margin marker
   // (text null) placed at an exact mid-sentence offset — no row break.
   interface FlowPart { text: string | null; n: number | null; real: boolean; }
@@ -241,53 +242,6 @@
     if (fromW > 0) text = text.replace(/^\s+/, '');
     if (toW < line.tokens.length) text = text.replace(/\s+$/, '');
     return { n: line.n, text, tokens: line.tokens.slice(fromW, toW), cont: fromW > 0 };
-  }
-
-  // The gutter renders each tick as its own block row, so a row boundary forces
-  // a visual line break. To avoid splitting a sentence (which happens when an
-  // estimated tick lands mid-sentence), snap every tick to the nearest sentence
-  // boundary in the slice, then drop ticks that collapse onto an earlier row.
-  // Numbers stay as approximate margin references; breaks fall only at sentence
-  // ends. Boundaries are positions after . ? ! (optionally a closing quote) + space.
-  function snapTicksToSentences(
-    text: string,
-    ticks: { n: number; real: boolean; off: number }[],
-  ): { n: number; real: boolean; off: number }[] {
-    if (!ticks.length) return ticks;
-    const bounds = [0];
-    const re = /[.?!]["'”’)\]]?\s+/g;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text))) bounds.push(m.index + m[0].length);
-    bounds.push(text.length);
-    const nearest = (off: number) => {
-      let best = bounds[0], bestD = Infinity;
-      for (const b of bounds) { const d = Math.abs(b - off); if (d < bestD) { bestD = d; best = b; } }
-      return best;
-    };
-    const out: { n: number; real: boolean; off: number }[] = [];
-    let lastOff = -1;
-    for (const t of ticks) {
-      const off = nearest(t.off);
-      if (off <= lastOff) continue; // collapsed into a row already begun — drop
-      out.push({ ...t, off });
-      lastOff = off;
-    }
-    return out;
-  }
-
-  // Break an English slice into gutter rows at its Bekker ticks. Each row is the
-  // prose from one tick to the next, labelled with that tick's Bekker line; a
-  // leading numberless row holds any text before the first tick.
-  function buildRows(text: string, ticks: { n: number; real: boolean; off: number }[]): EngRow[] {
-    if (!ticks.length) return text ? [{ n: null, real: false, text }] : [];
-    const rows: EngRow[] = [];
-    if (ticks[0].off > 0) rows.push({ n: null, real: false, text: text.slice(0, ticks[0].off) });
-    for (let i = 0; i < ticks.length; i++) {
-      const off = Math.max(0, Math.min(ticks[i].off, text.length));
-      const end = i + 1 < ticks.length ? Math.max(0, Math.min(ticks[i + 1].off, text.length)) : text.length;
-      rows.push({ n: ticks[i].n, real: ticks[i].real, text: text.slice(off, end) });
-    }
-    return rows;
   }
 
   // Flowing prose with Bekker numbers floated into the margin at their EXACT
@@ -354,48 +308,43 @@
     const greek = seg.greek;
     const text = seg.english?.text ?? '';
     const allTicks = seg.english?.bekker ?? [];
-    // English rows for the slice [a, b), with Bekker ticks rebased into it.
-    const rowsFor = (a: number, b: number): EngRow[] => {
+    // The primary English slice [a, b) as flowing prose: its Bekker ticks
+    // (rebased into the slice) are floated into the margin at their EXACT char
+    // offsets — no sentence-snapping, no row break — so a mid-sentence Bekker
+    // number renders where it actually falls instead of jumping to the next
+    // sentence start (which the older snapped-row gutter did). The secondary
+    // Ross slot uses the same flow model.
+    const flowFor = (a: number, b: number): FlowPart[] => {
       const slice = text.slice(a, b);
       const ticks = allTicks
         .filter(t => t.offset >= a && t.offset < b)
         .map(t => ({ n: t.n, real: t.real, off: t.offset - a }))
         .sort((x, y) => x.off - y.off);
-      return buildRows(slice, snapTicksToSentences(slice, ticks));
+      return flowParts(slice, ticks);
     };
     // Ross slices for this column, paired to blocks: the continuation slice
     // (a chapter begun in an earlier column) and one per chapter that starts
-    // here. Each slice lays out as gutter rows like Rackham, with its
-    // interpolated Bekker ticks (snapped to sentences so prose stays continuous).
+    // here. Each slice lays out as flowing prose, its Bekker numbers floated into
+    // the margin at exact offsets.
     const rossPieces = seg.ross ?? [];
-    const rossRowsOf = (p: typeof rossPieces[number] | undefined): EngRow[] => {
-      if (!p || !p.text) return [];
-      const ticks = (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset }));
-      return buildRows(p.text, snapTicksToSentences(p.text, ticks));
-    };
-    const rossCont = () => rossRowsOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
-    const rossFor = (chapter: string) => rossRowsOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
-    // Flowing-prose variant: numbers float in the margin at exact offsets.
     const rossFlowOf = (p: typeof rossPieces[number] | undefined): FlowPart[] =>
       (!p || !p.text) ? [] : flowParts(p.text, (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset })));
     const rossFlowCont = () => rossFlowOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
     const rossFlowFor = (chapter: string) => rossFlowOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
-    // Third translation overlay, same chapter-anchored shape as ross.
+    // Third translation overlay (Ostwald / Ackrill), same flowing-prose shape;
+    // it adds clickable footnote markers and, for Ackrill, diagram tables.
     const thirdPieces = seg.third ?? [];
-    const thirdRowsOf = (p: typeof thirdPieces[number] | undefined): EngRow[] => {
-      if (!p || !p.text) return [];
-      const ticks = (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset }));
-      return buildRows(p.text, snapTicksToSentences(p.text, ticks));
-    };
-    const thirdCont = () => thirdRowsOf(thirdPieces.find(p => p.cont) ?? thirdPieces[0]);
-    const thirdFor = (chapter: string) => thirdRowsOf(thirdPieces.find(p => !p.cont && p.chapter === chapter));
+    const thirdFlowOf = (p: typeof thirdPieces[number] | undefined): FlowPart[] =>
+      (!p || !p.text) ? [] : flowParts(p.text, (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset })));
+    const thirdFlowCont = () => thirdFlowOf(thirdPieces.find(p => p.cont) ?? thirdPieces[0]);
+    const thirdFlowFor = (chapter: string) => thirdFlowOf(thirdPieces.find(p => !p.cont && p.chapter === chapter));
     const thirdTablesOf = (p: typeof thirdPieces[number] | undefined) => p?.tables ?? [];
     const thirdContTables = () => thirdTablesOf(thirdPieces.find(p => p.cont) ?? thirdPieces[0]);
     const thirdTablesFor = (chapter: string) => thirdTablesOf(thirdPieces.find(p => !p.cont && p.chapter === chapter));
 
     const starts = (seg.chapterStarts ?? []).slice()
       .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, rows: rowsFor(0, text.length), rossRows: rossCont(), rossFlow: rossFlowCont(), thirdRows: thirdCont(), thirdTables: thirdContTables() }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, flow: flowFor(0, text.length), rossFlow: rossFlowCont(), thirdFlow: thirdFlowCont(), thirdTables: thirdContTables() }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -430,7 +379,7 @@
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        rows: rowsFor(0, starts[0].engOffset), rossRows: rossCont(), rossFlow: rossFlowCont(), thirdRows: thirdCont(), thirdTables: thirdContTables(),
+        flow: flowFor(0, starts[0].engOffset), rossFlow: rossFlowCont(), thirdFlow: thirdFlowCont(), thirdTables: thirdContTables(),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
@@ -440,7 +389,7 @@
       blocks.push({
         chapter: b.chapter, bekker: b.bekker,
         lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
-        rows: rowsFor(b.engOffset, engTo), rossRows: rossFor(b.chapter), rossFlow: rossFlowFor(b.chapter), thirdRows: thirdFor(b.chapter), thirdTables: thirdTablesFor(b.chapter),
+        flow: flowFor(b.engOffset, engTo), rossFlow: rossFlowFor(b.chapter), thirdFlow: thirdFlowFor(b.chapter), thirdTables: thirdTablesFor(b.chapter),
       });
     }
     return blocks;
@@ -712,32 +661,43 @@
                   </div>
                 {/if}
               {:else if selectedSlot === 'third'}
-                {#if block.thirdRows.length}
-                  <!-- Third translation with its Bekker gutter + diagrams. Its
-                       `[^N]` footnote markers are clickable (delegated handler). -->
-                  <div class="english-text" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
-                    {#each block.thirdRows as row}
-                      <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
-                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                      <div class="eng-seg">{@html renderThird(row.text)}</div>
-                      {#each block.thirdTables.filter(t => t.n === row.n) as tbl}
-                        <table class="eng-table"><tbody>
-                          {#each tbl.rows as trow}
-                            <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
-                          {/each}
-                        </tbody></table>
-                      {/each}
+                {#if block.thirdFlow.length}
+                  <!-- Third translation as flowing prose with margin-floated
+                       Bekker numbers (same model as the primary/Ross slots). Its
+                       `[^N]` footnote markers are clickable (delegated handler);
+                       any diagram tables follow their anchoring Bekker number. -->
+                  <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
+                    {#each block.thirdFlow as part}
+                      {#if part.text !== null}
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        <span class="bk-seg">{@html renderThird(part.text)}</span>
+                      {:else}
+                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
+                        {#each block.thirdTables.filter(t => t.n === part.n) as tbl}
+                          <table class="eng-table"><tbody>
+                            {#each tbl.rows as trow}
+                              <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
+                            {/each}
+                          </tbody></table>
+                        {/each}
+                      {/if}
                     {/each}
                   </div>
                 {/if}
               {:else}
                 {#if trans === 'compare'}<div class="col-label">{engSlot?.short ?? 'English'}</div>{/if}
-                {#if block.rows.length}
-                  <div class="english-text">
-                    {#each block.rows as row}
-                      <span class="eng-num" class:approx={row.n !== null && !row.real}>{row.n ?? ''}</span>
-                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                      <div class="eng-seg">{@html highlightEng(row.text)}</div>
+                {#if block.flow.length}
+                  <!-- Primary English: flowing prose with Bekker numbers floated
+                       into the margin at their exact offsets (no sentence-snapping,
+                       no row break). Same flow model as the secondary Ross slot. -->
+                  <div class="ross-prose">
+                    {#each block.flow as part}
+                      {#if part.text !== null}
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        <span class="bk-seg">{@html highlightEng(part.text)}</span>
+                      {:else}
+                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
+                      {/if}
                     {/each}
                   </div>
                 {/if}
