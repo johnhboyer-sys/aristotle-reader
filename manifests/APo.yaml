@@ -11,7 +11,7 @@
 #     book_subtype: part numbers the books and grc_book: posteriora restricts
 #     emission to this work (the posteriora parts are Books I & II).
 #   - English = G. R. G. Mure (Oxford, 1928, public domain via the MIT archive),
-#     chapter-anchored archive prose with an interpolated gutter.
+#     chapter-anchored archive prose with a gloss-aligned Bekker gutter.
 # Book II begins mid-column at 89b23 (Book I ends 89b22); the work ends 100b17.
 
 work:
@@ -44,6 +44,10 @@ english:
     dir: "apo-mure"
     books: 2
     chapter_marker: part
+    # Real per-line Bekker ticks for Mure, from the gloss/verifier aligner
+    # (docs/gloss-aligner-recipe.md): {bekker, at: verbatim Mure phrase},
+    # resolved per column → dense gutter, replacing the interpolated estimate.
+    anchors: "apo-mure/anchors.yaml"
 
 mid_column_book_starts:
   - { book: 2, column: "89b" }
