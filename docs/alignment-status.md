@@ -25,6 +25,7 @@ anchors are structural/interpolated and not counted.
 | Nicomachean Ethics (`EN`) | W. D. Ross (secondary) | 116 | 1293 | 1288 confirmed · 5 uncertain | [Bk 1–10](../alignment-results/ross/review/) |
 | Politics (`Pol`) | B. Jowett (public primary) | 102 | 1555 | 1538 confirmed · 13 uncertain · 4 reliable | [Bk 1–8](../alignment-results/jowett/review/) |
 | Prior Analytics (`APr`) | A. J. Jenkinson (public primary) | 73 | 791 | 790 confirmed · 1 reliable | [Bk 1](../alignment-results/jenkinson/review/book-01.html) · [Bk 2](../alignment-results/jenkinson/review/book-02.html) · [index](../alignment-results/jenkinson/index.html) |
+| Physics (`Phys`) | R. P. Hardie & R. K. Gaye (public primary) | 71 | 1200 | 1199 confirmed · 1 reliable | [index](../alignment-results/hardie/index.html) · Bk [1](../alignment-results/hardie/review/book-01.html) [2](../alignment-results/hardie/review/book-02.html) [3](../alignment-results/hardie/review/book-03.html) [4](../alignment-results/hardie/review/book-04.html) [5](../alignment-results/hardie/review/book-05.html) [6](../alignment-results/hardie/review/book-06.html) [7](../alignment-results/hardie/review/book-07.html) [8](../alignment-results/hardie/review/book-08.html) |
 
 - **EN / Ross** — every tick read-and-checked (2026-06-17); shipped, reader consumes
   the combined gloss map via `stage1_ross`.
@@ -38,6 +39,13 @@ anchors are structural/interpolated and not counted.
   pins each column's first line structurally. Build: stage2 PASS, 1 unresolved (`32b40`,
   a column-end straddle → interpolated); gutter renders 858 real vs 5 interpolated ticks.
   Deploys on the next gh-pages push.
+- **Phys / Hardie & Gaye** — aligned + reviewed + shipped 2026-06-22 (sonnet gloss · opus
+  verify + one opus correction pass; lone `reliable` tick in Bk 7 where the phrase wasn't
+  located verbatim). Phase B wired via `sources/phys-hardie/anchors.yaml` (1105
+  `chapter`+`five_line` entries from `tools/gloss_map_to_anchors.py`) + `anchors:` under
+  `english.primary` in `manifests/Phys.yaml`. Build: stage2 PASS, key_failures=0, 8
+  unresolved column-end/`*35` straddles → interpolated; reader gutter renders 1249 real vs
+  7 interpolated ticks.
 
 ## Not gloss-aligned (different method, for completeness)
 

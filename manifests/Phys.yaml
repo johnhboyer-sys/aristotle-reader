@@ -24,6 +24,7 @@ english:
     dir: "phys-hardie"
     books: 8
     chapter_marker: part
+    anchors: "phys-hardie/anchors.yaml"
 
 mid_column_book_starts:
   - { book: 2, column: "192b" }
