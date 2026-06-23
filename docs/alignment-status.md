@@ -13,8 +13,15 @@ anchors are structural/interpolated and not counted.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
+| Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/book-01.html) · [index](../alignment-results/pickard/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
+- **SE / Pickard-Cambridge** — aligned 2026-06-23 (sonnet gloss · opus verify ×2 + human
+  review pass). 100 ticks human-reviewed (60 ok, 24 early, 16 late; 51 word-clicked to pin
+  exact phrase). Remaining 216 ticks verified by Opus — **Opus marked 87% early/late on
+  the unreviewed chapters, which is high vs the human rate of 40%; the unreviewed chapters
+  need a further human pass before shipping.** Phase B wired via
+  `sources/sr-pickard/anchors.yaml` + `anchors:` in `manifests/SE.yaml`; not yet committed.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
 

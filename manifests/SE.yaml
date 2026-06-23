@@ -38,6 +38,7 @@ english:
     dir: "sr-pickard"
     books: 1
     chapter_marker: part
+    anchors: "sr-pickard/anchors.yaml"
 
 books:
   - { n: 1, start: "164a20", end: "184b8" }
