@@ -53,26 +53,24 @@ Each agent reads its task file and writes `build/align/glosses/<SLUG>/<b>-<c>.js
 (reusable, no leakage). Translator-style is a booster for famous translations only
 (see §8). Glossing prompt:
 
-> You are translating ancient Greek (Aristotle, **<WORK>**, Book **<B>**, chapter
-> **<C>**) for a Bekker-line alignment tool. Be precise and faithful — a scholar
-> with good Greek will check your work. Read `build/align/gloss_tasks/<SLUG>/<B>-<C>.json`
-> (a list of "windows"; each has "lines": `{citation, greek}` — line above the tick,
-> the tick line, the line below; edge windows have 2). Translate EACH Greek line into
-> its OWN English line (verse mode — one English line per Greek line, keyed by its
-> citation, kept on its own line even if longer). **Each English line must BEGIN with
-> the rendering of its Greek line's FIRST word** — do not pull a line's opening word up
-> into the previous line, nor borrow the next line's opening; the English line
-> boundaries must coincide with the Greek line boundaries even if a line then starts
-> mid-clause (Greek line opens διαφέρειν → that English line starts "differ…"). This is
-> what the verifier anchors on downstream, so a shifted boundary here becomes a
-> mis-placed tick. Use neighbours only to get a mid-sentence line's sense right. Keep
-> proper names as names (Καλλίας→Callias). Do
-> not merge, reorder, or annotate; each citation appears once. Render Aristotle's
-> technical vocabulary with conventional scholarly English, used consistently —
-> ἀρετή=virtue, εὐδαιμονία=happiness, ἔργον=function, ἐνέργεια=activity, ἕξις=state,
-> τέλος=end, λόγος=reason/account, προαίρεσις=choice, τέχνη=art, πρᾶξις=action. Write
-> the flat JSON `{citation: english}` (UTF-8, nothing else) to
-> `build/align/glosses/<SLUG>/<B>-<C>.json`. Return a one-line summary.
+> Translate ancient Greek (Aristotle, **<WORK>**, Book **<B>**, ch **<C>**) for a
+> Bekker-line alignment tool. Precise and faithful — a scholar with good Greek checks
+> this.
+> - Read `build/align/gloss_tasks/<SLUG>/<B>-<C>.json`: a list of windows, each `lines`
+>   = `{citation, greek}` (line above the tick / tick line / line below; edge windows
+>   have 2). Use neighbours only to get a mid-sentence line's sense right.
+> - Output ONE English line per Greek line, keyed by its citation — verse mode, on its
+>   own line even if longer. Each citation appears once; do not merge, reorder, annotate.
+> - **Each English line MUST BEGIN with the rendering of its Greek line's FIRST word.**
+>   Don't pull a line's opening word up into the previous line or borrow the next line's;
+>   boundaries coincide with the Greek even if a line then starts mid-clause (Greek opens
+>   διαφέρειν → English starts "differ…"). The verifier anchors on this — a shifted
+>   boundary becomes a mis-placed tick.
+> - Standard scholarly terms, used consistently: ἀρετή=virtue, εὐδαιμονία=happiness,
+>   ἔργον=function, ἐνέργεια=activity, ἕξις=state, τέλος=end, λόγος=reason/account,
+>   προαίρεσις=choice, τέχνη=art, πρᾶξις=action. Proper names stay names (Καλλίας→Callias).
+> - Write flat JSON `{citation: english}` (UTF-8, nothing else) to
+>   `build/align/glosses/<SLUG>/<B>-<C>.json`. Return a one-line summary.
 
 ## 3. Align — pass 1 (gloss → translation)
 ```bash
@@ -90,7 +88,9 @@ VERIFY_ALL=1 uv run python tools/verify_gather.py <book>          # per book
 ```
 → `build/align/verify_tasks/<SLUG>/<b>-<c>.json` (one file per chapter; carries the
 **full chapter text** + every tick's `{citation, greek_above, greek_tick, greek_below,
-gloss, context_gloss, current_placement}`) and merges `build/align/verify_meta_<WORK>.json`.
+gloss, current_placement}`) and merges `build/align/verify_meta_<WORK>.json`. (The old
+`greek`/`context_gloss` fields were dropped as redundant with `greek_above/tick/below`
+and `gloss` — pure prompt savings, no behaviour change.)
 **The Greek tick line is the placement target — NOT the gloss.** `greek_tick` is the raw
 Greek of the line the tick marks; `greek_above`/`greek_below` are its neighbours;
 `gloss` is now a **sense hint only**; `current_placement` is the ~90 chars of translation
@@ -119,24 +119,24 @@ field** (reasons are the single biggest token sink; omit them):
 ```
 Judge-style verifier prompt:
 
-> You are checking Bekker line-marks in **<TRANSLATOR>**'s translation against the GREEK
-> (the Greek is authoritative; the gloss is only a sense hint). Read
-> `build/align/verify_tasks/<SLUG>/<B>-<C>.json`: "text" (full chapter prose) + "ticks" in
-> Bekker order, each with `greek_above`/`greek_tick`/`greek_below` (raw Greek of the line
-> before / the tick line / the line after), `gloss` (hint), and `current_placement` (the
-> translation text now sitting at the tick).
->
-> For EACH tick judge whether `current_placement` BEGINS exactly at the English rendering
-> of **`greek_tick`'s FIRST word**: `ok` = it does; `early` = it begins on content that
-> belongs to `greek_above` (one clause/line too high); `late` = a clause into `greek_tick`
-> or onto `greek_below`; `unsure` = the translation condenses/omits `greek_tick`. ALWAYS
-> return a corrected `phrase`: a SHORT verbatim phrase (5–10 words) copied EXACTLY from
-> "text" that begins precisely where `greek_tick`'s first word is rendered (so an exact
-> string search finds it; for `ok` it matches `current_placement`'s start). Your phrase
-> must NOT include anything rendering `greek_above`, and must NOT start as late as
-> `greek_below`. Judge by the GREEK, not by which reading sounds smoothest. Example:
-> `greek_tick` opens διαφέρειν → start at the English for "differ", even if the gloss put
-> "differ" on the line above. Return every tick. **No explanations.**
+> Strict Greek-to-English alignment judge. Check Bekker line-marks in **<TRANSLATOR>**'s
+> translation against the GREEK — the Greek is authoritative, the gloss is only a hint.
+> - Read `build/align/verify_tasks/<SLUG>/<B>-<C>.json`: `text` (full chapter prose) +
+>   `ticks` in Bekker order, each with `greek_above`/`greek_tick`/`greek_below` (raw Greek
+>   of the line before / tick / after), `gloss` (hint), `current_placement` (translation
+>   now sitting at the tick).
+> - For EACH tick, judge whether `current_placement` BEGINS exactly at the English of
+>   **`greek_tick`'s FIRST word**: `ok` = it does; `early` = begins on `greek_above`
+>   content (a line too high); `late` = a clause into `greek_tick` or onto `greek_below`;
+>   `unsure` = translation condenses/omits `greek_tick`.
+> - ALWAYS return `phrase`: a 5–10 word verbatim substring copied EXACTLY from `text`,
+>   beginning precisely where `greek_tick`'s first word is rendered (an exact search must
+>   find it; for `ok` it matches `current_placement`'s start). It must NOT include any
+>   `greek_above` rendering and must NOT start as late as `greek_below`.
+> - **Judge by the GREEK, not by which reading sounds smoothest.** Example: `greek_tick`
+>   opens διαφέρειν → start at the English for "differ", even if the gloss put it on the
+>   line above.
+> - Return every tick. Output strictly the schema JSON. **No explanations.**
 
 ## 5. Fold + re-align + persist (per book)
 ```bash

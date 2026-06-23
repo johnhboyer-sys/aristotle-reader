@@ -64,14 +64,16 @@ for (b, cp), cr in sorted(chapters.items()):
         # mid-line or couldn't be lexically matched.) Locate the tick within the
         # window by citation, not by index: edge windows have 2 lines.
         ti = cits.index(a.citation) if a.citation in cits else 0
+        # Per-tick payload kept lean: greek_above/tick/below are the authoritative
+        # placement target + neighbours; `gloss` is a sense hint. The old `greek`
+        # (the three lines joined) and `context_gloss` (the glosses joined) were
+        # fully/largely redundant with these and only inflated the prompt.
         tick = {
             "citation": a.citation,
             "greek_above": gk.get(cits[ti - 1], "") if ti > 0 else "",
             "greek_tick": gk.get(cits[ti], ""),
             "greek_below": gk.get(cits[ti + 1], "") if ti + 1 < len(cits) else "",
-            "greek": " / ".join(gk.get(c, "") for c in cits),
             "gloss": (g.get(a.citation, "") or "").strip(),
-            "context_gloss": " ".join((g.get(c, "") or "").strip() for c in cits),
         }
         # The pass-1 lexical guess, so a judge-style verifier can confirm/correct
         # an existing placement rather than produce one from scratch.
