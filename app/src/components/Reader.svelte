@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
+  import { fade } from 'svelte/transition';
   import { fetchBook, parseBekker, type Segment, type GreekLine, type Token } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { getWork, visibleTranslations } from '../lib/works';
@@ -53,6 +54,37 @@
   function setTrans(t: string) {
     trans = t;
     try { localStorage.setItem(TRANS_KEY, t); } catch {}
+  }
+
+  // ── Settings sidebar ──────────────────────────────────────────────────────
+  let settingsOpen = false;
+  const FS_KEY = `reader-fs-${work}`;
+  const LH_KEY = `reader-lh-${work}`;
+  // Base CSS values from global.css; scale as multipliers (1.0 = default).
+  const FS_GREEK_BASE = 1.05;
+  const FS_ENG_BASE   = 1.08;
+  const LH_GREEK_BASE = 1.7;
+  const LH_ENG_BASE   = 1.72;
+  let fsScale = 1.0;
+  let lhScale = 1.0;
+  $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
+  $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
+  $: lhGreek = (LH_GREEK_BASE * lhScale).toFixed(3);
+  $: lhEng   = (LH_ENG_BASE   * lhScale).toFixed(3);
+
+  function closeSettings() {
+    settingsOpen = false;
+    window.dispatchEvent(new CustomEvent('settings-state', { detail: { open: false } }));
+  }
+  function openSettings() {
+    settingsOpen = true;
+    window.dispatchEvent(new CustomEvent('settings-state', { detail: { open: true } }));
+  }
+  function saveFs() { try { localStorage.setItem(FS_KEY, String(fsScale)); } catch {} }
+  function saveLh() { try { localStorage.setItem(LH_KEY, String(lhScale)); } catch {} }
+  function resetSettings() {
+    fsScale = 1.0; lhScale = 1.0;
+    try { localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY); } catch {}
   }
 
   // ── Citation shown in the controls strip ─────────────────────────────────
@@ -168,11 +200,16 @@
     }
   }
 
+  let _onToggleSettings: () => void;
+  let _onCloseSettings: () => void;
+
   onDestroy(() => {
     spyObserver?.disconnect();
     if (typeof window !== 'undefined') {
       window.removeEventListener('scroll', onScrollArm);
       window.removeEventListener('resize', onResize);
+      if (_onToggleSettings) window.removeEventListener('toggle-settings', _onToggleSettings);
+      if (_onCloseSettings)  window.removeEventListener('close-settings',  _onCloseSettings);
     }
   });
 
@@ -486,6 +523,18 @@
   onMount(async () => {
     // Remember which book of this work was last open, for the work switcher.
     try { localStorage.setItem(`reader-book-${work}`, String(bookNum)); } catch {}
+
+    // Restore font-size / line-height prefs.
+    const savedFs = (() => { try { return localStorage.getItem(FS_KEY); } catch { return null; } })();
+    if (savedFs) { const v = parseFloat(savedFs); if (!isNaN(v)) fsScale = v; }
+    const savedLh = (() => { try { return localStorage.getItem(LH_KEY); } catch { return null; } })();
+    if (savedLh) { const v = parseFloat(savedLh); if (!isNaN(v)) lhScale = v; }
+
+    // Settings sidebar events (dispatched by ReaderShell.astro and Escape handler).
+    _onToggleSettings = () => { settingsOpen ? closeSettings() : openSettings(); };
+    _onCloseSettings  = () => { if (settingsOpen) closeSettings(); };
+    window.addEventListener('toggle-settings', _onToggleSettings);
+    window.addEventListener('close-settings',  _onCloseSettings);
     const params = new URLSearchParams(window.location.search);
     hlGrkFolds = (params.get('hlg') ?? '').trim().split(/\s+/).filter(Boolean)
       .map(t => greekFold(t.replace(/\*/g, ''))).filter(Boolean);
@@ -603,7 +652,8 @@
       {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
-  <div class="reader-body view-{view} trans-{trans}" role="main">
+  <div class="reader-body view-{view} trans-{trans}" role="main"
+    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}">
     <div class="reader-controls">
       <div class="rc-cite">
         {#if view === 'greek'}
@@ -621,17 +671,6 @@
       <div class="rc-controls">
         {#if view !== 'greek' && translations.length === 1}
           <span class="rc-trans-abbr">{citeShort(translations[0])}</span>
-        {/if}
-        {#if view !== 'greek' && translations.length > 1}
-          <label class="trans-picker">
-            <span class="trans-label">Translation</span>
-            <select bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
-              {#each translations as t}
-                <option value={t.id}>{t.short}</option>
-              {/each}
-              {#if canCompare}<option value="compare">Compare both</option>{/if}
-            </select>
-          </label>
         {/if}
         <div class="view-toggle" role="group" aria-label="Reading view">
           <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
@@ -768,6 +807,60 @@
       </div>
     {/each}
   </div>
+{/if}
+
+<aside class="settings-sidebar" class:open={settingsOpen} aria-label="Reader settings" aria-hidden={!settingsOpen}>
+  <div class="settings-head">
+    <span class="settings-title">Settings</span>
+    <button type="button" class="settings-close" on:click={closeSettings} aria-label="Close settings">×</button>
+  </div>
+  <div class="settings-body">
+    {#if translations.length > 1}
+      <div class="settings-section">
+        <div class="settings-section-label">Translation</div>
+        <!-- svelte-ignore a11y-label-has-associated-control -->
+        <label>
+          <select class="settings-select" bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+            {#each translations as t}
+              <option value={t.id}>{t.name}</option>
+            {/each}
+            {#if canCompare}<option value="compare">Compare both</option>{/if}
+          </select>
+        </label>
+      </div>
+    {/if}
+
+    <div class="settings-section">
+      <div class="settings-section-label">Text size</div>
+      <label class="settings-slider">
+        <div class="settings-slider-row">
+          <span class="settings-slider-name">Size</span>
+          <span class="settings-slider-val">{Math.round(fsScale * 100)}%</span>
+        </div>
+        <input type="range" min="0.75" max="1.4" step="0.05" bind:value={fsScale} on:change={saveFs} aria-label="Text size" />
+      </label>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-label">Line spacing</div>
+      <label class="settings-slider">
+        <div class="settings-slider-row">
+          <span class="settings-slider-name">Spacing</span>
+          <span class="settings-slider-val">{Math.round(lhScale * 100)}%</span>
+        </div>
+        <input type="range" min="0.8" max="1.4" step="0.05" bind:value={lhScale} on:change={saveLh} aria-label="Line spacing" />
+      </label>
+    </div>
+
+    <div class="settings-section">
+      <button type="button" class="settings-reset" on:click={resetSettings}>Reset to defaults</button>
+    </div>
+  </div>
+</aside>
+
+{#if settingsOpen}
+  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+  <div class="settings-backdrop" on:click={closeSettings} transition:fade={{ duration: 180 }}></div>
 {/if}
 
 {#if popup}

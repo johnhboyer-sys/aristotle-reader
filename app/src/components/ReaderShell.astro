@@ -74,6 +74,17 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
         <button type="button" class="toc-toggle" aria-expanded="false" aria-controls="toc-sidebar">
           <span class="toc-toggle-icon" aria-hidden="true">☰</span><span class="toc-toggle-text">Contents</span>
         </button>
+        <button type="button" class="settings-toggle" aria-label="Reader settings" aria-expanded="false">
+          <svg class="settings-icon" width="18" height="14" viewBox="0 0 18 14" aria-hidden="true" fill="currentColor" stroke="none">
+            <rect x="1" y="0" width="16" height="1.5" rx="0.75"/>
+            <circle cx="5.5" cy="0.75" r="2.5"/>
+            <rect x="1" y="6.25" width="16" height="1.5" rx="0.75"/>
+            <circle cx="12.5" cy="7" r="2.5"/>
+            <rect x="1" y="12.5" width="16" height="1.5" rx="0.75"/>
+            <circle cx="7.5" cy="13.25" r="2.5"/>
+          </svg>
+          <span class="settings-text">Settings</span>
+        </button>
         <HelpButton client:load />
         <ThemeToggle />
       </div>
@@ -215,8 +226,24 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
       setToc(!document.body.classList.contains('toc-open')));
     backdrop?.addEventListener('click', () => setToc(false));
     sidebar?.querySelector('.toc-close')?.addEventListener('click', () => setToc(false));
+
+    // Settings sidebar toggle. Communicates with Reader.svelte (a Svelte island)
+    // via CustomEvents on window; the island owns the open/closed state and the
+    // panel markup so translation state can live in one place.
+    const settingsToggle = header?.querySelector('.settings-toggle');
+    settingsToggle?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('toggle-settings'));
+    });
+    // Keep aria-expanded in sync when Reader.svelte reports a state change.
+    window.addEventListener('settings-state', (e) => {
+      const open = (e as CustomEvent<{ open: boolean }>).detail.open;
+      settingsToggle?.setAttribute('aria-expanded', String(open));
+    });
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.body.classList.contains('toc-open')) setToc(false);
+      if (e.key !== 'Escape') return;
+      if (document.body.classList.contains('toc-open')) { setToc(false); return; }
+      window.dispatchEvent(new CustomEvent('close-settings'));
     });
     // Clicking a chapter that's on this page (a #hash link) just scrolls — close
     // the drawer so the reader is visible. Cross-book links navigate away anyway.
