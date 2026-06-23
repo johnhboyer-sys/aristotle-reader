@@ -16,6 +16,7 @@ anchors are structural/interpolated and not counted.
 | Meteorology (`Mete`) | E. W. Webster (Oxford, 1923) | 41 | 773 | 773 confirmed | [Bk 1](../alignment-results/webster/review/book-01.html) · [Bk 2](../alignment-results/webster/review/book-02.html) · [Bk 3](../alignment-results/webster/review/book-03.html) · [Bk 4](../alignment-results/webster/review/book-04.html) · [index](../alignment-results/webster/index.html) |
 | On Generation and Corruption (`GC`) | H. H. Joachim (Oxford, 1922) | 21 | 362 | 362 confirmed | [Bk 1](../alignment-results/joachim/review/book-01.html) · [Bk 2](../alignment-results/joachim/review/book-02.html) · [index](../alignment-results/joachim/index.html) |
 | Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/book-01.html) · [index](../alignment-results/pickard/index.html) |
+| History of Animals (`HA`) | D'Arcy W. Thompson (public primary) | 227 | 2067 | 2060 confirmed · 7 reliable | [index](../alignment-results/thompson/index.html) · Bk [1](../alignment-results/thompson/review/book-01.html) [2](../alignment-results/thompson/review/book-02.html) [3](../alignment-results/thompson/review/book-03.html) [4](../alignment-results/thompson/review/book-04.html) [5](../alignment-results/thompson/review/book-05.html) [6](../alignment-results/thompson/review/book-06.html) [7](../alignment-results/thompson/review/book-07.html) [8](../alignment-results/thompson/review/book-08.html) [9](../alignment-results/thompson/review/book-09.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
 - **Mete / Webster** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 · **two-tier
@@ -42,6 +43,14 @@ anchors are structural/interpolated and not counted.
   the unreviewed chapters, which is high vs the human rate of 40%; the unreviewed chapters
   need a further human pass before shipping.** Phase B wired via
   `sources/sr-pickard/anchors.yaml` + `anchors:` in `manifests/SE.yaml`; not yet committed.
+- **HA / Thompson** — the corpus's longest work, aligned 2026-06-22 (sonnet gloss · opus
+  verify). Book 1 human-reviewed & approved. **One opus correction pass (recipe §5b) still
+  to run** before deploy (deferred for session budget; verify-tasks already re-gathered).
+  Phase B wired via `sources/ha-thompson/anchors.yaml` (2008 `chapter`+`five_line` entries
+  from `tools/gloss_map_to_anchors.py`) + `anchors:` under `english.primary` in
+  `manifests/HA.yaml`. Build: stage2 PASS, key_failures=0, 8 unresolved column-end/`*5`/`*30`
+  straddles → interpolated; reader gutter renders 2277 real vs 10 interpolated ticks. Not
+  yet deployed.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
 
