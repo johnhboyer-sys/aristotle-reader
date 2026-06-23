@@ -48,6 +48,9 @@ uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>
 → `build/align/gloss_tasks/<SLUG>/<book>-<chapter>.json`.
 
 ## 2. Gloss the windows (one sub-agent per chapter, parallel)
+Run these agents on **Sonnet** (`model: sonnet`) — A/B on NE Bk1 vs Opus-tier baseline
+showed no accuracy loss (column tier improved), since the gloss only feeds a word-overlap
+matcher and the verifier backstops it. (Keep verification on Opus.)
 Each agent reads its task file and writes `build/align/glosses/<SLUG>/<b>-<c>.json`
 = `{line_citation: english}`. **Default style = standard scholarly terminology**
 (reusable, no leakage). Translator-style is a booster for famous translations only
