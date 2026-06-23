@@ -117,6 +117,28 @@ def emit_gloss_tasks(work_id: str = "EN", books=None) -> int:
     return n
 
 
+def plan_batches(books=None, max_lines: int = 90) -> list[list[tuple]]:
+    """Group consecutive chapters into batches whose total glossed-line count
+    stays under `max_lines`, so one sub-agent glosses (or verifies) a whole batch
+    and the per-agent fixed overhead is paid once per batch, not once per chapter.
+    A/B (NE Bk1, 13 ch → 4 batches) cut gloss tokens ~57% with no accuracy loss.
+    A single chapter over the budget gets its own batch. Returns
+    [[(book, chapter), ...], ...] in document order."""
+    batches: list[list[tuple]] = []
+    cur: list[tuple] = []
+    cur_n = 0
+    for ch in chapter_lines(books):
+        n = len({ln.citation for w in tick_windows(ch) for ln in w.lines})
+        if cur and cur_n + n > max_lines:
+            batches.append(cur)
+            cur, cur_n = [], 0
+        cur.append((ch.book, ch.chapter))
+        cur_n += n
+    if cur:
+        batches.append(cur)
+    return batches
+
+
 def load_gloss(work_id: str, book: int, chapter: int) -> dict:
     """Read the glosses Claude Code wrote for one chapter:
     `build/align/glosses/<work>/<book>-<chapter>.json` = {line_citation: english}.

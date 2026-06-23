@@ -24,6 +24,8 @@ def main(argv=None):
                    help="write per-chapter tick-window Greek for Claude Code to gloss")
     p.add_argument("--gloss-eval", action="store_true",
                    help="score the gloss aligner against the milestoned English's real ticks")
+    p.add_argument("--plan-gloss-batches", action="store_true",
+                   help="print chapter batches (bundle small chapters per sub-agent)")
     p.add_argument("--html", action="store_true", help="write a side-by-side Rackham|Ross review page")
     args = p.parse_args(argv)
 
@@ -33,6 +35,16 @@ def main(argv=None):
         from .glossing import GLOSS_TASK_DIR, emit_gloss_tasks
         n = emit_gloss_tasks(args.work, books)
         print(f"wrote {n} gloss-task file(s) -> {GLOSS_TASK_DIR / args.work}/")
+        return
+
+    if args.plan_gloss_batches:
+        from .glossing import plan_batches
+        batches = plan_batches(books)
+        for i, batch in enumerate(batches, 1):
+            chaps = ", ".join(f"{b}-{c}" for b, c in batch)
+            print(f"batch {i}: {chaps}")
+        print(f"{len(batches)} batch(es) for "
+              f"{sum(len(b) for b in batches)} chapter(s)")
         return
 
     if args.gloss_eval:

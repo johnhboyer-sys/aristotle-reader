@@ -47,11 +47,20 @@ uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>
 ```
 → `build/align/gloss_tasks/<SLUG>/<book>-<chapter>.json`.
 
-## 2. Gloss the windows (one sub-agent per chapter, parallel)
+## 2. Gloss the windows (one sub-agent per *batch* of chapters, parallel)
 Run these agents on **Sonnet** (`model: sonnet`) — A/B on NE Bk1 vs Opus-tier baseline
 showed no accuracy loss (column tier improved), since the gloss only feeds a word-overlap
 matcher and the verifier backstops it. (Keep verification on Opus.)
-Each agent reads its task file and writes `build/align/glosses/<SLUG>/<b>-<c>.json`
+**Batch small chapters per agent** to amortize fixed per-agent overhead — bundle
+consecutive chapters (one agent glosses each chapter in its bundle into its own file,
+kept strictly separate). Get the bundles from:
+```bash
+uv run python -m aristotle_pipeline.align --plan-gloss-batches --work <SLUG> [--books N]
+```
+A/B (NE Bk1: 13 ch → batches, whole work 116 ch → 51) cut gloss tokens ~57% with no
+accuracy loss (magnitude is an upper bound — leaner Workflow sub-agents carry less fixed
+overhead than the general-purpose agents the A/B used). The same batching applies to §4.
+Each agent reads its task file(s) and writes `build/align/glosses/<SLUG>/<b>-<c>.json`
 = `{line_citation: english}`. **Default style = standard scholarly terminology**
 (reusable, no leakage). Translator-style is a booster for famous translations only
 (see §8). Glossing prompt:
@@ -106,10 +115,12 @@ rather than produce one cold.
 *(Cheaper option: omit `VERIFY_ALL=1` to gather only `uncertain` ticks. Optional args:
 `verify_gather.py <book> <PAD> <chapters>` to re-gather a few chapters.)*
 
-Run **as a Workflow fan-out, one agent per chapter, with a JSON schema** (forces
-structured output → no chatty prose, no malformed JSON, no retries). The workflow
-collects the validated results; write each agent's record **verbatim** (the whole
-`{chapter, ticks:[{citation, verdict, phrase}]}` object) to
+Run **as a Workflow fan-out, one agent per *batch* of chapters (same `--plan-gloss-batches`
+bundles as §2), with a JSON schema** (forces structured output → no chatty prose, no
+malformed JSON, no retries). A/B (NE Bk1 ch1–5, all Opus) put batched vs unbatched at 96%
+verdict agreement / 89% same-sentence placement for ~69% fewer tokens — no systematic
+drift. The workflow collects the validated results; write each agent's record **verbatim**
+(the whole `{chapter, ticks:[{citation, verdict, phrase}]}` object) to
 `build/align/verify_out/<SLUG>/<b>-<c>.json` — **keep the `verdict` field**, the §5b
 correction pass filters on it (`verify_to_offsets` reads `phrase` from this shape, and
 still accepts the legacy flat `{citation: phrase}`). **Lean schema — verdict + phrase,
