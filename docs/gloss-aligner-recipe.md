@@ -105,9 +105,12 @@ rather than produce one cold.
 
 Run **as a Workflow fan-out, one agent per chapter, with a JSON schema** (forces
 structured output → no chatty prose, no malformed JSON, no retries). The workflow
-collects the validated results; you write `build/align/verify_out/<SLUG>/<b>-<c>.json`
-= `{citation: phrase}` from them. **Lean schema — verdict + phrase, NO free-form `reason`
-field** (reasons are the single biggest token sink; omit them):
+collects the validated results; write each agent's record **verbatim** (the whole
+`{chapter, ticks:[{citation, verdict, phrase}]}` object) to
+`build/align/verify_out/<SLUG>/<b>-<c>.json` — **keep the `verdict` field**, the §5b
+correction pass filters on it (`verify_to_offsets` reads `phrase` from this shape, and
+still accepts the legacy flat `{citation: phrase}`). **Lean schema — verdict + phrase,
+NO free-form `reason` field** (reasons are the single biggest token sink; omit them):
 ```json
 { "type":"object","additionalProperties":false,"required":["chapter","ticks"],
   "properties":{ "chapter":{"type":"string"},
@@ -149,23 +152,44 @@ uv run python tools/persist_book.py <book>                                   # �
 around them. `persist_book` saves the per-book map, glosses, and a dark-mode
 3-line-window review HTML to the **tracked** `alignment-results/<vid>/`.
 
-## 5b. One cheap correction pass (built in, run once)
+## 5b. One cheap correction pass (built in, run once — scoped to early/late)
 **No single pass is clean** — measured against Rackham's real line numbers, even the
-judge-style §4 lands the *median* tick exactly but still misses ~1 in 5 of the harder
-ticks by a sentence (and the gloss-eval gold is itself soft, so trust column-starts
-most). The quality we ship comes from **one** correction pass on top — do it, but keep
-it cheap and bounded:
-1. After §5 fold+pass-2+persist, **re-run §4 exactly as above** — `verify_gather` now
-   emits `current_placement` from the *pass-2* offsets, so the second run is a true
-   confirm/correct of real placements (this is the "audit" we used to run as a separate
-   sprawling stage — it is now just §4 a second time).
-2. Keep only the `early`/`late` verdicts; overwrite those phrases in `verify_out` and
-   re-run §5 (fold+pass-2+persist) **once**. Leave `ok`/`unsure` alone.
+judge-style §4 lands the *median* tick exactly but still misses some of the harder ticks
+by a sentence (and the gloss-eval gold is itself soft, so trust column-starts most). The
+quality we ship comes from **one** correction pass on top — do it, but keep it cheap and
+**scope it to the ticks pass 1 actually moved**:
+1. After §5 fold+pass-2+persist, **re-run §4's gather with `VERIFY_FILTER`** so it
+   re-judges ONLY the ticks the previous pass marked `early`/`late` (skips `ok`/`unsure`):
+   ```bash
+   WORK=<SLUG> VERIFY_ALL=1 VERIFY_FILTER=early,late uv run python tools/verify_gather.py <book>
+   ```
+   `current_placement` now comes from the *pass-2* offsets, so this is a true
+   confirm/correct of the real placements that were corrected. **Safe to scope:** the
+   monotonic clamp moves **0** non-corrected real ticks (measured on Ross-EN), so
+   confirmed (`ok`) ticks don't drift and need no re-judging. A tick absent from the prior
+   pass falls through and is re-included (fail-safe = verify).
+   - **Ordering:** the gather reads the *existing* `verify_out` for verdicts, so run it
+     **before** the correction judge overwrites those files. Gather → judge → fold is
+     sequential; do not re-gather after the correction judge writes.
+2. Re-judge that delta (the §4 Workflow again, same schema), overwrite only those phrases
+   in `verify_out`, and re-run §5 (fold+pass-2+persist) **once**. Leave `ok`/`unsure` alone.
 3. **Do NOT loop.** One correction pass, then ship. Iterating agent rounds is where the
    tokens went; the recipe is built to converge in two §4 passes, not N.
+4. **Log the saving:** have the §4 workflow print the early/late count per chapter
+   (`early_late / total`). That ratio is the correction-pass token saving and is the
+   honest number to track per work — on Ross-EN pass-1 placement is coarse, so expect a
+   *modest* (~30%, not 70%) reduction; obscurer translations may differ.
 **Token rules:** lean schema (no `reason`), schema-validated output, correction pass run
-**once**, and for a re-check after corrections you may **sample** (1–2 chapters/book via
-the `<chapters>` arg) rather than re-judge the whole work.
+**once** and scoped via `VERIFY_FILTER`, and for a re-check you may also **sample** (1–2
+chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
+
+> **Archived — do NOT add a residual/confidence gate to pass 1.** We tested gating §4 so
+> it skips "confident, on-the-linear-progression" ticks (offset vs cum-Greek-word
+> expectation). Measured against Rackham gold it fails: drift happens across whole text
+> blocks, so a misplaced tick often sits *near* the linear expectation. Even a 23 % skip
+> already loses ~30 % of bad-tick recall; bigger skips collapse recall to ~50–60 %.
+> `VERIFY_ALL=1` stays **mandatory for pass 1** (100 % baseline recall). The cheap win is
+> scoping pass *2* (above), not gating pass 1.
 
 ## 6. Validate (optional)
 - **Numeric eval** (needs a Bekker-milestoned gold, e.g. Rackham): `--gloss-eval --work
@@ -221,11 +245,17 @@ from §3). Only the combined **map** is needed for the app build itself.
   pass-1 offset) and returns a lean `{verdict, phrase}` under a schema. This replaced the
   old "gloss = target, free-form phrase" verifier that drifted ~40% (early, onto the line
   above) and forced the sprawling correction rounds on Ross-EN and Pol-Jowett.
-- **One correction pass, not N.** §4 run a second time (now confirming real pass-2
-  placements) is the whole "audit" — keep only `early`/`late` fixes, fold once, ship. Do
-  not loop. A post-correction re-check may **sample** 1–2 chapters/book.
+- **One correction pass, not N — scoped.** §4 run a second time (now confirming real
+  pass-2 placements) is the whole "audit", but re-gather only the pass-1 `early`/`late`
+  ticks (`VERIFY_FILTER=early,late`) — confirmed ticks don't move (0 clamp collateral on
+  Ross-EN). Fold once, ship; do not loop. A post-correction re-check may **sample** 1–2
+  chapters/book.
+- **Pass 1 stays full (`VERIFY_ALL=1`).** Do not gate pass 1 by confidence or by
+  offset-vs-linear residual — both drop bad-tick recall hard (see the archived note in
+  §5b). The cheap win is scoping pass *2*, not skipping pass 1.
 - **Token rules:** schema-validated output everywhere; **no `reason` field** (the biggest
-  sink); correction pass run once; sample the re-check.
+  sink); keep `verdict` in `verify_out`; correction pass run once and scoped via
+  `VERIFY_FILTER`; sample the re-check.
 - **No single pass is clean.** Measured against external (Rackham) gold, even the judge
   pass lands the *median* tick exactly but misses ~1 in 5 hard ticks — the correction
   pass and a human eye on `review/*.html` are load-bearing, not optional polish.
@@ -246,13 +276,14 @@ for b in <books>; do
   uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 3 pass 1
   WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b              # 4 gather (greek + current_placement)
   # 4: judge-structured Workflow fan-out (schema {citation,verdict,phrase}, NO reason)
-  #    → write build/align/verify_out/<SLUG>/<b>-<c>.json = {citation: phrase}
+  #    → write each agent record VERBATIM ({chapter,ticks:[...]}, keep verdict) to
+  #      build/align/verify_out/<SLUG>/<b>-<c>.json
   WORK=<SLUG> uv run python tools/verify_to_offsets.py $b                       # 5 fold
   uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 5 pass 2
   uv run python tools/persist_book.py $b                                        # 5 persist
-  # 5b CORRECTION (run §4 ONCE more — current_placement now = pass-2 offsets):
-  WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b              #   re-gather
-  #    judge Workflow again → overwrite only early/late phrases → fold/pass2/persist once
+  # 5b CORRECTION (scoped — re-gather ONLY pass-1 early/late ticks, before re-judging):
+  WORK=<SLUG> VERIFY_ALL=1 VERIFY_FILTER=early,late uv run python tools/verify_gather.py $b
+  #    judge Workflow again on the delta → overwrite those phrases → fold/pass2/persist once
   WORK=<SLUG> uv run python tools/verify_to_offsets.py $b
   uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b
   uv run python tools/persist_book.py $b

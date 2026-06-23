@@ -25,10 +25,32 @@ CHAP_FILTER = set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None
 # chapter text, so flagged-but-reliable ticks that snapped to a sentence start
 # (e.g. 1094a20) also get direct-reading placement.
 ALL = bool(os.environ.get("VERIFY_ALL"))
+# VERIFY_FILTER="early,late" → correction-pass scoping: re-gather only ticks the
+# PREVIOUS verify pass judged early/late (skip ok/unsure). Safe — the monotonic
+# clamp moves 0 non-corrected real ticks, so confirmations don't shift. Reads the
+# existing verify_out, so run this BEFORE the correction judge overwrites it.
+V_FILTER = set(f.strip() for f in os.environ.get("VERIFY_FILTER", "").split(",") if f.strip())
 WORK = os.environ.get("WORK", "EN")
 TASK_DIR = REPO / "build/align/verify_tasks" / WORK
 TASK_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR = REPO / "build/align/verify_out" / WORK
 META = REPO / "build/align" / f"verify_meta_{WORK}.json"
+
+
+def prev_verdicts(b: int, cp: int) -> dict:
+    """{citation: verdict} from the previous verify pass, or {} if unavailable.
+    Accepts the verdict-bearing `{chapter, ticks:[{citation, verdict, ...}]}`
+    shape; a legacy flat `{citation: phrase}` file carries no verdicts → {}."""
+    p = OUT_DIR / f"{b}-{cp}.json"
+    if not p.exists():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return {}
+    if isinstance(data, dict) and "ticks" in data:
+        return {t["citation"]: t.get("verdict") for t in data["ticks"]}
+    return {}
 
 _vid, ross = default_target(WORK)
 chapters = {(c.book, int(c.chapter)): c for c in load_gloss_chapters(ross, WORK, [BOOK])}
@@ -49,11 +71,17 @@ for (b, cp), cr in sorted(chapters.items()):
     gk = greek.get((b, cp), {})
     wc = wins.get((b, cp), {})
     text = cr.ross_text
+    vd = prev_verdicts(b, cp) if V_FILTER else {}   # hoisted: one read per chapter
     ticks = []
     for a in align_chapter(cr, "lexical"):
         if a.tier not in ("column", "five_line"):
             continue
         if not ALL and a.confidence != "uncertain":
+            continue
+        # Correction-pass scoping: skip only ticks we POSITIVELY saw judged with a
+        # verdict outside the filter (e.g. ok/unsure). A tick absent from the prior
+        # pass (never judged) falls through and is INCLUDED — fail safe = verify.
+        if V_FILTER and (v := vd.get(a.citation)) is not None and v not in V_FILTER:
             continue
         cits = wc.get(a.citation, [a.citation])
         lo = 0 if ALL else max(0, a.offset - PAD)

@@ -35,6 +35,19 @@ def cit_key(cit):
     return (m.group(1), int(m.group(2))) if m else (cit, 0)
 
 
+def load_phrases(path: Path) -> dict:
+    """{citation: phrase} from a verify_out file, accepting either shape:
+    the verdict-bearing record `{chapter, ticks:[{citation, verdict, phrase}]}`
+    (current — keeps verdicts for the correction-pass filter) or the old flat
+    `{citation: phrase}`."""
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(data, dict) and "ticks" in data:
+        return {t["citation"]: t.get("phrase", "") for t in data["ticks"]}
+    return data  # legacy flat {citation: phrase}
+
+
 def find_from(text, phrase, start):
     """First occurrence of `phrase` at/after `start`, shrinking to prefixes.
     Floor is min(len, 3) words so short verifier phrases (e.g. a 3-word
@@ -72,8 +85,7 @@ for key, m in META.items():
 placed = missing = 0
 for (b, cp), ticks in by_chap.items():
     text = ross.get((b, cp), "")
-    f = OUT / f"{b}-{cp}.json"
-    phrases = json.loads(f.read_text()) if f.exists() else {}
+    phrases = load_phrases(OUT / f"{b}-{cp}.json")
     cursor = 0
     for cit, a_off in sorted(ticks, key=lambda t: cit_key(t[0])):
         phrase = (phrases.get(cit) or "").strip()
