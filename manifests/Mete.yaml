@@ -24,6 +24,7 @@ english:
     dir: "mete-webster"
     books: 4
     chapter_marker: part
+    anchors: "mete-webster/anchors.yaml"
 
 mid_column_book_starts:
   - { book: 2, column: "353a" }

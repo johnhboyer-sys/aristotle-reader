@@ -13,10 +13,21 @@ anchors are structural/interpolated and not counted.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
+| Meteorology (`Mete`) | E. W. Webster (Oxford, 1923) | 41 | 773 | 773 confirmed | [Bk 1](../alignment-results/webster/review/book-01.html) · [Bk 2](../alignment-results/webster/review/book-02.html) · [Bk 3](../alignment-results/webster/review/book-03.html) · [Bk 4](../alignment-results/webster/review/book-04.html) · [index](../alignment-results/webster/index.html) |
 | On Generation and Corruption (`GC`) | H. H. Joachim (Oxford, 1922) | 21 | 362 | 362 confirmed | [Bk 1](../alignment-results/joachim/review/book-01.html) · [Bk 2](../alignment-results/joachim/review/book-02.html) · [index](../alignment-results/joachim/index.html) |
 | Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/book-01.html) · [index](../alignment-results/pickard/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
+- **Mete / Webster** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 · **two-tier
+  targeted correction**). 773 real ticks, all confirmed; wired via
+  `sources/mete-webster/anchors.yaml` (713 anchors, 3 unresolved `357b30`/`368a5`/`368b5`)
+  + `anchors:` in `manifests/Mete.yaml`. stage2 PASS, app build clean, 809 prose marks.
+  **Targeted correction (new this work):** pass-2 was 65% exact / 86% early-late (Webster
+  paraphrases more than Joachim). Instead of a full ~1M-token Opus re-judge, ran a cheap
+  Sonnet Tier-1 over all 41 ch → flagged 117 ticks whose phrase moved >30 chars from the
+  persisted offset → Opus Tier-2 confirmed only those (109 moves, 85 folded). Result:
+  **80% exact, 99% within 30 chars, sentence-misses eliminated** (1 tick >30). Still wants a
+  human review pass before shipping live, but materially better than the raw verify output.
 - **GC / Joachim** — aligned 2026-06-23 (sonnet gloss · opus verify ×1, schema-judged).
   362 real ticks, all confirmed; wired via `sources/gc-joachim/anchors.yaml` (336 anchors,
   1 unresolved `327a35`) + `anchors:` in `manifests/GC.yaml`. stage2 PASS, app build clean.
