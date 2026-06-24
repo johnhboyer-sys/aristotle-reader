@@ -126,7 +126,7 @@ def sample(work_id="EN", books=None, every=6):
     return "\n".join(lines)
 
 
-def write_html(work_id="EN", books=None):
+def write_html(work_id="EN", books=None, seed=None):
     version_id, rows = _rows(work_id, books)
     book_num = books[0] if books and len(books) == 1 else 0
     store_key = f"review-{work_id}-{version_id}-book{book_num:02d}"
@@ -173,16 +173,40 @@ tr.v-late.uncertain  td{background:#1a0808}
   border-bottom:1px solid #2e3340;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
 #toolbar label{font-size:.82rem;color:#8b95a8}
 #stats{font-size:.82rem;color:#8b95a8;margin-left:auto}
-#dl-btn{font:600 12px sans-serif;padding:4px 12px;border-radius:4px;
+#dl-btn,#imp-btn{font:600 12px sans-serif;padding:4px 12px;border-radius:4px;
   border:1px solid #7fb0ff;background:#1a2a40;color:#7fb0ff;cursor:pointer}
-#dl-btn:hover{background:#243a55}
+#dl-btn:hover,#imp-btn:hover{background:#243a55}
+/* Phone: the 5-column table can't fit ~390px, so stack each tick's cells into
+   a labelled card (header row hidden) and lay the verdict buttons in a row. */
+@media (max-width:760px){
+  body{margin:.4rem auto;padding:0 .55rem;font-size:15px;overflow-x:hidden}
+  .pp{overflow-wrap:anywhere}
+  #toolbar{gap:.4rem .8rem;padding:.4rem .55rem}
+  #stats{margin-left:0}
+  table tr:first-of-type{display:none}
+  table,tbody,tr,td{display:block;width:auto}
+  tr{border-top:2px solid #444b57;padding:.55rem 0}
+  td{border:none!important;width:auto!important;padding:.15rem .1rem}
+  td.c1::before,td.c2::before,td.c3::before,td.c4::before{
+    display:block;font:700 10px sans-serif;letter-spacing:.05em;text-transform:uppercase;
+    color:#8b95a8;margin:.5rem 0 .15rem}
+  td.c1::before{content:"Greek"}
+  td.c2::before{content:"Gloss"}
+  td.c3::before{content:"Translation — tap to place"}
+  td.c4::before{content:"Verdict"}
+  .btn{display:inline-block;width:auto;margin:2px 4px 2px 0;padding:5px 10px;font-size:12px}
+}
 """
 
     js = f"""
 const STORE_KEY = {json.dumps(store_key)};
 const DL_NAME   = {json.dumps(dl_filename)};
-let saved = {{}};
-try {{ saved = JSON.parse(localStorage.getItem(STORE_KEY) || '{{}}'); }} catch(e) {{}}
+// Verdicts baked into the page at generation (default {{}}); used to pre-fill on
+// a device that has no localStorage yet (e.g. reviewing on a phone after starting
+// on the desktop). localStorage, if present, wins so on-device progress is kept.
+const SEED = {json.dumps(seed or {})};
+let saved = Object.assign({{}}, SEED);
+try {{ Object.assign(saved, JSON.parse(localStorage.getItem(STORE_KEY) || '{{}}')); }} catch(e) {{}}
 
 function rowEl(cit) {{
   return document.getElementById('r' + cit.replace(/[^a-z0-9]/gi,'_'));
@@ -247,6 +271,25 @@ function downloadJSON() {{
   URL.revokeObjectURL(a.href);
 }}
 
+// Load a previously exported JSON (merge over current state) so verdicts move
+// between devices: Export on one, Import on another.
+function importJSON(input) {{
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {{
+    try {{
+      const data = JSON.parse(r.result);
+      Object.assign(saved, data);
+      localStorage.setItem(STORE_KEY, JSON.stringify(saved));
+      for (const [cit, rec] of Object.entries(saved)) applyState(cit, rec);
+      updateStats();
+    }} catch(e) {{ alert('Could not read that JSON: ' + e.message); }}
+  }};
+  r.readAsText(file);
+  input.value = '';
+}}
+
 function updateStats() {{
   const total  = document.querySelectorAll('tr[data-cit]').length;
   const ok     = Object.values(saved).filter(r => r.verdict==='ok').length;
@@ -257,6 +300,8 @@ function updateStats() {{
 }}
 
 window.addEventListener('DOMContentLoaded', () => {{
+  // Persist the merged state so a baked-in SEED survives on a fresh device.
+  localStorage.setItem(STORE_KEY, JSON.stringify(saved));
   for (const [cit, rec] of Object.entries(saved)) applyState(cit, rec);
   updateStats();
 }});
@@ -277,6 +322,9 @@ window.addEventListener('DOMContentLoaded', () => {{
         "<label>Verdict buttons mark the current ◀ position as ok/early/late. "
         "Click a word in the translation to pin the exact phrase.</label>"
         f"<button id='dl-btn' onclick='downloadJSON()'>Export JSON</button>"
+        "<label id='imp-btn'>Import JSON"
+        "<input type='file' accept='.json,application/json' "
+        "onchange='importJSON(this)' style='display:none'></label>"
         "<span id='stats'>—</span>"
         "</div>"
     )
@@ -328,6 +376,7 @@ window.addEventListener('DOMContentLoaded', () => {{
 
     out = (
         f"<!doctype html><meta charset=utf-8>"
+        f"<meta name=viewport content='width=device-width,initial-scale=1'>"
         f"<title>Gloss review {work_id}</title>"
         f"<style>{css}</style>"
         f"<script>{js}</script>"
