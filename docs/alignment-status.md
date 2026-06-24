@@ -13,8 +13,23 @@ anchors are structural/interpolated and not counted.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
+| Poetics (`Poet`) | W. H. Fyfe (Loeb, 1932) — primary | 26 | 233 | 232 confirmed · 1 uncertain | [Bk 1](../alignment-results/fyfe/review/book-01.html) · [index](../alignment-results/fyfe/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
+- **Poet / Fyfe** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 + one scoped opus
+  correction pass). 233 real ticks, **232 confirmed · 1 uncertain** (`1458b10`, ch 22, where
+  Fyfe condenses the line). **First gloss-aligned work where the primary was converted from
+  the Perseus `perseus_tei` path to archive:** Fyfe's prose was extracted from the eng TEI to
+  `sources/poet-fyfe/book-01.html` by `tools/extract_fyfe_poetics.py` (footnotes + Bekker
+  milestones stripped, inline Greek kept), and `manifests/Poet.yaml` `english.primary` switched
+  to `model: archive` + `anchors: poet-fyfe/anchors.yaml`. Phase B wired via
+  `sources/poet-fyfe/anchors.yaml` (231 anchors, **0 unresolved**). stage2 PASS,
+  key_failures=0, app build clean (108 pages); reader gutter = **257 real ticks, 0
+  interpolated**. Correction pass behaved like Physics: Opus marked 88% early/late but the
+  actual offset moves were median 0 (74% unchanged, 91% ≤20 chars, only 1 > 100) — the
+  early/late count is the `current_placement` lead-in artifact, not real error. **Needs a
+  human review pass** before promoting to shipped. NB Fyfe's footnotes are dropped by the
+  archive conversion (a content tradeoff vs the old `perseus_tei` build).
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
 
