@@ -13,9 +13,18 @@ anchors are structural/interpolated and not counted.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
+| On Generation and Corruption (`GC`) | H. H. Joachim (Oxford, 1922) | 21 | 362 | 362 confirmed | [Bk 1](../alignment-results/joachim/review/book-01.html) · [Bk 2](../alignment-results/joachim/review/book-02.html) · [index](../alignment-results/joachim/index.html) |
 | Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/book-01.html) · [index](../alignment-results/pickard/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
+- **GC / Joachim** — aligned 2026-06-23 (sonnet gloss · opus verify ×1, schema-judged).
+  362 real ticks, all confirmed; wired via `sources/gc-joachim/anchors.yaml` (336 anchors,
+  1 unresolved `327a35`) + `anchors:` in `manifests/GC.yaml`. stage2 PASS, app build clean.
+  **Correction pass skipped after a 4-chapter sample probe:** the Opus verifier marked ~90%
+  early/late, but a sample check showed 82% of pass-2 placements are already exact and the
+  early/late verdicts are a `current_placement` lead-in artifact (the judge is shown a clause
+  before the true offset). Quality is comparable to Ross-EN; **needs a human review pass**
+  (watch for clause-level early drift on the ~18% harder ticks) before promoting to shipped.
 - **SE / Pickard-Cambridge** — aligned 2026-06-23 (sonnet gloss · opus verify ×2 + human
   review pass). 100 ticks human-reviewed (60 ok, 24 early, 16 late; 51 word-clicked to pin
   exact phrase). Remaining 216 ticks verified by Opus — **Opus marked 87% early/late on

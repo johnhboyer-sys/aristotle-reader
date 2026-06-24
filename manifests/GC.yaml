@@ -24,6 +24,7 @@ english:
     dir: "gc-joachim"
     books: 2
     chapter_marker: part
+    anchors: "gc-joachim/anchors.yaml"
 
 mid_column_book_starts:
   - { book: 2, column: "328b" }
