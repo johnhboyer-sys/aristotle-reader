@@ -1,11 +1,21 @@
 # Print / PDF layout — design handoff
 
-The print layout (structure) is set and committed. This brief hands it to the
-graphic-design pass (Claude Design). **Scope of that pass: visual polish only —
-ink/colour, type choices, rules, ornament, spacing rhythm — not layout
-structure**, which is locked below.
+**Update:** the Claude Design critical-edition spec has now been ported into the
+real `@media print` stylesheet (white stock per request). The masthead (DM Mono
+`ARISTOTLE` eyebrow · Bodoni Moda indigo title · Cardo Greek title · EB Garamond
+citation), oxblood rubrication, `Book N, Chapter M` headings, and justified
+English all ship. The brief below remains the reference for the locked structure
+and the constraints.
 
-Committed: `978a68a` (feature) — see `git show 978a68a`.
+Committed: `978a68a` (feature) + the design-port commit (see `git log`).
+
+## Known-deferred / open
+- Source citation sits in the masthead header (not a bottom-of-page footer):
+  a true content-page footer + running heads + page numbers need Paged.js.
+- Greek title (`greekTitle` in works.ts) is populated for EN only so far; add
+  per work as desired.
+- Two EN data issues were flagged separately (Ostwald hyphenation artifacts;
+  Bekker tick 1095a15 misplacement) — alignment/data, not layout.
 
 ## Where the code lives
 

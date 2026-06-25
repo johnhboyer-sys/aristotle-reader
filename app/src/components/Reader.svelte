@@ -134,20 +134,15 @@
         ? `${segments[0].column}–${segments[segments.length - 1].column}`
         : segments[0].column)
     : '';
-  // One compact header line, e.g.:
-  //   Aristotle, Nicomachean Ethics - Book 1 (1094a–1103a) | Bywater (OCT, 1894) - Ostwald (1962)
-  // Source segment adapts to the printed view (drop the side that isn't shown).
-  $: printSrc = view === 'greek'
-    ? (greekSrc?.short ?? '')
+  // Masthead pieces (critical-edition design): author eyebrow + work title;
+  // the full source citation(s) adapted to the printed view live in the footer.
+  $: printCite = view === 'greek'
+    ? (greekSrc?.full ? `Greek text: ${greekSrc.full}` : '')
     : view === 'english'
-      ? citeShort(selectedTrans)
-      : [greekSrc?.short, citeShort(selectedTrans)].filter(Boolean).join(' - ');
-  $: printHeader = 'Aristotle, ' + (workMeta?.title ?? '')
-    + (bookLabel ? ' - ' + bookLabel : '')
-    + (bekRange ? ' (' + bekRange + ')' : '')
-    + (printSrc ? ' | ' + printSrc : '');
-  // Footer: full bibliographic citation of the English translation.
-  $: printFooter = view === 'greek' ? '' : (selectedTrans?.name ?? '');
+      ? (selectedTrans?.name ? `Translation: ${selectedTrans.name}` : '')
+      : [greekSrc?.full ? `Greek text: ${greekSrc.full}` : '',
+         selectedTrans?.name ? `Translation: ${selectedTrans.name}` : '']
+          .filter(Boolean).join('   ·   ');
 
   // ── Live URL tracking (aquinas.cc style) ─────────────────────────────────
   // As the reader scrolls, rewrite the location hash to the Bekker citation at
@@ -629,7 +624,7 @@
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-      <span class="chapter-label">Chapter {block.chapter}</span>
+      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}</span>
       {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
@@ -668,11 +663,15 @@
         </button>
       </div>
     </div>
-    <!-- Print-only masthead: compact one-line header + full English-translation
-         citation beneath it (hidden on screen, shown via @media print). -->
+    <!-- Print-only masthead (hidden on screen): author eyebrow, work title with
+         its Greek title alongside, and the source citation. -->
     <div class="print-head" aria-hidden="true">
-      <div class="print-head-main">{printHeader}</div>
-      {#if printFooter}<div class="print-head-cite">{printFooter}</div>{/if}
+      <div class="print-eyebrow">{workMeta?.author ?? 'Aristotle'}</div>
+      <div class="print-titleline">
+        <span class="print-title">{workMeta?.title ?? ''}</span>
+        {#if workMeta?.greekTitle}<span class="print-title-gk">{workMeta.greekTitle}</span>{/if}
+      </div>
+      {#if printCite}<div class="print-cite">{printCite}</div>{/if}
     </div>
     {#if hasApproxTicks}
       <p class="bekker-note">
