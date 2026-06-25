@@ -1,5 +1,6 @@
 <script lang="ts">
   import { lookupWord, type Analysis, type LsjEntry } from '../lib/data';
+  import { betaToGreek } from '../lib/betacode';
 
   export let work: string = 'EN';
   export let token: { t: string; k: string };
@@ -58,7 +59,7 @@
     {:else}
       {#each analyses as a}
         <div class="analysis-card">
-          <div class="lemma">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? a.lemma : a.lemma}</div>
+          <div class="lemma">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
           <div class="gloss">{a.gloss}</div>
           <div class="parse">{a.parse}</div>
         </div>

@@ -21,6 +21,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .config import BUILD_DIR, Manifest
+from .parse_filter import filter_parses
 
 
 def _load(rel: str):
@@ -199,8 +200,9 @@ def emit_analyses(out_dir: Path) -> dict:
     key_map = _load("stage4/key_map.json")
     lemma_map = _load("stage5/lemma_map.json")
     merged: dict[str, list[dict]] = {}
+    dropped = 0
     for token_key, stored_key in key_map.items():
-        merged[token_key] = [
+        parses = [
             {
                 "lemma": g["lemma"],
                 "gloss": g["gloss"].strip(),
@@ -209,10 +211,13 @@ def emit_analyses(out_dir: Path) -> dict:
             }
             for g in analyses[stored_key]
         ]
+        kept = filter_parses(parses)
+        dropped += len(parses) - len(kept)
+        merged[token_key] = kept
     (out_dir / "analyses.json").write_text(
         json.dumps(merged, ensure_ascii=False), encoding="utf-8"
     )
-    return {"token_keys": len(merged)}
+    return {"token_keys": len(merged), "parses_dropped": dropped}
 
 
 def run(manifest: Manifest) -> Path:
