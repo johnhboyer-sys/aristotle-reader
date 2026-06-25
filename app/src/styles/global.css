@@ -540,7 +540,8 @@ body {
   color: var(--on-accent);
 }
 
-/* Print / Save-as-PDF button, beside the view toggle. */
+/* Print / Save-as-PDF button and chapter-selector dropdown. */
+.print-menu { position: relative; display: inline-flex; }
 .print-btn {
   display: inline-flex;
   align-items: center;
@@ -556,6 +557,34 @@ body {
 }
 .print-btn:hover { background: var(--border); }
 .print-btn svg { display: block; }
+.print-chevron { opacity: 0.55; flex-shrink: 0; }
+
+.print-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 170px;
+  background: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.13);
+  z-index: 200;
+  overflow: hidden;
+}
+.print-dd-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.38rem 0.8rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.print-dd-item:hover { background: var(--border); }
+.print-dd-sep { height: 1px; background: var(--border); margin: 0.2rem 0; }
 
 /* Print-only elements are hidden on screen; revealed under @media print. */
 .print-head { display: none; }

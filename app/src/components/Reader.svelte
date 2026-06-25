@@ -126,6 +126,42 @@
     window.print();
   }
 
+  // Print a single chapter by temporarily hiding all seg-rows and chapter heads
+  // that don't belong to the selected chapter, then restoring after print.
+  function printSingleChapter(ch: string) {
+    if (typeof window === 'undefined') return;
+    const toRestore: { el: HTMLElement; was: string }[] = [];
+    const hide = (el: HTMLElement) => {
+      toRestore.push({ el, was: el.style.display });
+      el.style.display = 'none';
+    };
+    document.querySelectorAll<HTMLElement>('.seg-row[data-chapter]').forEach(el => {
+      if (el.dataset.chapter !== ch) hide(el);
+    });
+    document.querySelectorAll<HTMLElement>('.chapter-head').forEach(el => {
+      const m = el.id.match(/^ch-\d+-(.+)$/);
+      if (!m || m[1] !== ch) hide(el);
+    });
+    // Hide segments where every row was hidden (so the lone seg-ref doesn't print).
+    document.querySelectorAll<HTMLElement>('.segment').forEach(seg => {
+      const rows = seg.querySelectorAll<HTMLElement>('.seg-row[data-chapter]');
+      if (rows.length > 0 && Array.from(rows).every(r => r.style.display === 'none')) hide(seg);
+    });
+    window.addEventListener('afterprint', () => {
+      toRestore.forEach(({ el, was }) => { el.style.display = was; });
+    }, { once: true });
+    window.print();
+  }
+
+  // Print-menu dropdown state (chapter selector shown when book has > 1 chapter).
+  let printMenuOpen = false;
+  function togglePrintMenu(e: MouseEvent) {
+    e.stopPropagation();
+    if (printMenuOpen) { printMenuOpen = false; return; }
+    printMenuOpen = true;
+    document.addEventListener('click', () => { printMenuOpen = false; }, { once: true });
+  }
+
   // Print-only header/footer. Book label only for multi-book works; Bekker
   // range spans the first to last column currently loaded (one book).
   $: bookLabel = workMeta && workMeta.books > 1 ? `Book ${bookNum}` : '';
@@ -143,6 +179,29 @@
       : [greekSrc?.full ? `Greek text: ${greekSrc.full}` : '',
          selectedTrans?.name ? `Translation: ${selectedTrans.name}` : '']
           .filter(Boolean).join('   ·   ');
+
+  // Segments annotated with a running currentChapter so every block — including
+  // continuation blocks that don't open a new chapter — knows which chapter it
+  // belongs to. Used for per-chapter print filtering via data-chapter attributes.
+  $: enrichedSegments = (() => {
+    let runCh = '';
+    return segments.map(seg => {
+      const blocks = splitSegment(seg);
+      return {
+        seg,
+        blocks: blocks.map(b => {
+          if (b.chapter) runCh = b.chapter;
+          return { ...b, currentChapter: runCh } as EnrichedBlock;
+        }),
+      };
+    });
+  })();
+
+  // Ordered list of distinct chapter identifiers present in the loaded book.
+  // Empty-string entries (no chapter assignment yet) are filtered out.
+  $: chaptersInBook = [...new Set(
+    enrichedSegments.flatMap(s => s.blocks.map(b => b.currentChapter)).filter(Boolean)
+  )];
 
   // ── Live URL tracking (aquinas.cc style) ─────────────────────────────────
   // As the reader scrolls, rewrite the location hash to the Bekker citation at
@@ -276,6 +335,9 @@
   // tail half, after a mid-line chapter split): it suppresses the repeated id.
   type RLine = GreekLine & { cont?: boolean };
   interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; rossFlow: FlowPart[]; thirdFlow: FlowPart[]; thirdTables: { n: number; rows: string[][] }[]; }
+  // EnrichedBlock annotates each block with the chapter it belongs to (tracking
+  // across segments so continuation blocks know their chapter too).
+  interface EnrichedBlock extends Block { currentChapter: string; }
   // A flowing-prose part: either a text run (n null) or a Bekker margin marker
   // (text null) placed at an exact mid-sentence offset — no row break.
   interface FlowPart { text: string | null; n: number | null; real: boolean; }
@@ -653,14 +715,39 @@
           <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
           <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
         </div>
-        <button class="print-btn" on:click={printReader} title="Print or save as PDF" aria-label="Print or save as PDF">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M6 9V2h12v7" />
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-            <rect x="6" y="14" width="12" height="8" />
-          </svg>
-          <span class="print-btn-label">Print</span>
-        </button>
+        {#if chaptersInBook.length > 1}
+          <div class="print-menu">
+            <button class="print-btn" on:click={togglePrintMenu} title="Print or save as PDF" aria-label="Print or save as PDF">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 9V2h12v7" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              <span class="print-btn-label">Print</span>
+              <svg class="print-chevron" viewBox="0 0 10 6" width="8" height="5" fill="currentColor" aria-hidden="true"><path d="M0 0l5 6 5-6z"/></svg>
+            </button>
+            {#if printMenuOpen}
+              <div class="print-dropdown">
+                <button class="print-dd-item" on:click={() => { printMenuOpen = false; printReader(); }}>Full book</button>
+                <div class="print-dd-sep" role="separator"></div>
+                {#each chaptersInBook as ch}
+                  <button class="print-dd-item" on:click={() => { printMenuOpen = false; printSingleChapter(ch); }}>
+                    {#if bookLabel}{bookLabel}, {/if}Chapter {ch}
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <button class="print-btn" on:click={printReader} title="Print or save as PDF" aria-label="Print or save as PDF">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 9V2h12v7" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            <span class="print-btn-label">Print</span>
+          </button>
+        {/if}
       </div>
     </div>
     <!-- Print-only masthead (hidden on screen): author eyebrow, work title with
@@ -682,8 +769,7 @@
         (interpolated estimate).
       </p>
     {/if}
-    {#each segments as seg (seg.id)}
-      {@const blocks = splitSegment(seg)}
+    {#each enrichedSegments as {seg, blocks} (seg.id)}
       {@const leadChapter = blocks[0]?.chapter ? blocks[0] : null}
       <div class="segment" id="col-{seg.column}">
         <!-- A chapter that opens this column heads the segment, ABOVE the column
@@ -698,7 +784,7 @@
           {#if block.chapter && !(bi === 0 && leadChapter)}
             {@render chapterHead(block)}
           {/if}
-          <div class="seg-row">
+          <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
             <div class="greek-col">
               {#each greekItems(block.lines) as item}
