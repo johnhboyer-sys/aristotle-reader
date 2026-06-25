@@ -28,6 +28,13 @@ const allChapters: Record<string, ChapterRef[]> = JSON.parse(
 );
 const chapters = allChapters[String(n)] ?? [];
 
+// The book's reading data, read at build time and handed to the Reader island so
+// the Greek + English text is server-rendered into the static HTML (crawlable +
+// instant paint) instead of fetched client-side. Same shape fetchBook returns.
+const bookData = JSON.parse(
+  readFileSync(`public/data/${workId}/book-${String(n).padStart(2, '0')}.json`, 'utf-8'),
+);
+
 // Optional one-line chapter titles/descriptions for the outline sidebar, keyed
 // {book: {chapter: "…"}}. The file is written by hand/curation per work and may
 // not exist yet — the outline degrades to chapter number + Bekker range.
@@ -46,6 +53,48 @@ const outline = Array.from({ length: work.books }, (_, i) => {
 const chapterHref = (b: number, chapter: string) =>
   b === n ? `#ch-${b}-${chapter}` : `${base}${workPath(workId, b)}#ch-${b}-${chapter}`;
 const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
+
+// ── SEO: server-rendered signals ───────────────────────────────────────────
+// The reading text itself is still hydrated client-side (Reader.svelte fetches
+// the book JSON on mount), so until that is server-rendered these are what
+// crawlers reliably see: a canonical URL, a real description, a Schema.org Book
+// record, and a semantic <h1>. See memory `aristotle-seo-ssr-text` for the
+// larger SSR-the-text job this is a down payment on.
+const bookSuffix = bookless ? '' : `, Book ${label}`;
+const primaryTrans =
+  work.translations.find((t) => t.slot === 'english') ?? work.translations[0];
+// Translator entries read "Name (Publisher, Year)"; keep just the person name.
+const translatorName = primaryTrans?.name.split(' (')[0] ?? '';
+const canonical = Astro.site
+  ? new URL(`${base}${workPath(workId, n)}/`, Astro.site).href
+  : undefined;
+// Social share card: a branded render of a bilingual page (public/og-default.png).
+// Crawlers require an absolute URL, so it's built off Astro.site + base.
+const ogImage = Astro.site
+  ? new URL(`${base}/og-default.png`, Astro.site).href
+  : undefined;
+const metaDescription =
+  `Read Aristotle's ${work.title}${bookSuffix} — the original Greek` +
+  ` (${work.greekSource.short}) side by side with` +
+  (translatorName ? ` ${translatorName}'s` : ' an') +
+  ` English translation, with click-to-parse morphology, dictionary entries,` +
+  ` and Bekker citation.`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Book',
+  name: `${work.title}${bookSuffix}`,
+  ...(work.greekTitle ? { alternateName: work.greekTitle } : {}),
+  author: { '@type': 'Person', name: 'Aristotle' },
+  ...(translatorName
+    ? { translator: { '@type': 'Person', name: translatorName } }
+    : {}),
+  inLanguage: ['grc', 'en'],
+  ...(canonical ? { url: canonical } : {}),
+  isPartOf: { '@type': 'CreativeWorkSeries', name: 'The Works of Aristotle' },
+  description: metaDescription,
+};
+const h1Text =
+  `Aristotle, ${work.title}${bookSuffix} — Greek text with English translation`;
 ---
 <html lang="en">
 <head>
@@ -53,6 +102,19 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
   <title>{pageTitle}</title>
+  <meta name="description" content={metaDescription} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={metaDescription} />
+  {canonical && <meta property="og:url" content={canonical} />}
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -62,6 +124,10 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" media="print" />
 </head>
 <body>
+  <!-- Semantic page heading for search engines and screen readers. Visually
+       hidden because the visible title is the work-switcher control; this gives
+       the document a real, descriptive <h1> without altering the design. -->
+  <h1 class="sr-only">{h1Text}</h1>
   <header class="page-header">
     <div class="header-bar">
       <div class="header-title">
@@ -275,6 +341,6 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
     if (document.fonts?.ready) document.fonts.ready.then(setHeaderH);
   </script>
 
-  <Reader work={workId} bookNum={n} client:load />
+  <Reader work={workId} bookNum={n} bookData={bookData} client:load />
 </body>
 </html>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, type Segment, type GreekLine, type Token } from '../lib/data';
+  import { fetchBook, parseBekker, type Segment, type GreekLine, type Token, type BookData } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { getWork, visibleTranslations } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
@@ -9,6 +9,11 @@
 
   export let work: string = 'EN';
   export let bookNum: number = 1;
+  // The book's segments, read at build time and passed by ReaderShell.astro so
+  // the reading text is server-rendered into the static HTML (crawlable, instant
+  // paint) and the island hydrates over it. When absent (e.g. a future dynamic
+  // mount), the reader falls back to fetching the JSON in onMount as before.
+  export let bookData: BookData | null = null;
 
   const workMeta = getWork(work);
   const translations = workMeta ? visibleTranslations(workMeta) : [];
@@ -20,8 +25,10 @@
   const thirdSlot = translations.find(t => t.slot === 'third');
   const canCompare = !!engSlot && !!rossSlot;
 
-  let segments: Segment[] = [];
-  let loading = true;
+  // Seeded from the build-time prop so SSR renders the text; stays empty (and
+  // `loading` true) only in the fetch-fallback path.
+  let segments: Segment[] = bookData?.segments ?? [];
+  let loading = !bookData;
   let error = '';
 
   // Search jump-in: highlight query terms + scroll to a line (?hlg=&hle=&loc=).
@@ -607,8 +614,12 @@
     const qTrans = params.get('trans');
     if (qTrans && validTrans.has(qTrans)) { trans = qTrans; if (view === 'greek') view = 'both'; }
     try {
-      const data = await fetchBook(work, bookNum);
-      segments = data.segments;
+      // Already seeded from the build-time prop in the normal (SSR) path; only
+      // fetch when the reader was mounted without it.
+      if (!bookData) {
+        const data = await fetchBook(work, bookNum);
+        segments = data.segments;
+      }
     } catch (e) {
       error = String(e);
     } finally {
@@ -673,6 +684,53 @@
   }
 </script>
 
+<!-- View toggle and Print control are rendered in the reader header on desktop
+     and inside the ⚙ Settings sidebar on mobile (CSS scopes which is visible).
+     Top-level snippets keep a single source of markup and one printMenuOpen. -->
+{#snippet viewToggle()}
+  <div class="view-toggle" role="group" aria-label="Reading view">
+    <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
+    <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
+    <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
+  </div>
+{/snippet}
+
+{#snippet printControl()}
+  {#if chaptersInBook.length > 1}
+    <div class="print-menu">
+      <button class="print-btn" on:click={togglePrintMenu} title="Print or save as PDF" aria-label="Print or save as PDF">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 9V2h12v7" />
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <rect x="6" y="14" width="12" height="8" />
+        </svg>
+        <span class="print-btn-label">Print</span>
+        <svg class="print-chevron" viewBox="0 0 10 6" width="8" height="5" fill="currentColor" aria-hidden="true"><path d="M0 0l5 6 5-6z"/></svg>
+      </button>
+      {#if printMenuOpen}
+        <div class="print-dropdown">
+          <button class="print-dd-item" on:click={() => { printMenuOpen = false; printReader(); }}>Full book</button>
+          <div class="print-dd-sep" role="separator"></div>
+          {#each chaptersInBook as ch}
+            <button class="print-dd-item" on:click={() => { printMenuOpen = false; printSingleChapter(ch); }}>
+              {#if bookLabel}{bookLabel}, {/if}Chapter {ch}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {:else}
+    <button class="print-btn" on:click={printReader} title="Print or save as PDF" aria-label="Print or save as PDF">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 9V2h12v7" />
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+        <rect x="6" y="14" width="12" height="8" />
+      </svg>
+      <span class="print-btn-label">Print</span>
+    </button>
+  {/if}
+{/snippet}
+
 {#if loading}
   <p style="padding:2rem;font-family:system-ui;color:#888">Loading Book {bookNum}…</p>
 {:else if error}
@@ -710,44 +768,22 @@
         {#if view !== 'greek' && translations.length === 1}
           <span class="rc-trans-abbr">{citeShort(translations[0])}</span>
         {/if}
-        <div class="view-toggle" role="group" aria-label="Reading view">
-          <button class:active={view === 'greek'} aria-pressed={view === 'greek'} on:click={() => setView('greek')}>Greek</button>
-          <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
-          <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
-        </div>
-        {#if chaptersInBook.length > 1}
-          <div class="print-menu">
-            <button class="print-btn" on:click={togglePrintMenu} title="Print or save as PDF" aria-label="Print or save as PDF">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M6 9V2h12v7" />
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-              <span class="print-btn-label">Print</span>
-              <svg class="print-chevron" viewBox="0 0 10 6" width="8" height="5" fill="currentColor" aria-hidden="true"><path d="M0 0l5 6 5-6z"/></svg>
-            </button>
-            {#if printMenuOpen}
-              <div class="print-dropdown">
-                <button class="print-dd-item" on:click={() => { printMenuOpen = false; printReader(); }}>Full book</button>
-                <div class="print-dd-sep" role="separator"></div>
-                {#each chaptersInBook as ch}
-                  <button class="print-dd-item" on:click={() => { printMenuOpen = false; printSingleChapter(ch); }}>
-                    {#if bookLabel}{bookLabel}, {/if}Chapter {ch}
-                  </button>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        {:else}
-          <button class="print-btn" on:click={printReader} title="Print or save as PDF" aria-label="Print or save as PDF">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M6 9V2h12v7" />
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-              <rect x="6" y="14" width="12" height="8" />
-            </svg>
-            <span class="print-btn-label">Print</span>
-          </button>
+        {#if translations.length > 1}
+          <!-- Desktop translation picker, beside the view toggle. On mobile this
+               is hidden (see global.css) and the same control lives in the
+               ⚙ Settings sidebar instead. -->
+          <select class="rc-trans-select" bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+            {#each translations as t}
+              <option value={t.id}>{t.name}</option>
+            {/each}
+            {#if canCompare}<option value="compare">Compare both</option>{/if}
+          </select>
         {/if}
+        <!-- Desktop only — on mobile these live in the ⚙ Settings sidebar. -->
+        <div class="rc-desktop-controls">
+          {@render viewToggle()}
+          {@render printControl()}
+        </div>
       </div>
     </div>
     <!-- Print-only masthead (hidden on screen): author eyebrow, work title with
@@ -906,8 +942,21 @@
     <button type="button" class="settings-close" on:click={closeSettings} aria-label="Close settings">×</button>
   </div>
   <div class="settings-body">
+    <!-- Mobile-only: on desktop the view toggle and print control live in the
+         reader header (see .settings-mobile-only in global.css). -->
+    <div class="settings-section settings-mobile-only">
+      <div class="settings-section-label">View</div>
+      {@render viewToggle()}
+    </div>
+    <div class="settings-section settings-mobile-only">
+      <div class="settings-section-label">Print</div>
+      {@render printControl()}
+    </div>
+
     {#if translations.length > 1}
-      <div class="settings-section">
+      <!-- Mobile-only: on desktop the picker sits beside the view toggle in the
+           header (see .settings-trans in global.css). -->
+      <div class="settings-section settings-trans">
         <div class="settings-section-label">Translation</div>
         <!-- svelte-ignore a11y-label-has-associated-control -->
         <label>
