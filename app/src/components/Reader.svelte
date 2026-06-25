@@ -948,11 +948,6 @@
       <div class="settings-section-label">View</div>
       {@render viewToggle()}
     </div>
-    <div class="settings-section settings-mobile-only">
-      <div class="settings-section-label">Print</div>
-      {@render printControl()}
-    </div>
-
     {#if translations.length > 1}
       <!-- Mobile-only: on desktop the picker sits beside the view toggle in the
            header (see .settings-trans in global.css). -->
@@ -969,6 +964,11 @@
         </label>
       </div>
     {/if}
+
+    <div class="settings-section settings-mobile-only">
+      <div class="settings-section-label">Print</div>
+      {@render printControl()}
+    </div>
 
     <div class="settings-section">
       <div class="settings-section-label">Text size</div>
