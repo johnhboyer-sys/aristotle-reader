@@ -196,6 +196,9 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
 }
+/* Contents toggle leads the bar on desktop; the title's auto right-margin keeps
+   the global actions (search/settings/help/theme) pinned to the far edge. */
+.header-title { margin-right: auto; }
 .nav-panel {
   display: flex;
   width: 100%;
@@ -1080,16 +1083,18 @@ body {
     text-overflow: ellipsis;
   }
 
-  /* The action icons wrap onto their own full-width row on a phone. Split them
-     into two groups instead of one ungainly left cluster: Contents · Search on
-     the left, Settings · Night-mode on the right. DOM order is Search, Contents,
-     Settings, (Help — hidden), Theme; `order` sets the visual sequence and the
-     auto margin opens the gap that pushes the Settings/Theme pair to the edge. */
-  .bar-actions { width: 100%; }
-  .bar-actions .toc-toggle      { order: 1; }
-  .bar-actions .header-search   { order: 2; }
-  .bar-actions .settings-toggle { order: 3; margin-left: auto; }
-  .bar-actions .theme-toggle    { order: 4; }
+  /* On a phone the title takes row 1; the actions wrap to row 2. Split them into
+     two groups instead of one ungainly left cluster: Contents · Search on the
+     left, Settings · Night-mode on the right. The Contents toggle is a header-bar
+     sibling (desktop puts it far-left), so on mobile it shares row 2 with the
+     bar-actions group; within bar-actions, the auto margin opens the gap that
+     pushes the Settings/Theme pair to the edge. */
+  .header-title { flex: 1 1 100%; margin-right: 0; }
+  .toc-toggle { order: 2; }
+  .bar-actions { order: 3; flex: 1 1 auto; }
+  .bar-actions .header-search   { order: 1; }
+  .bar-actions .settings-toggle { order: 2; margin-left: auto; }
+  .bar-actions .theme-toggle    { order: 3; }
 
   .nav-panel {
     display: none;
