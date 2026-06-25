@@ -39,6 +39,7 @@ export interface MissingBooks {
 export interface Work {
   id: string;       // slug + data dir, e.g. 'EN'
   title: string;
+  greekTitle?: string;  // polytonic Greek title, shown in the print masthead
   abbr: string;     // display abbreviation (may differ from id styling)
   author: string;
   books: number;
@@ -513,6 +514,7 @@ export const WORKS: Work[] = [
   {
     id: 'EN',
     title: 'Nicomachean Ethics',
+    greekTitle: 'Ἠθικὰ Νικομάχεια',
     abbr: 'EN',
     author: 'Aristotle',
     books: 10,

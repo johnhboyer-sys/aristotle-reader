@@ -540,6 +540,27 @@ body {
   color: var(--on-accent);
 }
 
+/* Print / Save-as-PDF button, beside the view toggle. */
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--col-bg);
+  color: var(--text-mid);
+}
+.print-btn:hover { background: var(--border); }
+.print-btn svg { display: block; }
+
+/* Print-only elements are hidden on screen; revealed under @media print. */
+.print-head { display: none; }
+.chapter-book { display: none; }
+
 /* Monolingual: hide one column and let the other read full-width, centred at a
    comfortable measure (the Bekker column ref and gutter are kept). */
 .reader-body.view-english .greek-col,
@@ -1588,4 +1609,150 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 
 @media (prefers-reduced-motion: reduce) {
   .settings-sidebar { transition: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Print / Save-as-PDF (static-web tier)
+
+   Hand the currently-rendered reader view to the browser's native print
+   engine. We reuse the existing view-greek / view-both / view-english column
+   CSS, so all three views print as shown. Greek/English side-by-side aligns
+   within a page but drifts across page breaks (a printed caveat says so);
+   true line-locked facing-page parallel is a desktop-LaTeX-tier concern.
+   ───────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Monolingual prints portrait; bilingual prints LANDSCAPE so both columns get
+     a full measure — English wide enough to read, Greek wide enough to keep
+     each Bekker line on one line. A named @page + the `page` property switches
+     orientation by view. */
+  @page { size: Letter portrait; margin: 1.9cm 1.4cm; }
+  @page bilingual { size: Letter landscape; margin: 1.5cm 1.6cm; }
+  .reader-body.view-both { page: bilingual; }
+
+  /* App chrome and overlays: gone. */
+  .page-header,
+  .reader-controls,
+  .toc-sidebar, .toc-backdrop,
+  .settings-sidebar, .settings-backdrop,
+  .popup, .popup-backdrop,
+  .help-trigger, .help-backdrop, .help-modal,
+  .bekker-note {
+    display: none !important;
+  }
+
+  /* Drop the on-screen sticky offsets / centred measure so the text fills the
+     printed page. Single-column views read full width; Both keeps its grid. */
+  html, body { background: #fff; }
+  .reader-body { padding: 0; margin: 0; }
+  .reader-body.view-english .english-col,
+  .reader-body.view-greek .greek-col { max-width: none; margin: 0; }
+
+  /* Words are inert in print — strip interactive affordances, and drop the
+     Ostwald footnote superscripts (click-to-open popups on screen, no print
+     equivalent). */
+  .tok { cursor: auto; border: 0; background: none; color: inherit; }
+  .fn-marker { display: none; }
+
+  /* Near-black ink on plain white stock (white background saves ink). */
+  .greek-col, .english-col, .english-col .bk-seg,
+  .ross-prose, .ross-col, .line-text { color: #1d1b16; }
+
+  /* Drop the on-screen per-segment separator rule (the line between Bekker
+     columns) — in print the masthead hairline and chapter rules carry the
+     structure, and the segment border would double up under the masthead. */
+  .segment { border-top: 0; padding-top: 0; }
+
+  /* Bilingual columns (landscape). Greek content-sized + flush-left so each
+     canonical Bekker line stays on one line; English takes the rest as the
+     wider primary read, justified. Design tokens: Greek Cardo 12px / 1.82,
+     English EB Garamond 15px / 1.66 (first line nudged up to meet the Greek). */
+  .reader-body.view-both .seg-row { grid-template-columns: auto minmax(0, 1fr); gap: 0.6rem; }
+  .reader-body.view-both .greek-col { font-size: 12px; line-height: 1.82; }
+  .reader-body.view-both .english-col { font-size: 15px; line-height: 1.66; margin-top: -4px; }
+  .reader-body.view-both .ross-prose { text-align: justify; hyphens: auto; }
+  .reader-body.view-both .greek-line { gap: 0.55em; }
+  /* Greek line numbers: EB Garamond, left-aligned flush with the chapter label
+     and Bekker ref. */
+  .reader-body.view-both .line-num {
+    min-width: 1.6em; font-size: 9.5px; text-align: left;
+  }
+  /* Each canonical Bekker line stays on one printed line. */
+  .reader-body.view-both .greek-line .line-text { white-space: nowrap; }
+
+  /* Page-break discipline. Keep a chapter heading with the text that follows
+     (never strand it at a page bottom), but don't force a page break per
+     chapter. A whole Bekker segment is far too tall to keep atomic — marking
+     it break-inside:avoid bumps the entire column to a fresh page and strands
+     the page bottom — so only the small atomic units resist splitting: a Greek
+     line and an inline table. Prose breaks freely, with orphan/widow guards. */
+  .chapter-head { break-after: avoid; }
+  /* Keep a Bekker column ref (1103a) with the text that follows it — never let
+     the label sit alone at the foot of a page with its lines on the next. */
+  .seg-ref { break-after: avoid; }
+  .greek-line { break-inside: avoid; }
+  .greek-table, .eng-table { break-inside: avoid; }
+  .ross-prose { orphans: 3; widows: 3; }
+
+  /* The Bekker margin gutter is paint-only (relative prose + absolute markers)
+     and carries over as-is — do NOT alter .ross-prose padding or .bk-num
+     positioning here, or the markers will detach from their lines. */
+
+  /* ── Critical-edition styling (ported from the Claude Design spec) ─────────
+     Oxblood rubrication (#883529), Oxford-indigo display title (#1e2452),
+     EB Garamond body, on plain white stock. */
+
+  /* Line numbers (all views) in the design's muted ink, EB Garamond. */
+  .line-num { font-family: "EB Garamond", serif; color: #7a7264; }
+  .bk-num { color: #7a7264; }
+
+  /* Chapter opener: oxblood small-caps "Book N, Chapter M" + italic range +
+     thin rule. The book prefix is print-only (the on-screen reader shows just
+     "Chapter M", with the book in its nav). */
+  .chapter-book { display: inline; margin-right: 0.35em; }
+  .chapter-head::after { border-top: 1px solid #c2b9a6; opacity: 1; }
+  .chapter-label {
+    font-family: "EB Garamond", serif; font-variant: small-caps;
+    font-weight: 600; letter-spacing: 0.15em; text-transform: none;
+    color: #883529;
+  }
+  .chapter-bekker {
+    font-family: "EB Garamond", serif; font-style: italic;
+    font-weight: 400; letter-spacing: 0; color: #8a8276;
+  }
+  /* Bekker column ref (1094a): oxblood small-caps. */
+  .seg-ref {
+    font-family: "EB Garamond", serif; font-variant: small-caps;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: none;
+    color: #883529;
+  }
+
+  /* Masthead at the top of the first page: DM Mono author eyebrow, Bodoni Moda
+     indigo title with the polytonic Greek title alongside, the source citation,
+     and a hairline rule; the text then flows beneath it. (A bottom-of-page
+     footer would need Paged.js — keeping the citation here for now.) */
+  .print-head {
+    display: block;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #cdc6b6;
+  }
+  .print-eyebrow {
+    font-family: "DM Mono", monospace; font-size: 10px; font-weight: 400;
+    text-transform: uppercase; letter-spacing: 0.2em; color: #8a857c;
+    margin-bottom: 0.3rem;
+  }
+  .print-titleline { display: flex; align-items: baseline; gap: 0.7em; }
+  .print-title {
+    font-family: "Bodoni Moda", serif; font-style: italic; font-weight: 600;
+    font-size: 30px; line-height: 1.04; color: #1e2452;
+  }
+  .reader-body.view-both .print-title { font-size: 33px; }
+  .print-title-gk {
+    font-family: var(--font-greek); font-size: 16px; color: #9a9384;
+  }
+  .print-cite {
+    margin-top: 0.35rem;
+    font-family: "EB Garamond", serif; font-style: italic; font-size: 10.5px;
+    color: #9a9384;
+  }
 }

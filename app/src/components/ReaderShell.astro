@@ -57,6 +57,9 @@ const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <!-- Display faces used only by the print masthead; media="print" defers the
+       fetch so it never costs the on-screen reader. -->
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" media="print" />
 </head>
 <body>
   <header class="page-header">

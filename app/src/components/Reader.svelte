@@ -117,6 +117,33 @@
     if (spyArmed) setupScrollSpy();
   }
 
+  // Print / Save-as-PDF: hand the currently-rendered view to the browser's
+  // native print engine. The @media print stylesheet (global.css) strips the
+  // app chrome, sets page breaks, and reveals a print-only title. We print the
+  // on-screen view as-is, so Both / Greek / English all work via existing CSS.
+  function printReader() {
+    if (typeof window === 'undefined') return;
+    window.print();
+  }
+
+  // Print-only header/footer. Book label only for multi-book works; Bekker
+  // range spans the first to last column currently loaded (one book).
+  $: bookLabel = workMeta && workMeta.books > 1 ? `Book ${bookNum}` : '';
+  $: bekRange = segments.length
+    ? (segments.length > 1
+        ? `${segments[0].column}–${segments[segments.length - 1].column}`
+        : segments[0].column)
+    : '';
+  // Masthead pieces (critical-edition design): author eyebrow + work title;
+  // the full source citation(s) adapted to the printed view live in the footer.
+  $: printCite = view === 'greek'
+    ? (greekSrc?.full ? `Greek text: ${greekSrc.full}` : '')
+    : view === 'english'
+      ? (selectedTrans?.name ? `Translation: ${selectedTrans.name}` : '')
+      : [greekSrc?.full ? `Greek text: ${greekSrc.full}` : '',
+         selectedTrans?.name ? `Translation: ${selectedTrans.name}` : '']
+          .filter(Boolean).join('   ·   ');
+
   // ── Live URL tracking (aquinas.cc style) ─────────────────────────────────
   // As the reader scrolls, rewrite the location hash to the Bekker citation at
   // the top of the reading area, so any position is a citable link. Line-level
@@ -597,7 +624,7 @@
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-      <span class="chapter-label">Chapter {block.chapter}</span>
+      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}</span>
       {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
@@ -626,7 +653,25 @@
           <button class:active={view === 'both'} aria-pressed={view === 'both'} on:click={() => setView('both')}>Both</button>
           <button class:active={view === 'english'} aria-pressed={view === 'english'} on:click={() => setView('english')}>English</button>
         </div>
+        <button class="print-btn" on:click={printReader} title="Print or save as PDF" aria-label="Print or save as PDF">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9V2h12v7" />
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <rect x="6" y="14" width="12" height="8" />
+          </svg>
+          <span class="print-btn-label">Print</span>
+        </button>
       </div>
+    </div>
+    <!-- Print-only masthead (hidden on screen): author eyebrow, work title with
+         its Greek title alongside, and the source citation. -->
+    <div class="print-head" aria-hidden="true">
+      <div class="print-eyebrow">{workMeta?.author ?? 'Aristotle'}</div>
+      <div class="print-titleline">
+        <span class="print-title">{workMeta?.title ?? ''}</span>
+        {#if workMeta?.greekTitle}<span class="print-title-gk">{workMeta.greekTitle}</span>{/if}
+      </div>
+      {#if printCite}<div class="print-cite">{printCite}</div>{/if}
     </div>
     {#if hasApproxTicks}
       <p class="bekker-note">
