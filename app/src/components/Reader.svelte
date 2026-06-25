@@ -715,7 +715,7 @@
                     {/each}
                   </tbody></table>
                 {:else}
-                  <div class="greek-line" id={item.line.cont ? `L${seg.column}-${item.line.n}-c` : `L${seg.column}-${item.line.n}`} class:target={!item.line.cont && targetId === `L${seg.column}-${item.line.n}`}>
+                  <div class="greek-line" id={item.line.cont ? `L${seg.column}-${item.line.n}-c` : `L${seg.column}-${item.line.n}`} class:target={!item.line.cont && targetId === `L${seg.column}-${item.line.n}`} class:cont={item.line.cont}>
                     <span class="line-num">{item.line.cont ? '' : showLineNum(item.line.n)}</span>
                     <span class="line-text">{@render greekToks(lineParts(item.line))}</span>
                   </div>

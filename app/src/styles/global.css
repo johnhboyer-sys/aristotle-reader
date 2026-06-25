@@ -726,6 +726,13 @@ body {
 .tok.active { background: var(--greek-active); }
 .tok.hit    { background: var(--hit-bg); }
 
+/* A Greek line that begins a new chapter but continues text from the previous
+   line (the chapter cut fell mid-line). Indent the text to signal continuation
+   rather than a fresh line-start. */
+.greek-line.cont .line-text {
+  padding-left: 1.5em;
+}
+
 /* Jumped-to line + highlighted terms from a search result */
 .greek-line.target {
   background: var(--target-bg);
