@@ -2,6 +2,20 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Visually hidden but available to screen readers and search engines. Used for
+   the reader's semantic <h1> (the visible title is the work-switcher control). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 :root {
   /* Cardo and EB Garamond loaded from Google Fonts in each page <head>.
      Fallback chain works without the network load. */
@@ -446,6 +460,14 @@ body {
   gap: 1rem;
   flex-shrink: 0;
 }
+/* The view toggle + print control. In the header (desktop) they sit in this
+   inline group; on mobile the group is hidden and the same snippets render in
+   the ⚙ Settings sidebar (.settings-mobile-only) instead. */
+.rc-desktop-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 /* The abbreviated translation name shown beside the toggle on mobile, where the
    single-translation works have no picker and the citation strip is hidden. */
 .rc-trans-abbr {
@@ -515,6 +537,25 @@ body {
   background-position: right 0.55rem center;
 }
 .trans-picker select:focus { outline: none; border-color: var(--accent); }
+
+/* Desktop translation picker, beside the view toggle. Mobile hides this (the
+   ⚙ Settings sidebar carries the picker there — see .settings-trans). */
+.rc-trans-select {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--text-mid);
+  background: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.22rem 1.6rem 0.22rem 0.6rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+}
+.rc-trans-select:hover { border-color: var(--accent); color: var(--text); }
+.rc-trans-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .view-toggle {
   display: flex;
@@ -1027,6 +1068,28 @@ body {
   .header-title { min-width: 0; flex: 1 1 auto; overflow: hidden; }
   .header-title .home-link,
   .header-title .title-sep { display: none; }
+  /* The work picker is a native <select>, which sizes to its WIDEST option
+     (e.g. "On Sophistical Refutations"). Without a shrink cap that intrinsic
+     width pushes the header off-screen on a phone, so let it shrink within
+     .header-title and ellipsize the displayed title instead. */
+  .work-switcher {
+    min-width: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The action icons wrap onto their own full-width row on a phone. Split them
+     into two groups instead of one ungainly left cluster: Contents · Search on
+     the left, Settings · Night-mode on the right. DOM order is Search, Contents,
+     Settings, (Help — hidden), Theme; `order` sets the visual sequence and the
+     auto margin opens the gap that pushes the Settings/Theme pair to the edge. */
+  .bar-actions { width: 100%; }
+  .bar-actions .toc-toggle      { order: 1; }
+  .bar-actions .header-search   { order: 2; }
+  .bar-actions .settings-toggle { order: 3; margin-left: auto; }
+  .bar-actions .theme-toggle    { order: 4; }
 
   .nav-panel {
     display: none;
@@ -1084,7 +1147,19 @@ body {
      abbreviated translation name beside the toggle instead. */
   .rc-cite { display: none; }
   .rc-trans-abbr { display: inline-block; }
-  .reader-controls { justify-content: flex-end; }
+  /* The header picker, view toggle, and print control are desktop-only; on a
+     phone they all live in the ⚙ Settings sidebar to keep the toolbar minimal. */
+  .rc-trans-select { display: none; }
+  .rc-desktop-controls { display: none; }
+  /* Extra specificity (.settings-body …) so these win over the unconditional
+     `display:none` defaults that appear LATER in the stylesheet — media queries
+     add no specificity, so source order would otherwise re-hide them. */
+  .settings-body .settings-trans { display: block; }
+  .settings-body .settings-mobile-only { display: block; }
+  /* With the view toggle + print moved into the Settings sidebar, the sticky
+     sub-toolbar has nothing left to show on a phone — drop it so reading starts
+     right under the header. (The Bekker citation strip is already hidden above.) */
+  .reader-controls { display: none; }
   /* The "Translation" label pushes the picker off the edge on a phone — the
      dropdown's own options make its purpose clear, so drop the label. */
   .trans-label { display: none; }
@@ -1581,6 +1656,30 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   text-transform: uppercase;
   color: var(--text-light);
   margin-bottom: 0.8rem;
+}
+
+/* The Translation section is the mobile home for the picker; on desktop the
+   picker sits beside the view toggle (.rc-trans-select), so hide it here. The
+   mobile media query re-shows it. */
+.settings-trans { display: none; }
+
+/* View toggle + print control sections: shown only inside the sidebar on mobile
+   (desktop keeps them in the header). Make the controls fill the sidebar width
+   so they read as full-width rows like the other settings. */
+.settings-mobile-only { display: none; }
+.settings-mobile-only .view-toggle { justify-content: stretch; }
+.settings-mobile-only .view-toggle button { flex: 1; }
+/* Block (not inline-flex) so the inline/static dropdown stacks BELOW the button
+   instead of becoming a sibling flex item beside it. */
+.settings-mobile-only .print-menu { width: 100%; display: block; }
+.settings-mobile-only .print-btn { width: 100%; justify-content: center; }
+/* Inline (not absolute) inside the scrolling sidebar so the chapter list can't
+   be clipped — it expands the panel instead of floating over it. */
+.settings-mobile-only .print-dropdown {
+  position: static;
+  width: 100%;
+  margin-top: 0.4rem;
+  box-shadow: none;
 }
 
 .settings-select {

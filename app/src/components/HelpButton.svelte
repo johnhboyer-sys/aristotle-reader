@@ -99,7 +99,7 @@
         </li>
         <li>
           <span class="feat-name">Views &amp; translations</span>
-          <span class="feat-desc">Switch <strong>Greek</strong> / <strong>Both</strong> / <strong>English</strong>; <strong>Compare</strong> shows two translations side by side. You can also pick a view or translation from the home page.</span>
+          <span class="feat-desc">Switch <strong>Greek</strong> / <strong>Both</strong> / <strong>English</strong> with the view buttons, and choose which translation fills the English column — or show <strong>Compare both</strong> side by side — from the picker beside them. On a phone the view, translation, and print controls all live in the <strong>⚙ Settings</strong> menu (along with text size and line spacing). You can also pick a view or translation from the home page.</span>
         </li>
         <li>
           <span class="feat-name">Contents</span>
