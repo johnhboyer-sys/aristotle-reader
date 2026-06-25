@@ -1,0 +1,71 @@
+% Minimal facing-page parallel Greek <-> English critical-edition test.
+% Goal of this spike: prove that Tectonic (XeTeX engine) compiles
+% reledmac + reledpar cleanly AND renders polytonic Greek correctly in
+% BOTH columns and the apparatus. If this PDF looks right, the desktop
+% (Tauri) PDF tier is settled.
+%
+% Compile:
+%   tectonic parallel-greek-english.tex
+% (Tectonic fetches reledmac/reledpar/polyglossia/fontspec from TeXLive
+%  on demand; first run downloads, later runs are cached.)
+%
+% Fallback if Tectonic chokes:
+%   xelatex parallel-greek-english.tex   % run twice (reledpar needs 2 passes)
+
+\documentclass[11pt]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{english}
+\setotherlanguage{greek}
+
+% Bundle a full-coverage polytonic OpenType font rather than trusting
+% system fonts (the #1 cause of broken diacritics). Swap "GFS Didot" for
+% whatever redistribution-friendly face you settle on (Cardo, Brill, etc.).
+\newfontfamily\greekfont[Script=Greek]{GFS Didot}
+
+\usepackage{reledmac}
+\usepackage{reledpar}
+
+% Bekker-style line numbering: number every line, print every 5th.
+\firstlinenum{1}
+\linenumincrement{5}
+
+\begin{document}
+
+\begin{pages}
+
+% ---- LEFT (verso): Greek ----------------------------------------------
+\begin{Leftside}
+\beginnumbering
+\pstart
+\textgreek{πᾶσα τέχνη καὶ πᾶσα μέθοδος, ὁμοίως δὲ πρᾶξίς τε καὶ προαίρεσις,
+ἀγαθοῦ τινὸς ἐφίεσθαι δοκεῖ\ledsidenote{1094a}· διὸ καλῶς ἀπεφήναντο
+τὸ ἀγαθόν, οὗ πάντ\textquoteright{} ἐφίεται.}
+\pend
+\pstart
+\textgreek{διαφορὰ δέ τις φαίνεται τῶν τελῶν· τὰ μὲν γάρ εἰσιν ἐνέργειαι,
+τὰ δὲ παρ\textquoteright{} αὐτὰς ἔργα τινά.}
+\pend
+\endnumbering
+\end{Leftside}
+
+% ---- RIGHT (recto): English -------------------------------------------
+\begin{Rightside}
+\beginnumbering
+\pstart
+Every art and every inquiry, and similarly every action and pursuit, is
+thought to aim at some good\ledsidenote{1094a}; and for this reason the
+good has rightly been declared to be that at which all things aim.
+\pend
+\pstart
+But a certain difference is found among ends; some are activities, others
+are products apart from the activities that produce them.
+\pend
+\endnumbering
+\end{Rightside}
+
+\end{pages}
+\Pages   % typeset the accumulated facing-page material
+
+\end{document}
