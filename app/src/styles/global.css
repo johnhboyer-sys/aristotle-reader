@@ -540,6 +540,26 @@ body {
   color: var(--on-accent);
 }
 
+/* Print / Save-as-PDF button, beside the view toggle. */
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--col-bg);
+  color: var(--text-mid);
+}
+.print-btn:hover { background: var(--border); }
+.print-btn svg { display: block; }
+
+/* The print-only title block is hidden on screen; revealed under @media print. */
+.print-head { display: none; }
+
 /* Monolingual: hide one column and let the other read full-width, centred at a
    comfortable measure (the Bekker column ref and gutter are kept). */
 .reader-body.view-english .greek-col,
@@ -1588,4 +1608,109 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 
 @media (prefers-reduced-motion: reduce) {
   .settings-sidebar { transition: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Print / Save-as-PDF (static-web tier)
+
+   Hand the currently-rendered reader view to the browser's native print
+   engine. We reuse the existing view-greek / view-both / view-english column
+   CSS, so all three views print as shown. Greek/English side-by-side aligns
+   within a page but drifts across page breaks (a printed caveat says so);
+   true line-locked facing-page parallel is a desktop-LaTeX-tier concern.
+   ───────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Monolingual prints portrait; bilingual prints LANDSCAPE so both columns get
+     a full measure — English wide enough to read, Greek wide enough to keep
+     each Bekker line on one line. A named @page + the `page` property switches
+     orientation by view. */
+  @page { size: Letter portrait; margin: 1.9cm 1.4cm; }
+  @page bilingual { size: Letter landscape; margin: 1.5cm 1.6cm; }
+  .reader-body.view-both { page: bilingual; }
+
+  /* App chrome and overlays: gone. */
+  .page-header,
+  .reader-controls,
+  .toc-sidebar, .toc-backdrop,
+  .settings-sidebar, .settings-backdrop,
+  .popup, .popup-backdrop,
+  .help-trigger, .help-backdrop, .help-modal,
+  .bekker-note {
+    display: none !important;
+  }
+
+  /* Drop the on-screen sticky offsets / centred measure so the text fills the
+     printed page. Single-column views read full width; Both keeps its grid. */
+  html, body { background: #fff; }
+  .reader-body { padding: 0; margin: 0; }
+  .reader-body.view-english .english-col,
+  .reader-body.view-greek .greek-col { max-width: none; margin: 0; }
+
+  /* Words are inert in print — strip interactive affordances, and drop the
+     Ostwald footnote superscripts (click-to-open popups on screen, no print
+     equivalent). */
+  .tok { cursor: auto; border: 0; background: none; color: inherit; }
+  .fn-marker { display: none; }
+
+  /* The translation is the primary read in bilingual: render it solid black
+     (it's a muted grey on screen). */
+  .english-col,
+  .english-col .bk-seg,
+  .ross-prose,
+  .ross-col { color: #000; }
+
+  /* Bilingual columns (landscape). Size the Greek column to its own content so
+     it sits flush against the left margin with no trailing slack; English takes
+     all the remaining width (the primary read). Content-sizing also means each
+     Bekker line stays on one line — the column is exactly as wide as its
+     longest line. */
+  .reader-body.view-both .seg-row { grid-template-columns: auto minmax(0, 1fr); gap: 0.6rem; }
+  .reader-body.view-both .greek-col { font-size: 10pt; line-height: 1.62; }
+  /* Slightly smaller English so more fits per page; nudge it up so its first
+     line aligns with the Greek first line (Cardo vs EB Garamond ascent metrics
+     otherwise drop the English a couple of px). */
+  .reader-body.view-both .english-col { font-size: 10pt; line-height: 1.5; margin-top: -3px; }
+  .reader-body.view-both .greek-line { gap: 0.3rem; }
+  /* Left-align the Greek line numbers so their digits sit flush with the left
+     edge of the chapter label and the Bekker column ref (1094A), rather than
+     right-aligned and visually indented inside the gutter. */
+  .reader-body.view-both .line-num { min-width: 1.4rem; font-size: 8pt; text-align: left; }
+  /* Guarantee each canonical Bekker line stays on one printed line. */
+  .reader-body.view-both .greek-line .line-text { white-space: nowrap; }
+
+  /* Page-break discipline. Keep a chapter heading with the text that follows
+     (never strand it at a page bottom), but don't force a page break per
+     chapter. A whole Bekker segment is far too tall to keep atomic — marking
+     it break-inside:avoid bumps the entire column to a fresh page and strands
+     the page bottom — so only the small atomic units resist splitting: a Greek
+     line and an inline table. Prose breaks freely, with orphan/widow guards. */
+  .chapter-head { break-after: avoid; }
+  .greek-line { break-inside: avoid; }
+  .greek-table, .eng-table { break-inside: avoid; }
+  .ross-prose { orphans: 3; widows: 3; }
+
+  /* The Bekker margin gutter is paint-only (relative prose + absolute markers)
+     and carries over as-is — do NOT alter .ross-prose padding or .bk-num
+     positioning here, or the markers will detach from their lines. */
+
+  /* Print masthead: a compact one-line header
+       Aristotle, <Work> - <Book> (<Bekker>) | <Greek source> - <English>
+     with the full English-translation citation as a credit line beneath it.
+     (A literal bottom-of-page-1 footer needs per-page regions that only Paged.js
+     provides; a pure-CSS fixed footer repeats on every page and overlaps text,
+     so the citation lives in the masthead instead.) */
+  .print-head {
+    display: block;
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #999;
+    font-family: var(--font-ui);
+  }
+  .print-head-main { font-size: 0.86rem; font-weight: 600; color: #000; }
+  .print-head-cite {
+    margin-top: 0.2rem;
+    font-size: 0.74rem;
+    font-style: italic;
+    color: #333;
+  }
 }
