@@ -1716,7 +1716,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
      thin rule. The book prefix is print-only (the on-screen reader shows just
      "Chapter M", with the book in its nav). */
   .chapter-book { display: inline; margin-right: 0.35em; }
-  .chapter-head::after { border-top: 1px solid #c2b9a6; opacity: 1; }
+  .chapter-head::after { border-top: 1px solid #7a7264; opacity: 1; }
   .chapter-label {
     font-family: "EB Garamond", serif; font-variant: small-caps;
     font-weight: 600; letter-spacing: 0.15em; text-transform: none;
@@ -1724,7 +1724,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   }
   .chapter-bekker {
     font-family: "EB Garamond", serif; font-style: italic;
-    font-weight: 400; letter-spacing: 0; color: #8a8276;
+    font-weight: 400; letter-spacing: 0; color: #5a5248;
   }
   /* Bekker column ref (1094a): oxblood small-caps. */
   .seg-ref {
@@ -1741,7 +1741,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
     display: block;
     margin-bottom: 0.9rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #cdc6b6;
+    border-bottom: 1px solid #7a7264;
   }
   .print-eyebrow {
     font-family: "DM Mono", monospace; font-size: 10px; font-weight: 400;
@@ -1755,11 +1755,11 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   }
   .reader-body.view-both .print-title { font-size: 33px; }
   .print-title-gk {
-    font-family: var(--font-greek); font-size: 16px; color: #9a9384;
+    font-family: var(--font-greek); font-size: 16px; color: #5a5248;
   }
   .print-cite {
     margin-top: 0.35rem;
     font-family: "EB Garamond", serif; font-style: italic; font-size: 10.5px;
-    color: #9a9384;
+    color: #5a5248;
   }
 }
