@@ -1,8 +1,10 @@
 # Poetics — pipeline manifest
 #
 # A single-book work (26 chapters, no book divisions). Greek spine from the
-# cached TLG export; chapter structure from the Perseus grc TEI; English from
-# the Perseus eng TEI (W. H. Fyfe) via the chapter-anchored archive path.
+# cached TLG export; chapter structure from the Perseus grc TEI; English is
+# W. H. Fyfe's prose (extracted from the Perseus eng TEI into sources/poet-fyfe/
+# by tools/extract_fyfe_poetics.py) served via the archive path, with a dense
+# per-line Bekker gutter from the gloss aligner's anchors.yaml.
 
 work:
   id: Poet
@@ -26,9 +28,11 @@ english:
   primary:
     id: fyfe
     name: "W. H. Fyfe (Loeb, 1932)"
-    model: perseus_tei
-    source: "tlg0086.tlg034.perseus-eng2.xml"
-    chapter_subtype: chapter
+    model: archive
+    dir: "poet-fyfe"
+    books: 1
+    chapter_marker: part
+    anchors: "poet-fyfe/anchors.yaml"
 
 # The TLG edition's line numbering skips these single line numbers (the Greek
 # text is continuous across them — verified); declared so the validator passes.

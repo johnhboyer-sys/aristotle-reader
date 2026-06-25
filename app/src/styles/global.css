@@ -719,37 +719,10 @@ body {
 
 /* ── English chunk + Bekker gutter ────────────────────────────────── */
 
-/* Two columns: a narrow Bekker-line gutter (mirroring the Greek line numbers)
-   and the prose. Each tick segment is one grid row; row-gap 0 keeps the prose
-   reading as one continuous passage with numbers down the left. */
-.english-text {
-  display: grid;
-  grid-template-columns: 1.9rem 1fr;
-  column-gap: 0.7rem;
-  row-gap: 0;
-  align-items: baseline;
-}
-.english-text p { margin: 0; }
-.eng-num {
-  font-family: var(--font-ui);
-  font-size: var(--fs-linenum);
-  color: var(--text-light);
-  text-align: right;
-  user-select: none;
-  -webkit-user-select: none;
-  font-variant-numeric: tabular-nums;
-}
-/* Estimated (interpolated) ticks: lighter + italic so they read as approximate,
-   while real TEI anchors (column start / ~line 20) stay full weight. */
-.eng-num.approx {
-  font-style: italic;
-  opacity: 0.5;
-}
-.eng-seg { margin: 0; }
-
-/* Flowing-prose translation (precisely gloss-aligned Ross): the prose reads as
-   one unbroken passage; each Bekker number is floated into the left margin at
-   its EXACT character offset. The marker span is empty and absolutely
+/* Every English slot (primary / Ross / third) renders as flowing prose: the
+   prose reads as one unbroken passage; each Bekker number is floated into the
+   left margin at its EXACT character offset. The marker span is empty and
+   absolutely
    positioned with only `left` set, so it keeps its static vertical position
    (the line it falls on) while shifting into the gutter — no row break, no
    in-text number, no sentence-boundary snapping, no JS measurement. */
@@ -1084,11 +1057,6 @@ body {
   .reader-body.view-both .english-col { font-size: 0.9rem; line-height: 1.55; }
   .reader-body.view-both .greek-line { gap: 0.2rem; }
   .reader-body.view-both .line-num { min-width: 0.9rem; font-size: 0.6rem; }
-  .reader-body.view-both .english-text {
-    grid-template-columns: 1.15rem 1fr;
-    column-gap: 0.3rem;
-  }
-  .reader-body.view-both .eng-num { font-size: 0.6rem; }
 
   /* Compare both can't fit 2–3 columns on a phone: stack Greek, Rackham and Ross
      full-width with their labels, at the comfortable single-column type (these
@@ -1107,10 +1075,6 @@ body {
     padding-top: 0.6rem;
     margin-top: 0.6rem;
   }
-  .reader-body.trans-compare .english-text {
-    grid-template-columns: 1.9rem 1fr; column-gap: 0.7rem;
-  }
-  .reader-body.trans-compare .eng-num { font-size: var(--fs-linenum); }
 
   .popup {
     width: calc(100vw - 1rem);
