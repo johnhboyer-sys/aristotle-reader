@@ -6,6 +6,14 @@ import '../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const href = (work: string, q = '') => `${base}${workPath(work)}${q}`;
+
+// Home-page SEO + social card (absolute URLs need Astro.site, set in config).
+const homeDescription =
+  'Read the complete works of Aristotle with the original Greek and a facing' +
+  ' English translation, side by side — with click-to-parse morphology,' +
+  ' dictionary lookup, Bekker citation, and full-text search across the corpus.';
+const canonical = Astro.site ? new URL(`${base}/`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
 // Where "report an error / suggest" points — John's x.com.
 const FEEDBACK_URL = 'https://x.com/johnhboyer';
 
@@ -41,7 +49,19 @@ for (const cat of CATEGORIES) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
-  <title>The Aristotle Reader</title>
+  <title>The Aristotle Reader — Complete Works in Greek &amp; English</title>
+  <meta name="description" content={homeDescription} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="The Aristotle Reader — Complete Works in Greek & English" />
+  <meta property="og:description" content={homeDescription} />
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {canonical && <meta property="og:url" content={canonical} />}
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
