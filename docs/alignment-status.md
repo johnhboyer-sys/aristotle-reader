@@ -16,7 +16,6 @@ anchors are structural/interpolated and not counted.
 | Meteorology (`Mete`) | E. W. Webster (Oxford, 1923) | 41 | 773 | 773 confirmed | [Bk 1](../alignment-results/webster/review/book-01.html) · [Bk 2](../alignment-results/webster/review/book-02.html) · [Bk 3](../alignment-results/webster/review/book-03.html) · [Bk 4](../alignment-results/webster/review/book-04.html) · [index](../alignment-results/webster/index.html) |
 | On Generation and Corruption (`GC`) | H. H. Joachim (Oxford, 1922) | 21 | 362 | 362 confirmed | [Bk 1](../alignment-results/joachim/review/book-01.html) · [Bk 2](../alignment-results/joachim/review/book-02.html) · [index](../alignment-results/joachim/index.html) |
 | Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/book-01.html) · [index](../alignment-results/pickard/index.html) |
-| Poetics (`Poet`) | W. H. Fyfe (Loeb, 1932) — primary | 26 | 233 | 232 confirmed · 1 uncertain | [Bk 1](../alignment-results/fyfe/review/book-01.html) · [index](../alignment-results/fyfe/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
 - **Mete / Webster** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 · **two-tier
@@ -43,20 +42,6 @@ anchors are structural/interpolated and not counted.
   the unreviewed chapters, which is high vs the human rate of 40%; the unreviewed chapters
   need a further human pass before shipping.** Phase B wired via
   `sources/sr-pickard/anchors.yaml` + `anchors:` in `manifests/SE.yaml`; not yet committed.
-- **Poet / Fyfe** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 + one scoped opus
-  correction pass). 233 real ticks, **232 confirmed · 1 uncertain** (`1458b10`, ch 22, where
-  Fyfe condenses the line). **First gloss-aligned work where the primary was converted from
-  the Perseus `perseus_tei` path to archive:** Fyfe's prose was extracted from the eng TEI to
-  `sources/poet-fyfe/book-01.html` by `tools/extract_fyfe_poetics.py` (footnotes + Bekker
-  milestones stripped, inline Greek kept), and `manifests/Poet.yaml` `english.primary` switched
-  to `model: archive` + `anchors: poet-fyfe/anchors.yaml`. Phase B wired via
-  `sources/poet-fyfe/anchors.yaml` (231 anchors, **0 unresolved**). stage2 PASS,
-  key_failures=0, app build clean (108 pages); reader gutter = **257 real ticks, 0
-  interpolated**. Correction pass behaved like Physics: Opus marked 88% early/late but the
-  actual offset moves were median 0 (74% unchanged, 91% ≤20 chars, only 1 > 100) — the
-  early/late count is the `current_placement` lead-in artifact, not real error. **Needs a
-  human review pass** before promoting to shipped. NB Fyfe's footnotes are dropped by the
-  archive conversion (a content tradeoff vs the old `perseus_tei` build).
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
 
@@ -68,6 +53,7 @@ anchors are structural/interpolated and not counted.
 | Politics (`Pol`) | B. Jowett (public primary) | 102 | 1555 | 1538 confirmed · 13 uncertain · 4 reliable | [Bk 1–8](../alignment-results/jowett/review/) |
 | Prior Analytics (`APr`) | A. J. Jenkinson (public primary) | 73 | 791 | 790 confirmed · 1 reliable | [Bk 1](../alignment-results/jenkinson/review/book-01.html) · [Bk 2](../alignment-results/jenkinson/review/book-02.html) · [index](../alignment-results/jenkinson/index.html) |
 | Physics (`Phys`) | R. P. Hardie & R. K. Gaye (public primary) | 71 | 1200 | 1199 confirmed · 1 reliable | [index](../alignment-results/hardie/index.html) · Bk [1](../alignment-results/hardie/review/book-01.html) [2](../alignment-results/hardie/review/book-02.html) [3](../alignment-results/hardie/review/book-03.html) [4](../alignment-results/hardie/review/book-04.html) [5](../alignment-results/hardie/review/book-05.html) [6](../alignment-results/hardie/review/book-06.html) [7](../alignment-results/hardie/review/book-07.html) [8](../alignment-results/hardie/review/book-08.html) |
+| Poetics (`Poet`) | W. H. Fyfe (Loeb, 1932) — primary | 26 | 233 | 232 confirmed · 1 uncertain | [Bk 1](../alignment-results/fyfe/review/book-01.html) · [index](../alignment-results/fyfe/index.html) |
 
 - **EN / Ross** — every tick read-and-checked (2026-06-17); shipped, reader consumes
   the combined gloss map via `stage1_ross`.
@@ -88,6 +74,16 @@ anchors are structural/interpolated and not counted.
   `english.primary` in `manifests/Phys.yaml`. Build: stage2 PASS, key_failures=0, 8
   unresolved column-end/`*35` straddles → interpolated; reader gutter renders 1249 real vs
   7 interpolated ticks.
+- **Poet / Fyfe** — aligned + human-reviewed + shipped live 2026-06-24 (gh-pages `b6cff15`;
+  sonnet gloss · opus verify ×1 + one scoped opus correction pass + 8 word-exact human
+  anchor pins). 233 real ticks, **232 confirmed · 1 uncertain** (`1458b10`, ch 22, where Fyfe
+  condenses the line). **First gloss-aligned work whose primary was converted from the Perseus
+  `perseus_tei` path to archive:** Fyfe's prose was extracted from the eng TEI to
+  `sources/poet-fyfe/book-01.html` by `tools/extract_fyfe_poetics.py` (footnotes + Bekker
+  milestones stripped, inline Greek kept), and `manifests/Poet.yaml` `english.primary` switched
+  to `model: archive` + `anchors: poet-fyfe/anchors.yaml` (231 anchors, **0 unresolved**).
+  Reader gutter renders **257 real ticks, 0 interpolated**. NB Fyfe's footnotes are dropped by
+  the archive conversion (a content tradeoff vs the old `perseus_tei` build).
 
 ## Not gloss-aligned (different method, for completeness)
 
