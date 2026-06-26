@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import statistics
 import sys
 from dataclasses import dataclass
@@ -43,6 +44,10 @@ from aristotle_pipeline.align.glossing import chapter_lines, is_tick, load_gloss
 from aristotle_pipeline.align.reference import default_target, load_chapters, load_gloss_chapters
 from aristotle_pipeline.config import BUILD_DIR
 
+# A comma-bound example marker (", οἷον …") is a clause Aristotle keeps inside one
+# sentence but translators routinely promote to a NEW sentence — so the Greek grain
+# is too coarse there. With examples=True, break the span right before such a οἷον.
+_EXAMPLE = re.compile(r",\s+(?=οἷον\b)")
 # Hard sentence enders (Greek '.' and the question marks); soft adds the ano teleia.
 HARD = {".", ";", ";"}            # . , ; (ascii) , U+037E Greek question mark
 SOFT = {"·", "·"}            # middle dot / ano teleia (mid-level pause)
@@ -66,10 +71,12 @@ class GSent:
     gloss: str         # concatenated line glosses (sense fingerprint, may be sparse)
 
 
-def segment_greek(lines, gloss_map, soft: bool) -> tuple[list[GSent], dict, dict]:
+def segment_greek(lines, gloss_map, soft: bool, examples: bool = False) -> tuple[list[GSent], dict, dict]:
     """lines = ordered glossing.Line for one chapter. Returns (sentences,
     line_start_char, line2sent) where line2sent maps every line citation to the
-    index of the sentence its *start* falls in."""
+    index of the sentence its *start* falls in.
+    examples=True additionally breaks a span right before a comma-bound `οἷον`
+    (the example clause), matching how translators chunk such examples."""
     enders = HARD | SOFT if soft else HARD
     joined_parts, line_start_char, cum_before, wc = [], {}, {}, {}
     pos = words = 0
@@ -103,6 +110,18 @@ def segment_greek(lines, gloss_map, soft: bool) -> tuple[list[GSent], dict, dict
         spans.append((start, len(joined), tail))
     if not spans:
         spans = [(0, len(joined), joined)]
+
+    # refine: split each span before a comma-bound `οἷον` so the example is its own
+    # unit (operate on raw joined[s:e] to keep offsets aligned with line_start_char).
+    if examples:
+        refined = []
+        for (s, e, _txt) in spans:
+            cuts = [s + m.end() for m in _EXAMPLE.finditer(joined[s:e])]
+            for a, b in zip([s] + cuts, cuts + [e]):
+                seg = joined[a:b].strip()
+                if seg:
+                    refined.append((a, b, seg))
+        spans = refined or spans
 
     ordered = [(c, line_start_char[c]) for c in line_start_char]
     sents, line2sent = [], {}

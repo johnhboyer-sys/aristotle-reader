@@ -210,6 +210,22 @@ def gsent_to_engspan(beads, n_g):
     return out
 
 
+def llm_beads(work_id: str, chap: int):
+    """gsent index -> set of english indices, from an LLM aligner's interp_out file
+    ({"beads":[{"g":[i...],"e":[j...]}]}). Uses the SAME soft-Greek/fine-English grain
+    the task emitter wrote, so indices match the anchor gold. {} if no file."""
+    p = BUILD_DIR / "align" / "interp_out" / work_id / f"1-{chap}.json"
+    if not p.exists():
+        return None
+    data = json.loads(p.read_text(encoding="utf-8"))
+    out = {}
+    for bead in data.get("beads", []):
+        eng = set(bead.get("e", []))
+        for gi in bead.get("g", []):
+            out[gi] = eng
+    return out
+
+
 # ---------------------------------------------------------------------------
 # eval driver
 # ---------------------------------------------------------------------------
@@ -219,6 +235,13 @@ CONFIGS = [
     ("+full-sentence gloss",              dict(matcher="quality", gloss="sentence", length="gloss", names=False, alpha=0.3, beta=1.0)),
     ("+gale-church length",               dict(matcher="quality", gloss="sentence", length="gale", names=False, alpha=0.3, beta=1.0)),
     ("+name anchors (all)",               dict(matcher="quality", gloss="sentence", length="gale", names=True, alpha=0.3, beta=1.0)),
+]
+
+# LLM bead aligner (stage 2): beads come from interp_out/ files, not the DP. Same
+# soft-Greek/fine-English grain as the DP edition run, so the rows are comparable.
+LLM_CONFIGS = [
+    ("DP (soft, lexical+sentence+gale)", dict(matcher="lexical", gloss="sentence", length="gale", names=False, alpha=0.3, beta=1.0)),
+    ("LLM beads (per-chapter aligner)",  dict(llm=True)),
 ]
 
 
@@ -274,10 +297,15 @@ def run(work_id: str, trans: list[str], configs, dump: bool, soft: bool = False)
             for chap in sorted({g[0] for g in gold}):
                 _lines, gsents, _l2s, _cum = gch[chap]
                 sents, starts = esent[chap]
-                fps = fingerprints(gsents, work_id, chap, cfg["gloss"])
-                score = make_scorer(gsents, sents, fps, cfg, c_ratio)
-                beads = bead_align(len(gsents), len(sents), score)
-                g2e = gsent_to_engspan(beads, len(gsents))
+                if cfg.get("llm"):
+                    g2e = llm_beads(work_id, chap)
+                    if g2e is None:        # no LLM file for this chapter -> skip its anchors
+                        continue
+                else:
+                    fps = fingerprints(gsents, work_id, chap, cfg["gloss"])
+                    score = make_scorer(gsents, sents, fps, cfg, c_ratio)
+                    beads = bead_align(len(gsents), len(sents), score)
+                    g2e = gsent_to_engspan(beads, len(gsents))
                 for (gc, sg, se) in gold:
                     if gc != chap:
                         continue
@@ -305,8 +333,12 @@ if __name__ == "__main__":
     ap.add_argument("--work", default="Cat")
     ap.add_argument("--trans", default="edghill,taylor,ackrill")
     ap.add_argument("--ablate", action="store_true")
+    ap.add_argument("--llm", action="store_true", help="compare DP vs LLM beads (forces soft grain)")
     ap.add_argument("--soft", action="store_true", help="split Greek on · too (edition grain)")
     ap.add_argument("--dump", action="store_true")
     a = ap.parse_args()
-    cfgs = CONFIGS if a.ablate else CONFIGS[:1]
-    run(a.work, a.trans.split(","), cfgs, a.dump, a.soft)
+    if a.llm:
+        run(a.work, a.trans.split(","), LLM_CONFIGS, a.dump, soft=True)
+    else:
+        cfgs = CONFIGS if a.ablate else CONFIGS[:1]
+        run(a.work, a.trans.split(","), cfgs, a.dump, a.soft)
