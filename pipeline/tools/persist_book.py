@@ -27,8 +27,14 @@ book_map = {k: v for k, v in amap.items() if int(k.split(":")[0]) == BOOK}
 (RES / "maps" / f"book-{BOOK:02d}.json").write_text(
     json.dumps(book_map, ensure_ascii=False, indent=1), encoding="utf-8")
 
+# Glosses are namespaced PER WORK: works sharing a translator vid (ross = EN +
+# Meta + Juv) have colliding book-chapter filenames (EN 1-1 vs Juv 1-1), so a
+# flat glosses/ dir lets the last-persisted work clobber the others (this is the
+# Juv-over-EN corruption). Keep each work's glosses under glosses/<WORK>/.
+gdir = RES / "glosses" / WORK
+gdir.mkdir(parents=True, exist_ok=True)
 for g in sorted((REPO / "build/align/glosses" / WORK).glob(f"{BOOK}-*.json")):
-    shutil.copy(g, RES / "glosses" / g.name)
+    shutil.copy(g, gdir / g.name)
 
 html = write_html(WORK, [BOOK])
 shutil.copy(html, RES / "review" / f"book-{BOOK:02d}.html")

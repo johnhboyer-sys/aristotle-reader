@@ -243,7 +243,9 @@ chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
 
 **Restoring glosses for a re-run:** the aligner reads `build/align/glosses/<SLUG>/`
 (git-ignored). If `build/` was wiped, copy the tracked copies back first:
-`cp alignment-results/<vid>/glosses/*.json build/align/glosses/<SLUG>/` (then re-run
+`cp alignment-results/<vid>/glosses/<SLUG>/*.json build/align/glosses/<SLUG>/` (glosses
+are namespaced per work under `glosses/<SLUG>/` — works sharing a vid, e.g. ross = EN +
+Meta + Juv, would otherwise clobber each other's `<book>-<ch>.json`; then re-run
 from §3). Only the combined **map** is needed for the app build itself.
 
 ---
