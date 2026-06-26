@@ -1,5 +1,9 @@
 # build output
 dist/
+!public/robots.txt
+!public/favicon.svg
+!public/og-default.png
+!public/.nojekyll
 # generated types
 .astro/
 # review screenshots (scripts/shoot.mjs)
