@@ -76,7 +76,7 @@ for (const cat of CATEGORIES) {
       <p class="wip-note">
         <strong>Work in progress.</strong> The translation alignment is still
         being refined. Spotted an error or have a suggestion?
-        <a href={FEEDBACK_URL}>Let me know</a>.
+        <button id="feedback-btn-wip" style="background:none;border:none;padding:0;cursor:pointer;font:inherit;color:var(--accent);text-decoration:underline;">Let me know</button>.
       </p>
     </header>
 
@@ -483,6 +483,7 @@ for (const cat of CATEGORIES) {
     const close = () => modal.classList.remove('open');
 
     openBtn.addEventListener('click', open);
+    document.getElementById('feedback-btn-wip')?.addEventListener('click', open);
     cancelBtn.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
