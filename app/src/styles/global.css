@@ -1736,6 +1736,76 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   height: 4px;
 }
 
+.copy-cite-btn {
+  position: fixed;
+  z-index: 300;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.28rem 0.55rem;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  transform: translateX(-50%) translateY(calc(-100% - 6px));
+  white-space: nowrap;
+  transition: opacity 0.1s ease;
+  pointer-events: auto;
+}
+.copy-cite-btn:hover { opacity: 0.88; }
+
+.settings-check-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  margin-top: 0.1rem;
+}
+.settings-check-name {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.settings-check-hint {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-light);
+  margin-top: 0.15rem;
+}
+.settings-pill {
+  position: relative;
+  display: inline-block;
+  width: 2.2rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+.settings-pill input { opacity: 0; width: 0; height: 0; position: absolute; }
+.settings-pill-track {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 1rem;
+  transition: background 0.18s ease;
+}
+.settings-pill input:checked ~ .settings-pill-track { background: var(--accent); }
+.settings-pill-thumb {
+  position: absolute;
+  top: 0.175rem;
+  left: 0.175rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.18s ease;
+  pointer-events: none;
+}
+.settings-pill input:checked ~ .settings-pill-thumb { transform: translateX(0.975rem); }
+
 .settings-reset {
   margin-top: 1rem;
   padding: 0.35rem 0.8rem;

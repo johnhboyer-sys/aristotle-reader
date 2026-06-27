@@ -58,6 +58,9 @@
     (shownSlots.includes('third') && seg.third?.some((p) => p.bekker?.some((t) => !t.real)))
   );
   const TRANS_KEY = `reader-trans-${work}`;
+  const CITE_KEY  = 'reader-cite-copy';
+  let citeCopy = true;
+  function saveCiteCopy() { try { localStorage.setItem(CITE_KEY, String(citeCopy)); } catch {} }
   function setTrans(t: string) {
     trans = t;
     try { localStorage.setItem(TRANS_KEY, t); } catch {}
@@ -90,8 +93,8 @@
   function saveFs() { try { localStorage.setItem(FS_KEY, String(fsScale)); } catch {} }
   function saveLh() { try { localStorage.setItem(LH_KEY, String(lhScale)); } catch {} }
   function resetSettings() {
-    fsScale = 1.0; lhScale = 1.0;
-    try { localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY); } catch {}
+    fsScale = 1.0; lhScale = 1.0; citeCopy = true;
+    try { localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY); localStorage.removeItem(CITE_KEY); } catch {}
   }
 
   // ── Citation shown in the controls strip ─────────────────────────────────
@@ -303,6 +306,8 @@
       window.removeEventListener('resize', onResize);
       if (_onToggleSettings) window.removeEventListener('toggle-settings', _onToggleSettings);
       if (_onCloseSettings)  window.removeEventListener('close-settings',  _onCloseSettings);
+      document.removeEventListener('mouseup', checkCopyBtn);
+      document.removeEventListener('selectionchange', onSelectionChange);
     }
   });
 
@@ -581,6 +586,8 @@
     if (savedFs) { const v = parseFloat(savedFs); if (!isNaN(v)) fsScale = v; }
     const savedLh = (() => { try { return localStorage.getItem(LH_KEY); } catch { return null; } })();
     if (savedLh) { const v = parseFloat(savedLh); if (!isNaN(v)) lhScale = v; }
+    const savedCite = (() => { try { return localStorage.getItem(CITE_KEY); } catch { return null; } })();
+    if (savedCite !== null) citeCopy = savedCite === 'true';
 
     // Settings sidebar events (dispatched by ReaderShell.astro and Escape handler).
     _onToggleSettings = () => { settingsOpen ? closeSettings() : openSettings(); };
@@ -667,6 +674,8 @@
         // jumps above are suppressed), so an opened #citation isn't overwritten.
         window.addEventListener('scroll', onScrollArm, { passive: true });
         window.addEventListener('resize', onResize);
+        document.addEventListener('mouseup', checkCopyBtn);
+        document.addEventListener('selectionchange', onSelectionChange);
       }, 0);
     }
   });
@@ -688,6 +697,71 @@
   function showLineNum(n: number): string {
     if (n === 1 || n % 5 === 0) return String(n);
     return '';
+  }
+
+  // ── Copy-with-citation helpers ────────────────────────────────────────────
+  function nearestGreekLine(node: Node): HTMLElement | null {
+    let n: Node | null = node;
+    while (n && n !== document.body) {
+      if (n instanceof HTMLElement && n.classList.contains('greek-line')) return n;
+      n = n.parentNode;
+    }
+    return null;
+  }
+  // L1094a-3 → 1094a3; L1094a-3-c → 1094a3
+  const idToBekker = (id: string) => id.slice(1).replace(/-(\d+)(-c)?$/, '$1');
+
+  function greekCiteForRange(range: Range): string | null {
+    const startLine = nearestGreekLine(range.startContainer);
+    const endLine   = nearestGreekLine(range.endContainer);
+    if (!startLine && !endLine) return null;
+    const s = startLine ? idToBekker(startLine.id) : null;
+    const f = endLine   ? idToBekker(endLine.id)   : null;
+    const abbr = workMeta?.abbr ?? '';
+    return (s && f && s !== f) ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
+  }
+
+  function handleCopy(e: ClipboardEvent) {
+    if (!citeCopy) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+    const text = sel.toString().trim();
+    if (!text) return;
+    const range = sel.getRangeAt(0);
+    const cite = greekCiteForRange(range);
+    if (!cite) return; // English-only selection; wait for alignment
+    e.clipboardData?.setData('text/plain', text + '\n' + cite);
+    e.preventDefault();
+  }
+
+  // ── Floating copy button (appears on Greek text selection) ────────────────
+  let copyBtnPos: { x: number; y: number } | null = null;
+
+  function checkCopyBtn() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) { copyBtnPos = null; return; }
+    const range = sel.getRangeAt(0);
+    if (!nearestGreekLine(range.startContainer) && !nearestGreekLine(range.endContainer)) {
+      copyBtnPos = null; return;
+    }
+    const rect = range.getBoundingClientRect();
+    if (!rect.width && !rect.height) { copyBtnPos = null; return; }
+    copyBtnPos = { x: rect.right, y: rect.top };
+  }
+
+  function onSelectionChange() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) copyBtnPos = null;
+  }
+
+  function clickCopyBtn() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) { copyBtnPos = null; return; }
+    const text = sel.toString().trim();
+    const cite = greekCiteForRange(sel.getRangeAt(0));
+    const full = cite ? text + '\n' + cite : text;
+    navigator.clipboard.writeText(full).catch(() => {});
+    copyBtnPos = null;
   }
 </script>
 
@@ -756,7 +830,8 @@
     </div>
   {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main"
-    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}">
+    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}"
+    on:copy={handleCopy}>
     <div class="reader-controls">
       <div class="rc-cite">
         {#if view === 'greek'}
@@ -1008,6 +1083,21 @@
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-label">Copying</div>
+      <label class="settings-check-row">
+        <span class="settings-check-name">
+          Append citation on copy
+          <span class="settings-check-hint">Greek selections only</span>
+        </span>
+        <span class="settings-pill">
+          <input type="checkbox" bind:checked={citeCopy} on:change={saveCiteCopy} aria-label="Append citation when copying text" />
+          <span class="settings-pill-track"></span>
+          <span class="settings-pill-thumb"></span>
+        </span>
+      </label>
+    </div>
+
+    <div class="settings-section">
       <button type="button" class="settings-reset" on:click={resetSettings}>Reset to defaults</button>
     </div>
   </div>
@@ -1036,4 +1126,22 @@
     onHoverIn={cancelFnClose}
     onHoverOut={scheduleFnClose}
   />
+{/if}
+
+{#if copyBtnPos}
+  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+  <button
+    class="copy-cite-btn"
+    style="left:{copyBtnPos.x}px;top:{copyBtnPos.y}px"
+    on:mousedown|preventDefault
+    on:click={clickCopyBtn}
+    aria-label="Copy with citation"
+    title="Copy with citation"
+  >
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2z"/>
+      <path d="M0 4a2 2 0 0 1 2-2v10a2 2 0 0 0 2 2h8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4z"/>
+    </svg>
+    Copy
+  </button>
 {/if}
