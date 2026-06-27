@@ -214,7 +214,9 @@ def llm_beads(work_id: str, chap: int):
     """gsent index -> set of english indices, from an LLM aligner's interp_out file
     ({"beads":[{"g":[i...],"e":[j...]}]}). Uses the SAME soft-Greek/fine-English grain
     the task emitter wrote, so indices match the anchor gold. {} if no file."""
-    p = BUILD_DIR / "align" / "interp_out" / work_id / f"1-{chap}.json"
+    cor = BUILD_DIR / "align" / "interp_corrections" / work_id / f"1-{chap}.json"
+    out_p = BUILD_DIR / "align" / "interp_out" / work_id / f"1-{chap}.json"
+    p = cor if cor.exists() else out_p   # human corrections overlay wins
     if not p.exists():
         return None
     data = json.loads(p.read_text(encoding="utf-8"))

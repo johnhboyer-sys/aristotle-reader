@@ -38,7 +38,9 @@ td{vertical-align:top;padding:.55rem .9rem}
 
 def render(work: str, chap: int) -> Path:
     task = json.loads((BUILD_DIR / "align" / "interp_tasks" / work / f"1-{chap}.json").read_text("utf-8"))
-    beads = json.loads((BUILD_DIR / "align" / "interp_out" / work / f"1-{chap}.json").read_text("utf-8"))["beads"]
+    _cor = BUILD_DIR / "align" / "interp_corrections" / work / f"1-{chap}.json"
+    _bpath = _cor if _cor.exists() else (BUILD_DIR / "align" / "interp_out" / work / f"1-{chap}.json")
+    beads = json.loads(_bpath.read_text("utf-8"))["beads"]
     g = {x["i"]: x["text"] for x in task["greek"]}
     e = {x["j"]: x["text"] for x in task["english"]}
 
