@@ -27,6 +27,12 @@ from .config import BUILD_DIR, SOURCES_DIR
 _REAL_CONF = {"certain", "reliable", "confirmed"}  # confirmed = verifier-placed (gloss aligner)
 
 _TAG = re.compile(r"<[^>]+>")
+# A line ends a sentence (so a following blank line is a real paragraph break,
+# not a soft-wrap) if it ends with terminal punctuation, allowing a trailing
+# closing quote/paren/bracket.
+_ENDS_SENT = re.compile(r"[.?!:][\"'’”)\]]?\s*$")
+def _ends_sentence(line: str) -> bool:
+    return bool(_ENDS_SENT.search(line))
 _ROSS_DIR = SOURCES_DIR / "ross"
 # Sentence boundary in English prose: end punctuation (+ optional closing
 # quote/paren) followed by whitespace.
@@ -81,6 +87,14 @@ def _book_text(path: Path) -> str:
     raw = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", raw, flags=re.S | re.I)
     m = re.search(r"<body.*?</body>", raw, flags=re.S | re.I)
     body = m.group(0) if m else raw
+    # Inline tags are NOT line/paragraph breaks — drop them (don't convert to a
+    # newline). The MIT archive HTML prefixes EVERY soft-wrapped line with a
+    # `<a name="N"></a>` Bekker anchor; turning those into newlines made the
+    # parser read every wrapped line as its own paragraph (one `\n` per line),
+    # so the real paragraph structure (a `<br><br>` only at true paragraph
+    # starts) was drowned out. Stripping inline tags first leaves `<br><br>` as
+    # the sole paragraph delimiter, matching MIT's displayed divisions.
+    body = re.sub(r"</?(a|span|i|b|em|strong|sup|sub|font)\b[^>]*>", "", body, flags=re.I)
     return html.unescape(_TAG.sub("\n", body))
 
 
@@ -114,7 +128,12 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
         if started:
             if ln:
                 buf.append(ln)
-            elif buf and buf[-1] is not None:
+            elif buf and buf[-1] is not None and _ends_sentence(buf[-1]):
+                # A blank line is a paragraph break only when the preceding line
+                # actually ends a sentence. Some archive sources (e.g. the Beare
+                # Parva Naturalia) put a blank line after EVERY soft-wrapped line,
+                # which would otherwise make each ~70-char line its own paragraph;
+                # a mid-clause wrap (ends on a comma/word) is joined, not broken.
                 buf.append(None)  # paragraph break sentinel
     if cur is not None:
         chapters[cur] = _join_para(buf)
