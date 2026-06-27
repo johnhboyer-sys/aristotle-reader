@@ -1,0 +1,88 @@
+---
+import ThemeInit from '../components/ThemeInit.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import '../styles/global.css';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
+  <title>Page Not Found — Aristotle</title>
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="theme-corner"><ThemeToggle /></div>
+  <main class="not-found">
+    <p class="eyebrow">Aristotle</p>
+    <h1>Page not found</h1>
+    <p class="lede">The page you're looking for doesn't exist or has moved.</p>
+    <div class="actions">
+      <a class="btn-primary" href={`${base}/`}>Back to the corpus</a>
+      <a class="btn-secondary" href={`${base}/search`}>Search</a>
+    </div>
+  </main>
+
+  <style>
+    body { background: var(--page-bg); color: var(--text); margin: 0; }
+    .theme-corner { position: fixed; top: 1rem; right: 1rem; z-index: 10; }
+    .not-found {
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: clamp(4rem, 14vh, 9rem) 1.5rem 4rem;
+      text-align: center;
+    }
+    .eyebrow {
+      font-family: var(--font-ui);
+      text-transform: uppercase;
+      letter-spacing: .28em;
+      font-size: .72rem;
+      color: var(--accent-light);
+      margin: 0 0 .6rem;
+    }
+    h1 {
+      font-family: var(--font-greek);
+      font-weight: 400;
+      font-size: clamp(2rem, 5vw, 2.6rem);
+      color: var(--text);
+      margin: 0 0 1rem;
+    }
+    .lede {
+      font-family: var(--font-english);
+      color: var(--text-mid);
+      font-size: 1rem;
+      line-height: 1.55;
+      margin: 0 0 2rem;
+    }
+    .actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-family: var(--font-ui);
+      font-size: .9rem;
+      font-weight: 600;
+      padding: .55rem 1.25rem;
+      border-radius: 6px;
+      transition: opacity .15s ease;
+    }
+    .btn-primary:hover { opacity: .86; }
+    .btn-secondary {
+      background: var(--col-bg);
+      color: var(--text-mid);
+      text-decoration: none;
+      font-family: var(--font-ui);
+      font-size: .9rem;
+      padding: .55rem 1.25rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      transition: border-color .15s ease;
+    }
+    .btn-secondary:hover { border-color: var(--accent-light); color: var(--accent); }
+  </style>
+</body>
+</html>
