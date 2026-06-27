@@ -71,9 +71,9 @@ class _Walker:
             return
         chunk = self._chunk()
         piece = _WS.sub(" ", raw)
-        if piece == " " and (not chunk["text"] or chunk["text"].endswith(" ")):
+        if piece == " " and (not chunk["text"] or chunk["text"].endswith(" ") or chunk["text"].endswith("\n")):
             return
-        if chunk["text"].endswith(" ") and piece.startswith(" "):
+        if (chunk["text"].endswith(" ") or chunk["text"].endswith("\n")) and piece.startswith(" "):
             piece = piece.lstrip(" ")
         if not chunk["text"]:
             piece = piece.lstrip(" ")
@@ -90,6 +90,11 @@ class _Walker:
             {"kind": kind, "n": n, "offset": len(chunk["text"].rstrip())}
         )
 
+    def add_paragraph(self):
+        chunk = self._chunk()
+        if chunk["text"] and not chunk["text"].endswith("\n"):
+            chunk["text"] = chunk["text"].rstrip() + "\n"
+
     def walk(self, el):
         tag = _local(el)
         if tag is None:
@@ -103,6 +108,13 @@ class _Walker:
             # Book headings ("Book 5") are derivable from the div structure;
             # at column-boundary book starts they would otherwise leak into
             # the previous column's chunk.
+            self.add_text(el.tail)
+            return
+        if tag == "p":
+            self.add_paragraph()
+            self.add_text(el.text)
+            for child in el:
+                self.walk(child)
             self.add_text(el.tail)
             return
         if tag == "milestone":

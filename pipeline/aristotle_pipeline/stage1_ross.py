@@ -45,6 +45,25 @@ _CHAPTER_MARKERS = {
 _ROMAN = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
 
 
+def _join_para(buf: list) -> str:
+    """Join a buffer of text lines and None-sentinels (paragraph breaks) into
+    a prose string with `\n` at each paragraph boundary and no leading/trailing
+    newlines."""
+    parts: list[str] = []
+    cur: list[str] = []
+    for item in buf:
+        if item is None:
+            if cur:
+                parts.append(" ".join(cur))
+                parts.append("\n")
+                cur = []
+        else:
+            cur.extend(item.split())
+    if cur:
+        parts.append(" ".join(cur))
+    return "".join(parts)
+
+
 def _marker_int(s: str) -> int:
     """A chapter marker's value: an Arabic number as-is, else Roman numerals."""
     if s.isdigit():
@@ -81,7 +100,7 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
             txt = txt[:j]
     chapters: dict[int, str] = {}
     cur: int | None = None
-    buf: list[str] = []
+    buf: list = []
     started = False
     for ln in (l.strip() for l in txt.split("\n")):
         m = pat.fullmatch(ln)
@@ -89,13 +108,16 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
             num = _marker_int(m.group(m.lastindex or 0))
             if (cur is None and num == 1) or (cur is not None and num == cur + 1):
                 if cur is not None:
-                    chapters[cur] = " ".join(" ".join(buf).split())
+                    chapters[cur] = _join_para(buf)
                 cur, buf, started = num, [], True
                 continue
-        if started and ln:
-            buf.append(ln)
+        if started:
+            if ln:
+                buf.append(ln)
+            elif buf and buf[-1] is not None:
+                buf.append(None)  # paragraph break sentinel
     if cur is not None:
-        chapters[cur] = " ".join(" ".join(buf).split())
+        chapters[cur] = _join_para(buf)
     return chapters
 
 

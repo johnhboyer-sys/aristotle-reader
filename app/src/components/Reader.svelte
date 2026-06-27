@@ -384,12 +384,19 @@
     const ts = [...ticks].sort((a, b) => a.off - b.off);
     const parts: FlowPart[] = [];
     let cur = 0;
+    const addText = (s: string) => {
+      const segs = s.split('\n');
+      for (let i = 0; i < segs.length; i++) {
+        if (i > 0) parts.push({ text: '\n', n: null, real: false });
+        if (segs[i]) parts.push({ text: segs[i], n: null, real: false });
+      }
+    };
     for (const t of ts) {
       const off = Math.max(0, Math.min(t.off, text.length));
-      if (off > cur) { parts.push({ text: text.slice(cur, off), n: null, real: false }); cur = off; }
+      if (off > cur) { addText(text.slice(cur, off)); cur = off; }
       parts.push({ text: null, n: t.n, real: t.real });
     }
-    if (cur < text.length) parts.push({ text: text.slice(cur), n: null, real: false });
+    if (cur < text.length) addText(text.slice(cur));
     return parts;
   }
 
@@ -857,7 +864,9 @@
                        numbers floated into the margin at their exact offsets. -->
                   <div class="ross-prose">
                     {#each block.rossFlow as part}
-                      {#if part.text !== null}
+                      {#if part.text === '\n'}
+                        <br class="para-br" />
+                      {:else if part.text !== null}
                         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                         <span class="bk-seg">{@html highlightEng(part.text)}</span>
                       {:else}
@@ -874,7 +883,9 @@
                        any diagram tables follow their anchoring Bekker number. -->
                   <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
                     {#each block.thirdFlow as part}
-                      {#if part.text !== null}
+                      {#if part.text === '\n'}
+                        <br class="para-br" />
+                      {:else if part.text !== null}
                         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                         <span class="bk-seg">{@html renderThird(part.text)}</span>
                       {:else}
@@ -898,7 +909,9 @@
                        no row break). Same flow model as the secondary Ross slot. -->
                   <div class="ross-prose">
                     {#each block.flow as part}
-                      {#if part.text !== null}
+                      {#if part.text === '\n'}
+                        <br class="para-br" />
+                      {:else if part.text !== null}
                         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                         <span class="bk-seg">{@html highlightEng(part.text)}</span>
                       {:else}
@@ -918,7 +931,9 @@
                 {#if block.rossFlow.length}
                   <div class="ross-prose">
                     {#each block.rossFlow as part}
-                      {#if part.text !== null}
+                      {#if part.text === '\n'}
+                        <br class="para-br" />
+                      {:else if part.text !== null}
                         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                         <span class="bk-seg">{@html highlightEng(part.text)}</span>
                       {:else}

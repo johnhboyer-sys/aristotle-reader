@@ -82,6 +82,24 @@ def parse_ostwald(md_path: Path):
     anchors: list[dict] = []
     counts = {"pages": 0, "line_marks": 0, "skipped_nums": 0}
 
+    def _join_parts(ps: list) -> str:
+        """Join word tokens and None paragraph-break sentinels into prose with
+        `\n` at each paragraph boundary. Both `\n` and ` ` are 1 char, so the
+        anchor char offsets computed during parsing remain valid."""
+        segs: list[str] = []
+        cur: list[str] = []
+        for p in ps:
+            if p is None:
+                if cur:
+                    segs.append(" ".join(cur))
+                    segs.append("\n")
+                    cur = []
+            else:
+                cur.append(p)
+        if cur:
+            segs.append(" ".join(cur))
+        return "".join(segs)
+
     def flush_chapter():
         nonlocal parts, length, anchors, pending
         if book is not None and chapter is not None and parts:
@@ -89,7 +107,7 @@ def parse_ostwald(md_path: Path):
             for cit in pending:
                 anchors.append({"citation": cit, "offset": length,
                                 "confidence": "certain"})
-            prose[(book, chapter)] = " ".join(parts)
+            prose[(book, chapter)] = _join_parts(parts)
             if anchors:
                 align[f"{book}:{chapter}"] = {"anchors": anchors}
         parts, length, anchors, pending = [], 0, [], []
@@ -120,7 +138,14 @@ def parse_ostwald(md_path: Path):
             # end of the previous chapter (until the next inline page label).
             chapter = int(mc.group(1))
             continue
-        if chapter is None or not line:
+        if chapter is None:
+            continue
+        if not line:
+            # Blank line = paragraph boundary. Append a None sentinel; the
+            # joining step converts it to a \n in the final text. Both \n and
+            # the usual space separator are 1 char, so anchor offsets stay valid.
+            if parts and parts[-1] is not None:
+                parts.append(None)
             continue
 
         for tok in line.split():
