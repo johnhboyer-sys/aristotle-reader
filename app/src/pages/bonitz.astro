@@ -114,8 +114,14 @@ const entryCount = flat.filter(f => f.type === 'entry').length;
 const pageFirst = '15';
 const pageLast  = '60';
 const lastEntry = [...flat].reverse().find(f => f.type === 'entry') as { lemma: string } | undefined;
-const lastLemma = lastEntry?.lemma ?? '';
+const lastLemma = cleanLemma(lastEntry?.lemma ?? '');
 const navBuckets = [...buckets].sort();
+
+// Strip trailing punctuation (comma/period/semicolon/ano-teleia) the OCR pulled
+// into the headword, e.g. "ἀετός," → "ἀετός", "ἀηδία." → "ἀηδία".
+function cleanLemma(s: string): string {
+  return (s || '').replace(/[\s.,;·]+$/, '');
+}
 
 // ── Bekker citation normalisation helpers ──
 
@@ -183,7 +189,7 @@ function renderSegments(segs: Segment[]): string {
       const splitViaSep =
         next?.kind === 'text' && /^[\s.]*$/.test(next.content) &&
         nextNext?.kind === 'cit' && /^[ab]\d+/.test((nextNext as { content: string }).content);
-      const chapIsBekkPage = /^\d{3,4}$/.test(s.chap);
+      const chapIsBekkPage = /^\d{2,4}$/.test(s.chap);
 
       if (chapIsBekkPage && (nextIsSplitCit || splitViaSep)) {
         pendingCitPrefix = s.chap;
@@ -229,7 +235,7 @@ function renderSegments(segs: Segment[]): string {
       // immediately following segment is only the sub-page portion.
       const nextIsSplitCit = next?.kind === 'cit' && /^[ab]\d+/.test(next.content);
       if (nextIsSplitCit) {
-        const mt = s.content.match(/^(.*?)(\d{3,4})\s*$/);
+        const mt = s.content.match(/^(.*?)(\d{2,4})\s*$/);
         if (mt) {
           pendingCitPrefix = mt[2];
           parts.push(mt[1]);
@@ -269,29 +275,87 @@ function renderSegments(segs: Segment[]): string {
   return parts.join('');
 }
 
+// ── Em-dash paragraph / subdivision splitter ──
+//
+// Bonitz separates the sections of an article with an em-dash "—", and numbers
+// later sections "— 2.", "— 3.". The OCR leaves these inline, so an article
+// renders as one undivided block. Split the segment list into paragraph groups
+// at top-level em-dashes; a group that opens with "N." (and isn't the first) is
+// a numbered subdivision. Operates on the existing JSON — no re-transcription.
+function splitEmDash(segs: Segment[]): { sub: string | null; segments: Segment[] }[] {
+  const groups: { sub: string | null; segments: Segment[] }[] = [];
+  let cur: Segment[] = [];
+  for (const s of segs) {
+    if (s.kind === 'text' && s.content.includes('—')) {
+      const chunks = s.content.split('—');
+      cur.push({ kind: 'text', content: chunks[0] });
+      for (let j = 1; j < chunks.length; j++) {
+        groups.push({ sub: null, segments: cur });
+        cur = [{ kind: 'text', content: chunks[j] }];
+      }
+    } else {
+      cur.push(s);
+    }
+  }
+  groups.push({ sub: null, segments: cur });
+
+  // A group opening with a bare "N." is a numbered subdivision; strip the inline
+  // number into `sub` (the renderer decides whether to show a badge for it).
+  for (const g of groups) {
+    const first = g.segments.find(
+      x => x.kind === 'text' && x.content.trim() !== ''
+    ) as { kind: 'text'; content: string } | undefined;
+    if (first) {
+      const m = first.content.match(/^\s*(\d+)\.\s*/);
+      if (m) { g.sub = m[1]; first.content = first.content.slice(m[0].length); }
+    }
+  }
+
+  return groups.filter(g =>
+    g.segments.some(x => x.kind !== 'text' || x.content.trim() !== '')
+  );
+}
+
+// Render a segment list as one or more paragraphs, splitting at em-dashes.
+// `lead` (bold headword or a sense badge) goes on paragraph 0; `leadNum` is the
+// number that lead already shows, so a repeated inline number is not doubled.
+function renderParagraphs(segs: Segment[], lead?: string, leadNum?: string): string {
+  const groups = splitEmDash(segs);
+  if (!groups.length) return lead ? `<p class="entry-text">${lead}</p>` : '';
+  let lastNum = leadNum ?? null;
+  return groups.map((g, idx) => {
+    let sub = g.sub;
+    if (idx === 0 && lead) sub = null;            // lead owns the first number slot
+    else if (sub && sub === lastNum) sub = null;  // drop OCR-duplicated number
+    if (sub) lastNum = sub;
+    const inner = renderSegments(g.segments);
+    const body = idx === 0 && lead ? `${lead} <span>${inner}</span>` : inner;
+    const num = sub ? `<span class="sense-n">${sub}.</span> ` : '';
+    return `<p class="entry-text${sub ? ' subdiv' : ''}">${num}${body}</p>`;
+  }).join('');
+}
+
 function renderSenses(senses: Sense[]): string {
   return `<ol class="senses">${senses.map(s =>
-    `<li class="sense"><span class="sense-n">${s.n}.</span> `
-    + renderSegments(s.segments)
+    `<li class="sense">`
+    + renderParagraphs(s.segments, `<span class="sense-n">${s.n}.</span>`, s.n)
     + (s.children ? renderSenses(s.children) : '')
     + `</li>`
   ).join('')}</ol>`;
 }
 
 function renderBlocks(blocks: Block[], lemma?: string): string {
-  // Single plain-text block → inline lemma + text
+  const lead = lemma ? `<strong class="entry-lemma">${cleanLemma(lemma)}</strong>` : undefined;
+  // Single plain-text block → inline lemma + text (split into paragraphs)
   if (blocks.length === 1 && blocks[0].kind === 'segments') {
-    const inner = renderSegments(blocks[0].segments);
-    return lemma
-      ? `<p class="entry-text"><strong class="entry-lemma">${lemma}</strong> <span>${inner}</span></p>`
-      : `<p class="entry-text">${inner}</p>`;
+    return renderParagraphs(blocks[0].segments, lead);
   }
   // Multiple blocks (merged across columns) or a senses block → lemma head + blocks
-  let html = lemma ? `<p class="entry-lemma-head"><strong>${lemma}</strong></p>` : '';
+  let html = lemma ? `<p class="entry-lemma-head"><strong>${cleanLemma(lemma)}</strong></p>` : '';
   for (const b of blocks) {
     html += b.kind === 'senses'
       ? renderSenses(b.senses)
-      : `<p class="entry-text">${renderSegments(b.segments)}</p>`;
+      : renderParagraphs(b.segments);
   }
   return html;
 }
@@ -376,7 +440,7 @@ function renderBlocks(blocks: Block[], lemma?: string): string {
         return (
           <details class="card" data-lemma={f.lemma} id={anchorId}>
             <summary class="lemma">
-              {f.lemma}
+              {cleanLemma(f.lemma)}
               <span class="chev" aria-hidden="true" />
             </summary>
             <div class="card-body" set:html={renderBlocks(f.blocks, f.lemma)} />
@@ -674,6 +738,12 @@ function renderBlocks(blocks: Block[], lemma?: string): string {
       line-height: var(--lh-greek);
     }
     .entry-text + .entry-text { margin-top: .5rem; }
+    /* Numbered subdivision split out of inline "— N." dividers */
+    :global(.entry-text.subdiv) {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-top: .55rem;
+    }
 
     /* ── Bekker citations ── */
     :global(.cit) {
