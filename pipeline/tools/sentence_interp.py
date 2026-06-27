@@ -89,13 +89,15 @@ def eng_sent_index(starts: list[int], off: int) -> int:
 # ---------------------------------------------------------------------------
 # Greek side: segment once (geometry), attach fingerprints per config
 # ---------------------------------------------------------------------------
-def greek_chapters(soft: bool = False):
+def greek_chapters(soft: bool = False, examples: bool = False):
     """{chapter -> (lines, gsents, line2sent, cum_before)} for the current work.
     soft=True splits Greek on the ano teleia (·) too — the right grain for an
-    EDITION whose English is finely split (opposite of the Bekker default)."""
+    EDITION whose English is finely split (opposite of the Bekker default).
+    examples=True additionally splits before a comma-bound οἷον (must match the
+    grain the interp_tasks/beads were emitted at)."""
     out = {}
     for ch in chapter_lines():
-        gsents, line_start, line2sent = segment_greek(ch.lines, {}, soft=soft)
+        gsents, line_start, line2sent = segment_greek(ch.lines, {}, soft=soft, examples=examples)
         cum = {}
         w = 0
         for ln in ch.lines:
@@ -103,6 +105,28 @@ def greek_chapters(soft: bool = False):
             w += len(ln.text.split())
         out[ch.chapter] = (ch.lines, gsents, line2sent, cum)
     return out
+
+
+def detect_examples(work_id: str) -> bool:
+    """True if the work's interp_tasks were emitted at examples grain — decided by
+    comparing each chapter's task greek-unit count to soft vs soft+examples
+    segmentation (so scorers segment at the grain the beads actually index into)."""
+    tdir = BUILD_DIR / "align" / "interp_tasks" / work_id
+    if not tdir.exists():
+        return False
+    soft = greek_chapters(soft=True, examples=False)
+    ex = greek_chapters(soft=True, examples=True)
+    votes_ex = votes_soft = 0
+    for ch in soft:
+        p = tdir / f"1-{ch}.json"
+        if not p.exists():
+            continue
+        n = len(json.loads(p.read_text("utf-8"))["greek"])
+        if n == len(ex[ch][1]) and len(ex[ch][1]) != len(soft[ch][1]):
+            votes_ex += 1
+        elif n == len(soft[ch][1]):
+            votes_soft += 1
+    return votes_ex > votes_soft
 
 
 def line_to_chapter():
@@ -247,8 +271,9 @@ LLM_CONFIGS = [
 ]
 
 
-def run(work_id: str, trans: list[str], configs, dump: bool, soft: bool = False):
-    gch = greek_chapters(soft)
+def run(work_id: str, trans: list[str], configs, dump: bool, soft: bool = False,
+        examples: bool = False):
+    gch = greek_chapters(soft, examples)
     l2c = line_to_chapter()
     slot_of = {}
     man = Manifest.for_work(work_id).data["english"]
@@ -340,7 +365,8 @@ if __name__ == "__main__":
     ap.add_argument("--dump", action="store_true")
     a = ap.parse_args()
     if a.llm:
-        run(a.work, a.trans.split(","), LLM_CONFIGS, a.dump, soft=True)
+        ex = detect_examples(a.work)   # match the grain the beads were emitted at
+        run(a.work, a.trans.split(","), LLM_CONFIGS, a.dump, soft=True, examples=ex)
     else:
         cfgs = CONFIGS if a.ablate else CONFIGS[:1]
         run(a.work, a.trans.split(","), cfgs, a.dump, a.soft)

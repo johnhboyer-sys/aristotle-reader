@@ -45,7 +45,8 @@ def dp_g2e(work, chap, gsents, sents):
 
 
 def main(work, trans, show_list):
-    gch = si.greek_chapters(soft=True)
+    ex = si.detect_examples(work)   # segment at the grain the beads index into
+    gch = si.greek_chapters(soft=True, examples=ex)
     l2c = si.line_to_chapter()
     man = si.Manifest.for_work(work).data["english"]
     slot_of = {man[s]["id"]: s for s in ("primary", "secondary", "third") if man.get(s)}
