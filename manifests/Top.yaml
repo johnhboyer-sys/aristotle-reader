@@ -39,6 +39,16 @@ english:
     dir: "top-pickard"
     books: 8
     chapter_marker: part
+  # Second translation: O. F. Owen (Bohn, 1853), public domain. Curated
+  # Wikisource Organon (analytical sidenotes stripped), 8 books of "Part N"
+  # chapters = Bekker 18/11/6/6/9/14/5/14. Tier 0 overlay (no anchors).
+  secondary:
+    id: owen
+    name: "O. F. Owen (Bohn, 1853)"
+    model: archive
+    dir: "top-owen"
+    books: 8
+    chapter_marker: part
 
 # Line numbers the OCT skips at the mid-column book boundaries (the Greek is
 # continuous across them — verified against the export), declared so the

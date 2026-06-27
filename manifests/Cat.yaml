@@ -72,6 +72,17 @@ english:
     books: 1
     chapter_marker: part
     anchors: "cat-ackrill/anchors.yaml"
+  # Fourth translation: O. F. Owen (Bohn, 1853), public domain. From the curated
+  # Wikisource Organon (analytical sidenote headings stripped, prose only), 15
+  # "Part N" chapters = the Bekker chapters. Tier 0 overlay (no anchors), the
+  # 4th-slot mechanism that lifts the old 3-translation cap.
+  overlays:
+    - id: owen
+      name: "O. F. Owen (Bohn, 1853)"
+      model: archive
+      dir: "cat-owen"
+      books: 1
+      chapter_marker: part
 
 # Single line numbers the TLG/OCT edition skips (the Greek is continuous across
 # them — verified against the export); declared so the validator passes.

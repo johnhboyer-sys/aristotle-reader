@@ -53,6 +53,16 @@ english:
     # (docs/gloss-aligner-recipe.md): {bekker, at: verbatim Jenkinson phrase},
     # resolved per column → dense gutter, replacing the interpolated estimate.
     anchors: "apr-jenkinson/anchors.yaml"
+  # Second translation: O. F. Owen (Bohn, 1853), public domain. Curated
+  # Wikisource Organon (analytical sidenotes stripped), 2 books of "Part N"
+  # chapters = Bekker 46/27. Tier 0 overlay (no anchors).
+  secondary:
+    id: owen
+    name: "O. F. Owen (Bohn, 1853)"
+    model: archive
+    dir: "apr-owen"
+    books: 2
+    chapter_marker: part
 
 mid_column_book_starts:
   - { book: 2, column: "52b" }

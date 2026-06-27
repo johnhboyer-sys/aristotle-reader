@@ -33,6 +33,18 @@ english:
     books: 1
     chapter_marker: part
     anchors: "poet-fyfe/anchors.yaml"
+  # Second translation: S. H. Butcher (Macmillan, 1895), public domain. Sourced
+  # from the MIT Internet Classics Archive (poetics.mb.txt), one book of 26
+  # "Part <Roman>" chapters. Tier 0: no anchors file — chapters are pinned to the
+  # Greek spine via the grc TEI (chapters.source: grc_tei), so chapter-level
+  # Bekker is exact; the within-chapter line gutter is interpolated (estimates).
+  secondary:
+    id: butcher
+    name: "S. H. Butcher (Macmillan, 1895)"
+    model: archive
+    dir: "poet-butcher"
+    books: 1
+    chapter_marker: part_roman
 
 # The TLG edition's line numbering skips these single line numbers (the Greek
 # text is continuous across them — verified); declared so the validator passes.

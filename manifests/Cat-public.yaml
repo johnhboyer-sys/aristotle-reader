@@ -54,6 +54,15 @@ english:
     books: 1
     chapter_marker: part
     anchors: "cat-taylor/anchors.yaml"
+  # O. F. Owen (Bohn, 1853), public domain — the 4th translation, Tier 0 overlay
+  # (analytical sidenotes stripped). Also in Cat.yaml (full build).
+  overlays:
+    - id: owen
+      name: "O. F. Owen (Bohn, 1853)"
+      model: archive
+      dir: "cat-owen"
+      books: 1
+      chapter_marker: part
 
 expected_line_gaps:
   - { column: "3b",  after: 28, next: 30 }

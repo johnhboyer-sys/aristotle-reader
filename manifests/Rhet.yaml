@@ -4,11 +4,13 @@
 # Perseus grc TEI's chapter <div>s (60 = 15+26+19); English = J. H. Freese
 # (Loeb, 1926) from the Perseus eng2, via the perseus-primary path.
 #
-# Single translation: Freese (1926) is public domain in the US (1926 works
-# entered the PD in 2022), so unlike Metaphysics/Politics this work is fully
-# deployable. The only PD secondary on the MIT archive (W. Rhys Roberts) uses a
-# coarser, non-standard part division (8/16/15 vs the 15/26/19 Bekker chapters)
-# that won't chapter-anchor cleanly, so it is omitted.
+# Primary Freese (1926) is public domain in the US (1926 works entered the PD in
+# 2022), so unlike Metaphysics/Politics this work is fully deployable. A PD
+# second translation, W. Rhys Roberts (Oxford, 1924), is added from the MIT
+# archive: its "Part" divisions ARE the canonical 15/26/19 Bekker chapters
+# (verified 2026-06-27 — an earlier note here wrongly claimed 8/16/15), so it
+# chapter-anchors cleanly as a Tier 0 secondary (no anchors file; chapters pinned
+# to the Greek spine, within-chapter gutter interpolated).
 #
 # Book boundaries are the canonical Bekker ranges, derived from the TLG line
 # sequence cut at the grc TEI book-div starts (Stage 2 validates them).
@@ -30,10 +32,23 @@ bekker_range:
 # Chapter starts are text-aligned onto the Greek spine from this grc TEI's
 # chapter <div>s. `source` is intentionally NOT grc_tei (that would swap to the
 # archive English path); only the chapter lines are overridden, Freese stays the
-# primary milestoned English. No english.secondary → primary-only build.
+# primary milestoned English.
 chapters:
   grc_tei: "tlg0086.tlg038.perseus-grc2.xml"
   chapter_subtype: chapter
+
+# Second translation: W. Rhys Roberts (Oxford, 1924), public domain. From the MIT
+# Internet Classics Archive (rhetoric.mb.txt), 3 books of "Part N" chapters
+# matching the Bekker 15/26/19 division. Tier 0: no anchors — chapters pinned to
+# the Greek spine, within-chapter line gutter interpolated (estimates).
+english:
+  secondary:
+    id: roberts
+    name: "W. Rhys Roberts (Oxford, 1924)"
+    model: archive
+    dir: "rhet-roberts"
+    books: 3
+    chapter_marker: part
 
 books:
   - { n: 1, start: "1354a1",  end: "1378a15" }

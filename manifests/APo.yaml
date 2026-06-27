@@ -48,6 +48,28 @@ english:
     # (docs/gloss-aligner-recipe.md): {bekker, at: verbatim Mure phrase},
     # resolved per column → dense gutter, replacing the interpolated estimate.
     anchors: "apo-mure/anchors.yaml"
+  # Second translation: E. S. Bouchier (Blackwell, 1901), public domain. From the
+  # curated Wikisource transcription (per-chapter pages; editorial chapter
+  # "arguments" stripped, only the translation body kept), 2 books of "Part N"
+  # chapters matching the Bekker 34/19 division. Tier 0: no anchors — chapters
+  # pinned to the Greek spine, within-chapter gutter interpolated.
+  secondary:
+    id: bouchier
+    name: "E. S. Bouchier (Blackwell, 1901)"
+    model: archive
+    dir: "apo-bouchier"
+    books: 2
+    chapter_marker: part
+  # Third translation: O. F. Owen (Bohn, 1853), public domain. Curated Wikisource
+  # Organon (analytical sidenotes stripped), 2 books of "Part N" chapters =
+  # Bekker 34/19. Tier 0 overlay (no anchors).
+  third:
+    id: owen
+    name: "O. F. Owen (Bohn, 1853)"
+    model: archive
+    dir: "apo-owen"
+    books: 2
+    chapter_marker: part
 
 mid_column_book_starts:
   - { book: 2, column: "89b" }

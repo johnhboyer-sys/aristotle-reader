@@ -39,6 +39,16 @@ english:
     books: 1
     chapter_marker: part
     anchors: "sr-pickard/anchors.yaml"
+  # Second translation: O. F. Owen (Bohn, 1853), public domain. Curated
+  # Wikisource Organon (analytical sidenotes stripped), 34 "Part N" chapters =
+  # Bekker. Tier 0 overlay (no anchors).
+  secondary:
+    id: owen
+    name: "O. F. Owen (Bohn, 1853)"
+    model: archive
+    dir: "se-owen"
+    books: 1
+    chapter_marker: part
 
 books:
   - { n: 1, start: "164a20", end: "184b8" }

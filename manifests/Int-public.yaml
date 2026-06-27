@@ -64,6 +64,15 @@ english:
     books: 1
     chapter_marker: part
     anchors: "int-taylor/anchors.yaml"
+  # O. F. Owen (Bohn, 1853), public domain — Tier 0 overlay (analytical sidenotes
+  # stripped). Also in Int.yaml (full build).
+  overlays:
+    - id: owen
+      name: "O. F. Owen (Bohn, 1853)"
+      model: archive
+      dir: "int-owen"
+      books: 1
+      chapter_marker: part
 
 # Single line numbers the TLG/OCT edition skips (the Greek is continuous across
 # them — verified against the export); declared so the validator passes.
