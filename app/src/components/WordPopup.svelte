@@ -1,6 +1,5 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import { onMount } from 'svelte';
   import { lookupWord, type Analysis, type LsjEntry } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
 
@@ -13,11 +12,13 @@
   let lsj: LsjEntry[] = [];
   let loading = true;
   let error = '';
-  let isMobile = false;
-
-  onMount(() => {
-    isMobile = window.matchMedia('(max-width: 680px)').matches;
-  });
+  // Resolved synchronously at instantiation (this component only ever mounts
+  // client-side, on a word click) so the intro transition picks the right
+  // direction: mobile rises from the bottom, desktop slides in from the right.
+  // Reading it in onMount would be too late — Svelte evaluates transition
+  // params when the element mounts, before onMount runs.
+  const isMobile = typeof window !== 'undefined'
+    && window.matchMedia('(max-width: 680px)').matches;
 
   lookupWord(work, token.k)
     .then(r => { analyses = r.analyses; lsj = r.lsj; })

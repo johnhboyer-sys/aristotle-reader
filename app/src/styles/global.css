@@ -919,17 +919,24 @@ body {
   transition: padding-right 0.22s ease;
 }
 
-/* Mobile: sidebar rises from bottom as a sheet */
+/* Mobile: sidebar rises from bottom as a sheet, flush with the screen bottom.
+   dvh (not vh) measures the *visible* viewport, so the bottom-pinned sheet
+   doesn't leave a gap behind the browser chrome; safe-area padding keeps the
+   last card clear of the home indicator. */
 @media (max-width: 680px) {
   .word-sidebar {
     top: auto;
     left: 0; right: 0; bottom: 0;
     width: 100%;
-    max-height: 72vh;
+    max-height: 80vh;       /* fallback for browsers without dvh */
+    max-height: 80dvh;
     border-left: none;
     border-top: 1px solid var(--border);
     border-radius: 1rem 1rem 0 0;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.14);
+  }
+  .word-sidebar-body {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   }
   .reader-body.word-open { padding-right: 1rem; }
 }
