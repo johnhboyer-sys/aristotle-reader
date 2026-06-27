@@ -854,6 +854,7 @@ body {
 }
 .bk-num.approx { font-style: italic; opacity: 0.5; }
 .para-br { display: block; height: 0.6em; }
+.para-br + .bk-seg::before { content: ''; display: inline-block; width: 1.4em; }
 
 /* A translation's diagram (Ackrill's square of opposition / modal table),
    rendered as a real grid spanning the full English column width. */
