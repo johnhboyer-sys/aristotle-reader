@@ -872,7 +872,7 @@ body {
   vertical-align: top;
 }
 
-/* ── Word popup ───────────────────────────────────────────────────── */
+/* ── Word sidebar ─────────────────────────────────────────────────── */
 
 .popup-backdrop {
   position: fixed;
@@ -881,20 +881,60 @@ body {
   background: transparent;
 }
 
-.popup {
+.word-sidebar {
   position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(22rem, 86vw);
+  background: var(--col-bg);
+  border-left: 1px solid var(--border);
   z-index: 101;
-  background: var(--popup-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--popup-shadow);
-  width: min(480px, calc(100vw - 2rem));
-  max-height: min(70vh, 600px);
   display: flex;
   flex-direction: column;
+  box-shadow: -2px 0 18px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 
+.word-sidebar-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.word-sidebar-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.75rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Reader narrows when word sidebar is open so text isn't covered. */
+.reader-body.word-open {
+  padding-right: calc(min(22rem, 86vw) + 1rem);
+  transition: padding-right 0.22s ease;
+}
+
+/* Mobile: sidebar rises from bottom as a sheet */
+@media (max-width: 680px) {
+  .word-sidebar {
+    top: auto;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    max-height: 72vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.14);
+  }
+  .reader-body.word-open { padding-right: 1rem; }
+}
+
+/* Legacy .popup class kept for FootnotePopup which still floats */
 .popup-header {
   padding: 0.75rem 1rem 0.5rem;
   border-bottom: 1px solid var(--border);

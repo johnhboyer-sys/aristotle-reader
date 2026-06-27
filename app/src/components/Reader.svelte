@@ -541,7 +541,7 @@
   }
 
   // Active popup state
-  let popup: { token: Token; anchor: { x: number; y: number } } | null = null;
+  let popup: { token: Token } | null = null;
   // Active footnote popup (third-translation `[^N]` markers). Opens on hover,
   // with a short close-delay so the cursor can travel from the marker into the
   // popup without it vanishing; click/Enter also open it (touch + keyboard).
@@ -682,11 +682,7 @@
 
   function handleTokenClick(e: MouseEvent, token: Token) {
     e.stopPropagation();
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    popup = {
-      token,
-      anchor: { x: rect.left, y: rect.bottom },
-    };
+    popup = { token };
   }
 
   function closePopup() {
@@ -830,6 +826,7 @@
     </div>
   {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main"
+    class:word-open={!!popup}
     style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}"
     on:copy={handleCopy}>
     <div class="reader-controls">
@@ -1112,7 +1109,6 @@
   <WordPopup
     {work}
     token={popup.token}
-    anchor={popup.anchor}
     onClose={closePopup}
   />
 {/if}
