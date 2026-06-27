@@ -18,7 +18,8 @@ def _stage1(manifest):
     # build/stage1 is single-work scratch; drop any secondary-translation chunks
     # left by a previous work's build so stage7 never emits a stale overlay. It
     # is rewritten below only when this work declares english.secondary.
-    for scratch in ("ross_chunks.json", "third_chunks.json", "third_footnotes.json"):
+    for scratch in ("ross_chunks.json", "third_chunks.json", "third_footnotes.json",
+                    "overlays.json"):
         (BUILD_DIR / "stage1" / scratch).unlink(missing_ok=True)
 
     chapters_cfg = manifest.data.get("chapters", {})
@@ -74,20 +75,48 @@ def _stage1(manifest):
         # english.secondary, align it onto the spine via the Bekker-milestoned
         # primary as reference (writing the standoff map stage1_ross reads for
         # real ticks) then chunk it; otherwise the work ships primary-only.
-        if (manifest.data.get("english") or {}).get("secondary"):
-            from .align.aligner import align as align_secondary
-            from .align.reference import default_target
+        sec = (manifest.data.get("english") or {}).get("secondary")
+        if sec:
+            # Tier 0 chapter overlay (no gloss aligner). An archive secondary
+            # whose "Part" divisions ARE the Bekker chapters (e.g. Rhetoric:
+            # Freese primary on the perseus path, Roberts secondary) is placed
+            # straight onto the grc-aligned chapter spine via build_overlay —
+            # the same overlay the archive path builds — so a milestoned primary
+            # can carry a chapter-anchored secondary without a gloss map. Used
+            # only when no gloss map exists for this version (EN's Ross has one,
+            # so it keeps the reference-aligner path below) and the grc chapter
+            # override is present. build_overlay still honours an anchors.yaml
+            # (Tier 1) if the secondary later gains one.
+            from .stage1_ross import _load_align_map
+            tier0 = (sec.get("model") == "archive"
+                     and sec.get("chapter_marker")
+                     and override is not None
+                     and not _load_align_map(manifest.work_id, sec["id"]))
+            if tier0:
+                from . import stage1_archive
+                ross = stage1_archive.build_overlay(spine, override, sec,
+                                                    manifest.work_id)
+                (BUILD_DIR / "stage1" / "ross_chunks.json").write_text(
+                    json.dumps(ross, ensure_ascii=False, indent=1),
+                    encoding="utf-8")
+                placed = sum(1 for v in ross.values()
+                             if any(p["text"].strip() for p in v))
+                print(f"  ross (Tier 0 chapter overlay): segments_with_text="
+                      f"{placed} pieces={sum(len(v) for v in ross.values())}")
+            else:
+                from .align.aligner import align as align_secondary
+                from .align.reference import default_target
 
-            version_id, prose = default_target(manifest.work_id)
-            stats = align_secondary(manifest.work_id, version_id=version_id,
-                                    target_prose=prose)
-            print(f"  align({version_id}): chapters={stats['chapters']} "
-                  f"anchors={stats['anchors']} tiers={stats['tiers']} "
-                  f"review={stats['review']}")
-            ross_path = stage1_ross.run(manifest, spine, english)
-            ross = json.loads(ross_path.read_text(encoding="utf-8"))
-            print(f"  ross: segments_with_text={len(ross)} "
-                  f"pieces={sum(len(v) for v in ross.values())}")
+                version_id, prose = default_target(manifest.work_id)
+                stats = align_secondary(manifest.work_id, version_id=version_id,
+                                        target_prose=prose)
+                print(f"  align({version_id}): chapters={stats['chapters']} "
+                      f"anchors={stats['anchors']} tiers={stats['tiers']} "
+                      f"review={stats['review']}")
+                ross_path = stage1_ross.run(manifest, spine, english)
+                ross = json.loads(ross_path.read_text(encoding="utf-8"))
+                print(f"  ross: segments_with_text={len(ross)} "
+                      f"pieces={sum(len(v) for v in ross.values())}")
         # A third translation (NE Ostwald) whose Markdown carries the Bekker
         # apparatus inline — parsed straight into a real per-line gutter, no
         # aligner needed (see stage1_ostwald). Writes third_chunks.json plus a
@@ -96,6 +125,14 @@ def _stage1(manifest):
             from . import stage1_ostwald
 
             stage1_ostwald.run(manifest, spine, english)
+        # Additional overlays (4th translation onward) — chapter-marker archive
+        # overlays placed on the grc chapter spine, no aligner. Needs the grc
+        # override; perseus-primary works without one carry none.
+        from . import stage1_archive
+        ov = stage1_archive.run_overlays(manifest, spine, override or [])
+        if ov:
+            print(f"  overlays: {', '.join(ov)} "
+                  f"({sum(sum(len(v) for v in c.values()) for c in ov.values())} pieces)")
     n_lines = sum(len(s["lines"]) for s in spine["segments"])
     print(f"stage1: segments={len(spine['segments'])} lines={n_lines} "
           f"unassigned={len(spine['unassigned_lines'])}")

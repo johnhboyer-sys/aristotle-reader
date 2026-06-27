@@ -64,6 +64,10 @@ export interface Segment {
   // Optional third translation (same overlay shape as ross), e.g. Categories'
   // Ackrill beside Edghill + Taylor. Absent in works with fewer translations.
   third?: RossPiece[];
+  // Any further overlay translations (the 4th onward), keyed by translation id.
+  // Same overlay shape as ross/third. Lets a work carry an unbounded number of
+  // chapter-anchored secondary translations beyond the fixed ross/third slots.
+  overlays?: Record<string, RossPiece[]>;
 }
 
 export interface ChapterRef {

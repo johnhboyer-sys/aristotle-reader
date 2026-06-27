@@ -6,15 +6,18 @@
 // `id` is the URL slug AND the data directory name; it uses the standard
 // scholarly abbreviation (EN = Ethica Nicomachea, DA = De Anima).
 //
-// `translations[].slot` says which emitted field the reader renders for that
-// translation: 'english' is the primary parallel chunk (Rackham / Smith),
-// 'ross' is the secondary chapter-anchored overlay (Ross / Hicks).
+// `translations[].slot` says which emitted segment field the reader renders for
+// that translation: 'english' is the primary parallel chunk (Rackham / Smith),
+// 'ross' the secondary chapter-anchored overlay (Ross / Hicks), 'third' an
+// optional third overlay (e.g. Ackrill), and 'overlay' any further overlay
+// (4th onward) read from seg.overlays[id] — so a work can carry any number of
+// translations. The picker lists them in registry order.
 
 export interface TranslationRef {
   id: string;
   name: string;     // full citation, for the picker + attribution
   short: string;    // chip label
-  slot: 'english' | 'ross' | 'third';
+  slot: 'english' | 'ross' | 'third' | 'overlay';
   // Copyright-encumbered translations carried only in the local/full build.
   // The public deploy sets PUBLIC_HIDE_PRIVATE=1 to drop them from the registry
   // (and is built from the work's -public manifest, so their text is absent too).
@@ -99,6 +102,7 @@ export const WORKS: Work[] = [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
       { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
       ...ACKRILL,   // dropped from the public build (see HIDE_PRIVATE above)
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
     blurb: 'Aristotle on the ten kinds of predication — the opening work of the Organon.',
   },
@@ -121,6 +125,7 @@ export const WORKS: Work[] = [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
       { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
       ...ACKRILL,   // dropped from the public build (see HIDE_PRIVATE above)
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
     blurb: 'Aristotle on statements, truth, negation, and future contingents — the second work of the Organon.',
   },
@@ -457,6 +462,7 @@ export const WORKS: Work[] = [
     },
     translations: [
       { id: 'jenkinson', name: 'A. J. Jenkinson (Oxford, 1928)', short: 'Jenkinson', slot: 'english' },
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'ross' },
     ],
     blurb: 'Aristotle’s theory of the syllogism and deductive inference, in two books.',
   },
@@ -472,8 +478,13 @@ export const WORKS: Work[] = [
       short: 'Ross (OCT, 1964)',
       full: 'W. D. Ross, ed. Aristotelis analytica priora et posteriora. Oxford: Clarendon Press, 1964.',
     },
+    // Mure (Oxford, 1928) primary + Bouchier (Blackwell, 1901) overlay — both PD.
+    // Bouchier is a Tier 0 secondary: "Part" divisions match the 34/19 Bekker
+    // chapters, pinned to the Greek spine; gutter interpolated (no anchors.yaml).
     translations: [
       { id: 'mure', name: 'G. R. G. Mure (Oxford, 1928)', short: 'Mure', slot: 'english' },
+      { id: 'bouchier', name: 'E. S. Bouchier (Blackwell, 1901)', short: 'Bouchier', slot: 'ross' },
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'third' },
     ],
     blurb: 'Aristotle on demonstration, scientific knowledge, and first principles, in two books.',
   },
@@ -491,6 +502,7 @@ export const WORKS: Work[] = [
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'ross' },
     ],
     blurb: 'Aristotle’s manual of dialectical argument and the topoi, in eight books.',
   },
@@ -508,6 +520,7 @@ export const WORKS: Work[] = [
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'ross' },
     ],
     blurb: 'Aristotle on fallacies and sophistical argument — the closing work of the Organon, in thirty-four chapters.',
   },
@@ -601,8 +614,12 @@ export const WORKS: Work[] = [
       short: 'Ross (OCT, 1959)',
       full: 'W. D. Ross, ed. Aristotelis ars rhetorica. Oxford: Clarendon Press, 1959.',
     },
+    // Freese (Loeb, 1926) primary + Roberts (Oxford, 1924) overlay — both PD.
+    // Roberts is a Tier 0 secondary: "Part" divisions match the 15/26/19 Bekker
+    // chapters, pinned to the Greek spine; gutter interpolated (no anchors.yaml).
     translations: [
       { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
+      { id: 'roberts', name: 'W. Rhys Roberts (Oxford, 1924)', short: 'Roberts', slot: 'ross' },
     ],
     blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
   },
@@ -618,8 +635,12 @@ export const WORKS: Work[] = [
       short: 'Kassel (OCT, 1966)',
       full: 'R. Kassel, ed. Aristotelis de arte poetica liber. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
     },
+    // Fyfe (Loeb, 1932) primary + Butcher (Macmillan, 1895) overlay — both PD.
+    // Butcher is a Tier 0 secondary: chapters pinned to the Greek spine, gutter
+    // interpolated (no anchors.yaml).
     translations: [
       { id: 'fyfe', name: 'W. H. Fyfe (Loeb, 1932)', short: 'Fyfe', slot: 'english' },
+      { id: 'butcher', name: 'S. H. Butcher (Macmillan, 1895)', short: 'Butcher', slot: 'ross' },
     ],
     blurb: 'Aristotle on poetry and tragedy — the founding work of literary theory.',
   },

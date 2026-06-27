@@ -126,11 +126,12 @@ def chapter_ranges(spine, chapters) -> dict[tuple, str]:
 
 
 def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
-               third=None) -> list[dict]:
+               third=None, overlays=None) -> list[dict]:
     tokens_by_id = {s["id"]: s for s in tokens_doc["segments"]}
     english_by_id = {c["id"]: c for c in english["chunks"]}
     ross = ross or {}
     third = third or {}
+    overlays = overlays or {}
     chapters_by_col: dict[tuple, list[dict]] = defaultdict(list)
     for ch in english.get("chapters", []):
         chapters_by_col[(ch["book"], ch["column"])].append(ch)
@@ -176,6 +177,17 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
                 **({"ross": ross[seg["id"]]} if ross.get(seg["id"]) else {}),
                 # Optional third translation (same overlay shape as ross).
                 **({"third": third[seg["id"]]} if third.get(seg["id"]) else {}),
+                # Any further overlays (4th translation onward), keyed by
+                # translation id: { <id>: [pieces] }. Same overlay shape as ross.
+                **(
+                    {"overlays": ov}
+                    if (ov := {
+                        tid: chunks[seg["id"]]
+                        for tid, chunks in overlays.items()
+                        if chunks.get(seg["id"])
+                    })
+                    else {}
+                ),
             }
         )
     stats = []
@@ -233,6 +245,8 @@ def run(manifest: Manifest) -> Path:
     ross = json.loads(ross_path.read_text(encoding="utf-8")) if ross_path.exists() else {}
     third_path = BUILD_DIR / "stage1" / "third_chunks.json"
     third = json.loads(third_path.read_text(encoding="utf-8")) if third_path.exists() else {}
+    overlays_path = BUILD_DIR / "stage1" / "overlays.json"
+    overlays = json.loads(overlays_path.read_text(encoding="utf-8")) if overlays_path.exists() else {}
     # A third translation may ship footnotes (NE Ostwald): a {N: html} map the
     # reader loads to fill the footnote popups. Emit it alongside the books.
     footnotes_path = BUILD_DIR / "stage1" / "third_footnotes.json"
@@ -240,7 +254,7 @@ def run(manifest: Manifest) -> Path:
         shutil.copy(footnotes_path, out_dir / "footnotes.json")
 
     range_map = chapter_ranges(spine, english.get("chapters", []))
-    book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross, third)
+    book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross, third, overlays)
     analyses_stats = emit_analyses(out_dir)
 
     # Per-book ordered chapter list for navigation (Work → Book → Chapter).

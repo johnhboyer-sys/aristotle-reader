@@ -248,4 +248,29 @@ def run(manifest: Manifest, spine: dict, chapters: list[dict]) -> tuple[Path, Pa
     (out_dir / "third_chunks.json").write_text(
         json.dumps(third_chunks, ensure_ascii=False, indent=1), encoding="utf-8"
     )
+    run_overlays(manifest, spine, chapters)
     return eng_path, align_path
+
+
+def run_overlays(manifest: Manifest, spine: dict, chapters: list[dict]) -> dict:
+    """Build any *additional* overlay translations (the 4th onward, beyond the
+    english/ross/third slots) declared as `english.overlays: [cfg, ...]`, and
+    write them keyed by translation id to build/stage1/overlays.json
+    ({id: {seg_id: [pieces]}}). Each is an archive chapter-marker overlay (same
+    build_overlay path as ross/third), so a work can carry an unbounded number of
+    chapter-anchored secondary translations. Always (re)written — empty {} when a
+    work declares none — so a prior work's overlays can't leak through the shared
+    scratch file. Requires the grc chapter spine; with no chapters (no override)
+    overlays are skipped.
+    """
+    out_dir = BUILD_DIR / "stage1"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    overlays: dict[str, dict] = {}
+    cfgs = (manifest.data.get("english") or {}).get("overlays") or []
+    if cfgs and chapters:
+        for cfg in cfgs:
+            overlays[cfg["id"]] = build_overlay(spine, chapters, cfg, manifest.work_id)
+    (out_dir / "overlays.json").write_text(
+        json.dumps(overlays, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    return overlays

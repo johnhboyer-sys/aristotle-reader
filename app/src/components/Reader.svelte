@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, type Segment, type GreekLine, type Token, type BookData } from '../lib/data';
+  import { fetchBook, parseBekker, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
-  import { getWork, visibleTranslations } from '../lib/works';
+  import { getWork, visibleTranslations, type TranslationRef } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
 
@@ -17,13 +17,34 @@
 
   const workMeta = getWork(work);
   const translations = workMeta ? visibleTranslations(workMeta) : [];
-  // The display slots the reader can render: the primary parallel chunk
-  // ('english'), the secondary chapter-anchored overlay ('ross'), and an
-  // optional third overlay ('third', e.g. Categories' Ackrill).
+  // The reader can render any number of translations. The primary parallel
+  // chunk is the 'english' slot; every other translation is a chapter-anchored
+  // overlay read from its segment field (ross / third / overlays[id]).
+  // `secondaries` is the ordered list of non-primary translations.
   const engSlot = translations.find(t => t.slot === 'english');
-  const rossSlot = translations.find(t => t.slot === 'ross');
-  const thirdSlot = translations.find(t => t.slot === 'third');
-  const canCompare = !!engSlot && !!rossSlot;
+  const thirdSlot = translations.find(t => t.slot === 'third');  // bears footnotes/tables
+  const secondaries = translations.filter(t => t.slot !== 'english');
+  const canCompare = translations.length >= 2;
+  // Overlay pieces for a translation in a segment, selected by its slot.
+  const piecesFor = (seg: Segment, t: TranslationRef | undefined | null): RossPiece[] => {
+    if (!t) return [];
+    if (t.slot === 'ross') return seg.ross ?? [];
+    if (t.slot === 'third') return seg.third ?? [];
+    if (t.slot === 'overlay') return seg.overlays?.[t.id] ?? [];
+    return [];
+  };
+  const transById = (id: string | null | undefined): TranslationRef | null =>
+    id ? (translations.find(t => t.id === id) ?? null) : null;
+
+  // Compare mode shows two translations side by side; which two is chosen in the
+  // settings sidebar. Defaults: primary + first secondary. Persisted per work.
+  let compareLeft: string = engSlot?.id ?? translations[0]?.id ?? 'english';
+  let compareRight: string = secondaries[0]?.id ?? translations[1]?.id ?? compareLeft;
+  const CMPL_KEY = `reader-cmpl-${work}`;
+  const CMPR_KEY = `reader-cmpr-${work}`;
+  function saveCompare() {
+    try { localStorage.setItem(CMPL_KEY, compareLeft); localStorage.setItem(CMPR_KEY, compareRight); } catch {}
+  }
 
   // Seeded from the build-time prop so SSR renders the text; stays empty (and
   // `loading` true) only in the fetch-fallback path.
@@ -44,19 +65,20 @@
   // saved choice or ?trans= query param overrides this in onMount.
   const defaultTrans = translations.find(t => t.id === workMeta?.defaultTranslation)?.id;
   let trans: string = defaultTrans ?? engSlot?.id ?? translations[0]?.id ?? 'english';
-  $: selectedSlot = trans === 'compare'
-    ? null
-    : (translations.find(t => t.id === trans)?.slot ?? 'english');
-  // Whether the translation(s) currently shown actually carry any approximate
-  // (interpolated) Bekker ticks — drives the gutter disclaimer. Overlay
-  // translations whose gutter is fully anchored show no approximate ticks, so
-  // the note is suppressed for them.
-  $: shownSlots = trans === 'compare' ? ['english', 'ross'] : [selectedSlot];
-  $: hasApproxTicks = view !== 'greek' && segments.some((seg) =>
-    (shownSlots.includes('english') && seg.english?.bekker?.some((t) => !t.real)) ||
-    (shownSlots.includes('ross') && seg.ross?.some((p) => p.bekker?.some((t) => !t.real))) ||
-    (shownSlots.includes('third') && seg.third?.some((p) => p.bekker?.some((t) => !t.real)))
-  );
+  // The translation ids currently on screen: the single selection, or the two
+  // compare columns. Drives the gutter disclaimer and the citation strip.
+  $: shownTransIds = trans === 'compare' ? [compareLeft, compareRight] : [trans];
+  // Whether a translation carries any approximate (interpolated) Bekker ticks in
+  // a segment — overlays whose gutter is fully anchored show none, so the note
+  // is suppressed for them.
+  const transApprox = (seg: Segment, id: string): boolean => {
+    const t = transById(id);
+    if (!t) return false;
+    if (t.slot === 'english') return !!seg.english?.bekker?.some((x) => !x.real);
+    return piecesFor(seg, t).some((p) => p.bekker?.some((x) => !x.real));
+  };
+  $: hasApproxTicks = view !== 'greek'
+    && segments.some((seg) => shownTransIds.some((id) => transApprox(seg, id)));
   const TRANS_KEY = `reader-trans-${work}`;
   const CITE_KEY  = 'reader-cite-copy';
   let citeCopy = true;
@@ -346,7 +368,7 @@
   // flowParts). A GreekLine may be a partial slice of a real line (cont = its
   // tail half, after a mid-line chapter split): it suppresses the repeated id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; rossFlow: FlowPart[]; thirdFlow: FlowPart[]; thirdTables: { n: number; rows: string[][] }[]; }
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]>; }
   // EnrichedBlock annotates each block with the chapter it belongs to (tracking
   // across segments so continuation blocks know their chapter too).
   interface EnrichedBlock extends Block { currentChapter: string; }
@@ -467,29 +489,34 @@
         .sort((x, y) => x.off - y.off);
       return flowParts(slice, ticks);
     };
-    // Ross slices for this column, paired to blocks: the continuation slice
-    // (a chapter begun in an earlier column) and one per chapter that starts
-    // here. Each slice lays out as flowing prose, its Bekker numbers floated into
-    // the margin at exact offsets.
-    const rossPieces = seg.ross ?? [];
-    const rossFlowOf = (p: typeof rossPieces[number] | undefined): FlowPart[] =>
+    // Overlay slices for each secondary translation, paired to blocks: the
+    // continuation slice (a chapter begun in an earlier column) and one per
+    // chapter that starts here. Each lays out as flowing prose with its Bekker
+    // numbers floated into the margin at exact offsets. Keyed by translation id
+    // so any number of overlays render (the 'third'/footnote-bearing one also
+    // carries diagram tables).
+    const secPieces = secondaries.map((t) => ({ t, pieces: piecesFor(seg, t) }));
+    const flowOf = (p: RossPiece | undefined): FlowPart[] =>
       (!p || !p.text) ? [] : flowParts(p.text, (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset })));
-    const rossFlowCont = () => rossFlowOf(rossPieces.find(p => p.cont) ?? rossPieces[0]);
-    const rossFlowFor = (chapter: string) => rossFlowOf(rossPieces.find(p => !p.cont && p.chapter === chapter));
-    // Third translation overlay (Ostwald / Ackrill), same flowing-prose shape;
-    // it adds clickable footnote markers and, for Ackrill, diagram tables.
-    const thirdPieces = seg.third ?? [];
-    const thirdFlowOf = (p: typeof thirdPieces[number] | undefined): FlowPart[] =>
-      (!p || !p.text) ? [] : flowParts(p.text, (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset })));
-    const thirdFlowCont = () => thirdFlowOf(thirdPieces.find(p => p.cont) ?? thirdPieces[0]);
-    const thirdFlowFor = (chapter: string) => thirdFlowOf(thirdPieces.find(p => !p.cont && p.chapter === chapter));
-    const thirdTablesOf = (p: typeof thirdPieces[number] | undefined) => p?.tables ?? [];
-    const thirdContTables = () => thirdTablesOf(thirdPieces.find(p => p.cont) ?? thirdPieces[0]);
-    const thirdTablesFor = (chapter: string) => thirdTablesOf(thirdPieces.find(p => !p.cont && p.chapter === chapter));
+    const pieceCont = (pieces: RossPiece[]) => pieces.find(p => p.cont) ?? pieces[0];
+    const pieceFor = (pieces: RossPiece[], chapter: string | null) =>
+      pieces.find(p => !p.cont && p.chapter === chapter);
+    // {transId: flow} + {transId: tables} for a block, picking each overlay's
+    // continuation slice or the slice for `chapter` (null → continuation).
+    const overlaysFor = (chapter: string | null): { oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]> } => {
+      const oflows: Record<string, FlowPart[]> = {};
+      const otables: Record<string, { n: number; rows: string[][] }[]> = {};
+      for (const { t, pieces } of secPieces) {
+        const p = chapter === null ? pieceCont(pieces) : pieceFor(pieces, chapter);
+        oflows[t.id] = flowOf(p);
+        if (p?.tables?.length) otables[t.id] = p.tables;
+      }
+      return { oflows, otables };
+    };
 
     const starts = (seg.chapterStarts ?? []).slice()
       .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, flow: flowFor(0, text.length), rossFlow: rossFlowCont(), thirdFlow: thirdFlowCont(), thirdTables: thirdContTables() }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, flow: flowFor(0, text.length), ...overlaysFor(null) }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -524,7 +551,7 @@
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        flow: flowFor(0, starts[0].engOffset), rossFlow: rossFlowCont(), thirdFlow: thirdFlowCont(), thirdTables: thirdContTables(),
+        flow: flowFor(0, starts[0].engOffset), ...overlaysFor(null),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
@@ -534,7 +561,7 @@
       blocks.push({
         chapter: b.chapter, bekker: b.bekker,
         lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
-        flow: flowFor(b.engOffset, engTo), rossFlow: rossFlowFor(b.chapter), thirdFlow: thirdFlowFor(b.chapter), thirdTables: thirdTablesFor(b.chapter),
+        flow: flowFor(b.engOffset, engTo), ...overlaysFor(b.chapter),
       });
     }
     return blocks;
@@ -622,6 +649,12 @@
     const validTrans = new Set([...translations.map(t => t.id), ...(canCompare ? ['compare'] : [])]);
     const savedTrans = (() => { try { return localStorage.getItem(TRANS_KEY); } catch { return null; } })();
     if (savedTrans && validTrans.has(savedTrans)) trans = savedTrans;
+    // Restore the chosen compare pair (set in the settings sidebar).
+    const transIds = new Set(translations.map(t => t.id));
+    const savedL = (() => { try { return localStorage.getItem(CMPL_KEY); } catch { return null; } })();
+    const savedR = (() => { try { return localStorage.getItem(CMPR_KEY); } catch { return null; } })();
+    if (savedL && transIds.has(savedL)) compareLeft = savedL;
+    if (savedR && transIds.has(savedR)) compareRight = savedR;
     // The home index links can preselect a view/translation via query params.
     const qView = params.get('view');
     if (qView === 'greek' || qView === 'both' || qView === 'english') view = qView;
@@ -826,6 +859,51 @@
       {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
+
+  <!-- One English column for a translation: the primary's flow (block.flow) or
+       an overlay's (block.oflows[id]), as flowing prose with margin-floated
+       Bekker numbers. The footnote/table-bearing translation ('third' slot)
+       uses renderThird + clickable `[^N]` markers + diagram tables; the rest
+       use plain highlightEng. Works for any number of translations. -->
+  {#snippet transFlow(block: Block, transId: string)}
+    {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
+    {#if flow.length}
+      {#if transId === thirdSlot?.id}
+        <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
+          {#each flow as part}
+            {#if part.text === '\n'}
+              <br class="para-br" />
+            {:else if part.text !== null}
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              <span class="bk-seg">{@html renderThird(part.text)}</span>
+            {:else}
+              <span class="bk-num" class:approx={!part.real}>{part.n}</span>
+              {#each (block.otables[transId] ?? []).filter(t => t.n === part.n) as tbl}
+                <table class="eng-table"><tbody>
+                  {#each tbl.rows as trow}
+                    <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
+                  {/each}
+                </tbody></table>
+              {/each}
+            {/if}
+          {/each}
+        </div>
+      {:else}
+        <div class="ross-prose">
+          {#each flow as part}
+            {#if part.text === '\n'}
+              <br class="para-br" />
+            {:else if part.text !== null}
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              <span class="bk-seg">{@html highlightEng(part.text)}</span>
+            {:else}
+              <span class="bk-num" class:approx={!part.real}>{part.n}</span>
+            {/if}
+          {/each}
+        </div>
+      {/if}
+    {/if}
+  {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:word-open={!!popup}
     style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}"
@@ -836,8 +914,8 @@
           {#if greekSrc}<span class="rc-greek">{greekSrc.full}</span>{/if}
         {:else if trans === 'compare'}
           {#if view === 'both'}<span class="rc-col-spacer" aria-hidden="true"></span>{/if}
-          <span class="rc-col-name">{citeShort(engSlot)}</span>
-          <span class="rc-col-name">{citeShort(rossSlot)}</span>
+          <span class="rc-col-name">{citeShort(transById(compareLeft))}</span>
+          <span class="rc-col-name">{citeShort(transById(compareRight))}</span>
         {:else if view === 'both'}
           <span class="rc-pair">{pairText}</span>
         {:else if selectedTrans}
@@ -925,96 +1003,20 @@
               {/each}
             </div>
 
-            <!-- English column: prose laid out beside its Bekker-line gutter.
-                 Real anchors (column start / ~line 20) are full weight; estimated
-                 ticks are lighter/italic. -->
-            <!-- English column: Ross alone when selected, else Rackham (also the
-                 left English column in Compare). -->
+            <!-- English column: the selected translation (single view), or the
+                 left compare column. Prose laid out beside its Bekker-line
+                 gutter — real anchors full weight, estimates lighter/italic. -->
             <div class="english-col">
-              {#if selectedSlot === 'ross'}
-                {#if block.rossFlow.length}
-                  <!-- Precisely gloss-aligned Ross: flowing prose with Bekker
-                       numbers floated into the margin at their exact offsets. -->
-                  <div class="ross-prose">
-                    {#each block.rossFlow as part}
-                      {#if part.text === '\n'}
-                        <br class="para-br" />
-                      {:else if part.text !== null}
-                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                        <span class="bk-seg">{@html highlightEng(part.text)}</span>
-                      {:else}
-                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
-                      {/if}
-                    {/each}
-                  </div>
-                {/if}
-              {:else if selectedSlot === 'third'}
-                {#if block.thirdFlow.length}
-                  <!-- Third translation as flowing prose with margin-floated
-                       Bekker numbers (same model as the primary/Ross slots). Its
-                       `[^N]` footnote markers are clickable (delegated handler);
-                       any diagram tables follow their anchoring Bekker number. -->
-                  <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
-                    {#each block.thirdFlow as part}
-                      {#if part.text === '\n'}
-                        <br class="para-br" />
-                      {:else if part.text !== null}
-                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                        <span class="bk-seg">{@html renderThird(part.text)}</span>
-                      {:else}
-                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
-                        {#each block.thirdTables.filter(t => t.n === part.n) as tbl}
-                          <table class="eng-table"><tbody>
-                            {#each tbl.rows as trow}
-                              <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
-                            {/each}
-                          </tbody></table>
-                        {/each}
-                      {/if}
-                    {/each}
-                  </div>
-                {/if}
-              {:else}
-                {#if trans === 'compare'}<div class="col-label">{engSlot?.short ?? 'English'}</div>{/if}
-                {#if block.flow.length}
-                  <!-- Primary English: flowing prose with Bekker numbers floated
-                       into the margin at their exact offsets (no sentence-snapping,
-                       no row break). Same flow model as the secondary Ross slot. -->
-                  <div class="ross-prose">
-                    {#each block.flow as part}
-                      {#if part.text === '\n'}
-                        <br class="para-br" />
-                      {:else if part.text !== null}
-                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                        <span class="bk-seg">{@html highlightEng(part.text)}</span>
-                      {:else}
-                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
-                      {/if}
-                    {/each}
-                  </div>
-                {/if}
-              {/if}
+              {#if trans === 'compare'}<div class="col-label">{transById(compareLeft)?.short ?? 'English'}</div>{/if}
+              {@render transFlow(block, trans === 'compare' ? compareLeft : trans)}
             </div>
 
-            <!-- Third column: the secondary translation beside the primary in
-                 Compare (hidden in Greek-only). -->
+            <!-- Right compare column: the second chosen translation beside the
+                 first (hidden in Greek-only). -->
             {#if trans === 'compare' && view !== 'greek'}
               <div class="ross-col">
-                <div class="col-label">{rossSlot?.short ?? ''}</div>
-                {#if block.rossFlow.length}
-                  <div class="ross-prose">
-                    {#each block.rossFlow as part}
-                      {#if part.text === '\n'}
-                        <br class="para-br" />
-                      {:else if part.text !== null}
-                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                        <span class="bk-seg">{@html highlightEng(part.text)}</span>
-                      {:else}
-                        <span class="bk-num" class:approx={!part.real}>{part.n}</span>
-                      {/if}
-                    {/each}
-                  </div>
-                {/if}
+                <div class="col-label">{transById(compareRight)?.short ?? ''}</div>
+                {@render transFlow(block, compareRight)}
               </div>
             {/if}
           </div>
@@ -1048,6 +1050,31 @@
               <option value={t.id}>{t.name}</option>
             {/each}
             {#if canCompare}<option value="compare">Compare both</option>{/if}
+          </select>
+        </label>
+      </div>
+    {/if}
+    {#if canCompare}
+      <!-- Compare pair: which two translations sit side by side when "Compare
+           both" is selected. Mix and match any two. -->
+      <div class="settings-section">
+        <div class="settings-section-label">Compare</div>
+        <!-- svelte-ignore a11y-label-has-associated-control -->
+        <label class="settings-compare-row">
+          <span class="settings-compare-side">Left</span>
+          <select class="settings-select" bind:value={compareLeft} on:change={() => { saveCompare(); setTrans('compare'); }} aria-label="Compare left translation">
+            {#each translations as t}
+              <option value={t.id}>{t.name}</option>
+            {/each}
+          </select>
+        </label>
+        <!-- svelte-ignore a11y-label-has-associated-control -->
+        <label class="settings-compare-row">
+          <span class="settings-compare-side">Right</span>
+          <select class="settings-select" bind:value={compareRight} on:change={() => { saveCompare(); setTrans('compare'); }} aria-label="Compare right translation">
+            {#each translations as t}
+              <option value={t.id}>{t.name}</option>
+            {/each}
           </select>
         </label>
       </div>

@@ -1753,6 +1753,20 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 }
 .settings-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* Compare pair pickers: a "Left"/"Right" label beside each select. */
+.settings-compare-row {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+.settings-compare-row + .settings-compare-row { margin-top: 0.5rem; }
+.settings-compare-side {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: var(--text-dim, #888);
+}
+
 .settings-slider {
   display: block;
   margin-top: 0.1rem;
