@@ -19,16 +19,6 @@
     isMobile = window.matchMedia('(max-width: 680px)').matches;
   });
 
-  // Position floating popup so it stays inside the viewport (mobile only)
-  function clampedPos(x: number, y: number) {
-    const W = 480, H = 600, vw = window.innerWidth, vh = window.innerHeight;
-    return {
-      left: Math.min(x, vw - W - 16) + 'px',
-      top:  Math.min(y + 8, vh - H - 16) + 'px',
-    };
-  }
-  $: pos = clampedPos(anchor.x, anchor.y);
-
   lookupWord(work, token.k)
     .then(r => { analyses = r.analyses; lsj = r.lsj; })
     .catch(e => { error = String(e); })
@@ -43,86 +33,43 @@
 
 <div class="popup-backdrop" on:click={onClose} on:keydown={() => {}} role="presentation"></div>
 
-{#if isMobile}
-  <!-- Mobile: original floating popup -->
-  <div
-    class="popup"
-    style="left:{pos.left};top:{pos.top}"
-    role="dialog"
-    aria-label="Word analysis"
-  >
-    <div class="popup-header">
-      <span class="popup-surface">{token.t}</span>
-      <button class="popup-close" on:click={onClose} aria-label="Close">✕</button>
-    </div>
-    <div class="popup-body">
-      {#if loading}
-        <div class="popup-loading">Looking up…</div>
-      {:else if error}
-        <div class="popup-loading">Error: {error}</div>
-      {:else if analyses.length === 0}
-        <div class="popup-loading">No analysis found for this form.</div>
-      {:else}
-        {#each analyses as a}
-          <div class="analysis-card">
-            <div class="lemma">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
-            <div class="gloss">{a.gloss}</div>
-            <div class="parse">{a.parse}</div>
-          </div>
-        {/each}
-        {#if lsj.length > 0}
-          <div class="lsj-section">
-            <div class="lsj-label">LSJ</div>
-            {#each lsj as entry}
-              <div class="lsj-entry">
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html entry.html}
-              </div>
-            {/each}
-          </div>
-        {/if}
-      {/if}
-    </div>
+<!-- Desktop: slide-in sidebar. Mobile: bottom sheet. Both via CSS. -->
+<aside
+  class="word-sidebar"
+  transition:fly={isMobile ? { y: 600, duration: 260, opacity: 1 } : { x: 420, duration: 220, opacity: 1 }}
+  role="dialog"
+  aria-label="Word analysis"
+>
+  <div class="word-sidebar-head">
+    <span class="popup-surface">{token.t}</span>
+    <button class="settings-close" on:click={onClose} aria-label="Close">×</button>
   </div>
-{:else}
-  <!-- Desktop: slide-in sidebar -->
-  <aside
-    class="word-sidebar"
-    transition:fly={{ x: 420, duration: 220, opacity: 1 }}
-    role="dialog"
-    aria-label="Word analysis"
-  >
-    <div class="word-sidebar-head">
-      <span class="popup-surface">{token.t}</span>
-      <button class="settings-close" on:click={onClose} aria-label="Close">×</button>
-    </div>
-    <div class="word-sidebar-body">
-      {#if loading}
-        <div class="popup-loading">Looking up…</div>
-      {:else if error}
-        <div class="popup-loading">Error: {error}</div>
-      {:else if analyses.length === 0}
-        <div class="popup-loading">No analysis found for this form.</div>
-      {:else}
-        {#each analyses as a}
-          <div class="analysis-card">
-            <div class="lemma">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
-            <div class="gloss">{a.gloss}</div>
-            <div class="parse">{a.parse}</div>
-          </div>
-        {/each}
-        {#if lsj.length > 0}
-          <div class="lsj-section">
-            <div class="lsj-label">LSJ</div>
-            {#each lsj as entry}
-              <div class="lsj-entry">
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html entry.html}
-              </div>
-            {/each}
-          </div>
-        {/if}
+  <div class="word-sidebar-body">
+    {#if loading}
+      <div class="popup-loading">Looking up…</div>
+    {:else if error}
+      <div class="popup-loading">Error: {error}</div>
+    {:else if analyses.length === 0}
+      <div class="popup-loading">No analysis found for this form.</div>
+    {:else}
+      {#each analyses as a}
+        <div class="analysis-card">
+          <div class="lemma">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
+          <div class="gloss">{a.gloss}</div>
+          <div class="parse">{a.parse}</div>
+        </div>
+      {/each}
+      {#if lsj.length > 0}
+        <div class="lsj-section">
+          <div class="lsj-label">LSJ</div>
+          {#each lsj as entry}
+            <div class="lsj-entry">
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html entry.html}
+            </div>
+          {/each}
+        </div>
       {/if}
-    </div>
-  </aside>
-{/if}
+    {/if}
+  </div>
+</aside>
