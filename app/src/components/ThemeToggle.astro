@@ -17,7 +17,6 @@
     var btn = document.querySelector('.theme-toggle');
     if (!btn) return;
     var icon = btn.querySelector('.theme-icon');
-    var mql = window.matchMedia('(prefers-color-scheme: dark)');
 
     // Sleek, stroked line icons (Feather-style) that inherit currentColor, so
     // they read as a refined monochrome glyph rather than a gold emoji.
@@ -56,15 +55,6 @@
       } else {
         applyTheme();
       }
-    });
-
-    // Track the OS while the reader hasn't pinned a choice.
-    mql.addEventListener('change', function (e) {
-      try {
-        if (localStorage.getItem('ne-theme')) return;
-      } catch (err) {}
-      document.documentElement.dataset.theme = e.matches ? 'dark' : 'light';
-      render();
     });
   })();
 </script>
