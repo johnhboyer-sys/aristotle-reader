@@ -52,6 +52,11 @@ _EXAMPLE = re.compile(r",\s+(?=οἷον\b)")
 HARD = {".", ";", ";"}            # . , ; (ascii) , U+037E Greek question mark
 SOFT = {"·", "·"}            # middle dot / ano teleia (mid-level pause)
 
+# Closing brackets/quotes that may TRAIL an ender — they belong to the clause the
+# ender closed, so the split must keep them with the previous segment (else the
+# closer leaks onto the start of the next Greek clause).
+CLOSE = set("])}⟩⟧〉»›") | {'"', "'", "”", "’"}
+
 ALPHA = 0.3   # weight on the length-ratio prior
 BETA = 1.0    # weight on the lexical (gloss↔english) cosine
 DEL = 0.25    # insertion / deletion penalty in the bead DP
@@ -96,7 +101,8 @@ def segment_greek(lines, gloss_map, soft: bool, examples: bool = False) -> tuple
     while i < len(joined):
         if joined[i] in enders:
             j = i
-            while j < len(joined) and (joined[j] in enders or joined[j] == " "):
+            while j < len(joined) and (joined[j] in enders or joined[j] == " "
+                                       or joined[j] in CLOSE):
                 j += 1
             seg = joined[start:j].strip()
             if seg:
