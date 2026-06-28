@@ -1,15 +1,15 @@
 ---
-// Single-book (bookless) works route directly at /<work> — a single treatise of
-// chapters with no book level (Categories, Poetics). Multi-book works are served
-// by src/pages/[work]/book/[n].astro instead.
-import ReaderShell from '../../components/ReaderShell.astro';
-import { WORKS, isBookless } from '../../lib/works';
+// Every work's landing page, served at the bare slug /<work> (e.g. /EN, /Cat).
+// The reader for a work lives at /<work>/book/<n> (bookless works only ever
+// have book 1). See src/components/Landing.astro.
+import Landing from '../../components/Landing.astro';
+import { WORKS } from '../../lib/works';
 import '../../styles/global.css';
 
 export function getStaticPaths() {
-  return WORKS.filter((w) => isBookless(w)).map((w) => ({ params: { work: w.id } }));
+  return WORKS.map((w) => ({ params: { work: w.id } }));
 }
 
 const workId = Astro.params.work!;
 ---
-<ReaderShell workId={workId} n={1} />
+<Landing workId={workId} />

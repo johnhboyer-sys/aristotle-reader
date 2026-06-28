@@ -97,16 +97,16 @@ const hasPrivate = WORKS.some((w) => w.translations.some((t) => t.private));
   </style>
 </head>
 <body>
-  <header class="page-header">
+  <header class="simple-header">
     <div class="header-title">
       <a class="home-link" href={`${base}/`} title="All works">Aristotle</a>
       <span class="title-sep">›</span>
       <span class="header-static">Texts &amp; Licences</span>
     </div>
-    <ThemeToggle />
-    <nav class="book-nav" aria-label="Navigation">
+    <nav class="header-actions" aria-label="Navigation">
       <a href={`${base}/`} class="search-link">All works</a>
       <a href={`${base}/search`} class="search-link">Search</a>
+      <ThemeToggle />
     </nav>
   </header>
 

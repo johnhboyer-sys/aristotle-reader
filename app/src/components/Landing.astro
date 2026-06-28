@@ -1,0 +1,270 @@
+---
+// A work's landing page, served at the bare /<work> slug. An overview that
+// describes the work, credits the Greek source + translations, lists the
+// table of contents (linking into the reader), surfaces the "start reading"
+// editions, and points to in-print modern translations/commentaries we can't
+// host. The reader itself lives at /<work>/book/<n> for every work.
+import { readFileSync } from 'node:fs';
+import ThemeInit from './ThemeInit.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import {
+  getWork, bookLabel, isBookless, workPath, visibleTranslations,
+  furtherReading, inPrintHref,
+} from '../lib/works';
+import { SUPPORT_URL } from '../lib/support';
+import '../styles/global.css';
+
+interface Props { workId: string; }
+const { workId } = Astro.props as Props;
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const work = getWork(workId)!;
+const bookless = isBookless(work);
+
+interface ChapterRef { chapter: string; column: string; line: string; bekker: string; }
+const allChapters: Record<string, ChapterRef[]> = JSON.parse(
+  readFileSync(`public/data/${workId}/chapters.json`, 'utf-8'),
+);
+interface BookOutline { book: number; label: string; chapters: ChapterRef[]; }
+const outline: BookOutline[] = Array.from({ length: work.books }, (_, i) => {
+  const b = i + 1;
+  return { book: b, label: bookLabel(work, b), chapters: allChapters[String(b)] ?? [] };
+});
+const totalChapters = outline.reduce((n, b) => n + b.chapters.length, 0);
+// "N chapters · <Bekker start>–<Bekker end>" for a book's row on the landing.
+const bookSpan = (b: BookOutline) => {
+  const n = b.chapters.length;
+  const first = b.chapters[0]?.bekker.split('–')[0] ?? '';
+  const last = b.chapters.at(-1)?.bekker.split('–').at(-1) ?? '';
+  const range = first && last ? ` · ${first}–${last}` : '';
+  return `${n} chapter${n === 1 ? '' : 's'}${range}`;
+};
+
+const editions = visibleTranslations(work);
+const primary = editions.find((t) => t.id === work.defaultTranslation)
+  ?? editions.find((t) => t.slot === 'english') ?? editions[0];
+const translatorNames = editions.map((t) => t.name.split(' (')[0]);
+const reading = furtherReading(workId);
+const readingTrans = reading.filter((r) => r.kind === 'translation');
+const readingComm = reading.filter((r) => r.kind === 'commentary');
+const readingColl = reading.filter((r) => r.kind === 'collection');
+
+const readHref = (q = '') => `${base}${workPath(workId, 1)}${q}`;
+
+// ── SEO ─────────────────────────────────────────────────────────────────────
+const pageTitle = `${work.title} — Aristotle, in Greek & English`;
+const metaDescription =
+  `${work.title} by Aristotle: the original Greek (${work.greekSource.short})` +
+  ` with English translation` +
+  (translatorNames.length ? ` (${translatorNames.join(', ')})` : '') +
+  `, table of contents, morphology, and Bekker citation. ${work.blurb}`;
+const canonical = Astro.site
+  ? new URL(`${base}${workPath(workId, 1).replace(/\/book\/1$/, '')}/`, Astro.site).href
+  : undefined;
+const ogImage = Astro.site
+  ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Book',
+  name: work.title,
+  ...(work.greekTitle ? { alternateName: work.greekTitle } : {}),
+  author: { '@type': 'Person', name: 'Aristotle' },
+  ...(translatorNames.length
+    ? { translator: translatorNames.map((name) => ({ '@type': 'Person', name })) }
+    : {}),
+  inLanguage: ['grc', 'en'],
+  ...(canonical ? { url: canonical } : {}),
+  numberOfPages: totalChapters,
+  isPartOf: { '@type': 'CreativeWorkSeries', name: 'The Works of Aristotle' },
+  description: work.blurb,
+};
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
+  <title>{pageTitle}</title>
+  <meta name="description" content={metaDescription} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="book" />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={metaDescription} />
+  {canonical && <meta property="og:url" content={canonical} />}
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    .lp-body { max-width: 760px; margin: 0 auto; padding: 2rem 1rem 5rem; font-family: var(--font-english); color: var(--text); }
+    .lp-eyebrow { font-family: var(--font-ui); font-size: 0.8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-mid); margin: 0 0 0.3rem; }
+    .lp-title { font-family: var(--font-english); font-size: 2rem; font-weight: 600; margin: 0 0 0.2rem; line-height: 1.15; }
+    .lp-greek { font-family: var(--font-greek); font-size: 1.15rem; color: var(--text-mid); margin: 0 0 1rem; }
+    .lp-lede { font-size: 1.1rem; line-height: 1.6; margin: 0 0 0.8rem; }
+    .lp-desc { font-size: 0.98rem; line-height: 1.7; color: var(--text-mid); margin: 0 0 1.5rem; }
+    .lp-cta-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0 0 2.5rem; }
+    .lp-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.1rem; border-radius: 6px; text-decoration: none; border: 1px solid var(--border); color: var(--text); transition: transform .08s ease; }
+    .lp-btn:active { transform: scale(0.97); }
+    .lp-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    h2.lp-h { font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700; letter-spacing: .03em; color: var(--accent); margin: 2.2rem 0 0.7rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+    .ed-list, .book-list, .read-list { list-style: none; padding: 0; margin: 0; }
+    .ed-list li { margin: 0 0 0.5rem; }
+    .ed-list a { display: flex; justify-content: space-between; gap: 0.8rem; align-items: baseline; text-decoration: none; color: var(--text); padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 6px; }
+    .ed-list a:hover { border-color: var(--accent); }
+    .ed-name { font-family: var(--font-ui); font-weight: 600; font-size: 0.92rem; }
+    .ed-kind { font-size: 0.82rem; color: var(--text-mid); text-align: right; }
+    .book-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 0.5rem; }
+    .book-list a { display: flex; justify-content: space-between; gap: 0.6rem; align-items: baseline; text-decoration: none; color: var(--text); padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 6px; }
+    .book-list a:hover { border-color: var(--accent); }
+    .bl-label { font-family: var(--font-ui); font-weight: 600; font-size: 0.92rem; }
+    .bl-meta { font-size: 0.78rem; color: var(--text-mid); font-variant-numeric: tabular-nums; text-align: right; }
+    .credits { font-size: 0.9rem; line-height: 1.7; color: var(--text-mid); }
+    .credits a { color: var(--accent); }
+    .read-list li { margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.55; color: var(--text-mid); }
+    .read-list .rk { font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-mid); background: var(--border); border-radius: 3px; padding: 0.08em 0.45em; margin-right: 0.45em; vertical-align: 0.08em; }
+    .read-list a.buy { color: var(--accent); white-space: nowrap; }
+    .lp-note { font-size: 0.82rem; color: var(--text-mid); margin-top: 0.8rem; }
+    .lp-support { margin-top: 2.75rem; }
+  </style>
+</head>
+<body>
+  <header class="simple-header">
+    <div class="header-title">
+      <a class="home-link" href={`${base}/`} title="All works">Aristotle</a>
+      <span class="title-sep">›</span>
+      <span class="header-static">{work.title}</span>
+    </div>
+    <nav class="header-actions" aria-label="Navigation">
+      <a href={`${base}/`} class="search-link">All works</a>
+      <a href={`${base}/search`} class="search-link">Search</a>
+      <ThemeToggle />
+    </nav>
+  </header>
+
+  <main class="lp-body">
+    <p class="lp-eyebrow">Aristotle · {work.abbr}</p>
+    <h1 class="lp-title">{work.title}</h1>
+    {work.greekTitle && <p class="lp-greek">{work.greekTitle}</p>}
+    <p class="lp-lede">{work.blurb}</p>
+    <p class="lp-desc">
+      This edition presents the original Greek ({work.greekSource.short}) side by
+      side with {translatorNames.length > 1 ? 'English translations' : 'an English translation'}
+      {translatorNames.length ? ` (${translatorNames.join(', ')})` : ''} —
+      with click-to-parse morphology, dictionary entries, and exact Bekker
+      citation. {bookless ? `${totalChapters} chapters.` : `${work.books} books, ${totalChapters} chapters.`}
+    </p>
+
+    <div class="lp-cta-row">
+      <a class="lp-btn primary" href={primary ? readHref(`?trans=${primary.id}`) : readHref()}>
+        Start reading →
+      </a>
+      <a class="lp-btn" href={readHref('?view=greek')}>Greek only</a>
+      {editions.length > 1 && <a class="lp-btn" href={readHref('?trans=compare')}>Compare translations</a>}
+    </div>
+
+    <h2 class="lp-h">Read this work</h2>
+    <ul class="ed-list">
+      {editions.map((t) => (
+        <li>
+          <a href={readHref(`?trans=${t.id}`)}>
+            <span class="ed-name">{t.short}</span>
+            <span class="ed-kind">Greek &amp; English · {t.name}</span>
+          </a>
+        </li>
+      ))}
+      {workId === 'EN' && (
+        <li>
+          <a href={`${base}/EN/glossary`}>
+            <span class="ed-name">Glossary of Technical Terms</span>
+            <span class="ed-kind">Ostwald’s Greek–English term glossary</span>
+          </a>
+        </li>
+      )}
+    </ul>
+
+    {!bookless && (
+      <>
+        <h2 class="lp-h">Books</h2>
+        <ul class="book-list">
+          {outline.map((b) => (
+            <li>
+              <a href={`${base}${workPath(workId, b.book)}`}>
+                <span class="bl-label">Book {b.label}</span>
+                <span class="bl-meta">{bookSpan(b)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    <h2 class="lp-h">Greek text &amp; translations</h2>
+    <p class="credits">
+      <strong>Greek:</strong> {work.greekSource.full}<br />
+      <strong>{translatorNames.length > 1 ? 'Translations' : 'Translation'}:</strong>
+      {' '}{editions.map((t) => t.name).join('; ')}.<br />
+      Full source and licence details are on the
+      <a href={`${base}/attribution`}>Texts &amp; Licences</a> page.
+    </p>
+
+    {reading.length > 0 && (
+      <>
+        <h2 class="lp-h">In print</h2>
+        {(readingTrans.length > 0 || readingComm.length > 0) && (
+          <>
+            <p class="credits" style="margin-bottom:0.8rem;">
+              Modern, copyright-protected translations and commentaries we can’t
+              host here, for readers who want to go further:
+            </p>
+            <ul class="read-list">
+              {readingTrans.map((r) => (
+                <li>
+                  <span class="rk">Translation</span><span set:html={r.cite} />{' '}
+                  <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
+                </li>
+              ))}
+              {readingComm.map((r) => (
+                <li>
+                  <span class="rk">Commentary</span><span set:html={r.cite} />{' '}
+                  <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {readingColl.length > 0 && (
+          <>
+            <p class="credits" style="margin:1rem 0 0.8rem;">
+              Prefer a paper copy? These in-print editions carry the translation
+              read here (or a revision of it):
+            </p>
+            <ul class="read-list">
+              {readingColl.map((r) => (
+                <li>
+                  <span class="rk">In print</span><span set:html={r.cite} />{' '}
+                  <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <p class="lp-note">“Find in print” opens a Google Books search for the edition.</p>
+      </>
+    )}
+
+    <section class="support-card lp-support">
+      <div class="eyebrow">Support <span class="gk">χάρις</span></div>
+      <h2>Support the Aristotle Reader</h2>
+      <p>The reader is free and open. A contribution helps defray development costs and keeps it that way.</p>
+      <a class="btn-donate" href={SUPPORT_URL} target="_blank" rel="noopener">Make a gift</a>
+    </section>
+  </main>
+</body>
+</html>

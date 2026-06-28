@@ -56,11 +56,11 @@ const chapterHref = (b: number, chapter: string) =>
 const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
 
 // ── SEO: server-rendered signals ───────────────────────────────────────────
-// The reading text itself is still hydrated client-side (Reader.svelte fetches
-// the book JSON on mount), so until that is server-rendered these are what
-// crawlers reliably see: a canonical URL, a real description, a Schema.org Book
-// record, and a semantic <h1>. See memory `aristotle-seo-ssr-text` for the
-// larger SSR-the-text job this is a down payment on.
+// The reading text is now server-rendered (bookData is read at build above and
+// handed to the Reader island, so the Greek/English lines are in the static
+// HTML, not a "Loading…" placeholder). These tags supply the rest of what
+// crawlers want: a canonical URL, a real description, a Schema.org Book record,
+// a semantic <h1>, and a topical intro paragraph.
 const bookSuffix = bookless ? '' : `, Book ${label}`;
 const primaryTrans =
   work.translations.find((t) => t.slot === 'english') ?? work.translations[0];
@@ -96,6 +96,14 @@ const jsonLd = {
 };
 const h1Text =
   `Aristotle, ${work.title}${bookSuffix} — Greek text with English translation`;
+// A short topical paragraph (the curated one-line blurb, framed with the Greek
+// source and translator) so the page carries real descriptive prose for search
+// snippets and screen readers, distinct from the dense parallel-text body.
+const intro =
+  `${work.title}${bookSuffix} by Aristotle, in the original Greek` +
+  ` (${work.greekSource.short})` +
+  (translatorName ? `, with the English translation of ${translatorName}` : '') +
+  `. ${work.blurb}`;
 ---
 <html lang="en">
 <head>
@@ -126,10 +134,14 @@ const h1Text =
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" media="print" />
 </head>
 <body>
-  <!-- Semantic page heading for search engines and screen readers. Visually
-       hidden because the visible title is the work-switcher control; this gives
-       the document a real, descriptive <h1> without altering the design. -->
-  <h1 class="sr-only">{h1Text}</h1>
+  <!-- Semantic page heading + topical intro for search engines and screen
+       readers. Visually hidden because the visible title is the work-switcher
+       control; this gives the document a real, descriptive <h1> and a prose
+       summary without altering the design. -->
+  <header class="sr-only">
+    <h1>{h1Text}</h1>
+    <p>{intro}</p>
+  </header>
   <header class="page-header">
     <div class="header-bar">
       <button type="button" class="toc-toggle" aria-expanded="false" aria-controls="toc-sidebar">

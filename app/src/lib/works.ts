@@ -663,13 +663,24 @@ export function isBookless(work: Work): boolean {
   return work.books === 1;
 }
 
-// The base-relative path to a work's reader (caller prepends BASE_URL). Bookless
-// works route at /<work>; multi-book works at /<work>/book/<n>. The single
-// source of truth for reader URLs — used by the home index, work switcher,
-// Bekker jump, search jumps, and cross-book outline links.
+// The base-relative path to a work's READER (caller prepends BASE_URL). Every
+// work — bookless or not — reads at /<work>/book/<n>; bookless works only ever
+// have book 1. The bare /<work> slug is the work's landing page (workLanding).
+// The single source of truth for reader URLs — used by the home index, work
+// switcher, Bekker jump, search jumps, and cross-book outline links.
 export function workPath(workId: string, book = 1): string {
+  // Clamp to the work's real book range so a stale/overflow value (e.g. a
+  // remembered book number for a work that is now bookless) can't 404.
   const w = BY_ID.get(workId);
-  return w && isBookless(w) ? `/${workId}` : `/${workId}/book/${book}`;
+  const max = w ? w.books : book;
+  const b = Math.min(Math.max(1, book || 1), max);
+  return `/${workId}/book/${b}`;
+}
+
+// The base-relative path to a work's LANDING page (caller prepends BASE_URL):
+// the bare /<work> slug, an overview of the work that funnels into the reader.
+export function workLanding(workId: string): string {
+  return `/${workId}`;
 }
 
 // Translations visible in the current build. Private (copyright-encumbered)
@@ -677,6 +688,177 @@ export function workPath(workId: string, book = 1): string {
 // (see HIDE_PRIVATE / ACKRILL above); this filter is a runtime backstop.
 export function visibleTranslations(work: Work): TranslationRef[] {
   return work.translations.filter(t => !t.private || !HIDE_PRIVATE);
+}
+
+// ---------------------------------------------------------------------------
+// "In print" — copyright-encumbered modern translations and commentaries we
+// can't host but want to point readers to, shown on each work's landing page.
+// This is curated, additive metadata: a work with no entry simply omits the
+// section. Each item is a citation plus an optional direct `url`; when `url` is
+// absent the landing renders a Google Books search for the citation, so a link
+// always resolves and we never fabricate a product page. John can fill in exact
+// publisher/retailer URLs over time.
+
+export interface FurtherReadingItem {
+  // 'translation'/'commentary' = modern, copyright-protected works we can't host.
+  // 'collection' = an in-print physical edition that CONTAINS the translation we
+  // do host (a Loeb volume, or an anthology like the Basic/Complete Works) — for
+  // readers who want a paper copy of what they're reading here.
+  kind: 'translation' | 'commentary' | 'collection';
+  cite: string;     // full citation, e.g. "Roger Crisp (Cambridge, 2000)"
+  url?: string;     // optional direct purchase/publisher link; else Books search
+}
+
+// Citations may use <em>…</em> around the work's title (rendered as italics on
+// the landing; stripped for the Google Books search link in inPrintHref).
+const FURTHER_READING: Record<string, FurtherReadingItem[]> = {
+  EN: [
+    { kind: 'translation', cite: 'Roger Crisp, <em>Nicomachean Ethics</em> (Cambridge University Press, rev. ed. 2014)' },
+    { kind: 'translation', cite: 'Terence Irwin, <em>Nicomachean Ethics</em> (Hackett, 3rd ed. 2019)' },
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Nicomachean Ethics</em> (The Peripatetic Press, 1975)' },
+    { kind: 'commentary', cite: 'Sarah Broadie & Christopher Rowe, <em>Nicomachean Ethics: Translation, Introduction, and Commentary</em> (Oxford University Press, 2002)' },
+  ],
+  EE: [
+    { kind: 'translation', cite: 'Brad Inwood & Raphael Woolf, <em>Eudemian Ethics</em> (Cambridge University Press, 2013)' },
+    { kind: 'commentary', cite: 'Anthony Kenny, <em>The Eudemian Ethics</em> (Oxford World’s Classics, 2011)' },
+  ],
+  Meta: [
+    { kind: 'translation', cite: 'C. D. C. Reeve, <em>Metaphysics</em> (Hackett, 2016)' },
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Metaphysics</em> (Indiana University Press, 1966)' },
+    { kind: 'commentary', cite: 'W. D. Ross, <em>Aristotle’s Metaphysics: A Revised Text with Introduction and Commentary</em>, 2 vols. (Oxford University Press, 1924)' },
+  ],
+  Pol: [
+    { kind: 'translation', cite: 'C. D. C. Reeve, <em>Politics</em> (Hackett, 2017)' },
+    { kind: 'translation', cite: 'Carnes Lord, <em>The Politics</em> (University of Chicago Press, 2nd ed. 2013)' },
+    { kind: 'translation', cite: 'Hippocrates G. Apostle & Lloyd P. Gerson, <em>Aristotle’s Politics</em> (The Peripatetic Press, 1986)' },
+  ],
+  Phys: [
+    { kind: 'translation', cite: 'Robin Waterfield, <em>Physics</em> (Oxford World’s Classics, 1996)' },
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Physics</em> (Indiana University Press, 1969)' },
+    { kind: 'commentary', cite: 'W. D. Ross, <em>Aristotle’s Physics: A Revised Text with Introduction and Commentary</em> (Oxford University Press, 1936)' },
+  ],
+  DA: [
+    { kind: 'translation', cite: 'Christopher Shields, <em>De Anima</em> (Clarendon Aristotle Series, Oxford University Press, 2016)' },
+    { kind: 'translation', cite: 'Hugh Lawson-Tancred, <em>De Anima (On the Soul)</em> (Penguin Classics, 1986)' },
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s On the Soul</em> (The Peripatetic Press, 1981)' },
+  ],
+  Rhet: [
+    { kind: 'translation', cite: 'George A. Kennedy, <em>On Rhetoric: A Theory of Civic Discourse</em> (Oxford University Press, 2nd ed. 2007)' },
+  ],
+  Poet: [
+    { kind: 'translation', cite: 'Anthony Kenny, <em>Poetics</em> (Oxford World’s Classics, 2013)' },
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, Elizabeth A. Dobbs & Morris A. Parslow, <em>Aristotle’s Poetics</em> (The Peripatetic Press, 1990)' },
+    { kind: 'commentary', cite: 'Stephen Halliwell, <em>The Poetics of Aristotle: Translation and Commentary</em> (University of North Carolina Press, 1987)' },
+  ],
+  Cat: [
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Categories and Propositions (De Interpretatione)</em> (The Peripatetic Press, 1980)' },
+    { kind: 'commentary', cite: 'J. L. Ackrill, <em>Categories and De Interpretatione</em> (Clarendon Aristotle Series, Oxford University Press, 1963)' },
+  ],
+  Int: [
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Categories and Propositions (De Interpretatione)</em> (The Peripatetic Press, 1980)' },
+    { kind: 'commentary', cite: 'J. L. Ackrill, <em>Categories and De Interpretatione</em> (Clarendon Aristotle Series, Oxford University Press, 1963)' },
+  ],
+  APo: [
+    { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Posterior Analytics</em> (The Peripatetic Press, 1981)' },
+    { kind: 'commentary', cite: 'Jonathan Barnes, <em>Posterior Analytics</em> (Clarendon Aristotle Series, Oxford University Press, 2nd ed. 1994)' },
+  ],
+};
+
+// ── In-print editions that contain the (public-domain) translation we host ───
+// Each entry names WHICH hosted translation a given print edition carries, so
+// the granularity is per-work, not a blanket "complete works" pointer.
+
+// The Oxford Translation translator we host for a work — the text that McKeon's
+// Basic Works reprints and that Barnes's Revised Oxford Translation revises.
+// Works whose hosted English is NOT from the Oxford Translation (Rhetoric/Freese
+// and Poetics/Fyfe are Loeb; Eudemian Ethics) are absent here.
+const OXFORD_TRANS: Record<string, string> = {
+  Cat: 'E. M. Edghill', Int: 'E. M. Edghill',
+  APr: 'A. J. Jenkinson', APo: 'G. R. G. Mure',
+  Top: 'W. A. Pickard-Cambridge', SE: 'W. A. Pickard-Cambridge',
+  Phys: 'R. P. Hardie & R. K. Gaye', Cael: 'J. L. Stocks',
+  GC: 'H. H. Joachim', Mete: 'E. W. Webster', DA: 'J. A. Smith',
+  Sens: 'J. I. Beare', Mem: 'J. I. Beare', Somn: 'J. I. Beare',
+  Insomn: 'J. I. Beare', DivSomn: 'J. I. Beare',
+  Long: 'G. R. T. Ross', Juv: 'G. R. T. Ross',
+  HA: 'D’Arcy W. Thompson', PA: 'William Ogle',
+  MA: 'A. S. L. Farquharson', IA: 'A. S. L. Farquharson', GA: 'Arthur Platt',
+  Meta: 'W. D. Ross', EN: 'W. D. Ross', Pol: 'Benjamin Jowett',
+};
+
+// McKeon's Basic Works reprints the original Oxford Translation of these major
+// treatises complete and in the same translator's version we host.
+const MCKEON_WORKS = new Set(['Cat', 'Int', 'APo', 'Phys', 'DA', 'Meta', 'EN', 'Pol']);
+
+// Works where Barnes's Revised Oxford Translation SUBSTITUTED a fresh translation
+// (Ackrill for Categories/De Interpretatione, Barnes's own for the Posterior
+// Analytics) rather than revising the one we host — so it does not contain ours.
+const BARNES_SUBSTITUTED = new Set(['Cat', 'Int', 'APo']);
+
+// Works whose hosted English IS a Loeb translation still sold in print: the
+// facing-page Loeb is the paper edition of the very text shown here.
+const LOEB_HOSTED: Record<string, string> = {
+  EN: 'H. Rackham, <em>Nicomachean Ethics</em>, Loeb Classical Library 73 (Harvard University Press)',
+  Rhet: 'J. H. Freese, <em>Art of Rhetoric</em>, Loeb Classical Library 193 (Harvard University Press; rev. Gisela Striker, 2020)',
+  Poet: 'Aristotle, <em>Poetics</em>, Loeb Classical Library 199 (Harvard University Press)',
+};
+
+// Public-domain translations we host that the Prometheus Trust keeps in print in
+// its Thomas Taylor Series — the specific reprint of the very text shown here.
+const PROMETHEUS_HOSTED: Record<string, string> = {
+  Cat: 'Thomas Taylor, trans., <em>The Organon, or Logical Treatises of Aristotle</em>, Thomas Taylor Series (Prometheus Trust)',
+  Int: 'Thomas Taylor, trans., <em>The Organon, or Logical Treatises of Aristotle</em>, Thomas Taylor Series (Prometheus Trust)',
+};
+
+// C. D. C. Reeve's new complete translation (Hackett) is his OWN translation —
+// it contains none of the public-domain translations we host — so it is listed
+// among the modern translations, not as an edition of the text read here.
+const REEVE_COMPLETE: FurtherReadingItem = {
+  kind: 'translation',
+  cite: 'C. D. C. Reeve, trans., in <em>Aristotle: The Complete Works</em>, 2 vols. (Hackett, 2024)',
+};
+
+function collectionsFor(workId: string): FurtherReadingItem[] {
+  const out: FurtherReadingItem[] = [];
+  if (LOEB_HOSTED[workId]) {
+    out.push({ kind: 'collection', cite: `${LOEB_HOSTED[workId]} — the print edition of the translation read here` });
+  }
+  if (PROMETHEUS_HOSTED[workId]) {
+    out.push({ kind: 'collection', cite: `${PROMETHEUS_HOSTED[workId]} — the in-print reprint of the translation read here` });
+  }
+  const ox = OXFORD_TRANS[workId];
+  if (ox && MCKEON_WORKS.has(workId)) {
+    out.push({ kind: 'collection', cite: `${ox}’s translation, found in Richard McKeon, ed., <em>The Basic Works of Aristotle</em> (Random House, 1941; repr. Modern Library, 2001)` });
+  }
+  if (ox && !BARNES_SUBSTITUTED.has(workId)) {
+    out.push({ kind: 'collection', cite: `${ox}’s translation, revised, found in Jonathan Barnes, ed., <em>The Complete Works of Aristotle: The Revised Oxford Translation</em>, 2 vols. (Princeton University Press, 1984)` });
+  }
+  return out;
+}
+
+// In-print editions for a work's landing page: curated modern translations and
+// commentaries, plus the print collections that contain the hosted translation.
+// Items without a direct `url` get a Google Books search link.
+// Hippocrates G. Apostle's translations (originally Peripatetic Press / Indiana
+// University Press) are reprinted by Thomas More College Press; link those
+// "Find in print" buttons straight to its Peripatetic Press catalog.
+const PERIPATETIC_URL = 'https://press.thomasmorecollege.edu/product-category/books/the-peripatetic-press/';
+
+export function furtherReading(workId: string): FurtherReadingItem[] {
+  const curated = (FURTHER_READING[workId] ?? []).map((r) =>
+    !r.url && /Apostle/.test(r.cite) ? { ...r, url: PERIPATETIC_URL } : r,
+  );
+  // Reeve's complete works applies to every work, but skip it where a specific
+  // Reeve volume is already listed (Metaphysics, Politics) to avoid duplication.
+  const reeve = curated.some((r) => /Reeve/.test(r.cite)) ? [] : [REEVE_COMPLETE];
+  return [...curated, ...reeve, ...collectionsFor(workId)];
+}
+
+// A link that always resolves to where the cited edition can be found/bought.
+// The cite may carry <em> title markup, so strip tags before building the query.
+export function inPrintHref(item: FurtherReadingItem): string {
+  const plain = item.cite.replace(/<[^>]+>/g, '');
+  return item.url ?? `https://www.google.com/search?tbm=bks&q=${encodeURIComponent(plain)}`;
 }
 
 // ---------------------------------------------------------------------------
