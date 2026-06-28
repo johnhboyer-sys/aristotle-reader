@@ -4,6 +4,10 @@ import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
 import { WORKS } from '../lib/works';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+// True only in the local/full build, where copyright-encumbered overlays are
+// carried; the public deploy (PUBLIC_HIDE_PRIVATE=1) drops them entirely, so the
+// "local only" legend below is suppressed there.
+const hasPrivate = WORKS.some((w) => w.translations.some((t) => t.private));
 ---
 <html lang="en">
 <head>
@@ -54,9 +58,34 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     .licence-badge.cc { background: #e8f4e8; color: #2a6a2a; }
     .licence-badge.pd { background: #e8eef4; color: #2a4a6a; }
     .licence-badge.mit { background: #f4f0e8; color: #6a4a2a; }
+    .licence-badge.local {
+      font-size: 0.65rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: #f4e8e8; color: #8a3a3a;
+    }
     :global(html[data-theme="dark"]) .licence-badge.cc { background: #1f3320; color: #9ed3a0; }
     :global(html[data-theme="dark"]) .licence-badge.pd { background: #1c2a3a; color: #9cc2e6; }
     :global(html[data-theme="dark"]) .licence-badge.mit { background: #33291c; color: #e0b483; }
+    :global(html[data-theme="dark"]) .licence-badge.local { background: #3a1c1c; color: #e69c9c; }
+    .trans-list { list-style: none; padding-left: 0; margin: 0.75rem 0 1rem; }
+    .trans-list > li { margin: 0 0 0.9rem; }
+    .trans-list > li > strong {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .trans-list ul {
+      list-style: none;
+      padding-left: 0.9rem;
+      margin: 0.15rem 0 0;
+      border-left: 1px solid var(--border);
+    }
+    .trans-list ul li {
+      margin: 0.1rem 0;
+      color: var(--text-mid);
+      font-size: 0.9rem;
+    }
     blockquote {
       border-left: 3px solid var(--border);
       margin: 0.75rem 0 0.75rem 1rem;
@@ -127,86 +156,37 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <span class="licence-badge pd">Public Domain &amp; archival</span>
     </h2>
     <p>
-      Each work shows a freely available scholarly translation. Most are in the
-      public domain; the two exceptions are noted below.
+      Each work carries one or more freely available scholarly translations,
+      listed below in the order they appear in the reader's translation picker.
+      This list is generated directly from the corpus registry, so it always
+      matches what the reader actually carries.
     </p>
-
-    <p><strong>Nicomachean Ethics — H. Rackham</strong> (Loeb Classical Library):</p>
-    <blockquote>
-      Aristotle. <em>Nicomachean Ethics.</em>
-      Translated by H. Rackham.
-      Loeb Classical Library 73.
-      Cambridge, MA: Harvard University Press, 1926.
-    </blockquote>
-
-    <p><strong>Nicomachean Ethics — W. D. Ross</strong> (Oxford):</p>
-    <blockquote>
-      Aristotle. <em>Nicomachean Ethics.</em>
-      Translated by W. D. Ross. In <em>The Works of Aristotle Translated into
-      English</em>, vol. IX. Oxford: Clarendon Press, 1925.
-    </blockquote>
-
-    <p><strong>De Anima — J. A. Smith</strong> (Oxford):</p>
-    <blockquote>
-      Aristotle. <em>On the Soul (De Anima).</em>
-      Translated by J. A. Smith. In <em>The Works of Aristotle Translated into
-      English</em>, vol. III. Oxford: Clarendon Press, 1931.
-      Text from the <a href="http://classics.mit.edu/">Internet Classics Archive</a>.
-    </blockquote>
-
-    <p><strong>Metaphysics — W. D. Ross</strong> (Oxford):</p>
-    <blockquote>
-      Aristotle. <em>Metaphysics.</em>
-      Translated by W. D. Ross. In <em>The Works of Aristotle Translated into
-      English</em>, vol. VIII. Oxford: Clarendon Press, 1908.
-      Text from the <a href="http://classics.mit.edu/">Internet Classics Archive</a>.
-    </blockquote>
-
-    <p><strong>Politics — Benjamin Jowett</strong> (Oxford):</p>
-    <blockquote>
-      Aristotle. <em>Politics.</em>
-      Translated by Benjamin Jowett. Oxford: Clarendon Press, 1885.
-      Text from the <a href="http://classics.mit.edu/">Internet Classics Archive</a>.
-    </blockquote>
-
-    <p><strong>Rhetoric — J. H. Freese</strong> (Loeb Classical Library):</p>
-    <blockquote>
-      Aristotle. <em>Art of Rhetoric.</em>
-      Translated by J. H. Freese. Loeb Classical Library 193.
-      Cambridge, MA: Harvard University Press, 1926.
-      Machine-readable text: Perseus Digital Library.
-    </blockquote>
-
-    <p><strong>Poetics — W. H. Fyfe</strong> (Loeb Classical Library):</p>
-    <blockquote>
-      Aristotle. <em>Poetics.</em>
-      Translated by W. H. Fyfe. Loeb Classical Library 199.
-      Cambridge, MA: Harvard University Press, 1932.
-      Machine-readable text: Perseus Digital Library.
-    </blockquote>
-
-    <p><strong>Categories &amp; De Interpretatione — E. M. Edghill</strong> (Oxford):</p>
-    <blockquote>
-      Aristotle. <em>Categoriae</em> and <em>De Interpretatione.</em>
-      Translated by E. M. Edghill. In <em>The Works of Aristotle Translated into
-      English</em>, vol. I. Oxford: Clarendon Press, 1928.
-      Text from the <a href="http://classics.mit.edu/">Internet Classics Archive</a>.
-    </blockquote>
-
-    <p><strong>Categories &amp; De Interpretatione — Thomas Taylor</strong> (London):</p>
-    <blockquote>
-      Aristotle. <em>The Organon, or Logical Treatises of Aristotle.</em>
-      Translated by Thomas Taylor. London, 1812.
-      <em>Categories</em> and <em>On Interpretation</em> chapters from the
-      <a href="https://classicalliberalarts.com/">Classical Liberal Arts Academy</a>;
-      <em>On Interpretation</em> ch. 14 from the 1812 edition
-      (<a href="https://archive.org/details/works00taylgoog">Internet Archive</a>).
-    </blockquote>
-
+    <ul class="trans-list">
+      {WORKS.filter((w) => w.translations.length > 0).map((w) => (
+        <li>
+          <strong>{w.title}</strong>
+          <ul>
+            {w.translations.map((t) => (
+              <li>
+                {t.name}
+                {t.private && <span class="licence-badge local">local only</span>}
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
     <p class="note">
-      The De Anima (Smith, 1931) and Poetics (Fyfe, 1932) translations are
-      reproduced from freely available scholarly archives. If you hold rights to
-      either and wish it removed, please get in touch.
+      Translations are reproduced from public-domain editions and freely
+      available scholarly archives; machine-readable texts derive from the
+      <a href="https://www.perseus.tufts.edu/">Perseus Digital Library</a> and the
+      <a href="http://classics.mit.edu/">Internet Classics Archive</a>.
+      {hasPrivate && (
+        <span> Entries marked <span class="licence-badge local">local only</span> are
+        copyright-encumbered and are excluded from the public edition of this site.</span>
+      )}
+      If you hold rights to any text shown here and wish it removed, please get in
+      touch.
     </p>
 
     <h2>Bekker Line Numbers</h2>
