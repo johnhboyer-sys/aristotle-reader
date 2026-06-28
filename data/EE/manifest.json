@@ -1,0 +1,53 @@
+{
+ "work": {
+  "id": "EE",
+  "title": "Eudemian Ethics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "009",
+  "greek_edition": "Susemihl, Aristotelis Ethica Eudemia (Teubner, 1884)",
+  "english_translation": "J. Solomon (Oxford, 1915)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 10,
+   "first_column": "1214a",
+   "last_column": "1218b"
+  },
+  {
+   "book": 2,
+   "segments": 20,
+   "first_column": "1218b",
+   "last_column": "1228a"
+  },
+  {
+   "book": 3,
+   "segments": 14,
+   "first_column": "1228a",
+   "last_column": "1234b"
+  },
+  {
+   "book": 4,
+   "segments": 24,
+   "first_column": "1234b",
+   "last_column": "1246a"
+  },
+  {
+   "book": 5,
+   "segments": 8,
+   "first_column": "1246a",
+   "last_column": "1249b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 4364,
+  "parses_dropped": 100
+ },
+ "lsj": {
+  "lemmata_needed": 2343,
+  "lsj_entries_kept": 2262,
+  "shards": 24,
+  "lemmata_without_entry": 91
+ }
+}

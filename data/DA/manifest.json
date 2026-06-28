@@ -1,0 +1,41 @@
+{
+ "work": {
+  "id": "DA",
+  "title": "De Anima",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "002",
+  "greek_edition": "Ross, Aristotelis De Anima (OCT, 1956)",
+  "english_translation": "J. A. Smith (Oxford, 1931)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 20,
+   "first_column": "402a",
+   "last_column": "411b"
+  },
+  {
+   "book": 2,
+   "segments": 26,
+   "first_column": "412a",
+   "last_column": "424b"
+  },
+  {
+   "book": 3,
+   "segments": 23,
+   "first_column": "424b",
+   "last_column": "435b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 3197,
+  "parses_dropped": 83
+ },
+ "lsj": {
+  "lemmata_needed": 1731,
+  "lsj_entries_kept": 1680,
+  "shards": 24,
+  "lemmata_without_entry": 68
+ }
+}

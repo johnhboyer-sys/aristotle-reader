@@ -1,0 +1,35 @@
+{
+ "work": {
+  "id": "GC",
+  "title": "On Generation and Corruption",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "013",
+  "greek_edition": "Joachim, Aristotelis De Generatione et Corruptione (Oxford, 1922)",
+  "english_translation": "H. H. Joachim (Oxford, 1922)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 30,
+   "first_column": "314a",
+   "last_column": "328b"
+  },
+  {
+   "book": 2,
+   "segments": 21,
+   "first_column": "328b",
+   "last_column": "338b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 2313,
+  "parses_dropped": 57
+ },
+ "lsj": {
+  "lemmata_needed": 1240,
+  "lsj_entries_kept": 1194,
+  "shards": 24,
+  "lemmata_without_entry": 56
+ }
+}

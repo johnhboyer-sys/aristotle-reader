@@ -1,0 +1,47 @@
+{
+ "work": {
+  "id": "Cael",
+  "title": "On the Heavens",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "005",
+  "greek_edition": "Moraux, Aristote: Du ciel (Budé, 1965)",
+  "english_translation": "J. L. Stocks (Oxford, 1922)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 32,
+   "first_column": "268a",
+   "last_column": "283b"
+  },
+  {
+   "book": 2,
+   "segments": 30,
+   "first_column": "283b",
+   "last_column": "298a"
+  },
+  {
+   "book": 3,
+   "segments": 20,
+   "first_column": "298a",
+   "last_column": "307b"
+  },
+  {
+   "book": 4,
+   "segments": 13,
+   "first_column": "307b",
+   "last_column": "313b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 3564,
+  "parses_dropped": 115
+ },
+ "lsj": {
+  "lemmata_needed": 1812,
+  "lsj_entries_kept": 1737,
+  "shards": 24,
+  "lemmata_without_entry": 85
+ }
+}

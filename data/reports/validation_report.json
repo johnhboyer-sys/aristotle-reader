@@ -1,0 +1,207 @@
+{
+ "checks": {
+  "columns": {
+   "expected": 18,
+   "found": 18,
+   "missing": [],
+   "extra": [],
+   "monotonic": true,
+   "ok": true
+  },
+  "line_gaps": {
+   "gaps": [
+    {
+     "column": "16b",
+     "after_line": 13,
+     "next_line": 15,
+     "expected": true
+    },
+    {
+     "column": "17b",
+     "after_line": 23,
+     "next_line": 25,
+     "expected": true
+    },
+    {
+     "column": "17b",
+     "after_line": 38,
+     "next_line": 40,
+     "expected": true
+    },
+    {
+     "column": "18a",
+     "after_line": 13,
+     "next_line": 15,
+     "expected": true
+    },
+    {
+     "column": "18b",
+     "after_line": 23,
+     "next_line": 25,
+     "expected": true
+    },
+    {
+     "column": "21a",
+     "after_line": 3,
+     "next_line": 5,
+     "expected": true
+    },
+    {
+     "column": "21b",
+     "after_line": 18,
+     "next_line": 20,
+     "expected": true
+    },
+    {
+     "column": "21b",
+     "after_line": 33,
+     "next_line": 35,
+     "expected": true
+    }
+   ],
+   "unexpected": [],
+   "ok": true
+  },
+  "alignment": {
+   "pairs": 18,
+   "unmatched_segments": [],
+   "allowed_unmatched": [],
+   "unexpected_unmatched": [],
+   "english_only": [],
+   "unexpected_english_only": [],
+   "ok": true
+  },
+  "length_ratio": {
+   "mean": 1.641,
+   "sd": 0.104,
+   "outliers": [
+    {
+     "id": "1:16a",
+     "ratio": 1.364,
+     "greek_chars": 1666,
+     "english_chars": 2273
+    },
+    {
+     "id": "1:22a",
+     "ratio": 1.818,
+     "greek_chars": 1957,
+     "english_chars": 3557
+    }
+   ],
+   "ok": true
+  },
+  "proper_names": {
+   "names": [],
+   "ok": true
+  },
+  "sigla": {
+   "characters": [
+    {
+     "char": "·",
+     "name": "GREEK ANO TELEIA",
+     "count": 185,
+     "samples": [
+      {
+       "ref": "16a6",
+       "text": "αὐταί· ὧν μέντοι ταῦτα σημεῖα πρώτων, ταὐτὰ πᾶσι παθήματα"
+      },
+      {
+       "ref": "16a9",
+       "text": "—ἄλλης γὰρ πραγματείας·— ἔστι δέ, ὥσπερ ἐν τῇ ψυχῇ"
+      },
+      {
+       "ref": "16a11",
+       "text": "ᾧ ἀνάγκη τούτων ὑπάρχειν θάτερον, οὕτω καὶ ἐν τῇ φωνῇ·"
+      },
+      {
+       "ref": "16a15",
+       "text": "ἢ λευκόν, ὅταν μὴ προστεθῇ τι· οὔτε γὰρ ψεῦδος"
+      },
+      {
+       "ref": "16a16",
+       "text": "οὔτε ἀληθές πω. σημεῖον δ' ἐστὶ τοῦδε· καὶ γὰρ ὁ τραγέλαφος"
+      }
+     ]
+    },
+    {
+     "char": ";",
+     "name": "GREEK QUESTION MARK",
+     "count": 10,
+     "samples": [
+      {
+       "ref": "20a26",
+       "text": "σοφός; οὔ· Σωκράτης ἄρα οὐ σοφός. ἐπὶ δὲ τῶν καθόλου οὐκ"
+      },
+      {
+       "ref": "20a28",
+       "text": "γε πᾶς ἄνθρωπος σοφός; οὔ· πᾶς ἄρα ἄνθρωπος οὐ σοφός·"
+      },
+      {
+       "ref": "20b33",
+       "text": "διαφορά; κατὰ γὰρ τοῦ ἀνθρώπου ἀληθὲς εἰπεῖν καὶ χωρὶς"
+      },
+      {
+       "ref": "21a26",
+       "text": "ἐστί τι, οἷον ποιητής· ἆρ' οὖν καὶ ἔστιν, ἢ οὔ; κατὰ συμβεβηκὸς"
+      },
+      {
+       "ref": "22b10",
+       "text": "ἢ ἀδύνατον οὕτω κεῖσθαι τὰς τοῦ ἀναγκαίου ἀντιφάσεις;"
+      }
+     ]
+    },
+    {
+     "char": "⎪",
+     "name": "CURLY BRACKET EXTENSION",
+     "count": 8,
+     "samples": [
+      {
+       "ref": "22a24",
+       "text": "δυνατὸν εἶναι ⎪οὐ δυνατὸν εἶναι"
+      },
+      {
+       "ref": "22a25",
+       "text": "ἐνδεχόμενον εἶναι ⎪οὐκ ἐνδεχόμεν εἶναι"
+      },
+      {
+       "ref": "22a26",
+       "text": "οὐκ ἀδύνατον εἶναι ⎪ἀδύνατον εἶναι"
+      },
+      {
+       "ref": "22a27",
+       "text": "οὐκ ἀναγκαῖον εἶναι ⎪ἀναγκαῖον εἶναι"
+      },
+      {
+       "ref": "22a28",
+       "text": "δυνατὸν μὴ εἶναι ⎪οὐ δυνατὸν μὴ εἶναι"
+      }
+     ]
+    },
+    {
+     "char": "<",
+     "name": "LESS-THAN SIGN",
+     "count": 1,
+     "samples": [
+      {
+       "ref": "24b4",
+       "text": "καθόλου, οἷον <τῇ> ὅτι πᾶν ἀγαθὸν ἀγαθόν ἢ ὅτι πᾶς ἄνθρωπος"
+      }
+     ]
+    },
+    {
+     "char": ">",
+     "name": "GREATER-THAN SIGN",
+     "count": 1,
+     "samples": [
+      {
+       "ref": "24b4",
+       "text": "καθόλου, οἷον <τῇ> ὅτι πᾶν ἀγαθὸν ἀγαθόν ἢ ὅτι πᾶς ἄνθρωπος"
+      }
+     ]
+    }
+   ],
+   "ok": true
+  }
+ },
+ "ok": true
+}

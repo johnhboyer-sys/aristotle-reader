@@ -1,0 +1,84 @@
+{
+ "work": {
+  "id": "EN",
+  "title": "Nicomachean Ethics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "010",
+  "greek_edition": "Bywater, Aristotelis Ethica Nicomachea (OCT, 1894)",
+  "english_source": "tlg0086.tlg010.perseus-eng2.xml",
+  "english_translation": "H. Rackham (Loeb, 1926)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 19,
+   "first_column": "1094a",
+   "last_column": "1103a"
+  },
+  {
+   "book": 2,
+   "segments": 14,
+   "first_column": "1103a",
+   "last_column": "1109b"
+  },
+  {
+   "book": 3,
+   "segments": 21,
+   "first_column": "1109b",
+   "last_column": "1119b"
+  },
+  {
+   "book": 4,
+   "segments": 19,
+   "first_column": "1119b",
+   "last_column": "1128b"
+  },
+  {
+   "book": 5,
+   "segments": 20,
+   "first_column": "1129a",
+   "last_column": "1138b"
+  },
+  {
+   "book": 6,
+   "segments": 14,
+   "first_column": "1138b",
+   "last_column": "1145a"
+  },
+  {
+   "book": 7,
+   "segments": 20,
+   "first_column": "1145a",
+   "last_column": "1154b"
+  },
+  {
+   "book": 8,
+   "segments": 18,
+   "first_column": "1155a",
+   "last_column": "1163b"
+  },
+  {
+   "book": 9,
+   "segments": 18,
+   "first_column": "1163b",
+   "last_column": "1172a"
+  },
+  {
+   "book": 10,
+   "segments": 20,
+   "first_column": "1172a",
+   "last_column": "1181b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 7992,
+  "parses_dropped": 189
+ },
+ "lsj": {
+  "lemmata_needed": 3708,
+  "lsj_entries_kept": 3567,
+  "shards": 24,
+  "lemmata_without_entry": 147
+ }
+}

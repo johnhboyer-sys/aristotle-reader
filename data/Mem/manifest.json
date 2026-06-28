@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "Mem",
+  "title": "On Memory",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "024",
+  "greek_edition": "Ross, Aristotle: Parva Naturalia (OCT, 1955)",
+  "english_translation": "J. I. Beare (Oxford, 1908)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 9,
+   "first_column": "449b",
+   "last_column": "453b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 768,
+  "parses_dropped": 21
+ },
+ "lsj": {
+  "lemmata_needed": 512,
+  "lsj_entries_kept": 504,
+  "shards": 23,
+  "lemmata_without_entry": 17
+ }
+}

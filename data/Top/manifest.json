@@ -1,0 +1,71 @@
+{
+ "work": {
+  "id": "Top",
+  "title": "Topics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "044",
+  "greek_edition": "Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)",
+  "english_translation": "W. A. Pickard-Cambridge (Oxford, 1928)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 18,
+   "first_column": "100a",
+   "last_column": "108b"
+  },
+  {
+   "book": 2,
+   "segments": 15,
+   "first_column": "108b",
+   "last_column": "115b"
+  },
+  {
+   "book": 3,
+   "segments": 10,
+   "first_column": "116a",
+   "last_column": "120b"
+  },
+  {
+   "book": 4,
+   "segments": 17,
+   "first_column": "120b",
+   "last_column": "128b"
+  },
+  {
+   "book": 5,
+   "segments": 22,
+   "first_column": "128b",
+   "last_column": "139a"
+  },
+  {
+   "book": 6,
+   "segments": 26,
+   "first_column": "139a",
+   "last_column": "151b"
+  },
+  {
+   "book": 7,
+   "segments": 8,
+   "first_column": "151b",
+   "last_column": "155a"
+  },
+  {
+   "book": 8,
+   "segments": 19,
+   "first_column": "155b",
+   "last_column": "164b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 4346,
+  "parses_dropped": 87
+ },
+ "lsj": {
+  "lemmata_needed": 1978,
+  "lsj_entries_kept": 1890,
+  "shards": 24,
+  "lemmata_without_entry": 78
+ }
+}

@@ -1,0 +1,71 @@
+{
+ "work": {
+  "id": "Pol",
+  "title": "Politics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "035",
+  "greek_edition": "Ross, Aristotelis Politica (OCT, 1957)",
+  "english_translation": "Benjamin Jowett (Oxford, 1885)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 18,
+   "first_column": "1252a",
+   "last_column": "1260b"
+  },
+  {
+   "book": 2,
+   "segments": 29,
+   "first_column": "1260b",
+   "last_column": "1274b"
+  },
+  {
+   "book": 3,
+   "segments": 29,
+   "first_column": "1274b",
+   "last_column": "1288b"
+  },
+  {
+   "book": 4,
+   "segments": 26,
+   "first_column": "1288b",
+   "last_column": "1301a"
+  },
+  {
+   "book": 5,
+   "segments": 32,
+   "first_column": "1301a",
+   "last_column": "1316b"
+  },
+  {
+   "book": 6,
+   "segments": 14,
+   "first_column": "1316b",
+   "last_column": "1323a"
+  },
+  {
+   "book": 7,
+   "segments": 29,
+   "first_column": "1323a",
+   "last_column": "1337a"
+  },
+  {
+   "book": 8,
+   "segments": 12,
+   "first_column": "1337a",
+   "last_column": "1342b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 9025,
+  "parses_dropped": 206
+ },
+ "lsj": {
+  "lemmata_needed": 4129,
+  "lsj_entries_kept": 3865,
+  "shards": 24,
+  "lemmata_without_entry": 268
+ }
+}

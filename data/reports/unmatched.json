@@ -1,0 +1,37 @@
+[
+ {
+  "key": "ippos",
+  "surface": "ιππος",
+  "first_ref": "16a21",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "kelhs",
+  "surface": "κελης",
+  "first_ref": "16a26",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "us",
+  "surface": "υς",
+  "first_ref": "16b31",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "o(posw|ou=n",
+  "surface": "ὁποσῳοῦν",
+  "first_ref": "19a1",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "e)ndexo/men",
+  "surface": "ἐνδεχόμεν",
+  "first_ref": "22a25",
+  "count": 1,
+  "analyses": []
+ }
+]

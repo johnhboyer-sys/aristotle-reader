@@ -1,0 +1,77 @@
+{
+ "work": {
+  "id": "HA",
+  "title": "History of Animals",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "014",
+  "greek_edition": "Louis, Aristote: Histoire des animaux (Budé, 1964–69)",
+  "english_translation": "D'Arcy Wentworth Thompson (Oxford, 1910)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 24,
+   "first_column": "486a",
+   "last_column": "497b"
+  },
+  {
+   "book": 2,
+   "segments": 24,
+   "first_column": "497b",
+   "last_column": "509a"
+  },
+  {
+   "book": 3,
+   "segments": 29,
+   "first_column": "509a",
+   "last_column": "523a"
+  },
+  {
+   "book": 4,
+   "segments": 32,
+   "first_column": "523a",
+   "last_column": "538b"
+  },
+  {
+   "book": 5,
+   "segments": 41,
+   "first_column": "538b",
+   "last_column": "558b"
+  },
+  {
+   "book": 6,
+   "segments": 46,
+   "first_column": "558b",
+   "last_column": "581a"
+  },
+  {
+   "book": 7,
+   "segments": 15,
+   "first_column": "581a",
+   "last_column": "588a"
+  },
+  {
+   "book": 8,
+   "segments": 41,
+   "first_column": "588a",
+   "last_column": "608a"
+  },
+  {
+   "book": 9,
+   "segments": 52,
+   "first_column": "608a",
+   "last_column": "633b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 12380,
+  "parses_dropped": 292
+ },
+ "lsj": {
+  "lemmata_needed": 6077,
+  "lsj_entries_kept": 5823,
+  "shards": 24,
+  "lemmata_without_entry": 309
+ }
+}

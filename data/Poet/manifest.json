@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "Poet",
+  "title": "Poetics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "034",
+  "greek_edition": "Kassel, Aristotelis De Arte Poetica (OCT, 1965)",
+  "english_translation": "W. H. Fyfe (Loeb, 1932)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 32,
+   "first_column": "1447a",
+   "last_column": "1462b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 2680,
+  "parses_dropped": 81
+ },
+ "lsj": {
+  "lemmata_needed": 1644,
+  "lsj_entries_kept": 1555,
+  "shards": 24,
+  "lemmata_without_entry": 113
+ }
+}

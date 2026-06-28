@@ -1,0 +1,42 @@
+{
+ "work": {
+  "id": "Rhet",
+  "title": "Rhetoric",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "038",
+  "greek_edition": "Ross, Aristotelis Ars Rhetorica (OCT, 1959)",
+  "english_source": "tlg0086.tlg038.perseus-eng2.xml",
+  "english_translation": "J. H. Freese (Loeb, 1926)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 49,
+   "first_column": "1354a",
+   "last_column": "1378a"
+  },
+  {
+   "book": 2,
+   "segments": 53,
+   "first_column": "1378a",
+   "last_column": "1404a"
+  },
+  {
+   "book": 3,
+   "segments": 33,
+   "first_column": "1404a",
+   "last_column": "1420a"
+  }
+ ],
+ "analyses": {
+  "token_keys": 7861,
+  "parses_dropped": 176
+ },
+ "lsj": {
+  "lemmata_needed": 3864,
+  "lsj_entries_kept": 3612,
+  "shards": 24,
+  "lemmata_without_entry": 273
+ }
+}

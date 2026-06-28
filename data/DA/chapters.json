@@ -1,0 +1,188 @@
+{
+ "1": [
+  {
+   "chapter": "1",
+   "column": "402a",
+   "line": "1",
+   "bekker": "402a1–403b19"
+  },
+  {
+   "chapter": "2",
+   "column": "403b",
+   "line": "20",
+   "bekker": "403b20–405b30"
+  },
+  {
+   "chapter": "3",
+   "column": "405b",
+   "line": "31",
+   "bekker": "405b31–407b26"
+  },
+  {
+   "chapter": "4",
+   "column": "407b",
+   "line": "27",
+   "bekker": "407b27–409a30"
+  },
+  {
+   "chapter": "5",
+   "column": "409a",
+   "line": "31",
+   "bekker": "409a31–411b30"
+  }
+ ],
+ "2": [
+  {
+   "chapter": "1",
+   "column": "412a",
+   "line": "3",
+   "bekker": "412a3–413a10"
+  },
+  {
+   "chapter": "2",
+   "column": "413a",
+   "line": "11",
+   "bekker": "413a11–414a28"
+  },
+  {
+   "chapter": "3",
+   "column": "414a",
+   "line": "29",
+   "bekker": "414a29–415a13"
+  },
+  {
+   "chapter": "4",
+   "column": "415a",
+   "line": "14",
+   "bekker": "415a14–416b31"
+  },
+  {
+   "chapter": "5",
+   "column": "416b",
+   "line": "32",
+   "bekker": "416b32–418a6"
+  },
+  {
+   "chapter": "6",
+   "column": "418a",
+   "line": "7",
+   "bekker": "418a7–25"
+  },
+  {
+   "chapter": "7",
+   "column": "418a",
+   "line": "26",
+   "bekker": "418a26–419b3"
+  },
+  {
+   "chapter": "8",
+   "column": "419b",
+   "line": "4",
+   "bekker": "419b4–421a6"
+  },
+  {
+   "chapter": "9",
+   "column": "421a",
+   "line": "7",
+   "bekker": "421a7–422a7"
+  },
+  {
+   "chapter": "10",
+   "column": "422a",
+   "line": "8",
+   "bekker": "422a8–422b16"
+  },
+  {
+   "chapter": "11",
+   "column": "422b",
+   "line": "17",
+   "bekker": "422b17–424a16"
+  },
+  {
+   "chapter": "12",
+   "column": "424a",
+   "line": "17",
+   "bekker": "424a17–424b18"
+  }
+ ],
+ "3": [
+  {
+   "chapter": "1",
+   "column": "424b",
+   "line": "22",
+   "bekker": "424b22–425b11"
+  },
+  {
+   "chapter": "2",
+   "column": "425b",
+   "line": "12",
+   "bekker": "425b12–427a16"
+  },
+  {
+   "chapter": "3",
+   "column": "427a",
+   "line": "17",
+   "bekker": "427a17–429a9"
+  },
+  {
+   "chapter": "4",
+   "column": "429a",
+   "line": "10",
+   "bekker": "429a10–430a9"
+  },
+  {
+   "chapter": "5",
+   "column": "430a",
+   "line": "10",
+   "bekker": "430a10–25"
+  },
+  {
+   "chapter": "6",
+   "column": "430a",
+   "line": "26",
+   "bekker": "430a26–430b30"
+  },
+  {
+   "chapter": "7",
+   "column": "431a",
+   "line": "1",
+   "bekker": "431a1–431b19"
+  },
+  {
+   "chapter": "8",
+   "column": "431b",
+   "line": "20",
+   "bekker": "431b20–432a14"
+  },
+  {
+   "chapter": "9",
+   "column": "432a",
+   "line": "15",
+   "bekker": "432a15–433a8"
+  },
+  {
+   "chapter": "10",
+   "column": "433a",
+   "line": "9",
+   "bekker": "433a9–433b30"
+  },
+  {
+   "chapter": "11",
+   "column": "433b",
+   "line": "31",
+   "bekker": "433b31–434a21"
+  },
+  {
+   "chapter": "12",
+   "column": "434a",
+   "line": "22",
+   "bekker": "434a22–435a10"
+  },
+  {
+   "chapter": "13",
+   "column": "435a",
+   "line": "11",
+   "bekker": "435a11–435b25"
+  }
+ ]
+}

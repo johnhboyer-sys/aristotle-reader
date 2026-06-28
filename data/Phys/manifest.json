@@ -1,0 +1,71 @@
+{
+ "work": {
+  "id": "Phys",
+  "title": "Physics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "031",
+  "greek_edition": "Ross, Aristotelis Physica (OCT, 1950)",
+  "english_translation": "R. P. Hardie and R. K. Gaye (Oxford, 1930)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 18,
+   "first_column": "184a",
+   "last_column": "192b"
+  },
+  {
+   "book": 2,
+   "segments": 17,
+   "first_column": "192b",
+   "last_column": "200b"
+  },
+  {
+   "book": 3,
+   "segments": 16,
+   "first_column": "200b",
+   "last_column": "208a"
+  },
+  {
+   "book": 4,
+   "segments": 33,
+   "first_column": "208a",
+   "last_column": "224a"
+  },
+  {
+   "book": 5,
+   "segments": 15,
+   "first_column": "224a",
+   "last_column": "231a"
+  },
+  {
+   "book": 6,
+   "segments": 22,
+   "first_column": "231a",
+   "last_column": "241b"
+  },
+  {
+   "book": 7,
+   "segments": 19,
+   "first_column": "241b",
+   "last_column": "250b"
+  },
+  {
+   "book": 8,
+   "segments": 35,
+   "first_column": "250b",
+   "last_column": "267b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 4698,
+  "parses_dropped": 129
+ },
+ "lsj": {
+  "lemmata_needed": 2191,
+  "lsj_entries_kept": 2108,
+  "shards": 24,
+  "lemmata_without_entry": 97
+ }
+}

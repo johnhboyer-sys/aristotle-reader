@@ -1,0 +1,40 @@
+{
+ "1": [
+  {
+   "chapter": "1",
+   "column": "464b",
+   "line": "19",
+   "bekker": "464b19–465a12"
+  },
+  {
+   "chapter": "2",
+   "column": "465a",
+   "line": "13",
+   "bekker": "465a13–32"
+  },
+  {
+   "chapter": "3",
+   "column": "465b",
+   "line": "1",
+   "bekker": "465b1–32"
+  },
+  {
+   "chapter": "4",
+   "column": "466a",
+   "line": "1",
+   "bekker": "466a1–16"
+  },
+  {
+   "chapter": "5",
+   "column": "466a",
+   "line": "17",
+   "bekker": "466a17–467a5"
+  },
+  {
+   "chapter": "6",
+   "column": "467a",
+   "line": "6",
+   "bekker": "467a6–467b9"
+  }
+ ]
+}

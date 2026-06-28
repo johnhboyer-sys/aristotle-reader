@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-zetdm5md> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('ne-theme');
+      document.documentElement.dataset.theme = saved === 'dark' ? 'dark' : 'light';
+    } catch (e) {
+      /* localStorage unavailable: fall back to light (CSS default). */
+    }
+  })();
+</script><title>Page Not Found — Aristotle</title><link rel="icon" href="/aristotle-reader/favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="/aristotle-reader/_astro/global.Cu3QkXWB.css">
+<style>body{background:var(--page-bg);color:var(--text);margin:0}.theme-corner[data-astro-cid-zetdm5md]{position:fixed;top:1rem;right:1rem;z-index:10}.not-found[data-astro-cid-zetdm5md]{max-width:36rem;margin:0 auto;padding:clamp(4rem,14vh,9rem) 1.5rem 4rem;text-align:center}.eyebrow[data-astro-cid-zetdm5md]{font-family:var(--font-ui);text-transform:uppercase;letter-spacing:.28em;font-size:.72rem;color:var(--accent-light);margin:0 0 .6rem}h1[data-astro-cid-zetdm5md]{font-family:var(--font-greek);font-weight:400;font-size:clamp(2rem,5vw,2.6rem);color:var(--text);margin:0 0 1rem}.lede[data-astro-cid-zetdm5md]{font-family:var(--font-english);color:var(--text-mid);font-size:1rem;line-height:1.55;margin:0 0 2rem}.goatstag[data-astro-cid-zetdm5md]{margin:0 0 1.4rem;color:var(--accent)}.goatstag[data-astro-cid-zetdm5md] svg[data-astro-cid-zetdm5md]{width:clamp(150px,30vw,210px);height:auto;opacity:.92}.goatstag[data-astro-cid-zetdm5md] figcaption[data-astro-cid-zetdm5md]{font-family:var(--font-greek);font-size:.95rem;color:var(--text-mid);margin-top:.5rem}.actions[data-astro-cid-zetdm5md]{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}.btn-primary[data-astro-cid-zetdm5md]{background:var(--accent);color:#fff;text-decoration:none;font-family:var(--font-ui);font-size:.9rem;font-weight:600;padding:.55rem 1.25rem;border-radius:6px;transition:opacity .15s ease}.btn-primary[data-astro-cid-zetdm5md]:hover{opacity:.86}.btn-secondary[data-astro-cid-zetdm5md]{background:var(--col-bg);color:var(--text-mid);text-decoration:none;font-family:var(--font-ui);font-size:.9rem;padding:.55rem 1.25rem;border-radius:6px;border:1px solid var(--border);transition:border-color .15s ease}.btn-secondary[data-astro-cid-zetdm5md]:hover{border-color:var(--accent-light);color:var(--accent)}
+</style></head> <body data-astro-cid-zetdm5md> <div class="theme-corner" data-astro-cid-zetdm5md><button type="button" class="theme-toggle" aria-label="Toggle night mode" title="Toggle night mode"> <span class="theme-icon" aria-hidden="true"></span> </button> <script>
+  (function () {
+    var btn = document.querySelector('.theme-toggle');
+    if (!btn) return;
+    var icon = btn.querySelector('.theme-icon');
+
+    // Sleek, stroked line icons (Feather-style) that inherit currentColor, so
+    // they read as a refined monochrome glyph rather than a gold emoji.
+    var MOON =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var SUN =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.4 4.4l1.6 1.6M18 18l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.4 19.6l1.6-1.6M18 6l1.6-1.6"/></svg>';
+
+    function render() {
+      var dark = document.documentElement.dataset.theme === 'dark';
+      // Icon shows the theme you'll switch TO: moon in light, sun in dark.
+      icon.innerHTML = dark ? SUN : MOON;
+      btn.setAttribute('aria-pressed', String(dark));
+    }
+    render();
+
+    // Flip the theme. Wrapped in a View Transition so the browser snapshots the
+    // page, applies the change, then crossfades old→new as ONE uniform fade —
+    // chrome, borders, text and the icon swap all dissolve together instead of
+    // the body fading while everything else snaps. Browsers without the API (or
+    // with reduce-motion on) fall back to a clean instant flip.
+    function applyTheme() {
+      var next =
+        document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem('ne-theme', next);
+      } catch (e) {}
+      render();
+    }
+
+    btn.addEventListener('click', function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (document.startViewTransition && !reduce) {
+        document.startViewTransition(applyTheme);
+      } else {
+        applyTheme();
+      }
+    });
+  })();
+</script></div> <main class="not-found" data-astro-cid-zetdm5md> <p class="eyebrow" data-astro-cid-zetdm5md>Aristotle</p> <figure class="goatstag" data-astro-cid-zetdm5md> <svg viewBox="0 0 220 200" role="img" aria-labelledby="gs-title" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" data-astro-cid-zetdm5md> <title id="gs-title">A goat-stag (tragelaphos): an antlered, bearded creature</title> <!-- lean body + long goat head --> <path d="M16,78 C14,72 18,67 26,65 C33,63 40,62 47,59 C51,57 54,55 56,50
+                 C60,53 62,57 63,62 C70,61 78,60 86,61 C112,57 148,57 176,68
+                 C182,64 187,62 190,66 C189,71 185,74 180,76 C178,84 175,92 172,100
+                 C150,106 120,108 100,106 C92,105 84,104 78,102 C74,101 70,99 67,96
+                 C64,92 62,88 60,84 C57,86 54,86 50,86 C46,87 43,89 41,90
+                 C33,90 24,87 19,83 C17,82 16,80 16,78 Z" data-astro-cid-zetdm5md></path> <!-- snout: mouth line --> <path d="M18,80 C21,82 24,83 27,82" data-astro-cid-zetdm5md></path> <!-- goat ear --> <path d="M62,57 C69,51 76,50 81,53 C77,59 69,62 64,61 C63,60 62,58 62,57 Z" data-astro-cid-zetdm5md></path> <!-- stag antlers (large, branching) --> <path d="M54,50 C50,38 47,28 44,14" data-astro-cid-zetdm5md></path> <path d="M49,34 C42,31 37,28 31,22" data-astro-cid-zetdm5md></path> <path d="M47,26 C41,23 37,19 33,12" data-astro-cid-zetdm5md></path> <path d="M45,18 C42,13 40,9 39,5" data-astro-cid-zetdm5md></path> <path d="M57,49 C61,37 64,27 67,13" data-astro-cid-zetdm5md></path> <path d="M62,33 C68,30 73,27 79,21" data-astro-cid-zetdm5md></path> <path d="M64,25 C70,22 75,18 79,11" data-astro-cid-zetdm5md></path> <path d="M66,17 C69,12 71,8 72,4" data-astro-cid-zetdm5md></path> <!-- full goat beard --> <path d="M42,88 C39,98 39,108 42,120" data-astro-cid-zetdm5md></path> <path d="M47,89 C45,99 45,109 48,121" data-astro-cid-zetdm5md></path> <path d="M52,89 C50,98 50,107 52,117" data-astro-cid-zetdm5md></path> <!-- long lean legs --> <path d="M82,104 L80,172" data-astro-cid-zetdm5md></path> <path d="M94,105 L96,174" data-astro-cid-zetdm5md></path> <path d="M156,102 L158,172" data-astro-cid-zetdm5md></path> <path d="M168,100 L170,174" data-astro-cid-zetdm5md></path> <!-- hooves --> <path d="M76,172 L84,172" data-astro-cid-zetdm5md></path> <path d="M92,174 L100,174" data-astro-cid-zetdm5md></path> <path d="M152,172 L160,172" data-astro-cid-zetdm5md></path> <path d="M164,174 L172,174" data-astro-cid-zetdm5md></path> <!-- eye --> <circle cx="38" cy="72" r="1.8" fill="currentColor" stroke="none" data-astro-cid-zetdm5md></circle> </svg> <figcaption data-astro-cid-zetdm5md>τραγέλαφος · the goat-stag</figcaption> </figure> <h1 data-astro-cid-zetdm5md>Page not found</h1> <p class="lede" data-astro-cid-zetdm5md>The <em data-astro-cid-zetdm5md>goat-stag</em> is Aristotle's example of a name that
+      signifies something which does not exist (<em data-astro-cid-zetdm5md>De Interpretatione</em> 16a16).
+      So, it would seem, is the page you're looking for.</p> <div class="actions" data-astro-cid-zetdm5md> <a class="btn-primary" href="/aristotle-reader/" data-astro-cid-zetdm5md>Back to the corpus</a> <a class="btn-secondary" href="/aristotle-reader/search" data-astro-cid-zetdm5md>Search</a> </div> </main> </body> </html>

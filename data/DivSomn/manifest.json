@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "DivSomn",
+  "title": "On Divination in Sleep",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "008",
+  "greek_edition": "Ross, Aristotle: Parva Naturalia (OCT, 1955)",
+  "english_translation": "J. I. Beare (Oxford, 1908)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 5,
+   "first_column": "462b",
+   "last_column": "464b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 521,
+  "parses_dropped": 13
+ },
+ "lsj": {
+  "lemmata_needed": 401,
+  "lsj_entries_kept": 391,
+  "shards": 24,
+  "lemmata_without_entry": 13
+ }
+}

@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "Juv",
+  "title": "On Youth, Old Age, Life and Death, and Respiration",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "918",
+  "greek_edition": "Ross, Aristotle: Parva Naturalia (OCT, 1955)",
+  "english_translation": "G. R. T. Ross (Oxford, 1908)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 27,
+   "first_column": "467b",
+   "last_column": "480b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 1851,
+  "parses_dropped": 54
+ },
+ "lsj": {
+  "lemmata_needed": 1197,
+  "lsj_entries_kept": 1156,
+  "shards": 24,
+  "lemmata_without_entry": 51
+ }
+}

@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "IA",
+  "title": "Progression of Animals",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "015",
+  "greek_edition": "Jaeger, Aristotelis De animalium incessu (Teubner, 1913)",
+  "english_translation": "A. S. L. Farquharson (Oxford, 1912)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 22,
+   "first_column": "704a",
+   "last_column": "714b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 1442,
+  "parses_dropped": 30
+ },
+ "lsj": {
+  "lemmata_needed": 890,
+  "lsj_entries_kept": 869,
+  "shards": 24,
+  "lemmata_without_entry": 29
+ }
+}

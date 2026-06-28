@@ -1,0 +1,94 @@
+{
+ "1": [
+  {
+   "chapter": "1",
+   "column": "1a",
+   "line": "1",
+   "bekker": "1a1–15"
+  },
+  {
+   "chapter": "2",
+   "column": "1a",
+   "line": "16",
+   "bekker": "1a16–1b9"
+  },
+  {
+   "chapter": "3",
+   "column": "1b",
+   "line": "10",
+   "bekker": "1b10–24"
+  },
+  {
+   "chapter": "4",
+   "column": "1b",
+   "line": "25",
+   "bekker": "1b25–2a10"
+  },
+  {
+   "chapter": "5",
+   "column": "2a",
+   "line": "11",
+   "bekker": "2a11–4b19"
+  },
+  {
+   "chapter": "6",
+   "column": "4b",
+   "line": "20",
+   "bekker": "4b20–6a35"
+  },
+  {
+   "chapter": "7",
+   "column": "6a",
+   "line": "36",
+   "bekker": "6a36–8b24"
+  },
+  {
+   "chapter": "8",
+   "column": "8b",
+   "line": "25",
+   "bekker": "8b25–11a39"
+  },
+  {
+   "chapter": "9",
+   "column": "11b",
+   "line": "1",
+   "bekker": "11b1–14"
+  },
+  {
+   "chapter": "10",
+   "column": "11b",
+   "line": "15",
+   "bekker": "11b15–13b35"
+  },
+  {
+   "chapter": "11",
+   "column": "13b",
+   "line": "36",
+   "bekker": "13b36–14a25"
+  },
+  {
+   "chapter": "12",
+   "column": "14a",
+   "line": "26",
+   "bekker": "14a26–14b23"
+  },
+  {
+   "chapter": "13",
+   "column": "14b",
+   "line": "24",
+   "bekker": "14b24–15a12"
+  },
+  {
+   "chapter": "14",
+   "column": "15a",
+   "line": "13",
+   "bekker": "15a13–15b16"
+  },
+  {
+   "chapter": "15",
+   "column": "15b",
+   "line": "17",
+   "bekker": "15b17–32"
+  }
+ ]
+}

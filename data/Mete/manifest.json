@@ -1,0 +1,47 @@
+{
+ "work": {
+  "id": "Mete",
+  "title": "Meteorology",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "026",
+  "greek_edition": "Fobes, Aristotelis Meteorologicorum libri quattuor (Cambridge, Mass., 1919)",
+  "english_translation": "E. W. Webster (Oxford, 1923)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 31,
+   "first_column": "338a",
+   "last_column": "353a"
+  },
+  {
+   "book": 2,
+   "segments": 35,
+   "first_column": "353a",
+   "last_column": "370a"
+  },
+  {
+   "book": 3,
+   "segments": 17,
+   "first_column": "370b",
+   "last_column": "378b"
+  },
+  {
+   "book": 4,
+   "segments": 25,
+   "first_column": "378b",
+   "last_column": "390b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 5324,
+  "parses_dropped": 192
+ },
+ "lsj": {
+  "lemmata_needed": 2747,
+  "lsj_entries_kept": 2620,
+  "shards": 24,
+  "lemmata_without_entry": 165
+ }
+}

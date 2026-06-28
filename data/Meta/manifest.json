@@ -1,0 +1,107 @@
+{
+ "work": {
+  "id": "Meta",
+  "title": "Metaphysics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "025",
+  "greek_edition": "Ross, Aristotle's Metaphysics (OCT, 1924)",
+  "english_translation": "W. D. Ross (Oxford, 1924)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 27,
+   "first_column": "980a",
+   "last_column": "993a"
+  },
+  {
+   "book": 2,
+   "segments": 5,
+   "first_column": "993a",
+   "last_column": "995a"
+  },
+  {
+   "book": 3,
+   "segments": 17,
+   "first_column": "995a",
+   "last_column": "1003a"
+  },
+  {
+   "book": 4,
+   "segments": 20,
+   "first_column": "1003a",
+   "last_column": "1012b"
+  },
+  {
+   "book": 5,
+   "segments": 26,
+   "first_column": "1012b",
+   "last_column": "1025a"
+  },
+  {
+   "book": 6,
+   "segments": 6,
+   "first_column": "1025b",
+   "last_column": "1028a"
+  },
+  {
+   "book": 7,
+   "segments": 28,
+   "first_column": "1028a",
+   "last_column": "1041b"
+  },
+  {
+   "book": 8,
+   "segments": 8,
+   "first_column": "1042a",
+   "last_column": "1045b"
+  },
+  {
+   "book": 9,
+   "segments": 14,
+   "first_column": "1045b",
+   "last_column": "1052a"
+  },
+  {
+   "book": 10,
+   "segments": 15,
+   "first_column": "1052a",
+   "last_column": "1059a"
+  },
+  {
+   "book": 11,
+   "segments": 21,
+   "first_column": "1059a",
+   "last_column": "1069a"
+  },
+  {
+   "book": 12,
+   "segments": 15,
+   "first_column": "1069a",
+   "last_column": "1076a"
+  },
+  {
+   "book": 13,
+   "segments": 23,
+   "first_column": "1076a",
+   "last_column": "1087a"
+  },
+  {
+   "book": 14,
+   "segments": 14,
+   "first_column": "1087a",
+   "last_column": "1093b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 6297,
+  "parses_dropped": 148
+ },
+ "lsj": {
+  "lemmata_needed": 2774,
+  "lsj_entries_kept": 2651,
+  "shards": 24,
+  "lemmata_without_entry": 134
+ }
+}

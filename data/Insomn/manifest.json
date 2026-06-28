@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "Insomn",
+  "title": "On Dreams",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "016",
+  "greek_edition": "Ross, Aristotle: Parva Naturalia (OCT, 1955)",
+  "english_translation": "J. I. Beare (Oxford, 1908)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 10,
+   "first_column": "458a",
+   "last_column": "462b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 827,
+  "parses_dropped": 22
+ },
+ "lsj": {
+  "lemmata_needed": 596,
+  "lsj_entries_kept": 577,
+  "shards": 23,
+  "lemmata_without_entry": 23
+ }
+}

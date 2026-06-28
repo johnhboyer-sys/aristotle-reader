@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "Long",
+  "title": "On Length and Shortness of Life",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "020",
+  "greek_edition": "Ross, Aristotle: Parva Naturalia (OCT, 1955)",
+  "english_translation": "G. R. T. Ross (Oxford, 1908)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 7,
+   "first_column": "464b",
+   "last_column": "467b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 623,
+  "parses_dropped": 10
+ },
+ "lsj": {
+  "lemmata_needed": 468,
+  "lsj_entries_kept": 460,
+  "shards": 24,
+  "lemmata_without_entry": 9
+ }
+}

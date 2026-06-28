@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://johnhboyer-sys.github.io/aristotle-reader/sitemap-index.xml

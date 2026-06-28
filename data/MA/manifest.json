@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "MA",
+  "title": "Movement of Animals",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "021",
+  "greek_edition": "Jaeger, Aristotelis De animalium motione (Teubner, 1913)",
+  "english_translation": "A. S. L. Farquharson (Oxford, 1912)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 14,
+   "first_column": "698a",
+   "last_column": "704b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 1120,
+  "parses_dropped": 35
+ },
+ "lsj": {
+  "lemmata_needed": 753,
+  "lsj_entries_kept": 738,
+  "shards": 24,
+  "lemmata_without_entry": 25
+ }
+}

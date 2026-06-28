@@ -1,0 +1,132 @@
+{
+ "1": [
+  {
+   "chapter": "1",
+   "column": "314a",
+   "line": "1",
+   "bekker": "314a1–315a25"
+  },
+  {
+   "chapter": "2",
+   "column": "315a",
+   "line": "26",
+   "bekker": "315a26–317a31"
+  },
+  {
+   "chapter": "3",
+   "column": "317a",
+   "line": "32",
+   "bekker": "317a32–319b5"
+  },
+  {
+   "chapter": "4",
+   "column": "319b",
+   "line": "6",
+   "bekker": "319b6–320a7"
+  },
+  {
+   "chapter": "5",
+   "column": "320a",
+   "line": "8",
+   "bekker": "320a8–322a33"
+  },
+  {
+   "chapter": "6",
+   "column": "322b",
+   "line": "1",
+   "bekker": "322b1–323a34"
+  },
+  {
+   "chapter": "7",
+   "column": "323b",
+   "line": "1",
+   "bekker": "323b1–324b24"
+  },
+  {
+   "chapter": "8",
+   "column": "324b",
+   "line": "25",
+   "bekker": "324b25–326b28"
+  },
+  {
+   "chapter": "9",
+   "column": "326b",
+   "line": "29",
+   "bekker": "326b29–327a29"
+  },
+  {
+   "chapter": "10",
+   "column": "327a",
+   "line": "30",
+   "bekker": "327a30–328b22"
+  }
+ ],
+ "2": [
+  {
+   "chapter": "1",
+   "column": "328b",
+   "line": "26",
+   "bekker": "328b26–329b5"
+  },
+  {
+   "chapter": "2",
+   "column": "329b",
+   "line": "6",
+   "bekker": "329b6–330a29"
+  },
+  {
+   "chapter": "3",
+   "column": "330a",
+   "line": "30",
+   "bekker": "330a30–331a6"
+  },
+  {
+   "chapter": "4",
+   "column": "331a",
+   "line": "7",
+   "bekker": "331a7–332a2"
+  },
+  {
+   "chapter": "5",
+   "column": "332a",
+   "line": "3",
+   "bekker": "332a3–333a15"
+  },
+  {
+   "chapter": "6",
+   "column": "333a",
+   "line": "16",
+   "bekker": "333a16–334a14"
+  },
+  {
+   "chapter": "7",
+   "column": "334a",
+   "line": "15",
+   "bekker": "334a15–334b29"
+  },
+  {
+   "chapter": "8",
+   "column": "334b",
+   "line": "30",
+   "bekker": "334b30–335a23"
+  },
+  {
+   "chapter": "9",
+   "column": "335a",
+   "line": "24",
+   "bekker": "335a24–336a14"
+  },
+  {
+   "chapter": "10",
+   "column": "336a",
+   "line": "15",
+   "bekker": "336a15–337a33"
+  },
+  {
+   "chapter": "11",
+   "column": "337a",
+   "line": "34",
+   "bekker": "337a34–338b19"
+  }
+ ]
+}

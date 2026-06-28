@@ -1,0 +1,53 @@
+{
+ "work": {
+  "id": "GA",
+  "title": "Generation of Animals",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "012",
+  "greek_edition": "Drossaart Lulofs, Aristotelis De Generatione Animalium (OCT, 1965)",
+  "english_translation": "Arthur Platt (Oxford, 1910)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 34,
+   "first_column": "715a",
+   "last_column": "731b"
+  },
+  {
+   "book": 2,
+   "segments": 36,
+   "first_column": "731b",
+   "last_column": "749a"
+  },
+  {
+   "book": 3,
+   "segments": 30,
+   "first_column": "749a",
+   "last_column": "763b"
+  },
+  {
+   "book": 4,
+   "segments": 30,
+   "first_column": "763b",
+   "last_column": "778a"
+  },
+  {
+   "book": 5,
+   "segments": 24,
+   "first_column": "778a",
+   "last_column": "789b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 6254,
+  "parses_dropped": 188
+ },
+ "lsj": {
+  "lemmata_needed": 3086,
+  "lsj_entries_kept": 2971,
+  "shards": 24,
+  "lemmata_without_entry": 143
+ }
+}

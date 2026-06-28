@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "Cat",
+  "title": "Categories",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "006",
+  "greek_edition": "Minio-Paluello, Aristotelis Categoriae et Liber de Interpretatione (OCT, 1949)",
+  "english_translation": "E. M. Edghill (Oxford, 1928)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 30,
+   "first_column": "1a",
+   "last_column": "15b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 1445,
+  "parses_dropped": 32
+ },
+ "lsj": {
+  "lemmata_needed": 826,
+  "lsj_entries_kept": 812,
+  "shards": 24,
+  "lemmata_without_entry": 28
+ }
+}

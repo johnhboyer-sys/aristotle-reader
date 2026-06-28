@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "Somn",
+  "title": "On Sleep",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "042",
+  "greek_edition": "Ross, Aristotle: Parva Naturalia (OCT, 1955)",
+  "english_translation": "J. I. Beare (Oxford, 1908)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 10,
+   "first_column": "453b",
+   "last_column": "458a"
+  }
+ ],
+ "analyses": {
+  "token_keys": 934,
+  "parses_dropped": 24
+ },
+ "lsj": {
+  "lemmata_needed": 685,
+  "lsj_entries_kept": 667,
+  "shards": 24,
+  "lemmata_without_entry": 23
+ }
+}

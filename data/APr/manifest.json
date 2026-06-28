@@ -1,0 +1,35 @@
+{
+ "work": {
+  "id": "APr",
+  "title": "Prior Analytics",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "001",
+  "greek_edition": "Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)",
+  "english_translation": "A. J. Jenkinson (Oxford, 1928)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 58,
+   "first_column": "24a",
+   "last_column": "52b"
+  },
+  {
+   "book": 2,
+   "segments": 37,
+   "first_column": "52b",
+   "last_column": "70b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 2240,
+  "parses_dropped": 62
+ },
+ "lsj": {
+  "lemmata_needed": 1029,
+  "lsj_entries_kept": 989,
+  "shards": 24,
+  "lemmata_without_entry": 42
+ }
+}

@@ -1,0 +1,29 @@
+{
+ "work": {
+  "id": "SE",
+  "title": "Sophistical Refutations",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "040",
+  "greek_edition": "Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)",
+  "english_translation": "W. A. Pickard-Cambridge (Oxford, 1928)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 42,
+   "first_column": "164a",
+   "last_column": "184b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 2536,
+  "parses_dropped": 56
+ },
+ "lsj": {
+  "lemmata_needed": 1382,
+  "lsj_entries_kept": 1314,
+  "shards": 24,
+  "lemmata_without_entry": 65
+ }
+}
