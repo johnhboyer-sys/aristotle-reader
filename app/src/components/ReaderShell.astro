@@ -13,6 +13,7 @@ import WorkSwitcher from './WorkSwitcher.svelte';
 import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, bookLabel, isBookless, workPath } from '../lib/works';
+import { SUPPORT_URL } from '../lib/support';
 
 interface Props { workId: string; n: number; }
 const { workId, n } = Astro.props as Props;
@@ -140,6 +141,10 @@ const h1Text =
         <WorkSwitcher work={workId} client:load />
       </div>
       <div class="bar-actions">
+        <a class="header-support" href={SUPPORT_URL} target="_blank" rel="noopener" title="Support the site" aria-label="Support the site">
+          <span class="hsup-heart" aria-hidden="true">♥</span>
+          <span class="hsup-text">Support</span>
+        </a>
         <a class="header-search" href={`${base}/search`} title="Search Greek &amp; English" aria-label="Search Greek &amp; English">
           <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.8" cy="6.8" r="4.6"/><line x1="10.4" y1="10.4" x2="14" y2="14"/></svg>
           <span class="hs-text">Search</span>

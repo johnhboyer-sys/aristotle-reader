@@ -231,6 +231,29 @@ body {
 .header-search:hover { border-color: var(--accent); color: var(--accent); }
 .header-search .hs-icon { display: block; flex-shrink: 0; }
 
+/* "Support the site" pill — the one filled call-to-action in the otherwise
+   neutral top-bar cluster. Shares .header-search geometry (size/min-height so
+   the row stays even) but inverts to an accent fill. Text hides on mobile (see
+   the responsive block), leaving just the heart. */
+.header-support {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0.4rem 0.7rem;
+  min-height: 36px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.header-support:hover { filter: brightness(1.08); }
+.header-support .hsup-heart { font-size: 0.85em; line-height: 1; }
+
 /* Theme (night-mode) toggle — sits next to the wordmark on desktop, and is
    grouped with the menu button on mobile (see .bar-actions). */
 .bar-actions {
@@ -1115,6 +1138,8 @@ body {
   .toc-toggle-text { display: none; }
   .header-search .hs-text { display: none; }
   .header-search { padding: 0.4rem 0.5rem; }
+  .header-support .hsup-text { display: none; }
+  .header-support { padding: 0.4rem 0.5rem; }
   /* Drop the "Aristotle ›" prefix (the sidebar has an "All works" link) and let
      the work title ellipsize rather than push the icons off-screen. */
   .header-title { min-width: 0; flex: 1 1 auto; overflow: hidden; }
@@ -1142,6 +1167,7 @@ body {
   .toc-toggle { order: 2; }
   .bar-actions { order: 3; flex: 1 1 auto; }
   .bar-actions .header-search   { order: 1; }
+  .bar-actions .header-support  { order: 1; }
   .bar-actions .settings-toggle { order: 2; margin-left: auto; }
   .bar-actions .theme-toggle    { order: 3; }
 
