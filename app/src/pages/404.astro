@@ -19,8 +19,54 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <div class="theme-corner"><ThemeToggle /></div>
   <main class="not-found">
     <p class="eyebrow">Aristotle</p>
+    <figure class="goatstag">
+      <svg viewBox="0 0 220 200" role="img" aria-labelledby="gs-title"
+           fill="none" stroke="currentColor" stroke-width="2.4"
+           stroke-linecap="round" stroke-linejoin="round">
+        <title id="gs-title">A goat-stag (tragelaphos): an antlered, bearded creature</title>
+        <!-- lean body + long goat head -->
+        <path d="M16,78 C14,72 18,67 26,65 C33,63 40,62 47,59 C51,57 54,55 56,50
+                 C60,53 62,57 63,62 C70,61 78,60 86,61 C112,57 148,57 176,68
+                 C182,64 187,62 190,66 C189,71 185,74 180,76 C178,84 175,92 172,100
+                 C150,106 120,108 100,106 C92,105 84,104 78,102 C74,101 70,99 67,96
+                 C64,92 62,88 60,84 C57,86 54,86 50,86 C46,87 43,89 41,90
+                 C33,90 24,87 19,83 C17,82 16,80 16,78 Z"/>
+        <!-- snout: mouth line -->
+        <path d="M18,80 C21,82 24,83 27,82"/>
+        <!-- goat ear -->
+        <path d="M62,57 C69,51 76,50 81,53 C77,59 69,62 64,61 C63,60 62,58 62,57 Z"/>
+        <!-- stag antlers (large, branching) -->
+        <path d="M54,50 C50,38 47,28 44,14"/>
+        <path d="M49,34 C42,31 37,28 31,22"/>
+        <path d="M47,26 C41,23 37,19 33,12"/>
+        <path d="M45,18 C42,13 40,9 39,5"/>
+        <path d="M57,49 C61,37 64,27 67,13"/>
+        <path d="M62,33 C68,30 73,27 79,21"/>
+        <path d="M64,25 C70,22 75,18 79,11"/>
+        <path d="M66,17 C69,12 71,8 72,4"/>
+        <!-- full goat beard -->
+        <path d="M42,88 C39,98 39,108 42,120"/>
+        <path d="M47,89 C45,99 45,109 48,121"/>
+        <path d="M52,89 C50,98 50,107 52,117"/>
+        <!-- long lean legs -->
+        <path d="M82,104 L80,172"/>
+        <path d="M94,105 L96,174"/>
+        <path d="M156,102 L158,172"/>
+        <path d="M168,100 L170,174"/>
+        <!-- hooves -->
+        <path d="M76,172 L84,172"/>
+        <path d="M92,174 L100,174"/>
+        <path d="M152,172 L160,172"/>
+        <path d="M164,174 L172,174"/>
+        <!-- eye -->
+        <circle cx="38" cy="72" r="1.8" fill="currentColor" stroke="none"/>
+      </svg>
+      <figcaption>τραγέλαφος · the goat-stag</figcaption>
+    </figure>
     <h1>Page not found</h1>
-    <p class="lede">The page you're looking for doesn't exist or has moved.</p>
+    <p class="lede">The <em>goat-stag</em> is Aristotle's example of a name that
+      signifies something which does not exist (<em>De Interpretatione</em> 16a16).
+      So, it would seem, is the page you're looking for.</p>
     <div class="actions">
       <a class="btn-primary" href={`${base}/`}>Back to the corpus</a>
       <a class="btn-secondary" href={`${base}/search`}>Search</a>
@@ -57,6 +103,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       font-size: 1rem;
       line-height: 1.55;
       margin: 0 0 2rem;
+    }
+    .goatstag { margin: 0 0 1.4rem; color: var(--accent); }
+    .goatstag svg { width: clamp(150px, 30vw, 210px); height: auto; opacity: .92; }
+    .goatstag figcaption {
+      font-family: var(--font-greek);
+      font-size: .95rem;
+      color: var(--text-mid);
+      margin-top: .5rem;
     }
     .actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
     .btn-primary {
