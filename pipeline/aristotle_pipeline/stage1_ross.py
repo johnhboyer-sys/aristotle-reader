@@ -27,6 +27,15 @@ from .config import BUILD_DIR, SOURCES_DIR
 _REAL_CONF = {"certain", "reliable", "confirmed"}  # confirmed = verifier-placed (gloss aligner)
 
 _TAG = re.compile(r"<[^>]+>")
+# Some Wikisource-fetched archive sources (the O. F. Owen Organon volumes) carry
+# Parsoid transclusion spans whose `data-mw='[…]'` attribute holds JSON for the
+# page-number templates — and that JSON contains literal `>` and apostrophes
+# (e.g. "Owen's"), which break the inline-tag strip above and leak the attribute
+# tail into the visible prose as a `{"template":…}` run ending at the malformed
+# tag's `>`. Once the inner <span> strings have been stripped, the only `>` left
+# in such a run is that closing one, so each run is `{"template":…>`; drop them
+# (with any leading quote/comma/bracket JSON punctuation) and close the gap.
+_MW_TRANSCLUSION = re.compile(r'[\s",\[\]]*\{"template":.*?>\s*', re.S)
 # A line ends a sentence (so a following blank line is a real paragraph break,
 # not a soft-wrap) if it ends with terminal punctuation, allowing a trailing
 # closing quote/paren/bracket.
@@ -95,7 +104,13 @@ def _book_text(path: Path) -> str:
     # starts) was drowned out. Stripping inline tags first leaves `<br><br>` as
     # the sole paragraph delimiter, matching MIT's displayed divisions.
     body = re.sub(r"</?(a|span|i|b|em|strong|sup|sub|font)\b[^>]*>", "", body, flags=re.I)
-    return html.unescape(_TAG.sub("\n", body))
+    text = html.unescape(_TAG.sub("\n", body))
+    # Excise any leaked Parsoid data-mw template runs (see _MW_TRANSCLUSION).
+    # Guarded so it's a strict no-op for every source that doesn't carry them.
+    if '{"template":' in text:
+        text = _MW_TRANSCLUSION.sub(" ", text)
+        text = re.sub(r"[ \t]{2,}", " ", text)
+    return text
 
 
 def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
