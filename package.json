@@ -1,0 +1,8 @@
+{
+  "name": "aristotle-reader",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:public": "node scripts/build-public.mjs"
+  }
+}

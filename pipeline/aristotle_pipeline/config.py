@@ -34,9 +34,18 @@ class Manifest:
             return cls(yaml.safe_load(f), path)
 
     @classmethod
-    def for_work(cls, work: str) -> "Manifest":
-        """Load the manifest for a work slug, e.g. 'EN' or 'DA'."""
-        return cls.load(REPO_ROOT / "manifests" / f"{work}.yaml")
+    def for_work(cls, work: str, public: bool = False) -> "Manifest":
+        """Load the manifest for a work slug, e.g. 'EN' or 'DA'.
+
+        Public builds use manifests/<work>-public.yaml when it exists, falling
+        back to the normal manifest for works with no private translations.
+        """
+        manifests_dir = REPO_ROOT / "manifests"
+        if public:
+            public_path = manifests_dir / f"{work}-public.yaml"
+            if public_path.exists():
+                return cls.load(public_path)
+        return cls.load(manifests_dir / f"{work}.yaml")
 
     @property
     def work_id(self) -> str:

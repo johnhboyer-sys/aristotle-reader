@@ -1,6 +1,6 @@
 # Nicomachean Ethics Parallel Reader
 
-A static web application for reading Aristotle's *Nicomachean Ethics* with the Greek and English side by side, morphological analysis on every word, and full-text search across both languages.
+A static web application for reading and searching Aristotle's complete works with the Greek and English side by side, morphological analysis on every word, compare translations, and full-text search across both languages.
 
 ---
 
@@ -8,7 +8,7 @@ A static web application for reading Aristotle's *Nicomachean Ethics* with the G
 
 | Feature | Detail |
 |---|---|
-| Parallel text | Bywater Greek (OCT 1894) and Rackham English (Loeb 1926), aligned at every Bekker column |
+| Parallel text | Greek and English, aligned at every Bekker column |
 | Word popups | Click any Greek word: lemma, short gloss, parse (from Diogenes / Morpheus), and the full LSJ entry |
 | Search | Separate Greek and English boxes; All words / Any word / Phrase modes; `*` wildcard on Greek lemmata; AND/OR combination across languages |
 | Navigation | Book I–X; deep-link to any Bekker column from search results |
@@ -33,6 +33,30 @@ A static web application for reading Aristotle's *Nicomachean Ethics* with the G
 ---
 
 ## Building
+
+### Public build for GitHub Pages
+
+Use the repo-level public build command for anything that may be deployed:
+
+```bash
+npm run build:public
+```
+
+That single command:
+
+- rebuilds the generated data in the normal local path, `build/dist/`, so the app still reads through `app/public/data -> ../../build/dist`;
+- uses `manifests/<work>-public.yaml` whenever that file exists, falling back to `manifests/<work>.yaml` only for works with no public/private split;
+- removes old generated output first, so a previous local/full build cannot leave private overlay JSON behind;
+- runs the Astro build as `PUBLIC_HIDE_PRIVATE=1 npm run build`, which drops private translation registry entries from the public bundle.
+
+A GitHub Pages deploy should therefore use exactly:
+
+```bash
+npm ci --prefix app
+npm run build:public
+```
+
+Deploy `app/dist/` only after that command succeeds. Do not deploy an app build made with plain `npm run build` inside `app/`; that build can include local/private translation entries if the data was produced from the full manifests.
 
 ### 1. Run the pipeline
 
