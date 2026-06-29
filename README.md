@@ -1,6 +1,8 @@
-# Nicomachean Ethics Parallel Reader
+# Aristotle Parallel Reader
 
-A static web application for reading Aristotle's *Nicomachean Ethics* with the Greek and English side by side, morphological analysis on every word, and full-text search across both languages.
+A static web application for reading Aristotle's complete works with the Greek and English side by side, morphological analysis on every word, and full-text search across both languages.
+
+Live at **[johnhboyer-sys.github.io/aristotle-reader/](https://johnhboyer-sys.github.io/aristotle-reader/)**
 
 ---
 
@@ -8,10 +10,29 @@ A static web application for reading Aristotle's *Nicomachean Ethics* with the G
 
 | Feature | Detail |
 |---|---|
-| Parallel text | Bywater Greek (OCT 1894) and Rackham English (Loeb 1926), aligned at every Bekker column |
+| Parallel text | TLG Greek and public-domain English translations, aligned at every Bekker column |
 | Word popups | Click any Greek word: lemma, short gloss, parse (from Diogenes / Morpheus), and the full LSJ entry |
 | Search | Separate Greek and English boxes; All words / Any word / Phrase modes; `*` wildcard on Greek lemmata; AND/OR combination across languages |
-| Navigation | Book I–X; deep-link to any Bekker column from search results |
+| Navigation | Books and chapters; deep-link to any Bekker location from search results; URL tracks scroll position |
+| Translation picker | Multiple public-domain English translations available for most works (e.g. Ross, Rackham, Jowett, Fyfe, Owen) |
+| Print / PDF | Browser print saves a clean bilingual PDF (landscape) or English-only portrait layout |
+| Bekker Index | Index Aristotelicus (Bonitz) reader (in progress) |
+
+### Works covered (26 total)
+
+**Logic (Organon):** Categories, De Interpretatione, Prior Analytics, Posterior Analytics, Topics, Sophistical Refutations
+
+**Natural Philosophy:** Physics, On the Heavens, On Generation and Corruption, Meteorology, De Anima
+
+**Parva Naturalia:** Sense and Sensibilia, On Memory, On Sleep, On Dreams, On Divination in Sleep, On Length and Shortness of Life, On Youth, Old Age, Life and Death, and Respiration
+
+**Biological Works:** History of Animals, Parts of Animals, Movement of Animals, Progression of Animals, Generation of Animals
+
+**Metaphysics**
+
+**Moral and Political Philosophy:** Nicomachean Ethics, Eudemian Ethics, Politics
+
+**Rhetoric and Poetics:** Rhetoric, Poetics
 
 ---
 
@@ -23,7 +44,7 @@ A static web application for reading Aristotle's *Nicomachean Ethics* with the G
 |---|---|---|
 | **Diogenes 4.7+** | [d.iogen.es](https://d.iogen.es) | Free. Provides both the `xml-export.pl` script and the Morpheus data files (`greek-analyses.txt`, `grc.lsj.xml`). |
 | **TLG corpus** | Licensed from the [TLG](https://stephanus.tlg.uci.edu) | Required for the Greek text. The corpus files live at `TLG Files/TLG/` one level above this repo and are never committed. |
-| **Perseus English TEI** | Downloaded automatically on first pipeline run (see `manifests/ne.yaml`), or already vendored in `sources/` | Rackham 1926, public domain. |
+| **English translations** | Vendored in `sources/` or downloaded automatically on first pipeline run (see `manifests/`) | All public domain. |
 
 ### Tools
 
@@ -34,30 +55,37 @@ A static web application for reading Aristotle's *Nicomachean Ethics* with the G
 
 ## Building
 
-### 1. Run the pipeline
+### 1. Run the pipeline (per work)
 
 ```bash
 cd pipeline
-uv run python -m aristotle_pipeline all
+WORK=ne uv run python -m aristotle_pipeline all
 ```
 
-This runs all seven stages in order and writes the frontend data set to `build/dist/ne/`. The full run takes about two seconds on an M-series Mac.
+Set `WORK` to the work's short identifier (`ne`, `pol`, `rhet`, `poet`, `da`, `phys`, `meta`, `gc`, `mete`, `apr`, `apo`, `top`, `se`, `ha`, `cat`, `de_int`, `sens`, `mem`, `somn`, `insomn`, `div_somn`, `juv`, `ee`, …). The pipeline writes data to `build/dist/{WORK}/`.
 
-**Stages:**
+To run a single stage: `WORK=ne uv run python -m aristotle_pipeline stage2`
+
+**Pipeline stages:**
 
 | Stage | What it does |
 |---|---|
-| 1 | Exports Greek from TLG via Diogenes, parses verse-mode TEI; chunks Rackham English at Bekker milestones; builds standoff alignment |
-| 2 | Validates column completeness, line gaps, alignment coverage, length ratios, proper-name spot check, sigla inventory |
+| 1 | Exports Greek from TLG via Diogenes; chunks English translation at Bekker milestones; builds standoff alignment |
+| 2 | Validates column completeness, line gaps, alignment coverage, length ratios |
 | 3 | Tokenizes Greek text; converts surface forms to Beta Code lookup keys |
-| 4 | Single targeted pass over `greek-analyses.txt`; matches 99.9% of tokens; writes `unmatched.json` for review |
+| 4 | Single targeted pass over `greek-analyses.txt`; matches 99.9% of tokens |
 | 5 | Streams `grc.lsj.xml`; extracts corpus-occurring lemmata only; letter-sharded HTML |
-| 6 | Builds inverted search indexes (Greek lemma + English word) with per-segment fold-token sequences for phrase search |
-| 7 | Emits final `build/dist/ne/` tree: `book-{01–10}.json`, `analyses.json`, `lsj/`, `search/`, `manifest.json` |
+| 6 | Builds inverted search indexes (Greek lemma + English word) with phrase search support |
+| 7 | Emits final `build/dist/{WORK}/` tree: `book-*.json`, `analyses.json`, `lsj/`, `search/`, `manifest.json` |
 
-To run a single stage: `uv run python -m aristotle_pipeline stage2` (useful after editing the manifest or patch file).
+**Alignment pipeline** (produces `anchors.yaml` per work, then wired into Stage 1):
 
-**Patch file:** `manifests/ne-analyses-patch.json` holds hand-reviewed analyses for forms Morpheus does not know (Aristotle's algebraic variable letters in Book V, etc.).
+```bash
+cd pipeline
+WORK=ne uv run python stage1_gloss.py    # extract Greek glosses
+WORK=ne uv run python gloss_align.py     # align translation to Greek spine
+WORK=ne uv run python gloss_map_to_anchors.py  # emit anchors.yaml
+```
 
 ### 2. Run the app
 
@@ -81,9 +109,7 @@ npm run shots                # all scenes → app/.shots/
 npm run shots -- /book/3     # one ad-hoc shot of a path
 ```
 
-Uses Playwright from the local or npx cache (no project dependency); edit the `scenes` list in `app/scripts/shoot.mjs` to add views.
-
-The `app/public/data` symlink points at `../build/dist/ne/`, so no copy step is needed in development. For a production deployment, copy or serve `build/dist/ne/` at the `/data/` path.
+Uses Playwright from the local or npx cache (no project dependency).
 
 ---
 
@@ -92,17 +118,19 @@ The `app/public/data` symlink points at `../build/dist/ne/`, so no copy step is 
 ```
 aristotle-reader/
 ├── manifests/
-│   ├── ne.yaml                  # work metadata, book boundaries, source paths
-│   └── ne-analyses-patch.json   # hand-reviewed analyses for unmatched forms
-├── sources/
-│   └── tlg0086.tlg010.perseus-eng2.xml   # vendored Rackham TEI (public domain)
+│   ├── {work}.yaml              # per-work metadata, book boundaries, source paths
+│   └── {work}-analyses-patch.json  # hand-reviewed analyses for unmatched forms
+├── sources/                     # vendored public-domain English translations (TEI XML)
 ├── pipeline/                    # uv Python project
 │   └── aristotle_pipeline/
 │       ├── stage1_greek.py      # TLG export + spine parser
 │       ├── stage1_english.py    # Perseus TEI chunker + alignment
-│       ├── stage2_validate.py   # six-check validation suite
+│       ├── stage1_gloss.py      # Greek gloss extractor (for alignment)
+│       ├── gloss_align.py       # translation aligner (gloss method)
+│       ├── gloss_map_to_anchors.py  # anchors.yaml emitter
+│       ├── stage2_validate.py   # validation suite
 │       ├── stage3_tokenize.py   # Greek tokenizer
-│       ├── beta.py              # Unicode → Beta Code conversion
+│       ├── betacode.ts / beta.py  # Unicode ↔ Beta Code conversion
 │       ├── stage4_morphology.py # analyses lookup
 │       ├── stage5_lsj.py        # LSJ extraction
 │       ├── stage6_search.py     # search index build
@@ -112,18 +140,22 @@ aristotle-reader/
 ├── app/                         # Astro + Svelte static site
 │   └── src/
 │       ├── pages/
-│       │   ├── book/[n].astro   # reading view (Books I–X)
-│       │   ├── search.astro     # search page
+│       │   ├── index.astro      # home page (5 corpus divisions)
+│       │   ├── [work]/          # per-work reading view
+│       │   ├── search.astro     # full-corpus search
+│       │   ├── support.astro    # support / donation page
 │       │   └── attribution.astro
 │       ├── components/
 │       │   ├── Reader.svelte    # parallel text view + word popups
 │       │   ├── WordPopup.svelte # morphology + LSJ popup
 │       │   └── Search.svelte    # search UI + engine
 │       └── lib/
+│           ├── works.ts         # work registry + corpus categories
 │           ├── data.ts          # data-fetch helpers
 │           └── search.ts        # search engine (inverted index + phrase)
+├── bonitz/                      # Index Aristotelicus (Bonitz) pipeline (in progress)
 └── build/                       # generated, gitignored
-    └── dist/ne/                 # ready-to-serve frontend data
+    └── dist/{work}/             # ready-to-serve frontend data per work
 ```
 
 ---
@@ -133,8 +165,7 @@ aristotle-reader/
 See [`/attribution`](app/src/pages/attribution.astro) in the running app, or the source file directly. The short version:
 
 - **LSJ** — CC BY-SA 3.0 (Perseus Digital Library / Trustees of Tufts University). This app uses a derivative; downstream use must also carry CC BY-SA.
-- **Rackham translation** — Public domain (published 1926, US copyright expired).
-- **Bywater Greek text** — Public domain (published 1894).
+- **English translations** — All public domain (pre-1928 US publications). See attribution page for per-work details.
 - **TLG electronic corpus** — Separately licensed; not redistributed by this project. Users must hold their own TLG licence.
 - **Morpheus morphological data** — Distributed with Diogenes; see Diogenes licence.
 - **This software** — MIT licence (pipeline + app code only; data excluded).
