@@ -45,6 +45,14 @@ if (!existsSync(join(ROOT, 'build', 'dist'))) {
   throw new Error('Public data build did not produce build/dist; refusing to build deployable app output.');
 }
 
+// Safety gate for the shared (de-duplicated) LSJ dictionary: fail the build if
+// any LSJ key referenced by any work's analyses.json is missing from the shared
+// build/dist/lsj shards (which would make a word popup silently show no entry).
+console.log('\nVerifying shared LSJ dictionary covers every referenced key');
+run('uv', ['run', 'python', '-m', 'aristotle_pipeline.verify_shared_lsj'], {
+  cwd: join(ROOT, 'pipeline'),
+});
+
 if (!existsSync(join(ROOT, 'app', 'node_modules'))) {
   console.log('\nInstalling app dependencies');
   run('npm', ['ci'], { cwd: join(ROOT, 'app') });

@@ -220,13 +220,17 @@ export function lsjShard(key: string): string {
   return '_';
 }
 
-export async function fetchLsjShard(work: string, letter: string): Promise<Record<string, LsjEntry>> {
-  const key = `${work}:${letter}`;
-  if (_lsjCache.has(key)) return _lsjCache.get(key)!;
-  const r = await fetch(`${workBase(work)}/lsj/${letter}.json`);
+// The LSJ dictionary is shared across the whole corpus — one copy at
+// /data/lsj/<letter>.json (the union of every work's lemmas), not a per-work
+// subset — so entries aren't duplicated ~30× across works. Keys are global
+// betacode headwords, identical across works, so the same lookup resolves
+// against the shared shard. Cached by letter (work-independent).
+export async function fetchLsjShard(letter: string): Promise<Record<string, LsjEntry>> {
+  if (_lsjCache.has(letter)) return _lsjCache.get(letter)!;
+  const r = await fetch(`${ROOT}/lsj/${letter}.json`);
   if (!r.ok) return {};
   const shard = await r.json();
-  _lsjCache.set(key, shard);
+  _lsjCache.set(letter, shard);
   return shard;
 }
 
@@ -243,7 +247,7 @@ export async function lookupWord(
       if (seen.has(lsjKey)) continue;
       seen.add(lsjKey);
       const letter = lsjShard(lsjKey);
-      const shard = await fetchLsjShard(work, letter);
+      const shard = await fetchLsjShard(letter);
       if (shard[lsjKey]) lsjEntries.push(shard[lsjKey]);
     }
   }
