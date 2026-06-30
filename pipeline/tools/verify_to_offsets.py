@@ -98,6 +98,9 @@ for (b, cp), ticks in by_chap.items():
         if off is None:
             missing += 1
             continue
+        if off < cursor:   # nearest-match can regress; skip rather than backtrack
+            missing += 1
+            continue
         overrides.setdefault(f"{b}:{cp}", {})[cit] = off
         cursor = off
         placed += 1

@@ -28,10 +28,15 @@ from sentence_spike import segment_greek
 
 def main(work_id: str, batch_size: int | None = None):
     out = BUILD_DIR / "align" / "sent_gloss_tasks" / work_id
+    glosses_dir = BUILD_DIR / "align" / "sent_glosses" / work_id
     out.mkdir(parents=True, exist_ok=True)
     total = 0
     files = 0
+    skipped = 0
     for ch in chapter_lines():
+        if (glosses_dir / f"1-{ch.chapter}.json").exists():
+            skipped += 1
+            continue
         gsents, _ls, _l2s = segment_greek(ch.lines, {}, soft=False)
         items = [{"index": i, "bekker": s.lines[0], "greek": s.text}
                  for i, s in enumerate(gsents)]
@@ -47,13 +52,14 @@ def main(work_id: str, batch_size: int | None = None):
                 json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
             files += 1
         total += len(items)
-    print(f"{work_id}: wrote {files} sentence-gloss task file(s), {total} sentences -> {out}")
+    skipped_note = f" ({skipped} already done)" if skipped else ""
+    print(f"{work_id}: wrote {files} sentence-gloss task file(s), {total} sentences -> {out}{skipped_note}")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--work", default="Cat")
-    ap.add_argument("--batch-size", type=int, default=0,
-                    help="If >0, split each chapter into numbered batch files")
+    ap.add_argument("--batch-size", type=int, default=20,
+                    help="Sentences per task file; 0 = one file per chapter (legacy)")
     a = ap.parse_args()
     main(a.work, a.batch_size)
