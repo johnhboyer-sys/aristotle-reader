@@ -1,0 +1,10 @@
+{"column": "L", "entry_count": 19, "json": "app/src/data/bonitz/page-015-L.json", "page": "015", "source": "existing_xml", "status": "ok", "xml": "output/page-015-L.xml"}
+{"column": "R", "entry_count": 1, "json": "app/src/data/bonitz/page-015-R.json", "page": "015", "source": "existing_xml", "status": "ok", "xml": "output/page-015-R.xml"}
+{"column": "L", "json": "app/src/data/bonitz/page-015-L.json", "page": "015", "source": "existing_xml_json", "status": "ok", "xml": "output/page-015-L.xml"}
+{"column": "R", "json": "app/src/data/bonitz/page-015-R.json", "page": "015", "source": "existing_xml_json", "status": "ok", "xml": "output/page-015-R.xml"}
+{"column": "L", "json": "app/src/data/bonitz/page-015-L.json", "page": "015", "source": "existing_xml_json", "status": "ok", "xml": "output/page-015-L.xml"}
+{"column": "R", "json": "app/src/data/bonitz/page-015-R.json", "page": "015", "source": "existing_xml_json", "status": "ok", "xml": "output/page-015-R.xml"}
+{"column": "L", "entry_count": 2, "json": "app/src/data/bonitz/page-016-L.json", "page": "016", "source": "existing_xml", "status": "ok", "xml": "output/page-016-L.xml"}
+{"column": "R", "entry_count": 10, "json": "app/src/data/bonitz/page-016-R.json", "page": "016", "source": "existing_xml", "status": "ok", "xml": "output/page-016-R.xml"}
+{"column": "L", "json": "app/src/data/bonitz/page-016-L.json", "page": "016", "source": "existing_xml_json", "status": "ok", "xml": "output/page-016-L.xml"}
+{"column": "R", "json": "app/src/data/bonitz/page-016-R.json", "page": "016", "source": "existing_xml_json", "status": "ok", "xml": "output/page-016-R.xml"}

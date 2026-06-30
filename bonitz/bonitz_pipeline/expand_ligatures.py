@@ -36,10 +36,10 @@ CLI:
 
 from __future__ import annotations
 import argparse
-import glob
 import re
 import sys
 import unicodedata
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 _COMB = '̀-ͯ'
@@ -180,18 +180,21 @@ def expand_ligatures(text: str) -> str:
 # CLI helpers
 # ---------------------------------------------------------------------------
 
-def _iter_xml():
-    return sorted(glob.glob('output/page-*.xml'))
+_DEFAULT_XML_DIR = Path(__file__).resolve().parent.parent / "output"
 
 
-def _preview(limit: int = 16) -> None:
+def _iter_xml(directory: Path):
+    return sorted(directory.glob('page-*.xml'))
+
+
+def _preview(directory: Path, limit: int = 16) -> None:
     shown = 0
-    for f in _iter_xml():
-        for line in Path(f).read_text(encoding='utf-8').splitlines():
+    for f in _iter_xml(directory):
+        for line in f.read_text(encoding='utf-8').splitlines():
             if 'ȣ' in line or 'ϗ' in line:
                 i = min((line.find(c) for c in 'ȣϗ' if c in line), default=0)
                 a, b = max(0, i - 30), i + 60
-                print(f"[{Path(f).name}]")
+                print(f"[{f.name}]")
                 print("  before: …" + line[a:b].strip())
                 print("  after : …" + expand_ligatures(line[a:b]).strip())
                 print()
@@ -200,13 +203,13 @@ def _preview(limit: int = 16) -> None:
                     return
 
 
-def _residual() -> None:
+def _residual(directory: Path) -> None:
     """Report any bare-unaccented ου-word the table did NOT fix."""
     import collections
     ACCENT = set('́̀͂')
     miss = collections.Counter()
-    for f in _iter_xml():
-        s = re.sub(r'</?cit>', '', Path(f).read_text(encoding='utf-8'))
+    for f in _iter_xml(directory):
+        s = re.sub(r'</?cit>', '', f.read_text(encoding='utf-8'))
         s = re.sub(r'<[^>]+>', ' ', s)
         s = expand_ligatures(s)
         for w in _WORD_RE.findall(s):
@@ -220,14 +223,32 @@ def _residual() -> None:
             print(f"  {c:3}  {w}")
 
 
-def _apply() -> None:
+def _expand_xml_text_nodes(path: Path) -> bool:
+    parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+    tree = ET.parse(path, parser=parser)
+    root = tree.getroot()
+    changed = False
+    for el in root.iter():
+        if el.text:
+            new_text = expand_ligatures(el.text)
+            if new_text != el.text:
+                el.text = new_text
+                changed = True
+        if el.tail:
+            new_tail = expand_ligatures(el.tail)
+            if new_tail != el.tail:
+                el.tail = new_tail
+                changed = True
+    if changed:
+        xml = ET.tostring(root, encoding='unicode')
+        path.write_text(unicodedata.normalize('NFC', xml) + '\n', encoding='utf-8')
+    return changed
+
+
+def _apply(directory: Path) -> None:
     changed = 0
-    for f in _iter_xml():
-        p = Path(f)
-        orig = p.read_text(encoding='utf-8')
-        new = expand_ligatures(orig)
-        if new != orig:
-            p.write_text(new, encoding='utf-8')
+    for p in _iter_xml(directory):
+        if _expand_xml_text_nodes(p):
             changed += 1
     print(f"Rewrote {changed} XML files.", file=sys.stderr)
 
@@ -237,14 +258,17 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument('--preview', action='store_true')
     ap.add_argument('--residual', action='store_true')
     ap.add_argument('--apply', action='store_true')
+    ap.add_argument('--dir', type=Path, default=_DEFAULT_XML_DIR,
+                    help=f"Directory containing page-*.xml (default: {_DEFAULT_XML_DIR})")
     ap.add_argument('--limit', type=int, default=16)
     args = ap.parse_args(argv)
+    xml_dir = args.dir.resolve()
     if args.apply:
-        _apply()
+        _apply(xml_dir)
     elif args.residual:
-        _residual()
+        _residual(xml_dir)
     else:
-        _preview(args.limit)
+        _preview(xml_dir, args.limit)
 
 
 if __name__ == '__main__':
