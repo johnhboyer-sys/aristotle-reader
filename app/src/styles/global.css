@@ -1112,7 +1112,10 @@ body {
   line-height: 0;
   color: var(--accent);
   cursor: pointer;
-  padding: 0 0.05em;
+  /* Roomier hit area so the small superscript is easy to hover/tap, without
+     enlarging the visible glyph (negative margins absorb the extra padding). */
+  padding: 0.5em 0.35em;
+  margin: -0.5em -0.3em;
 }
 .fn-marker:hover { text-decoration: underline; }
 .fn-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
