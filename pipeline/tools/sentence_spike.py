@@ -50,7 +50,7 @@ from aristotle_pipeline.config import BUILD_DIR
 _EXAMPLE = re.compile(r",\s+(?=οἷον\b)")
 # Hard sentence enders (Greek '.' and the question marks); soft adds the ano teleia.
 HARD = {".", ";", ";"}            # . , ; (ascii) , U+037E Greek question mark
-SOFT = {"·", "·"}            # middle dot / ano teleia (mid-level pause)
+SOFT = {"·", "·", "—"}  # middle dot / ano teleia + em-dash (parenthetical break)
 
 # Closing brackets/quotes that may TRAIL an ender — they belong to the clause the
 # ender closed, so the split must keep them with the previous segment (else the
