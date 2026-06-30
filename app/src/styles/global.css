@@ -889,6 +889,13 @@ body {
    not page-divided segments. */
 .reader-body.busse .segment { border-top: none; padding-top: 0; margin-bottom: 0; }
 .reader-body.busse .seg-row + .seg-row { margin-top: 0; }
+/* Flow the Greek as continuous prose (not one block per Bekker line) so the
+   Greek and the English are balanced in height and read as parallel paragraphs
+   — no per-line gutter is shown for a non-Bekker work anyway. */
+.reader-body.busse .greek-line { display: inline; }
+.reader-body.busse .greek-line::after { content: ' '; }
+.reader-body.busse .greek-line .line-num { display: none; }
+.reader-body.busse .greek-col { text-align: justify; }
 .para-br { display: block; height: 0.6em; }
 .para-br + .bk-seg::before { content: ''; display: inline-block; width: 1.4em; }
 
