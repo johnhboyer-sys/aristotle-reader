@@ -45,11 +45,20 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
 const scenes = [
   { name: 'home', path: '/' },
   {
-    // The corpus picker with the De Anima work expanded to show its translations.
-    name: 'home-expanded',
+    // Mobile home: divisions collapsed by default → a short menu of headers.
+    name: 'home-mobile',
     path: '/',
+    viewport: { width: 390, height: 1400 },
+  },
+  {
+    // Mobile home with Natural Philosophy expanded → its three sub-divisions
+    // show collapsed; the first sub-division is then opened to reveal its grid.
+    name: 'home-mobile-expanded',
+    path: '/',
+    viewport: { width: 390, height: 1400 },
     async run(page) {
-      await page.click('.works li:nth-child(2) summary');
+      await page.click('.cat:nth-child(2) .cat-toggle');           // Natural Philosophy
+      await page.click('.cat:nth-child(2) .subcat:nth-child(1) .subcat-toggle'); // II.a
       await page.waitForTimeout(300);
     },
   },
@@ -104,7 +113,7 @@ const scenes = [
 ];
 
 async function shoot(browser, scene, outName) {
-  const page = await browser.newPage({ viewport: { width: 1100, height: 1400 } });
+  const page = await browser.newPage({ viewport: scene.viewport || { width: 1100, height: 1400 } });
   await page.goto(BASE + scene.path, { waitUntil: 'networkidle' });
   if (scene.run) await scene.run(page);
   await page.waitForTimeout(400);
