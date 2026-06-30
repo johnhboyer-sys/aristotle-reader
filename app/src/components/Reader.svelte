@@ -376,7 +376,7 @@
   function renderThird(text: string): string {
     return highlightEng(text).replace(
       /\[\^(\d+)\]/g,
-      '<sup class="fn-marker" data-fn="$1" role="button" tabindex="0" aria-label="Footnote $1">$1</sup>',
+      '<button type="button" class="fn-marker" data-fn="$1" aria-label="Footnote $1">$1</button>',
     );
   }
 
@@ -596,16 +596,21 @@
   // with a short close-delay so the cursor can travel from the marker into the
   // popup without it vanishing; click/Enter also open it (touch + keyboard).
   let footnote: { n: string; anchor: { x: number; y: number } } | null = null;
+  // A click PINS the popup open (it stays until you dismiss it); hover opens it
+  // transiently with a short close delay. Pinning makes click-to-read reliable.
+  let fnPinned = false;
   let fnCloseTimer: ReturnType<typeof setTimeout> | null = null;
   function cancelFnClose() {
     if (fnCloseTimer) { clearTimeout(fnCloseTimer); fnCloseTimer = null; }
   }
   function scheduleFnClose() {
+    if (fnPinned) return;            // a clicked (pinned) note ignores hover-out
     cancelFnClose();
     fnCloseTimer = setTimeout(() => { footnote = null; fnCloseTimer = null; }, 180);
   }
-  function showFootnote(marker: Element) {
+  function showFootnote(marker: Element, pin = false) {
     cancelFnClose();
+    if (pin) fnPinned = true;
     const n = marker.getAttribute('data-fn') ?? '';
     if (footnote?.n === n) return;
     const r = marker.getBoundingClientRect();
@@ -623,9 +628,17 @@
     if (!marker) return;
     if (e instanceof KeyboardEvent && e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
-    showFootnote(marker);
+    e.stopPropagation();
+    showFootnote(marker, true);
   }
-  function closeFootnote() { cancelFnClose(); footnote = null; }
+  function closeFootnote() { cancelFnClose(); fnPinned = false; footnote = null; }
+  // Click anywhere outside the marker/popup dismisses a pinned note.
+  function onDocPointerDown(e: MouseEvent) {
+    if (!fnPinned) return;
+    const t = e.target as HTMLElement | null;
+    if (t?.closest?.('.fn-marker') || t?.closest?.('.footnote-popup')) return;
+    closeFootnote();
+  }
 
   onMount(async () => {
     // Remember which book of this work was last open, for the work switcher.
@@ -1230,6 +1243,8 @@
     onClose={closePopup}
   />
 {/if}
+
+<svelte:window on:pointerdown={onDocPointerDown} />
 
 {#if footnote}
   <FootnotePopup

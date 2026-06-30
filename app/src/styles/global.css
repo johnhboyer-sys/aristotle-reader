@@ -1105,6 +1105,12 @@ body {
 /* ── translator footnotes (Ostwald) ──────────────────────────────── */
 /* Inline `[^N]` reference, rendered as a clickable superscript marker. */
 .fn-marker {
+  /* A real <button> (keyboard- + screen-reader-accessible, unambiguously
+     clickable) styled as an inline superscript — reset the native chrome. */
+  display: inline;
+  background: none;
+  border: 0;
+  appearance: none;
   font-family: var(--font-ui);
   font-size: 0.62em;
   font-weight: 600;
