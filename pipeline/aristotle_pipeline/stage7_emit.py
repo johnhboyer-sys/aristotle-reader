@@ -232,11 +232,36 @@ def emit_analyses(out_dir: Path) -> dict:
     return {"token_keys": len(merged), "parses_dropped": dropped}
 
 
+def _merge_shared_lsj() -> None:
+    """Merge this work's LSJ shards into the corpus-wide shared dictionary at
+    build/dist/lsj/<letter>.json (union by key).
+
+    The reader fetches /data/lsj/<letter>.json regardless of which work is open,
+    so dictionary entries are stored ONCE instead of duplicated ~30× across
+    per-work subsets. Entry bodies are identical across works (same master
+    grc.lsj.xml), so a key-keyed dict merge dedups them: the result is the union
+    of every work's needed entries. build/dist persists across the works in one
+    build run (it is cleared once at the start), so each work accumulates into
+    the shared dir; a single-work rebuild just refreshes its own keys.
+    """
+    shared = BUILD_DIR / "dist" / "lsj"
+    shared.mkdir(parents=True, exist_ok=True)
+    for shard in sorted((BUILD_DIR / "stage5" / "lsj").glob("*.json")):
+        src = json.loads(shard.read_text(encoding="utf-8"))
+        dest = shared / shard.name
+        if dest.exists():
+            merged = json.loads(dest.read_text(encoding="utf-8"))
+            merged.update(src)
+        else:
+            merged = src
+        dest.write_text(json.dumps(merged, ensure_ascii=False), encoding="utf-8")
+
+
 def run(manifest: Manifest) -> Path:
     out_dir = BUILD_DIR / "dist" / manifest.work_id
     if out_dir.exists():
         shutil.rmtree(out_dir)
-    (out_dir / "lsj").mkdir(parents=True)
+    out_dir.mkdir(parents=True)
 
     spine = _load("stage1/greek_spine.json")
     tokens_doc = _load("stage3/tokens.json")
@@ -291,8 +316,7 @@ def run(manifest: Manifest) -> Path:
         json.dumps(columns_out, ensure_ascii=False, indent=1), encoding="utf-8"
     )
 
-    for shard in sorted((BUILD_DIR / "stage5" / "lsj").glob("*.json")):
-        shutil.copy(shard, out_dir / "lsj" / shard.name)
+    _merge_shared_lsj()
 
     (out_dir / "search").mkdir(exist_ok=True)
     for f in ["greek_lemma.json", "greek_form.json", "english.json", "meta.json"]:
