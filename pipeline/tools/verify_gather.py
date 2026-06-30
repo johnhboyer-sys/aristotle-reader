@@ -19,7 +19,9 @@ from aristotle_pipeline.align.glossing import chapter_lines, load_gloss, tick_wi
 from aristotle_pipeline.align.reference import default_target, load_gloss_chapters
 
 BOOK = int(sys.argv[1])
-PAD = int(sys.argv[2]) if len(sys.argv) > 2 else 600
+pad_arg = sys.argv[2] if len(sys.argv) > 2 else None
+PAD = int(os.environ.get("VERIFY_PAD", pad_arg or "600"))
+CURRENT_PLACEMENT = int(os.environ.get("VERIFY_PLACEMENT", "90"))
 CHAP_FILTER = set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None
 # VERIFY_ALL=1 → verify EVERY real tick (not just 'uncertain') against the full
 # chapter text, so flagged-but-reliable ticks that snapped to a sentence start
@@ -105,7 +107,7 @@ for (b, cp), cr in sorted(chapters.items()):
         }
         # The pass-1 lexical guess, so a judge-style verifier can confirm/correct
         # an existing placement rather than produce one from scratch.
-        tick["current_placement"] = text[a.offset:a.offset + 90]
+        tick["current_placement"] = text[a.offset:a.offset + CURRENT_PLACEMENT]
         if not ALL:  # windowed mode carries its own excerpt; ALL mode shares chapter text
             tick["excerpt"] = text[lo:min(len(text), a.offset + PAD)]
         ticks.append(tick)

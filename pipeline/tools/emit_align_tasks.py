@@ -2,8 +2,8 @@
 
 Writes build/align/interp_tasks/<WORK>/1-<chapter>.json =
   { "chapter": <n>,
-    "greek":   [{"i": 0, "text": "<soft-segmented Greek clause>"}, ...],
-    "english": [{"j": 0, "text": "<fine-segmented English unit>"}, ...] }
+    "greek":   ["<soft-segmented Greek clause>", ...],
+    "english": ["<fine-segmented English unit>", ...] }
 
 An agent reads it and returns the monotonic bead grouping (which Greek clauses go
 with which English units), written to build/align/interp_out/<WORK>/1-<chapter>.json
@@ -46,8 +46,8 @@ def main(work_id: str, vid: str, chapters, examples: bool = False):
         esents, _starts = si.eng_sentences(prose[(1, chap)], fine=True)
         task = {
             "chapter": chap,
-            "greek": [{"i": i, "text": s.text} for i, s in enumerate(gsents)],
-            "english": [{"j": j, "text": t} for j, (_o, t) in enumerate(esents)],
+            "greek": [s.text for s in gsents],
+            "english": [t for _, t in esents],
         }
         (out / f"1-{chap}.json").write_text(
             json.dumps(task, ensure_ascii=False, indent=1), encoding="utf-8")
