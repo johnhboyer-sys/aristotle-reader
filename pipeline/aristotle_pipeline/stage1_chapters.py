@@ -229,10 +229,16 @@ def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dic
         column, line = m.group(1), m.group(2)
         if column not in cols:
             print(f"  chapters: explicit column {column} absent from spine")
-        chapters.append({
+        chapter = {
             "book": 1, "chapter": str(entry["n"]), "column": column,
             "line": line, "wordIndex": 0, "bookstart": not chapters,
-        })
+        }
+        # Optional human section title (e.g. "Of Genus and Species" for the
+        # Isagoge), surfaced by stage7 as chapter-titles.json and shown by the
+        # reader in place of a bare "Chapter N".
+        if entry.get("title"):
+            chapter["title"] = entry["title"]
+        chapters.append(chapter)
     return chapters
 
 

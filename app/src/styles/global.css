@@ -876,6 +876,19 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .bk-num.approx { font-style: italic; opacity: 0.5; }
+/* Non-Bekker works (Busse-cited, e.g. the Isagoge) carry no meaningful per-line
+   gutter: hide the floated line numbers and reclaim the gutter padding so the
+   translation reads as plain prose beside the section reference (p. N). */
+.reader-body.busse .bk-num { display: none; }
+.reader-body.busse .ross-prose { padding-left: 0; }
+/* No dividing rules for a non-Bekker work: drop the control-strip underline and
+   the accent line trailing each section heading. */
+.reader-body.busse .reader-controls { border-bottom: none; }
+.reader-body.busse .chapter-head::after { display: none; }
+/* No per-page rules either: a non-Bekker treatise reads as continuous prose,
+   not page-divided segments. */
+.reader-body.busse .segment { border-top: none; padding-top: 0; margin-bottom: 0; }
+.reader-body.busse .seg-row + .seg-row { margin-top: 0; }
 .para-br { display: block; height: 0.6em; }
 .para-br + .bk-seg::before { content: ''; display: inline-block; width: 1.4em; }
 

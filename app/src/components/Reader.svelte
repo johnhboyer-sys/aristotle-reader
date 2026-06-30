@@ -14,8 +14,18 @@
   // paint) and the island hydrates over it. When absent (e.g. a future dynamic
   // mount), the reader falls back to fetching the JSON in onMount as before.
   export let bookData: BookData | null = null;
+  // Optional per-chapter section titles {chapter: title} for this book, passed
+  // by ReaderShell from chapter-titles.json. Shown in the chapter heading in
+  // place of "Chapter N" (used by non-Bekker works like the Isagoge).
+  export let chapterTitles: Record<string, string> = {};
 
   const workMeta = getWork(work);
+  // Non-Bekker works (e.g. Porphyry's Isagoge) are cited by Busse page, not a
+  // Bekker column:line. For them the reader relabels the column reference (p. N),
+  // hides the per-line Greek numbers and the interpolated English gutter, and
+  // titles each section from chapterTitles instead of "Chapter N".
+  const busse = workMeta?.citation?.scheme === 'busse';
+  const hideLineNums = busse && workMeta?.citation?.hideLineNumbers === true;
   const translations = workMeta ? visibleTranslations(workMeta) : [];
   // The reader can render any number of translations. The primary parallel
   // chunk is the 'english' slot; every other translation is a chapter-anchored
@@ -23,6 +33,10 @@
   // `secondaries` is the ordered list of non-primary translations.
   const engSlot = translations.find(t => t.slot === 'english');
   const thirdSlot = translations.find(t => t.slot === 'third');  // bears footnotes/tables
+  // The translation whose prose carries [^N] footnote markers (Ostwald's third
+  // slot, or a primary like the Isagoge's Owen). Its column renders the markers
+  // and opens the footnote popup.
+  const fnTransId = translations.find(t => t.footnotes)?.id ?? thirdSlot?.id;
   const secondaries = translations.filter(t => t.slot !== 'english');
   const canCompare = translations.length >= 2;
   // Overlay pieces for a translation in a segment, selected by its slot.
@@ -773,8 +787,10 @@
     pinnedTok = null;
   }
 
-  // Show line number only for multiples of 5 (and line 1)
+  // Show line number only for multiples of 5 (and line 1). Suppressed entirely
+  // for non-Bekker works whose synthetic line numbers aren't meaningful.
   function showLineNum(n: number): string {
+    if (hideLineNums) return '';
     if (n === 1 || n % 5 === 0) return String(n);
     return '';
   }
@@ -905,8 +921,8 @@
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}</span>
-      {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
+      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter]}: {chapterTitles[block.chapter]}{/if}</span>
+      {#if block.bekker && !busse}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
 
@@ -918,7 +934,7 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
-      {#if transId === thirdSlot?.id}
+      {#if transId === fnTransId}
         <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
           {#each flow as part}
             {#if part.text === '\n'}
@@ -955,6 +971,7 @@
     {/if}
   {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main"
+    class:busse={busse}
     class:word-open={!!popup}
     style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}"
     on:copy={handleCopy}>
@@ -1004,7 +1021,7 @@
       </div>
       {#if printCite}<div class="print-cite">{printCite}</div>{/if}
     </div>
-    {#if hasApproxTicks}
+    {#if hasApproxTicks && !busse}
       <p class="bekker-note">
         Greek line numbers are exact. The translations carry no Bekker numbers of
         their own, so those beside the English are aligned to the Greek:
@@ -1020,9 +1037,11 @@
              reference (the column ref is a marker within the chapter, not a
              heading over it). Mid-column chapter starts render inline below. -->
         {#if leadChapter}{@render chapterHead(leadChapter)}{/if}
-        <div class="seg-ref">
-          {seg.column}
-        </div>
+        {#if !busse}
+          <div class="seg-ref">
+            {seg.column}
+          </div>
+        {/if}
 
         {#each blocks as block, bi}
           {#if block.chapter && !(bi === 0 && leadChapter)}

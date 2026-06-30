@@ -1,0 +1,76 @@
+# Porphyry, Isagoge ("Introduction") — pipeline manifest.
+#
+# A NON-BEKKER work: the first ancient introduction/commentary on the site. The
+# Isagoge is its own treatise (not part of the Bekker corpus), cited by Busse
+# CAG IV.1 page.line. We export it from the TLG via Diogenes like every other
+# Greek text (tlg2034.006), then map Busse page N onto a SYNTHETIC Bekker column
+# "Na" (citation.scheme: busse) so the whole column:line pipeline + reader work
+# unchanged; the reader relabels the gutter (p. N) and shows section titles in
+# place of "Chapter N".
+#
+# One translation: O. F. Owen (Bohn, 1853), public domain, translated from the
+# Greek. Owen divides the work into 17 "Parts" that map 1:1 onto the Greek
+# section headings (he merges each community+difference pair, except Species &
+# Difference which he splits as "the same subject continued"). Tier 0 — no
+# anchors; the gutter is suppressed in the reader, so only the section
+# boundaries (exact, from the chapter starts below) matter.
+
+work:
+  id: Isa
+  title: "Isagoge"
+  greekTitle: "Εἰσαγωγή"
+  author: "Porphyry"
+  tlg_author: "2034"
+  tlg_work: "006"
+  greek_edition: "A. Busse, Porphyrii Isagoge et in Aristotelis Categorias commentarium (CAG IV.1, Berlin 1887)"
+  english_translation: "Octavius Freire Owen (Bohn, 1853)"
+
+# Non-Bekker citation: Busse CAG page.line, carried as synthetic columns "Na".
+citation:
+  scheme: busse
+
+bekker_range:
+  first_column: "1a"
+  last_column: "22a"
+
+# The 17 sections = Owen's 17 Parts, each pinned to the Busse (page, line) where
+# its Greek begins (the editorial section headings are tagged in the TLG export).
+# `title` is Owen's chapter heading, surfaced as chapter-titles.json.
+chapters:
+  source: explicit
+  list:
+    - { n: 1,  bekker: "1a3",   title: "Object of the Writer" }
+    - { n: 2,  bekker: "1a17",  title: "Of the Nature of Genus and Species" }
+    - { n: 3,  bekker: "8a7",   title: "Of Difference" }
+    - { n: 4,  bekker: "12a12", title: "Of Property" }
+    - { n: 5,  bekker: "12a23", title: "Of Accident" }
+    - { n: 6,  bekker: "13a9",  title: "Of Things Common and Peculiar to the Five Predicates" }
+    - { n: 7,  bekker: "13a22", title: "Of the Community and Distinction of Genus and Difference" }
+    - { n: 8,  bekker: "15a9",  title: "Of Community and Difference of Genus and Species" }
+    - { n: 9,  bekker: "16a1",  title: "Of Community and Difference of Genus and Property" }
+    - { n: 10, bekker: "16a19", title: "Of Community and Difference of Genus and Accident" }
+    - { n: 11, bekker: "18a10", title: "Of Community and Difference of Species and Difference" }
+    - { n: 12, bekker: "18a15", title: "The Same Subject Continued" }
+    - { n: 13, bekker: "19a4",  title: "Of Community and Difference of Property and Difference" }
+    - { n: 14, bekker: "19a16", title: "Of Community and Difference of Accident and Difference" }
+    - { n: 15, bekker: "20a11", title: "Of Community and Difference of Species and Property" }
+    - { n: 16, bekker: "21a4",  title: "Of Community and Difference of Species and Accident" }
+    - { n: 17, bekker: "21a20", title: "Of Community and Difference of Property and Accident" }
+
+english:
+  primary:
+    id: owen
+    name: "O. F. Owen (Bohn, 1853)"
+    model: archive
+    dir: "isa-owen"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "1a3", end: "22a13" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

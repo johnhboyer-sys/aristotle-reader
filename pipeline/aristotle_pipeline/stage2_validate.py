@@ -45,13 +45,20 @@ def _is_greek_letter(ch: str) -> bool:
 def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) -> dict:
     report: dict = {"checks": {}}
     segments = spine["segments"]
+    # A non-Bekker work (citation.scheme: busse) uses a synthetic a-side-only
+    # column set ("1a".."22a") and drops the editorial section-heading lines, so
+    # the standard Bekker completeness (which expects both a/b sides) and the
+    # line-gap check (which sees the dropped heading lines as gaps) don't apply.
+    busse = ((manifest.data.get("citation") or {}).get("scheme", "bekker") == "busse")
 
     # --- 1. column completeness + monotonicity --------------------------
-    expected = column_range(manifest.first_column, manifest.last_column)
     seen_cols: list[str] = []
     for seg in segments:
         if seg["column"] not in seen_cols:
             seen_cols.append(seg["column"])
+    # busse: the spine's own columns ARE the expected set (no a/b pairing).
+    expected = list(seen_cols) if busse else column_range(
+        manifest.first_column, manifest.last_column)
     missing = sorted(set(expected) - set(seen_cols), key=column_key)
     extra = sorted(set(seen_cols) - set(expected), key=column_key)
     keys = [column_key(c) for c in seen_cols]
@@ -92,6 +99,11 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
                     "expected": (col, a, b) in expected_gaps,
                 }
                 gaps.append(entry)
+    # busse: per-page line numbering with the editorial section headings dropped
+    # from the spine leaves benign intra-page gaps; they're expected by design.
+    if busse:
+        for g in gaps:
+            g["expected"] = True
     unexpected_gaps = [g for g in gaps if not g["expected"]]
     report["checks"]["line_gaps"] = {
         "gaps": gaps,

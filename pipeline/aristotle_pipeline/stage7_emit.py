@@ -20,7 +20,7 @@ import shutil
 from collections import defaultdict
 from pathlib import Path
 
-from .config import BUILD_DIR, Manifest
+from .config import BUILD_DIR, SOURCES_DIR, Manifest
 from .parse_filter import filter_parses
 
 
@@ -277,6 +277,15 @@ def run(manifest: Manifest) -> Path:
     footnotes_path = BUILD_DIR / "stage1" / "third_footnotes.json"
     if footnotes_path.exists():
         shutil.copy(footnotes_path, out_dir / "footnotes.json")
+    else:
+        # Primary (archive) translation footnotes, vendored beside its HTML as
+        # sources/<dir>/footnotes.json ({N: html}); its prose carries [^N]
+        # markers (e.g. the Isagoge's Owen). Emitted to the same footnotes.json.
+        prim = (manifest.data.get("english") or {}).get("primary") or {}
+        if prim.get("dir"):
+            src = SOURCES_DIR / prim["dir"] / "footnotes.json"
+            if src.exists():
+                shutil.copy(src, out_dir / "footnotes.json")
 
     range_map = chapter_ranges(spine, english.get("chapters", []))
     book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross, third, overlays)
@@ -296,6 +305,19 @@ def run(manifest: Manifest) -> Path:
     (out_dir / "chapters.json").write_text(
         json.dumps(chapters_by_book, ensure_ascii=False, indent=1), encoding="utf-8"
     )
+
+    # Optional per-chapter section titles ({book: {chapter: title}}), emitted
+    # when the manifest chapters carry a `title` (e.g. the Isagoge's "Of Genus
+    # and Species"). The reader's outline and chapter headings show these in
+    # place of a bare "Chapter N"; absent → the file is simply not written.
+    titles_by_book: dict[str, dict[str, str]] = defaultdict(dict)
+    for ch in english.get("chapters", []):
+        if ch.get("title"):
+            titles_by_book[str(ch["book"])][str(ch["chapter"])] = ch["title"]
+    if titles_by_book:
+        (out_dir / "chapter-titles.json").write_text(
+            json.dumps(titles_by_book, ensure_ascii=False, indent=1), encoding="utf-8"
+        )
 
     # Bekker column -> owning book(s), with each book's line span in that column.
     # Boundary columns (a book starting mid-column) list more than one book, so a

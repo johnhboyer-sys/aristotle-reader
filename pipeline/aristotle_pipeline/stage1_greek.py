@@ -109,13 +109,21 @@ def _expand_compound(items: list[tuple[str, str]]) -> list[tuple[int, str]]:
 
 def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
     tree = etree.parse(str(xml_path))
+    # Most works have a real Bekker spine: <div type="Bekker-page" n="16a">. A
+    # non-Bekker treatise (citation.scheme: busse, e.g. Porphyry's Isagoge) is
+    # cited by Busse CAG page.line — the export types each page <div type="page"
+    # n="1">. We map Busse page N onto a SYNTHETIC Bekker column "Na" (a-side
+    # only) so refs.py/config/stage7 and the reader's column:line machinery work
+    # unchanged; the reader relabels the gutter from the registry citation flag.
+    scheme = (manifest.data.get("citation") or {}).get("scheme", "bekker")
+    page_type = "page" if scheme == "busse" else "Bekker-page"
     # Flat list of (column, line_no, text) in document order.
     flat: list[dict] = []
     headings: list[dict] = []
     for div in tree.iter("{*}div"):
-        if div.get("type") != "Bekker-page":
+        if div.get("type") != page_type:
             continue
-        column = div.get("n")
+        column = f"{div.get('n')}a" if scheme == "busse" else div.get("n")
         compound: list[tuple[str, str]] = []  # run of compound-numbered lines
 
         def flush():
