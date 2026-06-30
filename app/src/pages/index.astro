@@ -1,12 +1,11 @@
 ---
-import { CATEGORIES, getWork, workPath, workLanding, visibleTranslations, type Work } from '../lib/works';
+import { CATEGORIES, getWork, workLanding, type Work } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const href = (work: string, q = '') => `${base}${workPath(work)}${q}`;
 
 // Home-page SEO + social card (absolute URLs need Astro.site, set in config).
 const homeDescription =
@@ -15,32 +14,37 @@ const homeDescription =
   ' dictionary lookup, Bekker citation, and full-text search across the corpus.';
 const canonical = Astro.site ? new URL(`${base}/`, Astro.site).href : undefined;
 const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
-// Flatten the corpus taxonomy into a single render sequence: category and
-// sub-category headings interleaved with work cards (existing works) and
-// "coming soon" placeholders (works not yet added). Nesting is visual (headings
-// + indentation), so all styling stays in this one file.
-type Row =
-  | { kind: 'cat'; numeral: string; title: string }
-  | { kind: 'sub'; ref: string; label: string }
+// Resolve the corpus taxonomy into per-division view models. Each division holds
+// either a flat list of cards or labelled sub-groups (Natural Philosophy). A
+// card is an existing work (clickable → its landing page) or a "coming soon"
+// placeholder (works not yet added). Each card row becomes a single tappable
+// card; the editions/translations live on the work's landing page (/<work>).
+type Card =
   | { kind: 'work'; work: Work }
   | { kind: 'soon'; title: string };
 
-const rows: Row[] = [];
-for (const cat of CATEGORIES) {
-  rows.push({ kind: 'cat', numeral: cat.numeral, title: cat.title });
-  const add = (ws: { id?: string; title?: string }[]) => {
-    for (const cw of ws) {
-      const w = cw.id ? getWork(cw.id) : undefined;
-      if (w) rows.push({ kind: 'work', work: w });
-      else if (cw.title) rows.push({ kind: 'soon', title: cw.title });
-    }
-  };
-  if (cat.works) add(cat.works);
-  for (const sub of cat.subcategories ?? []) {
-    rows.push({ kind: 'sub', ref: sub.ref, label: sub.label });
-    add(sub.works);
-  }
+interface Division {
+  numeral: string;
+  title: string;
+  count: number;                                  // total cards (works + soon)
+  groups: { ref?: string; label?: string; cards: Card[] }[];
 }
+
+const toCards = (ws: { id?: string; title?: string }[]): Card[] =>
+  ws.flatMap((cw) => {
+    const w = cw.id ? getWork(cw.id) : undefined;
+    if (w) return [{ kind: 'work', work: w } as Card];
+    if (cw.title) return [{ kind: 'soon', title: cw.title } as Card];
+    return [];
+  });
+
+const divisions: Division[] = CATEGORIES.map((cat) => {
+  const groups = cat.subcategories
+    ? cat.subcategories.map((sub) => ({ ref: sub.ref, label: sub.label, cards: toCards(sub.works) }))
+    : [{ cards: toCards(cat.works ?? []) }];
+  const count = groups.reduce((n, g) => n + g.cards.length, 0);
+  return { numeral: cat.numeral, title: cat.title, count, groups };
+});
 ---
 <html lang="en">
 <head>
@@ -98,74 +102,49 @@ for (const cat of CATEGORIES) {
     <h2 class="works-heading">Open a Work</h2>
 
     <div class="toc">
-      {rows.map((r) => (
-        r.kind === 'cat' ? (
-          <h3 class="cat-head"><span class="cat-num">{r.numeral}.</span> {r.title}</h3>
-        ) : r.kind === 'sub' ? (
-          <h4 class="subcat-head"><span class="subcat-ref">{r.ref}</span> {r.label}</h4>
-        ) : r.kind === 'work' ? (
-          <details class="work">
-            <summary>
-              <div class="work-text">
-                <span class="work-name">{r.work.title}</span>
-                <span class="work-blurb">{r.work.blurb}</span>
-              </div>
-              <div class="work-right">
-                <span class="work-meta">{r.work.abbr} · {r.work.books} book{r.work.books > 1 ? 's' : ''}</span>
-                <span class="chev" aria-hidden="true"></span>
-              </div>
-            </summary>
-            <div class="panel">
-              <ul class="editions">
-                <li>
-                  <a href={`${base}${workLanding(r.work.id)}`} class="ed-overview">
-                    <span class="ed-name">Work overview</span>
-                    <span class="ed-kind">Description, contents &amp; editions</span>
-                  </a>
-                </li>
-                {visibleTranslations(r.work).map((t) => (
-                  <>
-                    <li>
-                      <a href={href(r.work.id, `?trans=${t.id}`)}>
-                        <span class="ed-name">{t.short}</span>
-                        <span class="ed-kind">Greek &amp; English · {t.name}</span>
+      {divisions.map((d) => (
+        <section class="cat">
+          <button class="cat-toggle" type="button" aria-expanded="false">
+            <span class="cat-head">
+              <span class="cat-num">{d.numeral}.</span> {d.title}
+              <span class="cat-count">· {d.count} work{d.count > 1 ? 's' : ''}</span>
+            </span>
+            <span class="cat-chev" aria-hidden="true"></span>
+          </button>
+          <div class="cat-body">
+            {d.groups.map((g) => {
+              const grid = (
+                <div class="works-grid">
+                  {g.cards.map((c) => (
+                    c.kind === 'work' ? (
+                      <a class="work-card" href={`${base}${workLanding(c.work.id)}`}>
+                        <span class="work-name">{c.work.title}</span>
+                        <span class="work-blurb">{c.work.blurb}</span>
+                        <span class="work-meta">{c.work.abbr} · {c.work.books} book{c.work.books > 1 ? 's' : ''}</span>
                       </a>
-                    </li>
-                    {/* Ostwald's edition (EN only) carries a glossary of technical
-                        terms — a standalone reference page, shown under its entry. */}
-                    {t.id === 'ostwald' && (
-                      <li>
-                        <a href={`${base}/EN/glossary`}>
-                          <span class="ed-name">Glossary of Technical Terms</span>
-                          <span class="ed-kind">Ostwald’s Greek–English term glossary</span>
-                        </a>
-                      </li>
-                    )}
-                  </>
-                ))}
-                {visibleTranslations(r.work).length > 1 && (
-                  <li>
-                    <a href={href(r.work.id, '?trans=compare')}>
-                      <span class="ed-name">Compare</span>
-                      <span class="ed-kind">Both translations side by side</span>
-                    </a>
-                  </li>
-                )}
-                <li>
-                  <a href={href(r.work.id, '?view=greek')}>
-                    <span class="ed-name">Greek only</span>
-                    <span class="ed-kind">{r.work.greekEdition}</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </details>
-        ) : (
-          <div class="work soon" aria-disabled="true">
-            <span class="work-name">{r.title}</span>
-            <span class="soon-tag">Coming soon</span>
+                    ) : (
+                      <div class="work-card soon" aria-disabled="true">
+                        <span class="work-name">{c.title}</span>
+                        <span class="soon-tag">Coming soon</span>
+                      </div>
+                    )
+                  ))}
+                </div>
+              );
+              return g.label ? (
+                <div class="subcat">
+                  <button class="subcat-toggle" type="button" aria-expanded="false">
+                    <span class="subcat-head"><span class="subcat-ref">{g.ref}</span> {g.label}
+                      <span class="subcat-count">· {g.cards.length} work{g.cards.length > 1 ? 's' : ''}</span>
+                    </span>
+                    <span class="subcat-chev" aria-hidden="true"></span>
+                  </button>
+                  <div class="subcat-body">{grid}</div>
+                </div>
+              ) : grid;
+            })}
           </div>
-        )
+        </section>
       ))}
     </div>
 
@@ -195,9 +174,14 @@ for (const cat of CATEGORIES) {
     body.home { background: var(--page-bg); color: var(--text); }
     .home-theme { position: fixed; top: 1rem; right: 1rem; z-index: 10; }
     .corpus {
-      max-width: 40rem;
+      max-width: 56rem;
       margin: 0 auto;
       padding: clamp(2.5rem, 8vh, 6rem) 1.5rem 4rem;
+    }
+    /* The intro column stays narrow and centred; only the works grid widens. */
+    .masthead, .search-card, .support-card {
+      max-width: 40rem;
+      margin-inline: auto;
     }
     .masthead { text-align: center; margin-bottom: 2.75rem; }
     .eyebrow {
@@ -282,21 +266,32 @@ for (const cat of CATEGORIES) {
       margin-bottom: 1rem;
     }
 
-    .toc { display: flex; flex-direction: column; gap: .55rem; }
+    .toc { display: flex; flex-direction: column; }
 
+    /* ── Division (category) ─────────────────────────────────────────────── */
+    .cat-toggle {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 1.9rem 0 .85rem;
+      display: flex;
+      align-items: baseline;
+      gap: .55rem;
+      text-align: left;
+      color: inherit;
+      font: inherit;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: .35rem;
+    }
+    .toc > .cat:first-child .cat-toggle { margin-top: 0; }
     .cat-head {
       font-family: var(--font-greek);
       font-weight: 400;
       font-size: 1.5rem;
       color: var(--text);
-      margin: 1.9rem 0 .55rem;
-      padding-bottom: .35rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: baseline;
-      gap: .55rem;
+      flex: 1;
     }
-    .toc > .cat-head:first-child { margin-top: 0; }
     .cat-num {
       font-family: var(--font-ui);
       font-size: .95rem;
@@ -304,6 +299,39 @@ for (const cat of CATEGORIES) {
       letter-spacing: .04em;
       color: var(--accent-light);
     }
+    .cat-count {
+      font-family: var(--font-ui);
+      font-size: .72rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    /* Chevron shown only on mobile (where the header is a real toggle). */
+    .cat-chev {
+      align-self: center;
+      flex-shrink: 0;
+      width: .5rem; height: .5rem;
+      border-right: 1.5px solid var(--text-light);
+      border-bottom: 1.5px solid var(--text-light);
+      transform: rotate(45deg) translateY(-2px);
+      transition: transform .18s ease;
+    }
+    .cat[data-open] .cat-chev { transform: rotate(225deg); }
+
+    .subcat-toggle {
+      width: 100%;
+      background: none;
+      border: none;
+      margin: 1rem 0 .55rem;
+      padding: 0;
+      display: flex;
+      align-items: baseline;
+      gap: .5rem;
+      text-align: left;
+      color: inherit;
+      font: inherit;
+    }
+    .cat-body > .subcat:first-child .subcat-toggle { margin-top: 0; }
     .subcat-head {
       font-family: var(--font-ui);
       font-size: .76rem;
@@ -311,39 +339,81 @@ for (const cat of CATEGORIES) {
       text-transform: uppercase;
       letter-spacing: .1em;
       color: var(--text-light);
-      margin: 1rem 0 .15rem .15rem;
-      display: flex;
-      align-items: baseline;
-      gap: .5rem;
+      flex: 1;
     }
     .subcat-ref { color: var(--accent-light); letter-spacing: .04em; }
+    .subcat-count { letter-spacing: .04em; opacity: .85; }
+    .subcat-chev {
+      align-self: center;
+      flex-shrink: 0;
+      width: .42rem; height: .42rem;
+      border-right: 1.5px solid var(--text-light);
+      border-bottom: 1.5px solid var(--text-light);
+      transform: rotate(45deg) translateY(-2px);
+      transition: transform .18s ease;
+    }
+    .subcat[data-open] .subcat-chev { transform: rotate(225deg); }
 
-    .work {
+    /* ── Work cards ──────────────────────────────────────────────────────── */
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+      gap: .55rem;
+      margin-bottom: .55rem;
+    }
+    .work-card {
+      display: flex;
+      flex-direction: column;
+      gap: .18rem;
       background: var(--col-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      overflow: hidden;
+      padding: .9rem 1.1rem;
+      text-decoration: none;
+      color: var(--text);
       transition: border-color .15s ease, box-shadow .15s ease;
     }
-    .work[open] { box-shadow: 0 6px 22px rgba(0,0,0,.05); border-color: var(--accent-light); }
-    .work:not(.soon):hover { border-color: var(--accent-light); }
+    .work-card:not(.soon):hover {
+      border-color: var(--accent-light);
+      box-shadow: 0 6px 22px rgba(0,0,0,.05);
+    }
+    .work-name {
+      font-family: var(--font-greek);
+      font-size: 1.3rem;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    .work-blurb {
+      font-family: var(--font-english);
+      font-size: .8rem;
+      color: var(--text-light);
+      line-height: 1.4;
+      text-wrap: pretty;
+    }
+    .work-meta {
+      font-family: var(--font-ui);
+      font-size: .72rem;
+      letter-spacing: .04em;
+      color: var(--text-light);
+      text-transform: uppercase;
+      white-space: nowrap;
+      margin-top: .1rem;
+    }
 
     /* Not-yet-added works: a quiet, non-interactive placeholder. */
-    .work.soon {
-      display: flex;
-      align-items: baseline;
-      gap: .75rem;
-      padding: .8rem 1.3rem;
+    .work-card.soon {
       background: transparent;
       border-style: dashed;
-      border-color: var(--border);
       cursor: default;
+      flex-direction: row;
+      align-items: baseline;
+      gap: .75rem;
     }
-    .work.soon .work-name {
+    .work-card.soon .work-name {
       font-size: 1.15rem;
       color: var(--text-light);
     }
-    .work.soon .soon-tag {
+    .work-card.soon .soon-tag {
       margin-left: auto;
       align-self: center;
       font-family: var(--font-ui);
@@ -358,77 +428,18 @@ for (const cat of CATEGORIES) {
       white-space: nowrap;
     }
 
-    summary {
-      list-style: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      padding: .9rem 1.3rem;
-      user-select: none;
-    }
-    summary::-webkit-details-marker { display: none; }
-    .work-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .18rem; }
-    .work-name {
-      font-family: var(--font-greek);
-      font-size: 1.3rem;
-      color: var(--text);
-      line-height: 1.25;
-    }
-    .work-blurb {
-      font-family: var(--font-english);
-      font-size: .8rem;
-      color: var(--text-light);
-      line-height: 1.4;
-      text-wrap: pretty;
-    }
-    .work-right {
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      flex-shrink: 0;
-    }
-    .work-meta {
-      font-family: var(--font-ui);
-      font-size: .72rem;
-      letter-spacing: .04em;
-      color: var(--text-light);
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-    .chev {
-      width: .5rem; height: .5rem;
-      border-right: 1.5px solid var(--text-light);
-      border-bottom: 1.5px solid var(--text-light);
-      transform: rotate(45deg) translateY(-2px);
-      transition: transform .18s ease;
-      flex-shrink: 0;
-    }
-    .work[open] .chev { transform: rotate(225deg); }
+    /* ── Mobile-only collapse ────────────────────────────────────────────── */
+    /* Base (mobile-first): divisions and Natural Philosophy's sub-divisions
+       collapse; tapping a header opens its body. */
+    .cat:not([data-open]) .cat-body { display: none; }
+    .subcat:not([data-open]) .subcat-body { display: none; }
+    .cat-toggle, .subcat-toggle { cursor: pointer; }
 
-    .panel { padding: 0 1.3rem 1.1rem; border-top: 1px solid var(--border); }
-    .editions { list-style: none; display: flex; flex-direction: column; gap: .35rem; margin: 0; padding-top: .65rem; }
-    .editions a {
-      display: flex;
-      flex-direction: column;
-      gap: .1rem;
-      padding: .55rem .7rem;
-      border-radius: 6px;
-      text-decoration: none;
-      color: var(--text);
-      transition: background .12s ease;
-    }
-    .editions a:hover { background: var(--page-bg); }
-    .ed-name {
-      font-family: var(--font-english);
-      font-weight: 600;
-      font-size: 1rem;
-      color: var(--accent);
-    }
-    .ed-kind {
-      font-family: var(--font-ui);
-      font-size: .78rem;
-      color: var(--text-light);
+    /* Desktop: everything expanded, headers are static (no toggle / chevron). */
+    @media (min-width: 48rem) {
+      .cat-body, .subcat-body { display: block !important; }
+      .cat-toggle, .subcat-toggle { pointer-events: none; cursor: default; }
+      .cat-chev, .cat-count, .subcat-chev, .subcat-count { display: none; }
     }
 
     .home-foot {
@@ -530,6 +541,21 @@ for (const cat of CATEGORIES) {
         `mailto:jhboyer@loyno.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
       close();
     });
+  </script>
+
+  <script>
+    // Mobile-only collapse: tapping a division (or Natural Philosophy
+    // sub-division) header toggles its body. On desktop the buttons are
+    // pointer-events:none (see CSS), so these never fire.
+    const toggles: [string, string][] = [['.cat-toggle', '.cat'], ['.subcat-toggle', '.subcat']];
+    for (const [btnSel, boxSel] of toggles) {
+      for (const btn of document.querySelectorAll<HTMLButtonElement>(btnSel)) {
+        btn.addEventListener('click', () => {
+          const open = btn.closest(boxSel)!.toggleAttribute('data-open');
+          btn.setAttribute('aria-expanded', String(open));
+        });
+      }
+    }
   </script>
 </body>
 </html>
