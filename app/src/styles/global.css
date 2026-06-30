@@ -909,6 +909,20 @@ body {
   .sidenote-rail { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 0.4rem; margin: 0.3rem 0 0.7rem; }
   .sidenote { border-left: none; padding-left: 0; font-style: italic; }
 }
+/* Inline diagrams (the Isagoge's Tree of Porphyry): a centered figure rendered
+   in the prose flow, responsive on desktop + mobile. */
+.diagram { margin: 1.6rem auto; max-width: 24rem; font-family: var(--font-ui); }
+.diagram figcaption { text-align: center; font-size: 0.74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.9rem; }
+.porphyry-tree .pt { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.pt-genus { font-weight: 700; font-size: 0.92rem; color: var(--text); background: var(--page-bg); border: 1px solid var(--border); border-radius: 999px; padding: 0.28rem 0.95rem; text-align: center; line-height: 1.2; }
+.pt-genus .pt-tag { display: block; font-weight: 400; font-size: 0.66rem; color: var(--text-light); text-transform: none; letter-spacing: 0; }
+.pt-split { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.4rem 0; position: relative; }
+.pt-split::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border); transform: translateX(-50%); z-index: -1; }
+.pt-diff { font-size: 0.72rem; background: var(--page-bg); padding: 0 0.3rem; }
+.pt-on { color: var(--accent); font-weight: 600; }
+.pt-on::before { content: '↓ '; }
+.pt-off { color: var(--text-light); }
+.pt-indiv { font-size: 0.78rem; color: var(--text-mid); font-style: italic; margin-top: 0.5rem; text-align: center; }
 .para-br { display: block; height: 0.6em; }
 .para-br + .bk-seg::before { content: ''; display: inline-block; width: 1.4em; }
 

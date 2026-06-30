@@ -294,6 +294,12 @@ def run(manifest: Manifest) -> Path:
         sn = SOURCES_DIR / prim["dir"] / "sidenotes.json"
         if sn.exists():
             shutil.copy(sn, out_dir / "sidenotes.json")
+        # Diagrams ({N: html figure}); the prose carries [[figN]] markers and the
+        # reader renders each figure inline at that point (the Isagoge's Tree of
+        # Porphyry).
+        fg = SOURCES_DIR / prim["dir"] / "figures.json"
+        if fg.exists():
+            shutil.copy(fg, out_dir / "figures.json")
 
     range_map = chapter_ranges(spine, english.get("chapters", []))
     book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross, third, overlays)
