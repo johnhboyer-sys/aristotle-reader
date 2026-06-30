@@ -63,19 +63,23 @@ export interface Work {
 
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 
-// The public deploy sets PUBLIC_HIDE_PRIVATE=1; this is a compile-time constant
-// (Vite inlines import.meta.env.PUBLIC_*), so gating a copyright-encumbered
-// translation entry behind it lets the minifier drop the entry — and its
-// citation — from the public bundle entirely, not just hide it at runtime.
-const HIDE_PRIVATE = import.meta.env.PUBLIC_HIDE_PRIVATE === '1';
-const ACKRILL: TranslationRef[] = HIDE_PRIVATE ? [] : [
+// Copyright-encumbered translations are carried ONLY when a build explicitly
+// opts in via PUBLIC_SHOW_PRIVATE=1 — the `npm run dev` script sets it, so they
+// show locally. Every production build (plain `npm run build` AND the public
+// deploy, which forces it off) leaves it unset, so private entries — and their
+// citations — are dropped from the bundle. This is fail-SAFE: a forgotten flag
+// hides private content rather than leaking text we can't host.
+// (It's a compile-time constant — Vite inlines import.meta.env.PUBLIC_* — so the
+// minifier drops the gated entries entirely, not just at runtime.)
+const SHOW_PRIVATE = import.meta.env.PUBLIC_SHOW_PRIVATE === '1';
+const ACKRILL: TranslationRef[] = SHOW_PRIVATE ? [
   { id: 'ackrill', name: 'J. L. Ackrill (Oxford, 1963)', short: 'Ackrill', slot: 'third', private: true },
-];
+] : [];
 // Rackham's Loeb (1935) Eudemian Ethics is US-copyright until ~2031; carried as
 // the secondary overlay in the local build, gated out of the public deploy.
-const EE_RACKHAM: TranslationRef[] = HIDE_PRIVATE ? [] : [
+const EE_RACKHAM: TranslationRef[] = SHOW_PRIVATE ? [
   { id: 'rackham', name: 'H. Rackham (Loeb, 1935)', short: 'Rackham', slot: 'ross', private: true },
-];
+] : [];
 
 // Display order follows the traditional arrangement of the corpus: the Organon
 // (Categories, De Interpretatione, …) first, then De Anima, Metaphysics, the
@@ -101,7 +105,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
       { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
-      ...ACKRILL,   // dropped from the public build (see HIDE_PRIVATE above)
+      ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
     blurb: 'Aristotle on the ten kinds of predication — the opening work of the Organon.',
@@ -124,7 +128,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
       { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
-      ...ACKRILL,   // dropped from the public build (see HIDE_PRIVATE above)
+      ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
     blurb: 'Aristotle on statements, truth, negation, and future contingents — the second work of the Organon.',
@@ -578,7 +582,7 @@ export const WORKS: Work[] = [
     // and is gated out of the public deploy (private flag + EE-public.yaml).
     translations: [
       { id: 'solomon', name: 'J. Solomon (Oxford, 1915)', short: 'Solomon', slot: 'english' },
-      ...EE_RACKHAM,   // dropped from the public build (see HIDE_PRIVATE above)
+      ...EE_RACKHAM,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
     ],
     blurb: 'Aristotle’s other ethical treatise, closely related to the Nicomachean Ethics.',
   },
@@ -684,10 +688,10 @@ export function workLanding(workId: string): string {
 }
 
 // Translations visible in the current build. Private (copyright-encumbered)
-// entries are already dropped from WORKS at compile time in the public build
-// (see HIDE_PRIVATE / ACKRILL above); this filter is a runtime backstop.
+// entries are already dropped from WORKS at compile time unless the build opted
+// in (see SHOW_PRIVATE / ACKRILL above); this filter is a runtime backstop.
 export function visibleTranslations(work: Work): TranslationRef[] {
-  return work.translations.filter(t => !t.private || !HIDE_PRIVATE);
+  return work.translations.filter(t => !t.private || SHOW_PRIVATE);
 }
 
 // ---------------------------------------------------------------------------

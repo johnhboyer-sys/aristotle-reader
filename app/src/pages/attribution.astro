@@ -4,9 +4,9 @@ import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
 import { WORKS } from '../lib/works';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-// True only in the local/full build, where copyright-encumbered overlays are
-// carried; the public deploy (PUBLIC_HIDE_PRIVATE=1) drops them entirely, so the
-// "local only" legend below is suppressed there.
+// True only in the local/full build (PUBLIC_SHOW_PRIVATE=1), where copyright-
+// encumbered overlays are carried; every production/public build drops them
+// entirely, so the "local only" legend below is suppressed there.
 const hasPrivate = WORKS.some((w) => w.translations.some((t) => t.private));
 ---
 <html lang="en">
