@@ -286,6 +286,14 @@ def run(manifest: Manifest) -> Path:
             src = SOURCES_DIR / prim["dir"] / "footnotes.json"
             if src.exists():
                 shutil.copy(src, out_dir / "footnotes.json")
+    # Primary translation's analytical sidenotes ({N: text}); the prose carries
+    # [[sN]] markers and the reader floats each note into a right-hand rail. The
+    # Isagoge (Owen) carries 61. Emitted to sidenotes.json beside the books.
+    prim = (manifest.data.get("english") or {}).get("primary") or {}
+    if prim.get("dir"):
+        sn = SOURCES_DIR / prim["dir"] / "sidenotes.json"
+        if sn.exists():
+            shutil.copy(sn, out_dir / "sidenotes.json")
 
     range_map = chapter_ranges(spine, english.get("chapters", []))
     book_stats = emit_books(spine, tokens_doc, english, range_map, out_dir, ross, third, overlays)

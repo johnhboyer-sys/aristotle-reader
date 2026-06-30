@@ -159,6 +159,22 @@ export function fetchFootnotes(work: string): Promise<Record<string, string>> {
   return p;
 }
 
+// Analytical sidenotes for a work: { sidenote number -> text }. Present only for
+// works whose translation carries marginal notes (the Isagoge's Owen). Loaded
+// lazily and cached for the session.
+const _sidenotesCache = new Map<string, Promise<Record<string, string>>>();
+export function fetchSidenotes(work: string): Promise<Record<string, string>> {
+  const cached = _sidenotesCache.get(work);
+  if (cached) return cached;
+  const p = fetch(`${workBase(work)}/sidenotes.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} sidenotes: ${r.status}`);
+    return r.json();
+  });
+  p.catch(() => { if (_sidenotesCache.get(work) === p) _sidenotesCache.delete(work); });
+  _sidenotesCache.set(work, p);
+  return p;
+}
+
 // Bekker column -> owning book(s) with each book's line span in that column.
 export interface ColumnRef { book: number; lo: number; hi: number; }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
+  import { fetchBook, parseBekker, fetchSidenotes, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { getWork, visibleTranslations, type TranslationRef } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
@@ -26,6 +26,9 @@
   // titles each section from chapterTitles instead of "Chapter N".
   const busse = workMeta?.citation?.scheme === 'busse';
   const hideLineNums = busse && workMeta?.citation?.hideLineNumbers === true;
+  // Analytical sidenotes ({N: text}) for a busse work, floated into a right rail.
+  let sidenotesData: Record<string, string> = {};
+  if (busse) fetchSidenotes(work).then(d => { sidenotesData = d; }).catch(() => {});
   const translations = workMeta ? visibleTranslations(workMeta) : [];
   // The reader can render any number of translations. The primary parallel
   // chunk is the 'english' slot; every other translation is a chapter-anchored
@@ -356,6 +359,8 @@
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
   function highlightEng(text: string): string {
+    // Sidenote markers [[sN]] are floated into the right rail, not shown inline.
+    text = text.replace(/\s*\[\[s\d+\]\]\s*/g, ' ');
     if (!hlEngTerms.length) return esc(text);
     let out = esc(text);
     for (const t of hlEngTerms) {
@@ -382,7 +387,7 @@
   // flowParts). A GreekLine may be a partial slice of a real line (cont = its
   // tail half, after a mid-line chapter split): it suppresses the repeated id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]>; }
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]>; sidenotes: number[]; }
   // EnrichedBlock annotates each block with the chapter it belongs to (tracking
   // across segments so continuation blocks know their chapter too).
   interface EnrichedBlock extends Block { currentChapter: string; }
@@ -503,6 +508,10 @@
         .sort((x, y) => x.off - y.off);
       return flowParts(slice, ticks);
     };
+    // Sidenote numbers ([[sN]] markers) falling in the primary English slice
+    // [a, b) — the reader floats these into the right rail (busse works).
+    const sidesIn = (a: number, b: number): number[] =>
+      [...text.slice(a, b).matchAll(/\[\[s(\d+)\]\]/g)].map(m => Number(m[1]));
     // Overlay slices for each secondary translation, paired to blocks: the
     // continuation slice (a chapter begun in an earlier column) and one per
     // chapter that starts here. Each lays out as flowing prose with its Bekker
@@ -530,7 +539,7 @@
 
     const starts = (seg.chapterStarts ?? []).slice()
       .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, flow: flowFor(0, text.length), ...overlaysFor(null) }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, flow: flowFor(0, text.length), sidenotes: sidesIn(0, text.length), ...overlaysFor(null) }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -565,7 +574,7 @@
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        flow: flowFor(0, starts[0].engOffset), ...overlaysFor(null),
+        flow: flowFor(0, starts[0].engOffset), sidenotes: sidesIn(0, starts[0].engOffset), ...overlaysFor(null),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
@@ -575,7 +584,7 @@
       blocks.push({
         chapter: b.chapter, bekker: b.bekker,
         lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
-        flow: flowFor(b.engOffset, engTo), ...overlaysFor(b.chapter),
+        flow: flowFor(b.engOffset, engTo), sidenotes: sidesIn(b.engOffset, engTo), ...overlaysFor(b.chapter),
       });
     }
     return blocks;
@@ -1087,6 +1096,17 @@
                 <div class="col-label">{transById(compareRight)?.short ?? ''}</div>
                 {@render transFlow(block, compareRight)}
               </div>
+            {/if}
+
+            <!-- Analytical sidenotes (Owen's marginal notes), floated into a
+                 right rail on desktop; on mobile they fall inline below the
+                 English (hidden in Greek-only view). -->
+            {#if busse && view !== 'greek' && block.sidenotes.length}
+              <aside class="sidenote-rail">
+                {#each block.sidenotes as sn}
+                  {#if sidenotesData[String(sn)]}<p class="sidenote">{sidenotesData[String(sn)]}</p>{/if}
+                {/each}
+              </aside>
             {/if}
           </div>
         {/each}

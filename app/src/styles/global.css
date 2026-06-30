@@ -896,6 +896,19 @@ body {
 .reader-body.busse .greek-line::after { content: ' '; }
 .reader-body.busse .greek-line .line-num { display: none; }
 .reader-body.busse .greek-col { text-align: justify; }
+/* Owen's analytical sidenotes: a right-hand rail beside the text (desktop). */
+.reader-body.busse.view-both .seg-row { grid-template-columns: 1.05fr 1.05fr minmax(7rem, 0.5fr); }
+.reader-body.busse.view-english .seg-row { grid-template-columns: 1fr minmax(7rem, 0.55fr); }
+.sidenote-rail { align-self: start; }
+.sidenote { font-family: var(--font-ui); font-size: 0.72rem; line-height: 1.5; color: var(--text-mid); margin: 0 0 0.9rem; padding-left: 0.6rem; border-left: 2px solid var(--border); }
+.sidenote:first-child { margin-top: 0.15rem; }
+@media (max-width: 680px) {
+  /* No rail on phones: sidenotes fall inline (italic, full width) below the text. */
+  .reader-body.busse.view-both .seg-row { grid-template-columns: auto minmax(0, 1fr); }
+  .reader-body.busse.view-english .seg-row { grid-template-columns: 1fr; }
+  .sidenote-rail { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 0.4rem; margin: 0.3rem 0 0.7rem; }
+  .sidenote { border-left: none; padding-left: 0; font-style: italic; }
+}
 .para-br { display: block; height: 0.6em; }
 .para-br + .bk-seg::before { content: ''; display: inline-block; width: 1.4em; }
 
