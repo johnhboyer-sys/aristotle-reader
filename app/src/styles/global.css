@@ -997,7 +997,22 @@ body {
   .reader-body.word-open { padding-right: 1rem; }
 }
 
-/* Legacy .popup class kept for FootnotePopup which still floats */
+/* Legacy .popup class kept for FootnotePopup which still floats. It is anchored
+   with inline left/top from the component, so it needs position:fixed + a
+   surface (the WordPopup migration removed the shared base rule, which left the
+   footnote popup position:static — rendering off-screen at the document end). */
+.popup {
+  position: fixed;
+  z-index: 60;
+  background: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.18);
+  max-height: 60vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 .popup-header {
   padding: 0.75rem 1rem 0.5rem;
   border-bottom: 1px solid var(--border);
