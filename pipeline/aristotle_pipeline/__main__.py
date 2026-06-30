@@ -225,8 +225,15 @@ def main(argv=None):
         "--work", default="EN",
         help="work slug = manifest filename stem (default: EN)",
     )
+    parser.add_argument(
+        "--public",
+        action="store_true",
+        help="use manifests/<work>-public.yaml when present",
+    )
     args = parser.parse_args(argv)
-    manifest = Manifest.for_work(args.work)
+    manifest = Manifest.for_work(args.work, public=args.public)
+    if args.public:
+        print(f"manifest: {manifest.path.relative_to(manifest.path.parents[1])}")
     if args.stage == "all":
         for fn in _STAGES.values():
             fn(manifest)

@@ -1,6 +1,6 @@
 # Aristotle Parallel Reader
 
-A static web application for reading Aristotle's complete works with the Greek and English side by side, morphological analysis on every word, and full-text search across both languages.
+A static web application for reading and searching Aristotle's complete works with the Greek and English side by side, morphological analysis on every word, multiple translation comparison, and full-text search across both languages.
 
 Live at **[johnhboyer-sys.github.io/aristotle-reader/](https://johnhboyer-sys.github.io/aristotle-reader/)**
 
@@ -54,6 +54,30 @@ Live at **[johnhboyer-sys.github.io/aristotle-reader/](https://johnhboyer-sys.gi
 ---
 
 ## Building
+
+### Public build for GitHub Pages
+
+Use the repo-level public build command for anything that may be deployed:
+
+```bash
+npm run build:public
+```
+
+That single command:
+
+- rebuilds the generated data in the normal local path, `build/dist/`, so the app still reads through `app/public/data -> ../../build/dist`;
+- uses `manifests/<work>-public.yaml` whenever that file exists, falling back to `manifests/<work>.yaml` only for works with no public/private split;
+- removes old generated output first, so a previous local/full build cannot leave private overlay JSON behind;
+- runs the Astro build as `PUBLIC_HIDE_PRIVATE=1 npm run build`, which drops private translation registry entries from the public bundle.
+
+A GitHub Pages deploy should therefore use exactly:
+
+```bash
+npm ci --prefix app
+npm run build:public
+```
+
+Deploy `app/dist/` only after that command succeeds. Do not deploy an app build made with plain `npm run build` inside `app/`; that build can include local/private translation entries if the data was produced from the full manifests.
 
 ### 1. Run the pipeline (per work)
 

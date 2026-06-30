@@ -26,21 +26,40 @@ from aristotle_pipeline.config import BUILD_DIR
 from sentence_spike import segment_greek
 
 
-def main(work_id: str):
+def main(work_id: str, batch_size: int | None = None):
     out = BUILD_DIR / "align" / "sent_gloss_tasks" / work_id
+    glosses_dir = BUILD_DIR / "align" / "sent_glosses" / work_id
     out.mkdir(parents=True, exist_ok=True)
     total = 0
+    files = 0
+    skipped = 0
     for ch in chapter_lines():
+        if (glosses_dir / f"1-{ch.chapter}.json").exists():
+            skipped += 1
+            continue
         gsents, _ls, _l2s = segment_greek(ch.lines, {}, soft=False)
         items = [{"index": i, "bekker": s.lines[0], "greek": s.text}
                  for i, s in enumerate(gsents)]
-        (out / f"1-{ch.chapter}.json").write_text(
-            json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
+        if batch_size and batch_size > 0:
+            for batch_num, start in enumerate(range(0, len(items), batch_size), start=1):
+                batch_items = items[start:start + batch_size]
+                path = out / f"1-{ch.chapter}-batch-{batch_num}.json"
+                path.write_text(
+                    json.dumps(batch_items, ensure_ascii=False, indent=1), encoding="utf-8")
+                files += 1
+        else:
+            (out / f"1-{ch.chapter}.json").write_text(
+                json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
+            files += 1
         total += len(items)
-    print(f"{work_id}: wrote {len(list(chapter_lines()))} chapter task files, {total} sentences -> {out}")
+    skipped_note = f" ({skipped} already done)" if skipped else ""
+    print(f"{work_id}: wrote {files} sentence-gloss task file(s), {total} sentences -> {out}{skipped_note}")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--work", default="Cat")
-    main(ap.parse_args().work)
+    ap.add_argument("--batch-size", type=int, default=20,
+                    help="Sentences per task file; 0 = one file per chapter (legacy)")
+    a = ap.parse_args()
+    main(a.work, a.batch_size)
