@@ -100,7 +100,7 @@ To run a single stage: `WORK=ne uv run python -m aristotle_pipeline stage2`
 | 4 | Single targeted pass over `greek-analyses.txt`; matches 99.9% of tokens |
 | 5 | Streams `grc.lsj.xml`; extracts corpus-occurring lemmata only; letter-sharded HTML |
 | 6 | Builds inverted search indexes (Greek lemma + English word) with phrase search support |
-| 7 | Emits final `build/dist/{WORK}/` tree: `book-*.json`, `analyses.json`, `lsj/`, `search/`, `manifest.json` |
+| 7 | Emits final per-work `build/dist/{WORK}/` tree: `book-*.json`, `analyses.json`, `search/`, `manifest.json`; LSJ entries are merged into one corpus-wide shared `build/dist/lsj/<letter>.json` (served at `/data/lsj/`, fetched once across works — not duplicated per work) |
 
 **Alignment pipeline** (produces `anchors.yaml` per work, then wired into Stage 1):
 
