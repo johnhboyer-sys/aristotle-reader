@@ -50,8 +50,12 @@ if (!existsSync(join(ROOT, 'app', 'node_modules'))) {
   run('npm', ['ci'], { cwd: join(ROOT, 'app') });
 }
 
-console.log('\nBuilding Astro app with PUBLIC_HIDE_PRIVATE=1');
+// Private (copyright-encumbered) translations are hidden by default; a
+// production build only carries them if PUBLIC_SHOW_PRIVATE=1. Force it off here
+// so the public deploy can never leak them — even if the caller's shell happens
+// to have that var set. (See SHOW_PRIVATE in app/src/lib/works.ts.)
+console.log('\nBuilding Astro app (private translations hidden)');
 run('npm', ['run', 'build'], {
   cwd: join(ROOT, 'app'),
-  env: { PUBLIC_HIDE_PRIVATE: '1' },
+  env: { PUBLIC_SHOW_PRIVATE: '0' },
 });
