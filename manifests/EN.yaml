@@ -50,6 +50,18 @@ english:
     name: "Martin Ostwald (Bobbs-Merrill, 1962)"
     dir: ostwald
     file: ostwald-ethics.md
+  # Fourth translation: F. H. Peters (1881), public domain (Standard Ebooks).
+  # Chapter counts per book (13/9/12/9/11/13/14/14/12/9) match the canonical
+  # grc-TEI division exactly, so this is a clean Tier 0 overlay: no anchors
+  # file, chapters pinned to the Greek spine via the grc TEI override below,
+  # within-chapter line gutter interpolated (estimates).
+  overlays:
+    - id: peters
+      name: "F. H. Peters (Kegan Paul, 1881)"
+      model: archive
+      dir: "en-peters"
+      books: 10
+      chapter_marker: number
 
 # Columns where a new book starts mid-column. The English TEI emits a
 # duplicate page milestone at these restarts — except Books II (1103a14)

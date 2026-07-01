@@ -390,6 +390,17 @@ def build_chunks(spine: dict, chapters: list[dict],
         pieces.sort(key=lambda p: p["_g"])
         for p in pieces:
             p.pop("_g", None)
+        # The paragraph-break marker above is only meaningful between two
+        # pieces rendered back-to-back in the same segment (end of one
+        # chapter's text, start of the next). The segment's first piece has
+        # nothing before it to break from, so a leading "\n" there is a pure
+        # rendering artifact (a stray line break before the first word) —
+        # strip it and undo the matching tick-offset shift.
+        first = pieces[0]
+        if first["text"].startswith("\n"):
+            first["text"] = first["text"][1:]
+            for t in first["bekker"]:
+                t["offset"] -= 1
         out[seg_id] = pieces
     return out
 

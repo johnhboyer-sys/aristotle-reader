@@ -42,13 +42,18 @@ english:
     books: 3
     chapter_marker: part          # "Part N" lines (Ross archive uses bare numbers)
     # anchors: "da-smith/anchors.yaml"   # optional hand-keyed Bekker anchors
-  # secondary:                          # e.g. R. D. Hicks (1907) when sourced
-  #   id: hicks
-  #   name: "R. D. Hicks (Cambridge, 1907)"
-  #   model: archive
-  #   dir: "da-hicks"
-  #   books: 3
-  #   chapter_marker: part
+  # Second translation: Edwin Wallace (Cambridge, 1882), public domain, from
+  # Wikisource ("Aristotle's Psychology"). Chapter counts per book (5/12/13)
+  # match the canonical grc-TEI division exactly, so this is a clean Tier 0
+  # secondary: no anchors file, chapters pinned to the Greek spine via the grc
+  # TEI, within-chapter line gutter interpolated (estimates).
+  secondary:
+    id: wallace
+    name: "Edwin Wallace (Cambridge, 1882)"
+    model: archive
+    dir: "da-wallace"
+    books: 3
+    chapter_marker: number
 
 mid_column_book_starts:
   - { book: 3, column: "424b" }

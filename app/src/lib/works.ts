@@ -252,8 +252,11 @@ export const WORKS: Work[] = [
       short: 'Ross (OCT, 1956)',
       full: 'W. D. Ross, ed. Aristotle, De Anima. Oxford: Clarendon Press (Oxford Classical Texts), 1956.',
     },
+    // Wallace (Cambridge, 1882) is public domain and a Tier 0 secondary: chapter
+    // divisions match the Greek spine exactly (5/12/13), no anchors file.
     translations: [
       { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
+      { id: 'wallace', name: 'Edwin Wallace (Cambridge, 1882)', short: 'Wallace', slot: 'ross' },
     ],
     blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
   },
@@ -587,6 +590,9 @@ export const WORKS: Work[] = [
       // it ships in the public build. Bekker-keyed from its inline apparatus and
       // carries Ostwald's 505 footnotes (shown as popups in the reader).
       { id: 'ostwald', name: 'Martin Ostwald (Bobbs-Merrill, 1962)', short: 'Ostwald', slot: 'third' },
+      // Fourth translation: F. H. Peters (1881), public domain. Tier 0 overlay:
+      // chapter divisions match the Greek spine exactly (13/9/12/9/11/13/14/14/12/9).
+      { id: 'peters', name: 'F. H. Peters (Kegan Paul, 1881)', short: 'Peters', slot: 'overlay' },
     ],
     // The modern, Bekker-keyed Ostwald is the default English on first load.
     defaultTranslation: 'ostwald',
@@ -637,11 +643,14 @@ export const WORKS: Work[] = [
       short: 'Ross (OCT, 1957)',
       full: 'W. D. Ross, ed. Aristotelis politica. Oxford: Clarendon Press, 1957.',
     },
-    // Public build ships the public-domain Jowett (1885) only. The copyrighted
-    // Rackham (Loeb 1932) primary + aligned-Jowett overlay live in Pol.yaml for
-    // the local/private build and are NOT deployed (see publish-plan).
+    // Public build ships the public-domain Jowett (1885) + Ellis (1776/1912)
+    // only. The copyrighted Rackham (Loeb 1932) primary + aligned-Jowett
+    // overlay live in Pol.yaml for the local/private build and are NOT
+    // deployed (see publish-plan). Ellis is a Tier 0 secondary: chapter
+    // divisions match the Greek spine exactly (13/12/18/16/12/8/17/7).
     translations: [
       { id: 'jowett', name: 'Benjamin Jowett (Oxford, 1885)', short: 'Jowett', slot: 'english' },
+      { id: 'ellis', name: 'William Ellis (1776; rev. 1912)', short: 'Ellis', slot: 'ross' },
     ],
     blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
   },
