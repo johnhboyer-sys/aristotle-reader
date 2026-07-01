@@ -876,6 +876,53 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .bk-num.approx { font-style: italic; opacity: 0.5; }
+/* Non-Bekker works (Busse-cited, e.g. the Isagoge) carry no meaningful per-line
+   gutter: hide the floated line numbers and reclaim the gutter padding so the
+   translation reads as plain prose beside the section reference (p. N). */
+.reader-body.busse .bk-num { display: none; }
+.reader-body.busse .ross-prose { padding-left: 0; }
+/* No dividing rules for a non-Bekker work: drop the control-strip underline and
+   the accent line trailing each section heading. */
+.reader-body.busse .reader-controls { border-bottom: none; }
+.reader-body.busse .chapter-head::after { display: none; }
+/* No per-page rules either: a non-Bekker treatise reads as continuous prose,
+   not page-divided segments. */
+.reader-body.busse .segment { border-top: none; padding-top: 0; margin-bottom: 0; }
+.reader-body.busse .seg-row + .seg-row { margin-top: 0; }
+/* Flow the Greek as continuous prose (not one block per Bekker line) so the
+   Greek and the English are balanced in height and read as parallel paragraphs
+   — no per-line gutter is shown for a non-Bekker work anyway. */
+.reader-body.busse .greek-line { display: inline; }
+.reader-body.busse .greek-line::after { content: ' '; }
+.reader-body.busse .greek-line .line-num { display: none; }
+.reader-body.busse .greek-col { text-align: justify; }
+/* Owen's analytical sidenotes: a right-hand rail beside the text (desktop). */
+.reader-body.busse.view-both .seg-row { grid-template-columns: 1.05fr 1.05fr minmax(7rem, 0.5fr); }
+.reader-body.busse.view-english .seg-row { grid-template-columns: 1fr minmax(7rem, 0.55fr); }
+.sidenote-rail { align-self: start; }
+.sidenote { font-family: var(--font-ui); font-size: 0.72rem; line-height: 1.5; color: var(--text-mid); margin: 0 0 0.9rem; padding-left: 0.6rem; border-left: 2px solid var(--border); }
+.sidenote:first-child { margin-top: 0.15rem; }
+@media (max-width: 680px) {
+  /* No rail on phones: sidenotes fall inline (italic, full width) below the text. */
+  .reader-body.busse.view-both .seg-row { grid-template-columns: auto minmax(0, 1fr); }
+  .reader-body.busse.view-english .seg-row { grid-template-columns: 1fr; }
+  .sidenote-rail { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 0.4rem; margin: 0.3rem 0 0.7rem; }
+  .sidenote { border-left: none; padding-left: 0; font-style: italic; }
+}
+/* Inline diagrams (the Isagoge's Tree of Porphyry): a centered figure rendered
+   in the prose flow, responsive on desktop + mobile. */
+.diagram { margin: 1.6rem auto; max-width: 24rem; font-family: var(--font-ui); }
+.diagram figcaption { text-align: center; font-size: 0.74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.9rem; }
+.porphyry-tree .pt { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.pt-genus { font-weight: 700; font-size: 0.92rem; color: var(--text); background: var(--page-bg); border: 1px solid var(--border); border-radius: 999px; padding: 0.28rem 0.95rem; text-align: center; line-height: 1.2; }
+.pt-genus .pt-tag { display: block; font-weight: 400; font-size: 0.66rem; color: var(--text-light); text-transform: none; letter-spacing: 0; }
+.pt-split { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.4rem 0; position: relative; }
+.pt-split::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border); transform: translateX(-50%); z-index: -1; }
+.pt-diff { font-size: 0.72rem; background: var(--page-bg); padding: 0 0.3rem; }
+.pt-on { color: var(--accent); font-weight: 600; }
+.pt-on::before { content: '↓ '; }
+.pt-off { color: var(--text-light); }
+.pt-indiv { font-size: 0.78rem; color: var(--text-mid); font-style: italic; margin-top: 0.5rem; text-align: center; }
 .para-br { display: block; height: 0.6em; }
 .para-br + .bk-seg::before { content: ''; display: inline-block; width: 1.4em; }
 
@@ -964,7 +1011,22 @@ body {
   .reader-body.word-open { padding-right: 1rem; }
 }
 
-/* Legacy .popup class kept for FootnotePopup which still floats */
+/* Legacy .popup class kept for FootnotePopup which still floats. It is anchored
+   with inline left/top from the component, so it needs position:fixed + a
+   surface (the WordPopup migration removed the shared base rule, which left the
+   footnote popup position:static — rendering off-screen at the document end). */
+.popup {
+  position: fixed;
+  z-index: 60;
+  background: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.18);
+  max-height: 60vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 .popup-header {
   padding: 0.75rem 1rem 0.5rem;
   border-bottom: 1px solid var(--border);
@@ -1072,6 +1134,12 @@ body {
 /* ── translator footnotes (Ostwald) ──────────────────────────────── */
 /* Inline `[^N]` reference, rendered as a clickable superscript marker. */
 .fn-marker {
+  /* A real <button> (keyboard- + screen-reader-accessible, unambiguously
+     clickable) styled as an inline superscript — reset the native chrome. */
+  display: inline;
+  background: none;
+  border: 0;
+  appearance: none;
   font-family: var(--font-ui);
   font-size: 0.62em;
   font-weight: 600;
@@ -1079,7 +1147,10 @@ body {
   line-height: 0;
   color: var(--accent);
   cursor: pointer;
-  padding: 0 0.05em;
+  /* Roomier hit area so the small superscript is easy to hover/tap, without
+     enlarging the visible glyph (negative margins absorb the extra padding). */
+  padding: 0.5em 0.35em;
+  margin: -0.5em -0.3em;
 }
 .fn-marker:hover { text-decoration: underline; }
 .fn-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }

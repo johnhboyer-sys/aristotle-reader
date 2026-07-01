@@ -18,6 +18,10 @@ export interface TranslationRef {
   name: string;     // full citation, for the picker + attribution
   short: string;    // chip label
   slot: 'english' | 'ross' | 'third' | 'overlay';
+  // Carries inline `[^N]` footnote markers + a footnotes.json popup map (e.g.
+  // the Isagoge's Owen). Independent of slot — the reader renders the markers
+  // for whichever translation sets this.
+  footnotes?: boolean;
   // Copyright-encumbered translations carried only in the local/full build.
   // The public deploy sets PUBLIC_HIDE_PRIVATE=1 to drop them from the registry
   // (and is built from the work's -public manifest, so their text is absent too).
@@ -59,6 +63,18 @@ export interface Work {
   // Used to surface a preferred overlay (e.g. NE → Ostwald) on first load.
   defaultTranslation?: string;
   blurb: string;    // one line for the home index
+  // Most works are cited by Bekker (column:line). A non-Bekker treatise (e.g.
+  // Porphyry's Isagoge) sets scheme:'busse' so the reader drops the per-page
+  // reference and the per-line Greek numbers; its section headings come from
+  // chapter-titles.json. Default (omitted) = bekker.
+  citation?: { scheme: 'bekker' | 'busse'; hideLineNumbers?: boolean };
+  // Cross-links to closely related works (e.g. the Isagoge ↔ the Categories it
+  // introduces), shown on the landing page. Each `id` must be a built work.
+  related?: { id: string; label: string }[];
+  // Ancient commentaries/introductions hosted on the site that comment on THIS
+  // work (ids of built works), surfaced in a "Commentary" section on the
+  // landing page. The Categories carries Porphyry's Isagoge.
+  commentaries?: string[];
 }
 
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
@@ -108,6 +124,7 @@ export const WORKS: Work[] = [
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
+    commentaries: ['Isa'],
     blurb: 'Aristotle on the ten kinds of predication — the opening work of the Organon.',
   },
   {
@@ -132,6 +149,28 @@ export const WORKS: Work[] = [
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
     blurb: 'Aristotle on statements, truth, negation, and future contingents — the second work of the Organon.',
+  },
+  {
+    id: 'Isa',
+    title: 'Isagoge',
+    greekTitle: 'Εἰσαγωγή',
+    abbr: 'Isag.',
+    author: 'Porphyry',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Busse, Porphyrii Isagoge (CAG IV.1, 1887)',
+    greekSource: {
+      short: 'Busse (CAG IV.1, 1887)',
+      full: 'A. Busse, ed. Porphyrii Isagoge et in Aristotelis Categorias commentarium. Commentaria in Aristotelem Graeca IV.1. Berlin: Reimer, 1887.',
+    },
+    // Porphyry's introduction to Aristotle's Categories; cited by Busse page,
+    // not Bekker. Owen (1853) is public domain and translated from the Greek.
+    translations: [
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'english', footnotes: true },
+    ],
+    citation: { scheme: 'busse', hideLineNumbers: true },
+    related: [{ id: 'Cat', label: 'Aristotle’s Categories — the work it introduces' }],
+    blurb: 'Porphyry’s introduction to the five predicables — the standard late-antique gateway to the Categories and the whole Organon.',
   },
   {
     id: 'Phys',
@@ -766,6 +805,10 @@ const FURTHER_READING: Record<string, FurtherReadingItem[]> = {
     { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Posterior Analytics</em> (The Peripatetic Press, 1981)' },
     { kind: 'commentary', cite: 'Jonathan Barnes, <em>Posterior Analytics</em> (Clarendon Aristotle Series, Oxford University Press, 2nd ed. 1994)' },
   ],
+  Isa: [
+    { kind: 'translation', cite: 'Jonathan Barnes, <em>Porphyry: Introduction</em> (Clarendon Later Ancient Philosophers, Oxford University Press, 2003)' },
+    { kind: 'translation', cite: 'Paul Vincent Spade, trans., in <em>Five Texts on the Mediaeval Problem of Universals</em> (Hackett, 1994)' },
+  ],
 };
 
 // ── In-print editions that contain the (public-domain) translation we host ───
@@ -852,9 +895,13 @@ export function furtherReading(workId: string): FurtherReadingItem[] {
   const curated = (FURTHER_READING[workId] ?? []).map((r) =>
     !r.url && /Apostle/.test(r.cite) ? { ...r, url: PERIPATETIC_URL } : r,
   );
-  // Reeve's complete works applies to every work, but skip it where a specific
-  // Reeve volume is already listed (Metaphysics, Politics) to avoid duplication.
-  const reeve = curated.some((r) => /Reeve/.test(r.cite)) ? [] : [REEVE_COMPLETE];
+  // Reeve's complete works applies to every ARISTOTLE work, but skip it where a
+  // specific Reeve volume is already listed (Metaphysics, Politics) to avoid
+  // duplication — and skip it entirely for non-Aristotle works (e.g. Porphyry's
+  // Isagoge), which his Complete Works of Aristotle does not contain.
+  const byAristotle = getWork(workId)?.author === 'Aristotle';
+  const reeve =
+    !byAristotle || curated.some((r) => /Reeve/.test(r.cite)) ? [] : [REEVE_COMPLETE];
   return [...curated, ...reeve, ...collectionsFor(workId)];
 }
 
@@ -969,6 +1016,9 @@ export const CATEGORIES: Category[] = [
       { id: 'Poet' },
     ],
   },
+  // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's
+  // surfaced as a "Commentary" card on the Categories landing page (the work it
+  // introduces) instead. It remains routable at /Isa and searchable.
 ];
 
 // A named group of works for the search "works to include" selector: one entry

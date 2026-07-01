@@ -357,11 +357,31 @@ def build_chunks(spine: dict, chapters: list[dict],
             raw = text[cuts[i]:cuts[i + 1]]
             lead = len(raw) - len(raw.lstrip())
             piece = raw.strip()
+            ticks = _real_ticks(piece, lns, column, anchors, cuts[i] + lead)
+            # Preserve a paragraph break that landed on this column cut. parse_book
+            # marks paragraph boundaries with '\n', but _snap prefers sentence
+            # boundaries for cuts and a paragraph end IS a sentence boundary, so the
+            # boundary '\n' would be stripped away here and the break lost. If the
+            # whitespace immediately preceding this piece's first character holds a
+            # newline, this piece starts a new paragraph — re-add the marker (and
+            # shift the word-snapped ticks to match the prepended char).
+            # Clamp to len(text): an empty/whitespace-only overlay chapter can make
+            # _snap floor a cut at 1 (target = max(low+1, …)) while len(text) is 0,
+            # giving non-monotonic cuts and cstart past the end — there is no
+            # paragraph break to preserve there, so a clamp is safe.
+            cstart = min(cuts[i] + lead, len(text))
+            k = cstart
+            while k > 0 and text[k - 1].isspace():
+                k -= 1
+            if i > 0 and "\n" in text[k:cstart]:
+                piece = "\n" + piece
+                for t in ticks:
+                    t["offset"] += 1
             by_seg[seg_id].append({
                 "chapter": str(chap),
                 "text": piece,
                 "cont": i > 0,
-                "bekker": _real_ticks(piece, lns, column, anchors, cuts[i] + lead),
+                "bekker": ticks,
                 "_g": gidx,
             })
     # Keep each segment's pieces in document (chapter) order; drop the sort key.

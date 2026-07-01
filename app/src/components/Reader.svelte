@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
+  import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { getWork, visibleTranslations, type TranslationRef } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
@@ -14,8 +14,24 @@
   // paint) and the island hydrates over it. When absent (e.g. a future dynamic
   // mount), the reader falls back to fetching the JSON in onMount as before.
   export let bookData: BookData | null = null;
+  // Optional per-chapter section titles {chapter: title} for this book, passed
+  // by ReaderShell from chapter-titles.json. Shown in the chapter heading in
+  // place of "Chapter N" (used by non-Bekker works like the Isagoge).
+  export let chapterTitles: Record<string, string> = {};
 
   const workMeta = getWork(work);
+  // Non-Bekker works (e.g. Porphyry's Isagoge) are cited by Busse page, not a
+  // Bekker column:line. For them the reader relabels the column reference (p. N),
+  // hides the per-line Greek numbers and the interpolated English gutter, and
+  // titles each section from chapterTitles instead of "Chapter N".
+  const busse = workMeta?.citation?.scheme === 'busse';
+  const hideLineNums = busse && workMeta?.citation?.hideLineNumbers === true;
+  // Analytical sidenotes ({N: text}) for a busse work, floated into a right rail.
+  let sidenotesData: Record<string, string> = {};
+  if (busse) fetchSidenotes(work).then(d => { sidenotesData = d; }).catch(() => {});
+  // Diagrams ({N: html}) rendered inline at [[figN]] markers (Tree of Porphyry).
+  let figuresData: Record<string, string> = {};
+  if (busse) fetchFigures(work).then(d => { figuresData = d; }).catch(() => {});
   const translations = workMeta ? visibleTranslations(workMeta) : [];
   // The reader can render any number of translations. The primary parallel
   // chunk is the 'english' slot; every other translation is a chapter-anchored
@@ -23,6 +39,10 @@
   // `secondaries` is the ordered list of non-primary translations.
   const engSlot = translations.find(t => t.slot === 'english');
   const thirdSlot = translations.find(t => t.slot === 'third');  // bears footnotes/tables
+  // The translation whose prose carries [^N] footnote markers (Ostwald's third
+  // slot, or a primary like the Isagoge's Owen). Its column renders the markers
+  // and opens the footnote popup.
+  const fnTransId = translations.find(t => t.footnotes)?.id ?? thirdSlot?.id;
   const secondaries = translations.filter(t => t.slot !== 'english');
   const canCompare = translations.length >= 2;
   // Overlay pieces for a translation in a segment, selected by its slot.
@@ -342,6 +362,9 @@
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
   function highlightEng(text: string): string {
+    // Sidenote [[sN]] and figure [[figN]] markers are rendered elsewhere (the
+    // right rail / an inline figure), so strip them from the prose flow.
+    text = text.replace(/\s*\[\[(?:s|fig)\d+\]\]\s*/g, ' ');
     if (!hlEngTerms.length) return esc(text);
     let out = esc(text);
     for (const t of hlEngTerms) {
@@ -357,7 +380,7 @@
   function renderThird(text: string): string {
     return highlightEng(text).replace(
       /\[\^(\d+)\]/g,
-      '<sup class="fn-marker" data-fn="$1" role="button" tabindex="0" aria-label="Footnote $1">$1</sup>',
+      '<button type="button" class="fn-marker" data-fn="$1" aria-label="Footnote $1">$1</button>',
     );
   }
 
@@ -368,7 +391,7 @@
   // flowParts). A GreekLine may be a partial slice of a real line (cont = its
   // tail half, after a mid-line chapter split): it suppresses the repeated id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]>; }
+  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]>; sidenotes: number[]; figs: number[]; }
   // EnrichedBlock annotates each block with the chapter it belongs to (tracking
   // across segments so continuation blocks know their chapter too).
   interface EnrichedBlock extends Block { currentChapter: string; }
@@ -489,6 +512,13 @@
         .sort((x, y) => x.off - y.off);
       return flowParts(slice, ticks);
     };
+    // Sidenote numbers ([[sN]] markers) falling in the primary English slice
+    // [a, b) — the reader floats these into the right rail (busse works).
+    const sidesIn = (a: number, b: number): number[] =>
+      [...text.slice(a, b).matchAll(/\[\[s(\d+)\]\]/g)].map(m => Number(m[1]));
+    // Diagram numbers ([[figN]] markers) in the slice — rendered inline as figures.
+    const figsIn = (a: number, b: number): number[] =>
+      [...text.slice(a, b).matchAll(/\[\[fig(\d+)\]\]/g)].map(m => Number(m[1]));
     // Overlay slices for each secondary translation, paired to blocks: the
     // continuation slice (a chapter begun in an earlier column) and one per
     // chapter that starts here. Each lays out as flowing prose with its Bekker
@@ -516,7 +546,7 @@
 
     const starts = (seg.chapterStarts ?? []).slice()
       .sort((a, b) => a.beforeLine - b.beforeLine || (a.wordIndex || 0) - (b.wordIndex || 0));
-    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, flow: flowFor(0, text.length), ...overlaysFor(null) }];
+    if (!starts.length) return [{ chapter: null, bekker: '', lines: greek, flow: flowFor(0, text.length), sidenotes: sidesIn(0, text.length), figs: figsIn(0, text.length), ...overlaysFor(null) }];
 
     const lineIdx = (beforeLine: number) => {
       const i = greek.findIndex(l => l.n >= beforeLine);
@@ -551,7 +581,7 @@
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        flow: flowFor(0, starts[0].engOffset), ...overlaysFor(null),
+        flow: flowFor(0, starts[0].engOffset), sidenotes: sidesIn(0, starts[0].engOffset), figs: figsIn(0, starts[0].engOffset), ...overlaysFor(null),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
@@ -561,7 +591,7 @@
       blocks.push({
         chapter: b.chapter, bekker: b.bekker,
         lines: linesFor(b.idx, b.word, next ? next.idx : greek.length, next ? next.word : 0),
-        flow: flowFor(b.engOffset, engTo), ...overlaysFor(b.chapter),
+        flow: flowFor(b.engOffset, engTo), sidenotes: sidesIn(b.engOffset, engTo), figs: figsIn(b.engOffset, engTo), ...overlaysFor(b.chapter),
       });
     }
     return blocks;
@@ -573,16 +603,21 @@
   // with a short close-delay so the cursor can travel from the marker into the
   // popup without it vanishing; click/Enter also open it (touch + keyboard).
   let footnote: { n: string; anchor: { x: number; y: number } } | null = null;
+  // A click PINS the popup open (it stays until you dismiss it); hover opens it
+  // transiently with a short close delay. Pinning makes click-to-read reliable.
+  let fnPinned = false;
   let fnCloseTimer: ReturnType<typeof setTimeout> | null = null;
   function cancelFnClose() {
     if (fnCloseTimer) { clearTimeout(fnCloseTimer); fnCloseTimer = null; }
   }
   function scheduleFnClose() {
+    if (fnPinned) return;            // a clicked (pinned) note ignores hover-out
     cancelFnClose();
     fnCloseTimer = setTimeout(() => { footnote = null; fnCloseTimer = null; }, 180);
   }
-  function showFootnote(marker: Element) {
+  function showFootnote(marker: Element, pin = false) {
     cancelFnClose();
+    if (pin) fnPinned = true;
     const n = marker.getAttribute('data-fn') ?? '';
     if (footnote?.n === n) return;
     const r = marker.getBoundingClientRect();
@@ -600,9 +635,17 @@
     if (!marker) return;
     if (e instanceof KeyboardEvent && e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
-    showFootnote(marker);
+    e.stopPropagation();
+    showFootnote(marker, true);
   }
-  function closeFootnote() { cancelFnClose(); footnote = null; }
+  function closeFootnote() { cancelFnClose(); fnPinned = false; footnote = null; }
+  // Click anywhere outside the marker/popup dismisses a pinned note.
+  function onDocPointerDown(e: MouseEvent) {
+    if (!fnPinned) return;
+    const t = e.target as HTMLElement | null;
+    if (t?.closest?.('.fn-marker') || t?.closest?.('.footnote-popup')) return;
+    closeFootnote();
+  }
 
   onMount(async () => {
     // Remember which book of this work was last open, for the work switcher.
@@ -773,8 +816,10 @@
     pinnedTok = null;
   }
 
-  // Show line number only for multiples of 5 (and line 1)
+  // Show line number only for multiples of 5 (and line 1). Suppressed entirely
+  // for non-Bekker works whose synthetic line numbers aren't meaningful.
   function showLineNum(n: number): string {
+    if (hideLineNums) return '';
     if (n === 1 || n % 5 === 0) return String(n);
     return '';
   }
@@ -905,8 +950,8 @@
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}</span>
-      {#if block.bekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
+      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter]}: {chapterTitles[block.chapter]}{/if}</span>
+      {#if block.bekker && !busse}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
 
@@ -918,7 +963,7 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
-      {#if transId === thirdSlot?.id}
+      {#if transId === fnTransId}
         <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
           {#each flow as part}
             {#if part.text === '\n'}
@@ -955,6 +1000,7 @@
     {/if}
   {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main"
+    class:busse={busse}
     class:word-open={!!popup}
     style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}"
     on:copy={handleCopy}>
@@ -1004,7 +1050,7 @@
       </div>
       {#if printCite}<div class="print-cite">{printCite}</div>{/if}
     </div>
-    {#if hasApproxTicks}
+    {#if hasApproxTicks && !busse}
       <p class="bekker-note">
         Greek line numbers are exact. The translations carry no Bekker numbers of
         their own, so those beside the English are aligned to the Greek:
@@ -1020,9 +1066,11 @@
              reference (the column ref is a marker within the chapter, not a
              heading over it). Mid-column chapter starts render inline below. -->
         {#if leadChapter}{@render chapterHead(leadChapter)}{/if}
-        <div class="seg-ref">
-          {seg.column}
-        </div>
+        {#if !busse}
+          <div class="seg-ref">
+            {seg.column}
+          </div>
+        {/if}
 
         {#each blocks as block, bi}
           {#if block.chapter && !(bi === 0 && leadChapter)}
@@ -1059,6 +1107,12 @@
             <div class="english-col">
               {#if trans === 'compare'}<div class="col-label">{transById(compareLeft)?.short ?? 'English'}</div>{/if}
               {@render transFlow(block, trans === 'compare' ? compareLeft : trans)}
+              <!-- Inline diagrams ([[figN]] markers), e.g. the Tree of Porphyry. -->
+              {#if busse && view !== 'greek' && block.figs.length}
+                {#each block.figs as fig}
+                  {#if figuresData[String(fig)]}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html figuresData[String(fig)]}{/if}
+                {/each}
+              {/if}
             </div>
 
             <!-- Right compare column: the second chosen translation beside the
@@ -1068,6 +1122,17 @@
                 <div class="col-label">{transById(compareRight)?.short ?? ''}</div>
                 {@render transFlow(block, compareRight)}
               </div>
+            {/if}
+
+            <!-- Analytical sidenotes (Owen's marginal notes), floated into a
+                 right rail on desktop; on mobile they fall inline below the
+                 English (hidden in Greek-only view). -->
+            {#if busse && view !== 'greek' && block.sidenotes.length}
+              <aside class="sidenote-rail">
+                {#each block.sidenotes as sn}
+                  {#if sidenotesData[String(sn)]}<p class="sidenote">{sidenotesData[String(sn)]}</p>{/if}
+                {/each}
+              </aside>
             {/if}
           </div>
         {/each}
@@ -1191,6 +1256,8 @@
     onClose={closePopup}
   />
 {/if}
+
+<svelte:window on:pointerdown={onDocPointerDown} />
 
 {#if footnote}
   <FootnotePopup

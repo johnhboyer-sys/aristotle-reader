@@ -9,7 +9,7 @@ import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import {
   getWork, bookLabel, isBookless, workPath, visibleTranslations,
-  furtherReading, inPrintHref,
+  furtherReading, inPrintHref, workLanding,
 } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import '../styles/global.css';
@@ -44,6 +44,9 @@ const editions = visibleTranslations(work);
 const primary = editions.find((t) => t.id === work.defaultTranslation)
   ?? editions.find((t) => t.slot === 'english') ?? editions[0];
 const translatorNames = editions.map((t) => t.name.split(' (')[0]);
+const commentaries = (work.commentaries ?? [])
+  .map((id) => getWork(id))
+  .filter((w): w is NonNullable<typeof w> => Boolean(w));
 const reading = furtherReading(workId);
 const readingTrans = reading.filter((r) => r.kind === 'translation');
 const readingComm = reading.filter((r) => r.kind === 'commentary');
@@ -120,6 +123,14 @@ const jsonLd = {
     .ed-list a:hover { border-color: var(--accent); }
     .ed-name { font-family: var(--font-ui); font-weight: 600; font-size: 0.92rem; }
     .ed-kind { font-size: 0.82rem; color: var(--text-mid); text-align: right; }
+    /* Commentary card: same full width / border as an edition row, but a richer
+       column layout (title, blurb, call-to-action). */
+    .comm-card { flex-direction: column; align-items: flex-start; gap: 0.45rem; padding: 0.9rem 1rem; }
+    .comm-title { font-family: var(--font-ui); font-weight: 700; font-size: 1rem; color: var(--text); }
+    .comm-greek { font-weight: 500; color: var(--text-mid); }
+    .comm-blurb { font-size: 0.86rem; line-height: 1.5; color: var(--text-mid); }
+    .comm-cta { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.2rem; font-family: var(--font-ui); font-weight: 600; font-size: 0.86rem; color: #fff; background: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 0.45rem 0.9rem; transition: transform .08s ease; }
+    .comm-card:hover .comm-cta { transform: translateX(2px); }
     .book-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 0.5rem; }
     .book-list a { display: flex; justify-content: space-between; gap: 0.6rem; align-items: baseline; text-decoration: none; color: var(--text); padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 6px; }
     .book-list a:hover { border-color: var(--accent); }
@@ -149,7 +160,7 @@ const jsonLd = {
   </header>
 
   <main class="lp-body">
-    <p class="lp-eyebrow">Aristotle · {work.abbr}</p>
+    <p class="lp-eyebrow">{work.author} · {work.abbr}</p>
     <h1 class="lp-title">{work.title}</h1>
     {work.greekTitle && <p class="lp-greek">{work.greekTitle}</p>}
     <p class="lp-lede">{work.blurb}</p>
@@ -157,8 +168,9 @@ const jsonLd = {
       This edition presents the original Greek ({work.greekSource.short}) side by
       side with {translatorNames.length > 1 ? 'English translations' : 'an English translation'}
       {translatorNames.length ? ` (${translatorNames.join(', ')})` : ''} —
-      with click-to-parse morphology, dictionary entries, and exact Bekker
-      citation. {bookless ? `${totalChapters} chapters.` : `${work.books} books, ${totalChapters} chapters.`}
+      with click-to-parse morphology, dictionary entries, and exact
+      {work.citation?.scheme === 'busse' ? ' page' : ' Bekker'} citation.
+      {bookless ? ` ${totalChapters} chapters.` : ` ${work.books} books, ${totalChapters} chapters.`}
     </p>
 
     <div class="lp-cta-row">
@@ -168,6 +180,20 @@ const jsonLd = {
       <a class="lp-btn" href={readHref('?view=greek')}>Greek only</a>
       {editions.length > 1 && <a class="lp-btn" href={readHref('?trans=compare')}>Compare translations</a>}
     </div>
+
+    {work.related && work.related.length > 0 && (
+      <p class="lp-related">
+        See also: {work.related.map((r, i) => {
+          const rw = getWork(r.id);
+          return rw ? (
+            <>
+              {i > 0 && <span> · </span>}
+              <a href={`${base}${workLanding(r.id)}`}>{r.label}</a>
+            </>
+          ) : null;
+        })}
+      </p>
+    )}
 
     <h2 class="lp-h">Read this work</h2>
     <ul class="ed-list">
@@ -198,6 +224,23 @@ const jsonLd = {
               <a href={`${base}${workPath(workId, b.book)}`}>
                 <span class="bl-label">Book {b.label}</span>
                 <span class="bl-meta">{bookSpan(b)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    {commentaries.length > 0 && (
+      <>
+        <h2 class="lp-h">Commentary</h2>
+        <ul class="ed-list">
+          {commentaries.map((c) => (
+            <li>
+              <a class="comm-card" href={`${base}${workLanding(c.id)}`}>
+                <span class="comm-title">{c.author} — {c.title}{c.greekTitle && <span class="comm-greek"> · {c.greekTitle}</span>}</span>
+                <span class="comm-blurb">{c.blurb}</span>
+                <span class="comm-cta">Read the {c.title} →</span>
               </a>
             </li>
           ))}

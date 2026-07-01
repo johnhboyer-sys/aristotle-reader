@@ -21,6 +21,9 @@ const { workId, n } = Astro.props as Props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const work = getWork(workId)!;
 const bookless = isBookless(work);
+// Non-Bekker works (e.g. the Isagoge) have no Bekker lines, so the "Go to
+// Bekker line" jump doesn't apply.
+const busse = work.citation?.scheme === 'busse';
 const label = bookLabel(work, n);
 
 interface ChapterRef { chapter: string; column: string; line: string; bekker: string; }
@@ -177,7 +180,7 @@ const intro =
       </div>
     </div>
     <div class="nav-panel" id="nav-panel">
-      <BekkerJump work={workId} client:load />
+      {!busse && <BekkerJump work={workId} client:load />}
       {!bookless && (
         <nav class="book-nav" aria-label="Books">
           <span class="book-nav-label">Books</span>
@@ -208,7 +211,10 @@ const intro =
           <span class="chapter-nav-label">{bookless ? 'Chapters' : `Book ${label} · Chapters`}</span>
           <span class="chapter-list">
             {chapters.map((c) => (
-              <a href={`#ch-${n}-${c.chapter}`} title={`Chapter ${c.chapter} · ${c.bekker}`}>{c.chapter}</a>
+              <a href={`#ch-${n}-${c.chapter}`} title={
+                (chapterTitles[String(n)]?.[c.chapter] ?? `Chapter ${c.chapter}`)
+                + (work.citation?.scheme === 'busse' ? '' : ` · ${c.bekker}`)
+              }>{c.chapter}</a>
             ))}
           </span>
         </nav>
@@ -223,7 +229,7 @@ const intro =
       <button type="button" class="toc-close" aria-label="Close contents">×</button>
     </div>
     <div class="toc-actions toc-actions-top">
-      <BekkerJump work={workId} client:load />
+      {!busse && <BekkerJump work={workId} client:load />}
       <a class="toc-action" href={`${base}/search`}>
         <span class="toc-action-name">Search</span>
         <span class="toc-action-hint">Greek &amp; English</span>
@@ -359,6 +365,6 @@ const intro =
     if (document.fonts?.ready) document.fonts.ready.then(setHeaderH);
   </script>
 
-  <Reader work={workId} bookNum={n} bookData={bookData} client:load />
+  <Reader work={workId} bookNum={n} bookData={bookData} chapterTitles={chapterTitles[String(n)] ?? {}} client:load />
 </body>
 </html>
