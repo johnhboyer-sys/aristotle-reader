@@ -805,6 +805,10 @@ const FURTHER_READING: Record<string, FurtherReadingItem[]> = {
     { kind: 'translation', cite: 'Hippocrates G. Apostle, <em>Aristotle’s Posterior Analytics</em> (The Peripatetic Press, 1981)' },
     { kind: 'commentary', cite: 'Jonathan Barnes, <em>Posterior Analytics</em> (Clarendon Aristotle Series, Oxford University Press, 2nd ed. 1994)' },
   ],
+  Isa: [
+    { kind: 'translation', cite: 'Jonathan Barnes, <em>Porphyry: Introduction</em> (Clarendon Later Ancient Philosophers, Oxford University Press, 2003)' },
+    { kind: 'translation', cite: 'Paul Vincent Spade, trans., in <em>Five Texts on the Mediaeval Problem of Universals</em> (Hackett, 1994)' },
+  ],
 };
 
 // ── In-print editions that contain the (public-domain) translation we host ───
@@ -891,9 +895,13 @@ export function furtherReading(workId: string): FurtherReadingItem[] {
   const curated = (FURTHER_READING[workId] ?? []).map((r) =>
     !r.url && /Apostle/.test(r.cite) ? { ...r, url: PERIPATETIC_URL } : r,
   );
-  // Reeve's complete works applies to every work, but skip it where a specific
-  // Reeve volume is already listed (Metaphysics, Politics) to avoid duplication.
-  const reeve = curated.some((r) => /Reeve/.test(r.cite)) ? [] : [REEVE_COMPLETE];
+  // Reeve's complete works applies to every ARISTOTLE work, but skip it where a
+  // specific Reeve volume is already listed (Metaphysics, Politics) to avoid
+  // duplication — and skip it entirely for non-Aristotle works (e.g. Porphyry's
+  // Isagoge), which his Complete Works of Aristotle does not contain.
+  const byAristotle = getWork(workId)?.author === 'Aristotle';
+  const reeve =
+    !byAristotle || curated.some((r) => /Reeve/.test(r.cite)) ? [] : [REEVE_COMPLETE];
   return [...curated, ...reeve, ...collectionsFor(workId)];
 }
 
