@@ -1,0 +1,17 @@
+---
+// Per-lemma reference page, served at /lemma/<slug>. The slug set is produced by
+// scripts/build-lemmata.mjs (public/data/lemmata/_index.json); run that before
+// building. See src/components/LemmaPage.astro for the render.
+import { readFileSync } from 'node:fs';
+import LemmaPage from '../../components/LemmaPage.astro';
+
+export function getStaticPaths() {
+  const index: { slug: string; key: string }[] = JSON.parse(
+    readFileSync('public/data/lemmata/_index.json', 'utf-8'),
+  );
+  return index.map((e) => ({ params: { slug: e.slug } }));
+}
+
+const slug = Astro.params.slug!;
+---
+<LemmaPage slug={slug} />

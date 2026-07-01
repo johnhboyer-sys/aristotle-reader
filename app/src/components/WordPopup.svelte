@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import { lookupWord, type Analysis, type LsjEntry } from '../lib/data';
+  import { lookupWord, fetchLemmata, type Analysis, type LsjEntry, type LemmaRef } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
 
   export let work: string = 'EN';
@@ -24,6 +24,16 @@
     .then(r => { analyses = r.analyses; lsj = r.lsj; })
     .catch(e => { error = String(e); })
     .finally(() => { loading = false; });
+
+  // The lemma-page manifest (loaded once, cached): lets each analysis card offer
+  // a "see all N occurrences" link into /lemma/<slug>, but only for lemmata that
+  // actually have a page. Absent manifest = no links, popup unchanged.
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  let lemmata: Record<string, LemmaRef> = {};
+  fetchLemmata().then(m => { lemmata = m; }).catch(() => {});
+  // A card's lemma page keys off its primary LSJ key (matching the concordance).
+  const lemmaRef = (a: Analysis): LemmaRef | null =>
+    (a.lsj[0] && lemmata[a.lsj[0]]) || null;
 
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
@@ -58,6 +68,12 @@
           <div class="lemma">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
           <div class="gloss">{a.gloss}</div>
           <div class="parse">{a.parse}</div>
+          {#if lemmaRef(a)}
+            <a class="lemma-link" href={`${base}/lemma/${lemmaRef(a)!.slug}/`}>
+              Appears {lemmaRef(a)!.count.toLocaleString()}× across Aristotle
+              <span class="lemma-link-arr" aria-hidden="true">→</span>
+            </a>
+          {/if}
         </div>
       {/each}
       {#if lsj.length > 0}
@@ -74,3 +90,16 @@
     {/if}
   </div>
 </aside>
+
+<style>
+  /* "See all occurrences" link into the lemma page — the popup's one bridge to
+     the deeper reference view. Sits at the foot of each analysis card. */
+  .lemma-link {
+    display: inline-flex; align-items: center; gap: 0.35em;
+    margin-top: 0.5rem; font-family: var(--font-ui); font-size: 0.8rem;
+    font-weight: 600; color: var(--accent); text-decoration: none;
+  }
+  .lemma-link:hover { text-decoration: underline; }
+  .lemma-link-arr { transition: transform .1s ease; }
+  .lemma-link:hover .lemma-link-arr { transform: translateX(2px); }
+</style>

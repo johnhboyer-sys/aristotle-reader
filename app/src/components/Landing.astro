@@ -81,6 +81,20 @@ const jsonLd = {
   isPartOf: { '@type': 'CreativeWorkSeries', name: 'The Works of Aristotle' },
   description: work.blurb,
 };
+// Breadcrumb (Home › Work) for a SERP breadcrumb rich result. Absolute URLs
+// required, so emitted only when Astro.site is set.
+const breadcrumbLd = Astro.site
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Aristotle',
+          item: new URL(`${base}/`, Astro.site).href },
+        { '@type': 'ListItem', position: 2, name: work.title,
+          item: new URL(`${base}${workLanding(workId)}/`, Astro.site).href },
+      ],
+    }
+  : null;
 ---
 <html lang="en">
 <head>
@@ -101,6 +115,7 @@ const jsonLd = {
   <meta name="twitter:card" content="summary_large_image" />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  {breadcrumbLd && <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -154,6 +169,7 @@ const jsonLd = {
     </div>
     <nav class="header-actions" aria-label="Navigation">
       <a href={`${base}/`} class="search-link">All works</a>
+      <a href={`${base}/lemma/`} class="search-link">Lexicon</a>
       <a href={`${base}/search`} class="search-link">Search</a>
       <ThemeToggle />
     </nav>

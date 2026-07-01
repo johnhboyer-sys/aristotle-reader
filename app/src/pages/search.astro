@@ -35,16 +35,16 @@ const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href 
   <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <header class="page-header">
+  <header class="simple-header">
     <div class="header-title">
       <a class="home-link" href={`${base}/`} title="All works">Home</a>
       <span class="title-sep">›</span>
       <span class="header-static">Search</span>
     </div>
-    <ThemeToggle />
-    <nav class="book-nav" aria-label="Navigation">
+    <nav class="header-actions" aria-label="Navigation">
       <a href={`${base}/`} class="search-link">All works</a>
-      <a href={`${base}/attribution`} class="search-link">Texts &amp; Licences</a>
+      <a href={`${base}/lemma/`} class="search-link">Lexicon</a>
+      <ThemeToggle />
     </nav>
   </header>
   <Search client:load />

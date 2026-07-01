@@ -1197,15 +1197,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 0.75rem;
+  /* Single row: title left, actions right. The actions are compact enough to
+     stay on the title's line; a long work title ellipsises rather than wrap. */
+  gap: 0.75rem;
 }
 .simple-header .header-title {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
-  min-width: 0;
+  min-width: 0;                 /* allow a long title to ellipsis, not push actions off */
   font-family: var(--font-ui);
 }
+.simple-header .header-actions { flex: 0 0 auto; }
 .simple-header .header-title .home-link {
   font-weight: 600;
   color: var(--accent);
@@ -1225,14 +1228,18 @@ body {
 .simple-header .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.55rem;
   flex: 0 0 auto;
 }
-/* Quiet UI links (no default browser-blue), matching the reader's header nav. */
+/* Quiet UI links (no default browser-blue), matching the reader's header nav.
+   Use the UI font + a small size so the links match the title instead of
+   rendering as large serif body text. */
 .simple-header .header-actions .search-link {
   margin-left: 0;
   padding: 0.15rem 0.4rem !important;
   border-left: none;
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
   color: var(--text-mid);
   text-decoration: none;
   border-radius: 3px;
@@ -1246,6 +1253,10 @@ body {
 @media (max-width: 560px) {
   .simple-header .header-title .home-link,
   .simple-header .header-title .title-sep { display: none; }
+  /* Tighten so the title + actions stay on one row on a phone. */
+  .simple-header { padding: 0.5rem 0.7rem; gap: 0.5rem; }
+  .simple-header .header-actions { gap: 0.35rem; }
+  .simple-header .header-actions .search-link { padding: 0.15rem 0.3rem !important; font-size: 0.82rem; }
 }
 
 /* Donation card — shared by the home page and the work landing pages so they

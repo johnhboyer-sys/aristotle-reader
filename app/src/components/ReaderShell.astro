@@ -12,7 +12,7 @@ import HelpButton from './HelpButton.svelte';
 import WorkSwitcher from './WorkSwitcher.svelte';
 import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
-import { getWork, bookLabel, isBookless, workPath } from '../lib/works';
+import { getWork, bookLabel, isBookless, workPath, workLanding } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
 
 interface Props { workId: string; n: number; }
@@ -56,7 +56,13 @@ const outline = Array.from({ length: work.books }, (_, i) => {
 });
 const chapterHref = (b: number, chapter: string) =>
   b === n ? `#ch-${b}-${chapter}` : `${base}${workPath(workId, b)}#ch-${b}-${chapter}`;
-const pageTitle = bookless ? work.title : `${work.title} · Book ${label}`;
+// The visible tab title + og:title. Front-loads the work name (what people
+// search) and appends the parallel-text long-tail phrasing ("greek english
+// translation") that these deep book pages can realistically rank for, since
+// they can't win the bare head term against Wikipedia/SEP on a github.io path.
+const pageTitle = bookless
+  ? `${work.title} — Greek Text & English Translation`
+  : `${work.title}, Book ${label} — Greek Text & English Translation`;
 
 // ── SEO: server-rendered signals ───────────────────────────────────────────
 // The reading text is now server-rendered (bookData is read at build above and
@@ -97,6 +103,25 @@ const jsonLd = {
   isPartOf: { '@type': 'CreativeWorkSeries', name: 'The Works of Aristotle' },
   description: metaDescription,
 };
+// Breadcrumb trail (Home › Work › Book N) — gives Google the page's place in the
+// hierarchy and can render as a breadcrumb rich result in the SERP. Absolute
+// URLs required, so emitted only when Astro.site is set.
+const breadcrumbLd = Astro.site
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Aristotle',
+          item: new URL(`${base}/`, Astro.site).href },
+        { '@type': 'ListItem', position: 2, name: work.title,
+          item: new URL(`${base}${workLanding(workId)}/`, Astro.site).href },
+        ...(bookless
+          ? []
+          : [{ '@type': 'ListItem', position: 3, name: `Book ${label}`,
+              item: new URL(`${base}${workPath(workId, n)}/`, Astro.site).href }]),
+      ],
+    }
+  : null;
 const h1Text =
   `Aristotle, ${work.title}${bookSuffix} — Greek text with English translation`;
 // A short topical paragraph (the curated one-line blurb, framed with the Greek
@@ -128,6 +153,7 @@ const intro =
   <meta name="twitter:card" content="summary_large_image" />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  {breadcrumbLd && <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -163,6 +189,10 @@ const intro =
         <a class="header-search" href={`${base}/search`} title="Search Greek &amp; English" aria-label="Search Greek &amp; English">
           <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.8" cy="6.8" r="4.6"/><line x1="10.4" y1="10.4" x2="14" y2="14"/></svg>
           <span class="hs-text">Search</span>
+        </a>
+        <a class="header-search header-lexicon" href={`${base}/lemma/`} title="Greek Lexicon — word frequency &amp; concordance" aria-label="Greek Lexicon">
+          <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 3.6C6.6 2.6 4.2 2.6 2.6 3.1v9C4.2 11.6 6.6 11.6 8 12.6M8 3.6C9.4 2.6 11.8 2.6 13.4 3.1v9C11.8 11.6 9.4 11.6 8 12.6M8 3.6v9"/></svg>
+          <span class="hs-text">Lexicon</span>
         </a>
         <button type="button" class="settings-toggle" aria-label="Reader settings" aria-expanded="false">
           <svg class="settings-icon" width="18" height="14" viewBox="0 0 18 14" aria-hidden="true" fill="currentColor" stroke="none">
@@ -233,6 +263,10 @@ const intro =
       <a class="toc-action" href={`${base}/search`}>
         <span class="toc-action-name">Search</span>
         <span class="toc-action-hint">Greek &amp; English</span>
+      </a>
+      <a class="toc-action" href={`${base}/lemma/`}>
+        <span class="toc-action-name">Greek Lexicon</span>
+        <span class="toc-action-hint">Word frequency &amp; concordance</span>
       </a>
     </div>
     <div class="toc-work-head"><span class="toc-work">{work.title}</span></div>

@@ -243,6 +243,21 @@ export function fetchAnalyses(work: string): Promise<Record<string, Analysis[]>>
   return p;
 }
 
+// The lemma-page manifest: LSJ key -> { slug, head, count } for every lemma that
+// has a /lemma/<slug> reference page (produced by scripts/build-lemmata.mjs).
+// The word popup loads it once to decide whether to offer a "see all N
+// occurrences" link, and only for lemmata that actually have a page.
+export interface LemmaRef { slug: string; head: string; count: number; }
+let _lemmataCache: Promise<Record<string, LemmaRef>> | null = null;
+export function fetchLemmata(): Promise<Record<string, LemmaRef>> {
+  if (_lemmataCache) return _lemmataCache;
+  const p = fetch(`${ROOT}/lemmata.json`).then(r => (r.ok ? r.json() : {}));
+  // A missing/failed manifest just means no lemma links — don't cache the failure.
+  p.catch(() => { if (_lemmataCache === p) _lemmataCache = null; });
+  _lemmataCache = p;
+  return p;
+}
+
 export function lsjShard(key: string): string {
   for (const ch of key) {
     if (ch === '*') continue;

@@ -45,6 +45,39 @@ const divisions: Division[] = CATEGORIES.map((cat) => {
   const count = groups.reduce((n, g) => n + g.cards.length, 0);
   return { numeral: cat.numeral, title: cat.title, count, groups };
 });
+
+// Structured data: identify the site (WebSite) and enumerate every built work as
+// an ItemList of CreativeWorks linking to its landing page. This tells Google the
+// home page is the hub for the whole corpus, reinforcing the per-work pages that
+// carry the long-tail "<work> greek & english" queries. Absolute URLs need
+// Astro.site (set in config); emitted only when present.
+const builtWorks = divisions.flatMap((d) =>
+  d.groups.flatMap((g) => g.cards.filter((c): c is Extract<Card, { kind: 'work' }> => c.kind === 'work')),
+);
+const structuredData = Astro.site
+  ? [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'The Aristotle Reader',
+        alternateName: 'Aristotle in Greek & English',
+        url: new URL(`${base}/`, Astro.site).href,
+        description: homeDescription,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'The Works of Aristotle',
+        numberOfItems: builtWorks.length,
+        itemListElement: builtWorks.map((c, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: c.work.title,
+          url: new URL(`${base}${workLanding(c.work.id)}/`, Astro.site).href,
+        })),
+      },
+    ]
+  : null;
 ---
 <html lang="en">
 <head>
@@ -66,6 +99,9 @@ const divisions: Division[] = CATEGORIES.map((cat) => {
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
+  {structuredData && structuredData.map((sd) => (
+    <script type="application/ld+json" set:html={JSON.stringify(sd)} />
+  ))}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -88,6 +124,12 @@ const divisions: Division[] = CATEGORIES.map((cat) => {
     <a class="search-card" href={`${base}/search`}>
       <span class="search-card-name">Search the Corpus</span>
       <span class="search-card-meta">Greek &amp; English · all works</span>
+      <span class="chev-right" aria-hidden="true">›</span>
+    </a>
+
+    <a class="search-card" href={`${base}/lemma/`}>
+      <span class="search-card-name">Greek Lexicon</span>
+      <span class="search-card-meta">Key words · frequency &amp; concordance</span>
       <span class="chev-right" aria-hidden="true">›</span>
     </a>
 

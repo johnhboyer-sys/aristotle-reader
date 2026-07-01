@@ -1,0 +1,309 @@
+---
+// A single lemma's reference page (the "lemma pages" spike), served at
+// /lemma/<slug>. Fuses three layers over one Greek word:
+//   ① LSJ definition (English)            — what it means
+//   ② corpus-wide frequency + per-work    — how much Aristotle uses it
+//   ③ a concordance sample                — every use links back into the reader
+// with a stubbed Bonitz section (④) where the Index Aristotelicus sense-analysis
+// will slot in. Data is precomputed by scripts/build-lemmata.mjs into
+// public/data/lemmata/<slug>.json; this page just renders it at build time.
+import { readFileSync } from 'node:fs';
+import ThemeInit from './ThemeInit.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { getWork, workPath, workLanding, bookLabel, isBookless } from '../lib/works';
+import '../styles/global.css';
+
+interface Props { slug: string; }
+const { slug } = Astro.props as Props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+type Instance = [col: string, line: number, surface: string];
+interface ChapterInstances { chapter: string; bekker: string; instances: Instance[]; }
+interface BookInstances { book: number; chapters: ChapterInstances[]; }
+interface WorkInstances { work: string; title: string; count: number; shown: number; books: BookInstances[]; }
+interface LemmaData {
+  slug: string; key: string; head: string; lemmaBeta: string;
+  count: number; glosses: string[];
+  byWork: { work: string; title: string; count: number }[];
+  instancesByWork: WorkInstances[];
+  truncated: boolean;
+  bonitz: null;
+}
+const data: LemmaData = JSON.parse(
+  readFileSync(`public/data/lemmata/${slug}.json`, 'utf-8'),
+);
+
+// The LSJ entry HTML (shared shards, keyed by the same LSJ key the concordance
+// attributed the lemma to). Read at build; absent for the rare lemma with no
+// dictionary entry.
+function lsjShardLetter(key: string): string {
+  for (const ch of key) { if (ch === '*') continue; if (/[a-z]/.test(ch)) return ch; }
+  return '_';
+}
+let lsjHtml = '';
+try {
+  const shard = JSON.parse(
+    readFileSync(`public/data/lsj/${lsjShardLetter(data.key)}.json`, 'utf-8'),
+  );
+  lsjHtml = shard[data.key]?.html ?? '';
+} catch { /* no shard */ }
+
+// Deep-link an instance back into the reader: scroll to the Bekker line and
+// highlight the Greek word (the same ?hlg=&loc= mechanism search uses).
+const instHref = (work: string, book: number, [col, line, surface]: Instance) =>
+  `${base}${workPath(work, book)}?hlg=${encodeURIComponent(surface)}&loc=${col}:${line}`;
+
+// For the frequency bars: scale each work's count against the most-frequent work
+// (byWork is sorted desc) so the bars are directly comparable at a glance.
+const maxWork = data.byWork[0]?.count ?? 1;
+
+// Precompute the per-work view (book labels, per-book counts, flat-vs-drilldown)
+// in the frontmatter — comparison operators like `<=` inside inline template
+// expressions confuse Astro's JSX parser, so no logic lives in the markup.
+const worksView = data.instancesByWork.map((w) => {
+  const ww = getWork(w.work);
+  const bookless = ww ? isBookless(ww) : false;
+  return {
+    ...w,
+    bookless,
+    flat: w.shown <= 30,             // small entries render fully expanded
+    capped: w.shown < w.count,       // per-lemma INSTANCE_CAP truncated this work
+    barPct: Math.max(2, (w.count / maxWork) * 100),
+    books: w.books.map((bk) => ({
+      book: bk.book,
+      label: ww ? bookLabel(ww, bk.book) : String(bk.book),
+      bookCount: bk.chapters.reduce((n, c) => n + c.instances.length, 0),
+      chapters: bk.chapters,
+    })),
+  };
+});
+
+// ── SEO ─────────────────────────────────────────────────────────────────────
+const gloss = data.glosses[0] ?? '';
+const pageTitle = `${data.head} (${data.slug}) — Aristotle's Greek Lexicon: ${gloss || 'definition & occurrences'}`;
+const metaDescription =
+  `${data.head} in Aristotle${gloss ? ` — "${gloss}"` : ''}. Appears ${data.count}` +
+  ` times across the corpus (${data.byWork.slice(0, 3).map((b) => b.title).join(', ')}…),` +
+  ` with the LSJ definition, frequency by work, and every occurrence linked to the` +
+  ` parallel Greek–English text with Bekker citation.`;
+const canonical = Astro.site
+  ? new URL(`${base}/lemma/${data.slug}/`, Astro.site).href : undefined;
+const ogImage = Astro.site
+  ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const definedTerm = {
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTerm',
+  name: data.head,
+  ...(gloss ? { description: gloss } : {}),
+  inLanguage: 'grc',
+  ...(canonical ? { url: canonical } : {}),
+  inDefinedTermSet: {
+    '@type': 'DefinedTermSet',
+    name: "Lexicon of Aristotle's Greek",
+    url: Astro.site ? new URL(`${base}/lemma/`, Astro.site).href : undefined,
+  },
+};
+const breadcrumb = Astro.site ? {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Aristotle', item: new URL(`${base}/`, Astro.site).href },
+    { '@type': 'ListItem', position: 2, name: 'Greek Lexicon', item: new URL(`${base}/lemma/`, Astro.site).href },
+    { '@type': 'ListItem', position: 3, name: data.head, item: canonical },
+  ],
+} : null;
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
+  <title>{pageTitle}</title>
+  <meta name="description" content={metaDescription} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={metaDescription} />
+  {canonical && <meta property="og:url" content={canonical} />}
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta name="twitter:card" content="summary_large_image" />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={JSON.stringify(definedTerm)} />
+  {breadcrumb && <script type="application/ld+json" set:html={JSON.stringify(breadcrumb)} />}
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    .lx-body { max-width: 820px; margin: 0 auto; padding: 2rem 1rem 5rem; font-family: var(--font-english); color: var(--text); }
+    .lx-head-gk { font-family: var(--font-greek); font-size: 2.6rem; font-weight: 600; line-height: 1.1; margin: 0; }
+    .lx-translit { font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mid); margin: 0.3rem 0 0; }
+    .lx-gloss { font-size: 1.15rem; color: var(--text); margin: 0.7rem 0 0; }
+    .lx-freq { font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-mid); margin: 1rem 0 0; }
+    .lx-freq b { color: var(--accent); font-size: 1.1rem; }
+    h2.lx-h { font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700; letter-spacing: .03em; color: var(--accent); margin: 2.4rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+    /* Frequency-by-work: a ranked list with proportional bars so relative
+       counts are readable at a glance (pills hid the comparison). */
+    .lx-freqbars { list-style: none; padding: 0; margin: 0; }
+    .lx-freqbars > li { margin: 0; }
+    .fb-item > summary {
+      display: grid; grid-template-columns: minmax(6rem, 12rem) 1fr 3.2rem 1rem;
+      align-items: center; gap: 0.7rem; cursor: pointer; list-style: none;
+      padding: 0.28rem 0.4rem; border-radius: 5px;
+    }
+    .fb-item > summary::-webkit-details-marker { display: none; }
+    .fb-item > summary:hover { background: var(--surface-2, rgba(128,128,128,.08)); }
+    .fb-name { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fb-item > summary:hover .fb-name { color: var(--accent); }
+    .fb-track { height: 0.7rem; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .fb-fill { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+    .fb-n { font-family: var(--font-ui); font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--text-mid); text-align: right; }
+    .fb-caret { font-size: 0.7rem; color: var(--text-mid); transition: transform .12s ease; justify-self: center; }
+    .fb-item[open] > summary .fb-caret { transform: rotate(90deg); }
+    .fb-cites { padding: 0.5rem 0.4rem 1rem 0.4rem; }
+    .fb-open { display: inline-block; font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; color: var(--accent); text-decoration: none; margin: 0 0 0.6rem; }
+    .fb-open:hover { text-decoration: underline; }
+    .fb-citelist { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .fb-citelist a {
+      display: inline-block; font-family: var(--font-ui); font-variant-numeric: tabular-nums;
+      font-size: 0.78rem; color: var(--text); text-decoration: none;
+      border: 1px solid var(--border); border-radius: 4px; padding: 0.15rem 0.45rem;
+    }
+    .fb-citelist a:hover { border-color: var(--accent); color: var(--accent); }
+    /* Grouped citation list inside an expanded work: book + chapter headings. */
+    .fb-book-group { margin: 0 0 0.9rem; }
+    /* Collapsible book (multi-book works): a compact summary row you drill into. */
+    .fb-book-d { border-top: 1px solid var(--border); }
+    .fb-book-d > summary {
+      display: flex; align-items: center; gap: 0.5rem; cursor: pointer; list-style: none;
+      padding: 0.4rem 0.2rem;
+    }
+    .fb-book-d > summary::-webkit-details-marker { display: none; }
+    .fb-book-d > summary:hover .fb-book { color: var(--accent); }
+    .fb-book { font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .fb-book-n { font-family: var(--font-ui); font-variant-numeric: tabular-nums; font-size: 0.78rem; color: var(--text-mid); margin-left: auto; }
+    .fb-book-caret { font-size: 0.65rem; }
+    .fb-book-d[open] > summary .fb-book-caret { transform: rotate(90deg); }
+    .fb-book-body { padding: 0.2rem 0 0.6rem 0.5rem; }
+    .fb-chapter { margin: 0 0 0.7rem 0.2rem; }
+    .fb-ch-head { display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 0.35rem; }
+    .fb-ch-label { font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; color: var(--text-mid); }
+    .fb-ch-bekker { font-family: var(--font-ui); font-size: 0.72rem; color: var(--text-mid); font-variant-numeric: tabular-nums; opacity: .8; }
+    .lsj { font-size: 0.95rem; line-height: 1.6; color: var(--text); }
+    .lsj :global(.lsj-head) { font-family: var(--font-greek); }
+    .lx-bonitz { border: 1px dashed var(--border); border-radius: 8px; padding: 1rem 1.1rem; color: var(--text-mid); font-size: 0.9rem; line-height: 1.6; }
+    .lx-bonitz b { color: var(--text); }
+    .lx-note { font-size: 0.82rem; color: var(--text-mid); margin: 0.4rem 0 0; }
+    .lx-back { display: inline-block; margin: 2.5rem 0 0; font-family: var(--font-ui); font-size: 0.9rem; color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header class="simple-header">
+    <div class="header-title">
+      <a class="home-link" href={`${base}/`} title="All works">Aristotle</a>
+      <span class="title-sep">›</span>
+      <a class="home-link" href={`${base}/lemma/`}>Greek Lexicon</a>
+      <span class="title-sep">›</span>
+      <span class="header-static">{data.head}</span>
+    </div>
+    <nav class="header-actions" aria-label="Navigation">
+      <a href={`${base}/`} class="search-link">All works</a>
+      <a href={`${base}/lemma/`} class="search-link">Lexicon</a>
+      <a href={`${base}/search`} class="search-link">Search</a>
+      <ThemeToggle />
+    </nav>
+  </header>
+
+  <main class="lx-body">
+    <h1 class="lx-head-gk">{data.head}</h1>
+    <p class="lx-translit">{data.slug}</p>
+    {gloss && <p class="lx-gloss">{data.glosses.join('; ')}</p>}
+    <p class="lx-freq">Appears <b>{data.count.toLocaleString()}</b> times across Aristotle's works.</p>
+
+    <h2 class="lx-h">Frequency by work</h2>
+    <p class="lx-note">Click a work to list every occurrence by Bekker number — each links into the reader.</p>
+    <ul class="lx-freqbars">
+      {worksView.map((w) => (
+        <li>
+          <details class="fb-item">
+            <summary>
+              <span class="fb-name">{w.title}</span>
+              <span class="fb-track"><span class="fb-fill" style={`width:${w.barPct}%`}></span></span>
+              <span class="fb-n">{w.count.toLocaleString()}</span>
+              <span class="fb-caret" aria-hidden="true">▸</span>
+            </summary>
+            <div class="fb-cites">
+              <a class="fb-open" href={`${base}${workLanding(w.work)}`}>Open {w.title} ›</a>
+              {w.books.map((bk) => (
+                w.bookless ? (
+                  <div class="fb-book-group">
+                    {bk.chapters.map((ch) => (
+                      <div class="fb-chapter">
+                        <div class="fb-ch-head">
+                          <span class="fb-ch-label">Chapter {ch.chapter}</span>
+                          {ch.bekker && <span class="fb-ch-bekker">{ch.bekker}</span>}
+                        </div>
+                        <ul class="fb-citelist">
+                          {ch.instances.map((inst) => (
+                            <li><a href={instHref(w.work, bk.book, inst)}>{inst[0]}{inst[1]}</a></li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <details class="fb-book-d" open={w.flat}>
+                    <summary class="fb-book-sum">
+                      <span class="fb-book">Book {bk.label}</span>
+                      <span class="fb-book-n">{bk.bookCount}</span>
+                      <span class="fb-caret fb-book-caret" aria-hidden="true">▸</span>
+                    </summary>
+                    <div class="fb-book-body">
+                      {bk.chapters.map((ch) => (
+                        <div class="fb-chapter">
+                          <div class="fb-ch-head">
+                            <span class="fb-ch-label">Chapter {ch.chapter}</span>
+                            {ch.bekker && <span class="fb-ch-bekker">{ch.bekker}</span>}
+                          </div>
+                          <ul class="fb-citelist">
+                            {ch.instances.map((inst) => (
+                              <li><a href={instHref(w.work, bk.book, inst)}>{inst[0]}{inst[1]}</a></li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )
+              ))}
+              {w.capped && (
+                <p class="lx-note">Showing {w.shown.toLocaleString()} of {w.count.toLocaleString()} (list capped).</p>
+              )}
+            </div>
+          </details>
+        </li>
+      ))}
+    </ul>
+
+    {lsjHtml && (
+      <>
+        <h2 class="lx-h">Dictionary (LSJ)</h2>
+        <!-- eslint-disable-next-line -->
+        <div class="lsj" set:html={lsjHtml} />
+      </>
+    )}
+
+    <h2 class="lx-h">Key passages &amp; sense analysis (Bonitz)</h2>
+    <div class="lx-bonitz">
+      <b>Index Aristotelicus.</b> Hermann Bonitz's sense-by-sense analysis of
+      <span style="font-family:var(--font-greek)"> {data.head}</span> — with the passages
+      he singles out as decisive for each meaning — will appear here. That curated,
+      interpretive selection is the layer LSJ and a raw concordance don't provide.
+      <span class="lx-note">Digitisation in progress; this entry is not yet available.</span>
+    </div>
+
+    <a class="lx-back" href={`${base}/lemma/`}>‹ All lexicon entries</a>
+  </main>
+</body>
+</html>
