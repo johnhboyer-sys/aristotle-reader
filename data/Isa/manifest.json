@@ -1,0 +1,30 @@
+{
+ "work": {
+  "id": "Isa",
+  "title": "Isagoge",
+  "greekTitle": "Εἰσαγωγή",
+  "author": "Porphyry",
+  "tlg_author": "2034",
+  "tlg_work": "006",
+  "greek_edition": "A. Busse, Porphyrii Isagoge et in Aristotelis Categorias commentarium (CAG IV.1, Berlin 1887)",
+  "english_translation": "Octavius Freire Owen (Bohn, 1853)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 22,
+   "first_column": "1a",
+   "last_column": "22a"
+  }
+ ],
+ "analyses": {
+  "token_keys": 1021,
+  "parses_dropped": 35
+ },
+ "lsj": {
+  "lemmata_needed": 667,
+  "lsj_entries_kept": 637,
+  "shards": 23,
+  "lemmata_without_entry": 36
+ }
+}

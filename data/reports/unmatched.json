@@ -1,36 +1,162 @@
 [
  {
-  "key": "ippos",
-  "surface": "ιππος",
-  "first_ref": "16a21",
+  "key": "a)napneusto/n",
+  "surface": "ἀναπνευστὸν",
+  "first_ref": "135a33",
+  "count": 5,
+  "analyses": []
+ },
+ {
+  "key": "e)pitimhte/on",
+  "surface": "ἐπιτιμητέον",
+  "first_ref": "118a24",
+  "count": 4,
+  "analyses": []
+ },
+ {
+  "key": "i)saxw=s",
+  "surface": "ἰσαχῶς",
+  "first_ref": "125a15",
+  "count": 2,
+  "analyses": []
+ },
+ {
+  "key": "eu)h/qwn",
+  "surface": "εὐήθων",
+  "first_ref": "162a5",
+  "count": 2,
+  "analyses": []
+ },
+ {
+  "key": "au)todo/can",
+  "surface": "αὐτοδόξαν",
+  "first_ref": "162a30",
+  "count": 2,
+  "analyses": []
+ },
+ {
+  "key": "proskei/qwsan",
+  "surface": "προσκείθωσαν",
+  "first_ref": "102b14",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "kelhs",
-  "surface": "κελης",
-  "first_ref": "16a26",
+  "key": "lw/pion",
+  "surface": "λώπιον",
+  "first_ref": "103a10",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "us",
-  "surface": "υς",
-  "first_ref": "16b31",
+  "key": "lwpi/w|",
+  "surface": "λωπίῳ",
+  "first_ref": "103a27",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "o(posw|ou=n",
-  "surface": "ὁποσῳοῦν",
-  "first_ref": "19a1",
+  "key": "o(poterousou=n",
+  "surface": "ὁποτερουσοῦν",
+  "first_ref": "104b33",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "e)ndexo/men",
-  "surface": "ἐνδεχόμεν",
-  "first_ref": "22a25",
+  "key": "filo/glukus",
+  "surface": "φιλόγλυκυς",
+  "first_ref": "111a3",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "o(poteou=n",
+  "surface": "ὁποτεοῦν",
+  "first_ref": "115b28",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "meiw/sews",
+  "surface": "μειώσεως",
+  "first_ref": "122a28",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "a(/pnates",
+  "surface": "ἅπνατες",
+  "first_ref": "134a28",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "a)napneusto/s",
+  "surface": "ἀναπνευστός",
+  "first_ref": "135a36",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "oi(aspotou=n",
+  "surface": "οἱασποτοῦν",
+  "first_ref": "146b26",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "o(poshsou=n",
+  "surface": "ὁποσησοῦν",
+  "first_ref": "146b33",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "o(posouou=n",
+  "surface": "ὁποσουοῦν",
+  "first_ref": "146b34",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "w(felou/menos",
+  "surface": "ὡφελούμενος",
+  "first_ref": "147a15",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "o(poterwsou=n",
+  "surface": "ὁποτερωσοῦν",
+  "first_ref": "148a36",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "lwpi/ou",
+  "surface": "λωπίου",
+  "first_ref": "149a4",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "sw|stikh/n",
+  "surface": "σῳστικὴν",
+  "first_ref": "149b33",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "sw|stiko/n",
+  "surface": "σῳστικὸν",
+  "first_ref": "149b34",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "o(poterw|ou=n",
+  "surface": "ὁποτερῳοῦν",
+  "first_ref": "150b30",
   "count": 1,
   "analyses": []
  }
