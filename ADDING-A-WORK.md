@@ -48,8 +48,12 @@ between anchors. Zero anchors = all estimates; full anchors = Rackham-grade.
 cd pipeline && uv run python -m aristotle_pipeline all --work <SLUG>
 ```
 
-Emits `build/dist/<SLUG>/` (books, chapters, columns, analyses, LSJ, search).
-Spot-check chapter placement against a couple of canonical Bekker anchors.
+Emits `build/dist/<SLUG>/` (books, chapters, columns, analyses, search) and
+merges this work's LSJ entries into the shared corpus-wide `build/dist/lsj/`
+(one dictionary, not per-work). For the complete shared dictionary run a full
+`npm run build:public` (it clears `build/dist` once, then every work accumulates
+into `build/dist/lsj/`; `verify_shared_lsj` then checks every referenced key
+resolves). Spot-check chapter placement against a couple of canonical Bekker anchors.
 
 ## 4. Register the work (`app/src/lib/works.ts`)
 
