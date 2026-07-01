@@ -121,10 +121,15 @@ def _write_json(xml_out: Path, json_out: Path) -> dict:
     return data
 
 
-def _validate_written_column(xml_out: Path, json_out: Path | None) -> tuple[bool, list[str]]:
-    failures, warnings = validate_column(xml_out, json_path=json_out)
-    messages = failures + warnings
-    return not messages, messages
+def _validate_written_column(
+    xml_out: Path, json_out: Path | None, *, page: int | None = None, side: str | None = None
+) -> tuple[bool, list[str], list[str]]:
+    """Returns (ok, failures, warnings). Only `failures` block; `warnings` are informational."""
+    col = _side_name(side) if side is not None else None
+    failures, warnings = validate_column(
+        xml_out, json_path=json_out, page=str(page) if page is not None else None, col=col
+    )
+    return not failures, failures, warnings
 
 
 def _write_manifest_row(row: dict) -> None:
@@ -141,6 +146,7 @@ def _column_manifest(
     error: str | None = None,
     entries: int | None = None,
     source: str | None = None,
+    warnings: list[str] | None = None,
 ) -> None:
     row = {
         "page": page_str,
@@ -155,21 +161,29 @@ def _column_manifest(
         row["entry_count"] = entries
     if error:
         row["error"] = error
+    if warnings:
+        row["warnings"] = warnings
     _write_manifest_row(row)
 
 
-def _write_existing_xml_json(page_str: str, side: str, xml_out: Path, json_out: Path, *, dry_run: bool) -> int:
+def _print_warnings(page_str: str, side: str, warnings: list[str]) -> None:
+    for msg in warnings:
+        print(f"  [warn]  page {page_str}-{side}: {msg}", file=sys.stderr, flush=True)
+
+
+def _write_existing_xml_json(page: int, page_str: str, side: str, xml_out: Path, json_out: Path, *, dry_run: bool) -> int:
     print(f"  [json]  page {page_str}-{side} from existing XML", flush=True)
     if dry_run:
         return 1
 
     data = _write_json(xml_out, json_out)
-    ok, messages = _validate_written_column(xml_out, json_out)
+    ok, failures, warnings = _validate_written_column(xml_out, json_out, page=page, side=side)
     if not ok:
-        raise ValueError("; ".join(messages))
+        raise ValueError("; ".join(failures))
+    _print_warnings(page_str, side, warnings)
     print(f"  [valid] page {page_str}-{side}", flush=True)
     print(f"  [json]  {len(data['entries'])} entries -> {json_out.name}", flush=True)
-    _column_manifest(page_str, side, status="ok", entries=len(data["entries"]), source="existing_xml")
+    _column_manifest(page_str, side, status="ok", entries=len(data["entries"]), source="existing_xml", warnings=warnings)
     return 1
 
 
@@ -193,20 +207,24 @@ def process_page(page: int, *, pdf: Path, dry_run: bool = False) -> tuple[int, i
         json_out = _OUTPUT_JSON / f"page-{page_str}-{side}.json"
 
         if xml_out.exists() and json_out.exists():
-            ok, messages = _validate_written_column(xml_out, json_out) if not dry_run else (True, [])
+            ok, failures, warnings = (
+                _validate_written_column(xml_out, json_out, page=page, side=side) if not dry_run else (True, [], [])
+            )
             if not ok:
-                error = "; ".join(messages)
+                error = "; ".join(failures)
                 print(f"  [fail] page {page_str}-{side}: {error}", file=sys.stderr, flush=True)
                 _column_manifest(page_str, side, status="failed", error=error, source="existing_xml_json")
                 continue
+            _print_warnings(page_str, side, warnings)
             print(f"  [skip] page {page_str}-{side} already done", flush=True)
-            _column_manifest(page_str, side, status="ok", source="existing_xml_json") if not dry_run else None
+            if not dry_run:
+                _column_manifest(page_str, side, status="ok", source="existing_xml_json", warnings=warnings)
             skipped += 1
             continue
 
         if xml_out.exists() and not json_out.exists():
             try:
-                done += _write_existing_xml_json(page_str, side, xml_out, json_out, dry_run=dry_run)
+                done += _write_existing_xml_json(page, page_str, side, xml_out, json_out, dry_run=dry_run)
             except Exception as exc:
                 print(f"  [fail] page {page_str}-{side}: {exc}", file=sys.stderr, flush=True)
                 _column_manifest(page_str, side, status="failed", error=str(exc), source="existing_xml")
@@ -252,18 +270,19 @@ def process_page(page: int, *, pdf: Path, dry_run: bool = False) -> tuple[int, i
             _OUTPUT_XML.mkdir(parents=True, exist_ok=True)
             tmp = xml_out.with_suffix(xml_out.suffix + ".tmp")
             tmp.write_text(xml_text, encoding="utf-8")
-            ok, messages = _validate_written_column(tmp, None)
+            ok, failures, _ = _validate_written_column(tmp, None, page=page, side=side)
             if not ok:
-                raise ValueError("; ".join(messages))
+                raise ValueError("; ".join(failures))
             os.replace(tmp, xml_out)
 
             data = _write_json(xml_out, json_out)
-            ok, messages = _validate_written_column(xml_out, json_out)
+            ok, failures, warnings = _validate_written_column(xml_out, json_out, page=page, side=side)
             if not ok:
-                raise ValueError("; ".join(messages))
+                raise ValueError("; ".join(failures))
+            _print_warnings(page_str, side, warnings)
             print(f"  [valid] page {page_str}-{side}", flush=True)
             print(f"  [json]  {len(data['entries'])} entries -> {json_out.name}", flush=True)
-            _column_manifest(page_str, side, status="ok", entries=len(data["entries"]), source="transcribed")
+            _column_manifest(page_str, side, status="ok", entries=len(data["entries"]), source="transcribed", warnings=warnings)
             done += 1
         except Exception as exc:
             tmp = xml_out.with_suffix(xml_out.suffix + ".tmp")
