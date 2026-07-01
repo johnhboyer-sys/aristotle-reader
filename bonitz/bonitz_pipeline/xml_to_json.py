@@ -42,7 +42,7 @@ def _segments(node: ET.Element) -> list[dict]:
         elif tag != "sense":  # sense children handled separately
             parts.append({"kind": "text", "content": (child.text or "")})
 
-        if child.tag != "sense" and child.tail:
+        if child.tail:
             parts.append({"kind": "text", "content": child.tail})
 
     return parts

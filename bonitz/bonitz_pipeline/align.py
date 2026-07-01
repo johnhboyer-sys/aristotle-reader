@@ -13,6 +13,7 @@ as gaps for unmatched lines.
 from __future__ import annotations
 import difflib
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -25,9 +26,6 @@ class AlignedLine:
     @property
     def is_gap(self) -> bool:
         return self.ref_idx is None or self.ver_idx is None
-
-
-from typing import Optional
 
 
 def align_lines(ref_lines: list[str], ver_lines: list[str]) -> list[AlignedLine]:

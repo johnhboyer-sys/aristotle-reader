@@ -1,0 +1,2 @@
+{"column": "L", "error": "root @page is '4', expected '16'", "json": "app/src/data/bonitz/page-016-L.json", "page": "016", "source": "existing_xml", "status": "failed", "xml": "output/page-016-L.xml"}
+{"column": "R", "error": "root @page is '9', expected '16'; root @col is 'left', expected 'right'", "json": "app/src/data/bonitz/page-016-R.json", "page": "016", "source": "existing_xml", "status": "failed", "xml": "output/page-016-R.xml"}
