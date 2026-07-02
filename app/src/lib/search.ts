@@ -10,8 +10,13 @@
 // Cross-language: AND (intersection) or OR (union) the two result sets.
 
 // Honour Astro's base path. BASE_URL may lack a trailing slash, so strip + join.
-const ROOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
-const searchBase = (work: string) => `${ROOT}/${work}/search`;
+// Same host override as data.ts: the desktop app points the whole data layer
+// at an on-disk corpus via globalThis.__ARISTOTLE_DATA_ROOT__ (read lazily so
+// module-import order doesn't matter); the site never sets it.
+const DEFAULT_ROOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
+const ROOT = () =>
+  (globalThis as { __ARISTOTLE_DATA_ROOT__?: string }).__ARISTOTLE_DATA_ROOT__ ?? DEFAULT_ROOT;
+const searchBase = (work: string) => `${ROOT()}/${work}/search`;
 
 // -- Data types -----------------------------------------------------------
 

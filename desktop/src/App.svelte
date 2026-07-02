@@ -15,6 +15,7 @@
   import LexiconIndex from './components/LexiconIndex.svelte';
   import LexiconEntry from './components/LexiconEntry.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
+  import Search from '../../app/src/components/Search.svelte';
   import type { ImportSummary } from './lib/imports';
 
   export let dataLayer: DataLayerInfo;
@@ -63,7 +64,7 @@
   // Set the URL the Reader will parse on mount (?loc= forces bilingual + line
   // scroll, ?hlg= highlights a Greek term; #hash covers chapter targets), then
   // remount it.
-  async function nav(id: string, book?: number, opts: { loc?: string; hash?: string; hlg?: string } = {}) {
+  async function nav(id: string, book?: number, opts: { loc?: string; hash?: string; hlg?: string; hle?: string } = {}) {
     const m = getWork(id);
     if (!m) return;
     let b = book ?? bookNum;
@@ -80,6 +81,7 @@
     const params = new URLSearchParams();
     if (opts.loc) params.set('loc', opts.loc);
     if (opts.hlg) params.set('hlg', opts.hlg);
+    if (opts.hle) params.set('hle', opts.hle);
     const qs = params.toString();
     const url = `/${qs ? `?${qs}` : ''}${opts.hash ? `#${opts.hash}` : ''}`;
     try { history.replaceState(null, '', url); } catch { /* tauri origin quirks */ }
@@ -146,8 +148,22 @@
     nav(work, book, { loc: `${column}:${line}`, hlg: surface });
   }
   function onEsc(e: KeyboardEvent) {
+    if (e.key === 'Escape' && searchOpen) { e.stopPropagation(); searchOpen = false; return; }
     if (e.key === 'Escape' && lexicon) { e.stopPropagation(); closeLexicon(); }
+    // ⌘K / Ctrl-K opens search from anywhere.
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      searchOpen = true;
+    }
   }
+
+  // ── Search overlay ────────────────────────────────────────────────────────
+  // The site's Search.svelte mounted whole (dual boxes, All/Any/Phrase,
+  // lemma/form, wildcards, works refine, CSV export), plus the desktop-only
+  // accent-sensitivity toggle via its accentOption prop. Result links are
+  // ordinary reader hrefs — the global click interceptor below turns them
+  // into in-app navigation.
+  let searchOpen = false;
 
   // ── Import flow ───────────────────────────────────────────────────────────
   // Both entry points the plan requires: a button (native picker) and true
@@ -248,10 +264,24 @@
     const href = a.getAttribute('href') ?? '';
     if (href.startsWith('#')) return; // in-page: fine
     const lemma = href.match(/\/lemma\/([^/#?]+)/);
+    const reader = href.match(/^\/([A-Za-z]+)\/book\/(\d+)(?:\?([^#]*))?(?:#(.*))?$/);
     if (lemma) {
       // The word popup's "Appears N× across Aristotle" link → the Lexicon entry.
       e.preventDefault();
       openLexicon(decodeURIComponent(lemma[1]));
+    } else if (reader && getWork(reader[1])) {
+      // A reader link (search results, future cross-references): navigate
+      // in-app, carrying the jump/highlight params through.
+      e.preventDefault();
+      const q = new URLSearchParams(reader[3] ?? '');
+      searchOpen = false;
+      closeLexicon();
+      nav(reader[1], Number(reader[2]), {
+        ...(q.get('loc') ? { loc: q.get('loc')! } : {}),
+        ...(q.get('hlg') ? { hlg: q.get('hlg')! } : {}),
+        ...(q.get('hle') ? { hle: q.get('hle')! } : {}),
+        ...(reader[4] ? { hash: reader[4] } : {}),
+      });
     } else if (!/^https?:/.test(href)) {
       // Any other relative site link (work paths from future reuse): swallow
       // rather than let the webview leave the app.
@@ -300,6 +330,9 @@
       {#if !busse}
         <BekkerJumpDesktop work={workId} onJump={onBekkerJump} />
       {/if}
+      <button class="dt-cite" on:click={() => (searchOpen = true)} title="Search the corpus (⌘K)">
+        Search
+      </button>
       <button class="dt-cite" on:click={copyCitation} title="Copy a citation for the current position">
         Copy citation
       </button>
@@ -325,6 +358,19 @@
       {:else}
         <LexiconIndex onOpenEntry={(s) => openLexicon(s)} />
       {/if}
+    </div>
+  </div>
+{/if}
+
+{#if searchOpen}
+  <div class="dt-lexicon" role="dialog" aria-label="Search">
+    <header class="page-header dt-lexicon-bar">
+      <h1>Search</h1>
+      <span class="dt-spacer"></span>
+      <button class="dt-lexicon-close" on:click={() => (searchOpen = false)} aria-label="Close search">✕</button>
+    </header>
+    <div class="dt-lexicon-body">
+      <Search accentOption={true} />
     </div>
   </div>
 {/if}
