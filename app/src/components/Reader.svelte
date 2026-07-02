@@ -3,7 +3,7 @@
   import { fade } from 'svelte/transition';
   import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
-  import { getWork, visibleTranslations, type TranslationRef } from '../lib/works';
+  import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
 
@@ -235,9 +235,9 @@
     document.addEventListener('click', () => { printMenuOpen = false; }, { once: true });
   }
 
-  // Print-only header/footer. Book label only for multi-book works; Bekker
-  // range spans the first to last column currently loaded (one book).
-  $: bookLabel = workMeta && workMeta.books > 1 ? `Book ${bookNum}` : '';
+  // Book label for chapter headings, the live context strip, and print —
+  // multi-book works only, using the work's own numbering (Roman for EN).
+  $: bookLabel = workMeta && workMeta.books > 1 ? `Book ${workBookLabel(workMeta, bookNum)}` : '';
   $: bekRange = segments.length
     ? (segments.length > 1
         ? `${segments[0].column}–${segments[segments.length - 1].column}`
@@ -306,6 +306,28 @@
     try { localStorage.setItem(`reader-loc-${work}`, cite); } catch {}
   }
 
+  // ── Live book/chapter context in the sticky controls strip ───────────────
+  // Chapter heads scroll away with the text (they sit inside segments, so
+  // CSS sticky can't carry them across segment boundaries); the strip shows
+  // the label of the last chapter head above the reading line instead, so
+  // the reader always knows where they are. Sampled on scroll, rAF-throttled.
+  let liveChapter = '';
+  let ctxRaf = 0;
+  function updateChapterContext() {
+    const strip = document.querySelector('.reader-controls');
+    const boundary = (strip?.getBoundingClientRect().bottom ?? 100) + 12;
+    let label = '';
+    for (const h of document.querySelectorAll('.chapter-head .chapter-label')) {
+      if (h.getBoundingClientRect().top <= boundary) label = h.textContent?.trim() ?? '';
+      else break;
+    }
+    liveChapter = label;
+  }
+  function onCtxScroll() {
+    if (ctxRaf) return;
+    ctxRaf = requestAnimationFrame(() => { ctxRaf = 0; updateChapterContext(); });
+  }
+
   function setupScrollSpy() {
     spyObserver?.disconnect();
     spyState = new Map();
@@ -366,6 +388,7 @@
     spyObserver?.disconnect();
     if (typeof window !== 'undefined') {
       window.removeEventListener('scroll', onScrollArm);
+      window.removeEventListener('scroll', onCtxScroll);
       window.removeEventListener('resize', onResize);
       if (_onToggleSettings) window.removeEventListener('toggle-settings', _onToggleSettings);
       if (_onCloseSettings)  window.removeEventListener('close-settings',  _onCloseSettings);
@@ -776,9 +799,11 @@
         // Begin live URL tracking once the reader actually scrolls (programmatic
         // jumps above are suppressed), so an opened #citation isn't overwritten.
         window.addEventListener('scroll', onScrollArm, { passive: true });
+        window.addEventListener('scroll', onCtxScroll, { passive: true });
         window.addEventListener('resize', onResize);
         document.addEventListener('mouseup', checkCopyBtn);
         document.addEventListener('selectionchange', onSelectionChange);
+        updateChapterContext();
       }, 0);
     }
   });
@@ -977,7 +1002,7 @@
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter]}: {chapterTitles[block.chapter]}{/if}</span>
+      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},&nbsp;</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter]}: {chapterTitles[block.chapter]}{/if}</span>
       {#if block.bekker && !busse}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
@@ -1032,6 +1057,9 @@
     style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale}"
     on:copy={handleCopy}>
     <div class="reader-controls">
+      {#if liveChapter}
+        <span class="rc-context">{liveChapter}</span>
+      {/if}
       <div class="rc-cite">
         {#if view === 'greek'}
           {#if greekSrc}<span class="rc-greek">{greekSrc.full}</span>{/if}

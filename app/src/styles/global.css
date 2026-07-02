@@ -447,6 +447,18 @@ body {
    so the view toggle / translation picker stay in reach while reading. The
    strip is filled out with the source citation (left) so it reads as a header
    band rather than a lone floating toggle; the controls sit at the right. */
+/* Live position context in the sticky strip: the chapter (and book, for
+   multi-book works) currently under the reading line. The chapter heads
+   themselves scroll away with the text; this is the part that stays. */
+.rc-context {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
 .reader-controls {
   position: sticky;
   top: var(--header-h, 92px);
@@ -683,7 +695,10 @@ body {
 
 /* Print-only elements are hidden on screen; revealed under @media print. */
 .print-head { display: none; }
-.chapter-book { display: none; }
+/* The chapter heading's book label ("Book I, Chapter 7") — on screen for
+   multi-book orientation, and in print as before. The separating space is a
+   real &nbsp; in the markup so text copies (and the live context strip,
+   which reuses this label's text) keep it. */
 
 /* Monolingual: hide one column and let the other read full-width, centred at a
    comfortable measure (the Bekker column ref and gutter are kept). */
