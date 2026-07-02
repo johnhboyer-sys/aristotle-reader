@@ -1,0 +1,9 @@
+/* Desktop-shell adjustments layered over the site's global.css.
+   Principle: the reading pane keeps the site's warm parchment identity
+   untouched; the surrounding chrome (rail, top bar) stays neutral and quiet. */
+
+html, body { margin: 0; }
+
+/* The site's fonts are loaded locally via @fontsource in main.ts (an offline
+   desktop app must not fetch Google Fonts at runtime); family names match the
+   site's --font-greek / --font-english tokens, so no token overrides needed. */

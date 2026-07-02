@@ -98,8 +98,14 @@ export interface LsjEntry {
 // Honour Astro's base path so data fetches work under a project Pages site as
 // well as at the root. BASE_URL may or may not carry a trailing slash, so strip
 // it and join explicitly. Each work's data lives under /data/<work>/.
-const ROOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
-const workBase = (work: string) => `${ROOT}/${work}`;
+// A non-Astro host (the desktop app) can point the whole data layer somewhere
+// else — e.g. a Tauri asset:// URL for an on-disk corpus directory — by setting
+// globalThis.__ARISTOTLE_DATA_ROOT__ before any fetch helper runs. Read lazily
+// so the override wins regardless of module-import order.
+const DEFAULT_ROOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
+const ROOT = () =>
+  (globalThis as { __ARISTOTLE_DATA_ROOT__?: string }).__ARISTOTLE_DATA_ROOT__ ?? DEFAULT_ROOT;
+const workBase = (work: string) => `${ROOT()}/${work}`;
 
 // All caches are keyed by work so two works loaded in one session (e.g. unified
 // search) never collide.
@@ -251,7 +257,7 @@ export interface LemmaRef { slug: string; head: string; count: number; }
 let _lemmataCache: Promise<Record<string, LemmaRef>> | null = null;
 export function fetchLemmata(): Promise<Record<string, LemmaRef>> {
   if (_lemmataCache) return _lemmataCache;
-  const p = fetch(`${ROOT}/lemmata.json`).then(r => (r.ok ? r.json() : {}));
+  const p = fetch(`${ROOT()}/lemmata.json`).then(r => (r.ok ? r.json() : {}));
   // A missing/failed manifest just means no lemma links — don't cache the failure.
   p.catch(() => { if (_lemmataCache === p) _lemmataCache = null; });
   _lemmataCache = p;
@@ -273,7 +279,7 @@ export function lsjShard(key: string): string {
 // against the shared shard. Cached by letter (work-independent).
 export async function fetchLsjShard(letter: string): Promise<Record<string, LsjEntry>> {
   if (_lsjCache.has(letter)) return _lsjCache.get(letter)!;
-  const r = await fetch(`${ROOT}/lsj/${letter}.json`);
+  const r = await fetch(`${ROOT()}/lsj/${letter}.json`);
   if (!r.ok) return {};
   const shard = await r.json();
   _lsjCache.set(letter, shard);

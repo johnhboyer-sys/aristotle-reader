@@ -1,0 +1,22 @@
+[package]
+name = "aristotle-reader-desktop"
+version = "0.1.0"
+description = "The Aristotle Reader — desktop"
+edition = "2021"
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Custom Rust stays minimal by design: Tauri core + official plugins only
+# (filesystem, native dialogs). OS capabilities beyond these should justify
+# themselves before any bespoke Rust is written.
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
+
+[lib]
+name = "aristotle_reader_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
