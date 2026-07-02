@@ -434,7 +434,9 @@ body {
 }
 
 .reader-body {
-  max-width: 1080px;
+  /* --colw-scale: the settings sidebar's Column width slider (set inline by
+     Reader.svelte); 1 = the stock measure. */
+  max-width: calc(1080px * var(--colw-scale, 1));
   margin: 0 auto;
   padding: 1.5rem 1rem 4rem;
 }
@@ -664,7 +666,7 @@ body {
 .reader-body.view-english .seg-row,
 .reader-body.view-greek .seg-row { grid-template-columns: 1fr; }
 .reader-body.view-english .english-col,
-.reader-body.view-greek .greek-col { max-width: 42rem; margin: 0 auto; }
+.reader-body.view-greek .greek-col { max-width: calc(42rem * var(--colw-scale, 1)); margin: 0 auto; }
 
 /* Compare both: Greek | Rackham | Ross (or Rackham | Ross in English-only).
    A third translation column joins the seg-row grid. */

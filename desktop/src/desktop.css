@@ -16,15 +16,17 @@ html, body { margin: 0; }
    At extreme font scaling the Greek column may exceed the cap — the English
    column then narrows rather than the Greek line wrapping. */
 @media (min-width: 1100px) {
-  .dt-shell.dt-no-rails .reader-body { max-width: 1200px; }
+  .dt-shell.dt-no-rails .reader-body { max-width: calc(1200px * var(--colw-scale, 1)); }
   .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare) .seg-row {
     grid-template-columns: max-content minmax(0, 1fr);
   }
   /* English matches the Greek column's width (the unwrapped Bekker lines
      run ~35rem at default type size) — the two columns read as equal
-     halves of an opening, not prose stretched to fill the extra page. */
+     halves of an opening, not prose stretched to fill the extra page.
+     The Column width slider scales the English measure; the Greek column
+     is content-sized and cannot narrow without wrapping a Bekker line. */
   .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare) .english-col {
-    max-width: 35rem;
+    max-width: calc(35rem * var(--colw-scale, 1));
   }
   .dt-shell.dt-no-rails .reader-body.view-greek .greek-col {
     max-width: max-content;

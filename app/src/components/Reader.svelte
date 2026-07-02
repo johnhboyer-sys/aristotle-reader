@@ -112,6 +112,7 @@
   let settingsOpen = false;
   const FS_KEY = `reader-fs-${work}`;
   const LH_KEY = `reader-lh-${work}`;
+  const COLW_KEY = `reader-colw-${work}`;
   // Base CSS values from global.css; scale as multipliers (1.0 = default).
   const FS_GREEK_BASE = 1.05;
   const FS_ENG_BASE   = 1.08;
@@ -119,6 +120,9 @@
   const LH_ENG_BASE   = 1.72;
   let fsScale = 1.0;
   let lhScale = 1.0;
+  // Column-width scale: multiplies the layout's width caps (reader measure,
+  // mono-view column measure) via --colw-scale; 1.0 = the stock layout.
+  let colScale = 1.0;
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
   $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
   $: lhGreek = (LH_GREEK_BASE * lhScale).toFixed(3);
@@ -134,9 +138,13 @@
   }
   function saveFs() { try { localStorage.setItem(FS_KEY, String(fsScale)); } catch {} }
   function saveLh() { try { localStorage.setItem(LH_KEY, String(lhScale)); } catch {} }
+  function saveColw() { try { localStorage.setItem(COLW_KEY, String(colScale)); } catch {} }
   function resetSettings() {
-    fsScale = 1.0; lhScale = 1.0; citeCopy = true;
-    try { localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY); localStorage.removeItem(CITE_KEY); } catch {}
+    fsScale = 1.0; lhScale = 1.0; colScale = 1.0; citeCopy = true;
+    try {
+      localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY);
+      localStorage.removeItem(COLW_KEY); localStorage.removeItem(CITE_KEY);
+    } catch {}
   }
 
   // ── Citation shown in the controls strip ─────────────────────────────────
@@ -656,6 +664,8 @@
     if (savedFs) { const v = parseFloat(savedFs); if (!isNaN(v)) fsScale = v; }
     const savedLh = (() => { try { return localStorage.getItem(LH_KEY); } catch { return null; } })();
     if (savedLh) { const v = parseFloat(savedLh); if (!isNaN(v)) lhScale = v; }
+    const savedColw = (() => { try { return localStorage.getItem(COLW_KEY); } catch { return null; } })();
+    if (savedColw) { const v = parseFloat(savedColw); if (!isNaN(v)) colScale = v; }
     const savedCite = (() => { try { return localStorage.getItem(CITE_KEY); } catch { return null; } })();
     if (savedCite !== null) citeCopy = savedCite === 'true';
 
@@ -1002,7 +1012,7 @@
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
     class:word-open={!!popup}
-    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}"
+    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale}"
     on:copy={handleCopy}>
     <div class="reader-controls">
       <div class="rc-cite">
@@ -1219,6 +1229,17 @@
           <span class="settings-slider-val">{Math.round(lhScale * 100)}%</span>
         </div>
         <input type="range" min="0.8" max="1.4" step="0.05" bind:value={lhScale} on:change={saveLh} aria-label="Line spacing" />
+      </label>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-label">Column width</div>
+      <label class="settings-slider">
+        <div class="settings-slider-row">
+          <span class="settings-slider-name">Width</span>
+          <span class="settings-slider-val">{Math.round(colScale * 100)}%</span>
+        </div>
+        <input type="range" min="0.75" max="1.3" step="0.05" bind:value={colScale} on:change={saveColw} aria-label="Column width" />
       </label>
     </div>
 
