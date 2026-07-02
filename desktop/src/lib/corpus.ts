@@ -44,6 +44,9 @@ export interface CorpusEntry {
 
 export interface CorpusGroup {
   label: string;
+  /** Extra search words for the rail's quick-filter — the traditional label
+   *  and the common English name don't always coincide (Organon = logic). */
+  aliases?: string;
   entries: CorpusEntry[];
 }
 
@@ -65,6 +68,7 @@ const slot = (
 export const CORPUS_GROUPS: CorpusGroup[] = [
   {
     label: 'Organon',
+    aliases: 'logic',
     entries: [
       W('Cat', 'Categories', 'tlg0086.tlg006'),
       W('Int', 'De Interpretatione', 'tlg0086.tlg017'),
@@ -94,6 +98,7 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
   },
   {
     label: 'Parva Naturalia',
+    aliases: 'short works on nature natural philosophy',
     entries: [
       W('Sens', 'Sense and Sensibilia', 'tlg0086.tlg041'),
       W('Mem', 'On Memory and Recollection', 'tlg0086.tlg024'),
@@ -108,6 +113,7 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
   },
   {
     label: 'Biology',
+    aliases: 'animals natural philosophy',
     entries: [
       W('HA', 'History of Animals', 'tlg0086.tlg014'),
       W('PA', 'Parts of Animals', 'tlg0086.tlg030'),
@@ -118,6 +124,7 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
   },
   {
     label: 'First Philosophy',
+    aliases: 'metaphysics',
     entries: [
       W('Metaph', 'Metaphysics', 'tlg0086.tlg025', { siteSlug: 'Meta' }),
     ],
@@ -145,6 +152,7 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
     // Texts ABOUT Aristotle by other identifiable authors — their own CTS
     // textgroup, no authenticity tier (nobody ever attributed these to him).
     label: 'Companion Texts',
+    aliases: 'commentary porphyry',
     entries: [
       W('Isag', 'Isagoge', 'tlg2034.tlg007', {
         siteSlug: 'Isa',

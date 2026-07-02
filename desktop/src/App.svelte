@@ -143,6 +143,22 @@
     nav(workId, book, { loc: `${column}:${line}` });
   }
 
+  // ── Live citation tracking for the rail ───────────────────────────────────
+  // The Reader's scroll-spy rewrites location.hash via history.replaceState,
+  // which fires NO event — so sample the hash on (throttled) scroll and hand
+  // it to the rail, which maps it to the on-screen chapter.
+  let currentCite: string | null = null;
+  let citeTimer: ReturnType<typeof setTimeout> | undefined;
+  function sampleCite() {
+    const h = decodeURIComponent(location.hash.slice(1));
+    const cite = h && !h.startsWith('ch-') ? h : null;
+    if (cite !== currentCite) currentCite = cite;
+  }
+  function onWinScroll() {
+    if (citeTimer) return;
+    citeTimer = setTimeout(() => { citeTimer = undefined; sampleCite(); }, 250);
+  }
+
   // ── Lexicon overlay ───────────────────────────────────────────────────────
   // The browsable dictionary (site: /lemma + /lemma/<slug>), ported as a
   // full-pane overlay with its own scroll so the reader underneath keeps its
@@ -417,7 +433,7 @@
   }
 </script>
 
-<svelte:window on:click|capture={onGlobalClick} on:keydown|capture={onEsc} />
+<svelte:window on:click|capture={onGlobalClick} on:keydown|capture={onEsc} on:scroll={onWinScroll} />
 
 <div class="dt-shell" class:drag-over={dragOver} class:dt-no-rails={!railOpen && !annOpen}
   on:dragover={onDragOver} on:dragleave={onDragLeave} on:drop={onDrop} role="application">
@@ -439,6 +455,7 @@
       <LibraryRail
         currentWork={workId}
         currentBook={bookNum}
+        {currentCite}
         {onOpenWork}
         {onOpenChapter}
       />
