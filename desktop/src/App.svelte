@@ -12,6 +12,8 @@
   import LibraryRail from './components/LibraryRail.svelte';
   import BekkerJumpDesktop from './components/BekkerJumpDesktop.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
+  import LexiconIndex from './components/LexiconIndex.svelte';
+  import LexiconEntry from './components/LexiconEntry.svelte';
 
   export let dataLayer: DataLayerInfo;
 
@@ -34,28 +36,32 @@
   // Optional curated chapter titles ({book: {chapter: title}}) — the website
   // reads this at build time in ReaderShell; the desktop fetches it at runtime.
   // Missing file = headings fall back to "Chapter N", same as the site.
+  // Loaded BEFORE the Reader remounts (see nav below): a late title update
+  // re-renders the chapter headings, and that layout shift aborts the Reader's
+  // in-flight smooth scroll to a jumped-to line.
   const dataRoot = () =>
     (globalThis as { __ARISTOTLE_DATA_ROOT__?: string }).__ARISTOTLE_DATA_ROOT__ ?? '/data';
   let chapterTitles: Record<string, string> = {};
-  let titlesFor = '';
-  $: if (`${workId}:${bookNum}` !== titlesFor) {
-    titlesFor = `${workId}:${bookNum}`;
-    chapterTitles = {};
-    fetch(`${dataRoot()}/${workId}/chapter-titles.json`)
+  const _titlesCache = new Map<string, Record<string, Record<string, string>>>();
+  async function loadTitles(id: string): Promise<Record<string, Record<string, string>>> {
+    const cached = _titlesCache.get(id);
+    if (cached) return cached;
+    const all = await fetch(`${dataRoot()}/${id}/chapter-titles.json`)
       .then(r => (r.ok ? r.json() : {}))
-      .then((all: Record<string, Record<string, string>>) => {
-        if (titlesFor === `${workId}:${bookNum}`) chapterTitles = all[String(bookNum)] ?? {};
-      })
-      .catch(() => { /* no titles for this work */ });
+      .catch(() => ({}));
+    _titlesCache.set(id, all);
+    return all;
   }
+  loadTitles(workId).then(all => { chapterTitles = all[String(bookNum)] ?? {}; });
 
   function persistLoc() {
     try { localStorage.setItem('desktop-loc', JSON.stringify({ work: workId, book: bookNum })); } catch { /* fine */ }
   }
 
   // Set the URL the Reader will parse on mount (?loc= forces bilingual + line
-  // scroll; #hash covers chapter targets), then remount it.
-  function nav(id: string, book?: number, opts: { loc?: string; hash?: string } = {}) {
+  // scroll, ?hlg= highlights a Greek term; #hash covers chapter targets), then
+  // remount it.
+  async function nav(id: string, book?: number, opts: { loc?: string; hash?: string; hlg?: string } = {}) {
     const m = getWork(id);
     if (!m) return;
     let b = book ?? bookNum;
@@ -65,13 +71,50 @@
       b = savedBook ? Number(savedBook) : 1;
     }
     b = Math.min(Math.max(1, b), m.books);
-    const url = `/${opts.loc ? `?loc=${opts.loc}` : ''}${opts.hash ? `#${opts.hash}` : ''}`;
+    // Titles resolved before the remount so the first render is final (no
+    // late heading reflow under the Reader's jump scroll).
+    const allTitles = await loadTitles(id);
+    chapterTitles = allTitles[String(b)] ?? {};
+    const params = new URLSearchParams();
+    if (opts.loc) params.set('loc', opts.loc);
+    if (opts.hlg) params.set('hlg', opts.hlg);
+    const qs = params.toString();
+    const url = `/${qs ? `?${qs}` : ''}${opts.hash ? `#${opts.hash}` : ''}`;
     try { history.replaceState(null, '', url); } catch { /* tauri origin quirks */ }
     workId = id;
     bookNum = b;
     navSeq += 1;
     persistLoc();
     scrollTo({ top: 0 });
+    if (opts.loc) {
+      const [col, ln] = opts.loc.split(':');
+      armJumpVerifier(col, Number(ln));
+    }
+  }
+
+  // The Reader's own jump-in scroll is smooth and one-shot; anything that
+  // shifts layout mid-flight (font swap, image, late data) can abort it and
+  // strand the view at the top. Verify the target actually made it on screen
+  // and correct instantly if not — never fight a scroll that succeeded.
+  let jumpSeq = 0;
+  function armJumpVerifier(col: string, line: number) {
+    const seq = ++jumpSeq;
+    const check = (attempt: number) => {
+      if (seq !== jumpSeq) return;             // superseded by a newer jump
+      const el = document.getElementById(`L${col}-${line}`);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        const inView = r.top >= 0 && r.top <= window.innerHeight * 0.85;
+        if (inView) return;                     // the Reader's scroll landed
+        el.scrollIntoView({ behavior: 'auto', block: 'center' });
+        // Late layout drift (fonts, figures) can nudge the line back out of
+        // view after an instant correction — verify once more before trusting.
+        if (attempt < 3) setTimeout(() => check(attempt + 1), 900);
+        return;
+      }
+      if (attempt < 3) setTimeout(() => check(attempt + 1), 900); // book still loading
+    };
+    setTimeout(() => check(0), 1100);
   }
 
   function onOpenWork(id: string, book?: number) { nav(id, book); }
@@ -87,6 +130,21 @@
 
   function onBekkerJump(book: number, column: string, line: number) {
     nav(workId, book, { loc: `${column}:${line}` });
+  }
+
+  // ── Lexicon overlay ───────────────────────────────────────────────────────
+  // The browsable dictionary (site: /lemma + /lemma/<slug>), ported as a
+  // full-pane overlay with its own scroll so the reader underneath keeps its
+  // exact position. null = closed; { slug: null } = the index.
+  let lexicon: { slug: string | null } | null = null;
+  function openLexicon(slug: string | null = null) { lexicon = { slug }; }
+  function closeLexicon() { lexicon = null; }
+  function lexiconJump(work: string, book: number, column: string, line: number, surface: string) {
+    closeLexicon();
+    nav(work, book, { loc: `${column}:${line}`, hlg: surface });
+  }
+  function onEsc(e: KeyboardEvent) {
+    if (e.key === 'Escape' && lexicon) { e.stopPropagation(); closeLexicon(); }
   }
 
   // ── Library rail visibility ───────────────────────────────────────────────
@@ -160,9 +218,11 @@
     if (!(a instanceof HTMLAnchorElement)) return;
     const href = a.getAttribute('href') ?? '';
     if (href.startsWith('#')) return; // in-page: fine
-    if (href.includes('/lemma/')) {
+    const lemma = href.match(/\/lemma\/([^/#?]+)/);
+    if (lemma) {
+      // The word popup's "Appears N× across Aristotle" link → the Lexicon entry.
       e.preventDefault();
-      showToast('The Lexicon is not in the desktop app yet');
+      openLexicon(decodeURIComponent(lemma[1]));
     } else if (!/^https?:/.test(href)) {
       // Any other relative site link (work paths from future reuse): swallow
       // rather than let the webview leave the app.
@@ -171,13 +231,19 @@
   }
 </script>
 
-<svelte:window on:click|capture={onGlobalClick} />
+<svelte:window on:click|capture={onGlobalClick} on:keydown|capture={onEsc} />
 
 <div class="dt-shell">
   {#if railOpen}
     <aside class="dt-rail">
       <div class="dt-rail-head">
         <span class="dt-rail-brand">The Aristotle Reader</span>
+      </div>
+      <div class="dt-rail-ref">
+        <button class="dt-lexicon-link" on:click={() => openLexicon()}>
+          <span>Greek Lexicon</span>
+          <span class="dt-lexicon-arr" aria-hidden="true">→</span>
+        </button>
       </div>
       <LibraryRail
         currentWork={workId}
@@ -211,6 +277,23 @@
     {/key}
   </div>
 </div>
+
+{#if lexicon}
+  <div class="dt-lexicon" role="dialog" aria-label="Greek Lexicon">
+    <header class="page-header dt-lexicon-bar">
+      <h1>Greek Lexicon</h1>
+      <span class="dt-spacer"></span>
+      <button class="dt-lexicon-close" on:click={closeLexicon} aria-label="Close the Lexicon">✕</button>
+    </header>
+    <div class="dt-lexicon-body">
+      {#if lexicon.slug}
+        <LexiconEntry slug={lexicon.slug} onJumpTo={lexiconJump} onBack={() => openLexicon()} />
+      {:else}
+        <LexiconIndex onOpenEntry={(s) => openLexicon(s)} />
+      {/if}
+    </div>
+  </div>
+{/if}
 
 {#if toast}
   <div class="dt-toast" role="status">{toast}</div>
@@ -263,6 +346,34 @@
     padding: 0.32rem 0.7rem; cursor: pointer; white-space: nowrap;
   }
   .dt-cite:hover { color: var(--text); border-color: var(--text-light); }
+
+  .dt-rail-ref { padding: 0.5rem 0.6rem 0; }
+  .dt-lexicon-link {
+    display: flex; justify-content: space-between; align-items: baseline; width: 100%;
+    font-family: var(--font-ui); font-size: 0.86rem; font-weight: 600;
+    color: var(--text); background: var(--col-bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.45rem 0.7rem; cursor: pointer;
+  }
+  .dt-lexicon-link:hover { border-color: var(--accent); color: var(--accent); }
+  .dt-lexicon-arr { color: var(--text-light); }
+  .dt-lexicon-link:hover .dt-lexicon-arr { color: var(--accent); }
+
+  /* Full-pane overlay with its own scroll: the reader underneath keeps its
+     window scroll position untouched while the Lexicon is open. */
+  .dt-lexicon {
+    position: fixed; inset: 0; z-index: 150;
+    display: flex; flex-direction: column;
+    background: var(--col-bg);
+  }
+  .dt-lexicon-bar { position: static; flex: none; display: flex; align-items: center; }
+  .dt-lexicon-close {
+    font-size: 1rem; color: var(--text-mid); background: transparent;
+    border: 1px solid var(--border); border-radius: 6px;
+    width: 30px; height: 30px; cursor: pointer;
+  }
+  .dt-lexicon-close:hover { color: var(--text); border-color: var(--text-light); }
+  .dt-lexicon-body { flex: 1; overflow-y: auto; }
 
   .dt-toast {
     position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
