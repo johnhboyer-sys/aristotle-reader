@@ -562,7 +562,7 @@
       <button class="dt-lexicon-close" on:click={() => (searchOpen = false)} aria-label="Close search">✕</button>
     </header>
     <div class="dt-lexicon-body">
-      <Search accentOption={true} />
+      <Search />
     </div>
   </div>
 {/if}

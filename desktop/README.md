@@ -85,9 +85,10 @@ ported yet). `cargo check` passes (which also validates the capability file).
   reach the untouched Reader via the two runtime hooks in data.ts/works.ts.
 
 - **Search** (overlay + ⌘K): the site's `Search.svelte` mounted whole, plus
-  the desktop-only accent-sensitivity toggle (instance-level post-filter on
-  matched surface tokens; result bar honestly reports index counts as
-  "before accent filtering"). Result links navigate in-app.
+  the new accent-sensitivity toggle (instance-level post-filter on matched
+  surface tokens; result bar honestly reports index counts as "before
+  accent filtering") — a shared feature, on the site as of the next deploy.
+  Result links navigate in-app.
 - **Annotations** (step 7): highlights + notes as one W3C-modelled type;
   Greek targets Bekker-anchored, English targets char-anchored within one
   translation's prose (alignment refinements can't move them); `layer`

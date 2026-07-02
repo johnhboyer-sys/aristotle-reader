@@ -61,15 +61,13 @@
   interface SearchCtx { grkQuery: string; engQuery: string; engTerms: string[]; grkAccentTerms: string[]; }
   let searchCtx: SearchCtx = { grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [] };
 
-  // ── Accent-sensitive Greek matching (opt-in host feature) ─────────────────
+  // ── Accent-sensitive Greek matching ────────────────────────────────────────
   // The indexes are accent-folded (λόγος and λογός share a key), which is the
-  // right default. A host can offer strict matching by passing accentOption
-  // (the desktop app does; the site never sets it, so nothing changes there).
-  // Implementation is an instance-level post-filter: the index still finds the
-  // folded hits, then each matched surface token must carry the query's exact
-  // diacritics. Strict semantics, stated on the control: a query typed WITHOUT
-  // accents then only matches genuinely unaccented tokens.
-  export let accentOption = false;
+  // right default and stays the default. The toggle offers strict matching as
+  // an instance-level post-filter: the index still finds the folded hits, then
+  // each matched surface token must carry the query's exact diacritics. Strict
+  // semantics, stated on the control: a query typed WITHOUT accents then only
+  // matches genuinely unaccented tokens.
   let accentSensitive = false;
   // NFC + lowercase + final-sigma normalisation, diacritics KEPT.
   const accentNorm = (s: string) => s.normalize('NFC').toLowerCase().replace(/ς/g, 'σ');
@@ -409,7 +407,7 @@
         grkQuery: grkQuery.trim(),
         engQuery: engQuery.trim(),
         engTerms: engQuery.trim().split(/\s+/).filter(Boolean),
-        grkAccentTerms: accentOption && accentSensitive
+        grkAccentTerms: accentSensitive
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
       };
@@ -612,12 +610,10 @@
         <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Lemma</label>
         <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Exact form</label>
       </fieldset>
-      {#if accentOption}
-        <fieldset class="mode-group" title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens.">
-          <legend>Accents</legend>
-          <label><input type="checkbox" bind:checked={accentSensitive} /> Match accents exactly</label>
-        </fieldset>
-      {/if}
+      <fieldset class="mode-group" title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens.">
+        <legend>Accents</legend>
+        <label><input type="checkbox" bind:checked={accentSensitive} /> Match accents exactly</label>
+      </fieldset>
     </div>
 
     <div class="query-row">
