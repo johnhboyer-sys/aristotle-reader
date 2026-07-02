@@ -1,6 +1,6 @@
 [package]
 name = "aristotle-reader-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "The Aristotle Reader — desktop"
 edition = "2021"
 license = "MIT"
@@ -17,6 +17,7 @@ tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-opener = "2"
+tauri-plugin-updater = "2"
 
 [lib]
 name = "aristotle_reader_desktop_lib"

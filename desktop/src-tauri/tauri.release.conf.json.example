@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "resources": ["corpus"],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "PASTE_PUBLIC_KEY_FROM_tauri_signer_generate_HERE",
+      "endpoints": [
+        "https://github.com/johnhboyer-sys/aristotle-reader/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

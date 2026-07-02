@@ -60,10 +60,26 @@ rmSync(CORPUS, { recursive: true, force: true });
 cpSync(DATA_DIR, CORPUS, { recursive: true, dereference: true });
 
 // ── build ─────────────────────────────────────────────────────────────────────
-console.log('Building the app (public frontend + bundled corpus)…');
-const r = spawnSync('npm', ['run', 'tauri', '--', 'build', '--config', 'tauri.public.conf.json'], {
+// Release config (updater artifacts, signed) is used automatically when
+// present; see README "Releasing".
+const releaseConf = path.join(desktopRoot, 'src-tauri', 'tauri.release.conf.json');
+const useRelease = existsSync(releaseConf);
+if (useRelease && !process.env.TAURI_SIGNING_PRIVATE_KEY) {
+  console.error('tauri.release.conf.json present but TAURI_SIGNING_PRIVATE_KEY is not set.');
+  console.error('Set TAURI_SIGNING_PRIVATE_KEY (+ _PASSWORD) or remove the release config.');
+  process.exit(1);
+}
+const confArg = useRelease ? 'src-tauri/tauri.release.conf.json' : 'src-tauri/tauri.public.conf.json';
+console.log(`Building the app (public frontend + bundled corpus) with ${confArg}…`);
+const r = spawnSync('npm', ['run', 'tauri', '--', 'build', '--config', confArg], {
   cwd: desktopRoot,
   stdio: 'inherit',
-  env: { ...process.env, DESKTOP_PUBLIC: '1' },
+  env: {
+    ...process.env,
+    DESKTOP_PUBLIC: '1',
+    // create-dmg's Finder-scripting DMG styling fails outside an interactive
+    // GUI session; CI=1 makes the bundler skip it (plain DMG).
+    CI: process.env.CI ?? 'true',
+  },
 });
 process.exit(r.status ?? 1);
