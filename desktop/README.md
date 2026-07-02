@@ -65,17 +65,31 @@ line centered + tinted); scroll-spy hash tracking; copy-citation toast; light/
 dark; rail filter/badges/planned slots; lemma links intercepted (Lexicon not
 ported yet). `cargo check` passes (which also validates the capability file).
 
-## Not built yet (per the v1 plan's build order)
+## Also done since the scaffold
 
-4. Right rail (Annotations/Parse tabs; WordPopup is currently the site's
-   slide-in, which already behaves close to the target), Lexicon port
-   (`/lemma`, glossary).
-5. Translation file format + TS port of the TF-IDF+DP aligner.
-6. Import flow (picker/drag-drop, metadata form, dehyphenation + review queue,
-   completion summary).
+- **Lexicon** (step 4): `/lemma` index + per-lemma entries as a full-pane
+  overlay (own scroll — the reader keeps its position); concordance chips
+  jump into the reader with highlight; the word popup's "Appears N×" link
+  opens the entry. Parse remains the site's slide-in WordPopup, which already
+  matches the plan's target behavior.
+- **Aligner port + format** (step 5): `src/lib/aligner/` with EXACT parity to
+  the Python engine — `node scripts/parity.mjs EN` compares both on identical
+  inputs (116 chapters, 4,886 anchors, zero mismatches; `Cat` likewise).
+  `translation-file.ts` implements the {b.c}/{1094a}/{20} tag format with
+  scanned (never trusted) density detection.
+- **Import flow** (step 6): dialog + drag-and-drop, metadata form with the
+  restrictive-default license question, hunspell dehyphenation with the
+  tap-through review queue (en_US data vendored under `src/assets/dict-en/`),
+  density-driven alignment, honest completion summary, Replace-or-Keep-Both
+  collisions. Imports are plain files under `$APPDATA/translations/` and
+  reach the untouched Reader via the two runtime hooks in data.ts/works.ts.
+
+## Not built yet
+
 7. Annotations (W3C model, plain-file storage, Bekker-anchored Greek /
-   token-anchored English).
+   token-anchored English, `layer` field), as a right-rail panel.
 8. Updater (signed manifest on GitHub Releases), library export,
    Report-a-Problem. Also: search overlay (reuse `Search.svelte`) + the new
-   accent-sensitive index, bundling a corpus into `$RESOURCE/corpus`, and a
-   real `tauri dev` smoke test on the Mac.
+   accent-sensitive second index, bundling a corpus into `$RESOURCE/corpus`
+   for a distributable .app, and a native-window pass over the Lexicon and
+   import flow (verified in the browser harness so far).
