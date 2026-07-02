@@ -123,6 +123,14 @@ export function fetchBook(work: string, n: number): Promise<BookData> {
   const p = fetch(`${workBase(work)}/book-${String(n).padStart(2, '0')}.json`).then(r => {
     if (!r.ok) throw new Error(`${work} book ${n}: ${r.status}`);
     return r.json();
+  }).then((d: BookData) => {
+    // A non-Astro host (the desktop app) can overlay runtime content — e.g.
+    // user-imported translations merged into seg.overlays — via this hook.
+    // The site never sets it; the fetched data passes through untouched.
+    const hook = (globalThis as {
+      __ARISTOTLE_BOOK_HOOK__?: (work: string, n: number, data: BookData) => BookData;
+    }).__ARISTOTLE_BOOK_HOOK__;
+    return hook ? hook(work, n, d) : d;
   });
   // Evict a rejected fetch so it can be retried (don't cache the failure).
   p.catch(() => { if (_bookCache.get(key) === p) _bookCache.delete(key); });
