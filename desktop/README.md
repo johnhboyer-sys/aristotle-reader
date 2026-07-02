@@ -84,12 +84,32 @@ ported yet). `cargo check` passes (which also validates the capability file).
   collisions. Imports are plain files under `$APPDATA/translations/` and
   reach the untouched Reader via the two runtime hooks in data.ts/works.ts.
 
+- **Search** (overlay + ⌘K): the site's `Search.svelte` mounted whole, plus
+  the desktop-only accent-sensitivity toggle (instance-level post-filter on
+  matched surface tokens; result bar honestly reports index counts as
+  "before accent filtering"). Result links navigate in-app.
+- **Annotations** (step 7): highlights + notes as one W3C-modelled type;
+  Greek targets Bekker-anchored, English targets char-anchored within one
+  translation's prose (alignment refinements can't move them); `layer`
+  dimming in the panel; one JSON file per work; painted via the CSS Custom
+  Highlight API with zero Reader DOM mutation. Select text → Highlight/Note.
+- **Library export + Report a Problem** (step 8, partial): rail footer.
+  Export bundles annotations + imported translations into one JSON via the
+  native save dialog; Report opens a pre-filled GitHub issue in the system
+  browser — user-initiated, nothing sent automatically, ever.
+
 ## Not built yet
 
-7. Annotations (W3C model, plain-file storage, Bekker-anchored Greek /
-   token-anchored English, `layer` field), as a right-rail panel.
-8. Updater (signed manifest on GitHub Releases), library export,
-   Report-a-Problem. Also: search overlay (reuse `Search.svelte`) + the new
-   accent-sensitive second index, bundling a corpus into `$RESOURCE/corpus`
-   for a distributable .app, and a native-window pass over the Lexicon and
-   import flow (verified in the browser harness so far).
+- **Updater** — the one step-8 piece deliberately left unwired: it requires
+  a signing keypair whose custody is the owner's, not something a build
+  session should generate silently. When ready: `npm run tauri signer
+  generate -- -w ~/.tauri/aristotle-reader.key` (choose a password, keep the
+  key OUT of the repo), put the printed public key + a GitHub-Releases
+  `latest.json` endpoint under `plugins.updater` in tauri.conf.json, add
+  tauri-plugin-updater to Cargo.toml/lib.rs and `"updater:default"` to the
+  capability file. The manifest signature matters regardless of the
+  (deferred) code-signing decision — it is what stops a fake "update".
+- Bundling a corpus into `$RESOURCE/corpus` for a distributable .app.
+- A native-window pass over Lexicon / import / search / annotations
+  (verified in the browser harness so far).
+- Annotation capture in compare view (ambiguous column in v1).

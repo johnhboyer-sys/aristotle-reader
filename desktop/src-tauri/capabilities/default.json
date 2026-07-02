@@ -10,6 +10,8 @@
     "fs:allow-appdata-read-recursive",
     "fs:allow-appdata-write-recursive",
     "fs:allow-resource-read-recursive",
-    "clipboard-manager:allow-write-text"
+    "clipboard-manager:allow-write-text",
+    "dialog:allow-save",
+    "opener:allow-open-url"
   ]
 }

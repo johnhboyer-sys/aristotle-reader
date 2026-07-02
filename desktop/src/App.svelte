@@ -18,6 +18,7 @@
   import Search from '../../app/src/components/Search.svelte';
   import type { ImportSummary } from './lib/imports';
   import AnnotationsPanel from './components/AnnotationsPanel.svelte';
+  import { exportLibrary, reportProblem } from './lib/export';
   import {
     addAnnotation, captureSelection, listAnnotations, newId, paintAnnotations,
     type Annotation,
@@ -366,6 +367,19 @@
     }
   }
 
+  // ── Library export + Report a Problem ─────────────────────────────────────
+  async function doExport() {
+    try {
+      const summary = await exportLibrary();
+      if (summary) showToast(`Library exported — ${summary}`);
+    } catch (e) {
+      showToast(`Export failed: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+  function doReport() {
+    reportProblem('0.1.0').catch(() => showToast('Could not open the issue page'));
+  }
+
   // ── Link interception ─────────────────────────────────────────────────────
   // Reused site components emit real <a href> links (the word popup's lemma
   // link). In a desktop window those would navigate the webview away; catch
@@ -374,7 +388,8 @@
     const a = (e.target as HTMLElement).closest?.('a[href]');
     if (!(a instanceof HTMLAnchorElement)) return;
     const href = a.getAttribute('href') ?? '';
-    if (href.startsWith('#')) return; // in-page: fine
+    if (href.startsWith('#')) return;           // in-page: fine
+    if (a.download || /^(blob|data):/.test(href)) return; // downloads: fine
     const lemma = href.match(/\/lemma\/([^/#?]+)/);
     const reader = href.match(/^\/([A-Za-z]+)\/book\/(\d+)(?:\?([^#]*))?(?:#(.*))?$/);
     if (lemma) {
@@ -427,6 +442,10 @@
         {onOpenWork}
         {onOpenChapter}
       />
+      <div class="dt-rail-foot">
+        <button on:click={doExport} title="Bundle your annotations and imported translations into one file">Export library…</button>
+        <button on:click={doReport} title="Open a pre-filled GitHub issue — nothing is sent automatically">Report a problem</button>
+      </div>
     </aside>
   {/if}
 
@@ -575,6 +594,16 @@
   .dt-cite:hover { color: var(--text); border-color: var(--text-light); }
 
   .dt-rail-ref { padding: 0.5rem 0.6rem 0; }
+  .dt-rail-foot {
+    padding: 0.4rem 0.6rem 1.2rem;
+    display: flex; flex-direction: column; gap: 0.15rem;
+  }
+  .dt-rail-foot button {
+    font-family: var(--font-ui); font-size: 0.75rem; text-align: left;
+    color: var(--text-light); background: none; border: none;
+    padding: 0.2rem 0.7rem; cursor: pointer;
+  }
+  .dt-rail-foot button:hover { color: var(--accent); }
   .dt-lexicon-link {
     display: flex; justify-content: space-between; align-items: baseline; width: 100%;
     font-family: var(--font-ui); font-size: 0.86rem; font-weight: 600;
