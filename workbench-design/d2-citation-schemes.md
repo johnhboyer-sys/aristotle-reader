@@ -146,3 +146,50 @@ Decisions baked in (both memos converged independently):
 - `aquinas-tbd` registered but throwing; chapter creation for scheme `aquinas-tbd` is disabled.
 - Gutter renderer switches on `gutter.rowUnit`; only `'bekker-line'` arm implemented, others
   TODO-stubbed. This scopes the Aquinas punt explicitly instead of assuming a line spine.
+
+## Phase 2 exercise outcome
+
+A real (non-throwing) second, non-Bekker scheme — `busse-paragraph`, modeled on the CAG
+page.line citation used for Porphyry's Isagoge on the reader site — was added to prove the
+contract at compile time and in tests, not just as a throwing stub. Result: **the contract
+holds.** `src/lib/citation/schemes/busseParagraph.ts` (one file) + one `registry.ts` line was
+sufficient; no change to editor, library, export, or autosave code was needed. `getScheme`,
+`isKnownScheme`, and every general call site keep working unmodified because they were already
+written against the interface, never against `bekker-standard`/`bekker-metaphysics` literals.
+
+**SchemeId-union extension precedent.** `types.ts` is "frozen" in the sense of its function set
+and data fields, not its `SchemeId` string union — adding `'busse-paragraph'` to that union was
+necessary and is the sanctioned extension point for acceptance test 1 ("one new file + one
+registry line"). A scheme can't exist without a union member for the type system to attach it
+to; this is additive (widens a union) and doesn't touch any interface shape. Future non-Bekker
+schemes (including the real Aquinas scheme in Phase 3) follow the same precedent.
+
+**Friction found, reported honestly:**
+
+- `bookLabel(bookIndex, work)` and `RefSpan.book`/`chapter` are shaped for a work with numbered
+  books and chapters. Isagoge has neither — it is one continuous text. The scheme still had to
+  implement `bookLabel` (can't omit a contract method) against a `WorkMeta.books: []`; the
+  decision made here is to return the empty string rather than throw or invent a fallback
+  numbering scheme, and `formatCitation` treats an empty label as "no book part" so no stray
+  `.` or space leaks into the citation string. This works, but it means every bookless scheme
+  must independently re-derive "empty string means absent" — the contract doesn't say so itself.
+  Not severe enough to warrant changing `types.ts` (the union-of-optionals shape in `RefSpan`
+  already allows `book`/`chapter` to be omitted entirely at the span level, which is the
+  cleaner way a bookless work should be cited — this friction is really about the always-called
+  `bookLabel(bookIndex, ...)` method needing SOME return value even when index 1 has no meaning,
+  not about `RefSpan` itself). Recommend Phase 3 either accept this documented convention or,
+  if Aquinas is also bookless/paragraph-shaped, make the convention explicit in `types.ts`'s
+  doc comment on `bookLabel` — a doc change, not a contract shape change.
+- `formatRange`'s doc comment says Bekker schemes delegate to the shared `range.ts` formatter;
+  `busse-paragraph` does NOT delegate (its page.line collapse semantics — "12.3–7" — don't map
+  onto `formatBekkerRange`'s page/side/line assumptions) and instead owns ~10 lines of range
+  logic inside its own scheme file, per this doc's guidance. No contract change needed; flagging
+  only so Phase 3 doesn't assume every scheme can reuse `range.ts` without checking first.
+- No other friction: `parseAddress`/`compareAddress`/`formatCitation`/`gutter` all fit a
+  page.line, paragraph-rowUnit, address-gutterMode scheme with no strain.
+
+Tests: `src/lib/citation/__tests__/busseParagraph.test.ts` (scheme-specific table-driven cases),
+`schemeIdIsolation.test.ts` (D2 acceptance test 2 made executable — source scan for
+`scheme.id === '<id>'` outside `schemes/`), `contract.test.ts` (generic conformance suite run
+over every registered scheme, including the throwing `aquinas-tbd` stub) — this last file is
+the reusable harness Phase 3 should extend, not replace, when the real Aquinas scheme lands.

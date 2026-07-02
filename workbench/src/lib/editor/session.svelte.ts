@@ -31,6 +31,14 @@ export interface FootnoteListEntry {
   row: number | null;
 }
 
+/** Shown when the open chapter changed on disk while there are unsaved edits
+ * (Drive-folder sync, build spec §11) — the app shell renders the prompt;
+ * ChapterEditor supplies the two resolutions. */
+export interface ExternalChangePrompt {
+  onKeepMine(): void;
+  onLoadTheirs(): void;
+}
+
 export const session = $state({
   hasEditor: false,
   greekMode: false,
@@ -45,6 +53,9 @@ export const session = $state({
   activeFootnoteId: null as string | null,
   /** Set after footnote creation so an open panel focuses the new body field. */
   fnFocusRequest: null as { id: string; ts: number } | null,
+  // ── Drive-folder sync bridge (build spec §11) ──
+  /** Non-null while the "keep mine / load theirs" choice is pending. */
+  externalChangePrompt: null as ExternalChangePrompt | null,
 });
 
 export interface EditorCommands {
@@ -53,6 +64,7 @@ export interface EditorCommands {
   insertFootnote(): void;
   undo(): void;
   redo(): void;
+  copyCitation(): void;
 }
 
 /** Footnote actions the panel proxies to the mounted ChapterEditor. */
@@ -68,12 +80,22 @@ export interface FootnoteCommands {
   setActiveFootnote(id: string | null): void;
 }
 
+/** Sync command the app shell drives on window focus (build spec §11). */
+export interface SyncCommands {
+  /** Stat the open chapter's file; reload seamlessly, prompt, or no-op per
+   * the decision matrix in lib/library/sync.ts. Safe to call anytime;
+   * no-ops if the file hasn't changed. */
+  checkExternalChange(): Promise<void>;
+}
+
 let current: EditorCommands | null = null;
 let currentFn: FootnoteCommands | null = null;
+let currentSync: SyncCommands | null = null;
 
-export function registerEditor(cmds: EditorCommands, fn?: FootnoteCommands): void {
+export function registerEditor(cmds: EditorCommands, fn?: FootnoteCommands, sync?: SyncCommands): void {
   current = cmds;
   currentFn = fn ?? null;
+  currentSync = sync ?? null;
   session.hasEditor = true;
 }
 
@@ -81,12 +103,14 @@ export function unregisterEditor(cmds: EditorCommands): void {
   if (current === cmds) {
     current = null;
     currentFn = null;
+    currentSync = null;
     session.hasEditor = false;
     session.greekMode = false;
     session.activeMarks = { bold: false, italic: false, underline: false, greek: false };
     session.footnotes = [];
     session.activeFootnoteId = null;
     session.fnFocusRequest = null;
+    session.externalChangePrompt = null;
   }
 }
 
@@ -97,6 +121,7 @@ export const commands: EditorCommands = {
   insertFootnote: () => current?.insertFootnote(),
   undo: () => current?.undo(),
   redo: () => current?.redo(),
+  copyCitation: () => current?.copyCitation(),
 };
 
 /** Footnote-panel proxy; no-ops when no editor is mounted. */
@@ -106,6 +131,14 @@ export const fnCommands: FootnoteCommands = {
   reanchorFootnote: (id) => currentFn?.reanchorFootnote(id),
   updateFootnoteBody: (id, body) => currentFn?.updateFootnoteBody(id, body),
   setActiveFootnote: (id) => currentFn?.setActiveFootnote(id),
+};
+
+/** App-shell proxy for the sync check; no-op when no editor is mounted (e.g.
+ * the empty state, or between chapter switches). */
+export const syncCommands: SyncCommands = {
+  checkExternalChange: async () => {
+    await currentSync?.checkExternalChange();
+  },
 };
 
 let statusTimer: ReturnType<typeof setTimeout> | undefined;

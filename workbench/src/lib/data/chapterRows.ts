@@ -39,7 +39,8 @@ export interface ChapterRowsResult {
   entry: ChapterEntry;
 }
 
-interface FlatLine {
+/** One spine line in document order — the atom the editor and importer share. */
+export interface FlatLine {
   column: string;
   n: number;
   text: string;
@@ -49,7 +50,10 @@ interface FlatLine {
 // the corpus identity so repeated chapter opens don't re-flatten 8k lines.
 const flatCache = new WeakMap<WorkCorpus, FlatLine[]>();
 
-function flatLines(corpus: WorkCorpus): FlatLine[] {
+/** The spine as a flat, document-order line stream (cached per corpus). The
+ * importer shares this exact flattening with the editor so both see the same
+ * atoms in the same order. */
+export function flatLines(corpus: WorkCorpus): FlatLine[] {
   let flat = flatCache.get(corpus);
   if (!flat) {
     flat = [];
@@ -81,6 +85,67 @@ function startIndex(flat: FlatLine[], entry: ChapterEntry): number {
   return entry.wordIndex > 0 ? idx + 1 : idx;
 }
 
+/**
+ * The spine window (start/end indices into `flatLines(corpus)`, inclusive) that
+ * (book, chapter) owns — the SINGLE definition of a chapter's row span, shared
+ * by the editor (via `chapterRows`) and the importer (via `plan.ts`) so the
+ * imported chapter's row count equals the editor's by construction. `null` when
+ * the chapter isn't in this corpus or its anchors aren't in the spine (same
+ * quiet-unavailable contract as `chapterRows`).
+ */
+export interface ChapterSpineWindow {
+  /** The corpus' flat, document-order line stream (identity-cached). */
+  flat: FlatLine[];
+  /** First flat index the chapter owns (inclusive). */
+  start: number;
+  /** Last flat index the chapter owns (inclusive). */
+  end: number;
+  entry: ChapterEntry;
+}
+
+export function chapterSpineRows(
+  corpus: WorkCorpus,
+  book: number,
+  chapter: number,
+): ChapterSpineWindow | null {
+  const chapters = corpus.chapters;
+  const gidx = chapters.findIndex((c) => c.book === book && Number(c.chapter) === chapter);
+  if (gidx < 0) return null;
+  const entry = chapters[gidx];
+
+  const flat = flatLines(corpus);
+  const start = startIndex(flat, entry);
+  if (start < 0) {
+    console.warn(
+      `chapterSpineRows: ${corpus.spine.work} book ${book} ch ${chapter} anchor ${entry.column}${entry.line} not in spine`,
+    );
+    return null;
+  }
+
+  const next = gidx + 1 < chapters.length ? chapters[gidx + 1] : null;
+  let end: number; // inclusive
+  if (next) {
+    const nextStart = startIndex(flat, next);
+    if (nextStart < 0) {
+      console.warn(
+        `chapterSpineRows: ${corpus.spine.work} next anchor ${next.column}${next.line} not in spine — running to work end`,
+      );
+      end = flat.length - 1;
+    } else {
+      end = nextStart - 1;
+    }
+  } else {
+    end = flat.length - 1;
+  }
+
+  if (end < start) {
+    console.warn(`chapterSpineRows: ${corpus.spine.work} book ${book} ch ${chapter} has an empty span`);
+    return null;
+  }
+
+  return { flat, start, end, entry };
+}
+
 /** Chapter numbers present for a book, in spine/document order. */
 export function bookChapterNumbers(corpus: WorkCorpus, book: number): number[] {
   return corpus.chapters
@@ -100,41 +165,10 @@ export function chapterRows(
   book: number,
   chapter: number,
 ): ChapterRowsResult | null {
-  const chapters = corpus.chapters;
-  const gidx = chapters.findIndex((c) => c.book === book && Number(c.chapter) === chapter);
-  if (gidx < 0) return null;
-  const entry = chapters[gidx];
+  const window = chapterSpineRows(corpus, book, chapter);
+  if (!window) return null;
 
-  const flat = flatLines(corpus);
-  const start = startIndex(flat, entry);
-  if (start < 0) {
-    console.warn(
-      `chapterRows: ${work.id} book ${book} ch ${chapter} anchor ${entry.column}${entry.line} not in spine`,
-    );
-    return null;
-  }
-
-  const next = gidx + 1 < chapters.length ? chapters[gidx + 1] : null;
-  let end: number; // inclusive
-  if (next) {
-    const nextStart = startIndex(flat, next);
-    if (nextStart < 0) {
-      console.warn(
-        `chapterRows: ${work.id} next anchor ${next.column}${next.line} not in spine — running to work end`,
-      );
-      end = flat.length - 1;
-    } else {
-      end = nextStart - 1;
-    }
-  } else {
-    end = flat.length - 1;
-  }
-
-  if (end < start) {
-    console.warn(`chapterRows: ${work.id} book ${book} ch ${chapter} has an empty span`);
-    return null;
-  }
-
+  const { flat, start, end, entry } = window;
   const rows: ChapterRow[] = [];
   for (let i = start; i <= end; i++) {
     const line = flat[i];

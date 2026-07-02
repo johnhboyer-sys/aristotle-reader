@@ -40,7 +40,15 @@
   import { greekInput, resetGreekRun } from './plugins/greekInput';
   import { footnotePlugin, FN_REFRESH } from './plugins/footnote';
   import { session, registerEditor, unregisterEditor, setStatus } from './session.svelte';
-  import type { EditorCommands, FootnoteCommands, FootnoteListEntry } from './session.svelte';
+  import type { EditorCommands, FootnoteCommands, FootnoteListEntry, SyncCommands } from './session.svelte';
+  import { hasChanged, decideReload, snapshotOf } from '../library/sync';
+  import type { FileSnapshot } from '../library/sync';
+  import { parseChapterFile } from '../chapterfile';
+  import { buildCitationClipboardText } from './copyCitation';
+  import type { CitationRowInput } from './copyCitation';
+  import { getScheme } from '../citation/registry';
+  import type { WorkMeta } from '../citation/types';
+  import { isTauri } from '../runtime';
   import { libraryStorage, chapterFileName } from '../library/storage';
   import {
     createAutosave,
@@ -88,6 +96,13 @@
   let spans: ChapterSpans = spansFromModel(model);
   let destroyed = false;
 
+  // ── Drive-folder sync (build spec §11) ──────────────────────────────────
+  // The snapshot (mtime + content hash) as of the last load or successful
+  // save — what checkExternalChange() compares the live disk file against.
+  // Null until initChapter() sets it (no file yet, or still loading).
+  let lastSnapshot: FileSnapshot | null = null;
+  let checkingExternal = false;
+
   // Books in manifest order for work-wide numbering; null → numeric fallback
   // (the dev fixture's workId isn't in the manifest registry yet).
   let workBooks: BookOrder = null;
@@ -95,6 +110,23 @@
     workBooks = getWork(model.workId).books;
   } catch {
     workBooks = null;
+  }
+
+  // WorkMeta for scheme.formatCitation (copy-as-citation). Prefer the real
+  // manifest; fall back to a synthetic single-book WorkMeta built from the
+  // model/fixture fields (same "manifest lookup can miss" case as workBooks
+  // above — the dev fixture's workId isn't registered yet).
+  let citationWork: WorkMeta;
+  try {
+    citationWork = getWork(model.workId);
+  } catch {
+    citationWork = {
+      id: model.workId,
+      title: model.workTitle,
+      author: '',
+      scheme: model.scheme,
+      books: [{ n: model.book, label: model.bookLabel }],
+    };
   }
 
   // ── reactive UI state ──────────────────────────────────────────────────
@@ -254,6 +286,7 @@
         },
         onSaved: () => {
           void updateFootnoteCount(storage, model.workId, model.book, model.chapter, anchoredFootnoteCount(model));
+          void refreshSnapshot(); // our own save moved the file — track its new state
         },
       });
       if (fresh) {
@@ -263,10 +296,122 @@
       }
     }
 
+    await refreshSnapshot();
+
     ready = true;
     await tick();
     publishFootnotes();
     requestAnimationFrame(() => focusRowEnd(0));
+  }
+
+  /** Re-read the file's current mtime + content as the sync baseline (called
+   * after load and after every successful save — see initChapter/onSaved). */
+  async function refreshSnapshot(): Promise<void> {
+    try {
+      const [mtime, content] = await Promise.all([
+        storage.mtime(model.workId, fileName),
+        storage.read(model.workId, fileName),
+      ]);
+      if (destroyed) return;
+      lastSnapshot = snapshotOf(mtime, content ?? '');
+    } catch {
+      /* best-effort baseline only; a failed stat just means the next check
+         re-tries from whatever lastSnapshot already holds */
+    }
+  }
+
+  /** Drive-folder sync check (build spec §11): called on window focus. Stats
+   * the open chapter's file; reloads seamlessly, prompts, or no-ops per the
+   * decision matrix. Never runs concurrently with itself. */
+  async function checkExternalChange(): Promise<void> {
+    if (checkingExternal || destroyed || !ready || saveBlocked || !lastSnapshot) return;
+    checkingExternal = true;
+    try {
+      const [mtime, content] = await Promise.all([
+        storage.mtime(model.workId, fileName),
+        storage.read(model.workId, fileName),
+      ]);
+      if (destroyed || content === null) return;
+      const changed = hasChanged(lastSnapshot, mtime, content);
+      const decision = decideReload(changed, model.dirty);
+      if (decision.kind === 'none') return;
+
+      if (decision.kind === 'reload-seamless') {
+        reloadFromDisk(content, mtime);
+        setStatus('Updated from the shared folder.');
+        return;
+      }
+
+      // decision.kind === 'ask' — do not clobber either side.
+      session.externalChangePrompt = {
+        onKeepMine: () => {
+          session.externalChangePrompt = null;
+          // Local edits win: mark dirty so the next autosave overwrites the
+          // incoming version, and adopt the disk snapshot so we don't keep
+          // re-prompting for the same external change.
+          lastSnapshot = snapshotOf(mtime, content);
+          markModelDirty();
+        },
+        onLoadTheirs: () => {
+          session.externalChangePrompt = null;
+          reloadFromDisk(content, mtime);
+        },
+      };
+    } finally {
+      checkingExternal = false;
+    }
+  }
+
+  /** Discard whatever's live and re-hydrate the model from `content` (the
+   * file just read off disk). Used by both the seamless path and "Load
+   * theirs". Clears any pending commit timers first so a stale scheduled
+   * commit can't stomp the freshly loaded rows a moment later. */
+  function reloadFromDisk(content: string, mtime: number | null) {
+    for (const timer of commitTimers.values()) clearTimeout(timer);
+    commitTimers.clear();
+
+    let parsed: ReturnType<typeof parseChapterFile> | null = null;
+    try {
+      parsed = parseChapterFile(content, fileName);
+    } catch (err) {
+      console.error(`sync reload: ${fileName} failed to parse`, err);
+      setStatus("The shared folder's version of this chapter couldn't be read.");
+      return;
+    }
+    const h = hydrateFromFile(parsed, fixture.lines, model.scheme);
+    model.rows = h.rows;
+    model.footnotes = h.footnotes;
+    model.dirty = false;
+    spans = h.spans;
+    loadNotice = h.notice;
+    lastSnapshot = snapshotOf(mtime, content);
+
+    // Rebuild every row view still mounted from the reloaded model (mirrors
+    // applyEntry's replaceWith for the undo/redo path). Rows beyond the new
+    // model length (or a row count change entirely) fall through to the
+    // views-array resize below — the {#each} key on row index+address
+    // remounts the grid for those.
+    const commonRows = Math.min(views.length, model.rows.length);
+    for (let i = 0; i < commonRows; i++) {
+      const view = views[i];
+      if (!view) continue;
+      const newDoc = docFromJSON(model.rows[i].english);
+      view.dispatch(
+        view.state.tr
+          .replaceWith(0, view.state.doc.content.size, newDoc.content)
+          .setMeta('appHistoryIgnore', true)
+          .setMeta(FN_REFRESH, true),
+      );
+    }
+    if (model.rows.length !== views.length) {
+      // Row count changed underneath us (rare: corpus spine drift on the
+      // collaborator's saved file) — resize the views array to match; the
+      // {#each} key (index + address) remounts rows that moved or are new.
+      views = Array(model.rows.length).fill(null);
+    }
+    fnDisplay = displayNumbers(model.rows.flatMap((_, i) => markerIdsIn(rowDoc(i))));
+    history.clear();
+    refreshFnDisplay();
   }
 
   // ── footnote bookkeeping (model side; the plugin is view-only) ─────────
@@ -536,6 +681,17 @@
     return cell ? Number((cell as HTMLElement).dataset.rowEn) : -1;
   }
 
+  /** Same row lookup, but recognizes Greek/gutter cells too (`data-row`), for
+   * copy-as-citation's "selection may sit in Greek cells" case. */
+  function anyRowOfDomNode(node: Node | null): number {
+    if (!node) return -1;
+    const el = node instanceof Element ? node : node.parentElement;
+    const cell = el?.closest('[data-row-en], [data-row]');
+    if (!cell) return -1;
+    const raw = (cell as HTMLElement).dataset.rowEn ?? (cell as HTMLElement).dataset.row;
+    return raw !== undefined ? Number(raw) : -1;
+  }
+
   function crossRowSelection(): boolean {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false;
@@ -576,6 +732,107 @@
     if (crossRowSelection()) {
       e.preventDefault();
       setStatus('Select within one row to edit — cross-row selections are read-only');
+    }
+  }
+
+  // ── copy as citation (build spec §10) ──────────────────────────────────
+  // Row range = every row touched by the native selection, whether it sits
+  // in English or Greek cells; caret-only → the focused row alone. Assembly
+  // (English/Greek extraction, the exact clipboard string, scheme.formatCitation)
+  // is pure and lives in copyCitation.ts — this only resolves DOM selection
+  // to row indices and per-row englishSelected text, mirroring onCopy above.
+  async function writeClipboardText(text: string): Promise<void> {
+    if (isTauri()) {
+      const { writeText } = await import('@tauri-apps/plugin-clipboard-manager');
+      await writeText(text);
+    } else {
+      await navigator.clipboard.writeText(text);
+    }
+  }
+
+  async function copyCitation() {
+    const sel = window.getSelection();
+    let startRow: number;
+    let endRow: number;
+    let range: Range | null = null;
+
+    if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
+      range = sel.getRangeAt(0);
+      startRow = anyRowOfDomNode(range.startContainer);
+      endRow = anyRowOfDomNode(range.endContainer);
+      if (startRow < 0 || endRow < 0) {
+        // Selection isn't inside the chapter grid at all — fall back to the
+        // focused row, same as caret-only.
+        range = null;
+        startRow = endRow = focusedRow;
+      } else if (startRow > endRow) {
+        [startRow, endRow] = [endRow, startRow];
+      }
+    } else {
+      startRow = endRow = focusedRow;
+    }
+
+    if (startRow < 0 || endRow < 0) {
+      setStatus('Click into a row first');
+      return;
+    }
+
+    const rows: CitationRowInput[] = [];
+    for (let r = startRow; r <= endRow; r++) {
+      const doc = rowDoc(r);
+      // englishSelected only when a selection ENDPOINT sits in this row's
+      // English cell (rowOfDomNode is English-specific). Every other touched
+      // row — interior rows, endpoints sitting in a Greek cell — stays null
+      // and contributes its FULL English inside buildCitationClipboardText.
+      let englishSelected: string | null = null;
+      if (range) {
+        const view = viewAt(r);
+        const startsHere = r === startRow && rowOfDomNode(range.startContainer) === r;
+        const endsHere = r === endRow && rowOfDomNode(range.endContainer) === r;
+        if (view && (startsHere || endsHere)) {
+          const size = doc.content.size;
+          let from = 0;
+          let to = size;
+          try {
+            if (startsHere) {
+              from = Math.max(0, Math.min(view.posAtDOM(range.startContainer, range.startOffset), size));
+            }
+            if (endsHere) {
+              to = Math.max(0, Math.min(view.posAtDOM(range.endContainer, range.endOffset), size));
+            }
+          } catch {
+            /* keep full-row fallback for this row */
+          }
+          englishSelected = doc.textBetween(from, to, ' ', '');
+        }
+      }
+      rows.push({
+        address: model.rows[r].address,
+        greek: model.rows[r].greek,
+        englishDoc: doc,
+        englishSelected,
+      });
+    }
+
+    const scheme = getScheme(model.scheme);
+    const result = buildCitationClipboardText({
+      rows,
+      scheme,
+      work: citationWork,
+      book: model.book,
+      chapter: model.chapter,
+    });
+
+    if (result.kind === 'empty') {
+      setStatus('Nothing to cite — the selected rows have no English yet.');
+      return;
+    }
+
+    try {
+      await writeClipboardText(result.text);
+      setStatus('Citation copied.');
+    } catch {
+      setStatus('Could not copy — try again.');
     }
   }
 
@@ -886,6 +1143,7 @@
     insertFootnote,
     undo,
     redo,
+    copyCitation,
   };
 
   const footnoteCommands: FootnoteCommands = {
@@ -894,6 +1152,10 @@
     reanchorFootnote,
     updateFootnoteBody,
     setActiveFootnote,
+  };
+
+  const syncCommandsImpl: SyncCommands = {
+    checkExternalChange,
   };
 
   function onWindowKeydown(e: KeyboardEvent) {
@@ -907,6 +1169,9 @@
     } else if (e.key === 'y') {
       e.preventDefault();
       redo();
+    } else if (e.shiftKey && (e.key === 'c' || e.key === 'C')) {
+      e.preventDefault();
+      void copyCitation();
     }
   }
 
@@ -957,7 +1222,7 @@
   });
 
   onMount(() => {
-    registerEditor(editorCommands, footnoteCommands);
+    registerEditor(editorCommands, footnoteCommands, syncCommandsImpl);
     session.greekMode = false;
 
     const unsubIndex = onFootnoteIndexChange((workId) => {

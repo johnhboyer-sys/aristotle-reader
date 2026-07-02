@@ -1,0 +1,309 @@
+<script lang="ts">
+  // Whole-work compile export (build spec §8, Phase 2). Tauri-only, mirrors
+  // ExportButton.svelte's degraded-state rule: every failure is one plain
+  // sentence; stderr goes to the console only. Reads every saved chapter of
+  // the work directly from library storage (not just the currently open
+  // one), compiles them into one .docx via lib/export, and shows the
+  // compact gap notice before/while the user decides.
+  import { isTauri } from '../lib/runtime';
+  import { libraryStorage, chapterFileName } from '../lib/library/storage';
+  import { parseChapterFile } from '../lib/chapterfile';
+  import type { ChapterFile } from '../lib/chapterfile/types';
+  import {
+    exportWorkToDocx,
+    buildGapReport,
+    compileDefaultFilename,
+    PANDOC_UNAVAILABLE_MESSAGE,
+  } from '../lib/export';
+  import type { CompileMode } from '../lib/export';
+  import type { WorkManifest } from '../lib/works/manifest';
+
+  let {
+    work,
+    onClose,
+  }: {
+    work: WorkManifest;
+    onClose: () => void;
+  } = $props();
+
+  type Phase = 'loading' | 'ready' | 'empty' | 'exporting' | 'done';
+  let phase = $state<Phase>('loading');
+  let note = $state<string | null>(null);
+  let mode = $state<CompileMode>('english');
+  let chapters = $state<ChapterFile[]>([]);
+  let gapSummary = $state<string>('');
+
+  const CHAPTER_FILE_RE = /^b\d{2,}c\d{2,}\.md$/;
+
+  async function loadChapters() {
+    phase = 'loading';
+    try {
+      const storage = libraryStorage();
+      const files = (await storage.list(work.id)).filter((f) => CHAPTER_FILE_RE.test(f));
+      const loaded: ChapterFile[] = [];
+      for (const file of files) {
+        const raw = await storage.read(work.id, file);
+        if (!raw) continue;
+        try {
+          loaded.push(parseChapterFile(raw, file));
+        } catch (err) {
+          // A corrupt chapter file shouldn't block compiling every other
+          // chapter — skip it and note it plainly, same "degrade, don't
+          // block" spirit as onboarding's chapters.json handling.
+          console.error(`[compile] skipping unreadable chapter file ${file}`, err);
+        }
+      }
+      chapters = loaded;
+      if (loaded.length === 0) {
+        phase = 'empty';
+        return;
+      }
+      gapSummary = buildGapReport(
+        loaded.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter })),
+        work,
+      ).summary;
+      phase = 'ready';
+    } catch (err) {
+      console.error('[compile] failed to read the library', err);
+      phase = 'empty';
+      note = "This work's saved chapters couldn't be read.";
+    }
+  }
+
+  $effect(() => {
+    void loadChapters();
+  });
+
+  async function runExport() {
+    if (phase !== 'ready' || chapters.length === 0) return;
+    phase = 'exporting';
+    note = null;
+    try {
+      const shell = await import('@tauri-apps/plugin-shell');
+      const probe = await shell.Command.create('pandoc', ['--version'])
+        .execute()
+        .catch(() => null);
+      if (!probe || probe.code !== 0) {
+        note = PANDOC_UNAVAILABLE_MESSAGE;
+        phase = 'ready';
+        return;
+      }
+
+      const dialog = await import('@tauri-apps/plugin-dialog');
+      const defaultPath = compileDefaultFilename(work, mode);
+      const docxPath = await dialog.save({
+        defaultPath,
+        filters: [{ name: 'Word document', extensions: ['docx'] }],
+      });
+      if (!docxPath) {
+        phase = 'ready';
+        return; // user cancelled — not a failure
+      }
+
+      const pathApi = await import('@tauri-apps/api/path');
+      const fs = await import('@tauri-apps/plugin-fs');
+      const appData = await pathApi.appDataDir();
+      await fs.mkdir(appData, { recursive: true }).catch(() => {});
+      const mdPath = await pathApi.join(appData, 'export-compile-intermediate.md');
+
+      let referenceDocPath: string | undefined;
+      try {
+        referenceDocPath = await pathApi.resolveResource('reference.docx');
+      } catch (err) {
+        console.warn('[compile] reference.docx resource not found — using pandoc defaults', err);
+      }
+
+      const writeFile = async (p: string, contents: string) => {
+        await fs.writeTextFile(p, contents);
+      };
+
+      // exportWorkToDocx (index.ts) runs pandoc via node:child_process,
+      // which doesn't exist under Tauri's webview — so the compile step
+      // here mirrors ExportButton's split: build markdown via the same
+      // compile module, run pandoc via the Tauri shell runner.
+      const { compileWorkMarkdown } = await import('../lib/export/compile');
+      const compiled = compileWorkMarkdown(chapters, work, { mode });
+      await writeFile(mdPath, compiled.markdown);
+
+      const { runPandocTauri } = await import('../lib/export');
+      const run = await runPandocTauri({ markdownPath: mdPath, docxPath, referenceDocPath }, shell);
+      if (run.code !== 0) {
+        console.error('[compile] pandoc failed:', run.stderr);
+        note = "The Word document couldn't be created.";
+        phase = 'ready';
+        return;
+      }
+
+      phase = 'done';
+      note = 'Exported.';
+      const opener = await import('@tauri-apps/plugin-opener');
+      void opener.revealItemInDir(docxPath).catch(() => {});
+    } catch (err) {
+      console.error('[compile]', err);
+      note = "The Word document couldn't be created.";
+      phase = 'ready';
+    }
+  }
+</script>
+
+{#if isTauri()}
+  <div class="scrim" role="presentation">
+    <div class="dialog" role="dialog" aria-modal="true" aria-label="Export whole work">
+      <header class="dialog-head">
+        <h2>Export whole work</h2>
+        <button class="close-btn" onclick={onClose} aria-label="Close">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </header>
+
+      <div class="dialog-body">
+        {#if phase === 'loading'}
+          <p class="line">Reading the saved chapters…</p>
+        {:else if phase === 'empty'}
+          <p class="line">{note ?? 'This work has no saved chapters yet — nothing to export.'}</p>
+        {:else}
+          <p class="line">{gapSummary}</p>
+
+          <fieldset class="mode-choice">
+            <legend>Format</legend>
+            <label class="mode-option">
+              <input type="radio" name="compile-mode" value="english" bind:group={mode} />
+              English only
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="compile-mode" value="bilingual" bind:group={mode} />
+              Greek and English
+            </label>
+          </fieldset>
+
+          {#if note}
+            <p class="line note">{note}</p>
+          {/if}
+
+          <button class="export-btn" onclick={runExport} disabled={phase === 'exporting'}>
+            {phase === 'exporting' ? 'Exporting…' : 'Export…'}
+          </button>
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}
+
+<style>
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+  }
+
+  .dialog {
+    width: 380px;
+    max-width: calc(100vw - 2 * var(--space-4));
+    background: var(--col-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--popup-shadow);
+  }
+
+  .dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+  .dialog-head h2 {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+  }
+
+  .close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-mid);
+    cursor: pointer;
+  }
+  .close-btn:hover {
+    color: var(--text);
+    background: var(--ui-hover);
+  }
+
+  .dialog-body {
+    padding: var(--space-4);
+  }
+
+  .line {
+    font-family: var(--font-english);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-mid);
+  }
+  .line.note {
+    margin-top: var(--space-3);
+    color: var(--text);
+  }
+
+  .mode-choice {
+    margin-top: var(--space-4);
+    border: none;
+    padding: 0;
+  }
+  .mode-choice legend {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    margin-bottom: var(--space-2);
+  }
+  .mode-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-english);
+    font-size: 0.9rem;
+    color: var(--text);
+    padding: var(--space-1) 0;
+    cursor: pointer;
+  }
+
+  .export-btn {
+    margin-top: var(--space-4);
+    width: 100%;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+  }
+  .export-btn:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+  .export-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+</style>

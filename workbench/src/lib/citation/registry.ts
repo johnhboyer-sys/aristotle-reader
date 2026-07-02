@@ -7,11 +7,13 @@ import type { CitationScheme, SchemeId } from './types';
 import { bekkerStandard } from './schemes/bekkerStandard';
 import { bekkerMetaphysics } from './schemes/bekkerMetaphysics';
 import { aquinasStub } from './schemes/aquinasStub';
+import { busseParagraph } from './schemes/busseParagraph';
 
 const SCHEMES = new Map<SchemeId, CitationScheme>([
   [bekkerStandard.id, bekkerStandard],
   [bekkerMetaphysics.id, bekkerMetaphysics],
   [aquinasStub.id, aquinasStub],
+  [busseParagraph.id, busseParagraph],
 ]);
 
 /** Look up a citation scheme by id. Throws on an unknown scheme id. */

@@ -53,7 +53,10 @@ export interface PandocMarkdownOptions {
 // error rather than mis-stamping silently — resaving the chapter in the app
 // stamps column_starts and removes the limitation.
 
-interface BekkerLineAddr {
+// Exported (not just used internally) so compile.ts — the whole-work
+// compiler, which stamps each chapter's rows with the exact same rules —
+// reuses this single implementation instead of re-deriving it.
+export interface BekkerLineAddr {
   page: number;
   side: 'a' | 'b';
   line: number;
@@ -61,7 +64,7 @@ interface BekkerLineAddr {
 
 const BEKKER_RE = /^(\d+)([ab])(\d+)$/;
 
-function parseBekkerLineAddr(raw: string): BekkerLineAddr {
+export function parseBekkerLineAddr(raw: string): BekkerLineAddr {
   const m = BEKKER_RE.exec(raw);
   if (!m) throw new Error(`pandocMarkdown: not a Bekker line address: ${JSON.stringify(raw)}`);
   return { page: Number(m[1]), side: m[2] as 'a' | 'b', line: Number(m[3]) };
@@ -135,7 +138,7 @@ export function deriveRowAddresses(spanStart: string, spanEnd: string, rowCount:
  * (the chapter heading already carries the opening ref, and row 0 IS
  * spanStart by construction).
  */
-function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode, colStart: boolean): string | null {
+export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode, colStart: boolean): string | null {
   if (rowIndex === 0) return null; // heading already carries the opening ref
   const bare = `${addr.page}${addr.side}`;
   const full = formatBekkerLineAddr(addr);

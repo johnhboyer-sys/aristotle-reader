@@ -23,6 +23,13 @@ export interface WorkbenchSettings {
   /** Override for the Diogenes server directory (the one holding xml-export.pl). */
   diogenesPath?: string;
   lastOpened?: LastOpened;
+  /**
+   * User-chosen folder holding the library (chapter files), e.g. a synced
+   * Drive/Dropbox folder shared with a collaborator (build spec §11). Unset
+   * means the default `$APPDATA/library` location. Tauri only — the browser
+   * dev harness never reads or writes this.
+   */
+  libraryRoot?: string;
 }
 
 const LS_KEY = 'workbench:settings';
@@ -34,6 +41,7 @@ function sanitize(value: unknown): WorkbenchSettings {
   const out: WorkbenchSettings = {};
   if (typeof v.tlgDir === 'string') out.tlgDir = v.tlgDir;
   if (typeof v.diogenesPath === 'string') out.diogenesPath = v.diogenesPath;
+  if (typeof v.libraryRoot === 'string') out.libraryRoot = v.libraryRoot;
   const lo = v.lastOpened as Record<string, unknown> | undefined;
   if (
     typeof lo === 'object' &&
@@ -99,7 +107,7 @@ export async function updateSettings(
 ): Promise<WorkbenchSettings> {
   const current = await loadSettings();
   const next: WorkbenchSettings = { ...current };
-  for (const key of ['tlgDir', 'diogenesPath', 'lastOpened'] as const) {
+  for (const key of ['tlgDir', 'diogenesPath', 'lastOpened', 'libraryRoot'] as const) {
     if (key in patch) {
       const value = patch[key];
       if (value === undefined) delete (next as Record<string, unknown>)[key];

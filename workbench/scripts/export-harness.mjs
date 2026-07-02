@@ -1,8 +1,9 @@
-// Export harness — end to end proof that a single-chapter export produces a
-// REAL .docx with NATIVE Word footnote objects (not fake in-page endnote-
-// style hyperlinks — see workbench/src/lib/export/pandoc.ts's header for why
-// that distinction is the entire point).
+// Export harness — end to end proof that exports produce a REAL .docx with
+// NATIVE Word footnote objects (not fake in-page endnote-style hyperlinks —
+// see workbench/src/lib/export/pandoc.ts's header for why that distinction
+// is the entire point).
 //
+// PART A — single-chapter export:
 // 1. Bundles workbench/src/lib/export/index.ts for Node via esbuild (same
 //    pattern as scripts/parity-corpus.mjs).
 // 2. Builds a REALISTIC chapter file in memory: Metaphysics book 7 chapter 17
@@ -25,6 +26,14 @@
 //    (c) underline survives as <w:u ...> somewhere in styles.xml or a run's
 //        rPr,
 //    (d) the Greek span text is present intact (NFC) in document.xml.
+//
+// PART B (below, "whole-work compile") — a synthetic 3-chapter, 2-book work
+// compiled end to end through the SAME pandoc invocation shape, verifying:
+// headings present for both books/all chapters, native footnotes numbered
+// CONTINUOUSLY across chapter boundaries (not restarting), the reference.docx
+// styling (font + page geometry) actually lands in the OUTPUT docx, and
+// (bilingual mode) Greek blocks present alongside English.
+//
 // Prints a PASS/FAIL table and exits nonzero on any failure.
 //
 // Usage: node scripts/export-harness.mjs
@@ -42,7 +51,7 @@ const workbenchRoot = path.resolve(here, '..');
 const pandocBin = process.env.EXPORT_HARNESS_PANDOC_BIN ?? 'pandoc';
 const scratchDir =
   process.env.EXPORT_HARNESS_SCRATCH ??
-  '/private/tmp/claude-501/-Users-johnboyer-Developer-aristotle-reader--claude-worktrees-blissful-rubin-d64797/e1c8be9d-8f51-4b23-9dcf-e914f359a134/scratchpad';
+  path.join(tmpdir(), 'workbench-export-harness');
 
 mkdirSync(scratchDir, { recursive: true });
 
@@ -90,7 +99,13 @@ await build({
   // external empty so esbuild bundles whatever IS actually reached.
 });
 const exportLib = await import(pathToFileURL(bundlePath).href);
-const { exportChapterToDocx, chapterToPandocMarkdown, pandocAvailable, PANDOC_UNAVAILABLE_MESSAGE } = exportLib;
+const {
+  exportChapterToDocx,
+  exportWorkToDocx,
+  chapterToPandocMarkdown,
+  pandocAvailable,
+  PANDOC_UNAVAILABLE_MESSAGE,
+} = exportLib;
 
 // ── 2. realistic chapter file in memory ─────────────────────────────────────
 // Metaphysics Ζ.17, 1041a6–1041b3: 8 rows spanning the real a->b Bekker
@@ -386,6 +401,294 @@ if (!multiResult.ok) {
     } else {
       fail(`column ref ${column} present in document.xml`, 'not found');
     }
+  }
+}
+
+// ── PART B: whole-work compile export, end to end ───────────────────────────
+//
+// A synthetic 2-book, 3-chapter work (Α.1, Α.2, Ζ.5 — deliberately
+// out-of-manifest-order in the input array, to prove compile sorts into
+// manifest order). Each chapter's [ENGLISH] uses LOCAL footnote id "1" (the
+// realistic authoring pattern — footnote ids are chapter-local by design, see
+// workbench-design/d1-row-lock-editor.md) so the harness proves namespacing
+// prevents collisions and Word still numbers them 1, 2, 3 continuously.
+// Chapter Ζ.5 spans a real a->b column transition so the compiled doc's
+// running Bekker refs are exercised across a boundary INSIDE a chapter too,
+// not just across chapters.
+
+const workMetaCompile = {
+  id: 'metaphysics',
+  title: 'Metaphysics',
+  author: 'Aristotle',
+  scheme: 'bekker-metaphysics',
+  books: [
+    { n: 1, label: 'Α' }, { n: 2, label: 'α' }, { n: 3, label: 'Β' }, { n: 4, label: 'Γ' },
+    { n: 5, label: 'Δ' }, { n: 6, label: 'Ε' }, { n: 7, label: 'Ζ' }, { n: 8, label: 'Η' },
+    { n: 9, label: 'Θ' }, { n: 10, label: 'Ι' }, { n: 11, label: 'Κ' }, { n: 12, label: 'Λ' },
+    { n: 13, label: 'Μ' }, { n: 14, label: 'Ν' },
+  ],
+};
+
+const compileChapterA1 = {
+  meta: {
+    schemaVersion: 1,
+    work: 'metaphysics',
+    book: 1,
+    chapter: 1,
+    citationScheme: 'bekker-metaphysics',
+    spanStart: '980a21',
+    spanEnd: '980a25',
+  },
+  greekLines: ['πάντες ἄνθρωποι', 'τοῦ εἰδέναι', 'ὀρέγονται φύσει.', 'σημεῖον δ᾽ ἡ', 'τῶν αἰσθήσεων ἀγάπησις·'],
+  englishLines: [
+    'All men by nature desire {^1:to know}.',
+    'An indication of this',
+    'is the delight we take',
+    'in our senses; for even',
+    'apart from their usefulness they are loved for themselves.',
+  ],
+  footnotes: [{ id: 1, body: 'The famous opening line — cf. **Ross** ad loc.' }],
+};
+
+const compileChapterA2 = {
+  meta: {
+    schemaVersion: 1,
+    work: 'metaphysics',
+    book: 1,
+    chapter: 2,
+    citationScheme: 'bekker-metaphysics',
+    spanStart: '982a30',
+    spanEnd: '982a33',
+  },
+  greekLines: ['διὰ γὰρ τὸ θαυμάζειν', 'οἱ ἄνθρωποι καὶ νῦν', 'καὶ τὸ πρῶτον ἤρξαντο', 'φιλοσοφεῖν.'],
+  englishLines: [
+    'For it is owing to their {^1:wonder} that men',
+    'both now begin and at first began',
+    'to philosophize; they wondered',
+    'originally at the obvious difficulties.',
+  ],
+  footnotes: [{ id: 1, body: 'θαυμάζειν — a second chapter, a second local id "1"; must not collide with Α.1\'s.' }],
+};
+
+const compileChapterZ5 = {
+  meta: {
+    schemaVersion: 1,
+    work: 'metaphysics',
+    book: 7,
+    chapter: 5,
+    citationScheme: 'bekker-metaphysics',
+    spanStart: '1041a30',
+    spanEnd: '1041b3',
+    columnStarts: [
+      { ref: '1041a30', rowIndex: 1 },
+      { ref: '1041b1', rowIndex: 5 },
+    ],
+  },
+  // 4 rows in column a (1041a30..33), 3 rows in column b (1041b1..3) = 7 rows.
+  greekLines: ['γα1', 'γα2', 'γα3', 'γα4', 'γβ1', 'γβ2', 'γβ3'],
+  englishLines: [
+    'closing out column a of book Zeta,',
+    'still in column a,',
+    'still in column a,',
+    'the last row of column a,',
+    'now the {^1:first row} of column b,',
+    'continuing column b,',
+    'and the last row of book Zeta chapter five.',
+  ],
+  footnotes: [{ id: 1, body: 'A THIRD chapter, a THIRD local id "1" — the running-refs-across-chapters case.' }],
+};
+
+// Given deliberately OUT of manifest order, to prove compile sorts.
+const compileChapters = [compileChapterZ5, compileChapterA2, compileChapterA1];
+
+const compileMdPath = path.join(scratchDir, 'export-harness-compile-work.md');
+const compileDocxPath = path.join(scratchDir, 'export-harness-compile-work.docx');
+const referenceDocPath = path.join(workbenchRoot, 'src-tauri', 'resources', 'reference.docx');
+
+if (!existsSync(referenceDocPath)) {
+  fail('reference.docx resource exists (run scripts/make-reference-docx.mjs first)', referenceDocPath);
+} else {
+  pass('reference.docx resource exists', referenceDocPath);
+}
+
+const compileResult = await exportWorkToDocx(compileChapters, workMetaCompile, {
+  markdownPath: compileMdPath,
+  docxPath: compileDocxPath,
+  referenceDocPath: existsSync(referenceDocPath) ? referenceDocPath : undefined,
+  writeFile,
+  pandocBin,
+});
+
+if (!compileResult.ok) {
+  fail('whole-work compile: pandoc conversion succeeded (exit 0)', compileResult.message ?? '(no message)');
+  printTable();
+  process.exit(1);
+}
+pass('whole-work compile: pandoc conversion succeeded (exit 0)', `${compileResult.included.length} chapters compiled`);
+
+// Manifest-order + gap report sanity (Α before Ζ; no gaps flagged since Α.1,
+// Α.2 are contiguous and Ζ.5 is the only Ζ chapter present — so Ζ IS flagged
+// as incomplete only in the sense that it's a single-chapter "run", which
+// buildGapReport does not flag as a gap; the other 12 books are absent
+// entirely, which SHOULD be flagged).
+if (compileResult.included.length === 3 &&
+    compileResult.included[0].book === 1 && compileResult.included[0].chapter === 1 &&
+    compileResult.included[1].book === 1 && compileResult.included[1].chapter === 2 &&
+    compileResult.included[2].book === 7 && compileResult.included[2].chapter === 5) {
+  pass('whole-work compile: chapters sorted into manifest order', 'Α.1, Α.2, Ζ.5');
+} else {
+  fail('whole-work compile: chapters sorted into manifest order', JSON.stringify(compileResult.included));
+}
+if (compileResult.gapReport.hasGaps && compileResult.gapReport.lines.some((l) => l.includes('missing entirely'))) {
+  pass('whole-work compile: gap report flags the 12 untouched books', compileResult.gapReport.summary.slice(0, 80) + '…');
+} else {
+  fail('whole-work compile: gap report flags the 12 untouched books', compileResult.gapReport.summary);
+}
+
+const compileMd = readFileSync(compileMdPath, 'utf8');
+if (compileMd.includes('# Α') && compileMd.includes('# Ζ')) {
+  pass('whole-work compile: book headings present for both books', 'found "# Α" and "# Ζ"');
+} else {
+  fail('whole-work compile: book headings present for both books', 'missing one or both book headings');
+}
+if (compileMd.includes('## Chapter 1') && compileMd.includes('## Chapter 2') && compileMd.includes('## Chapter 5')) {
+  pass('whole-work compile: chapter headings present for all 3 chapters', 'found');
+} else {
+  fail('whole-work compile: chapter headings present for all 3 chapters', 'missing one or more');
+}
+
+const compileEntries = zipEntryNames(compileDocxPath);
+const compileDocumentXml = unzipEntry(compileDocxPath, 'word/document.xml') ?? '';
+const compileFootnotesXml = unzipEntry(compileDocxPath, 'word/footnotes.xml') ?? '';
+const compileStylesXml = unzipEntry(compileDocxPath, 'word/styles.xml') ?? '';
+
+// Native footnotes present, 3 of them (one per chapter), sequentially
+// referenced in document.xml (order = manifest reading order).
+const compileFootnoteRefs = [...compileDocumentXml.matchAll(/<w:footnoteReference\b[^>]*w:id="(-?\d+)"[^>]*\/?>/g)].map(
+  (m) => m[1],
+);
+if (compileFootnoteRefs.length === 3) {
+  pass('whole-work compile: 3 native footnote references in document.xml', `ids: ${compileFootnoteRefs.join(', ')}`);
+} else {
+  fail('whole-work compile: 3 native footnote references in document.xml', `found ${compileFootnoteRefs.length}`);
+}
+
+const compileFootnoteEntryRe = /<w:footnote\b([^>]*)>([\s\S]*?)<\/w:footnote>/g;
+const compileRealFootnotes = [];
+{
+  let m;
+  while ((m = compileFootnoteEntryRe.exec(compileFootnotesXml))) {
+    if (/type="(separator|continuationSeparator)"/.test(m[1])) continue;
+    compileRealFootnotes.push(m[2]);
+  }
+}
+if (compileRealFootnotes.length === 3) {
+  pass('whole-work compile: word/footnotes.xml has exactly 3 real <w:footnote> entries', 'found 3');
+} else {
+  fail('whole-work compile: word/footnotes.xml has exactly 3 real <w:footnote> entries', `found ${compileRealFootnotes.length}`);
+}
+
+// Continuity: pandoc's docx writer assigns w:id values in the order
+// footnotes are encountered in the source; Word itself renders the VISIBLE
+// number by simple document-order sequence within one section (no
+// numRestart boundary exists mid-document — see make-reference-docx.mjs's
+// header for why <w:sectPr> in this doc has none). We can't literally
+// screenshot Word's rendered numeral here, but we CAN assert the structural
+// precondition for that continuity: exactly one <w:sectPr> in the whole
+// document (a single section — no section break was introduced that would
+// trigger eachSect numRestart), and that the reference count strictly
+// increases through the document in source order (pandoc always allocates
+// footnote w:ids in ascending encounter order).
+const compileSectPrCount = (compileDocumentXml.match(/<w:sectPr\b/g) ?? []).length;
+if (compileSectPrCount === 1) {
+  pass('whole-work compile: exactly one section (no per-chapter section breaks)', 'a single <w:sectPr> — footnote numbering cannot restart mid-document');
+} else {
+  fail('whole-work compile: exactly one section (no per-chapter section breaks)', `found ${compileSectPrCount} <w:sectPr> elements`);
+}
+const refIdsAscending = compileFootnoteRefs.every((id, i) => i === 0 || Number(id) > Number(compileFootnoteRefs[i - 1]));
+if (refIdsAscending) {
+  pass('whole-work compile: footnote reference ids increase monotonically in document order', compileFootnoteRefs.join(' < '));
+} else {
+  fail('whole-work compile: footnote reference ids increase monotonically in document order', compileFootnoteRefs.join(', '));
+}
+// No accidental id collision: the 3 footnoteReference w:id values must be
+// distinct (this is the concrete, checkable form of "namespacing prevented
+// the collision" — pandoc would otherwise have reused an id and Word would
+// still render distinct footnotes, but a collision at the SOURCE level, if
+// namespacing had been skipped, produces a pandoc WARNING on stderr; assert
+// pandoc's run for this compile produced none).
+const distinctRefIds = new Set(compileFootnoteRefs).size === compileFootnoteRefs.length;
+if (distinctRefIds) {
+  pass('whole-work compile: footnote reference ids are distinct (no id collisions)', compileFootnoteRefs.join(', '));
+} else {
+  fail('whole-work compile: footnote reference ids are distinct (no id collisions)', compileFootnoteRefs.join(', '));
+}
+if (!/duplicate note reference/i.test(compileResult.run?.stderr ?? '')) {
+  pass('whole-work compile: pandoc emitted no "duplicate note reference" warning', 'stderr clean of that warning');
+} else {
+  fail('whole-work compile: pandoc emitted no "duplicate note reference" warning', compileResult.run.stderr);
+}
+
+// Bekker stamps across the intra-chapter column transition AND across the
+// chapter boundary (Ζ.5's own 1041a->1041b transition).
+if (compileDocumentXml.includes('1041b')) {
+  pass('whole-work compile: intra-chapter column-transition stamp [1041b] present', 'found');
+} else {
+  fail('whole-work compile: intra-chapter column-transition stamp [1041b] present', 'not found');
+}
+
+// reference.docx styling actually applied to the OUTPUT docx: font +
+// page geometry, checked in the compiled doc's own styles.xml/document.xml
+// (not the reference file itself — proving --reference-doc really took).
+if (existsSync(referenceDocPath)) {
+  const hasCambriaFont = /w:ascii="Cambria"/.test(compileStylesXml) || /w:ascii="Cambria"/.test(compileDocumentXml);
+  if (hasCambriaFont) {
+    pass('whole-work compile: reference.docx font (Cambria) applied in output styles.xml', 'found w:ascii="Cambria"');
+  } else {
+    fail('whole-work compile: reference.docx font (Cambria) applied in output styles.xml', 'w:ascii="Cambria" not found');
+  }
+  const hasPageSize = /<w:pgSz\b[^>]*w:w="12240"[^>]*w:h="15840"/.test(compileDocumentXml) ||
+    /<w:pgSz\b[^>]*w:h="15840"[^>]*w:w="12240"/.test(compileDocumentXml);
+  if (hasPageSize) {
+    pass('whole-work compile: reference.docx page geometry (US Letter) applied in output document.xml', 'found 12240x15840 twips');
+  } else {
+    fail('whole-work compile: reference.docx page geometry (US Letter) applied in output document.xml', 'US Letter pgSz not found');
+  }
+  const hasMargins = /<w:pgMar\b[^>]*w:top="1440"/.test(compileDocumentXml);
+  if (hasMargins) {
+    pass('whole-work compile: reference.docx 1" margins applied in output document.xml', 'found w:top="1440"');
+  } else {
+    fail('whole-work compile: reference.docx 1" margins applied in output document.xml', 'w:top="1440" not found');
+  }
+}
+
+// ── bilingual mode: Greek blocks present, stacked before English, per chapter ──
+const compileBilingualMdPath = path.join(scratchDir, 'export-harness-compile-work-bilingual.md');
+const compileBilingualDocxPath = path.join(scratchDir, 'export-harness-compile-work-bilingual.docx');
+const bilingualResult = await exportWorkToDocx(compileChapters, workMetaCompile, {
+  markdownPath: compileBilingualMdPath,
+  docxPath: compileBilingualDocxPath,
+  referenceDocPath: existsSync(referenceDocPath) ? referenceDocPath : undefined,
+  writeFile,
+  pandocBin,
+  mode: 'bilingual',
+});
+if (!bilingualResult.ok) {
+  fail('whole-work compile (bilingual): pandoc conversion succeeded (exit 0)', bilingualResult.message ?? '(no message)');
+} else {
+  pass('whole-work compile (bilingual): pandoc conversion succeeded (exit 0)', 'ok');
+  const bilingualDocXml = unzipEntry(compileBilingualDocxPath, 'word/document.xml') ?? '';
+  const hasGreek = /πάντες ἄνθρωποι/.test(bilingualDocXml.normalize('NFC'));
+  if (hasGreek) {
+    pass('whole-work compile (bilingual): Greek block text present in document.xml', 'found "πάντες ἄνθρωποι"');
+  } else {
+    fail('whole-work compile (bilingual): Greek block text present in document.xml', 'not found');
+  }
+  const hasEnglish = /desire/.test(bilingualDocXml);
+  if (hasEnglish) {
+    pass('whole-work compile (bilingual): English block text present in document.xml', 'found "desire"');
+  } else {
+    fail('whole-work compile (bilingual): English block text present in document.xml', 'not found');
   }
 }
 

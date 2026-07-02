@@ -1,98 +1,97 @@
 # Translation Workbench — TODO
 
-State as of 2026-07-02: **Phase 1 complete and committed** (`d118d23`, branch
-`claude/blissful-rubin-d64797`, not pushed). 301 tests green; tsc, vite build, and
-tauri debug build clean. John reviewed in the running app. Phase 2 starts only on
-John's explicit greenlight, per the build spec's phase gate.
+State as of 2026-07-02 (evening): **Phase 2 complete, UNCOMMITTED** on branch
+`claude/blissful-rubin-d64797` (now checked out in the `nervous-saha-372f7c`
+worktree — the original blissful-rubin worktree directory was cleaned up; the
+branch survived intact). 560 tests green; tsc, vite build, svelte-check, cargo
+check clean; export harness 43/43. Awaiting John's review of the phase summary
+before commit.
 
-## Carried forward from Phase 1 (small, no greenlight needed)
+## Phase 2 — DONE (all verified in the browser harness by the orchestrator)
 
-- [ ] **Bundle corpus resources into the packaged app** so "Add work…" completes
-  standalone: per-work `chapters.json` (+ `analyses.json`, shared `lsj/`) as Tauri
-  resources with the existing Resource→AppData copy path in
-  `src/lib/data/onboarding.ts`. Today onboarding produces `spine.json` from the
-  user's TLG but stops at "This work isn't fully supported yet" because no
-  chapters resource ships. Decide size strategy (LSJ is ~46 MB shared).
-  Interim workaround in place: both works' corpora seeded directly into
-  `~/Library/Application Support/org.aristotlereader.workbench/corpus/`.
-- [ ] **Human-exercise the two Tauri-only paths** end to end (verified by build +
-  boot + code review only): the full AddWorkDialog Diogenes run against the real
-  TLG folder, and the native export flow (save dialog → pandoc → reveal in Finder).
-- [ ] **Export cosmetics** (optional, from the Codex OOXML audit): a Pandoc
-  reference-docx pinning an explicit Greek-capable run font (`w:rFonts`) and page
-  geometry (`w:pgSz`/`w:pgMar`); today both fall back to Word defaults.
-  `referenceDocPath` is already plumbed through `src/lib/export/`.
-- [ ] **Confirm two orchestrator judgment calls with John**:
-  Bekker stamp default in exports (`every-5` + column transitions, plain brackets —
-  `stampMode` param supports `every-line`/`every-5`/`columns`), and
-  `formatCitation`'s comma when book/chapter absent (`*Metaphysics*, 1041a6`).
-- [ ] **Prune or keep** `workbench/src/components/FOOTNOTE_PANEL_WIRING.md`
-  (wiring was applied; file is now historical documentation).
+- [x] **Copy-as-citation** (§10): toolbar `“ ”` button + ⌘⇧C; `{english}. ({title}
+  {book}{chapter}, {range}: {greek})` composed via scheme.formatCitation; plain
+  ⌘C provably untouched (additive diff + regression tests). Terminal-punctuation
+  period rule; Greek-cell/mixed selections carry full-row English fallbacks.
+- [x] **Scrivener import** (§9): dual-dispatched design (d3) + real-export Stage 0
+  addendum (d3a). Core: line-level banded DP + rare-token seeding, spine owns
+  rows, hints never override content, orphans block import. Stage 0: real .md
+  pairs (paragraph-flow Greek w/ inline markers + soft hyphens; marker-segmented
+  English; markdown footnotes incl. multi-paragraph; inline Greek → {grc:…};
+  enum-vs-marker disambiguation corroboration-gated; editorial <…> kept+flagged).
+  ImportDialog: two-file picker, form, preview table w/ state badges + editable
+  cells + merge-up/push-down, orphan assign/discard, Replace/Cancel duplicate
+  guard, dev-only sample loader. ACCEPTANCE (measured, real files): Meta 7.17 —
+  95% quiet rows, fn1–15 anchored (fn6 multi-paragraph intact), zero silent
+  drops; APo 1.4 — enums 4/4 dropped 0 real lost, 73b→74a reset survived,
+  no text dumps, both <20ms. Per-cell marker/residue audit in acceptance tests.
+- [x] **Whole-work compile export** (§8): manifest-order concatenation, gap
+  notice, headings via contract, continuous native footnotes across chapters
+  (stored files untouched — asserted), stamps default every-5+columns, English
+  and bilingual (stacked Greek-then-English per chapter) modes, reference.docx
+  (Cambria + US Letter 1" — see flags) bundled as resource. Found & fixed:
+  pandoc was never in shell:allow-execute scope (Phase 1 export would have
+  failed in the packaged app).
+- [x] **Shared-folder sync** (§11): folder picker (settings gear, Tauri-only),
+  reload-on-focus (mtime + hash confirm; clean→silent reload, dirty→Keep mine /
+  Load theirs), conflicted-copy surfacing (Drive/Dropbox verbose names + iCloud
+  bare `Name 2.md` matched only against our own file stem), iCloud `.icloud`
+  placeholder stubs shown greyed w/ plain sentence, turn-taking help popover.
+  John approved the /** fs-scope broadening (2026-07-02).
+- [x] **Second-scheme exercise**: `busse-paragraph` (CAG page.line, rowUnit
+  'paragraph') = one file + one registry line + SchemeId union member; generic
+  contract-conformance suite over ALL schemes; executable no-scheme-id-branching
+  source test. Friction documented in d2 addendum: bookless works need an
+  "empty bookLabel = omit" convention (doc-comment for Phase 3).
+- [x] **Corpus resource bundling** (carried from Phase 1): `stage:corpus` +
+  `app:package` scripts; 47MB staged (lsj 46MB shared, copied to app-data once,
+  idempotent) gitignored at src-tauri/resources/corpus/; onboarding completes
+  standalone for bundled works (Meta + APo); unbundled works keep the same
+  plain sentence. No TLG text ships — spine still comes from the user's TLG.
 
-## Phase 2 (needs John's greenlight — build spec §0)
+## Carried forward (small)
 
-- [ ] **Copy-as-citation** (§10): selection → row range → clipboard string
-  `{english}. ({title} {book}{chapter}, {range}: {greek})`. Most infrastructure
-  exists (schemes, shared range formatter, row addresses, cross-row copy handler);
-  needs the Greek-span assembly + clipboard-manager write. No truncation of long
-  Greek spans in Phase 2.
-- [ ] **Scrivener import** (§9): parse the canonical intermediate format; align
-  imported Greek against the bundled spine (monotonic diacritic-normalized
-  alignment — `bekker_start` hints narrow the window, NEVER override the match);
-  flag unmatched lines for manual confirmation; validate GREEK/ENGLISH counts
-  before aligning. ⚠️ The spec references a conversion aid delivered alongside it
-  (`scrivener-import-guide.md`, `scrivener_to_canonical.py`) — **these files were
-  never provided; ask John for them before starting.**
-  The spec marks the spine-alignment approach HIGH-STAKES → dual-dispatch
-  (deep-reasoner + Codex, independent) before implementing.
-- [ ] **Whole-work compile export** (§8): concatenate chapters in manifest order,
-  display-time continuous footnote renumbering (never mutating stored files),
-  book/chapter heading levels, sane running Bekker refs, finished-manuscript
-  quality. Default English-only; **ask John whether a bilingual mode is also
-  wanted** (open question in the spec).
-- [ ] **Drive-folder sync** (§11): user-pickable library folder (settings has the
-  slot; storage layer keeps `mtime()` for this), reload-on-focus when on-disk
-  mtime/hash changed with unsaved-changes warning, surface `(Conflicted copy…)`
-  files as flagged items, in-app help text for the turn-taking convention.
-  No Drive API, no OAuth — plain files only.
-- [ ] **Citation-scheme abstraction exercised for a second scheme** (Aquinas prep):
-  bekker-metaphysics already proves the label axis; the Phase 2 intent is a
-  non-Bekker row-unit scheme shape-check against the frozen contract
-  (`workbench-design/d2-citation-schemes.md`, `GutterSpec.rowUnit`).
+- [ ] **Human-exercise the Tauri-only paths in the real app** (John, or next
+  session with John at the keyboard): real Diogenes "Add work…" run; native
+  export save dialog (now that the pandoc capability bug is fixed); native
+  import file picker; compile export; settings folder picker on a real synced
+  folder. All logic-verified + browser-verified only.
+- [ ] **Full `tauri build` / `app:package` never run** — artifact size, packaged
+  resource resolution (cargo check materialized resources correctly, strong
+  signal), updater still unwired (needs John's signing key, from Phase 1).
+- [ ] **chapterfile parse.ts U+2028 fragility**: a HAND-AUTHORED footnote body
+  containing U+2028 silently merges on round-trip (imports are safe — Stage 0
+  normalizes). Hardening candidate.
+- [ ] **Copy-citation element-endpoint selections** (e.g. some triple-click
+  paragraph selections) resolve as empty → "Nothing to cite" false negative.
+  Minor UX hardening: treat element-level endpoints as full-cell coverage.
+- [ ] **Dev sample loader** only loads the Meta pair; APo path is
+  acceptance-tested but has no one-click UI loader.
+- [ ] **Bilingual compile layout** (stacked Greek-then-English per chapter) needs
+  John's aesthetic review on a real docx; row-locked facing-page parallel
+  remains LaTeX-only territory (docs/pdf-spike).
+- [ ] Reference-docx font is **Cambria** (ships with Word, full polytonic
+  coverage; EB Garamond is a webfont Word can't resolve). One-line change if
+  John prefers an installed manuscript font.
+- [ ] Prune `workbench/src/components/FOOTNOTE_PANEL_WIRING.md` at commit time
+  (historical doc; wiring long applied).
+
+## Decisions John has confirmed (2026-07-02)
+
+- Bekker stamp default: every-5 + column transitions, plain brackets. KEEP.
+- formatCitation comma when no book/chapter. KEEP.
+- Whole-work compile: BOTH modes (English-only default + bilingual).
+- Whole-disk fs permission for the shared-folder feature: APPROVED.
+- Copy-as-citation: separate explicit command; normal ⌘C untouched (his ask).
+- Scrivener import defaults: two-file selection; proportional pre-split ON
+  (flagged, editable). D3 §9.5 duplicate-import Replace/Cancel shown to John.
 
 ## Phase 3 (later; John specifies Aquinas conventions then)
 
-- [ ] AI-assist: shell out to local `claude -p`; graceful copy-to-clipboard
-  fallback; API-key alternative clearly labeled pay-per-use; invisible to a user
-  who never touches it (spec §12).
-- [ ] Reference-translation panel: plain text/Markdown import (NOT a PDF viewer),
-  chapter-level display first, optional TF-IDF+DP line-matching (spec §13; the
-  Reader's aligner port at `desktop/src/lib/aligner/` is the prior art).
-- [ ] Latin: Aquinas citation schemes (Corpus Thomisticum conventions, per work
-  type) + Latin morphological backend (Whitaker's Words or equivalent) behind the
-  existing `LexiconProvider` interface.
-
-## Open questions for John
-
-1. Bilingual whole-work export in addition to English-only manuscript?
-2. Bekker stamp density/format in exports (current default: every 5 lines +
-   column transitions, plain brackets).
-3. Where are `scrivener-import-guide.md` / `scrivener_to_canonical.py`?
-4. Reference screenshots of the old Scrivener layout (spec mentions them;
-   never provided — working view was matched to the written description).
-5. Push the branch / open a PR to main?
-
-## Accepted limitations (deliberate, documented)
-
-- Standalone single-chapter docx restarts footnotes at 1 (Word auto-numbers;
-  continuity arrives with the Phase 2 whole-work compile).
-- A row whose literal text equals a section header (e.g. `[FOOTNOTES]`) blocks
-  autosave with a plain error rather than corrupting the file.
-- Mount-on-focus editor variant is designed but unbuilt — only needed if a
-  chapter ever types laggy (worst real chapter Γ.4, 216 rows: 80–99 ms open,
-  sub-ms keystrokes, zero long tasks).
-- Chapter files without `column_starts` (pre-fix saves) fall back to a
-  single-transition export heuristic; any resave adds the field.
+- [ ] AI-assist: local `claude -p`, clipboard fallback, API-key alt (spec §12).
+- [ ] Reference-translation panel: text/MD import, chapter-level first (spec §13).
+- [ ] Latin: Aquinas schemes (contract proven ready — see d2 addendum +
+  busse-paragraph precedent) + Latin morphology behind LexiconProvider.
 
 ## Running things
 
@@ -100,9 +99,16 @@ John's explicit greenlight, per the build spec's phase gate.
 cd workbench
 npm run dev                                   # browser harness (localhost:1421)
 PATH="$HOME/.cargo/bin:$PATH" npx tauri dev   # the real app
-npx vitest run                                # 301 tests
+npx vitest run                                # 560 tests
 node scripts/build-dev-corpus.mjs             # regen .dev-corpus (Meta + APo)
 node scripts/parity-corpus.mjs                # TS-vs-Python corpus parity
-node scripts/export-harness.mjs               # docx export + native-footnote checks
+node scripts/export-harness.mjs               # docx export checks (43)
+node scripts/make-reference-docx.mjs          # regen reference.docx
+npm run stage:corpus                          # stage packaged-app corpus (47MB)
+npm run app:package                           # stage + tauri build
 npm run shots                                 # Playwright screenshots → shots/
 ```
+
+Real Scrivener sample pairs (John's translation + TLG Greek — LOCAL ONLY,
+gitignored): `workbench/.dev-corpus/scrivener-samples/`. Acceptance tests
+skip when absent.

@@ -58,6 +58,32 @@ function devCorpus(): Plugin {
         r.setHeader('Content-Type', 'application/json');
         r.end(fs.readFileSync(file, 'utf-8'));
       });
+
+      // ImportDialog's dev-only "Load sample pair" harness (workbench-design/
+      // d3-scrivener-import.md §10 / d3a §9 local-only acceptance): serves the
+      // two real Scrivener export files at /dev-corpus-samples/<name>.md so
+      // the browser harness can exercise the scrivener-md path without Tauri
+      // file dialogs. Same "missing = 404 = normal absent state" contract;
+      // ImportDialog degrades to a plain sentence when this 404s.
+      server.middlewares.use('/dev-corpus-samples', (req, res, next) => {
+        const url = (req as { url?: string }).url ?? '';
+        const m = /^\/([^/]+\.(?:md|txt))$/.exec(url);
+        if (!m) return next();
+        const r = res as {
+          statusCode: number;
+          setHeader(name: string, value: string): void;
+          end(body?: string): void;
+        };
+        const name = decodeURIComponent(m[1]);
+        const file = `${corpusRoot}/scrivener-samples/${name}`;
+        if (!fs.existsSync(file)) {
+          r.statusCode = 404;
+          r.end('not found');
+          return;
+        }
+        r.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        r.end(fs.readFileSync(file, 'utf-8'));
+      });
     },
   };
 }

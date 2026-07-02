@@ -7,7 +7,7 @@
  * parse them outside the owning scheme.
  */
 
-export type SchemeId = 'bekker-standard' | 'bekker-metaphysics' | 'aquinas-tbd';
+export type SchemeId = 'bekker-standard' | 'bekker-metaphysics' | 'aquinas-tbd' | 'busse-paragraph';
 
 /** Opaque scheme-owned address, e.g. "1041a6". Only the owning scheme parses/compares it. */
 export interface Address {

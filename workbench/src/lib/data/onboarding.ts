@@ -1,11 +1,15 @@
 /**
  * Work onboarding (Tauri only) — produce $APPDATA/corpus/<workId>/spine.json
  * from the user's local TLG texts via Diogenes' verse-mode exporter, then copy
- * the precomputed chapters.json from the bundled resources when present.
+ * the precomputed chapters.json + analyses.json + shared lsj/ shards from the
+ * bundled resources when present (staged into src-tauri/resources/corpus/ at
+ * package time by scripts/stage-corpus-resources.mjs — see tauri.conf.json's
+ * bundle.resources).
  *
- * Onboarding does NOT run chapter detection (chapters.json is precomputed and
- * ships with the app); it only builds the spine. The TLG-derived spine stays
- * on the user's machine — it is never committed anywhere.
+ * Onboarding does NOT run chapter detection or morphological analysis (both
+ * are precomputed and ship with the app); it only builds the spine. The
+ * TLG-derived spine stays on the user's machine — it is never committed
+ * anywhere, and no TLG text is ever bundled as a resource.
  *
  * Every failure maps to one plain, calm sentence for the UI (the dialog shows
  * it verbatim); stderr/exit codes/stack traces go to the console only.
@@ -28,6 +32,52 @@ const SHELL_SCOPE_NAME = 'diogenes-export';
 
 async function fsPlugin() {
   return import('@tauri-apps/plugin-fs');
+}
+
+export type FsModule = Awaited<ReturnType<typeof fsPlugin>>;
+
+/**
+ * Copy one bundled resource file into app data, if it exists as a resource.
+ * Silent no-op (logged only) when the resource isn't bundled — mirrors the
+ * chapters.json handling above: a missing resource is a normal degraded
+ * state, never a hard failure.
+ */
+export async function copyBundledResourceIfPresent(
+  fs: FsModule,
+  resourcePath: string,
+  appDataPath: string,
+): Promise<void> {
+  try {
+    if (!(await fs.exists(resourcePath, { baseDir: fs.BaseDirectory.Resource }))) return;
+    const contents = await fs.readTextFile(resourcePath, { baseDir: fs.BaseDirectory.Resource });
+    await fs.writeTextFile(appDataPath, contents, { baseDir: fs.BaseDirectory.AppData });
+  } catch (err) {
+    console.warn(`onboarding: failed copying bundled resource ${resourcePath}`, err);
+  }
+}
+
+/**
+ * Copy the shared corpus/lsj/ shard directory from bundled resources into
+ * app data, once. Idempotence guard: if corpus/lsj/ already exists in app
+ * data (prior onboarding, or a pre-seeded install), this is a no-op — the
+ * ~46 MB shard set is never re-copied per work.
+ */
+export async function copySharedLsjIfMissing(fs: FsModule): Promise<void> {
+  try {
+    if (await fs.exists('corpus/lsj', { baseDir: fs.BaseDirectory.AppData })) return;
+    if (!(await fs.exists('corpus/lsj', { baseDir: fs.BaseDirectory.Resource }))) return;
+    const entries = await fs.readDir('corpus/lsj', { baseDir: fs.BaseDirectory.Resource });
+    await fs.mkdir('corpus/lsj', { baseDir: fs.BaseDirectory.AppData, recursive: true });
+    for (const entry of entries) {
+      if (!entry.isFile) continue;
+      await fs.copyFile(`corpus/lsj/${entry.name}`, `corpus/lsj/${entry.name}`, {
+        fromPathBaseDir: fs.BaseDirectory.Resource,
+        toPathBaseDir: fs.BaseDirectory.AppData,
+      });
+    }
+  } catch (err) {
+    console.warn('onboarding: failed copying shared lsj/ resources', err);
+  }
 }
 
 /** The Diogenes server directory to run the exporter from (settings override
@@ -160,6 +210,21 @@ export async function onboardWork(work: WorkManifest, tlgDir: string): Promise<O
     } catch (err) {
       console.warn(`onboarding: no bundled chapters.json for ${work.id}`, err);
     }
+
+    // 5. Bundled analyses.json (morphology for the click-to-parse lexicon) —
+    // best-effort, never blocks onboarding: the lexicon drawer just shows
+    // "No entry found" if this is absent (see lib/lexicon/provider.ts).
+    await copyBundledResourceIfPresent(
+      fs,
+      `corpus/${work.id}/analyses.json`,
+      `corpus/${work.id}/analyses.json`,
+    );
+
+    // 6. Shared LSJ dictionary shards — one copy for the whole corpus, not
+    // per work. Idempotent: skipped once corpus/lsj/ already exists in app
+    // data (either from a prior onboarding or a pre-seeded install), so
+    // onboarding a second work never re-copies the ~46 MB shard set.
+    await copySharedLsjIfMissing(fs);
 
     invalidateCorpus(work.id);
     // Without chapters the work is deliberately NOT usable (book-level-only

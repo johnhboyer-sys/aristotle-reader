@@ -63,6 +63,17 @@
     title="Footnote on selection"
     aria-label="Insert footnote"
   >n<sup>1</sup></button>
+
+  <span class="tb-sep" aria-hidden="true"></span>
+
+  <button
+    class="tb-btn tb-cite"
+    disabled={!session.hasEditor}
+    onmousedown={keepFocus}
+    onclick={() => commands.copyCitation()}
+    title="Copy as citation (⌘⇧C)"
+    aria-label="Copy as citation"
+  >“ ”</button>
 </div>
 
 <style>
@@ -122,6 +133,10 @@
     font-size: 0.62em;
     color: var(--accent);
     margin-left: 1px;
+  }
+  .tb-cite {
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
   }
 
   .tb-sep {

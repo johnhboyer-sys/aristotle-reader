@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: read/write the app-data workspace; native dialogs for import/export; clipboard for copy actions; shell to run Diogenes' perl exporter and pandoc as subprocesses. The fs:allow-exists scope covers onboarding's existence checks only (Diogenes install location and the user-picked TLG folder).",
+  "description": "Main window: read/write the app-data workspace; native dialogs for import/export; clipboard for copy actions; shell to run Diogenes' perl exporter and pandoc as subprocesses. The fs:allow-exists scope covers onboarding's existence checks only (Diogenes install location and the user-picked TLG folder). The broader read/write/mkdir/read-dir/stat '/**' scopes support a user-picked library folder (shared-folder sync, build spec §11) — the folder is chosen explicitly via the native picker, same trust model as the TLG folder.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -13,6 +13,26 @@
     {
       "identifier": "fs:allow-exists",
       "allow": [{ "path": "/Applications/Diogenes.app/**" }, { "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [{ "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "/**" }]
     },
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
@@ -36,6 +56,11 @@
             "-o",
             { "validator": "^/.+" }
           ]
+        },
+        {
+          "name": "pandoc",
+          "cmd": "pandoc",
+          "args": true
         }
       ]
     },

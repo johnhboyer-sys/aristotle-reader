@@ -9,6 +9,7 @@
   import LibraryRail from './components/LibraryRail.svelte';
   import type { RailSelection, RailWork } from './components/LibraryRail.svelte';
   import AddWorkDialog from './components/AddWorkDialog.svelte';
+  import ImportDialog from './components/ImportDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import FootnotePanel from './components/FootnotePanel.svelte';
   import ExportButton from './components/ExportButton.svelte';
@@ -22,6 +23,11 @@
   import { loadSettings, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
   import { wordAt } from './lib/lexicon/wordAt';
+  import { libraryStorage, chapterFileName } from './lib/library/storage';
+  import { chapterLibraryStatuses } from './lib/library/sync';
+  import type { ChapterLibraryStatus } from './lib/library/sync';
+  import { session, syncCommands } from './lib/editor/session.svelte';
+  import LibrarySettingsDialog from './components/LibrarySettingsDialog.svelte';
 
   const works: WorkManifest[] = listWorks();
 
@@ -29,6 +35,9 @@
   let footnotesOpen = $state(false);
   let lexiconOpen = $state(false);
   let addWorkOpen = $state(false);
+  let librarySettingsOpen = $state(false);
+  let importOpen = $state(false);
+  let importDefaultWorkId = $state<string | undefined>(undefined);
 
   // Per-work corpus (null = not on this machine). Loaded once at startup;
   // refreshed per work after onboarding.
@@ -36,18 +45,43 @@
   let booted = $state(false);
   let selection = $state<RailSelection | null>(null);
 
+  // Per-work library-file status (placeholders/conflicted copies — build
+  // spec §11), keyed by chapterFileName. Tauri only (mtime/listing are null
+  // in the browser dev harness); refreshed at boot and on every window
+  // focus so a collaborator's new/downloaded files show up promptly.
+  let libraryStatus = $state<Record<string, Map<string, ChapterLibraryStatus>>>({});
+
+  async function refreshLibraryStatus() {
+    if (!isTauri()) return;
+    const storage = libraryStorage();
+    const entries = await Promise.all(
+      works.map(async (work) => {
+        const files = await storage.list(work.id);
+        return [work.id, chapterLibraryStatuses(files)] as const;
+      }),
+    );
+    libraryStatus = Object.fromEntries(entries);
+  }
+
   const railWorks: RailWork[] = $derived(
     works.map((work) => {
       const corpus = corpora[work.id] ?? null;
+      const statuses = libraryStatus[work.id];
       return {
         work,
         status: corpus ? ('ready' as const) : ('absent' as const),
         books: corpus
-          ? work.books.map((b) => ({
-              n: b.n,
-              label: b.label,
-              chapters: bookChapterNumbers(corpus, b.n),
-            }))
+          ? work.books.map((b) => {
+              const chapters = bookChapterNumbers(corpus, b.n);
+              const status: Record<number, { isPlaceholder: boolean; conflictCount: number }> = {};
+              if (statuses) {
+                for (const chapter of chapters) {
+                  const s = statuses.get(chapterFileName(b.n, chapter));
+                  if (s) status[chapter] = { isPlaceholder: s.isPlaceholder, conflictCount: s.conflicts.length };
+                }
+              }
+              return { n: b.n, label: b.label, chapters, status };
+            })
           : [],
       };
     }),
@@ -94,6 +128,21 @@
     return null;
   }
 
+  // Drive-folder sync (build spec §11): when the window regains focus, check
+  // the open chapter for an external change (reload seamlessly, or prompt if
+  // there are unsaved edits) and refresh the library listing so a
+  // collaborator's new chapters / downloaded placeholders show up. The
+  // browser dev harness has no real focus signal from another process, but
+  // visibilitychange still fires on tab-switch-back, which is close enough
+  // for manual testing there.
+  function onWindowFocus() {
+    void refreshLibraryStatus();
+    void syncCommands.checkExternalChange();
+  }
+  function onVisibilityVisible() {
+    if (document.visibilityState === 'visible') onWindowFocus();
+  }
+
   onMount(() => {
     // Startup: load every work's corpus, then land on the last-opened chapter
     // (or book Α chapter 1 of the Metaphysics on first run).
@@ -106,6 +155,7 @@
         }),
       );
       corpora = loaded;
+      await refreshLibraryStatus();
       const last = settings.lastOpened;
       if (last && works.some((w) => w.id === last.workId) && validSelection(last)) {
         selection = last;
@@ -114,6 +164,13 @@
       }
       booted = true;
     })();
+
+    window.addEventListener('focus', onWindowFocus);
+    document.addEventListener('visibilitychange', onVisibilityVisible);
+    return () => {
+      window.removeEventListener('focus', onWindowFocus);
+      document.removeEventListener('visibilitychange', onVisibilityVisible);
+    };
   });
 
   function select(workId: string, book: number, chapter: number) {
@@ -124,6 +181,17 @@
   async function handleOnboarded(workId: string) {
     invalidateCorpus(workId);
     corpora = { ...corpora, [workId]: await loadCorpus(workId) };
+  }
+
+  function openImportDialog(workId: string) {
+    importDefaultWorkId = workId;
+    importOpen = true;
+  }
+
+  async function handleImported(workId: string, book: number, chapter: number) {
+    importOpen = false;
+    await refreshLibraryStatus();
+    select(workId, book, chapter);
   }
 
   function toggleRail() {
@@ -299,6 +367,20 @@
         </svg>
       </button>
 
+      {#if isTauri()}
+        <button
+          class="icon-btn"
+          onclick={() => (librarySettingsOpen = true)}
+          title="Library settings…"
+          aria-label="Library settings"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+      {/if}
+
       <ThemeToggle />
     </div>
   </header>
@@ -312,6 +394,7 @@
             selected={selection}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
+            onImportChapter={isTauri() || import.meta.env.DEV ? openImportDialog : undefined}
           />
         {/if}
       </aside>
@@ -369,6 +452,37 @@
       onClose={() => (addWorkOpen = false)}
       onOnboarded={handleOnboarded}
     />
+  {/if}
+
+  {#if librarySettingsOpen}
+    <LibrarySettingsDialog {works} onClose={() => (librarySettingsOpen = false)} />
+  {/if}
+
+  {#if importOpen}
+    <ImportDialog
+      works={works.filter((w) => corpora[w.id])}
+      defaultWorkId={importDefaultWorkId}
+      onClose={() => (importOpen = false)}
+      onImported={handleImported}
+    />
+  {/if}
+
+  {#if session.externalChangePrompt}
+    {@const prompt = session.externalChangePrompt}
+    <div class="scrim" role="presentation">
+      <div class="dialog conflict-dialog" role="alertdialog" aria-modal="true" aria-label="Chapter changed in the shared folder">
+        <div class="dialog-body">
+          <p class="line">
+            This chapter changed in the shared folder while you were editing — keep your version or
+            load theirs?
+          </p>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-btn" onclick={prompt.onLoadTheirs}>Load theirs</button>
+          <button class="primary-btn" onclick={prompt.onKeepMine}>Keep mine</button>
+        </div>
+      </div>
+    </div>
   {/if}
 </div>
 
@@ -561,5 +675,70 @@
     font-size: 0.9rem;
     line-height: 1.6;
     color: var(--text-light);
+  }
+
+  /* External-change prompt (build spec §11) — same scrim/dialog skin as
+     AddWorkDialog, sized for one or two lines of plain-sentence copy. */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .dialog {
+    width: 380px;
+    max-width: calc(100vw - 2 * var(--space-4));
+    background: var(--col-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--popup-shadow);
+  }
+  .conflict-dialog .dialog-body {
+    padding: var(--space-4);
+  }
+  .conflict-dialog .line {
+    font-family: var(--font-english);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: 0 var(--space-4) var(--space-4);
+  }
+  .primary-btn {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+  }
+  .primary-btn:hover {
+    filter: brightness(1.08);
+  }
+  .secondary-btn {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+  }
+  .secondary-btn:hover {
+    color: var(--text);
+    background: var(--ui-hover);
   }
 </style>

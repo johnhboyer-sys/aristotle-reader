@@ -2,10 +2,19 @@
   // The rail's input shapes (App builds these from manifests + corpus).
   import type { WorkManifest } from '../lib/works/manifest';
 
+  export interface RailChapterStatus {
+    /** Not yet downloaded to this Mac (iCloud "Optimize Mac Storage" stub). */
+    isPlaceholder: boolean;
+    /** Conflicted-copy filenames shadowing this chapter (Drive/Dropbox/iCloud). */
+    conflictCount: number;
+  }
+
   export interface RailBook {
     n: number;
     label: string;
     chapters: number[];
+    /** Chapter n → sync status; absent entries are ordinary chapters. */
+    status?: Record<number, RailChapterStatus>;
   }
 
   export interface RailWork {
@@ -34,11 +43,16 @@
     selected,
     onSelect,
     onAddWork,
+    onImportChapter,
   }: {
     railWorks: RailWork[];
     selected: RailSelection | null;
     onSelect: (workId: string, book: number, chapter: number) => void;
     onAddWork?: () => void;
+    /** "Import chapter…" for a ready work (Tauri only — App gates the prop
+     * the same way onAddWork is gated). Receives the work id so the dialog
+     * can default its work picker to the one the user clicked from. */
+    onImportChapter?: (workId: string) => void;
   } = $props();
 
   // Expanded books, keyed "workId:bookN". Start with the selected book open.
@@ -65,7 +79,18 @@
 
   {#each railWorks as rw (rw.work.id)}
     <div class="work">
-      <span class="work-title">{rw.work.title}</span>
+      <div class="work-head">
+        <span class="work-title">{rw.work.title}</span>
+        {#if rw.status === 'ready' && onImportChapter}
+          <button
+            class="import-chapter"
+            onclick={() => onImportChapter?.(rw.work.id)}
+            title="Import a chapter file for {rw.work.title}"
+          >
+            Import chapter…
+          </button>
+        {/if}
+      </div>
 
       {#if rw.status === 'ready'}
         <ul class="books">
@@ -96,14 +121,25 @@
               {#if expanded[`${rw.work.id}:${book.n}`]}
                 <ul class="chapters">
                   {#each book.chapters as chapter (chapter)}
+                    {@const status = book.status?.[chapter]}
                     <li>
-                      <button
-                        class="chapter-row"
-                        class:selected={isSelected(rw.work.id, book.n, chapter)}
-                        onclick={() => onSelect(rw.work.id, book.n, chapter)}
-                      >
-                        Chapter {chapter}
-                      </button>
+                      {#if status?.isPlaceholder}
+                        <span class="chapter-row placeholder" title="This chapter hasn't downloaded to this Mac yet — open the folder in Finder to download it.">
+                          Chapter {chapter}
+                          <span class="badge badge-placeholder">not downloaded</span>
+                        </span>
+                      {:else}
+                        <button
+                          class="chapter-row"
+                          class:selected={isSelected(rw.work.id, book.n, chapter)}
+                          onclick={() => onSelect(rw.work.id, book.n, chapter)}
+                        >
+                          Chapter {chapter}
+                          {#if status?.conflictCount}
+                            <span class="badge badge-conflict">conflicted copy</span>
+                          {/if}
+                        </button>
+                      {/if}
                     </li>
                   {/each}
                 </ul>
@@ -150,6 +186,12 @@
   .work + .work {
     margin-top: var(--space-3);
   }
+  .work-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
   /* Work titles in the reading serif — the library shelf reads as books,
      not as a settings tree. Books/chapters below stay in the UI face. */
   .work-title {
@@ -160,6 +202,26 @@
     letter-spacing: 0.005em;
     color: var(--text);
     padding: var(--space-2) var(--space-2) var(--space-1);
+  }
+
+  /* Quiet text-affordance, matching .add-work's understatement — importing
+     is a secondary action next to the work's own chapter tree. */
+  .import-chapter {
+    flex: none;
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    color: var(--text-light);
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    padding: var(--space-1) var(--space-2);
+    margin-right: var(--space-1);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .import-chapter:hover {
+    color: var(--accent);
+    background: var(--ui-hover);
   }
 
   .work-absent {
@@ -214,7 +276,9 @@
   }
 
   .chapter-row {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     width: 100%;
     text-align: left;
     font-family: var(--font-ui);
@@ -235,6 +299,33 @@
     background: var(--accent);
     color: var(--on-accent);
     font-weight: 500;
+  }
+
+  /* Not-yet-downloaded (iCloud placeholder stub): greyed, unclickable, no
+     hover affordance — this is a <span>, not a <button>. */
+  .chapter-row.placeholder {
+    color: var(--text-light);
+    font-style: italic;
+    cursor: default;
+  }
+
+  .badge {
+    flex: none;
+    font-family: var(--font-ui);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+  }
+  .badge-placeholder {
+    color: var(--text-light);
+    background: var(--ui-hover);
+  }
+  .badge-conflict {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
   }
 
   .rail-foot {

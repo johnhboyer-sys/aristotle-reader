@@ -8,6 +8,7 @@
   import { parseChapterFile } from '../lib/chapterfile';
   import { chapterToPandocMarkdown, runPandocTauri, PANDOC_UNAVAILABLE_MESSAGE } from '../lib/export';
   import type { WorkManifest } from '../lib/works/manifest';
+  import CompileDialog from './CompileDialog.svelte';
 
   let {
     work,
@@ -17,6 +18,7 @@
 
   let status = $state<string | null>(null);
   let busy = $state(false);
+  let compileOpen = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   function note(msg: string) {
@@ -95,10 +97,26 @@
         <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
       </svg>
     </button>
+    <button
+      class="icon-btn"
+      onclick={() => (compileOpen = true)}
+      disabled={!work}
+      title="Export whole work as Word document…"
+      aria-label="Export whole work as Word document"
+    >
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
+        <path d="M14 4v5h5" />
+        <path d="M8 13h8M8 16.5h8" />
+      </svg>
+    </button>
     {#if status}
       <span class="export-status" role="status">{status}</span>
     {/if}
   </span>
+  {#if compileOpen && work}
+    <CompileDialog {work} onClose={() => (compileOpen = false)} />
+  {/if}
 {/if}
 
 <style>
