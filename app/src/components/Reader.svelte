@@ -101,6 +101,8 @@
     && segments.some((seg) => shownTransIds.some((id) => transApprox(seg, id)));
   const TRANS_KEY = `reader-trans-${work}`;
   const CITE_KEY  = 'reader-cite-copy';
+  // The "ℹ︎ Bekker numbers" popover (upright = fixed, italic = estimate).
+  let bekkerInfoOpen = false;
   let citeCopy = true;
   function saveCiteCopy() { try { localStorage.setItem(CITE_KEY, String(citeCopy)); } catch {} }
   // The last single-translation choice, remembered so leaving compare mode
@@ -658,10 +660,12 @@
     showFootnote(marker, true);
   }
   function closeFootnote() { cancelFnClose(); fnPinned = false; footnote = null; }
-  // Click anywhere outside the marker/popup dismisses a pinned note.
+  // Click anywhere outside the marker/popup dismisses a pinned note; same
+  // for the Bekker-numbers info popover.
   function onDocPointerDown(e: MouseEvent) {
-    if (!fnPinned) return;
     const t = e.target as HTMLElement | null;
+    if (bekkerInfoOpen && !t?.closest?.('.bekker-info')) bekkerInfoOpen = false;
+    if (!fnPinned) return;
     if (t?.closest?.('.fn-marker') || t?.closest?.('.footnote-popup')) return;
     closeFootnote();
   }
@@ -1073,13 +1077,26 @@
       {#if printCite}<div class="print-cite">{printCite}</div>{/if}
     </div>
     {#if hasApproxTicks && !busse}
-      <p class="bekker-note">
-        Greek line numbers are exact. The translations carry no Bekker numbers of
-        their own, so those beside the English are aligned to the Greek:
-        <span class="bk-fixed">upright</span> = fixed (anchored to this point in
-        the text), <span class="bk-approx">italic grey</span> = approximate
-        (interpolated estimate).
-      </p>
+      <!-- The estimate disclaimer stays one click away, not a paragraph of
+           front matter: the honesty lives in the ticks themselves (upright vs
+           italic grey); this explains the convention on demand. -->
+      <div class="bekker-info">
+        <button
+          type="button"
+          class="bekker-info-btn"
+          aria-expanded={bekkerInfoOpen}
+          on:click|stopPropagation={() => (bekkerInfoOpen = !bekkerInfoOpen)}
+        >ℹ︎ Bekker numbers</button>
+        {#if bekkerInfoOpen}
+          <div class="bekker-info-pop" role="note" transition:fade={{ duration: 120 }}>
+            Greek line numbers are exact. The translations carry no Bekker
+            numbers of their own, so those beside the English are aligned to
+            the Greek: <span class="bk-fixed">upright</span> = fixed (anchored
+            to this point in the text), <span class="bk-approx">italic grey</span>
+            = approximate (interpolated estimate).
+          </div>
+        {/if}
+      </div>
     {/if}
     {#each enrichedSegments as {seg, blocks} (seg.id)}
       {@const leadChapter = blocks[0]?.chapter ? blocks[0] : null}

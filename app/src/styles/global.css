@@ -523,17 +523,43 @@ body {
 }
 
 /* Disclaimer: which translation Bekker numbers are fixed vs approximate. */
-.bekker-note {
-  margin: -0.75rem 0 1.6rem;
+/* "ℹ︎ Bekker numbers": the tick-convention note, one click away instead of a
+   paragraph of front matter. */
+.bekker-info {
+  position: relative;
+  margin: -0.75rem 0 1.2rem;
+}
+.bekker-info-btn {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  cursor: pointer;
+}
+.bekker-info-btn:hover,
+.bekker-info-btn[aria-expanded='true'] { color: var(--accent); }
+.bekker-info-pop {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 30;
+  max-width: 26rem;
   font-family: var(--font-ui);
   font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--text-light);
-  max-width: 46rem;
+  line-height: 1.55;
+  color: var(--text-mid);
+  background: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
   text-wrap: pretty;
 }
-.bekker-note .bk-fixed { color: var(--text-mid); font-weight: 600; }
-.bekker-note .bk-approx { color: var(--text-light); font-style: italic; opacity: 0.85; }
+.bekker-info-pop .bk-fixed { color: var(--text-mid); font-weight: 600; }
+.bekker-info-pop .bk-approx { color: var(--text-light); font-style: italic; opacity: 0.85; }
 
 /* English translation picker (Rackham / Ross). */
 .trans-picker {
