@@ -1,0 +1,13 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+.DS_Store
+
+# Machine-generated dev corpus (spine.json/chapters.json built from the local
+# TLG via Diogenes). TLG-derived text must NEVER be committed.
+.dev-corpus/
+
+# Product screenshots (npm run shots) and local launch config.
+shots/
+.claude/

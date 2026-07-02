@@ -1,0 +1,294 @@
+/* Row-lock chapter editor styles.
+   Plain CSS (not component-scoped): ProseMirror mounts its own DOM inside
+   RowEditor, so mark/node classes (.grc, .fn-marker, …) must be global.
+
+   WORKING-VIEW TYPOGRAPHY (build spec): dense, Times-like serif for BOTH
+   languages — the polished Cardo/Garamond treatment is for export, not the
+   editor. Inside .chapter-editor the shared --font-greek token is remapped to
+   the same working stack, so the `greek` mark still keys off --font-greek
+   (per the schema contract) while the editor stays Times-like throughout.
+   Think the old Scrivener verse-mode document, but crisper. */
+
+.chapter-editor {
+  --font-work: 'Times New Roman', Times, Georgia, serif;
+  --font-greek: var(--font-work);
+  --work-fs: 0.98rem;
+  --work-lh: 1.45;
+
+  height: 100%;
+  overflow-y: auto; /* the editor owns its scroll (anchoring + settle guard) */
+  background: var(--col-bg);
+}
+
+.chapter-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-5) var(--space-6) var(--space-4);
+}
+/* The chapter heading is chrome, not working text — it gets the edition
+   serif (EB Garamond) while both text columns keep the dense working face. */
+.chapter-head h1 {
+  font-family: var(--font-english);
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--text);
+}
+.chapter-head-ref {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-light);
+  margin-left: var(--space-2);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle save-state indicator (autosave): quiet text, no spinner circus. */
+.save-state {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--text-light);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.save-state[data-state='error'],
+.save-state[data-state='blocked'] {
+  color: var(--accent);
+}
+
+/* Quiet one-line notice (saved file disagrees with the corpus spine, etc.). */
+.load-notice {
+  flex-basis: 100%;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+/* ── the flat grid (D1 §"Height sync") ────────────────────────────────────
+   One grid for the whole chapter; each row's three cells are siblings placed
+   on the same explicit row track, so track height = max(Greek, English) with
+   zero JS. The gutter column is sized max-content (the doc sketches 4ch, but
+   full raw addresses like "1041a33" need ~7ch — visual-pass tune, mechanism
+   untouched). */
+.chapter-grid {
+  display: grid;
+  grid-template-columns:
+    [grc] minmax(20rem, max-content)
+    [gutter] max-content
+    [en] minmax(16rem, 1fr);
+  align-items: start;
+  padding: 0 var(--space-6) var(--space-6);
+  max-width: 88rem;
+}
+
+.grc-cell,
+.en-cell {
+  font-family: var(--font-work);
+  font-size: var(--work-fs);
+  line-height: var(--work-lh);
+  color: var(--text);
+}
+
+.grc-cell {
+  grid-column: grc;
+  padding-right: var(--space-5);
+  /* The spine is reference text: selectable for reading, never editable. */
+  user-select: text;
+}
+
+.gutter {
+  grid-column: gutter;
+  font-family: var(--font-ui);
+  font-size: var(--fs-linenum);
+  /* Baseline-align the small number with the row's first text line. */
+  line-height: calc(var(--work-fs) * var(--work-lh));
+  color: var(--text-light);
+  text-align: right;
+  padding-right: var(--space-3);
+  min-width: 3.2rem;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.en-cell {
+  grid-column: en;
+  position: relative; /* hosts the inline paste-confirm */
+}
+
+/* ── the ProseMirror row ─────────────────────────────────────────────── */
+.row-editor .ProseMirror {
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  min-height: calc(var(--work-fs) * var(--work-lh));
+  caret-color: var(--accent);
+}
+
+/* Focused row: a whisper of background across the WHOLE row — the three
+   cells are siblings on one grid track, so the Greek and gutter cells find
+   their focused English sibling via :has(). */
+.grc-cell:has(+ .gutter + .en-cell:focus-within) {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border-radius: 3px 0 0 3px;
+}
+.gutter:has(+ .en-cell:focus-within) {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  color: var(--text-mid);
+}
+.en-cell:focus-within {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Empty English cells: a faint dotted starting rule, so untranslated rows
+   read as an inviting writing surface rather than dead space. Gone the
+   moment the row gains focus or text. */
+.row-editor .ProseMirror:not(.ProseMirror-focused):has(> .ProseMirror-trailingBreak:only-child)::before {
+  content: '';
+  display: inline-block;
+  width: 2.5rem;
+  height: 0.62em;
+  border-bottom: 1px dotted color-mix(in srgb, var(--text-light) 60%, transparent);
+}
+
+/* Row flash: boundary-swallow feedback (Backspace at start etc.). */
+.row-flash {
+  animation: row-flash 0.4s ease-out;
+}
+@keyframes row-flash {
+  0% {
+    background: var(--greek-active);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* ── marks ────────────────────────────────────────────────────────────── */
+.chapter-editor .grc,
+.chapter-editor [lang='grc'] {
+  font-family: var(--font-greek);
+}
+/* Make the greek-mark span visible as a *span* while editing (very quiet). */
+.row-editor .grc {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-radius: 2px;
+}
+
+.row-editor .fn-ref {
+  text-decoration: underline dotted 1px;
+  text-decoration-color: var(--accent-light);
+  text-underline-offset: 2px;
+}
+
+/* Footnote marker: empty <sup>; the computed display number is injected by
+   the footnote plugin as a node decoration (data-fn-display). */
+.fn-marker {
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 0.66em;
+  cursor: pointer;
+  user-select: none;
+  padding: 0 1px;
+}
+.fn-marker::after {
+  content: attr(data-fn-display);
+}
+
+/* Active-footnote highlight (view-only DecorationSet). */
+.row-editor .fn-active {
+  background: var(--target-bg);
+  box-shadow: 0 1px 0 var(--accent-light);
+}
+.fn-marker-active {
+  background: var(--hit-bg);
+  border-radius: 2px;
+}
+
+/* Always-on anchor highlight while the footnotes panel is open (subtle;
+   the active footnote keeps the stronger .fn-active treatment). */
+.row-editor .fn-anchor {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-radius: 2px;
+}
+
+/* ── inline paste confirm ─────────────────────────────────────────────── */
+.paste-confirm {
+  position: absolute;
+  top: calc(-1 * var(--space-2) - 2rem);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--popup-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  box-shadow: var(--popup-shadow);
+  white-space: nowrap;
+}
+.paste-confirm-text {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--text-mid);
+}
+.paste-btn {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+.paste-btn:hover {
+  color: var(--text);
+  border-color: var(--text-light);
+}
+.paste-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.paste-btn-primary:hover {
+  color: var(--on-accent);
+  border-color: var(--accent);
+  filter: brightness(1.08);
+}
+
+/* ── transient status pill ────────────────────────────────────────────── */
+.status-pill {
+  position: fixed;
+  bottom: 1.1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 0.35rem 0.8rem;
+  background: var(--popup-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--popup-shadow);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--text-mid);
+  pointer-events: none;
+  animation: pill-in 0.14s ease-out;
+}
+@keyframes pill-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
