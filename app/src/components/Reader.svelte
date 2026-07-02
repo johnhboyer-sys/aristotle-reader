@@ -3,7 +3,7 @@
   import { fade } from 'svelte/transition';
   import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
-  import { getWork, visibleTranslations, type TranslationRef } from '../lib/works';
+  import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
 
@@ -101,17 +101,31 @@
     && segments.some((seg) => shownTransIds.some((id) => transApprox(seg, id)));
   const TRANS_KEY = `reader-trans-${work}`;
   const CITE_KEY  = 'reader-cite-copy';
+  // The "ℹ︎ Bekker numbers" popover (upright = fixed, italic = estimate).
+  let bekkerInfoOpen = false;
   let citeCopy = true;
   function saveCiteCopy() { try { localStorage.setItem(CITE_KEY, String(citeCopy)); } catch {} }
+  // The last single-translation choice, remembered so leaving compare mode
+  // returns to it (and so the picker has something to display in compare).
+  let lastSingle: string = trans;
   function setTrans(t: string) {
     trans = t;
+    if (t !== 'compare') lastSingle = t;
     try { localStorage.setItem(TRANS_KEY, t); } catch {}
+  }
+  // The dropdowns select WHICH translation; mode (single vs compare) is chosen
+  // in the settings sidebar. Picking a translation always means "show me this
+  // one" — including from compare mode, which it exits.
+  $: pickValue = trans === 'compare' ? lastSingle : trans;
+  function onPick(e: Event) {
+    setTrans((e.currentTarget as HTMLSelectElement).value);
   }
 
   // ── Settings sidebar ──────────────────────────────────────────────────────
   let settingsOpen = false;
   const FS_KEY = `reader-fs-${work}`;
   const LH_KEY = `reader-lh-${work}`;
+  const COLW_KEY = `reader-colw-${work}`;
   // Base CSS values from global.css; scale as multipliers (1.0 = default).
   const FS_GREEK_BASE = 1.05;
   const FS_ENG_BASE   = 1.08;
@@ -119,6 +133,9 @@
   const LH_ENG_BASE   = 1.72;
   let fsScale = 1.0;
   let lhScale = 1.0;
+  // Column-width scale: multiplies the layout's width caps (reader measure,
+  // mono-view column measure) via --colw-scale; 1.0 = the stock layout.
+  let colScale = 1.0;
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
   $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
   $: lhGreek = (LH_GREEK_BASE * lhScale).toFixed(3);
@@ -134,9 +151,13 @@
   }
   function saveFs() { try { localStorage.setItem(FS_KEY, String(fsScale)); } catch {} }
   function saveLh() { try { localStorage.setItem(LH_KEY, String(lhScale)); } catch {} }
+  function saveColw() { try { localStorage.setItem(COLW_KEY, String(colScale)); } catch {} }
   function resetSettings() {
-    fsScale = 1.0; lhScale = 1.0; citeCopy = true;
-    try { localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY); localStorage.removeItem(CITE_KEY); } catch {}
+    fsScale = 1.0; lhScale = 1.0; colScale = 1.0; citeCopy = true;
+    try {
+      localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY);
+      localStorage.removeItem(COLW_KEY); localStorage.removeItem(CITE_KEY);
+    } catch {}
   }
 
   // ── Citation shown in the controls strip ─────────────────────────────────
@@ -214,9 +235,9 @@
     document.addEventListener('click', () => { printMenuOpen = false; }, { once: true });
   }
 
-  // Print-only header/footer. Book label only for multi-book works; Bekker
-  // range spans the first to last column currently loaded (one book).
-  $: bookLabel = workMeta && workMeta.books > 1 ? `Book ${bookNum}` : '';
+  // Book label for chapter headings, the live context strip, and print —
+  // multi-book works only, using the work's own numbering (Roman for EN).
+  $: bookLabel = workMeta && workMeta.books > 1 ? `Book ${workBookLabel(workMeta, bookNum)}` : '';
   $: bekRange = segments.length
     ? (segments.length > 1
         ? `${segments[0].column}–${segments[segments.length - 1].column}`
@@ -285,6 +306,28 @@
     try { localStorage.setItem(`reader-loc-${work}`, cite); } catch {}
   }
 
+  // ── Live book/chapter context in the sticky controls strip ───────────────
+  // Chapter heads scroll away with the text (they sit inside segments, so
+  // CSS sticky can't carry them across segment boundaries); the strip shows
+  // the label of the last chapter head above the reading line instead, so
+  // the reader always knows where they are. Sampled on scroll, rAF-throttled.
+  let liveChapter = '';
+  let ctxRaf = 0;
+  function updateChapterContext() {
+    const strip = document.querySelector('.reader-controls');
+    const boundary = (strip?.getBoundingClientRect().bottom ?? 100) + 12;
+    let label = '';
+    for (const h of document.querySelectorAll('.chapter-head .chapter-label')) {
+      if (h.getBoundingClientRect().top <= boundary) label = h.textContent?.trim() ?? '';
+      else break;
+    }
+    liveChapter = label;
+  }
+  function onCtxScroll() {
+    if (ctxRaf) return;
+    ctxRaf = requestAnimationFrame(() => { ctxRaf = 0; updateChapterContext(); });
+  }
+
   function setupScrollSpy() {
     spyObserver?.disconnect();
     spyState = new Map();
@@ -345,6 +388,7 @@
     spyObserver?.disconnect();
     if (typeof window !== 'undefined') {
       window.removeEventListener('scroll', onScrollArm);
+      window.removeEventListener('scroll', onCtxScroll);
       window.removeEventListener('resize', onResize);
       if (_onToggleSettings) window.removeEventListener('toggle-settings', _onToggleSettings);
       if (_onCloseSettings)  window.removeEventListener('close-settings',  _onCloseSettings);
@@ -639,10 +683,12 @@
     showFootnote(marker, true);
   }
   function closeFootnote() { cancelFnClose(); fnPinned = false; footnote = null; }
-  // Click anywhere outside the marker/popup dismisses a pinned note.
+  // Click anywhere outside the marker/popup dismisses a pinned note; same
+  // for the Bekker-numbers info popover.
   function onDocPointerDown(e: MouseEvent) {
-    if (!fnPinned) return;
     const t = e.target as HTMLElement | null;
+    if (bekkerInfoOpen && !t?.closest?.('.bekker-info')) bekkerInfoOpen = false;
+    if (!fnPinned) return;
     if (t?.closest?.('.fn-marker') || t?.closest?.('.footnote-popup')) return;
     closeFootnote();
   }
@@ -656,6 +702,8 @@
     if (savedFs) { const v = parseFloat(savedFs); if (!isNaN(v)) fsScale = v; }
     const savedLh = (() => { try { return localStorage.getItem(LH_KEY); } catch { return null; } })();
     if (savedLh) { const v = parseFloat(savedLh); if (!isNaN(v)) lhScale = v; }
+    const savedColw = (() => { try { return localStorage.getItem(COLW_KEY); } catch { return null; } })();
+    if (savedColw) { const v = parseFloat(savedColw); if (!isNaN(v)) colScale = v; }
     const savedCite = (() => { try { return localStorage.getItem(CITE_KEY); } catch { return null; } })();
     if (savedCite !== null) citeCopy = savedCite === 'true';
 
@@ -692,6 +740,8 @@
     const validTrans = new Set([...translations.map(t => t.id), ...(canCompare ? ['compare'] : [])]);
     const savedTrans = (() => { try { return localStorage.getItem(TRANS_KEY); } catch { return null; } })();
     if (savedTrans && validTrans.has(savedTrans)) trans = savedTrans;
+    // A restored single choice is also the one "leave compare" returns to.
+    if (trans !== 'compare') lastSingle = trans;
     // Restore the chosen compare pair (set in the settings sidebar).
     const transIds = new Set(translations.map(t => t.id));
     const savedL = (() => { try { return localStorage.getItem(CMPL_KEY); } catch { return null; } })();
@@ -749,9 +799,11 @@
         // Begin live URL tracking once the reader actually scrolls (programmatic
         // jumps above are suppressed), so an opened #citation isn't overwritten.
         window.addEventListener('scroll', onScrollArm, { passive: true });
+        window.addEventListener('scroll', onCtxScroll, { passive: true });
         window.addEventListener('resize', onResize);
         document.addEventListener('mouseup', checkCopyBtn);
         document.addEventListener('selectionchange', onSelectionChange);
+        updateChapterContext();
       }, 0);
     }
   });
@@ -950,7 +1002,7 @@
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter]}: {chapterTitles[block.chapter]}{/if}</span>
+      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},&nbsp;</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter]}: {chapterTitles[block.chapter]}{/if}</span>
       {#if block.bekker && !busse}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
@@ -1002,9 +1054,12 @@
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
     class:word-open={!!popup}
-    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng}"
+    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale}"
     on:copy={handleCopy}>
     <div class="reader-controls">
+      {#if liveChapter}
+        <span class="rc-context">{liveChapter}</span>
+      {/if}
       <div class="rc-cite">
         {#if view === 'greek'}
           {#if greekSrc}<span class="rc-greek">{greekSrc.full}</span>{/if}
@@ -1026,11 +1081,10 @@
           <!-- Desktop translation picker, beside the view toggle. On mobile this
                is hidden (see global.css) and the same control lives in the
                ⚙ Settings sidebar instead. -->
-          <select class="rc-trans-select" bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+          <select class="rc-trans-select" value={pickValue} on:change={onPick} aria-label="English translation">
             {#each translations as t}
               <option value={t.id}>{t.name}</option>
             {/each}
-            {#if canCompare}<option value="compare">Compare both</option>{/if}
           </select>
         {/if}
         <!-- Desktop only — on mobile these live in the ⚙ Settings sidebar. -->
@@ -1051,13 +1105,26 @@
       {#if printCite}<div class="print-cite">{printCite}</div>{/if}
     </div>
     {#if hasApproxTicks && !busse}
-      <p class="bekker-note">
-        Greek line numbers are exact. The translations carry no Bekker numbers of
-        their own, so those beside the English are aligned to the Greek:
-        <span class="bk-fixed">upright</span> = fixed (anchored to this point in
-        the text), <span class="bk-approx">italic grey</span> = approximate
-        (interpolated estimate).
-      </p>
+      <!-- The estimate disclaimer stays one click away, not a paragraph of
+           front matter: the honesty lives in the ticks themselves (upright vs
+           italic grey); this explains the convention on demand. -->
+      <div class="bekker-info">
+        <button
+          type="button"
+          class="bekker-info-btn"
+          aria-expanded={bekkerInfoOpen}
+          on:click|stopPropagation={() => (bekkerInfoOpen = !bekkerInfoOpen)}
+        >ℹ︎ Bekker numbers</button>
+        {#if bekkerInfoOpen}
+          <div class="bekker-info-pop" role="note" transition:fade={{ duration: 120 }}>
+            Greek line numbers are exact. The translations carry no Bekker
+            numbers of their own, so those beside the English are aligned to
+            the Greek: <span class="bk-fixed">upright</span> = fixed (anchored
+            to this point in the text), <span class="bk-approx">italic grey</span>
+            = approximate (interpolated estimate).
+          </div>
+        {/if}
+      </div>
     {/if}
     {#each enrichedSegments as {seg, blocks} (seg.id)}
       {@const leadChapter = blocks[0]?.chapter ? blocks[0] : null}
@@ -1160,18 +1227,41 @@
         <div class="settings-section-label">Translation</div>
         <!-- svelte-ignore a11y-label-has-associated-control -->
         <label>
-          <select class="settings-select" bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+          <select class="settings-select" value={pickValue} on:change={onPick} aria-label="English translation">
             {#each translations as t}
               <option value={t.id}>{t.name}</option>
             {/each}
-            {#if canCompare}<option value="compare">Compare both</option>{/if}
           </select>
         </label>
       </div>
     {/if}
     {#if canCompare}
-      <!-- Compare pair: which two translations sit side by side when "Compare
-           both" is selected. Mix and match any two. -->
+      <!-- Mode lives HERE, not in the picker: the dropdowns choose WHICH
+           translation, this chooses single vs side-by-side comparison. -->
+      <div class="settings-section">
+        <div class="settings-section-label">Translations</div>
+        <label class="settings-mode-row">
+          <input
+            type="radio"
+            name="trans-mode"
+            checked={trans !== 'compare'}
+            on:change={() => setTrans(lastSingle)}
+          />
+          <span>Single translation</span>
+        </label>
+        <label class="settings-mode-row">
+          <input
+            type="radio"
+            name="trans-mode"
+            checked={trans === 'compare'}
+            on:change={() => setTrans('compare')}
+          />
+          <span>Compare two translations</span>
+        </label>
+      </div>
+    {/if}
+    {#if canCompare && trans === 'compare'}
+      <!-- Compare pair: which two translations sit side by side. -->
       <div class="settings-section">
         <div class="settings-section-label">Compare</div>
         <!-- svelte-ignore a11y-label-has-associated-control -->
@@ -1219,6 +1309,17 @@
           <span class="settings-slider-val">{Math.round(lhScale * 100)}%</span>
         </div>
         <input type="range" min="0.8" max="1.4" step="0.05" bind:value={lhScale} on:change={saveLh} aria-label="Line spacing" />
+      </label>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-label">Column width</div>
+      <label class="settings-slider">
+        <div class="settings-slider-row">
+          <span class="settings-slider-name">Width</span>
+          <span class="settings-slider-val">{Math.round(colScale * 100)}%</span>
+        </div>
+        <input type="range" min="0.75" max="1.3" step="0.05" bind:value={colScale} on:change={saveColw} aria-label="Column width" />
       </label>
     </div>
 

@@ -58,8 +58,24 @@
   // and jump-links after the search completes, so they must use the query that
   // produced the results — not whatever is currently typed in the boxes (a user
   // can edit the inputs without re-submitting, then page/retry/export).
-  interface SearchCtx { grkQuery: string; engQuery: string; engTerms: string[]; }
-  let searchCtx: SearchCtx = { grkQuery: '', engQuery: '', engTerms: [] };
+  interface SearchCtx { grkQuery: string; engQuery: string; engTerms: string[]; grkAccentTerms: string[]; }
+  let searchCtx: SearchCtx = { grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [] };
+
+  // ── Accent-sensitive Greek matching ────────────────────────────────────────
+  // The indexes are accent-folded (λόγος and λογός share a key), which is the
+  // right default and stays the default. The toggle offers strict matching as
+  // an instance-level post-filter: the index still finds the folded hits, then
+  // each matched surface token must carry the query's exact diacritics. Strict
+  // semantics, stated on the control: a query typed WITHOUT accents then only
+  // matches genuinely unaccented tokens.
+  let accentSensitive = false;
+  // NFC + lowercase + final-sigma normalisation, diacritics KEPT.
+  const accentNorm = (s: string) => s.normalize('NFC').toLowerCase().replace(/ς/g, 'σ');
+  function accentTokenMatch(token: string, terms: string[]): boolean {
+    const t = accentNorm(token);
+    return terms.some(q =>
+      q.endsWith('*') ? t.startsWith(q.slice(0, -1)) : t === q);
+  }
 
   // Shared option list for the per-language mode selectors.
   const MODE_OPTS: { v: SearchMode; l: string }[] = [
@@ -296,7 +312,15 @@
       const lookup = lookups.get(`${r.work}:${r.meta.book}`);
       if (!seg || !lookup) continue;
       if (r.grkMatch) {
+        // Flattened surface tokens, for the accent post-filter (positions are
+        // token indices — the same flattening greekKwic uses).
+        const toks: string[] = [];
+        if (ctx.grkAccentTerms.length) {
+          for (const line of seg.greek) for (const tok of line.tokens) toks.push(tok.t);
+        }
         for (const pos of r.grkPositions) {
+          if (ctx.grkAccentTerms.length
+            && !accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms)) continue;
           const line = lineOfPosition(seg, pos);
           const ch = lookup(seg.column, line);
           add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
@@ -383,6 +407,9 @@
         grkQuery: grkQuery.trim(),
         engQuery: engQuery.trim(),
         engTerms: engQuery.trim().split(/\s+/).filter(Boolean),
+        grkAccentTerms: accentSensitive
+          ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
+          : [],
       };
       const results = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
       totalInstances = results.reduce((n, r) => n + instCount(r), 0);
@@ -583,6 +610,10 @@
         <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Lemma</label>
         <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Exact form</label>
       </fieldset>
+      <fieldset class="mode-group" title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens.">
+        <legend>Accents</legend>
+        <label><input type="checkbox" bind:checked={accentSensitive} /> Match accents exactly</label>
+      </fieldset>
     </div>
 
     <div class="query-row">
@@ -736,6 +767,7 @@
         {totalInstances === 0
           ? 'No passages found.'
           : `${totalInstances} instance${totalInstances === 1 ? '' : 's'}` +
+            (searchCtx.grkAccentTerms.length ? ' before accent filtering' : '') +
             (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '')}
       </p>
       {#if totalInstances > 0}

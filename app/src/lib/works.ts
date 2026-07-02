@@ -738,8 +738,15 @@ export function workLanding(workId: string): string {
 // Translations visible in the current build. Private (copyright-encumbered)
 // entries are already dropped from WORKS at compile time unless the build opted
 // in (see SHOW_PRIVATE / ACKRILL above); this filter is a runtime backstop.
+// A non-Astro host (the desktop app) can append runtime-registered
+// translations — user imports, loaded from local files — via
+// globalThis.__ARISTOTLE_EXTRA_TRANSLATIONS__ ({workId: TranslationRef[]});
+// the site never sets it, so the static registry is unchanged there.
 export function visibleTranslations(work: Work): TranslationRef[] {
-  return work.translations.filter(t => !t.private || SHOW_PRIVATE);
+  const extra = (globalThis as {
+    __ARISTOTLE_EXTRA_TRANSLATIONS__?: Record<string, TranslationRef[]>;
+  }).__ARISTOTLE_EXTRA_TRANSLATIONS__?.[work.id] ?? [];
+  return work.translations.filter(t => !t.private || SHOW_PRIVATE).concat(extra);
 }
 
 // ---------------------------------------------------------------------------

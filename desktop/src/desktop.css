@@ -1,0 +1,50 @@
+/* Desktop-shell adjustments layered over the site's global.css.
+   Principle: the reading pane keeps the site's warm parchment identity
+   untouched; the surrounding chrome (rail, top bar) stays neutral and quiet. */
+
+html, body { margin: 0; }
+
+/* The site's fonts are loaded locally via @fontsource in main.ts (an offline
+   desktop app must not fetch Google Fonts at runtime); family names match the
+   site's --font-greek / --font-english tokens, so no token overrides needed. */
+
+/* Full-immersion reading (both side panels closed): widen the page and let
+   the Greek column size to its longest UNWRAPPED Bekker line (max-content),
+   so a single Greek line never wraps — the lineation is the critical
+   edition's spine and a wrapped line breaks it. English takes the rest.
+   Guarded to wide windows; compare view (3 columns) keeps the site layout.
+   At extreme font scaling the Greek column may exceed the cap — the English
+   column then narrows rather than the Greek line wrapping. */
+@media (min-width: 1100px) {
+  .dt-shell.dt-no-rails .reader-body { max-width: calc(1200px * var(--colw-scale, 1)); }
+  .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare) .seg-row {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+  /* English matches the Greek column's width (the unwrapped Bekker lines
+     run ~35rem at default type size) — the two columns read as equal
+     halves of an opening, not prose stretched to fill the extra page.
+     The Column width slider scales the English measure; the Greek column
+     is content-sized and cannot narrow without wrapping a Bekker line. */
+  .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare) .english-col {
+    max-width: calc(35rem * var(--colw-scale, 1));
+  }
+  .dt-shell.dt-no-rails .reader-body.view-greek .greek-col {
+    max-width: max-content;
+  }
+}
+
+/* Annotation paint (CSS Custom Highlight API — no reader DOM mutation).
+   Highlights read as a marker wash; notes add a dotted underline cue. */
+::highlight(ann-highlight) {
+  background-color: rgba(235, 195, 80, 0.38);
+}
+::highlight(ann-note) {
+  background-color: rgba(228, 160, 90, 0.42);
+  text-decoration: underline dotted;
+}
+[data-theme='dark'] ::highlight(ann-highlight) {
+  background-color: rgba(200, 160, 60, 0.32);
+}
+[data-theme='dark'] ::highlight(ann-note) {
+  background-color: rgba(210, 140, 70, 0.35);
+}

@@ -434,7 +434,9 @@ body {
 }
 
 .reader-body {
-  max-width: 1080px;
+  /* --colw-scale: the settings sidebar's Column width slider (set inline by
+     Reader.svelte); 1 = the stock measure. */
+  max-width: calc(1080px * var(--colw-scale, 1));
   margin: 0 auto;
   padding: 1.5rem 1rem 4rem;
 }
@@ -445,6 +447,18 @@ body {
    so the view toggle / translation picker stay in reach while reading. The
    strip is filled out with the source citation (left) so it reads as a header
    band rather than a lone floating toggle; the controls sit at the right. */
+/* Live position context in the sticky strip: the chapter (and book, for
+   multi-book works) currently under the reading line. The chapter heads
+   themselves scroll away with the text; this is the part that stays. */
+.rc-context {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
 .reader-controls {
   position: sticky;
   top: var(--header-h, 92px);
@@ -521,17 +535,43 @@ body {
 }
 
 /* Disclaimer: which translation Bekker numbers are fixed vs approximate. */
-.bekker-note {
-  margin: -0.75rem 0 1.6rem;
+/* "ℹ︎ Bekker numbers": the tick-convention note, one click away instead of a
+   paragraph of front matter. */
+.bekker-info {
+  position: relative;
+  margin: -0.75rem 0 1.2rem;
+}
+.bekker-info-btn {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  cursor: pointer;
+}
+.bekker-info-btn:hover,
+.bekker-info-btn[aria-expanded='true'] { color: var(--accent); }
+.bekker-info-pop {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 30;
+  max-width: 26rem;
   font-family: var(--font-ui);
   font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--text-light);
-  max-width: 46rem;
+  line-height: 1.55;
+  color: var(--text-mid);
+  background: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
   text-wrap: pretty;
 }
-.bekker-note .bk-fixed { color: var(--text-mid); font-weight: 600; }
-.bekker-note .bk-approx { color: var(--text-light); font-style: italic; opacity: 0.85; }
+.bekker-info-pop .bk-fixed { color: var(--text-mid); font-weight: 600; }
+.bekker-info-pop .bk-approx { color: var(--text-light); font-style: italic; opacity: 0.85; }
 
 /* English translation picker (Rackham / Ross). */
 .trans-picker {
@@ -655,7 +695,10 @@ body {
 
 /* Print-only elements are hidden on screen; revealed under @media print. */
 .print-head { display: none; }
-.chapter-book { display: none; }
+/* The chapter heading's book label ("Book I, Chapter 7") — on screen for
+   multi-book orientation, and in print as before. The separating space is a
+   real &nbsp; in the markup so text copies (and the live context strip,
+   which reuses this label's text) keep it. */
 
 /* Monolingual: hide one column and let the other read full-width, centred at a
    comfortable measure (the Bekker column ref and gutter are kept). */
@@ -664,7 +707,7 @@ body {
 .reader-body.view-english .seg-row,
 .reader-body.view-greek .seg-row { grid-template-columns: 1fr; }
 .reader-body.view-english .english-col,
-.reader-body.view-greek .greek-col { max-width: 42rem; margin: 0 auto; }
+.reader-body.view-greek .greek-col { max-width: calc(42rem * var(--colw-scale, 1)); margin: 0 auto; }
 
 /* Compare both: Greek | Rackham | Ross (or Rackham | Ross in English-only).
    A third translation column joins the seg-row grid. */
@@ -1985,6 +2028,20 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   background-position: right 0.65rem center;
 }
 .settings-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Translation mode (single vs compare) — chosen in the sidebar, not the
+   translation picker; the picker only chooses WHICH translation. */
+.settings-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--text);
+  padding: 0.18rem 0;
+  cursor: pointer;
+}
+.settings-mode-row input { accent-color: var(--accent); }
 
 /* Compare pair pickers: a "Left"/"Right" label beside each select. */
 .settings-compare-row {
