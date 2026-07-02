@@ -11,9 +11,13 @@ import '../../app/src/styles/global.css';
 import './desktop.css';
 import { mount } from 'svelte';
 import { initDataLayer } from './lib/runtime';
+import { loadImports } from './lib/imports';
 import App from './App.svelte';
 
 const info = await initDataLayer();
+// Imported translations must be registered before the Reader mounts — it
+// resolves its translation list once, at component init.
+await loadImports().catch(() => 0);
 
 mount(App, {
   target: document.getElementById('app')!,

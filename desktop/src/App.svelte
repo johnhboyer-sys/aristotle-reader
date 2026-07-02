@@ -14,6 +14,8 @@
   import ThemeToggle from './components/ThemeToggle.svelte';
   import LexiconIndex from './components/LexiconIndex.svelte';
   import LexiconEntry from './components/LexiconEntry.svelte';
+  import ImportDialog from './components/ImportDialog.svelte';
+  import type { ImportSummary } from './lib/imports';
 
   export let dataLayer: DataLayerInfo;
 
@@ -147,6 +149,33 @@
     if (e.key === 'Escape' && lexicon) { e.stopPropagation(); closeLexicon(); }
   }
 
+  // ── Import flow ───────────────────────────────────────────────────────────
+  // Both entry points the plan requires: a button (native picker) and true
+  // drag-and-drop onto the library. A finished import reloads the app so the
+  // Reader re-resolves its translation list and book caches with the new
+  // overlay registered.
+  let importDlg: { file: { name: string; text: string } | null } | null = null;
+  function openImport() { importDlg = { file: null }; }
+  function closeImport(imported: ImportSummary | null) {
+    importDlg = null;
+    if (imported) location.reload();
+  }
+  let dragOver = false;
+  function onDragOver(e: DragEvent) {
+    if (e.dataTransfer?.types.includes('Files')) {
+      e.preventDefault();
+      dragOver = true;
+    }
+  }
+  function onDragLeave() { dragOver = false; }
+  async function onDrop(e: DragEvent) {
+    dragOver = false;
+    const f = e.dataTransfer?.files?.[0];
+    if (!f) return;
+    e.preventDefault();
+    importDlg = { file: { name: f.name, text: await f.text() } };
+  }
+
   // ── Library rail visibility ───────────────────────────────────────────────
   let railOpen = (() => {
     try { return localStorage.getItem('desktop-rail') !== 'closed'; } catch { return true; }
@@ -233,7 +262,8 @@
 
 <svelte:window on:click|capture={onGlobalClick} on:keydown|capture={onEsc} />
 
-<div class="dt-shell">
+<div class="dt-shell" class:drag-over={dragOver}
+  on:dragover={onDragOver} on:dragleave={onDragLeave} on:drop={onDrop} role="application">
   {#if railOpen}
     <aside class="dt-rail">
       <div class="dt-rail-head">
@@ -243,6 +273,10 @@
         <button class="dt-lexicon-link" on:click={() => openLexicon()}>
           <span>Greek Lexicon</span>
           <span class="dt-lexicon-arr" aria-hidden="true">→</span>
+        </button>
+        <button class="dt-lexicon-link" on:click={openImport}>
+          <span>Import translation…</span>
+          <span class="dt-lexicon-arr" aria-hidden="true">＋</span>
         </button>
       </div>
       <LibraryRail
@@ -295,6 +329,10 @@
   </div>
 {/if}
 
+{#if importDlg}
+  <ImportDialog file={importDlg.file} presetWork={workId} onClose={closeImport} />
+{/if}
+
 {#if toast}
   <div class="dt-toast" role="status">{toast}</div>
 {/if}
@@ -311,6 +349,7 @@
 
 <style>
   .dt-shell { display: flex; align-items: flex-start; min-height: 100vh; }
+  .dt-shell.drag-over { outline: 3px dashed var(--accent); outline-offset: -3px; }
 
   .dt-rail {
     position: sticky; top: 0;

@@ -187,6 +187,7 @@ export interface ImportRequest {
   license: TranslationMeta['license'];
   year?: number;
   replace?: boolean;           // collision resolution: true = replace existing
+  idOverride?: string;         // collision resolution: "keep both" imports under a new id
 }
 
 export class ImportCollision extends Error {
@@ -211,7 +212,7 @@ export async function runImport(
     license: req.license,
     ...(req.year !== undefined ? { year: req.year } : {}),
     language: parsed.meta.language ?? 'en',
-    id: parsed.meta.id ?? slugId(req.translator, req.work),
+    id: req.idOverride ?? parsed.meta.id ?? slugId(req.translator, req.work),
   };
 
   const s = await store();
