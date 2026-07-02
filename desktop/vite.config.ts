@@ -45,12 +45,14 @@ function serveCorpusData() {
 
 export default defineConfig({
   plugins: [svelte(), serveCorpusData()],
-  // The desktop app is the owner's local instrument: like the site's
-  // `npm run dev`, it carries the private (copyright-encumbered) translations
-  // present in the local full build. A future public binary build must flip
-  // this off (see works.ts SHOW_PRIVATE for the fail-safe convention).
+  // The owner's local builds carry the private (copyright-encumbered)
+  // translations, like the site's `npm run dev`. A DISTRIBUTABLE build
+  // (scripts/package-app.mjs) sets DESKTOP_PUBLIC=1, which flips this off —
+  // fail-safe direction: private entries vanish from the registry unless the
+  // build explicitly opts in (see works.ts SHOW_PRIVATE).
   define: {
-    'import.meta.env.PUBLIC_SHOW_PRIVATE': JSON.stringify('1'),
+    'import.meta.env.PUBLIC_SHOW_PRIVATE':
+      JSON.stringify(process.env.DESKTOP_PUBLIC === '1' ? '0' : '1'),
   },
   server: {
     port: 1420,

@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "app:dev": "tauri dev",
-    "app:build": "tauri build"
+    "app:build": "tauri build",
+    "app:package": "node scripts/package-app.mjs"
   },
   "dependencies": {
     "@fontsource/cardo": "^5.2.5",

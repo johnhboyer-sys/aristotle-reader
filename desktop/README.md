@@ -99,6 +99,25 @@ ported yet). `cargo check` passes (which also validates the capability file).
   native save dialog; Report opens a pre-filled GitHub issue in the system
   browser — user-initiated, nothing sent automatically, ever.
 
+## Releasing a distributable build
+
+```sh
+node scripts/build-public.mjs      # repo root: rebuild build/dist from -public manifests
+cd desktop && npm run app:package  # gate → stage corpus → public tauri build
+```
+
+`app:package` hard-refuses a corpus containing the private translations
+(Ackrill Cat / Rackham EE markers), stages it into `src-tauri/corpus`
+(gitignored), and builds with `DESKTOP_PUBLIC=1` (private registry entries
+compiled out) + `tauri.public.conf.json` (adds the corpus to bundle
+resources — dev builds never touch either). Upload the .dmg from
+`src-tauri/target/release/bundle/` to a GitHub Release. Before the FIRST
+public release: generate the updater signing key (below) and note the
+Gatekeeper right-click→Open step on the download page.
+
+Status: the gate and corpus staging are verified; the final `tauri build`
+leg has not yet been exercised end to end — expect to babysit the first run.
+
 ## Not built yet
 
 - **Updater** — the one step-8 piece deliberately left unwired: it requires
