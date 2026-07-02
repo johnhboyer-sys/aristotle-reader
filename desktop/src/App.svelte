@@ -17,6 +17,12 @@
   import ImportDialog from './components/ImportDialog.svelte';
   import Search from '../../app/src/components/Search.svelte';
   import type { ImportSummary } from './lib/imports';
+  import AnnotationsPanel from './components/AnnotationsPanel.svelte';
+  import {
+    addAnnotation, captureSelection, listAnnotations, newId, paintAnnotations,
+    type Annotation,
+  } from './lib/annotations';
+  import { onMount } from 'svelte';
 
   export let dataLayer: DataLayerInfo;
 
@@ -192,6 +198,112 @@
     importDlg = { file: { name: f.name, text: await f.text() } };
   }
 
+  // ── Annotations ───────────────────────────────────────────────────────────
+  // Highlights + notes (one type; see lib/annotations.ts for the anchor
+  // rules). Painting uses the CSS Custom Highlight API and re-runs whenever
+  // the reader's DOM changes (nav, book load, view/translation switch) via a
+  // debounced MutationObserver — the Reader itself is never modified.
+  let annOpen = (() => {
+    try { return localStorage.getItem('desktop-ann') === 'open'; } catch { return false; }
+  })();
+  function toggleAnn() {
+    annOpen = !annOpen;
+    try { localStorage.setItem('desktop-ann', annOpen ? 'open' : 'closed'); } catch { /* fine */ }
+  }
+  let annotations: Annotation[] = [];
+  // The translation currently filling the English column — the Reader's own
+  // resolution order: saved choice (if still valid), else the work's declared
+  // default, else the primary 'english' slot.
+  const activeTrans = (): string => {
+    const m = getWork(workId);
+    const ts = m ? visibleTranslations(m) : [];
+    try {
+      const saved = localStorage.getItem(`reader-trans-${workId}`);
+      if (saved && (saved === 'compare' || ts.some(t => t.id === saved))) return saved;
+    } catch { /* fall through */ }
+    return ts.find(t => t.id === m?.defaultTranslation)?.id
+      ?? ts.find(t => t.slot === 'english')?.id
+      ?? ts[0]?.id
+      ?? '';
+  };
+  let annTransShown = '';
+  async function refreshAnnotations() {
+    annotations = [...await listAnnotations(workId)];
+    annTransShown = activeTrans();
+    paintAnnotations(annotations, annTransShown);
+  }
+  $: if (workId) refreshAnnotations();
+
+  let paintTimer: ReturnType<typeof setTimeout> | undefined;
+  onMount(() => {
+    const mo = new MutationObserver(() => {
+      clearTimeout(paintTimer);
+      paintTimer = setTimeout(() => {
+        annTransShown = activeTrans();
+        paintAnnotations(annotations, annTransShown);
+      }, 300);
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  });
+
+  // Selection toolbar: appears over a selection inside the reader; offers
+  // Highlight / Note. The anchor is captured the moment the toolbar opens —
+  // clicking into the note textarea clears the document selection, so
+  // capture-at-save would always come up empty. Compare view is not
+  // supported for capture in v1 (which column's wording is ambiguous there).
+  let selPos: { x: number; y: number } | null = null;
+  let noteDraft: string | null = null;   // non-null = the note input is open
+  let pendingCapture: ReturnType<typeof captureSelection> = null;
+  function onReaderMouseUp() {
+    setTimeout(() => {
+      if (lexicon || searchOpen || importDlg) { selPos = null; return; }
+      if (noteDraft !== null) return;    // don't tear down an open note input
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) { selPos = null; pendingCapture = null; return; }
+      const el = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode as Element : sel.anchorNode.parentElement) : null;
+      if (!el?.closest('.segment')) { selPos = null; return; }
+      const t = activeTrans();
+      if (t === 'compare') { selPos = null; return; }  // ambiguous column — no capture in v1
+      pendingCapture = captureSelection(bookNum, t);
+      if (!pendingCapture) { selPos = null; return; }  // unanchorable (spans columns, chrome)
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      if (!rect.width && !rect.height) { selPos = null; return; }
+      selPos = { x: Math.min(rect.right, window.innerWidth - 180), y: Math.max(8, rect.top - 38) };
+    }, 0);
+  }
+  async function saveAnnotation(body: string) {
+    const cap = pendingCapture;
+    if (!cap) { showToast('Could not anchor that selection — try selecting within one column'); selPos = null; return; }
+    await addAnnotation({
+      id: newId(), work: workId, created: new Date().toISOString(),
+      body, layer: cap.layer, target: cap.target, exact: cap.exact,
+    });
+    pendingCapture = null;
+    selPos = null;
+    noteDraft = null;
+    window.getSelection()?.removeAllRanges();
+    await refreshAnnotations();
+    if (body) annOpen = true;
+    showToast(body ? 'Note saved' : 'Highlighted');
+  }
+  function annJump(a: Annotation) {
+    if (a.target.kind === 'greek') {
+      nav(workId, a.target.book, { loc: `${a.target.start.column}:${a.target.start.line}` });
+    } else {
+      const col = a.target.column;
+      nav(workId, a.target.book).then(() => {
+        let tries = 0;
+        const seek = () => {
+          const el = document.getElementById(`col-${col}`);
+          if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+          else if (++tries < 5) setTimeout(seek, 700);
+        };
+        setTimeout(seek, 900);
+      });
+    }
+  }
+
   // ── Library rail visibility ───────────────────────────────────────────────
   let railOpen = (() => {
     try { return localStorage.getItem('desktop-rail') !== 'closed'; } catch { return true; }
@@ -318,7 +430,7 @@
     </aside>
   {/if}
 
-  <div class="dt-main">
+  <div class="dt-main" on:mouseup={onReaderMouseUp} role="presentation">
     <header class="page-header dt-topbar">
       <button class="dt-railtoggle" on:click={toggleRail} title={railOpen ? 'Hide library' : 'Show library'} aria-label="Toggle library rail">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -336,6 +448,9 @@
       <button class="dt-cite" on:click={copyCitation} title="Copy a citation for the current position">
         Copy citation
       </button>
+      <button class="dt-cite" class:dt-on={annOpen} on:click={toggleAnn} title="Show highlights and notes">
+        Notes{annotations.length ? ` (${annotations.length})` : ''}
+      </button>
       <ThemeToggle />
     </header>
 
@@ -343,7 +458,34 @@
       <Reader work={workId} bookNum={bookNum} bookData={null} {chapterTitles} />
     {/key}
   </div>
+
+  {#if annOpen}
+    <AnnotationsPanel
+      work={workId}
+      activeTranslation={annTransShown}
+      {annotations}
+      onChanged={refreshAnnotations}
+      onJump={annJump}
+      onClose={toggleAnn}
+    />
+  {/if}
 </div>
+
+{#if selPos}
+  <div class="dt-seltool" style="left:{selPos.x}px;top:{selPos.y}px" role="toolbar" aria-label="Annotate selection">
+    {#if noteDraft === null}
+      <button on:click={() => saveAnnotation('')}>Highlight</button>
+      <button on:click={() => (noteDraft = '')}>Note…</button>
+    {:else}
+      <!-- svelte-ignore a11y_autofocus -->
+      <textarea bind:value={noteDraft} rows="3" placeholder="Your note…" autofocus></textarea>
+      <div class="dt-seltool-row">
+        <button on:click={() => saveAnnotation(noteDraft ?? '')} disabled={!noteDraft?.trim()}>Save note</button>
+        <button class="quiet" on:click={() => { noteDraft = null; selPos = null; }}>Cancel</button>
+      </div>
+    {/if}
+  </div>
+{/if}
 
 {#if lexicon}
   <div class="dt-lexicon" role="dialog" aria-label="Greek Lexicon">
@@ -459,6 +601,32 @@
   }
   .dt-lexicon-close:hover { color: var(--text); border-color: var(--text-light); }
   .dt-lexicon-body { flex: 1; overflow-y: auto; }
+
+  .dt-on { color: var(--accent) !important; border-color: var(--accent) !important; }
+
+  .dt-seltool {
+    position: fixed; z-index: 180;
+    display: flex; flex-direction: column; gap: 0.35rem;
+    background: var(--col-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.35rem; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+    font-family: var(--font-ui);
+  }
+  .dt-seltool button {
+    font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    color: var(--text); background: transparent;
+    border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.7rem;
+  }
+  .dt-seltool button:hover { border-color: var(--accent); color: var(--accent); }
+  .dt-seltool button.quiet { color: var(--text-mid); }
+  .dt-seltool button:disabled { opacity: 0.5; }
+  .dt-seltool textarea {
+    width: 16rem; font-family: var(--font-ui); font-size: 0.82rem;
+    color: var(--text); background: var(--page-bg);
+    border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.5rem;
+  }
+  .dt-seltool textarea:focus { outline: none; border-color: var(--accent); }
+  .dt-seltool-row { display: flex; gap: 0.4rem; }
+  .dt-seltool > button { display: block; }
 
   .dt-toast {
     position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);

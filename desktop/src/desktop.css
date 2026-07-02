@@ -7,3 +7,19 @@ html, body { margin: 0; }
 /* The site's fonts are loaded locally via @fontsource in main.ts (an offline
    desktop app must not fetch Google Fonts at runtime); family names match the
    site's --font-greek / --font-english tokens, so no token overrides needed. */
+
+/* Annotation paint (CSS Custom Highlight API — no reader DOM mutation).
+   Highlights read as a marker wash; notes add a dotted underline cue. */
+::highlight(ann-highlight) {
+  background-color: rgba(235, 195, 80, 0.38);
+}
+::highlight(ann-note) {
+  background-color: rgba(228, 160, 90, 0.42);
+  text-decoration: underline dotted;
+}
+[data-theme='dark'] ::highlight(ann-highlight) {
+  background-color: rgba(200, 160, 60, 0.32);
+}
+[data-theme='dark'] ::highlight(ann-note) {
+  background-color: rgba(210, 140, 70, 0.35);
+}
