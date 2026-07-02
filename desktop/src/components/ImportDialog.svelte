@@ -156,6 +156,35 @@
       on:change={onBrowserFile} style="display:none" />
     <p class="imp-note">…or drop a file anywhere on the library.</p>
 
+    <details class="imp-help">
+      <summary>How do I format a file for import?</summary>
+      <div class="imp-help-body">
+        <p>Plain text or Markdown, with tags in braces placed immediately
+        <em>before</em> the word they belong to (tag, one space, then the word).
+        Use the numbers as printed in your source — never a computed count.</p>
+        <dl>
+          <dt><code>{'{1.7}'}</code></dt>
+          <dd><b>Chapter</b> (book.chapter) — <b>required</b>, before the first word of
+            each chapter. For single-book works use book 1: <code>{'{1.4}'}</code> = chapter 4.</dd>
+          <dt><code>{'{1094a}'}</code></dt>
+          <dd><b>Bekker column</b> — optional, before the first word of that column.</dd>
+          <dt><code>{'{20}'}</code></dt>
+          <dd><b>Bekker line</b> of the current column — optional, if your edition
+            prints line numbers (usually every 5th).</dd>
+        </dl>
+        <p>Example:</p>
+        <pre>{'{1.1}'} Every art and every inquiry, and similarly
+every action and pursuit, is thought to aim at
+some good… {'{1094b}'} But a certain difference is
+found among ends…</pre>
+        <p>Whatever detail your tags don't provide is filled in by alignment and
+        <em>always labelled as an estimate</em> in the margin — chapter tags alone
+        are enough for a working parallel text. OCR line-break hyphens
+        (like <code>under-</code> at a line end) are detected and fixed with your
+        review. You never write the metadata header yourself — this form does.</p>
+      </div>
+    </details>
+
   {:else if step === 'form'}
     <h2>Import “{file?.name}”</h2>
     <label class="imp-field">
@@ -311,6 +340,17 @@
   .imp-warn { margin-top: 0.8rem; font-size: 0.82rem; color: var(--text-mid); }
   .imp-warn ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
   .imp-error { font-size: 0.88rem; color: var(--error); line-height: 1.5; }
+  .imp-help { margin-top: 1rem; font-size: 0.83rem; }
+  .imp-help summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+  .imp-help-body { margin-top: 0.5rem; color: var(--text-mid); line-height: 1.55; }
+  .imp-help-body dl { margin: 0.5rem 0; }
+  .imp-help-body dt { float: left; clear: left; width: 4.5rem; font-weight: 600; }
+  .imp-help-body dd { margin: 0 0 0.4rem 5rem; }
+  .imp-help-body pre {
+    background: var(--page-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.5rem 0.7rem; font-size: 0.78rem; white-space: pre-wrap; line-height: 1.5;
+  }
+  .imp-help-body b { color: var(--text); }
   .imp-review-ctx {
     font-family: var(--font-english); font-size: 0.95rem; line-height: 1.6;
     background: var(--page-bg); border: 1px solid var(--border); border-radius: 8px;
