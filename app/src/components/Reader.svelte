@@ -103,9 +103,20 @@
   const CITE_KEY  = 'reader-cite-copy';
   let citeCopy = true;
   function saveCiteCopy() { try { localStorage.setItem(CITE_KEY, String(citeCopy)); } catch {} }
+  // The last single-translation choice, remembered so leaving compare mode
+  // returns to it (and so the picker has something to display in compare).
+  let lastSingle: string = trans;
   function setTrans(t: string) {
     trans = t;
+    if (t !== 'compare') lastSingle = t;
     try { localStorage.setItem(TRANS_KEY, t); } catch {}
+  }
+  // The dropdowns select WHICH translation; mode (single vs compare) is chosen
+  // in the settings sidebar. Picking a translation always means "show me this
+  // one" — including from compare mode, which it exits.
+  $: pickValue = trans === 'compare' ? lastSingle : trans;
+  function onPick(e: Event) {
+    setTrans((e.currentTarget as HTMLSelectElement).value);
   }
 
   // ── Settings sidebar ──────────────────────────────────────────────────────
@@ -702,6 +713,8 @@
     const validTrans = new Set([...translations.map(t => t.id), ...(canCompare ? ['compare'] : [])]);
     const savedTrans = (() => { try { return localStorage.getItem(TRANS_KEY); } catch { return null; } })();
     if (savedTrans && validTrans.has(savedTrans)) trans = savedTrans;
+    // A restored single choice is also the one "leave compare" returns to.
+    if (trans !== 'compare') lastSingle = trans;
     // Restore the chosen compare pair (set in the settings sidebar).
     const transIds = new Set(translations.map(t => t.id));
     const savedL = (() => { try { return localStorage.getItem(CMPL_KEY); } catch { return null; } })();
@@ -1036,11 +1049,10 @@
           <!-- Desktop translation picker, beside the view toggle. On mobile this
                is hidden (see global.css) and the same control lives in the
                ⚙ Settings sidebar instead. -->
-          <select class="rc-trans-select" bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+          <select class="rc-trans-select" value={pickValue} on:change={onPick} aria-label="English translation">
             {#each translations as t}
               <option value={t.id}>{t.name}</option>
             {/each}
-            {#if canCompare}<option value="compare">Compare both</option>{/if}
           </select>
         {/if}
         <!-- Desktop only — on mobile these live in the ⚙ Settings sidebar. -->
@@ -1170,18 +1182,41 @@
         <div class="settings-section-label">Translation</div>
         <!-- svelte-ignore a11y-label-has-associated-control -->
         <label>
-          <select class="settings-select" bind:value={trans} on:change={() => setTrans(trans)} aria-label="English translation">
+          <select class="settings-select" value={pickValue} on:change={onPick} aria-label="English translation">
             {#each translations as t}
               <option value={t.id}>{t.name}</option>
             {/each}
-            {#if canCompare}<option value="compare">Compare both</option>{/if}
           </select>
         </label>
       </div>
     {/if}
     {#if canCompare}
-      <!-- Compare pair: which two translations sit side by side when "Compare
-           both" is selected. Mix and match any two. -->
+      <!-- Mode lives HERE, not in the picker: the dropdowns choose WHICH
+           translation, this chooses single vs side-by-side comparison. -->
+      <div class="settings-section">
+        <div class="settings-section-label">Translations</div>
+        <label class="settings-mode-row">
+          <input
+            type="radio"
+            name="trans-mode"
+            checked={trans !== 'compare'}
+            on:change={() => setTrans(lastSingle)}
+          />
+          <span>Single translation</span>
+        </label>
+        <label class="settings-mode-row">
+          <input
+            type="radio"
+            name="trans-mode"
+            checked={trans === 'compare'}
+            on:change={() => setTrans('compare')}
+          />
+          <span>Compare two translations</span>
+        </label>
+      </div>
+    {/if}
+    {#if canCompare && trans === 'compare'}
+      <!-- Compare pair: which two translations sit side by side. -->
       <div class="settings-section">
         <div class="settings-section-label">Compare</div>
         <!-- svelte-ignore a11y-label-has-associated-control -->

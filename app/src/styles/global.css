@@ -1988,6 +1988,20 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 }
 .settings-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* Translation mode (single vs compare) — chosen in the sidebar, not the
+   translation picker; the picker only chooses WHICH translation. */
+.settings-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--text);
+  padding: 0.18rem 0;
+  cursor: pointer;
+}
+.settings-mode-row input { accent-color: var(--accent); }
+
 /* Compare pair pickers: a "Left"/"Right" label beside each select. */
 .settings-compare-row {
   display: grid;
