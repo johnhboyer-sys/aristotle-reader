@@ -8,12 +8,13 @@
   // (estimate) lines are reported separately and honestly.
   import { WORKS } from '../../../app/src/lib/works';
   import { runImport, ImportCollision, type ImportSummary } from '../lib/imports';
+  import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';
 
   export let file: { name: string; text: string } | null = null;
   export let presetWork: string | null = null;   // pre-filled when launched from a work
   export let onClose: (imported: ImportSummary | null) => void;
 
-  type Step = 'pick' | 'form' | 'running' | 'collision' | 'done' | 'error';
+  type Step = 'pick' | 'form' | 'review' | 'running' | 'collision' | 'done' | 'error';
   let step: Step = file ? 'form' : 'pick';
 
   // form state
@@ -27,6 +28,13 @@
   let errorMsg = '';
   let summary: ImportSummary | null = null;
   let collision: ImportCollision | null = null;
+
+  // Dehyphenation review queue: sites the dictionary couldn't safely decide.
+  let reviewItems: ReviewItem[] = [];
+  let reviewChoices = new Map<number, string>();
+  let reviewPos = 0;
+  let autoJoined = 0;
+  let dehyphenatedText: string | null = null;
 
   $: license = personalCopy === 'yes' || advLicense === 'not-sure'
     ? 'user-supplied' as const
@@ -57,13 +65,48 @@
     step = 'form';
   }
 
+  // Form submit → dehyphenation pass first; alignment only once the text is
+  // settled (auto-decisions applied, review sites resolved by the user).
+  async function prepare() {
+    if (!file) return;
+    step = 'running';
+    progress = 'Checking for OCR line-break hyphens…';
+    try {
+      const d = await dehyphenate(file.text);
+      autoJoined = d.decisions.filter(x => x.action === 'joined').length;
+      dehyphenatedText = d.text;
+      if (d.reviewCount > 0) {
+        reviewItems = listReviewItems(d.text);
+        reviewChoices = new Map();
+        reviewPos = 0;
+        step = 'review';
+        return;
+      }
+    } catch {
+      // Dictionary unavailable: proceed on the raw text rather than block the
+      // import — line-end hyphens then stay exactly as the source had them.
+      dehyphenatedText = file.text;
+    }
+    await start();
+  }
+
+  function chooseReview(form: string) {
+    reviewChoices.set(reviewItems[reviewPos].index, form);
+    if (reviewPos + 1 < reviewItems.length) {
+      reviewPos += 1;
+    } else {
+      dehyphenatedText = resolveReviews(dehyphenatedText!, reviewChoices);
+      start();
+    }
+  }
+
   async function start(replace = false, idOverride?: string) {
     if (!file) return;
     step = 'running';
     progress = 'Starting…';
     try {
       summary = await runImport({
-        raw: file.text,
+        raw: dehyphenatedText ?? file.text,
         work,
         translator: translator.trim(),
         license,
@@ -148,8 +191,29 @@
       </label>
     {/if}
     <div class="imp-actions">
-      <button class="imp-primary" disabled={!formReady} on:click={() => start()}>Import</button>
+      <button class="imp-primary" disabled={!formReady} on:click={prepare}>Import</button>
       <button class="imp-quiet" on:click={() => onClose(null)}>Cancel</button>
+    </div>
+
+  {:else if step === 'review'}
+    <h2>Hyphenation check</h2>
+    <p class="imp-note">
+      This text has printed line-break hyphens. {autoJoined}
+      {autoJoined === 1 ? 'was' : 'were'} rejoined automatically; the
+      dictionary could not safely decide {reviewItems.length} — choose the
+      correct form for each.
+    </p>
+    {#if reviewItems[reviewPos]}
+      {@const item = reviewItems[reviewPos]}
+      <p class="imp-review-ctx">…{item.context}…</p>
+      <div class="imp-actions">
+        <button class="imp-primary" on:click={() => chooseReview(item.closed)}>{item.closed}</button>
+        <button class="imp-primary" on:click={() => chooseReview(item.hyphenated)}>{item.hyphenated}</button>
+      </div>
+      <p class="imp-note">{reviewPos + 1} of {reviewItems.length}</p>
+    {/if}
+    <div class="imp-actions">
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
     </div>
 
   {:else if step === 'running'}
@@ -247,4 +311,9 @@
   .imp-warn { margin-top: 0.8rem; font-size: 0.82rem; color: var(--text-mid); }
   .imp-warn ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
   .imp-error { font-size: 0.88rem; color: var(--error); line-height: 1.5; }
+  .imp-review-ctx {
+    font-family: var(--font-english); font-size: 0.95rem; line-height: 1.6;
+    background: var(--page-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.7rem 0.9rem; margin: 0.8rem 0;
+  }
 </style>
