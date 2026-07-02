@@ -231,6 +231,41 @@ mv "$RAW" "$OUTNAME"
 
 **4. ⚠ Repair page-boundary splits (critical).** Each page was transcribed independently, so text spanning a boundary appears broken: a line ending mid-sentence, blank lines, then a continuation starting lowercase. Read the whole document and fix every such split — join the fragments and delete the intervening blanks. Rejoin hyphenated word-breaks across pages (`afir-` + `mada` → `afirmada`, drop the hyphen). Remove page-boundary artifacts: running headers, standalone page numbers, `<!-- blank page -->` markers. **Assume there is a split at most boundaries where text flows continuously — do not trust naive concatenation.**
 
+> **⚠ Don't rely on a manual read-through alone — script the check.** A manual pass on a
+> multi-hundred-page work (e.g. Ostwald's *Nicomachean Ethics*, ~3000 lines) missed **37**
+> mid-sentence blank-line splits that only surfaced months later as spurious paragraph
+> breaks in the live reader (some literally split a single word's neighbors, e.g. "does" /
+> blank / "not make a spring"). One footnote definition was even truncated this way, with
+> its continuation orphaned into the body text as a bogus paragraph (see
+> `docs/alignment-status.md` note on NE/Ostwald, fixed 2026-07-02). Before declaring a work
+> done, run an automated scan and manually adjudicate every hit (most are real paragraph
+> breaks; the false ones are the bug):
+> ```bash
+> python3 - <<'EOF'
+> import re
+> lines = open("OUTNAME.md", encoding="utf-8").read().splitlines()
+> n = len(lines)
+> for i in range(n):
+>     if lines[i].strip(): continue
+>     p = i - 1
+>     while p >= 0 and not lines[p].strip(): p -= 1
+>     x = i + 1
+>     while x < n and not lines[x].strip(): x += 1
+>     if p < 0 or x >= n: continue
+>     prev, nxt = lines[p].rstrip(), lines[x].rstrip()
+>     if prev.lstrip().startswith(("#", ">", "[^")) or nxt.lstrip().startswith(("#", ">", "[^")):
+>         continue
+>     if re.match(r"^\s*[a-z]", nxt):   # next paragraph opens lowercase => real split
+>         print(p + 1, x + 1, "|", prev[-70:], "|", nxt[:70])
+> EOF
+> ```
+> A hit means the blank line is very likely a page-boundary artifact, not an authorial
+> paragraph break — delete it (removing the blank line is enough; the pipeline's tokenizer
+> joins words with a single space regardless of the surrounding line-wrap, so no further
+> edit is needed). This also catches orphaned footnote continuations: if the "next" line
+> reads like a textual/editorial aside with no clear referent, check whether a nearby
+> footnote definition ends mid-sentence and the fragment belongs there instead of in the body.
+
 **5. ⚠ Relocate all footnote definitions to the end (critical).** Page files hold `[^N]: …` definitions inline. In the final document, move **every** definition out of the body into a single `## Footnotes` section at the very end, in numerical order. Ensure every `[^N]` reference has a matching definition and vice versa; flag mismatches. If numbering resets between chapters, renumber to avoid collisions (e.g. chapter-2 `[^1]` → `[^101]`). Merge definitions split across a page boundary. **Each definition must be a single line** matching `[^N]: full text`, with one blank line between definitions.
 
 **6. Final cleanup pass.** Read through `$OUTNAME` and fix remaining artifacts: orphaned list items, duplicated headers, inconsistent heading hierarchy, tables/lists split across pages. Separate sections with a single blank line (not a horizontal rule). **Never leave more than one consecutive blank line.**
@@ -259,6 +294,10 @@ Treat any of these as a failure to fix before declaring done:
 - **Transcription never goes in response text** — status lines only; write to files. This holds whether or not the substitution protocol is enabled.
 - **Substitution is optional, reversible, word-bounded, OFF by default.** Enable only on observed filter errors. Encode and decode are exact `\b`-bounded inverses (`perl`, never unbounded `sed`), so verbatim fidelity is preserved; it's a harmless no-op on Greek.
 - **Verbatim fidelity** — transcription, not summarization. Every word, accent, and dash matters.
+- **Script the page-boundary-split check (Step 4.4), don't rely on reading alone.** A blank
+  line followed by a lowercase continuation is almost always a false paragraph break, not an
+  authorial one — 37 slipped past a manual read in one past translation before an automated
+  scan caught them.
 - **Coordinate via files + messages.** Downstream agents poll the filesystem for upstream outputs; the lead never relays content between teammates.
 - **All reading roles are batched** to stay under the 20MB limit, with a graceful-overflow stop that never fails a whole batch.
 - **Pick the mode deliberately.** Standard (1 read + 1 review) is the default; escalate to High-accuracy (blind dual-read + review + assemble) only where the reviewer keeps catching misreads. Don't pay for four reads by default.

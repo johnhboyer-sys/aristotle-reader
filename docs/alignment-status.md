@@ -89,6 +89,11 @@ anchors are structural/interpolated and not counted.
 
 - **NE / Ostwald** — per-line Bekker gutter comes from the source's inline Bekker markers
   (`stage1_ostwald`), not the gloss-aligner; no review page in this tracker.
+  **2026-07-02:** fixed 37 stray page-boundary blank lines in `sources/ostwald/ostwald-ethics.md`
+  that rendered as spurious mid-sentence paragraph breaks in the reader (plus one footnote,
+  `[^277]`, truncated mid-sentence with its continuation orphaned into the Book VI body text).
+  See `ocr_translations/CLAUDE.md` Step 4.4 for the automated scan that should catch this on
+  future translations.
 
 ## How to verify a work
 
