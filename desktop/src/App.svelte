@@ -419,7 +419,7 @@
 
 <svelte:window on:click|capture={onGlobalClick} on:keydown|capture={onEsc} />
 
-<div class="dt-shell" class:drag-over={dragOver}
+<div class="dt-shell" class:drag-over={dragOver} class:dt-no-rails={!railOpen && !annOpen}
   on:dragover={onDragOver} on:dragleave={onDragLeave} on:drop={onDrop} role="application">
   {#if railOpen}
     <aside class="dt-rail">
