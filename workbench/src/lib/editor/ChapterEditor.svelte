@@ -1254,6 +1254,17 @@
     requestUnsplit(m.row, m.segment);
   }
 
+  /** Right-click the Greek → "Translate with AI" (the discoverable entry
+   * point; the hover glyph + ⌘⏎ still work). Translates the whole Bekker
+   * line via the same per-row assist flow; the suggestion lands in this
+   * row's English cell. */
+  function menuAssist() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    invokeAssist(m.row, m.segment);
+  }
+
   /** Split model row r at a validated Greek offset — ONE undo entry that
    * captures the row's structural before/after (offsets + both English
    * docs) and restores focus on ⌘Z. */
@@ -1921,6 +1932,7 @@
 
   {#if ctxMenu}
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>Translate with AI</button>
       {#if ctxMenu.merge}
         <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
       {:else}

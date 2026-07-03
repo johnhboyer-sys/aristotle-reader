@@ -37,12 +37,19 @@
   let {
     work,
     books,
+    defaultBook = null,
+    defaultChapter = null,
     onClose,
     onImported,
   }: {
     /** The work this reference belongs to (the rail button's work). */
     work: WorkManifest;
     books: ReferenceImportBook[];
+    /** The chapter you're currently viewing — pre-fills the assignment when a
+     * block has no heading of its own, so the common "import for the chapter
+     * I'm reading" case is one confirm. Null when importing for another work. */
+    defaultBook?: number | null;
+    defaultChapter?: number | null;
     onClose: () => void;
     /** Called after a successful write with the chapters just imported, so
      * the host can refresh an open ReferencePanel. */
@@ -118,9 +125,20 @@
   // ── assignment step ─────────────────────────────────────────────────────
   let rows = $state<AssignmentRow[]>([]);
 
+  /** Fill any block that has no chapter of its own with the chapter the user
+   * is currently viewing (when it's a real chapter of this work). */
+  function withDefaultChapter(base: AssignmentRow[]): AssignmentRow[] {
+    if (defaultBook === null || defaultChapter === null) return base;
+    const b = books.find((x) => x.n === defaultBook);
+    if (!b || !b.chapters.includes(defaultChapter)) return base;
+    return base.map((r) =>
+      r.book === null && r.chapter === null ? { ...r, book: defaultBook, chapter: defaultChapter } : r,
+    );
+  }
+
   function toAssignment() {
     errorMessage = null;
-    rows = rowsFromBlocks(proposeSplits(sourceText));
+    rows = withDefaultChapter(rowsFromBlocks(proposeSplits(sourceText)));
     phase = 'assign';
   }
 
@@ -264,8 +282,8 @@
         </div>
       {:else if phase === 'assign'}
         <p class="line">
-          Say which chapter each section belongs to. Detected headings have been filled in — check
-          them.
+          Say which chapter each section belongs to. The chapter you're viewing (and any headings
+          found in the text) are filled in — check them.
         </p>
         <div class="table-wrap">
           <table class="assign-table">

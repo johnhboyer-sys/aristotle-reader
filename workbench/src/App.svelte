@@ -209,7 +209,16 @@
       label: b.label,
       chapters: b.chapters,
     }));
-    return { work, books };
+    // Default the assignment to the chapter you're currently viewing (still
+    // editable) when the reference belongs to the open work — so "which
+    // chapter is this for?" is answered by one sensible default.
+    const sameWork = selection && selection.workId === work.id;
+    return {
+      work,
+      books,
+      defaultBook: sameWork ? selection!.book : null,
+      defaultChapter: sameWork ? selection!.chapter : null,
+    };
   });
 
   function handleReferenceImported() {
@@ -537,6 +546,8 @@
     <ReferenceImportDialog
       work={referenceImportTarget.work}
       books={referenceImportTarget.books}
+      defaultBook={referenceImportTarget.defaultBook}
+      defaultChapter={referenceImportTarget.defaultChapter}
       onClose={() => (referenceImportWorkId = null)}
       onImported={handleReferenceImported}
     />
