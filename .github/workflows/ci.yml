@@ -52,6 +52,13 @@ jobs:
       - name: Install pipeline dependencies
         run: cd pipeline && uv sync
 
+      - name: Run corpus preflight fixture
+        run: |
+          cd pipeline
+          uv run python -m aristotle_pipeline.preflight \
+            tests/fixtures/preflight/valid/data \
+            tests/fixtures/preflight/valid/manifests
+
       - name: Run pipeline tests
         run: |
           cd pipeline

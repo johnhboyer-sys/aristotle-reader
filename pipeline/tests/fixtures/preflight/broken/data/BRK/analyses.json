@@ -1,0 +1,18 @@
+{
+  "tri/ton": [
+    {
+      "lemma": "tri/ton",
+      "gloss": "third",
+      "parse": "adjective",
+      "lsj": ["tri/ton"]
+    }
+  ],
+  "prw=ton": [
+    {
+      "lemma": "prw=ton",
+      "gloss": "first",
+      "parse": "adjective",
+      "lsj": ["prw=ton"]
+    }
+  ]
+}
