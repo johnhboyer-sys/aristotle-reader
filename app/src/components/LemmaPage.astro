@@ -11,6 +11,8 @@ import { readFileSync } from 'node:fs';
 import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, workPath, workLanding, bookLabel, isBookless } from '../lib/works';
+import { sanitizeHtml } from '../lib/html';
+import { jsonLdSafe } from '../lib/jsonld';
 import '../styles/global.css';
 
 interface Props { slug: string; }
@@ -45,7 +47,7 @@ try {
   const shard = JSON.parse(
     readFileSync(`public/data/lsj/${lsjShardLetter(data.key)}.json`, 'utf-8'),
   );
-  lsjHtml = shard[data.key]?.html ?? '';
+  lsjHtml = sanitizeHtml(shard[data.key]?.html ?? '');
 } catch { /* no shard */ }
 
 // Deep-link an instance back into the reader: scroll to the Bekker line and
@@ -128,9 +130,11 @@ const breadcrumb = Astro.site ? {
   <meta property="og:site_name" content="The Aristotle Reader" />
   {ogImage && <meta property="og:image" content={ogImage} />}
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={metaDescription} />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
-  <script type="application/ld+json" set:html={JSON.stringify(definedTerm)} />
-  {breadcrumb && <script type="application/ld+json" set:html={JSON.stringify(breadcrumb)} />}
+  <script type="application/ld+json" set:html={jsonLdSafe(definedTerm)} />
+  {breadcrumb && <script type="application/ld+json" set:html={jsonLdSafe(breadcrumb)} />}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -216,7 +220,7 @@ const breadcrumb = Astro.site ? {
   </header>
 
   <main class="lx-body">
-    <h1 class="lx-head-gk">{data.head}</h1>
+    <h1 class="lx-head-gk" lang="grc">{data.head}</h1>
     <p class="lx-translit">{data.slug}</p>
     {gloss && <p class="lx-gloss">{data.glosses.join('; ')}</p>}
     <p class="lx-freq">Appears <b>{data.count.toLocaleString()}</b> times across Aristotle's works.</p>

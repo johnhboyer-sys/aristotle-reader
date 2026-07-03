@@ -1,13 +1,16 @@
 <script lang="ts">
+  import { onDestroy, onMount } from 'svelte';
   import { fly } from 'svelte/transition';
   import { lookupWord, fetchLemmata, type Analysis, type LsjEntry, type LemmaRef } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
 
   export let work: string = 'EN';
   export let token: { t: string; k: string };
-  export let anchor: { x: number; y: number } = { x: 0, y: 0 };
+  export const anchor: { x: number; y: number } = { x: 0, y: 0 };
   export let onClose: () => void;
 
+  let dialogEl: HTMLDivElement;
+  let previousFocus: HTMLElement | null = null;
   let analyses: Analysis[] = [];
   let lsj: LsjEntry[] = [];
   let loading = true;
@@ -38,6 +41,42 @@
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
   }
+
+  function focusableEls(): HTMLElement[] {
+    return dialogEl
+      ? Array.from(dialogEl.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+      : [];
+  }
+
+  function onDialogKey(e: KeyboardEvent) {
+    if (e.key !== 'Tab') return;
+    const els = focusableEls();
+    if (els.length === 0) {
+      e.preventDefault();
+      dialogEl?.focus();
+      return;
+    }
+    const first = els[0];
+    const last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  onMount(() => {
+    previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setTimeout(() => dialogEl?.focus(), 0);
+  });
+
+  onDestroy(() => {
+    previousFocus?.focus();
+  });
 </script>
 
 <svelte:window on:keydown={onKey} />
@@ -45,14 +84,18 @@
 <div class="popup-backdrop" on:click={onClose} on:keydown={() => {}} role="presentation"></div>
 
 <!-- Desktop: slide-in sidebar. Mobile: bottom sheet. Both via CSS. -->
-<aside
+<div
   class="word-sidebar"
+  bind:this={dialogEl}
   transition:fly={isMobile ? { y: 600, duration: 260, opacity: 1 } : { x: 420, duration: 220, opacity: 1 }}
   role="dialog"
   aria-label="Word analysis"
+  aria-modal="true"
+  tabindex="-1"
+  on:keydown={onDialogKey}
 >
   <div class="word-sidebar-head">
-    <span class="popup-surface">{token.t}</span>
+    <span class="popup-surface" lang="grc">{token.t}</span>
     <button class="settings-close" on:click={onClose} aria-label="Close">×</button>
   </div>
   <div class="word-sidebar-body">
@@ -65,7 +108,7 @@
     {:else}
       {#each analyses as a}
         <div class="analysis-card">
-          <div class="lemma">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
+          <div class="lemma" lang="grc">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
           <div class="gloss">{a.gloss}</div>
           <div class="parse">{a.parse}</div>
           {#if lemmaRef(a)}
@@ -89,7 +132,7 @@
       {/if}
     {/if}
   </div>
-</aside>
+</div>
 
 <style>
   /* "See all occurrences" link into the lemma page — the popup's one bridge to
