@@ -359,6 +359,118 @@ describe('compileWorkMarkdown — modes', () => {
   });
 });
 
+describe('compileWorkMarkdown — line splits (design doc D6, export)', () => {
+  // Row index 2 (address 1041a8) carries a real Greek word boundary at
+  // offset 6 and a matching `¶` in its English markup.
+  function splitChapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
+    return metaChapter(1, 1, {
+      greekLines: ['g1', 'g2', 'gamma gamma-second', 'g4', 'g5'],
+      englishLines: ['one', 'two', 'three¶four', 'five', 'six'],
+      meta: {
+        ...metaChapter(1, 1).meta,
+        lineSplits: [{ ref: '1041a8', offset: 6 }],
+      },
+      ...overrides,
+    });
+  }
+
+  it('an unsplit chapter compiles byte-identically to before the feature (regression)', () => {
+    const result = compileWorkMarkdown([metaChapter(1, 1)], META);
+    expect(result.markdown).toContain('one two three four [1041a10] five');
+  });
+
+  it('english mode: the paragraph break lands exactly at the split', () => {
+    const result = compileWorkMarkdown([splitChapter()], META);
+    const bodyStart = result.markdown.indexOf('## Chapter 1');
+    const body = result.markdown.slice(bodyStart);
+    const parts = body.split('\n\n');
+    // "## Chapter 1 (...)", paragraph 1, paragraph 2
+    expect(parts[1].trimEnd()).toBe('one two three');
+    expect(parts[2].trimEnd()).toBe('four five [1041a10] six');
+  });
+
+  it('bilingual mode: BOTH the Greek block and the English block paragraph-break at the same split (John\'s confirmed parity)', () => {
+    const result = compileWorkMarkdown([splitChapter()], META, { mode: 'bilingual' });
+    const bodyStart = result.markdown.indexOf('## Chapter 1');
+    const body = result.markdown.slice(bodyStart);
+    const parts = body.split('\n\n');
+    // heading, greek-para-1, greek-para-2, english-para-1, english-para-2
+    expect(parts).toHaveLength(5);
+    expect(parts[1].trimEnd()).toBe('g1 g2 gamma');
+    // The Greek block stamps too (bilingual parity for the SAME rows means
+    // the SAME segment carries isStampSegment on both sides).
+    expect(parts[2].trimEnd()).toBe('gamma-second g4 [1041a10] g5');
+    expect(parts[3].trimEnd()).toBe('one two three');
+    expect(parts[4].trimEnd()).toBe('four five [1041a10] six');
+  });
+
+  it('bilingual mode: the every-5 stamp appears once in the Greek block and once in the English block (twice total), never duplicated by the split', () => {
+    const result = compileWorkMarkdown([splitChapter()], META, { mode: 'bilingual' });
+    const occurrences = result.markdown.split('[1041a10]').length - 1;
+    expect(occurrences).toBe(2);
+  });
+
+  it('a two-split line yields three paragraphs in whole-work compile too', () => {
+    const c = splitChapter({
+      greekLines: ['g1', 'g2', 'gamma gamma-second gamma-third', 'g4', 'g5'],
+      englishLines: ['one', 'two', 'alpha¶beta¶gamma', 'five', 'six'],
+      meta: {
+        ...splitChapter().meta,
+        lineSplits: [
+          { ref: '1041a8', offset: 6 },
+          { ref: '1041a8', offset: 19 },
+        ],
+      },
+    });
+    const result = compileWorkMarkdown([c], META);
+    const bodyStart = result.markdown.indexOf('## Chapter 1');
+    const parts = result.markdown.slice(bodyStart).split('\n\n');
+    expect(parts[1].trimEnd()).toBe('one two alpha');
+    expect(parts[2].trimEnd()).toBe('beta');
+    expect(parts[3].trimEnd()).toBe('gamma five [1041a10] six');
+  });
+
+  it('stamp fires once on the first non-empty segment, even across a chapter compiled with other chapters', () => {
+    const c = metaChapter(1, 2, {
+      greekLines: ['g1', 'g2', 'g3', 'g4', 'penta penta-second'],
+      englishLines: ['one', 'two', 'three', 'four', '¶the fifth word'],
+      meta: {
+        ...metaChapter(1, 2).meta,
+        lineSplits: [{ ref: '1041a10', offset: 6 }],
+      },
+    });
+    const result = compileWorkMarkdown([metaChapter(1, 1), c], META);
+    const stampCount = (result.markdown.match(/\[1041a10\]/g) ?? []).length;
+    // One from chapter 1 (unsplit, "five") + one from chapter 2's split row
+    // (on its second, non-empty segment) = 2 total, never 3.
+    expect(stampCount).toBe(2);
+    expect(result.markdown).toContain('[1041a10] the fifth word');
+  });
+
+  it('footnotes resolve across the split when compiled with other chapters (namespacing + split coexist)', () => {
+    const c1 = metaChapter(1, 1, {
+      englishLines: ['a note here {^1:phrase}', 'two', 'three', 'four', 'five'],
+      footnotes: [{ id: 1, body: 'first chapter note' }],
+    });
+    const c2 = splitChapter({
+      englishLines: ['one', 'two', 'three¶four {^1:with a note}', 'five', 'six'],
+      footnotes: [{ id: 1, body: 'second chapter note, anchored after the split' }],
+      meta: { ...splitChapter().meta, book: 1, chapter: 2 },
+    });
+    const result = compileWorkMarkdown([c1, c2], META);
+    expect(result.markdown).toContain('[^c1-1]: first chapter note');
+    expect(result.markdown).toContain('four with a note[^c2-1]');
+    expect(result.markdown).toContain('[^c2-1]: second chapter note, anchored after the split');
+  });
+
+  it('stored chapter files are never mutated by compile, even with a split-bearing fixture', () => {
+    const c = splitChapter();
+    const before = JSON.parse(JSON.stringify(c));
+    compileWorkMarkdown([c], META, { mode: 'bilingual' });
+    expect(c).toEqual(before);
+  });
+});
+
 describe('filename helpers', () => {
   it('sanitizes illegal filename characters and collapses whitespace', () => {
     expect(sanitizeFilenameComponent('A: B / C * D?')).toBe('A B C D');

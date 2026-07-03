@@ -692,6 +692,80 @@ if (!bilingualResult.ok) {
   }
 }
 
+// ── PART C: line splits (design doc D6) — real pandoc/docx proof ────────────
+//
+// A single chapter with ONE user paragraph split (Metaphysics Α.1, same span
+// shape as compileChapterA1 above but with a `line_splits` entry on its
+// third row and a matching `¶` in that row's [ENGLISH] markup). Verifies the
+// split survives a REAL pandoc conversion as two actual Word paragraphs
+// (`<w:p>` elements), not just a `\n\n` in the intermediate markdown.
+
+const splitChapterA1 = {
+  meta: {
+    schemaVersion: 1,
+    work: 'metaphysics',
+    book: 1,
+    chapter: 1,
+    citationScheme: 'bekker-metaphysics',
+    spanStart: '980a21',
+    spanEnd: '980a25',
+    lineSplits: [{ ref: '980a23', offset: 10 }], // word gap in "ὀρέγονται φύσει." (before "φύσει")
+  },
+  greekLines: ['πάντες ἄνθρωποι', 'τοῦ εἰδέναι', 'ὀρέγονται φύσει.', 'σημεῖον δ᾽ ἡ', 'τῶν αἰσθήσεων ἀγάπησις·'],
+  englishLines: [
+    'All men by nature desire {^1:to know}.',
+    'An indication of this',
+    'is the delight we take¶and here a new paragraph begins',
+    'in our senses; for even',
+    'apart from their usefulness they are loved for themselves.',
+  ],
+  footnotes: [{ id: 1, body: 'The famous opening line — cf. **Ross** ad loc.' }],
+};
+
+const splitMdPath = path.join(scratchDir, 'export-harness-split-a1.md');
+const splitDocxPath = path.join(scratchDir, 'export-harness-split-a1.docx');
+const splitResult = await exportChapterToDocx(splitChapterA1, workMeta, {
+  markdownPath: splitMdPath,
+  docxPath: splitDocxPath,
+  writeFile,
+  pandocBin,
+});
+
+if (!splitResult.ok) {
+  fail('line split: pandoc conversion succeeded (exit 0)', splitResult.message ?? '(no message)');
+} else {
+  pass('line split: pandoc conversion succeeded (exit 0)', '.md -> .docx');
+
+  const splitMd = readFileSync(splitMdPath, 'utf8');
+  if (splitMd.includes('is the delight we take\n\nand here a new paragraph begins')) {
+    pass('line split: intermediate markdown has a \\n\\n paragraph break exactly at the split', 'found');
+  } else {
+    fail('line split: intermediate markdown has a \\n\\n paragraph break exactly at the split', `markdown was:\n${splitMd}`);
+  }
+
+  const splitDocXml = unzipEntry(splitDocxPath, 'word/document.xml') ?? '';
+  // pandoc renders each markdown paragraph as its own <w:p> block; a real
+  // split must produce at least 3 body paragraphs (heading + 2 body
+  // paragraphs), and the two body-text fragments must NOT share one <w:p>.
+  const bodyParagraphs = [...splitDocXml.matchAll(/<w:p\b[^>]*>([\s\S]*?)<\/w:p>/g)].map((m) => m[1]);
+  const firstIdx = bodyParagraphs.findIndex((p) => /delight we take/.test(p));
+  const secondIdx = bodyParagraphs.findIndex((p) => /new paragraph begins/.test(p));
+  if (firstIdx >= 0 && secondIdx >= 0 && firstIdx !== secondIdx) {
+    pass('line split: split text lands in two DISTINCT <w:p> paragraphs in document.xml', `paragraphs ${firstIdx} and ${secondIdx}`);
+  } else {
+    fail('line split: split text lands in two DISTINCT <w:p> paragraphs in document.xml', `firstIdx=${firstIdx} secondIdx=${secondIdx}`);
+  }
+
+  // The footnote (anchored in the FIRST segment, before the split) still
+  // resolves as a real native footnote across the split.
+  const splitFootnotesXml = unzipEntry(splitDocxPath, 'word/footnotes.xml') ?? '';
+  if (/Ross/.test(splitFootnotesXml)) {
+    pass('line split: footnote anchored before the split still resolves as a native footnote', 'found "Ross"');
+  } else {
+    fail('line split: footnote anchored before the split still resolves as a native footnote', 'not found');
+  }
+}
+
 printTable();
 const anyFailed = results.some((r) => !r.ok);
 process.exit(anyFailed ? 1 : 0);

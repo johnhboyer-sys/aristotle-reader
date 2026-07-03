@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChapterFileError, parseChapterFile, serializeChapterFile, rowAddress } from '../index';
+import { ChapterFileError, parseChapterFile, serializeChapterFile, rowAddress, isValidSplitOffset } from '../index';
 import type { ChapterFile, ChapterFileMeta, ColumnStart } from '../types';
 
 // Canonical serialized shape: one structural blank line after each section's
@@ -760,5 +760,181 @@ describe('round-trip property (seeded generator)', () => {
       expect(reparsed, `case ${i}\n${serialized}`).toEqual(doc);
       expect(serializeChapterFile(reparsed), `case ${i} not byte-idempotent`).toBe(serialized);
     }
+  });
+});
+
+// ── line_splits (design doc D6, slice 1) ─────────────────────────────────────
+//
+// The parser owns STRUCTURE (pair shape, scheme-parseable refs, positive
+// strictly-ascending offsets per address) and byte-stable round-tripping;
+// whether an offset lands in range / at a word boundary of its row's Greek is
+// hydration's job (library/autosave.ts drift policy) and must NOT throw here.
+
+describe('line_splits parsing + validation', () => {
+  const greek = ['ἡ οὐσία', 'τὸ αἴτιον· καὶ ἡ ἀρχή', 'γ', 'δ'];
+  const english = ['a', 'first part¶second part', 'c', 'd'];
+
+  it('parses comma-separated <address>@<offset> pairs into meta.lineSplits', () => {
+    const doc = parseChapterFile(fileWith('line_splits: "1041a7@3,1041a7@11"', greek, english));
+    expect(doc.meta.lineSplits).toEqual([
+      { ref: '1041a7', offset: 3 },
+      { ref: '1041a7', offset: 11 },
+    ]);
+  });
+
+  it('a file without line_splits parses with the field absent (unsplit files)', () => {
+    const doc = parseChapterFile(fileWith('', greek, english));
+    expect(doc.meta.lineSplits).toBeUndefined();
+  });
+
+  it('serializes byte-stably: parse(file) → serialize is byte-identical, and the field sits after column_starts', () => {
+    const file = fileWith('column_starts: "1041a6@1,1041b1@3"\nline_splits: "1041a7@3"', greek, english);
+    const doc = parseChapterFile(file);
+    expect(serializeChapterFile(doc)).toBe(file);
+    expect(serializeChapterFile(doc)).toContain('column_starts: "1041a6@1,1041b1@3"\nline_splits: "1041a7@3"\n---');
+  });
+
+  it('rejects a malformed pair, with the frontmatter line number', () => {
+    expect(() => parseChapterFile(fileWith('line_splits: "1041a7@3,1041a8"', greek, english), 'f.md')).toThrow(
+      /f\.md: line 9: line_splits pair 2 .* is not of the form <address>@<offset>/,
+    );
+  });
+
+  it('rejects a zero offset (an offset is a positive integer)', () => {
+    expect(() => parseChapterFile(fileWith('line_splits: "1041a7@0"', greek, english))).toThrow(
+      /offset must be a positive integer/,
+    );
+  });
+
+  it('rejects an address that does not parse under the declared scheme', () => {
+    expect(() => parseChapterFile(fileWith('line_splits: "junk@3"', greek, english))).toThrow(
+      /does not parse under scheme/,
+    );
+  });
+
+  it('rejects non-ascending offsets at a shared address', () => {
+    expect(() => parseChapterFile(fileWith('line_splits: "1041a7@11,1041a7@3"', greek, english))).toThrow(
+      /strictly ascending/,
+    );
+    expect(() => parseChapterFile(fileWith('line_splits: "1041a7@3,1041a7@3"', greek, english))).toThrow(
+      /strictly ascending/,
+    );
+  });
+
+  it('rejects an empty line_splits value', () => {
+    expect(() => parseChapterFile(fileWith('line_splits: ""', greek, english))).toThrow(/non-empty string/);
+  });
+
+  it('does NOT reject a well-formed but semantically drifted offset (out of range / mid-word) — that is hydration policy, and the pairs round-trip verbatim', () => {
+    // 999 is far beyond any row's Greek; 2 sits mid-word in 'ἡ οὐσία'.
+    const file = fileWith('line_splits: "1041a6@2,1041a7@999"', greek, english);
+    const doc = parseChapterFile(file);
+    expect(doc.meta.lineSplits).toEqual([
+      { ref: '1041a6', offset: 2 },
+      { ref: '1041a7', offset: 999 },
+    ]);
+    expect(serializeChapterFile(doc)).toBe(file);
+  });
+
+  it('serialize refuses an empty lineSplits array (would silently become "absent")', () => {
+    const doc = parseChapterFile(fileWith('', greek, english));
+    doc.meta.lineSplits = [];
+    expect(() => serializeChapterFile(doc)).toThrow(ChapterFileError);
+  });
+
+  it('round-trip property: a doc with lineSplits and ¶ english lines deep-equals through parse(serialize(x)), byte-idempotently', () => {
+    const doc: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'metaphysics',
+        book: 7,
+        chapter: 17,
+        citationScheme: 'bekker-metaphysics',
+        spanStart: '1041a6',
+        spanEnd: '1041a8',
+        columnStarts: [{ ref: '1041a6', rowIndex: 1 }],
+        lineSplits: [
+          { ref: '1041a6', offset: 2 },
+          { ref: '1041a6', offset: 5 },
+          { ref: '1041a8', offset: 3 },
+        ],
+      },
+      greekLines: ['ἡ γὰρ ἀρχή', 'τὸ αἴτιον', 'ἡ οὐσία πρώτη'],
+      englishLines: ['one¶two¶three', 'no split here', 'tail is empty¶'],
+      footnotes: [{ id: 1, body: 'a note' }],
+    };
+    const serialized = serializeChapterFile(doc);
+    const reparsed = parseChapterFile(serialized);
+    expect(reparsed).toEqual(doc);
+    expect(serializeChapterFile(reparsed)).toBe(serialized);
+  });
+});
+
+describe('isValidSplitOffset (semantic offset validity, code units)', () => {
+  const greek = 'ἡ γὰρ ἀρχή'; // word gaps after code units 2 and 6
+
+  it('accepts an in-range offset whose preceding character is a word gap', () => {
+    expect(isValidSplitOffset(greek, 2)).toBe(true); // before 'γὰρ'
+    expect(isValidSplitOffset(greek, 6)).toBe(true); // before 'ἀρχή'
+  });
+
+  it('rejects offsets at or beyond the ends (0 < offset < length)', () => {
+    expect(isValidSplitOffset(greek, 0)).toBe(false);
+    expect(isValidSplitOffset(greek, greek.length)).toBe(false);
+    expect(isValidSplitOffset(greek, 999)).toBe(false);
+    expect(isValidSplitOffset(greek, -1)).toBe(false);
+    expect(isValidSplitOffset(greek, 2.5)).toBe(false);
+  });
+
+  it('rejects a mid-word offset (character before it is a letter)', () => {
+    expect(isValidSplitOffset(greek, 1)).toBe(false); // after 'ἡ' but before its space
+    expect(isValidSplitOffset(greek, 4)).toBe(false); // inside 'γὰρ'
+  });
+
+  it('rejects an offset right after a combining mark (never splits a grapheme)', () => {
+    const combining = 'αβ́ γ'; // β + combining acute
+    expect(isValidSplitOffset(combining, 3)).toBe(false); // char before is U+0301
+    expect(isValidSplitOffset(combining, 4)).toBe(true); // char before is the space
+  });
+
+  it('accepts a split after punctuation such as the ano teleia', () => {
+    const line = 'τὸ αἴτιον· καὶ ἡ ἀρχή';
+    expect(isValidSplitOffset(line, line.indexOf('·') + 1)).toBe(true); // directly after '·'
+    expect(isValidSplitOffset(line, line.indexOf('·') + 2)).toBe(true); // after '· '
+    expect(isValidSplitOffset(line, line.indexOf('·'))).toBe(false); // char before is a letter
+  });
+});
+
+// ── schema_version guard (d6 divergence C) ───────────────────────────────────
+
+describe('schema_version guard', () => {
+  function fileWithVersion(version: number): string {
+    return `---
+schema_version: ${version}
+work: metaphysics
+book: 7
+chapter: 17
+citation_scheme: bekker-metaphysics
+span_start: "1041a6"
+span_end: "1041a6"
+---
+[GREEK]
+line one
+[ENGLISH]
+line one english
+`;
+  }
+
+  it('refuses schema_version 2 with one plain sentence', () => {
+    expect(() => parseChapterFile(fileWithVersion(2))).toThrow(ChapterFileError);
+    expect(() => parseChapterFile(fileWithVersion(2))).toThrow(
+      /This chapter was saved by a newer version of the app — update the app to open it\./,
+    );
+  });
+
+  it('accepts schema_version 1 (with or without line_splits — the feature is additive)', () => {
+    expect(() => parseChapterFile(fileWithVersion(1))).not.toThrow();
+    const withSplits = fileWithVersion(1).replace('---\n[GREEK]', 'line_splits: "1041a6@3"\n---\n[GREEK]');
+    expect(parseChapterFile(withSplits).meta.lineSplits).toEqual([{ ref: '1041a6', offset: 3 }]);
   });
 });

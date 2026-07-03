@@ -23,13 +23,22 @@ import { resetGreekRun } from './greekInput';
 
 export const DOUBLE_BACKSPACE_MS = 600;
 
-/** Everything a row needs from the chapter (implemented by ChapterEditor). */
+/** Everything a row needs from the chapter (implemented by ChapterEditor).
+ *
+ * All indexes here are DISPLAY-row (grid) ordinals (design doc D6): a
+ * paragraph-split Bekker line renders as two display rows, and Enter / Tab /
+ * Arrows walk them in order (segment 0 → segment 1 → next line). ChapterEditor
+ * implements `index` as a live getter so the ordinal stays correct when a
+ * split above shifts the grid. */
 export interface RowContext {
   index: number;
   rowCount(): number;
   /** Live-view emptiness of row k (used for paste distribution). */
   isRowEmpty(k: number): boolean;
+  /** Display row k is a CONTINUATION segment (same Bekker address as k-1). */
+  isContinuation(k: number): boolean;
   focusRowEnd(k: number): void;
+  focusRowStart(k: number): void;
   focusRowAtX(k: number, edge: 'first' | 'last', x: number): void;
   getSavedX(): number | null;
   setSavedX(x: number): void;
@@ -113,6 +122,15 @@ export function rowPlugins(ctx: RowContext): Plugin[] {
 
   const backspaceGuard: Command = (state) => {
     if (!atRowStart(state.selection)) return false;
+    // Continuation segment of the SAME Bekker line (D6 divergence F):
+    // Backspace is NAVIGATION ONLY — the caret moves to the previous
+    // segment's end, nothing ever joins. Un-split is the explicit
+    // context-menu command. The merge guard below stays for DISTINCT
+    // addresses only.
+    if (ctx.index > 0 && ctx.isContinuation(ctx.index)) {
+      ctx.focusRowEnd(ctx.index - 1);
+      return true;
+    }
     const now = Date.now();
     if (ctx.index > 0 && now - lastSwallowedBackspace <= DOUBLE_BACKSPACE_MS) {
       lastSwallowedBackspace = 0;
@@ -139,6 +157,13 @@ export function rowPlugins(ctx: RowContext): Plugin[] {
   const deleteGuard: Command = (state) => {
     const { empty, head } = state.selection;
     if (!empty || head !== state.doc.content.size) return false;
+    // Delete at a segment end whose NEXT display row is the same line's
+    // continuation: navigation only, mirroring the Backspace rule — never
+    // joins (D6 divergence F).
+    if (ctx.index < ctx.rowCount() - 1 && ctx.isContinuation(ctx.index + 1)) {
+      ctx.focusRowStart(ctx.index + 1);
+      return true;
+    }
     ctx.flash(ctx.index);
     ctx.hint('Bekker lines can’t be merged');
     return true;

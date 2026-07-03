@@ -13,12 +13,13 @@
  * for what the markup MEANS, two renderers (editor markup, Pandoc markup).
  */
 
-import { parseRow, runsOf } from '../editor/serialize';
+import { parseRow, parseRowSegments, runsOf, serializeRow } from '../editor/serialize';
 import type { InlineRun, MarkSet } from '../editor/serialize';
+import { docFromJSON } from '../editor/schema';
 import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
-import { rowAddress } from '../chapterfile';
+import { isValidSplitOffset, rowAddress } from '../chapterfile';
 
 export type StampMode = 'every-line' | 'every-5' | 'columns';
 
@@ -156,6 +157,220 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
   return null;
 }
 
+// ── per-row addressing, shared by both export paths ────────────────────────
+
+/**
+ * Per-row Bekker addresses for a chapter's rows, and which 0-based row
+ * indexes begin a new column. Exact via `column_starts` when the file
+ * carries it; the single-transition span heuristic otherwise (see the
+ * module header for the fallback's documented limitation). Used internally
+ * by `chapterSegments` below — the single implementation both the
+ * single-chapter (`buildBody`) and whole-work (`compile.ts`) exporters
+ * consume, since both render from `chapterSegments`' output.
+ */
+export function chapterRowAddresses(
+  chapter: ChapterFile,
+  rowCount: number,
+): { addresses: string[]; transitionRows: Set<number> | null } {
+  const columnStarts = chapter.meta.columnStarts;
+  if (columnStarts && columnStarts.length > 0) {
+    const addresses = Array.from({ length: rowCount }, (_, i) => rowAddress(chapter.meta, i + 1));
+    const transitionRows = new Set(columnStarts.slice(1).map((s) => s.rowIndex - 1));
+    return { addresses, transitionRows };
+  }
+  const addresses = deriveRowAddresses(chapter.meta.spanStart, chapter.meta.spanEnd, rowCount);
+  return { addresses, transitionRows: null };
+}
+
+// ── paragraph segments (design doc D6 — line splits) ────────────────────────
+//
+// A Bekker LINE (one row) may be user-split into 1..N paragraph SEGMENTS
+// sharing the row's one address (Codex's memo §6 "chapterSegments(chapter)"
+// direction, adopted). Export's whole job downstream of this helper is:
+// segments of one row flow within a paragraph joined by ' ' as today UNLESS
+// a split forces a new paragraph group; the Bekker stamp — computed exactly
+// as before, once per ROW — prefixes the first NON-EMPTY segment of that row
+// and never repeats on a later segment of the same address.
+
+export interface ChapterSegment {
+  /** 0-based row index (one Bekker line) this segment belongs to. */
+  rowIndex: number;
+  /** 0-based segment index within the row (0 = the row's first segment). */
+  segment: number;
+  /** The row's raw Bekker address (shared by every segment of the row). */
+  address: string;
+  /** This segment's slice of the row's [GREEK] line (offsets, not copies). */
+  greekSlice: string;
+  /** This segment's raw [ENGLISH] markup (one parseRowSegments piece). */
+  englishMarkup: string;
+  /**
+   * True for the first segment of the row whose ENGLISH markup is
+   * non-empty (trimmed) — this is where the row's Bekker stamp belongs.
+   * False for every other segment, including segment 0 when it is empty
+   * and a later segment carries the row's text (the "stamp lands on the
+   * later segment, once" case).
+   */
+  isStampSegment: boolean;
+  /** Whether this ROW begins a new Bekker column (see stampFor's `colStart`); same value for every segment of the row. Always false when the scheme has no bekker-line addressing. */
+  colStart: boolean;
+}
+
+/**
+ * Derive per-row, per-segment views of a chapter's rows — the pure primitive
+ * both `buildBody` (single-chapter) and `compile.ts` (whole-work) render
+ * from. One row (`greekLines[i]`/`englishLines[i]`) yields 1 segment when
+ * unsplit, or N segments when `meta.lineSplits` has (valid) offsets for that
+ * row's address.
+ *
+ * VALIDITY, mirroring hydration's drift policy (d6 divergence E — degrade,
+ * never refuse): an offset is honored only when `isValidSplitOffset` holds
+ * against the file's OWN [GREEK] line for that row. A `line_splits` entry
+ * for an address that doesn't parse as this scheme's addressing scheme, or
+ * whose offset doesn't land at a word boundary inside the row's Greek, is
+ * silently ignored here — the row exports as if unsplit (English `¶`
+ * segmentation from `parseRowSegments` is honored independently and always
+ * wins for how many ENGLISH segments exist; see below).
+ *
+ * ENGLISH VS GREEK SEGMENT COUNT: `parseRowSegments` on the [ENGLISH] row is
+ * the source of truth for how many English segments exist (English `¶` count
+ * wins over the frontmatter offset count, exactly like hydration — prose
+ * over metadata). Greek offsets are paired positionally to those segments;
+ * if there are fewer valid Greek offsets than English segments (skew, or the
+ * row has no `line_splits` entry at all while English still has `¶` tokens
+ * from a hand-edit), the extra trailing English segment(s) get an empty
+ * `greekSlice` rather than losing English text or crashing.
+ */
+export function chapterSegments(chapter: ChapterFile): ChapterSegment[] {
+  const rowCount = chapter.englishLines.length;
+  const scheme = getScheme(chapter.meta.citationScheme);
+  const useAddresses = scheme.gutter.rowUnit === 'bekker-line';
+  const { addresses, transitionRows } = useAddresses
+    ? chapterRowAddresses(chapter, rowCount)
+    : { addresses: [] as string[], transitionRows: null as Set<number> | null };
+
+  // Group this chapter's line_splits by address (offsets already validated
+  // STRUCTURALLY and strictly ascending by the parser — see parse.ts).
+  const splitsByAddress = new Map<string, number[]>();
+  for (const s of chapter.meta.lineSplits ?? []) {
+    const list = splitsByAddress.get(s.ref) ?? [];
+    list.push(s.offset);
+    splitsByAddress.set(s.ref, list);
+  }
+
+  const out: ChapterSegment[] = [];
+  for (let i = 0; i < rowCount; i++) {
+    const greek = chapter.greekLines[i];
+    const address = useAddresses ? addresses[i] : '';
+    const colStart = useAddresses
+      ? transitionRows !== null
+        ? transitionRows.has(i)
+        : parseBekkerLineAddr(address).line === 1
+      : false;
+    // parseRowSegments returns PM doc JSON per segment (Slice 1's public
+    // shape); re-serialize each back to the one-line editor markup string
+    // this module's `markupToPandoc`/`parseRow` pipeline already consumes —
+    // lossless by construction (Slice 1's round-trip guarantee), and keeps
+    // export's contract as "raw editor markup in" for every row/segment.
+    const englishSegments = parseRowSegments(chapter.englishLines[i]).map((doc) => serializeRow(docFromJSON(doc)));
+
+    // Valid Greek offsets for this row (word-boundary-checked against the
+    // row's OWN Greek — see module doc). Invalid/out-of-range offsets are
+    // dropped, never thrown — a drifted split degrades, it doesn't refuse.
+    const rawOffsets = address ? (splitsByAddress.get(address) ?? []) : [];
+    const validOffsets = rawOffsets.filter((off) => isValidSplitOffset(greek, off));
+
+    // Greek slice boundaries: 0, then each valid offset, then greek.length —
+    // yields validOffsets.length + 1 slices. Paired positionally with the
+    // English segments (English count wins on skew; see module doc).
+    const bounds = [0, ...validOffsets, greek.length];
+    const greekSliceCount = Math.max(1, bounds.length - 1);
+
+    let stamped = false;
+    for (let seg = 0; seg < englishSegments.length; seg++) {
+      const englishMarkup = englishSegments[seg];
+      const hasGreekSlice = seg < greekSliceCount;
+      const greekSlice = hasGreekSlice ? greek.slice(bounds[seg], bounds[seg + 1]) : '';
+
+      const isStampSegment = !stamped && rowTextNonEmpty(englishMarkup);
+      if (isStampSegment) stamped = true;
+
+      out.push({ rowIndex: i, segment: seg, address, greekSlice, englishMarkup, isStampSegment, colStart });
+    }
+  }
+  return out;
+}
+
+function rowTextNonEmpty(markup: string): boolean {
+  return markup.trim().length > 0;
+}
+
+// ── paragraph grouping (design doc D6 §6) ───────────────────────────────────
+//
+// Rendering a chapter's segments into Pandoc paragraphs: within a row,
+// segments 1..N-1 each start a NEW paragraph group relative to segment 0
+// (that's what a split IS — a paragraph boundary); consecutive ROWS with no
+// split between them keep flowing into the CURRENT group, joined by ' ',
+// exactly as before the feature existed. Concretely: a new group starts at
+// every segment whose `segment > 0`. Groups are later joined by '\n\n';
+// pieces within a group are joined by ' '.
+//
+// This function renders ONE side (Greek or English) of `chapterSegments`
+// output — callers pick `greekSlice` or `englishMarkup` via `textOf`, so the
+// exact same grouping logic drives both the English body (buildBody /
+// compile.ts's English pass) and the bilingual Greek block (compile.ts).
+// Exported so compile.ts reuses this single implementation for its
+// Greek-block and English-block rendering, instead of re-deriving the
+// grouping/stamping rules a second time.
+
+export interface RenderedParagraphs {
+  /** One entry per paragraph group, already joined with ' ' within the group. Empty groups (an all-untranslated stretch) are omitted. */
+  paragraphs: string[];
+  footnoteIdsUsed: string[];
+}
+
+/**
+ * Render segments of one side (English markup, or Greek slices) into
+ * paragraph groups, applying Bekker stamps (English/Greek both stamp — see
+ * module doc; bilingual Greek carries no footnotes, so Greek-side callers
+ * simply never see footnote ids because Greek text has no `{^id:}` syntax).
+ * `textOf` extracts the raw one-line markup to render for a segment;
+ * `useStamps` + `stampMode` control Bekker-ref stamping exactly as before.
+ */
+export function renderSegmentsGrouped(
+  segments: ChapterSegment[],
+  textOf: (seg: ChapterSegment) => string,
+  useStamps: boolean,
+  stampMode: StampMode,
+): RenderedParagraphs {
+  const groups: string[][] = [[]];
+  const footnoteIdsUsed: string[] = [];
+
+  for (const seg of segments) {
+    // A new segment of the SAME row (segment > 0) forces a new paragraph
+    // group — that is the split, full stop. Segment 0 of every row
+    // continues flowing into whatever group is currently open.
+    if (seg.segment > 0) groups.push([]);
+
+    const raw = textOf(seg);
+    if (raw.trim().length === 0) continue; // untranslated segment, skipped silently
+
+    const { markdown, footnoteIdsUsed: used } = markupToPandoc(raw);
+    footnoteIdsUsed.push(...used);
+    if (markdown.length === 0) continue;
+
+    let piece = markdown;
+    if (useStamps && seg.isStampSegment && seg.address) {
+      const addr = parseBekkerLineAddr(seg.address);
+      const stamp = stampFor(addr, seg.rowIndex, stampMode, seg.colStart);
+      if (stamp) piece = `${stamp} ${piece}`;
+    }
+    groups[groups.length - 1].push(piece);
+  }
+
+  const paragraphs = groups.map((g) => g.join(' ')).filter((p) => p.length > 0);
+  return { paragraphs, footnoteIdsUsed };
+}
+
 // ── inline markup: InlineRun[] -> Pandoc markdown ───────────────────────────
 
 const PANDOC_SPECIAL = /[\\*_[\]^~`<>&]/g;
@@ -246,50 +461,18 @@ function buildHeading(chapter: ChapterFile, work: WorkMeta): string {
 
 // ── body ─────────────────────────────────────────────────────────────────
 
-function buildBody(chapter: ChapterFile, options: Required<PandocMarkdownOptions>): { paragraph: string; footnoteIdsUsed: string[] } {
+/**
+ * Render a chapter's English body as one or more Pandoc paragraphs (design
+ * doc D6): unsplit chapters produce exactly one paragraph, byte-identical to
+ * the pre-D6 behavior; a paragraph split produces a `\n\n` boundary at the
+ * split point, in both single-chapter and (via compile.ts, which shares
+ * `chapterSegments`/`renderSegmentsGrouped`) whole-work exports.
+ */
+function buildBody(chapter: ChapterFile, options: Required<PandocMarkdownOptions>): { paragraphs: string[]; footnoteIdsUsed: string[] } {
   const scheme = getScheme(chapter.meta.citationScheme);
   const useStamps = scheme.gutter.rowUnit === 'bekker-line';
-  const rowCount = chapter.englishLines.length;
-  const columnStarts = chapter.meta.columnStarts;
-
-  // Per-row addresses: exact via column_starts when the file carries it
-  // (rowAddress is pure segment arithmetic — any number of transitions);
-  // otherwise the single-transition span heuristic for older files.
-  let addresses: string[] = [];
-  // 0-based row indexes that begin a new column — known exactly from
-  // column_starts; null means "fall back to the line===1 heuristic".
-  let transitionRows: Set<number> | null = null;
-  if (useStamps) {
-    if (columnStarts && columnStarts.length > 0) {
-      addresses = Array.from({ length: rowCount }, (_, i) => rowAddress(chapter.meta, i + 1));
-      transitionRows = new Set(columnStarts.slice(1).map((s) => s.rowIndex - 1));
-    } else {
-      addresses = deriveRowAddresses(chapter.meta.spanStart, chapter.meta.spanEnd, rowCount);
-    }
-  }
-
-  const parts: string[] = [];
-  const footnoteIdsUsed: string[] = [];
-
-  for (let i = 0; i < rowCount; i++) {
-    const raw = chapter.englishLines[i];
-    if (raw.trim().length === 0) continue; // untranslated row, skipped silently
-
-    const { markdown, footnoteIdsUsed: used } = markupToPandoc(raw);
-    footnoteIdsUsed.push(...used);
-    if (markdown.length === 0) continue;
-
-    let piece = markdown;
-    if (useStamps) {
-      const addr = parseBekkerLineAddr(addresses[i]);
-      const colStart = transitionRows !== null ? transitionRows.has(i) : addr.line === 1;
-      const stamp = stampFor(addr, i, options.stampMode, colStart);
-      if (stamp) piece = `${stamp} ${piece}`;
-    }
-    parts.push(piece);
-  }
-
-  return { paragraph: parts.join(' '), footnoteIdsUsed };
+  const segments = chapterSegments(chapter);
+  return renderSegmentsGrouped(segments, (seg) => seg.englishMarkup, useStamps, options.stampMode);
 }
 
 // ── footnote blocks ──────────────────────────────────────────────────────
@@ -322,10 +505,12 @@ export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, op
   const resolved: Required<PandocMarkdownOptions> = { stampMode: options.stampMode ?? 'every-5' };
 
   const heading = buildHeading(chapter, work);
-  const { paragraph, footnoteIdsUsed } = buildBody(chapter, resolved);
+  const { paragraphs, footnoteIdsUsed } = buildBody(chapter, resolved);
   const footnoteBlocks = buildFootnoteBlocks(chapter, footnoteIdsUsed);
 
-  const sections = [heading, paragraph];
+  // An all-empty chapter still emits one (empty) paragraph, matching the
+  // pre-D6 shape (md.split('\n\n')[1] === '' in that case).
+  const sections = [heading, ...(paragraphs.length > 0 ? paragraphs : [''])];
   if (footnoteBlocks.length > 0) sections.push(footnoteBlocks.join('\n\n'));
 
   return sections.join('\n\n') + '\n';

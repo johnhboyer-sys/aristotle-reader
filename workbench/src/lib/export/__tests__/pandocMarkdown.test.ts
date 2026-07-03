@@ -337,6 +337,123 @@ describe('chapterToPandocMarkdown — escapes', () => {
   });
 });
 
+describe('chapterToPandocMarkdown — line splits (design doc D6, export)', () => {
+  // Row index 2 (address 1041a8) carries a real Greek word boundary at
+  // offset 6 (the space before "gamma-second") and a matching `¶` in its
+  // English markup. Row 4 (1041a10, the every-5 stamp row) stays unsplit so
+  // the stamp-once/skip-empty-segment cases can be layered on independently.
+  function splitChapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
+    return chapter({
+      greekLines: ['g1', 'g2', 'gamma gamma-second', 'g4', 'g5'],
+      englishLines: ['one', 'two', 'three¶four', 'five', 'six'],
+      meta: {
+        schemaVersion: 1,
+        work: 'metaphysics',
+        book: 7,
+        chapter: 17,
+        citationScheme: 'bekker-metaphysics',
+        spanStart: '1041a6',
+        spanEnd: '1041a10',
+        lineSplits: [{ ref: '1041a8', offset: 6 }],
+      },
+      ...overrides,
+    });
+  }
+
+  it('an unsplit chapter renders byte-identically to before the feature (regression)', () => {
+    const withNoSplits = chapter();
+    const md = chapterToPandocMarkdown(withNoSplits, META);
+    // Exactly one body paragraph (heading, body, nothing else joined by \n\n).
+    expect(md.split('\n\n')).toHaveLength(2);
+    const body = md.split('\n\n')[1].trimEnd();
+    expect(body).toBe('one two three four [1041a10] five');
+  });
+
+  it('the paragraph break lands exactly at the split — two paragraphs, split at "three"/"four"', () => {
+    const md = chapterToPandocMarkdown(splitChapter(), META);
+    const parts = md.split('\n\n');
+    // heading, paragraph 1, paragraph 2 (no footnotes here). Row 1041a10
+    // (the last row, "six") is still the every-5 stamp row, unaffected by
+    // the split earlier in the chapter.
+    expect(parts).toHaveLength(3);
+    expect(parts[1].trimEnd()).toBe('one two three');
+    expect(parts[2].trimEnd()).toBe('four five [1041a10] six');
+  });
+
+  it('a two-split line yields three paragraphs', () => {
+    const c = splitChapter({
+      greekLines: ['g1', 'g2', 'gamma gamma-second gamma-third', 'g4', 'g5'],
+      englishLines: ['one', 'two', 'alpha¶beta¶gamma', 'five', 'six'],
+      meta: {
+        ...splitChapter().meta,
+        lineSplits: [
+          { ref: '1041a8', offset: 6 },
+          { ref: '1041a8', offset: 19 },
+        ],
+      },
+    });
+    const md = chapterToPandocMarkdown(c, META);
+    const parts = md.split('\n\n');
+    expect(parts).toHaveLength(4);
+    expect(parts[1].trimEnd()).toBe('one two alpha');
+    expect(parts[2].trimEnd()).toBe('beta');
+    expect(parts[3].trimEnd()).toBe('gamma five [1041a10] six');
+  });
+
+  it('stamp fires once per address, on the first NON-EMPTY segment (segment 0 empty, segment 1 has text)', () => {
+    // Row 1041a10 (index 4, the every-5 stamp row) is split; its FIRST
+    // segment is empty (untranslated continuation start) and its SECOND
+    // segment carries the row's actual text — the stamp must land on the
+    // second segment, and only once (never duplicated).
+    const c = chapter({
+      greekLines: ['g1', 'g2', 'g3', 'g4', 'penta penta-second'],
+      englishLines: ['one', 'two', 'three', 'four', '¶the fifth word'],
+      meta: {
+        schemaVersion: 1,
+        work: 'metaphysics',
+        book: 7,
+        chapter: 17,
+        citationScheme: 'bekker-metaphysics',
+        spanStart: '1041a6',
+        spanEnd: '1041a10',
+        lineSplits: [{ ref: '1041a10', offset: 6 }],
+      },
+    });
+    const md = chapterToPandocMarkdown(c, META);
+    // Exactly one stamp occurrence anywhere in the document.
+    const stampCount = (md.match(/\[1041a10\]/g) ?? []).length;
+    expect(stampCount).toBe(1);
+    // It prefixes the second segment's text (the first segment being empty
+    // produces no paragraph of its own — segment 0 contributes nothing, so
+    // the split still creates a NEW group at segment 1, and since segment 0
+    // was empty, that group is the only content from this row).
+    expect(md).toContain('[1041a10] the fifth word');
+  });
+
+  it('footnotes resolve across the split (a footnote anchored in the second segment still gets its body block)', () => {
+    const c = splitChapter({
+      englishLines: ['one', 'two', 'three¶four {^1:with a note}', 'five', 'six'],
+      footnotes: [{ id: 1, body: 'a note about "four"' }],
+    });
+    const md = chapterToPandocMarkdown(c, META);
+    expect(md).toContain('four with a note[^1]');
+    expect(md).toContain('[^1]: a note about');
+    const parts = md.split('\n\n');
+    expect(parts[1].trimEnd()).toBe('one two three');
+  });
+
+  it('bilingual-equivalent stamping and grouping also verified via compile.ts (see compile.test.ts) — here: stampMode every-line stamps only the first segment of a split row, never the continuation', () => {
+    const md = chapterToPandocMarkdown(splitChapter(), META, { stampMode: 'every-line' });
+    // 1041a8 is row index 2; every-line stamps every row except row 0.
+    // The stamp must appear exactly once even though the row now has two
+    // segments (never "[1041a8] three [1041a8] four").
+    const stampCount = (md.match(/\[1041a8\]/g) ?? []).length;
+    expect(stampCount).toBe(1);
+    expect(md).toContain('[1041a8] three');
+    expect(md).not.toContain('[1041a8] four');
+  });
+});
+
 describe('chapterToPandocMarkdown — footnote blocks', () => {
   it('emits [^id]: body blocks at the end, only for footnotes actually referenced', () => {
     const c = chapter({

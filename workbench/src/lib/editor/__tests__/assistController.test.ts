@@ -479,10 +479,10 @@ describe('assist wiring stays intact (source scan)', () => {
     expect(binding).not.toContain('advance');
   });
 
-  it('ChapterEditor wires requestAssist into every row context and the host', () => {
-    expect(chapterSource).toContain('requestAssist: () => invokeAssist(index)');
-    expect(chapterSource).toContain('assistStateFor: (index) =>');
-    expect(chapterSource).toContain('insertSuggestion: (index, text) => insertSuggestionIntoRow(index, text)');
+  it('ChapterEditor wires requestAssist into every cell context and the host (keyed row+segment, D6)', () => {
+    expect(chapterSource).toContain('requestAssist: () => invokeAssist(row, segment)');
+    expect(chapterSource).toContain('assistStateFor: (row, segment) =>');
+    expect(chapterSource).toContain('insertSuggestion: (row, segment, text) => insertSuggestionIntoRow(row, segment, text)');
   });
 
   it('the insert path is the row view dispatch — never a direct model write', () => {
@@ -512,8 +512,8 @@ describe('assist wiring stays intact (source scan)', () => {
 
   it('RowEditor exposes the ONE public assist command and the quiet affordance', () => {
     expect(rowSource).toContain('export function insertSuggestion(text: string)');
-    expect(rowSource).toContain('host.insertSuggestion(index, text)');
-    expect(rowSource).toContain('host.requestAssist(index)');
+    expect(rowSource).toContain('host.insertSuggestion(row, segment, text)');
+    expect(rowSource).toContain('host.requestAssist(row, segment)');
     expect(rowSource).toContain('AssistPopover');
     expect(rowSource).toContain('assist-glyph');
   });

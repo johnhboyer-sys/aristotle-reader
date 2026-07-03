@@ -29,9 +29,8 @@
 import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
-import { rowAddress } from '../chapterfile';
-import type { BekkerLineAddr, StampMode } from './pandocMarkdown';
-import { markupToPandoc, deriveRowAddresses, parseBekkerLineAddr, stampFor } from './pandocMarkdown';
+import type { StampMode } from './pandocMarkdown';
+import { chapterSegments, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
 
 export type CompileMode = 'english' | 'bilingual';
 
@@ -194,60 +193,28 @@ function chapterHeading(chapter: ChapterFile, work: WorkMeta): string {
 // single-chapter export — see pandocMarkdown.ts for the authoritative
 // commentary on the column_starts vs fallback-heuristic split) ─────────────
 
-// BekkerLineAddr/parseBekkerLineAddr/stampFor are imported from
+// chapterSegments/parseBekkerLineAddr/stampFor are imported from
 // pandocMarkdown.ts (exported from there specifically so this module reuses
-// the single-chapter exporter's stamping rules verbatim instead of
-// re-deriving them — see that module's header for the full commentary on
-// the column_starts-exact vs single-transition-fallback split).
-
-/** Per-row Bekker addresses for one chapter's rows, and which 0-based row indexes begin a new column. Exact via column_starts when present; single-transition fallback heuristic otherwise (same limitation as pandocMarkdown.ts). */
-function chapterRowAddresses(chapter: ChapterFile, rowCount: number): { addresses: string[]; transitionRows: Set<number> | null } {
-  const columnStarts = chapter.meta.columnStarts;
-  if (columnStarts && columnStarts.length > 0) {
-    const addresses = Array.from({ length: rowCount }, (_, i) => rowAddress(chapter.meta, i + 1));
-    const transitionRows = new Set(columnStarts.slice(1).map((s) => s.rowIndex - 1));
-    return { addresses, transitionRows };
-  }
-  const addresses = deriveRowAddresses(chapter.meta.spanStart, chapter.meta.spanEnd, rowCount);
-  return { addresses, transitionRows: null };
-}
+// the single-chapter exporter's segment-derivation and stamping rules
+// verbatim instead of re-deriving them — see that module's header for the
+// full commentary on the column_starts-exact vs single-transition-fallback
+// split, and on the segment/paragraph-grouping shape).
 
 // ── per-chapter body rendering ───────────────────────────────────────────
-
-/**
- * Render one chapter's row text (Greek or English lines) as a single Pandoc
- * Markdown paragraph, with Bekker stamps and footnote markers. Footnote ids
- * referenced in the ENGLISH pass are namespaced by the caller (compileWork)
- * before this function is invoked in the bilingual English block; the Greek
- * block never carries footnote markers (footnotes anchor to English prose
- * only in this app — Greek row text has no {^id:} syntax in the format).
- */
-function renderRowsParagraph(
-  lines: string[],
-  addresses: string[],
-  transitionRows: Set<number> | null,
-  useStamps: boolean,
-  stampMode: StampMode,
-): { paragraph: string; footnoteIdsUsed: string[] } {
-  const parts: string[] = [];
-  const footnoteIdsUsed: string[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    if (raw.trim().length === 0) continue;
-    const { markdown, footnoteIdsUsed: used } = markupToPandoc(raw);
-    footnoteIdsUsed.push(...used);
-    if (markdown.length === 0) continue;
-    let piece = markdown;
-    if (useStamps) {
-      const addr = parseBekkerLineAddr(addresses[i]);
-      const colStart = transitionRows !== null ? transitionRows.has(i) : addr.line === 1;
-      const stamp = stampFor(addr, i, stampMode, colStart);
-      if (stamp) piece = `${stamp} ${piece}`;
-    }
-    parts.push(piece);
-  }
-  return { paragraph: parts.join(' '), footnoteIdsUsed };
-}
+//
+// renderSegmentsGrouped (imported from pandocMarkdown.ts) renders a
+// chapter's segments (Greek slices OR English markup — chosen via `textOf`)
+// as one or more Pandoc Markdown paragraphs, with Bekker stamps and footnote
+// markers, applying the split-driven paragraph grouping of design doc D6 §6:
+// a paragraph break lands at every segment boundary (`seg.segment > 0`), in
+// both the Greek and English blocks of bilingual mode below, keeping the two
+// blocks' manuscript structure parallel (John's confirmed decision) — both
+// calls below are given the SAME `segments` array (one chapterSegments call
+// per chapter), so the split points are identical between blocks by
+// construction. Footnote ids referenced in the ENGLISH pass are namespaced
+// BEFORE `chapterSegments` runs (see below); the Greek block never carries
+// footnote markers (footnotes anchor to English prose only in this app —
+// Greek row text has no {^id:} syntax in the format).
 
 /**
  * Rewrite a raw editor-markup line's `{^id:...}` footnote references to a
@@ -313,31 +280,37 @@ export function compileWorkMarkdown(
 
     const scheme = getScheme(chapter.meta.citationScheme);
     const useStamps = scheme.gutter.rowUnit === 'bekker-line';
-    const rowCount = chapter.englishLines.length;
-    const { addresses, transitionRows } = useStamps
-      ? chapterRowAddresses(chapter, rowCount)
-      : { addresses: [], transitionRows: null };
+
+    // Footnote ids are namespaced BEFORE segment derivation (a textual
+    // rewrite of `{^id:` tokens — untouched by, and unaffected by, any `¶`
+    // segment delimiters already in the row), so chapterSegments sees the
+    // already-namespaced markup and both the Greek and English passes below
+    // share ONE segment derivation per chapter — the split points (and thus
+    // the paragraph groups) are identical between the two blocks by
+    // construction, which is exactly John's confirmed bilingual parity.
+    const namespacedChapter: ChapterFile = {
+      ...chapter,
+      englishLines: chapter.englishLines.map((l) => namespaceFootnoteRefs(l, prefix)),
+    };
+    const segments = chapterSegments(namespacedChapter);
 
     if (resolved.mode === 'bilingual') {
-      const { paragraph: greekParagraph } = renderRowsParagraph(
-        chapter.greekLines,
-        addresses,
-        transitionRows,
+      const { paragraphs: greekParagraphs } = renderSegmentsGrouped(
+        segments,
+        (seg) => seg.greekSlice,
         useStamps,
         resolved.stampMode,
       );
-      if (greekParagraph.length > 0) sections.push(greekParagraph);
+      if (greekParagraphs.length > 0) sections.push(greekParagraphs.join('\n\n'));
     }
 
-    const namespacedEnglish = chapter.englishLines.map((l) => namespaceFootnoteRefs(l, prefix));
-    const { paragraph: englishParagraph, footnoteIdsUsed } = renderRowsParagraph(
-      namespacedEnglish,
-      addresses,
-      transitionRows,
+    const { paragraphs: englishParagraphs, footnoteIdsUsed } = renderSegmentsGrouped(
+      segments,
+      (seg) => seg.englishMarkup,
       useStamps,
       resolved.stampMode,
     );
-    if (englishParagraph.length > 0) sections.push(englishParagraph);
+    if (englishParagraphs.length > 0) sections.push(englishParagraphs.join('\n\n'));
 
     const used = new Set(footnoteIdsUsed);
     const footnoteBlocks: string[] = [];

@@ -13,6 +13,7 @@
  * span_start: "1041a6"
  * span_end: "1041b33"
  * column_starts: "1041a6@1,1041b1@29"
+ * line_splits: "1041b8@14,1041b8@31"
  * ---
  * [GREEK]
  * <one line per Bekker line>
@@ -37,6 +38,20 @@
  * always carried, never assumed. Within a segment, line numbers increment by
  * 1 per row (see `rowAddress`).
  *
+ * `line_splits` is OPTIONAL (design doc D6; unsplit files lack it):
+ * comma-separated `<address>@<offset>` pairs marking user paragraph splits
+ * inside a Bekker line. The address is the split row's raw address (opaque —
+ * validated only via scheme.parseAddress); the offset is a CODE-UNIT index
+ * into that row's [GREEK] line (see isValidSplitOffset). Multiple pairs may
+ * share an address (several splits in one line); their offsets must be
+ * strictly ascending. LAYERING: this module validates line_splits STRUCTURE
+ * only and round-trips the pairs byte-stably; whether an offset actually
+ * lands in range and at a word boundary of its row's Greek is the HYDRATION
+ * step's job (library/autosave.ts) — a well-formed but drifted split must
+ * degrade to an unsplit line with a notice, never a parse refusal. The
+ * matching English segmentation is a `¶` token in the [ENGLISH] row markup
+ * (editor/serialize.ts parseRowSegments/serializeRowSegments).
+ *
  * Structural blanks: the serializer emits exactly one blank line after each
  * section's content when another section follows (at EOF the file's final
  * newline plays that role), and the parser drops exactly one trailing blank
@@ -50,8 +65,17 @@
 import yaml from 'js-yaml';
 import type { SchemeId } from '../citation/types';
 import { getScheme, isKnownScheme } from '../citation/registry';
-import type { ChapterFile, ChapterFileMeta, ColumnStart, Footnote } from './types';
+import type { ChapterFile, ChapterFileMeta, ColumnStart, Footnote, LineSplit } from './types';
 import { ChapterFileError } from './types';
+
+/**
+ * Highest schema_version this build can open. schema_version stays 1 for the
+ * line_splits addition (it is additive-optional, exactly like column_starts —
+ * d6 divergence C); this guard exists so that when a FUTURE format change
+ * does bump the version, today's build refuses the file with one plain
+ * sentence instead of misreading it.
+ */
+const SUPPORTED_SCHEMA_VERSION = 1;
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const FOOTNOTE_ENTRY_RE = /^(\d+):[ \t](.*)$/;
@@ -178,6 +202,87 @@ function parseColumnStarts(
   return out;
 }
 
+const LINE_SPLITS_PAIR_RE = /^([^@]+)@(\d+)$/;
+
+/**
+ * Structural validation of the frontmatter `line_splits` field (see the
+ * format doc above for the layering: semantic offset validation lives in
+ * hydration, not here). Mirrors parseColumnStarts' error style.
+ */
+function parseLineSplits(
+  val: unknown,
+  scheme: ReturnType<typeof getScheme>,
+  lineNo: number,
+  source: string,
+): LineSplit[] {
+  const at = lineNo > 0 ? `line ${lineNo}: ` : '';
+  if (typeof val !== 'string' || val.length === 0) {
+    throw new ChapterFileError(
+      `${source}: ${at}frontmatter field "line_splits", when present, must be a non-empty string of <address>@<offset> pairs`,
+    );
+  }
+  const out: LineSplit[] = [];
+  const lastOffsetByRef = new Map<string, number>();
+  const pairs = val.split(',');
+  for (let i = 0; i < pairs.length; i++) {
+    const pairRaw = pairs[i].trim();
+    const m = LINE_SPLITS_PAIR_RE.exec(pairRaw);
+    if (!m) {
+      throw new ChapterFileError(
+        `${source}: ${at}line_splits pair ${i + 1} (${JSON.stringify(pairRaw)}) is not of the form <address>@<offset>`,
+      );
+    }
+    const ref = m[1];
+    const offset = Number(m[2]);
+    try {
+      scheme.parseAddress(ref);
+    } catch (err) {
+      throw new ChapterFileError(
+        `${source}: ${at}line_splits pair ${i + 1}: address ${JSON.stringify(ref)} does not parse under scheme "${scheme.id}": ${(err as Error).message}`,
+      );
+    }
+    if (!Number.isSafeInteger(offset) || offset <= 0) {
+      throw new ChapterFileError(
+        `${source}: ${at}line_splits pair ${i + 1}: offset must be a positive integer (got ${JSON.stringify(m[2])})`,
+      );
+    }
+    const prev = lastOffsetByRef.get(ref);
+    if (prev !== undefined && offset <= prev) {
+      throw new ChapterFileError(
+        `${source}: ${at}line_splits offsets for address ${JSON.stringify(ref)} must be strictly ascending (pair ${i + 1} has ${offset}, after ${prev})`,
+      );
+    }
+    lastOffsetByRef.set(ref, offset);
+    out.push({ ref, offset });
+  }
+  return out;
+}
+
+/**
+ * Semantic validity of one paragraph-split offset against its row's OWN
+ * [GREEK] line (the canonical Greek that travels with the file — never the
+ * live corpus). Used by hydration's drift policy (d6 divergence E): an
+ * invalid offset never refuses the file; the line just loads unsplit with a
+ * notice.
+ *
+ * OFFSET BASIS — JS CODE UNITS, deliberately (d6 divergence A). The offset
+ * indexes the Greek string with the same `.length`/`.slice` basis every other
+ * offset in this file format uses. Do NOT "fix" this to code points or
+ * graphemes: the Greek the offset indexes is in the same file, so code units
+ * are exact, and combining-mark safety comes from the word-boundary rule
+ * below, not from grapheme segmentation.
+ *
+ * WORD-BOUNDARY RULE: a split must sit in a word gap — the character
+ * immediately before the offset must not be a letter or combining mark
+ * (whitespace, punctuation, and the ano teleia `·` are all fine). This is
+ * what makes a mid-grapheme (base letter + combining mark) split impossible
+ * without any environment-dependent segmenter machinery.
+ */
+export function isValidSplitOffset(greek: string, offset: number): boolean {
+  if (!Number.isInteger(offset) || offset <= 0 || offset >= greek.length) return false;
+  return !/[\p{L}\p{M}]/u.test(greek[offset - 1]);
+}
+
 function parseFrontmatter(
   normalized: string,
   source: string,
@@ -214,6 +319,13 @@ function parseFrontmatter(
   };
 
   const schemaVersion = requireInt('schema_version');
+  if (schemaVersion > SUPPORTED_SCHEMA_VERSION) {
+    // Version discipline (d6 divergence C): refuse a future format with one
+    // plain sentence rather than misread it.
+    throw new ChapterFileError(
+      `${source}: This chapter was saved by a newer version of the app — update the app to open it.`,
+    );
+  }
   const work = requireString('work');
   const book = requireInt('book');
   const chapter = requireInt('chapter');
@@ -247,6 +359,14 @@ function parseFrontmatter(
     columnStarts = parseColumnStarts(v['column_starts'], spanStart, scheme, columnStartsLine, source);
   }
 
+  // Optional line_splits (unsplit files lack it). Structure only — see the
+  // layering note in the format doc above.
+  let lineSplits: LineSplit[] | undefined;
+  if ('line_splits' in v) {
+    const lineSplitsLine = frontmatterKeyLine(m[1], 'line_splits');
+    lineSplits = parseLineSplits(v['line_splits'], scheme, lineSplitsLine, source);
+  }
+
   const meta: ChapterFileMeta = {
     schemaVersion,
     work,
@@ -256,6 +376,7 @@ function parseFrontmatter(
     spanStart,
     spanEnd,
     ...(columnStarts ? { columnStarts } : {}),
+    ...(lineSplits ? { lineSplits } : {}),
   };
   return { meta, rest, columnStartsLine };
 }
@@ -447,6 +568,14 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
       throw new ChapterFileError('serializeChapterFile: column_starts, when present, must contain at least one <columnRef>@<rowIndex> pair');
     }
     lines.push(`column_starts: "${meta.columnStarts.map((s) => `${s.ref}@${s.rowIndex}`).join(',')}"`);
+  }
+  if (meta.lineSplits !== undefined) {
+    if (meta.lineSplits.length === 0) {
+      // Same policy as column_starts: an empty list would silently round-trip
+      // to "absent" — refuse loudly instead of writing a lossy file.
+      throw new ChapterFileError('serializeChapterFile: line_splits, when present, must contain at least one <address>@<offset> pair');
+    }
+    lines.push(`line_splits: "${meta.lineSplits.map((s) => `${s.ref}@${s.offset}`).join(',')}"`);
   }
   lines.push('---');
   return lines.join('\n');

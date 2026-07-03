@@ -1,7 +1,9 @@
 // ChapterModel helpers + dev-fixture sanity (the fixture is real pipeline
 // data: Metaphysics Ζ.17, 1041a6–1041b33).
 import { describe, expect, it } from 'vitest';
-import { modelFromFixture, nextFootnoteId, displayNumbers } from '../model';
+import { modelFromFixture, nextFootnoteId, displayNumbers, segmentCount, englishDocsOf } from '../model';
+import type { RowModel } from '../model';
+import { emptyRowDocJSON } from '../schema';
 import { META_Z17 } from '../../../dev/fixture-meta-z17';
 
 describe('META_Z17 fixture', () => {
@@ -21,6 +23,33 @@ describe('META_Z17 fixture', () => {
     expect(model.dirty).toBe(false);
     expect(model.bookLabel).toBe('Ζ');
     expect(model.chapter).toBe(17);
+  });
+});
+
+describe('row segments (design doc D6)', () => {
+  const base: RowModel = {
+    address: { scheme: 'bekker-metaphysics', raw: '1041a6' },
+    greek: 'Τί δὲ χρὴ λέγειν',
+    english: emptyRowDocJSON(),
+  };
+
+  it('an unsplit row has exactly one segment — its english doc', () => {
+    expect(segmentCount(base)).toBe(1);
+    expect(englishDocsOf(base)).toEqual([base.english]);
+  });
+
+  it('a split row counts and enumerates segment 0 then its continuations, in order', () => {
+    const seg1 = { type: 'doc' as const, content: [{ type: 'text' as const, text: 'two' }] };
+    const seg2 = { type: 'doc' as const, content: [{ type: 'text' as const, text: 'three' }] };
+    const row: RowModel = { ...base, splitOffsets: [3, 6], english2: [seg1, seg2] };
+    expect(segmentCount(row)).toBe(3);
+    expect(englishDocsOf(row)).toEqual([base.english, seg1, seg2]);
+  });
+
+  it('an empty english2 array behaves as unsplit', () => {
+    const row: RowModel = { ...base, english2: [] };
+    expect(segmentCount(row)).toBe(1);
+    expect(englishDocsOf(row)).toEqual([base.english]);
   });
 });
 

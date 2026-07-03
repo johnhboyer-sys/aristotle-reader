@@ -1,7 +1,9 @@
-// Pure row-keymap logic: paste planning (distribute vs flatten) and the
-// typing-transaction shape check used for undo coalescing.
+// Pure row-keymap logic: paste planning (distribute vs flatten), the
+// typing-transaction shape check used for undo coalescing, and the headless
+// keymap bindings — including the D6 display-row navigation (Enter/Backspace/
+// Delete across the segments of a paragraph-split Bekker line).
 import { describe, expect, it } from 'vitest';
-import { EditorState } from '@tiptap/pm/state';
+import { EditorState, TextSelection } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { planPaste, splitSegments, flattenSegments, rowPlugins } from '../plugins/rowKeymap';
 import type { RowContext } from '../plugins/rowKeymap';
@@ -64,21 +66,35 @@ const IS_MAC =
   typeof navigator !== 'undefined' && /Mac|iP(hone|[oa]d)/.test(navigator.platform ?? '');
 
 describe('row keymap bindings', () => {
-  function makeCtx() {
-    const calls = { requestAssist: 0, focusRowEnd: [] as number[] };
+  function makeCtx(overrides: Partial<RowContext> = {}) {
+    const calls = {
+      requestAssist: 0,
+      focusRowEnd: [] as number[],
+      focusRowStart: [] as number[],
+      flash: [] as number[],
+      hints: [] as string[],
+    };
     const ctx: RowContext = {
       index: 0,
       rowCount: () => 3,
       isRowEmpty: () => true,
+      isContinuation: () => false,
       focusRowEnd: (k) => {
         calls.focusRowEnd.push(k);
+      },
+      focusRowStart: (k) => {
+        calls.focusRowStart.push(k);
       },
       focusRowAtX: () => {},
       getSavedX: () => null,
       setSavedX: () => {},
       clearSavedX: () => {},
-      flash: () => {},
-      hint: () => {},
+      flash: (k) => {
+        calls.flash.push(k);
+      },
+      hint: (t) => {
+        calls.hints.push(t);
+      },
       toast: () => {},
       toggleGreek: () => {},
       undo: () => {},
@@ -88,39 +104,117 @@ describe('row keymap bindings', () => {
       requestAssist: () => {
         calls.requestAssist++;
       },
+      ...overrides,
     };
     return { ctx, calls };
   }
 
-  function pressEnter(mods: { mod?: boolean } = {}) {
-    const { ctx, calls } = makeCtx();
-    const [bindings] = rowPlugins(ctx);
-    const state = EditorState.create({ doc: buildRowDoc([]) });
-    const view = { state, dispatch: () => {} } as unknown as EditorView;
-    const mod = mods.mod ?? false;
+  function press(
+    key: string,
+    keyCode: number,
+    opts: {
+      mod?: boolean;
+      made?: ReturnType<typeof makeCtx>;
+      doc?: ReturnType<typeof buildRowDoc>;
+      selAt?: number;
+    } = {},
+  ) {
+    const made = opts.made ?? makeCtx();
+    const [bindings] = rowPlugins(made.ctx);
+    let state = EditorState.create({ doc: opts.doc ?? buildRowDoc([]) });
+    if (opts.selAt !== undefined) {
+      state = state.apply(state.tr.setSelection(TextSelection.create(state.doc, opts.selAt)));
+    }
+    const dispatched: unknown[] = [];
+    const view = {
+      state,
+      dispatch: (tr: unknown) => {
+        dispatched.push(tr);
+      },
+    } as unknown as EditorView;
+    const mod = opts.mod ?? false;
     const event = {
-      key: 'Enter',
-      keyCode: 13,
+      key,
+      keyCode,
       ctrlKey: mod && !IS_MAC,
       metaKey: mod && IS_MAC,
       altKey: false,
       shiftKey: false,
     } as unknown as KeyboardEvent;
     const handled = bindings.props.handleKeyDown!.call(bindings, view, event);
-    return { handled, calls };
+    return { handled, calls: made.calls, dispatched };
   }
 
+  const text = (t: string) => buildRowDoc([{ kind: 'text', text: t, marks: {} }]);
+
   it('⌘⏎ (Mod-Enter) requests an AI suggestion for the row — it never advances', () => {
-    const { handled, calls } = pressEnter({ mod: true });
+    const { handled, calls } = press('Enter', 13, { mod: true });
     expect(handled).toBe(true);
     expect(calls.requestAssist).toBe(1);
     expect(calls.focusRowEnd).toEqual([]);
   });
 
   it('plain Enter still advances to the next row (D1 muscle memory unchanged)', () => {
-    const { handled, calls } = pressEnter();
+    const { handled, calls } = press('Enter', 13);
     expect(handled).toBe(true);
     expect(calls.requestAssist).toBe(0);
     expect(calls.focusRowEnd).toEqual([1]);
+  });
+
+  // ── D6: display-row navigation across split segments ──────────────────
+  it('Enter walks DISPLAY rows: segment 0 advances to the same line’s continuation', () => {
+    // Grid: [line A seg 0, line A seg 1, line B]. Enter from ordinal 0 lands
+    // on ordinal 1 — the continuation — not on line B.
+    const made = makeCtx({ isContinuation: (k) => k === 1 });
+    const { handled, calls } = press('Enter', 13, { made });
+    expect(handled).toBe(true);
+    expect(calls.focusRowEnd).toEqual([1]);
+  });
+
+  it('Backspace at a continuation start NAVIGATES to the previous segment end — never joins, no merge hint', () => {
+    const made = makeCtx({ index: 1, isContinuation: (k) => k === 1 });
+    const { handled, calls, dispatched } = press('Backspace', 8, {
+      made,
+      doc: text('continuation text'),
+      selAt: 0,
+    });
+    expect(handled).toBe(true);
+    expect(calls.focusRowEnd).toEqual([0]); // caret moved up…
+    expect(dispatched).toEqual([]); // …and NOTHING was deleted or joined
+    expect(calls.hints).toEqual([]); // no “can’t be merged” — same address
+    expect(calls.flash).toEqual([]);
+  });
+
+  it('Backspace at the start of a DISTINCT address keeps the two-step merge guard', () => {
+    const made = makeCtx({ index: 1 }); // isContinuation stays false
+    const { handled, calls, dispatched } = press('Backspace', 8, {
+      made,
+      doc: text('row text'),
+      selAt: 0,
+    });
+    expect(handled).toBe(true);
+    expect(dispatched).toEqual([]);
+    expect(calls.focusRowEnd).toEqual([]); // first press only hints
+    expect(calls.hints[0]).toContain('Bekker lines can’t be merged');
+    expect(calls.flash).toEqual([1]);
+  });
+
+  it('Delete at a segment end before the same line’s continuation navigates — never joins', () => {
+    const doc = text('first segment');
+    const made = makeCtx({ isContinuation: (k) => k === 1 });
+    const { handled, calls, dispatched } = press('Delete', 46, { made, doc, selAt: doc.content.size });
+    expect(handled).toBe(true);
+    expect(calls.focusRowStart).toEqual([1]);
+    expect(dispatched).toEqual([]);
+    expect(calls.hints).toEqual([]);
+  });
+
+  it('Delete at a row end before a DISTINCT address still hints the merge guard', () => {
+    const doc = text('row');
+    const made = makeCtx();
+    const { handled, calls } = press('Delete', 46, { made, doc, selAt: doc.content.size });
+    expect(handled).toBe(true);
+    expect(calls.focusRowStart).toEqual([]);
+    expect(calls.hints).toEqual(['Bekker lines can’t be merged']);
   });
 });

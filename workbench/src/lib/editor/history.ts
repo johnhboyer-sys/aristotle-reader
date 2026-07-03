@@ -12,6 +12,12 @@
 //   (fnBefore/fnAfter snapshots).
 // - Redo clears on any new edit.
 //
+// Line splits (design doc D6): the edit payload is the row's SEGMENT BUNDLE —
+// every segment doc plus the row's splitOffsets — so a split or un-split is
+// ONE entry whose undo restores the whole structural before-state (offsets
+// AND both English docs) in one ⌘Z. A segment text edit is still a
+// single-row entry (its bundle differs only in that segment's doc).
+//
 // This module is pure bookkeeping: applying an entry back to the model and
 // the live views (updateState + refocus) is ChapterEditor's job.
 
@@ -20,14 +26,24 @@ import type { Footnote } from './model';
 
 export interface SelRef {
   row: number;
+  /** English segment within the row (0 unless the line is split — D6). */
+  segment: number;
   anchor: number;
   head: number;
 }
 
+/** One row's full structural state: segment docs in order + split offsets. */
+export interface RowSnapshot {
+  /** Segment docs in document order; docs[0] is the row's `english`. */
+  docs: PMNode[];
+  /** The row's splitOffsets at snapshot time (cloned; undefined = unsplit). */
+  splitOffsets?: number[];
+}
+
 export interface RowEdit {
   row: number;
-  before: PMNode;
-  after: PMNode;
+  before: RowSnapshot;
+  after: RowSnapshot;
 }
 
 export interface UndoEntry {

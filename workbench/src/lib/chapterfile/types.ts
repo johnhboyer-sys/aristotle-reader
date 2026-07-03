@@ -17,6 +17,20 @@ export interface ColumnStart {
   rowIndex: number;
 }
 
+/**
+ * One `<address>@<offset>` pair from the frontmatter `line_splits` field
+ * (design doc D6 — paragraph splits inside a Bekker line). `ref` is the
+ * OPAQUE raw address of the split row — validated only via
+ * `scheme.parseAddress`, never compared or ordered outside citation/.
+ * `offset` is a Greek CODE-UNIT index into that row's [GREEK] line — the
+ * same `.length`/`.slice` basis as everything else in this file format (see
+ * `isValidSplitOffset` in parse.ts before "fixing" this to code points).
+ */
+export interface LineSplit {
+  ref: string;
+  offset: number;
+}
+
 export interface ChapterFileMeta {
   schemaVersion: number;
   work: string;
@@ -33,6 +47,17 @@ export interface ChapterFileMeta {
    * `rowAddress`).
    */
   columnStarts?: ColumnStart[];
+  /**
+   * OPTIONAL paragraph-split points (frontmatter `line_splits`), design doc
+   * D6. Absent in unsplit files — every consumer must handle absence. The
+   * parser checks STRUCTURE only (pair shape, scheme-parseable refs, positive
+   * strictly-ascending offsets per address) and keeps the pairs verbatim so
+   * serialization is byte-stable; whether an offset actually lands inside —
+   * and at a word boundary of — its row's Greek is validated at HYDRATION
+   * (library/autosave.ts), where a drifted split degrades to an unsplit line
+   * with a notice instead of refusing the file.
+   */
+  lineSplits?: LineSplit[];
 }
 
 export interface Footnote {

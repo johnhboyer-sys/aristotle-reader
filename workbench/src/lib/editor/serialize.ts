@@ -8,8 +8,19 @@
 //   footnote    {^3:anchored phrase}      (fnRef mark over the phrase, with the
 //                                          footnoteMarker node implicit at its
 //                                          end; `{^3:}` = marker alone)
-//   escapes     backslash before literal \ * + { [ ^  (always) and } inside
+//   escapes     backslash before literal \ * + { [ ^ ¶  (always) and } inside
 //               {...} spans. Parse side accepts \X → X for any X.
+//
+// SEGMENT DELIMITER (design doc D6 — line splits): `¶` (U+00B6) is a
+// STRUCTURAL token at the [ENGLISH]-row-markup level, one level ABOVE this
+// file's run syntax. It delimits the English segments of a paragraph-split
+// Bekker line: parseRowSegments splits a physical line on unescaped `¶`
+// before parseRow ever sees it, and serializeRowSegments joins segment
+// markups with it. A literal pilcrow in text (it never occurs in practice)
+// is escaped as `\¶` by escapeText and unescaped by parseRow's generic
+// `\X → X` rule — so the segment round trip holds by construction. parseRow
+// itself treats an unescaped `¶` as literal text (single-segment callers and
+// older files are unchanged).
 //
 // CANONICAL MARK ORDER (outermost → innermost): fnRef, greek, bold, italic,
 // underline (MARK_ORDER in schema.ts). Marks are a set in ProseMirror, so
@@ -37,6 +48,10 @@
 import type { Mark, Node as PMNode } from '@tiptap/pm/model';
 import { Fragment } from '@tiptap/pm/model';
 import { rowSchema, MARK_ORDER } from './schema';
+import type { PMDocJSON } from './schema';
+
+/** Structural English-segment delimiter in row markup (see module header). */
+const PILCROW = '¶';
 
 // ── shared inline-run model ────────────────────────────────────────────────
 
@@ -108,7 +123,7 @@ function isSpanFrame(frame: string): boolean {
 function escapeText(text: string, inSpan: boolean): string {
   let out = '';
   for (const ch of text) {
-    if (ch === '\\' || ch === '*' || ch === '+' || ch === '{' || ch === '[' || ch === '^') {
+    if (ch === '\\' || ch === '*' || ch === '+' || ch === '{' || ch === '[' || ch === '^' || ch === PILCROW) {
       out += '\\' + ch;
     } else if (ch === '}' && inSpan) {
       out += '\\}';
@@ -334,6 +349,69 @@ export function parseRow(line: string): PMNode {
   }
 
   return buildRowDoc(runs);
+}
+
+// ── paragraph segments (design doc D6 — line splits) ───────────────────────
+
+/**
+ * Split a physical [ENGLISH] line on unescaped `¶`, respecting the markup's
+ * backslash escapes (`\¶` is a literal pilcrow inside a segment, `\\` is a
+ * literal backslash — the char after any backslash never delimits).
+ */
+function splitOnUnescapedPilcrow(line: string): string[] {
+  const parts: string[] = [];
+  let start = 0;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '\\') {
+      i++; // the escaped character can never be a delimiter
+    } else if (ch === PILCROW) {
+      parts.push(line.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(line.slice(start));
+  return parts;
+}
+
+/**
+ * Parse one physical [ENGLISH] line into its 1..N segment docs (PM JSON) —
+ * a thin wrapper over parseRow: split on unescaped `¶`, parse each piece.
+ * A line with no `¶` yields exactly [parseRow(line)] — older files are
+ * byte-for-byte unchanged through this path.
+ */
+export function parseRowSegments(line: string): PMDocJSON[] {
+  return splitOnUnescapedPilcrow(line).map((segment) => parseRow(segment).toJSON());
+}
+
+/**
+ * Serialize segment docs back to the one physical line — a thin wrapper over
+ * serializeRow: serialize each segment, join with `¶`. serializeRow escapes
+ * any literal pilcrow in text (`\¶`), so every unescaped `¶` in the output is
+ * structural and parseRowSegments(serializeRowSegments(docs)) round-trips by
+ * construction. An empty docs array (never produced by the model — a row has
+ * at least segment 0) serializes as the empty line.
+ */
+export function serializeRowSegments(docs: PMDocJSON[]): string {
+  return docs.map((doc) => serializeRow(rowSchema.nodeFromJSON(doc))).join(PILCROW);
+}
+
+/**
+ * Rejoin segment docs into ONE row doc, non-empty segments separated by a
+ * single plain space — the app's existing join convention (un-split,
+ * paste-flatten, copy-as-citation). Hydration's drift policy uses this: when
+ * a stored split can't be honored, the line loads unsplit and every segment's
+ * English (marks, markers and all) is preserved in order — nothing lost.
+ */
+export function joinRowDocs(docs: PMDocJSON[]): PMDocJSON {
+  const runs: InlineRun[] = [];
+  for (const doc of docs) {
+    const segmentRuns = runsOf(rowSchema.nodeFromJSON(doc));
+    if (segmentRuns.length === 0) continue;
+    if (runs.length > 0) runs.push({ kind: 'text', text: ' ', marks: {} });
+    runs.push(...segmentRuns);
+  }
+  return buildRowDoc(runs).toJSON();
 }
 
 /** Dev-build guard: assert the round-trip on a doc; throws on mismatch. */

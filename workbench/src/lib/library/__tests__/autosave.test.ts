@@ -3,9 +3,9 @@
 // in-flight re-dirty, error retention, pending-write gating on load).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseChapterFile } from '../../chapterfile';
-import { buildRowDoc } from '../../editor/serialize';
+import { buildRowDoc, joinRowDocs } from '../../editor/serialize';
 import type { InlineRun, MarkSet } from '../../editor/serialize';
-import { docFromJSON } from '../../editor/schema';
+import { docFromJSON, emptyRowDocJSON } from '../../editor/schema';
 import type { ChapterModel } from '../../editor/model';
 import { chapterFileName } from '../storage';
 import {
@@ -422,5 +422,197 @@ describe('autosave scheduler (fake timers)', () => {
 
   it('spansFromModel takes the first/last row addresses', () => {
     expect(spansFromModel(makeModel())).toEqual({ start: '1041a6', end: '1041a8' });
+  });
+});
+
+// ── paragraph splits (design doc D6, slice 1) ────────────────────────────────
+//
+// Format layer only: chapterFileFromModel emits line_splits + ¶-segmented
+// [ENGLISH] rows; hydrateFromFile restores segmented rows, applying the drift
+// policy (a drifted split un-splits the line, English rejoined with a space,
+// one plain sentence on the notice channel) and English-count-wins on any
+// ¶-count vs offset-count skew. serializeModel's round-trip self-check must
+// stay green on split models — the last line of defense on user data.
+
+describe('paragraph splits (design doc D6, slice 1)', () => {
+  // makeModel row 0 greek: 'Τί δὲ χρὴ λέγειν καὶ ὁποῖόν τι τὴν οὐσίαν'
+  // code-unit offsets 3 ('δὲ…') and 6 ('χρὴ…') sit right after word gaps.
+  function makeSplitModel(): ChapterModel {
+    const model = makeModel();
+    model.rows[0] = {
+      ...model.rows[0],
+      splitOffsets: [3],
+      english2: [buildRowDoc([t('and then a new paragraph')]).toJSON()],
+    };
+    return model;
+  }
+
+  const DRIFT_1041A6 =
+    "A paragraph split in line 1041a6 didn't line up with the Greek and was removed — re-split if you still want it.";
+
+  it('serializeModel emits line_splits and the ¶-joined English row, and the self-check stays green', () => {
+    const content = serializeModel(makeSplitModel());
+    expect(content).toContain('line_splits: "1041a6@3"');
+    expect(content).toContain('The **cause** of {^1:*being*} plainly¶and then a new paragraph');
+    const file = parseChapterFile(content, 'split-emit');
+    expect(file.meta.lineSplits).toEqual([{ ref: '1041a6', offset: 3 }]);
+    expect(file.englishLines[0]).toBe('The **cause** of {^1:*being*} plainly¶and then a new paragraph');
+  });
+
+  it('an unsplit model writes neither line_splits nor ¶ (old files stay byte-identical)', () => {
+    const content = serializeModel(makeModel());
+    expect(content).not.toContain('line_splits');
+    expect(content).not.toContain('¶');
+  });
+
+  it('model → file → model round trip restores one split exactly (offsets, both segments, no notice)', () => {
+    const model = makeSplitModel();
+    const file = parseChapterFile(serializeModel(model), 'split-rt');
+    const h = hydrateFromFile(file, spineOf(model), SCHEME);
+    expect(h.notice).toBeNull();
+    expect(h.rows[0].splitOffsets).toEqual([3]);
+    expect(h.rows[0].english2).toHaveLength(1);
+    expect(docFromJSON(h.rows[0].english).eq(docFromJSON(model.rows[0].english))).toBe(true);
+    expect(docFromJSON(h.rows[0].english2![0]).eq(docFromJSON(model.rows[0].english2![0]))).toBe(true);
+    expect(h.rows[1].splitOffsets).toBeUndefined();
+    expect(h.rows[1].english2).toBeUndefined();
+  });
+
+  it('round-trips two splits on one line and a split on a non-adjacent line', () => {
+    const model = makeModel();
+    model.rows[0] = {
+      ...model.rows[0],
+      splitOffsets: [3, 6],
+      english2: [buildRowDoc([t('second')]).toJSON(), buildRowDoc([t('third')]).toJSON()],
+    };
+    model.rows[2] = {
+      ...model.rows[2],
+      splitOffsets: [6], // after 'ἔσται ' in 'ἔσται δῆλον καὶ περὶ ἐκείνης'
+      english2: [buildRowDoc([t('tail')]).toJSON()],
+    };
+    const content = serializeModel(model);
+    expect(content).toContain('line_splits: "1041a6@3,1041a6@6,1041a8@6"');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-rt2'), spineOf(model), SCHEME);
+    expect(h.notice).toBeNull();
+    expect(h.rows[0].splitOffsets).toEqual([3, 6]);
+    expect(h.rows[0].english2).toHaveLength(2);
+    expect(docFromJSON(h.rows[0].english2![1]).eq(docFromJSON(model.rows[0].english2![1]))).toBe(true);
+    expect(h.rows[1].splitOffsets).toBeUndefined();
+    expect(h.rows[2].splitOffsets).toEqual([6]);
+    expect(docFromJSON(h.rows[2].english2![0]).eq(docFromJSON(model.rows[2].english2![0]))).toBe(true);
+  });
+
+  it('an EMPTY continuation segment (untranslated second paragraph) round-trips', () => {
+    const model = makeModel();
+    model.rows[0] = { ...model.rows[0], splitOffsets: [3], english2: [emptyRowDocJSON()] };
+    const content = serializeModel(model);
+    expect(content).toContain('plainly¶');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-empty'), spineOf(model), SCHEME);
+    expect(h.notice).toBeNull();
+    expect(h.rows[0].splitOffsets).toEqual([3]);
+    expect(h.rows[0].english2).toHaveLength(1);
+    expect(docFromJSON(h.rows[0].english2![0]).eq(docFromJSON(emptyRowDocJSON()))).toBe(true);
+  });
+
+  it('drift: an out-of-range offset loads the line UNSPLIT with the exact notice, English rejoined with a space', () => {
+    const model = makeSplitModel();
+    const content = serializeModel(model).replace('line_splits: "1041a6@3"', 'line_splits: "1041a6@999"');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-range'), spineOf(model), SCHEME);
+    expect(h.notice).toBe(DRIFT_1041A6);
+    expect(h.rows[0].splitOffsets).toBeUndefined();
+    expect(h.rows[0].english2).toBeUndefined();
+    const rejoined = joinRowDocs([model.rows[0].english, model.rows[0].english2![0]]);
+    expect(docFromJSON(h.rows[0].english).eq(docFromJSON(rejoined))).toBe(true);
+  });
+
+  it('drift: a non-word-boundary offset (mid-word) is treated the same way', () => {
+    const model = makeSplitModel();
+    const content = serializeModel(model).replace('line_splits: "1041a6@3"', 'line_splits: "1041a6@1"');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-boundary'), spineOf(model), SCHEME);
+    expect(h.notice).toBe(DRIFT_1041A6);
+    expect(h.rows[0].splitOffsets).toBeUndefined();
+    expect(h.rows[0].english2).toBeUndefined();
+    const rejoined = joinRowDocs([model.rows[0].english, model.rows[0].english2![0]]);
+    expect(docFromJSON(h.rows[0].english).eq(docFromJSON(rejoined))).toBe(true);
+  });
+
+  it('skew: ¶ segments with NO offsets — English wins, segments preserved without an anchor, notice surfaced', () => {
+    const model = makeSplitModel();
+    const content = serializeModel(model).replace('line_splits: "1041a6@3"\n', '');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-skew-short'), spineOf(model), SCHEME);
+    expect(h.notice).toBe(DRIFT_1041A6);
+    expect(h.rows[0].splitOffsets).toBeUndefined();
+    expect(h.rows[0].english2).toHaveLength(1); // nothing dropped
+    expect(docFromJSON(h.rows[0].english).eq(docFromJSON(model.rows[0].english))).toBe(true);
+    expect(docFromJSON(h.rows[0].english2![0]).eq(docFromJSON(model.rows[0].english2![0]))).toBe(true);
+  });
+
+  it('skew: MORE offsets than ¶ segments — English wins, extra offset dropped, segments intact, notice surfaced', () => {
+    const model = makeSplitModel();
+    const content = serializeModel(model).replace('line_splits: "1041a6@3"', 'line_splits: "1041a6@3,1041a6@6"');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-skew-long'), spineOf(model), SCHEME);
+    expect(h.notice).toBe(DRIFT_1041A6);
+    expect(h.rows[0].splitOffsets).toEqual([3]); // truncated to segments − 1
+    expect(h.rows[0].english2).toHaveLength(1);
+    expect(docFromJSON(h.rows[0].english2![0]).eq(docFromJSON(model.rows[0].english2![0]))).toBe(true);
+  });
+
+  it('drift: a split whose address no row carries is dropped with its notice; the orphaned ¶ segments stay (English wins)', () => {
+    const model = makeSplitModel();
+    const content = serializeModel(model).replace('line_splits: "1041a6@3"', 'line_splits: "1041b30@3"');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-noline'), spineOf(model), SCHEME);
+    expect(h.notice).toContain(
+      "A paragraph split in line 1041b30 didn't line up with the Greek and was removed — re-split if you still want it.",
+    );
+    expect(h.notice).toContain(DRIFT_1041A6); // row 0's segments now lack their anchor (skew)
+    expect(h.rows[0].splitOffsets).toBeUndefined();
+    expect(h.rows[0].english2).toHaveLength(1); // nothing dropped
+  });
+
+  it('maps line_splits refs via the corpus spine when the file has no column_starts (older addressing)', () => {
+    const model = makeSplitModel();
+    // Span drift makes columnStartsFromModel bail — the file is written
+    // WITHOUT column_starts but WITH line_splits.
+    const content = serializeModel(model, { start: '1041a5', end: '1041a8' });
+    expect(content).not.toContain('column_starts');
+    expect(content).toContain('line_splits: "1041a6@3"');
+    const h = hydrateFromFile(parseChapterFile(content, 'split-spine-fallback'), spineOf(model), SCHEME);
+    expect(h.notice).toBeNull();
+    expect(h.rows[0].splitOffsets).toEqual([3]);
+    expect(h.rows[0].english2).toHaveLength(1);
+  });
+
+  it('a split row whose address is the spine-drift filler saves WITHOUT its anchors but WITH its ¶ segments (self-check green)', () => {
+    const model = makeSplitModel();
+    model.rows[0] = { ...model.rows[0], address: addr('') };
+    const content = serializeModel(model, { start: '1041a6', end: '1041a8' });
+    expect(content).not.toContain('line_splits');
+    expect(content).toContain('¶and then a new paragraph'); // prose never lost
+    expect(() => parseChapterFile(content, 'split-filler')).not.toThrow();
+  });
+
+  it('footnote markers in continuation segments count and anchor (segment-order walk)', () => {
+    const model = makeSplitModel();
+    model.rows[0] = {
+      ...model.rows[0],
+      english2: [buildRowDoc([t('see note', { fnRef: '2' }), m('2'), t(' and '), m('9')]).toJSON()],
+    };
+    expect(anchoredFootnoteCount(model)).toBe(3); // 1 (segment 0) + 2 and 9 (continuation)
+    const file = parseChapterFile(serializeModel(model), 'split-fn');
+    const h = hydrateFromFile(file, spineOf(model), SCHEME);
+    expect(h.footnotes).toEqual([
+      { id: '1', body: 'See *Physics* B — τὸ αἴτιον.', anchored: true },
+      { id: '2', body: 'Unanchored line one\nand a continuation line.', anchored: true },
+      { id: '9', body: '', anchored: true }, // marker with no entry, found via the segment walk
+    ]);
+  });
+
+  it('greek drift and split drift share the notice channel (sentences joined)', () => {
+    const model = makeSplitModel();
+    const content = serializeModel(model).replace('line_splits: "1041a6@3"', 'line_splits: "1041a6@999"');
+    const spine = spineOf(model);
+    spine[1] = { ...spine[1], greek: 'ἄλλην οἷον ἀρχὴν ποιησάμενοι λέγωμεν· ἴσως' };
+    const h = hydrateFromFile(parseChapterFile(content, 'split-both'), spine, SCHEME);
+    expect(h.notice).toBe(`Saved Greek differs from the corpus text — using the saved file. ${DRIFT_1041A6}`);
   });
 });

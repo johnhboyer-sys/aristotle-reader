@@ -3,18 +3,22 @@
 
   // What a RowEditor needs from the chapter — kept minimal so the row side
   // can later become mount-on-focus without touching this contract.
+  // View identity is (row, segment) — the model (Bekker-line) row index plus
+  // the English segment index (design doc D6): a paragraph-split line mounts
+  // one editor per segment, and both indexes are stable across the grid
+  // ordinal shifts a split causes.
   export interface RowViewHost {
-    createView(index: number, el: HTMLElement): void;
-    destroyView(index: number): void;
+    createView(row: number, segment: number, el: HTMLElement): void;
+    destroyView(row: number, segment: number): void;
     // ── AI-assist (design doc D4) ──
     /** Suggest-for-row entry point (the row glyph; ⌘⏎ arrives via rowKeymap). */
-    requestAssist(index: number): void;
-    /** Popover state for row `index`; null unless assist targets it. Reactive. */
-    assistStateFor(index: number): AssistUiState | null;
+    requestAssist(row: number, segment: number): void;
+    /** Popover state for cell (row, segment); null unless assist targets it. Reactive. */
+    assistStateFor(row: number, segment: number): AssistUiState | null;
     /** THE one editor mutation assist may perform, surfaced to the popover
-     * as RowEditor.insertSuggestion — a normal transaction on the row's
+     * as RowEditor.insertSuggestion — a normal transaction on the cell's
      * view, through the same dispatch path as typing. */
-    insertSuggestion(index: number, text: string): void;
+    insertSuggestion(row: number, segment: number, text: string): void;
     dismissAssist(): void;
   }
 </script>
@@ -25,6 +29,14 @@
   // the whole chapter: each row's three cells (Greek, gutter, English) are
   // siblings on the same explicit row track, so track height = max(Greek,
   // English) with zero JS.
+  //
+  // Line splits (design doc D6): the grid renders DISPLAY rows — expandRows
+  // (gridRows.ts) expands each paragraph-split Bekker line into one grid row
+  // per English segment, all sharing the line's one address. The MODEL row
+  // stays the commit/autosave/undo unit; navigation (Enter/Tab/Arrows) walks
+  // display rows. The split gesture is a right-click on the Greek cell
+  // ("Start new paragraph here"); un-split is the explicit "Merge paragraph
+  // back" command, confirm-guarded only when both English cells hold text.
   //
   // Persistence (this is user data — nothing typed may ever be silently
   // lost): on open the chapter hydrates from its saved chapter file when one
@@ -40,13 +52,14 @@
   import { toggleMark } from '@tiptap/pm/commands';
 
   import type { FixtureChapter } from '../../dev/fixture-meta-z17';
-  import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers } from './model';
+  import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf } from './model';
   import type { ChapterModel } from './model';
-  import { rowSchema, docFromJSON, markerIdsIn } from './schema';
-  import { serializeRow, assertRoundTrip, buildRowDoc, runsOf, orphanFnRefIds } from './serialize';
+  import { rowSchema, docFromJSON, markerIdsIn, emptyRowDocJSON } from './schema';
+  import type { PMDocJSON } from './schema';
+  import { assertRoundTrip, buildRowDoc, runsOf, orphanFnRefIds, joinRowDocs } from './serialize';
   import type { InlineRun } from './serialize';
   import { AppHistory } from './history';
-  import type { SelRef, UndoEntry } from './history';
+  import type { SelRef, UndoEntry, RowSnapshot } from './history';
   import { rowPlugins, isTypingTransaction } from './plugins/rowKeymap';
   import type { RowContext } from './plugins/rowKeymap';
   import { greekInput, resetGreekRun } from './plugins/greekInput';
@@ -59,6 +72,8 @@
   import { buildCitationClipboardText } from './copyCitation';
   import type { CitationRowInput } from './copyCitation';
   import { resolveEndpointPos } from './citationSelection';
+  import { expandRows, snapToWordStart, splitUnsplitRow, mergeSegments, mergeNeedsConfirm } from './gridRows';
+  import type { DisplayRow } from './gridRows';
   import { getScheme } from '../citation/registry';
   import type { WorkMeta } from '../citation/types';
   import { isTauri } from '../runtime';
@@ -105,18 +120,22 @@
   const history = new AppHistory();
   const storage = libraryStorage();
   const fileName = chapterFileName(fixture.book, fixture.chapter);
-  let views: (EditorView | null)[] = []; // sized once the model is hydrated
+  // Live views keyed by `${row}:${segment}` — (row, segment) is the stable
+  // view identity (see RowViewHost above); grid ordinals are never keys.
+  const views = new Map<string, EditorView>();
+  const vkey = (row: number, segment: number) => `${row}:${segment}`;
 
   let rootEl = $state<HTMLDivElement>(); // the scroll container
   let gridEl = $state<HTMLDivElement>();
 
-  let focusedRow = -1; // last row that held focus (toolbar targets it)
+  let focusedRow = -1; // last MODEL row that held focus (toolbar targets it)
+  let focusedSegment = 0; // …and the segment within it
   let savedX: number | null = null; // goal column for cross-row Arrow moves
   let activeFn: string | null = null;
   let fnDisplay = new Map<string, number>(); // chapter-local order (1-based)
   let fnBase = 0; // work-wide offset: footnotes in all preceding chapters
   let pendingFn: { before: ReturnType<typeof cloneFootnotes>; after: ReturnType<typeof cloneFootnotes> } | null = null;
-  const commitTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  const commitTimers = new Map<number, ReturnType<typeof setTimeout>>(); // keyed by MODEL row
 
   let autosave: AutosaveHandle | null = null;
   let spans: ChapterSpans = spansFromModel(model);
@@ -180,10 +199,22 @@
 
   // ── reactive UI state ──────────────────────────────────────────────────
   let ready = $state(false);
-  let flashRowIdx = $state(-1);
+  // The flat display-row list the grid renders (design doc D6). Derived from
+  // the model EXPLICITLY (the model itself is non-reactive): refreshed on
+  // hydration, reload, split/un-split and structural undo/redo.
+  let displayRows = $state<DisplayRow[]>([]);
+  function refreshDisplayRows() {
+    displayRows = expandRows(model.rows);
+  }
+  let flashRowIdx = $state(-1); // grid ordinal
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
   let greekMode = $state(false);
-  let pendingPaste = $state<{ row: number; segments: string[] } | null>(null);
+  let pendingPaste = $state<{ grid: number; segments: string[] } | null>(null);
+  // Greek-cell context menu (design doc D6 §4): split on unsplit lines,
+  // merge on split ones. `offset` is the snapped split point (null = the
+  // click found no valid word gap → the status line, never a silent split).
+  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null } | null>(null);
+  let pendingUnsplit = $state<{ row: number; boundary: number } | null>(null);
   let saveState = $state<SaveState>('idle');
   let saveBlocked = $state(false);
   let loadNotice = $state<string | null>(null);
@@ -201,30 +232,67 @@
   );
 
   // ── helpers ────────────────────────────────────────────────────────────
-  function viewAt(i: number): EditorView | null {
-    return views[i] ?? null;
+  function viewAt(row: number, segment = 0): EditorView | null {
+    return views.get(vkey(row, segment)) ?? null;
   }
   function focusedView(): EditorView | null {
-    return focusedRow >= 0 ? viewAt(focusedRow) : null;
+    return focusedRow >= 0 ? viewAt(focusedRow, focusedSegment) : null;
   }
-  function docSize(i: number): number {
-    return viewAt(i)?.state.doc.content.size ?? 0;
+  /** Grid ordinal of cell (row, segment); -1 when it isn't displayed. */
+  function gridOrdinalOf(row: number, segment: number): number {
+    return displayRows.findIndex((d) => d.rowIndex === row && d.segment === segment);
   }
-  /** Row i's current doc: the live view when mounted, else the committed model. */
-  function rowDoc(i: number): PMNode {
-    return viewAt(i)?.state.doc ?? docFromJSON(model.rows[i].english);
+  function focusedGrid(): number {
+    return focusedRow >= 0 ? gridOrdinalOf(focusedRow, focusedSegment) : -1;
+  }
+  /** Cell (row, segment)'s current doc: live view when mounted, else the committed model. */
+  function segmentDoc(row: number, segment: number): PMNode {
+    const view = viewAt(row, segment);
+    if (view) return view.state.doc;
+    const r = model.rows[row];
+    return docFromJSON(segment === 0 ? r.english : (r.english2?.[segment - 1] ?? emptyRowDocJSON()));
+  }
+  /** All of row i's segment docs in document order (live views win). */
+  function rowDocs(i: number): PMNode[] {
+    return englishDocsOf(model.rows[i]).map((_, s) => segmentDoc(i, s));
+  }
+  function rowDocsJSON(i: number): PMDocJSON[] {
+    return rowDocs(i).map((d) => d.toJSON());
+  }
+  /** The whole Bekker line's English as ONE doc — segments joined by the
+   * app's single-space convention (d6 §7 call-site folding). */
+  function joinedRowDoc(i: number): PMNode {
+    return docFromJSON(joinRowDocs(rowDocsJSON(i)));
+  }
+  function gridDocSize(g: number): number {
+    const d = displayRows[g];
+    return d ? segmentDoc(d.rowIndex, d.segment).content.size : 0;
+  }
+  /** The row's full structural state for an undo payload (docs + offsets). */
+  function snapshotRow(i: number): RowSnapshot {
+    const offsets = model.rows[i].splitOffsets;
+    return {
+      docs: rowDocs(i),
+      ...(offsets && offsets.length > 0 ? { splitOffsets: offsets.slice() } : {}),
+    };
   }
 
-  function selRefOf(i: number, state: EditorState): SelRef {
-    return { row: i, anchor: state.selection.anchor, head: state.selection.head };
+  function selRefOf(row: number, segment: number, state: EditorState): SelRef {
+    return { row, segment, anchor: state.selection.anchor, head: state.selection.head };
   }
 
-  function flash(i: number) {
+  function focusedSelRef(): SelRef | null {
+    const view = focusedView();
+    if (!view || focusedRow < 0) return null;
+    return selRefOf(focusedRow, focusedSegment, view.state);
+  }
+
+  function flash(g: number) {
     flashRowIdx = -1;
     clearTimeout(flashTimer);
     // Re-set on the next frame so a repeated flash restarts the animation.
     requestAnimationFrame(() => {
-      flashRowIdx = i;
+      flashRowIdx = g;
       flashTimer = setTimeout(() => (flashRowIdx = -1), 400);
     });
   }
@@ -250,15 +318,20 @@
     autosave?.markDirty();
   }
 
+  /** Commit MODEL ROW i — every mounted segment view's doc lands in
+   * english/english2[k] (the model row is the commit unit, design doc D6). */
   function commitRowNow(i: number, changed = false) {
-    const view = viewAt(i);
+    const row = model.rows[i];
+    if (!row) return;
+    const count = segmentCount(row);
     // Ingest DOM mutations ProseMirror hasn't observed yet (its DOMObserver
     // batches the tail of a typing burst for ~20ms). Without this, a commit
     // fired by an instant chapter-switch/blur could read a stale doc and drop
     // the last keystrokes. This may dispatch (and schedule a commit timer),
     // so it runs BEFORE the timer check. domObserver is internal but stable.
-    if (view) {
-      (view as unknown as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
+    for (let s = 0; s < count; s++) {
+      const view = viewAt(i, s);
+      if (view) (view as unknown as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
     }
     const timer = commitTimers.get(i);
     if (timer !== undefined) {
@@ -266,15 +339,22 @@
       commitTimers.delete(i);
       changed = true; // a scheduled commit only ever follows a doc change
     }
-    if (!view) return;
-    const doc = view.state.doc;
-    model.rows[i].english = doc.toJSON();
+    let sawView = false;
+    for (let s = 0; s < count; s++) {
+      const view = viewAt(i, s);
+      if (!view) continue;
+      sawView = true;
+      const doc = view.state.doc;
+      if (s === 0) row.english = doc.toJSON();
+      else row.english2![s - 1] = doc.toJSON();
+      if (import.meta.env.DEV) assertRoundTrip(doc); // round-trip asserted on every commit
+    }
+    if (!sawView) return;
     history.breakCoalescing();
     if (changed) {
       markModelDirty();
       publishFootnotes(); // anchored-phrase snippets follow the text
     }
-    if (import.meta.env.DEV) assertRoundTrip(doc); // round-trip asserted on every commit
   }
 
   function scheduleCommit(i: number) {
@@ -321,8 +401,8 @@
     }
     if (destroyed) return;
 
-    views = Array(model.rows.length).fill(null);
-    fnDisplay = displayNumbers(model.rows.flatMap((_, i) => markerIdsIn(rowDoc(i))));
+    refreshDisplayRows();
+    fnDisplay = displayNumbers(model.rows.flatMap((_, i) => rowDocs(i).flatMap((d) => markerIdsIn(d))));
 
     if (!saveBlocked) {
       autosave = createAutosave({
@@ -435,16 +515,16 @@
     loadNotice = h.notice;
     lastSnapshot = snapshotOf(mtime, content);
 
-    // Rebuild every row view still mounted from the reloaded model (mirrors
-    // applyEntry's replaceWith for the undo/redo path). Rows beyond the new
-    // model length (or a row count change entirely) fall through to the
-    // views-array resize below — the {#each} key on row index+address
-    // remounts the grid for those.
-    const commonRows = Math.min(views.length, model.rows.length);
-    for (let i = 0; i < commonRows; i++) {
-      const view = views[i];
-      if (!view) continue;
-      const newDoc = docFromJSON(model.rows[i].english);
+    // Rebuild every cell view that still exists in the reloaded model
+    // (mirrors applyEntry's replaceWith for the undo/redo path). Cells whose
+    // row/segment vanished (row-count drift, un-split in the incoming file)
+    // fall through to the keyed {#each} remount below — their components
+    // unmount and destroyView skips the stale commit.
+    for (const [key, view] of views) {
+      const [r, s] = key.split(':').map(Number);
+      if (r >= model.rows.length || s >= segmentCount(model.rows[r])) continue;
+      const row = model.rows[r];
+      const newDoc = docFromJSON(s === 0 ? row.english : row.english2![s - 1]);
       view.dispatch(
         view.state.tr
           .replaceWith(0, view.state.doc.content.size, newDoc.content)
@@ -452,13 +532,8 @@
           .setMeta(FN_REFRESH, true),
       );
     }
-    if (model.rows.length !== views.length) {
-      // Row count changed underneath us (rare: corpus spine drift on the
-      // collaborator's saved file) — resize the views array to match; the
-      // {#each} key (index + address) remounts rows that moved or are new.
-      views = Array(model.rows.length).fill(null);
-    }
-    fnDisplay = displayNumbers(model.rows.flatMap((_, i) => markerIdsIn(rowDoc(i))));
+    refreshDisplayRows();
+    fnDisplay = displayNumbers(model.rows.flatMap((_, i) => rowDocs(i).flatMap((d) => markerIdsIn(d))));
     history.clear();
     refreshFnDisplay();
   }
@@ -467,11 +542,13 @@
   function refreshFnDisplay() {
     const order: string[] = [];
     for (let i = 0; i < model.rows.length; i++) {
-      order.push(...markerIdsIn(rowDoc(i)));
+      // Segments walked in document order — a marker can live in a
+      // continuation segment of a split row (design doc D6).
+      for (const doc of rowDocs(i)) order.push(...markerIdsIn(doc));
     }
     fnDisplay = displayNumbers(order);
-    for (const view of views) {
-      view?.dispatch(view.state.tr.setMeta(FN_REFRESH, true).setMeta('appHistoryIgnore', true));
+    for (const view of views.values()) {
+      view.dispatch(view.state.tr.setMeta(FN_REFRESH, true).setMeta('appHistoryIgnore', true));
     }
     publishFootnotes();
   }
@@ -479,8 +556,8 @@
   function setActiveFootnote(id: string | null) {
     activeFn = id;
     session.activeFootnoteId = id;
-    for (const view of views) {
-      view?.dispatch(view.state.tr.setMeta(FN_REFRESH, true).setMeta('appHistoryIgnore', true));
+    for (const view of views.values()) {
+      view.dispatch(view.state.tr.setMeta(FN_REFRESH, true).setMeta('appHistoryIgnore', true));
     }
   }
 
@@ -496,14 +573,16 @@
     const markerRow = new Map<string, number>();
     const order: string[] = [];
     for (let i = 0; i < model.rows.length; i++) {
-      for (const run of runsOf(rowDoc(i))) {
-        if (run.kind === 'marker') {
-          if (!markerRow.has(run.id)) {
-            markerRow.set(run.id, i);
-            order.push(run.id);
+      for (const doc of rowDocs(i)) {
+        for (const run of runsOf(doc)) {
+          if (run.kind === 'marker') {
+            if (!markerRow.has(run.id)) {
+              markerRow.set(run.id, i);
+              order.push(run.id);
+            }
+          } else if (run.marks.fnRef !== undefined) {
+            phrases.set(run.marks.fnRef, (phrases.get(run.marks.fnRef) ?? '') + run.text);
           }
-        } else if (run.marks.fnRef !== undefined) {
-          phrases.set(run.marks.fnRef, (phrases.get(run.marks.fnRef) ?? '') + run.text);
         }
       }
     }
@@ -541,9 +620,9 @@
   }
 
   // ── the dispatch pipeline ──────────────────────────────────────────────
-  function dispatchFor(i: number) {
+  function dispatchFor(row: number, segment: number) {
     return (tr: Transaction) => {
-      const view = viewAt(i);
+      const view = viewAt(row, segment);
       if (!view) return;
       const oldState = view.state;
       const newState = oldState.apply(tr);
@@ -551,15 +630,15 @@
 
       if (tr.docChanged && !tr.getMeta('appHistoryIgnore')) {
         savedX = null;
-        afterDocChange(i, oldState, tr);
-        scheduleCommit(i);
+        afterDocChange(row, segment, oldState, tr);
+        scheduleCommit(row);
       }
-      if (view.hasFocus() || focusedRow === i) syncToolbar(view.state);
+      if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) syncToolbar(view.state);
     };
   }
 
-  function afterDocChange(i: number, oldState: EditorState, tr: Transaction) {
-    const view = viewAt(i)!;
+  function afterDocChange(row: number, segment: number, oldState: EditorState, tr: Transaction) {
+    const view = viewAt(row, segment)!;
     const beforeDoc = oldState.doc;
 
     // Footnote invariant upkeep: markers deleted by this edit unanchor their
@@ -600,16 +679,29 @@
     const afterDoc = view.state.doc;
     const coalesceKey =
       !tr.getMeta('noCoalesce') && (tr.getMeta('coalesce') === 'typing' || isTypingTransaction(tr))
-        ? `typing:${i}`
+        ? `typing:${row}.${segment}`
         : null;
+
+    // Undo payload = the row's SEGMENT BUNDLE (design doc D6): the edited
+    // segment's before/after doc plus the sibling segments as they stand.
+    const offsets = model.rows[row].splitOffsets;
+    const beforeDocs = rowDocs(row);
+    beforeDocs[segment] = beforeDoc;
+    const afterDocs = rowDocs(row); // segment's view already holds afterDoc
 
     history.push(
       {
-        edits: [{ row: i, before: beforeDoc, after: afterDoc }],
+        edits: [
+          {
+            row,
+            before: { docs: beforeDocs, ...(offsets ? { splitOffsets: offsets.slice() } : {}) },
+            after: { docs: afterDocs, ...(offsets ? { splitOffsets: offsets.slice() } : {}) },
+          },
+        ],
         fnBefore,
         fnAfter,
-        selBefore: selRefOf(i, oldState),
-        selAfter: selRefOf(i, view.state),
+        selBefore: selRefOf(row, segment, oldState),
+        selAfter: selRefOf(row, segment, view.state),
       },
       { coalesceKey },
     );
@@ -620,18 +712,34 @@
   // ── undo/redo ──────────────────────────────────────────────────────────
   function applyEntry(entry: UndoEntry, dir: 'undo' | 'redo') {
     const firstRow = entry.edits[0]?.row ?? focusedRow;
-    withScrollAnchor(firstRow, () => {
+    withScrollAnchor(firstRow >= 0 ? gridOrdinalOf(firstRow, 0) : -1, () => {
       for (const edit of entry.edits) {
-        const view = viewAt(edit.row);
-        if (!view) continue;
-        const doc = dir === 'undo' ? edit.before : edit.after;
-        const tr = view.state.tr
-          .replaceWith(0, view.state.doc.content.size, doc.content)
-          .setMeta('appHistoryIgnore', true)
-          .setMeta(FN_REFRESH, true);
-        view.dispatch(tr);
-        commitRowNow(edit.row, true);
+        const snap = dir === 'undo' ? edit.before : edit.after;
+        const row = model.rows[edit.row];
+        if (!row) continue;
+        // Restore the row's structural state (docs + offsets) — one ⌘Z fully
+        // reverses a split/un-split (design doc D6).
+        row.english = snap.docs[0].toJSON();
+        if (snap.docs.length > 1) row.english2 = snap.docs.slice(1).map((d) => d.toJSON());
+        else delete row.english2;
+        if (snap.splitOffsets && snap.splitOffsets.length > 0) row.splitOffsets = snap.splitOffsets.slice();
+        else delete row.splitOffsets;
+        // Refresh surviving mounted views; vanished/new segments remount via
+        // the keyed {#each} after refreshDisplayRows below.
+        for (let s = 0; s < snap.docs.length; s++) {
+          const view = viewAt(edit.row, s);
+          if (!view) continue;
+          view.dispatch(
+            view.state.tr
+              .replaceWith(0, view.state.doc.content.size, snap.docs[s].content)
+              .setMeta('appHistoryIgnore', true)
+              .setMeta(FN_REFRESH, true),
+          );
+        }
+        markModelDirty();
       }
+      history.breakCoalescing();
+      refreshDisplayRows();
       const fnTable = dir === 'undo' ? entry.fnBefore : entry.fnAfter;
       if (fnTable) {
         model.footnotes = cloneFootnotes(fnTable);
@@ -639,7 +747,9 @@
       }
       refreshFnDisplay();
       const sel = dir === 'undo' ? entry.selBefore : entry.selAfter;
-      if (sel) focusSel(sel);
+      // tick(): a structural undo/redo may mount the target segment's view
+      // on the next flush — focus once it exists.
+      if (sel) void tick().then(() => focusSel(sel));
     });
   }
 
@@ -662,7 +772,7 @@
   }
 
   function focusSel(sel: SelRef) {
-    const view = viewAt(sel.row);
+    const view = viewAt(sel.row, sel.segment);
     if (!view) return;
     const size = view.state.doc.content.size;
     const anchor = Math.min(sel.anchor, size);
@@ -675,11 +785,12 @@
         .setMeta('appHistoryIgnore', true),
     );
     focusedRow = sel.row;
+    focusedSegment = sel.segment;
   }
 
   // ── scroll anchoring (design doc D1 §"Height sync") ────────────────────
-  function withScrollAnchor(row: number, fn: () => void) {
-    const cellEl = gridEl?.querySelector<HTMLElement>(`[data-row-en="${row}"]`);
+  function withScrollAnchor(grid: number, fn: () => void) {
+    const cellEl = grid >= 0 ? gridEl?.querySelector<HTMLElement>(`[data-row-en="${grid}"]`) : null;
     const before = cellEl?.getBoundingClientRect().top ?? null;
     fn();
     if (before === null || !cellEl) return;
@@ -690,22 +801,36 @@
     });
   }
 
-  // ── focus / navigation ─────────────────────────────────────────────────
-  function focusRowEnd(i: number) {
-    const view = viewAt(i);
+  // ── focus / navigation (grid ordinals — display rows, design doc D6) ───
+  function focusGridSel(g: number, pos: 'start' | 'end') {
+    const d = displayRows[g];
+    if (!d) return;
+    const view = viewAt(d.rowIndex, d.segment);
     if (!view) return;
     view.focus();
+    const target = pos === 'end' ? view.state.doc.content.size : 0;
     view.dispatch(
       view.state.tr
-        .setSelection(TextSelection.create(view.state.doc, view.state.doc.content.size))
+        .setSelection(TextSelection.create(view.state.doc, target))
         .scrollIntoView()
         .setMeta('appHistoryIgnore', true),
     );
-    focusedRow = i;
+    focusedRow = d.rowIndex;
+    focusedSegment = d.segment;
   }
 
-  function focusRowAtX(i: number, edge: 'first' | 'last', x: number) {
-    const view = viewAt(i);
+  function focusRowEnd(g: number) {
+    focusGridSel(g, 'end');
+  }
+
+  function focusRowStart(g: number) {
+    focusGridSel(g, 'start');
+  }
+
+  function focusRowAtX(g: number, edge: 'first' | 'last', x: number) {
+    const d = displayRows[g];
+    if (!d) return;
+    const view = viewAt(d.rowIndex, d.segment);
     if (!view) return;
     view.focus();
     const rect = view.dom.getBoundingClientRect();
@@ -719,7 +844,8 @@
         .scrollIntoView()
         .setMeta('appHistoryIgnore', true),
     );
-    focusedRow = i;
+    focusedRow = d.rowIndex;
+    focusedSegment = d.segment;
   }
 
   // ── cross-row selection helpers ────────────────────────────────────────
@@ -759,15 +885,17 @@
     if (startRow < 0 || endRow < 0 || startRow === endRow) return; // single row → PM handles
 
     const parts: string[] = [];
-    for (let r = startRow; r <= endRow; r++) {
-      const view = viewAt(r);
+    for (let g = startRow; g <= endRow; g++) {
+      const d = displayRows[g];
+      if (!d) continue;
+      const view = viewAt(d.rowIndex, d.segment);
       if (!view) continue;
       const size = view.state.doc.content.size;
       let from = 0;
       let to = size;
       try {
-        if (r === startRow) from = Math.max(0, Math.min(view.posAtDOM(range.startContainer, range.startOffset), size));
-        if (r === endRow) to = Math.max(0, Math.min(view.posAtDOM(range.endContainer, range.endOffset), size));
+        if (g === startRow) from = Math.max(0, Math.min(view.posAtDOM(range.startContainer, range.startOffset), size));
+        if (g === endRow) to = Math.max(0, Math.min(view.posAtDOM(range.endContainer, range.endOffset), size));
       } catch {
         /* keep full-row fallback */
       }
@@ -785,11 +913,14 @@
   }
 
   // ── copy as citation (build spec §10) ──────────────────────────────────
-  // Row range = every row touched by the native selection, whether it sits
-  // in English or Greek cells; caret-only → the focused row alone. Assembly
-  // (English/Greek extraction, the exact clipboard string, scheme.formatCitation)
-  // is pure and lives in copyCitation.ts — this only resolves DOM selection
-  // to row indices and per-row englishSelected text, mirroring onCopy above.
+  // Row range = every MODEL row touched by the native selection, whether it
+  // sits in English or Greek cells; caret-only → the focused row alone. A
+  // paragraph-split line is ONE citable row (design doc D6 §7): both segment
+  // cells fold back into a single CitationRowInput — one address, englishDoc
+  // = the segments joined (joinRowDocs). Assembly (English/Greek extraction,
+  // the exact clipboard string, scheme.formatCitation) is pure and lives in
+  // copyCitation.ts — this only resolves DOM selection to rows and per-row
+  // englishSelected text, mirroring onCopy above.
   async function writeClipboardText(text: string): Promise<void> {
     if (isTauri()) {
       const { writeText } = await import('@tauri-apps/plugin-clipboard-manager');
@@ -801,75 +932,94 @@
 
   async function copyCitation() {
     const sel = window.getSelection();
-    let startRow: number;
-    let endRow: number;
+    let startG: number;
+    let endG: number;
     let range: Range | null = null;
 
     if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
       range = sel.getRangeAt(0);
-      startRow = anyRowOfDomNode(range.startContainer);
-      endRow = anyRowOfDomNode(range.endContainer);
-      if (startRow < 0 || endRow < 0) {
+      startG = anyRowOfDomNode(range.startContainer);
+      endG = anyRowOfDomNode(range.endContainer);
+      if (startG < 0 || endG < 0) {
         // Selection isn't inside the chapter grid at all — fall back to the
         // focused row, same as caret-only.
         range = null;
-        startRow = endRow = focusedRow;
-      } else if (startRow > endRow) {
-        [startRow, endRow] = [endRow, startRow];
+        startG = endG = focusedGrid();
+      } else if (startG > endG) {
+        [startG, endG] = [endG, startG];
       }
     } else {
-      startRow = endRow = focusedRow;
+      startG = endG = focusedGrid();
     }
 
-    if (startRow < 0 || endRow < 0) {
+    if (startG < 0 || endG < 0) {
       setStatus('Click into a row first');
       return;
     }
 
+    const startRow = displayRows[startG].rowIndex;
+    const endRow = displayRows[endG].rowIndex;
+
     const rows: CitationRowInput[] = [];
     for (let r = startRow; r <= endRow; r++) {
-      const doc = rowDoc(r);
-      // englishSelected only when a selection ENDPOINT sits in this row's
-      // English cell (rowOfDomNode is English-specific). Every other touched
-      // row — interior rows, endpoints sitting in a Greek cell — stays null
-      // and contributes its FULL English inside buildCitationClipboardText.
+      // A split line folds to ONE citable row: full English = segments
+      // joined by a single space (the app's one join convention).
+      const englishDoc = joinedRowDoc(r);
+      // englishSelected only when the selection PARTIALLY covers this row's
+      // English (an endpoint inside an English cell, or a segment of a split
+      // line outside the selected grid range). Fully covered / interior /
+      // Greek-endpoint rows stay null and contribute their FULL English
+      // inside buildCitationClipboardText.
       let englishSelected: string | null = null;
       if (range) {
-        const view = viewAt(r);
-        const startsHere = r === startRow && rowOfDomNode(range.startContainer) === r;
-        const endsHere = r === endRow && rowOfDomNode(range.endContainer) === r;
-        if (view && (startsHere || endsHere)) {
+        const parts: string[] = [];
+        let partial = false;
+        const count = segmentCount(model.rows[r]);
+        for (let s = 0; s < count; s++) {
+          const g = gridOrdinalOf(r, s);
+          if (g < startG || g > endG) {
+            partial = true; // this segment sits outside the selection
+            continue;
+          }
+          const doc = segmentDoc(r, s);
           const size = doc.content.size;
           let from = 0;
           let to = size;
-          // Element-level endpoints (e.g. a triple-clicked paragraph, whose
-          // Range boundary sits on the cell wrapper rather than inside a
-          // text node) never get handed to posAtDOM: its default bias can
-          // resolve a boundary offset back to an empty point, which — via
-          // buildCitationClipboardText's "all-empty is nothing to cite"
-          // check — surfaced as a false-negative "Nothing to cite" even
-          // though rows were visibly selected. Treat such an endpoint as
-          // full coverage of this cell from its edge instead.
-          // resolveEndpointPos duck-types nodes as DomNodeLike (so it can be
-          // unit-tested without jsdom); here the containers are real DOM
-          // nodes, so the cast back to Node is sound.
-          if (startsHere) {
-            from = resolveEndpointPos(range.startContainer, range.startOffset, size, 'start', (node, offset) =>
-              view.posAtDOM(node as unknown as Node, offset),
-            );
+          const view = viewAt(r, s);
+          const startsHere = g === startG && rowOfDomNode(range.startContainer) === g;
+          const endsHere = g === endG && rowOfDomNode(range.endContainer) === g;
+          if (view && (startsHere || endsHere)) {
+            // Element-level endpoints (e.g. a triple-clicked paragraph, whose
+            // Range boundary sits on the cell wrapper rather than inside a
+            // text node) never get handed to posAtDOM: its default bias can
+            // resolve a boundary offset back to an empty point, which — via
+            // buildCitationClipboardText's "all-empty is nothing to cite"
+            // check — surfaced as a false-negative "Nothing to cite" even
+            // though rows were visibly selected. Treat such an endpoint as
+            // full coverage of this cell from its edge instead.
+            // resolveEndpointPos duck-types nodes as DomNodeLike (so it can be
+            // unit-tested without jsdom); here the containers are real DOM
+            // nodes, so the cast back to Node is sound.
+            if (startsHere) {
+              from = resolveEndpointPos(range.startContainer, range.startOffset, size, 'start', (node, offset) =>
+                view.posAtDOM(node as unknown as Node, offset),
+              );
+            }
+            if (endsHere) {
+              to = resolveEndpointPos(range.endContainer, range.endOffset, size, 'end', (node, offset) =>
+                view.posAtDOM(node as unknown as Node, offset),
+              );
+            }
+            if (from > 0 || to < size) partial = true;
           }
-          if (endsHere) {
-            to = resolveEndpointPos(range.endContainer, range.endOffset, size, 'end', (node, offset) =>
-              view.posAtDOM(node as unknown as Node, offset),
-            );
-          }
-          englishSelected = doc.textBetween(from, to, ' ', '');
+          parts.push(doc.textBetween(from, to, ' ', ''));
         }
+        if (partial) englishSelected = parts.join(' ').trim();
       }
       rows.push({
         address: model.rows[r].address,
         greek: model.rows[r].greek,
-        englishDoc: doc,
+        englishDoc,
         englishSelected,
       });
     }
@@ -898,8 +1048,12 @@
 
   // ── AI-assist (design doc D4, build spec §12 — UI slice) ────────────────
   // Lazy, first-use only: nothing here runs until the glyph or ⌘⏎ fires.
-  // assistRow anchors the popover under that row; assistUi is its state.
+  // (assistRow, assistSeg) anchors the popover under that CELL — a request
+  // from a continuation segment targets that segment for Insert, but the
+  // context is assembled per ADDRESS (a split line is one context line, its
+  // draft = segments joined; the ±6 window counts Bekker LINES — d6 §7).
   let assistRow = $state(-1);
+  let assistSeg = $state(0);
   let assistUi = $state<AssistUiState | null>(null);
 
   const assistCtl = new AssistController({
@@ -918,28 +1072,30 @@
   });
 
   /** Suggest-for-row (glyph click / ⌘⏎). Guards run BEFORE any provider
-   * work: no active row → no-op; no Greek on the row → NO_LINE_MESSAGE. */
-  function invokeAssist(index: number) {
-    if (index < 0 || index >= model.rows.length || !viewAt(index)) return;
-    assistRow = index;
-    if (model.rows[index].greek.trim().length === 0) {
+   * work: no active cell → no-op; no Greek on the LINE → NO_LINE_MESSAGE. */
+  function invokeAssist(row: number, segment: number) {
+    if (row < 0 || row >= model.rows.length || !viewAt(row, segment)) return;
+    assistRow = row;
+    assistSeg = segment;
+    if (model.rows[row].greek.trim().length === 0) {
       assistCtl.cancel();
       assistUi = { kind: 'message', text: NO_LINE_MESSAGE };
       return;
     }
-    void runAssist(index);
+    void runAssist(row, segment);
   }
 
-  async function runAssist(index: number) {
+  async function runAssist(row: number, segment: number) {
     const settings = await loadSettings(); // includeDraft (John: default ON)
-    if (destroyed || assistRow !== index) return;
+    if (destroyed || assistRow !== row || assistSeg !== segment) return;
     const ctx = buildAssistContext({
       rowCount: model.rows.length,
       rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
-      // Live view when mounted, committed model otherwise — the draft the
-      // user SEES is the draft that goes out as context.
-      draftAt: (i) => plainRowText(rowDoc(i)),
-      targetIndex: index,
+      // Live views when mounted, committed model otherwise — the draft the
+      // user SEES is the draft that goes out as context. A split line is ONE
+      // context line: its segments joined (d6 §7 call-site folding).
+      draftAt: (i) => plainRowText(joinedRowDoc(i)),
+      targetIndex: row,
       includeDraft: settings.assist?.includeDraft ?? true,
       work: assistWorkMeta(),
       book: { index: model.book, label: model.bookLabel },
@@ -952,14 +1108,15 @@
     assistCtl.cancel();
     assistUi = null;
     assistRow = -1;
+    assistSeg = 0;
   }
 
   /** The assist→editor mutation (RowEditor.insertSuggestion delegates here):
-   * ONE normal transaction on the row's view, dispatched through dispatchFor
-   * — the exact same pipeline as typing (app undo, dirty tracking,
-   * commit-on-idle). */
-  function insertSuggestionIntoRow(index: number, text: string) {
-    const view = viewAt(index);
+   * ONE normal transaction on the target CELL's view, dispatched through
+   * dispatchFor — the exact same pipeline as typing (app undo, dirty
+   * tracking, commit-on-idle). */
+  function insertSuggestionIntoRow(row: number, segment: number, text: string) {
+    const view = viewAt(row, segment);
     if (!view) return;
     const tr = buildInsertTransaction(view.state, text);
     if (!tr) return;
@@ -967,7 +1124,8 @@
     resetGreekRun(view);
     view.dispatch(tr);
     view.focus();
-    focusedRow = index;
+    focusedRow = row;
+    focusedSegment = segment;
   }
 
   /** Dev-only browser-harness hookup (mirrors ImportDialog's devHarness
@@ -1016,6 +1174,202 @@
       invokeResolve: () => invoke<string | null>('assist_resolve_claude'),
       writeClipboard: writeClipboardText,
     });
+  }
+
+  // ── line split / un-split (design doc D6 §4) ───────────────────────────
+  /** Code-unit offset of the right-click position within the Greek cell's
+   * text (WebKit caretRangeFromPoint / Firefox caretPositionFromPoint);
+   * null when the click missed the text. Resolved via a Range from the
+   * cell's start rather than the raw node-local offset: the cell normally
+   * holds a single text node, but App.svelte's click-to-parse flash can
+   * transiently split it into siblings (same gotcha its caretOffsetInCell
+   * documents), and a fragment-local offset would then be wrong. */
+  function caretOffsetFromPoint(e: MouseEvent): number | null {
+    const cell = e.currentTarget as HTMLElement | null;
+    if (!cell) return null;
+    const doc = document as Document & {
+      caretPositionFromPoint?(x: number, y: number): { offsetNode: Node; offset: number } | null;
+      caretRangeFromPoint?(x: number, y: number): Range | null;
+    };
+    let node: Node | null = null;
+    let offset = 0;
+    if (typeof doc.caretPositionFromPoint === 'function') {
+      const p = doc.caretPositionFromPoint(e.clientX, e.clientY);
+      if (p) {
+        node = p.offsetNode;
+        offset = p.offset;
+      }
+    } else if (typeof doc.caretRangeFromPoint === 'function') {
+      const r = doc.caretRangeFromPoint(e.clientX, e.clientY);
+      if (r) {
+        node = r.startContainer;
+        offset = r.startOffset;
+      }
+    }
+    if (!node || !cell.contains(node)) return null;
+    try {
+      const full = document.createRange();
+      full.selectNodeContents(cell);
+      full.setEnd(node, offset);
+      return full.toString().length;
+    } catch {
+      return null;
+    }
+  }
+
+  function onGreekContextMenu(e: MouseEvent, g: number) {
+    e.preventDefault();
+    const d = displayRows[g];
+    if (!d) return;
+    const row = model.rows[d.rowIndex];
+    if (segmentCount(row) > 1) {
+      // Already split (Phase-1 UI is single-split): offer the merge.
+      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null };
+      return;
+    }
+    // Split gesture (John's §4.1): the offset is the click's nearest word
+    // gap, snapped BEFORE the clicked word; isValidSplitOffset (via
+    // snapToWordStart) rejects offset 0 and the line end.
+    const within = caretOffsetFromPoint(e);
+    const offset = within === null ? null : snapToWordStart(row.greek, d.greekStart + within);
+    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset };
+  }
+
+  function menuSplit() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m || m.merge) return;
+    if (m.offset === null) {
+      setStatus('Choose the Greek word where the new paragraph starts.');
+      return;
+    }
+    performSplit(m.row, m.offset);
+  }
+
+  function menuMerge() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m || !m.merge) return;
+    requestUnsplit(m.row, m.segment);
+  }
+
+  /** Split model row r at a validated Greek offset — ONE undo entry that
+   * captures the row's structural before/after (offsets + both English
+   * docs) and restores focus on ⌘Z. */
+  function performSplit(r: number, offset: number) {
+    const row = model.rows[r];
+    if (!row) return;
+    commitRowNow(r); // live edits land in the model before the snapshot
+    const before = snapshotRow(r);
+    const selBefore = focusedSelRef();
+    // English division (John's §4.2): at the caret when it's currently in
+    // THIS row's English cell; otherwise all existing English stays in
+    // segment 0 and the continuation starts empty.
+    const caret = focusedRow === r && focusedSegment === 0 ? (viewAt(r, 0)?.state.selection.head ?? null) : null;
+    const result = splitUnsplitRow(row, offset, caret);
+    if (!result) {
+      setStatus('Choose the Greek word where the new paragraph starts.');
+      return;
+    }
+    dismissAssist();
+    history.breakCoalescing();
+
+    row.english = result.english;
+    row.english2 = result.english2;
+    row.splitOffsets = result.splitOffsets;
+    refreshDisplayRows();
+
+    // Segment 0 keeps its mounted view (stable key) — push the divided doc
+    // into it; the continuation mounts fresh from the model.
+    const seg0 = viewAt(r, 0);
+    if (seg0) {
+      seg0.dispatch(
+        seg0.state.tr
+          .replaceWith(0, seg0.state.doc.content.size, docFromJSON(result.english).content)
+          .setMeta('appHistoryIgnore', true)
+          .setMeta(FN_REFRESH, true),
+      );
+    }
+
+    const selAfter: SelRef = { row: r, segment: 1, anchor: 0, head: 0 };
+    history.push({
+      edits: [{ row: r, before, after: snapshotRow(r) }],
+      selBefore,
+      selAfter,
+    });
+    markModelDirty();
+    refreshFnDisplay();
+    void tick().then(() => focusSel(selAfter));
+  }
+
+  /** Un-split entry point (context menu on either segment). Confirms ONLY
+   * when both English cells hold text (John's adopted default); an empty
+   * side rejoins silently. */
+  function requestUnsplit(r: number, segment: number) {
+    const row = model.rows[r];
+    if (!row || segmentCount(row) < 2) return;
+    const boundary = Math.min(segment === 0 ? 0 : segment - 1, segmentCount(row) - 2);
+    commitRowNow(r);
+    if (mergeNeedsConfirm(row, boundary)) {
+      pendingUnsplit = { row: r, boundary };
+      return;
+    }
+    performUnsplit(r, boundary);
+  }
+
+  function confirmUnsplit() {
+    const p = pendingUnsplit;
+    pendingUnsplit = null;
+    if (p) performUnsplit(p.row, p.boundary);
+  }
+
+  function cancelUnsplit() {
+    pendingUnsplit = null;
+  }
+
+  /** Merge segments boundary/boundary+1 back into one — English rejoined
+   * with a single space (joinRowDocs), ONE undo entry. NOT the forbidden
+   * Bekker merge: both segments share one address. */
+  function performUnsplit(r: number, boundary: number) {
+    const row = model.rows[r];
+    if (!row) return;
+    commitRowNow(r);
+    const before = snapshotRow(r);
+    const selBefore = focusedSelRef();
+    const merged = mergeSegments(row, boundary);
+    if (!merged) return;
+    dismissAssist();
+    history.breakCoalescing();
+
+    row.english = merged.english;
+    if (merged.english2) row.english2 = merged.english2;
+    else delete row.english2;
+    if (merged.splitOffsets) row.splitOffsets = merged.splitOffsets;
+    else delete row.splitOffsets;
+    refreshDisplayRows();
+
+    // The surviving segment keeps its view — push the merged doc into it;
+    // the vanished continuation unmounts (destroyView skips the stale commit).
+    const keep = viewAt(r, boundary);
+    if (keep) {
+      const json = boundary === 0 ? row.english : row.english2![boundary - 1];
+      keep.dispatch(
+        keep.state.tr
+          .replaceWith(0, keep.state.doc.content.size, docFromJSON(json).content)
+          .setMeta('appHistoryIgnore', true)
+          .setMeta(FN_REFRESH, true),
+      );
+    }
+
+    const selAfter: SelRef = { row: r, segment: boundary, anchor: merged.joinPos, head: merged.joinPos };
+    history.push({
+      edits: [{ row: r, before, after: snapshotRow(r) }],
+      selBefore,
+      selAfter,
+    });
+    markModelDirty();
+    refreshFnDisplay();
+    void tick().then(() => focusSel(selAfter));
   }
 
   // ── commands (toolbar + shortcuts) ─────────────────────────────────────
@@ -1094,39 +1448,46 @@
   }
 
   // ── footnote panel commands ────────────────────────────────────────────
-  function anchorRowOf(id: string): number {
+  /** The (row, segment) whose doc holds footnote id's marker, if any. */
+  function anchorLocOf(id: string): { row: number; segment: number } | null {
     for (let i = 0; i < model.rows.length; i++) {
-      if (markerIdsIn(rowDoc(i)).includes(id)) return i;
+      const docs = rowDocs(i);
+      for (let s = 0; s < docs.length; s++) {
+        if (markerIdsIn(docs[s]).includes(id)) return { row: i, segment: s };
+      }
     }
-    return -1;
+    return null;
   }
 
   function focusFootnote(id: string) {
     setActiveFootnote(id);
-    const row = anchorRowOf(id);
-    if (row < 0) return;
+    const loc = anchorLocOf(id);
+    if (!loc) return;
+    const g = gridOrdinalOf(loc.row, loc.segment);
+    if (g < 0) return;
     gridEl
-      ?.querySelector(`[data-row-en="${row}"]`)
+      ?.querySelector(`[data-row-en="${g}"]`)
       ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   /** Delete marker + fnRef mark + body as ONE undo entry. */
   function deleteFootnote(id: string) {
     const fnIdx = model.footnotes.findIndex((f) => f.id === id);
-    const row = anchorRowOf(id);
-    if (fnIdx < 0 && row < 0) return;
+    const loc = anchorLocOf(id);
+    if (fnIdx < 0 && !loc) return;
 
     history.breakCoalescing();
     const fnBefore = cloneFootnotes(model.footnotes);
     if (fnIdx >= 0) model.footnotes.splice(fnIdx, 1);
     const fnAfter = cloneFootnotes(model.footnotes);
 
-    if (row >= 0) {
-      const view = viewAt(row);
+    if (loc) {
+      const view = viewAt(loc.row, loc.segment);
       if (view) {
         const oldState = view.state;
-        const before = oldState.doc;
-        const runs: InlineRun[] = runsOf(before)
+        const offsets = model.rows[loc.row].splitOffsets;
+        const beforeDocs = rowDocs(loc.row); // marker still present here
+        const runs: InlineRun[] = runsOf(oldState.doc)
           .filter((r) => !(r.kind === 'marker' && r.id === id))
           .map((r) =>
             r.kind === 'text' && r.marks.fnRef === id ? { ...r, marks: { ...r.marks, fnRef: undefined } } : r,
@@ -1134,17 +1495,23 @@
         const after = buildRowDoc(runs);
         view.dispatch(
           view.state.tr
-            .replaceWith(0, before.content.size, after.content)
+            .replaceWith(0, oldState.doc.content.size, after.content)
             .setMeta('appHistoryIgnore', true)
             .setMeta(FN_REFRESH, true),
         );
-        commitRowNow(row, true);
+        commitRowNow(loc.row, true);
         history.push({
-          edits: [{ row, before, after }],
+          edits: [
+            {
+              row: loc.row,
+              before: { docs: beforeDocs, ...(offsets ? { splitOffsets: offsets.slice() } : {}) },
+              after: snapshotRow(loc.row),
+            },
+          ],
           fnBefore,
           fnAfter,
-          selBefore: selRefOf(row, oldState),
-          selAfter: selRefOf(row, view.state),
+          selBefore: selRefOf(loc.row, loc.segment, oldState),
+          selAfter: selRefOf(loc.row, loc.segment, view.state),
         });
       }
     } else {
@@ -1206,64 +1573,94 @@
   }
 
   // ── paste distribution ─────────────────────────────────────────────────
-  function requestPasteDistribute(row: number, segments: string[]) {
-    pendingPaste = { row, segments };
+  function requestPasteDistribute(grid: number, segments: string[]) {
+    pendingPaste = { grid, segments };
   }
 
   function confirmPaste() {
     const pending = pendingPaste;
     pendingPaste = null;
     if (!pending) return;
-    const { row, segments } = pending;
-    const edits: UndoEntry['edits'] = [];
+    const { grid, segments } = pending;
 
-    const firstView = viewAt(row);
+    const first = displayRows[grid];
+    if (!first) return;
+    const firstView = viewAt(first.rowIndex, first.segment);
     if (!firstView) return;
-    const selBefore = selRefOf(row, firstView.state);
+    const selBefore = selRefOf(first.rowIndex, first.segment, firstView.state);
 
-    withScrollAnchor(row, () => {
+    withScrollAnchor(grid, () => {
+      // Group edits per MODEL row (the undo payload is the row's segment
+      // bundle) while distributing text per DISPLAY row.
+      const touched: number[] = [];
+      const beforeByRow = new Map<number, RowSnapshot>();
+      let applied = 0;
       for (let k = 0; k < segments.length; k++) {
-        const view = viewAt(row + k);
+        const d = displayRows[grid + k];
+        if (!d) break;
+        const view = viewAt(d.rowIndex, d.segment);
         if (!view) break;
-        const before = view.state.doc;
+        if (!beforeByRow.has(d.rowIndex)) {
+          beforeByRow.set(d.rowIndex, snapshotRow(d.rowIndex));
+          touched.push(d.rowIndex);
+        }
+        const beforeDoc = view.state.doc;
         const runs: InlineRun[] =
           k === 0
-            ? [...runsOf(before), { kind: 'text', text: segments[k], marks: {} }]
+            ? [...runsOf(beforeDoc), { kind: 'text', text: segments[k], marks: {} }]
             : [{ kind: 'text', text: segments[k], marks: {} }];
         const after = buildRowDoc(runs);
-        edits.push({ row: row + k, before, after });
         view.dispatch(
           view.state.tr
             .replaceWith(0, view.state.doc.content.size, after.content)
             .setMeta('appHistoryIgnore', true),
         );
-        commitRowNow(row + k, true);
+        applied++;
       }
-      const last = edits[edits.length - 1];
+      const edits: UndoEntry['edits'] = touched.map((r) => {
+        commitRowNow(r, true);
+        return { row: r, before: beforeByRow.get(r)!, after: snapshotRow(r) };
+      });
       history.breakCoalescing();
+      const lastG = grid + applied - 1;
+      const lastD = applied > 0 ? displayRows[lastG] : null;
       history.push({
         edits,
         selBefore,
-        selAfter: last ? { row: last.row, anchor: last.after.content.size, head: last.after.content.size } : null,
+        selAfter: lastD
+          ? {
+              row: lastD.rowIndex,
+              segment: lastD.segment,
+              anchor: segmentDoc(lastD.rowIndex, lastD.segment).content.size,
+              head: segmentDoc(lastD.rowIndex, lastD.segment).content.size,
+            }
+          : null,
       });
-      if (last) focusRowEnd(last.row);
+      if (lastD) focusRowEnd(lastG);
     });
     setStatus(`Pasted ${segments.length} lines into ${segments.length} rows`);
   }
 
   function cancelPaste() {
-    const row = pendingPaste?.row ?? -1;
+    const grid = pendingPaste?.grid ?? -1;
     pendingPaste = null;
-    if (row >= 0) focusRowEnd(row);
+    if (grid >= 0) focusRowEnd(grid);
   }
 
   // ── per-row plugin wiring ──────────────────────────────────────────────
-  function rowContext(index: number): RowContext {
+  // The context is bound to the CELL identity (row, segment); its `index` is
+  // a live getter for the current grid ordinal, so navigation stays correct
+  // when a split above shifts the grid (design doc D6, deep-reasoner §3).
+  function rowContext(row: number, segment: number): RowContext {
     return {
-      index,
-      rowCount: () => model.rows.length,
-      isRowEmpty: (k) => docSize(k) === 0,
+      get index() {
+        return gridOrdinalOf(row, segment);
+      },
+      rowCount: () => displayRows.length,
+      isRowEmpty: (k) => gridDocSize(k) === 0,
+      isContinuation: (k) => displayRows[k]?.continuation ?? false,
       focusRowEnd,
+      focusRowStart,
       focusRowAtX,
       getSavedX: () => savedX,
       setSavedX: (x) => (savedX = x),
@@ -1276,17 +1673,19 @@
       redo,
       insertFootnote,
       requestPasteDistribute,
-      requestAssist: () => invokeAssist(index),
+      requestAssist: () => invokeAssist(row, segment),
     };
   }
 
   const host: RowViewHost = {
-    createView(index, el) {
+    createView(row, segment, el) {
+      const r = model.rows[row];
+      const json = segment === 0 ? r.english : (r.english2?.[segment - 1] ?? emptyRowDocJSON());
       const state = EditorState.create({
-        doc: docFromJSON(model.rows[index].english),
+        doc: docFromJSON(json),
         plugins: [
           greekInput({ isGreekMode: () => greekMode }),
-          ...rowPlugins(rowContext(index)),
+          ...rowPlugins(rowContext(row, segment)),
           footnotePlugin({
             displayNumber: fnDisplayNumber,
             activeFootnoteId: () => activeFn,
@@ -1297,29 +1696,35 @@
       });
       const view = new EditorView(el, {
         state,
-        dispatchTransaction: dispatchFor(index),
+        dispatchTransaction: dispatchFor(row, segment),
         handleDOMEvents: {
           focus: (v) => {
-            focusedRow = index;
+            focusedRow = row;
+            focusedSegment = segment;
             syncToolbar(v.state);
             return false;
           },
           blur: () => {
-            commitRowNow(index);
+            commitRowNow(row);
             return false;
           },
         },
       });
-      views[index] = view;
+      views.set(vkey(row, segment), view);
     },
-    destroyView(index) {
-      commitRowNow(index);
-      views[index]?.destroy();
-      views[index] = null;
+    destroyView(row, segment) {
+      const view = views.get(vkey(row, segment));
+      if (!view) return;
+      // Commit only while the model still HAS this segment — after an
+      // un-split the stale continuation unmounts and must not clobber the
+      // freshly merged row.
+      if (row < model.rows.length && segment < segmentCount(model.rows[row])) commitRowNow(row);
+      view.destroy();
+      views.delete(vkey(row, segment));
     },
-    requestAssist: (index) => invokeAssist(index),
-    assistStateFor: (index) => (assistRow === index ? assistUi : null),
-    insertSuggestion: (index, text) => insertSuggestionIntoRow(index, text),
+    requestAssist: (row, segment) => invokeAssist(row, segment),
+    assistStateFor: (row, segment) => (assistRow === row && assistSeg === segment ? assistUi : null),
+    insertSuggestion: (row, segment, text) => insertSuggestionIntoRow(row, segment, text),
     dismissAssist,
   };
 
@@ -1371,6 +1776,16 @@
   }
 
   function onRootKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && ctxMenu) {
+      e.preventDefault();
+      ctxMenu = null;
+      return;
+    }
+    if (e.key === 'Escape' && pendingUnsplit) {
+      e.preventDefault();
+      cancelUnsplit();
+      return;
+    }
     if (e.key === 'Escape' && assistUi) {
       e.preventDefault();
       dismissAssist();
@@ -1382,12 +1797,24 @@
     }
   }
 
+  // Context menu: any mousedown outside it closes it (capture phase so a
+  // click that also focuses a row still closes the menu first).
+  $effect(() => {
+    if (!ctxMenu) return;
+    const close = (ev: MouseEvent) => {
+      const target = ev.target as Element | null;
+      if (!target?.closest('.ctx-menu')) ctxMenu = null;
+    };
+    window.addEventListener('mousedown', close, true);
+    return () => window.removeEventListener('mousedown', close, true);
+  });
+
   // Panel open/close: repaint anchor highlights on every row.
   $effect(() => {
     const open = session.fnPanelOpen;
     if (!ready) return;
-    for (const view of views) {
-      view?.dispatch(view.state.tr.setMeta(FN_REFRESH, true).setMeta('appHistoryIgnore', true));
+    for (const view of views.values()) {
+      view.dispatch(view.state.tr.setMeta(FN_REFRESH, true).setMeta('appHistoryIgnore', true));
     }
     if (open) publishFootnotes();
   });
@@ -1436,7 +1863,7 @@
       unsubIndex();
       // Chapter switch: commit every row, then flush BEFORE the next chapter
       // loads (loadChapterFile awaits this write via the pending registry).
-      for (let i = 0; i < views.length; i++) if (views[i]) commitRowNow(i);
+      for (let i = 0; i < model.rows.length; i++) commitRowNow(i);
       void autosave?.dispose();
       unregisterEditor(editorCommands);
     };
@@ -1465,18 +1892,39 @@
     </header>
 
     <div class="chapter-grid" bind:this={gridEl}>
-      {#each model.rows as row, i (`${i}:${row.address.raw}`)}
-        <GreekCell index={i} greek={row.greek} flash={flashRowIdx === i} />
-        <RowGutter index={i} raw={row.address.raw} />
+      {#each displayRows as d, g (d.key)}
+        <GreekCell
+          gridRow={g}
+          greek={d.greekSlice}
+          continuation={d.continuation}
+          flash={flashRowIdx === g}
+          onContext={(e) => onGreekContextMenu(e, g)}
+        />
+        <RowGutter gridRow={g} raw={d.address.raw} />
         <EnglishCell
-          index={i}
+          gridRow={g}
+          row={d.rowIndex}
+          segment={d.segment}
           {host}
-          flash={flashRowIdx === i}
-          pasteConfirm={pendingPaste?.row === i ? pendingPaste.segments.length : null}
+          flash={flashRowIdx === g}
+          pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
           onPasteConfirm={confirmPaste}
           onPasteCancel={cancelPaste}
+          unsplitConfirm={pendingUnsplit?.row === d.rowIndex && d.segment === 0}
+          onUnsplitConfirm={confirmUnsplit}
+          onUnsplitCancel={cancelUnsplit}
         />
       {/each}
+    </div>
+  {/if}
+
+  {#if ctxMenu}
+    <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
+      {#if ctxMenu.merge}
+        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
+      {:else}
+        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>Start new paragraph here</button>
+      {/if}
     </div>
   {/if}
 

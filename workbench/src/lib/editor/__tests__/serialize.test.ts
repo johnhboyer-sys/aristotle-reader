@@ -10,9 +10,14 @@ import {
   runsOf,
   orphanFnRefIds,
   assertRoundTrip,
+  parseRowSegments,
+  serializeRowSegments,
+  joinRowDocs,
   type InlineRun,
   type MarkSet,
 } from '../serialize';
+import { docFromJSON } from '../schema';
+import type { PMDocJSON } from '../schema';
 
 const t = (text: string, marks: MarkSet = {}): InlineRun => ({ kind: 'text', text, marks });
 const m = (id: string): InlineRun => ({ kind: 'marker', id });
@@ -147,6 +152,106 @@ describe('footnote invariant helpers', () => {
 
   it('assertRoundTrip passes for a valid doc and throws for none', () => {
     expect(() => assertRoundTrip(doc(t('fine ', { bold: true }), t('ok', { fnRef: '1' }), m('1')))).not.toThrow();
+  });
+});
+
+// ── ¶ row segments (design doc D6, slice 1) ────────────────────────────────
+
+describe('parseRowSegments / serializeRowSegments (¶ structural token)', () => {
+  const json = (...runs: InlineRun[]): PMDocJSON => buildRowDoc(runs).toJSON();
+  const segRoundTrip = (docs: PMDocJSON[]) => parseRowSegments(serializeRowSegments(docs));
+  const eqDocs = (a: PMDocJSON[], b: PMDocJSON[]) => {
+    expect(a.length).toBe(b.length);
+    for (let i = 0; i < a.length; i++) {
+      expect(docFromJSON(a[i]).eq(docFromJSON(b[i])), `segment ${i}`).toBe(true);
+    }
+  };
+
+  it('a single segment serializes with no ¶ and parses back to one doc (old rows unchanged)', () => {
+    const docs = [json(t('the cause of '), t('being', { bold: true }))];
+    const line = serializeRowSegments(docs);
+    expect(line).toBe('the cause of **being**');
+    expect(line).not.toContain('¶');
+    eqDocs(parseRowSegments(line), docs);
+  });
+
+  it('joins two segments with an unescaped ¶ and round-trips', () => {
+    const docs = [json(t('first half')), json(t('second half'))];
+    expect(serializeRowSegments(docs)).toBe('first half¶second half');
+    eqDocs(segRoundTrip(docs), docs);
+  });
+
+  it('three segments (two splits on one line) round-trip', () => {
+    const docs = [json(t('one')), json(t('two', { italic: true })), json(t('three'))];
+    expect(serializeRowSegments(docs)).toBe('one¶*two*¶three');
+    eqDocs(segRoundTrip(docs), docs);
+  });
+
+  it('an EMPTY continuation segment survives (trailing ¶)', () => {
+    const docs = [json(t('translated part')), json()];
+    expect(serializeRowSegments(docs)).toBe('translated part¶');
+    eqDocs(segRoundTrip(docs), docs);
+    // Leading empty segment too.
+    const docs2 = [json(), json(t('only the continuation'))];
+    expect(serializeRowSegments(docs2)).toBe('¶only the continuation');
+    eqDocs(segRoundTrip(docs2), docs2);
+  });
+
+  it('a literal pilcrow in text escapes as \\¶ and stays ONE segment', () => {
+    const docs = [json(t('a¶b'))];
+    const line = serializeRowSegments(docs);
+    expect(line).toBe('a\\¶b');
+    const back = parseRowSegments(line);
+    expect(back).toHaveLength(1);
+    eqDocs(back, docs);
+  });
+
+  it('escaped literal ¶ inside split segments round-trips (escape beats delimiter)', () => {
+    const docs = [json(t('a¶b', { bold: true })), json(t('c'))];
+    expect(serializeRowSegments(docs)).toBe('**a\\¶b**¶c');
+    eqDocs(segRoundTrip(docs), docs);
+  });
+
+  it('a segment ending in a literal backslash never swallows the delimiter', () => {
+    const docs = [json(t('a\\')), json(t('b'))];
+    expect(serializeRowSegments(docs)).toBe('a\\\\¶b');
+    eqDocs(segRoundTrip(docs), docs);
+  });
+
+  it('footnote anchors and markers ride inside their segment', () => {
+    const docs = [json(t('one', { fnRef: '1' }), m('1')), json(t('two '), m('2'))];
+    expect(serializeRowSegments(docs)).toBe('{^1:one}¶two {^2:}');
+    eqDocs(segRoundTrip(docs), docs);
+  });
+
+  it('parseRow itself still treats an unescaped ¶ as literal text (single-segment callers unchanged)', () => {
+    const d = parseRow('a¶b');
+    expect(runsOf(d)).toEqual([t('a¶b')]);
+  });
+});
+
+describe('joinRowDocs (drift-policy rejoin: single space, nothing lost)', () => {
+  const json = (...runs: InlineRun[]): PMDocJSON => buildRowDoc(runs).toJSON();
+
+  it('joins non-empty segments with a single plain space, preserving marks and markers', () => {
+    const joined = joinRowDocs([
+      json(t('one', { bold: true })),
+      json(t('two', { fnRef: '1' }), m('1')),
+    ]);
+    const expected = buildRowDoc([t('one', { bold: true }), t(' '), t('two', { fnRef: '1' }), m('1')]);
+    expect(docFromJSON(joined).eq(expected)).toBe(true);
+  });
+
+  it('skips empty segments (no stray spaces)', () => {
+    const joined = joinRowDocs([json(t('kept')), json(), json(t('also kept'))]);
+    const expected = buildRowDoc([t('kept'), t(' '), t('also kept')]);
+    expect(docFromJSON(joined).eq(expected)).toBe(true);
+    expect(docFromJSON(joinRowDocs([json(), json()])).eq(buildRowDoc([]))).toBe(true);
+  });
+
+  it('a single segment joins to itself', () => {
+    const joined = joinRowDocs([json(t('alone', { italic: true }))]);
+    expect(docFromJSON(joined).eq(buildRowDoc([t('alone', { italic: true })]))).toBe(true);
   });
 });
 

@@ -102,6 +102,13 @@
   user-select: text;
 }
 
+/* Continuation segment of a paragraph-split Bekker line (design doc D6 §5):
+   the Greek indents ~1.5em (reader-site precedent); the English stays flush
+   (the paragraph break itself is the signal). Both gutters show the address. */
+.grc-cell.cont {
+  padding-left: 1.5em;
+}
+
 .gutter {
   grid-column: gutter;
   font-family: var(--font-ui);
@@ -350,6 +357,37 @@
   color: var(--on-accent);
   border-color: var(--accent);
   filter: brightness(1.08);
+}
+
+/* ── Greek-cell context menu (design doc D6 §4: split / merge) ──────────
+   Same quiet popover chrome as the paste-confirm / assist popover. */
+.ctx-menu {
+  position: fixed;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  min-width: 13rem;
+  padding: 0.25rem;
+  background: var(--popup-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  box-shadow: var(--popup-shadow);
+}
+.ctx-menu-item {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  text-align: left;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ctx-menu-item:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--text);
 }
 
 /* ── transient status pill ────────────────────────────────────────────── */

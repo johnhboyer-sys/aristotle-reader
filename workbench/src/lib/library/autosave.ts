@@ -8,15 +8,25 @@
 // span_start/span_end (raw address strings) + column_starts (self-contained
 // per-row addressing computed from the model's real row addresses; omitted
 // when the addresses can't be represented exactly — see
-// columnStartsFromModel); [GREEK] is the model's greek lines verbatim;
-// [ENGLISH] is serialize.ts row markup per row; [FOOTNOTES] is chapter-local
-// `id: body-markup` entries (ALL footnotes, anchored or not — an unanchored
-// body is recoverable user data, dropping it would be loss).
+// columnStartsFromModel) + line_splits (paragraph splits inside a Bekker
+// line, design doc D6 — emitted from the rows' splitOffsets); [GREEK] is the
+// model's greek lines verbatim; [ENGLISH] is serialize.ts row markup per row
+// (a split row's segments joined by the structural `¶` token); [FOOTNOTES]
+// is chapter-local `id: body-markup` entries (ALL footnotes, anchored or not
+// — an unanchored body is recoverable user data, dropping it would be loss).
 //
 // Load path: on chapter open, read + parse the file if present; the FILE is
 // canonical — its Greek wins over the corpus spine (quiet notice when they
 // differ). English rows hydrate through the serialize.ts parser; footnote
 // anchored-ness is derived from marker presence in the hydrated rows.
+// line_splits SEMANTIC validation happens here (the parser checks structure
+// only): a well-formed but drifted split — offset out of the row's Greek
+// range, not at a word boundary, or an address no row carries — never blocks
+// the load; that line hydrates UNSPLIT with its English segments rejoined by
+// a single space and a one-sentence notice on the same channel as the
+// Greek-drift notices (d6 divergence E). On any ¶-count vs offset-count
+// skew, the ENGLISH count wins: segments are never dropped; offsets beyond
+// the segments are.
 //
 // Scheduling: every model commit calls markDirty() (debounced ~1s); chapter
 // switch / window blur / visibilitychange→hidden call flush(). Writes are
@@ -26,10 +36,11 @@
 
 import type { Address, SchemeId } from '../citation/types';
 import type { ChapterModel, Footnote as ModelFootnote, RowModel } from '../editor/model';
+import { englishDocsOf } from '../editor/model';
 import { docFromJSON, markerIdsIn } from '../editor/schema';
-import { serializeRow, parseRow } from '../editor/serialize';
-import { parseChapterFile, serializeChapterFile, ChapterFileError } from '../chapterfile';
-import type { ChapterFile, ColumnStart } from '../chapterfile';
+import { serializeRowSegments, parseRowSegments, joinRowDocs } from '../editor/serialize';
+import { parseChapterFile, serializeChapterFile, rowAddress, isValidSplitOffset, ChapterFileError } from '../chapterfile';
+import type { ChapterFile, ColumnStart, LineSplit } from '../chapterfile';
 import { libraryStorage } from './storage';
 import type { LibraryStorage } from './storage';
 
@@ -123,6 +134,22 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
 
   const columnStarts = columnStartsFromModel(model, spans);
 
+  // line_splits from the rows' splitOffsets (design doc D6). A raw ''
+  // address (hydration's spine-drift filler) can't carry a ref the parser
+  // accepts; its offsets are skipped — the `¶` English segments still save,
+  // so on reload the prose survives as anchorless segments with a notice
+  // (English is never lost; only the Greek anchor is). Any OTHER
+  // unrepresentable address fails the round-trip self-check loudly instead
+  // of writing a corrupt file.
+  const lineSplits: LineSplit[] = [];
+  for (const row of model.rows) {
+    if (!row.splitOffsets || row.splitOffsets.length === 0) continue;
+    if (row.address.raw === '') continue;
+    for (const offset of row.splitOffsets) {
+      lineSplits.push({ ref: row.address.raw, offset });
+    }
+  }
+
   return {
     meta: {
       schemaVersion: 1,
@@ -135,9 +162,10 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
       // Key order and present/absent-ness must match parseChapterFile's meta
       // construction — the round-trip self-check compares JSON shapes.
       ...(columnStarts ? { columnStarts } : {}),
+      ...(lineSplits.length > 0 ? { lineSplits } : {}),
     },
     greekLines: model.rows.map((r) => r.greek),
-    englishLines: model.rows.map((r) => serializeRow(docFromJSON(r.english))),
+    englishLines: model.rows.map((r) => serializeRowSegments(englishDocsOf(r))),
     footnotes,
   };
 }
@@ -171,7 +199,11 @@ export function serializeModel(model: ChapterModel, spans?: ChapterSpans): strin
 export function anchoredFootnoteCount(model: ChapterModel): number {
   const ids = new Set<string>();
   for (const row of model.rows) {
-    for (const id of markerIdsIn(docFromJSON(row.english))) ids.add(id);
+    // Walk segments in document order — a marker can live in a continuation
+    // segment of a split row (design doc D6).
+    for (const doc of englishDocsOf(row)) {
+      for (const id of markerIdsIn(docFromJSON(doc))) ids.add(id);
+    }
   }
   return ids.size;
 }
@@ -188,34 +220,120 @@ export interface HydrationResult {
   footnotes: ModelFootnote[];
   /** Spans subsequent saves should carry (row addresses; file meta on row-count drift). */
   spans: ChapterSpans;
-  /** Quiet one-line notice when the file disagrees with the corpus spine. */
+  /**
+   * Quiet notice when the file disagrees with the corpus spine and/or a
+   * stored paragraph split drifted (one plain sentence per problem, joined by
+   * spaces — the same single channel for all of them).
+   */
   notice: string | null;
+}
+
+/** The d6 divergence-E drift sentence, verbatim. */
+function splitDriftNotice(address: string): string {
+  return `A paragraph split in line ${address} didn't line up with the Greek and was removed — re-split if you still want it.`;
 }
 
 /**
  * Hydrate a parsed chapter file against the incoming corpus spine. The file
  * is canonical: its Greek (and, on drift, even its row count) wins — the
  * corpus supplies row ADDRESSES where the counts line up.
+ *
+ * Paragraph splits (design doc D6): [ENGLISH] rows hydrate through
+ * parseRowSegments (1..N segment docs per row) and line_splits offsets are
+ * validated SEMANTICALLY here, against the file's OWN Greek — see the module
+ * header for the drift policy this implements. Refs are mapped to rows via
+ * the file's own addressing (column_starts arithmetic — it travels with the
+ * file, exactly like the Greek the offsets index), falling back to the
+ * corpus spine's addresses for older files without column_starts.
  */
 export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: SchemeId): HydrationResult {
   const fileCount = file.greekLines.length;
+
+  // Per-row address labels for line_splits mapping and notices (file's own
+  // addressing first, spine fallback; '' when neither can say).
+  const rowLabels: string[] = [];
+  const rowIndexByLabel = new Map<string, number>();
+  for (let i = 0; i < fileCount; i++) {
+    let label = '';
+    if (file.meta.columnStarts) {
+      try {
+        label = rowAddress(file.meta, i + 1);
+      } catch {
+        label = '';
+      }
+    } else if (i < spine.length) {
+      label = spine[i].address.raw;
+    }
+    rowLabels.push(label);
+    if (label !== '' && !rowIndexByLabel.has(label)) rowIndexByLabel.set(label, i);
+  }
+
+  // Group line_splits offsets by row. A ref no row carries is drift — the
+  // split is dropped with the notice (there is no line to split).
+  const splitNotices: string[] = [];
+  const noticedLabels = new Set<string>();
+  const noteDrift = (label: string) => {
+    if (noticedLabels.has(label)) return;
+    noticedLabels.add(label);
+    splitNotices.push(splitDriftNotice(label));
+  };
+  const offsetsByRow = new Map<number, number[]>();
+  for (const split of file.meta.lineSplits ?? []) {
+    const rowIdx = rowIndexByLabel.get(split.ref);
+    if (rowIdx === undefined) {
+      noteDrift(split.ref);
+      continue;
+    }
+    const list = offsetsByRow.get(rowIdx);
+    if (list) list.push(split.offset);
+    else offsetsByRow.set(rowIdx, [split.offset]);
+  }
+
   const rows: RowModel[] = [];
   for (let i = 0; i < fileCount; i++) {
+    const address = i < spine.length ? spine[i].address : { scheme, raw: '' };
+    const greek = file.greekLines[i];
+    const segments = parseRowSegments(file.englishLines[i]);
+    let offsets = offsetsByRow.get(i) ?? [];
+    const label = rowLabels[i] !== '' ? rowLabels[i] : address.raw;
+
+    // Drift policy (d6 divergence E): any offset out of the file's own Greek
+    // range or off a word boundary un-splits the WHOLE line — segments are
+    // rejoined with a single space (nothing lost), one plain sentence
+    // surfaced on the notice channel.
+    if (offsets.some((offset) => !isValidSplitOffset(greek, offset))) {
+      rows.push({ address, greek, english: joinRowDocs(segments) });
+      noteDrift(label);
+      continue;
+    }
+
+    // English-count-wins (¶-count vs offset-count skew, e.g. a hand edit):
+    // the segments are the user's actual prose and are NEVER dropped; extra
+    // segments simply carry no Greek anchor, extra offsets are dropped.
+    if (offsets.length !== segments.length - 1) {
+      noteDrift(label);
+      offsets = offsets.slice(0, segments.length - 1);
+    }
+
     rows.push({
-      address: i < spine.length ? spine[i].address : { scheme, raw: '' },
-      greek: file.greekLines[i],
-      english: parseRow(file.englishLines[i]).toJSON(),
+      address,
+      greek,
+      english: segments[0],
+      ...(offsets.length > 0 ? { splitOffsets: offsets } : {}),
+      ...(segments.length > 1 ? { english2: segments.slice(1) } : {}),
     });
   }
 
   // Anchored-ness is derived: a footnote is anchored iff its marker survives
-  // somewhere in the hydrated rows.
+  // somewhere in the hydrated rows (segments walked in document order).
   const markerIds = new Set<string>();
   const markerOrder: string[] = [];
   for (const row of rows) {
-    for (const id of markerIdsIn(docFromJSON(row.english))) {
-      if (!markerIds.has(id)) markerOrder.push(id);
-      markerIds.add(id);
+    for (const doc of englishDocsOf(row)) {
+      for (const id of markerIdsIn(docFromJSON(doc))) {
+        if (!markerIds.has(id)) markerOrder.push(id);
+        markerIds.add(id);
+      }
     }
   }
   const footnotes: ModelFootnote[] = file.footnotes.map((fn) => ({
@@ -230,12 +348,14 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
     if (!known.has(id)) footnotes.push({ id, body: '', anchored: true });
   }
 
-  let notice: string | null = null;
+  const notices: string[] = [];
   if (fileCount !== spine.length) {
-    notice = `Saved file has ${fileCount} lines but the corpus spine has ${spine.length} — using the saved file.`;
+    notices.push(`Saved file has ${fileCount} lines but the corpus spine has ${spine.length} — using the saved file.`);
   } else if (rows.some((row, i) => row.greek !== spine[i].greek)) {
-    notice = 'Saved Greek differs from the corpus text — using the saved file.';
+    notices.push('Saved Greek differs from the corpus text — using the saved file.');
   }
+  notices.push(...splitNotices);
+  const notice = notices.length > 0 ? notices.join(' ') : null;
 
   const spans: ChapterSpans =
     fileCount === spine.length && fileCount > 0

@@ -88,6 +88,40 @@ transcript, now at `workbench-design/build-spec.md` (commit it with Phase 3).
 Gates at wrap: **782 vitest / tsc clean / svelte-check 0 errors / cargo check
 clean / cargo test 7 / vite build clean**.
 
+## Line-split feature (D6) — BUILT 2026-07-03, uncommitted, awaiting John
+
+Split a Bekker line at a paragraph boundary (John's request). Design:
+`d6-line-split.md` (synthesized from `d6-memo-deep-reasoner.md` +
+`d6-memo-codex.md`, dual-dispatched). John's §4 answers: right-click-Greek
+gesture; English divides at the caret (else continuation empty); bilingual
+export breaks the Greek block too; repeated gutter address. Built in 3 slices,
+all orchestrator-verified:
+- [x] **Slice 1 — format layer**: `line_splits` frontmatter (opaque
+  `<addr>@<offset>`, code-unit + word-boundary validation) + `¶` [ENGLISH]
+  segment delimiter (escaped `\¶`); RowModel.splitOffsets/english2; autosave
+  round-trip + drift policy (out-of-range/skew → line loads unsplit, English
+  rejoined, one plain sentence, never dropped); schema_version stays 1 with a
+  future-version refusal. 47 tests.
+- [x] **Slice 2 — editor UI**: pure `gridRows.ts` (expandRows/divideDocAt/
+  split-unsplit/merge); grid expands one line → two tracks; right-click-Greek
+  "Start new paragraph here" (word-snap); English divides at PM caret;
+  explicit un-split w/ confirm when both non-empty (Backspace NEVER joins —
+  navigation only); one-undo-step; copy-citation + assist fold segments per
+  address. 46 tests.
+- [x] **Slice 3 — export**: pure `chapterSegments`; paragraph break at splits
+  (single + whole-work, English + bilingual w/ Greek parity); Bekker stamp
+  once per address on first non-empty segment; stored files untouched.
+  14 tests + 4 new export-harness checks (real pandoc → two `<w:p>`).
+
+Gates: **901 vitest / tsc clean / svelte-check 0 errors / vite build /
+export-harness 47/47**. Browser-verified end to end: split → twin 1041a6
+gutters + 1.5em continuation indent → independent English cells → persists
+`line_splits`+`¶` → reload restores (no drift notice) → un-split confirm →
+rejoin with single space → clean undo. NOTE: caret-division of existing
+English is unit-tested + wiring-verified (reads live PM selection.head) but
+couldn't be exercised headlessly (PM only adopts caret moves from real input);
+worth John confirming with a real cursor during hand-test.
+
 ## Decisions John has confirmed
 
 2026-07-03:
