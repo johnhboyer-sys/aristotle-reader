@@ -3,3 +3,8 @@ dist/
 src-tauri/target/
 src-tauri/gen/
 src-tauri/corpus/
+
+# Real release config holds the updater pubkey; keep only the .example
+# committed so filled-in/placeholder states can't be confused. The pubkey
+# itself isn't secret — this is just to prevent accidental commits.
+src-tauri/tauri.release.conf.json

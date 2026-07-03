@@ -112,23 +112,78 @@ cd desktop && npm run app:package  # gate → stage corpus → public tauri buil
 compiled out) + `tauri.public.conf.json` (adds the corpus to bundle
 resources — dev builds never touch either). Upload the .dmg from
 `src-tauri/target/release/bundle/` to a GitHub Release. Before the FIRST
-public release: generate the updater signing key (below) and note the
-Gatekeeper right-click→Open step on the download page.
+public release: generate the updater signing key (see "Releasing with the
+updater" below) and note the Gatekeeper right-click→Open step on the
+download page.
 
 Status: the gate and corpus staging are verified; the final `tauri build`
 leg has not yet been exercised end to end — expect to babysit the first run.
 
+## Releasing with the updater
+
+The updater scaffold is wired (tauri-plugin-updater in Cargo.toml/lib.rs,
+`"updater:default"` in the capability file, `@tauri-apps/plugin-updater` in
+package.json) but dormant — no update check runs yet; see
+`src/lib/updater.ts`. Nothing here requires a signing key until the owner
+chooses to publish a signed release.
+
+### One-time: generate the signing keypair
+
+```sh
+# password-protect it; NEVER commit it
+cd desktop
+npm run tauri -- signer generate -- -w ~/.tauri/aristotle-reader.key
+# → prints the PUBLIC key; back up ~/.tauri/aristotle-reader.key + password
+#   (losing them = can never ship an update)
+
+# paste the printed public key into src-tauri/tauri.release.conf.json
+cp src-tauri/tauri.release.conf.json.example src-tauri/tauri.release.conf.json
+#   (edit: replace the pubkey placeholder; file is gitignored)
+```
+
+### Every release: build signed with updater artifacts
+
+```sh
+export TAURI_SIGNING_PRIVATE_KEY=~/.tauri/aristotle-reader.key   # path or key contents
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD='...'
+node ../scripts/build-public.mjs   # if corpus needs rebuilding
+npm run app:package                # auto-selects the release config when present
+# → bundle/ now also has a .app.tar.gz + .app.tar.gz.sig
+```
+
+`app:package` picks `src-tauri/tauri.release.conf.json` automatically when
+that file exists (and refuses to build if it's present without
+`TAURI_SIGNING_PRIVATE_KEY` set); otherwise it falls back to
+`tauri.public.conf.json` as before.
+
+### latest.json
+
+Hand-write or generate a `latest.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "pub_date": "2026-07-02T00:00:00Z",
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "<contents of the .app.tar.gz.sig file>",
+      "url": "<GitHub release asset URL of the .app.tar.gz>"
+    }
+  }
+}
+```
+
+Upload the `.dmg` + `.app.tar.gz` + `latest.json` to the GitHub Release
+(published, not draft/prerelease). The endpoint
+`https://github.com/johnhboyer-sys/aristotle-reader/releases/latest/download/latest.json`
+then serves it.
+
+Note: the update-check call (JS, `@tauri-apps/plugin-updater` `check()`) is
+deliberately not wired into startup yet — wire it after the first signed
+release exists (see `desktop/src/lib/updater.ts`).
+
 ## Not built yet
 
-- **Updater** — the one step-8 piece deliberately left unwired: it requires
-  a signing keypair whose custody is the owner's, not something a build
-  session should generate silently. When ready: `npm run tauri signer
-  generate -- -w ~/.tauri/aristotle-reader.key` (choose a password, keep the
-  key OUT of the repo), put the printed public key + a GitHub-Releases
-  `latest.json` endpoint under `plugins.updater` in tauri.conf.json, add
-  tauri-plugin-updater to Cargo.toml/lib.rs and `"updater:default"` to the
-  capability file. The manifest signature matters regardless of the
-  (deferred) code-signing decision — it is what stops a fake "update".
 - Bundling a corpus into `$RESOURCE/corpus` for a distributable .app.
 - A native-window pass over Lexicon / import / search / annotations
   (verified in the browser harness so far).

@@ -12,6 +12,7 @@
     "fs:allow-resource-read-recursive",
     "clipboard-manager:allow-write-text",
     "dialog:allow-save",
-    "opener:allow-open-url"
+    "opener:allow-open-url",
+    "updater:default"
   ]
 }
