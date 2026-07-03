@@ -51,7 +51,7 @@
     <button class="ann-close" on:click={onClose} aria-label="Close annotations">✕</button>
   </div>
   <div class="ann-filter" role="radiogroup" aria-label="Filter annotations">
-    {#each [['all', 'All'], ['highlights', 'Highlights'], ['notes', 'Notes']] as [v, l]}
+    {#each ([['all', 'All'], ['highlights', 'Highlights'], ['notes', 'Notes']] as [Filter, string][]) as [v, l] (v)}
       <button class:on={filter === v} on:click={() => (filter = v)}>{l}</button>
     {/each}
   </div>
