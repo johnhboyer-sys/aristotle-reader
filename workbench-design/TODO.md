@@ -122,6 +122,29 @@ English is unit-tested + wiring-verified (reads live PM selection.head) but
 couldn't be exercised headlessly (PM only adopts caret moves from real input);
 worth John confirming with a real cursor during hand-test.
 
+## Multi-provider AI-assist (D7) — COMMITTED `6cccbb8f` 2026-07-03
+
+Generalized AI-assist beyond Claude Code (John: "let users use any AI they
+have with their own subscription"). Design: `d7-multi-provider-assist.md`
+(+ `d7-memo-*` not used — solo design extending d4). 4 slices, all landed:
+- CLIs auto-detected (Claude Code / Codex / Gemini) + custom command + API
+  keys (OpenAI/Anthropic/Google, off by default, pay-per-use to the user's
+  key — costs the app nothing). Settings picker; clipboard floor + §12
+  invisibility unchanged.
+- Rust generalized: assist_run(binPath,args,stdin,timeoutMs) +
+  assist_which(candidates,binName) replace the claude-specific commands;
+  execve no-shell, prompt-as-data, binName validated before the one
+  `command -v` rung (unsafe-name test proves no shell exec).
+- Settings migrate old {cliPath,cliState} → {provider:'claude',
+  cliPaths.claude}. CSP connect-src scoped to the 3 API hosts.
+- VERIFIED against the real installs: claude + codex both translate
+  correctly through the app's actual tools-spec→buildCliInvocation→parser
+  path. Gemini not installed (best-effort; custom covers). API path
+  unit-tested (fake fetch), NOT live (no key).
+Gates: 992 vitest / tsc / svelte-check 0 err / 15 cargo tests.
+Codex gotcha baked in: `codex exec` needs --skip-git-repo-check + JSONL
+agent_message parsing + `-c mcp_servers={}`.
+
 ## Decisions John has confirmed
 
 2026-07-03:
