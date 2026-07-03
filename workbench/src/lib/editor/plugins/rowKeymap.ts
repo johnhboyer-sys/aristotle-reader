@@ -42,6 +42,8 @@ export interface RowContext {
   redo(): void;
   insertFootnote(): void;
   requestPasteDistribute(k: number, segments: string[]): void;
+  /** AI-assist (design doc D4): suggest a translation for THIS row (⌘⏎). */
+  requestAssist(): void;
 }
 
 // ── pure paste planning (unit-tested) ──────────────────────────────────────
@@ -178,7 +180,12 @@ export function rowPlugins(ctx: RowContext): Plugin[] {
   const bindings = keymap({
     Enter: advance,
     'Shift-Enter': advance,
-    'Mod-Enter': advance,
+    // ⌘⏎ while the caret is in an English cell = suggest-for-this-row
+    // (design doc D4; the quiet gutter glyph is the pointer path).
+    'Mod-Enter': () => {
+      ctx.requestAssist();
+      return true;
+    },
     Tab: () => {
       if (ctx.index >= ctx.rowCount() - 1) {
         ctx.flash(ctx.index);

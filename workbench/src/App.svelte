@@ -12,6 +12,8 @@
   import ImportDialog from './components/ImportDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import FootnotePanel from './components/FootnotePanel.svelte';
+  import ReferencePanel from './components/ReferencePanel.svelte';
+  import ReferenceImportDialog from './components/ReferenceImportDialog.svelte';
   import ExportButton from './components/ExportButton.svelte';
   import ChapterEditor from './lib/editor/ChapterEditor.svelte';
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
@@ -33,11 +35,15 @@
 
   let railOpen = $state(true);
   let footnotesOpen = $state(false);
+  let referenceOpen = $state(false);
   let lexiconOpen = $state(false);
   let addWorkOpen = $state(false);
   let librarySettingsOpen = $state(false);
   let importOpen = $state(false);
   let importDefaultWorkId = $state<string | undefined>(undefined);
+  let referenceImportWorkId = $state<string | null>(null);
+  /** Bumped after every reference import so an open panel re-reads storage. */
+  let referenceReloadKey = $state(0);
 
   // Per-work corpus (null = not on this machine). Loaded once at startup;
   // refreshed per work after onboarding.
@@ -188,6 +194,30 @@
     importOpen = true;
   }
 
+  // ── reference-translation import (design doc D5 §5) ─────────────────────
+  function openReferenceImport(workId: string) {
+    referenceImportWorkId = workId;
+  }
+
+  /** The dialog's work + the same book/chapter lists the rail shows. */
+  const referenceImportTarget = $derived.by(() => {
+    if (!referenceImportWorkId) return null;
+    const work = works.find((w) => w.id === referenceImportWorkId);
+    if (!work) return null;
+    const books = (railWorks.find((rw) => rw.work.id === work.id)?.books ?? []).map((b) => ({
+      n: b.n,
+      label: b.label,
+      chapters: b.chapters,
+    }));
+    return { work, books };
+  });
+
+  function handleReferenceImported() {
+    // An open panel re-targets from storage; the dialog stays on its own
+    // "Imported…" confirmation until the user dismisses it.
+    referenceReloadKey += 1;
+  }
+
   async function handleImported(workId: string, book: number, chapter: number) {
     importOpen = false;
     await refreshLibraryStatus();
@@ -197,8 +227,16 @@
   function toggleRail() {
     railOpen = !railOpen;
   }
+  // Footnotes and Reference share the right rail and are mutually exclusive
+  // (design doc D5 §4, John-confirmed 2026-07-03): opening one closes the
+  // other.
   function toggleFootnotes() {
     footnotesOpen = !footnotesOpen;
+    if (footnotesOpen) referenceOpen = false;
+  }
+  function toggleReference() {
+    referenceOpen = !referenceOpen;
+    if (referenceOpen) footnotesOpen = false;
   }
   function toggleLexicon() {
     lexiconOpen = !lexiconOpen;
@@ -355,6 +393,20 @@
 
       <button
         class="icon-btn"
+        class:active={referenceOpen}
+        onclick={toggleReference}
+        title={referenceOpen ? 'Hide reference translation' : 'Show reference translation'}
+        aria-label="Toggle reference translation panel"
+        aria-pressed={referenceOpen}
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" />
+          <path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" />
+        </svg>
+      </button>
+
+      <button
+        class="icon-btn"
         class:active={lexiconOpen}
         onclick={toggleLexicon}
         title={lexiconOpen ? 'Hide lexicon' : 'Show lexicon'}
@@ -395,6 +447,7 @@
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onImportChapter={isTauri() || import.meta.env.DEV ? openImportDialog : undefined}
+            onImportReference={isTauri() || import.meta.env.DEV ? openReferenceImport : undefined}
           />
         {/if}
       </aside>
@@ -443,6 +496,19 @@
           <FootnotePanel />
         </div>
       </aside>
+    {:else if referenceOpen}
+      <aside class="side-panel" aria-label="Reference translation">
+        <ReferencePanel
+          workId={selection?.workId ?? null}
+          book={selection?.book ?? null}
+          chapter={selection?.chapter ?? null}
+          reloadKey={referenceReloadKey}
+          onClose={toggleReference}
+          onImport={(isTauri() || import.meta.env.DEV) && selection
+            ? () => openReferenceImport(selection!.workId)
+            : undefined}
+        />
+      </aside>
     {/if}
   </div>
 
@@ -464,6 +530,15 @@
       defaultWorkId={importDefaultWorkId}
       onClose={() => (importOpen = false)}
       onImported={handleImported}
+    />
+  {/if}
+
+  {#if referenceImportTarget}
+    <ReferenceImportDialog
+      work={referenceImportTarget.work}
+      books={referenceImportTarget.books}
+      onClose={() => (referenceImportWorkId = null)}
+      onImported={handleReferenceImported}
     />
   {/if}
 

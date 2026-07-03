@@ -1,9 +1,21 @@
 <script module lang="ts">
+  import type { AssistUiState } from './assistController';
+
   // What a RowEditor needs from the chapter — kept minimal so the row side
   // can later become mount-on-focus without touching this contract.
   export interface RowViewHost {
     createView(index: number, el: HTMLElement): void;
     destroyView(index: number): void;
+    // ── AI-assist (design doc D4) ──
+    /** Suggest-for-row entry point (the row glyph; ⌘⏎ arrives via rowKeymap). */
+    requestAssist(index: number): void;
+    /** Popover state for row `index`; null unless assist targets it. Reactive. */
+    assistStateFor(index: number): AssistUiState | null;
+    /** THE one editor mutation assist may perform, surfaced to the popover
+     * as RowEditor.insertSuggestion — a normal transaction on the row's
+     * view, through the same dispatch path as typing. */
+    insertSuggestion(index: number, text: string): void;
+    dismissAssist(): void;
   }
 </script>
 
@@ -46,6 +58,7 @@
   import { parseChapterFile } from '../chapterfile';
   import { buildCitationClipboardText } from './copyCitation';
   import type { CitationRowInput } from './copyCitation';
+  import { resolveEndpointPos } from './citationSelection';
   import { getScheme } from '../citation/registry';
   import type { WorkMeta } from '../citation/types';
   import { isTauri } from '../runtime';
@@ -67,6 +80,19 @@
   } from '../library/footnoteIndex';
   import type { BookOrder } from '../library/footnoteIndex';
   import { getWork } from '../works/manifest';
+  import { loadSettings, updateSettings } from '../settings';
+  import {
+    AssistController,
+    buildAssistContext,
+    buildInsertTransaction,
+    plainRowText,
+    resolveTauriAssistProvider,
+  } from './assistController';
+  import { buildClipboardPayload } from '../assist/clipboardPayload';
+  import { NO_LINE_MESSAGE } from '../assist/messages';
+  import { ClipboardProvider } from '../assist/clipboardProvider';
+  import type { AssistContext, AssistProvider, AssistResult } from '../assist/provider';
+  import type { InvokeFn } from '../assist/cliProvider';
   import GreekCell from './GreekCell.svelte';
   import RowGutter from './RowGutter.svelte';
   import EnglishCell from './EnglishCell.svelte';
@@ -127,6 +153,29 @@
       scheme: model.scheme,
       books: [{ n: model.book, label: model.bookLabel }],
     };
+  }
+
+  // Work metadata for the assist prompt (design doc D4): prefer the real
+  // manifest (title/author/scheme/originalLanguage), fall back to the
+  // model/fixture fields — same "manifest lookup can miss" case as
+  // citationWork above. Lazy: read at request time, inside a closure.
+  function assistWorkMeta(): AssistContext['work'] {
+    try {
+      const w = getWork(model.workId);
+      return {
+        title: w.title,
+        author: w.author,
+        originalLanguage: w.originalLanguage ?? 'greek',
+        scheme: w.scheme,
+      };
+    } catch {
+      return {
+        title: model.workTitle,
+        author: fixture.author,
+        originalLanguage: 'greek',
+        scheme: model.scheme,
+      };
+    }
   }
 
   // ── reactive UI state ──────────────────────────────────────────────────
@@ -793,15 +842,26 @@
           const size = doc.content.size;
           let from = 0;
           let to = size;
-          try {
-            if (startsHere) {
-              from = Math.max(0, Math.min(view.posAtDOM(range.startContainer, range.startOffset), size));
-            }
-            if (endsHere) {
-              to = Math.max(0, Math.min(view.posAtDOM(range.endContainer, range.endOffset), size));
-            }
-          } catch {
-            /* keep full-row fallback for this row */
+          // Element-level endpoints (e.g. a triple-clicked paragraph, whose
+          // Range boundary sits on the cell wrapper rather than inside a
+          // text node) never get handed to posAtDOM: its default bias can
+          // resolve a boundary offset back to an empty point, which — via
+          // buildCitationClipboardText's "all-empty is nothing to cite"
+          // check — surfaced as a false-negative "Nothing to cite" even
+          // though rows were visibly selected. Treat such an endpoint as
+          // full coverage of this cell from its edge instead.
+          // resolveEndpointPos duck-types nodes as DomNodeLike (so it can be
+          // unit-tested without jsdom); here the containers are real DOM
+          // nodes, so the cast back to Node is sound.
+          if (startsHere) {
+            from = resolveEndpointPos(range.startContainer, range.startOffset, size, 'start', (node, offset) =>
+              view.posAtDOM(node as unknown as Node, offset),
+            );
+          }
+          if (endsHere) {
+            to = resolveEndpointPos(range.endContainer, range.endOffset, size, 'end', (node, offset) =>
+              view.posAtDOM(node as unknown as Node, offset),
+            );
           }
           englishSelected = doc.textBetween(from, to, ' ', '');
         }
@@ -834,6 +894,128 @@
     } catch {
       setStatus('Could not copy — try again.');
     }
+  }
+
+  // ── AI-assist (design doc D4, build spec §12 — UI slice) ────────────────
+  // Lazy, first-use only: nothing here runs until the glyph or ⌘⏎ fires.
+  // assistRow anchors the popover under that row; assistUi is its state.
+  let assistRow = $state(-1);
+  let assistUi = $state<AssistUiState | null>(null);
+
+  const assistCtl = new AssistController({
+    getProvider: getAssistProvider,
+    copyPayload: async (ctx) => {
+      try {
+        await writeClipboardText(buildClipboardPayload(ctx));
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    onState: (s) => {
+      assistUi = s;
+    },
+  });
+
+  /** Suggest-for-row (glyph click / ⌘⏎). Guards run BEFORE any provider
+   * work: no active row → no-op; no Greek on the row → NO_LINE_MESSAGE. */
+  function invokeAssist(index: number) {
+    if (index < 0 || index >= model.rows.length || !viewAt(index)) return;
+    assistRow = index;
+    if (model.rows[index].greek.trim().length === 0) {
+      assistCtl.cancel();
+      assistUi = { kind: 'message', text: NO_LINE_MESSAGE };
+      return;
+    }
+    void runAssist(index);
+  }
+
+  async function runAssist(index: number) {
+    const settings = await loadSettings(); // includeDraft (John: default ON)
+    if (destroyed || assistRow !== index) return;
+    const ctx = buildAssistContext({
+      rowCount: model.rows.length,
+      rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
+      // Live view when mounted, committed model otherwise — the draft the
+      // user SEES is the draft that goes out as context.
+      draftAt: (i) => plainRowText(rowDoc(i)),
+      targetIndex: index,
+      includeDraft: settings.assist?.includeDraft ?? true,
+      work: assistWorkMeta(),
+      book: { index: model.book, label: model.bookLabel },
+      chapter: model.chapter,
+    });
+    await assistCtl.request(ctx);
+  }
+
+  function dismissAssist() {
+    assistCtl.cancel();
+    assistUi = null;
+    assistRow = -1;
+  }
+
+  /** The assist→editor mutation (RowEditor.insertSuggestion delegates here):
+   * ONE normal transaction on the row's view, dispatched through dispatchFor
+   * — the exact same pipeline as typing (app undo, dirty tracking,
+   * commit-on-idle). */
+  function insertSuggestionIntoRow(index: number, text: string) {
+    const view = viewAt(index);
+    if (!view) return;
+    const tr = buildInsertTransaction(view.state, text);
+    if (!tr) return;
+    history.breakCoalescing();
+    resetGreekRun(view);
+    view.dispatch(tr);
+    view.focus();
+    focusedRow = index;
+  }
+
+  /** Dev-only browser-harness hookup (mirrors ImportDialog's devHarness
+   * gating): set `window.__assistFake` at localhost:1421 to exercise the
+   * full popover/Insert flow without Tauri —
+   *   true            → a canned suggestion
+   *   'some text'     → that suggestion text
+   *   { kind: ... }   → any AssistResult (error/clipboard/suggestion)
+   * Optional `window.__assistFakeDelayMs` (default 600) exercises Thinking….
+   * The import.meta.env.DEV gate strips all of this from production builds. */
+  async function devFakeAssistProvider(): Promise<AssistProvider | null> {
+    if (!import.meta.env.DEV || isTauri()) return null;
+    const w = window as unknown as { __assistFake?: unknown; __assistFakeDelayMs?: number };
+    const raw = w.__assistFake;
+    if (raw === undefined || raw === null || raw === false) return null;
+    const { FakeProvider } = await import('../assist/fakeProvider');
+    const result: AssistResult =
+      typeof raw === 'string'
+        ? { kind: 'suggestion', text: raw }
+        : typeof raw === 'object' && 'kind' in (raw as object)
+          ? (raw as AssistResult)
+          : { kind: 'suggestion', text: 'and this is the substance and actuality of each thing.' };
+    return new FakeProvider({ result, delayMs: w.__assistFakeDelayMs ?? 600 });
+  }
+
+  /** Provider for THIS request: dev fake (browser harness) → Tauri flow
+   * (cached cliPath / resolution ladder / clipboard floor, see
+   * assistController.resolveTauriAssistProvider) → plain browser clipboard. */
+  async function getAssistProvider(): Promise<AssistProvider> {
+    const fake = await devFakeAssistProvider();
+    if (fake) return fake;
+    if (!isTauri()) {
+      return new ClipboardProvider({ writeText: writeClipboardText });
+    }
+    const [{ invoke }, fs, path] = await Promise.all([
+      import('@tauri-apps/api/core'),
+      import('@tauri-apps/plugin-fs'),
+      import('@tauri-apps/api/path'),
+    ]);
+    return resolveTauriAssistProvider({
+      loadSettings,
+      updateSettings,
+      exists: (p) => fs.exists(p),
+      home: () => path.homeDir(),
+      invokeSuggest: ((cmd, args) => invoke(cmd, args)) as InvokeFn,
+      invokeResolve: () => invoke<string | null>('assist_resolve_claude'),
+      writeClipboard: writeClipboardText,
+    });
   }
 
   // ── commands (toolbar + shortcuts) ─────────────────────────────────────
@@ -1094,6 +1276,7 @@
       redo,
       insertFootnote,
       requestPasteDistribute,
+      requestAssist: () => invokeAssist(index),
     };
   }
 
@@ -1134,6 +1317,10 @@
       views[index]?.destroy();
       views[index] = null;
     },
+    requestAssist: (index) => invokeAssist(index),
+    assistStateFor: (index) => (assistRow === index ? assistUi : null),
+    insertSuggestion: (index, text) => insertSuggestionIntoRow(index, text),
+    dismissAssist,
   };
 
   // ── lifecycle ──────────────────────────────────────────────────────────
@@ -1184,6 +1371,11 @@
   }
 
   function onRootKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && assistUi) {
+      e.preventDefault();
+      dismissAssist();
+      return;
+    }
     if (e.key === 'Escape' && pendingPaste) {
       e.preventDefault();
       cancelPaste();
@@ -1237,6 +1429,7 @@
 
     return () => {
       destroyed = true;
+      assistCtl.cancel(); // in-flight suggestion can never land in a gone chapter
       window.removeEventListener('keydown', onWindowKeydown);
       window.removeEventListener('blur', onWindowBlur);
       document.removeEventListener('visibilitychange', onVisibilityHidden);

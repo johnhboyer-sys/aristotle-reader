@@ -117,6 +117,62 @@ export async function pandocAvailable(pandocBin = 'pandoc'): Promise<boolean> {
   });
 }
 
+// ── Tauri-side pandoc resolution (GUI-PATH fix, d4 rider) ──────────────────
+//
+// A Finder-launched .app inherits launchd's minimal PATH
+// (/usr/bin:/bin:/usr/sbin:/sbin) — no Homebrew dirs — so the bare 'pandoc'
+// scope entry resolves ONLY when the app was launched from a terminal. The
+// capability (src-tauri/capabilities/default.json) therefore also pins two
+// absolute locations under dedicated scope names; the frontend probes which
+// absolute path exists (plugin-fs `exists`, already scoped /**) and prefers
+// its scope name, keeping bare 'pandoc' as the last resort so a
+// terminal-launched dev app behaves exactly as before.
+
+/** Known absolute pandoc locations, in preference order, each pinned by a shell:allow-execute scope entry of the given name. */
+export const PANDOC_SCOPE_CANDIDATES: ReadonlyArray<{ scopeName: string; path: string }> = [
+  { scopeName: 'pandoc-homebrew', path: '/opt/homebrew/bin/pandoc' },
+  { scopeName: 'pandoc-usr-local', path: '/usr/local/bin/pandoc' },
+];
+
+/**
+ * Pick the shell-scope name to run pandoc under: the first candidate whose
+ * absolute path exists, else the bare 'pandoc' name (PATH lookup — works from
+ * a terminal launch). `exists` is injected (plugin-fs `exists` in the app;
+ * a fake in tests) so this stays pure and node-testable.
+ */
+export async function resolvePandocProgram(
+  exists: (path: string) => Promise<boolean>,
+): Promise<string> {
+  for (const candidate of PANDOC_SCOPE_CANDIDATES) {
+    try {
+      if (await exists(candidate.path)) return candidate.scopeName;
+    } catch {
+      // fs probe unavailable/denied — fall through to the next rung
+    }
+  }
+  return 'pandoc';
+}
+
+/** Minimal structural type for the bit of @tauri-apps/plugin-fs we probe with. */
+interface TauriFsModule {
+  exists(path: string): Promise<boolean>;
+}
+
+/**
+ * Tauri-hosted convenience: resolve using plugin-fs's `exists`. Dynamic
+ * import keeps this module free of import-time Tauri dependencies (it is
+ * also used from Node by the export harness). Outside a Tauri runtime the
+ * probe fails and this degrades to the bare 'pandoc' name.
+ */
+async function resolvePandocProgramTauri(): Promise<string> {
+  try {
+    const fs = (await import('@tauri-apps/plugin-fs')) as unknown as TauriFsModule;
+    return await resolvePandocProgram((p) => fs.exists(p));
+  } catch {
+    return 'pandoc';
+  }
+}
+
 // ── Tauri-side runner ────────────────────────────────────────────────────
 //
 // VERIFIED BY INSPECTION (cannot be executed in this environment — no Tauri
@@ -146,10 +202,14 @@ interface TauriShellModule {
 export async function runPandocTauri(
   job: PandocDocxJob,
   shell: TauriShellModule,
-  pandocBin = 'pandoc',
+  pandocBin?: string,
 ): Promise<RunResult> {
+  // No explicit program → resolve the GUI-safe scope name (absolute-path
+  // entries first, bare 'pandoc' last) so a Finder-launched app finds
+  // Homebrew's pandoc; callers that already resolved pass it through.
+  const program = pandocBin ?? (await resolvePandocProgramTauri());
   const args = pandocDocxArgs(job);
-  const command = shell.Command.create(pandocBin, args);
+  const command = shell.Command.create(program, args);
   const output = await command.execute();
   return { code: output.code, stdout: output.stdout, stderr: output.stderr };
 }

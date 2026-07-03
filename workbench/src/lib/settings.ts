@@ -17,6 +17,16 @@ export interface LastOpened {
   chapter: number;
 }
 
+/** Cached AI-assist CLI detection (design doc D4). */
+export interface AssistSettings {
+  /** Resolved absolute path to the `claude` binary. */
+  cliPath?: string;
+  cliState?: 'ok' | 'not-found' | 'unauth';
+  checkedAt?: number;
+  /** Send the surrounding draft English as prompt context (John: default ON). */
+  includeDraft?: boolean;
+}
+
 export interface WorkbenchSettings {
   /** Directory containing the TLG texts (AUTHTAB.DIR etc.). */
   tlgDir?: string;
@@ -30,6 +40,14 @@ export interface WorkbenchSettings {
    * dev harness never reads or writes this.
    */
   libraryRoot?: string;
+  /**
+   * Root for imported reference translations (design doc D5). Unset means the
+   * default `$APPDATA/references`. NEVER derived from libraryRoot: reference
+   * texts are private-study OCR of copyrighted works and must stay out of the
+   * synced folder. Tauri only.
+   */
+  referenceRoot?: string;
+  assist?: AssistSettings;
 }
 
 const LS_KEY = 'workbench:settings';
@@ -42,6 +60,18 @@ function sanitize(value: unknown): WorkbenchSettings {
   if (typeof v.tlgDir === 'string') out.tlgDir = v.tlgDir;
   if (typeof v.diogenesPath === 'string') out.diogenesPath = v.diogenesPath;
   if (typeof v.libraryRoot === 'string') out.libraryRoot = v.libraryRoot;
+  if (typeof v.referenceRoot === 'string') out.referenceRoot = v.referenceRoot;
+  const a = v.assist as Record<string, unknown> | undefined;
+  if (typeof a === 'object' && a !== null) {
+    const assist: AssistSettings = {};
+    if (typeof a.cliPath === 'string') assist.cliPath = a.cliPath;
+    if (a.cliState === 'ok' || a.cliState === 'not-found' || a.cliState === 'unauth') {
+      assist.cliState = a.cliState;
+    }
+    if (typeof a.checkedAt === 'number') assist.checkedAt = a.checkedAt;
+    if (typeof a.includeDraft === 'boolean') assist.includeDraft = a.includeDraft;
+    out.assist = assist;
+  }
   const lo = v.lastOpened as Record<string, unknown> | undefined;
   if (
     typeof lo === 'object' &&
@@ -107,7 +137,14 @@ export async function updateSettings(
 ): Promise<WorkbenchSettings> {
   const current = await loadSettings();
   const next: WorkbenchSettings = { ...current };
-  for (const key of ['tlgDir', 'diogenesPath', 'lastOpened', 'libraryRoot'] as const) {
+  for (const key of [
+    'tlgDir',
+    'diogenesPath',
+    'lastOpened',
+    'libraryRoot',
+    'referenceRoot',
+    'assist',
+  ] as const) {
     if (key in patch) {
       const value = patch[key];
       if (value === undefined) delete (next as Record<string, unknown>)[key];

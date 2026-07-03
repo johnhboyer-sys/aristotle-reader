@@ -1,83 +1,106 @@
 # Translation Workbench — TODO
 
-State as of 2026-07-02 (evening): **Phase 2 complete, UNCOMMITTED** on branch
-`claude/blissful-rubin-d64797` (now checked out in the `nervous-saha-372f7c`
-worktree — the original blissful-rubin worktree directory was cleaned up; the
-branch survived intact). 560 tests green; tsc, vite build, svelte-check, cargo
-check clean; export harness 43/43. Awaiting John's review of the phase summary
-before commit.
+State as of 2026-07-03: **Phase 2 committed** (`5adefdde`), **Phase 3 GREENLIT by
+John** (no push — branch stays local, his call). Branch
+`claude/blissful-rubin-d64797` now lives in the `intelligent-tesla-c10171`
+worktree (nervous-saha was auto-cleaned; branch intact). Phase 3 (3A+3B) COMMITTED
+`a4d83899` (John reviewed the summary and approved). 782 tests green;
+svelte-check 0 errors.
 
-## Phase 2 — DONE (all verified in the browser harness by the orchestrator)
+⚠️ Worktree-cleanup survival kit (this has bitten twice): the gitignored
+Scrivener samples die with the worktree — restore from `~/Downloads/meta z 17/`
++ `~/Downloads/APo 1.4 {Greek,English}.md` into
+`workbench/.dev-corpus/scrivener-samples/`. The original build spec was never
+committed and nearly died the same way — recovered verbatim from the Phase 1
+transcript, now at `workbench-design/build-spec.md` (commit it with Phase 3).
 
-- [x] **Copy-as-citation** (§10): toolbar `“ ”` button + ⌘⇧C; `{english}. ({title}
-  {book}{chapter}, {range}: {greek})` composed via scheme.formatCitation; plain
-  ⌘C provably untouched (additive diff + regression tests). Terminal-punctuation
-  period rule; Greek-cell/mixed selections carry full-row English fallbacks.
-- [x] **Scrivener import** (§9): dual-dispatched design (d3) + real-export Stage 0
-  addendum (d3a). Core: line-level banded DP + rare-token seeding, spine owns
-  rows, hints never override content, orphans block import. Stage 0: real .md
-  pairs (paragraph-flow Greek w/ inline markers + soft hyphens; marker-segmented
-  English; markdown footnotes incl. multi-paragraph; inline Greek → {grc:…};
-  enum-vs-marker disambiguation corroboration-gated; editorial <…> kept+flagged).
-  ImportDialog: two-file picker, form, preview table w/ state badges + editable
-  cells + merge-up/push-down, orphan assign/discard, Replace/Cancel duplicate
-  guard, dev-only sample loader. ACCEPTANCE (measured, real files): Meta 7.17 —
-  95% quiet rows, fn1–15 anchored (fn6 multi-paragraph intact), zero silent
-  drops; APo 1.4 — enums 4/4 dropped 0 real lost, 73b→74a reset survived,
-  no text dumps, both <20ms. Per-cell marker/residue audit in acceptance tests.
-- [x] **Whole-work compile export** (§8): manifest-order concatenation, gap
-  notice, headings via contract, continuous native footnotes across chapters
-  (stored files untouched — asserted), stamps default every-5+columns, English
-  and bilingual (stacked Greek-then-English per chapter) modes, reference.docx
-  (Cambria + US Letter 1" — see flags) bundled as resource. Found & fixed:
-  pandoc was never in shell:allow-execute scope (Phase 1 export would have
-  failed in the packaged app).
-- [x] **Shared-folder sync** (§11): folder picker (settings gear, Tauri-only),
-  reload-on-focus (mtime + hash confirm; clean→silent reload, dirty→Keep mine /
-  Load theirs), conflicted-copy surfacing (Drive/Dropbox verbose names + iCloud
-  bare `Name 2.md` matched only against our own file stem), iCloud `.icloud`
-  placeholder stubs shown greyed w/ plain sentence, turn-taking help popover.
-  John approved the /** fs-scope broadening (2026-07-02).
-- [x] **Second-scheme exercise**: `busse-paragraph` (CAG page.line, rowUnit
-  'paragraph') = one file + one registry line + SchemeId union member; generic
-  contract-conformance suite over ALL schemes; executable no-scheme-id-branching
-  source test. Friction documented in d2 addendum: bookless works need an
-  "empty bookLabel = omit" convention (doc-comment for Phase 3).
-- [x] **Corpus resource bundling** (carried from Phase 1): `stage:corpus` +
-  `app:package` scripts; 47MB staged (lsj 46MB shared, copied to app-data once,
-  idempotent) gitignored at src-tauri/resources/corpus/; onboarding completes
-  standalone for bundled works (Meta + APo); unbundled works keep the same
-  plain sentence. No TLG text ships — spine still comes from the user's TLG.
+## Done this session (2026-07-03, in `a4d83899`, orchestrator-verified)
 
-## Carried forward (small)
+- [x] **U+2028/U+2029 parse hardening**: footnote bodies fold the separators to a
+  paragraph break on parse AND serialize, mirroring Stage 0's
+  `normalizeFootnoteBody`. Deliberately scoped to footnote bodies only — the
+  real APo English legitimately contains mid-sentence U+2028 in row content,
+  where the separator is inert by format design (a global fold corrupted the
+  1:1 row invariant and was reverted). 4 new round-trip tests.
+- [x] **Copy-citation element-endpoint fix**: new pure
+  `src/lib/editor/citationSelection.ts` (duck-typed `DomNodeLike`, testable
+  without jsdom); element-node Range endpoints (triple-click shape) now resolve
+  as full-cell coverage instead of false-negative "Nothing to cite". 13 tests;
+  plain ⌘C byte-identical; browser-verified end to end (captured clipboard
+  payload = correct full citation).
+- [x] **APo 1.4 dev sample loader** button beside the Meta one, same
+  `devHarness` gate, verified stripped from production bundles; browser-verified
+  (64 preview rows, correct work/book/chapter prefill).
+- [x] **Full `tauri build` first ever run** (`app:package`): .app bundles
+  cleanly, 62MB, all 48MB corpus resources + reference.docx resolved under
+  Contents/Resources. Only the DMG step fails headless (`bundle_dmg.sh` needs a
+  real Finder session) — rerun at the machine or use `--bundles app`.
+- [x] **Phase 3 design round complete**: d4 (AI-assist) dual-dispatched
+  deep-reasoner + Codex → synthesized `d4-ai-assist.md` (memos preserved as
+  `d4-memo-*.md`); d5 (reference panel) single memo `d5-memo-reference-panel.md`,
+  orchestrator-reviewed, codebase claims spot-checked.
 
-- [ ] **Human-exercise the Tauri-only paths in the real app** (John, or next
-  session with John at the keyboard): real Diogenes "Add work…" run; native
-  export save dialog (now that the pandoc capability bug is fixed); native
-  import file picker; compile export; settings folder picker on a real synced
-  folder. All logic-verified + browser-verified only.
-- [ ] **Full `tauri build` / `app:package` never run** — artifact size, packaged
-  resource resolution (cargo check materialized resources correctly, strong
-  signal), updater still unwired (needs John's signing key, from Phase 1).
-- [ ] **chapterfile parse.ts U+2028 fragility**: a HAND-AUTHORED footnote body
-  containing U+2028 silently merges on round-trip (imports are safe — Stage 0
-  normalizes). Hardening candidate.
-- [ ] **Copy-citation element-endpoint selections** (e.g. some triple-click
-  paragraph selections) resolve as empty → "Nothing to cite" false negative.
-  Minor UX hardening: treat element-level endpoints as full-cell coverage.
-- [ ] **Dev sample loader** only loads the Meta pair; APo path is
-  acceptance-tested but has no one-click UI loader.
-- [ ] **Bilingual compile layout** (stacked Greek-then-English per chapter) needs
-  John's aesthetic review on a real docx; row-locked facing-page parallel
-  remains LaTeX-only territory (docs/pdf-spike).
-- [ ] Reference-docx font is **Cambria** (ships with Word, full polytonic
-  coverage; EB Garamond is a webfont Word can't resolve). One-line change if
-  John prefers an installed manuscript font.
-- [ ] Prune `workbench/src/components/FOOTNOTE_PANEL_WIRING.md` at commit time
-  (historical doc; wiring long applied).
+## Carried forward
 
-## Decisions John has confirmed (2026-07-02)
+- [ ] **Human-exercise the Tauri-only paths in the real app** (John): Diogenes
+  "Add work…", native export/import pickers, compile export, settings folder
+  picker on a real synced folder. Still pending — John hadn't tested as of
+  2026-07-03.
+- [ ] **Finder-launch smoke test** of the built .app (NOT `open` from a
+  terminal): now doubly important — both d4 memos flag that the shipped pandoc
+  export likely fails on a real Finder launch (bare `cmd: "pandoc"`, launchd
+  PATH has no Homebrew dirs). Fix rides with d4 Slice 2 (shared binary
+  resolution ladder). Updater still unwired (John's signing key ceremony).
+- [ ] **Bilingual compile layout + Cambria font**: still awaiting John's
+  aesthetic verdict on a real docx.
+- [ ] Prune `workbench/src/components/FOOTNOTE_PANEL_WIRING.md` at commit time.
 
+## Phase 3 — 3A + 3B COMMITTED `a4d83899` (2026-07-03)
+
+- [x] **3A AI-assist** (spec §12, design `d4-ai-assist.md`) — Slices 1+2 BUILT
+  and orchestrator-verified: pure `src/lib/assist/` library (64 tests incl.
+  isolation source-scan); Rust `assist.rs` (`assist_resolve_claude` ladder —
+  finds John's real install at `~/.local/bin/claude`; `assist_suggest` with
+  argv-array + prompt-over-stdin, timeout+kill, stderr redaction — live-proven
+  against the real CLI); popover UI + hover-✦-glyph + ⌘⏎ +
+  `RowEditor.insertSuggestion` through the normal dispatch path (browser-
+  verified: suggest → Insert → single-step ⌘Z; clipboard floor payload has
+  neighbor drafts in, target draft out). API-key path = deferred Slice 3.
+  REMAINING: the packaged **Finder-launch smoke test** (John at the machine).
+- [x] **3B reference panel** (spec §13, design `d5-memo-reference-panel.md`) —
+  Slice 1 + edition picker BUILT and orchestrator-verified: `src/lib/reference/`
+  (63 tests incl. copyright regression), local-only storage
+  (`$APPDATA/references`, never the synced folder), ReferencePanel +
+  ReferenceImportDialog + App/rail wiring (browser-verified end to end: paste
+  with `# Book 7/## 17` headings → pre-filled assignment → stored
+  `chapter-07-17.md` with hyphenation rejoined + line structure verbatim →
+  panel renders it, chapter switch shows the quiet absence line, footnote
+  exclusivity works both ways). REMAINING: native file-picker path (Tauri-only,
+  John at the machine); real OCR acceptance import (his Ross Z.17).
+- [x] **Rider: pandoc Finder-launch fix** — absolute-path scope entries +
+  frontend probe (ExportButton AND CompileDialog); dev/terminal behavior
+  unchanged. Verify in the same Finder smoke test.
+- [ ] **3C Latin/Aquinas** — PARKED by John (2026-07-03) until he supplies
+  citation conventions (works, citation string format, row unit, spine/source
+  numbering). Contract proven ready (busse-paragraph precedent, aquinas-tbd
+  stub registered).
+
+Gates at wrap: **782 vitest / tsc clean / svelte-check 0 errors / cargo check
+clean / cargo test 7 / vite build clean**.
+
+## Decisions John has confirmed
+
+2026-07-03:
+- Phase 3 greenlit, scope 3A + 3B now, 3C parked pending his conventions.
+- Branch stays unpushed.
+- AI-assist: draft-English context ON by default (settings disclosure);
+  hover-glyph + ⌘⏎ affordance; ±6 context rows; insert = fill-empty /
+  replace-selection / else-caret; inherit his Claude Code default model;
+  auth-lapse gets the specific sign-in sentence.
+- References: LOCAL-ONLY (never the synced folder) + footnote/reference panels
+  mutually exclusive in the right rail.
+
+2026-07-02 (unchanged):
 - Bekker stamp default: every-5 + column transitions, plain brackets. KEEP.
 - formatCitation comma when no book/chapter. KEEP.
 - Whole-work compile: BOTH modes (English-only default + bilingual).
@@ -86,20 +109,13 @@ before commit.
 - Scrivener import defaults: two-file selection; proportional pre-split ON
   (flagged, editable). D3 §9.5 duplicate-import Replace/Cancel shown to John.
 
-## Phase 3 (later; John specifies Aquinas conventions then)
-
-- [ ] AI-assist: local `claude -p`, clipboard fallback, API-key alt (spec §12).
-- [ ] Reference-translation panel: text/MD import, chapter-level first (spec §13).
-- [ ] Latin: Aquinas schemes (contract proven ready — see d2 addendum +
-  busse-paragraph precedent) + Latin morphology behind LexiconProvider.
-
 ## Running things
 
 ```
 cd workbench
 npm run dev                                   # browser harness (localhost:1421)
 PATH="$HOME/.cargo/bin:$PATH" npx tauri dev   # the real app
-npx vitest run                                # 560 tests
+npx vitest run                                # 577 tests
 node scripts/build-dev-corpus.mjs             # regen .dev-corpus (Meta + APo)
 node scripts/parity-corpus.mjs                # TS-vs-Python corpus parity
 node scripts/export-harness.mjs               # docx export checks (43)
@@ -111,4 +127,4 @@ npm run shots                                 # Playwright screenshots → shots
 
 Real Scrivener sample pairs (John's translation + TLG Greek — LOCAL ONLY,
 gitignored): `workbench/.dev-corpus/scrivener-samples/`. Acceptance tests
-skip when absent.
+skip when absent. Restore from ~/Downloads after any worktree cleanup (see top).

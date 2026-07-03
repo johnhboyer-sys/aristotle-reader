@@ -281,6 +281,84 @@ describe('serializeChapterFile', () => {
   });
 });
 
+// ── U+2028/U+2029 hardening ──────────────────────────────────────────────────
+//
+// A hand-authored footnote body pasted from a word processor/PDF can carry a
+// literal U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR instead of "\n".
+// `String.prototype.split('\n')` does NOT split on these, but the parser's
+// FOOTNOTE_ENTRY_RE (`/^(\d+):[ \t](.*)$/`) treats them as line terminators
+// (JS regex `^`/`$`/`.` semantics) — so a body containing one fails to match
+// as a footnote entry, silently merging into (or being rejected as) garbage on
+// round-trip. Imports are already safe (Stage 0's scrivenerMd.ts normalizes
+// these before they ever reach the chapter-file format); hand-authored bodies
+// typed/pasted directly into the editor are not.
+describe('U+2028 / U+2029 in footnote bodies', () => {
+  const LS = ' ';
+  const PS = ' ';
+
+  function docWithFootnoteBody(body: string): ChapterFile {
+    return {
+      meta: {
+        schemaVersion: 1,
+        work: 'metaphysics',
+        book: 7,
+        chapter: 17,
+        citationScheme: 'bekker-metaphysics',
+        spanStart: '1041a6',
+        spanEnd: '1041a6',
+      },
+      greekLines: ['line one'],
+      englishLines: ['line one english'],
+      footnotes: [{ id: 1, body }],
+    };
+  }
+
+  it('round-trips a footnote body containing U+2028 without merging/losing structure', () => {
+    const doc = docWithFootnoteBody(`first physical line${LS}second physical line, no colon here`);
+    const serialized = serializeChapterFile(doc);
+    const reparsed = parseChapterFile(serialized);
+    // The body must not silently swallow the separator into a single run of
+    // text that loses the author's intended break.
+    expect(reparsed.footnotes[0].body).not.toBe('first physical line second physical line, no colon here');
+    // Round-trip must be stable (idempotent on repeated serialize/parse).
+    expect(serializeChapterFile(reparsed)).toBe(serialized);
+  });
+
+  it('round-trips a footnote body containing U+2029', () => {
+    const doc = docWithFootnoteBody(`first paragraph${PS}second paragraph`);
+    const serialized = serializeChapterFile(doc);
+    const reparsed = parseChapterFile(serialized);
+    expect(reparsed.footnotes[0].body).not.toBe('first paragraph second paragraph');
+    expect(serializeChapterFile(reparsed)).toBe(serialized);
+  });
+
+  it('a footnote body whose U+2028-joined halves form a "N: "-shaped line round-trips as a stable, well-formed file (no crash, no lost content)', () => {
+    // This is the reported failure mode verbatim: WITHOUT the fix, the merged
+    // text (U+2028 not treated as a line break by split('\n'), but treated as
+    // one by the parser's regex `^`/`$`) throws "footnote continuation line
+    // before any N: entry" on reparse — a hard crash on a file the app itself
+    // just wrote. With the fix, U+2028 folds to a real paragraph break, so the
+    // line legitimately starts a new footnote entry — the SAME ambiguity a
+    // hand-typed body with a literal "\n2: ..." line already has today
+    // (pre-existing, independent of U+2028; out of scope here). What matters
+    // for THIS bug is: no crash, no silent loss, and a stable round-trip.
+    const doc = docWithFootnoteBody(`para one${LS}2: fake entry looking line`);
+    const serialized = serializeChapterFile(doc);
+    const reparsed = parseChapterFile(serialized);
+    const bodies = reparsed.footnotes.map((fn) => fn.body).join('\n');
+    expect(bodies).toContain('para one');
+    expect(bodies).toContain('fake entry looking line');
+    expect(serializeChapterFile(reparsed)).toBe(serialized);
+  });
+
+  it('normalizes U+2028/U+2029 the same way Stage 0 import does (fold to a paragraph break), never emitting the raw separator into a saved file', () => {
+    const doc = docWithFootnoteBody(`alpha${LS}beta${PS}gamma`);
+    const serialized = serializeChapterFile(doc);
+    expect(serialized).not.toContain(LS);
+    expect(serialized).not.toContain(PS);
+  });
+});
+
 describe('round-trip property: parse(serialize(doc)) equals doc', () => {
   const cases: ChapterFile[] = [
     {

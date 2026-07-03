@@ -62,6 +62,36 @@ function normalizeLineEndings(raw: string): string {
   return raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }
 
+/**
+ * Fold Unicode U+2028 LINE SEPARATOR / U+2029 PARAGRAPH SEPARATOR to a real
+ * paragraph break ("\n\n") in a footnote body. A hand-authored/pasted body can
+ * carry these instead of "\n"; left in place they're invisible but dangerous,
+ * because the parser's `FOOTNOTE_ENTRY_RE` (`^`/`.`/`$`) treats U+2028/U+2029
+ * AS line terminators even though `String.prototype.split('\n')` does NOT —
+ * so a footnote body containing one fails to match on reparse (or silently
+ * truncates its captured text) even though `split('\n')` kept it on one
+ * physical line. A footnote body has a native multi-paragraph shape (see the
+ * format doc above and `parseFootnotes`'s continuation-line handling), so
+ * folding to "\n\n" (rather than a bare space) matches the Stage 0
+ * Scrivener-import policy for the same characters (normalizeFootnoteBody in
+ * ../import/scrivenerMd.ts): it turns an unrepresentable separator into the
+ * closest well-formed thing the format already represents (a paragraph
+ * break), so the round trip is lossless-by-construction rather than merely
+ * non-crashing.
+ *
+ * Scoped to footnote bodies only — NOT [GREEK]/[ENGLISH] rows. A row is a
+ * single line by format design with no regex-based matching applied to its
+ * content in this module, so a stray U+2028/U+2029 there doesn't exhibit this
+ * bug; folding it would instead risk turning one row into extra physical
+ * lines on serialize (breaking the [GREEK]/[ENGLISH] 1:1 row-count invariant)
+ * for real hand-authored/imported prose that already carries one mid-sentence
+ * (measured against real fixture data) — worse than leaving it as an inert
+ * (if invisible) character.
+ */
+function normalizeFootnoteSeparators(body: string): string {
+  return body.replace(/[\u2028\u2029]/g, '\n\n');
+}
+
 // ── raw-address splitting (presentation-level, not citation math) ───────────
 
 // Trailing digits = line number, prefix = column. This is textual slicing of
@@ -301,7 +331,12 @@ function parseFootnotes(lines: string[], sectionStartLine: number, source: strin
 
   for (let i = 0; i < content.length; i++) {
     const lineNo = sectionStartLine + i + 1; // +1 for the [FOOTNOTES] header line itself
-    const line = content[i];
+    // Fold U+2028/U+2029 to a paragraph break BEFORE matching FOOTNOTE_ENTRY_RE
+    // (see normalizeFootnoteSeparators): its `^`/`.`/`$` treat those characters
+    // as line terminators even though split('\n') (above) did not, so a stray
+    // separator on this physical line would otherwise make a well-formed
+    // "N: text" entry fail to match, or silently truncate its captured body.
+    const line = normalizeFootnoteSeparators(content[i]);
     const m = FOOTNOTE_ENTRY_RE.exec(line);
     if (m) {
       const id = Number(m[1]);
@@ -425,6 +460,16 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
  * genuinely EMPTY final content row (trailing untranslated [ENGLISH] rows,
  * empty sections, footnote bodies ending in newlines) survives the round
  * trip by construction.
+ *
+ * `doc` may come straight from `parseChapterFile` (already normalized) OR be
+ * hand-built in memory by the editor — e.g. a footnote body the collaborator
+ * just typed/pasted, never round-tripped through parse. Either way, footnote
+ * bodies get the U+2028/U+2029 → paragraph-break fold (`normalizeFootnoteSeparators`)
+ * applied before assembly, so a raw separator never reaches disk. [GREEK]/
+ * [ENGLISH] rows are NOT folded here: a row is one physical line by format
+ * design, and folding U+2028/U+2029 in row content would itself risk turning
+ * one row into extra physical lines on disk, corrupting the 1:1 GREEK/ENGLISH
+ * row-count invariant — worse than leaving an inert stray separator in place.
  */
 export function serializeChapterFile(doc: ChapterFile): string {
   const parts: string[] = [serializeFrontmatter(doc.meta)];
@@ -440,7 +485,7 @@ export function serializeChapterFile(doc: ChapterFile): string {
     parts.push(''); // structural blank before the next header
     parts.push('[FOOTNOTES]');
     for (const fn of doc.footnotes) {
-      const bodyLines = fn.body.split('\n');
+      const bodyLines = normalizeFootnoteSeparators(fn.body).split('\n');
       parts.push(`${fn.id}: ${bodyLines[0]}`);
       parts.push(...bodyLines.slice(1));
     }

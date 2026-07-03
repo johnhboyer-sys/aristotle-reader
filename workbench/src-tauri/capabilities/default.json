@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: read/write the app-data workspace; native dialogs for import/export; clipboard for copy actions; shell to run Diogenes' perl exporter and pandoc as subprocesses. The fs:allow-exists scope covers onboarding's existence checks only (Diogenes install location and the user-picked TLG folder). The broader read/write/mkdir/read-dir/stat '/**' scopes support a user-picked library folder (shared-folder sync, build spec §11) — the folder is chosen explicitly via the native picker, same trust model as the TLG folder.",
+  "description": "Main window: read/write the app-data workspace; native dialogs for import/export; clipboard for copy actions; shell to run Diogenes' perl exporter and pandoc as subprocesses. The fs:allow-exists scope covers onboarding's existence checks only (Diogenes install location and the user-picked TLG folder). The broader read/write/mkdir/read-dir/stat '/**' scopes support a user-picked library folder (shared-folder sync, build spec §11) — the folder is chosen explicitly via the native picker, same trust model as the TLG folder. The pandoc-homebrew/pandoc-usr-local entries pin ABSOLUTE pandoc paths: a Finder-launched .app inherits launchd's minimal PATH (no Homebrew dirs), so the bare 'pandoc' name only works from a terminal launch — the frontend probes which absolute path exists and prefers it (src/lib/export/pandoc.ts), keeping bare 'pandoc' as the last resort. The AI-assist commands (assist_resolve_claude/assist_suggest) are app-owned Rust commands registered via invoke_handler (src-tauri/src/assist.rs) — they are not plugin commands, so they need no shell scope here; core:default covers app commands.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -56,6 +56,16 @@
             "-o",
             { "validator": "^/.+" }
           ]
+        },
+        {
+          "name": "pandoc-homebrew",
+          "cmd": "/opt/homebrew/bin/pandoc",
+          "args": true
+        },
+        {
+          "name": "pandoc-usr-local",
+          "cmd": "/usr/local/bin/pandoc",
+          "args": true
         },
         {
           "name": "pandoc",

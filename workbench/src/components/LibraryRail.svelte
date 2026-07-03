@@ -44,6 +44,7 @@
     onSelect,
     onAddWork,
     onImportChapter,
+    onImportReference,
   }: {
     railWorks: RailWork[];
     selected: RailSelection | null;
@@ -53,6 +54,10 @@
      * the same way onAddWork is gated). Receives the work id so the dialog
      * can default its work picker to the one the user clicked from. */
     onImportChapter?: (workId: string) => void;
+    /** "Import reference…" for a ready work — a private, local-only
+     * reference translation (design doc D5 §5). Gated exactly like
+     * onImportChapter (Tauri or dev harness). */
+    onImportReference?: (workId: string) => void;
   } = $props();
 
   // Expanded books, keyed "workId:bookN". Start with the selected book open.
@@ -81,14 +86,27 @@
     <div class="work">
       <div class="work-head">
         <span class="work-title">{rw.work.title}</span>
-        {#if rw.status === 'ready' && onImportChapter}
-          <button
-            class="import-chapter"
-            onclick={() => onImportChapter?.(rw.work.id)}
-            title="Import a chapter file for {rw.work.title}"
-          >
-            Import chapter…
-          </button>
+        {#if rw.status === 'ready' && (onImportChapter || onImportReference)}
+          <span class="work-actions">
+            {#if onImportChapter}
+              <button
+                class="import-chapter"
+                onclick={() => onImportChapter?.(rw.work.id)}
+                title="Import a chapter file for {rw.work.title}"
+              >
+                Import chapter…
+              </button>
+            {/if}
+            {#if onImportReference}
+              <button
+                class="import-chapter"
+                onclick={() => onImportReference?.(rw.work.id)}
+                title="Import a reference translation for {rw.work.title} (stays on this Mac)"
+              >
+                Import reference…
+              </button>
+            {/if}
+          </span>
         {/if}
       </div>
 
@@ -202,6 +220,15 @@
     letter-spacing: 0.005em;
     color: var(--text);
     padding: var(--space-2) var(--space-2) var(--space-1);
+  }
+
+  /* The 260px rail can't fit two inline import affordances next to a work
+     title — stack them, right-aligned, keeping each one quiet. */
+  .work-actions {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
   }
 
   /* Quiet text-affordance, matching .add-work's understatement — importing

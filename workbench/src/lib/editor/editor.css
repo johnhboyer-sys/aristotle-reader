@@ -264,6 +264,94 @@
   filter: brightness(1.08);
 }
 
+/* ── AI-assist (design doc D4) ────────────────────────────────────────────
+   Suggest glyph: invisible at rest (§12 invisibility — the collaborator
+   should never notice it). It appears only while the FOCUSED row is hovered,
+   at the right edge of the English cell; ⌘⏎ is the keyboard path. */
+.assist-glyph {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  padding: 0 3px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.72rem;
+  line-height: calc(var(--work-fs) * var(--work-lh));
+  cursor: pointer;
+  user-select: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+.en-cell:focus-within:hover .assist-glyph {
+  opacity: 0.55;
+  pointer-events: auto;
+}
+.en-cell .assist-glyph:hover {
+  opacity: 1;
+}
+
+/* Non-modal suggestion popover anchored under the row (same quiet chrome as
+   the paste-confirm bar; .en-cell is the positioning context). */
+.assist-popover {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  max-width: min(36rem, 100%);
+  padding: var(--space-2) var(--space-3);
+  background: var(--popup-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  box-shadow: var(--popup-shadow);
+}
+.assist-note {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--text-mid);
+}
+.assist-text {
+  font-family: var(--font-work);
+  font-size: var(--work-fs);
+  line-height: var(--work-lh);
+  color: var(--text);
+  margin: 0;
+}
+.assist-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.assist-btn {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.assist-btn:hover {
+  color: var(--text);
+  border-color: var(--text-light);
+}
+.assist-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.assist-btn-primary:hover {
+  color: var(--on-accent);
+  border-color: var(--accent);
+  filter: brightness(1.08);
+}
+
 /* ── transient status pill ────────────────────────────────────────────── */
 .status-pill {
   position: fixed;

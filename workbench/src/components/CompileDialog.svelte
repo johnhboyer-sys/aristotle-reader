@@ -80,7 +80,12 @@
     note = null;
     try {
       const shell = await import('@tauri-apps/plugin-shell');
-      const probe = await shell.Command.create('pandoc', ['--version'])
+      // GUI-PATH fix (d4 rider, same as ExportButton): resolve the absolute
+      // pandoc scope name first — bare 'pandoc' only works from a terminal launch.
+      const { resolvePandocProgram } = await import('../lib/export');
+      const fsProbe = await import('@tauri-apps/plugin-fs');
+      const pandocProgram = await resolvePandocProgram((p) => fsProbe.exists(p));
+      const probe = await shell.Command.create(pandocProgram, ['--version'])
         .execute()
         .catch(() => null);
       if (!probe || probe.code !== 0) {
@@ -126,7 +131,7 @@
       await writeFile(mdPath, compiled.markdown);
 
       const { runPandocTauri } = await import('../lib/export');
-      const run = await runPandocTauri({ markdownPath: mdPath, docxPath, referenceDocPath }, shell);
+      const run = await runPandocTauri({ markdownPath: mdPath, docxPath, referenceDocPath }, shell, pandocProgram);
       if (run.code !== 0) {
         console.error('[compile] pandoc failed:', run.stderr);
         note = "The Word document couldn't be created.";

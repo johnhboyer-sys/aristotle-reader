@@ -6,7 +6,7 @@
   import { isTauri } from '../lib/runtime';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
   import { parseChapterFile } from '../lib/chapterfile';
-  import { chapterToPandocMarkdown, runPandocTauri, PANDOC_UNAVAILABLE_MESSAGE } from '../lib/export';
+  import { chapterToPandocMarkdown, runPandocTauri, resolvePandocProgram, PANDOC_UNAVAILABLE_MESSAGE } from '../lib/export';
   import type { WorkManifest } from '../lib/works/manifest';
   import CompileDialog from './CompileDialog.svelte';
 
@@ -39,7 +39,12 @@
       const parsed = parseChapterFile(raw);
 
       const shell = await import('@tauri-apps/plugin-shell');
-      const probe = await shell.Command.create('pandoc', ['--version'])
+      // GUI-PATH fix (d4 rider): a Finder-launched app has no Homebrew dirs
+      // on PATH, so probe the known absolute locations first and run pandoc
+      // under that scope name; bare 'pandoc' stays the terminal-launch fallback.
+      const fsProbe = await import('@tauri-apps/plugin-fs');
+      const pandocProgram = await resolvePandocProgram((p) => fsProbe.exists(p));
+      const probe = await shell.Command.create(pandocProgram, ['--version'])
         .execute()
         .catch(() => null);
       if (!probe || probe.code !== 0) {
@@ -63,7 +68,7 @@
       const mdPath = await pathApi.join(appData, 'export-intermediate.md');
       await fs.writeTextFile(mdPath, markdown);
 
-      const run = await runPandocTauri({ markdownPath: mdPath, docxPath }, shell);
+      const run = await runPandocTauri({ markdownPath: mdPath, docxPath }, shell, pandocProgram);
       if (run.code !== 0) {
         console.error('[export] pandoc failed:', run.stderr);
         note("The Word document couldn't be created.");

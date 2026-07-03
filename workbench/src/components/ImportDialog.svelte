@@ -201,6 +201,28 @@
     }
   }
 
+  async function loadDevSampleApo() {
+    errorMessage = null;
+    try {
+      const [gRes, eRes] = await Promise.all([
+        fetch('/dev-corpus-samples/APo%201.4%20Greek.md'),
+        fetch('/dev-corpus-samples/APo%201.4%20English.md'),
+      ]);
+      if (!gRes.ok || !eRes.ok) {
+        errorMessage = 'The sample Scrivener pair is not available in this dev build.';
+        return;
+      }
+      const [g, e] = await Promise.all([gRes.text(), eRes.text()]);
+      formWork = 'posterior-analytics';
+      formBook = '1';
+      formChapter = '4';
+      loadScrivenerPair('APo 1.4 Greek.md', g, 'APo 1.4 English.md', e);
+    } catch (err) {
+      console.error('[import] dev sample load failed', err);
+      errorMessage = 'The sample Scrivener pair could not be loaded.';
+    }
+  }
+
   // ── running the parse + plan pipeline ──────────────────────────────────
 
   let plan = $state<ImportPlan | null>(null);
@@ -387,6 +409,7 @@
           </div>
           {#if devHarness}
             <button class="pick-btn dev-btn" onclick={loadDevSample}>Load sample pair (dev)</button>
+            <button class="pick-btn dev-btn" onclick={loadDevSampleApo}>Load APo 1.4 sample pair (dev)</button>
           {/if}
           {#if !isTauri() && !devHarness}
             <p class="line note">Importing is only available in the desktop app.</p>

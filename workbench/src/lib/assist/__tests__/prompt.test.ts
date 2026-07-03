@@ -1,0 +1,93 @@
+import { describe, expect, it } from 'vitest';
+import { buildAssistPrompt, renderAssistContext } from '../prompt';
+import { GOLDEN_CONTEXT, NO_CONTEXT } from './fixtures';
+
+describe('buildAssistPrompt', () => {
+  it('golden: system prompt states the row-locked 1:1 discipline and output-only-English rule', () => {
+    const { system } = buildAssistPrompt(GOLDEN_CONTEXT);
+    expect(system).toMatchInlineSnapshot(
+      `"You are helping a professional classicist translate a work from its original language into English. The translation is strictly line-locked: each source line gets exactly one English line, kept in 1:1 correspondence even when English word order forces an awkward mid-clause break. Match the register, terminology, and style of the surrounding English shown below. Output ONLY the English translation for the single TARGET line. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context lines."`,
+    );
+  });
+
+  it('golden: user prompt renders citation, context rows, bracketed target, and trailing instruction', () => {
+    const { user } = buildAssistPrompt(GOLDEN_CONTEXT);
+    expect(user).toMatchInlineSnapshot(`
+      "Work: Metaphysics, Book Ζ, Chapter 17  (bekker-metaphysics citation)
+
+      Context (each line: [address] source — English draft, blank if untranslated):
+      [1041a4] πάλιν ἐπανέλθωμεν. — (untranslated)
+      [1041a5] διὰ τί ὕλη τὶς τόδε τὶ ἐστιν; — why is this matter this thing?
+
+      >>> TARGET line to translate:
+      [1041a6] τὸ γὰρ τί ἦν εἶναι τοῦτό ἐστιν.
+
+      Continuing context:
+      [1041a7] πρῶτον οὖν εἴπωμεν. — (untranslated)
+      [1041a8] ἔστω δὴ σαφὲς τοῦτο. — let this then be clear.
+
+      Provide the English translation for the TARGET line only."
+    `);
+  });
+
+  it('interleaved untranslated rows render the literal "(untranslated)" token, never an empty field', () => {
+    const { user } = buildAssistPrompt(GOLDEN_CONTEXT);
+    expect(user).toContain('[1041a4] πάλιν ἐπανέλθωμεν. — (untranslated)');
+    expect(user).toContain('[1041a7] πρῶτον οὖν εἴπωμεν. — (untranslated)');
+  });
+
+  it('the target line never appears in the "english draft" position of a context row', () => {
+    const { user } = buildAssistPrompt(GOLDEN_CONTEXT);
+    // The target's Greek must appear exactly once, inside the bracketed
+    // TARGET section, and never as the greek/english pair of a context row.
+    const occurrences = user.split(GOLDEN_CONTEXT.target.greek).length - 1;
+    expect(occurrences).toBe(1);
+    expect(user).toContain(`>>> TARGET line to translate:\n[${GOLDEN_CONTEXT.target.address}] ${GOLDEN_CONTEXT.target.greek}`);
+  });
+
+  it('Greek in the rendered prompt is Unicode, not Beta Code (no ASCII transliteration markers)', () => {
+    const { user } = buildAssistPrompt(GOLDEN_CONTEXT);
+    // Beta Code uses bare ASCII with markers like *, /, =, \ attached to letters;
+    // spot-check that the actual Greek glyphs made it through untransformed.
+    expect(user).toContain('τὸ γὰρ τί ἦν εἶναι');
+    expect(user).toContain('ἐπανέλθωμεν');
+  });
+
+  it('empty-target-row: an unfilled target still renders its Greek only (no english field on target)', () => {
+    const ctx = { ...GOLDEN_CONTEXT, target: { address: '1041a6', greek: '' } };
+    const { user } = buildAssistPrompt(ctx);
+    expect(user).toContain('>>> TARGET line to translate:\n[1041a6] ');
+  });
+
+  it('no context rows: omits the "Context" and "Continuing context" headers entirely', () => {
+    const { user } = buildAssistPrompt(NO_CONTEXT);
+    expect(user).not.toContain('Context (each line');
+    expect(user).not.toContain('Continuing context');
+    expect(user).toContain('>>> TARGET line to translate:');
+  });
+
+  it('renders whatever before/after arrays it is given, without trimming or re-selecting a window', () => {
+    const wide = {
+      ...GOLDEN_CONTEXT,
+      before: Array.from({ length: 10 }, (_, i) => ({
+        address: `100${i}a1`,
+        greek: `λόγος ${i}`,
+        english: null,
+      })),
+    };
+    const { user } = buildAssistPrompt(wide);
+    for (let i = 0; i < 10; i++) {
+      expect(user).toContain(`λόγος ${i}`);
+    }
+  });
+});
+
+describe('renderAssistContext', () => {
+  it('is the single shared rendering helper used by both prompt.ts and clipboardPayload.ts', () => {
+    const rendered = renderAssistContext(GOLDEN_CONTEXT);
+    expect(rendered.beforeLines).toHaveLength(2);
+    expect(rendered.afterLines).toHaveLength(2);
+    expect(rendered.targetLine).toBe('[1041a6] τὸ γὰρ τί ἦν εἶναι τοῦτό ἐστιν.');
+    expect(rendered.citationLine).toBe('Work: Metaphysics, Book Ζ, Chapter 17  (bekker-metaphysics citation)');
+  });
+});
