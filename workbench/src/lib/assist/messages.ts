@@ -33,3 +33,23 @@ export const API_BAD_KEY_MESSAGE =
 
 /** Plain sentence shown by the (deferred) API-key path on 429 / overloaded. */
 export const API_BUSY_MESSAGE = 'Claude is busy right now — copied this line to the clipboard instead.';
+
+/**
+ * Shown when an API provider was chosen but no API key is stored for it. The
+ * controller still runs the clipboard fallback, so the "copied…" clause holds.
+ */
+export const API_NO_KEY_MESSAGE =
+  'Add an API key in Settings to use this AI — copied this line to the clipboard instead.';
+
+// ── service-neutral API-adapter sentences (ApiProvider, any of openai/anthropic/
+// google). The three above are Claude-worded from the deferred Slice-C stub;
+// these carry no vendor name so one ApiProvider can use them for every service.
+
+/** 401 / 403 from an API service — the stored key is bad. */
+export const API_KEY_REJECTED_MESSAGE = "That API key didn't work — check it in Settings.";
+
+/** 429 from an API service — rate-limited / overloaded. */
+export const API_SERVICE_BUSY_MESSAGE = 'The AI service is busy right now — try again in a moment.';
+
+/** Network failure, abort, other non-2xx, or malformed/empty response. */
+export const API_UNREACHABLE_MESSAGE = "Couldn't reach the AI service just now — try again.";

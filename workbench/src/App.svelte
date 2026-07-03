@@ -419,12 +419,12 @@
         </svg>
       </button>
 
-      {#if isTauri()}
+      {#if isTauri() || import.meta.env.DEV}
         <button
           class="icon-btn"
           onclick={() => (librarySettingsOpen = true)}
-          title="Library settings…"
-          aria-label="Library settings"
+          title="Settings…"
+          aria-label="Settings"
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3" />

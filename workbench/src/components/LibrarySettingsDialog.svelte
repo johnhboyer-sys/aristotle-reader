@@ -8,6 +8,8 @@
   import { loadSettings, updateSettings } from '../lib/settings';
   import { copyLibraryToRoot, invalidateLibraryRootCache } from '../lib/library/storage';
   import type { WorkManifest } from '../lib/works/manifest';
+  import { isTauri } from '../lib/runtime';
+  import AssistSettings from './AssistSettings.svelte';
 
   let { works, onClose }: { works: WorkManifest[]; onClose: () => void } = $props();
 
@@ -86,9 +88,9 @@
 </script>
 
 <div class="scrim" role="presentation">
-  <div class="dialog" role="dialog" aria-modal="true" aria-label="Library settings">
+  <div class="dialog" role="dialog" aria-modal="true" aria-label="Settings">
     <header class="dialog-head">
-      <h2>Library settings</h2>
+      <h2>Settings</h2>
       <button class="close-btn" onclick={onClose} aria-label="Close">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M6 6l12 12M18 6L6 18" />
@@ -97,6 +99,16 @@
     </header>
 
     <div class="dialog-body">
+      <!-- AI-assist settings (D7 Slice C) — always available (works in the
+           browser dev harness too; only Detect needs Tauri). -->
+      <div class="section">
+        <p class="section-title">AI assist</p>
+        <AssistSettings />
+      </div>
+
+      {#if isTauri()}
+      <div class="section">
+        <p class="section-title">Library folder</p>
       {#if phase === 'loading'}
         <p class="line">Checking…</p>
       {:else if phase === 'confirming'}
@@ -156,6 +168,8 @@
           </div>
         {/if}
       {/if}
+      </div>
+      {/if}
     </div>
   </div>
 </div>
@@ -174,11 +188,14 @@
   }
 
   .dialog {
-    width: 420px;
+    width: 440px;
     max-width: calc(100vw - 2 * var(--space-4));
+    max-height: calc(100vh - 2 * var(--space-4));
+    display: flex;
+    flex-direction: column;
     background: var(--col-bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: var(--popup-shadow);
   }
 
@@ -217,6 +234,22 @@
 
   .dialog-body {
     padding: var(--space-4);
+    overflow-y: auto;
+  }
+
+  .section + .section {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+  .section-title {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    margin: 0 0 var(--space-3);
   }
 
   .label {

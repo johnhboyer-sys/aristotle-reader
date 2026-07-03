@@ -17,12 +17,41 @@ export interface LastOpened {
   chapter: number;
 }
 
-/** Cached AI-assist CLI detection (design doc D4). */
+/** CLI tools driven directly (each on the user's own subscription). */
+export type AssistCliToolId = 'claude' | 'codex' | 'gemini';
+/** API providers called with the user's own key (pay-per-use). Slice D. */
+export type AssistApiProviderId = 'openai' | 'anthropic' | 'google';
+/** Every value `AssistSettings.provider` may take. */
+export type AssistProviderChoice = AssistCliToolId | 'custom' | AssistApiProviderId;
+
+/** User-supplied custom command config (D7 §"Provider registry", `specForCustom`). */
+export interface AssistCustomConfig {
+  /** Absolute path to the custom binary. */
+  binPath?: string;
+  /** Fixed non-interactive flags. */
+  args?: string[];
+  /** How the composed prompt reaches the tool. */
+  promptVia?: 'stdin' | 'arg';
+}
+
+/**
+ * AI-assist settings (design doc D7 — multi-provider). Back-compatible with the
+ * d4 single-claude shape (`cliPath`/`cliState`/`checkedAt`): `sanitize()`
+ * migrates an old blob into `cliPaths.claude` + `provider: 'claude'`. Every
+ * field is optional; an empty object means "detect + prefer Claude, else
+ * clipboard" (the §12 invisibility floor).
+ */
 export interface AssistSettings {
-  /** Resolved absolute path to the `claude` binary. */
-  cliPath?: string;
-  cliState?: 'ok' | 'not-found' | 'unauth';
-  checkedAt?: number;
+  /** The user's explicit provider choice. Unset → detect (prefer claude). */
+  provider?: AssistProviderChoice;
+  /** Cached resolved absolute paths for the built-in CLI tools. */
+  cliPaths?: Partial<Record<AssistCliToolId, string>>;
+  /** Custom-command config (used when `provider === 'custom'`). */
+  custom?: AssistCustomConfig;
+  /** API keys, one per provider — plaintext (parity with all other settings). Slice D. */
+  apiKeys?: Partial<Record<AssistApiProviderId, string>>;
+  /** Optional per-provider model override. */
+  models?: Record<string, string>;
   /** Send the surrounding draft English as prompt context (John: default ON). */
   includeDraft?: boolean;
 }
@@ -53,7 +82,89 @@ export interface WorkbenchSettings {
 const LS_KEY = 'workbench:settings';
 const FILE = 'settings.json';
 
-function sanitize(value: unknown): WorkbenchSettings {
+const CLI_TOOL_IDS: readonly AssistCliToolId[] = ['claude', 'codex', 'gemini'];
+const API_PROVIDER_IDS: readonly AssistApiProviderId[] = ['openai', 'anthropic', 'google'];
+const PROVIDER_CHOICES: readonly AssistProviderChoice[] = [
+  ...CLI_TOOL_IDS,
+  'custom',
+  ...API_PROVIDER_IDS,
+];
+
+/**
+ * Sanitize + migrate the persisted `assist` blob. Defensive against every
+ * field; also migrates the OLD d4 shape:
+ *   { cliPath, cliState, checkedAt }  →  { cliPaths: { claude }, provider }
+ * When an old `cliPath` string is present we map it to `cliPaths.claude` and
+ * default `provider` to 'claude' (unless a valid new `provider` is already
+ * set). The old `cliState`/`checkedAt` fields carried transient detection
+ * state and are intentionally dropped — resolution re-runs and re-caches.
+ * Returns undefined when nothing survives (so the empty object never persists).
+ *
+ * Exported for unit testing (settings.test.ts); production callers reach it
+ * through `sanitize()` / `loadSettings()`.
+ */
+export function sanitizeAssist(raw: unknown): AssistSettings | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const a = raw as Record<string, unknown>;
+  const out: AssistSettings = {};
+
+  // ── new fields ──
+  if (typeof a.provider === 'string' && (PROVIDER_CHOICES as readonly string[]).includes(a.provider)) {
+    out.provider = a.provider as AssistProviderChoice;
+  }
+
+  if (typeof a.cliPaths === 'object' && a.cliPaths !== null) {
+    const src = a.cliPaths as Record<string, unknown>;
+    const cliPaths: Partial<Record<AssistCliToolId, string>> = {};
+    for (const id of CLI_TOOL_IDS) {
+      if (typeof src[id] === 'string') cliPaths[id] = src[id] as string;
+    }
+    if (Object.keys(cliPaths).length > 0) out.cliPaths = cliPaths;
+  }
+
+  if (typeof a.custom === 'object' && a.custom !== null) {
+    const c = a.custom as Record<string, unknown>;
+    const custom: AssistCustomConfig = {};
+    if (typeof c.binPath === 'string') custom.binPath = c.binPath;
+    if (Array.isArray(c.args) && c.args.every((x) => typeof x === 'string')) {
+      custom.args = c.args as string[];
+    }
+    if (c.promptVia === 'stdin' || c.promptVia === 'arg') custom.promptVia = c.promptVia;
+    if (Object.keys(custom).length > 0) out.custom = custom;
+  }
+
+  if (typeof a.apiKeys === 'object' && a.apiKeys !== null) {
+    const src = a.apiKeys as Record<string, unknown>;
+    const apiKeys: Partial<Record<AssistApiProviderId, string>> = {};
+    for (const id of API_PROVIDER_IDS) {
+      if (typeof src[id] === 'string') apiKeys[id] = src[id] as string;
+    }
+    if (Object.keys(apiKeys).length > 0) out.apiKeys = apiKeys;
+  }
+
+  if (typeof a.models === 'object' && a.models !== null) {
+    const src = a.models as Record<string, unknown>;
+    const models: Record<string, string> = {};
+    for (const [k, val] of Object.entries(src)) {
+      if (typeof val === 'string') models[k] = val;
+    }
+    if (Object.keys(models).length > 0) out.models = models;
+  }
+
+  if (typeof a.includeDraft === 'boolean') out.includeDraft = a.includeDraft;
+
+  // ── migration from the old { cliPath, cliState, checkedAt } shape ──
+  if (typeof a.cliPath === 'string' && a.cliPath.length > 0) {
+    if (!out.cliPaths) out.cliPaths = {};
+    if (out.cliPaths.claude === undefined) out.cliPaths.claude = a.cliPath;
+    if (out.provider === undefined) out.provider = 'claude';
+  }
+
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** Exported for unit testing (settings.test.ts) — the full-blob sanitizer. */
+export function sanitize(value: unknown): WorkbenchSettings {
   if (typeof value !== 'object' || value === null) return {};
   const v = value as Record<string, unknown>;
   const out: WorkbenchSettings = {};
@@ -61,17 +172,8 @@ function sanitize(value: unknown): WorkbenchSettings {
   if (typeof v.diogenesPath === 'string') out.diogenesPath = v.diogenesPath;
   if (typeof v.libraryRoot === 'string') out.libraryRoot = v.libraryRoot;
   if (typeof v.referenceRoot === 'string') out.referenceRoot = v.referenceRoot;
-  const a = v.assist as Record<string, unknown> | undefined;
-  if (typeof a === 'object' && a !== null) {
-    const assist: AssistSettings = {};
-    if (typeof a.cliPath === 'string') assist.cliPath = a.cliPath;
-    if (a.cliState === 'ok' || a.cliState === 'not-found' || a.cliState === 'unauth') {
-      assist.cliState = a.cliState;
-    }
-    if (typeof a.checkedAt === 'number') assist.checkedAt = a.checkedAt;
-    if (typeof a.includeDraft === 'boolean') assist.includeDraft = a.includeDraft;
-    out.assist = assist;
-  }
+  const assist = sanitizeAssist(v.assist);
+  if (assist) out.assist = assist;
   const lo = v.lastOpened as Record<string, unknown> | undefined;
   if (
     typeof lo === 'object' &&

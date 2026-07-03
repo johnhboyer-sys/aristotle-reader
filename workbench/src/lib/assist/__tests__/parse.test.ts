@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseClaudeJson } from '../parse';
+import { parseClaudeJson, parseCodexJsonl, parsePlainText } from '../parse';
 
 describe('parseClaudeJson', () => {
   it('valid envelope with a result string -> { text }', () => {
@@ -81,5 +81,76 @@ describe('parseClaudeJson', () => {
     const prose = 'This, then, is what it means "to be" — no braces, no quotes needed.';
     const parsed = parseClaudeJson(JSON.stringify({ is_error: false, result: prose }));
     expect(parsed).toEqual({ text: prose });
+  });
+});
+
+describe('parsePlainText', () => {
+  it('empty stdout -> { error, authLike: false }', () => {
+    expect(parsePlainText('')).toEqual({ error: 'empty output', authLike: false });
+    expect(parsePlainText('   \n\t ')).toEqual({ error: 'empty output', authLike: false });
+  });
+
+  it('plain prose -> { text }, trimmed', () => {
+    expect(parsePlainText('  For thinking and being are the same.\n')).toEqual({
+      text: 'For thinking and being are the same.',
+    });
+  });
+
+  it('an auth-flavored plain-text error on stdout -> { error, authLike: true }', () => {
+    const parsed = parsePlainText('Error: you are not authenticated. Please log in.');
+    expect('error' in parsed && parsed.authLike).toBe(true);
+  });
+
+  it('non-auth prose that merely mentions ordinary words is not flagged auth-like', () => {
+    const parsed = parsePlainText('The soul is in a way all existing things.');
+    expect(parsed).toEqual({ text: 'The soul is in a way all existing things.' });
+  });
+});
+
+describe('parseCodexJsonl', () => {
+  it('extracts the last agent_message text from a realistic noisy JSONL stream', () => {
+    const stdout = [
+      '{"type":"reasoning","text":"thinking about the line"}',
+      '{"type":"item.completed","item":{"id":"call_1","type":"mcp_tool_call","name":"noop"}}',
+      '{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"For thinking and being are the same."}}',
+      '{"type":"turn.completed","usage":{"input_tokens":120,"output_tokens":9}}',
+    ].join('\n');
+    expect(parseCodexJsonl(stdout)).toEqual({ text: 'For thinking and being are the same.' });
+  });
+
+  it('when multiple agent_message events appear, returns the LAST one', () => {
+    const stdout = [
+      '{"type":"item.completed","item":{"type":"agent_message","text":"first draft"}}',
+      '{"type":"item.completed","item":{"type":"agent_message","text":"final answer"}}',
+    ].join('\n');
+    expect(parseCodexJsonl(stdout)).toEqual({ text: 'final answer' });
+  });
+
+  it('skips non-JSON noise lines without throwing', () => {
+    const stdout = [
+      'codex v0.142.4 starting...',
+      '{not json',
+      '{"type":"item.completed","item":{"type":"agent_message","text":"the answer"}}',
+    ].join('\n');
+    expect(() => parseCodexJsonl(stdout)).not.toThrow();
+    expect(parseCodexJsonl(stdout)).toEqual({ text: 'the answer' });
+  });
+
+  it('no agent_message event -> { error: "no answer" }, auth-sniffing the raw stdout', () => {
+    const noAnswer = '{"type":"turn.completed","usage":{}}';
+    expect(parseCodexJsonl(noAnswer)).toEqual({ error: 'no answer', authLike: false });
+
+    const authy = 'Please sign in to Codex first.\n{"type":"turn.completed"}';
+    const parsed = parseCodexJsonl(authy);
+    expect('error' in parsed && parsed.authLike).toBe(true);
+  });
+
+  it('empty stdout -> { error: "no answer" }', () => {
+    expect(parseCodexJsonl('')).toEqual({ error: 'no answer', authLike: false });
+  });
+
+  it('trims the extracted agent_message text', () => {
+    const stdout = '{"type":"item.completed","item":{"type":"agent_message","text":"  spaced out  "}}';
+    expect(parseCodexJsonl(stdout)).toEqual({ text: 'spaced out' });
   });
 });

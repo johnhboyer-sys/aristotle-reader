@@ -1,27 +1,35 @@
-//! AI-assist commands (design d4-ai-assist.md, divergence A: Rust command,
-//! not plugin-shell). Two commands:
+//! AI-assist commands (design d4-ai-assist.md → generalized in
+//! d7-multi-provider-assist.md §B, divergence A: Rust command, not
+//! plugin-shell). Two GENERIC commands drive ANY resolved AI CLI (Claude Code,
+//! Codex, Gemini, or a user-supplied custom command). The frontend (Slice A)
+//! owns the per-tool registry (binary ladder, argv, stdin-vs-arg prompt
+//! delivery, output parsing); Rust owns only the trust boundary and the
+//! subprocess plumbing:
 //!
-//! - `assist_resolve_claude` — resolve an ABSOLUTE path to the user's
-//!   `claude` binary. A Finder-launched .app inherits launchd's minimal PATH
+//! - `assist_which` — resolve an ABSOLUTE path to a CLI binary, or None. A
+//!   Finder-launched .app inherits launchd's minimal PATH
 //!   (`/usr/bin:/bin:/usr/sbin:/sbin`), so bare names never resolve; we probe
-//!   a fixed candidate ladder, then fall back to a login shell with a FIXED
-//!   argv constant (`/bin/zsh -lc "command -v claude"` — no user data is ever
-//!   near the shell).
+//!   the frontend-supplied `candidates` ladder, then (optionally) fall back to
+//!   a login shell (`/bin/zsh -lc "command -v <bin_name>"`). `bin_name` is the
+//!   ONE token interpolated into that shell string, so it is validated against
+//!   `^[A-Za-z0-9_-]+$` FIRST — any shell metacharacter → None, shell never
+//!   runs.
 //!
-//! - `assist_suggest` — run the resolved binary in print mode
-//!   (`-p --output-format json`) with the prompt written to the child's
-//!   STDIN. Prompt text NEVER appears in argv, and no shell ever parses it.
-//!   Rust owns the timeout (kill on expiry) and stderr redaction: stderr is
-//!   logged to the Rust console only, never returned to the frontend.
+//! - `assist_run` — run a resolved ABSOLUTE executable with a fixed `args`
+//!   array via `Command` (execve — NO shell parses argv), optionally writing
+//!   `stdin` to the child. The prompt is now EITHER a positional arg (arg-mode
+//!   tools) OR stdin (stdin-mode) — both are safe under execve, so neither is
+//!   special-cased. Rust owns the timeout (kill on expiry) and stderr
+//!   redaction: full stderr is logged to the Rust console only, never returned
+//!   to the frontend; on failure stderr+stdout are sniffed for auth signatures.
 //!
 //! The frontend contract (src/lib/assist/ codes against exactly this):
-//! `assist_suggest` takes `claude_path`, `system`, `user`, `timeout_ms`
-//! (JS invoke keys: claudePath / system / user / timeoutMs — Tauri's default
-//! camelCase argument mapping) and returns
-//! `{ ok: true, text: string }` or
-//! `{ ok: false, kind: "unauth" | "timeout" | "error" }`,
-//! where `text` is the RAW stdout of the CLI (the TS side parses the JSON
-//! envelope; Rust only checks exit status and non-emptiness).
+//!   invoke('assist_run', { binPath, args, stdin, timeoutMs })
+//!     => { ok: true, text: string }
+//!      | { ok: false, kind: "unauth" | "timeout" | "error" }
+//!     where `text` is the RAW stdout of the CLI (the TS side parses whatever
+//!     envelope the tool emits; Rust only checks exit status + non-emptiness).
+//!   invoke('assist_which', { candidates, binName }) => string | null
 
 use serde::Serialize;
 use std::io::{Read, Write};
@@ -52,12 +60,9 @@ impl AssistOutcome {
     }
 }
 
-// ── binary resolution ───────────────────────────────────────────────────────
+// ── binary resolution (assist_which) ─────────────────────────────────────────
 
-/// Fixed argv for the last discovery rung. A constant — user data is never
-/// anywhere near this shell invocation.
 const LOGIN_SHELL: &str = "/bin/zsh";
-const LOGIN_SHELL_ARGS: [&str; 2] = ["-lc", "command -v claude"];
 const RESOLVE_TIMEOUT: Duration = Duration::from_secs(5);
 
 fn home_dir() -> Option<PathBuf> {
@@ -78,29 +83,36 @@ fn is_executable_file(path: &Path) -> bool {
     path.is_file()
 }
 
-/// Candidate ladder: first existing executable wins.
-fn candidate_paths() -> Vec<PathBuf> {
-    let mut candidates = Vec::new();
-    if let Some(home) = home_dir() {
-        candidates.push(home.join(".claude/local/claude"));
-        candidates.push(home.join(".local/bin/claude"));
-    }
-    candidates.push(PathBuf::from("/opt/homebrew/bin/claude"));
-    candidates.push(PathBuf::from("/usr/local/bin/claude"));
-    candidates
+/// A bin name is safe to interpolate into the `command -v <name>` login-shell
+/// string ONLY if it is a plain identifier. Anything else (spaces, `;`, `$`,
+/// backticks, quotes, slashes…) is rejected — the shell is never run for it.
+fn is_safe_bin_name(name: &str) -> bool {
+    !name.is_empty()
+        && name
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
 }
 
-fn resolve_claude_blocking() -> Option<String> {
-    for candidate in candidate_paths() {
-        if is_executable_file(&candidate) {
-            return Some(candidate.to_string_lossy().into_owned());
+fn which_blocking(candidates: Vec<String>, bin_name: Option<String>) -> Option<String> {
+    // 1. Frontend-supplied absolute ladder: first existing executable wins.
+    for candidate in &candidates {
+        let path = Path::new(candidate);
+        if is_executable_file(path) {
+            return Some(candidate.clone());
         }
     }
 
-    // Last rung: ask a login shell (sources the user's profile PATH) where
-    // claude lives. Fixed argv constant; 5s timeout; kill on expiry.
+    // 2. Last rung: ask a login shell (sources the user's profile PATH) where
+    //    the bin lives. Only if bin_name is a validated plain identifier — it
+    //    is the sole token interpolated into the shell string.
+    let bin_name = bin_name?;
+    if !is_safe_bin_name(&bin_name) {
+        eprintln!("[assist] refusing login-shell resolution: unsafe bin_name {bin_name:?}");
+        return None;
+    }
+
     let mut cmd = Command::new(LOGIN_SHELL);
-    cmd.args(LOGIN_SHELL_ARGS);
+    cmd.args(["-lc", &format!("command -v {bin_name}")]);
     match run_with_timeout(cmd, None, RESOLVE_TIMEOUT) {
         Ok(out) if !out.timed_out && out.status == Some(0) => {
             let path = out.stdout.trim();
@@ -118,31 +130,22 @@ fn resolve_claude_blocking() -> Option<String> {
     }
 }
 
-/// Resolve an absolute path to the user's `claude` binary, or None.
+/// Resolve an absolute path to a CLI binary from the supplied `candidates`
+/// ladder, falling back to a `command -v <bin_name>` login-shell rung when
+/// `bin_name` is a validated plain identifier. Returns None if nothing exists.
 #[tauri::command]
-pub async fn assist_resolve_claude() -> Option<String> {
-    tauri::async_runtime::spawn_blocking(resolve_claude_blocking)
+pub async fn assist_which(candidates: Vec<String>, bin_name: Option<String>) -> Option<String> {
+    tauri::async_runtime::spawn_blocking(move || which_blocking(candidates, bin_name))
         .await
         .ok()
         .flatten()
 }
 
-// ── suggestion ──────────────────────────────────────────────────────────────
+// ── run (assist_run) ─────────────────────────────────────────────────────────
 
 /// Auth-failure signatures sniffed (case-insensitively) from stderr+stdout of
 /// a failed run. Matching any → kind "unauth".
 const UNAUTH_SIGNATURES: [&str; 4] = ["not logged in", "authenticate", "login", "api key"];
-
-/// Compose the process input: system block, blank line, user block. The
-/// prompt goes over stdin — never argv — so no shell/argv layer ever sees it.
-fn compose_stdin(system: &str, user: &str) -> String {
-    let system = system.trim();
-    if system.is_empty() {
-        user.to_string()
-    } else {
-        format!("{system}\n\n{user}")
-    }
-}
 
 /// PATH insurance for the child: a Finder-launched app's PATH lacks the
 /// user-level bin dirs; if the CLI shells out to helpers, give it the usual
@@ -171,43 +174,47 @@ fn augmented_path() -> String {
     parts.join(":")
 }
 
-fn suggest_blocking(claude_path: &str, system: &str, user: &str, timeout_ms: u64) -> AssistOutcome {
-    let path = Path::new(claude_path);
+fn run_blocking(
+    bin_path: &str,
+    args: &[String],
+    stdin: Option<String>,
+    timeout_ms: u64,
+) -> AssistOutcome {
+    let path = Path::new(bin_path);
     if !path.is_absolute() || !is_executable_file(path) {
-        eprintln!("[assist] claude path is not an absolute executable: {claude_path}");
+        eprintln!("[assist] bin_path is not an absolute executable: {bin_path}");
         return AssistOutcome::failure("error");
     }
 
-    // Fixed argv ARRAY — the prompt goes over stdin, never argv.
-    let mut cmd = Command::new(claude_path);
-    cmd.args(["-p", "--output-format", "json"]);
+    // Frontend-owned argv ARRAY under execve — no shell parses it. The prompt
+    // may live in `args` (arg-mode) or in `stdin` (stdin-mode); both are safe.
+    let mut cmd = Command::new(bin_path);
+    cmd.args(args);
     cmd.env("PATH", augmented_path());
 
-    let input = compose_stdin(system, user);
     let timeout = Duration::from_millis(timeout_ms);
 
-    let out = match run_with_timeout(cmd, Some(input), timeout) {
+    let out = match run_with_timeout(cmd, stdin, timeout) {
         Ok(out) => out,
         Err(err) => {
-            eprintln!("[assist] failed to spawn claude: {err}");
+            eprintln!("[assist] failed to spawn {bin_path}: {err}");
             return AssistOutcome::failure("error");
         }
     };
 
     if out.timed_out {
-        eprintln!("[assist] claude timed out after {timeout_ms}ms — child killed");
+        eprintln!("[assist] {bin_path} timed out after {timeout_ms}ms — child killed");
         return AssistOutcome::failure("timeout");
     }
 
-    let stdout_trimmed = out.stdout.trim();
-    if out.status == Some(0) && !stdout_trimmed.is_empty() {
-        // Raw stdout: the TS side parses the CLI's JSON envelope.
+    if out.status == Some(0) && !out.stdout.trim().is_empty() {
+        // Raw stdout: the TS side parses whatever envelope the tool emits.
         return AssistOutcome::success(out.stdout);
     }
 
     // Failure: log full stderr to the Rust console ONLY — never the frontend.
     eprintln!(
-        "[assist] claude exited with status {:?}; stderr:\n{}",
+        "[assist] {bin_path} exited with status {:?}; stderr:\n{}",
         out.status, out.stderr
     );
     let haystack = format!("{}\n{}", out.stderr, out.stdout).to_lowercase();
@@ -218,22 +225,22 @@ fn suggest_blocking(claude_path: &str, system: &str, user: &str, timeout_ms: u64
     }
 }
 
-/// Run the resolved `claude` binary in print mode with the composed prompt on
-/// stdin. Returns `{ ok: true, text }` (raw stdout) or
-/// `{ ok: false, kind: "unauth" | "timeout" | "error" }`.
+/// Run a resolved AI CLI (absolute executable) with a fixed `args` array,
+/// optionally writing `stdin` to the child. Returns `{ ok: true, text }` (raw
+/// stdout) or `{ ok: false, kind: "unauth" | "timeout" | "error" }`.
 #[tauri::command]
-pub async fn assist_suggest(
-    claude_path: String,
-    system: String,
-    user: String,
+pub async fn assist_run(
+    bin_path: String,
+    args: Vec<String>,
+    stdin: Option<String>,
     timeout_ms: u64,
 ) -> AssistOutcome {
     tauri::async_runtime::spawn_blocking(move || {
-        suggest_blocking(&claude_path, &system, &user, timeout_ms)
+        run_blocking(&bin_path, &args, stdin, timeout_ms)
     })
     .await
     .unwrap_or_else(|err| {
-        eprintln!("[assist] suggest task panicked: {err}");
+        eprintln!("[assist] run task panicked: {err}");
         AssistOutcome::failure("error")
     })
 }
@@ -326,17 +333,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn compose_joins_system_then_user_with_blank_line() {
-        assert_eq!(compose_stdin("SYS", "USER"), "SYS\n\nUSER");
-    }
-
-    #[test]
-    fn compose_empty_system_is_just_user() {
-        assert_eq!(compose_stdin("", "USER"), "USER");
-        assert_eq!(compose_stdin("   \n", "USER"), "USER");
-    }
-
-    #[test]
     fn outcome_serializes_to_contract_shapes() {
         let ok = serde_json::to_value(AssistOutcome::success("raw".into())).unwrap();
         assert_eq!(ok, serde_json::json!({ "ok": true, "text": "raw" }));
@@ -383,5 +379,117 @@ mod tests {
             .unwrap();
         assert_eq!(out.status, Some(0));
         assert_eq!(out.stdout, "σύνθεσις\n\nline");
+    }
+
+    // ── assist_run: bin_path validation ──────────────────────────────────────
+
+    #[test]
+    fn run_rejects_non_absolute_bin_path() {
+        // A bare/relative name is not an absolute path → error, never spawned.
+        let outcome = run_blocking("echo", &["hi".into()], None, 5_000);
+        assert!(matches!(
+            outcome,
+            AssistOutcome::Failure { kind: "error", .. }
+        ));
+    }
+
+    #[test]
+    fn run_rejects_non_executable_bin_path() {
+        // An absolute path that isn't an executable file → error.
+        let outcome = run_blocking("/etc/hosts", &[], None, 5_000);
+        assert!(matches!(
+            outcome,
+            AssistOutcome::Failure { kind: "error", .. }
+        ));
+    }
+
+    #[test]
+    fn run_arg_mode_prompt_reaches_child() {
+        // Arg-mode tools receive the prompt as a positional arg (safe under
+        // execve). /bin/echo emits its args → stdout must contain the prompt.
+        let prompt = "translate: σύνθεσις; $(whoami) `id` ;rm".to_string();
+        let outcome = run_blocking("/bin/echo", &[prompt.clone()], None, 5_000);
+        match outcome {
+            AssistOutcome::Success { text, .. } => {
+                assert!(text.contains(&prompt), "stdout {text:?} missing prompt");
+            }
+            other => panic!("expected success, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn run_stdin_mode_prompt_reaches_child() {
+        // Stdin-mode tools receive the prompt on stdin. /bin/cat echoes it.
+        let prompt = "SYS\n\nUSER prompt".to_string();
+        let outcome = run_blocking("/bin/cat", &[], Some(prompt.clone()), 5_000);
+        match outcome {
+            AssistOutcome::Success { text, .. } => assert_eq!(text, prompt),
+            other => panic!("expected success, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn run_timeout_yields_timeout_kind() {
+        let outcome = run_blocking("/bin/sleep", &["30".into()], None, 200);
+        assert!(matches!(
+            outcome,
+            AssistOutcome::Failure { kind: "timeout", .. }
+        ));
+    }
+
+    // ── assist_which: bin_name validation ────────────────────────────────────
+
+    #[test]
+    fn which_returns_first_existing_candidate() {
+        let resolved = which_blocking(
+            vec!["/no/such/thing".into(), "/bin/cat".into()],
+            None,
+        );
+        assert_eq!(resolved.as_deref(), Some("/bin/cat"));
+    }
+
+    #[test]
+    fn which_none_when_no_candidate_and_no_bin_name() {
+        let resolved = which_blocking(vec!["/no/such/thing".into()], None);
+        assert_eq!(resolved, None);
+    }
+
+    #[test]
+    fn safe_bin_name_accepts_plain_identifiers() {
+        assert!(is_safe_bin_name("claude"));
+        assert!(is_safe_bin_name("codex"));
+        assert!(is_safe_bin_name("gemini-cli"));
+        assert!(is_safe_bin_name("my_tool2"));
+    }
+
+    #[test]
+    fn safe_bin_name_rejects_shell_metacharacters() {
+        assert!(!is_safe_bin_name(""));
+        assert!(!is_safe_bin_name("claude; rm -rf /"));
+        assert!(!is_safe_bin_name("$(whoami)"));
+        assert!(!is_safe_bin_name("a b"));
+        assert!(!is_safe_bin_name("foo`id`"));
+        assert!(!is_safe_bin_name("../bin/evil"));
+        assert!(!is_safe_bin_name("foo|bar"));
+    }
+
+    #[test]
+    fn which_never_runs_shell_for_unsafe_bin_name() {
+        // A malicious bin_name with a metacharacter must return None WITHOUT
+        // invoking the login shell. If the shell ran the `;` payload, the marker
+        // file would be created; assert it never is.
+        let marker = std::env::temp_dir().join(format!(
+            "assist_which_pwned_{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_file(&marker);
+        let payload = format!("x; touch {}", marker.display());
+        let resolved = which_blocking(vec!["/no/such/thing".into()], Some(payload));
+        assert_eq!(resolved, None);
+        assert!(
+            !marker.exists(),
+            "shell payload executed — marker {marker:?} was created"
+        );
+        let _ = std::fs::remove_file(&marker);
     }
 }

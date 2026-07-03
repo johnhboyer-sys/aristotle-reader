@@ -107,7 +107,7 @@
   import { NO_LINE_MESSAGE } from '../assist/messages';
   import { ClipboardProvider } from '../assist/clipboardProvider';
   import type { AssistContext, AssistProvider, AssistResult } from '../assist/provider';
-  import type { InvokeFn } from '../assist/cliProvider';
+  import type { RunInvokeFn } from '../assist/cliProvider';
   import GreekCell from './GreekCell.svelte';
   import RowGutter from './RowGutter.svelte';
   import EnglishCell from './EnglishCell.svelte';
@@ -1170,8 +1170,9 @@
       updateSettings,
       exists: (p) => fs.exists(p),
       home: () => path.homeDir(),
-      invokeSuggest: ((cmd, args) => invoke(cmd, args)) as InvokeFn,
-      invokeResolve: () => invoke<string | null>('assist_resolve_claude'),
+      invokeRun: ((cmd, args) => invoke(cmd, args)) as RunInvokeFn,
+      invokeWhich: (candidates, binName) =>
+        invoke<string | null>('assist_which', { candidates, binName }),
       writeClipboard: writeClipboardText,
     });
   }

@@ -29,7 +29,7 @@ import {
   UNAUTH_MESSAGE,
 } from '../../assist/messages';
 import type { AssistContext } from '../../assist/provider';
-import type { AssistSuggestResponse, InvokeFn } from '../../assist/cliProvider';
+import type { AssistRunResponse, RunInvokeFn } from '../../assist/cliProvider';
 import type { WorkbenchSettings } from '../../settings';
 
 // ── shared fixtures ─────────────────────────────────────────────────────────
@@ -353,7 +353,7 @@ describe('AssistController', () => {
   });
 });
 
-// ── resolveTauriAssistProvider ──────────────────────────────────────────────
+// ── resolveTauriAssistProvider (D7 multi-provider) ──────────────────────────
 
 describe('resolveTauriAssistProvider', () => {
   function tauriDeps(overrides: Partial<TauriAssistDeps> = {}) {
@@ -361,7 +361,8 @@ describe('resolveTauriAssistProvider', () => {
       updates: [] as Partial<WorkbenchSettings>[],
       exists: [] as string[],
       clipboard: [] as string[],
-      suggests: [] as { claudePath: string }[],
+      runs: [] as { binPath: string; args: string[]; stdin: string | null }[],
+      whichCalls: [] as { candidates: string[]; binName: string }[],
     };
     const deps: TauriAssistDeps = {
       loadSettings: async () => ({}),
@@ -374,11 +375,14 @@ describe('resolveTauriAssistProvider', () => {
         return false;
       },
       home: async () => '/Users/j/', // trailing slash on purpose
-      invokeSuggest: (async (_cmd, args) => {
-        calls.suggests.push({ claudePath: args.claudePath });
-        return { ok: true, text: 'ok' } as AssistSuggestResponse;
-      }) as InvokeFn,
-      invokeResolve: async () => null,
+      invokeRun: (async (_cmd, args) => {
+        calls.runs.push({ binPath: args.binPath, args: args.args, stdin: args.stdin });
+        return { ok: true, text: JSON.stringify({ result: 'ok' }) } as AssistRunResponse;
+      }) as RunInvokeFn,
+      invokeWhich: async (candidates, binName) => {
+        calls.whichCalls.push({ candidates, binName });
+        return null;
+      },
       writeClipboard: async (t) => {
         calls.clipboard.push(t);
       },
@@ -389,57 +393,164 @@ describe('resolveTauriAssistProvider', () => {
 
   const signal = () => new AbortController().signal;
 
-  it('cached cliPath that still exists → CliProvider on that path, settings untouched', async () => {
+  it('detect (no explicit provider): resolves claude via the ladder → run-mode CliProvider', async () => {
     const { deps, calls } = tauriDeps({
-      loadSettings: async () => ({ assist: { cliPath: '/opt/claude', cliState: 'ok' } }),
+      exists: async (p) => p === '/Users/j/.claude/local/claude',
+    });
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('cli');
+    await provider.suggest(smallCtx(), signal());
+    expect(calls.runs).toHaveLength(1);
+    // claude spec: prompt over stdin, args = -p --output-format json
+    expect(calls.runs[0].binPath).toBe('/Users/j/.claude/local/claude');
+    expect(calls.runs[0].args).toEqual(['-p', '--output-format', 'json']);
+    expect(calls.runs[0].stdin).toContain('γραμμή 10'); // composed prompt carries the target
+    // newly-resolved path is cached under cliPaths.claude
+    expect(calls.updates.at(-1)?.assist?.cliPaths).toMatchObject({
+      claude: '/Users/j/.claude/local/claude',
+    });
+  });
+
+  it('cached cliPaths.claude that still exists → reused, no re-resolve, settings untouched', async () => {
+    const { deps, calls } = tauriDeps({
+      loadSettings: async () => ({ assist: { provider: 'claude', cliPaths: { claude: '/opt/claude' } } }),
       exists: async (p) => p === '/opt/claude',
     });
     const provider = await resolveTauriAssistProvider(deps);
     expect(provider.id).toBe('cli');
     await provider.suggest(smallCtx(), signal());
-    expect(calls.suggests).toEqual([{ claudePath: '/opt/claude' }]);
-    expect(calls.updates).toEqual([]);
+    expect(calls.runs[0].binPath).toBe('/opt/claude');
+    expect(calls.updates).toEqual([]); // reuse → no write
+    expect(calls.whichCalls).toEqual([]); // no ladder walk beyond the cached hit
   });
 
   it('cached path that stopped existing → ladder re-resolves and re-caches', async () => {
     const { deps, calls } = tauriDeps({
-      loadSettings: async () => ({ assist: { cliPath: '/gone/claude', cliState: 'ok' } }),
+      loadSettings: async () => ({ assist: { provider: 'claude', cliPaths: { claude: '/gone/claude' } } }),
       exists: async (p) => p === '/Users/j/.claude/local/claude',
     });
     const provider = await resolveTauriAssistProvider(deps);
     expect(provider.id).toBe('cli');
     await provider.suggest(smallCtx(), signal());
     // trailing slash on $HOME must not double up
-    expect(calls.suggests).toEqual([{ claudePath: '/Users/j/.claude/local/claude' }]);
+    expect(calls.runs[0].binPath).toBe('/Users/j/.claude/local/claude');
     expect(calls.updates).toHaveLength(1);
-    expect(calls.updates[0].assist).toMatchObject({
-      cliPath: '/Users/j/.claude/local/claude',
-      cliState: 'ok',
+    expect(calls.updates[0].assist?.cliPaths).toMatchObject({
+      claude: '/Users/j/.claude/local/claude',
     });
   });
 
-  it('nothing found anywhere → caches not-found, returns the clipboard floor', async () => {
+  /** A recording invokeRun that returns a fixed canned `text` per call. */
+  function recordingRun(
+    calls: { runs: { binPath: string; args: string[]; stdin: string | null }[] },
+    text: string,
+  ): RunInvokeFn {
+    return (async (_cmd, args) => {
+      calls.runs.push({ binPath: args.binPath, args: args.args, stdin: args.stdin });
+      return { ok: true, text } as AssistRunResponse;
+    }) as RunInvokeFn;
+  }
+
+  it('explicit codex provider: resolves + runs codex (stdin, its own argv, JSONL parse)', async () => {
+    const { deps, calls } = tauriDeps({
+      loadSettings: async () => ({ assist: { provider: 'codex' } }),
+      exists: async (p) => p === '/opt/homebrew/bin/codex',
+    });
+    // codex parseOutput is JSONL — return a valid agent_message event
+    deps.invokeRun = recordingRun(
+      calls,
+      '{"type":"item.completed","item":{"type":"agent_message","text":"hello"}}',
+    );
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('cli');
+    const result = await provider.suggest(smallCtx(), signal());
+    expect(result).toEqual({ kind: 'suggestion', text: 'hello' });
+    expect(calls.runs[0].binPath).toBe('/opt/homebrew/bin/codex');
+    expect(calls.runs[0].args).toContain('exec');
+    expect(calls.runs[0].stdin).toContain('γραμμή 10'); // codex is stdin-mode
+    // newly-resolved codex path cached under cliPaths.codex
+    expect(calls.updates.at(-1)?.assist?.cliPaths).toMatchObject({ codex: '/opt/homebrew/bin/codex' });
+  });
+
+  it('custom provider: uses custom.binPath + args + promptVia straight from settings', async () => {
+    const { deps, calls } = tauriDeps({
+      loadSettings: async () => ({
+        assist: {
+          provider: 'custom',
+          custom: { binPath: '/usr/local/bin/mytool', args: ['--flag'], promptVia: 'arg' },
+        },
+      }),
+      exists: async (p) => p === '/usr/local/bin/mytool',
+    });
+    deps.invokeRun = recordingRun(calls, 'plain answer');
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('cli');
+    const result = await provider.suggest(smallCtx(), signal());
+    expect(result).toEqual({ kind: 'suggestion', text: 'plain answer' });
+    expect(calls.runs[0].binPath).toBe('/usr/local/bin/mytool');
+    // promptVia 'arg': stdin null, prompt appended to args after --flag
+    expect(calls.runs[0].stdin).toBeNull();
+    expect(calls.runs[0].args[0]).toBe('--flag');
+    expect(calls.runs[0].args.at(-1)).toContain('γραμμή 10');
+    // custom has no cache slot → no settings write
+    expect(calls.updates).toEqual([]);
+  });
+
+  it('an API provider choice WITH a stored key → an ApiProvider (Slice D)', async () => {
+    const { deps } = tauriDeps({
+      loadSettings: async () => ({ assist: { provider: 'anthropic', apiKeys: { anthropic: 'sk-x' } } }),
+    });
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('api');
+  });
+
+  it('an API provider choice with NO stored key → clipboard floor', async () => {
+    const { deps } = tauriDeps({
+      loadSettings: async () => ({ assist: { provider: 'anthropic' } }),
+    });
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('clipboard');
+    const result = await provider.suggest(smallCtx(), signal());
+    expect(result).toEqual({ kind: 'clipboard', message: NOT_FOUND_MESSAGE });
+  });
+
+  it('an API provider choice with a whitespace-only key → clipboard floor', async () => {
+    const { deps } = tauriDeps({
+      loadSettings: async () => ({ assist: { provider: 'openai', apiKeys: { openai: '   ' } } }),
+    });
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('clipboard');
+  });
+
+  it('nothing found anywhere → the clipboard floor', async () => {
     const { deps, calls } = tauriDeps();
     const provider = await resolveTauriAssistProvider(deps);
     expect(provider.id).toBe('clipboard');
-    expect(calls.updates).toHaveLength(1);
-    expect(calls.updates[0].assist).toMatchObject({ cliState: 'not-found' });
-    expect(calls.updates[0].assist?.cliPath).toBeUndefined();
     const result = await provider.suggest(smallCtx(), signal());
     expect(result).toEqual({ kind: 'clipboard', message: NOT_FOUND_MESSAGE });
     expect(calls.clipboard).toHaveLength(1);
     expect(calls.clipboard[0]).toContain('γραμμή 10'); // the target line rode along
   });
 
-  it('the Rust login-shell rung (invokeResolve) is honored when the fixed ladder misses', async () => {
+  it('the Rust login-shell rung (invokeWhich) is honored when the fixed ladder misses', async () => {
     const { deps, calls } = tauriDeps({
-      invokeResolve: async () => '/weird/place/claude',
       exists: async (p) => p === '/weird/place/claude',
+      invokeWhich: async () => '/weird/place/claude',
     });
     const provider = await resolveTauriAssistProvider(deps);
     expect(provider.id).toBe('cli');
     await provider.suggest(smallCtx(), signal());
-    expect(calls.suggests).toEqual([{ claudePath: '/weird/place/claude' }]);
+    expect(calls.runs[0].binPath).toBe('/weird/place/claude');
+  });
+
+  it('resolution that throws still yields the clipboard floor (never throws)', async () => {
+    const { deps } = tauriDeps({
+      home: async () => {
+        throw new Error('home exploded');
+      },
+    });
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('clipboard');
   });
 });
 
@@ -508,6 +619,19 @@ describe('assist wiring stays intact (source scan)', () => {
     const body = chapterSource.slice(start, start + 400);
     expect(body).toContain('import.meta.env.DEV');
     expect(body).toContain('isTauri()');
+  });
+
+  it('the Tauri provider flow wires the NEW multi-provider Rust commands, not the removed ones', () => {
+    const start = chapterSource.indexOf('return resolveTauriAssistProvider(');
+    expect(start).toBeGreaterThan(-1);
+    const body = chapterSource.slice(start, start + 500);
+    // new contract (Slice B): assist_run threaded via invokeRun, assist_which via invokeWhich
+    expect(body).toContain('invokeRun:');
+    expect(body).toContain('invokeWhich:');
+    expect(body).toContain("'assist_which'");
+    // the removed d4 commands must not survive anywhere in ChapterEditor
+    expect(chapterSource).not.toContain('assist_resolve_claude');
+    expect(chapterSource).not.toContain("'assist_suggest'");
   });
 
   it('RowEditor exposes the ONE public assist command and the quiet affordance', () => {

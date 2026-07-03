@@ -9,8 +9,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            assist::assist_resolve_claude,
-            assist::assist_suggest
+            assist::assist_which,
+            assist::assist_run
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
