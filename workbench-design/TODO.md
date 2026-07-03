@@ -4,7 +4,7 @@ State as of 2026-07-03: **Phase 2 committed** (`5adefdde`), **Phase 3 GREENLIT b
 John** (no push — branch stays local, his call). Branch
 `claude/blissful-rubin-d64797` now lives in the `intelligent-tesla-c10171`
 worktree (nervous-saha was auto-cleaned; branch intact). Phase 3 (3A+3B) COMMITTED
-`a4d83899` (John reviewed the summary and approved). 782 tests green;
+`46f65a6e` (John reviewed the summary and approved). 782 tests green;
 svelte-check 0 errors.
 
 ⚠️ Worktree-cleanup survival kit (this has bitten twice): the gitignored
@@ -14,7 +14,7 @@ Scrivener samples die with the worktree — restore from `~/Downloads/meta z 17/
 committed and nearly died the same way — recovered verbatim from the Phase 1
 transcript, now at `workbench-design/build-spec.md` (commit it with Phase 3).
 
-## Done this session (2026-07-03, in `a4d83899`, orchestrator-verified)
+## Done this session (2026-07-03, in `46f65a6e`, orchestrator-verified)
 
 - [x] **U+2028/U+2029 parse hardening**: footnote bodies fold the separators to a
   paragraph break on parse AND serialize, mirroring Stage 0's
@@ -55,7 +55,7 @@ transcript, now at `workbench-design/build-spec.md` (commit it with Phase 3).
   aesthetic verdict on a real docx.
 - [ ] Prune `workbench/src/components/FOOTNOTE_PANEL_WIRING.md` at commit time.
 
-## Phase 3 — 3A + 3B COMMITTED `a4d83899` (2026-07-03)
+## Phase 3 — 3A + 3B COMMITTED `46f65a6e` (2026-07-03)
 
 - [x] **3A AI-assist** (spec §12, design `d4-ai-assist.md`) — Slices 1+2 BUILT
   and orchestrator-verified: pure `src/lib/assist/` library (64 tests incl.
