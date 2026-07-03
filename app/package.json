@@ -11,7 +11,9 @@
     "build:lemmata": "node scripts/build-lemmata.mjs",
     "preview": "astro preview",
     "astro": "astro",
-    "shots": "node scripts/shoot.mjs"
+    "shots": "node scripts/shoot.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
@@ -19,6 +21,11 @@
   },
   "devDependencies": {
     "@astrojs/svelte": "^8.1.2",
-    "svelte": "^5.56.3"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/svelte": "^5.2.9",
+    "axe-core": "^4.10.3",
+    "happy-dom": "^20.0.10",
+    "svelte": "^5.56.3",
+    "vitest": "^4.0.16"
   }
 }
