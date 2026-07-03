@@ -21,6 +21,7 @@ import yaml
 from . import stage1_perseus
 from .config import BUILD_DIR, SOURCES_DIR, Manifest
 from .stage1_english import add_bekker_gutter, build_alignment
+from .stage1_common import write_json
 from .stage1_ross import build_chunks, parse_translation
 
 
@@ -226,28 +227,21 @@ def run(manifest: Manifest, spine: dict, chapters: list[dict]) -> tuple[Path, Pa
     out_dir = BUILD_DIR / "stage1"
     out_dir.mkdir(parents=True, exist_ok=True)
     eng_path = out_dir / "english_chunks.json"
-    eng_path.write_text(json.dumps(english, ensure_ascii=False, indent=1), encoding="utf-8")
+    write_json(eng_path, english)
     align_path = out_dir / "alignment.json"
-    align_path.write_text(
-        json.dumps(build_alignment(spine, english), ensure_ascii=False, indent=1),
-        encoding="utf-8",
-    )
+    write_json(align_path, build_alignment(spine, english))
     # Secondary (compare) translation fills the same slot as Ross does for EN.
     # Always (re)write ross_chunks.json so a prior EN build can't leak through
     # this shared scratch file; empty when the work has only one translation.
     sec = eng_cfg.get("secondary")
     ross = build_overlay(spine, chapters, sec, manifest.work_id) if sec else {}
-    (out_dir / "ross_chunks.json").write_text(
-        json.dumps(ross, ensure_ascii=False, indent=1), encoding="utf-8"
-    )
+    write_json(out_dir / "ross_chunks.json", ross)
     # Optional third translation (e.g. Categories: Ackrill alongside Edghill +
     # Taylor). Same overlay shape; emitted to third_chunks.json. Always rewritten
     # (empty when absent) so a prior work's third overlay can't leak through.
     third = eng_cfg.get("third")
     third_chunks = build_overlay(spine, chapters, third, manifest.work_id) if third else {}
-    (out_dir / "third_chunks.json").write_text(
-        json.dumps(third_chunks, ensure_ascii=False, indent=1), encoding="utf-8"
-    )
+    write_json(out_dir / "third_chunks.json", third_chunks)
     run_overlays(manifest, spine, chapters)
     return eng_path, align_path
 
@@ -270,7 +264,5 @@ def run_overlays(manifest: Manifest, spine: dict, chapters: list[dict]) -> dict:
     if cfgs and chapters:
         for cfg in cfgs:
             overlays[cfg["id"]] = build_overlay(spine, chapters, cfg, manifest.work_id)
-    (out_dir / "overlays.json").write_text(
-        json.dumps(overlays, ensure_ascii=False, indent=1), encoding="utf-8"
-    )
+    write_json(out_dir / "overlays.json", overlays)
     return overlays

@@ -1,0 +1,51 @@
+{
+ "work": "TST",
+ "edition": "Fixture Greek",
+ "segments": [
+  {
+   "id": "1:1094a",
+   "book": 1,
+   "column": "1094a",
+   "lines": [
+    {
+     "n": 1,
+     "text": "Alpha betagamma",
+     "joined": true
+    },
+    {
+     "n": 2,
+     "text": "delta"
+    },
+    {
+     "n": 3,
+     "text": "Heading"
+    },
+    {
+     "n": 4,
+     "text": "Epsilon"
+    },
+    {
+     "n": 5,
+     "text": "zeta"
+    }
+   ]
+  },
+  {
+   "id": "1:1094b",
+   "book": 1,
+   "column": "1094b",
+   "lines": [
+    {
+     "n": 1,
+     "text": "Lambda mu"
+    },
+    {
+     "n": 2,
+     "text": "Nu xi"
+    }
+   ]
+  }
+ ],
+ "headings": [],
+ "unassigned_lines": []
+}

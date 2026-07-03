@@ -1,0 +1,14 @@
+{
+ "work": "TST",
+ "pairs": [
+  {
+   "segment": "1:1094a",
+   "english": "1:1094a"
+  },
+  {
+   "segment": "1:1094b",
+   "english": "1:1094b"
+  }
+ ],
+ "english_only": []
+}
