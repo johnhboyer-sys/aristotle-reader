@@ -33,6 +33,10 @@ export interface CorpusEntry {
   author?: string;
   /** Only meaningful when author is Aristotle. Defaults to 'genuine'. */
   authenticity?: Authenticity;
+  /** Extra search words for the rail's quick-filter — common scholarly
+   *  shorthand and alternate English titles that don't already appear in
+   *  `title`/`work`/`siteSlug` (e.g. "NE"/"Ethics" for Nicomachean Ethics). */
+  aliases?: string;
   /** Defaults to 'bekker'. 'lecture' is anticipated for Aquinas (liber.lectio, n. ##,
    *  paragraph numbers continuous through each book — they do NOT reset per lectio). */
   citationScheme?: 'bekker' | 'chapter' | 'lecture';
@@ -71,21 +75,21 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
     aliases: 'logic',
     entries: [
       W('Cat', 'Categories', 'tlg0086.tlg006'),
-      W('Int', 'De Interpretatione', 'tlg0086.tlg017'),
+      W('Int', 'De Interpretatione', 'tlg0086.tlg017', { aliases: 'on interpretation peri hermeneias' }),
       W('APr', 'Prior Analytics', 'tlg0086.tlg001'),
       W('APo', 'Posterior Analytics', 'tlg0086.tlg001'),
       W('Top', 'Topics', 'tlg0086.tlg044'),
-      W('SE', 'Sophistical Refutations', 'tlg0086.tlg040'),
+      W('SE', 'Sophistical Refutations', 'tlg0086.tlg040', { aliases: 'sophistici elenchi' }),
     ],
   },
   {
     label: 'Natural Philosophy',
     entries: [
       W('Phys', 'Physics', 'tlg0086.tlg031'),
-      W('Cael', 'On the Heavens', 'tlg0086.tlg005'),
-      W('GC', 'On Generation and Corruption', 'tlg0086.tlg013'),
-      W('Mete', 'Meteorology', 'tlg0086.tlg026'),
-      W('DA', 'On the Soul', 'tlg0086.tlg002'),
+      W('Cael', 'On the Heavens', 'tlg0086.tlg005', { aliases: 'de caelo' }),
+      W('GC', 'On Generation and Corruption', 'tlg0086.tlg013', { aliases: 'de generatione' }),
+      W('Mete', 'Meteorology', 'tlg0086.tlg026', { aliases: 'meteorologica' }),
+      W('DA', 'On the Soul', 'tlg0086.tlg002', { aliases: 'de anima' }),
       slot('Mu', 'On the Cosmos', 'tlg0086.tlg028', { authenticity: 'spurious' }),
       slot('Mech', 'Mechanics', 'tlg0086.tlg023', { authenticity: 'spurious' }),
       slot('Probl', 'Problems', 'tlg0086.tlg036', { authenticity: 'disputed' }),
@@ -98,7 +102,7 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
   },
   {
     label: 'Parva Naturalia',
-    aliases: 'short works on nature natural philosophy',
+    aliases: 'pn short works on nature natural philosophy',
     entries: [
       W('Sens', 'Sense and Sensibilia', 'tlg0086.tlg041'),
       W('Mem', 'On Memory and Recollection', 'tlg0086.tlg024'),
@@ -126,14 +130,14 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
     label: 'First Philosophy',
     aliases: 'metaphysics',
     entries: [
-      W('Metaph', 'Metaphysics', 'tlg0086.tlg025', { siteSlug: 'Meta' }),
+      W('Metaph', 'Metaphysics', 'tlg0086.tlg025', { siteSlug: 'Meta', aliases: 'meta' }),
     ],
   },
   {
     label: 'Ethics & Politics',
     entries: [
-      W('EN', 'Nicomachean Ethics', 'tlg0086.tlg010'),
-      W('EE', 'Eudemian Ethics', 'tlg0086.tlg009'),
+      W('EN', 'Nicomachean Ethics', 'tlg0086.tlg010', { aliases: 'ne ethics' }),
+      W('EE', 'Eudemian Ethics', 'tlg0086.tlg009', { aliases: 'eudemian' }),
       W('Pol', 'Politics', 'tlg0086.tlg035'),
       slot('MM', 'Magna Moralia', 'tlg0086.tlg022', { authenticity: 'disputed' }),
       slot('AthPol', 'Constitution of the Athenians', 'tlg0086.tlg003'),

@@ -17,11 +17,11 @@ import type { TranslationRef } from '../../../app/src/lib/works';
 import { getWork } from '../../../app/src/lib/works';
 import { isTauri } from './runtime';
 import {
-  parseTranslationFile, serializeFrontmatter, splitChapters, slugId,
+  parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation,
   type ParsedTranslation, type TranslationMeta,
 } from './translation-file';
 import { buildChapterInputs } from './aligner/reference';
-import { alignImportedChapter, emitOverlayPieces, type ChapterAlignment } from './aligner/import-align';
+import { alignImportedChapter, emitOverlayPieces, type ChapterAlignment, type PieceEmphasis } from './aligner/import-align';
 
 export interface ImportRecord {
   meta: TranslationMeta;
@@ -30,6 +30,16 @@ export interface ImportRecord {
   stats: { tagged: number; placed: number; interpolated: number; chapters: number };
   /** book number → segment id → overlay pieces (precomputed at import time). */
   overlaysByBook: Record<string, Record<string, RossPiece[]>>;
+  /**
+   * book number → Bekker COLUMN (not segment id — matches the rendered DOM's
+   * `#col-{column}` element directly) → that column's overlay pieces'
+   * emphasis spans (precomputed at import time, PARALLEL to overlaysByBook —
+   * never stored on RossPiece itself; see import-align.ts's emitOverlayPieces
+   * doc comment for why). Optional so records written before this field
+   * existed still load — paintEmphasis (annotations.ts) just has nothing to
+   * paint for them.
+   */
+  emphasisByBook?: Record<string, Record<string, PieceEmphasis[]>>;
   /** per-chapter anchor maps, kept for future refinement/re-tagging. */
   alignment: Record<string, ChapterAlignment>;
 }
@@ -136,6 +146,44 @@ type G = typeof globalThis & {
 
 const registered = new Map<string, ImportRecord>(); // "work/id" → record
 
+// The built-in corpus overlays only ever surface interpolated (estimate)
+// Bekker ticks at the 5-line apparatus stops plus the column-start line
+// (n=1) — verified against build/dist/**/book-*.json, where every real:false
+// tick has n%5===0 or n===1. Real (user/model-placed) ticks always render;
+// interpolated ones are noise between those printed stops. The importer's
+// engine.interpolate() fills EVERY untagged line, so without this filter an
+// imported five-line-tagged file renders a tick on every single line instead
+// of the sparse gutter the built-in translations show. Filtering here (at
+// the overlay-merge hook, which re-reads the stored map on every book fetch)
+// means already-imported translations are fixed retroactively — no re-import
+// needed — since nothing is mutated in the stored record itself.
+function sparseTicks(
+  ticks: { n: number; offset: number; real: boolean }[],
+): { n: number; offset: number; real: boolean }[] {
+  const filtered = ticks.filter(t => t.real || t.n % 5 === 0 || t.n === 1);
+  return filtered.length === ticks.length ? ticks : filtered;
+}
+
+function sparsifyPieces(pieces: RossPiece[]): RossPiece[] {
+  return pieces.map(p => {
+    if (!p.bekker) return p;
+    const bekker = sparseTicks(p.bekker);
+    return bekker === p.bekker ? p : { ...p, bekker };
+  });
+}
+
+// Display name shown in the picker: "Translator (Year)" plus a subtle
+// muted-info marker so an imported translation is distinguishable from a
+// built-in one at a glance — but "imported" itself never appears in the
+// name. It stays only in the stored record's metadata (greppable/debuggable
+// via the map.json / localStorage entry), never in display strings, exported
+// citations, or copied citations. There's no tooltip here (the picker is
+// rendered by untouched site code as a plain <option> string), so the marker
+// has to be minimal and self-explanatory rather than relying on a title attr.
+function displayName(meta: TranslationMeta): string {
+  return `${meta.translator}${meta.year ? ` (${meta.year})` : ''} ⓘ`;
+}
+
 function installHooks(): void {
   const g = globalThis as G;
   const extras: Record<string, TranslationRef[]> = {};
@@ -143,7 +191,7 @@ function installHooks(): void {
     const work = key.split('/')[0];
     (extras[work] ??= []).push({
       id: rec.meta.id,
-      name: `${rec.meta.translator}${rec.meta.year ? ` (${rec.meta.year})` : ''} — imported`,
+      name: displayName(rec.meta),
       short: rec.meta.translator,
       slot: 'overlay',
     });
@@ -158,7 +206,7 @@ function installHooks(): void {
       for (const seg of data.segments) {
         const pieces = perSeg[seg.id];
         if (pieces) {
-          seg.overlays = { ...(seg.overlays ?? {}), [rec.meta.id]: pieces };
+          seg.overlays = { ...(seg.overlays ?? {}), [rec.meta.id]: sparsifyPieces(pieces) };
           touched = true;
         }
       }
@@ -178,16 +226,59 @@ export async function loadImports(): Promise<number> {
   return registered.size;
 }
 
+/**
+ * Emphasis spans for one imported translation's rendered Bekker column
+ * (matches the DOM's `#col-{column}` element directly) — each entry carries
+ * its own piece's full text (PieceEmphasis.pieceText) so the caller can match
+ * it against the right `.ross-prose` block by CONTENT (a column can render
+ * several chapter-blocks' worth of `.ross-prose`; see import-align.ts's
+ * PieceEmphasis doc comment for why content-matching, not a lookup key, is
+ * the robust join). Returns [] (never throws) when `id` isn't a registered
+ * import, the book/column carries no emphasis, or the record predates this
+ * field.
+ */
+export function getImportEmphasis(work: string, id: string, book: number, column: string): PieceEmphasis[] {
+  const rec = registered.get(`${work}/${id}`);
+  return rec?.emphasisByBook?.[String(book)]?.[column] ?? [];
+}
+
+/**
+ * The citation string for an imported translation, for Copy Citation:
+ * the stored `citation` verbatim, or the translator/year/source fallback
+ * when a record predates the citation field (or the form was left blank).
+ * Read-time defaulting — no migration needed for records already on disk.
+ * Returns null when `id` isn't a registered import (i.e. it's a built-in
+ * translation, which the caller cites from the site registry instead).
+ */
+export function getImportCitation(work: string, id: string): string | null {
+  const rec = registered.get(`${work}/${id}`);
+  if (!rec) return null;
+  return rec.meta.citation || composeCitation(rec.meta);
+}
+
 // ── the import operation ─────────────────────────────────────────────────────
 
 export interface ImportRequest {
-  raw: string;                 // file content as uploaded
+  raw: string;                 // file content as uploaded (dehyphenated, but still carrying
+                                // emphasis markers — parseTranslationFile classifies those)
   work: string;                // corpus slug (from the dropdown — never free text)
   translator: string;
   license: TranslationMeta['license'];
   year?: number;
+  source?: string;
+  citation?: string;           // full bibliographic citation; falls back to
+                                // composeCitation(translator/year/source) if omitted
   replace?: boolean;           // collision resolution: true = replace existing
   idOverride?: string;         // collision resolution: "keep both" imports under a new id
+  /**
+   * Emphasis review decisions ImportDialog's interactive queue already
+   * collected (marker-review index → 'keep'/'remove'), replayed verbatim by
+   * parseTranslationFile instead of its own pattern-based defaults —
+   * scanEmphasis is pure, so re-scanning this same `raw` text reproduces the
+   * identical review-item indices the dialog saw. Omit for a caller (tests,
+   * a non-interactive re-import) that wants the defaults applied instead.
+   */
+  emphasisChoices?: Map<number, 'keep' | 'remove'>;
 }
 
 export class ImportCollision extends Error {
@@ -204,15 +295,17 @@ export async function runImport(
   if (!workMeta) throw new Error(`unknown work: ${req.work}`);
 
   onProgress('Scanning tags…');
-  const parsed: ParsedTranslation = parseTranslationFile(req.raw);
+  const parsed: ParsedTranslation = parseTranslationFile(req.raw, req.emphasisChoices);
   const meta: TranslationMeta = {
     formatVersion: 1,
     work: req.work,
     translator: req.translator,
     license: req.license,
     ...(req.year !== undefined ? { year: req.year } : {}),
+    ...(req.source ? { source: req.source } : (parsed.meta.source ? { source: parsed.meta.source } : {})),
     language: parsed.meta.language ?? 'en',
     id: req.idOverride ?? parsed.meta.id ?? slugId(req.translator, req.work),
+    ...(req.citation ? { citation: req.citation } : (parsed.meta.citation ? { citation: parsed.meta.citation } : {})),
   };
 
   const s = await store();
@@ -236,6 +329,7 @@ export async function runImport(
   const aligned: ChapterAlignment[] = [];
   const alignment: Record<string, ChapterAlignment> = {};
   const overlaysByBook: Record<string, Record<string, RossPiece[]>> = {};
+  const emphasisByBook: Record<string, Record<string, PieceEmphasis[]>> = {};
   for (const b of books) {
     onProgress(`Aligning Book ${b} of ${workMeta.books}…`);
     const bookData = await fetchBook(req.work, b);
@@ -245,13 +339,15 @@ export async function runImport(
     const inputs = buildChapterInputs(bookData, chaptersIndex, prose);
     const perBook: ChapterAlignment[] = [];
     for (const input of inputs) {
-      const tags = chapters.find(c => c.book === b && String(c.chapter) === input.chapter)?.tags ?? [];
-      const ca = alignImportedChapter(input, tags, parsed.density);
+      const ch = chapters.find(c => c.book === b && String(c.chapter) === input.chapter);
+      const ca = alignImportedChapter(input, ch?.tags ?? [], parsed.density, ch?.emphasis ?? []);
       perBook.push(ca);
       aligned.push(ca);
       alignment[`${ca.book}:${ca.chapter}`] = ca;
     }
-    overlaysByBook[String(b)] = emitOverlayPieces(bookData, perBook);
+    const emitted = emitOverlayPieces(bookData, perBook);
+    overlaysByBook[String(b)] = emitted.pieces;
+    emphasisByBook[String(b)] = emitted.emphasis;
   }
 
   onProgress('Writing library files…');
@@ -266,6 +362,7 @@ export async function runImport(
       chapters: aligned.length,
     },
     overlaysByBook,
+    emphasisByBook,
     alignment,
   };
   const canonical = parsed.hasFrontmatter

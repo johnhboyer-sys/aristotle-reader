@@ -55,7 +55,7 @@
 
   // ── filter: by work title OR by category label/aliases ─────────────────────
   const entryMatch = (e: CorpusEntry, terms: string[]) => {
-    const hay = `${e.title} ${e.work} ${e.siteSlug ?? ''}`.toLowerCase();
+    const hay = `${e.title} ${e.work} ${e.siteSlug ?? ''} ${e.aliases ?? ''}`.toLowerCase();
     return terms.every(t => hay.includes(t));
   };
   $: q = filter.trim().toLowerCase();
@@ -237,14 +237,18 @@
 
   .rail-group { margin-bottom: 0.9rem; }
   .rail-group-label {
-    display: flex; align-items: center; gap: 0.35em; width: 100%;
+    display: flex; align-items: center; gap: 0.45em; width: 100%;
+    min-height: 2.25rem; box-sizing: border-box;
     font-family: inherit; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
     text-transform: uppercase; color: var(--text-light); text-align: left;
-    background: none; border: none; cursor: pointer;
-    padding: 0.3rem 0.5rem 0.2rem;
+    background: none; border: none; border-radius: 6px; cursor: pointer;
+    padding: 0.3rem 0.5rem;
   }
-  .rail-group-label:hover { color: var(--text-mid); }
-  .rail-group-caret { font-size: 0.75em; transition: transform 0.12s ease; }
+  .rail-group-label:hover { color: var(--text-mid); background: var(--border); }
+  .rail-group-caret {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: none; font-size: 1rem; line-height: 1; transition: transform 0.12s ease;
+  }
   .rail-group-caret.closed { transform: rotate(-90deg); }
   ul { list-style: none; margin: 0; padding: 0; }
 

@@ -36,15 +36,27 @@ export interface EnglishTarget {
   end: number;           //   (concatenated .bk-seg text — Bekker numerals excluded)
 }
 
+export type AnnStyle = 'highlight' | 'underline';
+export type AnnColor = 'yellow' | 'green' | 'pink' | 'blue' | 'purple' | 'orange';
+
 export interface Annotation {
   id: string;
   work: string;
   created: string;       // ISO 8601
-  body: string;          // '' = highlight; text = note
+  body: string;          // '' = highlight/underline mark; text = note
   layer: 'greek' | `translation:${string}` | 'both';
   target: GreekTarget | EnglishTarget;
   exact: string;         // the selected text, quoted verbatim at creation time
+  style?: AnnStyle;      // default 'highlight' at read time (see annStyle())
+  color?: AnnColor;      // default 'yellow' at read time (see annColor())
 }
+
+// Read-time defaulting: old annotations (pre-dating style/color) paint as a
+// plain yellow highlight — identical to the single-wash behavior they were
+// created under. No file rewrite/migration needed.
+export const annStyle = (a: Annotation): AnnStyle => a.style ?? 'highlight';
+export const annColor = (a: Annotation): AnnColor => a.color ?? 'yellow';
+export const PALETTE: AnnColor[] = ['yellow', 'green', 'pink', 'blue', 'purple', 'orange'];
 
 // ── storage ──────────────────────────────────────────────────────────────────
 
@@ -127,6 +139,123 @@ const lineIdOf = (el: Element | null): { column: string; line: number } | null =
 const nodeEl = (n: Node): Element | null =>
   n.nodeType === Node.ELEMENT_NODE ? (n as Element) : n.parentElement;
 
+// ── copy: plain text + citation formatting ──────────────────────────────────
+// The desktop app has no selection-anchored popup for copying (that lives in
+// the right-click context menu now — see App.svelte). These helpers format
+// the clipboard payload; App.svelte wires them to the menu actions AND to a
+// capture-phase `document` 'copy' listener that intercepts plain ⌘C / native
+// copy so the same clean-text formatting applies there too (the site's own
+// on:copy handler on .reader-body only strips nothing — raw selection.toString()
+// — which is what left hard line breaks / footnote digits in normal copies;
+// see App.svelte's onDocumentCopy).
+
+// L1094a-3 → 1094a3; L1094a-3-c → 1094a3 (mirrors Reader.svelte's idToBekker
+// for Greek lines — same id shape, `L<column>-<line>[-c]`).
+const idToBekker = (id: string) => id.slice(1).replace(/-(\d+)(-c)?$/, '$1');
+
+/** Greek-line citation for a Range, e.g. "(NE 1094a3)" or "(NE 1094a3–1094a5)".
+ * Returns null off a Greek line (English/mixed selection). */
+export function greekCiteForRange(range: Range, abbr: string): string | null {
+  const startLine = nodeEl(range.startContainer)?.closest('.greek-line[id]') ?? null;
+  const endLine = nodeEl(range.endContainer)?.closest('.greek-line[id]') ?? null;
+  if (!startLine && !endLine) return null;
+  const s = startLine ? idToBekker(startLine.id) : null;
+  const f = endLine ? idToBekker(endLine.id) : null;
+  return s && f && s !== f ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
+}
+
+/** Column-granularity citation for an English selection, e.g. "(NE 1097a)" or
+ * "(NE 1097a–1097b)" when the selection spans segments. English is
+ * Bekker-anchored at column granularity site-wide (see EnglishTarget above);
+ * a line-level citation would be an alignment estimate the data model
+ * deliberately refuses. Falls back to null (→ plain text) if no enclosing
+ * segment resolves on either boundary. */
+export function segCiteForRange(range: Range, abbr: string): string | null {
+  const startSeg = nodeEl(range.startContainer)?.closest('.segment[id^="col-"]') ?? null;
+  const endSeg = nodeEl(range.endContainer)?.closest('.segment[id^="col-"]') ?? null;
+  if (!startSeg && !endSeg) return null;
+  const colOf = (seg: Element) => seg.id.replace(/^col-/, '');
+  const s = startSeg ? colOf(startSeg) : null;
+  const f = endSeg ? colOf(endSeg) : null;
+  return s && f && s !== f ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
+}
+
+/** Write text to the OS clipboard: Tauri's plugin in the packaged app
+ * (WKWebView can deny navigator.clipboard), the web API in the browser
+ * harness. Returns whether the write succeeded. */
+export async function writeClipboard(text: string): Promise<boolean> {
+  try {
+    if ('__TAURI_INTERNALS__' in window) {
+      const { writeText } = await import('@tauri-apps/plugin-clipboard-manager');
+      await writeText(text);
+    } else {
+      await navigator.clipboard.writeText(text);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Elements whose text must never land in a copied selection, even though
+// they sit inside the prose/line flow selection.toString() would otherwise
+// walk straight through:
+//   .bk-num     — the Bekker gutter number floated into the English margin
+//   .line-num   — the Greek gutter's own line-number span
+//   .col-label  — the compare-view translation-name header above a column
+//   .fn-marker  — Ostwald's inline `[^N]` footnote reference button
+//                 (rendered as a clickable superscript digit, see
+//                 Reader.svelte's renderThird/.fn-marker)
+//   .eng-table  — kept for parity with the existing offset walker below,
+//                 though its own text is usually outside any prose selection
+const COPY_EXCLUDE_SELECTOR = '.bk-num, .line-num, .col-label, .fn-marker, .eng-table';
+
+/**
+ * Extract a Range's text the way a "clean copy" should read: skips gutter
+ * numbers, column labels, and footnote-reference markers (see
+ * COPY_EXCLUDE_SELECTOR), then collapses every run of whitespace — including
+ * the newlines `selection.toString()` inserts between separately-rendered
+ * `.greek-line` elements (one rendered line per Bekker line; see
+ * Reader.svelte's `.greek-line` markup) — into a single space and trims the
+ * ends. Greek line boundaries are always between complete words (each line's
+ * `.tok` tokens come from a word-bounded `tokens` array with no cross-line
+ * hyphenation in the data or renderer), so a plain space-join is correct —
+ * no hyphen-rejoin logic is needed.
+ *
+ * Exported: App.svelte's document-level `copy` listener (the plain ⌘C /
+ * native-copy path, distinct from the right-click menu's Copy actions below)
+ * reuses this directly so both copy paths produce identical clean text.
+ */
+export function extractCleanText(range: Range): string {
+  const frag = range.cloneContents();
+  frag.querySelectorAll(COPY_EXCLUDE_SELECTOR).forEach((el) => el.remove());
+  const raw = frag.textContent ?? '';
+  return raw.replace(/\s+/g, ' ').trim();
+}
+
+/** Copy the current selection's text only, no citation. */
+export async function copySelectionPlain(): Promise<boolean> {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false;
+  const text = extractCleanText(sel.getRangeAt(0));
+  if (!text) return false;
+  return writeClipboard(text);
+}
+
+/** Copy the current selection's text plus a citation: Greek lines cite at
+ * line granularity (byte-identical to the site's own floating copy button);
+ * English selections cite at column granularity via segCiteForRange; falls
+ * back to plain text if neither resolves. */
+export async function copySelectionWithCitation(abbr: string): Promise<boolean> {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  const text = extractCleanText(range);
+  if (!text) return false;
+  const cite = greekCiteForRange(range, abbr) ?? segCiteForRange(range, abbr);
+  return writeClipboard(cite ? `${text}\n${cite}` : text);
+}
+
 /** Index of the .tok containing (or nearest before) a range boundary, within its line. */
 function wordIndexAt(container: Node, lineHost: Element): number {
   const toks = [...lineHost.querySelectorAll('.tok')];
@@ -144,8 +273,13 @@ function wordIndexAt(container: Node, lineHost: Element): number {
 
 /** Char offset of a range boundary within a column's prose (.bk-seg text only). */
 function proseOffsetAt(col: Element, container: Node, offset: number): number {
+  // Scope to the prose subtree: in compare view .english-col/.ross-col carry a
+  // leading .col-label (translation name) before .ross-prose — walking from
+  // `col` itself would count that label text into the offset, shifting every
+  // compare-captured offset relative to the same selection made in mono view.
+  const root = col.querySelector('.ross-prose') ?? col;
   let acc = 0;
-  const walker = document.createTreeWalker(col, NodeFilter.SHOW_TEXT, {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (n) =>
       nodeEl(n)?.closest('.bk-num, .eng-table') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
   });
@@ -164,12 +298,25 @@ export interface CaptureResult {
   layer: Annotation['layer'];
 }
 
+/** Returned instead of a CaptureResult when a selection spans two distinct
+ * columns (e.g. Greek → English, or left → right in compare) — anchorable to
+ * neither, but worth telling the user about (unlike plain unanchorable null). */
+export const CROSS_COLUMN = 'cross-column' as const;
+
+/** Which of the three column kinds (if any) a node lives in, for the
+ * cross-column check below. */
+function columnOf(el: Element | null): Element | null {
+  return el?.closest('.greek-col, .english-col, .ross-col') ?? null;
+}
+
 /**
- * Turn the current selection into an anchor. `activeTranslation` is the
- * translation currently filling the English column (capture is disabled in
- * compare view — the shell enforces that before calling).
+ * Turn the current selection into an anchor. `activeTranslation` is used only
+ * as a fallback when the resolved column carries no `data-trans` (should not
+ * happen post-Reader-change, but keeps this resilient) — the column's own
+ * `data-trans` attribute is the primary source of the translation id, so this
+ * works correctly in both mono and compare view.
  */
-export function captureSelection(book: number, activeTranslation: string): CaptureResult | null {
+export function captureSelection(book: number, activeTranslation: string): CaptureResult | null | typeof CROSS_COLUMN {
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null;
   const range = sel.getRangeAt(0);
@@ -193,18 +340,23 @@ export function captureSelection(book: number, activeTranslation: string): Captu
     };
   }
 
-  const engCol = nodeEl(range.startContainer)?.closest('.english-col');
+  const startCol = columnOf(nodeEl(range.startContainer));
+  const endCol = columnOf(nodeEl(range.endContainer));
+  if (startCol && endCol && startCol !== endCol) return CROSS_COLUMN;
+
+  const col = nodeEl(range.startContainer)?.closest('.english-col, .ross-col');
   const seg = nodeEl(range.startContainer)?.closest('.segment');
   const colId = seg?.id.match(/^col-(.+)$/)?.[1];
-  if (engCol && colId && engCol.contains(range.endContainer)) {
-    const start = proseOffsetAt(engCol, range.startContainer, range.startOffset);
-    const end = proseOffsetAt(engCol, range.endContainer, range.endOffset);
+  if (col && colId && col.contains(range.endContainer)) {
+    const translation = col.getAttribute('data-trans') ?? activeTranslation;
+    const start = proseOffsetAt(col, range.startContainer, range.startOffset);
+    const end = proseOffsetAt(col, range.endContainer, range.endOffset);
     if (end > start) {
       return {
         exact,
-        layer: `translation:${activeTranslation}`,
+        layer: `translation:${translation}`,
         target: {
-          kind: 'english', book, translation: activeTranslation,
+          kind: 'english', book, translation,
           column: colId, start, end,
         },
       };
@@ -215,7 +367,7 @@ export function captureSelection(book: number, activeTranslation: string): Captu
 
 // ── resolve: target → Range, and paint via CSS Custom Highlights ───────────
 
-function greekRange(t: GreekTarget): Range | null {
+export function greekRange(t: GreekTarget): Range | null {
   const hostOf = (column: string, line: number): Element | null =>
     document.getElementById(`L${column}-${line}`) ?? document.getElementById(`L${column}-${line}-c`);
   const sh = hostOf(t.start.column, t.start.line);
@@ -232,15 +384,27 @@ function greekRange(t: GreekTarget): Range | null {
   return r;
 }
 
-function englishRange(t: EnglishTarget, activeTranslation: string): Range | null {
-  // Only resolvable when the annotated translation is the one on screen.
-  if (t.translation !== activeTranslation) return null;
+export function englishRange(t: EnglishTarget, shown: string[]): Range | null {
+  // Only resolvable when the annotated translation is one of the ones on
+  // screen (mono: a single id; compare: the left+right pair).
+  if (!shown.includes(t.translation)) return null;
   const seg = document.getElementById(`col-${t.column}`);
-  const col = seg?.querySelector('.english-col');
+  if (!seg) return null;
+  // Locate the specific column element carrying this translation. Compare
+  // view can have both an .english-col and a .ross-col under the same
+  // segment, each tagged with its own data-trans; mono view has only
+  // .english-col and (pre-existing markup) may carry no data-trans at all,
+  // so fall back to the old unconditional .english-col lookup in that case.
+  const candidates = [...seg.querySelectorAll('.english-col, .ross-col')];
+  const col = candidates.find(c => c.getAttribute('data-trans') === t.translation)
+    ?? seg.querySelector('.english-col');
   if (!col) return null;
+  // Scope to the prose subtree — mirrors the capture-side offset walk so a
+  // compare column's leading .col-label text is never counted.
+  const root = col.querySelector('.ross-prose') ?? col;
   const locate = (target: number): [Node, number] | null => {
     let acc = 0;
-    const walker = document.createTreeWalker(col, NodeFilter.SHOW_TEXT, {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: (n) =>
         nodeEl(n)?.closest('.bk-num, .eng-table') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
     });
@@ -262,22 +426,73 @@ function englishRange(t: EnglishTarget, activeTranslation: string): Range | null
 
 /**
  * Re-resolve every annotation for the current view and register the ranges
- * under ::highlight(ann-highlight) / ::highlight(ann-note). Safe to call
- * repeatedly (idempotent); no-op where the API is unsupported.
+ * under one Highlight per (style,color) — ::highlight(ann-hl-<color>) for
+ * fills, ::highlight(ann-ul-<color>) for underlines — plus a shared
+ * ::highlight(ann-note-cue) for the "has a comment" dotted affordance. Safe
+ * to call repeatedly (idempotent): every known name is (re)registered every
+ * call, including empties, so a name that lost all its ranges is cleared
+ * rather than left stale. No-op where the API is unsupported.
  */
-export function paintAnnotations(anns: Annotation[], activeTranslation: string): void {
+export function paintAnnotations(anns: Annotation[], shown: string[]): void {
   const css = (globalThis as { CSS?: { highlights?: Map<string, unknown> } }).CSS;
   if (!css?.highlights || typeof Highlight === 'undefined') return;
-  const hi: Range[] = [];
-  const notes: Range[] = [];
+  const buckets = new Map<string, Range[]>();
+  const push = (name: string, r: Range) => {
+    const b = buckets.get(name);
+    if (b) b.push(r);
+    else buckets.set(name, [r]);
+  };
+  const noteCue: Range[] = [];
   for (const a of anns) {
     const r = a.target.kind === 'greek'
       ? greekRange(a.target)
-      : englishRange(a.target, activeTranslation);
-    if (r) (a.body ? notes : hi).push(r);
+      : englishRange(a.target, shown);
+    if (!r) continue;
+    const name = `ann-${annStyle(a) === 'underline' ? 'ul' : 'hl'}-${annColor(a)}`;
+    push(name, r);
+    if (a.body) noteCue.push(r.cloneRange()); // a note also gets the dotted cue
   }
-  css.highlights.set('ann-highlight', new Highlight(...hi));
-  css.highlights.set('ann-note', new Highlight(...notes));
+  // Register fills, then underlines, then the note cue — later registrations
+  // paint on top, so the note cue's dotted decoration sits above the rest.
+  for (const color of PALETTE) {
+    const name = `ann-hl-${color}`;
+    css.highlights.set(name, new Highlight(...(buckets.get(name) ?? [])));
+  }
+  for (const color of PALETTE) {
+    const name = `ann-ul-${color}`;
+    css.highlights.set(name, new Highlight(...(buckets.get(name) ?? [])));
+  }
+  const cue = new Highlight(...noteCue);
+  cue.priority = 1;
+  css.highlights.set('ann-note-cue', cue);
+}
+
+/**
+ * Paint a PROVISIONAL range while the note editor is open — otherwise
+ * focusing the textarea clears the DOM selection and the user loses sight of
+ * what the note is about. Registered under its own name ('ann-pending') so
+ * paintAnnotations' full re-registration of the 13 real (style,color) names
+ * every call can never clobber it (see paintAnnotations above — it only ever
+ * `.set()`s its own known names). The active palette color is communicated to
+ * CSS via a `data-ann-pending-color` attribute on <html> (desktop.css keys
+ * six `[data-ann-pending-color="…"] ::highlight(ann-pending)` rules off it,
+ * mirroring the existing `[data-theme='dark']` selector-attribute pattern
+ * already used for every other highlight color) — simpler than computing an
+ * rgba() in JS and pushing it through a CSS custom property, and it stays
+ * themeable for free the same way the real fills are.
+ */
+export function paintPending(range: Range | null, color: AnnColor): void {
+  const css = (globalThis as { CSS?: { highlights?: Map<string, unknown> } }).CSS;
+  if (!css?.highlights || typeof Highlight === 'undefined') return;
+  document.documentElement.setAttribute('data-ann-pending-color', color);
+  css.highlights.set('ann-pending', new Highlight(...(range ? [range] : [])));
+}
+
+/** Clear the provisional pending highlight (save/cancel/Esc). */
+export function clearPending(): void {
+  const css = (globalThis as { CSS?: { highlights?: Map<string, unknown> } }).CSS;
+  if (!css?.highlights) return;
+  css.highlights.delete('ann-pending');
 }
 
 /** A short citation label for the panel, e.g. "1097a15–1097b2" or "1097a (Ostwald)". */

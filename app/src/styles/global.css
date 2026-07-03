@@ -472,6 +472,16 @@ body {
   padding: 0.5rem 0;
   background: var(--page-bg);
   border-bottom: 1px solid var(--border);
+  /* This strip is sticky chrome pinned over the reading text. When a text line
+     scrolls beneath it and the reader starts a selection drag on that partly-
+     covered line, WebKit (WKWebView / Safari) resolves the caret to the strip's
+     OWN text — the "Both"/"English" toggle labels, the citation — which sit ~one
+     line above the cursor, so the selection lands one line too high. (Chromium
+     never drag-selects the overlapping sticky element, so it doesn't reproduce.)
+     Making the strip's text unselectable stops WebKit from extending a selection
+     into the header band; interactive controls (buttons/selects) still work. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 /* Cover band: paints page-bg in the slice directly above the pinned strip so
    reading text can never bleed through if a browser (Safari, notably) leaves a
