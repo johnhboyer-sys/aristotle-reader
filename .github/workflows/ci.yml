@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: cd app && npm ci
+
+      - name: Run tests
+        run: cd app && npm test
+
+  pipeline:
+    name: pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install pipeline dependencies
+        run: cd pipeline && uv sync
+
+      - name: Run pipeline tests
+        run: |
+          cd pipeline
+          set +e
+          uv run --with pytest pytest
+          code=$?
+          set -e
+          # pytest exits 5 when no tests are collected; pipeline tests have not
+          # landed yet, so tolerate only that documented no-tests status here.
+          if [ "$code" -ne 0 ] && [ "$code" -ne 5 ]; then
+            exit "$code"
+          fi
+
+      - name: Run Bonitz tests
+        run: cd bonitz && uv run --with pytest pytest tests
+
+  desktop:
+    name: desktop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies
+        run: cd desktop && npm ci
+
+      - name: Build frontend
+        run: cd desktop && npm run build
+
+      - name: Run tests
+        run: cd desktop && npm test
+
+      - name: Typecheck
+        run: cd desktop && npm run check
