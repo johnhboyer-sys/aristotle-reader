@@ -139,9 +139,20 @@ describe('snapToWordStart', () => {
     expect(snapToWordStart(greek, 7)).toBe(7);
   });
 
-  it('a click in a gap snaps to the NEXT word start', () => {
-    expect(snapToWordStart(greek, 2)).toBe(3); // the space before μὲν
-    expect(snapToWordStart(greek, 6)).toBe(7);
+  it('a click at a word’s trailing edge snaps to THAT word — it begins the new paragraph', () => {
+    // The caret resolves just PAST a word when you click its right side or the
+    // space after it; that word must still be the first word of the new para.
+    expect(snapToWordStart(greek, 6)).toBe(3); // space after μὲν → μὲν starts the new paragraph
+  });
+
+  it('the trailing edge of the FIRST word yields no valid split (its start is offset 0)', () => {
+    expect(snapToWordStart(greek, 2)).toBeNull(); // space after τὸ → τὸ start = 0 → rejected
+  });
+
+  it('a click in leading whitespace (no word at or before it) looks FORWARD to the next word', () => {
+    const g = '  οὖν'; // οὖν starts at index 2
+    expect(snapToWordStart(g, 0)).toBe(2);
+    expect(snapToWordStart(g, 1)).toBe(2);
   });
 
   it('the first word is not a split point (offset 0 rejected)', () => {

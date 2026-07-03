@@ -91,19 +91,29 @@ export function expandRows(rows: RowModel[]): DisplayRow[] {
 const WORD_CHAR = /[\p{L}\p{M}]/u;
 
 /**
- * Snap a raw click offset to the split point BEFORE the clicked word: the
- * code-unit start of the word the click landed in (or, when the click landed
- * in a gap, of the next word). Returns null when no valid split point exists
- * there — the first word (offset 0) and the line end are not split points
- * (isValidSplitOffset is the single validity authority; this never returns
- * an offset it rejects).
+ * Snap a raw click offset to the split point at the START of the word the
+ * click belongs to — so the clicked word becomes the FIRST word of the new
+ * paragraph. The word the click "belongs to" is the word it lands inside OR
+ * at the trailing edge of: a caret resolves to the position just PAST a
+ * word's last letter when you click the right side of that word (or the
+ * space right after it), and that click still means "this word." Only when
+ * there is no word at or immediately before the click (leading whitespace, a
+ * wide gap) do we look FORWARD to the next word. Returns null when no valid
+ * split point exists there — the first word (offset 0) and the line end are
+ * not split points (isValidSplitOffset is the single validity authority;
+ * this never returns an offset it rejects).
  */
 export function snapToWordStart(greek: string, offset: number): number | null {
   if (!Number.isInteger(offset) || offset < 0 || offset > greek.length) return null;
   let p = offset;
-  // Click in a gap → the "clicked word" is the next one.
-  while (p < greek.length && !WORD_CHAR.test(greek[p])) p++;
-  // Back up to the start of that word.
+  const onWord = p < greek.length && WORD_CHAR.test(greek[p]);
+  const afterWord = p > 0 && WORD_CHAR.test(greek[p - 1]);
+  // Only a click with no word under it AND none ending just before it looks
+  // forward; a click inside a word or at its trailing edge stays on that word.
+  if (!onWord && !afterWord) {
+    while (p < greek.length && !WORD_CHAR.test(greek[p])) p++;
+  }
+  // Back up to the start of the resolved word.
   while (p > 0 && WORD_CHAR.test(greek[p - 1])) p--;
   return isValidSplitOffset(greek, p) ? p : null;
 }
