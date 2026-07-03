@@ -88,7 +88,7 @@ transcript, now at `workbench-design/build-spec.md` (commit it with Phase 3).
 Gates at wrap: **782 vitest / tsc clean / svelte-check 0 errors / cargo check
 clean / cargo test 7 / vite build clean**.
 
-## Line-split feature (D6) — BUILT 2026-07-03, uncommitted, awaiting John
+## Line-split feature (D6) — COMMITTED `ecb7b542` 2026-07-03
 
 Split a Bekker line at a paragraph boundary (John's request). Design:
 `d6-line-split.md` (synthesized from `d6-memo-deep-reasoner.md` +
