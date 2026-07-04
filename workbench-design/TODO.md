@@ -145,6 +145,26 @@ Gates: 992 vitest / tsc / svelte-check 0 err / 15 cargo tests.
 Codex gotcha baked in: `codex exec` needs --skip-git-repo-check + JSONL
 agent_message parsing + `-c mcp_servers={}`.
 
+## AI-assist hand-test round (D7 follow-ups) — COMMITTED 2026-07-03
+
+John hand-tested (in the browser preview, which CANNOT run CLIs → always the
+clipboard fallback; the real .app runs headless in-app). Fixes:
+- `f48adb17` line-split: the clicked Greek word now begins the new paragraph
+  (was forward-snapping to the next word on right-edge clicks).
+- `e8f31c9f` discoverable AI trigger: right-click Greek → "Translate with AI"
+  (was hover-glyph + ⌘⏎ only); reference import defaults the assignment to the
+  chapter you're viewing. (Bekker gutter numbers already user-select:none.)
+- `f81d59a5` AI-assist MODES: "Translate with AI" (fills cell) + "AI reference"
+  (floating persistent popup, draggable, Copy/Close, multiple coexist, never
+  touches the cell) — mode on AssistContext, prompt branches; new
+  ReferencePopup.svelte. "Copy as citation" → "Copy with citation".
+  DEFERRED: "Check my English" mode + Apple Intelligence provider (slots into
+  the provider layer when its on-device API ships).
+- Built the real .app (`npm run stage:corpus` + `tauri build --bundles app`,
+  63MB) → ~/Downloads/Translation Workbench.app so John can use headless AI
+  for real. assist_run/assist_which confirmed in the binary.
+Gates at wrap: 999 vitest / tsc / svelte-check 0 err / vite build / cargo.
+
 ## Decisions John has confirmed
 
 2026-07-03:
