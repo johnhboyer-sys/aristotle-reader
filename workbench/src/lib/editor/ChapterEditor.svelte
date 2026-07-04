@@ -1071,6 +1071,7 @@
     id: number;
     x: number;
     y: number;
+    title: string;
     state: RefPopupState;
     abort: AbortController;
   }
@@ -1138,23 +1139,40 @@
    * (row valid, Greek non-empty → else a brief status). Positions the popup at
    * the click point (x, y). Multiple popups coexist; each has its own
    * AbortController so closing one aborts only its request. */
-  function invokeReference(row: number, segment: number, x: number, y: number) {
+  function invokePopup(
+    row: number,
+    segment: number,
+    x: number,
+    y: number,
+    mode: 'reference' | 'check',
+    title: string,
+  ) {
     if (row < 0 || row >= model.rows.length || !viewAt(row, segment)) return;
     if (model.rows[row].greek.trim().length === 0) {
       setStatus(NO_LINE_MESSAGE);
       return;
     }
+    // Check mode diagnoses the EXISTING English — nothing to check on a blank line.
+    if (mode === 'check' && plainRowText(joinedRowDoc(row)) === null) {
+      setStatus('There is no English on this line to check yet.');
+      return;
+    }
     const id = ++refPopupSeq;
     const abort = new AbortController();
-    refPopups = [...refPopups, { id, x, y, state: { kind: 'thinking' }, abort }];
-    void runReference(id, row, abort.signal);
+    refPopups = [...refPopups, { id, x, y, title, state: { kind: 'thinking' }, abort }];
+    void runPopup(id, row, mode, abort.signal);
   }
 
   function setRefPopupState(id: number, state: RefPopupState) {
     refPopups = refPopups.map((p) => (p.id === id ? { ...p, state } : p));
   }
 
-  async function runReference(id: number, row: number, signal: AbortSignal) {
+  async function runPopup(
+    id: number,
+    row: number,
+    mode: 'reference' | 'check',
+    signal: AbortSignal,
+  ) {
     let provider: AssistProvider;
     try {
       provider = await getAssistProvider();
@@ -1167,19 +1185,25 @@
     const settings = await loadSettings();
     if (signal.aborted || destroyed) return;
 
-    const ctx: AssistContext = {
-      mode: 'reference',
-      ...buildAssistContext({
-        rowCount: model.rows.length,
-        rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
-        draftAt: (i) => plainRowText(joinedRowDoc(i)),
-        targetIndex: row,
-        includeDraft: settings.assist?.includeDraft ?? true,
-        work: assistWorkMeta(),
-        book: { index: model.book, label: model.bookLabel },
-        chapter: model.chapter,
-      }),
-    };
+    // Check mode MUST include the surrounding drafts (the passage under review)
+    // regardless of the user's default; reference honours the setting.
+    const includeDraft = mode === 'check' ? true : (settings.assist?.includeDraft ?? true);
+    const base = buildAssistContext({
+      rowCount: model.rows.length,
+      rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
+      draftAt: (i) => plainRowText(joinedRowDoc(i)),
+      targetIndex: row,
+      includeDraft,
+      work: assistWorkMeta(),
+      book: { index: model.book, label: model.bookLabel },
+      chapter: model.chapter,
+    });
+    // Check mode sends the target's OWN English (the translation being
+    // diagnosed); reference never does.
+    const ctx: AssistContext =
+      mode === 'check'
+        ? { mode, ...base, target: { ...base.target, english: plainRowText(joinedRowDoc(row)) } }
+        : { mode, ...base };
 
     let result: AssistResult;
     try {
@@ -1371,13 +1395,22 @@
     invokeAssist(m.row, m.segment);
   }
 
-  /** Right-click the Greek → "AI reference": open a floating reference popup
-   * near the click point. Independent of the translate/cell flow. */
+  /** Right-click the Greek → "AI reference": the AI's own translation in a
+   * floating popup. Independent of the translate/cell flow. */
   function menuReference() {
     const m = ctxMenu;
     ctxMenu = null;
     if (!m) return;
-    invokeReference(m.row, m.segment, m.x, m.y);
+    invokePopup(m.row, m.segment, m.x, m.y, 'reference', 'AI reference');
+  }
+
+  /** Right-click the Greek → "Check my translation": a linguist's diagnosis of
+   * the row's existing English against the Greek, in a floating popup. */
+  function menuCheck() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    invokePopup(m.row, m.segment, m.x, m.y, 'check', 'Translation check');
   }
 
   /** Split model row r at a validated Greek offset — ONE undo entry that
@@ -2052,6 +2085,7 @@
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>Translate with AI</button>
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>AI reference</button>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>Check my translation</button>
       {#if ctxMenu.merge}
         <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
       {:else}
@@ -2064,6 +2098,7 @@
     <ReferencePopup
       x={p.x}
       y={p.y}
+      title={p.title}
       body={p.state}
       onClose={() => closeRefPopup(p.id)}
       onCopy={() => void copyRefPopup(p.id)}

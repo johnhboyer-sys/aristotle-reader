@@ -88,10 +88,33 @@ const REFERENCE_SYSTEM_PROMPT = [
   'original-language text. Do not translate the context lines.',
 ].join(' ');
 
+/**
+ * `check` mode — the AI acts SOLELY as a linguist diagnosing the translator's
+ * existing English against the Greek: accuracy, morphology, syntax, lexical
+ * fidelity, omissions/additions — never interpretation, philosophy, literary
+ * judgement, or its own translation. The target's own English IS sent (it is
+ * what's under review) and several lines of Greek+English context surround it.
+ * Output goes to a floating popup, not the cell.
+ */
+const CHECK_SYSTEM_PROMPT = [
+  'You are a linguist checking a translation for fidelity to its source',
+  'text. Examine ONLY the TARGET line: judge whether the translator’s',
+  'English accurately and completely renders the Greek — morphology, case,',
+  'tense, voice, mood, agreement, syntax, word order, lexical choice, and any',
+  'omissions or additions. Cite the specific Greek word(s) at issue. Use the',
+  'surrounding lines only as grammatical and referential context; do not',
+  'assess them. Report ONLY concrete linguistic observations, concisely. Do',
+  'NOT offer interpretation, philosophical or literary judgement, stylistic',
+  'preference, paraphrase, or your own translation. If the English faithfully',
+  'renders the Greek, say so briefly.',
+].join(' ');
+
 /** The mode-specific final instruction line appended to the user prompt. */
 const TRANSLATE_INSTRUCTION = 'Provide the English translation for the TARGET line only.';
 const REFERENCE_INSTRUCTION =
   'Provide a natural, complete English reference translation of the TARGET line only.';
+const CHECK_INSTRUCTION =
+  'As a linguist, diagnose the TARGET line’s English against its Greek. List only linguistic issues, citing the Greek word(s); if it is accurate, say so briefly.';
 
 /** Pure: `AssistContext` in, `{ system, user }` strings out. Branches on
  * `ctx.mode` (absent = 'translate'); the user-prompt body is shared, only the
@@ -102,14 +125,30 @@ export function buildAssistPrompt(ctx: AssistContext): AssistPrompt {
 
   const userParts: string[] = [citationLine, ''];
 
+  // Check mode: name the text explicitly so the linguist knows exactly what
+  // it is diagnosing (John: "obviously tell it the reference").
+  if (mode === 'check' && ctx.work.author.trim().length > 0) {
+    userParts.push(`Text under review: ${ctx.work.author}, ${ctx.work.title}.`, '');
+  }
+
   if (beforeLines.length > 0) {
     userParts.push('Context (each line: [address] source — English draft, blank if untranslated):');
     userParts.push(...beforeLines);
     userParts.push('');
   }
 
-  userParts.push('>>> TARGET line to translate:');
-  userParts.push(targetLine);
+  if (mode === 'check') {
+    userParts.push('>>> TARGET line to check:');
+    userParts.push(targetLine);
+    const english =
+      ctx.target.english == null || ctx.target.english.trim().length === 0
+        ? '(no English yet)'
+        : ctx.target.english;
+    userParts.push(`Translator’s English under review: ${english}`);
+  } else {
+    userParts.push('>>> TARGET line to translate:');
+    userParts.push(targetLine);
+  }
 
   if (afterLines.length > 0) {
     userParts.push('');
@@ -118,8 +157,15 @@ export function buildAssistPrompt(ctx: AssistContext): AssistPrompt {
   }
 
   userParts.push('');
-  userParts.push(mode === 'reference' ? REFERENCE_INSTRUCTION : TRANSLATE_INSTRUCTION);
+  userParts.push(
+    mode === 'check'
+      ? CHECK_INSTRUCTION
+      : mode === 'reference'
+        ? REFERENCE_INSTRUCTION
+        : TRANSLATE_INSTRUCTION,
+  );
 
-  const system = mode === 'reference' ? REFERENCE_SYSTEM_PROMPT : SYSTEM_PROMPT;
+  const system =
+    mode === 'check' ? CHECK_SYSTEM_PROMPT : mode === 'reference' ? REFERENCE_SYSTEM_PROMPT : SYSTEM_PROMPT;
   return { system, user: userParts.join('\n') };
 }

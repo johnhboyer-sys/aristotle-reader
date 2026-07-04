@@ -128,6 +128,34 @@ describe('buildAssistPrompt — modes', () => {
     expect(reference.user).toContain('>>> TARGET line to translate:');
     expect(reference.user).toContain('[1041a6] τὸ γὰρ τί ἦν εἶναι τοῦτό ἐστιν.');
   });
+
+  it("'check' mode: acts SOLELY as a linguist, no interpretation, its own instruction", () => {
+    const { system, user } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'check' });
+    expect(system).toContain('linguist');
+    expect(system).toContain('fidelity');
+    expect(system).toMatch(/do not offer interpretation/i);
+    expect(system).toMatch(/philosophical or literary judgement/i);
+    expect(system).not.toContain('strictly line-locked');
+    expect(user.trimEnd()).toMatch(/As a linguist, diagnose the TARGET line’s English against its Greek/);
+    expect(user).toContain('>>> TARGET line to check:');
+  });
+
+  it("'check' mode: sends the target's OWN English (the translation under review) + names the reference", () => {
+    const ctx = {
+      ...GOLDEN_CONTEXT,
+      mode: 'check' as const,
+      target: { ...GOLDEN_CONTEXT.target, english: 'For the essence of a thing is this.' },
+    };
+    const { user } = buildAssistPrompt(ctx);
+    expect(user).toContain('Translator’s English under review: For the essence of a thing is this.');
+    // "obviously tell it the reference" — author + work are named for check.
+    expect(user).toContain(`Text under review: ${GOLDEN_CONTEXT.work.author}, ${GOLDEN_CONTEXT.work.title}.`);
+  });
+
+  it("'check' mode: a target with no English yet is marked, not omitted", () => {
+    const { user } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'check' });
+    expect(user).toContain('Translator’s English under review: (no English yet)');
+  });
 });
 
 describe('renderAssistContext', () => {

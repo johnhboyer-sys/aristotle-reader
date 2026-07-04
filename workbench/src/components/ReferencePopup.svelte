@@ -17,12 +17,14 @@
   let {
     x,
     y,
+    title = 'AI reference',
     body,
     onClose,
     onCopy,
   }: {
     x: number;
     y: number;
+    title?: string;
     body: RefState;
     onClose: () => void;
     onCopy: () => void;
@@ -77,7 +79,7 @@
   const copyable = $derived(body.kind === 'text');
 </script>
 
-<div class="ref-popup" role="dialog" aria-label="AI reference translation" style="left: {left}px; top: {top}px">
+<div class="ref-popup" role="dialog" aria-label={title} style="left: {left}px; top: {top}px">
   <header
     class="ref-head"
     role="toolbar"
@@ -88,7 +90,7 @@
     onpointerup={onHeaderPointerUp}
     onpointercancel={onHeaderPointerUp}
   >
-    <span class="ref-title">AI reference</span>
+    <span class="ref-title">{title}</span>
     <button class="ref-x" type="button" aria-label="Close" onpointerdown={(e) => e.stopPropagation()} onclick={onClose}
       >×</button
     >

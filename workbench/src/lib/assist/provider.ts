@@ -28,7 +28,7 @@ export interface AssistContextRow {
  *                   the translator in a floating reference popup; it never
  *                   touches the cell, so it is freed from line-lock.
  */
-export type AssistMode = 'translate' | 'reference';
+export type AssistMode = 'translate' | 'reference' | 'check';
 
 export interface AssistContext {
   /** Which task the prompt frames; absent = 'translate' (back-compat). */
@@ -41,9 +41,11 @@ export interface AssistContext {
   };
   book: { index: number; label: string };
   chapter: number;
-  /** The line to translate. Target rows never carry an `english` field —
-   * assist never sends or receives draft English for the target itself. */
-  target: { address: string; greek: string };
+  /** The target line. In `translate`/`reference` modes the target carries no
+   * `english` (assist never sends the target's own draft when producing a
+   * translation). In `check` mode the target's `english` IS sent — it is the
+   * translation being diagnosed. */
+  target: { address: string; greek: string; english?: string | null };
   /** Rows immediately before the target, oldest to newest. */
   before: AssistContextRow[];
   /** Rows immediately after the target, nearest first. */
