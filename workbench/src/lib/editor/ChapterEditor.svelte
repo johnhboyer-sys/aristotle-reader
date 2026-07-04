@@ -104,13 +104,14 @@
     resolveTauriAssistProvider,
   } from './assistController';
   import { buildClipboardPayload } from '../assist/clipboardPayload';
-  import { NO_LINE_MESSAGE } from '../assist/messages';
+  import { NO_LINE_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
   import { ClipboardProvider } from '../assist/clipboardProvider';
   import type { AssistContext, AssistProvider, AssistResult } from '../assist/provider';
   import type { RunInvokeFn } from '../assist/cliProvider';
   import GreekCell from './GreekCell.svelte';
   import RowGutter from './RowGutter.svelte';
   import EnglishCell from './EnglishCell.svelte';
+  import ReferencePopup from '../../components/ReferencePopup.svelte';
   import './editor.css';
 
   let { fixture }: { fixture: FixtureChapter } = $props();
@@ -1056,6 +1057,26 @@
   let assistSeg = $state(0);
   let assistUi = $state<AssistUiState | null>(null);
 
+  // ── AI reference popups (right-click Greek → "AI reference") ──────────────
+  // Independent of the translate flow: the AI's own translation appears in a
+  // FLOATING popup that never touches the English cell and stays open until
+  // the user closes it. Multiple can coexist, so this is an ARRAY; each entry
+  // owns its own AbortController (closing a popup aborts its in-flight
+  // request). All are torn down on chapter switch / unmount.
+  type RefPopupState =
+    | { kind: 'thinking' }
+    | { kind: 'text'; text: string }
+    | { kind: 'error'; text: string };
+  interface RefPopup {
+    id: number;
+    x: number;
+    y: number;
+    state: RefPopupState;
+    abort: AbortController;
+  }
+  let refPopups = $state<RefPopup[]>([]);
+  let refPopupSeq = 0;
+
   const assistCtl = new AssistController({
     getProvider: getAssistProvider,
     copyPayload: async (ctx) => {
@@ -1109,6 +1130,91 @@
     assistUi = null;
     assistRow = -1;
     assistSeg = 0;
+  }
+
+  /** Right-click the Greek → "AI reference": run the SAME provider the
+   * translate flow uses, but with `mode: 'reference'`, and show the result in
+   * a floating popup that never touches the English cell. Guards run first
+   * (row valid, Greek non-empty → else a brief status). Positions the popup at
+   * the click point (x, y). Multiple popups coexist; each has its own
+   * AbortController so closing one aborts only its request. */
+  function invokeReference(row: number, segment: number, x: number, y: number) {
+    if (row < 0 || row >= model.rows.length || !viewAt(row, segment)) return;
+    if (model.rows[row].greek.trim().length === 0) {
+      setStatus(NO_LINE_MESSAGE);
+      return;
+    }
+    const id = ++refPopupSeq;
+    const abort = new AbortController();
+    refPopups = [...refPopups, { id, x, y, state: { kind: 'thinking' }, abort }];
+    void runReference(id, row, abort.signal);
+  }
+
+  function setRefPopupState(id: number, state: RefPopupState) {
+    refPopups = refPopups.map((p) => (p.id === id ? { ...p, state } : p));
+  }
+
+  async function runReference(id: number, row: number, signal: AbortSignal) {
+    let provider: AssistProvider;
+    try {
+      provider = await getAssistProvider();
+    } catch {
+      if (!signal.aborted) setRefPopupState(id, { kind: 'error', text: GENERIC_ERROR_MESSAGE });
+      return;
+    }
+    if (signal.aborted || destroyed) return;
+
+    const settings = await loadSettings();
+    if (signal.aborted || destroyed) return;
+
+    const ctx: AssistContext = {
+      mode: 'reference',
+      ...buildAssistContext({
+        rowCount: model.rows.length,
+        rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
+        draftAt: (i) => plainRowText(joinedRowDoc(i)),
+        targetIndex: row,
+        includeDraft: settings.assist?.includeDraft ?? true,
+        work: assistWorkMeta(),
+        book: { index: model.book, label: model.bookLabel },
+        chapter: model.chapter,
+      }),
+    };
+
+    let result: AssistResult;
+    try {
+      result = await provider.suggest(ctx, signal);
+    } catch {
+      if (!signal.aborted && !destroyed) setRefPopupState(id, { kind: 'error', text: GENERIC_ERROR_MESSAGE });
+      return;
+    }
+    if (signal.aborted || destroyed) return;
+
+    if (result.kind === 'suggestion') {
+      setRefPopupState(id, { kind: 'text', text: result.text });
+    } else {
+      // clipboard fallback or error — both carry one vetted plain sentence.
+      setRefPopupState(id, { kind: 'error', text: result.message });
+    }
+  }
+
+  /** Close a reference popup: abort its in-flight request and drop it. */
+  function closeRefPopup(id: number) {
+    const p = refPopups.find((q) => q.id === id);
+    p?.abort.abort();
+    refPopups = refPopups.filter((q) => q.id !== id);
+  }
+
+  /** Copy a reference popup's text to the clipboard (only in the text state). */
+  async function copyRefPopup(id: number) {
+    const p = refPopups.find((q) => q.id === id);
+    if (!p || p.state.kind !== 'text') return;
+    try {
+      await writeClipboardText(p.state.text);
+      setStatus('Reference copied.');
+    } catch {
+      setStatus('Could not copy — try again.');
+    }
   }
 
   /** The assist→editor mutation (RowEditor.insertSuggestion delegates here):
@@ -1263,6 +1369,15 @@
     ctxMenu = null;
     if (!m) return;
     invokeAssist(m.row, m.segment);
+  }
+
+  /** Right-click the Greek → "AI reference": open a floating reference popup
+   * near the click point. Independent of the translate/cell flow. */
+  function menuReference() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    invokeReference(m.row, m.segment, m.x, m.y);
   }
 
   /** Split model row r at a validated Greek offset — ONE undo entry that
@@ -1869,6 +1984,9 @@
     return () => {
       destroyed = true;
       assistCtl.cancel(); // in-flight suggestion can never land in a gone chapter
+      // Abort every open reference popup's in-flight request and drop them.
+      for (const p of refPopups) p.abort.abort();
+      refPopups = [];
       window.removeEventListener('keydown', onWindowKeydown);
       window.removeEventListener('blur', onWindowBlur);
       document.removeEventListener('visibilitychange', onVisibilityHidden);
@@ -1933,6 +2051,7 @@
   {#if ctxMenu}
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>Translate with AI</button>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>AI reference</button>
       {#if ctxMenu.merge}
         <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
       {:else}
@@ -1940,6 +2059,16 @@
       {/if}
     </div>
   {/if}
+
+  {#each refPopups as p (p.id)}
+    <ReferencePopup
+      x={p.x}
+      y={p.y}
+      body={p.state}
+      onClose={() => closeRefPopup(p.id)}
+      onCopy={() => void copyRefPopup(p.id)}
+    />
+  {/each}
 
   {#if session.status}
     <div class="status-pill" role="status">{session.status.text}</div>

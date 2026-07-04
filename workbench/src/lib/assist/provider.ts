@@ -17,7 +17,22 @@ export interface AssistContextRow {
   english: string | null;
 }
 
+/**
+ * Which assist task the prompt frames. Optional on `AssistContext` (absent =
+ * `'translate'`, for back-compat):
+ *
+ *  - `translate`  — the FIRST-PASS translation that FILLS the manuscript's
+ *                   English cell: strictly line-locked 1:1, output only the
+ *                   target line's English, match the surrounding register.
+ *  - `reference`  — a natural, faithful, COMPLETE English rendering shown to
+ *                   the translator in a floating reference popup; it never
+ *                   touches the cell, so it is freed from line-lock.
+ */
+export type AssistMode = 'translate' | 'reference';
+
 export interface AssistContext {
+  /** Which task the prompt frames; absent = 'translate' (back-compat). */
+  mode?: AssistMode;
   work: {
     title: string;
     author: string;

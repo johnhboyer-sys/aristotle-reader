@@ -82,6 +82,54 @@ describe('buildAssistPrompt', () => {
   });
 });
 
+describe('buildAssistPrompt — modes', () => {
+  it("absent mode defaults to 'translate' (back-compat): same system prompt as an explicit 'translate'", () => {
+    const withoutMode = buildAssistPrompt(GOLDEN_CONTEXT);
+    const explicitTranslate = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'translate' });
+    expect(withoutMode.system).toBe(explicitTranslate.system);
+    expect(withoutMode.user).toBe(explicitTranslate.user);
+  });
+
+  it("'translate' mode: line-locked system prompt + the TARGET-line-only instruction", () => {
+    const { system, user } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'translate' });
+    expect(system).toContain('strictly line-locked');
+    expect(system).toContain('1:1');
+    expect(system).toContain('Output ONLY the English translation for the single');
+    expect(user.trimEnd().endsWith('Provide the English translation for the TARGET line only.')).toBe(true);
+  });
+
+  it("'reference' mode: a natural/complete system prompt that is explicitly NOT line-locked", () => {
+    const { system } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'reference' });
+    expect(system).toContain('natural, faithful, complete English translation');
+    expect(system).toContain('not line-locked');
+    expect(system).toContain('reference');
+    // It must NOT carry the translate mode's strict 1:1 line-lock framing
+    // (it may, and does, say it need NOT preserve 1:1 line correspondence).
+    expect(system).not.toContain('strictly line-locked');
+  });
+
+  it("'reference' mode: its own final instruction line (a reference translation, not a fill)", () => {
+    const { user } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'reference' });
+    expect(
+      user
+        .trimEnd()
+        .endsWith('Provide a natural, complete English reference translation of the TARGET line only.'),
+    ).toBe(true);
+    expect(user).not.toContain('Provide the English translation for the TARGET line only.');
+  });
+
+  it('the user-prompt BODY (citation + context rows + bracketed target) is identical across modes', () => {
+    const translate = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'translate' });
+    const reference = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'reference' });
+    // Everything up to the final instruction line is shared; only the last
+    // line differs. Strip the trailing instruction and compare the bodies.
+    const body = (u: string) => u.slice(0, u.lastIndexOf('\n'));
+    expect(body(reference.user)).toBe(body(translate.user));
+    expect(reference.user).toContain('>>> TARGET line to translate:');
+    expect(reference.user).toContain('[1041a6] τὸ γὰρ τί ἦν εἶναι τοῦτό ἐστιν.');
+  });
+});
+
 describe('renderAssistContext', () => {
   it('is the single shared rendering helper used by both prompt.ts and clipboardPayload.ts', () => {
     const rendered = renderAssistContext(GOLDEN_CONTEXT);

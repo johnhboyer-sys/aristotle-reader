@@ -51,6 +51,11 @@ export interface AssistPrompt {
   user: string;
 }
 
+/**
+ * `translate` mode — the first-pass translation that FILLS the manuscript's
+ * English cell. Strict row-locked 1:1 line discipline; output ONLY the target
+ * line's English.
+ */
 const SYSTEM_PROMPT = [
   'You are helping a professional classicist translate a work from its',
   'original language into English. The translation is strictly line-locked:',
@@ -63,8 +68,36 @@ const SYSTEM_PROMPT = [
   'context lines.',
 ].join(' ');
 
-/** Pure: `AssistContext` in, `{ system, user }` strings out. */
+/**
+ * `reference` mode — a natural, faithful, COMPLETE English translation of the
+ * TARGET line, shown to the translator FOR REFERENCE in a floating popup. It
+ * never enters the manuscript, so it is NOT forced into 1:1 line-lock: render
+ * the target's full sense in fluent English. Still output only the
+ * translation — no preamble, commentary, alternatives, or original-language
+ * text — and never translate the context lines.
+ */
+const REFERENCE_SYSTEM_PROMPT = [
+  'You are helping a professional classicist by providing a reference',
+  'translation. Produce a natural, faithful, complete English translation of',
+  'the single TARGET line, rendering its full sense in fluent English. This',
+  'is for the translator’s reference only and is NOT inserted into the',
+  'manuscript, so it is not line-locked: you need not preserve 1:1 line',
+  'correspondence. Use the surrounding lines only as context for meaning.',
+  'Output ONLY the English translation for the TARGET line. Do not add',
+  'quotation marks, commentary, notes, alternatives, or the',
+  'original-language text. Do not translate the context lines.',
+].join(' ');
+
+/** The mode-specific final instruction line appended to the user prompt. */
+const TRANSLATE_INSTRUCTION = 'Provide the English translation for the TARGET line only.';
+const REFERENCE_INSTRUCTION =
+  'Provide a natural, complete English reference translation of the TARGET line only.';
+
+/** Pure: `AssistContext` in, `{ system, user }` strings out. Branches on
+ * `ctx.mode` (absent = 'translate'); the user-prompt body is shared, only the
+ * system prompt + final instruction line differ. */
 export function buildAssistPrompt(ctx: AssistContext): AssistPrompt {
+  const mode = ctx.mode ?? 'translate';
   const { citationLine, beforeLines, targetLine, afterLines } = renderAssistContext(ctx);
 
   const userParts: string[] = [citationLine, ''];
@@ -85,7 +118,8 @@ export function buildAssistPrompt(ctx: AssistContext): AssistPrompt {
   }
 
   userParts.push('');
-  userParts.push('Provide the English translation for the TARGET line only.');
+  userParts.push(mode === 'reference' ? REFERENCE_INSTRUCTION : TRANSLATE_INSTRUCTION);
 
-  return { system: SYSTEM_PROMPT, user: userParts.join('\n') };
+  const system = mode === 'reference' ? REFERENCE_SYSTEM_PROMPT : SYSTEM_PROMPT;
+  return { system, user: userParts.join('\n') };
 }

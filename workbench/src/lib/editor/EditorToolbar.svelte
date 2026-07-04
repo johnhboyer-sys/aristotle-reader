@@ -71,8 +71,8 @@
     disabled={!session.hasEditor}
     onmousedown={keepFocus}
     onclick={() => commands.copyCitation()}
-    title="Copy as citation (⌘⇧C)"
-    aria-label="Copy as citation"
+    title="Copy with citation (⌘⇧C)"
+    aria-label="Copy with citation"
   >“ ”</button>
 </div>
 
