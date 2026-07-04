@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="#B0512E"/>
+  <g fill="#F5EFE1" font-family="Palatino, 'Palatino Linotype', 'Georgia', 'Times New Roman', serif" text-anchor="middle" dominant-baseline="central">
+    <text x="248" y="516" font-size="430">α</text>
+    <text x="800" y="512" font-size="430">a</text>
+  </g>
+  <g stroke="#F5EFE1" fill="#F5EFE1" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="452" y1="512" x2="600" y2="512" stroke-width="42"/>
+    <path d="M 588 464 L 656 512 L 588 560 Z"/>
+  </g>
+</svg>
