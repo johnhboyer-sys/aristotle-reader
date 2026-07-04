@@ -186,6 +186,27 @@ Gates at wrap: 999 vitest / tsc / svelte-check 0 err / vite build / cargo.
 - Scrivener import defaults: two-file selection; proportional pre-split ON
   (flagged, editable). D3 §9.5 duplicate-import Replace/Cancel shown to John.
 
+## Future / backlog (John's ideas — NOT scheduled, capture only)
+
+- **Generic edition workbench, possibly a FORK** (John, 2026-07-03): a version
+  NOT hard-wired to one author, work, or language — any source text on any
+  citation/reference scheme, not just Greek/Latin classics on a Bekker spine.
+  The architecture already leans this way: the `CitationScheme` contract is
+  frozen + scheme-agnostic (busse-paragraph proved a non-Bekker scheme drops in
+  as one file + one registry line), the row model is spine-driven, and the
+  AI-assist prompts already say "original language," not "Greek." Generalizing
+  means: arbitrary source-text ingestion (not just TLG/Diogenes export), a
+  pluggable per-work spine/citation, and language-neutral onboarding.
+- **AI-backed parsing + definitions for languages without a lexicon/analyzer**:
+  Greek has LSJ + click-to-parse morphology; Latin was planned behind a
+  LexiconProvider. For other languages (no analyzer, no digital lexicon), use
+  the AI to supply morphology/parsing + definitions on demand — an AI-backed
+  LexiconProvider impl behind the SAME click-a-word UX, just a different
+  backend. (Now that the multi-provider AI layer exists, this is a natural fit.)
+- **Fork vs. mode**: decide whether this is a separate generic fork or a config
+  "mode" in this app. Lean fork if the classical-specific assumptions (Bekker,
+  TLG, LSJ) can't stay clean opt-ins; lean mode if they can.
+
 ## Running things
 
 ```

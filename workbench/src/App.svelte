@@ -11,6 +11,7 @@
   import AddWorkDialog from './components/AddWorkDialog.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
+  import AskPanel from './components/AskPanel.svelte';
   import FootnotePanel from './components/FootnotePanel.svelte';
   import ReferencePanel from './components/ReferencePanel.svelte';
   import ReferenceImportDialog from './components/ReferenceImportDialog.svelte';
@@ -253,6 +254,15 @@
   function closeLexicon() {
     lexiconOpen = false;
   }
+  // Ask-AI panel: docked bottom panel in the center column. Open state lives on
+  // the session bridge so the ctx-menu ("Ask AI about this line…") can open it
+  // too; the panel follows the focused line via session.askTarget.
+  function toggleAsk() {
+    session.askPanelOpen = !session.askPanelOpen;
+  }
+  function closeAsk() {
+    session.askPanelOpen = false;
+  }
 
   // ── click-to-parse: word-click delegation over the Greek column ─────────
   //
@@ -428,6 +438,21 @@
         </svg>
       </button>
 
+      <button
+        class="icon-btn"
+        class:active={session.askPanelOpen}
+        onclick={toggleAsk}
+        title={session.askPanelOpen ? 'Hide Ask AI' : 'Ask AI about a line'}
+        aria-label="Toggle Ask AI panel"
+        aria-pressed={session.askPanelOpen}
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <path d="M9.5 9a2.5 2.5 0 1 1 3 2.5c-.5.2-1 .7-1 1.5" />
+          <path d="M12 16.5h.01" />
+        </svg>
+      </button>
+
       {#if isTauri() || import.meta.env.DEV}
         <button
           class="icon-btn"
@@ -488,6 +513,10 @@
 
       {#if lexiconOpen}
         <LexiconDrawer workId={selection?.workId ?? ''} word={lexiconWord} onClose={closeLexicon} />
+      {/if}
+
+      {#if session.askPanelOpen}
+        <AskPanel onClose={closeAsk} />
       {/if}
     </div>
 

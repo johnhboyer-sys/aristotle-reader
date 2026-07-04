@@ -109,12 +109,35 @@ const CHECK_SYSTEM_PROMPT = [
   'renders the Greek, say so briefly.',
 ].join(' ');
 
+/**
+ * `ask` mode — a general, helpful CLASSICIST-ASSISTANT answering the
+ * translator's own free-form question about the TARGET line. Unlike `check`
+ * (a strict linguist confined to fidelity diagnosis), this mode is open: it may
+ * discuss grammar, lexicon, syntax, and meaning as the question asks, and may
+ * comment on the translator's own English when that is what they ask about.
+ * Grounded in the Greek and the surrounding context; concise and specific,
+ * citing Greek words where relevant. Output goes to a docked panel, not the
+ * cell.
+ */
+const ASK_SYSTEM_PROMPT = [
+  'You are a knowledgeable classicist assisting a translator with a question',
+  'about a single TARGET line of the source text. Answer the translator’s',
+  'question directly, grounding your answer in the Greek of the TARGET line',
+  'and using the surrounding lines as context for meaning and reference. You',
+  'may discuss grammar, morphology, syntax, lexicon, and meaning as the',
+  'question requires, and you may comment on the translator’s own English when',
+  'they ask about it. Be concise and specific; cite the relevant Greek word(s)',
+  'where it helps. Answer only what is asked — no unsolicited full translation',
+  'unless the question calls for one, and no preamble.',
+].join(' ');
+
 /** The mode-specific final instruction line appended to the user prompt. */
 const TRANSLATE_INSTRUCTION = 'Provide the English translation for the TARGET line only.';
 const REFERENCE_INSTRUCTION =
   'Provide a natural, complete English reference translation of the TARGET line only.';
 const CHECK_INSTRUCTION =
   'As a linguist, diagnose the TARGET line’s English against its Greek. List only linguistic issues, citing the Greek word(s); if it is accurate, say so briefly.';
+const ASK_INSTRUCTION = 'Answer the translator’s question about the TARGET line.';
 
 /** Pure: `AssistContext` in, `{ system, user }` strings out. Branches on
  * `ctx.mode` (absent = 'translate'); the user-prompt body is shared, only the
@@ -125,9 +148,9 @@ export function buildAssistPrompt(ctx: AssistContext): AssistPrompt {
 
   const userParts: string[] = [citationLine, ''];
 
-  // Check mode: name the text explicitly so the linguist knows exactly what
-  // it is diagnosing (John: "obviously tell it the reference").
-  if (mode === 'check' && ctx.work.author.trim().length > 0) {
+  // Check + ask modes: name the text explicitly so the assistant knows exactly
+  // what it is discussing (John: "obviously tell it the reference").
+  if ((mode === 'check' || mode === 'ask') && ctx.work.author.trim().length > 0) {
     userParts.push(`Text under review: ${ctx.work.author}, ${ctx.work.title}.`, '');
   }
 
@@ -145,6 +168,17 @@ export function buildAssistPrompt(ctx: AssistContext): AssistPrompt {
         ? '(no English yet)'
         : ctx.target.english;
     userParts.push(`Translator’s English under review: ${english}`);
+  } else if (mode === 'ask') {
+    userParts.push('>>> TARGET line:');
+    userParts.push(targetLine);
+    const english =
+      ctx.target.english == null || ctx.target.english.trim().length === 0
+        ? '(none yet)'
+        : ctx.target.english;
+    userParts.push(`Translator’s English (if any): ${english}`);
+    const question =
+      ctx.question == null || ctx.question.trim().length === 0 ? '(no question given)' : ctx.question.trim();
+    userParts.push(`The translator asks: ${question}`);
   } else {
     userParts.push('>>> TARGET line to translate:');
     userParts.push(targetLine);
@@ -160,12 +194,20 @@ export function buildAssistPrompt(ctx: AssistContext): AssistPrompt {
   userParts.push(
     mode === 'check'
       ? CHECK_INSTRUCTION
-      : mode === 'reference'
-        ? REFERENCE_INSTRUCTION
-        : TRANSLATE_INSTRUCTION,
+      : mode === 'ask'
+        ? ASK_INSTRUCTION
+        : mode === 'reference'
+          ? REFERENCE_INSTRUCTION
+          : TRANSLATE_INSTRUCTION,
   );
 
   const system =
-    mode === 'check' ? CHECK_SYSTEM_PROMPT : mode === 'reference' ? REFERENCE_SYSTEM_PROMPT : SYSTEM_PROMPT;
+    mode === 'check'
+      ? CHECK_SYSTEM_PROMPT
+      : mode === 'ask'
+        ? ASK_SYSTEM_PROMPT
+        : mode === 'reference'
+          ? REFERENCE_SYSTEM_PROMPT
+          : SYSTEM_PROMPT;
   return { system, user: userParts.join('\n') };
 }

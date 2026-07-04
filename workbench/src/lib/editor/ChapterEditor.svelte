@@ -65,7 +65,14 @@
   import { greekInput, resetGreekRun } from './plugins/greekInput';
   import { footnotePlugin, FN_REFRESH } from './plugins/footnote';
   import { session, registerEditor, unregisterEditor, setStatus } from './session.svelte';
-  import type { EditorCommands, FootnoteCommands, FootnoteListEntry, SyncCommands } from './session.svelte';
+  import type {
+    EditorCommands,
+    FootnoteCommands,
+    FootnoteListEntry,
+    SyncCommands,
+    AssistCommands,
+    AskResult,
+  } from './session.svelte';
   import { hasChanged, decideReload, snapshotOf } from '../library/sync';
   import type { FileSnapshot } from '../library/sync';
   import { parseChapterFile } from '../chapterfile';
@@ -1078,6 +1085,31 @@
   let refPopups = $state<RefPopup[]>([]);
   let refPopupSeq = 0;
 
+  // ── Ask-AI (docked bottom panel; free-form question about a line) ────────
+  // ONE-SHOT: each question is answered independently (no prior-turn history is
+  // sent). The panel accumulates a transcript for readability only; multi-turn
+  // would slot in by threading the transcript into the prompt here. Each
+  // in-flight ask has its own AbortController so a chapter switch / unmount
+  // (and a superseding ask) aborts it — its result can never render in a gone
+  // chapter. `askAssistTarget` is the model row the next ask runs against: it
+  // follows focus, and the ctx-menu pins it to the right-clicked row.
+  let askAbort: AbortController | null = null;
+  let askAssistTarget = $state(-1);
+
+  /** Display locus for a model row, e.g. "Ζ.17" (book label + chapter). */
+  function rowLocus(): string {
+    return `${model.bookLabel}.${model.chapter}`;
+  }
+
+  /** Point session.askTarget at model row `i` (address + locus) so an open
+   * panel follows the line. No-op for an out-of-range row. */
+  function setAskTarget(i: number) {
+    const row = model.rows[i];
+    if (!row) return;
+    askAssistTarget = i;
+    session.askTarget = { address: row.address.raw, locus: rowLocus() };
+  }
+
   const assistCtl = new AssistController({
     getProvider: getAssistProvider,
     copyPayload: async (ctx) => {
@@ -1239,6 +1271,71 @@
     } catch {
       setStatus('Could not copy — try again.');
     }
+  }
+
+  /** Ask-AI (docked panel): answer the translator's free-form `question` about
+   * the current ask target's line, via assist mode 'ask'. ONE-SHOT — the
+   * question is the only turn sent; the passage context + target English ride
+   * along, but no prior transcript entries. Resolves the row from
+   * askAssistTarget (the ctx-menu / focus target), falling back to the last
+   * focused row. Returns {ok, answer} or {ok:false, message}; never throws, and
+   * the message is always a vetted plain sentence (no stack trace). Aborts any
+   * prior in-flight ask so only the latest answer can land. */
+  async function askAboutLine(question: string): Promise<AskResult> {
+    const row = askAssistTarget >= 0 ? askAssistTarget : focusedRow;
+    if (row < 0 || row >= model.rows.length) {
+      return { ok: false, message: 'Click into a line first, then ask about it.' };
+    }
+    if (model.rows[row].greek.trim().length === 0) {
+      return { ok: false, message: NO_LINE_MESSAGE };
+    }
+
+    askAbort?.abort();
+    const abort = new AbortController();
+    askAbort = abort;
+
+    let provider: AssistProvider;
+    try {
+      provider = await getAssistProvider();
+    } catch {
+      return { ok: false, message: GENERIC_ERROR_MESSAGE };
+    }
+    if (abort.signal.aborted || destroyed) return { ok: false, message: GENERIC_ERROR_MESSAGE };
+
+    const base = buildAssistContext({
+      rowCount: model.rows.length,
+      rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
+      draftAt: (i) => plainRowText(joinedRowDoc(i)),
+      targetIndex: row,
+      includeDraft: true, // the passage the question is about
+      work: assistWorkMeta(),
+      book: { index: model.book, label: model.bookLabel },
+      chapter: model.chapter,
+    });
+    // Ask mode sends the target's OWN English (so the translator may ask about
+    // their own draft) plus the free-form question.
+    const ctx: AssistContext = {
+      mode: 'ask',
+      question,
+      ...base,
+      target: { ...base.target, english: plainRowText(joinedRowDoc(row)) },
+    };
+
+    let result: AssistResult;
+    try {
+      result = await provider.suggest(ctx, abort.signal);
+    } catch {
+      if (abort.signal.aborted) return { ok: false, message: GENERIC_ERROR_MESSAGE };
+      return { ok: false, message: GENERIC_ERROR_MESSAGE };
+    }
+    if (abort.signal.aborted || destroyed) return { ok: false, message: GENERIC_ERROR_MESSAGE };
+
+    if (result.kind === 'suggestion') {
+      const text = result.text.trim();
+      return text ? { ok: true, answer: text } : { ok: false, message: GENERIC_ERROR_MESSAGE };
+    }
+    // clipboard fallback or error — both carry one vetted plain sentence.
+    return { ok: false, message: result.message };
   }
 
   /** The assist→editor mutation (RowEditor.insertSuggestion delegates here):
@@ -1411,6 +1508,17 @@
     ctxMenu = null;
     if (!m) return;
     invokePopup(m.row, m.segment, m.x, m.y, 'check', 'Translation check');
+  }
+
+  /** Right-click the Greek → "Ask AI about this line…": pin the ask target to
+   * this row and open the docked panel (App focuses its input). The panel then
+   * follows focus, but starts on the row you chose. */
+  function menuAsk() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    setAskTarget(m.row);
+    session.askPanelOpen = true;
   }
 
   /** Split model row r at a validated Greek offset — ONE undo entry that
@@ -1862,6 +1970,9 @@
             focusedRow = row;
             focusedSegment = segment;
             syncToolbar(v.state);
+            // Keep the ask target on the line you're on, so an already-open
+            // Ask panel follows the caret.
+            setAskTarget(row);
             return false;
           },
           blur: () => {
@@ -1908,6 +2019,10 @@
 
   const syncCommandsImpl: SyncCommands = {
     checkExternalChange,
+  };
+
+  const assistCommandsImpl: AssistCommands = {
+    askAboutLine,
   };
 
   function onWindowKeydown(e: KeyboardEvent) {
@@ -2001,7 +2116,7 @@
   });
 
   onMount(() => {
-    registerEditor(editorCommands, footnoteCommands, syncCommandsImpl);
+    registerEditor(editorCommands, footnoteCommands, syncCommandsImpl, assistCommandsImpl);
     session.greekMode = false;
 
     const unsubIndex = onFootnoteIndexChange((workId) => {
@@ -2017,6 +2132,8 @@
     return () => {
       destroyed = true;
       assistCtl.cancel(); // in-flight suggestion can never land in a gone chapter
+      askAbort?.abort(); // in-flight ask can never answer in a gone chapter
+      askAbort = null;
       // Abort every open reference popup's in-flight request and drop them.
       for (const p of refPopups) p.abort.abort();
       refPopups = [];
@@ -2086,6 +2203,7 @@
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>Translate with AI</button>
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>AI reference</button>
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>Check my translation</button>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAsk}>Ask AI about this line…</button>
       {#if ctxMenu.merge}
         <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
       {:else}

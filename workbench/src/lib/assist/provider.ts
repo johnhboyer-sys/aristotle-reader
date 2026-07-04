@@ -27,12 +27,23 @@ export interface AssistContextRow {
  *  - `reference`  — a natural, faithful, COMPLETE English rendering shown to
  *                   the translator in a floating reference popup; it never
  *                   touches the cell, so it is freed from line-lock.
+ *  - `check`      — a linguist's diagnosis of the translator's existing English
+ *                   against the Greek; the target's own English IS sent.
+ *  - `ask`        — a free-form question the translator poses about the TARGET
+ *                   line; the AI answers as a helpful classicist assistant,
+ *                   grounded in the Greek and surrounding context. The
+ *                   question rides in `AssistContext.question`; the target's
+ *                   own English IS sent (like `check`), so the translator may
+ *                   ask about their own draft.
  */
-export type AssistMode = 'translate' | 'reference' | 'check';
+export type AssistMode = 'translate' | 'reference' | 'check' | 'ask';
 
 export interface AssistContext {
   /** Which task the prompt frames; absent = 'translate' (back-compat). */
   mode?: AssistMode;
+  /** The translator's free-form question. Used ONLY in `ask` mode; ignored
+   * (and normally absent) in every other mode. */
+  question?: string;
   work: {
     title: string;
     author: string;

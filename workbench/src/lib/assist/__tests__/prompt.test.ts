@@ -156,6 +156,46 @@ describe('buildAssistPrompt — modes', () => {
     const { user } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'check' });
     expect(user).toContain('Translator’s English under review: (no English yet)');
   });
+
+  it("'ask' mode: a general classicist-assistant system prompt, NOT the strict 'check' linguist", () => {
+    const { system } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'What case is τοῦτό?' });
+    expect(system).toContain('classicist');
+    // The open assistant answers the question; it is NOT the fidelity-only
+    // linguist and does NOT forbid interpretation.
+    expect(system).not.toContain('strictly line-locked');
+    expect(system).not.toMatch(/checking a translation for fidelity/i);
+    expect(system).not.toMatch(/do not offer interpretation/i);
+    expect(system).toMatch(/answer the translator’s question/i);
+  });
+
+  it("'ask' mode: includes the question, the target English, names the reference, and its own instruction", () => {
+    const ctx = {
+      ...GOLDEN_CONTEXT,
+      mode: 'ask' as const,
+      question: 'Why is τοῦτό nominative here?',
+      target: { ...GOLDEN_CONTEXT.target, english: 'For the essence of a thing is this.' },
+    };
+    const { user } = buildAssistPrompt(ctx);
+    expect(user).toContain('The translator asks: Why is τοῦτό nominative here?');
+    expect(user).toContain('Translator’s English (if any): For the essence of a thing is this.');
+    // "obviously tell it the reference" — author + work are named for ask too.
+    expect(user).toContain(`Text under review: ${GOLDEN_CONTEXT.work.author}, ${GOLDEN_CONTEXT.work.title}.`);
+    expect(user.trimEnd()).toMatch(/Answer the translator’s question about the TARGET line\.$/);
+    // The target line itself is rendered (Greek), and NOT under the 'to check' header.
+    expect(user).toContain('>>> TARGET line:');
+    expect(user).toContain('[1041a6] τὸ γὰρ τί ἦν εἶναι τοῦτό ἐστιν.');
+  });
+
+  it("'ask' mode: a target with no English yet renders (none yet), not omitted", () => {
+    const { user } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'Parse the verb.' });
+    expect(user).toContain('Translator’s English (if any): (none yet)');
+  });
+
+  it("'ask' mode: an absent question is handled without throwing and marked in the prompt", () => {
+    const ctx = { ...GOLDEN_CONTEXT, mode: 'ask' as const };
+    const { user } = buildAssistPrompt(ctx);
+    expect(user).toContain('The translator asks: (no question given)');
+  });
 });
 
 describe('renderAssistContext', () => {

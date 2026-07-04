@@ -56,6 +56,14 @@ export const session = $state({
   // ── Drive-folder sync bridge (build spec §11) ──
   /** Non-null while the "keep mine / load theirs" choice is pending. */
   externalChangePrompt: null as ExternalChangePrompt | null,
+  // ── Ask-AI panel bridge (docked bottom panel; one-shot per question) ──
+  /** True while the Ask-AI panel is docked open. */
+  askPanelOpen: false,
+  /** Which line the Ask panel is asking about — updated as focus moves (so an
+   * open panel follows the current line) and when the ctx-menu opens it.
+   * `locus` is a display label (e.g. "Ζ.17"); `address` the opaque raw
+   * citation string. Null when no line is targeted yet. */
+  askTarget: null as { address: string; locus: string } | null,
 });
 
 export interface EditorCommands {
@@ -80,6 +88,17 @@ export interface FootnoteCommands {
   setActiveFootnote(id: string | null): void;
 }
 
+/** One free-form answer for the Ask-AI panel: the answer text on success, or
+ * a vetted plain sentence on failure — never a stack trace. */
+export type AskResult = { ok: true; answer: string } | { ok: false; message: string };
+
+/** Ask-AI action the docked panel proxies to the mounted ChapterEditor. */
+export interface AssistCommands {
+  /** Run the current `session.askTarget`'s row through assist mode 'ask' with
+   * this question. ONE-SHOT: each call is independent (no prior turns sent). */
+  askAboutLine(question: string): Promise<AskResult>;
+}
+
 /** Sync command the app shell drives on window focus (build spec §11). */
 export interface SyncCommands {
   /** Stat the open chapter's file; reload seamlessly, prompt, or no-op per
@@ -91,11 +110,18 @@ export interface SyncCommands {
 let current: EditorCommands | null = null;
 let currentFn: FootnoteCommands | null = null;
 let currentSync: SyncCommands | null = null;
+let currentAssist: AssistCommands | null = null;
 
-export function registerEditor(cmds: EditorCommands, fn?: FootnoteCommands, sync?: SyncCommands): void {
+export function registerEditor(
+  cmds: EditorCommands,
+  fn?: FootnoteCommands,
+  sync?: SyncCommands,
+  assist?: AssistCommands,
+): void {
   current = cmds;
   currentFn = fn ?? null;
   currentSync = sync ?? null;
+  currentAssist = assist ?? null;
   session.hasEditor = true;
 }
 
@@ -104,6 +130,7 @@ export function unregisterEditor(cmds: EditorCommands): void {
     current = null;
     currentFn = null;
     currentSync = null;
+    currentAssist = null;
     session.hasEditor = false;
     session.greekMode = false;
     session.activeMarks = { bold: false, italic: false, underline: false, greek: false };
@@ -111,6 +138,7 @@ export function unregisterEditor(cmds: EditorCommands): void {
     session.activeFootnoteId = null;
     session.fnFocusRequest = null;
     session.externalChangePrompt = null;
+    session.askTarget = null;
   }
 }
 
@@ -131,6 +159,17 @@ export const fnCommands: FootnoteCommands = {
   reanchorFootnote: (id) => currentFn?.reanchorFootnote(id),
   updateFootnoteBody: (id, body) => currentFn?.updateFootnoteBody(id, body),
   setActiveFootnote: (id) => currentFn?.setActiveFootnote(id),
+};
+
+/** Ask-AI panel proxy; returns an error result when no editor is mounted so
+ * the panel shows a plain sentence rather than throwing. */
+export const assistCommands: AssistCommands = {
+  askAboutLine: async (question) => {
+    if (!currentAssist) {
+      return { ok: false, message: 'Open a chapter first, then ask about one of its lines.' };
+    }
+    return currentAssist.askAboutLine(question);
+  },
 };
 
 /** App-shell proxy for the sync check; no-op when no editor is mounted (e.g.
