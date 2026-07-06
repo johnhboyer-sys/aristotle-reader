@@ -323,10 +323,18 @@ function rowTextNonEmpty(markup: string): boolean {
 // grouping/stamping rules a second time.
 
 export interface RenderedParagraphs {
-  /** One entry per paragraph group, already joined with ' ' within the group. Empty groups (an all-untranslated stretch) are omitted. */
+  /** One entry per paragraph group, already joined with ' ' within the group.
+   * A run of untranslated (blank) segments BETWEEN translated content becomes a
+   * single ellipsis paragraph so gaps read as gaps instead of collapsing the
+   * surrounding text together. Leading/trailing all-untranslated stretches emit
+   * no ellipsis. (Greek slices are never blank, so the Greek side is unaffected.) */
   paragraphs: string[];
   footnoteIdsUsed: string[];
 }
+
+/** A blank-span placeholder: one line reading `…` marks skipped/untranslated
+ * lines so the export doesn't silently run the translated fragments together. */
+const ELLIPSIS_PARAGRAPH = '…';
 
 /**
  * Render segments of one side (English markup, or Greek slices) into
@@ -335,6 +343,11 @@ export interface RenderedParagraphs {
  * simply never see footnote ids because Greek text has no `{^id:}` syntax).
  * `textOf` extracts the raw one-line markup to render for a segment;
  * `useStamps` + `stampMode` control Bekker-ref stamping exactly as before.
+ *
+ * Untranslated segments no longer vanish silently: a maximal run of blank
+ * segments sitting BETWEEN translated content is emitted as a single `…`
+ * paragraph (John's export QA — a sparse chapter was collapsing distant
+ * translated lines into one paragraph with no sign of the gap).
  */
 export function renderSegmentsGrouped(
   segments: ChapterSegment[],
@@ -342,21 +355,36 @@ export function renderSegmentsGrouped(
   useStamps: boolean,
   stampMode: StampMode,
 ): RenderedParagraphs {
-  const groups: string[][] = [[]];
+  const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
+  let current: string[] = []; // pieces of the flowing paragraph currently open
+  let gap = false; // ≥1 blank segment seen since the last emitted content
+
+  const flush = () => {
+    if (current.length > 0) {
+      paragraphs.push(current.join(' '));
+      current = [];
+    }
+  };
 
   for (const seg of segments) {
     // A new segment of the SAME row (segment > 0) forces a new paragraph
     // group — that is the split, full stop. Segment 0 of every row
     // continues flowing into whatever group is currently open.
-    if (seg.segment > 0) groups.push([]);
+    if (seg.segment > 0) flush();
 
     const raw = textOf(seg);
-    if (raw.trim().length === 0) continue; // untranslated segment, skipped silently
+    if (raw.trim().length === 0) {
+      gap = true; // untranslated segment — remember the gap, mark it once content resumes
+      continue;
+    }
 
     const { markdown, footnoteIdsUsed: used } = markupToPandoc(raw);
+    if (markdown.length === 0) {
+      gap = true;
+      continue;
+    }
     footnoteIdsUsed.push(...used);
-    if (markdown.length === 0) continue;
 
     let piece = markdown;
     if (useStamps && seg.isStampSegment && seg.address) {
@@ -364,10 +392,19 @@ export function renderSegmentsGrouped(
       const stamp = stampFor(addr, seg.rowIndex, stampMode, seg.colStart);
       if (stamp) piece = `${stamp} ${piece}`;
     }
-    groups[groups.length - 1].push(piece);
-  }
 
-  const paragraphs = groups.map((g) => g.join(' ')).filter((p) => p.length > 0);
+    // A gap BETWEEN emitted content becomes its own ellipsis paragraph. Never
+    // leads the chapter (no content emitted yet → no stray opening ellipsis).
+    if (gap && (paragraphs.length > 0 || current.length > 0)) {
+      flush();
+      paragraphs.push(ELLIPSIS_PARAGRAPH);
+    }
+    gap = false;
+
+    current.push(piece);
+  }
+  flush(); // a trailing gap after the last content emits nothing — correct
+
   return { paragraphs, footnoteIdsUsed };
 }
 

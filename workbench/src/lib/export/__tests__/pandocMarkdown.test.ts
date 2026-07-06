@@ -119,14 +119,22 @@ describe('chapterToPandocMarkdown — body assembly', () => {
     expect(body).toBe('one two three four [1041a10] five');
   });
 
-  it('skips empty rows silently (untranslated) without leaving double spaces', () => {
+  it('marks untranslated gaps BETWEEN content with an ellipsis paragraph', () => {
     const c = chapter({ englishLines: ['one', '', 'three', '   ', 'five'] });
     const md = chapterToPandocMarkdown(c, META);
-    const body = md.split('\n\n')[1].trimEnd();
-    expect(body).toBe('one three [1041a10] five');
+    const paras = md.split('\n\n').map((p) => p.trimEnd());
+    // paras[0] is the heading; the body follows — each blank span → one '…'.
+    expect(paras.slice(1)).toEqual(['one', '…', 'three', '…', '[1041a10] five']);
   });
 
-  it('an all-empty chapter produces an empty body paragraph', () => {
+  it('does NOT emit a leading or trailing ellipsis for edge untranslated stretches', () => {
+    const c = chapter({ englishLines: ['', '', 'three', '', ''] });
+    const md = chapterToPandocMarkdown(c, META);
+    const paras = md.split('\n\n').map((p) => p.trimEnd());
+    expect(paras.slice(1)).toEqual(['three']); // no '…' before or after
+  });
+
+  it('an all-empty chapter produces an empty body (no stray ellipsis)', () => {
     const c = chapter({ englishLines: ['', '', '', '', ''] });
     const md = chapterToPandocMarkdown(c, META);
     const body = md.split('\n\n')[1].trimEnd();
