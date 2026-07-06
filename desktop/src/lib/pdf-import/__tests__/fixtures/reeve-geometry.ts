@@ -210,6 +210,35 @@ export const reevePage3: string = page3Lines.join('\n');
 // All three physical pages, form-feed separated, ready for `splitPages`.
 export const reeveThreePages: string = [reevePage1, reevePage2, reevePage3].join('\f');
 
+// ---------------------------------------------------------------------------
+// Standalone book-heading page (recto) — mirrors the real Book 8 opening
+// geometry: the book-heading line itself carries the full-form gutter tic
+// ("Book 8   ...   1155a1"), followed by the "8.1" chapter heading, its
+// centered title, and the section's first body line. Phase-2 forward-bind
+// must carry the tic past the whole heading block to "The".
+// ---------------------------------------------------------------------------
+
+const bookHeadingPageLines: string[] = [
+  centered(12, 'A Certain Synthetic Work*'),
+  '',
+  '',
+  rectoTicLine('                                    Book 8', '1155a1'),
+  '',
+  '',
+  centered(40, '8.1'),
+  centered(31, 'Views about Friendship'),
+  '',
+  'The next issue we should discuss is friendship; for friendship is a sort of',
+  'virtue or involves virtue, and further it is most necessary for living well.',
+  'For no one would choose to live without friends even if he had all the other',
+  'goods, and indeed rich people and holders of office seem to need friends most.',
+  '',
+  centered(44, '504'),
+  '',
+];
+
+export const reeveBookHeadingPage: string = bookHeadingPageLines.join('\n');
+
 export interface ExpectedReeveTic {
   raw: string;
   column: string;

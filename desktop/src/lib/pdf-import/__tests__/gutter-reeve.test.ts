@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { splitPages } from '../pages';
 import { createDocContext, scanPage, type PageScan } from '../gutter';
+import { classifyDivisions, createDivisionState } from '../divisions';
 import {
   reeveThreePages,
+  reeveBookHeadingPage,
   reevePage1Expected,
   reevePage2Expected,
   reevePage3Expected,
@@ -100,5 +102,30 @@ describe('gutter Reeve-geometry synthetic fixture (recto/verso/recto)', () => {
   it('carries the running Bekker address across all three physical pages', () => {
     expect(ctx.anyTicSeen).toBe(true);
     expect(ctx.lastTic).toEqual({ page: 1095, col: 'b', line: 1, physPage: 2 });
+  });
+});
+
+describe('gutter/divisions: tic on a book-heading line (Book 8 geometry)', () => {
+  const pages = splitPages(reeveBookHeadingPage);
+  const scan = scanPage(pages[0], createDocContext());
+
+  it('forward-binds the heading-line tic past the heading block to the first body word', () => {
+    expect(scan.tics).toHaveLength(1);
+    const tic = scan.tics[0];
+    expect(tic.raw).toBe('1155a1');
+    expect(tic.column).toBe('1155a');
+    expect(tic.line).toBe(1);
+    expect(tic.flags).toContain('anchor-forwarded-past-heading');
+    // Never the heading word "Book"; past "8.1" and the title to the body.
+    expect(tokenAt(pages[0].lines, tic.anchorLineIdx!, tic.anchorCol!)).toBe('The');
+  });
+
+  it('classifyDivisions emits {book:8} then {8,1} with its title', () => {
+    const state = createDivisionState();
+    const divisions = classifyDivisions(pages[0], scan, state);
+    expect(divisions.map((d) => ({ kind: d.kind, book: d.book, chapter: d.chapter, title: d.title }))).toEqual([
+      { kind: 'book', book: 8, chapter: null, title: null },
+      { kind: 'chapter', book: 8, chapter: 1, title: 'Views about Friendship' },
+    ]);
   });
 });
