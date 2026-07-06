@@ -204,6 +204,124 @@ Real slice measured: 337 joined, 0 kept (every fragment in NE starts lowercase).
   LOCALLY (originals untouched — gutter-reeve.test.ts pins their line indices);
   the remaining 2.1→2.3 gap is kept and pinned as its honest audit flag.
 
+## Phase 4B: ImportDialog wiring + footnote/title render wiring
+
+### Detection + accept-stage wiring
+- **Detection rule** (`isLayoutExtraction`, pdf-import/index.ts): a form-feed
+  byte (`\f`). pdftotext's page-break marker never appears in a hand-authored
+  or already-tagged file, so this is a cheap, reliable, zero-false-positive
+  signal — exported as a standalone pure function (not inlined in the Svelte
+  component) so it's unit-testable without a DOM (`is-layout-extraction.test.ts`).
+- All FOUR accept paths (native picker, browser `<input>`, Tauri drag-drop,
+  browser-harness drag-drop) route through one shared `acceptText(name, text,
+  opts)` in ImportDialog.svelte. A fifth path — App.svelte's own drag-drop
+  handling hands a `{name, text}` straight to this component's `file` prop,
+  bypassing all four functions above — is covered too: a synchronous
+  top-level `if (file) acceptText(file.name, file.text);` runs the SAME
+  pre-stage before first render, so a layout extraction dropped onto the app
+  shell gets converted exactly like one dropped onto the dialog's own zone.
+- `ConvertNeedsChoice` → `convert-choice` step; "Import with page-level
+  anchors only" re-invokes `acceptText` on the SAME held `{name, text}` with
+  `{pageLevelOnly: true}` rather than re-prompting for a file.
+- **`.original` vs. parse input (conservative reading)**: `ImportRequest.raw`
+  already serves three roles simultaneously (parse input, canonical `.md`
+  body basis, AND — until now — the literal `.original` safety-net content).
+  Splitting all three apart for every caller was out of scope and risked
+  regressing non-PDF imports; the minimal correct fix was one new OPTIONAL
+  `ImportRequest.original` field, defaulted to `req.raw` in `s.write(...)`
+  (`req.original ?? req.raw`). A non-PDF import omits it and is byte-for-byte
+  unchanged from before. A PDF import sets `raw` to the converter's tagged
+  output (what actually gets parsed/aligned/canonicalized — unchanged
+  existing flow) and `original` to the pristine pre-conversion pdftotext
+  extraction, so `.original` now holds what its own doc comment always
+  claimed ("the untouched raw upload") for this path specifically.
+- **Residual, not fixed here**: dehyphenate.ts's `SITE` regex
+  (`/([A-Za-z]+)-\r?\n([A-Za-z]+)/`) still runs on the converter's tagged
+  output per the existing ImportDialog flow. The converter's own §3.4
+  hyphen-eol joins remove essentially every line-end-hyphen site from the
+  BODY before dehyphenate ever sees it, but a footnote block's own multi-line
+  note continuations (real `\n`, not converter-joined — AM1 display-line
+  rule) could in principle still contain a hyphen-before-newline inside a
+  note's text. Not observed in the NE slice; if it ever fires, the worst case
+  is a spurious dehyphenation-review prompt (user confirms "keep hyphenated"),
+  not silent corruption — flagged here rather than silently assumed safe.
+
+### Honesty report (Done step) — which numbers came from where
+- The footnote scope/count line reuses `ImportSummary.footnoteSummary`
+  (already computed by `runImport` from `parsed.footnotes`/`footnoteScope`)
+  rather than recomputing the same phrase from `ConvertReport.footnotes` —
+  same underlying data for a PDF import, and this way the line also appears
+  for a hand-tagged file with a footnotes block (a generalization beyond
+  strict task scope, but harmless and DRY: no second copy of the
+  scope-phrase table in the Svelte component).
+- Dropped lines / suppressed-tick breakdown / display-block count / seams
+  warning all read `ConvertReport` directly and are gated on `convertReport
+  !== null` — i.e. this whole sub-section only renders for a PDF-converted
+  import, exactly per task scope.
+
+### Titles merge (task 2)
+- `getImportTitles(work)` merges every registered import's `titles` map for
+  that work in `registered`'s Map iteration order (session load/registration
+  order, not necessarily original import chronology) — "later imports win"
+  is documented as an ordering caveat, not a hard chronological guarantee.
+- `mergeChapterTitles(book, builtin, imported)` is the pure, unit-tested
+  "built-ins win, imports only fill a gap" rule, pulled out of App.svelte so
+  it's testable without mounting the component; App.svelte's `mergeTitles` is
+  now a two-line wrapper supplying `getImportTitles(work)`.
+
+### Footnote render wiring (§B4) — the site-inertness argument
+Reader.svelte and FootnotePopup.svelte are the SAME files served by the
+static site build (no imports.ts there) and the desktop app. Two changes
+touch them:
+1. **`fnTransIds` (was singular `fnTransId`)**: generalized from "the one
+   footnote-bearing translation" to a `Set`, because an import can now ALSO
+   carry footnotes:true (set on its `TranslationRef` by
+   `imports.ts`'s `installHooks`, only when `rec.footnotes` is non-empty).
+   `thirdSlot` is included unconditionally now (not just as a fallback for
+   "nothing else flagged") so a newly-flagged import can never silently
+   un-flag an existing built-in (e.g. Ostwald) that relied on the fallback.
+   For every work in the corpus TODAY (no imports registered), this set
+   reduces to exactly the same single id the old code picked — verified by
+   inspection: no work combines an explicitly-flagged translation with a
+   different `third`-slot translation.
+2. **`renderThird`'s widened marker regex + `data-fn-trans` attribute**: this
+   IS a new DOM attribute on every footnote-bearing translation's markers,
+   including built-ins on the site (Ostwald, Owen) — not conditional on
+   import presence, because `renderThird` can't tell "is this transId an
+   import" without the same site/desktop split problem `FootnotePopup` has,
+   and the spec (§B4.2) mandates the attribute unconditionally on the one
+   shared function. Read "byte-identical" as *behaviorally* identical: the
+   attribute is inert (nothing on the site reads it except the sibling
+   `showFootnote`, which — for a non-import transId — simply carries it
+   through to a `FootnotePopup` that resolves via the untouched
+   `fetchFootnotes(work)` path, below). No existing test or build asserts
+   exact HTML strings for `.fn-marker` (checked: only CSS-selector consumers
+   in `annotations.ts`), so this is a safe, spec-compliant reading.
+3. **`FootnotePopup`'s resolver hook pair**: `__ARISTOTLE_IMPORT_HAS_TRANS__`
+   and `__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__`, installed by
+   `imports.ts`'s `installHooks()` — the SAME window-level-hook pattern
+   `__ARISTOTLE_BOOK_HOOK__`/`__ARISTOTLE_EXTRA_TRANSLATIONS__` already use
+   for exactly this site/desktop split. Neither hook exists on the site
+   build (imports.ts is never bundled there), so `isImportedTrans()` is
+   always `false` there and every popup falls through to the untouched
+   `fetchFootnotes(work)` branch — inert.
+   - **Why TWO hooks, not one**: `getImportFootnote` alone can't distinguish
+     "this transId isn't a registered import" from "it IS registered but has
+     no definition for this label" (`footnote-note-unmatched`) — both return
+     `null`. Folding that into a single fallback-on-null design would let an
+     unmatched import label fall through to `fetchFootnotes(work)`, which
+     could return a DIFFERENT translation's note text for the same numeric
+     label under continuous scope (a real collision risk, not hypothetical —
+     Ostwald's `footnotes.json` and an imported translation's labels are both
+     plain digits). The separate `__ARISTOTLE_IMPORT_HAS_TRANS__` boolean
+     hook makes "is this a registered import at all" an explicit, first-class
+     question, so an unmatched import label correctly shows "not found"
+     instead of risking a wrong-translation's note.
+- `fnDisplay` (printed-number-from-label) is duplicated (Reader.svelte,
+  FootnotePopup.svelte) rather than shared: it's two lines, pure, and sharing
+  it would mean a new tiny shared module or growing the site/desktop
+  boundary discussion for no real benefit.
+
 ## Categories 4 gold case for display blocks + bare-numeral chapters (John, 2026-07-06)
 Categories ch. 4 (Reeve complete-works extraction, ~line 20260ff. of the full file)
 has a genuine BODY table — the ten-categories list ("Substance  human, horse" …) —
