@@ -222,6 +222,12 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
       // construction — the round-trip self-check compares JSON shapes.
       ...(columnStarts ? { columnStarts } : {}),
       ...(lineSplits.length > 0 ? { lineSplits } : {}),
+      // paragraph_starts rides along verbatim (D8 §5 grouping metadata —
+      // dropping it on the first autosave would silently lose the import's
+      // blank-line grouping). Key order matches parseChapterFile's meta.
+      ...(model.paragraphStarts && model.paragraphStarts.length > 0
+        ? { paragraphStarts: model.paragraphStarts }
+        : {}),
     },
     greekLines: model.rows.map((r) => r.greek),
     englishLines: model.rows.map((r) => serializeRowSegments(englishDocsOf(r))),
@@ -280,6 +286,8 @@ export interface HydrationResult {
   footnotes: ModelFootnote[];
   /** Spans subsequent saves should carry (row addresses; file meta on row-count drift). */
   spans: ChapterSpans;
+  /** paragraph_starts from the file, for the model to carry (D8 §5). */
+  paragraphStarts?: number[];
   /**
    * Quiet notice when the file disagrees with the corpus spine and/or a
    * stored paragraph split drifted (one plain sentence per problem, joined by
@@ -432,7 +440,13 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
       ? { start: rows[0].address.raw, end: rows[fileCount - 1].address.raw }
       : { start: file.meta.spanStart, end: file.meta.spanEnd };
 
-  return { rows, footnotes, spans, notice };
+  return {
+    rows,
+    footnotes,
+    spans,
+    ...(file.meta.paragraphStarts ? { paragraphStarts: file.meta.paragraphStarts } : {}),
+    notice,
+  };
 }
 
 // ── pending-write registry (cross-controller read safety) ───────────────────

@@ -91,6 +91,14 @@ export interface ChapterModel {
   bekkerRange: string;
   rows: RowModel[];
   footnotes: Footnote[];
+  /**
+   * Visual paragraph grouping for plain-line document-spine works (D8 §5:
+   * chapter-file `paragraph_starts`, 1-based row ordinals). Carried on the
+   * model so autosave round-trips it; Phase D's views read it for grouping.
+   * Hydration supplies it (modelFromFixture leaves it unset — fixtures have
+   * no grouping and corpus works never carry one).
+   */
+  paragraphStarts?: number[];
   dirty: boolean;
 }
 

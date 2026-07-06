@@ -404,6 +404,7 @@
       const h = hydrateFromFile(res.file, fixture.lines, model.scheme);
       model.rows = h.rows;
       model.footnotes = h.footnotes;
+      model.paragraphStarts = h.paragraphStarts;
       spans = h.spans;
       loadNotice = h.notice;
     } else {
@@ -527,6 +528,7 @@
     const h = hydrateFromFile(parsed, fixture.lines, model.scheme);
     model.rows = h.rows;
     model.footnotes = h.footnotes;
+    model.paragraphStarts = h.paragraphStarts;
     model.dirty = false;
     spans = h.spans;
     loadNotice = h.notice;

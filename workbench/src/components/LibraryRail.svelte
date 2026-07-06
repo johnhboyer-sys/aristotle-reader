@@ -21,6 +21,12 @@
     work: WorkManifest;
     status: 'ready' | 'absent';
     books: RailBook[];
+    /**
+     * Corpus-free single-document work (D8: scheme.spineSource ===
+     * 'document', v1 = one document) — renders as one "Open" row instead of
+     * a book/chapter tree. App sets this from the scheme CAPABILITY.
+     */
+    singleDocument?: boolean;
   }
 
   export interface RailSelection {
@@ -43,6 +49,7 @@
     selected,
     onSelect,
     onAddWork,
+    onNewDocument,
     onImportChapter,
     onImportReference,
   }: {
@@ -50,6 +57,9 @@
     selected: RailSelection | null;
     onSelect: (workId: string, book: number, chapter: number) => void;
     onAddWork?: () => void;
+    /** "New document…" — create a corpus-free document (D8 §6). Gated like
+     * onImportChapter (Tauri or dev harness). */
+    onNewDocument?: () => void;
     /** "Import chapter…" for a ready work (Tauri only — App gates the prop
      * the same way onAddWork is gated). Receives the work id so the dialog
      * can default its work picker to the one the user clicked from. */
@@ -110,7 +120,20 @@
         {/if}
       </div>
 
-      {#if rw.status === 'ready'}
+      {#if rw.status === 'ready' && rw.singleDocument}
+        <!-- Corpus-free document: no book/chapter tree, one quiet row. -->
+        <ul class="chapters doc-row">
+          <li>
+            <button
+              class="chapter-row"
+              class:selected={isSelected(rw.work.id, 1, 1)}
+              onclick={() => onSelect(rw.work.id, 1, 1)}
+            >
+              Document
+            </button>
+          </li>
+        </ul>
+      {:else if rw.status === 'ready'}
         <ul class="books">
           {#each rw.books as book (book.n)}
             <li class="book">
@@ -171,9 +194,14 @@
     </div>
   {/each}
 
-  {#if onAddWork}
+  {#if onAddWork || onNewDocument}
     <div class="rail-foot">
-      <button class="add-work" onclick={onAddWork}>Add work…</button>
+      {#if onAddWork}
+        <button class="add-work" onclick={onAddWork}>Add work…</button>
+      {/if}
+      {#if onNewDocument}
+        <button class="add-work" onclick={onNewDocument}>New document…</button>
+      {/if}
     </div>
   {/if}
 </nav>
@@ -292,6 +320,14 @@
   }
   .chevron.open {
     transform: rotate(90deg);
+  }
+
+  /* A single-document work has no book level — its one row sits directly
+     under the title, no hairline guide. */
+  .doc-row {
+    margin-left: var(--space-2);
+    padding-left: var(--space-2);
+    border-left: none;
   }
 
   /* Chapters hang off a hairline guide aligned under the book chevron. */
