@@ -164,6 +164,27 @@ describe('snapToWordStart', () => {
     expect(snapToWordStart(greek, greek.length)).toBe(7); // end of οὖν → its start
   });
 
+  it('pulls a leading opening-paren into the new paragraph (not stranded on the prior line)', () => {
+    // 'τὸ (μὲν': τὸ@0-1, ' '@2, '('@3, μὲν@4-6 — click inside μὲν → split BEFORE the '('.
+    expect(snapToWordStart('τὸ (μὲν', 5)).toBe(3);
+  });
+
+  it('pulls a leading em-dash (and its separating space) into the new paragraph', () => {
+    // 'τὸ — μὲν': τὸ@0-1, ' '@2, '—'@3, ' '@4, μὲν@5-7 — the dash opens the clause.
+    expect(snapToWordStart('τὸ — μὲν', 6)).toBe(3);
+  });
+
+  it('leaves a TRAILING comma with the prior word (only opening marks/dashes attach forward)', () => {
+    // 'τὸ, μὲν': the comma trails τὸ; μὲν starts clean at its own word start.
+    expect(snapToWordStart('τὸ, μὲν', 5)).toBe(4);
+  });
+
+  it('a mark glued to the prior word (no separating space) falls back to the bare word start', () => {
+    // 'τὸ(μὲν': '(' sits right after a letter, so splitting before it is invalid
+    // (letter immediately before the offset) → keep the word start.
+    expect(snapToWordStart('τὸ(μὲν', 4)).toBe(3);
+  });
+
   it('trailing whitespace clicks (nothing after) are rejected', () => {
     expect(snapToWordStart('τὸ μὲν  ', 8)).toBeNull(); // gap with no following word
   });

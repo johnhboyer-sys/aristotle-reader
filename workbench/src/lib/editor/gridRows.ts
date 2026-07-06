@@ -90,6 +90,12 @@ export function expandRows(rows: RowModel[]): DisplayRow[] {
 
 const WORD_CHAR = /[\p{L}\p{M}]/u;
 
+// Leading punctuation that OPENS the clause it precedes — an opening bracket /
+// quote, or a dash — so it belongs with the word that starts the new paragraph,
+// not stranded on the prior line. (Closing marks and commas/periods trail the
+// prior word and are deliberately excluded.)
+const LEADING_ATTACH = /[(\[{«‹“‘„–—―⟨]/u;
+
 /**
  * Snap a raw click offset to the split point at the START of the word the
  * click belongs to — so the clicked word becomes the FIRST word of the new
@@ -98,10 +104,16 @@ const WORD_CHAR = /[\p{L}\p{M}]/u;
  * word's last letter when you click the right side of that word (or the
  * space right after it), and that click still means "this word." Only when
  * there is no word at or immediately before the click (leading whitespace, a
- * wide gap) do we look FORWARD to the next word. Returns null when no valid
- * split point exists there — the first word (offset 0) and the line end are
- * not split points (isValidSplitOffset is the single validity authority;
- * this never returns an offset it rejects).
+ * wide gap) do we look FORWARD to the next word.
+ *
+ * Leading opening-punctuation / dashes (e.g. `(ἆρα`, `— ἆρα`) are pulled into
+ * the new paragraph too: the mark opens the clause the clicked word begins, so
+ * stranding it on the prior line is wrong. A single space separating such a
+ * mark from the word is absorbed with it.
+ *
+ * Returns null when no valid split point exists there — the first word
+ * (offset 0) and the line end are not split points (isValidSplitOffset is the
+ * single validity authority; this never returns an offset it rejects).
  */
 export function snapToWordStart(greek: string, offset: number): number | null {
   if (!Number.isInteger(offset) || offset < 0 || offset > greek.length) return null;
@@ -115,7 +127,25 @@ export function snapToWordStart(greek: string, offset: number): number | null {
   }
   // Back up to the start of the resolved word.
   while (p > 0 && WORD_CHAR.test(greek[p - 1])) p--;
-  return isValidSplitOffset(greek, p) ? p : null;
+  const wordStart = p;
+
+  // Pull any leading opening-punctuation / dash run (and single spaces that
+  // merely separate those marks from the word) into the new paragraph.
+  let q = wordStart;
+  while (q > 0) {
+    const prev = greek[q - 1];
+    if (LEADING_ATTACH.test(prev)) {
+      q--;
+    } else if (prev === ' ' && q >= 2 && LEADING_ATTACH.test(greek[q - 2])) {
+      q--; // a space separating an attach mark from the word — absorb it
+    } else {
+      break;
+    }
+  }
+  // Prefer the punctuation-inclusive point when it's a valid split; otherwise
+  // fall back to the bare word start (e.g. a mark glued to the prior word).
+  if (q !== wordStart && isValidSplitOffset(greek, q)) return q;
+  return isValidSplitOffset(greek, wordStart) ? wordStart : null;
 }
 
 // ── English caret division (D6 §4.2) ────────────────────────────────────────
