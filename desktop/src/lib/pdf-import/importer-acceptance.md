@@ -2,9 +2,9 @@
 
 Check items off as they're proven, with the proving test named.
 
-- [ ] Every gutter tic on a geometry-intact page detected and bound, or explicitly flagged (collapse / review)
-- [ ] Lennox fixture reproduces exactly (all 8 rows)
-- [ ] 5-line cadence self-audit closes; missing tic → flagged dropped line, never interpolated
+- [~] Every gutter tic on a geometry-intact page detected and bound, or explicitly flagged (collapse / review) — PROVEN for the Lennox + synthetic Reeve gold fixtures (gutter-gold.test.ts, gutter-reeve.test.ts: all 20 tics across the two fixtures bind exactly). NOT fully proven at corpus scale: the real 176-page NE slice (gutter-slice.integration.test.ts, env-gated) surfaces a genuine gap — a printed mark that's actually MISSING from the source is correctly flagged (dropped-line), not silently bound, which is the designed behavior, but it means "detected and bound" has a real, characterized exception class (see implementation-notes.md). Annotated rather than checked because Phase 1 scope explicitly includes "or explicitly flagged," and that's what happens — but the >2500-tic corpus-coverage assumption in the integration test does not hold for a single-work slice this size, so full-corpus confidence is not yet established.
+- [x] Lennox fixture reproduces exactly (all 8 rows) — gutter-gold.test.ts, `detects exactly 8 tics, in order, with correct column/line/anchor`.
+- [x] 5-line cadence self-audit closes; missing tic → flagged dropped line, never interpolated — gutter-reeve.test.ts `has zero dropped-line flags across all three pages` (clean-geometry case, nothing to flag) plus the real-slice integration test's `dropped-line:1119b20` (page 50) case, which demonstrates the flag firing on genuine real-world input: the missing 1119b20 mark is flagged, never fabricated with an interpolated line value — `promoteByCadenceMonotonic`'s `nextMultiplesOf5Between` in gutter.ts only ever pushes a flag string, it never synthesizes a Tic.
 - [ ] Headers stripped; divisions tagged {b.c} with correct inheritance; titles captured-unaligned or correctly absent
 - [ ] Footnotes separated; scope inferred and stated; verso/footnote never confused
 - [ ] Paragraphs preserved; anchors survive reflow (text stream unchanged)
