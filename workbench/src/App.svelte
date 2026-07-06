@@ -515,16 +515,15 @@
       {#if lexiconOpen}
         <LexiconDrawer workId={selection?.workId ?? ''} word={lexiconWord} onClose={closeLexicon} />
       {/if}
-
-      {#if session.askPanelOpen}
-        <AskPanel onClose={closeAsk} />
-      {/if}
     </div>
 
     {#if session.aiPanel}
       <!-- AI output (Translation Check / AI reference) takes the right slot
            while open; closing it reveals whatever tool panel was toggled. -->
       <AiPanel />
+    {:else if session.askPanelOpen}
+      <!-- Ask-AI chat as a tall right sidebar (John: chat reads best vertical). -->
+      <AskPanel onClose={closeAsk} />
     {:else if footnotesOpen}
       <aside class="side-panel" aria-label="Footnotes">
         <header class="panel-head">

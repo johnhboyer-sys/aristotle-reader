@@ -1,48 +1,24 @@
 <script lang="ts">
-  // Ask-AI panel: a docked, resizable BOTTOM panel (not a popup). Like the
-  // lexicon drawer, it's a flex sibling in App.svelte's .center-col — it pushes
-  // the editing viewport up rather than floating over it, and stops at the
-  // center column so the right rail (footnotes/reference) stays visible.
-  //
-  // The translator types a free-form question about the current line; the AI
-  // answers as a helpful classicist. ONE-SHOT: each question is sent
+  // Ask-AI panel: a full-height RIGHT sidebar (John: chat reads best tall, not
+  // wide). Sits in App.svelte's right-panel slot alongside the other side
+  // panels. The translator types a free-form question about the current line;
+  // the AI answers as a helpful classicist. ONE-SHOT: each question is sent
   // independently (with the passage context, but NOT prior turns) — the
   // transcript below accumulates only so it reads like a conversation. Where
   // multi-turn would slot in: thread the transcript into the prompt in
   // ChapterEditor.askAboutLine (session bridge), not here.
   //
-  // Resizable by dragging the top edge (clamped 160px..60vh); reopens at its
-  // last dragged height (persisted to localStorage, matching LexiconDrawer).
   // The transcript clears when the target line changes — a one-shot "ask about
-  // THIS line" panel shouldn't carry another line's Q&A.
+  // THIS line" panel shouldn't carry another line's Q&A. The header shows which
+  // model is answering (a reminder), read from the assist settings.
   import { tick } from 'svelte';
   import { session, assistCommands } from '../lib/editor/session.svelte';
   import { renderMarkdown } from '../lib/assist/markdown';
+  import { assistProviderLabel } from '../lib/assist/providerLabel';
+  import { loadSettings } from '../lib/settings';
   import '../lib/assist/ai-prose.css';
 
   let { onClose }: { onClose: () => void } = $props();
-
-  const HEIGHT_KEY = 'workbench:ask:height';
-  const MIN_H = 160;
-  const DEFAULT_H = 280;
-
-  function clampHeight(h: number): number {
-    const viewportH = window.innerHeight || 0;
-    const maxH = viewportH > 0 ? Math.round(viewportH * 0.6) : Infinity;
-    return Math.min(Math.max(h, MIN_H), Math.max(MIN_H, maxH));
-  }
-
-  function loadHeight(): number {
-    if (typeof localStorage === 'undefined') return DEFAULT_H;
-    const raw = localStorage.getItem(HEIGHT_KEY);
-    const n = raw ? Number(raw) : NaN;
-    return Number.isFinite(n) && n > 0 ? clampHeight(n) : DEFAULT_H;
-  }
-
-  let height = $state(loadHeight());
-  let dragging = $state(false);
-  let dragStartY = 0;
-  let dragStartHeight = 0;
 
   // One transcript entry: the question, then the AI's answer (or the pending /
   // error state). ONE-SHOT — entries are display-only, never re-sent.
@@ -53,11 +29,18 @@
   let transcript = $state<Entry[]>([]);
   let draft = $state('');
   let sending = $state(false);
+  let providerLabel = $state('');
 
   let inputEl = $state<HTMLTextAreaElement>();
   let transcriptEl = $state<HTMLDivElement>();
 
   const locus = $derived(session.askTarget?.locus ?? null);
+
+  // Refresh the provider label whenever the panel (re)opens — the user may have
+  // changed the assist provider in Settings between opens.
+  $effect(() => {
+    if (session.askPanelOpen) void loadSettings().then((s) => (providerLabel = assistProviderLabel(s.assist)));
+  });
 
   // Clear the transcript when the target line changes — a one-shot "ask about
   // THIS line" panel shouldn't carry over another line's Q&A. Keyed on the
@@ -120,50 +103,22 @@
       onClose();
     }
   }
-
-  function startDrag(e: PointerEvent) {
-    dragging = true;
-    dragStartY = e.clientY;
-    dragStartHeight = height;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    e.preventDefault();
-  }
-
-  function onDrag(e: PointerEvent) {
-    if (!dragging) return;
-    const delta = dragStartY - e.clientY; // dragging up grows the panel
-    height = clampHeight(dragStartHeight + delta);
-  }
-
-  function endDrag() {
-    if (!dragging) return;
-    dragging = false;
-    if (typeof localStorage !== 'undefined') localStorage.setItem(HEIGHT_KEY, String(Math.round(height)));
-  }
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<section class="ask-panel" style="height: {height}px" aria-label="Ask AI" onkeydown={onKeydown}>
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div
-    class="ask-resize-handle"
-    class:dragging
-    role="separator"
-    aria-orientation="horizontal"
-    aria-label="Resize Ask AI panel"
-    tabindex="-1"
-    onpointerdown={startDrag}
-    onpointermove={onDrag}
-    onpointerup={endDrag}
-    onpointercancel={endDrag}
-  ></div>
-
+<aside class="ask-panel" aria-label="Ask AI" onkeydown={onKeydown}>
   <header class="ask-head">
-    <h2 class="ask-title">Ask AI</h2>
-    {#if locus}
-      <span class="ask-locus">{locus}</span>
-    {/if}
-    <span class="ask-spacer"></span>
+    <div class="ask-head-titles">
+      <div class="ask-title-row">
+        <h2 class="ask-title">Ask AI</h2>
+        {#if locus}
+          <span class="ask-locus">{locus}</span>
+        {/if}
+      </div>
+      {#if providerLabel}
+        <span class="ask-model" title="The AI model answering your questions">via {providerLabel}</span>
+      {/if}
+    </div>
     <button class="ask-close" onclick={onClose} aria-label="Close Ask AI">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M6 6l12 12M18 6L6 18" />
@@ -199,7 +154,7 @@
       bind:this={inputEl}
       bind:value={draft}
       class="ask-input"
-      rows="2"
+      rows="3"
       placeholder="Ask about this line…"
       onkeydown={onInputKeydown}
       disabled={sending}
@@ -209,54 +164,38 @@
       {sending ? 'Asking…' : 'Send'}
     </button>
   </div>
-</section>
-
-<svelte:window onpointermove={onDrag} onpointerup={endDrag} />
+</aside>
 
 <style>
   .ask-panel {
     flex: none;
+    width: 360px;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    min-height: 160px;
     background: var(--page-bg);
-    border-top: 1px solid var(--border);
-    position: relative;
-  }
-
-  .ask-resize-handle {
-    position: absolute;
-    top: -4px;
-    left: 0;
-    right: 0;
-    height: 8px;
-    cursor: row-resize;
-    z-index: 5;
-    touch-action: none;
-  }
-  .ask-resize-handle::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2.5rem;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--border);
-  }
-  .ask-resize-handle:hover::after,
-  .ask-resize-handle.dragging::after {
-    background: var(--accent-light);
+    border-left: 1px solid var(--border);
   }
 
   .ask-head {
     flex: none;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border);
+  }
+  .ask-head-titles {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .ask-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
   }
   .ask-title {
     font-family: var(--font-ui);
@@ -272,8 +211,11 @@
     color: var(--text-light);
     font-variant-numeric: tabular-nums;
   }
-  .ask-spacer {
-    flex: 1;
+  .ask-model {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    color: var(--text-light);
+    letter-spacing: 0.01em;
   }
   .ask-close {
     display: inline-flex;
@@ -323,7 +265,7 @@
   }
   .ask-question {
     align-self: flex-end;
-    max-width: 85%;
+    max-width: 90%;
     font-family: var(--font-english);
     font-size: 0.9rem;
     line-height: 1.5;
@@ -335,13 +277,12 @@
   }
   .ask-answer {
     align-self: flex-start;
-    max-width: 92%;
+    max-width: 100%;
     font-family: var(--font-english);
     font-size: 0.92rem;
     line-height: 1.6;
     color: var(--text);
     text-wrap: pretty;
-    white-space: pre-wrap;
   }
   .ask-answer.thinking {
     color: var(--text-light);
