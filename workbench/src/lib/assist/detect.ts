@@ -12,7 +12,9 @@
  *   1. each `spec.candidatePaths(home)` in order (first existing wins)
  *   2. the injected `invokeWhich(candidates, binName)` rung (the Rust
  *      `assist_which` login-shell `command -v` fallback), if provided — its
- *      result is re-validated with `exists` before it is trusted
+ *      result is TRUSTED as-is (the Rust command only returns a path it has
+ *      itself verified is an executable file, so a frontend re-check would be
+ *      redundant AND wrong — see the note in `resolveToolBinary`)
  *   3. `null` (not found)
  */
 
@@ -50,8 +52,17 @@ export async function resolveToolBinary(
   }
 
   if (deps.invokeWhich && spec.binName.length > 0) {
+    // Trust the login-shell rung's result as-is. The Rust `assist_which`
+    // command only returns a path it has itself verified is an executable
+    // file (std::fs::metadata + mode bits). Re-validating here via plugin-fs
+    // `exists` is not just redundant — it is actively wrong for the paths that
+    // matter: a Finder-launched .app's plugin-fs `exists` returns false for a
+    // SYMLINKED binary outside the app sandbox (e.g. ~/.local/bin/claude ->
+    // …/versions/x, or /opt/homebrew/bin/* via Cellar), so the re-check would
+    // discard the correctly-resolved path and silently drop assist to the
+    // clipboard floor. (Same fs-scope/symlink quirk that broke pandoc export.)
     const resolved = await deps.invokeWhich(candidates, spec.binName);
-    if (resolved && (await deps.exists(resolved))) {
+    if (resolved) {
       return resolved;
     }
   }

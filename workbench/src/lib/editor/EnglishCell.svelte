@@ -20,6 +20,7 @@
     unsplitConfirm,
     onUnsplitConfirm,
     onUnsplitCancel,
+    onContext,
   }: {
     gridRow: number;
     row: number;
@@ -32,10 +33,18 @@
     unsplitConfirm: boolean; // the un-split confirm is pending on this cell
     onUnsplitConfirm: () => void;
     onUnsplitCancel: () => void;
+    onContext: (e: MouseEvent) => void; // right-click → the row's AI menu
   } = $props();
 </script>
 
-<div class="en-cell" class:row-flash={flash} style="grid-row: {gridRow + 1}" data-row-en={gridRow}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="en-cell"
+  class:row-flash={flash}
+  style="grid-row: {gridRow + 1}"
+  data-row-en={gridRow}
+  oncontextmenu={onContext}
+>
   <RowEditor {row} {segment} {host} />
 
   {#if pasteConfirm !== null}

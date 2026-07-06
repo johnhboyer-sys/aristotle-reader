@@ -59,14 +59,18 @@ describe('resolveToolBinary (generalized, codex spec)', () => {
     expect(seenBinName).toBe('codex');
   });
 
-  it('invokeWhich result is re-validated with exists before being trusted', async () => {
-    const exists = async () => false; // nothing exists, including the "resolved" path
+  it('trusts the invokeWhich rung result as-is, even when exists() would reject it', async () => {
+    // Rust assist_which already verifies the path is an executable file; a
+    // frontend plugin-fs exists() re-check is wrong for symlinked out-of-
+    // sandbox binaries (/opt/homebrew/bin/codex), where it returns false and
+    // would drop assist to the clipboard floor. The shell rung is authoritative.
+    const exists = async () => false; // plugin-fs can't see the symlinked binary
     const resolved = await resolveToolBinary(codexSpec, {
       exists,
       home: HOME,
-      invokeWhich: async () => '/bogus/codex',
+      invokeWhich: async () => '/opt/homebrew/bin/codex',
     });
-    expect(resolved).toBeNull();
+    expect(resolved).toBe('/opt/homebrew/bin/codex');
   });
 
   it('not found: no candidate exists and no invokeWhich provided', async () => {

@@ -278,20 +278,26 @@ export async function resolveTauriAssistProvider(deps: TauriAssistDeps): Promise
       tool === 'custom' ? specForCustom(prev.custom) : CLI_TOOLS[tool];
 
     // Resolve a tool's absolute binary path, reusing a still-valid cached path
-    // (built-in tools only; custom's path comes straight from its spec).
+    // (built-in tools only; custom's path comes straight from its spec). The
+    // cached-path short-circuit uses plugin-fs `exists`, which fails for the
+    // SYMLINKED CLIs that matter (~/.local/bin/claude, /opt/homebrew/bin/codex)
+    // on a Finder-launched .app — but that only means the short-circuit is
+    // skipped and we re-resolve via resolveToolBinary (whose Rust
+    // `assist_which` rung IS symlink-safe), so it still resolves correctly.
+    // The re-cache write is gated on an ACTUAL change so a symlink tool that
+    // re-resolves to the same path every request doesn't churn settings.
     const resolveBin = async (tool: CliProviderId): Promise<string | null> => {
-      if (tool !== 'custom') {
-        const cached = prev.cliPaths?.[tool];
-        if (cached && (await safeExists(cached))) return cached;
-      }
+      const cached = tool !== 'custom' ? prev.cliPaths?.[tool] : undefined;
+      if (cached && (await safeExists(cached))) return cached;
       const path = await resolveToolBinary(specFor(tool), {
         exists: safeExists,
         home,
         invokeWhich: (candidates, binName) =>
           deps.invokeWhich(candidates, binName).catch(() => null),
       });
-      // Cache newly-resolved built-in paths (custom has no cache slot).
-      if (path && tool !== 'custom') {
+      // Cache newly-resolved built-in paths (custom has no cache slot); skip
+      // the write when the resolved path is unchanged from the cache.
+      if (path && tool !== 'custom' && path !== cached) {
         await deps.updateSettings({
           assist: { ...prev, cliPaths: { ...prev.cliPaths, [tool]: path } },
         });

@@ -57,14 +57,19 @@ describe('resolveClaudeBinary', () => {
     expect(resolved).toBe('/some/custom/path/claude');
   });
 
-  it('invokeResolve result is still validated with exists before being trusted', async () => {
-    const exists = async () => false; // nothing exists, including the "resolved" path
+  it('trusts the invokeResolve rung result as-is, even when exists() would reject it', async () => {
+    // The Rust assist_which command already verifies the path is an executable
+    // file (std::fs::metadata). A frontend plugin-fs exists() re-check is not
+    // just redundant but WRONG for symlinked out-of-sandbox binaries
+    // (~/.local/bin/claude), where it returns false and would drop assist to
+    // the clipboard floor. So the shell-rung result is trusted directly.
+    const exists = async () => false; // plugin-fs can't see the symlinked binary
     const resolved = await resolveClaudeBinary({
       exists,
       home: HOME,
-      invokeResolve: async () => '/bogus/claude',
+      invokeResolve: async () => '/Users/john/.local/bin/claude',
     });
-    expect(resolved).toBeNull();
+    expect(resolved).toBe('/Users/john/.local/bin/claude');
   });
 
   it('invokeResolve returning null is treated as not-found from that rung', async () => {

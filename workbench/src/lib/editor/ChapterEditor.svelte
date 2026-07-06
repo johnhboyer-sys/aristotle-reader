@@ -221,7 +221,7 @@
   // Greek-cell context menu (design doc D6 §4): split on unsplit lines,
   // merge on split ones. `offset` is the snapped split point (null = the
   // click found no valid word gap → the status line, never a silent split).
-  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null } | null>(null);
+  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null; aiOnly?: boolean } | null>(null);
   let pendingUnsplit = $state<{ row: number; boundary: number } | null>(null);
   let saveState = $state<SaveState>('idle');
   let saveBlocked = $state(false);
@@ -1463,6 +1463,17 @@
     ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset };
   }
 
+  /** Right-click the English cell → the 4 AI modes only. Split/Merge is a
+   * Greek-word gesture (it needs a clicked Greek offset), so it stays on the
+   * Greek cell; the AI modes operate on the whole row and work from either
+   * column, so we surface them where the translator's cursor already is. */
+  function onEnglishContextMenu(e: MouseEvent, g: number) {
+    e.preventDefault();
+    const d = displayRows[g];
+    if (!d) return;
+    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset: null, aiOnly: true };
+  }
+
   function menuSplit() {
     const m = ctxMenu;
     ctxMenu = null;
@@ -2193,6 +2204,7 @@
           unsplitConfirm={pendingUnsplit?.row === d.rowIndex && d.segment === 0}
           onUnsplitConfirm={confirmUnsplit}
           onUnsplitCancel={cancelUnsplit}
+          onContext={(e) => onEnglishContextMenu(e, g)}
         />
       {/each}
     </div>
@@ -2204,10 +2216,12 @@
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>AI reference</button>
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>Check my translation</button>
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAsk}>Ask AI about this line…</button>
-      {#if ctxMenu.merge}
-        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
-      {:else}
-        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>Start new paragraph here</button>
+      {#if !ctxMenu.aiOnly}
+        {#if ctxMenu.merge}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
+        {:else}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>Start new paragraph here</button>
+        {/if}
       {/if}
     </div>
   {/if}
