@@ -2428,6 +2428,19 @@
 
   {#if ctxMenu}
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
+      {#if !ctxMenu.aiOnly}
+        {#if ctxMenu.merge}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>
+            <span class="ctx-menu-title">Merge paragraph back</span>
+          </button>
+        {:else}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>
+            <span class="ctx-menu-title">Start new paragraph here</span>
+            <span class="ctx-menu-desc">Splits this Bekker line at the clicked Greek word</span>
+          </button>
+        {/if}
+        <div class="ctx-menu-divider" role="separator"></div>
+      {/if}
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>
         {#if ctxMenu.translateRows && ctxMenu.translateRows.length > 1}
           <span class="ctx-menu-title">Translate {ctxMenu.translateRows.length} lines with AI</span>
@@ -2449,18 +2462,6 @@
         <span class="ctx-menu-title">Ask AI about this line…</span>
         <span class="ctx-menu-desc">Open a Q&A chat about this line</span>
       </button>
-      {#if !ctxMenu.aiOnly}
-        {#if ctxMenu.merge}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>
-            <span class="ctx-menu-title">Merge paragraph back</span>
-          </button>
-        {:else}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>
-            <span class="ctx-menu-title">Start new paragraph here</span>
-            <span class="ctx-menu-desc">Splits this Bekker line at the clicked Greek word</span>
-          </button>
-        {/if}
-      {/if}
     </div>
   {/if}
 

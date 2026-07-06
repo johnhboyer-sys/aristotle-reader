@@ -424,6 +424,11 @@
 .ctx-menu-item:hover .ctx-menu-desc {
   color: var(--text-mid);
 }
+.ctx-menu-divider {
+  height: 1px;
+  margin: 0.25rem 0.4rem;
+  background: var(--border);
+}
 
 /* ── batch-translate overwrite confirmation ───────────────────────────── */
 .batch-scrim {
