@@ -884,10 +884,38 @@
     return a >= 0 && b >= 0 && a !== b;
   }
 
+  /** Which column a DOM node sits in, for column-scoped selection/copy. */
+  function columnOfDomNode(node: Node | null): 'greek' | 'english' | null {
+    const el = node instanceof Element ? node : node?.parentElement;
+    if (el?.closest('.grc-cell')) return 'greek';
+    if (el?.closest('.en-cell')) return 'english';
+    return null;
+  }
+
+  /** Constrain a drag-selection to the column it starts in (John): mark the
+   * OTHER column user-select:none while the pointer is down, so the highlight —
+   * and any copied text — stays within one language. Imperative (not reactive)
+   * so it applies synchronously before the browser extends the selection. */
+  function onGridPointerDown(e: PointerEvent) {
+    if (e.button !== 0 || !gridEl) return;
+    gridEl.classList.remove('sel-greek', 'sel-english');
+    const col = columnOfDomNode(e.target as Node | null);
+    if (col === 'greek') gridEl.classList.add('sel-greek');
+    else if (col === 'english') gridEl.classList.add('sel-english');
+  }
+
+  function clearSelectionColumn() {
+    gridEl?.classList.remove('sel-greek', 'sel-english');
+  }
+
   function onCopy(e: ClipboardEvent) {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
+    // A Greek-column selection copies natively (the read-only spine text) —
+    // the per-row English extraction below is only for cross-row ENGLISH
+    // selections (spanning multiple ProseMirror editors).
+    if (columnOfDomNode(range.startContainer) === 'greek') return;
     const startRow = rowOfDomNode(range.startContainer);
     const endRow = rowOfDomNode(range.endContainer);
     if (startRow < 0 || endRow < 0 || startRow === endRow) return; // single row → PM handles
@@ -2132,6 +2160,8 @@
 
     window.addEventListener('keydown', onWindowKeydown);
     window.addEventListener('blur', onWindowBlur);
+    window.addEventListener('pointerup', clearSelectionColumn);
+    window.addEventListener('pointercancel', clearSelectionColumn);
     document.addEventListener('visibilitychange', onVisibilityHidden);
 
     void initChapter();
@@ -2147,6 +2177,8 @@
       session.aiPanel = null;
       window.removeEventListener('keydown', onWindowKeydown);
       window.removeEventListener('blur', onWindowBlur);
+      window.removeEventListener('pointerup', clearSelectionColumn);
+      window.removeEventListener('pointercancel', clearSelectionColumn);
       document.removeEventListener('visibilitychange', onVisibilityHidden);
       unsubIndex();
       // Chapter switch: commit every row, then flush BEFORE the next chapter
@@ -2179,7 +2211,8 @@
       {/if}
     </header>
 
-    <div class="chapter-grid" bind:this={gridEl}>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="chapter-grid" bind:this={gridEl} onpointerdown={onGridPointerDown}>
       {#each displayRows as d, g (d.key)}
         <GreekCell
           gridRow={g}

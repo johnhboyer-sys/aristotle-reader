@@ -102,6 +102,23 @@
   user-select: text;
 }
 
+/* Column-scoped selection (John): a drag that starts in one column must not
+   bleed its highlight (or its copied text) into the other — a multi-line Greek
+   selection with English mixed in would mislead the AI. While a drag is active
+   we mark the OTHER column user-select:none so WebKit excludes it from the
+   selection range entirely. Cleared on pointerup, so both columns stay freely
+   selectable/editable at rest. The gutter is always excluded (below). */
+.chapter-grid.sel-greek .en-cell,
+.chapter-grid.sel-greek .en-cell * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.chapter-grid.sel-english .grc-cell,
+.chapter-grid.sel-english .grc-cell * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* Continuation segment of a paragraph-split Bekker line (design doc D6 §5):
    the Greek indents ~1.5em (reader-site precedent); the English stays flush
    (the paragraph break itself is the signal). Both gutters show the address. */
