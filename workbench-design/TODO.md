@@ -1,12 +1,22 @@
 # Translation Workbench — TODO
 
-State as of 2026-07-04: **all feature work through the AI-assist suite + app
-icon is COMMITTED on `claude/blissful-rubin-d64797` — branch NOT pushed (John's
-standing call), local-only.** Now lives in the `.claude/worktrees/wb-ai`
-worktree (previous worktrees kept auto-cleaning; branch intact). Latest HEAD
-`62f5ae44`. **1006 vitest green; tsc / svelte-check 0 errors / cargo test 15 /
-vite build clean.** ➡️ NEXT PHASE: **hand-TESTING in the real .app** — see the
-Testing checklist below; that is the focus now, not new features.
+State as of 2026-07-06: **all feature work COMMITTED on
+`claude/blissful-rubin-d64797` — branch NOT pushed (John's standing call),
+local-only.** Lives in the `.claude/worktrees/wb-ai` worktree. Latest HEAD
+`44f1da44`. **1028 vitest green; svelte-check 0 errors / cargo test 15 / vite +
+tauri build clean.** ➡️ CURRENT PHASE: **hand-TESTING in the real .app** — see
+the Testing checklist below.
+
+2026-07-06 session shipped a batch of fixes + UX changes on top of the AI suite
+(all rebuilt into `~/Downloads/Translation Workbench.app`, auto-de-quarantined):
+Finder-launch pandoc export + AI-assist resolution (plugin-fs `exists()` fails
+on out-of-sandbox symlinks in WebKit → resolve by RUNNING, not `exists`); AI
+Check/Reference output moved to a right sidebar with rendered Markdown; Ask AI
+moved to a tall right sidebar + "via <model>" label; Greek selection no longer
+bleeds into English (grid DOM columns grouped); right-click AI menu items got
+descriptions; text-size zoom; multi-line "Translate with AI" with overwrite
+confirmation; and two macOS TCC-prompt fixes (neutral subprocess cwd; Claude
+Code runs with MCP servers disabled).
 
 ⚠️ Worktree-cleanup survival kit (this has bitten repeatedly): the gitignored
 Scrivener samples die with the worktree — restore from `~/Downloads/meta z 17/`
@@ -18,33 +28,50 @@ memos are in `workbench-design/`.
 
 ## ➡️ TESTING CHECKLIST — the current focus (John, in the real .app)
 
-The app is at `~/Downloads/Translation Workbench.app` (rebuilt `62f5ae44`;
-unsigned → first launch right-click → Open). The browser preview CANNOT run the
-AI CLIs — only the packaged .app can, so all AI testing must be in the .app.
+The app is at `~/Downloads/Translation Workbench.app` (rebuilt `44f1da44`,
+auto-de-quarantined by the deploy step → no right-click-Open needed). The
+browser preview CANNOT run the AI CLIs — only the packaged .app can, so all AI
+testing must be in the .app. ⌘Q + relaunch after each new build.
 
-**AI-assist (⚙️ → AI assist to pick a provider first):**
-- [ ] Provider detection: Claude Code + Codex auto-detected (both verified
-  present on this Mac); pick one. Gemini not installed → best-effort flags,
-  confirm the custom-command path if you install it. API-key path (OpenAI/
-  Anthropic/Google) is code-complete + unit-tested but NEVER live-run — test
-  with a real key if you want it (Anthropic needs the browser-access header,
-  already sent).
+**AI-assist — DONE this session (John-verified in the .app):**
+- [x] Provider detection + resolution: Claude Code resolved and runs a real
+  translation on a Finder launch (was falling to the clipboard floor — the
+  plugin-fs-`exists`-on-symlink bug; now resolves by running). Codex path
+  unchanged. Gemini not installed. API-key path still NEVER live-run.
+- [x] **Check my translation** → right sidebar, linguist diagnosis vs the Greek,
+  rendered Markdown (bold/lists/`code`). Verified returning a real Claude
+  diagnosis.
+- [x] Clipboard floor no longer appears when a CLI is present (the "copy into
+  Claude" popup was the resolution bug).
+- [x] **Finder-launch smoke test** (pandoc/GUI-PATH): assist AND docx export
+  both work on a real Finder launch.
+
+**AI-assist — NEEDS A QUICK RE-VERIFY (changed shape this session):**
 - [ ] Right-click a Greek line → **Translate with AI** → fills the English
-  cell; ⌘Z undoes as one step.
-- [ ] **AI reference** → floating popup with the AI's own translation; drag it,
-  Copy, Close; open several; cell untouched.
-- [ ] **Check my translation** (line with English) → "Translation check" popup,
-  linguist diagnosis vs the Greek; blank line → the guard message.
-- [ ] **Ask AI about this line…** → docked bottom chat panel; type a question,
-  Enter sends, answer appears; resize the panel; coexists with the reference
-  rail. (One-shot — no multi-turn yet.)
-- [ ] Clipboard fallback (no provider chosen) shows the plain sentence, not a
-  stack trace.
-- [ ] **Finder-launch smoke test** (the pandoc/GUI-PATH lesson): launch from
-  Finder, NOT `open` from a terminal — confirm assist AND a docx export both
-  work (bare-PATH failures only show on a real Finder launch).
+  cell; ⌘Z undoes as one step. (Single-line popover-review flow.)
+- [ ] **AI reference** → now a RIGHT SIDEBAR (not a floating popup): the AI's
+  own translation, **Copy** works, your English cell untouched.
+- [ ] **Ask AI about this line…** → now a tall RIGHT SIDEBAR (not a bottom
+  dock): type a question, Enter sends, a real answer renders (Markdown), header
+  shows **"via Claude Code"**. Right-panel precedence: AI Check/Reference > Ask
+  > Footnotes > Reference. (One-shot — no multi-turn yet.)
+- [ ] **Multi-line Translate**: select several Greek lines → right-click →
+  "Translate N lines with AI" → progress counter, each empty line fills; if any
+  selected line already has text, the **overwrite confirmation** appears
+  (Cancel / Translate & replace); ⌘Z undoes; Esc/scrim-click cancels.
+- [ ] **No macOS folder-access prompts**: running a translation should NOT
+  raise "Translation Workbench wants to access <folder>" (Apple Music etc.) —
+  fixed via neutral cwd + MCP-servers-off. (macOS remembers earlier decisions;
+  clean-slate check = `tccutil reset All <bundle-id>`.)
 
-**Line-split (D6):**
+**Other UI — NEEDS A QUICK RE-VERIFY:**
+- [x] **Column-scoped selection**: dragging across Greek lines no longer bleeds
+  the highlight/copy into English. John-verified.
+- [ ] **Text-size zoom**: −/+ toolbar buttons and ⌘+ / ⌘- / ⌘0 scale the
+  working Greek/English text (chrome fixed); size persists across ⌘Q+relaunch.
+- [ ] Right-click AI menu items read clearly (each has a one-line description).
+
+**Line-split (D6) — NOT yet tested in the .app:**
 - [ ] Right-click a Greek word → "Start new paragraph here" → the CLICKED word
   begins the new paragraph; twin gutter address; continuation indented.
 - [ ] **Cursor-division** (the one path never verifiable headlessly): type a
@@ -52,22 +79,22 @@ AI CLIs — only the packaged .app can, so all AI testing must be in the .app.
 - [ ] Un-split (confirm when both halves non-empty); ⌘Z reverses; export shows
   the paragraph break (single-chapter + whole-work, English + bilingual).
 
-**Reference / Scrivener import:**
+**Reference / Scrivener import — NOT yet tested in the .app:**
 - [ ] Native file picker for "Import reference…"; assignment defaults to the
   open chapter; the panel shows it; references land under $APPDATA/references
   (never the synced folder).
 - [ ] Real-OCR reference import (Ross/Lennox) — the acceptance case.
-- [ ] Scrivener import via the native two-file picker; whole-work compile export
-  (bilingual layout + Cambria — John's aesthetic verdict still pending).
+- [ ] Scrivener import via the native two-file picker (`~/Downloads/meta z 17/`
+  is staged); whole-work compile export (bilingual layout + Cambria — John's
+  aesthetic verdict still pending).
 
-**Packaging / release (still open):**
+**Packaging / release (separate track, still open):**
 - [ ] Full `tauri build` DMG step (needs a real Finder session; `--bundles app`
   used so far); updater signing-key ceremony (John's key, from Phase 1).
 - [ ] The Diogenes "Add work…" onboarding path in the real app.
 
-**App icon:** shipped `62f5ae44` — italic α → a, warm gradient, light arrow;
-source at `src-tauri/icons/icon-source.svg`. Nothing to test beyond eyeballing
-it in the dock.
+**App icon:** shipped — italic α → a, warm gradient, light arrow; source at
+`src-tauri/icons/icon-source.svg`. Nothing to test beyond eyeballing it.
 
 ## Done this session (2026-07-03, in `46f65a6e`, orchestrator-verified)
 
