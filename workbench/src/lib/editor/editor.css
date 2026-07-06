@@ -425,6 +425,64 @@
   color: var(--text-mid);
 }
 
+/* ── batch-translate overwrite confirmation ───────────────────────────── */
+.batch-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.batch-dialog {
+  width: 24rem;
+  max-width: calc(100vw - 2 * var(--space-4));
+  padding: var(--space-4);
+  background: var(--col-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--popup-shadow);
+}
+.batch-msg {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-english);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text);
+  text-wrap: pretty;
+}
+.batch-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.batch-btn {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+.batch-btn:hover {
+  color: var(--text);
+  border-color: var(--text-light);
+}
+.batch-btn-danger {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.batch-btn-danger:hover {
+  filter: brightness(1.08);
+  color: var(--on-accent);
+}
+
 /* ── transient status pill ────────────────────────────────────────────── */
 .status-pill {
   position: fixed;

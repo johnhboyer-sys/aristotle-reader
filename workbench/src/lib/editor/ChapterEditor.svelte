@@ -1237,9 +1237,14 @@
     return true;
   }
 
-  /** Translate every model row in `rows` (Greek-non-empty), filling each EMPTY
-   * English cell. One line → defer to the normal popover flow. */
-  async function invokeAssistRange(rows: number[]) {
+  /** A pending multi-line translate awaiting the overwrite confirmation
+   * (non-null only when some target lines already have English). */
+  let pendingBatchTranslate = $state<{ rows: number[]; withText: number } | null>(null);
+
+  /** Entry point for a multi-line translate. Translates EVERY Greek-non-empty
+   * line in `rows`, overwriting existing English — but if any target already
+   * has text, warn first (John). One line → defer to the popover-review flow. */
+  function invokeAssistRange(rows: number[]) {
     const targets = rows.filter(
       (r) => r >= 0 && r < model.rows.length && model.rows[r].greek.trim().length > 0,
     );
@@ -1247,7 +1252,27 @@
       if (targets.length === 1) invokeAssist(targets[0], 0);
       return;
     }
+    const withText = targets.filter((r) => plainRowText(joinedRowDoc(r)) !== null).length;
+    if (withText > 0) {
+      pendingBatchTranslate = { rows: targets, withText }; // confirm before overwriting
+    } else {
+      void runAssistRange(targets);
+    }
+  }
 
+  function confirmBatchTranslate() {
+    const p = pendingBatchTranslate;
+    pendingBatchTranslate = null;
+    if (p) void runAssistRange(p.rows);
+  }
+
+  function cancelBatchTranslate() {
+    pendingBatchTranslate = null;
+  }
+
+  /** Translate each target line SEQUENTIALLY, overwriting its full English cell.
+   * Progress via the status pill; abortable on unmount / re-invoke. */
+  async function runAssistRange(targets: number[]) {
     batchAbort?.abort();
     const abort = new AbortController();
     batchAbort = abort;
@@ -1265,16 +1290,10 @@
 
     const includeDraft = settings.assist?.includeDraft ?? true;
     let filled = 0;
-    let skipped = 0;
     let failed = 0;
     for (let i = 0; i < targets.length; i++) {
       if (abort.signal.aborted || destroyed) break;
       const r = targets[i];
-      // Non-destructive: leave lines that already have English untouched.
-      if (plainRowText(joinedRowDoc(r)) !== null) {
-        skipped++;
-        continue;
-      }
       setStatus(`Translating line ${i + 1} of ${targets.length}…`, 120_000);
       const ctx = buildAssistContext({
         rowCount: model.rows.length,
@@ -1302,7 +1321,6 @@
     }
     if (abort.signal.aborted || destroyed) return;
     const parts = [`Translated ${filled} line${filled === 1 ? '' : 's'}`];
-    if (skipped) parts.push(`${skipped} already had text`);
     if (failed) parts.push(`${failed} failed`);
     setStatus(parts.join(' · '), 4000);
   }
@@ -1648,7 +1666,7 @@
     ctxMenu = null;
     if (!m) return;
     if (m.translateRows && m.translateRows.length > 1) {
-      void invokeAssistRange(m.translateRows);
+      invokeAssistRange(m.translateRows);
     } else {
       invokeAssist(m.row, m.segment);
     }
@@ -2234,6 +2252,11 @@
   }
 
   function onRootKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && pendingBatchTranslate) {
+      e.preventDefault();
+      cancelBatchTranslate();
+      return;
+    }
     if (e.key === 'Escape' && ctxMenu) {
       e.preventDefault();
       ctxMenu = null;
@@ -2325,6 +2348,7 @@
       session.aiPanel = null;
       batchAbort?.abort(); // stop any in-flight multi-line translate
       batchAbort = null;
+      pendingBatchTranslate = null;
       window.removeEventListener('keydown', onWindowKeydown);
       window.removeEventListener('blur', onWindowBlur);
       window.removeEventListener('pointerup', clearSelectionColumn);
@@ -2407,7 +2431,7 @@
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>
         {#if ctxMenu.translateRows && ctxMenu.translateRows.length > 1}
           <span class="ctx-menu-title">Translate {ctxMenu.translateRows.length} lines with AI</span>
-          <span class="ctx-menu-desc">Fills each selected line's empty English cell</span>
+          <span class="ctx-menu-desc">Fills each selected line's English cell (asks before replacing existing text)</span>
         {:else}
           <span class="ctx-menu-title">Translate with AI</span>
           <span class="ctx-menu-desc">Writes a draft into this row's English cell</span>
@@ -2442,5 +2466,33 @@
 
   {#if session.status}
     <div class="status-pill" role="status">{session.status.text}</div>
+  {/if}
+
+  {#if pendingBatchTranslate}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="batch-scrim" role="presentation" onclick={cancelBatchTranslate}>
+      <div
+        class="batch-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="Confirm overwrite"
+        tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+      >
+        <p class="batch-msg">
+          {pendingBatchTranslate.withText} of the {pendingBatchTranslate.rows.length} selected
+          {pendingBatchTranslate.rows.length === 1 ? 'line' : 'lines'} already
+          {pendingBatchTranslate.withText === 1 ? 'has' : 'have'} a translation.
+          Translate all {pendingBatchTranslate.rows.length} and <strong>replace</strong> the existing English?
+        </p>
+        <div class="batch-actions">
+          <button class="batch-btn" type="button" onclick={cancelBatchTranslate}>Cancel</button>
+          <button class="batch-btn batch-btn-danger" type="button" onclick={confirmBatchTranslate}>
+            Translate &amp; replace
+          </button>
+        </div>
+      </div>
+    </div>
   {/if}
 </div>
