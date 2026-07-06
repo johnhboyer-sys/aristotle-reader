@@ -1,11 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="#B0512E"/>
-  <g fill="#F5EFE1" font-family="Palatino, 'Palatino Linotype', 'Georgia', 'Times New Roman', serif" text-anchor="middle" dominant-baseline="central">
-    <text x="248" y="516" font-size="430">α</text>
-    <text x="800" y="512" font-size="430">a</text>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BC5B34"/>
+      <stop offset="1" stop-color="#9A3E20"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#g)"/>
+  <g fill="#F7F1E3" font-family="Palatino, 'Palatino Linotype', Georgia, serif" text-anchor="middle" dominant-baseline="central">
+    <text x="244" y="508" font-size="440" font-style="italic">α</text>
+    <text x="802" y="508" font-size="440">a</text>
   </g>
-  <g stroke="#F5EFE1" fill="#F5EFE1" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="452" y1="512" x2="600" y2="512" stroke-width="42"/>
-    <path d="M 588 464 L 656 512 L 588 560 Z"/>
+  <g fill="none" stroke="#F7F1E3" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="470" y1="508" x2="606" y2="508"/>
+    <path d="M 566 468 L 606 508 L 566 548"/>
   </g>
 </svg>
