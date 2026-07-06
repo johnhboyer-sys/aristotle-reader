@@ -367,29 +367,51 @@ export function captureSelection(book: number, activeTranslation: string): Captu
 
 // ── resolve: target → Range, and paint via CSS Custom Highlights ───────────
 
-export function greekRange(t: GreekTarget): Range | null {
+export function greekRange(t: GreekTarget): Range[] {
   const hostOf = (column: string, line: number): Element | null =>
     document.getElementById(`L${column}-${line}`) ?? document.getElementById(`L${column}-${line}-c`);
   const sh = hostOf(t.start.column, t.start.line);
   const eh = hostOf(t.end.column, t.end.line);
-  if (!sh || !eh) return null;
-  const sToks = [...sh.querySelectorAll('.tok')];
-  const eToks = [...eh.querySelectorAll('.tok')];
-  const sTok = sToks[Math.min(t.start.word, sToks.length - 1)];
-  const eTok = eToks[Math.min(t.end.word, eToks.length - 1)];
-  if (!sTok || !eTok) return null;
-  const r = new Range();
-  r.setStartBefore(sTok);
-  r.setEndAfter(eTok);
-  return r;
+  if (!sh || !eh) return [];
+
+  // One sub-range PER LINE, each spanning only that line's `.tok` run. Painting
+  // a multi-line highlight as a single range (first tok → last tok) would cross
+  // `.greek-line` boundaries and swallow every wrapped line's `.line-num` gutter
+  // — and the CSS Custom Highlight API ignores `user-select`, so those numerals
+  // would be painted. A per-line range stays inside `.line-text` (the gutter is
+  // a preceding sibling), so the gutter is never touched.
+  let hosts: Element[];
+  if (sh === eh) {
+    hosts = [sh];
+  } else {
+    const all = [...document.querySelectorAll('.greek-line[id], tr[id^="L"]')];
+    const si = all.indexOf(sh);
+    const ei = all.indexOf(eh);
+    if (si < 0 || ei < 0 || si > ei) return [];
+    hosts = all.slice(si, ei + 1);
+  }
+
+  const ranges: Range[] = [];
+  for (const host of hosts) {
+    const toks = [...host.querySelectorAll('.tok')];
+    if (!toks.length) continue; // e.g. an empty continuation line
+    const from = host === sh ? Math.min(t.start.word, toks.length - 1) : 0;
+    const to = host === eh ? Math.min(t.end.word, toks.length - 1) : toks.length - 1;
+    if (to < from) continue;
+    const r = new Range();
+    r.setStartBefore(toks[from]);
+    r.setEndAfter(toks[to]);
+    ranges.push(r);
+  }
+  return ranges;
 }
 
-export function englishRange(t: EnglishTarget, shown: string[]): Range | null {
+export function englishRange(t: EnglishTarget, shown: string[]): Range[] {
   // Only resolvable when the annotated translation is one of the ones on
   // screen (mono: a single id; compare: the left+right pair).
-  if (!shown.includes(t.translation)) return null;
+  if (!shown.includes(t.translation)) return [];
   const seg = document.getElementById(`col-${t.column}`);
-  if (!seg) return null;
+  if (!seg) return [];
   // Locate the specific column element carrying this translation. Compare
   // view can have both an .english-col and a .ross-col under the same
   // segment, each tagged with its own data-trans; mono view has only
@@ -398,7 +420,7 @@ export function englishRange(t: EnglishTarget, shown: string[]): Range | null {
   const candidates = [...seg.querySelectorAll('.english-col, .ross-col')];
   const col = candidates.find(c => c.getAttribute('data-trans') === t.translation)
     ?? seg.querySelector('.english-col');
-  if (!col) return null;
+  if (!col) return [];
   // Scope to the prose subtree — mirrors the capture-side offset walk so a
   // compare column's leading .col-label text is never counted.
   const root = col.querySelector('.ross-prose') ?? col;
@@ -417,11 +439,34 @@ export function englishRange(t: EnglishTarget, shown: string[]): Range | null {
   };
   const s = locate(t.start);
   const e = locate(t.end);
-  if (!s || !e) return null;
-  const r = new Range();
-  r.setStart(s[0], s[1]);
-  r.setEnd(e[0], e[1]);
-  return r;
+  if (!s || !e) return [];
+  // Split into per-text-node sub-ranges that skip .bk-num / .eng-table. One
+  // range from s to e would tree-span the absolutely-positioned .bk-num gutter
+  // numerals (locate omits them from the OFFSET count, but they still sit
+  // inside the range in document order) and the CSS Custom Highlight would
+  // paint them. Emitting one sub-range per accepted prose text node never
+  // includes a gutter numeral; adjacent nodes tile seamlessly in the inline
+  // flow, so the highlight still reads as one continuous band.
+  const out: Range[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let inRange = false;
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const isStart = n === s[0];
+    if (isStart) inRange = true;
+    const isEnd = n === e[0];
+    if (inRange && !nodeEl(n)?.closest('.bk-num, .eng-table')) {
+      const from = isStart ? s[1] : 0;
+      const to = isEnd ? e[1] : n.textContent!.length;
+      if (to > from) {
+        const sub = new Range();
+        sub.setStart(n, from);
+        sub.setEnd(n, to);
+        out.push(sub);
+      }
+    }
+    if (isEnd) break;
+  }
+  return out;
 }
 
 /**
@@ -444,13 +489,15 @@ export function paintAnnotations(anns: Annotation[], shown: string[]): void {
   };
   const noteCue: Range[] = [];
   for (const a of anns) {
-    const r = a.target.kind === 'greek'
+    const ranges = a.target.kind === 'greek'
       ? greekRange(a.target)
       : englishRange(a.target, shown);
-    if (!r) continue;
+    if (!ranges.length) continue;
     const name = `ann-${annStyle(a) === 'underline' ? 'ul' : 'hl'}-${annColor(a)}`;
-    push(name, r);
-    if (a.body) noteCue.push(r.cloneRange()); // a note also gets the dotted cue
+    for (const r of ranges) {
+      push(name, r);
+      if (a.body) noteCue.push(r.cloneRange()); // a note also gets the dotted cue
+    }
   }
   // Register fills, then underlines, then the note cue — later registrations
   // paint on top, so the note cue's dotted decoration sits above the rest.
@@ -481,11 +528,11 @@ export function paintAnnotations(anns: Annotation[], shown: string[]): void {
  * rgba() in JS and pushing it through a CSS custom property, and it stays
  * themeable for free the same way the real fills are.
  */
-export function paintPending(range: Range | null, color: AnnColor): void {
+export function paintPending(ranges: Range[], color: AnnColor): void {
   const css = (globalThis as { CSS?: { highlights?: Map<string, unknown> } }).CSS;
   if (!css?.highlights || typeof Highlight === 'undefined') return;
   document.documentElement.setAttribute('data-ann-pending-color', color);
-  css.highlights.set('ann-pending', new Highlight(...(range ? [range] : [])));
+  css.highlights.set('ann-pending', new Highlight(...ranges));
 }
 
 /** Clear the provisional pending highlight (save/cancel/Esc). */

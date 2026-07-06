@@ -833,6 +833,9 @@ body {
   min-width: 1.8rem;
   text-align: right;
   flex-shrink: 0;
+  /* Both prefixes: WKWebView (the desktop app's engine) honours only the
+     -webkit- form, without which a drag-selection grabs the gutter numeral. */
+  -webkit-user-select: none;
   user-select: none;
   /* Equal-width digits so the right-aligned Bekker numerals form a clean
      vertical column (5, 10, 15… 100 line up on the same advance). */
@@ -865,13 +868,17 @@ body {
 
 .tok {
   cursor: pointer;
-  border: 1px solid transparent;
   border-radius: 3px;
-  padding: 0 0.1em;
-  transition: background 0.1s, border-color 0.1s;
+  padding: 0;
+  transition: background 0.1s, box-shadow 0.1s;
   white-space: pre;
 }
-.tok:hover  { background: var(--greek-hover); border-color: var(--greek-hover-border); }
+/* Hover ring via box-shadow, not border: a border reserves 1px of horizontal
+   layout on every token, which leaves thin unpainted gaps in a continuous
+   annotation highlight (the CSS Custom Highlight fill can't cross the border
+   box). box-shadow draws the same 1px ring without taking layout space, so
+   highlighted runs read as one continuous band. */
+.tok:hover  { background: var(--greek-hover); box-shadow: 0 0 0 1px var(--greek-hover-border); }
 .tok.active { background: var(--greek-active); }
 .tok.hit    { background: var(--hit-bg); }
 

@@ -543,10 +543,10 @@
     // pattern means `cap` outlives the selection anyway, and re-resolving
     // through the same greekRange/englishRange the real painter uses keeps
     // this in lockstep with however the reader is currently rendered.
-    const r = cap.target.kind === 'greek'
+    const rs = cap.target.kind === 'greek'
       ? greekRange(cap.target)
       : englishRange(cap.target, annShown);
-    paintPending(r, color);
+    paintPending(rs, color);
     _pendingSelRect = rect;
   }
   let _pendingSelRect: DOMRect | null = null;
