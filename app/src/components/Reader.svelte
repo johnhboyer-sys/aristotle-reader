@@ -39,10 +39,22 @@
   // `secondaries` is the ordered list of non-primary translations.
   const engSlot = translations.find(t => t.slot === 'english');
   const thirdSlot = translations.find(t => t.slot === 'third');  // bears footnotes/tables
-  // The translation whose prose carries [^N] footnote markers (Ostwald's third
-  // slot, or a primary like the Isagoge's Owen). Its column renders the markers
-  // and opens the footnote popup.
-  const fnTransId = translations.find(t => t.footnotes)?.id ?? thirdSlot?.id;
+  // The translation(s) whose prose carries [^label] footnote markers
+  // (Ostwald's third slot, a primary like the Isagoge's Owen, or — Phase 4B —
+  // any imported overlay whose file carried a footnotes block, flagged via
+  // the same TranslationRef.footnotes bit by desktop/src/lib/imports.ts's
+  // installHooks). Every such id's column renders the markers and opens the
+  // footnote popup. thirdSlot is ALWAYS included (not just as a fallback when
+  // nothing is explicitly flagged) so an import gaining footnotes:true never
+  // silently un-flags Ostwald — this generalizes the old single-id
+  // `fnTransId` without changing behavior for any existing work (today,
+  // across the whole corpus, this set never has more than one member: either
+  // the one explicitly-flagged translation, or thirdSlot — never both, since
+  // no work currently combines them).
+  const fnTransIds = new Set([
+    ...translations.filter(t => t.footnotes).map(t => t.id),
+    ...(thirdSlot ? [thirdSlot.id] : []),
+  ]);
   const secondaries = translations.filter(t => t.slot !== 'english');
   const canCompare = translations.length >= 2;
   // Overlay pieces for a translation in a segment, selected by its slot.
@@ -418,13 +430,34 @@
     }
     return out;
   }
-  // The third translation (Ostwald) carries inline `[^N]` footnote references;
-  // turn each into a clickable superscript. A delegated click handler on the
-  // column reads `data-fn` and opens the footnote popup.
-  function renderThird(text: string): string {
+  // §Phase-3 B5: the printed number is stored as `display`; identity is the
+  // (scope, number) pair encoded in the label — continuous scope's label IS
+  // the display digits (label === display, zero-change case), while a scoped
+  // label ("2.3.1") or a star/dagger glyph carries its display as the
+  // trailing component. Pure function of the label alone, so both Reader
+  // (button text) and FootnotePopup (popup header) can compute it locally
+  // without threading an extra value through the marker string itself.
+  function fnDisplay(label: string): string {
+    if (label === '*' || label === '†') return label;
+    const i = label.lastIndexOf('.');
+    return i === -1 ? label : label.slice(i + 1);
+  }
+  // A footnote-bearing translation (Ostwald's third slot, the Isagoge's Owen,
+  // or — Phase 4B — an imported overlay; see fnTransIds above) carries inline
+  // `[^label]` footnote references; turn each into a clickable superscript.
+  // §B4.2: the label is the full scope-qualified identity (continuous scope:
+  // plain digits, unchanged from before); the button only ever displays the
+  // printed number. `data-fn-trans` records which translation's footnote map
+  // to resolve against (§B4.3/4.4) — needed once more than one translation on
+  // the page can carry footnotes. A delegated click handler on the column
+  // reads both data attributes and opens the footnote popup.
+  function renderThird(text: string, transId: string): string {
     return highlightEng(text).replace(
-      /\[\^(\d+)\]/g,
-      '<button type="button" class="fn-marker" data-fn="$1" aria-label="Footnote $1">$1</button>',
+      /\[\^([\w.*†]+)\]/g,
+      (_m, label: string) => {
+        const display = fnDisplay(label);
+        return `<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button>`;
+      },
     );
   }
 
@@ -643,10 +676,13 @@
 
   // Active popup state
   let popup: { token: Token; anchor: { x: number; y: number } } | null = null;
-  // Active footnote popup (third-translation `[^N]` markers). Opens on hover,
-  // with a short close-delay so the cursor can travel from the marker into the
-  // popup without it vanishing; click/Enter also open it (touch + keyboard).
-  let footnote: { n: string; anchor: { x: number; y: number } } | null = null;
+  // Active footnote popup (footnote-bearing translations' `[^label]`
+  // markers). Opens on hover, with a short close-delay so the cursor can
+  // travel from the marker into the popup without it vanishing; click/Enter
+  // also open it (touch + keyboard). §B4.3: carries `transId` (from the
+  // marker's `data-fn-trans`) alongside the label, so FootnotePopup knows
+  // WHICH translation's footnote map to resolve `n` against.
+  let footnote: { n: string; transId: string; anchor: { x: number; y: number } } | null = null;
   // A click PINS the popup open (it stays until you dismiss it); hover opens it
   // transiently with a short close delay. Pinning makes click-to-read reliable.
   let fnPinned = false;
@@ -663,9 +699,10 @@
     cancelFnClose();
     if (pin) fnPinned = true;
     const n = marker.getAttribute('data-fn') ?? '';
-    if (footnote?.n === n) return;
+    const transId = marker.getAttribute('data-fn-trans') ?? '';
+    if (footnote?.n === n && footnote?.transId === transId) return;
     const r = marker.getBoundingClientRect();
-    footnote = { n, anchor: { x: r.left, y: r.bottom } };
+    footnote = { n, transId, anchor: { x: r.left, y: r.bottom } };
   }
   function onFootnoteOver(e: MouseEvent) {
     const marker = (e.target as HTMLElement | null)?.closest?.('.fn-marker');
@@ -1015,14 +1052,14 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
-      {#if transId === fnTransId}
+      {#if fnTransIds.has(transId)}
         <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
           {#each flow as part}
             {#if part.text === '\n'}
               <br class="para-br" />
             {:else if part.text !== null}
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <span class="bk-seg">{@html renderThird(part.text)}</span>
+              <span class="bk-seg">{@html renderThird(part.text, transId)}</span>
             {:else}
               <span class="bk-num" class:approx={!part.real}>{part.n}</span>
               {#each (block.otables[transId] ?? []).filter(t => t.n === part.n) as tbl}
@@ -1364,6 +1401,7 @@
   <FootnotePopup
     {work}
     n={footnote.n}
+    transId={footnote.transId}
     anchor={footnote.anchor}
     onClose={closeFootnote}
     onHoverIn={cancelFnClose}
