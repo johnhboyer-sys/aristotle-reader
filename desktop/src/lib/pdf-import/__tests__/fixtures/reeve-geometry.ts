@@ -186,7 +186,7 @@ const page3Lines: string[] = [
   ),
   'since plain observers and careful observers rarely answer in quite the same way.',
   rectoTicLine(
-    'Suppose the question is put instead to someone already persuaded that',
+    'of their own accord the listeners then ask after the ground of the claim',
     '25'
   ),
   'the matter admits of no further clarification beyond what has been said,',
@@ -241,7 +241,9 @@ export const reevePage3Expected: ExpectedReeveTic[] = [
   { raw: '10', column: '1095a', line: 10, anchorWord: 'accord' },
   { raw: '15', column: '1095a', line: 15, anchorWord: 'choice' },
   { raw: '20', column: '1095a', line: 20, anchorWord: 'well' },
-  { raw: '25', column: '1095a', line: 25, anchorWord: 'Suppose' },
+  // Anchor "of" John-confirmed against the printed page (2026-07-06): the real
+  // 1095a25 line reads "of their own ignorance they are wonder-struck…".
+  { raw: '25', column: '1095a', line: 25, anchorWord: 'of' },
   { raw: '30', column: '1095a', line: 30, anchorWord: 'We' },
   { raw: '1095b1', column: '1095b', line: 1, anchorWord: 'For' },
 ];
