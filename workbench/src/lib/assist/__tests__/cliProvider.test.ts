@@ -105,7 +105,7 @@ describe('CliProvider', () => {
 describe('buildCliInvocation', () => {
   it('stdin-mode (claude): stdin carries the composed prompt, args unchanged', () => {
     const { args, stdin } = buildCliInvocation(CLI_TOOLS.claude, GOLDEN_CONTEXT);
-    expect(args).toEqual(['-p', '--output-format', 'json']);
+    expect(args).toEqual(['-p', '--output-format', 'json', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}']);
     expect(stdin).not.toBeNull();
     expect(stdin as string).toContain('>>> TARGET line to translate:');
     // The system framing rides along on stdin too.

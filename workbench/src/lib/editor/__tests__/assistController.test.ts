@@ -401,9 +401,16 @@ describe('resolveTauriAssistProvider', () => {
     expect(provider.id).toBe('cli');
     await provider.suggest(smallCtx(), signal());
     expect(calls.runs).toHaveLength(1);
-    // claude spec: prompt over stdin, args = -p --output-format json
+    // claude spec: prompt over stdin, args = -p --output-format json + empty strict MCP config
     expect(calls.runs[0].binPath).toBe('/Users/j/.claude/local/claude');
-    expect(calls.runs[0].args).toEqual(['-p', '--output-format', 'json']);
+    expect(calls.runs[0].args).toEqual([
+      '-p',
+      '--output-format',
+      'json',
+      '--strict-mcp-config',
+      '--mcp-config',
+      '{"mcpServers":{}}',
+    ]);
     expect(calls.runs[0].stdin).toContain('γραμμή 10'); // composed prompt carries the target
     // newly-resolved path is cached under cliPaths.claude
     expect(calls.updates.at(-1)?.assist?.cliPaths).toMatchObject({

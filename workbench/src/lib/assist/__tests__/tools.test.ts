@@ -16,7 +16,14 @@ describe('CLI_TOOLS registry', () => {
   it('claude spec: known-good flags, stdin, JSON parser, historical ladder', () => {
     const spec = CLI_TOOLS.claude;
     expect(spec.binName).toBe('claude');
-    expect(spec.args).toEqual(['-p', '--output-format', 'json']);
+    expect(spec.args).toEqual([
+      '-p',
+      '--output-format',
+      'json',
+      '--strict-mcp-config',
+      '--mcp-config',
+      '{"mcpServers":{}}',
+    ]);
     expect(spec.promptVia).toBe('stdin');
     expect(spec.parseOutput).toBe(parseClaudeJson);
     expect(spec.candidatePaths(HOME)).toEqual([
@@ -57,7 +64,7 @@ describe('CLI_TOOLS registry', () => {
 
   // Table test over the built-in specs' invariant properties.
   const table: [keyof typeof CLI_TOOLS, string[], 'stdin' | 'arg', (s: string) => unknown][] = [
-    ['claude', ['-p', '--output-format', 'json'], 'stdin', parseClaudeJson],
+    ['claude', ['-p', '--output-format', 'json', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'], 'stdin', parseClaudeJson],
     ['codex', CODEX_ARGS, 'stdin', parseCodexJsonl],
     ['gemini', ['-p'], 'arg', parsePlainText],
   ];

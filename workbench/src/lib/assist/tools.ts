@@ -42,10 +42,17 @@ export interface CliToolSpec {
 // ---------------------------------------------------------------------------
 
 /**
- * Claude Code — the known-good spec, unchanged from the original hardcoded
- * path. `claude -p --output-format json` prints a JSON envelope whose `result`
- * field is plain prose; `parseClaudeJson` extracts it. Prompt over stdin.
- * Ladder = the historical claude candidatePaths (see detect.ts).
+ * Claude Code — `claude -p --output-format json` prints a JSON envelope whose
+ * `result` field is plain prose; `parseClaudeJson` extracts it. Prompt over
+ * stdin. Ladder = the historical claude candidatePaths (see detect.ts).
+ *
+ * `--strict-mcp-config --mcp-config {"mcpServers":{}}` runs with NO MCP servers:
+ * Claude Code otherwise loads the user's globally-configured MCP servers
+ * (~/.claude.json) on startup regardless of cwd, and any of those (e.g. an
+ * Apple Music integration) launching would touch protected folders — attributed
+ * to the parent .app under macOS TCC → a prompt storm. A plain translation
+ * needs no MCP tools, so an empty strict config keeps startup clean and fast.
+ * Verified 2026-07-06 against claude 2.1.201: same JSON envelope, correct result.
  */
 const CLAUDE_SPEC: CliToolSpec = {
   id: 'claude',
@@ -59,7 +66,7 @@ const CLAUDE_SPEC: CliToolSpec = {
       '/usr/local/bin/claude',
     ];
   },
-  args: ['-p', '--output-format', 'json'],
+  args: ['-p', '--output-format', 'json', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'],
   promptVia: 'stdin',
   parseOutput: parseClaudeJson,
 };
