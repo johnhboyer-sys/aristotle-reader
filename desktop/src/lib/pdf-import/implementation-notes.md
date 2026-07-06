@@ -119,6 +119,91 @@ Also measured and pinned: 2 star notes (NE's + MM's translator-credit note), 22 
 - **`[^*]` inline body markers collide with emphasis's stray-asterisk cleanup**: scanEmphasis runs BEFORE scanFootnoteMarkers (locked pipeline order, §B2), and a lone `*` inside `[^*]` is indistinguishable to it from a stray emphasis marker — it gets swallowed as OCR-noise-shaped cleanup before scanFootnoteMarkers ever sees it, corrupting the label. Not treated as a gap: per §A3, a star/dagger note is always a WORK-LEVEL attachment (marker lives in the running head, routed straight to front matter) — it is never turned into a literal `[^*]` marker glued into body prose in the first place. `†` (which doesn't collide) is the tested/working glyph for any genuinely inline star/dagger case; `translation-file-footnotes.test.ts` documents the `*` collision inline rather than silently working around it.
 - **§B3's overlay-piece marker re-insertion also had to shift Bekker-tick and emphasis piece-local offsets** — the spec's own worked arithmetic only covers the clean-text parse (§B2); emitOverlayPieces' marker splice is the one INSERTION-direction offset carry in the codebase (every other carry in this codebase removes syntax and subtracts). Implemented a `shiftForInsertions` helper (import-align.ts) applied to both Bekker-tick offsets and the emphasis piece-local offsets computed against the piece's pre-insertion text, so neither silently drifts once a piece gains inline `[^label]` syntax. Not spec-mandated in so many words, but a necessary correctness consequence of §B3 as written; covered by aligner/__tests__/import-align-footnotes.test.ts (not part of the spec's own §C tables).
 
+## emit.ts + index.ts + translation-file.ts TAG extension (Phase 4A: emission)
+
+### §3.4 hyphenation — which route was taken and why
+The CONVERTER-JOINS route (the spec's "safe default"), not the emit-hyphen-eol-for-
+dehyphenate route. dehyphenate.ts's contract was read first, as instructed, and the
+`frag-\nfrag` route fails the spec's own cleanliness condition on two independent
+paths: (1) ImportDialog.prepare() catches a dictionary-load failure and proceeds on
+the RAW text ("line-end hyphens then stay exactly as the source had them") — the \n
+survives into the body and renders as a bogus paragraph break, the exact Lennox
+defect class; (2) dehyphenate's SITE regex is `/([A-Za-z]+)-\r?\n([A-Za-z]+)/` —
+a continuation line that begins with an emitted tag (`direc-\n{1095b1} tion.`)
+doesn't match, so that \n leaks even when the dictionary loads. Also the converter
+output is legitimately parseable WITHOUT ever passing through ImportDialog (tests,
+future callers), which route A would silently corrupt. So emit.ts joins hyphen-eol
+pairs itself: fragment starts lowercase → hyphen dropped (compositor break, counted
+`joined`); uppercase/other → hyphen kept, glued (likely lexical compound, counted
+`kept`). No review queue in 4A; ImportDialog's spellcheck still runs downstream.
+Real slice measured: 337 joined, 0 kept (every fragment in NE starts lowercase).
+
+### Conservative readings / decisions logged during implementation
+- **Unmatched marker emission**: Phase-3 §A3 says an unmatched marker is "kept
+  (renders); popup shows 'Note N not found'" — a parse/Reader-side rule. On the
+  EMISSION side, turning flagged, unpaired digits into `[^N]` syntax would DELETE
+  them from the clean text stream on the strength of a guess the pairing already
+  refused to make. Conservative reading: only PAIRED body markers become `[^label]`;
+  an unmatched marker's printed digits stay verbatim in the body and its label is
+  reported in `report.footnotes.unmatched`. The slice's one real case ("…sayings
+  9–11", the Bekker line-range apparatus mark) stays "9–11" in the text — flagged,
+  never guessed. Flagged in the task report as a spec tension, not silently chosen.
+- **FootnoteState threading**: spec §2's pipeline threads ONE FootnoteState across
+  all pages (no per-work reset), so that is what convertLayoutExtraction does — the
+  established "caller resets per work" convention now applies one level up (the UI
+  slices per work before import; report.seams is the warning surface). Measured
+  consequence on the multi-work slice: the MM seam kills the already-decided
+  'continuous' hypothesis → `footnote-scope-conflict` ×2 (once per MM transition
+  scored after zero scopes remain alive), verdict stays 'continuous' (the safe
+  fallback). Pinned, not papered over.
+- **Seam collisions are surfaced, not resolved** (§3.7): across the MM restart,
+  chapter key "1.1" collides (MM's title overwrites NE's 'Goods and Ends' in the
+  titles map → 116 keys for 117 chapters) and MM's footnote labels 1/2/* shadow
+  NE's in the parsed definitions map (226 emitted defs → 223 unique keys). All
+  spec-verbatim ('b.c' keys, printed-number labels); the seam warning tells the
+  user to slice per work, which makes every collision vanish.
+- **displayBlocks in NE measured NOT empty** (spec guessed []): exactly one —
+  page 97 line 14, the same "9–11" range-apparatus line as the unmatched marker.
+  Its wide internal gap makes the line display-shaped (single line + ≥4-space run
+  ⇒ qualifies), so it becomes its own paragraph and surfaces in
+  report.displayBlocks for hand review. Two honest review surfaces, one printed
+  anomaly.
+- **Paragraph rule is spec-literal**: only the 2–8-col indent window, division
+  boundaries, and display blocks break paragraphs. Blank lines inside the body do
+  NOT (that immunizes against the Lennox page-break-blank defect class by
+  construction). Happy measured consequence: Reeve prints verse quotations
+  (Margites, Hesiod, Evenus) indented within the window, so each verse line gets
+  its own line — all 9 "mid-sentence-looking" breaks in the slice are verse lines
+  plus the two around the flagged page-97 display line, each hand-verified and
+  pinned in convert-slice.integration.test.ts.
+- **Footnote definition emission**: a note's AM1 display-line breaks become
+  ≥3-space-indented continuation lines; the §B1 definition grammar has no
+  blank-interior-line form, so newline runs collapse to single continuations
+  (parseFootnoteDefs joins continuations with a space regardless — the rawLines
+  live on the extraction side if verbatim display ever matters, Phase 4B+).
+  A document with zero notes gets NO sentinel block (suffix-only extension;
+  emitting an empty block would be noise).
+- **ticsSuppressed counting**: each suppressed tic is counted once, under the
+  first matching base flag in the fixed priority order non-monotonic >
+  unmarked-roll > position-unresolved > anchor-unresolved > footnote-tic-ambiguous
+  (a tic can carry several, e.g. unmarked-roll + position-unresolved:unmarked-roll).
+  The full detailed histogram is report.flags.
+- **report.pages counts splitPages pages** — a file ending in \f contributes a
+  trailing empty page (177 for the 176-content-page slice), consistent with
+  pages.ts's documented doubled-\f behavior.
+- **TAG extension legacy nuance**: a suffix-less column tag still leaves scanTags'
+  lastLine at 0 (not 1), so a legacy `{1094a}{1}` sequence stays warning-free —
+  byte-identical legacy behavior, pinned; a suffixed tag sets lastLine to its
+  suffix. The real slice exercises the new form at the MM seam: MM's printed
+  1181a25 is refused (non-monotonic), so its 1181b25 becomes the emitted
+  `{1181b25}` — plus the one pinned scanTags warning (column {1181b} re-entered).
+- **Golden-fixture patches (emit.test.ts only)**: the committed reeve-geometry
+  fixture centers page 1's title 6 cols off its heading (an artifact — real Reeve
+  titles align within 2.0; Phase 2 rightly rejects it) and jumps 1.1→2.1 with no
+  book heading. The emit golden re-centers the title and inserts "Book Two"
+  LOCALLY (originals untouched — gutter-reeve.test.ts pins their line indices);
+  the remaining 2.1→2.3 gap is kept and pinned as its honest audit flag.
+
 ## Categories 4 gold case for display blocks + bare-numeral chapters (John, 2026-07-06)
 Categories ch. 4 (Reeve complete-works extraction, ~line 20260ff. of the full file)
 has a genuine BODY table — the ten-categories list ("Substance  human, horse" …) —
