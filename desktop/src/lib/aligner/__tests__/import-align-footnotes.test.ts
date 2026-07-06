@@ -28,7 +28,7 @@ describe('emitOverlayPieces: footnote marker re-insertion (§B3)', () => {
         column: '1094a',
         greek: [],
         english: null,
-        chapterStarts: [{ chapter: '1', beforeLine: 1, wordIndex: 0 }],
+        chapterStarts: [{ chapter: '1', beforeLine: 1, wordIndex: 0, engOffset: 0, bekker: '1094a' }],
       },
     ],
   };
