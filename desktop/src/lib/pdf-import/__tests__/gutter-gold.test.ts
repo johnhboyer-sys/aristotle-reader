@@ -36,5 +36,10 @@ describe('gutter gold fixtures (Lennox PA 675b)', () => {
     const scan = scanPage(page, lennox675bPrimerContext());
     expect(scan.collapsed).toBe(false);
     expect(scan.headerLineIdx).toBe(0);
+    // The Clarendon header trap: line 0 carries the page's opening Bekker
+    // page ("675b") at the gutter column itself. It must never become a tic
+    // — stripped positionally, and arithmetically unable to pass the
+    // cadence guard (a header full-form implies line 1).
+    expect(scan.tics.some((t) => t.lineIdx === 0)).toBe(false);
   });
 });

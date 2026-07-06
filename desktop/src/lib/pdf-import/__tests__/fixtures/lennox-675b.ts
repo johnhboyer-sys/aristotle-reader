@@ -5,7 +5,13 @@ import { createDocContext, type DocContext } from '../../gutter';
 // column transition 675b -> 676a.
 //
 // Layout rules baked into this fixture:
-//  - Header line "Parts of Animals III.14" + one blank line.
+//  - Header line: Clarendon running heads print the page's opening Bekker
+//    PAGE (not a range) at the outer margin — on a recto that is the right
+//    edge, i.e. the same x-band as the gutter tics. The fixture places
+//    "675b" at the tic column on line 0: the worst-case header trap. It
+//    must be stripped positionally (a header full-form implies line 1, so
+//    it can never be a 4/5 cadence step from the previous tic) and yield
+//    no tic.
 //  - Body lines start at column 0.
 //  - Gutter tics are right-aligned so their first digit sits at column 78
 //    (0-based index into the line string).
@@ -24,7 +30,7 @@ function ticLine(prefix: string, tic: string): string {
 }
 
 const lines: string[] = [
-  'Parts of Animals III.14',
+  ticLine('Parts of Animals III.14', '675b'),
   '',
   'the digestive residue passes through a series of',
   'compartments before reaching the final passage',
