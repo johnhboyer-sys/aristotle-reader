@@ -37,3 +37,47 @@
   continuous-DocContext design: concatenating multiple works through one DocContext
   will flag a false non-monotonic at every work seam. Not fixed here (out of spec
   scope) — callers should start a fresh `createDocContext()` per work.
+
+## divisions.ts + line-shape.ts (Phase 2 division tagging)
+
+- **Forward-bind stance (spec §7b)**: a tic sitting on a division-heading line binds
+  FORWARD past the whole heading block (the `b.c` line and the title line) to the
+  section's first body word, flagged `anchor-forwarded-past-heading` — never to the
+  heading word "Book". This mirrors the locked paragraph rule ("a break coinciding
+  with an anchor binds forward"): a division-adjacent tic marks the onset of the
+  section's first line, and heading text renders nothing in the reference stream, so
+  binding it would be a silent mis-bind of paratext. The tic itself stays entirely in
+  the gutter system (address/cadence/monotonic unchanged). If no body line follows on
+  the page, the anchor is left null with `anchor-forwarded-cross-page` for Phase 4 to
+  bind on the next page (not observed in the slice). Note that DEMOTED tics forward-
+  bind too: Phase 1 keeps a non-monotonic tic in the output with its anchor, so Book
+  5's corrupted `1029a1` (on the Book 5 heading line) carries BOTH
+  `non-monotonic:1029a1` and `anchor-forwarded-past-heading`, binding to "As" — the
+  spec's own verified target list names all four heading tics (Books 5/6/8/9 →
+  As/Since/The/In).
+- **Title test = center-alignment, NOT a leading-space floor**: a chapter title is
+  captured iff its midpoint sits within ±TITLE_CENTER_TOL (4) columns of its `b.c`
+  heading's midpoint. A long title ("Natural Virtue, Virtue in the Strict Sense, and
+  Practical Wisdom") centers to a leftGap of only ~3 columns, so any meaningful
+  left-indent floor would reject real titles; the floor kept (TITLE_LEFT_MIN = 3) only
+  excludes flush-left body fragments. Measured max center deviation across all 117
+  Reeve titles: 2.0 cols.
+- **Doc-level vs division-level flags**: the spec's §10c test table writes e.g.
+  "`Book 12` (last 1) → {book:12} + `book-sequence:gap:1->12`", which could be read as
+  attaching the flag to the division, but the §9 taxonomy assigns
+  `book-sequence:restart/gap` and `preamble-present` doc level. Conservative reading:
+  taxonomy wins — sequence restart/gap and preamble go to `DivisionState.flags` only;
+  all other audit flags sit on the triggering Division.
+- `DivisionState.lastBookDivision` is an implementation-detail field beyond spec §1:
+  §4.3 must retroactively flag `book-heading-suspect:no-chapter-1` on the *preceding*
+  book division, which may have been emitted from an earlier page/call.
+- Keyworded chapter with NO governing book heading and no restated digit (e.g. a doc
+  that opens `CHAPTER I` with no `BOOK N` ever): spec is silent. Conservative: book 0
+  + `book-heading-missing:unknown`, never a crash.
+- **Integration pin update (deliberate, 2026-07-06)**: the real-slice histogram gains
+  exactly `anchor-forwarded-past-heading: 4` — the slice's four verified
+  tic-on-heading cases (all book headings; no `b.c` line carries a tic). Nothing else
+  moved: tic count 1333, full-forms 179, and every Phase-1 flag byte-identical. The
+  division invariants pinned alongside were measured on the same run: books
+  1..10 + MM restart, 117/117 chapters titled, zero division-level audit flags, no
+  preamble, `workOrdinal` 2 after the seam.
