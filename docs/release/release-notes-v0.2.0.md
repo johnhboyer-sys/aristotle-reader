@@ -18,6 +18,13 @@ The Aristotle Reader is a free, offline parallel Greek–English edition of Aris
 - Chapter tags are all that's required; Bekker column and line tags are used when your source has them. Anything the alignment fills in is always labelled as an estimate, never presented as fact.
 - Personal copies of copyrighted translations stay private to your computer by default.
 
+*Preparing a file — pitfalls we've hit ourselves.* Most import problems come from the source file, not the app, and OCR'd texts are the usual culprits:
+- **Chapter tags must match the standard chaptering by content, not by count.** Older editions merge or split chapters freely — verify each `{book.chapter}` tag actually sits where the standard division begins, or alignment will silently smear text across the wrong Bekker range. A missing tag degrades gracefully into an estimate; a *wrong* tag corrupts the chapter.
+- **Join paragraph breaks the page made, not the author.** OCR inserts a blank line at every page turn; mid-sentence ones are easy to catch, but a page break that falls *between* sentences leaves a false paragraph only the printed page can disprove.
+- **Watch hyphenated words split around tags** — `de- {20} terioration` should be `{20} deterioration`. The importer's dehyphenation review catches most splits, but tag-interrupted ones are worth a search.
+- **Strip page furniture**: running heads, page numbers, and endnote markers that OCR drops into the text flow.
+- **Tag only what the edition prints.** If your source shows line numbers every fifth line, tag those; don't invent per-line tags or compute your own numbers.
+
 **Annotations**
 - Highlight and annotate as you read; notes and highlights are stored as plain local JSON files — yours to read, back up, or move, with no proprietary format.
 - Export your annotations and imported translations as a single file whenever you want a copy.

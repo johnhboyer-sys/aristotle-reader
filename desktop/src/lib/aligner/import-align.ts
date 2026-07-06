@@ -18,13 +18,14 @@
 
 import type { BookData, RossPiece } from '../../../../app/src/lib/data';
 import { alignChapter, dedupMonotonic, interpolate, snapWord, type Anchor, type ChapterInput } from './engine';
-import type { InlineTag, TagDensity } from '../translation-file';
+import type { EmphasisSpan, InlineTag, TagDensity } from '../translation-file';
 
 export interface ChapterAlignment {
   book: number;
   chapter: string;
   text: string;               // the chapter's clean prose (tags stripped)
   anchors: Anchor[];
+  emphasis: EmphasisSpan[];   // offsets into `text`, carried through unchanged (alignment never rewrites the chapter's own text/offsets)
   stats: { tagged: number; placed: number; interpolated: number };
 }
 
@@ -33,6 +34,7 @@ export function alignImportedChapter(
   input: ChapterInput,
   tags: InlineTag[],
   density: TagDensity,
+  emphasis: EmphasisSpan[] = [],
 ): ChapterAlignment {
   let anchors: Anchor[];
   const cited = tags.filter(t => t.citation);
@@ -60,11 +62,24 @@ export function alignImportedChapter(
     anchors.sort((x, y) =>
       x.offset - y.offset || (x.citation < y.citation ? -1 : x.citation > y.citation ? 1 : 0));
   }
+  // engine.interpolate() (shared, parity-checked against the Python pipeline)
+  // only fills BETWEEN pairs of placed anchors — it never extrapolates past
+  // the last one. For a chapter whose only real/placed anchor is its own
+  // chapter-start (very short chapters, or ones that don't reach the next
+  // real Bekker tick), that leaves the entire rest of the chapter — and for
+  // a one-anchor chapter, the WHOLE chapter — without a single interpolated
+  // tick. Built-in translations don't hit this: their reference ticks are
+  // baked in at 5-line density per column by the pipeline (stage1_ross),
+  // independent of chapter boundaries. Imports have no such luxury, so fill
+  // the tail here, import-side only, to keep engine.ts byte-for-byte parity
+  // with align/aligner.py (scripts/parity.mjs diffs anchor-for-anchor).
+  anchors = fillChapterTail(input, anchors);
   return {
     book: input.book,
     chapter: input.chapter,
     text: input.targetText,
     anchors,
+    emphasis,
     stats: {
       tagged: anchors.filter(a => a.confidence === 'tagged').length,
       placed: anchors.filter(a => ['certain', 'reliable', 'uncertain'].includes(a.confidence)).length,
@@ -73,11 +88,121 @@ export function alignImportedChapter(
   };
 }
 
+/**
+ * Extrapolate interpolated ticks from the last anchor (placed or already
+ * interpolated) out to the chapter's last Greek line, using the same
+ * word-count-proportional method as engine.interpolate() — just applied to
+ * the open tail instead of a closed anchor pair. Rate comes from the last
+ * anchor pair when there is one (continuity with the interior interpolation);
+ * with only a single anchor in the whole chapter (no pair to derive a rate
+ * from), falls back to a uniform rate across the chapter's full remaining
+ * text/word span. No-op if the last anchor already covers the last line.
+ */
+function fillChapterTail(ch: ChapterInput, anchors: Anchor[]): Anchor[] {
+  const cum = new Map(ch.greekLines.map(g => [g.citation, g.cumWords]));
+  const order = ch.greekLines.map(g => g.citation);
+  if (!order.length) return anchors;
+  const pos = new Map(order.map((c, i) => [c, i]));
+  const placed = new Set(anchors.map(a => a.citation));
+  const anchored = anchors
+    .filter(a => cum.has(a.citation))
+    .sort((x, y) => x.offset - y.offset);
+  if (!anchored.length) return anchors;
+
+  const last = anchored[anchored.length - 1];
+  const lastPos = pos.get(last.citation)!;
+  if (lastPos + 1 >= order.length) return anchors; // already at the chapter's last line
+
+  const lastCum = cum.get(last.citation)!;
+  // Total Greek words in the chapter, counting the final line itself (the
+  // running cumulative count is words BEFORE each line — see reference.ts).
+  const finalCite = order[order.length - 1];
+  const totalWords = cum.get(finalCite)! + wordCountApprox(ch, finalCite);
+
+  // Prefer the rate from the last interior anchor pair (keeps the tail's
+  // pacing consistent with the interpolation that precedes it); otherwise
+  // fall back to a uniform rate spanning the rest of the chapter's text.
+  let rate: number; // target-offset chars per Greek word
+  if (anchored.length >= 2) {
+    const prev = anchored[anchored.length - 2];
+    const prevCum = cum.get(prev.citation);
+    if (prevCum !== undefined && lastCum > prevCum && last.offset > prev.offset) {
+      rate = (last.offset - prev.offset) / (lastCum - prevCum);
+    } else {
+      rate = fallbackRate(ch, last, lastCum, totalWords);
+    }
+  } else {
+    rate = fallbackRate(ch, last, lastCum, totalWords);
+  }
+  if (!Number.isFinite(rate) || rate < 0) return anchors;
+
+  const out = anchors.slice();
+  for (const c of order.slice(lastPos + 1)) {
+    if (placed.has(c)) continue;
+    const words = cum.get(c)! - lastCum;
+    let off = last.offset + pyRoundLocal(words * rate);
+    off = snapWord(ch.targetText, Math.min(off, ch.targetText.length));
+    out.push({ citation: c, offset: off, tier: 'line', confidence: 'interpolated', score: 0, flags: [] });
+  }
+  return out;
+}
+
+/** Uniform rate spanning from the last anchor to the chapter's own end. */
+function fallbackRate(ch: ChapterInput, last: Anchor, lastCum: number, totalWords: number): number {
+  const remainingWords = totalWords - lastCum;
+  const remainingChars = ch.targetText.length - last.offset;
+  if (remainingWords <= 0 || remainingChars <= 0) return 0;
+  return remainingChars / remainingWords;
+}
+
+/** Greek word count of the chapter's final line (for the running total). */
+function wordCountApprox(ch: ChapterInput, finalCitation: string): number {
+  // greekLines only carries cumulative counts BEFORE each line; we don't have
+  // the reference's per-line text here, so approximate the final line's own
+  // word count as the average per-line count seen across the chapter. This
+  // only affects how far the LAST tick's implied "words after last real line"
+  // stretches — a small, honest estimate is fine since the tail ticks are
+  // already flagged real:false.
+  const n = ch.greekLines.length;
+  if (n < 2) return 0;
+  const first = ch.greekLines[0].cumWords, last = ch.greekLines[n - 1].cumWords;
+  return n > 1 ? Math.round((last - first) / (n - 1)) : 0;
+}
+
+// Python's round(): banker's rounding (half to even) — mirrors engine.ts's
+// private pyRound so the tail fill paces identically to the interior fill.
+function pyRoundLocal(x: number): number {
+  const floor = Math.floor(x);
+  const diff = x - floor;
+  if (diff > 0.5) return floor + 1;
+  if (diff < 0.5) return floor;
+  return floor % 2 === 0 ? floor : floor + 1;
+}
+
 // ── overlay emission ─────────────────────────────────────────────────────────
+
+// A piece's emphasis ranges, offsets rebased into that PIECE's own text (same
+// offset space piecesFor/flowOf in Reader.svelte read RossPiece.text with).
+//
+// `pieceText` carries the piece's FULL clean text so the desktop-side painter
+// can match a rendered `.ross-prose` block by CONTENT rather than by trying
+// to reconstruct which array index/chapter-key the Reader resolved it to: a
+// single Bekker column can render several blocks (one per chapter that starts
+// or continues there — see Reader.svelte's splitSegment, one `.seg-row`/
+// `.english-col`/`.ross-prose` per block), and there's no DOM attribute that
+// cleanly exposes "this .ross-prose is the cont-piece vs. chapter X's own
+// piece" the way the Reader's internal pieceFor/pieceCont lookup does — so an
+// exact-text match against each candidate `.ross-prose` in that column is the
+// robust join, not an inferred ordering/key.
+export interface PieceEmphasis { pieceText: string; start: number; end: number; style: EmphasisSpan['style']; }
 
 /**
  * Slice aligned chapter prose across a book's column segments, producing the
- * per-segment overlay pieces the Reader renders (seg.overlays[id] shape).
+ * per-segment overlay pieces the Reader renders (seg.overlays[id] shape), and
+ * — in a PARALLEL structure, never on RossPiece itself (Reader.svelte only
+ * reads text/cont/chapter/bekker/tables off a piece; an extra field would be
+ * harmless but there's no need to touch app/src's RossPiece type at all) —
+ * each piece's emphasis ranges rebased to that piece's own text.
  *
  * Column boundaries inside a chapter come from that chapter's anchors: the
  * anchor at each column's line 1 (or the nearest anchor at/before it) bounds
@@ -88,9 +213,10 @@ export function alignImportedChapter(
 export function emitOverlayPieces(
   book: BookData,
   aligned: ChapterAlignment[],
-): Record<string, RossPiece[]> {
+): { pieces: Record<string, RossPiece[]>; emphasis: Record<string /* column */, PieceEmphasis[]> } {
   const byChapter = new Map(aligned.filter(c => c.book === book.book).map(c => [c.chapter, c]));
   const out: Record<string, RossPiece[]> = {};
+  const emphOut: Record<string, PieceEmphasis[]> = {};
 
   // Which chapters appear in which segments, in order — walk chapterStarts.
   // A chapter runs from its start segment to the segment before the next
@@ -157,11 +283,42 @@ export function emitOverlayPieces(
         cont: !isFirst,
         ...(ticks.length ? { bekker: ticks } : {}),
       };
-      (out[book.segments[si].id] ??= []).push(piece);
+      const segId = book.segments[si].id;
+      (out[segId] ??= []).push(piece);
+
+      // Emphasis spans wholly inside [cursor, sliceEnd) — clipped defensively
+      // (a span should never straddle a piece boundary since pieces are cut
+      // at anchor offsets and emphasis spans are word runs, but a boundary
+      // landing mid-span would otherwise produce an out-of-range piece-local
+      // offset for the desktop-side painter to choke on). Keyed by COLUMN
+      // (not seg.id, unlike overlaysByBook) because that's what the rendered
+      // DOM exposes (Reader.svelte's segment element is `#col-{column}`) —
+      // the desktop-side paint pass runs on a debounce after every Reader
+      // re-render and must resolve straight to a DOM id without a BookData
+      // fetch in the hot path. `pieceText` (== pieceText, this piece's own
+      // clean text) lets the painter match the right `.ross-prose` by content.
+      // The emphasis key + offsets must live in the SAME character space the
+      // desktop painter measures: it reads rendered DOM text via proseText(),
+      // and Reader's flowParts renders every '\n' as a <br> (which contributes
+      // no text node), so the on-screen text is this piece's text with newlines
+      // removed. Store the emphasis pieceText and its piece-local offsets in
+      // that '\n'-free space so `pieceText === proseText(prose)` holds and the
+      // offsets line up — otherwise any piece containing a paragraph break
+      // silently fails the painter's exact-match gate and no italics render.
+      // (Imports carry no [[sN]]/[[figN]]/[^N] markers, so '\n' is the only
+      // transform highlightEng applies to an import column's text.)
+      const cleanPieceText = pieceText.replace(/\n/g, '');
+      const toClean = (rawLocal: number) =>
+        rawLocal - (pieceText.slice(0, rawLocal).match(/\n/g)?.length ?? 0);
+      const pieceEmph = ca.emphasis
+        .filter(e => e.start >= cursor && e.end <= sliceEnd)
+        .map(e => ({ pieceText: cleanPieceText, start: toClean(e.start - cursor), end: toClean(e.end - cursor), style: e.style }));
+      if (pieceEmph.length) (emphOut[col] ??= []).push(...pieceEmph);
+
       cursor = sliceEnd;
       // consume skipped segments (no boundary signal): they get no piece
       si = nj - 1;
     }
   }
-  return out;
+  return { pieces: out, emphasis: emphOut };
 }

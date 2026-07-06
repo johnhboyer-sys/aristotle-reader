@@ -6,15 +6,20 @@
   // where "estimates are always labelled" becomes visible to a first-time
   // importer: tagged anchors, alignment-placed anchors, and interpolated
   // (estimate) lines are reported separately and honestly.
+  import { onMount, onDestroy } from 'svelte';
   import { WORKS } from '../../../app/src/lib/works';
   import { runImport, ImportCollision, type ImportSummary } from '../lib/imports';
+  import { parseTranslationFile, composeCitation, emphasisScanInput } from '../lib/translation-file';
   import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';
+  import { scanEmphasis, listEmphasisReviewItems, type EmphasisReviewItem } from '../lib/emphasis';
+  import { isTauri } from '../lib/runtime';
+  import type { UnlistenFn } from '@tauri-apps/api/event';
 
   export let file: { name: string; text: string } | null = null;
   export let presetWork: string | null = null;   // pre-filled when launched from a work
   export let onClose: (imported: ImportSummary | null) => void;
 
-  type Step = 'pick' | 'form' | 'review' | 'running' | 'collision' | 'done' | 'error';
+  type Step = 'pick' | 'form' | 'review' | 'emph-review' | 'running' | 'collision' | 'done' | 'error';
   let step: Step = file ? 'form' : 'pick';
 
   // form state
@@ -23,6 +28,11 @@
   let personalCopy: 'yes' | 'no' | null = null;
   let advLicense: 'public-domain' | 'cc-by' | 'cc-by-sa' | 'not-sure' = 'not-sure';
   let yearStr = '';
+  let sourceStr = '';
+  let citationStr = '';
+  // Once the person edits the Citation field by hand, stop silently
+  // overwriting it as translator/year/source change underneath them.
+  let citationTouched = false;
 
   let progress = '';
   let errorMsg = '';
@@ -36,13 +46,48 @@
   let autoJoined = 0;
   let dehyphenatedText: string | null = null;
 
+  // Emphasis review queue: markdown emphasis spans the classifier couldn't
+  // confidently place — same shape as the dehyphenation queue above, one
+  // decision at a time with a sensible pattern-based default. Runs AFTER
+  // dehyphenation resolves (so a rejoined word never straddles a marker in a
+  // confusing way) and before the final import call. The dialog only
+  // COLLECTS the user's per-item choices here — it never strips markers out
+  // of the text itself; parseTranslationFile (inside runImport) re-runs the
+  // same pure scanEmphasis classification on this exact text and replays
+  // these choices verbatim (see translation-file.ts's parseTranslationFile
+  // doc comment). That's what lets a CONFIDENT span's range survive the trip
+  // to runImport — if the dialog pre-stripped markers, a second scanEmphasis
+  // pass over already-clean text would have nothing left to recognise as
+  // emphasis, silently losing every confident range before storage.
+  let emphReviewItems: (EmphasisReviewItem & { context: string; before: string; hit: string; after: string })[] = [];
+  let emphReviewChoices = new Map<number, 'keep' | 'remove'>();
+  let emphReviewPos = 0;
+  let emphConfidentCount = 0;
+
   $: license = personalCopy === 'yes' || advLicense === 'not-sure'
     ? 'user-supplied' as const
     : advLicense as 'public-domain' | 'cc-by' | 'cc-by-sa';
   $: formReady = !!file && translator.trim().length > 0 && personalCopy !== null;
 
+  // Frontmatter the file may already carry (a re-import of a previously
+  // exported/tagged file, or one hand-authored by an advanced user) — read
+  // once per file to pre-fill translator/year/source/citation. The metadata
+  // form still drives the actual import request; this only seeds defaults.
+  $: fileMeta = file ? parseTranslationFile(file.text).meta : {};
+  $: if (file) {
+    if (fileMeta.translator && !translator) translator = fileMeta.translator;
+    if (fileMeta.year && !yearStr) yearStr = String(fileMeta.year);
+    if (fileMeta.source && !sourceStr) sourceStr = fileMeta.source;
+    if (fileMeta.citation && !citationTouched) { citationStr = fileMeta.citation; citationTouched = true; }
+  }
+  // Keep the Citation field assembled live from translator/year/source until
+  // the user edits it directly, or the file's own frontmatter already supplied
+  // one (handled above). This is what makes "Citation" pre-filled-but-editable
+  // rather than a second freeform field the user has to fill in from scratch.
+  $: if (!citationTouched) citationStr = composeCitation({ translator, year: Number(yearStr) || undefined, source: sourceStr });
+
   async function pickFile() {
-    if ('__TAURI_INTERNALS__' in window) {
+    if (isTauri()) {
       const { open } = await import('@tauri-apps/plugin-dialog');
       const { readTextFile } = await import('@tauri-apps/plugin-fs');
       const path = await open({
@@ -65,8 +110,99 @@
     step = 'form';
   }
 
-  // Form submit → dehyphenation pass first; alignment only once the text is
-  // settled (auto-decisions applied, review sites resolved by the user).
+  // ── Drop zone ──────────────────────────────────────────────────────────────
+  // Packaged Tauri v2 webviews intercept OS file drags before they ever reach
+  // the DOM: no HTML5 `drop` event fires, only `tauri://drag-drop` (exposed via
+  // getCurrentWebview().onDragDropEvent). The HTML5 handlers below stay as a
+  // harmless fallback for the plain-browser dev harness, guarded so both paths
+  // can't double-fire in the packaged app.
+  let dropHover = false;
+  let dropError = '';
+  const ACCEPTED = /\.(txt|md)$/i;
+
+  function acceptName(name: string): boolean {
+    return ACCEPTED.test(name);
+  }
+
+  async function acceptPath(path: string) {
+    dropError = '';
+    const name = path.split(/[/\\]/).pop() ?? path;
+    if (!acceptName(name)) {
+      dropError = 'Please drop one .txt or .md file.';
+      return;
+    }
+    const { readTextFile } = await import('@tauri-apps/plugin-fs');
+    file = { name, text: await readTextFile(path) };
+    step = 'form';
+  }
+
+  async function acceptBrowserFile(f: File) {
+    dropError = '';
+    if (!acceptName(f.name)) {
+      dropError = 'Please drop one .txt or .md file.';
+      return;
+    }
+    file = { name: f.name, text: await f.text() };
+    step = 'form';
+  }
+
+  let unlistenDragDrop: UnlistenFn | null = null;
+  onMount(() => {
+    if (!isTauri()) return;
+    let cancelled = false;
+    (async () => {
+      const { getCurrentWebview } = await import('@tauri-apps/api/webview');
+      const unlisten = await getCurrentWebview().onDragDropEvent(event => {
+        if (step !== 'pick') return; // only while the drop zone is showing
+        switch (event.payload.type) {
+          case 'enter':
+          case 'over':
+            dropHover = true;
+            break;
+          case 'leave':
+            dropHover = false;
+            break;
+          case 'drop': {
+            dropHover = false;
+            const [firstPath] = event.payload.paths;
+            if (firstPath) void acceptPath(firstPath);
+            break;
+          }
+        }
+      });
+      if (cancelled) unlisten();
+      else unlistenDragDrop = unlisten;
+    })();
+    return () => { cancelled = true; };
+  });
+  onDestroy(() => {
+    if (unlistenDragDrop) unlistenDragDrop();
+  });
+
+  // HTML5 fallback (plain-browser dev harness only — see comment above).
+  function onZoneDragOver(e: DragEvent) {
+    if (isTauri()) return;
+    if (e.dataTransfer?.types.includes('Files')) {
+      e.preventDefault();
+      dropHover = true;
+    }
+  }
+  function onZoneDragLeave() {
+    if (isTauri()) return;
+    dropHover = false;
+  }
+  async function onZoneDrop(e: DragEvent) {
+    if (isTauri()) return;
+    e.preventDefault();
+    dropHover = false;
+    const f = e.dataTransfer?.files?.[0];
+    if (!f) return;
+    await acceptBrowserFile(f);
+  }
+
+  // Form submit → dehyphenation pass first, then emphasis classification;
+  // alignment only once the text is fully settled (auto-decisions applied,
+  // every review site resolved by the user).
   async function prepare() {
     if (!file) return;
     step = 'running';
@@ -87,7 +223,7 @@
       // import — line-end hyphens then stay exactly as the source had them.
       dehyphenatedText = file.text;
     }
-    await start();
+    runEmphasisScan();
   }
 
   function chooseReview(form: string) {
@@ -96,6 +232,36 @@
       reviewPos += 1;
     } else {
       dehyphenatedText = resolveReviews(dehyphenatedText!, reviewChoices);
+      runEmphasisScan();
+    }
+  }
+
+  // Classify markdown emphasis in the dehyphenated text — a discovery pass
+  // ONLY: markers are never stripped here. runImport's own parseTranslationFile
+  // call re-runs this exact classification later (over the identical text —
+  // see emphasisScanInput) and is what actually strips markers into stored
+  // EmphasisRanges; this pass exists purely to find review-worthy sites and
+  // let the user weigh in before the import proceeds, exactly like the
+  // hyphenation step above.
+  function runEmphasisScan() {
+    const source = dehyphenatedText ?? file!.text;
+    const r = scanEmphasis(emphasisScanInput(source));
+    emphConfidentCount = r.ranges.length;
+    if (r.reviewItems.length > 0) {
+      emphReviewItems = listEmphasisReviewItems(r.text, r.reviewItems);
+      emphReviewChoices = new Map();
+      emphReviewPos = 0;
+      step = 'emph-review';
+      return;
+    }
+    start();
+  }
+
+  function chooseEmphReview(choice: 'keep' | 'remove') {
+    emphReviewChoices.set(emphReviewItems[emphReviewPos].index, choice);
+    if (emphReviewPos + 1 < emphReviewItems.length) {
+      emphReviewPos += 1;
+    } else {
       start();
     }
   }
@@ -107,10 +273,13 @@
     try {
       summary = await runImport({
         raw: dehyphenatedText ?? file.text,
+        emphasisChoices: emphReviewChoices.size ? emphReviewChoices : undefined,
         work,
         translator: translator.trim(),
         license,
         ...(yearStr && !Number.isNaN(Number(yearStr)) ? { year: Number(yearStr) } : {}),
+        ...(sourceStr.trim() ? { source: sourceStr.trim() } : {}),
+        ...(citationStr.trim() ? { citation: citationStr.trim() } : {}),
         replace,
         ...(idOverride ? { idOverride } : {}),
       }, msg => { progress = msg; });
@@ -148,13 +317,39 @@
       Bekker tags like <code>{'{1094a}'}</code> and <code>{'{20}'}</code> are used when present —
       anything below the tagged detail is filled in by alignment and labelled as an estimate.
     </p>
-    <div class="imp-actions">
-      <button class="imp-primary" on:click={pickFile}>Choose a file…</button>
-      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel</button>
+    <div
+      class="imp-drop"
+      class:imp-drop-hover={dropHover}
+      role="button"
+      tabindex="0"
+      aria-label="Drop a .txt or .md file here, or click to browse"
+      on:click={pickFile}
+      on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickFile(); } }}
+      on:dragover={onZoneDragOver}
+      on:dragleave={onZoneDragLeave}
+      on:drop={onZoneDrop}
+    >
+      <svg class="imp-drop-icon" viewBox="0 0 24 24" width="28" height="28" fill="none"
+        stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v12" />
+        <path d="M7 10l5 5 5-5" />
+        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+      </svg>
+      <p class="imp-drop-text">
+        {#if file}
+          <b>{file.name}</b> selected — drop or click to choose a different file
+        {:else}
+          Drop a <b>.txt</b> or <b>.md</b> file here — or click to browse
+        {/if}
+      </p>
     </div>
     <input type="file" accept=".md,.txt,text/plain,text/markdown" bind:this={browserInput}
       on:change={onBrowserFile} style="display:none" />
-    <p class="imp-note">…or drop a file anywhere on the library.</p>
+    {#if dropError}<p class="imp-error">{dropError}</p>{/if}
+
+    <div class="imp-actions">
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel</button>
+    </div>
 
     <details class="imp-help">
       <summary>How do I format a file for import?</summary>
@@ -203,6 +398,18 @@ found among ends…</pre>
       <span>Year (optional)</span>
       <input type="text" bind:value={yearStr} placeholder="e.g. 1926" inputmode="numeric" />
     </label>
+    <label class="imp-field">
+      <span>Source (optional)</span>
+      <input type="text" bind:value={sourceStr} placeholder="e.g. Oxford: Clarendon Press" spellcheck="false" />
+    </label>
+    <label class="imp-field">
+      <span>Citation</span>
+      <textarea class="imp-citation" rows="3" spellcheck="false"
+        placeholder="Full citation for Copy Citation, e.g. Aristotle. Parts of Animals I–IV. Trans. James G. Lennox. Oxford: Clarendon Press, 2001."
+        bind:value={citationStr}
+        on:input={() => (citationTouched = true)}
+      ></textarea>
+    </label>
     <fieldset class="imp-field imp-radio">
       <legend>Is this a personal copy of a copyrighted translation?</legend>
       <label><input type="radio" bind:group={personalCopy} value="yes" /> Yes — keep it private to this computer</label>
@@ -240,6 +447,49 @@ found among ends…</pre>
         <button class="imp-primary" on:click={() => chooseReview(item.hyphenated)}>{item.hyphenated}</button>
       </div>
       <p class="imp-note">{reviewPos + 1} of {reviewItems.length}</p>
+    {/if}
+    <div class="imp-actions">
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
+    </div>
+
+  {:else if step === 'emph-review'}
+    <h2>Emphasis check</h2>
+    <p class="imp-note">
+      {#if emphConfidentCount > 0}
+        {emphConfidentCount} span{emphConfidentCount === 1 ? '' : 's'} of markdown emphasis
+        (<code>_like this_</code> or <code>**like this**</code>) {emphConfidentCount === 1 ? 'was' : 'were'}
+        recognised automatically.
+      {/if}
+      {emphReviewItems.length} marker{emphReviewItems.length === 1 ? '' : 's'} couldn't be classified
+      confidently — choose how to treat each one.
+    </p>
+    {#if emphReviewItems[emphReviewPos]}
+      {@const item = emphReviewItems[emphReviewPos]}
+      <p class="imp-review-ctx">…{item.before}<mark class="imp-emph-hit">{item.hit}</mark>{item.after}…</p>
+      <p class="imp-note">
+        {#if item.reason === 'stray-marker'}
+          A lone <code>{item.raw}</code> with no matching partner.
+        {:else if item.reason === 'mid-word'}
+          A marker touching a word rather than a word boundary — likely not emphasis.
+        {:else if item.reason === 'too-long'}
+          A long span ({item.inner.split(/\s+/).filter(Boolean).length} words) — could be a deliberate
+          emphasis run or an OCR artifact.
+        {:else}
+          An unbalanced or oddly-spaced marker.
+        {/if}
+      </p>
+      <div class="imp-actions">
+        <button class="imp-primary" on:click={() => chooseEmphReview('keep')}>
+          Keep as {item.style === 'bold' ? 'bold' : 'italics'}
+        </button>
+        <button class="imp-primary" on:click={() => chooseEmphReview('remove')}>
+          Remove markers, plain text
+        </button>
+      </div>
+      <p class="imp-note">
+        Default: {item.defaultKeep ? `keep as ${item.style === 'bold' ? 'bold' : 'italics'}` : 'remove markers'}.
+        {emphReviewPos + 1} of {emphReviewItems.length}
+      </p>
     {/if}
     <div class="imp-actions">
       <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
@@ -313,14 +563,33 @@ found among ends…</pre>
   h2 { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.9rem; }
   code { font-size: 0.85em; }
   .imp-note { font-size: 0.83rem; color: var(--text-mid); line-height: 1.5; margin: 0.6rem 0; }
+  .imp-drop {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    text-align: center; cursor: pointer; color: var(--text-mid);
+    border: 1.5px dashed var(--border); border-radius: 10px;
+    background: var(--page-bg); padding: 1.6rem 1.2rem; margin: 0.8rem 0 0.4rem;
+    transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+  }
+  .imp-drop:hover, .imp-drop:focus-visible {
+    border-color: var(--accent); color: var(--text);
+  }
+  .imp-drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .imp-drop-hover {
+    border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--page-bg));
+    color: var(--text);
+  }
+  .imp-drop-icon { flex: none; }
+  .imp-drop-text { font-size: 0.9rem; line-height: 1.5; margin: 0; }
+  .imp-drop-text b { color: var(--text); }
   .imp-field { display: block; margin: 0 0 0.8rem; font-size: 0.85rem; }
   .imp-field > span { display: block; font-weight: 600; margin-bottom: 0.25rem; }
-  .imp-field input[type="text"], .imp-field select {
+  .imp-field input[type="text"], .imp-field select, .imp-field textarea {
     width: 100%; box-sizing: border-box; font: inherit; color: var(--text);
     background: var(--page-bg); border: 1px solid var(--border); border-radius: 6px;
     padding: 0.45rem 0.6rem;
   }
-  .imp-field input:focus, .imp-field select:focus { outline: none; border-color: var(--accent); }
+  .imp-field input:focus, .imp-field select:focus, .imp-field textarea:focus { outline: none; border-color: var(--accent); }
+  .imp-citation { resize: vertical; line-height: 1.4; font-size: 0.85rem; }
   .imp-radio { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; margin: 0 0 0.8rem; }
   .imp-radio legend { font-weight: 600; font-size: 0.85rem; padding: 0 0.3rem; }
   .imp-radio label { display: block; margin: 0.35rem 0; font-size: 0.85rem; }
@@ -355,5 +624,11 @@ found among ends…</pre>
     font-family: var(--font-english); font-size: 0.95rem; line-height: 1.6;
     background: var(--page-bg); border: 1px solid var(--border); border-radius: 8px;
     padding: 0.7rem 0.9rem; margin: 0.8rem 0;
+  }
+  .imp-emph-hit {
+    background: var(--accent-soft, rgba(139, 90, 43, 0.18));
+    color: inherit; font-weight: 600;
+    border-radius: 3px; padding: 0 0.15em;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
   }
 </style>

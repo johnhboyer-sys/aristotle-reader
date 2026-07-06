@@ -1054,7 +1054,7 @@
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
     class:word-open={!!popup}
-    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale}"
+    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale};--fs-scale:{fsScale}"
     on:copy={handleCopy}>
     <div class="reader-controls">
       {#if liveChapter}
@@ -1171,7 +1171,7 @@
             <!-- English column: the selected translation (single view), or the
                  left compare column. Prose laid out beside its Bekker-line
                  gutter — real anchors full weight, estimates lighter/italic. -->
-            <div class="english-col">
+            <div class="english-col" data-trans={trans === 'compare' ? compareLeft : trans}>
               {#if trans === 'compare'}<div class="col-label">{transById(compareLeft)?.short ?? 'English'}</div>{/if}
               {@render transFlow(block, trans === 'compare' ? compareLeft : trans)}
               <!-- Inline diagrams ([[figN]] markers), e.g. the Tree of Porphyry. -->
@@ -1185,7 +1185,7 @@
             <!-- Right compare column: the second chosen translation beside the
                  first (hidden in Greek-only). -->
             {#if trans === 'compare' && view !== 'greek'}
-              <div class="ross-col">
+              <div class="ross-col" data-trans={compareRight}>
                 <div class="col-label">{transById(compareRight)?.short ?? ''}</div>
                 {@render transFlow(block, compareRight)}
               </div>
