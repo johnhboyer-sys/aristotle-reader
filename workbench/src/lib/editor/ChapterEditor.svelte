@@ -109,6 +109,7 @@
     AssistController,
     buildAssistContext,
     buildInsertTransaction,
+    sanitizeSuggestion,
     plainRowText,
     resolveTauriAssistProvider,
   } from './assistController';
@@ -229,7 +230,7 @@
   // Greek-cell context menu (design doc D6 §4): split on unsplit lines,
   // merge on split ones. `offset` is the snapped split point (null = the
   // click found no valid word gap → the status line, never a silent split).
-  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null; aiOnly?: boolean } | null>(null);
+  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null; aiOnly?: boolean; translateRows?: number[] } | null>(null);
   let pendingUnsplit = $state<{ row: number; boundary: number } | null>(null);
   let saveState = $state<SaveState>('idle');
   let saveBlocked = $state(false);
@@ -1195,6 +1196,117 @@
     assistSeg = 0;
   }
 
+  // ── batch translate (multi-line selection) ─────────────────────────────
+  // When the Greek right-click fires on a multi-line selection, "Translate with
+  // AI" fills EVERY selected line's English cell in one sweep (design: the
+  // single-line flow reviews in a popover; a batch would be N popovers, so it
+  // auto-fills instead). Non-destructive: only EMPTY cells are filled; lines
+  // that already have English are left alone and reported. Sequential (one CLI
+  // call at a time) with a status counter; abortable on unmount / re-invoke.
+  let batchAbort: AbortController | null = null;
+
+  /** Model rows covered by a multi-line selection in the GREEK column — sorted,
+   * de-duped, Greek-non-empty only. Empty unless the selection spans >1 row in
+   * the Greek column. Grid ordinals → model rows via displayRows (a split
+   * line's two segments fold to one model row). */
+  function selectedGreekModelRows(): number[] {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return [];
+    const range = sel.getRangeAt(0);
+    if (columnOfDomNode(range.startContainer) !== 'greek') return [];
+    const a = anyRowOfDomNode(range.startContainer);
+    const b = anyRowOfDomNode(range.endContainer);
+    if (a < 0 || b < 0) return [];
+    const rows = new Set<number>();
+    for (let g = Math.min(a, b); g <= Math.max(a, b); g++) {
+      const d = displayRows[g];
+      if (d && (model.rows[d.rowIndex]?.greek.trim().length ?? 0) > 0) rows.add(d.rowIndex);
+    }
+    return [...rows].sort((x, y) => x - y);
+  }
+
+  /** Replace a row cell's FULL English content with `text` (already sanitized),
+   * without stealing focus/scroll — the batch fills many cells at once. Its own
+   * app-undo entry. Returns false if the view is gone or the text is empty. */
+  function fillRowEnglish(row: number, segment: number, text: string): boolean {
+    const view = viewAt(row, segment);
+    if (!view || text.length === 0) return false;
+    const size = view.state.doc.content.size;
+    history.breakCoalescing();
+    view.dispatch(view.state.tr.replaceWith(0, size, view.state.schema.text(text)).setMeta('noCoalesce', true));
+    return true;
+  }
+
+  /** Translate every model row in `rows` (Greek-non-empty), filling each EMPTY
+   * English cell. One line → defer to the normal popover flow. */
+  async function invokeAssistRange(rows: number[]) {
+    const targets = rows.filter(
+      (r) => r >= 0 && r < model.rows.length && model.rows[r].greek.trim().length > 0,
+    );
+    if (targets.length <= 1) {
+      if (targets.length === 1) invokeAssist(targets[0], 0);
+      return;
+    }
+
+    batchAbort?.abort();
+    const abort = new AbortController();
+    batchAbort = abort;
+
+    const settings = await loadSettings();
+    if (abort.signal.aborted || destroyed) return;
+    let provider: AssistProvider;
+    try {
+      provider = await getAssistProvider();
+    } catch {
+      setStatus(GENERIC_ERROR_MESSAGE);
+      return;
+    }
+    if (abort.signal.aborted || destroyed) return;
+
+    const includeDraft = settings.assist?.includeDraft ?? true;
+    let filled = 0;
+    let skipped = 0;
+    let failed = 0;
+    for (let i = 0; i < targets.length; i++) {
+      if (abort.signal.aborted || destroyed) break;
+      const r = targets[i];
+      // Non-destructive: leave lines that already have English untouched.
+      if (plainRowText(joinedRowDoc(r)) !== null) {
+        skipped++;
+        continue;
+      }
+      setStatus(`Translating line ${i + 1} of ${targets.length}…`, 120_000);
+      const ctx = buildAssistContext({
+        rowCount: model.rows.length,
+        rowAt: (k) => ({ address: model.rows[k].address.raw, greek: model.rows[k].greek }),
+        draftAt: (k) => plainRowText(joinedRowDoc(k)),
+        targetIndex: r,
+        includeDraft,
+        work: assistWorkMeta(),
+        book: { index: model.book, label: model.bookLabel },
+        chapter: model.chapter,
+      });
+      let result: AssistResult;
+      try {
+        result = await provider.suggest(ctx, abort.signal);
+      } catch {
+        failed++;
+        continue;
+      }
+      if (abort.signal.aborted || destroyed) break;
+      if (result.kind === 'suggestion' && fillRowEnglish(r, 0, sanitizeSuggestion(result.text))) {
+        filled++;
+      } else {
+        failed++;
+      }
+    }
+    if (abort.signal.aborted || destroyed) return;
+    const parts = [`Translated ${filled} line${filled === 1 ? '' : 's'}`];
+    if (skipped) parts.push(`${skipped} already had text`);
+    if (failed) parts.push(`${failed} failed`);
+    setStatus(parts.join(' · '), 4000);
+  }
+
   /** Right-click → "AI reference" / "Check my translation": run the SAME
    * provider the translate flow uses (mode 'reference' or 'check') and show the
    * result in the right-docked AiPanel — never touching the English cell.
@@ -1480,9 +1592,14 @@
     const d = displayRows[g];
     if (!d) return;
     const row = model.rows[d.rowIndex];
+    // If the right-click sits inside a multi-line Greek selection, "Translate
+    // with AI" acts on every selected line (batch fill); otherwise it's the
+    // usual single-line, popover-reviewed translate.
+    const selRows = selectedGreekModelRows();
+    const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
     if (segmentCount(row) > 1) {
       // Already split (Phase-1 UI is single-split): offer the merge.
-      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null };
+      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, translateRows };
       return;
     }
     // Split gesture (John's §4.1): the offset is the click's nearest word
@@ -1490,7 +1607,7 @@
     // snapToWordStart) rejects offset 0 and the line end.
     const within = caretOffsetFromPoint(e);
     const offset = within === null ? null : snapToWordStart(row.greek, d.greekStart + within);
-    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset };
+    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, translateRows };
   }
 
   /** Right-click the English cell → the 4 AI modes only. Split/Merge is a
@@ -1530,7 +1647,11 @@
     const m = ctxMenu;
     ctxMenu = null;
     if (!m) return;
-    invokeAssist(m.row, m.segment);
+    if (m.translateRows && m.translateRows.length > 1) {
+      void invokeAssistRange(m.translateRows);
+    } else {
+      invokeAssist(m.row, m.segment);
+    }
   }
 
   /** Right-click → "AI reference": the AI's own translation in the right-docked
@@ -2202,6 +2323,8 @@
       aiPanelAbort?.abort();
       aiPanelAbort = null;
       session.aiPanel = null;
+      batchAbort?.abort(); // stop any in-flight multi-line translate
+      batchAbort = null;
       window.removeEventListener('keydown', onWindowKeydown);
       window.removeEventListener('blur', onWindowBlur);
       window.removeEventListener('pointerup', clearSelectionColumn);
@@ -2282,8 +2405,13 @@
   {#if ctxMenu}
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>
-        <span class="ctx-menu-title">Translate with AI</span>
-        <span class="ctx-menu-desc">Writes a draft into this row's English cell</span>
+        {#if ctxMenu.translateRows && ctxMenu.translateRows.length > 1}
+          <span class="ctx-menu-title">Translate {ctxMenu.translateRows.length} lines with AI</span>
+          <span class="ctx-menu-desc">Fills each selected line's empty English cell</span>
+        {:else}
+          <span class="ctx-menu-title">Translate with AI</span>
+          <span class="ctx-menu-desc">Writes a draft into this row's English cell</span>
+        {/if}
       </button>
       <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>
         <span class="ctx-menu-title">AI reference</span>
