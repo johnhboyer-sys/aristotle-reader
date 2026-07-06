@@ -138,6 +138,13 @@
 
   let focusedRow = -1; // last MODEL row that held focus (toolbar targets it)
   let focusedSegment = 0; // …and the segment within it
+  // Reactive mirror of the CURRENTLY-focused (row, segment), cleared on blur —
+  // drives the focused-row whisper on the Greek + gutter cells. Needed because
+  // those cells no longer sit adjacent to their English sibling in the DOM (the
+  // columns are grouped so a Greek selection can't span English), so the old
+  // sibling-`:has()` CSS can't reach them; the English cell keeps :focus-within.
+  let focusRow = $state(-1);
+  let focusSeg = $state(-1);
   let savedX: number | null = null; // goal column for cross-row Arrow moves
   let activeFn: string | null = null;
   let fnDisplay = new Map<string, number>(); // chapter-local order (1-based)
@@ -2002,6 +2009,8 @@
           focus: (v) => {
             focusedRow = row;
             focusedSegment = segment;
+            focusRow = row;
+            focusSeg = segment;
             syncToolbar(v.state);
             // Keep the ask target on the line you're on, so an already-open
             // Ask panel follows the caret.
@@ -2010,6 +2019,12 @@
           },
           blur: () => {
             commitRowNow(row);
+            // Drop the Greek/gutter whisper when THIS cell loses focus (a newer
+            // focus event re-sets it first, so cell-to-cell moves don't flicker).
+            if (focusRow === row && focusSeg === segment) {
+              focusRow = -1;
+              focusSeg = -1;
+            }
             return false;
           },
         },
@@ -2212,6 +2227,12 @@
     </header>
 
     <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <!-- The three columns are grouped in DOM order (all Greek, then all
+         gutters, then all English) rather than interleaved per row, so a drag
+         across Greek lines can't run through the English cells that would
+         otherwise sit between rows — the highlight (and any copied text) stays
+         within one language. Visual layout is unchanged: every cell is placed
+         by explicit grid-row + grid-column, so DOM order is free. -->
     <div class="chapter-grid" bind:this={gridEl} onpointerdown={onGridPointerDown}>
       {#each displayRows as d, g (d.key)}
         <GreekCell
@@ -2219,9 +2240,14 @@
           greek={d.greekSlice}
           continuation={d.continuation}
           flash={flashRowIdx === g}
+          focused={focusRow === d.rowIndex && focusSeg === d.segment}
           onContext={(e) => onGreekContextMenu(e, g)}
         />
-        <RowGutter gridRow={g} raw={d.address.raw} />
+      {/each}
+      {#each displayRows as d, g (d.key)}
+        <RowGutter gridRow={g} raw={d.address.raw} focused={focusRow === d.rowIndex && focusSeg === d.segment} />
+      {/each}
+      {#each displayRows as d, g (d.key)}
         <EnglishCell
           gridRow={g}
           row={d.rowIndex}

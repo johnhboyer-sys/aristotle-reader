@@ -11,12 +11,14 @@
     greek,
     continuation,
     flash,
+    focused,
     onContext,
   }: {
     gridRow: number;
     greek: string;
     continuation: boolean;
     flash: boolean;
+    focused: boolean;
     onContext: (e: MouseEvent) => void;
   } = $props();
 </script>
@@ -29,6 +31,7 @@
   class="grc-cell"
   class:cont={continuation}
   class:row-flash={flash}
+  class:row-focus={focused}
   style="grid-row: {gridRow + 1}"
   data-row={gridRow}
   lang="grc"

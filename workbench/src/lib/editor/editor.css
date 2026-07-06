@@ -154,14 +154,17 @@
   caret-color: var(--accent);
 }
 
-/* Focused row: a whisper of background across the WHOLE row — the three
-   cells are siblings on one grid track, so the Greek and gutter cells find
-   their focused English sibling via :has(). */
-.grc-cell:has(+ .gutter + .en-cell:focus-within) {
+/* Focused row: a whisper of background across the WHOLE row. The columns are
+   grouped in the DOM (so a Greek selection can't span the English between
+   rows), so the Greek + gutter cells no longer sit next to their English
+   sibling and can't find it via :has(); they take a .row-focus class driven by
+   the editor's focus/blur events instead. The English cell still uses
+   :focus-within (it hosts the focus). */
+.grc-cell.row-focus {
   background: color-mix(in srgb, var(--accent) 4%, transparent);
   border-radius: 3px 0 0 3px;
 }
-.gutter:has(+ .en-cell:focus-within) {
+.gutter.row-focus {
   background: color-mix(in srgb, var(--accent) 4%, transparent);
   color: var(--text-mid);
 }
