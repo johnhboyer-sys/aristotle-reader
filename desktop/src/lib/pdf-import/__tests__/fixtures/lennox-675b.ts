@@ -1,3 +1,5 @@
+import { createDocContext, type DocContext } from '../../gutter';
+
 // Gold fixture: a synthetic recto page reconstructed to match the Lennox
 // "Parts of Animals" III.14 pdftotext -layout output around the Bekker
 // column transition 675b -> 676a.
@@ -68,8 +70,20 @@ const lines: string[] = [
 
 export const lennox675bPage: string = lines.join('\n');
 
-/** The primer DocContext this page opens under (mid-column, inherited from the previous physical page). */
-export const lennox675bPrimerContext = { column: '675b', lastLine: 1 };
+/**
+ * The primer DocContext this page opens under: mid-column at 675b, with the
+ * last printed tic having been 675b1 on the (unmodeled) previous physical
+ * page — so the 5->675b5 cadence step is the legitimate "first interval is
+ * 4" case, not a dropped line.
+ */
+export function lennox675bPrimerContext(): DocContext {
+  const ctx = createDocContext();
+  ctx.page = 675;
+  ctx.col = 'b';
+  ctx.lastTic = { page: 675, col: 'b', line: 1, physPage: -1 };
+  ctx.anyTicSeen = true;
+  return ctx;
+}
 
 export interface ExpectedTic {
   raw: string;

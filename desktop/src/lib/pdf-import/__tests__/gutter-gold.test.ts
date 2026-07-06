@@ -16,11 +16,11 @@ function tokenAt(page: ReturnType<typeof splitPages>[number], lineIdx: number, c
   return word.replace(/[.,;:]+$/, '');
 }
 
-describe.skip('gutter gold fixtures — unskip when scanPage lands (Phase 1)', () => {
+describe('gutter gold fixtures (Lennox PA 675b)', () => {
   const page = splitPages(lennox675bPage)[0];
 
   it('detects exactly 8 tics, in order, with correct column/line/anchor', () => {
-    const scan = scanPage(page, lennox675bPrimerContext);
+    const scan = scanPage(page, lennox675bPrimerContext());
     expect(scan.tics).toHaveLength(8);
 
     scan.tics.forEach((tic, i) => {
@@ -28,12 +28,12 @@ describe.skip('gutter gold fixtures — unskip when scanPage lands (Phase 1)', (
       expect(tic.raw).toBe(expected.raw);
       expect(tic.column).toBe(expected.column);
       expect(tic.line).toBe(expected.line);
-      expect(tokenAt(page, tic.anchorLineIdx, tic.anchorCol)).toBe(expected.anchorWord);
+      expect(tokenAt(page, tic.anchorLineIdx!, tic.anchorCol!)).toBe(expected.anchorWord);
     });
   });
 
   it('is not collapsed and finds the header on the first line', () => {
-    const scan = scanPage(page, lennox675bPrimerContext);
+    const scan = scanPage(page, lennox675bPrimerContext());
     expect(scan.collapsed).toBe(false);
     expect(scan.headerLineIdx).toBe(0);
   });
