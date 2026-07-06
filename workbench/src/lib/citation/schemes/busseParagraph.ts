@@ -133,4 +133,5 @@ export const busseParagraph: CitationScheme = {
     rowUnit: 'paragraph',
     gutterMode: 'address',
   },
+  spineSource: 'corpus',
 };

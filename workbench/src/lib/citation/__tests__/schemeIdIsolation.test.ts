@@ -30,7 +30,14 @@ let srcRoot: string;
 // Every SchemeId currently registered (types.ts's SchemeId union is the
 // source of truth; the second test below cross-checks this list against
 // registry.ts so it can't silently drift out of date).
-const SCHEME_IDS: SchemeId[] = ['bekker-standard', 'bekker-metaphysics', 'aquinas-tbd', 'busse-paragraph'];
+const SCHEME_IDS: SchemeId[] = [
+  'bekker-standard',
+  'bekker-metaphysics',
+  'aquinas-tbd',
+  'busse-paragraph',
+  'paragraph',
+  'plain-line',
+];
 
 function listTsFiles(fsMod: FS, path: PathMod, dir: string): string[] {
   const out: string[] = [];
