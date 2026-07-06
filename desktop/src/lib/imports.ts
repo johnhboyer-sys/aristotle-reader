@@ -50,6 +50,14 @@ export interface ImportRecord {
    */
   footnotes?: Record<string, string>;
   footnoteScope?: FootnoteScope;
+  /**
+   * 'b.c' -> chapter title, verbatim, from the PDF converter's title map
+   * (Phase 4A's `ConvertResult.titles`; §Phase-4B task 2). Optional so
+   * records from a hand-authored/plain import (no converter involved) or
+   * written before this field existed still load unchanged — getImportTitles
+   * just has nothing to contribute for them.
+   */
+  titles?: Record<string, string>;
 }
 
 export interface ImportSummary {
@@ -152,6 +160,26 @@ function store(): Promise<Store> {
 type G = typeof globalThis & {
   __ARISTOTLE_EXTRA_TRANSLATIONS__?: Record<string, TranslationRef[]>;
   __ARISTOTLE_BOOK_HOOK__?: (work: string, n: number, data: BookData) => BookData;
+  /**
+   * §B4.4: FootnotePopup.svelte (app/src, SHARED with the static site build,
+   * which has no imports.ts and must not import desktop code) resolves an
+   * imported translation's footnote text through this window-level hook
+   * instead of a direct import — the same pattern __ARISTOTLE_BOOK_HOOK__ and
+   * __ARISTOTLE_EXTRA_TRANSLATIONS__ already use above. Site build: hook is
+   * never installed, so app/src's lazy `globalThis.__ARISTOTLE_...` read is
+   * always undefined there — inert, byte-identical rendering.
+   */
+  __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__?: (work: string, id: string, label: string) => string | null;
+  /**
+   * Companion to the hook above: lets FootnotePopup tell "this transId is a
+   * registered import with no note for this label" apart from "this transId
+   * isn't an import at all — fall back to the site's fetchFootnotes(work)".
+   * Without this, a registered import's unmatched label would silently fall
+   * through to the WORK's built-in footnotes.json and could show a foreign
+   * translation's note text if the label happened to collide (both use plain
+   * digit labels under continuous scope) — see implementation-notes.md.
+   */
+  __ARISTOTLE_IMPORT_HAS_TRANS__?: (work: string, id: string) => boolean;
 };
 
 const registered = new Map<string, ImportRecord>(); // "work/id" → record
@@ -204,6 +232,11 @@ function installHooks(): void {
       name: displayName(rec.meta),
       short: rec.meta.translator,
       slot: 'overlay',
+      // §B4.2: marks this overlay for Reader.svelte's footnote-marker
+      // transform (the same TranslationRef.footnotes flag a built-in like
+      // Owen already sets) — only when the file actually carried a
+      // footnotes block, so an import with none renders exactly as before.
+      ...(rec.footnotes && Object.keys(rec.footnotes).length > 0 ? { footnotes: true } : {}),
     });
   }
   g.__ARISTOTLE_EXTRA_TRANSLATIONS__ = extras;
@@ -223,6 +256,11 @@ function installHooks(): void {
     }
     return touched ? data : data;
   };
+  // §B4.4: window-level footnote-resolution hooks for FootnotePopup.svelte
+  // (site-shared; see the G type's doc comment above for why these exist as
+  // hooks rather than a direct import).
+  g.__ARISTOTLE_IMPORT_HAS_TRANS__ = (work, id) => registered.has(`${work}/${id}`);
+  g.__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ = (work, id, label) => getImportFootnote(work, id, label);
 }
 
 /** Load every stored import and register it — call once at startup, before mount. */
@@ -253,6 +291,18 @@ export function getImportEmphasis(work: string, id: string, book: number, column
 }
 
 /**
+ * Pure core of getImportFootnote — resolves `label` (the full scope-qualified
+ * identity: plain digits under continuous scope, "book.chapter.N" under
+ * per-chapter, or a "*"/"†" work-level glyph — see phase3-final-spec.md §B5)
+ * against one already-fetched record's footnotes map. Split out from the
+ * `registered`-Map lookup below so it's unit-testable with a plain object
+ * literal, no storage/registration pipeline required.
+ */
+export function resolveImportFootnote(rec: ImportRecord | undefined, label: string): string | null {
+  return rec?.footnotes?.[label] ?? null;
+}
+
+/**
  * §B4 (Phase 4 wires this into FootnotePopup): the note text for one label
  * on one imported translation, reading `registered.get(...).footnotes?.[label]`
  * — mirrors getImportEmphasis. Returns null (never throws) when `work`/`id`
@@ -260,8 +310,53 @@ export function getImportEmphasis(work: string, id: string, book: number, column
  * predates the footnotes field.
  */
 export function getImportFootnote(work: string, id: string, label: string): string | null {
-  const rec = registered.get(`${work}/${id}`);
-  return rec?.footnotes?.[label] ?? null;
+  return resolveImportFootnote(registered.get(`${work}/${id}`), label);
+}
+
+/**
+ * §Phase-4B task 2: merged 'b.c' -> title map across every registered import
+ * for `work` (converter-derived titles only; records with no `titles` field
+ * contribute nothing). Iterates `registered` in Map insertion order — i.e.
+ * the order imports were loaded/registered this session, NOT necessarily
+ * their original import chronology — and a later entry's title for the same
+ * key overwrites an earlier one ("later imports win"). Consumed by
+ * App.svelte via mergeChapterTitles below, which merges this OVER the
+ * fetched chapter-titles.json map but only to fill gaps.
+ */
+export function getImportTitles(work: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, rec] of registered) {
+    if (key.split('/')[0] !== work || !rec.titles) continue;
+    Object.assign(out, rec.titles);
+  }
+  return out;
+}
+
+/**
+ * §Phase-4B task 2: merge an imported 'b.c' -> title map (as returned by
+ * getImportTitles) over `builtin`'s per-chapter titles for ONE book — but
+ * ONLY to fill a gap. A built-in title always wins over an imported one: the
+ * built-in file is curated/reviewed for this exact book, while an imported
+ * title is machine-extracted from a PDF's running heads and may be noisier
+ * — conservative default, never let an import silently replace a reviewed
+ * title. Pure function (no registry access) so the merge rule is directly
+ * unit-testable; App.svelte's mergeTitles is a thin wrapper that supplies
+ * `getImportTitles(work)` as `imported`.
+ */
+export function mergeChapterTitles(
+  book: number,
+  builtin: Record<string, string>,
+  imported: Record<string, string>,
+): Record<string, string> {
+  if (Object.keys(imported).length === 0) return builtin;
+  const merged = { ...builtin };
+  const prefix = `${book}.`;
+  for (const [key, title] of Object.entries(imported)) {
+    if (!key.startsWith(prefix)) continue;
+    const chapter = key.slice(prefix.length);
+    if (!merged[chapter]) merged[chapter] = title;
+  }
+  return merged;
 }
 
 /**
@@ -283,6 +378,16 @@ export function getImportCitation(work: string, id: string): string | null {
 export interface ImportRequest {
   raw: string;                 // file content as uploaded (dehyphenated, but still carrying
                                 // emphasis markers — parseTranslationFile classifies those)
+  /**
+   * The pristine upload, when it differs from `raw` — e.g. ImportDialog's
+   * PDF-conversion pre-stage sets `raw` to the CONVERTER'S tagged output
+   * (what actually gets parsed/aligned/canonicalized) but wants the
+   * `.original` safety-net file to hold the real pdftotext extraction, not
+   * the tagged text. Falls back to `raw` when omitted — every pre-existing
+   * caller (a plain/hand-tagged import has no separate "original") keeps
+   * today's behavior unchanged.
+   */
+  original?: string;
   work: string;                // corpus slug (from the dropdown — never free text)
   translator: string;
   license: TranslationMeta['license'];
@@ -301,6 +406,14 @@ export interface ImportRequest {
    * a non-interactive re-import) that wants the defaults applied instead.
    */
   emphasisChoices?: Map<number, 'keep' | 'remove'>;
+  /**
+   * 'b.c' -> chapter title map from the PDF converter (Phase 4A's
+   * ConvertResult.titles), passed through unchanged by ImportDialog when the
+   * source file was a layout extraction. Stored on the ImportRecord verbatim
+   * (§getImportTitles); omitted for a plain/hand-tagged import, which has no
+   * titles to offer.
+   */
+  titles?: Record<string, string>;
 }
 
 // §B3 import summary: "Detected continuous work-level numbering — 222
@@ -404,11 +517,12 @@ export async function runImport(
     alignment,
     footnotes: parsed.footnotes,
     footnoteScope: parsed.footnoteScope,
+    ...(req.titles ? { titles: req.titles } : {}),
   };
   const canonical = parsed.hasFrontmatter
     ? req.raw
     : serializeFrontmatter(meta) + req.raw;
-  await s.write(req.work, meta.id, canonical, req.raw, record);
+  await s.write(req.work, meta.id, canonical, req.original ?? req.raw, record);
   registered.set(`${req.work}/${meta.id}`, record);
   installHooks();
 
