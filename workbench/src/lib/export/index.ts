@@ -17,7 +17,7 @@ import type { WorkMeta } from '../citation/types';
 
 export type { StampMode, PandocMarkdownOptions } from './pandocMarkdown';
 export { chapterToPandocMarkdown, markupToPandoc, deriveRowAddresses } from './pandocMarkdown';
-export { pandocAvailable, pandocDocxArgs, runPandocNode, runPandocTauri, resolvePandocProgram, PANDOC_SCOPE_CANDIDATES, PANDOC_UNAVAILABLE_MESSAGE, NATIVE_FOOTNOTES_NOTES } from './pandoc';
+export { pandocAvailable, pandocDocxArgs, runPandocNode, runPandocTauri, resolvePandocProgram, resolvePandocProgramByRun, PANDOC_SCOPE_CANDIDATES, PANDOC_UNAVAILABLE_MESSAGE, NATIVE_FOOTNOTES_NOTES } from './pandoc';
 export type { PandocDocxJob, RunResult } from './pandoc';
 export {
   compileWorkMarkdown,

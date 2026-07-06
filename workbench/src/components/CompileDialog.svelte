@@ -80,15 +80,16 @@
     note = null;
     try {
       const shell = await import('@tauri-apps/plugin-shell');
-      // GUI-PATH fix (d4 rider, same as ExportButton): resolve the absolute
-      // pandoc scope name first — bare 'pandoc' only works from a terminal launch.
-      const { resolvePandocProgram } = await import('../lib/export');
-      const fsProbe = await import('@tauri-apps/plugin-fs');
-      const pandocProgram = await resolvePandocProgram((p) => fsProbe.exists(p));
-      const probe = await shell.Command.create(pandocProgram, ['--version'])
-        .execute()
-        .catch(() => null);
-      if (!probe || probe.code !== 0) {
+      // GUI-PATH fix (d4 rider, same as ExportButton): a Finder-launched app
+      // has no Homebrew dirs on PATH, so resolve the pandoc scope name by
+      // actually running `--version` — absolute Homebrew/usr-local scopes
+      // first, bare 'pandoc' last for terminal launches. Running IS the probe.
+      const { resolvePandocProgramByRun } = await import('../lib/export');
+      const pandocProgram = await resolvePandocProgramByRun(async (program) => {
+        const r = await shell.Command.create(program, ['--version']).execute().catch(() => null);
+        return !!r && r.code === 0;
+      });
+      if (!pandocProgram) {
         note = PANDOC_UNAVAILABLE_MESSAGE;
         phase = 'ready';
         return;

@@ -6,7 +6,7 @@
   import { isTauri } from '../lib/runtime';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
   import { parseChapterFile } from '../lib/chapterfile';
-  import { chapterToPandocMarkdown, runPandocTauri, resolvePandocProgram, PANDOC_UNAVAILABLE_MESSAGE } from '../lib/export';
+  import { chapterToPandocMarkdown, runPandocTauri, resolvePandocProgramByRun, PANDOC_UNAVAILABLE_MESSAGE } from '../lib/export';
   import type { WorkManifest } from '../lib/works/manifest';
   import CompileDialog from './CompileDialog.svelte';
 
@@ -39,15 +39,16 @@
       const parsed = parseChapterFile(raw);
 
       const shell = await import('@tauri-apps/plugin-shell');
-      // GUI-PATH fix (d4 rider): a Finder-launched app has no Homebrew dirs
-      // on PATH, so probe the known absolute locations first and run pandoc
-      // under that scope name; bare 'pandoc' stays the terminal-launch fallback.
-      const fsProbe = await import('@tauri-apps/plugin-fs');
-      const pandocProgram = await resolvePandocProgram((p) => fsProbe.exists(p));
-      const probe = await shell.Command.create(pandocProgram, ['--version'])
-        .execute()
-        .catch(() => null);
-      if (!probe || probe.code !== 0) {
+      // GUI-PATH fix (d4 rider): a Finder-launched app has no Homebrew dirs on
+      // PATH, so bare 'pandoc' won't resolve. Try each scope name by actually
+      // running `--version` and take the first that exits cleanly (absolute
+      // Homebrew/usr-local scopes first, bare 'pandoc' last for terminal
+      // launches). Running it IS the availability probe — no separate check.
+      const pandocProgram = await resolvePandocProgramByRun(async (program) => {
+        const r = await shell.Command.create(program, ['--version']).execute().catch(() => null);
+        return !!r && r.code === 0;
+      });
+      if (!pandocProgram) {
         note(PANDOC_UNAVAILABLE_MESSAGE);
         return;
       }

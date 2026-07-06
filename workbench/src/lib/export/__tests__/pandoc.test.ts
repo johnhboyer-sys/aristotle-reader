@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   pandocDocxArgs,
   resolvePandocProgram,
+  resolvePandocProgramByRun,
   runPandocTauri,
   PANDOC_SCOPE_CANDIDATES,
 } from '../pandoc';
@@ -47,6 +48,45 @@ describe('resolvePandocProgram (GUI-PATH fix)', () => {
       return false;
     });
     expect(probed).toEqual(PANDOC_SCOPE_CANDIDATES.map((c) => c.path));
+  });
+});
+
+describe('resolvePandocProgramByRun (run-based GUI-PATH fix)', () => {
+  it('returns the first scope name whose --version runs (Homebrew first)', async () => {
+    const program = await resolvePandocProgramByRun(async (name) => name === 'pandoc-homebrew');
+    expect(program).toBe('pandoc-homebrew');
+  });
+
+  it('falls back to /usr/local when Homebrew cannot run', async () => {
+    const program = await resolvePandocProgramByRun(async (name) => name === 'pandoc-usr-local');
+    expect(program).toBe('pandoc-usr-local');
+  });
+
+  it('falls back to the bare name (terminal launch, PATH lookup) last', async () => {
+    const program = await resolvePandocProgramByRun(async (name) => name === 'pandoc');
+    expect(program).toBe('pandoc');
+  });
+
+  it('returns null when no candidate runs', async () => {
+    const program = await resolvePandocProgramByRun(async () => false);
+    expect(program).toBeNull();
+  });
+
+  it('treats a throwing runner as "cannot run" and tries the next rung', async () => {
+    const program = await resolvePandocProgramByRun(async (name) => {
+      if (name === 'pandoc-homebrew') throw new Error('shell scope denied');
+      return name === 'pandoc-usr-local';
+    });
+    expect(program).toBe('pandoc-usr-local');
+  });
+
+  it('probes scope names in order: absolute scopes first, bare name last', async () => {
+    const probed: string[] = [];
+    await resolvePandocProgramByRun(async (name) => {
+      probed.push(name);
+      return false;
+    });
+    expect(probed).toEqual([...PANDOC_SCOPE_CANDIDATES.map((c) => c.scopeName), 'pandoc']);
   });
 });
 

@@ -139,6 +139,13 @@ export const PANDOC_SCOPE_CANDIDATES: ReadonlyArray<{ scopeName: string; path: s
  * absolute path exists, else the bare 'pandoc' name (PATH lookup — works from
  * a terminal launch). `exists` is injected (plugin-fs `exists` in the app;
  * a fake in tests) so this stays pure and node-testable.
+ *
+ * NOTE: prefer `resolvePandocProgramByRun` in the app. This `exists`-based
+ * resolver depends on plugin-fs `exists` succeeding for an absolute path
+ * OUTSIDE the app sandbox (/opt/homebrew/…), which proved unreliable on a
+ * real Finder launch (scope/symlink quirks make it return false or throw,
+ * silently dropping resolution to bare 'pandoc' → PATH miss → "install
+ * pandoc"). Kept for callers/tests that still inject a fs probe.
  */
 export async function resolvePandocProgram(
   exists: (path: string) => Promise<boolean>,
@@ -151,6 +158,35 @@ export async function resolvePandocProgram(
     }
   }
   return 'pandoc';
+}
+
+/**
+ * Resolve the shell-scope name to run pandoc under by ACTUALLY running each
+ * candidate's `--version` and taking the first that exits cleanly. This tests
+ * the one thing that matters — "can this program be spawned and run?" — so it
+ * sidesteps the fs-scope / symlink quirks that made the `exists`-probe
+ * approach fail on a real Finder launch. Order: the absolute Homebrew /
+ * usr-local scope names first (a Finder-launched .app has no Homebrew dirs on
+ * PATH, so these absolute-path scope entries are what actually work), then the
+ * bare 'pandoc' name last (PATH lookup — still works from a terminal launch).
+ *
+ * `canRun(program)` should run `program --version` under the app's shell scope
+ * and resolve true iff it exits 0. Injected (a shell-plugin runner in the app;
+ * a fake in tests) so this stays pure and node-testable. Returns null when no
+ * candidate runs — the caller then shows PANDOC_UNAVAILABLE_MESSAGE.
+ */
+export async function resolvePandocProgramByRun(
+  canRun: (program: string) => Promise<boolean>,
+): Promise<string | null> {
+  const candidates = [...PANDOC_SCOPE_CANDIDATES.map((c) => c.scopeName), 'pandoc'];
+  for (const program of candidates) {
+    try {
+      if (await canRun(program)) return program;
+    } catch {
+      // scope-denied / spawn error — try the next rung
+    }
+  }
+  return null;
 }
 
 /** Minimal structural type for the bit of @tauri-apps/plugin-fs we probe with. */
