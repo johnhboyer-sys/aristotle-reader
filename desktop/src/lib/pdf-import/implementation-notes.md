@@ -81,3 +81,14 @@
   division invariants pinned alongside were measured on the same run: books
   1..10 + MM restart, 117/117 chapters titled, zero division-level audit flags, no
   preamble, `workOrdinal` 2 after the seam.
+
+## Deferred to Phase 4 (John, 2026-07-06): body diagrams / table-like formatting
+Reeve prints occasional diagrams (e.g. the NE 5 proportion diagram — in this work it
+sits inside footnote 77, already handled by the note display-line rule). Body-text
+diagrams in other works would be scrambled by prose reflow at emission. Phase 4's
+emit design must include a body display-block detector (wide internal space runs /
+low alpha density, same rule as note display lines): preserve such blocks verbatim
+or flag `display-block` with page/line refs in the import summary, and add a review
+flag to any tic whose anchor lands on a display line. Detection-side risk is already
+bounded: stray diagram numbers that pass the positional gates are caught by the
+cadence/monotonic audit (flagged, never silent).
