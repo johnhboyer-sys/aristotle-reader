@@ -72,6 +72,7 @@
     SyncCommands,
     AssistCommands,
     AskResult,
+    AiPanelState,
   } from './session.svelte';
   import { hasChanged, decideReload, snapshotOf } from '../library/sync';
   import type { FileSnapshot } from '../library/sync';
@@ -118,7 +119,6 @@
   import GreekCell from './GreekCell.svelte';
   import RowGutter from './RowGutter.svelte';
   import EnglishCell from './EnglishCell.svelte';
-  import ReferencePopup from '../../components/ReferencePopup.svelte';
   import './editor.css';
 
   let { fixture }: { fixture: FixtureChapter } = $props();
@@ -1070,20 +1070,14 @@
   // the user closes it. Multiple can coexist, so this is an ARRAY; each entry
   // owns its own AbortController (closing a popup aborts its in-flight
   // request). All are torn down on chapter switch / unmount.
-  type RefPopupState =
-    | { kind: 'thinking' }
-    | { kind: 'text'; text: string }
-    | { kind: 'error'; text: string };
-  interface RefPopup {
-    id: number;
-    x: number;
-    y: number;
-    title: string;
-    state: RefPopupState;
-    abort: AbortController;
-  }
-  let refPopups = $state<RefPopup[]>([]);
-  let refPopupSeq = 0;
+  // ── AI output sidebar (Translation Check / AI reference) ────────────────
+  // The result renders in the right-docked AiPanel (session.aiPanel bridge),
+  // not a floating popup — one panel at a time, superseded by the next request.
+  // `aiPanelAbort` cancels the in-flight request on close / supersede / unmount
+  // so a stale result can never land; `aiPanelText` is the raw Markdown kept
+  // for the Copy action.
+  let aiPanelAbort: AbortController | null = null;
+  let aiPanelText = '';
 
   // ── Ask-AI (docked bottom panel; free-form question about a line) ────────
   // ONE-SHOT: each question is answered independently (no prior-turn history is
@@ -1165,17 +1159,15 @@
     assistSeg = 0;
   }
 
-  /** Right-click the Greek → "AI reference": run the SAME provider the
-   * translate flow uses, but with `mode: 'reference'`, and show the result in
-   * a floating popup that never touches the English cell. Guards run first
-   * (row valid, Greek non-empty → else a brief status). Positions the popup at
-   * the click point (x, y). Multiple popups coexist; each has its own
-   * AbortController so closing one aborts only its request. */
-  function invokePopup(
+  /** Right-click → "AI reference" / "Check my translation": run the SAME
+   * provider the translate flow uses (mode 'reference' or 'check') and show the
+   * result in the right-docked AiPanel — never touching the English cell.
+   * Guards run first (row valid, Greek non-empty; check needs existing English
+   * → else a brief status). Supersedes any open panel (one at a time) and
+   * aborts its in-flight request. `title` is the panel header. */
+  function invokeAiPanel(
     row: number,
     segment: number,
-    x: number,
-    y: number,
     mode: 'reference' | 'check',
     title: string,
   ) {
@@ -1189,27 +1181,28 @@
       setStatus('There is no English on this line to check yet.');
       return;
     }
-    const id = ++refPopupSeq;
+    aiPanelAbort?.abort(); // supersede any open panel's request
     const abort = new AbortController();
-    refPopups = [...refPopups, { id, x, y, title, state: { kind: 'thinking' }, abort }];
-    void runPopup(id, row, mode, abort.signal);
+    aiPanelAbort = abort;
+    aiPanelText = '';
+    session.aiPanel = { title, locus: model.rows[row].address.raw, state: { kind: 'thinking' } };
+    void runAiPanel(row, mode, abort);
   }
 
-  function setRefPopupState(id: number, state: RefPopupState) {
-    refPopups = refPopups.map((p) => (p.id === id ? { ...p, state } : p));
+  /** Only apply a result if `abort` is still THE current panel request (not
+   * superseded / closed / unmounted). */
+  function setAiPanelState(abort: AbortController, state: AiPanelState) {
+    if (abort.signal.aborted || destroyed || aiPanelAbort !== abort || !session.aiPanel) return;
+    session.aiPanel = { ...session.aiPanel, state };
   }
 
-  async function runPopup(
-    id: number,
-    row: number,
-    mode: 'reference' | 'check',
-    signal: AbortSignal,
-  ) {
+  async function runAiPanel(row: number, mode: 'reference' | 'check', abort: AbortController) {
+    const signal = abort.signal;
     let provider: AssistProvider;
     try {
       provider = await getAssistProvider();
     } catch {
-      if (!signal.aborted) setRefPopupState(id, { kind: 'error', text: GENERIC_ERROR_MESSAGE });
+      setAiPanelState(abort, { kind: 'error', text: GENERIC_ERROR_MESSAGE });
       return;
     }
     if (signal.aborted || destroyed) return;
@@ -1241,35 +1234,36 @@
     try {
       result = await provider.suggest(ctx, signal);
     } catch {
-      if (!signal.aborted && !destroyed) setRefPopupState(id, { kind: 'error', text: GENERIC_ERROR_MESSAGE });
+      setAiPanelState(abort, { kind: 'error', text: GENERIC_ERROR_MESSAGE });
       return;
     }
     if (signal.aborted || destroyed) return;
 
     if (result.kind === 'suggestion') {
-      setRefPopupState(id, { kind: 'text', text: result.text });
+      aiPanelText = result.text;
+      setAiPanelState(abort, { kind: 'text', text: result.text });
     } else {
       // clipboard fallback or error — both carry one vetted plain sentence.
-      setRefPopupState(id, { kind: 'error', text: result.message });
+      setAiPanelState(abort, { kind: 'error', text: result.message });
     }
   }
 
-  /** Close a reference popup: abort its in-flight request and drop it. */
-  function closeRefPopup(id: number) {
-    const p = refPopups.find((q) => q.id === id);
-    p?.abort.abort();
-    refPopups = refPopups.filter((q) => q.id !== id);
+  /** Close the AI panel: abort its in-flight request and clear the bridge. */
+  function closeAiPanel() {
+    aiPanelAbort?.abort();
+    aiPanelAbort = null;
+    aiPanelText = '';
+    session.aiPanel = null;
   }
 
-  /** Copy a reference popup's text to the clipboard (only in the text state). */
-  async function copyRefPopup(id: number) {
-    const p = refPopups.find((q) => q.id === id);
-    if (!p || p.state.kind !== 'text') return;
+  /** Copy the AI panel's current text to the clipboard; true on success. */
+  async function copyAiPanel(): Promise<boolean> {
+    if (session.aiPanel?.state.kind !== 'text' || !aiPanelText) return false;
     try {
-      await writeClipboardText(p.state.text);
-      setStatus('Reference copied.');
+      await writeClipboardText(aiPanelText);
+      return true;
     } catch {
-      setStatus('Could not copy — try again.');
+      return false;
     }
   }
 
@@ -1503,22 +1497,22 @@
     invokeAssist(m.row, m.segment);
   }
 
-  /** Right-click the Greek → "AI reference": the AI's own translation in a
-   * floating popup. Independent of the translate/cell flow. */
+  /** Right-click → "AI reference": the AI's own translation in the right-docked
+   * AI panel. Independent of the translate/cell flow. */
   function menuReference() {
     const m = ctxMenu;
     ctxMenu = null;
     if (!m) return;
-    invokePopup(m.row, m.segment, m.x, m.y, 'reference', 'AI reference');
+    invokeAiPanel(m.row, m.segment, 'reference', 'AI reference');
   }
 
-  /** Right-click the Greek → "Check my translation": a linguist's diagnosis of
-   * the row's existing English against the Greek, in a floating popup. */
+  /** Right-click → "Check my translation": a linguist's diagnosis of the row's
+   * existing English against the Greek, in the right-docked AI panel. */
   function menuCheck() {
     const m = ctxMenu;
     ctxMenu = null;
     if (!m) return;
-    invokePopup(m.row, m.segment, m.x, m.y, 'check', 'Translation check');
+    invokeAiPanel(m.row, m.segment, 'check', 'Translation check');
   }
 
   /** Right-click the Greek → "Ask AI about this line…": pin the ask target to
@@ -2034,6 +2028,8 @@
 
   const assistCommandsImpl: AssistCommands = {
     askAboutLine,
+    closeAiPanel,
+    copyAiPanel,
   };
 
   function onWindowKeydown(e: KeyboardEvent) {
@@ -2145,9 +2141,10 @@
       assistCtl.cancel(); // in-flight suggestion can never land in a gone chapter
       askAbort?.abort(); // in-flight ask can never answer in a gone chapter
       askAbort = null;
-      // Abort every open reference popup's in-flight request and drop them.
-      for (const p of refPopups) p.abort.abort();
-      refPopups = [];
+      // Abort the AI panel's in-flight request and clear the bridge.
+      aiPanelAbort?.abort();
+      aiPanelAbort = null;
+      session.aiPanel = null;
       window.removeEventListener('keydown', onWindowKeydown);
       window.removeEventListener('blur', onWindowBlur);
       document.removeEventListener('visibilitychange', onVisibilityHidden);
@@ -2225,17 +2222,6 @@
       {/if}
     </div>
   {/if}
-
-  {#each refPopups as p (p.id)}
-    <ReferencePopup
-      x={p.x}
-      y={p.y}
-      title={p.title}
-      body={p.state}
-      onClose={() => closeRefPopup(p.id)}
-      onCopy={() => void copyRefPopup(p.id)}
-    />
-  {/each}
 
   {#if session.status}
     <div class="status-pill" role="status">{session.status.text}</div>

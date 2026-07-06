@@ -12,6 +12,7 @@
   import ImportDialog from './components/ImportDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import AskPanel from './components/AskPanel.svelte';
+  import AiPanel from './components/AiPanel.svelte';
   import FootnotePanel from './components/FootnotePanel.svelte';
   import ReferencePanel from './components/ReferencePanel.svelte';
   import ReferenceImportDialog from './components/ReferenceImportDialog.svelte';
@@ -520,7 +521,11 @@
       {/if}
     </div>
 
-    {#if footnotesOpen}
+    {#if session.aiPanel}
+      <!-- AI output (Translation Check / AI reference) takes the right slot
+           while open; closing it reveals whatever tool panel was toggled. -->
+      <AiPanel />
+    {:else if footnotesOpen}
       <aside class="side-panel" aria-label="Footnotes">
         <header class="panel-head">
           <h2>Footnotes</h2>

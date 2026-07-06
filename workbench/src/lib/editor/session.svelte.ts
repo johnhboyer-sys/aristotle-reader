@@ -64,7 +64,26 @@ export const session = $state({
    * `locus` is a display label (e.g. "Ζ.17"); `address` the opaque raw
    * citation string. Null when no line is targeted yet. */
   askTarget: null as { address: string; locus: string } | null,
+  // ── AI output sidebar bridge (Translation Check / AI reference) ──
+  /** The right-docked AI output panel's content, or null when closed. Populated
+   * by ChapterEditor's check/reference flow; App.svelte renders it. The `text`
+   * is raw Markdown — the panel renders it. */
+  aiPanel: null as AiPanelData | null,
 });
+
+/** One AI output panel's live state. */
+export type AiPanelState =
+  | { kind: 'thinking' }
+  | { kind: 'text'; text: string }
+  | { kind: 'error'; text: string };
+
+export interface AiPanelData {
+  /** Header label, e.g. "Translation check" / "AI reference". */
+  title: string;
+  /** The target line's Bekker address (e.g. "90a3"), or null. */
+  locus: string | null;
+  state: AiPanelState;
+}
 
 export interface EditorCommands {
   toggleMark(name: 'bold' | 'italic' | 'underline'): void;
@@ -97,6 +116,10 @@ export interface AssistCommands {
   /** Run the current `session.askTarget`'s row through assist mode 'ask' with
    * this question. ONE-SHOT: each call is independent (no prior turns sent). */
   askAboutLine(question: string): Promise<AskResult>;
+  /** Close the AI output sidebar: abort its in-flight request and clear it. */
+  closeAiPanel(): void;
+  /** Copy the AI output panel's current text to the clipboard; true on success. */
+  copyAiPanel(): Promise<boolean>;
 }
 
 /** Sync command the app shell drives on window focus (build spec §11). */
@@ -139,6 +162,7 @@ export function unregisterEditor(cmds: EditorCommands): void {
     session.fnFocusRequest = null;
     session.externalChangePrompt = null;
     session.askTarget = null;
+    session.aiPanel = null;
   }
 }
 
@@ -170,6 +194,8 @@ export const assistCommands: AssistCommands = {
     }
     return currentAssist.askAboutLine(question);
   },
+  closeAiPanel: () => currentAssist?.closeAiPanel(),
+  copyAiPanel: async () => currentAssist?.copyAiPanel() ?? false,
 };
 
 /** App-shell proxy for the sync check; no-op when no editor is mounted (e.g.

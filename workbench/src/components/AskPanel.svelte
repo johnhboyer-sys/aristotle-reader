@@ -17,6 +17,8 @@
   // THIS line" panel shouldn't carry another line's Q&A.
   import { tick } from 'svelte';
   import { session, assistCommands } from '../lib/editor/session.svelte';
+  import { renderMarkdown } from '../lib/assist/markdown';
+  import '../lib/assist/ai-prose.css';
 
   let { onClose }: { onClose: () => void } = $props();
 
@@ -182,7 +184,8 @@
           {#if entry.state.kind === 'thinking'}
             <p class="ask-answer thinking">Thinking…</p>
           {:else if entry.state.kind === 'answer'}
-            <p class="ask-answer">{entry.state.text}</p>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags — renderMarkdown() output is XSS-safe (input escaped first) -->
+            <div class="ask-answer ai-prose">{@html renderMarkdown(entry.state.text)}</div>
           {:else}
             <p class="ask-answer error">{entry.state.text}</p>
           {/if}
