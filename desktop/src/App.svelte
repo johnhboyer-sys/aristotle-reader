@@ -16,7 +16,7 @@
   import LexiconEntry from './components/LexiconEntry.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import Search from '../../app/src/components/Search.svelte';
-  import { getImportCitation, type ImportSummary } from './lib/imports';
+  import { getImportCitation, getImportTitles, mergeChapterTitles, type ImportSummary } from './lib/imports';
   import AnnotationsPanel from './components/AnnotationsPanel.svelte';
   import { exportLibrary, reportProblem } from './lib/export';
   import {
@@ -66,7 +66,13 @@
     _titlesCache.set(id, all);
     return all;
   }
-  loadTitles(workId).then(all => { chapterTitles = all[String(bookNum)] ?? {}; });
+  // Thin wrapper over imports.ts's mergeChapterTitles (the testable, pure
+  // "built-ins win, imports only fill gaps" rule) — supplies this work's
+  // registered-import titles as the thing being merged in.
+  function mergeTitles(work: string, book: number, builtin: Record<string, string>): Record<string, string> {
+    return mergeChapterTitles(book, builtin, getImportTitles(work));
+  }
+  loadTitles(workId).then(all => { chapterTitles = mergeTitles(workId, bookNum, all[String(bookNum)] ?? {}); });
 
   function persistLoc() {
     try { localStorage.setItem('desktop-loc', JSON.stringify({ work: workId, book: bookNum })); } catch { /* fine */ }
@@ -98,7 +104,7 @@
     // Titles resolved before the remount so the first render is final (no
     // late heading reflow under the Reader's jump scroll).
     const allTitles = await loadTitles(id);
-    chapterTitles = allTitles[String(b)] ?? {};
+    chapterTitles = mergeTitles(id, b, allTitles[String(b)] ?? {});
     const params = new URLSearchParams();
     if (opts.loc) params.set('loc', opts.loc);
     if (opts.hlg) params.set('hlg', opts.hlg);
