@@ -212,6 +212,17 @@ function isNoteStarterLine(line: string): boolean {
  * >= 2" as the terminal signal; that over-absorbed real body content on
  * pages whose terminal gap happens to be exactly one blank line — see
  * implementation-notes.md.)
+ *
+ * The display-shape peek test does NOT require sawNoteLine to already be
+ * true: because continuations are climbed in reverse (bottom-up), a note's
+ * OWN opener is only discovered strictly above its continuations, so a
+ * display-block's interior blank can be reached before any note-starter has
+ * been seen yet. The `sawNoteLine` gate matters only for the final commit —
+ * a trailing run with no note-starter anywhere in it is left as before
+ * (folio-only boundary, or none), no matter how far the display-shape peek
+ * climbed. (This was also a real bug in an earlier version — gating the
+ * peek on sawNoteLine truncated the walk right at a genuine display block's
+ * interior gap, e.g. note 77's diagram, before its opener was ever reached.)
  */
 export function computeNoteBlockStart(lines: string[]): number | null {
   let firstNonBlank = -1;
@@ -240,7 +251,7 @@ export function computeNoteBlockStart(lines: string[]): number | null {
       let k = i;
       while (k >= 0 && isBlank(lines[k])) k--;
       if (k < 0) break; // ran out of page
-      if (sawNoteLine && isDisplayShapedLine(stripLikelyTicEnds(lines[k]).trim())) {
+      if (isDisplayShapedLine(stripLikelyTicEnds(lines[k]).trim())) {
         i = k; // interior gap around a display line — absorb through it
         continue;
       }
@@ -422,12 +433,25 @@ function isRectoCadencePlausible(value: number, scan: PageScan): boolean {
   return delta === 4 || delta === 5;
 }
 
-function scanBodyMarkers(page: Page, scan: PageScan, noteBlockStart: number | null, pageFlags: string[]): BodyMarker[] {
+function scanBodyMarkers(
+  page: Page,
+  scan: PageScan,
+  noteBlockStart: number | null,
+  headingLines: Set<number>,
+  pageFlags: string[]
+): BodyMarker[] {
   const out: BodyMarker[] = [];
   const lines = page.lines;
   const limit = noteBlockStart ?? lines.length;
   for (let i = 0; i < limit; i++) {
     if (i === scan.headerLineIdx) continue;
+    // §A2 runs over BODY lines only — a division heading's own dotted "b.c"
+    // (or a captured title line) is not body prose, and a trailing digit
+    // after its dot ("5.1") would otherwise look exactly like a glued
+    // footnote marker to MARKER_RE. divisions.ts has already decided which
+    // lines are heading-class for this page; reuse that instead of
+    // re-deriving shape here.
+    if (headingLines.has(i)) continue;
     const blanked = blankTicSpan(lines[i], scan, i);
     if (isBlank(blanked)) continue;
     const trimmedEnd = blanked.replace(/\s+$/, '').length;
@@ -649,7 +673,12 @@ export function extractFootnotes(page: Page, scan: PageScan, divisions: Division
 
   const noteBlockStart = computeNoteBlockStart(lines);
   const notes = noteBlockStart !== null ? parseNoteBlock(lines, noteBlockStart, pageFlags) : [];
-  const markers = scanBodyMarkers(page, scan, noteBlockStart, pageFlags);
+  const headingLines = new Set<number>();
+  for (const d of divisions) {
+    headingLines.add(d.lineIdx);
+    if (d.titleLineIdx !== null) headingLines.add(d.titleLineIdx);
+  }
+  const markers = scanBodyMarkers(page, scan, noteBlockStart, headingLines, pageFlags);
   const headerGlued = headerGluedMarkers(page, scan);
 
   const { pairs, unmatchedMarkers, unmatchedNotes, workLevelNotes } = pairMarkersAndNotes(

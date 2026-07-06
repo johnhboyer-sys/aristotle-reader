@@ -359,11 +359,15 @@ const LONE_INTEGER_RE = /^\d+$/;
 // gap is interior — absorb through and keep climbing; otherwise it's the
 // terminal body/footnote gap — stop (real terminal gaps in the slice run
 // 1-4 blank lines, so a fixed length threshold isn't a safe signal on its
-// own). Only commits the result if >=1 note-starter line was actually seen —
-// a trailing run with no note-starter at all is left as before (folio-only
-// boundary, or none). footnotes.ts re-derives its own bounds independently
-// regardless (defensive — correct even if this amendment is imperfect on
-// some page this slice doesn't exercise).
+// own). The peek does NOT require sawNoteLine to already be true — reversed
+// (bottom-up) traversal reaches a display block's interior gap before its
+// own note-opener is ever seen, so gating the peek on sawNoteLine would
+// truncate the walk right there. Only the FINAL commit is gated on
+// sawNoteLine — a trailing run with no note-starter anywhere in it is left
+// as before (folio-only boundary, or none), no matter how far the peek
+// climbed. footnotes.ts re-derives its own bounds independently regardless
+// (defensive — correct even if this amendment is imperfect on some page
+// this slice doesn't exercise).
 function findBottomFurnitureStart(lines: string[]): number | null {
   let firstNonBlank = -1;
   let lastNonBlank = -1;
@@ -391,7 +395,7 @@ function findBottomFurnitureStart(lines: string[]): number | null {
       let k = i;
       while (k >= 0 && isBlank(lines[k])) k--;
       if (k < 0) break;
-      if (sawNoteLine && isDisplayShapedLine(stripLikelyTicEnds(lines[k]).trim())) {
+      if (isDisplayShapedLine(stripLikelyTicEnds(lines[k]).trim())) {
         i = k;
         continue;
       }
