@@ -35,6 +35,40 @@
 // computed against text that still had literal `_`/`*` in it. Emphasis
 // ranges themselves are then rebased through scanTags's own tag-stripping
 // pass (see scanTags) so they land in the SAME final offset space as tags.
+//
+// Phase 3 (footnotes) adds a fourth pass between emphasis and tags, and a
+// zeroth pass before either: a translation file may carry a footnote
+// DEFINITIONS block at the very end, sentinel-delimited (`<!-- footnotes -->`
+// / `<!-- footnotes scope=... -->`), and inline `[^label]` markers glued into
+// the body next to the word they annotate (same vocabulary the Reader
+// already renders footnotes with). The full pass order is now:
+//
+//   0. splitFootnoteBlock(parseFrontmatter(raw)) — slice the sentinel-
+//      delimited block off the END of the raw body FIRST, before anything
+//      else touches the text. Note text is full of `_`/`*`-shaped
+//      substrings and Bekker-shaped cross-references that must never reach
+//      body scanning or the aligned clean text.
+//   1. normalizeParagraphBreaks(body)
+//   2. scanEmphasis(body) → emphText ({tag}s and [^label]s still present,
+//      emphasis markers gone) + emphRanges (offsets into emphText)
+//   3. scanFootnoteMarkers(emphText) → fnText ([^label] REMOVED) + markers
+//      (offsets into fnText, measured as `clean.length` at each removal,
+//      exactly like scanTags's own offset bookkeeping) + emphRanges2
+//      (emphRanges rebased through the marker strip — ONE extra carry)
+//   4. scanTags(fnText) → { text, tags } + emphasis(final) = rebase
+//      emphRanges2 through the tag strip (second carry) + markers(final) =
+//      rebase markers through the tag strip (its only carry) — reusing the
+//      SAME rebaseThroughTagStrip machinery for both, since both were
+//      measured in fnText's coordinate system.
+//
+// No offset is ever rebased through a removal already applied to the text it
+// was measured in (the double-shift double-shift this order is designed to
+// avoid): emphasis picks up exactly two carries (marker strip, then tag
+// strip); markers pick up exactly one (tag strip only — they were never
+// measured in pre-emphasis or pre-marker-strip space to begin with). A file
+// with no sentinel and no `[^label]` markers is unaffected by any of this —
+// splitFootnoteBlock and scanFootnoteMarkers are no-ops on such a file, so
+// parseTranslationFile's output is BYTE-IDENTICAL to a pre-Phase-3 parse.
 
 import { scanEmphasis, resolveEmphasisReviews } from './emphasis';
 
@@ -77,6 +111,19 @@ export interface EmphasisSpan {
   style: 'italic' | 'bold';
 }
 
+// A footnote marker's placement in the clean text — same offset space as
+// InlineTag.offset / EmphasisSpan.start — plus its identity. `label` is the
+// full stable identity (continuous: "222"; per-chapter: "2.3.1"; per-book:
+// "2.1"; work-level: "*"/"†"); `display` is the trailing numeric/glyph
+// component actually rendered ([^2.3.1] shows "1") — see §B5.
+export interface FootnoteMarker {
+  offset: number;
+  label: string;
+  display: string;
+}
+
+export type FootnoteScope = 'continuous' | 'per-book' | 'per-chapter';
+
 export interface ParsedTranslation {
   meta: Partial<TranslationMeta>;   // {} when the file has no frontmatter yet
   hasFrontmatter: boolean;
@@ -85,6 +132,9 @@ export interface ParsedTranslation {
   emphasis: EmphasisSpan[];         // in document order, offsets into `text`
   density: TagDensity;
   warnings: string[];               // suspect tag sequences — surfaced, never auto-fixed
+  footnoteMarkers: FootnoteMarker[]; // in document order, offsets into `text`
+  footnotes: Record<string, string>; // label -> note text (verbatim, from the definitions block)
+  footnoteScope: FootnoteScope;      // recorded from the sentinel's scope= attribute (AM2); default continuous
 }
 
 const LICENSES: License[] = ['public-domain', 'cc-by', 'cc-by-sa', 'user-supplied'];
@@ -149,6 +199,72 @@ export function serializeFrontmatter(meta: TranslationMeta): string {
 export function composeCitation(meta: Pick<TranslationMeta, 'translator' | 'year' | 'source'>): string {
   const who = meta.year ? `${meta.translator} (${meta.year})` : meta.translator;
   return meta.source ? `${who}, ${meta.source}` : who;
+}
+
+// ── footnote definitions block (§B1) ────────────────────────────────────────
+
+// AM2: `<!-- footnotes -->` or `<!-- footnotes scope=continuous -->` (also
+// per-book / per-chapter). The parser records the attribute when present;
+// absent ⇒ continuous (emission always writes the attribute — that's the
+// emit side's job, not the parser's).
+const FOOTNOTE_SENTINEL_RE = /^<!--\s*footnotes(?:\s+scope=(continuous|per-book|per-chapter))?\s*-->\s*$/;
+
+// §B1 definition grammar: `[^label]: text`, optionally continued on
+// following lines indented >=3 spaces (appended to the prior definition).
+const FOOTNOTE_DEF_RE = /^\[\^([\w.*†]+)\]:[ \t]?(.*)$/;
+const FOOTNOTE_DEF_CONT_RE = /^ {3,}(\S.*)$/;
+
+function parseFootnoteDefs(lines: string[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  let current: string | null = null;
+  for (const line of lines) {
+    const def = FOOTNOTE_DEF_RE.exec(line);
+    if (def) {
+      current = def[1];
+      out[current] = def[2];
+      continue;
+    }
+    const cont = FOOTNOTE_DEF_CONT_RE.exec(line);
+    if (cont && current !== null) {
+      out[current] = `${out[current]} ${cont[1].trim()}`.trim();
+      continue;
+    }
+    current = null; // blank line or unrecognised content ends the current definition
+  }
+  return out;
+}
+
+/**
+ * §B1: split the sentinel-delimited footnote-definitions block off the END
+ * of the raw body — BEFORE normalizeParagraphBreaks/scanEmphasis/scanTags
+ * ever run, so note text (full of `_`/`*`-shaped substrings and Bekker-shaped
+ * cross-references like "1103a3") never reaches body scanning or the
+ * aligned clean text. Backward compatibility: no sentinel found ⇒ the whole
+ * input is returned as `body` unchanged, `footnotes` = {}, `footnoteScope` =
+ * 'continuous' — a suffix-only removal that never touches a legacy file.
+ */
+export function splitFootnoteBlock(body: string): {
+  body: string;
+  footnotes: Record<string, string>;
+  footnoteScope: FootnoteScope;
+} {
+  const lines = body.split(/\r?\n/);
+  let sentinelIdx = -1;
+  let scope: FootnoteScope = 'continuous';
+  for (let i = 0; i < lines.length; i++) {
+    const m = FOOTNOTE_SENTINEL_RE.exec(lines[i]);
+    if (m) {
+      sentinelIdx = i;
+      if (m[1]) scope = m[1] as FootnoteScope;
+      break;
+    }
+  }
+  if (sentinelIdx === -1) return { body, footnotes: {}, footnoteScope: 'continuous' };
+  return {
+    body: lines.slice(0, sentinelIdx).join('\n'),
+    footnotes: parseFootnoteDefs(lines.slice(sentinelIdx + 1)),
+    footnoteScope: scope,
+  };
 }
 
 // ── inline tags ─────────────────────────────────────────────────────────────
@@ -216,18 +332,19 @@ function scanTags(body: string): { text: string; tags: InlineTag[]; warnings: st
 }
 
 /**
- * Rebase offsets (e.g. emphasis ranges) computed against `body` — the SAME
- * pre-tag-stripped text scanTags(body) walks — into the post-strip text's
- * offset space, by replaying the identical left-to-right `{tag}` removal and
- * accumulating how much each removal shifts everything after it. Mirrors
- * scanTags' own `clean += …` accumulation exactly, so an offset that scanTags
- * would place at clean-text position P is rebased to that same P here.
+ * Rebase offsets computed against `body` into the offset space of the text
+ * produced by removing every match of `re` from `body` left-to-right —
+ * replaying the identical removal and accumulating how much each one shifts
+ * everything after it. Mirrors a scan-and-strip pass's own `clean += …`
+ * accumulation exactly, so an offset that pass would place at clean-text
+ * position P is rebased to that same P here. Shared by rebaseThroughTagStrip
+ * ({tag} removal) and the footnote-marker strip ([^label] removal) — same
+ * machinery, different regex, per Phase-3 §B2.
  */
-function rebaseThroughTagStrip(body: string, offsets: number[]): number[] {
-  body = normalizeParagraphBreaks(body);
+function rebaseThroughRemoval(body: string, re: RegExp, offsets: number[]): number[] {
   const shifts: { at: number; amount: number }[] = [];
   let removed = 0;
-  for (const m of body.matchAll(TAG)) {
+  for (const m of body.matchAll(re)) {
     removed += m[0].length;
     shifts.push({ at: m.index! + m[0].length, amount: removed });
   }
@@ -239,6 +356,66 @@ function rebaseThroughTagStrip(body: string, offsets: number[]): number[] {
     }
     return off - shift;
   });
+}
+
+/**
+ * Rebase offsets (e.g. emphasis ranges) computed against `body` — the SAME
+ * pre-tag-stripped text scanTags(body) walks — into the post-strip text's
+ * offset space, by replaying the identical left-to-right `{tag}` removal and
+ * accumulating how much each removal shifts everything after it. Mirrors
+ * scanTags' own `clean += …` accumulation exactly, so an offset that scanTags
+ * would place at clean-text position P is rebased to that same P here.
+ */
+function rebaseThroughTagStrip(body: string, offsets: number[]): number[] {
+  return rebaseThroughRemoval(normalizeParagraphBreaks(body), TAG, offsets);
+}
+
+// ── footnote markers (§B2) ──────────────────────────────────────────────────
+
+// `[^label]`, glued after the marked word/punctuation — reuses the Reader's
+// existing `[^N]` vocabulary; `label` widens it to `[\w.*†]+` (continuous
+// digits, dotted per-chapter/per-book identities, or the star/dagger glyphs).
+const FOOTNOTE_MARKER = /\[\^([\w.*†]+)\]/g;
+
+/** §B5: the trailing component actually rendered ([^2.3.1] shows "1"). */
+function footnoteDisplay(label: string): string {
+  if (label === '*' || label === '†') return label;
+  const parts = label.split('.');
+  return parts[parts.length - 1];
+}
+
+/**
+ * New pass (§B2), run AFTER emphasis resolution and BEFORE scanTags: strip
+ * `[^label]` markers out of `emphText`, recording each one's identity and
+ * its offset in the CLEAN (marker-stripped) text — measured as `clean.length`
+ * at the point of removal, exactly like scanTags' own tag-offset bookkeeping,
+ * so the marker is already in fnText's coordinate system and needs only ONE
+ * further carry (through the tag strip) to reach final text-space.
+ */
+function scanFootnoteMarkers(emphText: string): { text: string; markers: FootnoteMarker[] } {
+  const markers: FootnoteMarker[] = [];
+  let clean = '';
+  let last = 0;
+  for (const m of emphText.matchAll(FOOTNOTE_MARKER)) {
+    clean += emphText.slice(last, m.index!);
+    last = m.index! + m[0].length;
+    const label = m[1];
+    markers.push({ offset: clean.length, label, display: footnoteDisplay(label) });
+  }
+  clean += emphText.slice(last);
+  return { text: clean, markers };
+}
+
+/**
+ * Rebase emphasis ranges (measured in emphText-space, BEFORE footnote
+ * markers are stripped) through the marker-strip removal — the ONE extra
+ * carry emphasis needs relative to markers (see the file-header ordering
+ * notes): an emphasis span can never straddle a marker (scanEmphasis and
+ * scanFootnoteMarkers both work on non-overlapping, well-formed spans), so
+ * this only ever shifts ranges that fall entirely after a removed marker.
+ */
+function rebaseThroughMarkerStrip(emphText: string, offsets: number[]): number[] {
+  return rebaseThroughRemoval(emphText, FOOTNOTE_MARKER, offsets);
 }
 
 /** Bekker column sort key: 1094a < 1094b < 1095a … */
@@ -288,7 +465,11 @@ function detectDensity(tags: InlineTag[]): TagDensity {
  * dialog's collected choices replay correctly (see parseTranslationFile).
  */
 export function emphasisScanInput(raw: string): string {
-  return normalizeParagraphBreaks(parseFrontmatter(raw).body);
+  // Must match parseTranslationFile's own input to scanEmphasis exactly
+  // (including the §B1 footnote-block split, now run first there too), or a
+  // file WITH a sentinel would hand the dialog different text than the
+  // parser scans and the review-item indices would no longer line up.
+  return normalizeParagraphBreaks(splitFootnoteBlock(parseFrontmatter(raw).body).body);
 }
 
 /**
@@ -313,9 +494,13 @@ export function parseTranslationFile(
   emphasisChoices?: Map<number, 'keep' | 'remove'>,
 ): ParsedTranslation {
   const { meta, body: rawBody, has } = parseFrontmatter(raw);
-  const body = normalizeParagraphBreaks(rawBody);
+  // §B1: slice the sentinel-delimited footnote block off the end FIRST — its
+  // text never reaches normalizeParagraphBreaks/scanEmphasis/scanTags. A
+  // legacy file with no sentinel passes rawBody through unchanged.
+  const { body: bodyBeforeFootnotes, footnotes, footnoteScope } = splitFootnoteBlock(rawBody);
+  const body = normalizeParagraphBreaks(bodyBeforeFootnotes);
   const emphResult = scanEmphasis(body);
-  let emphText = emphResult.text;      // {tag} syntax still present, emphasis markers gone
+  let emphText = emphResult.text;      // {tag} and [^label] syntax still present, emphasis markers gone
   let emphRanges = emphResult.ranges;  // offsets into emphText
   if (emphResult.reviewItems.length) {
     const choices = emphasisChoices ?? new Map<number, 'keep' | 'remove'>(
@@ -325,15 +510,29 @@ export function parseTranslationFile(
     emphText = resolved.text;
     emphRanges = resolved.ranges;
   }
-  // scanTags strips {tag} syntax out of emphText, shifting every offset after
-  // each tag — rebase the emphasis ranges (computed against emphText) through
-  // that same left-to-right removal so they land in the FINAL clean text's
-  // offset space, identically to how scanTags places its own tag offsets.
-  const { text, tags, warnings } = scanTags(emphText);
-  const starts = rebaseThroughTagStrip(emphText, emphRanges.map(r => r.start));
-  const ends = rebaseThroughTagStrip(emphText, emphRanges.map(r => r.end));
+  // §B2: strip `[^label]` markers out of emphText BEFORE scanTags runs, so a
+  // marker glued next to a tag never shifts the tag's own offset arithmetic.
+  // Emphasis ranges pick up their SECOND carry here (marker strip); markers
+  // themselves are already in fnText-space and need none yet.
+  const { text: fnText, markers: rawMarkers } = scanFootnoteMarkers(emphText);
+  const markerStripStarts = rebaseThroughMarkerStrip(emphText, emphRanges.map(r => r.start));
+  const markerStripEnds = rebaseThroughMarkerStrip(emphText, emphRanges.map(r => r.end));
+  emphRanges = emphRanges.map((r, i) => ({ ...r, start: markerStripStarts[i], end: markerStripEnds[i] }));
+  // scanTags strips {tag} syntax out of fnText, shifting every offset after
+  // each tag — rebase the emphasis ranges (now in fnText-space) AND the
+  // footnote-marker offsets (already in fnText-space, their only carry)
+  // through that same left-to-right removal, identically to how scanTags
+  // places its own tag offsets.
+  const { text, tags, warnings } = scanTags(fnText);
+  const starts = rebaseThroughTagStrip(fnText, emphRanges.map(r => r.start));
+  const ends = rebaseThroughTagStrip(fnText, emphRanges.map(r => r.end));
   const emphasis: EmphasisSpan[] = emphRanges.map((r, i) => ({ start: starts[i], end: ends[i], style: r.style }));
-  return { meta, hasFrontmatter: has, text, tags, emphasis, warnings, density: detectDensity(tags) };
+  const markerOffsets = rebaseThroughTagStrip(fnText, rawMarkers.map(m => m.offset));
+  const footnoteMarkers: FootnoteMarker[] = rawMarkers.map((m, i) => ({ ...m, offset: markerOffsets[i] }));
+  return {
+    meta, hasFrontmatter: has, text, tags, emphasis, warnings, density: detectDensity(tags),
+    footnoteMarkers, footnotes, footnoteScope,
+  };
 }
 
 /**
@@ -349,7 +548,14 @@ export function parseTranslationFile(
  */
 export function splitChapters(p: ParsedTranslation): {
   preamble: string;
-  chapters: { book: number; chapter: number; text: string; tags: InlineTag[]; emphasis: EmphasisSpan[] }[];
+  chapters: {
+    book: number;
+    chapter: number;
+    text: string;
+    tags: InlineTag[];
+    emphasis: EmphasisSpan[];
+    footnoteMarkers: FootnoteMarker[];
+  }[];
 } {
   const chapterTags = p.tags.filter(t => t.kind === 'chapter');
   if (!chapterTags.length) return { preamble: '', chapters: [] };
@@ -367,6 +573,10 @@ export function splitChapters(p: ParsedTranslation): {
       emphasis: p.emphasis
         .filter(e => e.start >= start && e.end <= end)
         .map(e => ({ ...e, start: e.start - start, end: e.end - start })),
+      // §B3: sliced per chapter like tags/emphasis, same chapter-local offset convention.
+      footnoteMarkers: p.footnoteMarkers
+        .filter(m => m.offset >= start && m.offset < end)
+        .map(m => ({ ...m, offset: Math.min(m.offset - start, end - start) })),
     };
   });
   return { preamble, chapters };

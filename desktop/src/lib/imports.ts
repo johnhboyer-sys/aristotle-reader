@@ -18,7 +18,7 @@ import { getWork } from '../../../app/src/lib/works';
 import { isTauri } from './runtime';
 import {
   parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation,
-  type ParsedTranslation, type TranslationMeta,
+  type ParsedTranslation, type TranslationMeta, type FootnoteScope,
 } from './translation-file';
 import { buildChapterInputs } from './aligner/reference';
 import { alignImportedChapter, emitOverlayPieces, type ChapterAlignment, type PieceEmphasis } from './aligner/import-align';
@@ -42,6 +42,14 @@ export interface ImportRecord {
   emphasisByBook?: Record<string, Record<string, PieceEmphasis[]>>;
   /** per-chapter anchor maps, kept for future refinement/re-tagging. */
   alignment: Record<string, ChapterAlignment>;
+  /**
+   * label -> note text (§B3), from the file's sentinel-delimited footnote
+   * definitions block. Both fields optional so records written before Phase
+   * 3 still load unchanged — getImportFootnote just has nothing to resolve
+   * for them, mirroring emphasisByBook's read-time-optional precedent.
+   */
+  footnotes?: Record<string, string>;
+  footnoteScope?: FootnoteScope;
 }
 
 export interface ImportSummary {
@@ -53,6 +61,8 @@ export interface ImportSummary {
   placed: number;
   interpolated: number;
   replaced: boolean;
+  /** e.g. "Detected continuous work-level numbering — 222 footnotes." Undefined when the file has no footnotes block. */
+  footnoteSummary?: string;
 }
 
 // ── storage backends ─────────────────────────────────────────────────────────
@@ -243,6 +253,18 @@ export function getImportEmphasis(work: string, id: string, book: number, column
 }
 
 /**
+ * §B4 (Phase 4 wires this into FootnotePopup): the note text for one label
+ * on one imported translation, reading `registered.get(...).footnotes?.[label]`
+ * — mirrors getImportEmphasis. Returns null (never throws) when `work`/`id`
+ * isn't a registered import, the label has no definition, or the record
+ * predates the footnotes field.
+ */
+export function getImportFootnote(work: string, id: string, label: string): string | null {
+  const rec = registered.get(`${work}/${id}`);
+  return rec?.footnotes?.[label] ?? null;
+}
+
+/**
  * The citation string for an imported translation, for Copy Citation:
  * the stored `citation` verbatim, or the translator/year/source fallback
  * when a record predates the citation field (or the form was left blank).
@@ -279,6 +301,22 @@ export interface ImportRequest {
    * a non-interactive re-import) that wants the defaults applied instead.
    */
   emphasisChoices?: Map<number, 'keep' | 'remove'>;
+}
+
+// §B3 import summary: "Detected continuous work-level numbering — 222
+// footnotes." Undefined (no line at all) when the file carries no footnote
+// definitions — most imports don't have a footnotes block, and a summary
+// with "0 footnotes" would read as an error rather than simply "not present".
+const SCOPE_PHRASE: Record<FootnoteScope, string> = {
+  continuous: 'Detected continuous work-level numbering',
+  'per-book': 'Detected per-book numbering',
+  'per-chapter': 'Detected per-chapter numbering',
+};
+
+function footnoteSummaryLine(scope: FootnoteScope, footnotes: Record<string, string>): string | undefined {
+  const count = Object.keys(footnotes).length;
+  if (count === 0) return undefined;
+  return `${SCOPE_PHRASE[scope]} — ${count} footnote${count === 1 ? '' : 's'}.`;
 }
 
 export class ImportCollision extends Error {
@@ -340,7 +378,7 @@ export async function runImport(
     const perBook: ChapterAlignment[] = [];
     for (const input of inputs) {
       const ch = chapters.find(c => c.book === b && String(c.chapter) === input.chapter);
-      const ca = alignImportedChapter(input, ch?.tags ?? [], parsed.density, ch?.emphasis ?? []);
+      const ca = alignImportedChapter(input, ch?.tags ?? [], parsed.density, ch?.emphasis ?? [], ch?.footnoteMarkers ?? []);
       perBook.push(ca);
       aligned.push(ca);
       alignment[`${ca.book}:${ca.chapter}`] = ca;
@@ -364,6 +402,8 @@ export async function runImport(
     overlaysByBook,
     emphasisByBook,
     alignment,
+    footnotes: parsed.footnotes,
+    footnoteScope: parsed.footnoteScope,
   };
   const canonical = parsed.hasFrontmatter
     ? req.raw
@@ -375,6 +415,7 @@ export async function runImport(
   return {
     meta,
     density: parsed.density,
+    footnoteSummary: footnoteSummaryLine(parsed.footnoteScope, parsed.footnotes),
     warnings: parsed.warnings,
     chapters: record.stats.chapters,
     tagged: record.stats.tagged,

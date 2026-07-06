@@ -26,7 +26,11 @@
 // AND suspicious-with-a-chosen-default get resolved before this module hands
 // back), which is what lets translation-file.ts run this BEFORE scanTags:
 // Bekker/annotation offsets are computed against the fully-clean text, never
-// against text that still has literal `_`/`*` characters in it.
+// against text that still has literal `_`/`*` characters in it. (Phase 3
+// inserts scanFootnoteMarkers between this pass and scanTags — see
+// translation-file.ts's file header — but the relative order here is
+// unchanged: emphasis is still resolved before either the footnote-marker
+// strip or scanTags ever touch the text.)
 
 export type EmphasisStyle = 'italic' | 'bold';
 

@@ -18,7 +18,7 @@
 
 import type { BookData, RossPiece } from '../../../../app/src/lib/data';
 import { alignChapter, dedupMonotonic, interpolate, snapWord, type Anchor, type ChapterInput } from './engine';
-import type { EmphasisSpan, InlineTag, TagDensity } from '../translation-file';
+import type { EmphasisSpan, FootnoteMarker, InlineTag, TagDensity } from '../translation-file';
 
 export interface ChapterAlignment {
   book: number;
@@ -26,6 +26,10 @@ export interface ChapterAlignment {
   text: string;               // the chapter's clean prose (tags stripped)
   anchors: Anchor[];
   emphasis: EmphasisSpan[];   // offsets into `text`, carried through unchanged (alignment never rewrites the chapter's own text/offsets)
+  // §B3: same treatment as emphasis — offsets into `text`, carried through
+  // unchanged; emitOverlayPieces re-inserts each marker's `[^label]` text
+  // into the emitted RossPiece at the matching piece-local position.
+  footnoteMarkers: FootnoteMarker[];
   stats: { tagged: number; placed: number; interpolated: number };
 }
 
@@ -35,6 +39,7 @@ export function alignImportedChapter(
   tags: InlineTag[],
   density: TagDensity,
   emphasis: EmphasisSpan[] = [],
+  footnoteMarkers: FootnoteMarker[] = [],
 ): ChapterAlignment {
   let anchors: Anchor[];
   const cited = tags.filter(t => t.citation);
@@ -80,6 +85,7 @@ export function alignImportedChapter(
     text: input.targetText,
     anchors,
     emphasis,
+    footnoteMarkers,
     stats: {
       tagged: anchors.filter(a => a.confidence === 'tagged').length,
       placed: anchors.filter(a => ['certain', 'reliable', 'uncertain'].includes(a.confidence)).length,
@@ -266,20 +272,54 @@ export function emitOverlayPieces(
       const pieceText = text.slice(cursor, sliceEnd);
       if (pieceText.trim().length === 0 && !isFirst) { continue; }
 
+      // §B3: footnote markers whose clean-text offset falls inside this
+      // piece's slice — re-inserted as literal `[^label]` text at
+      // (offset - pieceStart), same convention as a built-in translation's
+      // third-slot `[^N]` vocabulary. Sorted ascending for the shift
+      // computation below; spliced right-to-left (descending) so each
+      // insertion never invalidates a not-yet-processed (leftward) one.
+      const pieceMarkers = ca.footnoteMarkers
+        .filter(m => m.offset >= cursor && m.offset < sliceEnd)
+        .map(m => ({ ...m, local: m.offset - cursor }))
+        .sort((a, b) => a.local - b.local);
+
+      // How far a RAW (pre-insertion) piece-local offset moves once every
+      // marker at or before it has had its `[^label]` text spliced in —
+      // ticks and emphasis offsets are computed against the piece's clean
+      // prose before markers exist, so both need this same carry to stay
+      // correctly positioned in the text markers now interrupt.
+      const shiftForInsertions = (rawLocal: number): number => {
+        let shift = 0;
+        for (const m of pieceMarkers) {
+          if (m.local > rawLocal) break;
+          shift += `[^${m.label}]`.length;
+        }
+        return shift;
+      };
+
+      let finalPieceText = pieceText;
+      for (let mi = pieceMarkers.length - 1; mi >= 0; mi--) {
+        const m = pieceMarkers[mi];
+        finalPieceText = finalPieceText.slice(0, m.local) + `[^${m.label}]` + finalPieceText.slice(m.local);
+      }
+
       const col = book.segments[si].column;
       const ticks = ca.anchors
         .filter(a => a.citation.startsWith(col) && a.offset >= cursor && a.offset < sliceEnd)
-        .map(a => ({
-          n: Number(a.citation.slice(col.length)),
-          offset: a.offset - cursor,
-          real: a.confidence !== 'interpolated',
-        }))
+        .map(a => {
+          const raw = a.offset - cursor;
+          return {
+            n: Number(a.citation.slice(col.length)),
+            offset: raw + shiftForInsertions(raw),
+            real: a.confidence !== 'interpolated',
+          };
+        })
         .filter(t => Number.isFinite(t.n) && t.n > 0)
         .sort((x, y) => x.n - y.n);
 
       const piece: RossPiece = {
         chapter: span.chapter,
-        text: pieceText,
+        text: finalPieceText,
         cont: !isFirst,
         ...(ticks.length ? { bekker: ticks } : {}),
       };
@@ -305,11 +345,14 @@ export function emitOverlayPieces(
       // that '\n'-free space so `pieceText === proseText(prose)` holds and the
       // offsets line up — otherwise any piece containing a paragraph break
       // silently fails the painter's exact-match gate and no italics render.
-      // (Imports carry no [[sN]]/[[figN]]/[^N] markers, so '\n' is the only
-      // transform highlightEng applies to an import column's text.)
-      const cleanPieceText = pieceText.replace(/\n/g, '');
-      const toClean = (rawLocal: number) =>
-        rawLocal - (pieceText.slice(0, rawLocal).match(/\n/g)?.length ?? 0);
+      // (Imports carry no [[sN]]/[[figN]] markers; '\n' and now `[^label]`
+      // footnote markers are the only transforms an import column's text
+      // undergoes relative to the aligned chapter prose.)
+      const cleanPieceText = finalPieceText.replace(/\n/g, '');
+      const toClean = (rawLocal: number) => {
+        const shifted = rawLocal + shiftForInsertions(rawLocal);
+        return shifted - (finalPieceText.slice(0, shifted).match(/\n/g)?.length ?? 0);
+      };
       const pieceEmph = ca.emphasis
         .filter(e => e.start >= cursor && e.end <= sliceEnd)
         .map(e => ({ pieceText: cleanPieceText, start: toClean(e.start - cursor), end: toClean(e.end - cursor), style: e.style }));
