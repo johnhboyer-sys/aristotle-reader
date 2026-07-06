@@ -14,12 +14,16 @@
  * span_end: "1041b33"
  * column_starts: "1041a6@1,1041b1@29"
  * line_splits: "1041b8@14,1041b8@31"
+ * paragraph_starts: "1,5,12"
  * ---
  * [GREEK]
  * <one line per Bekker line>
  * <structural blank line>
  * [ENGLISH]
  * <one line per Bekker line — RAW markup strings>
+ * <structural blank line, only when [FOOTNOTES] follows>
+ * [ENGLISH.PARA]
+ * <optional one line per row — paragraph-granularity RAW markup strings>
  * <structural blank line, only when [FOOTNOTES] follows>
  * [FOOTNOTES]
  * 1: footnote body text…
@@ -79,7 +83,7 @@ const SUPPORTED_SCHEMA_VERSION = 1;
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const FOOTNOTE_ENTRY_RE = /^(\d+):[ \t](.*)$/;
-const SECTION_HEADERS = ['[GREEK]', '[ENGLISH]', '[FOOTNOTES]'] as const;
+const SECTION_HEADERS = ['[GREEK]', '[ENGLISH]', '[ENGLISH.PARA]', '[FOOTNOTES]'] as const;
 type SectionHeader = (typeof SECTION_HEADERS)[number];
 
 function normalizeLineEndings(raw: string): string {
@@ -258,6 +262,38 @@ function parseLineSplits(
   return out;
 }
 
+function parseParagraphStarts(val: unknown, lineNo: number, source: string): number[] {
+  const at = lineNo > 0 ? `line ${lineNo}: ` : '';
+  if (typeof val !== 'string' || val.length === 0) {
+    throw new ChapterFileError(
+      `${source}: ${at}frontmatter field "paragraph_starts", when present, must be a non-empty string of 1-based row ordinals`,
+    );
+  }
+  const out: number[] = [];
+  const parts = val.split(',');
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i].trim();
+    if (!/^\d+$/.test(part)) {
+      throw new ChapterFileError(
+        `${source}: ${at}paragraph_starts entry ${i + 1} (${JSON.stringify(part)}) is not a positive integer`,
+      );
+    }
+    const n = Number(part);
+    if (!Number.isSafeInteger(n) || n <= 0) {
+      throw new ChapterFileError(
+        `${source}: ${at}paragraph_starts entry ${i + 1}: row ordinal must be a positive integer (got ${JSON.stringify(part)})`,
+      );
+    }
+    if (out.length > 0 && n <= out[out.length - 1]) {
+      throw new ChapterFileError(
+        `${source}: ${at}paragraph_starts entries must be strictly ascending (entry ${i + 1} has ${n}, after ${out[out.length - 1]})`,
+      );
+    }
+    out.push(n);
+  }
+  return out;
+}
+
 /**
  * Semantic validity of one paragraph-split offset against its row's OWN
  * [GREEK] line (the canonical Greek that travels with the file — never the
@@ -286,7 +322,7 @@ export function isValidSplitOffset(greek: string, offset: number): boolean {
 function parseFrontmatter(
   normalized: string,
   source: string,
-): { meta: ChapterFileMeta; rest: string; columnStartsLine: number } {
+): { meta: ChapterFileMeta; rest: string; columnStartsLine: number; paragraphStartsLine: number } {
   const m = FRONTMATTER_RE.exec(normalized);
   if (!m) {
     throw new ChapterFileError(`${source}: missing YAML frontmatter (expected a leading "---" block)`);
@@ -367,6 +403,13 @@ function parseFrontmatter(
     lineSplits = parseLineSplits(v['line_splits'], scheme, lineSplitsLine, source);
   }
 
+  let paragraphStarts: number[] | undefined;
+  let paragraphStartsLine = 0;
+  if ('paragraph_starts' in v) {
+    paragraphStartsLine = frontmatterKeyLine(m[1], 'paragraph_starts');
+    paragraphStarts = parseParagraphStarts(v['paragraph_starts'], paragraphStartsLine, source);
+  }
+
   const meta: ChapterFileMeta = {
     schemaVersion,
     work,
@@ -377,8 +420,9 @@ function parseFrontmatter(
     spanEnd,
     ...(columnStarts ? { columnStarts } : {}),
     ...(lineSplits ? { lineSplits } : {}),
+    ...(paragraphStarts ? { paragraphStarts } : {}),
   };
-  return { meta, rest, columnStartsLine };
+  return { meta, rest, columnStartsLine, paragraphStartsLine };
 }
 
 // ── body sections ────────────────────────────────────────────────────────────
@@ -491,17 +535,25 @@ function parseFootnotes(lines: string[], sectionStartLine: number, source: strin
 
 export function parseChapterFile(raw: string, source = '<chapterfile>'): ChapterFile {
   const normalized = normalizeLineEndings(raw);
-  const { meta, rest, columnStartsLine } = parseFrontmatter(normalized, source);
+  const { meta, rest, columnStartsLine, paragraphStartsLine } = parseFrontmatter(normalized, source);
   const sections = splitSections(rest, source);
 
   const greekLines = trimTrailingBlank(sections.get('[GREEK]')!.lines);
   const englishLines = trimTrailingBlank(sections.get('[ENGLISH]')!.lines);
+  const englishParaSection = sections.get('[ENGLISH.PARA]');
+  const englishParaLines = englishParaSection ? trimTrailingBlank(englishParaSection.lines) : undefined;
   const footnotesSection = sections.get('[FOOTNOTES]');
   const footnotes = footnotesSection ? parseFootnotes(footnotesSection.lines, footnotesSection.startLine, source) : [];
 
   if (greekLines.length !== englishLines.length) {
     throw new ChapterFileError(
       `${source}: [GREEK] has ${greekLines.length} line(s) but [ENGLISH] has ${englishLines.length} line(s) — they must match 1:1`
+    );
+  }
+
+  if (englishParaLines !== undefined && greekLines.length !== englishParaLines.length) {
+    throw new ChapterFileError(
+      `${source}: [GREEK] has ${greekLines.length} line(s) but [ENGLISH.PARA] has ${englishParaLines.length} line(s) — they must match 1:1`
     );
   }
 
@@ -515,7 +567,17 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
     }
   }
 
-  return { meta, greekLines, englishLines, footnotes };
+  if (meta.paragraphStarts) {
+    const at = paragraphStartsLine > 0 ? `line ${paragraphStartsLine}: ` : '';
+    const last = meta.paragraphStarts[meta.paragraphStarts.length - 1];
+    if (last > greekLines.length) {
+      throw new ChapterFileError(
+        `${source}: ${at}paragraph_starts row ordinal ${last} is out of range — the chapter has ${greekLines.length} row(s)`,
+      );
+    }
+  }
+
+  return { meta, greekLines, englishLines, ...(englishParaLines !== undefined ? { englishParaLines } : {}), footnotes };
 }
 
 /**
@@ -577,6 +639,12 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
     }
     lines.push(`line_splits: "${meta.lineSplits.map((s) => `${s.ref}@${s.offset}`).join(',')}"`);
   }
+  if (meta.paragraphStarts !== undefined) {
+    if (meta.paragraphStarts.length === 0) {
+      throw new ChapterFileError('serializeChapterFile: paragraph_starts, when present, must contain at least one row ordinal');
+    }
+    lines.push(`paragraph_starts: "${meta.paragraphStarts.join(',')}"`);
+  }
   lines.push('---');
   return lines.join('\n');
 }
@@ -609,6 +677,12 @@ export function serializeChapterFile(doc: ChapterFile): string {
 
   parts.push('[ENGLISH]');
   parts.push(...doc.englishLines);
+
+  if (doc.englishParaLines !== undefined && doc.englishParaLines.some((line) => line.length > 0)) {
+    parts.push(''); // structural blank before the next header
+    parts.push('[ENGLISH.PARA]');
+    parts.push(...doc.englishParaLines);
+  }
 
   if (doc.footnotes.length > 0) {
     parts.push(''); // structural blank before the next header

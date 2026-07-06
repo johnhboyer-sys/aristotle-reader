@@ -2,10 +2,12 @@
 // anchors and bodies) + the debounced scheduler with fake timers (flush,
 // in-flight re-dirty, error retention, pending-write gating on load).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { parseChapterFile } from '../../chapterfile';
+import { parseChapterFile, serializeChapterFile } from '../../chapterfile';
+import { getScheme } from '../../citation/registry';
 import { buildRowDoc, joinRowDocs } from '../../editor/serialize';
 import type { InlineRun, MarkSet } from '../../editor/serialize';
 import { docFromJSON, emptyRowDocJSON } from '../../editor/schema';
+import type { PMDocJSON } from '../../editor/schema';
 import type { ChapterModel } from '../../editor/model';
 import { chapterFileName } from '../storage';
 import {
@@ -14,6 +16,7 @@ import {
   spansFromModel,
   splitRaw,
   columnStartsFromModel,
+  rowAddressSource,
   hydrateFromFile,
   anchoredFootnoteCount,
   loadChapterFile,
@@ -137,6 +140,59 @@ describe('columnStartsFromModel', () => {
     const model = makeModel();
     model.rows = [];
     expect(columnStartsFromModel(model)).toBeUndefined();
+  });
+});
+
+describe('rowAddressSource', () => {
+  it('uses column_starts exact reconstruction when present', () => {
+    const model = makeMultiColumnModel();
+    const file = parseChapterFile(serializeModel(model), 'addr-cs');
+    const addressOf = rowAddressSource(file.meta, [], getScheme(SCHEME));
+    expect([1, 2, 3].map((i) => addressOf(i).raw)).toEqual(['1041a33', '1041b1', '1042a1']);
+  });
+
+  it('falls back to the corpus spine for corpus-owned schemes without column_starts', () => {
+    const model = makeModel();
+    const file = parseChapterFile(serializeModel(model, { start: '1041a5', end: '1041a8' }), 'addr-spine');
+    expect(file.meta.columnStarts).toBeUndefined();
+    const addressOf = rowAddressSource(file.meta, spineOf(model), getScheme(SCHEME));
+    expect([1, 2, 3, 4].map((i) => addressOf(i))).toEqual([
+      addr('1041a6'),
+      addr('1041a7'),
+      addr('1041a8'),
+      { scheme: SCHEME, raw: '' },
+    ]);
+  });
+
+  it('derives document-spine addresses from row ordinals', () => {
+    const paragraphAddress = rowAddressSource(
+      {
+        schemaVersion: 1,
+        work: 'free',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶3',
+      },
+      [],
+      getScheme('paragraph'),
+    );
+    const lineAddress = rowAddressSource(
+      {
+        schemaVersion: 1,
+        work: 'free',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'plain-line',
+        spanStart: '1',
+        spanEnd: '3',
+      },
+      [],
+      getScheme('plain-line'),
+    );
+    expect([1, 2, 3].map((i) => paragraphAddress(i).raw)).toEqual(['¶1', '¶2', '¶3']);
+    expect([1, 2, 3].map((i) => lineAddress(i).raw)).toEqual(['1', '2', '3']);
   });
 });
 
@@ -614,5 +670,126 @@ describe('paragraph splits (design doc D6, slice 1)', () => {
     spine[1] = { ...spine[1], greek: 'ἄλλην οἷον ἀρχὴν ποιησάμενοι λέγωμεν· ἴσως' };
     const h = hydrateFromFile(parseChapterFile(content, 'split-both'), spine, SCHEME);
     expect(h.notice).toBe(`Saved Greek differs from the corpus text — using the saved file. ${DRIFT_1041A6}`);
+  });
+});
+
+describe('document-spine chapter files (D8 Phase B)', () => {
+  const paddr = (raw: string) => ({ scheme: 'paragraph' as const, raw });
+  const laddr = (raw: string) => ({ scheme: 'plain-line' as const, raw });
+  const textOf = (json: PMDocJSON) => docFromJSON(json).textContent;
+
+  function paragraphModel(): ChapterModel {
+    return {
+      workId: 'free-paragraph',
+      workTitle: 'Free Paragraph',
+      scheme: 'paragraph',
+      book: 1,
+      bookLabel: '',
+      chapter: 1,
+      bekkerRange: '¶1–2',
+      rows: [
+        {
+          address: paddr('¶1'),
+          greek: 'Alpha sentence. Beta sentence.',
+          english: buildRowDoc([t('Alpha sentence')]).toJSON(),
+          english2: [buildRowDoc([t('Beta sentence')]).toJSON()],
+          splitOffsets: [16],
+          englishPara: buildRowDoc([t('Paragraph one whole')]).toJSON(),
+        },
+        {
+          address: paddr('¶2'),
+          greek: 'Gamma sentence.',
+          english: emptyRowDocJSON(),
+          englishPara: buildRowDoc([t('Paragraph two whole')]).toJSON(),
+        },
+      ],
+      footnotes: [],
+      dirty: false,
+    };
+  }
+
+  it('serializes and hydrates a paragraph-scheme file with [ENGLISH.PARA], sentence line_splits, and ¶ spans', () => {
+    const model = paragraphModel();
+    const content = serializeModel(model);
+    expect(content).toContain('citation_scheme: paragraph');
+    expect(content).toContain('span_start: "¶1"');
+    expect(content).toContain('span_end: "¶2"');
+    expect(content).not.toContain('column_starts');
+    expect(content).toContain('line_splits: "¶1@16"');
+    expect(content).toContain('[ENGLISH.PARA]\nParagraph one whole\nParagraph two whole\n');
+
+    const file = parseChapterFile(content, 'paragraph-doc');
+    expect(file.englishParaLines).toEqual(['Paragraph one whole', 'Paragraph two whole']);
+    const h = hydrateFromFile(file, [], 'paragraph');
+    expect(h.notice).toBeNull();
+    expect(h.rows.map((r) => r.address.raw)).toEqual(['¶1', '¶2']);
+    expect(h.spans).toEqual({ start: '¶1', end: '¶2' });
+    expect(h.rows[0].splitOffsets).toEqual([16]);
+    expect(h.rows[0].english2).toHaveLength(1);
+    expect(textOf(h.rows[0].englishPara!)).toBe('Paragraph one whole');
+  });
+
+  it('serializes a plain-line document with paragraph_starts and no column_starts', () => {
+    const model: ChapterModel = {
+      workId: 'free-lines',
+      workTitle: 'Free Lines',
+      scheme: 'plain-line',
+      book: 1,
+      bookLabel: '',
+      chapter: 1,
+      bekkerRange: '1–3',
+      rows: [
+        { address: laddr('1'), greek: 'Line one', english: buildRowDoc([t('one')]).toJSON() },
+        { address: laddr('2'), greek: 'Line two', english: buildRowDoc([t('two')]).toJSON() },
+        { address: laddr('3'), greek: 'Line three', english: emptyRowDocJSON() },
+      ],
+      footnotes: [],
+      dirty: false,
+    };
+    const doc = chapterFileFromModel(model);
+    doc.meta.paragraphStarts = [1, 3];
+    const content = serializeChapterFile(doc);
+    const file = parseChapterFile(content, 'plain-line-doc');
+    expect(file.meta.paragraphStarts).toEqual([1, 3]);
+    expect(content).not.toContain('column_starts');
+    expect(content).toContain('span_start: "1"');
+    expect(content).toContain('span_end: "3"');
+    expect(serializeChapterFile(file)).toBe(content);
+  });
+
+  it('drift-degrade behavior is reused on paragraph rows', () => {
+    const model = paragraphModel();
+    const content = serializeModel(model).replace('line_splits: "¶1@16"', 'line_splits: "¶1@999"');
+    const h = hydrateFromFile(parseChapterFile(content, 'paragraph-drift'), [], 'paragraph');
+    expect(h.notice).toBe("A paragraph split in line ¶1 didn't line up with the Greek and was removed — re-split if you still want it.");
+    expect(h.rows[0].splitOffsets).toBeUndefined();
+    expect(h.rows[0].english2).toBeUndefined();
+    expect(textOf(h.rows[0].english)).toBe('Alpha sentence Beta sentence');
+    expect(textOf(h.rows[0].englishPara!)).toBe('Paragraph one whole');
+  });
+
+  it('hydrate-with-empty-spine produces synthetic addresses and preserves English-count-wins', () => {
+    const raw = `---
+schema_version: 1
+work: free-paragraph
+book: 1
+chapter: 1
+citation_scheme: paragraph
+span_start: "¶1"
+span_end: "¶1"
+line_splits: "¶1@16,¶1@21"
+---
+[GREEK]
+Alpha sentence. Beta sentence.
+
+[ENGLISH]
+one¶two
+`;
+    const h = hydrateFromFile(parseChapterFile(raw, 'paragraph-skew'), [], 'paragraph');
+    expect(h.rows.map((r) => r.address.raw)).toEqual(['¶1']);
+    expect(h.rows[0].splitOffsets).toEqual([16]);
+    expect(h.rows[0].english2).toHaveLength(1);
+    expect(textOf(h.rows[0].english2![0])).toBe('two');
+    expect(h.notice).toBe("A paragraph split in line ¶1 didn't line up with the Greek and was removed — re-split if you still want it.");
   });
 });

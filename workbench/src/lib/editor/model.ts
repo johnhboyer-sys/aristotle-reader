@@ -21,6 +21,12 @@ export interface RowModel {
    */
   english: PMDocJSON;
   /**
+   * Paragraph-granularity translation layer for document-spine paragraph
+   * rows (D8 §4). Sentence-granularity translations still live in
+   * `english`/`english2`; Bekker rows never use this field.
+   */
+  englishPara?: PMDocJSON;
+  /**
    * Paragraph-split points (design doc D6): ascending Greek CODE-UNIT offsets
    * into `greek` — the same `.length`/`.slice` basis the chapter file uses
    * (see chapterfile isValidSplitOffset before "fixing" this to code points).
@@ -50,6 +56,21 @@ export function segmentCount(row: RowModel): number {
  */
 export function englishDocsOf(row: RowModel): PMDocJSON[] {
   return [row.english, ...(row.english2 ?? [])];
+}
+
+/** True when the row has any sentence-layer English content. */
+export function hasSentenceEnglish(row: RowModel): boolean {
+  return englishDocsOf(row).some((doc) => (doc.content?.length ?? 0) > 0);
+}
+
+/** True when the row has paragraph-layer English content. */
+export function hasParagraphEnglish(row: RowModel): boolean {
+  return (row.englishPara?.content?.length ?? 0) > 0;
+}
+
+/** All English docs that can carry footnote markers, across both D8 layers. */
+export function allEnglishDocsOf(row: RowModel): PMDocJSON[] {
+  return [...englishDocsOf(row), ...(row.englishPara ? [row.englishPara] : [])];
 }
 
 export interface Footnote {

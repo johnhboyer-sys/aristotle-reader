@@ -34,11 +34,12 @@
 // table so re-opening a chapter can await an in-flight write before reading
 // (leave Ζ.17 → instantly reopen Ζ.17 must never read a stale file).
 
-import type { Address, SchemeId } from '../citation/types';
+import type { Address, CitationScheme, SchemeId } from '../citation/types';
+import { getScheme } from '../citation/registry';
 import type { ChapterModel, Footnote as ModelFootnote, RowModel } from '../editor/model';
-import { englishDocsOf } from '../editor/model';
+import { allEnglishDocsOf, englishDocsOf, hasParagraphEnglish } from '../editor/model';
 import { docFromJSON, markerIdsIn } from '../editor/schema';
-import { serializeRowSegments, parseRowSegments, joinRowDocs } from '../editor/serialize';
+import { serializeRow, serializeRowSegments, parseRow, parseRowSegments, joinRowDocs } from '../editor/serialize';
 import { parseChapterFile, serializeChapterFile, rowAddress, isValidSplitOffset, ChapterFileError } from '../chapterfile';
 import type { ChapterFile, ColumnStart, LineSplit } from '../chapterfile';
 import { libraryStorage } from './storage';
@@ -53,9 +54,58 @@ export interface ChapterSpans {
 
 /** span_start/span_end from the model's row addresses (first/last row). */
 export function spansFromModel(model: ChapterModel): ChapterSpans {
+  const scheme = getScheme(model.scheme);
+  if (scheme.spineSource === 'document') {
+    if (model.rows.length === 0) return { start: '', end: '' };
+    return {
+      start: ordinalAddress(scheme, 1).raw,
+      end: ordinalAddress(scheme, model.rows.length).raw,
+    };
+  }
   const first = model.rows[0]?.address.raw ?? '';
   const last = model.rows[model.rows.length - 1]?.address.raw ?? '';
   return { start: first, end: last };
+}
+
+function ordinalAddress(scheme: CitationScheme, rowIndex: number): Address {
+  if (!Number.isInteger(rowIndex) || rowIndex <= 0) {
+    throw new ChapterFileError(`rowAddressSource: row index ${rowIndex} is out of range`);
+  }
+  let raw: string;
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      raw = `¶${rowIndex}`;
+      break;
+    case 'plain-line':
+      raw = String(rowIndex);
+      break;
+    default:
+      throw new ChapterFileError(
+        `rowAddressSource: document-spine scheme "${scheme.id}" cannot derive ordinal addresses for row unit "${scheme.gutter.rowUnit}"`,
+      );
+  }
+  return scheme.parseAddress(raw);
+}
+
+export type RowAddressProvider = (rowIndex: number) => Address;
+
+/**
+ * Per-row address source for hydrated files, in precedence order:
+ * column_starts exact reconstruction, corpus spine fallback, document-owned
+ * synthetic ordinal addresses.
+ */
+export function rowAddressSource(
+  meta: ChapterFile['meta'],
+  spine: SpineRow[],
+  scheme: CitationScheme,
+): RowAddressProvider {
+  if (meta.columnStarts) {
+    return (rowIndex: number) => scheme.parseAddress(rowAddress(meta, rowIndex));
+  }
+  if (scheme.spineSource === 'corpus') {
+    return (rowIndex: number) => spine[rowIndex - 1]?.address ?? { scheme: scheme.id, raw: '' };
+  }
+  return (rowIndex: number) => ordinalAddress(scheme, rowIndex);
 }
 
 /**
@@ -120,6 +170,8 @@ export function columnStartsFromModel(model: ChapterModel, spans: ChapterSpans =
 }
 
 export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = spansFromModel(model)): ChapterFile {
+  const scheme = getScheme(model.scheme);
+  const effectiveSpans = scheme.spineSource === 'document' ? spansFromModel(model) : spans;
   const footnotes = [...model.footnotes]
     .map((fn) => {
       const id = Number(fn.id);
@@ -132,7 +184,7 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
     })
     .sort((a, b) => a.id - b.id);
 
-  const columnStarts = columnStartsFromModel(model, spans);
+  const columnStarts = scheme.spineSource === 'document' ? undefined : columnStartsFromModel(model, effectiveSpans);
 
   // line_splits from the rows' splitOffsets (design doc D6). A raw ''
   // address (hydration's spine-drift filler) can't carry a ref the parser
@@ -142,13 +194,20 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
   // unrepresentable address fails the round-trip self-check loudly instead
   // of writing a corrupt file.
   const lineSplits: LineSplit[] = [];
-  for (const row of model.rows) {
+  for (let i = 0; i < model.rows.length; i++) {
+    const row = model.rows[i];
     if (!row.splitOffsets || row.splitOffsets.length === 0) continue;
-    if (row.address.raw === '') continue;
+    const ref = scheme.spineSource === 'document' ? ordinalAddress(scheme, i + 1).raw : row.address.raw;
+    if (ref === '') continue;
     for (const offset of row.splitOffsets) {
-      lineSplits.push({ ref: row.address.raw, offset });
+      lineSplits.push({ ref, offset });
     }
   }
+
+  const hasAnyEnglishPara = model.rows.some(hasParagraphEnglish);
+  const englishParaLines = hasAnyEnglishPara
+    ? model.rows.map((r) => (r.englishPara ? serializeRow(docFromJSON(r.englishPara)) : ''))
+    : undefined;
 
   return {
     meta: {
@@ -157,8 +216,8 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
       book: model.book,
       chapter: model.chapter,
       citationScheme: model.scheme,
-      spanStart: spans.start,
-      spanEnd: spans.end,
+      spanStart: effectiveSpans.start,
+      spanEnd: effectiveSpans.end,
       // Key order and present/absent-ness must match parseChapterFile's meta
       // construction — the round-trip self-check compares JSON shapes.
       ...(columnStarts ? { columnStarts } : {}),
@@ -166,6 +225,7 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
     },
     greekLines: model.rows.map((r) => r.greek),
     englishLines: model.rows.map((r) => serializeRowSegments(englishDocsOf(r))),
+    ...(englishParaLines ? { englishParaLines } : {}),
     footnotes,
   };
 }
@@ -188,7 +248,7 @@ export function serializeModel(model: ChapterModel, spans?: ChapterSpans): strin
   const doc = chapterFileFromModel(model, spans);
   const content = serializeChapterFile(doc);
   const back = parseChapterFile(content, 'autosave-selfcheck');
-  const shape = (d: ChapterFile) => JSON.stringify([d.meta, d.greekLines, d.englishLines, d.footnotes]);
+  const shape = (d: ChapterFile) => JSON.stringify([d.meta, d.greekLines, d.englishLines, d.englishParaLines, d.footnotes]);
   if (shape(back) !== shape(doc)) {
     throw new Error('autosave: serialized chapter file does not round-trip through the parser — save aborted, nothing written');
   }
@@ -201,7 +261,7 @@ export function anchoredFootnoteCount(model: ChapterModel): number {
   for (const row of model.rows) {
     // Walk segments in document order — a marker can live in a continuation
     // segment of a split row (design doc D6).
-    for (const doc of englishDocsOf(row)) {
+    for (const doc of allEnglishDocsOf(row)) {
       for (const id of markerIdsIn(docFromJSON(doc))) ids.add(id);
     }
   }
@@ -247,7 +307,9 @@ function splitDriftNotice(address: string): string {
  * corpus spine's addresses for older files without column_starts.
  */
 export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: SchemeId): HydrationResult {
+  const schemeDef = getScheme(scheme);
   const fileCount = file.greekLines.length;
+  const addressOfRow = rowAddressSource(file.meta, spine, schemeDef);
 
   // Per-row address labels for line_splits mapping and notices (file's own
   // addressing first, spine fallback; '' when neither can say).
@@ -255,14 +317,10 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
   const rowIndexByLabel = new Map<string, number>();
   for (let i = 0; i < fileCount; i++) {
     let label = '';
-    if (file.meta.columnStarts) {
-      try {
-        label = rowAddress(file.meta, i + 1);
-      } catch {
-        label = '';
-      }
-    } else if (i < spine.length) {
-      label = spine[i].address.raw;
+    try {
+      label = addressOfRow(i + 1).raw;
+    } catch {
+      label = '';
     }
     rowLabels.push(label);
     if (label !== '' && !rowIndexByLabel.has(label)) rowIndexByLabel.set(label, i);
@@ -291,9 +349,20 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
 
   const rows: RowModel[] = [];
   for (let i = 0; i < fileCount; i++) {
-    const address = i < spine.length ? spine[i].address : { scheme, raw: '' };
+    let address: Address;
+    if (schemeDef.spineSource === 'document') {
+      try {
+        address = addressOfRow(i + 1);
+      } catch {
+        address = { scheme, raw: '' };
+      }
+    } else {
+      address = i < spine.length ? spine[i].address : { scheme, raw: '' };
+    }
     const greek = file.greekLines[i];
     const segments = parseRowSegments(file.englishLines[i]);
+    const englishParaLine = file.englishParaLines?.[i];
+    const englishPara = englishParaLine !== undefined && englishParaLine.length > 0 ? parseRow(englishParaLine).toJSON() : undefined;
     let offsets = offsetsByRow.get(i) ?? [];
     const label = rowLabels[i] !== '' ? rowLabels[i] : address.raw;
 
@@ -302,7 +371,7 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
     // rejoined with a single space (nothing lost), one plain sentence
     // surfaced on the notice channel.
     if (offsets.some((offset) => !isValidSplitOffset(greek, offset))) {
-      rows.push({ address, greek, english: joinRowDocs(segments) });
+      rows.push({ address, greek, english: joinRowDocs(segments), ...(englishPara ? { englishPara } : {}) });
       noteDrift(label);
       continue;
     }
@@ -319,6 +388,7 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
       address,
       greek,
       english: segments[0],
+      ...(englishPara ? { englishPara } : {}),
       ...(offsets.length > 0 ? { splitOffsets: offsets } : {}),
       ...(segments.length > 1 ? { english2: segments.slice(1) } : {}),
     });
@@ -329,7 +399,7 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
   const markerIds = new Set<string>();
   const markerOrder: string[] = [];
   for (const row of rows) {
-    for (const doc of englishDocsOf(row)) {
+    for (const doc of allEnglishDocsOf(row)) {
       for (const id of markerIdsIn(docFromJSON(doc))) {
         if (!markerIds.has(id)) markerOrder.push(id);
         markerIds.add(id);
@@ -349,16 +419,16 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
   }
 
   const notices: string[] = [];
-  if (fileCount !== spine.length) {
+  if (schemeDef.spineSource === 'corpus' && fileCount !== spine.length) {
     notices.push(`Saved file has ${fileCount} lines but the corpus spine has ${spine.length} — using the saved file.`);
-  } else if (rows.some((row, i) => row.greek !== spine[i].greek)) {
+  } else if (schemeDef.spineSource === 'corpus' && rows.some((row, i) => row.greek !== spine[i].greek)) {
     notices.push('Saved Greek differs from the corpus text — using the saved file.');
   }
   notices.push(...splitNotices);
   const notice = notices.length > 0 ? notices.join(' ') : null;
 
   const spans: ChapterSpans =
-    fileCount === spine.length && fileCount > 0
+    (schemeDef.spineSource === 'document' || fileCount === spine.length) && fileCount > 0
       ? { start: rows[0].address.raw, end: rows[fileCount - 1].address.raw }
       : { start: file.meta.spanStart, end: file.meta.spanEnd };
 
