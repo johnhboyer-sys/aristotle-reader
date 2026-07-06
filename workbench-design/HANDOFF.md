@@ -11,17 +11,28 @@ translation editor (one row = one Bekker line) replacing John's Scrivener
 workflow; his collaborator is non-technical, so every degraded state must be one
 plain sentence, never a stack trace.
 
+**➡️ CURRENT PHASE: hand-TESTING, not new features.** All feature work is
+committed; the job now is exercising it in the real .app and triaging what John
+finds. See the "TESTING CHECKLIST" at the top of `workbench-design/TODO.md`
+(the single source of truth for what to test). Do NOT start new features unless
+John asks.
+
 **Branch state:** all work committed, branch **NOT pushed** (John's standing
-call — keep it local unless he says otherwise). Commit trail:
-- `d118d23b` Phase 1
-- `5adefdde` Phase 2
-- `46f65a6e` Phase 3 (AI-assist + reference panel) + `98daf28f` ledger fix
-- `ecb7b542` line-split feature (D6) + `0d4f0d6b` ledger fix
+call — keep it local unless he says otherwise). Commit trail (HEAD `62f5ae44`):
+- `d118d23b` Phase 1 · `5adefdde` Phase 2
+- `46f65a6e` Phase 3 (AI-assist + reference panel)
+- `ecb7b542` line-split (D6)
+- `6cccbb8f` multi-provider AI-assist (any CLI / API key)
+- `f48adb17` split clicked-word fix · `e8f31c9f` discoverable AI trigger +
+  reference-import default
+- `f81d59a5` Translate/Reference modes · `0b9c42a4` Check mode ·
+  `66e699dc` Ask panel (docked, one-shot)
+- `a6eee54b` → `62f5ae44` app icon (italic α → a)
+Latest built .app: `~/Downloads/Translation Workbench.app` (unsigned).
 
 Check `git worktree list` first — the branch was last checked out in
-`.claude/worktrees/intelligent-tesla-c10171` (worktrees keep getting
-auto-cleaned; the branch survives each time). Work in whichever worktree has it,
-or check it out fresh. **After any fresh checkout:**
+`.claude/worktrees/wb-ai` (worktrees keep getting auto-cleaned; the branch
+survives each time). Work in whichever worktree has it, or check it out fresh. **After any fresh checkout:**
 `cd workbench && npm install && node scripts/build-dev-corpus.mjs`, AND restore
 the gitignored Scrivener samples into `workbench/.dev-corpus/scrivener-samples/`
 from `~/Downloads/meta z 17/` (Meta 7.17 pair) + `~/Downloads/APo 1.4 {Greek,
@@ -53,27 +64,32 @@ branch (browser harness on port 1421).
   `$APPDATA/references` (never synced, never committed), right-rail panel
   mutually exclusive with footnotes. Plus a latent pandoc Finder-launch PATH
   bug fixed along the way.
-- **Line-split (`ecb7b542`)**: split a Bekker line at a paragraph boundary —
-  right-click Greek → "Start new paragraph here"; both halves get their own
-  English cell; stored as `line_splits` frontmatter + `¶` delimiter; exports as
-  a real docx paragraph. 901 tests green.
+- **Line-split (`ecb7b542`)**: right-click Greek → "Start new paragraph here";
+  both halves get their own English cell; `line_splits` frontmatter + `¶`
+  delimiter; exports as a real docx paragraph.
+- **Multi-provider AI-assist (`6cccbb8f` + follow-ups)**: runs whatever AI the
+  user has — Claude Code / Codex / Gemini CLIs auto-detected, custom command,
+  or API keys (off by default). Four right-click modes on the Greek:
+  **Translate** (fills cell) · **AI reference** (floating popup) · **Check my
+  translation** (linguist diagnosis popup) · **Ask about this line…** (docked
+  bottom chat panel, one-shot). Rust `assist_run`/`assist_which` run any
+  resolved binary; prompt via `ctx.mode`; providers unchanged across modes.
+- **App icon (`62f5ae44`)**: italic α → a, terracotta gradient, light arrow.
 
-**REMAINING — all need John at the keyboard (Tauri-native, not headless-testable):**
-1. **Line-split cursor-division check**: type a sentence, put the cursor
-   mid-way, right-click-split — confirm the English divides at the cursor. This
-   is the one path the browser harness couldn't exercise (ProseMirror only
-   adopts a caret from real input); it's unit-tested and wiring-verified, just
-   wants a real-cursor confirmation.
-2. **Finder-launch smoke test** of a fresh `npm run app:package` build, launched
-   from Finder (NOT `open` from a terminal): try assist (⌘⏎) with his real
-   `claude` install, and a docx export (validates the pandoc PATH fix). If
-   assist falls back to clipboard or export fails, the binary-resolution ladder
-   or a capability scope is wrong — see d4 §1 / the pandoc rider in d4-ai-assist.md.
-3. **Real-OCR reference import** — his Ross or Lennox text through
-   "Import reference…", to shake out the native file picker + assignment flow.
-4. Carried Phase-2 hand-test items (Diogenes "Add work…", native pickers,
-   folder picker on a real synced folder); full `tauri build` DMG step (needs a
-   real Finder session); updater signing-key ceremony.
+**REMAINING — all TESTING, John at the keyboard in the real .app** (the full
+checklist lives at the top of TODO.md; highlights):
+1. **AI in the .app**: pick a provider (⚙️ → AI assist); test all four modes.
+   The browser preview CANNOT run CLIs — only the packaged .app can. Claude +
+   Codex are verified present on this Mac; the API path is unit-tested but never
+   live-run.
+2. **Finder-launch smoke test** (launch from Finder, NOT `open` from a terminal):
+   assist + a docx export both work — bare-PATH failures only surface on a real
+   Finder launch (the pandoc/GUI-PATH lesson; see d4 §1 / the pandoc rider).
+3. **Line-split cursor-division**: type a sentence, cursor mid-line, split →
+   English divides at the cursor (the one path never verifiable headlessly).
+4. **Real-OCR reference import**; native pickers; Diogenes "Add work…"; whole-
+   work compile (John's bilingual/Cambria aesthetic verdict pending); full
+   `tauri build` DMG step; updater signing-key ceremony.
 
 **HARD GATE — Latin/Aquinas (3C) is PARKED.** Do not start it without John's
 explicit greenlight AND his Aquinas citation conventions (which works, the
@@ -111,7 +127,18 @@ returns null. Codex via `codex:codex-rescue` can misfire (lost prompt) or hit
 its usage limit — give the forwarding call a long Bash timeout and retry.
 Toolchain: Node 22, pandoc 3.10, Diogenes.app, rust ~1.96.
 
-**Start by:** (1) asking John how the hand-testing went (the four REMAINING
-items above) and triaging whatever he reports — that's the top priority;
-(2) asking whether to push/PR the branch; (3) NOT starting 3C unless he
-greenlights it and supplies the Aquinas conventions.
+Add-ons discovered this round to fold in when relevant: the app icon source is
+`src-tauri/icons/icon-source.svg` (regenerate with `tauri icon <svg>`); Codex's
+`codex exec` needs `--skip-git-repo-check` + JSONL `agent_message` parsing +
+`-c mcp_servers={}` (baked into the codex tool spec); Tauri commands are
+unavailable in the browser preview (isTauri()=false) so AI can only be
+live-tested in the packaged .app.
+
+**Start by:** (1) asking John how the TESTING went (the checklist at the top of
+TODO.md) and triaging whatever he reports — that is the whole job this phase;
+(2) fixing bugs he finds, verifying each in the .app (rebuild:
+`stage:corpus` + `tauri build --bundles app` → copy to ~/Downloads), summary
+before each commit; (3) asking whether to push/PR the branch once he's
+satisfied; (4) NOT starting new features (multi-turn chat, generic-app fork,
+Latin/Aquinas 3C) unless he greenlights them — 3C also needs his Aquinas
+citation conventions.

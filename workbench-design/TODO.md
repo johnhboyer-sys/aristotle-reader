@@ -1,18 +1,73 @@
 # Translation Workbench — TODO
 
-State as of 2026-07-03: **Phase 2 committed** (`5adefdde`), **Phase 3 GREENLIT by
-John** (no push — branch stays local, his call). Branch
-`claude/blissful-rubin-d64797` now lives in the `intelligent-tesla-c10171`
-worktree (nervous-saha was auto-cleaned; branch intact). Phase 3 (3A+3B) COMMITTED
-`46f65a6e` (John reviewed the summary and approved). 782 tests green;
-svelte-check 0 errors.
+State as of 2026-07-04: **all feature work through the AI-assist suite + app
+icon is COMMITTED on `claude/blissful-rubin-d64797` — branch NOT pushed (John's
+standing call), local-only.** Now lives in the `.claude/worktrees/wb-ai`
+worktree (previous worktrees kept auto-cleaning; branch intact). Latest HEAD
+`62f5ae44`. **1006 vitest green; tsc / svelte-check 0 errors / cargo test 15 /
+vite build clean.** ➡️ NEXT PHASE: **hand-TESTING in the real .app** — see the
+Testing checklist below; that is the focus now, not new features.
 
-⚠️ Worktree-cleanup survival kit (this has bitten twice): the gitignored
+⚠️ Worktree-cleanup survival kit (this has bitten repeatedly): the gitignored
 Scrivener samples die with the worktree — restore from `~/Downloads/meta z 17/`
 + `~/Downloads/APo 1.4 {Greek,English}.md` into
-`workbench/.dev-corpus/scrivener-samples/`. The original build spec was never
-committed and nearly died the same way — recovered verbatim from the Phase 1
-transcript, now at `workbench-design/build-spec.md` (commit it with Phase 3).
+`workbench/.dev-corpus/scrivener-samples/`. After any fresh checkout:
+`cd workbench && npm install && node scripts/build-dev-corpus.mjs`. The build
+spec is committed at `workbench-design/build-spec.md`; design docs d1–d7 +
+memos are in `workbench-design/`.
+
+## ➡️ TESTING CHECKLIST — the current focus (John, in the real .app)
+
+The app is at `~/Downloads/Translation Workbench.app` (rebuilt `62f5ae44`;
+unsigned → first launch right-click → Open). The browser preview CANNOT run the
+AI CLIs — only the packaged .app can, so all AI testing must be in the .app.
+
+**AI-assist (⚙️ → AI assist to pick a provider first):**
+- [ ] Provider detection: Claude Code + Codex auto-detected (both verified
+  present on this Mac); pick one. Gemini not installed → best-effort flags,
+  confirm the custom-command path if you install it. API-key path (OpenAI/
+  Anthropic/Google) is code-complete + unit-tested but NEVER live-run — test
+  with a real key if you want it (Anthropic needs the browser-access header,
+  already sent).
+- [ ] Right-click a Greek line → **Translate with AI** → fills the English
+  cell; ⌘Z undoes as one step.
+- [ ] **AI reference** → floating popup with the AI's own translation; drag it,
+  Copy, Close; open several; cell untouched.
+- [ ] **Check my translation** (line with English) → "Translation check" popup,
+  linguist diagnosis vs the Greek; blank line → the guard message.
+- [ ] **Ask AI about this line…** → docked bottom chat panel; type a question,
+  Enter sends, answer appears; resize the panel; coexists with the reference
+  rail. (One-shot — no multi-turn yet.)
+- [ ] Clipboard fallback (no provider chosen) shows the plain sentence, not a
+  stack trace.
+- [ ] **Finder-launch smoke test** (the pandoc/GUI-PATH lesson): launch from
+  Finder, NOT `open` from a terminal — confirm assist AND a docx export both
+  work (bare-PATH failures only show on a real Finder launch).
+
+**Line-split (D6):**
+- [ ] Right-click a Greek word → "Start new paragraph here" → the CLICKED word
+  begins the new paragraph; twin gutter address; continuation indented.
+- [ ] **Cursor-division** (the one path never verifiable headlessly): type a
+  sentence, put the cursor mid-line, split → English divides at the cursor.
+- [ ] Un-split (confirm when both halves non-empty); ⌘Z reverses; export shows
+  the paragraph break (single-chapter + whole-work, English + bilingual).
+
+**Reference / Scrivener import:**
+- [ ] Native file picker for "Import reference…"; assignment defaults to the
+  open chapter; the panel shows it; references land under $APPDATA/references
+  (never the synced folder).
+- [ ] Real-OCR reference import (Ross/Lennox) — the acceptance case.
+- [ ] Scrivener import via the native two-file picker; whole-work compile export
+  (bilingual layout + Cambria — John's aesthetic verdict still pending).
+
+**Packaging / release (still open):**
+- [ ] Full `tauri build` DMG step (needs a real Finder session; `--bundles app`
+  used so far); updater signing-key ceremony (John's key, from Phase 1).
+- [ ] The Diogenes "Add work…" onboarding path in the real app.
+
+**App icon:** shipped `62f5ae44` — italic α → a, warm gradient, light arrow;
+source at `src-tauri/icons/icon-source.svg`. Nothing to test beyond eyeballing
+it in the dock.
 
 ## Done this session (2026-07-03, in `46f65a6e`, orchestrator-verified)
 
@@ -145,7 +200,7 @@ Gates: 992 vitest / tsc / svelte-check 0 err / 15 cargo tests.
 Codex gotcha baked in: `codex exec` needs --skip-git-repo-check + JSONL
 agent_message parsing + `-c mcp_servers={}`.
 
-## AI-assist hand-test round (D7 follow-ups) — COMMITTED 2026-07-03
+## AI-assist round (D7 follow-ups + modes + Ask + icon) — COMMITTED 2026-07-03/04
 
 John hand-tested (in the browser preview, which CANNOT run CLIs → always the
 clipboard fallback; the real .app runs headless in-app). Fixes:
@@ -160,10 +215,23 @@ clipboard fallback; the real .app runs headless in-app). Fixes:
   ReferencePopup.svelte. "Copy as citation" → "Copy with citation".
   DEFERRED: "Check my English" mode + Apple Intelligence provider (slots into
   the provider layer when its on-device API ships).
-- Built the real .app (`npm run stage:corpus` + `tauri build --bundles app`,
-  63MB) → ~/Downloads/Translation Workbench.app so John can use headless AI
-  for real. assist_run/assist_which confirmed in the binary.
-Gates at wrap: 999 vitest / tsc / svelte-check 0 err / vite build / cargo.
+- `0b9c42a4` **Check my translation** mode: AI as SOLELY a linguist diagnosing
+  the row's existing English vs the Greek (morphology/syntax/lexical fidelity,
+  cites the Greek, no interpretation); sends the target's OWN English + names
+  the reference; "Translation check" popup; blank-line guard.
+- `66e699dc` **Ask about this line** (one-shot): a free-form question in a
+  DOCKED, RESIZABLE BOTTOM chat panel (AskPanel.svelte) that coexists with the
+  right rail; session-bridge (assistCommands.askAboutLine); mode 'ask' on
+  AssistContext + `question`. Multi-turn is the small documented follow-up.
+- `a6eee54b` → `62f5ae44` app icon: italic **α → a** on a warm terracotta
+  gradient with a light chevron arrow; icon-source.svg + all platform assets.
+- Built/refreshed the real .app (`stage:corpus` + `tauri build --bundles app`,
+  63MB) → ~/Downloads/Translation Workbench.app. assist_run/assist_which +
+  the icon confirmed in the bundle.
+DEFERRED (documented, John's call): multi-turn chat in the Ask panel; Apple
+Intelligence provider (slots into the provider layer when its on-device API
+ships); the generic-app fork (see backlog).
+Gates at wrap: **1006 vitest** / tsc / svelte-check 0 err / vite build / cargo.
 
 ## Decisions John has confirmed
 
