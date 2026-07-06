@@ -269,9 +269,21 @@ export function splitFootnoteBlock(body: string): {
 
 // ── inline tags ─────────────────────────────────────────────────────────────
 
-const TAG = /\{([0-9]+\.[0-9]+|[0-9]{3,4}[ab]|[0-9]{1,2})\}[ \t]?/g;
+// Phase-4A grammar extension (additive, backward compatible): a column tag
+// is 1–4 page digits + a/b + an OPTIONAL 1–2-digit STARTING LINE. `{1181a25}`
+// = column 1181a entered at line 25 (Magna Moralia opens mid-column); no
+// trailing digits = line 1 exactly as before. Pages of 1–2 digits are now
+// legal too (`{16a}` De Interpretatione, `{1a}` Categories).
+//
+// Ambiguity check: `{15}` (bare line tag) vs `{15a}` (column tag) are
+// DISTINCT — the letter disambiguates; `{1.7}` chapter tags are unchanged.
+// No legacy file changes meaning under the new grammar: legacy files contain
+// only 3–4-digit columns without line suffixes and 1–2-digit bare lines,
+// whose parses are byte-identical under the new regex (pinned by
+// translation-file-tags.test.ts).
+const TAG = /\{([0-9]+\.[0-9]+|[0-9]{1,4}[ab][0-9]{0,2}|[0-9]{1,2})\}[ \t]?/g;
 const CHAPTER_TAG = /^[0-9]+\.[0-9]+$/;
-const COLUMN_TAG = /^[0-9]{3,4}[ab]$/;
+const COLUMN_TAG = /^([0-9]{1,4})([ab])([0-9]{1,2})?$/;
 
 // Markdown/plain-text sources mark a paragraph break with a blank line (one
 // or more), i.e. two-or-more `\n` in the raw text. The Reader's flowing-prose
@@ -308,12 +320,19 @@ function scanTags(body: string): { text: string; tags: InlineTag[]; warnings: st
       const [b, c] = raw.split('.').map(Number);
       tags.push({ kind: 'chapter', raw, offset, book: b, chapter: c });
     } else if (COLUMN_TAG.test(raw)) {
-      if (column !== null && columnKey(raw) <= columnKey(column)) {
-        warnings.push(`column {${raw}} does not advance from {${column}} — check the source tags`);
+      const cm = COLUMN_TAG.exec(raw)!;
+      const col = `${cm[1]}${cm[2]}`;
+      const startLine = cm[3] !== undefined ? Number(cm[3]) : null;
+      if (column !== null && columnKey(col) <= columnKey(column)) {
+        warnings.push(`column {${col}} does not advance from {${column}} — check the source tags`);
       }
-      column = raw;
-      lastLine = 0;
-      tags.push({ kind: 'column', raw, offset, column, line: 1, citation: `${column}1` });
+      column = col;
+      // Legacy identity: a suffix-less column tag leaves lastLine at 0 (so a
+      // following {1} line tag doesn't warn), exactly as before. A suffixed
+      // tag enters the column mid-way, so the suffix becomes the line context.
+      lastLine = startLine ?? 0;
+      const line = startLine ?? 1;
+      tags.push({ kind: 'column', raw, offset, column: col, line, citation: `${col}${line}` });
     } else {
       const n = Number(raw);
       if (column === null) {
@@ -418,9 +437,11 @@ function rebaseThroughMarkerStrip(emphText: string, offsets: number[]): number[]
   return rebaseThroughRemoval(emphText, FOOTNOTE_MARKER, offsets);
 }
 
-/** Bekker column sort key: 1094a < 1094b < 1095a … */
+/** Bekker column sort key: 1a < 1b < … < 1094a < 1094b < 1095a … (pages of
+ *  1–2 digits are legal since the Phase-4A grammar extension: Categories/De
+ *  Int live on them). */
 export function columnKey(col: string): number {
-  const m = col.match(/^(\d{3,4})([ab])$/);
+  const m = col.match(/^(\d{1,4})([ab])$/);
   return m ? Number(m[1]) * 2 + (m[2] === 'b' ? 1 : 0) : -1;
 }
 
@@ -436,6 +457,9 @@ function detectDensity(tags: InlineTag[]): TagDensity {
   if (!lines.length) return 'five-line-or-column';
   // Median gap between consecutive line numbers within a column: an
   // exhaustively-tagged source advances by 1–2, a five-line apparatus by ~5.
+  // (A Phase-4A column tag with a line suffix, e.g. {1181a25}, counts exactly
+  // like any column tag here — its `line` is the entered line, so the gap to
+  // the column's next mark is measured from the true entry point.)
   const gaps: number[] = [];
   const byCol = new Map<string, number[]>();
   for (const t of [...columns, ...lines]) {
