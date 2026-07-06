@@ -65,6 +65,7 @@
   import { greekInput, resetGreekRun } from './plugins/greekInput';
   import { footnotePlugin, FN_REFRESH } from './plugins/footnote';
   import { session, registerEditor, unregisterEditor, setStatus } from './session.svelte';
+  import { zoom, zoomIn, zoomOut, zoomReset } from './zoom.svelte';
   import type {
     EditorCommands,
     FootnoteCommands,
@@ -2079,7 +2080,18 @@
     if (e.defaultPrevented) return;
     const mod = e.metaKey || e.ctrlKey;
     if (!mod || e.altKey) return;
-    if (e.key === 'z' || e.key === 'Z') {
+    // Zoom the working text: ⌘+ / ⌘- / ⌘0 (⌘= is the unshifted "+"). `+` and `=`
+    // share a key, and `_` shares `-`, so match both forms.
+    if (e.key === '=' || e.key === '+') {
+      e.preventDefault();
+      zoomIn();
+    } else if (e.key === '-' || e.key === '_') {
+      e.preventDefault();
+      zoomOut();
+    } else if (e.key === '0') {
+      e.preventDefault();
+      zoomReset();
+    } else if (e.key === 'z' || e.key === 'Z') {
       e.preventDefault();
       if (e.shiftKey) redo();
       else undo();
@@ -2208,6 +2220,7 @@
 <div
   class="chapter-editor"
   bind:this={rootEl}
+  style="--zoom: {zoom.factor}"
   oncopy={onCopy}
   oncut={onCut}
   onkeydown={onRootKeydown}
@@ -2268,15 +2281,32 @@
 
   {#if ctxMenu}
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>Translate with AI</button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>AI reference</button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>Check my translation</button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAsk}>Ask AI about this line…</button>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>
+        <span class="ctx-menu-title">Translate with AI</span>
+        <span class="ctx-menu-desc">Writes a draft into this row's English cell</span>
+      </button>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>
+        <span class="ctx-menu-title">AI reference</span>
+        <span class="ctx-menu-desc">A second version in the sidebar — your cell untouched</span>
+      </button>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>
+        <span class="ctx-menu-title">Check my translation</span>
+        <span class="ctx-menu-desc">Linguist's check of your English against the Greek</span>
+      </button>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAsk}>
+        <span class="ctx-menu-title">Ask AI about this line…</span>
+        <span class="ctx-menu-desc">Open a Q&A chat about this line</span>
+      </button>
       {#if !ctxMenu.aiOnly}
         {#if ctxMenu.merge}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>Merge paragraph back</button>
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>
+            <span class="ctx-menu-title">Merge paragraph back</span>
+          </button>
         {:else}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>Start new paragraph here</button>
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>
+            <span class="ctx-menu-title">Start new paragraph here</span>
+            <span class="ctx-menu-desc">Splits this Bekker line at the clicked Greek word</span>
+          </button>
         {/if}
       {/if}
     </div>

@@ -31,6 +31,7 @@
   import { chapterLibraryStatuses } from './lib/library/sync';
   import type { ChapterLibraryStatus } from './lib/library/sync';
   import { session, syncCommands } from './lib/editor/session.svelte';
+  import { zoomIn, zoomOut, zoomReset, zoomAtMin, zoomAtMax, zoomPercent } from './lib/editor/zoom.svelte';
   import LibrarySettingsDialog from './components/LibrarySettingsDialog.svelte';
 
   const works: WorkManifest[] = listWorks();
@@ -454,6 +455,33 @@
         </svg>
       </button>
 
+      <span class="tb-divider" aria-hidden="true"></span>
+
+      <span class="zoom-group" role="group" aria-label="Text size">
+        <button
+          class="icon-btn zoom-step"
+          onclick={zoomOut}
+          disabled={zoomAtMin()}
+          title="Smaller text (⌘−)"
+          aria-label="Decrease text size"
+        >−</button>
+        <button
+          class="icon-btn zoom-pct"
+          onclick={zoomReset}
+          title="Reset text size (⌘0)"
+          aria-label="Reset text size"
+        >{zoomPercent()}%</button>
+        <button
+          class="icon-btn zoom-step"
+          onclick={zoomIn}
+          disabled={zoomAtMax()}
+          title="Larger text (⌘+)"
+          aria-label="Increase text size"
+        >+</button>
+      </span>
+
+      <span class="tb-divider" aria-hidden="true"></span>
+
       {#if isTauri() || import.meta.env.DEV}
         <button
           class="icon-btn"
@@ -692,6 +720,35 @@
   .icon-btn.active {
     color: var(--accent);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .icon-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .icon-btn:disabled:hover {
+    color: var(--text-mid);
+    background: transparent;
+  }
+
+  /* Text-size (zoom) control: − [percent] + */
+  .zoom-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+  }
+  .zoom-step {
+    font-size: 1.15rem;
+    line-height: 1;
+    font-family: var(--font-ui);
+  }
+  .zoom-pct {
+    width: auto;
+    min-width: 3rem;
+    padding: 0 var(--space-2);
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-light);
   }
 
   /* ── Body: rail · center · side panel ────────────────────────────── */

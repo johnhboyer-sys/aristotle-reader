@@ -77,8 +77,8 @@ describe('split gesture wiring (D6 §4.1)', () => {
   });
 
   it('the menu offers "Start new paragraph here" on unsplit lines and "Merge paragraph back" on split ones', () => {
-    expect(chapterSource).toContain('>Start new paragraph here</button>');
-    expect(chapterSource).toContain('>Merge paragraph back</button>');
+    expect(chapterSource).toContain('>Start new paragraph here</span>');
+    expect(chapterSource).toContain('>Merge paragraph back</span>');
   });
 
   it('the click offset snaps to a word gap via snapToWordStart; an invalid spot no-ops with the status line', () => {
