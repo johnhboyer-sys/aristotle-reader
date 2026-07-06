@@ -7,3 +7,4 @@ export * from './pages';
 export * from './line-shape';
 export * from './gutter';
 export * from './divisions';
+export * from './footnotes';

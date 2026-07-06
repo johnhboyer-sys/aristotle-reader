@@ -57,6 +57,8 @@ import {
   classifyTicToken,
   findTrailingToken,
   isHeadingClassLine,
+  isDisplayShapedLine,
+  stripLikelyTicEnds,
   lineShape,
   ticSpanOnLine,
   LEFT_MIN,
@@ -339,13 +341,29 @@ function headerHasCadenceConsistentTic(lines: string[], headerIdx: number, ctx: 
   return false;
 }
 
-const FOOTNOTE_LINE_RE = /^\s*(\d+\.\s|\*)/;
+// Phase-3 §A3 adds † as a valid note-starter glyph, symmetric with *.
+const FOOTNOTE_LINE_RE = /^\s*(\d+\.\s|[*†])/;
 const LONE_INTEGER_RE = /^\d+$/;
 
-// §4 + A6: scan up from the bottom for an optional folio line and/or a
-// footnote block, separated from the body by a blank-line gap, gated to the
-// bottom 40% of the page's non-blank extent so an early blank line ahead of
-// an ordinary numbered list can't be mistaken for furniture.
+// §4 + A6, with the Phase-3 coordinated amendment (see implementation-notes.md
+// and pdf-import/footnotes.ts's identical computeNoteBlockStart, which this
+// mirrors): a wrapped note's continuation line — including a DISPLAY line
+// (AM1), which by construction doesn't look note-shaped at all — is
+// encountered BEFORE its own note-opening line when scanning upward from the
+// bottom, so the original "stop at the first line that isn't note-shaped"
+// loop truncated the furniture region and left a note's continuation in the
+// tic/division scan set. Fixed by absorbing every non-blank line once inside
+// the trailing run regardless of shape, and resolving each blank-line run by
+// PEEKING across it: if the next non-blank line above is display-shaped (AM1
+// — a diagram/label line a genuine interior note gap always brackets), the
+// gap is interior — absorb through and keep climbing; otherwise it's the
+// terminal body/footnote gap — stop (real terminal gaps in the slice run
+// 1-4 blank lines, so a fixed length threshold isn't a safe signal on its
+// own). Only commits the result if >=1 note-starter line was actually seen —
+// a trailing run with no note-starter at all is left as before (folio-only
+// boundary, or none). footnotes.ts re-derives its own bounds independently
+// regardless (defensive — correct even if this amendment is imperfect on
+// some page this slice doesn't exercise).
 function findBottomFurnitureStart(lines: string[]): number | null {
   let firstNonBlank = -1;
   let lastNonBlank = -1;
@@ -365,10 +383,25 @@ function findBottomFurnitureStart(lines: string[]): number | null {
     i--;
     while (i >= 0 && isBlank(lines[i])) i--;
   }
-  while (i >= 0 && FOOTNOTE_LINE_RE.test(lines[i])) {
-    boundary = i;
+
+  let sawNoteLine = false;
+  let tentative = boundary;
+  while (i >= 0) {
+    if (isBlank(lines[i])) {
+      let k = i;
+      while (k >= 0 && isBlank(lines[k])) k--;
+      if (k < 0) break;
+      if (sawNoteLine && isDisplayShapedLine(stripLikelyTicEnds(lines[k]).trim())) {
+        i = k;
+        continue;
+      }
+      break;
+    }
+    if (FOOTNOTE_LINE_RE.test(lines[i])) sawNoteLine = true;
+    tentative = i;
     i--;
   }
+  if (sawNoteLine) boundary = tentative;
   if (boundary === null) return null;
 
   let j = boundary - 1;

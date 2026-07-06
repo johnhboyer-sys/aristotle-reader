@@ -321,6 +321,46 @@ export function lineShape(
   return { shape: 'body', residual, startCol, endCol, mid };
 }
 
+// ---------------------------------------------------------------------------
+// Phase-3 AM1: display-line test, shared by footnotes.ts (note-text assembly)
+// and gutter.ts's bottom-furniture amendment (§4 coordinated amendment: used
+// to tell an INTERIOR blank line around a display block — e.g. note 77's
+// proportion diagram — from the TERMINAL blank gap that separates the whole
+// footnote block from the body, when walking upward from the page bottom).
+// ---------------------------------------------------------------------------
+
+/**
+ * A line whose trimmed content has fewer than 3 alphabetic characters OR
+ * contains an internal run of >=4 spaces is a DISPLAY line (AM1) — a diagram
+ * row or a bare number/label line, never ordinary prose.
+ */
+export function isDisplayShapedLine(trimmed: string): boolean {
+  const alphaCount = (trimmed.match(/\p{L}/gu) ?? []).length;
+  if (alphaCount < 3) return true;
+  if (/ {4,}/.test(trimmed)) return true;
+  return false;
+}
+
+/**
+ * Strip a leading or trailing Bekker-tic-shaped token (bare 1-2 digits, or
+ * full-form 1-4 digits + a/b + optional 1-2-digit line) separated from the
+ * rest of the line by a >=2-space gap. Used ONLY when peeking at a candidate
+ * BODY line during furniture-boundary detection (gutter.ts's
+ * findBottomFurnitureStart, footnotes.ts's computeNoteBlockStart) before
+ * testing it with isDisplayShapedLine — an ordinary recto/verso body line's
+ * own gutter tic ("25         small sums…", "…wher-               5") is
+ * ALWAYS separated from the prose by a wide gap, which would otherwise make
+ * every tic-bearing body line look display-shaped (a real display line, e.g.
+ * a diagram row, is never itself a resolvable tic). Real footnote-block
+ * content is never re-run through this — once inside the confirmed block,
+ * no genuine gutter tic can appear there.
+ */
+export function stripLikelyTicEnds(line: string): string {
+  let s = line.replace(/^\s*\d{1,4}[ab]?\d{0,2}\s{2,}/, '');
+  s = s.replace(/\s{2,}\d{1,4}[ab]?\d{0,2}\s*$/, '');
+  return s;
+}
+
 /** True iff the line's shape is book, chapter, or title-candidate (§7a). */
 export function isHeadingClassLine(
   line: string,
