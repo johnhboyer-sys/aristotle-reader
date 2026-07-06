@@ -92,3 +92,18 @@ or flag `display-block` with page/line refs in the import summary, and add a rev
 flag to any tic whose anchor lands on a display line. Detection-side risk is already
 bounded: stray diagram numbers that pass the positional gates are caught by the
 cadence/monotonic audit (flagged, never silent).
+
+## Categories 4 gold case for display blocks + bare-numeral chapters (John, 2026-07-06)
+Categories ch. 4 (Reeve complete-works extraction, ~line 20260ff. of the full file)
+has a genuine BODY table — the ten-categories list ("Substance  human, horse" …) —
+that SPANS A PAGE BREAK and carries a real gutter tic on a row ("Where  in the
+Lyceum, in the marketplace   2a1"). Unlike headings this is translational content:
+the tic anchor ("Where") is positionally right; the harm is reflow-scrambling at
+render. This is the gold case for Phase 4's display-block detector (preserve line
+structure, keep tic bound, flag `display-block`).
+Same pages: Categories chapters are BARE CENTERED NUMERALS ("4" + title "The Ten
+Categories") — single-book works have no b.c form; Phase-2 grammar needs a
+bare-numeral extension before Categories/De Int can import. Slotted for Phase 5
+(edition generality). Also seen: single-digit folio ("2", col 6) and dotless
+chapter running head ("Categories (Cat.) .4–.5") — both covered by existing
+defenses (furniture position; header line-1 strip).
