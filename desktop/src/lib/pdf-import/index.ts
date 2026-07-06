@@ -36,6 +36,16 @@ export * from './divisions';
 export * from './footnotes';
 export * from './emit';
 
+// Phase 4B (ImportDialog's accept-stage pre-check): a form-feed byte is
+// pdftotext's page-break marker and never appears in a hand-authored or
+// already-tagged translation file — its presence is what tells the dialog to
+// route an upload through convertLayoutExtraction before the metadata form,
+// instead of the existing direct-parse path. A small pure exported function
+// so this detection rule is unit-testable without a DOM/Svelte harness.
+export function isLayoutExtraction(text: string): boolean {
+  return text.includes('\f');
+}
+
 export function convertLayoutExtraction(raw: string, opts: ConvertOptions = {}): ConvertResult {
   const pages = splitPages(raw);
   const ctx = createDocContext();
