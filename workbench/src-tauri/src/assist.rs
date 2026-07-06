@@ -191,6 +191,14 @@ fn run_blocking(
     let mut cmd = Command::new(bin_path);
     cmd.args(args);
     cmd.env("PATH", augmented_path());
+    // Run in a NEUTRAL working directory (the app's temp dir), not the app's
+    // inherited cwd (`/` for a Finder-launched .app). A subprocess's file
+    // access is attributed to the PARENT app under macOS TCC, so an AI CLI that
+    // establishes "project context" from its cwd would wander into
+    // Documents/Desktop/Downloads and trigger a slew of "Translation Workbench
+    // wants to access <folder>" prompts. An empty temp cwd gives it no tree to
+    // scan and keeps it out of the user's protected folders.
+    cmd.current_dir(std::env::temp_dir());
 
     let timeout = Duration::from_millis(timeout_ms);
 
