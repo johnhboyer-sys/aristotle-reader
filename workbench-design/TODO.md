@@ -71,13 +71,15 @@ testing must be in the .app. ⌘Q + relaunch after each new build.
   working Greek/English text (chrome fixed); size persists across ⌘Q+relaunch.
 - [ ] Right-click AI menu items read clearly (each has a one-line description).
 
-**Line-split (D6) — NOT yet tested in the .app:**
-- [ ] Right-click a Greek word → "Start new paragraph here" → the CLICKED word
-  begins the new paragraph; twin gutter address; continuation indented.
-- [ ] **Cursor-division** (the one path never verifiable headlessly): type a
-  sentence, put the cursor mid-line, split → English divides at the cursor.
-- [ ] Un-split (confirm when both halves non-empty); ⌘Z reverses; export shows
-  the paragraph break (single-chapter + whole-work, English + bilingual).
+**Line-split (D6) — DONE (John-verified in the .app, 2026-07-06):**
+- [x] Split gesture + **cursor-division** (English divides at the caret) work.
+- [x] Leading punctuation fix (`0d5e34c5`): splitting at a word next to `(` or
+  `—` now pulls the mark into the new paragraph (was stranded on prior line).
+- [x] Split/Merge moved to the TOP of the right-click menu + divider (`168343ac`).
+- [x] Un-split + **⌘Z reverses** cleanly ("undo works great").
+- [x] Export shows the paragraph break, AND untranslated gaps render as a single
+  `…` paragraph (`03d6aa63`). Still worth a glance: whole-work **bilingual**
+  compile (ellipses on the English side only; Cambria aesthetic verdict pending).
 
 **Reference / Scrivener import — NOT yet tested in the .app:**
 - [ ] Native file picker for "Import reference…"; assignment defaults to the
