@@ -59,7 +59,7 @@
   // to runImport — if the dialog pre-stripped markers, a second scanEmphasis
   // pass over already-clean text would have nothing left to recognise as
   // emphasis, silently losing every confident range before storage.
-  let emphReviewItems: (EmphasisReviewItem & { context: string })[] = [];
+  let emphReviewItems: (EmphasisReviewItem & { context: string; before: string; hit: string; after: string })[] = [];
   let emphReviewChoices = new Map<number, 'keep' | 'remove'>();
   let emphReviewPos = 0;
   let emphConfidentCount = 0;
@@ -465,7 +465,7 @@ found among ends…</pre>
     </p>
     {#if emphReviewItems[emphReviewPos]}
       {@const item = emphReviewItems[emphReviewPos]}
-      <p class="imp-review-ctx">…{item.context}…</p>
+      <p class="imp-review-ctx">…{item.before}<mark class="imp-emph-hit">{item.hit}</mark>{item.after}…</p>
       <p class="imp-note">
         {#if item.reason === 'stray-marker'}
           A lone <code>{item.raw}</code> with no matching partner.
@@ -624,5 +624,11 @@ found among ends…</pre>
     font-family: var(--font-english); font-size: 0.95rem; line-height: 1.6;
     background: var(--page-bg); border: 1px solid var(--border); border-radius: 8px;
     padding: 0.7rem 0.9rem; margin: 0.8rem 0;
+  }
+  .imp-emph-hit {
+    background: var(--accent-soft, rgba(139, 90, 43, 0.18));
+    color: inherit; font-weight: 600;
+    border-radius: 3px; padding: 0 0.15em;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
   }
 </style>

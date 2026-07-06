@@ -297,9 +297,22 @@ export function emitOverlayPieces(
       // re-render and must resolve straight to a DOM id without a BookData
       // fetch in the hot path. `pieceText` (== pieceText, this piece's own
       // clean text) lets the painter match the right `.ross-prose` by content.
+      // The emphasis key + offsets must live in the SAME character space the
+      // desktop painter measures: it reads rendered DOM text via proseText(),
+      // and Reader's flowParts renders every '\n' as a <br> (which contributes
+      // no text node), so the on-screen text is this piece's text with newlines
+      // removed. Store the emphasis pieceText and its piece-local offsets in
+      // that '\n'-free space so `pieceText === proseText(prose)` holds and the
+      // offsets line up — otherwise any piece containing a paragraph break
+      // silently fails the painter's exact-match gate and no italics render.
+      // (Imports carry no [[sN]]/[[figN]]/[^N] markers, so '\n' is the only
+      // transform highlightEng applies to an import column's text.)
+      const cleanPieceText = pieceText.replace(/\n/g, '');
+      const toClean = (rawLocal: number) =>
+        rawLocal - (pieceText.slice(0, rawLocal).match(/\n/g)?.length ?? 0);
       const pieceEmph = ca.emphasis
         .filter(e => e.start >= cursor && e.end <= sliceEnd)
-        .map(e => ({ pieceText, start: e.start - cursor, end: e.end - cursor, style: e.style }));
+        .map(e => ({ pieceText: cleanPieceText, start: toClean(e.start - cursor), end: toClean(e.end - cursor), style: e.style }));
       if (pieceEmph.length) (emphOut[col] ??= []).push(...pieceEmph);
 
       cursor = sliceEnd;

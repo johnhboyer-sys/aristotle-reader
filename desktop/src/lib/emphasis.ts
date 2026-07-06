@@ -251,17 +251,23 @@ export function scanEmphasis(raw: string): EmphasisResult {
 
 /** Pending review sites as surfaced in the queue UI, walking the CURRENT
  *  (post-scanEmphasis) text — mirrors dehyphenate.ts's listReviewItems. */
-export function listEmphasisReviewItems(text: string, seed: EmphasisReviewItem[]): (EmphasisReviewItem & { context: string })[] {
+export function listEmphasisReviewItems(text: string, seed: EmphasisReviewItem[]): (EmphasisReviewItem & { context: string; before: string; hit: string; after: string })[] {
   const bySeed = new Map(seed.map(s => [s.index, s]));
+  const clean = (t: string) => t.replace(/\[EREVIEW:\d+:[ib]\]|\[\/EREVIEW\]/g, '').replace(/\s+/g, ' ');
   return [...text.matchAll(EMPH_REVIEW_MARKER)].map(m => {
     const idx = Number(m[1]);
     const s = bySeed.get(idx)!;
     const inner = m[3];
-    return {
-      ...s,
-      inner,
-      context: text.slice(Math.max(0, m.index! - 30), m.index! + m[0].length + 30).replace(/\[EREVIEW:\d+:[ib]\]|\[\/EREVIEW\]/g, '').replace(/\s+/g, ' '),
-    };
+    const start = m.index!;
+    const end = start + m[0].length;
+    // Split the snippet into before / hit / after so the UI can spotlight exactly
+    // what was flagged. `hit` is the emphasised span for a real span, or the orphan
+    // marker glyph itself for a stray (whose payload is empty and would otherwise
+    // collapse to nothing, leaving nothing to point at).
+    const hit = clean(inner) || s.raw;
+    const before = clean(text.slice(Math.max(0, start - 30), start));
+    const after = clean(text.slice(end, end + 30));
+    return { ...s, inner, before, hit, after, context: `${before}${hit}${after}` };
   });
 }
 
