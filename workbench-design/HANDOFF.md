@@ -17,18 +17,28 @@ finds. See the "TESTING CHECKLIST" at the top of `workbench-design/TODO.md`
 (the single source of truth for what to test). Do NOT start new features unless
 John asks.
 
-**Branch state:** all work committed, branch **NOT pushed** (John's standing
-call — keep it local unless he says otherwise). Commit trail (HEAD `62f5ae44`):
-- `d118d23b` Phase 1 · `5adefdde` Phase 2
-- `46f65a6e` Phase 3 (AI-assist + reference panel)
-- `ecb7b542` line-split (D6)
-- `6cccbb8f` multi-provider AI-assist (any CLI / API key)
-- `f48adb17` split clicked-word fix · `e8f31c9f` discoverable AI trigger +
-  reference-import default
-- `f81d59a5` Translate/Reference modes · `0b9c42a4` Check mode ·
-  `66e699dc` Ask panel (docked, one-shot)
-- `a6eee54b` → `62f5ae44` app icon (italic α → a)
-Latest built .app: `~/Downloads/Translation Workbench.app` (unsigned).
+**Branch state (updated 2026-07-06 EOD):** branch is now **PUSHED** and open as
+**PR #20 → main** (https://github.com/johnhboyer-sys/aristotle-reader/pull/20) —
+John asked to submit, reversing the old "don't push" call. HEAD `6cf0cb11`;
+tree clean, fully synced. New commits on this branch roll into PR #20; commit
+(with a summary first) as before, and push so the PR stays current. 36 commits /
++52k lines ahead of main, all under `workbench/` + `workbench-design/` (isolated
+from the reader). Earlier trail: Phase 1 `d118d23b` · Phase 2 `5adefdde` ·
+Phase 3 `46f65a6e` · line-split `ecb7b542` · multi-provider AI `6cccbb8f` · app
+icon `62f5ae44`.
+
+**2026-07-06 QA session fixes (on top of the above):** Finder-launch pandoc
+export (`aeafc958`) + AI-assist resolution (`2785a8ba`) — WebKit `plugin-fs
+exists()` is false for out-of-sandbox SYMLINKED binaries, so RUN to probe, don't
+`exists`; AI Check/Reference → right sidebar + rendered Markdown (`31c17ad4`);
+Greek selection column-scoped via DOM regroup (`d4ce6222`); Ask → tall right
+sidebar + model label (`d4dbce50`); menu descriptions + text-size zoom
+(`da77ff00`); multi-line Translate (`ae867363`) + overwrite confirm (`a37af7ae`);
+two macOS TCC-prompt fixes — neutral subprocess cwd (`b73e0739`) + Claude Code
+MCP-servers-off (`44f1da44`, the Apple Music prompt); line-split leading-punct
+(`0d5e34c5`), split/merge menu → top + divider (`168343ac`), export `…` gaps
+(`03d6aa63`). Latest built .app: `~/Downloads/Translation Workbench.app`
+(unsigned, auto-de-quarantined by the deploy step).
 
 Check `git worktree list` first — the branch was last checked out in
 `.claude/worktrees/wb-ai` (worktrees keep getting auto-cleaned; the branch
@@ -76,20 +86,23 @@ branch (browser harness on port 1421).
   resolved binary; prompt via `ctx.mode`; providers unchanged across modes.
 - **App icon (`62f5ae44`)**: italic α → a, terracotta gradient, light arrow.
 
-**REMAINING — all TESTING, John at the keyboard in the real .app** (the full
-checklist lives at the top of TODO.md; highlights):
-1. **AI in the .app**: pick a provider (⚙️ → AI assist); test all four modes.
-   The browser preview CANNOT run CLIs — only the packaged .app can. Claude +
-   Codex are verified present on this Mac; the API path is unit-tested but never
-   live-run.
-2. **Finder-launch smoke test** (launch from Finder, NOT `open` from a terminal):
-   assist + a docx export both work — bare-PATH failures only surface on a real
-   Finder launch (the pandoc/GUI-PATH lesson; see d4 §1 / the pandoc rider).
-3. **Line-split cursor-division**: type a sentence, cursor mid-line, split →
-   English divides at the cursor (the one path never verifiable headlessly).
-4. **Real-OCR reference import**; native pickers; Diogenes "Add work…"; whole-
-   work compile (John's bilingual/Cambria aesthetic verdict pending); full
-   `tauri build` DMG step; updater signing-key ceremony.
+**JOHN-VERIFIED in the .app this session:** full AI-assist suite (Claude Code
+resolves + real translation / Check / Reference / Ask), Finder-launch (assist +
+docx export), column-scoped selection, and ALL of line-split (split gesture +
+cursor-division + undo + export paragraph break + `…` gaps). Zoom + multi-line
+Translate built + unit-tested, worth a quick eyeball.
+
+**REMAINING core QA — John at the keyboard in the real .app** (full checklist at
+the top of TODO.md):
+1. **Reference / Scrivener import — the one untested core bucket.** Native
+   picker for "Import reference…" (defaults to the open chapter; lands under
+   `$APPDATA/references`); the **real-OCR (Ross/Lennox) acceptance case**;
+   Scrivener two-file import (`~/Downloads/meta z 17/` staged) → whole-work
+   compile, where **John's bilingual/Cambria aesthetic verdict is still
+   pending**. The browser preview CANNOT run CLIs — AI is .app-only.
+2. Diogenes "Add work…" onboarding in the real app.
+3. **Packaging (separate track):** full `tauri build` DMG; updater signing-key
+   ceremony.
 
 **HARD GATE — Latin/Aquinas (3C) is PARKED.** Do not start it without John's
 explicit greenlight AND his Aquinas citation conventions (which works, the
@@ -134,11 +147,18 @@ Add-ons discovered this round to fold in when relevant: the app icon source is
 unavailable in the browser preview (isTauri()=false) so AI can only be
 live-tested in the packaged .app.
 
-**Start by:** (1) asking John how the TESTING went (the checklist at the top of
-TODO.md) and triaging whatever he reports — that is the whole job this phase;
-(2) fixing bugs he finds, verifying each in the .app (rebuild:
-`stage:corpus` + `tauri build --bundles app` → copy to ~/Downloads), summary
-before each commit; (3) asking whether to push/PR the branch once he's
-satisfied; (4) NOT starting new features (multi-turn chat, generic-app fork,
-Latin/Aquinas 3C) unless he greenlights them — 3C also needs his Aquinas
+**Start by:** (1) picking up **reference / Scrivener import** testing (the one
+remaining core bucket) with John — walk the import script, triage what he finds;
+(2) fixing bugs, verifying each in the .app, summary before each commit, then
+**push** so PR #20 stays current (rebuild+deploy one-liner: `cd workbench &&
+npm run build && (source ~/.cargo/env; npm run app:build -- --bundles app) &&
+cp -R src-tauri/target/release/bundle/macos/"Translation Workbench.app"
+~/Downloads/ && xattr -dr com.apple.quarantine ~/Downloads/"Translation
+Workbench.app"`); (3) NOT starting new features (multi-turn chat, generic-app
+fork, Latin/Aquinas 3C) unless he greenlights them — 3C also needs his Aquinas
 citation conventions.
+
+NOTE: this session moved the AI Check/Reference output and the Ask panel from
+floating popups / a docked bottom panel into RIGHT SIDEBARS (right-panel slot
+precedence: AiPanel > Ask > Footnotes > Reference) — the older "floating popup"
+descriptions above are superseded.
