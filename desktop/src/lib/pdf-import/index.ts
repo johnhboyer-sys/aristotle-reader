@@ -4,4 +4,5 @@
 // parseTranslationFile unchanged.
 
 export * from './pages';
+export * from './line-shape';
 export * from './gutter';

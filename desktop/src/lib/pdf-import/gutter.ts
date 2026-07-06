@@ -53,29 +53,26 @@
 // already split out by pages.ts.
 
 import type { Page } from './pages';
+import {
+  classifyTicToken,
+  findTrailingToken,
+  isHeadingClassLine,
+  lineShape,
+  ticSpanOnLine,
+  LEFT_MIN,
+  type Side,
+  type BekkerCol,
+} from './line-shape';
+
+// The tic grammar (FULLFORM/BARE regexes), the recto/verso positional gates,
+// and the trailing/leading token finders live in line-shape.ts (shared with
+// divisions.ts); this module keeps the stateful pipeline.
+
+export type { Side, BekkerCol };
 
 // ---------------------------------------------------------------------------
 // Constants (Phase 1 spec, amendments A1-A7 applied)
 // ---------------------------------------------------------------------------
-
-// A1: page is 1-4 digits, column letter mandatory, line 0-2 digits.
-// A single internal space ("1098 b1") is tolerated during recognition only;
-// `raw` below always preserves whatever was actually printed.
-const FULLFORM_BODY_RE = /^(\d{1,4})\s?([ab])(\d{1,2})?$/;
-
-// A2: bare tics are 1-2 digits, value 1-99, with NO upper cap beyond that —
-// layered defense (furniture exclusion, positional gate, x-band, cadence
-// audit) does the work a numeric cap used to do, because real Reeve pages
-// print legitimate bare 40s/45s and Physics 7's lineation runs past 70.
-const BARE_BODY_RE = /^(\d{1,2})$/;
-
-const RANGE_DASH_RE = /[–—]/; // – —
-
-// A3: recto candidates are gated by position, not an absolute column floor —
-// real gutters sit anywhere from col 78 (Lennox) to 94-104 (Reeve).
-const RECTO_MIN_START_COL = 40;
-const RECTO_MIN_GAP = 4;
-const VERSO_START_CEIL = 1;
 
 const BAND_MAD_K = 3;
 const BAND_MIN_WIN = 6;
@@ -100,9 +97,6 @@ const BAND_EWMA_ALPHA = 0.3;
 // ---------------------------------------------------------------------------
 // Data structures
 // ---------------------------------------------------------------------------
-
-export type Side = 'recto' | 'verso';
-export type BekkerCol = 'a' | 'b';
 
 export interface Tic {
   /** Bekker page number (e.g. 1094), or null while unresolved. */
@@ -140,6 +134,13 @@ export interface PageScan {
   side: Side | null;
   headerLineIdx: number | null;
   bottomFurnitureStartIdx: number | null;
+  /**
+   * Modal first-alpha column of the page's body lines (the side signal-A
+   * measurement: recto → 0, verso → ~11), exposed so divisions.ts and the
+   * heading-aware anchor binding share one measurement. Null when the page
+   * has no qualifying body lines.
+   */
+  bodyLeft: number | null;
   flags: string[];
 }
 
@@ -255,100 +256,26 @@ interface Candidate {
   bareValue?: number;
 }
 
-// Parses a bare token span into a Candidate shell (kind/value only); callers
-// attach position fields.
-function classifyToken(raw: string): Pick<Candidate, 'kind' | 'fullPage' | 'fullCol' | 'fullLine' | 'bareValue'> | null {
-  const full = FULLFORM_BODY_RE.exec(raw);
-  if (full) {
-    return {
-      kind: 'full',
-      fullPage: Number(full[1]),
-      fullCol: full[2] as BekkerCol,
-      fullLine: full[3] !== undefined ? Number(full[3]) : undefined,
-    };
-  }
-  const bare = BARE_BODY_RE.exec(raw);
-  if (bare) {
-    const value = Number(bare[1]);
-    if (value >= 1 && value <= 99) return { kind: 'bare', bareValue: value };
-  }
-  return null;
+// §6 candidate extraction: positional + grammar gates live in line-shape.ts'
+// ticSpanOnLine (recto: last token, ≥4-space gap, start col ≥ 40, not a
+// lone-integer folio line, not dash-adjacent; verso: first token at col ≤ 1
+// followed by space + text) — here we just attach the resolved grammar.
+function extractCandidate(line: string, lineIdx: number, side: Side): Candidate | null {
+  const span = ticSpanOnLine(line, side);
+  if (!span) return null;
+  const [startCol, endCol] = span;
+  const raw = line.slice(startCol, endCol);
+  const cls = classifyTicToken(raw);
+  if (!cls) return null; // unreachable: ticSpanOnLine already checked grammar
+  return { lineIdx, raw, startCol, endCol, ...cls };
 }
 
-// A trailing candidate: last token on the line, gated by A3 (recto) or used
-// generically for side-signal counting. Returns null if the line has no
-// digit token flush against its end.
-function findTrailingToken(line: string): { raw: string; startCol: number; endCol: number } | null {
-  const trimmed = line.replace(/\s+$/, '');
-  if (trimmed.length === 0) return null;
-  const m = /(\d{1,4}\s?[ab]\d{0,2}|\d{1,2})$/.exec(trimmed);
-  if (!m) return null;
-  const startCol = m.index;
-  const endCol = trimmed.length;
-  return { raw: m[1], startCol, endCol };
-}
-
-function findLeadingToken(line: string): { raw: string; startCol: number; endCol: number } | null {
-  const m = /^(\s*)(\d{1,4}\s?[ab]\d{0,2}|\d{1,2})/.exec(line);
-  if (!m) return null;
-  const startCol = m[1].length;
-  const raw = m[2];
-  return { raw, startCol, endCol: startCol + raw.length };
-}
-
-// Character immediately preceding `col` in `line`, ignoring nothing — used
-// for the explicit dash-adjacency guard (a header Bekker range always has a
-// dash abutting one of its two numbers).
-function charBefore(line: string, col: number): string {
-  return col > 0 ? line[col - 1] : '';
-}
-
-// Whitespace run length immediately before `col`.
-function gapBefore(line: string, col: number): number {
-  let i = col - 1;
-  let n = 0;
-  while (i >= 0 && line[i] === ' ') {
-    n++;
-    i--;
-  }
-  return n;
-}
-
-// §6 recto candidate: last token, ≥4-space gap, start col ≥ 40 (A3), not
-// dash-adjacent, not followed by '.', and not a lone-integer line (A2 —
-// folio numbers are furniture even when nothing else excluded them yet).
 function extractRectoCandidate(line: string, lineIdx: number): Candidate | null {
-  const trailing = findTrailingToken(line);
-  if (!trailing) return null;
-  const { raw, startCol, endCol } = trailing;
-  if (endCol < line.length && /[^\s]/.test(line.slice(endCol))) return null; // followed by non-space (e.g. '.')
-  const cls = classifyToken(raw);
-  if (!cls) return null;
-  if (startCol < RECTO_MIN_START_COL) return null;
-  const before = line.slice(0, startCol);
-  const beforeTrimmed = before.replace(/\s+$/, '');
-  if (beforeTrimmed.length === 0) return null; // lone-integer line: folio furniture, never a tic
-  if (RANGE_DASH_RE.test(charBefore(line, startCol)) || RANGE_DASH_RE.test(line.slice(endCol, endCol + 1))) return null;
-  const gap = gapBefore(line, startCol);
-  if (gap < RECTO_MIN_GAP) return null;
-  return { lineIdx, raw, startCol, endCol, ...cls } as Candidate;
+  return extractCandidate(line, lineIdx, 'recto');
 }
 
-// §6 verso candidate: first token, start col ≤ 1 (VERSO_START_CEIL), followed
-// by ≥1 space and real body text, not dash-adjacent, not followed by '.'.
 function extractVersoCandidate(line: string, lineIdx: number): Candidate | null {
-  const leading = findLeadingToken(line);
-  if (!leading) return null;
-  const { raw, startCol, endCol } = leading;
-  if (startCol > VERSO_START_CEIL) return null;
-  const rest = line.slice(endCol);
-  if (!/^\s/.test(rest)) return null; // must be followed by whitespace, not '.', not glued text
-  const restTrimmed = rest.trim();
-  if (restTrimmed.length === 0) return null; // lone-integer line: furniture, never a tic
-  if (RANGE_DASH_RE.test(rest.slice(0, 1))) return null;
-  const cls = classifyToken(raw);
-  if (!cls) return null;
-  return { lineIdx, raw, startCol, endCol, ...cls } as Candidate;
+  return extractCandidate(line, lineIdx, 'verso');
 }
 
 function collectRawCandidates(
@@ -469,6 +396,8 @@ interface SideDecision {
   flags: string[];
   rectoCount: number;
   versoCount: number;
+  /** Signal A's modal body indent — exposed on PageScan as bodyLeft. */
+  bodyLeft: number | null;
 }
 
 function decideSide(
@@ -521,7 +450,7 @@ function decideSide(
     side = alternationFallback(ctx, physPage, flags, R, L);
   }
 
-  return { side, flags, rectoCount: R, versoCount: L };
+  return { side, flags, rectoCount: R, versoCount: L, bodyLeft: modeIndent };
 }
 
 function alternationFallback(ctx: DocContext, physPage: number, flags: string[], R: number, L: number): Side {
@@ -697,13 +626,63 @@ function detectCollapse(band: Candidate[], side: Side): boolean {
 // §10a-c Anchor binding
 // ---------------------------------------------------------------------------
 
+interface AnchorBinding {
+  anchorLineIdx: number | null;
+  anchorCol: number | null;
+  anchorWord: string | null;
+  flags: string[];
+}
+
+// Phase-2 §7b: a tic on a division-heading line (e.g. "Book 8   1155a1")
+// marks the onset of the section's first line, mirroring the locked
+// paragraph rule ("a break coinciding with an anchor binds forward"). It
+// binds forward past the heading block — the b.c line and the title line —
+// to the first body word, never to heading paratext. The tic itself stays
+// in the gutter system (address/cadence/monotonic unchanged).
+function forwardBindPastHeading(
+  lines: string[],
+  cand: Candidate,
+  headerLineIdx: number | null,
+  bottomFurnitureStartIdx: number | null,
+  side: Side,
+  bodyLeft: number
+): AnchorBinding {
+  for (let j = cand.lineIdx + 1; j < lines.length; j++) {
+    if (bottomFurnitureStartIdx !== null && j >= bottomFurnitureStartIdx) break;
+    if (j === headerLineIdx || isBlank(lines[j])) continue;
+    const span = ticSpanOnLine(lines[j], side);
+    const shape = lineShape(lines[j], bodyLeft, side, span);
+    if (shape.shape !== 'body') continue; // intervening b.c / title line
+    if (shape.startCol - bodyLeft >= LEFT_MIN) continue;
+    // Hyphen-skip is a no-op here (previous line is heading/blank): bind the
+    // residual's first token directly.
+    const tokens = tokenizeWithCols(shape.residual);
+    if (tokens.length === 0) continue;
+    const tok = tokens[0];
+    return {
+      anchorLineIdx: j,
+      anchorCol: tok.col,
+      anchorWord: tok.text.replace(/[.,;:]+$/, ''),
+      flags: ['anchor-forwarded-past-heading'],
+    };
+  }
+  // No body line before page end: Phase 4 binds to the next page's first
+  // body word.
+  return { anchorLineIdx: null, anchorCol: null, anchorWord: null, flags: ['anchor-forwarded-cross-page'] };
+}
+
 function bindAnchor(
   lines: string[],
   cand: Candidate,
   headerLineIdx: number | null,
-  bottomFurnitureStartIdx: number | null
-): { anchorLineIdx: number | null; anchorCol: number | null; anchorWord: string | null; flags: string[] } {
+  bottomFurnitureStartIdx: number | null,
+  side: Side,
+  bodyLeft: number
+): AnchorBinding {
   const line = lines[cand.lineIdx];
+  if (isHeadingClassLine(line, bodyLeft, side, [cand.startCol, cand.endCol])) {
+    return forwardBindPastHeading(lines, cand, headerLineIdx, bottomFurnitureStartIdx, side, bodyLeft);
+  }
   // Blank out the tic token in place (rather than concatenating the two
   // slices) so remaining tokens keep their original column positions —
   // essential for verso, where the tic is at the FRONT of the line and a
@@ -725,7 +704,7 @@ function bindAnchor(
       // Strip the previous line's own trailing tic (if any) before testing —
       // §10a: "strip trailing tic before the hyphen test."
       const prevTrailing = findTrailingToken(prevLine);
-      const prevCls = prevTrailing ? classifyToken(prevTrailing.raw) : null;
+      const prevCls = prevTrailing ? classifyTicToken(prevTrailing.raw) : null;
       const prevStripped = prevCls
         ? prevLine.slice(0, prevTrailing!.startCol).replace(/\s+$/, '')
         : prevLine.replace(/\s+$/, '');
@@ -750,7 +729,15 @@ function bindAnchor(
 export function scanPage(page: Page, ctx: DocContext): PageScan {
   const lines = page.lines;
   if (lines.every(isBlank)) {
-    return { tics: [], collapsed: false, side: null, headerLineIdx: null, bottomFurnitureStartIdx: null, flags: [] };
+    return {
+      tics: [],
+      collapsed: false,
+      side: null,
+      headerLineIdx: null,
+      bottomFurnitureStartIdx: null,
+      bodyLeft: null,
+      flags: [],
+    };
   }
 
   const headerLineIdx = findHeaderLineIdx(lines);
@@ -766,6 +753,7 @@ export function scanPage(page: Page, ctx: DocContext): PageScan {
 
   const sideDecision = decideSide(lines, excluded, ctx, page.index);
   const side = sideDecision.side;
+  const bodyLeft = sideDecision.bodyLeft;
   const flags: string[] = [...sideDecision.flags];
 
   const { recto, verso } = collectRawCandidates(lines, excluded);
@@ -781,7 +769,7 @@ export function scanPage(page: Page, ctx: DocContext): PageScan {
   if (collapsed) flags.push('page-collapsed');
 
   const tics: Tic[] = promoted.map(({ candidate, addr, ticFlags }) => {
-    const anchor = bindAnchor(lines, candidate, headerLineIdx, bottomFurnitureStartIdx);
+    const anchor = bindAnchor(lines, candidate, headerLineIdx, bottomFurnitureStartIdx, side, bodyLeft ?? 0);
     const ticFlagsOut = [...ticFlags, ...anchor.flags];
 
     let column: string | null = null;
@@ -832,5 +820,5 @@ export function scanPage(page: Page, ctx: DocContext): PageScan {
     ctx.bandEwma[side] = prevEwma === null ? localMedian : BAND_EWMA_ALPHA * localMedian + (1 - BAND_EWMA_ALPHA) * prevEwma;
   }
 
-  return { tics, collapsed, side, headerLineIdx, bottomFurnitureStartIdx, flags };
+  return { tics, collapsed, side, headerLineIdx, bottomFurnitureStartIdx, bodyLeft, flags };
 }
