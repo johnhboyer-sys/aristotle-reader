@@ -288,6 +288,16 @@ Real slice measured: 337 joined, 0 kept (every fragment in NE starts lowercase).
   `COPY_EXCLUDE_SELECTOR`, the same way `.fn-marker` already is.
 - `App.svelte`'s `chapterTitles` reverts to built-in `chapter-titles.json`
   only — `mergeTitles`/`getImportTitles`/`mergeChapterTitles` are gone.
+- **Row-placement fix (2026-07-06, John's review of 631ff971)**: having the
+  title as the first child of the chapter-opening seg-row's own `.ross-prose`
+  pushed the English prose one line below the Greek. Reader.svelte now
+  renders it via a new `chapterTitleRow` snippet — a `.seg-row` of its own,
+  inserted immediately before the chapter-opening seg-row, with an empty
+  `.greek-col` placeholder and the title (still a `.ross-chapter-title` inside
+  a `.ross-prose` wrapper, for the same left-edge indent) in the `.english-col`
+  (and `.ross-col` in compare mode) — so Greek line 1 and English prose line 1
+  land at the same y-position, title above. Same title source/hook, same
+  render-only/no-offset guarantee, same clean-copy exclusion.
 
 ### Footnote render wiring (§B4) — the site-inertness argument
 Reader.svelte and FootnotePopup.svelte are the SAME files served by the

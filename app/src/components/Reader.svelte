@@ -1072,10 +1072,8 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
-      {@const chTitle = importChapterTitle(transId, block.chapter)}
       {#if fnTransIds.has(transId)}
         <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
-          {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
           {#each flow as part}
             {#if part.text === '\n'}
               <br class="para-br" />
@@ -1096,7 +1094,6 @@
         </div>
       {:else}
         <div class="ross-prose">
-          {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
           {#each flow as part}
             {#if part.text === '\n'}
               <br class="para-br" />
@@ -1109,6 +1106,38 @@
           {/each}
         </div>
       {/if}
+    {/if}
+  {/snippet}
+
+  <!-- An imported translation's chapter-opening title (importChapterTitle)
+       must NOT sit inside the aligned seg-row's English cell: that pushes the
+       English prose one line below the Greek (John's review, 631ff971). It
+       renders instead as its OWN row, immediately before the chapter-opening
+       seg-row, positioned over the English (or compare-right) track only —
+       never the Greek column or gutter. Reusing .seg-row/.greek-col/
+       .english-col/.ross-col (an empty Greek placeholder + the title in the
+       English track) means it automatically inherits the same grid template
+       across every view/trans mode (greek-only hides it via the existing
+       .view-greek .english-col{display:none} rule — no separate CSS needed).
+       Wrapping the title in .ross-prose reproduces the same left-edge
+       indent (and busse's zero-indent override) the title used to inherit
+       as a child of the real .ross-prose. Render-only, same title source. -->
+  {#snippet chapterTitleRow(block: Block)}
+    {@const leftId = trans === 'compare' ? compareLeft : trans}
+    {@const leftTitle = view !== 'greek' ? importChapterTitle(leftId, block.chapter) : ''}
+    {@const rightTitle = (trans === 'compare' && view !== 'greek') ? importChapterTitle(compareRight, block.chapter) : ''}
+    {#if leftTitle || rightTitle}
+      <div class="seg-row chapter-title-row">
+        <div class="greek-col" aria-hidden="true"></div>
+        <div class="english-col" data-trans={leftId}>
+          {#if leftTitle}<div class="ross-prose"><div class="ross-chapter-title">{leftTitle}</div></div>{/if}
+        </div>
+        {#if trans === 'compare'}
+          <div class="ross-col" data-trans={compareRight}>
+            {#if rightTitle}<div class="ross-prose"><div class="ross-chapter-title">{rightTitle}</div></div>{/if}
+          </div>
+        {/if}
+      </div>
     {/if}
   {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main"
@@ -1203,6 +1232,7 @@
           {#if block.chapter && !(bi === 0 && leadChapter)}
             {@render chapterHead(block)}
           {/if}
+          {@render chapterTitleRow(block)}
           <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
             <div class="greek-col">
