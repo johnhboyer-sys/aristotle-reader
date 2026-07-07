@@ -1,0 +1,83 @@
+/* Design tokens — copied from app/src/styles/global.css (:root and
+   [data-theme="dark"] blocks) so the Workbench shares the reader's parchment
+   palette and typography. Property names are kept identical on purpose: any
+   future component ported between the two apps needs no rewrite. */
+
+:root {
+  /* Cardo and EB Garamond loaded locally via @fontsource in main.ts — an
+     offline desktop app must not fetch Google Fonts at runtime. Fallback
+     chain works without the network load either way. */
+  --font-greek:   "Cardo", "Gentium Plus", "Noto Serif", Georgia, serif;
+  --font-english: "EB Garamond", Georgia, "Times New Roman", serif;
+  --font-ui:      system-ui, -apple-system, sans-serif;
+
+  --col-bg:       #faf8f3;
+  --page-bg:      #f3efe6;
+  --text:         #1a1814;
+  --text-mid:     #5a5550;
+  --text-light:   #9a948e;
+  --accent:       #7a4e2d;
+  --accent-light: #b8845a;
+  --border:       #d8d0c4;
+  --popup-bg:     #ffffff;
+  --popup-shadow: 0 4px 24px rgba(0,0,0,.18);
+  --greek-hover:        rgba(0, 0, 0, 0.08);
+  --greek-hover-border: rgba(0, 0, 0, 0.15);
+  --greek-active: #ffe0b2;
+
+  /* Workbench chrome additions (never renamed — reader tokens above are the
+     shared contract). Quiet hover wash for borderless toolbar/tree buttons,
+     and the keyboard focus ring. */
+  --ui-hover:     rgba(26, 24, 20, 0.06);
+  --focus-ring:   rgba(122, 78, 45, 0.55);
+
+  /* Semantic colours used in a few hardcoded spots; aliased here so the dark
+     theme can remap them. */
+  --on-accent:    #ffffff;   /* text/icon sitting on an --accent fill */
+  --input-bg:     #ffffff;   /* text inputs, modals */
+  --hit-bg:       #ffe082;   /* search-hit token highlight */
+  --target-bg:    #fff6d6;   /* jumped-to line tint */
+  --mark-bg:      #ffe082;   /* <mark> in English/search results */
+  --error:        #b22323;
+  color-scheme:   light;
+
+  /* Greek (Cardo) and English (EB Garamond) balanced so neither column
+     dominates: equal-ish optical size, and Greek verse leading compressed
+     toward the English so the two columns sit at roughly the same height. */
+  --lh-greek:     1.7;
+  --lh-english:   1.72;
+  --fs-greek:     1.05rem;
+  --fs-english:   1.08rem;  /* nudged up: EB Garamond x-height < Cardo, so 1.08 reads equal to Greek 1.05 */
+  --fs-ref:       0.78rem;
+  --fs-linenum:   0.72rem;
+}
+
+/* ── Night mode ───────────────────────────────────────────────────────
+   Warm dark palette (not pure black) to keep the parchment-reader feel.
+   Activated by data-theme="dark" on <html>, set inline before paint. */
+:root[data-theme="dark"] {
+  --col-bg:       #211d18;
+  --page-bg:      #181511;
+  --text:         #e9e2d4;
+  --text-mid:     #b6ac9b;
+  --text-light:   #837a6c;
+  --accent:       #cf9d68;
+  --accent-light: #e6bd8a;
+  --border:       #3a342b;
+  --popup-bg:     #26221b;
+  --popup-shadow: 0 6px 28px rgba(0,0,0,.55);
+  --greek-hover:        rgba(255, 255, 255, 0.10);
+  --greek-hover-border: rgba(255, 255, 255, 0.18);
+  --greek-active: #4a3c22;
+
+  --ui-hover:     rgba(233, 226, 212, 0.08);
+  --focus-ring:   rgba(207, 157, 104, 0.60);
+
+  --on-accent:    #211d18;   /* dark text reads on the lighter dark-mode accent */
+  --input-bg:     #26221b;
+  --hit-bg:       rgba(255,206,84,.30);   /* translucent so light text stays readable */
+  --target-bg:    rgba(255,206,84,.14);
+  --mark-bg:      rgba(255,206,84,.32);
+  --error:        #f08a82;
+  color-scheme:   dark;
+}

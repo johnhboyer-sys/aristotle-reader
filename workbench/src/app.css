@@ -1,0 +1,76 @@
+/* Base reset + app-wide layout scale, layered over tokens.css. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+#app {
+  height: 100vh;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Text selection carries the parchment accent in both themes. */
+::selection {
+  background: var(--greek-active);
+}
+
+/* One keyboard-focus treatment everywhere; mouse clicks stay ringless. */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* Overlay-style scrollbars: hairline thumb, no track chrome, so scroll
+   regions (rail, editor, panels) read as paper rather than widgets. */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-light) 42%, transparent);
+  border-radius: 99px;
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text-light) 70%, transparent);
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+}
+
+/* A single spacing scale used throughout the chrome, so panel padding,
+   gaps and borders read as deliberate rather than ad hoc per component. */
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+}
