@@ -1,0 +1,35 @@
+{
+ "prose": {
+  "1:1": "First words for the chapter. More words.[^1]\nSecond paragraph starts. Column b words.",
+  "1:2": "Next chapter words.\n"
+ },
+ "align": {
+  "1:1": {
+   "anchors": [
+    {
+     "citation": "1094a1",
+     "offset": 0,
+     "confidence": "certain"
+    },
+    {
+     "citation": "1094a5",
+     "offset": 29,
+     "confidence": "certain"
+    },
+    {
+     "citation": "1094b1",
+     "offset": 70,
+     "confidence": "certain"
+    }
+   ]
+  }
+ },
+ "footnotes": {
+  "1": "A <em>rendered</em> note."
+ },
+ "counts": {
+  "pages": 2,
+  "line_marks": 1,
+  "skipped_nums": 0
+ }
+}

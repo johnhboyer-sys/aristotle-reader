@@ -3,6 +3,7 @@
   import { fade } from 'svelte/transition';
   import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
+  import { highlightPrefixMatches } from '../lib/text';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
@@ -442,13 +443,7 @@
     // right rail / an inline figure), so strip them from the prose flow.
     text = text.replace(/\s*\[\[(?:s|fig)\d+\]\]\s*/g, ' ');
     if (!hlEngTerms.length) return esc(text);
-    let out = esc(text);
-    for (const t of hlEngTerms) {
-      const clean = t.replace(/[^a-z'*]/gi, '').replace(/\*+$/, '');
-      if (!clean) continue;
-      out = out.replace(new RegExp(`\\b(${clean}\\w*)\\b`, 'gi'), '<mark>$1</mark>');
-    }
-    return out;
+    return highlightPrefixMatches(text, hlEngTerms);
   }
   // §Phase-3 B5: the printed number is stored as `display`; identity is the
   // (scope, number) pair encoded in the label — continuous scope's label IS
@@ -494,7 +489,7 @@
   interface EnrichedBlock extends Block { currentChapter: string; }
   // A flowing-prose part: either a text run (n null) or a Bekker margin marker
   // (text null) placed at an exact mid-sentence offset — no row break.
-  interface FlowPart { text: string | null; n: number | null; real: boolean; }
+  interface FlowPart { text: string | null; n: number | null; real: boolean; para?: boolean; }
 
   // The char position where token `w` begins in a line's text (0 at the start,
   // text.length at/after the end), so a cut preserves the verbatim
@@ -527,8 +522,11 @@
   // Flowing prose with Bekker numbers floated into the margin at their EXACT
   // offsets (no row break, no in-text number, no sentence-boundary snapping).
   // Used for precisely-placed translations like the gloss-aligned Ross.
-  function flowParts(text: string, ticks: { n: number; real: boolean; off: number }[]): FlowPart[] {
-    const ts = [...ticks].sort((a, b) => a.off - b.off);
+  function flowParts(text: string, ticks: { n: number; real: boolean; off: number }[], paraOffsets: number[] = []): FlowPart[] {
+    const ts = [
+      ...ticks.map(t => ({ ...t, para: false })),
+      ...paraOffsets.map(off => ({ n: 0, real: false, off, para: true })),
+    ].sort((a, b) => a.off - b.off || Number(a.para) - Number(b.para));
     const parts: FlowPart[] = [];
     let cur = 0;
     const addText = (s: string) => {
@@ -541,7 +539,11 @@
     for (const t of ts) {
       const off = Math.max(0, Math.min(t.off, text.length));
       if (off > cur) { addText(text.slice(cur, off)); cur = off; }
-      parts.push({ text: null, n: t.n, real: t.real });
+      if (t.para) {
+        parts.push({ text: null, n: null, real: false, para: true });
+      } else {
+        parts.push({ text: null, n: t.n, real: t.real });
+      }
     }
     if (cur < text.length) addText(text.slice(cur));
     return parts;
@@ -595,6 +597,9 @@
     const greek = seg.greek;
     const text = seg.english?.text ?? '';
     const allTicks = seg.english?.bekker ?? [];
+    const allParas = (seg.english?.markers ?? [])
+      .filter(m => m.kind === 'paragraph')
+      .map(m => m.offset);
     // The primary English slice [a, b) as flowing prose: its Bekker ticks
     // (rebased into the slice) are floated into the margin at their EXACT char
     // offsets — no sentence-snapping, no row break — so a mid-sentence Bekker
@@ -607,7 +612,10 @@
         .filter(t => t.offset >= a && t.offset < b)
         .map(t => ({ n: t.n, real: t.real, off: t.offset - a }))
         .sort((x, y) => x.off - y.off);
-      return flowParts(slice, ticks);
+      const paras = allParas
+        .filter(off => off > a && off < b)
+        .map(off => off - a);
+      return flowParts(slice, ticks, paras);
     };
     // Sidenote numbers ([[sN]] markers) falling in the primary English slice
     // [a, b) — the reader floats these into the right rail (busse works).
@@ -729,6 +737,13 @@
     if (marker) showFootnote(marker);
   }
   function onFootnoteOut(e: MouseEvent) {
+    if ((e.target as HTMLElement | null)?.closest?.('.fn-marker')) scheduleFnClose();
+  }
+  function onFootnoteFocus(e: FocusEvent) {
+    const marker = (e.target as HTMLElement | null)?.closest?.('.fn-marker');
+    if (marker) showFootnote(marker);
+  }
+  function onFootnoteBlur(e: FocusEvent) {
     if ((e.target as HTMLElement | null)?.closest?.('.fn-marker')) scheduleFnClose();
   }
   function onFootnoteClick(e: MouseEvent | KeyboardEvent) {
@@ -909,7 +924,8 @@
   // scrolled it out of view, in which case we keep the current top line fixed.
   let pinnedTok: HTMLElement | null = null;
 
-  function handleTokenClick(e: MouseEvent, token: Token) {
+  function handleTokenClick(e: MouseEvent, token: Token | null) {
+    if (!token) return;
     e.stopPropagation();
     const el = e.currentTarget as HTMLElement;
     const rect = el.getBoundingClientRect();
@@ -1059,7 +1075,7 @@
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
-      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},&nbsp;</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter]}: {chapterTitles[block.chapter]}{/if}</span>
+      <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},&nbsp;</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter ?? '']}: {chapterTitles[block.chapter ?? '']}{/if}</span>
       {#if block.bekker && !busse}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
@@ -1087,13 +1103,26 @@
            structural. -->
       {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
       {#if fnTransIds.has(transId)}
-        <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
+        <div
+          class="ross-prose"
+          on:mouseover={onFootnoteOver}
+          on:mouseout={onFootnoteOut}
+          on:focus={onFootnoteFocus}
+          on:blur={onFootnoteBlur}
+          on:focusin={onFootnoteFocus}
+          on:focusout={onFootnoteBlur}
+          on:click={onFootnoteClick}
+          on:keydown={onFootnoteClick}
+          role="presentation"
+        >
           {#each flow as part}
             {#if part.text === '\n'}
               <br class="para-br" />
             {:else if part.text !== null}
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
               <span class="bk-seg">{@html renderThird(part.text, transId)}</span>
+            {:else if part.para}
+              <br class="para-br" />
             {:else}
               <span class="bk-num" class:approx={!part.real}>{part.n}</span>
               {#each (block.otables[transId] ?? []).filter(t => t.n === part.n) as tbl}
@@ -1114,6 +1143,8 @@
             {:else if part.text !== null}
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
               <span class="bk-seg">{@html highlightEng(part.text)}</span>
+            {:else if part.para}
+              <br class="para-br" />
             {:else}
               <span class="bk-num" class:approx={!part.real}>{part.n}</span>
             {/if}
@@ -1230,7 +1261,7 @@
           {/if}
           <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
-            <div class="greek-col">
+            <div class="greek-col" lang="grc">
               {#if spacerTitle}<div class="ross-chapter-title ross-chapter-title-spacer" aria-hidden="true">{spacerTitle}</div>{/if}
               {#each greekItems(block.lines) as item}
                 {#if item.table}
@@ -1240,7 +1271,7 @@
                       <tr id={`L${seg.column}-${row.n}`} class:target={targetId === `L${seg.column}-${row.n}`}>
                         <td class="line-num">{showLineNum(row.n)}</td>
                         {#each (row.cells ?? []) as cell}
-                          <td class="line-text">{@render greekToks(cellParts(cell))}</td>
+                          <td class="line-text" lang="grc">{@render greekToks(cellParts(cell))}</td>
                         {/each}
                       </tr>
                     {/each}
@@ -1248,7 +1279,7 @@
                 {:else}
                   <div class="greek-line" id={item.line.cont ? `L${seg.column}-${item.line.n}-c` : `L${seg.column}-${item.line.n}`} class:target={!item.line.cont && targetId === `L${seg.column}-${item.line.n}`} class:cont={item.line.cont}>
                     <span class="line-num">{item.line.cont ? '' : showLineNum(item.line.n)}</span>
-                    <span class="line-text">{@render greekToks(lineParts(item.line))}</span>
+                    <span class="line-text" lang="grc">{@render greekToks(lineParts(item.line))}</span>
                   </div>
                 {/if}
               {/each}
@@ -1294,7 +1325,7 @@
   </div>
 {/if}
 
-<aside class="settings-sidebar" class:open={settingsOpen} aria-label="Reader settings" aria-hidden={!settingsOpen}>
+<aside class="settings-sidebar" class:open={settingsOpen} aria-label="Reader settings" aria-hidden={!settingsOpen} inert={!settingsOpen}>
   <div class="settings-head">
     <span class="settings-title">Settings</span>
     <button type="button" class="settings-close" on:click={closeSettings} aria-label="Close settings">×</button>

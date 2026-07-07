@@ -1,0 +1,45 @@
+{
+  "book": 1,
+  "segments": [
+    {
+      "id": "1:1094a",
+      "column": "1094a",
+      "chapterStarts": [
+        {
+          "chapter": "1",
+          "beforeLine": 5,
+          "wordIndex": 0,
+          "engOffset": 0,
+          "bekker": "1094a1–3"
+        }
+      ],
+      "greek": [
+        {
+          "n": 3,
+          "text": "τρίτον",
+          "tokens": [
+            { "t": "τρίτον", "o": 0, "k": "tri/ton" }
+          ]
+        },
+        {
+          "n": 1,
+          "text": "πρῶτον",
+          "tokens": [
+            { "t": "πρῶτον", "o": 0, "k": "prw=ton" }
+          ]
+        }
+      ],
+      "english": {
+        "text": "Third. First.",
+        "notes": [],
+        "markers": [
+          { "kind": "section", "n": "1", "offset": 0 }
+        ],
+        "bekker": [
+          { "n": 3, "offset": 0, "real": true },
+          { "n": 1, "offset": 7, "real": true }
+        ]
+      }
+    }
+  ]
+}

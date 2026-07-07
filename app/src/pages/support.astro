@@ -5,6 +5,7 @@
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { SUPPORT_URL } from '../lib/support';
+import { jsonLdSafe } from '../lib/jsonld';
 import '../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -17,6 +18,18 @@ const canonical = Astro.site
   ? new URL(`${base}/support/`, Astro.site).href : undefined;
 const ogImage = Astro.site
   ? new URL(`${base}/og-support.png`, Astro.site).href : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: pageTitle,
+  description: metaDescription,
+  ...(canonical ? { url: canonical } : {}),
+  isPartOf: { '@type': 'WebSite', name: 'The Aristotle Reader' },
+  potentialAction: {
+    '@type': 'DonateAction',
+    target: SUPPORT_URL,
+  },
+};
 ---
 <html lang="en">
 <head>
@@ -35,7 +48,10 @@ const ogImage = Astro.site
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={metaDescription} />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

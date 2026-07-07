@@ -5,6 +5,7 @@
 import { readFileSync } from 'node:fs';
 import ThemeInit from '../../components/ThemeInit.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
+import { jsonLdSafe } from '../../lib/jsonld';
 import { greekFold } from '../../lib/search';
 import '../../styles/global.css';
 
@@ -55,8 +56,10 @@ const jsonLd = {
   <meta property="og:site_name" content="The Aristotle Reader" />
   {ogImage && <meta property="og:image" content={ogImage} />}
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={metaDescription} />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

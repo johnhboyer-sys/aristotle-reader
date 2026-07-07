@@ -1,0 +1,40 @@
+{
+ "1:1094a": [
+  {
+   "chapter": "1",
+   "text": "First chapter first sentence.\nSecond paragraph.",
+   "cont": false,
+   "bekker": [
+    {
+     "n": 1,
+     "offset": 0,
+     "real": false
+    },
+    {
+     "n": 5,
+     "offset": 47,
+     "real": false
+    }
+   ]
+  }
+ ],
+ "1:1094b": [
+  {
+   "chapter": "2",
+   "text": "Second chapter sentence. -THE END-",
+   "cont": false,
+   "bekker": [
+    {
+     "n": 1,
+     "offset": 0,
+     "real": false
+    },
+    {
+     "n": 5,
+     "offset": 34,
+     "real": false
+    }
+   ]
+  }
+ ]
+}

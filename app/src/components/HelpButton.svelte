@@ -5,23 +5,36 @@
   //
   // The button renders inline in the header; the modal and tip are position:fixed
   // overlays, so where this component sits in the DOM doesn't affect layout.
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
 
   const SEEN_KEY = 'ar-help-seen';
 
   let showHelp = false;
   let showTip = false;
+  let helpModal: HTMLDivElement;
+  let helpTrigger: HTMLElement | null = null;
 
   function markSeen() {
     try { localStorage.setItem(SEEN_KEY, '1'); } catch {}
   }
 
-  function openHelp() {
+  async function openHelp(e?: Event) {
+    helpTrigger = e?.currentTarget instanceof HTMLElement
+      ? e.currentTarget
+      : document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     showHelp = true;
     showTip = false;
     markSeen();
+    await tick();
+    helpModal?.focus();
   }
-  function closeHelp() { showHelp = false; }
+  function closeHelp() {
+    showHelp = false;
+    helpTrigger?.focus();
+    helpTrigger = null;
+  }
 
   function dismissTip() {
     showTip = false;
@@ -29,7 +42,31 @@
   }
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && showHelp) closeHelp();
+    if (!showHelp) return;
+    if (e.key === 'Escape') {
+      closeHelp();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const els = helpModal
+      ? Array.from(helpModal.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+      : [];
+    if (els.length === 0) {
+      e.preventDefault();
+      helpModal?.focus();
+      return;
+    }
+    const first = els[0];
+    const last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   onMount(() => {
@@ -73,10 +110,13 @@
   <div class="help-backdrop" on:click={closeHelp}>
     <div
       class="help-modal"
+      bind:this={helpModal}
       role="dialog"
       aria-modal="true"
       aria-label="How to use this reader"
+      tabindex="-1"
       on:click|stopPropagation
+      on:keydown={onKeydown}
     >
       <div class="help-head">
         <h2>Getting the most out of the reader</h2>

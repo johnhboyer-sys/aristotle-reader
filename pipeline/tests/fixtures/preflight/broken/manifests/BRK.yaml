@@ -1,0 +1,35 @@
+work:
+  id: BRK
+  title: "Broken Fixture"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "998"
+  greek_edition: "Fixture Greek"
+  english_translation: "Fixture English"
+
+bekker_range:
+  first_column: "1094a"
+  last_column: "1094a"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1, bekker: "1094a1" }
+
+english:
+  primary:
+    id: fixture
+    name: "Fixture English"
+    model: archive
+    dir: fixture
+    books: 1
+    chapter_marker: number
+
+books:
+  - { n: 1, start: "1094a1", end: "1094a3" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

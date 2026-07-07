@@ -9,18 +9,51 @@
 import ThemeInit from '../../components/ThemeInit.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
 import { GLOSSARY_TITLE, GLOSSARY_NOTE, GLOSSARY_ENTRIES } from '../../lib/glossary';
+import { sanitizeHtml } from '../../lib/html';
 import { workPath } from '../../lib/works';
+import { jsonLdSafe } from '../../lib/jsonld';
 import '../../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const readerHref = `${base}${workPath('EN')}`;
+const pageTitle = 'Glossary of Technical Terms — Nicomachean Ethics';
+const metaDescription =
+  "Martin Ostwald's glossary of technical terms for Aristotle's Nicomachean Ethics, with Greek terms, English renderings, explanatory notes, and stable entry links.";
+const canonical = Astro.site ? new URL(`${base}/EN/glossary/`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTermSet',
+  name: pageTitle,
+  description: metaDescription,
+  inLanguage: ['grc', 'en'],
+  ...(canonical ? { url: canonical } : {}),
+  hasDefinedTerm: GLOSSARY_ENTRIES.slice(0, 100).map((e) => ({
+    '@type': 'DefinedTerm',
+    name: e.terms[0],
+    ...(canonical ? { url: `${canonical}#${e.slug}` } : {}),
+  })),
+};
 ---
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
-  <title>Glossary of Technical Terms — Nicomachean Ethics</title>
+  <title>{pageTitle}</title>
+  <meta name="description" content={metaDescription} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={metaDescription} />
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {canonical && <meta property="og:url" content={canonical} />}
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={metaDescription} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -115,7 +148,7 @@ const readerHref = `${base}${workPath('EN')}`;
     </nav>
   </header>
 
-  <div class="glossary-body">
+  <main class="glossary-body">
     <h1 class="glossary-title">
       {GLOSSARY_TITLE}{GLOSSARY_NOTE && (<a class="glossary-note-ref" href="#glossary-note" aria-label="Note on conventions">*</a>)}
     </h1>
@@ -128,16 +161,16 @@ const readerHref = `${base}${workPath('EN')}`;
     <dl class="glossary-list">
       {GLOSSARY_ENTRIES.map((e) => (
         <div class="gloss-entry" id={e.slug}>
-          <dd set:html={e.html} />
+          <dd set:html={sanitizeHtml(e.html)} />
           <a class="gloss-anchor" href={`#${e.slug}`} aria-label={`Link to ${e.terms[0]}`}>#</a>
         </div>
       ))}
     </dl>
     {GLOSSARY_NOTE && (
       <p class="glossary-note" id="glossary-note">
-        <span class="glossary-note-mark">*</span> <Fragment set:html={GLOSSARY_NOTE} />
+        <span class="glossary-note-mark">*</span> <Fragment set:html={sanitizeHtml(GLOSSARY_NOTE)} />
       </p>
     )}
-  </div>
+  </main>
 </body>
 </html>

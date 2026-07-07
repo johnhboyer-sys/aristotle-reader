@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -16,6 +16,24 @@ function run(command, args, options = {}) {
   if (result.status !== 0) {
     throw new Error(`${command} ${args.join(' ')} failed with status ${result.status}`);
   }
+}
+
+function dataDirProblem(path) {
+  try {
+    const stat = lstatSync(path);
+    if (stat.isSymbolicLink()) {
+      return existsSync(path) ? null : 'data not built yet: build/dist is a dangling symlink';
+    }
+    if (!stat.isDirectory()) {
+      return 'data not built yet: build/dist exists but is not a directory';
+    }
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return 'data not built yet: build/dist does not exist';
+    }
+    throw error;
+  }
+  return null;
 }
 
 const works = readdirSync(MANIFESTS)
@@ -41,9 +59,17 @@ for (const work of works) {
   });
 }
 
-if (!existsSync(join(ROOT, 'build', 'dist'))) {
-  throw new Error('Public data build did not produce build/dist; refusing to build deployable app output.');
+const dataDir = join(ROOT, 'build', 'dist');
+const dataProblem = dataDirProblem(dataDir);
+if (dataProblem) {
+  console.error(dataProblem);
+  process.exit(1);
 }
+
+console.log('\nRunning corpus preflight validation');
+run('uv', ['run', 'python', '-m', 'aristotle_pipeline.preflight', dataDir, MANIFESTS], {
+  cwd: join(ROOT, 'pipeline'),
+});
 
 // Safety gate for the shared (de-duplicated) LSJ dictionary: fail the build if
 // any LSJ key referenced by any work's analyses.json is missing from the shared

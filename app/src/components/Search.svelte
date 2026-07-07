@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { search, type SearchMode, type LangOp, type MatchMode, type SearchResult } from '../lib/search';
   import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
+  import { escapeRe, highlightPrefixMatches, searchTermPrefix } from '../lib/text';
   import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
 
   // One match occurrence, located precisely enough to label and jump to.
@@ -40,6 +42,8 @@
   let searched = false;
   let error = '';
   let showHelp = false;
+  let helpModal: HTMLDivElement;
+  let helpTrigger: HTMLElement | null = null;
 
   // Pagination. search() returns the complete hit list (index-only); we render
   // it a page at a time, snapping page breaks to whole books so a chapter never
@@ -108,6 +112,25 @@
     for (const id of ids) selectedWorks.add(id);
     selectedWorks = selectedWorks;
   }
+
+  // Authenticity scope — quick-filter the selection by authorship status.
+  // "Genuine" = works with no authenticity flag (or explicitly 'genuine'); the
+  // others match the tagged works. Each acts like a division "only": clicking it
+  // narrows the selection to exactly that class. Empty classes render disabled.
+  const AUTH_SCOPES = [
+    { key: 'all',      label: 'All',      ids: WORKS.map((w) => w.id) },
+    { key: 'genuine',  label: 'Genuine',  ids: WORKS.filter((w) => !w.authenticity || w.authenticity === 'genuine').map((w) => w.id) },
+    { key: 'dubious',  label: 'Dubious',  ids: WORKS.filter((w) => w.authenticity === 'dubious').map((w) => w.id) },
+    { key: 'spurious', label: 'Spurious', ids: WORKS.filter((w) => w.authenticity === 'spurious').map((w) => w.id) },
+  ] as const;
+  // Which scope (if any) the current selection exactly matches — drives the active pill.
+  $: activeAuthScope = allSelected
+    ? 'all'
+    : (AUTH_SCOPES.find(
+        (s) => s.key !== 'all' && s.ids.length > 0 &&
+          s.ids.length === selectedWorks.size && s.ids.every((id) => selectedWorks.has(id)),
+      )?.key ?? null);
+
   // Compact summary for the collapsed trigger.
   $: worksSummary = allSelected
     ? 'All works'
@@ -196,8 +219,53 @@
     { beta: 'fron*', greek: 'φρόν… (wildcard)' },
   ];
 
+  async function openHelp(e?: MouseEvent) {
+    helpTrigger = e?.currentTarget instanceof HTMLElement
+      ? e.currentTarget
+      : document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    showHelp = true;
+    await tick();
+    helpModal?.focus();
+  }
+
+  function closeHelp() {
+    showHelp = false;
+    helpTrigger?.focus();
+    helpTrigger = null;
+  }
+
+  function helpFocusableEls(): HTMLElement[] {
+    return helpModal
+      ? Array.from(helpModal.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+      : [];
+  }
+
   function onHelpKey(e: KeyboardEvent) {
-    if (e.key === 'Escape') showHelp = false;
+    if (!showHelp) return;
+    if (e.key === 'Escape') {
+      closeHelp();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const els = helpFocusableEls();
+    if (els.length === 0) {
+      e.preventDefault();
+      helpModal?.focus();
+      return;
+    }
+    const first = els[0];
+    const last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   // Map a hit's (column, line) to the chapter it falls in, for one book.
@@ -239,9 +307,9 @@
     const text = seg.english?.text ?? '';
     let earliest = -1;
     for (const t of terms) {
-      const clean = t.replace(/[^a-z'*]/gi, '').replace(/\*+$/, '');
+      const clean = searchTermPrefix(t);
       if (!clean) continue;
-      const m = new RegExp(`\\b${escapeRe(clean)}`, 'i').exec(text);
+      const m = new RegExp(`(^|[^\\p{L}\\p{M}\\p{N}_])${escapeRe(clean)}`, 'iu').exec(text);
       if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
     }
     const lines = seg.greek;
@@ -452,17 +520,14 @@
   // English keyword-in-context: a character window around the first matched
   // word in the full chunk text, with all query terms highlighted.
   const ENG_WINDOW = 140;
-  function escapeRe(s: string): string {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
   function englishKwic(seg: Segment, terms: string[]): string {
     const text = seg.english?.text ?? '';
     if (!text) return '';
     let earliest = -1;
     for (const t of terms) {
-      const clean = t.replace(/[^a-z'*]/gi, '').replace(/\*+$/, '');
+      const clean = searchTermPrefix(t);
       if (!clean) continue;
-      const m = new RegExp(`\\b${escapeRe(clean)}`, 'i').exec(text);
+      const m = new RegExp(`(^|[^\\p{L}\\p{M}\\p{N}_])${escapeRe(clean)}`, 'iu').exec(text);
       if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
     }
     if (earliest < 0) {
@@ -486,15 +551,7 @@
   }
 
   function highlightEnglish(text: string, terms: string[]): string {
-    if (!terms.length) return esc(text);
-    let out = esc(text);
-    for (const t of terms) {
-      const clean = t.replace(/[^a-z'*]/gi, '').replace('*', '');
-      if (!clean) continue;
-      const re = new RegExp(`\\b(${clean}\\w*)\\b`, 'gi');
-      out = out.replace(re, '<mark>$1</mark>');
-    }
-    return out;
+    return highlightPrefixMatches(text, terms);
   }
 
   function esc(s: string): string {
@@ -576,7 +633,7 @@
 
 <svelte:window on:keydown={onHelpKey} />
 
-<div class="search-page">
+<main class="search-page">
   <form class="search-form" on:submit={doSearch} novalidate>
 
     <div class="query-row">
@@ -584,6 +641,7 @@
       <input
         id="grk-input"
         class="query-input greek-input"
+        lang="grc"
         type="search"
         placeholder="τέχνη or texnh, fronhsis*, …"
         bind:value={grkQuery}
@@ -593,7 +651,7 @@
         autocapitalize="none"
         spellcheck="false"
       />
-      <button type="button" class="help-btn" on:click={() => (showHelp = true)} aria-haspopup="dialog" title="How to type Greek">
+      <button type="button" class="help-btn" on:click={openHelp} aria-haspopup="dialog" title="How to type Greek">
         ⌨ Type Greek
       </button>
     </div>
@@ -657,6 +715,20 @@
             <button type="button" class="works-action" on:click={clearWorks} disabled={selectedWorks.size === 0}>Clear</button>
           </div>
 
+          <div class="works-auth" role="group" aria-label="Filter works by authorship status">
+            {#each AUTH_SCOPES as s}
+              <button
+                type="button"
+                class="auth-btn"
+                class:on={activeAuthScope === s.key}
+                aria-pressed={activeAuthScope === s.key}
+                disabled={s.ids.length === 0}
+                on:click={() => selectOnly(s.ids)}
+                title={s.key === 'all' ? 'Search all works' : `Search only ${s.label.toLowerCase()} works`}
+              >{s.label}{#if s.key !== 'all'}<span class="auth-count">{s.ids.length}</span>{/if}</button>
+            {/each}
+          </div>
+
           {#each WORK_GROUPS as grp}
             {@const gs = groupState(grp.ids)}
             <div class="works-group">
@@ -701,24 +773,27 @@
     </div>
 
     <p class="search-hint">
-      Type Greek in Greek letters or <button type="button" class="link-btn" on:click={() => (showHelp = true)}>Beta Code</button>
+      Type Greek in Greek letters or <button type="button" class="link-btn" on:click={openHelp}>Beta Code</button>
       (<code>texnh</code> = τέχνη). Use <code>*</code> for a wildcard: <code>fron*</code> matches φρόνησις, φρόνιμος, etc.
     </p>
   </form>
 
   {#if showHelp}
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-    <div class="help-backdrop" on:click={() => (showHelp = false)}>
+    <div class="help-backdrop" on:click={closeHelp}>
       <div
         class="help-modal"
+        bind:this={helpModal}
         role="dialog"
         aria-modal="true"
         aria-label="How to type Greek"
+        tabindex="-1"
         on:click|stopPropagation
+        on:keydown={onHelpKey}
       >
         <div class="help-head">
           <h2>How to type Greek</h2>
-          <button type="button" class="help-close" on:click={() => (showHelp = false)} aria-label="Close">×</button>
+          <button type="button" class="help-close" on:click={closeHelp} aria-label="Close">×</button>
         </div>
 
         <p class="help-intro">
@@ -730,7 +805,7 @@
           {#each BETA_LETTERS as L}
             <div class="beta-cell">
               <span class="beta-key">{L.beta}</span>
-              <span class="beta-grk">{L.greek}</span>
+              <span class="beta-grk" lang="grc">{L.greek}</span>
               <span class="beta-name">{L.name}</span>
             </div>
           {/each}
@@ -740,14 +815,14 @@
         <p class="help-sub">Type the mark right after the vowel:</p>
         <ul class="mark-list">
           {#each BETA_MARKS as M}
-            <li><span class="beta-key">{M.beta}</span> <span class="mark-ex">{M.example}</span> <span class="beta-name">{M.name}</span></li>
+            <li><span class="beta-key">{M.beta}</span> <span class="mark-ex" lang="grc">{M.example}</span> <span class="beta-name">{M.name}</span></li>
           {/each}
         </ul>
 
         <h3>Examples</h3>
         <ul class="example-list">
           {#each BETA_EXAMPLES as E}
-            <li><code>{E.beta}</code> <span class="ex-arrow">→</span> <span class="ex-grk">{E.greek}</span></li>
+            <li><code>{E.beta}</code> <span class="ex-arrow" aria-hidden="true">→</span> <span class="ex-grk" lang="grc">{E.greek}</span></li>
           {/each}
         </ul>
 
@@ -817,7 +892,7 @@
                 {#each g.instances as inst}
                   <li class="instance">
                     <a class="inst-ref" href={inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{inst.ref}</a>
-                    <span class="inst-snippet" class:greek={inst.lang === 'grk'}>
+                    <span class="inst-snippet" class:greek={inst.lang === 'grk'} lang={inst.lang === 'grk' ? 'grc' : 'en'}>
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                       {@html inst.html}
                     </span>
@@ -839,7 +914,7 @@
       </nav>
     {/if}
   {/if}
-</div>
+</main>
 
 <style>
   .search-page {
@@ -963,6 +1038,25 @@
     cursor: pointer;
   }
   .works-action:disabled { opacity: 0.45; cursor: default; }
+  .works-auth { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.55rem; }
+  .auth-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.18rem 0.6rem;
+    cursor: pointer;
+  }
+  .auth-btn:hover:not(:disabled) { border-color: var(--accent-light); color: var(--accent); }
+  .auth-btn.on { color: var(--accent); border-color: var(--accent-light); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .auth-btn:disabled { opacity: 0.4; cursor: default; }
+  .auth-count { font-size: 0.66rem; opacity: 0.6; font-variant-numeric: tabular-nums; }
   .works-group { margin-top: 0.6rem; }
   .works-group-head {
     display: flex;

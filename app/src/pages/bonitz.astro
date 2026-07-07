@@ -1,6 +1,8 @@
 ---
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import { sanitizeHtml } from '../lib/html';
+import { jsonLdSafe } from '../lib/jsonld';
 import '../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -116,6 +118,25 @@ const pageLast  = '60';
 const lastEntry = [...flat].reverse().find(f => f.type === 'entry') as { lemma: string } | undefined;
 const lastLemma = cleanLemma(lastEntry?.lemma ?? '');
 const navBuckets = [...buckets].sort();
+const pageTitle = 'Bonitz Index Aristotelicus — α';
+const metaDescription =
+  `Work-in-progress transcription of Hermann Bonitz's Index Aristotelicus, section alpha, pages ${pageFirst}-${pageLast}, with ${entryCount} entries through ${lastLemma}.`;
+const canonical = Astro.site ? new URL(`${base}/bonitz/`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: pageTitle,
+  description: metaDescription,
+  inLanguage: ['la', 'grc', 'en'],
+  ...(canonical ? { url: canonical } : {}),
+  isBasedOn: {
+    '@type': 'Book',
+    name: 'Index Aristotelicus',
+    author: { '@type': 'Person', name: 'Hermann Bonitz' },
+    datePublished: '1870',
+  },
+};
 
 // Strip trailing punctuation (comma/period/semicolon/ano-teleia) the OCR pulled
 // into the headword, e.g. "ἀετός," → "ἀετός", "ἀηδία." → "ἀηδία".
@@ -365,7 +386,21 @@ function renderBlocks(blocks: Block[], lemma?: string): string {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
-  <title>Bonitz Index Aristotelicus — α</title>
+  <title>{pageTitle}</title>
+  <meta name="description" content={metaDescription} />
+  <meta name="robots" content="noindex,follow" />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={metaDescription} />
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {canonical && <meta property="og:url" content={canonical} />}
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={metaDescription} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -381,7 +416,7 @@ function renderBlocks(blocks: Block[], lemma?: string): string {
       <p class="subtitle">Hermann Bonitz, 1870</p>
       <p class="wip-note">
         <strong>Work in progress.</strong> Section α, pages {pageFirst}–{pageLast} —
-        {entryCount} entries through <span class="greek-inline">{lastLemma}</span>.
+        {entryCount} entries through <span class="greek-inline" lang="grc">{lastLemma}</span>.
         Transcribed by Claude Opus 4.8.
       </p>
     </header>
@@ -427,13 +462,13 @@ function renderBlocks(blocks: Block[], lemma?: string): string {
           return <h2 class="section-head" id={anchorId}>{f.content}</h2>;
         }
         if (f.type === 'header_gloss') {
-          return <div class="intro-gloss" id={anchorId} set:html={renderBlocks(f.blocks)} />;
+          return <div class="intro-gloss" id={anchorId} set:html={sanitizeHtml(renderBlocks(f.blocks))} />;
         }
         if (f.type === 'orphan_cont') {
           return (
             <div class="card continuation" id={anchorId}>
               <p class="cont-label">↳ continued from previous page</p>
-              <div class="card-body" set:html={renderBlocks(f.blocks)} />
+              <div class="card-body" set:html={sanitizeHtml(renderBlocks(f.blocks))} />
             </div>
           );
         }
@@ -443,7 +478,7 @@ function renderBlocks(blocks: Block[], lemma?: string): string {
               {cleanLemma(f.lemma)}
               <span class="chev" aria-hidden="true" />
             </summary>
-            <div class="card-body" set:html={renderBlocks(f.blocks, f.lemma)} />
+            <div class="card-body" set:html={sanitizeHtml(renderBlocks(f.blocks, f.lemma))} />
           </details>
         );
       })}

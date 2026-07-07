@@ -1,8 +1,9 @@
 ---
-import { CATEGORIES, getWork, workLanding, type Work } from '../lib/works';
+import { AUTHENTICITY_LABEL, CATEGORIES, getWork, workLanding, type Work } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import { jsonLdSafe } from '../lib/jsonld';
 import '../styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -98,9 +99,11 @@ const structuredData = Astro.site
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Aristotle Reader — Complete Works in Greek & English" />
+  <meta name="twitter:description" content={homeDescription} />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
   {structuredData && structuredData.map((sd) => (
-    <script type="application/ld+json" set:html={JSON.stringify(sd)} />
+    <script type="application/ld+json" set:html={jsonLdSafe(sd)} />
   ))}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -163,6 +166,8 @@ const structuredData = Astro.site
                         <span class="work-name">{c.work.title}</span>
                         <span class="work-blurb">{c.work.blurb}</span>
                         <span class="work-meta">{c.work.abbr} · {c.work.books} book{c.work.books > 1 ? 's' : ''}</span>
+                        {c.work.authenticity && c.work.authenticity !== 'genuine' &&
+                          <span class="status-tag">{AUTHENTICITY_LABEL[c.work.authenticity]}</span>}
                       </a>
                     ) : (
                       <div class="work-card soon" aria-disabled="true">
@@ -541,7 +546,7 @@ const structuredData = Astro.site
   </style>
 
   <!-- Feedback modal -->
-  <div id="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title">
+  <div id="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title" tabindex="-1">
     <div class="fb-box">
       <h2 id="fb-title">Request a Feature / Report an Error</h2>
       <div class="fb-type">
@@ -562,15 +567,49 @@ const structuredData = Astro.site
     const cancelBtn = document.getElementById('fb-cancel')!;
     const submitBtn = document.getElementById('fb-submit')!;
     const textarea = document.getElementById('fb-message') as HTMLTextAreaElement;
+    let feedbackTrigger: HTMLElement | null = null;
 
-    const open = () => { modal.classList.add('open'); textarea.value = ''; textarea.focus(); };
-    const close = () => modal.classList.remove('open');
+    const open = (e?: Event) => {
+      feedbackTrigger = e?.currentTarget instanceof HTMLElement ? e.currentTarget : null;
+      modal.classList.add('open');
+      textarea.value = '';
+      textarea.focus();
+    };
+    const close = () => {
+      modal.classList.remove('open');
+      feedbackTrigger?.focus();
+      feedbackTrigger = null;
+    };
 
     openBtn.addEventListener('click', open);
     document.getElementById('feedback-btn-wip')?.addEventListener('click', open);
     cancelBtn.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    document.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('open')) return;
+      if (e.key === 'Escape') {
+        close();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const els = Array.from(modal.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1);
+      if (els.length === 0) {
+        e.preventDefault();
+        modal.focus();
+        return;
+      }
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
 
     submitBtn.addEventListener('click', () => {
       const msg = textarea.value.trim();

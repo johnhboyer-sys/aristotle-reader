@@ -1,0 +1,95 @@
+{
+ "work": "TST",
+ "source": "english.xml",
+ "translation": "Fixture Translation",
+ "chunks": [
+  {
+   "id": "1:1094a",
+   "book": 1,
+   "column": "1094a",
+   "text": "First paragraph. Second paragraph with marker. Subsection text.",
+   "notes": [
+    {
+     "offset": 5,
+     "text": "translator note"
+    }
+   ],
+   "markers": [
+    {
+     "kind": "section",
+     "n": "1",
+     "offset": 0
+    },
+    {
+     "kind": "paragraph",
+     "n": "",
+     "offset": 16
+    },
+    {
+     "kind": "subsection",
+     "n": "1",
+     "offset": 46
+    },
+    {
+     "kind": "paragraph",
+     "n": "",
+     "offset": 46
+    }
+   ],
+   "bekker": [
+    {
+     "n": 1,
+     "offset": 0,
+     "real": true
+    },
+    {
+     "n": 5,
+     "offset": 38,
+     "real": true
+    }
+   ]
+  },
+  {
+   "id": "1:1094b",
+   "book": 1,
+   "column": "1094b",
+   "text": "Chapter two text.",
+   "notes": [],
+   "markers": [
+    {
+     "kind": "section",
+     "n": "2",
+     "offset": 0
+    }
+   ],
+   "bekker": [
+    {
+     "n": 1,
+     "offset": 0,
+     "real": true
+    },
+    {
+     "n": 5,
+     "offset": 17,
+     "real": false
+    }
+   ]
+  }
+ ],
+ "chapters": [
+  {
+   "book": 1,
+   "chapter": "1",
+   "column": "1094a",
+   "line": "1",
+   "bookstart": true
+  },
+  {
+   "book": 1,
+   "chapter": "2",
+   "column": "1094b",
+   "line": "1",
+   "bookstart": false
+  }
+ ]
+}
