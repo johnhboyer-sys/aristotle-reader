@@ -1,0 +1,87 @@
+// scripts/ocr-repair.ts
+//
+// Thin CLI for the Goal-A OCR-repair pipeline. Run with:
+//
+//   npx tsx desktop/scripts/ocr-repair.ts --config ~/Documents/aristotle-ocr/<corpus>/config.json [--through N]
+//
+// Reads the corpus backbone, runs repair stages 1..N in order (none yet at
+// stage 0), grades the text with the frozen Goal-B converter after every
+// stage, prints the honesty-report delta, and writes stage outputs +
+// change-lists + reports into the corpus outDir (never the repo).
+
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { loadCorpusConfig, type CorpusConfig } from '../src/lib/ocr-repair/corpus-config';
+import { grade, formatSummary, diffSummaries, type GradeSummary } from '../src/lib/ocr-repair/grade';
+
+interface StageResult {
+  text: string;
+  /** JSONL-ready change records (changelist.ts shapes them; none at stage 0). */
+  changes: object[];
+}
+
+type Stage = {
+  n: number;
+  name: string;
+  run: (text: string, config: CorpusConfig) => StageResult;
+};
+
+// Stages register here as they are built (slice, skeleton, gutter-reseat,
+// spacing, align+vote). Stage 0 is the grade of the raw backbone itself.
+const STAGES: Stage[] = [];
+
+function parseArgs(argv: string[]): { configPath: string; through: number } {
+  let configPath = '';
+  let through = 0;
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--config') configPath = argv[++i] ?? '';
+    else if (argv[i] === '--through') through = Number(argv[++i] ?? '0');
+    else throw new Error(`unknown argument ${argv[i]}`);
+  }
+  if (!configPath) throw new Error('usage: ocr-repair.ts --config <config.json> [--through N]');
+  if (!Number.isInteger(through) || through < 0) throw new Error(`bad --through value`);
+  return { configPath, through };
+}
+
+function main() {
+  const { configPath, through } = parseArgs(process.argv.slice(2));
+  const config = loadCorpusConfig(configPath);
+  const reportsDir = join(config.outDir, 'reports');
+  const stagesDir = join(config.outDir, 'stages');
+  mkdirSync(reportsDir, { recursive: true });
+  mkdirSync(stagesDir, { recursive: true });
+
+  let text = readFileSync(config.backbonePath, 'utf8');
+
+  console.log(`corpus: ${config.id} (${config.workTitle})`);
+  console.log(`backbone: ${config.backbonePath}`);
+  console.log('\nstage 0 — raw backbone baseline:');
+  let prev: GradeSummary = grade(text).summary;
+  console.log(formatSummary(prev));
+  writeFileSync(join(reportsDir, 'stage0-baseline.json'), JSON.stringify(prev, null, 2) + '\n');
+
+  for (const stage of STAGES) {
+    if (stage.n > through) break;
+    const { text: repaired, changes } = stage.run(text, config);
+    text = repaired;
+    const summary = grade(text).summary;
+    console.log(`\nstage ${stage.n} — ${stage.name}: ${changes.length} change records`);
+    const delta = diffSummaries(prev, summary);
+    console.log(delta.length ? delta : '  (no counter moved)');
+    writeFileSync(
+      join(stagesDir, `stage${stage.n}-${stage.name}.txt`),
+      text
+    );
+    writeFileSync(
+      join(reportsDir, `stage${stage.n}-${stage.name}.json`),
+      JSON.stringify(summary, null, 2) + '\n'
+    );
+    if (changes.length) {
+      const jsonl = changes.map((c) => JSON.stringify(c)).join('\n') + '\n';
+      writeFileSync(join(config.outDir, `changes-stage${stage.n}.jsonl`), jsonl);
+    }
+    prev = summary;
+  }
+}
+
+main();
