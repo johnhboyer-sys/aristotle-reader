@@ -42,6 +42,18 @@ export interface CorpusConfig {
   witnessPath: string;
   /** Optional chapter map (Bekker ranges per chapter) for slice cross-checks. */
   chapterMapPath?: string;
+  /**
+   * Stage-1 slice boundaries, pattern-driven so an unseen edition needs only
+   * config. Patterns are regex sources tested line-by-line against a page;
+   * the first page with a matching line is the boundary. Cuts happen at page
+   * boundaries only.
+   */
+  slice?: {
+    /** First page with a matching line opens the translation body. */
+    bodyStart: string;
+    /** First page AT OR AFTER bodyStart matching begins back matter (cut to end). */
+    backMatterStart?: string;
+  };
   /** Where stage outputs, reports, and change-lists are written. */
   outDir: string;
 }

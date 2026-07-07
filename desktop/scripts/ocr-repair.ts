@@ -13,11 +13,14 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadCorpusConfig, type CorpusConfig } from '../src/lib/ocr-repair/corpus-config';
 import { grade, formatSummary, diffSummaries, type GradeSummary } from '../src/lib/ocr-repair/grade';
+import { slicePages } from '../src/lib/ocr-repair/slice';
 
 interface StageResult {
   text: string;
   /** JSONL-ready change records (changelist.ts shapes them; none at stage 0). */
   changes: object[];
+  /** Extra files to persist (e.g. sliced-off front/back matter — kept, never deleted). */
+  artifacts?: Record<string, string>;
 }
 
 type Stage = {
@@ -28,7 +31,19 @@ type Stage = {
 
 // Stages register here as they are built (slice, skeleton, gutter-reseat,
 // spacing, align+vote). Stage 0 is the grade of the raw backbone itself.
-const STAGES: Stage[] = [];
+const STAGES: Stage[] = [
+  {
+    n: 1,
+    name: 'slice',
+    run: (text, config) => {
+      const { text: sliced, changes, frontMatter, backMatter } = slicePages(text, config);
+      const artifacts: Record<string, string> = {};
+      if (frontMatter) artifacts['removed-front-matter.txt'] = frontMatter;
+      if (backMatter) artifacts['removed-back-matter.txt'] = backMatter;
+      return { text: sliced, changes, artifacts };
+    },
+  },
+];
 
 function parseArgs(argv: string[]): { configPath: string; through: number } {
   let configPath = '';
@@ -62,8 +77,11 @@ function main() {
 
   for (const stage of STAGES) {
     if (stage.n > through) break;
-    const { text: repaired, changes } = stage.run(text, config);
+    const { text: repaired, changes, artifacts } = stage.run(text, config);
     text = repaired;
+    for (const [name, content] of Object.entries(artifacts ?? {})) {
+      writeFileSync(join(stagesDir, name), content);
+    }
     const summary = grade(text).summary;
     console.log(`\nstage ${stage.n} — ${stage.name}: ${changes.length} change records`);
     const delta = diffSummaries(prev, summary);
