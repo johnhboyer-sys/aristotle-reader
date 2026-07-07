@@ -44,15 +44,20 @@ function fnBody(name: string): string {
 
 describe('display expansion wiring', () => {
   it('the grid iterates expandRows-derived display rows keyed by the stable DisplayRow key', () => {
-    expect(chapterSource).toContain('displayRows = expandRows(model.rows)');
+    // Granularity is chosen by the view (D8): 'unit' for the paragraph-unit
+    // view, 'sentence' (the D6 default) everywhere else.
+    expect(chapterSource).toContain("expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence')");
     expect(chapterSource).toContain('{#each displayRows as d, g (d.key)}');
   });
 
-  it('view identity is (row, segment): registry keys, host contract, RowEditor mount', () => {
-    expect(chapterSource).toContain('const vkey = (row: number, segment: number)');
-    expect(chapterSource).toContain('createView(row: number, segment: number, el: HTMLElement)');
-    expect(rowSource).toContain('host.createView(row, segment, el)');
-    expect(rowSource).toContain('host.destroyView(row, segment)');
+  it('view identity is (row, segment, layer): registry keys, host contract, RowEditor mount', () => {
+    // (row, segment) stays the D6 identity; D8 adds the editing LAYER (sentence
+    // vs paragraph) as a third key dimension so the paragraph editor
+    // (englishPara) never collides with the sentence cells.
+    expect(chapterSource).toContain('const vkey = (row: number, segment: number, layer: EditLayer');
+    expect(chapterSource).toContain('createView(row: number, segment: number, el: HTMLElement, layer: EditLayer)');
+    expect(rowSource).toContain('host.createView(row, segment, el, layer)');
+    expect(rowSource).toContain('host.destroyView(row, segment, layer)');
   });
 
   it('both segments’ gutters show the same raw address; continuation Greek is indented 1.5em', () => {
@@ -114,7 +119,10 @@ describe('un-split wiring (d6 divergence F + §4.4)', () => {
   });
 
   it('a stale continuation unmount never clobbers the merged row (destroyView guard)', () => {
-    expect(chapterSource).toContain('segment < segmentCount(model.rows[row])) commitRowNow(row)');
+    // The guard now also admits the paragraph layer (always alive while the
+    // row exists); the sentence branch keeps the D6 segment-count check.
+    expect(chapterSource).toContain('segment < segmentCount(model.rows[row])');
+    expect(chapterSource).toContain('if (alive) commitRowNow(row)');
   });
 });
 

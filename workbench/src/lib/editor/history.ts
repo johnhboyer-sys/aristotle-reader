@@ -28,16 +28,30 @@ export interface SelRef {
   row: number;
   /** English segment within the row (0 unless the line is split — D6). */
   segment: number;
+  /** Which English layer the caret was in (D8 §4): the default sentence
+   * layer (`english`/`english2`), or the paragraph layer (`englishPara`).
+   * Absent = 'sentence' (every pre-D8 caller). */
+  layer?: 'sentence' | 'para';
   anchor: number;
   head: number;
 }
 
-/** One row's full structural state: segment docs in order + split offsets. */
+/** One row's full structural state: segment docs in order + split offsets +
+ * the paragraph layer. */
 export interface RowSnapshot {
   /** Segment docs in document order; docs[0] is the row's `english`. */
   docs: PMNode[];
   /** The row's splitOffsets at snapshot time (cloned; undefined = unsplit). */
   splitOffsets?: number[];
+  /**
+   * The row's paragraph-layer English (`englishPara`) at snapshot time, or
+   * undefined when the row has none (D8 §4). Captured on EVERY snapshot so an
+   * undo/redo restores the whole row — a paragraph-view edit reverts its
+   * `englishPara`, and a sentence-layer edit never clobbers a paragraph
+   * translation it didn't touch (the field round-trips through the snapshot
+   * unchanged).
+   */
+  englishPara?: PMNode;
 }
 
 export interface RowEdit {

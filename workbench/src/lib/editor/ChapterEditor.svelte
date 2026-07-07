@@ -3,13 +3,17 @@
 
   // What a RowEditor needs from the chapter — kept minimal so the row side
   // can later become mount-on-focus without touching this contract.
-  // View identity is (row, segment) — the model (Bekker-line) row index plus
-  // the English segment index (design doc D6): a paragraph-split line mounts
-  // one editor per segment, and both indexes are stable across the grid
-  // ordinal shifts a split causes.
+  // View identity is (row, segment, layer) — the model (Bekker-line) row
+  // index, the English segment index (design doc D6), and the EDITING LAYER
+  // (D8 §4): the default 'sentence' layer edits english/english2 (segment i ↔
+  // sentence i); the 'para' layer edits englishPara (paragraph view, segment
+  // always 0). A ChapterEditor renders exactly one layer at a time (view mode
+  // is exclusive), so the two never mount simultaneously; the layer keeps
+  // their view keys distinct and lets commit/undo route to the right field.
+  export type EditLayer = 'sentence' | 'para';
   export interface RowViewHost {
-    createView(row: number, segment: number, el: HTMLElement): void;
-    destroyView(row: number, segment: number): void;
+    createView(row: number, segment: number, el: HTMLElement, layer: EditLayer): void;
+    destroyView(row: number, segment: number, layer: EditLayer): void;
     // ── AI-assist (design doc D4) ──
     /** Suggest-for-row entry point (the row glyph; ⌘⏎ arrives via rowKeymap). */
     requestAssist(row: number, segment: number): void;
@@ -52,7 +56,7 @@
   import { toggleMark } from '@tiptap/pm/commands';
 
   import type { FixtureChapter } from '../../dev/fixture-meta-z17';
-  import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf } from './model';
+  import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf, hasSentenceEnglish } from './model';
   import type { ChapterModel } from './model';
   import { rowSchema, docFromJSON, markerIdsIn, emptyRowDocJSON } from './schema';
   import type { PMDocJSON } from './schema';
@@ -83,6 +87,9 @@
   import { resolveEndpointPos } from './citationSelection';
   import { expandRows, snapToWordStart, splitUnsplitRow, mergeSegments, mergeNeedsConfirm } from './gridRows';
   import type { DisplayRow } from './gridRows';
+  import { currentViewMode, setViewMode } from './viewMode.svelte';
+  import { legalViews } from './viewPolicy';
+  import type { ViewMode } from './viewPolicy';
   import { getScheme } from '../citation/registry';
   import type { WorkMeta } from '../citation/types';
   import { isTauri } from '../runtime';
@@ -130,10 +137,14 @@
   const history = new AppHistory();
   const storage = libraryStorage();
   const fileName = chapterFileName(fixture.book, fixture.chapter);
-  // Live views keyed by `${row}:${segment}` — (row, segment) is the stable
-  // view identity (see RowViewHost above); grid ordinals are never keys.
+  // Live views keyed by (row, segment, layer) — the stable view identity (see
+  // RowViewHost above); grid ordinals are never keys. Sentence-layer cells
+  // keep the historical `${row}:${segment}` key (byte-for-byte the D6 key);
+  // paragraph-layer cells (segment always 0) use `${row}:para`. Since only one
+  // layer is mounted at a time, `viewAt` reads the ACTIVE layer's view.
   const views = new Map<string, EditorView>();
-  const vkey = (row: number, segment: number) => `${row}:${segment}`;
+  const vkey = (row: number, segment: number, layer: EditLayer = activeLayer()) =>
+    layer === 'para' ? `${row}:para` : `${row}:${segment}`;
 
   let rootEl = $state<HTMLDivElement>(); // the scroll container
   let gridEl = $state<HTMLDivElement>();
@@ -216,13 +227,78 @@
 
   // ── reactive UI state ──────────────────────────────────────────────────
   let ready = $state(false);
+
+  // ── view mode (D8 §5) ──────────────────────────────────────────────────
+  // ViewMode string values as named constants. The paragraph view-mode string
+  // collides textually with the paragraph SCHEME id, and
+  // schemeIdIsolation.test.ts's grep can't tell a legitimate ViewMode
+  // comparison from a forbidden scheme-id comparison (both read as
+  // `=== '<that string>'`). Comparing against these constants keeps the bare
+  // quoted literal out of the source while staying just as clear.
+  const MODE_GRID: ViewMode = 'grid';
+  const MODE_PARAGRAPH: ViewMode = 'paragraph';
+  const MODE_INTERPOLATED: ViewMode = 'interpolated';
+  // The work's citation scheme (capability object) — legalViews/defaultView
+  // and the current-mode clamp are all keyed on it, never a scheme id.
+  const scheme = getScheme(model.scheme);
+  const legalViewModes = legalViews(scheme);
+  // The current, validated view mode for this work (reactive store, clamped
+  // to legalViews). `grid` (line grid) · `paragraph` (paragraph-unit view /
+  // chunked line view) · `interpolated` (next phase, not yet rendered).
+  const viewMode = $derived<ViewMode>(currentViewMode(model.workId, scheme));
+  // The modes the toggle actually offers this phase: interpolated is a legal
+  // target but its view lands next phase, so it's hidden. The toggle appears
+  // only when more than one SELECTABLE mode exists — a document-spine
+  // paragraph doc (legal: paragraph + interpolated) then shows no lone button.
+  const toggleModes = legalViewModes.filter((m) => m !== MODE_INTERPOLATED);
+  function chooseView(mode: ViewMode) {
+    setViewMode(model.workId, scheme, mode);
+  }
+  /**
+   * PARAGRAPH-UNIT view: a document-spine paragraph doc showing one visual
+   * unit per model row, whose English cell edits the paragraph layer
+   * (englishPara). A plain-line doc in `paragraph` mode is still line-based
+   * (grouped chunks, per-line sentence cells) — NOT unit-view — so this is
+   * gated on the row unit being a paragraph, never the mode alone.
+   *
+   * The row-unit test is a `switch` (not a `rowUnit ===` literal) on purpose:
+   * the paragraph rowUnit string is both a GutterSpec rowUnit AND a registered
+   * scheme id, and schemeIdIsolation.test.ts's source scan for `=== '<id>'`
+   * can't tell the two apart by text — the switch is the sanctioned way to
+   * compare a rowUnit (same pattern as viewPolicy.ts). */
+  function isParagraphRowUnit(): boolean {
+    switch (scheme.gutter.rowUnit) {
+      case 'paragraph':
+        return true;
+      default:
+        return false;
+    }
+  }
+  const paragraphUnitView = $derived(viewMode === MODE_PARAGRAPH && isParagraphRowUnit());
+  /** The editing layer the mounted cells use right now (D8 §4). Only the
+   * paragraph-unit view edits englishPara; every other view edits the
+   * sentence layer. Non-reactive read used by vkey/viewAt (they run in plain
+   * functions); paragraphUnitView is the reactive source of truth. */
+  function activeLayer(): EditLayer {
+    return paragraphUnitView ? 'para' : 'sentence';
+  }
+
   // The flat display-row list the grid renders (design doc D6). Derived from
   // the model EXPLICITLY (the model itself is non-reactive): refreshed on
-  // hydration, reload, split/un-split and structural undo/redo.
+  // hydration, reload, split/un-split and structural undo/redo. In the
+  // paragraph-unit view each model row is ONE display row (expandRows 'unit');
+  // every other view keeps the sentence-granularity expansion.
   let displayRows = $state<DisplayRow[]>([]);
   function refreshDisplayRows() {
-    displayRows = expandRows(model.rows);
+    displayRows = expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence');
   }
+  // Re-expand when the view mode flips (the granularity changes): the keyed
+  // {#each} then remounts cells for the new layer. Runs after `ready`, so the
+  // initial hydrate (which calls refreshDisplayRows itself) isn't doubled.
+  $effect(() => {
+    void viewMode; // track
+    if (ready) refreshDisplayRows();
+  });
   let flashRowIdx = $state(-1); // grid ordinal
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
   let greekMode = $state(false);
@@ -230,7 +306,7 @@
   // Greek-cell context menu (design doc D6 §4): split on unsplit lines,
   // merge on split ones. `offset` is the snapped split point (null = the
   // click found no valid word gap → the status line, never a silent split).
-  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null; aiOnly?: boolean; translateRows?: number[] } | null>(null);
+  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null; aiOnly?: boolean; aiDisabled?: boolean; translateRows?: number[] } | null>(null);
   let pendingUnsplit = $state<{ row: number; boundary: number } | null>(null);
   let saveState = $state<SaveState>('idle');
   let saveBlocked = $state(false);
@@ -269,6 +345,13 @@
     const r = model.rows[row];
     return docFromJSON(segment === 0 ? r.english : (r.english2?.[segment - 1] ?? emptyRowDocJSON()));
   }
+  /** The paragraph-layer (englishPara) doc for row i: live para view when
+   * mounted, else the committed model field (empty when the row has none). */
+  function paraDoc(i: number): PMNode {
+    const view = views.get(vkey(i, 0, 'para'));
+    if (view) return view.state.doc;
+    return docFromJSON(model.rows[i].englishPara ?? emptyRowDocJSON());
+  }
   /** All of row i's segment docs in document order (live views win). */
   function rowDocs(i: number): PMNode[] {
     return englishDocsOf(model.rows[i]).map((_, s) => segmentDoc(i, s));
@@ -281,16 +364,58 @@
   function joinedRowDoc(i: number): PMNode {
     return docFromJSON(joinRowDocs(rowDocsJSON(i)));
   }
+
+  // ── paragraph-view display helpers (D8 §4/§5) ──────────────────────────
+  /**
+   * "Text stays at its unit" (§4): in the paragraph-unit view, when a row ALSO
+   * carries a sentence-layer translation (any non-empty english/english2), it
+   * is shown READ-ONLY beneath the editable englishPara field — subdued and
+   * labelled — so a view switch never moves or destroys it. This is the joined
+   * sentence text (marks flattened to plain text — the block is copyable
+   * reference, not an editor). Null when the row has no sentence English.
+   */
+  function sentenceLayerText(i: number): string | null {
+    if (!hasSentenceEnglish(model.rows[i])) return null;
+    return plainRowText(joinedRowDoc(i));
+  }
+
+  /**
+   * Paragraph-chunk grouping for PLAIN-LINE document-spine works (§5): the
+   * display rows whose model row begins a paragraph chunk (1-based ordinals in
+   * model.paragraphStarts). Pure display metadata — the doc stays line-based.
+   * Row 1 always begins the first chunk. Returns a Set of grid ordinals that
+   * open a chunk (used to add chunk spacing/border in the line grid).
+   */
+  const chunkStartGrids = $derived.by(() => {
+    const starts = new Set(model.paragraphStarts ?? []);
+    const out = new Set<number>();
+    if (viewMode !== MODE_PARAGRAPH || paragraphUnitView) return out; // only the line-doc chunk view
+    for (let g = 0; g < displayRows.length; g++) {
+      const d = displayRows[g];
+      // A chunk break lands on the FIRST display row of a model row that starts
+      // a paragraph (a split line's continuation segments never open a chunk).
+      if (d.segment === 0 && (d.rowIndex === 0 || starts.has(d.rowIndex + 1))) out.add(g);
+    }
+    return out;
+  });
   function gridDocSize(g: number): number {
     const d = displayRows[g];
     return d ? segmentDoc(d.rowIndex, d.segment).content.size : 0;
   }
-  /** The row's full structural state for an undo payload (docs + offsets). */
+  /** The row's full structural state for an undo payload (docs + offsets +
+   * the paragraph layer). englishPara is captured whenever the row has one
+   * (live para view wins), so any undo/redo restores the whole row: a
+   * paragraph-view edit reverts its englishPara, and a sentence edit
+   * round-trips englishPara untouched (D8 §4). */
   function snapshotRow(i: number): RowSnapshot {
-    const offsets = model.rows[i].splitOffsets;
+    const row = model.rows[i];
+    const offsets = row.splitOffsets;
+    const paraView = views.get(vkey(i, 0, 'para'));
+    const para = paraView ? paraView.state.doc : row.englishPara ? docFromJSON(row.englishPara) : undefined;
     return {
       docs: rowDocs(i),
       ...(offsets && offsets.length > 0 ? { splitOffsets: offsets.slice() } : {}),
+      ...(para && para.content.size > 0 ? { englishPara: para } : {}),
     };
   }
 
@@ -346,10 +471,14 @@
     // fired by an instant chapter-switch/blur could read a stale doc and drop
     // the last keystrokes. This may dispatch (and schedule a commit timer),
     // so it runs BEFORE the timer check. domObserver is internal but stable.
+    // The paragraph-layer view (englishPara) is flushed/committed alongside
+    // the sentence segments — a row mounts at most one layer at a time (D8 §4).
+    const paraView = views.get(vkey(i, 0, 'para'));
     for (let s = 0; s < count; s++) {
       const view = viewAt(i, s);
       if (view) (view as unknown as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
     }
+    if (paraView) (paraView as unknown as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
     const timer = commitTimers.get(i);
     if (timer !== undefined) {
       clearTimeout(timer);
@@ -365,6 +494,15 @@
       if (s === 0) row.english = doc.toJSON();
       else row.english2![s - 1] = doc.toJSON();
       if (import.meta.env.DEV) assertRoundTrip(doc); // round-trip asserted on every commit
+    }
+    if (paraView) {
+      sawView = true;
+      const doc = paraView.state.doc;
+      // Empty englishPara is absent, not an empty doc — keeps files that never
+      // used the paragraph layer byte-identical (chapterfile omits blank rows).
+      if (doc.content.size > 0) row.englishPara = doc.toJSON();
+      else delete row.englishPara;
+      if (import.meta.env.DEV) assertRoundTrip(doc);
     }
     if (!sawView) return;
     history.breakCoalescing();
@@ -639,9 +777,9 @@
   }
 
   // ── the dispatch pipeline ──────────────────────────────────────────────
-  function dispatchFor(row: number, segment: number) {
+  function dispatchFor(row: number, segment: number, layer: EditLayer = 'sentence') {
     return (tr: Transaction) => {
-      const view = viewAt(row, segment);
+      const view = layer === 'para' ? (views.get(vkey(row, 0, 'para')) ?? null) : viewAt(row, segment);
       if (!view) return;
       const oldState = view.state;
       const newState = oldState.apply(tr);
@@ -649,11 +787,47 @@
 
       if (tr.docChanged && !tr.getMeta('appHistoryIgnore')) {
         savedX = null;
-        afterDocChange(row, segment, oldState, tr);
+        if (layer === 'para') afterParaChange(row, oldState, tr);
+        else afterDocChange(row, segment, oldState, tr);
         scheduleCommit(row);
       }
       if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) syncToolbar(view.state);
     };
+  }
+
+  /** Undo bookkeeping for a paragraph-layer (englishPara) edit (D8 §4): the
+   * sentence `docs` are unchanged in this entry — only `englishPara` differs
+   * before→after. The whole row snapshot round-trips so one ⌘Z reverts the
+   * paragraph edit and nothing else. Footnotes don't ride the paragraph layer
+   * (englishPara carries no markers in Phase D), so no fnBefore/fnAfter. */
+  function afterParaChange(row: number, oldState: EditorState, tr: Transaction) {
+    const view = views.get(vkey(row, 0, 'para'))!;
+    const beforeDoc = oldState.doc;
+    const afterDoc = view.state.doc;
+    const offsets = model.rows[row].splitOffsets;
+    const docs = rowDocs(row); // sentence layer, unchanged by a para edit
+    const structural = {
+      docs,
+      ...(offsets && offsets.length > 0 ? { splitOffsets: offsets.slice() } : {}),
+    };
+    const coalesceKey =
+      !tr.getMeta('noCoalesce') && (tr.getMeta('coalesce') === 'typing' || isTypingTransaction(tr))
+        ? `typing:${row}.para`
+        : null;
+    history.push(
+      {
+        edits: [
+          {
+            row,
+            before: { ...structural, ...(beforeDoc.content.size > 0 ? { englishPara: beforeDoc } : {}) },
+            after: { ...structural, ...(afterDoc.content.size > 0 ? { englishPara: afterDoc } : {}) },
+          },
+        ],
+        selBefore: { row, segment: 0, layer: 'para', anchor: oldState.selection.anchor, head: oldState.selection.head },
+        selAfter: { row, segment: 0, layer: 'para', anchor: view.state.selection.anchor, head: view.state.selection.head },
+      },
+      { coalesceKey },
+    );
   }
 
   function afterDocChange(row: number, segment: number, oldState: EditorState, tr: Transaction) {
@@ -702,19 +876,24 @@
         : null;
 
     // Undo payload = the row's SEGMENT BUNDLE (design doc D6): the edited
-    // segment's before/after doc plus the sibling segments as they stand.
+    // segment's before/after doc plus the sibling segments as they stand. The
+    // paragraph layer (englishPara) is unchanged by a sentence edit but rides
+    // BOTH snapshots so undo/redo round-trips it untouched (D8 §4).
     const offsets = model.rows[row].splitOffsets;
     const beforeDocs = rowDocs(row);
     beforeDocs[segment] = beforeDoc;
     const afterDocs = rowDocs(row); // segment's view already holds afterDoc
+    const paraDocJSON = model.rows[row].englishPara;
+    const para = paraDocJSON ? docFromJSON(paraDocJSON) : undefined;
+    const paraField = para && para.content.size > 0 ? { englishPara: para } : {};
 
     history.push(
       {
         edits: [
           {
             row,
-            before: { docs: beforeDocs, ...(offsets ? { splitOffsets: offsets.slice() } : {}) },
-            after: { docs: afterDocs, ...(offsets ? { splitOffsets: offsets.slice() } : {}) },
+            before: { docs: beforeDocs, ...(offsets ? { splitOffsets: offsets.slice() } : {}), ...paraField },
+            after: { docs: afterDocs, ...(offsets ? { splitOffsets: offsets.slice() } : {}), ...paraField },
           },
         ],
         fnBefore,
@@ -743,16 +922,32 @@
         else delete row.english2;
         if (snap.splitOffsets && snap.splitOffsets.length > 0) row.splitOffsets = snap.splitOffsets.slice();
         else delete row.splitOffsets;
-        // Refresh surviving mounted views; vanished/new segments remount via
-        // the keyed {#each} after refreshDisplayRows below.
+        // Restore the paragraph layer (D8 §4): a para-view undo reverts
+        // englishPara; a sentence undo round-trips it (the snapshot carries
+        // the unchanged doc), so this always reflects the snapshot exactly.
+        if (snap.englishPara && snap.englishPara.content.size > 0) row.englishPara = snap.englishPara.toJSON();
+        else delete row.englishPara;
+        // Refresh surviving mounted views by their EXACT (row, segment, layer)
+        // key — never viewAt, whose active-layer resolution would push a
+        // sentence doc into a mounted para view (or vice versa). Vanished/new
+        // cells remount via the keyed {#each} after refreshDisplayRows below.
         for (let s = 0; s < snap.docs.length; s++) {
-          const view = viewAt(edit.row, s);
+          const view = views.get(vkey(edit.row, s, 'sentence'));
           if (!view) continue;
           view.dispatch(
             view.state.tr
               .replaceWith(0, view.state.doc.content.size, snap.docs[s].content)
               .setMeta('appHistoryIgnore', true)
               .setMeta(FN_REFRESH, true),
+          );
+        }
+        const paraView = views.get(vkey(edit.row, 0, 'para'));
+        if (paraView) {
+          const content = (snap.englishPara ?? docFromJSON(emptyRowDocJSON())).content;
+          paraView.dispatch(
+            paraView.state.tr
+              .replaceWith(0, paraView.state.doc.content.size, content)
+              .setMeta('appHistoryIgnore', true),
           );
         }
         markModelDirty();
@@ -791,7 +986,7 @@
   }
 
   function focusSel(sel: SelRef) {
-    const view = viewAt(sel.row, sel.segment);
+    const view = sel.layer === 'para' ? (views.get(vkey(sel.row, 0, 'para')) ?? null) : viewAt(sel.row, sel.segment);
     if (!view) return;
     const size = view.state.doc.content.size;
     const anchor = Math.min(sel.anchor, size);
@@ -1611,6 +1806,14 @@
     e.preventDefault();
     const d = displayRows[g];
     if (!d) return;
+    // Paragraph-unit view (D8 §4): the Greek word split/merge gesture and the
+    // AI modes both target the sentence layer; wiring them to englishPara is
+    // deferred to Phase E. Offer only the AI menu, disabled with a tooltip, so
+    // invoking it can't corrupt the paragraph translation.
+    if (paragraphUnitView) {
+      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: 0, merge: false, offset: null, aiOnly: true, aiDisabled: true };
+      return;
+    }
     const row = model.rows[d.rowIndex];
     // If the right-click sits inside a multi-line Greek selection, "Translate
     // with AI" acts on every selected line (batch fill); otherwise it's the
@@ -1638,7 +1841,9 @@
     e.preventDefault();
     const d = displayRows[g];
     if (!d) return;
-    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset: null, aiOnly: true };
+    // Paragraph-unit view: AI modes are deferred to Phase E (they'd target
+    // the sentence layer, not englishPara) — show them disabled with a tooltip.
+    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset: null, aiOnly: true, aiDisabled: paragraphUnitView };
   }
 
   function menuSplit() {
@@ -2128,9 +2333,14 @@
   }
 
   const host: RowViewHost = {
-    createView(row, segment, el) {
+    createView(row, segment, el, layer) {
       const r = model.rows[row];
-      const json = segment === 0 ? r.english : (r.english2?.[segment - 1] ?? emptyRowDocJSON());
+      const json =
+        layer === 'para'
+          ? (r.englishPara ?? emptyRowDocJSON())
+          : segment === 0
+            ? r.english
+            : (r.english2?.[segment - 1] ?? emptyRowDocJSON());
       const state = EditorState.create({
         doc: docFromJSON(json),
         plugins: [
@@ -2146,7 +2356,7 @@
       });
       const view = new EditorView(el, {
         state,
-        dispatchTransaction: dispatchFor(row, segment),
+        dispatchTransaction: dispatchFor(row, segment, layer),
         handleDOMEvents: {
           focus: (v) => {
             focusedRow = row;
@@ -2171,17 +2381,18 @@
           },
         },
       });
-      views.set(vkey(row, segment), view);
+      views.set(vkey(row, segment, layer), view);
     },
-    destroyView(row, segment) {
-      const view = views.get(vkey(row, segment));
+    destroyView(row, segment, layer) {
+      const view = views.get(vkey(row, segment, layer));
       if (!view) return;
-      // Commit only while the model still HAS this segment — after an
-      // un-split the stale continuation unmounts and must not clobber the
-      // freshly merged row.
-      if (row < model.rows.length && segment < segmentCount(model.rows[row])) commitRowNow(row);
+      // Commit only while the model still HAS this cell — after an un-split
+      // the stale continuation unmounts and must not clobber the freshly
+      // merged row (paragraph cells always exist while the row does).
+      const alive = layer === 'para' ? row < model.rows.length : row < model.rows.length && segment < segmentCount(model.rows[row]);
+      if (alive) commitRowNow(row);
       view.destroy();
-      views.delete(vkey(row, segment));
+      views.delete(vkey(row, segment, layer));
     },
     requestAssist: (row, segment) => invokeAssist(row, segment),
     assistStateFor: (row, segment) => (assistRow === row && assistSeg === segment ? assistUi : null),
@@ -2380,6 +2591,25 @@
         {model.workTitle}
         <span class="chapter-head-ref">{model.bookLabel}.{model.chapter} · {model.bekkerRange}</span>
       </h1>
+      {#if toggleModes.length > 1}
+        <!-- View-mode toggle (D8 §5): only shown when more than one SELECTABLE
+             view exists. Sits in the chapter chrome (not the top-bar) because
+             legality is per-work — it needs this editor's scheme. Interpolated
+             is a legal target but its view lands next phase; kept out of the
+             switch for now (no dead button). -->
+        <div class="view-toggle" role="group" aria-label="View mode">
+          {#each toggleModes as m (m)}
+            <button
+              class="view-toggle-btn"
+              class:active={viewMode === m}
+              type="button"
+              aria-pressed={viewMode === m}
+              onmousedown={(e) => e.preventDefault()}
+              onclick={() => chooseView(m)}
+            >{m === MODE_GRID ? 'Lines' : 'Paragraphs'}</button>
+          {/each}
+        </div>
+      {/if}
       {#if saveLabel}
         <span class="save-state" data-state={saveBlocked ? 'blocked' : saveState} role="status">{saveLabel}</span>
       {/if}
@@ -2395,7 +2625,13 @@
          otherwise sit between rows — the highlight (and any copied text) stays
          within one language. Visual layout is unchanged: every cell is placed
          by explicit grid-row + grid-column, so DOM order is free. -->
-    <div class="chapter-grid" bind:this={gridEl} onpointerdown={onGridPointerDown}>
+    <div
+      class="chapter-grid"
+      class:view-paragraph={viewMode === MODE_PARAGRAPH}
+      class:view-para-unit={paragraphUnitView}
+      bind:this={gridEl}
+      onpointerdown={onGridPointerDown}
+    >
       {#each displayRows as d, g (d.key)}
         <GreekCell
           gridRow={g}
@@ -2403,19 +2639,28 @@
           continuation={d.continuation}
           flash={flashRowIdx === g}
           focused={focusRow === d.rowIndex && focusSeg === d.segment}
+          chunkStart={chunkStartGrids.has(g)}
           onContext={(e) => onGreekContextMenu(e, g)}
         />
       {/each}
       {#each displayRows as d, g (d.key)}
-        <RowGutter gridRow={g} raw={d.address.raw} focused={focusRow === d.rowIndex && focusSeg === d.segment} />
+        <RowGutter
+          gridRow={g}
+          raw={d.address.raw}
+          focused={focusRow === d.rowIndex && focusSeg === d.segment}
+          chunkStart={chunkStartGrids.has(g)}
+        />
       {/each}
       {#each displayRows as d, g (d.key)}
         <EnglishCell
           gridRow={g}
           row={d.rowIndex}
           segment={d.segment}
+          layer={paragraphUnitView ? 'para' : 'sentence'}
+          sentenceText={paragraphUnitView ? sentenceLayerText(d.rowIndex) : null}
           {host}
           flash={flashRowIdx === g}
+          chunkStart={chunkStartGrids.has(g)}
           pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
           onPasteConfirm={confirmPaste}
           onPasteCancel={cancelPaste}
@@ -2443,7 +2688,17 @@
         {/if}
         <div class="ctx-menu-divider" role="separator"></div>
       {/if}
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>
+      {#if ctxMenu.aiDisabled}
+        <div class="ctx-menu-note" role="note">AI help for paragraph translations is coming soon.</div>
+      {/if}
+      <button
+        class="ctx-menu-item"
+        type="button"
+        role="menuitem"
+        disabled={ctxMenu.aiDisabled}
+        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
+        onclick={menuAssist}
+      >
         {#if ctxMenu.translateRows && ctxMenu.translateRows.length > 1}
           <span class="ctx-menu-title">Translate {ctxMenu.translateRows.length} lines with AI</span>
           <span class="ctx-menu-desc">Fills each selected line's English cell (asks before replacing existing text)</span>
@@ -2452,15 +2707,36 @@
           <span class="ctx-menu-desc">Writes a draft into this row's English cell</span>
         {/if}
       </button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>
+      <button
+        class="ctx-menu-item"
+        type="button"
+        role="menuitem"
+        disabled={ctxMenu.aiDisabled}
+        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
+        onclick={menuReference}
+      >
         <span class="ctx-menu-title">AI reference</span>
         <span class="ctx-menu-desc">A second version in the sidebar — your cell untouched</span>
       </button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>
+      <button
+        class="ctx-menu-item"
+        type="button"
+        role="menuitem"
+        disabled={ctxMenu.aiDisabled}
+        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
+        onclick={menuCheck}
+      >
         <span class="ctx-menu-title">Check my translation</span>
         <span class="ctx-menu-desc">Linguist's check of your English against the Greek</span>
       </button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAsk}>
+      <button
+        class="ctx-menu-item"
+        type="button"
+        role="menuitem"
+        disabled={ctxMenu.aiDisabled}
+        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
+        onclick={menuAsk}
+      >
         <span class="ctx-menu-title">Ask AI about this line…</span>
         <span class="ctx-menu-desc">Open a Q&A chat about this line</span>
       </button>

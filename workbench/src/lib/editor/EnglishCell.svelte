@@ -6,14 +6,17 @@
   // (row, segment); `gridRow` is only the current grid ordinal (track
   // placement + DOM row resolution).
   import RowEditor from './RowEditor.svelte';
-  import type { RowViewHost } from './ChapterEditor.svelte';
+  import type { RowViewHost, EditLayer } from './ChapterEditor.svelte';
 
   let {
     gridRow,
     row,
     segment,
     host,
+    layer = 'sentence',
+    sentenceText = null,
     flash,
+    chunkStart = false,
     pasteConfirm,
     onPasteConfirm,
     onPasteCancel,
@@ -26,7 +29,16 @@
     row: number;
     segment: number;
     host: RowViewHost;
+    /** Which English layer the hosted editor edits (D8 §4): 'sentence' (grid /
+     * line views) or 'para' (paragraph-unit view → englishPara). */
+    layer?: EditLayer;
+    /** Read-only sentence-layer translation to show beneath the paragraph
+     * field when this row also has one (§4 "text stays at its unit"). Null
+     * outside the paragraph-unit view or when the row has no sentence English. */
+    sentenceText?: string | null;
     flash: boolean;
+    /** First row of a paragraph chunk (line-doc grouping, §5). */
+    chunkStart?: boolean;
     pasteConfirm: number | null; // segment count when a confirm is pending here
     onPasteConfirm: () => void;
     onPasteCancel: () => void;
@@ -41,11 +53,23 @@
 <div
   class="en-cell"
   class:row-flash={flash}
+  class:chunk-start={chunkStart}
   style="grid-row: {gridRow + 1}"
   data-row-en={gridRow}
   oncontextmenu={onContext}
 >
-  <RowEditor {row} {segment} {host} />
+  <RowEditor {row} {segment} {host} {layer} />
+
+  {#if sentenceText !== null}
+    <!-- Read-only sentence-layer translation (D8 §4 "text stays at its unit"):
+         subdued, selectable/copyable, labelled — never editable. Shown only in
+         the paragraph-unit view when the row also carries sentence English, so
+         switching views never moves or destroys it. -->
+    <div class="sentence-layer" role="note">
+      <span class="sentence-layer-label">Sentence-layer translation</span>
+      <p class="sentence-layer-text">{sentenceText}</p>
+    </div>
+  {/if}
 
   {#if pasteConfirm !== null}
     <div class="paste-confirm" role="alertdialog" aria-label="Confirm multi-line paste">

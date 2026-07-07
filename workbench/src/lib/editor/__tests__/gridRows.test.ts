@@ -123,6 +123,54 @@ describe('expandRows', () => {
     const keys = expandRows(rows).map((d) => d.key);
     expect(new Set(keys).size).toBe(keys.length);
   });
+
+  it('the default granularity is sentence (existing callers unchanged)', () => {
+    const rows = [row('1b8', GREEK, 'a', { splitOffsets: [H_GAR], english2: [doc('b')] })];
+    expect(expandRows(rows)).toEqual(expandRows(rows, 'sentence'));
+  });
+});
+
+describe('expandRows (unit granularity, D8 §5)', () => {
+  it('a split row collapses to ONE unit display row — whole Greek, segment 0, no continuation', () => {
+    const rows = [row('1041a6', GREEK, 'first', { splitOffsets: [H_GAR], english2: [doc('second')] })];
+    const sentence = expandRows(rows, 'sentence');
+    const unit = expandRows(rows, 'unit');
+    expect(sentence).toHaveLength(2); // the sentence view splits it
+    expect(unit).toHaveLength(1); // the unit view does not
+    expect(unit[0]).toMatchObject({
+      rowIndex: 0,
+      segment: 0,
+      greekSlice: GREEK, // the WHOLE source text, not a slice
+      greekStart: 0,
+      continuation: false,
+    });
+    expect(textOf(unit[0].englishDoc)).toBe('first'); // segment 0's committed doc
+  });
+
+  it('one display row per model row regardless of splits, in order', () => {
+    const rows = [
+      row('¶1', GREEK, 'a', { splitOffsets: [H_GAR], english2: [doc('b')] }),
+      row('¶2', 'δεύτερος', 'c'),
+      row('¶3', 'τρίτος', ''),
+    ];
+    const unit = expandRows(rows, 'unit');
+    expect(unit.map((d) => d.rowIndex)).toEqual([0, 1, 2]);
+    expect(unit.every((d) => d.segment === 0 && !d.continuation)).toBe(true);
+  });
+
+  it('unit keys are stable, unique, and never collide with a sentence segment-0 key', () => {
+    const rows = [
+      row('¶1', GREEK, 'a', { splitOffsets: [H_GAR], english2: [doc('b')] }),
+      row('¶2', 'δεύτερος', 'c'),
+    ];
+    const unit = expandRows(rows, 'unit');
+    const keys = unit.map((d) => d.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    // A sentence split inside the row must not remount the unit row: its key
+    // omits the @offset the sentence segment-0 key carries.
+    const sentenceSeg0Keys = new Set(expandRows(rows, 'sentence').filter((d) => d.segment === 0).map((d) => d.key));
+    for (const k of keys) expect(sentenceSeg0Keys.has(k)).toBe(false);
+  });
 });
 
 describe('snapToWordStart', () => {
