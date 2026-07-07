@@ -62,6 +62,24 @@ this line at this word" / "Rejoin this split line" — and on a corpus
 paragraph work's grid the same D6 gesture is labelled as the sentence fix-up
 ("Start new sentence here" / "Join sentences").
 
+**🆕 REFINEMENT PASS additions (2026-07-07, 6 commits on this branch —
+NOT in the .app until it's rebuilt):**
+- [ ] **Multiline AI paragraph translate:** in Paragraph view, Translate a
+  paragraph whose translation naturally spans sentences → line breaks in the
+  suggestion survive into the cell, quit/reopen keeps them (the file's
+  `[ENGLISH.PARA]` line shows `⏎` where the breaks are); grid-line translate
+  still one-line; docx export flattens the breaks to spaces.
+- [ ] **Interpolated structure gestures:** right-click the ORIGINAL under a
+  field → same split/merge menu as the two-column views (paragraph docs: both
+  granularities, incl. clicking a sentence block; plain-line docs: chunk
+  toggle + line split); the English FIELD still shows only the AI modes;
+  multi-block drag over originals + right-click → batch translate.
+- [ ] **Menu copy:** no more colliding "Start paragraph here"-style labels
+  anywhere; corpus-paragraph grids say "Start new sentence here"/"Join
+  sentences".
+- [ ] (No Busse work is registered yet, so the corpus-paragraph
+  default-view/export changes are test-pinned only.)
+
 ---
 
 State as of 2026-07-06: **all feature work COMMITTED on
