@@ -1072,6 +1072,20 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
+      {@const chTitle = importChapterTitle(transId, block.chapter)}
+      <!-- An imported translation's chapter-opening title: a SIBLING before
+           .ross-prose, not its first child — (a) inside .ross-prose it pushed
+           the English prose one line below the Greek (John's review of
+           631ff971); the Greek column gets a matching invisible spacer
+           instead (see the .greek-col markup below), so Greek line 1 and
+           English prose line 1 stay flush and the title takes its own space
+           above; (b) the offset walkers (annotations.ts proseOffsetAt,
+           emphasis-paint.ts proseText) root at col.querySelector('.ross-prose')
+           and exclude only .bk-num/.eng-table, so title text INSIDE
+           .ross-prose would leak into captured offsets — as a sibling they
+           never see it, keeping the render-only/no-offset-shift guarantee
+           structural. -->
+      {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
       {#if fnTransIds.has(transId)}
         <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
           {#each flow as part}
@@ -1109,37 +1123,6 @@
     {/if}
   {/snippet}
 
-  <!-- An imported translation's chapter-opening title (importChapterTitle)
-       must NOT sit inside the aligned seg-row's English cell: that pushes the
-       English prose one line below the Greek (John's review, 631ff971). It
-       renders instead as its OWN row, immediately before the chapter-opening
-       seg-row, positioned over the English (or compare-right) track only —
-       never the Greek column or gutter. Reusing .seg-row/.greek-col/
-       .english-col/.ross-col (an empty Greek placeholder + the title in the
-       English track) means it automatically inherits the same grid template
-       across every view/trans mode (greek-only hides it via the existing
-       .view-greek .english-col{display:none} rule — no separate CSS needed).
-       Wrapping the title in .ross-prose reproduces the same left-edge
-       indent (and busse's zero-indent override) the title used to inherit
-       as a child of the real .ross-prose. Render-only, same title source. -->
-  {#snippet chapterTitleRow(block: Block)}
-    {@const leftId = trans === 'compare' ? compareLeft : trans}
-    {@const leftTitle = view !== 'greek' ? importChapterTitle(leftId, block.chapter) : ''}
-    {@const rightTitle = (trans === 'compare' && view !== 'greek') ? importChapterTitle(compareRight, block.chapter) : ''}
-    {#if leftTitle || rightTitle}
-      <div class="seg-row chapter-title-row">
-        <div class="greek-col" aria-hidden="true"></div>
-        <div class="english-col" data-trans={leftId}>
-          {#if leftTitle}<div class="ross-prose"><div class="ross-chapter-title">{leftTitle}</div></div>{/if}
-        </div>
-        {#if trans === 'compare'}
-          <div class="ross-col" data-trans={compareRight}>
-            {#if rightTitle}<div class="ross-prose"><div class="ross-chapter-title">{rightTitle}</div></div>{/if}
-          </div>
-        {/if}
-      </div>
-    {/if}
-  {/snippet}
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
     class:word-open={!!popup}
@@ -1229,13 +1212,26 @@
         {/if}
 
         {#each blocks as block, bi}
+          <!-- If the on-screen primary translation (English cell of this row)
+               opens this chapter with an imported title, the Greek column gets
+               an invisible spacer of the same one-line height (see
+               .ross-chapter-title-spacer in global.css) so both columns are
+               pushed down equally: title above, Greek line 1 flush with
+               English prose line 1. Same gates as the visible title in
+               transFlow (chapter start + that import's flow present here);
+               skipped in greek-only view (no title shown → no gap). Compare
+               mode aligns Greek to the LEFT column; the right column's own
+               title still renders in its cell via transFlow. -->
+          {@const spacerTransId = trans === 'compare' ? compareLeft : trans}
+          {@const spacerFlow = spacerTransId === engSlot?.id ? block.flow : (block.oflows[spacerTransId] ?? [])}
+          {@const spacerTitle = view !== 'greek' && spacerFlow.length ? importChapterTitle(spacerTransId, block.chapter) : ''}
           {#if block.chapter && !(bi === 0 && leadChapter)}
             {@render chapterHead(block)}
           {/if}
-          {@render chapterTitleRow(block)}
           <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
             <div class="greek-col">
+              {#if spacerTitle}<div class="ross-chapter-title ross-chapter-title-spacer" aria-hidden="true">{spacerTitle}</div>{/if}
               {#each greekItems(block.lines) as item}
                 {#if item.table}
                   <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->

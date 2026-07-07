@@ -288,16 +288,29 @@ Real slice measured: 337 joined, 0 kept (every fragment in NE starts lowercase).
   `COPY_EXCLUDE_SELECTOR`, the same way `.fn-marker` already is.
 - `App.svelte`'s `chapterTitles` reverts to built-in `chapter-titles.json`
   only — `mergeTitles`/`getImportTitles`/`mergeChapterTitles` are gone.
-- **Row-placement fix (2026-07-06, John's review of 631ff971)**: having the
-  title as the first child of the chapter-opening seg-row's own `.ross-prose`
-  pushed the English prose one line below the Greek. Reader.svelte now
-  renders it via a new `chapterTitleRow` snippet — a `.seg-row` of its own,
-  inserted immediately before the chapter-opening seg-row, with an empty
-  `.greek-col` placeholder and the title (still a `.ross-chapter-title` inside
-  a `.ross-prose` wrapper, for the same left-edge indent) in the `.english-col`
-  (and `.ross-col` in compare mode) — so Greek line 1 and English prose line 1
-  land at the same y-position, title above. Same title source/hook, same
-  render-only/no-offset guarantee, same clean-copy exclusion.
+- **Row-placement fix (2026-07-06, John's review of 631ff971; revised same
+  day)**: the title as first child of `.ross-prose` pushed the English prose
+  one line below the Greek. First attempt (a separate `.seg-row` above the
+  real one) failed: each seg-row is its own grid and the desktop no-rails
+  both-view sizes the Greek track `max-content` (desktop.css:40), so the
+  title row's EMPTY greek cell collapsed and the title rendered over the
+  Greek column. Final shape: the visible title stays in the chapter-opening
+  row's own English cell, but as a SIBLING before `.ross-prose` (transFlow,
+  same flow-length gate — which also keeps it out of annotations.ts /
+  emphasis-paint.ts offset walks, which root at `.ross-prose`); the
+  `.greek-col` gets a matching invisible spacer
+  (`.ross-chapter-title.ross-chapter-title-spacer`, visibility:hidden +
+  width:0/nowrap so it adds one title-height without widening the
+  max-content Greek track), gated on the same chapter-start + flow-present
+  condition for the on-screen primary (left) translation and on
+  view !== 'greek' (no title in greek-only → no stray gap). Both columns
+  drop by the same one-line height → Greek line 1 flush with English prose
+  line 1, title above, over the English column in every view/rail mode.
+  Compare-right's title renders in its own `.ross-col` cell the same way
+  (Greek aligns to the LEFT column). The title now carries `.ross-prose`'s
+  2.6rem gutter indent itself (global.css; busse override to 0), and the
+  spacer carries the `.ross-chapter-title` class, so the clean-copy
+  exclusion covers it too. Same title source/hook, render-only, site-inert.
 
 ### Footnote render wiring (§B4) — the site-inertness argument
 Reader.svelte and FootnotePopup.svelte are the SAME files served by the
