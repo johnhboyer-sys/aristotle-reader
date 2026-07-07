@@ -169,6 +169,16 @@ describe('sanitizeSuggestion', () => {
   it('collapses newlines and runs of whitespace to single spaces, trims', () => {
     expect(sanitizeSuggestion('  one\ntwo\r\n  three  ')).toBe('one two three');
   });
+
+  it('multiline keeps paragraph breaks while normalizing lines', () => {
+    expect(sanitizeSuggestion(' \r\n  one\t  two  \r\n\r\n\n three   four \n\n', { multiline: true })).toBe(
+      'one two\nthree four',
+    );
+  });
+
+  it('default path is unchanged even when input looks paragraph-shaped', () => {
+    expect(sanitizeSuggestion('\n\none\t two\n\nthree\r\nfour\n')).toBe('one two three four');
+  });
 });
 
 describe('buildInsertTransaction', () => {
@@ -239,6 +249,12 @@ describe('buildInsertTransaction', () => {
     expect(next.doc.textContent).toBe('line one line two');
   });
 
+  it('multiline insert keeps paragraph-layer line breaks', () => {
+    const state = stateOf('');
+    const next = state.apply(buildInsertTransaction(state, ' line one \r\n  line   two \n\n line three ', { multiline: true })!);
+    expect(next.doc.textContent).toBe('line one\nline two\nline three');
+  });
+
   it('empty or whitespace-only suggestion → null (nothing to dispatch)', () => {
     expect(buildInsertTransaction(stateOf(''), '')).toBeNull();
     expect(buildInsertTransaction(stateOf(''), ' \n ')).toBeNull();
@@ -277,6 +293,15 @@ describe('AssistController', () => {
       { kind: 'suggestion', text: 'hello world' },
     ]);
     expect(copies).toHaveLength(0);
+  });
+
+  it('paragraph request path preserves sanitized line breaks in the suggestion state', async () => {
+    const { ctl, states } = harness({ providers: [fakeSuggestion('  hello\r\nworld  ')] });
+    await ctl.request({ ...smallCtx(), unit: 'paragraph' });
+    expect(states).toEqual([
+      { kind: 'thinking' },
+      { kind: 'suggestion', text: 'hello\nworld' },
+    ]);
   });
 
   it('CLI error → ALSO copies the payload, shows the vetted CLI sentence', async () => {
@@ -607,7 +632,7 @@ describe('assist wiring stays intact (source scan)', () => {
     const start = chapterSource.indexOf('function insertSuggestionIntoRow(');
     expect(start).toBeGreaterThan(-1);
     const body = chapterSource.slice(start, chapterSource.indexOf('\n  }', start));
-    expect(body).toContain('buildInsertTransaction(view.state, text)');
+    expect(body).toContain("buildInsertTransaction(view.state, text, { multiline: assistLayer === 'para' })");
     expect(body).toContain('view.dispatch(tr)');
     expect(body).not.toContain('model.rows');
     expect(body).not.toContain('.english =');

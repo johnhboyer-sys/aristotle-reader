@@ -12,6 +12,8 @@ import {
   assertRoundTrip,
   parseRowSegments,
   serializeRowSegments,
+  encodeParaLine,
+  decodeParaLine,
   joinRowDocs,
   stripFootnoteMarkup,
   stripFootnoteMarkupLine,
@@ -57,9 +59,10 @@ describe('serializeRow — each construct', () => {
     expect(serializeRow(doc(m('7')))).toBe('{^7:}');
   });
 
-  it('escapes * + { [ ^ and backslash in text; } only inside spans', () => {
+  it('escapes * + { [ ^ ¶ ⏎ and backslash in text; } only inside spans', () => {
     expect(serializeRow(doc(t('a*b+c{d[e^f}g\\h')))).toBe('a\\*b\\+c\\{d\\[e\\^f}g\\\\h');
     expect(serializeRow(doc(t('x}y', { greek: true })))).toBe('{grc:x\\}y}');
+    expect(serializeRow(doc(t('a¶b⏎c')))).toBe('a\\¶b\\⏎c');
   });
 
   it('mixed plain and marked segments', () => {
@@ -256,6 +259,31 @@ describe('parseRowSegments / serializeRowSegments (¶ structural token)', () => 
   it('parseRow itself still treats an unescaped ¶ as literal text (single-segment callers unchanged)', () => {
     const d = parseRow('a¶b');
     expect(runsOf(d)).toEqual([t('a¶b')]);
+  });
+});
+
+describe('encodeParaLine / decodeParaLine (⏎ structural token)', () => {
+  it('encodes raw newlines and decodes unescaped return symbols', () => {
+    expect(encodeParaLine('one\ntwo\nthree')).toBe('one⏎two⏎three');
+    expect(decodeParaLine('one⏎two⏎three')).toBe('one\ntwo\nthree');
+  });
+
+  it('leaves escaped literal return symbols for parseRow to unescape', () => {
+    const markup = serializeRow(doc(t('literal ⏎ and break\nnext')));
+    expect(markup).toBe('literal \\⏎ and break\nnext');
+    const encoded = encodeParaLine(markup);
+    expect(encoded).toBe('literal \\⏎ and break⏎next');
+    const decoded = decodeParaLine(encoded);
+    expect(decoded).toBe(markup);
+    expect(parseRow(decoded).textContent).toBe('literal ⏎ and break\nnext');
+  });
+
+  it('round-trips a para doc with both literal ⏎ text and real line breaks', () => {
+    const original = doc(t('typed ⏎ token'), t('\n'), t('real break and ¶ too'));
+    const encoded = encodeParaLine(serializeRow(original));
+    expect(encoded).toBe('typed \\⏎ token⏎real break and \\¶ too');
+    const back = parseRow(decodeParaLine(encoded));
+    expect(back.eq(original)).toBe(true);
   });
 });
 

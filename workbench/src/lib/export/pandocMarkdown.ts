@@ -13,7 +13,14 @@
  * for what the markup MEANS, two renderers (editor markup, Pandoc markup).
  */
 
-import { parseRow, parseRowSegments, runsOf, serializeRow, stripFootnoteMarkupLine } from '../editor/serialize';
+import {
+  parseRow,
+  parseRowSegments,
+  runsOf,
+  serializeRow,
+  stripFootnoteMarkupLine,
+  decodeParaLine,
+} from '../editor/serialize';
 import type { InlineRun, MarkSet } from '../editor/serialize';
 import { docFromJSON } from '../editor/schema';
 import { getScheme } from '../citation/registry';
@@ -427,9 +434,13 @@ function rowEnglishSegmentsWithParaFallback(chapter: ChapterFile, rowIndex: numb
   if (sentenceSegments.some((s) => s.trim().length > 0)) return sentenceSegments;
 
   const para = chapter.englishParaLines?.[rowIndex] ?? '';
-  if (para.trim().length > 0) return [stripFootnoteMarkupLine(para)];
+  if (para.trim().length > 0) return [stripFootnoteMarkupLine(flattenParaLineForExport(para))];
 
   return [''];
+}
+
+function flattenParaLineForExport(line: string): string {
+  return decodeParaLine(line).replace(/\n/g, ' ').replace(/ {2,}/g, ' ');
 }
 
 function renderMarkupPieces(markup: string[]): { markdown: string | null; footnoteIdsUsed: string[] } {
@@ -466,7 +477,7 @@ function renderDocumentRow(chapter: ChapterFile, rowIndex: number): { markdown: 
 
   const para = chapter.englishParaLines?.[rowIndex] ?? '';
   if (para.trim().length > 0) {
-    return renderMarkupPieces([stripFootnoteMarkupLine(para)]);
+    return renderMarkupPieces([stripFootnoteMarkupLine(flattenParaLineForExport(para))]);
   }
 
   return { markdown: null, footnoteIdsUsed: [] };

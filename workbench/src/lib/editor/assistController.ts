@@ -28,6 +28,8 @@ import { resolveAssistProvider } from '../assist/resolveProvider';
 import type { CliProviderId, DetectionMap } from '../assist/resolveProvider';
 import type { WorkbenchSettings } from '../settings';
 
+const PARAGRAPH_ASSIST_UNIT: AssistUnit = 'paragraph';
+
 // ── draft extraction ────────────────────────────────────────────────────────
 
 /**
@@ -113,13 +115,29 @@ export function buildAssistContext(args: AssistContextArgs): AssistContext {
 
 // ── the insert transaction (D4's hard constraint) ──────────────────────────
 
+export interface SanitizeSuggestionOptions {
+  multiline?: boolean;
+}
+
 /**
- * A row is one Bekker line: newlines are unrepresentable in the schema, so
- * any multi-line/whitespace-decorated model output collapses to single
- * spaces before it can reach a document.
+ * Sentence/Bekker-line suggestions are one physical row, so the default path
+ * collapses all whitespace to single spaces. Paragraph-layer suggestions may
+ * carry line breaks in PM text nodes; in that mode, CRLF/CR normalize to LF,
+ * horizontal whitespace collapses per line, edge blank lines are dropped, and
+ * interior blank runs collapse to one LF.
  */
-export function sanitizeSuggestion(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
+export function sanitizeSuggestion(text: string, opts: SanitizeSuggestionOptions = {}): string {
+  if (!opts.multiline) return text.replace(/\s+/g, ' ').trim();
+
+  const lines = text
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/[^\S\n\r]+/g, ' ').trim());
+
+  while (lines.length > 0 && lines[0] === '') lines.shift();
+  while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+
+  return lines.filter((line) => line !== '').join('\n');
 }
 
 /**
@@ -135,8 +153,12 @@ export function sanitizeSuggestion(text: string): string {
  * EXACT same pipeline as typing (app undo stack, dirty tracking,
  * commit-on-idle). No other editor surface exists for assist.
  */
-export function buildInsertTransaction(state: EditorState, text: string): Transaction | null {
-  const clean = sanitizeSuggestion(text);
+export function buildInsertTransaction(
+  state: EditorState,
+  text: string,
+  opts: SanitizeSuggestionOptions = {},
+): Transaction | null {
+  const clean = sanitizeSuggestion(text, opts);
   if (clean.length === 0) return null;
   const node = state.schema.text(clean); // no marks — plain text by construction
   const { from, to } = state.selection;
@@ -197,7 +219,7 @@ export class AssistController {
       if (!live()) return;
 
       if (result.kind === 'suggestion') {
-        const text = sanitizeSuggestion(result.text);
+        const text = sanitizeSuggestion(result.text, { multiline: ctx.unit === PARAGRAPH_ASSIST_UNIT });
         result = text
           ? { kind: 'suggestion', text }
           : { kind: 'error', message: GENERIC_ERROR_MESSAGE }; // empty output → error path

@@ -1902,7 +1902,10 @@
         continue;
       }
       if (abort.signal.aborted || destroyed) break;
-      if (result.kind === 'suggestion' && fillRowEnglish(r, 0, layer, sanitizeSuggestion(result.text))) {
+      if (
+        result.kind === 'suggestion' &&
+        fillRowEnglish(r, 0, layer, sanitizeSuggestion(result.text, { multiline: layer === 'para' }))
+      ) {
         filled++;
       } else {
         failed++;
@@ -2138,7 +2141,7 @@
     // layer's view is gone (view switched mid-flight), quietly do nothing.
     const view = views.get(vkey(row, segment, assistLayer));
     if (!view) return;
-    const tr = buildInsertTransaction(view.state, text);
+    const tr = buildInsertTransaction(view.state, text, { multiline: assistLayer === 'para' });
     if (!tr) return;
     history.breakCoalescing();
     resetGreekRun(view);

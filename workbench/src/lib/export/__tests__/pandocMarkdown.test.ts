@@ -514,6 +514,28 @@ describe('chapterToPandocMarkdown — document-spine export (D8)', () => {
     );
   });
 
+  it('paragraph-layer ⏎ tokens export as spaces for document-spine paragraph docs', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶1',
+      },
+      greekLines: ['Source fallback.'],
+      englishLines: [''],
+      englishParaLines: ['Paragraph fallback⏎with a break.'],
+      footnotes: [],
+    };
+
+    expect(chapterToPandocMarkdown(c, FREE_PARAGRAPH_META)).toBe(
+      '# Free Paragraph\n\nParagraph fallback with a break.\n',
+    );
+  });
+
   it('plain-line docs break paragraphs at paragraphStarts and preserve line identity with Pandoc hard breaks', () => {
     const c: ChapterFile = {
       meta: {
@@ -615,6 +637,14 @@ describe('chapterToPandocMarkdown — corpus paragraph export', () => {
 
   it('exports paragraph-layer English for corpus-spine paragraph works', () => {
     const md = chapterToPandocMarkdown(corpusParagraphChapter(), CORPUS_PARAGRAPH_META);
+    expect(md).toBe('## Isagoge Book.1 (1.1–2)\n\nPara-layer first.\n\nPara-layer second.\n');
+  });
+
+  it('paragraph-layer ⏎ tokens export as spaces for corpus-spine paragraph docs', () => {
+    const md = chapterToPandocMarkdown(
+      corpusParagraphChapter({ englishParaLines: ['Para-layer⏎first.', 'Para-layer second.'] }),
+      CORPUS_PARAGRAPH_META,
+    );
     expect(md).toBe('## Isagoge Book.1 (1.1–2)\n\nPara-layer first.\n\nPara-layer second.\n');
   });
 

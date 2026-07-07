@@ -8,7 +8,7 @@
 //   footnote    {^3:anchored phrase}      (fnRef mark over the phrase, with the
 //                                          footnoteMarker node implicit at its
 //                                          end; `{^3:}` = marker alone)
-//   escapes     backslash before literal \ * + { [ ^ ¶  (always) and } inside
+//   escapes     backslash before literal \ * + { [ ^ ¶ ⏎ (always) and } inside
 //               {...} spans. Parse side accepts \X → X for any X.
 //
 // SEGMENT DELIMITER (design doc D6 — line splits): `¶` (U+00B6) is a
@@ -52,6 +52,8 @@ import type { PMDocJSON } from './schema';
 
 /** Structural English-segment delimiter in row markup (see module header). */
 const PILCROW = '¶';
+/** Structural paragraph-layer newline token in [ENGLISH.PARA] markup. */
+const RETURN_SYMBOL = '⏎';
 
 // ── shared inline-run model ────────────────────────────────────────────────
 
@@ -123,7 +125,16 @@ function isSpanFrame(frame: string): boolean {
 function escapeText(text: string, inSpan: boolean): string {
   let out = '';
   for (const ch of text) {
-    if (ch === '\\' || ch === '*' || ch === '+' || ch === '{' || ch === '[' || ch === '^' || ch === PILCROW) {
+    if (
+      ch === '\\' ||
+      ch === '*' ||
+      ch === '+' ||
+      ch === '{' ||
+      ch === '[' ||
+      ch === '^' ||
+      ch === PILCROW ||
+      ch === RETURN_SYMBOL
+    ) {
       out += '\\' + ch;
     } else if (ch === '}' && inSpan) {
       out += '\\}';
@@ -372,6 +383,38 @@ function splitOnUnescapedPilcrow(line: string): string[] {
   }
   parts.push(line.slice(start));
   return parts;
+}
+
+/**
+ * Encode one paragraph-layer row for [ENGLISH.PARA]. This is the paragraph
+ * analog of the PILCROW segment discipline: serializeRow escapes literal `⏎`
+ * as `\⏎`, and this helper then turns raw PM text newlines into unescaped
+ * structural `⏎` tokens so the file section remains one physical line per row.
+ */
+export function encodeParaLine(markup: string): string {
+  return markup.replace(/\n/g, RETURN_SYMBOL);
+}
+
+/**
+ * Decode one [ENGLISH.PARA] physical line before parseRow. Backslash escapes
+ * skip the next character exactly like splitOnUnescapedPilcrow, so escaped
+ * `\⏎` stays escaped for parseRow to unescape into a literal return symbol;
+ * only unescaped `⏎` becomes an in-memory newline.
+ */
+export function decodeParaLine(line: string): string {
+  let out = '';
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '\\' && i + 1 < line.length) {
+      out += ch + line[i + 1];
+      i++;
+    } else if (ch === RETURN_SYMBOL) {
+      out += '\n';
+    } else {
+      out += ch;
+    }
+  }
+  return out;
 }
 
 /**

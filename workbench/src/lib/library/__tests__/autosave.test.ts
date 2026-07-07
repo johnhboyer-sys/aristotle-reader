@@ -708,6 +708,21 @@ describe('document-spine chapter files (D8 Phase B)', () => {
     };
   }
 
+  function paragraphModelOf(h: ReturnType<typeof hydrateFromFile>): ChapterModel {
+    return {
+      workId: 'free-paragraph',
+      workTitle: 'Free Paragraph',
+      scheme: 'paragraph',
+      book: 1,
+      bookLabel: '',
+      chapter: 1,
+      bekkerRange: '¶1–2',
+      rows: h.rows,
+      footnotes: h.footnotes,
+      dirty: false,
+    };
+  }
+
   it('serializes and hydrates a paragraph-scheme file with [ENGLISH.PARA], sentence line_splits, and ¶ spans', () => {
     const model = paragraphModel();
     const content = serializeModel(model);
@@ -727,6 +742,25 @@ describe('document-spine chapter files (D8 Phase B)', () => {
     expect(h.rows[0].splitOffsets).toEqual([16]);
     expect(h.rows[0].english2).toHaveLength(1);
     expect(textOf(h.rows[0].englishPara!)).toBe('Paragraph one whole');
+  });
+
+  it('saves paragraph-layer newlines as one physical [ENGLISH.PARA] row and hydrates them back', () => {
+    const model = paragraphModel();
+    model.rows[0].englishPara = buildRowDoc([t('Paragraph one'), t('\n'), t('whole')]).toJSON();
+    const content = serializeModel(model);
+    expect(content).toContain('[ENGLISH.PARA]\nParagraph one⏎whole\nParagraph two whole\n');
+
+    const file = parseChapterFile(content, 'paragraph-newline');
+    expect(file.englishParaLines).toEqual(['Paragraph one⏎whole', 'Paragraph two whole']);
+    const h = hydrateFromFile(file, [], 'paragraph');
+    expect(textOf(h.rows[0].englishPara!)).toBe('Paragraph one\nwhole');
+  });
+
+  it('a paragraph-layer file without ⏎ stays byte-identical through hydrate and save', () => {
+    const content = serializeModel(paragraphModel());
+    expect(content).not.toContain('⏎');
+    const h = hydrateFromFile(parseChapterFile(content, 'paragraph-no-token'), [], 'paragraph');
+    expect(serializeModel(paragraphModelOf(h))).toBe(content);
   });
 
   it('serializes a plain-line document with paragraph_starts and no column_starts', () => {

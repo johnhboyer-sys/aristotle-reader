@@ -41,7 +41,16 @@ import { getScheme } from '../citation/registry';
 import type { ChapterModel, Footnote as ModelFootnote, RowModel } from '../editor/model';
 import { englishDocsOf, hasParagraphEnglish } from '../editor/model';
 import { docFromJSON, markerIdsIn } from '../editor/schema';
-import { serializeRow, serializeRowSegments, parseRow, parseRowSegments, joinRowDocs, stripFootnoteMarkup } from '../editor/serialize';
+import {
+  serializeRow,
+  serializeRowSegments,
+  parseRow,
+  parseRowSegments,
+  joinRowDocs,
+  stripFootnoteMarkup,
+  encodeParaLine,
+  decodeParaLine,
+} from '../editor/serialize';
 import { parseChapterFile, serializeChapterFile, rowAddress, isValidSplitOffset, ChapterFileError } from '../chapterfile';
 import type { ChapterFile, ColumnStart, LineSplit } from '../chapterfile';
 import { libraryStorage } from './storage';
@@ -222,7 +231,9 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
   // para doc strips to nothing; serializeChapterFile would omit the all-empty
   // section, so including it here would fail the round-trip self-check).
   const strippedParaLines = model.rows.some(hasParagraphEnglish)
-    ? model.rows.map((r) => (r.englishPara ? serializeRow(stripFootnoteMarkup(docFromJSON(r.englishPara))) : ''))
+    ? model.rows.map((r) =>
+        r.englishPara ? encodeParaLine(serializeRow(stripFootnoteMarkup(docFromJSON(r.englishPara)))) : '',
+      )
     : undefined;
   const englishParaLines = strippedParaLines?.some((line) => line.length > 0) ? strippedParaLines : undefined;
 
@@ -397,7 +408,7 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
     const englishParaLine = file.englishParaLines?.[i];
     const englishParaDoc =
       englishParaLine !== undefined && englishParaLine.length > 0
-        ? stripFootnoteMarkup(parseRow(englishParaLine))
+        ? stripFootnoteMarkup(parseRow(decodeParaLine(englishParaLine)))
         : undefined;
     const englishPara = englishParaDoc && englishParaDoc.content.size > 0 ? englishParaDoc.toJSON() : undefined;
     let offsets = offsetsByRow.get(i) ?? [];
