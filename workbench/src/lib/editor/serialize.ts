@@ -8,8 +8,12 @@
 //   footnote    {^3:anchored phrase}      (fnRef mark over the phrase, with the
 //                                          footnoteMarker node implicit at its
 //                                          end; `{^3:}` = marker alone)
-//   escapes     backslash before literal \ * + { [ ^ ¶ ⏎ (always) and } inside
-//               {...} spans. Parse side accepts \X → X for any X.
+//   escapes     backslash before literal \ * + { [ ^ ¶  (always) and } inside
+//               {...} spans. Parse side accepts \X → X for any X. `⏎` is NOT
+//               escaped here — the generic serializer never changes existing
+//               [ENGLISH] bytes over it; only the [ENGLISH.PARA] boundary
+//               (encodeParaLine) escapes a literal `⏎` before minting its
+//               structural token.
 //
 // SEGMENT DELIMITER (design doc D6 — line splits): `¶` (U+00B6) is a
 // STRUCTURAL token at the [ENGLISH]-row-markup level, one level ABOVE this
@@ -125,16 +129,7 @@ function isSpanFrame(frame: string): boolean {
 function escapeText(text: string, inSpan: boolean): string {
   let out = '';
   for (const ch of text) {
-    if (
-      ch === '\\' ||
-      ch === '*' ||
-      ch === '+' ||
-      ch === '{' ||
-      ch === '[' ||
-      ch === '^' ||
-      ch === PILCROW ||
-      ch === RETURN_SYMBOL
-    ) {
+    if (ch === '\\' || ch === '*' || ch === '+' || ch === '{' || ch === '[' || ch === '^' || ch === PILCROW) {
       out += '\\' + ch;
     } else if (ch === '}' && inSpan) {
       out += '\\}';
@@ -387,12 +382,29 @@ function splitOnUnescapedPilcrow(line: string): string[] {
 
 /**
  * Encode one paragraph-layer row for [ENGLISH.PARA]. This is the paragraph
- * analog of the PILCROW segment discipline: serializeRow escapes literal `⏎`
- * as `\⏎`, and this helper then turns raw PM text newlines into unescaped
- * structural `⏎` tokens so the file section remains one physical line per row.
+ * analog of the PILCROW segment discipline, but the escaping lives HERE, not
+ * in the generic serializer (escapeText must never rewrite the bytes of
+ * existing [ENGLISH] lines over a literal `⏎`): in one escape-aware walk, a
+ * literal `⏎` in the markup becomes `\⏎` (parseRow's generic `\X → X` rule
+ * restores it) and each raw PM text newline becomes the unescaped structural
+ * `⏎` token, so the file section remains one physical line per row.
  */
 export function encodeParaLine(markup: string): string {
-  return markup.replace(/\n/g, RETURN_SYMBOL);
+  let out = '';
+  for (let i = 0; i < markup.length; i++) {
+    const ch = markup[i];
+    if (ch === '\\' && i + 1 < markup.length) {
+      out += ch + markup[i + 1];
+      i++;
+    } else if (ch === '\n') {
+      out += RETURN_SYMBOL;
+    } else if (ch === RETURN_SYMBOL) {
+      out += '\\' + RETURN_SYMBOL;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
 }
 
 /**

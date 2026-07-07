@@ -129,11 +129,11 @@ describe('sourceSliceSpans + sourceOffsetAtDisplay — display↔model offset ma
     const first = 'πρῶτον μὲν οὖν.';
     // inside the first slice: identity
     expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], 3)).toBe(3);
-    // exactly at the join: resolves to the END of the earlier slice (the
-    // word-start snap downstream treats both sides alike)
-    expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], first.length)).toBe(first.length);
-    // one past the join = one INTO the second slice, whose leading boundary
-    // space was trimmed away
+    // exactly at the join: resolves to the NEXT slice's start — the click
+    // was on the left edge of its first word; the earlier slice's trimmed
+    // end may sit mid-whitespace where the word snap would fail
+    expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], first.length)).toBe(afterFirst);
+    // one past the join = one INTO the second slice
     expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], first.length + 1)).toBe(afterFirst + 1);
     // inside the third slice
     const displayThirdStart = first.length + 'δεύτερον δέ·'.length;
@@ -149,5 +149,20 @@ describe('sourceSliceSpans + sourceOffsetAtDisplay — display↔model offset ma
   it('leading trim on an undivided slice shifts the mapping', () => {
     expect(sourceOffsetAtDisplay('  ab cd', undefined, 0)).toBe(2);
     expect(sourceOffsetAtDisplay('  ab cd', undefined, 3)).toBe(5);
+  });
+
+  it('a whitespace-only join (no punctuation) still maps the join click to the next word — adversarial-review regression', () => {
+    // 'α β' split at β: display = 'α' + 'β'; a click at display offset 1
+    // (the visible start of β) must map to β's model offset, where
+    // snapToWordStart succeeds — not to the space after α, where it fails.
+    const src = 'α β';
+    expect(sourceSliceSpans(src, [2])).toEqual([
+      { text: 'α', start: 0 },
+      { text: 'β', start: 2 },
+    ]);
+    expect(sourceOffsetAtDisplay(src, [2], 1)).toBe(2);
+    // the final display end still resolves to the last slice's end
+    expect(sourceOffsetAtDisplay(src, [2], 2)).toBe(3);
+    expect(sourceOffsetAtDisplay(src, [2], 3)).toBeNull();
   });
 });

@@ -59,10 +59,17 @@ describe('serializeRow — each construct', () => {
     expect(serializeRow(doc(m('7')))).toBe('{^7:}');
   });
 
-  it('escapes * + { [ ^ ¶ ⏎ and backslash in text; } only inside spans', () => {
+  it('escapes * + { [ ^ ¶ and backslash in text; } only inside spans', () => {
     expect(serializeRow(doc(t('a*b+c{d[e^f}g\\h')))).toBe('a\\*b\\+c\\{d\\[e\\^f}g\\\\h');
     expect(serializeRow(doc(t('x}y', { greek: true })))).toBe('{grc:x\\}y}');
-    expect(serializeRow(doc(t('a¶b⏎c')))).toBe('a\\¶b\\⏎c');
+    expect(serializeRow(doc(t('a¶b⏎c')))).toBe('a\\¶b⏎c');
+  });
+
+  it('a literal ⏎ in a sentence-layer row round-trips byte-identically — the generic serializer never escapes it', () => {
+    // Adversarial-review regression: only encodeParaLine (the [ENGLISH.PARA]
+    // boundary) escapes ⏎; existing [ENGLISH] bytes must never change.
+    const line = 'raw ⏎ stays';
+    expect(serializeRow(parseRow(line))).toBe(line);
   });
 
   it('mixed plain and marked segments', () => {
@@ -268,13 +275,13 @@ describe('encodeParaLine / decodeParaLine (⏎ structural token)', () => {
     expect(decodeParaLine('one⏎two⏎three')).toBe('one\ntwo\nthree');
   });
 
-  it('leaves escaped literal return symbols for parseRow to unescape', () => {
+  it('escapes literal return symbols itself (the generic serializer leaves them raw) and decode keeps them for parseRow', () => {
     const markup = serializeRow(doc(t('literal ⏎ and break\nnext')));
-    expect(markup).toBe('literal \\⏎ and break\nnext');
+    expect(markup).toBe('literal ⏎ and break\nnext');
     const encoded = encodeParaLine(markup);
     expect(encoded).toBe('literal \\⏎ and break⏎next');
     const decoded = decodeParaLine(encoded);
-    expect(decoded).toBe(markup);
+    expect(decoded).toBe('literal \\⏎ and break\nnext');
     expect(parseRow(decoded).textContent).toBe('literal ⏎ and break\nnext');
   });
 

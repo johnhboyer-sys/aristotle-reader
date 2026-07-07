@@ -108,9 +108,12 @@ export function sourceSliceSpans(source: string, splitOffsets?: number[]): Sourc
  * Map a caret offset measured in the interpolated source block's DISPLAY
  * text (the trimmed slices concatenated — separators contribute nothing)
  * back to the corresponding MODEL offset in `source`. An offset that falls
- * exactly between two slices resolves to the end of the earlier one — the
- * word-start snap downstream treats both sides alike. Returns null when the
- * offset lies beyond the display text.
+ * exactly between two slices resolves to the NEXT slice's start: a caret at
+ * a join came from clicking the left edge of the next slice's first word,
+ * and the earlier slice's trimmed end may sit mid-whitespace, where the
+ * word-start snap would fail. Only the final display end resolves to the
+ * last slice's end. Returns null when the offset lies beyond the display
+ * text.
  */
 export function sourceOffsetAtDisplay(
   source: string,
@@ -118,10 +121,15 @@ export function sourceOffsetAtDisplay(
   displayOffset: number,
 ): number | null {
   if (displayOffset < 0) return null;
+  const spans = sourceSliceSpans(source, splitOffsets);
   let acc = 0;
-  for (const span of sourceSliceSpans(source, splitOffsets)) {
-    if (displayOffset <= acc + span.text.length) return span.start + (displayOffset - acc);
-    acc += span.text.length;
+  for (let i = 0; i < spans.length; i++) {
+    const len = spans[i].text.length;
+    const last = i === spans.length - 1;
+    if (displayOffset < acc + len || (last && displayOffset === acc + len)) {
+      return spans[i].start + (displayOffset - acc);
+    }
+    acc += len;
   }
   return null;
 }
