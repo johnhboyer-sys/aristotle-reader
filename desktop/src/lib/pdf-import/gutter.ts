@@ -389,7 +389,19 @@ function findBottomFurnitureStart(lines: string[]): number | null {
   }
 
   let sawNoteLine = false;
-  let tentative = boundary;
+  // Phase 5 fix (2026-07-06; mirrors footnotes.ts's computeNoteBlockStart,
+  // logged in implementation-notes.md): anchor the block's start on the
+  // TOPMOST note-starter line actually reached, never on `tentative` (the
+  // outermost position the bridge-and-climb happened to reach). A
+  // display-shaped bridge legitimately crosses an INTERIOR gap inside a note
+  // (AM1's diagram case — reached before the note's own "N. " opener,
+  // climbing bottom-up), but the same bridge can also over-absorb a genuine
+  // BODY display block (a table) sitting directly above the footnote block
+  // with only one blank-line gap and nothing note-shaped above it at all.
+  // Nothing legitimate ever precedes a footnote block's own first note, so
+  // the topmost note-starter is correct in both cases and excludes the
+  // false one (Categories ch.4's ten-categories table, real-slice-measured).
+  let topmostNoteStarter: number | null = null;
   while (i >= 0) {
     if (isBlank(lines[i])) {
       let k = i;
@@ -401,11 +413,13 @@ function findBottomFurnitureStart(lines: string[]): number | null {
       }
       break;
     }
-    if (FOOTNOTE_LINE_RE.test(lines[i])) sawNoteLine = true;
-    tentative = i;
+    if (FOOTNOTE_LINE_RE.test(lines[i])) {
+      sawNoteLine = true;
+      topmostNoteStarter = i;
+    }
     i--;
   }
-  if (sawNoteLine) boundary = tentative;
+  if (sawNoteLine) boundary = topmostNoteStarter;
   if (boundary === null) return null;
 
   let j = boundary - 1;

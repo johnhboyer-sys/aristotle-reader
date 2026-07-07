@@ -245,7 +245,20 @@ export function computeNoteBlockStart(lines: string[]): number | null {
   }
 
   let sawNoteLine = false;
-  let tentative = boundary;
+  // Phase 5 fix (2026-07-06, logged in implementation-notes.md): the block's
+  // start is the TOPMOST note-starter line actually reached — never
+  // `tentative` (the outermost position the climb happened to reach). A
+  // display-shaped bridge can legitimately cross an INTERIOR gap inside a
+  // note (AM1's diagram case: the diagram is reached before its own note's
+  // "N. " opener, climbing bottom-up, so nothing above the topmost
+  // note-starter is ever excluded by this). But the same bridge can also
+  // over-absorb a genuine BODY display block (a table) that happens to sit
+  // directly above the footnote block with only one blank-line gap — with
+  // nothing note-shaped above it at all. Nothing legitimate can precede a
+  // footnote block's own first note, so anchoring on the topmost
+  // note-starter (rather than however far the climb was able to bridge)
+  // is correct in both cases and excludes the false one.
+  let topmostNoteStarter: number | null = null;
   while (i >= 0) {
     if (isBlank(lines[i])) {
       let k = i;
@@ -257,11 +270,13 @@ export function computeNoteBlockStart(lines: string[]): number | null {
       }
       break; // terminal body/footnote gap
     }
-    if (isNoteStarterLine(lines[i])) sawNoteLine = true;
-    tentative = i;
+    if (isNoteStarterLine(lines[i])) {
+      sawNoteLine = true;
+      topmostNoteStarter = i;
+    }
     i--;
   }
-  if (sawNoteLine) boundary = tentative;
+  if (sawNoteLine) boundary = topmostNoteStarter;
   if (boundary === null) return null;
 
   let j = boundary - 1;
