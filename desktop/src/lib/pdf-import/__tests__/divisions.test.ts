@@ -13,6 +13,15 @@ import { classifyDivisions, createDivisionState, type DivisionState } from '../d
 
 const c = (col: number, text: string): string => ' '.repeat(col) + text;
 
+// Center `text` within a fixed measure (mirrors how a real page centers a
+// numeral and its title independently — both computed the same way, so
+// their midpoints land within a column or two of each other regardless of
+// each string's own length, exactly like the real Categories geometry).
+function centerIn(width: number, text: string): string {
+  const pad = Math.max(0, Math.floor((width - text.length) / 2));
+  return ' '.repeat(pad) + text;
+}
+
 function makePage(lines: string[], index = 0): Page {
   return { index, lines };
 }
@@ -250,5 +259,137 @@ describe('divisions: preamble and seam', () => {
     expect(st.flags).toContain('book-sequence:restart:1');
     expect(st.book).toBe(1);
     expect(st.lastChapter).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 §1: bare-numeral chapters (single-book works — Categories, De Int)
+// ---------------------------------------------------------------------------
+
+describe('divisions: bare-numeral chapters (Phase 5 spec §1)', () => {
+  const W = 80; // a nominal print measure; heading + title both centered in it
+
+  it('accepts a clean 1..3 sequence, keys book=1 implicitly, sets single-book-work once', () => {
+    const st = createDivisionState();
+    const divs = classify(
+      [
+        centerIn(W, '1'),
+        centerIn(W, 'Homonymy, Synonymy, and Paronymy'),
+        '',
+        'Things are said to be homonymous when they have only the name in common.',
+        '',
+        centerIn(W, '2'),
+        centerIn(W, 'Said-of-a-Subject versus in-a-Subject'),
+        '',
+        'Among things that are said, some are said in combination, some without.',
+        '',
+        centerIn(W, '3'),
+        centerIn(W, 'Said-of-a-Subject'),
+        '',
+        'Whenever one thing is predicated of another as of a subject.',
+      ],
+      st
+    );
+    expect(divs.map((d) => [d.kind, d.book, d.chapter, d.title])).toEqual([
+      ['chapter', 1, 1, 'Homonymy, Synonymy, and Paronymy'],
+      ['chapter', 1, 2, 'Said-of-a-Subject versus in-a-Subject'],
+      ['chapter', 1, 3, 'Said-of-a-Subject'],
+    ]);
+    expect(divs.every((d) => d.flags.length === 0)).toBe(true);
+    // The flag fires exactly once, on the FIRST acceptance only.
+    expect(st.flags).toEqual(['single-book-work']);
+    expect(st.singleBookWork).toBe(true);
+    expect(st.book).toBe(1); // implicit — never printed, never a Book heading
+    expect(st.bookHeadingGoverns).toBe(false);
+  });
+
+  it('title capture is the identical center-alignment rule as b.c chapters (captured within tolerance, rejected beyond it)', () => {
+    const st = primedState({ book: 1, bookHeadingGoverns: false, lastChapter: 3, singleBookWork: true });
+    const divs = classify(
+      [centerIn(W, '4'), centerIn(W, 'The Ten Categories'), '', 'Each of the things said without any combination...'],
+      st
+    );
+    expect(divs).toHaveLength(1);
+    expect(divs[0]).toMatchObject({ kind: 'chapter', book: 1, chapter: 4, title: 'The Ten Categories' });
+
+    // A title shoved 6 columns off its heading's midpoint (beyond
+    // TITLE_CENTER_TOL=4) is correctly NOT captured — flush-left body prose
+    // is never mistaken for a title, exactly as for b.c chapters.
+    const st2 = primedState({ book: 1, bookHeadingGoverns: false, lastChapter: 4, singleBookWork: true });
+    const divs2 = classify(
+      [centerIn(W, '5'), c(3, 'Substance'), '', 'Substance in the strictest sense...'],
+      st2
+    );
+    expect(divs2).toHaveLength(1);
+    expect(divs2[0]).toMatchObject({ kind: 'chapter', book: 1, chapter: 5, title: null, titleLineIdx: null });
+  });
+
+  it('a false-positive stray numeral before the true "1" is rejected outright (stays body, no flag)', () => {
+    const st = createDivisionState();
+    const divs = classify(
+      [
+        centerIn(W, '5'), // not 1: sequence-inconsistent, no mode active yet — a stray centered number
+        '',
+        centerIn(W, '1'),
+        centerIn(W, 'Homonymy, Synonymy, and Paronymy'),
+        '',
+        'Things are said to be homonymous when they have only the name in common.',
+      ],
+      st
+    );
+    expect(divs).toHaveLength(1);
+    expect(divs[0]).toMatchObject({ kind: 'chapter', book: 1, chapter: 1, title: 'Homonymy, Synonymy, and Paronymy' });
+    expect(st.flags).toEqual(['single-book-work']); // the stray "5" left no trace
+    expect(st.singleBookWork).toBe(true);
+  });
+
+  it('a stray numeral that happens to equal lastChapter+1 while b.c mode governs is ignored — no division, no flag ("b.c mode wins")', () => {
+    // A real book-heading/dotted-b.c division has already run in this state
+    // (state.book set, singleBookWork false): the bare "5" that would
+    // otherwise be sequence-consistent (lastChapter 4 -> 5) must NOT become
+    // a chapter division.
+    const st = primedState({ book: 2, bookHeadingGoverns: true, lastChapter: 4, singleBookWork: false });
+    const divs = classify([centerIn(W, '5'), centerIn(W, 'Some Centered Line')], st);
+    expect(divs).toEqual([]);
+    expect(st.flags).toEqual([]);
+    expect(st.singleBookWork).toBe(false);
+    expect(st.lastChapter).toBe(4); // untouched
+  });
+
+  it('single-book-work mode tolerates exactly a one-chapter forward gap, flagged (spec\'s own "value==last+2" example)', () => {
+    const st = primedState({ book: 1, bookHeadingGoverns: false, lastChapter: 5, singleBookWork: true });
+    const divs = classify([centerIn(W, '7'), centerIn(W, 'A Skipped Chapter')], st);
+    expect(divs).toHaveLength(1);
+    expect(divs[0]).toMatchObject({
+      kind: 'chapter',
+      book: 1,
+      chapter: 7,
+      title: 'A Skipped Chapter',
+      flags: ['chapter-sequence:gap-or-repeat:5->7'],
+    });
+    expect(st.lastChapter).toBe(7);
+  });
+
+  it('single-book-work mode rejects a wild jump beyond the one-chapter gap tolerance (stays body, no division)', () => {
+    const st = primedState({ book: 1, bookHeadingGoverns: false, lastChapter: 5, singleBookWork: true });
+    const divs = classify([centerIn(W, '47'), 'unrelated body prose continuing on the next line'], st);
+    expect(divs).toEqual([]);
+    expect(st.lastChapter).toBe(5); // untouched — never accepted
+  });
+
+  it('single-book-work mode rejects a backward/repeat value (stays body, no division)', () => {
+    const st = primedState({ book: 1, bookHeadingGoverns: false, lastChapter: 5, singleBookWork: true });
+    const divs = classify([centerIn(W, '3'), 'body prose resumes normally right here'], st);
+    expect(divs).toEqual([]);
+    expect(st.lastChapter).toBe(5);
+  });
+
+  it('a free-floating title-shaped line after a REJECTED bare numeral stays ignored, not captured', () => {
+    const st = primedState({ book: 1, bookHeadingGoverns: false, lastChapter: 5, singleBookWork: true });
+    const divs = classify(
+      [centerIn(W, '99'), centerIn(W, 'Not Really A Title'), '', 'ordinary prose follows'],
+      st
+    );
+    expect(divs).toEqual([]);
   });
 });

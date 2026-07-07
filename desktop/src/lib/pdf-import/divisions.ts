@@ -89,6 +89,16 @@ export interface DivisionState {
   /** Document-level division flags. */
   flags: string[];
   /**
+   * Phase 5 §1: true once a bare-numeral chapter (single-book work —
+   * Categories, De Int) has been accepted. Once set, `book` is pinned at 1
+   * (implicit, never printed — keying into the app's spine, not
+   * renumbering) and every subsequent bare-numeral candidate is evaluated in
+   * the same mode. A real Book heading or dotted "b.c" is never seen in a
+   * single-book work, so this and a governing book heading are mutually
+   * exclusive in practice; see the acceptance gate below.
+   */
+  singleBookWork: boolean;
+  /**
    * Implementation detail (not in spec §1): the last emitted book division,
    * kept so §4.3 can retroactively flag `book-heading-suspect:no-chapter-1`
    * on it even when the offending chapter lands on a later page.
@@ -106,6 +116,7 @@ export function createDivisionState(): DivisionState {
     lastBodyLeft: { recto: null, verso: null },
     flags: [],
     lastBookDivision: null,
+    singleBookWork: false,
   };
 }
 
@@ -162,6 +173,13 @@ function resolveNum(num: HeadingNum, expected: number, last: number | null, flag
   return r.value;
 }
 
+/** Bare numerals (Phase 5 §1) are capped at 1-2 digits by their own grammar
+ *  (parseHeadingResidual's `bare` regex), so no glued-marker split ever
+ *  applies — read the value directly. */
+function bareNumeralValue(num: HeadingNum): number {
+  return num.type === 'resolved' ? num.value : Number(num.digits);
+}
+
 // ---------------------------------------------------------------------------
 // classifyDivisions (spec §2-§6)
 // ---------------------------------------------------------------------------
@@ -187,6 +205,40 @@ function auditAndAdoptBook(state: DivisionState, N: number): void {
   }
   state.book = N;
   state.lastChapter = 0; // chapter counter resets at a book boundary
+}
+
+// §5 title capture, shared verbatim by bare-numeral and b.c/keyworded
+// chapters alike (spec §1: "Title capture: identical rule to b.c chapters").
+function captureTitle(
+  lines: string[],
+  headingIdx: number,
+  headingMid: number,
+  scannable: (i: number) => boolean,
+  shapeOf: (i: number) => LineShapeResult,
+  consumed: Set<number>,
+  flags: string[]
+): { title: string | null; titleLineIdx: number | null } {
+  for (let j = headingIdx + 1; j < lines.length && scannable(j); j++) {
+    if (isBlank(lines[j])) continue;
+    const tShape = shapeOf(j);
+    if (tShape.shape === 'title-candidate' && Math.abs(tShape.mid - headingMid) <= TITLE_CENTER_TOL) {
+      const title = tShape.residual.trim(); // outer trim only — internal spacing verbatim
+      const titleLineIdx = j;
+      consumed.add(j);
+      // Multi-line titles: capture the first line only; flag a suspect
+      // continuation (the literal next line also title-shaped + aligned).
+      const k = j + 1;
+      if (k < lines.length && scannable(k) && !isBlank(lines[k])) {
+        const kShape = shapeOf(k);
+        if (kShape.shape === 'title-candidate' && Math.abs(kShape.mid - headingMid) <= TITLE_CENTER_TOL) {
+          flags.push('title-multiline-suspect');
+        }
+      }
+      return { title, titleLineIdx };
+    }
+    break; // the first non-blank line decides, captured or not
+  }
+  return { title: null, titleLineIdx: null };
 }
 
 export function classifyDivisions(page: Page, scan: PageScan, state: DivisionState): Division[] {
@@ -245,6 +297,65 @@ export function classifyDivisions(page: Page, scan: PageScan, state: DivisionSta
       continue;
     }
 
+    if (parsed.bare) {
+      // Phase 5 §1: bare-numeral chapter (single-book works — Categories,
+      // De Int). ACCEPTANCE is sequence-gated: lineShape's pure predicate
+      // marks ANY standalone centered 1-2 digit numeral 'chapter'-shaped
+      // (see line-shape.ts's parseHeadingResidual doc comment), so this
+      // gate is the only thing telling a real chapter heading apart from a
+      // stray centered number elsewhere in the body.
+      //
+      // Conservative reading (spec text reconciled; logged in
+      // implementation-notes.md): "b.c mode" — a real Book heading or
+      // dotted "b.c" already seen (state.book set, but NOT via bare-numeral
+      // mode) — always wins silently, no flag ("state.book === null or
+      // single-book mode already active" is exactly the negation of that).
+      // Otherwise, a value that doesn't continue the running bare-numeral
+      // sequence is rejected outright (never a division — the line stays
+      // ordinary body text, per spec) UNLESS single-book-work mode is
+      // already established AND the value is EXACTLY a one-chapter FORWARD
+      // gap (spec's own worked example: "value==last+2" — a single missing
+      // chapter, not an arbitrary jump), in which case it is accepted with
+      // the ordinary §4.3 gap flag — exactly as a normal (non-bare) chapter
+      // is never rejected, only flagged. Bounding the gap to exactly +1
+      // beyond `expected` (rather than any larger forward value) keeps the
+      // "kills false positives" goal intact: an unrelated large number
+      // elsewhere in the body (a folio, a table figure) must not be able to
+      // masquerade as "the next chapter, however far off."
+      const bcModeActive = state.book !== null && !state.singleBookWork;
+      if (bcModeActive) continue; // b.c mode wins — silently ignored, no flag
+      const flags: string[] = [];
+      const value = bareNumeralValue(parsed.num);
+      const expected = (state.lastChapter ?? 0) + 1;
+      if (value === expected) {
+        // normal (or first-ever, lastChapter null -> expected 1) acceptance
+      } else if (state.singleBookWork && value === expected + 1) {
+        flags.push(`chapter-sequence:gap-or-repeat:${state.lastChapter ?? 0}->${value}`);
+      } else {
+        continue; // not sequence-consistent — stays ordinary body text
+      }
+      if (!state.singleBookWork) {
+        state.singleBookWork = true;
+        state.book = 1;
+        pushDocFlag(state, 'single-book-work');
+      }
+      state.lastChapter = value;
+      state.sawFirstDivision = true;
+
+      const { title, titleLineIdx } = captureTitle(lines, i, shape.mid, scannable, shapeOf, consumed, flags);
+      out.push({
+        kind: 'chapter',
+        book: 1,
+        chapter: value,
+        title,
+        page: page.index,
+        lineIdx: i,
+        titleLineIdx,
+        flags,
+      });
+      continue;
+    }
+
     // Chapter division. Chapter number first (its glued resolution needs
     // only lastChapter), then b per §4.2.
     const flags: string[] = [];
@@ -294,27 +405,7 @@ export function classifyDivisions(page: Page, scan: PageScan, state: DivisionSta
 
     // §5 title capture: first non-blank line below, title-shaped and
     // center-aligned to the heading mid within TITLE_CENTER_TOL.
-    let title: string | null = null;
-    let titleLineIdx: number | null = null;
-    for (let j = i + 1; j < lines.length && scannable(j); j++) {
-      if (isBlank(lines[j])) continue;
-      const tShape = shapeOf(j);
-      if (tShape.shape === 'title-candidate' && Math.abs(tShape.mid - shape.mid) <= TITLE_CENTER_TOL) {
-        title = tShape.residual.trim(); // outer trim only — internal spacing verbatim
-        titleLineIdx = j;
-        consumed.add(j);
-        // Multi-line titles: capture the first line only; flag a suspect
-        // continuation (the literal next line also title-shaped + aligned).
-        const k = j + 1;
-        if (k < lines.length && scannable(k) && !isBlank(lines[k])) {
-          const kShape = shapeOf(k);
-          if (kShape.shape === 'title-candidate' && Math.abs(kShape.mid - shape.mid) <= TITLE_CENTER_TOL) {
-            flags.push('title-multiline-suspect');
-          }
-        }
-      }
-      break; // the first non-blank line decides, captured or not
-    }
+    const { title, titleLineIdx } = captureTitle(lines, i, shape.mid, scannable, shapeOf, consumed, flags);
 
     out.push({
       kind: 'chapter',

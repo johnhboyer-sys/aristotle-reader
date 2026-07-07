@@ -237,24 +237,53 @@ function parseHeadingNum(token: string): HeadingNum | null {
 
 export type HeadingParse =
   | { kind: 'book'; num: HeadingNum }
-  | { kind: 'chapter'; restatedBook: number | null; num: HeadingNum };
+  | { kind: 'chapter'; restatedBook: number | null; num: HeadingNum; bare: boolean };
 
 /**
  * Grammar for a trimmed heading residual (spec §3.1-§3.2, §3.5):
- * "BOOK <num>" / "CHAPTER <num>" (keyworded, case-insensitive) or bare
- * dotted "b.c" (each 1-2 Arabic digits). Returns null when the residual is
- * not heading-shaped (including non-canonical Roman / unknown spelled-out).
+ * "BOOK <num>" / "CHAPTER <num>" (keyworded, case-insensitive), bare dotted
+ * "b.c" (each 1-2 Arabic digits), or (Phase 5 §1) a BARE-NUMERAL chapter — a
+ * standalone 1-2 digit Arabic numeral with no book/dot context at all.
+ * Single-book works (Categories, De Int) print chapters this way: no Book
+ * heading, no dotted "b.c" anywhere, just a centered numeral + a centered
+ * title below it. Returns null when the residual is not heading-shaped
+ * (including non-canonical Roman / unknown spelled-out).
+ *
+ * The bare-numeral branch is deliberately permissive at the GRAMMAR level —
+ * this function has no sequence/state, so it cannot tell a real chapter 5
+ * from a stray centered "5" elsewhere in the body (a folio that slipped past
+ * furniture detection, a table label, ...). divisions.ts gates ACCEPTANCE on
+ * running sequence consistency (Phase 5 §1); this only recognizes the shape.
+ * Consequence for gutter.ts's tic-on-heading interplay (§7a/§7b): a stray
+ * centered numeral that lineShape marks 'chapter' (bare) but divisions.ts
+ * never accepts as a division would still be treated as heading-class by
+ * `isHeadingClassLine`, and so would forward-bind a tic that happened to sit
+ * on it — accepted as a rare, spec-acknowledged imprecision (a tic can only
+ * ever land there if the line also passes ticSpanOnLine's own gates, and a
+ * standalone numeral line with nothing else on it already fails those — see
+ * ticSpanOnLine's "lone-integer line: folio furniture" checks above).
  */
 export function parseHeadingResidual(trimmed: string): HeadingParse | null {
   const kw = /^(BOOK|CHAPTER)\s+(\S+(?:[ -]\S+)?)$/i.exec(trimmed);
   if (kw) {
     const num = parseHeadingNum(kw[2]);
     if (num === null) return null;
-    return kw[1].toUpperCase() === 'BOOK' ? { kind: 'book', num } : { kind: 'chapter', restatedBook: null, num };
+    return kw[1].toUpperCase() === 'BOOK'
+      ? { kind: 'book', num }
+      : { kind: 'chapter', restatedBook: null, num, bare: false };
   }
   const dotted = /^(\d{1,2})\.(\d{1,2})$/.exec(trimmed);
   if (dotted) {
-    return { kind: 'chapter', restatedBook: Number(dotted[1]), num: { type: 'arabic', digits: dotted[2] } };
+    return {
+      kind: 'chapter',
+      restatedBook: Number(dotted[1]),
+      num: { type: 'arabic', digits: dotted[2] },
+      bare: false,
+    };
+  }
+  const bare = /^(\d{1,2})$/.exec(trimmed);
+  if (bare) {
+    return { kind: 'chapter', restatedBook: null, num: { type: 'arabic', digits: bare[1] }, bare: true };
   }
   return null;
 }
