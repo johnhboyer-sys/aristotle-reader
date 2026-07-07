@@ -1,6 +1,11 @@
 # D8 — View modes: paragraph-by-paragraph + interpolated (generalizing beyond line-numbered texts)
 
-**Status:** requirements confirmed with John 2026-07-06 (interview); design in progress.
+**Status:** ✅ BUILT 2026-07-07 — all phases implemented (A schemes → B model/file-format →
+C create/open → D1 paragraph view → D2 interpolated → D3 structure editing → E1 export →
+E2 unit-aware assist), full Codex adversarial review run (4 findings: para-layer footnote
+stripping, paragraph_starts lenient degrade, document-spine bilingual compile, Check fallback —
+all fixed + regression-pinned). 1352 vitest green; awaiting John's .app hand-testing
+(checklist at the top of TODO.md).
 **Branch:** `claude/workbench-paragraph-views` (off `claude/blissful-rubin-d64797` @ `39849421`, the open PR #20 head).
 
 ## Why

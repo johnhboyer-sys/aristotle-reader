@@ -1,5 +1,65 @@
 # Translation Workbench — TODO
 
+## 🆕 D8 TESTING CHECKLIST (John, in the real .app) — corpus-free docs + new views
+
+State 2026-07-07: **D8 complete on `claude/workbench-paragraph-views`** (off the
+PR #20 head) — 10 commits, 1352 vitest green, tsc/svelte-check/build clean,
+every phase live-verified in the browser harness, full Codex adversarial review
+done (4 findings, all fixed + regression-pinned). Design: `d8-view-modes.md`.
+⚠️ The rebuilt `~/Downloads/Translation Workbench.app` is now the D8 build — it
+CONTAINS all of PR #20 (branched from its head), so #20 QA can continue on it.
+
+**Create + paragraph view**
+- [ ] Library rail → "New document…" → paste multi-paragraph prose (set a
+  title; try a language label like "German") → unit auto-detects "paragraphs"
+  → create → opens in Paragraph view: original left (wrapping), ¶N gutter,
+  English right.
+- [ ] Type a paragraph translation → blur → quit/reopen → persists (file gains
+  `[ENGLISH.PARA]`).
+
+**Interpolated view**
+- [ ] Toggle Interpolated → "By sentence": one field per sentence, its source
+  slice beneath; type into two sentences → persists into `[ENGLISH]`.
+- [ ] "By paragraph": one field per paragraph, whole original beneath with
+  sentence tick marks; the sentence text you just typed shows as a subdued
+  READ-ONLY block (never moved/destroyed); ⌘Z only touches the layer you
+  edited.
+
+**Structure editing (paragraph doc)**
+- [ ] Right-click original → "Split paragraph here" → ¶ numbers renumber, one
+  ⌘Z restores exactly. "Merge with previous paragraph" → confirm dialog only
+  when both halves have paragraph text.
+- [ ] On a paragraph row the D6 gestures read "Start new sentence here" /
+  "Join sentences" and fix the auto-segmentation.
+
+**Plain-line document**
+- [ ] Paste verse/line text with blank stanza gaps → detects "lines" → grid
+  default. Paragraphs view groups into chunks; right-click "Start paragraph
+  here"/merge regroups (undoable). Interpolated = one block per line.
+
+**AI suite (needs the .app — browser can't run CLIs)**
+- [ ] Right-click the English cell in Paragraph view: all four modes, with
+  paragraph wording (+ "against the German" if you set a language). Translate
+  fills ONLY the paragraph cell; Check falls back to sentence text when the
+  paragraph cell is empty; multi-paragraph Greek selection → "Translate N
+  paragraphs" with the overwrite warning.
+
+**Export**
+- [ ] Export the paragraph doc → docx: real paragraph breaks, single `…` for
+  untranslated runs, NO Bekker stamps. Compile "Greek and English" →
+  source/English interleaved per paragraph (was silently English-only before
+  the review fix).
+
+**Regression (5 min)**
+- [ ] Open Metaphysics Ζ.17: grid identical, no view toggle, D6 split/merge
+  labels unchanged, AI + export behave as before.
+
+Known wording nit (deferred to the refinement pass, John's call): plain-line
+rows show chunk "Start paragraph here" adjacent to D6's intra-line "Start new
+paragraph here".
+
+---
+
 State as of 2026-07-06: **all feature work COMMITTED on
 `claude/blissful-rubin-d64797` — branch NOT pushed (John's standing call),
 local-only.** Lives in the `.claude/worktrees/wb-ai` worktree. Latest HEAD
