@@ -1933,8 +1933,9 @@
       return;
     }
     // Check mode diagnoses the EXISTING English of the TARGET unit — nothing
-    // to check when that unit is blank (para layer reads englishPara; a
-    // sentence-unit target reads its own cell; a line the joined row).
+    // to check when that unit is blank (para layer reads englishPara, falling
+    // back to the sentence join the para view displays; a sentence-unit
+    // target reads its own cell; a line the joined row).
     if (mode === 'check' && targetEnglish(row, segment, layer, unit) === null) {
       setStatus(
         unit === 'line'
@@ -1952,10 +1953,13 @@
   }
 
   /** The TARGET's own English for check/ask: the para layer reads
-   * englishPara; a sentence-unit target reads its own cell's doc; a
-   * line-unit target reads the whole row joined (the D4 behaviour). */
+   * englishPara, falling back to the joined sentence text — the read-only
+   * draft the para view SHOWS when englishPara is empty (same
+   * read-what-the-user-sees rule as contextDraft and Ask); a sentence-unit
+   * target reads its own cell's doc; a line-unit target reads the whole row
+   * joined (the D4 behaviour). */
   function targetEnglish(row: number, segment: number, layer: EditLayer, unit: AssistUnit): string | null {
-    if (layer === 'para') return plainRowText(paraDoc(row));
+    if (layer === 'para') return plainRowText(paraDoc(row)) ?? plainRowText(joinedRowDoc(row));
     if (unit === 'sentence') return plainRowText(segmentDoc(row, segment));
     return plainRowText(joinedRowDoc(row));
   }

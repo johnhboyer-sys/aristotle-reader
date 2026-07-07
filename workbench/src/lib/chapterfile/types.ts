@@ -78,6 +78,15 @@ export interface ChapterFile {
   /** Optional paragraph-granularity translation layer, one physical line per row. */
   englishParaLines?: string[];
   footnotes: Footnote[];
+  /**
+   * True when frontmatter `paragraph_starts` carried entries the parser had
+   * to drop or reorder (junk tokens, zero/negative, duplicates, out of
+   * range). paragraph_starts is optional DISPLAY metadata, so a malformed
+   * value degrades leniently instead of refusing the file (D6 drift
+   * convention); hydration surfaces this flag as a one-line notice. Never
+   * set by serialization-side construction — parse-only.
+   */
+  paragraphStartsSanitized?: boolean;
 }
 
 /** Thrown by parseChapterFile on any validation failure. Message is plain-language and line-numbered where applicable. */

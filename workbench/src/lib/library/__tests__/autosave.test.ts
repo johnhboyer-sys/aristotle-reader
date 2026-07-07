@@ -792,4 +792,136 @@ one¶two
     expect(textOf(h.rows[0].english2![0])).toBe('two');
     expect(h.notice).toBe("A paragraph split in line ¶1 didn't line up with the Greek and was removed — re-split if you still want it.");
   });
+
+  it('malformed paragraph_starts degrades to a sanitized grouping + one-line notice — the document stays openable', () => {
+    const raw = `---
+schema_version: 1
+work: free-lines
+book: 1
+chapter: 1
+citation_scheme: plain-line
+span_start: "1"
+span_end: "2"
+paragraph_starts: "2,2,9"
+---
+[GREEK]
+Line one
+Line two
+
+[ENGLISH]
+one
+two
+`;
+    const file = parseChapterFile(raw, 'bad-starts');
+    expect(file.meta.paragraphStarts).toEqual([2]);
+    const h = hydrateFromFile(file, [], 'plain-line');
+    expect(h.rows.map((r) => r.greek)).toEqual(['Line one', 'Line two']); // prose intact
+    expect(textOf(h.rows[0].english)).toBe('one');
+    expect(h.paragraphStarts).toEqual([2]);
+    expect(h.notice).toBe(
+      'Some of the saved paragraph grouping was invalid and was removed — regroup if you still want it.',
+    );
+  });
+});
+
+describe('paragraph-layer footnote markers (D8 v1 rule — footnotes are sentence-layer only)', () => {
+  const textOf = (json: PMDocJSON) => docFromJSON(json).textContent;
+
+  // {^1:anchored} lives in the SENTENCE layer (live footnote); {^2:stray} and
+  // the bodyless {^3:} arrived in [ENGLISH.PARA] by paste/hand edit.
+  const paraMarkerFile = `---
+schema_version: 1
+work: free-paragraph
+book: 1
+chapter: 1
+citation_scheme: paragraph
+span_start: "¶1"
+span_end: "¶2"
+---
+[GREEK]
+Alpha source.
+Beta source.
+
+[ENGLISH]
+Alpha {^1:anchored} here.
+
+
+[ENGLISH.PARA]
+
+Beta {^2:stray} tail {^3:}
+
+[FOOTNOTES]
+1: sentence-layer note
+2: para-only note
+`;
+
+  function modelOf(h: ReturnType<typeof hydrateFromFile>): ChapterModel {
+    return {
+      workId: 'free-paragraph',
+      workTitle: 'Free Paragraph',
+      scheme: 'paragraph',
+      book: 1,
+      bookLabel: '',
+      chapter: 1,
+      bekkerRange: '¶1–2',
+      rows: h.rows,
+      footnotes: h.footnotes,
+      dirty: false,
+    };
+  }
+
+  it('hydration strips para-layer markers (phrase kept) and never anchors or invents footnotes from them', () => {
+    const h = hydrateFromFile(parseChapterFile(paraMarkerFile, 'para-markers'), [], 'paragraph');
+    // Sentence-layer marker anchors normally; the para-only body stays
+    // UNANCHORED (kept + recoverable — matching the panel's sentence-layer
+    // scan); the bodyless para marker {^3:} invents nothing.
+    expect(h.footnotes).toEqual([
+      { id: '1', body: 'sentence-layer note', anchored: true },
+      { id: '2', body: 'para-only note', anchored: false },
+    ]);
+    // Para-layer prose is lossless minus the decoration.
+    expect(textOf(h.rows[1].englishPara!)).toBe('Beta stray tail ');
+  });
+
+  it('the file round-trips without gaining or losing footnote bodies, and the stripped para layer stays stripped', () => {
+    const h = hydrateFromFile(parseChapterFile(paraMarkerFile, 'para-markers'), [], 'paragraph');
+    const saved = serializeModel(modelOf(h));
+    expect(saved).toContain('1: sentence-layer note');
+    expect(saved).toContain('2: para-only note');
+    expect(saved).toContain('Alpha {^1:anchored} here.'); // sentence layer untouched
+    expect(saved).toContain('Beta stray tail '); // para layer: text kept
+    expect(saved).not.toContain('{^2:');
+    expect(saved).not.toContain('{^3:');
+
+    const h2 = hydrateFromFile(parseChapterFile(saved, 'para-markers-resaved'), [], 'paragraph');
+    expect(h2.footnotes).toEqual(h.footnotes); // stable: no empty-bodied recreation
+  });
+
+  it('deleting the para-only footnote body cannot resurrect on reload (the failure this rule prevents)', () => {
+    const h = hydrateFromFile(parseChapterFile(paraMarkerFile, 'para-markers'), [], 'paragraph');
+    const model = modelOf(h);
+    // Panel Delete on the unanchored footnote 2: body removed from the model.
+    model.footnotes = model.footnotes.filter((f) => f.id !== '2');
+    const saved = serializeModel(model);
+    const h2 = hydrateFromFile(parseChapterFile(saved, 'after-delete'), [], 'paragraph');
+    expect(h2.footnotes).toEqual([{ id: '1', body: 'sentence-layer note', anchored: true }]);
+  });
+
+  it('save boundary: a marker pasted into the LIVE para layer is stripped on serialize and never counted', () => {
+    const h = hydrateFromFile(parseChapterFile(paraMarkerFile, 'para-markers'), [], 'paragraph');
+    const model = modelOf(h);
+    model.rows[0].englishPara = buildRowDoc([t('pasted '), t('phrase', { fnRef: '9' }), m('9')]).toJSON();
+    expect(anchoredFootnoteCount(model)).toBe(1); // only the sentence-layer {^1}
+    const doc = chapterFileFromModel(model);
+    expect(doc.englishParaLines![0]).toBe('pasted phrase');
+  });
+
+  it('a marker-only para line strips to nothing — no [ENGLISH.PARA] resurrection from decoration alone', () => {
+    const raw = paraMarkerFile.replace('Beta {^2:stray} tail {^3:}', '{^2:}');
+    const h = hydrateFromFile(parseChapterFile(raw, 'marker-only-para'), [], 'paragraph');
+    expect(h.rows[1].englishPara).toBeUndefined();
+    const saved = serializeModel(modelOf(h));
+    expect(saved).not.toContain('[ENGLISH.PARA]'); // no other row has para content
+    expect(saved).toContain('2: para-only note'); // the body itself is still kept
+  });
 });

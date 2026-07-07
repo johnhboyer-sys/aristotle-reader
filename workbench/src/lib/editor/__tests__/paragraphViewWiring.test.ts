@@ -121,9 +121,11 @@ describe('AI modes are LIVE (and layer-correct) in the paragraph-unit view (D8 P
     expect(fnBody('invokeAssist')).toContain('assistLayer = activeLayer()');
   });
 
-  it('para-layer Check reads englishPara (targetEnglish), never the sentence join', () => {
+  it('para-layer Check reads englishPara, falling back to the sentence join the view shows (same rule as Ask/context)', () => {
     const body = fnBody('targetEnglish');
-    expect(body).toContain("if (layer === 'para') return plainRowText(paraDoc(row))");
+    expect(body).toContain(
+      "if (layer === 'para') return plainRowText(paraDoc(row)) ?? plainRowText(joinedRowDoc(row))",
+    );
   });
 
   it('footnote insertion is blocked in para-layer views with a notice ([ENGLISH.PARA] has no markers)', () => {

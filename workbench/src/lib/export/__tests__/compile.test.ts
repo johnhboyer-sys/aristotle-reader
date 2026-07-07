@@ -511,6 +511,79 @@ describe('compileWorkMarkdown — document-spine single-document route (D8)', ()
     expect(result.gapReport).toEqual({ hasGaps: false, lines: [], summary: 'Document present.' });
     expect(result.included).toEqual([{ book: 1, chapter: 1 }]);
   });
+
+  // Bilingual mode previously IGNORED the mode for document-spine works and
+  // silently produced English-only output under the bilingual filename. Now
+  // it interleaves per unit: source block, then English block (untranslated
+  // units keep their source and mark the missing English with one `…`).
+  it('bilingual mode interleaves source and English per paragraph', () => {
+    const result = compileWorkMarkdown([freeChapter()], FREE_WORK, { mode: 'bilingual' });
+    expect(result.markdown).toBe(
+      '# Free Doc\n\n' +
+        'Source one.\n\n' +
+        'First translated paragraph.\n\n' +
+        'Source two.\n\n' +
+        'Second paragraph from paragraph layer.\n',
+    );
+  });
+
+  it('bilingual mode marks an untranslated paragraph with an ellipsis after its source', () => {
+    const c = freeChapter({ englishParaLines: undefined }); // row 2 now untranslated
+    const result = compileWorkMarkdown([c], FREE_WORK, { mode: 'bilingual' });
+    expect(result.markdown).toBe(
+      '# Free Doc\n\n' +
+        'Source one.\n\n' +
+        'First translated paragraph.\n\n' +
+        'Source two.\n\n' +
+        '…\n',
+    );
+  });
+
+  it('bilingual mode on a plain-line doc interleaves per paragraph group, keeping hard line breaks on both sides', () => {
+    const FREE_LINES: WorkMeta = {
+      id: 'free-lines',
+      title: 'Free Lines',
+      author: '',
+      scheme: 'plain-line',
+      books: [{ n: 1, label: '' }],
+    };
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-lines',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'plain-line',
+        spanStart: '1',
+        spanEnd: '4',
+        paragraphStarts: [1, 3],
+      },
+      greekLines: ['L1', 'L2', 'L3', 'L4'],
+      englishLines: ['Line one', 'Line two', 'Line three', ''],
+      footnotes: [],
+    };
+    const result = compileWorkMarkdown([c], FREE_LINES, { mode: 'bilingual' });
+    expect(result.markdown).toBe(
+      '# Free Lines\n\n' +
+        'L1\\\nL2\n\n' +
+        'Line one\\\nLine two\n\n' +
+        'L3\\\nL4\n\n' +
+        'Line three\n\n' +
+        '…\n', // L4 untranslated → the group's trailing gap is marked
+    );
+  });
+
+  it('bilingual document-spine export keeps sentence-layer footnotes on the English side', () => {
+    const c = freeChapter({
+      englishLines: ['A translated {^1:phrase}.', ''],
+      footnotes: [{ id: 1, body: 'the note' }],
+    });
+    const result = compileWorkMarkdown([c], FREE_WORK, { mode: 'bilingual' });
+    expect(result.markdown).toContain('phrase[^1]');
+    expect(result.markdown).toContain('[^1]: the note');
+    // The source blocks never carry the reference.
+    expect(result.markdown).toContain('Source one.\n\n');
+  });
 });
 
 describe('filename helpers', () => {

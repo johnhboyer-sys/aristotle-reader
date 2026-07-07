@@ -276,7 +276,12 @@ export function compileWorkMarkdown(
   const workScheme = getScheme(work.scheme);
 
   if (workScheme.spineSource === 'document') {
-    const markdown = ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work) : `# ${work.title}\n\n`;
+    // Document-spine works honour the export mode too: 'bilingual' renders
+    // source + English per unit (renderDocumentSpineBilingual) — previously
+    // this branch ignored `mode` and silently produced English-only output
+    // under the bilingual filename.
+    const markdown =
+      ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work, resolved.mode) : `# ${work.title}\n\n`;
     return {
       markdown,
       gapReport,

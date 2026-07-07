@@ -954,16 +954,64 @@ d
     expect(serializeChapterFile(doc)).toBe(file);
   });
 
-  it('rejects malformed, non-ascending, and out-of-range paragraph_starts', () => {
-    expect(() => parseChapterFile(fileWith('paragraph_starts: "1,nope"', ['α'], ['a']), 'p.md')).toThrow(
-      /paragraph_starts entry 2/,
-    );
-    expect(() => parseChapterFile(fileWith('paragraph_starts: "2,2"', ['α', 'β'], ['a', 'b']), 'p.md')).toThrow(
-      /strictly ascending/,
-    );
-    expect(() => parseChapterFile(fileWith('paragraph_starts: "1,3"', ['α', 'β'], ['a', 'b']), 'p.md')).toThrow(
-      /row ordinal 3 is out of range/,
-    );
+  // Malformed paragraph_starts must DEGRADE, never refuse the file: it is
+  // optional display GROUPING metadata (unlike column_starts/line_splits,
+  // which address user prose), and a hard parse error here made the whole
+  // document unopenable with autosave off. D6 drift convention: sanitize
+  // leniently, flag it (paragraphStartsSanitized) so hydration can surface
+  // the one-line notice, and keep the prose fully intact.
+  it('degrades malformed paragraph_starts instead of refusing the file', () => {
+    const load = (extra: string, greek: string[], english: string[]) =>
+      parseChapterFile(fileWith(extra, greek, english), 'p.md');
+
+    const junk = load('paragraph_starts: "1,nope"', ['α', 'β'], ['a', 'b']);
+    expect(junk.meta.paragraphStarts).toEqual([1]);
+    expect(junk.paragraphStartsSanitized).toBe(true);
+    expect(junk.greekLines).toEqual(['α', 'β']); // prose fully intact
+    expect(junk.englishLines).toEqual(['a', 'b']);
+
+    const dupes = load('paragraph_starts: "2,2"', ['α', 'β'], ['a', 'b']);
+    expect(dupes.meta.paragraphStarts).toEqual([2]);
+    expect(dupes.paragraphStartsSanitized).toBe(true);
+
+    const outOfRange = load('paragraph_starts: "1,9"', ['α', 'β'], ['a', 'b']);
+    expect(outOfRange.meta.paragraphStarts).toEqual([1]);
+    expect(outOfRange.paragraphStartsSanitized).toBe(true);
+
+    const nonAscending = load('paragraph_starts: "3,1"', ['α', 'β', 'γ'], ['a', 'b', 'c']);
+    expect(nonAscending.meta.paragraphStarts).toEqual([1, 3]);
+    expect(nonAscending.paragraphStartsSanitized).toBe(true);
+
+    const zero = load('paragraph_starts: "0"', ['α'], ['a']);
+    expect(zero.meta.paragraphStarts).toBeUndefined();
+    expect(zero.paragraphStartsSanitized).toBe(true);
+
+    const allJunk = load('paragraph_starts: "a,b"', ['α'], ['a']);
+    expect(allJunk.meta.paragraphStarts).toBeUndefined();
+    expect(allJunk.paragraphStartsSanitized).toBe(true);
+
+    const empty = load('paragraph_starts: ""', ['α'], ['a']);
+    expect(empty.meta.paragraphStarts).toBeUndefined();
+    expect(empty.paragraphStartsSanitized).toBe(true);
+
+    // Non-scalar YAML (no token shape to salvage) drops the field entirely.
+    const mapping = load('paragraph_starts: {a: 1}', ['α'], ['a']);
+    expect(mapping.meta.paragraphStarts).toBeUndefined();
+    expect(mapping.paragraphStartsSanitized).toBe(true);
+  });
+
+  it('well-formed paragraph_starts carries no sanitized flag and byte-round-trips', () => {
+    const file = fileWith('paragraph_starts: "1,2"', ['α', 'β'], ['a', 'b']);
+    const doc = parseChapterFile(file, 'p.md');
+    expect(doc.meta.paragraphStarts).toEqual([1, 2]);
+    expect(doc.paragraphStartsSanitized).toBeUndefined();
+    expect(serializeChapterFile(doc)).toBe(file);
+  });
+
+  it('a sanitized-but-salvaged value serializes canonically (repairs stick on the next save)', () => {
+    const doc = parseChapterFile(fileWith('paragraph_starts: "2,2,9"', ['α', 'β'], ['a', 'b']), 'p.md');
+    expect(doc.meta.paragraphStarts).toEqual([2]);
+    expect(serializeChapterFile(doc)).toContain('paragraph_starts: "2"');
   });
 });
 

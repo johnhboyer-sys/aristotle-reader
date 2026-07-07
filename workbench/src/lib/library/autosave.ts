@@ -18,7 +18,9 @@
 // Load path: on chapter open, read + parse the file if present; the FILE is
 // canonical — its Greek wins over the corpus spine (quiet notice when they
 // differ). English rows hydrate through the serialize.ts parser; footnote
-// anchored-ness is derived from marker presence in the hydrated rows.
+// anchored-ness is derived from marker presence in the hydrated rows'
+// SENTENCE layer only (footnotes are a sentence-layer feature — D8 v1 rule;
+// [ENGLISH.PARA] marker markup is stripped on load, phrase text kept).
 // line_splits SEMANTIC validation happens here (the parser checks structure
 // only): a well-formed but drifted split — offset out of the row's Greek
 // range, not at a word boundary, or an address no row carries — never blocks
@@ -37,9 +39,9 @@
 import type { Address, CitationScheme, SchemeId } from '../citation/types';
 import { getScheme } from '../citation/registry';
 import type { ChapterModel, Footnote as ModelFootnote, RowModel } from '../editor/model';
-import { allEnglishDocsOf, englishDocsOf, hasParagraphEnglish } from '../editor/model';
+import { englishDocsOf, hasParagraphEnglish } from '../editor/model';
 import { docFromJSON, markerIdsIn } from '../editor/schema';
-import { serializeRow, serializeRowSegments, parseRow, parseRowSegments, joinRowDocs } from '../editor/serialize';
+import { serializeRow, serializeRowSegments, parseRow, parseRowSegments, joinRowDocs, stripFootnoteMarkup } from '../editor/serialize';
 import { parseChapterFile, serializeChapterFile, rowAddress, isValidSplitOffset, ChapterFileError } from '../chapterfile';
 import type { ChapterFile, ColumnStart, LineSplit } from '../chapterfile';
 import { libraryStorage } from './storage';
@@ -211,10 +213,18 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
     }
   }
 
-  const hasAnyEnglishPara = model.rows.some(hasParagraphEnglish);
-  const englishParaLines = hasAnyEnglishPara
-    ? model.rows.map((r) => (r.englishPara ? serializeRow(docFromJSON(r.englishPara)) : ''))
+  // Footnotes are a sentence-layer feature (D8 v1 rule — see
+  // editor/serialize.ts stripFootnoteRuns): a marker that reached the live
+  // paragraph layer anyway (paste) is stripped here at the save boundary —
+  // phrase text kept, decoration dropped — so [ENGLISH.PARA] on disk never
+  // carries marker markup that hydration/export would have to ignore. The
+  // section rides along only when a STRIPPED line is non-empty (a marker-only
+  // para doc strips to nothing; serializeChapterFile would omit the all-empty
+  // section, so including it here would fail the round-trip self-check).
+  const strippedParaLines = model.rows.some(hasParagraphEnglish)
+    ? model.rows.map((r) => (r.englishPara ? serializeRow(stripFootnoteMarkup(docFromJSON(r.englishPara))) : ''))
     : undefined;
+  const englishParaLines = strippedParaLines?.some((line) => line.length > 0) ? strippedParaLines : undefined;
 
   return {
     meta: {
@@ -272,9 +282,11 @@ export function serializeModel(model: ChapterModel, spans?: ChapterSpans): strin
 export function anchoredFootnoteCount(model: ChapterModel): number {
   const ids = new Set<string>();
   for (const row of model.rows) {
-    // Walk segments in document order — a marker can live in a continuation
-    // segment of a split row (design doc D6).
-    for (const doc of allEnglishDocsOf(row)) {
+    // Walk SENTENCE-layer segments in document order — a marker can live in a
+    // continuation segment of a split row (design doc D6). The paragraph
+    // layer is excluded: footnotes are sentence-layer-only (D8 v1 rule), so a
+    // pasted para-layer marker must not bump the work-wide numbering base.
+    for (const doc of englishDocsOf(row)) {
       for (const id of markerIdsIn(docFromJSON(doc))) ids.add(id);
     }
   }
@@ -376,8 +388,18 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
     }
     const greek = file.greekLines[i];
     const segments = parseRowSegments(file.englishLines[i]);
+    // Paragraph-layer markers never become live footnotes (D8 v1 rule —
+    // sentence layer only; see editor/serialize.ts stripFootnoteRuns): any
+    // `{^id:phrase}` a paste or hand edit left in [ENGLISH.PARA] hydrates as
+    // plain "phrase" — surrounding text lossless, decoration dropped — so the
+    // panel/delete/renumber paths (sentence-layer scans) and this hydration
+    // agree. A marker-only para line strips to an empty doc → no para layer.
     const englishParaLine = file.englishParaLines?.[i];
-    const englishPara = englishParaLine !== undefined && englishParaLine.length > 0 ? parseRow(englishParaLine).toJSON() : undefined;
+    const englishParaDoc =
+      englishParaLine !== undefined && englishParaLine.length > 0
+        ? stripFootnoteMarkup(parseRow(englishParaLine))
+        : undefined;
+    const englishPara = englishParaDoc && englishParaDoc.content.size > 0 ? englishParaDoc.toJSON() : undefined;
     let offsets = offsetsByRow.get(i) ?? [];
     const label = rowLabels[i] !== '' ? rowLabels[i] : address.raw;
 
@@ -410,11 +432,15 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
   }
 
   // Anchored-ness is derived: a footnote is anchored iff its marker survives
-  // somewhere in the hydrated rows (segments walked in document order).
+  // somewhere in the hydrated rows' SENTENCE layer (segments walked in
+  // document order). The paragraph layer never counts — its markers were
+  // stripped above, and a footnote whose only marker sat there is correctly
+  // UNANCHORED (body kept, recoverable), matching the editor's panel/delete
+  // paths which scan the sentence layer only.
   const markerIds = new Set<string>();
   const markerOrder: string[] = [];
   for (const row of rows) {
-    for (const doc of allEnglishDocsOf(row)) {
+    for (const doc of englishDocsOf(row)) {
       for (const id of markerIdsIn(docFromJSON(doc))) {
         if (!markerIds.has(id)) markerOrder.push(id);
         markerIds.add(id);
@@ -440,6 +466,15 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
     notices.push('Saved Greek differs from the corpus text — using the saved file.');
   }
   notices.push(...splitNotices);
+  // paragraph_starts drift (D8 §5 grouping metadata, D6 degrade convention):
+  // the parser dropped invalid/out-of-range/duplicate entries rather than
+  // refuse the file — one plain sentence on the same channel; the next save
+  // writes the sanitized list back, so this self-heals.
+  if (file.paragraphStartsSanitized) {
+    notices.push(
+      'Some of the saved paragraph grouping was invalid and was removed — regroup if you still want it.',
+    );
+  }
   const notice = notices.length > 0 ? notices.join(' ') : null;
 
   const spans: ChapterSpans =

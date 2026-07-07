@@ -68,7 +68,13 @@ export function hasParagraphEnglish(row: RowModel): boolean {
   return (row.englishPara?.content?.length ?? 0) > 0;
 }
 
-/** All English docs that can carry footnote markers, across both D8 layers. */
+/**
+ * All English docs of a row across both D8 layers (sentence segments +
+ * englishPara). NOT for footnote walks: footnotes are a sentence-layer
+ * feature (D8 v1 rule — see editor/serialize.ts stripFootnoteRuns), so
+ * marker/anchoring/renumbering scans use englishDocsOf; paragraph-layer
+ * marker markup is stripped at the hydration/serialization/export boundaries.
+ */
 export function allEnglishDocsOf(row: RowModel): PMDocJSON[] {
   return [...englishDocsOf(row), ...(row.englishPara ? [row.englishPara] : [])];
 }

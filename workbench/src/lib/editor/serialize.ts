@@ -414,6 +414,40 @@ export function joinRowDocs(docs: PMDocJSON[]): PMDocJSON {
   return buildRowDoc(runs).toJSON();
 }
 
+/**
+ * Strip footnote markup from a row doc: marker nodes are removed and fnRef
+ * marks are cleared, keeping every character of text (lossless for the
+ * surrounding prose; only the footnote DECORATION goes).
+ *
+ * D8 v1 rule: footnotes are a SENTENCE-LAYER feature, period. The paragraph
+ * layer ([ENGLISH.PARA] / RowModel.englishPara) does not model footnote
+ * markers — the editor blocks inserting them there (D8 Phase E2) — but marker
+ * markup can still arrive via paste or a hand-edited file. Every boundary
+ * where sentence-layer markers become LIVE footnotes (hydration,
+ * serialization, export) runs paragraph-layer content through this instead,
+ * so a para-layer `{^id:phrase}` deterministically degrades to plain
+ * "phrase": it never anchors, creates, renumbers, or exports a footnote.
+ */
+export function stripFootnoteRuns(runs: InlineRun[]): InlineRun[] {
+  return runs
+    .filter((run) => run.kind !== 'marker')
+    .map((run) =>
+      run.kind === 'text' && run.marks.fnRef !== undefined
+        ? { ...run, marks: { ...run.marks, fnRef: undefined } }
+        : run,
+    );
+}
+
+/** stripFootnoteRuns on a whole row doc (see that function for the policy). */
+export function stripFootnoteMarkup(doc: PMNode): PMNode {
+  return buildRowDoc(stripFootnoteRuns(runsOf(doc)));
+}
+
+/** stripFootnoteMarkup at the one-line-markup level (export-side helper). */
+export function stripFootnoteMarkupLine(line: string): string {
+  return serializeRow(stripFootnoteMarkup(parseRow(line)));
+}
+
 /** Dev-build guard: assert the round-trip on a doc; throws on mismatch. */
 export function assertRoundTrip(doc: PMNode): void {
   const line = serializeRow(doc);

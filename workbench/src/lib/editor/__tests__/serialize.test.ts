@@ -13,6 +13,8 @@ import {
   parseRowSegments,
   serializeRowSegments,
   joinRowDocs,
+  stripFootnoteMarkup,
+  stripFootnoteMarkupLine,
   type InlineRun,
   type MarkSet,
 } from '../serialize';
@@ -152,6 +154,33 @@ describe('footnote invariant helpers', () => {
 
   it('assertRoundTrip passes for a valid doc and throws for none', () => {
     expect(() => assertRoundTrip(doc(t('fine ', { bold: true }), t('ok', { fnRef: '1' }), m('1')))).not.toThrow();
+  });
+});
+
+describe('stripFootnoteMarkup (D8 v1 — footnotes are sentence-layer only)', () => {
+  it('removes marker nodes and clears fnRef marks, keeping every character of text', () => {
+    const d = doc(t('Beta ', {}), t('stray', { fnRef: '2' }), m('2'), t(' tail ', {}), m('3'));
+    const stripped = stripFootnoteMarkup(d);
+    expect(stripped.eq(doc(t('Beta stray tail ')))).toBe(true);
+  });
+
+  it('keeps the other marks on a stripped fnRef run', () => {
+    const d = doc(t('kept', { fnRef: '1', italic: true }), m('1'));
+    expect(stripFootnoteMarkup(d).eq(doc(t('kept', { italic: true })))).toBe(true);
+  });
+
+  it('a marker-only doc strips to the empty doc', () => {
+    expect(stripFootnoteMarkup(doc(m('7'))).content.size).toBe(0);
+  });
+
+  it('a doc with no footnote markup is unchanged', () => {
+    const d = doc(t('plain ', { bold: true }), t('τὸ ὄν', { greek: true }));
+    expect(stripFootnoteMarkup(d).eq(d)).toBe(true);
+  });
+
+  it('stripFootnoteMarkupLine works at the one-line-markup level (export boundary)', () => {
+    expect(stripFootnoteMarkupLine('Beta {^2:stray} tail {^3:}')).toBe('Beta stray tail ');
+    expect(stripFootnoteMarkupLine('no markers *here*')).toBe('no markers *here*');
   });
 });
 

@@ -529,6 +529,59 @@ describe('chapterToPandocMarkdown — document-spine export (D8)', () => {
         'Line three\n',
     );
   });
+
+  // Footnotes are a SENTENCE-LAYER feature (D8 v1 rule): marker markup in
+  // [ENGLISH.PARA] renders as plain phrase text — no [^id] reference, no
+  // footnote body pulled in — matching hydration, which strips the same
+  // markers on load.
+  it('paragraph-layer footnote markers are stripped at export: phrase as plain text, no reference, no body', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶2',
+      },
+      greekLines: ['Source one.', 'Source two.'],
+      englishLines: ['Sentence layer with a real {^1:anchor}.', ''],
+      englishParaLines: ['', 'Para layer with a {^2:stray} marker.'],
+      footnotes: [
+        { id: 1, body: 'real note' },
+        { id: 2, body: 'para-only note' },
+      ],
+    };
+    const md = chapterToPandocMarkdown(c, FREE_PARAGRAPH_META);
+    expect(md).toContain('anchor[^1]');
+    expect(md).toContain('[^1]: real note');
+    expect(md).toContain('Para layer with a stray marker.');
+    expect(md).not.toContain('[^2]');
+    expect(md).not.toContain('para-only note');
+  });
+
+  it('a marker-only paragraph line strips to nothing and counts as untranslated', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶3',
+      },
+      greekLines: ['Source one.', 'Source two.', 'Source three.'],
+      englishLines: ['First.', '', ''],
+      englishParaLines: ['', '{^7:}', ''],
+      footnotes: [],
+    };
+    // Row 2's para layer is decoration-only → an untranslated gap, exactly as
+    // if the line were blank (one ellipsis between translated content — none
+    // follows here, so no trailing ellipsis either).
+    expect(chapterToPandocMarkdown(c, FREE_PARAGRAPH_META)).toBe('# Free Paragraph\n\nFirst.\n');
+  });
 });
 
 describe('chapterToPandocMarkdown — footnote blocks', () => {
