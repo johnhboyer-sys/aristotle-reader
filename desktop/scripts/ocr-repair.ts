@@ -16,6 +16,7 @@ import { grade, formatSummary, diffSummaries, type GradeSummary } from '../src/l
 import { slicePages } from '../src/lib/ocr-repair/slice';
 import { repairSkeleton } from '../src/lib/ocr-repair/skeleton';
 import { reseatGutter } from '../src/lib/ocr-repair/gutter-reseat';
+import { normalizeSpacing } from '../src/lib/ocr-repair/spacing';
 import { extractWitnessAnchors } from '../src/lib/ocr-repair/witness-anchors';
 
 interface StageResult {
@@ -58,6 +59,11 @@ const STAGES: Stage[] = [
       const witness = extractWitnessAnchors(readFileSync(config.witnessPath, 'utf8'));
       return reseatGutter(text, config, witness);
     },
+  },
+  {
+    n: 4,
+    name: 'spacing',
+    run: (text, config) => normalizeSpacing(text, config),
   },
 ];
 

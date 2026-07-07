@@ -239,3 +239,14 @@ so stages 2–5 stay general:
   as evidence; Greek tokens are always Tier 2 (witness reading attached as
   evidence, never auto-applied); witness normalization decodes apparatus
   encodings for MATCHING only.
+
+## Stage 4 — prose spacing normalization (2026-07-07)
+
+`spacing.ts` per stage4-spec.md. Grader: ONLY displayBlocks moved —
+PA 468 → 3, APo 7 → 2 (everything else byte-stable vs stage 3, asserted by
+the delta printer). Survivors = the 5 enumerated hand-check items (PA p33
+leaked furniture pair, p54/p94 BOOK headings w/ trailing bare page numbers;
+APo p29/p51 centered bare chapter numerals — converter refuses bare-numeral
+chapters in multi-book works). 51 tests green; pdf-import zero-diff.
+`config.preserveDisplayLines` escape added for a hypothetical high-alpha
+real table (none exist in PA/APo; Apostle contingency).

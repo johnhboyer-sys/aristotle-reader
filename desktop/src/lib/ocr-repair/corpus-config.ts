@@ -48,6 +48,7 @@ export interface CorpusConfig {
   witnessPath: string;
   /** Optional chapter map (Bekker ranges per chapter) for slice cross-checks. */
   chapterMapPath?: string;
+  preserveDisplayLines?: { page: number; from: number; to: number }[];
   /**
    * Stage-1 slice boundaries, pattern-driven so an unseen edition needs only
    * config. Patterns are regex sources tested line-by-line against a page;
