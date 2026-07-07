@@ -56,7 +56,7 @@
   import { toggleMark } from '@tiptap/pm/commands';
 
   import type { FixtureChapter } from '../../dev/fixture-meta-z17';
-  import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf, hasSentenceEnglish } from './model';
+  import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf, hasSentenceEnglish, hasParagraphEnglish } from './model';
   import type { ChapterModel } from './model';
   import { rowSchema, docFromJSON, markerIdsIn, emptyRowDocJSON } from './schema';
   import type { PMDocJSON } from './schema';
@@ -88,8 +88,10 @@
   import { expandRows, snapToWordStart, splitUnsplitRow, mergeSegments, mergeNeedsConfirm } from './gridRows';
   import type { DisplayRow } from './gridRows';
   import { currentViewMode, setViewMode } from './viewMode.svelte';
+  import { currentGranularity, setGranularity } from './viewMode.svelte';
   import { legalViews } from './viewPolicy';
-  import type { ViewMode } from './viewPolicy';
+  import type { ViewMode, InterpolatedGranularity } from './viewPolicy';
+  import { usesParaLayer, showGranularityToggle, sourceSlices } from './interpolated';
   import { getScheme } from '../citation/registry';
   import type { WorkMeta } from '../citation/types';
   import { isTauri } from '../runtime';
@@ -128,6 +130,7 @@
   import GreekCell from './GreekCell.svelte';
   import RowGutter from './RowGutter.svelte';
   import EnglishCell from './EnglishCell.svelte';
+  import InterpolatedUnit from './InterpolatedUnit.svelte';
   import './editor.css';
 
   let { fixture }: { fixture: FixtureChapter } = $props();
@@ -244,28 +247,46 @@
   const legalViewModes = legalViews(scheme);
   // The current, validated view mode for this work (reactive store, clamped
   // to legalViews). `grid` (line grid) · `paragraph` (paragraph-unit view /
-  // chunked line view) · `interpolated` (next phase, not yet rendered).
+  // chunked line view) · `interpolated` (single-column stack: the English
+  // field with its display-only original beneath it).
   const viewMode = $derived<ViewMode>(currentViewMode(model.workId, scheme));
-  // The modes the toggle actually offers this phase: interpolated is a legal
-  // target but its view lands next phase, so it's hidden. The toggle appears
-  // only when more than one SELECTABLE mode exists — a document-spine
-  // paragraph doc (legal: paragraph + interpolated) then shows no lone button.
-  const toggleModes = legalViewModes.filter((m) => m !== MODE_INTERPOLATED);
+  // The toggle offers every legal mode (interpolated landed this phase). It
+  // appears only when more than one mode exists — a hypothetical one-mode
+  // scheme shows no lone button.
+  const toggleModes = legalViewModes;
   function chooseView(mode: ViewMode) {
     setViewMode(model.workId, scheme, mode);
   }
+  function viewLabel(m: ViewMode): string {
+    return m === MODE_GRID ? 'Lines' : m === MODE_PARAGRAPH ? 'Paragraphs' : 'Interpolated';
+  }
+  // Interpolated granularity for this work (D8 §5): 'unit' (one block per
+  // model row) or 'sentence' (one block per sentence segment). Only
+  // meaningful for paragraph-row-unit docs; the sub-toggle is offered only
+  // for DOCUMENT-SPINE ones (showGranularityToggle — line docs interpolate
+  // by line, their natural unit).
+  const granularity = $derived<InterpolatedGranularity>(currentGranularity(model.workId));
+  const granularityToggle = $derived(showGranularityToggle(scheme, viewMode));
+  const GRAN_UNIT: InterpolatedGranularity = 'unit';
+  const GRAN_SENTENCE: InterpolatedGranularity = 'sentence';
+  function chooseGranularity(g: InterpolatedGranularity) {
+    setGranularity(model.workId, g);
+  }
   /**
-   * PARAGRAPH-UNIT view: a document-spine paragraph doc showing one visual
-   * unit per model row, whose English cell edits the paragraph layer
-   * (englishPara). A plain-line doc in `paragraph` mode is still line-based
-   * (grouped chunks, per-line sentence cells) — NOT unit-view — so this is
-   * gated on the row unit being a paragraph, never the mode alone.
-   *
-   * The row-unit test is a `switch` (not a `rowUnit ===` literal) on purpose:
-   * the paragraph rowUnit string is both a GutterSpec rowUnit AND a registered
-   * scheme id, and schemeIdIsolation.test.ts's source scan for `=== '<id>'`
-   * can't tell the two apart by text — the switch is the sanctioned way to
-   * compare a rowUnit (same pattern as viewPolicy.ts). */
+   * PARA-LAYER UNIT view (usesParaLayer, interpolated.ts): a paragraph-row-
+   * unit doc showing one visual unit per model row, whose English field edits
+   * the paragraph layer (englishPara) — the `paragraph` view (D1 semantics
+   * unchanged) or the `interpolated` view at 'unit' granularity. A plain-line
+   * doc in `paragraph` mode is still line-based (grouped chunks, per-line
+   * sentence cells) — NOT unit-view — so this is gated on the row unit being
+   * a paragraph, never the mode alone.
+   */
+  const paragraphUnitView = $derived(usesParaLayer(scheme, viewMode, granularity));
+  /** The row-unit test as a `switch` (not a `rowUnit ===` literal) on
+   * purpose: the paragraph rowUnit string is both a GutterSpec rowUnit AND a
+   * registered scheme id, and schemeIdIsolation.test.ts's source scan for
+   * `=== '<id>'` can't tell the two apart by text — the switch is the
+   * sanctioned way to compare a rowUnit (same pattern as viewPolicy.ts). */
   function isParagraphRowUnit(): boolean {
     switch (scheme.gutter.rowUnit) {
       case 'paragraph':
@@ -274,9 +295,8 @@
         return false;
     }
   }
-  const paragraphUnitView = $derived(viewMode === MODE_PARAGRAPH && isParagraphRowUnit());
   /** The editing layer the mounted cells use right now (D8 §4). Only the
-   * paragraph-unit view edits englishPara; every other view edits the
+   * para-layer unit views edit englishPara; every other view edits the
    * sentence layer. Non-reactive read used by vkey/viewAt (they run in plain
    * functions); paragraphUnitView is the reactive source of truth. */
   function activeLayer(): EditLayer {
@@ -292,11 +312,13 @@
   function refreshDisplayRows() {
     displayRows = expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence');
   }
-  // Re-expand when the view mode flips (the granularity changes): the keyed
-  // {#each} then remounts cells for the new layer. Runs after `ready`, so the
-  // initial hydrate (which calls refreshDisplayRows itself) isn't doubled.
+  // Re-expand when the view mode OR the interpolated granularity flips (both
+  // change the expansion): the keyed {#each} then remounts cells for the new
+  // layer. Runs after `ready`, so the initial hydrate (which calls
+  // refreshDisplayRows itself) isn't doubled.
   $effect(() => {
     void viewMode; // track
+    void granularity; // track (interpolated 'unit' ⇄ 'sentence' re-expands)
     if (ready) refreshDisplayRows();
   });
   let flashRowIdx = $state(-1); // grid ordinal
@@ -338,9 +360,13 @@
   function focusedGrid(): number {
     return focusedRow >= 0 ? gridOrdinalOf(focusedRow, focusedSegment) : -1;
   }
-  /** Cell (row, segment)'s current doc: live view when mounted, else the committed model. */
+  /** SENTENCE-layer doc of cell (row, segment): live sentence view when
+   * mounted, else the committed model. The layer is EXPLICIT — never viewAt,
+   * whose active-layer default would hand back the mounted PARA view for
+   * every segment in a para-layer view and let paragraph text masquerade as
+   * (and, via commit/undo snapshots, LEAK INTO) the sentence layer. */
   function segmentDoc(row: number, segment: number): PMNode {
-    const view = viewAt(row, segment);
+    const view = views.get(vkey(row, segment, 'sentence'));
     if (view) return view.state.doc;
     const r = model.rows[row];
     return docFromJSON(segment === 0 ? r.english : (r.english2?.[segment - 1] ?? emptyRowDocJSON()));
@@ -380,6 +406,33 @@
   }
 
   /**
+   * Read-only paragraph-layer text for row i (§4 "text stays at its unit",
+   * the mirror of sentenceLayerText): in sentence-granularity interpolated
+   * blocks a non-empty englishPara renders ONCE per row — above the row's
+   * first sentence block — as a labelled read-only block, copyable for
+   * manual distribution. Never moved or destroyed by a granularity switch.
+   */
+  function paraLayerText(i: number): string | null {
+    if (!hasParagraphEnglish(model.rows[i])) return null;
+    return plainRowText(paraDoc(i));
+  }
+
+  /**
+   * Display slices of a display row's original text for the interpolated
+   * view (§5): the unit view shows the WHOLE paragraph with its sentence
+   * divisions (splitOffsets) as subtle separators; sentence/line blocks show
+   * their own slice. Display-only (sourceSlices trims); the model text is
+   * untouched.
+   */
+  function interpSlices(d: DisplayRow): string[] {
+    if (paragraphUnitView) {
+      const row = model.rows[d.rowIndex];
+      return sourceSlices(row.greek, row.splitOffsets);
+    }
+    return sourceSlices(d.greekSlice);
+  }
+
+  /**
    * Paragraph-chunk grouping for PLAIN-LINE document-spine works (§5): the
    * display rows whose model row begins a paragraph chunk (1-based ordinals in
    * model.paragraphStarts). Pure display metadata — the doc stays line-based.
@@ -389,18 +442,33 @@
   const chunkStartGrids = $derived.by(() => {
     const starts = new Set(model.paragraphStarts ?? []);
     const out = new Set<number>();
-    if (viewMode !== MODE_PARAGRAPH || paragraphUnitView) return out; // only the line-doc chunk view
+    // Grouping applies to the line-doc chunk view (§5) and the interpolated
+    // stack (§3): line docs group by paragraph_starts; a paragraph doc's
+    // sentence blocks group by their paragraph row. Unit views need none —
+    // every unit already IS a paragraph.
+    const interp = viewMode === MODE_INTERPOLATED;
+    if (paragraphUnitView || (viewMode !== MODE_PARAGRAPH && !interp)) return out;
+    const perRow = interp && isParagraphRowUnit(); // sentence blocks per paragraph row
     for (let g = 0; g < displayRows.length; g++) {
       const d = displayRows[g];
       // A chunk break lands on the FIRST display row of a model row that starts
       // a paragraph (a split line's continuation segments never open a chunk).
-      if (d.segment === 0 && (d.rowIndex === 0 || starts.has(d.rowIndex + 1))) out.add(g);
+      if (d.segment === 0 && (perRow || d.rowIndex === 0 || starts.has(d.rowIndex + 1))) out.add(g);
     }
     return out;
   });
+  /** Doc size of grid cell g's ACTIVE field (rowKeymap emptiness for paste
+   * distribution): the live view when mounted (the normal case — every
+   * displayed cell mounts), else the active layer's committed field. */
   function gridDocSize(g: number): number {
     const d = displayRows[g];
-    return d ? segmentDoc(d.rowIndex, d.segment).content.size : 0;
+    if (!d) return 0;
+    const view = viewAt(d.rowIndex, d.segment);
+    if (view) return view.state.doc.content.size;
+    if (activeLayer() === 'para') {
+      return docFromJSON(model.rows[d.rowIndex].englishPara ?? emptyRowDocJSON()).content.size;
+    }
+    return segmentDoc(d.rowIndex, d.segment).content.size;
   }
   /** The row's full structural state for an undo payload (docs + offsets +
    * the paragraph layer). englishPara is captured whenever the row has one
@@ -472,10 +540,14 @@
     // the last keystrokes. This may dispatch (and schedule a commit timer),
     // so it runs BEFORE the timer check. domObserver is internal but stable.
     // The paragraph-layer view (englishPara) is flushed/committed alongside
-    // the sentence segments — a row mounts at most one layer at a time (D8 §4).
+    // the sentence segments — a row mounts at most one layer at a time
+    // (D8 §4). Both loops address their layer's views EXPLICITLY (never
+    // viewAt, whose active-layer default would resolve every sentence
+    // segment to the mounted para view in a para-layer view and commit the
+    // paragraph text into english/english2 — cross-layer corruption).
     const paraView = views.get(vkey(i, 0, 'para'));
     for (let s = 0; s < count; s++) {
-      const view = viewAt(i, s);
+      const view = views.get(vkey(i, s, 'sentence'));
       if (view) (view as unknown as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
     }
     if (paraView) (paraView as unknown as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
@@ -487,7 +559,7 @@
     }
     let sawView = false;
     for (let s = 0; s < count; s++) {
-      const view = viewAt(i, s);
+      const view = views.get(vkey(i, s, 'sentence'));
       if (!view) continue;
       sawView = true;
       const doc = view.state.doc;
@@ -678,9 +750,23 @@
     // fall through to the keyed {#each} remount below — their components
     // unmount and destroyView skips the stale commit.
     for (const [key, view] of views) {
-      const [r, s] = key.split(':').map(Number);
-      if (r >= model.rows.length || s >= segmentCount(model.rows[r])) continue;
+      const [rStr, sStr] = key.split(':');
+      const r = Number(rStr);
+      if (r >= model.rows.length) continue;
       const row = model.rows[r];
+      // A paragraph-layer view keys as `${row}:para` (D8 §4) — refresh it
+      // from englishPara, never from the sentence fields (and never let
+      // Number('para') = NaN slip past the segment guard below).
+      if (sStr === 'para') {
+        view.dispatch(
+          view.state.tr
+            .replaceWith(0, view.state.doc.content.size, docFromJSON(row.englishPara ?? emptyRowDocJSON()).content)
+            .setMeta('appHistoryIgnore', true),
+        );
+        continue;
+      }
+      const s = Number(sStr);
+      if (s >= segmentCount(row)) continue;
       const newDoc = docFromJSON(s === 0 ? row.english : row.english2![s - 1]);
       view.dispatch(
         view.state.tr
@@ -2592,11 +2678,9 @@
         <span class="chapter-head-ref">{model.bookLabel}.{model.chapter} · {model.bekkerRange}</span>
       </h1>
       {#if toggleModes.length > 1}
-        <!-- View-mode toggle (D8 §5): only shown when more than one SELECTABLE
+        <!-- View-mode toggle (D8 §5): only shown when more than one legal
              view exists. Sits in the chapter chrome (not the top-bar) because
-             legality is per-work — it needs this editor's scheme. Interpolated
-             is a legal target but its view lands next phase; kept out of the
-             switch for now (no dead button). -->
+             legality is per-work — it needs this editor's scheme. -->
         <div class="view-toggle" role="group" aria-label="View mode">
           {#each toggleModes as m (m)}
             <button
@@ -2606,8 +2690,32 @@
               aria-pressed={viewMode === m}
               onmousedown={(e) => e.preventDefault()}
               onclick={() => chooseView(m)}
-            >{m === MODE_GRID ? 'Lines' : 'Paragraphs'}</button>
+            >{viewLabel(m)}</button>
           {/each}
+        </div>
+      {/if}
+      {#if granularityToggle}
+        <!-- Interpolated granularity sub-toggle (D8 §5): offered only while
+             the interpolated view is active on a document-spine paragraph doc
+             (showGranularityToggle) — 'unit' edits englishPara per paragraph,
+             'sentence' edits the normal sentence layer per sentence. -->
+        <div class="view-toggle" role="group" aria-label="Interpolated granularity">
+          <button
+            class="view-toggle-btn"
+            class:active={granularity === GRAN_UNIT}
+            type="button"
+            aria-pressed={granularity === GRAN_UNIT}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => chooseGranularity(GRAN_UNIT)}
+          >By paragraph</button>
+          <button
+            class="view-toggle-btn"
+            class:active={granularity === GRAN_SENTENCE}
+            type="button"
+            aria-pressed={granularity === GRAN_SENTENCE}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => chooseGranularity(GRAN_SENTENCE)}
+          >By sentence</button>
         </div>
       {/if}
       {#if saveLabel}
@@ -2618,6 +2726,39 @@
       {/if}
     </header>
 
+    {#if viewMode === MODE_INTERPOLATED}
+      <!-- INTERPOLATED view (D8 §5): a single-column stack — for each display
+           unit, the English field on top with the display-only original
+           beneath it. Same displayRows / same keyed identity as the grid, so
+           navigation, commit, undo and assist plumbing are untouched. The
+           original is plain text (never an editor); split/merge gestures are
+           structure editing and stay suppressed here (next phase). -->
+      <div class="interp-stack" bind:this={gridEl}>
+        {#each displayRows as d, g (d.key)}
+          <InterpolatedUnit
+            gridRow={g}
+            row={d.rowIndex}
+            segment={d.segment}
+            {host}
+            layer={paragraphUnitView ? 'para' : 'sentence'}
+            addr={d.address.raw}
+            slices={interpSlices(d)}
+            paraText={paragraphUnitView || d.segment !== 0 ? null : paraLayerText(d.rowIndex)}
+            sentenceText={paragraphUnitView ? sentenceLayerText(d.rowIndex) : null}
+            flash={flashRowIdx === g}
+            focused={focusRow === d.rowIndex && focusSeg === d.segment}
+            chunkStart={chunkStartGrids.has(g)}
+            pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
+            onPasteConfirm={confirmPaste}
+            onPasteCancel={cancelPaste}
+            unsplitConfirm={pendingUnsplit?.row === d.rowIndex && d.segment === 0}
+            onUnsplitConfirm={confirmUnsplit}
+            onUnsplitCancel={cancelUnsplit}
+            onContext={(e) => onEnglishContextMenu(e, g)}
+          />
+        {/each}
+      </div>
+    {:else}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- The three columns are grouped in DOM order (all Greek, then all
          gutters, then all English) rather than interleaved per row, so a drag
@@ -2671,6 +2812,7 @@
         />
       {/each}
     </div>
+    {/if}
   {/if}
 
   {#if ctxMenu}
