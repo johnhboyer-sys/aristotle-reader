@@ -74,16 +74,54 @@ export function showGranularityToggle(scheme: CitationScheme, mode: ViewMode): b
  * are dropped. An empty source yields [''] so callers can test emptiness.
  */
 export function sourceSlices(source: string, splitOffsets?: number[]): string[] {
+  return sourceSliceSpans(source, splitOffsets).map((s) => s.text);
+}
+
+/** A display slice with its provenance: `start` is the MODEL offset of the
+ * trimmed text's first character within `source`. The spans concatenate to
+ * exactly what the interpolated source block displays (separators render as
+ * empty elements and contribute no text), which is what lets a caret offset
+ * measured in the DOM map back to a model offset. */
+export interface SourceSliceSpan {
+  text: string;
+  start: number;
+}
+
+export function sourceSliceSpans(source: string, splitOffsets?: number[]): SourceSliceSpan[] {
   const offsets = [
     ...new Set((splitOffsets ?? []).filter((o) => Number.isInteger(o) && o > 0 && o < source.length)),
   ].sort((a, b) => a - b);
-  const out: string[] = [];
+  const spans: SourceSliceSpan[] = [];
   let prev = 0;
-  for (const o of offsets) {
-    out.push(source.slice(prev, o).trim());
-    prev = o;
+  for (const end of [...offsets, source.length]) {
+    const raw = source.slice(prev, end);
+    const text = raw.trim();
+    if (text.length > 0) {
+      spans.push({ text, start: prev + (raw.length - raw.trimStart().length) });
+    }
+    prev = end;
   }
-  out.push(source.slice(prev).trim());
-  const nonEmpty = out.filter((s) => s.length > 0);
-  return nonEmpty.length > 0 ? nonEmpty : [''];
+  return spans.length > 0 ? spans : [{ text: '', start: 0 }];
+}
+
+/**
+ * Map a caret offset measured in the interpolated source block's DISPLAY
+ * text (the trimmed slices concatenated — separators contribute nothing)
+ * back to the corresponding MODEL offset in `source`. An offset that falls
+ * exactly between two slices resolves to the end of the earlier one — the
+ * word-start snap downstream treats both sides alike. Returns null when the
+ * offset lies beyond the display text.
+ */
+export function sourceOffsetAtDisplay(
+  source: string,
+  splitOffsets: number[] | undefined,
+  displayOffset: number,
+): number | null {
+  if (displayOffset < 0) return null;
+  let acc = 0;
+  for (const span of sourceSliceSpans(source, splitOffsets)) {
+    if (displayOffset <= acc + span.text.length) return span.start + (displayOffset - acc);
+    acc += span.text.length;
+  }
+  return null;
 }

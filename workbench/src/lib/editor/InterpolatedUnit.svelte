@@ -10,9 +10,10 @@
   // div, never a TipTap node. user-select stays on — it is not adjacent to
   // another editable column here, so the two-column DOM-grouping selection
   // invariant does not apply (documented in the design; it remains mandatory
-  // for the grid/paragraph views). Right-click on it opens the same AI menu
-  // as the field (the split/merge gestures are structure editing and are
-  // suppressed in this view — next phase).
+  // for the grid/paragraph views). Right-click on the ORIGINAL opens the
+  // same structure menu as the work's two-column views (refinement pass —
+  // onSourceContext, offset-mapped through the display slices); the FIELD
+  // keeps the AI-only menu (onContext), like every English cell.
   import EnglishCell from './EnglishCell.svelte';
   import type { RowViewHost, EditLayer } from './ChapterEditor.svelte';
 
@@ -37,6 +38,7 @@
     onUnsplitConfirm,
     onUnsplitCancel,
     onContext,
+    onSourceContext = null,
   }: {
     gridRow: number;
     row: number;
@@ -73,6 +75,9 @@
     onUnsplitConfirm: () => void;
     onUnsplitCancel: () => void;
     onContext: (e: MouseEvent) => void;
+    /** Structure-aware menu for the ORIGINAL (refinement pass): falls back
+     * to onContext (AI-only) when the host doesn't wire it. */
+    onSourceContext?: ((e: MouseEvent) => void) | null;
   } = $props();
 
   const sourceText = $derived(slices.join(''));
@@ -116,6 +121,6 @@
 
   {#if sourceText.trim().length > 0}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="interp-source" lang="grc" oncontextmenu={onContext}>{#each slices as s, i (i)}{#if i > 0}<span class="interp-sep" aria-hidden="true"></span>{/if}{s}{/each}</div>
+    <div class="interp-source" lang="grc" oncontextmenu={onSourceContext ?? onContext}>{#each slices as s, i (i)}{#if i > 0}<span class="interp-sep" aria-hidden="true"></span>{/if}{s}{/each}</div>
   {/if}
 </section>

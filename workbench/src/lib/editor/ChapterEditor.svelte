@@ -103,7 +103,7 @@
   import { currentGranularity, setGranularity } from './viewMode.svelte';
   import { legalViews } from './viewPolicy';
   import type { ViewMode, InterpolatedGranularity } from './viewPolicy';
-  import { usesParaLayer, showGranularityToggle, sourceSlices } from './interpolated';
+  import { usesParaLayer, showGranularityToggle, sourceSlices, sourceOffsetAtDisplay } from './interpolated';
   import { getScheme } from '../citation/registry';
   import type { WorkMeta } from '../citation/types';
   import { isTauri } from '../runtime';
@@ -1471,7 +1471,9 @@
   /** Which column a DOM node sits in, for column-scoped selection/copy. */
   function columnOfDomNode(node: Node | null): 'greek' | 'english' | null {
     const el = node instanceof Element ? node : node?.parentElement;
-    if (el?.closest('.grc-cell')) return 'greek';
+    // The interpolated original counts as the source column (refinement
+    // pass): a multi-block source selection batch-translates, like the grid.
+    if (el?.closest('.grc-cell') || el?.closest('.interp-source')) return 'greek';
     if (el?.closest('.en-cell')) return 'english';
     return null;
   }
@@ -2357,6 +2359,78 @@
       noun: assistUnitFor(activeLayer(), d.rowIndex),
       rowNoun: rowUnitNoun(),
     });
+  }
+
+  /** Right-click the interpolated ORIGINAL (refinement pass): the same
+   * structure menu as the work's two-column views — full parity. The only
+   * new mechanics is the offset: the block displays TRIMMED slices joined by
+   * text-less separators, so the caret offset is mapped back to a model
+   * offset via sourceOffsetAtDisplay before the usual word-start snap.
+   * Document-spine paragraph docs get the paraDoc menu in BOTH granularities
+   * (a sentence block's click maps into its whole row); everything else
+   * mirrors the grid's Greek-cell menu (chunk toggle on plain-line rows, D6
+   * split/merge — sentence-labelled on corpus paragraph rows by
+   * buildCtxMenu). */
+  function onInterpSourceContextMenu(e: MouseEvent, g: number) {
+    e.preventDefault();
+    const d = displayRows[g];
+    if (!d) return;
+    const noun = assistUnitFor(activeLayer(), d.rowIndex);
+    const rowNoun = rowUnitNoun();
+    const within = caretOffsetFromPoint(e);
+    const row = model.rows[d.rowIndex];
+    const selRows = selectedGreekModelRows();
+    const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
+    if (canEditRowStructure(scheme)) {
+      // Unit granularity displays the whole row (its sentence separators
+      // contribute no text); sentence granularity displays one slice of it —
+      // both map to an offset in the row's own source.
+      let mapped: number | null = null;
+      if (within !== null) {
+        if (paragraphUnitView) {
+          mapped = sourceOffsetAtDisplay(row.greek, row.splitOffsets, within);
+        } else {
+          const local = sourceOffsetAtDisplay(d.greekSlice, undefined, within);
+          mapped = local === null ? null : d.greekStart + local;
+        }
+      }
+      const snapped = mapped === null ? null : snapToWordStart(row.greek, mapped);
+      ctxMenu = withMenuModel({
+        x: e.clientX,
+        y: e.clientY,
+        row: d.rowIndex,
+        segment: d.segment,
+        merge: false,
+        offset: snapped,
+        noun,
+        rowNoun,
+        translateRows,
+        paraDoc: {
+          canMergePrev: d.rowIndex > 0,
+          joinBoundary: mapped === null ? null : joinBoundaryAt(row.splitOffsets, mapped),
+        },
+      });
+      return;
+    }
+    if (paragraphUnitView) {
+      // Corpus-spine paragraph docs (Busse) at unit granularity: the corpus
+      // owns their row count — AI-only, exactly like their paragraph view.
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: 0, merge: false, offset: null, aiOnly: true, noun, rowNoun, translateRows });
+      return;
+    }
+    const chunkState =
+      canGroupLines(scheme) && d.rowIndex > 0 && d.segment === 0
+        ? (model.paragraphStarts ?? []).includes(d.rowIndex + 1)
+          ? ('remove' as const)
+          : ('add' as const)
+        : undefined;
+    if (segmentCount(row) > 1) {
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk: chunkState });
+      return;
+    }
+    const local = within === null ? null : sourceOffsetAtDisplay(d.greekSlice, undefined, within);
+    const offset = local === null ? null : snapToWordStart(row.greek, d.greekStart + local);
+    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk: chunkState });
   }
 
   function menuSplit() {
@@ -3431,8 +3505,9 @@
            unit, the English field on top with the display-only original
            beneath it. Same displayRows / same keyed identity as the grid, so
            navigation, commit, undo and assist plumbing are untouched. The
-           original is plain text (never an editor); split/merge gestures are
-           structure editing and stay suppressed here (next phase). -->
+           original is plain text (never an editor); right-clicking it opens
+           the full structure menu (refinement pass — see
+           onInterpSourceContextMenu), the field the AI-only one. -->
       <div class="interp-stack" bind:this={gridEl}>
         {#each displayRows as d, g (d.key)}
           <InterpolatedUnit
@@ -3456,6 +3531,7 @@
             onUnsplitConfirm={confirmUnsplit}
             onUnsplitCancel={cancelUnsplit}
             onContext={(e) => onEnglishContextMenu(e, g)}
+            onSourceContext={(e) => onInterpSourceContextMenu(e, g)}
           />
         {/each}
       </div>

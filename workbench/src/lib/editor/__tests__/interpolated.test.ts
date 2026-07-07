@@ -5,7 +5,7 @@
 // sentence divisions (sourceSlices).
 import { describe, expect, it } from 'vitest';
 
-import { usesParaLayer, showGranularityToggle, sourceSlices } from '../interpolated';
+import { usesParaLayer, showGranularityToggle, sourceSlices, sourceSliceSpans, sourceOffsetAtDisplay } from '../interpolated';
 import { paragraphScheme } from '../../citation/schemes/paragraphScheme';
 import { plainLineScheme } from '../../citation/schemes/plainLineScheme';
 import { bekkerStandard } from '../../citation/schemes/bekkerStandard';
@@ -99,5 +99,55 @@ describe('sourceSlices — a unit’s original divided at its sentence boundarie
     expect(sourceSlices('ab  cd', [2, 3])).toEqual(['ab', 'cd']); // middle slice is whitespace-only
     expect(sourceSlices('')).toEqual(['']);
     expect(sourceSlices('   ')).toEqual(['']);
+  });
+});
+
+describe('sourceSliceSpans + sourceOffsetAtDisplay — display↔model offset mapping (refinement pass)', () => {
+  const text = 'πρῶτον μὲν οὖν. δεύτερον δέ· τρίτον τέλος.';
+  const afterFirst = text.indexOf('δεύτερον'); // slice trims the boundary space
+  const afterSecond = text.indexOf('τρίτον');
+
+  it('spans carry the model offset of each trimmed slice', () => {
+    expect(sourceSliceSpans(text, [afterFirst, afterSecond])).toEqual([
+      { text: 'πρῶτον μὲν οὖν.', start: 0 },
+      { text: 'δεύτερον δέ·', start: afterFirst },
+      { text: 'τρίτον τέλος.', start: afterSecond },
+    ]);
+    // leading whitespace shifts the span start, not its text
+    expect(sourceSliceSpans('  ab cd  ')).toEqual([{ text: 'ab cd', start: 2 }]);
+    expect(sourceSliceSpans('')).toEqual([{ text: '', start: 0 }]);
+  });
+
+  it('sourceSlices stays exactly the spans’ texts (behavior unchanged)', () => {
+    expect(sourceSlices(text, [afterSecond, afterFirst, afterFirst])).toEqual(
+      sourceSliceSpans(text, [afterFirst, afterSecond]).map((s) => s.text),
+    );
+  });
+
+  it('a display offset maps back through trimmed, separator-joined slices', () => {
+    // display = 'πρῶτον μὲν οὖν.' + 'δεύτερον δέ·' + 'τρίτον τέλος.' (no separators text)
+    const first = 'πρῶτον μὲν οὖν.';
+    // inside the first slice: identity
+    expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], 3)).toBe(3);
+    // exactly at the join: resolves to the END of the earlier slice (the
+    // word-start snap downstream treats both sides alike)
+    expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], first.length)).toBe(first.length);
+    // one past the join = one INTO the second slice, whose leading boundary
+    // space was trimmed away
+    expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], first.length + 1)).toBe(afterFirst + 1);
+    // inside the third slice
+    const displayThirdStart = first.length + 'δεύτερον δέ·'.length;
+    expect(sourceOffsetAtDisplay(text, [afterFirst, afterSecond], displayThirdStart + 2)).toBe(afterSecond + 2);
+  });
+
+  it('offsets beyond the display text (or negative) are null', () => {
+    expect(sourceOffsetAtDisplay(text, undefined, text.length + 1)).toBeNull();
+    expect(sourceOffsetAtDisplay(text, undefined, -1)).toBeNull();
+    expect(sourceOffsetAtDisplay(text, undefined, text.length)).toBe(text.length);
+  });
+
+  it('leading trim on an undivided slice shifts the mapping', () => {
+    expect(sourceOffsetAtDisplay('  ab cd', undefined, 0)).toBe(2);
+    expect(sourceOffsetAtDisplay('  ab cd', undefined, 3)).toBe(5);
   });
 });

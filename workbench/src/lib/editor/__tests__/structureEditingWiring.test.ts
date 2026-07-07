@@ -167,8 +167,8 @@ describe('chunk grouping for plain-line docs (D8 §5)', () => {
   });
 });
 
-describe('interpolated view: structure gestures stay suppressed (D8 §4, shipped decision)', () => {
-  it('the stack right-click still routes to the AI-only English menu — no paraDoc/chunk entries can appear', () => {
+describe('interpolated view: English cells stay AI-only (structure lives on the SOURCE — refinement pass)', () => {
+  it('the English-cell handler carries no paraDoc/chunk entries in any view', () => {
     const body = fnBody('onEnglishContextMenu');
     expect(body).not.toContain('paraDoc');
     expect(body).not.toContain('chunk');

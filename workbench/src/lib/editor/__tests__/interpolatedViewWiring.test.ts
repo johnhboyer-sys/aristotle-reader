@@ -71,7 +71,7 @@ describe('view toggle now offers interpolated (D1 filter flipped on)', () => {
 
 describe('granularity sub-toggle + layer selection (§2)', () => {
   it('layer + granularity come from the pure policy module, reactive per work', () => {
-    expect(chapterSource).toContain("import { usesParaLayer, showGranularityToggle, sourceSlices } from './interpolated'");
+    expect(chapterSource).toContain("import { usesParaLayer, showGranularityToggle, sourceSlices, sourceOffsetAtDisplay } from './interpolated'");
     expect(chapterSource).toContain('usesParaLayer(scheme, viewMode, granularity)');
     expect(chapterSource).toContain('currentGranularity(model.workId)');
     expect(chapterSource).toContain('showGranularityToggle(scheme, viewMode)');
@@ -128,12 +128,34 @@ describe('"text stays at its unit" — both directions (§2)', () => {
   });
 });
 
-describe('AI menu + structure gestures in the interpolated view (§4)', () => {
-  it('right-click (field OR original) routes to the AI-only English menu — no split/merge entries', () => {
+describe('AI menu + structure gestures in the interpolated view (§4 + refinement pass)', () => {
+  it('the FIELD right-click stays AI-only; the ORIGINAL routes to the structure-aware source handler', () => {
     expect(chapterSource).toContain('onContext={(e) => onEnglishContextMenu(e, g)}');
-    expect(unitSource).toContain('oncontextmenu={onContext}');
-    // The Greek split/merge menu builder is never reachable from the stack.
+    expect(chapterSource).toContain('onSourceContext={(e) => onInterpSourceContextMenu(e, g)}');
+    expect(unitSource).toContain('oncontextmenu={onSourceContext ?? onContext}');
+    // The grid's Greek handler itself is never reachable from the stack —
+    // the source handler owns the display-offset mapping.
     expect(unitSource).not.toContain('onGreekContextMenu');
+  });
+
+  it('the source handler maps display offsets back to model offsets before the word snap', () => {
+    const body = fnBody('onInterpSourceContextMenu');
+    expect(body).toContain('sourceOffsetAtDisplay(row.greek, row.splitOffsets, within)');
+    expect(body).toContain('sourceOffsetAtDisplay(d.greekSlice, undefined, within)');
+    expect(body).toContain('snapToWordStart(row.greek, mapped)');
+    expect(body).toContain('snapToWordStart(row.greek, d.greekStart + local)');
+  });
+
+  it('document-spine paragraph docs get the paraDoc menu in BOTH granularities; corpus unit blocks stay AI-only', () => {
+    const body = fnBody('onInterpSourceContextMenu');
+    expect(body).toContain('if (canEditRowStructure(scheme))');
+    expect(body).toContain('canMergePrev: d.rowIndex > 0');
+    expect(body).toContain('aiOnly: true');
+  });
+
+  it('a multi-block source selection batch-translates: the original counts as the source column', () => {
+    expect(fnBody('columnOfDomNode')).toContain(".closest('.interp-source')");
+    expect(fnBody('onInterpSourceContextMenu')).toContain('selectedGreekModelRows()');
   });
 
   it('the four AI items are live for ALL targets; para-layer menus carry unit nouns (D8 Phase E2)', () => {
