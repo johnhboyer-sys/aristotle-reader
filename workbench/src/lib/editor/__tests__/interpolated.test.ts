@@ -57,8 +57,8 @@ describe('showGranularityToggle — offered only where two granularities are mea
     expect(showGranularityToggle(bekkerStandard, 'interpolated')).toBe(false);
   });
 
-  it('corpus-spine paragraph docs (Busse) stay at the row unit — no toggle', () => {
-    expect(showGranularityToggle(busseParagraph, 'interpolated')).toBe(false);
+  it('corpus-spine paragraph docs (Busse) also offer the toggle', () => {
+    expect(showGranularityToggle(busseParagraph, 'interpolated')).toBe(true);
   });
 });
 

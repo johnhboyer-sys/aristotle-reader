@@ -53,7 +53,7 @@ export function legalViews(scheme: CitationScheme): ViewMode[] {
 export function defaultView(scheme: CitationScheme): ViewMode {
   switch (scheme.gutter.rowUnit) {
     case 'paragraph':
-      return scheme.spineSource === 'document' ? 'paragraph' : 'grid';
+      return 'paragraph';
     default:
       return 'grid';
   }

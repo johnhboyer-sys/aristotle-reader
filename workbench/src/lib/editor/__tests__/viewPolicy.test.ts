@@ -16,9 +16,9 @@ describe('viewPolicy matrix (keyed only on rowUnit/spineSource)', () => {
     expect(defaultView(bekkerStandard)).toBe('grid');
   });
 
-  it('paragraph + corpus (busse) → grid, paragraph, interpolated; default grid — unchanged for existing works', () => {
+  it('paragraph + corpus (busse) → grid, paragraph, interpolated; default paragraph', () => {
     expect(legalViews(busseParagraph)).toEqual(['grid', 'paragraph', 'interpolated']);
-    expect(defaultView(busseParagraph)).toBe('grid');
+    expect(defaultView(busseParagraph)).toBe('paragraph');
   });
 
   it('paragraph + document → paragraph, interpolated; default paragraph', () => {
@@ -47,6 +47,6 @@ describe('viewPolicy matrix (keyed only on rowUnit/spineSource)', () => {
 
   it('aquinas-tbd itself (paragraph + corpus stub) also resolves via the busse-shaped arm', () => {
     expect(legalViews(aquinasStub)).toEqual(['grid', 'paragraph', 'interpolated']);
-    expect(defaultView(aquinasStub)).toBe('grid');
+    expect(defaultView(aquinasStub)).toBe('paragraph');
   });
 });

@@ -244,6 +244,14 @@ export function chapterSegments(chapter: ChapterFile): ChapterSegment[] {
   const rowCount = chapter.englishLines.length;
   const scheme = getScheme(chapter.meta.citationScheme);
   const useAddresses = scheme.gutter.rowUnit === 'bekker-line';
+  let useParagraphRowText = false;
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      useParagraphRowText = true;
+      break;
+    default:
+      break;
+  }
   const { addresses, transitionRows } = useAddresses
     ? chapterRowAddresses(chapter, rowCount)
     : { addresses: [] as string[], transitionRows: null as Set<number> | null };
@@ -271,7 +279,9 @@ export function chapterSegments(chapter: ChapterFile): ChapterSegment[] {
     // this module's `markupToPandoc`/`parseRow` pipeline already consumes —
     // lossless by construction (Slice 1's round-trip guarantee), and keeps
     // export's contract as "raw editor markup in" for every row/segment.
-    const englishSegments = parseRowSegments(chapter.englishLines[i]).map((doc) => serializeRow(docFromJSON(doc)));
+    const englishSegments = useParagraphRowText
+      ? rowEnglishSegmentsWithParaFallback(chapter, i)
+      : parseRowSegments(chapter.englishLines[i]).map((doc) => serializeRow(docFromJSON(doc)));
 
     // Valid Greek offsets for this row (word-boundary-checked against the
     // row's OWN Greek — see module doc). Invalid/out-of-range offsets are
@@ -412,6 +422,16 @@ function rowEnglishSegments(chapter: ChapterFile, rowIndex: number): string[] {
   return parseRowSegments(chapter.englishLines[rowIndex]).map((doc) => serializeRow(docFromJSON(doc)));
 }
 
+function rowEnglishSegmentsWithParaFallback(chapter: ChapterFile, rowIndex: number): string[] {
+  const sentenceSegments = rowEnglishSegments(chapter, rowIndex);
+  if (sentenceSegments.some((s) => s.trim().length > 0)) return sentenceSegments;
+
+  const para = chapter.englishParaLines?.[rowIndex] ?? '';
+  if (para.trim().length > 0) return [stripFootnoteMarkupLine(para)];
+
+  return [''];
+}
+
 function renderMarkupPieces(markup: string[]): { markdown: string | null; footnoteIdsUsed: string[] } {
   const pieces: string[] = [];
   const footnoteIdsUsed: string[] = [];
@@ -427,7 +447,7 @@ function renderMarkupPieces(markup: string[]): { markdown: string | null; footno
 }
 
 /**
- * D8 paragraph-layer precedence for document-spine rows: sentence layer wins
+ * D8 paragraph-layer precedence for paragraph-row export: sentence layer wins
  * when any sentence segment is non-empty; otherwise the paragraph layer wins;
  * otherwise the row is untranslated.
  *
@@ -640,6 +660,17 @@ export function renderDocumentSpineBilingual(chapter: ChapterFile): RenderedPara
   }
 }
 
+function usesDocumentRowRenderer(scheme: ReturnType<typeof getScheme>): boolean {
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      return true;
+    case 'plain-line':
+      return scheme.spineSource === 'document';
+    default:
+      return scheme.spineSource === 'document';
+  }
+}
+
 // ── inline markup: InlineRun[] -> Pandoc markdown ───────────────────────────
 
 const PANDOC_SPECIAL = /[\\*_[\]^~`<>&]/g;
@@ -739,7 +770,7 @@ function buildHeading(chapter: ChapterFile, work: WorkMeta): string {
  */
 function buildBody(chapter: ChapterFile, options: Required<PandocMarkdownOptions>): { paragraphs: string[]; footnoteIdsUsed: string[] } {
   const scheme = getScheme(chapter.meta.citationScheme);
-  if (scheme.spineSource === 'document') return renderDocumentSpineEnglish(chapter);
+  if (usesDocumentRowRenderer(scheme)) return renderDocumentSpineEnglish(chapter);
   const useStamps = scheme.gutter.rowUnit === 'bekker-line';
   const segments = chapterSegments(chapter);
   return renderSegmentsGrouped(segments, (seg) => seg.englishMarkup, useStamps, options.stampMode);

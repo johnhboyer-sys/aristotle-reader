@@ -321,6 +321,7 @@
         return false;
     }
   }
+  const wrapColumns = $derived(viewMode === MODE_PARAGRAPH || isParagraphRowUnit());
   /** The editing layer the mounted cells use right now (D8 §4). Only the
    * para-layer unit views edit englishPara; every other view edits the
    * sentence layer. Non-reactive read used by vkey/viewAt (they run in plain
@@ -3423,7 +3424,7 @@
          by explicit grid-row + grid-column, so DOM order is free. -->
     <div
       class="chapter-grid"
-      class:view-paragraph={viewMode === MODE_PARAGRAPH}
+      class:view-paragraph={wrapColumns}
       class:view-para-unit={paragraphUnitView}
       bind:this={gridEl}
       onpointerdown={onGridPointerDown}

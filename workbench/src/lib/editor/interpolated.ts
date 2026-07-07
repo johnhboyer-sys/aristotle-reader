@@ -47,16 +47,15 @@ export function usesParaLayer(
 
 /**
  * Whether the interpolated granularity sub-toggle is offered (D8 §5): ONLY
- * while the interpolated view is active on a paragraph-unit DOCUMENT-SPINE
- * doc — the one case with two meaningful granularities. Line-based docs
- * interpolate by line (their natural unit); corpus-spine paragraph docs
- * (Busse) stay at the row unit, mirroring their paragraph view.
+ * while the interpolated view is active on a paragraph-row-unit doc — the one
+ * row unit with two meaningful granularities. Line-based docs interpolate by
+ * line (their natural unit).
  */
 export function showGranularityToggle(scheme: CitationScheme, mode: ViewMode): boolean {
   if (mode !== 'interpolated') return false;
   switch (scheme.gutter.rowUnit) {
     case 'paragraph':
-      return scheme.spineSource === 'document';
+      return true;
     default:
       return false;
   }
