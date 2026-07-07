@@ -51,12 +51,16 @@ CONTAINS all of PR #20 (branched from its head), so #20 QA can continue on it.
   the review fix).
 
 **Regression (5 min)**
-- [ ] Open Metaphysics Ζ.17: grid identical, no view toggle, D6 split/merge
-  labels unchanged, AI + export behave as before.
+- [ ] Open Metaphysics Ζ.17: grid identical, no view toggle, AI + export
+  behave as before. D6 split/merge now read "Split this line at this word" /
+  "Rejoin this split line" (refinement-pass copy, John-approved 2026-07-07).
 
-Known wording nit (deferred to the refinement pass, John's call): plain-line
-rows show chunk "Start paragraph here" adjacent to D6's intra-line "Start new
-paragraph here".
+Wording nit RESOLVED in the refinement pass (John chose the short-titles
+variant): the chunk toggle reads "Start a new paragraph at this line" /
+"Merge into the paragraph above" (grouping wording), the D6 gesture "Split
+this line at this word" / "Rejoin this split line" — and on a corpus
+paragraph work's grid the same D6 gesture is labelled as the sentence fix-up
+("Start new sentence here" / "Join sentences").
 
 ---
 

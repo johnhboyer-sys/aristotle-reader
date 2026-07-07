@@ -84,14 +84,22 @@ describe('buildCtxMenu — wording', () => {
     return buildCtxMenu({ ...BASE, ...input }).groups.flat().map((i) => i.title);
   }
 
-  it('D6 line gestures (Bekker/plain-line grids)', () => {
-    expect(titles({})[0]).toBe('Start new paragraph here');
-    expect(titles({ merge: true })[0]).toBe('Merge paragraph back');
+  it('D6 line gestures (Bekker/plain-line grids) — refinement-pass copy', () => {
+    expect(titles({})[0]).toBe('Split this line at this word');
+    expect(titles({ merge: true })[0]).toBe('Rejoin this split line');
   });
 
-  it('plain-line chunk grouping', () => {
-    expect(titles({ scheme: plainLineScheme, chunk: 'add' })[0]).toBe('Start paragraph here');
-    expect(titles({ scheme: plainLineScheme, chunk: 'remove' })[0]).toBe('Merge with previous paragraph');
+  it('plain-line chunk grouping is worded as grouping — never confusable with the D6 split', () => {
+    const add = buildCtxMenu({ ...BASE, scheme: plainLineScheme, chunk: 'add' }).groups[0];
+    expect(add[0].title).toBe('Start a new paragraph at this line');
+    expect(add[0].desc).toBe("Grouping only — the lines and their text don't change");
+    expect(add[1].title).toBe('Split this line at this word');
+    expect(titles({ scheme: plainLineScheme, chunk: 'remove' })[0]).toBe('Merge into the paragraph above');
+  });
+
+  it("a corpus paragraph work's grid labels the D6 gesture as the sentence fix-up it is", () => {
+    expect(titles({ scheme: busseParagraph })[0]).toBe('Start new sentence here');
+    expect(titles({ scheme: busseParagraph, merge: true })[0]).toBe('Join sentences');
   });
 
   it('document-spine paragraph ops + sentence fix-up', () => {

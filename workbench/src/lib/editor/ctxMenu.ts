@@ -100,27 +100,51 @@ export function buildCtxMenu(input: CtxMenuInput): CtxMenuModel {
     const structure: CtxMenuItem[] = [];
     if (input.chunk === 'add') {
       // Plain-line document-spine grouping (D8 §5): display metadata only —
-      // no line is created, destroyed or edited.
+      // no line is created, destroyed or edited. Worded as line-level
+      // GROUPING so it can't be confused with the D6 within-line split.
       structure.push({
         id: 'chunk-add',
-        title: 'Start paragraph here',
-        desc: "This line begins a new paragraph — grouping only, the lines don't change",
+        title: 'Start a new paragraph at this line',
+        desc: "Grouping only — the lines and their text don't change",
       });
     } else if (input.chunk === 'remove') {
       structure.push({
         id: 'chunk-remove',
-        title: 'Merge with previous paragraph',
-        desc: 'Rejoins this line to the paragraph above — grouping only',
+        title: 'Merge into the paragraph above',
+        desc: 'Grouping only — rejoins the visual paragraph',
       });
     }
-    if (input.merge) {
-      structure.push({ id: 'line-merge', title: 'Merge paragraph back' });
-    } else {
-      structure.push({
-        id: 'line-split',
-        title: 'Start new paragraph here',
-        desc: 'Splits this Bekker line at the clicked Greek word',
-      });
+    // The D6 within-line gesture, labelled by what a row's segment
+    // boundaries MEAN under this row unit: on paragraph rows (a corpus-spine
+    // paragraph work's grid) they are SENTENCES — same wording as the
+    // document-spine fix-up above; on line rows they divide the translation
+    // into paragraphs mid-line.
+    switch (input.scheme.gutter.rowUnit) {
+      case 'paragraph':
+        if (input.merge) {
+          structure.push({
+            id: 'line-merge',
+            title: 'Join sentences',
+            desc: 'Merges this sentence with the previous one',
+          });
+        } else {
+          structure.push({
+            id: 'line-split',
+            title: 'Start new sentence here',
+            desc: 'Fixes the sentence division used by the by-sentence view',
+          });
+        }
+        break;
+      default:
+        if (input.merge) {
+          structure.push({ id: 'line-merge', title: 'Rejoin this split line' });
+        } else {
+          structure.push({
+            id: 'line-split',
+            title: 'Split this line at this word',
+            desc: 'Your English continues in a new cell',
+          });
+        }
     }
     groups.push(structure);
   }
