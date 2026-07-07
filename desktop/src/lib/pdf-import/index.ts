@@ -75,5 +75,25 @@ export function convertLayoutExtraction(raw: string, opts: ConvertOptions = {}):
     return { ok: false, needsChoice: true, collapsedPages };
   }
 
-  return emitDocument(bundles, divisionState, footnoteState, collapsedPages);
+  const result = emitDocument(bundles, divisionState, footnoteState, collapsedPages);
+
+  // Markers were seen but none survived the honesty audits and no divisions
+  // were found: emitting a tag-less body would only defer the failure to a
+  // less specific error downstream. Refuse with the real story instead.
+  if (result.ok && result.report.ticsEmitted === 0 && result.report.divisions.chapters === 0) {
+    return {
+      ok: false,
+      refused: true,
+      reason:
+        'Bekker-like numbers were found but none survived the reliability audits ' +
+        '(see suppressed counts), and no book/chapter structure was detected — ' +
+        'nothing reliable to import. The extraction is likely damaged; re-extract ' +
+        'the PDF with pdftotext -layout.',
+      scanned: {
+        pages: pages.length,
+        nonEmptyPages: pages.filter((p) => p.lines.some((l) => l.trim().length > 0)).length,
+      },
+    };
+  }
+  return result;
 }

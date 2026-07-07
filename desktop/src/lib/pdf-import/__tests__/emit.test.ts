@@ -277,6 +277,30 @@ describe('emit refusal: no gutter markers → clean structured refusal', () => {
     );
     expect(result.scanned).toEqual({ pages: 3, nonEmptyPages: 2 });
   });
+
+  it('refuses when markers were seen but zero anchors survived and no divisions exist', () => {
+    // Verso-style BARE tics with body text but no full-form anywhere in the
+    // document: each is promoted (kept for the audit trail) but carries
+    // position-unresolved:no-column-context, so emission suppresses all of
+    // them. With zero chapters detected too, succeeding with a tag-less body
+    // would just defer the failure to a vaguer error downstream.
+    const noContextBares = [
+      'A Running Head',
+      '',
+      '5          body prose on the first marked line continuing along',
+      '           an unmarked continuation line of ordinary prose here',
+      '           another unmarked continuation line of ordinary prose',
+      '           yet another unmarked line of prose continuing onward',
+      '           one more unmarked line of prose continuing further on',
+      '10         body prose on the second marked line continuing along',
+      '           closing body line with no marginal number on it at all',
+    ].join('\n');
+    const result = convertLayoutExtraction(noContextBares);
+    expect(result.ok).toBe(false);
+    if (result.ok || !('refused' in result)) return;
+    expect(result.refused).toBe(true);
+    expect(result.reason).toContain('none survived the reliability audits');
+  });
 });
 
 // ---------------------------------------------------------------------------
