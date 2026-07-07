@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy, onMount } from 'svelte';
   import { fetchFootnotes } from '../lib/data';
 
   export let work: string = 'EN';
@@ -13,6 +14,8 @@
   let html = '';
   let loading = true;
   let error = '';
+  let dialogEl: HTMLDivElement;
+  let previousFocus: HTMLElement | null = null;
 
   // Keep the popup inside the viewport (anchored below the marker).
   function clampedPos(x: number, y: number) {
@@ -33,17 +36,59 @@
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
   }
+
+  function focusableEls(): HTMLElement[] {
+    return dialogEl
+      ? Array.from(dialogEl.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+      : [];
+  }
+
+  function onDialogKey(e: KeyboardEvent) {
+    if (e.key !== 'Tab') return;
+    const els = focusableEls();
+    if (els.length === 0) {
+      e.preventDefault();
+      dialogEl?.focus();
+      return;
+    }
+    const first = els[0];
+    const last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  onMount(() => {
+    previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setTimeout(() => dialogEl?.focus(), 0);
+  });
+
+  onDestroy(() => {
+    previousFocus?.focus();
+  });
 </script>
 
 <svelte:window on:keydown={onKey} />
 
 <div
   class="popup footnote-popup"
+  bind:this={dialogEl}
   style="left:{pos.left};top:{pos.top}"
   role="dialog"
   aria-label="Footnote {n}"
+  aria-modal="true"
+  tabindex="-1"
   on:mouseenter={onHoverIn}
   on:mouseleave={onHoverOut}
+  on:focus={onHoverIn}
+  on:blur={onHoverOut}
+  on:keydown={onDialogKey}
 >
   <div class="popup-header">
     <span class="footnote-num">Note {n}</span>

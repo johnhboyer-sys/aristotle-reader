@@ -21,6 +21,7 @@ import re
 from pathlib import Path
 
 from .config import BUILD_DIR, SOURCES_DIR
+from .stage1_common import join_paragraph_parts, write_json
 from .stage1_ross import build_chunks
 
 # Book / chapter / marker grammar of the Ostwald Markdown.
@@ -86,19 +87,7 @@ def parse_ostwald(md_path: Path):
         """Join word tokens and None paragraph-break sentinels into prose with
         `\n` at each paragraph boundary. Both `\n` and ` ` are 1 char, so the
         anchor char offsets computed during parsing remain valid."""
-        segs: list[str] = []
-        cur: list[str] = []
-        for p in ps:
-            if p is None:
-                if cur:
-                    segs.append(" ".join(cur))
-                    segs.append("\n")
-                    cur = []
-            else:
-                cur.append(p)
-        if cur:
-            segs.append(" ".join(cur))
-        return "".join(segs)
+        return join_paragraph_parts(ps)
 
     def flush_chapter():
         nonlocal parts, length, anchors, pending
@@ -218,10 +207,8 @@ def run(manifest, spine: dict, english: dict) -> Path:
 
     out_dir = BUILD_DIR / "stage1"
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "third_chunks.json").write_text(
-        json.dumps(chunks, ensure_ascii=False, indent=1), encoding="utf-8")
-    (out_dir / "third_footnotes.json").write_text(
-        json.dumps(footnotes, ensure_ascii=False, indent=1), encoding="utf-8")
+    write_json(out_dir / "third_chunks.json", chunks)
+    write_json(out_dir / "third_footnotes.json", footnotes)
 
     print(f"  ostwald: chapters={len(prose)} anchors={sum(len(v['anchors']) for v in align.values())} "
           f"footnotes={len(footnotes)} pages={counts['pages']} "

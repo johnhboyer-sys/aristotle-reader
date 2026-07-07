@@ -20,6 +20,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .config import BUILD_DIR, SOURCES_DIR
+from .stage1_common import join_paragraph_parts, write_json
 
 # Confidence levels the aligner produces that we trust as *real* Bekker ticks
 # (vs. pure interpolation). Validated on NE Book 1 review: chapter/column/
@@ -64,19 +65,7 @@ def _join_para(buf: list) -> str:
     """Join a buffer of text lines and None-sentinels (paragraph breaks) into
     a prose string with `\n` at each paragraph boundary and no leading/trailing
     newlines."""
-    parts: list[str] = []
-    cur: list[str] = []
-    for item in buf:
-        if item is None:
-            if cur:
-                parts.append(" ".join(cur))
-                parts.append("\n")
-                cur = []
-        else:
-            cur.extend(item.split())
-    if cur:
-        parts.append(" ".join(cur))
-    return "".join(parts)
+    return join_paragraph_parts(buf, split_words=True)
 
 
 def _marker_int(s: str) -> int:
@@ -424,5 +413,5 @@ def run(manifest, spine: dict, english: dict) -> Path:
     out_dir = BUILD_DIR / "stage1"
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "ross_chunks.json"
-    path.write_text(json.dumps(chunks, ensure_ascii=False, indent=1), encoding="utf-8")
+    write_json(path, chunks)
     return path

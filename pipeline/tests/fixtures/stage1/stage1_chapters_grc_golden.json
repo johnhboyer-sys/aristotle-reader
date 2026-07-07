@@ -1,0 +1,18 @@
+[
+ {
+  "book": 1,
+  "chapter": "1",
+  "column": "1094a",
+  "line": "1",
+  "wordIndex": 0,
+  "bookstart": true
+ },
+ {
+  "book": 1,
+  "chapter": "2",
+  "column": "1094b",
+  "line": "1",
+  "wordIndex": 0,
+  "bookstart": false
+ }
+]

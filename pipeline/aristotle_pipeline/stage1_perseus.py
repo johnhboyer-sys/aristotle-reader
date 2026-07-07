@@ -19,6 +19,8 @@ from pathlib import Path
 
 from lxml import etree
 
+from .stage1_common import text_excluding_subtrees
+
 _WS = re.compile(r"\s+")
 
 
@@ -29,23 +31,7 @@ def _localname(el) -> str:
 def _chapter_text(div) -> str:
     """Plain text under a chapter div, dropping <note>/<head> subtrees (their
     tails — the main-text continuation — are kept)."""
-    out: list[str] = []
-
-    def walk(node, is_root=False):
-        tag = _localname(node)
-        if tag in ("note", "head") and not is_root:
-            if node.tail:
-                out.append(node.tail)
-            return
-        if node.text:
-            out.append(node.text)
-        for child in node:
-            walk(child)
-        if not is_root and node.tail:
-            out.append(node.tail)
-
-    walk(div, is_root=True)
-    return _WS.sub(" ", "".join(out)).strip()
+    return text_excluding_subtrees(div)
 
 
 def chapter_prose(

@@ -1,0 +1,26 @@
+{
+  "work": {
+    "id": "VAL",
+    "title": "Valid Fixture",
+    "author": "Aristotle",
+    "tlg_author": "0086",
+    "tlg_work": "999",
+    "greek_edition": "Fixture Greek",
+    "english_translation": "Fixture English"
+  },
+  "books": [
+    {
+      "book": 1,
+      "segments": 1,
+      "first_column": "1094a",
+      "last_column": "1094a"
+    }
+  ],
+  "analyses": {
+    "token_keys": 2,
+    "parses_dropped": 0
+  },
+  "lsj": {
+    "entries": 2
+  }
+}

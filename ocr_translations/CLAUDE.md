@@ -241,40 +241,37 @@ mv "$RAW" "$OUTNAME"
 > done, run an automated scan and manually adjudicate every hit (most are real paragraph
 > breaks; the false ones are the bug):
 > ```bash
-> python3 - <<'EOF'
-> import re
-> lines = open("OUTNAME.md", encoding="utf-8").read().splitlines()
-> n = len(lines)
-> for i in range(n):
->     if lines[i].strip(): continue
->     p = i - 1
->     while p >= 0 and not lines[p].strip(): p -= 1
->     x = i + 1
->     while x < n and not lines[x].strip(): x += 1
->     if p < 0 or x >= n: continue
->     prev, nxt = lines[p].rstrip(), lines[x].rstrip()
->     if prev.lstrip().startswith(("#", ">", "[^")) or nxt.lstrip().startswith(("#", ">", "[^")):
->         continue
->     if re.match(r"^\s*[a-z]", nxt):   # next paragraph opens lowercase => real split
->         print(p + 1, x + 1, "|", prev[-70:], "|", nxt[:70])
-> EOF
+> python3 pipeline/tools/ocr_postprocess.py scan-breaks "$OUTNAME"
 > ```
-> A hit means the blank line is very likely a page-boundary artifact, not an authorial
-> paragraph break — delete it (removing the blank line is enough; the pipeline's tokenizer
-> joins words with a single space regardless of the surrounding line-wrap, so no further
-> edit is needed). This also catches orphaned footnote continuations: if the "next" line
-> reads like a textual/editorial aside with no clear referent, check whether a nearby
-> footnote definition ends mid-sentence and the fragment belongs there instead of in the body.
+> The scanner reports `prevLineNo nextLineNo | prevContext | nextContext` and exits non-zero
+> when it finds hits, so it can gate the cleanup pass. A hit means the blank line is very
+> likely a page-boundary artifact, not an authorial paragraph break — adjudicate every hit.
+> When the hit is a real page-boundary split, delete the blank line (removing the blank line
+> is enough; the pipeline's tokenizer joins words with a single space regardless of the
+> surrounding line-wrap, so no further edit is needed), or run the explicit fixer:
+> ```bash
+> python3 pipeline/tools/ocr_postprocess.py scan-breaks --fix "$OUTNAME"
+> ```
+> The fixer only removes detected blank lines; it does not run unless `--fix` is passed.
+> This also catches orphaned footnote continuations: if the "next" line reads like a
+> textual/editorial aside with no clear referent, check whether a nearby footnote definition
+> ends mid-sentence and the fragment belongs there instead of in the body.
 
 **5. ⚠ Relocate all footnote definitions to the end (critical).** Page files hold `[^N]: …` definitions inline. In the final document, move **every** definition out of the body into a single `## Footnotes` section at the very end, in numerical order. Ensure every `[^N]` reference has a matching definition and vice versa; flag mismatches. If numbering resets between chapters, renumber to avoid collisions (e.g. chapter-2 `[^1]` → `[^101]`). Merge definitions split across a page boundary. **Each definition must be a single line** matching `[^N]: full text`, with one blank line between definitions.
+```bash
+python3 pipeline/tools/ocr_postprocess.py relocate-footnotes "$OUTNAME"
+python3 pipeline/tools/ocr_postprocess.py relocate-footnotes --fix "$OUTNAME"
+```
+Run without `--fix` first to review duplicate keys, orphaned definitions, references with
+no definition, and chapter-renumber collisions. The `--fix` form writes the relocated
+single trailing `## Footnotes` section and remaps duplicate chapter-local keys such as a
+second `[^1]` to `[^101]`; it must never silently drop content.
 
 **6. Final cleanup pass.** Read through `$OUTNAME` and fix remaining artifacts: orphaned list items, duplicated headers, inconsistent heading hierarchy, tables/lists split across pages. Separate sections with a single blank line (not a horizontal rule). **Never leave more than one consecutive blank line.**
 
 **7. ⚠ Pandoc footnote validation (critical).** Convert to `.docx`; pandoc warns about exactly the footnote bugs a page-by-page view can't catch:
 ```bash
-DOCX="${OUTNAME%.md}.docx"
-pandoc "$OUTNAME" -o "$DOCX" --from=markdown --to=docx 2> ./md-output/pandoc.stderr
-echo "=== pandoc warnings ==="; cat ./md-output/pandoc.stderr
+python3 pipeline/tools/ocr_postprocess.py validate "$OUTNAME"
 ```
 Treat any of these as a failure to fix before declaring done:
 - `Note with key '…' defined … but not used` — orphaned definition.
@@ -282,7 +279,16 @@ Treat any of these as a failure to fix before declaring done:
 - Duplicate-key warning — same `[^N]:` defined twice.
 - Suspicious numbering gaps (e.g. `[^14]`, `[^16]`, no `[^15]`) — open the source page PDFs for that range and confirm real omission vs renumbering artifact.
 
-**Re-pass when warnings appear:** for each warned key, grep the body and footnotes section for `[^KEY]`; open the source page PDF (and `./md-output/working/page-NNN-reader-a.md`) for the relevant range; add missing definitions/references from the original, renumber where wrong, merge split definitions; re-run pandoc; repeat until zero footnote warnings. Keep the `.docx` as the published companion artifact.
+The validator shells out to `pandoc "$OUTNAME" -o <tmp>.docx --from=markdown --to=docx`,
+prints pandoc stderr, and fails on orphaned/undefined/duplicate notes or suspicious
+numbering gaps. If `pandoc` is not installed, it prints `skipped: pandoc not installed`
+and exits successfully so markdown-only cleanup can still proceed.
+
+**Re-pass when warnings appear:** for each warned key, grep the body and footnotes section for `[^KEY]`; open the source page PDF (and `./md-output/working/page-NNN-reader-a.md`) for the relevant range; add missing definitions/references from the original, renumber where wrong, merge split definitions; re-run validation; repeat until zero footnote warnings. After validation is clean, create and keep the `.docx` as the published companion artifact:
+```bash
+DOCX="${OUTNAME%.md}.docx"
+pandoc "$OUTNAME" -o "$DOCX" --from=markdown --to=docx
+```
 
 **8. Cleanup (optional).** Once satisfied, remove `./md-output/pages/`, `./md-output/working/`, `./md-output/pandoc.stderr`. Keep `$OUTNAME` and `$DOCX`.
 

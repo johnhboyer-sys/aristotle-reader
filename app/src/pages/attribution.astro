@@ -3,18 +3,45 @@ import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import '../styles/global.css';
 import { WORKS } from '../lib/works';
+import { jsonLdSafe } from '../lib/jsonld';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // True only in the local/full build (PUBLIC_SHOW_PRIVATE=1), where copyright-
 // encumbered overlays are carried; every production/public build drops them
 // entirely, so the "local only" legend below is suppressed there.
 const hasPrivate = WORKS.some((w) => w.translations.some((t) => t.private));
+const pageTitle = 'Texts & Licences — Aristotle Reader';
+const metaDescription =
+  'Source and licence information for the Aristotle Reader: Greek texts, English translations, LSJ lexicon data, Bekker line numbers, and open-source code.';
+const canonical = Astro.site ? new URL(`${base}/attribution/`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: pageTitle,
+  description: metaDescription,
+  ...(canonical ? { url: canonical } : {}),
+  isPartOf: { '@type': 'WebSite', name: 'The Aristotle Reader' },
+};
 ---
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
-  <title>Texts &amp; Licences — Aristotle</title>
+  <title>{pageTitle}</title>
+  <meta name="description" content={metaDescription} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={metaDescription} />
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {canonical && <meta property="og:url" content={canonical} />}
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={metaDescription} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -110,7 +137,8 @@ const hasPrivate = WORKS.some((w) => w.translations.some((t) => t.private));
     </nav>
   </header>
 
-  <div class="attr-body">
+  <main class="attr-body">
+    <h1 class="sr-only">Texts and licences for the Aristotle Reader</h1>
     <h2>Texts &amp; Licences</h2>
     <p>
       This reader presents Greek texts, English translations, and reference
@@ -263,6 +291,6 @@ const hasPrivate = WORKS.some((w) => w.translations.some((t) => t.private));
     <p>
       Site by <a href="https://x.com/johnhboyer" target="_blank" rel="noopener">John H. Boyer</a>.
     </p>
-  </div>
+  </main>
 </body>
 </html>

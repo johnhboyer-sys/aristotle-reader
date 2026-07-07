@@ -21,17 +21,16 @@ from pathlib import Path
 from lxml import etree
 
 from .config import BUILD_DIR, Manifest
+from .stage1_common import StandoffChunkMixin, local_name, write_json
 
 _WS = re.compile(r"\s+")
 
 
 def _local(el) -> str | None:
-    if not isinstance(el.tag, str):
-        return None  # comment / PI
-    return etree.QName(el).localname
+    return local_name(el)
 
 
-class _Walker:
+class _Walker(StandoffChunkMixin):
     def __init__(self, manifest: Manifest):
         self.manifest = manifest
         self.book: int | None = None
@@ -49,51 +48,6 @@ class _Walker:
         # chunk id -> [(bekker_line, char_offset), ...] for placing chapter
         # headings on the exact Greek line (see refine_chapter_lines).
         self.line_ms: dict[str, list] = defaultdict(list)
-
-    def _chunk(self) -> dict:
-        key = (self.book, self.column)
-        chunk = self._by_key.get(key)
-        if chunk is None:
-            chunk = {
-                "id": f"{self.book}:{self.column}",
-                "book": self.book,
-                "column": self.column,
-                "text": "",
-                "notes": [],
-                "markers": [],
-            }
-            self._by_key[key] = chunk
-            self.chunks.append(chunk)
-        return chunk
-
-    def add_text(self, raw: str | None):
-        if not raw:
-            return
-        chunk = self._chunk()
-        piece = _WS.sub(" ", raw)
-        if piece == " " and (not chunk["text"] or chunk["text"].endswith(" ") or chunk["text"].endswith("\n")):
-            return
-        if (chunk["text"].endswith(" ") or chunk["text"].endswith("\n")) and piece.startswith(" "):
-            piece = piece.lstrip(" ")
-        if not chunk["text"]:
-            piece = piece.lstrip(" ")
-        chunk["text"] += piece
-
-    def add_note(self, el):
-        text = _WS.sub(" ", "".join(el.itertext())).strip()
-        chunk = self._chunk()
-        chunk["notes"].append({"offset": len(chunk["text"].rstrip()), "text": text})
-
-    def add_marker(self, kind: str, n: str):
-        chunk = self._chunk()
-        chunk["markers"].append(
-            {"kind": kind, "n": n, "offset": len(chunk["text"].rstrip())}
-        )
-
-    def add_paragraph(self):
-        chunk = self._chunk()
-        if chunk["text"] and not chunk["text"].endswith("\n"):
-            chunk["text"] = chunk["text"].rstrip() + "\n"
 
     def walk(self, el):
         tag = _local(el)
@@ -347,12 +301,8 @@ def run(manifest: Manifest, spine: dict, chapters_override=None) -> tuple[Path, 
     out_dir = BUILD_DIR / "stage1"
     out_dir.mkdir(parents=True, exist_ok=True)
     eng_path = out_dir / "english_chunks.json"
-    eng_path.write_text(
-        json.dumps(english, ensure_ascii=False, indent=1), encoding="utf-8"
-    )
+    write_json(eng_path, english)
     alignment = build_alignment(spine, english)
     align_path = out_dir / "alignment.json"
-    align_path.write_text(
-        json.dumps(alignment, ensure_ascii=False, indent=1), encoding="utf-8"
-    )
+    write_json(align_path, alignment)
     return eng_path, align_path

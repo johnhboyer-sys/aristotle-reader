@@ -12,6 +12,8 @@ import {
   furtherReading, inPrintHref, workLanding,
 } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
+import { sanitizeHtml } from '../lib/html';
+import { jsonLdSafe } from '../lib/jsonld';
 import '../styles/global.css';
 
 interface Props { workId: string; }
@@ -113,9 +115,11 @@ const breadcrumbLd = Astro.site
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={metaDescription} />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
-  {breadcrumbLd && <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />}
+  <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
+  {breadcrumbLd && <script type="application/ld+json" set:html={jsonLdSafe(breadcrumbLd)} />}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -184,7 +188,7 @@ const breadcrumbLd = Astro.site
         <span class="lp-status-note">Authorship traditionally doubted — transmitted in the Aristotelian corpus but widely judged not to be by Aristotle.</span>
       </p>
     )}
-    {work.greekTitle && <p class="lp-greek">{work.greekTitle}</p>}
+    {work.greekTitle && <p class="lp-greek" lang="grc">{work.greekTitle}</p>}
     <p class="lp-lede">{work.blurb}</p>
     <p class="lp-desc">
       This edition presents the original Greek ({work.greekSource.short}) side by
@@ -291,13 +295,13 @@ const breadcrumbLd = Astro.site
             <ul class="read-list">
               {readingTrans.map((r) => (
                 <li>
-                  <span class="rk">Translation</span><span set:html={r.cite} />{' '}
+                  <span class="rk">Translation</span><span set:html={sanitizeHtml(r.cite)} />{' '}
                   <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
                 </li>
               ))}
               {readingComm.map((r) => (
                 <li>
-                  <span class="rk">Commentary</span><span set:html={r.cite} />{' '}
+                  <span class="rk">Commentary</span><span set:html={sanitizeHtml(r.cite)} />{' '}
                   <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
                 </li>
               ))}
@@ -313,7 +317,7 @@ const breadcrumbLd = Astro.site
             <ul class="read-list">
               {readingColl.map((r) => (
                 <li>
-                  <span class="rk">In print</span><span set:html={r.cite} />{' '}
+                  <span class="rk">In print</span><span set:html={sanitizeHtml(r.cite)} />{' '}
                   <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
                 </li>
               ))}

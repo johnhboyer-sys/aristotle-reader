@@ -1,0 +1,77 @@
+{
+ "work": "TST",
+ "source": "archive",
+ "translation": "Archive Fixture",
+ "chunks": [
+  {
+   "id": "1:1094a",
+   "book": 1,
+   "column": "1094a",
+   "text": "First chapter first sentence.\nSecond paragraph.",
+   "notes": [],
+   "markers": [
+    {
+     "kind": "section",
+     "n": "1",
+     "offset": 0
+    }
+   ],
+   "bekker": [
+    {
+     "n": 1,
+     "offset": 0,
+     "real": true
+    },
+    {
+     "n": 5,
+     "offset": 47,
+     "real": false
+    }
+   ]
+  },
+  {
+   "id": "1:1094b",
+   "book": 1,
+   "column": "1094b",
+   "text": "Second chapter sentence. -THE END-",
+   "notes": [],
+   "markers": [
+    {
+     "kind": "section",
+     "n": "2",
+     "offset": 0
+    }
+   ],
+   "bekker": [
+    {
+     "n": 1,
+     "offset": 0,
+     "real": true
+    },
+    {
+     "n": 5,
+     "offset": 34,
+     "real": false
+    }
+   ]
+  }
+ ],
+ "chapters": [
+  {
+   "book": 1,
+   "chapter": "1",
+   "column": "1094a",
+   "line": "1",
+   "wordIndex": 0,
+   "bookstart": true
+  },
+  {
+   "book": 1,
+   "chapter": "2",
+   "column": "1094b",
+   "line": "1",
+   "wordIndex": 0,
+   "bookstart": false
+  }
+ ]
+}

@@ -1,0 +1,134 @@
+{
+  "tokens": {
+    "work": "TST",
+    "segments": [
+      {
+        "id": "1:1094a",
+        "book": 1,
+        "column": "1094a",
+        "lines": [
+          {
+            "n": 1,
+            "tokens": [
+              {
+                "t": "Ἀγαθός",
+                "o": 0,
+                "k": "a)gaqo/s"
+              },
+              {
+                "t": "ἐστι",
+                "o": 7,
+                "k": "e)sti"
+              }
+            ]
+          },
+          {
+            "n": 2,
+            "tokens": [
+              {
+                "t": "τῷ",
+                "o": 0,
+                "k": "tw=|"
+              },
+              {
+                "t": "λόγος",
+                "o": 3,
+                "k": "lo/gos"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1:1094b",
+        "book": 1,
+        "column": "1094b",
+        "lines": [
+          {
+            "n": 1,
+            "tokens": [
+              {
+                "t": "κατ’",
+                "o": 0,
+                "k": "kat'"
+              },
+              {
+                "t": "ἀρετήν",
+                "o": 5,
+                "k": "a)reth/n"
+              }
+            ]
+          },
+          {
+            "n": 2,
+            "tokens": [
+              {
+                "t": "λόγος",
+                "o": 0,
+                "k": "lo/gos"
+              },
+              {
+                "t": "ἀγαθός",
+                "o": 8,
+                "k": "a)gaqo/s"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "sigla_log": [
+    {
+      "ref": "1094b2",
+      "raw": "†λόγος†",
+      "kept": "λόγος"
+    }
+  ],
+  "key_failures": [],
+  "validation": {
+    "ok": true,
+    "columns": {
+      "expected": 2,
+      "found": 2,
+      "missing": [],
+      "extra": [],
+      "monotonic": true,
+      "ok": true
+    },
+    "line_gaps": {
+      "gaps": [],
+      "unexpected": [],
+      "ok": true
+    },
+    "alignment": {
+      "pairs": 2,
+      "unmatched_segments": [],
+      "allowed_unmatched": [],
+      "unexpected_unmatched": [],
+      "english_only": [],
+      "unexpected_english_only": [],
+      "ok": true
+    },
+    "sigla": {
+      "characters": [
+        {
+          "char": "†",
+          "name": "DAGGER",
+          "count": 2,
+          "samples": [
+            {
+              "ref": "1094b2",
+              "text": "†λόγος†—ἀγαθός"
+            },
+            {
+              "ref": "1094b2",
+              "text": "†λόγος†—ἀγαθός"
+            }
+          ]
+        }
+      ],
+      "ok": true
+    }
+  }
+}
