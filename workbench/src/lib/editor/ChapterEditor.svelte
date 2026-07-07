@@ -57,13 +57,13 @@
 
   import type { FixtureChapter } from '../../dev/fixture-meta-z17';
   import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf, hasSentenceEnglish, hasParagraphEnglish } from './model';
-  import type { ChapterModel } from './model';
+  import type { ChapterModel, RowModel } from './model';
   import { rowSchema, docFromJSON, markerIdsIn, emptyRowDocJSON } from './schema';
   import type { PMDocJSON } from './schema';
   import { assertRoundTrip, buildRowDoc, runsOf, orphanFnRefIds, joinRowDocs } from './serialize';
   import type { InlineRun } from './serialize';
   import { AppHistory } from './history';
-  import type { SelRef, UndoEntry, RowSnapshot } from './history';
+  import type { SelRef, UndoEntry, RowSnapshot, StructuralRowSnapshot } from './history';
   import { rowPlugins, isTypingTransaction } from './plugins/rowKeymap';
   import type { RowContext } from './plugins/rowKeymap';
   import { greekInput, resetGreekRun } from './plugins/greekInput';
@@ -87,6 +87,18 @@
   import { resolveEndpointPos } from './citationSelection';
   import { expandRows, snapToWordStart, splitUnsplitRow, mergeSegments, mergeNeedsConfirm } from './gridRows';
   import type { DisplayRow } from './gridRows';
+  import {
+    canEditRowStructure,
+    canGroupLines,
+    splitParagraphRow,
+    mergeParagraphRows,
+    paragraphMergeNeedsConfirm,
+    addSentenceBoundary,
+    joinBoundaryAt,
+    addParagraphStart,
+    removeParagraphStart,
+  } from './rowStructure';
+  import type { RowStructure } from './rowStructure';
   import { currentViewMode, setViewMode } from './viewMode.svelte';
   import { currentGranularity, setGranularity } from './viewMode.svelte';
   import { legalViews } from './viewPolicy';
@@ -103,6 +115,7 @@
     serializeModel,
     spansFromModel,
     anchoredFootnoteCount,
+    documentOrdinalAddress,
   } from '../library/autosave';
   import type { AutosaveHandle, ChapterSpans, SaveState } from '../library/autosave';
   import {
@@ -328,8 +341,45 @@
   // Greek-cell context menu (design doc D6 §4): split on unsplit lines,
   // merge on split ones. `offset` is the snapped split point (null = the
   // click found no valid word gap → the status line, never a silent split).
-  let ctxMenu = $state<{ x: number; y: number; row: number; segment: number; merge: boolean; offset: number | null; aiOnly?: boolean; aiDisabled?: boolean; translateRows?: number[] } | null>(null);
-  let pendingUnsplit = $state<{ row: number; boundary: number } | null>(null);
+  // D8 §2 extends the same menu with STRUCTURE editing for document-spine
+  // works: `paraDoc` (paragraph-unit docs — row-level split/merge + the
+  // relabelled sentence fix-up) and `chunk` (plain-line docs — paragraph
+  // grouping). Both are set ONLY by the Greek/source handler under their
+  // capability gates; Bekker/corpus menus never carry them.
+  let ctxMenu = $state<{
+    x: number;
+    y: number;
+    row: number;
+    segment: number;
+    merge: boolean;
+    offset: number | null;
+    aiOnly?: boolean;
+    aiDisabled?: boolean;
+    translateRows?: number[];
+    /** Paragraph-unit document-spine rows (D8 §2/§3): row-level ops + the
+     * sentence fix-up. `offset` above is the snapped click offset both split
+     * gestures share; `joinBoundary` is the sentence boundary a "Join
+     * sentences" would remove (null in the first sentence). */
+    paraDoc?: { canMergePrev: boolean; joinBoundary: number | null };
+    /** Plain-line document-spine rows (D8 §5): grouping toggle for this row. */
+    chunk?: 'add' | 'remove';
+  } | null>(null);
+  // Pending merge confirms. `pendingUnsplit` is the D6 segment un-split AND
+  // the D8 sentence join (same mergeSegments machinery; `message` overrides
+  // the cell dialog's D6 wording for sentence joins). `pendingParaMerge` is
+  // the D8 row-level paragraph merge, confirmed only when BOTH rows carry
+  // paragraph-layer English (paragraphMergeNeedsConfirm).
+  let pendingUnsplit = $state<{ row: number; boundary: number; message?: string } | null>(null);
+  let pendingParaMerge = $state<{ row: number } | null>(null);
+  // Structural-remount window (D8 §2): TRUE from a row splice until the
+  // keyed {#each} has settled (next tick). Row indices in view keys are
+  // stale inside the window, so commits are suppressed — every pending
+  // commit is flushed BEFORE the splice, making the model canonical.
+  let structuralRemount = false;
+  // Keys whose mounted view was evicted by a newer createView on the same
+  // key (a keyed remount can create the new cell before the old one is
+  // destroyed): the old cell's destroyView must then do nothing.
+  const evictedViewKeys = new Set<string>();
   let saveState = $state<SaveState>('idle');
   let saveBlocked = $state(false);
   let loadNotice = $state<string | null>(null);
@@ -487,6 +537,114 @@
     };
   }
 
+  // ── structural row ops: shared splice machinery (D8 §2) ────────────────
+  /** A row's full STRUCTURAL state for a row-splice undo payload, read from
+   * the committed MODEL (callers flush pending commits first, so the model
+   * is canonical — no live-view reads with about-to-shift indices). */
+  function structSnapshotOfRow(row: RowModel): StructuralRowSnapshot {
+    const offsets = row.splitOffsets;
+    const para = row.englishPara ? docFromJSON(row.englishPara) : undefined;
+    return {
+      greek: row.greek,
+      docs: englishDocsOf(row).map((d) => docFromJSON(d)),
+      ...(offsets && offsets.length > 0 ? { splitOffsets: offsets.slice() } : {}),
+      ...(para && para.content.size > 0 ? { englishPara: para } : {}),
+    };
+  }
+
+  /** RowModel from a pure RowStructure result — the address is a placeholder
+   * immediately re-derived by reassignDocumentAddresses after the splice. */
+  function rowModelFromStruct(s: RowStructure): RowModel {
+    return {
+      address: { scheme: model.scheme, raw: '' },
+      greek: s.greek,
+      english: s.english,
+      ...(s.english2 && s.english2.length > 0 ? { english2: s.english2 } : {}),
+      ...(s.splitOffsets && s.splitOffsets.length > 0 ? { splitOffsets: s.splitOffsets } : {}),
+      ...(s.englishPara ? { englishPara: s.englishPara } : {}),
+    };
+  }
+
+  function rowModelFromStructSnapshot(s: StructuralRowSnapshot): RowModel {
+    return rowModelFromStruct({
+      greek: s.greek,
+      english: s.docs[0]?.toJSON() ?? emptyRowDocJSON(),
+      ...(s.docs.length > 1 ? { english2: s.docs.slice(1).map((d) => d.toJSON()) } : {}),
+      ...(s.splitOffsets && s.splitOffsets.length > 0 ? { splitOffsets: s.splitOffsets.slice() } : {}),
+      ...(s.englishPara ? { englishPara: s.englishPara.toJSON() } : {}),
+    });
+  }
+
+  /** Re-derive every row's ordinal address (¶N / N) after a splice — for
+   * document-spine works the addresses ARE the ordinals (D8 §1), and nothing
+   * else references them (spans/line_splits re-derive at save). */
+  function reassignDocumentAddresses() {
+    if (scheme.spineSource !== 'document') return;
+    for (let i = 0; i < model.rows.length; i++) {
+      model.rows[i].address = documentOrdinalAddress(scheme, i + 1);
+    }
+  }
+
+  /**
+   * THE row-splice primitive (split/merge/structural undo all go through
+   * here). Flushes every pending commit FIRST — uncommitted text in ANY row
+   * lands in the model before indices shift, so a remount can never lose a
+   * keystroke — then opens the structural-remount window (commits suppressed
+   * while view keys are stale; see commitRowNow) until the keyed {#each}
+   * settles on the next tick.
+   */
+  function spliceRows(index: number, removeCount: number, newRows: RowModel[]) {
+    for (const i of [...commitTimers.keys()]) commitRowNow(i);
+    structuralRemount = true;
+    model.rows.splice(index, removeCount, ...newRows);
+    reassignDocumentAddresses();
+    refreshDisplayRows();
+    // Ordinal addresses name a POSITION, not a row — so a shifted row keeps
+    // the display key its position always had, and Svelte REUSES the mounted
+    // component for what is now a DIFFERENT model row. Push every row's
+    // committed content into whatever views are mounted from the splice
+    // point down; keys that genuinely changed remount from the model.
+    for (let i = index; i < model.rows.length; i++) refreshRowViews(i);
+    void tick().then(() => {
+      structuralRemount = false;
+      evictedViewKeys.clear();
+    });
+  }
+
+  /** Push model row i's committed docs into whatever views are mounted at
+   * its EXACT (row, segment, layer) keys — the survivors of a splice whose
+   * keys didn't change but whose content did (e.g. the kept row of a merge).
+   * No-ops on identical docs so an untouched surviving cell keeps its
+   * selection. */
+  function refreshRowViews(i: number) {
+    const row = model.rows[i];
+    if (!row) return;
+    const docs = englishDocsOf(row);
+    for (let s = 0; s < docs.length; s++) {
+      const view = views.get(vkey(i, s, 'sentence'));
+      if (!view) continue;
+      const doc = docFromJSON(docs[s]);
+      if (view.state.doc.eq(doc)) continue;
+      view.dispatch(
+        view.state.tr
+          .replaceWith(0, view.state.doc.content.size, doc.content)
+          .setMeta('appHistoryIgnore', true)
+          .setMeta(FN_REFRESH, true),
+      );
+    }
+    const paraView = views.get(vkey(i, 0, 'para'));
+    if (paraView) {
+      const doc = docFromJSON(row.englishPara ?? emptyRowDocJSON());
+      if (!paraView.state.doc.eq(doc)) {
+        paraView.dispatch(
+          paraView.state.tr
+            .replaceWith(0, paraView.state.doc.content.size, doc.content)
+            .setMeta('appHistoryIgnore', true),
+        );
+      }
+    }
+  }
+
   function selRefOf(row: number, segment: number, state: EditorState): SelRef {
     return { row, segment, anchor: state.selection.anchor, head: state.selection.head };
   }
@@ -494,7 +652,10 @@
   function focusedSelRef(): SelRef | null {
     const view = focusedView();
     if (!view || focusedRow < 0) return null;
-    return selRefOf(focusedRow, focusedSegment, view.state);
+    // The focused view is the ACTIVE layer's (viewAt) — record that layer so
+    // an undo from a paragraph-unit view refocuses the para cell, not a
+    // sentence cell that isn't mounted there (D8 §4).
+    return { ...selRefOf(focusedRow, focusedSegment, view.state), layer: activeLayer() };
   }
 
   function flash(g: number) {
@@ -531,6 +692,11 @@
   /** Commit MODEL ROW i — every mounted segment view's doc lands in
    * english/english2[k] (the model row is the commit unit, design doc D6). */
   function commitRowNow(i: number, changed = false) {
+    // Inside a structural-remount window every view key may point at a
+    // SHIFTED row (D8 §2) — committing would write one row's text into
+    // another. All pending commits were flushed before the splice, so the
+    // model is already canonical; skip (blur/unmount commits included).
+    if (structuralRemount) return;
     const row = model.rows[i];
     if (!row) return;
     const count = segmentCount(row);
@@ -994,7 +1160,31 @@
   }
 
   // ── undo/redo ──────────────────────────────────────────────────────────
+  /** Row-splice undo/redo (D8 §2): replace the spliced span with the
+   * captured row snapshots, re-derive ordinal addresses (spliceRows),
+   * refresh surviving views in place, and restore focus once the keyed
+   * remount settles. */
+  function applyStructuralEntry(entry: UndoEntry, dir: 'undo' | 'redo') {
+    const s = entry.structural!;
+    const snaps = dir === 'undo' ? s.before : s.after;
+    const removeCount = dir === 'undo' ? s.after.length : s.before.length;
+    withScrollAnchor(gridOrdinalOf(s.index, 0), () => {
+      spliceRows(s.index, removeCount, snaps.map(rowModelFromStructSnapshot));
+      history.breakCoalescing();
+      markModelDirty();
+      const sel = dir === 'undo' ? entry.selBefore : entry.selAfter;
+      void tick().then(() => {
+        refreshFnDisplay();
+        if (sel) focusSel(sel);
+      });
+    });
+  }
+
   function applyEntry(entry: UndoEntry, dir: 'undo' | 'redo') {
+    if (entry.structural) {
+      applyStructuralEntry(entry, dir);
+      return;
+    }
     const firstRow = entry.edits[0]?.row ?? focusedRow;
     withScrollAnchor(firstRow >= 0 ? gridOrdinalOf(firstRow, 0) : -1, () => {
       for (const edit of entry.edits) {
@@ -1039,6 +1229,13 @@
         markModelDirty();
       }
       history.breakCoalescing();
+      // paragraph_starts grouping (D8 §5) rides the entry like the footnote
+      // table: restore the captured list, then re-derive the chunk display.
+      if (entry.paraStarts) {
+        const starts = dir === 'undo' ? entry.paraStarts.before : entry.paraStarts.after;
+        model.paragraphStarts = starts.length > 0 ? starts.slice() : undefined;
+        markModelDirty();
+      }
       refreshDisplayRows();
       const fnTable = dir === 'undo' ? entry.fnBefore : entry.fnAfter;
       if (fnTable) {
@@ -1072,7 +1269,14 @@
   }
 
   function focusSel(sel: SelRef) {
-    const view = sel.layer === 'para' ? (views.get(vkey(sel.row, 0, 'para')) ?? null) : viewAt(sel.row, sel.segment);
+    // Layer-EXPLICIT lookup (D8 §4): a sentence-layer SelRef must never
+    // focus a mounted para view (viewAt resolves through the ACTIVE layer);
+    // if the recorded layer's view isn't mounted in the current view mode,
+    // the focus restore is a quiet no-op.
+    const view =
+      sel.layer === 'para'
+        ? (views.get(vkey(sel.row, 0, 'para')) ?? null)
+        : (views.get(vkey(sel.row, sel.segment, 'sentence')) ?? null);
     if (!view) return;
     const size = view.state.doc.content.size;
     const anchor = Math.min(sel.anchor, size);
@@ -1892,15 +2096,46 @@
     e.preventDefault();
     const d = displayRows[g];
     if (!d) return;
-    // Paragraph-unit view (D8 §4): the Greek word split/merge gesture and the
-    // AI modes both target the sentence layer; wiring them to englishPara is
-    // deferred to Phase E. Offer only the AI menu, disabled with a tooltip, so
-    // invoking it can't corrupt the paragraph translation.
+    // Paragraph-unit view (D8 §4): the D6 word gesture and the AI modes both
+    // target the sentence layer; the AI wiring to englishPara is deferred to
+    // Phase E (disabled with a tooltip). Document-spine paragraph docs get
+    // STRUCTURE editing here instead (D8 §2/§3): row-level paragraph
+    // split/merge plus the sentence-boundary fix-up — the same snapped-click
+    // offset drives both split gestures. Corpus-spine paragraph docs (Busse)
+    // keep the AI-only menu: the corpus owns their row count.
     if (paragraphUnitView) {
+      if (canEditRowStructure(scheme)) {
+        const paraRow = model.rows[d.rowIndex];
+        const within = caretOffsetFromPoint(e);
+        const snapped = within === null ? null : snapToWordStart(paraRow.greek, within);
+        ctxMenu = {
+          x: e.clientX,
+          y: e.clientY,
+          row: d.rowIndex,
+          segment: 0,
+          merge: false,
+          offset: snapped,
+          aiDisabled: true,
+          paraDoc: {
+            canMergePrev: d.rowIndex > 0,
+            joinBoundary: within === null ? null : joinBoundaryAt(paraRow.splitOffsets, within),
+          },
+        };
+        return;
+      }
       ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: 0, merge: false, offset: null, aiOnly: true, aiDisabled: true };
       return;
     }
     const row = model.rows[d.rowIndex];
+    // Plain-line document-spine rows (D8 §5): the grouping toggle — row 1
+    // always begins the first chunk, every other row either starts a
+    // paragraph or merges back into the one above. Pure display metadata.
+    const chunk =
+      canGroupLines(scheme) && d.rowIndex > 0 && d.segment === 0
+        ? (model.paragraphStarts ?? []).includes(d.rowIndex + 1)
+          ? ('remove' as const)
+          : ('add' as const)
+        : undefined;
     // If the right-click sits inside a multi-line Greek selection, "Translate
     // with AI" acts on every selected line (batch fill); otherwise it's the
     // usual single-line, popover-reviewed translate.
@@ -1908,7 +2143,7 @@
     const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
     if (segmentCount(row) > 1) {
       // Already split (Phase-1 UI is single-split): offer the merge.
-      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, translateRows };
+      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, translateRows, chunk };
       return;
     }
     // Split gesture (John's §4.1): the offset is the click's nearest word
@@ -1916,7 +2151,7 @@
     // snapToWordStart) rejects offset 0 and the line end.
     const within = caretOffsetFromPoint(e);
     const offset = within === null ? null : snapToWordStart(row.greek, d.greekStart + within);
-    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, translateRows };
+    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, translateRows, chunk };
   }
 
   /** Right-click the English cell → the 4 AI modes only. Split/Merge is a
@@ -1948,6 +2183,50 @@
     ctxMenu = null;
     if (!m || !m.merge) return;
     requestUnsplit(m.row, m.segment);
+  }
+
+  // ── document-spine structure menu commands (D8 §2/§3/§5) ────────────────
+  function menuParaSplit() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m?.paraDoc) return;
+    if (m.offset === null) {
+      setStatus('Choose the word where the new paragraph starts.');
+      return;
+    }
+    performParagraphSplit(m.row, m.offset);
+  }
+
+  function menuParaMerge() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m?.paraDoc || !m.paraDoc.canMergePrev) return;
+    requestParagraphMerge(m.row);
+  }
+
+  function menuSentenceSplit() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m?.paraDoc) return;
+    if (m.offset === null) {
+      setStatus('Choose the word where the new sentence starts.');
+      return;
+    }
+    performSentenceSplit(m.row, m.offset);
+  }
+
+  function menuSentenceJoin() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m?.paraDoc || m.paraDoc.joinBoundary === null) return;
+    requestSentenceJoin(m.row, m.paraDoc.joinBoundary);
+  }
+
+  function menuChunkToggle() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m?.chunk) return;
+    toggleChunkStart(m.row, m.chunk);
   }
 
   /** Right-click the Greek → "Translate with AI" (the discoverable entry
@@ -2090,8 +2369,11 @@
     refreshDisplayRows();
 
     // The surviving segment keeps its view — push the merged doc into it;
-    // the vanished continuation unmounts (destroyView skips the stale commit).
-    const keep = viewAt(r, boundary);
+    // the vanished continuation unmounts (destroyView skips the stale
+    // commit). Layer-EXPLICIT: a sentence join can fire from the
+    // paragraph-unit view (D8 §3), where viewAt would hand back the mounted
+    // para view and write sentence text into englishPara.
+    const keep = views.get(vkey(r, boundary, 'sentence')) ?? null;
     if (keep) {
       const json = boundary === 0 ? row.english : row.english2![boundary - 1];
       keep.dispatch(
@@ -2111,6 +2393,184 @@
     markModelDirty();
     refreshFnDisplay();
     void tick().then(() => focusSel(selAfter));
+  }
+
+  // ── document-spine structure editing (D8 §2/§3/§5) ──────────────────────
+  /**
+   * Row-level PARAGRAPH SPLIT (D8 §2 — the user owns row count): model row r
+   * becomes TWO rows at a validated word-start offset. Distribution is the
+   * pure splitParagraphRow's: sentence boundaries partition, sentence
+   * segments follow their sentences, englishPara stays entirely on the first
+   * row. Ordinal addresses re-derive across the splice; ONE structural undo
+   * entry restores the exact prior row.
+   */
+  function performParagraphSplit(r: number, offset: number) {
+    if (!canEditRowStructure(scheme)) return;
+    const row = model.rows[r];
+    if (!row) return;
+    commitRowNow(r); // this row's live para/sentence edits land in the model first
+    const result = splitParagraphRow(row, offset);
+    if (!result) {
+      setStatus('Choose the word where the new paragraph starts.');
+      return;
+    }
+    dismissAssist();
+    history.breakCoalescing();
+    const before = [structSnapshotOfRow(row)];
+    const selBefore = focusedSelRef();
+    const newRows = [rowModelFromStruct(result.first), rowModelFromStruct(result.second)];
+    spliceRows(r, 1, newRows);
+    const selAfter: SelRef = { row: r + 1, segment: 0, layer: 'para', anchor: 0, head: 0 };
+    history.push({
+      edits: [],
+      structural: { index: r, before, after: newRows.map(structSnapshotOfRow) },
+      selBefore,
+      selAfter,
+    });
+    markModelDirty();
+    void tick().then(() => {
+      refreshFnDisplay();
+      focusSel(selAfter);
+    });
+  }
+
+  /** Row-level paragraph merge entry point: confirm-guarded ONLY when both
+   * rows carry paragraph-layer English (the layer the merge actually joins —
+   * the D6 un-split confirm pattern); otherwise merge immediately. */
+  function requestParagraphMerge(r: number) {
+    if (!canEditRowStructure(scheme)) return;
+    if (r <= 0 || r >= model.rows.length) return;
+    commitRowNow(r - 1);
+    commitRowNow(r);
+    if (paragraphMergeNeedsConfirm(model.rows[r - 1], model.rows[r])) {
+      pendingParaMerge = { row: r };
+      return;
+    }
+    performParagraphMerge(r);
+  }
+
+  function confirmParaMerge() {
+    const p = pendingParaMerge;
+    pendingParaMerge = null;
+    if (p) performParagraphMerge(p.row);
+  }
+
+  function cancelParaMerge() {
+    pendingParaMerge = null;
+  }
+
+  /**
+   * Row-level PARAGRAPH MERGE (D8 §2): rows r-1 and r become one. Source
+   * joins with a single space; sentence boundaries concatenate (the join
+   * point becomes a boundary only where one exists); sentence segments
+   * append; englishPara joins per mergeParagraphRows. ONE structural undo
+   * entry restores both rows exactly.
+   */
+  function performParagraphMerge(r: number) {
+    if (!canEditRowStructure(scheme)) return;
+    const a = model.rows[r - 1];
+    const b = model.rows[r];
+    if (!a || !b) return;
+    commitRowNow(r - 1);
+    commitRowNow(r);
+    const merged = mergeParagraphRows(a, b);
+    dismissAssist();
+    history.breakCoalescing();
+    const before = [structSnapshotOfRow(a), structSnapshotOfRow(b)];
+    const selBefore = focusedSelRef();
+    const newRow = rowModelFromStruct(merged.row);
+    spliceRows(r - 1, 2, [newRow]); // refreshes surviving/reused views itself
+    const selAfter: SelRef = { row: r - 1, segment: 0, layer: 'para', anchor: merged.paraJoinPos, head: merged.paraJoinPos };
+    history.push({
+      edits: [],
+      structural: { index: r - 1, before, after: [structSnapshotOfRow(newRow)] },
+      selBefore,
+      selAfter,
+    });
+    markModelDirty();
+    void tick().then(() => {
+      refreshFnDisplay();
+      focusSel(selAfter);
+    });
+  }
+
+  /**
+   * SENTENCE fix-up on a paragraph row (D8 §3): the D6 splitOffsets
+   * machinery under its sentence name — "Start new sentence here" adds a
+   * boundary plus an empty segment (English stays with the sentence start,
+   * never divided by guesswork). No row is created; the division shows in
+   * the by-sentence interpolated view. ONE row-bundle undo entry.
+   */
+  function performSentenceSplit(r: number, offset: number) {
+    const row = model.rows[r];
+    if (!row) return;
+    commitRowNow(r);
+    const result = addSentenceBoundary(row, offset);
+    if (!result) {
+      setStatus(
+        row.splitOffsets?.includes(offset)
+          ? 'There is already a sentence break here.'
+          : 'Choose the word where the new sentence starts.',
+      );
+      return;
+    }
+    dismissAssist();
+    history.breakCoalescing();
+    const before = snapshotRow(r);
+    const selBefore = focusedSelRef();
+    row.english = result.english;
+    if (result.english2 && result.english2.length > 0) row.english2 = result.english2;
+    else delete row.english2;
+    row.splitOffsets = result.splitOffsets;
+    refreshDisplayRows();
+    history.push({
+      edits: [{ row: r, before, after: snapshotRow(r) }],
+      selBefore,
+      selAfter: selBefore,
+    });
+    markModelDirty();
+    refreshFnDisplay();
+    setStatus('New sentence started — visible in the interpolated view, by sentence.');
+  }
+
+  /** "Join sentences" (D8 §3): remove the boundary at the start of the
+   * clicked sentence via the SAME pure mergeSegments/confirm machinery as
+   * the D6 un-split, with sentence wording on the confirm. */
+  function requestSentenceJoin(r: number, boundary: number) {
+    const row = model.rows[r];
+    if (!row || boundary < 0 || boundary >= segmentCount(row) - 1) return;
+    commitRowNow(r);
+    if (mergeNeedsConfirm(row, boundary)) {
+      pendingUnsplit = {
+        row: r,
+        boundary,
+        message: 'Both sentences already have English — join them into one sentence?',
+      };
+      return;
+    }
+    performUnsplit(r, boundary);
+  }
+
+  /** Chunk grouping for plain-line docs (D8 §5): toggle this row's 1-based
+   * ordinal in paragraph_starts. Pure display metadata — no row or text
+   * changes — with its own undo entry; persists via paragraph_starts. */
+  function toggleChunkStart(r: number, mode: 'add' | 'remove') {
+    if (!canGroupLines(scheme) || r <= 0 || r >= model.rows.length) return;
+    const ordinal = r + 1;
+    const before = (model.paragraphStarts ?? []).slice();
+    const after = mode === 'add' ? addParagraphStart(before, ordinal) : removeParagraphStart(before, ordinal);
+    history.breakCoalescing();
+    model.paragraphStarts = after.length > 0 ? after : undefined;
+    const sel = focusedSelRef();
+    history.push({
+      edits: [],
+      paraStarts: { before, after: after.slice() },
+      selBefore: sel,
+      selAfter: sel,
+    });
+    markModelDirty();
+    refreshDisplayRows(); // chunkStartGrids re-derives from the fresh displayRows
+    setStatus(mode === 'add' ? 'Paragraph starts here.' : 'Merged with the paragraph above.');
   }
 
   // ── commands (toolbar + shortcuts) ─────────────────────────────────────
@@ -2420,6 +2880,19 @@
 
   const host: RowViewHost = {
     createView(row, segment, el, layer) {
+      // A keyed remount may CREATE the new cell for a (row, segment, layer)
+      // before the old cell is destroyed (a row splice shifts indices onto
+      // keys other rows held — D8 §2). Evict the stale view so the newest
+      // mount owns the key; the old cell's destroyView then no-ops via
+      // evictedViewKeys. Outside a structural window the old view's text is
+      // committed first (belt and braces — nothing typed may be lost).
+      const stale = views.get(vkey(row, segment, layer));
+      if (stale) {
+        if (!structuralRemount) commitRowNow(row);
+        stale.destroy();
+        views.delete(vkey(row, segment, layer));
+        evictedViewKeys.add(vkey(row, segment, layer));
+      }
       const r = model.rows[row];
       const json =
         layer === 'para'
@@ -2470,6 +2943,11 @@
       views.set(vkey(row, segment, layer), view);
     },
     destroyView(row, segment, layer) {
+      // A row splice's keyed remount may have already EVICTED this cell's
+      // view (a newer mount claimed the same key before this teardown ran —
+      // see createView): the map now holds the NEW cell's view, which must
+      // not be destroyed here.
+      if (evictedViewKeys.delete(vkey(row, segment, layer))) return;
       const view = views.get(vkey(row, segment, layer));
       if (!view) return;
       // Commit only while the model still HAS this cell — after an un-split
@@ -2564,6 +3042,11 @@
     if (e.key === 'Escape' && pendingUnsplit) {
       e.preventDefault();
       cancelUnsplit();
+      return;
+    }
+    if (e.key === 'Escape' && pendingParaMerge) {
+      e.preventDefault();
+      cancelParaMerge();
       return;
     }
     if (e.key === 'Escape' && assistUi) {
@@ -2752,6 +3235,7 @@
             onPasteConfirm={confirmPaste}
             onPasteCancel={cancelPaste}
             unsplitConfirm={pendingUnsplit?.row === d.rowIndex && d.segment === 0}
+            unsplitMessage={pendingUnsplit?.message ?? null}
             onUnsplitConfirm={confirmUnsplit}
             onUnsplitCancel={cancelUnsplit}
             onContext={(e) => onEnglishContextMenu(e, g)}
@@ -2806,6 +3290,7 @@
           onPasteConfirm={confirmPaste}
           onPasteCancel={cancelPaste}
           unsplitConfirm={pendingUnsplit?.row === d.rowIndex && d.segment === 0}
+          unsplitMessage={pendingUnsplit?.message ?? null}
           onUnsplitConfirm={confirmUnsplit}
           onUnsplitCancel={cancelUnsplit}
           onContext={(e) => onEnglishContextMenu(e, g)}
@@ -2817,7 +3302,48 @@
 
   {#if ctxMenu}
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
-      {#if !ctxMenu.aiOnly}
+      {#if ctxMenu.paraDoc}
+        <!-- Document-spine paragraph rows (D8 §2/§3): row-level paragraph
+             ops first, then the sentence fix-up — the D6 splitOffsets
+             machinery relabelled, since on paragraph rows those boundaries
+             mean SENTENCES — then the AI options (house convention:
+             structure at the top, divider before AI). -->
+        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuParaSplit}>
+          <span class="ctx-menu-title">Split paragraph here</span>
+          <span class="ctx-menu-desc">The clicked word starts a new paragraph — your English stays with this one</span>
+        </button>
+        {#if ctxMenu.paraDoc.canMergePrev}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuParaMerge}>
+            <span class="ctx-menu-title">Merge with previous paragraph</span>
+            <span class="ctx-menu-desc">Joins this paragraph onto the one above</span>
+          </button>
+        {/if}
+        <div class="ctx-menu-divider" role="separator"></div>
+        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSentenceSplit}>
+          <span class="ctx-menu-title">Start new sentence here</span>
+          <span class="ctx-menu-desc">Fixes the sentence division used by the by-sentence view</span>
+        </button>
+        {#if ctxMenu.paraDoc.joinBoundary !== null}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSentenceJoin}>
+            <span class="ctx-menu-title">Join sentences</span>
+            <span class="ctx-menu-desc">Merges this sentence with the previous one</span>
+          </button>
+        {/if}
+        <div class="ctx-menu-divider" role="separator"></div>
+      {:else if !ctxMenu.aiOnly}
+        {#if ctxMenu.chunk}
+          <!-- Plain-line document-spine grouping (D8 §5): display metadata
+               only — no line is created, destroyed or edited. -->
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuChunkToggle}>
+            {#if ctxMenu.chunk === 'add'}
+              <span class="ctx-menu-title">Start paragraph here</span>
+              <span class="ctx-menu-desc">This line begins a new paragraph — grouping only, the lines don't change</span>
+            {:else}
+              <span class="ctx-menu-title">Merge with previous paragraph</span>
+              <span class="ctx-menu-desc">Rejoins this line to the paragraph above — grouping only</span>
+            {/if}
+          </button>
+        {/if}
         {#if ctxMenu.merge}
           <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>
             <span class="ctx-menu-title">Merge paragraph back</span>
@@ -2911,6 +3437,34 @@
           <button class="batch-btn" type="button" onclick={cancelBatchTranslate}>Cancel</button>
           <button class="batch-btn batch-btn-danger" type="button" onclick={confirmBatchTranslate}>
             Translate &amp; replace
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  {#if pendingParaMerge}
+    <!-- Paragraph-merge confirm (D8 §2): shown ONLY when both rows carry a
+         paragraph-layer translation — the merge joins them with a space. -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="batch-scrim" role="presentation" onclick={cancelParaMerge}>
+      <div
+        class="batch-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="Confirm paragraph merge"
+        tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+      >
+        <p class="batch-msg">
+          Both paragraphs already have a translation. Merge them and
+          <strong>join</strong> their English into one paragraph?
+        </p>
+        <div class="batch-actions">
+          <button class="batch-btn" type="button" onclick={cancelParaMerge}>Cancel</button>
+          <button class="batch-btn batch-btn-danger" type="button" onclick={confirmParaMerge}>
+            Merge &amp; join
           </button>
         </div>
       </div>

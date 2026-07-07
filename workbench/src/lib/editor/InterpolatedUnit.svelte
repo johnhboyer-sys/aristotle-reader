@@ -33,6 +33,7 @@
     onPasteConfirm,
     onPasteCancel,
     unsplitConfirm,
+    unsplitMessage = null,
     onUnsplitConfirm,
     onUnsplitCancel,
     onContext,
@@ -67,6 +68,8 @@
     onPasteConfirm: () => void;
     onPasteCancel: () => void;
     unsplitConfirm: boolean;
+    /** Confirm wording override (D8 §3) — passed through to EnglishCell. */
+    unsplitMessage?: string | null;
     onUnsplitConfirm: () => void;
     onUnsplitCancel: () => void;
     onContext: (e: MouseEvent) => void;
@@ -105,6 +108,7 @@
     {onPasteConfirm}
     {onPasteCancel}
     {unsplitConfirm}
+    {unsplitMessage}
     {onUnsplitConfirm}
     {onUnsplitCancel}
     {onContext}

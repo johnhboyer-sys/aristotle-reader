@@ -21,6 +21,7 @@
     onPasteConfirm,
     onPasteCancel,
     unsplitConfirm,
+    unsplitMessage = null,
     onUnsplitConfirm,
     onUnsplitCancel,
     onContext,
@@ -43,6 +44,9 @@
     onPasteConfirm: () => void;
     onPasteCancel: () => void;
     unsplitConfirm: boolean; // the un-split confirm is pending on this cell
+    /** Confirm wording override (D8 §3 sentence join); null → the D6 line
+     * un-split sentence below. */
+    unsplitMessage?: string | null;
     onUnsplitConfirm: () => void;
     onUnsplitCancel: () => void;
     onContext: (e: MouseEvent) => void; // right-click → the row's AI menu
@@ -81,7 +85,7 @@
 
   {#if unsplitConfirm}
     <div class="paste-confirm" role="alertdialog" aria-label="Confirm paragraph merge">
-      <span class="paste-confirm-text">Merge these two English paragraphs back into one line?</span>
+      <span class="paste-confirm-text">{unsplitMessage ?? 'Merge these two English paragraphs back into one line?'}</span>
       <button class="paste-btn paste-btn-primary" onclick={onUnsplitConfirm}>Merge</button>
       <button class="paste-btn" onclick={onUnsplitCancel}>Cancel</button>
     </div>

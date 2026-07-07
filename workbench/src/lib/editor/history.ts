@@ -60,8 +60,50 @@ export interface RowEdit {
   after: RowSnapshot;
 }
 
+/**
+ * One ROW's full model state for a STRUCTURAL edit (D8 §2 — document-spine
+ * paragraph split/merge, where the operation creates/destroys RowModels).
+ * Unlike RowSnapshot this also carries the row's SOURCE text: a paragraph
+ * split partitions the Greek between two rows, so restoring the row set
+ * must restore the text with it. Addresses are NOT captured — document-spine
+ * addresses are derived from row ordinal and re-derived after every splice.
+ */
+export interface StructuralRowSnapshot {
+  /** The row's source (Greek/original) text. */
+  greek: string;
+  /** Sentence-layer segment docs in document order; docs[0] = `english`. */
+  docs: PMNode[];
+  /** Sentence boundaries (splitOffsets) at snapshot time. */
+  splitOffsets?: number[];
+  /** Paragraph-layer English, when the row has one. */
+  englishPara?: PMNode;
+}
+
+/**
+ * A structural (row-count-changing) edit: the rows `[index, index +
+ * before.length)` are replaced by `after` on do/redo, and `[index, index +
+ * after.length)` by `before` on undo. A paragraph split is one row → two;
+ * a paragraph merge is two rows → one. Exactly one ⌘Z restores the exact
+ * prior row structure (D8 §2). An entry carries EITHER `edits` (in-row
+ * changes, the D1/D6 shape) OR `structural` — never both.
+ */
+export interface StructuralEdit {
+  /** Model row index where the replaced span begins. */
+  index: number;
+  before: StructuralRowSnapshot[];
+  after: StructuralRowSnapshot[];
+}
+
 export interface UndoEntry {
   edits: RowEdit[];
+  /** Row-count-changing edit (D8 §2) — see StructuralEdit. */
+  structural?: StructuralEdit;
+  /**
+   * paragraph_starts change (D8 §5 chunk grouping for plain-line docs):
+   * cloned 1-based ordinal lists before/after. Pure display metadata riding
+   * the same stack so grouping gestures undo like everything else.
+   */
+  paraStarts?: { before: number[]; after: number[] };
   fnBefore?: Footnote[];
   fnAfter?: Footnote[];
   selBefore: SelRef | null;

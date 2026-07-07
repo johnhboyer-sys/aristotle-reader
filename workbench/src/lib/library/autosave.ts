@@ -58,8 +58,8 @@ export function spansFromModel(model: ChapterModel): ChapterSpans {
   if (scheme.spineSource === 'document') {
     if (model.rows.length === 0) return { start: '', end: '' };
     return {
-      start: ordinalAddress(scheme, 1).raw,
-      end: ordinalAddress(scheme, model.rows.length).raw,
+      start: documentOrdinalAddress(scheme, 1).raw,
+      end: documentOrdinalAddress(scheme, model.rows.length).raw,
     };
   }
   const first = model.rows[0]?.address.raw ?? '';
@@ -67,7 +67,14 @@ export function spansFromModel(model: ChapterModel): ChapterSpans {
   return { start: first, end: last };
 }
 
-function ordinalAddress(scheme: CitationScheme, rowIndex: number): Address {
+/**
+ * Ordinal-derived address for a DOCUMENT-SPINE row (D8 §1: `¶N` / `N` from
+ * the 1-based row ordinal — never persisted). Exported for the editor's
+ * structure-editing path (D8 §2): a row splice shifts every following
+ * ordinal, so the model's addresses are re-derived through this after each
+ * split/merge/undo — the same derivation every save and hydration uses.
+ */
+export function documentOrdinalAddress(scheme: CitationScheme, rowIndex: number): Address {
   if (!Number.isInteger(rowIndex) || rowIndex <= 0) {
     throw new ChapterFileError(`rowAddressSource: row index ${rowIndex} is out of range`);
   }
@@ -105,7 +112,7 @@ export function rowAddressSource(
   if (scheme.spineSource === 'corpus') {
     return (rowIndex: number) => spine[rowIndex - 1]?.address ?? { scheme: scheme.id, raw: '' };
   }
-  return (rowIndex: number) => ordinalAddress(scheme, rowIndex);
+  return (rowIndex: number) => documentOrdinalAddress(scheme, rowIndex);
 }
 
 /**
@@ -197,7 +204,7 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
   for (let i = 0; i < model.rows.length; i++) {
     const row = model.rows[i];
     if (!row.splitOffsets || row.splitOffsets.length === 0) continue;
-    const ref = scheme.spineSource === 'document' ? ordinalAddress(scheme, i + 1).raw : row.address.raw;
+    const ref = scheme.spineSource === 'document' ? documentOrdinalAddress(scheme, i + 1).raw : row.address.raw;
     if (ref === '') continue;
     for (const offset of row.splitOffsets) {
       lineSplits.push({ ref, offset });
