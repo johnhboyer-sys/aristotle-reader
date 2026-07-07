@@ -36,6 +36,12 @@ export interface CorpusConfig {
   bekkerEnd: BekkerRef;
   /** Expected division structure; chaptersPerBook[i] = chapters in book i+1. */
   divisions: { books: number; chaptersPerBook: number[] };
+  /**
+   * Declared gutter side when the print is one-sided (e.g. an all-verso
+   * edition). A hint for sparse pages only — side is normally decided per
+   * page from tic evidence; never assume recto/verso alternation.
+   */
+  side?: 'verso' | 'recto' | 'alternating';
   /** The pdftotext -layout extraction (geometry backbone). */
   backbonePath: string;
   /** The History Genie extraction (wording witness). */
