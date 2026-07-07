@@ -379,3 +379,147 @@ bare-numeral extension before Categories/De Int can import. Slotted for Phase 5
 (edition generality). Also seen: single-digit folio ("2", col 6) and dotless
 chapter running head ("Categories (Cat.) .4–.5") — both covered by existing
 defenses (furniture position; header line-1 strip).
+
+## Phase 5: bare-numeral chapters + the real Categories slice + Clarendon per-chapter scope
+
+### Bare-numeral chapter grammar (divisions.ts / line-shape.ts) — gating rationale
+
+`parseHeadingResidual` (line-shape.ts) grows a third branch: a standalone trimmed
+residual of 1-2 Arabic digits (`^(\d{1,2})$`) parses to
+`{kind:'chapter', restatedBook:null, num:{type:'arabic',digits}, bare:true}`. This is
+DELIBERATELY permissive at the grammar level — the function is pure/stateless and
+cannot know whether a given centered "5" is really a chapter heading or a stray
+centered number elsewhere in the body (a folio that slipped past furniture
+detection, a table label). `lineShape` therefore marks ANY such line 'chapter'-shaped
+once it also clears `leftGap >= LEFT_MIN`; **all the false-positive rejection happens
+in divisions.ts's sequence gate**, per the spec's own framing ("ACCEPTANCE is
+sequence-gated — this kills false positives").
+
+**Reconciling the spec's own two-part gap rule.** Spec §1 says, in two adjacent
+sentences that read as if in tension: (a) "A bare numeral that is NOT sequence-
+consistent → not a division"; (b) "if chapters genuinely skip (value==last+2 with no
+intervening candidate), flag `chapter-sequence:gap-or-repeat:` … and accept
+(consistent with §4.3)". Implemented as the reading that makes BOTH sentences true
+without contradiction: bare-numeral acceptance is `value === (lastChapter ?? 0) + 1`
+(sentence a's default — this is what "kills false positives" before single-book-work
+mode is even established, since a random early number essentially never equals
+1 exactly), **except** that once `state.singleBookWork` is already true (mode
+established — at least one chapter already legitimately accepted), a value that is
+EXACTLY `expected + 1` (a one-chapter forward gap — the spec's own "value==last+2"
+worked example) is ALSO accepted, flagged, never a value further out. This keeps the
+"kills false positives" goal intact for a document that has NOT yet proven itself to
+be a bare-numeral single-book work, while still tolerating the one genuinely-skipped-
+chapter case the spec names once the pattern is already trusted. A "b.c mode" check
+(`state.book !== null && !state.singleBookWork`) wins silently over BOTH branches, no
+flag, per spec ("b.c mode wins") — this is checked first, before any value
+comparison at all. All of this is unit-tested in divisions.test.ts's "bare-numeral
+chapters (Phase 5 spec §1)" describe block (8 cases: clean sequence, book=1 keying,
+the flag firing exactly once, b.c-mode-wins, a stray pre-"1" numeral rejected, the
+one-chapter-gap tolerance vs. a wild jump and a backward/repeat value both rejected,
+and a free-floating title-candidate after a rejected numeral staying uncaptured).
+
+Title capture for a bare-numeral chapter reuses the IDENTICAL center-alignment rule
+as a b.c chapter (factored into a shared `captureTitle` helper in divisions.ts,
+called from both branches) — spec §1 calls for exactly this ("Title capture:
+identical rule to b.c chapters").
+
+### The measured Categories truths (real 27-page slice, cat-slice.integration.test.ts)
+
+Measured, then hand-verified against the raw slice, then pinned (2026-07-06):
+- 15 chapters, `{1.1}`..`{1.15}`, ALL titled, book=1 implicit throughout (the
+  `single-book-work` doc flag fires exactly once, on chapter 1's acceptance); ZERO
+  Book divisions and ZERO division-level audit flags anywhere in the slice.
+- The gutter-flag histogram across all 27 pages is genuinely EMPTY `{}` — no dropped
+  lines, no non-monotonic tics, no side-ambiguity, no unmarked rolls. This is the
+  cleanest real slice measured in this corpus so far; 236/236 tics detected and bound.
+- Footnotes: 43 numbered notes + 1 work-level star (translator-credit, glued to the
+  running-head title "Categories*") = 44 definitions, 43 body markers, 44 pairs
+  (43 numbered + 1 star), ZERO unmatched notes or markers.
+- **Scope verdict is genuinely `null`** (not a bug): a single-book work can never
+  cross a BOOK boundary (book is pinned at 1 for the whole document), so
+  'continuous' and 'per-book' predict IDENTICAL transitions for every observation —
+  no number of observations can ever discriminate between them. 'per-chapter' dies
+  normally (footnote numbering doesn't reset per chapter in this edition). Verdict
+  stays null after 12 discriminating observations, both `continuous` and `perBook`
+  still alive; emission's own documented fallback (`footnoteState.verdict ??
+  'continuous'`) is what actually labels the output `scope: 'continuous'` in the
+  report. This is a structural fact about single-book works worth stating plainly:
+  the scope machine cannot ever "solve" this case, by design, and shouldn't.
+- The ten-categories BODY TABLE (ch. 4) genuinely spans a page break, with a
+  footnote block, a folio, and a running head printed between its two halves, and
+  carries a real gutter tic on one row (`Where … 2a1`, flagged `display-block-
+  anchor`). All ten rows land in the emitted text in printed order.
+- Gold anchors, all three hand-verified against the raw page before pinning:
+  `{1a}` (citation `1a1`) → "Things" (ch.1 opening); the table-row tic `{2a}`
+  (citation `2a1`) → "Where"; and ch.4's OWN opening tag — MEASURED as the bare
+  line tag `{25}` (kind `'line'`, not a composite `{1b25}`), settling the phase-5
+  spec's own tentative "`{1b25}`?" guess: ch.4's heading sits on a VERSO page, whose
+  printed tic really is just "25" (a leading bare tic with no page/column digits of
+  its own) rolling the column already established by an earlier "1b1" full-form tic
+  on the same page. Only the PARSED tag's `citation` field resolves the full
+  address ("1b25") via that running column context; the emitted TAG TEXT itself is
+  the bare `{25}`. Anchor word: "Each" (of "Each of the things said…").
+
+### Bug found and fixed: furniture-boundary over-absorption of a real body table
+
+Building the Categories integration test surfaced a genuine defect (not merely an
+honest-anomaly-to-pin): the shared "climb upward past a blank-line gap, bridging
+through if the line on the far side is display-shaped" logic — added in Phase 3
+(`gutter.ts`'s `findBottomFurnitureStart`, mirrored independently in `footnotes.ts`'s
+`computeNoteBlockStart`) specifically so a footnote's own interior diagram (note 77's,
+in the NE slice) wouldn't truncate the furniture walk — was ALSO silently absorbing
+the first three rows of Categories ch.4's ten-categories table ("Substance / Quantity
+/ Quality") into the footnote/furniture region. Those three rows sit directly above
+the real footnote block with only ONE blank line separating them, and each row's wide
+internal spacing (`isDisplayShapedLine`'s ≥4-space-run test) makes it display-shaped —
+exactly the same shape signature a note's own diagram interior has. The climb bridged
+straight through them, past the real body/footnote boundary, and `bottomFurnitureStartIdx`
+landed 3 lines too early — those three table rows never reached body-line scanning at
+all and were silently DROPPED from the emitted text (confirmed: "Substance", "Quantity"
+and their row text were entirely absent from `convertLayoutExtraction`'s output before
+the fix, while chapter 4's remaining seven rows — on the next page, correctly bounded —
+were present).
+
+Root cause, traced by hand: the climb's boundary was set to `tentative` — however far
+upward the bridge-and-climb happened to wander — gated only on "did we see ANY
+note-starter ANYWHERE during the whole climb" (`sawNoteLine`). That gate is too weak:
+it says nothing about whether the SPECIFIC span just bridged into is actually part of
+a note. **Fix**: anchor the boundary on the TOPMOST note-starter line actually reached
+(`topmostNoteStarter`, tracked alongside `sawNoteLine`) instead of `tentative`. This is
+correct in both directions: nothing legitimate can ever precede a footnote block's own
+first printed note (a continuation only ever comes AFTER its opener, which is why the
+existing note-77-diagram case still works — climbing bottom-up reaches the diagram
+before reaching "77."'s own opener, but "77." itself IS eventually the topmost
+note-starter reached, so the boundary still correctly includes the whole diagram); and
+nothing that sits ABOVE the topmost note-starter can ever legitimately be furniture,
+even if a display-shaped bridge happened to wander that far, because there is no note
+content up there to justify including it. Applied identically to both
+`findBottomFurnitureStart` (gutter.ts) and `computeNoteBlockStart` (footnotes.ts) —
+the two independent, intentionally-duplicated implementations (see the existing Phase-3
+note above on why they're not shared). **Verified safe**: the ENTIRE pre-existing
+NE-slice pinned suite (gutter-slice.integration.test.ts, convert-slice.integration.test.ts,
+177/176 pages, all footnote/division/tic counts) is BYTE-IDENTICAL before and after this
+fix — the NE slice has no case where a real body display block sits one blank line above
+its own footnote block, so the fix only ever changes behavior for the Categories case it
+was built to correct.
+
+### Clarendon fixture: four chapters, not the spec's illustrative three
+
+Spec §3 describes "`CHAPTER I`..`CHAPTER III`". Built with a FOURTH chapter instead
+(`fixtures/clarendon-geometry.ts`), because the scope machine's own
+`SCOPE_DECIDE_N = 3` threshold (§A4) requires at least 3 DISCRIMINATING
+(division-boundary-crossing) observations before it will ever LOCK a verdict, and a
+transition only counts as discriminating when it crosses a chapter (or book)
+boundary. Three chapters give exactly TWO chapter-boundary crossings — never enough
+to lock `per-chapter`, no matter how clean the reset pattern is; the report would
+silently fall back to `'continuous'` (the safe default for a null verdict), which
+would defeat the entire point of a fixture built to exercise "the per-chapter scope
+verdict and scoped labels end-to-end through emission." A fourth chapter (a single
+footnote is enough) supplies the third crossing that actually settles the verdict.
+Measured consequence, confirmed correct: `continuous` and `per-book` both die at the
+VERY FIRST chapter-boundary reset (a single-book document never crosses a book
+boundary, so those two hypotheses are behaviorally identical here too, exactly as in
+the real Categories slice above) — only `per-chapter` survives from chapter 1→2
+onward, and the verdict LOCKS at the third crossing (chapter 3→4), retroactively
+scoping every label (including chapter 1's own notes) `<book>.<chapter>.<N>` once
+emission reads the final `footnoteState.verdict`.
