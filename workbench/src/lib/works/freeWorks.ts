@@ -114,6 +114,12 @@ export function freeWorkManifest(record: FreeWorkRecord): WorkManifest {
   if (lang === 'greek' || lang === 'latin') {
     manifest.originalLanguage = lang as OriginalLanguage;
   }
+  // The user's exact wording rides along for prompt wording (D8 §7 Phase E2):
+  // assist names the actual language ("German") or none, never a false
+  // 'greek' fallback.
+  if (record.language !== undefined) {
+    manifest.language = record.language;
+  }
   return manifest;
 }
 

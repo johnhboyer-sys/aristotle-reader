@@ -109,10 +109,40 @@ describe('paragraph-chunk grouping for line docs (§5)', () => {
   });
 });
 
-describe('AI menu is disabled (not corrupting) in the paragraph-unit view', () => {
-  it('paragraph-unit context menus flag aiDisabled and the buttons honour it', () => {
-    expect(chapterSource).toContain('aiDisabled: paragraphUnitView');
-    expect(chapterSource).toContain('disabled={ctxMenu.aiDisabled}');
+describe('AI modes are LIVE (and layer-correct) in the paragraph-unit view (D8 Phase E2)', () => {
+  it('the disabled state + tooltip are gone: para-layer targets get the full AI menu', () => {
+    expect(chapterSource).not.toContain('aiDisabled');
+    expect(chapterSource).not.toContain('coming soon');
+  });
+
+  it('assist writes are layer-EXPLICIT (vkey with the captured layer, never viewAt)', () => {
+    expect(fnBody('insertSuggestionIntoRow')).toContain('views.get(vkey(row, segment, assistLayer))');
+    expect(fnBody('fillRowEnglish')).toContain('views.get(vkey(row, segment, layer))');
+    expect(fnBody('invokeAssist')).toContain('assistLayer = activeLayer()');
+  });
+
+  it('para-layer Check reads englishPara (targetEnglish), never the sentence join', () => {
+    const body = fnBody('targetEnglish');
+    expect(body).toContain("if (layer === 'para') return plainRowText(paraDoc(row))");
+  });
+
+  it('footnote insertion is blocked in para-layer views with a notice ([ENGLISH.PARA] has no markers)', () => {
+    const body = fnBody('insertFootnote');
+    expect(body).toContain("if (activeLayer() === 'para')");
+    const guardAt = body.indexOf("activeLayer() === 'para'");
+    const markerAt = body.indexOf('footnoteMarker.create');
+    expect(guardAt).toBeGreaterThan(-1);
+    expect(markerAt).toBeGreaterThan(guardAt); // guard runs FIRST
+    expect(body).toContain('translating by paragraph');
+  });
+
+  it('a view/granularity switch cancels in-flight assist + batch (stale layer can never land)', () => {
+    // Both cancellations live in the SAME view-mode effect as the re-expansion.
+    const effectAt = chapterSource.indexOf('void granularity; // track');
+    const windowSrc = chapterSource.slice(effectAt, effectAt + 700);
+    expect(windowSrc).toContain('dismissAssist();');
+    expect(windowSrc).toContain('batchAbort?.abort();');
+    expect(windowSrc).toContain('refreshDisplayRows();');
   });
 });
 

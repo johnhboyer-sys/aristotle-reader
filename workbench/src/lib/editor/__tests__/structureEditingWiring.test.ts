@@ -38,7 +38,7 @@ describe('capability gating (D8 §2 — Bekker/corpus rows refuse row-level ops)
     expect(menu).toContain('canEditRowStructure(scheme)');
     expect(menu).toContain('canGroupLines(scheme)');
     // The Busse/corpus fallback inside the paragraph-unit branch is unchanged.
-    expect(menu).toContain('aiOnly: true, aiDisabled: true');
+    expect(menu).toContain('aiOnly: true, noun, rowNoun, translateRows: paraTranslateRows');
     // The D6 grid path is intact (Bekker labels + snapping pinned by
     // lineSplitWiring.test.ts).
     expect(menu).toContain('snapToWordStart(row.greek, d.greekStart + within)');

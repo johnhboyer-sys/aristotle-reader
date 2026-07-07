@@ -22,6 +22,10 @@ export type OriginalLanguage = 'greek' | 'latin';
 /** WorkMeta plus the extra fields carried in the manifest YAML. */
 export interface WorkManifest extends WorkMeta {
   originalLanguage?: OriginalLanguage;
+  /** Free-text source-language label, VERBATIM as the user typed it (free
+   * works only — built-in manifests use `originalLanguage`). Threaded into
+   * the AI-assist prompts so a German document is never framed as Greek. */
+  language?: string;
   tlgAuthor?: string;
   tlgWork?: string;
 }

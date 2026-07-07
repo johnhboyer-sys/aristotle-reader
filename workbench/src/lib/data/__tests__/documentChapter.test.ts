@@ -44,3 +44,24 @@ describe('documentChapterForEditor', () => {
     expect(() => documentChapterForEditor(getWork('metaphysics'), file)).toThrow(/corpus-spine/);
   });
 });
+
+describe('documentChapterForEditor — language threading (D8 Phase E2)', () => {
+  it("threads the free work's verbatim language into the fixture for assist wording", () => {
+    const { work: record } = createFreeDocument({
+      title: 'Doc',
+      unit: 'paragraphs',
+      language: 'German',
+      text: 'Ein Satz.\n\nZwei.',
+    });
+    const work = freeWorkManifest(record);
+    const { file } = freeDoc('paragraphs', 'Ein Satz.\n\nZwei.');
+    const fixture = documentChapterForEditor(work, file);
+    expect(fixture!.language).toBe('German');
+  });
+
+  it('no language on the work → no language on the fixture (assist drops the claim, never Greek)', () => {
+    const { work, file } = freeDoc('paragraphs', 'One.\n\nTwo.');
+    const fixture = documentChapterForEditor(work, file);
+    expect('language' in fixture!).toBe(false);
+  });
+});

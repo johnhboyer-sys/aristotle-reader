@@ -38,9 +38,26 @@ export interface AssistContextRow {
  */
 export type AssistMode = 'translate' | 'reference' | 'check' | 'ask';
 
+/**
+ * The translation unit the prompt speaks in (D8 §7 — unit-aware wording).
+ * Absent on `AssistContext` = `'line'` (back-compat: every pre-D8 caller is a
+ * line-unit caller, and the Bekker prompt strings stay byte-identical):
+ *
+ *  - `line`       — Bekker / plain-line rows: the shipped wording, unchanged.
+ *  - `paragraph`  — paragraph-row para-layer targets (the `englishPara`
+ *                   field): target and context rows are whole paragraphs.
+ *  - `sentence`   — paragraph-row sentence-layer targets: the target is ONE
+ *                   sentence of a paragraph; context rows are the
+ *                   neighbouring paragraphs, and `enclosing` carries the
+ *                   paragraph the sentence belongs to.
+ */
+export type AssistUnit = 'line' | 'paragraph' | 'sentence';
+
 export interface AssistContext {
   /** Which task the prompt frames; absent = 'translate' (back-compat). */
   mode?: AssistMode;
+  /** The translation unit the prompt speaks in; absent = 'line'. */
+  unit?: AssistUnit;
   /** The translator's free-form question. Used ONLY in `ask` mode; ignored
    * (and normally absent) in every other mode. */
   question?: string;
@@ -48,10 +65,26 @@ export interface AssistContext {
     title: string;
     author: string;
     originalLanguage: 'greek' | 'latin';
+    /**
+     * Human-readable source-language label for the prompt wording.
+     * ABSENT (undefined) = back-compat: derived from `originalLanguage`
+     * ('greek' → "Greek", 'latin' → "Latin") — corpus works keep their
+     * shipped wording byte-identical. A non-empty string (a free work's
+     * user-typed language, e.g. "German") is used verbatim. `null` or a
+     * blank string = UNKNOWN: the prompts drop the language claim and speak
+     * of "the source text" instead.
+     */
+    language?: string | null;
     scheme: string;
   };
   book: { index: number; label: string };
   chapter: number;
+  /**
+   * `sentence`-unit targets only: the paragraph the target sentence belongs
+   * to (the whole row's source text). Rendered as reading context — never
+   * translated, never sent with a draft.
+   */
+  enclosing?: { address: string; greek: string };
   /** The target line. In `translate`/`reference` modes the target carries no
    * `english` (assist never sends the target's own draft when producing a
    * translation). In `check` mode the target's `english` IS sent — it is the

@@ -658,3 +658,55 @@ describe('assist wiring stays intact (source scan)', () => {
     expect(popoverSource).not.toMatch(/copied|clipboard|sign-in/i);
   });
 });
+
+// ── buildAssistContext — unit threading (D8 §7 Phase E2) ────────────────────
+
+describe('buildAssistContext — unit + targetSlice (D8 §7 Phase E2)', () => {
+  it("default (no unit): no `unit` field and no `enclosing` — pre-D8 contexts are byte-compatible", () => {
+    const ctx = buildAssistContext(contextArgs(10).args);
+    expect('unit' in ctx).toBe(false);
+    expect('enclosing' in ctx).toBe(false);
+  });
+
+  it("unit 'paragraph' rides the context verbatim; target = the whole row", () => {
+    const ctx = buildAssistContext(contextArgs(10, { unit: 'paragraph' }).args);
+    expect(ctx.unit).toBe('paragraph');
+    expect(ctx.target.greek).toBe('γραμμή 10');
+    expect('enclosing' in ctx).toBe(false);
+  });
+
+  it("unit 'sentence' + a proper targetSlice: the slice becomes the target, the full row becomes `enclosing` (same address)", () => {
+    const ctx = buildAssistContext(contextArgs(10, { unit: 'sentence', targetSlice: 'γραμμή' }).args);
+    expect(ctx.unit).toBe('sentence');
+    expect(ctx.target.greek).toBe('γραμμή');
+    expect(ctx.target.address).toBe('1041a11');
+    expect(ctx.enclosing).toEqual({ address: '1041a11', greek: 'γραμμή 10' });
+  });
+
+  it("unit 'sentence' with a slice equal to the whole row (undivided paragraph): no duplicate enclosing", () => {
+    const ctx = buildAssistContext(contextArgs(10, { unit: 'sentence', targetSlice: 'γραμμή 10' }).args);
+    expect(ctx.unit).toBe('sentence');
+    expect(ctx.target.greek).toBe('γραμμή 10');
+    expect('enclosing' in ctx).toBe(false);
+  });
+
+  it("unit 'sentence' with a blank/absent slice degrades to the whole row (defensive, never an empty target)", () => {
+    const blank = buildAssistContext(contextArgs(10, { unit: 'sentence', targetSlice: '   ' }).args);
+    expect(blank.target.greek).toBe('γραμμή 10');
+    const absent = buildAssistContext(contextArgs(10, { unit: 'sentence' }).args);
+    expect(absent.target.greek).toBe('γραμμή 10');
+  });
+
+  it("targetSlice is IGNORED for non-sentence units (a paragraph/line target is always the whole row)", () => {
+    const ctx = buildAssistContext(contextArgs(10, { unit: 'paragraph', targetSlice: 'γραμμή' }).args);
+    expect(ctx.target.greek).toBe('γραμμή 10');
+    expect('enclosing' in ctx).toBe(false);
+  });
+
+  it('the ±window and draft-context behaviour is unit-independent (same rows either way)', () => {
+    const line = buildAssistContext(contextArgs(10).args);
+    const para = buildAssistContext(contextArgs(10, { unit: 'paragraph' }).args);
+    expect(para.before).toEqual(line.before);
+    expect(para.after).toEqual(line.after);
+  });
+});

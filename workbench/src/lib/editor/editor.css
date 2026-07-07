@@ -611,15 +611,6 @@
   opacity: 0.45;
   cursor: default;
 }
-/* Quiet one-line note above a disabled AI section (paragraph view, D8 §4). */
-.ctx-menu-note {
-  font-family: var(--font-ui);
-  font-size: 0.68rem;
-  line-height: 1.3;
-  color: var(--text-light);
-  font-style: italic;
-  padding: 0.15rem 0.6rem 0.35rem;
-}
 .ctx-menu-divider {
   height: 1px;
   margin: 0.25rem 0.4rem;

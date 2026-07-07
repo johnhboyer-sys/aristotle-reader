@@ -136,10 +136,11 @@ describe('AI menu + structure gestures in the interpolated view (§4)', () => {
     expect(unitSource).not.toContain('onGreekContextMenu');
   });
 
-  it('the four AI items disable ONLY for englishPara targets (para-layer unit views)', () => {
-    // aiDisabled is the single gate and it is exactly the para-layer flag:
-    // line docs + sentence granularity map 1:1 to (row, segment) and stay ON.
-    expect(chapterSource).toContain('aiDisabled: paragraphUnitView');
+  it('the four AI items are live for ALL targets; para-layer menus carry unit nouns (D8 Phase E2)', () => {
+    // The D1/D2 disabled state is gone; the English-cell menu labels its
+    // target with the unit derived from (rowUnit, active layer).
+    expect(chapterSource).not.toContain('aiDisabled');
+    expect(fnBody('onEnglishContextMenu')).toContain('noun: assistUnitFor(activeLayer(), d.rowIndex)');
   });
 });
 

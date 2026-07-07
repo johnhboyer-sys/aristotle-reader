@@ -46,6 +46,9 @@ export function documentChapterForEditor(
     workId: work.id,
     workTitle: work.title,
     author: work.author,
+    // Free works carry the user's verbatim language label (or none = unknown)
+    // for the assist prompts; there is no 'greek' default here on purpose.
+    ...(work.language !== undefined ? { language: work.language } : {}),
     scheme: work.scheme,
     book: 1,
     bookLabel: scheme.bookLabel(1, work),

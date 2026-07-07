@@ -136,9 +136,9 @@
     resolveTauriAssistProvider,
   } from './assistController';
   import { buildClipboardPayload } from '../assist/clipboardPayload';
-  import { NO_LINE_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
+  import { NO_LINE_MESSAGE, NO_PARAGRAPH_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
   import { ClipboardProvider } from '../assist/clipboardProvider';
-  import type { AssistContext, AssistProvider, AssistResult } from '../assist/provider';
+  import type { AssistContext, AssistProvider, AssistResult, AssistUnit } from '../assist/provider';
   import type { RunInvokeFn } from '../assist/cliProvider';
   import GreekCell from './GreekCell.svelte';
   import RowGutter from './RowGutter.svelte';
@@ -229,6 +229,8 @@
         title: w.title,
         author: w.author,
         originalLanguage: w.originalLanguage ?? 'greek',
+        // Built-ins: an explicit label so prompt wording never guesses.
+        language: w.originalLanguage === 'latin' ? 'Latin' : 'Greek',
         scheme: w.scheme,
       };
     } catch {
@@ -236,10 +238,21 @@
         title: model.workTitle,
         author: fixture.author,
         originalLanguage: 'greek',
+        // Free works (and dev fixtures): the record's VERBATIM language, or
+        // null = unknown — the prompts then drop the language claim instead
+        // of falling back to Greek (D8 §7 Phase E2; fixes the Phase C note).
+        language: fixture.language ?? null,
         scheme: model.scheme,
       };
     }
   }
+
+  /** The source-language noun for menu descriptions ('Greek', 'German', …;
+   * 'original' when unknown). Static per chapter. */
+  const sourceNoun: string = (() => {
+    const lang = assistWorkMeta().language;
+    return lang && lang.trim().length > 0 ? lang.trim() : 'original';
+  })();
 
   // ── reactive UI state ──────────────────────────────────────────────────
   let ready = $state(false);
@@ -316,6 +329,42 @@
     return paragraphUnitView ? 'para' : 'sentence';
   }
 
+  // ── unit-aware assist plumbing (D8 §7 Phase E2) ─────────────────────────
+  /**
+   * The translation unit an assist TARGET at (row, layer) speaks in:
+   * line docs → 'line' (wording unchanged — the Bekker prompt goldens stay
+   * byte-identical); paragraph rows in the para layer → 'paragraph';
+   * paragraph rows in the sentence layer → 'sentence' when the row IS
+   * sentence-divided, else 'paragraph' (an undivided row's single cell holds
+   * the whole paragraph — calling it a sentence would misdirect the model).
+   */
+  function assistUnitFor(layer: EditLayer, row: number): AssistUnit {
+    if (!isParagraphRowUnit()) return 'line';
+    if (layer === 'para') return 'paragraph';
+    return segmentCount(model.rows[row]) > 1 ? 'sentence' : 'paragraph';
+  }
+  /** The ROW-unit noun for whole-row actions (Ask, batch translate). */
+  function rowUnitNoun(): 'line' | 'paragraph' {
+    return isParagraphRowUnit() ? 'paragraph' : 'line';
+  }
+  /** The target cell's slice of the row's source text (sentence-unit
+   * targets); falls back to the whole row when the cell isn't displayed. */
+  function greekSliceOf(row: number, segment: number): string {
+    const g = gridOrdinalOf(row, segment);
+    return displayRows[g]?.greekSlice ?? model.rows[row].greek;
+  }
+  /**
+   * Draft English for CONTEXT row i as the given layer's view shows it: the
+   * para layer reads englishPara first and falls back to the joined sentence
+   * text (the read-only block under the para field — the draft the user
+   * SEES); sentence-layer context stays the joined sentence docs, exactly
+   * the pre-D8 behaviour.
+   */
+  function contextDraft(layer: EditLayer, i: number): string | null {
+    if (layer === 'para') return plainRowText(paraDoc(i)) ?? plainRowText(joinedRowDoc(i));
+    return plainRowText(joinedRowDoc(i));
+  }
+
   // The flat display-row list the grid renders (design doc D6). Derived from
   // the model EXPLICITLY (the model itself is non-reactive): refreshed on
   // hydration, reload, split/un-split and structural undo/redo. In the
@@ -332,7 +381,17 @@
   $effect(() => {
     void viewMode; // track
     void granularity; // track (interpolated 'unit' ⇄ 'sentence' re-expands)
-    if (ready) refreshDisplayRows();
+    if (ready) {
+      // A view/granularity switch changes the ACTIVE LAYER: cancel assist
+      // work invoked under the old layer so a suggestion popover or batch
+      // fill can never land against remounted cells of the other layer
+      // (D8 §7 Phase E2 — writes are layer-explicit, so a stale request
+      // would only no-op, but cancelling keeps the UI honest).
+      dismissAssist();
+      batchAbort?.abort();
+      pendingBatchTranslate = null;
+      refreshDisplayRows();
+    }
   });
   let flashRowIdx = $state(-1); // grid ordinal
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
@@ -354,7 +413,11 @@
     merge: boolean;
     offset: number | null;
     aiOnly?: boolean;
-    aiDisabled?: boolean;
+    /** Unit nouns for the AI item wording (D8 §7 Phase E2): `noun` is the
+     * TARGET unit of the cell-scoped modes (Translate/Reference/Check),
+     * `rowNoun` the whole-row unit (Ask, batch). Line docs: both 'line'. */
+    noun?: AssistUnit;
+    rowNoun?: 'line' | 'paragraph';
     translateRows?: number[];
     /** Paragraph-unit document-spine rows (D8 §2/§3): row-level ops + the
      * sentence fix-up. `offset` above is the snapped click offset both split
@@ -1586,6 +1649,11 @@
   // draft = segments joined; the ±6 window counts Bekker LINES — d6 §7).
   let assistRow = $state(-1);
   let assistSeg = $state(0);
+  // The editing LAYER captured when the request was invoked (D8 §7 Phase E2):
+  // Insert writes through the layer-explicit view key `vkey(row, seg, layer)`
+  // — NEVER viewAt, whose active-layer default could hand a suggestion
+  // invoked in one layer to the other layer's view after a view switch.
+  let assistLayer: EditLayer = 'sentence';
   let assistUi = $state<AssistUiState | null>(null);
 
   // ── AI reference popups (right-click Greek → "AI reference") ──────────────
@@ -1644,31 +1712,43 @@
   });
 
   /** Suggest-for-row (glyph click / ⌘⏎). Guards run BEFORE any provider
-   * work: no active cell → no-op; no Greek on the LINE → NO_LINE_MESSAGE. */
+   * work: no active cell → no-op; no source text on the row → the unit's
+   * no-line message. Captures the ACTIVE layer so the eventual Insert
+   * writes back to the layer the request came from (D8 §7 Phase E2). */
   function invokeAssist(row: number, segment: number) {
     if (row < 0 || row >= model.rows.length || !viewAt(row, segment)) return;
     assistRow = row;
     assistSeg = segment;
+    assistLayer = activeLayer();
     if (model.rows[row].greek.trim().length === 0) {
       assistCtl.cancel();
-      assistUi = { kind: 'message', text: NO_LINE_MESSAGE };
+      assistUi = {
+        kind: 'message',
+        text: rowUnitNoun() === 'line' ? NO_LINE_MESSAGE : NO_PARAGRAPH_MESSAGE,
+      };
       return;
     }
-    void runAssist(row, segment);
+    void runAssist(row, segment, assistLayer);
   }
 
-  async function runAssist(row: number, segment: number) {
+  async function runAssist(row: number, segment: number, layer: EditLayer) {
     const settings = await loadSettings(); // includeDraft (John: default ON)
     if (destroyed || assistRow !== row || assistSeg !== segment) return;
+    const unit = assistUnitFor(layer, row);
     const ctx = buildAssistContext({
       rowCount: model.rows.length,
       rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
       // Live views when mounted, committed model otherwise — the draft the
       // user SEES is the draft that goes out as context. A split line is ONE
-      // context line: its segments joined (d6 §7 call-site folding).
-      draftAt: (i) => plainRowText(joinedRowDoc(i)),
+      // context line: its segments joined (d6 §7 call-site folding); para-
+      // layer context reads englishPara first (contextDraft).
+      draftAt: (i) => contextDraft(layer, i),
       targetIndex: row,
       includeDraft: settings.assist?.includeDraft ?? true,
+      unit,
+      // Sentence-unit targets translate ONE sentence of the paragraph — the
+      // clicked cell's slice; the whole row rides along as ctx.enclosing.
+      ...(unit === 'sentence' ? { targetSlice: greekSliceOf(row, segment) } : {}),
       work: assistWorkMeta(),
       book: { index: model.book, label: model.bookLabel },
       chapter: model.chapter,
@@ -1712,11 +1792,15 @@
     return [...rows].sort((x, y) => x - y);
   }
 
-  /** Replace a row cell's FULL English content with `text` (already sanitized),
-   * without stealing focus/scroll — the batch fills many cells at once. Its own
-   * app-undo entry. Returns false if the view is gone or the text is empty. */
-  function fillRowEnglish(row: number, segment: number, text: string): boolean {
-    const view = viewAt(row, segment);
+  /** Replace a cell's FULL English content with `text` (already sanitized),
+   * without stealing focus/scroll — the batch fills many cells at once. The
+   * LAYER is explicit (D2/D8 vkey discipline — never viewAt for writes): a
+   * para-layer batch writes englishPara views, a sentence-layer batch writes
+   * sentence views; each view's own dispatch pipeline handles undo/commit.
+   * Its own app-undo entry. Returns false if the view is gone (e.g. the user
+   * switched views mid-batch) or the text is empty. */
+  function fillRowEnglish(row: number, segment: number, layer: EditLayer, text: string): boolean {
+    const view = views.get(vkey(row, segment, layer));
     if (!view || text.length === 0) return false;
     const size = view.state.doc.content.size;
     history.breakCoalescing();
@@ -1724,13 +1808,22 @@
     return true;
   }
 
-  /** A pending multi-line translate awaiting the overwrite confirmation
-   * (non-null only when some target lines already have English). */
-  let pendingBatchTranslate = $state<{ rows: number[]; withText: number } | null>(null);
+  /** A pending multi-row translate awaiting the overwrite confirmation
+   * (non-null only when some target rows already have English). Carries the
+   * layer + unit noun captured at invocation. */
+  let pendingBatchTranslate = $state<{
+    rows: number[];
+    withText: number;
+    layer: EditLayer;
+    noun: 'line' | 'paragraph';
+  } | null>(null);
 
-  /** Entry point for a multi-line translate. Translates EVERY Greek-non-empty
-   * line in `rows`, overwriting existing English — but if any target already
-   * has text, warn first (John). One line → defer to the popover-review flow. */
+  /** Entry point for a multi-row translate. Translates EVERY source-non-empty
+   * row in `rows`, overwriting existing English — but if any target already
+   * has text, warn first (John). One row → defer to the popover-review flow.
+   * On paragraph docs the rows ARE paragraphs: a para-layer batch fills
+   * englishPara, a sentence-layer batch fills the row's first cell (the D6
+   * batch convention), both with whole-paragraph wording. */
   function invokeAssistRange(rows: number[]) {
     const targets = rows.filter(
       (r) => r >= 0 && r < model.rows.length && model.rows[r].greek.trim().length > 0,
@@ -1739,27 +1832,31 @@
       if (targets.length === 1) invokeAssist(targets[0], 0);
       return;
     }
-    const withText = targets.filter((r) => plainRowText(joinedRowDoc(r)) !== null).length;
+    const layer = activeLayer();
+    const noun = rowUnitNoun();
+    const hasText = (r: number) =>
+      layer === 'para' ? plainRowText(paraDoc(r)) !== null : plainRowText(joinedRowDoc(r)) !== null;
+    const withText = targets.filter(hasText).length;
     if (withText > 0) {
-      pendingBatchTranslate = { rows: targets, withText }; // confirm before overwriting
+      pendingBatchTranslate = { rows: targets, withText, layer, noun }; // confirm before overwriting
     } else {
-      void runAssistRange(targets);
+      void runAssistRange(targets, layer, noun);
     }
   }
 
   function confirmBatchTranslate() {
     const p = pendingBatchTranslate;
     pendingBatchTranslate = null;
-    if (p) void runAssistRange(p.rows);
+    if (p) void runAssistRange(p.rows, p.layer, p.noun);
   }
 
   function cancelBatchTranslate() {
     pendingBatchTranslate = null;
   }
 
-  /** Translate each target line SEQUENTIALLY, overwriting its full English cell.
+  /** Translate each target row SEQUENTIALLY, overwriting its full English.
    * Progress via the status pill; abortable on unmount / re-invoke. */
-  async function runAssistRange(targets: number[]) {
+  async function runAssistRange(targets: number[], layer: EditLayer, noun: 'line' | 'paragraph') {
     batchAbort?.abort();
     const abort = new AbortController();
     batchAbort = abort;
@@ -1776,18 +1873,22 @@
     if (abort.signal.aborted || destroyed) return;
 
     const includeDraft = settings.assist?.includeDraft ?? true;
+    // A batch target is always the WHOLE row: paragraph wording on paragraph
+    // docs (regardless of layer — the row is a paragraph), line wording else.
+    const unit: AssistUnit = noun;
     let filled = 0;
     let failed = 0;
     for (let i = 0; i < targets.length; i++) {
       if (abort.signal.aborted || destroyed) break;
       const r = targets[i];
-      setStatus(`Translating line ${i + 1} of ${targets.length}…`, 120_000);
+      setStatus(`Translating ${noun} ${i + 1} of ${targets.length}…`, 120_000);
       const ctx = buildAssistContext({
         rowCount: model.rows.length,
         rowAt: (k) => ({ address: model.rows[k].address.raw, greek: model.rows[k].greek }),
-        draftAt: (k) => plainRowText(joinedRowDoc(k)),
+        draftAt: (k) => contextDraft(layer, k),
         targetIndex: r,
         includeDraft,
+        unit,
         work: assistWorkMeta(),
         book: { index: model.book, label: model.bookLabel },
         chapter: model.chapter,
@@ -1800,14 +1901,14 @@
         continue;
       }
       if (abort.signal.aborted || destroyed) break;
-      if (result.kind === 'suggestion' && fillRowEnglish(r, 0, sanitizeSuggestion(result.text))) {
+      if (result.kind === 'suggestion' && fillRowEnglish(r, 0, layer, sanitizeSuggestion(result.text))) {
         filled++;
       } else {
         failed++;
       }
     }
     if (abort.signal.aborted || destroyed) return;
-    const parts = [`Translated ${filled} line${filled === 1 ? '' : 's'}`];
+    const parts = [`Translated ${filled} ${noun}${filled === 1 ? '' : 's'}`];
     if (failed) parts.push(`${failed} failed`);
     setStatus(parts.join(' · '), 4000);
   }
@@ -1825,13 +1926,21 @@
     title: string,
   ) {
     if (row < 0 || row >= model.rows.length || !viewAt(row, segment)) return;
+    const layer = activeLayer();
+    const unit = assistUnitFor(layer, row);
     if (model.rows[row].greek.trim().length === 0) {
-      setStatus(NO_LINE_MESSAGE);
+      setStatus(rowUnitNoun() === 'line' ? NO_LINE_MESSAGE : NO_PARAGRAPH_MESSAGE);
       return;
     }
-    // Check mode diagnoses the EXISTING English — nothing to check on a blank line.
-    if (mode === 'check' && plainRowText(joinedRowDoc(row)) === null) {
-      setStatus('There is no English on this line to check yet.');
+    // Check mode diagnoses the EXISTING English of the TARGET unit — nothing
+    // to check when that unit is blank (para layer reads englishPara; a
+    // sentence-unit target reads its own cell; a line the joined row).
+    if (mode === 'check' && targetEnglish(row, segment, layer, unit) === null) {
+      setStatus(
+        unit === 'line'
+          ? 'There is no English on this line to check yet.'
+          : `There is no English in this ${unit} to check yet.`,
+      );
       return;
     }
     aiPanelAbort?.abort(); // supersede any open panel's request
@@ -1839,7 +1948,16 @@
     aiPanelAbort = abort;
     aiPanelText = '';
     session.aiPanel = { title, locus: model.rows[row].address.raw, state: { kind: 'thinking' } };
-    void runAiPanel(row, mode, abort);
+    void runAiPanel(row, segment, layer, mode, abort);
+  }
+
+  /** The TARGET's own English for check/ask: the para layer reads
+   * englishPara; a sentence-unit target reads its own cell's doc; a
+   * line-unit target reads the whole row joined (the D4 behaviour). */
+  function targetEnglish(row: number, segment: number, layer: EditLayer, unit: AssistUnit): string | null {
+    if (layer === 'para') return plainRowText(paraDoc(row));
+    if (unit === 'sentence') return plainRowText(segmentDoc(row, segment));
+    return plainRowText(joinedRowDoc(row));
   }
 
   /** Only apply a result if `abort` is still THE current panel request (not
@@ -1849,7 +1967,13 @@
     session.aiPanel = { ...session.aiPanel, state };
   }
 
-  async function runAiPanel(row: number, mode: 'reference' | 'check', abort: AbortController) {
+  async function runAiPanel(
+    row: number,
+    segment: number,
+    layer: EditLayer,
+    mode: 'reference' | 'check',
+    abort: AbortController,
+  ) {
     const signal = abort.signal;
     let provider: AssistProvider;
     try {
@@ -1866,12 +1990,15 @@
     // Check mode MUST include the surrounding drafts (the passage under review)
     // regardless of the user's default; reference honours the setting.
     const includeDraft = mode === 'check' ? true : (settings.assist?.includeDraft ?? true);
+    const unit = assistUnitFor(layer, row);
     const base = buildAssistContext({
       rowCount: model.rows.length,
       rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
-      draftAt: (i) => plainRowText(joinedRowDoc(i)),
+      draftAt: (i) => contextDraft(layer, i),
       targetIndex: row,
       includeDraft,
+      unit,
+      ...(unit === 'sentence' ? { targetSlice: greekSliceOf(row, segment) } : {}),
       work: assistWorkMeta(),
       book: { index: model.book, label: model.bookLabel },
       chapter: model.chapter,
@@ -1880,7 +2007,7 @@
     // diagnosed); reference never does.
     const ctx: AssistContext =
       mode === 'check'
-        ? { mode, ...base, target: { ...base.target, english: plainRowText(joinedRowDoc(row)) } }
+        ? { mode, ...base, target: { ...base.target, english: targetEnglish(row, segment, layer, unit) } }
         : { mode, ...base };
 
     let result: AssistResult;
@@ -1930,12 +2057,17 @@
    * prior in-flight ask so only the latest answer can land. */
   async function askAboutLine(question: string): Promise<AskResult> {
     const row = askAssistTarget >= 0 ? askAssistTarget : focusedRow;
+    const noun = rowUnitNoun();
     if (row < 0 || row >= model.rows.length) {
-      return { ok: false, message: 'Click into a line first, then ask about it.' };
+      return { ok: false, message: `Click into a ${noun} first, then ask about it.` };
     }
     if (model.rows[row].greek.trim().length === 0) {
-      return { ok: false, message: NO_LINE_MESSAGE };
+      return { ok: false, message: noun === 'line' ? NO_LINE_MESSAGE : NO_PARAGRAPH_MESSAGE };
     }
+    // Ask is a whole-ROW mode (the target follows focus row-wise), so on
+    // paragraph docs it speaks 'paragraph' in either layer; the English shown
+    // to the assistant is the layer the translator is looking at.
+    const layer = activeLayer();
 
     askAbort?.abort();
     const abort = new AbortController();
@@ -1952,20 +2084,26 @@
     const base = buildAssistContext({
       rowCount: model.rows.length,
       rowAt: (i) => ({ address: model.rows[i].address.raw, greek: model.rows[i].greek }),
-      draftAt: (i) => plainRowText(joinedRowDoc(i)),
+      draftAt: (i) => contextDraft(layer, i),
       targetIndex: row,
       includeDraft: true, // the passage the question is about
+      unit: noun,
       work: assistWorkMeta(),
       book: { index: model.book, label: model.bookLabel },
       chapter: model.chapter,
     });
     // Ask mode sends the target's OWN English (so the translator may ask about
-    // their own draft) plus the free-form question.
+    // their own draft) plus the free-form question. Layer-aware: the para
+    // layer sends englishPara (falling back to the sentence join it shows).
+    const english =
+      layer === 'para'
+        ? (plainRowText(paraDoc(row)) ?? plainRowText(joinedRowDoc(row)))
+        : plainRowText(joinedRowDoc(row));
     const ctx: AssistContext = {
       mode: 'ask',
       question,
       ...base,
-      target: { ...base.target, english: plainRowText(joinedRowDoc(row)) },
+      target: { ...base.target, english },
     };
 
     let result: AssistResult;
@@ -1990,7 +2128,10 @@
    * dispatchFor — the exact same pipeline as typing (app undo, dirty
    * tracking, commit-on-idle). */
   function insertSuggestionIntoRow(row: number, segment: number, text: string) {
-    const view = viewAt(row, segment);
+    // Layer-EXPLICIT write (D2/D8 vkey discipline — never viewAt for writes):
+    // the suggestion lands in the layer the request was invoked from. If that
+    // layer's view is gone (view switched mid-flight), quietly do nothing.
+    const view = views.get(vkey(row, segment, assistLayer));
     if (!view) return;
     const tr = buildInsertTransaction(view.state, text);
     if (!tr) return;
@@ -2096,14 +2237,20 @@
     e.preventDefault();
     const d = displayRows[g];
     if (!d) return;
-    // Paragraph-unit view (D8 §4): the D6 word gesture and the AI modes both
-    // target the sentence layer; the AI wiring to englishPara is deferred to
-    // Phase E (disabled with a tooltip). Document-spine paragraph docs get
-    // STRUCTURE editing here instead (D8 §2/§3): row-level paragraph
-    // split/merge plus the sentence-boundary fix-up — the same snapped-click
-    // offset drives both split gestures. Corpus-spine paragraph docs (Busse)
-    // keep the AI-only menu: the corpus owns their row count.
+    // Unit nouns for the AI items (D8 §7 Phase E2) — the AI modes are live in
+    // EVERY view; para-layer targets read/write englishPara.
+    const noun = assistUnitFor(activeLayer(), d.rowIndex);
+    const rowNoun = rowUnitNoun();
+    // Paragraph-unit view (D8 §4): document-spine paragraph docs get
+    // STRUCTURE editing here (D8 §2/§3): row-level paragraph split/merge plus
+    // the sentence-boundary fix-up — the same snapped-click offset drives
+    // both split gestures. Corpus-spine paragraph docs (Busse) get the
+    // AI-only menu: the corpus owns their row count. A right-click inside a
+    // multi-paragraph source selection batch-translates every selected
+    // paragraph into englishPara (same overwrite confirmation as lines).
     if (paragraphUnitView) {
+      const paraSel = selectedGreekModelRows();
+      const paraTranslateRows = paraSel.length > 1 && paraSel.includes(d.rowIndex) ? paraSel : undefined;
       if (canEditRowStructure(scheme)) {
         const paraRow = model.rows[d.rowIndex];
         const within = caretOffsetFromPoint(e);
@@ -2115,7 +2262,9 @@
           segment: 0,
           merge: false,
           offset: snapped,
-          aiDisabled: true,
+          noun,
+          rowNoun,
+          translateRows: paraTranslateRows,
           paraDoc: {
             canMergePrev: d.rowIndex > 0,
             joinBoundary: within === null ? null : joinBoundaryAt(paraRow.splitOffsets, within),
@@ -2123,7 +2272,7 @@
         };
         return;
       }
-      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: 0, merge: false, offset: null, aiOnly: true, aiDisabled: true };
+      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: 0, merge: false, offset: null, aiOnly: true, noun, rowNoun, translateRows: paraTranslateRows };
       return;
     }
     const row = model.rows[d.rowIndex];
@@ -2143,7 +2292,7 @@
     const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
     if (segmentCount(row) > 1) {
       // Already split (Phase-1 UI is single-split): offer the merge.
-      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, translateRows, chunk };
+      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk };
       return;
     }
     // Split gesture (John's §4.1): the offset is the click's nearest word
@@ -2151,7 +2300,7 @@
     // snapToWordStart) rejects offset 0 and the line end.
     const within = caretOffsetFromPoint(e);
     const offset = within === null ? null : snapToWordStart(row.greek, d.greekStart + within);
-    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, translateRows, chunk };
+    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk };
   }
 
   /** Right-click the English cell → the 4 AI modes only. Split/Merge is a
@@ -2162,9 +2311,20 @@
     e.preventDefault();
     const d = displayRows[g];
     if (!d) return;
-    // Paragraph-unit view: AI modes are deferred to Phase E (they'd target
-    // the sentence layer, not englishPara) — show them disabled with a tooltip.
-    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset: null, aiOnly: true, aiDisabled: paragraphUnitView };
+    // The AI modes are live in every view (D8 §7 Phase E2): para-layer unit
+    // views target englishPara, everything else the sentence layer — the
+    // menu just labels the target with its unit noun.
+    ctxMenu = {
+      x: e.clientX,
+      y: e.clientY,
+      row: d.rowIndex,
+      segment: d.segment,
+      merge: false,
+      offset: null,
+      aiOnly: true,
+      noun: assistUnitFor(activeLayer(), d.rowIndex),
+      rowNoun: rowUnitNoun(),
+    };
   }
 
   function menuSplit() {
@@ -2611,6 +2771,13 @@
   }
 
   function insertFootnote() {
+    // Para-layer guard (D8 Phase E2, D2 note #3): [ENGLISH.PARA] doesn't
+    // model footnote markers, so footnotes can't be inserted while a
+    // paragraph-layer view is focused — quiet no-op + notice.
+    if (activeLayer() === 'para') {
+      setStatus('Footnotes aren’t available when translating by paragraph — switch to a by-sentence view');
+      return;
+    }
     if (crossRowSelection()) {
       setStatus('Select within one row');
       return;
@@ -3356,57 +3523,26 @@
         {/if}
         <div class="ctx-menu-divider" role="separator"></div>
       {/if}
-      {#if ctxMenu.aiDisabled}
-        <div class="ctx-menu-note" role="note">AI help for paragraph translations is coming soon.</div>
-      {/if}
-      <button
-        class="ctx-menu-item"
-        type="button"
-        role="menuitem"
-        disabled={ctxMenu.aiDisabled}
-        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
-        onclick={menuAssist}
-      >
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>
         {#if ctxMenu.translateRows && ctxMenu.translateRows.length > 1}
-          <span class="ctx-menu-title">Translate {ctxMenu.translateRows.length} lines with AI</span>
-          <span class="ctx-menu-desc">Fills each selected line's English cell (asks before replacing existing text)</span>
+          <span class="ctx-menu-title">Translate {ctxMenu.translateRows.length} {ctxMenu.rowNoun ?? 'line'}s with AI</span>
+          <span class="ctx-menu-desc">Fills each selected {ctxMenu.rowNoun ?? 'line'}'s English cell (asks before replacing existing text)</span>
         {:else}
           <span class="ctx-menu-title">Translate with AI</span>
-          <span class="ctx-menu-desc">Writes a draft into this row's English cell</span>
+          <span class="ctx-menu-desc">Writes a draft into this {(ctxMenu.noun ?? 'line') === 'line' ? 'row' : ctxMenu.noun}'s English cell</span>
         {/if}
       </button>
-      <button
-        class="ctx-menu-item"
-        type="button"
-        role="menuitem"
-        disabled={ctxMenu.aiDisabled}
-        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
-        onclick={menuReference}
-      >
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>
         <span class="ctx-menu-title">AI reference</span>
         <span class="ctx-menu-desc">A second version in the sidebar — your cell untouched</span>
       </button>
-      <button
-        class="ctx-menu-item"
-        type="button"
-        role="menuitem"
-        disabled={ctxMenu.aiDisabled}
-        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
-        onclick={menuCheck}
-      >
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>
         <span class="ctx-menu-title">Check my translation</span>
-        <span class="ctx-menu-desc">Linguist's check of your English against the Greek</span>
+        <span class="ctx-menu-desc">Linguist's check of your English against the {sourceNoun}</span>
       </button>
-      <button
-        class="ctx-menu-item"
-        type="button"
-        role="menuitem"
-        disabled={ctxMenu.aiDisabled}
-        title={ctxMenu.aiDisabled ? 'AI help for paragraph translations is coming soon' : undefined}
-        onclick={menuAsk}
-      >
-        <span class="ctx-menu-title">Ask AI about this line…</span>
-        <span class="ctx-menu-desc">Open a Q&A chat about this line</span>
+      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAsk}>
+        <span class="ctx-menu-title">Ask AI about this {ctxMenu.rowNoun ?? 'line'}…</span>
+        <span class="ctx-menu-desc">Open a Q&A chat about this {ctxMenu.rowNoun ?? 'line'}</span>
       </button>
     </div>
   {/if}
@@ -3429,7 +3565,7 @@
       >
         <p class="batch-msg">
           {pendingBatchTranslate.withText} of the {pendingBatchTranslate.rows.length} selected
-          {pendingBatchTranslate.rows.length === 1 ? 'line' : 'lines'} already
+          {pendingBatchTranslate.rows.length === 1 ? pendingBatchTranslate.noun : `${pendingBatchTranslate.noun}s`} already
           {pendingBatchTranslate.withText === 1 ? 'has' : 'have'} a translation.
           Translate all {pendingBatchTranslate.rows.length} and <strong>replace</strong> the existing English?
         </p>

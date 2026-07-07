@@ -120,3 +120,14 @@ describe('freeWorkManifest', () => {
     expect(freeWorkManifest(RECORD).originalLanguage).toBeUndefined();
   });
 });
+
+describe('freeWorkManifest — verbatim language label (D8 Phase E2)', () => {
+  it("carries the record's language VERBATIM for assist prompt wording", () => {
+    expect(freeWorkManifest({ ...RECORD, language: 'German' }).language).toBe('German');
+    expect(freeWorkManifest({ ...RECORD, language: 'Greek' }).language).toBe('Greek');
+  });
+
+  it('no language recorded → no language field (assist treats it as unknown, never Greek)', () => {
+    expect('language' in freeWorkManifest(RECORD)).toBe(false);
+  });
+});

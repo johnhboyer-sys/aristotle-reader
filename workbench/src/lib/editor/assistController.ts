@@ -13,7 +13,7 @@ import { TextSelection } from '@tiptap/pm/state';
 import type { EditorState, Transaction } from '@tiptap/pm/state';
 import type { Node as PMNode } from '@tiptap/pm/model';
 
-import type { AssistContext, AssistProvider, AssistResult } from '../assist/provider';
+import type { AssistContext, AssistProvider, AssistResult, AssistUnit } from '../assist/provider';
 import { COPY_FAILED_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
 import { CliProvider, buildCliInvocation } from '../assist/cliProvider';
 import type { RunInvokeFn } from '../assist/cliProvider';
@@ -59,6 +59,15 @@ export interface AssistContextArgs {
    * untranslated (draftAt is not called at all). */
   includeDraft?: boolean;
   window?: number;
+  /** The translation unit the prompt speaks in (D8 §7); absent = 'line'. */
+  unit?: AssistUnit;
+  /**
+   * `sentence`-unit targets only: the target SENTENCE's slice of the row's
+   * source text. When it is a proper sub-slice of the row, the full row
+   * becomes `ctx.enclosing` (the paragraph the sentence belongs to) and the
+   * slice becomes the target text. Ignored for other units.
+   */
+  targetSlice?: string;
   work: AssistContext['work'];
   book: AssistContext['book'];
   chapter: number;
@@ -69,6 +78,7 @@ export interface AssistContextArgs {
 export function buildAssistContext(args: AssistContextArgs): AssistContext {
   const window = args.window ?? ASSIST_CONTEXT_WINDOW;
   const includeDraft = args.includeDraft ?? true;
+  const unit = args.unit ?? 'line';
   const lo = Math.max(0, args.targetIndex - window);
   const hi = Math.min(args.rowCount - 1, args.targetIndex + window);
 
@@ -83,11 +93,19 @@ export function buildAssistContext(args: AssistContextArgs): AssistContext {
   for (let i = args.targetIndex + 1; i <= hi; i++) after.push(contextRow(i));
 
   const target = args.rowAt(args.targetIndex);
+  // Sentence-unit slice discipline: the slice is the target text and the
+  // whole row rides along as the enclosing paragraph — but only when the
+  // slice is real (non-blank) and a PROPER sub-slice (an unsplit row's
+  // "slice" is the whole row; no enclosing duplicate then).
+  const slice = unit === 'sentence' ? (args.targetSlice ?? '').trim() : '';
+  const useSlice = slice.length > 0 && slice !== target.greek.trim();
   return {
+    ...(unit !== 'line' ? { unit } : {}),
     work: args.work,
     book: args.book,
     chapter: args.chapter,
-    target: { address: target.address, greek: target.greek },
+    target: { address: target.address, greek: useSlice ? slice : target.greek },
+    ...(useSlice ? { enclosing: { address: target.address, greek: target.greek } } : {}),
     before,
     after,
   };

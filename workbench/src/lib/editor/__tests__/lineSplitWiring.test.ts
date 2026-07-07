@@ -138,13 +138,19 @@ describe('call-site folding (d6 §7)', () => {
   it('assist context treats a split line as ONE line: address once, draft = segments joined, window in Bekker lines', () => {
     const body = fnBody('runAssist');
     expect(body).toContain('rowCount: model.rows.length'); // ±6 counts LINES, not segments
-    expect(body).toContain('draftAt: (i) => plainRowText(joinedRowDoc(i))');
+    // contextDraft(layer, i) joins the sentence segments for sentence-layer
+    // context (and reads englishPara first only in the para layer) — the
+    // Bekker path is plainRowText(joinedRowDoc(i)) verbatim inside it.
+    expect(body).toContain('draftAt: (i) => contextDraft(layer, i)');
+    expect(fnBody('contextDraft')).toContain('return plainRowText(joinedRowDoc(i))');
     expect(body).toContain('targetIndex: row'); // the model row, not a grid ordinal
   });
 
   it('requestAssist from a continuation targets that segment’s cell for Insert', () => {
     expect(chapterSource).toContain('insertSuggestion: (row, segment, text) => insertSuggestionIntoRow(row, segment, text)');
     const body = fnBody('insertSuggestionIntoRow');
-    expect(body).toContain('viewAt(row, segment)');
+    // Layer-EXPLICIT write (D8 Phase E2): the request's captured layer keys
+    // the view — never viewAt, whose active-layer default could cross layers.
+    expect(body).toContain('views.get(vkey(row, segment, assistLayer))');
   });
 });
