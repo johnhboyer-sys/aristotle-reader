@@ -15,6 +15,8 @@ import { loadCorpusConfig, type CorpusConfig } from '../src/lib/ocr-repair/corpu
 import { grade, formatSummary, diffSummaries, type GradeSummary } from '../src/lib/ocr-repair/grade';
 import { slicePages } from '../src/lib/ocr-repair/slice';
 import { repairSkeleton } from '../src/lib/ocr-repair/skeleton';
+import { reseatGutter } from '../src/lib/ocr-repair/gutter-reseat';
+import { extractWitnessAnchors } from '../src/lib/ocr-repair/witness-anchors';
 
 interface StageResult {
   text: string;
@@ -48,6 +50,14 @@ const STAGES: Stage[] = [
     n: 2,
     name: 'skeleton',
     run: (text, config) => repairSkeleton(text, config),
+  },
+  {
+    n: 3,
+    name: 'gutter',
+    run: (text, config) => {
+      const witness = extractWitnessAnchors(readFileSync(config.witnessPath, 'utf8'));
+      return reseatGutter(text, config, witness);
+    },
   },
 ];
 
