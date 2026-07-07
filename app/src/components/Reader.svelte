@@ -68,6 +68,26 @@
   const transById = (id: string | null | undefined): TranslationRef | null =>
     id ? (translations.find(t => t.id === id) ?? null) : null;
 
+  // §Phase-4B-revised (John's call 2026-07-06): an imported translation's own
+  // converter-derived chapter title is this edition's editorial paratext, not
+  // work-level chrome — it renders as a small unaligned heading INSIDE that
+  // import's own overlay column (see transFlow below), never merged into the
+  // shared chapterTitles heading map above. Resolved through a window-level
+  // hook installed by desktop/src/lib/imports.ts's installHooks(), the same
+  // site-shared pattern __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ uses (see
+  // FootnotePopup.svelte) — this component is SHARED with the static site
+  // build, which never installs the hook, so the lazy read below is always
+  // undefined there: inert, byte-identical rendering. Render-only: sourced
+  // from ImportRecord.titles, never written into any offset-bearing text
+  // stream, so no anchor ever shifts.
+  function importChapterTitle(transId: string, chapter: string | null): string {
+    if (!chapter) return '';
+    const hook = (globalThis as {
+      __ARISTOTLE_IMPORT_TITLE_HOOK__?: (work: string, id: string, book: number, chapter: string) => string | null;
+    }).__ARISTOTLE_IMPORT_TITLE_HOOK__;
+    return (hook ? hook(work, transId, bookNum, chapter) : null) ?? '';
+  }
+
   // Compare mode shows two translations side by side; which two is chosen in the
   // settings sidebar. Defaults: primary + first secondary. Persisted per work.
   let compareLeft: string = engSlot?.id ?? translations[0]?.id ?? 'english';
@@ -1052,8 +1072,10 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
+      {@const chTitle = importChapterTitle(transId, block.chapter)}
       {#if fnTransIds.has(transId)}
         <div class="ross-prose" on:mouseover={onFootnoteOver} on:mouseout={onFootnoteOut} on:click={onFootnoteClick} on:keydown={onFootnoteClick} role="presentation">
+          {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
           {#each flow as part}
             {#if part.text === '\n'}
               <br class="para-br" />
@@ -1074,6 +1096,7 @@
         </div>
       {:else}
         <div class="ross-prose">
+          {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
           {#each flow as part}
             {#if part.text === '\n'}
               <br class="para-br" />

@@ -98,8 +98,9 @@
   // Held for the Done step's honesty report (task 1); null for a non-PDF
   // import, which hides that whole report section.
   let convertReport: ConvertReport | null = null;
-  // 'b.c' -> title, threaded into runImport (task 2) so imported chapter
-  // titles can fill gaps in the reader's chapter headings.
+  // 'b.c' -> title, threaded into runImport (task 2) so this import's chapter
+  // titles are shown at chapter openings inside its own column (not merged
+  // into the reader's shared chapter headings — that's work-level chrome).
   let convertTitles: Record<string, string> = {};
   // The pristine upload — kept ONLY when the converter ran, and passed to
   // runImport as `original` so the `.original` safety-net file holds the

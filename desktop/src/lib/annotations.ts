@@ -206,9 +206,13 @@ export async function writeClipboard(text: string): Promise<boolean> {
 //   .fn-marker  — Ostwald's inline `[^N]` footnote reference button
 //                 (rendered as a clickable superscript digit, see
 //                 Reader.svelte's renderThird/.fn-marker)
+//   .ross-chapter-title — an imported translation's own converter-derived
+//                 chapter title (Reader.svelte's importChapterTitle):
+//                 editorial paratext rendered inside that import's column,
+//                 not part of the reference text
 //   .eng-table  — kept for parity with the existing offset walker below,
 //                 though its own text is usually outside any prose selection
-const COPY_EXCLUDE_SELECTOR = '.bk-num, .line-num, .col-label, .fn-marker, .eng-table';
+const COPY_EXCLUDE_SELECTOR = '.bk-num, .line-num, .col-label, .fn-marker, .ross-chapter-title, .eng-table';
 
 /**
  * Extract a Range's text the way a "clean copy" should read: skips gutter
