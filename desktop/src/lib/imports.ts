@@ -52,10 +52,11 @@ export interface ImportRecord {
   footnoteScope?: FootnoteScope;
   /**
    * 'b.c' -> chapter title, verbatim, from the PDF converter's title map
-   * (Phase 4A's `ConvertResult.titles`; §Phase-4B task 2). Optional so
-   * records from a hand-authored/plain import (no converter involved) or
-   * written before this field existed still load unchanged — getImportTitles
-   * just has nothing to contribute for them.
+   * (Phase 4A's `ConvertResult.titles`; §Phase-4B task 2, rendering revised
+   * 2026-07-06 — see getImportTitle). Optional so records from a hand-
+   * authored/plain import (no converter involved) or written before this
+   * field existed still load unchanged — getImportTitle just has nothing to
+   * resolve for them.
    */
   titles?: Record<string, string>;
 }
@@ -180,6 +181,17 @@ type G = typeof globalThis & {
    * digit labels under continuous scope) — see implementation-notes.md.
    */
   __ARISTOTLE_IMPORT_HAS_TRANS__?: (work: string, id: string) => boolean;
+  /**
+   * §Phase-4B-revised: an imported translation's converter-derived chapter
+   * title, resolved for ONE registered import's own overlay column — NOT
+   * merged into the shared chapterTitles heading map every translation
+   * shares (that's work-level chrome; an imported title is this edition's
+   * own editorial paratext, John's call 2026-07-06). Reader.svelte (app/src,
+   * site-shared) reads this the same lazy-global way FootnotePopup reads
+   * __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ above — never installed on the site
+   * build, so the read is always undefined there — inert, byte-identical.
+   */
+  __ARISTOTLE_IMPORT_TITLE_HOOK__?: (work: string, id: string, book: number, chapter: string) => string | null;
 };
 
 const registered = new Map<string, ImportRecord>(); // "work/id" → record
@@ -261,6 +273,7 @@ function installHooks(): void {
   // hooks rather than a direct import).
   g.__ARISTOTLE_IMPORT_HAS_TRANS__ = (work, id) => registered.has(`${work}/${id}`);
   g.__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ = (work, id, label) => getImportFootnote(work, id, label);
+  g.__ARISTOTLE_IMPORT_TITLE_HOOK__ = (work, id, book, chapter) => getImportTitle(work, id, book, chapter);
 }
 
 /** Load every stored import and register it — call once at startup, before mount. */
@@ -314,49 +327,27 @@ export function getImportFootnote(work: string, id: string, label: string): stri
 }
 
 /**
- * §Phase-4B task 2: merged 'b.c' -> title map across every registered import
- * for `work` (converter-derived titles only; records with no `titles` field
- * contribute nothing). Iterates `registered` in Map insertion order — i.e.
- * the order imports were loaded/registered this session, NOT necessarily
- * their original import chronology — and a later entry's title for the same
- * key overwrites an earlier one ("later imports win"). Consumed by
- * App.svelte via mergeChapterTitles below, which merges this OVER the
- * fetched chapter-titles.json map but only to fill gaps.
+ * Pure core of getImportTitle — resolves 'book.chapter' against one already-
+ * fetched record's `titles` map. Split out from the `registered`-Map lookup
+ * below so it's unit-testable with a plain object literal, mirroring
+ * resolveImportFootnote just above.
  */
-export function getImportTitles(work: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [key, rec] of registered) {
-    if (key.split('/')[0] !== work || !rec.titles) continue;
-    Object.assign(out, rec.titles);
-  }
-  return out;
+export function resolveImportTitle(rec: ImportRecord | undefined, book: number, chapter: string): string | null {
+  return rec?.titles?.[`${book}.${chapter}`] ?? null;
 }
 
 /**
- * §Phase-4B task 2: merge an imported 'b.c' -> title map (as returned by
- * getImportTitles) over `builtin`'s per-chapter titles for ONE book — but
- * ONLY to fill a gap. A built-in title always wins over an imported one: the
- * built-in file is curated/reviewed for this exact book, while an imported
- * title is machine-extracted from a PDF's running heads and may be noisier
- * — conservative default, never let an import silently replace a reviewed
- * title. Pure function (no registry access) so the merge rule is directly
- * unit-testable; App.svelte's mergeTitles is a thin wrapper that supplies
- * `getImportTitles(work)` as `imported`.
+ * §Phase-4B-revised (John's call 2026-07-06): the converter-derived chapter
+ * title for ONE registered import, at ONE chapter — this edition's own
+ * editorial paratext, rendered as a small unaligned heading inside that
+ * import's own overlay column (Reader.svelte's transFlow), never merged into
+ * the shared chapterTitles heading map every translation sees. Returns null
+ * (never throws) when `work`/`id` isn't a registered import, the chapter has
+ * no captured title, or the record predates the titles field. Mirrors
+ * getImportFootnote/getImportEmphasis.
  */
-export function mergeChapterTitles(
-  book: number,
-  builtin: Record<string, string>,
-  imported: Record<string, string>,
-): Record<string, string> {
-  if (Object.keys(imported).length === 0) return builtin;
-  const merged = { ...builtin };
-  const prefix = `${book}.`;
-  for (const [key, title] of Object.entries(imported)) {
-    if (!key.startsWith(prefix)) continue;
-    const chapter = key.slice(prefix.length);
-    if (!merged[chapter]) merged[chapter] = title;
-  }
-  return merged;
+export function getImportTitle(work: string, id: string, book: number, chapter: string): string | null {
+  return resolveImportTitle(registered.get(`${work}/${id}`), book, chapter);
 }
 
 /**
@@ -410,7 +401,7 @@ export interface ImportRequest {
    * 'b.c' -> chapter title map from the PDF converter (Phase 4A's
    * ConvertResult.titles), passed through unchanged by ImportDialog when the
    * source file was a layout extraction. Stored on the ImportRecord verbatim
-   * (§getImportTitles); omitted for a plain/hand-tagged import, which has no
+   * (§getImportTitle); omitted for a plain/hand-tagged import, which has no
    * titles to offer.
    */
   titles?: Record<string, string>;

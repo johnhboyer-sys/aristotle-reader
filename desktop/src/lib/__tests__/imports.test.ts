@@ -2,48 +2,61 @@
 // out of imports.ts so they're testable without the storage/alignment
 // pipeline (runImport needs fetchBook/fetchChapters + a Tauri/browser store).
 //
-// - mergeChapterTitles: the "built-ins win, imports only fill gaps" rule for
-//   an imported translation's converter-derived chapter titles (task 2).
+// - resolveImportTitle (§Phase-4B-revised, John's call 2026-07-06): an
+//   imported translation's own converter-derived chapter title is that
+//   edition's editorial paratext — resolved for ONE registered import at ONE
+//   book.chapter, rendered unaligned inside that import's own overlay
+//   column, never merged into the reader's shared chapter-heading map.
 // - resolveImportFootnote: label resolution against one record's footnotes
 //   map, including scoped labels (continuous digits, per-chapter "b.c.N",
 //   and the star/dagger work-level glyphs — phase3-final-spec.md §B5).
 
 import { describe, expect, it } from 'vitest';
-import { mergeChapterTitles, resolveImportFootnote } from '../imports';
+import { resolveImportFootnote, resolveImportTitle } from '../imports';
 import type { ImportRecord } from '../imports';
 
-describe('mergeChapterTitles (§Phase-4B task 2: built-ins win, imports fill gaps)', () => {
-  it('returns the built-in map unchanged when there are no imported titles', () => {
-    const builtin = { '1': 'On Being' };
-    expect(mergeChapterTitles(1, builtin, {})).toBe(builtin);
+describe('resolveImportTitle (§Phase-4B-revised: per-import, unaligned, chapter-opening title)', () => {
+  const baseRecord = (titles: Record<string, string>): ImportRecord => ({
+    meta: {
+      formatVersion: 1,
+      work: 'EN',
+      translator: 'Test',
+      license: 'public-domain',
+      language: 'en',
+      id: 'test',
+    },
+    density: 'exhaustive',
+    warnings: [],
+    stats: { tagged: 0, placed: 0, interpolated: 0, chapters: 0 },
+    overlaysByBook: {},
+    alignment: {},
+    titles,
   });
 
-  it('fills a chapter the built-in map has no title for', () => {
-    const builtin = { '1': 'On Being' };
-    const imported = { '1.2': 'Imported Title' };
-    expect(mergeChapterTitles(1, builtin, imported)).toEqual({
-      '1': 'On Being',
-      '2': 'Imported Title',
-    });
+  it('resolves a captured title for its book.chapter key', () => {
+    const rec = baseRecord({ '1.2': 'Imported Title' });
+    expect(resolveImportTitle(rec, 1, '2')).toBe('Imported Title');
   });
 
-  it('never overwrites an existing built-in title for the same chapter', () => {
-    const builtin = { '1': 'On Being' };
-    const imported = { '1.1': 'A Noisier PDF-Extracted Title' };
-    expect(mergeChapterTitles(1, builtin, imported)).toEqual({ '1': 'On Being' });
+  it('is scoped to the exact book — a same-numbered chapter in another book does not collide', () => {
+    const rec = baseRecord({ '1.1': 'Book 1 Ch 1', '2.1': 'Book 2 Ch 1' });
+    expect(resolveImportTitle(rec, 1, '1')).toBe('Book 1 Ch 1');
+    expect(resolveImportTitle(rec, 2, '1')).toBe('Book 2 Ch 1');
   });
 
-  it('only pulls in titles keyed to the requested book', () => {
-    const builtin: Record<string, string> = {};
-    const imported = { '1.1': 'Book 1 Ch 1', '2.1': 'Book 2 Ch 1' };
-    expect(mergeChapterTitles(1, builtin, imported)).toEqual({ '1': 'Book 1 Ch 1' });
-    expect(mergeChapterTitles(2, builtin, imported)).toEqual({ '1': 'Book 2 Ch 1' });
+  it('returns null for a chapter with no captured title', () => {
+    const rec = baseRecord({ '1.1': 'On Being' });
+    expect(resolveImportTitle(rec, 1, '2')).toBeNull();
   });
 
-  it('does not mutate the builtin object it was given', () => {
-    const builtin = { '1': 'On Being' };
-    mergeChapterTitles(1, builtin, { '1.2': 'Imported Title' });
-    expect(builtin).toEqual({ '1': 'On Being' });
+  it('returns null (never throws) when the record is undefined (not a registered import)', () => {
+    expect(resolveImportTitle(undefined, 1, '1')).toBeNull();
+  });
+
+  it('returns null when the record predates the titles field', () => {
+    const rec = baseRecord({});
+    delete (rec as { titles?: unknown }).titles;
+    expect(resolveImportTitle(rec, 1, '1')).toBeNull();
   });
 });
 
