@@ -2,7 +2,7 @@ import type { CorpusConfig } from './corpus-config';
 import { makeChangeId } from './changelist';
 import type { ChangeRecord } from './changelist';
 import type { WitnessAnchor } from './witness-anchors';
-import { classifyTicToken, isDisplayShapedLine } from '../pdf-import/line-shape';
+import { classifyTicToken, isDisplayShapedLine, parseHeadingResidual } from '../pdf-import/line-shape';
 
 export interface GutterOutcome {
   text: string;
@@ -340,7 +340,27 @@ function validateRun(
       continue;
     }
 
-    const acceptable = candidate.values.filter((value) => isAcceptable(value, state, config));
+    let acceptable = candidate.values.filter((value) => isAcceptable(value, state, config));
+    // Unmarked column roll: a clean low bare (5/10/15) rejected only because
+    // the previous column's line count is already high is the print opening
+    // a new column without a full-form (the converter models this too). A
+    // wrong roll can only surface later as a column-jump against a
+    // range-gated full-form, never as silent corruption.
+    let rolled: RunningState | null = null;
+    if (
+      acceptable.length === 0 &&
+      candidate.clean?.kind === 'bare' &&
+      candidate.clean.n % 5 === 0 &&
+      candidate.clean.n <= 15 &&
+      state.line >= 20
+    ) {
+      const next = nextColumn(state);
+      const trial: RunningState = { page: next.page, col: next.col, line: 0 };
+      if (inRange({ kind: 'full', page: trial.page, col: trial.col }, config) && isPlausibleBare(candidate.clean.n, trial)) {
+        rolled = trial;
+        acceptable = [candidate.clean];
+      }
+    }
     if (candidate.clean && acceptable.length === 0) {
       flags.push(flagRecord(nextId, page, 'clean-off-cadence', { raw: candidate.raw, cadenceState: state }, candidate.lineIdx, candidate.startCol));
       continue;
@@ -363,12 +383,22 @@ function validateRun(
         repaired = true;
       }
     }
-    if (!value) continue;
+    if (!value) {
+      // State resync past a garbled opener the uniqueness gate refused to
+      // rewrite: when its lone in-range monotone decode is a full-form,
+      // advance the cadence STATE only. The token stays raw (Tier-2 logged);
+      // downstream bares and repairs read the corrected column. A state
+      // advance is bookkeeping, not a text edit.
+      const fulls = acceptable.filter((v): v is BekkerValue => v.kind === 'full');
+      if (!candidate.clean && fulls.length === 1) state = applyValue(fulls[0], state);
+      continue;
+    }
 
-    const after = applyValue(value, state);
+    const after = applyValue(value, rolled ?? state);
     const canon = canonical(value);
     if (!classifyTicToken(canon)) continue;
     const flagsForCandidate: string[] = [];
+    if (rolled) flagsForCandidate.push(`unmarked-roll:${rolled.page}${rolled.col}`);
     if (value.kind === 'full') {
       const expected = nextColumn(state);
       const jump = orderOf(value.page, value.col) - orderOf(expected.page, expected.col);
@@ -408,6 +438,19 @@ function trailingEdgeToken(line: string): { raw: string; startCol: number; endCo
   return EDGE_TOKEN_RE.test(last.raw) ? last : null;
 }
 
+/**
+ * A tic candidate is refused only for genuinely tabular residuals — near-empty
+ * of letters, or carrying two separate wide runs (a multi-cell row). A single
+ * internal ≥4-space run is ordinary justified-OCR prose (14.6% of Lennox
+ * lines) and must not disqualify a gutter-edge tic.
+ */
+function isTabularResidual(residual: string): boolean {
+  const alpha = residual.match(/[A-Za-z]/gu)?.length ?? 0;
+  if (alpha < 3) return residual.trim() !== '' && isDisplayShapedLine(residual);
+  const wideRuns = residual.trim().match(/ {4,}/gu)?.length ?? 0;
+  return wideRuns >= 2;
+}
+
 function leadingEdgeToken(line: string): { raw: string; startCol: number; endCol: number } | null {
   const tokens = [...line.matchAll(/\S+/gu)].map((match) => ({
     raw: match[0],
@@ -443,6 +486,12 @@ function extractCandidates(lines: string[], excluded: Set<number>, page: number,
     const line = stripCr(lines[i]);
     if (line.trim() === '') continue;
     if (DASH_RANGE_RE.test(line)) continue;
+    // A line that IS a division heading ('CHAPTER 4') must never donate its
+    // numeral to the gutter — re-padding it would make the converter's own
+    // scanner claim the numeral as a tic and the heading would lose its
+    // number. Genuine tic-bearing headings ('Book 8   1155a1') have a wide
+    // gap, fail the heading grammar as a whole line, and pass through.
+    if (parseHeadingResidual(line.trim())) continue;
 
     const leading = leadingEdgeToken(line);
     const trailing = trailingEdgeToken(line);
@@ -460,7 +509,7 @@ function extractCandidates(lines: string[], excluded: Set<number>, page: number,
           endCol: leading.endCol,
           values,
           clean: cleanValue(leading.raw),
-          display: isDisplayShapedLine(residual.residual.trim()),
+          display: isTabularResidual(residual.residual),
           residualStart: residual.residualStart,
         });
       }
@@ -483,7 +532,7 @@ function extractCandidates(lines: string[], excluded: Set<number>, page: number,
             endCol: trailing.endCol,
             values,
             clean: cleanValue(raw),
-            display: isDisplayShapedLine(residual.residual.trim()),
+            display: isTabularResidual(residual.residual),
             residualStart: residual.residualStart,
           });
         }

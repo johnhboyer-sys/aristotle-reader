@@ -162,6 +162,40 @@ structure (PA 5/17/15/14 per the chapter map; APo 34+19). Tic/side counters
 are stage-3's business (the small movements here come from heading numerals
 leaving the tic-candidate pool).
 
+## Stage 3 — gutter re-seat + Bekker repair (2026-07-07)
+
+`gutter-reseat.ts` + `witness-anchors.ts` per `stage3-spec.md` (dual-design
+synthesis). Review fixes on the Codex build: uniqueness gate made airtight
+(a garble whose lone decode isn't cadence-expected is never rewritten — no
+unlogged edits), spaced VERSO garbles extractable (leading two-token,
+digit-guarded). Post-run diagnosis (deep-reasoner, verified) added three
+more: (H) division-heading lines never donate their numeral to the gutter
+(`parseHeadingResidual` guard — re-padding `CHAPTER 4` had made the
+converter eat the 4 as a tic: PA chapters 51→48→51); (A) display-guard
+restricted to genuinely tabular residuals (<3 alpha or ≥2 wide runs) —
+Lennox justified prose has incidental wide runs on 14.6% of lines vs
+Barnes 1.4%, which was the whole PA tic gap; (B1/B2) cadence-state recovery:
+state-advance past Tier-2-pending garbled openers (state moves, token
+stays raw+logged) and unmarked column rolls for clean low bares.
+
+Grader (post-skeleton → post-gutter):
+
+| counter | PA | APo |
+|---|---|---|
+| ticsEmitted | 47 → **819** | 83 → **411** |
+| ticsSuppressed | 144 → 30 | 89 → 13 |
+| side-ambiguous | 92 → **0** | 59 → 1 |
+| droppedLines | 44 → 15 | 60 → 43 |
+| collapsedPages | 0 | 0 |
+| books/chapters | 4/51 intact | 2/53 intact |
+| fnUnmatched | 569 → 21 | 292 → 115 |
+
+The residual suppressed counts (30/13) sit in the shadow of Tier-2-pending
+garbled openers — the converter can't parse the raw garble we correctly
+refused to auto-rewrite; they clear when John's accepted Tier-2 decisions
+apply at stage 6. APo droppedLines 43 vs the 5–20 estimate — re-examine at
+stage 5 with witness evidence (may be genuine Genie-visible gaps).
+
 ## Stage-7 held-out corpus — Apostle, Posterior Analytics (John's description only; files untouched)
 
 John vendored a third, non-Clarendon pair: Apostle's APo — files are in

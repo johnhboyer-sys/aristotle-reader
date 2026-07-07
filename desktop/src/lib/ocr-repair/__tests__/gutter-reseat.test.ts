@@ -161,8 +161,8 @@ describe('reseatGutter stage-3 fixtures', () => {
     const raw = [
       'RUNNING HEAD',
       '639a  Body text opens here.',
-      '5     Alpha    Beta',
-      '      Gamma    Delta',
+      '5     Alpha    Beta    Gamma',
+      '      Delta    Epsi    Zeta',
       '5     Body text after table.',
       '',
       '104',
@@ -171,8 +171,8 @@ describe('reseatGutter stage-3 fixtures', () => {
     const lines = outcome.text.split('\n');
 
     expect(flagKinds(outcome.changes)).toContain('tic-candidate-on-display-line');
-    expect(lines[2]).toContain('5     Alpha    Beta');
-    expect(lines[3]).toContain('Gamma    Delta');
+    expect(lines[2]).toContain('5     Alpha    Beta    Gamma');
+    expect(lines[3]).toContain('Delta    Epsi    Zeta');
 
     const report = reportFor(outcome.text);
     expect(report.displayBlocks.length).toBeGreaterThanOrEqual(1);
