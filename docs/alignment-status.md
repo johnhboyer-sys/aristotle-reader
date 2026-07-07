@@ -44,13 +44,17 @@ anchors are structural/interpolated and not counted.
   need a further human pass before shipping.** Phase B wired via
   `sources/sr-pickard/anchors.yaml` + `anchors:` in `manifests/SE.yaml`; not yet committed.
 - **HA / Thompson** — the corpus's longest work, aligned 2026-06-22 (sonnet gloss · opus
-  verify). Book 1 human-reviewed & approved. **One opus correction pass (recipe §5b) still
-  to run** before deploy (deferred for session budget; verify-tasks already re-gathered).
+  verify). Book 1 human-reviewed & approved. **§5b correction pass status:** Book 7 applied
+  (`d24550c`); **Books 8+9 applied 2026-07-06** (opus, 634 ticks re-judged; move-size vs
+  verify-once: median 0 / mean 6.4 / max 82 chars, 0 moves >100). Books 1–6 intentionally
+  left at verify-once (the original build's scratch was lost; the correction is a marginal
+  nudge and re-running it over all books wasn't worth the regression risk against the
+  approved alignment). Reconstruction note: rebuilt overrides from the committed maps
+  (Book 8 pre-seed reproduced the committed map with 0 mismatches) before correcting 8+9.
   Phase B wired via `sources/ha-thompson/anchors.yaml` (2008 `chapter`+`five_line` entries
   from `tools/gloss_map_to_anchors.py`) + `anchors:` under `english.primary` in
-  `manifests/HA.yaml`. Build: stage2 PASS, key_failures=0, 8 unresolved column-end/`*5`/`*30`
-  straddles → interpolated; reader gutter renders 2277 real vs 10 interpolated ticks. Not
-  yet deployed.
+  `manifests/HA.yaml`. Build: stage2 PASS, key_failures=0; reader gutter 2254 real / 31
+  interpolated (98.6%). Not yet deployed.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
 
