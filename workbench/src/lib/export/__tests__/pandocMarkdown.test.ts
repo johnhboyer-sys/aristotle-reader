@@ -6,11 +6,26 @@ import {
 } from '../pandocMarkdown';
 import { parseManifest } from '../../works/manifest';
 import type { ChapterFile } from '../../chapterfile/types';
+import type { WorkMeta } from '../../citation/types';
 import metaphysicsYaml from '../../works/manifests/metaphysics.yaml?raw';
 import posteriorAnalyticsYaml from '../../works/manifests/posterior-analytics.yaml?raw';
 
 const META = parseManifest(metaphysicsYaml, 'metaphysics.yaml'); // book 7 label Ζ
 const POST_AN = parseManifest(posteriorAnalyticsYaml, 'posterior-analytics.yaml'); // book 2 label II
+const FREE_PARAGRAPH_META: WorkMeta = {
+  id: 'free-paragraph',
+  title: 'Free Paragraph',
+  author: '',
+  scheme: 'paragraph',
+  books: [{ n: 1, label: '' }],
+};
+const FREE_LINE_META: WorkMeta = {
+  id: 'free-lines',
+  title: 'Free Lines',
+  author: '',
+  scheme: 'plain-line',
+  books: [{ n: 1, label: '' }],
+};
 
 function chapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
   return {
@@ -459,6 +474,60 @@ describe('chapterToPandocMarkdown — line splits (design doc D6, export)', () =
     expect(stampCount).toBe(1);
     expect(md).toContain('[1041a8] three');
     expect(md).not.toContain('[1041a8] four');
+  });
+});
+
+describe('chapterToPandocMarkdown — document-spine export (D8)', () => {
+  it('paragraph docs use sentence-layer precedence, englishPara fallback, one ellipsis gap, and no addresses', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶4',
+        lineSplits: [{ ref: '¶1', offset: 13 }],
+      },
+      greekLines: ['Source one. Source two.', 'Source fallback.', 'Source blank.', 'Source after gap.'],
+      englishLines: ['First sentence.¶Second sentence.', '', '', 'After gap.'],
+      englishParaLines: ['Paragraph layer should lose.', 'Paragraph fallback.', '', ''],
+      footnotes: [],
+    };
+
+    expect(chapterToPandocMarkdown(c, FREE_PARAGRAPH_META)).toBe(
+      '# Free Paragraph\n\n' +
+        'First sentence. Second sentence.\n\n' +
+        'Paragraph fallback.\n\n' +
+        '…\n\n' +
+        'After gap.\n',
+    );
+  });
+
+  it('plain-line docs break paragraphs at paragraphStarts and preserve line identity with Pandoc hard breaks', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-lines',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'plain-line',
+        spanStart: '1',
+        spanEnd: '3',
+        paragraphStarts: [1, 3],
+      },
+      greekLines: ['L1', 'L2', 'L3'],
+      englishLines: ['Line one', 'Line two', 'Line three'],
+      footnotes: [],
+    };
+
+    expect(chapterToPandocMarkdown(c, FREE_LINE_META)).toBe(
+      '# Free Lines\n\n' +
+        'Line one\\\n' +
+        'Line two\n\n' +
+        'Line three\n',
+    );
   });
 });
 

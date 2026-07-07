@@ -408,6 +408,114 @@ export function renderSegmentsGrouped(
   return { paragraphs, footnoteIdsUsed };
 }
 
+function rowEnglishSegments(chapter: ChapterFile, rowIndex: number): string[] {
+  return parseRowSegments(chapter.englishLines[rowIndex]).map((doc) => serializeRow(docFromJSON(doc)));
+}
+
+function renderMarkupPieces(markup: string[]): { markdown: string | null; footnoteIdsUsed: string[] } {
+  const pieces: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+  for (const raw of markup) {
+    if (raw.trim().length === 0) continue;
+    const rendered = markupToPandoc(raw);
+    if (rendered.markdown.length === 0) continue;
+    pieces.push(rendered.markdown);
+    footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
+  }
+  if (pieces.length === 0) return { markdown: null, footnoteIdsUsed };
+  return { markdown: pieces.join(' '), footnoteIdsUsed };
+}
+
+/**
+ * D8 paragraph-layer precedence for document-spine rows: sentence layer wins
+ * when any sentence segment is non-empty; otherwise the paragraph layer wins;
+ * otherwise the row is untranslated.
+ */
+function renderDocumentRow(chapter: ChapterFile, rowIndex: number): { markdown: string | null; footnoteIdsUsed: string[] } {
+  const sentenceSegments = rowEnglishSegments(chapter, rowIndex);
+  if (sentenceSegments.some((s) => s.trim().length > 0)) {
+    return renderMarkupPieces(sentenceSegments);
+  }
+
+  const para = chapter.englishParaLines?.[rowIndex] ?? '';
+  if (para.trim().length > 0) {
+    return renderMarkupPieces([para]);
+  }
+
+  return { markdown: null, footnoteIdsUsed: [] };
+}
+
+function renderDocumentParagraphRows(chapter: ChapterFile): RenderedParagraphs {
+  const paragraphs: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+  let gap = false;
+
+  for (let i = 0; i < chapter.englishLines.length; i++) {
+    const rendered = renderDocumentRow(chapter, i);
+    if (rendered.markdown === null) {
+      gap = true;
+      continue;
+    }
+
+    if (gap && paragraphs.length > 0) paragraphs.push(ELLIPSIS_PARAGRAPH);
+    gap = false;
+    paragraphs.push(rendered.markdown);
+    footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
+  }
+
+  return { paragraphs, footnoteIdsUsed };
+}
+
+function renderDocumentPlainLineRows(chapter: ChapterFile): RenderedParagraphs {
+  const paragraphs: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+  const paragraphStarts = new Set(chapter.meta.paragraphStarts ?? []);
+  const hardLineBreak = '\\' + '\n';
+  let currentLines: string[] = [];
+  let gap = false;
+
+  const flush = () => {
+    if (currentLines.length > 0) {
+      paragraphs.push(currentLines.join(hardLineBreak));
+      currentLines = [];
+    }
+  };
+
+  for (let i = 0; i < chapter.englishLines.length; i++) {
+    if (i === 0 || paragraphStarts.has(i + 1)) flush();
+
+    const rendered = renderDocumentRow(chapter, i);
+    if (rendered.markdown === null) {
+      flush();
+      gap = true;
+      continue;
+    }
+
+    if (gap && (paragraphs.length > 0 || currentLines.length > 0)) {
+      flush();
+      paragraphs.push(ELLIPSIS_PARAGRAPH);
+    }
+    gap = false;
+    currentLines.push(rendered.markdown);
+    footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
+  }
+  flush();
+
+  return { paragraphs, footnoteIdsUsed };
+}
+
+export function renderDocumentSpineEnglish(chapter: ChapterFile): RenderedParagraphs {
+  const scheme = getScheme(chapter.meta.citationScheme);
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      return renderDocumentParagraphRows(chapter);
+    case 'plain-line':
+      return renderDocumentPlainLineRows(chapter);
+    default:
+      return renderSegmentsGrouped(chapterSegments(chapter), (seg) => seg.englishMarkup, false, 'every-5');
+  }
+}
+
 // ── inline markup: InlineRun[] -> Pandoc markdown ───────────────────────────
 
 const PANDOC_SPECIAL = /[\\*_[\]^~`<>&]/g;
@@ -507,6 +615,7 @@ function buildHeading(chapter: ChapterFile, work: WorkMeta): string {
  */
 function buildBody(chapter: ChapterFile, options: Required<PandocMarkdownOptions>): { paragraphs: string[]; footnoteIdsUsed: string[] } {
   const scheme = getScheme(chapter.meta.citationScheme);
+  if (scheme.spineSource === 'document') return renderDocumentSpineEnglish(chapter);
   const useStamps = scheme.gutter.rowUnit === 'bekker-line';
   const segments = chapterSegments(chapter);
   return renderSegmentsGrouped(segments, (seg) => seg.englishMarkup, useStamps, options.stampMode);
@@ -540,6 +649,8 @@ function buildFootnoteBlocks(chapter: ChapterFile, idsUsed: string[]): string[] 
  */
 export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, options: PandocMarkdownOptions = {}): string {
   const resolved: Required<PandocMarkdownOptions> = { stampMode: options.stampMode ?? 'every-5' };
+  const scheme = getScheme(chapter.meta.citationScheme);
+  if (scheme.spineSource === 'document') return documentToPandocMarkdown(chapter, work);
 
   const heading = buildHeading(chapter, work);
   const { paragraphs, footnoteIdsUsed } = buildBody(chapter, resolved);
@@ -550,5 +661,13 @@ export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, op
   const sections = [heading, ...(paragraphs.length > 0 ? paragraphs : [''])];
   if (footnoteBlocks.length > 0) sections.push(footnoteBlocks.join('\n\n'));
 
+  return sections.join('\n\n') + '\n';
+}
+
+export function documentToPandocMarkdown(chapter: ChapterFile, work: WorkMeta): string {
+  const { paragraphs, footnoteIdsUsed } = renderDocumentSpineEnglish(chapter);
+  const footnoteBlocks = buildFootnoteBlocks(chapter, footnoteIdsUsed);
+  const sections = [`# ${work.title}`, ...(paragraphs.length > 0 ? paragraphs : [''])];
+  if (footnoteBlocks.length > 0) sections.push(footnoteBlocks.join('\n\n'));
   return sections.join('\n\n') + '\n';
 }

@@ -7,11 +7,19 @@ import {
 import { compileDefaultFilename, sanitizeFilenameComponent } from '../index';
 import { parseManifest } from '../../works/manifest';
 import type { ChapterFile } from '../../chapterfile/types';
+import type { WorkMeta } from '../../citation/types';
 import metaphysicsYaml from '../../works/manifests/metaphysics.yaml?raw';
 import posteriorAnalyticsYaml from '../../works/manifests/posterior-analytics.yaml?raw';
 
 const META = parseManifest(metaphysicsYaml, 'metaphysics.yaml');
 const POST_AN = parseManifest(posteriorAnalyticsYaml, 'posterior-analytics.yaml');
+const FREE_WORK: WorkMeta = {
+  id: 'free-doc',
+  title: 'Free Doc',
+  author: '',
+  scheme: 'paragraph',
+  books: [{ n: 1, label: '' }],
+};
 
 function metaChapter(book: number, chapter: number, overrides: Partial<ChapterFile> = {}): ChapterFile {
   return {
@@ -471,6 +479,40 @@ describe('compileWorkMarkdown — line splits (design doc D6, export)', () => {
   });
 });
 
+describe('compileWorkMarkdown — document-spine single-document route (D8)', () => {
+  function freeChapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
+    return {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-doc',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶2',
+      },
+      greekLines: ['Source one.', 'Source two.'],
+      englishLines: ['First translated paragraph.', ''],
+      englishParaLines: ['', 'Second paragraph from paragraph layer.'],
+      footnotes: [],
+      ...overrides,
+    };
+  }
+
+  it('renders one title-only document with no book/chapter headings or Bekker stamps', () => {
+    const result = compileWorkMarkdown([freeChapter()], FREE_WORK);
+    expect(result.markdown).toBe(
+      '# Free Doc\n\n' +
+        'First translated paragraph.\n\n' +
+        'Second paragraph from paragraph layer.\n',
+    );
+    expect(result.markdown).not.toContain('## Chapter');
+    expect(result.markdown).not.toContain('[');
+    expect(result.gapReport).toEqual({ hasGaps: false, lines: [], summary: 'Document present.' });
+    expect(result.included).toEqual([{ book: 1, chapter: 1 }]);
+  });
+});
+
 describe('filename helpers', () => {
   it('sanitizes illegal filename characters and collapses whitespace', () => {
     expect(sanitizeFilenameComponent('A: B / C * D?')).toBe('A B C D');
@@ -487,5 +529,9 @@ describe('filename helpers', () => {
 
   it('default filename with no mode specified falls back to english wording', () => {
     expect(compileDefaultFilename(META, undefined)).toBe('Metaphysics — Aristotle (translation).docx');
+  });
+
+  it('default filename omits the byline separator for anonymous free works', () => {
+    expect(compileDefaultFilename(FREE_WORK, 'english')).toBe('Free Doc (translation).docx');
   });
 });
