@@ -81,9 +81,12 @@ describe('split gesture wiring (D6 §4.1)', () => {
     expect(chapterSource).toContain('onContext={(e) => onGreekContextMenu(e, g)}');
   });
 
-  it('the menu offers "Start new paragraph here" on unsplit lines and "Merge paragraph back" on split ones', () => {
-    expect(chapterSource).toContain('>Start new paragraph here</span>');
-    expect(chapterSource).toContain('>Merge paragraph back</span>');
+  it('unsplit lines get the split item, split ones the merge — labels pinned in ctxMenu.test.ts', () => {
+    // The two grid assignments carry merge: true / merge: false into
+    // buildCtxMenu, which decides the D6 item ("D6 line gestures" matrix row).
+    const menu = fnBody('onGreekContextMenu');
+    expect(menu).toContain('segment: d.segment, merge: true');
+    expect(menu).toContain('segment: d.segment, merge: false');
   });
 
   it('the click offset snaps to a word gap via snapToWordStart; an invalid spot no-ops with the status line', () => {

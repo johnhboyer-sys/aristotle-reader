@@ -135,6 +135,8 @@
     plainRowText,
     resolveTauriAssistProvider,
   } from './assistController';
+  import { buildCtxMenu } from './ctxMenu';
+  import type { CtxMenuItemId, CtxMenuModel } from './ctxMenu';
   import { buildClipboardPayload } from '../assist/clipboardPayload';
   import { NO_LINE_MESSAGE, NO_PARAGRAPH_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
   import { ClipboardProvider } from '../assist/clipboardProvider';
@@ -427,7 +429,29 @@
     paraDoc?: { canMergePrev: boolean; joinBoundary: number | null };
     /** Plain-line document-spine rows (D8 §5): grouping toggle for this row. */
     chunk?: 'add' | 'remove';
+    /** The rendered items — built by buildCtxMenu (ctxMenu.ts) from the
+     * fields above; the template renders the model, never re-decides it. */
+    model: CtxMenuModel;
   } | null>(null);
+  /** Attach the display model to a menu state: every ctxMenu assignment
+   * routes through here so items/wording/grouping have exactly one source
+   * of truth (buildCtxMenu — matrix-tested in ctxMenu.test.ts). */
+  function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model'>): NonNullable<typeof ctxMenu> {
+    return {
+      ...m,
+      model: buildCtxMenu({
+        scheme,
+        paraDoc: m.paraDoc,
+        aiOnly: m.aiOnly,
+        chunk: m.chunk,
+        merge: m.merge,
+        batchRowCount: m.translateRows?.length ?? 1,
+        noun: m.noun,
+        rowNoun: m.rowNoun,
+        sourceNoun,
+      }),
+    };
+  }
   // Pending merge confirms. `pendingUnsplit` is the D6 segment un-split AND
   // the D8 sentence join (same mergeSegments machinery; `message` overrides
   // the cell dialog's D6 wording for sentence joins). `pendingParaMerge` is
@@ -2263,7 +2287,7 @@
         const paraRow = model.rows[d.rowIndex];
         const within = caretOffsetFromPoint(e);
         const snapped = within === null ? null : snapToWordStart(paraRow.greek, within);
-        ctxMenu = {
+        ctxMenu = withMenuModel({
           x: e.clientX,
           y: e.clientY,
           row: d.rowIndex,
@@ -2277,10 +2301,10 @@
             canMergePrev: d.rowIndex > 0,
             joinBoundary: within === null ? null : joinBoundaryAt(paraRow.splitOffsets, within),
           },
-        };
+        });
         return;
       }
-      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: 0, merge: false, offset: null, aiOnly: true, noun, rowNoun, translateRows: paraTranslateRows };
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: 0, merge: false, offset: null, aiOnly: true, noun, rowNoun, translateRows: paraTranslateRows });
       return;
     }
     const row = model.rows[d.rowIndex];
@@ -2300,7 +2324,7 @@
     const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
     if (segmentCount(row) > 1) {
       // Already split (Phase-1 UI is single-split): offer the merge.
-      ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk };
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk });
       return;
     }
     // Split gesture (John's §4.1): the offset is the click's nearest word
@@ -2308,7 +2332,7 @@
     // snapToWordStart) rejects offset 0 and the line end.
     const within = caretOffsetFromPoint(e);
     const offset = within === null ? null : snapToWordStart(row.greek, d.greekStart + within);
-    ctxMenu = { x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk };
+    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk });
   }
 
   /** Right-click the English cell → the 4 AI modes only. Split/Merge is a
@@ -2322,7 +2346,7 @@
     // The AI modes are live in every view (D8 §7 Phase E2): para-layer unit
     // views target englishPara, everything else the sentence layer — the
     // menu just labels the target with its unit noun.
-    ctxMenu = {
+    ctxMenu = withMenuModel({
       x: e.clientX,
       y: e.clientY,
       row: d.rowIndex,
@@ -2332,7 +2356,7 @@
       aiOnly: true,
       noun: assistUnitFor(activeLayer(), d.rowIndex),
       rowNoun: rowUnitNoun(),
-    };
+    });
   }
 
   function menuSplit() {
@@ -2440,6 +2464,24 @@
     setAskTarget(m.row);
     session.askPanelOpen = true;
   }
+
+  /** Item ids (ctxMenu.ts) → the menu commands above. Each command still
+   * reads its own guard fields off ctxMenu, so a stray id is a no-op. */
+  const menuActions: Record<CtxMenuItemId, () => void> = {
+    'line-split': menuSplit,
+    'line-merge': menuMerge,
+    'chunk-add': menuChunkToggle,
+    'chunk-remove': menuChunkToggle,
+    'para-split': menuParaSplit,
+    'para-merge': menuParaMerge,
+    'sentence-split': menuSentenceSplit,
+    'sentence-join': menuSentenceJoin,
+    'ai-translate': menuAssist,
+    'ai-translate-batch': menuAssist,
+    'ai-reference': menuReference,
+    'ai-check': menuCheck,
+    'ai-ask': menuAsk,
+  };
 
   /** Split model row r at a validated Greek offset — ONE undo entry that
    * captures the row's structural before/after (offsets + both English
@@ -3476,82 +3518,22 @@
   {/if}
 
   {#if ctxMenu}
+    <!-- Items, wording and grouping all come from buildCtxMenu (ctxMenu.ts)
+         — the per-view matrix is decided (and tested) there, never here. -->
     <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
-      {#if ctxMenu.paraDoc}
-        <!-- Document-spine paragraph rows (D8 §2/§3): row-level paragraph
-             ops first, then the sentence fix-up — the D6 splitOffsets
-             machinery relabelled, since on paragraph rows those boundaries
-             mean SENTENCES — then the AI options (house convention:
-             structure at the top, divider before AI). -->
-        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuParaSplit}>
-          <span class="ctx-menu-title">Split paragraph here</span>
-          <span class="ctx-menu-desc">The clicked word starts a new paragraph — your English stays with this one</span>
-        </button>
-        {#if ctxMenu.paraDoc.canMergePrev}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuParaMerge}>
-            <span class="ctx-menu-title">Merge with previous paragraph</span>
-            <span class="ctx-menu-desc">Joins this paragraph onto the one above</span>
-          </button>
+      {#each ctxMenu.model.groups as group, gi (gi)}
+        {#if gi > 0}
+          <div class="ctx-menu-divider" role="separator"></div>
         {/if}
-        <div class="ctx-menu-divider" role="separator"></div>
-        <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSentenceSplit}>
-          <span class="ctx-menu-title">Start new sentence here</span>
-          <span class="ctx-menu-desc">Fixes the sentence division used by the by-sentence view</span>
-        </button>
-        {#if ctxMenu.paraDoc.joinBoundary !== null}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSentenceJoin}>
-            <span class="ctx-menu-title">Join sentences</span>
-            <span class="ctx-menu-desc">Merges this sentence with the previous one</span>
-          </button>
-        {/if}
-        <div class="ctx-menu-divider" role="separator"></div>
-      {:else if !ctxMenu.aiOnly}
-        {#if ctxMenu.chunk}
-          <!-- Plain-line document-spine grouping (D8 §5): display metadata
-               only — no line is created, destroyed or edited. -->
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuChunkToggle}>
-            {#if ctxMenu.chunk === 'add'}
-              <span class="ctx-menu-title">Start paragraph here</span>
-              <span class="ctx-menu-desc">This line begins a new paragraph — grouping only, the lines don't change</span>
-            {:else}
-              <span class="ctx-menu-title">Merge with previous paragraph</span>
-              <span class="ctx-menu-desc">Rejoins this line to the paragraph above — grouping only</span>
+        {#each group as item (item.id)}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuActions[item.id]}>
+            <span class="ctx-menu-title">{item.title}</span>
+            {#if item.desc}
+              <span class="ctx-menu-desc">{item.desc}</span>
             {/if}
           </button>
-        {/if}
-        {#if ctxMenu.merge}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuMerge}>
-            <span class="ctx-menu-title">Merge paragraph back</span>
-          </button>
-        {:else}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuSplit}>
-            <span class="ctx-menu-title">Start new paragraph here</span>
-            <span class="ctx-menu-desc">Splits this Bekker line at the clicked Greek word</span>
-          </button>
-        {/if}
-        <div class="ctx-menu-divider" role="separator"></div>
-      {/if}
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAssist}>
-        {#if ctxMenu.translateRows && ctxMenu.translateRows.length > 1}
-          <span class="ctx-menu-title">Translate {ctxMenu.translateRows.length} {ctxMenu.rowNoun ?? 'line'}s with AI</span>
-          <span class="ctx-menu-desc">Fills each selected {ctxMenu.rowNoun ?? 'line'}'s English cell (asks before replacing existing text)</span>
-        {:else}
-          <span class="ctx-menu-title">Translate with AI</span>
-          <span class="ctx-menu-desc">Writes a draft into this {(ctxMenu.noun ?? 'line') === 'line' ? 'row' : ctxMenu.noun}'s English cell</span>
-        {/if}
-      </button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuReference}>
-        <span class="ctx-menu-title">AI reference</span>
-        <span class="ctx-menu-desc">A second version in the sidebar — your cell untouched</span>
-      </button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuCheck}>
-        <span class="ctx-menu-title">Check my translation</span>
-        <span class="ctx-menu-desc">Linguist's check of your English against the {sourceNoun}</span>
-      </button>
-      <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuAsk}>
-        <span class="ctx-menu-title">Ask AI about this {ctxMenu.rowNoun ?? 'line'}…</span>
-        <span class="ctx-menu-desc">Open a Q&A chat about this {ctxMenu.rowNoun ?? 'line'}</span>
-      </button>
+        {/each}
+      {/each}
     </div>
   {/if}
 

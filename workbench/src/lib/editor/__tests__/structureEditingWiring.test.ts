@@ -102,23 +102,21 @@ describe('row-level paragraph split/merge (D8 §2)', () => {
     expect(body).toContain('focusSel(sel)');
   });
 
-  it('the menu offers the row ops on paragraph-doc source cells, structure first (house convention)', () => {
-    expect(chapterSource).toContain('{#if ctxMenu.paraDoc}');
-    expect(chapterSource).toContain('>Split paragraph here</span>');
-    expect(chapterSource).toContain('>Merge with previous paragraph</span>');
-    // "Merge with previous" only exists below row 0.
-    expect(chapterSource).toContain('{#if ctxMenu.paraDoc.canMergePrev}');
+  it('the menu model is built by buildCtxMenu — item sets/wording are matrix-pinned in ctxMenu.test.ts', () => {
+    // Every ctxMenu assignment routes through withMenuModel → buildCtxMenu;
+    // the template renders the model and never re-decides items.
+    expect(chapterSource).toContain("import { buildCtxMenu } from './ctxMenu'");
+    expect(chapterSource).toContain('{#each ctxMenu.model.groups as group, gi (gi)}');
+    expect(chapterSource).not.toContain('ctx-menu-title">Split');
+    // "Merge with previous" only exists below row 0 — the paraDoc input
+    // carries the gate.
+    expect(fnBody('onGreekContextMenu')).toContain('canMergePrev: d.rowIndex > 0');
   });
 });
 
 describe('sentence-boundary fix-up relabel (D8 §3 — same D6 machinery, sentence wording)', () => {
-  it('the sentence items appear ONLY in the paraDoc menu; Bekker rows keep the D6 labels', () => {
-    expect(chapterSource).toContain('>Start new sentence here</span>');
-    expect(chapterSource).toContain('>Join sentences</span>');
-    // The D6 labels survive verbatim for Bekker/plain-line grid rows.
-    expect(chapterSource).toContain('>Start new paragraph here</span>');
-    expect(chapterSource).toContain('>Merge paragraph back</span>');
-  });
+  // Sentence-vs-D6 labels are pinned per input in ctxMenu.test.ts's matrix
+  // ('document-spine paragraph ops + sentence fix-up' / 'D6 line gestures').
 
   it('sentence split manipulates splitOffsets via the pure addSentenceBoundary — ONE row-bundle entry, no row created', () => {
     const body = fnBody('performSentenceSplit');
@@ -163,8 +161,9 @@ describe('chunk grouping for plain-line docs (D8 §5)', () => {
   it('the menu items: row 1 never offers a toggle; add/remove follows membership', () => {
     const menu = fnBody('onGreekContextMenu');
     expect(menu).toContain('d.rowIndex > 0 && d.segment === 0');
-    expect(chapterSource).toContain('>Start paragraph here</span>');
-    expect(chapterSource).toContain("{#if ctxMenu.chunk === 'add'}");
+    // The chunk items themselves are pinned in ctxMenu.test.ts
+    // ('plain-line chunk grouping').
+    expect(menu).toContain("? ('remove' as const)");
   });
 });
 
