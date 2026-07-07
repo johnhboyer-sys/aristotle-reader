@@ -51,7 +51,20 @@ export interface CorpusConfig {
   slice?: {
     /** First page with a matching line opens the translation body. */
     bodyStart: string;
-    /** First page AT OR AFTER bodyStart matching begins back matter (cut to end). */
+    /**
+     * When set, bodyStart only matches if the NEXT non-blank line matches
+     * this too (e.g. BOOK heading followed by CHAPTER heading — running
+     * heads that merely say "BOOK ONE" can't satisfy the pair).
+     */
+    bodyStartNextLine?: string;
+    /**
+     * Drop non-blank lines strictly between the body-start page's running
+     * head (first non-blank line, always kept) and the matched bodyStart
+     * line — front-matter prose printed above the opening heading. Logged;
+     * removed lines are carried in the change record's evidence.
+     */
+    trimBodyStartPreamble?: boolean;
+    /** First page AFTER bodyStart matching begins back matter (cut to end). */
     backMatterStart?: string;
   };
   /** Where stage outputs, reports, and change-lists are written. */

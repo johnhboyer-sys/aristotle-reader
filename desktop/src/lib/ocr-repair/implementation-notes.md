@@ -67,6 +67,56 @@ Open observations for later stages:
   APo 325 `\f` vs 354 Genie `---`. Pairing must anchor on running heads /
   Bekker anchors, never raw index (handoff data fact, confirmed for APo too).
 
+## Stage 1 — slice (2026-07-07)
+
+Pattern-driven page-boundary slice (`slice.ts`): bodyStart regex plus an
+optional bodyStartNextLine PAIR rule (the body opens where a centered BOOK
+heading is followed by a centered CHAPTER heading — necessary because PA's
+recto running heads literally read `BOOK ONE` etc., so a single-line BOOK
+pattern misfires), first match front-to-back; backMatterStart searched
+strictly after the body start (the same BOOK+CHAPTER pair reappears where the
+commentary opens). `trimBodyStartPreamble` removes front-matter prose printed
+between the body-start page's head and the opening heading (PA prints an
+8-line note on the translation there), logged with the removed lines in the
+change record's evidence.
+
+Boundaries (0-based `split('\f')` segments; deep-reasoner report, seam pages
+eyeball-verified): PA keep 16–133 (back matter from 134 `COMMENTARY`; 133 is
+a harmless blank); APo keep 27–100 (back matter from 101 `SYNOPSIS` — a
+COMMENTARY-only pattern would wrongly keep the 4-page synopsis).
+
+Grader deltas (baseline → post-slice):
+
+| counter | PA | APo |
+|---|---|---|
+| pages | 425 → 118 | 326 → 74 |
+| seams | 2 → 0 | 0 → 0 |
+| collapsedPages | 1 → 0 | 0 → 0 |
+| ticsEmitted | 51 → 49 | 106 → 82 |
+| ticsSuppressed | 205 → 150 | 182 → 95 |
+| droppedLines | 56 → 44 | 88 → 62 |
+| displayBlocks | 1369 → 498 | 152 → 22 |
+| side-ambiguous | 364 → 87 | 283 → 57 |
+| books / chapters | 6/39 → 1/31 | 0/52 → 0/33 |
+| fnUnmatched | 13942 → 584 | 8079 → 294 |
+
+Stage-1 target met: seams=[], boundary cuts only, sliced material on disk.
+Divisions completeness explicitly MOVES to stage 2 — three measured causes:
+
+1. **Book-opening pages print no running head**, so the converter strips the
+   real `BOOK TWO/THREE/FOUR` (and APo `BOOK ALPHA`) heading as the page
+   head — the missing-head silent-loss mode the spec warns about. Stage-2
+   head-insert must treat "first non-blank line is a centered division
+   heading" as a headless page and insert the placeholder above it.
+2. **APo names books in Greek-letter ordinals** (`BOOK ALPHA`/`BOOK BETA`),
+   which the frozen converter's number vocabulary (Arabic/Roman/spelled
+   English) cannot parse. Repair-side Tier-1 normalization ALPHA→ONE,
+   BETA→TWO planned; per-record before/after preserves what the print says.
+   FLAGGED to John at the stage-1 checkpoint (it re-spells a printed word).
+3. **Chapter numerals are OCR-garbled** in both translations (`CHAPTER IO`,
+   `I I`, `I3`, `IS`, `2 I`, `3I` for 10/11/13/15/21/31 …) — Tier-1
+   letter-for-digit normalization on heading lines only, stage 2.
+
 ### OCR quirk table (John 2026-07-07, verified in both corpora)
 
 - Adobe backbone: geometry trustworthy; Bekker column letters garbled —

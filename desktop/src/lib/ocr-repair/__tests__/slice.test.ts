@@ -107,6 +107,79 @@ describe('slicePages', () => {
     });
   });
 
+  it('bodyStartNextLine pair rule skips lone running heads that match bodyStart', () => {
+    const pairPages = [
+      'Contents\r\n   BOOK ONE   \r\nlisted with prose after it',
+      '   BOOK ONE\r\n\r\nrecto running head page, body prose follows',
+      'HEAD\r\n\r\n     BOOK ONE\r\n\r\n   CHAPTER I\r\nReal body opening',
+      '   COMMENTARY\r\nback matter',
+    ];
+    const outcome = slicePages(
+      pairPages.join('\f'),
+      config({
+        bodyStart: '^\\s{2,}BOOK\\s+[A-Z]+\\s*$',
+        bodyStartNextLine: '^\\s{2,}CHAPTER\\s+\\S{1,4}\\s*$',
+        backMatterStart: '^\\s*COMMENTARY\\s*$',
+      })
+    );
+
+    expect(outcome.text).toBe(pairPages[2]);
+    expect(outcome.changes[0].evidence).toMatchObject({ kind: 'front-matter', pages: '0-1' });
+  });
+
+  it('trimBodyStartPreamble drops prose between the head and the heading, keeps both, logs it', () => {
+    const trimPages = [
+      'Half title',
+      'TRANSLATION\r\n\r\nThe rendering avoids brackets.\r\nA second preamble line.\r\n\r\n     BOOK ONE\r\n\r\n   CHAPTER I\r\nBody text begins',
+      '   COMMENTARY\r\nback matter',
+    ];
+    const outcome = slicePages(
+      trimPages.join('\f'),
+      config({
+        bodyStart: '^\\s{2,}BOOK\\s+[A-Z]+\\s*$',
+        bodyStartNextLine: '^\\s{2,}CHAPTER\\s+\\S{1,4}\\s*$',
+        trimBodyStartPreamble: true,
+        backMatterStart: '^\\s*COMMENTARY\\s*$',
+      })
+    );
+
+    expect(outcome.text).toBe(
+      'TRANSLATION\r\n\n     BOOK ONE\r\n\r\n   CHAPTER I\r\nBody text begins'
+    );
+    const trim = outcome.changes.find(
+      (c) => (c.evidence as { kind?: string } | undefined)?.kind === 'body-start-preamble'
+    );
+    expect(trim).toMatchObject({
+      rule: 'slice',
+      tier: 1,
+      stage: 1,
+      page: 1,
+      evidence: {
+        linesRemoved: 2,
+        removedLines: ['The rendering avoids brackets.', 'A second preamble line.'],
+      },
+    });
+  });
+
+  it('trimBodyStartPreamble is a no-op when the heading directly follows the head', () => {
+    const cleanPages = [
+      'BOOK ONE\r\n\r\n   CHAPTER I\r\nBody starts immediately',
+      '   COMMENTARY\r\nback matter',
+    ];
+    const outcome = slicePages(
+      cleanPages.join('\f'),
+      config({
+        bodyStart: '^\\s*CHAPTER I\\s*$',
+        trimBodyStartPreamble: true,
+        backMatterStart: '^\\s*COMMENTARY\\s*$',
+      })
+    );
+
+    expect(outcome.text).toBe(cleanPages[0]);
+    expect(outcome.changes).toHaveLength(1);
+    expect(outcome.changes[0].evidence).toMatchObject({ kind: 'back-matter' });
+  });
+
   it('records only a back cut when p0 is 0', () => {
     const startPages = [
       'BOOK ONE\r\nBody starts immediately',
