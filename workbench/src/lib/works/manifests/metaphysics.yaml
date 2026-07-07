@@ -1,0 +1,22 @@
+id: metaphysics
+title: "Metaphysics"
+author: "Aristotle"
+original_language: greek
+citation_scheme: bekker-metaphysics
+tlg_author: "0086"
+tlg_work: "025"
+books:
+  - { n: 1, label: "Α" }
+  - { n: 2, label: "α" }
+  - { n: 3, label: "Β" }
+  - { n: 4, label: "Γ" }
+  - { n: 5, label: "Δ" }
+  - { n: 6, label: "Ε" }
+  - { n: 7, label: "Ζ" }
+  - { n: 8, label: "Η" }
+  - { n: 9, label: "Θ" }
+  - { n: 10, label: "Ι" }
+  - { n: 11, label: "Κ" }
+  - { n: 12, label: "Λ" }
+  - { n: 13, label: "Μ" }
+  - { n: 14, label: "Ν" }

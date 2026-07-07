@@ -17,6 +17,7 @@ anchors are structural/interpolated and not counted.
 | On Generation and Corruption (`GC`) | H. H. Joachim (Oxford, 1922) | 21 | 362 | 362 confirmed | [Bk 1](../alignment-results/joachim/review/book-01.html) · [Bk 2](../alignment-results/joachim/review/book-02.html) · [index](../alignment-results/joachim/index.html) |
 | Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/book-01.html) · [index](../alignment-results/pickard/index.html) |
 | De Anima (`DA`) | J. A. Smith (Oxford, 1931) | 30 | 460 | 454 confirmed · 6 reliable/uncertain | [Bk 1](../alignment-results/smith/review/book-01.html) · [Bk 2](../alignment-results/smith/review/book-02.html) · [Bk 3](../alignment-results/smith/review/book-03.html) · [index](../alignment-results/smith/index.html) |
+| History of Animals (`HA`) | D'Arcy W. Thompson (public primary) | 227 | 2067 | 2060 confirmed · 7 reliable | [index](../alignment-results/thompson/index.html) · Bk [1](../alignment-results/thompson/review/book-01.html) [2](../alignment-results/thompson/review/book-02.html) [3](../alignment-results/thompson/review/book-03.html) [4](../alignment-results/thompson/review/book-04.html) [5](../alignment-results/thompson/review/book-05.html) [6](../alignment-results/thompson/review/book-06.html) [7](../alignment-results/thompson/review/book-07.html) [8](../alignment-results/thompson/review/book-08.html) [9](../alignment-results/thompson/review/book-09.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
 - **Mete / Webster** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 · **two-tier
@@ -51,6 +52,18 @@ anchors are structural/interpolated and not counted.
   move-size vs verify-once: median 0 / mean 4.3 / max 69 chars, 0 moves >100. stage2 PASS,
   key_failures=0; reader gutter 486 real / 3 interp (99.4%). **Needs a human review pass**
   (`smith/review/book-0{1,2,3}.html`) before shipping; not yet deployed.
+- **HA / Thompson** — the corpus's longest work, aligned 2026-06-22 (sonnet gloss · opus
+  verify). Book 1 human-reviewed & approved. **§5b correction pass status:** Book 7 applied
+  (`d24550c`); **Books 8+9 applied 2026-07-06** (opus, 634 ticks re-judged; move-size vs
+  verify-once: median 0 / mean 6.4 / max 82 chars, 0 moves >100). Books 1–6 intentionally
+  left at verify-once (the original build's scratch was lost; the correction is a marginal
+  nudge and re-running it over all books wasn't worth the regression risk against the
+  approved alignment). Reconstruction note: rebuilt overrides from the committed maps
+  (Book 8 pre-seed reproduced the committed map with 0 mismatches) before correcting 8+9.
+  Phase B wired via `sources/ha-thompson/anchors.yaml` (2008 `chapter`+`five_line` entries
+  from `tools/gloss_map_to_anchors.py`) + `anchors:` under `english.primary` in
+  `manifests/HA.yaml`. Build: stage2 PASS, key_failures=0; reader gutter 2254 real / 31
+  interpolated (98.6%). Not yet deployed.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
 

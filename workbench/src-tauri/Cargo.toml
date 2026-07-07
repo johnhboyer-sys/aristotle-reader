@@ -1,0 +1,29 @@
+[package]
+name = "translation-workbench"
+version = "0.1.0"
+description = "Translation Workbench — a translation editor for the Aristotle corpus"
+edition = "2021"
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Custom Rust stays minimal by design: Tauri core + official plugins only,
+# plus serde for the assist command's serialized outcome (src/assist.rs).
+# tauri-plugin-shell is here because the editor will later shell out to
+# Diogenes' perl exporter and to pandoc as subprocesses.
+serde = { version = "1", features = ["derive"] }
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-shell = "2"
+
+[dev-dependencies]
+serde_json = "1"
+
+[lib]
+name = "translation_workbench_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
