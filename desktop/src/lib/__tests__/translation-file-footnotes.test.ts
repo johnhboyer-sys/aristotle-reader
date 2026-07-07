@@ -3,7 +3,7 @@
 // example from §B2 and the legacy byte-identical guarantee.
 
 import { describe, expect, it } from 'vitest';
-import { parseTranslationFile, splitChapters } from '../translation-file';
+import { parseTranslationFile, splitChapters, splitFootnoteBlock } from '../translation-file';
 
 function withFrontmatter(body: string, id = 'test'): string {
   return `---
@@ -149,14 +149,130 @@ describe('translation-file footnotes §C3: format round-trip', () => {
     expect(p.footnotes['†']).toBe('Translated by a synthetic hand for this fixture only.');
   });
 
-  // NOT tested with a literal `[^*]` inline body marker: scanEmphasis runs
-  // BEFORE scanFootnoteMarkers (locked pipeline order, §B2), and a lone `*`
-  // inside `[^*]` is indistinguishable to it from a stray emphasis marker —
-  // it gets swallowed as OCR-noise-shaped stray-asterisk cleanup, corrupting
-  // the label before scanFootnoteMarkers ever sees it. This is not a gap in
-  // practice: per §A3, a star/dagger note is a WORK-LEVEL attachment (the
-  // marker lives in the running head, routed straight to front matter) —
-  // it is never turned into a literal `[^*]` marker glued into body prose to
-  // begin with. Logged in implementation-notes.md as a known, narrow,
-  // spec-consistent limitation rather than silently worked around.
+  // Fix 3 (2026-07-06 adversarial review): a literal `[^*]` inline body
+  // marker used to be corrupted by scanEmphasis — it runs BEFORE
+  // scanFootnoteMarkers (locked pipeline order, §B2), and a lone `*` inside
+  // `[^*]` was indistinguishable to it from a stray emphasis marker, so it
+  // got swallowed as OCR-noise-shaped stray-asterisk cleanup before
+  // scanFootnoteMarkers ever saw it. Fixed by teaching findMarkerRuns
+  // (emphasis.ts) to skip a `*` that is the entire label of a `[^*]` token —
+  // it's never an emphasis candidate to begin with.
+  it('a star `[^*]` inline body marker round-trips (Fix 3): scanEmphasis no longer swallows the `*` as a stray marker', () => {
+    const raw = withFrontmatter(
+      'Credit.[^*]\n\n' +
+        '<!-- footnotes -->\n' +
+        '[^*]: Translator credit.\n'
+    );
+    const p = parseTranslationFile(raw);
+    expect(p.text).toBe('Credit.\n');
+    expect(p.footnoteMarkers).toEqual([{ offset: 7, label: '*', display: '*' }]);
+    expect(p.footnotes['*']).toBe('Translator credit.');
+  });
+
+  it('Fix 3 control: an ordinary stray `*` elsewhere in the body still behaves as before (removed as OCR noise, no footnote involved)', () => {
+    const raw = withFrontmatter('{1.1}A *stray asterisk in the middle of a sentence.\n');
+    const p = parseTranslationFile(raw);
+    expect(p.footnoteMarkers).toEqual([]);
+    expect(p.text).not.toContain('*');
+  });
+
+  describe('Fix 2 (2026-07-06 adversarial review): a marker glued at a chapter boundary belongs to the chapter it ENDS', () => {
+    it('scenario (a): {1.1}Last word.[^1] + block -> chapter 1.1 carries the marker at its end; overlay text ends "Last word.[^1]"; note reachable', () => {
+      const raw = withFrontmatter(
+        '{1.1}Last word.[^1]\n\n' +
+          '<!-- footnotes -->\n' +
+          '[^1]: A note on the very last word of the file.\n'
+      );
+      const p = parseTranslationFile(raw);
+      expect(p.text).toBe('Last word.\n');
+      expect(p.footnoteMarkers).toHaveLength(1);
+      expect(p.footnoteMarkers[0]).toMatchObject({ label: '1' });
+      expect(p.text.slice(0, p.footnoteMarkers[0].offset)).toBe('Last word.');
+      // Glued at the very end of the chapter's own content — only the
+      // file's own trailing newline follows it (the OLD `< end` rule
+      // dropped this marker entirely, since offset === chapter-end never
+      // satisfied a strict `<`).
+      expect(p.text.slice(p.footnoteMarkers[0].offset)).toBe('\n');
+
+      const { chapters } = splitChapters(p);
+      expect(chapters).toHaveLength(1);
+      expect(chapters[0].footnoteMarkers).toHaveLength(1);
+      expect(chapters[0].footnoteMarkers[0].label).toBe('1');
+      expect(chapters[0].text.slice(0, chapters[0].footnoteMarkers[0].offset)).toBe('Last word.');
+      expect(p.footnotes['1']).toBe('A note on the very last word of the file.');
+    });
+
+    it('scenario (b): {1.1}A.[^1] {1.2}B. -> the marker belongs to chapter 1.1 at its end, NOT chapter 1.2 at offset 0', () => {
+      const raw = withFrontmatter('{1.1}A.[^1] {1.2}B.\n');
+      const p = parseTranslationFile(raw);
+      const { chapters } = splitChapters(p);
+      expect(chapters).toHaveLength(2);
+      expect(chapters[0].footnoteMarkers).toHaveLength(1);
+      expect(chapters[0].footnoteMarkers[0].label).toBe('1');
+      expect(chapters[0].text.slice(0, chapters[0].footnoteMarkers[0].offset)).toBe('A.');
+      expect(chapters[1].footnoteMarkers).toEqual([]);
+    });
+  });
+});
+
+describe('splitFootnoteBlock hardening (Fix 4, 2026-07-06 adversarial review)', () => {
+  it('a sentinel-shaped line mid-body whose "tail" is not definitions is NOT split — whole file stays body, with a warning', () => {
+    // An editorial comment that happens to quote the sentinel syntax,
+    // followed by ordinary prose rather than `[^label]:` definitions.
+    const raw =
+      'The translator here discusses the convention:\n' +
+      '<!-- footnotes -->\n' +
+      'This line is not a footnote definition, just more running prose\n' +
+      'that continues on for a while before the file ends.\n';
+    const result = splitFootnoteBlock(raw);
+    expect(result.body).toBe(raw);
+    expect(result.footnotes).toEqual({});
+    expect(result.warnings).toEqual([
+      'footnote block sentinel found but content is not definitions — treated as body',
+    ]);
+  });
+
+  it('a normal emitted file (sentinel at end, valid definitions) splits exactly as before, with no warning', () => {
+    const raw =
+      'Some chapter prose.[^1]\n\n' +
+      '<!-- footnotes -->\n' +
+      '[^1]: A genuine note.\n';
+    const result = splitFootnoteBlock(raw);
+    expect(result.body).toBe('Some chapter prose.[^1]\n');
+    expect(result.footnotes).toEqual({ '1': 'A genuine note.' });
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('uses the LAST sentinel line when more than one sentinel-shaped line appears, and still validates its own tail', () => {
+    const raw =
+      'Body text before.\n' +
+      '<!-- footnotes -->\n' +
+      'An editorial aside quoting the marker, not a definition.\n' +
+      '<!-- footnotes -->\n' +
+      '[^1]: The real note, after the real (last) sentinel.\n';
+    const result = splitFootnoteBlock(raw);
+    expect(result.footnotes).toEqual({ '1': 'The real note, after the real (last) sentinel.' });
+    expect(result.body).toBe(
+      'Body text before.\n' +
+        '<!-- footnotes -->\n' +
+        'An editorial aside quoting the marker, not a definition.'
+    );
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('a legacy file with no sentinel is untouched (re-run of the existing byte-identical pin, via parseTranslationFile)', () => {
+    const raw = withFrontmatter(
+      '{1.1}Every good thing, as it seems, is worth pursuing for its own sake.\n' +
+        '{1094a}But since there are many _sorts_ of actions, their ends are many too.\n' +
+        '{5}Some further point continues here for a while before the chapter ends.\n'
+    );
+    const p = parseTranslationFile(raw);
+    expect(p.footnoteMarkers).toEqual([]);
+    expect(p.footnotes).toEqual({});
+    expect(p.footnoteScope).toBe('continuous');
+    expect(p.warnings).toEqual([]);
+    expect(p.tags.map(t => t.kind)).toEqual(['chapter', 'column', 'line']);
+    expect(p.emphasis).toHaveLength(1);
+    expect(p.text).not.toMatch(/[[\]^]/);
+  });
 });

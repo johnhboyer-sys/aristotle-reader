@@ -523,3 +523,100 @@ the real Categories slice above) — only `per-chapter` survives from chapter 1�
 onward, and the verdict LOCKS at the third crossing (chapter 3→4), retroactively
 scoping every label (including chapter 1's own notes) `<book>.<chapter>.<N>` once
 emission reads the final `footnoteState.verdict`.
+
+## Adversarial review adjudications (2026-07-06)
+
+- **Finding 1 (major, confirmed/fixed)** — imported emphasis was silently
+  unpainted on any marker-bearing piece: `.fn-marker` (the footnote button
+  Reader.svelte renders for `[^label]`) was never excluded from the
+  desktop-side TreeWalkers that measure rendered prose text, so
+  `emphasis-paint.ts`'s DOM text included the button's rendered text while
+  `import-align.ts`'s stored `PieceEmphasis.pieceText` was built from
+  `finalPieceText` (the marker-*inserted* literal-`[^label]` text) — two
+  different character spaces that could only coincidentally agree, and
+  didn't once markers were involved. Fixed by (a) adding `.fn-marker` to
+  both TreeWalker exclusion selectors in `emphasis-paint.ts` (`proseText`,
+  `locate`) and to `annotations.ts`'s matching walkers (`proseOffsetAt` at
+  the capture side, plus `englishRange`'s render-side `locate` and
+  sub-range filter — all three needed the same addition to keep
+  capture/paint symmetric, not just the one line named in the brief); (b)
+  changing `import-align.ts`'s `emitOverlayPieces` to store
+  `PieceEmphasis.pieceText`/offsets against the piece's PRE-marker-insertion
+  text (`pieceText`, newline-stripped only, no `shiftForInsertions` carry)
+  instead of `finalPieceText`. New invariant, documented inline: painter DOM
+  text (`.fn-marker` excluded) === marker-free, newline-free piece text.
+  Tests: `import-align-footnotes.test.ts` — rewrote the bad pin ("shifts an
+  emphasis span after the marker...") into "does NOT shift an emphasis span
+  after the marker ('noble')..."; added a new regression describe block
+  "PieceEmphasis marker-free invariant (Fix 1 regression)" covering
+  `Every good[^1] thing.` end-to-end through `emitOverlayPieces`.
+
+- **Finding 2 (major, confirmed/fixed)** — a footnote marker glued exactly
+  at a chapter/piece boundary was dropped (when it was the file's very last
+  character) or misattributed to the wrong side, because both
+  `translation-file.ts`'s `splitChapters` and `import-align.ts`'s
+  `pieceMarkers` slicing used a half-open `[start, end)` filter. A marker is
+  glued right after the word it annotates, so a boundary-exact marker is
+  always the LAST character of the span it ends, never the first of the
+  next one. Fixed by switching both filters to `(offset > start && offset
+  <= end)`, with an explicit `offset === 0` admission for the very first
+  chapter/piece (whose lower bound would otherwise never admit anything at
+  the strict document start). Tests, both in
+  `translation-file-footnotes.test.ts`'s new "Fix 2" describe block:
+  scenario (a) `{1.1}Last word.[^1]` + block — marker now reaches chapter
+  1.1 (previously dropped entirely); scenario (b) `{1.1}A.[^1] {1.2}B.` —
+  confirms the marker still correctly lands in chapter 1.1, not 1.2 (this
+  case happened to already work under the old rule too — kept as a
+  regression guard, not a behavior change). No pinned integration marker
+  count changed: the NE-slice (224) and Categories-slice (43)
+  `footnoteMarkers` counts in `convert-slice.integration.test.ts` /
+  `cat-slice.integration.test.ts` are unchanged — neither real fixture
+  happens to glue a marker exactly on a chapter/piece boundary offset.
+
+- **Finding 3 (hardening, confirmed-contained/hardened)** — a `[^*]`
+  work-level footnote token had its `*` swallowed by `scanEmphasis`'s
+  stray-marker cleanup (it runs before `scanFootnoteMarkers`, per the
+  locked §B2 pipeline order, and a lone `*` inside `[^*]` was
+  indistinguishable to it from ordinary OCR-noise stray-asterisk shape).
+  This was previously a documented, deliberately-untested known limitation
+  (see the removed comment in `translation-file-footnotes.test.ts`,
+  justified there as "never arises in practice" since star/dagger notes are
+  work-level, routed to front matter, not glued into body prose). Genuinely
+  fixed rather than left contained: `emphasis.ts`'s `findMarkerRuns` now
+  skips a single `*` run whose immediate context is `[^` ... `]`
+  (`isFootnoteStarToken`) before it ever becomes an emphasis/stray
+  candidate — minimal, local change, no effect on `**`/`_` or on any `*`
+  outside that exact token shape. `†` is not in `MARKER_RUN`'s alphabet at
+  all, so it was never at risk (confirmed: the fix only needed to handle
+  `*`). Tests added to `translation-file-footnotes.test.ts`: `[^*]` body
+  marker + block round-trips to `{label:'*', display:'*'}` with clean text
+  `Credit.` and no leaked `*`; a control asserts an ordinary stray `*`
+  elsewhere in the body is still removed as OCR noise exactly as before.
+
+- **Finding 4 (minor, confirmed-minor/fixed)** — `splitFootnoteBlock` used
+  the FIRST sentinel-shaped line it found and split unconditionally; an
+  editorial comment mid-body that happened to quote or resemble
+  `<!-- footnotes -->` would silently truncate everything after it into a
+  bogus "footnote block" of ordinary prose. Fixed by (a) scanning for the
+  LAST sentinel-shaped line instead of the first, and (b) validating that
+  every non-blank line after it is either a definition (`^\[\^...\]:...`)
+  or a >=3-space continuation — if not, the split is abandoned, the whole
+  input is returned as `body` unchanged, and a warning
+  (`'footnote block sentinel found but content is not definitions — treated
+  as body'`) is threaded through `parseTranslationFile`'s `warnings` array
+  (via a new `warnings` field on `splitFootnoteBlock`'s return, merged
+  ahead of `scanTags`'s own warnings). Tests added to
+  `translation-file-footnotes.test.ts`'s new "splitFootnoteBlock hardening"
+  describe block: the Codex mid-body-editorial-comment case (not split,
+  warning surfaced); a normal emitted file (sentinel at end, valid
+  definitions — unchanged behavior, no warning); a file with two
+  sentinel-shaped lines (uses the last, still validates its own tail); and
+  a re-run of the legacy no-sentinel byte-identical pin (now also asserting
+  `warnings` is empty).
+
+**Suite results**: `npm test` — 112/112 passed (3 integration files
+conditionally skipped, no Reeve slice env vars). With
+`ARISTOTLE_REEVE_SLICE`/`ARISTOTLE_REEVE_CAT_SLICE` set — 133/133 passed,
+all previously-skipped integration pins included, no pin changes required.
+`npm run build` — clean (pre-existing Svelte a11y/unused-export warnings
+only, unrelated to this work).

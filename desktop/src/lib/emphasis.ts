@@ -101,10 +101,28 @@ interface MarkerRun { index: number; end: number; marker: '**' | '_' | '*'; }
 
 const MARKER_RUN = /\*\*|_|\*/g;
 
+// Fix 3: a single `*` that IS the entire label of a footnote-marker token
+// `[^*]` (preceded by `[^`, followed by `]`) is not an emphasis candidate at
+// all — it's the star/dagger work-level footnote vocabulary (§A3/§B5),
+// scanned by the later scanFootnoteMarkers pass, not markdown emphasis. This
+// module runs BEFORE scanFootnoteMarkers (locked pipeline order, §B2), so
+// without this exclusion that `*` looks exactly like an ordinary stray
+// asterisk and gets swallowed by the OCR-noise stray-marker cleanup below,
+// corrupting `[^*]` before the footnote pass ever sees it. `**` runs are
+// unambiguous (no footnote label is ever two stars) and are never checked
+// here; only the single-`*` case is at risk.
+function isFootnoteStarToken(text: string, index: number, end: number): boolean {
+  return text.slice(Math.max(0, index - 2), index) === '[^' && text[end] === ']';
+}
+
 function findMarkerRuns(text: string): MarkerRun[] {
   const runs: MarkerRun[] = [];
   for (const m of text.matchAll(MARKER_RUN)) {
-    runs.push({ index: m.index!, end: m.index! + m[0].length, marker: m[0] as '**' | '_' | '*' });
+    const marker = m[0] as '**' | '_' | '*';
+    const index = m.index!;
+    const end = index + m[0].length;
+    if (marker === '*' && isFootnoteStarToken(text, index, end)) continue;
+    runs.push({ index, end, marker });
   }
   return runs;
 }

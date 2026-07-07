@@ -242,11 +242,23 @@ function parseFootnoteDefs(lines: string[]): Record<string, string> {
  * aligned clean text. Backward compatibility: no sentinel found ⇒ the whole
  * input is returned as `body` unchanged, `footnotes` = {}, `footnoteScope` =
  * 'continuous' — a suffix-only removal that never touches a legacy file.
+ *
+ * Fix 4 hardening: uses the LAST sentinel-shaped line in the file, not the
+ * first — a translator's editorial comment mid-body could itself quote or
+ * closely resemble `<!-- footnotes -->`, and taking the first match would
+ * slice everything from THAT point to EOF into "the footnote block",
+ * silently truncating however much genuine body prose follows. Having found
+ * a candidate, the split is also validated: every non-blank line after it
+ * must look like a definition (`[^label]: ...`) or a >=3-space continuation
+ * of one. If it doesn't — the sentinel-shaped line was mid-body prose, not a
+ * real block boundary — the split is abandoned, the whole input is returned
+ * as `body` unchanged, and a warning is surfaced (never a silent truncation).
  */
 export function splitFootnoteBlock(body: string): {
   body: string;
   footnotes: Record<string, string>;
   footnoteScope: FootnoteScope;
+  warnings: string[];
 } {
   const lines = body.split(/\r?\n/);
   let sentinelIdx = -1;
@@ -254,16 +266,29 @@ export function splitFootnoteBlock(body: string): {
   for (let i = 0; i < lines.length; i++) {
     const m = FOOTNOTE_SENTINEL_RE.exec(lines[i]);
     if (m) {
-      sentinelIdx = i;
+      sentinelIdx = i; // keep scanning — the LAST match wins, not the first
       if (m[1]) scope = m[1] as FootnoteScope;
-      break;
     }
   }
-  if (sentinelIdx === -1) return { body, footnotes: {}, footnoteScope: 'continuous' };
+  if (sentinelIdx === -1) return { body, footnotes: {}, footnoteScope: 'continuous', warnings: [] };
+
+  const tail = lines.slice(sentinelIdx + 1);
+  const validTail = tail.every(line =>
+    line.trim() === '' || FOOTNOTE_DEF_RE.test(line) || FOOTNOTE_DEF_CONT_RE.test(line));
+  if (!validTail) {
+    return {
+      body,
+      footnotes: {},
+      footnoteScope: 'continuous',
+      warnings: ['footnote block sentinel found but content is not definitions — treated as body'],
+    };
+  }
+
   return {
     body: lines.slice(0, sentinelIdx).join('\n'),
-    footnotes: parseFootnoteDefs(lines.slice(sentinelIdx + 1)),
+    footnotes: parseFootnoteDefs(tail),
     footnoteScope: scope,
+    warnings: [],
   };
 }
 
@@ -521,7 +546,7 @@ export function parseTranslationFile(
   // §B1: slice the sentinel-delimited footnote block off the end FIRST — its
   // text never reaches normalizeParagraphBreaks/scanEmphasis/scanTags. A
   // legacy file with no sentinel passes rawBody through unchanged.
-  const { body: bodyBeforeFootnotes, footnotes, footnoteScope } = splitFootnoteBlock(rawBody);
+  const { body: bodyBeforeFootnotes, footnotes, footnoteScope, warnings: footnoteWarnings } = splitFootnoteBlock(rawBody);
   const body = normalizeParagraphBreaks(bodyBeforeFootnotes);
   const emphResult = scanEmphasis(body);
   let emphText = emphResult.text;      // {tag} and [^label] syntax still present, emphasis markers gone
@@ -547,7 +572,8 @@ export function parseTranslationFile(
   // footnote-marker offsets (already in fnText-space, their only carry)
   // through that same left-to-right removal, identically to how scanTags
   // places its own tag offsets.
-  const { text, tags, warnings } = scanTags(fnText);
+  const { text, tags, warnings: tagWarnings } = scanTags(fnText);
+  const warnings = [...footnoteWarnings, ...tagWarnings];
   const starts = rebaseThroughTagStrip(fnText, emphRanges.map(r => r.start));
   const ends = rebaseThroughTagStrip(fnText, emphRanges.map(r => r.end));
   const emphasis: EmphasisSpan[] = emphRanges.map((r, i) => ({ start: starts[i], end: ends[i], style: r.style }));
