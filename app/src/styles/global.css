@@ -122,6 +122,32 @@ body {
      browsers without it get a clean instant flip. */
 }
 
+.status-tag {
+  font-family: var(--font-ui);
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: 999px;
+  padding: .12rem .5rem;
+  background: color-mix(in srgb, var(--error) 7%, transparent);
+  white-space: nowrap;
+}
+
+.lp-status {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: .35rem 0 .75rem;
+}
+
+.lp-status-note {
+  color: var(--text-light);
+  font-family: var(--font-ui);
+  font-size: .8rem;
+}
+
 /* ── Layout ───────────────────────────────────────────────────────── */
 
 .page-header {
