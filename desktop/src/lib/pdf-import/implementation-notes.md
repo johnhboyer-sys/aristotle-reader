@@ -259,15 +259,35 @@ Real slice measured: 337 joined, 0 kept (every fragment in NE starts lowercase).
   !== null` — i.e. this whole sub-section only renders for a PDF-converted
   import, exactly per task scope.
 
-### Titles merge (task 2)
-- `getImportTitles(work)` merges every registered import's `titles` map for
-  that work in `registered`'s Map iteration order (session load/registration
-  order, not necessarily original import chronology) — "later imports win"
-  is documented as an ordering caveat, not a hard chronological guarantee.
-- `mergeChapterTitles(book, builtin, imported)` is the pure, unit-tested
-  "built-ins win, imports only fill a gap" rule, pulled out of App.svelte so
-  it's testable without mounting the component; App.svelte's `mergeTitles` is
-  now a two-line wrapper supplying `getImportTitles(work)`.
+### Titles render (task 2, REVISED 2026-07-06 — see below)
+- Original task-2 design merged an imported title INTO the shared
+  `chapterTitles` heading map (`getImportTitles`/`mergeChapterTitles`,
+  "built-ins win, imports fill gaps"). John reviewed in the real app and
+  rejected this: the shared heading row ("BOOK I, CHAPTER 1: …") is
+  work-level chrome every translation sees, but an imported title is that
+  ONE edition's own editorial paratext (a PDF's running head) — it should
+  never appear as if it were the work's title just because one translation's
+  source PDF happened to carry a heading.
+- **Revised design**: the title now renders as a small unaligned heading
+  INSIDE that import's own overlay column, at the start of its chapter —
+  never touching the shared `chapterTitles` map at all. `imports.ts`'s
+  `getImportTitle(work, id, book, chapter)` (pure core: `resolveImportTitle`,
+  mirroring `getImportFootnote`/`resolveImportFootnote`) resolves ONE
+  registered import's own title for ONE `book.chapter`, wired through a new
+  `__ARISTOTLE_IMPORT_TITLE_HOOK__` window hook — same site-shared pattern as
+  `__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__` below. Reader.svelte's `transFlow`
+  snippet renders it as a `.ross-chapter-title` div, above the flow content,
+  only for the block where `block.chapter` starts AND that transId's own
+  `oflows[transId]` is non-empty (i.e. this import actually has a piece
+  starting that chapter here) — so it appears exactly once, at the true
+  opening of the chapter in that translation's own text. Render-only: the
+  title text is never written into `RossPiece.text` or any offset-bearing
+  stream, so no anchor shifts; no `.bk-num` gutter tick ever renders beside
+  it (it's a plain sibling div, not a `flow` part); excluded from clean-copy
+  via `.ross-chapter-title` added to `annotations.ts`'s
+  `COPY_EXCLUDE_SELECTOR`, the same way `.fn-marker` already is.
+- `App.svelte`'s `chapterTitles` reverts to built-in `chapter-titles.json`
+  only — `mergeTitles`/`getImportTitles`/`mergeChapterTitles` are gone.
 
 ### Footnote render wiring (§B4) — the site-inertness argument
 Reader.svelte and FootnotePopup.svelte are the SAME files served by the
