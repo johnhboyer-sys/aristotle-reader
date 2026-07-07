@@ -1,0 +1,10 @@
+id: posterior-analytics
+title: "Posterior Analytics"
+author: "Aristotle"
+original_language: greek
+citation_scheme: bekker-standard
+tlg_author: "0086"
+tlg_work: "001"
+books:
+  - { n: 1, label: "I" }
+  - { n: 2, label: "II" }

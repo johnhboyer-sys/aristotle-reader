@@ -31,6 +31,7 @@ english:
     dir: "ha-thompson"
     books: 9
     chapter_marker: part
+    anchors: "ha-thompson/anchors.yaml"
 
 # Books II–IX each begin partway down a Bekker column (the previous book ends a
 # few lines into the same column).

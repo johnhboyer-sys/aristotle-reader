@@ -45,7 +45,10 @@ describe('imports', () => {
       anchors: [],
       stats: { tagged: 1, placed: 0, interpolated: 0 },
     });
-    mocks.emitOverlayPieces.mockReturnValue({ seg1: [{ chapter: '1', text: 'Happiness.', cont: false }] });
+    mocks.emitOverlayPieces.mockReturnValue({
+      pieces: { seg1: [{ chapter: '1', text: 'Happiness.', cont: false }] },
+      emphasis: {},
+    });
   });
 
   it('imports tagged translation content, writes browser storage, and formats runtime citation metadata', async () => {
@@ -85,7 +88,7 @@ describe('imports', () => {
     expect((globalThis as { __ARISTOTLE_EXTRA_TRANSLATIONS__?: Record<string, unknown[]> })
       .__ARISTOTLE_EXTRA_TRANSLATIONS__?.ethics[0]).toMatchObject({
       id: 'jane-doe-ethics',
-      name: 'Jane Doe (1901) — imported',
+      name: 'Jane Doe (1901) ⓘ',
       short: 'Jane Doe',
       slot: 'overlay',
     });

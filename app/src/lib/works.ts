@@ -75,7 +75,14 @@ export interface Work {
   // work (ids of built works), surfaced in a "Commentary" section on the
   // landing page. The Categories carries Porphyry's Isagoge.
   commentaries?: string[];
+  /** Authorship status. Absent ⇒ genuine. Drives the homepage/landing badge. */
+  authenticity?: 'genuine' | 'dubious' | 'spurious';
 }
+
+export const AUTHENTICITY_LABEL: Record<'dubious' | 'spurious', string> = {
+  dubious: 'Dubious',
+  spurious: 'Spurious',
+};
 
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 
@@ -655,6 +662,29 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
   },
   {
+    id: 'Oec',
+    title: 'Oeconomica',
+    greekTitle: 'Οἰκονομικά',
+    abbr: 'Oec.',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'Susemihl, Aristotelis quae feruntur Oeconomica (Teubner, 1887)',
+    greekSource: {
+      short: 'Susemihl (Teubner, 1887)',
+      full: 'F. Susemihl, ed. Aristotelis quae feruntur Oeconomica. Leipzig: Teubner, 1887.',
+    },
+    authenticity: 'spurious',
+    // Spurious/post-Aristotelian: Book I is possibly by a pupil, Book II by a
+    // later Peripatetic. The Greek transmits only Books I–II; the traditional
+    // Book III survives solely in medieval Latin and is omitted. Forster
+    // (Oxford, 1920, PD) is the sole translation; Bekker gutter interpolated.
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1920)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'A short treatise on household and civic economy — transmitted with Aristotle but not by him.',
+  },
+  {
     id: 'Rhet',
     title: 'Rhetoric',
     abbr: 'Rhet.',
@@ -1022,6 +1052,7 @@ export const CATEGORIES: Category[] = [
       { id: 'EN' },
       { id: 'EE' },
       { id: 'Pol' },
+      { id: 'Oec' },
     ],
   },
   {

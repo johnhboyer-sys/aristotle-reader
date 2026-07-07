@@ -112,6 +112,25 @@
     for (const id of ids) selectedWorks.add(id);
     selectedWorks = selectedWorks;
   }
+
+  // Authenticity scope — quick-filter the selection by authorship status.
+  // "Genuine" = works with no authenticity flag (or explicitly 'genuine'); the
+  // others match the tagged works. Each acts like a division "only": clicking it
+  // narrows the selection to exactly that class. Empty classes render disabled.
+  const AUTH_SCOPES = [
+    { key: 'all',      label: 'All',      ids: WORKS.map((w) => w.id) },
+    { key: 'genuine',  label: 'Genuine',  ids: WORKS.filter((w) => !w.authenticity || w.authenticity === 'genuine').map((w) => w.id) },
+    { key: 'dubious',  label: 'Dubious',  ids: WORKS.filter((w) => w.authenticity === 'dubious').map((w) => w.id) },
+    { key: 'spurious', label: 'Spurious', ids: WORKS.filter((w) => w.authenticity === 'spurious').map((w) => w.id) },
+  ] as const;
+  // Which scope (if any) the current selection exactly matches — drives the active pill.
+  $: activeAuthScope = allSelected
+    ? 'all'
+    : (AUTH_SCOPES.find(
+        (s) => s.key !== 'all' && s.ids.length > 0 &&
+          s.ids.length === selectedWorks.size && s.ids.every((id) => selectedWorks.has(id)),
+      )?.key ?? null);
+
   // Compact summary for the collapsed trigger.
   $: worksSummary = allSelected
     ? 'All works'
@@ -696,6 +715,20 @@
             <button type="button" class="works-action" on:click={clearWorks} disabled={selectedWorks.size === 0}>Clear</button>
           </div>
 
+          <div class="works-auth" role="group" aria-label="Filter works by authorship status">
+            {#each AUTH_SCOPES as s}
+              <button
+                type="button"
+                class="auth-btn"
+                class:on={activeAuthScope === s.key}
+                aria-pressed={activeAuthScope === s.key}
+                disabled={s.ids.length === 0}
+                on:click={() => selectOnly(s.ids)}
+                title={s.key === 'all' ? 'Search all works' : `Search only ${s.label.toLowerCase()} works`}
+              >{s.label}{#if s.key !== 'all'}<span class="auth-count">{s.ids.length}</span>{/if}</button>
+            {/each}
+          </div>
+
           {#each WORK_GROUPS as grp}
             {@const gs = groupState(grp.ids)}
             <div class="works-group">
@@ -1005,6 +1038,25 @@
     cursor: pointer;
   }
   .works-action:disabled { opacity: 0.45; cursor: default; }
+  .works-auth { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.55rem; }
+  .auth-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.18rem 0.6rem;
+    cursor: pointer;
+  }
+  .auth-btn:hover:not(:disabled) { border-color: var(--accent-light); color: var(--accent); }
+  .auth-btn.on { color: var(--accent); border-color: var(--accent-light); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .auth-btn:disabled { opacity: 0.4; cursor: default; }
+  .auth-count { font-size: 0.66rem; opacity: 0.6; font-variant-numeric: tabular-nums; }
   .works-group { margin-top: 0.6rem; }
   .works-group-head {
     display: flex;

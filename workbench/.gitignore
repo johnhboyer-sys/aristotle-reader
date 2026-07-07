@@ -1,0 +1,25 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+.DS_Store
+
+# Machine-generated dev corpus (spine.json/chapters.json built from the local
+# TLG via Diogenes). TLG-derived text must NEVER be committed.
+.dev-corpus/
+
+# Staged bundle resources (chapters.json/analyses.json/lsj) copied at package
+# time by scripts/stage-corpus-resources.mjs from build/dist in the main
+# checkout. Not TLG text, but pipeline build output — never committed.
+src-tauri/resources/corpus/
+
+# Imported reference-translation OCR (design doc D5): private-study copies of
+# copyrighted translations. Belt-and-suspenders guard — the real location is
+# outside the repo entirely (referenceRoot, default $APPDATA/references), but
+# this stops an accidental symlink/copy into the tree from being committed.
+references/
+src-tauri/resources/references/
+
+# Product screenshots (npm run shots) and local launch config.
+shots/
+.claude/

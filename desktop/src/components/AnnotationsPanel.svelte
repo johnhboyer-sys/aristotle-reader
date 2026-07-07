@@ -8,11 +8,11 @@
   // labelled), never silently hidden — a highlight on Ostwald's phrasing must
   // not masquerade as a highlight on Rackham's.
   import {
-    annotationLabel, deleteAnnotation, updateAnnotation, type Annotation,
+    annColor, annStyle, annotationLabel, deleteAnnotation, updateAnnotation, type Annotation,
   } from '../lib/annotations';
 
   export let work: string;
-  export let activeTranslation: string;
+  export let shown: string[];               // translation id(s) on screen (mono: 1; compare: 2)
   export let annotations: Annotation[] = [];
   export let onChanged: () => void;         // persist happened → repaint/reload
   export let onJump: (a: Annotation) => void;
@@ -23,11 +23,22 @@
   let editing: string | null = null;
   let editText = '';
 
-  $: shown = annotations.filter(a =>
+  // Mirrors the ann-hl-<color> fill values in desktop.css (light-theme rgba)
+  // so the panel's swatch chip previews the same paint as the reader.
+  const SWATCH_RGBA: Record<string, string> = {
+    yellow: 'rgba(235,195,80,0.9)',
+    green: 'rgba(120,190,120,0.9)',
+    pink: 'rgba(230,120,140,0.9)',
+    blue: 'rgba(120,165,225,0.9)',
+    purple: 'rgba(175,135,220,0.9)',
+    orange: 'rgba(235,150,70,0.9)',
+  };
+
+  $: visible = annotations.filter(a =>
     filter === 'all' ? true : filter === 'notes' ? a.body !== '' : a.body === '');
 
   const dimmed = (a: Annotation): boolean =>
-    a.layer.startsWith('translation:') && a.layer !== `translation:${activeTranslation}`;
+    a.layer.startsWith('translation:') && !shown.includes(a.layer.slice('translation:'.length));
 
   function startEdit(a: Annotation) {
     editing = a.id;
@@ -56,7 +67,7 @@
     {/each}
   </div>
 
-  {#if shown.length === 0}
+  {#if visible.length === 0}
     <p class="ann-empty">
       {annotations.length === 0
         ? 'Nothing here yet — select text in the reader to highlight it or attach a note.'
@@ -64,8 +75,13 @@
     </p>
   {:else}
     <ul class="ann-list">
-      {#each shown as a (a.id)}
+      {#each visible as a (a.id)}
         <li class:dim={dimmed(a)}>
+          <span
+            class="ann-swatch"
+            style="background:{SWATCH_RGBA[annColor(a)]}"
+            title="{annColor(a)} {annStyle(a)}"
+          ></span>
           <button class="ann-cite" on:click={() => onJump(a)} title="Jump to this passage">
             {annotationLabel(a)}
           </button>
@@ -128,6 +144,11 @@
   .ann-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
   .ann-list li { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.7rem; }
   .ann-list li.dim { opacity: 0.55; }
+  .ann-swatch {
+    display: inline-block; width: 0.62rem; height: 0.62rem; border-radius: 50%;
+    margin-right: 0.4rem; vertical-align: middle;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+  }
   .ann-cite {
     font: inherit; font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums;
     color: var(--accent); background: none; border: none; padding: 0; cursor: pointer;

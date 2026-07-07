@@ -18,6 +18,12 @@ tauri-plugin-dialog = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-updater = "2"
+# Required (not unused): generate_context!() expands to serde_json paths when the
+# updater config is present — i.e. signed release builds via
+# tauri.release.conf.json. Without it the release build fails with "cannot find
+# serde_json in the crate root" (dev builds carry no updater config, so they don't
+# hit it — which is why this went unnoticed until the first signed build).
+serde_json = "1"
 
 [lib]
 name = "aristotle_reader_desktop_lib"

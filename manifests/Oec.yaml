@@ -1,0 +1,47 @@
+# Oeconomica — pipeline manifest
+#
+# Greek spine from the cached TLG export; chapter (section) structure from the
+# Perseus grc TEI; primary English = E. S. Forster (Oxford, 1920), public
+# domain archive HTML, distributed across the Bekker columns with an
+# interpolated gutter.
+
+work:
+  id: Oec
+  title: "Oeconomica"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "029"
+  authenticity: spurious
+  greek_edition: "Susemihl, Aristotelis quae feruntur Oeconomica (Teubner, 1887)"
+  english_translation: "E. S. Forster (Oxford, 1920)"
+
+bekker_range:
+  first_column: "1343a"
+  last_column: "1353b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg029.perseus-grc2.xml"
+  chapter_subtype: section
+
+english:
+  primary:
+    id: forster
+    name: "E. S. Forster (Oxford, 1920)"
+    model: archive
+    dir: "oec-forster"
+    books: 2
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "1343a1", end: "1345b3" }
+  - { n: 2, start: "1345b7", end: "1353b27" }
+
+expected_line_gaps:
+  - { column: "1345b", after: 3, next: 7 }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

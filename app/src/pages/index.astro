@@ -1,5 +1,5 @@
 ---
-import { CATEGORIES, getWork, workLanding, type Work } from '../lib/works';
+import { AUTHENTICITY_LABEL, CATEGORIES, getWork, workLanding, type Work } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
@@ -166,6 +166,8 @@ const structuredData = Astro.site
                         <span class="work-name">{c.work.title}</span>
                         <span class="work-blurb">{c.work.blurb}</span>
                         <span class="work-meta">{c.work.abbr} · {c.work.books} book{c.work.books > 1 ? 's' : ''}</span>
+                        {c.work.authenticity && c.work.authenticity !== 'genuine' &&
+                          <span class="status-tag">{AUTHENTICITY_LABEL[c.work.authenticity]}</span>}
                       </a>
                     ) : (
                       <div class="work-card soon" aria-disabled="true">

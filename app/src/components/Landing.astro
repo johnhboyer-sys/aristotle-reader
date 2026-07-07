@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import {
-  getWork, bookLabel, isBookless, workPath, visibleTranslations,
+  AUTHENTICITY_LABEL, getWork, bookLabel, isBookless, workPath, visibleTranslations,
   furtherReading, inPrintHref, workLanding,
 } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
@@ -182,7 +182,13 @@ const breadcrumbLd = Astro.site
   <main class="lp-body">
     <p class="lp-eyebrow">{work.author} · {work.abbr}</p>
     <h1 class="lp-title">{work.title}</h1>
-      {work.greekTitle && <p class="lp-greek" lang="grc">{work.greekTitle}</p>}
+    {work.authenticity && work.authenticity !== 'genuine' && (
+      <p class="lp-status">
+        <span class="status-tag">{AUTHENTICITY_LABEL[work.authenticity]}</span>
+        <span class="lp-status-note">Authorship traditionally doubted — transmitted in the Aristotelian corpus but widely judged not to be by Aristotle.</span>
+      </p>
+    )}
+    {work.greekTitle && <p class="lp-greek" lang="grc">{work.greekTitle}</p>}
     <p class="lp-lede">{work.blurb}</p>
     <p class="lp-desc">
       This edition presents the original Greek ({work.greekSource.short}) side by

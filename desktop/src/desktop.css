@@ -14,37 +14,142 @@ html, body { margin: 0; }
    edition's spine and a wrapped line breaks it. English takes the rest.
    Guarded to wide windows; compare view (3 columns) keeps the site layout.
    At extreme font scaling the Greek column may exceed the cap — the English
-   column then narrows rather than the Greek line wrapping. */
+   column then narrows rather than the Greek line wrapping.
+
+   :not(.word-open) — the word/definition sidebar (site component, fixed-
+   position overlay; see global.css .word-sidebar) claims real width via
+   padding-right on .reader-body but, unlike the rail/annotations panel,
+   never toggles .dt-no-rails off, since it's the site's own overlay and
+   knows nothing about the desktop shell's rail/annotations state. Without
+   this guard the Greek column stays locked at max-content while the
+   English column absorbs the sidebar's ~368px in addition to the existing
+   1200px immersion cap — squeezing English into an unreadable ribbon with
+   dead space left over (the cap doesn't shrink to match). Falling back to
+   the site's plain .reader-body (1080px cap, equal Greek/English split,
+   Greek free to wrap) while the sidebar is open reproduces the same
+   graceful reflow the Annotations panel already gets from leaving
+   .dt-no-rails altogether. */
 @media (min-width: 1100px) {
-  .dt-shell.dt-no-rails .reader-body { max-width: calc(1200px * var(--colw-scale, 1)); }
-  .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare) .seg-row {
+  /* The immersion cap must grow with the Text-size setting too: the Greek
+     column is max-content (unwrappable), so at e.g. 140% type a fixed budget
+     is eaten by the Greek line and the English column shrinks instead of
+     growing. Viewport-capped so large type on small windows can't overflow. */
+  .dt-shell.dt-no-rails .reader-body:not(.word-open) {
+    max-width: min(calc(1200px * var(--colw-scale, 1) * var(--fs-scale, 1)), calc(100% - 1rem));
+  }
+  .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare):not(.word-open) .seg-row {
     grid-template-columns: max-content minmax(0, 1fr);
   }
   /* English matches the Greek column's width (the unwrapped Bekker lines
      run ~35rem at default type size) — the two columns read as equal
      halves of an opening, not prose stretched to fill the extra page.
-     The Column width slider scales the English measure; the Greek column
-     is content-sized and cannot narrow without wrapping a Bekker line. */
-  .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare) .english-col {
-    max-width: calc(35rem * var(--colw-scale, 1));
+     The Column width slider AND the Text size slider both scale the
+     English measure (--colw-scale / --fs-scale, both set inline on
+     .reader-body by Reader.svelte) — 35rem is a root-em value, so without
+     --fs-scale the cap wouldn't track the Text size setting and larger
+     type would just shrink the effective characters-per-line. The Greek
+     column is content-sized and cannot narrow without wrapping a Bekker
+     line. */
+  .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare):not(.word-open) .english-col {
+    max-width: calc(35rem * var(--colw-scale, 1) * var(--fs-scale, 1));
   }
-  .dt-shell.dt-no-rails .reader-body.view-greek .greek-col {
+  .dt-shell.dt-no-rails .reader-body.view-greek:not(.word-open) .greek-col {
     max-width: max-content;
+  }
+
+  /* The word sidebar (global.css .word-sidebar) is position:fixed — unlike
+     the rail/annotations panel it never shrinks .dt-main as a flex sibling,
+     so .reader-body's `margin: 0 auto` still centers against the FULL
+     window width, and the site's own clearance for the sidebar is INNER
+     padding-right (calc(min(22rem,86vw) + 1rem)) — space subtracted from
+     .reader-body's own content box, on top of an already-centered box that
+     leaves an equal (unclaimed) margin on the left. Both combine into the
+     dead gap: the box is centered too far left, and then loses more of its
+     own width to padding that duplicates the same clearance.
+     Fix: claim the sidebar's footprint as outer margin instead (so the box
+     is centered in the space actually left of the sidebar, exactly like
+     the annotations panel's real flex-sibling narrowing), and zero out the
+     site's inner padding so that reserved width isn't subtracted twice.
+
+     max-width: the site's plain 1080px cap is a constant — it doesn't know
+     the rail is a flex sibling of .dt-main, so closing the rail (which
+     really does hand .dt-main ~290px more room) left the reader stuck at
+     1080px either way, wasting that width. .reader-body sits directly in
+     .dt-main (Reader.svelte renders it with no wrapping element — see
+     App.svelte's {#key} block), so `%` here resolves against .dt-main's
+     own box, which already excludes the rail. Deriving the cap from that
+     100% (minus the sidebar footprint + the same margins used above) makes
+     the reader re-measure to whatever .dt-main actually has free, in both
+     rail states, while min(1400px, …) still stops lines from running
+     absurdly long on very wide monitors. --colw-scale/--fs-scale aren't
+     folded in here (unlike the full-immersion cap above): this is an
+     outer ceiling on the whole reader box, not the per-column measure —
+     the Column-width/Text-size sliders still act on .english-col beneath
+     it via the site's own rules, same as the plain 1080px cap they scaled
+     against before. */
+  .dt-shell .reader-body.word-open {
+    margin-left: auto;
+    margin-right: calc(min(22rem, 86vw) - 1rem);
+    padding-right: 1rem;
+    max-width: min(1400px, calc(100% - min(22rem, 86vw) - 1rem));
   }
 }
 
-/* Annotation paint (CSS Custom Highlight API — no reader DOM mutation).
-   Highlights read as a marker wash; notes add a dotted underline cue. */
-::highlight(ann-highlight) {
-  background-color: rgba(235, 195, 80, 0.38);
-}
-::highlight(ann-note) {
-  background-color: rgba(228, 160, 90, 0.42);
-  text-decoration: underline dotted;
-}
-[data-theme='dark'] ::highlight(ann-highlight) {
-  background-color: rgba(200, 160, 60, 0.32);
-}
-[data-theme='dark'] ::highlight(ann-note) {
-  background-color: rgba(210, 140, 70, 0.35);
-}
+/* Annotation paint — 6 colors × {highlight fill, underline}, + a note cue.
+   Light values first; dark overrides below. Alpha keeps text legible. */
+::highlight(ann-hl-yellow) { background-color: rgba(235,195,80,0.40); }
+::highlight(ann-hl-green)  { background-color: rgba(120,190,120,0.38); }
+::highlight(ann-hl-pink)   { background-color: rgba(230,120,140,0.34); }
+::highlight(ann-hl-blue)   { background-color: rgba(120,165,225,0.34); }
+::highlight(ann-hl-purple) { background-color: rgba(175,135,220,0.34); }
+::highlight(ann-hl-orange) { background-color: rgba(235,150,70,0.38); }
+
+::highlight(ann-ul-yellow) { text-decoration: underline; text-decoration-color: rgb(200,150,40); text-decoration-thickness: 2px; }
+::highlight(ann-ul-green)  { text-decoration: underline; text-decoration-color: rgb(70,150,80);  text-decoration-thickness: 2px; }
+::highlight(ann-ul-pink)   { text-decoration: underline; text-decoration-color: rgb(200,80,110);  text-decoration-thickness: 2px; }
+::highlight(ann-ul-blue)   { text-decoration: underline; text-decoration-color: rgb(70,120,200);  text-decoration-thickness: 2px; }
+::highlight(ann-ul-purple) { text-decoration: underline; text-decoration-color: rgb(140,90,200);  text-decoration-thickness: 2px; }
+::highlight(ann-ul-orange) { text-decoration: underline; text-decoration-color: rgb(210,110,30);  text-decoration-thickness: 2px; }
+
+/* Note cue: any annotation with a comment also gets a dotted underline,
+   independent of its fill/underline style (Papers "has a note" tell). */
+::highlight(ann-note-cue) { text-decoration: underline dotted; text-decoration-thickness: 1px; }
+
+[data-theme='dark'] ::highlight(ann-hl-yellow) { background-color: rgba(205,165,60,0.30); }
+[data-theme='dark'] ::highlight(ann-hl-green)  { background-color: rgba(110,175,110,0.28); }
+[data-theme='dark'] ::highlight(ann-hl-pink)   { background-color: rgba(215,110,135,0.28); }
+[data-theme='dark'] ::highlight(ann-hl-blue)   { background-color: rgba(110,155,215,0.28); }
+[data-theme='dark'] ::highlight(ann-hl-purple) { background-color: rgba(165,125,210,0.28); }
+[data-theme='dark'] ::highlight(ann-hl-orange) { background-color: rgba(215,135,55,0.30); }
+[data-theme='dark'] ::highlight(ann-ul-yellow) { text-decoration-color: rgb(220,180,90);  }
+[data-theme='dark'] ::highlight(ann-ul-green)  { text-decoration-color: rgb(120,195,130); }
+[data-theme='dark'] ::highlight(ann-ul-pink)   { text-decoration-color: rgb(225,130,155); }
+[data-theme='dark'] ::highlight(ann-ul-blue)   { text-decoration-color: rgb(130,175,230); }
+[data-theme='dark'] ::highlight(ann-ul-purple) { text-decoration-color: rgb(185,145,225); }
+[data-theme='dark'] ::highlight(ann-ul-orange) { text-decoration-color: rgb(230,155,80);  }
+
+/* Pending highlight: the note editor's provisional "this is what the note is
+   about" paint (registered/cleared by annotations.ts paintPending/clearPending
+   — see App.svelte openNoteEditor/saveNote/cancelNote). One shared highlight
+   name ('ann-pending'), colored via a `data-ann-pending-color` attribute set
+   on <html> at open time — same alpha values as the matching ann-hl-<color>
+   fill so the preview matches the eventual saved paint exactly. Dark overrides
+   mirror the ann-hl-<color> dark values above. */
+[data-ann-pending-color='yellow'] ::highlight(ann-pending) { background-color: rgba(235,195,80,0.40); }
+[data-ann-pending-color='green']  ::highlight(ann-pending) { background-color: rgba(120,190,120,0.38); }
+[data-ann-pending-color='pink']   ::highlight(ann-pending) { background-color: rgba(230,120,140,0.34); }
+[data-ann-pending-color='blue']   ::highlight(ann-pending) { background-color: rgba(120,165,225,0.34); }
+[data-ann-pending-color='purple'] ::highlight(ann-pending) { background-color: rgba(175,135,220,0.34); }
+[data-ann-pending-color='orange'] ::highlight(ann-pending) { background-color: rgba(235,150,70,0.38); }
+
+[data-theme='dark'][data-ann-pending-color='yellow'] ::highlight(ann-pending) { background-color: rgba(205,165,60,0.30); }
+[data-theme='dark'][data-ann-pending-color='green']  ::highlight(ann-pending) { background-color: rgba(110,175,110,0.28); }
+[data-theme='dark'][data-ann-pending-color='pink']   ::highlight(ann-pending) { background-color: rgba(215,110,135,0.28); }
+[data-theme='dark'][data-ann-pending-color='blue']   ::highlight(ann-pending) { background-color: rgba(110,155,215,0.28); }
+[data-theme='dark'][data-ann-pending-color='purple'] ::highlight(ann-pending) { background-color: rgba(165,125,210,0.28); }
+[data-theme='dark'][data-ann-pending-color='orange'] ::highlight(ann-pending) { background-color: rgba(215,135,55,0.30); }
+
+/* The desktop app has NO selection-anchored popups: the site's Copy pill is
+   replaced by the right-click menu (Copy / Copy with citation). Site build
+   never loads this file — .copy-cite-btn is unaffected on the web. */
+.copy-cite-btn { display: none; }

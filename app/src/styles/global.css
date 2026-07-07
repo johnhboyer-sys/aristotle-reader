@@ -122,6 +122,32 @@ body {
      browsers without it get a clean instant flip. */
 }
 
+.status-tag {
+  font-family: var(--font-ui);
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: 999px;
+  padding: .12rem .5rem;
+  background: color-mix(in srgb, var(--error) 7%, transparent);
+  white-space: nowrap;
+}
+
+.lp-status {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: .35rem 0 .75rem;
+}
+
+.lp-status-note {
+  color: var(--text-light);
+  font-family: var(--font-ui);
+  font-size: .8rem;
+}
+
 /* ── Layout ───────────────────────────────────────────────────────── */
 
 .page-header {
@@ -472,6 +498,16 @@ body {
   padding: 0.5rem 0;
   background: var(--page-bg);
   border-bottom: 1px solid var(--border);
+  /* This strip is sticky chrome pinned over the reading text. When a text line
+     scrolls beneath it and the reader starts a selection drag on that partly-
+     covered line, WebKit (WKWebView / Safari) resolves the caret to the strip's
+     OWN text — the "Both"/"English" toggle labels, the citation — which sit ~one
+     line above the cursor, so the selection lands one line too high. (Chromium
+     never drag-selects the overlapping sticky element, so it doesn't reproduce.)
+     Making the strip's text unselectable stops WebKit from extending a selection
+     into the header band; interactive controls (buttons/selects) still work. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 /* Cover band: paints page-bg in the slice directly above the pinned strip so
    reading text can never bleed through if a browser (Safari, notably) leaves a
@@ -823,6 +859,9 @@ body {
   min-width: 1.8rem;
   text-align: right;
   flex-shrink: 0;
+  /* Both prefixes: WKWebView (the desktop app's engine) honours only the
+     -webkit- form, without which a drag-selection grabs the gutter numeral. */
+  -webkit-user-select: none;
   user-select: none;
   /* Equal-width digits so the right-aligned Bekker numerals form a clean
      vertical column (5, 10, 15… 100 line up on the same advance). */
@@ -855,13 +894,17 @@ body {
 
 .tok {
   cursor: pointer;
-  border: 1px solid transparent;
   border-radius: 3px;
-  padding: 0 0.1em;
-  transition: background 0.1s, border-color 0.1s;
+  padding: 0;
+  transition: background 0.1s, box-shadow 0.1s;
   white-space: pre;
 }
-.tok:hover  { background: var(--greek-hover); border-color: var(--greek-hover-border); }
+/* Hover ring via box-shadow, not border: a border reserves 1px of horizontal
+   layout on every token, which leaves thin unpainted gaps in a continuous
+   annotation highlight (the CSS Custom Highlight fill can't cross the border
+   box). box-shadow draws the same 1px ring without taking layout space, so
+   highlighted runs read as one continuous band. */
+.tok:hover  { background: var(--greek-hover); box-shadow: 0 0 0 1px var(--greek-hover-border); }
 .tok.active { background: var(--greek-active); }
 .tok.hit    { background: var(--hit-bg); }
 
