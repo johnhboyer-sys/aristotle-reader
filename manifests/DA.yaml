@@ -41,7 +41,7 @@ english:
     dir: "da-smith"
     books: 3
     chapter_marker: part          # "Part N" lines (Ross archive uses bare numbers)
-    # anchors: "da-smith/anchors.yaml"   # optional hand-keyed Bekker anchors
+    anchors: "da-smith/anchors.yaml"   # Tier 2 gloss-aligned Bekker anchors (vid=smith)
   # Second translation: Edwin Wallace (Cambridge, 1882), public domain, from
   # Wikisource ("Aristotle's Psychology"). Chapter counts per book (5/12/13)
   # match the canonical grc-TEI division exactly, so this is a clean Tier 0
