@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { loadCorpusConfig, type CorpusConfig } from '../src/lib/ocr-repair/corpus-config';
 import { grade, formatSummary, diffSummaries, type GradeSummary } from '../src/lib/ocr-repair/grade';
 import { slicePages } from '../src/lib/ocr-repair/slice';
+import { repairSkeleton } from '../src/lib/ocr-repair/skeleton';
 
 interface StageResult {
   text: string;
@@ -42,6 +43,11 @@ const STAGES: Stage[] = [
       if (backMatter) artifacts['removed-back-matter.txt'] = backMatter;
       return { text: sliced, changes, artifacts };
     },
+  },
+  {
+    n: 2,
+    name: 'skeleton',
+    run: (text, config) => repairSkeleton(text, config),
   },
 ];
 

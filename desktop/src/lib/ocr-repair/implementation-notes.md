@@ -110,12 +110,84 @@ Divisions completeness explicitly MOVES to stage 2 — three measured causes:
    heading" as a headless page and insert the placeholder above it.
 2. **APo names books in Greek-letter ordinals** (`BOOK ALPHA`/`BOOK BETA`),
    which the frozen converter's number vocabulary (Arabic/Roman/spelled
-   English) cannot parse. Repair-side Tier-1 normalization ALPHA→ONE,
-   BETA→TWO planned; per-record before/after preserves what the print says.
-   FLAGGED to John at the stage-1 checkpoint (it re-spells a printed word).
+   English) cannot parse. Tier-1 normalization ALPHA→ONE, BETA→TWO;
+   per-record before/after preserves what the print says. **JOHN APPROVED
+   2026-07-07** ("we repair these as you suggest" — he keeps the Greek-letter
+   convention only for Metaphysics).
 3. **Chapter numerals are OCR-garbled** in both translations (`CHAPTER IO`,
    `I I`, `I3`, `IS`, `2 I`, `3I` for 10/11/13/15/21/31 …) — Tier-1
    letter-for-digit normalization on heading lines only, stage 2.
+
+## Stage 2 — skeleton repair (2026-07-07)
+
+`skeleton.ts`, three ordered passes, all Tier 1 + logged:
+
+1. **head-insert** — a page whose first non-blank line is a BOOK heading with
+   CHAPTER 1 as the next non-blank line is a book-opening page that printed no
+   running head; insert the config placeholder + blank above it (5 pages: PA
+   15/46/76, APo 0/47). The CHAPTER-1 condition is what spares PA's recto
+   running heads (`BOOK ONE` over chapters 2/3/4/10).
+2. **heading-normalize** — document-order walk (book, chapter), skipping each
+   page's first non-blank line. Greek book ordinals rewritten (ALPHA→ONE,
+   BETA→TWO; John-approved). Garbled chapter numerals repaired ONLY when the
+   confusion-map value equals the expected next chapter (12 PA + 18 APo, all
+   sequence-forced); otherwise Tier-2 flag.
+3. **folio-repair** — last-non-blank-line candidates in the confusion charset;
+   cadence constant inferred from clean folios; garbles rewritten only when
+   shape-map == cadence expectation; conflicts flagged (APo p57 `ss`, cadence
+   58 vs shape 55, left + flagged).
+
+**Discovery — heading numerals get eaten as gutter tics.** Wide keyword→
+numeral gaps (`CHAPTER      10`) put the numeral at col ≥40 behind a ≥4-space
+run — exactly the converter's trailing-tic shape — so the gutter scanner
+claimed it and the heading lost its number (PA emitted only 36/51 chapters
+on the first stage-2 run; the missing 15 were position-, not numeral-,
+dependent). Fix: collapse the keyword→numeral gap to one space on every
+ACCEPTED division line (`heading-spacing` records; unresolved lines left
+untouched). This is a general Clarendon/pdftotext hazard worth remembering
+for any future corpus.
+
+Grader deltas (post-slice → post-skeleton):
+
+| counter | PA | APo |
+|---|---|---|
+| books / chapters | 1/31 → **4/51** ✓ | 0/33 → **2/53** ✓ |
+| ticsEmitted | 49 → 47 | 82 → 83 |
+| ticsSuppressed | 150 → 144 | 95 → 89 |
+| displayBlocks | 498 → 486 | 22 → 11 |
+| side-ambiguous | 87 → 92 | 57 → 59 |
+
+Chapter tag sequences verified complete and monotonic against the print
+structure (PA 5/17/15/14 per the chapter map; APo 34+19). Tic/side counters
+are stage-3's business (the small movements here come from heading numerals
+leaving the tic-candidate pool).
+
+## Stage-7 held-out corpus — Apostle, Posterior Analytics (John's description only; files untouched)
+
+John vendored a third, non-Clarendon pair: Apostle's APo — files are in
+~/Downloads with "Apostle" in the filenames (per John; not listed, not opened).
+Per the held-out protocol we do NOT read, sample, grep, or even `ls` them
+before stage 7 — all facts below are John's description (2026-07-07), recorded
+so stages 2–5 stay general:
+
+- Rough scan: some pages' Bekker tics are partially CUT OFF; History Genie
+  missed some tics entirely; the `$` apparatus encoding is INCONSISTENT —
+  witness normalization must handle encodings per-instance, never assume a
+  corpus-uniform quirk.
+- ALL Bekker tics sit in a VERSO (leading) gutter — no recto pages. Stage-3
+  re-seat must not assume alternation (the converter itself is fine with
+  one-sided).
+- Apostle's chapter headings are BARE NUMERALS (`7`, `31`). Known spec
+  collision: ocr-target-format §5 accepts bare centered numerals as chapter
+  headings for SINGLE-BOOK works only, and Apostle's APo has two books. If
+  config-only fails at stage 7, the general fix candidate is a config-declared
+  chapter-style mapping in heading-normalize (bare centered numeral →
+  keyword form, Tier 1, logged) — corpus-agnostic because the style comes
+  from config.
+- Cut-off tics = marks lost by the scan, not by print: cadence repair can
+  only fix garbles that are present; wholly missing tics stay as flagged
+  droppedLines gaps (witnesses are reflowed and carry no line geometry, so
+  they cannot re-seat a tic; at most they corroborate a value).
 
 ### OCR quirk table (John 2026-07-07, verified in both corpora)
 

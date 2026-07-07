@@ -12,13 +12,16 @@ export type Tier = 1 | 2;
 export type RuleId =
   | 'slice'
   | 'head-insert'
+  | 'heading-normalize'
+  | 'folio-repair'
   | 'tic-reseat'
   | 'bekker-digit'
   | 'spacing-collapse'
   | 'emdash-restore'
   | 'ligature'
   | 'word-identity' // Tier 2 only
-  | 'no-witness-span'; // flag record, no edit
+  | 'no-witness-span' // flag record, no edit: witness coverage gap
+  | 'flag'; // flag record, no edit: anything left in place for human eyes
 
 export interface ChangeRecord {
   /** Stable id, e.g. "p117-L14-c52-1" — page/line/col plus a per-site counter. */
