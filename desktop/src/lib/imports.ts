@@ -18,7 +18,7 @@ import { getWork } from '../../../app/src/lib/works';
 import { isTauri } from './runtime';
 import {
   parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation,
-  type ParsedTranslation, type TranslationMeta,
+  type ParsedTranslation, type TranslationMeta, type FootnoteScope,
 } from './translation-file';
 import { buildChapterInputs } from './aligner/reference';
 import { alignImportedChapter, emitOverlayPieces, type ChapterAlignment, type PieceEmphasis } from './aligner/import-align';
@@ -42,6 +42,23 @@ export interface ImportRecord {
   emphasisByBook?: Record<string, Record<string, PieceEmphasis[]>>;
   /** per-chapter anchor maps, kept for future refinement/re-tagging. */
   alignment: Record<string, ChapterAlignment>;
+  /**
+   * label -> note text (§B3), from the file's sentinel-delimited footnote
+   * definitions block. Both fields optional so records written before Phase
+   * 3 still load unchanged — getImportFootnote just has nothing to resolve
+   * for them, mirroring emphasisByBook's read-time-optional precedent.
+   */
+  footnotes?: Record<string, string>;
+  footnoteScope?: FootnoteScope;
+  /**
+   * 'b.c' -> chapter title, verbatim, from the PDF converter's title map
+   * (Phase 4A's `ConvertResult.titles`; §Phase-4B task 2, rendering revised
+   * 2026-07-06 — see getImportTitle). Optional so records from a hand-
+   * authored/plain import (no converter involved) or written before this
+   * field existed still load unchanged — getImportTitle just has nothing to
+   * resolve for them.
+   */
+  titles?: Record<string, string>;
 }
 
 export interface ImportSummary {
@@ -53,6 +70,8 @@ export interface ImportSummary {
   placed: number;
   interpolated: number;
   replaced: boolean;
+  /** e.g. "Detected continuous work-level numbering — 222 footnotes." Undefined when the file has no footnotes block. */
+  footnoteSummary?: string;
 }
 
 // ── storage backends ─────────────────────────────────────────────────────────
@@ -142,6 +161,37 @@ function store(): Promise<Store> {
 type G = typeof globalThis & {
   __ARISTOTLE_EXTRA_TRANSLATIONS__?: Record<string, TranslationRef[]>;
   __ARISTOTLE_BOOK_HOOK__?: (work: string, n: number, data: BookData) => BookData;
+  /**
+   * §B4.4: FootnotePopup.svelte (app/src, SHARED with the static site build,
+   * which has no imports.ts and must not import desktop code) resolves an
+   * imported translation's footnote text through this window-level hook
+   * instead of a direct import — the same pattern __ARISTOTLE_BOOK_HOOK__ and
+   * __ARISTOTLE_EXTRA_TRANSLATIONS__ already use above. Site build: hook is
+   * never installed, so app/src's lazy `globalThis.__ARISTOTLE_...` read is
+   * always undefined there — inert, byte-identical rendering.
+   */
+  __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__?: (work: string, id: string, label: string) => string | null;
+  /**
+   * Companion to the hook above: lets FootnotePopup tell "this transId is a
+   * registered import with no note for this label" apart from "this transId
+   * isn't an import at all — fall back to the site's fetchFootnotes(work)".
+   * Without this, a registered import's unmatched label would silently fall
+   * through to the WORK's built-in footnotes.json and could show a foreign
+   * translation's note text if the label happened to collide (both use plain
+   * digit labels under continuous scope) — see implementation-notes.md.
+   */
+  __ARISTOTLE_IMPORT_HAS_TRANS__?: (work: string, id: string) => boolean;
+  /**
+   * §Phase-4B-revised: an imported translation's converter-derived chapter
+   * title, resolved for ONE registered import's own overlay column — NOT
+   * merged into the shared chapterTitles heading map every translation
+   * shares (that's work-level chrome; an imported title is this edition's
+   * own editorial paratext, John's call 2026-07-06). Reader.svelte (app/src,
+   * site-shared) reads this the same lazy-global way FootnotePopup reads
+   * __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ above — never installed on the site
+   * build, so the read is always undefined there — inert, byte-identical.
+   */
+  __ARISTOTLE_IMPORT_TITLE_HOOK__?: (work: string, id: string, book: number, chapter: string) => string | null;
 };
 
 const registered = new Map<string, ImportRecord>(); // "work/id" → record
@@ -194,6 +244,11 @@ function installHooks(): void {
       name: displayName(rec.meta),
       short: rec.meta.translator,
       slot: 'overlay',
+      // §B4.2: marks this overlay for Reader.svelte's footnote-marker
+      // transform (the same TranslationRef.footnotes flag a built-in like
+      // Owen already sets) — only when the file actually carried a
+      // footnotes block, so an import with none renders exactly as before.
+      ...(rec.footnotes && Object.keys(rec.footnotes).length > 0 ? { footnotes: true } : {}),
     });
   }
   g.__ARISTOTLE_EXTRA_TRANSLATIONS__ = extras;
@@ -213,6 +268,12 @@ function installHooks(): void {
     }
     return touched ? data : data;
   };
+  // §B4.4: window-level footnote-resolution hooks for FootnotePopup.svelte
+  // (site-shared; see the G type's doc comment above for why these exist as
+  // hooks rather than a direct import).
+  g.__ARISTOTLE_IMPORT_HAS_TRANS__ = (work, id) => registered.has(`${work}/${id}`);
+  g.__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ = (work, id, label) => getImportFootnote(work, id, label);
+  g.__ARISTOTLE_IMPORT_TITLE_HOOK__ = (work, id, book, chapter) => getImportTitle(work, id, book, chapter);
 }
 
 /** Load every stored import and register it — call once at startup, before mount. */
@@ -243,6 +304,53 @@ export function getImportEmphasis(work: string, id: string, book: number, column
 }
 
 /**
+ * Pure core of getImportFootnote — resolves `label` (the full scope-qualified
+ * identity: plain digits under continuous scope, "book.chapter.N" under
+ * per-chapter, or a "*"/"†" work-level glyph — see phase3-final-spec.md §B5)
+ * against one already-fetched record's footnotes map. Split out from the
+ * `registered`-Map lookup below so it's unit-testable with a plain object
+ * literal, no storage/registration pipeline required.
+ */
+export function resolveImportFootnote(rec: ImportRecord | undefined, label: string): string | null {
+  return rec?.footnotes?.[label] ?? null;
+}
+
+/**
+ * §B4 (Phase 4 wires this into FootnotePopup): the note text for one label
+ * on one imported translation, reading `registered.get(...).footnotes?.[label]`
+ * — mirrors getImportEmphasis. Returns null (never throws) when `work`/`id`
+ * isn't a registered import, the label has no definition, or the record
+ * predates the footnotes field.
+ */
+export function getImportFootnote(work: string, id: string, label: string): string | null {
+  return resolveImportFootnote(registered.get(`${work}/${id}`), label);
+}
+
+/**
+ * Pure core of getImportTitle — resolves 'book.chapter' against one already-
+ * fetched record's `titles` map. Split out from the `registered`-Map lookup
+ * below so it's unit-testable with a plain object literal, mirroring
+ * resolveImportFootnote just above.
+ */
+export function resolveImportTitle(rec: ImportRecord | undefined, book: number, chapter: string): string | null {
+  return rec?.titles?.[`${book}.${chapter}`] ?? null;
+}
+
+/**
+ * §Phase-4B-revised (John's call 2026-07-06): the converter-derived chapter
+ * title for ONE registered import, at ONE chapter — this edition's own
+ * editorial paratext, rendered as a small unaligned heading inside that
+ * import's own overlay column (Reader.svelte's transFlow), never merged into
+ * the shared chapterTitles heading map every translation sees. Returns null
+ * (never throws) when `work`/`id` isn't a registered import, the chapter has
+ * no captured title, or the record predates the titles field. Mirrors
+ * getImportFootnote/getImportEmphasis.
+ */
+export function getImportTitle(work: string, id: string, book: number, chapter: string): string | null {
+  return resolveImportTitle(registered.get(`${work}/${id}`), book, chapter);
+}
+
+/**
  * The citation string for an imported translation, for Copy Citation:
  * the stored `citation` verbatim, or the translator/year/source fallback
  * when a record predates the citation field (or the form was left blank).
@@ -261,6 +369,16 @@ export function getImportCitation(work: string, id: string): string | null {
 export interface ImportRequest {
   raw: string;                 // file content as uploaded (dehyphenated, but still carrying
                                 // emphasis markers — parseTranslationFile classifies those)
+  /**
+   * The pristine upload, when it differs from `raw` — e.g. ImportDialog's
+   * PDF-conversion pre-stage sets `raw` to the CONVERTER'S tagged output
+   * (what actually gets parsed/aligned/canonicalized) but wants the
+   * `.original` safety-net file to hold the real pdftotext extraction, not
+   * the tagged text. Falls back to `raw` when omitted — every pre-existing
+   * caller (a plain/hand-tagged import has no separate "original") keeps
+   * today's behavior unchanged.
+   */
+  original?: string;
   work: string;                // corpus slug (from the dropdown — never free text)
   translator: string;
   license: TranslationMeta['license'];
@@ -279,6 +397,30 @@ export interface ImportRequest {
    * a non-interactive re-import) that wants the defaults applied instead.
    */
   emphasisChoices?: Map<number, 'keep' | 'remove'>;
+  /**
+   * 'b.c' -> chapter title map from the PDF converter (Phase 4A's
+   * ConvertResult.titles), passed through unchanged by ImportDialog when the
+   * source file was a layout extraction. Stored on the ImportRecord verbatim
+   * (§getImportTitle); omitted for a plain/hand-tagged import, which has no
+   * titles to offer.
+   */
+  titles?: Record<string, string>;
+}
+
+// §B3 import summary: "Detected continuous work-level numbering — 222
+// footnotes." Undefined (no line at all) when the file carries no footnote
+// definitions — most imports don't have a footnotes block, and a summary
+// with "0 footnotes" would read as an error rather than simply "not present".
+const SCOPE_PHRASE: Record<FootnoteScope, string> = {
+  continuous: 'Detected continuous work-level numbering',
+  'per-book': 'Detected per-book numbering',
+  'per-chapter': 'Detected per-chapter numbering',
+};
+
+function footnoteSummaryLine(scope: FootnoteScope, footnotes: Record<string, string>): string | undefined {
+  const count = Object.keys(footnotes).length;
+  if (count === 0) return undefined;
+  return `${SCOPE_PHRASE[scope]} — ${count} footnote${count === 1 ? '' : 's'}.`;
 }
 
 export class ImportCollision extends Error {
@@ -340,7 +482,7 @@ export async function runImport(
     const perBook: ChapterAlignment[] = [];
     for (const input of inputs) {
       const ch = chapters.find(c => c.book === b && String(c.chapter) === input.chapter);
-      const ca = alignImportedChapter(input, ch?.tags ?? [], parsed.density, ch?.emphasis ?? []);
+      const ca = alignImportedChapter(input, ch?.tags ?? [], parsed.density, ch?.emphasis ?? [], ch?.footnoteMarkers ?? []);
       perBook.push(ca);
       aligned.push(ca);
       alignment[`${ca.book}:${ca.chapter}`] = ca;
@@ -364,17 +506,21 @@ export async function runImport(
     overlaysByBook,
     emphasisByBook,
     alignment,
+    footnotes: parsed.footnotes,
+    footnoteScope: parsed.footnoteScope,
+    ...(req.titles ? { titles: req.titles } : {}),
   };
   const canonical = parsed.hasFrontmatter
     ? req.raw
     : serializeFrontmatter(meta) + req.raw;
-  await s.write(req.work, meta.id, canonical, req.raw, record);
+  await s.write(req.work, meta.id, canonical, req.original ?? req.raw, record);
   registered.set(`${req.work}/${meta.id}`, record);
   installHooks();
 
   return {
     meta,
     density: parsed.density,
+    footnoteSummary: footnoteSummaryLine(parsed.footnoteScope, parsed.footnotes),
     warnings: parsed.warnings,
     chapters: record.stats.chapters,
     tagged: record.stats.tagged,

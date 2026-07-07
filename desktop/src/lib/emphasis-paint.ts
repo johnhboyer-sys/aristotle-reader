@@ -45,7 +45,7 @@ function proseText(root: Element): string {
   let out = '';
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (n) =>
-      nodeEl(n)?.closest('.bk-num, .eng-table') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+      nodeEl(n)?.closest('.bk-num, .eng-table, .fn-marker') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
   });
   for (let n = walker.nextNode(); n; n = walker.nextNode()) out += n.textContent;
   return out;
@@ -58,7 +58,7 @@ function locate(root: Element, target: number): [Node, number] | null {
   let acc = 0;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (n) =>
-      nodeEl(n)?.closest('.bk-num, .eng-table') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+      nodeEl(n)?.closest('.bk-num, .eng-table, .fn-marker') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
   });
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     const len = n.textContent!.length;

@@ -3,7 +3,11 @@
   import { fetchFootnotes } from '../lib/data';
 
   export let work: string = 'EN';
-  export let n: string;
+  export let n: string;             // full label identity, e.g. "1", "2.3.1", "*"
+  // §B4.3/4.4: which translation's footnote map `n` belongs to — set from the
+  // marker's `data-fn-trans`. '' for legacy call sites that omit it (none in
+  // this codebase after Phase 4B, but keeps the prop non-breaking).
+  export let transId: string = '';
   export let anchor: { x: number; y: number };
   export let onClose: () => void;
   // Hover bridge: cancel/schedule the parent's close timer so the cursor can
@@ -17,6 +21,19 @@
   let dialogEl: HTMLDivElement;
   let previousFocus: HTMLElement | null = null;
 
+  // §Phase-3 B5 / Reader.svelte's fnDisplay: the printed number to show in
+  // the header — a scoped label's ("2.3.1") trailing component, a star/
+  // dagger glyph verbatim, or (continuous scope, the pre-Phase-4B norm) the
+  // label itself unchanged. Duplicated in Reader.svelte rather than shared
+  // because it's a two-line pure function and this component must stay
+  // import-free of Reader's internals.
+  function fnDisplay(label: string): string {
+    if (label === '*' || label === '†') return label;
+    const i = label.lastIndexOf('.');
+    return i === -1 ? label : label.slice(i + 1);
+  }
+  $: display = fnDisplay(n);
+
   // Keep the popup inside the viewport (anchored below the marker).
   function clampedPos(x: number, y: number) {
     const W = 440, H = 360, vw = window.innerWidth, vh = window.innerHeight;
@@ -28,10 +45,44 @@
 
   $: pos = clampedPos(anchor.x, anchor.y);
 
-  fetchFootnotes(work)
-    .then(map => { html = map[n] ?? ''; if (!html) error = `Footnote ${n} not found.`; })
-    .catch(e => { error = String(e); })
-    .finally(() => { loading = false; });
+  // §B4.4: an imported translation's footnote text is resolved through a
+  // window-level hook installed by desktop/src/lib/imports.ts's
+  // installHooks() — this component (app/src) is SHARED with the static
+  // site build, which has no imports.ts and must not import desktop code, so
+  // the established pattern (mirroring __ARISTOTLE_BOOK_HOOK__ /
+  // __ARISTOTLE_EXTRA_TRANSLATIONS__) is a lazily-read global instead of a
+  // direct import. On the site build neither hook is ever installed, so
+  // `isImportedTrans()` is always false and every call falls through to the
+  // original `fetchFootnotes(work)` path unchanged — inert, byte-identical.
+  //
+  // `isImportedTrans` is a SEPARATE hook from the note lookup itself so a
+  // registered import with no definition for this label ("footnote-note-
+  // unmatched") shows "not found" instead of silently falling through to
+  // fetchFootnotes(work) — which could otherwise return a DIFFERENT
+  // translation's note text for the same work if the labels happen to
+  // collide (continuous scope on both sides uses plain digits).
+  function isImportedTrans(): boolean {
+    if (!transId) return false;
+    const hook = (globalThis as {
+      __ARISTOTLE_IMPORT_HAS_TRANS__?: (work: string, id: string) => boolean;
+    }).__ARISTOTLE_IMPORT_HAS_TRANS__;
+    return hook ? hook(work, transId) : false;
+  }
+
+  if (isImportedTrans()) {
+    const hook = (globalThis as {
+      __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__?: (work: string, id: string, label: string) => string | null;
+    }).__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__;
+    const note = hook ? hook(work, transId, n) : null;
+    html = note ?? '';
+    if (!html) error = `Footnote ${display} not found.`;
+    loading = false;
+  } else {
+    fetchFootnotes(work)
+      .then(map => { html = map[n] ?? ''; if (!html) error = `Footnote ${display} not found.`; })
+      .catch(e => { error = String(e); })
+      .finally(() => { loading = false; });
+  }
 
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
@@ -81,7 +132,7 @@
   bind:this={dialogEl}
   style="left:{pos.left};top:{pos.top}"
   role="dialog"
-  aria-label="Footnote {n}"
+  aria-label="Footnote {display}"
   aria-modal="true"
   tabindex="-1"
   on:mouseenter={onHoverIn}
@@ -91,7 +142,7 @@
   on:keydown={onDialogKey}
 >
   <div class="popup-header">
-    <span class="footnote-num">Note {n}</span>
+    <span class="footnote-num">Note {display}</span>
     <button class="popup-close" on:click={onClose} aria-label="Close">✕</button>
   </div>
 

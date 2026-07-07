@@ -206,9 +206,13 @@ export async function writeClipboard(text: string): Promise<boolean> {
 //   .fn-marker  — Ostwald's inline `[^N]` footnote reference button
 //                 (rendered as a clickable superscript digit, see
 //                 Reader.svelte's renderThird/.fn-marker)
+//   .ross-chapter-title — an imported translation's own converter-derived
+//                 chapter title (Reader.svelte's importChapterTitle):
+//                 editorial paratext rendered inside that import's column,
+//                 not part of the reference text
 //   .eng-table  — kept for parity with the existing offset walker below,
 //                 though its own text is usually outside any prose selection
-const COPY_EXCLUDE_SELECTOR = '.bk-num, .line-num, .col-label, .fn-marker, .eng-table';
+const COPY_EXCLUDE_SELECTOR = '.bk-num, .line-num, .col-label, .fn-marker, .ross-chapter-title, .eng-table';
 
 /**
  * Extract a Range's text the way a "clean copy" should read: skips gutter
@@ -281,7 +285,7 @@ function proseOffsetAt(col: Element, container: Node, offset: number): number {
   let acc = 0;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (n) =>
-      nodeEl(n)?.closest('.bk-num, .eng-table') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+      nodeEl(n)?.closest('.bk-num, .eng-table, .fn-marker') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
   });
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     if (n === container) return acc + offset;
@@ -428,7 +432,7 @@ export function englishRange(t: EnglishTarget, shown: string[]): Range[] {
     let acc = 0;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: (n) =>
-        nodeEl(n)?.closest('.bk-num, .eng-table') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+        nodeEl(n)?.closest('.bk-num, .eng-table, .fn-marker') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
     });
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       const len = n.textContent!.length;
@@ -440,13 +444,16 @@ export function englishRange(t: EnglishTarget, shown: string[]): Range[] {
   const s = locate(t.start);
   const e = locate(t.end);
   if (!s || !e) return [];
-  // Split into per-text-node sub-ranges that skip .bk-num / .eng-table. One
-  // range from s to e would tree-span the absolutely-positioned .bk-num gutter
-  // numerals (locate omits them from the OFFSET count, but they still sit
-  // inside the range in document order) and the CSS Custom Highlight would
-  // paint them. Emitting one sub-range per accepted prose text node never
-  // includes a gutter numeral; adjacent nodes tile seamlessly in the inline
-  // flow, so the highlight still reads as one continuous band.
+  // Split into per-text-node sub-ranges that skip .bk-num / .eng-table /
+  // .fn-marker. One range from s to e would tree-span the absolutely-
+  // positioned .bk-num gutter numerals and the `.fn-marker` footnote-button
+  // text (locate omits both from the OFFSET count — same exclusion as
+  // proseOffsetAt's capture-side walker, so capture and paint agree — but
+  // they still sit inside the range in document order) and the CSS Custom
+  // Highlight would paint them. Emitting one sub-range per accepted prose
+  // text node never includes a gutter numeral or a footnote-marker button;
+  // adjacent nodes tile seamlessly in the inline flow, so the highlight
+  // still reads as one continuous band.
   const out: Range[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let inRange = false;
@@ -454,7 +461,7 @@ export function englishRange(t: EnglishTarget, shown: string[]): Range[] {
     const isStart = n === s[0];
     if (isStart) inRange = true;
     const isEnd = n === e[0];
-    if (inRange && !nodeEl(n)?.closest('.bk-num, .eng-table')) {
+    if (inRange && !nodeEl(n)?.closest('.bk-num, .eng-table, .fn-marker')) {
       const from = isStart ? s[1] : 0;
       const to = isEnd ? e[1] : n.textContent!.length;
       if (to > from) {

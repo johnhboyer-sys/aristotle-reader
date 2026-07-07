@@ -12,6 +12,7 @@
   import { parseTranslationFile, composeCitation, emphasisScanInput } from '../lib/translation-file';
   import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';
   import { scanEmphasis, listEmphasisReviewItems, type EmphasisReviewItem } from '../lib/emphasis';
+  import { convertLayoutExtraction, isLayoutExtraction, type ConvertOptions, type ConvertReport } from '../lib/pdf-import';
   import { isTauri } from '../lib/runtime';
   import type { UnlistenFn } from '@tauri-apps/api/event';
 
@@ -19,8 +20,11 @@
   export let presetWork: string | null = null;   // pre-filled when launched from a work
   export let onClose: (imported: ImportSummary | null) => void;
 
-  type Step = 'pick' | 'form' | 'review' | 'emph-review' | 'running' | 'collision' | 'done' | 'error';
-  let step: Step = file ? 'form' : 'pick';
+  type Step =
+    | 'pick' | 'form' | 'review' | 'emph-review' | 'running' | 'collision' | 'done' | 'error'
+    // Phase 4B: the PDF-conversion pre-stage's own outcomes, ahead of the form.
+    | 'convert-refused' | 'convert-choice';
+  let step: Step = 'pick';
 
   // form state
   let work = presetWork ?? 'EN';
@@ -86,6 +90,74 @@
   // rather than a second freeform field the user has to fill in from scratch.
   $: if (!citationTouched) citationStr = composeCitation({ translator, year: Number(yearStr) || undefined, source: sourceStr });
 
+  // ── PDF layout-extraction pre-stage ─────────────────────────────────────────
+  // Detection rule lives in pdf-import/index.ts (isLayoutExtraction) so it's
+  // unit-testable without a DOM; those files route through
+  // convertLayoutExtraction BEFORE the metadata form step, every other file
+  // takes the pre-existing path unchanged.
+  // Held for the Done step's honesty report (task 1); null for a non-PDF
+  // import, which hides that whole report section.
+  let convertReport: ConvertReport | null = null;
+  // 'b.c' -> title, threaded into runImport (task 2) so this import's chapter
+  // titles are shown at chapter openings inside its own column (not merged
+  // into the reader's shared chapter headings — that's work-level chrome).
+  let convertTitles: Record<string, string> = {};
+  // The pristine upload — kept ONLY when the converter ran, and passed to
+  // runImport as `original` so the `.original` safety-net file holds the
+  // actual pdftotext output rather than the tagged working text. null for a
+  // non-PDF import, where the uploaded text and the parse input are (as
+  // before) the same thing.
+  let originalRawText: string | null = null;
+  let refusalMsg = '';
+  let collapsedPages: number[] = [];
+  // The exact upload that triggered a needsChoice — kept so "Import with
+  // page-level anchors only" can re-run conversion on the SAME bytes.
+  let pendingConvert: { name: string; text: string } | null = null;
+
+  function acceptText(name: string, text: string, opts: ConvertOptions = {}) {
+    if (!isLayoutExtraction(text)) {
+      file = { name, text };
+      originalRawText = null;
+      convertReport = null;
+      convertTitles = {};
+      step = 'form';
+      return;
+    }
+    const result = convertLayoutExtraction(text, opts);
+    if (result.ok) {
+      convertReport = result.report;
+      convertTitles = result.titles;
+      originalRawText = text;
+      file = { name, text: result.tagged };
+      step = 'form';
+    } else if ('refused' in result) {
+      refusalMsg =
+        "No printed Bekker line numbers found in this file. The importer reads the "
+        + "Bekker numbers printed in an edition's margins; this extraction has none "
+        + "— either the edition doesn't print them, or the extraction lost the page "
+        + "layout. Re-extract the PDF with pdftotext -layout, or import a pre-tagged file "
+        + "instead.";
+      step = 'convert-refused';
+    } else {
+      collapsedPages = result.collapsedPages;
+      pendingConvert = { name, text };
+      step = 'convert-choice';
+    }
+  }
+
+  // "Import with page-level anchors only" (the convert-choice step) — re-run
+  // the SAME upload with the collapsed-page fallback opted in (§3.6).
+  function retryPageLevelOnly() {
+    if (!pendingConvert) return;
+    acceptText(pendingConvert.name, pendingConvert.text, { pageLevelOnly: true });
+  }
+
+  // A file the caller already supplied (App.svelte's own drag-drop handling
+  // hands a {name, text} straight to this component's `file` prop, bypassing
+  // the pick/drop functions below) goes through the same conversion
+  // pre-stage as every other accept path.
+  if (file) acceptText(file.name, file.text);
+
   async function pickFile() {
     if (isTauri()) {
       const { open } = await import('@tauri-apps/plugin-dialog');
@@ -95,8 +167,7 @@
         filters: [{ name: 'Translation files', extensions: ['md', 'txt'] }],
       });
       if (typeof path === 'string') {
-        file = { name: path.split('/').pop() ?? path, text: await readTextFile(path) };
-        step = 'form';
+        acceptText(path.split('/').pop() ?? path, await readTextFile(path));
       }
     } else {
       browserInput?.click();
@@ -106,8 +177,7 @@
   async function onBrowserFile(e: Event) {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
-    file = { name: f.name, text: await f.text() };
-    step = 'form';
+    acceptText(f.name, await f.text());
   }
 
   // ── Drop zone ──────────────────────────────────────────────────────────────
@@ -132,8 +202,7 @@
       return;
     }
     const { readTextFile } = await import('@tauri-apps/plugin-fs');
-    file = { name, text: await readTextFile(path) };
-    step = 'form';
+    acceptText(name, await readTextFile(path));
   }
 
   async function acceptBrowserFile(f: File) {
@@ -142,8 +211,7 @@
       dropError = 'Please drop one .txt or .md file.';
       return;
     }
-    file = { name: f.name, text: await f.text() };
-    step = 'form';
+    acceptText(f.name, await f.text());
   }
 
   let unlistenDragDrop: UnlistenFn | null = null;
@@ -273,6 +341,11 @@
     try {
       summary = await runImport({
         raw: dehyphenatedText ?? file.text,
+        // The PDF converter's pristine upload — .original gets the actual
+        // pdftotext extraction instead of the tagged working text. Omitted
+        // (falls back to `raw`) for a non-PDF import, unchanged from before.
+        ...(originalRawText !== null ? { original: originalRawText } : {}),
+        ...(Object.keys(convertTitles).length ? { titles: convertTitles } : {}),
         emphasisChoices: emphReviewChoices.size ? emphReviewChoices : undefined,
         work,
         translator: translator.trim(),
@@ -379,6 +452,25 @@ found among ends…</pre>
         review. You never write the metadata header yourself — this form does.</p>
       </div>
     </details>
+
+  {:else if step === 'convert-refused'}
+    <h2>Couldn't read this file</h2>
+    <p class="imp-note">{refusalMsg}</p>
+    <div class="imp-actions">
+      <button class="imp-quiet" on:click={() => onClose(null)}>Close</button>
+    </div>
+
+  {:else if step === 'convert-choice'}
+    <h2>Some pages lost their layout</h2>
+    <p class="imp-note">
+      {collapsedPages.length} page{collapsedPages.length === 1 ? '' : 's'} lost
+      {collapsedPages.length === 1 ? 'its' : 'their'} print layout in extraction
+      (pages {collapsedPages.join(', ')}). Re-extracting the PDF usually fixes this.
+    </p>
+    <div class="imp-actions">
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel (re-extract)</button>
+      <button class="imp-primary" on:click={retryPageLevelOnly}>Import with page-level anchors only</button>
+    </div>
 
   {:else if step === 'form'}
     <h2>Import “{file?.name}”</h2>
@@ -535,6 +627,49 @@ found among ends…</pre>
             {#each summary.warnings.slice(0, 20) as w}<li>{w}</li>{/each}
           </ul>
         </details>
+      {/if}
+      {#if summary.footnoteSummary}
+        <p class="imp-summary">{summary.footnoteSummary}</p>
+      {/if}
+      {#if convertReport}
+        <!-- Honesty report for a PDF-conversion import: everything the
+             converter dropped, suppressed, or preserved verbatim, so the
+             claim "labelled as an estimate" extends to what didn't make it
+             into the file at all. -->
+        {#if convertReport.droppedLines.length}
+          <details class="imp-warn">
+            <summary>
+              {convertReport.droppedLines.length}
+              dropped line{convertReport.droppedLines.length === 1 ? '' : 's'}
+            </summary>
+            <ul>
+              {#each convertReport.droppedLines as l}<li>{l}</li>{/each}
+            </ul>
+          </details>
+        {/if}
+        {#if convertReport.ticsSuppressed.length}
+          <details class="imp-warn">
+            <summary>
+              {convertReport.ticsSuppressed.reduce((n, s) => n + s.count, 0)}
+              Bekker tick{convertReport.ticsSuppressed.reduce((n, s) => n + s.count, 0) === 1 ? '' : 's'} suppressed (not printed as anchors)
+            </summary>
+            <ul>
+              {#each convertReport.ticsSuppressed as s}<li>{s.flag}: {s.count}</li>{/each}
+            </ul>
+          </details>
+        {/if}
+        {#if convertReport.displayBlocks.length}
+          <p class="imp-note">
+            {convertReport.displayBlocks.length}
+            table/diagram-like block{convertReport.displayBlocks.length === 1 ? '' : 's'}
+            preserved line-by-line — review in the reader.
+          </p>
+        {/if}
+        {#if convertReport.seams.length}
+          <p class="imp-error">
+            This file appears to contain more than one work — slice per work before importing.
+          </p>
+        {/if}
       {/if}
     {/if}
     <div class="imp-actions">

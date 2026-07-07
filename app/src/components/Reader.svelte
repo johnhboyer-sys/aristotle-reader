@@ -40,10 +40,22 @@
   // `secondaries` is the ordered list of non-primary translations.
   const engSlot = translations.find(t => t.slot === 'english');
   const thirdSlot = translations.find(t => t.slot === 'third');  // bears footnotes/tables
-  // The translation whose prose carries [^N] footnote markers (Ostwald's third
-  // slot, or a primary like the Isagoge's Owen). Its column renders the markers
-  // and opens the footnote popup.
-  const fnTransId = translations.find(t => t.footnotes)?.id ?? thirdSlot?.id;
+  // The translation(s) whose prose carries [^label] footnote markers
+  // (Ostwald's third slot, a primary like the Isagoge's Owen, or — Phase 4B —
+  // any imported overlay whose file carried a footnotes block, flagged via
+  // the same TranslationRef.footnotes bit by desktop/src/lib/imports.ts's
+  // installHooks). Every such id's column renders the markers and opens the
+  // footnote popup. thirdSlot is ALWAYS included (not just as a fallback when
+  // nothing is explicitly flagged) so an import gaining footnotes:true never
+  // silently un-flags Ostwald — this generalizes the old single-id
+  // `fnTransId` without changing behavior for any existing work (today,
+  // across the whole corpus, this set never has more than one member: either
+  // the one explicitly-flagged translation, or thirdSlot — never both, since
+  // no work currently combines them).
+  const fnTransIds = new Set([
+    ...translations.filter(t => t.footnotes).map(t => t.id),
+    ...(thirdSlot ? [thirdSlot.id] : []),
+  ]);
   const secondaries = translations.filter(t => t.slot !== 'english');
   const canCompare = translations.length >= 2;
   // Overlay pieces for a translation in a segment, selected by its slot.
@@ -56,6 +68,26 @@
   };
   const transById = (id: string | null | undefined): TranslationRef | null =>
     id ? (translations.find(t => t.id === id) ?? null) : null;
+
+  // §Phase-4B-revised (John's call 2026-07-06): an imported translation's own
+  // converter-derived chapter title is this edition's editorial paratext, not
+  // work-level chrome — it renders as a small unaligned heading INSIDE that
+  // import's own overlay column (see transFlow below), never merged into the
+  // shared chapterTitles heading map above. Resolved through a window-level
+  // hook installed by desktop/src/lib/imports.ts's installHooks(), the same
+  // site-shared pattern __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ uses (see
+  // FootnotePopup.svelte) — this component is SHARED with the static site
+  // build, which never installs the hook, so the lazy read below is always
+  // undefined there: inert, byte-identical rendering. Render-only: sourced
+  // from ImportRecord.titles, never written into any offset-bearing text
+  // stream, so no anchor ever shifts.
+  function importChapterTitle(transId: string, chapter: string | null): string {
+    if (!chapter) return '';
+    const hook = (globalThis as {
+      __ARISTOTLE_IMPORT_TITLE_HOOK__?: (work: string, id: string, book: number, chapter: string) => string | null;
+    }).__ARISTOTLE_IMPORT_TITLE_HOOK__;
+    return (hook ? hook(work, transId, bookNum, chapter) : null) ?? '';
+  }
 
   // Compare mode shows two translations side by side; which two is chosen in the
   // settings sidebar. Defaults: primary + first secondary. Persisted per work.
@@ -413,13 +445,34 @@
     if (!hlEngTerms.length) return esc(text);
     return highlightPrefixMatches(text, hlEngTerms);
   }
-  // The third translation (Ostwald) carries inline `[^N]` footnote references;
-  // turn each into a clickable superscript. A delegated click handler on the
-  // column reads `data-fn` and opens the footnote popup.
-  function renderThird(text: string): string {
+  // §Phase-3 B5: the printed number is stored as `display`; identity is the
+  // (scope, number) pair encoded in the label — continuous scope's label IS
+  // the display digits (label === display, zero-change case), while a scoped
+  // label ("2.3.1") or a star/dagger glyph carries its display as the
+  // trailing component. Pure function of the label alone, so both Reader
+  // (button text) and FootnotePopup (popup header) can compute it locally
+  // without threading an extra value through the marker string itself.
+  function fnDisplay(label: string): string {
+    if (label === '*' || label === '†') return label;
+    const i = label.lastIndexOf('.');
+    return i === -1 ? label : label.slice(i + 1);
+  }
+  // A footnote-bearing translation (Ostwald's third slot, the Isagoge's Owen,
+  // or — Phase 4B — an imported overlay; see fnTransIds above) carries inline
+  // `[^label]` footnote references; turn each into a clickable superscript.
+  // §B4.2: the label is the full scope-qualified identity (continuous scope:
+  // plain digits, unchanged from before); the button only ever displays the
+  // printed number. `data-fn-trans` records which translation's footnote map
+  // to resolve against (§B4.3/4.4) — needed once more than one translation on
+  // the page can carry footnotes. A delegated click handler on the column
+  // reads both data attributes and opens the footnote popup.
+  function renderThird(text: string, transId: string): string {
     return highlightEng(text).replace(
-      /\[\^(\d+)\]/g,
-      '<button type="button" class="fn-marker" data-fn="$1" aria-label="Footnote $1">$1</button>',
+      /\[\^([\w.*†]+)\]/g,
+      (_m, label: string) => {
+        const display = fnDisplay(label);
+        return `<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button>`;
+      },
     );
   }
 
@@ -651,10 +704,13 @@
 
   // Active popup state
   let popup: { token: Token; anchor: { x: number; y: number } } | null = null;
-  // Active footnote popup (third-translation `[^N]` markers). Opens on hover,
-  // with a short close-delay so the cursor can travel from the marker into the
-  // popup without it vanishing; click/Enter also open it (touch + keyboard).
-  let footnote: { n: string; anchor: { x: number; y: number } } | null = null;
+  // Active footnote popup (footnote-bearing translations' `[^label]`
+  // markers). Opens on hover, with a short close-delay so the cursor can
+  // travel from the marker into the popup without it vanishing; click/Enter
+  // also open it (touch + keyboard). §B4.3: carries `transId` (from the
+  // marker's `data-fn-trans`) alongside the label, so FootnotePopup knows
+  // WHICH translation's footnote map to resolve `n` against.
+  let footnote: { n: string; transId: string; anchor: { x: number; y: number } } | null = null;
   // A click PINS the popup open (it stays until you dismiss it); hover opens it
   // transiently with a short close delay. Pinning makes click-to-read reliable.
   let fnPinned = false;
@@ -671,9 +727,10 @@
     cancelFnClose();
     if (pin) fnPinned = true;
     const n = marker.getAttribute('data-fn') ?? '';
-    if (footnote?.n === n) return;
+    const transId = marker.getAttribute('data-fn-trans') ?? '';
+    if (footnote?.n === n && footnote?.transId === transId) return;
     const r = marker.getBoundingClientRect();
-    footnote = { n, anchor: { x: r.left, y: r.bottom } };
+    footnote = { n, transId, anchor: { x: r.left, y: r.bottom } };
   }
   function onFootnoteOver(e: MouseEvent) {
     const marker = (e.target as HTMLElement | null)?.closest?.('.fn-marker');
@@ -1031,7 +1088,21 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
-      {#if transId === fnTransId}
+      {@const chTitle = importChapterTitle(transId, block.chapter)}
+      <!-- An imported translation's chapter-opening title: a SIBLING before
+           .ross-prose, not its first child — (a) inside .ross-prose it pushed
+           the English prose one line below the Greek (John's review of
+           631ff971); the Greek column gets a matching invisible spacer
+           instead (see the .greek-col markup below), so Greek line 1 and
+           English prose line 1 stay flush and the title takes its own space
+           above; (b) the offset walkers (annotations.ts proseOffsetAt,
+           emphasis-paint.ts proseText) root at col.querySelector('.ross-prose')
+           and exclude only .bk-num/.eng-table, so title text INSIDE
+           .ross-prose would leak into captured offsets — as a sibling they
+           never see it, keeping the render-only/no-offset-shift guarantee
+           structural. -->
+      {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
+      {#if fnTransIds.has(transId)}
         <div
           class="ross-prose"
           on:mouseover={onFootnoteOver}
@@ -1049,7 +1120,7 @@
               <br class="para-br" />
             {:else if part.text !== null}
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <span class="bk-seg">{@html renderThird(part.text)}</span>
+              <span class="bk-seg">{@html renderThird(part.text, transId)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}
@@ -1082,6 +1153,7 @@
       {/if}
     {/if}
   {/snippet}
+
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
     class:word-open={!!popup}
@@ -1171,12 +1243,26 @@
         {/if}
 
         {#each blocks as block, bi}
+          <!-- If the on-screen primary translation (English cell of this row)
+               opens this chapter with an imported title, the Greek column gets
+               an invisible spacer of the same one-line height (see
+               .ross-chapter-title-spacer in global.css) so both columns are
+               pushed down equally: title above, Greek line 1 flush with
+               English prose line 1. Same gates as the visible title in
+               transFlow (chapter start + that import's flow present here);
+               skipped in greek-only view (no title shown → no gap). Compare
+               mode aligns Greek to the LEFT column; the right column's own
+               title still renders in its cell via transFlow. -->
+          {@const spacerTransId = trans === 'compare' ? compareLeft : trans}
+          {@const spacerFlow = spacerTransId === engSlot?.id ? block.flow : (block.oflows[spacerTransId] ?? [])}
+          {@const spacerTitle = view !== 'greek' && spacerFlow.length ? importChapterTitle(spacerTransId, block.chapter) : ''}
           {#if block.chapter && !(bi === 0 && leadChapter)}
             {@render chapterHead(block)}
           {/if}
           <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
             <div class="greek-col" lang="grc">
+              {#if spacerTitle}<div class="ross-chapter-title ross-chapter-title-spacer" aria-hidden="true">{spacerTitle}</div>{/if}
               {#each greekItems(block.lines) as item}
                 {#if item.table}
                   <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->
@@ -1395,6 +1481,7 @@
   <FootnotePopup
     {work}
     n={footnote.n}
+    transId={footnote.transId}
     anchor={footnote.anchor}
     onClose={closeFootnote}
     onHoverIn={cancelFnClose}

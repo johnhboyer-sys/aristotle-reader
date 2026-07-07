@@ -66,6 +66,12 @@
     _titlesCache.set(id, all);
     return all;
   }
+  // §Phase-4B-revised (John's call 2026-07-06): this map is built-in
+  // chapter-titles.json ONLY — work-level chrome shared by every
+  // translation. An imported translation's own converter-derived titles are
+  // NOT merged in here; they render as a small unaligned heading inside that
+  // import's own overlay column instead (Reader.svelte's transFlow, via
+  // imports.ts's getImportTitle/__ARISTOTLE_IMPORT_TITLE_HOOK__).
   loadTitles(workId).then(all => { chapterTitles = all[String(bookNum)] ?? {}; });
 
   function persistLoc() {
