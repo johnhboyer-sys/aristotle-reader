@@ -597,10 +597,23 @@ export function splitChapters(p: ParsedTranslation): {
       emphasis: p.emphasis
         .filter(e => e.start >= start && e.end <= end)
         .map(e => ({ ...e, start: e.start - start, end: e.end - start })),
-      // §B3: sliced per chapter like tags/emphasis, same chapter-local offset convention.
+      // §B3: sliced per chapter like tags/emphasis, same chapter-local offset
+      // convention — but with a boundary rule of its own (Fix 2): a marker
+      // is glued right after the word it annotates, so a marker sitting
+      // exactly at a chapter boundary is the LAST character of the chapter
+      // it ENDS, never the first character of the chapter that follows —
+      // `(start, end]`, not `[start, end)`. The old `[start, end)` rule
+      // dropped a marker entirely when it landed on the very last chapter's
+      // end (offset === end === p.text.length never satisfies `< end`) and,
+      // for an interior boundary, would have handed it to the WRONG
+      // (following) chapter instead. The one exception is offset 0 at the
+      // very first chapter: with the new strict `>` lower bound that
+      // position would otherwise never be claimed by any chapter (a
+      // preamble has no footnoteMarkers slot of its own), so `i === 0`
+      // admits it explicitly.
       footnoteMarkers: p.footnoteMarkers
-        .filter(m => m.offset >= start && m.offset < end)
-        .map(m => ({ ...m, offset: Math.min(m.offset - start, end - start) })),
+        .filter(m => (m.offset > start && m.offset <= end) || (i === 0 && m.offset === 0))
+        .map(m => ({ ...m, offset: Math.max(0, Math.min(m.offset - start, end - start)) })),
     };
   });
   return { preamble, chapters };
