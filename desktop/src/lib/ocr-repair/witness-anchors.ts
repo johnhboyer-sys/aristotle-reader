@@ -20,13 +20,13 @@ interface RawAnchor {
 }
 
 const FULL_ANCHOR_RE =
-  /([0-9IlrOoSsZz|]{1,4})(?:\s*(?:\^\s*([ab])|\$\^\{?([ab])\}?\$|<sup>\s*([ab])\s*<\/sup>|([abAB])|([ᵃᵇ])))([0-9IlrOoSsZz|]{1,2})?/giu;
+  /([0-9IlrOoSsZz|]{1,4})(?:\s*(?:\^\s*([ab])|\$\^\{?([ab])\}?\$|<sup>\s*([ab])\s*<\/sup>|([abAB])|([ᵃᵇª])))([0-9IlrOoSsZz|]{1,2})?/giu;
 const CONTINUATION_RE =
-  /(?:\^\s*([ab])|\$\^\{?([ab])\}?\$|<sup>\s*([ab])\s*<\/sup>|([ᵃᵇ]))/giu;
+  /(?:\^\s*([ab])|\$\^\{?([ab])\}?\$|<sup>\s*([ab])\s*<\/sup>|([ᵃᵇª]))/giu;
 const WORD_RE = /[\p{L}\p{N}]+/gu;
 
 function normalizeCol(raw: string): 'a' | 'b' {
-  return raw === 'ᵃ' || raw.toLowerCase() === 'a' ? 'a' : 'b';
+  return raw === 'ᵃ' || raw === 'ª' || raw.toLowerCase() === 'a' ? 'a' : 'b';
 }
 
 function normalizeDigits(raw: string): number {
@@ -98,6 +98,10 @@ function extractPageAnchors(text: string): WitnessAnchor[] {
       after,
     };
   });
+}
+
+export function decodeWitnessHeadRef(line: string): WitnessAnchor | null {
+  return extractPageAnchors(line)[0] ?? null;
 }
 
 export function extractWitnessAnchors(witnessText: string): WitnessAnchor[][] {
