@@ -447,7 +447,11 @@ function trailingEdgeToken(line: string): { raw: string; startCol: number; endCo
   if (tokens.length === 0) return null;
   const last = tokens[tokens.length - 1];
   const previous = tokens[tokens.length - 2];
-  if (previous && previous.endCol + 1 === last.startCol) {
+  if (
+    previous &&
+    previous.endCol + 1 === last.startCol &&
+    (HAS_ARABIC_DIGIT_RE.test(last.raw) || /^[36h]$/u.test(last.raw))
+  ) {
     const spaced = `${previous.raw} ${last.raw}`;
     if (EDGE_TOKEN_RE.test(spaced) && decodeValues(spaced).values.some((value) => value.kind === 'full')) {
       return { raw: spaced, startCol: previous.startCol, endCol: last.endCol };
@@ -484,7 +488,7 @@ function leadingEdgeToken(line: string): { raw: string; startCol: number; endCol
   if (
     second &&
     first.endCol + 1 === second.startCol &&
-    (HAS_ARABIC_DIGIT_RE.test(second.raw) || /^[ab36h]$/u.test(second.raw))
+    (HAS_ARABIC_DIGIT_RE.test(second.raw) || /^[36h]$/u.test(second.raw))
   ) {
     const spaced = `${first.raw} ${second.raw}`;
     if (EDGE_TOKEN_RE.test(spaced) && decodeValues(spaced).values.some((value) => value.kind === 'full')) {
@@ -697,10 +701,6 @@ function sameColumn(a: { page: number; col: BekkerCol }, b: { page: number; col:
   return a.page === b.page && a.col === b.col;
 }
 
-function bodyResidual(line: string, side: Side, token: { startCol: number; endCol: number }): string {
-  return candidateResidual(line, { startCol: token.startCol, endCol: token.endCol, side }).residual;
-}
-
 function recoverBracketedBares(
   lines: string[],
   side: Side,
@@ -734,9 +734,11 @@ function recoverBracketedBares(
     }
     const decoded = decodeBareLetters(token.raw);
     if (!decoded) continue;
+    // Unlike the forward extraction pass, this sweep may recover display-shaped
+    // rows: the two-sided same-column bracket plus unique <=2-char charset
+    // decode is stronger evidence than the wide-run heuristic protects
+    // against, and was proven zero-false-positive on both corpora.
     const n = decoded.value;
-    const residual = bodyResidual(line, side, token);
-    if (isDisplayShapedLine(stripLikelyTicEnds(residual).trim())) continue;
 
     const column = (() => {
       const before = [...accepted, ...recovered]
@@ -746,16 +748,20 @@ function recoverBracketedBares(
     })();
     if (!inRange({ kind: 'full', page: column.page, col: column.col }, config)) continue;
 
-    const same = [...accepted, ...recovered]
+    const sameMarks = [...accepted, ...recovered]
       .filter((a) => sameColumn(acceptedColumn(a), column))
-      .sort((a, b) => a.candidate.lineIdx - b.candidate.lineIdx);
-    const previousAccepted = same.filter((a) => a.candidate.lineIdx < i).at(-1);
-    const nextAccepted = same.find((a) => a.candidate.lineIdx > i);
-    const prev = previousAccepted ? acceptedLineNumber(previousAccepted) : sameColumn(column, incoming) ? incoming.line : 0;
-    const next = nextAccepted ? acceptedLineNumber(nextAccepted) : nextAcrossPages?.(column, n) ?? null;
+      .map((a) => ({ lineIdx: a.candidate.lineIdx, value: acceptedLineNumber(a) }));
+    if (incoming.line > 0 && sameColumn(column, incoming)) {
+      sameMarks.push({ lineIdx: -1, value: incoming.line });
+    }
+    sameMarks.sort((a, b) => a.lineIdx - b.lineIdx);
+    const previousAccepted = sameMarks.filter((a) => a.lineIdx < i).at(-1);
+    const nextAccepted = sameMarks.find((a) => a.lineIdx > i);
+    const prev = previousAccepted ? previousAccepted.value : 0;
+    const next = nextAccepted ? nextAccepted.value : nextAcrossPages?.(column, n) ?? null;
     if (!isPlausibleBare(n, { page: column.page, col: column.col, line: prev })) continue;
     if (prev <= 0 || next === null || !(prev < n && n < next)) continue;
-    if (same.some((a) => acceptedLineNumber(a) === n)) continue;
+    if (sameMarks.some((a) => a.value === n)) continue;
 
     const candidate: Candidate = {
       side,

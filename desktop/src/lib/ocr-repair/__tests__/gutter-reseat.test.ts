@@ -357,4 +357,88 @@ describe('reseatGutter stage-3 fixtures', () => {
       )
     ).toBe(false);
   });
+
+  it('18. bracket sweep recovers a display-shaped two-wide-run bare', () => {
+    const raw = [
+      'RUNNING HEAD',
+      '639a  Body text opens here.',
+      '5     Body text continues here.',
+      '10    Alpha    Beta    Gamma',
+      '15    Body text continues after display-shaped row.',
+      '',
+      '106',
+    ].join('\n');
+    const outcome = reseatGutter(raw, config(undefined, undefined, 'verso'));
+    const lines = outcome.text.split('\n');
+    const recovered = outcome.changes.find((change) => change.evidence?.kind === 'bracketed-bare-recovery');
+
+    expect(flagKinds(outcome.changes)).toContain('tic-candidate-on-display-line');
+    expect(lines[3]).toMatch(/^10\s+Alpha    Beta    Gamma/u);
+    expect(recovered).toMatchObject({
+      before: '10',
+      after: '10',
+      evidence: { bracket: { prev: 5, next: 15 } },
+    });
+  });
+
+  it("19. keeps the article in '25 a hearth' out of spaced full-form merging", () => {
+    const raw = [
+      'RUNNING HEAD',
+      '25 a hearth receives heat from the center.',
+      '30    Body text continues after the bare.',
+    ].join('\n');
+    const outcome = reseatGutter(raw, config({ page: 25, col: 'a' }, { page: 26, col: 'b' }, 'verso'));
+    const lines = outcome.text.split('\n');
+    const tic = outcome.changes.find((change) => change.rule === 'tic-reseat');
+    const ticLines = tic?.evidence?.ticLines as { raw: string }[];
+
+    expect(lines[1]).toMatch(/^25\s+a hearth/u);
+    expect(outcome.text).not.toContain('25a');
+    expect(ticLines.map((line) => line.raw)).toContain('25');
+    expect(outcome.changes.some((change) => change.before === '25 a')).toBe(false);
+  });
+
+  it('20. spaced 639 6 garble still merges and repairs after narrowing', () => {
+    const raw = [
+      'RUNNING HEAD',
+      rectoLine(35, '639a'),
+      rectoLine(35, '639 6'),
+    ].join('\n');
+    const outcome = reseatGutter(raw, config(undefined, undefined, 'recto'));
+
+    expect(outcome.text).toContain('639b');
+    expect(outcome.changes.find((change) => change.before === '639 6')).toMatchObject({
+      after: '639b',
+      evidence: { confusions: expect.arrayContaining(['6->b']) },
+    });
+  });
+
+  it("21. page-crossing bracket uses the previous page's incoming line as lower bound", () => {
+    const raw = [
+      [
+        'RUNNING HEAD 1',
+        '639a  Body text opens here.',
+        '5     Body text reaches the page end.',
+      ].join('\n'),
+      [
+        'RUNNING HEAD 2',
+        '10    Alpha    Beta    Gamma',
+        '15    Body text resumes below the display-shaped row.',
+        '',
+        '107',
+      ].join('\n'),
+    ].join('\f');
+    const outcome = reseatGutter(raw, config(undefined, undefined, 'verso'));
+    const secondPage = outcome.text.split('\f')[1].split('\n');
+    const recovered = outcome.changes.find(
+      (change) => change.page === 1 && change.evidence?.kind === 'bracketed-bare-recovery'
+    );
+
+    expect(secondPage[1]).toMatch(/^10\s+Alpha    Beta    Gamma/u);
+    expect(recovered).toMatchObject({
+      before: '10',
+      after: '10',
+      evidence: { bracket: { prev: 5, next: 15 } },
+    });
+  });
 });
