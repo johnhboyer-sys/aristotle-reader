@@ -253,3 +253,19 @@ APo p29/p51 centered bare chapter numerals — converter refuses bare-numeral
 chapters in multi-book works). 51 tests green; pdf-import zero-diff.
 `config.preserveDisplayLines` escape added for a hypothetical high-alpha
 real table (none exist in PA/APo; Apostle contingency).
+
+## Stage 5 — Tier-2 proposal audit + run-pairing fix (2026-07-08)
+
+John spot-checked the review page 2-for-2 wrong → full Opus audit: 12/48
+proposals (25%) wrong or junk. Root causes fixed: (1) footnote-marker digits
+paired with footnote Greek (≥2-letter garble gate, subsumed by content-token
+filtering); (2) multi-token Greek runs paired off-by-one (adjacent-pair →
+REGION WALK: contiguous garble-run vs clean-Greek-run, equal content-token
+counts → per-token records grouped as one run pattern; mismatches →
+'greek-run-unpaired' diagnostics); (3) Genie markup (*…*/$…$/<sup>) could
+enter proposals/edits — stripped everywhere; (4) checked gap-records were
+never wired into edits — apply now works. Discovery: ALL APo body Greek is
+Barnes's own translator footnotes (MS-reading notes); the proposals are
+de-garbles of footnote Greek, zero edition disagreements. Post-fix: APo 85
+greek + 2 diacritic proposals in 68 review groups, ZERO wrong per audit;
+13 unpairable → diagnostics; PA just the 66Ia→661a opener. 73 tests green.

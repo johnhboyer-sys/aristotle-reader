@@ -244,4 +244,64 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
     expect(outcome.report.window.commentaryIdx).toBe(2);
     expect(outcome.witnessBodyPages.map((page) => page.page)).toEqual([0, 1]);
   });
+
+  it('17. pairs multi-token Greek gap runs by count instead of adjacent local order', () => {
+    const backbone = ['RUNNING HEAD', '639a We continue after ra apwa, with Schone.'].join('\n');
+    const witness = '639a We continue after τὰ ἄμεσα, with Schöne.';
+    const outcome = vote(backbone, witness, config());
+    const records = outcome.changes.filter((change) => change.rule === 'word-identity' && change.evidence?.kind === 'greek');
+
+    expect(records).toHaveLength(2);
+    expect(records.map((record) => [record.before, record.after])).toEqual([
+      ['ra', 'τὰ'],
+      ['apwa,', 'ἄμεσα,'],
+    ]);
+    expect(records.every((record) => record.evidence?.runBefore === 'ra apwa,')).toBe(true);
+    expect(records.every((record) => record.evidence?.runAfter === 'τὰ ἄμεσα,')).toBe(true);
+    expect(records.some((record) => record.before === 'apwa,' && record.after === 'τὰ')).toBe(false);
+  });
+
+  it('18. emits one diagnostic for count-mismatched Greek regions without word proposals', () => {
+    const backbone = ['RUNNING HEAD', '639a We continue after ra apwa sample.'].join('\n');
+    const witness = '639a We continue after λόγος sample.';
+    const outcome = vote(backbone, witness, config());
+    const unpaired = outcome.changes.filter((change) => change.evidence?.kind === 'greek-run-unpaired');
+
+    expect(unpaired).toHaveLength(1);
+    expect(unpaired[0].evidence).toMatchObject({ backbone: 'ra apwa', witness: 'λόγος' });
+    expect(outcome.changes.some((change) => change.rule === 'word-identity')).toBe(false);
+  });
+
+  it('19. never turns a LaTeX witness command token into replacement text', () => {
+    const backbone = ['RUNNING HEAD', '639a We continue after dx sample.'].join('\n');
+    const witness = '639a We continue after $\\delta$ sample.';
+    const outcome = vote(backbone, witness, config());
+
+    expect(outcome.changes.some((change) => change.rule === 'word-identity')).toBe(false);
+    expect(outcome.changes.some((change) => change.after === '\\delta')).toBe(false);
+  });
+
+  it('20. applies a checked Greek run group to every token in place', () => {
+    const backbone = ['RUNNING HEAD', '639a We continue after ra apwa, with Schone.'].join('\n');
+    const witness = '639a We continue after τὰ ἄμεσα, with Schöne.';
+    const initial = vote(backbone, witness, config());
+    const runGroup = initial.review.groups.find((group) => group.patternKey.startsWith('greek-run|'));
+    expect(runGroup).toMatchObject({ before: 'ra apwa,', after: 'τὰ ἄμεσα,' });
+
+    const checked = renderReview(initial.review).replace(`- [ ] ${runGroup?.before} -> ${runGroup?.after}`, `- [x] ${runGroup?.before} -> ${runGroup?.after}`);
+    const applied = vote(backbone, witness, config(), parseDecisions(checked));
+    const line = applied.text.split('\n')[1];
+
+    expect(line).toBe('639a We continue after τὰ ἄμεσα, with Schone.');
+    expect(line.trim().split(/\s+/u)).toHaveLength(backbone.split('\n')[1].trim().split(/\s+/u).length);
+  });
+
+  it('21. keeps bare digit and Roman marker furniture out of Greek proposal before values', () => {
+    const backbone = ['RUNNING HEAD', '639a We continue after I 3 ra sample.'].join('\n');
+    const witness = '639a We continue after τὰ sample.';
+    const outcome = vote(backbone, witness, config());
+
+    expect(outcome.changes.some((change) => change.before === 'I' || change.before === '3')).toBe(false);
+    expect(outcome.changes.find((change) => change.rule === 'word-identity')).toMatchObject({ before: 'ra', after: 'τὰ' });
+  });
 });

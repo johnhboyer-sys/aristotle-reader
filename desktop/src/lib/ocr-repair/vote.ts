@@ -213,7 +213,7 @@ function candidateFromMatch(
   nextId: ReturnType<typeof changeFactory>,
   sourceText: string,
   counters: VoteOutcome['counters']
-): { record?: ChangeRecord; edit?: PendingEdit } {
+): { record?: ChangeRecord; edit?: PendingEdit } | null {
   if (!op.aProv || op.aRaw === op.bRaw) return {};
   const page = op.aProv.page;
   const line = op.aProv.line;
@@ -245,10 +245,10 @@ function candidateFromMatch(
       line,
       col,
       before: op.aRaw,
-      after: op.bRaw,
+      after: stripWitnessMarkup(op.bRaw),
       evidence: { witnessRef: witnessRefFor(op.bRaw) },
     };
-    return { record, edit: { record, after: op.bRaw, prov: op.aProv, automatic: true } };
+    return { record, edit: { record, after: stripWitnessMarkup(op.bRaw), prov: op.aProv, automatic: true } };
   }
   // A backbone token that IS a Bekker tic carries geometry, not wording —
   // its witness counterpart is an apparatus anchor (kept in the stream as a
@@ -267,13 +267,14 @@ function candidateFromMatch(
       line,
       col,
       before: op.aRaw,
-      after: op.bRaw,
+      after: stripWitnessMarkup(op.bRaw),
       evidence: {
         kind: hasGreek(op.aRaw) || hasGreek(op.bRaw) ? 'greek' : 'diacritic',
+        witnessRaw: op.bRaw,
         line: lineContext(sourceText, op.aProv),
       },
     };
-    return { record, edit: { record, after: op.bRaw, prov: op.aProv, automatic: false } };
+    return { record, edit: { record, after: stripWitnessMarkup(op.bRaw), prov: op.aProv, automatic: false } };
   }
   counters.punctCaseDiffs += 1;
   return {};
@@ -301,32 +302,44 @@ function stage3ReviewRecords(records: ChangeRecord[], nextId: ReturnType<typeof 
     .filter((record) => record.after !== undefined);
 }
 
-function pairedGreekGap(
-  ops: AlignOp[],
-  i: number,
-  nextId: ReturnType<typeof changeFactory>,
-  sourceText: string
-): { record: ChangeRecord; consumed: number } | null {
-  const current = ops[i];
-  const next = ops[i + 1];
-  const a = current.t === 'aOnly' ? current : next?.t === 'aOnly' ? next : null;
-  const b = current.t === 'bOnly' ? current : next?.t === 'bOnly' ? next : null;
-  if (!a || !b || !a.aProv || !hasGreek(b.bRaw)) return null;
-  return {
-    consumed: 2,
-    record: {
-      id: nextId(a.aProv.page, a.aProv.line, a.aProv.col),
-      stage: 5,
-      tier: 2,
-      rule: 'word-identity',
-      page: a.aProv.page,
-      line: a.aProv.line,
-      col: a.aProv.col,
-      before: a.aRaw,
-      after: b.bRaw,
-      evidence: { kind: 'greek', witnessGreek: true, line: lineContext(sourceText, a.aProv) },
-    },
-  };
+/**
+ * Genie decorates tokens with markdown/LaTeX (*word*, **w**, $..$, <sup>);
+ * a proposed `after` must carry ONLY text that could enter the backbone.
+ */
+function stripWitnessMarkup(raw: string): string {
+  let t = raw.replace(/\*+/gu, '');
+  if (/^\$.*\$$/u.test(t)) t = t.slice(1, -1);
+  return t.replace(/<\/?sup>/giu, '');
+}
+
+function isGarbleToken(raw: string): boolean {
+  return (raw.match(/[A-Za-z]/gu)?.length ?? 0) >= 2;
+}
+
+function isCleanGreekWitness(raw: string): boolean {
+  const t = stripWitnessMarkup(raw);
+  return hasGreek(t) && !/[A-Za-z\{}$]/u.test(t);
+}
+
+function classifyGapOp(
+  op: Exclude<AlignOp, { t: 'match' }>,
+  lastProv: TokenProvenance,
+  records: ChangeRecord[],
+  nextId: ReturnType<typeof changeFactory>
+): TokenProvenance {
+  if (op.t === 'aOnly') {
+    const prov = op.aProv ?? lastProv;
+    if (matchKey(op.aRaw) !== '') {
+      records.push(flagRecord(nextId, prov.page, 'alignment-gap', { backbone: op.aRaw }, prov.line, prov.col));
+    }
+    return prov;
+  }
+  if (/^[—–-]+$/u.test(op.bRaw)) {
+    records.push(flagRecord(nextId, lastProv.page, 'spaced-dash-diagnostic', { witness: op.bRaw }, lastProv.line, lastProv.col));
+  } else if (matchKey(op.bRaw) !== '') {
+    records.push(flagRecord(nextId, lastProv.page, 'alignment-gap', { witness: op.bRaw }, lastProv.line, lastProv.col));
+  }
+  return lastProv;
 }
 
 function classifyGaps(ops: AlignOp[], nextId: ReturnType<typeof changeFactory>, sourceText: string): ChangeRecord[] {
@@ -334,24 +347,83 @@ function classifyGaps(ops: AlignOp[], nextId: ReturnType<typeof changeFactory>, 
   let lastProv: TokenProvenance = { page: 0, line: 0, col: 0 };
   for (let i = 0; i < ops.length; i += 1) {
     const op = ops[i];
-    if (op.t === 'match' && op.aProv) lastProv = op.aProv;
-    if (op.t === 'aOnly' && op.aProv) lastProv = op.aProv;
-    const paired = pairedGreekGap(ops, i, nextId, sourceText);
-    if (paired) {
-      records.push(paired.record);
-      i += paired.consumed - 1;
+    if (op.t === 'match') {
+      if (op.aProv) lastProv = op.aProv;
       continue;
     }
-    if (op.t === 'bOnly') {
-      if (/^[—–-]+$/u.test(op.bRaw)) {
-        records.push(flagRecord(nextId, lastProv.page, 'spaced-dash-diagnostic', { witness: op.bRaw }, lastProv.line, lastProv.col));
-      } else if (matchKey(op.bRaw) === '') {
-        continue;
-      } else {
-        records.push(flagRecord(nextId, lastProv.page, 'alignment-gap', { witness: op.bRaw }, lastProv.line, lastProv.col));
+
+    const region: Exclude<AlignOp, { t: 'match' }>[] = [];
+    const aOps: Extract<AlignOp, { t: 'aOnly' }>[] = [];
+    const bOps: Extract<AlignOp, { t: 'bOnly' }>[] = [];
+    for (; i < ops.length && ops[i].t !== 'match'; i += 1) {
+      const gapOp = ops[i] as Exclude<AlignOp, { t: 'match' }>;
+      region.push(gapOp);
+      if (gapOp.t === 'aOnly') aOps.push(gapOp);
+      else bOps.push(gapOp);
+    }
+    i -= 1;
+
+    const bGreek = bOps.filter((gapOp) => hasGreek(gapOp.bRaw));
+    if (bGreek.length === 0) {
+      for (const gapOp of region) lastProv = classifyGapOp(gapOp, lastProv, records, nextId);
+      continue;
+    }
+
+    const aWords = aOps.filter((gapOp) => isGarbleToken(gapOp.aRaw));
+    const bWords = bOps.filter((gapOp) => isCleanGreekWitness(gapOp.bRaw));
+    if (aWords.length > 0 && aWords.length === bWords.length) {
+      const runBefore = aWords.map((gapOp) => gapOp.aRaw).join(' ');
+      const runAfter = bWords.map((gapOp) => stripWitnessMarkup(gapOp.bRaw)).join(' ');
+      const consumedA = new Set<AlignOp>(aWords);
+      const consumedB = new Set<AlignOp>(bWords);
+      for (let k = 0; k < aWords.length; k += 1) {
+        const a = aWords[k];
+        const b = bWords[k];
+        if (!a.aProv) continue;
+        records.push({
+          id: nextId(a.aProv.page, a.aProv.line, a.aProv.col),
+          stage: 5,
+          tier: 2,
+          rule: 'word-identity',
+          page: a.aProv.page,
+          line: a.aProv.line,
+          col: a.aProv.col,
+          before: a.aRaw,
+          after: stripWitnessMarkup(b.bRaw),
+          evidence: {
+            kind: 'greek',
+            witnessGreek: true,
+            runBefore,
+            runAfter,
+            runLen: aWords.length,
+            runIdx: k,
+            line: lineContext(sourceText, a.aProv),
+          },
+        });
       }
-    } else if (op.t === 'aOnly' && matchKey(op.aRaw) !== '') {
-      records.push(flagRecord(nextId, op.aProv?.page ?? lastProv.page, 'alignment-gap', { backbone: op.aRaw }, op.aProv?.line ?? lastProv.line, op.aProv?.col ?? lastProv.col));
+      for (const gapOp of region) {
+        if (consumedA.has(gapOp) || consumedB.has(gapOp)) {
+          if (gapOp.t === 'aOnly' && gapOp.aProv) lastProv = gapOp.aProv;
+          continue;
+        }
+        lastProv = classifyGapOp(gapOp, lastProv, records, nextId);
+      }
+      continue;
+    }
+
+    const prov = aWords[0]?.aProv ?? aOps.find((gapOp) => gapOp.aProv)?.aProv ?? lastProv;
+    records.push(
+      flagRecord(
+        nextId,
+        prov.page,
+        'greek-run-unpaired',
+        { backbone: aWords.map((gapOp) => gapOp.aRaw).join(' '), witness: bGreek.map((gapOp) => gapOp.bRaw).join(' ') },
+        prov.line,
+        prov.col
+      )
+    );
+    for (const gapOp of region) {
+      if (gapOp.t === 'aOnly' && gapOp.aProv) lastProv = gapOp.aProv;
     }
   }
   return records;
@@ -414,6 +486,11 @@ export function vote(
 
   const gapRecords = classifyGaps(ops, nextId, backbone);
   reviewRecords.push(...gapRecords);
+  for (const record of gapRecords) {
+    if (record.rule !== 'word-identity' || !checked(decisions, record)) continue;
+    if (record.line === undefined || record.col === undefined || record.after === undefined) continue;
+    edits.push({ record, after: record.after, prov: { page: record.page, line: record.line, col: record.col }, automatic: false });
+  }
 
   const stage3Records = stage3ReviewRecords(options.stage3Records ?? [], nextId);
   reviewRecords.push(...stage3Records);

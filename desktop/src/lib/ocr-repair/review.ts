@@ -35,6 +35,7 @@ export interface ReviewDecisions {
 // counts (full detail stays in changes-stage5.jsonl).
 const DIAGNOSTIC_CATEGORIES = new Set([
   'Spaced dash/alignment-gap diagnostics',
+  'Greek diagnostics',
   'Paragraph diagnostics',
   'Coverage diagnostics',
 ]);
@@ -42,6 +43,7 @@ const DIAGNOSTIC_CATEGORIES = new Set([
 function categoryFor(record: ChangeRecord): string {
   const kind = String(record.evidence?.kind ?? '');
   if (kind === 'bekker-ambiguous' || kind === 'bekker-opener') return 'Bekker openers';
+  if (kind === 'greek-run-unpaired') return 'Greek diagnostics';
   if (kind.includes('spaced-dash') || kind.includes('alignment-gap')) return 'Spaced dash/alignment-gap diagnostics';
   if (kind.includes('paragraph')) return 'Paragraph diagnostics';
   if (record.rule === 'no-witness-span' || kind === 'no-witness-span') return 'Coverage diagnostics';
@@ -49,7 +51,17 @@ function categoryFor(record: ChangeRecord): string {
   return 'Diacritic';
 }
 
+function greekRunText(record: Pick<ChangeRecord, 'evidence'>): { before: string; after: string } | null {
+  const runLen = typeof record.evidence?.runLen === 'number' ? record.evidence.runLen : 0;
+  const runBefore = record.evidence?.runBefore;
+  const runAfter = record.evidence?.runAfter;
+  if (runLen <= 1 || typeof runBefore !== 'string' || typeof runAfter !== 'string') return null;
+  return { before: runBefore, after: runAfter };
+}
+
 export function patternKeyFor(record: Pick<ChangeRecord, 'rule' | 'before' | 'after' | 'evidence'>): string {
+  const run = greekRunText(record);
+  if (run) return `greek-run|${run.before}|${run.after}`;
   const kind = String(record.evidence?.kind ?? '');
   return `${kind || record.rule}|${record.before ?? ''}|${record.after ?? ''}`;
 }
@@ -59,11 +71,12 @@ export function buildReviewModel(corpus: string, records: ChangeRecord[], text: 
   const grouped = new Map<string, ReviewGroup>();
   for (const record of records) {
     const key = patternKeyFor(record);
+    const run = greekRunText(record);
     const group = grouped.get(key) ?? {
       category: categoryFor(record),
       patternKey: key,
-      before: record.before,
-      after: record.after,
+      before: run?.before ?? record.before,
+      after: run?.after ?? record.after,
       checked: false,
       instances: [],
     };
