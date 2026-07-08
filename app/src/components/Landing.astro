@@ -9,7 +9,7 @@ import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import {
   AUTHENTICITY_LABEL, getWork, bookLabel, isBookless, workPath, visibleTranslations,
-  furtherReading, inPrintHref, workLanding,
+  furtherReading, inPrintHref, workLanding, resourcesFor,
 } from '../lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import { sanitizeHtml } from '../lib/html';
@@ -49,6 +49,7 @@ const translatorNames = editions.map((t) => t.name.split(' (')[0]);
 const commentaries = (work.commentaries ?? [])
   .map((id) => getWork(id))
   .filter((w): w is NonNullable<typeof w> => Boolean(w));
+const resources = resourcesFor(workId);
 const reading = furtherReading(workId);
 const readingTrans = reading.filter((r) => r.kind === 'translation');
 const readingComm = reading.filter((r) => r.kind === 'commentary');
@@ -160,6 +161,7 @@ const breadcrumbLd = Astro.site
     .read-list li { margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.55; color: var(--text-mid); }
     .read-list .rk { font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-mid); background: var(--border); border-radius: 3px; padding: 0.08em 0.45em; margin-right: 0.45em; vertical-align: 0.08em; }
     .read-list a.buy { color: var(--accent); white-space: nowrap; }
+    .read-list a.res-link { font-family: var(--font-ui); font-size: 0.98rem; font-weight: 700; color: var(--accent); }
     .lp-note { font-size: 0.82rem; color: var(--text-mid); margin-top: 0.8rem; }
     .lp-support { margin-top: 2.75rem; }
   </style>
@@ -325,6 +327,23 @@ const breadcrumbLd = Astro.site
           </>
         )}
         <p class="lp-note">“Find in print” opens a Google Books search for the edition.</p>
+      </>
+    )}
+
+    {resources.length > 0 && (
+      <>
+        <h2 class="lp-h">Resources</h2>
+        <ul class="read-list">
+          {resources.map((r) => (
+            <li>
+              <a class="res-link" href={r.url} target="_blank" rel="noopener">{r.label}</a>
+              {' — '}{r.blurb}
+              {r.exercises && <> See {r.exercises}, relevant to this work.</>}
+              {' '}Developed by{' '}
+              <a class="buy" href={r.authorUrl} target="_blank" rel="noopener">{r.authorName}</a>.
+            </li>
+          ))}
+        </ul>
       </>
     )}
 
