@@ -252,8 +252,11 @@ function candidateFromMatch(
   }
   // A backbone token that IS a Bekker tic carries geometry, not wording —
   // its witness counterpart is an apparatus anchor (kept in the stream as a
-  // sync point), never a word-identity disagreement.
-  if (classifyTicToken(op.aRaw.trim())) return null;
+  // sync point), never a word-identity disagreement. Same for a glued-opener
+  // blob ('689ato') stage 3 left ambiguous: proposing the witness's anchor
+  // token would delete the fused word; the blob is already Tier-2-recorded
+  // by stage 3 and belongs to the geometry campaign, not the vote.
+  if (classifyTicToken(op.aRaw.trim()) || /^\d{1,4}[ab]\p{L}+/u.test(op.aRaw.trim())) return null;
   if (hasGreek(op.aRaw) || hasGreek(op.bRaw) || hasDiacriticChange(op.aRaw, op.bRaw) || matchKey(op.aRaw) !== matchKey(op.bRaw)) {
     const record: ChangeRecord = {
       id: nextId(page, line, col),

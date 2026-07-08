@@ -513,6 +513,35 @@ function extractCandidates(lines: string[], excluded: Set<number>, page: number,
           residualStart: residual.residualStart,
         });
       }
+    } else if (leading === null && found.length === 0) {
+      // Glued verso opener: OCR fused the marginal full-form to the first
+      // body word ('683athe'). Decode the numeric part only; the residual
+      // starts INSIDE the token, so the standard verso re-layout re-emits
+      // it as tic + margin-padded word — the split falls out of the
+      // existing machinery. Uniqueness-gated like any garble (clean:null).
+      const first = /^(\s*)(\S+)/u.exec(line);
+      const glued = first ? /^(\d{1,4}[ab])(\p{L}{2,}.*)$/u.exec(first[2]) : null;
+      // Indent gate is looser than the plain-tic ≤3: a glued opener can sit
+      // at the body margin itself (OCR pulled the tic into the column). The
+      // cadence-uniqueness gate is what prevents false splits.
+      if (glued && first![1].length <= 6) {
+        const startCol = first![1].length;
+        const { values } = decodeValues(glued[1]);
+        const residualStart = startCol + glued[1].length;
+        if (values.length > 0) {
+          found.push({
+            side: 'verso',
+            lineIdx: i,
+            raw: first![2],
+            startCol,
+            endCol: startCol + glued[1].length,
+            values,
+            clean: null,
+            display: isTabularResidual(line.slice(residualStart).trim()),
+            residualStart,
+          });
+        }
+      }
     }
 
     if (trailing) {

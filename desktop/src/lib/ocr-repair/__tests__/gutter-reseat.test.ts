@@ -316,6 +316,29 @@ describe('reseatGutter stage-3 fixtures', () => {
     expect(bodyLine?.indexOf('Body')).toBe(11);
   });
 
+  it('17. glued verso opener splits into tic + word when cadence-unique', () => {
+    const raw = [
+      'RUNNING HEAD',
+      '639a   Body text opens the first column here.',
+      '5      More body text continues along nicely.',
+      '\f',
+      'RUNNING HEAD',
+      '639bthe acquisition of nourishment proceeds apace.',
+      '5      More body text continues along nicely.',
+      '',
+      '104',
+    ].join('\n');
+    const outcome = reseatGutter(raw, config(undefined, undefined, 'verso'));
+    const secondPage = outcome.text.split('\f')[1];
+
+    expect(secondPage).toContain('\n639b');
+    expect(secondPage).toMatch(/639b\s+the acquisition/u);
+    const split = outcome.changes.find(
+      (c) => c.rule === 'bekker-digit' && c.tier === 1 && c.before === '639bthe'
+    );
+    expect(split).toMatchObject({ after: '639b' });
+  });
+
   it('16. prose beginning with a small number and l-words is not decoded as a full-form', () => {
     const raw = [
       'RUNNING HEAD',
