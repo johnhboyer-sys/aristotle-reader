@@ -88,14 +88,19 @@ function headRefForPage(page: string): WitnessAnchor | null {
   return line ? decodeWitnessHeadRef(line) : null;
 }
 
-function firstCommentaryPage(pages: string[]): number {
-  const idx = pages.findIndex((page) => /^COMMENTARY\b/u.test(firstNonEmptyLine(page).trim()));
-  return idx === -1 ? pages.length : idx;
+// Searched only AFTER the body start — front matter also carries NOTE/
+// COMMENTARY-headed pages (APo: 'NOTE ON THE TRANSLATION'), the same
+// first-match trap the stage-1 slice hit.
+function firstCommentaryPage(pages: string[], from: number): number {
+  for (let i = from; i < pages.length; i += 1) {
+    if (/^#*\s*(?:SYNOPSIS|NOTE|COMMENTARY)\b/iu.test(firstNonEmptyLine(pages[i]).trim())) return i;
+  }
+  return pages.length;
 }
 
-function bodyStart(pages: string[], commentaryIdx: number, config: CorpusConfig): number {
-  for (let i = 0; i < commentaryIdx; i += 1) {
-    const refs = pages.slice(i, Math.min(i + 5, commentaryIdx)).map(headRefForPage);
+function bodyStart(pages: string[], config: CorpusConfig): number {
+  for (let i = 0; i < pages.length; i += 1) {
+    const refs = pages.slice(i, Math.min(i + 5, pages.length)).map(headRefForPage);
     if (refs[0] && inRange(refs[0], config) && refs.filter((ref) => ref && inRange(ref, config)).length >= 4) {
       return i;
     }
@@ -165,9 +170,13 @@ function countRows(rows: PairingRow[]): Record<PairKind, number> {
 
 export function pairWitnessPages(backboneText: string, witnessText: string, config: CorpusConfig): PairingOutcome {
   const witnessPages = splitWitnessPages(witnessText);
-  const commentaryIdx = firstCommentaryPage(witnessPages);
-  const bodyLo = bodyStart(witnessPages, commentaryIdx, config);
-  const bodyHi = commentaryIdx;
+  const bodyLo = bodyStart(witnessPages, config);
+  const commentaryIdx = firstCommentaryPage(witnessPages, bodyLo + 1);
+  const lastInRange = witnessPages.slice(bodyLo, commentaryIdx).reduce((last, page, offset) => {
+    const ref = headRefForPage(page);
+    return ref && inRange(ref, config) ? bodyLo + offset : last;
+  }, bodyLo - 1);
+  const bodyHi = lastInRange >= bodyLo ? lastInRange + 1 : commentaryIdx;
   const witnessBodyPages: WitnessBodyPage[] = witnessPages.slice(bodyLo, bodyHi).map((text, offset) => ({
     page: bodyLo + offset,
     text,

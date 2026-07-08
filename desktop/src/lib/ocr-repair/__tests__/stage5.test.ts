@@ -5,6 +5,7 @@ import { vote, classifyDroppedLines } from '../vote';
 import { renderReview, parseDecisions, patternKeyFor } from '../review';
 import type { ChangeRecord } from '../changelist';
 import { alignTokens } from '../align';
+import { decodeWitnessHeadRef } from '../witness-anchors';
 
 function config(overrides: Partial<CorpusConfig> = {}): CorpusConfig {
   return {
@@ -199,5 +200,48 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
 
     expect(durationMs).toBeLessThan(3000);
     expect(matched / size).toBeGreaterThan(0.95);
+  });
+
+  it('12. rebuilds closed em dash edits from the backbone token without Genie markdown', () => {
+    const backbone = ['RUNNING HEAD', '639a C-therefore follows.'].join('\n');
+    const witness = '639a *C*—therefore follows.';
+    const outcome = vote(backbone, witness, config());
+    const record = outcome.changes.find((change) => change.rule === 'emdash-restore');
+
+    expect(record).toMatchObject({ before: 'C-therefore', after: 'C—therefore' });
+    expect(outcome.text).toContain('C—therefore');
+    expect(outcome.text).not.toContain('*C*');
+    expect(outcome.text).not.toContain('*');
+  });
+
+  it('13. decodes brace-wrapped LaTeX superscript witness heads', () => {
+    expect(decodeWitnessHeadRef('$639^{\\mathrm{b}}$')?.ref).toBe('639b');
+    expect(decodeWitnessHeadRef('$641^{\\text{a}}$')?.ref).toBe('641a');
+    expect(decodeWitnessHeadRef('642^{a}')?.ref).toBe('642a');
+  });
+
+  it('14. hard-syncs marked-up witness Bekker openers against bare backbone openers', () => {
+    const ops = alignTokens('640b Alpha beta gamma.', '$640^{\\mathrm{b}}$ Alpha beta gamma.');
+
+    expect(ops).toContainEqual(expect.objectContaining({ t: 'match', aRaw: '640b', bRaw: '640^{\\mathrm{b}}' }));
+  });
+
+  it('15. strips witness running heads, marginal line numbers, and markup-only tokens before alignment', () => {
+    const ops = alignTokens('The prose aligns exactly.', ['HISTORY OF ANIMALS', '15', '**', 'The prose aligns exactly.', '**'].join('\n'));
+
+    expect(ops.every((op) => op.t === 'match')).toBe(true);
+    expect(ops.filter((op) => op.t === 'match')).toHaveLength(4);
+    expect(ops.some((op) => op.t === 'bOnly')).toBe(false);
+  });
+
+  it('16. excludes synopsis and markdown commentary tail pages from the witness body window', () => {
+    const backbone = ['RUNNING HEAD', '639a First body page.', recto('Second body page.', '639b')].join('\n');
+    const witness = ['639a\nFirst witness page.', '---', '639b\nSecond witness page.', '---', 'SYNOPSIS\n640a tail.', '---', '# COMMENTARY\n641a tail.'].join('\n');
+    const outcome = pairWitnessPages(backbone, witness, config());
+
+    expect(outcome.report.window.bodyLo).toBe(0);
+    expect(outcome.report.window.bodyHi).toBe(2);
+    expect(outcome.report.window.commentaryIdx).toBe(2);
+    expect(outcome.witnessBodyPages.map((page) => page.page)).toEqual([0, 1]);
   });
 });

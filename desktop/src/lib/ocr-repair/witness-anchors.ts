@@ -25,6 +25,12 @@ const CONTINUATION_RE =
   /(?:\^\s*([ab])|\$\^\{?([ab])\}?\$|<sup>\s*([ab])\s*<\/sup>|([ᵃᵇª]))/giu;
 const WORD_RE = /[\p{L}\p{N}]+/gu;
 
+function normalizeLatexSuperscripts(text: string): string {
+  return text
+    .replace(/\^\s*\{\s*\\(?:mathrm|text)\s*\{\s*([ab])\s*\}\s*\}/giu, '^$1')
+    .replace(/\^\s*\{\s*([ab])\s*\}/giu, '^$1');
+}
+
 function normalizeCol(raw: string): 'a' | 'b' {
   return raw === 'ᵃ' || raw === 'ª' || raw.toLowerCase() === 'a' ? 'a' : 'b';
 }
@@ -49,6 +55,7 @@ function overlaps(anchor: RawAnchor, claimed: RawAnchor[]): boolean {
 }
 
 function extractPageAnchors(text: string): WitnessAnchor[] {
+  text = normalizeLatexSuperscripts(text);
   const events: ({ kind: 'full' } & RawAnchor | { kind: 'continuation'; col: 'a' | 'b'; raw: string; offset: number; end: number })[] = [];
 
   for (const match of text.matchAll(FULL_ANCHOR_RE)) {

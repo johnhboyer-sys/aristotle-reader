@@ -7,7 +7,7 @@ Modules (pure TS, no fs): witness-pairing.ts, align.ts, vote.ts, review.ts.
 ## Headline measurements (drive the design)
 
 - ZERO genuine word-identity disagreements in both corpora (99.2% tokens match).
-- Em-dash restore: 147 PA / 147 APo — Adobe DELETED dashes (backbone has zero
+- Em-dash restore: 147 PA / ~289 APo (measured at build) — Adobe DELETED dashes (backbone has zero
   `—`/`–`/`--`); witness sets them CLOSED (`things—whenever`). Norm-stripped,
   they align 1:1 to a single backbone token (`thingswhenever`) → insertion is
   a re-spelling WITHIN a matched token → Tier 1.

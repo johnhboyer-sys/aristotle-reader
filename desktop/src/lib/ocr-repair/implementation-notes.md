@@ -198,8 +198,11 @@ stage 5 with witness evidence (may be genuine Genie-visible gaps).
 
 ## Stage-7 held-out corpus — Apostle, Posterior Analytics (John's description only; files untouched)
 
-John vendored a third, non-Clarendon pair: Apostle's APo — files are in
-~/Downloads with "Apostle" in the filenames (per John; not listed, not opened).
+John vendored a third, non-Clarendon pair: Apostle's APo — files have
+"Apostle" in the filenames and were originally in ~/Downloads; **John moved
+Downloads' contents into iCloud (2026-07-07)**, so at stage 7 fetch them from
+iCloud Drive (they may be dataless stubs locally — `brctl download` first, or
+ask John to re-stage them). Not listed, not opened.
 Per the held-out protocol we do NOT read, sample, grep, or even `ls` them
 before stage 7 — all facts below are John's description (2026-07-07), recorded
 so stages 2–5 stay general:

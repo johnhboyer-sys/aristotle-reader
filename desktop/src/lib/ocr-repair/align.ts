@@ -1,3 +1,5 @@
+import { decodeWitnessHeadRef } from './witness-anchors';
+
 export interface TokenProvenance {
   page: number;
   line: number;
@@ -17,6 +19,7 @@ export type AlignOp =
 
 const TOKEN_RE = /\S+/gu;
 const FULL_OPENER_RE = /^(\d{1,4})([ab])(?:\d{0,2})$/u;
+const BARE_LINE_NUMBER_RE = /^(?:5|10|15|20|25|30)$/u;
 
 export function matchKey(raw: string): string {
   return raw
@@ -28,7 +31,9 @@ export function matchKey(raw: string): string {
 
 function openerKey(raw: string): string | null {
   const m = FULL_OPENER_RE.exec(raw);
-  return m ? `${Number(m[1])}${m[2]}` : null;
+  if (m) return `${Number(m[1])}${m[2]}`;
+  const decoded = decodeWitnessHeadRef(raw);
+  return decoded ? `${decoded.page}${decoded.col}` : null;
 }
 
 export function tokenizeBackbone(text: string): AlignedToken[] {
@@ -46,7 +51,34 @@ export function tokenizeBackbone(text: string): AlignedToken[] {
 }
 
 export function tokenizeWitness(text: string): AlignedToken[] {
-  return [...text.matchAll(TOKEN_RE)].map((match) => ({ raw: match[0], key: matchKey(match[0]) }));
+  const tokens: AlignedToken[] = [];
+  for (const line of text.split(/\n/u)) {
+    if (isWitnessRunningHeadLine(line)) continue;
+    const normalized = line.replace(/&nbsp;/giu, ' ');
+    for (const match of normalized.matchAll(TOKEN_RE)) {
+      const raw = cleanWitnessToken(match[0]);
+      if (raw === '' || BARE_LINE_NUMBER_RE.test(raw)) continue;
+      tokens.push({ raw, key: matchKey(raw) });
+    }
+  }
+  return tokens;
+}
+
+function cleanWitnessToken(raw: string): string {
+  let token = raw.replace(/\*\*/gu, '');
+  if (/^\$.*\$$/u.test(token)) token = token.slice(1, -1);
+  if (/^<sup>\s*[^<]*\s*<\/sup>$/iu.test(token)) return '';
+  return token;
+}
+
+function isWitnessRunningHeadLine(line: string): boolean {
+  const trimmed = line.replace(/&nbsp;/giu, ' ').trim();
+  if (trimmed === '' || decodeWitnessHeadRef(trimmed)) return false;
+  if (trimmed.length > 80 || /[.!?;:]/u.test(trimmed)) return false;
+  const words = trimmed.match(/\p{L}+/gu) ?? [];
+  if (words.length < 2 || words.length > 8) return false;
+  const letters = words.join('');
+  return letters === letters.toLocaleUpperCase();
 }
 
 interface Pair {

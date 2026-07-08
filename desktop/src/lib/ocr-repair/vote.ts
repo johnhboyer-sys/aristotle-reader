@@ -40,8 +40,10 @@ interface PendingEdit {
 }
 
 const DASH_RE = /[—–]/u;
+const INTERIOR_HYPHEN_RE = /(?<=\p{L})-{1,2}(?=\p{L})/u;
 const LIGATURE_RE = /[ﬁﬂﬀﬃﬄ]/u;
 const GREEK_RE = /[\u0370-\u03ff\u1f00-\u1fff]/u;
+const LETTER_RE = /\p{L}/u;
 
 function stripped(raw: string): string {
   return raw.normalize('NFD').replace(/\p{M}/gu, '');
@@ -182,6 +184,25 @@ function isClosedDashRestore(aRaw: string, bRaw: string): boolean {
   return DASH_RE.test(bRaw) && !DASH_RE.test(aRaw) && matchKey(aRaw) === matchKey(bRaw) && wordTokenCount(aRaw) === 1 && wordTokenCount(bRaw) === 1;
 }
 
+function dashRestorationAfter(aRaw: string, bRaw: string): string | null {
+  const dash = bRaw.match(DASH_RE)?.[0];
+  if (!dash) return null;
+  if (INTERIOR_HYPHEN_RE.test(aRaw)) return aRaw.replace(INTERIOR_HYPHEN_RE, dash);
+
+  const dashIndex = bRaw.search(DASH_RE);
+  const lettersBeforeDash = [...bRaw.slice(0, dashIndex)].filter((ch) => LETTER_RE.test(ch)).length;
+  if (lettersBeforeDash <= 0) return null;
+
+  let seen = 0;
+  for (let i = 0; i < aRaw.length; i += 1) {
+    const ch = aRaw[i];
+    if (!LETTER_RE.test(ch)) continue;
+    seen += 1;
+    if (seen === lettersBeforeDash) return `${aRaw.slice(0, i + 1)}${dash}${aRaw.slice(i + 1)}`;
+  }
+  return null;
+}
+
 function isLigatureRestore(aRaw: string, bRaw: string): boolean {
   return LIGATURE_RE.test(bRaw) && matchKey(aRaw) === matchKey(bRaw);
 }
@@ -197,6 +218,8 @@ function candidateFromMatch(
   const line = op.aProv.line;
   const col = op.aProv.col;
   if (isClosedDashRestore(op.aRaw, op.bRaw)) {
+    const after = dashRestorationAfter(op.aRaw, op.bRaw);
+    if (after === null) return {};
     const record: ChangeRecord = {
       id: nextId(page, line, col),
       stage: 5,
@@ -206,10 +229,10 @@ function candidateFromMatch(
       line,
       col,
       before: op.aRaw,
-      after: op.bRaw,
+      after,
       evidence: { witnessRef: witnessRefFor(op.bRaw), dashChar: op.bRaw.match(DASH_RE)?.[0] },
     };
-    return { record, edit: { record, after: op.bRaw, prov: op.aProv, automatic: true } };
+    return { record, edit: { record, after, prov: op.aProv, automatic: true } };
   }
   if (isLigatureRestore(op.aRaw, op.bRaw)) {
     const record: ChangeRecord = {
