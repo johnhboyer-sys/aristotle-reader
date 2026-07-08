@@ -161,7 +161,7 @@ const breadcrumbLd = Astro.site
     .read-list li { margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.55; color: var(--text-mid); }
     .read-list .rk { font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-mid); background: var(--border); border-radius: 3px; padding: 0.08em 0.45em; margin-right: 0.45em; vertical-align: 0.08em; }
     .read-list a.buy { color: var(--accent); white-space: nowrap; }
-    .read-list a.res-link { font-family: var(--font-ui); font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+    .read-list a.res-link { font-family: var(--font-ui); font-size: 0.98rem; font-weight: 700; color: var(--accent); }
     .lp-note { font-size: 0.82rem; color: var(--text-mid); margin-top: 0.8rem; }
     .lp-support { margin-top: 2.75rem; }
   </style>
@@ -337,9 +337,10 @@ const breadcrumbLd = Astro.site
           {resources.map((r) => (
             <li>
               <a class="res-link" href={r.url} target="_blank" rel="noopener">{r.label}</a>
-              {' — '}{r.blurb} Developed by{' '}
-              <a class="buy" href={r.authorUrl} target="_blank" rel="noopener">{r.authorName}</a>.
+              {' — '}{r.blurb}
               {r.exercises && <> See {r.exercises}, relevant to this work.</>}
+              {' '}Developed by{' '}
+              <a class="buy" href={r.authorUrl} target="_blank" rel="noopener">{r.authorName}</a>.
             </li>
           ))}
         </ul>
