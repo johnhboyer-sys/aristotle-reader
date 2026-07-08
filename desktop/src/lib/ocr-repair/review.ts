@@ -42,6 +42,7 @@ const DIAGNOSTIC_CATEGORIES = new Set([
 
 function categoryFor(record: ChangeRecord): string {
   const kind = String(record.evidence?.kind ?? '');
+  if (record.rule === 'paragraph-indent') return 'Paragraph breaks';
   if (kind === 'bekker-ambiguous' || kind === 'bekker-opener') return 'Bekker openers';
   if (kind === 'greek-run-unpaired') return 'Greek diagnostics';
   if (kind.includes('spaced-dash') || kind.includes('alignment-gap')) return 'Spaced dash/alignment-gap diagnostics';
@@ -62,6 +63,7 @@ function greekRunText(record: Pick<ChangeRecord, 'evidence'>): { before: string;
 export function patternKeyFor(record: Pick<ChangeRecord, 'rule' | 'before' | 'after' | 'evidence'>): string {
   const run = greekRunText(record);
   if (run) return `greek-run|${run.before}|${run.after}`;
+  if (record.rule === 'paragraph-indent') return `paragraph-indent|${record.evidence?.support ?? ''}`;
   const kind = String(record.evidence?.kind ?? '');
   return `${kind || record.rule}|${record.before ?? ''}|${record.after ?? ''}`;
 }
@@ -77,7 +79,7 @@ export function buildReviewModel(corpus: string, records: ChangeRecord[], text: 
       patternKey: key,
       before: run?.before ?? record.before,
       after: run?.after ?? record.after,
-      checked: false,
+      checked: record.rule === 'paragraph-indent' && record.evidence?.support === 'dual-blank',
       instances: [],
     };
     const lines = linesByPage[record.page] ?? [];

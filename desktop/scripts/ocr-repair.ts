@@ -19,6 +19,7 @@ import { reseatGutter } from '../src/lib/ocr-repair/gutter-reseat';
 import { normalizeSpacing } from '../src/lib/ocr-repair/spacing';
 import { extractWitnessAnchors } from '../src/lib/ocr-repair/witness-anchors';
 import { vote } from '../src/lib/ocr-repair/vote';
+import { normalizeFootnotes } from '../src/lib/ocr-repair/footnote-repair';
 import { renderReview, parseDecisions } from '../src/lib/ocr-repair/review';
 import { renderPairingMarkdown } from '../src/lib/ocr-repair/witness-pairing';
 import type { ChangeRecord } from '../src/lib/ocr-repair/changelist';
@@ -70,7 +71,7 @@ const STAGES: Stage[] = [
     name: 'gutter',
     run: (text, config, context) => {
       const witness = extractWitnessAnchors(context.witnessText);
-      return reseatGutter(text, config, witness);
+      return reseatGutter(text, config, witness, context.decisions);
     },
   },
   {
@@ -97,6 +98,11 @@ const STAGES: Stage[] = [
         ],
       };
     },
+  },
+  {
+    n: 6,
+    name: 'footnotes',
+    run: (text, config, context) => normalizeFootnotes(text, config, context.witnessText),
   },
 ];
 

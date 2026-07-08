@@ -8,8 +8,7 @@ import type { PairingReport } from './witness-pairing';
 import { buildReviewModel, patternKeyFor } from './review';
 import type { ReviewDecisions, ReviewModel } from './review';
 import { extractWitnessAnchors } from './witness-anchors';
-import { classifyTicToken } from '../pdf-import/line-shape';
-import { ticSpanOnLine } from '../pdf-import/line-shape';
+import { classifyTicToken, isDisplayShapedLine, parseHeadingResidual, ticSpanOnLine } from '../pdf-import/line-shape';
 
 export interface VoteOptions {
   stage3Records?: ChangeRecord[];
@@ -38,6 +37,12 @@ interface PendingEdit {
   after: string;
   prov: TokenProvenance;
   automatic: boolean;
+}
+
+interface ParagraphEdit {
+  record: ChangeRecord;
+  targetCol: number;
+  side: 'recto' | 'verso';
 }
 
 const DASH_RE = /[—–]/u;
@@ -121,6 +126,38 @@ function replaceInLine(line: string, col: number, before: string, after: string)
   return restoreCr(`${bare.slice(0, actualCol)}${after}${bare.slice(actualCol + before.length)}`, cr);
 }
 
+function rectoTicSpan(line: string): [number, number] | null {
+  const span = ticSpanOnLine(line, 'recto');
+  if (span) return span;
+  const match = / {4,}(\S+)\s*$/u.exec(line);
+  if (!match || !classifyTicToken(match[1])) return null;
+  const start = match.index + match[0].indexOf(match[1]);
+  return [start, start + match[1].length];
+}
+
+export function setLeadingIndent(line: string, targetCol: number, side: 'recto' | 'verso'): string | null {
+  const cr = line.endsWith('\r');
+  const bare = stripCr(line);
+  const recto = rectoTicSpan(bare);
+  if (side === 'recto' && recto) {
+    const [ticStart, ticEnd] = recto;
+    const body = bare.slice(0, ticStart).trim();
+    const prefix = `${' '.repeat(targetCol)}${body}`;
+    const gap = ticStart - prefix.length;
+    if (gap < 4) return null;
+    return restoreCr(`${prefix}${' '.repeat(gap)}${bare.slice(ticStart, ticEnd)}${bare.slice(ticEnd)}`, cr);
+  }
+  const verso = ticSpanOnLine(bare, 'verso');
+  if (side === 'verso' && verso) {
+    const [, ticEnd] = verso;
+    const body = bare.slice(ticEnd).trimStart();
+    const gap = targetCol - ticEnd;
+    if (gap < 1) return null;
+    return restoreCr(`${bare.slice(0, ticEnd)}${' '.repeat(gap)}${body}`, cr);
+  }
+  return restoreCr(`${' '.repeat(targetCol)}${bare.trimStart()}`, cr);
+}
+
 function firstNonBlank(lines: string[]): string {
   return lines.find((line) => stripCr(line).trim() !== '') ?? '';
 }
@@ -173,6 +210,31 @@ function applyPendingEdits(text: string, edits: PendingEdit[], nextId: ReturnTyp
       throw new Error('stage 5 invariant failed: whitespace token count changed on edited line');
     }
     pages[page][line] = current;
+  }
+  const out = pages.map((page) => page.join('\n')).join('\f');
+  assertDocumentInvariants(text, out);
+  return { text: out, changes };
+}
+
+function applyParagraphEdits(text: string, edits: ParagraphEdit[], nextId: ReturnType<typeof changeFactory>): { text: string; changes: ChangeRecord[] } {
+  const pages = text.split('\f').map((page) => page.split('\n'));
+  const changes: ChangeRecord[] = [];
+  for (const edit of edits) {
+    const line = edit.record.line;
+    if (line === undefined) continue;
+    const current = pages[edit.record.page]?.[line];
+    if (current === undefined) continue;
+    const next = setLeadingIndent(current, edit.targetCol, edit.side);
+    if (next === null) {
+      changes.push(flagRecord(nextId, edit.record.page, 'paragraph-indent-skipped-geometry', { targetCol: edit.targetCol, side: edit.side }, line, edit.record.col));
+      continue;
+    }
+    if (wordTokenCount(current) !== wordTokenCount(next)) {
+      changes.push(flagRecord(nextId, edit.record.page, 'token-count-invariant', { rule: 'paragraph-indent', targetCol: edit.targetCol }, line, edit.record.col));
+      continue;
+    }
+    pages[edit.record.page][line] = next;
+    changes.push(edit.record);
   }
   const out = pages.map((page) => page.join('\n')).join('\f');
   assertDocumentInvariants(text, out);
@@ -524,13 +586,168 @@ function checked(decisions: ReviewDecisions | undefined, record: ChangeRecord): 
   return decisions?.checkedPatterns.has(patternKeyFor(record)) ?? false;
 }
 
-function stage3Edits(records: ChangeRecord[], decisions: ReviewDecisions | undefined): PendingEdit[] {
+function plainWords(raw: string): string[] {
+  return raw
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .match(/[\p{L}\p{N}]+/gu) ?? [];
+}
+
+function contextPhrase(raw: string): string {
+  return plainWords(raw.replace(/^\s*\d{1,4}[ab]\d{0,2}\b/iu, '')).slice(0, 4).join(' ');
+}
+
+function witnessParagraphStarts(witnessBody: string): Set<string> {
+  const starts = new Set<string>();
+  let atBreak = true;
+  for (const line of witnessBody.split(/\n/u)) {
+    if (line.trim() === '') {
+      atBreak = true;
+      continue;
+    }
+    if (atBreak) {
+      const phrase = contextPhrase(line);
+      if (phrase) starts.add(phrase);
+    }
+    atBreak = false;
+  }
+  return starts;
+}
+
+function pageSide(lines: string[]): 'recto' | 'verso' {
+  if (lines.some((line) => ticSpanOnLine(stripCr(line), 'verso'))) return 'verso';
+  return 'recto';
+}
+
+function bodyStartCol(line: string, side: 'recto' | 'verso'): number | null {
+  const bare = stripCr(line);
+  if (side === 'verso') {
+    const verso = ticSpanOnLine(bare, 'verso');
+    const body = verso ? bare.slice(verso[1]) : bare;
+    const col = firstAlphaCol(body);
+    return col === null ? null : col + (verso?.[1] ?? 0);
+  }
+  const recto = ticSpanOnLine(bare, 'recto');
+  const body = recto ? bare.slice(0, recto[0]) : bare;
+  const col = firstAlphaCol(body);
+  return col;
+}
+
+function lineBody(line: string, side: 'recto' | 'verso'): string {
+  const bare = stripCr(line);
+  if (side === 'verso') {
+    const verso = ticSpanOnLine(bare, 'verso');
+    return verso ? bare.slice(verso[1]).trimStart() : bare.trimStart();
+  }
+  const recto = ticSpanOnLine(bare, 'recto');
+  return (recto ? bare.slice(0, recto[0]) : bare).trim();
+}
+
+function sentenceBoundary(line: string): boolean {
+  return /[.?!'"′)]$/u.test(line.trim());
+}
+
+function firstAlphaCol(line: string): number | null {
+  const m = /[A-Za-z]/u.exec(line);
+  return m ? m.index : null;
+}
+
+function modalBodyMargin(lines: string[], side: 'recto' | 'verso', skipHead: number | null): number {
+  if (side === 'verso') return 11;
+  const cols: number[] = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    if (i === skipHead || stripCr(lines[i]).trim() === '') continue;
+    const col = bodyStartCol(lines[i], side);
+    if (col !== null) cols.push(col);
+  }
+  if (cols.length === 0) return 0;
+  const counts = new Map<number, number>();
+  for (const col of cols) counts.set(col, (counts.get(col) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+}
+
+function firstNonBlankLine(lines: string[]): number | null {
+  for (let i = 0; i < lines.length; i += 1) {
+    if (stripCr(lines[i]).trim() !== '') return i;
+  }
+  return null;
+}
+
+function paragraphRecord(
+  nextId: ReturnType<typeof changeFactory>,
+  page: number,
+  line: number,
+  col: number,
+  kind: 'paragraph-break-lost' | 'paragraph-break-spurious',
+  support: 'dual-blank' | 'page-top' | 'under-indent' | 'jitter',
+  action: 'insert' | 'snap' | 'flag',
+  targetCol: number,
+  offset: number,
+  modal: number,
+  side: 'recto' | 'verso',
+  witnessContext: string
+): ChangeRecord {
+  return {
+    id: nextId(page, line, col),
+    stage: 5,
+    tier: 2,
+    rule: 'paragraph-indent',
+    page,
+    line,
+    col,
+    before: support,
+    after: action,
+    evidence: { kind, support, action, targetCol, offset, modal, side, witnessContext },
+  };
+}
+
+function classifyParagraphs(pages: string[][], witnessStarts: Set<string>, nextId: ReturnType<typeof changeFactory>): ChangeRecord[] {
+  const records: ChangeRecord[] = [];
+  for (let page = 0; page < pages.length; page += 1) {
+    const lines = pages[page];
+    const head = firstNonBlankLine(lines);
+    const side = pageSide(lines);
+    const modal = modalBodyMargin(lines, side, head);
+    let previousBodyLine: string | null = null;
+    let seenBody = false;
+    for (let line = 0; line < lines.length; line += 1) {
+      const raw = stripCr(lines[line]);
+      if (line === head || raw.trim() === '') continue;
+      const body = lineBody(raw, side);
+      if (body === '' || parseHeadingResidual(body) || isDisplayShapedLine(body)) continue;
+      const firstCol = bodyStartCol(raw, side);
+      if (firstCol === null) continue;
+      const offset = firstCol - modal;
+      const phrase = contextPhrase(body);
+      const witnessBreak = phrase !== '' && witnessStarts.has(phrase);
+      const blankPrecedes = line > 0 && stripCr(lines[line - 1]).trim() === '';
+      const pageTop = !seenBody;
+      if (offset <= 1 && witnessBreak && (blankPrecedes || pageTop || offset === 1)) {
+        const support = blankPrecedes && !pageTop ? 'dual-blank' : pageTop ? 'page-top' : 'under-indent';
+        records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-lost', support, 'insert', modal + 4, offset, modal, side, phrase));
+      } else if ((offset === 1 || offset === 2) && !witnessBreak && previousBodyLine && !sentenceBoundary(previousBodyLine)) {
+        records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'jitter', 'snap', modal, offset, modal, side, phrase));
+      } else if (offset === 2 && !witnessBreak && previousBodyLine && sentenceBoundary(previousBodyLine)) {
+        records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'under-indent', 'flag', modal, offset, modal, side, phrase));
+      }
+      previousBodyLine = body;
+      seenBody = true;
+    }
+  }
+  return records;
+}
+
+function paragraphEdits(records: ChangeRecord[], decisions: ReviewDecisions | undefined): ParagraphEdit[] {
   return records
     .filter((record) => checked(decisions, record))
-    .filter((record): record is ChangeRecord & { line: number; col: number; before: string; after: string } =>
-      record.line !== undefined && record.col !== undefined && record.before !== undefined && record.after !== undefined
-    )
-    .map((record) => ({ record, after: record.after, prov: { page: record.page, line: record.line, col: record.col }, automatic: false }));
+    .filter((record) => record.evidence?.action === 'insert' || record.evidence?.action === 'snap')
+    .map((record) => ({
+      record,
+      targetCol: Number(record.evidence?.targetCol),
+      side: (record.evidence?.side === 'verso' ? 'verso' : 'recto') as 'recto' | 'verso',
+    }))
+    .filter((edit) => Number.isInteger(edit.targetCol) && edit.targetCol >= 0);
 }
 
 export function classifyDroppedLines(droppedLines: string[], witnessText: string): DroppedLineClassification[] {
@@ -585,18 +802,23 @@ export function vote(
 
   const stage3Records = stage3ReviewRecords(options.stage3Records ?? [], nextId);
   reviewRecords.push(...stage3Records);
-  edits.push(...stage3Edits(stage3Records, decisions));
+
+  const paragraphRecords = classifyParagraphs(backbone.split('\f').map((page) => page.split('\n')), witnessParagraphStarts(witnessBody), nextId);
+  reviewRecords.push(...paragraphRecords);
+  const paragraphEditList = paragraphEdits(paragraphRecords, decisions);
 
   const applied = applyPendingEdits(backbone, edits, nextId);
+  const paragraphApplied = applyParagraphEdits(applied.text, paragraphEditList, nextId);
   const review = buildReviewModel(config.id, reviewRecords.filter((record) => record.tier === 2), backbone);
-  const appliedIds = new Set(applied.changes.map((record) => record.id));
+  const appliedIds = new Set([...applied.changes, ...paragraphApplied.changes].map((record) => record.id));
   const changes = [
     ...applied.changes,
+    ...paragraphApplied.changes,
     ...coverageRecords,
     ...reviewRecords.filter((record) => record.tier === 2 && !appliedIds.has(record.id)),
   ];
   return {
-    text: applied.text,
+    text: paragraphApplied.text,
     changes,
     review,
     pairing: pairing.report,

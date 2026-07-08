@@ -135,7 +135,7 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
     expect(outcome.changes.some((change) => change.evidence?.kind === 'alignment-gap')).toBe(true);
   });
 
-  it('8. applies checked macron and stage-3 Bekker opener groups with geometry intact', () => {
+  it('8. applies checked macron but only renders stage-3 Bekker opener groups', () => {
     const backbone = ['RUNNING HEAD', recto('639a The mekon sample remains.'), 'Column 66Ia marker remains.'].join('\n');
     const witness = '639a The mēkōn sample remains.';
     const stage3: ChangeRecord = {
@@ -155,7 +155,8 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
     const line = applied.text.split('\n')[1];
 
     expect(applied.text).toContain('mēkōn');
-    expect(applied.text).toContain('661a');
+    expect(applied.text).toContain('66Ia');
+    expect(applied.text).not.toContain('661a marker');
     expect(line.indexOf('5')).toBe(backbone.split('\n')[1].indexOf('5'));
   });
 

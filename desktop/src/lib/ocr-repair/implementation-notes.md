@@ -282,3 +282,13 @@ APo: 411 / 13 / 43 (all markerLost) / 1 / 2/53 / 2 / 0.
 Import files: ~/Documents/aristotle-ocr/<corpus>/FINAL-<corpus>-import.txt.
 Remaining stage-6 work: John imports both in the desktop app + hand-verifies
 (Reeve-NE bar), then stage 7 (Apostle, held-out).
+
+## Stage-6 fix batch landed (2026-07-08)
+
+All four read-through classes implemented (stage6-fixes-spec.md), 84 tests.
+Full reruns w/ decisions: APo tics 453 / dropped 60→1 / fnNotes 0→36 /
+fnUnmatched 61 / display 1. PA tics 861 / suppressed 15 / dropped 15 /
+stage-6 no-op held (0 records). OPEN: fnNotes 36 vs design's 49 (head-pass
+gap); PA dropped 15 vs static prediction 2 (new column context exposes more
+holes — re-diagnose); paragraph cards now in regenerated review files
+awaiting John's second sitting (dual-blank pre-checked).

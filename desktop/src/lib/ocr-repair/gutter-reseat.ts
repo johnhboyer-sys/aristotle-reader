@@ -1,6 +1,7 @@
 import type { CorpusConfig } from './corpus-config';
 import { makeChangeId } from './changelist';
 import type { ChangeRecord } from './changelist';
+import type { ReviewDecisions } from './review';
 import type { WitnessAnchor } from './witness-anchors';
 import { classifyTicToken, isDisplayShapedLine, parseHeadingResidual } from '../pdf-import/line-shape';
 
@@ -203,6 +204,12 @@ function normalizeDigits(raw: string, confusions: string[]): number | null {
   return out === '' ? null : Number(out);
 }
 
+export function decodeBareLetters(raw: string): { value: number; confusions: string[] } | null {
+  const confusions: string[] = [];
+  const n = normalizeDigits(raw, confusions);
+  return n !== null && n >= 1 && n <= 99 ? { value: n, confusions } : null;
+}
+
 function normalizeCol(raw: string, confusions: string[]): BekkerCol | null {
   if (raw === 'a' || raw === 'A') return 'a';
   if (raw === 'b' || raw === 'B') return 'b';
@@ -328,7 +335,8 @@ function validateRun(
   incoming: RunningState,
   config: CorpusConfig,
   page: number,
-  nextId: ReturnType<typeof changeFactory>
+  nextId: ReturnType<typeof changeFactory>,
+  decisions?: ReviewDecisions
 ): { accepted: AcceptedCandidate[]; flags: ChangeRecord[]; endState: RunningState } {
   const accepted: AcceptedCandidate[] = [];
   const flags: ChangeRecord[] = [];
@@ -383,6 +391,16 @@ function validateRun(
         repaired = true;
       }
     }
+    if (!value) {
+      if (!candidate.clean) {
+        const approved = acceptable.find((v) => decisions?.checkedPatterns.has(`bekker-opener|${candidate.raw}|${canonical(v)}`));
+        if (approved) {
+          value = approved;
+          repaired = true;
+        }
+      }
+    }
+
     if (!value) {
       // State resync past a garbled opener the uniqueness gate refused to
       // rewrite: when its lone in-range monotone decode is a full-form,
@@ -599,12 +617,13 @@ function scanPage(
   incoming: RunningState,
   config: CorpusConfig,
   page: number,
-  nextId: ReturnType<typeof changeFactory>
+  nextId: ReturnType<typeof changeFactory>,
+  decisions?: ReviewDecisions
 ): PageScan & { rectoState: RunningState; versoState: RunningState } {
   const excluded = pageExcluded(lines);
   const extracted = extractCandidates(lines, excluded, page, nextId);
-  const recto = validateRun(extracted.recto, incoming, config, page, nextId);
-  const verso = validateRun(extracted.verso, incoming, config, page, nextId);
+  const recto = validateRun(extracted.recto, incoming, config, page, nextId, decisions);
+  const verso = validateRun(extracted.verso, incoming, config, page, nextId, decisions);
   const bodyText = lines.some((line, i) => !excluded.has(i) && /[A-Za-z]/u.test(stripCr(line)));
   return {
     recto: recto.accepted,
@@ -651,6 +670,141 @@ function firstAlphaCol(line: string): number | null {
   return m ? m.index : null;
 }
 
+function versoModalMargin(lines: string[], accepted: AcceptedCandidate[], excluded: Set<number>): number {
+  const byLine = new Map(accepted.map((a) => [a.candidate.lineIdx, a]));
+  const alphaCols: number[] = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    if (excluded.has(i) || stripCr(lines[i]).trim() === '') continue;
+    const acceptedLine = byLine.get(i);
+    const line = stripCr(lines[i]);
+    const col = acceptedLine ? firstAlphaCol(line.slice(acceptedLine.candidate.residualStart)) : firstAlphaCol(line);
+    if (col !== null) alphaCols.push(col + (acceptedLine ? acceptedLine.candidate.residualStart : 0));
+  }
+  return mode(alphaCols) ?? 11;
+}
+
+function acceptedLineNumber(a: AcceptedCandidate): number {
+  return a.value.kind === 'bare' ? a.value.n : a.value.line ?? 1;
+}
+
+function acceptedColumn(a: AcceptedCandidate): { page: number; col: BekkerCol } {
+  return a.value.kind === 'bare'
+    ? { page: a.stateBefore.page, col: a.stateBefore.col }
+    : { page: a.value.page, col: a.value.col };
+}
+
+function sameColumn(a: { page: number; col: BekkerCol }, b: { page: number; col: BekkerCol }): boolean {
+  return a.page === b.page && a.col === b.col;
+}
+
+function bodyResidual(line: string, side: Side, token: { startCol: number; endCol: number }): string {
+  return candidateResidual(line, { startCol: token.startCol, endCol: token.endCol, side }).residual;
+}
+
+function recoverBracketedBares(
+  lines: string[],
+  side: Side,
+  accepted: AcceptedCandidate[],
+  excluded: Set<number>,
+  incoming: RunningState,
+  config: CorpusConfig,
+  page: number,
+  nextId: ReturnType<typeof changeFactory>,
+  nextAcrossPages?: (column: { page: number; col: BekkerCol }, afterLine: number) => number | null
+): { accepted: AcceptedCandidate[]; records: ChangeRecord[] } {
+  const claimed = new Set(accepted.map((a) => `${a.candidate.lineIdx}:${a.candidate.startCol}`));
+  const recovered: AcceptedCandidate[] = [];
+  const records: ChangeRecord[] = [];
+  const modalMargin = side === 'verso' ? versoModalMargin(lines, accepted, excluded) : 11;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (excluded.has(i) || stripCr(lines[i]).trim() === '') continue;
+    if (accepted.some((a) => a.candidate.lineIdx === i)) continue;
+    const line = stripCr(lines[i]);
+    if (DASH_RANGE_RE.test(line) || parseHeadingResidual(line.trim())) continue;
+
+    const token = side === 'verso' ? leadingEdgeToken(line) : trailingEdgeToken(line);
+    if (!token || token.raw.length > 2 || claimed.has(`${i}:${token.startCol}`)) continue;
+    if (side === 'verso') {
+      if (token.startCol > modalMargin - 2) continue;
+    } else {
+      const before = line.slice(0, token.startCol);
+      const gap = before.length - before.trimEnd().length;
+      if (token.startCol < 30 || gap < 1 || before.trim() === '') continue;
+    }
+    const decoded = decodeBareLetters(token.raw);
+    if (!decoded) continue;
+    const n = decoded.value;
+    const residual = bodyResidual(line, side, token);
+    if (isDisplayShapedLine(stripLikelyTicEnds(residual).trim())) continue;
+
+    const column = (() => {
+      const before = [...accepted, ...recovered]
+        .filter((a) => a.candidate.lineIdx < i)
+        .sort((a, b) => b.candidate.lineIdx - a.candidate.lineIdx)[0];
+      return before ? acceptedColumn(before) : { page: incoming.page, col: incoming.col };
+    })();
+    if (!inRange({ kind: 'full', page: column.page, col: column.col }, config)) continue;
+
+    const same = [...accepted, ...recovered]
+      .filter((a) => sameColumn(acceptedColumn(a), column))
+      .sort((a, b) => a.candidate.lineIdx - b.candidate.lineIdx);
+    const previousAccepted = same.filter((a) => a.candidate.lineIdx < i).at(-1);
+    const nextAccepted = same.find((a) => a.candidate.lineIdx > i);
+    const prev = previousAccepted ? acceptedLineNumber(previousAccepted) : sameColumn(column, incoming) ? incoming.line : 0;
+    const next = nextAccepted ? acceptedLineNumber(nextAccepted) : nextAcrossPages?.(column, n) ?? null;
+    if (!isPlausibleBare(n, { page: column.page, col: column.col, line: prev })) continue;
+    if (prev <= 0 || next === null || !(prev < n && n < next)) continue;
+    if (same.some((a) => acceptedLineNumber(a) === n)) continue;
+
+    const candidate: Candidate = {
+      side,
+      lineIdx: i,
+      raw: token.raw,
+      startCol: token.startCol,
+      endCol: token.endCol,
+      values: [{ kind: 'bare', n }],
+      clean: null,
+      display: false,
+      residualStart: candidateResidual(line, { startCol: token.startCol, endCol: token.endCol, side }).residualStart,
+    };
+    const stateBefore: RunningState = { page: column.page, col: column.col, line: prev };
+    const acceptedCandidate: AcceptedCandidate = {
+      candidate,
+      value: { kind: 'bare', n },
+      canonical: String(n),
+      repaired: true,
+      confusions: decoded.confusions,
+      stateBefore,
+      stateAfter: { ...stateBefore, line: n },
+      flags: [],
+    };
+    recovered.push(acceptedCandidate);
+    claimed.add(`${i}:${token.startCol}`);
+    records.push({
+      id: nextId(page, i, token.startCol),
+      stage: 3,
+      tier: 1,
+      rule: 'bekker-digit',
+      page,
+      line: i,
+      col: token.startCol,
+      before: token.raw,
+      after: String(n),
+      evidence: {
+        kind: 'bracketed-bare-recovery',
+        bracket: { prev, next },
+        confusions: decoded.confusions,
+      },
+    });
+  }
+
+  return {
+    accepted: [...accepted, ...recovered].sort((a, b) => a.candidate.lineIdx - b.candidate.lineIdx),
+    records,
+  };
+}
+
 function mode(values: number[]): number | null {
   if (values.length === 0) return null;
   const counts = new Map<number, number>();
@@ -691,15 +845,7 @@ function relayoutPage(
     return { lines: out, evidence: { side, margin: { ticCol, gap: 4 }, linesShifted: 0, ticLines, flags }, flags };
   }
 
-  const alphaCols: number[] = [];
-  for (let i = 0; i < lines.length; i += 1) {
-    if (excluded.has(i) || stripCr(lines[i]).trim() === '') continue;
-    const acceptedLine = byLine.get(i);
-    const line = stripCr(lines[i]);
-    const col = acceptedLine ? firstAlphaCol(line.slice(acceptedLine.candidate.residualStart)) : firstAlphaCol(line);
-    if (col !== null) alphaCols.push(col + (acceptedLine ? acceptedLine.candidate.residualStart : 0));
-  }
-  const from = mode(alphaCols) ?? 11;
+  const from = versoModalMargin(lines, accepted, excluded);
   const delta = 11 - from;
   for (let i = 0; i < lines.length; i += 1) {
     if (excluded.has(i) || stripCr(lines[i]).trim() === '') continue;
@@ -782,7 +928,36 @@ function ambiguousBekkerRecords(
   return out;
 }
 
-export function reseatGutter(raw: string, config: CorpusConfig, witnessPages?: WitnessAnchor[][]): GutterOutcome {
+function nextAcceptedLineAcrossPages(
+  pages: string[][],
+  fromPage: number,
+  column: { page: number; col: BekkerCol },
+  afterLine: number,
+  sideHint: Side | null,
+  config: CorpusConfig,
+  decisions?: ReviewDecisions
+): number | null {
+  const quietId = changeFactory();
+  let state: RunningState = { page: column.page, col: column.col, line: afterLine };
+  let lastSide = sideHint;
+  for (let page = fromPage; page < pages.length; page += 1) {
+    const scan = scanPage(pages[page], state, config, page, quietId, decisions);
+    const decision = chooseSide(scan, lastSide, config);
+    if (decision.conflict || !decision.side) continue;
+    const same = decision.accepted
+      .filter((a) => sameColumn(acceptedColumn(a), column))
+      .sort((a, b) => a.candidate.lineIdx - b.candidate.lineIdx);
+    const next = same.find((a) => acceptedLineNumber(a) > afterLine);
+    if (next) return acceptedLineNumber(next);
+    const laterColumn = decision.accepted.find((a) => compareRef(acceptedColumn(a), column) > 0);
+    if (laterColumn) return null;
+    if (decision.accepted.length > 0) state = decision.accepted[decision.accepted.length - 1].stateAfter;
+    lastSide = decision.side;
+  }
+  return null;
+}
+
+export function reseatGutter(raw: string, config: CorpusConfig, witnessPages?: WitnessAnchor[][], decisions?: ReviewDecisions): GutterOutcome {
   const nextId = changeFactory();
   const pages = raw.split('\f').map((segment) => segment.split('\n'));
   const changes: ChangeRecord[] = [];
@@ -791,7 +966,7 @@ export function reseatGutter(raw: string, config: CorpusConfig, witnessPages?: W
 
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page];
-    const scan = scanPage(lines, state, config, page, nextId);
+    const scan = scanPage(lines, state, config, page, nextId, decisions);
     changes.push(...scan.flags);
     const decision = chooseSide(scan, lastSide, config);
 
@@ -804,12 +979,31 @@ export function reseatGutter(raw: string, config: CorpusConfig, witnessPages?: W
       changes.push(flagRecord(nextId, page, 'side-inherited-no-tics', { side: decision.side }));
     }
     const rawCandidates = decision.side === 'recto' ? scan.rectoRaw : scan.versoRaw;
+    const recovered = recoverBracketedBares(
+      lines,
+      decision.side,
+      decision.accepted,
+      scan.excluded,
+      state,
+      config,
+      page,
+      nextId,
+      (column, afterLine) => nextAcceptedLineAcrossPages(pages, page + 1, column, afterLine, decision.side, config, decisions)
+    );
+    decision.accepted = recovered.accepted;
+    changes.push(...recovered.records);
+    const recoveredSites = new Set(recovered.records.map((record) => `${record.line}:${record.col}`));
     changes.push(...ambiguousBekkerRecords(rawCandidates, decision.accepted, state, page, config, nextId, witnessPages));
     const shouldRelayout = decision.accepted.length > 0 || (decision.side === 'verso' && scan.bodyText);
     if (shouldRelayout) {
       const layout = relayoutPage(lines, decision.side, decision.accepted, scan.excluded);
       pages[page] = layout.lines;
-      changes.push(...bekkerDigitRecords(decision.accepted, page, nextId, witnessPages));
+      changes.push(...bekkerDigitRecords(
+        decision.accepted.filter((a) => !recoveredSites.has(`${a.candidate.lineIdx}:${a.candidate.startCol}`)),
+        page,
+        nextId,
+        witnessPages
+      ));
       changes.push({
         id: nextId(page, undefined, undefined),
         stage: 3,

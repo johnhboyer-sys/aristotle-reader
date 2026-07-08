@@ -17,6 +17,9 @@ export type RuleId =
   | 'tic-reseat'
   | 'bekker-digit'
   | 'spacing-collapse'
+  | 'paragraph-indent'
+  | 'footnote-head'
+  | 'footnote-marker'
   | 'emdash-restore'
   | 'ligature'
   | 'word-identity' // Tier 2 only
