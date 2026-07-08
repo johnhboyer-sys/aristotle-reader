@@ -30,7 +30,7 @@ import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
 import type { StampMode } from './pandocMarkdown';
-import { chapterSegments, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
+import { chapterSegments, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
 
 export type CompileMode = 'english' | 'bilingual';
 
@@ -104,6 +104,13 @@ export function sortChaptersManifestOrder<T>(
  * intentionally under-reports at the tail rather than guessing.
  */
 export function buildGapReport(present: CompiledChapterRef[], work: WorkMeta): CompileGapReport {
+  const workScheme = getScheme(work.scheme);
+  if (workScheme.spineSource === 'document') {
+    return present.length > 0
+      ? { hasGaps: false, lines: [], summary: 'Document present.' }
+      : { hasGaps: true, lines: ['Document missing.'], summary: 'Document missing.' };
+  }
+
   const byBook = new Map<number, number[]>();
   for (const p of present) {
     const list = byBook.get(p.book) ?? [];
@@ -266,6 +273,21 @@ export function compileWorkMarkdown(
     ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter })),
     work,
   );
+  const workScheme = getScheme(work.scheme);
+
+  if (workScheme.spineSource === 'document') {
+    // Document-spine works honour the export mode too: 'bilingual' renders
+    // source + English per unit (renderDocumentSpineBilingual) — previously
+    // this branch ignored `mode` and silently produced English-only output
+    // under the bilingual filename.
+    const markdown =
+      ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work, resolved.mode) : `# ${work.title}\n\n`;
+    return {
+      markdown,
+      gapReport,
+      included: ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter })),
+    };
+  }
 
   const sections: string[] = [];
   let currentBook: number | null = null;

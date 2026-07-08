@@ -50,3 +50,62 @@ describe('buildClipboardPayload', () => {
     expect(buildClipboardPayload(ctx)).toContain('TRANSLATE THIS LINE:\n[1041a6] ');
   });
 });
+
+// ── D8 §7 Phase E2: unit-aware payloads ─────────────────────────────────────
+
+describe('buildClipboardPayload — units', () => {
+  const FREE_WORK = {
+    title: 'Vom Kriege',
+    author: '',
+    originalLanguage: 'greek' as const,
+    language: 'German',
+    scheme: 'paragraph',
+  };
+
+  it("golden: 'paragraph' unit — paragraph instruction + TRANSLATE THIS PARAGRAPH header, no empty author parens", () => {
+    const payload = buildClipboardPayload({
+      ...GOLDEN_CONTEXT,
+      unit: 'paragraph',
+      work: FREE_WORK,
+      before: [],
+      after: [],
+      target: { address: '¶2', greek: 'Der Krieg ist eine bloße Fortsetzung der Politik.' },
+    });
+    expect(payload).toBe(
+      [
+        'Translate this single paragraph of Vom Kriege into English, matching the style of the surrounding draft. Paragraph-locked 1:1 (one English paragraph per source paragraph).',
+        '',
+        'TRANSLATE THIS PARAGRAPH:',
+        '[¶2] Der Krieg ist eine bloße Fortsetzung der Politik.',
+      ].join('\n'),
+    );
+  });
+
+  it("'sentence' unit renders the enclosing paragraph before the TRANSLATE THIS SENTENCE header", () => {
+    const payload = buildClipboardPayload({
+      ...GOLDEN_CONTEXT,
+      unit: 'sentence',
+      work: FREE_WORK,
+      before: [],
+      after: [],
+      target: { address: '¶2', greek: 'Der Krieg ist eine Fortsetzung.' },
+      enclosing: { address: '¶2', greek: 'Der Krieg ist eine Fortsetzung. Er ist ein Instrument.' },
+    });
+    expect(payload).toBe(
+      [
+        'Translate this single sentence of Vom Kriege into English, matching the style of the surrounding draft. Sentence-locked 1:1 (one English sentence per source sentence).',
+        '',
+        'It is part of this paragraph:',
+        '[¶2] Der Krieg ist eine Fortsetzung. Er ist ein Instrument.',
+        '',
+        'TRANSLATE THIS SENTENCE:',
+        '[¶2] Der Krieg ist eine Fortsetzung.',
+      ].join('\n'),
+    );
+  });
+
+  it('the line-unit payload keeps the author parens when an author exists (shipped golden above pins it)', () => {
+    const payload = buildClipboardPayload(GOLDEN_CONTEXT);
+    expect(payload).toContain('of Metaphysics (Aristotle) into English');
+  });
+});

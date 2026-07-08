@@ -870,6 +870,151 @@ describe('line_splits parsing + validation', () => {
   });
 });
 
+describe('D8 optional document-spine fields', () => {
+  const paragraphFile = `---
+schema_version: 1
+work: free-paragraph
+book: 1
+chapter: 1
+citation_scheme: paragraph
+span_start: "¶1"
+span_end: "¶2"
+line_splits: "¶1@16"
+---
+[GREEK]
+Alpha sentence. Beta sentence.
+Gamma sentence.
+
+[ENGLISH]
+Alpha sentence¶Beta sentence
+
+
+[ENGLISH.PARA]
+Whole first paragraph
+Whole second paragraph
+`;
+
+  it('parses and byte-stably serializes [ENGLISH.PARA] with paragraph-scheme line_splits refs', () => {
+    const doc = parseChapterFile(paragraphFile, 'paragraph.md');
+    expect(doc.meta.lineSplits).toEqual([{ ref: '¶1', offset: 16 }]);
+    expect(doc.englishParaLines).toEqual(['Whole first paragraph', 'Whole second paragraph']);
+    expect(serializeChapterFile(doc)).toBe(paragraphFile);
+  });
+
+  it('omits [ENGLISH.PARA] when absent, preserving old files byte-identically', () => {
+    const file = fileWith('', ['α', 'β'], ['a', '']);
+    const doc = parseChapterFile(file, 'old.md');
+    expect(doc.englishParaLines).toBeUndefined();
+    expect(serializeChapterFile(doc)).toBe(file);
+  });
+
+  it('serializes [ENGLISH.PARA] only when at least one row has paragraph-layer content', () => {
+    const doc = parseChapterFile(fileWith('', ['α', 'β'], ['a', 'b']));
+    doc.englishParaLines = ['', ''];
+    expect(serializeChapterFile(doc)).not.toContain('[ENGLISH.PARA]');
+
+    doc.englishParaLines = ['', 'whole beta'];
+    const serialized = serializeChapterFile(doc);
+    expect(serialized).toContain('[ENGLISH.PARA]\n\nwhole beta\n');
+    expect(parseChapterFile(serialized).englishParaLines).toEqual(['', 'whole beta']);
+  });
+
+  it('rejects [ENGLISH.PARA] row-count mismatches', () => {
+    const bad = paragraphFile.replace('Whole second paragraph\n', '');
+    expect(() => parseChapterFile(bad, 'bad.md')).toThrow(
+      /\[GREEK\] has 2 line\(s\) but \[ENGLISH\.PARA\] has 1 line\(s\)/,
+    );
+  });
+
+  it('parses and byte-stably serializes paragraph_starts', () => {
+    const file = `---
+schema_version: 1
+work: free-lines
+book: 1
+chapter: 1
+citation_scheme: plain-line
+span_start: "1"
+span_end: "4"
+paragraph_starts: "1,3"
+---
+[GREEK]
+one
+two
+three
+four
+
+[ENGLISH]
+a
+b
+c
+d
+`;
+    const doc = parseChapterFile(file, 'plain.md');
+    expect(doc.meta.paragraphStarts).toEqual([1, 3]);
+    expect(serializeChapterFile(doc)).toBe(file);
+  });
+
+  // Malformed paragraph_starts must DEGRADE, never refuse the file: it is
+  // optional display GROUPING metadata (unlike column_starts/line_splits,
+  // which address user prose), and a hard parse error here made the whole
+  // document unopenable with autosave off. D6 drift convention: sanitize
+  // leniently, flag it (paragraphStartsSanitized) so hydration can surface
+  // the one-line notice, and keep the prose fully intact.
+  it('degrades malformed paragraph_starts instead of refusing the file', () => {
+    const load = (extra: string, greek: string[], english: string[]) =>
+      parseChapterFile(fileWith(extra, greek, english), 'p.md');
+
+    const junk = load('paragraph_starts: "1,nope"', ['α', 'β'], ['a', 'b']);
+    expect(junk.meta.paragraphStarts).toEqual([1]);
+    expect(junk.paragraphStartsSanitized).toBe(true);
+    expect(junk.greekLines).toEqual(['α', 'β']); // prose fully intact
+    expect(junk.englishLines).toEqual(['a', 'b']);
+
+    const dupes = load('paragraph_starts: "2,2"', ['α', 'β'], ['a', 'b']);
+    expect(dupes.meta.paragraphStarts).toEqual([2]);
+    expect(dupes.paragraphStartsSanitized).toBe(true);
+
+    const outOfRange = load('paragraph_starts: "1,9"', ['α', 'β'], ['a', 'b']);
+    expect(outOfRange.meta.paragraphStarts).toEqual([1]);
+    expect(outOfRange.paragraphStartsSanitized).toBe(true);
+
+    const nonAscending = load('paragraph_starts: "3,1"', ['α', 'β', 'γ'], ['a', 'b', 'c']);
+    expect(nonAscending.meta.paragraphStarts).toEqual([1, 3]);
+    expect(nonAscending.paragraphStartsSanitized).toBe(true);
+
+    const zero = load('paragraph_starts: "0"', ['α'], ['a']);
+    expect(zero.meta.paragraphStarts).toBeUndefined();
+    expect(zero.paragraphStartsSanitized).toBe(true);
+
+    const allJunk = load('paragraph_starts: "a,b"', ['α'], ['a']);
+    expect(allJunk.meta.paragraphStarts).toBeUndefined();
+    expect(allJunk.paragraphStartsSanitized).toBe(true);
+
+    const empty = load('paragraph_starts: ""', ['α'], ['a']);
+    expect(empty.meta.paragraphStarts).toBeUndefined();
+    expect(empty.paragraphStartsSanitized).toBe(true);
+
+    // Non-scalar YAML (no token shape to salvage) drops the field entirely.
+    const mapping = load('paragraph_starts: {a: 1}', ['α'], ['a']);
+    expect(mapping.meta.paragraphStarts).toBeUndefined();
+    expect(mapping.paragraphStartsSanitized).toBe(true);
+  });
+
+  it('well-formed paragraph_starts carries no sanitized flag and byte-round-trips', () => {
+    const file = fileWith('paragraph_starts: "1,2"', ['α', 'β'], ['a', 'b']);
+    const doc = parseChapterFile(file, 'p.md');
+    expect(doc.meta.paragraphStarts).toEqual([1, 2]);
+    expect(doc.paragraphStartsSanitized).toBeUndefined();
+    expect(serializeChapterFile(doc)).toBe(file);
+  });
+
+  it('a sanitized-but-salvaged value serializes canonically (repairs stick on the next save)', () => {
+    const doc = parseChapterFile(fileWith('paragraph_starts: "2,2,9"', ['α', 'β'], ['a', 'b']), 'p.md');
+    expect(doc.meta.paragraphStarts).toEqual([2]);
+    expect(serializeChapterFile(doc)).toContain('paragraph_starts: "2"');
+  });
+});
+
 describe('isValidSplitOffset (semantic offset validity, code units)', () => {
   const greek = 'ἡ γὰρ ἀρχή'; // word gaps after code units 2 and 6
 

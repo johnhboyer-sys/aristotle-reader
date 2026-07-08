@@ -13,7 +13,14 @@
  * for what the markup MEANS, two renderers (editor markup, Pandoc markup).
  */
 
-import { parseRow, parseRowSegments, runsOf, serializeRow } from '../editor/serialize';
+import {
+  parseRow,
+  parseRowSegments,
+  runsOf,
+  serializeRow,
+  stripFootnoteMarkupLine,
+  decodeParaLine,
+} from '../editor/serialize';
 import type { InlineRun, MarkSet } from '../editor/serialize';
 import { docFromJSON } from '../editor/schema';
 import { getScheme } from '../citation/registry';
@@ -244,6 +251,14 @@ export function chapterSegments(chapter: ChapterFile): ChapterSegment[] {
   const rowCount = chapter.englishLines.length;
   const scheme = getScheme(chapter.meta.citationScheme);
   const useAddresses = scheme.gutter.rowUnit === 'bekker-line';
+  let useParagraphRowText = false;
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      useParagraphRowText = true;
+      break;
+    default:
+      break;
+  }
   const { addresses, transitionRows } = useAddresses
     ? chapterRowAddresses(chapter, rowCount)
     : { addresses: [] as string[], transitionRows: null as Set<number> | null };
@@ -271,7 +286,9 @@ export function chapterSegments(chapter: ChapterFile): ChapterSegment[] {
     // this module's `markupToPandoc`/`parseRow` pipeline already consumes —
     // lossless by construction (Slice 1's round-trip guarantee), and keeps
     // export's contract as "raw editor markup in" for every row/segment.
-    const englishSegments = parseRowSegments(chapter.englishLines[i]).map((doc) => serializeRow(docFromJSON(doc)));
+    const englishSegments = useParagraphRowText
+      ? rowEnglishSegmentsWithParaFallback(chapter, i)
+      : parseRowSegments(chapter.englishLines[i]).map((doc) => serializeRow(docFromJSON(doc)));
 
     // Valid Greek offsets for this row (word-boundary-checked against the
     // row's OWN Greek — see module doc). Invalid/out-of-range offsets are
@@ -408,6 +425,263 @@ export function renderSegmentsGrouped(
   return { paragraphs, footnoteIdsUsed };
 }
 
+function rowEnglishSegments(chapter: ChapterFile, rowIndex: number): string[] {
+  return parseRowSegments(chapter.englishLines[rowIndex]).map((doc) => serializeRow(docFromJSON(doc)));
+}
+
+function rowEnglishSegmentsWithParaFallback(chapter: ChapterFile, rowIndex: number): string[] {
+  const sentenceSegments = rowEnglishSegments(chapter, rowIndex);
+  if (sentenceSegments.some((s) => s.trim().length > 0)) return sentenceSegments;
+
+  const para = chapter.englishParaLines?.[rowIndex] ?? '';
+  if (para.trim().length > 0) return [stripFootnoteMarkupLine(flattenParaLineForExport(para))];
+
+  return [''];
+}
+
+function flattenParaLineForExport(line: string): string {
+  return decodeParaLine(line).replace(/\n/g, ' ').replace(/ {2,}/g, ' ');
+}
+
+function renderMarkupPieces(markup: string[]): { markdown: string | null; footnoteIdsUsed: string[] } {
+  const pieces: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+  for (const raw of markup) {
+    if (raw.trim().length === 0) continue;
+    const rendered = markupToPandoc(raw);
+    if (rendered.markdown.length === 0) continue;
+    pieces.push(rendered.markdown);
+    footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
+  }
+  if (pieces.length === 0) return { markdown: null, footnoteIdsUsed };
+  return { markdown: pieces.join(' '), footnoteIdsUsed };
+}
+
+/**
+ * D8 paragraph-layer precedence for paragraph-row export: sentence layer wins
+ * when any sentence segment is non-empty; otherwise the paragraph layer wins;
+ * otherwise the row is untranslated.
+ *
+ * Footnotes are a SENTENCE-LAYER feature (D8 v1 rule — see
+ * editor/serialize.ts stripFootnoteRuns): marker markup a paste or hand edit
+ * left in [ENGLISH.PARA] is stripped at this export boundary — the phrase
+ * renders as plain text, no `[^id]` reference is emitted, no footnote body is
+ * pulled in — matching hydration, which strips the same markers on load. A
+ * marker-only para line strips to nothing and counts as untranslated.
+ */
+function renderDocumentRow(chapter: ChapterFile, rowIndex: number): { markdown: string | null; footnoteIdsUsed: string[] } {
+  const sentenceSegments = rowEnglishSegments(chapter, rowIndex);
+  if (sentenceSegments.some((s) => s.trim().length > 0)) {
+    return renderMarkupPieces(sentenceSegments);
+  }
+
+  const para = chapter.englishParaLines?.[rowIndex] ?? '';
+  if (para.trim().length > 0) {
+    return renderMarkupPieces([stripFootnoteMarkupLine(flattenParaLineForExport(para))]);
+  }
+
+  return { markdown: null, footnoteIdsUsed: [] };
+}
+
+function renderDocumentParagraphRows(chapter: ChapterFile): RenderedParagraphs {
+  const paragraphs: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+  let gap = false;
+
+  for (let i = 0; i < chapter.englishLines.length; i++) {
+    const rendered = renderDocumentRow(chapter, i);
+    if (rendered.markdown === null) {
+      gap = true;
+      continue;
+    }
+
+    if (gap && paragraphs.length > 0) paragraphs.push(ELLIPSIS_PARAGRAPH);
+    gap = false;
+    paragraphs.push(rendered.markdown);
+    footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
+  }
+
+  return { paragraphs, footnoteIdsUsed };
+}
+
+function renderDocumentPlainLineRows(chapter: ChapterFile): RenderedParagraphs {
+  const paragraphs: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+  const paragraphStarts = new Set(chapter.meta.paragraphStarts ?? []);
+  const hardLineBreak = '\\' + '\n';
+  let currentLines: string[] = [];
+  let gap = false;
+
+  const flush = () => {
+    if (currentLines.length > 0) {
+      paragraphs.push(currentLines.join(hardLineBreak));
+      currentLines = [];
+    }
+  };
+
+  for (let i = 0; i < chapter.englishLines.length; i++) {
+    if (i === 0 || paragraphStarts.has(i + 1)) flush();
+
+    const rendered = renderDocumentRow(chapter, i);
+    if (rendered.markdown === null) {
+      flush();
+      gap = true;
+      continue;
+    }
+
+    if (gap && (paragraphs.length > 0 || currentLines.length > 0)) {
+      flush();
+      paragraphs.push(ELLIPSIS_PARAGRAPH);
+    }
+    gap = false;
+    currentLines.push(rendered.markdown);
+    footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
+  }
+  flush();
+
+  return { paragraphs, footnoteIdsUsed };
+}
+
+export function renderDocumentSpineEnglish(chapter: ChapterFile): RenderedParagraphs {
+  const scheme = getScheme(chapter.meta.citationScheme);
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      return renderDocumentParagraphRows(chapter);
+    case 'plain-line':
+      return renderDocumentPlainLineRows(chapter);
+    default:
+      return renderSegmentsGrouped(chapterSegments(chapter), (seg) => seg.englishMarkup, false, 'every-5');
+  }
+}
+
+// ── document-spine bilingual rendering (compile mode 'bilingual') ───────────
+//
+// Per UNIT: the source block, then the English block — a paragraph doc
+// interleaves per paragraph row (source paragraph, English paragraph); a
+// plain-line doc interleaves per paragraph GROUP (paragraph_starts), keeping
+// the hard-line-break treatment on both sides so the line structure survives.
+// Conventions reused from the Bekker bilingual mode: the source text runs
+// through the SAME markup renderer as the English (markupToPandoc — one
+// escaping/styling path for both sides), and only the ENGLISH side ever
+// contributes footnote ids (the source has no `{^id:}` syntax). No Bekker
+// stamps — document spines have no corpus addresses. Untranslated units
+// differ from the English-only mode deliberately: the source of an
+// untranslated unit still renders, so EVERY maximal run of untranslated rows
+// inside a unit is marked with one `…` paragraph (including a fully
+// untranslated unit) instead of collapsing runs across units — the gap sits
+// next to the source it belongs to.
+
+/** Source text of row i rendered as one Pandoc piece ('' when blank). */
+function renderSourceLine(chapter: ChapterFile, rowIndex: number): string {
+  const raw = chapter.greekLines[rowIndex];
+  if (raw.trim().length === 0) return '';
+  return markupToPandoc(raw).markdown;
+}
+
+function renderDocumentParagraphRowsBilingual(chapter: ChapterFile): RenderedParagraphs {
+  const paragraphs: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+
+  for (let i = 0; i < chapter.englishLines.length; i++) {
+    const source = renderSourceLine(chapter, i);
+    const english = renderDocumentRow(chapter, i);
+    if (source.length === 0 && english.markdown === null) continue; // fully empty unit
+
+    if (source.length > 0) paragraphs.push(source);
+    if (english.markdown !== null) {
+      paragraphs.push(english.markdown);
+      footnoteIdsUsed.push(...english.footnoteIdsUsed);
+    } else {
+      paragraphs.push(ELLIPSIS_PARAGRAPH);
+    }
+  }
+
+  return { paragraphs, footnoteIdsUsed };
+}
+
+function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile): RenderedParagraphs {
+  const paragraphs: string[] = [];
+  const footnoteIdsUsed: string[] = [];
+  const starts = new Set(chapter.meta.paragraphStarts ?? []);
+  const hardLineBreak = '\\' + '\n';
+
+  // Row indexes grouped by paragraph_starts (row 1 implicitly opens group 1,
+  // exactly like renderDocumentPlainLineRows / the editor's chunk view).
+  const groups: number[][] = [];
+  for (let i = 0; i < chapter.englishLines.length; i++) {
+    if (i === 0 || starts.has(i + 1)) groups.push([]);
+    groups[groups.length - 1].push(i);
+  }
+
+  for (const group of groups) {
+    // Source block: the group's non-blank lines, hard-line-break joined.
+    const sourceLines = group.map((i) => renderSourceLine(chapter, i)).filter((s) => s.length > 0);
+    const source = sourceLines.join(hardLineBreak);
+
+    // English block(s): translated rows flow with hard line breaks; each
+    // maximal run of untranslated rows becomes one `…` paragraph (see the
+    // section comment for why bilingual marks leading/trailing runs too).
+    const englishBlocks: string[] = [];
+    let currentLines: string[] = [];
+    let pendingGap = false;
+    const flush = () => {
+      if (currentLines.length > 0) {
+        englishBlocks.push(currentLines.join(hardLineBreak));
+        currentLines = [];
+      }
+    };
+    for (const i of group) {
+      const rendered = renderDocumentRow(chapter, i);
+      if (rendered.markdown === null) {
+        flush();
+        pendingGap = true;
+        continue;
+      }
+      if (pendingGap) {
+        englishBlocks.push(ELLIPSIS_PARAGRAPH);
+        pendingGap = false;
+      }
+      currentLines.push(rendered.markdown);
+      footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
+    }
+    flush();
+    if (pendingGap) englishBlocks.push(ELLIPSIS_PARAGRAPH);
+    // A group always yields ≥1 English block (every row either adds a line or
+    // ends as a pending gap → one `…`), so no empty-group special case.
+
+    if (source.length > 0) paragraphs.push(source);
+    paragraphs.push(...englishBlocks);
+  }
+
+  return { paragraphs, footnoteIdsUsed };
+}
+
+export function renderDocumentSpineBilingual(chapter: ChapterFile): RenderedParagraphs {
+  const scheme = getScheme(chapter.meta.citationScheme);
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      return renderDocumentParagraphRowsBilingual(chapter);
+    case 'plain-line':
+      return renderDocumentPlainLineRowsBilingual(chapter);
+    default:
+      // Unreachable for the shipped document-spine schemes (paragraph /
+      // plain-line are the only two); degrade to the English-only rendering
+      // rather than throw, mirroring renderDocumentSpineEnglish's default.
+      return renderDocumentSpineEnglish(chapter);
+  }
+}
+
+function usesDocumentRowRenderer(scheme: ReturnType<typeof getScheme>): boolean {
+  switch (scheme.gutter.rowUnit) {
+    case 'paragraph':
+      return true;
+    case 'plain-line':
+      return scheme.spineSource === 'document';
+    default:
+      return scheme.spineSource === 'document';
+  }
+}
+
 // ── inline markup: InlineRun[] -> Pandoc markdown ───────────────────────────
 
 const PANDOC_SPECIAL = /[\\*_[\]^~`<>&]/g;
@@ -507,6 +781,7 @@ function buildHeading(chapter: ChapterFile, work: WorkMeta): string {
  */
 function buildBody(chapter: ChapterFile, options: Required<PandocMarkdownOptions>): { paragraphs: string[]; footnoteIdsUsed: string[] } {
   const scheme = getScheme(chapter.meta.citationScheme);
+  if (usesDocumentRowRenderer(scheme)) return renderDocumentSpineEnglish(chapter);
   const useStamps = scheme.gutter.rowUnit === 'bekker-line';
   const segments = chapterSegments(chapter);
   return renderSegmentsGrouped(segments, (seg) => seg.englishMarkup, useStamps, options.stampMode);
@@ -540,6 +815,8 @@ function buildFootnoteBlocks(chapter: ChapterFile, idsUsed: string[]): string[] 
  */
 export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, options: PandocMarkdownOptions = {}): string {
   const resolved: Required<PandocMarkdownOptions> = { stampMode: options.stampMode ?? 'every-5' };
+  const scheme = getScheme(chapter.meta.citationScheme);
+  if (scheme.spineSource === 'document') return documentToPandocMarkdown(chapter, work);
 
   const heading = buildHeading(chapter, work);
   const { paragraphs, footnoteIdsUsed } = buildBody(chapter, resolved);
@@ -550,5 +827,24 @@ export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, op
   const sections = [heading, ...(paragraphs.length > 0 ? paragraphs : [''])];
   if (footnoteBlocks.length > 0) sections.push(footnoteBlocks.join('\n\n'));
 
+  return sections.join('\n\n') + '\n';
+}
+
+/**
+ * Whole document for a document-spine work. `mode` mirrors compile.ts's
+ * CompileMode (single-chapter export always passes 'english'; the whole-work
+ * compile dialog passes its selected mode): 'bilingual' interleaves source
+ * and English per unit — see renderDocumentSpineBilingual.
+ */
+export function documentToPandocMarkdown(
+  chapter: ChapterFile,
+  work: WorkMeta,
+  mode: 'english' | 'bilingual' = 'english',
+): string {
+  const { paragraphs, footnoteIdsUsed } =
+    mode === 'bilingual' ? renderDocumentSpineBilingual(chapter) : renderDocumentSpineEnglish(chapter);
+  const footnoteBlocks = buildFootnoteBlocks(chapter, footnoteIdsUsed);
+  const sections = [`# ${work.title}`, ...(paragraphs.length > 0 ? paragraphs : [''])];
+  if (footnoteBlocks.length > 0) sections.push(footnoteBlocks.join('\n\n'));
   return sections.join('\n\n') + '\n';
 }

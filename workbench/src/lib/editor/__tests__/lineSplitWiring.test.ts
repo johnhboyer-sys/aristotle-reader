@@ -44,15 +44,20 @@ function fnBody(name: string): string {
 
 describe('display expansion wiring', () => {
   it('the grid iterates expandRows-derived display rows keyed by the stable DisplayRow key', () => {
-    expect(chapterSource).toContain('displayRows = expandRows(model.rows)');
+    // Granularity is chosen by the view (D8): 'unit' for the paragraph-unit
+    // view, 'sentence' (the D6 default) everywhere else.
+    expect(chapterSource).toContain("expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence')");
     expect(chapterSource).toContain('{#each displayRows as d, g (d.key)}');
   });
 
-  it('view identity is (row, segment): registry keys, host contract, RowEditor mount', () => {
-    expect(chapterSource).toContain('const vkey = (row: number, segment: number)');
-    expect(chapterSource).toContain('createView(row: number, segment: number, el: HTMLElement)');
-    expect(rowSource).toContain('host.createView(row, segment, el)');
-    expect(rowSource).toContain('host.destroyView(row, segment)');
+  it('view identity is (row, segment, layer): registry keys, host contract, RowEditor mount', () => {
+    // (row, segment) stays the D6 identity; D8 adds the editing LAYER (sentence
+    // vs paragraph) as a third key dimension so the paragraph editor
+    // (englishPara) never collides with the sentence cells.
+    expect(chapterSource).toContain('const vkey = (row: number, segment: number, layer: EditLayer');
+    expect(chapterSource).toContain('createView(row: number, segment: number, el: HTMLElement, layer: EditLayer)');
+    expect(rowSource).toContain('host.createView(row, segment, el, layer)');
+    expect(rowSource).toContain('host.destroyView(row, segment, layer)');
   });
 
   it('both segments’ gutters show the same raw address; continuation Greek is indented 1.5em', () => {
@@ -76,9 +81,12 @@ describe('split gesture wiring (D6 §4.1)', () => {
     expect(chapterSource).toContain('onContext={(e) => onGreekContextMenu(e, g)}');
   });
 
-  it('the menu offers "Start new paragraph here" on unsplit lines and "Merge paragraph back" on split ones', () => {
-    expect(chapterSource).toContain('>Start new paragraph here</span>');
-    expect(chapterSource).toContain('>Merge paragraph back</span>');
+  it('unsplit lines get the split item, split ones the merge — labels pinned in ctxMenu.test.ts', () => {
+    // The two grid assignments carry merge: true / merge: false into
+    // buildCtxMenu, which decides the D6 item ("D6 line gestures" matrix row).
+    const menu = fnBody('onGreekContextMenu');
+    expect(menu).toContain('segment: d.segment, merge: true');
+    expect(menu).toContain('segment: d.segment, merge: false');
   });
 
   it('the click offset snaps to a word gap via snapToWordStart; an invalid spot no-ops with the status line', () => {
@@ -114,7 +122,10 @@ describe('un-split wiring (d6 divergence F + §4.4)', () => {
   });
 
   it('a stale continuation unmount never clobbers the merged row (destroyView guard)', () => {
-    expect(chapterSource).toContain('segment < segmentCount(model.rows[row])) commitRowNow(row)');
+    // The guard now also admits the paragraph layer (always alive while the
+    // row exists); the sentence branch keeps the D6 segment-count check.
+    expect(chapterSource).toContain('segment < segmentCount(model.rows[row])');
+    expect(chapterSource).toContain('if (alive) commitRowNow(row)');
   });
 });
 
@@ -130,13 +141,19 @@ describe('call-site folding (d6 §7)', () => {
   it('assist context treats a split line as ONE line: address once, draft = segments joined, window in Bekker lines', () => {
     const body = fnBody('runAssist');
     expect(body).toContain('rowCount: model.rows.length'); // ±6 counts LINES, not segments
-    expect(body).toContain('draftAt: (i) => plainRowText(joinedRowDoc(i))');
+    // contextDraft(layer, i) joins the sentence segments for sentence-layer
+    // context (and reads englishPara first only in the para layer) — the
+    // Bekker path is plainRowText(joinedRowDoc(i)) verbatim inside it.
+    expect(body).toContain('draftAt: (i) => contextDraft(layer, i)');
+    expect(fnBody('contextDraft')).toContain('return plainRowText(joinedRowDoc(i))');
     expect(body).toContain('targetIndex: row'); // the model row, not a grid ordinal
   });
 
   it('requestAssist from a continuation targets that segment’s cell for Insert', () => {
     expect(chapterSource).toContain('insertSuggestion: (row, segment, text) => insertSuggestionIntoRow(row, segment, text)');
     const body = fnBody('insertSuggestionIntoRow');
-    expect(body).toContain('viewAt(row, segment)');
+    // Layer-EXPLICIT write (D8 Phase E2): the request's captured layer keys
+    // the view — never viewAt, whose active-layer default could cross layers.
+    expect(body).toContain('views.get(vkey(row, segment, assistLayer))');
   });
 });

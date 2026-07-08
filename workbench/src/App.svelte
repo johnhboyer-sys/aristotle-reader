@@ -10,6 +10,7 @@
   import type { RailSelection, RailWork } from './components/LibraryRail.svelte';
   import AddWorkDialog from './components/AddWorkDialog.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
+  import NewDocumentDialog from './components/NewDocumentDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import AskPanel from './components/AskPanel.svelte';
   import AiPanel from './components/AiPanel.svelte';
@@ -21,9 +22,14 @@
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
+  import { listFreeWorks } from './lib/works/freeWorks';
   import { invalidateCorpus, loadCorpus } from './lib/data/corpusStore';
   import type { WorkCorpus } from './lib/data/corpusStore';
   import { bookChapterNumbers, chapterForEditor } from './lib/data/chapterRows';
+  import { documentChapterForEditor } from './lib/data/documentChapter';
+  import { loadChapterFile } from './lib/library/autosave';
+  import { getScheme } from './lib/citation/registry';
+  import type { FixtureChapter } from './dev/fixture-meta-z17';
   import { loadSettings, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
   import { wordAt } from './lib/lexicon/wordAt';
@@ -34,13 +40,26 @@
   import { zoomIn, zoomOut, zoomReset, zoomAtMin, zoomAtMax, zoomPercent } from './lib/editor/zoom.svelte';
   import LibrarySettingsDialog from './components/LibrarySettingsDialog.svelte';
 
-  const works: WorkManifest[] = listWorks();
+  // Built-in works from the static manifests, plus corpus-free documents
+  // from the library's free-work registry (loaded at boot / after creation).
+  let works = $state<WorkManifest[]>(listWorks());
+
+  /** Document-spine work (D8): the chapter file is the spine — no corpus is
+   * ever loaded for it. Capability gate, never a scheme-id comparison. */
+  function isDocumentWork(work: WorkManifest): boolean {
+    return getScheme(work.scheme).spineSource === 'document';
+  }
+
+  async function reloadWorks() {
+    works = [...listWorks(), ...(await listFreeWorks())];
+  }
 
   let railOpen = $state(true);
   let footnotesOpen = $state(false);
   let referenceOpen = $state(false);
   let lexiconOpen = $state(false);
   let addWorkOpen = $state(false);
+  let newDocumentOpen = $state(false);
   let librarySettingsOpen = $state(false);
   let importOpen = $state(false);
   let importDefaultWorkId = $state<string | undefined>(undefined);
@@ -74,6 +93,11 @@
 
   const railWorks: RailWork[] = $derived(
     works.map((work) => {
+      if (isDocumentWork(work)) {
+        // Corpus-free document: always "ready" (its chapter file IS the
+        // work), one Document row instead of a book tree.
+        return { work, status: 'ready' as const, books: [], singleDocument: true };
+      }
       const corpus = corpora[work.id] ?? null;
       const statuses = libraryStatus[work.id];
       return {
@@ -100,8 +124,42 @@
     selection ? (works.find((w) => w.id === selection!.workId) ?? null) : null,
   );
 
+  // Document-spine works have no corpus: the editor fixture is built from
+  // the saved chapter file itself, read asynchronously when the selection
+  // lands on such a work. Keyed so a stale read never renders under a new
+  // selection.
+  let docFixture = $state<FixtureChapter | null>(null);
+  let docFixtureKey = $state('');
+  const selectionKey = $derived(
+    selection ? `${selection.workId}:${selection.book}.${selection.chapter}` : '',
+  );
+
+  $effect(() => {
+    const sel = selection;
+    const work = currentWork;
+    const key = selectionKey;
+    if (!sel || !work || !isDocumentWork(work)) return;
+    let cancelled = false;
+    void (async () => {
+      const res = await loadChapterFile(
+        libraryStorage(),
+        work.id,
+        chapterFileName(sel.book, sel.chapter),
+      );
+      if (cancelled) return;
+      docFixture = res.file ? documentChapterForEditor(work, res.file) : null;
+      docFixtureKey = key;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  });
+
   const currentChapter = $derived.by(() => {
     if (!selection || !currentWork) return null;
+    if (isDocumentWork(currentWork)) {
+      return docFixtureKey === selectionKey ? docFixture : null;
+    }
     const corpus = corpora[selection.workId];
     if (!corpus) return null;
     return chapterForEditor(currentWork, corpus, selection.book, selection.chapter);
@@ -110,11 +168,20 @@
   /** Breadcrumb parts: work title carries the weight, locus stays quiet. */
   const breadcrumb = $derived.by(() => {
     if (!selection || !currentWork) return { work: 'Translation Workbench', locus: null };
+    if (isDocumentWork(currentWork)) {
+      // A single-document work has no book/chapter locus worth showing.
+      return { work: currentWork.title, locus: null };
+    }
     const label = currentWork.books[selection.book - 1]?.label ?? String(selection.book);
     return { work: currentWork.title, locus: `${label} · ${selection.chapter}` };
   });
 
   function validSelection(sel: RailSelection): boolean {
+    const work = works.find((w) => w.id === sel.workId);
+    if (work && isDocumentWork(work)) {
+      // v1 free works are a single document (book 1, chapter 1).
+      return sel.book === 1 && sel.chapter === 1;
+    }
     const corpus = corpora[sel.workId];
     if (!corpus) return false;
     return bookChapterNumbers(corpus, sel.book).includes(sel.chapter);
@@ -157,11 +224,16 @@
     // (or book Α chapter 1 of the Metaphysics on first run).
     void (async () => {
       const settings = await loadSettings();
+      await reloadWorks();
       const loaded: Record<string, WorkCorpus | null> = {};
       await Promise.all(
-        works.map(async (work) => {
-          loaded[work.id] = await loadCorpus(work.id);
-        }),
+        works
+          // Document-spine works have no corpus — never call loadCorpus for
+          // them (D8; capability gate via isDocumentWork).
+          .filter((work) => !isDocumentWork(work))
+          .map(async (work) => {
+            loaded[work.id] = await loadCorpus(work.id);
+          }),
       );
       corpora = loaded;
       await refreshLibraryStatus();
@@ -195,6 +267,14 @@
   function openImportDialog(workId: string) {
     importDefaultWorkId = workId;
     importOpen = true;
+  }
+
+  // ── corpus-free "New document…" (design doc D8 §6) ──────────────────────
+  async function handleDocumentCreated(workId: string) {
+    newDocumentOpen = false;
+    await reloadWorks();
+    await refreshLibraryStatus();
+    select(workId, 1, 1);
   }
 
   // ── reference-translation import (design doc D5 §5) ─────────────────────
@@ -509,6 +589,7 @@
             selected={selection}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
+            onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
             onImportChapter={isTauri() || import.meta.env.DEV ? openImportDialog : undefined}
             onImportReference={isTauri() || import.meta.env.DEV ? openReferenceImport : undefined}
           />
@@ -584,9 +665,17 @@
 
   {#if addWorkOpen}
     <AddWorkDialog
-      works={works.filter((w) => !corpora[w.id])}
+      works={works.filter((w) => !isDocumentWork(w) && !corpora[w.id])}
       onClose={() => (addWorkOpen = false)}
       onOnboarded={handleOnboarded}
+    />
+  {/if}
+
+  {#if newDocumentOpen}
+    <NewDocumentDialog
+      existingIds={works.map((w) => w.id)}
+      onClose={() => (newDocumentOpen = false)}
+      onCreated={handleDocumentCreated}
     />
   {/if}
 

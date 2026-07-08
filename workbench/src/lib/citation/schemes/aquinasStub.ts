@@ -25,4 +25,5 @@ export const aquinasStub: CitationScheme = {
     rowUnit: 'paragraph',
     gutterMode: 'structural',
   },
+  spineSource: 'corpus',
 };

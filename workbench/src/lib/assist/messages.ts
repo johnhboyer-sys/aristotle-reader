@@ -20,6 +20,9 @@ export const GENERIC_ERROR_MESSAGE =
 /** Assist invoked on a row with no source-language line to translate yet. */
 export const NO_LINE_MESSAGE = "There's no line here to translate yet.";
 
+/** The paragraph-unit variant of NO_LINE_MESSAGE (D8 §7 unit-aware assist). */
+export const NO_PARAGRAPH_MESSAGE = "There's no paragraph here to translate yet.";
+
 /** The clipboard write itself failed. */
 export const COPY_FAILED_MESSAGE = "Couldn't copy — try again.";
 

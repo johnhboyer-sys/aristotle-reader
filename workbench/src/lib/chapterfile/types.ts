@@ -58,6 +58,12 @@ export interface ChapterFileMeta {
    * with a notice instead of refusing the file.
    */
   lineSplits?: LineSplit[];
+  /**
+   * OPTIONAL visual paragraph grouping for plain-line document-spine works
+   * (frontmatter `paragraph_starts`): 1-based row ordinals that begin a
+   * paragraph group. Meaningful only for line-segmented corpus-free imports.
+   */
+  paragraphStarts?: number[];
 }
 
 export interface Footnote {
@@ -69,7 +75,18 @@ export interface ChapterFile {
   meta: ChapterFileMeta;
   greekLines: string[];
   englishLines: string[];
+  /** Optional paragraph-granularity translation layer, one physical line per row. */
+  englishParaLines?: string[];
   footnotes: Footnote[];
+  /**
+   * True when frontmatter `paragraph_starts` carried entries the parser had
+   * to drop or reorder (junk tokens, zero/negative, duplicates, out of
+   * range). paragraph_starts is optional DISPLAY metadata, so a malformed
+   * value degrades leniently instead of refusing the file (D6 drift
+   * convention); hydration surfaces this flag as a one-line notice. Never
+   * set by serialization-side construction — parse-only.
+   */
+  paragraphStartsSanitized?: boolean;
 }
 
 /** Thrown by parseChapterFile on any validation failure. Message is plain-language and line-numbered where applicable. */

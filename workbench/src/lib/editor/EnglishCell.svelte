@@ -6,18 +6,22 @@
   // (row, segment); `gridRow` is only the current grid ordinal (track
   // placement + DOM row resolution).
   import RowEditor from './RowEditor.svelte';
-  import type { RowViewHost } from './ChapterEditor.svelte';
+  import type { RowViewHost, EditLayer } from './ChapterEditor.svelte';
 
   let {
     gridRow,
     row,
     segment,
     host,
+    layer = 'sentence',
+    sentenceText = null,
     flash,
+    chunkStart = false,
     pasteConfirm,
     onPasteConfirm,
     onPasteCancel,
     unsplitConfirm,
+    unsplitMessage = null,
     onUnsplitConfirm,
     onUnsplitCancel,
     onContext,
@@ -26,11 +30,23 @@
     row: number;
     segment: number;
     host: RowViewHost;
+    /** Which English layer the hosted editor edits (D8 §4): 'sentence' (grid /
+     * line views) or 'para' (paragraph-unit view → englishPara). */
+    layer?: EditLayer;
+    /** Read-only sentence-layer translation to show beneath the paragraph
+     * field when this row also has one (§4 "text stays at its unit"). Null
+     * outside the paragraph-unit view or when the row has no sentence English. */
+    sentenceText?: string | null;
     flash: boolean;
+    /** First row of a paragraph chunk (line-doc grouping, §5). */
+    chunkStart?: boolean;
     pasteConfirm: number | null; // segment count when a confirm is pending here
     onPasteConfirm: () => void;
     onPasteCancel: () => void;
     unsplitConfirm: boolean; // the un-split confirm is pending on this cell
+    /** Confirm wording override (D8 §3 sentence join); null → the D6 line
+     * un-split sentence below. */
+    unsplitMessage?: string | null;
     onUnsplitConfirm: () => void;
     onUnsplitCancel: () => void;
     onContext: (e: MouseEvent) => void; // right-click → the row's AI menu
@@ -41,11 +57,23 @@
 <div
   class="en-cell"
   class:row-flash={flash}
+  class:chunk-start={chunkStart}
   style="grid-row: {gridRow + 1}"
   data-row-en={gridRow}
   oncontextmenu={onContext}
 >
-  <RowEditor {row} {segment} {host} />
+  <RowEditor {row} {segment} {host} {layer} />
+
+  {#if sentenceText !== null}
+    <!-- Read-only sentence-layer translation (D8 §4 "text stays at its unit"):
+         subdued, selectable/copyable, labelled — never editable. Shown only in
+         the paragraph-unit view when the row also carries sentence English, so
+         switching views never moves or destroys it. -->
+    <div class="sentence-layer" role="note">
+      <span class="sentence-layer-label">Sentence-layer translation</span>
+      <p class="sentence-layer-text">{sentenceText}</p>
+    </div>
+  {/if}
 
   {#if pasteConfirm !== null}
     <div class="paste-confirm" role="alertdialog" aria-label="Confirm multi-line paste">
@@ -57,7 +85,7 @@
 
   {#if unsplitConfirm}
     <div class="paste-confirm" role="alertdialog" aria-label="Confirm paragraph merge">
-      <span class="paste-confirm-text">Merge these two English paragraphs back into one line?</span>
+      <span class="paste-confirm-text">{unsplitMessage ?? 'Merge these two English paragraphs back into one line?'}</span>
       <button class="paste-btn paste-btn-primary" onclick={onUnsplitConfirm}>Merge</button>
       <button class="paste-btn" onclick={onUnsplitCancel}>Cancel</button>
     </div>

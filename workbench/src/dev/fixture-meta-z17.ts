@@ -19,6 +19,9 @@ export interface FixtureChapter {
   workId: string;
   workTitle: string;
   author: string;
+  /** Verbatim source-language label for assist prompts (free works / dev
+   * fixtures). Absent = unknown: prompts drop the language claim. */
+  language?: string;
   scheme: SchemeId;
   /** 1-based index into the work's book list (Ζ = 7). */
   book: number;
@@ -33,6 +36,7 @@ export const META_Z17: FixtureChapter = {
   workId: 'meta',
   workTitle: 'Metaphysics',
   author: 'Aristotle',
+  language: 'Greek',
   scheme: SCHEME,
   book: 7,
   bookLabel: 'Ζ',

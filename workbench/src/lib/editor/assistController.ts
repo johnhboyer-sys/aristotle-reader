@@ -13,7 +13,7 @@ import { TextSelection } from '@tiptap/pm/state';
 import type { EditorState, Transaction } from '@tiptap/pm/state';
 import type { Node as PMNode } from '@tiptap/pm/model';
 
-import type { AssistContext, AssistProvider, AssistResult } from '../assist/provider';
+import type { AssistContext, AssistProvider, AssistResult, AssistUnit } from '../assist/provider';
 import { COPY_FAILED_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
 import { CliProvider, buildCliInvocation } from '../assist/cliProvider';
 import type { RunInvokeFn } from '../assist/cliProvider';
@@ -27,6 +27,8 @@ import type { CliToolSpec } from '../assist/tools';
 import { resolveAssistProvider } from '../assist/resolveProvider';
 import type { CliProviderId, DetectionMap } from '../assist/resolveProvider';
 import type { WorkbenchSettings } from '../settings';
+
+const PARAGRAPH_ASSIST_UNIT: AssistUnit = 'paragraph';
 
 // ── draft extraction ────────────────────────────────────────────────────────
 
@@ -59,6 +61,15 @@ export interface AssistContextArgs {
    * untranslated (draftAt is not called at all). */
   includeDraft?: boolean;
   window?: number;
+  /** The translation unit the prompt speaks in (D8 §7); absent = 'line'. */
+  unit?: AssistUnit;
+  /**
+   * `sentence`-unit targets only: the target SENTENCE's slice of the row's
+   * source text. When it is a proper sub-slice of the row, the full row
+   * becomes `ctx.enclosing` (the paragraph the sentence belongs to) and the
+   * slice becomes the target text. Ignored for other units.
+   */
+  targetSlice?: string;
   work: AssistContext['work'];
   book: AssistContext['book'];
   chapter: number;
@@ -69,6 +80,7 @@ export interface AssistContextArgs {
 export function buildAssistContext(args: AssistContextArgs): AssistContext {
   const window = args.window ?? ASSIST_CONTEXT_WINDOW;
   const includeDraft = args.includeDraft ?? true;
+  const unit = args.unit ?? 'line';
   const lo = Math.max(0, args.targetIndex - window);
   const hi = Math.min(args.rowCount - 1, args.targetIndex + window);
 
@@ -83,11 +95,19 @@ export function buildAssistContext(args: AssistContextArgs): AssistContext {
   for (let i = args.targetIndex + 1; i <= hi; i++) after.push(contextRow(i));
 
   const target = args.rowAt(args.targetIndex);
+  // Sentence-unit slice discipline: the slice is the target text and the
+  // whole row rides along as the enclosing paragraph — but only when the
+  // slice is real (non-blank) and a PROPER sub-slice (an unsplit row's
+  // "slice" is the whole row; no enclosing duplicate then).
+  const slice = unit === 'sentence' ? (args.targetSlice ?? '').trim() : '';
+  const useSlice = slice.length > 0 && slice !== target.greek.trim();
   return {
+    ...(unit !== 'line' ? { unit } : {}),
     work: args.work,
     book: args.book,
     chapter: args.chapter,
-    target: { address: target.address, greek: target.greek },
+    target: { address: target.address, greek: useSlice ? slice : target.greek },
+    ...(useSlice ? { enclosing: { address: target.address, greek: target.greek } } : {}),
     before,
     after,
   };
@@ -95,13 +115,29 @@ export function buildAssistContext(args: AssistContextArgs): AssistContext {
 
 // ── the insert transaction (D4's hard constraint) ──────────────────────────
 
+export interface SanitizeSuggestionOptions {
+  multiline?: boolean;
+}
+
 /**
- * A row is one Bekker line: newlines are unrepresentable in the schema, so
- * any multi-line/whitespace-decorated model output collapses to single
- * spaces before it can reach a document.
+ * Sentence/Bekker-line suggestions are one physical row, so the default path
+ * collapses all whitespace to single spaces. Paragraph-layer suggestions may
+ * carry line breaks in PM text nodes; in that mode, CRLF/CR normalize to LF,
+ * horizontal whitespace collapses per line, edge blank lines are dropped, and
+ * interior blank runs collapse to one LF.
  */
-export function sanitizeSuggestion(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
+export function sanitizeSuggestion(text: string, opts: SanitizeSuggestionOptions = {}): string {
+  if (!opts.multiline) return text.replace(/\s+/g, ' ').trim();
+
+  const lines = text
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/[^\S\n\r]+/g, ' ').trim());
+
+  while (lines.length > 0 && lines[0] === '') lines.shift();
+  while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+
+  return lines.filter((line) => line !== '').join('\n');
 }
 
 /**
@@ -117,8 +153,12 @@ export function sanitizeSuggestion(text: string): string {
  * EXACT same pipeline as typing (app undo stack, dirty tracking,
  * commit-on-idle). No other editor surface exists for assist.
  */
-export function buildInsertTransaction(state: EditorState, text: string): Transaction | null {
-  const clean = sanitizeSuggestion(text);
+export function buildInsertTransaction(
+  state: EditorState,
+  text: string,
+  opts: SanitizeSuggestionOptions = {},
+): Transaction | null {
+  const clean = sanitizeSuggestion(text, opts);
   if (clean.length === 0) return null;
   const node = state.schema.text(clean); // no marks — plain text by construction
   const { from, to } = state.selection;
@@ -179,7 +219,7 @@ export class AssistController {
       if (!live()) return;
 
       if (result.kind === 'suggestion') {
-        const text = sanitizeSuggestion(result.text);
+        const text = sanitizeSuggestion(result.text, { multiline: ctx.unit === PARAGRAPH_ASSIST_UNIT });
         result = text
           ? { kind: 'suggestion', text }
           : { kind: 'error', message: GENERIC_ERROR_MESSAGE }; // empty output → error path

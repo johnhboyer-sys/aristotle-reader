@@ -12,6 +12,7 @@
     continuation,
     flash,
     focused,
+    chunkStart = false,
     onContext,
   }: {
     gridRow: number;
@@ -19,6 +20,9 @@
     continuation: boolean;
     flash: boolean;
     focused: boolean;
+    /** First row of a paragraph chunk (D8 §5 line-doc grouping) — adds top
+     * spacing so chunks read as paragraphs. No-op outside paragraph view. */
+    chunkStart?: boolean;
     onContext: (e: MouseEvent) => void;
   } = $props();
 </script>
@@ -32,6 +36,7 @@
   class:cont={continuation}
   class:row-flash={flash}
   class:row-focus={focused}
+  class:chunk-start={chunkStart}
   style="grid-row: {gridRow + 1}"
   data-row={gridRow}
   lang="grc"

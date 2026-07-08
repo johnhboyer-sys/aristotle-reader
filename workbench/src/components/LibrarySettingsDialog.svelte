@@ -7,6 +7,7 @@
   // failure mode is one plain sentence; stderr never reaches the UI.
   import { loadSettings, updateSettings } from '../lib/settings';
   import { copyLibraryToRoot, invalidateLibraryRootCache } from '../lib/library/storage';
+  import { FREE_WORKS_STORAGE_ID } from '../lib/works/freeWorks';
   import type { WorkManifest } from '../lib/works/manifest';
   import { isTauri } from '../lib/runtime';
   import AssistSettings from './AssistSettings.svelte';
@@ -52,7 +53,9 @@
       phase = 'moving';
       note = 'Copying your chapters to the new folder…';
       try {
-        const workIds = works.map((w) => w.id);
+        // The free-work registry (works.json in the library root) moves with
+        // the chapters — its reserved storage id addresses the root itself.
+        const workIds = [...works.map((w) => w.id), FREE_WORKS_STORAGE_ID];
         const count = await copyLibraryToRoot(workIds, newRoot);
         note = count > 0 ? `Copied ${count} chapter file${count === 1 ? '' : 's'} to the new folder.` : 'Nothing to copy yet.';
       } catch (err) {

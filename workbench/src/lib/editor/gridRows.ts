@@ -51,6 +51,18 @@ export interface DisplayRow {
 }
 
 /**
+ * Grid expansion granularity (D8 §5):
+ * - `'sentence'` (default) — one DisplayRow per English SEGMENT. A row with
+ *   D6 sentence splits expands into one row per sentence. This is the grid /
+ *   line-view behaviour, unchanged: every existing caller gets exactly this.
+ * - `'unit'` — one DisplayRow per MODEL row, always segment 0, carrying the
+ *   whole source text. Paragraph/unit view renders one visual unit per
+ *   paragraph row (the intra-row sentence splits are ignored for display; the
+ *   paragraph layer edits `englishPara`, not these segments).
+ */
+export type GridGranularity = 'sentence' | 'unit';
+
+/**
  * Expand model rows into the flat display-row list the grid renders. An
  * unsplit row passes through as exactly one DisplayRow (segment 0, full
  * Greek). A split row yields one DisplayRow per English segment; Greek slices
@@ -58,11 +70,31 @@ export interface DisplayRow {
  * `splitOffsets` (English count wins — model.ts invariant): the extra
  * segments still display (English is never dropped) with an empty Greek
  * slice, anchored at `greek.length`.
+ *
+ * At `'unit'` granularity every model row collapses to a SINGLE DisplayRow
+ * (segment 0, the whole Greek) regardless of its sentence splits — the
+ * paragraph/unit views show one visual unit per row. The `'unit'` key omits
+ * the `@offset` suffix (there is never a split boundary at a unit row) so it
+ * can never collide with a `'sentence'` segment-0 key, and a sentence split
+ * inside the row can't force a unit-row remount.
  */
-export function expandRows(rows: RowModel[]): DisplayRow[] {
+export function expandRows(rows: RowModel[], granularity: GridGranularity = 'sentence'): DisplayRow[] {
   const out: DisplayRow[] = [];
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const row = rows[rowIndex];
+    if (granularity === 'unit') {
+      out.push({
+        rowIndex,
+        segment: 0,
+        address: row.address,
+        greekSlice: row.greek,
+        greekStart: 0,
+        englishDoc: row.english,
+        continuation: false,
+        key: `${rowIndex}.unit:${row.address.raw}`,
+      });
+      continue;
+    }
     const docs = englishDocsOf(row);
     const offsets = row.splitOffsets ?? [];
     for (let segment = 0; segment < docs.length; segment++) {
