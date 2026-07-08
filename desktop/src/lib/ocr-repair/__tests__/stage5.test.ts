@@ -37,6 +37,10 @@ function alphabeticToken(index: number): string {
   return `word${suffix}`;
 }
 
+function tokenCount(line: string): number {
+  return line.trim() === '' ? 0 : line.trim().split(/\s+/u).length;
+}
+
 describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => {
   it('1. restores a closed em dash within one token and preserves recto tic column', () => {
     const line = recto('Invented thingswhenever keeps moving.');
@@ -303,5 +307,63 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
 
     expect(outcome.changes.some((change) => change.before === 'I' || change.before === '3')).toBe(false);
     expect(outcome.changes.find((change) => change.rule === 'word-identity')).toMatchObject({ before: 'ra', after: 'τὰ' });
+  });
+
+  it('22. folds an orphan opening bracket into a bracket-bearing Greek witness edge', () => {
+    const backbone = ['RUNNING HEAD', '639a Omitting the addition of ( J.wKbv).'].join('\n');
+    const witness = '639a Omitting the addition of 〈λευκόν〉.';
+    const initial = vote(backbone, witness, config());
+    const records = initial.changes.filter((change) => change.rule === 'word-identity' && change.evidence?.kind === 'greek');
+
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({
+      before: '( J.wKbv).',
+      after: '〈λευκόν〉.',
+      col: backbone.split('\n')[1].indexOf('('),
+      evidence: { joinedTokens: 1, joinedPunct: '(', runBefore: '( J.wKbv).' },
+    });
+
+    const checked = renderReview(initial.review).replace('- [ ] ( J.wKbv). -> 〈λευκόν〉.', '- [x] ( J.wKbv). -> 〈λευκόν〉.');
+    const applied = vote(backbone, witness, config(), parseDecisions(checked));
+    const line = applied.text.split('\n')[1];
+
+    expect(line).toBe('639a Omitting the addition of 〈λευκόν〉.');
+    expect(tokenCount(backbone.split('\n')[1]) - tokenCount(line)).toBe(1);
+  });
+
+  it('23. applies a normal Greek pair on a joined-token line with zero extra token delta', () => {
+    const backbone = ['RUNNING HEAD', '639a Omitting the addition of ( J.wKbv). and ra remains.'].join('\n');
+    const witness = '639a Omitting the addition of 〈λευκόν〉. and τὰ remains.';
+    const initial = vote(backbone, witness, config());
+    const folded = initial.changes.find((change) => change.before === '( J.wKbv).');
+    const normal = initial.changes.find((change) => change.before === 'ra');
+
+    expect(folded).toMatchObject({ after: '〈λευκόν〉.', evidence: { joinedTokens: 1 } });
+    expect(normal).toMatchObject({ after: 'τὰ' });
+    expect(normal?.evidence?.joinedTokens).toBeUndefined();
+
+    const checked = renderReview(initial.review)
+      .replace('- [ ] ( J.wKbv). -> 〈λευκόν〉.', '- [x] ( J.wKbv). -> 〈λευκόν〉.')
+      .replace('- [ ] ra -> τὰ', '- [x] ra -> τὰ');
+    const applied = vote(backbone, witness, config(), parseDecisions(checked));
+    const line = applied.text.split('\n')[1];
+
+    expect(line).toBe('639a Omitting the addition of 〈λευκόν〉. and τὰ remains.');
+    expect(tokenCount(backbone.split('\n')[1]) - tokenCount(line)).toBe(1);
+  });
+
+  it('24. leaves an orphan opening parenthesis alone when the witness edge has no bracket', () => {
+    const backbone = ['RUNNING HEAD', '639a Omitting the addition of ( J.wKbv).'].join('\n');
+    const witness = '639a Omitting the addition of λευκόν.';
+    const initial = vote(backbone, witness, config());
+    const record = initial.changes.find((change) => change.rule === 'word-identity' && change.evidence?.kind === 'greek');
+
+    expect(record).toMatchObject({ before: 'J.wKbv).', after: 'λευκόν.' });
+    expect(record?.evidence?.joinedTokens).toBeUndefined();
+
+    const checked = renderReview(initial.review).replace('- [ ] J.wKbv). -> λευκόν.', '- [x] J.wKbv). -> λευκόν.');
+    const applied = vote(backbone, witness, config(), parseDecisions(checked));
+
+    expect(applied.text.split('\n')[1]).toBe('639a Omitting the addition of ( λευκόν.');
   });
 });

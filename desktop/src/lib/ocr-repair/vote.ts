@@ -153,20 +153,23 @@ function applyPendingEdits(text: string, edits: PendingEdit[], nextId: ReturnTyp
     let current = pages[page]?.[line];
     if (current === undefined) continue;
     const original = current;
+    let expectedLineDelta = 0;
     for (const edit of rows.sort((a, b) => b.prov.col - a.prov.col)) {
       const next = replaceInLine(current, edit.prov.col, edit.record.before ?? '', edit.after);
       if (next === null) {
         changes.push(flagRecord(nextId, page, 'emdash-skipped-geometry', { before: edit.record.before, after: edit.after }, line, edit.prov.col));
         continue;
       }
-      if (wordTokenCount(current) !== wordTokenCount(next)) {
+      const expectedDelta = joinedTokenDelta(edit.record);
+      if (wordTokenCount(current) - wordTokenCount(next) !== expectedDelta) {
         changes.push(flagRecord(nextId, page, 'token-count-invariant', { before: edit.record.before, after: edit.after }, line, edit.prov.col));
         continue;
       }
       current = next;
+      expectedLineDelta += expectedDelta;
       changes.push(edit.record);
     }
-    if (wordTokenCount(original) !== wordTokenCount(current)) {
+    if (wordTokenCount(original) - wordTokenCount(current) !== expectedLineDelta) {
       throw new Error('stage 5 invariant failed: whitespace token count changed on edited line');
     }
     pages[page][line] = current;
@@ -174,6 +177,11 @@ function applyPendingEdits(text: string, edits: PendingEdit[], nextId: ReturnTyp
   const out = pages.map((page) => page.join('\n')).join('\f');
   assertDocumentInvariants(text, out);
   return { text: out, changes };
+}
+
+function joinedTokenDelta(record: ChangeRecord): number {
+  const joinedTokens = record.evidence?.joinedTokens;
+  return typeof joinedTokens === 'number' && Number.isInteger(joinedTokens) && joinedTokens > 0 ? joinedTokens : 0;
 }
 
 function witnessRefFor(raw: string): string | undefined {
@@ -321,6 +329,44 @@ function isCleanGreekWitness(raw: string): boolean {
   return hasGreek(t) && !/[A-Za-z\{}$]/u.test(t);
 }
 
+const ORPHAN_OPEN_BRACKET_RE = /^[([{<]$/u;
+const ORPHAN_CLOSE_BRACKET_RE = /^[)\]}>]$/u;
+const WITNESS_OPEN_BRACKET_RE = /^[〈<(\[]/u;
+const WITNESS_CLOSE_BRACKET_RE = /[〉>)\]]$/u;
+
+interface GreekEdgeFold {
+  before: string;
+  col: number;
+  joinedTokens: number;
+  joinedPunct: string;
+}
+
+function openingGreekEdgeFold(
+  punct: Extract<AlignOp, { t: 'aOnly' }> | undefined,
+  word: Extract<AlignOp, { t: 'aOnly' }>,
+  witness: Extract<AlignOp, { t: 'bOnly' }>,
+  sourceText: string
+): GreekEdgeFold | null {
+  if (!punct?.aProv || !word.aProv || !ORPHAN_OPEN_BRACKET_RE.test(punct.aRaw) || !WITNESS_OPEN_BRACKET_RE.test(stripWitnessMarkup(witness.bRaw))) return null;
+  const before = `${punct.aRaw} ${word.aRaw}`;
+  return lineContext(sourceText, punct.aProv).slice(punct.aProv.col, punct.aProv.col + before.length) === before
+    ? { before, col: punct.aProv.col, joinedTokens: 1, joinedPunct: punct.aRaw }
+    : null;
+}
+
+function closingGreekEdgeFold(
+  word: Extract<AlignOp, { t: 'aOnly' }>,
+  punct: Extract<AlignOp, { t: 'aOnly' }> | undefined,
+  witness: Extract<AlignOp, { t: 'bOnly' }>,
+  sourceText: string
+): GreekEdgeFold | null {
+  if (!punct?.aProv || !word.aProv || !ORPHAN_CLOSE_BRACKET_RE.test(punct.aRaw) || !WITNESS_CLOSE_BRACKET_RE.test(stripWitnessMarkup(witness.bRaw))) return null;
+  const before = `${word.aRaw} ${punct.aRaw}`;
+  return lineContext(sourceText, word.aProv).slice(word.aProv.col, word.aProv.col + before.length) === before
+    ? { before, col: word.aProv.col, joinedTokens: 1, joinedPunct: punct.aRaw }
+    : null;
+}
+
 function classifyGapOp(
   op: Exclude<AlignOp, { t: 'match' }>,
   lastProv: TokenProvenance,
@@ -372,33 +418,78 @@ function classifyGaps(ops: AlignOp[], nextId: ReturnType<typeof changeFactory>, 
     const aWords = aOps.filter((gapOp) => isGarbleToken(gapOp.aRaw));
     const bWords = bOps.filter((gapOp) => isCleanGreekWitness(gapOp.bRaw));
     if (aWords.length > 0 && aWords.length === bWords.length) {
-      const runBefore = aWords.map((gapOp) => gapOp.aRaw).join(' ');
+      const edgeFolds = new Map<AlignOp, GreekEdgeFold>();
+      const foldedPunctOps = new Set<AlignOp>();
+      // An orphan bracket can sit at the run's edges OR between two run
+      // words ('Kai ( riJv …' — the print's '〈' split mid-run), so every
+      // word checks its immediate aOps neighbors. A punct op folds at most
+      // once, and never a slot occupied by another run word.
+      for (let k = 0; k < aWords.length; k += 1) {
+        const idx = aOps.indexOf(aWords[k]);
+        const prevOp = aOps[idx - 1];
+        const prevIsWord = k > 0 && aOps.indexOf(aWords[k - 1]) === idx - 1;
+        if (prevOp?.t === 'aOnly' && !prevIsWord && !foldedPunctOps.has(prevOp)) {
+          const fold = openingGreekEdgeFold(prevOp, aWords[k], bWords[k], sourceText);
+          if (fold) {
+            edgeFolds.set(aWords[k], fold);
+            foldedPunctOps.add(prevOp);
+          }
+        }
+        const nextOp = aOps[idx + 1];
+        const nextIsWord = k < aWords.length - 1 && aOps.indexOf(aWords[k + 1]) === idx + 1;
+        if (nextOp?.t === 'aOnly' && !nextIsWord && !foldedPunctOps.has(nextOp)) {
+          const fold = closingGreekEdgeFold(aWords[k], nextOp, bWords[k], sourceText);
+          if (fold) {
+            const existing = edgeFolds.get(aWords[k]);
+            edgeFolds.set(
+              aWords[k],
+              existing
+                ? {
+                    before: `${existing.before} ${fold.joinedPunct}`,
+                    col: existing.col,
+                    joinedTokens: existing.joinedTokens + fold.joinedTokens,
+                    joinedPunct: `${existing.joinedPunct} ${fold.joinedPunct}`,
+                  }
+                : fold
+            );
+            foldedPunctOps.add(nextOp);
+          }
+        }
+      }
+      const runBefore = aWords.map((gapOp) => edgeFolds.get(gapOp)?.before ?? gapOp.aRaw).join(' ');
       const runAfter = bWords.map((gapOp) => stripWitnessMarkup(gapOp.bRaw)).join(' ');
       const consumedA = new Set<AlignOp>(aWords);
+      for (const punctOp of foldedPunctOps) consumedA.add(punctOp);
       const consumedB = new Set<AlignOp>(bWords);
       for (let k = 0; k < aWords.length; k += 1) {
         const a = aWords[k];
         const b = bWords[k];
         if (!a.aProv) continue;
+        const fold = edgeFolds.get(a);
+        const evidence: Record<string, unknown> = {
+          kind: 'greek',
+          witnessGreek: true,
+          runBefore,
+          runAfter,
+          runLen: aWords.length,
+          runIdx: k,
+          line: lineContext(sourceText, a.aProv),
+        };
+        if (fold) {
+          evidence.joinedTokens = fold.joinedTokens;
+          evidence.joinedPunct = fold.joinedPunct;
+        }
         records.push({
-          id: nextId(a.aProv.page, a.aProv.line, a.aProv.col),
+          id: nextId(a.aProv.page, a.aProv.line, fold?.col ?? a.aProv.col),
           stage: 5,
           tier: 2,
           rule: 'word-identity',
           page: a.aProv.page,
           line: a.aProv.line,
-          col: a.aProv.col,
-          before: a.aRaw,
+          col: fold?.col ?? a.aProv.col,
+          before: fold?.before ?? a.aRaw,
           after: stripWitnessMarkup(b.bRaw),
-          evidence: {
-            kind: 'greek',
-            witnessGreek: true,
-            runBefore,
-            runAfter,
-            runLen: aWords.length,
-            runIdx: k,
-            line: lineContext(sourceText, a.aProv),
-          },
+          evidence,
         });
       }
       for (const gapOp of region) {
