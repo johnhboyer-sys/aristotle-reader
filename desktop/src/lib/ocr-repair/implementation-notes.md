@@ -269,3 +269,16 @@ Barnes's own translator footnotes (MS-reading notes); the proposals are
 de-garbles of footnote Greek, zero edition disagreements. Post-fix: APo 85
 greek + 2 diacritic proposals in 68 review groups, ZERO wrong per audit;
 13 unpairable → diagnostics; PA just the 66Ia→661a opener. 73 tests green.
+
+## Stage 6 — decisions applied, final grade (2026-07-08)
+
+John approved ALL 68 APo groups + PA 661a ("approve all and proceed");
+decision files preserved as review-*-decided-2026-07-08.md. Apply run:
+APo fnUnmatched 115→105 (repaired footnote Greek parses as notes), PA 21→20
++ 661a opener in text. Final grader state:
+PA: 838 tics / 30 suppressed (cadence noise) / 16 dropped / 0 side-amb /
+4 books/51 chapters / 3 display / seams 0.
+APo: 411 / 13 / 43 (all markerLost) / 1 / 2/53 / 2 / 0.
+Import files: ~/Documents/aristotle-ocr/<corpus>/FINAL-<corpus>-import.txt.
+Remaining stage-6 work: John imports both in the desktop app + hand-verifies
+(Reeve-NE bar), then stage 7 (Apostle, held-out).
