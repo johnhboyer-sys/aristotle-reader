@@ -30,11 +30,21 @@ export interface ReviewDecisions {
   checkedPatterns: Set<string>;
 }
 
+// Diagnostic categories carry no decision \u2014 thousands of instances would
+// bury the ~200 real checkboxes, so renderReview collapses them to summary
+// counts (full detail stays in changes-stage5.jsonl).
+const DIAGNOSTIC_CATEGORIES = new Set([
+  'Spaced dash/alignment-gap diagnostics',
+  'Paragraph diagnostics',
+  'Coverage diagnostics',
+]);
+
 function categoryFor(record: ChangeRecord): string {
   const kind = String(record.evidence?.kind ?? '');
   if (kind === 'bekker-ambiguous' || kind === 'bekker-opener') return 'Bekker openers';
   if (kind.includes('spaced-dash') || kind.includes('alignment-gap')) return 'Spaced dash/alignment-gap diagnostics';
   if (kind.includes('paragraph')) return 'Paragraph diagnostics';
+  if (record.rule === 'no-witness-span' || kind === 'no-witness-span') return 'Coverage diagnostics';
   if (record.evidence?.witnessGreek === true || /[\u0370-\u03ff\u1f00-\u1fff]/u.test(`${record.before ?? ''}${record.after ?? ''}`)) return 'Greek';
   return 'Diacritic';
 }
@@ -88,7 +98,16 @@ export function renderReview(model: ReviewModel): string {
   const categories = [...new Set(model.groups.map((group) => group.category))];
   for (const category of categories) {
     lines.push(`## ${category}`, '');
-    for (const group of model.groups.filter((item) => item.category === category)) {
+    const groups = model.groups.filter((item) => item.category === category);
+    if (DIAGNOSTIC_CATEGORIES.has(category)) {
+      const total = groups.reduce((n, g) => n + g.instances.length, 0);
+      lines.push(
+        `${total} informational record(s), nothing to decide — full detail in changes-stage5.jsonl.`,
+        ''
+      );
+      continue;
+    }
+    for (const group of groups) {
       lines.push(`- [${group.checked ? 'x' : ' '}] ${group.before ?? ''} -> ${group.after ?? ''} (${group.instances.length}) <!-- pattern:${group.patternKey} -->`);
       for (const instance of group.instances) {
         lines.push(`  - ${instance.id} p${instance.page}${instance.line === undefined ? '' : ` L${instance.line}`}`);

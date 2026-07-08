@@ -8,6 +8,7 @@ import type { PairingReport } from './witness-pairing';
 import { buildReviewModel, patternKeyFor } from './review';
 import type { ReviewDecisions, ReviewModel } from './review';
 import { extractWitnessAnchors } from './witness-anchors';
+import { classifyTicToken } from '../pdf-import/line-shape';
 import { ticSpanOnLine } from '../pdf-import/line-shape';
 
 export interface VoteOptions {
@@ -249,6 +250,10 @@ function candidateFromMatch(
     };
     return { record, edit: { record, after: op.bRaw, prov: op.aProv, automatic: true } };
   }
+  // A backbone token that IS a Bekker tic carries geometry, not wording —
+  // its witness counterpart is an apparatus anchor (kept in the stream as a
+  // sync point), never a word-identity disagreement.
+  if (classifyTicToken(op.aRaw.trim())) return null;
   if (hasGreek(op.aRaw) || hasGreek(op.bRaw) || hasDiacriticChange(op.aRaw, op.bRaw) || matchKey(op.aRaw) !== matchKey(op.bRaw)) {
     const record: ChangeRecord = {
       id: nextId(page, line, col),
@@ -399,7 +404,7 @@ export function vote(
   for (const op of ops) {
     if (op.t !== 'match') continue;
     const candidate = candidateFromMatch(op, nextId, backbone, counters);
-    if (!candidate.record) continue;
+    if (!candidate?.record) continue;
     reviewRecords.push(candidate.record);
     if (candidate.edit && (candidate.edit.automatic || checked(decisions, candidate.record))) edits.push(candidate.edit);
   }
