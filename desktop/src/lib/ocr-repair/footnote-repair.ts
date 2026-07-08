@@ -11,7 +11,8 @@ export interface FootnoteOutcome {
 interface NoteBlock {
   start: number;
   end: number;
-  folio: number;
+  folio: number | null;
+  suspectFolio: number | null;
 }
 
 interface HeadPassPage {
@@ -26,6 +27,7 @@ const NOTE_SIGNATURE_RE = /\b(?:Reading|Omitting|Retaining|Placing|Adding|Deleti
 const NUM_RE = /^\s*(\d{1,3})\s*$/u;
 const NUMTXT_RE = /^(\s*)(\d{1,3})\s+(\S.*)$/u;
 const ROMAN_NUMTXT_RE = /^(\s*)([IVXLCDM]{1,8})\s+(\S.*)$/u;
+const NORMALIZED_NOTE_START_RE = /^\s*\d{1,3}\.\s+\S/u;
 
 function stripCr(line: string): string {
   return line.endsWith('\r') ? line.slice(0, -1) : line;
@@ -116,37 +118,94 @@ function isPlainBody(line: string): boolean {
   return /[A-Za-z]/u.test(trimmed);
 }
 
-function findNoteBlock(lines: string[]): NoteBlock | null {
-  let folio = -1;
-  for (let i = lines.length - 1; i >= 0; i -= 1) {
-    if (FOLIO_RE.test(stripCr(lines[i]))) {
-      folio = i;
-      break;
-    }
-  }
-  if (folio < 0) return null;
+function isPotentialNoteText(line: string): boolean {
+  const trimmed = stripCr(line).trim();
+  if (trimmed === '') return false;
+  if (NUM_RE.test(trimmed) || NUMTXT_RE.test(trimmed) || ROMAN_NUMTXT_RE.test(trimmed)) return false;
+  if (/^(?:BOOK|CHAPTER)\b/iu.test(trimmed) || parseHeadingResidual(trimmed) || isDisplayShapedLine(trimmed)) return false;
+  return true;
+}
 
-  let end = folio;
-  while (end > 0 && stripCr(lines[end - 1]).trim() === '') end -= 1;
-  let start = end - 1;
+function lastNonBlankIndex(lines: string[]): number {
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    if (stripCr(lines[i]).trim() !== '') return i;
+  }
+  return -1;
+}
+
+function broadNoteRegionStart(lines: string[], end: number): number {
+  let start = end;
   while (start > 0) {
-    const line = stripCr(lines[start]);
-    if (line.trim() === '') {
-      const upper = stripCr(lines[start - 1]).trim();
-      if (isPlainBody(lines[start - 1]) || NUM_RE.test(upper) || (!NOTE_SIGNATURE_RE.test(upper) && !NUMTXT_RE.test(upper) && !ROMAN_NUMTXT_RE.test(upper) && !isDisplayShapedLine(upper))) {
-        start += 1;
-        break;
-      }
-    }
-    if (isPlainBody(line)) {
-      start += 1;
-      break;
-    }
+    const idx = start - 1;
+    if (stripCr(lines[idx]).trim() === '' && idx > 0 && isPlainBody(lines[idx - 1])) break;
     start -= 1;
   }
-  if (start < 0) start = 0;
+  return start;
+}
+
+function noteHeadValue(line: string): number | null {
+  const bare = stripCr(line);
+  const num = NUM_RE.exec(bare);
+  if (num) return Number(num[1]);
+  const numtxt = NUMTXT_RE.exec(bare);
+  if (numtxt) return Number(numtxt[2]);
+  const roman = ROMAN_NUMTXT_RE.exec(bare);
+  return roman ? romanValue(roman[2]) : null;
+}
+
+function localNextNoteNumber(lines: string[], start: number, end: number): number {
+  let max = 0;
+  for (let i = start; i < end; i += 1) {
+    const n = noteHeadValue(lines[i]);
+    if (n !== null) max = Math.max(max, n);
+  }
+  return max + 1;
+}
+
+function hasAdjacentSignature(lines: string[], index: number): boolean {
+  const prev = index > 0 && NOTE_SIGNATURE_RE.test(stripCr(lines[index - 1]));
+  const next = index + 1 < lines.length && NOTE_SIGNATURE_RE.test(stripCr(lines[index + 1]));
+  return prev || next;
+}
+
+function isGenuineFolio(lines: string[], index: number): boolean {
+  const bare = stripCr(lines[index]);
+  const folio = FOLIO_RE.exec(bare);
+  if (!folio || hasAdjacentSignature(lines, index)) return false;
+  const regionStart = broadNoteRegionStart(lines, index);
+  const nextNote = localNextNoteNumber(lines, regionStart, index);
+  return Number(bare.trim()) !== nextNote;
+}
+
+function isTrimAnchor(lines: string[], index: number, start: number, end: number): boolean {
+  const bare = stripCr(lines[index]);
+  if (bare.trim() === '') return false;
+  if (NOTE_SIGNATURE_RE.test(bare) || NUMTXT_RE.test(bare) || ROMAN_NUMTXT_RE.test(bare)) return true;
+  const prevText = index - 1 >= start && isPotentialNoteText(lines[index - 1]);
+  const nextText = index + 1 < end && isPotentialNoteText(lines[index + 1]);
+  if (NUM_RE.test(bare)) return prevText || nextText;
+  const prevNumber = index - 1 >= start && NUM_RE.test(stripCr(lines[index - 1]));
+  const nextNumber = index + 1 < end && NUM_RE.test(stripCr(lines[index + 1]));
+  const numberHasFollowingText = index + 2 < end && isPotentialNoteText(lines[index + 2]);
+  return isPotentialNoteText(bare) && (prevNumber || (nextNumber && !numberHasFollowingText));
+}
+
+function findNoteBlock(lines: string[]): NoteBlock | null {
+  const last = lastNonBlankIndex(lines);
+  if (last < 0) return null;
+
+  const folio = isGenuineFolio(lines, last) ? last : null;
+  const suspectFolio = folio === null && FOLIO_RE.test(stripCr(lines[last])) ? last : null;
+  let end = folio ?? last + 1;
+  while (end > 0 && stripCr(lines[end - 1]).trim() === '') end -= 1;
+
+  let start = broadNoteRegionStart(lines, end);
+  while (start < end && stripCr(lines[start]).trim() === '') start += 1;
+  while (end > start && stripCr(lines[end - 1]).trim() === '') end -= 1;
+  while (start < end && !isTrimAnchor(lines, start, start, end)) start += 1;
+
   const block = lines.slice(start, end).join('\n');
-  return NOTE_SIGNATURE_RE.test(block) ? { start, end, folio } : null;
+  return NOTE_SIGNATURE_RE.test(block) ? { start, end, folio, suspectFolio } : null;
 }
 
 function romanValue(raw: string): number | null {
@@ -160,6 +219,17 @@ function romanValue(raw: string): number | null {
     previous = Math.max(previous, value);
   }
   return total > 0 && total <= 999 ? total : null;
+}
+
+function romanHeadCandidates(raw: string): number[] {
+  const candidates: number[] = [];
+  const roman = romanValue(raw);
+  if (roman !== null) candidates.push(roman);
+  if (/^I+$/u.test(raw)) {
+    const ocrOnes = Number('1'.repeat(raw.length));
+    if (!candidates.includes(ocrOnes)) candidates.push(ocrOnes);
+  }
+  return candidates;
 }
 
 function noteLineWithNumber(line: string, n: number): string {
@@ -182,14 +252,42 @@ function normalizeHeadPage(
   const changes: ChangeRecord[] = [];
   const noteNumbers = new Set<number>();
   const deleteLines = new Set<number>();
+  const claimedTextLines = new Set<number>();
   let blanksInserted = 0;
   let numsRemoved = 0;
   let interiorBlanksRemoved = 0;
+  let localNextExpected = 1;
+  let localSawNumber = false;
+  let globalLastSeen = nextExpected - 1;
 
   const remember = (n: number) => {
-    if (nextExpected > 20 && n === 1) nextExpected = 1;
+    if (n < globalLastSeen) {
+      nextExpected = n;
+      globalLastSeen = n - 1;
+    }
     noteNumbers.add(n);
     nextExpected = Math.max(nextExpected, n + 1);
+    globalLastSeen = Math.max(globalLastSeen, n);
+    localNextExpected = Math.max(localNextExpected, n + 1);
+    localSawNumber = true;
+  };
+
+  const claimableTextLine = (idx: number): boolean => {
+    if (idx < block.start || idx >= block.end || deleteLines.has(idx) || claimedTextLines.has(idx)) return false;
+    const bare = stripCr(out[idx]);
+    return isPotentialNoteText(bare);
+  };
+
+  const nextArabicHead = (idx: number): number | null => {
+    for (let j = idx + 1; j < block.end; j += 1) {
+      if (deleteLines.has(j)) continue;
+      const bare = stripCr(out[j]);
+      const num = NUM_RE.exec(bare);
+      if (num) return Number(num[1]);
+      const numtxt = NUMTXT_RE.exec(bare);
+      if (numtxt) return Number(numtxt[2]);
+    }
+    return null;
   };
 
   for (let i = block.start; i < block.end; i += 1) {
@@ -198,12 +296,13 @@ function normalizeHeadPage(
     const num = NUM_RE.exec(line);
     if (num) {
       const n = Number(num[1]);
-      const following = i + 1 < block.end && NOTE_SIGNATURE_RE.test(stripCr(out[i + 1]));
-      const preceding = i - 1 >= block.start && NOTE_SIGNATURE_RE.test(stripCr(out[i - 1]));
-      const textLine = following ? i + 1 : preceding ? i - 1 : null;
+      const tailFolioShape = i === block.suspectFolio;
+      const plausibleTailNote = !tailFolioShape || n === localNextExpected || n === nextExpected || n <= nextExpected + 1;
+      const textLine = plausibleTailNote && claimableTextLine(i + 1) ? i + 1 : plausibleTailNote && claimableTextLine(i - 1) ? i - 1 : null;
       if (textLine !== null) {
         const before = out[textLine];
         out[textLine] = noteLineWithNumber(out[textLine], n);
+        claimedTextLines.add(textLine);
         deleteLines.add(i);
         numsRemoved += 1;
         remember(n);
@@ -224,8 +323,12 @@ function normalizeHeadPage(
 
     const roman = ROMAN_NUMTXT_RE.exec(line);
     if (roman && NOTE_SIGNATURE_RE.test(roman[3])) {
-      const n = romanValue(roman[2]);
-      if (n !== null && n === nextExpected) {
+      const candidates = romanHeadCandidates(roman[2]);
+      const nextLocal = nextArabicHead(i);
+      const n = candidates.find((candidate) => candidate === localNextExpected)
+        ?? candidates.find((candidate) => !localSawNumber && nextLocal !== null && candidate + 1 === nextLocal)
+        ?? null;
+      if (n !== null) {
         const before = out[i];
         out[i] = restoreCr(`${roman[1]}${n}. ${roman[3]}`, out[i].endsWith('\r'));
         remember(n);
@@ -242,6 +345,8 @@ function normalizeHeadPage(
   let end = block.end - removedBefore(block.end);
 
   while (start < end && stripCr(kept[start]).trim() === '') start += 1;
+  const firstHead = kept.findIndex((line, i) => i >= start && i < end && NORMALIZED_NOTE_START_RE.test(stripCr(line)));
+  if (firstHead >= start && firstHead < end) start = firstHead;
   if (start > 0 && stripCr(kept[start - 1]).trim() !== '') {
     kept.splice(start, 0, '');
     blanksInserted += 1;
@@ -270,7 +375,12 @@ function normalizeHeadPage(
     lines: kept,
     changes,
     noteNumbers,
-    noteBlock: { start, end, folio: block.folio + expectedDelta },
+    noteBlock: {
+      start,
+      end,
+      folio: block.folio === null ? null : block.folio + expectedDelta,
+      suspectFolio: block.suspectFolio === null ? null : block.suspectFolio + expectedDelta,
+    },
     nextExpected,
   };
 }

@@ -147,4 +147,86 @@ describe('stage 6 fix batch fixtures', () => {
     expect(noop.text).toBe(pa);
     expect(noop.changes).toEqual([]);
   });
+
+  it('D. keeps signatureless note text and bottom continuations in the note block', () => {
+    const raw = [
+      'RUNNING HEAD',
+      'Body line before notes.',
+      '1 Reading synthetic variant.',
+      '2',
+      'For the reading see notes.',
+      '3 Omitting synthetic option.',
+      'continued without a signature at the block bottom.',
+      '    81',
+    ].join('\n');
+    const outcome = normalizeFootnotes(raw, config());
+
+    expect(outcome.text).toContain('1. Reading synthetic variant.');
+    expect(outcome.text).toContain('2. For the reading see notes.');
+    expect(outcome.text).toContain('3. Omitting synthetic option.');
+    expect(outcome.text).toContain('continued without a signature at the block bottom.');
+  });
+
+  it('D. treats a folio-shaped final line as an own note number when local sequence says so', () => {
+    const raw = [
+      'RUNNING HEAD',
+      'Body line before notes.',
+      '1 Reading synthetic variant.',
+      'Final note text without signature.',
+      '    2',
+    ].join('\n');
+    const outcome = normalizeFootnotes(raw, config());
+
+    expect(outcome.text).toContain('1. Reading synthetic variant.');
+    expect(outcome.text).toContain('2. Final note text without signature.');
+    expect(outcome.text).not.toContain('\n    2');
+  });
+
+  it('D. degarbles Roman II from the local block sequence after a book seam', () => {
+    const raw = [
+      ['RUNNING HEAD', 'Body line before old-book notes.', '21 Reading old-book variant.', '    82'].join('\n'),
+      ['RUNNING HEAD', 'Body line before new-book notes.', 'II Reading new-book second note.', '3 Omitting new-book third note.', '    83'].join('\n'),
+    ].join('\f');
+    const outcome = normalizeFootnotes(raw, config());
+
+    expect(outcome.text).toContain('21. Reading old-book variant.');
+    expect(outcome.text).toContain('2. Reading new-book second note.');
+    expect(outcome.text).toContain('3. Omitting new-book third note.');
+
+    const eleven = normalizeFootnotes(['RUNNING HEAD', 'Body line before notes.', '10 Reading tenth note.', 'II Omitting eleventh note.', '12 Adding twelfth note.', '    86'].join('\n'), config());
+    expect(eleven.text).toContain('11. Omitting eleventh note.');
+  });
+
+  it('D. keeps num-below blank geometry inside the same note block', () => {
+    const raw = [
+      'RUNNING HEAD',
+      'Body line before notes.',
+      'Reading synthetic variant.',
+      '1',
+      '',
+      '2 Omitting synthetic option.',
+      '    84',
+    ].join('\n');
+    const outcome = normalizeFootnotes(raw, config());
+
+    expect(outcome.text).toContain('1. Reading synthetic variant.');
+    expect(outcome.text).toContain('2. Omitting synthetic option.');
+  });
+
+  it('D. does not let a signatureless NUM steal an already-joined previous line', () => {
+    const raw = [
+      'RUNNING HEAD',
+      'Body line before notes.',
+      '1',
+      'Reading synthetic variant.',
+      '2',
+      'For the reading see notes.',
+      '    85',
+    ].join('\n');
+    const outcome = normalizeFootnotes(raw, config());
+
+    expect(outcome.text).toContain('1. Reading synthetic variant.');
+    expect(outcome.text).toContain('2. For the reading see notes.');
+    expect(outcome.text).not.toContain('2. 1. Reading synthetic variant.');
+  });
 });
