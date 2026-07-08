@@ -1,0 +1,36 @@
+{
+ "work": {
+  "id": "Oec",
+  "title": "Oeconomica",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "029",
+  "authenticity": "spurious",
+  "greek_edition": "Susemihl, Aristotelis quae feruntur Oeconomica (Teubner, 1887)",
+  "english_translation": "E. S. Forster (Oxford, 1920)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 6,
+   "first_column": "1343a",
+   "last_column": "1345b"
+  },
+  {
+   "book": 2,
+   "segments": 17,
+   "first_column": "1345b",
+   "last_column": "1353b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 2178,
+  "parses_dropped": 61
+ },
+ "lsj": {
+  "lemmata_needed": 1503,
+  "lsj_entries_kept": 1432,
+  "shards": 24,
+  "lemmata_without_entry": 81
+ }
+}
