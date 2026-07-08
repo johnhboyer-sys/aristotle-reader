@@ -583,6 +583,7 @@ function classifyGaps(ops: AlignOp[], nextId: ReturnType<typeof changeFactory>, 
 }
 
 function checked(decisions: ReviewDecisions | undefined, record: ChangeRecord): boolean {
+  if (decisions?.excludeIds?.has(record.id)) return false;
   return decisions?.checkedPatterns.has(patternKeyFor(record)) ?? false;
 }
 
@@ -680,7 +681,7 @@ function paragraphRecord(
   line: number,
   col: number,
   kind: 'paragraph-break-lost' | 'paragraph-break-spurious',
-  support: 'dual-blank' | 'page-top' | 'under-indent' | 'jitter',
+  support: 'dual-blank' | 'page-top' | 'under-indent' | 'jitter' | 'john-manual',
   action: 'insert' | 'snap' | 'flag',
   targetCol: number,
   offset: number,
@@ -702,13 +703,26 @@ function paragraphRecord(
   };
 }
 
-function classifyParagraphs(pages: string[][], witnessStarts: Set<string>, nextId: ReturnType<typeof changeFactory>): ChangeRecord[] {
+function classifyParagraphs(
+  pages: string[][],
+  witnessStarts: Set<string>,
+  nextId: ReturnType<typeof changeFactory>,
+  manualBreaks: { page: number; line: number }[] = []
+): ChangeRecord[] {
   const records: ChangeRecord[] = [];
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page];
     const head = firstNonBlankLine(lines);
     const side = pageSide(lines);
     const modal = modalBodyMargin(lines, side, head);
+    for (const brk of manualBreaks.filter((b) => b.page === page)) {
+      const raw = stripCr(lines[brk.line] ?? '');
+      if (raw.trim() === '') continue;
+      const firstCol = bodyStartCol(raw, side) ?? 0;
+      // John-mandated break (print-verified, no machine evidence): same
+      // kind/action as machine inserts so an approved insert batch applies it.
+      records.push(paragraphRecord(nextId, page, brk.line, firstCol, 'paragraph-break-lost', 'john-manual', 'insert', modal + 4, firstCol - modal, modal, side, ''));
+    }
     let previousBodyLine: string | null = null;
     let seenBody = false;
     for (let line = 0; line < lines.length; line += 1) {
@@ -803,7 +817,12 @@ export function vote(
   const stage3Records = stage3ReviewRecords(options.stage3Records ?? [], nextId);
   reviewRecords.push(...stage3Records);
 
-  const paragraphRecords = classifyParagraphs(backbone.split('\f').map((page) => page.split('\n')), witnessParagraphStarts(witnessBody), nextId);
+  const paragraphRecords = classifyParagraphs(
+    backbone.split('\f').map((page) => page.split('\n')),
+    witnessParagraphStarts(witnessBody),
+    nextId,
+    decisions?.manualBreaks ?? []
+  );
   reviewRecords.push(...paragraphRecords);
   const paragraphEditList = paragraphEdits(paragraphRecords, decisions);
 

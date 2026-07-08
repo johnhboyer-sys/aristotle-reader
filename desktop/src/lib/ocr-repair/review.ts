@@ -28,6 +28,10 @@ export interface ReviewModel {
 
 export interface ReviewDecisions {
   checkedPatterns: Set<string>;
+  /** Record ids excised from otherwise-approved batches (`EXCLUDE <id>`). */
+  excludeIds?: Set<string>;
+  /** John-mandated paragraph breaks with no machine record (`BREAK p<page>-L<line>`). */
+  manualBreaks?: { page: number; line: number }[];
 }
 
 // Diagnostic categories carry no decision \u2014 thousands of instances would
@@ -138,5 +142,11 @@ export function parseDecisions(md: string): ReviewDecisions {
   const checkedPatterns = new Set<string>();
   const re = /^- \[[xX]\].*<!-- pattern:(.*?) -->$/gmu;
   for (const match of md.matchAll(re)) checkedPatterns.add(match[1]);
-  return { checkedPatterns };
+  const excludeIds = new Set<string>();
+  for (const match of md.matchAll(/^EXCLUDE\s+(\S+)\s*$/gmu)) excludeIds.add(match[1]);
+  const manualBreaks: { page: number; line: number }[] = [];
+  for (const match of md.matchAll(/^BREAK\s+p(\d+)-L(\d+)\s*$/gmu)) {
+    manualBreaks.push({ page: Number(match[1]), line: Number(match[2]) });
+  }
+  return { checkedPatterns, excludeIds, manualBreaks };
 }

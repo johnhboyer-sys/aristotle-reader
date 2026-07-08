@@ -292,3 +292,24 @@ stage-6 no-op held (0 records). OPEN: fnNotes 36 vs design's 49 (head-pass
 gap); PA dropped 15 vs static prediction 2 (new column context exposes more
 holes — re-diagnose); paragraph cards now in regenerated review files
 awaiting John's second sitting (dual-blank pre-checked).
+
+## Stage 6 COMPLETE — John's decisions applied, final grade (2026-07-08, pre-wipe)
+
+Second sitting applied: all paragraph batches both corpora + John's 7 spot
+decisions (2 PA + 5 APo), each verified as a real paragraph in the frozen
+converter's tagged output. New decisions-file directives: `EXCLUDE <id>`
+(per-record excision from an approved batch) and `BREAK p<N>-L<M>`
+(John-mandated manual paragraph break, support 'john-manual') — used for
+APo #120 where a jitter snap would have flattened a print-verified break.
+
+FINAL grades: PA 888 tics / 7 suppressed / 2 dropped (both genuine) /
+3 display / 0 side-amb / 4 books 51 chapters 20 titled.
+APo 453 / 14 / 1 / 1 / 1 / 2 books 53 chapters 14 titled / 52 notes
+(scope per-book) 41 unmatched (mostly pre-existing converter furniture
+artifact). Import files: FINAL-<corpus>-import.txt in each corpus dir.
+
+REMAINING (post-wipe): John imports+hand-verifies both books (stage-6 human
+half; prior read-through defects all fixed); then stage 7 Apostle (files in
+iCloud, "Apostle" in names, still NEVER opened) config-only neutrality gate;
+then PR. Improvement queued: short-previous-line as backbone-side paragraph
+evidence (John's insight) — would upgrade many page-top cases to dual.
