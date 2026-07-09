@@ -444,3 +444,18 @@ markup. Reader-side only — no re-import needed. Browser-verified: 48/48
 Ostwald markers anchored, zero orphans under a forced 240px measure.
 Offset walkers unaffected (they exclude .fn-marker by closest(); the
 anchor span's own text is body text and still counts).
+
+## Class I — dash-restore mis-seated against punctuation (2026-07-09)
+
+John's read-through: APo I.2 "them)-you" → "them—)-you" (dash inside the
+paren) and PA "plant'-it" → "plant—'-it" (dash inside the quote). Root
+cause: dashRestorationAfter's INTERIOR_HYPHEN_RE requires letters on BOTH
+sides, so a hyphen abutting `)`/`'` fell to the letters-count fallback,
+which re-seats the dash after the Nth LETTER (before the punctuation). Fix:
+first try each hyphen in aRaw — substituting the witness dash for the RIGHT
+one makes aRaw match the witness token under quote-folding (backbone often
+has straight quotes where the witness has curly; we KEEP aRaw's own chars,
+never adopt the witness quote style). Only two instances corpus-wide, both
+now correct; the genuine interior case "be—plant-like" (dash between
+letters, real hyphen-compound after) is untouched. 99 tests; grades
+byte-stable; requires re-import.

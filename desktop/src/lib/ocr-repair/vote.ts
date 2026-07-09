@@ -258,6 +258,23 @@ function isClosedDashRestore(aRaw: string, bRaw: string): boolean {
 function dashRestorationAfter(aRaw: string, bRaw: string): string | null {
   const dash = bRaw.match(DASH_RE)?.[0];
   if (!dash) return null;
+  // Class I (John's read-through, 2×): when the flattened dash sits against
+  // punctuation ("them)-you", "plant'-it"), the interior-hyphen rule below
+  // misses it (it requires letters on BOTH sides) and the letters-count
+  // fallback re-seats the dash after the Nth LETTER — inside the
+  // parenthesis/quote ("them—)-you"). Locate the true position by testing
+  // each of aRaw's hyphens: substituting the witness dash for the RIGHT one
+  // makes aRaw match the witness token once quote/apostrophe styles are
+  // folded (the backbone often has straight quotes where the witness has
+  // curly). Keep the candidate — aRaw's own characters, dash correctly
+  // placed — never adopting the witness's quote style.
+  const fold = (s: string): string =>
+    s.replace(/[‘’′']/gu, "'").replace(/[“”]/gu, '"');
+  const target = fold(bRaw);
+  for (let i = aRaw.indexOf('-'); i !== -1; i = aRaw.indexOf('-', i + 1)) {
+    const candidate = `${aRaw.slice(0, i)}${dash}${aRaw.slice(i + 1)}`;
+    if (fold(candidate) === target) return candidate;
+  }
   if (INTERIOR_HYPHEN_RE.test(aRaw)) return aRaw.replace(INTERIOR_HYPHEN_RE, dash);
 
   const dashIndex = bRaw.search(DASH_RE);

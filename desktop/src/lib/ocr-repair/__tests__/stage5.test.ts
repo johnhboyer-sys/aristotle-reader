@@ -58,6 +58,23 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
     expect(edited.indexOf('5')).toBe(line.indexOf('5'));
   });
 
+  it('1b. class I: restores a flattened dash against punctuation at its true position', () => {
+    // "them)-you" vs witness "them)\u2014you": the letters-count fallback used to
+    // re-seat the dash after the 4th LETTER \u2014 inside the parenthesis
+    // ("them\u2014)-you"). The exact single-hyphen substitution wins now.
+    const backbone = ['RUNNING HEAD', '639a some of them)-you must actually know.'].join('\n');
+    const witness = '639a some of them)\u2014you must actually know.';
+    const outcome = vote(backbone, witness, config());
+
+    expect(outcome.changes.find((change) => change.rule === 'emdash-restore')).toMatchObject({
+      before: 'them)-you',
+      after: 'them)\u2014you',
+      tier: 1,
+    });
+    expect(outcome.text).toContain('them)\u2014you');
+    expect(outcome.text).not.toContain('them\u2014)');
+  });
+
   it('2. keeps a spaced dash byte-identical and emits a diagnostic', () => {
     const backbone = ['RUNNING HEAD', '639a The casee remains steady.'].join('\n');
     const witness = '639a The case — e remains steady.';
