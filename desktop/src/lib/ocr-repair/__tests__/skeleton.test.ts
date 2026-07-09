@@ -228,9 +228,12 @@ describe('repairSkeleton folio repair', () => {
     const outcome = repairSkeleton(raw, config());
     const resultPages = outcome.text.split('\f');
 
-    expect(resultPages[2]).toBe('HEAD\nBody\n14');
+    // §F: cadence-consistent bottom folios (12, 13, and the repaired 14) are
+    // STRIPPED outright; the off-cadence garble on page 3 stays flagged.
+    expect(resultPages[0]).toBe('HEAD\nBody');
+    expect(resultPages[1]).toBe('HEAD\nBody');
+    expect(resultPages[2]).toBe('HEAD\nBody');
     expect(resultPages[3]).toBe('HEAD\nBody\nr4');
-    expect(outcome.changes).toHaveLength(2);
     expect(outcome.changes[0]).toMatchObject({
       stage: 2,
       tier: 1,
@@ -256,14 +259,20 @@ describe('repairSkeleton folio repair', () => {
         action: 'left-in-place',
       },
     });
+    const strips = outcome.changes.filter((change) => change.evidence?.kind === 'bottom-folio-strip');
+    expect(strips.map((change) => change.before)).toEqual(['12', '13', '14']);
+    expect(strips.every((change) => change.tier === 1 && change.rule === 'folio-repair')).toBe(true);
   });
 
-  it('ignores footnote-prose last lines outside the folio charset', () => {
+  it('strips cadence folios but never footnote-prose last lines', () => {
     const raw = pages(['HEAD\nBody\n12', 'HEAD\nBody\n13', 'HEAD\nBody\nnote text']);
     const outcome = repairSkeleton(raw, config());
 
-    expect(outcome.text).toBe(raw);
-    expect(outcome.changes).toEqual([]);
+    expect(outcome.text).toBe(pages(['HEAD\nBody', 'HEAD\nBody', 'HEAD\nBody\nnote text']));
+    expect(outcome.changes.map((change) => change.evidence?.kind)).toEqual([
+      'bottom-folio-strip',
+      'bottom-folio-strip',
+    ]);
   });
 });
 

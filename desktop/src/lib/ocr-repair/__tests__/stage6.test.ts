@@ -97,6 +97,70 @@ describe('stage 6 fix batch fixtures', () => {
     expect(setLeadingIndent('  abc    639a', 4, 'recto')).toBeNull();
   });
 
+  it('batch-2 A/B: rejoins witness-corroborated wrap dashes and compounds, leaves soft wraps', () => {
+    const backbone = [
+      'RUNNING HEAD',
+      'crossing from another kind-',
+      'e.g. something geometrical by arithmetic here.',
+      'the multi-split-',
+      recto('footed creature walks on land.', '10'),
+      'a wrapped hu-',
+      'man being appears here currently.',
+    ].join('\n');
+    const witness =
+      '639a crossing from another kind—e.g. something geometrical by arithmetic here.\n' +
+      'the multi-split-footed creature walks on land. a wrapped human being appears here currently.';
+    const outcome = vote(backbone, witness, config());
+    const lines = outcome.text.split('\n');
+
+    expect(lines[1]).toBe('crossing from another kind—e.g.');
+    expect(lines[2]).toBe('something geometrical by arithmetic here.');
+    expect(lines[3]).toBe('the multi-split-footed');
+    // removal re-pads the trailing recto tic back to its ORIGINAL column
+    expect(lines[4]).toBe(recto('creature walks on land.', '10'));
+    // soft wrap: witness has solid "human" — left for the converter's §3.4 glue
+    expect(lines[5]).toBe('a wrapped hu-');
+    expect(lines[6]).toBe('man being appears here currently.');
+
+    const joins = outcome.changes.filter((change) => change.rule === 'wrap-join' && change.tier === 1);
+    expect(joins.map((change) => [change.evidence?.kind, change.after])).toEqual([
+      ['emdash-joint', 'kind—e.g.'],
+      ['lexical-compound', 'split-footed'],
+    ]);
+  });
+
+  it('batch-2 C/D: snaps page-top raw jitter using the previous page\'s last TEXT line, skipping footnotes', () => {
+    const backbone = [
+      ['RUNNING HEAD', 'The argument continues without ending the', '', '12. Reading variant note.'].join('\n'),
+      ['RUNNING HEAD', '  Second page begins here quietly and', 'continues at the margin as before.', 'third line at margin for modal.'].join('\n'),
+    ].join('\f');
+    const witness = '639a Filler opening words here.\nThe argument continues without ending the second page begins here quietly.';
+    const outcome = vote(backbone, witness, config());
+    const snap = outcome.changes.find(
+      (change) => change.rule === 'paragraph-indent' && change.evidence?.support === 'jitter' && change.page === 1
+    );
+    // Old behavior latched onto the sentence-final NOTE line and refused the
+    // snap; footnote-aware §D reads the mid-sentence body line above it.
+    expect(snap).toMatchObject({ evidence: { action: 'snap', offset: 2 } });
+  });
+
+  it('batch-2 E: never paragraph-inserts on the first body line after a division heading', () => {
+    const backbone = [
+      'RUNNING HEAD',
+      '   CHAPTER 2',
+      '',
+      'Opening chapter words here again.',
+      'margin line one for modal fit.',
+      'margin line two here also now.',
+    ].join('\n');
+    const witness = '639a Filler opening sentence.\nmargin words\n\nOpening chapter words here again.';
+    const outcome = vote(backbone, witness, config());
+    const inserts = outcome.changes.filter(
+      (change) => change.rule === 'paragraph-indent' && change.evidence?.action === 'insert'
+    );
+    expect(inserts).toEqual([]);
+  });
+
   it('C. gates page-top inserts on the previous page\'s last body line', () => {
     const pageTwo = ['RUNNING HEAD', 'Second unit begins here.'].join('\n');
     // Filler opening keeps page 1's own top line out of the witness paragraph

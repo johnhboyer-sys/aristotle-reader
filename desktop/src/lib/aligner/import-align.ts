@@ -55,7 +55,7 @@ export function alignImportedChapter(
       if (t.citation === input.citation) continue;
       anchors.push({
         citation: t.citation!,
-        offset: snapWord(input.targetText, Math.min(t.offset, input.targetText.length)),
+        offset: snapWordImport(input.targetText, Math.min(t.offset, input.targetText.length)),
         tier: t.kind === 'column' ? 'column' : 'line',
         confidence: 'tagged',
         score: 0,
@@ -92,6 +92,45 @@ export function alignImportedChapter(
       interpolated: anchors.filter(a => a.confidence === 'interpolated').length,
     },
   };
+}
+
+/**
+ * Paragraph-aware word snap (§G of ocr-repair/stage6-fixes-2-spec.md).
+ * engine.snapWord picks the NEAREST space boundary and treats '\n' like any
+ * non-space character, so a Bekker tag emitted at a paragraph start
+ * ("…counterpredicate truly.\nEither a term…") snaps BACKWARD onto the
+ * previous paragraph's last word. A tag belongs to the text that follows it:
+ * at or immediately after a newline, snap FORWARD to the next word start;
+ * otherwise defer to engine.snapWord, rejecting any candidate on the far
+ * side of a newline. engine.ts itself is parity-locked (scripts/parity.mjs)
+ * and must not change.
+ */
+export function snapWordImport(text: string, off: number): number {
+  off = Math.max(0, Math.min(off, text.length));
+  const forwardFromNewline = (from: number): number => {
+    let i = from;
+    while (i < text.length && /\s/.test(text[i])) i += 1;
+    return i < text.length ? i : off;
+  };
+  // Only whitespace (including a newline) between off and the previous word:
+  // the tag sits at a paragraph boundary — take the next word start.
+  let back = off;
+  while (back > 0 && /[ \t]/.test(text[back - 1])) back -= 1;
+  if (text[off] === '\n' || (back > 0 && text[back - 1] === '\n')) {
+    return forwardFromNewline(off);
+  }
+  const snapped = snapWord(text, off);
+  if (snapped === off) return snapped;
+  const lo = Math.min(snapped, off);
+  const hi = Math.max(snapped, off);
+  if (text.slice(lo, hi).includes('\n')) {
+    // Candidate crossed a paragraph break — snap to the current word's own
+    // start within this paragraph instead.
+    let i = off;
+    while (i > 0 && !/\s/.test(text[i - 1])) i -= 1;
+    return i;
+  }
+  return snapped;
 }
 
 /**
@@ -147,7 +186,7 @@ function fillChapterTail(ch: ChapterInput, anchors: Anchor[]): Anchor[] {
     if (placed.has(c)) continue;
     const words = cum.get(c)! - lastCum;
     let off = last.offset + pyRoundLocal(words * rate);
-    off = snapWord(ch.targetText, Math.min(off, ch.targetText.length));
+    off = snapWordImport(ch.targetText, Math.min(off, ch.targetText.length));
     out.push({ citation: c, offset: off, tier: 'line', confidence: 'interpolated', score: 0, flags: [] });
   }
   return out;

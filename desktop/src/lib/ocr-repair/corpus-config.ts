@@ -50,6 +50,13 @@ export interface CorpusConfig {
   chapterMapPath?: string;
   preserveDisplayLines?: { page: number; from: number; to: number }[];
   /**
+   * Whether the edition prints real chapter titles (Reeve-style). When false
+   * (the default), the first body line after a division heading is re-seated
+   * to the body margin at stage 4 so the frozen converter's §5 title capture
+   * can never mint a "title" out of an indented chapter-opening body line.
+   */
+  chapterTitles?: boolean;
+  /**
    * Stage-1 slice boundaries, pattern-driven so an unseen edition needs only
    * config. Patterns are regex sources tested line-by-line against a page;
    * the first page with a matching line is the boundary. Cuts happen at page

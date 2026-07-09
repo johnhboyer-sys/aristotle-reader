@@ -345,3 +345,64 @@ decisions (apply = check them in a decisions file and re-run stage 5–6).
 Post-wipe restore facts (same session): full corpus state recovered from
 John's flash drive; old-code rerun with the 07-08b decisions reproduced both
 pre-wipe FINALs byte-identical (stage6-footnotes.txt vs drive FINAL).
+
+## Fix batch 2 — John's PA/APo read-through (2026-07-09)
+
+Eight classes per stage6-fixes-2-spec.md, all landed in one pass (Codex was
+down post-wipe — see below — so implemented directly):
+
+- **A/B wrap-joins** (`wrap-join` rule, new): witness-arbitrated line-wrap
+  rejoins. Tier-1 applied: PA 29 compounds + 6 dash joints, APo 5 + 9 (2
+  safely refused: shape/geometry). 33 ambiguous → 'Line-wrap diagnostics'.
+  Regression caught in first run: slicing w2 out of a tic-bearing line
+  shifted the recto tic column (dropped 662b10/681b10) — removal now goes
+  through replaceInLine, which re-pads the tic to its original column.
+- **C/D page-top jitter + footnote-aware cross-seam evidence**: jitter/
+  under-indent branches use the previous page's last TEXT line at page tops;
+  `lastTextBody` sheds trailing apparatus (gap+bare-note-head lines AND
+  deep-indented note text ≥ modal+6 — Barnes prints a lone marker digit then
+  the note at col ~20, which the note-head regex alone can't see). John's
+  73a20 `opposites` now snaps to margin. Page-top verdicts re-derived under
+  the better evidence: PA 1 dual + 6 ambiguous, APo 10 dual + 3 ambiguous.
+- **E chapter-first lines**: config `chapterTitles` (default false) → stage-4
+  de-indent of the first body line after BOOK/CHAPTER (13 PA + 8 APo), plus
+  stage-5 never INSERTS on a division-first line (this also collapsed the
+  contaminated dual-blank batch: PA 17→1, APo 61→41 — most were chapter-first
+  title bait). **divisions.titled → 0 for BOTH corpora; the 33 relocated
+  body lines are back in the stream.**
+- **F bottom-folio strip** (skeleton, after folio repair): cadence-consistent
+  bottom page numbers removed outright — 90 PA + 62 APo; kills the ~23
+  numbers the converter was gluing into Barnes prose ("many terms 31 are
+  predicated"). APo fnUnmatched 41→14 (page numbers had polluted the count).
+- **G aligner snap** (app-side, `snapWordImport` in import-align.ts; engine.ts
+  untouched, parity-locked): paragraph-boundary tags snap FORWARD; candidates
+  never cross '\n'. Fixes stored 83b1→"truly."-class anchors (240 paragraph-
+  start tags across the two books).
+- **H reader tick attachment** (Reader.svelte `attachTicks`): ticks render
+  nested as the first child of the FOLLOWING text run, pinning their static
+  position to the line they mark (a standalone absolute tick attaches to the
+  END of the previous rendered line — John's width-invariant 83a20/25). Also
+  restores `.para-br + .bk-seg` paragraph indents when a tick lands on a
+  paragraph start. Offset walkers exclude .bk-num via closest() — depth-safe.
+  Functionally verified in the browser: DA book 1, 134/134 ticks nested,
+  0 misattached.
+
+FINAL grades: PA 888/7/2 dropped (both genuine)/3 display/0 side-amb,
+4bk/51ch/**0 titled**; APo 453/14/1/1/1, 2bk/53ch/**0 titled**, 52 notes /
+**14 unmatched** (was 41). 98 ocr-repair + 230 desktop + 69 app tests green;
+pdf-import zero-diff. Decisions: review-<corpus>-decided-2026-07-09.md
+(= 07-08b minus page-top batch + page-top-dual checked); FINALs re-cut.
+
+AWAITING JOHN: re-import both books; 9 ambiguous page-top cards (6 PA + 3
+APo) + 33 wrap diagnostics in the regenerated review files.
+
+KNOWN pre-existing (NOT batch-2, confirmed present in the 07-08 FINAL too):
+dashRestorationAfter mis-seats a restored em-dash inside a token containing
+an apostrophe — PA has `'rock plant—'-it` (should be `'rock plant'—it`).
+Letters-count insertion ignores non-letters. Candidate class I for a next
+batch.
+
+Codex post-wipe: gpt-5.6-terra (John's "GPT 5.6", config default) is
+code-mode-only and /opt/homebrew/bin/codex-code-mode-host is missing → codex
+exec can't run ANY command. Fix is John's one-liner:
+`ln -s "/Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host" /opt/homebrew/bin/codex-code-mode-host`

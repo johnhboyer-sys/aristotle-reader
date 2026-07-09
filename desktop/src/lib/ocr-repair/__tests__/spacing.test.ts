@@ -194,4 +194,31 @@ describe('normalizeSpacing stage-4 fixtures', () => {
     expect(outcome.text).toBe(raw);
     expect(outcome.changes).toEqual([]);
   });
+
+  it('11. batch-2 E: re-seats a chapter-opening indent to the body margin unless chapterTitles', () => {
+    const body = [
+      '                 CHAPTER 4',
+      '',
+      '    One might be puzzled why people have not named',
+      'one kind that includes both invented sample words.',
+      'another margin line keeps the modal honest here.',
+    ];
+    const raw = doc(page(body));
+    const outcome = normalizeSpacing(raw, config());
+    const lines = outcome.text.split('\f')[0].split('\n');
+
+    expect(lines[4]).toBe('One might be puzzled why people have not named');
+    expect(outcome.changes).toMatchObject([
+      {
+        rule: 'heading-normalize',
+        tier: 1,
+        evidence: { kind: 'chapter-first-line-deindent', fromCol: 4, toCol: 0 },
+      },
+    ]);
+
+    // Title-bearing editions (Reeve-style) keep the indent for §5 capture.
+    const titled = normalizeSpacing(raw, config({ chapterTitles: true }));
+    expect(titled.text).toBe(raw);
+    expect(titled.changes).toEqual([]);
+  });
 });

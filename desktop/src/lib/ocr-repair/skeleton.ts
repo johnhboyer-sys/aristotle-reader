@@ -559,6 +559,43 @@ function applyFolioRepair(
   }
 }
 
+// §F of stage6-fixes-2-spec: the print's bottom-center page numbers survive
+// as bare-digit lines. When a blank line separates them from the prose the
+// frozen converter absorbs them as furniture, but on glued pages (31 in
+// Barnes) the number is joined INTO the paragraph ("...many terms 31 are
+// predicated"). Furniture is furniture: strip every cadence-consistent
+// bottom folio line outright (after folio repair has already canonicalized
+// garbled ones). Garbled or off-cadence candidates stay flagged in place.
+function applyBottomFolioStrip(
+  pages: PageLines[],
+  changes: ChangeRecord[],
+  nextId: ReturnType<typeof changeFactory>
+): void {
+  const candidates = pages
+    .map((page, index) => getFolioCandidate(index, page.lines))
+    .filter((candidate): candidate is FolioCandidate => candidate !== null)
+    .filter((candidate) => candidate.pureDigits);
+  const constant = cadenceConstant(candidates);
+  if (constant === null) return;
+
+  for (const candidate of candidates) {
+    if (candidate.value !== candidate.page + constant) continue;
+    const col = stripCr(pages[candidate.page].lines[candidate.line]).search(/\S/u);
+    pages[candidate.page].lines.splice(candidate.line, 1);
+    changes.push({
+      id: nextId(candidate.page, candidate.line, col),
+      stage: 2,
+      tier: 1,
+      rule: 'folio-repair',
+      page: candidate.page,
+      line: candidate.line,
+      col,
+      before: candidate.token,
+      evidence: { kind: 'bottom-folio-strip', cadenceConstant: constant, value: candidate.value },
+    });
+  }
+}
+
 export function repairSkeleton(raw: string, config: CorpusConfig): SkeletonOutcome {
   const pages = raw.split('\f').map((segment) => ({ lines: segment.split('\n') }));
   const changes: ChangeRecord[] = [];
@@ -567,6 +604,7 @@ export function repairSkeleton(raw: string, config: CorpusConfig): SkeletonOutco
   applyHeadInsert(pages, changes, nextId, config.runningHeadPlaceholder);
   applyHeadingNormalize(pages, changes, nextId);
   applyFolioRepair(pages, changes, nextId);
+  applyBottomFolioStrip(pages, changes, nextId);
 
   return { text: pages.map((page) => page.lines.join('\n')).join('\f'), changes };
 }

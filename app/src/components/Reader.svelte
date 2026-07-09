@@ -549,6 +549,33 @@
     return parts;
   }
 
+  // A standalone tick span is absolutely positioned with no `top`, so its
+  // static position decides which line it reads against — and a marker box
+  // sitting BETWEEN two text runs attaches to the END of the previous
+  // rendered line whenever the marked word starts a new one. The tick then
+  // shows a full rendered line (visually a sentence) too early, at every
+  // column width. Merging each tick into the FOLLOWING text run as its first
+  // child pins its static position to the first line box of the text it
+  // marks. (It also keeps `.para-br + .bk-seg` adjacency intact when a tick
+  // lands exactly on a paragraph start.) Ticks with an attached table — or
+  // with no following text run — keep the standalone rendering.
+  type RenderPart = FlowPart & { tick?: { n: number; real: boolean } };
+  function attachTicks(parts: FlowPart[], tableNs: Set<number> = new Set()): RenderPart[] {
+    const out: RenderPart[] = [];
+    for (let i = 0; i < parts.length; i += 1) {
+      const part = parts[i];
+      const isTick = part.text === null && part.n !== null && !part.para;
+      const next = parts[i + 1];
+      if (isTick && part.n !== null && !tableNs.has(part.n) && next && next.text !== null && next.text !== '\n') {
+        out.push({ ...next, tick: { n: part.n, real: part.real } });
+        i += 1;
+        continue;
+      }
+      out.push(part);
+    }
+    return out;
+  }
+
   // Split a line into clickable words and the verbatim text between them.
   // The tokens hold bare words (for the popup lookup); the line `text` keeps
   // the original punctuation AND the OCT editorial sigla ( ) [ ] < > † " — so
@@ -1115,12 +1142,13 @@
           on:keydown={onFootnoteClick}
           role="presentation"
         >
-          {#each flow as part}
+          {#each attachTicks(flow, new Set((block.otables[transId] ?? []).map(t => t.n))) as part}
             {#if part.text === '\n'}
               <br class="para-br" />
             {:else if part.text !== null}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <span class="bk-seg">{@html renderThird(part.text, transId)}</span>
+              <span class="bk-seg"
+                >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}
@@ -1137,12 +1165,13 @@
         </div>
       {:else}
         <div class="ross-prose">
-          {#each flow as part}
+          {#each attachTicks(flow) as part}
             {#if part.text === '\n'}
               <br class="para-br" />
             {:else if part.text !== null}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <span class="bk-seg">{@html highlightEng(part.text)}</span>
+              <span class="bk-seg"
+                >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}

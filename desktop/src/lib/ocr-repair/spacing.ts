@@ -2,6 +2,7 @@ import type { CorpusConfig } from './corpus-config';
 import { makeChangeId } from './changelist';
 import type { ChangeRecord } from './changelist';
 import { isDisplayShapedLine, parseHeadingResidual, ticSpanOnLine } from '../pdf-import/line-shape';
+import { setLeadingIndent } from './vote';
 
 export interface SpacingOutcome {
   text: string;
@@ -299,14 +300,107 @@ function normalizePage(
   return { lines: out, changes };
 }
 
+function bodyStartColOf(split: SplitLine): number {
+  if (split.side === 'verso') return split.ticHead?.length ?? 0;
+  return split.indent.length;
+}
+
+// §E of stage6-fixes-2-spec: both editions paragraph-indent chapter-opening
+// lines, and the frozen converter's §5 title capture reads an indented,
+// centered-enough first line after a division heading as the chapter TITLE —
+// removing a line of body text from the stream. Editions without real
+// chapter titles (config.chapterTitles !== true) get the first body line
+// after every BOOK/CHAPTER heading re-seated to the page's modal body margin,
+// so §5 has nothing title-shaped to capture.
+function deindentChapterFirstLines(
+  lines: string[],
+  page: number,
+  config: CorpusConfig,
+  nextId: ReturnType<typeof changeFactory>
+): { lines: string[]; changes: ChangeRecord[] } {
+  const excluded = pageExcluded(lines);
+  const out = [...lines];
+  const changes: ChangeRecord[] = [];
+
+  const splits = new Map<number, SplitLine>();
+  const proseCols: number[] = [];
+  let sawVerso = false;
+  let sawRecto = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const bare = stripCr(lines[i]);
+    if (excluded.has(i) || bare.trim() === '') continue;
+    const split = splitLine(bare);
+    splits.set(i, split);
+    if (split.side === 'verso') sawVerso = true;
+    if (split.side === 'recto') sawRecto = true;
+    const residual = split.body.trim();
+    if (isHeadingResidual(residual, config) || isDisplayShapedLine(residual)) continue;
+    proseCols.push(bodyStartColOf(split));
+  }
+  if (proseCols.length === 0) return { lines: out, changes };
+  const counts = new Map<number, number>();
+  for (const col of proseCols) counts.set(col, (counts.get(col) ?? 0) + 1);
+  const modal = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+  const side: 'recto' | 'verso' = sawVerso && !sawRecto ? 'verso' : 'recto';
+
+  const done = new Set<number>();
+  for (let i = 0; i < lines.length; i += 1) {
+    const split = splits.get(i);
+    if (!split || !isHeadingResidual(split.body.trim(), config)) continue;
+    // First prose line after the heading: skip blanks and further headings.
+    let j = i + 1;
+    while (j < lines.length) {
+      const s = splits.get(j);
+      if (stripCr(lines[j]).trim() === '' || (s && isHeadingResidual(s.body.trim(), config))) {
+        j += 1;
+        continue;
+      }
+      break;
+    }
+    const target = splits.get(j);
+    if (!target || done.has(j) || excluded.has(j)) continue;
+    const residual = target.body.trim();
+    if (isDisplayShapedLine(residual) && alphaCount(residual) < PROSE_ALPHA_FLOOR) continue;
+    if (inPreserveRange(config, page, j)) continue;
+    const fromCol = bodyStartColOf(target);
+    if (fromCol === modal) continue;
+    const original = out[j];
+    const cr = original.endsWith('\r');
+    const bare = stripCr(original);
+    const reseated = setLeadingIndent(bare, modal, side);
+    if (reseated === null || reseated === bare) continue;
+    out[j] = restoreCr(reseated, cr);
+    done.add(j);
+    changes.push({
+      id: nextId(page, j, fromCol),
+      stage: 4,
+      tier: 1,
+      rule: 'heading-normalize',
+      page,
+      line: j,
+      col: fromCol,
+      before: original,
+      after: out[j],
+      evidence: { kind: 'chapter-first-line-deindent', fromCol, toCol: modal },
+    });
+  }
+  return { lines: out, changes };
+}
+
 export function normalizeSpacing(raw: string, config: CorpusConfig): SpacingOutcome {
   const nextId = changeFactory();
   const pages = raw.split('\f');
   const allChanges: ChangeRecord[] = [];
   const normalized = pages.map((pageText, page) => {
     const result = normalizePage(pageText.split('\n'), page, config, nextId);
+    let lines = result.lines;
     allChanges.push(...result.changes);
-    return result.lines.join('\n');
+    if (config.chapterTitles !== true) {
+      const deindented = deindentChapterFirstLines(lines, page, config, nextId);
+      lines = deindented.lines;
+      allChanges.push(...deindented.changes);
+    }
+    return lines.join('\n');
   });
   return { text: normalized.join('\f'), changes: allChanges };
 }

@@ -42,10 +42,12 @@ const DIAGNOSTIC_CATEGORIES = new Set([
   'Greek diagnostics',
   'Paragraph diagnostics',
   'Coverage diagnostics',
+  'Line-wrap diagnostics',
 ]);
 
 function categoryFor(record: ChangeRecord): string {
   const kind = String(record.evidence?.kind ?? '');
+  if (record.rule === 'wrap-join') return 'Line-wrap diagnostics';
   if (record.rule === 'paragraph-indent') return 'Paragraph breaks';
   if (kind === 'bekker-ambiguous' || kind === 'bekker-opener') return 'Bekker openers';
   if (kind === 'greek-run-unpaired') return 'Greek diagnostics';

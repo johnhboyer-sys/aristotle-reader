@@ -704,6 +704,252 @@ function paragraphRecord(
 }
 
 const SHORT_LINE_MARGIN = 10;
+const NOTE_HEAD_RE = /^\d{1,2}[.)]?\s+\S/u;
+
+// ---------------------------------------------------------------------------
+// §A/§B of stage6-fixes-2-spec: line-wrap joins. The scan flattens a print
+// em-dash at line end to a bare hyphen ("kind-" / "e.g."), and wraps lexical
+// compounds at their hyphen ("split-" / "footed"); the frozen converter's
+// §3.4 rule (lowercase continuation → drop hyphen, glue) then yields
+// "kinde.g." / "splitfooted". The witness arbitrates each wrap INTRA-LINE:
+// dash joint → rejoin with the dash; plain-hyphen joint → rejoin keeping the
+// hyphen; solid form → genuine soft wrap, leave for the converter; both or
+// neither → Tier-2 card.
+
+interface WrapJoin {
+  record: ChangeRecord;
+  page: number;
+  line1: number;
+  line2: number;
+  w1: string; // alpha core of the fragment, without its trailing hyphen
+  w2: string; // raw first token of line 2
+  joiner: string;
+}
+
+function normWrapToken(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/^[^\p{L}]+/u, '')
+    .replace(/[^\p{L}]+$/u, '');
+}
+
+function witnessJointIndex(witnessBody: string): { joints: Map<string, Set<string>>; solids: Set<string> } {
+  const joints = new Map<string, Set<string>>();
+  const solids = new Set<string>();
+  for (const rawLine of witnessBody.split('\n')) {
+    const line = stripWitnessMarkup(rawLine).trimEnd();
+    // Lookahead keeps chained compounds overlapping: "multi-split-footed"
+    // must index BOTH (multi|split) and (split|footed).
+    for (const m of line.matchAll(/([\p{L}][\p{L}.]*) ?([—–-]) ?(?=([\p{L}][\p{L}.]*))/gu)) {
+      // w2 present on the same line by construction — intra-line evidence.
+      const key = `${normWrapToken(m[1])}|${normWrapToken(m[3])}`;
+      const set = joints.get(key) ?? new Set<string>();
+      set.add(m[2]);
+      joints.set(key, set);
+    }
+    for (const m of line.matchAll(/\p{L}{2,}/gu)) solids.add(m[0].toLowerCase());
+  }
+  return { joints, solids };
+}
+
+function classifyWrapJoins(
+  pages: string[][],
+  witnessBody: string,
+  nextId: ReturnType<typeof changeFactory>
+): { records: ChangeRecord[]; joins: WrapJoin[] } {
+  const { joints, solids } = witnessJointIndex(witnessBody);
+  const records: ChangeRecord[] = [];
+  const joins: WrapJoin[] = [];
+  for (let page = 0; page < pages.length; page += 1) {
+    const lines = pages[page];
+    const head = firstNonBlankLine(lines);
+    const side = pageSide(lines);
+    const bodies: { idx: number; body: string; raw: string }[] = [];
+    for (let i = 0; i < lines.length; i += 1) {
+      if (i === head) continue;
+      const raw = stripCr(lines[i]);
+      if (raw.trim() === '') continue;
+      const body = lineBody(raw, side);
+      if (body === '' || parseHeadingResidual(body) || isDisplayShapedLine(body)) continue;
+      bodies.push({ idx: i, body, raw });
+    }
+    for (let k = 0; k + 1 < bodies.length; k += 1) {
+      // Adjacent print lines only — a blank line between means the hyphen ends
+      // a paragraph, which is not a wrap.
+      if (bodies[k + 1].idx !== bodies[k].idx + 1) continue;
+      const frag = /([\p{L}]+)-$/u.exec(bodies[k].body.trimEnd());
+      if (!frag) continue;
+      const next = /^(\S+)/u.exec(bodies[k + 1].body.trimStart());
+      if (!next) continue;
+      const w1 = frag[1];
+      const w2 = next[1];
+      const key = `${normWrapToken(w1)}|${normWrapToken(w2)}`;
+      const dashes = joints.get(key);
+      const solid = solids.has(`${normWrapToken(w1)}${normWrapToken(w2)}`);
+      const col = bodies[k].raw.lastIndexOf(`${w1}-`);
+      if (dashes && dashes.size === 1 && !solid) {
+        const joiner = [...dashes][0];
+        const record: ChangeRecord = {
+          id: nextId(page, bodies[k].idx, col),
+          stage: 5,
+          tier: 1,
+          rule: 'wrap-join',
+          page,
+          line: bodies[k].idx,
+          col,
+          before: `${w1}-`,
+          after: `${w1}${joiner}${w2}`,
+          evidence: {
+            kind: joiner === '-' ? 'lexical-compound' : 'emdash-joint',
+            w2,
+            line2: bodies[k + 1].idx,
+            joinedTokens: 1,
+          },
+        };
+        joins.push({ record, page, line1: bodies[k].idx, line2: bodies[k + 1].idx, w1, w2, joiner });
+        records.push(record);
+      } else if (!dashes && solid) {
+        continue; // soft wrap — the converter's §3.4 glue is correct
+      } else {
+        records.push({
+          id: nextId(page, bodies[k].idx, col),
+          stage: 5,
+          tier: 2,
+          rule: 'wrap-join',
+          page,
+          line: bodies[k].idx,
+          col,
+          before: `${w1}-`,
+          after: `${w1}|${w2}`,
+          evidence: {
+            kind: 'wrap-ambiguous',
+            w2,
+            line2: bodies[k + 1].idx,
+            jointDashes: dashes ? [...dashes] : [],
+            solidSeen: solid,
+          },
+        });
+      }
+    }
+  }
+  return { records, joins };
+}
+
+function applyWrapJoins(
+  text: string,
+  joins: WrapJoin[],
+  nextId: ReturnType<typeof changeFactory>
+): { text: string; changes: ChangeRecord[] } {
+  const pages = text.split('\f').map((page) => page.split('\n'));
+  const changes: ChangeRecord[] = [];
+  for (const join of joins) {
+    const line1 = pages[join.page]?.[join.line1];
+    const line2 = pages[join.page]?.[join.line2];
+    if (line1 === undefined || line2 === undefined) continue;
+    // Recompute from the CURRENT lines — earlier stage-5 respells may have
+    // already restored the dash in place (fragment now ends "w1—").
+    const bare1 = stripCr(line1);
+    const side: 'recto' | 'verso' = ticSpanOnLine(bare1, 'recto') ? 'recto' : 'verso';
+    const body1 = lineBody(bare1, side);
+    const fragMatch = new RegExp(`${join.w1}[-—–]$`, 'u').exec(body1.trimEnd());
+    if (!fragMatch) {
+      changes.push(flagRecord(nextId, join.page, 'wrap-join-skipped-shape', { w1: join.w1, w2: join.w2 }, join.line1));
+      continue;
+    }
+    const before = fragMatch[0];
+    const after = `${join.w1}${join.joiner}${join.w2}`;
+    const col1 = bare1.lastIndexOf(before);
+    const next1 = replaceInLine(line1, col1, before, after);
+    if (next1 === null) {
+      changes.push(flagRecord(nextId, join.page, 'wrap-join-skipped-geometry', { w1: join.w1, w2: join.w2 }, join.line1, col1));
+      continue;
+    }
+    const bare2 = stripCr(line2);
+    // w2 at a token boundary only (a bare indexOf could hit a substring of an
+    // earlier word); removal goes through replaceInLine so a trailing recto
+    // tic is re-padded back to its ORIGINAL column — slicing shifted the tic
+    // out of the converter's band and dropped the line.
+    const escaped = join.w2.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+    const m2 = new RegExp(`(?:^|[ \\t])${escaped}(?=[ \\t]|$)`, 'u').exec(bare2);
+    if (!m2) {
+      changes.push(flagRecord(nextId, join.page, 'wrap-join-skipped-shape', { w1: join.w1, w2: join.w2, line2: join.line2 }, join.line2));
+      continue;
+    }
+    const c2 = m2.index === 0 ? 0 : m2.index + 1;
+    const followedBySpace = bare2[c2 + join.w2.length] === ' ';
+    const before2 = followedBySpace ? `${join.w2} ` : join.w2;
+    const next2 = replaceInLine(line2, c2, before2, '');
+    if (next2 === null) {
+      changes.push(flagRecord(nextId, join.page, 'wrap-join-skipped-geometry', { w1: join.w1, w2: join.w2, line2: join.line2 }, join.line2, c2));
+      continue;
+    }
+    if (stripCr(next2).trim() === '') {
+      changes.push(flagRecord(nextId, join.page, 'wrap-join-skipped-empty-line', { w1: join.w1, w2: join.w2 }, join.line2));
+      continue;
+    }
+    const beforeTokens = wordTokenCount(stripCr(line1)) + wordTokenCount(bare2);
+    const afterTokens = wordTokenCount(stripCr(next1)) + wordTokenCount(stripCr(next2));
+    if (beforeTokens - afterTokens !== 1) {
+      changes.push(flagRecord(nextId, join.page, 'token-count-invariant', { rule: 'wrap-join', w1: join.w1, w2: join.w2 }, join.line1, col1));
+      continue;
+    }
+    pages[join.page][join.line1] = next1;
+    pages[join.page][join.line2] = next2;
+    changes.push(join.record);
+  }
+  const out = pages.map((page) => page.join('\n')).join('\f');
+  assertDocumentInvariants(text, out);
+  return { text: out, changes };
+}
+
+// §D of stage6-fixes-2-spec: at stage 5 the translator footnotes still sit at
+// page bottoms, so "the previous page's last body line" must not latch onto a
+// NOTE — cross-seam sentence evidence would judge against apparatus text
+// (which is why the 73a20 page-top jitter went undetected: the page above
+// ends in a sentence-final note). A trailing block separated from the body by
+// a line gap and headed by a bare note number is excluded.
+function lastTextBody(
+  lines: string[],
+  side: 'recto' | 'verso',
+  head: number | null
+): { body: string; maxWidth: number } | null {
+  const bodies: { idx: number; body: string; col: number }[] = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    if (i === head) continue;
+    const raw = stripCr(lines[i]);
+    if (raw.trim() === '') continue;
+    const body = lineBody(raw, side);
+    if (body === '' || parseHeadingResidual(body) || isDisplayShapedLine(body)) continue;
+    const col = bodyStartCol(raw, side);
+    bodies.push({ idx: i, body, col: col ?? 0 });
+  }
+  if (bodies.length === 0) return null;
+  const counts = new Map<number, number>();
+  for (const b of bodies) counts.set(b.col, (counts.get(b.col) ?? 0) + 1);
+  const modal = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+  // Walk up from the bottom, shedding apparatus: note TEXT sits far right of
+  // the body margin (Barnes prints a lone marker digit, then the note deeply
+  // indented — the bare digit itself is display-filtered above), and one-line
+  // notes ("15. Reading …") are gap-separated with a bare note-number head.
+  let end = bodies.length;
+  while (end > 0) {
+    const cur = bodies[end - 1];
+    if (cur.col >= modal + 6) {
+      end -= 1;
+      continue;
+    }
+    const gapAbove = end >= 2 && cur.idx - bodies[end - 2].idx > 1;
+    if (gapAbove && NOTE_HEAD_RE.test(cur.body.trimStart())) {
+      end -= 1;
+      continue;
+    }
+    break;
+  }
+  if (end === 0) return null;
+  let maxWidth = 0;
+  for (let k = 0; k < end; k += 1) maxWidth = Math.max(maxWidth, bodies[k].body.trimEnd().length);
+  return { body: bodies[end - 1].body, maxWidth };
+}
 
 // A witness paragraph break at the top of a page is confounded: the reflowed
 // witness routinely opens a fresh paragraph at a print page turn, so witness
@@ -742,13 +988,18 @@ function classifyParagraphs(
       records.push(paragraphRecord(nextId, page, brk.line, firstCol, 'paragraph-break-lost', 'john-manual', 'insert', modal + 4, firstCol - modal, modal, side, ''));
     }
     let previousBodyLine: string | null = null;
-    let pageMaxWidth = 0;
     let seenBody = false;
+    let afterHeading = false;
     for (let line = 0; line < lines.length; line += 1) {
       const raw = stripCr(lines[line]);
       if (line === head || raw.trim() === '') continue;
       const body = lineBody(raw, side);
-      if (body === '' || parseHeadingResidual(body) || isDisplayShapedLine(body)) continue;
+      if (body === '') continue;
+      if (parseHeadingResidual(body)) {
+        afterHeading = true;
+        continue;
+      }
+      if (isDisplayShapedLine(body)) continue;
       const firstCol = bodyStartCol(raw, side);
       if (firstCol === null) continue;
       const offset = firstCol - modal;
@@ -756,7 +1007,13 @@ function classifyParagraphs(
       const witnessBreak = phrase !== '' && witnessStarts.has(phrase);
       const blankPrecedes = line > 0 && stripCr(lines[line - 1]).trim() === '';
       const pageTop = !seenBody;
-      if (offset <= 1 && witnessBreak && (blankPrecedes || pageTop || offset === 1)) {
+      const wasAfterHeading = afterHeading;
+      afterHeading = false;
+      // §E-b: never INSERT on the first body line after a division heading —
+      // the converter opens a paragraph at every chapter regardless, and the
+      // indent is pure title bait for §5 capture (witness "breaks" there
+      // vacuously: every chapter starts a witness paragraph).
+      if (offset <= 1 && witnessBreak && !wasAfterHeading && (blankPrecedes || pageTop || offset === 1)) {
         const support = pageTop
           ? pageTopSupport(prevPageLastBody, prevPageMaxWidth)
           : blankPrecedes
@@ -765,18 +1022,24 @@ function classifyParagraphs(
         if (support !== null) {
           records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-lost', support, 'insert', modal + 4, offset, modal, side, phrase));
         }
-      } else if ((offset === 1 || offset === 2) && !witnessBreak && previousBodyLine && !sentenceBoundary(previousBodyLine)) {
-        records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'jitter', 'snap', modal, offset, modal, side, phrase));
-      } else if (offset === 2 && !witnessBreak && previousBodyLine && sentenceBoundary(previousBodyLine)) {
-        records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'under-indent', 'flag', modal, offset, modal, side, phrase));
+      } else if ((offset === 1 || offset === 2) && !witnessBreak) {
+        // §C: page-top raw jitter — previousBodyLine resets per page, so the
+        // first body line of a page borrows the previous page's last TEXT
+        // line (footnote-aware, §D) as its sentence evidence.
+        const prevLine = previousBodyLine ?? (pageTop ? prevPageLastBody : null);
+        if (prevLine && !sentenceBoundary(prevLine)) {
+          records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'jitter', 'snap', modal, offset, modal, side, phrase));
+        } else if (offset === 2 && prevLine && sentenceBoundary(prevLine)) {
+          records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'under-indent', 'flag', modal, offset, modal, side, phrase));
+        }
       }
       previousBodyLine = body;
-      pageMaxWidth = Math.max(pageMaxWidth, body.trimEnd().length);
       seenBody = true;
     }
-    if (previousBodyLine !== null) {
-      prevPageLastBody = previousBodyLine;
-      prevPageMaxWidth = pageMaxWidth;
+    const pageText = lastTextBody(lines, side, head);
+    if (pageText !== null) {
+      prevPageLastBody = pageText.body;
+      prevPageMaxWidth = pageText.maxWidth;
     }
   }
   return records;
@@ -856,12 +1119,21 @@ export function vote(
   reviewRecords.push(...paragraphRecords);
   const paragraphEditList = paragraphEdits(paragraphRecords, decisions);
 
+  const wrapOutcome = classifyWrapJoins(
+    backbone.split('\f').map((page) => page.split('\n')),
+    witnessBody,
+    nextId
+  );
+  reviewRecords.push(...wrapOutcome.records.filter((record) => record.tier === 2));
+
   const applied = applyPendingEdits(backbone, edits, nextId);
-  const paragraphApplied = applyParagraphEdits(applied.text, paragraphEditList, nextId);
+  const wrapApplied = applyWrapJoins(applied.text, wrapOutcome.joins, nextId);
+  const paragraphApplied = applyParagraphEdits(wrapApplied.text, paragraphEditList, nextId);
   const review = buildReviewModel(config.id, reviewRecords.filter((record) => record.tier === 2), backbone);
-  const appliedIds = new Set([...applied.changes, ...paragraphApplied.changes].map((record) => record.id));
+  const appliedIds = new Set([...applied.changes, ...wrapApplied.changes, ...paragraphApplied.changes].map((record) => record.id));
   const changes = [
     ...applied.changes,
+    ...wrapApplied.changes,
     ...paragraphApplied.changes,
     ...coverageRecords,
     ...reviewRecords.filter((record) => record.tier === 2 && !appliedIds.has(record.id)),
