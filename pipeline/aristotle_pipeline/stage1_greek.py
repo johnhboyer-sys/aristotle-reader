@@ -63,7 +63,11 @@ def _line_text(el: etree._Element) -> str:
     parts = []
     for piece in el.itertext():
         parts.append(piece)
-    text = re.sub(r"\s+", " ", "".join(parts)).strip()
+    # Some editions (e.g. De Mundo's export) mark original edition line-breaks
+    # with a literal "|" inside <l> text — mid-word (καλοῦν|ται) or between words
+    # (εὐθεῖαν, | ἥν). The bar is never part of a Greek word: drop it (mid-word
+    # tokens rejoin; the following whitespace-collapse folds any doubled space).
+    text = re.sub(r"\s+", " ", "".join(parts).replace("|", "")).strip()
     return text
 
 
