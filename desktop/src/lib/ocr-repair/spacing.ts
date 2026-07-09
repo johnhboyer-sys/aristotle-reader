@@ -171,6 +171,21 @@ function stripMidwordDots(body: string): { text: string; removed: number } {
   return { text, removed };
 }
 
+// An em-dash glued directly to one or more hyphens ("simpliciter—-,") is
+// always OCR noise — the hyphen(s) are spurious. Collapse the run to the lone
+// em-dash. Unlike class I's witness-driven dash restoration, this needs no
+// witness, so it also cleans the 18 Genie-dropout pages class I can't reach.
+// Only the em-dash-adjacent case: a bare hyphen between letters is a real
+// wrap/compound and is left alone.
+function collapseDashClusters(body: string): { text: string; collapsed: number } {
+  let collapsed = 0;
+  const text = body.replace(/-*[—–]-+|-+[—–]/gu, (m) => {
+    collapsed += 1;
+    return m.includes('—') ? '—' : '–';
+  });
+  return { text, collapsed };
+}
+
 function collapseInternalSpaces(body: string): CollapsedBody {
   let runsCollapsed = 0;
   let firstRunCol: number | undefined;
@@ -302,8 +317,9 @@ function normalizePage(
 
     const collapsed = collapseInternalSpaces(split.body);
     const dots = stripMidwordDots(collapsed.text);
-    const punct = stripSpaceBeforePunct(dots.text);
-    if (collapsed.runsCollapsed === 0 && punct.removed === 0 && dots.removed === 0) continue;
+    const dashes = collapseDashClusters(dots.text);
+    const punct = stripSpaceBeforePunct(dashes.text);
+    if (collapsed.runsCollapsed === 0 && punct.removed === 0 && dots.removed === 0 && dashes.collapsed === 0) continue;
 
     const nextBare = reassemble(split, punct.text);
     if (nextBare === null || nextBare === bare) continue;
@@ -324,6 +340,7 @@ function normalizePage(
         runsCollapsed: collapsed.runsCollapsed,
         ...(punct.removed ? { spaceBeforePunct: punct.removed } : {}),
         ...(dots.removed ? { midwordDots: dots.removed } : {}),
+        ...(dashes.collapsed ? { dashClusters: dashes.collapsed } : {}),
         side: split.side,
         ...(split.side === 'recto' ? { ticColPreserved: true } : {}),
       },

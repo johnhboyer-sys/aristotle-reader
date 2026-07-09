@@ -75,6 +75,17 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
     expect(outcome.text).not.toContain('them\u2014)');
   });
 
+  it('1c. class I: fallback consumes the flattened hyphen when the witness token ends at the dash', () => {
+    // backbone "supposition-," vs witness token "supposition\u2014" (comma separate):
+    // the exact substitution can't match, so the letters-count fallback runs and
+    // must yield "supposition\u2014," not "supposition\u2014-,".
+    const backbone = ['RUNNING HEAD', '639a on the basis of a supposition-, then it holds.'].join('\n');
+    const witness = '639a on the basis of a supposition\u2014 , then it holds.';
+    const outcome = vote(backbone, witness, config());
+    expect(outcome.text).toContain('supposition\u2014, then');
+    expect(outcome.text).not.toContain('supposition\u2014-');
+  });
+
   it('2. keeps a spaced dash byte-identical and emits a diagnostic', () => {
     const backbone = ['RUNNING HEAD', '639a The casee remains steady.'].join('\n');
     const witness = '639a The case — e remains steady.';

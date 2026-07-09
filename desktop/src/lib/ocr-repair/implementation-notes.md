@@ -527,3 +527,26 @@ desktop + 69 app tests. Requires re-import.
 STILL OPEN (not garbles): stray 82b18/20 verso tics drifted to cols 12/22
 (structural stage-3 recovery — John to send exact I.31 Bekkers); assorted
 spurious paragraph/line breaks (Book 2 Ch 3 flagged — "check the book").
+
+## Class N + class-I fallback fix — residual em-dash+hyphen (2026-07-09)
+
+John's read-through surfaced two surviving dash clusters on witness-blind
+pages: `universals,-e.g.` (FIX => `universals—e.g.`) and `simpliciter—-,`.
+The latter is NOT backbone-native: stage 4 has `simpliciter-,` (plain
+hyphen); the `—-` is INTRODUCED at stage 5 by class I's letters-count
+fallback when the witness token ends AT the dash ("simpliciter—", comma
+tokenized separately) so the exact-substitution can't match — it inserted
+the em-dash after the 11th letter but LEFT the flattened hyphen. Root fix:
+that fallback now consumes a hyphen sitting at the insertion point (it IS
+the dash being restored) → `simpliciter—,`. Also added a defensive stage-4
+`collapseDashClusters` (class N): an em-dash glued to hyphen(s) → lone
+em-dash, no witness needed (catches backbone-native `—-`, generalizes to
+Apostle; fires on nothing in PA/APo now that class I is correct). Zero `—-`
+corpus-wide; grades byte-stable; 104 ocr-repair + 236 desktop + 69 app tests.
+
+APo correction list now 10: E.g., D is, of F, that, what, their,
+mentioned→20, not, universals—e.g. (+ noe→not). Requires re-import.
+
+STILL AWAITING (structural pass): John compiling the leaked/misread Bekker
+tick ground-truth (100a10=IO, 100a15, 100b1=IOOb splitting "particulars";
+I.31 18/20; 94a "ss") — build decode+seat+word-rejoin against his list.

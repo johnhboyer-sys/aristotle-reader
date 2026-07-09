@@ -286,7 +286,14 @@ function dashRestorationAfter(aRaw: string, bRaw: string): string | null {
     const ch = aRaw[i];
     if (!LETTER_RE.test(ch)) continue;
     seen += 1;
-    if (seen === lettersBeforeDash) return `${aRaw.slice(0, i + 1)}${dash}${aRaw.slice(i + 1)}`;
+    if (seen === lettersBeforeDash) {
+      // Consume a flattened hyphen sitting at the insertion point — it IS the
+      // dash being restored. Leaving it produced "simpliciter—-," when the
+      // witness token ended at the dash (comma tokenized separately) so the
+      // exact-substitution above couldn't match.
+      const rest = aRaw.slice(i + 1).replace(/^-/u, '');
+      return `${aRaw.slice(0, i + 1)}${dash}${rest}`;
+    }
   }
   return null;
 }

@@ -212,6 +212,19 @@ describe('normalizeSpacing stage-4 fixtures', () => {
     expect(stripped).toHaveLength(2);
   });
 
+  it('14. class N: collapses an em-dash glued to a spurious hyphen, keeps real hyphens', () => {
+    const raw = doc(page([
+      'on the basis of a supposition—-, then the predicates in between are',
+      'a real split-footed compound and a wrapped word stays hyphen-bound.',
+    ]));
+    const outcome = normalizeSpacing(raw, config());
+    const lines = outcome.text.split('\f')[0].split('\n');
+
+    expect(lines[2]).toBe('on the basis of a supposition—, then the predicates in between are');
+    expect(lines[3]).toBe('a real split-footed compound and a wrapped word stays hyphen-bound.');
+    expect(outcome.changes.filter((change) => change.evidence?.dashClusters)).toHaveLength(1);
+  });
+
   it('13. class L: strips a stray middle dot touching a word, keeps a spaced dot', () => {
     const raw = doc(page([
       'then u·niversal demonstrations are better than ·four right angles.',
