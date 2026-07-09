@@ -1,0 +1,41 @@
+work:
+  id: MXG
+  title: "On Melissus, Xenophanes, and Gorgias"
+  greekTitle: "Περὶ Μελίσσου Ξενοφάνους Γοργίου"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "047"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "T. Loveday and E. S. Forster (Oxford, 1913)"
+
+bekker_range:
+  first_column: "974a"
+  last_column: "980b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg047.1st1K-grc1.xml"
+  chapter_subtype: chapter
+
+english:
+  primary:
+    id: loveday_forster
+    name: "T. Loveday and E. S. Forster (Oxford, 1913)"
+    model: archive
+    dir: "mxg-loveday-forster"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "974a1", end: "980b30" }
+
+expected_line_gaps:
+  - { column: "977a", after: 11, next: 13 }
+  - { column: "979a", after: 9, next: 11 }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

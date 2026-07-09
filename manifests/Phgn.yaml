@@ -1,0 +1,37 @@
+work:
+  id: Phgn
+  title: "Physiognomonics"
+  greekTitle: "Φυσιογνωμονικά"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "032"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "T. Loveday and E. S. Forster (Oxford, 1913)"
+
+bekker_range:
+  first_column: "805a"
+  last_column: "814b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg032.1st1K-grc1.xml"
+  chapter_subtype: chapter
+
+english:
+  primary:
+    id: loveday_forster
+    name: "T. Loveday and E. S. Forster (Oxford, 1913)"
+    model: archive
+    dir: "phgn-loveday-forster"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "805a1", end: "814b9" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
