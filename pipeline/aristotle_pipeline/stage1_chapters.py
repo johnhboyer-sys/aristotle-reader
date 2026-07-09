@@ -282,6 +282,17 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 # Orthographic divergence missed the text match; fall back to the
                 # milestone's own Bekker position (heading pinned at line start).
                 widx = _first_word_at(owner, mcol, mline)
+                # Some First1KGreek chapter divs begin immediately after a page
+                # milestone, before their first line milestone.  The page is
+                # still authoritative; retain the division at the first word in
+                # that page following the previous chapter rather than dropping
+                # it solely because the line is implicit.
+                if widx is None and mline is None:
+                    widx = next(
+                        (i for i, (col, _, _) in enumerate(owner)
+                         if col == mcol and wstart[i] >= after),
+                        None,
+                    )
                 if widx is not None:
                     loc, after = owner[widx], wstart[widx]
             if loc is None and mcol is None:

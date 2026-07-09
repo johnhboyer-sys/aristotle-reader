@@ -1,0 +1,37 @@
+work:
+  id: Mirab
+  title: "De Mirabilibus Auscultationibus"
+  greekTitle: "Περὶ θαυμασίων ἀκουσμάτων"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "027"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "L. D. Dowdall (Oxford, 1909)"
+
+bekker_range:
+  first_column: "830a"
+  last_column: "847b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg027.1st1K-grc1.xml"
+  chapter_subtype: chapter
+
+english:
+  primary:
+    id: dowdall
+    name: "L. D. Dowdall (Oxford, 1909)"
+    model: archive
+    dir: "mirab-dowdall"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "830a1", end: "847b11" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
