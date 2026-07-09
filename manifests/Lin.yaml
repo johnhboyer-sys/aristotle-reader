@@ -1,0 +1,37 @@
+work:
+  id: Lin
+  title: "De Lineis Insecabilibus"
+  greekTitle: "Περὶ ἀτόμων γραμμῶν"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "019"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "H. H. Joachim (Oxford, 1908)"
+
+bekker_range:
+  first_column: "968a"
+  last_column: "972b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1, bekker: "968a1" }
+
+english:
+  primary:
+    id: joachim
+    name: "H. H. Joachim (Oxford, 1908)"
+    model: archive
+    dir: "lin-joachim"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "968a1", end: "972b33" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

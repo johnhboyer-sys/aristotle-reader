@@ -54,7 +54,7 @@ _SENT = re.compile(r"[.?!][\"')\]]?\s")
 # capture group holding the chapter number (Arabic or Roman).
 _CHAPTER_MARKERS = {
     "number": re.compile(r"\d{1,2}"),
-    "part": re.compile(r"Part\s+(\d{1,2})"),
+    "part": re.compile(r"Part\s+(\d{1,3})"),
     "part_roman": re.compile(r"Part\s+([IVXLC]+)"),
 }
 

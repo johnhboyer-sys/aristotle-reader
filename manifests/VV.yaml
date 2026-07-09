@@ -1,0 +1,51 @@
+# De Virtutibus et Vitiis ("On Virtues and Vices") — pipeline manifest.
+#
+# A short spurious ethical treatise (Bekker 1249a–1251b). Greek spine from the
+# cached TLG export (tlg0086.045); the Perseus grc TEI has only one textpart div,
+# so chapters are declared EXPLICITLY (8 traditional chapters) as Bekker starts,
+# each aligned onto the Bekker-lineated spine. Primary English = J. Solomon
+# (Oxford, 1915), public domain; archive-model with an interpolated gutter.
+
+work:
+  id: VV
+  title: "De Virtutibus et Vitiis"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "045"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "J. Solomon (Oxford, 1915)"
+
+bekker_range:
+  first_column: "1249a"
+  last_column: "1251b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1, bekker: "1249a26" }
+    - { n: 2, bekker: "1249b26" }
+    - { n: 3, bekker: "1250a5" }
+    - { n: 4, bekker: "1250a33" }
+    - { n: 5, bekker: "1250b6" }
+    - { n: 6, bekker: "1250b19" }
+    - { n: 7, bekker: "1251a19" }
+    - { n: 8, bekker: "1251b26" }
+
+english:
+  primary:
+    id: solomon
+    name: "J. Solomon (Oxford, 1915)"
+    model: archive
+    dir: "dvv-solomon"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "1249a26", end: "1251b39" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

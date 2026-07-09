@@ -58,13 +58,19 @@ def run_export(manifest: Manifest) -> Path:
     return out
 
 
-def _line_text(el: etree._Element) -> str:
-    """Flatten an <l>, dropping heading labels, collapsing whitespace."""
-    parts = []
-    for piece in el.itertext():
-        parts.append(piece)
-    text = re.sub(r"\s+", " ", "".join(parts)).strip()
-    return text
+def _line_text(el: etree._Element, strip_bars: bool = False) -> str:
+    """Flatten an <l>, dropping heading labels, collapsing whitespace.
+
+    `strip_bars` removes literal "|" edition line-break markers, which some
+    exports (e.g. De Mundo's) print inside a plain <l> — mid-word (καλοῦν|ται)
+    or between words (μέσον | μὲν); the bar is never part of a Greek word.
+    It must stay FALSE on compound-numbered lines (n="8,9"), where "|" is the
+    delimiter _expand_compound splits on to map the physical line onto its two
+    Bekker numbers — stripping it there would destroy the split."""
+    text = "".join(el.itertext())
+    if strip_bars:
+        text = text.replace("|", "")
+    return re.sub(r"\s+", " ", text).strip()
 
 
 _COMPOUND_N = re.compile(r"^\d+(?:\s*,\s*\d+)+$")
@@ -140,9 +146,9 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
                 flush()
             line_no = _line_no(n)
             if line_no is None:
-                headings.append({"column": column, "text": _line_text(l)})
+                headings.append({"column": column, "text": _line_text(l, strip_bars=True)})
                 continue
-            flat.append({"column": column, "n": line_no, "text": _line_text(l)})
+            flat.append({"column": column, "n": line_no, "text": _line_text(l, strip_bars=True)})
         if compound:
             flush()
 

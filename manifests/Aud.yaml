@@ -1,0 +1,37 @@
+work:
+  id: Aud
+  title: "De Audibilibus"
+  greekTitle: "Περὶ ἀκουστῶν"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "004"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "T. Loveday and E. S. Forster (Oxford, 1913)"
+
+bekker_range:
+  first_column: "800a"
+  last_column: "804b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1, bekker: "800a1" }
+
+english:
+  primary:
+    id: loveday_forster
+    name: "T. Loveday and E. S. Forster (Oxford, 1913)"
+    model: archive
+    dir: "aud-loveday-forster"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "800a1", end: "804b39" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
