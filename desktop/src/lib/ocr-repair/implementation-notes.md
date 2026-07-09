@@ -498,3 +498,32 @@ drifted to cols 12/22, missed by stage-3 reseat — John offered exact I.31
 Bekkers as ground truth); assorted spurious paragraph/line breaks. The
 witness is NOT a clean oracle for the lost-space cases (Genie has its own
 run-togethers, e.g. "Band" for "B and").
+
+## Class M — manual-correction directive for witness-blind garbles (2026-07-09)
+
+STRUCTURAL FINDING: 18 of 74 Barnes pages have NO Genie witness (silent
+dropouts: 73a 75a 76a 77b 81a 81b 84a 86a 88b×2 89a 90a 91a 92b 95a 97b 99b
+100a), and paired pages don't cleanly align on garbled tokens. So OCR
+garbles like \Xhat, thae, Dis, ofF, E.g/ CANNOT be witness-arbitrated — the
+pipeline reads blind exactly where they live. That's why John keeps finding
+them.
+
+Solution: `FIX <before> => <after>` directive in the decisions file
+(review.ts parseDecisions → ReviewDecisions.corrections; applied by
+vote.ts applyCorrections as a final stage-5 pass). Each `before` is a unique
+on-line substring, replaced via replaceInLine (recto tic column preserved,
+running head skipped); logged as Tier-2 word-identity, evidence.kind
+'correction', source 'john-manual'. Zero-match → 'correction-unmatched'
+flag (a stale FIX never passes silently). Per-corpus DATA — no code
+literals, so stage-7 Apostle neutrality is untouched (Apostle brings its
+own FIX list or none). Turns John's skim-findings directly into logged,
+auditable edits with no witness dependency.
+
+Seeded APo decisions with the 6 garbles from John's read-through: E.g/→E.g.,
+Dis→D is, ofF→of F (×2), thae→that, \Xhat→what. All applied, 0 unmatched,
+grades byte-stable (453/1/1/0 titled, 14 fnUnmatched). 102 ocr-repair + 234
+desktop + 69 app tests. Requires re-import.
+
+STILL OPEN (not garbles): stray 82b18/20 verso tics drifted to cols 12/22
+(structural stage-3 recovery — John to send exact I.31 Bekkers); assorted
+spurious paragraph/line breaks (Book 2 Ch 3 flagged — "check the book").

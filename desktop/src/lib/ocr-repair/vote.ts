@@ -1111,6 +1111,57 @@ function paragraphEdits(records: ChangeRecord[], decisions: ReviewDecisions | un
     .filter((edit) => Number.isInteger(edit.targetCol) && edit.targetCol >= 0);
 }
 
+// John-authored literal corrections (`FIX <before> => <after>`) for OCR
+// garbles the witness can't arbitrate — chiefly the Genie-dropout pages the
+// pipeline reads blind. Each `before` is located as a unique on-line
+// substring and replaced via replaceInLine (which preserves a recto tic's
+// column); every hit is a logged Tier-2 word-identity record, and a
+// zero-match correction is flagged so a stale FIX line never passes silently.
+function applyCorrections(
+  text: string,
+  corrections: { before: string; after: string }[],
+  nextId: ReturnType<typeof changeFactory>
+): { text: string; changes: ChangeRecord[] } {
+  if (corrections.length === 0) return { text, changes: [] };
+  const pages = text.split('\f').map((page) => page.split('\n'));
+  const changes: ChangeRecord[] = [];
+  for (const { before, after } of corrections) {
+    let hits = 0;
+    for (let p = 0; p < pages.length; p += 1) {
+      const head = firstNonBlankLine(pages[p]);
+      for (let l = 0; l < pages[p].length; l += 1) {
+        if (l === head) continue; // never touch the running head (invariant)
+        const bare = stripCr(pages[p][l]);
+        const col = bare.indexOf(before);
+        if (col < 0) continue;
+        const next = replaceInLine(pages[p][l], col, before, after);
+        if (next === null) {
+          changes.push(flagRecord(nextId, p, 'correction-skipped-geometry', { before, after }, l, col));
+          continue;
+        }
+        pages[p][l] = next;
+        hits += 1;
+        changes.push({
+          id: nextId(p, l, col),
+          stage: 5,
+          tier: 2,
+          rule: 'word-identity',
+          page: p,
+          line: l,
+          col,
+          before,
+          after,
+          evidence: { kind: 'correction', source: 'john-manual' },
+        });
+      }
+    }
+    if (hits === 0) changes.push(flagRecord(nextId, 0, 'correction-unmatched', { before, after }));
+  }
+  const out = pages.map((page) => page.join('\n')).join('\f');
+  assertDocumentInvariants(text, out);
+  return { text: out, changes };
+}
+
 export function classifyDroppedLines(droppedLines: string[], witnessText: string): DroppedLineClassification[] {
   const witnessColumns = new Set(extractWitnessAnchors(witnessText).flat().map((anchor) => `${anchor.page}${anchor.col}`));
   return droppedLines.map((ref) => {
@@ -1183,17 +1234,19 @@ export function vote(
   const applied = applyPendingEdits(backbone, edits, nextId);
   const wrapApplied = applyWrapJoins(applied.text, wrapOutcome.joins, nextId);
   const paragraphApplied = applyParagraphEdits(wrapApplied.text, paragraphEditList, nextId);
+  const corrected = applyCorrections(paragraphApplied.text, decisions?.corrections ?? [], nextId);
   const review = buildReviewModel(config.id, reviewRecords.filter((record) => record.tier === 2), backbone);
   const appliedIds = new Set([...applied.changes, ...wrapApplied.changes, ...paragraphApplied.changes].map((record) => record.id));
   const changes = [
     ...applied.changes,
     ...wrapApplied.changes,
     ...paragraphApplied.changes,
+    ...corrected.changes,
     ...coverageRecords,
     ...reviewRecords.filter((record) => record.tier === 2 && !appliedIds.has(record.id)),
   ];
   return {
-    text: paragraphApplied.text,
+    text: corrected.text,
     changes,
     review,
     pairing: pairing.report,

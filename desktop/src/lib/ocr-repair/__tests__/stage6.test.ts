@@ -161,6 +161,28 @@ describe('stage 6 fix batch fixtures', () => {
     expect(inserts).toEqual([]);
   });
 
+  it('class M: applies FIX corrections as logged Tier-2 edits, preserves recto tics, flags stale FIXes', () => {
+    const backbone = [
+      'RUNNING HEAD',
+      recto('deduce that A is \\Xhat it is to be C now.', '639a'),
+      recto('and grasping ofF in the same way here today.', '5'),
+    ].join('\n');
+    const md = [
+      'FIX \\Xhat => what',
+      'FIX ofF => of F',
+      'FIX nonexistent garble => corrected',
+    ].join('\n');
+    const outcome = vote(backbone, '639a placeholder witness.', config(), parseDecisions(md));
+    const lines = outcome.text.split('\n');
+
+    expect(lines[1]).toBe(recto('deduce that A is what it is to be C now.', '639a'));
+    expect(lines[2]).toBe(recto('and grasping of F in the same way here today.', '5'));
+    const applied = outcome.changes.filter((c) => c.rule === 'word-identity' && c.evidence?.kind === 'correction');
+    expect(applied.map((c) => [c.before, c.after])).toEqual([['\\Xhat', 'what'], ['ofF', 'of F']]);
+    expect(applied.every((c) => c.tier === 2)).toBe(true);
+    expect(outcome.changes.some((c) => c.evidence?.kind === 'correction-unmatched')).toBe(true);
+  });
+
   it('C. gates page-top inserts on the previous page\'s last body line', () => {
     const pageTwo = ['RUNNING HEAD', 'Second unit begins here.'].join('\n');
     // Filler opening keeps page 1's own top line out of the witness paragraph

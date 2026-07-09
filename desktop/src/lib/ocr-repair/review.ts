@@ -32,6 +32,14 @@ export interface ReviewDecisions {
   excludeIds?: Set<string>;
   /** John-mandated paragraph breaks with no machine record (`BREAK p<page>-L<line>`). */
   manualBreaks?: { page: number; line: number }[];
+  /**
+   * John-authored literal corrections for OCR garbles the witness can't
+   * arbitrate — chiefly on the 18/74 Genie-dropout pages the pipeline reads
+   * blind (`FIX <before> => <after>`). `before` is a unique on-line substring;
+   * applied as a logged Tier-2 word-identity edit. Per-corpus DATA, so it
+   * never affects the held-out neutrality gate.
+   */
+  corrections?: { before: string; after: string }[];
 }
 
 // Diagnostic categories carry no decision \u2014 thousands of instances would
@@ -150,5 +158,9 @@ export function parseDecisions(md: string): ReviewDecisions {
   for (const match of md.matchAll(/^BREAK\s+p(\d+)-L(\d+)\s*$/gmu)) {
     manualBreaks.push({ page: Number(match[1]), line: Number(match[2]) });
   }
-  return { checkedPatterns, excludeIds, manualBreaks };
+  const corrections: { before: string; after: string }[] = [];
+  for (const match of md.matchAll(/^FIX\s+(.+?)\s+=>\s+(.*?)\s*$/gmu)) {
+    if (match[1]) corrections.push({ before: match[1], after: match[2] });
+  }
+  return { checkedPatterns, excludeIds, manualBreaks, corrections };
 }
