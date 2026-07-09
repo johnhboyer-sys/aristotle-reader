@@ -1,0 +1,31 @@
+{
+ "work": {
+  "id": "Phgn",
+  "title": "Physiognomonics",
+  "greekTitle": "Φυσιογνωμονικά",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "032",
+  "authenticity": "spurious",
+  "greek_edition": "I. Bekker, Aristotelis Opera (Berlin, 1831)",
+  "english_translation": "T. Loveday and E. S. Forster (Oxford, 1913)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 20,
+   "first_column": "805a",
+   "last_column": "814b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 1733,
+  "parses_dropped": 57
+ },
+ "lsj": {
+  "lemmata_needed": 1209,
+  "lsj_entries_kept": 1178,
+  "shards": 24,
+  "lemmata_without_entry": 47
+ }
+}

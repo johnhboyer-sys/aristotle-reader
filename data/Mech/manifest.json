@@ -1,0 +1,30 @@
+{
+ "work": {
+  "id": "Mech",
+  "title": "Mechanica",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "023",
+  "authenticity": "spurious",
+  "greek_edition": "I. Bekker, Aristotelis Opera (Berlin, 1831)",
+  "english_translation": "E. S. Forster (Oxford, 1913)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 24,
+   "first_column": "847a",
+   "last_column": "858b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 1626,
+  "parses_dropped": 55
+ },
+ "lsj": {
+  "lemmata_needed": 920,
+  "lsj_entries_kept": 895,
+  "shards": 24,
+  "lemmata_without_entry": 37
+ }
+}

@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-sefmxpgk> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('ne-theme');
+      document.documentElement.dataset.theme = saved === 'dark' ? 'dark' : 'light';
+    } catch (e) {
+      /* localStorage unavailable: fall back to light (CSS default). */
+    }
+  })();
+</script><title>De Audibilibus — Aristotle, in Greek &amp; English</title><meta name="description" content="De Audibilibus by Aristotle: the original Greek (Bekker (Berlin, 1831)) with English translation (T. Loveday and E. S. Forster), table of contents, morphology, and Bekker citation. A short spurious work on sound and hearing."><link rel="canonical" href="https://johnhboyer-sys.github.io/aristotle-reader/Aud/"><meta property="og:type" content="book"><meta property="og:title" content="De Audibilibus — Aristotle, in Greek &amp; English"><meta property="og:description" content="De Audibilibus by Aristotle: the original Greek (Bekker (Berlin, 1831)) with English translation (T. Loveday and E. S. Forster), table of contents, morphology, and Bekker citation. A short spurious work on sound and hearing."><meta property="og:url" content="https://johnhboyer-sys.github.io/aristotle-reader/Aud/"><meta property="og:site_name" content="The Aristotle Reader"><meta property="og:image" content="https://johnhboyer-sys.github.io/aristotle-reader/og-default.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="De Audibilibus — Aristotle, in Greek &amp; English"><meta name="twitter:description" content="De Audibilibus by Aristotle: the original Greek (Bekker (Berlin, 1831)) with English translation (T. Loveday and E. S. Forster), table of contents, morphology, and Bekker citation. A short spurious work on sound and hearing."><meta name="twitter:image" content="https://johnhboyer-sys.github.io/aristotle-reader/og-default.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Book","name":"De Audibilibus","alternateName":"Περὶ ἀκουστῶν","author":{"@type":"Person","name":"Aristotle"},"translator":[{"@type":"Person","name":"T. Loveday and E. S. Forster"}],"inLanguage":["grc","en"],"url":"https://johnhboyer-sys.github.io/aristotle-reader/Aud/","numberOfPages":1,"isPartOf":{"@type":"CreativeWorkSeries","name":"The Works of Aristotle"},"description":"A short spurious work on sound and hearing."}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Aristotle","item":"https://johnhboyer-sys.github.io/aristotle-reader/"},{"@type":"ListItem","position":2,"name":"De Audibilibus","item":"https://johnhboyer-sys.github.io/aristotle-reader/Aud/"}]}</script><link rel="icon" href="/aristotle-reader/favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="/aristotle-reader/_astro/global.CznijnG9.css">
+<link rel="stylesheet" href="/aristotle-reader/_astro/index.C05LMZCr.css"></head> <body data-astro-cid-sefmxpgk> <header class="simple-header" data-astro-cid-sefmxpgk> <div class="header-title" data-astro-cid-sefmxpgk> <a class="home-link" href="/aristotle-reader/" data-astro-cid-sefmxpgk>Aristotle</a> <span class="title-sep" data-astro-cid-sefmxpgk>›</span> <span class="header-static" data-astro-cid-sefmxpgk>De Audibilibus</span> </div> <nav class="header-actions" aria-label="Navigation" data-astro-cid-sefmxpgk> <a href="/aristotle-reader/" class="search-link" data-astro-cid-sefmxpgk>All works</a> <a href="/aristotle-reader/lemma/" class="search-link" data-astro-cid-sefmxpgk>Lexicon</a> <a href="/aristotle-reader/search" class="search-link" data-astro-cid-sefmxpgk>Search</a> <button type="button" class="theme-toggle" aria-label="Toggle night mode" title="Toggle night mode"> <span class="theme-icon" aria-hidden="true"></span> </button> <script>
+  (function () {
+    var btn = document.querySelector('.theme-toggle');
+    if (!btn) return;
+    var icon = btn.querySelector('.theme-icon');
+
+    // Sleek, stroked line icons (Feather-style) that inherit currentColor, so
+    // they read as a refined monochrome glyph rather than a gold emoji.
+    var MOON =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var SUN =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.4 4.4l1.6 1.6M18 18l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.4 19.6l1.6-1.6M18 6l1.6-1.6"/></svg>';
+
+    function render() {
+      var dark = document.documentElement.dataset.theme === 'dark';
+      // Icon shows the theme you'll switch TO: moon in light, sun in dark.
+      icon.innerHTML = dark ? SUN : MOON;
+      btn.setAttribute('aria-pressed', String(dark));
+    }
+    render();
+
+    // Flip the theme. Wrapped in a View Transition so the browser snapshots the
+    // page, applies the change, then crossfades old→new as ONE uniform fade —
+    // chrome, borders, text and the icon swap all dissolve together instead of
+    // the body fading while everything else snaps. Browsers without the API (or
+    // with reduce-motion on) fall back to a clean instant flip.
+    function applyTheme() {
+      var next =
+        document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem('ne-theme', next);
+      } catch (e) {}
+      render();
+    }
+
+    btn.addEventListener('click', function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (document.startViewTransition && !reduce) {
+        document.startViewTransition(applyTheme);
+      } else {
+        applyTheme();
+      }
+    });
+  })();
+</script> </nav> </header> <main class="lp-body" data-astro-cid-sefmxpgk> <p class="lp-eyebrow" data-astro-cid-sefmxpgk>Aristotle · Aud.</p> <h1 class="lp-title" data-astro-cid-sefmxpgk>De Audibilibus</h1> <p class="lp-status" data-astro-cid-sefmxpgk> <span class="status-tag" data-astro-cid-sefmxpgk>Spurious</span> <span class="lp-status-note" data-astro-cid-sefmxpgk>Authorship traditionally doubted — transmitted in the Aristotelian corpus but widely judged not to be by Aristotle.</span> </p> <p class="lp-greek" lang="grc" data-astro-cid-sefmxpgk>Περὶ ἀκουστῶν</p> <p class="lp-lede" data-astro-cid-sefmxpgk>A short spurious work on sound and hearing.</p> <p class="lp-desc" data-astro-cid-sefmxpgk>
+This edition presents the original Greek (Bekker (Berlin, 1831)) side by
+      side with an English translation  (T. Loveday and E. S. Forster) —
+      with click-to-parse morphology, dictionary entries, and exact
+ Bekker citation.
+ 1 chapters. </p> <div class="lp-cta-row" data-astro-cid-sefmxpgk> <a class="lp-btn primary" href="/aristotle-reader/Aud/book/1?trans=loveday_forster" data-astro-cid-sefmxpgk>
+Start reading →
+</a> <a class="lp-btn" href="/aristotle-reader/Aud/book/1?view=greek" data-astro-cid-sefmxpgk>Greek only</a>  </div>  <h2 class="lp-h" data-astro-cid-sefmxpgk>Read this work</h2> <ul class="ed-list" data-astro-cid-sefmxpgk> <li data-astro-cid-sefmxpgk> <a href="/aristotle-reader/Aud/book/1?trans=loveday_forster" data-astro-cid-sefmxpgk> <span class="ed-name" data-astro-cid-sefmxpgk>Loveday &amp; Forster</span> <span class="ed-kind" data-astro-cid-sefmxpgk>Greek &amp; English · T. Loveday and E. S. Forster (Oxford, 1913)</span> </a> </li>  </ul>   <h2 class="lp-h" data-astro-cid-sefmxpgk>Greek text &amp; translations</h2> <p class="credits" data-astro-cid-sefmxpgk> <strong data-astro-cid-sefmxpgk>Greek:</strong> I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.<br data-astro-cid-sefmxpgk> <strong data-astro-cid-sefmxpgk>Translation:</strong>  T. Loveday and E. S. Forster (Oxford, 1913).<br data-astro-cid-sefmxpgk>
+Full source and licence details are on the
+<a href="/aristotle-reader/attribution" data-astro-cid-sefmxpgk>Texts &amp; Licences</a> page.
+</p>  <h2 class="lp-h" data-astro-cid-sefmxpgk>In print</h2>  <p class="credits" style="margin-bottom:0.8rem;" data-astro-cid-sefmxpgk>
+Modern, copyright-protected translations and commentaries we can’t
+              host here, for readers who want to go further:
+</p> <ul class="read-list" data-astro-cid-sefmxpgk> <li data-astro-cid-sefmxpgk> <span class="rk" data-astro-cid-sefmxpgk>Translation</span><span data-astro-cid-sefmxpgk>C. D. C. Reeve, trans., in <em>Aristotle: The Complete Works</em>, 2 vols. (Hackett, 2024)</span>  <a class="buy" href="https://www.google.com/search?tbm=bks&amp;q=C.%20D.%20C.%20Reeve%2C%20trans.%2C%20in%20Aristotle%3A%20The%20Complete%20Works%2C%202%20vols.%20(Hackett%2C%202024)" target="_blank" rel="noopener nofollow" data-astro-cid-sefmxpgk>Find in print →</a> </li>  </ul> <p class="lp-note" data-astro-cid-sefmxpgk>“Find in print” opens a Google Books search for the edition.</p>   <section class="support-card lp-support" data-astro-cid-sefmxpgk> <div class="eyebrow" data-astro-cid-sefmxpgk>Support <span class="gk" data-astro-cid-sefmxpgk>χάρις</span></div> <h2 data-astro-cid-sefmxpgk>Support the Aristotle Reader</h2> <p data-astro-cid-sefmxpgk>The reader is free and open. A contribution helps defray development costs and keeps it that way.</p> <a class="btn-donate" href="https://buy.stripe.com/cNi5kE3wn3lx7Wy5hN9fW00" target="_blank" rel="noopener" data-astro-cid-sefmxpgk>Make a gift</a> </section> </main> </body></html>

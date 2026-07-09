@@ -1,0 +1,30 @@
+{
+ "work": {
+  "id": "DM",
+  "title": "De Mundo",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "028",
+  "authenticity": "spurious",
+  "greek_edition": "I. Bekker, Aristotelis Opera (Berlin, 1831)",
+  "english_translation": "E. S. Forster (Oxford, 1914)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 22,
+   "first_column": "391a",
+   "last_column": "401b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 2544,
+  "parses_dropped": 72
+ },
+ "lsj": {
+  "lemmata_needed": 1919,
+  "lsj_entries_kept": 1852,
+  "shards": 24,
+  "lemmata_without_entry": 88
+ }
+}

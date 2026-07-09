@@ -1,0 +1,30 @@
+{
+ "work": {
+  "id": "VV",
+  "title": "De Virtutibus et Vitiis",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "045",
+  "authenticity": "spurious",
+  "greek_edition": "I. Bekker, Aristotelis Opera (Berlin, 1831)",
+  "english_translation": "J. Solomon (Oxford, 1915)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 6,
+   "first_column": "1249a",
+   "last_column": "1251b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 557,
+  "parses_dropped": 16
+ },
+ "lsj": {
+  "lemmata_needed": 488,
+  "lsj_entries_kept": 476,
+  "shards": 23,
+  "lemmata_without_entry": 18
+ }
+}
