@@ -83,7 +83,7 @@ export function buildReviewModel(corpus: string, records: ChangeRecord[], text: 
       patternKey: key,
       before: run?.before ?? record.before,
       after: run?.after ?? record.after,
-      checked: record.rule === 'paragraph-indent' && record.evidence?.support === 'dual-blank',
+      checked: record.rule === 'paragraph-indent' && (record.evidence?.support === 'dual-blank' || record.evidence?.support === 'page-top-dual'),
       instances: [],
     };
     const lines = linesByPage[record.page] ?? [];

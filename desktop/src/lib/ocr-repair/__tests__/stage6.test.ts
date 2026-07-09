@@ -97,6 +97,41 @@ describe('stage 6 fix batch fixtures', () => {
     expect(setLeadingIndent('  abc    639a', 4, 'recto')).toBeNull();
   });
 
+  it('C. gates page-top inserts on the previous page\'s last body line', () => {
+    const pageTwo = ['RUNNING HEAD', 'Second unit begins here.'].join('\n');
+    // Filler opening keeps page 1's own top line out of the witness paragraph
+    // starts, so the only candidate under test is page 2's top line.
+    const witness = '639a Filler opening words here.\nPrior text runs on unbroken\n\nSecond unit begins here.';
+    const paragraphSupports = (backbone: string) =>
+      vote(backbone, witness, config())
+        .review.groups.filter((group) => group.patternKey.startsWith('paragraph-indent|'))
+        .map((group) => ({ patternKey: group.patternKey, checked: group.checked }));
+
+    // Previous page ends mid-sentence: a paragraph cannot start at the page
+    // top, however the reflowed witness breaks — candidate killed outright.
+    const midSentence = [
+      ['RUNNING HEAD', 'Prior text runs on with plenty of width and'].join('\n'),
+      pageTwo,
+    ].join('\f');
+    expect(paragraphSupports(midSentence)).toEqual([]);
+
+    // Previous page ends a sentence on a short line: the print's own break
+    // evidence — dual support, rendered checked.
+    const shortClose = [
+      ['RUNNING HEAD', 'Prior text runs on with plenty of width and then', 'stops.'].join('\n'),
+      pageTwo,
+    ].join('\f');
+    expect(paragraphSupports(shortClose)).toEqual([{ patternKey: 'paragraph-indent|page-top-dual', checked: true }]);
+
+    // Previous page ends a sentence at full width: genuinely ambiguous —
+    // per-instance review, unchecked.
+    const fullWidth = [
+      ['RUNNING HEAD', 'Prior text runs to the full measure and stops here.'].join('\n'),
+      pageTwo,
+    ].join('\f');
+    expect(paragraphSupports(fullWidth)).toEqual([{ patternKey: 'paragraph-indent|page-top', checked: false }]);
+  });
+
   it('D. joins two-line footnote heads above and below, inserts periods, and adds a blank separator', () => {
     const raw = [
       'RUNNING HEAD',

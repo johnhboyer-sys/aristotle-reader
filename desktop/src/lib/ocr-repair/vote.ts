@@ -681,7 +681,7 @@ function paragraphRecord(
   line: number,
   col: number,
   kind: 'paragraph-break-lost' | 'paragraph-break-spurious',
-  support: 'dual-blank' | 'page-top' | 'under-indent' | 'jitter' | 'john-manual',
+  support: 'dual-blank' | 'page-top' | 'page-top-dual' | 'under-indent' | 'jitter' | 'john-manual',
   action: 'insert' | 'snap' | 'flag',
   targetCol: number,
   offset: number,
@@ -703,6 +703,22 @@ function paragraphRecord(
   };
 }
 
+const SHORT_LINE_MARGIN = 10;
+
+// A witness paragraph break at the top of a page is confounded: the reflowed
+// witness routinely opens a fresh paragraph at a print page turn, so witness
+// evidence alone says nothing there. The print must corroborate through the
+// previous page's last body line: mid-sentence forbids a paragraph break
+// (kill the candidate); sentence-final AND short of the page's body width is
+// the print's own break evidence (dual support); sentence-final at full
+// width stays ambiguous for per-instance review.
+function pageTopSupport(prevPageLastBody: string | null, prevPageMaxWidth: number): 'page-top' | 'page-top-dual' | null {
+  if (prevPageLastBody === null) return 'page-top';
+  if (!sentenceBoundary(prevPageLastBody)) return null;
+  if (prevPageLastBody.trim().length < prevPageMaxWidth - SHORT_LINE_MARGIN) return 'page-top-dual';
+  return 'page-top';
+}
+
 function classifyParagraphs(
   pages: string[][],
   witnessStarts: Set<string>,
@@ -710,6 +726,8 @@ function classifyParagraphs(
   manualBreaks: { page: number; line: number }[] = []
 ): ChangeRecord[] {
   const records: ChangeRecord[] = [];
+  let prevPageLastBody: string | null = null;
+  let prevPageMaxWidth = 0;
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page];
     const head = firstNonBlankLine(lines);
@@ -724,6 +742,7 @@ function classifyParagraphs(
       records.push(paragraphRecord(nextId, page, brk.line, firstCol, 'paragraph-break-lost', 'john-manual', 'insert', modal + 4, firstCol - modal, modal, side, ''));
     }
     let previousBodyLine: string | null = null;
+    let pageMaxWidth = 0;
     let seenBody = false;
     for (let line = 0; line < lines.length; line += 1) {
       const raw = stripCr(lines[line]);
@@ -738,15 +757,26 @@ function classifyParagraphs(
       const blankPrecedes = line > 0 && stripCr(lines[line - 1]).trim() === '';
       const pageTop = !seenBody;
       if (offset <= 1 && witnessBreak && (blankPrecedes || pageTop || offset === 1)) {
-        const support = blankPrecedes && !pageTop ? 'dual-blank' : pageTop ? 'page-top' : 'under-indent';
-        records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-lost', support, 'insert', modal + 4, offset, modal, side, phrase));
+        const support = pageTop
+          ? pageTopSupport(prevPageLastBody, prevPageMaxWidth)
+          : blankPrecedes
+            ? 'dual-blank'
+            : 'under-indent';
+        if (support !== null) {
+          records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-lost', support, 'insert', modal + 4, offset, modal, side, phrase));
+        }
       } else if ((offset === 1 || offset === 2) && !witnessBreak && previousBodyLine && !sentenceBoundary(previousBodyLine)) {
         records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'jitter', 'snap', modal, offset, modal, side, phrase));
       } else if (offset === 2 && !witnessBreak && previousBodyLine && sentenceBoundary(previousBodyLine)) {
         records.push(paragraphRecord(nextId, page, line, firstCol, 'paragraph-break-spurious', 'under-indent', 'flag', modal, offset, modal, side, phrase));
       }
       previousBodyLine = body;
+      pageMaxWidth = Math.max(pageMaxWidth, body.trimEnd().length);
       seenBody = true;
+    }
+    if (previousBodyLine !== null) {
+      prevPageLastBody = previousBodyLine;
+      prevPageMaxWidth = pageMaxWidth;
     }
   }
   return records;

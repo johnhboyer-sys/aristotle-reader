@@ -313,3 +313,35 @@ half; prior read-through defects all fixed); then stage 7 Apostle (files in
 iCloud, "Apostle" in names, still NEVER opened) config-only neutrality gate;
 then PR. Improvement queued: short-previous-line as backbone-side paragraph
 evidence (John's insight) — would upgrade many page-top cases to dual.
+
+## Page-top paragraph gate (2026-07-09, post-restore)
+
+John's first PA read-through hit a mid-sentence paragraph break at 639b25
+("present in the | eternal things") — record p2-L2-c0-1, support page-top.
+Root cause: at page tops the witness paragraph evidence is confounded (the
+reflowed Genie routinely opens a fresh paragraph at print page turns), and
+the page-top insert rule required nothing else. Measured against the
+backbone's own cross-seam evidence: PA 70/85 page-top inserts provably false
+(previous page's last body line ends mid-sentence), APo 23/57.
+
+Fix (vote.ts `pageTopSupport`, John-approved): page-top insert candidates now
+gate on the previous page's last body line — mid-sentence → candidate killed
+outright; sentence-final AND short of the page's body width (John's queued
+short-previous-line insight, promoted) → new support `page-top-dual`,
+rendered pre-checked; sentence-final at full width → stays `page-top`,
+unchecked ambiguous card. Distribution after fix: PA 8 dual + 7 ambiguous,
+APo 26 dual + 8 ambiguous. 94 tests green; pdf-import zero-diff.
+
+Decisions lineage: `review-<corpus>-decided-2026-07-09.md` = the 07-08b file
+with the page-top batch unchecked + `page-top-dual` batch checked
+(EXCLUDE/BREAK directives preserved). FINAL-<corpus>-import.txt re-cut
+(= copy of stages/stage6-footnotes.txt — note the CLI does not write FINAL;
+cutting it is a manual cp). Final grades identical to the pinned tables
+except APo titled 14→13: the removed false indent right after Book 2
+CHAPTER 15 had been read by the converter as a spurious chapter title —
+13 is correct. The 15 ambiguous page-top cards await John's per-instance
+decisions (apply = check them in a decisions file and re-run stage 5–6).
+
+Post-wipe restore facts (same session): full corpus state recovered from
+John's flash drive; old-code rerun with the 07-08b decisions reproduced both
+pre-wipe FINALs byte-identical (stage6-footnotes.txt vs drive FINAL).
