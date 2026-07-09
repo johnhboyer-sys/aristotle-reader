@@ -195,6 +195,23 @@ describe('normalizeSpacing stage-4 fixtures', () => {
     expect(outcome.changes).toEqual([]);
   });
 
+  it('12. class K: strips a space before a comma/paren after a word or digit, keeps spaced ellipses', () => {
+    const raw = doc(page([
+      'that demonstration is necessary ,9 i.e. that if it holds.',
+      'they are not said to be or not be anything15 ). Rather, terms.',
+      'what you know to be a number ... , or what you know to be right.',
+    ]));
+    const outcome = normalizeSpacing(raw, config());
+    const lines = outcome.text.split('\f')[0].split('\n');
+
+    expect(lines[2]).toBe('that demonstration is necessary,9 i.e. that if it holds.');
+    expect(lines[3]).toBe('they are not said to be or not be anything15). Rather, terms.');
+    // Barnes's spaced ellipsis (space follows a period) is left intact.
+    expect(lines[4]).toBe('what you know to be a number ... , or what you know to be right.');
+    const stripped = outcome.changes.filter((change) => change.evidence?.spaceBeforePunct);
+    expect(stripped).toHaveLength(2);
+  });
+
   it('11. batch-2 E: re-seats a chapter-opening indent to the body margin unless chapterTitles', () => {
     const body = [
       '                 CHAPTER 4',

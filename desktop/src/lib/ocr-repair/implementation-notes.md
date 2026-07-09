@@ -459,3 +459,17 @@ never adopt the witness quote style). Only two instances corpus-wide, both
 now correct; the genuine interior case "be—plant-like" (dash between
 letters, real hyphen-compound after) is untouched. 99 tests; grades
 byte-stable; requires re-import.
+
+## Class K — space before closing punctuation (2026-07-09)
+
+John's read-through: "demonstration is necessary ,9" (space before comma)
+and "anything15 )" (space before paren — ALSO the root of the reader wrap
+he saw: the space let ")" break away from its footnote marker). Stage-4
+`stripSpaceBeforePunct` removes a space before `, ; )` ONLY when a
+letter/digit precedes it — which leaves Barnes's own spaced ellipses
+("number ... ,", "posited ... )") untouched, since their space follows a
+period. 7 fixes total (APo 6 + PA 1); all 4 spaced ellipses preserved.
+Tier-1, logged (evidence.spaceBeforePunct), tic column preserved via the
+existing reassemble path. 100 tests; grades byte-stable; requires re-import.
+The paren-wrap is fixed in the DATA now (no space to break at); the class-J
+fn-anchor already handles the marker↔preceding-word side.

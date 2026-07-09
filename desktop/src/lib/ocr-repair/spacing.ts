@@ -142,6 +142,21 @@ function internalSpaceRunWidths(s: string): number[] {
   return widths;
 }
 
+// OCR sometimes leaves a space between a word/number and a following comma,
+// semicolon, or closing paren ("necessary ,9", "anything15 )"). Strip it —
+// but ONLY when a letter/digit precedes the space, which excludes Barnes's
+// own spaced ellipses ("number ... ,", "posited ... )") whose space follows
+// a period. Also drives the reader wrap fix: the space before ")" is what
+// let the paren break away from its footnote marker.
+function stripSpaceBeforePunct(body: string): { text: string; removed: number } {
+  let removed = 0;
+  const text = body.replace(/(?<=[\p{L}\p{N}]) +(?=[,;)])/gu, () => {
+    removed += 1;
+    return '';
+  });
+  return { text, removed };
+}
+
 function collapseInternalSpaces(body: string): CollapsedBody {
   let runsCollapsed = 0;
   let firstRunCol: number | undefined;
@@ -272,9 +287,10 @@ function normalizePage(
     }
 
     const collapsed = collapseInternalSpaces(split.body);
-    if (collapsed.runsCollapsed === 0) continue;
+    const punct = stripSpaceBeforePunct(collapsed.text);
+    if (collapsed.runsCollapsed === 0 && punct.removed === 0) continue;
 
-    const nextBare = reassemble(split, collapsed.text);
+    const nextBare = reassemble(split, punct.text);
     if (nextBare === null || nextBare === bare) continue;
 
     const col = absoluteRunCol(split, collapsed.firstRunCol);
@@ -291,6 +307,7 @@ function normalizePage(
       after: out[i],
       evidence: {
         runsCollapsed: collapsed.runsCollapsed,
+        ...(punct.removed ? { spaceBeforePunct: punct.removed } : {}),
         side: split.side,
         ...(split.side === 'recto' ? { ticColPreserved: true } : {}),
       },
