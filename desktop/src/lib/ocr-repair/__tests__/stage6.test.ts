@@ -166,10 +166,12 @@ describe('stage 6 fix batch fixtures', () => {
       'RUNNING HEAD',
       recto('deduce that A is \\Xhat it is to be C now.', '639a'),
       recto('and grasping ofF in the same way here today.', '5'),
+      recto('if A is the case Cis the case, then Cis assumed.', '10'),
     ].join('\n');
     const md = [
       'FIX \\Xhat => what',
       'FIX ofF => of F',
+      'FIX Cis => C is',
       'FIX nonexistent garble => corrected',
     ].join('\n');
     const outcome = vote(backbone, '639a placeholder witness.', config(), parseDecisions(md));
@@ -177,8 +179,10 @@ describe('stage 6 fix batch fixtures', () => {
 
     expect(lines[1]).toBe(recto('deduce that A is what it is to be C now.', '639a'));
     expect(lines[2]).toBe(recto('and grasping of F in the same way here today.', '5'));
+    // both occurrences on one line are replaced, not just the first
+    expect(lines[3]).toBe(recto('if A is the case C is the case, then C is assumed.', '10'));
     const applied = outcome.changes.filter((c) => c.rule === 'word-identity' && c.evidence?.kind === 'correction');
-    expect(applied.map((c) => [c.before, c.after])).toEqual([['\\Xhat', 'what'], ['ofF', 'of F']]);
+    expect(applied.map((c) => [c.before, c.after])).toEqual([['\\Xhat', 'what'], ['ofF', 'of F'], ['Cis', 'C is'], ['Cis', 'C is']]);
     expect(applied.every((c) => c.tier === 2)).toBe(true);
     expect(outcome.changes.some((c) => c.evidence?.kind === 'correction-unmatched')).toBe(true);
   });
