@@ -561,15 +561,29 @@
   // with no following text run — keep the standalone rendering.
   type RenderPart = FlowPart & { tick?: { n: number; real: boolean } };
   function attachTicks(parts: FlowPart[], tableNs: Set<number> = new Set()): RenderPart[] {
+    const isText = (p: FlowPart | undefined): p is FlowPart => !!p && p.text !== null && p.text !== '\n';
+    const isBreak = (p: FlowPart | undefined): boolean => !!p && (p.text === '\n' || p.para === true);
     const out: RenderPart[] = [];
     for (let i = 0; i < parts.length; i += 1) {
       const part = parts[i];
       const isTick = part.text === null && part.n !== null && !part.para;
-      const next = parts[i + 1];
-      if (isTick && part.n !== null && !tableNs.has(part.n) && next && next.text !== null && next.text !== '\n') {
-        out.push({ ...next, tick: { n: part.n, real: part.real } });
-        i += 1;
-        continue;
+      if (isTick && part.n !== null && !tableNs.has(part.n)) {
+        const next = parts[i + 1];
+        if (isText(next)) {
+          out.push({ ...next, tick: { n: part.n, real: part.real } });
+          i += 1;
+          continue;
+        }
+        // A tick coinciding with a paragraph boundary marks the paragraph's
+        // OPENING word: emit the break first, then the opener carrying the
+        // tick (leaving the tick standalone before the <br> re-creates the
+        // previous-line attachment this helper exists to prevent).
+        if (isBreak(next) && isText(parts[i + 2])) {
+          out.push(next);
+          out.push({ ...parts[i + 2], tick: { n: part.n, real: part.real } });
+          i += 2;
+          continue;
+        }
       }
       out.push(part);
     }

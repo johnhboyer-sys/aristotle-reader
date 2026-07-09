@@ -575,6 +575,9 @@ function applyBottomFolioStrip(
     .map((page, index) => getFolioCandidate(index, page.lines))
     .filter((candidate): candidate is FolioCandidate => candidate !== null)
     .filter((candidate) => candidate.pureDigits);
+  // A single bare number is no cadence — never strip on one page's evidence
+  // (cadenceConstant would accept a singleton).
+  if (candidates.length < 2) return;
   const constant = cadenceConstant(candidates);
   if (constant === null) return;
 

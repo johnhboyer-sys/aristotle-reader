@@ -335,6 +335,7 @@ function deindentChapterFirstLines(
     if (split.side === 'recto') sawRecto = true;
     const residual = split.body.trim();
     if (isHeadingResidual(residual, config) || isDisplayShapedLine(residual)) continue;
+    if (inPreserveRange(config, page, i)) continue; // preserved display must not skew the modal margin
     proseCols.push(bodyStartColOf(split));
   }
   if (proseCols.length === 0) return { lines: out, changes };

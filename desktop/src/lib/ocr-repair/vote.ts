@@ -760,6 +760,7 @@ function classifyWrapJoins(
   const { joints, solids } = witnessJointIndex(witnessBody);
   const records: ChangeRecord[] = [];
   const joins: WrapJoin[] = [];
+  let prevPageTail: { page: number; idx: number; body: string; raw: string } | null = null;
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page];
     const head = firstNonBlankLine(lines);
@@ -773,6 +774,39 @@ function classifyWrapJoins(
       if (body === '' || parseHeadingResidual(body) || isDisplayShapedLine(body)) continue;
       bodies.push({ idx: i, body, raw });
     }
+    // Cross-page wraps: a page ending in a hyphen fragment whose witness
+    // evidence says dash joint or compound gets a Tier-2 card — token moves
+    // across a page seam are never automatic. Solid-form soft wraps are the
+    // converter's own cross-page glue and need nothing.
+    if (prevPageTail && bodies.length > 0) {
+      const frag = /([\p{L}]+)-$/u.exec(prevPageTail.body.trimEnd());
+      const next = /^(\S+)/u.exec(bodies[0].body.trimStart());
+      if (frag && next) {
+        const key = `${normWrapToken(frag[1])}|${normWrapToken(next[1])}`;
+        const dashes = joints.get(key);
+        const solid = solids.has(`${normWrapToken(frag[1])}${normWrapToken(next[1])}`);
+        if (dashes || !solid) {
+          records.push({
+            id: nextId(prevPageTail.page, prevPageTail.idx, prevPageTail.raw.lastIndexOf(`${frag[1]}-`)),
+            stage: 5,
+            tier: 2,
+            rule: 'wrap-join',
+            page: prevPageTail.page,
+            line: prevPageTail.idx,
+            before: `${frag[1]}-`,
+            after: `${frag[1]}|${next[1]}`,
+            evidence: {
+              kind: 'wrap-cross-page',
+              w2: next[1],
+              nextPage: page,
+              jointDashes: dashes ? [...dashes] : [],
+              solidSeen: solid,
+            },
+          });
+        }
+      }
+    }
+    prevPageTail = bodies.length > 0 ? { page, ...bodies[bodies.length - 1] } : prevPageTail;
     for (let k = 0; k + 1 < bodies.length; k += 1) {
       // Adjacent print lines only — a blank line between means the hyphen ends
       // a paragraph, which is not a wrap.
@@ -857,6 +891,9 @@ function applyWrapJoins(
       continue;
     }
     const before = fragMatch[0];
+    // Audit fidelity: an earlier stage-5 respell may have already restored
+    // the dash in place — record what the line actually said at apply time.
+    join.record.before = before;
     const after = `${join.w1}${join.joiner}${join.w2}`;
     const col1 = bare1.lastIndexOf(before);
     const next1 = replaceInLine(line1, col1, before, after);

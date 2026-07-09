@@ -406,3 +406,27 @@ Codex post-wipe: gpt-5.6-terra (John's "GPT 5.6", config default) is
 code-mode-only and /opt/homebrew/bin/codex-code-mode-host is missing → codex
 exec can't run ANY command. Fix is John's one-liner:
 `ln -s "/Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host" /opt/homebrew/bin/codex-code-mode-host`
+
+## Batch-2 adversarial review (Codex gpt-5.6-terra, 2026-07-09)
+
+Nine findings; each verified by hand before acting. Fixed: (1) cross-page
+wraps now emit Tier-2 'wrap-cross-page' cards per the spec — found exactly 2:
+PA `four-|footed` (REAL compound gluing to "fourfooted" at a page seam,
+awaiting John) + APo `l-|first?` (OCR junk, correctly parked); (2)
+`record.before` refreshed at apply time when a respell already restored the
+dash; (3) preserveDisplayLines no longer skew the stage-4 modal margin; (4)
+bottom-folio strip requires ≥2 cadence candidates (never strips on singleton
+evidence); (5) Reader attachTicks hops over a single paragraph-break part so
+a boundary-coincident tick attaches to the paragraph OPENER (browser-verified:
+DA 134/134 nested, NE 130/133 nested + 3 flow-final standalone by design,
+0 misattached, paragraph indents intact).
+
+Declined as moot (documented): "CHAPTER as a page's first non-blank line"
+shapes (stage-2 head-insert guarantees a running head on every page, and the
+frozen converter eats line 1 regardless); notes-only-page modal pollution in
+lastTextBody (no such pages in these corpora; affects only cross-seam
+evidence quality); sparse-page chapter-first deindent when the opener is the
+page's ONLY prose line (no margin evidence exists to re-seat against —
+empirically zero: titled is 0/0). Re-entrancy of wrap classification with
+same-token respells: a miss degrades to a logged skip flag, never a wrong
+edit. Grades after all review fixes: byte-stable vs the batch-2 run.
