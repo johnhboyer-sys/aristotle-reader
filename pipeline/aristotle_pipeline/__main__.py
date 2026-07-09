@@ -43,6 +43,13 @@ def _stage1(manifest):
                 chapters_cfg.get("grc_book"),
                 chapters_cfg.get("extra"),
             )
+        # Some source TEIs use zero-based or discontinuous chapter labels.  A
+        # chapter-anchored archive translation is numbered in reading order, so
+        # a manifest may explicitly request that the extracted spine be
+        # renumbered sequentially before its English Parts are attached.
+        if chapters_cfg.get("chapter_renumber") == "sequential":
+            for n, chapter in enumerate(chapters, 1):
+                chapter["chapter"] = str(n)
         # Drop chapters from books the manifest doesn't carry — e.g. History of
         # Animals' spurious, untranslated Book X, whose grc chapter divs would
         # otherwise align past the spine's last assigned book.

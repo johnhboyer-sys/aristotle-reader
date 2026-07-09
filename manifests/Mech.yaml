@@ -1,0 +1,48 @@
+# Mechanica ("Mechanical Problems") — pipeline manifest.
+#
+# A spurious mechanical treatise (Bekker 847a–858b). Greek spine from the
+# cached TLG export (tlg0086.023); its 36 chapter divisions correspond to the
+# preface and thirty-five problems. Primary English = E. S. Forster (Oxford,
+# 1913), public domain; archive-model with an interpolated gutter.
+
+work:
+  id: Mech
+  title: "Mechanica"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "023"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "E. S. Forster (Oxford, 1913)"
+
+bekker_range:
+  first_column: "847a"
+  last_column: "858b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg023.1st1K-grc1.xml"
+  chapter_subtype: chapter
+  # First1KGreek numbers the preface 0 and folds problems 7–8 into one div.
+  # Its ch. 27 opening needs the authoritative Bekker fallback below.
+  chapter_renumber: sequential
+  extra:
+    - { n: 27, bekker: "857a22" }
+
+english:
+  primary:
+    id: forster
+    name: "E. S. Forster (Oxford, 1913)"
+    model: archive
+    dir: "mech-forster"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "847a1", end: "858b31" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
