@@ -1,0 +1,37 @@
+work:
+  id: Vent
+  title: "Ventorum Situs"
+  greekTitle: "Ἀνέμων θέσεις καὶ προσηγορίαι"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "046"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "E. S. Forster (Oxford, 1913)"
+
+bekker_range:
+  first_column: "973a"
+  last_column: "973b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1, bekker: "973a1" }
+
+english:
+  primary:
+    id: forster
+    name: "E. S. Forster (Oxford, 1913)"
+    model: archive
+    dir: "vent-forster"
+    books: 1
+    chapter_marker: part
+
+books:
+  - { n: 1, start: "973a1", end: "973b25" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
