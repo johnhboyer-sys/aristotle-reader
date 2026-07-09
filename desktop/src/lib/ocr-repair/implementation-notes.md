@@ -430,3 +430,17 @@ page's ONLY prose line (no margin evidence exists to re-seat against —
 empirically zero: titled is 0/0). Re-entrancy of wrap classification with
 same-token respells: a miss degrades to a logged skip flag, never a wrong
 edit. Grades after all review fixes: byte-stable vs the batch-2 run.
+
+## Class J — footnote marker orphaned at line wraps (2026-07-09)
+
+John's read-through, APo 72a10: "pair, | ¹ one thing" — the superscript
+wrapped alone. Backbone/FINAL are correct ("pair,1" glued); the reader's
+marker is a <button> (an atomic inline box), and engines — WKWebView
+especially — may take the break opportunity at an atomic inline's edge even
+with no space. Fix: renderThird wraps the marker AND its preceding word run
+in <span class="fn-anchor"> (white-space: nowrap); the capture stops at
+whitespace/tag-brackets/entities so it can never swallow highlightEng
+markup. Reader-side only — no re-import needed. Browser-verified: 48/48
+Ostwald markers anchored, zero orphans under a forced 240px measure.
+Offset walkers unaffected (they exclude .fn-marker by closest(); the
+anchor span's own text is body text and still counts).

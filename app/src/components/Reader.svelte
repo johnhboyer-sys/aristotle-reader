@@ -467,11 +467,19 @@
   // the page can carry footnotes. A delegated click handler on the column
   // reads both data attributes and opens the footnote popup.
   function renderThird(text: string, transId: string): string {
+    // The marker <button> is an atomic inline box, and engines may take a
+    // line-break opportunity at its edge even with no space — WKWebView
+    // orphans the superscript onto the next line ("pair, | ¹ one thing").
+    // Glue it to the word it annotates with a nowrap wrapper. The capture
+    // deliberately stops at whitespace, tag brackets, and entities so it can
+    // never swallow a fragment of highlightEng's own markup; if a tag abuts
+    // the marker the wrapper just holds the marker alone (no worse than
+    // before).
     return highlightEng(text).replace(
-      /\[\^([\w.*†]+)\]/g,
-      (_m, label: string) => {
+      /([^\s<>&]*)\[\^([\w.*†]+)\]/g,
+      (_m, lead: string, label: string) => {
         const display = fnDisplay(label);
-        return `<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button>`;
+        return `<span class="fn-anchor">${lead}<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button></span>`;
       },
     );
   }

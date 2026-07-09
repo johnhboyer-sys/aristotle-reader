@@ -1255,6 +1255,11 @@ body {
 
 /* ── translator footnotes (Ostwald) ──────────────────────────────── */
 /* Inline `[^N]` reference, rendered as a clickable superscript marker. */
+/* Glues a marker to the word it annotates: the marker <button> is an atomic
+   inline box, so without this engines (WKWebView especially) may take the
+   break opportunity at its edge and orphan the superscript onto the next
+   line ("pair, | ¹ one thing"). */
+.fn-anchor { white-space: nowrap; }
 .fn-marker {
   /* A real <button> (keyboard- + screen-reader-accessible, unambiguously
      clickable) styled as an inline superscript — reset the native chrome. */
