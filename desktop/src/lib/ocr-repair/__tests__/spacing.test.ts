@@ -212,6 +212,19 @@ describe('normalizeSpacing stage-4 fixtures', () => {
     expect(stripped).toHaveLength(2);
   });
 
+  it('13. class L: strips a stray middle dot touching a word, keeps a spaced dot', () => {
+    const raw = doc(page([
+      'then u·niversal demonstrations are better than ·four right angles.',
+      'is doing something or is at· some place and time in the account here.',
+    ]));
+    const outcome = normalizeSpacing(raw, config());
+    const lines = outcome.text.split('\f')[0].split('\n');
+
+    expect(lines[2]).toBe('then universal demonstrations are better than four right angles.');
+    expect(lines[3]).toBe('is doing something or is at some place and time in the account here.');
+    expect(outcome.changes.filter((change) => change.evidence?.midwordDots)).toHaveLength(2);
+  });
+
   it('11. batch-2 E: re-seats a chapter-opening indent to the body margin unless chapterTitles', () => {
     const body = [
       '                 CHAPTER 4',

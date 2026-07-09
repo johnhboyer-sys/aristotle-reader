@@ -157,6 +157,20 @@ function stripSpaceBeforePunct(body: string): { text: string; removed: number } 
   return { text, removed };
 }
 
+// OCR drops a stray middle dot (U+00B7) against a word ("u·niversal",
+// "·four", "at· some"). In this English translation body a middle dot
+// touching a letter is always noise (the Greek's legitimate ano teleia lives
+// in the separate Greek source, never here). Remove it only when it abuts a
+// letter — a spaced "A · B" would be left intact.
+function stripMidwordDots(body: string): { text: string; removed: number } {
+  let removed = 0;
+  const text = body.replace(/·(?=\p{L})|(?<=\p{L})·/gu, () => {
+    removed += 1;
+    return '';
+  });
+  return { text, removed };
+}
+
 function collapseInternalSpaces(body: string): CollapsedBody {
   let runsCollapsed = 0;
   let firstRunCol: number | undefined;
@@ -287,8 +301,9 @@ function normalizePage(
     }
 
     const collapsed = collapseInternalSpaces(split.body);
-    const punct = stripSpaceBeforePunct(collapsed.text);
-    if (collapsed.runsCollapsed === 0 && punct.removed === 0) continue;
+    const dots = stripMidwordDots(collapsed.text);
+    const punct = stripSpaceBeforePunct(dots.text);
+    if (collapsed.runsCollapsed === 0 && punct.removed === 0 && dots.removed === 0) continue;
 
     const nextBare = reassemble(split, punct.text);
     if (nextBare === null || nextBare === bare) continue;
@@ -308,6 +323,7 @@ function normalizePage(
       evidence: {
         runsCollapsed: collapsed.runsCollapsed,
         ...(punct.removed ? { spaceBeforePunct: punct.removed } : {}),
+        ...(dots.removed ? { midwordDots: dots.removed } : {}),
         side: split.side,
         ...(split.side === 'recto' ? { ticColPreserved: true } : {}),
       },

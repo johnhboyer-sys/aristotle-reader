@@ -473,3 +473,28 @@ Tier-1, logged (evidence.spaceBeforePunct), tic column preserved via the
 existing reassemble path. 100 tests; grades byte-stable; requires re-import.
 The paren-wrap is fixed in the DATA now (no space to break at); the class-J
 fn-anchor already handles the marker↔preceding-word side.
+
+## Class L — stray middle-dot noise (2026-07-09)
+
+John's read-through: "u·niversal", "·four", "at· some", "·something",
+"·which" — OCR dropped a U+00B7 middle dot against English words. Stage-4
+stripMidwordDots removes a middle dot ONLY when it abuts a letter (spaced
+"A · B" left intact); the Greek's legitimate ano teleia lives in the
+separate Greek source, never in this Barnes English body. 5 instances, all
+gone; grades byte-stable; 101 tests. Requires re-import.
+
+## Read-through status note (2026-07-09)
+
+John's screenshots repeatedly show ALREADY-FIXED states because his app
+import predates classes I/J/K/L. Confirmed already-correct in the re-cut
+FINALs (need only a re-import): all "—-"/"—)-" dash clusters (supposition,
+explanatory, far-away, finite) via class I; footnote-marker wrap (J);
+"necessary ,"/"anything )" (K); middle dots (L). GENUINELY STILL OPEN
+(word/char/structural, NOT dash-mechanics): E.g/→E.g. (garbled punct);
+Dis→D is, ofF→of F (token-split in-word spacing — Tier-1 per spec but
+blocked by the token-count invariant; needs witness-driven split); thae→that
+(word-identity Tier-2 → review card); stray 82b18/20 tics (verso tics OCR-
+drifted to cols 12/22, missed by stage-3 reseat — John offered exact I.31
+Bekkers as ground truth); assorted spurious paragraph/line breaks. The
+witness is NOT a clean oracle for the lost-space cases (Genie has its own
+run-togethers, e.g. "Band" for "B and").
