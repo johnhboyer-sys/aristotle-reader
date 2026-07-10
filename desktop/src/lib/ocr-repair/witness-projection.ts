@@ -9,10 +9,14 @@ export interface WitnessProjection { edits: ProjectionEdit[]; records: ChangeRec
 interface Options { nextId?: (page: number, line?: number, col?: number) => string; corrections?: { before: string; after: string }[]; occupied?: ChangeRecord[] }
 
 const GREEK_RE = /[\u0370-\u03ff\u1f00-\u1fff]/u;
-// The Genie witness writes superscripts three ways: <sup>7</sup>, $^{17}$,
-// and braceless $^7$ — accept all (a missed form leaks raw markup into the
-// repaired text).
-const SUP_RE = /^(.*?)(?:<sup>\s*(\d+)\s*<\/sup>|\$\^\{?(\d+)\}?\$)$/iu;
+// The Genie witness writes superscripts four ways: <sup>7</sup>, $^{17}$,
+// braceless $^7$, and literal Unicode superscript digits (knowledge³³) —
+// accept all (a missed form leaves the garbled glyph in the text).
+const SUP_RE = /^(.*?)(?:<sup>\s*(\d+)\s*<\/sup>|\$\^\{?(\d+)\}?\$|([⁰¹²³⁴⁵⁶⁷⁸⁹]+))$/iu;
+const SUP_DIGITS: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
+function supToAscii(run: string): string {
+  return [...run].map((ch) => SUP_DIGITS[ch] ?? ch).join('');
+}
 // True garble glyphs a mangled superscript leaves on a word's tail. The
 // witness itself arbitrates real punctuation here: `base` is the witness word
 // MINUS the marker, so a printed "taken?" would surface as base "taken?" and
@@ -25,6 +29,7 @@ const GARBLED_TAIL_RE = /[>!*°®'’"”‘?]{1,2}$/u;
 export function stripWitnessMarkup(raw: string): string {
   let value = raw.replace(/[*_]+/gu, '');
   value = value.replace(/<sup>\s*(\d+)\s*<\/sup>/giu, '$1').replace(/\$\^\{?(\d+)\}?\$/gu, '$1');
+  value = value.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/gu, (run) => supToAscii(run));
   if (/^\$.*\$$/u.test(value)) value = value.slice(1, -1);
   return value;
 }
@@ -109,7 +114,8 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
       clean = base;
     }
     if (matchKey(base) !== matchKey(clean)) return false;
-    const after = `${clean}${sup[2] ?? sup[3]}`;
+    const digits = sup[2] ?? sup[3] ?? supToAscii(sup[4]);
+    const after = `${clean}${digits}`;
     if (after === aRaw) return false;
     const record: ChangeRecord = { id: nextId(aProv.page, aProv.line, aProv.col), stage: 5, tier: 2, rule: 'word-identity', page: aProv.page, line: aProv.line, col: aProv.col, before: aRaw, after, evidence: { kind: 'witness-sup-marker', witnessRaw: bRaw } };
     propose(record, after, aProv);
@@ -131,8 +137,23 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
   // this is where the bulk of the printed superscripts live.
   for (const op of ops) {
     if (op.t !== 'match' || !op.aProv) continue;
-    if (!/<sup|\$\^/iu.test(op.bRaw)) continue;
+    if (!/<sup|\$\^|[⁰¹²³⁴⁵⁶⁷⁸⁹]/iu.test(op.bRaw)) continue;
     glueSup(op.aRaw, op.aProv, op.bRaw);
+  }
+
+  // Matched pairs that differ ONLY in quotation glyphs — the scan mangles
+  // close-quotes ("such-and-such]'" for the printed ]") — adopt the witness
+  // form, the cleaner OCR. Everything except the quote characters must be
+  // byte-identical, so no word or punctuation content can change.
+  const QUOTE_CLASS = /['’‘"“”]/u;
+  const QUOTE_ALL = /['’‘"“”]/gu;
+  for (const op of ops) {
+    if (op.t !== 'match' || !op.aProv) continue;
+    const bClean = stripWitnessMarkup(op.bRaw);
+    if (op.aRaw === bClean || !QUOTE_CLASS.test(op.aRaw) && !QUOTE_CLASS.test(bClean)) continue;
+    if (op.aRaw.replace(QUOTE_ALL, '') !== bClean.replace(QUOTE_ALL, '')) continue;
+    const record: ChangeRecord = { id: nextId(op.aProv.page, op.aProv.line, op.aProv.col), stage: 5, tier: 2, rule: 'word-identity', page: op.aProv.page, line: op.aProv.line, col: op.aProv.col, before: op.aRaw, after: bClean, evidence: { kind: 'witness-quote-glyph', witnessRaw: op.bRaw } };
+    propose(record, bClean, op.aProv);
   }
 
   for (let i = 0; i < ops.length;) {

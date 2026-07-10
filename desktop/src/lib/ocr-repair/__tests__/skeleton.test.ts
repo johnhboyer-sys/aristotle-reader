@@ -419,6 +419,55 @@ describe('repairSkeleton config-declared heading style (Apostle format)', () => 
   });
 });
 
+describe('repairSkeleton PAD directive', () => {
+  it('inserts the placeholder above a body line stranded at page head', () => {
+    const raw = pages(['[running head]\nx', 'the arithmetician posits the expression\nmore body']);
+    const outcome = repairSkeleton(raw, config(), {
+      checkedPatterns: new Set<string>(),
+      padLines: ['arithmetician posits the expression'],
+    });
+    const p2 = outcome.text.split('\f')[1].split('\n');
+    expect(p2[0]).toBe('[running head]');
+    expect(p2[2]).toContain('arithmetician posits');
+    expect(outcome.changes.some((c) => c.evidence?.kind === 'pad-line')).toBe(true);
+  });
+
+  it('refuses when the anchored line is not its page head', () => {
+    const raw = pages(['[running head]\nthe arithmetician posits the expression']);
+    const outcome = repairSkeleton(raw, config(), {
+      checkedPatterns: new Set<string>(),
+      padLines: ['arithmetician posits the expression'],
+    });
+    expect(outcome.text).not.toContain('[running head]\n\nthe arithmetician');
+    const flag = outcome.changes.find((c) => c.evidence?.kind === 'pad-refused');
+    expect(flag?.evidence?.reason).toBe('not-page-head');
+  });
+});
+
+describe('repairSkeleton interior running-head strip', () => {
+  it('blanks interior token+title lines when configured, leaves page heads alone', () => {
+    const raw = pages([
+      '[running head]\nbody one\n   67                    Posterior Analytics\nbody two',
+    ]);
+    const cfg: CorpusConfig = { ...config(), runningHeadPlaceholder: 'POSTERIOR ANALYTICS', interiorRunningHeads: 'strip' };
+    const outcome = repairSkeleton(raw, cfg);
+    expect(outcome.text).not.toMatch(/67\s+Posterior Analytics/);
+    expect(outcome.text).toContain('body two');
+    expect(outcome.changes.some((c) => c.evidence?.kind === 'interior-running-head')).toBe(true);
+    // Line count preserved (blanked, not deleted).
+    expect(outcome.text.split('\n')).toHaveLength(raw.split('\n').length);
+  });
+
+  it('is a no-op without the config flag', () => {
+    const raw = pages([
+      '[running head]\nbody one\n   67                    Posterior Analytics\nbody two',
+    ]);
+    const outcome = repairSkeleton(raw, { ...config(), runningHeadPlaceholder: 'POSTERIOR ANALYTICS' });
+    expect(outcome.text).toContain('Posterior Analytics');
+    expect(outcome.changes.some((c) => c.evidence?.kind === 'interior-running-head')).toBe(false);
+  });
+});
+
 describe('repairSkeleton SEAT-chapter directive', () => {
   const IND = ' '.repeat(35); // centred book/chapter heading indent
   const CH = ' '.repeat(12); // printed bare chapter numeral indent (shallow)
