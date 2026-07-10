@@ -917,7 +917,16 @@
             // Tint the cited line so a shared link makes the passage obvious.
             targetId = `L${ref.column}-${ref.line}`;
           } else {
-            document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Column-level citations (the scroll-spy writes bare "#1107a" when
+            // the Greek column is hidden) target the segment element col-<col>.
+            // Instant, like scrollToCitation: a smooth animation started during
+            // hydration gets canceled by layout churn and strands the reader at
+            // the top.
+            const el = document.getElementById(hash) ?? document.getElementById(`col-${hash}`);
+            if (el) {
+              suppressArmUntil = Date.now() + 1500;
+              el.scrollIntoView({ behavior: 'auto', block: 'start' });
+            }
           }
         }
         // Begin live URL tracking once the reader actually scrolls (programmatic
