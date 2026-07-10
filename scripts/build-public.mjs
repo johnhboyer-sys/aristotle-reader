@@ -93,3 +93,9 @@ run('npm', ['run', 'build'], {
   cwd: join(ROOT, 'app'),
   env: { PUBLIC_SHOW_PRIVATE: '0' },
 });
+
+// Deploy gate: every internal href, fragment anchor, Bekker deep link, and
+// lemma page in the emitted site must resolve. CI can't run this (the corpus
+// is machine-local), so the pre-deploy build is where it has to hold the line.
+console.log('\nChecking link integrity of the built site');
+run('node', [join(ROOT, 'scripts', 'check-links.mjs'), join(ROOT, 'app', 'dist')]);
