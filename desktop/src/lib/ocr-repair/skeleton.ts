@@ -196,6 +196,59 @@ function changeFactory(): (
   };
 }
 
+function normWs(s: string): string {
+  return s.replace(/\s+/gu, ' ').trim();
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
+
+// A bare folio / book-number remnant the scan strands on its own line above the
+// running head ("3", "668 3", "665").
+function isPageNumberStray(trimmed: string): boolean {
+  return /^\d{1,4}( \d{1,3})?$/u.test(normWs(trimmed));
+}
+
+// A running-head furniture line: the work title (± a folio number), or a book
+// running head that carries a folio — "BOOK THREE 665". The folio is REQUIRED
+// for the BOOK form so a bare "BOOK THREE" division heading is never matched.
+function isRunningHeadLine(trimmed: string, placeholder: string): boolean {
+  const n = normWs(trimmed);
+  if (new RegExp(`^(\\d{3,4} )?${escapeRe(normWs(placeholder))}( \\d{3,4})?$`, 'u').test(n)) return true;
+  return /^BOOK [A-Z]+ \d{3,4}$/u.test(n);
+}
+
+// When the OCR doubles the page-top furniture — a bare page/book-number line
+// ABOVE the running head — the frozen converter strips only the first
+// non-blank line, so the running head ("655 PARTS OF ANIMALS", "BOOK THREE
+// 665") leaks into the reflowed body. Blank the running-head line; the bare
+// number above it stays the page's first line and the converter strips that.
+function applyPageHeadStrayStrip(pages: PageLines[], changes: ChangeRecord[], nextId: ReturnType<typeof changeFactory>, placeholder: string): void {
+  for (let page = 0; page < pages.length; page += 1) {
+    const lines = pages[page].lines;
+    const first = firstNonBlankLine(lines);
+    if (first === null) continue;
+    const second = firstNonBlankLine(lines, first + 1);
+    if (second === null) continue;
+    const stray = stripCr(lines[first]).trim();
+    const head = stripCr(lines[second]).trim();
+    if (!isPageNumberStray(stray) || !isRunningHeadLine(head, placeholder)) continue;
+    changes.push({
+      id: nextId(page, second, undefined),
+      stage: 2,
+      tier: 1,
+      rule: 'folio-repair',
+      page,
+      line: second,
+      before: head,
+      after: '',
+      evidence: { kind: 'page-head-running-strip', strayAbove: stray },
+    });
+    lines[second] = '';
+  }
+}
+
 function applyHeadInsert(pages: PageLines[], changes: ChangeRecord[], nextId: ReturnType<typeof changeFactory>, placeholder: string): void {
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page].lines;
@@ -604,6 +657,7 @@ export function repairSkeleton(raw: string, config: CorpusConfig): SkeletonOutco
   const changes: ChangeRecord[] = [];
   const nextId = changeFactory();
 
+  applyPageHeadStrayStrip(pages, changes, nextId, config.runningHeadPlaceholder);
   applyHeadInsert(pages, changes, nextId, config.runningHeadPlaceholder);
   applyHeadingNormalize(pages, changes, nextId);
   applyFolioRepair(pages, changes, nextId);

@@ -304,3 +304,27 @@ describe('repairSkeleton integration', () => {
     ]);
   });
 });
+
+describe('repairSkeleton page-head stray strip', () => {
+  it('blanks a running head that a bare page-number stray strands above it', () => {
+    // Doubled page-top furniture: a stray "3" then "665 [running head]". The
+    // frozen converter strips only the first line, so the running head would
+    // leak into the reflowed body — blank it, leaving the stray as the head.
+    const raw = pages([
+      '[running head]\nBody of page one goes here.',
+      '   3\n   665 [running head]\nbody continues here after the head',
+    ]);
+    const outcome = repairSkeleton(raw, config());
+    const p2 = outcome.text.split('\f')[1];
+    expect(p2).not.toMatch(/665 \[running head\]/);
+    expect(p2).toContain('body continues here after the head');
+    expect(outcome.changes.some((c) => c.evidence?.kind === 'page-head-running-strip')).toBe(true);
+  });
+
+  it('leaves a bare BOOK division heading (no folio) untouched', () => {
+    const raw = pages(['[running head]\nx', '5\nBOOK THREE\nCHAPTER I\nOpening words']);
+    const outcome = repairSkeleton(raw, config());
+    expect(outcome.text).toContain('BOOK THREE');
+    expect(outcome.changes.some((c) => c.evidence?.kind === 'page-head-running-strip')).toBe(false);
+  });
+});
