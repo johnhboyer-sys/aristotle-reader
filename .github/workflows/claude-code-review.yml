@@ -42,8 +42,14 @@ jobs:
           # The review agent runs sandboxed with no interactive approver, so every
           # tool it needs must be pre-granted here. Without this the review "passes"
           # while unable to inspect anything (permission_denials > 0, zero output).
+          # Skill is REQUIRED — the prompt invokes the code-review plugin as a
+          # skill, and a denied Skill call silently guts the whole review. Bash
+          # is granted whole: the reviewer redirects output and chains commands
+          # (`gh pr diff > file; wc -l`), which never prefix-match narrow
+          # Bash(cmd:*) rules (first live run: 13 denials). The runner is
+          # ephemeral with contents:read, so the blast radius is the runner.
           claude_args: |
-            --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh api:*),Bash(gh search:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git status:*),Bash(git branch:*),Grep,Glob,Read,WebFetch"
+            --allowedTools "Skill,Bash,Grep,Glob,Read,WebFetch"
 
       - name: Fail if the review ran hamstrung
         if: always()
