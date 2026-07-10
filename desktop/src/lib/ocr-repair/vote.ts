@@ -1143,22 +1143,34 @@ function applyCorrections(
   if (dropLines.length > 0) {
     for (let p = 0; p < pages.length; p += 1) {
       const head = firstNonBlankLine(pages[p]);
-      const kept: string[] = [];
-      let prevNonBlank = '';
-      for (let l = 0; l < pages[p].length; l += 1) {
-        const token = stripCr(pages[p][l]).trim();
-        const hit = l !== head && token !== ''
-          ? dropLines.find((d) => d.token === token
-              && (d.afterContains === undefined || prevNonBlank.includes(d.afterContains)))
-          : undefined;
-        if (hit) {
-          changes.push(flagRecord(nextId, p, 'dropped-leaked-line', { token, afterContains: hit.afterContains }, l));
-          continue;
+      const lines = pages[p];
+      const trimmed = lines.map((l) => stripCr(l).trim());
+      const nearestNonBlank = (from: number, step: number): string => {
+        for (let i = from; i >= 0 && i < lines.length; i += step) {
+          if (trimmed[i] !== '') return trimmed[i];
         }
-        kept.push(pages[p][l]);
-        if (token !== '') prevNonBlank = token;
+        return '';
+      };
+      const drop = new Set<number>();
+      for (let l = 0; l < lines.length; l += 1) {
+        if (l === head || trimmed[l] === '') continue;
+        const hit = dropLines.find((d) => {
+          if (d.token !== trimmed[l]) return false;
+          if (d.afterContains === undefined) return true;
+          // A leaked footnote marker sits directly beside the word it annotates
+          // — anchor to EITHER adjacent non-blank line (the scan drops it above
+          // OR below its own line). A footnote DEFINITION head carrying the same
+          // number is flanked by note text, so a distinctive body anchor keeps
+          // it (bare DROP-by-number would delete it, regressing fnNotes).
+          return nearestNonBlank(l - 1, -1).includes(d.afterContains)
+            || nearestNonBlank(l + 1, 1).includes(d.afterContains);
+        });
+        if (hit) {
+          drop.add(l);
+          changes.push(flagRecord(nextId, p, 'dropped-leaked-line', { token: trimmed[l], afterContains: hit.afterContains }, l));
+        }
       }
-      pages[p] = kept;
+      pages[p] = lines.filter((_, i) => !drop.has(i));
     }
   }
   for (const { before, after } of corrections) {

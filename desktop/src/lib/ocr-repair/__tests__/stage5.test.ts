@@ -396,3 +396,54 @@ describe('stage 5 witness pairing, alignment, vote, and review fixtures', () => 
     expect(applied.text.split('\n')[1]).toBe('639a Omitting the addition of ( λευκόν.');
   });
 });
+
+describe('stage 5 seating-pass directives (SEAT / NOTICK / anchored DROP)', () => {
+  it('parses SEAT, NOTICK, and context-anchored DROP alongside FIX/DROP', () => {
+    const md = [
+      'SEAT 689a1 => to the aforementioned cause—so that',
+      'SEAT 80b5 => of B.) So if C',
+      'NOTICK 81a40 87a40 73a40',
+      'NOTICK 95b40',
+      'DROP ss',
+      'DROP 18 <== holds of every B and of no',
+    ].join('\n');
+    const d = parseDecisions(md);
+    expect(d.seatTicks).toEqual([
+      { ref: '689a1', anchor: 'to the aforementioned cause—so that' },
+      { ref: '80b5', anchor: 'of B.) So if C' },
+    ]);
+    expect(d.noTicks).toEqual(['81a40', '87a40', '73a40', '95b40']);
+    expect(d.dropLines).toEqual([
+      { token: 'ss' },
+      { token: '18', afterContains: 'holds of every B and of no' },
+    ]);
+  });
+
+  it('seats a glued verso column tick and un-glues its first body word', () => {
+    const backbone = [
+      'RUNNING HEAD',
+      '5          existing verso body line of the column here now',
+      '689ato the aforementioned cause and yet more body follows',
+    ].join('\n');
+    const md = 'SEAT 689a1 => to the aforementioned cause and yet more body follows';
+    const applied = vote(backbone, '', config(), parseDecisions(md));
+    const line = applied.text.split('\n')[2];
+    expect(line).toMatch(/^689a {2,}to the aforementioned cause and yet more body follows$/);
+  });
+
+  it('drops a leaked marker line but keeps an identically-numbered definition head', () => {
+    const backbone = [
+      'RUNNING HEAD',
+      '639a a body line that ends with holds of every B and of no',
+      '18',
+      'C, then it is necessary for something to hold of B here',
+      '',
+      '18',
+      '   Reading note-text for the real footnote definition here',
+    ].join('\n');
+    const md = 'DROP 18 <== holds of every B and of no';
+    const applied = vote(backbone, '', config(), parseDecisions(md));
+    expect(applied.text).toContain('   Reading note-text for the real footnote definition here');
+    expect(applied.text.split('\n').filter((l) => l.trim() === '18')).toHaveLength(1);
+  });
+});

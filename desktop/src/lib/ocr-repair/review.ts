@@ -42,14 +42,15 @@ export interface ReviewDecisions {
   corrections?: { before: string; after: string }[];
   /**
    * Standalone garbage lines to delete (`DROP <token>` or, context-anchored,
-   * `DROP <token> <== <prev-line-substring>`). The bare form removes a line
+   * `DROP <token> <== <adjacent-line-substring>`). The bare form removes a line
    * whose whole trimmed content equals the token (a scan fragment orphaned on
-   * its own line, "ss"). The anchored form removes such a line ONLY when the
-   * PREVIOUS non-blank line contains the given substring — needed for a leaked
-   * footnote MARKER ("18" on its own line) whose bare number also names a
-   * footnote DEFINITION block ("18\n<note text>"): DROP-by-bare-number alone
-   * deletes the real definition too (regressed fnNotes 52→46), so the marker
-   * line is pinned by the body line it trails.
+   * its own line, "ss"). The anchored form removes such a line ONLY when an
+   * ADJACENT non-blank line (either side — the scan leaks a marker above or
+   * below its word) contains the given substring — needed for a leaked footnote
+   * MARKER ("18" on its own line) whose bare number also names a footnote
+   * DEFINITION block ("18\n<note text>"): DROP-by-bare-number alone deletes the
+   * real definition too (regressed fnNotes 52→46), so the marker line is pinned
+   * by the distinctive body text it sits against.
    */
   dropLines?: { token: string; afterContains?: string }[];
   /**
