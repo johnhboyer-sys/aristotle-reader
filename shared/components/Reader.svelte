@@ -5,6 +5,7 @@
   import { greekFold } from '../lib/search';
   import { highlightPrefixMatches } from '../lib/text';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
+  import { touchRecent } from '../lib/resume';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
 
@@ -815,8 +816,10 @@
   }
 
   onMount(async () => {
-    // Remember which book of this work was last open, for the work switcher.
+    // Remember which book of this work was last open, for the work switcher —
+    // and stamp the work's recency so hosts can offer "continue reading".
     try { localStorage.setItem(`reader-book-${work}`, String(bookNum)); } catch {}
+    touchRecent(work);
 
     // Restore font-size / line-height prefs.
     const savedFs = (() => { try { return localStorage.getItem(FS_KEY); } catch { return null; } })();

@@ -125,6 +125,20 @@ const structuredData = Astro.site
       </p>
     </header>
 
+    <a
+      class="search-card resume-card"
+      id="resume-card"
+      href="#"
+      hidden
+      data-works={JSON.stringify(Object.fromEntries(
+        builtWorks.map((c) => [c.work.id, { title: c.work.title, books: c.work.books }]),
+      ))}
+    >
+      <span class="search-card-name">Continue reading</span>
+      <span class="search-card-meta" id="resume-meta"></span>
+      <span class="chev-right" aria-hidden="true">›</span>
+    </a>
+
     <a class="search-card" href={`${base}/search`}>
       <span class="search-card-name">Search the Corpus</span>
       <span class="search-card-meta">Greek &amp; English · all works</span>
@@ -292,6 +306,12 @@ const structuredData = Astro.site
       line-height: 1;
     }
     .search-card:hover .chev-right { color: var(--accent-light); }
+
+    /* Continue-reading card: same idiom as .search-card, tinted so returning
+       readers spot it first. Hidden until the script finds a saved position. */
+    .resume-card { border-color: var(--accent-light); margin-bottom: .55rem; }
+    .resume-card[hidden] { display: none; }
+    .search-card + .search-card { margin-top: .55rem; }
 
     /* Support / donation card — sits below the search card, above the works
        list. Same panel idiom as .search-card (col-bg, border, 8px radius), but
@@ -628,6 +648,30 @@ const structuredData = Astro.site
         `mailto:jhboyer@loyno.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
       close();
     });
+  </script>
+
+  <script>
+    // "Continue reading" card: shown only when the reader has saved a recent
+    // position (localStorage — see shared/lib/resume.ts), pointing back into
+    // the reader at the remembered book + Bekker citation.
+    import { lastRead } from '@shared/lib/resume';
+
+    const card = document.getElementById('resume-card') as HTMLAnchorElement | null;
+    if (card) {
+      const works: Record<string, { title: string; books: number }> =
+        JSON.parse(card.dataset.works || '{}');
+      const last = lastRead((w) => w in works);
+      if (last) {
+        const w = works[last.work];
+        const book = Math.min(Math.max(1, last.book), w.books);
+        const bookBit = w.books > 1 ? ` · Book ${book}` : '';
+        const citeBit = last.cite ? ` · ${last.cite}` : '';
+        card.querySelector('#resume-meta')!.textContent = `${w.title}${bookBit}${citeBit}`;
+        const base = (import.meta.env.BASE_URL as string).replace(/\/$/, '');
+        card.href = `${base}/${last.work}/book/${book}${last.cite ? `#${last.cite}` : ''}`;
+        card.hidden = false;
+      }
+    }
   </script>
 
   <script>

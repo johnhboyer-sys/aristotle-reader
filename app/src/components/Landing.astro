@@ -133,6 +133,7 @@ const breadcrumbLd = Astro.site
     .lp-lede { font-size: 1.1rem; line-height: 1.6; margin: 0 0 0.8rem; }
     .lp-desc { font-size: 0.98rem; line-height: 1.7; color: var(--text-mid); margin: 0 0 1.5rem; }
     .lp-cta-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0 0 2.5rem; }
+    .lp-btn[hidden] { display: none; }
     .lp-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.1rem; border-radius: 6px; text-decoration: none; border: 1px solid var(--border); color: var(--text); transition: transform .08s ease; }
     .lp-btn:active { transform: scale(0.97); }
     .lp-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -205,6 +206,8 @@ const breadcrumbLd = Astro.site
       <a class="lp-btn primary" href={primary ? readHref(`?trans=${primary.id}`) : readHref()}>
         Start reading →
       </a>
+      <a class="lp-btn resume-btn" id="lp-resume" href="#" hidden
+         data-work={workId} data-books={work.books}>Resume</a>
       <a class="lp-btn" href={readHref('?view=greek')}>Greek only</a>
       {editions.length > 1 && <a class="lp-btn" href={readHref('?trans=compare')}>Compare translations</a>}
     </div>
@@ -354,5 +357,24 @@ const breadcrumbLd = Astro.site
       <a class="btn-donate" href={SUPPORT_URL} target="_blank" rel="noopener">Make a gift</a>
     </section>
   </main>
+<script>
+  // "Resume" CTA: appears when the reader has a saved position for this work
+  // (localStorage — see shared/lib/resume.ts), linking to the remembered
+  // book + Bekker citation.
+  import { resumeFor } from '@shared/lib/resume';
+
+  const btn = document.getElementById('lp-resume') as HTMLAnchorElement | null;
+  if (btn) {
+    const pos = resumeFor(btn.dataset.work!);
+    if (pos) {
+      const books = Number(btn.dataset.books) || 1;
+      const book = Math.min(Math.max(1, pos.book), books);
+      const base = (import.meta.env.BASE_URL as string).replace(/\/$/, '');
+      btn.href = `${base}/${btn.dataset.work}/book/${book}${pos.cite ? `#${pos.cite}` : ''}`;
+      btn.textContent = pos.cite ? `Resume at ${pos.cite}` : (books > 1 ? `Resume Book ${book}` : 'Resume');
+      btn.hidden = false;
+    }
+  }
+</script>
 </body>
 </html>
