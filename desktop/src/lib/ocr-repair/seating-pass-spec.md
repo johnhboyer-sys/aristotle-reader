@@ -1,5 +1,26 @@
 # Bekker tick-seating pass — SPEC / RESUME (for a fresh post-compact session)
 
+## ✅ DONE 2026-07-09 (branch `claude/ocr-repair`, head after this commit)
+All three sub-problems built + graded + tested; both FINALs re-cut. Grades
+(both improve, no regression, pdf-import zero-diff, desktop 242 + app 69 green):
+- **PA**  tics 888→897, dropped 2→0, suppressed 7→1 (4 books / 51 ch).
+- **APo** tics 453→476, dropped 1→0, suppressed 14→0, fnUnmatched 12→2,
+  fnNotes 52 (2 books / 53 ch).
+Code: `SEAT`/`NOTICK`/anchored-`DROP` parse in review.ts; `applySeatTicks`
+(verso/recto reseat, dead-page side detection, per-page verso margin) +
+both-neighbour anchored DROP in vote.ts; aligner `fillChapterTail` + filter
+honour a `noTicks` set (import-align.ts), plumbed decided-file → FINAL
+`noTicks:` frontmatter → ImportDialog peel → runImport → aligner. FINAL now =
+optional `noTicks` header + graded stage-6 layout (CLI writes it when `--through`
+reaches the last stage). Directives live in each `review-<corpus>-decided-
+2026-07-09.md`. Tests: import-align-notick.test.ts + 3 stage5 cases.
+REMAINING: John re-imports both FINALs + hand-verifies → stage 7 Apostle gate → PR.
+NOTE (footnote per-book numbering) 22 = book-2 note; converter emits [^2.22].
+
+---
+### Original spec below (kept for reference)
+
+
 Goal: seat the Bekker ticks the OCR failed to yield, drop the phantom ones,
 and re-attach leaked footnote markers — from John's ground-truth manifests.
 This is the last structural piece before Goal-A sign-off; TEXT is already
