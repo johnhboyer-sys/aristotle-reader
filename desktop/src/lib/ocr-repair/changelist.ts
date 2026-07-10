@@ -23,6 +23,7 @@ export type RuleId =
   | 'emdash-restore'
   | 'wrap-join' // line-wrap dash joints / lexical compounds rejoined across the wrap
   | 'ligature'
+  | 'emphasis'
   | 'word-identity' // Tier 2 only
   | 'no-witness-span' // flag record, no edit: witness coverage gap
   | 'flag'; // flag record, no edit: anything left in place for human eyes

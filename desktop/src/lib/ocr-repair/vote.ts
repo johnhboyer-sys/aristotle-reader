@@ -5,6 +5,8 @@ import { alignTokens, matchKey } from './align';
 import type { AlignOp, TokenProvenance } from './align';
 import { pairWitnessPages } from './witness-pairing';
 import type { PairingReport } from './witness-pairing';
+import { parseWitnessStructure } from './witness-structure';
+import { projectWitnessStructure } from './witness-projection';
 import { buildReviewModel, patternKeyFor } from './review';
 import type { ReviewDecisions, ReviewModel } from './review';
 import { extractWitnessAnchors } from './witness-anchors';
@@ -50,6 +52,75 @@ const INTERIOR_HYPHEN_RE = /(?<=\p{L})-{1,2}(?=\p{L})/u;
 const LIGATURE_RE = /[ﬁﬂﬀﬃﬄ]/u;
 const GREEK_RE = /[\u0370-\u03ff\u1f00-\u1fff]/u;
 const LETTER_RE = /\p{L}/u;
+
+const BOOK_WORDS = new Map([
+  ['ONE', 1], ['TWO', 2], ['THREE', 3], ['FOUR', 4], ['FIVE', 5], ['SIX', 6],
+  ['SEVEN', 7], ['EIGHT', 8], ['NINE', 9], ['TEN', 10], ['ELEVEN', 11], ['TWELVE', 12],
+]);
+
+interface BackboneChapterSlice {
+  key: `${number}:${number}`;
+  start: number;
+  end: number;
+}
+
+function backboneChapterSlices(text: string): BackboneChapterSlice[] {
+  const slices: BackboneChapterSlice[] = [];
+  let book = 0;
+  let offset = 0;
+  let open: Omit<BackboneChapterSlice, 'end'> | null = null;
+  for (const line of text.split(/(?<=\n)/u)) {
+    const bare = line.replace(/[\r\n\f]/gu, '').trim();
+    const bookMatch = /^BOOK\s+(\S+)$/iu.exec(bare);
+    if (bookMatch) {
+      if (open) slices.push({ ...open, end: offset });
+      open = null;
+      book = (BOOK_WORDS.get(bookMatch[1].toUpperCase()) ?? Number(bookMatch[1])) || book;
+    } else {
+      const chapterMatch = /^CHAPTER\s+(\d+)$/iu.exec(bare);
+      if (chapterMatch && book > 0) {
+        if (open) slices.push({ ...open, end: offset });
+        open = { key: `${book}:${Number(chapterMatch[1])}`, start: offset + line.length };
+      }
+    }
+    offset += line.length;
+  }
+  if (open) slices.push({ ...open, end: text.length });
+  return slices;
+}
+
+function chapterScopedOps(backbone: string, globalWitness: string, witness: string, config: CorpusConfig): AlignOp[] {
+  const slices = backboneChapterSlices(backbone);
+  if (slices.length === 0) return alignTokens(backbone, globalWitness);
+  const structure = parseWitnessStructure(witness, config.workTitle);
+  const ops: AlignOp[] = [];
+  for (const slice of slices) {
+    // Preserve page, line, and column provenance while removing all tokens
+    // before this chapter from the alignment stream.
+    const prefix = backbone.slice(0, slice.start).replace(/[^\n\f]/gu, ' ');
+    const backboneChapter = `${prefix}${backbone.slice(slice.start, slice.end)}`;
+    // A chapter the witness structure lacks gets NO witness arbitration —
+    // aligning it against the whole witness instead produced only junk
+    // pairings (183 vs 710 matches on the Apostle ch-1 measurement) and
+    // flooded the diagnostics with every unmatched witness token, twice
+    // over. Hand directives cover those chapters.
+    const witnessChapter = structure.chapters.get(slice.key)?.text;
+    if (witnessChapter === undefined) continue;
+    // Barrier between concatenated per-chapter streams: without it, a
+    // trailing gap of one chapter and the leading gap of the next read as a
+    // single match-bounded region, and the projection could write chapter
+    // N+1's witness words onto chapter N's text. An empty match op is inert
+    // everywhere else: no aProv (classifyGaps ignores it, edits refuse it),
+    // empty bRaw (never opens an italic span; a span walking across it fails
+    // the provenance-count check).
+    if (ops.length > 0) ops.push({ t: 'match', aRaw: '', bRaw: '' });
+    // Not a spread: a chapter can yield tens of thousands of ops, and
+    // push(...ops) puts every element on the call stack (RangeError on the
+    // real corpus).
+    for (const op of alignTokens(backboneChapter, witnessChapter)) ops.push(op);
+  }
+  return ops;
+}
 
 function stripped(raw: string): string {
   return raw.normalize('NFD').replace(/\p{M}/gu, '');
@@ -168,8 +239,11 @@ function assertDocumentInvariants(before: string, after: string) {
   }
   const beforeHeads = before.split('\f').map((page) => firstNonBlank(page.split('\n')));
   const afterHeads = after.split('\f').map((page) => firstNonBlank(page.split('\n')));
-  if (beforeHeads.some((head, i) => head !== afterHeads[i])) {
-    throw new Error('stage 5 invariant failed: running head changed');
+  const changedHead = beforeHeads.findIndex((head, i) => head !== afterHeads[i]);
+  if (changedHead !== -1) {
+    throw new Error(
+      `stage 5 invariant failed: running head changed (page ${changedHead}: ${JSON.stringify(beforeHeads[changedHead])} -> ${JSON.stringify(afterHeads[changedHead])})`
+    );
   }
 }
 
@@ -243,7 +317,7 @@ function applyParagraphEdits(text: string, edits: ParagraphEdit[], nextId: Retur
 
 function joinedTokenDelta(record: ChangeRecord): number {
   const joinedTokens = record.evidence?.joinedTokens;
-  return typeof joinedTokens === 'number' && Number.isInteger(joinedTokens) && joinedTokens > 0 ? joinedTokens : 0;
+  return typeof joinedTokens === 'number' && Number.isInteger(joinedTokens) ? joinedTokens : 0;
 }
 
 function witnessRefFor(raw: string): string | undefined {
@@ -1414,7 +1488,9 @@ export function vote(
   const nextId = changeFactory();
   const pairing = pairWitnessPages(backbone, witness, config);
   const witnessBody = pairing.witnessBodyPages.map((page) => page.text).join('\n');
-  const ops = alignTokens(backbone, witnessBody);
+  const ops = config.witnessStructure
+    ? chapterScopedOps(backbone, witnessBody, witness, config)
+    : alignTokens(backbone, witnessBody);
   const counters = { punctCaseDiffs: 0 };
   const reviewRecords: ChangeRecord[] = [];
   const edits: PendingEdit[] = [];
@@ -1444,6 +1520,17 @@ export function vote(
     if (record.line === undefined || record.col === undefined || record.after === undefined) continue;
     edits.push({ record, after: record.after, prov: { page: record.page, line: record.line, col: record.col }, automatic: false });
   }
+
+  // Projection is deliberately part of stage 5: the CLI remains stages 1–6.
+  // FIX directives are not present in the aligned text (they run below), so
+  // their literal sites are reserved here and become review records instead.
+  const projection = projectWitnessStructure(backbone, ops, config, {
+    nextId,
+    corrections: decisions?.corrections,
+    occupied: edits.map((edit) => edit.record),
+  });
+  reviewRecords.push(...projection.records);
+  for (const edit of projection.edits) edits.push({ ...edit, automatic: true });
 
   const stage3Records = stage3ReviewRecords(options.stage3Records ?? [], nextId);
   reviewRecords.push(...stage3Records);
