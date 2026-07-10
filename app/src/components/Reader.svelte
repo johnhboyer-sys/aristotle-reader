@@ -467,11 +467,19 @@
   // the page can carry footnotes. A delegated click handler on the column
   // reads both data attributes and opens the footnote popup.
   function renderThird(text: string, transId: string): string {
+    // The marker <button> is an atomic inline box, and engines may take a
+    // line-break opportunity at its edge even with no space — WKWebView
+    // orphans the superscript onto the next line ("pair, | ¹ one thing").
+    // Glue it to the word it annotates with a nowrap wrapper. The capture
+    // deliberately stops at whitespace, tag brackets, and entities so it can
+    // never swallow a fragment of highlightEng's own markup; if a tag abuts
+    // the marker the wrapper just holds the marker alone (no worse than
+    // before).
     return highlightEng(text).replace(
-      /\[\^([\w.*†]+)\]/g,
-      (_m, label: string) => {
+      /([^\s<>&]*)\[\^([\w.*†]+)\]/g,
+      (_m, lead: string, label: string) => {
         const display = fnDisplay(label);
-        return `<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button>`;
+        return `<span class="fn-anchor">${lead}<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button></span>`;
       },
     );
   }
@@ -547,6 +555,47 @@
     }
     if (cur < text.length) addText(text.slice(cur));
     return parts;
+  }
+
+  // A standalone tick span is absolutely positioned with no `top`, so its
+  // static position decides which line it reads against — and a marker box
+  // sitting BETWEEN two text runs attaches to the END of the previous
+  // rendered line whenever the marked word starts a new one. The tick then
+  // shows a full rendered line (visually a sentence) too early, at every
+  // column width. Merging each tick into the FOLLOWING text run as its first
+  // child pins its static position to the first line box of the text it
+  // marks. (It also keeps `.para-br + .bk-seg` adjacency intact when a tick
+  // lands exactly on a paragraph start.) Ticks with an attached table — or
+  // with no following text run — keep the standalone rendering.
+  type RenderPart = FlowPart & { tick?: { n: number; real: boolean } };
+  function attachTicks(parts: FlowPart[], tableNs: Set<number> = new Set()): RenderPart[] {
+    const isText = (p: FlowPart | undefined): p is FlowPart => !!p && p.text !== null && p.text !== '\n';
+    const isBreak = (p: FlowPart | undefined): boolean => !!p && (p.text === '\n' || p.para === true);
+    const out: RenderPart[] = [];
+    for (let i = 0; i < parts.length; i += 1) {
+      const part = parts[i];
+      const isTick = part.text === null && part.n !== null && !part.para;
+      if (isTick && part.n !== null && !tableNs.has(part.n)) {
+        const next = parts[i + 1];
+        if (isText(next)) {
+          out.push({ ...next, tick: { n: part.n, real: part.real } });
+          i += 1;
+          continue;
+        }
+        // A tick coinciding with a paragraph boundary marks the paragraph's
+        // OPENING word: emit the break first, then the opener carrying the
+        // tick (leaving the tick standalone before the <br> re-creates the
+        // previous-line attachment this helper exists to prevent).
+        if (isBreak(next) && isText(parts[i + 2])) {
+          out.push(next);
+          out.push({ ...parts[i + 2], tick: { n: part.n, real: part.real } });
+          i += 2;
+          continue;
+        }
+      }
+      out.push(part);
+    }
+    return out;
   }
 
   // Split a line into clickable words and the verbatim text between them.
@@ -1115,12 +1164,13 @@
           on:keydown={onFootnoteClick}
           role="presentation"
         >
-          {#each flow as part}
+          {#each attachTicks(flow, new Set((block.otables[transId] ?? []).map(t => t.n))) as part}
             {#if part.text === '\n'}
               <br class="para-br" />
             {:else if part.text !== null}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <span class="bk-seg">{@html renderThird(part.text, transId)}</span>
+              <span class="bk-seg"
+                >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}
@@ -1137,12 +1187,13 @@
         </div>
       {:else}
         <div class="ross-prose">
-          {#each flow as part}
+          {#each attachTicks(flow) as part}
             {#if part.text === '\n'}
               <br class="para-br" />
             {:else if part.text !== null}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <span class="bk-seg">{@html highlightEng(part.text)}</span>
+              <span class="bk-seg"
+                >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}

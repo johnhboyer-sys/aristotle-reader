@@ -9,7 +9,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { WORKS } from '../../../app/src/lib/works';
   import { runImport, ImportCollision, type ImportSummary } from '../lib/imports';
-  import { parseTranslationFile, composeCitation, emphasisScanInput } from '../lib/translation-file';
+  import { parseTranslationFile, composeCitation, emphasisScanInput, splitFrontmatter } from '../lib/translation-file';
   import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';
   import { scanEmphasis, listEmphasisReviewItems, type EmphasisReviewItem } from '../lib/emphasis';
   import { convertLayoutExtraction, isLayoutExtraction, type ConvertOptions, type ConvertReport } from '../lib/pdf-import';
@@ -108,6 +108,9 @@
   // non-PDF import, where the uploaded text and the parse input are (as
   // before) the same thing.
   let originalRawText: string | null = null;
+  // NOTICK citations peeled from a layout file's frontmatter header (seating
+  // pass §2) — threaded to runImport so the aligner skips those estimate ticks.
+  let importNoTicks: string[] | undefined;
   let refusalMsg = '';
   let collapsedPages: number[] = [];
   // The exact upload that triggered a needsChoice — kept so "Import with
@@ -115,7 +118,13 @@
   let pendingConvert: { name: string; text: string } | null = null;
 
   function acceptText(name: string, text: string, opts: ConvertOptions = {}) {
-    if (!isLayoutExtraction(text)) {
+    // Peel a frontmatter header first: a layout FINAL carries a `noTicks` line
+    // the frozen converter would fold into body text. Read it here, convert the
+    // body only. A non-layout import keeps its raw text (frontmatter intact) so
+    // form pre-fill (fileMeta) and runImport's own parser still see it.
+    const { meta: header, body } = splitFrontmatter(text);
+    importNoTicks = header.noTicks;
+    if (!isLayoutExtraction(body)) {
       file = { name, text };
       originalRawText = null;
       convertReport = null;
@@ -123,11 +132,11 @@
       step = 'form';
       return;
     }
-    const result = convertLayoutExtraction(text, opts);
+    const result = convertLayoutExtraction(body, opts);
     if (result.ok) {
       convertReport = result.report;
       convertTitles = result.titles;
-      originalRawText = text;
+      originalRawText = body;
       file = { name, text: result.tagged };
       step = 'form';
     } else if ('refused' in result) {
@@ -346,6 +355,7 @@
         // (falls back to `raw`) for a non-PDF import, unchanged from before.
         ...(originalRawText !== null ? { original: originalRawText } : {}),
         ...(Object.keys(convertTitles).length ? { titles: convertTitles } : {}),
+        ...(importNoTicks?.length ? { noTicks: importNoTicks } : {}),
         emphasisChoices: emphReviewChoices.size ? emphReviewChoices : undefined,
         work,
         translator: translator.trim(),

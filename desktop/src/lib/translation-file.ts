@@ -88,6 +88,11 @@ export interface TranslationMeta {
   // when absent, callers compose a "translator (year), source" fallback
   // (see composeCitation below) rather than leaving Copy Citation empty.
   citation?: string;
+  // Bekker citations the import aligner must NOT extrapolate as estimate ticks
+  // (`noTicks: 81a40 87a40 …`) — a column whose print stops short of line 40
+  // still has a 40 in the Greek reference, so the tail fill would invent one.
+  // Whitespace-separated in the frontmatter; per-source ground truth.
+  noTicks?: string[];
 }
 
 export interface InlineTag {
@@ -169,7 +174,22 @@ function parseFrontmatter(raw: string): { meta: Partial<TranslationMeta>; body: 
   out.language = meta.language || 'en';
   if (meta.id) out.id = meta.id;
   if (meta.citation) out.citation = meta.citation;
+  if (meta.noTicks) {
+    const refs = meta.noTicks.split(/\s+/).filter(Boolean);
+    if (refs.length) out.noTicks = refs;
+  }
   return { meta: out, body: raw.slice(m[0].length), has: true };
+}
+
+/**
+ * Peel a leading frontmatter header off a raw import (layout or tagged),
+ * returning the parsed header metadata and the body with the block removed.
+ * Layout imports carry a `noTicks` header the ImportDialog reads BEFORE running
+ * the frozen converter (which would otherwise fold the header into body text).
+ */
+export function splitFrontmatter(raw: string): { meta: Partial<TranslationMeta>; body: string } {
+  const { meta, body } = parseFrontmatter(raw);
+  return { meta, body };
 }
 
 export function serializeFrontmatter(meta: TranslationMeta): string {
@@ -184,6 +204,7 @@ export function serializeFrontmatter(meta: TranslationMeta): string {
     `language: ${meta.language}`,
     `id: ${meta.id}`,
     ...(meta.citation ? [`citation: "${meta.citation.replace(/"/g, "'").replace(/\r?\n/g, '\\n')}"`] : []),
+    ...(meta.noTicks && meta.noTicks.length ? [`noTicks: ${meta.noTicks.join(' ')}`] : []),
     '---',
     '',
   ];
