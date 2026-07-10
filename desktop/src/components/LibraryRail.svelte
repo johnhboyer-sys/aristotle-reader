@@ -8,8 +8,8 @@
   // top of the reading pane is highlighted live (from the scroll-spy cite).
   import { tick } from 'svelte';
   import { CORPUS_GROUPS, dataId, type CorpusEntry } from '../lib/corpus';
-  import { getWork, bookLabel, isBookless } from '../../../app/src/lib/works';
-  import { fetchChapters, parseBekker, type ChapterRef } from '../../../app/src/lib/data';
+  import { getWork, bookLabel, isBookless } from '@shared/lib/works';
+  import { fetchChapters, parseBekker, type ChapterRef } from '@shared/lib/data';
   import { columnKey } from '../lib/translation-file';
 
   export let currentWork: string;          // data id (works.ts id)

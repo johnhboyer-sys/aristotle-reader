@@ -1,6 +1,6 @@
 // The desktop corpus registry — the data model from the v1 build plan.
 //
-// This EXTENDS the website's registry (app/src/lib/works.ts, which stays the
+// This EXTENDS the website's registry (shared/lib/works.ts, which stays the
 // source of truth for everything about a built work: books, translations,
 // Greek source, citation scheme details). What it adds is what the website
 // never needed:

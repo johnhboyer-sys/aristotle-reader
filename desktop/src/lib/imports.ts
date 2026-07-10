@@ -12,9 +12,9 @@
 // In the browser dev harness (no Tauri), the same records live in
 // localStorage so the whole flow is testable in a plain browser.
 
-import { fetchBook, fetchChapters, type BookData, type RossPiece } from '../../../app/src/lib/data';
-import type { TranslationRef } from '../../../app/src/lib/works';
-import { getWork } from '../../../app/src/lib/works';
+import { fetchBook, fetchChapters, type BookData, type RossPiece } from '@shared/lib/data';
+import type { TranslationRef } from '@shared/lib/works';
+import { getWork } from '@shared/lib/works';
 import { isTauri } from './runtime';
 import {
   parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation,
@@ -162,12 +162,12 @@ type G = typeof globalThis & {
   __ARISTOTLE_EXTRA_TRANSLATIONS__?: Record<string, TranslationRef[]>;
   __ARISTOTLE_BOOK_HOOK__?: (work: string, n: number, data: BookData) => BookData;
   /**
-   * §B4.4: FootnotePopup.svelte (app/src, SHARED with the static site build,
+   * §B4.4: FootnotePopup.svelte (shared/, used by the static site build too,
    * which has no imports.ts and must not import desktop code) resolves an
    * imported translation's footnote text through this window-level hook
    * instead of a direct import — the same pattern __ARISTOTLE_BOOK_HOOK__ and
    * __ARISTOTLE_EXTRA_TRANSLATIONS__ already use above. Site build: hook is
-   * never installed, so app/src's lazy `globalThis.__ARISTOTLE_...` read is
+   * never installed, so the shared lib’s lazy `globalThis.__ARISTOTLE_...` read is
    * always undefined there — inert, byte-identical rendering.
    */
   __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__?: (work: string, id: string, label: string) => string | null;
@@ -186,7 +186,7 @@ type G = typeof globalThis & {
    * title, resolved for ONE registered import's own overlay column — NOT
    * merged into the shared chapterTitles heading map every translation
    * shares (that's work-level chrome; an imported title is this edition's
-   * own editorial paratext, John's call 2026-07-06). Reader.svelte (app/src,
+   * own editorial paratext, John's call 2026-07-06). Reader.svelte (shared/,
    * site-shared) reads this the same lazy-global way FootnotePopup reads
    * __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ above — never installed on the site
    * build, so the read is always undefined there — inert, byte-identical.

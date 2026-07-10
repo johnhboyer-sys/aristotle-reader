@@ -9,12 +9,12 @@ const mocks = vi.hoisted(() => ({
   emitOverlayPieces: vi.fn(),
 }));
 
-vi.mock('../../../app/src/lib/data', () => ({
+vi.mock('@shared/lib/data', () => ({
   fetchBook: mocks.fetchBook,
   fetchChapters: mocks.fetchChapters,
 }));
 
-vi.mock('../../../app/src/lib/works', () => ({
+vi.mock('@shared/lib/works', () => ({
   WORKS: [{ id: 'ethics' }, { id: 'politics' }],
   getWork: mocks.getWork,
 }));

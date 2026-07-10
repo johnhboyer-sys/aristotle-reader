@@ -1,13 +1,17 @@
 <script lang="ts">
-  // Desktop variant of the site's BekkerJump: identical parse/resolve logic
-  // (reused from data.ts), but navigation is a callback into the shell — a
-  // desktop window has no URL routing to navigate with.
   import { onMount, tick } from 'svelte';
-  import { fetchColumns, parseBekker, resolveBekker, type ColumnRef } from '../../../app/src/lib/data';
-  import { getWork } from '../../../app/src/lib/works';
+  import { fetchColumns, parseBekker, resolveBekker, type ColumnRef } from '../lib/data';
+  import { getWork, workPath } from '../lib/works';
 
-  export let work: string;
-  export let onJump: (book: number, column: string, line: number) => void;
+  export let work: string = 'EN';
+  // Navigation strategy: the site leaves this unset and navigates the tab;
+  // the desktop shell passes a callback (a Tauri window has no URL routing).
+  export let onJump: ((book: number, column: string, line: number) => void) | null = null;
+  // Hosts that mount more than one instance per page must pass distinct ids
+  // (the site's ReaderShell mounts two) or the label/input pairing collides.
+  // Deterministic prop rather than a generated id: this component is
+  // server-rendered, so a random/counter id would break hydration.
+  export let inputId = 'bekker-input';
 
   $: workMeta = getWork(work);
 
@@ -17,6 +21,8 @@
   let columns: Record<string, ColumnRef[]> | null = null;
   let inputEl: HTMLInputElement | undefined;
 
+  // Preload the column index so the first lookup is instant; re-preload when
+  // the shell switches works under us (desktop).
   onMount(() => { preload(); });
   $: if (work) preload();
   function preload() {
@@ -25,22 +31,39 @@
   }
 
   async function openBox() {
-    open = true; error = '';
+    open = true;
+    error = '';
     await tick();
     inputEl?.focus();
   }
-  function closeBox() { open = false; error = ''; value = ''; }
+
+  function closeBox() {
+    open = false;
+    error = '';
+    value = '';
+  }
 
   async function go() {
     error = '';
     const ref = parseBekker(value);
-    if (!ref) { error = 'Enter a Bekker citation, e.g. 1097a15'; return; }
+    if (!ref) {
+      error = 'Enter a Bekker citation, e.g. 1097a15';
+      return;
+    }
     const cols = columns ?? (await fetchColumns(work).catch(() => null));
     if (!cols) { error = 'Could not load the index — try again'; return; }
     const book = resolveBekker(cols, ref.column, ref.line);
-    if (book == null) { error = `${ref.column} is not in the ${workMeta?.title ?? 'text'}`; return; }
-    closeBox();
-    onJump(book, ref.column, ref.line);
+    if (book == null) {
+      error = `${ref.column} is not in the ${workMeta?.title ?? 'text'}`;
+      return;
+    }
+    if (onJump) {
+      closeBox();
+      onJump(book, ref.column, ref.line);
+      return;
+    }
+    // Same-tab navigation; the reader snaps to the nearest line if exact is absent.
+    window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}${workPath(work, book)}?loc=${ref.column}:${ref.line}`;
   }
 
   function onKey(e: KeyboardEvent) {
@@ -54,7 +77,9 @@
   </button>
 {:else}
   <form class="bekker-jump" on:submit|preventDefault={go} role="search">
+    <label class="bekker-label" for={inputId}>Bekker line</label>
     <input
+      id={inputId}
       type="text"
       bind:this={inputEl}
       bind:value

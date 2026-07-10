@@ -16,7 +16,7 @@
 // pieces ({chapter, text, cont, bekker ticks with real/estimate flags}) in
 // exactly the shape Reader.svelte renders from seg.overlays[id].
 
-import type { BookData, RossPiece } from '../../../../app/src/lib/data';
+import type { BookData, RossPiece } from '@shared/lib/data';
 import { alignChapter, dedupMonotonic, interpolate, snapWord, type Anchor, type ChapterInput } from './engine';
 import type { EmphasisSpan, FootnoteMarker, InlineTag, TagDensity } from '../translation-file';
 
@@ -254,7 +254,7 @@ export interface PieceEmphasis { pieceText: string; start: number; end: number; 
  * per-segment overlay pieces the Reader renders (seg.overlays[id] shape), and
  * — in a PARALLEL structure, never on RossPiece itself (Reader.svelte only
  * reads text/cont/chapter/bekker/tables off a piece; an extra field would be
- * harmless but there's no need to touch app/src's RossPiece type at all) —
+ * harmless but there's no need to touch the shared RossPiece type at all) —
  * each piece's emphasis ranges rebased to that piece's own text.
  *
  * Column boundaries inside a chapter come from that chapter's anchors: the

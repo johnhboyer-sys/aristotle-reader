@@ -1,11 +1,11 @@
 # The Aristotle Reader — Desktop (v1 foundations)
 
 A Tauri (Rust shell + WebKit webview) desktop port of the website. **Not a
-rewrite**: the reading experience is the website's own Svelte components,
-imported directly from `../app/src` — `Reader.svelte`, `WordPopup.svelte`,
+rewrite**: the reading experience is the shared reader core, imported from
+`../shared` via the `@shared` alias — `Reader.svelte`, `WordPopup.svelte`,
 `FootnotePopup.svelte`, `data.ts`, `works.ts`, `search.ts`, `global.css` are
-all consumed unchanged. What this project adds is the desktop chrome and a
-runtime data layer.
+all consumed unchanged (see `shared/README.md`). What this project adds is
+the desktop chrome and a runtime data layer.
 
 ## Running
 
@@ -24,7 +24,7 @@ npm run app:build    # package .app/.dmg (unsigned — Gatekeeper warning is acc
 ## Architecture decisions (v1)
 
 - **Data loading boundary** — the one deliberate change to site code:
-  `app/src/lib/data.ts` reads its data root lazily from
+  `shared/lib/data.ts` reads its data root lazily from
   `globalThis.__ARISTOTLE_DATA_ROOT__` (falling back to the site's `/data`).
   `src/lib/runtime.ts` sets that root at startup: in the packaged app it points
   at an on-disk corpus directory (`$APPDATA/corpus` first — where the future
@@ -37,12 +37,12 @@ npm run app:build    # package .app/.dmg (unsigned — Gatekeeper warning is acc
   (genuine/disputed/spurious) badges, not-yet-built works as greyed "planned"
   slots inline in their traditional groups, and a separate Companion Texts
   section (Porphyry; Aquinas `lecture`/`la` anticipated in the schema only).
-  `app/src/lib/works.ts` remains the source of truth for built works.
+  `shared/lib/works.ts` remains the source of truth for built works.
 - **Navigation**: state + keyed remount of `Reader`. Jump-ins reuse the
   Reader's existing URL contract (`?loc=col:line`, `#hash`) via
-  `history.replaceState`, so the Reader needed no changes. `BekkerJumpDesktop`
-  is a thin variant of the site's `BekkerJump` whose navigation is a callback
-  instead of `window.location`.
+  `history.replaceState`, so the Reader needed no changes. The shared
+  `BekkerJump` takes an optional `onJump` callback; this shell passes one
+  (a desktop window has no URL routing), the site leaves it unset.
 - **Copy Citation** (new, desktop-only): a desktop window has no address bar,
   so the site's live-URL-hash-as-citation gets a real control — formats
   "Arist. EN 1103a14, trans. Ostwald" from the scroll-spy's current hash +

@@ -1,8 +1,8 @@
 ---
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
-import '../styles/global.css';
-import { WORKS } from '../lib/works';
+import '@shared/styles/global.css';
+import { WORKS } from '@shared/lib/works';
 import { jsonLdSafe } from '../lib/jsonld';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // True only in the local/full build (PUBLIC_SHOW_PRIVATE=1), where copyright-

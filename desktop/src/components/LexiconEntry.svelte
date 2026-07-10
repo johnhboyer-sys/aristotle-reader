@@ -5,8 +5,8 @@
   // the Bonitz section stubbed exactly as on the site (digitisation pending —
   // the stub is honest, not filler). Citation chips jump into the reader via
   // the same ?hlg=&loc= contract the site's search uses.
-  import { fetchLsjShard, lsjShard } from '../../../app/src/lib/data';
-  import { getWork, bookLabel, isBookless } from '../../../app/src/lib/works';
+  import { fetchLsjShard, lsjShard } from '@shared/lib/data';
+  import { getWork, bookLabel, isBookless } from '@shared/lib/works';
 
   export let slug: string;
   export let onJumpTo: (work: string, book: number, column: string, line: number, surface: string) => void;

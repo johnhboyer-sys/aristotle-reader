@@ -7,7 +7,7 @@
 
 import { isTauri } from './runtime';
 import { listAnnotations, type Annotation } from './annotations';
-import { WORKS } from '../../../app/src/lib/works';
+import { WORKS } from '@shared/lib/works';
 
 export interface LibraryBundle {
   formatVersion: 1;

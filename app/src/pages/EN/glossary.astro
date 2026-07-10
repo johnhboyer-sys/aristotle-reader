@@ -8,11 +8,11 @@
 // come straight from that file).
 import ThemeInit from '../../components/ThemeInit.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
-import { GLOSSARY_TITLE, GLOSSARY_NOTE, GLOSSARY_ENTRIES } from '../../lib/glossary';
+import { GLOSSARY_TITLE, GLOSSARY_NOTE, GLOSSARY_ENTRIES } from '@shared/lib/glossary';
 import { sanitizeHtml } from '../../lib/html';
-import { workPath } from '../../lib/works';
+import { workPath } from '@shared/lib/works';
 import { jsonLdSafe } from '../../lib/jsonld';
-import '../../styles/global.css';
+import '@shared/styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const readerHref = `${base}${workPath('EN')}`;

@@ -4,8 +4,8 @@
 // works generate one page per book. The bare /<work> slug is the landing page
 // (src/pages/[work]/index.astro), not the reader.
 import ReaderShell from '../../../components/ReaderShell.astro';
-import { WORKS } from '../../../lib/works';
-import '../../../styles/global.css';
+import { WORKS } from '@shared/lib/works';
+import '@shared/styles/global.css';
 
 export function getStaticPaths() {
   return WORKS.flatMap((w) =>

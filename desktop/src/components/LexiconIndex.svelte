@@ -2,8 +2,8 @@
   // The Lexicon index — desktop port of the site's /lemma directory page.
   // Same data (the lemmata.json popup manifest), same fold-based filter that
   // accepts polytonic Greek or Beta Code, prefix-matched like a dictionary.
-  import { fetchLemmata, type LemmaRef } from '../../../app/src/lib/data';
-  import { greekFold } from '../../../app/src/lib/search';
+  import { fetchLemmata, type LemmaRef } from '@shared/lib/data';
+  import { greekFold } from '@shared/lib/search';
 
   export let onOpenEntry: (slug: string) => void;
 

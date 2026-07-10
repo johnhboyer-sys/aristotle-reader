@@ -7,7 +7,7 @@
   // importer: tagged anchors, alignment-placed anchors, and interpolated
   // (estimate) lines are reported separately and honestly.
   import { onMount, onDestroy } from 'svelte';
-  import { WORKS } from '../../../app/src/lib/works';
+  import { WORKS } from '@shared/lib/works';
   import { runImport, ImportCollision, type ImportSummary } from '../lib/imports';
   import { parseTranslationFile, composeCitation, emphasisScanInput, splitFrontmatter } from '../lib/translation-file';
   import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';

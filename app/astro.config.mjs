@@ -1,4 +1,5 @@
 // @ts-check
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
 
@@ -22,6 +23,13 @@ export default defineConfig({
   vite: {
     server: {
       fs: { allow: ['..'] },
+    },
+    resolve: {
+      // The reader core (components, libs, global.css) lives in ../shared and
+      // is consumed by both this site and the desktop app. See shared/README.md.
+      alias: {
+        '@shared': fileURLToPath(new URL('../shared', import.meta.url)),
+      },
     },
   },
 });

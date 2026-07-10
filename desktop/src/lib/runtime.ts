@@ -3,7 +3,7 @@
 // The website resolves its corpus at Astro build time (public/data symlink →
 // build/dist). The desktop app must not: content is no longer fixed at build
 // time (bundled corpus now, user-imported translations later). Instead the
-// shared data helpers in app/src/lib/data.ts read their root URL lazily from
+// shared data helpers in shared/lib/data.ts read their root URL lazily from
 // `globalThis.__ARISTOTLE_DATA_ROOT__`, and this module decides what that root
 // is before the UI mounts:
 //

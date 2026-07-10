@@ -3,8 +3,8 @@
 // The reader for a work lives at /<work>/book/<n> (bookless works only ever
 // have book 1). See src/components/Landing.astro.
 import Landing from '../../components/Landing.astro';
-import { WORKS } from '../../lib/works';
-import '../../styles/global.css';
+import { WORKS } from '@shared/lib/works';
+import '@shared/styles/global.css';
 
 export function getStaticPaths() {
   return WORKS.map((w) => ({ params: { work: w.id } }));
