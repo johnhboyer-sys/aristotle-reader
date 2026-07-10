@@ -660,7 +660,7 @@ const structuredData = Astro.site
     if (card) {
       const works: Record<string, { title: string; books: number }> =
         JSON.parse(card.dataset.works || '{}');
-      const last = lastRead((w) => w in works);
+      const last = lastRead((w) => Object.hasOwn(works, w));
       if (last) {
         const w = works[last.work];
         const book = Math.min(Math.max(1, last.book), w.books);
