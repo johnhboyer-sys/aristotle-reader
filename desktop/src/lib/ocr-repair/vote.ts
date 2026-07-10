@@ -6,6 +6,7 @@ import type { AlignOp, TokenProvenance } from './align';
 import { pairWitnessPages } from './witness-pairing';
 import type { PairingReport } from './witness-pairing';
 import { parseWitnessStructure } from './witness-structure';
+import { projectWitnessStructure } from './witness-projection';
 import { buildReviewModel, patternKeyFor } from './review';
 import type { ReviewDecisions, ReviewModel } from './review';
 import { extractWitnessAnchors } from './witness-anchors';
@@ -230,8 +231,11 @@ function assertDocumentInvariants(before: string, after: string) {
   }
   const beforeHeads = before.split('\f').map((page) => firstNonBlank(page.split('\n')));
   const afterHeads = after.split('\f').map((page) => firstNonBlank(page.split('\n')));
-  if (beforeHeads.some((head, i) => head !== afterHeads[i])) {
-    throw new Error('stage 5 invariant failed: running head changed');
+  const changedHead = beforeHeads.findIndex((head, i) => head !== afterHeads[i]);
+  if (changedHead !== -1) {
+    throw new Error(
+      `stage 5 invariant failed: running head changed (page ${changedHead}: ${JSON.stringify(beforeHeads[changedHead])} -> ${JSON.stringify(afterHeads[changedHead])})`
+    );
   }
 }
 
@@ -305,7 +309,7 @@ function applyParagraphEdits(text: string, edits: ParagraphEdit[], nextId: Retur
 
 function joinedTokenDelta(record: ChangeRecord): number {
   const joinedTokens = record.evidence?.joinedTokens;
-  return typeof joinedTokens === 'number' && Number.isInteger(joinedTokens) && joinedTokens > 0 ? joinedTokens : 0;
+  return typeof joinedTokens === 'number' && Number.isInteger(joinedTokens) ? joinedTokens : 0;
 }
 
 function witnessRefFor(raw: string): string | undefined {
@@ -1508,6 +1512,17 @@ export function vote(
     if (record.line === undefined || record.col === undefined || record.after === undefined) continue;
     edits.push({ record, after: record.after, prov: { page: record.page, line: record.line, col: record.col }, automatic: false });
   }
+
+  // Projection is deliberately part of stage 5: the CLI remains stages 1–6.
+  // FIX directives are not present in the aligned text (they run below), so
+  // their literal sites are reserved here and become review records instead.
+  const projection = projectWitnessStructure(backbone, ops, config, {
+    nextId,
+    corrections: decisions?.corrections,
+    occupied: edits.map((edit) => edit.record),
+  });
+  reviewRecords.push(...projection.records);
+  for (const edit of projection.edits) edits.push({ ...edit, automatic: true });
 
   const stage3Records = stage3ReviewRecords(options.stage3Records ?? [], nextId);
   reviewRecords.push(...stage3Records);
