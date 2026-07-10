@@ -255,6 +255,16 @@ body {
   color: var(--text-mid);
 }
 .header-search:hover { border-color: var(--accent); color: var(--accent); }
+.header-search .hs-kbd {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 0.28rem;
+  margin-left: 0.15rem;
+}
 .header-search .hs-icon { display: block; flex-shrink: 0; }
 
 /* "Support the site" pill — the one filled call-to-action in the otherwise

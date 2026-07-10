@@ -15,6 +15,7 @@ import { SUPPORT_URL } from '../lib/support';
 import { sanitizeHtml } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
+import CommandPalette from '@shared/components/CommandPalette.svelte';
 
 interface Props { workId: string; }
 const { workId } = Astro.props as Props;
@@ -376,5 +377,6 @@ const breadcrumbLd = Astro.site
     }
   }
 </script>
+<CommandPalette work={workId} client:load />
 </body>
 </html>
