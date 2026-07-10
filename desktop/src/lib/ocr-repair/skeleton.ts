@@ -602,7 +602,9 @@ function applyHeadingNormalize(
           const col = leading.length;
           const value = shapeNumeral(token).value;
           const expected = chapter + 1;
-          const maxChapters = config.divisions.chaptersPerBook[book - 1] ?? Number.MAX_SAFE_INTEGER;
+          // No chapters before the first book heading; otherwise the book's
+          // declared chapter total bounds acceptance.
+          const maxChapters = book >= 1 ? config.divisions.chaptersPerBook[book - 1] ?? Number.MAX_SAFE_INTEGER : 0;
           // Self-healing: accept any centred numeral that advances the count
           // within a small window and stays inside the book's chapter total.
           // A forward jump means the scan dropped the intervening chapter
