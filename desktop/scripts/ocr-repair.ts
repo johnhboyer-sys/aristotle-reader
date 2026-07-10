@@ -189,6 +189,15 @@ function main() {
     }
     prev = summary;
   }
+
+  // The importable FINAL = the graded final-stage layout, prefixed with a
+  // `noTicks` frontmatter header when the decided file lists any (seating §2).
+  // ImportDialog peels the header before the frozen converter runs, so the
+  // graded layout the CLI reports on and the body John imports stay identical.
+  if (through >= STAGES[STAGES.length - 1].n) {
+    const header = decisions?.noTicks?.length ? `---\nnoTicks: ${decisions.noTicks.join(' ')}\n---\n` : '';
+    writeFileSync(join(config.outDir, `FINAL-${config.id}-import.txt`), header + text);
+  }
 }
 
 main();

@@ -405,6 +405,14 @@ export interface ImportRequest {
    * titles to offer.
    */
   titles?: Record<string, string>;
+  /**
+   * Bekker citations the aligner must not extrapolate as estimate ticks
+   * (seating-pass §2 NOTICK). ImportDialog reads these from the layout file's
+   * `noTicks` frontmatter header BEFORE conversion (the frozen converter would
+   * fold the header into body text); falls back to the file's own frontmatter
+   * when omitted, so a plain hand-tagged import carrying the header still works.
+   */
+  noTicks?: string[];
 }
 
 // §B3 import summary: "Detected continuous work-level numbering — 222
@@ -448,7 +456,12 @@ export async function runImport(
     language: parsed.meta.language ?? 'en',
     id: req.idOverride ?? parsed.meta.id ?? slugId(req.translator, req.work),
     ...(req.citation ? { citation: req.citation } : (parsed.meta.citation ? { citation: parsed.meta.citation } : {})),
+    ...(req.noTicks ?? parsed.meta.noTicks ? { noTicks: req.noTicks ?? parsed.meta.noTicks } : {}),
   };
+  // Citations the aligner must not extrapolate (NOTICK) — from the request
+  // (ImportDialog peeled the layout header pre-conversion) or, for a plain
+  // tagged import, the file's own frontmatter.
+  const noTickSet = new Set(req.noTicks ?? parsed.meta.noTicks ?? []);
 
   const s = await store();
   const already = await s.exists(req.work, meta.id);
@@ -482,7 +495,7 @@ export async function runImport(
     const perBook: ChapterAlignment[] = [];
     for (const input of inputs) {
       const ch = chapters.find(c => c.book === b && String(c.chapter) === input.chapter);
-      const ca = alignImportedChapter(input, ch?.tags ?? [], parsed.density, ch?.emphasis ?? [], ch?.footnoteMarkers ?? []);
+      const ca = alignImportedChapter(input, ch?.tags ?? [], parsed.density, ch?.emphasis ?? [], ch?.footnoteMarkers ?? [], noTickSet);
       perBook.push(ca);
       aligned.push(ca);
       alignment[`${ca.book}:${ca.chapter}`] = ca;

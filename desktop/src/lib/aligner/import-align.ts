@@ -40,6 +40,7 @@ export function alignImportedChapter(
   density: TagDensity,
   emphasis: EmphasisSpan[] = [],
   footnoteMarkers: FootnoteMarker[] = [],
+  noTicks: Set<string> = new Set(),
 ): ChapterAlignment {
   let anchors: Anchor[];
   const cited = tags.filter(t => t.citation);
@@ -78,7 +79,14 @@ export function alignImportedChapter(
   // independent of chapter boundaries. Imports have no such luxury, so fill
   // the tail here, import-side only, to keep engine.ts byte-for-byte parity
   // with align/aligner.py (scripts/parity.mjs diffs anchor-for-anchor).
-  anchors = fillChapterTail(input, anchors);
+  anchors = fillChapterTail(input, anchors, noTicks);
+  // NOTICK (seating-pass-spec.md §2): a column whose print stops short of line
+  // 40 still carries a 40 in the Greek reference's per-line milestones, so the
+  // tail fill (and, if bracketed, interpolate) invent an estimate tick the
+  // print never shows. John's per-corpus ground truth names those citations;
+  // drop any INTERPOLATED anchor among them (a real/tagged tick is never
+  // touched — a column that legitimately reaches 40 keeps it).
+  if (noTicks.size) anchors = anchors.filter(a => a.confidence !== 'interpolated' || !noTicks.has(a.citation));
   return {
     book: input.book,
     chapter: input.chapter,
@@ -143,7 +151,7 @@ export function snapWordImport(text: string, off: number): number {
  * from), falls back to a uniform rate across the chapter's full remaining
  * text/word span. No-op if the last anchor already covers the last line.
  */
-function fillChapterTail(ch: ChapterInput, anchors: Anchor[]): Anchor[] {
+function fillChapterTail(ch: ChapterInput, anchors: Anchor[], noTicks: Set<string> = new Set()): Anchor[] {
   const cum = new Map(ch.greekLines.map(g => [g.citation, g.cumWords]));
   const order = ch.greekLines.map(g => g.citation);
   if (!order.length) return anchors;
@@ -183,7 +191,7 @@ function fillChapterTail(ch: ChapterInput, anchors: Anchor[]): Anchor[] {
 
   const out = anchors.slice();
   for (const c of order.slice(lastPos + 1)) {
-    if (placed.has(c)) continue;
+    if (placed.has(c) || noTicks.has(c)) continue;
     const words = cum.get(c)! - lastCum;
     let off = last.offset + pyRoundLocal(words * rate);
     off = snapWordImport(ch.targetText, Math.min(off, ch.targetText.length));
