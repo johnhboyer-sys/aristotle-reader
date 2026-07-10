@@ -79,6 +79,13 @@ export interface CorpusConfig {
     chapterNumeral?: 'bare';
   };
   /**
+   * Declares structural markup carried by the wording witness. When absent,
+   * stage 5 retains its whole-witness candidate search byte-for-byte.
+   */
+  witnessStructure?: {
+    format: 'genie-markdown';
+  };
+  /**
    * Stage-1 slice boundaries, pattern-driven so an unseen edition needs only
    * config. Patterns are regex sources tested line-by-line against a page;
    * the first page with a matching line is the boundary. Cuts happen at page

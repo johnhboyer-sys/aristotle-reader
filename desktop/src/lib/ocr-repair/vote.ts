@@ -5,6 +5,7 @@ import { alignTokens, matchKey } from './align';
 import type { AlignOp, TokenProvenance } from './align';
 import { pairWitnessPages } from './witness-pairing';
 import type { PairingReport } from './witness-pairing';
+import { parseWitnessStructure } from './witness-structure';
 import { buildReviewModel, patternKeyFor } from './review';
 import type { ReviewDecisions, ReviewModel } from './review';
 import { extractWitnessAnchors } from './witness-anchors';
@@ -50,6 +51,67 @@ const INTERIOR_HYPHEN_RE = /(?<=\p{L})-{1,2}(?=\p{L})/u;
 const LIGATURE_RE = /[ﬁﬂﬀﬃﬄ]/u;
 const GREEK_RE = /[\u0370-\u03ff\u1f00-\u1fff]/u;
 const LETTER_RE = /\p{L}/u;
+
+const BOOK_WORDS = new Map([
+  ['ONE', 1], ['TWO', 2], ['THREE', 3], ['FOUR', 4], ['FIVE', 5], ['SIX', 6],
+  ['SEVEN', 7], ['EIGHT', 8], ['NINE', 9], ['TEN', 10], ['ELEVEN', 11], ['TWELVE', 12],
+]);
+
+interface BackboneChapterSlice {
+  key: `${number}:${number}`;
+  start: number;
+  end: number;
+}
+
+function backboneChapterSlices(text: string): BackboneChapterSlice[] {
+  const slices: BackboneChapterSlice[] = [];
+  let book = 0;
+  let offset = 0;
+  let open: Omit<BackboneChapterSlice, 'end'> | null = null;
+  for (const line of text.split(/(?<=\n)/u)) {
+    const bare = line.replace(/[\r\n\f]/gu, '').trim();
+    const bookMatch = /^BOOK\s+(\S+)$/iu.exec(bare);
+    if (bookMatch) {
+      if (open) slices.push({ ...open, end: offset });
+      open = null;
+      book = (BOOK_WORDS.get(bookMatch[1].toUpperCase()) ?? Number(bookMatch[1])) || book;
+    } else {
+      const chapterMatch = /^CHAPTER\s+(\d+)$/iu.exec(bare);
+      if (chapterMatch && book > 0) {
+        if (open) slices.push({ ...open, end: offset });
+        open = { key: `${book}:${Number(chapterMatch[1])}`, start: offset + line.length };
+      }
+    }
+    offset += line.length;
+  }
+  if (open) slices.push({ ...open, end: text.length });
+  return slices;
+}
+
+function chapterScopedOps(backbone: string, globalWitness: string, witness: string, config: CorpusConfig): AlignOp[] {
+  const slices = backboneChapterSlices(backbone);
+  if (slices.length === 0) return alignTokens(backbone, globalWitness);
+  const structure = parseWitnessStructure(witness, config.workTitle);
+  const ops: AlignOp[] = [];
+  for (const slice of slices) {
+    // Preserve page, line, and column provenance while removing all tokens
+    // before this chapter from the alignment stream.
+    const prefix = backbone.slice(0, slice.start).replace(/[^\n\f]/gu, ' ');
+    const backboneChapter = `${prefix}${backbone.slice(slice.start, slice.end)}`;
+    // A chapter the witness structure lacks gets NO witness arbitration —
+    // aligning it against the whole witness instead produced only junk
+    // pairings (183 vs 710 matches on the Apostle ch-1 measurement) and
+    // flooded the diagnostics with every unmatched witness token, twice
+    // over. Hand directives cover those chapters.
+    const witnessChapter = structure.chapters.get(slice.key)?.text;
+    if (witnessChapter === undefined) continue;
+    // Not a spread: a chapter can yield tens of thousands of ops, and
+    // push(...ops) puts every element on the call stack (RangeError on the
+    // real corpus).
+    for (const op of alignTokens(backboneChapter, witnessChapter)) ops.push(op);
+  }
+  return ops;
+}
 
 function stripped(raw: string): string {
   return raw.normalize('NFD').replace(/\p{M}/gu, '');
@@ -1414,7 +1476,9 @@ export function vote(
   const nextId = changeFactory();
   const pairing = pairWitnessPages(backbone, witness, config);
   const witnessBody = pairing.witnessBodyPages.map((page) => page.text).join('\n');
-  const ops = alignTokens(backbone, witnessBody);
+  const ops = config.witnessStructure
+    ? chapterScopedOps(backbone, witnessBody, witness, config)
+    : alignTokens(backbone, witnessBody);
   const counters = { punctCaseDiffs: 0 };
   const reviewRecords: ChangeRecord[] = [];
   const edits: PendingEdit[] = [];

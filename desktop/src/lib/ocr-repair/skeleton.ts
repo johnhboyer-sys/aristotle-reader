@@ -76,7 +76,7 @@ function spelledOrdinal(value: number): string | null {
 // hit is sequence-forced against the running book count, so the collisions with
 // Roman-numeral letters (I, K→none, X…) or an OCR misread can never renumber a
 // book silently — a mismatch is flagged instead.
-const GREEK_LETTER_ORDINALS: Record<string, number> = {
+export const GREEK_LETTER_ORDINALS: Record<string, number> = {
   Α: 1, A: 1,
   Β: 2, B: 2,
   Γ: 3,
