@@ -28,6 +28,8 @@
   let inputEl: HTMLInputElement | undefined;
   let lemmata: Record<string, LemmaRef> | null = null;
   let seq = 0; // stale-async guard
+  let boxEl: HTMLDivElement | undefined;
+  let restoreEl: HTMLElement | null = null; // focus to give back on close
 
   function navigate(href: string) {
     close();
@@ -36,6 +38,7 @@
   }
 
   export async function openPalette() {
+    restoreEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     open = true;
     query = '';
     items = [];
@@ -48,6 +51,8 @@
     open = false;
     query = '';
     items = [];
+    restoreEl?.focus();
+    restoreEl = null;
   }
 
   function onWindowKey(e: KeyboardEvent) {
@@ -125,6 +130,18 @@
 
   $: if (open) compute(query);
 
+  // aria-modal promises focus stays inside: wrap Tab within the dialog's
+  // focusable controls (the input + result buttons).
+  function onBoxKey(e: KeyboardEvent) {
+    if (e.key !== 'Tab' || !boxEl) return;
+    const focusables = boxEl.querySelectorAll<HTMLElement>('input, button');
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
   function onInputKey(e: KeyboardEvent) {
     if (e.key === 'ArrowDown') { e.preventDefault(); selected = Math.min(selected + 1, items.length - 1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); selected = Math.max(selected - 1, 0); }
@@ -140,7 +157,8 @@
 
 {#if open}
   <div class="cp-backdrop" on:click={(e) => { if (e.target === e.currentTarget) close(); }} role="presentation">
-    <div class="cp-box" role="dialog" aria-modal="true" aria-label="Jump to a work, citation, or lemma" tabindex="-1">
+    <div class="cp-box" role="dialog" aria-modal="true" aria-label="Jump to a work, citation, or lemma" tabindex="-1"
+         bind:this={boxEl} on:keydown={onBoxKey}>
       <input
         class="cp-input"
         type="text"
