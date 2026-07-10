@@ -27,6 +27,7 @@ type Card =
 interface Division {
   numeral: string;
   title: string;
+  appendix: boolean;                              // spurious appendix — no numeral, set off by a rule
   count: number;                                  // total cards (works + soon)
   groups: { ref?: string; label?: string; cards: Card[] }[];
 }
@@ -44,7 +45,7 @@ const divisions: Division[] = CATEGORIES.map((cat) => {
     ? cat.subcategories.map((sub) => ({ ref: sub.ref, label: sub.label, cards: toCards(sub.works) }))
     : [{ cards: toCards(cat.works ?? []) }];
   const count = groups.reduce((n, g) => n + g.cards.length, 0);
-  return { numeral: cat.numeral, title: cat.title, count, groups };
+  return { numeral: cat.numeral, title: cat.title, appendix: !!cat.appendix, count, groups };
 });
 
 // Structured data: identify the site (WebSite) and enumerate every built work as
@@ -148,10 +149,10 @@ const structuredData = Astro.site
 
     <div class="toc">
       {divisions.map((d) => (
-        <section class="cat">
+        <section class={d.appendix ? 'cat cat-appendix' : 'cat'}>
           <button class="cat-toggle" type="button" aria-expanded="false">
             <span class="cat-head">
-              <span class="cat-num">{d.numeral}.</span> {d.title}
+              {d.numeral && <span class="cat-num">{d.numeral}.</span>} {d.title}
               <span class="cat-count">· {d.count} work{d.count > 1 ? 's' : ''}</span>
             </span>
             <span class="cat-chev" aria-hidden="true"></span>
@@ -353,6 +354,11 @@ const structuredData = Astro.site
       text-transform: uppercase;
       color: var(--text-light);
     }
+    /* Appendix — the spurious works, set OUTSIDE the numbered corpus above and
+       separated by a stronger rule + extra space. */
+    .cat-appendix { margin-top: 2.4rem; padding-top: 1.7rem; border-top: 2px solid var(--border); }
+    .cat-appendix .cat-toggle { margin-top: 0; }
+    .cat-appendix .cat-head { font-style: italic; }
     /* Chevron shown only on mobile (where the header is a real toggle). */
     .cat-chev {
       align-self: center;

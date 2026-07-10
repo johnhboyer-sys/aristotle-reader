@@ -1207,10 +1207,14 @@ export interface SubCategory {
 }
 
 export interface Category {
-  numeral: string;  // 'I'
+  numeral: string;  // 'I' — empty for an appendix section (rendered without a numeral)
   title: string;    // 'Logic (Organon)'
   works?: CategoryWork[];          // direct works (no sub-division)
   subcategories?: SubCategory[];
+  // An appendix sits OUTSIDE the numbered corpus divisions: the doubtful/spurious
+  // works transmitted under Aristotle's name but not by him. Rendered after the
+  // numbered divisions, set off by a rule, with no Roman numeral.
+  appendix?: boolean;
 }
 
 export const CATEGORIES: Category[] = [
@@ -1239,14 +1243,6 @@ export const CATEGORIES: Category[] = [
           { id: 'GC' },
           { id: 'Mete' },
           { id: 'DA' },
-          { id: 'DM' },
-          { id: 'Mech' },
-          { id: 'Col' },
-          { id: 'Phgn' },
-          { id: 'Aud' },
-          { id: 'Lin' },
-          { id: 'Vent' },
-          { id: 'Mirab' },
         ],
       },
       {
@@ -1280,7 +1276,6 @@ export const CATEGORIES: Category[] = [
     title: 'Metaphysics',
     works: [
       { id: 'Meta' },
-      { id: 'MXG' },
     ],
   },
   {
@@ -1290,8 +1285,6 @@ export const CATEGORIES: Category[] = [
       { id: 'EN' },
       { id: 'EE' },
       { id: 'Pol' },
-      { id: 'Oec' },
-      { id: 'VV' },
     ],
   },
   {
@@ -1300,6 +1293,27 @@ export const CATEGORIES: Category[] = [
     works: [
       { id: 'Rhet' },
       { id: 'Poet' },
+    ],
+  },
+  // Appendix — the doubtful/spurious works transmitted under Aristotle's name but
+  // judged not to be by him. Grouped OUTSIDE the numbered divisions (no numeral);
+  // each card still carries its Dubious/Spurious badge.
+  {
+    numeral: '',
+    title: 'Spurious Works',
+    appendix: true,
+    works: [
+      { id: 'DM' },
+      { id: 'MXG' },
+      { id: 'Mech' },
+      { id: 'Col' },
+      { id: 'Aud' },
+      { id: 'Phgn' },
+      { id: 'Mirab' },
+      { id: 'Lin' },
+      { id: 'Vent' },
+      { id: 'VV' },
+      { id: 'Oec' },
     ],
   },
   // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's
