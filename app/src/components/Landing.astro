@@ -10,11 +10,11 @@ import ThemeToggle from './ThemeToggle.astro';
 import {
   AUTHENTICITY_LABEL, getWork, bookLabel, isBookless, workPath, visibleTranslations,
   furtherReading, inPrintHref, workLanding, resourcesFor,
-} from '../lib/works';
+} from '@shared/lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import { sanitizeHtml } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
-import '../styles/global.css';
+import '@shared/styles/global.css';
 
 interface Props { workId: string; }
 const { workId } = Astro.props as Props;

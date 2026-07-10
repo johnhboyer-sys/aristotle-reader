@@ -1,9 +1,9 @@
 ---
-import Search from '../components/Search.svelte';
+import Search from '@shared/components/Search.svelte';
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { jsonLdSafe } from '../lib/jsonld';
-import '../styles/global.css';
+import '@shared/styles/global.css';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const searchDescription =
   'Search the complete works of Aristotle across the original Greek and English' +

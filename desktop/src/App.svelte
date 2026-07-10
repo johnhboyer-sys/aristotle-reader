@@ -4,18 +4,18 @@
   // (work + book) with a keyed remount; jump-ins reuse the Reader's existing
   // URL contract (?loc=column:line, #hash) via history.replaceState, so the
   // Reader needs no desktop-specific changes.
-  import Reader from '../../app/src/components/Reader.svelte';
-  import { getWork, bookLabel, visibleTranslations } from '../../app/src/lib/works';
-  import { parseBekker } from '../../app/src/lib/data';
+  import Reader from '@shared/components/Reader.svelte';
+  import { getWork, bookLabel, visibleTranslations } from '@shared/lib/works';
+  import { parseBekker } from '@shared/lib/data';
   import { entryByDataId } from './lib/corpus';
   import { isTauri, type DataLayerInfo } from './lib/runtime';
   import LibraryRail from './components/LibraryRail.svelte';
-  import BekkerJumpDesktop from './components/BekkerJumpDesktop.svelte';
+  import BekkerJump from '@shared/components/BekkerJump.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import LexiconIndex from './components/LexiconIndex.svelte';
   import LexiconEntry from './components/LexiconEntry.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
-  import Search from '../../app/src/components/Search.svelte';
+  import Search from '@shared/components/Search.svelte';
   import { getImportCitation, type ImportSummary } from './lib/imports';
   import AnnotationsPanel from './components/AnnotationsPanel.svelte';
   import { exportLibrary, reportProblem } from './lib/export';
@@ -982,7 +982,7 @@
       <h1>{meta?.title ?? workId}{titleSuffix}</h1>
       <span class="dt-spacer"></span>
       {#if !busse}
-        <BekkerJumpDesktop work={workId} onJump={onBekkerJump} />
+        <BekkerJump work={workId} onJump={onBekkerJump} />
       {/if}
       <button class="dt-cite" on:click={() => (searchOpen = true)} title="Search the corpus (⌘K)">
         Search

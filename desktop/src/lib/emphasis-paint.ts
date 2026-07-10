@@ -1,5 +1,5 @@
 // Paints imported-translation markdown emphasis (italic/bold) onto the
-// rendered Reader DOM — desktop-only, zero app/src changes.
+// rendered Reader DOM — desktop-only, zero shared-reader changes.
 //
 // THE GATE (see the design brief this file answers): overlay pieces are
 // plain text rendered by the site's own Reader.svelte (flowParts/transFlow),
@@ -14,7 +14,7 @@
 // background-color/text-decoration — never font-style). So italics/bold
 // cannot be painted the same way annotations are.
 //
-// The route that DOES work without touching app/src: real DOM surgery. The
+// The route that DOES work without touching the shared reader: real DOM surgery. The
 // Reader's rendered prose is ordinary text nodes inside `.ross-prose` — this
 // module resolves each import's stored EmphasisRange (offsets into one
 // overlay PIECE's own text — see import-align.ts's emitOverlayPieces) to a

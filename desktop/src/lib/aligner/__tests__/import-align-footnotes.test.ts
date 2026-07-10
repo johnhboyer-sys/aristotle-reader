@@ -7,7 +7,7 @@
 // this codebase) worth its own focused coverage.
 
 import { describe, expect, it } from 'vitest';
-import type { BookData } from '../../../../../app/src/lib/data';
+import type { BookData } from '@shared/lib/data';
 import { emitOverlayPieces, type ChapterAlignment } from '../import-align';
 
 describe('emitOverlayPieces: footnote marker re-insertion (§B3)', () => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { WORKS, WORK_ORDER, workPath } from '../lib/works';
+  import { WORKS, WORK_ORDER, workPath } from '@shared/lib/works';
   const SORTED_WORKS = [...WORKS].sort((a, b) =>
     (WORK_ORDER.get(a.id) ?? 999) - (WORK_ORDER.get(b.id) ?? 999)
   );

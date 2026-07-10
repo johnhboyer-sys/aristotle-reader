@@ -12,7 +12,7 @@
 // Pure data-in/data-out: no fetch, no fs — callers supply the shards, so the
 // same module runs in the app (fetch), in Node scripts (fs), and in tests.
 
-import type { BookData, ChapterRef, Segment } from '../../../../app/src/lib/data';
+import type { BookData, ChapterRef, Segment } from '@shared/lib/data';
 import type { ChapterInput, RefAnchor, GreekLine } from './engine';
 
 /** Greek word count of a line (whitespace split, like the pipeline). */

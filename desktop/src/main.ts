@@ -7,7 +7,7 @@ import '@fontsource/cardo/400-italic.css';
 import '@fontsource/eb-garamond/400.css';
 import '@fontsource/eb-garamond/400-italic.css';
 import '@fontsource/eb-garamond/600.css';
-import '../../app/src/styles/global.css';
+import '@shared/styles/global.css';
 import './desktop.css';
 import { mount } from 'svelte';
 import { initDataLayer } from './lib/runtime';

@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs';
 import ThemeInit from '../../components/ThemeInit.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
 import { jsonLdSafe } from '../../lib/jsonld';
-import { greekFold } from '../../lib/search';
-import '../../styles/global.css';
+import { greekFold } from '@shared/lib/search';
+import '@shared/styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 

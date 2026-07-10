@@ -3,7 +3,7 @@ import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { sanitizeHtml } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
-import '../styles/global.css';
+import '@shared/styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 

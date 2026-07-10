@@ -10,10 +10,10 @@
 import { readFileSync } from 'node:fs';
 import ThemeInit from './ThemeInit.astro';
 import ThemeToggle from './ThemeToggle.astro';
-import { getWork, workPath, workLanding, bookLabel, isBookless } from '../lib/works';
+import { getWork, workPath, workLanding, bookLabel, isBookless } from '@shared/lib/works';
 import { sanitizeHtml } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
-import '../styles/global.css';
+import '@shared/styles/global.css';
 
 interface Props { slug: string; }
 const { slug } = Astro.props as Props;

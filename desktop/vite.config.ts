@@ -1,10 +1,11 @@
 // Vite config for the desktop (Tauri) shell.
 //
-// The frontend deliberately reuses the website's Svelte components and libs
-// from ../app/src — this project adds only the desktop chrome (library rail,
-// top bar) and the runtime data layer. Two things make that reuse work here:
+// The frontend reuses the shared reader core (components, libs, global.css)
+// from ../shared via the @shared alias — this project adds only the desktop
+// chrome (library rail, top bar) and the runtime data layer. Two things make
+// that reuse work here:
 //
-//  1. `server.fs.allow` opens the repo root so Vite may serve ../app/src files.
+//  1. `server.fs.allow` opens the repo root so Vite may serve ../shared files.
 //  2. A tiny dev middleware serves /data/* from the pipeline's build/dist
 //     directory AT RUNTIME (the website resolves this at Astro build time via a
 //     public/data symlink; the desktop app must not bake the corpus into the
@@ -45,6 +46,11 @@ function serveCorpusData() {
 
 export default defineConfig({
   plugins: [svelte(), serveCorpusData()],
+  resolve: {
+    alias: {
+      '@shared': path.resolve(repoRoot, 'shared'),
+    },
+  },
   // The owner's local builds carry the private (copyright-encumbered)
   // translations, like the site's `npm run dev`. A DISTRIBUTABLE build
   // (scripts/package-app.mjs) sets DESKTOP_PUBLIC=1, which flips this off —
@@ -58,12 +64,6 @@ export default defineConfig({
     port: 1420,
     strictPort: true,
     fs: { allow: [repoRoot] },
-  },
-  // Reused files under ../app/src would make esbuild discover app/tsconfig.json,
-  // which extends astro/tsconfigs/strict — not installed here. Pin the only
-  // flags esbuild actually consumes instead of resolving tsconfigs from disk.
-  esbuild: {
-    tsconfigRaw: '{"compilerOptions":{"useDefineForClassFields":true,"verbatimModuleSyntax":true}}',
   },
   // Tauri's macOS webview is modern WebKit; ES2022 allows the top-level await
   // in main.ts (data layer init before mount).

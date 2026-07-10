@@ -109,7 +109,7 @@ describe('Reader.svelte', () => {
 
   it('renders sidecar English paragraph markers as paragraph breaks', async () => {
     window.history.replaceState(null, '', '/EN/book/1?trans=rackham');
-    const book = structuredClone(fixtureBook);
+    const book: BookData = structuredClone(fixtureBook);
     book.segments[0].english = {
       text: 'First paragraph. Second paragraph.',
       notes: [],
@@ -126,7 +126,7 @@ describe('Reader.svelte', () => {
 
   it('keeps English prose without paragraph markers on the existing flat path', async () => {
     window.history.replaceState(null, '', '/EN/book/1?trans=rackham');
-    const book = structuredClone(fixtureBook);
+    const book: BookData = structuredClone(fixtureBook);
     book.segments[0].english = {
       text: 'First paragraph. Second paragraph.',
       notes: [],
@@ -142,7 +142,7 @@ describe('Reader.svelte', () => {
 
   it('keeps existing sidenote and figure inline markers out of rendered prose', async () => {
     window.history.replaceState(null, '', '/Isa/book/1');
-    const book = structuredClone(fixtureBook);
+    const book: BookData = structuredClone(fixtureBook);
     book.segments[0].english = {
       text: 'Alpha [[s1]] beta [[fig2]] gamma.',
       notes: [],

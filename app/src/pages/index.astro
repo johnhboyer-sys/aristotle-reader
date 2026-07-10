@@ -1,10 +1,10 @@
 ---
-import { AUTHENTICITY_LABEL, CATEGORIES, getWork, workLanding, type Work } from '../lib/works';
+import { AUTHENTICITY_LABEL, CATEGORIES, getWork, workLanding, type Work } from '@shared/lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { jsonLdSafe } from '../lib/jsonld';
-import '../styles/global.css';
+import '@shared/styles/global.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
