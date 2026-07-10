@@ -544,6 +544,53 @@ describe('repairSkeleton SEAT-chapter directive', () => {
     expect(outcome.changes.some((c) => c.evidence?.kind === 'seat-chapter-conflict')).toBe(true);
   });
 
+  it('refuses an anchor that resolves to a structural heading line', () => {
+    // "SEAT-chapter 1.2 => BOOK B" passes the sequence gate (walk is at book
+    // 1, chapter 1) but would stack CHAPTER 2 against the BOOK B heading and
+    // steal book B's opening — refuse, and the heading still normalizes.
+    const raw = pages([
+      `[running head]\n${IND}BOOK A\n     body A\n${IND}BOOK B\n     body B`,
+    ]);
+    const outcome = repairSkeleton(raw, apostleConfig(), seats('SEAT-chapter 1.2 => BOOK B'));
+    expect(outcome.text).not.toContain('CHAPTER 2');
+    expect(outcome.text).toContain('BOOK TWO');
+    const flag = outcome.changes.find((c) => c.evidence?.kind === 'seat-chapter-anchor-is-heading');
+    expect(flag).toBeDefined();
+  });
+
+  it('refuses an anchor that resolves to a bare chapter numeral line', () => {
+    const raw = pages([
+      `[running head]\n${IND}BOOK A\n${CH}2\n     alpha ch2 body`,
+    ]);
+    // The bare "2" line is the only line containing "2" at that shape; anchor
+    // it directly — must refuse (it IS the chapter heading, not a body line).
+    // Built as an object: parseDecisions strips leading whitespace, so a
+    // spaces+numeral anchor can only arise programmatically.
+    const outcome = repairSkeleton(raw, apostleConfig(), {
+      checkedPatterns: new Set<string>(),
+      seatChapters: [{ book: 1, chapter: 2, anchor: `${CH}2` }],
+    });
+    const seatsApplied = outcome.changes.filter((c) => c.evidence?.kind === 'seat-chapter');
+    expect(seatsApplied).toHaveLength(0);
+    expect(outcome.changes.some((c) => c.evidence?.kind === 'seat-chapter-anchor-is-heading')).toBe(true);
+    // The printed numeral still becomes the real CHAPTER 2 heading.
+    expect(outcome.text).toContain(`${IND}CHAPTER 2`);
+  });
+
+  it('locates refusal flags in the post-walk text', () => {
+    // The ambiguous anchor's occurrences sit below the synthesized CHAPTER 1
+    // splice, so their pre-walk line indices are one too low — the flag must
+    // carry the post-walk position (where a reader of the record will look).
+    const raw = pages([
+      `[running head]\n${IND}BOOK A\n     alpha repeated phrase\n     beta repeated phrase`,
+    ]);
+    const outcome = repairSkeleton(raw, apostleConfig(), seats('SEAT-chapter 1.2 => repeated phrase'));
+    const flag = outcome.changes.find((c) => c.evidence?.kind === 'seat-chapter-anchor-ambiguous');
+    expect(flag).toBeDefined();
+    const outLines = outcome.text.split('\f')[0].split('\n');
+    expect(outLines[flag!.line!]).toContain('alpha repeated phrase');
+  });
+
   it('is byte-identical with no directives (gating)', () => {
     const raw = pages([
       `[running head]\n${IND}BOOK A\n${CH}2\n     alpha ch2 body\n     some body line`,

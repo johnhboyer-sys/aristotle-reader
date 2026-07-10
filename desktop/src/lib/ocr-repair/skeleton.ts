@@ -372,9 +372,16 @@ function applyHeadingNormalize(
 
   // SEAT-chapter directives (John's ground truth for chapter numerals the
   // scan dropped). Each anchor must resolve to exactly ONE line in the whole
-  // corpus — an ambiguous or absent anchor is flagged up front and never
-  // seats, mirroring the tick SEAT contract.
-  const seatChapters = (decisions?.seatChapters ?? []).map((d) => ({ ...d, done: false }));
+  // corpus, and no two directives may resolve to the same line — either
+  // failure refuses the seat, mirroring the tick SEAT contract. Refusal
+  // FLAGS are emitted after the walk (not here) so their recorded page/line
+  // is located in the post-walk text — a pre-walk position drifts when the
+  // walk splices heading lines above it.
+  const seatChapters = (decisions?.seatChapters ?? []).map((d) => ({
+    ...d,
+    done: false,
+    fail: undefined as { kind: string; matches?: number; collidesWith?: string[] } | undefined,
+  }));
   const seatLines = new Map<string, typeof seatChapters>();
   for (const seat of seatChapters) {
     let matches = 0;
@@ -393,16 +400,7 @@ function applyHeadingNormalize(
     }
     if (matches !== 1) {
       seat.done = true;
-      changes.push({
-        id: nextId(firstPage, firstLine, undefined),
-        stage: 2,
-        tier: 2,
-        rule: 'flag',
-        page: firstPage,
-        line: firstLine,
-        before: seat.anchor,
-        evidence: { kind: 'seat-chapter-anchor-ambiguous', book: seat.book, chapter: seat.chapter, matches },
-      });
+      seat.fail = { kind: 'seat-chapter-anchor-ambiguous', matches };
       continue;
     }
     const key = `${firstPage}:${firstLine}`;
@@ -415,20 +413,10 @@ function applyHeadingNormalize(
     if (collided.length < 2) continue;
     for (const seat of collided) {
       seat.done = true;
-      changes.push({
-        id: nextId(0, undefined, undefined),
-        stage: 2,
-        tier: 2,
-        rule: 'flag',
-        page: 0,
-        before: seat.anchor,
-        evidence: {
-          kind: 'seat-chapter-anchor-collision',
-          book: seat.book,
-          chapter: seat.chapter,
-          collidesWith: collided.filter((s) => s !== seat).map((s) => `${s.book}.${s.chapter}`),
-        },
-      });
+      seat.fail = {
+        kind: 'seat-chapter-anchor-collision',
+        collidesWith: collided.filter((s) => s !== seat).map((s) => `${s.book}.${s.chapter}`),
+      };
     }
   }
 
@@ -450,8 +438,20 @@ function applyHeadingNormalize(
       const seat = seatChapters.find((s) => !s.done && content.includes(s.anchor));
       if (seat) {
         seat.done = true;
+        // The anchor must name a BODY line. An anchor that resolves to a
+        // structural heading line — a BOOK heading, a CHAPTER heading, or a
+        // bare chapter numeral in a bare-numeral edition — would stack a
+        // synthesized heading against a real one and corrupt the division
+        // structure, so it is refused (and the heading line then gets its
+        // normal walk treatment below).
+        const bareNumeral =
+          config.headingStyle?.chapterNumeral === 'bare' ? /^(\s*)([0-9IlrOoSsZz|]{1,3})\s*$/u.exec(content) : null;
+        const anchorIsHeading =
+          /^BOOK\s+\S{1,12}$/iu.test(trimmed) ||
+          /^CHAPTER\s+\S{1,8}(?:\s\S{1,4})?$/iu.test(trimmed) ||
+          (bareNumeral !== null && bareNumeral[1].length >= 8);
         const maxChapters = book >= 1 ? config.divisions.chaptersPerBook[book - 1] ?? Number.MAX_SAFE_INTEGER : 0;
-        if (seat.book === book && seat.chapter === chapter + 1 && seat.chapter <= maxChapters) {
+        if (!anchorIsHeading && seat.book === book && seat.chapter === chapter + 1 && seat.chapter <= maxChapters) {
           lines.splice(line, 0, `${' '.repeat(bookHeadingLeading)}CHAPTER ${seat.chapter}`);
           changes.push({
             id: nextId(page, line, bookHeadingLeading),
@@ -479,7 +479,7 @@ function applyHeadingNormalize(
           line,
           before: seat.anchor,
           evidence: {
-            kind: 'seat-chapter-conflict',
+            kind: anchorIsHeading ? 'seat-chapter-anchor-is-heading' : 'seat-chapter-conflict',
             book: seat.book,
             chapter: seat.chapter,
             walkBook: book,
@@ -774,21 +774,41 @@ function applyHeadingNormalize(
     }
   }
 
-  // A directive whose unique anchor line the walk never visited (it fell on a
-  // page-head line the walk skips) would otherwise vanish silently — surface it.
+  // Emit refusal flags for pre-flight failures (ambiguous/collision) and for
+  // any directive whose unique anchor line the walk never visited (it fell on
+  // a page-head line the walk skips). Located here, AFTER the walk, so each
+  // flag's page/line points at the anchor's first occurrence in the post-walk
+  // text — the text the record's reader will actually consult.
   for (const seat of seatChapters) {
-    if (seat.done) continue;
+    if (seat.done && !seat.fail) continue;
+    let flagPage = 0;
+    let flagLine: number | undefined;
+    outer: for (let page = 0; page < pages.length; page += 1) {
+      const lines = pages[page].lines;
+      for (let line = 0; line < lines.length; line += 1) {
+        if (!stripCr(lines[line]).includes(seat.anchor)) continue;
+        flagPage = page;
+        flagLine = line;
+        break outer;
+      }
+    }
     changes.push({
-      id: nextId(0, undefined, undefined),
+      id: nextId(flagPage, flagLine, undefined),
       stage: 2,
       tier: 2,
       rule: 'flag',
-      page: 0,
+      page: flagPage,
+      line: flagLine,
       before: seat.anchor,
-      evidence: { kind: 'seat-chapter-unapplied', book: seat.book, chapter: seat.chapter },
+      evidence: {
+        kind: seat.fail?.kind ?? 'seat-chapter-unapplied',
+        book: seat.book,
+        chapter: seat.chapter,
+        ...(seat.fail?.matches !== undefined ? { matches: seat.fail.matches } : {}),
+        ...(seat.fail?.collidesWith ? { collidesWith: seat.fail.collidesWith } : {}),
+      },
     });
   }
-
 }
 
 function getFolioCandidate(page: number, lines: string[]): FolioCandidate | null {
