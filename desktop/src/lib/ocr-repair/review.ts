@@ -71,6 +71,16 @@ export interface ReviewDecisions {
    * Consumed app-side by import-align, not by the layout pipeline.
    */
   noTicks?: string[];
+  /**
+   * Chapter headings whose printed numeral the scan dropped, re-seated from
+   * John's ground truth (`SEAT-chapter <book>.<n> => <anchor>`). `anchor` is a
+   * unique on-line substring marking the body line the lost chapter opens on;
+   * the skeleton pass (stage 2) splices a synthesized `CHAPTER n` heading
+   * above it, sequence-forced against the walk's running book/chapter count
+   * (a misplaced directive is flagged, never inserted). Per-corpus DATA, so
+   * the held-out neutrality gate is untouched.
+   */
+  seatChapters?: { book: number; chapter: number; anchor: string }[];
 }
 
 // Diagnostic categories carry no decision \u2014 thousands of instances would
@@ -205,5 +215,9 @@ export function parseDecisions(md: string): ReviewDecisions {
   for (const match of md.matchAll(/^NOTICK\s+(.+?)\s*$/gmu)) {
     for (const ref of match[1].split(/\s+/u)) if (ref) noTicks.push(ref);
   }
-  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks };
+  const seatChapters: { book: number; chapter: number; anchor: string }[] = [];
+  for (const match of md.matchAll(/^SEAT-chapter\s+(\d+)\.(\d+)\s+=>\s+(.+?)\s*$/gmu)) {
+    seatChapters.push({ book: Number(match[1]), chapter: Number(match[2]), anchor: match[3] });
+  }
+  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks, seatChapters };
 }

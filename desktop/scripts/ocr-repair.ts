@@ -64,7 +64,7 @@ const STAGES: Stage[] = [
   {
     n: 2,
     name: 'skeleton',
-    run: (text, config) => repairSkeleton(text, config),
+    run: (text, config, context) => repairSkeleton(text, config, context.decisions),
   },
   {
     n: 3,
