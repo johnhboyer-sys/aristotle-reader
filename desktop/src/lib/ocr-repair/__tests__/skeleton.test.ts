@@ -328,3 +328,68 @@ describe('repairSkeleton page-head stray strip', () => {
     expect(outcome.changes.some((c) => c.evidence?.kind === 'page-head-running-strip')).toBe(false);
   });
 });
+
+describe('repairSkeleton config-declared heading style (Apostle format)', () => {
+  const IND = ' '.repeat(35); // centred book/chapter heading indent
+  const CH = ' '.repeat(12); // printed bare chapter numeral indent (shallow)
+  function apostleConfig(): CorpusConfig {
+    return {
+      ...config(),
+      id: 'apostle-like',
+      divisions: { books: 2, chaptersPerBook: [5, 5] },
+      headingStyle: { bookOrdinal: 'greek-letter', chapterNumeral: 'bare' },
+    };
+  }
+
+  it('normalizes single-letter books, synthesizes chapter 1, and re-seats bare chapters', () => {
+    const raw = pages([
+      // Book A opens mid-page (running head above it, as at a body start).
+      `[running head]\n${IND}BOOK A\n${CH}2\n     alpha ch2 body\n${CH}3\n     alpha ch3 body`,
+      // Book B opens a fresh page — first line is the heading, no head, no
+      // labelled chapter; the "4" is a self-heal over a dropped "3".
+      `${IND}BOOK B\n${CH}2\n     beta ch2 body\n${CH}4\n     beta ch4 body`,
+    ]);
+    const outcome = repairSkeleton(raw, apostleConfig());
+
+    // Books resolve to spelled English; both survive as headings.
+    expect(outcome.text).toContain('BOOK ONE');
+    expect(outcome.text).toContain('BOOK TWO');
+    expect(outcome.text).not.toMatch(/BOOK [AB]\b/);
+
+    // Book B got a running-head placeholder inserted above its heading.
+    const bookBPage = outcome.text.split('\f')[1];
+    expect(bookBPage.startsWith('[running head]')).toBe(true);
+    expect(
+      outcome.changes.some(
+        (c) => c.rule === 'head-insert' && /letter-ordinal book-opening/.test(String(c.evidence?.reason))
+      )
+    ).toBe(true);
+
+    // Each book's unlabelled opening chapter is synthesized as CHAPTER 1, and
+    // printed bare numerals become keyworded chapters at the heading indent
+    // (so they clear the converter's LEFT_MIN gate — not their shallow print col).
+    expect(outcome.text).toContain(`${IND}CHAPTER 1`);
+    expect(outcome.text).toContain(`${IND}CHAPTER 2`);
+    expect(outcome.text).toContain(`${IND}CHAPTER 3`);
+    expect(outcome.text).not.toMatch(new RegExp(`^${CH}\\d`, 'm'));
+
+    // The dropped "3" in book B is skipped by a logged self-heal, not stalled.
+    const heal = outcome.changes.find((c) => c.evidence?.kind === 'bare-chapter-numeral' && c.evidence?.got === 4);
+    expect(heal).toBeDefined();
+    expect(heal?.evidence?.lostNumerals).toBe(1);
+    expect(outcome.text).toContain(`${IND}CHAPTER 4`);
+  });
+
+  it('is a no-op without headingStyle — single-letter books and bare numerals stay body text', () => {
+    const raw = pages([
+      `[running head]\n${IND}BOOK A\n${CH}2\n     alpha body`,
+      `${IND}BOOK B\n${CH}2\n     beta body`,
+    ]);
+    const outcome = repairSkeleton(raw, config());
+    expect(outcome.text).toContain('BOOK A');
+    expect(outcome.text).toContain('BOOK B');
+    expect(outcome.text).not.toContain('BOOK ONE');
+    expect(outcome.text).not.toContain('CHAPTER 1');
+    expect(outcome.changes.some((c) => c.rule === 'heading-normalize')).toBe(false);
+  });
+});

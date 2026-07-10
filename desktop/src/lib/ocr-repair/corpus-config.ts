@@ -57,6 +57,28 @@ export interface CorpusConfig {
    */
   chapterTitles?: boolean;
   /**
+   * Declared division-heading numbering style, for editions whose headings the
+   * frozen converter cannot parse as printed. Absent (the Clarendon PA/APo
+   * default) → every field below is a no-op and stage 2 is unchanged. All
+   * rewrites are sequence-forced (the value must equal the next expected book/
+   * chapter) so an OCR misread is flagged, never silently renumbered.
+   *
+   *   bookOrdinal 'greek-letter' — books are labelled with a single Greek (or
+   *     OCR-Latin) letter, e.g. Apostle's "BOOK A" / "BOOK B". Normalized to
+   *     the spelled English ordinal ("BOOK ONE" / "BOOK TWO") the converter
+   *     understands.
+   *   chapterNumeral 'bare' — chapters print as a standalone centred arabic
+   *     numeral with no CHAPTER keyword. Rewritten to "CHAPTER N" so the
+   *     converter accepts them in a multi-book work (§5 accepts bare-numeral
+   *     chapters for single-book works only). The unlabelled opening chapter of
+   *     each book (the print starts the numbering at "2") is synthesized as
+   *     "CHAPTER 1".
+   */
+  headingStyle?: {
+    bookOrdinal?: 'greek-letter';
+    chapterNumeral?: 'bare';
+  };
+  /**
    * Stage-1 slice boundaries, pattern-driven so an unseen edition needs only
    * config. Patterns are regex sources tested line-by-line against a page;
    * the first page with a matching line is the boundary. Cuts happen at page

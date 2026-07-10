@@ -38,7 +38,8 @@ const GREEK_ORDINALS: Record<string, { english: string; value: number }> = {
   KAPPA: { english: 'TEN', value: 10 },
 };
 
-const SPELLED_ORDINALS = new Set([
+const SPELLED = [
+  '',
   'ONE',
   'TWO',
   'THREE',
@@ -59,7 +60,47 @@ const SPELLED_ORDINALS = new Set([
   'EIGHTEEN',
   'NINETEEN',
   'TWENTY',
-]);
+];
+
+const SPELLED_ORDINALS = new Set(SPELLED.filter((w) => w !== ''));
+
+function spelledOrdinal(value: number): string | null {
+  return SPELLED[value] ?? null;
+}
+
+// Single-letter book ordinals: the classical 24-letter Greek alphabet used for
+// book numbering (Aristotle's editors letter books Α=1 … Ω=24), plus the
+// OCR-Latin lookalikes a rough scan produces for them. Consulted ONLY when a
+// corpus config declares headingStyle.bookOrdinal === 'greek-letter', and every
+// hit is sequence-forced against the running book count, so the collisions with
+// Roman-numeral letters (I, K→none, X…) or an OCR misread can never renumber a
+// book silently — a mismatch is flagged instead.
+const GREEK_LETTER_ORDINALS: Record<string, number> = {
+  Α: 1, A: 1,
+  Β: 2, B: 2,
+  Γ: 3,
+  Δ: 4,
+  Ε: 5, E: 5,
+  Ζ: 6,
+  Η: 7, H: 7,
+  Θ: 8,
+  Ι: 9, I: 9,
+  Κ: 10, K: 10,
+  Λ: 11,
+  Μ: 12, M: 12,
+  Ν: 13, N: 13,
+  Ξ: 14,
+  Ο: 15, O: 15,
+  Π: 16,
+  Ρ: 17, P: 17,
+  Σ: 18,
+  Τ: 19, T: 19,
+  Υ: 20, Y: 20,
+  Φ: 21,
+  Χ: 22, X: 22,
+  Ψ: 23,
+  Ω: 24,
+};
 
 const CONFUSION_RE = /^[0-9IlrOoSsZz|]+$/;
 
@@ -249,15 +290,44 @@ function applyPageHeadStrayStrip(pages: PageLines[], changes: ChangeRecord[], ne
   }
 }
 
-function applyHeadInsert(pages: PageLines[], changes: ChangeRecord[], nextId: ReturnType<typeof changeFactory>, placeholder: string): void {
+function applyHeadInsert(pages: PageLines[], changes: ChangeRecord[], nextId: ReturnType<typeof changeFactory>, placeholder: string, config: CorpusConfig): void {
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page].lines;
     const first = firstNonBlankLine(lines);
     if (first === null) continue;
+    const firstTrimmed = stripCr(lines[first]).trim();
+
+    // Letter-ordinal editions (Apostle) open a book on a fresh page with the
+    // division heading as the first line and NO running head above it and NO
+    // labelled chapter after it. The frozen converter strips line 1 as the
+    // page head, so the book heading would vanish. Insert the placeholder;
+    // the CHAPTER-1 pair rule below can't fire here (chapter 1 is unlabelled).
+    if (config.headingStyle?.bookOrdinal === 'greek-letter') {
+      const bookLetter = /^BOOK\s+(\S{1,2})$/iu.exec(firstTrimmed);
+      const letter = bookLetter?.[1];
+      if (
+        letter &&
+        (GREEK_LETTER_ORDINALS[letter] ?? GREEK_LETTER_ORDINALS[letter.toUpperCase()]) !== undefined
+      ) {
+        pages[page].lines = [placeholder, '', ...lines];
+        changes.push({
+          id: nextId(page, 0, undefined),
+          stage: 2,
+          tier: 1,
+          rule: 'head-insert',
+          page,
+          line: 0,
+          before: '',
+          after: placeholder,
+          evidence: { reason: 'letter-ordinal book-opening page, running head absent', firstLine: firstTrimmed },
+        });
+        continue;
+      }
+    }
+
     const second = firstNonBlankLine(lines, first + 1);
     if (second === null) continue;
 
-    const firstTrimmed = stripCr(lines[first]).trim();
     const secondTrimmed = stripCr(lines[second]).trim();
     const chapterMatch = /^CHAPTER\s+(\S.*)$/iu.exec(secondTrimmed);
     if (!/^BOOK\s+\S+/iu.test(firstTrimmed) || !chapterMatch) continue;
@@ -287,10 +357,20 @@ function applyHeadInsert(pages: PageLines[], changes: ChangeRecord[], nextId: Re
 function applyHeadingNormalize(
   pages: PageLines[],
   changes: ChangeRecord[],
-  nextId: ReturnType<typeof changeFactory>
+  nextId: ReturnType<typeof changeFactory>,
+  config: CorpusConfig
 ): void {
   let book = 0;
   let chapter = 0;
+  // The current book heading's centred indent, reused so synthesized/rewritten
+  // chapter headings clear the converter's LEFT_MIN heading gate (a numeral at
+  // its shallow printed indent reads as body text). Safe default until the
+  // first book heading is seen.
+  let bookHeadingLeading = 32;
+  // "CHAPTER 1" lines to splice in after a book heading for bare-numeral
+  // editions (the print leaves the opening chapter unlabelled). Applied after
+  // the walk so line indices stay stable during it.
+  const chapterOneInserts: { page: number; afterLine: number; indent: number }[] = [];
 
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page].lines;
@@ -309,8 +389,56 @@ function applyHeadingNormalize(
         const prefix = `${leading}${keyword}${gap}`;
         const col = tokenCol(prefix);
         const upper = token.toUpperCase();
-        const greek = GREEK_ORDINALS[upper];
         const expectedBook = book + 1;
+
+        // Config-declared single-letter book ordinal (Apostle "BOOK A/B").
+        // Gated, sequence-forced, and terminal for this line.
+        if (config.headingStyle?.bookOrdinal === 'greek-letter') {
+          const letterVal = GREEK_LETTER_ORDINALS[token] ?? GREEK_LETTER_ORDINALS[upper];
+          if (letterVal !== undefined) {
+            const after = spelledOrdinal(letterVal);
+            if (letterVal === expectedBook && after) {
+              lines[line] = restoreCr(`${leading}${keyword} ${after}${suffix}`, hadCr(rawLine));
+              bookHeadingLeading = leading.length;
+              changes.push({
+                id: nextId(page, line, col),
+                stage: 2,
+                tier: 1,
+                rule: 'heading-normalize',
+                page,
+                line,
+                col,
+                before: token,
+                after,
+                evidence: { kind: 'letter-book-ordinal', letter: token, value: letterVal, bookSequence: expectedBook },
+              });
+              book += 1;
+              chapter = 0;
+              if (config.headingStyle?.chapterNumeral === 'bare') {
+                // The book opens with an unlabelled chapter 1; give the
+                // converter its heading and start the count at 1 so the
+                // printed "2" lands on sequence.
+                chapterOneInserts.push({ page, afterLine: line, indent: leading.length });
+                chapter = 1;
+              }
+            } else {
+              changes.push({
+                id: nextId(page, line, col),
+                stage: 2,
+                tier: 2,
+                rule: 'flag',
+                page,
+                line,
+                col,
+                before: token,
+                evidence: { kind: 'book-sequence-conflict', letter: token, value: letterVal, bookSequence: expectedBook },
+              });
+            }
+            continue;
+          }
+        }
+
+        const greek = GREEK_ORDINALS[upper];
 
         if (greek) {
           if (greek.value === expectedBook) {
@@ -458,7 +586,93 @@ function applyHeadingNormalize(
             },
           });
         }
+        continue;
       }
+
+      if (config.headingStyle?.chapterNumeral === 'bare') {
+        // Bare-numeral editions print each chapter as a lone centred numeral
+        // with no CHAPTER keyword. Rewrite to the keyword form the converter
+        // accepts in a multi-book work. Guards against false positives:
+        // (1) centred — left-margin gutter line-marks are excluded;
+        // (2) sequence-forced against the running chapter count;
+        // (3) bounded by the book's declared chapter total.
+        const bare = /^(\s*)([0-9IlrOoSsZz|]{1,3})\s*$/u.exec(content);
+        if (bare && bare[1].length >= 8) {
+          const [, leading, token] = bare;
+          const col = leading.length;
+          const value = shapeNumeral(token).value;
+          const expected = chapter + 1;
+          const maxChapters = config.divisions.chaptersPerBook[book - 1] ?? Number.MAX_SAFE_INTEGER;
+          // Self-healing: accept any centred numeral that advances the count
+          // within a small window and stays inside the book's chapter total.
+          // A forward jump means the scan dropped the intervening chapter
+          // numeral(s) — resync to the surviving one and log the gap, rather
+          // than stalling and flagging every later chapter.
+          const WINDOW = 3;
+          if (value !== null && value > chapter && value <= maxChapters && value <= chapter + WINDOW) {
+            // Re-indent to the book-heading's centred column so the rewritten
+            // heading clears LEFT_MIN (the printed numeral sits too shallow).
+            const headIndent = ' '.repeat(bookHeadingLeading);
+            lines[line] = restoreCr(`${headIndent}CHAPTER ${value}`, hadCr(rawLine));
+            changes.push({
+              id: nextId(page, line, col),
+              stage: 2,
+              tier: value === expected ? 1 : 2,
+              rule: 'heading-normalize',
+              page,
+              line,
+              col,
+              before: token,
+              after: `CHAPTER ${value}`,
+              evidence:
+                value === expected
+                  ? { kind: 'bare-chapter-numeral', book, expectedChapter: expected }
+                  : { kind: 'bare-chapter-numeral', book, expectedChapter: expected, got: value, lostNumerals: value - expected },
+            });
+            chapter = value;
+          } else if (value !== null && value >= 1 && value <= maxChapters) {
+            changes.push({
+              id: nextId(page, line, col),
+              stage: 2,
+              tier: 2,
+              rule: 'flag',
+              page,
+              line,
+              col,
+              before: token,
+              evidence: { kind: 'bare-chapter-unresolved', token, expected, degarbled: value },
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // Splice synthesized "CHAPTER 1" headings after their book heading, deepest
+  // line first per page so earlier line indices stay valid during the splice.
+  const insertsByPage = new Map<number, { afterLine: number; indent: number }[]>();
+  for (const ins of chapterOneInserts) {
+    const list = insertsByPage.get(ins.page) ?? [];
+    list.push({ afterLine: ins.afterLine, indent: ins.indent });
+    insertsByPage.set(ins.page, list);
+  }
+  for (const [page, list] of insertsByPage) {
+    list.sort((a, b) => b.afterLine - a.afterLine);
+    for (const ins of list) {
+      const indent = ' '.repeat(Math.max(0, ins.indent));
+      pages[page].lines.splice(ins.afterLine + 1, 0, `${indent}CHAPTER 1`);
+      changes.push({
+        id: nextId(page, ins.afterLine + 1, ins.indent),
+        stage: 2,
+        tier: 1,
+        rule: 'heading-normalize',
+        page,
+        line: ins.afterLine + 1,
+        col: ins.indent,
+        before: '',
+        after: 'CHAPTER 1',
+        evidence: { kind: 'chapter-one-synthesized', reason: 'bare-numeral edition opens book unlabelled' },
+      });
     }
   }
 }
@@ -658,8 +872,8 @@ export function repairSkeleton(raw: string, config: CorpusConfig): SkeletonOutco
   const nextId = changeFactory();
 
   applyPageHeadStrayStrip(pages, changes, nextId, config.runningHeadPlaceholder);
-  applyHeadInsert(pages, changes, nextId, config.runningHeadPlaceholder);
-  applyHeadingNormalize(pages, changes, nextId);
+  applyHeadInsert(pages, changes, nextId, config.runningHeadPlaceholder, config);
+  applyHeadingNormalize(pages, changes, nextId, config);
   applyFolioRepair(pages, changes, nextId);
   applyBottomFolioStrip(pages, changes, nextId);
 
