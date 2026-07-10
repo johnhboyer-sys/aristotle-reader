@@ -605,6 +605,9 @@ found among ends…</pre>
       </p>
       {#if emphReviewItems.length - emphReviewPos > 1}
         <div class="imp-actions">
+          <button class="imp-quiet" on:click={() => chooseEmphReviewAll('keep')}>
+            Keep all {emphReviewItems.length - emphReviewPos} remaining as emphasis
+          </button>
           <button class="imp-quiet" on:click={() => chooseEmphReviewAll('remove')}>
             Remove markers for all {emphReviewItems.length - emphReviewPos} remaining
           </button>
