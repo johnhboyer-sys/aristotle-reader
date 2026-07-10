@@ -79,6 +79,15 @@ export interface CorpusConfig {
     chapterNumeral?: 'bare';
   };
   /**
+   * Scan-damage trait: the scan's page breaks fall INSIDE our pages, leaking
+   * interior running-head lines ("67   …   Posterior Analytics") into column
+   * bodies, where their numbers read as phantom gutter ticks (a stray "30"
+   * beside the real 82b30). 'strip' blanks any non-page-head line whose whole
+   * content is a short numeral-shaped token followed by the running-head
+   * title (case-insensitive vs runningHeadPlaceholder). Absent → no-op.
+   */
+  interiorRunningHeads?: 'strip';
+  /**
    * Declares structural markup carried by the wording witness. When absent,
    * stage 5 retains its whole-witness candidate search byte-for-byte.
    */

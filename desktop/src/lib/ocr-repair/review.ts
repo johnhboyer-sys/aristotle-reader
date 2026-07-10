@@ -81,6 +81,16 @@ export interface ReviewDecisions {
    * the held-out neutrality gate is untouched.
    */
   seatChapters?: { book: number; chapter: number; anchor: string }[];
+  /**
+   * Body lines stranded at a page's HEAD position by a mid-column scan page
+   * break (`PAD <anchor>`). The frozen converter strips each page's first
+   * line as furniture, silently eating the body text (and any gutter tick on
+   * it). The skeleton pass inserts the running-head placeholder above the
+   * unique anchored line so the converter strips the placeholder instead.
+   * Refused (tier-2 flag) when the anchor is ambiguous or the line is not
+   * its page's first non-blank.
+   */
+  padLines?: string[];
 }
 
 // Diagnostic categories carry no decision \u2014 thousands of instances would
@@ -219,5 +229,7 @@ export function parseDecisions(md: string): ReviewDecisions {
   for (const match of md.matchAll(/^SEAT-chapter\s+(\d+)\.(\d+)\s+=>\s+(.+?)\s*$/gmu)) {
     seatChapters.push({ book: Number(match[1]), chapter: Number(match[2]), anchor: match[3] });
   }
-  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks, seatChapters };
+  const padLines: string[] = [];
+  for (const match of md.matchAll(/^PAD\s+(.+?)\s*$/gmu)) padLines.push(match[1]);
+  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks, seatChapters, padLines };
 }

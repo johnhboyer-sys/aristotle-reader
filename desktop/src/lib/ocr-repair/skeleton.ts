@@ -291,6 +291,40 @@ function applyPageHeadStrayStrip(pages: PageLines[], changes: ChangeRecord[], ne
   }
 }
 
+// Config-gated (interiorRunningHeads: 'strip'): the scan's page breaks fall
+// INSIDE our pages, leaking interior running-head lines ("67 … Posterior
+// Analytics") into column bodies — their numbers read as phantom gutter ticks
+// (a stray "30" beside the real 82b30). Blank any non-page-head line whose
+// whole content is a short numeral-shaped token followed by the running-head
+// title (case-insensitive; the interior heads print mixed-case against the
+// placeholder's upper-case). Blanking, not deleting, keeps line indices
+// stable for everything downstream.
+function applyInteriorHeadStrip(pages: PageLines[], changes: ChangeRecord[], nextId: ReturnType<typeof changeFactory>, placeholder: string): void {
+  const re = new RegExp(`^([0-9IlrOoSsZz|]{1,4}) ${escapeRe(normWs(placeholder))}$`, 'iu');
+  for (let page = 0; page < pages.length; page += 1) {
+    const lines = pages[page].lines;
+    const head = firstNonBlankLine(lines);
+    for (let line = 0; line < lines.length; line += 1) {
+      if (line === head) continue;
+      const trimmed = normWs(stripCr(lines[line]));
+      const match = re.exec(trimmed);
+      if (!match) continue;
+      changes.push({
+        id: nextId(page, line, undefined),
+        stage: 2,
+        tier: 1,
+        rule: 'folio-repair',
+        page,
+        line,
+        before: trimmed,
+        after: '',
+        evidence: { kind: 'interior-running-head', token: match[1] },
+      });
+      lines[line] = '';
+    }
+  }
+}
+
 function applyHeadInsert(pages: PageLines[], changes: ChangeRecord[], nextId: ReturnType<typeof changeFactory>, placeholder: string, config: CorpusConfig): void {
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page].lines;
@@ -1000,12 +1034,62 @@ function applyBottomFolioStrip(
   }
 }
 
+// PAD directives (John's decided file): a mid-column scan page break strands
+// a BODY line at a page's head position, where the frozen converter strips it
+// as furniture — silently eating the text and any gutter tick on it. Insert
+// the running-head placeholder above the unique anchored line so the
+// converter strips the placeholder instead. Refused into a flag when the
+// anchor is ambiguous or the line is not its page's first non-blank.
+function applyPadLines(pages: PageLines[], changes: ChangeRecord[], nextId: ReturnType<typeof changeFactory>, placeholder: string, padLines: string[]): void {
+  for (const anchor of padLines) {
+    const hits: { page: number; line: number }[] = [];
+    for (let page = 0; page < pages.length; page += 1) {
+      const lines = pages[page].lines;
+      for (let line = 0; line < lines.length; line += 1) {
+        if (stripCr(lines[line]).includes(anchor)) hits.push({ page, line });
+      }
+    }
+    const only = hits.length === 1 ? hits[0] : null;
+    if (!only || firstNonBlankLine(pages[only.page].lines) !== only.line) {
+      changes.push({
+        id: nextId(only?.page ?? 0, only?.line, undefined),
+        stage: 2,
+        tier: 2,
+        rule: 'flag',
+        page: only?.page ?? 0,
+        line: only?.line,
+        before: anchor,
+        evidence: { kind: 'pad-refused', matches: hits.length, reason: only ? 'not-page-head' : 'anchor-ambiguous' },
+      });
+      continue;
+    }
+    pages[only.page].lines = [placeholder, '', ...pages[only.page].lines];
+    changes.push({
+      id: nextId(only.page, 0, undefined),
+      stage: 2,
+      tier: 2,
+      rule: 'head-insert',
+      page: only.page,
+      line: 0,
+      before: '',
+      after: placeholder,
+      evidence: { kind: 'pad-line', anchor },
+    });
+  }
+}
+
 export function repairSkeleton(raw: string, config: CorpusConfig, decisions?: ReviewDecisions): SkeletonOutcome {
   const pages = raw.split('\f').map((segment) => ({ lines: segment.split('\n') }));
   const changes: ChangeRecord[] = [];
   const nextId = changeFactory();
 
+  if (decisions?.padLines?.length) {
+    applyPadLines(pages, changes, nextId, config.runningHeadPlaceholder, decisions.padLines);
+  }
   applyPageHeadStrayStrip(pages, changes, nextId, config.runningHeadPlaceholder);
+  if (config.interiorRunningHeads === 'strip') {
+    applyInteriorHeadStrip(pages, changes, nextId, config.runningHeadPlaceholder);
+  }
   applyHeadInsert(pages, changes, nextId, config.runningHeadPlaceholder, config);
   applyHeadingNormalize(pages, changes, nextId, config, decisions);
   applyFolioRepair(pages, changes, nextId);

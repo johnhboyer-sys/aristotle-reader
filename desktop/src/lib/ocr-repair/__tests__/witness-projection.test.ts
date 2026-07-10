@@ -121,6 +121,28 @@ describe('chapter-scoped witness projection', () => {
     expect(outcome.records[0].evidence?.reason).toBe('page-head-line');
   });
 
+  it('glues a Unicode-superscript witness marker (knowledge³³)', () => {
+    const out = apply('knowledge®', [
+      { t: 'match', aRaw: 'knowledge®', bRaw: 'knowledge³³', aProv: prov(0) },
+    ]);
+    expect(out.text).toBe('knowledge33');
+  });
+
+  it('adopts the witness quote glyph when tokens differ only in quotes', () => {
+    const out = apply("such-and-such]'", [
+      { t: 'match', aRaw: "such-and-such]'", bRaw: 'such-and-such]”', aProv: prov(0) },
+    ]);
+    expect(out.text).toBe('such-and-such]”');
+    expect(out.records[0].evidence?.kind).toBe('witness-quote-glyph');
+  });
+
+  it('never lets the quote-glyph pass change non-quote content', () => {
+    const out = apply('figure]', [
+      { t: 'match', aRaw: 'figure]', bRaw: 'figures]”', aProv: prov(0) },
+    ]);
+    expect(out.text).toBe('figure]');
+  });
+
   it('is byte- and record-neutral without witnessStructure', () => {
     const text = 'hé’does'; const out = apply(text, [{ t: 'aOnly', aRaw: text, aProv: prov(0) }, { t: 'bOnly', bRaw: 'he does' }], false);
     expect(out.text).toBe(text); expect(out.records).toEqual([]); expect(out.edits).toEqual([]);
