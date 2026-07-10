@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CorpusConfig } from '../corpus-config';
 import { degarbleNumeral, repairSkeleton } from '../skeleton';
-import { parseDecisions } from '../review';
+import { buildReviewModel, parseDecisions } from '../review';
 
 function config(): CorpusConfig {
   return {
@@ -379,6 +379,30 @@ describe('repairSkeleton config-declared heading style (Apostle format)', () => 
     expect(heal).toBeDefined();
     expect(heal?.evidence?.lostNumerals).toBe(1);
     expect(outcome.text).toContain(`${IND}CHAPTER 4`);
+  });
+
+  it('records the real stage-2 line for a chapter below a synthesized CHAPTER 1', () => {
+    // Book A: running head, heading, then bare chapters 2 and 3. The walk
+    // synthesizes CHAPTER 1 after the heading, so CHAPTER 2 sits one line lower
+    // in the output than in the raw page. Its change record must carry the
+    // POST-splice line index or the stage-5 review would render the wrong
+    // prev/line/next context (it reads text by page/line).
+    const raw = pages([
+      `[running head]\n${IND}BOOK A\n${CH}2\n     alpha ch2 body\n${CH}3\n     alpha ch3 body`,
+    ]);
+    const outcome = repairSkeleton(raw, apostleConfig());
+
+    const ch2 = outcome.changes.find((c) => c.page === 0 && c.after === 'CHAPTER 2');
+    expect(ch2).toBeDefined();
+
+    const model = buildReviewModel('apostle-like', outcome.changes, outcome.text);
+    const instance = model.groups.flatMap((g) => g.instances).find((i) => i.id === ch2!.id);
+    expect(instance).toBeDefined();
+    expect(instance!.lineText).toContain('CHAPTER 2');
+    expect(instance!.prevLine).toContain('CHAPTER 1');
+    expect(instance!.nextLine).toContain('alpha ch2 body');
+    // And the id's encoded line agrees with the resolved line (no post-hoc drift).
+    expect(ch2!.id).toContain(`-L${ch2!.line}-`);
   });
 
   it('is a no-op without headingStyle — single-letter books and bare numerals stay body text', () => {

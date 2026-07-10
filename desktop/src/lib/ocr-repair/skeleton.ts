@@ -369,10 +369,6 @@ function applyHeadingNormalize(
   // its shallow printed indent reads as body text). Safe default until the
   // first book heading is seen.
   let bookHeadingLeading = 32;
-  // "CHAPTER 1" lines to splice in after a book heading for bare-numeral
-  // editions (the print leaves the opening chapter unlabelled). Applied after
-  // the walk so line indices stay stable during it.
-  const chapterOneInserts: { page: number; afterLine: number; indent: number }[] = [];
 
   // SEAT-chapter directives (John's ground truth for chapter numerals the
   // scan dropped). Each anchor must resolve to exactly ONE line in the whole
@@ -527,9 +523,27 @@ function applyHeadingNormalize(
               if (config.headingStyle?.chapterNumeral === 'bare') {
                 // The book opens with an unlabelled chapter 1; give the
                 // converter its heading and start the count at 1 so the
-                // printed "2" lands on sequence.
-                chapterOneInserts.push({ page, afterLine: line, indent: leading.length });
+                // printed "2" lands on sequence. Splice it in NOW (not after
+                // the walk) so this record and every later record on the page
+                // carry their real stage-2 line index — the review file reads
+                // prev/line/next context by line, so a deferred splice would
+                // shift them. Step the cursor past the inserted line.
+                const chapterOneIndent = ' '.repeat(leading.length);
+                lines.splice(line + 1, 0, `${chapterOneIndent}CHAPTER 1`);
+                changes.push({
+                  id: nextId(page, line + 1, leading.length),
+                  stage: 2,
+                  tier: 1,
+                  rule: 'heading-normalize',
+                  page,
+                  line: line + 1,
+                  col: leading.length,
+                  before: '',
+                  after: 'CHAPTER 1',
+                  evidence: { kind: 'chapter-one-synthesized', reason: 'bare-numeral edition opens book unlabelled' },
+                });
                 chapter = 1;
+                line += 1;
               }
             } else {
               changes.push({
@@ -775,33 +789,6 @@ function applyHeadingNormalize(
     });
   }
 
-  // Splice synthesized "CHAPTER 1" headings after their book heading, deepest
-  // line first per page so earlier line indices stay valid during the splice.
-  const insertsByPage = new Map<number, { afterLine: number; indent: number }[]>();
-  for (const ins of chapterOneInserts) {
-    const list = insertsByPage.get(ins.page) ?? [];
-    list.push({ afterLine: ins.afterLine, indent: ins.indent });
-    insertsByPage.set(ins.page, list);
-  }
-  for (const [page, list] of insertsByPage) {
-    list.sort((a, b) => b.afterLine - a.afterLine);
-    for (const ins of list) {
-      const indent = ' '.repeat(Math.max(0, ins.indent));
-      pages[page].lines.splice(ins.afterLine + 1, 0, `${indent}CHAPTER 1`);
-      changes.push({
-        id: nextId(page, ins.afterLine + 1, ins.indent),
-        stage: 2,
-        tier: 1,
-        rule: 'heading-normalize',
-        page,
-        line: ins.afterLine + 1,
-        col: ins.indent,
-        before: '',
-        after: 'CHAPTER 1',
-        evidence: { kind: 'chapter-one-synthesized', reason: 'bare-numeral edition opens book unlabelled' },
-      });
-    }
-  }
 }
 
 function getFolioCandidate(page: number, lines: string[]): FolioCandidate | null {
