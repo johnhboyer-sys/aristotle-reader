@@ -106,6 +106,14 @@ function chapterScopedOps(backbone: string, globalWitness: string, witness: stri
     // over. Hand directives cover those chapters.
     const witnessChapter = structure.chapters.get(slice.key)?.text;
     if (witnessChapter === undefined) continue;
+    // Barrier between concatenated per-chapter streams: without it, a
+    // trailing gap of one chapter and the leading gap of the next read as a
+    // single match-bounded region, and the projection could write chapter
+    // N+1's witness words onto chapter N's text. An empty match op is inert
+    // everywhere else: no aProv (classifyGaps ignores it, edits refuse it),
+    // empty bRaw (never opens an italic span; a span walking across it fails
+    // the provenance-count check).
+    if (ops.length > 0) ops.push({ t: 'match', aRaw: '', bRaw: '' });
     // Not a spread: a chapter can yield tens of thousands of ops, and
     // push(...ops) puts every element on the call stack (RangeError on the
     // real corpus).

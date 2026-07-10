@@ -9,12 +9,22 @@ export interface WitnessProjection { edits: ProjectionEdit[]; records: ChangeRec
 interface Options { nextId?: (page: number, line?: number, col?: number) => string; corrections?: { before: string; after: string }[]; occupied?: ChangeRecord[] }
 
 const GREEK_RE = /[\u0370-\u03ff\u1f00-\u1fff]/u;
-const SUP_RE = /^(.*?)(?:<sup>\s*(\d+)\s*<\/sup>|\$\^\{(\d+)\}\$)$/iu;
-const GARBLED_TAIL_RE = /[>!*°®'’"”?,'‘]{1,2}$/u;
+// The Genie witness writes superscripts three ways: <sup>7</sup>, $^{17}$,
+// and braceless $^7$ — accept all (a missed form leaks raw markup into the
+// repaired text).
+const SUP_RE = /^(.*?)(?:<sup>\s*(\d+)\s*<\/sup>|\$\^\{?(\d+)\}?\$)$/iu;
+// True garble glyphs a mangled superscript leaves on a word's tail. The
+// witness itself arbitrates real punctuation here: `base` is the witness word
+// MINUS the marker, so a printed "taken?" would surface as base "taken?" and
+// the tail test never sees the "?". Comma alone is deliberately ABSENT
+// (review finding #3): print order marker-vs-comma is genuinely ambiguous and
+// a silently eaten comma changes syntax — those sites glue after the comma
+// instead ("virtue,7").
+const GARBLED_TAIL_RE = /[>!*°®'’"”‘?]{1,2}$/u;
 
 export function stripWitnessMarkup(raw: string): string {
   let value = raw.replace(/\*+/gu, '');
-  value = value.replace(/<sup>\s*(\d+)\s*<\/sup>/giu, '$1').replace(/\$\^\{(\d+)\}\$/gu, '$1');
+  value = value.replace(/<sup>\s*(\d+)\s*<\/sup>/giu, '$1').replace(/\$\^\{?(\d+)\}?\$/gu, '$1');
   if (/^\$.*\$$/u.test(value)) value = value.slice(1, -1);
   return value;
 }
@@ -104,8 +114,12 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     while (i < ops.length && ops[i].t !== 'match') { if (!consumed.has(i)) { const op = ops[i]; if (op.t === 'aOnly') aOps.push(op); else bOps.push(op as Extract<AlignOp, { t: 'bOnly' }>); } i += 1; }
     if (gapStart === 0 || ops[gapStart - 1].t !== 'match' || i >= ops.length || ops[i].t !== 'match' || !aOps.length || !bOps.length) continue;
     const run = contiguousRun(text, aOps); if (!run) continue;
-    const witnessRaw = bOps.map((op) => op.bRaw).join(' '); const after = bOps.map((op) => stripWitnessMarkup(op.bRaw)).join(' '); const score = similarity(folded(run.before), folded(witnessRaw));
-    const refused = aOps.length > 4 || bOps.length > 4 ? 'run-too-long' : GREEK_RE.test(run.before) ? 'greek' : aOps.some((op) => classifyTicToken(op.aRaw.trim())) ? 'bekker-tic' : score < 0.5 ? 'low-similarity' : null;
+    const witnessRaw = bOps.map((op) => op.bRaw).join(' '); const after = bOps.map((op) => stripWitnessMarkup(op.bRaw)).join(' ');
+    const foldedBefore = folded(run.before); const foldedWitness = folded(witnessRaw); const score = similarity(foldedBefore, foldedWitness);
+    // Digit/punctuation-only runs fold to '' on BOTH sides and score a perfect
+    // 1.0 — which would silently rewrite enumeration markers and numbers,
+    // "(3)" -> "(5)" (review finding #1). No letters, no arbitration.
+    const refused = aOps.length > 4 || bOps.length > 4 ? 'run-too-long' : GREEK_RE.test(run.before) || GREEK_RE.test(after) ? 'greek' : aOps.some((op) => classifyTicToken(op.aRaw.trim())) ? 'bekker-tic' : !foldedBefore || !foldedWitness ? 'no-letter-content' : score < 0.5 ? 'low-similarity' : null;
     const record: ChangeRecord = { id: nextId(run.prov.page, run.prov.line, run.prov.col), stage: 5, tier: 2, rule: refused ? 'flag' : 'word-identity', page: run.prov.page, line: run.prov.line, col: run.prov.col, before: run.before, after: refused ? undefined : after, evidence: { kind: refused ? 'witness-projection-review' : 'witness-projection', witnessRaw, similarity: score, reason: refused, joinedTokens: aOps.length - bOps.length } };
     if (refused) records.push(record); else propose(record, after, run.prov);
   }
@@ -118,7 +132,12 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     const provs = span.map((op) => op.aProv).filter((p): p is TokenProvenance => Boolean(p));
     if (provs.length !== span.length || provs.some((p) => p.page !== provs[0].page || p.line !== provs[0].line)) continue;
     const before = lineText(text, provs[0]).slice(provs[0].col, provs.at(-1)!.col + span.at(-1)!.aRaw.length); const witnessRaw = span.map((op) => op.bRaw).join(' ');
-    if (matchKey(stripWitnessMarkup(witnessRaw)) === matchKey(config.workTitle)) continue;
+    // Skip running-head furniture italics (the work title). Only for
+    // multi-word titles: a single-word title (Physics, Politics) folds equal
+    // to a load-bearing body italic of the same word (review finding #4) —
+    // and single-word furniture sits on page-head lines the propose() guard
+    // already refuses.
+    if (config.workTitle.trim().split(/\s+/u).length > 1 && matchKey(stripWitnessMarkup(witnessRaw)) === matchKey(config.workTitle)) continue;
     const long = span.length > 6; const after = `*${before}*`;
     const record: ChangeRecord = { id: nextId(provs[0].page, provs[0].line, provs[0].col), stage: 5, tier: 2, rule: long ? 'flag' : 'emphasis', page: provs[0].page, line: provs[0].line, col: provs[0].col, before, after: long ? undefined : after, evidence: { kind: long ? 'witness-projection-review' : 'witness-italics', witnessRaw, reason: long ? 'span-too-long' : undefined } };
     if (long) records.push(record); else propose(record, after, provs[0]);

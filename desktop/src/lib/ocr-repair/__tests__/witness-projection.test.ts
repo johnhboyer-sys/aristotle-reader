@@ -39,7 +39,9 @@ describe('chapter-scoped witness projection', () => {
     expect(out.text).toBe('A λόγος Z'); expect(out.records[0].evidence?.reason).toBe('greek');
   });
   it('glues a sup marker while replacing a confirmed garble glyph', () => {
-    const out = apply('understood,?', [{ t: 'aOnly', aRaw: 'understood,?', aProv: prov(0) }, { t: 'bOnly', bRaw: 'understood,<sup>5</sup>' }]);
+    // ">" is the OCR's misread of the printed superscript 5 (the real
+    // Apostle 71a case) — a true garble tail, replaced by the digit.
+    const out = apply('understood,>', [{ t: 'aOnly', aRaw: 'understood,>', aProv: prov(0) }, { t: 'bOnly', bRaw: 'understood,<sup>5</sup>' }]);
     expect(out.text).toBe('understood,5'); expect(out.records[0].evidence?.kind).toBe('witness-sup-marker');
   });
   it('glues a sup marker to a clean word', () => {
@@ -55,6 +57,57 @@ describe('chapter-scoped witness projection', () => {
     const ops = words.map((word, i): AlignOp => { const op: AlignOp = { t: 'match', aRaw: word, bRaw: `${i === 0 ? '*' : ''}${word}${i === words.length - 1 ? '*' : ''}`, aProv: prov(col) }; col += word.length + 1; return op; });
     const out = apply(words.join(' '), ops); expect(out.text).toBe(words.join(' ')); expect(out.records[0].evidence?.reason).toBe('span-too-long');
   });
+  it('refuses a digit-only run — no letter content to score', () => {
+    // "(3)" and "(5)" both fold to '' under matchKey, which short-circuits
+    // similarity to a perfect 1.0 — without the refusal this silently
+    // rewrites enumeration markers and numbers.
+    const out = apply('reason (3) it', [
+      { t: 'match', aRaw: 'reason', bRaw: 'reason', aProv: prov(0) },
+      { t: 'aOnly', aRaw: '(3)', aProv: prov(7) },
+      { t: 'bOnly', bRaw: '(5)' },
+      { t: 'match', aRaw: 'it', bRaw: 'it', aProv: prov(11) },
+    ]);
+    expect(out.text).toBe('reason (3) it');
+    expect(out.records[0].evidence?.reason).toBe('no-letter-content');
+  });
+
+  it('keeps legitimate trailing punctuation when gluing a sup marker', () => {
+    // Witness sets the marker before the comma ("virtue⁷,") — the backbone
+    // comma is real text, not a garble tail, and must survive the glue.
+    const out = apply('virtue,', [
+      { t: 'aOnly', aRaw: 'virtue,', aProv: prov(0) },
+      { t: 'bOnly', bRaw: 'virtue<sup>7</sup>' },
+    ]);
+    expect(out.text).toBe('virtue,7');
+  });
+
+  it('does not merge gap regions across a chapter-seam barrier', () => {
+    // vote's chapterScopedOps inserts an empty match op between per-chapter
+    // streams; a trailing aOnly of one chapter must not pair with the leading
+    // bOnly of the next.
+    const out = apply('tail garble here', [
+      { t: 'match', aRaw: 'tail', bRaw: 'tail', aProv: prov(0) },
+      { t: 'aOnly', aRaw: 'garble', aProv: prov(5) },
+      { t: 'match', aRaw: '', bRaw: '' },
+      { t: 'bOnly', bRaw: 'gamble' },
+      { t: 'match', aRaw: 'here', bRaw: 'here', aProv: prov(12) },
+    ]);
+    expect(out.text).toBe('tail garble here');
+    expect(out.edits).toEqual([]);
+  });
+
+  it('projects a single-word italic matching a single-word work title', () => {
+    // A one-word title (Physics) folds equal to a load-bearing body italic
+    // of the same word — the furniture filter must only apply to multi-word
+    // titles.
+    const cfg = { ...config(), workTitle: 'Physics' };
+    const outcome = projectWitnessStructure('HEAD\nthe physics here', [
+      { t: 'match', aRaw: 'physics', bRaw: '*physics*', aProv: prov(4) },
+    ], cfg);
+    expect(outcome.edits).toHaveLength(1);
+    expect(outcome.edits[0].after).toBe('*physics*');
+  });
+
   it("refuses an edit on a page's first non-blank line into review", () => {
     // line 0 is the page head the converter strips — projecting there is
     // invisible at best and trips the stage-5 running-head invariant.
