@@ -96,9 +96,15 @@
     if (ctxMenu) closeCtx();
     let b = book ?? bookNum;
     if (id !== workId && book === undefined) {
-      // Entering a work fresh: resume its last-read book if the Reader saved one.
+      // Entering a work fresh: resume its last-read book if the Reader saved one —
+      // and, when the caller didn't ask for a specific spot, the last-read
+      // Bekker position within it (the site's work-switcher does the same).
       const savedBook = (() => { try { return localStorage.getItem(`reader-book-${id}`); } catch { return null; } })();
       b = savedBook ? Number(savedBook) : 1;
+      if (!opts.loc && !opts.hash && !opts.hlg && !opts.hle) {
+        const savedLoc = (() => { try { return localStorage.getItem(`reader-loc-${id}`); } catch { return null; } })();
+        if (savedLoc) opts = { ...opts, hash: savedLoc };
+      }
     }
     b = Math.min(Math.max(1, b), m.books);
     // Titles resolved before the remount so the first render is final (no

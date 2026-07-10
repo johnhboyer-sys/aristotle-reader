@@ -5,6 +5,7 @@
   import { greekFold } from '../lib/search';
   import { highlightPrefixMatches } from '../lib/text';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
+  import { touchRecent } from '../lib/resume';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
 
@@ -815,8 +816,10 @@
   }
 
   onMount(async () => {
-    // Remember which book of this work was last open, for the work switcher.
+    // Remember which book of this work was last open, for the work switcher —
+    // and stamp the work's recency so hosts can offer "continue reading".
     try { localStorage.setItem(`reader-book-${work}`, String(bookNum)); } catch {}
+    touchRecent(work);
 
     // Restore font-size / line-height prefs.
     const savedFs = (() => { try { return localStorage.getItem(FS_KEY); } catch { return null; } })();
@@ -914,7 +917,16 @@
             // Tint the cited line so a shared link makes the passage obvious.
             targetId = `L${ref.column}-${ref.line}`;
           } else {
-            document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Column-level citations (the scroll-spy writes bare "#1107a" when
+            // the Greek column is hidden) target the segment element col-<col>.
+            // Instant, like scrollToCitation: a smooth animation started during
+            // hydration gets canceled by layout churn and strands the reader at
+            // the top.
+            const el = document.getElementById(hash) ?? document.getElementById(`col-${hash}`);
+            if (el) {
+              suppressArmUntil = Date.now() + 1500;
+              el.scrollIntoView({ behavior: 'auto', block: 'start' });
+            }
           }
         }
         // Begin live URL tracking once the reader actually scrolls (programmatic
