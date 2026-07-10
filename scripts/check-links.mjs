@@ -198,6 +198,13 @@ async function main() {
     else report(indexFile, '', 'cannot read lemma index');
   }
 
+  // A dist with no pages (or no homepage) is a failed build, not a clean one —
+  // this gate must never bless an empty directory.
+  if (pages === 0) usage(`No HTML pages found under ${dist} — not a built site.`);
+  if (!(await existsFile(path.join(dist, 'index.html')))) {
+    usage(`No index.html at the root of ${dist} — not a complete site build.`);
+  }
+
   console.log(`Pages crawled: ${pages}; links checked: ${links}; anchors checked: ${anchors}; broken: ${broken.length}`);
   for (const failure of broken.slice(0, MAX_REPORTS)) console.log(`${failure.source} -> ${failure.href} (${failure.reason})`);
   if (broken.length > MAX_REPORTS) console.log(`+${broken.length - MAX_REPORTS} more`);
