@@ -75,6 +75,29 @@ jobs:
       - name: Run Bonitz tests
         run: cd bonitz && uv run --with pytest pytest tests
 
+  workbench:
+    name: workbench
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: workbench/package-lock.json
+
+      - name: Install dependencies
+        run: cd workbench && npm ci
+
+      - name: Build frontend
+        run: cd workbench && npm run build
+
+      - name: Run tests
+        run: cd workbench && npm test
+
   desktop:
     name: desktop
     runs-on: ubuntu-latest

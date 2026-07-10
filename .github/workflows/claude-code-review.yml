@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
 
     steps:
@@ -39,6 +39,30 @@ jobs:
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
+          # The review agent runs sandboxed with no interactive approver, so every
+          # tool it needs must be pre-granted here. Without this the review "passes"
+          # while unable to inspect anything (permission_denials > 0, zero output).
+          claude_args: |
+            --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh api:*),Bash(gh search:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git status:*),Bash(git branch:*),Grep,Glob,Read,WebFetch"
+
+      - name: Fail if the review ran hamstrung
+        if: always() && steps.claude-review.outputs.execution_file != ''
+        env:
+          EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
+        run: |
+          if [ ! -f "$EXECUTION_FILE" ]; then
+            echo "::warning::execution file not found; cannot verify review health"
+            exit 0
+          fi
+          denials=$(jq '[.. | objects | .permission_denials? // empty | length] | max // 0' "$EXECUTION_FILE")
+          if [ "$denials" -gt 0 ]; then
+            echo "::error::Review agent was denied $denials tool call(s) — the review is vacuous, not green."
+            jq -r '[.. | objects | .permission_denials? // empty] | flatten | .[] | "denied: \(.tool_name) \(.tool_input | tostring | .[0:200])"' "$EXECUTION_FILE" || true
+            exit 1
+          fi
+          errored=$(jq '[.. | objects | select(.type? == "result") | .is_error] | any' "$EXECUTION_FILE")
+          if [ "$errored" = "true" ]; then
+            echo "::error::Claude Code reported an error result"
+            exit 1
+          fi
 
