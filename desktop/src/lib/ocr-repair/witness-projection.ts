@@ -23,7 +23,7 @@ const SUP_RE = /^(.*?)(?:<sup>\s*(\d+)\s*<\/sup>|\$\^\{?(\d+)\}?\$)$/iu;
 const GARBLED_TAIL_RE = /[>!*°®'’"”‘?]{1,2}$/u;
 
 export function stripWitnessMarkup(raw: string): string {
-  let value = raw.replace(/\*+/gu, '');
+  let value = raw.replace(/[*_]+/gu, '');
   value = value.replace(/<sup>\s*(\d+)\s*<\/sup>/giu, '$1').replace(/\$\^\{?(\d+)\}?\$/gu, '$1');
   if (/^\$.*\$$/u.test(value)) value = value.slice(1, -1);
   return value;
@@ -91,20 +91,48 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     records.push(record); edits.push({ record, after, prov }); occupied.push(record);
   };
 
+  const glueSup = (aRaw: string, aProv: TokenProvenance, bRaw: string): boolean => {
+    const sup = SUP_RE.exec(bRaw);
+    if (!sup) return false;
+    const base = stripWitnessMarkup(sup[1]);
+    let clean: string;
+    if (aRaw.startsWith(base)) {
+      // Strip a short debris tail; KEEP legit extra punctuation the witness
+      // lacks (marker-before-comma print order) — the digit glues after it.
+      const tail = aRaw.slice(base.length);
+      clean = tail.length > 0 && tail.length <= 2 && GARBLED_TAIL_RE.test(tail) ? base : aRaw.replace(/[*_]/gu, '');
+    } else {
+      // The backbone token differs beyond a tail (quote-style mismatch,
+      // debris the tail rule can't reach) — adopt the witness base outright:
+      // same letters (matchKey-guarded below), cleaner OCR. Gluing onto the
+      // raw token composed garbage like "false**" + 27 -> "false**27".
+      clean = base;
+    }
+    if (matchKey(base) !== matchKey(clean)) return false;
+    const after = `${clean}${sup[2] ?? sup[3]}`;
+    if (after === aRaw) return false;
+    const record: ChangeRecord = { id: nextId(aProv.page, aProv.line, aProv.col), stage: 5, tier: 2, rule: 'word-identity', page: aProv.page, line: aProv.line, col: aProv.col, before: aRaw, after, evidence: { kind: 'witness-sup-marker', witnessRaw: bRaw } };
+    propose(record, after, aProv);
+    return true;
+  };
+
   const consumed = new Set<number>();
   for (let i = 0; i + 1 < ops.length; i += 1) {
     const pair = [ops[i], ops[i + 1]];
     const a = pair.find((op): op is Extract<AlignOp, { t: 'aOnly' }> => op.t === 'aOnly');
     const b = pair.find((op): op is Extract<AlignOp, { t: 'bOnly' }> => op.t === 'bOnly');
-    const sup = b && SUP_RE.exec(b.bRaw);
-    if (!a?.aProv || !sup) continue;
-    const base = stripWitnessMarkup(sup[1]);
-    const tail = a.aRaw.startsWith(base) ? a.aRaw.slice(base.length) : '';
-    const clean = tail.length > 0 && tail.length <= 2 && GARBLED_TAIL_RE.test(tail) ? base : a.aRaw;
-    if (matchKey(base) !== matchKey(clean)) continue;
-    const after = `${clean}${sup[2] ?? sup[3]}`;
-    const record: ChangeRecord = { id: nextId(a.aProv.page, a.aProv.line, a.aProv.col), stage: 5, tier: 2, rule: 'word-identity', page: a.aProv.page, line: a.aProv.line, col: a.aProv.col, before: a.aRaw, after, evidence: { kind: 'witness-sup-marker', witnessRaw: b.bRaw } };
-    propose(record, after, a.aProv); consumed.add(i); consumed.add(i + 1);
+    if (!a?.aProv || !b) continue;
+    if (glueSup(a.aRaw, a.aProv, b.bRaw)) { consumed.add(i); consumed.add(i + 1); }
+  }
+
+  // Most marker-bearing witness tokens MATCH their backbone word (matchKey
+  // folds markup and garble tails away — "dyads.*°" ↔ "dyads.<sup>10</sup>"),
+  // so the aOnly/bOnly pairing above never sees them. Glue on match ops too;
+  // this is where the bulk of the printed superscripts live.
+  for (const op of ops) {
+    if (op.t !== 'match' || !op.aProv) continue;
+    if (!/<sup|\$\^/iu.test(op.bRaw)) continue;
+    glueSup(op.aRaw, op.aProv, op.bRaw);
   }
 
   for (let i = 0; i < ops.length;) {
@@ -138,9 +166,35 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     // and single-word furniture sits on page-head lines the propose() guard
     // already refuses.
     if (config.workTitle.trim().split(/\s+/u).length > 1 && matchKey(stripWitnessMarkup(witnessRaw)) === matchKey(config.workTitle)) continue;
-    const long = span.length > 6; const after = `*${before}*`;
+    // A stray asterisk inside the wrapped range would corrupt the span —
+    // strip it here (the standalone stray-deletion below is refused on
+    // overlap with this wrap).
+    const long = span.length > 6; const after = `*${before.replace(/\*/gu, '')}*`;
     const record: ChangeRecord = { id: nextId(provs[0].page, provs[0].line, provs[0].col), stage: 5, tier: 2, rule: long ? 'flag' : 'emphasis', page: provs[0].page, line: provs[0].line, col: provs[0].col, before, after: long ? undefined : after, evidence: { kind: long ? 'witness-projection-review' : 'witness-italics', witnessRaw, reason: long ? 'span-too-long' : undefined } };
     if (long) records.push(record); else propose(record, after, provs[0]);
+  }
+
+  // A literal '*' in a pdftotext backbone is always OCR debris — print
+  // italics don't survive extraction as asterisks; these are mangled
+  // superscripts the witness couldn't confirm. Any stray left in the text
+  // pairs with a projected span's markers and shreds the importer's emphasis
+  // scan (183 unclassifiable markers on the first Apostle re-import). The
+  // projection's own spans exist only as pending edits at this point, so
+  // every '*' visible in the source is stray by construction; ones inside a
+  // range an earlier edit owns are refused by the overlap guard (the owner
+  // already handles them).
+  const pages = text.split('\f');
+  for (let page = 0; page < pages.length; page += 1) {
+    const lines = pages[page].split('\n');
+    for (let line = 0; line < lines.length; line += 1) {
+      for (const glyph of ['*', '_'] as const) {
+        for (let col = lines[line].indexOf(glyph); col !== -1; col = lines[line].indexOf(glyph, col + 1)) {
+          const prov = { page, line, col };
+          const record: ChangeRecord = { id: nextId(page, line, col), stage: 5, tier: 2, rule: 'word-identity', page, line, col, before: glyph, after: '', evidence: { kind: 'stray-asterisk' } };
+          propose(record, '', prov);
+        }
+      }
+    }
   }
   return { edits, records };
 }
