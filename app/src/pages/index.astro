@@ -1,6 +1,7 @@
 ---
 import { AUTHENTICITY_LABEL, CATEGORIES, getWork, workLanding, type Work } from '@shared/lib/works';
 import { SUPPORT_URL } from '../lib/support';
+import CommandPalette from '@shared/components/CommandPalette.svelte';
 import ThemeInit from '../components/ThemeInit.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { jsonLdSafe } from '../lib/jsonld';
@@ -113,6 +114,7 @@ const structuredData = Astro.site
 </head>
 <body class="home">
   <div class="home-theme"><ThemeToggle /></div>
+  <CommandPalette client:load />
   <main class="corpus">
     <header class="masthead">
       <p class="eyebrow">Aristotle</p>
@@ -660,7 +662,7 @@ const structuredData = Astro.site
     if (card) {
       const works: Record<string, { title: string; books: number }> =
         JSON.parse(card.dataset.works || '{}');
-      const last = lastRead((w) => w in works);
+      const last = lastRead((w) => Object.hasOwn(works, w));
       if (last) {
         const w = works[last.work];
         const book = Math.min(Math.max(1, last.book), w.books);

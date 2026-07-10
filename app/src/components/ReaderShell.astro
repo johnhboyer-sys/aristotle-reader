@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import Reader from '@shared/components/Reader.svelte';
 import BekkerJump from '@shared/components/BekkerJump.svelte';
+import CommandPalette from '@shared/components/CommandPalette.svelte';
 import HelpButton from './HelpButton.svelte';
 import WorkSwitcher from './WorkSwitcher.svelte';
 import ThemeInit from './ThemeInit.astro';
@@ -165,7 +166,7 @@ const intro =
        fetch so it never costs the on-screen reader. -->
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" media="print" />
 </head>
-<body>
+<body data-work={workId} data-book={n} data-books={work.books} data-base={base}>
   <!-- Semantic page heading + topical intro for search engines and screen
        readers. Visually hidden because the visible title is the work-switcher
        control; this gives the document a real, descriptive <h1> and a prose
@@ -192,6 +193,7 @@ const intro =
         <a class="header-search" href={`${base}/search`} aria-label="Search Greek &amp; English">
           <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.8" cy="6.8" r="4.6"/><line x1="10.4" y1="10.4" x2="14" y2="14"/></svg>
           <span class="hs-text">Search</span>
+          <kbd class="hs-kbd" aria-hidden="true">⌘K</kbd>
         </a>
         <a class="header-search header-lexicon" href={`${base}/lemma/`} aria-label="Greek Lexicon">
           <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 3.6C6.6 2.6 4.2 2.6 2.6 3.1v9C4.2 11.6 6.6 11.6 8 12.6M8 3.6C9.4 2.6 11.8 2.6 13.4 3.1v9C11.8 11.6 9.4 11.6 8 12.6M8 3.6v9"/></svg>
@@ -375,6 +377,20 @@ const intro =
       if (document.body.classList.contains('toc-open')) { setToc(false); return; }
       window.dispatchEvent(new CustomEvent('close-settings'));
     });
+
+    // [ / ] step to the previous/next book. Ignored while typing or with
+    // modifiers held (bracket characters occur in search/palette inputs).
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== '[' && e.key !== ']') return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const cur = Number(document.body.dataset.book);
+      const max = Number(document.body.dataset.books);
+      const next = e.key === ']' ? cur + 1 : cur - 1;
+      if (!Number.isFinite(next) || next < 1 || next > max) return;
+      window.location.href = `${document.body.dataset.base}/${document.body.dataset.work}/book/${next}`;
+    });
     // Clicking a chapter that's on this page (a #hash link) just scrolls — close
     // the drawer so the reader is visible. Cross-book links navigate away anyway.
     sidebar?.querySelectorAll<HTMLAnchorElement>('.toc-outline a').forEach((a) => {
@@ -402,6 +418,7 @@ const intro =
     if (document.fonts?.ready) document.fonts.ready.then(setHeaderH);
   </script>
 
+  <CommandPalette work={workId} client:load />
   <Reader work={workId} bookNum={n} bookData={bookData} chapterTitles={chapterTitles[String(n)] ?? {}} client:load />
 </body>
 </html>

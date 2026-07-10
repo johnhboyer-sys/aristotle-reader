@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { search, type SearchMode, type LangOp, type MatchMode, type SearchResult } from '../lib/search';
   import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
   import { escapeRe, highlightPrefixMatches, searchTermPrefix } from '../lib/text';
@@ -459,6 +459,17 @@
       document.querySelector('.result-bar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
+
+  // The command palette (and any external link) can hand off a query via
+  // ?g= (Greek) / ?e= (English): prefill and run it on mount.
+  onMount(() => {
+    const params = new URLSearchParams(window.location.search);
+    const g = params.get('g');
+    const en = params.get('e');
+    if (g) grkQuery = g;
+    if (en) engQuery = en;
+    if (g || en) doSearch();
+  });
 
   async function doSearch(e?: Event) {
     e?.preventDefault();
