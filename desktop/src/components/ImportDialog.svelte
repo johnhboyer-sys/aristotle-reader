@@ -343,6 +343,17 @@
     }
   }
 
+  // One decision applied to every marker not yet answered — a rough scan can
+  // throw dozens of stray markers at the queue (75 on Apostle's APo), and
+  // stepping through them one at a time serves nobody. Choices already made
+  // on earlier items are preserved.
+  function chooseEmphReviewAll(choice: 'keep' | 'remove') {
+    for (let i = emphReviewPos; i < emphReviewItems.length; i += 1) {
+      emphReviewChoices.set(emphReviewItems[i].index, choice);
+    }
+    start();
+  }
+
   async function start(replace = false, idOverride?: string) {
     if (!file) return;
     step = 'running';
@@ -592,6 +603,13 @@ found among ends…</pre>
         Default: {item.defaultKeep ? `keep as ${item.style === 'bold' ? 'bold' : 'italics'}` : 'remove markers'}.
         {emphReviewPos + 1} of {emphReviewItems.length}
       </p>
+      {#if emphReviewItems.length - emphReviewPos > 1}
+        <div class="imp-actions">
+          <button class="imp-quiet" on:click={() => chooseEmphReviewAll('remove')}>
+            Remove markers for all {emphReviewItems.length - emphReviewPos} remaining
+          </button>
+        </div>
+      {/if}
     {/if}
     <div class="imp-actions">
       <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
