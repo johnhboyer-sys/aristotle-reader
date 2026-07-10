@@ -959,6 +959,45 @@ export function inPrintHref(item: FurtherReadingItem): string {
 }
 
 // ---------------------------------------------------------------------------
+// "Resources" — external study aids relevant to a specific work, shown on the
+// landing page. Curated, additive metadata like FURTHER_READING: a work with
+// no entry simply omits the section.
+
+export interface ResourceItem {
+  label: string;         // resource name, e.g. 'Ars Syllogistica'
+  url: string;
+  blurb: string;         // one line describing the resource
+  authorName: string;
+  authorUrl: string;
+  exercises?: string;    // exercise set(s) within the resource keyed to this work
+}
+
+// Timothy Kearns's interactive Aristotelian/Scholastic logic exercise site.
+// Its "Study" modules and practice exercise sets track the traditional Organon
+// sequence, so each Organon work links to the set that drills its material.
+const ARS_SYLLOGISTICA: Omit<ResourceItem, 'exercises'> = {
+  label: 'Ars Syllogistica',
+  url: 'https://gcrastinus.github.io/ars-syllogistica/',
+  blurb: 'An interactive guide to learning Aristotelian logic.',
+  authorName: 'Dr. Timothy Kearns',
+  authorUrl: 'https://lccollege.academia.edu/TimothyKearns',
+};
+
+const RESOURCES: Record<string, ResourceItem[]> = {
+  Cat: [{ ...ARS_SYLLOGISTICA, exercises: 'the “Study” and “First Act of the Mind” exercise sets' }],
+  Int: [{ ...ARS_SYLLOGISTICA, exercises: 'the “Second Act of the Mind” exercise set' }],
+  APr: [{ ...ARS_SYLLOGISTICA, exercises: 'the “Third Act of the Mind” exercise set' }],
+  APo: [{ ...ARS_SYLLOGISTICA, exercises: 'the “Ad Demonstrandum” exercise set' }],
+  Top: [{ ...ARS_SYLLOGISTICA }],
+  SE: [{ ...ARS_SYLLOGISTICA }],
+  Rhet: [{ ...ARS_SYLLOGISTICA, exercises: 'the “Enthymeme” exercise set' }],
+};
+
+export function resourcesFor(workId: string): ResourceItem[] {
+  return RESOURCES[workId] ?? [];
+}
+
+// ---------------------------------------------------------------------------
 // Home-page taxonomy. The corpus is organised into the five traditional
 // divisions of the Aristotelian corpus (Logic, Natural Philosophy,
 // Metaphysics, Moral & Political Philosophy, Rhetoric & Poetics), some with
