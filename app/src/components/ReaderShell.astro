@@ -213,7 +213,7 @@ const intro =
       </div>
     </div>
     <div class="nav-panel" id="nav-panel">
-      {!busse && <BekkerJump work={workId} client:load />}
+      {!busse && <BekkerJump work={workId} inputId="bekker-input-nav" client:load />}
       {!bookless && (
         <nav class="book-nav" aria-label="Books">
           <span class="book-nav-label">Books</span>
@@ -262,7 +262,7 @@ const intro =
       <button type="button" class="toc-close" aria-label="Close contents">×</button>
     </div>
     <div class="toc-actions toc-actions-top">
-      {!busse && <BekkerJump work={workId} client:load />}
+      {!busse && <BekkerJump work={workId} inputId="bekker-input-toc" client:load />}
       <a class="toc-action" href={`${base}/search`}>
         <span class="toc-action-name">Search</span>
         <span class="toc-action-hint">Greek &amp; English</span>

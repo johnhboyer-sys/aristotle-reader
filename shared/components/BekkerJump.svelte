@@ -7,6 +7,11 @@
   // Navigation strategy: the site leaves this unset and navigates the tab;
   // the desktop shell passes a callback (a Tauri window has no URL routing).
   export let onJump: ((book: number, column: string, line: number) => void) | null = null;
+  // Hosts that mount more than one instance per page must pass distinct ids
+  // (the site's ReaderShell mounts two) or the label/input pairing collides.
+  // Deterministic prop rather than a generated id: this component is
+  // server-rendered, so a random/counter id would break hydration.
+  export let inputId = 'bekker-input';
 
   $: workMeta = getWork(work);
 
@@ -72,9 +77,9 @@
   </button>
 {:else}
   <form class="bekker-jump" on:submit|preventDefault={go} role="search">
-    <label class="bekker-label" for="bekker-input">Bekker line</label>
+    <label class="bekker-label" for={inputId}>Bekker line</label>
     <input
-      id="bekker-input"
+      id={inputId}
       type="text"
       bind:this={inputEl}
       bind:value
