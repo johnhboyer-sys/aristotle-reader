@@ -6,7 +6,7 @@
   // Reader needs no desktop-specific changes.
   import Reader from '@shared/components/Reader.svelte';
   import { getWork, bookLabel, visibleTranslations } from '@shared/lib/works';
-  import { parseBekker } from '@shared/lib/data';
+  import { parseBekker, invalidateBookCache } from '@shared/lib/data';
   import { entryByDataId } from './lib/corpus';
   import { isTauri, type DataLayerInfo } from './lib/runtime';
   import LibraryRail from './components/LibraryRail.svelte';
@@ -214,14 +214,29 @@
 
   // ── Import flow ───────────────────────────────────────────────────────────
   // Both entry points the plan requires: a button (native picker) and true
-  // drag-and-drop onto the library. A finished import reloads the app so the
-  // Reader re-resolves its translation list and book caches with the new
-  // overlay registered.
+  // drag-and-drop onto the library. A finished import re-attaches the new
+  // overlay to the open book (see closeImport) without a full page reload.
   let importDlg: { file: { name: string; text: string } | null } | null = null;
   function openImport() { importDlg = { file: null }; }
   function closeImport(imported: ImportSummary | null) {
     importDlg = null;
-    if (imported) location.reload();
+    if (!imported) return;
+    // runImport already updated the registered overlays and (for a fresh
+    // translation) the picker list — both surface through globals the Reader
+    // reads at mount time: works.ts's visibleTranslations and the fetchBook
+    // book hook. But fetchBook caches the hooked BookData, so a book already
+    // loaded before the import keeps showing its pre-import text until that
+    // cache is dropped and the Reader re-fetches. We used to force this with
+    // location.reload(), but reload is unreliable in the Tauri webview (⌘R
+    // isn't wired there either) and the stale text survived a re-import.
+    // Instead: evict every cached book for the affected work, then navigate
+    // into it — nav() bumps navSeq, remounting the Reader, which re-fetches
+    // (now a cache miss) and re-runs the book hook against the fresh
+    // registration, so the overlay re-attaches. finish() already pointed
+    // desktop-loc + reader-trans at the imported translation (book 1); nav
+    // here mirrors that jump.
+    invalidateBookCache(imported.meta.work);
+    nav(imported.meta.work, 1);
   }
   let dragOver = false;
   const IMPORTABLE = /\.(txt|md)$/i;

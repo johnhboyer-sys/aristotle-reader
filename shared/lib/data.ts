@@ -138,6 +138,25 @@ export function fetchBook(work: string, n: number): Promise<BookData> {
   return p;
 }
 
+/**
+ * Drop cached book data so the next fetchBook re-fetches and re-runs
+ * __ARISTOTLE_BOOK_HOOK__. The desktop app calls this after a translation
+ * import (imports.ts's overlays are merged into the fetched BookData by the
+ * hook, which only runs at fetch time — a book already loaded before the
+ * import keeps its pre-import segments until its cached promise is dropped).
+ * Pass a book number to evict one book, or omit to evict every book of the
+ * work. Inert on the site build, which never imports it.
+ */
+export function invalidateBookCache(work: string, n?: number): void {
+  if (n !== undefined) {
+    _bookCache.delete(`${work}:${n}`);
+    return;
+  }
+  for (const key of [..._bookCache.keys()]) {
+    if (key.startsWith(`${work}:`)) _bookCache.delete(key);
+  }
+}
+
 export function fetchChapters(work: string): Promise<Record<string, ChapterRef[]>> {
   const cached = _chaptersCache.get(work);
   if (cached) return cached;

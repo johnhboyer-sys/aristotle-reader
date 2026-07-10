@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchBook, fetchFootnotes, fetchLsjShard, lookupWord, lsjShard, parseBekker, resolveBekker } from '../lib/data';
+import { fetchBook, fetchFootnotes, fetchLsjShard, invalidateBookCache, lookupWord, lsjShard, parseBekker, resolveBekker } from '../lib/data';
 
 function mockFetch(map: Record<string, unknown>) {
   vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
@@ -52,6 +52,29 @@ describe('fetch and lookup helpers', () => {
       book: 1,
       segments: [{ id: 'hooked' }],
     });
+  });
+
+  it('invalidateBookCache forces a re-fetch that re-runs the book hook', async () => {
+    // Two fetches of the same book normally hit the promise cache once — the
+    // hook runs a single time. This is the desktop import staleness bug: a
+    // re-import updates the hook's overlay data, but the open book keeps its
+    // first (pre-import) hook result until the cache is dropped.
+    mockFetch({ 'EvictWork/book-01.json': { book: 1, segments: [] } });
+    const hook = vi.fn((_work, _n, data) => data);
+    (globalThis as { __ARISTOTLE_BOOK_HOOK__?: unknown }).__ARISTOTLE_BOOK_HOOK__ = hook;
+
+    await fetchBook('EvictWork', 1);
+    await fetchBook('EvictWork', 1);
+    expect(hook).toHaveBeenCalledTimes(1);           // cached: hook ran once
+
+    invalidateBookCache('EvictWork');
+    await fetchBook('EvictWork', 1);
+    expect(hook).toHaveBeenCalledTimes(2);           // evicted: re-fetch re-ran the hook
+
+    // A different work's cache is untouched by the eviction.
+    invalidateBookCache('OtherWork');
+    await fetchBook('EvictWork', 1);
+    expect(hook).toHaveBeenCalledTimes(2);           // still cached — no spurious re-fetch
   });
 
   it('fetchFootnotes linkifies glossary references for EN only', async () => {
