@@ -491,6 +491,26 @@ describe('repairSkeleton SEAT-chapter directive', () => {
     expect(flag?.evidence?.expectedChapter).toBe(3);
   });
 
+  it('flags and refuses two directives whose anchors resolve to the same line', () => {
+    // Each anchor is corpus-unique on its own, but both name the same body
+    // line — the second would stack a heading that even passes the sequence
+    // gate, so both are refused up front.
+    const raw = pages([
+      `[running head]\n${IND}BOOK A\n${CH}2\n     alpha ch2 body\n     the demonstration begins in earnest`,
+    ]);
+    const outcome = repairSkeleton(
+      raw,
+      apostleConfig(),
+      seats('SEAT-chapter 1.3 => demonstration begins\nSEAT-chapter 1.4 => begins in earnest')
+    );
+    expect(outcome.text).not.toContain('CHAPTER 3');
+    expect(outcome.text).not.toContain('CHAPTER 4');
+    const flags = outcome.changes.filter((c) => c.evidence?.kind === 'seat-chapter-anchor-collision');
+    expect(flags).toHaveLength(2);
+    expect(flags[0].evidence?.collidesWith).toEqual(['1.4']);
+    expect(flags[1].evidence?.collidesWith).toEqual(['1.3']);
+  });
+
   it('refuses a chapter jump even inside the right book', () => {
     const raw = pages([
       `[running head]\n${IND}BOOK A\n${CH}2\n     alpha ch2 body\n     another unique anchor line`,

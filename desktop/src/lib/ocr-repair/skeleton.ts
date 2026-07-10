@@ -379,6 +379,7 @@ function applyHeadingNormalize(
   // corpus — an ambiguous or absent anchor is flagged up front and never
   // seats, mirroring the tick SEAT contract.
   const seatChapters = (decisions?.seatChapters ?? []).map((d) => ({ ...d, done: false }));
+  const seatLines = new Map<string, typeof seatChapters>();
   for (const seat of seatChapters) {
     let matches = 0;
     let firstPage = 0;
@@ -405,6 +406,32 @@ function applyHeadingNormalize(
         line: firstLine,
         before: seat.anchor,
         evidence: { kind: 'seat-chapter-anchor-ambiguous', book: seat.book, chapter: seat.chapter, matches },
+      });
+      continue;
+    }
+    const key = `${firstPage}:${firstLine}`;
+    seatLines.set(key, [...(seatLines.get(key) ?? []), seat]);
+  }
+  // Two directives whose (individually unique) anchors resolve to the SAME
+  // line would stack two headings there — the second can even pass the
+  // sequence gate, so it must be refused up front, not silently applied.
+  for (const collided of seatLines.values()) {
+    if (collided.length < 2) continue;
+    for (const seat of collided) {
+      seat.done = true;
+      changes.push({
+        id: nextId(0, undefined, undefined),
+        stage: 2,
+        tier: 2,
+        rule: 'flag',
+        page: 0,
+        before: seat.anchor,
+        evidence: {
+          kind: 'seat-chapter-anchor-collision',
+          book: seat.book,
+          chapter: seat.chapter,
+          collidesWith: collided.filter((s) => s !== seat).map((s) => `${s.book}.${s.chapter}`),
+        },
       });
     }
   }
