@@ -41,15 +41,35 @@ export interface ReviewDecisions {
    */
   corrections?: { before: string; after: string }[];
   /**
-   * Standalone garbage lines to delete (`DROP <token>`) — a scan fragment
-   * orphaned on its own line ("ss"). Removes a line whose whole trimmed
-   * content equals the token. CAVEAT: footnote DEFINITION blocks put the note
-   * number on its own line too ("18\n<note text>"), so DROP-by-token on a
-   * bare number will also delete real footnote definitions — the leaked
-   * footnote-MARKER cleanup needs context-anchored removal (the deferred
-   * seating pass), not this. Safe only for non-numeric fragments.
+   * Standalone garbage lines to delete (`DROP <token>` or, context-anchored,
+   * `DROP <token> <== <prev-line-substring>`). The bare form removes a line
+   * whose whole trimmed content equals the token (a scan fragment orphaned on
+   * its own line, "ss"). The anchored form removes such a line ONLY when the
+   * PREVIOUS non-blank line contains the given substring — needed for a leaked
+   * footnote MARKER ("18" on its own line) whose bare number also names a
+   * footnote DEFINITION block ("18\n<note text>"): DROP-by-bare-number alone
+   * deletes the real definition too (regressed fnNotes 52→46), so the marker
+   * line is pinned by the body line it trails.
    */
-  dropLines?: string[];
+  dropLines?: { token: string; afterContains?: string }[];
+  /**
+   * Bekker ticks the OCR failed to yield, re-seated into the layout from
+   * John's ground truth (`SEAT <ref> => <anchor>`). `ref` is a Bekker citation
+   * (`689a`, `689a5`, `80b1`) — its column-start (line 1 or no line number)
+   * seats a full-form tick, a 5-line ref seats a bare line tick. `anchor` is a
+   * unique on-line substring marking the body line the tick sits at the start
+   * of. Applied as a geometric layout edit BEFORE the frozen converter reads
+   * ticks; per-corpus DATA, so the held-out neutrality gate is untouched.
+   */
+  seatTicks?: { ref: string; anchor: string }[];
+  /**
+   * Bekker line-ticks the import aligner must NOT extrapolate (`NOTICK <ref>
+   * <ref> …`, whitespace-separated, one or more lines). A column whose print
+   * stops short of line 40 gets a phantom 40 from fillChapterTail's tail
+   * extrapolation; these refs (`81a40`, `87a40`, …) name the citations to skip.
+   * Consumed app-side by import-align, not by the layout pipeline.
+   */
+  noTicks?: string[];
 }
 
 // Diagnostic categories carry no decision \u2014 thousands of instances would
@@ -172,7 +192,17 @@ export function parseDecisions(md: string): ReviewDecisions {
   for (const match of md.matchAll(/^FIX\s+(.+?)\s+=>\s+(.*?)\s*$/gmu)) {
     if (match[1]) corrections.push({ before: match[1], after: match[2] });
   }
-  const dropLines: string[] = [];
-  for (const match of md.matchAll(/^DROP\s+(\S+)\s*$/gmu)) dropLines.push(match[1]);
-  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines };
+  const dropLines: { token: string; afterContains?: string }[] = [];
+  for (const match of md.matchAll(/^DROP\s+(\S+?)(?:\s+<==\s+(.+?))?\s*$/gmu)) {
+    dropLines.push(match[2] ? { token: match[1], afterContains: match[2] } : { token: match[1] });
+  }
+  const seatTicks: { ref: string; anchor: string }[] = [];
+  for (const match of md.matchAll(/^SEAT\s+(\S+)\s+=>\s+(.+?)\s*$/gmu)) {
+    seatTicks.push({ ref: match[1], anchor: match[2] });
+  }
+  const noTicks: string[] = [];
+  for (const match of md.matchAll(/^NOTICK\s+(.+?)\s*$/gmu)) {
+    for (const ref of match[1].split(/\s+/u)) if (ref) noTicks.push(ref);
+  }
+  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks };
 }

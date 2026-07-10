@@ -8,7 +8,7 @@ import type { PairingReport } from './witness-pairing';
 import { buildReviewModel, patternKeyFor } from './review';
 import type { ReviewDecisions, ReviewModel } from './review';
 import { extractWitnessAnchors } from './witness-anchors';
-import { classifyTicToken, isDisplayShapedLine, parseHeadingResidual, ticSpanOnLine } from '../pdf-import/line-shape';
+import { classifyTicToken, isDisplayShapedLine, parseHeadingResidual, ticSpanOnLine, RECTO_MIN_GAP, RECTO_MIN_START_COL } from '../pdf-import/line-shape';
 
 export interface VoteOptions {
   stage3Records?: ChangeRecord[];
@@ -1127,7 +1127,7 @@ function paragraphEdits(records: ChangeRecord[], decisions: ReviewDecisions | un
 function applyCorrections(
   text: string,
   corrections: { before: string; after: string }[],
-  dropLines: string[],
+  dropLines: { token: string; afterContains?: string }[],
   nextId: ReturnType<typeof changeFactory>
 ): { text: string; changes: ChangeRecord[] } {
   if (corrections.length === 0 && dropLines.length === 0) return { text, changes: [] };
@@ -1136,18 +1136,27 @@ function applyCorrections(
   // DROP: delete standalone garbage lines (leaked footnote number / scan
   // fragment orphaned on its own line). Never the running head; only lines
   // whose whole trimmed content equals the token (a real tick carries body).
-  const dropSet = new Set(dropLines);
-  if (dropSet.size > 0) {
+  // A context-anchored DROP (`afterContains`) fires only when the previous
+  // KEPT non-blank line contains the anchor substring — so a leaked footnote
+  // marker "18" is removed while an identically-numbered footnote DEFINITION
+  // block head (preceded by a blank gap, not the marker's body line) survives.
+  if (dropLines.length > 0) {
     for (let p = 0; p < pages.length; p += 1) {
       const head = firstNonBlankLine(pages[p]);
       const kept: string[] = [];
+      let prevNonBlank = '';
       for (let l = 0; l < pages[p].length; l += 1) {
         const token = stripCr(pages[p][l]).trim();
-        if (l !== head && dropSet.has(token)) {
-          changes.push(flagRecord(nextId, p, 'dropped-leaked-line', { token }, l));
+        const hit = l !== head && token !== ''
+          ? dropLines.find((d) => d.token === token
+              && (d.afterContains === undefined || prevNonBlank.includes(d.afterContains)))
+          : undefined;
+        if (hit) {
+          changes.push(flagRecord(nextId, p, 'dropped-leaked-line', { token, afterContains: hit.afterContains }, l));
           continue;
         }
         kept.push(pages[p][l]);
+        if (token !== '') prevNonBlank = token;
       }
       pages[p] = kept;
     }
@@ -1191,6 +1200,183 @@ function applyCorrections(
       }
     }
     if (hits === 0) changes.push(flagRecord(nextId, 0, 'correction-unmatched', { before, after }));
+  }
+  const out = pages.map((page) => page.join('\n')).join('\f');
+  assertDocumentInvariants(text, out);
+  return { text: out, changes };
+}
+
+// ---------------------------------------------------------------------------
+// SEAT — re-seat Bekker ticks the OCR failed to yield (seating-pass-spec.md
+// §1). Ticks are GEOMETRIC: verso = tick token at col 0, body at the ~11-col
+// margin; recto = trailing token at col ≥40 with a ≥4-space gap. From John's
+// per-corpus ground truth (`SEAT <ref> => <anchor>`), locate the unique body
+// line the tick belongs to and re-lay-out that ONE line so the frozen
+// converter parses the tick in place. Prose never opens (verso) or closes
+// (recto) with a Bekker-shaped token, so stripping a mis-seated tick off the
+// matched line's edge only ever removes furniture, never words.
+
+// Fold dash variants and collapse whitespace so an anchor written with an
+// em-dash ("cause—so") matches a line the scan flattened to a hyphen
+// ("cause-so"), and indentation/spacing differences don't defeat the match.
+function normForAnchor(s: string): string {
+  return s.replace(/[—–]/gu, '-').replace(/\s+/gu, ' ').trim();
+}
+
+// Drop a leading Bekker-tick-shaped token from a body: a glued full-form
+// ("689ato" → "to"), or a spaced full-form / bare token at the start
+// ("689a to", "5 the").
+function stripLeadingTickToken(body: string): string {
+  const glued = /^(\d{1,4}[ab])(?=\p{L})/u.exec(body);
+  if (glued) return body.slice(glued[0].length).trimStart();
+  return body.replace(/^(\d{1,4}[ab]\d{0,2}|\d{1,2})(?=\s)/u, '').trimStart();
+}
+
+// Drop a trailing Bekker-tick-shaped token from a body ("…asserted or  30" →
+// "…asserted or"), whatever its gap. A stray leading punctuation mark on the
+// token is tolerated: the scan mangles a "15" tick to ", 5" / ",5", and a
+// column start to a duplicate full form — either way the recto reseat
+// re-places the correct token cleanly.
+function stripTrailingTickToken(body: string): string {
+  const m = /^(.*\S)\s+[.,]?\s*(\d{1,4}[ab]\d{0,2}|\d{1,2})$/u.exec(body.replace(/\s+$/u, ''));
+  return m ? m[1] : body.replace(/\s+$/u, '');
+}
+
+function parseSeatRef(ref: string): { col: string; line: number } | null {
+  const m = /^(\d{1,4}[ab])(\d{0,2})$/u.exec(ref);
+  if (!m) return null;
+  return { col: m[1], line: m[2] === '' ? 1 : Number(m[2]) };
+}
+
+function seatVersoLine(rawLine: string, tick: string, bodyMargin: number): string {
+  const cr = rawLine.endsWith('\r');
+  const body = stripLeadingTickToken(stripCr(rawLine).trimStart());
+  const pad = Math.max(1, bodyMargin - tick.length);
+  return restoreCr(`${tick}${' '.repeat(pad)}${body}`, cr);
+}
+
+function seatRectoLine(rawLine: string, tick: string, tickEndCol: number): string {
+  const cr = rawLine.endsWith('\r');
+  const bare = stripCr(rawLine);
+  // Preserve the body's own leading indent — a +3/+4 paragraph-start indent is
+  // structure the converter reads, not furniture to normalize away. Only the
+  // trailing (often mangled) tick is stripped and re-placed in the gutter.
+  const lead = bare.length - bare.trimStart().length;
+  const body = ' '.repeat(lead) + stripTrailingTickToken(bare.trim());
+  const minStart = body.length + RECTO_MIN_GAP;
+  const start = Math.max(tickEndCol - tick.length, minStart, RECTO_MIN_START_COL);
+  return restoreCr(`${body}${' '.repeat(start - body.length)}${tick}`, cr);
+}
+
+// Modal right-margin end column of the recto ticks already present on a page,
+// so a re-seated tick lands in the same gutter the converter reads the rest
+// from. Falls back to the grammar's minimum when a page has no parsed tick yet.
+function rectoTickEndCol(lines: string[]): number {
+  const counts = new Map<number, number>();
+  for (const l of lines) {
+    const span = ticSpanOnLine(stripCr(l), 'recto');
+    if (span) counts.set(span[1], (counts.get(span[1]) ?? 0) + 1);
+  }
+  if (counts.size === 0) return RECTO_MIN_START_COL + 4;
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0];
+}
+
+// Side of the page a tick is being seated on. When a tick already parses the
+// page's own geometry settles it; but a DEAD page — every tick mis-indented
+// (col 2-5) or mangled ("IOOb") so none parses — defeats pageSide (which needs
+// a parsed verso tick). Fall back to counting mis-seated leading vs trailing
+// tick-shaped tokens: a verso page carries them at the left, a recto page at
+// the right.
+function seatPageSide(lines: string[]): 'recto' | 'verso' {
+  if (lines.some((l) => ticSpanOnLine(stripCr(l), 'verso'))) return 'verso';
+  if (lines.some((l) => ticSpanOnLine(stripCr(l), 'recto'))) return 'recto';
+  let lead = 0;
+  let trail = 0;
+  for (const l of lines) {
+    const b = stripCr(l).trim();
+    if (b === '') continue;
+    if (/^(\d{1,4}[ab]?\d{0,2})\s/u.test(b)) lead += 1;
+    if (/[\s\p{L}](\d{1,4}[ab]?\d{0,2})$/u.test(b)) trail += 1;
+  }
+  return lead >= trail ? 'verso' : 'recto';
+}
+
+// Modal left margin of a verso page's BODY (the text after the gutter tick),
+// measured from lines that carry no leading tick so their indent is the body's
+// own. Pages vary (col 5 on 100b, col 11 on 88a's verso half); seating the
+// body to the page's real margin keeps the converter's margin detection sane.
+function versoBodyMargin(lines: string[]): number {
+  const counts = new Map<number, number>();
+  for (const l of lines) {
+    const b = stripCr(l);
+    if (b.trim() === '' || /^\s{0,3}\d{1,4}[ab]?\d{0,2}\s/u.test(b)) continue;
+    if (parseHeadingResidual(b.trim()) || isDisplayShapedLine(b.trim())) continue;
+    const col = b.length - b.trimStart().length;
+    if (col > 0) counts.set(col, (counts.get(col) ?? 0) + 1);
+  }
+  if (counts.size === 0) return 11;
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+}
+
+function findSeatLine(pages: string[][], anchor: string): { page: number; line: number } | null {
+  const norm = normForAnchor(anchor);
+  const hits: { page: number; line: number }[] = [];
+  for (let p = 0; p < pages.length; p += 1) {
+    const head = firstNonBlankLine(pages[p]);
+    for (let l = 0; l < pages[p].length; l += 1) {
+      if (l === head) continue;
+      const bare = stripCr(pages[p][l]);
+      if (bare.trim() === '') continue;
+      const body = stripTrailingTickToken(stripLeadingTickToken(bare.trimStart()));
+      if (normForAnchor(body).startsWith(norm)) hits.push({ page: p, line: l });
+    }
+  }
+  return hits.length === 1 ? hits[0] : null;
+}
+
+function applySeatTicks(
+  text: string,
+  seatTicks: { ref: string; anchor: string }[],
+  nextId: ReturnType<typeof changeFactory>
+): { text: string; changes: ChangeRecord[] } {
+  if (seatTicks.length === 0) return { text, changes: [] };
+  const pages = text.split('\f').map((page) => page.split('\n'));
+  const changes: ChangeRecord[] = [];
+  for (const seat of seatTicks) {
+    const ref = parseSeatRef(seat.ref);
+    if (!ref) {
+      changes.push(flagRecord(nextId, 0, 'seat-bad-ref', { ref: seat.ref }));
+      continue;
+    }
+    const loc = findSeatLine(pages, seat.anchor);
+    if (!loc) {
+      changes.push(flagRecord(nextId, 0, 'seat-anchor-unmatched', { ref: seat.ref, anchor: seat.anchor }));
+      continue;
+    }
+    const side = seatPageSide(pages[loc.page]);
+    const tick = ref.line === 1 ? ref.col : String(ref.line);
+    const before = stripCr(pages[loc.page][loc.line]);
+    const after = side === 'verso'
+      ? seatVersoLine(pages[loc.page][loc.line], tick, versoBodyMargin(pages[loc.page]))
+      : seatRectoLine(pages[loc.page][loc.line], tick, rectoTickEndCol(pages[loc.page]));
+    const span = ticSpanOnLine(stripCr(after), side);
+    if (!span || stripCr(after).slice(span[0], span[1]) !== tick) {
+      changes.push(flagRecord(nextId, loc.page, 'seat-unparsed', { ref: seat.ref, side, after }, loc.line));
+      continue;
+    }
+    pages[loc.page][loc.line] = after;
+    changes.push({
+      id: nextId(loc.page, loc.line, span[0]),
+      stage: 5,
+      tier: 2,
+      rule: 'tic-reseat',
+      page: loc.page,
+      line: loc.line,
+      col: span[0],
+      before,
+      after: tick,
+      evidence: { kind: 'seat', ref: seat.ref, side },
+    });
   }
   const out = pages.map((page) => page.join('\n')).join('\f');
   assertDocumentInvariants(text, out);
@@ -1270,6 +1456,10 @@ export function vote(
   const wrapApplied = applyWrapJoins(applied.text, wrapOutcome.joins, nextId);
   const paragraphApplied = applyParagraphEdits(wrapApplied.text, paragraphEditList, nextId);
   const corrected = applyCorrections(paragraphApplied.text, decisions?.corrections ?? [], decisions?.dropLines ?? [], nextId);
+  // SEAT runs last: its anchors are matched against the fully cleaned text, so
+  // the word-rejoins that un-split leaked-tick lines (100a10, 100b1) are
+  // already in place when a tick is re-seated at that same line.
+  const seated = applySeatTicks(corrected.text, decisions?.seatTicks ?? [], nextId);
   const review = buildReviewModel(config.id, reviewRecords.filter((record) => record.tier === 2), backbone);
   const appliedIds = new Set([...applied.changes, ...wrapApplied.changes, ...paragraphApplied.changes].map((record) => record.id));
   const changes = [
@@ -1277,11 +1467,12 @@ export function vote(
     ...wrapApplied.changes,
     ...paragraphApplied.changes,
     ...corrected.changes,
+    ...seated.changes,
     ...coverageRecords,
     ...reviewRecords.filter((record) => record.tier === 2 && !appliedIds.has(record.id)),
   ];
   return {
-    text: corrected.text,
+    text: seated.text,
     changes,
     review,
     pairing: pairing.report,
