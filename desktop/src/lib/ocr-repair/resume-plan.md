@@ -1,5 +1,15 @@
 # Goal-A OCR-repair pipeline — RESUME PLAN (written 2026-07-07, pre-wipe)
 
+> **✅ SHIPPED — PR #29 merged to main 2026-07-09.** This plan is now historical.
+> The pipeline is complete through stage 6 for both Clarendon build corpora
+> (Parts of Animals / Lennox, Posterior Analytics / Barnes), both John-verified,
+> plus the stage-7 held-out neutrality gate (Apostle APo) — which passed
+> config-only and produced the `config.headingStyle` support. `pdf-import` stayed
+> zero-diff throughout. The full per-stage history is in `implementation-notes.md`.
+> **Next work is the Apostle import campaign — see `apostle-import-plan.md`.**
+> The stage specs (`stage3-spec.md` … `stage6-fixes-2-spec.md`,
+> `seating-pass-spec.md`) remain the authoritative per-stage references.
+
 State at stop: **stages 0–2 complete and verified on both Clarendon corpora;
 stopped at the stage-3 checkpoint, stage 3 not started.** Branch
 `claude/ocr-repair`, pushed to origin. Companion history/log:
