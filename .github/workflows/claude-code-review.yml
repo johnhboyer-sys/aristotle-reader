@@ -46,12 +46,16 @@ jobs:
             --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh api:*),Bash(gh search:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git status:*),Bash(git branch:*),Grep,Glob,Read,WebFetch"
 
       - name: Fail if the review ran hamstrung
-        if: always() && steps.claude-review.outputs.execution_file != ''
+        if: always()
         env:
           EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
         run: |
-          if [ ! -f "$EXECUTION_FILE" ]; then
-            echo "::warning::execution file not found; cannot verify review health"
+          if [ -z "$EXECUTION_FILE" ] || [ ! -f "$EXECUTION_FILE" ]; then
+            # Known benign cause: the action refuses to run when the PR modifies
+            # this workflow file (anti-tampering validation vs the default
+            # branch). Annotate loudly so the green check isn't mistaken for a
+            # real review; it self-heals on the next PR after merge.
+            echo "::warning title=No review ran::claude-code-action produced no execution file — this check did NOT review the PR (expected only on PRs that modify this workflow)."
             exit 0
           fi
           denials=$(jq '[.. | objects | .permission_denials? // empty | length] | max // 0' "$EXECUTION_FILE")
