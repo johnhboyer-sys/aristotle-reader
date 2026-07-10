@@ -1127,11 +1127,31 @@ function paragraphEdits(records: ChangeRecord[], decisions: ReviewDecisions | un
 function applyCorrections(
   text: string,
   corrections: { before: string; after: string }[],
+  dropLines: string[],
   nextId: ReturnType<typeof changeFactory>
 ): { text: string; changes: ChangeRecord[] } {
-  if (corrections.length === 0) return { text, changes: [] };
+  if (corrections.length === 0 && dropLines.length === 0) return { text, changes: [] };
   const pages = text.split('\f').map((page) => page.split('\n'));
   const changes: ChangeRecord[] = [];
+  // DROP: delete standalone garbage lines (leaked footnote number / scan
+  // fragment orphaned on its own line). Never the running head; only lines
+  // whose whole trimmed content equals the token (a real tick carries body).
+  const dropSet = new Set(dropLines);
+  if (dropSet.size > 0) {
+    for (let p = 0; p < pages.length; p += 1) {
+      const head = firstNonBlankLine(pages[p]);
+      const kept: string[] = [];
+      for (let l = 0; l < pages[p].length; l += 1) {
+        const token = stripCr(pages[p][l]).trim();
+        if (l !== head && dropSet.has(token)) {
+          changes.push(flagRecord(nextId, p, 'dropped-leaked-line', { token }, l));
+          continue;
+        }
+        kept.push(pages[p][l]);
+      }
+      pages[p] = kept;
+    }
+  }
   for (const { before, after } of corrections) {
     let hits = 0;
     for (let p = 0; p < pages.length; p += 1) {
@@ -1249,7 +1269,7 @@ export function vote(
   const applied = applyPendingEdits(backbone, edits, nextId);
   const wrapApplied = applyWrapJoins(applied.text, wrapOutcome.joins, nextId);
   const paragraphApplied = applyParagraphEdits(wrapApplied.text, paragraphEditList, nextId);
-  const corrected = applyCorrections(paragraphApplied.text, decisions?.corrections ?? [], nextId);
+  const corrected = applyCorrections(paragraphApplied.text, decisions?.corrections ?? [], decisions?.dropLines ?? [], nextId);
   const review = buildReviewModel(config.id, reviewRecords.filter((record) => record.tier === 2), backbone);
   const appliedIds = new Set([...applied.changes, ...wrapApplied.changes, ...paragraphApplied.changes].map((record) => record.id));
   const changes = [

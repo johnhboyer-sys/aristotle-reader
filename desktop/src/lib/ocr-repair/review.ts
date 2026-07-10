@@ -40,6 +40,16 @@ export interface ReviewDecisions {
    * never affects the held-out neutrality gate.
    */
   corrections?: { before: string; after: string }[];
+  /**
+   * Standalone garbage lines to delete (`DROP <token>`) — a scan fragment
+   * orphaned on its own line ("ss"). Removes a line whose whole trimmed
+   * content equals the token. CAVEAT: footnote DEFINITION blocks put the note
+   * number on its own line too ("18\n<note text>"), so DROP-by-token on a
+   * bare number will also delete real footnote definitions — the leaked
+   * footnote-MARKER cleanup needs context-anchored removal (the deferred
+   * seating pass), not this. Safe only for non-numeric fragments.
+   */
+  dropLines?: string[];
 }
 
 // Diagnostic categories carry no decision \u2014 thousands of instances would
@@ -162,5 +172,7 @@ export function parseDecisions(md: string): ReviewDecisions {
   for (const match of md.matchAll(/^FIX\s+(.+?)\s+=>\s+(.*?)\s*$/gmu)) {
     if (match[1]) corrections.push({ before: match[1], after: match[2] });
   }
-  return { checkedPatterns, excludeIds, manualBreaks, corrections };
+  const dropLines: string[] = [];
+  for (const match of md.matchAll(/^DROP\s+(\S+)\s*$/gmu)) dropLines.push(match[1]);
+  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines };
 }
