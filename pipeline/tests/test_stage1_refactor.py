@@ -65,6 +65,64 @@ def test_stage1_chapters_matches_golden(tmp_path):
     ) == _golden("stage1_chapters_explicit_golden.json")
 
 
+def test_stage1_chapters_clamps_to_spine_book_cut(tmp_path):
+    """A grc TEI that divides book 2 earlier than the spine does (Rhet: TEI book
+    II opens at 1377b16, spine cuts book 2 at 1378a16). The chapter's opening
+    words text-match inside book 1's spine segments; without the clamp the
+    chapter is recorded at a (book=2, column-of-book-1) pair no spine segment
+    carries, and stage7 silently drops its heading anchor (ch-2-1)."""
+    spine = {
+        "work": "TST",
+        "segments": [
+            {
+                "id": "1:1377b",
+                "book": 1,
+                "column": "1377b",
+                "lines": [
+                    {"n": 1, "text": "Alpha beta."},
+                    # TEI book 2 opens here, still inside spine book 1.
+                    {"n": 2, "text": "Gamma delta epsilon zeta eta theta."},
+                ],
+            },
+            {
+                "id": "2:1378a",
+                "book": 2,
+                "column": "1378a",
+                "lines": [
+                    {"n": 16, "text": "Iota kappa."},
+                    {"n": 17, "text": "Lambda mu nu xi omicron pi rho sigma."},
+                ],
+            },
+        ],
+    }
+    path = tmp_path / "chapters.xml"
+    path.write_text(
+        """<TEI><text><body>
+<div subtype="book" n="1">
+<milestone unit="page" n="1377b"/><milestone unit="line" n="1"/>
+<div subtype="chapter" n="1"><p>Alpha beta.</p></div>
+</div>
+<div subtype="book" n="2">
+<div subtype="chapter" n="1"><p>Gamma delta epsilon zeta eta theta. Iota kappa.</p></div>
+<div subtype="chapter" n="2"><p>Lambda mu nu xi omicron pi rho sigma.</p></div>
+</div>
+</body></text></TEI>""",
+        encoding="utf-8",
+    )
+
+    chapters = stage1_chapters.extract_chapters_grc(spine, str(path))
+
+    # Book 2 chapter 1 is clamped onto the spine's book-2 cut, not left on the
+    # book-1 column its opening words matched in.
+    assert chapters[1] == {
+        "book": 2, "chapter": "1", "column": "1378a", "line": "16",
+        "wordIndex": 0, "bookstart": True,
+    }
+    # Later chapters still text-align normally after the clamp.
+    assert chapters[2]["chapter"] == "2"
+    assert (chapters[2]["column"], chapters[2]["line"]) == ("1378a", "17")
+
+
 def test_stage1_greek_matches_golden(tmp_path):
     path = tmp_path / "greek.xml"
     fixtures.write_greek_tei(path)

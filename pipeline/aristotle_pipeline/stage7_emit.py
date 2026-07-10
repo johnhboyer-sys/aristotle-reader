@@ -133,7 +133,16 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
     third = third or {}
     overlays = overlays or {}
     chapters_by_col: dict[tuple, list[dict]] = defaultdict(list)
+    seg_keys = {(seg["book"], seg["column"]) for seg in spine["segments"]}
     for ch in english.get("chapters", []):
+        if (ch["book"], ch["column"]) not in seg_keys:
+            # No spine segment carries this (book, column), so the reader would
+            # never render the ch-{book}-{chapter} heading anchor. stage1 clamps
+            # book-start chapters onto the spine's book cut; anything arriving
+            # here is a real data bug — say so instead of dropping it silently.
+            print(f"  stage7 WARNING: chapter {ch['book']}.{ch['chapter']} at "
+                  f"{ch['column']}{ch['line']} matches no spine segment — "
+                  f"heading not emitted")
         chapters_by_col[(ch["book"], ch["column"])].append(ch)
     by_book: dict[int, list[dict]] = defaultdict(list)
     for seg in spine["segments"]:

@@ -35,9 +35,13 @@ def _norm(s: str) -> str:
 
 def _spine_words(spine: dict):
     """Flatten the spine into a normalized word stream with each word's owning
-    (column, line) and its char offset in the joined string."""
+    (column, line) and its char offset in the joined string. Also returns each
+    book's first word index in the stream, so a chapter whose TEI division
+    opens before the spine's book cut can be clamped onto its own book."""
     words, owner = [], []
+    book_start: dict[int, int] = {}
     for seg in spine["segments"]:
+        book_start.setdefault(seg["book"], len(words))
         for line in seg["lines"]:
             # drop trailing hyphens so a word split across lines still matches.
             # Track each word's index WITHIN its line so a chapter that begins
@@ -50,7 +54,7 @@ def _spine_words(spine: dict):
     for w in words:
         wstart.append(pos)
         pos += len(w) + 1
-    return joined, owner, wstart
+    return joined, owner, wstart, book_start
 
 
 def _local(el) -> str:
@@ -257,7 +261,7 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
     divisions the TEI omits — a list of {n, bekker[, book]} — re-sorted into
     document order (e.g. SophRef 34, which First1KGreek folds into its ch33)."""
     grc_path = SOURCES_DIR / grc_rel
-    joined, owner, wstart = _spine_words(spine)
+    joined, owner, wstart, book_start = _spine_words(spine)
     if chapter_marker == "milestone":
         openings = _chapter_openings_milestone(grc_path, chapter_subtype, book_subtype)
     else:
@@ -266,9 +270,9 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
     after = 0
     for book, chap, opening, mcol, mline in openings:
         if not chapters:
-            col, line, word = owner[0]  # the work's first chapter starts the spine
+            widx = 0  # the work's first chapter starts the spine
         else:
-            loc = None
+            widx = None
             ow = _norm(opening).split()
             for kk in (8, 6, 5, 4):
                 if len(ow) < kk:
@@ -276,9 +280,9 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 p = joined.find(" ".join(ow[:kk]), after)
                 if p >= 0:
                     widx = joined[:p].count(" ")
-                    loc, after = owner[widx], wstart[widx]
+                    after = wstart[widx]
                     break
-            if loc is None and mcol is not None:
+            if widx is None and mcol is not None:
                 # Orthographic divergence missed the text match; fall back to the
                 # milestone's own Bekker position (heading pinned at line start).
                 widx = _first_word_at(owner, mcol, mline)
@@ -294,8 +298,8 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                         None,
                     )
                 if widx is not None:
-                    loc, after = owner[widx], wstart[widx]
-            if loc is None and mcol is None:
+                    after = wstart[widx]
+            if widx is None and mcol is None:
                 # Last resort for grc TEIs with no Bekker milestones (no fallback
                 # above). A single orthographic divergence in the opening words
                 # otherwise drops the chapter, and it bites at different offsets:
@@ -314,14 +318,25 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                         p = joined.find(" ".join(ow[start:start + kk]), after)
                         if p >= 0:
                             w = joined[:p].count(" ")
-                            loc = owner[max(0, w - start)]
+                            widx = max(0, w - start)
                             after = wstart[w]
                             break
-                    if loc is not None:
+                    if widx is not None:
                         break
-            if loc is None:
+            if widx is None:
                 continue  # unmatched chapter (surfaced by the caller as a gap)
-            col, line, word = loc
+        # A grc TEI may divide a book earlier than the spine does (Rhetoric's
+        # book II opens at 1377b16 in the TEI, but the TLG spine cuts book 2 at
+        # 1378a16). The matched words then belong to the PREVIOUS book's spine
+        # segments, so stage7 finds no (book, column) segment to hang the
+        # chapter heading on and silently drops it (Rhet II.1/III.1 had no
+        # heading anchor). Clamp such a chapter forward to its book's first
+        # spine word — the spine's book cut is authoritative for the reader.
+        bstart = book_start.get(book)
+        if bstart is not None and widx < bstart:
+            widx = bstart
+            after = max(after, wstart[widx])
+        col, line, word = owner[widx]
         bookstart = not any(c["book"] == book for c in chapters)
         chapters.append({
             "book": book, "chapter": chap, "column": col,
