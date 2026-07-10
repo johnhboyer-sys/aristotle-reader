@@ -4,8 +4,11 @@
 All three sub-problems built + graded + tested; both FINALs re-cut. Grades
 (both improve, no regression, pdf-import zero-diff, desktop 242 + app 69 green):
 - **PA**  tics 888→897, dropped 2→0, suppressed 7→1 (4 books / 51 ch).
-- **APo** tics 453→476, dropped 1→0, suppressed 14→0, fnUnmatched 12→2,
-  fnNotes 52 (2 books / 53 ch).
+- **APo** tics 453→476, dropped 1→0, suppressed 14→0, fnUnmatched 12→0
+  (ALL 52 notes matched), fnNotes 52 (2 books / 53 ch).
+  Six leaked/mangled footnote markers recovered via FIX: I.31 prove18/that19/
+  then20, II.19 not22, plus fn26 (`fact,Z 6`→`fact,26`), bk1 fn7
+  (`universally, 7`→`universally,7`), bk2 fn7 (`atomic.f`→`atomic.7`).
 Code: `SEAT`/`NOTICK`/anchored-`DROP` parse in review.ts; `applySeatTicks`
 (verso/recto reseat, dead-page side detection, per-page verso margin) +
 both-neighbour anchored DROP in vote.ts; aligner `fillChapterTail` + filter
