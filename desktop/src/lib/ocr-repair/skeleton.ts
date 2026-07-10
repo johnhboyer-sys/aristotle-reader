@@ -1,6 +1,7 @@
 import type { CorpusConfig } from './corpus-config';
 import { makeChangeId } from './changelist';
 import type { ChangeRecord } from './changelist';
+import type { ReviewDecisions } from './review';
 
 export interface SkeletonOutcome {
   text: string;
@@ -358,7 +359,8 @@ function applyHeadingNormalize(
   pages: PageLines[],
   changes: ChangeRecord[],
   nextId: ReturnType<typeof changeFactory>,
-  config: CorpusConfig
+  config: CorpusConfig,
+  decisions?: ReviewDecisions
 ): void {
   let book = 0;
   let chapter = 0;
@@ -372,6 +374,41 @@ function applyHeadingNormalize(
   // the walk so line indices stay stable during it.
   const chapterOneInserts: { page: number; afterLine: number; indent: number }[] = [];
 
+  // SEAT-chapter directives (John's ground truth for chapter numerals the
+  // scan dropped). Each anchor must resolve to exactly ONE line in the whole
+  // corpus — an ambiguous or absent anchor is flagged up front and never
+  // seats, mirroring the tick SEAT contract.
+  const seatChapters = (decisions?.seatChapters ?? []).map((d) => ({ ...d, done: false }));
+  for (const seat of seatChapters) {
+    let matches = 0;
+    let firstPage = 0;
+    let firstLine: number | undefined;
+    for (let page = 0; page < pages.length; page += 1) {
+      const lines = pages[page].lines;
+      for (let line = 0; line < lines.length; line += 1) {
+        if (!stripCr(lines[line]).includes(seat.anchor)) continue;
+        matches += 1;
+        if (matches === 1) {
+          firstPage = page;
+          firstLine = line;
+        }
+      }
+    }
+    if (matches !== 1) {
+      seat.done = true;
+      changes.push({
+        id: nextId(firstPage, firstLine, undefined),
+        stage: 2,
+        tier: 2,
+        rule: 'flag',
+        page: firstPage,
+        line: firstLine,
+        before: seat.anchor,
+        evidence: { kind: 'seat-chapter-anchor-ambiguous', book: seat.book, chapter: seat.chapter, matches },
+      });
+    }
+  }
+
   for (let page = 0; page < pages.length; page += 1) {
     const lines = pages[page].lines;
     const skipped = firstNonBlankLine(lines);
@@ -381,6 +418,52 @@ function applyHeadingNormalize(
       const rawLine = lines[line];
       const content = stripCr(rawLine);
       const trimmed = content.trim();
+
+      // A pending SEAT-chapter anchor names this line as the opening of a
+      // chapter whose printed numeral the scan lost. Sequence-forced against
+      // the walk's running counters — a directive that lands in the wrong
+      // book, out of order, or past the book's declared chapter total is
+      // flagged, never inserted.
+      const seat = seatChapters.find((s) => !s.done && content.includes(s.anchor));
+      if (seat) {
+        seat.done = true;
+        const maxChapters = book >= 1 ? config.divisions.chaptersPerBook[book - 1] ?? Number.MAX_SAFE_INTEGER : 0;
+        if (seat.book === book && seat.chapter === chapter + 1 && seat.chapter <= maxChapters) {
+          lines.splice(line, 0, `${' '.repeat(bookHeadingLeading)}CHAPTER ${seat.chapter}`);
+          changes.push({
+            id: nextId(page, line, bookHeadingLeading),
+            stage: 2,
+            tier: 2,
+            rule: 'heading-normalize',
+            page,
+            line,
+            col: bookHeadingLeading,
+            before: '',
+            after: `CHAPTER ${seat.chapter}`,
+            evidence: { kind: 'seat-chapter', book: seat.book, chapter: seat.chapter, anchor: seat.anchor },
+          });
+          chapter = seat.chapter;
+          // The anchor line itself (now at line + 1) still gets a normal walk
+          // visit on the next iteration.
+          continue;
+        }
+        changes.push({
+          id: nextId(page, line, undefined),
+          stage: 2,
+          tier: 2,
+          rule: 'flag',
+          page,
+          line,
+          before: seat.anchor,
+          evidence: {
+            kind: 'seat-chapter-conflict',
+            book: seat.book,
+            chapter: seat.chapter,
+            walkBook: book,
+            expectedChapter: chapter + 1,
+          },
+        });
+      }
 
       if (/^BOOK\s+(\S{1,12})$/iu.test(trimmed)) {
         const match = /^(\s*)(BOOK)(\s+)(\S{1,12})(\s*)$/iu.exec(content);
@@ -650,6 +733,21 @@ function applyHeadingNormalize(
     }
   }
 
+  // A directive whose unique anchor line the walk never visited (it fell on a
+  // page-head line the walk skips) would otherwise vanish silently — surface it.
+  for (const seat of seatChapters) {
+    if (seat.done) continue;
+    changes.push({
+      id: nextId(0, undefined, undefined),
+      stage: 2,
+      tier: 2,
+      rule: 'flag',
+      page: 0,
+      before: seat.anchor,
+      evidence: { kind: 'seat-chapter-unapplied', book: seat.book, chapter: seat.chapter },
+    });
+  }
+
   // Splice synthesized "CHAPTER 1" headings after their book heading, deepest
   // line first per page so earlier line indices stay valid during the splice.
   const insertsByPage = new Map<number, { afterLine: number; indent: number }[]>();
@@ -868,14 +966,14 @@ function applyBottomFolioStrip(
   }
 }
 
-export function repairSkeleton(raw: string, config: CorpusConfig): SkeletonOutcome {
+export function repairSkeleton(raw: string, config: CorpusConfig, decisions?: ReviewDecisions): SkeletonOutcome {
   const pages = raw.split('\f').map((segment) => ({ lines: segment.split('\n') }));
   const changes: ChangeRecord[] = [];
   const nextId = changeFactory();
 
   applyPageHeadStrayStrip(pages, changes, nextId, config.runningHeadPlaceholder);
   applyHeadInsert(pages, changes, nextId, config.runningHeadPlaceholder, config);
-  applyHeadingNormalize(pages, changes, nextId, config);
+  applyHeadingNormalize(pages, changes, nextId, config, decisions);
   applyFolioRepair(pages, changes, nextId);
   applyBottomFolioStrip(pages, changes, nextId);
 
