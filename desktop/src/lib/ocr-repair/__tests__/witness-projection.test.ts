@@ -80,6 +80,46 @@ describe('chapter-scoped witness projection', () => {
     ]);
     expect(out.text).toBe('virtue,7');
   });
+  it('strips a garble+digit marker remnant instead of composing garbage', () => {
+    // The printed art?¹² OCRs as "art?!2" — "!2" is superscript debris (the
+    // 2 is the marker's own remnant). Gluing without decomposing the tail
+    // composed "art?!212" (John, APo I.12).
+    const out = apply('art?!2', [
+      { t: 'match', aRaw: 'art?!2', bRaw: 'art?$^{12}$', aProv: prov(0) },
+    ]);
+    expect(out.text).toBe('art?12');
+  });
+  it('refuses to glue when the digit remnant is not a marker suffix', () => {
+    const out = apply('art?!7', [
+      { t: 'match', aRaw: 'art?!7', bRaw: 'art?$^{12}$', aProv: prov(0) },
+    ]);
+    expect(out.text).toBe('art?!7');
+  });
+  it('pairs a sup-bearing witness token inside a mixed gap run', () => {
+    // The aligner stranded "request!" three tokens from "request$^1$" in one
+    // gap — the adjacent-pair scan can't reach it (John, APo I.12).
+    const out = apply('request! requests requests', [
+      { t: 'match', aRaw: 'A', bRaw: 'A', aProv: prov(0) },
+      { t: 'aOnly', aRaw: 'request!', aProv: prov(0) },
+      { t: 'aOnly', aRaw: 'requests', aProv: prov(9) },
+      { t: 'aOnly', aRaw: 'requests', aProv: prov(18) },
+      { t: 'bOnly', bRaw: 'request$^1$' },
+      { t: 'bOnly', bRaw: 'requests' },
+      { t: 'bOnly', bRaw: 'requests' },
+      { t: 'match', aRaw: 'Z', bRaw: 'Z', aProv: prov(27) },
+    ]);
+    expect(out.text).toBe('request1 requests requests');
+  });
+  it('keeps enumeration letters plain even when the witness italicizes them', () => {
+    // Apostle prints "(a)", "(b)" with italic letters; a half-italicized
+    // series reads as an error (John, APo I.13).
+    const out = apply('and (b) whenever', [
+      { t: 'match', aRaw: 'and', bRaw: 'and', aProv: prov(0) },
+      { t: 'match', aRaw: '(b)', bRaw: '*(b)*', aProv: prov(4) },
+      { t: 'match', aRaw: 'whenever', bRaw: 'whenever', aProv: prov(8) },
+    ]);
+    expect(out.text).toBe('and (b) whenever');
+  });
 
   it('does not merge gap regions across a chapter-seam barrier', () => {
     // vote's chapterScopedOps inserts an empty match op between per-chapter

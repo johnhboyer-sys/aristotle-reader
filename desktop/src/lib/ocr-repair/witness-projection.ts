@@ -17,14 +17,13 @@ const SUP_DIGITS: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '
 function supToAscii(run: string): string {
   return [...run].map((ch) => SUP_DIGITS[ch] ?? ch).join('');
 }
-// True garble glyphs a mangled superscript leaves on a word's tail. The
-// witness itself arbitrates real punctuation here: `base` is the witness word
-// MINUS the marker, so a printed "taken?" would surface as base "taken?" and
-// the tail test never sees the "?". Comma alone is deliberately ABSENT
-// (review finding #3): print order marker-vs-comma is genuinely ambiguous and
-// a silently eaten comma changes syntax — those sites glue after the comma
-// instead ("virtue,7").
-const GARBLED_TAIL_RE = /[>!*°®'’"”‘?]{1,2}$/u;
+// Tail decomposition for glueSup lives inline there: legit punctuation
+// ([,.;:)\]]) is KEPT before the glued digits (marker-before-comma print
+// order, "understood," + 5 — comma can't be silently eaten, review finding
+// #3), garble glyphs ([>!*°®'’"”‘?]) and marker-digit remnants are stripped
+// ("art?!2" for the printed art?¹²). The witness arbitrates real punctuation:
+// `base` is the witness word MINUS the marker, so a printed "taken?" surfaces
+// as base "taken?" and the tail rule never sees the "?".
 
 export function stripWitnessMarkup(raw: string): string {
   let value = raw.replace(/[*_]+/gu, '');
@@ -100,12 +99,24 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     const sup = SUP_RE.exec(bRaw);
     if (!sup) return false;
     const base = stripWitnessMarkup(sup[1]);
+    const digits = sup[2] ?? sup[3] ?? supToAscii(sup[4]);
     let clean: string;
     if (aRaw.startsWith(base)) {
-      // Strip a short debris tail; KEEP legit extra punctuation the witness
-      // lacks (marker-before-comma print order) — the digit glues after it.
+      // Decompose the tail: legit punctuation the witness lacks
+      // (marker-before-comma print order — "understood," + 5) followed by
+      // superscript debris — garble glyphs plus any digit remnant of the
+      // marker itself ("art?!2" for the printed art?¹²). Gluing digits onto
+      // an undecomposable tail composed garbage ("art?!2" + 12 -> "art?!212").
       const tail = aRaw.slice(base.length);
-      clean = tail.length > 0 && tail.length <= 2 && GARBLED_TAIL_RE.test(tail) ? base : aRaw.replace(/[*_]/gu, '');
+      if (tail.length === 0) {
+        clean = base;
+      } else {
+        const parts = /^([,.;:)\]]{0,2})([>!*°®'’"”‘?\d]{0,4})$/u.exec(tail);
+        if (!parts || !(parts[1] || parts[2])) return false;
+        const remnant = parts[2].replace(/\D/gu, '');
+        if (remnant && !digits.endsWith(remnant)) return false;
+        clean = base + parts[1];
+      }
     } else {
       // The backbone token differs beyond a tail (quote-style mismatch,
       // debris the tail rule can't reach) — adopt the witness base outright:
@@ -114,7 +125,6 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
       clean = base;
     }
     if (matchKey(base) !== matchKey(clean)) return false;
-    const digits = sup[2] ?? sup[3] ?? supToAscii(sup[4]);
     const after = `${clean}${digits}`;
     if (after === aRaw) return false;
     const record: ChangeRecord = { id: nextId(aProv.page, aProv.line, aProv.col), stage: 5, tier: 2, rule: 'word-identity', page: aProv.page, line: aProv.line, col: aProv.col, before: aRaw, after, evidence: { kind: 'witness-sup-marker', witnessRaw: bRaw } };
@@ -162,6 +172,24 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     const aOps: Extract<AlignOp, { t: 'aOnly' }>[] = []; const bOps: Extract<AlignOp, { t: 'bOnly' }>[] = [];
     while (i < ops.length && ops[i].t !== 'match') { if (!consumed.has(i)) { const op = ops[i]; if (op.t === 'aOnly') aOps.push(op); else bOps.push(op as Extract<AlignOp, { t: 'bOnly' }>); } i += 1; }
     if (gapStart === 0 || ops[gapStart - 1].t !== 'match' || i >= ops.length || ops[i].t !== 'match' || !aOps.length || !bOps.length) continue;
+    // Sup-bearing witness tokens inside a MIXED gap run: the adjacent-pair
+    // scan above only reaches isolated aOnly/bOnly pairs, but the aligner can
+    // strand "request!" a few tokens away from "request$^1$" in one gap.
+    // Pair by folded identity — only when exactly one backbone candidate
+    // matches, so a twin can't steal another word's marker.
+    for (let bi = bOps.length - 1; bi >= 0; bi -= 1) {
+      const sup = SUP_RE.exec(bOps[bi].bRaw);
+      if (!sup) continue;
+      const baseFold = folded(sup[1]);
+      if (!baseFold) continue;
+      const cands = aOps.filter((a) => a.aProv && folded(a.aRaw) === baseFold);
+      if (cands.length !== 1) continue;
+      if (glueSup(cands[0].aRaw, cands[0].aProv!, bOps[bi].bRaw)) {
+        aOps.splice(aOps.indexOf(cands[0]), 1);
+        bOps.splice(bi, 1);
+      }
+    }
+    if (!aOps.length || !bOps.length) continue;
     const run = contiguousRun(text, aOps); if (!run) continue;
     const witnessRaw = bOps.map((op) => op.bRaw).join(' '); const after = bOps.map((op) => stripWitnessMarkup(op.bRaw)).join(' ');
     const foldedBefore = folded(run.before); const foldedWitness = folded(witnessRaw); const score = similarity(foldedBefore, foldedWitness);
@@ -181,6 +209,10 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     const provs = span.map((op) => op.aProv).filter((p): p is TokenProvenance => Boolean(p));
     if (provs.length !== span.length || provs.some((p) => p.page !== provs[0].page || p.line !== provs[0].line)) continue;
     const before = lineText(text, provs[0]).slice(provs[0].col, provs.at(-1)!.col + span.at(-1)!.aRaw.length); const witnessRaw = span.map((op) => op.bRaw).join(' ');
+    // The print italicizes enumeration letters — "(a)", "(b)" — but only some
+    // survive the span constraints, and a half-italicized series reads as an
+    // error (John, APo I.13). Enumeration letters stay plain.
+    if (/^\(?[a-zA-Z]\)?[,.;:]?$/u.test(before.replace(/\*/gu, ''))) continue;
     // Skip running-head furniture italics (the work title). Only for
     // multi-word titles: a single-word title (Physics, Politics) folds equal
     // to a load-bearing body italic of the same word (review finding #4) —
