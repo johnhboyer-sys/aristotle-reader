@@ -82,6 +82,19 @@ export interface ReviewDecisions {
    */
   seatChapters?: { book: number; chapter: number; anchor: string }[];
   /**
+   * Witness translation chapters whose heading the witness OCR lost entirely
+   * (`SEAT-witness-chapter <book>.<n> => <anchor>`) — the witness-side twin of
+   * `SEAT-chapter`, which seats headings the BACKBONE scan lost. `anchor` is a
+   * literal substring unique to the witness line the lost chapter opens on
+   * (genie paragraphs are single lines; avoid spans with `*emphasis*` markup).
+   * The witness chapter map splits the host chapter at that line; without the
+   * seat, chapter-scoped pairing skips the chapter and it gets NO witness
+   * arbitration at all (Apostle APo II.3 read through with every endnote
+   * marker still garbled). Per-corpus DATA, so the held-out neutrality gate
+   * is untouched.
+   */
+  seatWitnessChapters?: { book: number; chapter: number; anchor: string }[];
+  /**
    * Body lines stranded at a page's HEAD position by a mid-column scan page
    * break (`PAD <anchor>`). The frozen converter strips each page's first
    * line as furniture, silently eating the body text (and any gutter tick on
@@ -229,7 +242,11 @@ export function parseDecisions(md: string): ReviewDecisions {
   for (const match of md.matchAll(/^SEAT-chapter\s+(\d+)\.(\d+)\s+=>\s+(.+?)\s*$/gmu)) {
     seatChapters.push({ book: Number(match[1]), chapter: Number(match[2]), anchor: match[3] });
   }
+  const seatWitnessChapters: { book: number; chapter: number; anchor: string }[] = [];
+  for (const match of md.matchAll(/^SEAT-witness-chapter\s+(\d+)\.(\d+)\s+=>\s+(.+?)\s*$/gmu)) {
+    seatWitnessChapters.push({ book: Number(match[1]), chapter: Number(match[2]), anchor: match[3] });
+  }
   const padLines: string[] = [];
   for (const match of md.matchAll(/^PAD\s+(.+?)\s*$/gmu)) padLines.push(match[1]);
-  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks, seatChapters, padLines };
+  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks, seatChapters, seatWitnessChapters, padLines };
 }

@@ -5,7 +5,7 @@ import { alignTokens, matchKey } from './align';
 import type { AlignOp, TokenProvenance } from './align';
 import { pairWitnessPages } from './witness-pairing';
 import type { PairingReport } from './witness-pairing';
-import { parseWitnessStructure } from './witness-structure';
+import { parseWitnessStructure, type WitnessChapterSeat, type WitnessStructureDiagnostic } from './witness-structure';
 import { projectWitnessStructure } from './witness-projection';
 import { buildReviewModel, patternKeyFor } from './review';
 import type { ReviewDecisions, ReviewModel } from './review';
@@ -89,10 +89,16 @@ function backboneChapterSlices(text: string): BackboneChapterSlice[] {
   return slices;
 }
 
-function chapterScopedOps(backbone: string, globalWitness: string, witness: string, config: CorpusConfig): AlignOp[] {
+function chapterScopedOps(
+  backbone: string,
+  globalWitness: string,
+  witness: string,
+  config: CorpusConfig,
+  seats?: WitnessChapterSeat[]
+): { ops: AlignOp[]; seatFailures: WitnessStructureDiagnostic[] } {
   const slices = backboneChapterSlices(backbone);
-  if (slices.length === 0) return alignTokens(backbone, globalWitness);
-  const structure = parseWitnessStructure(witness, config.workTitle);
+  if (slices.length === 0) return { ops: alignTokens(backbone, globalWitness), seatFailures: [] };
+  const structure = parseWitnessStructure(witness, config.workTitle, seats);
   const ops: AlignOp[] = [];
   for (const slice of slices) {
     // Preserve page, line, and column provenance while removing all tokens
@@ -119,7 +125,7 @@ function chapterScopedOps(backbone: string, globalWitness: string, witness: stri
     // real corpus).
     for (const op of alignTokens(backboneChapter, witnessChapter)) ops.push(op);
   }
-  return ops;
+  return { ops, seatFailures: structure.diagnostics.filter((d) => d.kind === 'witness-seat-failed') };
 }
 
 function stripped(raw: string): string {
@@ -1488,9 +1494,15 @@ export function vote(
   const nextId = changeFactory();
   const pairing = pairWitnessPages(backbone, witness, config);
   const witnessBody = pairing.witnessBodyPages.map((page) => page.text).join('\n');
-  const ops = config.witnessStructure
-    ? chapterScopedOps(backbone, witnessBody, witness, config)
-    : alignTokens(backbone, witnessBody);
+  const scoped = config.witnessStructure
+    ? chapterScopedOps(backbone, witnessBody, witness, config, decisions?.seatWitnessChapters)
+    : { ops: alignTokens(backbone, witnessBody), seatFailures: [] };
+  const ops = scoped.ops;
+  // A failed SEAT-witness-chapter must not silently no-op: the chapter it
+  // meant to recover would keep reading through with no arbitration.
+  const witnessSeatRecords = scoped.seatFailures.map((d) =>
+    flagRecord(nextId, 0, 'witness-seat-failed', { anchor: d.token, reason: d.reason })
+  );
   const counters = { punctCaseDiffs: 0 };
   const reviewRecords: ChangeRecord[] = [];
   const edits: PendingEdit[] = [];
@@ -1567,6 +1579,7 @@ export function vote(
     ...paragraphApplied.changes,
     ...corrected.changes,
     ...seated.changes,
+    ...witnessSeatRecords,
     ...coverageRecords,
     ...reviewRecords.filter((record) => record.tier === 2 && !appliedIds.has(record.id)),
   ];
