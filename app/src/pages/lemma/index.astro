@@ -4,6 +4,7 @@
 // landing and an internal-link hub so the per-lemma pages get discovered.
 import { readFileSync } from 'node:fs';
 import ThemeInit from '../../components/ThemeInit.astro';
+import Pwa from '../../components/Pwa.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
 import { jsonLdSafe } from '../../lib/jsonld';
 import { greekFold } from '@shared/lib/search';
@@ -46,6 +47,7 @@ const jsonLd = {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   {canonical && <link rel="canonical" href={canonical} />}

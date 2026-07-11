@@ -3,6 +3,7 @@
 // Stripe Payment Link (SUPPORT_URL); this page gives that appeal a real URL on
 // our own domain with a branded Open Graph card (public/og-support.png).
 import ThemeInit from '../components/ThemeInit.astro';
+import Pwa from '../components/Pwa.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { SUPPORT_URL } from '../lib/support';
 import { jsonLdSafe } from '../lib/jsonld';
@@ -36,6 +37,7 @@ const jsonLd = {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   {canonical && <link rel="canonical" href={canonical} />}

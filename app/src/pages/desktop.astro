@@ -4,6 +4,7 @@
 // annotations/data, FAQ. Unlinked from the rest of the site until a release
 // exists — see app/src/pages/support.astro for the pattern this follows.
 import ThemeInit from '../components/ThemeInit.astro';
+import Pwa from '../components/Pwa.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import '@shared/styles/global.css';
 
@@ -21,6 +22,7 @@ const canonical = Astro.site
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   {canonical && <link rel="canonical" href={canonical} />}

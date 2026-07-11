@@ -9,6 +9,7 @@
 // public/data/lemmata/<slug>.json; this page just renders it at build time.
 import { readFileSync } from 'node:fs';
 import ThemeInit from './ThemeInit.astro';
+import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, workPath, workLanding, bookLabel, isBookless } from '@shared/lib/works';
 import { sanitizeHtml } from '../lib/html';
@@ -120,6 +121,7 @@ const breadcrumb = Astro.site ? {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   {canonical && <link rel="canonical" href={canonical} />}

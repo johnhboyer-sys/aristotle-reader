@@ -1,0 +1,17 @@
+---
+// PWA head lines + service-worker registration, included on every page.
+// The manifest uses relative start_url/scope so the GH Pages base path needs
+// no hardcoding; the worker must live INSIDE the base path for its scope to
+// cover the site. Registration is feature-detected and silent on failure —
+// the site works identically without it (and the desktop app never includes
+// this component).
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<link rel="manifest" href={`${base}/manifest.webmanifest`} />
+<script is:inline define:vars={{ swUrl: `${base}/sw.js`, swScope: `${base}/` }}>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(swUrl, { scope: swScope }).catch(() => {});
+    });
+  }
+</script>

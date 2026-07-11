@@ -6,6 +6,7 @@
 // host. The reader itself lives at /<work>/book/<n> for every work.
 import { readFileSync } from 'node:fs';
 import ThemeInit from './ThemeInit.astro';
+import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import {
   AUTHENTICITY_LABEL, getWork, bookLabel, isBookless, workPath, visibleTranslations,
@@ -105,6 +106,7 @@ const breadcrumbLd = Astro.site
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   {canonical && <link rel="canonical" href={canonical} />}
