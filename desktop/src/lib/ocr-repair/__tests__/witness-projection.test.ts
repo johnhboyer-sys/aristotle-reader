@@ -110,6 +110,55 @@ describe('chapter-scoped witness projection', () => {
     ]);
     expect(out.text).toBe('request1 requests requests');
   });
+  it('refuses a digit remnant that rides without a garble glyph', () => {
+    // "A2" is a formula, not superscript debris — only glyph-escorted
+    // remnants ("!2" for ¹²) strip.
+    const out = apply('A2', [{ t: 'match', aRaw: 'A2', bRaw: 'A$^{12}$', aProv: prov(0) }]);
+    expect(out.text).toBe('A2');
+  });
+  it('refuses in-run pairing when two witness markers share a base', () => {
+    // The word-run repair may still arbitrate the whole run (its own
+    // guards); the unit under test is that no sup-marker PAIRING happens —
+    // handing either marker to "request!" would be a coin flip.
+    const out = apply('request! watermelon', [
+      { t: 'match', aRaw: 'A', bRaw: 'A', aProv: prov(0) },
+      { t: 'aOnly', aRaw: 'request!', aProv: prov(0) },
+      { t: 'aOnly', aRaw: 'watermelon', aProv: prov(9) },
+      { t: 'bOnly', bRaw: 'request$^1$' },
+      { t: 'bOnly', bRaw: 'request$^2$' },
+      { t: 'match', aRaw: 'Z', bRaw: 'Z', aProv: prov(20) },
+    ]);
+    expect(out.records.filter((r) => r.evidence?.kind === 'witness-sup-marker')).toEqual([]);
+  });
+  it('refuses to adopt the witness base for an unrelated backbone token', () => {
+    // The unguarded adopt branch rewrote a wrapped-word FRAGMENT into the
+    // witness's FULL word, duplicating the stem across the line break
+    // ("indemonstr-" / "able.'®" became "indemonstr-" / "indemonstrable.10").
+    const out = apply("able.'®", [
+      { t: 'aOnly', aRaw: "able.'®", aProv: prov(0) },
+      { t: 'bOnly', bRaw: 'indemonstrable.$^{10}$' },
+    ]);
+    expect(out.text).toBe("able.'®");
+  });
+  it('does not pair one backbone token with two adjacent witness markers', () => {
+    const out = apply('word>', [
+      { t: 'bOnly', bRaw: 'word<sup>1</sup>' },
+      { t: 'aOnly', aRaw: 'word>', aProv: prov(0) },
+      { t: 'bOnly', bRaw: 'word<sup>2</sup>' },
+    ]);
+    // first window pairs and consumes; the overlapping second window is
+    // skipped rather than flagged as a spurious overlap
+    expect(out.text).toBe('word1');
+    expect(out.records.filter((r) => r.evidence?.reason === 'existing-edit-overlap')).toEqual([]);
+  });
+  it('still wraps a bare single-letter italic (variable, not enumeration)', () => {
+    const out = apply('let A be', [
+      { t: 'match', aRaw: 'let', bRaw: 'let', aProv: prov(0) },
+      { t: 'match', aRaw: 'A', bRaw: '*A*', aProv: prov(4) },
+      { t: 'match', aRaw: 'be', bRaw: 'be', aProv: prov(6) },
+    ]);
+    expect(out.text).toBe('let *A* be');
+  });
   it('keeps enumeration letters plain even when the witness italicizes them', () => {
     // Apostle prints "(a)", "(b)" with italic letters; a half-italicized
     // series reads as an error (John, APo I.13).

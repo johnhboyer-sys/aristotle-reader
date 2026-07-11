@@ -113,15 +113,21 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
       } else {
         const parts = /^([,.;:)\]]{0,2})([>!*°®'’"”‘?\d]{0,4})$/u.exec(tail);
         if (!parts || !(parts[1] || parts[2])) return false;
+        // A digit remnant is only believable as superscript debris when it
+        // is a suffix of the marker AND rides with a garble glyph ("!2" for
+        // ¹²) — a bare trailing digit (formula "A2") is real text.
         const remnant = parts[2].replace(/\D/gu, '');
-        if (remnant && !digits.endsWith(remnant)) return false;
+        if (remnant && (!digits.endsWith(remnant) || !/[>!*°®'’"”‘?]/u.test(parts[2]))) return false;
         clean = base + parts[1];
       }
     } else {
       // The backbone token differs beyond a tail (quote-style mismatch,
       // debris the tail rule can't reach) — adopt the witness base outright:
-      // same letters (matchKey-guarded below), cleaner OCR. Gluing onto the
-      // raw token composed garbage like "false**" + 27 -> "false**27".
+      // cleaner OCR. Gluing onto the raw token composed garbage like
+      // "false**" + 27 -> "false**27". The folded identity below is the
+      // guard: without it this branch rewrote an UNRELATED backbone token
+      // into the witness word ("other" -> "request1").
+      if (folded(aRaw) !== folded(base)) return false;
       clean = base;
     }
     if (matchKey(base) !== matchKey(clean)) return false;
@@ -134,6 +140,10 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
 
   const consumed = new Set<number>();
   for (let i = 0; i + 1 < ops.length; i += 1) {
+    // Overlapping windows must not pair one backbone token twice
+    // (bOnly,aOnly,bOnly would glue the first marker then flag the second
+    // as an overlap instead of surfacing the ambiguity).
+    if (consumed.has(i) || consumed.has(i + 1)) continue;
     const pair = [ops[i], ops[i + 1]];
     const a = pair.find((op): op is Extract<AlignOp, { t: 'aOnly' }> => op.t === 'aOnly');
     const b = pair.find((op): op is Extract<AlignOp, { t: 'bOnly' }> => op.t === 'bOnly');
@@ -182,6 +192,11 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
       if (!sup) continue;
       const baseFold = folded(sup[1]);
       if (!baseFold) continue;
+      // Unique on BOTH sides: two same-base witness markers against one
+      // backbone token is ambiguous — reverse iteration would silently
+      // hand the later marker to the earlier word.
+      const bTwins = bOps.filter((o) => { const s = SUP_RE.exec(o.bRaw); return s && folded(s[1]) === baseFold; });
+      if (bTwins.length !== 1) continue;
       const cands = aOps.filter((a) => a.aProv && folded(a.aRaw) === baseFold);
       if (cands.length !== 1) continue;
       if (glueSup(cands[0].aRaw, cands[0].aProv!, bOps[bi].bRaw)) {
@@ -211,8 +226,9 @@ export function projectWitnessStructure(text: string, ops: AlignOp[], config: Co
     const before = lineText(text, provs[0]).slice(provs[0].col, provs.at(-1)!.col + span.at(-1)!.aRaw.length); const witnessRaw = span.map((op) => op.bRaw).join(' ');
     // The print italicizes enumeration letters — "(a)", "(b)" — but only some
     // survive the span constraints, and a half-italicized series reads as an
-    // error (John, APo I.13). Enumeration letters stay plain.
-    if (/^\(?[a-zA-Z]\)?[,.;:]?$/u.test(before.replace(/\*/gu, ''))) continue;
+    // error (John, APo I.13). PARENTHESIZED single letters only: a bare
+    // one-letter italic can be a legitimate variable or siglum.
+    if (/^\([a-zA-Z]\)[,.;:]?$/u.test(before.replace(/\*/gu, ''))) continue;
     // Skip running-head furniture italics (the work title). Only for
     // multi-word titles: a single-word title (Physics, Politics) folds equal
     // to a load-bearing body italic of the same word (review finding #4) —
