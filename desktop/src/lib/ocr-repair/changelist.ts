@@ -24,6 +24,7 @@ export type RuleId =
   | 'wrap-join' // line-wrap dash joints / lexical compounds rejoined across the wrap
   | 'ligature'
   | 'emphasis'
+  | 'endnote-block' // stage 6: a page-bottom note block synthesized from witness commentary
   | 'word-identity' // Tier 2 only
   | 'no-witness-span' // flag record, no edit: witness coverage gap
   | 'flag'; // flag record, no edit: anything left in place for human eyes

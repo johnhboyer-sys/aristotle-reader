@@ -2413,3 +2413,65 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
     color: #5a5248;
   }
 }
+
+/* ── Endnote sidebar (commentary-class notes, render=endnote imports) ─────
+   The settings-sidebar slide-in shell, holding one note's full commentary
+   body. Click-only (Reader.svelte), Esc/✕/click-away to dismiss. */
+.endnote-sidebar {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(26rem, 88vw);
+  background: var(--col-bg);
+  border-left: 1px solid var(--border);
+  z-index: 50;
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -2px 0 18px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+.endnote-sidebar.open { transform: translateX(0); }
+
+@media (max-width: 680px) {
+  .endnote-sidebar {
+    top: auto;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    max-height: 70vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.14);
+    transform: translateY(100%);
+  }
+  .endnote-sidebar.open { transform: translateY(0); }
+}
+
+.endnote-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.endnote-title {
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.endnote-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem 1.15rem 1.5rem;
+}
+.endnote-text {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.endnote-text p { margin: 0 0 0.75em; }
+.endnote-text p:last-child { margin-bottom: 0; }

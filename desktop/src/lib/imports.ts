@@ -50,6 +50,9 @@ export interface ImportRecord {
    */
   footnotes?: Record<string, string>;
   footnoteScope?: FootnoteScope;
+  /** 'endnote' opens notes in the slide-in sidebar instead of the popover
+   * (from the sentinel's render= attribute — commentary-class editions). */
+  noteRender?: 'endnote';
   /**
    * 'b.c' -> chapter title, verbatim, from the PDF converter's title map
    * (Phase 4A's `ConvertResult.titles`; §Phase-4B task 2, rendering revised
@@ -192,6 +195,10 @@ type G = typeof globalThis & {
    * build, so the read is always undefined there — inert, byte-identical.
    */
   __ARISTOTLE_IMPORT_TITLE_HOOK__?: (work: string, id: string, book: number, chapter: string) => string | null;
+  /** 'endnote' when the import's notes are commentary-class (sentinel
+   * render=endnote) — the shared Reader opens the endnote sidebar instead of
+   * the footnote popover. Same lazy-global pattern as the hooks above. */
+  __ARISTOTLE_IMPORT_NOTE_RENDER__?: (work: string, id: string) => 'endnote' | null;
 };
 
 const registered = new Map<string, ImportRecord>(); // "work/id" → record
@@ -274,6 +281,7 @@ function installHooks(): void {
   g.__ARISTOTLE_IMPORT_HAS_TRANS__ = (work, id) => registered.has(`${work}/${id}`);
   g.__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__ = (work, id, label) => getImportFootnote(work, id, label);
   g.__ARISTOTLE_IMPORT_TITLE_HOOK__ = (work, id, book, chapter) => getImportTitle(work, id, book, chapter);
+  g.__ARISTOTLE_IMPORT_NOTE_RENDER__ = (work, id) => registered.get(`${work}/${id}`)?.noteRender ?? null;
 }
 
 /** Load every stored import and register it — call once at startup, before mount. */
@@ -521,6 +529,7 @@ export async function runImport(
     alignment,
     footnotes: parsed.footnotes,
     footnoteScope: parsed.footnoteScope,
+    ...(parsed.noteRender ? { noteRender: parsed.noteRender } : {}),
     ...(req.titles ? { titles: req.titles } : {}),
   };
   const canonical = parsed.hasFrontmatter

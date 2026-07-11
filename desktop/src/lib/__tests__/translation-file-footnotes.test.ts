@@ -113,6 +113,24 @@ describe('translation-file footnotes §C3: format round-trip', () => {
     expect(p.footnotes['2.3.1']).toBe('A per-chapter-scoped note, identified by book.chapter.number.');
   });
 
+  it('render=endnote on the sentinel sets noteRender; absent leaves it undefined', () => {
+    const endnote = parseTranslationFile(withFrontmatter(
+      '{2.3}Marker here.[^2.3.1]\n\n' +
+        '<!-- footnotes scope=per-chapter render=endnote -->\n' +
+        '[^2.3.1]: A commentary-class note.\n'
+    ));
+    expect(endnote.noteRender).toBe('endnote');
+    expect(endnote.footnoteScope).toBe('per-chapter');
+    expect(endnote.footnotes['2.3.1']).toBe('A commentary-class note.');
+
+    const plain = parseTranslationFile(withFrontmatter(
+      '{2.3}Marker here.[^2.3.1]\n\n' +
+        '<!-- footnotes scope=per-chapter -->\n' +
+        '[^2.3.1]: An ordinary footnote.\n'
+    ));
+    expect(plain.noteRender).toBeUndefined();
+  });
+
   it('splitChapters slices footnoteMarkers per chapter with chapter-local offsets, like tags/emphasis', () => {
     const raw = withFrontmatter(
       '{1.1}First chapter text ends with a marker.[^1]\n' +

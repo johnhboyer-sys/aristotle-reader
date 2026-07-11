@@ -36,7 +36,7 @@ describe('endnote block emission', () => {
     const lines = out.text.split('\n');
     expect(out.notesEmitted).toBe(2);
     expect(lines.at(-4)).toBe('');
-    expect(lines.at(-3)).toBe('<<notes scope=per-chapter>>');
+    expect(lines.at(-3)).toBe('<<notes scope=per-chapter render=endnote>>');
     expect(lines.at(-2)).toBe('           1. First note body.');
     expect(lines.at(-1)).toBe('           2. Second note body.');
   });

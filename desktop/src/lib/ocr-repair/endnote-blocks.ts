@@ -190,7 +190,7 @@ export function emitEndnoteBlocks(
     // Endnote numbering restarts per chapter in this house style; declaring
     // it spares the converter's scope inference from reconstruction
     // artifacts (marker-less gap-filled notes score as phantom crossings).
-    const block: string[] = ['', '<<notes scope=per-chapter>>'];
+    const block: string[] = ['', '<<notes scope=per-chapter render=endnote>>'];
     for (const note of pageNotes) {
       block.push(...wrapNote(note.n, note.body, margin, width));
       notesEmitted += 1;

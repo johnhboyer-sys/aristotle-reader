@@ -144,6 +144,8 @@ export interface FootnoteState {
   scopesAlive: { continuous: boolean; perBook: boolean; perChapter: boolean };
   /** Scope declared by a `<<notes scope=…>>` sentinel — trusted over inference. */
   declared: ScopeKind | null;
+  /** `render=endnote` declared by the sentinel — carried to the tagged output. */
+  declaredRender: 'endnote' | null;
   lastNoteNumber: number | null;
   lastPos: { book: number | null; chapter: number | null } | null;
   discriminatingObs: number;
@@ -161,6 +163,7 @@ export function createFootnoteState(): FootnoteState {
     currentChapter: null,
     scopesAlive: { continuous: true, perBook: true, perChapter: true },
     declared: null,
+    declaredRender: null,
     lastNoteNumber: null,
     lastPos: null,
     discriminatingObs: 0,
@@ -209,7 +212,10 @@ function isNoteStarterLine(line: string): boolean {
 // gap-filled notes, garbled duplicate markers) otherwise feed the machine
 // phantom observations. Absent the sentinel, behavior is byte-identical to
 // before this extension.
-const NOTE_SENTINEL_RE = /^\s*<<notes(?:\s+scope=(continuous|per-book|per-chapter))?>>\s*$/;
+// The optional `render=endnote` attribute declares the notes are ENDNOTES
+// (commentary-class bodies) — carried through to the tagged sentinel so the
+// reader can choose a sidebar over the footnote popover.
+const NOTE_SENTINEL_RE = /^\s*<<notes(?:\s+scope=(continuous|per-book|per-chapter))?(?:\s+render=(endnote))?>>\s*$/;
 
 // ---------------------------------------------------------------------------
 // §A1 block bounds (defensively re-derived — see module header)
@@ -732,15 +738,17 @@ export function extractFootnotes(page: Page, scan: PageScan, divisions: Division
 
   // A `<<notes scope=…>>` sentinel declares the numbering scheme once; the
   // declaration is document-sticky and trusted over inference.
-  if (state.declared === null) {
+  if (state.declared === null || state.declaredRender === null) {
     for (const line of lines) {
       const m = NOTE_SENTINEL_RE.exec(line);
-      if (m?.[1]) {
+      if (!m) continue;
+      if (m[1] && state.declared === null) {
         state.declared = m[1] as ScopeKind;
         state.verdict = state.declared;
         state.flags.push(`footnote-scope:${state.declared}`);
-        break;
       }
+      if (m[2] && state.declaredRender === null) state.declaredRender = 'endnote';
+      break;
     }
   }
 
