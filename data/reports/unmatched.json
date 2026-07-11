@@ -1,211 +1,414 @@
 [
  {
-  "key": "tufw/nwn",
-  "surface": "τυφώνων",
-  "first_ref": "392b11",
+  "key": "messhniakw=|",
+  "surface": "Μεσσηνιακῷ",
+  "first_ref": "1373b18",
   "count": 2,
   "analyses": []
  },
  {
-  "key": "a)lw|a/dai",
-  "surface": "Ἀλῳάδαι",
-  "first_ref": "391a11",
+  "key": "mousei=on",
+  "surface": "μουσεῖον",
+  "first_ref": "1406a24",
+  "count": 2,
+  "analyses": []
+ },
+ {
+  "key": "pra/tuos",
+  "surface": "Πράτυος",
+  "first_ref": "1413a8",
+  "count": 2,
+  "analyses": []
+ },
+ {
+  "key": "eu)/ghrws",
+  "surface": "εὔγηρως",
+  "first_ref": "1361b28",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "u(yh/lois",
-  "surface": "ὑψήλοις",
-  "first_ref": "392b18",
+  "key": "au)ta/rkws",
+  "surface": "αὐτάρκως",
+  "first_ref": "1362a27",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "dianewgw/s",
-  "surface": "διανεωγὼς",
-  "first_ref": "393a18",
+  "key": "filotoi/outoi",
+  "surface": "φιλοτοίουτοι",
+  "first_ref": "1363b1",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "pamfu/lion",
-  "surface": "Παμφύλιον",
-  "first_ref": "393a30",
+  "key": "filetairw/teron",
+  "surface": "φιλεταιρώτερον",
+  "first_ref": "1364b1",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "a)lbi/wn",
-  "surface": "Ἀλβίων",
-  "first_ref": "393b12",
+  "key": "o)lumpioni/kh|",
+  "surface": "ὀλυμπιονίκῃ",
+  "first_ref": "1365a25",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "i)e/rnh",
-  "surface": "Ἰέρνη",
-  "first_ref": "393b13",
+  "key": "h)=xes",
+  "surface": "ἦχες",
+  "first_ref": "1367a12",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "taproba/nh",
-  "surface": "Ταπροβάνη",
-  "first_ref": "393b14",
+  "key": "o)lumpioni/kou",
+  "surface": "ὀλυμπιονίκου",
+  "first_ref": "1367b18",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "febo/l",
-  "surface": "Φεβὸλ",
-  "first_ref": "393b15",
+  "key": "mnhme/nos",
+  "surface": "μνημένος",
+  "first_ref": "1370b6",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "tana/i+dos",
-  "surface": "Τανάϊδος",
-  "first_ref": "393b30",
+  "key": "filo/maimoi",
+  "surface": "φιλόμαιμοι",
+  "first_ref": "1371b24",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "e)/kleukon",
-  "surface": "ἔκλευκον",
-  "first_ref": "394a35",
+  "key": "turrani/s",
+  "surface": "τυρρανίς",
+  "first_ref": "1372b2",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "e)gkolpi/ai",
-  "surface": "ἐγκολπίαι",
-  "first_ref": "394b15",
+  "key": "naopoiou/s",
+  "surface": "ναοποιούς",
+  "first_ref": "1374b27",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "e)cudri/ai",
-  "surface": "ἐξυδρίαι",
-  "first_ref": "394b19",
+  "key": "sigeiei=s",
+  "surface": "Σιγειεῖς",
+  "first_ref": "1375b31",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "i)a/puga",
-  "surface": "ἰάπυγα",
-  "first_ref": "394b26",
+  "key": "paxu/peri",
+  "surface": "παχύπερὶ",
+  "first_ref": "1377a7",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "qraski/as",
-  "surface": "θρασκίας",
-  "first_ref": "394b30",
+  "key": "e)rgofi/lou",
+  "surface": "Ἐργοφίλου",
+  "first_ref": "1380b11",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "libofoi/nika",
-  "surface": "λιβοφοίνικα",
-  "first_ref": "394b34",
+  "key": "kallisqe/nei",
+  "surface": "Καλλισθένει",
+  "first_ref": "1380b12",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "a)nakamyi/pnooi",
-  "surface": "ἀνακαμψίπνοοι",
-  "first_ref": "394b36",
+  "key": "kallisqe/nous",
+  "surface": "Καλλισθένους",
+  "first_ref": "1380b13",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "shnh=yen",
-  "surface": "σηνῆψεν",
-  "first_ref": "396b11",
+  "key": "prowdopepoi/hke",
+  "surface": "προωδοπεποίηκε",
+  "first_ref": "1389b31",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "sulla/yies",
-  "surface": "Συλλάψιες",
-  "first_ref": "396b20",
+  "key": "ei)/nai",
+  "surface": "εἴναι",
+  "first_ref": "1392b11",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "h)piai/nousin",
-  "surface": "ἠπιαίνουσιν",
-  "first_ref": "397b1",
+  "key": "peparhqi/as",
+  "surface": "Πεπαρηθίας",
+  "first_ref": "1398a33",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "su/xnois",
-  "surface": "σύχνοις",
-  "first_ref": "398a17",
+  "key": "manti/a|",
+  "surface": "Μαντίᾳ",
+  "first_ref": "1398b2",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "mhxanote/xnai",
-  "surface": "μηχανοτέχναι",
-  "first_ref": "398b14",
+  "key": "sti/lbwnos",
+  "surface": "Στίλβωνος",
+  "first_ref": "1398b4",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "prosta/cin",
-  "surface": "προστάξιν",
-  "first_ref": "399b9",
+  "key": "qettali/skon",
+  "surface": "Θετταλίσκον",
+  "first_ref": "1398b5",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "qa/lattas",
-  "surface": "θάλαττας",
-  "first_ref": "400a28",
+  "key": "micidhmi/dhn",
+  "surface": "Μιξιδημίδην",
+  "first_ref": "1398b27",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "biai/",
-  "surface": "βιαί",
-  "first_ref": "400a28",
+  "key": "micidhmi/dh|",
+  "surface": "Μιξιδημίδῃ",
+  "first_ref": "1398b28",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "exo/mena",
-  "surface": "εχόμενα",
-  "first_ref": "401a3",
+  "key": "stra/baka",
+  "surface": "Στράβακα",
+  "first_ref": "1399b2",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "a)strapai=os",
-  "surface": "ἀστραπαῖός",
-  "first_ref": "401a16",
+  "key": "e)lea/tais",
+  "surface": "Ἐλεάταις",
+  "first_ref": "1400b6",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "brontai=os",
-  "surface": "βρονταῖος",
-  "first_ref": "401a17",
+  "key": "au)ch=|",
+  "surface": "αὐξῇ",
+  "first_ref": "1401b7",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "polieu/s",
-  "surface": "πολιεὺς",
-  "first_ref": "401a19",
+  "key": "pro/pon",
+  "surface": "πρόπον",
+  "first_ref": "1404a30",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "tropaiou=xos",
-  "surface": "τροπαιοῦχος",
-  "first_ref": "401a23",
+  "key": "dionusoko/lakas",
+  "surface": "διονυσοκόλακας",
+  "first_ref": "1405a23",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "stenopo/ron",
+  "surface": "στενοπόρον",
+  "first_ref": "1405b37",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "ptwxomousoko/lokas",
+  "surface": "πτωχομουσοκόλοκας",
+  "first_ref": "1405b38",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "puri/xrwn",
+  "surface": "πυρίχρων",
+  "first_ref": "1406a2",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "a)lkida/mantos",
+  "surface": "Ἀλκιδάμαντος",
+  "first_ref": "1406a18",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "parh/mpisxen",
+  "surface": "παρήμπισχεν",
+  "first_ref": "1406a28",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "au)/qades",
+  "surface": "αὔθαδες",
+  "first_ref": "1406b3",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "qeoda/mas",
+  "surface": "Θεοδάμας",
+  "first_ref": "1406b30",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "a)lh/llois",
+  "surface": "ἀλήλλοις",
+  "first_ref": "1407a24",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "teumhssou=",
+  "surface": "Τευμησσοῦ",
+  "first_ref": "1408a2",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "dalogene/s",
+  "surface": "Δαλογενὲς",
+  "first_ref": "1409a14",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "xruseoko/ma",
+  "surface": "Χρυσεοκόμα",
+  "first_ref": "1409a15",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "peiqo/laon",
+  "surface": "Πειθόλαόν",
+  "first_ref": "1410a17",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "qeodektei/ois",
+  "surface": "Θεοδεκτείοις",
+  "first_ref": "1410b3",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "peiqo/laos",
+  "surface": "Πειθόλαος",
+  "first_ref": "1411a13",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "da/pedonde",
+  "surface": "δάπεδόνδε",
+  "first_ref": "1411b34",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "xi/meqla",
+  "surface": "χίμεθλα",
+  "first_ref": "1412a31",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "a)na/sxetos",
+  "surface": "Ἀνάσχετος",
+  "first_ref": "1412b13",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "karpa/qios",
+  "surface": "Καρπάθιός",
+  "first_ref": "1413a19",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "gerontomaxi/a|",
+  "surface": "Γεροντομαχίᾳ",
+  "first_ref": "1413b26",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "r(ada/manqus",
+  "surface": "Ῥαδάμανθυς",
+  "first_ref": "1413b26",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "h(/geo",
+  "surface": "ἥγεό",
+  "first_ref": "1415a17",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "diablhte/on",
+  "surface": "διαβλητέον",
+  "first_ref": "1415a34",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "poiou=oin",
+  "surface": "ποιοῦοιν",
+  "first_ref": "1418a15",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "polu/xous",
+  "surface": "πολύχους",
+  "first_ref": "1418b9",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "messhniakh=|",
+  "surface": "Μεσσηνιακῇ",
+  "first_ref": "1418b11",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "eu)dokimhko/ta",
+  "surface": "εὐδοκιμηκότα",
+  "first_ref": "1418b14",
+  "count": 1,
+  "analyses": []
+ },
+ {
+  "key": "mi/sos",
+  "surface": "μίσος",
+  "first_ref": "1419b26",
   "count": 1,
   "analyses": []
  }

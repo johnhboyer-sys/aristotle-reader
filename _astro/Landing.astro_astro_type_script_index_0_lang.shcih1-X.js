@@ -1,0 +1,1 @@
+import{r}from"./resume.BGNOvXZm.js";const e=document.getElementById("lp-resume");if(e){const t=r(e.dataset.work);if(t){const o=Number(e.dataset.books)||1,s=Math.min(Math.max(1,t.book),o),a="/aristotle-reader".replace(/\/$/,"");e.href=`${a}/${e.dataset.work}/book/${s}${t.cite?`#${t.cite}`:""}`,e.textContent=t.cite?`Resume at ${t.cite}`:o>1?`Resume Book ${s}`:"Resume",e.hidden=!1}}
