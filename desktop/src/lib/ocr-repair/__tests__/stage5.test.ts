@@ -419,6 +419,20 @@ describe('stage 5 seating-pass directives (SEAT / NOTICK / anchored DROP)', () =
     ]);
   });
 
+  it('parses SEAT-witness-chapter without colliding with SEAT or SEAT-chapter', () => {
+    const md = [
+      'SEAT 80b5 => of B.) So if C',
+      'SEAT-chapter 2.14 => Let so much, then, be',
+      'SEAT-witness-chapter 2.3 => It is clear, then, that in all these inquiries',
+    ].join('\n');
+    const d = parseDecisions(md);
+    expect(d.seatTicks).toEqual([{ ref: '80b5', anchor: 'of B.) So if C' }]);
+    expect(d.seatChapters).toEqual([{ book: 2, chapter: 14, anchor: 'Let so much, then, be' }]);
+    expect(d.seatWitnessChapters).toEqual([
+      { book: 2, chapter: 3, anchor: 'It is clear, then, that in all these inquiries' },
+    ]);
+  });
+
   it('seats a glued verso column tick and un-glues its first body word', () => {
     const backbone = [
       'RUNNING HEAD',
