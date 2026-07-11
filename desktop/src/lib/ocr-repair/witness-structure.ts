@@ -65,9 +65,9 @@ const SUP_DIGITS: Record<string, string> = {
 // arbitration (Apostle APo II.18).
 function chapterNumeral(raw: string): { value: number; marker: string | null } | null {
   const cleaned = raw.replace(/[*_~`]/gu, '').trim();
-  const match = /^(\d+)(?:([⁰¹²³⁴⁵⁶⁷⁸⁹]+)|\$\^\{?(\d+)\}?\$|<sup>\s*(\d+)\s*<\/sup>)?$/u.exec(cleaned);
+  const match = /^(\d+)(?:([⁰¹²³⁴⁵⁶⁷⁸⁹]+)|\$\^\{(\d+)\}\$|\$\^(\d+)\$|<sup>\s*(\d+)\s*<\/sup>)?$/u.exec(cleaned);
   if (!match) return null;
-  const marker = match[2] ? [...match[2]].map((c) => SUP_DIGITS[c]).join('') : match[3] ?? match[4] ?? null;
+  const marker = match[2] ? [...match[2]].map((c) => SUP_DIGITS[c]).join('') : match[3] ?? match[4] ?? match[5] ?? null;
   return { value: Number(match[1]), marker };
 }
 
@@ -132,6 +132,11 @@ export function parseWitnessStructure(
     const parsed = heading(lines[i]);
     if (!parsed || parsed.level !== 2) continue;
     const text = plainHeading(parsed.text);
+    // Numeral H2s are chapter-heading level jitter, never section ends —
+    // post-translation sections in this format open with NAMED H2s
+    // (COMMENTARIES, Glossary). Deliberately sequence-blind, same as the
+    // walk below: an out-of-sequence numeral is the walk's conflict to
+    // flag, not a section boundary.
     if (/^BOOK\s+\S+$/iu.test(text) || chapterNumeral(parsed.text)) continue;
     bodyEnd = i;
     break;
@@ -219,6 +224,20 @@ export function parseWitnessStructure(
     const [hostBook, hostNum] = host.key.split(':').map(Number);
     if (hostBook !== seat.book || hostNum >= seat.chapter) {
       fail(`anchor-inside-${host.key}`, at);
+      continue;
+    }
+    // Chapters are physically ordered, so the host must be the chapter that
+    // immediately precedes the seat target among those mapped for the book —
+    // seating 4 into chapter 1 while chapter 3 is mapped would put chapter
+    // 4's text before chapter 3's. Two consecutive lost chapters seat in
+    // ascending order: the first seat becomes the second's host.
+    let precedingNum = 0;
+    for (const mappedKey of chapters.keys()) {
+      const [mappedBook, mappedNum] = mappedKey.split(':').map(Number);
+      if (mappedBook === seat.book && mappedNum < seat.chapter && mappedNum > precedingNum) precedingNum = mappedNum;
+    }
+    if (hostNum !== precedingNum) {
+      fail(`anchor-inside-${host.key}-but-${seat.book}:${precedingNum}-precedes-target`, at);
       continue;
     }
     // Splitting at the host's own first line would leave the host empty.

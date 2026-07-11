@@ -124,6 +124,40 @@ describe('SEAT-witness-chapter', () => {
     expect(parsed.chapters.has('1:2')).toBe(false);
     expect(parsed.diagnostics).toContainEqual(expect.objectContaining({ kind: 'witness-seat-failed', reason: 'anchor-inside-1:3' }));
   });
+
+  it('refuses a host that is not the immediately preceding mapped chapter', () => {
+    // Seating chapter 4 into chapter 1 while chapter 3 is mapped would put
+    // chapter 4's text physically before chapter 3's.
+    const parsed = parseWitnessStructure(document(body), undefined, [
+      { book: 1, chapter: 4, anchor: 'Opening of the lost chapter' },
+    ]);
+
+    expect(parsed.chapters.has('1:4')).toBe(false);
+    expect(parsed.diagnostics).toContainEqual(
+      expect.objectContaining({ kind: 'witness-seat-failed', reason: 'anchor-inside-1:1-but-1:3-precedes-target' })
+    );
+  });
+
+  it('seats two consecutive lost chapters in ascending order', () => {
+    const twoLost = '### BOOK A\n### 1\nFirst chapter.\nSecond opens here.\nThird opens here.\n### 4\nFourth.';
+    const parsed = parseWitnessStructure(document(twoLost), undefined, [
+      { book: 1, chapter: 2, anchor: 'Second opens here' },
+      { book: 1, chapter: 3, anchor: 'Third opens here' },
+    ]);
+
+    expect(parsed.chapters.get('1:1')?.text).toBe('First chapter.');
+    expect(parsed.chapters.get('1:2')?.text).toBe('Second opens here.');
+    expect(parsed.chapters.get('1:3')?.text).toBe('Third opens here.');
+    expect(parsed.diagnostics.filter((d) => d.kind === 'witness-seat-failed')).toEqual([]);
+  });
+
+  it('rejects malformed TeX marker forms on chapter numerals', () => {
+    for (const heading of ['### 2$^{1$', '### 2$^1}$']) {
+      const parsed = parseWitnessStructure(document(`### BOOK A\n### 1\nFirst.\n${heading}\nSecond.`));
+
+      expect(parsed.chapters.has('1:2')).toBe(false);
+    }
+  });
 });
 
 describe('chapter-scoped stage-5 pairing', () => {
@@ -170,6 +204,23 @@ describe('chapter-scoped stage-5 pairing', () => {
       expect.objectContaining({
         rule: 'flag',
         evidence: expect.objectContaining({ kind: 'witness-seat-failed', anchor: 'no such line', reason: 'anchor-unmatched' }),
+      })
+    );
+  });
+
+  it('flags seats even when the backbone has no chapter headings', () => {
+    const backbone = 'RUNNING HEAD\n71a No chapter structure at all.';
+    const witness = document('### BOOK A\n### 1\n71a No chapter structure at all.');
+    const decisions = {
+      checkedPatterns: new Set<string>(),
+      seatWitnessChapters: [{ book: 1, chapter: 2, anchor: 'anything' }],
+    };
+    const outcome = vote(backbone, witness, config(true), decisions);
+
+    expect(outcome.changes).toContainEqual(
+      expect.objectContaining({
+        rule: 'flag',
+        evidence: expect.objectContaining({ kind: 'witness-seat-failed', reason: 'no-backbone-chapters' }),
       })
     );
   });

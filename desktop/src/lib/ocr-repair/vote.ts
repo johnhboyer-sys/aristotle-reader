@@ -97,7 +97,18 @@ function chapterScopedOps(
   seats?: WitnessChapterSeat[]
 ): { ops: AlignOp[]; seatFailures: WitnessStructureDiagnostic[] } {
   const slices = backboneChapterSlices(backbone);
-  if (slices.length === 0) return { ops: alignTokens(backbone, globalWitness), seatFailures: [] };
+  if (slices.length === 0) {
+    // Whole-witness fallback never consults the chapter map, so any seat
+    // directive is moot here — but it must still surface, not vanish.
+    const seatFailures: WitnessStructureDiagnostic[] = (seats ?? []).map((seat) => ({
+      tier: 2,
+      line: 0,
+      kind: 'witness-seat-failed',
+      token: seat.anchor,
+      reason: 'no-backbone-chapters',
+    }));
+    return { ops: alignTokens(backbone, globalWitness), seatFailures };
+  }
   const structure = parseWitnessStructure(witness, config.workTitle, seats);
   const ops: AlignOp[] = [];
   for (const slice of slices) {
