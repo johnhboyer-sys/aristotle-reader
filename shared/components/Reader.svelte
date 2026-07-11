@@ -8,6 +8,7 @@
   import { touchRecent } from '../lib/resume';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
+  import EndnoteSidebar from './EndnoteSidebar.svelte';
 
   export let work: string = 'EN';
   export let bookNum: number = 1;
@@ -773,11 +774,31 @@
     cancelFnClose();
     fnCloseTimer = setTimeout(() => { footnote = null; fnCloseTimer = null; }, 180);
   }
+  // Commentary-class notes (imports whose sentinel declared render=endnote)
+  // open the slide-in sidebar, click-only — a hover-triggered sidebar would
+  // yank the whole layout on every marker fly-over. The hook is the same
+  // lazy window global pattern FootnotePopup uses; on the site build it is
+  // never installed, so this always returns null there.
+  let endnote: { n: string; transId: string } | null = null;
+  function noteRenderFor(transId: string): 'endnote' | null {
+    if (!transId) return null;
+    const hook = (globalThis as {
+      __ARISTOTLE_IMPORT_NOTE_RENDER__?: (work: string, id: string) => 'endnote' | null;
+    }).__ARISTOTLE_IMPORT_NOTE_RENDER__;
+    return hook ? hook(work, transId) : null;
+  }
+  function closeEndnote() { endnote = null; }
+
   function showFootnote(marker: Element, pin = false) {
     cancelFnClose();
-    if (pin) fnPinned = true;
     const n = marker.getAttribute('data-fn') ?? '';
     const transId = marker.getAttribute('data-fn-trans') ?? '';
+    if (noteRenderFor(transId) === 'endnote') {
+      // The sidebar and the popover are mutually exclusive presentations.
+      if (pin) { endnote = { n, transId }; closeFootnote(); }
+      return;
+    }
+    if (pin) { fnPinned = true; closeEndnote(); }
     if (footnote?.n === n && footnote?.transId === transId) return;
     const r = marker.getBoundingClientRect();
     footnote = { n, transId, anchor: { x: r.left, y: r.bottom } };
@@ -810,6 +831,7 @@
   function onDocPointerDown(e: MouseEvent) {
     const t = e.target as HTMLElement | null;
     if (bekkerInfoOpen && !t?.closest?.('.bekker-info')) bekkerInfoOpen = false;
+    if (endnote && !t?.closest?.('.fn-marker') && !t?.closest?.('.endnote-sidebar')) closeEndnote();
     if (!fnPinned) return;
     if (t?.closest?.('.fn-marker') || t?.closest?.('.footnote-popup')) return;
     closeFootnote();
@@ -1550,6 +1572,10 @@
     onHoverIn={cancelFnClose}
     onHoverOut={scheduleFnClose}
   />
+{/if}
+
+{#if endnote}
+  <EndnoteSidebar {work} n={endnote.n} transId={endnote.transId} onClose={closeEndnote} />
 {/if}
 
 {#if copyBtnPos}

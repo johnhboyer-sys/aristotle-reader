@@ -93,10 +93,15 @@ function commentarySpan(lines: string[], from: number): WitnessSectionSpan | nul
     if (parsed?.level !== 2 || !/^COMMENTAR(?:Y|IES)\b/iu.test(plainHeading(parsed.text))) continue;
     let end = lines.length;
     for (let j = i + 1; j < lines.length; j += 1) {
-      if (heading(lines[j])?.level === 2) {
-        end = j;
-        break;
-      }
+      const next = heading(lines[j]);
+      if (next?.level !== 2) continue;
+      // Numeral H2s inside the commentary are chapter-heading level jitter
+      // (`## 16`), and BOOK H2s open its books — neither ends the section;
+      // a NAMED H2 (Glossary) does.
+      const text = plainHeading(next.text);
+      if (/^BOOK\s+\S+$/iu.test(text) || chapterNumeral(next.text)) continue;
+      end = j;
+      break;
     }
     return { startLine: i, endLine: end, text: lines.slice(i, end).join('\n') };
   }

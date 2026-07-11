@@ -488,7 +488,8 @@ export function emitDocument(
       const first = `[^${d.label}]: ${noteLines[0] ?? ''}`;
       return [first, ...noteLines.slice(1).map((l) => `   ${l}`)].join('\n');
     });
-    tagged += `\n\n<!-- footnotes scope=${scope} -->\n${defs.join('\n')}\n`;
+    const render = footnoteState.declaredRender ? ` render=${footnoteState.declaredRender}` : '';
+    tagged += `\n\n<!-- footnotes scope=${scope}${render} -->\n${defs.join('\n')}\n`;
   } else {
     tagged += '\n';
   }

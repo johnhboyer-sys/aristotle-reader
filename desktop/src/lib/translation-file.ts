@@ -140,6 +140,7 @@ export interface ParsedTranslation {
   footnoteMarkers: FootnoteMarker[]; // in document order, offsets into `text`
   footnotes: Record<string, string>; // label -> note text (verbatim, from the definitions block)
   footnoteScope: FootnoteScope;      // recorded from the sentinel's scope= attribute (AM2); default continuous
+  noteRender?: 'endnote';            // sentinel's render= attribute — endnotes open a sidebar, not the popover
 }
 
 const LICENSES: License[] = ['public-domain', 'cc-by', 'cc-by-sa', 'user-supplied'];
@@ -227,8 +228,10 @@ export function composeCitation(meta: Pick<TranslationMeta, 'translator' | 'year
 // AM2: `<!-- footnotes -->` or `<!-- footnotes scope=continuous -->` (also
 // per-book / per-chapter). The parser records the attribute when present;
 // absent ⇒ continuous (emission always writes the attribute — that's the
-// emit side's job, not the parser's).
-const FOOTNOTE_SENTINEL_RE = /^<!--\s*footnotes(?:\s+scope=(continuous|per-book|per-chapter))?\s*-->\s*$/;
+// emit side's job, not the parser's). The optional `render=endnote`
+// attribute marks commentary-class ENDNOTES — the reader shows them in a
+// slide-in sidebar instead of the footnote popover.
+const FOOTNOTE_SENTINEL_RE = /^<!--\s*footnotes(?:\s+scope=(continuous|per-book|per-chapter))?(?:\s+render=(endnote))?\s*-->\s*$/;
 
 // §B1 definition grammar: `[^label]: text`, optionally continued on
 // following lines indented >=3 spaces (appended to the prior definition).
@@ -279,16 +282,19 @@ export function splitFootnoteBlock(body: string): {
   body: string;
   footnotes: Record<string, string>;
   footnoteScope: FootnoteScope;
+  noteRender?: 'endnote';
   warnings: string[];
 } {
   const lines = body.split(/\r?\n/);
   let sentinelIdx = -1;
   let scope: FootnoteScope = 'continuous';
+  let noteRender: 'endnote' | undefined;
   for (let i = 0; i < lines.length; i++) {
     const m = FOOTNOTE_SENTINEL_RE.exec(lines[i]);
     if (m) {
       sentinelIdx = i; // keep scanning — the LAST match wins, not the first
       if (m[1]) scope = m[1] as FootnoteScope;
+      noteRender = m[2] ? 'endnote' : undefined;
     }
   }
   if (sentinelIdx === -1) return { body, footnotes: {}, footnoteScope: 'continuous', warnings: [] };
@@ -309,6 +315,7 @@ export function splitFootnoteBlock(body: string): {
     body: lines.slice(0, sentinelIdx).join('\n'),
     footnotes: parseFootnoteDefs(tail),
     footnoteScope: scope,
+    noteRender,
     warnings: [],
   };
 }
@@ -567,7 +574,7 @@ export function parseTranslationFile(
   // §B1: slice the sentinel-delimited footnote block off the end FIRST — its
   // text never reaches normalizeParagraphBreaks/scanEmphasis/scanTags. A
   // legacy file with no sentinel passes rawBody through unchanged.
-  const { body: bodyBeforeFootnotes, footnotes, footnoteScope, warnings: footnoteWarnings } = splitFootnoteBlock(rawBody);
+  const { body: bodyBeforeFootnotes, footnotes, footnoteScope, noteRender, warnings: footnoteWarnings } = splitFootnoteBlock(rawBody);
   const body = normalizeParagraphBreaks(bodyBeforeFootnotes);
   const emphResult = scanEmphasis(body);
   let emphText = emphResult.text;      // {tag} and [^label] syntax still present, emphasis markers gone
@@ -602,7 +609,7 @@ export function parseTranslationFile(
   const footnoteMarkers: FootnoteMarker[] = rawMarkers.map((m, i) => ({ ...m, offset: markerOffsets[i] }));
   return {
     meta, hasFrontmatter: has, text, tags, emphasis, warnings, density: detectDensity(tags),
-    footnoteMarkers, footnotes, footnoteScope,
+    footnoteMarkers, footnotes, footnoteScope, noteRender,
   };
 }
 

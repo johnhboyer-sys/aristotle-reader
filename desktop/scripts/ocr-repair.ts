@@ -20,6 +20,9 @@ import { normalizeSpacing } from '../src/lib/ocr-repair/spacing';
 import { extractWitnessAnchors } from '../src/lib/ocr-repair/witness-anchors';
 import { vote } from '../src/lib/ocr-repair/vote';
 import { normalizeFootnotes } from '../src/lib/ocr-repair/footnote-repair';
+import { parseWitnessStructure } from '../src/lib/ocr-repair/witness-structure';
+import { parseWitnessCommentary } from '../src/lib/ocr-repair/witness-commentary';
+import { emitEndnoteBlocks } from '../src/lib/ocr-repair/endnote-blocks';
 import { renderReview, parseDecisions } from '../src/lib/ocr-repair/review';
 import { renderPairingMarkdown } from '../src/lib/ocr-repair/witness-pairing';
 import type { ChangeRecord } from '../src/lib/ocr-repair/changelist';
@@ -102,7 +105,29 @@ const STAGES: Stage[] = [
   {
     n: 6,
     name: 'footnotes',
-    run: (text, config, context) => normalizeFootnotes(text, config, context.witnessText),
+    run: (text, config, context) => {
+      const base = normalizeFootnotes(text, config, context.witnessText);
+      if (!config.endnotes || !config.witnessStructure) return base;
+      // Endnote emission: pull note bodies from the witness's COMMENTARIES
+      // span and append per-page note blocks in the converter's own input
+      // format (endnote-blocks.ts). Diagnostics from the commentary parse
+      // ride along as stage-6 records.
+      const structure = parseWitnessStructure(context.witnessText, config.workTitle, context.decisions?.seatWitnessChapters);
+      if (!structure.commentary) {
+        return { ...base, changes: [...base.changes, { id: 'p0-e1', stage: 6, tier: 2, rule: 'flag', page: 0, evidence: { kind: 'endnote-commentary-missing' } }] };
+      }
+      const commentary = parseWitnessCommentary(structure.commentary, context.decisions?.seatCommentaryChapters);
+      const emission = emitEndnoteBlocks(base.text, commentary, config);
+      const commentaryRecords = commentary.diagnostics.map((d, k) => ({
+        id: `pw-L${d.line}-e${k + 1}`,
+        stage: 6,
+        tier: d.tier,
+        rule: 'flag',
+        page: 0,
+        evidence: { kind: d.kind, witnessLine: d.line, expected: d.expected, got: d.got, token: d.token, reason: d.reason },
+      }));
+      return { text: emission.text, changes: [...base.changes, ...emission.changes, ...commentaryRecords] };
+    },
   },
 ];
 
