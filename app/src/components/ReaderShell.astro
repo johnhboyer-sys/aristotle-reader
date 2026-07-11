@@ -12,6 +12,7 @@ import CommandPalette from '@shared/components/CommandPalette.svelte';
 import HelpButton from './HelpButton.svelte';
 import WorkSwitcher from './WorkSwitcher.svelte';
 import ThemeInit from './ThemeInit.astro';
+import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, bookLabel, isBookless, workPath, workLanding } from '@shared/lib/works';
 import { SUPPORT_URL } from '../lib/support';
@@ -141,6 +142,7 @@ const intro =
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="google-site-verification" content="tlPYj47QxxAGIB0RGMjr2fycUYsaqZK-yeOj9SmIjE4" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   {canonical && <link rel="canonical" href={canonical} />}

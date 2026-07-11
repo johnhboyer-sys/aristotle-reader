@@ -1,5 +1,6 @@
 ---
 import ThemeInit from '../components/ThemeInit.astro';
+import Pwa from '../components/Pwa.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { sanitizeHtml } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
@@ -386,6 +387,7 @@ function renderBlocks(blocks: Block[], lemma?: string): string {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   <meta name="robots" content="noindex,follow" />

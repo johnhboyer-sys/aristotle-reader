@@ -3,6 +3,7 @@ import { AUTHENTICITY_LABEL, CATEGORIES, getWork, workLanding, type Work } from 
 import { SUPPORT_URL } from '../lib/support';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
 import ThemeInit from '../components/ThemeInit.astro';
+import Pwa from '../components/Pwa.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
@@ -89,6 +90,7 @@ const structuredData = Astro.site
   <!-- Google Search Console ownership verification (URL-prefix property). -->
   <meta name="google-site-verification" content="tlPYj47QxxAGIB0RGMjr2fycUYsaqZK-yeOj9SmIjE4" />
   <ThemeInit />
+  <Pwa />
   <title>The Aristotle Reader — Complete Works in Greek &amp; English</title>
   <meta name="description" content={homeDescription} />
   {canonical && <link rel="canonical" href={canonical} />}

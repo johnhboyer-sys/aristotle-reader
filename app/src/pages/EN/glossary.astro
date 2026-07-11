@@ -7,6 +7,7 @@
 // Astro's Markdown pipeline (the inline small-caps spans and the single footnote
 // come straight from that file).
 import ThemeInit from '../../components/ThemeInit.astro';
+import Pwa from '../../components/Pwa.astro';
 import ThemeToggle from '../../components/ThemeToggle.astro';
 import { GLOSSARY_TITLE, GLOSSARY_NOTE, GLOSSARY_ENTRIES } from '@shared/lib/glossary';
 import { sanitizeHtml } from '../../lib/html';
@@ -40,6 +41,7 @@ const jsonLd = {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
+  <Pwa />
   <title>{pageTitle}</title>
   <meta name="description" content={metaDescription} />
   {canonical && <link rel="canonical" href={canonical} />}
