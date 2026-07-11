@@ -17,6 +17,15 @@ describe('formatNoteHtml', () => {
     );
   });
 
+  it('renders _…_ spans as <em> but leaves snake_case identifiers alone', () => {
+    expect(formatNoteHtml('one must _understand_ these')).toBe(
+      '<p>one must <em>understand</em> these</p>'
+    );
+    expect(formatNoteHtml('the name some_var_name stays')).toBe(
+      '<p>the name some_var_name stays</p>'
+    );
+  });
+
   it('splits blank-line runs into paragraphs and collapses whitespace', () => {
     expect(formatNoteHtml('first  paragraph\n\nsecond   one')).toBe(
       '<p>first paragraph</p><p>second one</p>'

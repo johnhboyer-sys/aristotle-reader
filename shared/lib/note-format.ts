@@ -15,8 +15,10 @@ export function formatNoteHtml(raw: string): string {
     .filter(Boolean);
   const formatted = paragraphs.map((p) => {
     let html = escapeHtml(p);
-    // *word* / *short span* emphasis — same-line, non-greedy, no nesting.
+    // *word* / _word_ emphasis — same-line, non-greedy, no nesting (the
+    // genie witness uses both dressings).
     html = html.replace(/\*([^*\n]+)\*/gu, '<em>$1</em>');
+    html = html.replace(/(?<![\w])_([^_\n]+)_(?![\w])/gu, '<em>$1</em>');
     return `<p>${html}</p>`;
   });
   return formatted.join('');
