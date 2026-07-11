@@ -7,8 +7,11 @@
 //    falling back to the cached copy offline, then to the offline page.
 //  - Hashed build assets (/_astro/): cache-first — content-addressed names
 //    make them immutable, and a deploy's new HTML references new names.
-//  - Corpus data (/data/) and fonts: stale-while-revalidate — instant reads
-//    from cache, refreshed in the background when online.
+//  - Corpus data (/data/) and other same-scope files: network-first, cache
+//    fallback. Fresh HTML must never pair with a prior deploy's cached JSON
+//    (schema drift), so data is only served from cache when actually offline
+//    — where it pairs with equally-old cached HTML, which is consistent.
+//  - Fonts: cache-first (immutable binaries).
 //
 // Versioned cache: bump VERSION to invalidate everything after a breaking
 // deploy. Old caches are dropped on activate.
@@ -30,15 +33,17 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-async function networkFirst(request) {
+async function networkFirst(request, { offlineFallback = false } = {}) {
   const cache = await caches.open(VERSION);
   try {
     const fresh = await fetch(request);
     if (fresh.ok) cache.put(request, fresh.clone());
     return fresh;
-  } catch {
+  } catch (err) {
     const cached = await cache.match(request);
-    return cached ?? cache.match(OFFLINE_URL);
+    if (cached) return cached;
+    if (offlineFallback) return cache.match(OFFLINE_URL);
+    throw err;
   }
 }
 
@@ -51,30 +56,13 @@ async function cacheFirst(request) {
   return fresh;
 }
 
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(VERSION);
-  const cached = await cache.match(request);
-  const refresh = fetch(request)
-    .then((fresh) => {
-      if (fresh.ok || fresh.type === 'opaque') cache.put(request, fresh.clone());
-      return fresh;
-    })
-    .catch((err) => {
-      // Never resolve undefined into respondWith — an uncached miss while
-      // offline must reject like a plain network error would.
-      if (cached) return cached;
-      throw err;
-    });
-  return cached ?? refresh;
-}
-
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkFirst(request, { offlineFallback: true }));
     return;
   }
 
@@ -82,8 +70,9 @@ self.addEventListener('fetch', (event) => {
     if (url.pathname.includes('/_astro/')) {
       event.respondWith(cacheFirst(request));
     } else if (url.pathname.startsWith(SCOPE_PATH)) {
-      // Corpus data, favicons, manifest — serve cached, refresh behind.
-      event.respondWith(staleWhileRevalidate(request));
+      // Corpus data, favicons, manifest — always fresh online (a new deploy's
+      // HTML must never read an old deploy's JSON), cached copy offline.
+      event.respondWith(networkFirst(request));
     }
     return;
   }
