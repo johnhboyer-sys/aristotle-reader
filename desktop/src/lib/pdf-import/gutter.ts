@@ -344,6 +344,10 @@ function headerHasCadenceConsistentTic(lines: string[], headerIdx: number, ctx: 
 // Phase-3 §A3 adds † as a valid note-starter glyph, symmetric with *.
 const FOOTNOTE_LINE_RE = /^\s*(\d+\.\s|[*†])/;
 const LONE_INTEGER_RE = /^\d+$/;
+// Explicit note-block divider — mirrors footnotes.ts's NOTE_SENTINEL_RE (see
+// ocr-target-format §6). When present, the block bounds are ground truth:
+// endnote-style blocks occupy most of a page and fail the 60%-extent guard.
+const NOTE_SENTINEL_RE = /^\s*<<notes(?:\s+scope=(?:continuous|per-book|per-chapter))?>>\s*$/;
 
 // §4 + A6, with the Phase-3 coordinated amendment (see implementation-notes.md
 // and pdf-import/footnotes.ts's identical computeNoteBlockStart, which this
@@ -378,6 +382,15 @@ function findBottomFurnitureStart(lines: string[]): number | null {
     }
   }
   if (firstNonBlank === -1) return null;
+
+  // Explicit divider: everything from the sentinel down is note furniture.
+  for (let s = lines.length - 1; s >= 0; s--) {
+    if (!NOTE_SENTINEL_RE.test(lines[s])) continue;
+    for (let k = s + 1; k < lines.length; k++) {
+      if (FOOTNOTE_LINE_RE.test(lines[k])) return s;
+    }
+    return null;
+  }
 
   let i = lastNonBlank;
   let boundary: number | null = null;

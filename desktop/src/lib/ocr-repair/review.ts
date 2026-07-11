@@ -95,6 +95,15 @@ export interface ReviewDecisions {
    */
   seatWitnessChapters?: { book: number; chapter: number; anchor: string }[];
   /**
+   * COMMENTARY-section chapters whose heading the witness OCR lost
+   * (`SEAT-commentary-chapter <book>.<n> => <anchor>`). Without the heading,
+   * the chapter's notes restart at "1." mid-stream and the monotonic filter
+   * gloms them onto the previous chapter's tail note. `anchor` is a literal
+   * substring unique in the commentary span marking the chapter's FIRST note
+   * line. Consumed by the endnote pass, not the vote. Per-corpus DATA.
+   */
+  seatCommentaryChapters?: { book: number; chapter: number; anchor: string }[];
+  /**
    * Body lines stranded at a page's HEAD position by a mid-column scan page
    * break (`PAD <anchor>`). The frozen converter strips each page's first
    * line as furniture, silently eating the body text (and any gutter tick on
@@ -246,7 +255,11 @@ export function parseDecisions(md: string): ReviewDecisions {
   for (const match of md.matchAll(/^SEAT-witness-chapter\s+(\d+)\.(\d+)\s+=>\s+(.+?)\s*$/gmu)) {
     seatWitnessChapters.push({ book: Number(match[1]), chapter: Number(match[2]), anchor: match[3] });
   }
+  const seatCommentaryChapters: { book: number; chapter: number; anchor: string }[] = [];
+  for (const match of md.matchAll(/^SEAT-commentary-chapter\s+(\d+)\.(\d+)\s+=>\s+(.+?)\s*$/gmu)) {
+    seatCommentaryChapters.push({ book: Number(match[1]), chapter: Number(match[2]), anchor: match[3] });
+  }
   const padLines: string[] = [];
   for (const match of md.matchAll(/^PAD\s+(.+?)\s*$/gmu)) padLines.push(match[1]);
-  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks, seatChapters, seatWitnessChapters, padLines };
+  return { checkedPatterns, excludeIds, manualBreaks, corrections, dropLines, seatTicks, noTicks, seatChapters, seatWitnessChapters, seatCommentaryChapters, padLines };
 }

@@ -130,6 +130,18 @@ left margin, with nothing else on the line (a gutter tic on the same line is fin
 ## 6. Footnote block (page bottom)
 
 - Separated from the last body line by **≥1 fully blank line**.
+- OPTIONAL explicit divider: a line containing exactly `<<notes>>` between the
+  blank gap and the first note makes the block bounds ground truth — the
+  converter skips its block-shape heuristics (including the bottom-40%-of-page
+  extent guard). Use it when notes are commentary-length (endnote house
+  styles): such blocks legitimately dominate the page and the heuristics
+  refuse them. Without the divider, detection is heuristic exactly as before.
+- The divider may DECLARE the numbering scheme: `<<notes scope=per-chapter>>`
+  (also `continuous` / `per-book`). A declaration is document-sticky and
+  trusted over the importer's scope inference — reconstruction pipelines know
+  the edition's scheme, and reconstructed blocks (gap-filled notes without
+  markers, garbled duplicate markers) otherwise feed the inference machine
+  phantom observations.
 - Each note starts `N. text` (1–3 digit printed number, period, space) at the
   body's left margin; `* text` / `† text` for symbol notes.
 - Wrapped note text continues on following lines WITHOUT the `N.` prefix.

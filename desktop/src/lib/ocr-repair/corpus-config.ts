@@ -95,6 +95,18 @@ export interface CorpusConfig {
     format: 'genie-markdown';
   };
   /**
+   * House-style trait (Peripatetic Press): the print carries ENDNOTES —
+   * body superscripts whose bodies live in a back-matter COMMENTARIES
+   * section (sliced off with the back matter). 'witness-commentary' pulls
+   * the note bodies from the witness's commentary span and appends them as
+   * per-page note blocks in the converter's own footnote input format, so
+   * the frozen converter pairs markers to notes with zero changes. Requires
+   * witnessStructure. Absent → no-op.
+   */
+  endnotes?: {
+    source: 'witness-commentary';
+  };
+  /**
    * Stage-1 slice boundaries, pattern-driven so an unseen edition needs only
    * config. Patterns are regex sources tested line-by-line against a page;
    * the first page with a matching line is the boundary. Cuts happen at page

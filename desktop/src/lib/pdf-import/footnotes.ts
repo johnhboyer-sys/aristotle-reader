@@ -66,6 +66,16 @@ import { ticSpanOnLine, RECTO_MIN_START_COL, isDisplayShapedLine, stripLikelyTic
 // refs/column tokens (1094a/985b29), multi-digit runs.
 export const MARKER_RE = /(?<=\S)(\d{1,3}|[*†])(?![.\dab])/g;
 
+// A2 amendment: a fully-parenthesized digit — "(1)", "(2)" — is a prose
+// enumeration, never a printed footnote marker (markers are superscripts
+// glued to a word's END). Left unexcluded, an enum digit STEALS a real
+// marker's same-numbered note under first-to-first pairing (Apostle I.5:
+// "(1) when no [subject]" consumed note 1, leaving the real "first,1"
+// unmatched). Callers of MARKER_RE apply this via isEnumParenMatch.
+export function isEnumParenMatch(line: string, startCol: number, raw: string): boolean {
+  return /^\d+$/.test(raw) && line[startCol - 1] === '(' && line[startCol + raw.length] === ')';
+}
+
 // §A1's NOTE_BLOCK_MIN_GAP (>=1 fully-blank line separates the footnote
 // block from the body; observed: 2 in the Reeve slice) is enforced directly
 // by computeNoteBlockStart's `sawGap` check below rather than as a named
@@ -132,6 +142,8 @@ export interface FootnoteState {
   currentBook: number | null;
   currentChapter: number | null;
   scopesAlive: { continuous: boolean; perBook: boolean; perChapter: boolean };
+  /** Scope declared by a `<<notes scope=…>>` sentinel — trusted over inference. */
+  declared: ScopeKind | null;
   lastNoteNumber: number | null;
   lastPos: { book: number | null; chapter: number | null } | null;
   discriminatingObs: number;
@@ -148,6 +160,7 @@ export function createFootnoteState(): FootnoteState {
     currentBook: null,
     currentChapter: null,
     scopesAlive: { continuous: true, perBook: true, perChapter: true },
+    declared: null,
     lastNoteNumber: null,
     lastPos: null,
     discriminatingObs: 0,
@@ -184,6 +197,19 @@ function matchFolio(line: string): boolean {
 function isNoteStarterLine(line: string): boolean {
   return matchNote(line) !== null || matchStar(line) !== null;
 }
+
+// Explicit note-block divider (ocr-target-format §6): a cleaned source may
+// mark its note block with a `<<notes>>` line, making the block bounds ground
+// truth instead of heuristic. Needed for ENDNOTE house styles whose bodies
+// are full commentary paragraphs — such blocks legitimately occupy most of a
+// page and fail the 60%-extent guard below (measured: 70/74 Apostle pages).
+// The optional `scope=` attribute DECLARES the numbering scheme, bypassing
+// the §A4 hypothesis machine — a pipeline that reconstructs note blocks
+// knows the edition's scheme, and reconstruction artifacts (marker-less
+// gap-filled notes, garbled duplicate markers) otherwise feed the machine
+// phantom observations. Absent the sentinel, behavior is byte-identical to
+// before this extension.
+const NOTE_SENTINEL_RE = /^\s*<<notes(?:\s+scope=(continuous|per-book|per-chapter))?>>\s*$/;
 
 // ---------------------------------------------------------------------------
 // §A1 block bounds (defensively re-derived — see module header)
@@ -234,6 +260,16 @@ export function computeNoteBlockStart(lines: string[]): number | null {
     }
   }
   if (firstNonBlank === -1) return null;
+
+  // Explicit divider: ground truth, no heuristics. The sentinel line itself
+  // is the boundary (parseNoteBlock skips it; the body scan excludes it).
+  for (let s = lines.length - 1; s >= 0; s--) {
+    if (!NOTE_SENTINEL_RE.test(lines[s])) continue;
+    for (let k = s + 1; k < lines.length; k++) {
+      if (isNoteStarterLine(lines[k])) return s;
+    }
+    return null; // sentinel with no notes below it — malformed, ignore block
+  }
 
   let i = lastNonBlank;
   let boundary: number | null = null;
@@ -365,6 +401,7 @@ function parseNoteBlock(lines: string[], start: number, pageFlags: string[]): Fo
 
   for (let i = start; i < lines.length; i++) {
     const line = lines[i];
+    if (NOTE_SENTINEL_RE.test(line)) continue; // explicit divider, not content
     if (isBlank(line)) {
       pendingBlank = true;
       continue;
@@ -473,6 +510,7 @@ function scanBodyMarkers(
     for (const m of blanked.matchAll(MARKER_RE)) {
       const raw = m[1];
       const startCol = m.index!;
+      if (isEnumParenMatch(blanked, startCol, raw)) continue;
       const isLastOnLine = startCol + raw.length >= trimmedEnd;
       if (scan.side === 'recto' && isLastOnLine && /^\d+$/.test(raw) && startCol >= RECTO_MIN_START_COL) {
         if (isRectoCadencePlausible(Number(raw), scan)) {
@@ -621,6 +659,12 @@ function predict(kind: ScopeKind, crossedBook: boolean, crossedChapter: boolean)
 }
 
 function scoreTransition(state: FootnoteState, N: number, book: number | null, chapter: number | null): void {
+  if (state.declared !== null) {
+    // Declared scope: the hypothesis machine is off. Track position only.
+    state.lastNoteNumber = N;
+    state.lastPos = { book, chapter };
+    return;
+  }
   if (state.lastNoteNumber === null) {
     // Spec: "skip the slice's first note" — seed only.
     state.lastNoteNumber = N;
@@ -686,6 +730,20 @@ export function extractFootnotes(page: Page, scan: PageScan, divisions: Division
   const lines = page.lines;
   const pageFlags: string[] = [];
 
+  // A `<<notes scope=…>>` sentinel declares the numbering scheme once; the
+  // declaration is document-sticky and trusted over inference.
+  if (state.declared === null) {
+    for (const line of lines) {
+      const m = NOTE_SENTINEL_RE.exec(line);
+      if (m?.[1]) {
+        state.declared = m[1] as ScopeKind;
+        state.verdict = state.declared;
+        state.flags.push(`footnote-scope:${state.declared}`);
+        break;
+      }
+    }
+  }
+
   const noteBlockStart = computeNoteBlockStart(lines);
   const notes = noteBlockStart !== null ? parseNoteBlock(lines, noteBlockStart, pageFlags) : [];
   const headingLines = new Set<number>();
@@ -720,7 +778,13 @@ export function extractFootnotes(page: Page, scan: PageScan, divisions: Division
   for (const n of notes) {
     if (n.kind !== 'numbered') continue;
     const markerLine = pairedNoteToMarkerLine.get(n);
-    events.push({ lineIdx: markerLine !== undefined && markerLine >= 0 ? markerLine : n.lineIdx, kind: 'note', printed: n.printed! });
+    // A note with no matched marker has no reliable in-body position — its
+    // own line sits in the page-bottom block, AFTER any mid-page division,
+    // so scoring it there manufactures a phantom scope-crossing ('continue'
+    // across an apparent chapter change kills the per-chapter hypothesis).
+    // Marker-less notes don't vote on scope.
+    if (markerLine === undefined || markerLine < 0) continue;
+    events.push({ lineIdx: markerLine, kind: 'note', printed: n.printed! });
   }
   events.sort((a, b) => a.lineIdx - b.lineIdx);
 
