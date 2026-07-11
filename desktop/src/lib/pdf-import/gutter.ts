@@ -347,7 +347,7 @@ const LONE_INTEGER_RE = /^\d+$/;
 // Explicit note-block divider — mirrors footnotes.ts's NOTE_SENTINEL_RE (see
 // ocr-target-format §6). When present, the block bounds are ground truth:
 // endnote-style blocks occupy most of a page and fail the 60%-extent guard.
-const NOTE_SENTINEL_RE = /^\s*<<notes(?:\s+scope=(?:continuous|per-book|per-chapter))?>>\s*$/;
+const NOTE_SENTINEL_RE = /^\s*<<notes(?:\s+scope=(?:continuous|per-book|per-chapter))?(?:\s+render=endnote)?>>\s*$/;
 
 // §4 + A6, with the Phase-3 coordinated amendment (see implementation-notes.md
 // and pdf-import/footnotes.ts's identical computeNoteBlockStart, which this

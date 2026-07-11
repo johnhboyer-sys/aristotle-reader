@@ -147,18 +147,21 @@ export function emitEndnoteBlocks(
       }
     }
     const pageNotes: { n: number; body: string }[] = [];
+    // Gaps only fill between CONSECUTIVE found markers, and only short ones —
+    // trusting the blanket [min..max] range would let one garbled-but-valid
+    // marker ("999") drag a whole chapter's future notes onto this page AND
+    // poison `seen` so their real pages get nothing (review finding).
+    const MAX_GAP_FILL = 3;
     for (const group of chapterGroups) {
       const perChapter = commentary.notes.get(`${group.book}:${group.chapter}`);
       if (!perChapter) continue;
-      const found = [...group.ns];
-      const min = Math.min(...found);
-      const max = Math.max(...found);
-      for (let n = min; n <= max; n += 1) {
+      const found = [...group.ns].sort((a, b) => a - b);
+      const emit = (n: number, filled: boolean) => {
         const note = perChapter.get(n);
-        if (note === undefined) continue; // note 0 preambles never fill either
-        if (!group.ns.has(n)) {
+        if (note === undefined) return; // note 0 preambles never fill either
+        if (filled) {
           const key = `${group.book}:${group.chapter}:${n}`;
-          if (seen.has(key)) continue;
+          if (seen.has(key)) return;
           seen.add(key);
           changes.push({
             id: nextId(p, undefined, undefined),
@@ -170,6 +173,13 @@ export function emitEndnoteBlocks(
           });
         }
         pageNotes.push({ n, body: cleanNoteBody(note) });
+      };
+      for (let i = 0; i < found.length; i += 1) {
+        emit(found[i], false);
+        const next = found[i + 1];
+        if (next !== undefined && next - found[i] - 1 > 0 && next - found[i] - 1 <= MAX_GAP_FILL) {
+          for (let n = found[i] + 1; n < next; n += 1) emit(n, true);
+        }
       }
     }
     if (pageNotes.length === 0) continue;

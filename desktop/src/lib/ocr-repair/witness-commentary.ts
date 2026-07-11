@@ -53,7 +53,10 @@ export interface WitnessCommentary {
 }
 
 const CHAPTER_WINDOW = 3;
-const NOTE_WINDOW = 3;
+// Narrow: a wrong number accepted here HIJACKS the walk (the genuine
+// intervening notes then read as continuations of the wrong body). One
+// OCR-dropped number (+2) is the only skip the real corpus shows.
+const NOTE_WINDOW = 2;
 
 function plain(raw: string): string {
   return raw

@@ -794,10 +794,11 @@
     const n = marker.getAttribute('data-fn') ?? '';
     const transId = marker.getAttribute('data-fn-trans') ?? '';
     if (noteRenderFor(transId) === 'endnote') {
-      if (pin) endnote = { n, transId };
+      // The sidebar and the popover are mutually exclusive presentations.
+      if (pin) { endnote = { n, transId }; closeFootnote(); }
       return;
     }
-    if (pin) fnPinned = true;
+    if (pin) { fnPinned = true; closeEndnote(); }
     if (footnote?.n === n && footnote?.transId === transId) return;
     const r = marker.getBoundingClientRect();
     footnote = { n, transId, anchor: { x: r.left, y: r.bottom } };

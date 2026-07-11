@@ -48,19 +48,19 @@
     return hook ? hook(work, transId) : false;
   }
 
-  function resolve(label: string) {
+  function resolve(workId: string, trans: string, label: string) {
     loading = true;
     error = '';
     if (isImportedTrans()) {
       const hook = (globalThis as {
         __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__?: (work: string, id: string, label: string) => string | null;
       }).__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__;
-      const note = hook ? hook(work, transId, label) : null;
+      const note = hook ? hook(workId, trans, label) : null;
       html = note ? formatNoteHtml(note) : '';
       if (!html) error = `Note ${fnDisplay(label)} not found.`;
       loading = false;
     } else {
-      fetchFootnotes(work)
+      fetchFootnotes(workId)
         .then((map) => {
           // built-in notes are pre-rendered HTML — pass through unformatted
           html = map[label] ?? '';
@@ -70,7 +70,9 @@
         .finally(() => { loading = false; });
     }
   }
-  $: resolve(n);
+  // React to ALL identity props — in compare mode the same scoped label can
+  // arrive from a different translation (stale-body review finding).
+  $: resolve(work, transId, n);
 
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
