@@ -39,9 +39,15 @@ class _Walker(StandoffChunkMixin):
         self.chunks: list[dict] = []
         self._by_key: dict[tuple, dict] = {}
         # Chapter starts as (book, chapter) -> {column, line}. A chapter's start
-        # Bekker reference is the running (page, line) when its <div subtype=
-        # "section"> opens — EXCEPT a book's first chapter, whose exact start
-        # line only appears at the next line milestone inside it (e.g. 1103a14).
+        # Bekker reference is the running (page, line) when its chapter div
+        # opens — EXCEPT a book's first chapter, whose exact start line only
+        # appears at the next line milestone inside it (e.g. 1103a14). The div
+        # subtype that marks a chapter boundary is usually "section", but a
+        # manifest can override it (e.g. Rhetoric's chapter_subtype: chapter,
+        # whose "section" divs are a finer, non-chapter-aligned subdivision
+        # that doesn't cover every chapter — matching on it would silently
+        # leave some chapters without a marker, see stage7_emit._chapter_starts).
+        self._chapter_subtype = (manifest.data.get("chapters") or {}).get("chapter_subtype", "section")
         self.chapters: list[dict] = []
         self._book_first_section = False
         self._pending_first: tuple | None = None
@@ -95,7 +101,7 @@ class _Walker(StandoffChunkMixin):
             if subtype == "book":
                 self.book = int(el.get("n"))
                 self._book_first_section = True
-            elif subtype == "section":
+            elif subtype == self._chapter_subtype:
                 chap = el.get("n")
                 if self._book_first_section:
                     # Defer to the next line milestone for the exact start line.
@@ -106,7 +112,11 @@ class _Walker(StandoffChunkMixin):
                         {"book": self.book, "chapter": chap, "column": self.column,
                          "line": self.line, "bookstart": False}
                     )
-                self.add_marker(subtype, chap)
+                # Stored kind is always "section" regardless of the source div's
+                # own subtype name — it's the schema's generic "chapter-boundary
+                # marker" kind, consumed by stage7_emit._chapter_starts and
+                # align/reference.py.
+                self.add_marker("section", chap)
             elif subtype == "subsection":
                 self.add_marker(subtype, el.get("n"))
         self.add_text(el.text)

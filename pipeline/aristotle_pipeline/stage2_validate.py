@@ -8,7 +8,9 @@ Checks:
   4. Greek/English length-ratio outliers (> 1.5 SD from the mean ratio).
   5. Proper-name spot check: names that should co-occur in the same column
      in both languages.
-  6. Sigla/character inventory of the Greek text: every non-Greek,
+  6. Chapter English-offset coverage: every chapter must have a matching
+     English section marker, or the reader silently misplaces its text.
+  7. Sigla/character inventory of the Greek text: every non-Greek,
      non-expected character with counts and sample locations.
 
 Emits build/stage2/validation_report.json and .md (human-readable).
@@ -198,7 +200,30 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
         ),
     }
 
-    # --- 6. sigla / character inventory ------------------------------------
+    # --- 6. chapter English-offset coverage --------------------------------
+    # stage7_emit._chapter_starts looks up each chapter's English start offset
+    # by matching its number against that column's chunk's kind=="section"
+    # markers. A miss silently falls back to engOffset=0 there, which corrupts
+    # chapter slicing in the reader: the previous chapter's English text goes
+    # blank (sliced end-before-start) and the chapter with the bad offset
+    # swallows everything up to the next boundary — exactly the "incomplete
+    # range" print bug this check exists to catch before it ships.
+    eng_by_cid = {c["id"]: c for c in english["chunks"]}
+    missing_offsets = []
+    for ch in english.get("chapters", []):
+        cid = f"{ch['book']}:{ch['column']}"
+        chunk = eng_by_cid.get(cid)
+        markers = {m["n"] for m in chunk["markers"] if m["kind"] == "section"} if chunk else set()
+        if ch["chapter"] not in markers:
+            missing_offsets.append(
+                {"book": ch["book"], "chapter": ch["chapter"], "column": ch["column"]}
+            )
+    report["checks"]["chapter_offsets"] = {
+        "missing": missing_offsets,
+        "ok": not missing_offsets,
+    }
+
+    # --- 7. sigla / character inventory ------------------------------------
     inventory: dict[str, dict] = {}
     for seg in segments:
         for line in seg["lines"]:
@@ -275,6 +300,15 @@ def _to_markdown(report: dict) -> str:
             f"- {n['greek']} / {n['english']}: grc in {n['greek_columns']} cols, "
             f"eng in {n['english_columns']} cols — {status}"
         )
+    co = c["chapter_offsets"]
+    lines += [
+        "",
+        "## Chapter English-offset coverage",
+        f"- {len(co['missing'])} chapter(s) with no matching English section marker"
+        f" (falls back to engOffset=0 — misplaces that chapter's text in the reader/print)",
+    ]
+    for m in co["missing"]:
+        lines.append(f"  - **UNEXPECTED**: book {m['book']} chapter {m['chapter']} ({m['column']})")
     lines += ["", "## Non-Greek character inventory"]
     for e in c["sigla"]["characters"]:
         sample = e["samples"][0]["ref"] if e["samples"] else ""
