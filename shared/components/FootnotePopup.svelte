@@ -70,19 +70,31 @@
     return hook ? hook(work, transId) : false;
   }
 
-  if (isImportedTrans()) {
-    const hook = (globalThis as {
-      __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__?: (work: string, id: string, label: string) => string | null;
-    }).__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__;
-    const note = hook ? hook(work, transId, n) : null;
-    html = note ?? '';
-    if (!html) error = `Footnote ${display} not found.`;
-    loading = false;
-  } else {
-    fetchFootnotes(work)
-      .then(map => { html = map[n] ?? ''; if (!html) error = `Footnote ${display} not found.`; })
-      .catch(e => { error = String(e); })
-      .finally(() => { loading = false; });
+  // Reload when the marker changes. Reader reassigns `n`/`transId` in place when
+  // you move between footnote markers without closing, so a one-shot load would
+  // show the new "Note N" header over the previous note's body. Mirrors
+  // EndnoteSidebar.resolve(); the request id discards a slow earlier fetch.
+  let reqId = 0;
+  $: loadNote(work, transId, n);
+  function loadNote(workId: string, trans: string, label: string) {
+    const my = ++reqId;
+    loading = true;
+    error = '';
+    html = '';
+    if (isImportedTrans()) {
+      const hook = (globalThis as {
+        __ARISTOTLE_IMPORT_FOOTNOTE_HOOK__?: (work: string, id: string, label: string) => string | null;
+      }).__ARISTOTLE_IMPORT_FOOTNOTE_HOOK__;
+      const note = hook ? hook(workId, trans, label) : null;
+      html = note ?? '';
+      if (!html) error = `Footnote ${fnDisplay(label)} not found.`;
+      loading = false;
+    } else {
+      fetchFootnotes(workId)
+        .then(map => { if (my === reqId) { html = map[label] ?? ''; if (!html) error = `Footnote ${fnDisplay(label)} not found.`; } })
+        .catch(e => { if (my === reqId) error = String(e); })
+        .finally(() => { if (my === reqId) loading = false; });
+    }
   }
 
   function onKey(e: KeyboardEvent) {

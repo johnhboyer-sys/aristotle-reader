@@ -24,10 +24,25 @@
   const isMobile = typeof window !== 'undefined'
     && window.matchMedia('(max-width: 680px)').matches;
 
-  lookupWord(work, token.k)
-    .then(r => { analyses = r.analyses; lsj = r.lsj; })
-    .catch(e => { error = String(e); })
-    .finally(() => { loading = false; });
+  // Reload when the clicked word changes. The sidebar switches word in place —
+  // Reader reassigns `token` without remounting this component (see the
+  // .word-open comment in Reader.svelte) — so a one-shot load at creation would
+  // leave the PREVIOUS word's analyses/LSJ sitting under the new headword. The
+  // monotonic request id discards a slow earlier lookup that resolves after a
+  // newer click.
+  let reqId = 0;
+  $: loadWord(work, token.k);
+  function loadWord(w: string, k: string) {
+    const my = ++reqId;
+    loading = true;
+    error = '';
+    analyses = [];
+    lsj = [];
+    lookupWord(w, k)
+      .then(r => { if (my === reqId) { analyses = r.analyses; lsj = r.lsj; } })
+      .catch(e => { if (my === reqId) error = String(e); })
+      .finally(() => { if (my === reqId) loading = false; });
+  }
 
   // The lemma-page manifest (loaded once, cached): lets each analysis card offer
   // a "see all N occurrences" link into /lemma/<slug>, but only for lemmata that
