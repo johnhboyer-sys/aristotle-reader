@@ -201,26 +201,101 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
     }
 
     # --- 6. chapter English-offset coverage --------------------------------
-    # stage7_emit._chapter_starts looks up each chapter's English start offset
-    # by matching its number against that column's chunk's kind=="section"
-    # markers. A miss silently falls back to engOffset=0 there, which corrupts
-    # chapter slicing in the reader: the previous chapter's English text goes
-    # blank (sliced end-before-start) and the chapter with the bad offset
-    # swallows everything up to the next boundary — exactly the "incomplete
-    # range" print bug this check exists to catch before it ships.
+    # Each chapter's English begins at a char offset within its Bekker column,
+    # and its text runs (across columns) until the next chapter begins. The
+    # reader/print goes BLANK for a chapter only if that book-global span is
+    # empty — two chapters resolving to the same position. stage7_emit.
+    # resolve_chapter_offsets is the single source of truth for those offsets
+    # (a missing/colliding section marker is interpolated from the Greek line
+    # and de-collided); we replay it here over the book-concatenated English and
+    # fail only on a genuine collapse. Chapters whose offset had to be
+    # synthesized (no real section marker of their own) are reported as
+    # `approximate` — visible for data-quality follow-up, but not a build error,
+    # since the de-collision keeps them rendering in order.
+    from .stage7_emit import resolve_chapter_offsets
+
     eng_by_cid = {c["id"]: c for c in english["chunks"]}
-    missing_offsets = []
+    real_marker = {
+        cid: {m["n"] for m in c.get("markers", []) if m["kind"] == "section"}
+        for cid, c in eng_by_cid.items()
+    }
+    chapters_by_col: dict[tuple, list] = {}
     for ch in english.get("chapters", []):
-        cid = f"{ch['book']}:{ch['column']}"
-        chunk = eng_by_cid.get(cid)
-        markers = {m["n"] for m in chunk["markers"] if m["kind"] == "section"} if chunk else set()
-        if ch["chapter"] not in markers:
-            missing_offsets.append(
+        chapters_by_col.setdefault((ch["book"], ch["column"]), []).append(ch)
+    # Book -> its Bekker columns in spine order, with each column's English length.
+    book_cols: dict[int, list[str]] = {}
+    for seg in spine["segments"]:
+        cols = book_cols.setdefault(seg["book"], [])
+        if seg["column"] not in cols:
+            cols.append(seg["column"])
+
+    collapsed, approximate, untranslated = [], [], []
+    # A chapter whose (book, column) carries no spine segment can never be placed
+    # in the per-column loop below — stage7_emit likewise finds no segment and
+    # drops its heading, leaving a broken reader anchor. Fail the build on it
+    # rather than silently skipping it (the pre-refactor check caught this).
+    seg_keys = {(seg["book"], seg["column"]) for seg in spine["segments"]}
+    for ch in english.get("chapters", []):
+        if (ch["book"], ch["column"]) not in seg_keys:
+            collapsed.append(
                 {"book": ch["book"], "chapter": ch["chapter"], "column": ch["column"]}
             )
+    for book, cols in book_cols.items():
+        base, total = {}, 0
+        for col in cols:
+            base[col] = total
+            total += len(eng_by_cid.get(f"{book}:{col}", {}).get("text", "") or "")
+        placed = []  # (global_offset, book, chapter, column)
+        for col in cols:
+            cid = f"{book}:{col}"
+            chunk = eng_by_cid.get(cid)
+            chs = chapters_by_col.get((book, col), [])
+            if not chs:
+                continue
+            ordered = sorted(
+                chs,
+                key=lambda c: (
+                    int(c["line"]) if str(c.get("line", "")).lstrip("-").isdigit() else 0,
+                    int(c.get("wordIndex", 0) or 0),
+                ),
+            )
+            offs = resolve_chapter_offsets(chunk, ordered)
+            col_len = len(chunk.get("text", "") or "") if chunk else 0
+            for ch, off in zip(ordered, offs):
+                # Defence in depth: a resolved offset outside its own column is a
+                # resolver bug, not a coverage gap — force it to fail rather than
+                # letting the untranslated/empty-suffix classifier below hide it.
+                if not (0 <= off <= col_len):
+                    collapsed.append({"book": book, "chapter": ch["chapter"], "column": col})
+                placed.append((base[col] + min(max(off, 0), col_len), book, ch["chapter"], col))
+                if ch["chapter"] not in real_marker.get(cid, set()):
+                    approximate.append(
+                        {"book": book, "chapter": ch["chapter"], "column": col}
+                    )
+        placed.sort()
+        # A chapter is blank iff its book-global span (to the next chapter, or the
+        # book's end for the last one) holds no characters. Split two causes by
+        # WHERE the blank sits, not by inspecting the suffix (trailing whitespace
+        # would fool a .strip() test):
+        #  - untranslated: the chapter is pinned at the very end of the book's
+        #    English (goff == total) — the translation genuinely stops short of
+        #    the Greek's chapter count (e.g. Forster's 35-part Mechanics vs the
+        #    grc TEI's 37). A coverage gap to report, not a slicing bug.
+        #  - collapsed: the blank sits BEFORE the end, so real English still
+        #    follows and a chapter got mis-sliced — the corruption this check
+        #    exists to fail on.
+        for i, (goff, b, chap, col) in enumerate(placed):
+            nxt = placed[i + 1][0] if i + 1 < len(placed) else total
+            if nxt > goff:
+                continue
+            (untranslated if goff >= total else collapsed).append(
+                {"book": b, "chapter": chap, "column": col}
+            )
     report["checks"]["chapter_offsets"] = {
-        "missing": missing_offsets,
-        "ok": not missing_offsets,
+        "collapsed": collapsed,
+        "untranslated": untranslated,
+        "approximate": approximate,
+        "ok": not collapsed,
     }
 
     # --- 7. sigla / character inventory ------------------------------------
@@ -304,11 +379,20 @@ def _to_markdown(report: dict) -> str:
     lines += [
         "",
         "## Chapter English-offset coverage",
-        f"- {len(co['missing'])} chapter(s) with no matching English section marker"
-        f" (falls back to engOffset=0 — misplaces that chapter's text in the reader/print)",
+        f"- {len(co['collapsed'])} chapter(s) rendering BLANK with English text still "
+        f"following (reader/print corruption)",
+        f"- {len(co.get('untranslated', []))} chapter(s) past the translation's last "
+        f"covered chapter (coverage gap — Greek only, no English to place)",
+        f"- {len(co['approximate'])} chapter(s) with no own section marker; offset "
+        f"interpolated from the Greek line and de-collided (renders in order, boundary "
+        f"approximate)",
     ]
-    for m in co["missing"]:
-        lines.append(f"  - **UNEXPECTED**: book {m['book']} chapter {m['chapter']} ({m['column']})")
+    for m in co["collapsed"]:
+        lines.append(f"  - **UNEXPECTED (blank)**: book {m['book']} chapter {m['chapter']} ({m['column']})")
+    for m in co.get("untranslated", []):
+        lines.append(f"  - untranslated: book {m['book']} chapter {m['chapter']} ({m['column']})")
+    for m in co["approximate"][:30]:
+        lines.append(f"  - approximate: book {m['book']} chapter {m['chapter']} ({m['column']})")
     lines += ["", "## Non-Greek character inventory"]
     for e in c["sigla"]["characters"]:
         sample = e["samples"][0]["ref"] if e["samples"] else ""

@@ -51,22 +51,108 @@ def _greek_cells(text: str, tokens: list[dict]):
     return cells
 
 
+def _interp_off_from_ticks(ticks, line, text_len):
+    """English char offset for a Bekker `line`, piecewise-linear between the
+    chunk's gutter ticks ({n: bekker line, offset}). Used to place a chapter
+    whose own English section marker is missing (it landed in an adjacent Bekker
+    column) so it lands near its Greek start rather than at offset 0."""
+    pts = sorted((t["n"], t["offset"]) for t in ticks) or [(line, 0)]
+    if line <= pts[0][0]:
+        return pts[0][1]
+    for (l0, o0), (l1, o1) in zip(pts, pts[1:]):
+        if l0 <= line <= l1 and l1 > l0:
+            return round(o0 + (line - l0) / (l1 - l0) * (o1 - o0))
+    return min(pts[-1][1], text_len)
+
+
+def resolve_chapter_offsets(eng, chapters_in_order) -> list[int]:
+    """Per-column English start offsets for `chapters_in_order` (already sorted
+    by reading position), guaranteed strictly increasing so no chapter's English
+    text slices to empty. A chapter's offset is its own section marker when the
+    TEI/overlay placed one; otherwise it is interpolated from the chapter's Greek
+    start line via the column's Bekker gutter. Any remaining tie or inversion
+    (two chapters landing at the same/earlier offset — e.g. the De Mirabilibus
+    marvels that align onto one Greek word) is repaired by evenly distributing
+    the colliding run between the last good offset and the next fixed one.
+
+    Without this, a missing/colliding marker fell back to offset 0, which blanked
+    the preceding chapter (sliced end-before-start) and merged both — the class
+    of corruption stage2's chapter_offsets check guards. Returns one offset per
+    input chapter, in the same order."""
+    text_len = len(eng["text"]) if eng and eng.get("text") is not None else 0
+    section_offset: dict[str, int] = {}
+    if eng:
+        for m in eng.get("markers", []):
+            if m["kind"] == "section":
+                section_offset.setdefault(m["n"], m["offset"])
+    ticks = (eng or {}).get("bekker") or []
+    # Raw offsets: real marker where present, else interpolated from Greek line.
+    offs: list[int] = []
+    for ch in chapters_in_order:
+        raw = section_offset.get(ch["chapter"])
+        if raw is None:
+            line = int(ch["line"]) if str(ch.get("line", "")).lstrip("-").isdigit() else None
+            raw = _interp_off_from_ticks(ticks, line, text_len) if line is not None else 0
+        offs.append(max(0, min(raw, text_len)))
+    # Repair to strictly increasing: distribute any non-increasing run evenly
+    # between the previous offset and the next larger fixed offset (or the text
+    # end), so every chapter keeps a non-empty slice.
+    n = len(offs)
+    i = 1
+    while i < n:
+        if offs[i] > offs[i - 1]:
+            i += 1
+            continue
+        lo = offs[i - 1]
+        j = i
+        while j < n and offs[j] <= lo:
+            j += 1
+        # `hi` is the next fixed offset (or the text end) — synthesized offsets
+        # must stay within (lo, hi] and never run past the text, so a repaired
+        # start can't fall outside its own English or overtake a real marker.
+        hi = min(offs[j] if j < n else text_len, text_len)
+        count = j - i
+        span = hi - lo
+        # Synthesized offsets must stay STRICTLY below `hi`: below a following
+        # fixed marker (j < n) it would otherwise clamp onto and blank that
+        # validly-marked chapter; at the text end (j == n) landing exactly on
+        # text_len makes an empty end-of-book slice that the untranslated
+        # classifier would wrongly wave through. Either way the residual ties of
+        # a span-starved run then sit on real characters, so stage2 fails them.
+        ceil = max(hi - 1, lo)
+        for k in range(count):
+            if span > count:
+                # Room to spread the colliding run out, strictly increasing.
+                offs[i + k] = lo + round(span * (k + 1) / (count + 1))
+            else:
+                # More chapters than character positions available: pack them one
+                # apart but clamp at the ceiling, so offsets stay in range and
+                # never touch the following fixed marker even though some of the
+                # run necessarily tie among themselves. That residual tie is a
+                # genuine unrecoverable collapse the stage2 check then fails on.
+                offs[i + k] = min(lo + k + 1, ceil)
+        i = j
+    return offs
+
+
 def _chapter_starts(seg_column, line_ns, eng, chapters_in_col, range_map) -> list[dict]:
     """For each chapter starting in this Bekker column, where to break the
     reader. The Greek heading goes before the chapter's ACTUAL Bekker line
     (ch['line'] — exact for grc-aligned chapters); the reader matches the first
     Greek line >= beforeLine, so an exact line lands exactly. The English column
-    heading uses the section marker's char offset. (This replaced an earlier
-    proportional offset->line estimate that drifted within a column.)"""
-    section_offset = {}
-    if eng:
-        for m in eng["markers"]:
-            if m["kind"] == "section":
-                section_offset.setdefault(m["n"], m["offset"])
+    heading uses the section marker's char offset, de-collided so chapters never
+    overlap (see resolve_chapter_offsets)."""
     first_line = line_ns[0] if line_ns else 1
+    ordered = sorted(
+        chapters_in_col,
+        key=lambda ch: (
+            int(ch["line"]) if str(ch.get("line", "")).lstrip("-").isdigit() else first_line,
+            int(ch.get("wordIndex", 0) or 0),
+        ),
+    )
+    offsets = resolve_chapter_offsets(eng, ordered)
     starts = []
-    for ch in chapters_in_col:
-        off = section_offset.get(ch["chapter"], 0)
+    for ch, off in zip(ordered, offsets):
         before = int(ch["line"]) if str(ch.get("line", "")).lstrip("-").isdigit() else first_line
         starts.append(
             {
@@ -77,7 +163,6 @@ def _chapter_starts(seg_column, line_ns, eng, chapters_in_col, range_map) -> lis
                 "bekker": range_map[(ch["book"], ch["chapter"])],
             }
         )
-    starts.sort(key=lambda s: (s["beforeLine"], s["wordIndex"]))
     return starts
 
 

@@ -260,6 +260,14 @@ def _chapter_segments(spine: dict, chapters: list[dict]):
                     if run:
                         result[cur].append((seg["id"], seg["column"], run))
                         run = []
+                    elif cur is not None and cur not in result:
+                        # `cur` shares its exact (column, line) start with the next
+                        # chapter, so it never collected a Greek line — a zero-span
+                        # chapter (De Mirabilibus' one-sentence marvels align onto a
+                        # single spine word). Register an empty placement here so its
+                        # archive prose is still emitted; build_chunks would otherwise
+                        # skip the chapter entirely and blank it in the reader.
+                        result[cur].append((seg["id"], seg["column"], []))
                     bi += 1
                     cur = bounds[bi][2]
                 run.append(line["n"])
