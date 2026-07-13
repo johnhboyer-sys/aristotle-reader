@@ -42,12 +42,12 @@
  ],
  "analyses": {
   "token_keys": 4364,
-  "parses_dropped": 100
+  "parses_dropped": 109
  },
  "lsj": {
   "lemmata_needed": 2343,
-  "lsj_entries_kept": 2262,
+  "lsj_entries_kept": 2261,
   "shards": 24,
-  "lemmata_without_entry": 91
+  "lemmata_without_entry": 92
  }
 }

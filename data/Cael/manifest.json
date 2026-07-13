@@ -40,8 +40,8 @@
  },
  "lsj": {
   "lemmata_needed": 1812,
-  "lsj_entries_kept": 1737,
+  "lsj_entries_kept": 1735,
   "shards": 24,
-  "lemmata_without_entry": 85
+  "lemmata_without_entry": 86
  }
 }

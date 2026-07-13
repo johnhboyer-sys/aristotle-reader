@@ -3,33 +3,26 @@
 Overall: PASS
 
 ## Columns
-- 133/133 columns, monotonic: True
+- 6/6 columns, monotonic: True
 - missing: none; extra: none
 
 ## Line gaps
-- 2 gaps, 0 unexpected
-  - 1377b: 12 -> 16 (expected (book boundary))
-  - 1403b: 3 -> 6 (expected (book boundary))
+- 0 gaps, 0 unexpected
 
 ## Alignment
-- 135 pairs; unmatched segments: ['1:1378a', '2:1404a']; english-only: ['2:1377b', '3:1403b']
+- 6 pairs; unmatched segments: none; english-only: none
 
 ## Length ratios (english chars / greek chars)
-- mean 1.41, sd 0.205, 4 outliers > 1.5 SD
-  - 2:1403b: ratio 0.068 (grc 1813, eng 123)
-  - 2:1378a: ratio 2.63 (grc 1018, eng 2677)
-  - 1:1377b: ratio 0.531 (grc 1602, eng 850)
-  - 1:1377a: ratio 1.758 (grc 1829, eng 3216)
+- mean 1.411, sd 0.639, 1 outliers > 1.5 SD
+  - 1:1249a: ratio 2.577 (grc 312, eng 804)
 
 ## Proper names
-- γοργ / Gorgias: grc in 8 cols, eng in 8 cols — ok
-- ισοκρατ / Isocrates: grc in 10 cols, eng in 10 cols — ok
-- περικλ / Pericles: grc in 5 cols, eng in 5 cols — ok
+
+## Chapter English-offset coverage
+- 0 chapter(s) rendering BLANK with English text still following (reader/print corruption)
+- 0 chapter(s) past the translation's last covered chapter (coverage gap — Greek only, no English to place)
+- 0 chapter(s) with no own section marker; offset interpolated from the Greek line and de-collided (renders in order, boundary approximate)
 
 ## Non-Greek character inventory
-- U+0387 '·' GREEK ANO TELEIA x1303 (e.g. 1354a1)
-- U+0022 '"' QUOTATION MARK x447 (e.g. 1363a6)
-- U+003C '<' LESS-THAN SIGN x97 (e.g. 1356a11)
-- U+003E '>' GREATER-THAN SIGN x97 (e.g. 1356a11)
-- U+037E ';' GREEK QUESTION MARK x32 (e.g. 1375a13)
-- U+2020 '†' DAGGER x10 (e.g. 1374b32)
+- U+0387 '·' GREEK ANO TELEIA x9 (e.g. 1250a22)
+- U+0022 '"' QUOTATION MARK x2 (e.g. 1251a36)
