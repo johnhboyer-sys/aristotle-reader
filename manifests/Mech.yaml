@@ -23,9 +23,18 @@ chapters:
   source: grc_tei
   grc_tei: "tlg0086.tlg023.1st1K-grc1.xml"
   chapter_subtype: chapter
-  # First1KGreek numbers the preface 0 and folds problems 7–8 into one div.
-  # Its ch. 27 opening needs the authoritative Bekker fallback below.
+  # First1KGreek's 36 chapter divs (n=0..35) map to Forster's 35 Parts as:
+  # div 0 = the preface (Part 1); divs 1..7 = Parts 2..8; divs 9..35 = Parts
+  # 9..35. Two divs are defective and are skipped:
+  #   n=8  — a spurious second div splitting problem 8's answer ("Εἰ μὲν δὴ…");
+  #          it is not a Διὰ τί problem and has no Forster Part.
+  #   n=27 — problem 27's div, whose opening orthography diverges from the spine
+  #          and whose milestone is page-only (857a), so text-alignment mis-pins
+  #          it at 857a5 (colliding with div 26). It is re-pinned via `extra`
+  #          below at its authoritative Bekker start.
+  # Result: 34 aligned divs + 1 extra = 35 chapters, 1:1 with Forster's Parts.
   chapter_renumber: sequential
+  skip: [8, 27]
   extra:
     - { n: 27, bekker: "857a22" }
 

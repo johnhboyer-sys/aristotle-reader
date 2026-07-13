@@ -251,7 +251,8 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                          book_subtype: str = "book",
                          chapter_marker: str = "div",
                          top_book: str | None = None,
-                         extra: list[dict] | None = None) -> list[dict]:
+                         extra: list[dict] | None = None,
+                         skip: list | None = None) -> list[dict]:
     """List of {book, chapter, column, line, bookstart} aligned onto the spine.
     `chapter_marker` selects how chapters are read from the grc TEI: "div"
     (<div subtype=chapter_subtype>, default) or "milestone"
@@ -259,13 +260,21 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
     `top_book` restricts the div path to one top-level `<div subtype="book">`
     when several works share a TEI file (the Analytics). `extra` adds chapter
     divisions the TEI omits — a list of {n, bekker[, book]} — re-sorted into
-    document order (e.g. SophRef 34, which First1KGreek folds into its ch33)."""
+    document order (e.g. SophRef 34, which First1KGreek folds into its ch33).
+    `skip` drops grc divisions by their source `n`, for TEIs that carry a div
+    the translation doesn't treat as its own chapter — e.g. Mechanica, where
+    First1KGreek splits problem 8's answer into a spurious second div (n=8) and
+    numbers problem 27's div (n=27) with an opening that won't text-align, so it
+    is skipped and re-pinned via `extra` at its authoritative Bekker start."""
     grc_path = SOURCES_DIR / grc_rel
     joined, owner, wstart, book_start = _spine_words(spine)
     if chapter_marker == "milestone":
         openings = _chapter_openings_milestone(grc_path, chapter_subtype, book_subtype)
     else:
         openings = _chapter_openings(grc_path, chapter_subtype, book_subtype, top_book)
+    if skip:
+        drop = {str(n) for n in skip}
+        openings = [o for o in openings if str(o[1]) not in drop]
     chapters: list[dict] = []
     after = 0
     for book, chap, opening, mcol, mline in openings:

@@ -42,6 +42,7 @@ def _stage1(manifest):
                 chapters_cfg.get("chapter_marker", "div"),
                 chapters_cfg.get("grc_book"),
                 chapters_cfg.get("extra"),
+                chapters_cfg.get("skip"),
             )
         # Some source TEIs use zero-based or discontinuous chapter labels.  A
         # chapter-anchored archive translation is numbered in reading order, so
