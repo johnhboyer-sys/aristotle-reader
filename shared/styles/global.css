@@ -27,7 +27,7 @@
   --page-bg:      #f3efe6;
   --text:         #1a1814;
   --text-mid:     #5a5550;
-  --text-light:   #9a948e;
+  --text-light:   #6e685f;   /* was #9a948e (~2.8:1); darkened to ~4.8:1 for WCAG AA on --page-bg */
   --accent:       #7a4e2d;
   --accent-light: #b8845a;
   --border:       #d8d0c4;
@@ -66,7 +66,7 @@
   --page-bg:      #181511;
   --text:         #e9e2d4;
   --text-mid:     #b6ac9b;
-  --text-light:   #837a6c;
+  --text-light:   #8f8676;   /* was #837a6c (~4.0:1); lightened to ~4.7:1 for WCAG AA on --col-bg */
   --accent:       #cf9d68;
   --accent-light: #e6bd8a;
   --border:       #3a342b;
