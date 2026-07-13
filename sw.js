@@ -14,8 +14,12 @@
 //  - Fonts: cache-first (immutable binaries).
 //
 // Versioned cache: bump VERSION to invalidate everything after a breaking
-// deploy. Old caches are dropped on activate.
-const VERSION = 'aristotle-reader-v1';
+// deploy. On activate we drop only OUR own prior versions — caches.keys() is
+// origin-wide, so on a shared github.io origin another project's PWA can own
+// caches here too; deleting by CACHE_PREFIX (not "everything that isn't
+// VERSION") avoids wiping a sibling app's offline data.
+const CACHE_PREFIX = 'aristotle-reader-';
+const VERSION = CACHE_PREFIX + 'v1';
 const SCOPE_PATH = new URL(self.registration.scope).pathname; // e.g. /aristotle-reader/
 const OFFLINE_URL = SCOPE_PATH + 'offline.html';
 
@@ -28,7 +32,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(
+        keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== VERSION).map((k) => caches.delete(k)),
+      ))
       .then(() => self.clients.claim()),
   );
 });
