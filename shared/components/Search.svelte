@@ -41,6 +41,7 @@
   let loading = false;                    // running the index search
   let searched = false;
   let error = '';
+  let failedWorks: string[] = [];         // works whose index didn't load this run
   let showHelp = false;
   let helpModal: HTMLDivElement;
   let helpTrigger: HTMLElement | null = null;
@@ -476,6 +477,7 @@
     if (!grkQuery.trim() && !engQuery.trim()) return;
     loading = true;
     error = '';
+    failedWorks = [];
     pageError = '';
     csvNote = '';
     searched = false;
@@ -490,7 +492,8 @@
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
       };
-      const results = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
+      const { results, failedWorks: failed } = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
+      failedWorks = failed;
       totalInstances = results.reduce((n, r) => n + instCount(r), 0);
       pages = paginate(results);
       searched = true;
@@ -848,6 +851,13 @@
   {#if error}
     <p class="search-error">{error}</p>
   {:else if searched}
+    {#if failedWorks.length}
+      <p class="search-incomplete" role="alert">
+        ⚠ Incomplete results — couldn't load {failedWorks.length === 1 ? 'the index for' : 'indexes for'}
+        {failedWorks.map((w) => getWork(w)?.title ?? w).join(', ')}. Counts below may be short.
+        <button type="button" class="retry-btn" on:click={doSearch}>Retry</button>
+      </p>
+    {/if}
     <div class="result-bar">
       <p class="result-count">
         {totalInstances === 0
@@ -1365,6 +1375,25 @@
   }
 
   .search-error { color: var(--error); font-family: var(--font-ui); font-size: 0.9rem; }
+  .search-incomplete {
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    background: color-mix(in srgb, var(--error) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--error) 30%, transparent);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0;
+  }
+  .retry-btn {
+    font: inherit;
+    color: var(--accent);
+    background: none;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
 
   .result-bar {
     display: flex;

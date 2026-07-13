@@ -169,6 +169,14 @@ export interface SearchResult {
   grkPositions: number[]; // token positions in the segment where a Greek term matched
 }
 
+// search() returns the hits PLUS any works whose index failed to load, so the
+// UI can flag an incomplete result instead of presenting a partial search as
+// exhaustive. `failedWorks` is empty on a fully successful search.
+export interface SearchOutcome {
+  results: SearchResult[];
+  failedWorks: string[];  // work ids that could not be searched this run
+}
+
 // Positions of a single term across segments: seg_idx → [token positions].
 function termPositions(idx: GrkIndex, term: string): Map<number, number[]> {
   const m = new Map<number, number[]>();
@@ -314,9 +322,9 @@ export async function search(
   langOp: LangOp,
   works: string[],
   matchMode: MatchMode = 'lemma',
-): Promise<SearchResult[]> {
-  if (!grkQuery.trim() && !engQuery.trim()) return [];
-  if (!works.length) return [];
+): Promise<SearchOutcome> {
+  if (!grkQuery.trim() && !engQuery.trim()) return { results: [], failedWorks: [] };
+  if (!works.length) return { results: [], failedWorks: [] };
 
   // Strip a leading '*' (Beta Code capital marker, e.g. *a)nqrwpos); the fold
   // form is caseless, and a leading wildcard would match everything anyway.
@@ -324,23 +332,26 @@ export async function search(
   const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
   // Bound how many works load at once, and let a single work's failed index
-  // load drop just that work (logged) instead of rejecting the whole search.
-  let failures = 0;
+  // load drop just that work (logged + reported) instead of rejecting the whole
+  // search.
+  const failedWorks: string[] = [];
   const perWork = await pool(works, 8, async w => {
     try {
       return await searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode);
     } catch (err) {
       console.warn(`search: skipping ${w} —`, err);
-      failures++;
+      failedWorks.push(w);
       return [] as SearchResult[];
     }
   });
   // If EVERY work failed to load (e.g. offline, or a transient window mid-deploy
   // when the index JSONs are briefly unavailable), surface it as an error to
   // retry — not as an empty result that reads as a misleading "No passages
-  // found." A partial failure still returns what loaded.
-  if (failures === works.length) {
+  // found." A partial failure returns what loaded PLUS the list of works that
+  // didn't, so the caller can tell the user the results are incomplete rather
+  // than presenting them as exhaustive.
+  if (failedWorks.length === works.length) {
     throw new Error('Could not load the search index — check your connection and try again.');
   }
-  return perWork.flat();
+  return { results: perWork.flat(), failedWorks };
 }

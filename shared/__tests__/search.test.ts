@@ -55,27 +55,27 @@ describe('search', () => {
   });
 
   it('returns no results for empty queries or no works', async () => {
-    await expect(search('', ' ', 'all', 'all', 'and', ['TEmpty'])).resolves.toEqual([]);
-    await expect(search('logos', '', 'all', 'all', 'and', [])).resolves.toEqual([]);
+    await expect(search('', ' ', 'all', 'all', 'and', ['TEmpty'])).resolves.toEqual({ results: [], failedWorks: [] });
+    await expect(search('logos', '', 'all', 'all', 'and', [])).resolves.toEqual({ results: [], failedWorks: [] });
   });
 
   it('supports all, any, and phrase modes', async () => {
-    expect(await search('logos areth', '', 'all', 'all', 'and', ['TAll'])).toHaveLength(1);
-    expect(await search('yuxh areth', '', 'any', 'all', 'and', ['TAny'])).toHaveLength(2);
-    expect(await search('logos areth', '', 'phrase', 'all', 'and', ['TPhraseMiss'])).toHaveLength(1);
-    expect(await search('areth logos', '', 'phrase', 'all', 'and', ['TPhraseHit'])).toHaveLength(0);
+    expect((await search('logos areth', '', 'all', 'all', 'and', ['TAll'])).results).toHaveLength(1);
+    expect((await search('yuxh areth', '', 'any', 'all', 'and', ['TAny'])).results).toHaveLength(2);
+    expect((await search('logos areth', '', 'phrase', 'all', 'and', ['TPhraseMiss'])).results).toHaveLength(1);
+    expect((await search('areth logos', '', 'phrase', 'all', 'and', ['TPhraseHit'])).results).toHaveLength(0);
   });
 
   it('supports wildcards for Greek and English terms', async () => {
-    const greek = await search('tex*', '', 'all', 'all', 'and', ['TGreekWildcard']);
-    const english = await search('', 'hap*', 'all', 'all', 'and', ['TEngWildcard']);
+    const greek = (await search('tex*', '', 'all', 'all', 'and', ['TGreekWildcard'])).results;
+    const english = (await search('', 'hap*', 'all', 'all', 'and', ['TEngWildcard'])).results;
     expect(greek.map((r) => r.meta.id)).toEqual(['s3']);
     expect(english.map((r) => r.meta.id)).toEqual(['s2']);
   });
 
   it('combines Greek and English boxes with AND or OR', async () => {
-    const andHits = await search('logos', 'happiness', 'all', 'all', 'and', ['TAnd']);
-    const orHits = await search('texnh', 'happiness', 'all', 'all', 'or', ['TOr']);
+    const andHits = (await search('logos', 'happiness', 'all', 'all', 'and', ['TAnd'])).results;
+    const orHits = (await search('texnh', 'happiness', 'all', 'all', 'or', ['TOr'])).results;
     expect(andHits.map((r) => r.meta.id)).toEqual(['s2']);
     expect(orHits.map((r) => r.meta.id)).toEqual(['s2', 's3']);
   });
@@ -87,6 +87,6 @@ describe('search', () => {
     ['Greek string', 'λόγος τέχνη', 'virtue'],
     ['very long string', `${'logos '.repeat(500)}texnh`, `${'virtue '.repeat(500)}craft`],
   ])('does not throw for adversarial input: %s', async (_label, grk, eng) => {
-    await expect(search(grk, eng, 'any', 'any', 'or', [`TAdv-${_label}`])).resolves.toEqual(expect.any(Array));
+    await expect(search(grk, eng, 'any', 'any', 'or', [`TAdv-${_label}`])).resolves.toMatchObject({ results: expect.any(Array), failedWorks: expect.any(Array) });
   });
 });

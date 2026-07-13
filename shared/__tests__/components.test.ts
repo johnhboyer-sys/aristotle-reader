@@ -38,15 +38,18 @@ vi.mock('../lib/search', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/search')>();
   return {
     ...actual,
-    search: vi.fn(async () => [
-      {
-        work: 'EN',
-        meta: { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', greek_tokens: 'logos', english_head: 'Virtue (test) and κόσμος' },
-        grkMatch: true,
-        engMatch: true,
-        grkPositions: [0],
-      },
-    ]),
+    search: vi.fn(async () => ({
+      results: [
+        {
+          work: 'EN',
+          meta: { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', greek_tokens: 'logos', english_head: 'Virtue (test) and κόσμος' },
+          grkMatch: true,
+          engMatch: true,
+          grkPositions: [0],
+        },
+      ],
+      failedWorks: [],
+    })),
   };
 });
 
