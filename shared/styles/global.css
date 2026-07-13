@@ -1115,10 +1115,22 @@ body {
   gap: 0.75rem;
 }
 
-/* Reader narrows when word sidebar is open so text isn't covered. */
-.reader-body.word-open {
-  padding-right: calc(min(22rem, 86vw) + 1rem);
-  transition: padding-right 0.22s ease;
+/* The word sidebar is a fixed overlay pinned to the right edge. On a wide screen
+   it sits in the empty page margin beside the centred reading measure, so opening
+   it must NOT reflow the text. Threshold = measure + 2×panel = 1080 + 2×352 = 1784,
+   rounded up to 1800px: above it the centred box's right margin already fully
+   clears the panel. Below it (down to the 681px bottom-sheet band), reserve the
+   panel's strip as a right margin instead of shrinking the measure — .reader-body
+   is `margin: 0 auto`, so margin-right slides the box left out of the panel's way,
+   keeping the widest measure that still clears it and narrowing only once the
+   viewport genuinely can't hold both. On .reader-body (the box that caps every
+   column layout at the same measure) so it works in all modes: Greek-only, Both,
+   and 3-col compare. */
+@media (min-width: 681px) and (max-width: 1800px) {
+  .reader-body.word-open {
+    margin-right: calc(min(22rem, 86vw) + 1rem);
+    transition: margin-right 0.22s ease;
+  }
 }
 
 /* Mobile: sidebar rises from bottom as a sheet, flush with the screen bottom.
