@@ -3,7 +3,21 @@
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
 Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-07-13 (c · website-review fixes + Isagoge lexicon exclusion)
+## Latest deploy — 2026-07-13 (d · popup reload + AA contrast + partial-search disclosure)
+
+- **gh-pages:** `7bf65538` → `f3dc1025`
+- **Source:** `origin/main` `d5f6a12b5` (3 commits, direct to main: `2bfe0bc53`, `fd735df35`, `d5f6a12b5`)
+- **What shipped (remaining Codex website-review items 1/4/2):**
+  - **Word/footnote popups reload on switch** — the sidebar switches word (and the footnote popup switches marker) in place, but both loaded data once at creation, leaving the previous item's analyses/LSJ/note under the new header. Now load reactively on identity (`token.k` / `work+transId+n`) with a request-id guard against out-of-order responses. (EndnoteSidebar already did this.)
+  - **Secondary-text contrast → WCAG AA** — `--text-light` was ~2.8:1 (light) / ~4.0:1 (dark) on the page, below 4.5:1 for the citations/source-lines/hints it styles. Darkened light `#9a948e→#6e685f` (~4.8:1) and lightened dark `#837a6c→#8f8676` (~4.7:1); `--text-mid` unchanged so hierarchy holds. John eyeballed both themes.
+  - **Partial-search disclosure** — a single work's failed index load was caught and silently dropped, so a partial search read as exhaustive. `search()` now returns `{ results, failedWorks }`; the page shows a warning banner naming the failed works with a Retry.
+- **Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22) — no corpus data changed. Link-integrity **0 broken** (6,607 pages / 541,856 links / 428,659 anchors).
+- **Deploy diff:** 6,549 files, **0 data files changed** — CSS/JS bundle rehash (`global.css` = contrast, `Reader` = popups, `search` = banner) propagated to every page's `<link>`/`<script>`.
+- **bonitz:** removed `app/dist/bonitz/` before rsync → `/bonitz` 404.
+- **Leak-check:** clean — 0 Ackrill/Rackham/Tredennick in data JSON.
+- **Live-verified:** home / `/Cat/book/1/` / `/search/` / `/lemma/genos/` all 200; `/bonitz/` 404. Contrast tokens `#6e685f` (light) + `#8f8676` (dark) live in `global.Cczc2-ML.css`; `Search.BMpiBMok.js` carries `failedWorks` + the "Incomplete results" banner; `search.CM7zwWs5.css` has `.search-incomplete`/`.retry-btn`. Popup reactive-reload + partial-search banner/Retry verified functionally in the dev server pre-deploy (switching ὄνομα→λέγεται updates lemma/parse/LSJ together; simulated Cat index failure showed the banner and Retry recovered 419→434 instances).
+
+## Previous deploy — 2026-07-13 (c · website-review fixes + Isagoge lexicon exclusion)
 
 - **gh-pages:** `b3938d7f` → `7bf65538`
 - **Source:** `origin/main` `f40a18a20` (5 commits pushed direct to main, no PR: `f5f4169b2`, `bef16ba2b`, `58b326f54`, `671a813d5`, `f40a18a20`)
