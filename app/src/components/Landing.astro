@@ -23,6 +23,9 @@ const { workId } = Astro.props as Props;
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const work = getWork(workId)!;
+// Author-facing strings (title, meta description, JSON-LD) derive from
+// work.author, not a hardcoded "Aristotle" — the Isagoge is Porphyry's.
+const author = work.author;
 const bookless = isBookless(work);
 
 interface ChapterRef { chapter: string; column: string; line: string; bekker: string; }
@@ -60,9 +63,9 @@ const readingColl = reading.filter((r) => r.kind === 'collection');
 const readHref = (q = '') => `${base}${workPath(workId, 1)}${q}`;
 
 // ── SEO ─────────────────────────────────────────────────────────────────────
-const pageTitle = `${work.title} — Aristotle, in Greek & English`;
+const pageTitle = `${work.title} — ${author}, in Greek & English`;
 const metaDescription =
-  `${work.title} by Aristotle: the original Greek (${work.greekSource.short})` +
+  `${work.title} by ${author}: the original Greek (${work.greekSource.short})` +
   ` with English translation` +
   (translatorNames.length ? ` (${translatorNames.join(', ')})` : '') +
   `, table of contents, morphology, and Bekker citation. ${work.blurb}`;
@@ -76,7 +79,7 @@ const jsonLd = {
   '@type': 'Book',
   name: work.title,
   ...(work.greekTitle ? { alternateName: work.greekTitle } : {}),
-  author: { '@type': 'Person', name: 'Aristotle' },
+  author: { '@type': 'Person', name: author },
   ...(translatorNames.length
     ? { translator: translatorNames.map((name) => ({ '@type': 'Person', name })) }
     : {}),
