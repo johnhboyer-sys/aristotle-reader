@@ -199,7 +199,17 @@ def chapter_ranges(spine, chapters) -> dict[tuple, str]:
         for i, ch in enumerate(chs):
             scol, sline = ch["column"], int(ch["line"])
             if i + 1 < len(chs):
-                ecol, eline = step_back(book, chs[i + 1]["column"], int(chs[i + 1]["line"]))
+                ncol, nline = chs[i + 1]["column"], int(chs[i + 1]["line"])
+                if (ncol, nline) == (scol, sline):
+                    # Zero-Greek-span chapter: it shares its Bekker start with the
+                    # next chapter (De Mirabilibus' one-sentence marvels align onto
+                    # a single Greek line — see resolve_chapter_offsets, which then
+                    # separates them on the English side). Emit a single-point span
+                    # rather than stepping back to one line before its own start,
+                    # which would yield a backwards "end < start" range.
+                    ranges[(book, ch["chapter"])] = f"{scol}{sline}"
+                    continue
+                ecol, eline = step_back(book, ncol, nline)
             else:
                 ecol = book_cols[book][-1]
                 eline = col_max[(book, ecol)]
