@@ -76,10 +76,19 @@ const cleanGloss = (s) =>
   s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').replace(/[;,\s]+$/, '').trim();
 
 // ── Enumerate built works ───────────────────────────────────────────────────
+// The lexicon is "Aristotle's Greek", so the concordance counts only Aristotle-
+// authored works. Porphyry's Isagoge is excluded — otherwise its tokens fold
+// into totals shown "across Aristotle's works". Authenticity-flagged spuria stay
+// in (their registry/manifest author is still 'Aristotle').
+const workAuthor = (w) => {
+  try { return JSON.parse(readFileSync(join(DATA, w, 'manifest.json'), 'utf8')).work?.author; }
+  catch { return undefined; }
+};
 const works = readdirSync(DATA, { withFileTypes: true })
   .filter((d) => d.isDirectory() && d.name !== 'lsj' && d.name !== 'lemmata')
   .map((d) => d.name)
-  .filter((w) => existsSync(join(DATA, w, 'analyses.json')));
+  .filter((w) => existsSync(join(DATA, w, 'analyses.json')))
+  .filter((w) => workAuthor(w) === 'Aristotle');
 
 // Titles + a stable display order from each work's manifest.
 const title = {};
