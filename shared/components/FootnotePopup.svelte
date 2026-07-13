@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { fetchFootnotes } from '../lib/data';
+  import { sanitizeHtml } from '../lib/html';
 
   export let work: string = 'EN';
   export let n: string;             // full label identity, e.g. "1", "2.3.1", "*"
@@ -153,7 +154,7 @@
       <div class="popup-loading">{error}</div>
     {:else}
       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      <div class="footnote-text">{@html html}</div>
+      <div class="footnote-text">{@html sanitizeHtml(html)}</div>
     {/if}
   </div>
 </div>

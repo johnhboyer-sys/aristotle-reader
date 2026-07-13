@@ -2,6 +2,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { fetchFootnotes } from '../lib/data';
   import { formatNoteHtml } from '../lib/note-format';
+  import { sanitizeHtml } from '../lib/html';
 
   // Endnote presentation for commentary-class notes (sentinel render=endnote,
   // John's UX call 2026-07-10): a slide-in right sidebar — the settings-
@@ -107,7 +108,7 @@
       <div class="popup-loading">{error}</div>
     {:else}
       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      <div class="endnote-text">{@html html}</div>
+      <div class="endnote-text">{@html sanitizeHtml(html)}</div>
     {/if}
   </div>
 </aside>

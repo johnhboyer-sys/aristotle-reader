@@ -3,6 +3,7 @@
   import { fly } from 'svelte/transition';
   import { lookupWord, fetchLemmata, type Analysis, type LsjEntry, type LemmaRef } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
+  import { sanitizeHtml } from '../lib/html';
 
   export let work: string = 'EN';
   export let token: { t: string; k: string };
@@ -125,7 +126,7 @@
           {#each lsj as entry}
             <div class="lsj-entry">
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html entry.html}
+              {@html sanitizeHtml(entry.html)}
             </div>
           {/each}
         </div>
