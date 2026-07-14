@@ -486,9 +486,28 @@
   /** Attach the display model to a menu state: every ctxMenu assignment
    * routes through here so items/wording/grouping have exactly one source
    * of truth (buildCtxMenu — matrix-tested in ctxMenu.test.ts). */
+  /** Keep the context menu inside the viewport: it's position:fixed at the
+   * click point (max-width 19rem), so a right-/bottom-edge click would run it
+   * off-screen (seen first in the full-width Weave flow). Clamp against the
+   * window using the CSS max-width and a generous height estimate — a menu that
+   * would overflow flips back in rather than being cut off. */
+  function clampMenu(x: number, y: number): { x: number; y: number } {
+    const MARGIN = 8;
+    const MENU_W = 304; // 19rem max-width
+    const MENU_H = 360; // ~tallest menu (Greek word: split + 4 AI items)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : Infinity;
+    const vh = typeof window !== 'undefined' ? window.innerHeight : Infinity;
+    return {
+      x: Math.max(MARGIN, Math.min(x, vw - MENU_W - MARGIN)),
+      y: Math.max(MARGIN, Math.min(y, vh - MENU_H - MARGIN)),
+    };
+  }
   function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model'>): NonNullable<typeof ctxMenu> {
+    const { x, y } = clampMenu(m.x, m.y);
     return {
       ...m,
+      x,
+      y,
       model: buildCtxMenu({
         scheme,
         paraDoc: m.paraDoc,
