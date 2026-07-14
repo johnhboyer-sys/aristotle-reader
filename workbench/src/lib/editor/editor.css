@@ -410,13 +410,14 @@
 .flow-en-seg {
   display: inline;
 }
-/* The line tick on each English segment (correspondence marker) — a shade
-   darker than the Greek ticks so it's easy to match English back to its line,
-   and set as SUBSCRIPT (John) so it drops below the typing line and interferes
-   less with the English text. */
+/* The line tick on each English segment (correspondence marker): dropped LOW
+   and kept small + faint (John) so it tucks under the typing line and never
+   competes with the English — it sits at the foot of the first word. */
 .en-tick {
-  color: var(--text-mid);
-  vertical-align: sub;
+  color: var(--text-light);
+  font-size: calc(var(--fs-linenum) * var(--zoom, 1) * 0.72);
+  vertical-align: -0.4em;
+  opacity: 0.75;
 }
 .flow-en-block .en-cell {
   display: inline-block;
