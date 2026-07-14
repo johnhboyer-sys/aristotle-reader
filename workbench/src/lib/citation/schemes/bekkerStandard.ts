@@ -74,4 +74,5 @@ export const bekkerStandard: CitationScheme = {
     rowUnit: 'bekker-line',
     gutterMode: 'address',
   },
+  spineSource: 'corpus',
 };

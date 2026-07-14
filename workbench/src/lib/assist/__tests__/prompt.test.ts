@@ -207,3 +207,183 @@ describe('renderAssistContext', () => {
     expect(rendered.citationLine).toBe('Work: Metaphysics, Book Ζ, Chapter 17  (bekker-metaphysics citation)');
   });
 });
+
+// ── D8 §7 Phase E2: unit-aware + language-aware wordings ────────────────────
+
+/** A German paragraph-doc free work: bookless, authorless, verbatim label. */
+const GERMAN_WORK = {
+  title: 'Vom Kriege',
+  author: '',
+  originalLanguage: 'greek' as const, // legacy field; `language` wins
+  language: 'German',
+  scheme: 'paragraph',
+};
+
+const PARAGRAPH_CONTEXT = {
+  ...GOLDEN_CONTEXT,
+  unit: 'paragraph' as const,
+  work: GERMAN_WORK,
+  book: { index: 1, label: '' },
+  chapter: 1,
+  target: { address: '¶2', greek: 'Der Krieg ist eine bloße Fortsetzung der Politik mit anderen Mitteln.' },
+  before: [{ address: '¶1', greek: 'Wir denken die einzelnen Elemente unseres Gegenstandes.', english: 'We shall consider the single elements of our subject.' }],
+  after: [{ address: '¶3', greek: 'Der Krieg ist also ein Akt der Gewalt.', english: null }],
+};
+
+const SENTENCE_CONTEXT = {
+  ...PARAGRAPH_CONTEXT,
+  unit: 'sentence' as const,
+  target: { address: '¶2', greek: 'Der Krieg ist eine bloße Fortsetzung der Politik.' },
+  enclosing: { address: '¶2', greek: 'Der Krieg ist eine bloße Fortsetzung der Politik. Er ist ein wahres politisches Instrument.' },
+};
+
+describe('buildAssistPrompt — unit wordings (golden)', () => {
+  it("golden: 'paragraph' translate system prompt is paragraph-locked, translator persona for a non-classical language", () => {
+    const { system } = buildAssistPrompt(PARAGRAPH_CONTEXT);
+    expect(system).toBe(
+      'You are helping a professional translator translate a work from its original language into English. The translation is strictly paragraph-locked: each source paragraph gets exactly one English paragraph, kept in 1:1 correspondence. Match the register, terminology, and style of the surrounding English shown below. Output ONLY the English translation for the single TARGET paragraph. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context paragraphs.',
+    );
+  });
+
+  it("golden: 'paragraph' user prompt — bookless citation, paragraph context header, TARGET paragraph blocks", () => {
+    const { user } = buildAssistPrompt(PARAGRAPH_CONTEXT);
+    expect(user).toBe(
+      [
+        'Work: Vom Kriege  (paragraph citation)',
+        '',
+        'Context (each paragraph: [address] source — English draft, blank if untranslated):',
+        '[¶1] Wir denken die einzelnen Elemente unseres Gegenstandes. — We shall consider the single elements of our subject.',
+        '',
+        '>>> TARGET paragraph to translate:',
+        '[¶2] Der Krieg ist eine bloße Fortsetzung der Politik mit anderen Mitteln.',
+        '',
+        'Continuing context:',
+        '[¶3] Der Krieg ist also ein Akt der Gewalt. — (untranslated)',
+        '',
+        'Provide the English translation for the TARGET paragraph only.',
+      ].join('\n'),
+    );
+  });
+
+  it("golden: 'sentence' user prompt renders the enclosing paragraph between context and target", () => {
+    const { user } = buildAssistPrompt(SENTENCE_CONTEXT);
+    expect(user).toBe(
+      [
+        'Work: Vom Kriege  (paragraph citation)',
+        '',
+        'Context (each paragraph: [address] source — English draft, blank if untranslated):',
+        '[¶1] Wir denken die einzelnen Elemente unseres Gegenstandes. — We shall consider the single elements of our subject.',
+        '',
+        'The TARGET sentence is part of this paragraph:',
+        '[¶2] Der Krieg ist eine bloße Fortsetzung der Politik. Er ist ein wahres politisches Instrument.',
+        '',
+        '>>> TARGET sentence to translate:',
+        '[¶2] Der Krieg ist eine bloße Fortsetzung der Politik.',
+        '',
+        'Continuing context:',
+        '[¶3] Der Krieg ist also ein Akt der Gewalt. — (untranslated)',
+        '',
+        'Provide the English translation for the TARGET sentence only.',
+      ].join('\n'),
+    );
+  });
+
+  it("'sentence' translate system prompt is sentence-locked with paragraph context nouns", () => {
+    const { system } = buildAssistPrompt(SENTENCE_CONTEXT);
+    expect(system).toContain('strictly sentence-locked');
+    expect(system).toContain('each source sentence gets exactly one English sentence');
+    expect(system).toContain('TARGET sentence');
+    expect(system).toContain('Do not translate the context paragraphs.');
+    // The mid-clause-break concession is line-lock-specific.
+    expect(system).not.toContain('mid-clause');
+  });
+
+  it("an `enclosing` without unit 'sentence' is ignored (line/paragraph targets never render it)", () => {
+    const { user } = buildAssistPrompt({ ...PARAGRAPH_CONTEXT, enclosing: SENTENCE_CONTEXT.enclosing });
+    expect(user).not.toContain('is part of this paragraph');
+  });
+
+  it("'reference' mode speaks the unit too (not paragraph-locked; TARGET paragraph instruction)", () => {
+    const { system, user } = buildAssistPrompt({ ...PARAGRAPH_CONTEXT, mode: 'reference' });
+    expect(system).toContain('not paragraph-locked');
+    expect(system).toContain('you need not preserve 1:1 paragraph correspondence');
+    expect(user.trimEnd().endsWith('Provide a natural, complete English reference translation of the TARGET paragraph only.')).toBe(true);
+  });
+});
+
+describe('buildAssistPrompt — source-language wording (golden)', () => {
+  it("golden: 'check' names the free work's verbatim language (German), not Greek", () => {
+    const { system, user } = buildAssistPrompt({ ...PARAGRAPH_CONTEXT, mode: 'check' });
+    expect(system).toBe(
+      'You are a linguist checking a translation for fidelity to its source text. Examine ONLY the TARGET paragraph: judge whether the translator’s English accurately and completely renders the German — morphology, case, tense, voice, mood, agreement, syntax, word order, lexical choice, and any omissions or additions. Cite the specific German word(s) at issue. Use the surrounding paragraphs only as grammatical and referential context; do not assess them. Report ONLY concrete linguistic observations, concisely. Do NOT offer interpretation, philosophical or literary judgement, stylistic preference, paraphrase, or your own translation. If the English faithfully renders the German, say so briefly.',
+    );
+    expect(user).toContain('>>> TARGET paragraph to check:');
+    expect(user.trimEnd()).toMatch(/diagnose the TARGET paragraph’s English against its German\./);
+    expect(user).not.toContain('Greek');
+  });
+
+  it("an UNKNOWN language (null) drops the language claim: 'the source text' / 'source word(s)'", () => {
+    const ctx = { ...PARAGRAPH_CONTEXT, mode: 'check' as const, work: { ...GERMAN_WORK, language: null } };
+    const { system, user } = buildAssistPrompt(ctx);
+    expect(system).toContain('renders the source text');
+    expect(system).toContain('Cite the specific source word(s) at issue');
+    expect(system).not.toContain('Greek');
+    expect(user).toContain('against its source text');
+    expect(user).not.toContain('Greek');
+  });
+
+  it("a blank language string behaves like unknown", () => {
+    const ctx = { ...PARAGRAPH_CONTEXT, work: { ...GERMAN_WORK, language: '   ' }, mode: 'ask' as const, question: 'Parse it.' };
+    const { system } = buildAssistPrompt(ctx);
+    expect(system).toContain('grounding your answer in the source text');
+    expect(system).not.toContain('Greek');
+  });
+
+  it("'ask' persona: classicist for Greek/Latin, linguist otherwise; language named where known", () => {
+    const german = buildAssistPrompt({ ...PARAGRAPH_CONTEXT, mode: 'ask', question: 'Case of Politik?' });
+    expect(german.system).toContain('You are a knowledgeable linguist');
+    expect(german.system).toContain('grounding your answer in the German of the TARGET paragraph');
+    expect(german.system).toContain('cite the relevant German word(s)');
+    const greek = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'Case?' });
+    expect(greek.system).toContain('You are a knowledgeable classicist');
+  });
+
+  it("a free work whose language IS 'Greek' keeps the classicist wording (verbatim label)", () => {
+    const ctx = { ...GOLDEN_CONTEXT, work: { ...GOLDEN_CONTEXT.work, author: '', language: 'Greek' } };
+    const { system } = buildAssistPrompt({ ...ctx, mode: 'check' });
+    expect(system).toContain('renders the Greek');
+    const t = buildAssistPrompt(ctx);
+    expect(t.system).toContain('professional classicist');
+  });
+
+  it('corpus works (no language field) are BYTE-IDENTICAL to the shipped wording in every mode', () => {
+    // GOLDEN_CONTEXT carries no `language`; the derived label is 'Greek'.
+    // The inline-snapshot goldens above pin translate; spot-pin check + ask.
+    const check = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'check' });
+    expect(check.system).toContain('renders the Greek — morphology');
+    expect(check.system).toContain('Cite the specific Greek word(s) at issue');
+    const ask = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'q' });
+    expect(ask.system).toContain('knowledgeable classicist');
+    expect(ask.system).toContain('in the Greek of the TARGET line');
+  });
+});
+
+describe('renderAssistContext — bookless citation + enclosing', () => {
+  it('an empty book label drops the "Book …, Chapter …" locus (free/bookless works)', () => {
+    const rendered = renderAssistContext(PARAGRAPH_CONTEXT);
+    expect(rendered.citationLine).toBe('Work: Vom Kriege  (paragraph citation)');
+  });
+
+  it('a labelled book keeps the shipped citation line verbatim', () => {
+    const rendered = renderAssistContext(GOLDEN_CONTEXT);
+    expect(rendered.citationLine).toBe('Work: Metaphysics, Book Ζ, Chapter 17  (bekker-metaphysics citation)');
+  });
+
+  it("enclosingLine is set ONLY for sentence-unit contexts that carry `enclosing`", () => {
+    expect(renderAssistContext(SENTENCE_CONTEXT).enclosingLine).toBe(
+      '[¶2] Der Krieg ist eine bloße Fortsetzung der Politik. Er ist ein wahres politisches Instrument.',
+    );
+    expect(renderAssistContext(PARAGRAPH_CONTEXT).enclosingLine).toBeNull();
+    expect(renderAssistContext(GOLDEN_CONTEXT).enclosingLine).toBeNull();
+  });
+});

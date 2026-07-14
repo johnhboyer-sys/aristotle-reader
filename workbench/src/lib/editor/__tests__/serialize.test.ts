@@ -12,7 +12,11 @@ import {
   assertRoundTrip,
   parseRowSegments,
   serializeRowSegments,
+  encodeParaLine,
+  decodeParaLine,
   joinRowDocs,
+  stripFootnoteMarkup,
+  stripFootnoteMarkupLine,
   type InlineRun,
   type MarkSet,
 } from '../serialize';
@@ -55,9 +59,17 @@ describe('serializeRow — each construct', () => {
     expect(serializeRow(doc(m('7')))).toBe('{^7:}');
   });
 
-  it('escapes * + { [ ^ and backslash in text; } only inside spans', () => {
+  it('escapes * + { [ ^ ¶ and backslash in text; } only inside spans', () => {
     expect(serializeRow(doc(t('a*b+c{d[e^f}g\\h')))).toBe('a\\*b\\+c\\{d\\[e\\^f}g\\\\h');
     expect(serializeRow(doc(t('x}y', { greek: true })))).toBe('{grc:x\\}y}');
+    expect(serializeRow(doc(t('a¶b⏎c')))).toBe('a\\¶b⏎c');
+  });
+
+  it('a literal ⏎ in a sentence-layer row round-trips byte-identically — the generic serializer never escapes it', () => {
+    // Adversarial-review regression: only encodeParaLine (the [ENGLISH.PARA]
+    // boundary) escapes ⏎; existing [ENGLISH] bytes must never change.
+    const line = 'raw ⏎ stays';
+    expect(serializeRow(parseRow(line))).toBe(line);
   });
 
   it('mixed plain and marked segments', () => {
@@ -155,6 +167,33 @@ describe('footnote invariant helpers', () => {
   });
 });
 
+describe('stripFootnoteMarkup (D8 v1 — footnotes are sentence-layer only)', () => {
+  it('removes marker nodes and clears fnRef marks, keeping every character of text', () => {
+    const d = doc(t('Beta ', {}), t('stray', { fnRef: '2' }), m('2'), t(' tail ', {}), m('3'));
+    const stripped = stripFootnoteMarkup(d);
+    expect(stripped.eq(doc(t('Beta stray tail ')))).toBe(true);
+  });
+
+  it('keeps the other marks on a stripped fnRef run', () => {
+    const d = doc(t('kept', { fnRef: '1', italic: true }), m('1'));
+    expect(stripFootnoteMarkup(d).eq(doc(t('kept', { italic: true })))).toBe(true);
+  });
+
+  it('a marker-only doc strips to the empty doc', () => {
+    expect(stripFootnoteMarkup(doc(m('7'))).content.size).toBe(0);
+  });
+
+  it('a doc with no footnote markup is unchanged', () => {
+    const d = doc(t('plain ', { bold: true }), t('τὸ ὄν', { greek: true }));
+    expect(stripFootnoteMarkup(d).eq(d)).toBe(true);
+  });
+
+  it('stripFootnoteMarkupLine works at the one-line-markup level (export boundary)', () => {
+    expect(stripFootnoteMarkupLine('Beta {^2:stray} tail {^3:}')).toBe('Beta stray tail ');
+    expect(stripFootnoteMarkupLine('no markers *here*')).toBe('no markers *here*');
+  });
+});
+
 // ── ¶ row segments (design doc D6, slice 1) ────────────────────────────────
 
 describe('parseRowSegments / serializeRowSegments (¶ structural token)', () => {
@@ -227,6 +266,31 @@ describe('parseRowSegments / serializeRowSegments (¶ structural token)', () => 
   it('parseRow itself still treats an unescaped ¶ as literal text (single-segment callers unchanged)', () => {
     const d = parseRow('a¶b');
     expect(runsOf(d)).toEqual([t('a¶b')]);
+  });
+});
+
+describe('encodeParaLine / decodeParaLine (⏎ structural token)', () => {
+  it('encodes raw newlines and decodes unescaped return symbols', () => {
+    expect(encodeParaLine('one\ntwo\nthree')).toBe('one⏎two⏎three');
+    expect(decodeParaLine('one⏎two⏎three')).toBe('one\ntwo\nthree');
+  });
+
+  it('escapes literal return symbols itself (the generic serializer leaves them raw) and decode keeps them for parseRow', () => {
+    const markup = serializeRow(doc(t('literal ⏎ and break\nnext')));
+    expect(markup).toBe('literal ⏎ and break\nnext');
+    const encoded = encodeParaLine(markup);
+    expect(encoded).toBe('literal \\⏎ and break⏎next');
+    const decoded = decodeParaLine(encoded);
+    expect(decoded).toBe('literal \\⏎ and break\nnext');
+    expect(parseRow(decoded).textContent).toBe('literal ⏎ and break\nnext');
+  });
+
+  it('round-trips a para doc with both literal ⏎ text and real line breaks', () => {
+    const original = doc(t('typed ⏎ token'), t('\n'), t('real break and ¶ too'));
+    const encoded = encodeParaLine(serializeRow(original));
+    expect(encoded).toBe('typed \\⏎ token⏎real break and \\¶ too');
+    const back = parseRow(decodeParaLine(encoded));
+    expect(back.eq(original)).toBe(true);
   });
 });
 

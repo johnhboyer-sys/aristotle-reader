@@ -175,6 +175,189 @@
   border-radius: 0 3px 3px 0;
 }
 
+/* ── paragraph view (D8 §5) ───────────────────────────────────────────────
+   Same three-column grid, same DOM-grouped columns (Greek-vs-English
+   selection isolation is still mandatory — it is a two-column editable view),
+   but the original text WRAPS instead of sizing to max-content: a paragraph
+   unit is many sentences, so a max-content Greek track would blow the page
+   width open. Both columns become proportional; each cell wraps normally. */
+.chapter-grid.view-paragraph {
+  grid-template-columns:
+    [grc] minmax(0, 1fr)
+    [gutter] max-content
+    [en] minmax(0, 1fr);
+}
+/* Paragraph-UNIT view (document-spine paragraph docs): a touch more air
+   between units, and the gutter's ¶N baseline still aligns to the first line. */
+.chapter-grid.view-para-unit .grc-cell,
+.chapter-grid.view-para-unit .en-cell {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+/* Paragraph-CHUNK grouping for line docs (§5): the first row of each chunk
+   gets top spacing so the line grid reads as paragraphs. Pure display — the
+   doc stays line-based, addresses stay per line. The first chunk (grid row 1)
+   never adds a gap (nth handled by the store returning row 1 as a start; we
+   suppress the very first visually via :first-of-type-ish spacing below). */
+.chapter-grid.view-paragraph .grc-cell.chunk-start,
+.chapter-grid.view-paragraph .gutter.chunk-start,
+.chapter-grid.view-paragraph .en-cell.chunk-start {
+  margin-top: var(--space-4);
+}
+/* The topmost chunk sits flush at the grid's top edge (no leading gap). */
+.chapter-grid.view-paragraph .grc-cell.chunk-start[data-row='0'],
+.chapter-grid.view-paragraph .en-cell.chunk-start[data-row-en='0'] {
+  margin-top: 0;
+}
+.chapter-grid.view-paragraph .gutter.chunk-start[data-row='0'] {
+  margin-top: 0;
+}
+
+/* Read-only sentence-layer block beneath the editable englishPara field
+   (§4 "text stays at its unit"): subdued, selectable/copyable, clearly a
+   second layer — never mistaken for the editing surface. */
+.sentence-layer {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed color-mix(in srgb, var(--text-light) 45%, transparent);
+  user-select: text;
+}
+.sentence-layer-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin-bottom: var(--space-1);
+}
+.sentence-layer-text {
+  font-family: var(--font-work);
+  font-size: calc(var(--work-fs) * 0.94);
+  line-height: var(--work-lh);
+  color: var(--text-mid);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* ── interpolated view (D8 §5) ────────────────────────────────────────────
+   A single-column drafting stack: for each display unit the English FIELD on
+   top and the display-only original directly beneath it, with a compact
+   gutter-style address label. No Greek/gutter columns — the original is
+   plain selectable text (never an editor), so the DOM-column-grouping
+   selection invariant does not apply here (it stays mandatory for the
+   two-column views). Max readable measure, centered — a clean drafting
+   surface, not full-bleed. */
+.interp-stack {
+  max-width: min(70ch, 100%);
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-6);
+  /* The 70ch measure tracks the working text size (and the zoom). */
+  font-size: var(--work-fs);
+}
+.interp-unit {
+  position: relative;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-radius: 5px;
+}
+/* Focused unit: the same whisper as the grid's .row-focus family, carried by
+   the WHOLE unit (field + original read as one block); the inner cell stays
+   quiet so there's no double tint. */
+.interp-unit.row-focus {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.interp-stack .en-cell:focus-within {
+  background: transparent;
+  border-radius: 0;
+}
+/* Compact address label (echoes the grid gutter: --fs-linenum, muted,
+   tabular numerals — the raw address verbatim, never parsed). */
+.interp-addr {
+  font-family: var(--font-ui);
+  font-size: calc(var(--fs-linenum) * var(--zoom, 1));
+  color: var(--text-light);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  margin-bottom: 1px;
+}
+.interp-unit.row-focus .interp-addr {
+  color: var(--text-mid);
+}
+/* The display-only original beneath the field: the working face, slightly
+   smaller + subdued (the .sentence-layer-text treatment) so the editable
+   English above reads as the primary surface. STRICTLY non-editable;
+   selectable for reading/copying. */
+.interp-source {
+  font-family: var(--font-work);
+  font-size: calc(var(--work-fs) * 0.94);
+  line-height: var(--work-lh);
+  color: var(--text-mid);
+  margin-top: var(--space-1);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  user-select: text;
+}
+/* Sentence-division separator inside a unit-granularity original (§2): a
+   thin vertical tick at each splitOffsets boundary — visible, never loud. */
+.interp-sep {
+  display: inline-block;
+  width: 1px;
+  height: 0.8em;
+  margin: 0 0.45em;
+  vertical-align: -0.06em;
+  background: color-mix(in srgb, var(--text-light) 55%, transparent);
+}
+/* Group spacing in the stack (§3): line docs' paragraph_starts chunks; a
+   paragraph doc's sentence blocks group by their paragraph row. The topmost
+   group sits flush (no leading gap), mirroring the grid chunk rule. */
+.interp-unit.chunk-start {
+  margin-top: var(--space-4);
+}
+.interp-unit.chunk-start[data-row='0'] {
+  margin-top: 0;
+}
+/* The read-only cross-layer block ABOVE the field (paragraph-layer English
+   shown in sentence granularity, §4): same .sentence-layer family, but the
+   dashed rule sits below-left of a field rather than under it — give it a
+   little room before the editable field. */
+.interp-cross-layer {
+  margin-top: 0;
+  margin-bottom: var(--space-2);
+}
+
+/* View-mode toggle (chapter chrome): a compact segmented control, quiet at
+   rest, following the editor toolbar's flat-button treatment. */
+.view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: var(--space-3);
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--ui-hover);
+}
+.view-toggle-btn {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.32rem 0.6rem;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+.view-toggle-btn:hover {
+  color: var(--text);
+}
+.view-toggle-btn.active {
+  background: var(--col-bg);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
 /* Empty English cells: a faint dotted starting rule, so untranslated rows
    read as an inviting writing surface rather than dead space. Gone the
    moment the row gains focus or text. */
@@ -418,11 +601,15 @@
   color: var(--text-light);
   text-wrap: pretty;
 }
-.ctx-menu-item:hover {
+.ctx-menu-item:hover:not(:disabled) {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
-.ctx-menu-item:hover .ctx-menu-desc {
+.ctx-menu-item:hover:not(:disabled) .ctx-menu-desc {
   color: var(--text-mid);
+}
+.ctx-menu-item:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 .ctx-menu-divider {
   height: 1px;

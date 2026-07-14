@@ -16,10 +16,18 @@
   // itself is touched by assist through exactly ONE command:
   // `insertSuggestion` below.
   import { onMount } from 'svelte';
-  import type { RowViewHost } from './ChapterEditor.svelte';
+  import type { RowViewHost, EditLayer } from './ChapterEditor.svelte';
   import AssistPopover from '../../components/AssistPopover.svelte';
 
-  let { row, segment, host }: { row: number; segment: number; host: RowViewHost } = $props();
+  // `layer` (D8 §4) selects which English field this editor edits: the default
+  // 'sentence' layer (english/english2) or the paragraph layer (englishPara,
+  // used by the paragraph-unit view — segment is always 0 there).
+  let {
+    row,
+    segment,
+    host,
+    layer = 'sentence',
+  }: { row: number; segment: number; host: RowViewHost; layer?: EditLayer } = $props();
 
   let el: HTMLDivElement;
 
@@ -44,8 +52,8 @@
   }
 
   onMount(() => {
-    host.createView(row, segment, el);
-    return () => host.destroyView(row, segment);
+    host.createView(row, segment, el, layer);
+    return () => host.destroyView(row, segment, layer);
   });
 </script>
 

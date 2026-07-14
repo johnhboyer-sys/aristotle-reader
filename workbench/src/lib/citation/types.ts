@@ -7,7 +7,13 @@
  * parse them outside the owning scheme.
  */
 
-export type SchemeId = 'bekker-standard' | 'bekker-metaphysics' | 'aquinas-tbd' | 'busse-paragraph';
+export type SchemeId =
+  | 'bekker-standard'
+  | 'bekker-metaphysics'
+  | 'aquinas-tbd'
+  | 'busse-paragraph'
+  | 'paragraph'
+  | 'plain-line';
 
 /** Opaque scheme-owned address, e.g. "1041a6". Only the owning scheme parses/compares it. */
 export interface Address {
@@ -27,7 +33,7 @@ export interface RefSpan {
 
 export interface GutterSpec {
   /** What one editor row IS. Phase 1 renders only 'bekker-line'. */
-  rowUnit: 'bekker-line' | 'paragraph' | 'sentence';
+  rowUnit: 'bekker-line' | 'paragraph' | 'sentence' | 'plain-line';
   gutterMode: 'address' | 'structural';
 }
 
@@ -54,4 +60,16 @@ export interface CitationScheme {
   /** Full citation, e.g. "*Metaphysics* Ζ.17, 1041a6–b3". */
   formatCitation(span: RefSpan, work: WorkMeta): string;
   gutter: GutterSpec;
+  /**
+   * Who owns row count for a work under this scheme (D8 amendment, see
+   * workbench-design/d8-view-modes.md §1).
+   *
+   * - 'corpus': an external corpus spine owns row count (Bekker line grid,
+   *   Busse paragraph grid). Rows can't be created/destroyed by the user;
+   *   D6 merge-refusal semantics apply.
+   * - 'document': the document itself is the spine — there is no external
+   *   row source, so the user may create/destroy rows (paragraph split and
+   *   merge are row-level operations under this arm).
+   */
+  spineSource: 'corpus' | 'document';
 }

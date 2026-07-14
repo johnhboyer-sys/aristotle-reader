@@ -2,15 +2,39 @@ import { describe, expect, it } from 'vitest';
 import {
   chapterToPandocMarkdown,
   deriveRowAddresses,
+  documentToPandocMarkdown,
   markupToPandoc,
 } from '../pandocMarkdown';
+import { compileWorkMarkdown } from '../compile';
 import { parseManifest } from '../../works/manifest';
 import type { ChapterFile } from '../../chapterfile/types';
+import type { WorkMeta } from '../../citation/types';
 import metaphysicsYaml from '../../works/manifests/metaphysics.yaml?raw';
 import posteriorAnalyticsYaml from '../../works/manifests/posterior-analytics.yaml?raw';
 
 const META = parseManifest(metaphysicsYaml, 'metaphysics.yaml'); // book 7 label Ζ
 const POST_AN = parseManifest(posteriorAnalyticsYaml, 'posterior-analytics.yaml'); // book 2 label II
+const FREE_PARAGRAPH_META: WorkMeta = {
+  id: 'free-paragraph',
+  title: 'Free Paragraph',
+  author: '',
+  scheme: 'paragraph',
+  books: [{ n: 1, label: '' }],
+};
+const FREE_LINE_META: WorkMeta = {
+  id: 'free-lines',
+  title: 'Free Lines',
+  author: '',
+  scheme: 'plain-line',
+  books: [{ n: 1, label: '' }],
+};
+const CORPUS_PARAGRAPH_META: WorkMeta = {
+  id: 'isagoge',
+  title: 'Isagoge',
+  author: 'Porphyry',
+  scheme: 'busse-paragraph',
+  books: [{ n: 1, label: 'Book' }],
+};
 
 function chapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
   return {
@@ -459,6 +483,203 @@ describe('chapterToPandocMarkdown — line splits (design doc D6, export)', () =
     expect(stampCount).toBe(1);
     expect(md).toContain('[1041a8] three');
     expect(md).not.toContain('[1041a8] four');
+  });
+});
+
+describe('chapterToPandocMarkdown — document-spine export (D8)', () => {
+  it('paragraph docs use sentence-layer precedence, englishPara fallback, one ellipsis gap, and no addresses', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶4',
+        lineSplits: [{ ref: '¶1', offset: 13 }],
+      },
+      greekLines: ['Source one. Source two.', 'Source fallback.', 'Source blank.', 'Source after gap.'],
+      englishLines: ['First sentence.¶Second sentence.', '', '', 'After gap.'],
+      englishParaLines: ['Paragraph layer should lose.', 'Paragraph fallback.', '', ''],
+      footnotes: [],
+    };
+
+    expect(chapterToPandocMarkdown(c, FREE_PARAGRAPH_META)).toBe(
+      '# Free Paragraph\n\n' +
+        'First sentence. Second sentence.\n\n' +
+        'Paragraph fallback.\n\n' +
+        '…\n\n' +
+        'After gap.\n',
+    );
+  });
+
+  it('paragraph-layer ⏎ tokens export as spaces for document-spine paragraph docs', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶1',
+      },
+      greekLines: ['Source fallback.'],
+      englishLines: [''],
+      englishParaLines: ['Paragraph fallback⏎with a break.'],
+      footnotes: [],
+    };
+
+    expect(chapterToPandocMarkdown(c, FREE_PARAGRAPH_META)).toBe(
+      '# Free Paragraph\n\nParagraph fallback with a break.\n',
+    );
+  });
+
+  it('plain-line docs break paragraphs at paragraphStarts and preserve line identity with Pandoc hard breaks', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-lines',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'plain-line',
+        spanStart: '1',
+        spanEnd: '3',
+        paragraphStarts: [1, 3],
+      },
+      greekLines: ['L1', 'L2', 'L3'],
+      englishLines: ['Line one', 'Line two', 'Line three'],
+      footnotes: [],
+    };
+
+    expect(chapterToPandocMarkdown(c, FREE_LINE_META)).toBe(
+      '# Free Lines\n\n' +
+        'Line one\\\n' +
+        'Line two\n\n' +
+        'Line three\n',
+    );
+  });
+
+  // Footnotes are a SENTENCE-LAYER feature (D8 v1 rule): marker markup in
+  // [ENGLISH.PARA] renders as plain phrase text — no [^id] reference, no
+  // footnote body pulled in — matching hydration, which strips the same
+  // markers on load.
+  it('paragraph-layer footnote markers are stripped at export: phrase as plain text, no reference, no body', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶2',
+      },
+      greekLines: ['Source one.', 'Source two.'],
+      englishLines: ['Sentence layer with a real {^1:anchor}.', ''],
+      englishParaLines: ['', 'Para layer with a {^2:stray} marker.'],
+      footnotes: [
+        { id: 1, body: 'real note' },
+        { id: 2, body: 'para-only note' },
+      ],
+    };
+    const md = chapterToPandocMarkdown(c, FREE_PARAGRAPH_META);
+    expect(md).toContain('anchor[^1]');
+    expect(md).toContain('[^1]: real note');
+    expect(md).toContain('Para layer with a stray marker.');
+    expect(md).not.toContain('[^2]');
+    expect(md).not.toContain('para-only note');
+  });
+
+  it('a marker-only paragraph line strips to nothing and counts as untranslated', () => {
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-paragraph',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶3',
+      },
+      greekLines: ['Source one.', 'Source two.', 'Source three.'],
+      englishLines: ['First.', '', ''],
+      englishParaLines: ['', '{^7:}', ''],
+      footnotes: [],
+    };
+    // Row 2's para layer is decoration-only → an untranslated gap, exactly as
+    // if the line were blank (one ellipsis between translated content — none
+    // follows here, so no trailing ellipsis either).
+    expect(chapterToPandocMarkdown(c, FREE_PARAGRAPH_META)).toBe('# Free Paragraph\n\nFirst.\n');
+  });
+});
+
+describe('chapterToPandocMarkdown — corpus paragraph export', () => {
+  function corpusParagraphChapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
+    return {
+      meta: {
+        schemaVersion: 1,
+        work: 'isagoge',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'busse-paragraph',
+        spanStart: '1.1',
+        spanEnd: '1.2',
+      },
+      greekLines: ['Source first.', 'Source second.'],
+      englishLines: ['', ''],
+      englishParaLines: ['Para-layer first.', 'Para-layer second.'],
+      footnotes: [],
+      ...overrides,
+    };
+  }
+
+  it('exports paragraph-layer English for corpus-spine paragraph works', () => {
+    const md = chapterToPandocMarkdown(corpusParagraphChapter(), CORPUS_PARAGRAPH_META);
+    expect(md).toBe('## Isagoge Book.1 (1.1–2)\n\nPara-layer first.\n\nPara-layer second.\n');
+  });
+
+  it('paragraph-layer ⏎ tokens export as spaces for corpus-spine paragraph docs', () => {
+    const md = chapterToPandocMarkdown(
+      corpusParagraphChapter({ englishParaLines: ['Para-layer⏎first.', 'Para-layer second.'] }),
+      CORPUS_PARAGRAPH_META,
+    );
+    expect(md).toBe('## Isagoge Book.1 (1.1–2)\n\nPara-layer first.\n\nPara-layer second.\n');
+  });
+
+  it('bilingual paragraph rendering uses paragraph-layer English for corpus-spine paragraph works', () => {
+    const md = documentToPandocMarkdown(corpusParagraphChapter(), CORPUS_PARAGRAPH_META, 'bilingual');
+    expect(md).toBe(
+      '# Isagoge\n\n' +
+        'Source first.\n\n' +
+        'Para-layer first.\n\n' +
+        'Source second.\n\n' +
+        'Para-layer second.\n',
+    );
+  });
+
+  it('bilingual compile includes paragraph-layer English for corpus-spine paragraph works', () => {
+    const result = compileWorkMarkdown([corpusParagraphChapter()], CORPUS_PARAGRAPH_META, { mode: 'bilingual' });
+    expect(result.markdown).toBe(
+      '# Book\n\n' +
+        '## Chapter 1 (1.1–2)\n\n' +
+        'Source first. Source second.\n\n' +
+        'Para-layer first. Para-layer second.\n',
+    );
+  });
+
+  it('bekker-line export stays on the sentence-layer path and ignores paragraph-layer text', () => {
+    const base = chapter({
+      meta: { ...chapter().meta, spanStart: '1041a6', spanEnd: '1041a7' },
+      greekLines: ['g1', 'g2'],
+      englishLines: ['Bekker sentence.', ''],
+    });
+    const withParagraphLayer = { ...base, englishParaLines: ['Ignored para one.', 'Ignored para two.'] };
+
+    const expected = '## Metaphysics Ζ.17 (1041a6–7)\n\nBekker sentence.\n';
+    expect(chapterToPandocMarkdown(base, META)).toBe(expected);
+    expect(chapterToPandocMarkdown(withParagraphLayer, META)).toBe(expected);
   });
 });
 

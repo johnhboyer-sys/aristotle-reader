@@ -15,6 +15,8 @@ import { bekkerStandard } from '../schemes/bekkerStandard';
 import { bekkerMetaphysics } from '../schemes/bekkerMetaphysics';
 import { aquinasStub } from '../schemes/aquinasStub';
 import { busseParagraph } from '../schemes/busseParagraph';
+import { paragraphScheme } from '../schemes/paragraphScheme';
+import { plainLineScheme } from '../schemes/plainLineScheme';
 import { getScheme } from '../registry';
 
 /** Everything the registry knows about, plus a well-formed sample address
@@ -53,6 +55,22 @@ const isagogeWork: WorkMeta = {
   books: [],
 };
 
+const freeParagraphWork: WorkMeta = {
+  id: 'free-doc-1',
+  title: 'Some Imported Text',
+  author: 'Unknown',
+  scheme: 'paragraph',
+  books: [],
+};
+
+const freeLineWork: WorkMeta = {
+  id: 'free-doc-2',
+  title: 'Some Imported Poem',
+  author: 'Unknown',
+  scheme: 'plain-line',
+  books: [],
+};
+
 const FIXTURES: Fixture[] = [
   {
     scheme: bekkerStandard,
@@ -70,6 +88,16 @@ const FIXTURES: Fixture[] = [
     ascendingRaws: ['1.5', '1.9', '2.3'],
   },
   {
+    scheme: paragraphScheme,
+    work: freeParagraphWork,
+    ascendingRaws: ['¶1', '¶2', '¶10'],
+  },
+  {
+    scheme: plainLineScheme,
+    work: freeLineWork,
+    ascendingRaws: ['1', '2', '10'],
+  },
+  {
     scheme: aquinasStub,
     throws: true,
     work: isagogeWork, // unused — every method throws before touching it
@@ -80,7 +108,14 @@ const FIXTURES: Fixture[] = [
 // Cross-check: every scheme the registry knows about is covered here, and
 // vice versa — this suite can't silently go stale by someone adding a
 // scheme to registry.ts without adding a Fixture (or removing one).
-const REGISTERED_IDS = ['bekker-standard', 'bekker-metaphysics', 'aquinas-tbd', 'busse-paragraph'] as const;
+const REGISTERED_IDS = [
+  'bekker-standard',
+  'bekker-metaphysics',
+  'aquinas-tbd',
+  'busse-paragraph',
+  'paragraph',
+  'plain-line',
+] as const;
 
 describe('contract fixture roster matches the registry', () => {
   it('every registered scheme id has exactly one Fixture', () => {
@@ -110,7 +145,7 @@ for (const fixture of FIXTURES) {
 
       it('still declares a well-formed GutterSpec (id and gutter are data, not behavior)', () => {
         expect(typeof scheme.id).toBe('string');
-        expect(['bekker-line', 'paragraph', 'sentence']).toContain(scheme.gutter.rowUnit);
+        expect(['bekker-line', 'paragraph', 'sentence', 'plain-line']).toContain(scheme.gutter.rowUnit);
         expect(['address', 'structural']).toContain(scheme.gutter.gutterMode);
       });
 
@@ -180,7 +215,7 @@ for (const fixture of FIXTURES) {
     });
 
     it('gutter declares a valid rowUnit/gutterMode pair', () => {
-      expect(['bekker-line', 'paragraph', 'sentence']).toContain(scheme.gutter.rowUnit);
+      expect(['bekker-line', 'paragraph', 'sentence', 'plain-line']).toContain(scheme.gutter.rowUnit);
       expect(['address', 'structural']).toContain(scheme.gutter.gutterMode);
     });
   });

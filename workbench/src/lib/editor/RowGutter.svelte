@@ -4,7 +4,12 @@
   // shows them verbatim, it never parses them. Both segments of a
   // paragraph-split line show the SAME raw address (design doc D6 §5 — a
   // split is not a new line; no new ticks or stamps).
-  let { gridRow, raw, focused }: { gridRow: number; raw: string; focused: boolean } = $props();
+  let {
+    gridRow,
+    raw,
+    focused,
+    chunkStart = false,
+  }: { gridRow: number; raw: string; focused: boolean; chunkStart?: boolean } = $props();
 </script>
 
-<div class="gutter" class:row-focus={focused} style="grid-row: {gridRow + 1}" data-row={gridRow}>{raw}</div>
+<div class="gutter" class:row-focus={focused} class:chunk-start={chunkStart} style="grid-row: {gridRow + 1}" data-row={gridRow}>{raw}</div>

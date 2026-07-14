@@ -21,6 +21,12 @@ export interface RowModel {
    */
   english: PMDocJSON;
   /**
+   * Paragraph-granularity translation layer for document-spine paragraph
+   * rows (D8 §4). Sentence-granularity translations still live in
+   * `english`/`english2`; Bekker rows never use this field.
+   */
+  englishPara?: PMDocJSON;
+  /**
    * Paragraph-split points (design doc D6): ascending Greek CODE-UNIT offsets
    * into `greek` — the same `.length`/`.slice` basis the chapter file uses
    * (see chapterfile isValidSplitOffset before "fixing" this to code points).
@@ -52,6 +58,27 @@ export function englishDocsOf(row: RowModel): PMDocJSON[] {
   return [row.english, ...(row.english2 ?? [])];
 }
 
+/** True when the row has any sentence-layer English content. */
+export function hasSentenceEnglish(row: RowModel): boolean {
+  return englishDocsOf(row).some((doc) => (doc.content?.length ?? 0) > 0);
+}
+
+/** True when the row has paragraph-layer English content. */
+export function hasParagraphEnglish(row: RowModel): boolean {
+  return (row.englishPara?.content?.length ?? 0) > 0;
+}
+
+/**
+ * All English docs of a row across both D8 layers (sentence segments +
+ * englishPara). NOT for footnote walks: footnotes are a sentence-layer
+ * feature (D8 v1 rule — see editor/serialize.ts stripFootnoteRuns), so
+ * marker/anchoring/renumbering scans use englishDocsOf; paragraph-layer
+ * marker markup is stripped at the hydration/serialization/export boundaries.
+ */
+export function allEnglishDocsOf(row: RowModel): PMDocJSON[] {
+  return [...englishDocsOf(row), ...(row.englishPara ? [row.englishPara] : [])];
+}
+
 export interface Footnote {
   /** Chapter-local id (build spec §3); display numbers are computed. */
   id: string;
@@ -70,6 +97,14 @@ export interface ChapterModel {
   bekkerRange: string;
   rows: RowModel[];
   footnotes: Footnote[];
+  /**
+   * Visual paragraph grouping for plain-line document-spine works (D8 §5:
+   * chapter-file `paragraph_starts`, 1-based row ordinals). Carried on the
+   * model so autosave round-trips it; Phase D's views read it for grouping.
+   * Hydration supplies it (modelFromFixture leaves it unset — fixtures have
+   * no grouping and corpus works never carry one).
+   */
+  paragraphStarts?: number[];
   dirty: boolean;
 }
 

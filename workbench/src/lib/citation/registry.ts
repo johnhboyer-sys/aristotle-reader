@@ -8,12 +8,16 @@ import { bekkerStandard } from './schemes/bekkerStandard';
 import { bekkerMetaphysics } from './schemes/bekkerMetaphysics';
 import { aquinasStub } from './schemes/aquinasStub';
 import { busseParagraph } from './schemes/busseParagraph';
+import { paragraphScheme } from './schemes/paragraphScheme';
+import { plainLineScheme } from './schemes/plainLineScheme';
 
 const SCHEMES = new Map<SchemeId, CitationScheme>([
   [bekkerStandard.id, bekkerStandard],
   [bekkerMetaphysics.id, bekkerMetaphysics],
   [aquinasStub.id, aquinasStub],
   [busseParagraph.id, busseParagraph],
+  [paragraphScheme.id, paragraphScheme],
+  [plainLineScheme.id, plainLineScheme],
 ]);
 
 /** Look up a citation scheme by id. Throws on an unknown scheme id. */

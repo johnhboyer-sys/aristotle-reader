@@ -14,12 +14,16 @@
  * span_end: "1041b33"
  * column_starts: "1041a6@1,1041b1@29"
  * line_splits: "1041b8@14,1041b8@31"
+ * paragraph_starts: "1,5,12"
  * ---
  * [GREEK]
  * <one line per Bekker line>
  * <structural blank line>
  * [ENGLISH]
  * <one line per Bekker line — RAW markup strings>
+ * <structural blank line, only when [FOOTNOTES] follows>
+ * [ENGLISH.PARA]
+ * <optional one line per row — paragraph-granularity RAW markup strings>
  * <structural blank line, only when [FOOTNOTES] follows>
  * [FOOTNOTES]
  * 1: footnote body text…
@@ -79,7 +83,7 @@ const SUPPORTED_SCHEMA_VERSION = 1;
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const FOOTNOTE_ENTRY_RE = /^(\d+):[ \t](.*)$/;
-const SECTION_HEADERS = ['[GREEK]', '[ENGLISH]', '[FOOTNOTES]'] as const;
+const SECTION_HEADERS = ['[GREEK]', '[ENGLISH]', '[ENGLISH.PARA]', '[FOOTNOTES]'] as const;
 type SectionHeader = (typeof SECTION_HEADERS)[number];
 
 function normalizeLineEndings(raw: string): string {
@@ -259,6 +263,48 @@ function parseLineSplits(
 }
 
 /**
+ * LENIENT sanitize of the frontmatter `paragraph_starts` field — deliberately
+ * NOT the strict throw-on-malformed style of parseColumnStarts/parseLineSplits
+ * above. Those two fields carry ADDRESSING; a wrong value mis-addresses user
+ * prose, so refusing loudly is right. paragraph_starts is optional visual
+ * GROUPING metadata (D8 §5 — pure display; D1/D3 consumers treat row 1 as an
+ * implicit start and just Set-test the ordinals), so a malformed value must
+ * DEGRADE per the D6 drift convention, never make the document unopenable:
+ * junk tokens, zero/negative ordinals and duplicates are dropped, ordering is
+ * repaired (sorted ascending), and `modified` reports whether anything was
+ * lost/changed so hydration can surface the one-line notice. A leading 1 is
+ * neither required nor coerced (row 1 always opens the first group anyway).
+ * Out-of-range ordinals need the row count and are filtered in
+ * parseChapterFile. Serialization stays strict/canonical (see
+ * serializeFrontmatter) — this leniency is parse-side only.
+ */
+export function sanitizeParagraphStarts(val: unknown): { starts: number[] | undefined; modified: boolean } {
+  // Canonical files carry a quoted string; a bare YAML scalar (number) is
+  // salvageable by stringifying. Anything else (mapping, list, null…) has no
+  // token shape to salvage — treat as fully invalid.
+  const text = typeof val === 'string' ? val : typeof val === 'number' ? String(val) : undefined;
+  if (text === undefined) return { starts: undefined, modified: true };
+
+  const tokens = text.split(',').map((t) => t.trim());
+  const seen = new Set<number>();
+  let modified = false;
+  for (const token of tokens) {
+    const n = /^\d+$/.test(token) ? Number(token) : NaN;
+    if (!Number.isSafeInteger(n) || n <= 0 || seen.has(n)) {
+      modified = true;
+      continue;
+    }
+    seen.add(n);
+  }
+  const out = [...seen].sort((a, b) => a - b);
+  // Repaired ordering (e.g. "3,1") keeps every entry but is still a change
+  // worth the notice — the saved bytes weren't canonical.
+  if (!modified) modified = out.some((n, i) => n !== Number(tokens[i]));
+  if (out.length === 0) return { starts: undefined, modified: true };
+  return { starts: out, modified };
+}
+
+/**
  * Semantic validity of one paragraph-split offset against its row's OWN
  * [GREEK] line (the canonical Greek that travels with the file — never the
  * live corpus). Used by hydration's drift policy (d6 divergence E): an
@@ -286,7 +332,7 @@ export function isValidSplitOffset(greek: string, offset: number): boolean {
 function parseFrontmatter(
   normalized: string,
   source: string,
-): { meta: ChapterFileMeta; rest: string; columnStartsLine: number } {
+): { meta: ChapterFileMeta; rest: string; columnStartsLine: number; paragraphStartsSanitized: boolean } {
   const m = FRONTMATTER_RE.exec(normalized);
   if (!m) {
     throw new ChapterFileError(`${source}: missing YAML frontmatter (expected a leading "---" block)`);
@@ -367,6 +413,14 @@ function parseFrontmatter(
     lineSplits = parseLineSplits(v['line_splits'], scheme, lineSplitsLine, source);
   }
 
+  let paragraphStarts: number[] | undefined;
+  let paragraphStartsSanitized = false;
+  if ('paragraph_starts' in v) {
+    const sanitized = sanitizeParagraphStarts(v['paragraph_starts']);
+    paragraphStarts = sanitized.starts;
+    paragraphStartsSanitized = sanitized.modified;
+  }
+
   const meta: ChapterFileMeta = {
     schemaVersion,
     work,
@@ -377,8 +431,9 @@ function parseFrontmatter(
     spanEnd,
     ...(columnStarts ? { columnStarts } : {}),
     ...(lineSplits ? { lineSplits } : {}),
+    ...(paragraphStarts ? { paragraphStarts } : {}),
   };
-  return { meta, rest, columnStartsLine };
+  return { meta, rest, columnStartsLine, paragraphStartsSanitized };
 }
 
 // ── body sections ────────────────────────────────────────────────────────────
@@ -491,17 +546,25 @@ function parseFootnotes(lines: string[], sectionStartLine: number, source: strin
 
 export function parseChapterFile(raw: string, source = '<chapterfile>'): ChapterFile {
   const normalized = normalizeLineEndings(raw);
-  const { meta, rest, columnStartsLine } = parseFrontmatter(normalized, source);
+  const { meta, rest, columnStartsLine, paragraphStartsSanitized } = parseFrontmatter(normalized, source);
   const sections = splitSections(rest, source);
 
   const greekLines = trimTrailingBlank(sections.get('[GREEK]')!.lines);
   const englishLines = trimTrailingBlank(sections.get('[ENGLISH]')!.lines);
+  const englishParaSection = sections.get('[ENGLISH.PARA]');
+  const englishParaLines = englishParaSection ? trimTrailingBlank(englishParaSection.lines) : undefined;
   const footnotesSection = sections.get('[FOOTNOTES]');
   const footnotes = footnotesSection ? parseFootnotes(footnotesSection.lines, footnotesSection.startLine, source) : [];
 
   if (greekLines.length !== englishLines.length) {
     throw new ChapterFileError(
       `${source}: [GREEK] has ${greekLines.length} line(s) but [ENGLISH] has ${englishLines.length} line(s) — they must match 1:1`
+    );
+  }
+
+  if (englishParaLines !== undefined && greekLines.length !== englishParaLines.length) {
+    throw new ChapterFileError(
+      `${source}: [GREEK] has ${greekLines.length} line(s) but [ENGLISH.PARA] has ${englishParaLines.length} line(s) — they must match 1:1`
     );
   }
 
@@ -515,7 +578,30 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
     }
   }
 
-  return { meta, greekLines, englishLines, footnotes };
+  // Out-of-range paragraph_starts ordinals need the row count, so this last
+  // sanitize step lives here rather than in sanitizeParagraphStarts. Same
+  // lenient policy (grouping is display metadata — degrade, never refuse):
+  // drop them and flag it. `paragraphStarts` is the last meta key, so the
+  // repair keeps the key order parseFrontmatter established (the autosave
+  // round-trip self-check compares JSON shapes).
+  let psSanitized = paragraphStartsSanitized;
+  if (meta.paragraphStarts) {
+    const inRange = meta.paragraphStarts.filter((n) => n <= greekLines.length);
+    if (inRange.length !== meta.paragraphStarts.length) {
+      psSanitized = true;
+      if (inRange.length > 0) meta.paragraphStarts = inRange;
+      else delete meta.paragraphStarts;
+    }
+  }
+
+  return {
+    meta,
+    greekLines,
+    englishLines,
+    ...(englishParaLines !== undefined ? { englishParaLines } : {}),
+    footnotes,
+    ...(psSanitized ? { paragraphStartsSanitized: true } : {}),
+  };
 }
 
 /**
@@ -577,6 +663,12 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
     }
     lines.push(`line_splits: "${meta.lineSplits.map((s) => `${s.ref}@${s.offset}`).join(',')}"`);
   }
+  if (meta.paragraphStarts !== undefined) {
+    if (meta.paragraphStarts.length === 0) {
+      throw new ChapterFileError('serializeChapterFile: paragraph_starts, when present, must contain at least one row ordinal');
+    }
+    lines.push(`paragraph_starts: "${meta.paragraphStarts.join(',')}"`);
+  }
   lines.push('---');
   return lines.join('\n');
 }
@@ -609,6 +701,12 @@ export function serializeChapterFile(doc: ChapterFile): string {
 
   parts.push('[ENGLISH]');
   parts.push(...doc.englishLines);
+
+  if (doc.englishParaLines !== undefined && doc.englishParaLines.some((line) => line.length > 0)) {
+    parts.push(''); // structural blank before the next header
+    parts.push('[ENGLISH.PARA]');
+    parts.push(...doc.englishParaLines);
+  }
 
   if (doc.footnotes.length > 0) {
     parts.push(''); // structural blank before the next header

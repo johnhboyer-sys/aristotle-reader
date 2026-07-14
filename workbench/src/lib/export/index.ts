@@ -16,7 +16,7 @@ import type { ChapterFile } from '../chapterfile/types';
 import type { WorkMeta } from '../citation/types';
 
 export type { StampMode, PandocMarkdownOptions } from './pandocMarkdown';
-export { chapterToPandocMarkdown, markupToPandoc, deriveRowAddresses } from './pandocMarkdown';
+export { chapterToPandocMarkdown, documentToPandocMarkdown, markupToPandoc, deriveRowAddresses } from './pandocMarkdown';
 export { pandocAvailable, pandocDocxArgs, runPandocNode, runPandocTauri, resolvePandocProgram, resolvePandocProgramByRun, PANDOC_SCOPE_CANDIDATES, PANDOC_UNAVAILABLE_MESSAGE, NATIVE_FOOTNOTES_NOTES } from './pandoc';
 export type { PandocDocxJob, RunResult } from './pandoc';
 export {
@@ -203,6 +203,7 @@ export function sanitizeFilenameComponent(text: string): string {
  */
 export function compileDefaultFilename(work: WorkMeta, mode: CompileOptions['mode']): string {
   const suffix = mode === 'bilingual' ? 'Greek and translation' : 'translation';
-  const base = `${work.title} — ${work.author} (${suffix})`;
+  const byline = work.author.trim().length > 0 ? ` — ${work.author}` : '';
+  const base = `${work.title}${byline} (${suffix})`;
   return `${sanitizeFilenameComponent(base)}.docx`;
 }
