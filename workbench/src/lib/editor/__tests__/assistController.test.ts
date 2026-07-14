@@ -179,6 +179,25 @@ describe('sanitizeSuggestion', () => {
   it('default path is unchanged even when input looks paragraph-shaped', () => {
     expect(sanitizeSuggestion('\n\none\t two\n\nthree\r\nfour\n')).toBe('one two three four');
   });
+
+  it('strips a leading echoed [address] token the model copies from the prompt', () => {
+    expect(sanitizeSuggestion('[1041a19] in relation to itself is each thing')).toBe(
+      'in relation to itself is each thing',
+    );
+    expect(sanitizeSuggestion('[¶1] We shall consider the elements')).toBe(
+      'We shall consider the elements',
+    );
+    // multiline: only the first line's leading token is dropped.
+    expect(sanitizeSuggestion('[1041a19] first line\nsecond line', { multiline: true })).toBe(
+      'first line\nsecond line',
+    );
+  });
+
+  it('does NOT strip a bracket that opens genuine prose (has spaces / too long)', () => {
+    expect(sanitizeSuggestion('[a long editorial aside] the text')).toBe(
+      '[a long editorial aside] the text',
+    );
+  });
 });
 
 describe('buildInsertTransaction', () => {

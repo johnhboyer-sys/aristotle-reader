@@ -2589,9 +2589,10 @@
     if (m.translateRows && m.translateRows.length > 1) {
       invokeAssistRange(m.translateRows);
     } else {
-      // Anchor the popover under the clicked word (menuPointer), not the far-off
-      // English cell — the flowing views separate the two.
-      invokeAssist(m.row, m.segment, { ...menuPointer });
+      // NOTE: click-anchoring (position:fixed at menuPointer) broke translate in
+      // the flowing views — reverted to the cell-anchored popover, which works
+      // and is viewport-clamped. Revisit anchoring via a body portal later.
+      invokeAssist(m.row, m.segment);
     }
   }
 

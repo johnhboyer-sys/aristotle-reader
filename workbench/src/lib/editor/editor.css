@@ -662,6 +662,18 @@
 .en-cell .assist-glyph:hover {
   opacity: 1;
 }
+/* In the flowing views the English cells are small/inline, so requiring the
+   cell to be hovered AS WELL AS focused made the glyph's hit target fiddly
+   (clicks fell through). Make it clickable as soon as the cell holds focus, and
+   lift it above neighbouring cells so nothing overlaps its hit area. */
+.interp-flow .en-cell:focus-within .assist-glyph {
+  opacity: 0.55;
+  pointer-events: auto;
+  z-index: 5;
+}
+.interp-flow .en-cell:focus-within .assist-glyph:hover {
+  opacity: 1;
+}
 
 /* Non-modal suggestion popover anchored under the row (same quiet chrome as
    the paste-confirm bar; .en-cell is the positioning context). */
