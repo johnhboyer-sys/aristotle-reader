@@ -101,6 +101,8 @@
   import type { RowStructure } from './rowStructure';
   import { currentViewMode, setViewMode } from './viewMode.svelte';
   import { currentGranularity, setGranularity } from './viewMode.svelte';
+  import { currentInterpLayout, setInterpLayout } from './viewMode.svelte';
+  import type { InterpLayout } from './viewMode.svelte';
   import { legalViews } from './viewPolicy';
   import type { ViewMode, InterpolatedGranularity } from './viewPolicy';
   import { usesParaLayer, showGranularityToggle, sourceSlices, sourceOffsetAtDisplay } from './interpolated';
@@ -299,6 +301,21 @@
   const GRAN_SENTENCE: InterpolatedGranularity = 'sentence';
   function chooseGranularity(g: InterpolatedGranularity) {
     setGranularity(model.workId, g);
+  }
+  // Interpolated LAYOUT for line-based works (John 2026-07-14): the flowing
+  // interpolated view renders the Greek as continuous prose (not one stacked
+  // block per line). `lane` flows the Greek above a per-line English lane;
+  // `weave` puts each line's English inline right after its own Greek. Offered
+  // only for LINE docs in the interpolated view — paragraph docs keep the
+  // stacked unit/sentence view + its granularity sub-toggle. The English model
+  // is per-line in both, so switching to Lines still lines up.
+  const interpLayout = $derived<InterpLayout>(currentInterpLayout(model.workId));
+  const interpFlowing = $derived(viewMode === MODE_INTERPOLATED && !isParagraphRowUnit());
+  const showLayoutToggle = $derived(interpFlowing);
+  const LAYOUT_LANE: InterpLayout = 'lane';
+  const LAYOUT_WEAVE: InterpLayout = 'weave';
+  function chooseInterpLayout(l: InterpLayout) {
+    setInterpLayout(model.workId, l);
   }
   /**
    * PARA-LAYER UNIT view (usesParaLayer, interpolated.ts): a paragraph-row-
@@ -1473,7 +1490,7 @@
     const el = node instanceof Element ? node : node?.parentElement;
     // The interpolated original counts as the source column (refinement
     // pass): a multi-block source selection batch-translates, like the grid.
-    if (el?.closest('.grc-cell') || el?.closest('.interp-source')) return 'greek';
+    if (el?.closest('.grc-cell') || el?.closest('.interp-source') || el?.closest('.flow-grc')) return 'greek';
     if (el?.closest('.en-cell')) return 'english';
     return null;
   }
@@ -3492,6 +3509,30 @@
           >By sentence</button>
         </div>
       {/if}
+      {#if showLayoutToggle}
+        <!-- Interpolated layout sub-toggle (John 2026-07-14): line docs only.
+             `Lane` flows the Greek over a per-line English lane; `Weave` puts
+             each line's English inline after its Greek. Both keep the per-line
+             English model, so the Lines view stays aligned. -->
+        <div class="view-toggle" role="group" aria-label="Interpolated layout">
+          <button
+            class="view-toggle-btn"
+            class:active={interpLayout === LAYOUT_LANE}
+            type="button"
+            aria-pressed={interpLayout === LAYOUT_LANE}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => chooseInterpLayout(LAYOUT_LANE)}
+          >Lane</button>
+          <button
+            class="view-toggle-btn"
+            class:active={interpLayout === LAYOUT_WEAVE}
+            type="button"
+            aria-pressed={interpLayout === LAYOUT_WEAVE}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => chooseInterpLayout(LAYOUT_WEAVE)}
+          >Weave</button>
+        </div>
+      {/if}
       {#if saveLabel}
         <span class="save-state" data-state={saveBlocked ? 'blocked' : saveState} role="status">{saveLabel}</span>
       {/if}
@@ -3508,6 +3549,64 @@
            original is plain text (never an editor); right-clicking it opens
            the full structure menu (refinement pass — see
            onInterpSourceContextMenu), the field the AI-only one. -->
+      {#if interpFlowing}
+        <!-- FLOWING interpolated view (line docs, John 2026-07-14): the Greek
+             reads as continuous prose; the per-line English stays separate
+             editable cells (SAME displayRows / keyed identity / host as the
+             grid, so commit/undo/assist/paste are inherited), so switching to
+             Lines still lines up. `lane` = Greek block over a per-line English
+             lane; `weave` = each line's English inline after its own Greek. -->
+        {#snippet flowEnCell(d: DisplayRow, g: number)}
+          <EnglishCell
+            gridRow={g}
+            row={d.rowIndex}
+            segment={d.segment}
+            layer="sentence"
+            sentenceText={null}
+            {host}
+            flash={flashRowIdx === g}
+            pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
+            onPasteConfirm={confirmPaste}
+            onPasteCancel={cancelPaste}
+            unsplitConfirm={pendingUnsplit?.row === d.rowIndex && d.segment === 0}
+            unsplitMessage={pendingUnsplit?.message ?? null}
+            onUnsplitConfirm={confirmUnsplit}
+            onUnsplitCancel={cancelUnsplit}
+            onContext={(e) => onEnglishContextMenu(e, g)}
+          />
+        {/snippet}
+        {#if interpLayout === LAYOUT_WEAVE}
+          <div class="interp-flow weave" bind:this={gridEl}>
+            {#each displayRows as d, g (d.key)}<!-- svelte-ignore a11y_no_static_element_interactions --><span
+                class="flow-grc"
+                class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                lang="grc"
+                data-row={g}
+                oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
+              ><sup class="flow-tick">{d.address.raw}</sup>{d.greekSlice}</span><span class="flow-en">{@render flowEnCell(d, g)}</span>{' '}{/each}
+          </div>
+        {:else}
+          <div class="interp-flow lane" bind:this={gridEl}>
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="flow-grc-block" lang="grc">
+              {#each displayRows as d, g (d.key)}<span
+                  class="flow-grc"
+                  class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                  data-row={g}
+                  oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
+                ><sup class="flow-tick">{d.address.raw}</sup>{d.greekSlice}</span>{' '}{/each}
+            </div>
+            <div class="flow-en-lane">
+              {#each displayRows as d, g (d.key)}
+                <div class="lane-row" class:lit={focusRow === d.rowIndex && focusSeg === d.segment}>
+                  <span class="lane-num" aria-hidden="true">{d.address.raw}</span>
+                  {@render flowEnCell(d, g)}
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+      {:else}
       <div class="interp-stack" bind:this={gridEl}>
         {#each displayRows as d, g (d.key)}
           <InterpolatedUnit
@@ -3535,6 +3634,7 @@
           />
         {/each}
       </div>
+      {/if}
     {:else}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- The three columns are grouped in DOM order (all Greek, then all

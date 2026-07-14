@@ -30,7 +30,7 @@ class MemStorage {
 vi.stubGlobal('localStorage', new MemStorage());
 
 // Imported AFTER the stub so the module reads/writes it.
-const { currentViewMode, setViewMode, currentGranularity, setGranularity } = await import('../viewMode.svelte');
+const { currentViewMode, setViewMode, currentGranularity, setGranularity, currentInterpLayout, setInterpLayout } = await import('../viewMode.svelte');
 const { paragraphScheme } = await import('../../citation/schemes/paragraphScheme');
 const { plainLineScheme } = await import('../../citation/schemes/plainLineScheme');
 const { bekkerStandard } = await import('../../citation/schemes/bekkerStandard');
@@ -94,5 +94,23 @@ describe('interpolated granularity (stubbed hidden this phase)', () => {
     setGranularity('gran-a', 'sentence');
     expect(currentGranularity('gran-a')).toBe('sentence');
     expect(currentGranularity('gran-b')).toBe('unit');
+  });
+});
+
+describe('interpolated layout (line docs)', () => {
+  it("defaults to 'lane' (John's primary)", () => {
+    expect(currentInterpLayout('layout-x')).toBe('lane');
+  });
+
+  it('persists a valid layout per work; others keep the default', () => {
+    setInterpLayout('layout-a', 'weave');
+    expect(currentInterpLayout('layout-a')).toBe('weave');
+    expect(currentInterpLayout('layout-b')).toBe('lane');
+  });
+
+  it('ignores an unknown layout value', () => {
+    // @ts-expect-error — guard against a stale/foreign persisted string.
+    setInterpLayout('layout-c', 'nonsense');
+    expect(currentInterpLayout('layout-c')).toBe('lane');
   });
 });

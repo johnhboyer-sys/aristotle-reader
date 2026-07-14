@@ -258,14 +258,23 @@
 }
 .interp-unit {
   position: relative;
-  padding: var(--space-2) var(--space-3) var(--space-3);
-  border-radius: 5px;
+  padding: var(--space-2) var(--space-3);
+  /* A faint hairline after each English↔Greek pair: it fences the pair so the
+     eye stays on its own line instead of drifting up/down to a neighbour's
+     Greek and translating the wrong sentence. */
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
 }
-/* Focused unit: the same whisper as the grid's .row-focus family, carried by
-   the WHOLE unit (field + original read as one block); the inner cell stays
-   quiet so there's no double tint. */
+.interp-unit:last-child {
+  border-bottom: none;
+}
+/* Spotlight the pair being worked on (the row that holds focus): a clear
+   accent wash plus a left accent bar, so the current pair reads as lit and the
+   rest recede — the eye locks onto the line you're translating. Stronger than
+   the grid's quiet .row-focus whisper on purpose: this is a single-column
+   drafting surface with no gutter to anchor the eye. */
 .interp-unit.row-focus {
-  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: inset 3px 0 0 0 var(--accent);
 }
 .interp-stack .en-cell:focus-within {
   background: transparent;
@@ -325,6 +334,115 @@
 .interp-cross-layer {
   margin-top: 0;
   margin-bottom: var(--space-2);
+}
+
+/* ── flowing interpolated view (line docs — John 2026-07-14) ───────────────
+   The Greek reads as CONTINUOUS PROSE (not one stacked block per line); the
+   per-line English stays separate editable cells (unchanged model → the Lines
+   view still lines up). Two layouts share the flow container. */
+.interp-flow {
+  max-width: min(70ch, 100%);
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-6);
+  font-size: var(--work-fs);
+}
+/* Continuous Greek: one wrapping paragraph, each line an inline span. Slightly
+   subdued + a touch smaller than the English, which is the working surface. */
+.flow-grc-block,
+.interp-flow.weave {
+  font-family: var(--font-work);
+  line-height: calc(var(--work-lh) * 1.15);
+  color: var(--text-mid);
+}
+.flow-grc {
+  /* Inline span so consecutive lines flow/wrap as prose. */
+  border-radius: 3px;
+  transition: background-color 120ms ease;
+}
+/* Spotlight: the line being worked on (its English holds focus) lights up in
+   the flowing Greek, so the eye finds its place in the prose. */
+.flow-grc.lit {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+/* Bekker line number: a small superscript tick at each line start — preserves
+   citation without a stacked label crowding the English. */
+.flow-tick {
+  font-family: var(--font-ui);
+  font-size: calc(var(--fs-linenum) * var(--zoom, 1) * 0.9);
+  line-height: 0;
+  color: var(--text-light);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  vertical-align: super;
+  margin-right: 0.25em;
+  margin-left: 0.1em;
+}
+
+/* Lane layout: the flowing Greek reading block over a per-line English lane. */
+.flow-grc-block {
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.flow-en-lane {
+  display: flex;
+  flex-direction: column;
+}
+.lane-row {
+  display: grid;
+  grid-template-columns: 4.5ch 1fr;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 1px 0 1px var(--space-2);
+  border-left: 3px solid transparent;
+  border-radius: 0 3px 3px 0;
+}
+.lane-row.lit {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-left-color: var(--accent);
+}
+.lane-num {
+  font-family: var(--font-ui);
+  font-size: calc(var(--fs-linenum) * var(--zoom, 1));
+  color: var(--text-light);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  text-align: right;
+}
+
+/* Weave layout: each line's English inline right after its own Greek, the whole
+   thing flowing. The English reads as woven-in translation — the English serif,
+   full text colour, a hair of breathing room around it. */
+.interp-flow.weave {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.flow-en {
+  /* inline-block wrapper: flows inline with the Greek, but the ProseMirror
+     editor inside stays a normal block editor (caret/commit unchanged). */
+  display: inline-block;
+  vertical-align: baseline;
+  font-family: var(--font-work);
+  color: var(--text);
+  margin: 0 0.15em;
+}
+.flow-en .en-cell {
+  display: inline-block;
+  vertical-align: baseline;
+}
+.flow-en .en-cell .ProseMirror {
+  min-width: 1.5ch;
+  padding: 0 0.25em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.interp-flow .en-cell:focus-within .ProseMirror {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 /* View-mode toggle (chapter chrome): a compact segmented control, quiet at
