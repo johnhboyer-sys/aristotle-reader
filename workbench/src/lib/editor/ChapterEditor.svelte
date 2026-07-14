@@ -412,6 +412,21 @@
   function refreshDisplayRows() {
     displayRows = expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence');
   }
+  // Flowing-view paragraph grouping (John 2026-07-14): a D6 line-split is a
+  // paragraph break, so group the display rows into paragraphs — a new group
+  // starts at row 0 and at every continuation segment (segment > 0). The Lane
+  // view renders each group as a flowing Greek paragraph over a flowing English
+  // paragraph; Weave inserts a break before each continuation pair. Each row
+  // carries its global display index `g` (cell identity / focus / handlers all
+  // key off it). Purely a display regrouping — the per-line model is untouched.
+  const flowParagraphs = $derived.by(() => {
+    const groups: { key: string; rows: { d: DisplayRow; g: number }[] }[] = [];
+    displayRows.forEach((d, g) => {
+      if (g === 0 || d.continuation) groups.push({ key: d.key, rows: [] });
+      groups[groups.length - 1]?.rows.push({ d, g });
+    });
+    return groups;
+  });
   // Re-expand when the view mode OR the interpolated granularity flips (both
   // change the expansion): the keyed {#each} then remounts cells for the new
   // layer. Runs after `ready`, so the initial hydrate (which calls
@@ -3599,7 +3614,7 @@
                wrap, so the Greek reads as continuous prose while each line's
                English sits directly beneath its own words. -->
           <div class="interp-flow weave" bind:this={gridEl}>
-            {#each displayRows as d, g (d.key)}<!-- svelte-ignore a11y_no_static_element_interactions --><div
+            {#each displayRows as d, g (d.key)}{#if d.continuation}<div class="flow-break" aria-hidden="true"></div>{/if}<!-- svelte-ignore a11y_no_static_element_interactions --><div
                 class="weave-pair"
                 class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
                 data-row={g}
@@ -3610,24 +3625,31 @@
                 ><span class="flow-tick">{tickFor(d.address.raw, g)}</span>{d.greekSlice}</div><div class="weave-en">{@render flowEnCell(d, g)}</div></div>{/each}
           </div>
         {:else}
+          <!-- Lane (John's spec): alternating paragraphs — a flowing Greek
+               paragraph, then a flowing English paragraph directly beneath it,
+               for each paragraph (split at every D6 line-split). The English
+               cells flow inline so the translation reads continuously, not one
+               stacked line per row. -->
           <div class="interp-flow lane" bind:this={gridEl}>
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="flow-grc-block" lang="grc">
-              {#each displayRows as d, g (d.key)}<span
-                  class="flow-grc"
-                  class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
-                  data-row={g}
-                  oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
-                ><sup class="flow-tick">{tickFor(d.address.raw, g)}</sup>{d.greekSlice}</span>{' '}{/each}
-            </div>
-            <div class="flow-en-lane">
-              {#each displayRows as d, g (d.key)}
-                <div class="lane-row" class:lit={focusRow === d.rowIndex && focusSeg === d.segment}>
-                  <span class="lane-num" aria-hidden="true">{tickFor(d.address.raw, g)}</span>
-                  {@render flowEnCell(d, g)}
+            {#each flowParagraphs as para (para.key)}
+              <section class="flow-para">
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div class="flow-grc-block" lang="grc">
+                  {#each para.rows as { d, g } (d.key)}<span
+                      class="flow-grc"
+                      class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                      data-row={g}
+                      oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
+                    ><sup class="flow-tick">{tickFor(d.address.raw, g)}</sup>{d.greekSlice}</span>{' '}{/each}
                 </div>
-              {/each}
-            </div>
+                <div class="flow-en-block">
+                  {#each para.rows as { d, g } (d.key)}<span
+                      class="flow-en-seg"
+                      class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                    >{@render flowEnCell(d, g)}</span>{' '}{/each}
+                </div>
+              </section>
+            {/each}
           </div>
         {/if}
       {:else}

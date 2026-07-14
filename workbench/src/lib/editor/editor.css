@@ -380,39 +380,61 @@
   margin-left: 0.1em;
 }
 
-/* Lane layout: the flowing Greek reading block over a per-line English lane. */
+/* Lane layout (John's spec): alternating flowing paragraphs — a Greek paragraph
+   over an English paragraph, for each paragraph (split at every D6 line-split).
+   BOTH flow; the English cells sit inline-block so the translation reads
+   continuously, not one stacked line per row. */
+.flow-para {
+  margin-bottom: var(--space-5);
+}
+.flow-para:last-child {
+  margin-bottom: 0;
+}
 .flow-grc-block {
-  padding-bottom: var(--space-4);
-  margin-bottom: var(--space-4);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   white-space: normal;
   overflow-wrap: break-word;
+  margin-bottom: var(--space-1);
 }
-.flow-en-lane {
-  display: flex;
-  flex-direction: column;
+/* The English paragraph: inline-block segments flowing continuously. */
+.flow-en-block {
+  font-family: var(--font-work);
+  color: var(--text);
+  line-height: calc(var(--work-lh) * 1.5);
 }
-.lane-row {
-  display: grid;
-  grid-template-columns: 4.5ch 1fr;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: 1px 0 1px var(--space-2);
-  border-left: 3px solid transparent;
-  border-radius: 0 3px 3px 0;
+.flow-en-seg {
+  display: inline;
 }
-.lane-row.lit {
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
-  border-left-color: var(--accent);
+.flow-en-block .en-cell {
+  display: inline-block;
+  vertical-align: baseline;
 }
-.lane-num {
-  font-family: var(--font-ui);
-  font-size: calc(var(--fs-linenum) * var(--zoom, 1));
-  color: var(--text-light);
-  letter-spacing: 0.02em;
-  font-variant-numeric: tabular-nums;
-  user-select: none;
-  text-align: right;
+.flow-en-seg.lit .en-cell .ProseMirror {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Paragraph break from a D6 line-split (both flows): a full-width block that
+   forces the next Greek/pair onto a new paragraph, with a little gap. */
+.flow-break {
+  display: block;
+  width: 100%;
+  height: var(--space-3);
+}
+
+/* English fill-in slot (both flows): a dotted baseline the width of the field —
+   the dots read as a blank to write on and stay visible in the empty remainder
+   as text is typed; solid accent when it holds focus. */
+.flow-en-block .en-cell .ProseMirror,
+.weave-en .en-cell .ProseMirror {
+  min-height: 1.3em;
+  min-width: 2.5ch;
+  padding: 0 2px;
+  border-bottom: 1px dotted color-mix(in srgb, var(--text-light) 75%, transparent);
+}
+.flow-en-block .en-cell:focus-within .ProseMirror,
+.weave-en .en-cell:focus-within .ProseMirror {
+  border-bottom-color: var(--accent);
+  border-bottom-style: solid;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* Weave layout — INTERLINEAR (John's mockup): each Bekker line is a
@@ -446,19 +468,8 @@
 .weave-en {
   margin-top: 3px;
 }
-/* The English input reads as a fill-in slot: a dashed baseline the pair's
-   width, going solid accent when it holds focus. */
-.weave-en .en-cell .ProseMirror {
-  min-height: 1.35em;
-  min-width: 3ch;
-  padding: 1px 2px;
-  border-bottom: 1px dashed color-mix(in srgb, var(--text-light) 65%, transparent);
-}
-.weave-en .en-cell:focus-within .ProseMirror {
-  border-bottom-color: var(--accent);
-  border-bottom-style: solid;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}
+/* The English fill-in slot styling is shared with the Lane flow above
+   (.flow-en-block / .weave-en dotted-baseline rule). */
 
 /* View-mode toggle (chapter chrome): a compact segmented control, quiet at
    rest, following the editor toolbar's flat-button treatment. */
