@@ -422,11 +422,15 @@
    space between one line's Greek and the next. */
 .interp-flow.weave {
   white-space: normal;
+  /* Full pane (override the 70ch reading measure): several Bekker-line pairs
+     flow per row, so the Greek reads across and each line's English sits in the
+     lane directly beneath that row — not one line stacked per row. */
+  max-width: 100%;
 }
 .weave-pair {
   display: inline-block;
   vertical-align: top;
-  margin: 0 0.1em 0.7em 0;
+  margin: 0 0.15em 0.5em 0;
   padding: 2px 5px 3px;
   border-radius: 4px;
 }

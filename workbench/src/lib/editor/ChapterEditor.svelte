@@ -329,6 +329,12 @@
     const short = raw.replace(/^\d+/, '');
     return short.length > 0 ? short : raw;
   }
+  /** The tick label for a flowing-view line: the FIRST line of the chapter
+   * keeps its full Bekker citation (page anchors the reader); every line after
+   * it shows column+line only (John 2026-07-14). */
+  function tickFor(raw: string, g: number): string {
+    return g === 0 ? raw : shortTick(raw);
+  }
   /**
    * PARA-LAYER UNIT view (usesParaLayer, interpolated.ts): a paragraph-row-
    * unit doc showing one visual unit per model row, whose English field edits
@@ -3601,7 +3607,7 @@
                   class="weave-grc flow-grc"
                   lang="grc"
                   oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
-                ><span class="flow-tick">{shortTick(d.address.raw)}</span>{d.greekSlice}</div><div class="weave-en">{@render flowEnCell(d, g)}</div></div>{/each}
+                ><span class="flow-tick">{tickFor(d.address.raw, g)}</span>{d.greekSlice}</div><div class="weave-en">{@render flowEnCell(d, g)}</div></div>{/each}
           </div>
         {:else}
           <div class="interp-flow lane" bind:this={gridEl}>
@@ -3612,12 +3618,12 @@
                   class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
                   data-row={g}
                   oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
-                ><sup class="flow-tick">{shortTick(d.address.raw)}</sup>{d.greekSlice}</span>{' '}{/each}
+                ><sup class="flow-tick">{tickFor(d.address.raw, g)}</sup>{d.greekSlice}</span>{' '}{/each}
             </div>
             <div class="flow-en-lane">
               {#each displayRows as d, g (d.key)}
                 <div class="lane-row" class:lit={focusRow === d.rowIndex && focusSeg === d.segment}>
-                  <span class="lane-num" aria-hidden="true">{shortTick(d.address.raw)}</span>
+                  <span class="lane-num" aria-hidden="true">{tickFor(d.address.raw, g)}</span>
                   {@render flowEnCell(d, g)}
                 </div>
               {/each}
