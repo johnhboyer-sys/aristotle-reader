@@ -684,8 +684,10 @@
    so `max-width: 100%` (of that cell) squeezed the popover into a cramped box.
    Anchor it to the flow container instead and give it its natural width. */
 .interp-flow .assist-popover {
+  /* Size to content (up to a readable max) — no min-width, so there's no dead
+     space to the right of the buttons. */
+  width: max-content;
   max-width: min(36rem, 90vw);
-  min-width: 17rem;
   white-space: normal;
 }
 .assist-note {
