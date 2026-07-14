@@ -3646,7 +3646,7 @@
                   {#each para.rows as { d, g } (d.key)}<span
                       class="flow-en-seg"
                       class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
-                    >{@render flowEnCell(d, g)}</span>{' '}{/each}
+                    ><sup class="flow-tick en-tick">{tickFor(d.address.raw, g)}</sup>{@render flowEnCell(d, g)}</span>{' '}{/each}
                 </div>
               </section>
             {/each}

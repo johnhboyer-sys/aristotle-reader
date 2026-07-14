@@ -404,6 +404,11 @@
 .flow-en-seg {
   display: inline;
 }
+/* The line tick on each English segment (correspondence marker) — a shade
+   darker than the Greek ticks so it's easy to match English back to its line. */
+.en-tick {
+  color: var(--text-mid);
+}
 .flow-en-block .en-cell {
   display: inline-block;
   vertical-align: baseline;
