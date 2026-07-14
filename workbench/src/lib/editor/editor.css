@@ -384,8 +384,14 @@
    over an English paragraph, for each paragraph (split at every D6 line-split).
    BOTH flow; the English cells sit inline-block so the translation reads
    continuously, not one stacked line per row. */
+/* Lane uses more of the pane (less empty side margin than the 70ch reading
+   measure) and tighter side padding. */
+.interp-flow.lane {
+  max-width: min(88ch, 100%);
+  padding: 0 var(--space-4) var(--space-4);
+}
 .flow-para {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-3);
 }
 .flow-para:last-child {
   margin-bottom: 0;
@@ -399,15 +405,18 @@
 .flow-en-block {
   font-family: var(--font-work);
   color: var(--text);
-  line-height: calc(var(--work-lh) * 1.5);
+  line-height: calc(var(--work-lh) * 1.3);
 }
 .flow-en-seg {
   display: inline;
 }
 /* The line tick on each English segment (correspondence marker) — a shade
-   darker than the Greek ticks so it's easy to match English back to its line. */
+   darker than the Greek ticks so it's easy to match English back to its line,
+   and set as SUBSCRIPT (John) so it drops below the typing line and interferes
+   less with the English text. */
 .en-tick {
   color: var(--text-mid);
+  vertical-align: sub;
 }
 .flow-en-block .en-cell {
   display: inline-block;
