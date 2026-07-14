@@ -318,6 +318,18 @@
     setInterpLayout(model.workId, l);
   }
   /**
+   * Display-only SHORT Bekker tick for the flowing view (John 2026-07-14 —
+   * "cut out the Bekker page, just leave column and line number"): drop a
+   * leading page number, keep column+line (1041a6 → a6, 1041b33 → b33). Pure
+   * abbreviation of the tick label — the full opaque address is untouched in
+   * the model and still shown in the Lines-view gutter. Falls back to the raw
+   * address if it carries no leading page digits (nothing to trim).
+   */
+  function shortTick(raw: string): string {
+    const short = raw.replace(/^\d+/, '');
+    return short.length > 0 ? short : raw;
+  }
+  /**
    * PARA-LAYER UNIT view (usesParaLayer, interpolated.ts): a paragraph-row-
    * unit doc showing one visual unit per model row, whose English field edits
    * the paragraph layer (englishPara) — the `paragraph` view (D1 semantics
@@ -3576,14 +3588,20 @@
           />
         {/snippet}
         {#if interpLayout === LAYOUT_WEAVE}
+          <!-- Interlinear weave (John's mockup): each Bekker line is a
+               Greek-over-English pair; the pairs are inline-block and flow /
+               wrap, so the Greek reads as continuous prose while each line's
+               English sits directly beneath its own words. -->
           <div class="interp-flow weave" bind:this={gridEl}>
-            {#each displayRows as d, g (d.key)}<!-- svelte-ignore a11y_no_static_element_interactions --><span
-                class="flow-grc"
+            {#each displayRows as d, g (d.key)}<!-- svelte-ignore a11y_no_static_element_interactions --><div
+                class="weave-pair"
                 class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
-                lang="grc"
                 data-row={g}
-                oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
-              ><sup class="flow-tick">{d.address.raw}</sup>{d.greekSlice}</span><span class="flow-en">{@render flowEnCell(d, g)}</span>{' '}{/each}
+              ><div
+                  class="weave-grc flow-grc"
+                  lang="grc"
+                  oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
+                ><span class="flow-tick">{shortTick(d.address.raw)}</span>{d.greekSlice}</div><div class="weave-en">{@render flowEnCell(d, g)}</div></div>{/each}
           </div>
         {:else}
           <div class="interp-flow lane" bind:this={gridEl}>
@@ -3594,12 +3612,12 @@
                   class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
                   data-row={g}
                   oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
-                ><sup class="flow-tick">{d.address.raw}</sup>{d.greekSlice}</span>{' '}{/each}
+                ><sup class="flow-tick">{shortTick(d.address.raw)}</sup>{d.greekSlice}</span>{' '}{/each}
             </div>
             <div class="flow-en-lane">
               {#each displayRows as d, g (d.key)}
                 <div class="lane-row" class:lit={focusRow === d.rowIndex && focusSeg === d.segment}>
-                  <span class="lane-num" aria-hidden="true">{d.address.raw}</span>
+                  <span class="lane-num" aria-hidden="true">{shortTick(d.address.raw)}</span>
                   {@render flowEnCell(d, g)}
                 </div>
               {/each}

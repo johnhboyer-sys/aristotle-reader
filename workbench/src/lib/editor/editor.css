@@ -415,34 +415,45 @@
   text-align: right;
 }
 
-/* Weave layout: each line's English inline right after its own Greek, the whole
-   thing flowing. The English reads as woven-in translation — the English serif,
-   full text colour, a hair of breathing room around it. */
+/* Weave layout — INTERLINEAR (John's mockup): each Bekker line is a
+   Greek-over-English pair; the pairs are inline-block and flow / wrap, so the
+   Greek reads as continuous prose while each line's English sits directly
+   beneath its own words. The whitespace between pairs supplies the reading
+   space between one line's Greek and the next. */
 .interp-flow.weave {
   white-space: normal;
-  overflow-wrap: break-word;
 }
-.flow-en {
-  /* inline-block wrapper: flows inline with the Greek, but the ProseMirror
-     editor inside stays a normal block editor (caret/commit unchanged). */
+.weave-pair {
   display: inline-block;
-  vertical-align: baseline;
-  font-family: var(--font-work);
-  color: var(--text);
-  margin: 0 0.15em;
+  vertical-align: top;
+  margin: 0 0.1em 0.7em 0;
+  padding: 2px 5px 3px;
+  border-radius: 4px;
 }
-.flow-en .en-cell {
-  display: inline-block;
-  vertical-align: baseline;
+/* Spotlight the line being worked on — the whole pair (Greek + its English). */
+.weave-pair.lit {
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
 }
-.flow-en .en-cell .ProseMirror {
-  min-width: 1.5ch;
-  padding: 0 0.25em;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
+.weave-grc {
+  /* One Bekker line = one intact run; pairs wrap between lines, never within. */
+  white-space: nowrap;
+  line-height: var(--work-lh);
 }
-.interp-flow .en-cell:focus-within .ProseMirror {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+.weave-en {
+  margin-top: 3px;
+}
+/* The English input reads as a fill-in slot: a dashed baseline the pair's
+   width, going solid accent when it holds focus. */
+.weave-en .en-cell .ProseMirror {
+  min-height: 1.35em;
+  min-width: 3ch;
+  padding: 1px 2px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--text-light) 65%, transparent);
+}
+.weave-en .en-cell:focus-within .ProseMirror {
+  border-bottom-color: var(--accent);
+  border-bottom-style: solid;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* View-mode toggle (chapter chrome): a compact segmented control, quiet at
