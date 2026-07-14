@@ -680,6 +680,14 @@
   border-radius: 7px;
   box-shadow: var(--popup-shadow);
 }
+/* In the flowing interpolated views the English cell is a narrow inline-block,
+   so `max-width: 100%` (of that cell) squeezed the popover into a cramped box.
+   Anchor it to the flow container instead and give it its natural width. */
+.interp-flow .assist-popover {
+  max-width: min(36rem, 90vw);
+  min-width: 17rem;
+  white-space: normal;
+}
 .assist-note {
   font-family: var(--font-ui);
   font-size: 0.78rem;
