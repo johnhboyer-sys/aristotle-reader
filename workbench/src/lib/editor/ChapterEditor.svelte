@@ -19,6 +19,9 @@
     requestAssist(row: number, segment: number): void;
     /** Popover state for cell (row, segment); null unless assist targets it. Reactive. */
     assistStateFor(row: number, segment: number): AssistUiState | null;
+    /** Viewport point to anchor the popover at (under the clicked word), or null
+     * to fall back to the cell-anchored placement. Reactive. */
+    assistAnchor(): { x: number; y: number } | null;
     /** THE one editor mutation assist may perform, surfaced to the popover
      * as RowEditor.insertSuggestion — a normal transaction on the cell's
      * view, through the same dispatch path as typing. */
@@ -503,6 +506,7 @@
     };
   }
   function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model'>): NonNullable<typeof ctxMenu> {
+    menuPointer = { x: m.x, y: m.y }; // raw click, before the menu clamp below
     const { x, y } = clampMenu(m.x, m.y);
     return {
       ...m,
@@ -1751,6 +1755,15 @@
   // invoked in one layer to the other layer's view after a view switch.
   let assistLayer: EditLayer = 'sentence';
   let assistUi = $state<AssistUiState | null>(null);
+  // Viewport point to anchor the popover at (John 2026-07-14): the flowing
+  // views separate a line's Greek from its English cell, so a cell-anchored
+  // popover lands far from the word you clicked. When assist is invoked from a
+  // Greek/source context menu we anchor the popover under the CLICK instead;
+  // null falls back to the cell-anchored placement (glyph / ⌘⏎).
+  let assistAnchorPos = $state<{ x: number; y: number } | null>(null);
+  // Raw cursor of the last context-menu open (before the menu's own clamp) —
+  // the click point a menu-triggered translate anchors its popover to.
+  let menuPointer = { x: 0, y: 0 };
 
   // ── AI reference popups (right-click Greek → "AI reference") ──────────────
   // Independent of the translate flow: the AI's own translation appears in a
@@ -1811,8 +1824,9 @@
    * work: no active cell → no-op; no source text on the row → the unit's
    * no-line message. Captures the ACTIVE layer so the eventual Insert
    * writes back to the layer the request came from (D8 §7 Phase E2). */
-  function invokeAssist(row: number, segment: number) {
+  function invokeAssist(row: number, segment: number, anchor: { x: number; y: number } | null = null) {
     if (row < 0 || row >= model.rows.length || !viewAt(row, segment)) return;
+    assistAnchorPos = anchor;
     assistRow = row;
     assistSeg = segment;
     assistLayer = activeLayer();
@@ -2575,7 +2589,9 @@
     if (m.translateRows && m.translateRows.length > 1) {
       invokeAssistRange(m.translateRows);
     } else {
-      invokeAssist(m.row, m.segment);
+      // Anchor the popover under the clicked word (menuPointer), not the far-off
+      // English cell — the flowing views separate the two.
+      invokeAssist(m.row, m.segment, { ...menuPointer });
     }
   }
 
@@ -3320,6 +3336,7 @@
     },
     requestAssist: (row, segment) => invokeAssist(row, segment),
     assistStateFor: (row, segment) => (assistRow === row && assistSeg === segment ? assistUi : null),
+    assistAnchor: () => assistAnchorPos,
     insertSuggestion: (row, segment, text) => insertSuggestionIntoRow(row, segment, text),
     dismissAssist,
   };

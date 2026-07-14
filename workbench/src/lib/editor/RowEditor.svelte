@@ -33,6 +33,9 @@
 
   /** The assist popover state for THIS cell (null = assist isn't targeting it). */
   const assist = $derived(host.assistStateFor(row, segment));
+  /** Where to anchor the popover: a viewport point (under the clicked word) or
+   * null for the default cell-anchored placement. */
+  const assistAnchor = $derived(host.assistAnchor());
 
   /**
    * THE one public command the assist layer may use to touch the editor
@@ -70,5 +73,5 @@
 >✦</button>
 
 {#if assist}
-  <AssistPopover state={assist} {onInsert} onDismiss={() => host.dismissAssist()} />
+  <AssistPopover state={assist} anchor={assistAnchor} {onInsert} onDismiss={() => host.dismissAssist()} />
 {/if}
