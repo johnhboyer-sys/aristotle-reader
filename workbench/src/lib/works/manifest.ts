@@ -13,6 +13,7 @@
 import yaml from 'js-yaml';
 import type { SchemeId, WorkMeta } from '../citation/types';
 import { isKnownScheme } from '../citation/registry';
+import type { WorkProfile } from './profile';
 
 import metaphysicsYaml from './manifests/metaphysics.yaml?raw';
 import posteriorAnalyticsYaml from './manifests/posterior-analytics.yaml?raw';
@@ -28,6 +29,10 @@ export interface WorkManifest extends WorkMeta {
   language?: string;
   tlgAuthor?: string;
   tlgWork?: string;
+  /** Organization profile (document-spine free works only, D8 heading tools):
+   * the work's named heading tiers + their navigation roles. Absent on built-in
+   * works; free works get their saved profile or the default (works/profile.ts). */
+  profile?: WorkProfile;
 }
 
 interface RawManifestBook {

@@ -78,30 +78,63 @@ describe('buildCtxMenu — the per-view menu matrix', () => {
     ]);
   });
 
-  it('document-spine source cell, ordinary row → heading group first (two marks)', () => {
+  // The default two-tier profile → "Heading" / "Section title".
+  const DEFAULT_NAMES = ['Heading', 'Section title'];
+  // First menu group's item titles (the heading group when present).
+  function headTitles(input: Partial<CtxMenuInput>): string[] {
+    return buildCtxMenu({ ...BASE, ...input }).groups[0].map((i) => i.title);
+  }
+
+  it('document-spine source cell, ordinary row → a "Mark as" per tier', () => {
     expect(
-      ids({ scheme: paragraphScheme, heading: { role: null }, paraDoc: { canMergePrev: false, joinBoundary: null } })[0],
-    ).toEqual(['header-mark', 'subheader-mark']);
+      headTitles({
+        scheme: paragraphScheme,
+        heading: { level: null, levelNames: DEFAULT_NAMES },
+        paraDoc: { canMergePrev: false, joinBoundary: null },
+      }),
+    ).toEqual(['Mark as Heading', 'Mark as Section title']);
   });
 
-  it('document-spine source cell, already a header → section-title + clear', () => {
-    expect(
-      ids({ scheme: plainLineScheme, heading: { role: 'header' } })[0],
-    ).toEqual(['subheader-mark', 'header-clear']);
+  it('document-spine source cell, already level 1 → the OTHER tier + clear', () => {
+    expect(headTitles({ scheme: plainLineScheme, heading: { level: 1, levelNames: DEFAULT_NAMES } })).toEqual([
+      'Mark as Section title',
+      'Clear heading',
+    ]);
   });
 
-  it('document-spine source cell, already a subheader → heading + clear', () => {
+  it('document-spine source cell, already level 2 → level 1 + clear', () => {
+    expect(headTitles({ scheme: plainLineScheme, heading: { level: 2, levelNames: DEFAULT_NAMES } })).toEqual([
+      'Mark as Heading',
+      'Clear heading',
+    ]);
+  });
+
+  it('a custom N-tier profile offers a "Mark as" for every other tier', () => {
     expect(
-      ids({ scheme: plainLineScheme, heading: { role: 'subheader' } })[0],
-    ).toEqual(['header-mark', 'header-clear']);
+      headTitles({
+        scheme: plainLineScheme,
+        heading: { level: 2, levelNames: ['Part', 'Question', 'Article'] },
+      }),
+    ).toEqual(['Mark as Part', 'Mark as Article', 'Clear heading']);
+  });
+
+  it('every heading mark carries its target level; clear does not', () => {
+    const group = buildCtxMenu({
+      ...BASE,
+      scheme: plainLineScheme,
+      heading: { level: null, levelNames: ['Part', 'Question', 'Article'] },
+    }).groups[0];
+    expect(group.map((i) => i.level)).toEqual([1, 2, 3]);
   });
 
   it('corpus works never carry the heading group (no heading input)', () => {
-    expect(ids({}).some((g) => g.some((id) => id.startsWith('header') || id === 'subheader-mark'))).toBe(false);
+    expect(ids({}).some((g) => g.some((id) => id === 'heading-mark' || id === 'heading-clear'))).toBe(false);
   });
 
   it('the heading group is suppressed on an AI-only (English) cell', () => {
-    expect(ids({ scheme: plainLineScheme, heading: { role: null }, aiOnly: true })).toEqual([AI]);
+    expect(ids({ scheme: plainLineScheme, heading: { level: null, levelNames: DEFAULT_NAMES }, aiOnly: true })).toEqual([
+      AI,
+    ]);
   });
 });
 

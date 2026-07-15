@@ -325,24 +325,24 @@ describe('model → file → model round trip', () => {
     expect(h.footnotes).toEqual([{ id: '1', body: '', anchored: true }]);
   });
 
-  it('round-trips heading roles through serialize → parse → hydrate', () => {
+  it('round-trips heading levels through serialize → parse → hydrate', () => {
     const model = makeModel();
-    model.rows[0].role = 'header';
-    model.rows[1].role = 'subheader';
+    model.rows[0].headingLevel = 1;
+    model.rows[1].headingLevel = 3; // a deep tier — levels are no longer 1|2
     const content = serializeModel(model);
-    expect(content).toContain('headers: "1:1,2:2"');
-    const file = parseChapterFile(content, 'roles-rt');
+    expect(content).toContain('headers: "1:1,2:3"');
+    const file = parseChapterFile(content, 'levels-rt');
     expect(file.meta.headers).toEqual([
       { row: 1, level: 1 },
-      { row: 2, level: 2 },
+      { row: 2, level: 3 },
     ]);
     const h = hydrateFromFile(file, spineOf(model), SCHEME);
-    expect(h.rows[0].role).toBe('header');
-    expect(h.rows[1].role).toBe('subheader');
-    expect(h.rows[2].role).toBeUndefined();
+    expect(h.rows[0].headingLevel).toBe(1);
+    expect(h.rows[1].headingLevel).toBe(3);
+    expect(h.rows[2].headingLevel).toBeUndefined();
   });
 
-  it('writes no headers key when no row carries a role', () => {
+  it('writes no headers key when no row carries a heading level', () => {
     const content = serializeModel(makeModel());
     expect(content).not.toContain('headers:');
   });

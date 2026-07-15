@@ -24,6 +24,8 @@ import { getScheme, isKnownScheme } from '../citation/registry';
 import { libraryStorage } from '../library/storage';
 import type { LibraryStorage } from '../library/storage';
 import type { WorkManifest, OriginalLanguage } from './manifest';
+import type { WorkLevel } from './profile';
+import { DEFAULT_PROFILE, sanitizeLevels } from './profile';
 
 /** The reserved storage id whose "work dir" is the library root itself. */
 export const FREE_WORKS_STORAGE_ID = '.';
@@ -37,6 +39,9 @@ export interface FreeWorkRecord {
   language?: string;
   /** A document-spine scheme ('paragraph' | 'plain-line'). */
   scheme: SchemeId;
+  /** The work's organization profile levels (D8 heading tools). Absent =
+   * the work uses DEFAULT_PROFILE; sanitized on read. */
+  levels?: WorkLevel[];
 }
 
 interface RawRegistryEntry {
@@ -44,6 +49,7 @@ interface RawRegistryEntry {
   title?: unknown;
   language?: unknown;
   citation_scheme?: unknown;
+  levels?: unknown;
 }
 
 /** Validate one parsed registry entry; null (skip) when it isn't usable. */
@@ -59,6 +65,8 @@ function recordFromRaw(raw: unknown): FreeWorkRecord | null {
   if (typeof v.language === 'string' && v.language.trim().length > 0) {
     record.language = v.language.trim();
   }
+  const levels = sanitizeLevels(v.levels);
+  if (levels) record.levels = levels;
   return record;
 }
 
@@ -109,6 +117,7 @@ export function freeWorkManifest(record: FreeWorkRecord): WorkManifest {
     author: '',
     scheme: record.scheme,
     books: [{ n: 1, label: '' }],
+    profile: record.levels ? { levels: record.levels } : DEFAULT_PROFILE,
   };
   const lang = record.language?.toLowerCase();
   if (lang === 'greek' || lang === 'latin') {
@@ -148,6 +157,7 @@ export async function registerFreeWork(
       title: w.title,
       ...(w.language ? { language: w.language } : {}),
       citation_scheme: w.scheme,
+      ...(w.levels && w.levels.length > 0 ? { levels: w.levels } : {}),
     })),
   };
   await storage.write(FREE_WORKS_STORAGE_ID, REGISTRY_FILE, JSON.stringify(payload, null, 2) + '\n');

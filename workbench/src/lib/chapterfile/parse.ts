@@ -308,8 +308,8 @@ export function sanitizeParagraphStarts(val: unknown): { starts: number[] | unde
  * LENIENT sanitize of the frontmatter `headers` field — same degrade-don't-
  * refuse policy as sanitizeParagraphStarts (headings are pure display metadata,
  * D8 heading tools). Tokens are `<row>:<level>` pairs; a token that is not that
- * shape, a non-positive/duplicate row, or a level outside {1,2} is dropped.
- * A row appears at most once (one role per row); output is sorted by row.
+ * shape, a non-positive/duplicate row, or a level below 1 is dropped.
+ * A row appears at most once (one level per row); output is sorted by row.
  * Out-of-range rows need the row count and are filtered in parseChapterFile.
  * Returns undefined when nothing survives (so the meta key stays absent).
  */
@@ -325,7 +325,7 @@ export function sanitizeHeaders(val: unknown): HeaderMark[] | undefined {
     const row = Number(parsed[1]);
     const level = Number(parsed[2]);
     if (!Number.isSafeInteger(row) || row <= 0 || seen.has(row)) continue;
-    if (level !== 1 && level !== 2) continue;
+    if (!Number.isSafeInteger(level) || level < 1) continue;
     seen.add(row);
     marks.push({ row, level: level as RowHeaderLevel });
   }

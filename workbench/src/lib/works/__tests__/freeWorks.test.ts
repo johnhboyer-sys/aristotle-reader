@@ -8,6 +8,7 @@ import {
   registerFreeWork,
 } from '../freeWorks';
 import type { FreeWorkRecord } from '../freeWorks';
+import { DEFAULT_PROFILE } from '../profile';
 
 const RECORD: FreeWorkRecord = { id: 'my-doc', title: 'My Doc', scheme: 'paragraph' };
 
@@ -25,6 +26,23 @@ describe('free-work registry (works.json in the library root)', () => {
       { ...RECORD, language: 'German' },
       { id: 'verse', title: 'Verse', scheme: 'plain-line' },
     ]);
+  });
+
+  it('persists and reads back a work organization profile (levels)', async () => {
+    const storage = new MemStorage();
+    const levels = [
+      { name: 'Part', navRole: 'book' as const },
+      { name: 'Question', navRole: 'chapter' as const },
+    ];
+    await registerFreeWork({ ...RECORD, levels }, storage);
+    expect((await listFreeWorkRecords(storage))[0].levels).toEqual(levels);
+    // Malformed levels degrade to absent (→ default profile), never a failure.
+    await storage.write(
+      FREE_WORKS_STORAGE_ID,
+      'works.json',
+      JSON.stringify({ version: 1, works: [{ id: 'x', title: 'X', citation_scheme: 'paragraph', levels: 'junk' }] }),
+    );
+    expect((await listFreeWorkRecords(storage))[0].levels).toBeUndefined();
   });
 
   it('stores the registry as works.json under the reserved root id', async () => {
@@ -110,7 +128,17 @@ describe('freeWorkManifest', () => {
       author: '',
       scheme: 'paragraph',
       books: [{ n: 1, label: '' }],
+      profile: DEFAULT_PROFILE,
     });
+  });
+
+  it('surfaces the record levels as the manifest profile (custom over default)', () => {
+    const levels = [
+      { name: 'Part', navRole: 'book' as const },
+      { name: 'Question', navRole: 'chapter' as const },
+      { name: 'Article', navRole: 'heading' as const },
+    ];
+    expect(freeWorkManifest({ ...RECORD, levels }).profile).toEqual({ levels });
   });
 
   it("maps language onto originalLanguage only when it's greek/latin", () => {

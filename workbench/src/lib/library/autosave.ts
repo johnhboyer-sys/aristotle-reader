@@ -241,7 +241,7 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
   // Derived from the rows' role, so the round-trip mirrors hydration exactly.
   const headers: HeaderMark[] = [];
   model.rows.forEach((r, i) => {
-    if (r.role) headers.push({ row: i + 1, level: r.role === 'header' ? 1 : 2 });
+    if (r.headingLevel) headers.push({ row: i + 1, level: r.headingLevel });
   });
 
   return {
@@ -456,7 +456,7 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
   if (file.meta.headers) {
     for (const h of file.meta.headers) {
       const row = rows[h.row - 1];
-      if (row) row.role = h.level === 1 ? 'header' : 'subheader';
+      if (row) row.headingLevel = h.level;
     }
   }
 

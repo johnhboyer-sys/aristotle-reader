@@ -8,21 +8,19 @@ import type { PMDocJSON } from './schema';
 import { emptyRowDocJSON } from './schema';
 import type { FixtureChapter } from '../../dev/fixture-meta-z17';
 
-/** A row's heading role (D8 heading tools); absent = an ordinary content row. */
-export type RowRole = 'header' | 'subheader';
-
 export interface RowModel {
   /** Opaque scheme-owned address; the gutter shows `address.raw` verbatim. */
   address: Address;
   /** The Greek spine line — read-only in the editor. */
   greek: string;
   /**
-   * Heading role (D8 heading tools), document-spine works only. A header/
-   * subheader row keeps both columns (stays translatable) but renders as a
-   * title and drops out of the flowing Lane/Weave grouping. Absent = ordinary
+   * Heading level (D8 heading tools), document-spine works only: a 1-based rank
+   * into the work's organization profile (works/profile.ts), level 1 the top
+   * tier. A heading row keeps both columns (stays translatable) but renders as
+   * a title and drops out of the flowing Lane/Weave grouping. Absent = ordinary
    * row. Persisted via the chapter-file `headers` frontmatter (row:level).
    */
-  role?: RowRole;
+  headingLevel?: number;
   /**
    * Committed English row doc (PM JSON) of SEGMENT 0. Live views may be
    * ahead until commit. On a paragraph-split line (design doc D6) the

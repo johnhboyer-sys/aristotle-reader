@@ -28,9 +28,9 @@ describe('sanitizeHeaders', () => {
     ]);
   });
 
-  it('drops junk tokens, bad levels, non-positive rows, and duplicate rows', () => {
-    // "x" junk; "3:9" bad level (dropped) BEFORE the valid "3:1"; "0:1" non-positive.
-    expect(sanitizeHeaders('x,3:9,3:1,0:1,4:2')).toEqual([
+  it('drops junk tokens, level-0, non-positive rows, and duplicate rows', () => {
+    // "x" junk; "3:0" level 0 invalid (dropped) BEFORE the valid "3:1"; "0:1" non-positive row.
+    expect(sanitizeHeaders('x,3:0,3:1,0:1,4:2')).toEqual([
       { row: 3, level: 1 },
       { row: 4, level: 2 },
     ]);
@@ -38,6 +38,15 @@ describe('sanitizeHeaders', () => {
 
   it('keeps only the first role seen for a repeated row', () => {
     expect(sanitizeHeaders('3:1,3:2')).toEqual([{ row: 3, level: 1 }]);
+  });
+
+  it('accepts deep levels (≥3) now that tiers are profile-driven, not 1|2', () => {
+    expect(sanitizeHeaders('2:3,5:7')).toEqual([
+      { row: 2, level: 3 },
+      { row: 5, level: 7 },
+    ]);
+    // level 0 is still invalid (levels are 1-based).
+    expect(sanitizeHeaders('2:0,3:2')).toEqual([{ row: 3, level: 2 }]);
   });
 
   it('returns undefined when nothing survives or the value is not a string', () => {

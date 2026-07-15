@@ -75,17 +75,18 @@ export interface ChapterFileMeta {
 }
 
 /**
- * A row's structural role in a document-spine work (D8 heading tools). Level 1
- * (`header`) is a top-level heading; level 2 (`subheader`) is a section title
- * nested under it. Absent = an ordinary content row. Headings stay TRANSLATABLE
- * (both columns keep their text); the role only changes how the row renders
- * (as a title, out of the flowing views) and lets it anchor a part boundary.
+ * A row's heading LEVEL in a document-spine work (D8 heading tools): a 1-based
+ * rank into the work's organization profile (works/profile.ts), level 1 being
+ * the top tier. Absent = an ordinary content row. Headings stay TRANSLATABLE
+ * (both columns keep their text); the level only changes how the row renders
+ * (as a title, out of the flowing views), how deep it nests in the outline,
+ * and — via the profile's navRole — whether it anchors a book/chapter boundary.
  */
-export type RowHeaderLevel = 1 | 2;
+export type RowHeaderLevel = number;
 
 /**
  * One `<rowOrdinal>:<level>` pair from the frontmatter `headers` field: the
- * 1-based row ordinal that carries a heading role and its level (1 or 2). Like
+ * 1-based row ordinal that carries a heading and its 1-based level rank. Like
  * `paragraph_starts` this is OPTIONAL, LENIENT display metadata — a malformed
  * value degrades (see sanitizeHeaders) rather than refusing the file.
  */

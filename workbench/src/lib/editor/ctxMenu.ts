@@ -20,9 +20,8 @@ export type CtxMenuItemId =
   | 'para-merge'
   | 'sentence-split'
   | 'sentence-join'
-  | 'header-mark'
-  | 'subheader-mark'
-  | 'header-clear'
+  | 'heading-mark'
+  | 'heading-clear'
   | 'ai-translate'
   | 'ai-translate-batch'
   | 'ai-reference'
@@ -33,6 +32,8 @@ export interface CtxMenuItem {
   id: CtxMenuItemId;
   title: string;
   desc?: string;
+  /** For a `heading-mark` item: the 1-based level to mark the row as. */
+  level?: number;
 }
 
 /** Groups render in order with a divider between consecutive groups (the
@@ -52,12 +53,13 @@ export interface CtxMenuInput {
   /** Plain-line chunk-grouping toggle state (absent = not offered). */
   chunk?: 'add' | 'remove';
   /**
-   * Heading-role toggle state for document-spine works (D8 heading tools):
-   * the clicked row's current role, or null for an ordinary row. Absent =
+   * Heading state for document-spine works (D8 heading tools): the clicked
+   * row's current 1-based level (null for an ordinary row) plus the work
+   * profile's level names in rank order (`levelNames[0]` = level 1). Absent =
    * not offered (corpus works never carry it). Populated only for the
    * source-cell menu of a document-spine work.
    */
-  heading?: { role: 'header' | 'subheader' | null };
+  heading?: { level: number | null; levelNames: string[] };
   /** D6: the clicked row is already split → offer the merge. */
   merge: boolean;
   /** Rows a batch translate would act on (≤1 = single-row flow). */
@@ -71,29 +73,27 @@ export interface CtxMenuInput {
 }
 
 /**
- * The heading-role group (D8 heading tools). Offers the two roles the row is
- * NOT currently in, plus a clear when it has one — so the group always has
- * exactly two items and the current state is implied by what's absent.
+ * The heading group (D8 heading tools). Offers "Mark as <tier>" for each of the
+ * work profile's levels the row is NOT currently at, plus a "Clear heading"
+ * when it has one — so the current level is implied by which "Mark as" is
+ * absent. With the default two-tier profile this reads "Mark as Heading / Mark
+ * as Section title", exactly as before.
  */
-function headingGroup(role: 'header' | 'subheader' | null): CtxMenuItem[] {
+function headingGroup(level: number | null, levelNames: string[]): CtxMenuItem[] {
   const items: CtxMenuItem[] = [];
-  if (role !== 'header') {
+  levelNames.forEach((name, i) => {
+    const n = i + 1;
+    if (n === level) return;
     items.push({
-      id: 'header-mark',
-      title: 'Mark as heading',
+      id: 'heading-mark',
+      title: `Mark as ${name}`,
       desc: 'Renders this row as a title; it leaves the flowing view',
+      level: n,
     });
-  }
-  if (role !== 'subheader') {
+  });
+  if (level !== null) {
     items.push({
-      id: 'subheader-mark',
-      title: 'Mark as section title',
-      desc: 'Renders this row as a smaller section heading',
-    });
-  }
-  if (role !== null) {
-    items.push({
-      id: 'header-clear',
+      id: 'heading-clear',
       title: 'Clear heading',
       desc: 'Return this row to ordinary text',
     });
@@ -107,7 +107,8 @@ export function buildCtxMenu(input: CtxMenuInput): CtxMenuModel {
   // (house convention: structure first). Present only when the caller passes
   // `heading` — i.e. a document-spine work's source cell, never corpus.
   if (input.heading && !input.aiOnly) {
-    groups.push(headingGroup(input.heading.role));
+    const group = headingGroup(input.heading.level, input.heading.levelNames);
+    if (group.length > 0) groups.push(group);
   }
   if (input.paraDoc) {
     // Document-spine paragraph rows (D8 §2/§3): row-level paragraph ops

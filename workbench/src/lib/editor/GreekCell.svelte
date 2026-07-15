@@ -13,7 +13,7 @@
     flash,
     focused,
     chunkStart = false,
-    role = undefined,
+    headingLevel = undefined,
     onContext,
   }: {
     gridRow: number;
@@ -24,8 +24,9 @@
     /** First row of a paragraph chunk (D8 §5 line-doc grouping) — adds top
      * spacing so chunks read as paragraphs. No-op outside paragraph view. */
     chunkStart?: boolean;
-    /** Heading role (D8 heading tools): renders the spine text as a title. */
-    role?: 'header' | 'subheader';
+    /** Heading level (D8 heading tools): renders the spine text as a title,
+     * deeper levels progressively smaller. Absent = ordinary row. */
+    headingLevel?: number;
     onContext: (e: MouseEvent) => void;
   } = $props();
 </script>
@@ -40,8 +41,8 @@
   class:row-flash={flash}
   class:row-focus={focused}
   class:chunk-start={chunkStart}
-  class:row-header={role === 'header'}
-  class:row-subheader={role === 'subheader'}
+  class:row-heading={!!headingLevel}
+  data-heading-level={headingLevel ?? undefined}
   style="grid-row: {gridRow + 1}"
   data-row={gridRow}
   lang="grc"

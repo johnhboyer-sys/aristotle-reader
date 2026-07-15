@@ -15,6 +15,7 @@ import { getScheme } from '../citation/registry';
 import type { WorkManifest } from '../works/manifest';
 import type { ChapterFile } from '../chapterfile';
 import { rowAddressSource } from '../library/autosave';
+import { DEFAULT_PROFILE } from '../works/profile';
 import type { FixtureChapter } from '../../dev/fixture-meta-z17';
 
 /**
@@ -58,6 +59,9 @@ export function documentChapterForEditor(
       start: lines[0].address,
       end: lines[count - 1].address,
     }),
+    // The work's organization profile (D8 heading tools) rides on the fixture so
+    // the editor's heading menu shows the user's named tiers; default otherwise.
+    profile: work.profile ?? DEFAULT_PROFILE,
     lines,
   };
 }
