@@ -50,6 +50,7 @@
     selected,
     outline = [],
     onOutlineSelect,
+    onManageLevels,
     onSelect,
     onAddWork,
     onNewDocument,
@@ -64,6 +65,8 @@
     outline?: OutlineItem[];
     /** Jump the editor to a heading row (rail outline click). */
     onOutlineSelect?: (rowIndex: number) => void;
+    /** Open the "Manage levels…" profile editor for a document work. */
+    onManageLevels?: (workId: string) => void;
     onSelect: (workId: string, book: number, chapter: number) => void;
     onAddWork?: () => void;
     /** "New document…" — create a corpus-free document (D8 §6). Gated like
@@ -147,7 +150,8 @@
               <li>
                 <button
                   class="chapter-row outline-row"
-                  class:outline-sub={item.level === 2}
+                  class:outline-sub={item.level >= 2}
+                  style="--lvl: {item.level}"
                   title={item.label}
                   onclick={() => onOutlineSelect?.(item.rowIndex)}
                 >
@@ -155,6 +159,13 @@
                 </button>
               </li>
             {/each}
+          {/if}
+          {#if isSelected(rw.work.id, 1, 1) && onManageLevels}
+            <li>
+              <button class="manage-levels" onclick={() => onManageLevels?.(rw.work.id)}>
+                Manage levels…
+              </button>
+            </li>
           {/if}
         </ul>
       {:else if rw.status === 'ready'}
@@ -395,15 +406,32 @@
     display: block;
     font-size: 0.8rem;
     color: var(--text-mid);
-    padding-left: var(--space-3);
+    /* Indent by tier: level 1 sits at the base, each deeper tier steps in. */
+    padding-left: calc(var(--space-3) + (var(--lvl, 1) - 1) * var(--space-3));
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .outline-row.outline-sub {
-    padding-left: calc(var(--space-3) + var(--space-3));
     font-size: 0.76rem;
     color: var(--text-light);
+  }
+  .manage-levels {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    color: var(--text-light);
+    background: none;
+    border: none;
+    padding: var(--space-1) var(--space-2);
+    padding-left: var(--space-3);
+    margin-top: 2px;
+    cursor: pointer;
+  }
+  .manage-levels:hover {
+    color: var(--accent);
   }
 
   /* Not-yet-downloaded (iCloud placeholder stub): greyed, unclickable, no

@@ -30,6 +30,14 @@ describe('buildOutline', () => {
     expect(buildOutline(rows)).toEqual([{ rowIndex: 0, level: 1, label: 'Articulus 1' }]);
   });
 
+  it('labels from the PARAGRAPH layer when that is where the translation lives (e.g. the Summa)', () => {
+    // A paragraph-unit doc commits translations to englishPara, not english.
+    const rows = [
+      row('Articulus 1', { headingLevel: 1, englishPara: buildRowDoc([t('Article 1')]).toJSON() }),
+    ];
+    expect(buildOutline(rows)).toEqual([{ rowIndex: 0, level: 1, label: 'Article 1' }]);
+  });
+
   it('returns [] when no row carries a heading level', () => {
     expect(buildOutline([row('plain'), row('text')])).toEqual([]);
   });

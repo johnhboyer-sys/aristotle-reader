@@ -175,3 +175,21 @@ describe('interpolated view: English cells stay AI-only (structure lives on the 
     expect(body).toContain('aiOnly: true');
   });
 });
+
+describe('insert heading line (D8 heading tools)', () => {
+  it('performInsertHeading gates, inserts a new heading row (splice removeCount 0), and undoes as one entry', () => {
+    const body = fnBody('performInsertHeading');
+    expect(body).toContain('if (!canEditRowStructure(scheme)) return;');
+    // A true INSERT: remove nothing, add the one new row above r.
+    expect(body).toContain('spliceRows(r, 0, [newRow]);');
+    expect(body).toContain('headingLevel: level');
+    expect(body).toContain('markModelDirty();');
+    // one structural undo entry whose `before` is empty (nothing was removed).
+    expect(body).toContain('before: []');
+  });
+
+  it('the "Insert heading line here" item is offered only where rows can be spliced', () => {
+    expect(fnBody('onGreekContextMenu')).toContain('canInsertHeading = heading ? canEditRowStructure(scheme)');
+    expect(fnBody('onInterpSourceContextMenu')).toContain('canInsertHeading: canEditRowStructure(scheme)');
+  });
+})

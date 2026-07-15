@@ -22,6 +22,7 @@ export type CtxMenuItemId =
   | 'sentence-join'
   | 'heading-mark'
   | 'heading-clear'
+  | 'heading-insert'
   | 'ai-translate'
   | 'ai-translate-batch'
   | 'ai-reference'
@@ -60,6 +61,13 @@ export interface CtxMenuInput {
    * source-cell menu of a document-spine work.
    */
   heading?: { level: number | null; levelNames: string[] };
+  /**
+   * Whether an "Insert heading line here" item is offered (D8 heading tools).
+   * True only on a document-spine work whose rows can be spliced (paragraph
+   * unit — canEditRowStructure); rides in the heading group. Ignored without
+   * `heading`.
+   */
+  canInsertHeading?: boolean;
   /** D6: the clicked row is already split → offer the merge. */
   merge: boolean;
   /** Rows a batch translate would act on (≤1 = single-row flow). */
@@ -79,7 +87,7 @@ export interface CtxMenuInput {
  * absent. With the default two-tier profile this reads "Mark as Heading / Mark
  * as Section title", exactly as before.
  */
-function headingGroup(level: number | null, levelNames: string[]): CtxMenuItem[] {
+function headingGroup(level: number | null, levelNames: string[], canInsert: boolean): CtxMenuItem[] {
   const items: CtxMenuItem[] = [];
   levelNames.forEach((name, i) => {
     const n = i + 1;
@@ -98,6 +106,13 @@ function headingGroup(level: number | null, levelNames: string[]): CtxMenuItem[]
       desc: 'Return this row to ordinary text',
     });
   }
+  if (canInsert) {
+    items.push({
+      id: 'heading-insert',
+      title: 'Insert heading line here',
+      desc: 'Adds a new heading row above this one to type into',
+    });
+  }
   return items;
 }
 
@@ -107,7 +122,7 @@ export function buildCtxMenu(input: CtxMenuInput): CtxMenuModel {
   // (house convention: structure first). Present only when the caller passes
   // `heading` — i.e. a document-spine work's source cell, never corpus.
   if (input.heading && !input.aiOnly) {
-    const group = headingGroup(input.heading.level, input.heading.levelNames);
+    const group = headingGroup(input.heading.level, input.heading.levelNames, input.canInsertHeading ?? false);
     if (group.length > 0) groups.push(group);
   }
   if (input.paraDoc) {

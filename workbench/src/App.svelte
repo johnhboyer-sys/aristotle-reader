@@ -11,6 +11,7 @@
   import AddWorkDialog from './components/AddWorkDialog.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import NewDocumentDialog from './components/NewDocumentDialog.svelte';
+  import ProfileDialog from './components/ProfileDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import AskPanel from './components/AskPanel.svelte';
   import AiPanel from './components/AiPanel.svelte';
@@ -62,6 +63,9 @@
   let addWorkOpen = $state(false);
   let newDocumentOpen = $state(false);
   let librarySettingsOpen = $state(false);
+  // The document work whose organization profile the "Manage levels…" dialog
+  // is editing (null = closed).
+  let manageLevelsWork = $state<WorkManifest | null>(null);
   let importOpen = $state(false);
   let importDefaultWorkId = $state<string | undefined>(undefined);
   let referenceImportWorkId = $state<string | null>(null);
@@ -596,6 +600,7 @@
             selected={selection}
             outline={docOutline}
             onOutlineSelect={(rowIndex) => editorRef?.scrollToRow(rowIndex)}
+            onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
@@ -685,6 +690,15 @@
       existingIds={works.map((w) => w.id)}
       onClose={() => (newDocumentOpen = false)}
       onCreated={handleDocumentCreated}
+    />
+  {/if}
+
+  {#if manageLevelsWork}
+    <ProfileDialog
+      workId={manageLevelsWork.id}
+      initialLevels={manageLevelsWork.profile?.levels ?? []}
+      onClose={() => (manageLevelsWork = null)}
+      onSaved={reloadWorks}
     />
   {/if}
 

@@ -162,3 +162,21 @@ export async function registerFreeWork(
   };
   await storage.write(FREE_WORKS_STORAGE_ID, REGISTRY_FILE, JSON.stringify(payload, null, 2) + '\n');
 }
+
+/**
+ * Update just the organization-profile levels of an existing free work
+ * (D8 heading tools "Manage levels…"). Read-modify-write on top of
+ * registerFreeWork; a no-op when the work id isn't a known free work. Passing
+ * levels that sanitize to nothing clears them (the work reverts to
+ * DEFAULT_PROFILE).
+ */
+export async function updateFreeWorkLevels(
+  workId: string,
+  levels: WorkLevel[],
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  const record = (await listFreeWorkRecords(storage)).find((w) => w.id === workId);
+  if (!record) return;
+  const sanitized = sanitizeLevels(levels);
+  await registerFreeWork({ ...record, levels: sanitized }, storage);
+}

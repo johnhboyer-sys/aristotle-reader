@@ -77,6 +77,9 @@ export interface StructuralRowSnapshot {
   splitOffsets?: number[];
   /** Paragraph-layer English, when the row has one. */
   englishPara?: PMNode;
+  /** Heading level (D8 heading tools), when the row carries one — so an
+   * inserted/marked heading survives structural undo/redo. */
+  headingLevel?: number;
 }
 
 /**

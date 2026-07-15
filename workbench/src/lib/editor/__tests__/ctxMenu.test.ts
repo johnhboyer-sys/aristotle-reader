@@ -127,6 +127,34 @@ describe('buildCtxMenu — the per-view menu matrix', () => {
     expect(group.map((i) => i.level)).toEqual([1, 2, 3]);
   });
 
+  it('canInsertHeading adds "Insert heading line here" to the end of the heading group', () => {
+    expect(
+      headTitles({
+        scheme: paragraphScheme,
+        heading: { level: null, levelNames: DEFAULT_NAMES },
+        canInsertHeading: true,
+        paraDoc: { canMergePrev: false, joinBoundary: null },
+      }),
+    ).toEqual(['Mark as Heading', 'Mark as Section title', 'Insert heading line here']);
+  });
+
+  it('the insert item is offered even on a row that already has a level', () => {
+    expect(
+      headTitles({
+        scheme: paragraphScheme,
+        heading: { level: 1, levelNames: DEFAULT_NAMES },
+        canInsertHeading: true,
+        paraDoc: { canMergePrev: false, joinBoundary: null },
+      }),
+    ).toEqual(['Mark as Section title', 'Clear heading', 'Insert heading line here']);
+  });
+
+  it('without canInsertHeading there is no insert item (plain-line docs cannot splice)', () => {
+    expect(
+      headTitles({ scheme: plainLineScheme, heading: { level: null, levelNames: DEFAULT_NAMES } }),
+    ).not.toContain('Insert heading line here');
+  });
+
   it('corpus works never carry the heading group (no heading input)', () => {
     expect(ids({}).some((g) => g.some((id) => id === 'heading-mark' || id === 'heading-clear'))).toBe(false);
   });

@@ -171,8 +171,11 @@
   // The work's organization profile (D8 heading tools): names the heading tiers
   // shown in the "Mark as…" menu and looked up for status text. Default (two
   // in-page tiers) when the work carries none.
-  const profile = fixture.profile ?? DEFAULT_PROFILE;
-  const levelNames = profile.levels.map((l) => l.name);
+  // $derived so an edit to the work's organization profile (Manage levels…)
+  // flows in without remounting the editor: App reloads the work, currentChapter
+  // re-derives the fixture with the new profile, and this recomputes.
+  const profile = $derived(fixture.profile ?? DEFAULT_PROFILE);
+  const levelNames = $derived(profile.levels.map((l) => l.name));
   const history = new AppHistory();
   const storage = libraryStorage();
   const fileName = chapterFileName(fixture.book, fixture.chapter);
@@ -532,6 +535,9 @@
      * the clicked row's current role. Set only by the source handlers under
      * the document-spine gate; corpus menus never carry it. */
     heading?: { level: number | null; levelNames: string[] };
+    /** Whether the heading group offers "Insert heading line here" (document
+     * paragraph docs only — canEditRowStructure). */
+    canInsertHeading?: boolean;
     /** The rendered items — built by buildCtxMenu (ctxMenu.ts) from the
      * fields above; the template renders the model, never re-decides it. */
     model: CtxMenuModel;
@@ -568,6 +574,7 @@
         aiOnly: m.aiOnly,
         chunk: m.chunk,
         heading: m.heading,
+        canInsertHeading: m.canInsertHeading,
         merge: m.merge,
         batchRowCount: m.translateRows?.length ?? 1,
         noun: m.noun,
@@ -761,6 +768,7 @@
       docs: englishDocsOf(row).map((d) => docFromJSON(d)),
       ...(offsets && offsets.length > 0 ? { splitOffsets: offsets.slice() } : {}),
       ...(para && para.content.size > 0 ? { englishPara: para } : {}),
+      ...(row.headingLevel ? { headingLevel: row.headingLevel } : {}),
     };
   }
 
@@ -778,13 +786,15 @@
   }
 
   function rowModelFromStructSnapshot(s: StructuralRowSnapshot): RowModel {
-    return rowModelFromStruct({
+    const row = rowModelFromStruct({
       greek: s.greek,
       english: s.docs[0]?.toJSON() ?? emptyRowDocJSON(),
       ...(s.docs.length > 1 ? { english2: s.docs.slice(1).map((d) => d.toJSON()) } : {}),
       ...(s.splitOffsets && s.splitOffsets.length > 0 ? { splitOffsets: s.splitOffsets.slice() } : {}),
       ...(s.englishPara ? { englishPara: s.englishPara.toJSON() } : {}),
     });
+    if (s.headingLevel) row.headingLevel = s.headingLevel;
+    return row;
   }
 
   /** Re-derive every row's ordinal address (¶N / N) after a splice — for
@@ -2418,6 +2428,9 @@
       scheme.spineSource === 'document' && d.segment === 0
         ? { level: model.rows[d.rowIndex].headingLevel ?? null, levelNames }
         : undefined;
+    // "Insert heading line here" rides the heading group, but only where rows
+    // can be spliced (paragraph-unit document works — canEditRowStructure).
+    const canInsertHeading = heading ? canEditRowStructure(scheme) : undefined;
     // Paragraph-unit view (D8 §4): document-spine paragraph docs get
     // STRUCTURE editing here (D8 §2/§3): row-level paragraph split/merge plus
     // the sentence-boundary fix-up — the same snapped-click offset drives
@@ -2443,6 +2456,7 @@
           rowNoun,
           translateRows: paraTranslateRows,
           heading,
+          canInsertHeading,
           paraDoc: {
             canMergePrev: d.rowIndex > 0,
             joinBoundary: within === null ? null : joinBoundaryAt(paraRow.splitOffsets, within),
@@ -2555,6 +2569,7 @@
         rowNoun,
         translateRows,
         heading,
+        canInsertHeading: canEditRowStructure(scheme),
         paraDoc: {
           canMergePrev: d.rowIndex > 0,
           joinBoundary: mapped === null ? null : joinBoundaryAt(row.splitOffsets, mapped),
@@ -2652,6 +2667,13 @@
     setRowLevel(m.row, level);
   }
 
+  function menuInsertHeading() {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    performInsertHeading(m.row);
+  }
+
   /** Dispatch a clicked menu item. `heading-mark` carries its target level on
    * the item (one id, N tiers); everything else is a static id → command. */
   function runMenuItem(item: CtxMenuItem) {
@@ -2724,6 +2746,7 @@
     // through this static map (kept here only to satisfy the exhaustive Record).
     'heading-mark': () => {},
     'heading-clear': () => menuSetLevel(null),
+    'heading-insert': menuInsertHeading,
     'ai-translate': menuAssist,
     'ai-translate-batch': menuAssist,
     'ai-reference': menuReference,
@@ -2854,6 +2877,47 @@
   }
 
   // ── document-spine structure editing (D8 §2/§3/§5) ──────────────────────
+  /**
+   * Insert a NEW empty heading row ABOVE row r (D8 heading tools) and focus it
+   * so the user types the label immediately. Document paragraph works only
+   * (canEditRowStructure — where paragraphStarts never coexists, so nothing to
+   * shift). Reuses the row-splice primitive: ordinal addresses re-derive, and
+   * headingLevel + footnote anchoring ride on the row objects. ONE structural
+   * undo entry removes it (headingLevel now round-trips in the snapshot). The
+   * label lives in the row's English/translation cell; the Greek column stays
+   * empty (a user-authored marker, not source text).
+   */
+  function performInsertHeading(r: number) {
+    if (!canEditRowStructure(scheme)) return;
+    if (r < 0 || r > model.rows.length) return;
+    // Default to the shallowest in-page heading tier, else level 1.
+    const headingIdx = profile.levels.findIndex((l) => l.navRole === 'heading');
+    const level = (headingIdx >= 0 ? headingIdx : 0) + 1;
+    dismissAssist();
+    history.breakCoalescing();
+    const selBefore = focusedSelRef();
+    const newRow: RowModel = {
+      address: { scheme: model.scheme, raw: '' },
+      greek: '',
+      english: emptyRowDocJSON(),
+      headingLevel: level,
+    };
+    spliceRows(r, 0, [newRow]);
+    const selAfter: SelRef = { row: r, segment: 0, layer: activeLayer(), anchor: 0, head: 0 };
+    history.push({
+      edits: [],
+      structural: { index: r, before: [], after: [structSnapshotOfRow(newRow)] },
+      selBefore,
+      selAfter,
+    });
+    markModelDirty();
+    setStatus(`Inserted a ${levelName(profile, level)} line — type its text.`);
+    void tick().then(() => {
+      refreshFnDisplay();
+      focusSel(selAfter);
+    });
+  }
+
   /**
    * Row-level PARAGRAPH SPLIT (D8 §2 — the user owns row count): model row r
    * becomes TWO rows at a validated word-start offset. Distribution is the

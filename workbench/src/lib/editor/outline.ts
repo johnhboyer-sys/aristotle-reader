@@ -17,13 +17,24 @@ export interface OutlineItem {
   label: string;
 }
 
-/** Plain text (no markup) of a row's committed English segment 0. */
-function englishText(row: RowModel): string {
+/** Plain text (no markup) of a JSON doc, empty on any failure. */
+function plainText(doc: RowModel['english'] | undefined): string {
+  if (!doc) return '';
   try {
-    return docFromJSON(row.english).textContent.trim();
+    return docFromJSON(doc).textContent.trim();
   } catch {
     return '';
   }
+}
+
+/**
+ * A heading's translation text. A paragraph-unit doc (e.g. the Summa) commits
+ * translations to the PARAGRAPH layer (englishPara); a line/sentence doc to the
+ * sentence layer (english). Prefer whichever layer carries text so the rail
+ * label populates regardless of the work's granularity.
+ */
+function englishText(row: RowModel): string {
+  return plainText(row.englishPara) || plainText(row.english);
 }
 
 /**

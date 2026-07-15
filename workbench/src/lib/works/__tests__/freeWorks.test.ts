@@ -6,6 +6,7 @@ import {
   listFreeWorkRecords,
   listFreeWorks,
   registerFreeWork,
+  updateFreeWorkLevels,
 } from '../freeWorks';
 import type { FreeWorkRecord } from '../freeWorks';
 import { DEFAULT_PROFILE } from '../profile';
@@ -42,6 +43,36 @@ describe('free-work registry (works.json in the library root)', () => {
       'works.json',
       JSON.stringify({ version: 1, works: [{ id: 'x', title: 'X', citation_scheme: 'paragraph', levels: 'junk' }] }),
     );
+    expect((await listFreeWorkRecords(storage))[0].levels).toBeUndefined();
+  });
+
+  it('updateFreeWorkLevels replaces only the levels, keeping other fields', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, language: 'Latin' }, storage);
+    const levels = [
+      { name: 'Part', navRole: 'book' as const },
+      { name: 'Question', navRole: 'chapter' as const },
+      { name: 'Article', navRole: 'heading' as const },
+    ];
+    await updateFreeWorkLevels('my-doc', levels, storage);
+    const rec = (await listFreeWorkRecords(storage))[0];
+    expect(rec).toEqual({ ...RECORD, language: 'Latin', levels });
+  });
+
+  it('updateFreeWorkLevels with no usable levels clears them (reverts to default)', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(
+      { ...RECORD, levels: [{ name: 'Part', navRole: 'book' }] },
+      storage,
+    );
+    await updateFreeWorkLevels('my-doc', [{ name: '  ', navRole: 'heading' }], storage);
+    expect((await listFreeWorkRecords(storage))[0].levels).toBeUndefined();
+  });
+
+  it('updateFreeWorkLevels is a no-op for an unknown work id', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await updateFreeWorkLevels('nope', [{ name: 'X', navRole: 'book' }], storage);
     expect((await listFreeWorkRecords(storage))[0].levels).toBeUndefined();
   });
 
