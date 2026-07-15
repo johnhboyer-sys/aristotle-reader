@@ -62,6 +62,8 @@
   import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf, hasSentenceEnglish, hasParagraphEnglish } from './model';
   import type { ChapterModel, RowModel } from './model';
   import { rowSchema, docFromJSON, markerIdsIn, emptyRowDocJSON } from './schema';
+  import { buildOutline } from './outline';
+  import type { OutlineItem } from './outline';
   import type { PMDocJSON } from './schema';
   import { assertRoundTrip, buildRowDoc, runsOf, orphanFnRefIds, joinRowDocs } from './serialize';
   import type { InlineRun } from './serialize';
@@ -153,7 +155,15 @@
   import InterpolatedUnit from './InterpolatedUnit.svelte';
   import './editor.css';
 
-  let { fixture }: { fixture: FixtureChapter } = $props();
+  let {
+    fixture,
+    onOutline,
+  }: {
+    fixture: FixtureChapter;
+    /** Emitted whenever the heading outline changes (roles toggled or a
+     * heading's translation commits). Document-spine works only carry one. */
+    onOutline?: (items: OutlineItem[]) => void;
+  } = $props();
 
   // ── model + non-reactive machinery ─────────────────────────────────────
   const model: ChapterModel = modelFromFixture(fixture);
@@ -414,6 +424,29 @@
   let displayRows = $state<DisplayRow[]>([]);
   function refreshDisplayRows() {
     displayRows = expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence');
+    refreshOutline();
+  }
+
+  // Heading outline (D8 heading tools) for the rail's table-of-contents. The
+  // model is non-reactive, so — like displayRows — this is refreshed
+  // explicitly: on every structural change (via refreshDisplayRows) and when a
+  // heading's translation commits (commitRowNow). The $effect re-emits to the
+  // host whenever the array identity changes.
+  let outline = $state<OutlineItem[]>([]);
+  function refreshOutline() {
+    outline = buildOutline(model.rows);
+  }
+  $effect(() => {
+    onOutline?.(outline);
+  });
+
+  /** Scroll a model row into view (rail outline click). Resolves the row to its
+   * segment-0 display ordinal, then scrolls the matching grid cell. */
+  export function scrollToRow(rowIndex: number): void {
+    const g = displayRows.findIndex((d) => d.rowIndex === rowIndex && d.segment === 0);
+    if (g < 0) return;
+    const el = gridEl?.querySelector<HTMLElement>(`[data-row-en="${g}"], [data-row="${g}"]`);
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
   // Flowing-view paragraph grouping (John 2026-07-14): a D6 line-split is a
   // paragraph break, so group the display rows into paragraphs — a new group
@@ -920,6 +953,8 @@
     if (changed) {
       markModelDirty();
       publishFootnotes(); // anchored-phrase snippets follow the text
+      // A heading's translation just changed → refresh its rail-outline label.
+      if (row.role) refreshOutline();
     }
   }
 

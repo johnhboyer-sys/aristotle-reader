@@ -1,6 +1,7 @@
 <script module lang="ts">
   // The rail's input shapes (App builds these from manifests + corpus).
   import type { WorkManifest } from '../lib/works/manifest';
+  import type { OutlineItem } from '../lib/editor/outline';
 
   export interface RailChapterStatus {
     /** Not yet downloaded to this Mac (iCloud "Optimize Mac Storage" stub). */
@@ -47,6 +48,8 @@
   let {
     railWorks,
     selected,
+    outline = [],
+    onOutlineSelect,
     onSelect,
     onAddWork,
     onNewDocument,
@@ -55,6 +58,12 @@
   }: {
     railWorks: RailWork[];
     selected: RailSelection | null;
+    /** Heading outline of the OPEN document-spine work (D8 heading tools):
+     * the table-of-contents shown under its "Document" row, each entry labeled
+     * by the heading's translation. Empty for corpus works / untagged docs. */
+    outline?: OutlineItem[];
+    /** Jump the editor to a heading row (rail outline click). */
+    onOutlineSelect?: (rowIndex: number) => void;
     onSelect: (workId: string, book: number, chapter: number) => void;
     onAddWork?: () => void;
     /** "New document…" — create a corpus-free document (D8 §6). Gated like
@@ -121,7 +130,8 @@
       </div>
 
       {#if rw.status === 'ready' && rw.singleDocument}
-        <!-- Corpus-free document: no book/chapter tree, one quiet row. -->
+        <!-- Corpus-free document: no book/chapter tree, one quiet row, plus a
+             heading outline (D8) for the OPEN doc, labeled by translations. -->
         <ul class="chapters doc-row">
           <li>
             <button
@@ -132,6 +142,20 @@
               Document
             </button>
           </li>
+          {#if isSelected(rw.work.id, 1, 1) && outline.length > 0}
+            {#each outline as item (item.rowIndex)}
+              <li>
+                <button
+                  class="chapter-row outline-row"
+                  class:outline-sub={item.level === 2}
+                  title={item.label}
+                  onclick={() => onOutlineSelect?.(item.rowIndex)}
+                >
+                  {item.label}
+                </button>
+              </li>
+            {/each}
+          {/if}
         </ul>
       {:else if rw.status === 'ready'}
         <ul class="books">
@@ -362,6 +386,24 @@
     background: var(--accent);
     color: var(--on-accent);
     font-weight: 500;
+  }
+
+  /* Heading outline (D8): a table-of-contents under the Document row. Headers
+     sit at the document indent; section titles (level 2) tuck in further.
+     Labels can be long translations, so clamp to one line with an ellipsis. */
+  .outline-row {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    padding-left: var(--space-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .outline-row.outline-sub {
+    padding-left: calc(var(--space-3) + var(--space-3));
+    font-size: 0.76rem;
+    color: var(--text-light);
   }
 
   /* Not-yet-downloaded (iCloud placeholder stub): greyed, unclickable, no

@@ -19,6 +19,7 @@
   import ReferenceImportDialog from './components/ReferenceImportDialog.svelte';
   import ExportButton from './components/ExportButton.svelte';
   import ChapterEditor from './lib/editor/ChapterEditor.svelte';
+  import type { OutlineItem } from './lib/editor/outline';
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
@@ -72,6 +73,11 @@
   let corpora = $state<Record<string, WorkCorpus | null>>({});
   let booted = $state(false);
   let selection = $state<RailSelection | null>(null);
+  // Heading outline of the OPEN document-spine work (D8 heading tools), emitted
+  // by the editor; drives the rail's table-of-contents. Reset on every
+  // selection change so a previous doc's outline never leaks to the next.
+  let docOutline = $state<OutlineItem[]>([]);
+  let editorRef = $state<ReturnType<typeof ChapterEditor>>();
 
   // Per-work library-file status (placeholders/conflicted copies — build
   // spec §11), keyed by chapterFileName. Tauri only (mtime/listing are null
@@ -255,6 +261,7 @@
   });
 
   function select(workId: string, book: number, chapter: number) {
+    if (workId !== selection?.workId) docOutline = [];
     selection = { workId, book, chapter };
     void updateSettings({ lastOpened: { workId, book, chapter } });
   }
@@ -587,6 +594,8 @@
           <LibraryRail
             {railWorks}
             selected={selection}
+            outline={docOutline}
+            onOutlineSelect={(rowIndex) => editorRef?.scrollToRow(rowIndex)}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
@@ -603,7 +612,7 @@
           <!-- corpus still loading; keep the viewport quiet -->
         {:else if currentChapter}
           {#key `${selection?.workId}:${selection?.book}.${selection?.chapter}`}
-            <ChapterEditor fixture={currentChapter} />
+            <ChapterEditor bind:this={editorRef} fixture={currentChapter} onOutline={(o) => (docOutline = o)} />
           {/key}
         {:else if selection}
           <div class="empty-state-wrap">
