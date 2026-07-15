@@ -69,7 +69,7 @@
 import yaml from 'js-yaml';
 import type { SchemeId } from '../citation/types';
 import { getScheme, isKnownScheme } from '../citation/registry';
-import type { ChapterFile, ChapterFileMeta, ColumnStart, Footnote, LineSplit } from './types';
+import type { ChapterFile, ChapterFileMeta, ColumnStart, Footnote, HeaderMark, LineSplit, RowHeaderLevel } from './types';
 import { ChapterFileError } from './types';
 
 /**
@@ -305,6 +305,35 @@ export function sanitizeParagraphStarts(val: unknown): { starts: number[] | unde
 }
 
 /**
+ * LENIENT sanitize of the frontmatter `headers` field — same degrade-don't-
+ * refuse policy as sanitizeParagraphStarts (headings are pure display metadata,
+ * D8 heading tools). Tokens are `<row>:<level>` pairs; a token that is not that
+ * shape, a non-positive/duplicate row, or a level outside {1,2} is dropped.
+ * A row appears at most once (one role per row); output is sorted by row.
+ * Out-of-range rows need the row count and are filtered in parseChapterFile.
+ * Returns undefined when nothing survives (so the meta key stays absent).
+ */
+export function sanitizeHeaders(val: unknown): HeaderMark[] | undefined {
+  const text = typeof val === 'string' ? val : typeof val === 'number' ? String(val) : undefined;
+  if (text === undefined) return undefined;
+
+  const seen = new Set<number>();
+  const marks: HeaderMark[] = [];
+  for (const token of text.split(',').map((t) => t.trim())) {
+    const parsed = /^(\d+):(\d+)$/.exec(token);
+    if (!parsed) continue;
+    const row = Number(parsed[1]);
+    const level = Number(parsed[2]);
+    if (!Number.isSafeInteger(row) || row <= 0 || seen.has(row)) continue;
+    if (level !== 1 && level !== 2) continue;
+    seen.add(row);
+    marks.push({ row, level: level as RowHeaderLevel });
+  }
+  marks.sort((a, b) => a.row - b.row);
+  return marks.length > 0 ? marks : undefined;
+}
+
+/**
  * Semantic validity of one paragraph-split offset against its row's OWN
  * [GREEK] line (the canonical Greek that travels with the file — never the
  * live corpus). Used by hydration's drift policy (d6 divergence E): an
@@ -421,6 +450,11 @@ function parseFrontmatter(
     paragraphStartsSanitized = sanitized.modified;
   }
 
+  let headers: HeaderMark[] | undefined;
+  if ('headers' in v) {
+    headers = sanitizeHeaders(v['headers']);
+  }
+
   const meta: ChapterFileMeta = {
     schemaVersion,
     work,
@@ -432,6 +466,7 @@ function parseFrontmatter(
     ...(columnStarts ? { columnStarts } : {}),
     ...(lineSplits ? { lineSplits } : {}),
     ...(paragraphStarts ? { paragraphStarts } : {}),
+    ...(headers ? { headers } : {}),
   };
   return { meta, rest, columnStartsLine, paragraphStartsSanitized };
 }
@@ -594,6 +629,17 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
     }
   }
 
+  // Same out-of-range repair for `headers` (the last meta key). Heading roles
+  // are the most cosmetic of the display-metadata fields, so a dropped entry
+  // degrades silently — no separate load notice.
+  if (meta.headers) {
+    const inRange = meta.headers.filter((h) => h.row <= greekLines.length);
+    if (inRange.length !== meta.headers.length) {
+      if (inRange.length > 0) meta.headers = inRange;
+      else delete meta.headers;
+    }
+  }
+
   return {
     meta,
     greekLines,
@@ -668,6 +714,14 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
       throw new ChapterFileError('serializeChapterFile: paragraph_starts, when present, must contain at least one row ordinal');
     }
     lines.push(`paragraph_starts: "${meta.paragraphStarts.join(',')}"`);
+  }
+  if (meta.headers !== undefined) {
+    if (meta.headers.length === 0) {
+      // Same anti-lossy policy as the other optional lists: an empty array
+      // would round-trip to "absent" — refuse loudly instead.
+      throw new ChapterFileError('serializeChapterFile: headers, when present, must contain at least one <row>:<level> pair');
+    }
+    lines.push(`headers: "${meta.headers.map((h) => `${h.row}:${h.level}`).join(',')}"`);
   }
   lines.push('---');
   return lines.join('\n');

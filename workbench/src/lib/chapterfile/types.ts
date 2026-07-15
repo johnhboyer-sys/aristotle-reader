@@ -64,6 +64,34 @@ export interface ChapterFileMeta {
    * paragraph group. Meaningful only for line-segmented corpus-free imports.
    */
   paragraphStarts?: number[];
+  /**
+   * OPTIONAL heading roles for document-spine works (frontmatter `headers`,
+   * D8 heading tools): the rows the user has marked as a heading/section title
+   * and their level. Absent = no headings. Like `paragraphStarts` this is
+   * lenient display metadata; out-of-range/duplicate/junk entries degrade at
+   * parse (sanitizeHeaders) instead of refusing the file.
+   */
+  headers?: HeaderMark[];
+}
+
+/**
+ * A row's structural role in a document-spine work (D8 heading tools). Level 1
+ * (`header`) is a top-level heading; level 2 (`subheader`) is a section title
+ * nested under it. Absent = an ordinary content row. Headings stay TRANSLATABLE
+ * (both columns keep their text); the role only changes how the row renders
+ * (as a title, out of the flowing views) and lets it anchor a part boundary.
+ */
+export type RowHeaderLevel = 1 | 2;
+
+/**
+ * One `<rowOrdinal>:<level>` pair from the frontmatter `headers` field: the
+ * 1-based row ordinal that carries a heading role and its level (1 or 2). Like
+ * `paragraph_starts` this is OPTIONAL, LENIENT display metadata — a malformed
+ * value degrades (see sanitizeHeaders) rather than refusing the file.
+ */
+export interface HeaderMark {
+  row: number;
+  level: RowHeaderLevel;
 }
 
 export interface Footnote {

@@ -52,7 +52,7 @@ import {
   decodeParaLine,
 } from '../editor/serialize';
 import { parseChapterFile, serializeChapterFile, rowAddress, isValidSplitOffset, ChapterFileError } from '../chapterfile';
-import type { ChapterFile, ColumnStart, LineSplit } from '../chapterfile';
+import type { ChapterFile, ColumnStart, HeaderMark, LineSplit } from '../chapterfile';
 import { libraryStorage } from './storage';
 import type { LibraryStorage } from './storage';
 
@@ -237,6 +237,13 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
     : undefined;
   const englishParaLines = strippedParaLines?.some((line) => line.length > 0) ? strippedParaLines : undefined;
 
+  // Heading roles (D8 heading tools) → chapter-file `headers` (row:level).
+  // Derived from the rows' role, so the round-trip mirrors hydration exactly.
+  const headers: HeaderMark[] = [];
+  model.rows.forEach((r, i) => {
+    if (r.role) headers.push({ row: i + 1, level: r.role === 'header' ? 1 : 2 });
+  });
+
   return {
     meta: {
       schemaVersion: 1,
@@ -256,6 +263,8 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
       ...(model.paragraphStarts && model.paragraphStarts.length > 0
         ? { paragraphStarts: model.paragraphStarts }
         : {}),
+      // headers rides last, matching parseChapterFile's meta key order.
+      ...(headers.length > 0 ? { headers } : {}),
     },
     greekLines: model.rows.map((r) => r.greek),
     englishLines: model.rows.map((r) => serializeRowSegments(englishDocsOf(r))),
@@ -440,6 +449,15 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
       ...(offsets.length > 0 ? { splitOffsets: offsets } : {}),
       ...(segments.length > 1 ? { english2: segments.slice(1) } : {}),
     });
+  }
+
+  // Heading roles (D8 heading tools): apply the chapter-file `headers`
+  // (row:level, 1-based, already range-filtered at parse) onto the rows.
+  if (file.meta.headers) {
+    for (const h of file.meta.headers) {
+      const row = rows[h.row - 1];
+      if (row) row.role = h.level === 1 ? 'header' : 'subheader';
+    }
   }
 
   // Anchored-ness is derived: a footnote is anchored iff its marker survives

@@ -324,6 +324,28 @@ describe('model → file → model round trip', () => {
     const h = hydrateFromFile(file, spineOf(model), SCHEME);
     expect(h.footnotes).toEqual([{ id: '1', body: '', anchored: true }]);
   });
+
+  it('round-trips heading roles through serialize → parse → hydrate', () => {
+    const model = makeModel();
+    model.rows[0].role = 'header';
+    model.rows[1].role = 'subheader';
+    const content = serializeModel(model);
+    expect(content).toContain('headers: "1:1,2:2"');
+    const file = parseChapterFile(content, 'roles-rt');
+    expect(file.meta.headers).toEqual([
+      { row: 1, level: 1 },
+      { row: 2, level: 2 },
+    ]);
+    const h = hydrateFromFile(file, spineOf(model), SCHEME);
+    expect(h.rows[0].role).toBe('header');
+    expect(h.rows[1].role).toBe('subheader');
+    expect(h.rows[2].role).toBeUndefined();
+  });
+
+  it('writes no headers key when no row carries a role', () => {
+    const content = serializeModel(makeModel());
+    expect(content).not.toContain('headers:');
+  });
 });
 
 describe('loadChapterFile', () => {
