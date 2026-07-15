@@ -30,6 +30,7 @@
     flash,
     focused,
     chunkStart = false,
+    role = undefined,
     pasteConfirm,
     onPasteConfirm,
     onPasteCancel,
@@ -66,6 +67,8 @@
     focused: boolean;
     /** First unit of a paragraph chunk/group (§3/§5 grouping). */
     chunkStart?: boolean;
+    /** Heading role (D8 heading tools): renders the unit as a title. */
+    role?: 'header' | 'subheader';
     pasteConfirm: number | null;
     onPasteConfirm: () => void;
     onPasteCancel: () => void;
@@ -87,6 +90,8 @@
   class="interp-unit"
   class:row-focus={focused}
   class:chunk-start={chunkStart}
+  class:row-header={role === 'header'}
+  class:row-subheader={role === 'subheader'}
   data-row={gridRow}
 >
   <div class="interp-addr">{addr}</div>

@@ -17,6 +17,7 @@
     sentenceText = null,
     flash,
     chunkStart = false,
+    role = undefined,
     pasteConfirm,
     onPasteConfirm,
     onPasteCancel,
@@ -33,6 +34,8 @@
     /** Which English layer the hosted editor edits (D8 §4): 'sentence' (grid /
      * line views) or 'para' (paragraph-unit view → englishPara). */
     layer?: EditLayer;
+    /** Heading role (D8 heading tools): styles the editable cell as a title. */
+    role?: 'header' | 'subheader';
     /** Read-only sentence-layer translation to show beneath the paragraph
      * field when this row also has one (§4 "text stays at its unit"). Null
      * outside the paragraph-unit view or when the row has no sentence English. */
@@ -58,6 +61,8 @@
   class="en-cell"
   class:row-flash={flash}
   class:chunk-start={chunkStart}
+  class:row-header={role === 'header'}
+  class:row-subheader={role === 'subheader'}
   style="grid-row: {gridRow + 1}"
   data-row-en={gridRow}
   oncontextmenu={onContext}

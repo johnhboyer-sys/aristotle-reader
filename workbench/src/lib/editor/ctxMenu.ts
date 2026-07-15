@@ -20,6 +20,9 @@ export type CtxMenuItemId =
   | 'para-merge'
   | 'sentence-split'
   | 'sentence-join'
+  | 'header-mark'
+  | 'subheader-mark'
+  | 'header-clear'
   | 'ai-translate'
   | 'ai-translate-batch'
   | 'ai-reference'
@@ -48,6 +51,13 @@ export interface CtxMenuInput {
   aiOnly?: boolean;
   /** Plain-line chunk-grouping toggle state (absent = not offered). */
   chunk?: 'add' | 'remove';
+  /**
+   * Heading-role toggle state for document-spine works (D8 heading tools):
+   * the clicked row's current role, or null for an ordinary row. Absent =
+   * not offered (corpus works never carry it). Populated only for the
+   * source-cell menu of a document-spine work.
+   */
+  heading?: { role: 'header' | 'subheader' | null };
   /** D6: the clicked row is already split → offer the merge. */
   merge: boolean;
   /** Rows a batch translate would act on (≤1 = single-row flow). */
@@ -60,8 +70,45 @@ export interface CtxMenuInput {
   sourceNoun: string;
 }
 
+/**
+ * The heading-role group (D8 heading tools). Offers the two roles the row is
+ * NOT currently in, plus a clear when it has one — so the group always has
+ * exactly two items and the current state is implied by what's absent.
+ */
+function headingGroup(role: 'header' | 'subheader' | null): CtxMenuItem[] {
+  const items: CtxMenuItem[] = [];
+  if (role !== 'header') {
+    items.push({
+      id: 'header-mark',
+      title: 'Mark as heading',
+      desc: 'Renders this row as a title; it leaves the flowing view',
+    });
+  }
+  if (role !== 'subheader') {
+    items.push({
+      id: 'subheader-mark',
+      title: 'Mark as section title',
+      desc: 'Renders this row as a smaller section heading',
+    });
+  }
+  if (role !== null) {
+    items.push({
+      id: 'header-clear',
+      title: 'Clear heading',
+      desc: 'Return this row to ordinary text',
+    });
+  }
+  return items;
+}
+
 export function buildCtxMenu(input: CtxMenuInput): CtxMenuModel {
   const groups: CtxMenuItem[][] = [];
+  // Heading roles ride at the very top of a document-spine source-cell menu
+  // (house convention: structure first). Present only when the caller passes
+  // `heading` — i.e. a document-spine work's source cell, never corpus.
+  if (input.heading && !input.aiOnly) {
+    groups.push(headingGroup(input.heading.role));
+  }
   if (input.paraDoc) {
     // Document-spine paragraph rows (D8 §2/§3): row-level paragraph ops
     // first, then the sentence fix-up — the D6 splitOffsets machinery

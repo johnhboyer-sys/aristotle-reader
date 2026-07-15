@@ -77,6 +77,32 @@ describe('buildCtxMenu — the per-view menu matrix', () => {
       AI,
     ]);
   });
+
+  it('document-spine source cell, ordinary row → heading group first (two marks)', () => {
+    expect(
+      ids({ scheme: paragraphScheme, heading: { role: null }, paraDoc: { canMergePrev: false, joinBoundary: null } })[0],
+    ).toEqual(['header-mark', 'subheader-mark']);
+  });
+
+  it('document-spine source cell, already a header → section-title + clear', () => {
+    expect(
+      ids({ scheme: plainLineScheme, heading: { role: 'header' } })[0],
+    ).toEqual(['subheader-mark', 'header-clear']);
+  });
+
+  it('document-spine source cell, already a subheader → heading + clear', () => {
+    expect(
+      ids({ scheme: plainLineScheme, heading: { role: 'subheader' } })[0],
+    ).toEqual(['header-mark', 'header-clear']);
+  });
+
+  it('corpus works never carry the heading group (no heading input)', () => {
+    expect(ids({}).some((g) => g.some((id) => id.startsWith('header') || id === 'subheader-mark'))).toBe(false);
+  });
+
+  it('the heading group is suppressed on an AI-only (English) cell', () => {
+    expect(ids({ scheme: plainLineScheme, heading: { role: null }, aiOnly: true })).toEqual([AI]);
+  });
 });
 
 describe('buildCtxMenu — wording', () => {

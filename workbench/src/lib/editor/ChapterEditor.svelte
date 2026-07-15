@@ -423,10 +423,17 @@
   // carries its global display index `g` (cell identity / focus / handlers all
   // key off it). Purely a display regrouping — the per-line model is untouched.
   const flowParagraphs = $derived.by(() => {
-    const groups: { key: string; rows: { d: DisplayRow; g: number }[] }[] = [];
+    const groups: { key: string; heading: boolean; rows: { d: DisplayRow; g: number }[] }[] = [];
+    let prevWasHeading = false;
     displayRows.forEach((d, g) => {
-      if (g === 0 || d.continuation) groups.push({ key: d.key, rows: [] });
+      // A heading row (D8 heading tools) never flows: it is its own single-row
+      // group, and the row after it opens a fresh paragraph too.
+      const isHeading = !!d.role;
+      if (g === 0 || d.continuation || isHeading || prevWasHeading) {
+        groups.push({ key: d.key, heading: isHeading, rows: [] });
+      }
       groups[groups.length - 1]?.rows.push({ d, g });
+      prevWasHeading = isHeading;
     });
     return groups;
   });
@@ -482,6 +489,10 @@
     paraDoc?: { canMergePrev: boolean; joinBoundary: number | null };
     /** Plain-line document-spine rows (D8 §5): grouping toggle for this row. */
     chunk?: 'add' | 'remove';
+    /** Heading-role toggle for document-spine source cells (D8 heading tools):
+     * the clicked row's current role. Set only by the source handlers under
+     * the document-spine gate; corpus menus never carry it. */
+    heading?: { role: 'header' | 'subheader' | null };
     /** The rendered items — built by buildCtxMenu (ctxMenu.ts) from the
      * fields above; the template renders the model, never re-decides it. */
     model: CtxMenuModel;
@@ -517,6 +528,7 @@
         paraDoc: m.paraDoc,
         aiOnly: m.aiOnly,
         chunk: m.chunk,
+        heading: m.heading,
         merge: m.merge,
         batchRowCount: m.translateRows?.length ?? 1,
         noun: m.noun,
@@ -2358,6 +2370,13 @@
     // EVERY view; para-layer targets read/write englishPara.
     const noun = assistUnitFor(activeLayer(), d.rowIndex);
     const rowNoun = rowUnitNoun();
+    // Heading roles (D8 heading tools): offered on a document-spine work's
+    // source cell only, at the row's first segment. Undefined elsewhere (corpus
+    // menus never show it); buildCtxMenu drops it on aiOnly cells too.
+    const heading =
+      scheme.spineSource === 'document' && d.segment === 0
+        ? { role: model.rows[d.rowIndex].role ?? null }
+        : undefined;
     // Paragraph-unit view (D8 §4): document-spine paragraph docs get
     // STRUCTURE editing here (D8 §2/§3): row-level paragraph split/merge plus
     // the sentence-boundary fix-up — the same snapped-click offset drives
@@ -2382,6 +2401,7 @@
           noun,
           rowNoun,
           translateRows: paraTranslateRows,
+          heading,
           paraDoc: {
             canMergePrev: d.rowIndex > 0,
             joinBoundary: within === null ? null : joinBoundaryAt(paraRow.splitOffsets, within),
@@ -2409,7 +2429,7 @@
     const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
     if (segmentCount(row) > 1) {
       // Already split (Phase-1 UI is single-split): offer the merge.
-      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk });
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk, heading });
       return;
     }
     // Split gesture (John's §4.1): the offset is the click's nearest word
@@ -2417,7 +2437,7 @@
     // snapToWordStart) rejects offset 0 and the line end.
     const within = caretOffsetFromPoint(e);
     const offset = within === null ? null : snapToWordStart(row.greek, d.greekStart + within);
-    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk });
+    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk, heading });
   }
 
   /** Right-click the English cell → the 4 AI modes only. Split/Merge is a
@@ -2464,6 +2484,11 @@
     const row = model.rows[d.rowIndex];
     const selRows = selectedGreekModelRows();
     const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
+    // Heading roles (D8 heading tools): same document-spine gate as the grid.
+    const heading =
+      scheme.spineSource === 'document' && d.segment === 0
+        ? { role: model.rows[d.rowIndex].role ?? null }
+        : undefined;
     if (canEditRowStructure(scheme)) {
       // Unit granularity displays the whole row (its sentence separators
       // contribute no text); sentence granularity displays one slice of it —
@@ -2488,6 +2513,7 @@
         noun,
         rowNoun,
         translateRows,
+        heading,
         paraDoc: {
           canMergePrev: d.rowIndex > 0,
           joinBoundary: mapped === null ? null : joinBoundaryAt(row.splitOffsets, mapped),
@@ -2508,12 +2534,12 @@
           : ('add' as const)
         : undefined;
     if (segmentCount(row) > 1) {
-      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk: chunkState });
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk: chunkState, heading });
       return;
     }
     const local = within === null ? null : sourceOffsetAtDisplay(d.greekSlice, undefined, within);
     const offset = local === null ? null : snapToWordStart(row.greek, d.greekStart + local);
-    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk: chunkState });
+    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk: chunkState, heading });
   }
 
   function menuSplit() {
@@ -2578,6 +2604,13 @@
     toggleChunkStart(m.row, m.chunk);
   }
 
+  function menuSetRole(role: 'header' | 'subheader' | null) {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    setRowRole(m.row, role);
+  }
+
   /** Right-click the Greek → "Translate with AI" (the discoverable entry
    * point; the hover glyph + ⌘⏎ still work). Translates the whole Bekker
    * line via the same per-row assist flow; the suggestion lands in this
@@ -2636,6 +2669,9 @@
     'para-merge': menuParaMerge,
     'sentence-split': menuSentenceSplit,
     'sentence-join': menuSentenceJoin,
+    'header-mark': () => menuSetRole('header'),
+    'subheader-mark': () => menuSetRole('subheader'),
+    'header-clear': () => menuSetRole(null),
     'ai-translate': menuAssist,
     'ai-translate-batch': menuAssist,
     'ai-reference': menuReference,
@@ -2941,6 +2977,25 @@
     markModelDirty();
     refreshDisplayRows(); // chunkStartGrids re-derives from the fresh displayRows
     setStatus(mode === 'add' ? 'Paragraph starts here.' : 'Merged with the paragraph above.');
+  }
+
+  /** Set (or clear) a row's heading role (D8 heading tools). Document-spine
+   * only. First pass: no undo/redo entry (roles aren't in the history model
+   * yet) — a mis-mark is one menu click to fix. Autosave persists it as the
+   * chapter-file `headers` frontmatter. */
+  function setRowRole(r: number, role: 'header' | 'subheader' | null) {
+    if (scheme.spineSource !== 'document' || r < 0 || r >= model.rows.length) return;
+    if ((model.rows[r].role ?? null) === role) return;
+    model.rows[r].role = role === null ? undefined : role;
+    markModelDirty();
+    refreshDisplayRows();
+    setStatus(
+      role === null
+        ? 'Heading cleared.'
+        : role === 'header'
+          ? 'Marked as heading.'
+          : 'Marked as section title.',
+    );
   }
 
   // ── commands (toolbar + shortcuts) ─────────────────────────────────────
@@ -3635,6 +3690,7 @@
             sentenceText={null}
             {host}
             flash={flashRowIdx === g}
+            role={d.role}
             pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
             onPasteConfirm={confirmPaste}
             onPasteCancel={cancelPaste}
@@ -3654,6 +3710,8 @@
             {#each displayRows as d, g (d.key)}{#if d.continuation}<div class="flow-break" aria-hidden="true"></div>{/if}<!-- svelte-ignore a11y_no_static_element_interactions --><div
                 class="weave-pair"
                 class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                class:row-header={d.role === 'header'}
+                class:row-subheader={d.role === 'subheader'}
                 data-row={g}
               ><div
                   class="weave-grc flow-grc"
@@ -3669,7 +3727,12 @@
                stacked line per row. -->
           <div class="interp-flow lane" bind:this={gridEl}>
             {#each flowParagraphs as para (para.key)}
-              <section class="flow-para">
+              <section
+                class="flow-para"
+                class:flow-heading={para.heading}
+                class:row-header={para.rows[0]?.d.role === 'header'}
+                class:row-subheader={para.rows[0]?.d.role === 'subheader'}
+              >
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div class="flow-grc-block" lang="grc">
                   {#each para.rows as { d, g } (d.key)}<span
@@ -3702,6 +3765,7 @@
             slices={interpSlices(d)}
             paraText={paragraphUnitView || d.segment !== 0 ? null : paraLayerText(d.rowIndex)}
             sentenceText={paragraphUnitView ? sentenceLayerText(d.rowIndex) : null}
+            role={d.role}
             flash={flashRowIdx === g}
             focused={focusRow === d.rowIndex && focusSeg === d.segment}
             chunkStart={chunkStartGrids.has(g)}
@@ -3741,6 +3805,7 @@
           flash={flashRowIdx === g}
           focused={focusRow === d.rowIndex && focusSeg === d.segment}
           chunkStart={chunkStartGrids.has(g)}
+          role={d.role}
           onContext={(e) => onGreekContextMenu(e, g)}
         />
       {/each}
@@ -3762,6 +3827,7 @@
           {host}
           flash={flashRowIdx === g}
           chunkStart={chunkStartGrids.has(g)}
+          role={d.role}
           pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
           onPasteConfirm={confirmPaste}
           onPasteCancel={cancelPaste}
