@@ -228,14 +228,27 @@ describe('§4 distributeSegment', () => {
     expect(pieces.slice(0, 2).every((p) => !p.flagged)).toBe(true);
   });
 
-  it('merged paragraph (many lines → fewer rows) → length-proportional pre-split, ALL flagged', () => {
+  it('merged paragraph with clean sentence boundaries → spread, confident (quiet)', () => {
+    // Every cut lands on a real boundary (. ; .) → coherent pieces, so the
+    // placement is confident and NOT flagged (John 2026-07-15: only shaky
+    // mid-clause hard cuts flag).
     const seg = ['First sentence here. Second sentence follows; third clause too. Fourth ends.'];
     const pieces = distributeSegment(seg, 3, [10, 10, 10]);
     expect(pieces).toHaveLength(3);
-    expect(pieces.every((p) => p.state === 'split')).toBe(true);
-    expect(pieces.every((p) => p.flagged)).toBe(true);
+    expect(pieces.every((p) => !p.flagged)).toBe(true);
     // Text is SPREAD, not dumped on row 0 with the rest blank.
     expect(pieces.filter((p) => p.text.trim().length > 0).length).toBeGreaterThan(1);
+  });
+
+  it('merged paragraph with NO boundary near a target → forced hard cut is flagged', () => {
+    // A long boundary-free run: cutting it into rows must slice mid-clause, so
+    // at least one piece is a flagged shaky guess.
+    const seg = [
+      'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega ',
+    ];
+    const pieces = distributeSegment(seg, 3, [10, 10, 10]);
+    expect(pieces).toHaveLength(3);
+    expect(pieces.some((p) => p.flagged && p.state === 'split')).toBe(true);
   });
 
   it('pre-split cuts at sentence/clause boundaries, weighted by Greek token counts', () => {

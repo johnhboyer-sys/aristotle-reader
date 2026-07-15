@@ -909,13 +909,22 @@ export function distributeSegment(lines: string[], nRows: number, greekTokCounts
     return out;
   }
 
-  // Hard segment (merged paragraphs) → length-proportional pre-split, all ⚠.
+  // Hard segment (merged paragraphs) → length-proportional pre-split. Flag ONLY
+  // the pieces whose bounding cut was shaky (forced mid-clause / far from a
+  // boundary); pieces cut cleanly on both sides read as a confident placement
+  // and go quiet (John 2026-07-15). The segment edges are always clean (marker
+  // boundaries), so the first piece's left and the last piece's right never flag.
   const joined = clean.join(' ');
   const totalTok = greekTokCounts.reduce((a, b) => a + b, 0);
   const weights =
     totalTok > 0 ? greekTokCounts.map((c) => c / totalTok) : greekTokCounts.map(() => 1 / nRows);
-  const pieces = splitProportional(joined, weights);
-  return pieces.map((p) => ({ text: p, state: 'split' as RowState, flagged: true }));
+  const { pieces, cleanCuts } = splitProportional(joined, weights);
+  return pieces.map((p, r) => {
+    const leftClean = r === 0 ? true : cleanCuts[r - 1];
+    const rightClean = r === nRows - 1 ? true : cleanCuts[r];
+    const shaky = !leftClean || !rightClean;
+    return { text: p, state: (shaky ? 'split' : 'matched') as RowState, flagged: shaky };
+  });
 }
 
 /**
@@ -925,7 +934,10 @@ export function distributeSegment(lines: string[], nRows: number, greekTokCounts
  * with the LEFT piece. Always returns exactly `weights.length` pieces (padding
  * with '' if the text runs out).
  */
-function splitProportional(text: string, weights: number[]): string[] {
+function splitProportional(
+  text: string,
+  weights: number[],
+): { pieces: string[]; cleanCuts: boolean[] } {
   const nRows = weights.length;
   // Candidate cut offsets: just AFTER each boundary char (keep punct on left).
   const cuts: number[] = [];
@@ -954,8 +966,14 @@ function splitProportional(text: string, weights: number[]): string[] {
   }
 
   // For each target, pick the nearest candidate cut strictly greater than the
-  // previous chosen cut (keep pieces non-crossing, monotonic).
+  // previous chosen cut (keep pieces non-crossing, monotonic). `cleanCuts[i]`
+  // records whether cut i fell on a REAL sentence/clause boundary: if so, both
+  // pieces it bounds are coherent text and the placement is confident (quiet);
+  // only a FORCED hard cut — no boundary available, so we sliced mid-clause at
+  // the raw proportional offset — is "shaky" and keeps its pieces flagged
+  // (John 2026-07-15).
   const chosen: number[] = [];
+  const cleanCuts: boolean[] = [];
   let prev = 0;
   for (const target of targets) {
     let best = -1;
@@ -968,7 +986,9 @@ function splitProportional(text: string, weights: number[]): string[] {
         best = c;
       }
     }
+    const usedBoundary = best >= 0;
     if (best < 0) best = Math.max(prev + 1, Math.min(totalLen, target)); // no boundary → hard cut at target
+    cleanCuts.push(usedBoundary);
     chosen.push(best);
     prev = best;
   }
@@ -987,7 +1007,7 @@ function splitProportional(text: string, weights: number[]): string[] {
     const tail = out.splice(nRows - 1).join(' ').trim();
     out.push(tail);
   }
-  return out.slice(0, nRows);
+  return { pieces: out.slice(0, nRows), cleanCuts };
 }
 
 // ── chapter-file production (§6) ─────────────────────────────────────────────
