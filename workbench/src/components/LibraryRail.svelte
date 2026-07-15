@@ -2,6 +2,7 @@
   // The rail's input shapes (App builds these from manifests + corpus).
   import type { WorkManifest } from '../lib/works/manifest';
   import type { OutlineItem } from '../lib/editor/outline';
+  import { buildOutlineTree } from '../lib/editor/outline';
 
   export interface RailChapterStatus {
     /** Not yet downloaded to this Mac (iCloud "Optimize Mac Storage" stub). */
@@ -82,6 +83,10 @@
     onImportReference?: (workId: string) => void;
   } = $props();
 
+  // The flat outline, grouped into a nested Book › Chapter › heading tree by
+  // the tiers' nav-roles (buildOutlineTree). Pure derivation of the prop.
+  const outlineTree = $derived(buildOutlineTree(outline));
+
   // Expanded books, keyed "workId:bookN". Start with the selected book open.
   let expanded = $state<Record<string, boolean>>(
     selected ? { [`${selected.workId}:${selected.book}`]: true } : {},
@@ -98,6 +103,30 @@
     );
   }
 </script>
+
+<!-- Recursive nav-tree of the open document's headings (D8): Book › Chapter ›
+     heading, each node a jump-to button; children nest in their own <ul>. -->
+{#snippet outlineNodes(nodes: import('../lib/editor/outline').OutlineNode[])}
+  {#each nodes as node (node.item.rowIndex)}
+    <li>
+      <button
+        class="chapter-row outline-row"
+        class:outline-book={node.item.navRole === 'book'}
+        class:outline-chapter={node.item.navRole === 'chapter'}
+        class:outline-heading={node.item.navRole === 'heading'}
+        title={node.item.label}
+        onclick={() => onOutlineSelect?.(node.item.rowIndex)}
+      >
+        {node.item.label}
+      </button>
+      {#if node.children.length > 0}
+        <ul class="outline-children">
+          {@render outlineNodes(node.children)}
+        </ul>
+      {/if}
+    </li>
+  {/each}
+{/snippet}
 
 <nav class="library" aria-label="Library">
   <div class="library-head">
@@ -145,20 +174,8 @@
               Document
             </button>
           </li>
-          {#if isSelected(rw.work.id, 1, 1) && outline.length > 0}
-            {#each outline as item (item.rowIndex)}
-              <li>
-                <button
-                  class="chapter-row outline-row"
-                  class:outline-sub={item.level >= 2}
-                  style="--lvl: {item.level}"
-                  title={item.label}
-                  onclick={() => onOutlineSelect?.(item.rowIndex)}
-                >
-                  {item.label}
-                </button>
-              </li>
-            {/each}
+          {#if isSelected(rw.work.id, 1, 1) && outlineTree.length > 0}
+            {@render outlineNodes(outlineTree)}
           {/if}
           {#if isSelected(rw.work.id, 1, 1) && onManageLevels}
             <li>
@@ -399,20 +416,32 @@
     font-weight: 500;
   }
 
-  /* Heading outline (D8): a table-of-contents under the Document row. Headers
-     sit at the document indent; section titles (level 2) tuck in further.
-     Labels can be long translations, so clamp to one line with an ellipsis. */
+  /* Navigation tree (D8): Book › Chapter › heading, nested by nav-role. Indent
+     comes from structural nesting (each .outline-children steps in), and the
+     nav-role sets the weight/size — a Book reads bolder than a heading. Labels
+     can be long translations, so clamp to one line with an ellipsis. */
   .outline-row {
     display: block;
     font-size: 0.8rem;
     color: var(--text-mid);
-    /* Indent by tier: level 1 sits at the base, each deeper tier steps in. */
-    padding-left: calc(var(--space-3) + (var(--lvl, 1) - 1) * var(--space-3));
+    padding-left: var(--space-3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .outline-row.outline-sub {
+  .outline-children {
+    /* Each nesting level steps in from its parent. */
+    padding-left: var(--space-3);
+  }
+  .outline-row.outline-book {
+    font-weight: 600;
+    color: var(--text-strong, var(--text-mid));
+  }
+  .outline-row.outline-chapter {
+    font-weight: 500;
+    color: var(--text-mid);
+  }
+  .outline-row.outline-heading {
     font-size: 0.76rem;
     color: var(--text-light);
   }

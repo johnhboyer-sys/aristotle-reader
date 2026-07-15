@@ -443,10 +443,17 @@
   // host whenever the array identity changes.
   let outline = $state<OutlineItem[]>([]);
   function refreshOutline() {
-    outline = buildOutline(model.rows);
+    outline = buildOutline(model.rows, profile);
   }
   $effect(() => {
     onOutline?.(outline);
+  });
+  // Recompute the outline when the work's profile changes (Manage levels…) so
+  // the rail's nav-roles/labels reflect the new tiers. The model is
+  // non-reactive, so this profile dependency must be wired explicitly.
+  $effect(() => {
+    void profile;
+    refreshOutline();
   });
 
   /** Scroll a model row into view (rail outline click). Resolves the row to its
