@@ -257,6 +257,12 @@ suite('APo 1.4 — real-pair acceptance (d3a §9)', () => {
     expect(fnCount).toBe(2); // fn1–fn2
     expect(noDump).toBe(true);
     expect(plan.blocked).toBe(false);
+    // Soft breaks (↵/U+2028) count as line boundaries like ¶ (scrivenerMd
+    // makeSegment): every spine row gets English (no "no-source" gaps) and the
+    // 1:1 fast path keeps the flagged fraction low. Regression pin — before the
+    // fix this fixture flagged 0.67 with 2 empty rows.
+    expect(withText.length).toBe(plan.rows.length);
+    expect(plan.flaggedFraction).toBeLessThan(0.2);
   });
 
   it('APo round-trips through serializeChapterFile', async () => {
