@@ -995,10 +995,10 @@
   .row-note {
     margin-top: var(--space-1);
     font-family: var(--font-english);
-    font-size: 0.76rem;
+    font-size: 0.9rem;
     font-style: italic;
-    line-height: 1.35;
-    color: var(--text-mid);
+    line-height: 1.4;
+    color: var(--text);
   }
 
   .grc-diff {
