@@ -778,8 +778,14 @@ export function segmentEnglish(
   // (newline-split) as the §4b fast-path unit, and a whitespace-joined `text`
   // for the §4c pre-split.
   const makeSegment = (open: Marker | undefined, close: Marker | undefined, raw: string): EnglishSegment => {
+    // Treat EVERY break the translator used as a physical-line boundary: a hard
+    // paragraph return (\n), a soft line break (Scrivener exports ↵ as U+2028
+    // LSEP / U+2029 PSEP), and CR are all equivalent (John 2026-07-14). Splitting
+    // on \n alone under-counted lines when the translator used soft breaks, so
+    // the §4b 1:1 fast path never fired and every span fell to distribution
+    // guessing (spurious "split" flags).
     const lines = raw
-      .split('\n')
+      .split(/[\r\n\u2028\u2029]/)
       .map((l) => collapseInline(l))
       .filter((l) => l.length > 0);
     return { startBekker: open, endBekker: close, text: lines.join(' '), lines };

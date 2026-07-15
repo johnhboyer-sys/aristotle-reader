@@ -49,6 +49,8 @@
     type PreviewState,
   } from '../lib/import/previewModel';
   import type { RowState } from '../lib/import/plan';
+  import { parsePreviewEnglish } from '../lib/import/previewRender';
+  import PreviewText from './PreviewText.svelte';
 
   let {
     works,
@@ -76,6 +78,15 @@
 
   let phase = $state<Phase>('select');
   let errorMessage = $state<string | null>(null);
+  // The preview English is shown DECODED (Greek + footnote markers, not raw
+  // {grc:…}/{^id:…} tokens); clicking a cell reveals the raw <textarea> to edit
+  // that one row. `-1` = none editing.
+  let editingRow = $state(-1);
+  /** Autofocus the textarea when a row switches to edit mode. */
+  function focusOnMount(node: HTMLTextAreaElement) {
+    node.focus();
+    node.setSelectionRange(node.value.length, node.value.length);
+  }
 
   // ── file selection state ──────────────────────────────────────────────
   type PickedKind = 'none' | 'canonical' | 'scrivener-pair';
@@ -488,12 +499,37 @@
                       {/if}
                     </td>
                     <td class="col-eng">
-                      <textarea
-                        class="eng-cell"
-                        value={row.english}
-                        oninput={(e) => onRowEdit(row.index, (e.currentTarget as HTMLTextAreaElement).value)}
-                        rows="2"
-                      ></textarea>
+                      {#if editingRow === row.index}
+                        <textarea
+                          class="eng-cell"
+                          value={row.english}
+                          oninput={(e) => onRowEdit(row.index, (e.currentTarget as HTMLTextAreaElement).value)}
+                          onblur={() => (editingRow = -1)}
+                          use:focusOnMount
+                          rows="2"
+                        ></textarea>
+                      {:else}
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        <div
+                          class="eng-render"
+                          role="button"
+                          tabindex="0"
+                          title="Click to edit"
+                          onclick={() => (editingRow = row.index)}
+                          onkeydown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              editingRow = row.index;
+                            }
+                          }}
+                        >
+                          {#if row.english.trim().length > 0}
+                            <PreviewText segs={parsePreviewEnglish(row.english)} />
+                          {:else}
+                            <span class="eng-empty">— add English</span>
+                          {/if}
+                        </div>
+                      {/if}
                       <div class="row-actions">
                         <button
                           class="mini-btn"
@@ -886,6 +922,38 @@
     background: var(--input-bg);
   }
 
+  /* Decoded read-only English (click to edit): the {grc:…}/{^id:…} tokens
+     render as Greek + footnote markers instead of raw braces. */
+  .eng-render {
+    font-family: var(--font-english);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text);
+    padding: 0.3rem 0.45rem;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    cursor: text;
+  }
+  .eng-render:hover,
+  .eng-render:focus {
+    border-color: var(--border);
+    background: var(--input-bg);
+    outline: none;
+  }
+  .eng-empty {
+    color: var(--text-light);
+    font-style: italic;
+  }
+  .preview-grc {
+    font-family: var(--font-greek);
+  }
+  .preview-fn-mark {
+    font-family: var(--font-ui);
+    font-size: 0.66em;
+    color: var(--accent);
+    margin-left: 0.05em;
+  }
+
   .row-actions {
     display: flex;
     gap: var(--space-1);
@@ -927,10 +995,10 @@
   .row-note {
     margin-top: var(--space-1);
     font-family: var(--font-english);
-    font-size: 0.76rem;
+    font-size: 0.9rem;
     font-style: italic;
-    line-height: 1.35;
-    color: var(--text-mid);
+    line-height: 1.4;
+    color: var(--text);
   }
 
   .grc-diff {

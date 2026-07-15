@@ -127,7 +127,7 @@ export interface SanitizeSuggestionOptions {
  * interior blank runs collapse to one LF.
  */
 export function sanitizeSuggestion(text: string, opts: SanitizeSuggestionOptions = {}): string {
-  if (!opts.multiline) return text.replace(/\s+/g, ' ').trim();
+  if (!opts.multiline) return stripEchoedAddress(text.replace(/\s+/g, ' ').trim());
 
   const lines = text
     .replace(/\r\n?/g, '\n')
@@ -136,8 +136,19 @@ export function sanitizeSuggestion(text: string, opts: SanitizeSuggestionOptions
 
   while (lines.length > 0 && lines[0] === '') lines.shift();
   while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+  if (lines.length > 0) lines[0] = stripEchoedAddress(lines[0]);
 
   return lines.filter((line) => line !== '').join('\n');
+}
+
+/**
+ * The translate prompt shows the target as `[address] source`, so the model
+ * sometimes echoes the leading `[1041a19]` / `[¶1]` token into its answer. Drop
+ * a single leading address-like bracket token (short, no spaces) — real English
+ * translations don't open with one, so this can't eat genuine output.
+ */
+function stripEchoedAddress(line: string): string {
+  return line.replace(/^\[[^\]\s]{1,24}\]\s*/, '');
 }
 
 /**

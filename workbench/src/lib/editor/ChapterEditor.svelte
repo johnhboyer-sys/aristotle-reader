@@ -19,6 +19,9 @@
     requestAssist(row: number, segment: number): void;
     /** Popover state for cell (row, segment); null unless assist targets it. Reactive. */
     assistStateFor(row: number, segment: number): AssistUiState | null;
+    /** Viewport point to anchor the popover at (under the clicked word), or null
+     * to fall back to the cell-anchored placement. Reactive. */
+    assistAnchor(): { x: number; y: number } | null;
     /** THE one editor mutation assist may perform, surfaced to the popover
      * as RowEditor.insertSuggestion — a normal transaction on the cell's
      * view, through the same dispatch path as typing. */
@@ -101,6 +104,8 @@
   import type { RowStructure } from './rowStructure';
   import { currentViewMode, setViewMode } from './viewMode.svelte';
   import { currentGranularity, setGranularity } from './viewMode.svelte';
+  import { currentInterpLayout, setInterpLayout } from './viewMode.svelte';
+  import type { InterpLayout } from './viewMode.svelte';
   import { legalViews } from './viewPolicy';
   import type { ViewMode, InterpolatedGranularity } from './viewPolicy';
   import { usesParaLayer, showGranularityToggle, sourceSlices, sourceOffsetAtDisplay } from './interpolated';
@@ -300,6 +305,39 @@
   function chooseGranularity(g: InterpolatedGranularity) {
     setGranularity(model.workId, g);
   }
+  // Interpolated LAYOUT for line-based works (John 2026-07-14): the flowing
+  // interpolated view renders the Greek as continuous prose (not one stacked
+  // block per line). `lane` flows the Greek above a per-line English lane;
+  // `weave` puts each line's English inline right after its own Greek. Offered
+  // only for LINE docs in the interpolated view — paragraph docs keep the
+  // stacked unit/sentence view + its granularity sub-toggle. The English model
+  // is per-line in both, so switching to Lines still lines up.
+  const interpLayout = $derived<InterpLayout>(currentInterpLayout(model.workId));
+  const interpFlowing = $derived(viewMode === MODE_INTERPOLATED && !isParagraphRowUnit());
+  const showLayoutToggle = $derived(interpFlowing);
+  const LAYOUT_LANE: InterpLayout = 'lane';
+  const LAYOUT_WEAVE: InterpLayout = 'weave';
+  function chooseInterpLayout(l: InterpLayout) {
+    setInterpLayout(model.workId, l);
+  }
+  /**
+   * Display-only SHORT Bekker tick for the flowing view (John 2026-07-14 —
+   * "cut out the Bekker page, just leave column and line number"): drop a
+   * leading page number, keep column+line (1041a6 → a6, 1041b33 → b33). Pure
+   * abbreviation of the tick label — the full opaque address is untouched in
+   * the model and still shown in the Lines-view gutter. Falls back to the raw
+   * address if it carries no leading page digits (nothing to trim).
+   */
+  function shortTick(raw: string): string {
+    const short = raw.replace(/^\d+/, '');
+    return short.length > 0 ? short : raw;
+  }
+  /** The tick label for a flowing-view line: the FIRST line of the chapter
+   * keeps its full Bekker citation (page anchors the reader); every line after
+   * it shows column+line only (John 2026-07-14). */
+  function tickFor(raw: string, g: number): string {
+    return g === 0 ? raw : shortTick(raw);
+  }
   /**
    * PARA-LAYER UNIT view (usesParaLayer, interpolated.ts): a paragraph-row-
    * unit doc showing one visual unit per model row, whose English field edits
@@ -377,6 +415,21 @@
   function refreshDisplayRows() {
     displayRows = expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence');
   }
+  // Flowing-view paragraph grouping (John 2026-07-14): a D6 line-split is a
+  // paragraph break, so group the display rows into paragraphs — a new group
+  // starts at row 0 and at every continuation segment (segment > 0). The Lane
+  // view renders each group as a flowing Greek paragraph over a flowing English
+  // paragraph; Weave inserts a break before each continuation pair. Each row
+  // carries its global display index `g` (cell identity / focus / handlers all
+  // key off it). Purely a display regrouping — the per-line model is untouched.
+  const flowParagraphs = $derived.by(() => {
+    const groups: { key: string; rows: { d: DisplayRow; g: number }[] }[] = [];
+    displayRows.forEach((d, g) => {
+      if (g === 0 || d.continuation) groups.push({ key: d.key, rows: [] });
+      groups[groups.length - 1]?.rows.push({ d, g });
+    });
+    return groups;
+  });
   // Re-expand when the view mode OR the interpolated granularity flips (both
   // change the expansion): the keyed {#each} then remounts cells for the new
   // layer. Runs after `ready`, so the initial hydrate (which calls
@@ -436,9 +489,29 @@
   /** Attach the display model to a menu state: every ctxMenu assignment
    * routes through here so items/wording/grouping have exactly one source
    * of truth (buildCtxMenu — matrix-tested in ctxMenu.test.ts). */
+  /** Keep the context menu inside the viewport: it's position:fixed at the
+   * click point (max-width 19rem), so a right-/bottom-edge click would run it
+   * off-screen (seen first in the full-width Weave flow). Clamp against the
+   * window using the CSS max-width and a generous height estimate — a menu that
+   * would overflow flips back in rather than being cut off. */
+  function clampMenu(x: number, y: number): { x: number; y: number } {
+    const MARGIN = 8;
+    const MENU_W = 304; // 19rem max-width
+    const MENU_H = 360; // ~tallest menu (Greek word: split + 4 AI items)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : Infinity;
+    const vh = typeof window !== 'undefined' ? window.innerHeight : Infinity;
+    return {
+      x: Math.max(MARGIN, Math.min(x, vw - MENU_W - MARGIN)),
+      y: Math.max(MARGIN, Math.min(y, vh - MENU_H - MARGIN)),
+    };
+  }
   function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model'>): NonNullable<typeof ctxMenu> {
+    menuPointer = { x: m.x, y: m.y }; // raw click, before the menu clamp below
+    const { x, y } = clampMenu(m.x, m.y);
     return {
       ...m,
+      x,
+      y,
       model: buildCtxMenu({
         scheme,
         paraDoc: m.paraDoc,
@@ -1473,7 +1546,7 @@
     const el = node instanceof Element ? node : node?.parentElement;
     // The interpolated original counts as the source column (refinement
     // pass): a multi-block source selection batch-translates, like the grid.
-    if (el?.closest('.grc-cell') || el?.closest('.interp-source')) return 'greek';
+    if (el?.closest('.grc-cell') || el?.closest('.interp-source') || el?.closest('.flow-grc')) return 'greek';
     if (el?.closest('.en-cell')) return 'english';
     return null;
   }
@@ -1682,6 +1755,15 @@
   // invoked in one layer to the other layer's view after a view switch.
   let assistLayer: EditLayer = 'sentence';
   let assistUi = $state<AssistUiState | null>(null);
+  // Viewport point to anchor the popover at (John 2026-07-14): the flowing
+  // views separate a line's Greek from its English cell, so a cell-anchored
+  // popover lands far from the word you clicked. When assist is invoked from a
+  // Greek/source context menu we anchor the popover under the CLICK instead;
+  // null falls back to the cell-anchored placement (glyph / ⌘⏎).
+  let assistAnchorPos = $state<{ x: number; y: number } | null>(null);
+  // Raw cursor of the last context-menu open (before the menu's own clamp) —
+  // the click point a menu-triggered translate anchors its popover to.
+  let menuPointer = { x: 0, y: 0 };
 
   // ── AI reference popups (right-click Greek → "AI reference") ──────────────
   // Independent of the translate flow: the AI's own translation appears in a
@@ -1742,8 +1824,9 @@
    * work: no active cell → no-op; no source text on the row → the unit's
    * no-line message. Captures the ACTIVE layer so the eventual Insert
    * writes back to the layer the request came from (D8 §7 Phase E2). */
-  function invokeAssist(row: number, segment: number) {
+  function invokeAssist(row: number, segment: number, anchor: { x: number; y: number } | null = null) {
     if (row < 0 || row >= model.rows.length || !viewAt(row, segment)) return;
+    assistAnchorPos = anchor;
     assistRow = row;
     assistSeg = segment;
     assistLayer = activeLayer();
@@ -2506,6 +2589,9 @@
     if (m.translateRows && m.translateRows.length > 1) {
       invokeAssistRange(m.translateRows);
     } else {
+      // NOTE: click-anchoring (position:fixed at menuPointer) broke translate in
+      // the flowing views — reverted to the cell-anchored popover, which works
+      // and is viewport-clamped. Revisit anchoring via a body portal later.
       invokeAssist(m.row, m.segment);
     }
   }
@@ -3251,6 +3337,7 @@
     },
     requestAssist: (row, segment) => invokeAssist(row, segment),
     assistStateFor: (row, segment) => (assistRow === row && assistSeg === segment ? assistUi : null),
+    assistAnchor: () => assistAnchorPos,
     insertSuggestion: (row, segment, text) => insertSuggestionIntoRow(row, segment, text),
     dismissAssist,
   };
@@ -3492,6 +3579,30 @@
           >By sentence</button>
         </div>
       {/if}
+      {#if showLayoutToggle}
+        <!-- Interpolated layout sub-toggle (John 2026-07-14): line docs only.
+             `Lane` flows the Greek over a per-line English lane; `Weave` puts
+             each line's English inline after its Greek. Both keep the per-line
+             English model, so the Lines view stays aligned. -->
+        <div class="view-toggle" role="group" aria-label="Interpolated layout">
+          <button
+            class="view-toggle-btn"
+            class:active={interpLayout === LAYOUT_LANE}
+            type="button"
+            aria-pressed={interpLayout === LAYOUT_LANE}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => chooseInterpLayout(LAYOUT_LANE)}
+          >Lane</button>
+          <button
+            class="view-toggle-btn"
+            class:active={interpLayout === LAYOUT_WEAVE}
+            type="button"
+            aria-pressed={interpLayout === LAYOUT_WEAVE}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => chooseInterpLayout(LAYOUT_WEAVE)}
+          >Weave</button>
+        </div>
+      {/if}
       {#if saveLabel}
         <span class="save-state" data-state={saveBlocked ? 'blocked' : saveState} role="status">{saveLabel}</span>
       {/if}
@@ -3508,6 +3619,77 @@
            original is plain text (never an editor); right-clicking it opens
            the full structure menu (refinement pass — see
            onInterpSourceContextMenu), the field the AI-only one. -->
+      {#if interpFlowing}
+        <!-- FLOWING interpolated view (line docs, John 2026-07-14): the Greek
+             reads as continuous prose; the per-line English stays separate
+             editable cells (SAME displayRows / keyed identity / host as the
+             grid, so commit/undo/assist/paste are inherited), so switching to
+             Lines still lines up. `lane` = Greek block over a per-line English
+             lane; `weave` = each line's English inline after its own Greek. -->
+        {#snippet flowEnCell(d: DisplayRow, g: number)}
+          <EnglishCell
+            gridRow={g}
+            row={d.rowIndex}
+            segment={d.segment}
+            layer="sentence"
+            sentenceText={null}
+            {host}
+            flash={flashRowIdx === g}
+            pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
+            onPasteConfirm={confirmPaste}
+            onPasteCancel={cancelPaste}
+            unsplitConfirm={pendingUnsplit?.row === d.rowIndex && d.segment === 0}
+            unsplitMessage={pendingUnsplit?.message ?? null}
+            onUnsplitConfirm={confirmUnsplit}
+            onUnsplitCancel={cancelUnsplit}
+            onContext={(e) => onEnglishContextMenu(e, g)}
+          />
+        {/snippet}
+        {#if interpLayout === LAYOUT_WEAVE}
+          <!-- Interlinear weave (John's mockup): each Bekker line is a
+               Greek-over-English pair; the pairs are inline-block and flow /
+               wrap, so the Greek reads as continuous prose while each line's
+               English sits directly beneath its own words. -->
+          <div class="interp-flow weave" bind:this={gridEl}>
+            {#each displayRows as d, g (d.key)}{#if d.continuation}<div class="flow-break" aria-hidden="true"></div>{/if}<!-- svelte-ignore a11y_no_static_element_interactions --><div
+                class="weave-pair"
+                class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                data-row={g}
+              ><div
+                  class="weave-grc flow-grc"
+                  lang="grc"
+                  oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
+                ><span class="flow-tick">{tickFor(d.address.raw, g)}</span>{d.greekSlice}</div><div class="weave-en">{@render flowEnCell(d, g)}</div></div>{/each}
+          </div>
+        {:else}
+          <!-- Lane (John's spec): alternating paragraphs — a flowing Greek
+               paragraph, then a flowing English paragraph directly beneath it,
+               for each paragraph (split at every D6 line-split). The English
+               cells flow inline so the translation reads continuously, not one
+               stacked line per row. -->
+          <div class="interp-flow lane" bind:this={gridEl}>
+            {#each flowParagraphs as para (para.key)}
+              <section class="flow-para">
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div class="flow-grc-block" lang="grc">
+                  {#each para.rows as { d, g } (d.key)}<span
+                      class="flow-grc"
+                      class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                      data-row={g}
+                      oncontextmenu={(e) => onInterpSourceContextMenu(e, g)}
+                    ><sup class="flow-tick">{tickFor(d.address.raw, g)}</sup>{d.greekSlice}</span>{' '}{/each}
+                </div>
+                <div class="flow-en-block">
+                  {#each para.rows as { d, g } (d.key)}<span
+                      class="flow-en-seg"
+                      class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                    ><sup class="flow-tick en-tick">{tickFor(d.address.raw, g)}</sup>{@render flowEnCell(d, g)}</span>{' '}{/each}
+                </div>
+              </section>
+            {/each}
+          </div>
+        {/if}
+      {:else}
       <div class="interp-stack" bind:this={gridEl}>
         {#each displayRows as d, g (d.key)}
           <InterpolatedUnit
@@ -3535,6 +3717,7 @@
           />
         {/each}
       </div>
+      {/if}
     {:else}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <!-- The three columns are grouped in DOM order (all Greek, then all
