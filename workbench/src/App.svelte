@@ -24,7 +24,15 @@
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
-  import { listFreeWorks } from './lib/works/freeWorks';
+  import {
+    listFreeWorks,
+    updateFreeWorkBooks,
+    withAddedBook,
+    withAddedChapter,
+    withRenamedBook,
+    withRenamedChapter,
+  } from './lib/works/freeWorks';
+  import type { FreeBook } from './lib/works/freeWorks';
   import { invalidateCorpus, loadCorpus } from './lib/data/corpusStore';
   import type { WorkCorpus } from './lib/data/corpusStore';
   import { bookChapterNumbers, chapterForEditor } from './lib/data/chapterRows';
@@ -101,11 +109,48 @@
     libraryStatus = Object.fromEntries(entries);
   }
 
+  // Chapter files present on disk per document-spine work — drives the rail's
+  // "empty slot" indicator (a Book/Chapter container may declare a slot before
+  // any import fills it). storage.list works in both the Tauri app and the
+  // browser dev harness, so this scan is not gated to Tauri.
+  let docFiles = $state<Record<string, Set<string>>>({});
+
+  async function refreshDocFiles() {
+    const storage = libraryStorage();
+    const entries = await Promise.all(
+      works
+        .filter((work) => isDocumentWork(work))
+        .map(async (work) => [work.id, new Set(await storage.list(work.id))] as const),
+    );
+    docFiles = Object.fromEntries(entries);
+  }
+
   const railWorks: RailWork[] = $derived(
     works.map((work) => {
       if (isDocumentWork(work)) {
-        // Corpus-free document: always "ready" (its chapter file IS the
-        // work), one Document row instead of a book tree.
+        // Corpus-free document. With explicit Book/Chapter containers (D8
+        // structure tools) it renders a real tree — each chapter slot flagged
+        // "filled" when its file exists on disk, "empty" until an import lands.
+        // Without containers it stays a single quiet "Document" row.
+        const dbs = work.documentBooks;
+        if (dbs && dbs.length > 0) {
+          const present = docFiles[work.id];
+          return {
+            work,
+            status: 'ready' as const,
+            books: [],
+            container: true,
+            containerBooks: dbs.map((b) => ({
+              n: b.n,
+              label: b.label,
+              chapters: b.chapters.map((c) => ({
+                n: c.n,
+                label: c.label,
+                filled: present?.has(chapterFileName(b.n, c.n)) ?? false,
+              })),
+            })),
+          };
+        }
         return { work, status: 'ready' as const, books: [], singleDocument: true };
       }
       const corpus = corpora[work.id] ?? null;
@@ -179,6 +224,15 @@
   const breadcrumb = $derived.by(() => {
     if (!selection || !currentWork) return { work: 'Translation Workbench', locus: null };
     if (isDocumentWork(currentWork)) {
+      const dbs = currentWork.documentBooks;
+      if (dbs && dbs.length > 0) {
+        const book = dbs[selection.book - 1];
+        const chapter = book?.chapters[selection.chapter - 1];
+        return {
+          work: currentWork.title,
+          locus: book ? (chapter ? `${book.label} · ${chapter.label}` : book.label) : null,
+        };
+      }
       // A single-document work has no book/chapter locus worth showing.
       return { work: currentWork.title, locus: null };
     }
@@ -189,7 +243,14 @@
   function validSelection(sel: RailSelection): boolean {
     const work = works.find((w) => w.id === sel.workId);
     if (work && isDocumentWork(work)) {
-      // v1 free works are a single document (book 1, chapter 1).
+      const dbs = work.documentBooks;
+      if (dbs && dbs.length > 0) {
+        // A container work: any declared slot is valid (empty slots included —
+        // the editor shows an import prompt until a file lands).
+        const book = dbs[sel.book - 1];
+        return !!book && sel.chapter >= 1 && sel.chapter <= book.chapters.length;
+      }
+      // Bookless single-document work (book 1, chapter 1).
       return sel.book === 1 && sel.chapter === 1;
     }
     const corpus = corpora[sel.workId];
@@ -247,6 +308,7 @@
       );
       corpora = loaded;
       await refreshLibraryStatus();
+      await refreshDocFiles();
       const last = settings.lastOpened;
       if (last && works.some((w) => w.id === last.workId) && validSelection(last)) {
         selection = last;
@@ -285,7 +347,57 @@
     newDocumentOpen = false;
     await reloadWorks();
     await refreshLibraryStatus();
+    await refreshDocFiles();
     select(workId, 1, 1);
+  }
+
+  // ── explicit Book/Chapter containers (D8 structure tools) ───────────────
+  /** The work's container structure as FreeBook[] (empty when still bookless). */
+  function currentBooks(work: WorkManifest): FreeBook[] {
+    return (work.documentBooks ?? []).map((b) => ({
+      label: b.label,
+      chapters: b.chapters.map((c) => ({ label: c.label })),
+    }));
+  }
+
+  async function applyBooks(workId: string, books: FreeBook[]) {
+    await updateFreeWorkBooks(workId, books);
+    await reloadWorks();
+    await refreshDocFiles();
+  }
+
+  async function addBook(workId: string, label: string) {
+    const work = works.find((w) => w.id === workId);
+    if (!work) return;
+    // The FIRST book on a bookless work absorbs its existing single document as
+    // chapter 1 (that file is already b01c01 → book 1 / chapter 1). Later books
+    // start empty ("no chapters yet").
+    const bookless = !work.documentBooks || work.documentBooks.length === 0;
+    const seed = bookless ? 'Chapter 1' : undefined;
+    const next = withAddedBook(currentBooks(work), label, seed);
+    await applyBooks(workId, next);
+    if (seed) select(workId, next.length, 1);
+  }
+
+  async function addChapter(workId: string, bookN: number, label: string) {
+    const work = works.find((w) => w.id === workId);
+    if (!work) return;
+    const next = withAddedChapter(currentBooks(work), bookN, label);
+    await applyBooks(workId, next);
+    // Land on the fresh (empty) slot so the user sees exactly where it lives.
+    select(workId, bookN, next[bookN - 1]?.chapters.length ?? 1);
+  }
+
+  async function renameBook(workId: string, bookN: number, label: string) {
+    const work = works.find((w) => w.id === workId);
+    if (!work) return;
+    await applyBooks(workId, withRenamedBook(currentBooks(work), bookN, label));
+  }
+
+  async function renameChapter(workId: string, bookN: number, chapterN: number, label: string) {
+    const work = works.find((w) => w.id === workId);
+    if (!work) return;
+    await applyBooks(workId, withRenamedChapter(currentBooks(work), bookN, chapterN, label));
   }
 
   // ── reference-translation import (design doc D5 §5) ─────────────────────
@@ -604,6 +716,10 @@
             onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
             onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
+            onAddBook={isTauri() || import.meta.env.DEV ? addBook : undefined}
+            onAddChapter={isTauri() || import.meta.env.DEV ? addChapter : undefined}
+            onRenameBook={isTauri() || import.meta.env.DEV ? renameBook : undefined}
+            onRenameChapter={isTauri() || import.meta.env.DEV ? renameChapter : undefined}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
