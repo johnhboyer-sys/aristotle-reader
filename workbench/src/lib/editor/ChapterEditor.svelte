@@ -3189,6 +3189,13 @@
     setStatus(level === null ? 'Heading cleared.' : `Marked as ${levelName(profile, level)}.`);
   }
 
+  /** Re-tier (or clear) a row from the RAIL right-click menu — same gated,
+   * undoable mutator as the text "Mark as"; the outline refreshes through
+   * refreshDisplayRows so the rail updates in place. */
+  export function setRowLevelAt(rowIndex: number, level: number | null): void {
+    setRowLevel(rowIndex, level);
+  }
+
   /** Set (or clear) a heading row's rail TITLE OVERRIDE (D8 heading tools) —
    * called from the rail's inline rename. Document-spine heading rows only; an
    * empty title clears the override (rail falls back to translation/original).

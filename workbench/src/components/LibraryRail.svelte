@@ -50,8 +50,10 @@
     railWorks,
     selected,
     outline = [],
+    levels = [],
     onOutlineSelect,
     onOutlineRename,
+    onOutlineSetLevel,
     onManageLevels,
     onSelect,
     onAddWork,
@@ -65,10 +67,15 @@
      * the table-of-contents shown under its "Document" row, each entry labeled
      * by the heading's translation. Empty for corpus works / untagged docs. */
     outline?: OutlineItem[];
+    /** The open document work's profile tiers, in order — labels the rail's
+     * right-click "Mark as" menu (index + 1 = the level a row would carry). */
+    levels?: { name: string }[];
     /** Jump the editor to a heading row (rail outline click). */
     onOutlineSelect?: (rowIndex: number) => void;
     /** Set a heading's rail title override (double-click rename; '' clears). */
     onOutlineRename?: (rowIndex: number, title: string) => void;
+    /** Re-tier (or clear) a heading from the rail right-click menu. */
+    onOutlineSetLevel?: (rowIndex: number, level: number | null) => void;
     /** Open the "Manage levels…" profile editor for a document work. */
     onManageLevels?: (workId: string) => void;
     onSelect: (workId: string, book: number, chapter: number) => void;
@@ -147,7 +154,63 @@
     node.focus();
     node.select();
   }
+
+  // ── rail right-click "Mark as" menu (re-tier a heading from the sidebar) ────
+  const RAIL_MENU_W = 210;
+  const RAIL_MENU_MARGIN = 8;
+  let railMenu = $state<{ rowIndex: number; level: number; x: number; y: number; maxHeight: number } | null>(null);
+  function openRailMenu(e: MouseEvent, rowIndex: number, level: number) {
+    e.preventDefault();
+    if (!onOutlineSetLevel || levels.length === 0) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const x = Math.max(RAIL_MENU_MARGIN, Math.min(e.clientX, vw - RAIL_MENU_W - RAIL_MENU_MARGIN));
+    const y = Math.max(RAIL_MENU_MARGIN, Math.min(e.clientY, vh - 120));
+    railMenu = { rowIndex, level, x, y, maxHeight: Math.max(140, vh - y - RAIL_MENU_MARGIN) };
+  }
+  function railMenuPick(level: number | null) {
+    if (railMenu) onOutlineSetLevel?.(railMenu.rowIndex, level);
+    railMenu = null;
+  }
+  function onRailMenuKey(e: KeyboardEvent) {
+    if (e.key === 'Escape') railMenu = null;
+  }
 </script>
+
+<svelte:window onkeydown={onRailMenuKey} />
+
+{#if railMenu}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="rail-menu-backdrop"
+    onclick={() => (railMenu = null)}
+    oncontextmenu={(e) => {
+      e.preventDefault();
+      railMenu = null;
+    }}
+  ></div>
+  <div
+    class="rail-menu"
+    role="menu"
+    style={`left:${railMenu.x}px; top:${railMenu.y}px; max-height:${railMenu.maxHeight}px;`}
+  >
+    <div class="rail-menu-label">Mark as</div>
+    {#each levels as lvl, i (i)}
+      <button
+        class="rail-menu-item"
+        role="menuitemradio"
+        aria-checked={railMenu.level === i + 1}
+        onclick={() => railMenuPick(i + 1)}
+      >
+        <span class="rail-menu-check" aria-hidden="true">{railMenu.level === i + 1 ? '✓' : ''}</span>{lvl.name}
+      </button>
+    {/each}
+    <div class="rail-menu-sep" aria-hidden="true"></div>
+    <button class="rail-menu-item" role="menuitem" onclick={() => railMenuPick(null)}>
+      <span class="rail-menu-check" aria-hidden="true"></span>Clear heading
+    </button>
+  </div>
+{/if}
 
 <!-- Recursive nav-tree of the open document's headings (D8): Book › Chapter ›
      heading, each node a jump-to button; children nest in their own <ul>. -->
@@ -199,9 +262,10 @@
             class:outline-book={node.item.navRole === 'book'}
             class:outline-chapter={node.item.navRole === 'chapter'}
             class:outline-heading={node.item.navRole === 'heading'}
-            title={`${node.item.label} — double-click to rename`}
+            title={`${node.item.label} — double-click to rename, right-click to re-tier`}
             onclick={() => onOutlineSelect?.(ri)}
             ondblclick={() => startRename(ri, node.item.label)}
+            oncontextmenu={(e) => openRailMenu(e, ri, node.item.level)}
           >
             {node.item.label}
           </button>
@@ -606,6 +670,63 @@
   }
   .outline-subtitle:hover {
     color: var(--text-mid);
+  }
+  /* Rail right-click "Mark as" menu (re-tier a heading from the sidebar). */
+  .rail-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+  }
+  .rail-menu {
+    position: fixed;
+    z-index: 61;
+    min-width: 180px;
+    max-width: 210px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+    border-radius: 8px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    font-family: var(--font-ui);
+  }
+  .rail-menu-label {
+    padding: 4px 8px 2px;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-light);
+  }
+  .rail-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    padding: 5px 8px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .rail-menu-item:hover {
+    background: var(--hover, rgba(0, 0, 0, 0.06));
+    color: var(--text-strong, var(--text-mid));
+  }
+  .rail-menu-check {
+    display: inline-block;
+    width: 0.9em;
+    flex: none;
+    color: var(--accent);
+  }
+  .rail-menu-sep {
+    height: 1px;
+    margin: 4px 6px;
+    background: var(--border, rgba(0, 0, 0, 0.1));
   }
   .manage-levels {
     display: block;

@@ -599,8 +599,10 @@
             {railWorks}
             selected={selection}
             outline={docOutline}
+            levels={currentWork?.profile?.levels ?? []}
             onOutlineSelect={(rowIndex) => editorRef?.scrollToRow(rowIndex)}
             onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
+            onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
