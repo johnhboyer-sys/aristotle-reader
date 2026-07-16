@@ -11,7 +11,6 @@
   import AddWorkDialog from './components/AddWorkDialog.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import NewDocumentDialog from './components/NewDocumentDialog.svelte';
-  import ImportChapterDialog from './components/ImportChapterDialog.svelte';
   import ProfileDialog from './components/ProfileDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import AskPanel from './components/AskPanel.svelte';
@@ -22,29 +21,16 @@
   import ExportButton from './components/ExportButton.svelte';
   import ChapterEditor from './lib/editor/ChapterEditor.svelte';
   import type { OutlineItem } from './lib/editor/outline';
-  import { buildOutline } from './lib/editor/outline';
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
-  import {
-    listFreeWorks,
-    updateFreeWorkBooks,
-    withAddedBook,
-    withAddedChapter,
-    withRenamedBook,
-    withRenamedChapter,
-  } from './lib/works/freeWorks';
-  import type { FreeBook } from './lib/works/freeWorks';
+  import { listFreeWorks } from './lib/works/freeWorks';
   import { invalidateCorpus, loadCorpus } from './lib/data/corpusStore';
   import type { WorkCorpus } from './lib/data/corpusStore';
   import { bookChapterNumbers, chapterForEditor } from './lib/data/chapterRows';
   import { documentChapterForEditor } from './lib/data/documentChapter';
-  import { loadChapterFile, hydrateFromFile } from './lib/library/autosave';
-  import { splitDocument, documentBookStructure } from './lib/library/splitDocument';
-  import { serializeChapterFile } from './lib/chapterfile';
-  import { DEFAULT_PROFILE } from './lib/works/profile';
+  import { loadChapterFile } from './lib/library/autosave';
   import { getScheme } from './lib/citation/registry';
-  import type { SchemeId } from './lib/citation/types';
   import type { FixtureChapter } from './dev/fixture-meta-z17';
   import { loadSettings, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
@@ -115,49 +101,13 @@
     libraryStatus = Object.fromEntries(entries);
   }
 
-  // Chapter files present on disk per document-spine work — drives the rail's
-  // "empty slot" indicator (a Book/Chapter container may declare a slot before
-  // any import fills it). storage.list works in both the Tauri app and the
-  // browser dev harness, so this scan is not gated to Tauri.
-  let docFiles = $state<Record<string, Set<string>>>({});
-
-  async function refreshDocFiles() {
-    const storage = libraryStorage();
-    const entries = await Promise.all(
-      works
-        .filter((work) => isDocumentWork(work))
-        .map(async (work) => [work.id, new Set(await storage.list(work.id))] as const),
-    );
-    docFiles = Object.fromEntries(entries);
-  }
-
   const railWorks: RailWork[] = $derived(
     works.map((work) => {
       if (isDocumentWork(work)) {
-        // Corpus-free document. With explicit Book/Chapter containers (D8
-        // structure tools) it renders a real tree — each chapter slot flagged
-        // "filled" when its file exists on disk, "empty" until an import lands.
-        // Without containers it stays a single quiet "Document" row.
-        const dbs = work.documentBooks;
-        if (dbs && dbs.length > 0) {
-          const present = docFiles[work.id];
-          return {
-            work,
-            status: 'ready' as const,
-            books: [],
-            container: true,
-            containerBooks: dbs.map((b) => ({
-              n: b.n,
-              label: b.label,
-              chapters: b.chapters.map((c) => ({
-                n: c.n,
-                label: c.label,
-                filled: present?.has(chapterFileName(b.n, c.n)) ?? false,
-              })),
-            })),
-          };
-        }
-        return { work, status: 'ready' as const, books: [], singleDocument: true };
+        // Corpus-free document (D8): the lines marked in the text ARE its Books
+        // & Chapters. The rail mirrors the live heading outline — no separate
+        // container slots — so a mark and its sidebar entry can never drift.
+        return { work, status: 'ready' as const, books: [], document: true };
       }
       const corpus = corpora[work.id] ?? null;
       const statuses = libraryStatus[work.id];
@@ -191,9 +141,6 @@
   // selection.
   let docFixture = $state<FixtureChapter | null>(null);
   let docFixtureKey = $state('');
-  // Bumped after an import fills the open slot so the fixture effect re-reads
-  // the newly written file (the selection key itself is unchanged).
-  let docReloadKey = $state(0);
   const selectionKey = $derived(
     selection ? `${selection.workId}:${selection.book}.${selection.chapter}` : '',
   );
@@ -202,7 +149,6 @@
     const sel = selection;
     const work = currentWork;
     const key = selectionKey;
-    void docReloadKey; // re-run after an import writes the slot's file
     if (!sel || !work || !isDocumentWork(work)) return;
     let cancelled = false;
     void (async () => {
@@ -234,16 +180,7 @@
   const breadcrumb = $derived.by(() => {
     if (!selection || !currentWork) return { work: 'Translation Workbench', locus: null };
     if (isDocumentWork(currentWork)) {
-      const dbs = currentWork.documentBooks;
-      if (dbs && dbs.length > 0) {
-        const book = dbs[selection.book - 1];
-        const chapter = book?.chapters[selection.chapter - 1];
-        return {
-          work: currentWork.title,
-          locus: book ? (chapter ? `${book.label} · ${chapter.label}` : book.label) : null,
-        };
-      }
-      // A single-document work has no book/chapter locus worth showing.
+      // A document work's locus lives in its outline, not the breadcrumb.
       return { work: currentWork.title, locus: null };
     }
     const label = currentWork.books[selection.book - 1]?.label ?? String(selection.book);
@@ -253,14 +190,8 @@
   function validSelection(sel: RailSelection): boolean {
     const work = works.find((w) => w.id === sel.workId);
     if (work && isDocumentWork(work)) {
-      const dbs = work.documentBooks;
-      if (dbs && dbs.length > 0) {
-        // A container work: any declared slot is valid (empty slots included —
-        // the editor shows an import prompt until a file lands).
-        const book = dbs[sel.book - 1];
-        return !!book && sel.chapter >= 1 && sel.chapter <= book.chapters.length;
-      }
-      // Bookless single-document work (book 1, chapter 1).
+      // Marker-driven document work: one file (book 1, chapter 1); the in-text
+      // marks provide the navigation, not separate chapter files.
       return sel.book === 1 && sel.chapter === 1;
     }
     const corpus = corpora[sel.workId];
@@ -318,7 +249,6 @@
       );
       corpora = loaded;
       await refreshLibraryStatus();
-      await refreshDocFiles();
       const last = settings.lastOpened;
       if (last && works.some((w) => w.id === last.workId) && validSelection(last)) {
         selection = last;
@@ -337,7 +267,13 @@
   });
 
   function select(workId: string, book: number, chapter: number) {
-    if (workId !== selection?.workId) docOutline = [];
+    // Clear the outline whenever the open locus changes so a previous chapter's
+    // table of contents never lingers under a different (or empty) selection —
+    // the editor re-emits it for the chapter it actually loads.
+    const sel = selection;
+    if (!sel || sel.workId !== workId || sel.book !== book || sel.chapter !== chapter) {
+      docOutline = [];
+    }
     selection = { workId, book, chapter };
     void updateSettings({ lastOpened: { workId, book, chapter } });
   }
@@ -357,136 +293,17 @@
     newDocumentOpen = false;
     await reloadWorks();
     await refreshLibraryStatus();
-    await refreshDocFiles();
     select(workId, 1, 1);
   }
 
-  // ── explicit Book/Chapter containers (D8 structure tools) ───────────────
-  /** The work's container structure as FreeBook[] (empty when still bookless). */
-  function currentBooks(work: WorkManifest): FreeBook[] {
-    return (work.documentBooks ?? []).map((b) => ({
-      label: b.label,
-      chapters: b.chapters.map((c) => ({ label: c.label })),
-    }));
+  // "+ Book" / "+ Chapter" (marker-driven model): insert a new marked heading
+  // line into the open document at the Book/Chapter tier — the user types its
+  // title, and it appears in the rail as a Book/Chapter (the mark IS the entry).
+  function addBook(_workId: string) {
+    editorRef?.appendHeadingForRole('book');
   }
-
-  async function applyBooks(workId: string, books: FreeBook[]) {
-    await updateFreeWorkBooks(workId, books);
-    await reloadWorks();
-    await refreshDocFiles();
-  }
-
-  async function addBook(workId: string, label: string) {
-    const work = works.find((w) => w.id === workId);
-    if (!work) return;
-    // The FIRST book on a bookless work absorbs its existing single document as
-    // chapter 1 (that file is already b01c01 → book 1 / chapter 1). Later books
-    // start empty ("no chapters yet").
-    const bookless = !work.documentBooks || work.documentBooks.length === 0;
-    const seed = bookless ? 'Chapter 1' : undefined;
-    const next = withAddedBook(currentBooks(work), label, seed);
-    await applyBooks(workId, next);
-    if (seed) select(workId, next.length, 1);
-  }
-
-  async function addChapter(workId: string, bookN: number, label: string) {
-    const work = works.find((w) => w.id === workId);
-    if (!work) return;
-    const next = withAddedChapter(currentBooks(work), bookN, label);
-    await applyBooks(workId, next);
-    // Land on the fresh (empty) slot so the user sees exactly where it lives.
-    select(workId, bookN, next[bookN - 1]?.chapters.length ?? 1);
-  }
-
-  async function renameBook(workId: string, bookN: number, label: string) {
-    const work = works.find((w) => w.id === workId);
-    if (!work) return;
-    await applyBooks(workId, withRenamedBook(currentBooks(work), bookN, label));
-  }
-
-  async function renameChapter(workId: string, bookN: number, chapterN: number, label: string) {
-    const work = works.find((w) => w.id === workId);
-    if (!work) return;
-    await applyBooks(workId, withRenamedChapter(currentBooks(work), bookN, chapterN, label));
-  }
-
-  // The open selection as a container chapter slot (null unless a document work
-  // with explicit books is open on a declared slot), plus whether its file
-  // exists. Drives the "empty chapter" import prompt.
-  const currentContainerSlot = $derived.by(() => {
-    if (!selection || !currentWork || !isDocumentWork(currentWork)) return null;
-    const dbs = currentWork.documentBooks;
-    if (!dbs || dbs.length === 0) return null;
-    const book = dbs[selection.book - 1];
-    const chapter = book?.chapters[selection.chapter - 1];
-    if (!book || !chapter) return null;
-    const filled = docFiles[currentWork.id]?.has(chapterFileName(selection.book, selection.chapter)) ?? false;
-    return {
-      bookN: selection.book,
-      chapterN: selection.chapter,
-      bookLabel: book.label,
-      chapterLabel: chapter.label,
-      filled,
-    };
-  });
-
-  // "Import into chapter…" — fills the open (empty) container slot.
-  let importChapterTarget = $state<{
-    workId: string;
-    book: number;
-    chapter: number;
-    scheme: SchemeId;
-    bookLabel: string;
-    chapterLabel: string;
-  } | null>(null);
-
-  function openChapterImport() {
-    const slot = currentContainerSlot;
-    if (!slot || !currentWork) return;
-    importChapterTarget = {
-      workId: currentWork.id,
-      book: slot.bookN,
-      chapter: slot.chapterN,
-      scheme: currentWork.scheme,
-      bookLabel: slot.bookLabel,
-      chapterLabel: slot.chapterLabel,
-    };
-  }
-
-  async function handleChapterImported() {
-    importChapterTarget = null;
-    await refreshDocFiles();
-    docReloadKey += 1; // re-read the just-written file into the editor
-  }
-
-  // "Divide into chapters…" — the bulk shortcut: split the open single document
-  // at its Book/Chapter heading markers into one file per chapter, and register
-  // the matching Book/Chapter container structure in one step. Part 1 rewrites
-  // the original b01c01 in place; the rest are new slot files.
-  async function divideDocument(workId: string) {
-    const work = works.find((w) => w.id === workId);
-    if (!work || !isDocumentWork(work)) return;
-    const profile = work.profile ?? DEFAULT_PROFILE;
-    const storage = libraryStorage();
-    const res = await loadChapterFile(storage, workId, chapterFileName(1, 1));
-    if (!res.file) return;
-    const file = res.file;
-    const parts = splitDocument(file, profile);
-    if (parts.length <= 1) return; // no Book/Chapter markers → nothing to divide
-
-    // Labels line up 1:1 with the parts (same boundary walk); the text is the
-    // outline label (heading-title override → translation → original).
-    const rows = hydrateFromFile(file, [], work.scheme).rows;
-    const labelByRow = new Map(buildOutline(rows, profile).map((it) => [it.rowIndex, it.label] as const));
-    const books = documentBookStructure(file, profile, (i) => labelByRow.get(i) ?? '');
-
-    for (const part of parts) {
-      await storage.write(workId, chapterFileName(part.book, part.chapter), serializeChapterFile(part.file));
-    }
-    await updateFreeWorkBooks(workId, books);
-    await reloadWorks();
-    await refreshDocFiles();
-    select(workId, 1, 1);
+  function addChapter(_workId: string) {
+    editorRef?.appendHeadingForRole('chapter');
   }
 
   // ── reference-translation import (design doc D5 §5) ─────────────────────
@@ -805,11 +622,8 @@
             onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
             onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
-            onDivide={isTauri() || import.meta.env.DEV ? divideDocument : undefined}
             onAddBook={isTauri() || import.meta.env.DEV ? addBook : undefined}
             onAddChapter={isTauri() || import.meta.env.DEV ? addChapter : undefined}
-            onRenameBook={isTauri() || import.meta.env.DEV ? renameBook : undefined}
-            onRenameChapter={isTauri() || import.meta.env.DEV ? renameChapter : undefined}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
@@ -828,16 +642,6 @@
           {#key `${selection?.workId}:${selection?.book}.${selection?.chapter}`}
             <ChapterEditor bind:this={editorRef} fixture={currentChapter} onOutline={(o) => (docOutline = o)} />
           {/key}
-        {:else if currentContainerSlot && !currentContainerSlot.filled}
-          <div class="empty-state-wrap">
-            <div class="empty-state">
-              <p>This chapter is empty.</p>
-              <p class="empty-sub">Import its original text to start translating.</p>
-              {#if isTauri() || import.meta.env.DEV}
-                <button class="primary-btn empty-cta" onclick={openChapterImport}>Import text…</button>
-              {/if}
-            </div>
-          </div>
         {:else if selection}
           <div class="empty-state-wrap">
             <div class="empty-state">
@@ -931,19 +735,6 @@
       defaultWorkId={importDefaultWorkId}
       onClose={() => (importOpen = false)}
       onImported={handleImported}
-    />
-  {/if}
-
-  {#if importChapterTarget}
-    <ImportChapterDialog
-      workId={importChapterTarget.workId}
-      book={importChapterTarget.book}
-      chapter={importChapterTarget.chapter}
-      scheme={importChapterTarget.scheme}
-      bookLabel={importChapterTarget.bookLabel}
-      chapterLabel={importChapterTarget.chapterLabel}
-      onClose={() => (importChapterTarget = null)}
-      onImported={handleChapterImported}
     />
   {/if}
 
@@ -1142,10 +933,6 @@
   .empty-sub {
     margin-top: var(--space-2);
     font-size: 0.85rem;
-  }
-  .empty-cta {
-    margin-top: var(--space-3);
-    font-style: normal;
   }
 
   .side-panel {

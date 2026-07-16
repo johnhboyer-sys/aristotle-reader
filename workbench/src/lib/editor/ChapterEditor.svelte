@@ -154,6 +154,7 @@
   import EnglishCell from './EnglishCell.svelte';
   import InterpolatedUnit from './InterpolatedUnit.svelte';
   import { DEFAULT_PROFILE, levelName, navRoleOf } from '../works/profile';
+  import type { NavRole } from '../works/profile';
   import './editor.css';
 
   let {
@@ -3194,6 +3195,16 @@
    * refreshDisplayRows so the rail updates in place. */
   export function setRowLevelAt(rowIndex: number, level: number | null): void {
     setRowLevel(rowIndex, level);
+  }
+
+  /** Append a new heading line at the given nav-role's tier (rail "+ Book" /
+   * "+ Chapter"): inserts an empty marked row at the end of the document and
+   * focuses it so the user types its title. No-op if the profile has no tier
+   * with that role, or the scheme can't carry heading rows. */
+  export function appendHeadingForRole(role: NavRole): void {
+    const idx = profile.levels.findIndex((l) => l.navRole === role);
+    if (idx < 0) return;
+    performInsertHeading(model.rows.length, idx + 1);
   }
 
   /** Set (or clear) a heading row's rail TITLE OVERRIDE (D8 heading tools) —

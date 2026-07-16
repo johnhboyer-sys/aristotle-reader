@@ -50,6 +50,12 @@
      */
     container?: boolean;
     containerBooks?: RailContainerBook[];
+    /**
+     * Corpus-free document (marker-driven, D8): the lines marked in the text
+     * ARE the Books & Chapters. The rail renders the live heading outline as
+     * the navigation; clicking a node scrolls the editor there.
+     */
+    document?: boolean;
   }
 
   export interface RailSelection {
@@ -107,11 +113,10 @@
     /** "Divide into chapters…" — split the open single document at its
      * Book/Chapter markers into one file per chapter (bulk shortcut). */
     onDivide?: (workId: string) => void;
-    /** Add a Book container to a document work (the first Book on a bookless
-     * work absorbs its existing document as chapter 1). */
-    onAddBook?: (workId: string, label: string) => void;
-    /** Add an (empty) chapter slot to a document work's Book. */
-    onAddChapter?: (workId: string, bookN: number, label: string) => void;
+    /** Insert a new Book-tier heading line into the open document (rail "+ Book"). */
+    onAddBook?: (workId: string) => void;
+    /** Insert a new Chapter-tier heading line into the open document (rail "+ Chapter"). */
+    onAddChapter?: (workId: string) => void;
     /** Rename a Book / chapter slot (double-click). */
     onRenameBook?: (workId: string, bookN: number, label: string) => void;
     onRenameChapter?: (workId: string, bookN: number, chapterN: number, label: string) => void;
@@ -133,12 +138,6 @@
   // The flat outline, grouped into a nested Book › Chapter › heading tree by
   // the tiers' nav-roles (buildOutlineTree). Pure derivation of the prop.
   const outlineTree = $derived(buildOutlineTree(outline));
-
-  // The open document has Book/Chapter markers → "Divide into chapters…" would
-  // actually produce parts (heading-only outlines can't be divided).
-  const canDivide = $derived(
-    outline.some((i) => i.navRole === 'book' || i.navRole === 'chapter'),
-  );
 
   // Expanded books, keyed "workId:bookN". Start with the selected book open.
   let expanded = $state<Record<string, boolean>>(
@@ -207,99 +206,28 @@
     node.select();
   }
 
-  // ── Book/Chapter structure editing (D8 structure tools) ───────────────────
-  // One inline text field at a time — creating a Book, creating a chapter slot,
-  // or renaming either. Enter commits, Escape / blur cancels. Adds need a name;
-  // an empty rename is ignored (keeps the old label).
-  type StructEdit =
-    | { kind: 'add-book'; workId: string }
-    | { kind: 'add-chapter'; workId: string; bookN: number }
-    | { kind: 'rename-book'; workId: string; bookN: number }
-    | { kind: 'rename-chapter'; workId: string; bookN: number; chapterN: number };
-  let structEdit = $state<StructEdit | null>(null);
-  let structText = $state('');
-
-  function beginStruct(edit: StructEdit, current = '') {
-    structEdit = edit;
-    structText = current;
-  }
-  function cancelStruct() {
-    structEdit = null;
-    structText = '';
-  }
-  function commitStruct() {
-    const edit = structEdit;
-    const text = structText.trim();
-    structEdit = null;
-    structText = '';
-    if (!edit || text.length === 0) return; // no name → no change
-    switch (edit.kind) {
-      case 'add-book':
-        onAddBook?.(edit.workId, text);
-        break;
-      case 'add-chapter':
-        onAddChapter?.(edit.workId, edit.bookN, text);
-        break;
-      case 'rename-book':
-        onRenameBook?.(edit.workId, edit.bookN, text);
-        break;
-      case 'rename-chapter':
-        onRenameChapter?.(edit.workId, edit.bookN, edit.chapterN, text);
-        break;
-    }
-  }
-  function onStructKey(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      commitStruct();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      cancelStruct();
-    }
-  }
-  /** Is the given add-affordance currently in its editing (input) state? */
-  function editingAddBook(workId: string): boolean {
-    return structEdit?.kind === 'add-book' && structEdit.workId === workId;
-  }
-  function editingAddChapter(workId: string, bookN: number): boolean {
-    return (
-      structEdit?.kind === 'add-chapter' &&
-      structEdit.workId === workId &&
-      structEdit.bookN === bookN
-    );
-  }
-  function editingRenameBook(workId: string, bookN: number): boolean {
-    return (
-      structEdit?.kind === 'rename-book' &&
-      structEdit.workId === workId &&
-      structEdit.bookN === bookN
-    );
-  }
-  function editingRenameChapter(workId: string, bookN: number, chapterN: number): boolean {
-    return (
-      structEdit?.kind === 'rename-chapter' &&
-      structEdit.workId === workId &&
-      structEdit.bookN === bookN &&
-      structEdit.chapterN === chapterN
-    );
-  }
-
-  // ── rail right-click "Mark as" menu (re-tier a heading from the sidebar) ────
-  const RAIL_MENU_W = 210;
+  // ── rail right-click menu: make a line a Book/Chapter/heading, rename, remove ─
+  const RAIL_MENU_W = 230;
   const RAIL_MENU_MARGIN = 8;
-  let railMenu = $state<{ rowIndex: number; level: number; x: number; y: number; maxHeight: number } | null>(null);
-  function openRailMenu(e: MouseEvent, rowIndex: number, level: number) {
+  let railMenu = $state<{ rowIndex: number; level: number; label: string; x: number; y: number; maxHeight: number } | null>(null);
+  function openRailMenu(e: MouseEvent, rowIndex: number, level: number, label: string) {
     e.preventDefault();
     if (!onOutlineSetLevel || levels.length === 0) return;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const x = Math.max(RAIL_MENU_MARGIN, Math.min(e.clientX, vw - RAIL_MENU_W - RAIL_MENU_MARGIN));
     const y = Math.max(RAIL_MENU_MARGIN, Math.min(e.clientY, vh - 120));
-    railMenu = { rowIndex, level, x, y, maxHeight: Math.max(140, vh - y - RAIL_MENU_MARGIN) };
+    railMenu = { rowIndex, level, label, x, y, maxHeight: Math.max(140, vh - y - RAIL_MENU_MARGIN) };
   }
   function railMenuPick(level: number | null) {
     if (railMenu) onOutlineSetLevel?.(railMenu.rowIndex, level);
     railMenu = null;
+  }
+  function railMenuRename() {
+    if (!railMenu) return;
+    const { rowIndex, label } = railMenu;
+    railMenu = null;
+    startRename(rowIndex, label); // reuses the inline rename input (no click-to-open race)
   }
   function onRailMenuKey(e: KeyboardEvent) {
     if (e.key === 'Escape') railMenu = null;
@@ -323,7 +251,7 @@
     role="menu"
     style={`left:${railMenu.x}px; top:${railMenu.y}px; max-height:${railMenu.maxHeight}px;`}
   >
-    <div class="rail-menu-label">Mark as</div>
+    <div class="rail-menu-label">Make this a…</div>
     {#each levels as lvl, i (i)}
       <button
         class="rail-menu-item"
@@ -335,8 +263,11 @@
       </button>
     {/each}
     <div class="rail-menu-sep" aria-hidden="true"></div>
+    <button class="rail-menu-item" role="menuitem" onclick={railMenuRename}>
+      <span class="rail-menu-check" aria-hidden="true"></span>Rename…
+    </button>
     <button class="rail-menu-item" role="menuitem" onclick={() => railMenuPick(null)}>
-      <span class="rail-menu-check" aria-hidden="true"></span>Clear heading
+      <span class="rail-menu-check" aria-hidden="true"></span>Remove from outline
     </button>
   </div>
 {/if}
@@ -391,10 +322,10 @@
             class:outline-book={node.item.navRole === 'book'}
             class:outline-chapter={node.item.navRole === 'chapter'}
             class:outline-heading={node.item.navRole === 'heading'}
-            title={`${node.item.label} — double-click to rename, right-click to re-tier`}
+            title={`${node.item.label} — right-click to make it a Book/Chapter, rename, or remove`}
             onclick={() => onOutlineSelect?.(ri)}
             ondblclick={() => startRename(ri, node.item.label)}
-            oncontextmenu={(e) => openRailMenu(e, ri, node.item.level)}
+            oncontextmenu={(e) => openRailMenu(e, ri, node.item.level, node.item.label)}
           >
             {node.item.label}
           </button>
@@ -414,19 +345,6 @@
       {/if}
     </li>
   {/each}
-{/snippet}
-
-{#snippet structInput(placeholder: string)}
-  <!-- svelte-ignore a11y_autofocus -->
-  <input
-    class="struct-input"
-    type="text"
-    {placeholder}
-    bind:value={structText}
-    use:focusOnMount
-    onkeydown={onStructKey}
-    onblur={cancelStruct}
-  />
 {/snippet}
 
 <nav class="library" aria-label="Library">
@@ -462,156 +380,36 @@
         {/if}
       </div>
 
-      {#if rw.status === 'ready' && rw.singleDocument}
-        <!-- Corpus-free document: no book/chapter tree, one quiet row, plus a
-             heading outline (D8) for the OPEN doc, labeled by translations. -->
-        <ul class="chapters doc-row">
-          <li>
-            <button
-              class="chapter-row"
-              class:selected={isSelected(rw.work.id, 1, 1)}
-              onclick={() => onSelect(rw.work.id, 1, 1)}
-            >
-              Document
-            </button>
-          </li>
-          {#if isSelected(rw.work.id, 1, 1) && outlineTree.length > 0}
-            {@render outlineNodes(outlineTree)}
-          {/if}
-          {#if isSelected(rw.work.id, 1, 1) && onManageLevels}
+      {#if rw.status === 'ready' && rw.document}
+        <!-- Corpus-free document (marker-driven, D8): the lines you mark in the
+             text ARE the Books & Chapters. The rail mirrors the live outline —
+             click a node to jump there; right-click to make it a Book/Chapter,
+             rename, or remove; "+ Book/Chapter" inserts a new marked line. -->
+        <ul class="chapters doc-nav">
+          {#if !isSelected(rw.work.id, 1, 1)}
             <li>
-              <button class="manage-levels" onclick={() => onManageLevels?.(rw.work.id)}>
-                Manage levels…
+              <button class="chapter-row doc-open" onclick={() => onSelect(rw.work.id, 1, 1)}>
+                Open
               </button>
             </li>
-          {/if}
-          {#if isSelected(rw.work.id, 1, 1) && onDivide && canDivide}
-            <li>
-              <button
-                class="manage-levels"
-                title="Split this document into one chapter per Book/Chapter heading"
-                onclick={() => onDivide?.(rw.work.id)}
-              >
-                Divide into chapters…
-              </button>
-            </li>
-          {/if}
-          {#if onAddBook}
-            <li>
-              {#if editingAddBook(rw.work.id)}
-                {@render structInput('Book name (e.g. Prima Pars)')}
-              {:else}
-                <button
-                  class="add-slot"
-                  title="Organize this document into Books and Chapters"
-                  onclick={() => beginStruct({ kind: 'add-book', workId: rw.work.id })}
-                >
-                  + Book
-                </button>
+          {:else}
+            {#if outlineTree.length > 0}
+              {@render outlineNodes(outlineTree)}
+            {:else}
+              <li>
+                <p class="doc-hint">No Book or Chapter marks yet. Right-click a line in the text (or use the buttons below) to mark one — it becomes a chapter here.</p>
+              </li>
+            {/if}
+            <li class="doc-controls">
+              {#if onAddBook}
+                <button class="add-slot" title="Insert a Book heading line" onclick={() => onAddBook?.(rw.work.id)}>+ Book</button>
               {/if}
-            </li>
-          {/if}
-        </ul>
-      {:else if rw.status === 'ready' && rw.container && rw.containerBooks}
-        <!-- Corpus-free document with explicit Book/Chapter containers (D8
-             structure tools): a named tree with empty-slot indicators. The open
-             chapter shows its in-document heading outline underneath. -->
-        <ul class="books">
-          {#each rw.containerBooks as book (book.n)}
-            <li class="book">
-              {#if editingRenameBook(rw.work.id, book.n)}
-                <div class="book-rename-line">
-                  <span class="book-chevron-spacer" aria-hidden="true"></span>
-                  {@render structInput('Book name')}
-                </div>
-              {:else}
-                <button
-                  class="book-row"
-                  onclick={() => toggleBook(rw.work.id, book.n)}
-                  ondblclick={() => beginStruct({ kind: 'rename-book', workId: rw.work.id, bookN: book.n }, book.label)}
-                  aria-expanded={!!expanded[`${rw.work.id}:${book.n}`]}
-                >
-                  <svg
-                    class="chevron"
-                    class:open={expanded[`${rw.work.id}:${book.n}`]}
-                    viewBox="0 0 24 24"
-                    width="12"
-                    height="12"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
-                  <span class="book-label" title="{book.label} — double-click to rename">{book.label}</span>
-                </button>
+              {#if onAddChapter}
+                <button class="add-slot" title="Insert a Chapter heading line" onclick={() => onAddChapter?.(rw.work.id)}>+ Chapter</button>
               {/if}
-
-              {#if expanded[`${rw.work.id}:${book.n}`]}
-                <ul class="chapters">
-                  {#each book.chapters as chapter (chapter.n)}
-                    <li>
-                      {#if editingRenameChapter(rw.work.id, book.n, chapter.n)}
-                        {@render structInput('Chapter name')}
-                      {:else}
-                        <button
-                          class="chapter-row"
-                          class:selected={isSelected(rw.work.id, book.n, chapter.n)}
-                          class:empty-slot={!chapter.filled}
-                          title="{chapter.label} — double-click to rename"
-                          onclick={() => onSelect(rw.work.id, book.n, chapter.n)}
-                          ondblclick={() => beginStruct({ kind: 'rename-chapter', workId: rw.work.id, bookN: book.n, chapterN: chapter.n }, chapter.label)}
-                        >
-                          {chapter.label}
-                          {#if !chapter.filled}
-                            <span class="badge badge-empty">empty</span>
-                          {/if}
-                        </button>
-                      {/if}
-                      {#if isSelected(rw.work.id, book.n, chapter.n) && outlineTree.length > 0}
-                        {@render outlineNodes(outlineTree)}
-                      {/if}
-                    </li>
-                  {/each}
-                  {#if onAddChapter}
-                    <li>
-                      {#if editingAddChapter(rw.work.id, book.n)}
-                        {@render structInput('Chapter name (e.g. Question 3)')}
-                      {:else}
-                        <button
-                          class="add-slot"
-                          onclick={() => beginStruct({ kind: 'add-chapter', workId: rw.work.id, bookN: book.n })}
-                        >
-                          + Chapter
-                        </button>
-                      {/if}
-                    </li>
-                  {/if}
-                </ul>
+              {#if onManageLevels}
+                <button class="manage-levels" onclick={() => onManageLevels?.(rw.work.id)}>Manage levels…</button>
               {/if}
-            </li>
-          {/each}
-          {#if onAddBook}
-            <li>
-              {#if editingAddBook(rw.work.id)}
-                {@render structInput('Book name (e.g. Secunda Pars)')}
-              {:else}
-                <button
-                  class="add-slot"
-                  onclick={() => beginStruct({ kind: 'add-book', workId: rw.work.id })}
-                >
-                  + Book
-                </button>
-              {/if}
-            </li>
-          {/if}
-          {#if selected?.workId === rw.work.id && onManageLevels}
-            <li>
-              <button class="manage-levels" onclick={() => onManageLevels?.(rw.work.id)}>
-                Manage levels…
-              </button>
             </li>
           {/if}
         </ul>
@@ -804,12 +602,32 @@
     transform: rotate(90deg);
   }
 
-  /* A single-document work has no book level — its one row sits directly
-     under the title, no hairline guide. */
-  .doc-row {
+  /* Marker-driven document nav: the outline tree IS the navigation, sitting
+     directly under the work title. A document work has no book/chapter file
+     level — the marks in the text provide the hierarchy. */
+  .doc-nav {
     margin-left: var(--space-2);
     padding-left: var(--space-2);
     border-left: none;
+  }
+  .doc-open {
+    font-style: italic;
+    color: var(--text-light);
+  }
+  .doc-hint {
+    margin: var(--space-1) var(--space-2) var(--space-2);
+    font-family: var(--font-ui);
+    font-size: 0.76rem;
+    line-height: 1.45;
+    color: var(--text-light);
+  }
+  .doc-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
   }
 
   /* Chapters hang off a hairline guide aligned under the book chevron. */
@@ -1043,25 +861,8 @@
     color: var(--accent);
     background: color-mix(in srgb, var(--accent) 14%, transparent);
   }
-  /* An empty chapter slot (declared but not yet imported): quiet + a badge. */
-  .badge-empty {
-    color: var(--text-light);
-    background: var(--ui-hover);
-  }
-  .chapter-row.empty-slot {
-    color: var(--text-light);
-    font-style: italic;
-  }
-  .chapter-row.empty-slot.selected {
-    color: var(--on-accent);
-    font-style: normal;
-  }
-
-  /* "+ Book" / "+ Chapter" affordances and inline naming input. */
+  /* "+ Book" / "+ Chapter" insert-a-marked-line affordances (doc-controls). */
   .add-slot {
-    display: block;
-    width: 100%;
-    text-align: left;
     font-family: var(--font-ui);
     font-size: 0.78rem;
     color: var(--text-light);
@@ -1074,33 +875,6 @@
   .add-slot:hover {
     color: var(--accent);
     background: var(--ui-hover);
-  }
-  .struct-input {
-    width: 100%;
-    font-family: var(--font-ui);
-    font-size: 0.82rem;
-    color: var(--text);
-    background: var(--surface, #fff);
-    border: 1px solid var(--accent);
-    border-radius: 5px;
-    padding: 0.24rem var(--space-2);
-    margin: 1px 0;
-  }
-  .struct-input:focus {
-    outline: none;
-  }
-  /* Renaming a Book: the input sits where the book label would, aligned past
-     the chevron column. */
-  .book-rename-line {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 0.35rem var(--space-2);
-  }
-  .book-chevron-spacer {
-    flex: none;
-    width: 12px;
-    height: 12px;
   }
 
   .rail-foot {
