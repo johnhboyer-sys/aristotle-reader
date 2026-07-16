@@ -11,6 +11,7 @@
   import AddWorkDialog from './components/AddWorkDialog.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import NewDocumentDialog from './components/NewDocumentDialog.svelte';
+  import ImportChapterDialog from './components/ImportChapterDialog.svelte';
   import ProfileDialog from './components/ProfileDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import AskPanel from './components/AskPanel.svelte';
@@ -39,6 +40,7 @@
   import { documentChapterForEditor } from './lib/data/documentChapter';
   import { loadChapterFile } from './lib/library/autosave';
   import { getScheme } from './lib/citation/registry';
+  import type { SchemeId } from './lib/citation/types';
   import type { FixtureChapter } from './dev/fixture-meta-z17';
   import { loadSettings, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
@@ -185,6 +187,9 @@
   // selection.
   let docFixture = $state<FixtureChapter | null>(null);
   let docFixtureKey = $state('');
+  // Bumped after an import fills the open slot so the fixture effect re-reads
+  // the newly written file (the selection key itself is unchanged).
+  let docReloadKey = $state(0);
   const selectionKey = $derived(
     selection ? `${selection.workId}:${selection.book}.${selection.chapter}` : '',
   );
@@ -193,6 +198,7 @@
     const sel = selection;
     const work = currentWork;
     const key = selectionKey;
+    void docReloadKey; // re-run after an import writes the slot's file
     if (!sel || !work || !isDocumentWork(work)) return;
     let cancelled = false;
     void (async () => {
@@ -398,6 +404,55 @@
     const work = works.find((w) => w.id === workId);
     if (!work) return;
     await applyBooks(workId, withRenamedChapter(currentBooks(work), bookN, chapterN, label));
+  }
+
+  // The open selection as a container chapter slot (null unless a document work
+  // with explicit books is open on a declared slot), plus whether its file
+  // exists. Drives the "empty chapter" import prompt.
+  const currentContainerSlot = $derived.by(() => {
+    if (!selection || !currentWork || !isDocumentWork(currentWork)) return null;
+    const dbs = currentWork.documentBooks;
+    if (!dbs || dbs.length === 0) return null;
+    const book = dbs[selection.book - 1];
+    const chapter = book?.chapters[selection.chapter - 1];
+    if (!book || !chapter) return null;
+    const filled = docFiles[currentWork.id]?.has(chapterFileName(selection.book, selection.chapter)) ?? false;
+    return {
+      bookN: selection.book,
+      chapterN: selection.chapter,
+      bookLabel: book.label,
+      chapterLabel: chapter.label,
+      filled,
+    };
+  });
+
+  // "Import into chapter…" — fills the open (empty) container slot.
+  let importChapterTarget = $state<{
+    workId: string;
+    book: number;
+    chapter: number;
+    scheme: SchemeId;
+    bookLabel: string;
+    chapterLabel: string;
+  } | null>(null);
+
+  function openChapterImport() {
+    const slot = currentContainerSlot;
+    if (!slot || !currentWork) return;
+    importChapterTarget = {
+      workId: currentWork.id,
+      book: slot.bookN,
+      chapter: slot.chapterN,
+      scheme: currentWork.scheme,
+      bookLabel: slot.bookLabel,
+      chapterLabel: slot.chapterLabel,
+    };
+  }
+
+  async function handleChapterImported() {
+    importChapterTarget = null;
+    await refreshDocFiles();
+    docReloadKey += 1; // re-read the just-written file into the editor
   }
 
   // ── reference-translation import (design doc D5 §5) ─────────────────────
@@ -738,6 +793,16 @@
           {#key `${selection?.workId}:${selection?.book}.${selection?.chapter}`}
             <ChapterEditor bind:this={editorRef} fixture={currentChapter} onOutline={(o) => (docOutline = o)} />
           {/key}
+        {:else if currentContainerSlot && !currentContainerSlot.filled}
+          <div class="empty-state-wrap">
+            <div class="empty-state">
+              <p>This chapter is empty.</p>
+              <p class="empty-sub">Import its original text to start translating.</p>
+              {#if isTauri() || import.meta.env.DEV}
+                <button class="primary-btn empty-cta" onclick={openChapterImport}>Import text…</button>
+              {/if}
+            </div>
+          </div>
         {:else if selection}
           <div class="empty-state-wrap">
             <div class="empty-state">
@@ -831,6 +896,19 @@
       defaultWorkId={importDefaultWorkId}
       onClose={() => (importOpen = false)}
       onImported={handleImported}
+    />
+  {/if}
+
+  {#if importChapterTarget}
+    <ImportChapterDialog
+      workId={importChapterTarget.workId}
+      book={importChapterTarget.book}
+      chapter={importChapterTarget.chapter}
+      scheme={importChapterTarget.scheme}
+      bookLabel={importChapterTarget.bookLabel}
+      chapterLabel={importChapterTarget.chapterLabel}
+      onClose={() => (importChapterTarget = null)}
+      onImported={handleChapterImported}
     />
   {/if}
 
@@ -1029,6 +1107,10 @@
   .empty-sub {
     margin-top: var(--space-2);
     font-size: 0.85rem;
+  }
+  .empty-cta {
+    margin-top: var(--space-3);
+    font-style: normal;
   }
 
   .side-panel {

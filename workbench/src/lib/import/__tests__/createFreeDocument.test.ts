@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createFreeDocument, slugForTitle } from '../createFreeDocument';
+import { buildDocumentChapterFile, createFreeDocument, slugForTitle } from '../createFreeDocument';
 import { parseChapterFile, serializeChapterFile, isValidSplitOffset } from '../../chapterfile';
 import { parseRowSegments } from '../../editor/serialize';
 import { hydrateFromFile, serializeModel } from '../../library/autosave';
@@ -21,6 +21,58 @@ const LINE_TEXT = [
   'οὐλομένην, ἣ μυρί᾽',
   'ἄλγε᾽ ἔθηκε',
 ].join('\n');
+
+describe('buildDocumentChapterFile — filling a container slot', () => {
+  it('targets the given (work, book, chapter) and segments per scheme', () => {
+    const file = buildDocumentChapterFile({
+      workId: 'summa-theologiae',
+      book: 1,
+      chapter: 3,
+      scheme: 'paragraph',
+      text: PARA_TEXT,
+    });
+    expect(file.meta.work).toBe('summa-theologiae');
+    expect(file.meta.book).toBe(1);
+    expect(file.meta.chapter).toBe(3);
+    expect(file.meta.citationScheme).toBe('paragraph');
+    expect(file.meta.spanStart).toBe('¶1');
+    expect(file.greekLines.length).toBe(3);
+    // Round-trips through the frozen serializer.
+    expect(parseChapterFile(serializeChapterFile(file))).toEqual(file);
+  });
+
+  it('a plain-line work numbers rows plainly and round-trips', () => {
+    const file = buildDocumentChapterFile({
+      workId: 'iliad',
+      book: 2,
+      chapter: 5,
+      scheme: 'plain-line',
+      text: LINE_TEXT,
+    });
+    expect(file.meta.book).toBe(2);
+    expect(file.meta.chapter).toBe(5);
+    expect(file.meta.spanStart).toBe('1');
+    expect(parseChapterFile(serializeChapterFile(file))).toEqual(file);
+  });
+
+  it('throws when the text yields no rows', () => {
+    expect(() =>
+      buildDocumentChapterFile({ workId: 'x', book: 1, chapter: 1, scheme: 'paragraph', text: '   ' }),
+    ).toThrow(/no text/i);
+  });
+
+  it('produces the same file createFreeDocument writes for chapter 1', () => {
+    const { work, file } = createFreeDocument({ title: 'Notes', unit: 'paragraphs', text: PARA_TEXT });
+    const direct = buildDocumentChapterFile({
+      workId: work.id,
+      book: 1,
+      chapter: 1,
+      scheme: 'paragraph',
+      text: PARA_TEXT,
+    });
+    expect(direct).toEqual(file);
+  });
+});
 
 describe('slugForTitle', () => {
   it('lowercases, hyphenates, and folds diacritics', () => {

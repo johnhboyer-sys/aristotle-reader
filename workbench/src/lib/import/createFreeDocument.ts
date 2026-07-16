@@ -21,6 +21,7 @@
  */
 
 import type { SchemeId } from '../citation/types';
+import { getScheme } from '../citation/registry';
 import type { ChapterFile, ChapterFileMeta, LineSplit } from '../chapterfile';
 import { emptyRowDocJSON } from '../editor/schema';
 import { serializeRowSegments } from '../editor/serialize';
@@ -29,6 +30,21 @@ import { splitIntoParagraphRows, splitIntoLineRows } from './segmentDetect';
 import { segmentSentences } from './sentenceSegment';
 
 export type FreeDocumentUnit = 'lines' | 'paragraphs';
+
+/**
+ * A document-spine scheme's segmentation unit, read from the scheme's row-unit
+ * CAPABILITY (never a scheme-id comparison — D2 contract). Used when filling a
+ * chapter slot in an existing work, where the unit isn't chosen in a dialog but
+ * follows from the work's scheme.
+ */
+export function documentUnitForScheme(scheme: SchemeId): FreeDocumentUnit {
+  switch (getScheme(scheme).gutter.rowUnit) {
+    case 'paragraph':
+      return 'paragraphs';
+    default:
+      return 'lines';
+  }
+}
 
 export interface FreeDocumentSpec {
   /** Work title (required; whitespace-trimmed). */
@@ -77,6 +93,81 @@ function emptyEnglishLine(segments: number): string {
   return serializeRowSegments(Array.from({ length: segments }, () => emptyRowDocJSON()));
 }
 
+/** Where a built chapter file lands: which work, book, chapter, and the work's
+ * document-spine scheme (its segmentation unit follows from the scheme). */
+export interface DocumentChapterTarget {
+  workId: string;
+  book: number;
+  chapter: number;
+  scheme: SchemeId;
+  text: string;
+}
+
+/**
+ * Segment raw text into a standalone ChapterFile at a given (work, book,
+ * chapter). Shared by "New document…" (the work's first chapter) and
+ * "Import into chapter…" (filling a Book/Chapter container slot). The
+ * segmentation unit is derived from the scheme so a work stays internally
+ * consistent (a paragraph work's new chapters segment as paragraphs).
+ * Throws when the text yields no rows.
+ */
+export function buildDocumentChapterFile(target: DocumentChapterTarget): ChapterFile {
+  const { workId, book, chapter, scheme, text } = target;
+  const unit = documentUnitForScheme(scheme);
+
+  let rows: string[];
+  const lineSplits: LineSplit[] = [];
+  let paragraphStarts: number[] | undefined;
+
+  if (unit === 'paragraphs') {
+    rows = splitIntoParagraphRows(text);
+    for (let i = 0; i < rows.length; i++) {
+      // Refs use the same synthetic ordinal addresses rowAddressSource emits
+      // for document-spine paragraph works ("¶N" — d8 §1).
+      const ref = `¶${i + 1}`;
+      for (const offset of segmentSentences(rows[i])) {
+        lineSplits.push({ ref, offset });
+      }
+    }
+  } else {
+    const split = splitIntoLineRows(text);
+    rows = split.lines;
+    // `[1]` alone carries no grouping signal (one blank-line group = the
+    // whole document) — omit it, matching "absent field" semantics.
+    if (split.paragraphStarts.length > 1) paragraphStarts = split.paragraphStarts;
+  }
+
+  if (rows.length === 0) {
+    throw new Error('The document has no text — paste or choose a file first.');
+  }
+
+  const splitsByRow = new Map<string, number>();
+  for (const s of lineSplits) splitsByRow.set(s.ref, (splitsByRow.get(s.ref) ?? 0) + 1);
+
+  const addrOf = (n: number) => (unit === 'paragraphs' ? `¶${n}` : String(n));
+
+  // Key order mirrors parseChapterFile's meta construction (autosave's
+  // round-trip self-check compares JSON shapes).
+  const meta: ChapterFileMeta = {
+    schemaVersion: 1,
+    work: workId,
+    book,
+    chapter,
+    citationScheme: scheme,
+    spanStart: addrOf(1),
+    spanEnd: addrOf(rows.length),
+    ...(lineSplits.length > 0 ? { lineSplits } : {}),
+    ...(paragraphStarts ? { paragraphStarts } : {}),
+  };
+
+  return {
+    meta,
+    greekLines: rows,
+    englishLines: rows.map((_, i) => emptyEnglishLine(1 + (splitsByRow.get(addrOf(i + 1)) ?? 0))),
+    footnotes: [],
+  };
+}
+
 /**
  * Build the chapter file + registration record for a corpus-free document.
  * Throws a plain-language Error when the title is blank or the text yields
@@ -94,62 +185,12 @@ export function createFreeDocument(
   // Unit → scheme (input-form branching, not scheme-id branching: `unit` is
   // the dialog's radio value; the scheme ids are assigned as data).
   const scheme: SchemeId = spec.unit === 'paragraphs' ? 'paragraph' : 'plain-line';
-
-  let rows: string[];
-  let lineSplits: LineSplit[] = [];
-  let paragraphStarts: number[] | undefined;
-
-  if (spec.unit === 'paragraphs') {
-    rows = splitIntoParagraphRows(spec.text);
-    for (let i = 0; i < rows.length; i++) {
-      // Refs use the same synthetic ordinal addresses rowAddressSource emits
-      // for document-spine paragraph works ("¶N" — d8 §1).
-      const ref = `¶${i + 1}`;
-      for (const offset of segmentSentences(rows[i])) {
-        lineSplits.push({ ref, offset });
-      }
-    }
-  } else {
-    const split = splitIntoLineRows(spec.text);
-    rows = split.lines;
-    // `[1]` alone carries no grouping signal (one blank-line group = the
-    // whole document) — omit it, matching "absent field" semantics.
-    if (split.paragraphStarts.length > 1) paragraphStarts = split.paragraphStarts;
-  }
-
-  if (rows.length === 0) {
-    throw new Error('The document has no text — paste or choose a file first.');
-  }
-
-  const splitsByRow = new Map<string, number>();
-  for (const s of lineSplits) splitsByRow.set(s.ref, (splitsByRow.get(s.ref) ?? 0) + 1);
-
-  const addrOf = (n: number) => (spec.unit === 'paragraphs' ? `¶${n}` : String(n));
-
-  // Key order mirrors parseChapterFile's meta construction (autosave's
-  // round-trip self-check compares JSON shapes).
-  const meta: ChapterFileMeta = {
-    schemaVersion: 1,
-    work: slugForTitle(title, existingIds),
-    book: 1,
-    chapter: 1,
-    citationScheme: scheme,
-    spanStart: addrOf(1),
-    spanEnd: addrOf(rows.length),
-    ...(lineSplits.length > 0 ? { lineSplits } : {}),
-    ...(paragraphStarts ? { paragraphStarts } : {}),
-  };
-
-  const file: ChapterFile = {
-    meta,
-    greekLines: rows,
-    englishLines: rows.map((_, i) => emptyEnglishLine(1 + (splitsByRow.get(addrOf(i + 1)) ?? 0))),
-    footnotes: [],
-  };
+  const workId = slugForTitle(title, existingIds);
+  const file = buildDocumentChapterFile({ workId, book: 1, chapter: 1, scheme, text: spec.text });
 
   const language = spec.language?.trim();
   const work: FreeWorkRecord = {
-    id: meta.work,
+    id: workId,
     title,
     ...(language ? { language } : {}),
     scheme,
