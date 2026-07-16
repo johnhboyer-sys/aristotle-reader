@@ -83,7 +83,7 @@ const SUPPORTED_SCHEMA_VERSION = 1;
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const FOOTNOTE_ENTRY_RE = /^(\d+):[ \t](.*)$/;
-const SECTION_HEADERS = ['[GREEK]', '[ENGLISH]', '[ENGLISH.PARA]', '[FOOTNOTES]'] as const;
+const SECTION_HEADERS = ['[GREEK]', '[ENGLISH]', '[ENGLISH.PARA]', '[HEADING_TITLES]', '[FOOTNOTES]'] as const;
 type SectionHeader = (typeof SECTION_HEADERS)[number];
 
 function normalizeLineEndings(raw: string): string {
@@ -588,6 +588,8 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
   const englishLines = trimTrailingBlank(sections.get('[ENGLISH]')!.lines);
   const englishParaSection = sections.get('[ENGLISH.PARA]');
   const englishParaLines = englishParaSection ? trimTrailingBlank(englishParaSection.lines) : undefined;
+  const headingTitlesSection = sections.get('[HEADING_TITLES]');
+  const headingTitleLines = headingTitlesSection ? trimTrailingBlank(headingTitlesSection.lines) : undefined;
   const footnotesSection = sections.get('[FOOTNOTES]');
   const footnotes = footnotesSection ? parseFootnotes(footnotesSection.lines, footnotesSection.startLine, source) : [];
 
@@ -600,6 +602,12 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
   if (englishParaLines !== undefined && greekLines.length !== englishParaLines.length) {
     throw new ChapterFileError(
       `${source}: [GREEK] has ${greekLines.length} line(s) but [ENGLISH.PARA] has ${englishParaLines.length} line(s) — they must match 1:1`
+    );
+  }
+
+  if (headingTitleLines !== undefined && greekLines.length !== headingTitleLines.length) {
+    throw new ChapterFileError(
+      `${source}: [GREEK] has ${greekLines.length} line(s) but [HEADING_TITLES] has ${headingTitleLines.length} line(s) — they must match 1:1`
     );
   }
 
@@ -645,6 +653,7 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
     greekLines,
     englishLines,
     ...(englishParaLines !== undefined ? { englishParaLines } : {}),
+    ...(headingTitleLines !== undefined ? { headingTitleLines } : {}),
     footnotes,
     ...(psSanitized ? { paragraphStartsSanitized: true } : {}),
   };
@@ -760,6 +769,12 @@ export function serializeChapterFile(doc: ChapterFile): string {
     parts.push(''); // structural blank before the next header
     parts.push('[ENGLISH.PARA]');
     parts.push(...doc.englishParaLines);
+  }
+
+  if (doc.headingTitleLines !== undefined && doc.headingTitleLines.some((line) => line.length > 0)) {
+    parts.push(''); // structural blank before the next header
+    parts.push('[HEADING_TITLES]');
+    parts.push(...doc.headingTitleLines);
   }
 
   if (doc.footnotes.length > 0) {

@@ -106,6 +106,15 @@ export interface ChapterFile {
   englishLines: string[];
   /** Optional paragraph-granularity translation layer, one physical line per row. */
   englishParaLines?: string[];
+  /**
+   * Optional per-row heading TITLE OVERRIDE (D8 heading tools, `[HEADING_TITLES]`
+   * section): one physical line per row, blank when the row has no override.
+   * When present it is what the rail outline shows for that heading instead of
+   * its translation — lets a long marked paragraph carry a clean short title
+   * ("Objection 2") without touching its content. Present only when at least
+   * one row carries a title; 1:1 with the rows like englishParaLines.
+   */
+  headingTitleLines?: string[];
   footnotes: Footnote[];
   /**
    * True when frontmatter `paragraph_starts` carried entries the parser had

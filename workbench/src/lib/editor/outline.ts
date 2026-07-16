@@ -62,7 +62,9 @@ export function buildOutline(rows: RowModel[], profile: WorkProfile): OutlineIte
   const items: OutlineItem[] = [];
   rows.forEach((row, i) => {
     if (!row.headingLevel) return;
-    const en = englishText(row);
+    // A user-set title override wins; else the translation; else the original.
+    const override = row.headingTitle?.trim() ?? '';
+    const en = override.length > 0 ? override : englishText(row);
     const label = en.length > 0 ? en : row.greek.trim();
     items.push({
       rowIndex: i,

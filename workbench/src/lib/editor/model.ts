@@ -22,6 +22,14 @@ export interface RowModel {
    */
   headingLevel?: number;
   /**
+   * Optional heading TITLE OVERRIDE (D8 heading tools): a short label shown in
+   * the rail outline for this heading INSTEAD of its translation/original text
+   * (e.g. "Objection 2" on a long marked paragraph). Meaningful only on a row
+   * with a headingLevel. Persisted via the chapter-file `[HEADING_TITLES]`
+   * section. Absent = the outline falls back to translation, then original.
+   */
+  headingTitle?: string;
+  /**
    * Committed English row doc (PM JSON) of SEGMENT 0. Live views may be
    * ahead until commit. On a paragraph-split line (design doc D6) the
    * continuation segments live in `english2` — use englishDocsOf/segmentCount

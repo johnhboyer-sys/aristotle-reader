@@ -779,6 +779,25 @@ describe('document-spine chapter files (D8 Phase B)', () => {
     expect(h.rows[1].headingLevel).toBe(1);
   });
 
+  it('round-trips a heading TITLE override through [HEADING_TITLES]', () => {
+    const model = paragraphModel();
+    model.rows[0].headingLevel = 1;
+    model.rows[0].headingTitle = 'Objection 2';
+    // row 1 stays an ordinary heading with no override
+    model.rows[1].headingLevel = 1;
+    const content = serializeModel(model);
+    expect(content).toContain('[HEADING_TITLES]\nObjection 2');
+    const h = hydrateFromFile(parseChapterFile(content, 'para-titles'), [], 'paragraph');
+    expect(h.rows[0].headingTitle).toBe('Objection 2');
+    expect(h.rows[1].headingTitle).toBeUndefined();
+  });
+
+  it('writes no [HEADING_TITLES] when no row carries an override', () => {
+    const model = paragraphModel();
+    model.rows[0].headingLevel = 1;
+    expect(serializeModel(model)).not.toContain('[HEADING_TITLES]');
+  });
+
   it('saves paragraph-layer newlines as one physical [ENGLISH.PARA] row and hydrates them back', () => {
     const model = paragraphModel();
     model.rows[0].englishPara = buildRowDoc([t('Paragraph one'), t('\n'), t('whole')]).toJSON();

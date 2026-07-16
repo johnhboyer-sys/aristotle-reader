@@ -1511,6 +1511,16 @@
           markModelDirty();
         }
       }
+      // Heading title override (D8 heading tools): restore the row's headingTitle;
+      // refreshDisplayRows re-derives the rail outline label.
+      if (entry.headingTitle) {
+        const t = dir === 'undo' ? entry.headingTitle.before : entry.headingTitle.after;
+        const row = model.rows[entry.headingTitle.row];
+        if (row) {
+          row.headingTitle = t === null ? undefined : t;
+          markModelDirty();
+        }
+      }
       refreshDisplayRows();
       const fnTable = dir === 'undo' ? entry.fnBefore : entry.fnAfter;
       if (fnTable) {
@@ -3163,6 +3173,26 @@
     markModelDirty();
     refreshDisplayRows();
     setStatus(level === null ? 'Heading cleared.' : `Marked as ${levelName(profile, level)}.`);
+  }
+
+  /** Set (or clear) a heading row's rail TITLE OVERRIDE (D8 heading tools) —
+   * called from the rail's inline rename. Document-spine heading rows only; an
+   * empty title clears the override (rail falls back to translation/original).
+   * Its own ⌘Z step (headingTitle before/after); persisted to [HEADING_TITLES]. */
+  export function setHeadingTitle(rowIndex: number, title: string): void {
+    const r = rowIndex;
+    if (scheme.spineSource !== 'document' || r < 0 || r >= model.rows.length) return;
+    if (!model.rows[r].headingLevel) return; // only headings carry a title
+    const next = title.replace(/[\r\n]+/g, ' ').trim();
+    const before = model.rows[r].headingTitle ?? null;
+    const after = next.length > 0 ? next : null;
+    if (before === after) return;
+    history.breakCoalescing();
+    model.rows[r].headingTitle = after === null ? undefined : after;
+    history.push({ edits: [], headingTitle: { row: r, before, after }, selBefore: null, selAfter: null });
+    markModelDirty();
+    refreshDisplayRows();
+    setStatus(after === null ? 'Heading title cleared.' : `Renamed to “${after}”.`);
   }
 
   // ── commands (toolbar + shortcuts) ─────────────────────────────────────

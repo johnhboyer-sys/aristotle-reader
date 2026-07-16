@@ -56,6 +56,28 @@ describe('buildOutline', () => {
     ]);
   });
 
+  it('a title override wins over both translation and original text', () => {
+    const rows = [
+      row('Praeterea, illa dicuntur esse per se nota…', {
+        headingLevel: 3,
+        english: buildRowDoc([t('Furthermore, those are said to be self-evident…')]).toJSON(),
+        headingTitle: 'Objection 2',
+      }),
+    ];
+    expect(buildOutline(rows, SUMMA)[0].label).toBe('Objection 2');
+  });
+
+  it('a blank/whitespace title override falls through to the translation', () => {
+    const rows = [
+      row('Praeterea', {
+        headingLevel: 3,
+        english: buildRowDoc([t('Furthermore')]).toJSON(),
+        headingTitle: '   ',
+      }),
+    ];
+    expect(buildOutline(rows, SUMMA)[0].label).toBe('Furthermore');
+  });
+
   it('labels from the PARAGRAPH layer when that is where the translation lives (e.g. the Summa)', () => {
     const rows = [
       row('Articulus 1', { headingLevel: 1, englishPara: buildRowDoc([t('Article 1')]).toJSON() }),

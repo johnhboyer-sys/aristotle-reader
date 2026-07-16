@@ -113,6 +113,12 @@ export interface UndoEntry {
    * stack — mirrors `paraStarts` — so a plain heading mark is its own ⌘Z step.
    */
   headingLevel?: { row: number; before: number | null; after: number | null };
+  /**
+   * Heading TITLE-override change (D8 heading tools): one row's headingTitle
+   * before/after a rail rename (null = no override). Rides the same stack like
+   * `headingLevel`, so a rename is its own ⌘Z step.
+   */
+  headingTitle?: { row: number; before: string | null; after: string | null };
   fnBefore?: Footnote[];
   fnAfter?: Footnote[];
   selBefore: SelRef | null;

@@ -51,6 +51,7 @@
     selected,
     outline = [],
     onOutlineSelect,
+    onOutlineRename,
     onManageLevels,
     onSelect,
     onAddWork,
@@ -66,6 +67,8 @@
     outline?: OutlineItem[];
     /** Jump the editor to a heading row (rail outline click). */
     onOutlineSelect?: (rowIndex: number) => void;
+    /** Set a heading's rail title override (double-click rename; '' clears). */
+    onOutlineRename?: (rowIndex: number, title: string) => void;
     /** Open the "Manage levels…" profile editor for a document work. */
     onManageLevels?: (workId: string) => void;
     onSelect: (workId: string, book: number, chapter: number) => void;
@@ -102,24 +105,109 @@
       selected?.workId === workId && selected?.book === book && selected?.chapter === chapter
     );
   }
+
+  // ── outline collapse (per open work) + inline rename ──────────────────────
+  // Collapsed heading nodes, keyed `${workId}:${rowIndex}` so state never bleeds
+  // across documents (no reset needed). Not persisted across sessions.
+  let collapsedOutline = $state<Set<string>>(new Set());
+  const collapseKey = (rowIndex: number) => `${selected?.workId ?? ''}:${rowIndex}`;
+  function toggleOutline(rowIndex: number) {
+    const key = collapseKey(rowIndex);
+    const next = new Set(collapsedOutline);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    collapsedOutline = next;
+  }
+
+  let editingRow = $state<number | null>(null);
+  let editValue = $state('');
+  function startRename(rowIndex: number, current: string) {
+    editingRow = rowIndex;
+    editValue = current;
+  }
+  function commitRename(rowIndex: number) {
+    if (editingRow !== rowIndex) return;
+    editingRow = null;
+    onOutlineRename?.(rowIndex, editValue.trim());
+  }
+  function cancelRename() {
+    editingRow = null;
+  }
+  function onRenameKey(e: KeyboardEvent, rowIndex: number) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitRename(rowIndex);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelRename();
+    }
+  }
+  /** Focus + select the rename input the instant it mounts. */
+  function focusOnMount(node: HTMLInputElement) {
+    node.focus();
+    node.select();
+  }
 </script>
 
 <!-- Recursive nav-tree of the open document's headings (D8): Book › Chapter ›
      heading, each node a jump-to button; children nest in their own <ul>. -->
 {#snippet outlineNodes(nodes: import('../lib/editor/outline').OutlineNode[])}
   {#each nodes as node (node.item.rowIndex)}
+    {@const ri = node.item.rowIndex}
+    {@const hasChildren = node.children.length > 0}
+    {@const isCollapsed = collapsedOutline.has(collapseKey(ri))}
     <li>
-      <button
-        class="chapter-row outline-row"
-        class:outline-book={node.item.navRole === 'book'}
-        class:outline-chapter={node.item.navRole === 'chapter'}
-        class:outline-heading={node.item.navRole === 'heading'}
-        title={node.item.label}
-        onclick={() => onOutlineSelect?.(node.item.rowIndex)}
-      >
-        {node.item.label}
-      </button>
-      {#if node.children.length > 0}
+      <div class="outline-line">
+        {#if hasChildren}
+          <button
+            class="outline-toggle"
+            onclick={() => toggleOutline(ri)}
+            aria-expanded={!isCollapsed}
+            aria-label={isCollapsed ? 'Expand' : 'Collapse'}
+          >
+            <svg
+              class="chevron"
+              class:open={!isCollapsed}
+              viewBox="0 0 24 24"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+        {:else}
+          <span class="outline-toggle-spacer" aria-hidden="true"></span>
+        {/if}
+        {#if editingRow === ri}
+          <!-- svelte-ignore a11y_autofocus -->
+          <input
+            class="outline-rename"
+            type="text"
+            bind:value={editValue}
+            use:focusOnMount
+            onkeydown={(e) => onRenameKey(e, ri)}
+            onblur={() => commitRename(ri)}
+          />
+        {:else}
+          <button
+            class="chapter-row outline-row"
+            class:outline-book={node.item.navRole === 'book'}
+            class:outline-chapter={node.item.navRole === 'chapter'}
+            class:outline-heading={node.item.navRole === 'heading'}
+            title={`${node.item.label} — double-click to rename`}
+            onclick={() => onOutlineSelect?.(ri)}
+            ondblclick={() => startRename(ri, node.item.label)}
+          >
+            {node.item.label}
+          </button>
+        {/if}
+      </div>
+      {#if hasChildren && !isCollapsed}
         <ul class="outline-children">
           {@render outlineNodes(node.children)}
         </ul>
@@ -420,14 +508,59 @@
      comes from structural nesting (each .outline-children steps in), and the
      nav-role sets the weight/size — a Book reads bolder than a heading. Labels
      can be long translations, so clamp to one line with an ellipsis. */
+  /* One outline row = [disclosure toggle | label], on a flex line so the
+     chevron aligns and the label ellipsizes in the remaining space. */
+  .outline-line {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .outline-toggle {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .outline-toggle:hover {
+    background: var(--ui-hover);
+  }
+  /* Keeps leaf labels aligned with those that have a chevron. */
+  .outline-toggle-spacer {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
   .outline-row {
+    flex: 1;
+    min-width: 0;
     display: block;
     font-size: 0.8rem;
     color: var(--text-mid);
-    padding-left: var(--space-3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .outline-rename {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--text);
+    background: var(--surface, #fff);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 0.18rem var(--space-2);
+    margin: 1px 0;
+  }
+  .outline-rename:focus {
+    outline: none;
   }
   .outline-children {
     /* Each nesting level steps in from its parent. */

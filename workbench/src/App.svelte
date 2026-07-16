@@ -600,6 +600,7 @@
             selected={selection}
             outline={docOutline}
             onOutlineSelect={(rowIndex) => editorRef?.scrollToRow(rowIndex)}
+            onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}

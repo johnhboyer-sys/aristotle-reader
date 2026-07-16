@@ -293,6 +293,15 @@ describe('structural undo entries ride AppHistory unchanged (D8 §2)', () => {
     const redone = h.redo()!;
     expect(redone.headingLevel).toEqual({ row: 2, before: null, after: 3 });
   });
+
+  it('a headingTitle entry (D8 rail rename) round-trips its before/after', () => {
+    const h = new AppHistory();
+    h.push({ edits: [], headingTitle: { row: 4, before: null, after: 'Objection 2' }, selBefore: null, selAfter: null });
+    const undone = h.undo()!;
+    expect(undone.headingTitle).toEqual({ row: 4, before: null, after: 'Objection 2' });
+    const redone = h.redo()!;
+    expect(redone.headingTitle).toEqual({ row: 4, before: null, after: 'Objection 2' });
+  });
 });
 
 describe('heading role survives split/merge (D8 heading tools — no silent demotion)', () => {

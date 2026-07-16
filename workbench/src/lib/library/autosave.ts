@@ -244,6 +244,13 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
     if (r.headingLevel) headers.push({ row: i + 1, level: r.headingLevel });
   });
 
+  // Heading title overrides → chapter-file `[HEADING_TITLES]` (one line per row,
+  // blank when none; newlines flattened so the 1-line-per-row invariant holds).
+  // Only emitted when some row carries a title (serializeChapterFile drops an
+  // all-empty section, so an unconditional array would fail the self-check).
+  const headingTitles = model.rows.map((r) => (r.headingTitle ?? '').replace(/[\r\n]+/g, ' '));
+  const headingTitleLines = headingTitles.some((t) => t.length > 0) ? headingTitles : undefined;
+
   return {
     meta: {
       schemaVersion: 1,
@@ -269,6 +276,7 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
     greekLines: model.rows.map((r) => r.greek),
     englishLines: model.rows.map((r) => serializeRowSegments(englishDocsOf(r))),
     ...(englishParaLines ? { englishParaLines } : {}),
+    ...(headingTitleLines ? { headingTitleLines } : {}),
     footnotes,
   };
 }
@@ -460,6 +468,14 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
       const row = rows[h.row - 1];
       if (row) row.headingLevel = h.level;
     }
+  }
+
+  // Heading title overrides (`[HEADING_TITLES]`, 1:1 with rows) — document-spine
+  // only, same gate as headers. A blank line = no override.
+  if (file.headingTitleLines && schemeDef.spineSource === 'document') {
+    file.headingTitleLines.forEach((title, i) => {
+      if (title.length > 0 && rows[i]) rows[i].headingTitle = title;
+    });
   }
 
   // Anchored-ness is derived: a footnote is anchored iff its marker survives
