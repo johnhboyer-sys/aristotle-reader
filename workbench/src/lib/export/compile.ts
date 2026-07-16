@@ -30,7 +30,8 @@ import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
 import type { StampMode } from './pandocMarkdown';
-import { chapterSegments, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
+import { chapterSegments, documentChapterSections, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
+import type { DocumentBook } from '../works/manifest';
 
 export type CompileMode = 'english' | 'bilingual';
 
@@ -184,6 +185,15 @@ function bookHeading(book: number, work: WorkMeta): string {
   return `# ${scheme.bookLabel(book, work)}`;
 }
 
+/** A container chapter slot's display label ("Question 2") for the export
+ * heading, read defensively from the work's documentBooks (the runtime work is
+ * a WorkManifest even where the type is WorkMeta). Falls back to "Chapter N". */
+function documentChapterLabel(work: WorkMeta, book: number, chapter: number): string {
+  const books = (work as { documentBooks?: DocumentBook[] }).documentBooks;
+  const label = books?.[book - 1]?.chapters?.[chapter - 1]?.label?.trim();
+  return label && label.length > 0 ? label : `Chapter ${chapter}`;
+}
+
 function chapterHeading(chapter: ChapterFile, work: WorkMeta): string {
   const scheme = getScheme(chapter.meta.citationScheme);
   const range = scheme.formatRange({
@@ -280,13 +290,51 @@ export function compileWorkMarkdown(
     // source + English per unit (renderDocumentSpineBilingual) — previously
     // this branch ignored `mode` and silently produced English-only output
     // under the bilingual filename.
-    const markdown =
-      ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work, resolved.mode) : `# ${work.title}\n\n`;
-    return {
-      markdown,
-      gapReport,
-      included: ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter })),
-    };
+    const included = ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter }));
+
+    // Single document (the bookless free-work case): unchanged, byte-identical.
+    if (ordered.length <= 1) {
+      const markdown =
+        ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work, resolved.mode) : `# ${work.title}\n\n`;
+      return { markdown, gapReport, included };
+    }
+
+    // Multi-chapter container (D8 Book/Chapter structure): the work title once,
+    // then each chapter's body under its Book/Chapter heading. Footnote ids are
+    // namespaced per chapter so two chapters' local id "1" don't collide in the
+    // concatenated pandoc document (same rule as the corpus arm below).
+    const docSections: string[] = [`# ${work.title}`];
+    let docBook: number | null = null;
+    ordered.forEach((chapter, index) => {
+      if (chapter.meta.book !== docBook) {
+        docBook = chapter.meta.book;
+        docSections.push(`## ${workScheme.bookLabel(chapter.meta.book, work) || `Book ${chapter.meta.book}`}`);
+      }
+      docSections.push(`### ${documentChapterLabel(work, chapter.meta.book, chapter.meta.chapter)}`);
+      const prefix = `c${index + 1}-`;
+      const namespaced: ChapterFile = {
+        ...chapter,
+        englishLines: chapter.englishLines.map((l) => namespaceFootnoteRefs(l, prefix)),
+      };
+      const { paragraphs, footnoteIdsUsed } = documentChapterSections(namespaced, resolved.mode);
+      if (paragraphs.length > 0) docSections.push(...paragraphs);
+      // Footnote-definition blocks with the SAME namespacing as the corpus arm
+      // (prefix + local id), so two chapters' local id "1" resolve distinctly.
+      const used = new Set(footnoteIdsUsed);
+      const fnBlocks: string[] = [];
+      for (const fn of chapter.footnotes) {
+        const namespacedId = `${prefix}${fn.id}`;
+        if (!used.has(namespacedId)) continue;
+        const bodyLines = fn.body.split('\n').map((l) => namespaceFootnoteRefs(l, prefix));
+        const rendered = bodyLines.map((l) => markupToPandoc(l).markdown);
+        const [first, ...rest] = rendered;
+        let block = `[^${namespacedId}]: ${first}`;
+        for (const line of rest) block += `\n    ${line}`;
+        fnBlocks.push(block);
+      }
+      if (fnBlocks.length > 0) docSections.push(fnBlocks.join('\n\n'));
+    });
+    return { markdown: docSections.join('\n\n') + '\n', gapReport, included };
   }
 
   const sections: string[] = [];

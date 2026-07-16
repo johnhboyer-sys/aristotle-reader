@@ -836,13 +836,29 @@ export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, op
  * compile dialog passes its selected mode): 'bilingual' interleaves source
  * and English per unit — see renderDocumentSpineBilingual.
  */
+/**
+ * A single document-spine chapter's rendered body paragraphs + the footnote
+ * ids they reference, WITHOUT any title/heading or footnote-definition blocks.
+ * The reusable core of documentToPandocMarkdown; a multi-chapter document work
+ * composes several of these under its own Book/Chapter headings, building the
+ * footnote-definition blocks itself so it can namespace ids across chapters
+ * (compile.ts). Selecting english vs bilingual is the only mode logic here.
+ */
+export function documentChapterSections(
+  chapter: ChapterFile,
+  mode: 'english' | 'bilingual' = 'english',
+): { paragraphs: string[]; footnoteIdsUsed: string[] } {
+  const { paragraphs, footnoteIdsUsed } =
+    mode === 'bilingual' ? renderDocumentSpineBilingual(chapter) : renderDocumentSpineEnglish(chapter);
+  return { paragraphs, footnoteIdsUsed };
+}
+
 export function documentToPandocMarkdown(
   chapter: ChapterFile,
   work: WorkMeta,
   mode: 'english' | 'bilingual' = 'english',
 ): string {
-  const { paragraphs, footnoteIdsUsed } =
-    mode === 'bilingual' ? renderDocumentSpineBilingual(chapter) : renderDocumentSpineEnglish(chapter);
+  const { paragraphs, footnoteIdsUsed } = documentChapterSections(chapter, mode);
   const footnoteBlocks = buildFootnoteBlocks(chapter, footnoteIdsUsed);
   const sections = [`# ${work.title}`, ...(paragraphs.length > 0 ? paragraphs : [''])];
   if (footnoteBlocks.length > 0) sections.push(footnoteBlocks.join('\n\n'));

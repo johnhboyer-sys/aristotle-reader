@@ -586,6 +586,74 @@ describe('compileWorkMarkdown — document-spine single-document route (D8)', ()
   });
 });
 
+describe('compileWorkMarkdown — document-spine multi-chapter container (D8 structure)', () => {
+  // A container work: one Book "Prima Pars" with two named chapter slots.
+  const CONTAINER: WorkMeta = {
+    id: 'summa',
+    title: 'Summa Theologiae',
+    author: '',
+    scheme: 'paragraph',
+    books: [{ n: 1, label: 'Prima Pars' }],
+    // documentBooks rides along at runtime (WorkManifest); compile reads it
+    // defensively for the chapter labels.
+    documentBooks: [
+      { n: 1, label: 'Prima Pars', chapters: [{ n: 1, label: 'Question 2' }, { n: 2, label: 'Question 3' }] },
+    ],
+  } as WorkMeta;
+
+  function q(chapter: number, english: string, footnotes: ChapterFile['footnotes'] = []): ChapterFile {
+    return {
+      meta: {
+        schemaVersion: 1,
+        work: 'summa',
+        book: 1,
+        chapter,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶1',
+      },
+      greekLines: [`Source Q${chapter}.`],
+      englishLines: [english],
+      footnotes,
+    };
+  }
+
+  it('renders the title once, then Book + named-Chapter headings and each body', () => {
+    const result = compileWorkMarkdown([q(1, 'Article one.'), q(2, 'Article two.')], CONTAINER);
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Article one.\n\n' +
+        '### Question 3\n\n' +
+        'Article two.\n',
+    );
+    expect(result.included).toEqual([{ book: 1, chapter: 1 }, { book: 1, chapter: 2 }]);
+  });
+
+  it('namespaces footnote ids so two chapters’ local id 1 don’t collide', () => {
+    const result = compileWorkMarkdown(
+      [
+        q(1, 'A {^1:first note}.', [{ id: 1, body: 'first' }]),
+        q(2, 'B {^1:second note}.', [{ id: 1, body: 'second' }]),
+      ],
+      CONTAINER,
+    );
+    // Distinct namespaced refs + definitions, no collision.
+    expect(result.markdown).toContain('[^c1-1]: first');
+    expect(result.markdown).toContain('[^c2-1]: second');
+  });
+
+  it('falls back to "Chapter N" when a slot has no container label', () => {
+    const noLabels: WorkMeta = { ...FREE_WORK, books: [{ n: 1, label: '' }] };
+    const result = compileWorkMarkdown([q(1, 'One.'), q(2, 'Two.')], noLabels);
+    expect(result.markdown).toContain('### Chapter 1');
+    expect(result.markdown).toContain('### Chapter 2');
+    // Bookless label → "Book 1" fallback for the book heading.
+    expect(result.markdown).toContain('## Book 1');
+  });
+});
+
 describe('filename helpers', () => {
   it('sanitizes illegal filename characters and collapses whitespace', () => {
     expect(sanitizeFilenameComponent('A: B / C * D?')).toBe('A B C D');
