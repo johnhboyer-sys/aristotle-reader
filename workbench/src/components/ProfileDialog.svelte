@@ -5,7 +5,7 @@
   // tiers are in-page headings. Persisted onto the free-work record and reused
   // on later imports. A work with no custom profile seeds from DEFAULT_PROFILE.
   import type { NavRole, WorkLevel } from '../lib/works/profile';
-  import { DEFAULT_PROFILE, MAX_LEVELS, sanitizeLevels } from '../lib/works/profile';
+  import { DEFAULT_PROFILE, MAX_LEVELS, sanitizeLevels, reclampDepths } from '../lib/works/profile';
   import { updateFreeWorkLevels } from '../lib/works/freeWorks';
 
   let {
@@ -23,7 +23,11 @@
   } = $props();
 
   const seed = initialLevels.length > 0 ? initialLevels : DEFAULT_PROFILE.levels;
-  let levels = $state<WorkLevel[]>(seed.map((l) => ({ name: l.name, navRole: l.navRole })));
+  // reclampDepths fills any missing/legacy depth via the "one deeper" migration
+  // and enforces the no-gap invariant up front.
+  let levels = $state<WorkLevel[]>(
+    reclampDepths(seed.map((l) => ({ name: l.name, navRole: l.navRole, depth: l.depth }))),
+  );
   let errorMessage = $state<string | null>(null);
   let writing = $state(false);
 
@@ -43,20 +47,38 @@
           : null,
   );
 
+  /** Max legal depth for the level at index i (no-gap invariant). */
+  function maxDepthAt(i: number): number {
+    return i === 0 ? 0 : levels[i - 1].depth + 1;
+  }
+
   function addLevel() {
     if (levels.length >= MAX_LEVELS) return;
-    levels = [...levels, { name: '', navRole: 'heading' }];
+    // A new tier defaults to a SIBLING of the last (same depth) — the common
+    // case (another same-level heading); indent it after if you want a sub-level.
+    const depth = levels.length > 0 ? levels[levels.length - 1].depth : 0;
+    levels = reclampDepths([...levels, { name: '', navRole: 'heading', depth }]);
   }
   function removeLevel(i: number) {
     if (levels.length <= 1) return;
-    levels = levels.filter((_, j) => j !== i);
+    levels = reclampDepths(levels.filter((_, j) => j !== i));
   }
   function move(i: number, dir: -1 | 1) {
     const j = i + dir;
     if (j < 0 || j >= levels.length) return;
     const next = [...levels];
     [next[i], next[j]] = [next[j], next[i]];
-    levels = next;
+    levels = reclampDepths(next);
+  }
+  function indent(i: number) {
+    if (levels[i].depth >= maxDepthAt(i)) return;
+    const next = levels.map((l, j) => (j === i ? { ...l, depth: l.depth + 1 } : l));
+    levels = reclampDepths(next);
+  }
+  function outdent(i: number) {
+    if (levels[i].depth <= 0) return;
+    const next = levels.map((l, j) => (j === i ? { ...l, depth: l.depth - 1 } : l));
+    levels = reclampDepths(next);
   }
 
   async function save() {
@@ -96,10 +118,23 @@
         <strong>Chapter</strong> tiers become navigable divisions; <strong>Heading</strong>
         tiers are in-page headings. These are reused when you import more chapters.
       </p>
+      <p class="line hint">
+        Use <span class="kbd">▶</span> to make a tier a <strong>sub-level</strong> and
+        <span class="kbd">◀</span> to raise it. <strong>Same indent = same level</strong>
+        (siblings) — e.g. Objection, Sed contra, Respondeo and Reply all sit level with each other.
+      </p>
 
       <ol class="levels">
         {#each levels as level, i (i)}
-          <li class="level-row">
+          <li class="level-row" style="--depth: {level.depth}">
+            <!-- Prominent stepped indent: one guide rail per depth, a corner on the last. -->
+            {#if level.depth > 0}
+              <span class="indent" aria-hidden="true">
+                {#each Array.from({ length: level.depth }) as _, d (d)}
+                  <span class="guide" class:corner={d === level.depth - 1}></span>
+                {/each}
+              </span>
+            {/if}
             <span class="rank">{i + 1}</span>
             <input
               class="name"
@@ -114,6 +149,9 @@
               {/each}
             </select>
             <div class="row-actions">
+              <button class="icon" onclick={() => outdent(i)} disabled={level.depth <= 0} aria-label="Outdent (raise level)" title="Outdent — raise a level">◀</button>
+              <button class="icon" onclick={() => indent(i)} disabled={level.depth >= maxDepthAt(i)} aria-label="Indent (make sub-level)" title="Indent — make a sub-level">▶</button>
+              <span class="sep" aria-hidden="true"></span>
               <button class="icon" onclick={() => move(i, -1)} disabled={i === 0} aria-label="Move up" title="Move up">↑</button>
               <button class="icon" onclick={() => move(i, 1)} disabled={i === levels.length - 1} aria-label="Move down" title="Move down">↓</button>
               <button class="icon" onclick={() => removeLevel(i)} disabled={levels.length <= 1} aria-label="Remove level" title="Remove">✕</button>
@@ -214,10 +252,65 @@
     flex-direction: column;
     gap: var(--space-2);
   }
+  .hint {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text-light);
+    margin-bottom: var(--space-3);
+  }
+  .kbd {
+    display: inline-block;
+    min-width: 1.1rem;
+    text-align: center;
+    padding: 0 0.2rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--input-bg);
+    color: var(--text-mid);
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
   .level-row {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    min-height: 1.9rem;
+  }
+  /* Prominent stepped indent: one 1.6rem guide rail per depth level, the last
+     drawn as a └ corner connecting into the row, so equal-vs-sub reads at a
+     glance and jumps the moment indent/outdent fires. */
+  .indent {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-self: stretch;
+  }
+  .guide {
+    position: relative;
+    width: 1.6rem;
+    flex: 0 0 1.6rem;
+    align-self: stretch;
+    border-left: 2px solid var(--border);
+  }
+  .guide.corner {
+    border-left-color: var(--accent);
+  }
+  .guide.corner::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 0;
+    height: 50%;
+    width: 0.7rem;
+    border-left: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    border-bottom-left-radius: 4px;
+  }
+  .sep {
+    width: 1px;
+    align-self: center;
+    height: 1.1rem;
+    background: var(--border);
+    margin: 0 2px;
   }
   .rank {
     font-family: var(--font-ui);

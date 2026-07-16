@@ -7,9 +7,9 @@ import type { WorkProfile } from '../../works/profile';
 // level 1 = Part (book), 2 = Question (chapter), 3 = Article (in-page heading)
 const PROFILE: WorkProfile = {
   levels: [
-    { name: 'Part', navRole: 'book' },
-    { name: 'Question', navRole: 'chapter' },
-    { name: 'Article', navRole: 'heading' },
+    { name: 'Part', navRole: 'book', depth: 0 },
+    { name: 'Question', navRole: 'chapter', depth: 1 },
+    { name: 'Article', navRole: 'heading', depth: 2 },
   ],
 };
 

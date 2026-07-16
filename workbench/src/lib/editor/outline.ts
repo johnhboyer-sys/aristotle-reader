@@ -7,7 +7,7 @@
 
 import type { RowModel } from './model';
 import { docFromJSON } from './schema';
-import { navRoleOf } from '../works/profile';
+import { navRoleOf, levelDepth } from '../works/profile';
 import type { NavRole, WorkProfile } from '../works/profile';
 
 export interface OutlineItem {
@@ -17,6 +17,12 @@ export interface OutlineItem {
   level: number;
   /** The tier's navigation role, resolved from the work profile at build time. */
   navRole: NavRole;
+  /**
+   * The tier's 0-based outline indent (levelDepth) — what decides NESTING:
+   * equal depth within a nav-role = siblings, greater = child. Distinct from
+   * `level`, which only identifies the named tier.
+   */
+  depth: number;
   /** Translation of the heading if present, else the original-language text. */
   label: string;
 }
@@ -62,6 +68,7 @@ export function buildOutline(rows: RowModel[], profile: WorkProfile): OutlineIte
       rowIndex: i,
       level: row.headingLevel,
       navRole: navRoleOf(profile, row.headingLevel),
+      depth: levelDepth(profile, row.headingLevel),
       label,
     });
   });
@@ -73,12 +80,14 @@ const NAV_RANK: Record<NavRole, number> = { book: 0, chapter: 1, heading: 2 };
 
 /**
  * Nesting depth of an outline item. Nav-role dominates (a Book always contains a
- * Chapter contains a heading, whatever the raw levels), and the 1-based profile
- * level breaks ties — so a deeper heading tier nests under a shallower one, and
- * two rows at the same tier are siblings. (MAX_LEVELS ≪ 100, so nav-role wins.)
+ * Chapter contains a heading, whatever the tiers' indents), and the tier's
+ * profile DEPTH breaks ties within a nav-role — so two heading tiers the user
+ * set to the SAME depth are siblings (e.g. Objection / Sed contra / Respondeo /
+ * Reply under an Article), and a deeper tier nests under a shallower one above
+ * it. (depth ≤ MAX_LEVELS ≪ 100, so nav-role always wins.)
  */
 function nodeDepth(item: OutlineItem): number {
-  return NAV_RANK[item.navRole] * 100 + item.level;
+  return NAV_RANK[item.navRole] * 100 + item.depth;
 }
 
 /**

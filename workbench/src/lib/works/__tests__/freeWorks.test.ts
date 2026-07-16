@@ -32,8 +32,8 @@ describe('free-work registry (works.json in the library root)', () => {
   it('persists and reads back a work organization profile (levels)', async () => {
     const storage = new MemStorage();
     const levels = [
-      { name: 'Part', navRole: 'book' as const },
-      { name: 'Question', navRole: 'chapter' as const },
+      { name: 'Part', navRole: 'book' as const, depth: 0 },
+      { name: 'Question', navRole: 'chapter' as const, depth: 1 },
     ];
     await registerFreeWork({ ...RECORD, levels }, storage);
     expect((await listFreeWorkRecords(storage))[0].levels).toEqual(levels);
@@ -50,9 +50,9 @@ describe('free-work registry (works.json in the library root)', () => {
     const storage = new MemStorage();
     await registerFreeWork({ ...RECORD, language: 'Latin' }, storage);
     const levels = [
-      { name: 'Part', navRole: 'book' as const },
-      { name: 'Question', navRole: 'chapter' as const },
-      { name: 'Article', navRole: 'heading' as const },
+      { name: 'Part', navRole: 'book' as const, depth: 0 },
+      { name: 'Question', navRole: 'chapter' as const, depth: 1 },
+      { name: 'Article', navRole: 'heading' as const, depth: 2 },
     ];
     await updateFreeWorkLevels('my-doc', levels, storage);
     const rec = (await listFreeWorkRecords(storage))[0];
@@ -62,17 +62,17 @@ describe('free-work registry (works.json in the library root)', () => {
   it('updateFreeWorkLevels with no usable levels clears them (reverts to default)', async () => {
     const storage = new MemStorage();
     await registerFreeWork(
-      { ...RECORD, levels: [{ name: 'Part', navRole: 'book' }] },
+      { ...RECORD, levels: [{ name: 'Part', navRole: 'book', depth: 0 }] },
       storage,
     );
-    await updateFreeWorkLevels('my-doc', [{ name: '  ', navRole: 'heading' }], storage);
+    await updateFreeWorkLevels('my-doc', [{ name: '  ', navRole: 'heading', depth: 0 }], storage);
     expect((await listFreeWorkRecords(storage))[0].levels).toBeUndefined();
   });
 
   it('updateFreeWorkLevels is a no-op for an unknown work id', async () => {
     const storage = new MemStorage();
     await registerFreeWork(RECORD, storage);
-    await updateFreeWorkLevels('nope', [{ name: 'X', navRole: 'book' }], storage);
+    await updateFreeWorkLevels('nope', [{ name: 'X', navRole: 'book', depth: 0 }], storage);
     expect((await listFreeWorkRecords(storage))[0].levels).toBeUndefined();
   });
 
@@ -165,9 +165,9 @@ describe('freeWorkManifest', () => {
 
   it('surfaces the record levels as the manifest profile (custom over default)', () => {
     const levels = [
-      { name: 'Part', navRole: 'book' as const },
-      { name: 'Question', navRole: 'chapter' as const },
-      { name: 'Article', navRole: 'heading' as const },
+      { name: 'Part', navRole: 'book' as const, depth: 0 },
+      { name: 'Question', navRole: 'chapter' as const, depth: 1 },
+      { name: 'Article', navRole: 'heading' as const, depth: 2 },
     ];
     expect(freeWorkManifest({ ...RECORD, levels }).profile).toEqual({ levels });
   });
