@@ -30,6 +30,7 @@ import { getScheme } from '../citation/registry';
 import type { ChapterFile, ChapterFileMeta, Footnote, HeaderMark } from '../chapterfile';
 import type { NavRole, WorkProfile } from '../works/profile';
 import { navRoleOf } from '../works/profile';
+import type { FreeBook } from '../works/freeWorks';
 import { documentOrdinalAddress } from './autosave';
 
 export interface DocumentPart {
@@ -169,4 +170,43 @@ export function splitDocument(file: ChapterFile, profile: WorkProfile): Document
     chapter: seg.chapter,
     file: rebase(file, scheme, seg),
   }));
+}
+
+/**
+ * The explicit Book/Chapter container structure a document's markers imply —
+ * the registry counterpart of splitDocument (the SAME segment() boundary walk,
+ * so the labels line up 1:1 with the files it produces). `labelOf(rowIndex)`
+ * supplies a boundary row's display text (the caller passes the outline label:
+ * heading title override → translation → original). A Book takes its label from
+ * the 'book' row that opens it; a Chapter from the 'chapter' row that opens it;
+ * anything unlabeled (a leading preface, a book's first chapter opened only by
+ * the book row) falls back to "Book N" / "Chapter N".
+ */
+export function documentBookStructure(
+  file: ChapterFile,
+  profile: WorkProfile,
+  labelOf: (rowIndex: number) => string,
+): FreeBook[] {
+  const levelByRow = new Map<number, number>();
+  for (const h of file.meta.headers ?? []) levelByRow.set(h.row, h.level);
+  const navAtRow = (row0: number): NavRole | null => {
+    const level = levelByRow.get(row0 + 1);
+    return level === undefined ? null : navRoleOf(profile, level);
+  };
+
+  const books: FreeBook[] = [];
+  for (const seg of segment(file, profile)) {
+    while (books.length < seg.book) books.push({ label: '', chapters: [] });
+    const book = books[seg.book - 1];
+    const role = navAtRow(seg.start);
+    if (role === 'book' && book.label.length === 0) book.label = labelOf(seg.start).trim();
+    book.chapters.push({ label: role === 'chapter' ? labelOf(seg.start).trim() : '' });
+  }
+  books.forEach((b, bi) => {
+    if (b.label.length === 0) b.label = `Book ${bi + 1}`;
+    b.chapters.forEach((c, ci) => {
+      if (c.label.length === 0) c.label = `Chapter ${ci + 1}`;
+    });
+  });
+  return books;
 }

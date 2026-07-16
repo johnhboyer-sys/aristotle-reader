@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitDocument } from '../splitDocument';
+import { splitDocument, documentBookStructure } from '../splitDocument';
 import { parseChapterFile, serializeChapterFile } from '../../chapterfile';
 import type { ChapterFile, Footnote, HeaderMark } from '../../chapterfile';
 import type { WorkProfile } from '../../works/profile';
@@ -240,5 +240,57 @@ describe('splitDocument — every part round-trips through the chapter-file form
       // byte-stable
       expect(serializeChapterFile(reparsed)).toBe(text);
     }
+  });
+});
+
+describe('documentBookStructure — the container labels a split implies', () => {
+  // Label a boundary row by its greek text (what the outline would show).
+  const labelByRow = (rows: string[]) => (i: number) => rows[i] ?? '';
+
+  it('no book/chapter markers → one default Book with one default Chapter', () => {
+    const rows = ['a', 'b', 'c'];
+    const file = docFile(rows, { headers: [{ row: 2, level: 3 }] }); // heading only
+    expect(documentBookStructure(file, PROFILE, labelByRow(rows))).toEqual([
+      { label: 'Book 1', chapters: [{ label: 'Chapter 1' }] },
+    ]);
+  });
+
+  it('chapter markers → one Book, chapters labeled from their boundary rows (preface = Chapter 1)', () => {
+    const rows = ['pre', 'Question 2', 'Question 3'];
+    const file = docFile(rows, { headers: [{ row: 2, level: 2 }, { row: 3, level: 2 }] });
+    // parts are 1.1 (preface), 1.2, 1.3 — labels line up 1:1.
+    expect(splitDocument(file, PROFILE).map(key)).toEqual(['1.1', '1.2', '1.3']);
+    expect(documentBookStructure(file, PROFILE, labelByRow(rows))).toEqual([
+      {
+        label: 'Book 1',
+        chapters: [{ label: 'Chapter 1' }, { label: 'Question 2' }, { label: 'Question 3' }],
+      },
+    ]);
+  });
+
+  it('book + chapter markers → named Books; a book’s first chapter defaults to "Chapter 1"', () => {
+    const rows = ['Prima Pars', 'Q1', 'Q2', 'Secunda Pars', 'Q1b'];
+    const file = docFile(rows, {
+      headers: [
+        { row: 1, level: 1 }, // Prima Pars (book) — on row 1, labels the first part
+        { row: 2, level: 2 },
+        { row: 3, level: 2 },
+        { row: 4, level: 1 }, // Secunda Pars (book)
+        { row: 5, level: 2 },
+      ],
+    });
+    expect(splitDocument(file, PROFILE).map(key)).toEqual(['1.1', '1.2', '1.3', '2.1', '2.2']);
+    expect(documentBookStructure(file, PROFILE, labelByRow(rows))).toEqual([
+      { label: 'Prima Pars', chapters: [{ label: 'Chapter 1' }, { label: 'Q1' }, { label: 'Q2' }] },
+      { label: 'Secunda Pars', chapters: [{ label: 'Chapter 1' }, { label: 'Q1b' }] },
+    ]);
+  });
+
+  it('a blank boundary label falls back to the positional default', () => {
+    const rows = ['pre', '   ', 'Q3'];
+    const file = docFile(rows, { headers: [{ row: 2, level: 2 }, { row: 3, level: 2 }] });
+    expect(documentBookStructure(file, PROFILE, labelByRow(rows))).toEqual([
+      { label: 'Book 1', chapters: [{ label: 'Chapter 1' }, { label: 'Chapter 2' }, { label: 'Q3' }] },
+    ]);
   });
 });

@@ -22,6 +22,7 @@
   import ExportButton from './components/ExportButton.svelte';
   import ChapterEditor from './lib/editor/ChapterEditor.svelte';
   import type { OutlineItem } from './lib/editor/outline';
+  import { buildOutline } from './lib/editor/outline';
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
@@ -38,7 +39,10 @@
   import type { WorkCorpus } from './lib/data/corpusStore';
   import { bookChapterNumbers, chapterForEditor } from './lib/data/chapterRows';
   import { documentChapterForEditor } from './lib/data/documentChapter';
-  import { loadChapterFile } from './lib/library/autosave';
+  import { loadChapterFile, hydrateFromFile } from './lib/library/autosave';
+  import { splitDocument, documentBookStructure } from './lib/library/splitDocument';
+  import { serializeChapterFile } from './lib/chapterfile';
+  import { DEFAULT_PROFILE } from './lib/works/profile';
   import { getScheme } from './lib/citation/registry';
   import type { SchemeId } from './lib/citation/types';
   import type { FixtureChapter } from './dev/fixture-meta-z17';
@@ -455,6 +459,36 @@
     docReloadKey += 1; // re-read the just-written file into the editor
   }
 
+  // "Divide into chapters…" — the bulk shortcut: split the open single document
+  // at its Book/Chapter heading markers into one file per chapter, and register
+  // the matching Book/Chapter container structure in one step. Part 1 rewrites
+  // the original b01c01 in place; the rest are new slot files.
+  async function divideDocument(workId: string) {
+    const work = works.find((w) => w.id === workId);
+    if (!work || !isDocumentWork(work)) return;
+    const profile = work.profile ?? DEFAULT_PROFILE;
+    const storage = libraryStorage();
+    const res = await loadChapterFile(storage, workId, chapterFileName(1, 1));
+    if (!res.file) return;
+    const file = res.file;
+    const parts = splitDocument(file, profile);
+    if (parts.length <= 1) return; // no Book/Chapter markers → nothing to divide
+
+    // Labels line up 1:1 with the parts (same boundary walk); the text is the
+    // outline label (heading-title override → translation → original).
+    const rows = hydrateFromFile(file, [], work.scheme).rows;
+    const labelByRow = new Map(buildOutline(rows, profile).map((it) => [it.rowIndex, it.label] as const));
+    const books = documentBookStructure(file, profile, (i) => labelByRow.get(i) ?? '');
+
+    for (const part of parts) {
+      await storage.write(workId, chapterFileName(part.book, part.chapter), serializeChapterFile(part.file));
+    }
+    await updateFreeWorkBooks(workId, books);
+    await reloadWorks();
+    await refreshDocFiles();
+    select(workId, 1, 1);
+  }
+
   // ── reference-translation import (design doc D5 §5) ─────────────────────
   function openReferenceImport(workId: string) {
     referenceImportWorkId = workId;
@@ -771,6 +805,7 @@
             onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
             onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
+            onDivide={isTauri() || import.meta.env.DEV ? divideDocument : undefined}
             onAddBook={isTauri() || import.meta.env.DEV ? addBook : undefined}
             onAddChapter={isTauri() || import.meta.env.DEV ? addChapter : undefined}
             onRenameBook={isTauri() || import.meta.env.DEV ? renameBook : undefined}

@@ -76,6 +76,7 @@
     onOutlineRename,
     onOutlineSetLevel,
     onManageLevels,
+    onDivide,
     onAddBook,
     onAddChapter,
     onRenameBook,
@@ -103,6 +104,9 @@
     onOutlineSetLevel?: (rowIndex: number, level: number | null) => void;
     /** Open the "Manage levels…" profile editor for a document work. */
     onManageLevels?: (workId: string) => void;
+    /** "Divide into chapters…" — split the open single document at its
+     * Book/Chapter markers into one file per chapter (bulk shortcut). */
+    onDivide?: (workId: string) => void;
     /** Add a Book container to a document work (the first Book on a bookless
      * work absorbs its existing document as chapter 1). */
     onAddBook?: (workId: string, label: string) => void;
@@ -129,6 +133,12 @@
   // The flat outline, grouped into a nested Book › Chapter › heading tree by
   // the tiers' nav-roles (buildOutlineTree). Pure derivation of the prop.
   const outlineTree = $derived(buildOutlineTree(outline));
+
+  // The open document has Book/Chapter markers → "Divide into chapters…" would
+  // actually produce parts (heading-only outlines can't be divided).
+  const canDivide = $derived(
+    outline.some((i) => i.navRole === 'book' || i.navRole === 'chapter'),
+  );
 
   // Expanded books, keyed "workId:bookN". Start with the selected book open.
   let expanded = $state<Record<string, boolean>>(
@@ -472,6 +482,17 @@
             <li>
               <button class="manage-levels" onclick={() => onManageLevels?.(rw.work.id)}>
                 Manage levels…
+              </button>
+            </li>
+          {/if}
+          {#if isSelected(rw.work.id, 1, 1) && onDivide && canDivide}
+            <li>
+              <button
+                class="manage-levels"
+                title="Split this document into one chapter per Book/Chapter heading"
+                onclick={() => onDivide?.(rw.work.id)}
+              >
+                Divide into chapters…
               </button>
             </li>
           {/if}
