@@ -292,14 +292,19 @@ export function compileWorkMarkdown(
     // under the bilingual filename.
     const included = ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter }));
 
-    // Single document (the bookless free-work case): unchanged, byte-identical.
-    if (ordered.length <= 1) {
+    // Bookless single document (no explicit containers): unchanged,
+    // byte-identical. Gate on the ABSENCE of documentBooks, NOT on chapter
+    // count — a container work with only one saved chapter (e.g. just after
+    // "+ Book" absorbed the existing document) must still emit its Book/Chapter
+    // headings, so it takes the container branch below.
+    const containerBooks = (work as { documentBooks?: DocumentBook[] }).documentBooks;
+    if (!containerBooks || containerBooks.length === 0) {
       const markdown =
         ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work, resolved.mode) : `# ${work.title}\n\n`;
       return { markdown, gapReport, included };
     }
 
-    // Multi-chapter container (D8 Book/Chapter structure): the work title once,
+    // Container work (D8 Book/Chapter structure): the work title once,
     // then each chapter's body under its Book/Chapter heading. Footnote ids are
     // namespaced per chapter so two chapters' local id "1" don't collide in the
     // concatenated pandoc document (same rule as the corpus arm below).

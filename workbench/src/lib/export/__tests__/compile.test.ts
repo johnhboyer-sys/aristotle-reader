@@ -631,6 +631,19 @@ describe('compileWorkMarkdown — document-spine multi-chapter container (D8 str
     expect(result.included).toEqual([{ book: 1, chapter: 1 }, { book: 1, chapter: 2 }]);
   });
 
+  it('a container work with only ONE saved chapter still emits its Book/Chapter headings', () => {
+    // Regression: gate the byte-identical single-doc shortcut on the absence of
+    // documentBooks, not on chapter count — otherwise a work just after "+ Book"
+    // (one saved chapter) would export without the headings the user just typed.
+    const result = compileWorkMarkdown([q(1, 'Article one.')], CONTAINER);
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Article one.\n',
+    );
+  });
+
   it('namespaces footnote ids so two chapters’ local id 1 don’t collide', () => {
     const result = compileWorkMarkdown(
       [
@@ -644,13 +657,21 @@ describe('compileWorkMarkdown — document-spine multi-chapter container (D8 str
     expect(result.markdown).toContain('[^c2-1]: second');
   });
 
-  it('falls back to "Chapter N" when a slot has no container label', () => {
-    const noLabels: WorkMeta = { ...FREE_WORK, books: [{ n: 1, label: '' }] };
-    const result = compileWorkMarkdown([q(1, 'One.'), q(2, 'Two.')], noLabels);
+  it('falls back to "Book N" / "Chapter N" when a container has empty labels', () => {
+    // A container (documentBooks present) whose labels are empty still exports
+    // as a structured work — with numeric fallbacks, not the single-doc path.
+    const emptyLabels: WorkMeta = {
+      id: 'summa',
+      title: 'Summa Theologiae',
+      author: '',
+      scheme: 'paragraph',
+      books: [{ n: 1, label: '' }],
+      documentBooks: [{ n: 1, label: '', chapters: [{ n: 1, label: '' }, { n: 2, label: '' }] }],
+    } as WorkMeta;
+    const result = compileWorkMarkdown([q(1, 'One.'), q(2, 'Two.')], emptyLabels);
+    expect(result.markdown).toContain('## Book 1');
     expect(result.markdown).toContain('### Chapter 1');
     expect(result.markdown).toContain('### Chapter 2');
-    // Bookless label → "Book 1" fallback for the book heading.
-    expect(result.markdown).toContain('## Book 1');
   });
 });
 
