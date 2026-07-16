@@ -145,6 +145,22 @@ describe('buildOutlineTree', () => {
     expect(shape(tree)).toEqual([[0, [[1, []]]]]);
   });
 
+  it('attaches a subtitle to its preceding heading, not as a nested child', () => {
+    const tree = buildOutlineTree([
+      item(0, 2, 'heading'), // Article
+      item(1, 3, 'subtitle'), // Utrum — the Article's subtitle
+      item(2, 4, 'heading'), // Objection — still nests under the Article
+    ]);
+    expect(shape(tree)).toEqual([[0, [[2, []]]]]);
+    expect(tree[0].subtitle).toEqual({ rowIndex: 1, label: '#1' });
+  });
+
+  it('renders a leading subtitle as a normal node when nothing precedes it', () => {
+    const tree = buildOutlineTree([item(0, 0, 'subtitle'), item(1, 1, 'heading')]);
+    expect(shape(tree)).toEqual([[0, [[1, []]]]]);
+    expect(tree[0].subtitle).toBeUndefined();
+  });
+
   it('nests deeper headings under shallower ones (all-heading doc)', () => {
     const tree = buildOutlineTree([
       item(0, 0, 'heading'),

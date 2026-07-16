@@ -153,7 +153,7 @@
   import RowGutter from './RowGutter.svelte';
   import EnglishCell from './EnglishCell.svelte';
   import InterpolatedUnit from './InterpolatedUnit.svelte';
-  import { DEFAULT_PROFILE, levelName } from '../works/profile';
+  import { DEFAULT_PROFILE, levelName, navRoleOf } from '../works/profile';
   import './editor.css';
 
   let {
@@ -176,6 +176,10 @@
   // re-derives the fixture with the new profile, and this recomputes.
   const profile = $derived(fixture.profile ?? DEFAULT_PROFILE);
   const levelNames = $derived(profile.levels.map((l) => l.name));
+  /** A heading row whose tier is the 'subtitle' nav-role renders as a small
+   * subtitle (under its heading) rather than a big title. */
+  const isSubtitleLevel = (headingLevel: number | undefined): boolean =>
+    headingLevel != null && navRoleOf(profile, headingLevel) === 'subtitle';
   const history = new AppHistory();
   const storage = libraryStorage();
   const fileName = chapterFileName(fixture.book, fixture.chapter);
@@ -3888,6 +3892,7 @@
             {host}
             flash={flashRowIdx === g}
             headingLevel={d.headingLevel}
+            subtitle={isSubtitleLevel(d.headingLevel)}
             pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
             onPasteConfirm={confirmPaste}
             onPasteCancel={cancelPaste}
@@ -3907,8 +3912,9 @@
             {#each displayRows as d, g (d.key)}{#if d.continuation}<div class="flow-break" aria-hidden="true"></div>{/if}<!-- svelte-ignore a11y_no_static_element_interactions --><div
                 class="weave-pair"
                 class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
-                class:row-heading={!!d.headingLevel}
-                data-heading-level={d.headingLevel ?? undefined}
+                class:row-heading={!!d.headingLevel && !isSubtitleLevel(d.headingLevel)}
+                class:row-subtitle={isSubtitleLevel(d.headingLevel)}
+                data-heading-level={isSubtitleLevel(d.headingLevel) ? undefined : (d.headingLevel ?? undefined)}
                 data-row={g}
               ><div
                   class="weave-grc flow-grc"
@@ -3927,8 +3933,9 @@
               <section
                 class="flow-para"
                 class:flow-heading={para.heading}
-                class:row-heading={!!para.rows[0]?.d.headingLevel}
-                data-heading-level={para.rows[0]?.d.headingLevel ?? undefined}
+                class:row-heading={!!para.rows[0]?.d.headingLevel && !isSubtitleLevel(para.rows[0]?.d.headingLevel)}
+                class:row-subtitle={isSubtitleLevel(para.rows[0]?.d.headingLevel)}
+                data-heading-level={isSubtitleLevel(para.rows[0]?.d.headingLevel) ? undefined : (para.rows[0]?.d.headingLevel ?? undefined)}
               >
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div class="flow-grc-block" lang="grc">
@@ -3963,6 +3970,7 @@
             paraText={paragraphUnitView || d.segment !== 0 ? null : paraLayerText(d.rowIndex)}
             sentenceText={paragraphUnitView ? sentenceLayerText(d.rowIndex) : null}
             headingLevel={d.headingLevel}
+            subtitle={isSubtitleLevel(d.headingLevel)}
             flash={flashRowIdx === g}
             focused={focusRow === d.rowIndex && focusSeg === d.segment}
             chunkStart={chunkStartGrids.has(g)}
@@ -4003,6 +4011,7 @@
           focused={focusRow === d.rowIndex && focusSeg === d.segment}
           chunkStart={chunkStartGrids.has(g)}
           headingLevel={d.headingLevel}
+          subtitle={isSubtitleLevel(d.headingLevel)}
           onContext={(e) => onGreekContextMenu(e, g)}
         />
       {/each}
@@ -4025,6 +4034,7 @@
           flash={flashRowIdx === g}
           chunkStart={chunkStartGrids.has(g)}
           headingLevel={d.headingLevel}
+          subtitle={isSubtitleLevel(d.headingLevel)}
           pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
           onPasteConfirm={confirmPaste}
           onPasteCancel={cancelPaste}

@@ -31,6 +31,12 @@ export interface OutlineItem {
 export interface OutlineNode {
   item: OutlineItem;
   children: OutlineNode[];
+  /**
+   * A 'subtitle'-role heading immediately following this node (e.g. an Article's
+   * "Utrum…" title): shown UNDER this node's label, not nested as a child. Last
+   * subtitle before the next real node wins.
+   */
+  subtitle?: { rowIndex: number; label: string };
 }
 
 /** Plain text (no markup) of a JSON doc, empty on any failure. */
@@ -77,8 +83,10 @@ export function buildOutline(rows: RowModel[], profile: WorkProfile): OutlineIte
   return items;
 }
 
-/** Nav-role → coarse nesting rank; the profile level breaks ties within a role. */
-const NAV_RANK: Record<NavRole, number> = { book: 0, chapter: 1, heading: 2 };
+/** Nav-role → coarse nesting rank; the profile level breaks ties within a role.
+ * 'subtitle' is normally pulled out of the tree (attached to its parent), so its
+ * rank only matters for the defensive fallback when no node precedes it. */
+const NAV_RANK: Record<NavRole, number> = { book: 0, chapter: 1, heading: 2, subtitle: 2 };
 
 /**
  * Nesting depth of an outline item. Nav-role dominates (a Book always contains a
@@ -101,13 +109,22 @@ function nodeDepth(item: OutlineItem): number {
 export function buildOutlineTree(items: OutlineItem[]): OutlineNode[] {
   const roots: OutlineNode[] = [];
   const stack: { node: OutlineNode; depth: number }[] = [];
+  let lastNode: OutlineNode | null = null;
   for (const item of items) {
+    // A 'subtitle' tier (e.g. an Article's "Utrum…" title) is NOT its own node —
+    // it attaches to the nearest preceding node as that node's subtitle (last
+    // wins). With no node before it, fall through and render as a normal node.
+    if (item.navRole === 'subtitle' && lastNode) {
+      lastNode.subtitle = { rowIndex: item.rowIndex, label: item.label };
+      continue;
+    }
     const depth = nodeDepth(item);
     while (stack.length > 0 && stack[stack.length - 1].depth >= depth) stack.pop();
     const node: OutlineNode = { item, children: [] };
     if (stack.length === 0) roots.push(node);
     else stack[stack.length - 1].node.children.push(node);
     stack.push({ node, depth });
+    lastNode = node;
   }
   return roots;
 }

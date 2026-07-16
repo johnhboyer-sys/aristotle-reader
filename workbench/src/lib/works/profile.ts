@@ -4,15 +4,18 @@
  * rank); the profile turns that rank into a display name and a navigation role.
  *
  * navRole maps a tier onto the app's existing structure:
- *   - 'book'    → a top navigable division (Aristotle Book / Aquinas Part)
- *   - 'chapter' → the second navigable division (Aristotle Chapter / Aquinas Question)
- *   - 'heading' → an in-page heading (jump-to in the rail outline, no split)
+ *   - 'book'     → a top navigable division (Aristotle Book / Aquinas Part)
+ *   - 'chapter'  → the second navigable division (Aristotle Chapter / Aquinas Question)
+ *   - 'heading'  → an in-page heading (jump-to in the rail outline, no split)
+ *   - 'subtitle' → the TITLE OF A SECTION (e.g. Aquinas's "Utrum…" line): shown
+ *                  under its parent heading as a subtitle, NOT nested as a child;
+ *                  never a split boundary.
  *
  * A work with no saved profile uses DEFAULT_PROFILE, which reproduces the
  * original two-level behaviour (Heading / Section title, both in-page).
  */
 
-export type NavRole = 'book' | 'chapter' | 'heading';
+export type NavRole = 'book' | 'chapter' | 'heading' | 'subtitle';
 
 export interface WorkLevel {
   name: string;
@@ -41,7 +44,7 @@ export const DEFAULT_PROFILE: WorkProfile = {
   ],
 };
 
-const NAV_ROLES: readonly NavRole[] = ['book', 'chapter', 'heading'];
+const NAV_ROLES: readonly NavRole[] = ['book', 'chapter', 'heading', 'subtitle'];
 /** A sane upper bound so a corrupt registry can't build a runaway menu. */
 export const MAX_LEVELS = 12;
 

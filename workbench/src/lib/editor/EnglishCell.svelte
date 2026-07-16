@@ -18,6 +18,7 @@
     flash,
     chunkStart = false,
     headingLevel = undefined,
+    subtitle = false,
     pasteConfirm,
     onPasteConfirm,
     onPasteCancel,
@@ -37,6 +38,8 @@
     /** Heading level (D8 heading tools): styles the editable cell as a title,
      * deeper levels progressively smaller. Absent = ordinary row. */
     headingLevel?: number;
+    /** The heading tier is the 'subtitle' nav-role — render as a small subtitle. */
+    subtitle?: boolean;
     /** Read-only sentence-layer translation to show beneath the paragraph
      * field when this row also has one (§4 "text stays at its unit"). Null
      * outside the paragraph-unit view or when the row has no sentence English. */
@@ -62,8 +65,9 @@
   class="en-cell"
   class:row-flash={flash}
   class:chunk-start={chunkStart}
-  class:row-heading={!!headingLevel}
-  data-heading-level={headingLevel ?? undefined}
+  class:row-heading={!!headingLevel && !subtitle}
+  class:row-subtitle={subtitle}
+  data-heading-level={subtitle ? undefined : (headingLevel ?? undefined)}
   style="grid-row: {gridRow + 1}"
   data-row-en={gridRow}
   oncontextmenu={onContext}

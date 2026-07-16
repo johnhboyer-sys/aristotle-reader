@@ -28,7 +28,7 @@
 import type { CitationScheme } from '../citation/types';
 import { getScheme } from '../citation/registry';
 import type { ChapterFile, ChapterFileMeta, Footnote, HeaderMark } from '../chapterfile';
-import type { WorkProfile } from '../works/profile';
+import type { NavRole, WorkProfile } from '../works/profile';
 import { navRoleOf } from '../works/profile';
 import { documentOrdinalAddress } from './autosave';
 
@@ -69,7 +69,8 @@ function segment(file: ChapterFile, profile: WorkProfile): Segment[] {
   const levelByRow = new Map<number, number>();
   for (const h of file.meta.headers ?? []) levelByRow.set(h.row, h.level);
 
-  const navAt = (ordinal: number): 'book' | 'chapter' | 'heading' | null => {
+  // Only 'book'/'chapter' open a part; 'heading' and 'subtitle' stay in-chapter.
+  const navAt = (ordinal: number): NavRole | null => {
     const level = levelByRow.get(ordinal);
     return level === undefined ? null : navRoleOf(profile, level);
   };

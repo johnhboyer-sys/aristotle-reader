@@ -65,6 +65,22 @@ describe('splitDocument — partition', () => {
     expect(parts[0].file.meta.spanEnd).toBe('¶3');
   });
 
+  it('a subtitle-role marker is NOT a book/chapter boundary (stays in its chapter)', () => {
+    const profile: WorkProfile = {
+      levels: [...PROFILE.levels, { name: 'Title', navRole: 'subtitle', depth: 3 }],
+    };
+    // row 2 = Question (chapter) boundary; row 3 = Title (subtitle) — no boundary.
+    const file = docFile(['pre', 'Q', 'Utrum', 'body'], {
+      headers: [
+        { row: 2, level: 2 },
+        { row: 3, level: 4 },
+      ],
+    });
+    const parts = splitDocument(file, profile);
+    expect(parts.map(key)).toEqual(['1.1', '1.2']);
+    expect(parts[1].file.greekLines).toEqual(['Q', 'Utrum', 'body']);
+  });
+
   it('a chapter marker after a preface → preface 1.1, then 1.2 (chapter++ over the preface)', () => {
     // rows: 0,1 preface; row 2 is a Question (chapter) boundary.
     const file = docFile(['pre1', 'pre2', 'Q', 'body'], { headers: [{ row: 3, level: 2 }] });

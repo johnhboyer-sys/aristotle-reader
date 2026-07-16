@@ -35,6 +35,7 @@
     { value: 'book', label: 'Book' },
     { value: 'chapter', label: 'Chapter' },
     { value: 'heading', label: 'Heading' },
+    { value: 'subtitle', label: 'Subtitle' },
   ];
 
   const saveBlocked = $derived(
@@ -116,7 +117,9 @@
       <p class="line intro">
         Name this work's structural tiers, top to bottom. <strong>Book</strong> and
         <strong>Chapter</strong> tiers become navigable divisions; <strong>Heading</strong>
-        tiers are in-page headings. These are reused when you import more chapters.
+        tiers are in-page headings; a <strong>Subtitle</strong> tier is the title of a section
+        (e.g. an Article's <em>Utrum…</em>), shown under its parent heading, not nested.
+        These are reused when you import more chapters.
       </p>
       <p class="line hint">
         Use <span class="kbd">▶</span> to make a tier a <strong>sub-level</strong> and

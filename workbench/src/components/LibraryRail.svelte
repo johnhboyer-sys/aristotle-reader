@@ -207,6 +207,13 @@
           </button>
         {/if}
       </div>
+      {#if node.subtitle}
+        <button
+          class="outline-subtitle"
+          title={node.subtitle.label}
+          onclick={() => onOutlineSelect?.(node.subtitle.rowIndex)}
+        >{node.subtitle.label}</button>
+      {/if}
       {#if hasChildren && !isCollapsed}
         <ul class="outline-children">
           {@render outlineNodes(node.children)}
@@ -577,6 +584,28 @@
   .outline-row.outline-heading {
     font-size: 0.76rem;
     color: var(--text-light);
+  }
+  /* A 'subtitle' tier (e.g. an Article's "Utrum…" title): shown UNDER its parent
+     heading, indented to align under the label, not nested as a child row. */
+  .outline-subtitle {
+    display: block;
+    width: 100%;
+    margin: 0 0 1px calc(16px + var(--space-2, 6px));
+    padding: 0;
+    border: none;
+    background: none;
+    text-align: left;
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    font-style: italic;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  .outline-subtitle:hover {
+    color: var(--text-mid);
   }
   .manage-levels {
     display: block;

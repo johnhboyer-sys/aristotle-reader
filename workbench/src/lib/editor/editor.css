@@ -970,3 +970,28 @@
   width: 100%;
   margin: 0.5em 0 0.15em;
 }
+
+/* Subtitle (nav-role 'subtitle'): the TITLE OF A SECTION — e.g. an Article's
+   "Utrum…" line — rendered small and light directly under its heading, NOT a
+   big title and NOT nested in the rail. Still both columns, still out of flow. */
+.grc-cell.row-subtitle,
+.interp-unit.row-subtitle .interp-source,
+.weave-pair.row-subtitle .weave-grc,
+.flow-para.row-subtitle .flow-grc,
+.en-cell.row-subtitle .row-editor {
+  font-weight: 500;
+  font-style: italic;
+  font-size: calc(var(--work-fs) * 1.02);
+  line-height: 1.3;
+  color: var(--text-light, var(--text));
+}
+.grc-cell.row-subtitle,
+.en-cell.row-subtitle,
+.interp-unit.row-subtitle {
+  margin-top: 0.1em;
+}
+.weave-pair.row-subtitle {
+  display: block;
+  width: 100%;
+  margin: 0.1em 0 0.15em;
+}

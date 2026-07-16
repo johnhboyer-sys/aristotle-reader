@@ -39,6 +39,12 @@ describe('sanitizeLevels', () => {
     ]);
   });
 
+  it('keeps the subtitle nav-role', () => {
+    expect(sanitizeLevels([{ name: 'Title', navRole: 'subtitle', depth: 0 }])).toEqual([
+      { name: 'Title', navRole: 'subtitle', depth: 0 },
+    ]);
+  });
+
   it('preserves explicit depths and honours equal-level siblings', () => {
     expect(
       sanitizeLevels([
