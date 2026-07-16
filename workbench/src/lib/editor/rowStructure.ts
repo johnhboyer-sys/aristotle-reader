@@ -62,15 +62,25 @@ export interface RowStructure {
   english2?: PMDocJSON[];
   splitOffsets?: number[];
   englishPara?: PMDocJSON;
+  /** Heading role rank (D8 heading tools); carried through split/merge like
+   * englishPara so a structural edit never silently demotes a heading row. */
+  headingLevel?: number;
 }
 
-function pack(greek: string, docs: PMDocJSON[], offsets: number[], englishPara: PMDocJSON | undefined): RowStructure {
+function pack(
+  greek: string,
+  docs: PMDocJSON[],
+  offsets: number[],
+  englishPara: PMDocJSON | undefined,
+  headingLevel: number | undefined,
+): RowStructure {
   return {
     greek,
     english: docs[0] ?? emptyRowDocJSON(),
     ...(docs.length > 1 ? { english2: docs.slice(1) } : {}),
     ...(offsets.length > 0 ? { splitOffsets: offsets } : {}),
     ...(englishPara !== undefined ? { englishPara } : {}),
+    ...(headingLevel !== undefined ? { headingLevel } : {}),
   };
 }
 
@@ -144,8 +154,10 @@ export function splitParagraphRow(row: RowStructure, offset: number): { first: R
   if (firstDocs.length === 0) firstDocs.push(emptyRowDocJSON());
 
   return {
-    first: pack(firstGreek, firstDocs, firstOffsets, row.englishPara),
-    second: pack(secondGreek, secondDocs, secondOffsets, undefined),
+    // A heading role stays on `first` (same "metadata stays with the head of
+    // the split" rule as englishPara); `second` starts as an ordinary row.
+    first: pack(firstGreek, firstDocs, firstOffsets, row.englishPara, row.headingLevel),
+    second: pack(secondGreek, secondDocs, secondOffsets, undefined, undefined),
   };
 }
 
@@ -203,7 +215,11 @@ export function mergeParagraphRows(a: RowStructure, b: RowStructure): MergedPara
     englishPara = b.englishPara;
   }
 
-  return { row: pack(greek, docs, offsets, englishPara), paraJoinPos };
+  // Preserve a heading role from whichever side carries one (`a` — the row
+  // merged INTO — wins if both do); merging never silently demotes a heading.
+  const headingLevel = a.headingLevel ?? b.headingLevel;
+
+  return { row: pack(greek, docs, offsets, englishPara, headingLevel), paraJoinPos };
 }
 
 /**

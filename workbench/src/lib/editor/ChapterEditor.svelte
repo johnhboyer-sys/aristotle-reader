@@ -789,6 +789,7 @@
       ...(s.english2 && s.english2.length > 0 ? { english2: s.english2 } : {}),
       ...(s.splitOffsets && s.splitOffsets.length > 0 ? { splitOffsets: s.splitOffsets } : {}),
       ...(s.englishPara ? { englishPara: s.englishPara } : {}),
+      ...(s.headingLevel ? { headingLevel: s.headingLevel } : {}),
     };
   }
 

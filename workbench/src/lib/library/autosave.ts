@@ -453,7 +453,9 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
 
   // Heading roles (D8 heading tools): apply the chapter-file `headers`
   // (row:level, 1-based, already range-filtered at parse) onto the rows.
-  if (file.meta.headers) {
+  // Document-spine only — a stray `headers:` line in a hand-edited CORPUS file
+  // must never turn a Bekker row into a heading (flow/typography key off it).
+  if (file.meta.headers && schemeDef.spineSource === 'document') {
     for (const h of file.meta.headers) {
       const row = rows[h.row - 1];
       if (row) row.headingLevel = h.level;

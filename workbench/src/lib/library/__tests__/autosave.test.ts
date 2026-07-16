@@ -325,7 +325,7 @@ describe('model → file → model round trip', () => {
     expect(h.footnotes).toEqual([{ id: '1', body: '', anchored: true }]);
   });
 
-  it('round-trips heading levels through serialize → parse → hydrate', () => {
+  it('serializes + parses heading levels; a CORPUS hydrate ignores them (gate)', () => {
     const model = makeModel();
     model.rows[0].headingLevel = 1;
     model.rows[1].headingLevel = 3; // a deep tier — levels are no longer 1|2
@@ -336,10 +336,12 @@ describe('model → file → model round trip', () => {
       { row: 1, level: 1 },
       { row: 2, level: 3 },
     ]);
+    // A stray headers: line in a Bekker (corpus) file must NEVER turn a row into
+    // a heading — hydration only applies headers to document-spine works. The
+    // document-spine round-trip is covered in the document-spine describe below.
     const h = hydrateFromFile(file, spineOf(model), SCHEME);
-    expect(h.rows[0].headingLevel).toBe(1);
-    expect(h.rows[1].headingLevel).toBe(3);
-    expect(h.rows[2].headingLevel).toBeUndefined();
+    expect(h.rows[0].headingLevel).toBeUndefined();
+    expect(h.rows[1].headingLevel).toBeUndefined();
   });
 
   it('writes no headers key when no row carries a heading level', () => {
@@ -764,6 +766,17 @@ describe('document-spine chapter files (D8 Phase B)', () => {
     expect(h.rows[0].splitOffsets).toEqual([16]);
     expect(h.rows[0].english2).toHaveLength(1);
     expect(textOf(h.rows[0].englishPara!)).toBe('Paragraph one whole');
+  });
+
+  it('round-trips heading levels through a document-spine file (deep tiers)', () => {
+    const model = paragraphModel();
+    model.rows[0].headingLevel = 2;
+    model.rows[1].headingLevel = 1;
+    const content = serializeModel(model);
+    expect(content).toContain('headers: "1:2,2:1"');
+    const h = hydrateFromFile(parseChapterFile(content, 'para-headers'), [], 'paragraph');
+    expect(h.rows[0].headingLevel).toBe(2);
+    expect(h.rows[1].headingLevel).toBe(1);
   });
 
   it('saves paragraph-layer newlines as one physical [ENGLISH.PARA] row and hydrates them back', () => {

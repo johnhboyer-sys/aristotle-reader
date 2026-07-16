@@ -284,3 +284,27 @@ describe('structural undo entries ride AppHistory unchanged (D8 §2)', () => {
     expect(entry.paraStarts).toEqual({ before: [1], after: [1, 3] });
   });
 });
+
+describe('heading role survives split/merge (D8 heading tools — no silent demotion)', () => {
+  it('split keeps the heading on `first`, leaves `second` ordinary', () => {
+    const res = splitParagraphRow(paraRow({ headingLevel: 3 }), O1)!;
+    expect(res.first.headingLevel).toBe(3);
+    expect(res.second.headingLevel).toBeUndefined();
+  });
+
+  it('a non-heading row splits with no heading on either side', () => {
+    const res = splitParagraphRow(paraRow(), O1)!;
+    expect(res.first.headingLevel).toBeUndefined();
+    expect(res.second.headingLevel).toBeUndefined();
+  });
+
+  it('merge preserves a heading from `a` (the row merged into)', () => {
+    const merged = mergeParagraphRows(paraRow({ headingLevel: 2 }), paraRow());
+    expect(merged.row.headingLevel).toBe(2);
+  });
+
+  it('merge preserves a heading carried only by `b`', () => {
+    const merged = mergeParagraphRows(paraRow(), paraRow({ headingLevel: 4 }));
+    expect(merged.row.headingLevel).toBe(4);
+  });
+});
