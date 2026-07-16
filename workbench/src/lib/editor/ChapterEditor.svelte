@@ -545,36 +545,69 @@
     /** Whether the heading group offers "Insert heading line here" (document
      * paragraph docs only — canEditRowStructure). */
     canInsertHeading?: boolean;
+    /** Viewport-clamped cap on the menu's height (px): the menu grows to fit
+     * or scrolls internally, never off the bottom of the window. */
+    maxHeight: number;
+    /** True when the "Mark as ▸" submenu must open to the LEFT (no room right). */
+    submenuFlip: boolean;
     /** The rendered items — built by buildCtxMenu (ctxMenu.ts) from the
      * fields above; the template renders the model, never re-decides it. */
     model: CtxMenuModel;
   } | null>(null);
+  // The open "Mark as ▸" flyout (D8 heading tools). Rendered as a SEPARATE
+  // fixed element (not a child of the scrollable menu, whose overflow would
+  // clip it) with JS-computed, viewport-clamped coordinates.
+  let openSubmenu = $state<{ items: CtxMenuItem[]; x: number; y: number; maxHeight: number } | null>(null);
+  // Close the flyout whenever the menu itself closes.
+  $effect(() => {
+    if (!ctxMenu) openSubmenu = null;
+  });
+  /** Open the "Mark as ▸" flyout beside its parent item, clamped to the window
+   * (flips left when submenuFlip; never runs off top/bottom — caps + scrolls). */
+  function openMarkSubmenu(e: MouseEvent, items: CtxMenuItem[]) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const MARGIN = 8;
+    const SUB_W = 200;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let x = ctxMenu?.submenuFlip ? rect.left - SUB_W : rect.right;
+    x = Math.max(MARGIN, Math.min(x, vw - SUB_W - MARGIN));
+    const y = Math.max(MARGIN, Math.min(rect.top - 4, vh - MARGIN - Math.min(160, vh - 2 * MARGIN)));
+    const maxHeight = Math.max(120, vh - y - MARGIN);
+    openSubmenu = { items, x, y, maxHeight };
+  }
   /** Attach the display model to a menu state: every ctxMenu assignment
    * routes through here so items/wording/grouping have exactly one source
    * of truth (buildCtxMenu — matrix-tested in ctxMenu.test.ts). */
-  /** Keep the context menu inside the viewport: it's position:fixed at the
-   * click point (max-width 19rem), so a right-/bottom-edge click would run it
-   * off-screen (seen first in the full-width Weave flow). Clamp against the
-   * window using the CSS max-width and a generous height estimate — a menu that
-   * would overflow flips back in rather than being cut off. */
-  function clampMenu(x: number, y: number): { x: number; y: number } {
+  /** Keep the context menu fully inside the viewport: it's position:fixed at
+   * the click point (max-width 19rem). Clamp x against the CSS max-width; clamp
+   * the TOP so the menu keeps a minimum visible height, and cap `maxHeight` to
+   * the space from the (clamped) top to the bottom margin — the menu grows to
+   * fit or scrolls internally (never off the bottom, John's screenshot).
+   * `submenuFlip` says the "Mark as ▸" flyout must open LEFT (not enough room
+   * to its right). */
+  function clampMenu(x: number, y: number): { x: number; y: number; maxHeight: number; submenuFlip: boolean } {
     const MARGIN = 8;
     const MENU_W = 304; // 19rem max-width
-    const MENU_H = 360; // ~tallest menu (Greek word: split + 4 AI items)
+    const SUBMENU_W = 200; // ~12rem flyout
+    const MIN_MENU_H = 160; // keep at least a few items visible near the bottom
     const vw = typeof window !== 'undefined' ? window.innerWidth : Infinity;
     const vh = typeof window !== 'undefined' ? window.innerHeight : Infinity;
-    return {
-      x: Math.max(MARGIN, Math.min(x, vw - MENU_W - MARGIN)),
-      y: Math.max(MARGIN, Math.min(y, vh - MENU_H - MARGIN)),
-    };
+    const cx = Math.max(MARGIN, Math.min(x, vw - MENU_W - MARGIN));
+    const cy = Math.max(MARGIN, Math.min(y, vh - MARGIN - Math.min(MIN_MENU_H, vh - 2 * MARGIN)));
+    const maxHeight = Math.max(MIN_MENU_H, vh - cy - MARGIN);
+    const submenuFlip = cx + MENU_W + SUBMENU_W > vw;
+    return { x: cx, y: cy, maxHeight, submenuFlip };
   }
-  function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model'>): NonNullable<typeof ctxMenu> {
+  function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model' | 'maxHeight' | 'submenuFlip'>): NonNullable<typeof ctxMenu> {
     menuPointer = { x: m.x, y: m.y }; // raw click, before the menu clamp below
-    const { x, y } = clampMenu(m.x, m.y);
+    const { x, y, maxHeight, submenuFlip } = clampMenu(m.x, m.y);
     return {
       ...m,
       x,
       y,
+      maxHeight,
+      submenuFlip,
       model: buildCtxMenu({
         scheme,
         paraDoc: m.paraDoc,
@@ -1467,6 +1500,16 @@
         const starts = dir === 'undo' ? entry.paraStarts.before : entry.paraStarts.after;
         model.paragraphStarts = starts.length > 0 ? starts.slice() : undefined;
         markModelDirty();
+      }
+      // Heading mark (D8 heading tools): restore the row's headingLevel; the
+      // refreshDisplayRows below re-renders the title + rail outline.
+      if (entry.headingLevel) {
+        const hl = dir === 'undo' ? entry.headingLevel.before : entry.headingLevel.after;
+        const row = model.rows[entry.headingLevel.row];
+        if (row) {
+          row.headingLevel = hl === null ? undefined : hl;
+          markModelDirty();
+        }
       }
       refreshDisplayRows();
       const fnTable = dir === 'undo' ? entry.fnBefore : entry.fnAfter;
@@ -2685,6 +2728,8 @@
   /** Dispatch a clicked menu item. `heading-mark` carries its target level on
    * the item (one id, N tiers); everything else is a static id → command. */
   function runMenuItem(item: CtxMenuItem) {
+    // A submenu parent ("Mark as ▸") dispatches nothing — its children do.
+    if (item.submenu) return;
     if (item.id === 'heading-mark') {
       menuSetLevel(item.level ?? 1);
       return;
@@ -3105,13 +3150,16 @@
 
   /** Set (or clear) a row's heading level (D8 heading tools). Document-spine
    * only; `level` is a 1-based rank into the work profile, null clears it.
-   * First pass: no undo/redo entry (levels aren't in the history model yet) — a
-   * mis-mark is one menu click to fix. Autosave persists it as the chapter-file
-   * `headers` frontmatter. */
+   * Pushes its own undo/redo entry (headingLevel before/after) so a mis-mark is
+   * one ⌘Z. Autosave persists it as the chapter-file `headers` frontmatter. */
   function setRowLevel(r: number, level: number | null) {
     if (scheme.spineSource !== 'document' || r < 0 || r >= model.rows.length) return;
-    if ((model.rows[r].headingLevel ?? null) === level) return;
+    const before = model.rows[r].headingLevel ?? null;
+    if (before === level) return;
+    const sel = focusedSelRef();
+    history.breakCoalescing();
     model.rows[r].headingLevel = level === null ? undefined : level;
+    history.push({ edits: [], headingLevel: { row: r, before, after: level }, selBefore: sel, selAfter: sel });
     markModelDirty();
     refreshDisplayRows();
     setStatus(level === null ? 'Heading cleared.' : `Marked as ${levelName(profile, level)}.`);
@@ -3964,21 +4012,58 @@
   {#if ctxMenu}
     <!-- Items, wording and grouping all come from buildCtxMenu (ctxMenu.ts)
          — the per-view matrix is decided (and tested) there, never here. -->
-    <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
+    <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px; max-height: {ctxMenu.maxHeight}px">
       {#each ctxMenu.model.groups as group, gi (gi)}
         {#if gi > 0}
           <div class="ctx-menu-divider" role="separator"></div>
         {/if}
         {#each group as item (item.title)}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={() => runMenuItem(item)}>
-            <span class="ctx-menu-title">{item.title}</span>
-            {#if item.desc}
-              <span class="ctx-menu-desc">{item.desc}</span>
-            {/if}
-          </button>
+          {#if item.submenu}
+            <button
+              class="ctx-menu-item has-submenu"
+              type="button"
+              role="menuitem"
+              aria-haspopup="menu"
+              onmouseenter={(e) => openMarkSubmenu(e, item.submenu ?? [])}
+              onfocus={(e) => openMarkSubmenu(e, item.submenu ?? [])}
+              onclick={(e) => openMarkSubmenu(e, item.submenu ?? [])}
+            >
+              <span class="ctx-menu-title">{item.title}</span>
+              <span class="ctx-submenu-caret" aria-hidden="true">▸</span>
+            </button>
+          {:else}
+            <button
+              class="ctx-menu-item"
+              type="button"
+              role="menuitem"
+              onmouseenter={() => (openSubmenu = null)}
+              onfocus={() => (openSubmenu = null)}
+              onclick={() => runMenuItem(item)}
+            >
+              <span class="ctx-menu-title">{item.title}</span>
+              {#if item.desc}
+                <span class="ctx-menu-desc">{item.desc}</span>
+              {/if}
+            </button>
+          {/if}
         {/each}
       {/each}
     </div>
+    {#if openSubmenu}
+      <!-- Separate fixed element so the scrollable parent's overflow can't clip
+           it; coordinates are viewport-clamped in openMarkSubmenu. -->
+      <div
+        class="ctx-menu ctx-submenu"
+        role="menu"
+        style="left: {openSubmenu.x}px; top: {openSubmenu.y}px; max-height: {openSubmenu.maxHeight}px"
+      >
+        {#each openSubmenu.items as sub (sub.title)}
+          <button class="ctx-menu-item" type="button" role="menuitem" onclick={() => runMenuItem(sub)}>
+            <span class="ctx-menu-title">{sub.title}</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
   {/if}
 
   {#if session.status}

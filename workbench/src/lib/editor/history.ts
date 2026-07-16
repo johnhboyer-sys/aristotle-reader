@@ -107,6 +107,12 @@ export interface UndoEntry {
    * the same stack so grouping gestures undo like everything else.
    */
   paraStarts?: { before: number[]; after: number[] };
+  /**
+   * Heading-mark change (D8 heading tools): one row's headingLevel before/after
+   * a "Mark as …/Clear heading" toggle (null = ordinary row). Rides the same
+   * stack — mirrors `paraStarts` — so a plain heading mark is its own ⌘Z step.
+   */
+  headingLevel?: { row: number; before: number | null; after: number | null };
   fnBefore?: Footnote[];
   fnAfter?: Footnote[];
   selBefore: SelRef | null;

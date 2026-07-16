@@ -21,6 +21,7 @@ export type CtxMenuItemId =
   | 'sentence-split'
   | 'sentence-join'
   | 'heading-mark'
+  | 'heading-mark-menu'
   | 'heading-clear'
   | 'heading-insert'
   | 'ai-translate'
@@ -35,6 +36,10 @@ export interface CtxMenuItem {
   desc?: string;
   /** For a `heading-mark` item: the 1-based level to mark the row as. */
   level?: number;
+  /** When present, this item is a SUBMENU parent: it dispatches no action; the
+   * children fly out to the side (D8 heading tools — keeps "Mark as ▸" compact
+   * however many tiers a profile has). */
+  submenu?: CtxMenuItem[];
 }
 
 /** Groups render in order with a divider between consecutive groups (the
@@ -81,30 +86,25 @@ export interface CtxMenuInput {
 }
 
 /**
- * The heading group (D8 heading tools). Offers "Mark as <tier>" for each of the
- * work profile's levels the row is NOT currently at, plus a "Clear heading"
- * when it has one — so the current level is implied by which "Mark as" is
- * absent. With the default two-tier profile this reads "Mark as Heading / Mark
- * as Section title", exactly as before.
+ * The heading group (D8 heading tools). The per-tier "Mark as <tier>" items —
+ * one for each profile level the row is NOT currently at — are collapsed under
+ * a single "Mark as ▸" submenu so the menu stays short however many tiers a
+ * profile has (John: a flat list of 8 got "waaaaaay too big"). "Clear heading"
+ * (when the row has a level) and "Insert heading line here" stay top-level.
  */
 function headingGroup(level: number | null, levelNames: string[], canInsert: boolean): CtxMenuItem[] {
   const items: CtxMenuItem[] = [];
+  const marks: CtxMenuItem[] = [];
   levelNames.forEach((name, i) => {
     const n = i + 1;
     if (n === level) return;
-    items.push({
-      id: 'heading-mark',
-      title: `Mark as ${name}`,
-      desc: 'Renders this row as a title; it leaves the flowing view',
-      level: n,
-    });
+    marks.push({ id: 'heading-mark', title: name, level: n });
   });
+  if (marks.length > 0) {
+    items.push({ id: 'heading-mark-menu', title: 'Mark as', submenu: marks });
+  }
   if (level !== null) {
-    items.push({
-      id: 'heading-clear',
-      title: 'Clear heading',
-      desc: 'Return this row to ordinary text',
-    });
+    items.push({ id: 'heading-clear', title: 'Clear heading' });
   }
   if (canInsert) {
     items.push({
