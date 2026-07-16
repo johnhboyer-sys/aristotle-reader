@@ -128,7 +128,20 @@
       // here mirrors ExportButton's split: build markdown via the same
       // compile module, run pandoc via the Tauri shell runner.
       const { compileWorkMarkdown } = await import('../lib/export/compile');
-      const compiled = compileWorkMarkdown(chapters, work, { mode });
+      // A marker-driven document work is one file — split it at its in-text
+      // Book/Chapter marks so the export carries those headings (the marks ARE
+      // the chapters). Corpus works compile their scanned chapter files as-is.
+      let compileChapters = chapters;
+      let compileWork: typeof work = work;
+      const { getScheme } = await import('../lib/citation/registry');
+      if (getScheme(work.scheme).spineSource === 'document' && chapters.length > 0) {
+        const primary = chapters.find((c) => c.meta.book === 1 && c.meta.chapter === 1) ?? chapters[0];
+        const { documentCompileInput } = await import('../lib/export/documentExport');
+        const prepared = documentCompileInput(primary, work);
+        compileChapters = prepared.chapters;
+        compileWork = prepared.work as typeof work;
+      }
+      const compiled = compileWorkMarkdown(compileChapters, compileWork, { mode });
       await writeFile(mdPath, compiled.markdown);
 
       const { runPandocTauri } = await import('../lib/export');
