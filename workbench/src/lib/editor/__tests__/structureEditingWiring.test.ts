@@ -182,7 +182,9 @@ describe('insert heading line (D8 heading tools)', () => {
     expect(body).toContain('if (!canEditRowStructure(scheme)) return;');
     // A true INSERT: remove nothing, add the one new row above r.
     expect(body).toContain('spliceRows(r, 0, [newRow]);');
-    expect(body).toContain('headingLevel: level');
+    // The tier comes from the "Insert heading line ▸" picker (param `level`),
+    // falling back to the shallowest heading tier via local `lvl`.
+    expect(body).toContain('headingLevel: lvl');
     expect(body).toContain('markModelDirty();');
     // one structural undo entry whose `before` is empty (nothing was removed).
     expect(body).toContain('before: []');

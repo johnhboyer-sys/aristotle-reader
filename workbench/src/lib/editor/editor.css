@@ -781,6 +781,20 @@
   color: var(--text-light);
   line-height: 1;
 }
+/* Submenu tier picks (Mark as / Insert): check gutter + title on one row. */
+.ctx-menu-choice {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+.ctx-menu-check {
+  flex: none;
+  width: 1em;
+  text-align: center;
+  color: var(--accent);
+  font-size: 0.8rem;
+  line-height: 1;
+}
 .ctx-menu-item {
   display: flex;
   flex-direction: column;

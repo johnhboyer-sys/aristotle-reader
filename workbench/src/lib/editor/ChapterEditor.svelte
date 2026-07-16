@@ -2732,20 +2732,26 @@
     setRowLevel(m.row, level);
   }
 
-  function menuInsertHeading() {
+  function menuInsertLevel(level?: number) {
     const m = ctxMenu;
     ctxMenu = null;
     if (!m) return;
-    performInsertHeading(m.row);
+    performInsertHeading(m.row, level);
   }
 
-  /** Dispatch a clicked menu item. `heading-mark` carries its target level on
-   * the item (one id, N tiers); everything else is a static id → command. */
+  /** Dispatch a clicked menu item. `heading-mark`/`heading-insert` carry a
+   * per-tier level on the item (one id, N tiers); everything else is a static
+   * id → command. */
   function runMenuItem(item: CtxMenuItem) {
-    // A submenu parent ("Mark as ▸") dispatches nothing — its children do.
+    // A submenu parent ("Mark as ▸" / "Insert heading line ▸") dispatches
+    // nothing — its children do.
     if (item.submenu) return;
     if (item.id === 'heading-mark') {
       menuSetLevel(item.level ?? 1);
+      return;
+    }
+    if (item.id === 'heading-insert') {
+      menuInsertLevel(item.level);
       return;
     }
     menuActions[item.id]();
@@ -2809,11 +2815,14 @@
     'para-merge': menuParaMerge,
     'sentence-split': menuSentenceSplit,
     'sentence-join': menuSentenceJoin,
-    // heading-mark carries a per-item level → dispatched by runMenuItem, never
-    // through this static map (kept here only to satisfy the exhaustive Record).
+    // heading-mark / heading-insert carry a per-item level → dispatched by
+    // runMenuItem; the *-menu ids are submenu parents (also runMenuItem). All
+    // are no-ops here, kept only to satisfy the exhaustive Record.
     'heading-mark': () => {},
+    'heading-mark-menu': () => {},
     'heading-clear': () => menuSetLevel(null),
-    'heading-insert': menuInsertHeading,
+    'heading-insert': () => {},
+    'heading-insert-menu': () => {},
     'ai-translate': menuAssist,
     'ai-translate-batch': menuAssist,
     'ai-reference': menuReference,
@@ -2954,12 +2963,13 @@
    * label lives in the row's English/translation cell; the Greek column stays
    * empty (a user-authored marker, not source text).
    */
-  function performInsertHeading(r: number) {
+  function performInsertHeading(r: number, level?: number) {
     if (!canEditRowStructure(scheme)) return;
     if (r < 0 || r > model.rows.length) return;
-    // Default to the shallowest in-page heading tier, else level 1.
+    // The tier is picked from the "Insert heading line ▸" submenu; fall back to
+    // the shallowest in-page heading tier (else level 1) if invoked without one.
     const headingIdx = profile.levels.findIndex((l) => l.navRole === 'heading');
-    const level = (headingIdx >= 0 ? headingIdx : 0) + 1;
+    const lvl = level ?? (headingIdx >= 0 ? headingIdx : 0) + 1;
     dismissAssist();
     history.breakCoalescing();
     const selBefore = focusedSelRef();
@@ -2967,7 +2977,7 @@
       address: { scheme: model.scheme, raw: '' },
       greek: '',
       english: emptyRowDocJSON(),
-      headingLevel: level,
+      headingLevel: lvl,
     };
     spliceRows(r, 0, [newRow]);
     const selAfter: SelRef = { row: r, segment: 0, layer: activeLayer(), anchor: 0, head: 0 };
@@ -2978,7 +2988,7 @@
       selAfter,
     });
     markModelDirty();
-    setStatus(`Inserted a ${levelName(profile, level)} line — type its text.`);
+    setStatus(`Inserted a ${levelName(profile, lvl)} line — type its text.`);
     void tick().then(() => {
       refreshFnDisplay();
       focusSel(selAfter);
@@ -4098,7 +4108,15 @@
         style="left: {openSubmenu.x}px; top: {openSubmenu.y}px; max-height: {openSubmenu.maxHeight}px"
       >
         {#each openSubmenu.items as sub (sub.title)}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={() => runMenuItem(sub)}>
+          <button
+            class="ctx-menu-item ctx-menu-choice"
+            class:checked={sub.checked}
+            type="button"
+            role="menuitem"
+            aria-checked={sub.checked ? 'true' : undefined}
+            onclick={() => runMenuItem(sub)}
+          >
+            <span class="ctx-menu-check" aria-hidden="true">{sub.checked ? '✓' : ''}</span>
             <span class="ctx-menu-title">{sub.title}</span>
           </button>
         {/each}

@@ -24,6 +24,7 @@ export type CtxMenuItemId =
   | 'heading-mark-menu'
   | 'heading-clear'
   | 'heading-insert'
+  | 'heading-insert-menu'
   | 'ai-translate'
   | 'ai-translate-batch'
   | 'ai-reference'
@@ -34,8 +35,11 @@ export interface CtxMenuItem {
   id: CtxMenuItemId;
   title: string;
   desc?: string;
-  /** For a `heading-mark` item: the 1-based level to mark the row as. */
+  /** For a `heading-mark`/`heading-insert` item: the 1-based level it targets. */
   level?: number;
+  /** For a `heading-mark` item: true on the tier the row currently IS (shown
+   * with a ✓ so the current role is visible, not omitted). */
+  checked?: boolean;
   /** When present, this item is a SUBMENU parent: it dispatches no action; the
    * children fly out to the side (D8 heading tools — keeps "Mark as ▸" compact
    * however many tiers a profile has). */
@@ -86,32 +90,37 @@ export interface CtxMenuInput {
 }
 
 /**
- * The heading group (D8 heading tools). The per-tier "Mark as <tier>" items —
- * one for each profile level the row is NOT currently at — are collapsed under
- * a single "Mark as ▸" submenu so the menu stays short however many tiers a
- * profile has (John: a flat list of 8 got "waaaaaay too big"). "Clear heading"
- * (when the row has a level) and "Insert heading line here" stay top-level.
+ * The heading group (D8 heading tools). Both tier lists are collapsed under
+ * submenus so the menu stays short however many tiers a profile has (John: a
+ * flat list of 8 got "waaaaaay too big"):
+ *  - "Mark as ▸" lists EVERY tier, the row's current one shown with a ✓ (so the
+ *    role is visible, not omitted — clicking it is a harmless no-op);
+ *  - "Insert heading line here ▸" is a tier PICKER — pick the tier the new
+ *    inserted line should be (John: a blank inserted line had no clear place to
+ *    set its role).
+ * "Clear heading" (when the row has a level) stays top-level.
  */
 function headingGroup(level: number | null, levelNames: string[], canInsert: boolean): CtxMenuItem[] {
   const items: CtxMenuItem[] = [];
-  const marks: CtxMenuItem[] = [];
-  levelNames.forEach((name, i) => {
-    const n = i + 1;
-    if (n === level) return;
-    marks.push({ id: 'heading-mark', title: name, level: n });
-  });
+  const marks: CtxMenuItem[] = levelNames.map((name, i) => ({
+    id: 'heading-mark' as const,
+    title: name,
+    level: i + 1,
+    ...(i + 1 === level ? { checked: true } : {}),
+  }));
   if (marks.length > 0) {
     items.push({ id: 'heading-mark-menu', title: 'Mark as', submenu: marks });
   }
   if (level !== null) {
     items.push({ id: 'heading-clear', title: 'Clear heading' });
   }
-  if (canInsert) {
-    items.push({
-      id: 'heading-insert',
-      title: 'Insert heading line here',
-      desc: 'Adds a new heading row above this one to type into',
-    });
+  if (canInsert && levelNames.length > 0) {
+    const inserts: CtxMenuItem[] = levelNames.map((name, i) => ({
+      id: 'heading-insert' as const,
+      title: name,
+      level: i + 1,
+    }));
+    items.push({ id: 'heading-insert-menu', title: 'Insert heading line here', submenu: inserts });
   }
   return items;
 }
