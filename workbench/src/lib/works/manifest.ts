@@ -20,6 +20,24 @@ import posteriorAnalyticsYaml from './manifests/posterior-analytics.yaml?raw';
 
 export type OriginalLanguage = 'greek' | 'latin';
 
+/** One chapter slot inside a free work's explicit Book container. `n` is
+ * positional (1-based) and drives the chapter file name; `label` is the
+ * display name ("Question 2"). A slot can exist with no file on disk yet — an
+ * empty chapter awaiting an import. */
+export interface DocumentChapterSlot {
+  n: number;
+  label: string;
+}
+
+/** A free work's explicit Book container (D8 structure tools). `n` is
+ * positional (1-based) and drives the chapter file name's book part; `chapters`
+ * may be empty (a Book created before any chapters are added). */
+export interface DocumentBook {
+  n: number;
+  label: string;
+  chapters: DocumentChapterSlot[];
+}
+
 /** WorkMeta plus the extra fields carried in the manifest YAML. */
 export interface WorkManifest extends WorkMeta {
   originalLanguage?: OriginalLanguage;
@@ -33,6 +51,12 @@ export interface WorkManifest extends WorkMeta {
    * the work's named heading tiers + their navigation roles. Absent on built-in
    * works; free works get their saved profile or the default (works/profile.ts). */
   profile?: WorkProfile;
+  /** Explicit Book/Chapter containers (document-spine free works with the D8
+   * structure tools). Absent = a single-document "bookless" free work (the
+   * legacy shape; `books` is then `[{ n: 1, label: '' }]`). When present, `books`
+   * mirrors these entries' `n`/`label` and this carries the per-book chapter
+   * slots the rail, editor, and compiler navigate. */
+  documentBooks?: DocumentBook[];
 }
 
 interface RawManifestBook {
