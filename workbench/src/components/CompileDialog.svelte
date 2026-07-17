@@ -7,6 +7,7 @@
   // compact gap notice before/while the user decides.
   import { isTauri } from '../lib/runtime';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
+  import { getScheme } from '../lib/citation/registry';
   import { parseChapterFile } from '../lib/chapterfile';
   import type { ChapterFile } from '../lib/chapterfile/types';
   import {
@@ -39,7 +40,14 @@
     phase = 'loading';
     try {
       const storage = libraryStorage();
-      const files = (await storage.list(work.id)).filter((f) => CHAPTER_FILE_RE.test(f));
+      // A document-spine work is ONE file (its in-text marks become the
+      // chapters at export time — documentCompileInput below). Only ever
+      // consider its primary b01c01, so the gap report can't imply completeness
+      // from stray leftover files that the export would silently drop.
+      const isDoc = getScheme(work.scheme).spineSource === 'document';
+      const files = (await storage.list(work.id)).filter(
+        (f) => CHAPTER_FILE_RE.test(f) && (!isDoc || f === chapterFileName(1, 1)),
+      );
       const loaded: ChapterFile[] = [];
       for (const file of files) {
         const raw = await storage.read(work.id, file);

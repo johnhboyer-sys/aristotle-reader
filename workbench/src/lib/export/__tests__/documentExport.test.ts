@@ -42,7 +42,21 @@ describe('documentCompileInput — split a marker-driven document for export', (
     const file = docFile(['Body a', 'Body b'], [{ row: 1, level: 3 }]); // an Article (heading) only
     const out = documentCompileInput(file, WORK);
     expect(out.chapters).toHaveLength(1);
-    expect(out.work).toBe(WORK); // untouched
+    expect(out.work).toStrictEqual(WORK); // same content (no synthetic headings)
+    expect((out.work as WorkManifest).documentBooks).toBeUndefined();
+  });
+
+  it('strips stale registry documentBooks when there are no marks (single-doc path)', () => {
+    // A work left over from the retired container model still carries
+    // documentBooks; with no in-text book/chapter marks, compile must NOT
+    // render under those dead labels — strip them → byte-identical single doc.
+    const stale = {
+      ...WORK,
+      documentBooks: [{ n: 1, label: 'Prima Pars', chapters: [{ n: 1, label: 'Chapter 1' }] }],
+    } as WorkManifest;
+    const file = docFile(['Body a', 'Body b'], []);
+    const out = documentCompileInput(file, stale);
+    expect(out.chapters).toHaveLength(1);
     expect((out.work as WorkManifest).documentBooks).toBeUndefined();
   });
 

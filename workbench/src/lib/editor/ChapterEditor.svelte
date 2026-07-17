@@ -3203,7 +3203,12 @@
    * with that role, or the scheme can't carry heading rows. */
   export function appendHeadingForRole(role: NavRole): void {
     const idx = profile.levels.findIndex((l) => l.navRole === role);
-    if (idx < 0) return;
+    if (idx < 0) {
+      // No tier of this role in the work's profile — tell the user rather than
+      // failing silently (a default document has only heading tiers).
+      setStatus(`This work has no ${role} tier yet — add one in “Manage levels…” first.`);
+      return;
+    }
     performInsertHeading(model.rows.length, idx + 1);
   }
 

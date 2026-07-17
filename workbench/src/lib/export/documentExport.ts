@@ -24,10 +24,13 @@ export function documentCompileInput(
   const profile = work.profile ?? DEFAULT_PROFILE;
   const parts = splitDocument(file, profile);
 
-  // No Book/Chapter marks → one part; leave the work as-is so compile renders a
-  // plain titled document (no synthetic headings).
+  // No Book/Chapter marks → one part: a plain titled document. Strip any stale
+  // registry `documentBooks` (left over from the retired container model) so
+  // compile takes its byte-identical single-document path instead of rendering
+  // the document under long-dead slot labels.
   if (parts.length <= 1) {
-    return { chapters: parts.map((p) => p.file), work };
+    const { documentBooks: _stale, ...rest } = work;
+    return { chapters: parts.map((p) => p.file), work: rest };
   }
 
   const rows = hydrateFromFile(file, [], work.scheme).rows;
