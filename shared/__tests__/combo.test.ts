@@ -39,6 +39,11 @@ const form: Record<string, [number, number][]> = {
   zeta: [[0, 12]],
   eta: [[0, 19]],
   theta: [[1, 1]],
+  // For the greedy counterexample: kappa occurs TWICE, and only the later
+  // occurrence lets all three terms fit one window.
+  iota: [[0, 10]],
+  kappa: [[0, 5], [0, 12]],
+  lambda: [[0, 18]],
 };
 
 function json(data: unknown) {
@@ -129,6 +134,25 @@ describe('searchCombo', () => {
       opts({ window: 5 }), ['CW2'],
     );
     expect(phrase.results[0].grkPositions).toEqual([2, 3, 4]);
+  });
+
+  // Regression: taking each slot's EARLIEST feasible hit missed real matches.
+  // iota@10, kappa@5 and @12, lambda@18. The assignment 10/12/18 has extent 8
+  // and fits a window of 8; picking kappa@5 first pins the extent at 5-10 and
+  // puts lambda@18 out of reach, so a greedy scan reported nothing at all.
+  it('finds a window that needs a later occurrence than the first feasible one', async () => {
+    const { results } = await searchCombo(
+      [slot('iota'), slot('kappa'), slot('lambda')], opts({ window: 8 }), ['CG1'],
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].grkPositions).toEqual([10, 12, 18]);
+  });
+
+  it('still rejects that group when the window is genuinely too small', async () => {
+    const { results } = await searchCombo(
+      [slot('iota'), slot('kappa'), slot('lambda')], opts({ window: 7 }), ['CG2'],
+    );
+    expect(results).toHaveLength(0);
   });
 
   it('unions the heads a lemma slot carries', async () => {

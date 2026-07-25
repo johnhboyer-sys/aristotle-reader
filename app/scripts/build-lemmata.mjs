@@ -198,12 +198,10 @@ for (const w of works) {
           // both wherever several analyses share a lemma. The fold-key count is
           // what a search actually returns, so it is the one shown.
           const seenPair = new Set();
-          const seenFold = new Set();
           for (const a of ans) {
             const key = (a.lsj && a.lsj[0]) || a.lemma;
             const f = a.lemma && fold(a.lemma);
             if (!key || !f) continue;
-            if (!seenFold.has(f)) { seenFold.add(f); pickerTokens.set(f, (pickerTokens.get(f) ?? 0) + 1); }
             const pair = `${f}\0${key}`;
             if (seenPair.has(pair)) continue;
             seenPair.add(pair);
@@ -321,7 +319,14 @@ for (const w of readdirSync(DATA, { withFileTypes: true })
   .map((d) => d.name)) {
   const p = join(DATA, w, 'search', 'greek_lemma.json');
   if (!existsSync(p)) continue;
-  for (const f of Object.keys(JSON.parse(readFileSync(p, 'utf8')))) {
+  // `n` is counted from the postings themselves, not from this script's own
+  // walk. The walk resolves analyses[tok.k] directly while stage 6 goes through
+  // key_map, and stage 6 also keys a lemma off the stored form when an analysis
+  // carries no lemma — so a count derived here would be wrong for hundreds of
+  // keys and zero for the ones only the index knows about, while the UI calls it
+  // "tokens a search on this fold key returns".
+  for (const [f, posts] of Object.entries(JSON.parse(readFileSync(p, 'utf8')))) {
+    pickerTokens.set(f, (pickerTokens.get(f) ?? 0) + posts.length);
     if (!picker.has(f)) picker.set(f, new Map());
   }
 }

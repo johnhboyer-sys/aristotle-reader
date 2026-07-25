@@ -727,55 +727,69 @@ export function comboWindows(
   const out: { start: number; end: number; hits: SlotHit[] }[] = [];
   for (const anchor of sorted[0]) {
     const [unitLo, unitHi] = structural(anchor.start);
-    const chosen: SlotHit[] = [anchor];
-    let ok = true;
-    // The running extent of the match so far, so the window bounds the whole
-    // group. A slot's END must also fall inside the unit: a phrase may not run
-    // off the end of the line or chapter it is being measured in.
-    let spanLo = anchor.start;
-    let spanHi = anchor.start + anchor.span - 1;
-    for (let s = 1; s < sorted.length && ok; s++) {
-      let lo = unitLo;
-      let hi = unitHi;
-      if (opts.unit === 'words') {
-        // Anything further than W from either end of the current extent would
-        // put some pair of slots more than W apart.
-        lo = Math.max(lo, spanHi - opts.window);
-        hi = Math.min(hi, spanLo + opts.window + 1);
-      }
-      // Ordered: each slot starts at or after the previous one ends. Taking the
-      // earliest valid hit is optimal — every hit in a slot has the same span,
-      // so the earliest also ends earliest and blocks nothing a later one would
-      // have allowed.
-      if (opts.ordered) lo = Math.max(lo, spanHi + 1);
-      // Placement against the FIRST slot, which is the anchor.
-      const relation = relations[s] ?? 'near';
-      if (relation === 'after') lo = Math.max(lo, anchor.start + anchor.span);
-      if (relation === 'before') hi = Math.min(hi, anchor.start);
+    if (anchor.start + anchor.span > unitHi) continue;   // the anchor's own run must fit
 
-      let candidate: SlotHit | null = null;
-      if (relation === 'before') {
-        // The hit must END at or before the anchor begins. Spans are uniform
-        // within a slot, so that is a bound on `start`. Take the LAST such hit:
-        // the nearest one reads as the match a user meant, and any hit in range
-        // would satisfy the query equally.
-        const span = sorted[s][0].span;
-        const j = lowerBound(sorted[s], anchor.start - span + 1) - 1;
-        if (j >= 0 && sorted[s][j].start >= lo) candidate = sorted[s][j];
-      } else {
-        const i = lowerBound(sorted[s], lo);
-        if (i < sorted[s].length
-          && sorted[s][i].start < hi
-          && sorted[s][i].start + sorted[s][i].span <= unitHi) candidate = sorted[s][i];
+    // Everything each slot could contribute for THIS anchor: inside the unit,
+    // inside the word window, and on the side its relation requires.
+    const reach = opts.unit === 'words' ? opts.window : total;
+    const lo = Math.max(unitLo, anchor.start - reach);
+    const hi = Math.min(unitHi, anchor.start + reach + 1);
+    const feasible: SlotHit[][] = [[anchor]];
+    let possible = true;
+    for (let s = 1; s < sorted.length && possible; s++) {
+      const relation = relations[s] ?? 'near';
+      const from = relation === 'after' ? Math.max(lo, anchor.start + anchor.span) : lo;
+      const to = relation === 'before' ? Math.min(hi, anchor.start + 1) : hi;
+      const picks: SlotHit[] = [];
+      for (let i = lowerBound(sorted[s], from); i < sorted[s].length; i++) {
+        const h = sorted[s][i];
+        if (h.start >= to) break;
+        if (h.start + h.span > unitHi) continue;
+        // "before" is measured by the END of the run, so a phrase only counts
+        // as preceding when the whole run finishes first.
+        if (relation === 'before' && h.start + h.span > anchor.start) continue;
+        picks.push(h);
       }
-      if (!candidate) { ok = false; break; }
-      chosen.push(candidate);
-      spanLo = Math.min(spanLo, candidate.start);
-      spanHi = Math.max(spanHi, candidate.start + candidate.span - 1);
+      if (!picks.length) possible = false;
+      else feasible.push(picks);
     }
-    // The anchor's own phrase must sit inside the unit too.
-    if (!ok || anchor.start + anchor.span > unitHi) continue;
-    out.push({ start: spanLo, end: spanHi, hits: chosen });
+    if (!possible) continue;
+
+    // A window of W means every slot lands within W of every other, so the
+    // group must fit in some span [s, s+W] that contains the anchor. Taking the
+    // earliest feasible hit per slot is NOT sufficient: choosing an early
+    // partner can push the far end out of reach when a later one would have
+    // fitted. So try each candidate start rather than committing greedily.
+    const starts = new Set<number>([anchor.start]);
+    for (const picks of feasible) for (const h of picks) {
+      if (h.start <= anchor.start) starts.add(h.start);
+    }
+    let chosen: SlotHit[] | null = null;
+    for (const s0 of [...starts].sort((a, b) => a - b)) {
+      if (opts.unit === 'words' && anchor.start - s0 > opts.window) continue;
+      const limit = opts.unit === 'words' ? s0 + opts.window : unitHi;
+      const take: SlotHit[] = [anchor];
+      let cursor = anchor.start + anchor.span;   // for the whole-query order lock
+      let ok = true;
+      for (let s = 1; s < feasible.length; s++) {
+        const relation = relations[s] ?? 'near';
+        const from = opts.ordered ? Math.max(s0, cursor) : s0;
+        // "before" wants the nearest preceding run; everything else the
+        // earliest, which also chains correctly when the order lock is on.
+        const window = feasible[s].filter(h => h.start >= from && h.start <= limit);
+        const pick = relation === 'before' ? window[window.length - 1] : window[0];
+        if (!pick) { ok = false; break; }
+        take.push(pick);
+        cursor = pick.start + pick.span;
+      }
+      if (ok) { chosen = take; break; }
+    }
+    if (!chosen) continue;
+    out.push({
+      start: Math.min(...chosen.map(h => h.start)),
+      end: Math.max(...chosen.map(h => h.start + h.span - 1)),
+      hits: chosen,
+    });
   }
   return out;
 }
