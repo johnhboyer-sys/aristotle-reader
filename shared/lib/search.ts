@@ -145,19 +145,60 @@ export function greekFold(input: string): string {
   return out.join('');
 }
 
+// Fold a pattern without losing its metacharacters. Folding one character at
+// a time keeps * and ? out of greekFold(), where they are deliberately ignored
+// with punctuation and diacritics.
+function compilePattern(
+  term: string,
+  fold: (s: string) => string,
+): { exact: string } | { test: (key: string) => boolean } | null {
+  const input = term.replace(/^\*+/, '');
+  let pattern = '';
+  for (const ch of input) {
+    pattern += ch === '*' || ch === '?' ? ch : fold(ch);
+  }
+  if (!pattern) return null;
+
+  if (!pattern.includes('*') && !pattern.includes('?')) {
+    return { exact: pattern };
+  }
+
+  // Preserve the common trailing-* fast path without compiling or scanning
+  // with a regular expression.
+  if (pattern.endsWith('*')
+    && !pattern.slice(0, -1).includes('*')
+    && !pattern.includes('?')) {
+    const prefix = pattern.slice(0, -1);
+    return { test: key => key.startsWith(prefix) };
+  }
+
+  // Index keys contain only fold letters and apostrophes. Build the expression
+  // from known-safe pieces rather than interpolating user input.
+  const pieces: string[] = [];
+  for (const ch of pattern) {
+    if (ch === '*') pieces.push("[a-z']*");
+    else if (ch === '?') pieces.push("[a-z']");
+    else pieces.push(ch);
+  }
+  const regex = new RegExp(`^${pieces.join('')}$`);
+  return { test: key => regex.test(key) };
+}
+
+function englishFold(input: string): string {
+  return input.toLowerCase().replace(/[^a-z']/g, '');
+}
+
 // -- Posting-list helpers -------------------------------------------------
 
 function grkPosting(idx: GrkIndex, term: string): Set<number> {
-  const wildcard = term.indexOf('*');
-  if (wildcard === -1) {
-    const fold = greekFold(term);
-    return new Set((idx[fold] ?? []).map(([si]) => si));
+  const pattern = compilePattern(term, greekFold);
+  if (!pattern) return new Set();
+  if ('exact' in pattern) {
+    return new Set((idx[pattern.exact] ?? []).map(([si]) => si));
   }
-  // Prefix wildcard: fold the part before *, match all keys with that prefix
-  const prefix = greekFold(term.slice(0, wildcard));
   const result = new Set<number>();
   for (const key of Object.keys(idx)) {
-    if (key.startsWith(prefix)) {
+    if (pattern.test(key)) {
       for (const [si] of idx[key]) result.add(si);
     }
   }
@@ -165,17 +206,19 @@ function grkPosting(idx: GrkIndex, term: string): Set<number> {
 }
 
 function engPosting(idx: EngIndex, term: string): Set<number> {
-  const word = term.toLowerCase().replace(/[^a-z'*]/g, '');
-  if (!word || word === '*') return new Set(Object.values(idx).flat());
-  if (word.endsWith('*')) {
-    const prefix = word.slice(0, -1);
-    const result = new Set<number>();
-    for (const key of Object.keys(idx)) {
-      if (key.startsWith(prefix)) for (const si of idx[key]) result.add(si);
-    }
-    return result;
+  if (term === '*') return new Set(Object.values(idx).flat());
+  const pattern = compilePattern(term, englishFold);
+  if (!pattern) return new Set();
+  if ('exact' in pattern) {
+    return new Set(idx[pattern.exact] ?? []);
   }
-  return new Set(idx[word] ?? []);
+  const result = new Set<number>();
+  for (const key of Object.keys(idx)) {
+    if (pattern.test(key)) {
+      for (const si of idx[key]) result.add(si);
+    }
+  }
+  return result;
 }
 
 function intersect(a: Set<number>, b: Set<number>): Set<number> {
@@ -191,7 +234,7 @@ function union(a: Set<number>, b: Set<number>): Set<number> {
 //
 // This works off the same postings the query already intersected, so it uses
 // whichever index the match mode selected (surface forms for 'form', every
-// analysis lemma for 'lemma'), and wildcard terms participate via their prefix
+// analysis lemma for 'lemma'), and wildcard terms participate via their
 // postings. Token positions count EVERY token, so an unanalysed word between
 // two terms correctly breaks adjacency.
 function phraseStarts(idx: GrkIndex, terms: string[]): Map<number, number[]> {
@@ -253,12 +296,12 @@ function termPositions(idx: GrkIndex, term: string): Map<number, number[]> {
       else m.set(si, [pos]);
     }
   };
-  const wildcard = term.indexOf('*');
-  if (wildcard === -1) {
-    add(idx[greekFold(term)] ?? []);
+  const pattern = compilePattern(term, greekFold);
+  if (!pattern) return m;
+  if ('exact' in pattern) {
+    add(idx[pattern.exact] ?? []);
   } else {
-    const prefix = greekFold(term.slice(0, wildcard));
-    for (const key of Object.keys(idx)) if (key.startsWith(prefix)) add(idx[key]);
+    for (const key of Object.keys(idx)) if (pattern.test(key)) add(idx[key]);
   }
   return m;
 }
@@ -842,9 +885,7 @@ export async function search(
   if (!grkQuery.trim() && !engQuery.trim()) return { results: [], failedWorks: [] };
   if (!works.length) return { results: [], failedWorks: [] };
 
-  // Strip a leading '*' (Beta Code capital marker, e.g. *a)nqrwpos); the fold
-  // form is caseless, and a leading wildcard would match everything anyway.
-  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean).map(t => t.replace(/^\*+/, ''));
+  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean);
   const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
   // Bound how many works load at once, and let a single work's failed index
