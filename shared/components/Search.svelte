@@ -70,6 +70,9 @@
   let searched = false;
   let error = '';
   let failedWorks: string[] = [];         // works whose index didn't load this run
+  // Works whose chapter edges are line-precise only; set solely when the query
+  // depends on chapter geometry, so it is never noise.
+  let approximateChapters: string[] = [];
   let showHelp = false;
   let helpModal: HTMLDivElement;
   let helpTrigger: HTMLElement | null = null;
@@ -771,6 +774,7 @@
     loading = true;
     error = '';
     failedWorks = [];
+    approximateChapters = [];
     pageError = '';
     csvNote = '';
     searched = false;
@@ -788,12 +792,13 @@
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
       };
-      const { results, failedWorks: failed } = comboActive
+      const { results, failedWorks: failed, approximateChapters: approximate } = comboActive
         ? await searchCombo(comboSearchSlots, comboOptions, works)
         : grammarActive
           ? await searchGrammar(grammarQuery, works)
           : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
       failedWorks = failed;
+      approximateChapters = approximate ?? [];
       totalInstances = results.reduce((n, r) => n + instCount(r), 0);
       pages = paginate(results);
       searched = true;
@@ -1411,6 +1416,13 @@
         ⚠ Incomplete results — couldn't load {failedWorks.length === 1 ? 'the index for' : 'indexes for'}
         {failedWorks.map((w) => getWork(w)?.title ?? w).join(', ')}. Counts below may be short.
         <button type="button" class="retry-btn" on:click={doSearch}>Retry</button>
+      </p>
+    {/if}
+    {#if approximateChapters.length}
+      <p class="search-approximate">
+        Chapter starts in {approximateChapters.map((w) => getWork(w)?.title ?? w).join(', ')}
+        are recorded to the Bekker line, not the word, so a hit within the first
+        line of a chapter may belong to the one before it.
       </p>
     {/if}
     <div class="result-bar">
@@ -2215,6 +2227,17 @@
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     margin: 0.5rem 0;
+  }
+  /* A limit of the source, not an error — stated plainly, styled quietly. */
+  .search-approximate {
+    color: var(--text-mid);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    border-left: 2px solid var(--border);
+    padding: 0.1rem 0 0.1rem 0.6rem;
+    margin: 0.5rem 0;
+    max-width: 70ch;
   }
   .retry-btn {
     font: inherit;

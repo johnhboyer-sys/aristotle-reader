@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import statistics
 import unicodedata
+from bisect import bisect_right
 from collections import defaultdict
 from pathlib import Path
 
@@ -33,6 +34,8 @@ def _base(text: str) -> str:
 
 # Characters we expect in Bywater's text besides Greek letters.
 EXPECTED_NON_GREEK = set(" .,·;'’ʼ—-()[]")
+GRAMMAR_EVEN_SAMPLES = 257
+GRAMMAR_EDGE_SEGMENTS = 32
 
 
 def _is_greek_letter(ch: str) -> bool:
@@ -77,8 +80,12 @@ def check_offsets(offsets: dict, segments: list[dict]) -> dict:
                     f"seg {i} ({seg['id']}): base delta {actual - base[i]} != "
                     f"token count {count}"
                 )
-            if sum(n for _, n in coords[i]["line_runs"]) != count:
-                problems.append(f"seg {i} ({seg['id']}): line_runs sum != token count")
+            expected_runs = [[line["n"], len(line["tokens"])] for line in seg["lines"]]
+            if coords[i]["line_runs"] != expected_runs:
+                problems.append(
+                    f"seg {i} ({seg['id']}): line_runs do not match stage3 lines "
+                    f"(expected {expected_runs!r}, got {coords[i]['line_runs']!r})"
+                )
 
     # Round-trip a sample: global -> (seg, pos) must return the original.
     def to_local(g: int) -> tuple[int, int]:
@@ -124,7 +131,15 @@ def check_offsets(offsets: dict, segments: list[dict]) -> dict:
     }
 
 
-def check_grammar(grammar: dict, column: list[int], offsets: dict) -> dict:
+def check_grammar(
+    grammar: dict,
+    column: list[int],
+    offsets: dict,
+    segments: list[dict],
+    key_map: dict,
+    analyses: dict,
+    signature_fn,
+) -> dict:
     """Validate the stage6 grammatical index. Runs from stage6, like the above.
 
     The column is indexed by global offset, so a length that disagrees with the
@@ -148,14 +163,100 @@ def check_grammar(grammar: dict, column: list[int], offsets: dict) -> dict:
         if sigs[slot]:
             problems.append(f"reserved slot {slot} ({name}) is not empty")
 
+    # Range checks cannot detect a well-formed column joined to the wrong token.
+    # Re-derive morphology from stage3/stage4 at deterministic offsets spread
+    # across the work, with extra coverage at early segment boundaries.
+    nonempty_starts: list[int] = []
+    nonempty_indexes: list[int] = []
+    expected_count = 0
+    edge_segments = 0
+    samples: set[int] = set()
+    for si, seg in enumerate(segments):
+        count = sum(len(line["tokens"]) for line in seg["lines"])
+        if count:
+            nonempty_starts.append(expected_count)
+            nonempty_indexes.append(si)
+            if edge_segments < GRAMMAR_EDGE_SEGMENTS:
+                samples.update((expected_count, expected_count + count - 1))
+                edge_segments += 1
+        expected_count += count
+
+    if expected_count:
+        evenly_spaced = min(GRAMMAR_EVEN_SAMPLES, expected_count)
+        if evenly_spaced == 1:
+            samples.add(0)
+        else:
+            samples.update(
+                i * (expected_count - 1) // (evenly_spaced - 1)
+                for i in range(evenly_spaced)
+            )
+
+    semantic_sampled = 0
+    for g in sorted(samples):
+        if g >= len(column):
+            continue  # the length failure above already names this corruption
+        sid = column[g]
+        if not 0 <= sid < len(sigs):
+            continue  # likewise for the signature-id range failure
+        nonempty_i = bisect_right(nonempty_starts, g) - 1
+        si = nonempty_indexes[nonempty_i]
+        local = g - nonempty_starts[nonempty_i]
+        token = None
+        token_pos = local
+        for line in segments[si]["lines"]:
+            if token_pos < len(line["tokens"]):
+                token = line["tokens"][token_pos]
+                break
+            token_pos -= len(line["tokens"])
+        if token is None:
+            problems.append(f"semantic sample {g} did not resolve to a stage3 token")
+            continue
+
+        semantic_sampled += 1
+        key = token.get("k")
+        if not key:
+            expected_sid = grammar["reserved"]["unkeyed"]
+            if sid != expected_sid:
+                problems.append(
+                    f"grammar semantic mismatch at global offset {g} "
+                    f"(seg {si} {segments[si]['id']}, token {local}): "
+                    f"unkeyed token expected reserved id {expected_sid}, got {sid}"
+                )
+            continue
+
+        stored = key_map.get(key)
+        entries = analyses.get(stored, []) if stored else []
+        expected_sig = signature_fn(entries)
+        if not expected_sig:
+            expected_sid = grammar["reserved"]["unanalysed"]
+            if sid != expected_sid:
+                problems.append(
+                    f"grammar semantic mismatch at global offset {g} "
+                    f"(seg {si} {segments[si]['id']}, token {local}, key {key!r}): "
+                    f"unanalysed token expected reserved id {expected_sid}, got {sid}"
+                )
+            continue
+
+        expected_content = [
+            {category: list(values) for category, values in reading}
+            for reading in expected_sig
+        ]
+        if sigs[sid] != expected_content:
+            problems.append(
+                f"grammar semantic mismatch at global offset {g} "
+                f"(seg {si} {segments[si]['id']}, token {local}, key {key!r}): "
+                f"expected {expected_content!r}, got id {sid} -> {sigs[sid]!r}"
+            )
+
     # Ambiguity, per category: of the tokens that license a value for it, how
     # many license more than one? This is the honesty signal — it counts values
     # a reader could be shown, not analysis records.
-    analysed = sum(1 for s in column if sigs[s])
+    valid_ids = [s for s in column if 0 <= s < len(sigs)]
+    analysed = sum(1 for s in valid_ids if sigs[s])
     ambiguity: dict[str, dict] = {}
     for category in grammar["categories"]:
         present = ambiguous = 0
-        for sid, count in _counts(column).items():
+        for sid, count in _counts(valid_ids).items():
             readings = sigs[sid]
             if not readings:
                 continue
@@ -176,6 +277,7 @@ def check_grammar(grammar: dict, column: list[int], offsets: dict) -> dict:
         "signatures": len(sigs),
         "width_bytes": grammar["width"],
         "tokens": len(column),
+        "semantic_offsets_sampled": semantic_sampled,
         "tokens_analysed": analysed,
         "tokens_unkeyed": sum(1 for s in column if s == grammar["reserved"]["unkeyed"]),
         "tokens_unanalysed": sum(

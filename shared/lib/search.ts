@@ -297,6 +297,13 @@ export interface SearchResult {
 export interface SearchOutcome {
   results: SearchResult[];
   failedWorks: string[];  // work ids that could not be searched this run
+  // Works whose chapter starts are known only to the Bekker line, reported ONLY
+  // when the query actually leans on chapter geometry. The pipeline stamps each
+  // bound exact or line-snapped; saying nothing here would let a chapter-scoped
+  // result imply a precision the source does not have. Categories and De
+  // Interpretatione declare chapters by Bekker line, so nearly every edge in
+  // them is approximate.
+  approximateChapters?: string[];
 }
 
 // Positions of a single term across segments: seg_idx → [token positions].
@@ -694,6 +701,9 @@ export function comboWindows(
   opts: ComboOptions,
   offsets: Offsets,
   relations: SlotRelation[] = [],
+  // Two slots sharing an identity are the same query asked twice, so they may
+  // not both be satisfied by one token. Empty string means "no constraint".
+  identities: string[] = [],
 ): { start: number; end: number; hits: SlotHit[] }[] {
   if (!perSlot.length || perSlot.some(h => !h.length)) return [];
   const sorted = perSlot.map(h => [...h].sort((a, b) => a.start - b.start));
@@ -771,13 +781,29 @@ export function comboWindows(
       const take: SlotHit[] = [anchor];
       let cursor = anchor.start + anchor.span;   // for the whole-query order lock
       let ok = true;
+      // One token may satisfy two DIFFERENT slots — "λόγος in the nominative"
+      // is a lemma slot and a grammatical slot landing on the same word, and is
+      // the most useful combo query there is. But two IDENTICAL slots asking
+      // the same thing want two occurrences, not one word counted twice.
+      const used = new Map<string, Set<number>>();
+      const claim = (s: number, at: number): boolean => {
+        const id = identities[s];
+        if (!id) return true;
+        let taken = used.get(id);
+        if (!taken) { taken = new Set(); used.set(id, taken); }
+        if (taken.has(at)) return false;
+        taken.add(at);
+        return true;
+      };
+      claim(0, anchor.start);
       for (let s = 1; s < feasible.length; s++) {
         const relation = relations[s] ?? 'near';
         const from = opts.ordered ? Math.max(s0, cursor) : s0;
         // "before" wants the nearest preceding run; everything else the
         // earliest, which also chains correctly when the order lock is on.
         const window = feasible[s].filter(h => h.start >= from && h.start <= limit);
-        const pick = relation === 'before' ? window[window.length - 1] : window[0];
+        const ordered = relation === 'before' ? [...window].reverse() : window;
+        const pick = ordered.find(h => claim(s, h.start));
         if (!pick) { ok = false; break; }
         take.push(pick);
         cursor = pick.start + pick.span;
@@ -827,19 +853,26 @@ async function comboSearchWork(
 
   const base = offsets.seg_base_offset;
   const perSlot = slots.map(s => slotHits(s, base, lemmaIdx, formIdx, dict, column));
-  const windows = comboWindows(perSlot, opts, offsets, slots.map(s => s.relation ?? 'near'));
+  const slotIds = slots.map(s => JSON.stringify([s.kind, s.terms ?? null, s.query ?? null]));
+  const duplicated = new Set(slotIds.filter((id, i) => slotIds.indexOf(id) !== i));
+  const windows = comboWindows(
+    perSlot, opts, offsets,
+    slots.map(s => s.relation ?? 'near'),
+    slotIds.map(id => (duplicated.has(id) ? id : '')),
+  );
 
   const bySeg = new Map<number, SearchResult>();
   const seenBySeg = new Map<number, Set<number>>();
-  for (const w of windows) {
-    const [si] = locate(base, w.start);
-    let result = bySeg.get(si);
-    if (!result) {
-      result = { work, meta: meta[si], grkMatch: true, engMatch: false, grkPositions: [], grammar: [] };
-      bySeg.set(si, result);
+  const resultFor = (si: number): SearchResult => {
+    let r = bySeg.get(si);
+    if (!r) {
+      r = { work, meta: meta[si], grkMatch: true, engMatch: false, grkPositions: [], grammar: [] };
+      bySeg.set(si, r);
       seenBySeg.set(si, new Set());
     }
-    const seen = seenBySeg.get(si)!;
+    return r;
+  };
+  for (const w of windows) {
     // Report every matched token so the KWIC marks all of them. Ambiguity is
     // recorded PER SLOT, not per window: a lexically matched word is certain
     // whatever its neighbour's parse allows, and labelling it with the other
@@ -850,9 +883,13 @@ async function comboSearchWork(
     for (const h of w.hits) {
       for (let k = 0; k < h.span; k++) {
         const [hs, hp] = locate(base, h.start + k);
-        // A window may run past the end of a segment; those tokens belong to
-        // the next segment's result, which its own window will report.
-        if (hs !== si) continue;
+        // A window can straddle a column boundary — segments are keyed
+        // (book, column), and a book edge is the only thing a window may not
+        // cross. Mark the token in whichever segment it actually falls in, so
+        // both halves of the passage are shown; dropping the far half used to
+        // leave the reader looking at a hit with a term missing.
+        const result = resultFor(hs);
+        const seen = seenBySeg.get(hs)!;
         if (seen.has(hp)) continue;
         seen.add(hp);
         result.grkPositions.push(hp);
@@ -895,7 +932,21 @@ export async function searchCombo(
   if (failedWorks.length === works.length) {
     throw new Error('Could not load the search index — check your connection and try again.');
   }
-  return { results: perWork.flat(), failedWorks };
+
+  // Only worth saying when the answer depends on where a chapter begins.
+  const approximateChapters: string[] = [];
+  if (bounded.unit === 'chapter' || !bounded.crossChapter) {
+    for (const w of works) {
+      if (failedWorks.includes(w)) continue;
+      try {
+        const offsets = await loadIndex<Offsets>(w, 'offsets.json');   // already cached
+        if (offsets.chapter_bounds.some(c => c.accuracy !== 'exact' && c.start !== 0)) {
+          approximateChapters.push(w);
+        }
+      } catch { /* a work that failed to load is already reported */ }
+    }
+  }
+  return { results: perWork.flat(), failedWorks, approximateChapters };
 }
 
 // Unified search across one or more works. `matchMode` chooses the Greek index

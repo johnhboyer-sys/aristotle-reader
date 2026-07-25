@@ -384,7 +384,9 @@ def run(manifest: Manifest) -> Path:
     }
 
     offsets_check = check_offsets(offsets, segments)
-    grammar_check = check_grammar(grammar_dict, column, offsets)
+    grammar_check = check_grammar(
+        grammar_dict, column, offsets, segments, key_map, analyses, signature
+    )
     for name, check in (("offset", offsets_check), ("grammar", grammar_check)):
         if not check["ok"]:
             raise ValueError(
