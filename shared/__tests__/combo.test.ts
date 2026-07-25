@@ -121,6 +121,16 @@ describe('searchCombo', () => {
     expect(results[0].grkPositions).toEqual([12, 19]);
   });
 
+  it('accepts a wildcard in a slot, including inside a phrase run', async () => {
+    const form = await searchCombo([slot('alph*'), slot('bet?')], opts({ window: 5 }), ['CW1']);
+    expect(form.results[0].grkPositions).toEqual([2, 4]);
+    const phrase = await searchCombo(
+      [{ kind: 'phrase', terms: ['delt*', 'beta'] }, slot('alpha')],
+      opts({ window: 5 }), ['CW2'],
+    );
+    expect(phrase.results[0].grkPositions).toEqual([2, 3, 4]);
+  });
+
   it('unions the heads a lemma slot carries', async () => {
     const { results } = await searchCombo(
       [{ kind: 'lemma', terms: ['beta', 'zeta'] }, slot('alpha')],
