@@ -1,15 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { greekFold, search } from '../lib/search';
+import { greekFold, search, searchGrammar } from '../lib/search';
 
 const meta = [
-  { id: 's1', book: 1, column: '1094a', greek_head: 'λόγος ἀρετή', greek_tokens: 'logos areth', english_head: 'virtue is a habit of choice' },
-  { id: 's2', book: 1, column: '1094b', greek_head: 'ψυχή λόγος', greek_tokens: 'yuxh logos', english_head: 'happiness and virtue together' },
-  { id: 's3', book: 2, column: '1100a', greek_head: 'τέχνη', greek_tokens: 'texnh', english_head: 'craft concerns making' },
+  { id: 's1', book: 1, column: '1094a', greek_head: 'λόγος ἀρετή', english_head: 'virtue is a habit of choice' },
+  { id: 's2', book: 1, column: '1094b', greek_head: 'ψυχή λόγος', english_head: 'happiness and virtue together' },
+  { id: 's3', book: 2, column: '1100a', greek_head: 'τέχνη', english_head: 'craft concerns making' },
 ];
 
 const greekIndex = {
   logos: [[0, 0], [1, 1]],
   areth: [[0, 1]],
+  pasa: [[0, 2]],
+  meqodos: [[0, 3]],
+  kai: [[0, 5]],
   yuxh: [[1, 0]],
   texnh: [[2, 0]],
 } satisfies Record<string, [number, number][]>;
@@ -80,6 +83,23 @@ describe('search', () => {
     expect(orHits.map((r) => r.meta.id)).toEqual(['s2', 's3']);
   });
 
+  // Regression: phrases used to be verified by substring-matching the user's
+  // SURFACE folds against meta.greek_tokens, which was a LEMMA fold stream — so
+  // genuine form-mode hits were silently dropped. Real case: EN 1:1094a reads
+  // "pas meqodos" in the lemma stream while greek_form holds the surface pasa.
+  // Phrases are now verified against posting adjacency, and greek_tokens is gone.
+  // The index below stands in for that split: pasa@2, meqodos@3, kai@5.
+  it('matches a form phrase whose lemma stream differs from the surface forms', async () => {
+    const hits = (await search('pasa meqodos', '', 'phrase', 'all', 'and', ['TPhraseLemmaStream'], 'form')).results;
+    expect(hits.map((r) => r.meta.id)).toEqual(['s1']);
+    expect(hits[0].grkPositions).toEqual([2, 3]);
+  });
+
+  it('rejects phrase terms that are present but not adjacent or out of order', async () => {
+    expect((await search('meqodos pasa', '', 'phrase', 'all', 'and', ['TPhraseOrder'], 'form')).results).toHaveLength(0);
+    expect((await search('pasa kai', '', 'phrase', 'all', 'and', ['TPhraseGap'], 'form')).results).toHaveLength(0);
+  });
+
   it.each([
     ['whitespace only', '   ', '\t'],
     ['pure punctuation', '!!!', '...'],
@@ -88,5 +108,97 @@ describe('search', () => {
     ['very long string', `${'logos '.repeat(500)}texnh`, `${'virtue '.repeat(500)}craft`],
   ])('does not throw for adversarial input: %s', async (_label, grk, eng) => {
     await expect(search(grk, eng, 'any', 'any', 'or', [`TAdv-${_label}`])).resolves.toMatchObject({ results: expect.any(Array), failedWorks: expect.any(Array) });
+  });
+});
+
+// Four tokens in one segment, indexed by global offset:
+//   0 unkeyed · 1 "fem nom sg" (sole reading) · 2 "fem nom/voc sg" (ONE
+//   analysis, two possible cases) · 3 two analyses, nom and acc.
+const grammarDict = {
+  token_count: 4,
+  width: 2,
+  categories: ['case', 'gender', 'number'],
+  reserved: { unkeyed: 0, unanalysed: 1 },
+  sigs: [
+    [],
+    [],
+    [{ gender: ['fem'], case: ['nom'], number: ['sg'] }],
+    [{ gender: ['fem'], case: ['nom', 'voc'], number: ['sg'] }],
+    [
+      { gender: ['fem'], case: ['nom'], number: ['sg'] },
+      { gender: ['fem'], case: ['acc'], number: ['pl'] },
+    ],
+  ],
+};
+const grammarOffsets = {
+  token_count: 4,
+  seg_base_offset: [0],
+  segments: [{ book: 1, column: '1094a', line_runs: [[1, 4]] }],
+  book_bounds: [{ book: 1, start: 0 }],
+  chapter_bounds: [{ book: 1, chapter: '1', start: 0, accuracy: 'exact' }],
+};
+const grammarColumn = Uint16Array.from([0, 2, 3, 4]);
+
+describe('searchGrammar', () => {
+  beforeEach(() => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      const path = String(url);
+      if (path.endsWith('/meta.json')) return json(meta);
+      if (path.endsWith('/offsets.json')) return json(grammarOffsets);
+      if (path.endsWith('/grammar-dict.json')) return json(grammarDict);
+      if (path.endsWith('/grammar-col.bin')) {
+        return Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(grammarColumn.buffer) } as Response);
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
+    });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('returns nothing for an empty query or no works', async () => {
+    await expect(searchGrammar({}, ['TGEmpty'])).resolves.toEqual({ results: [], failedWorks: [] });
+    await expect(searchGrammar({ case: 'nom' }, [])).resolves.toEqual({ results: [], failedWorks: [] });
+  });
+
+  it('finds every token a query is possible for, and reports its offset', async () => {
+    const { results } = await searchGrammar({ case: 'nom' }, ['TGNom']);
+    expect(results).toHaveLength(1);
+    // Tokens 1, 2 and 3 all license nom; token 0 has no analysis.
+    expect(results[0].grkPositions).toEqual([1, 2, 3]);
+  });
+
+  it('calls a sole unambiguous reading certain', async () => {
+    const { results } = await searchGrammar({ case: 'nom' }, ['TGCertain']);
+    expect(results[0].grammar![0]).toEqual({ values: { case: ['nom'] }, certain: true });
+  });
+
+  // The honesty tier. Both of these would read as a single certain parse if
+  // ambiguity were counted as "number of analysis records".
+  it('does not call a syncretic single analysis certain', async () => {
+    const { results } = await searchGrammar({ case: 'nom' }, ['TGSyncretic']);
+    expect(results[0].grammar![1]).toEqual({ values: { case: ['nom', 'voc'] }, certain: false });
+  });
+
+  it('does not call a multi-analysis token certain', async () => {
+    const { results } = await searchGrammar({ case: 'nom' }, ['TGMulti']);
+    expect(results[0].grammar![2]).toEqual({ values: { case: ['acc', 'nom'] }, certain: false });
+  });
+
+  it('requires one single reading to satisfy every part of the query', async () => {
+    // Token 3 licenses nom (reading 1) and pl (reading 2), but no reading
+    // licenses both — a per-category union would wrongly match it.
+    const { results } = await searchGrammar({ case: 'nom', number: 'pl' }, ['TGCorrelation']);
+    expect(results).toHaveLength(0);
+  });
+
+  it('refuses to join files built from different runs', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      const path = String(url);
+      if (path.endsWith('/meta.json')) return json(meta);
+      if (path.endsWith('/offsets.json')) return json({ ...grammarOffsets, token_count: 99 });
+      if (path.endsWith('/grammar-dict.json')) return json(grammarDict);
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
+    });
+    await expect(searchGrammar({ case: 'nom' }, ['TGMismatch'])).rejects.toThrow(/grammar index/);
   });
 });

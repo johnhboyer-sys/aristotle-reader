@@ -44,6 +44,156 @@ def _is_greek_letter(ch: str) -> bool:
         return False
 
 
+def check_offsets(offsets: dict, segments: list[dict]) -> dict:
+    """Validate the stage6 word-offset primitive against the stage3 segments.
+
+    Lives here with the other checks, but runs from stage6 — offsets.json does
+    not exist yet when stage 2 runs.
+
+    Structural failures (a base that walks backwards, a base delta that misses
+    its segment's token count, an out-of-range chapter anchor) are hard: every
+    offset-indexed feature downstream would silently read the wrong word. A
+    line-snapped chapter bound is not a failure — it is a known limit of the
+    source, counted here so it can be surfaced rather than hidden.
+    """
+    base = offsets["seg_base_offset"]
+    coords = offsets["segments"]
+    problems: list[str] = []
+
+    if len(base) != len(segments) or len(coords) != len(segments):
+        problems.append(
+            f"length mismatch: {len(base)} bases / {len(coords)} coords / "
+            f"{len(segments)} segments"
+        )
+    else:
+        for i, seg in enumerate(segments):
+            count = sum(len(l["tokens"]) for l in seg["lines"])
+            if i and base[i] < base[i - 1]:
+                problems.append(f"base decreases at seg {i} ({seg['id']})")
+            expected = base[i] + count
+            actual = base[i + 1] if i + 1 < len(base) else offsets["token_count"]
+            if actual != expected:
+                problems.append(
+                    f"seg {i} ({seg['id']}): base delta {actual - base[i]} != "
+                    f"token count {count}"
+                )
+            if sum(n for _, n in coords[i]["line_runs"]) != count:
+                problems.append(f"seg {i} ({seg['id']}): line_runs sum != token count")
+
+    # Round-trip a sample: global -> (seg, pos) must return the original.
+    def to_local(g: int) -> tuple[int, int]:
+        lo, hi = 0, len(base) - 1
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if base[mid] <= g:
+                lo = mid
+            else:
+                hi = mid - 1
+        return lo, g - base[lo]
+
+    sampled = 0
+    if not problems:
+        for i, seg in enumerate(segments):
+            count = sum(len(l["tokens"]) for l in seg["lines"])
+            for pos in {0, count // 2, count - 1}:
+                if not 0 <= pos < count:
+                    continue
+                sampled += 1
+                if to_local(base[i] + pos) != (i, pos):
+                    problems.append(f"round-trip failed at seg {i} pos {pos}")
+
+    bounds = offsets["chapter_bounds"]
+    for c in bounds:
+        if not 0 <= c["start"] < max(offsets["token_count"], 1):
+            problems.append(
+                f"chapter {c['book']}.{c['chapter']}: start {c['start']} out of range"
+            )
+
+    snapped = [c for c in bounds if c["accuracy"] != "exact"]
+    return {
+        "token_count": offsets["token_count"],
+        "segments": len(segments),
+        "round_trips_sampled": sampled,
+        "chapter_bounds": len(bounds),
+        "chapter_bounds_exact": len(bounds) - len(snapped),
+        "chapter_bounds_line_snapped": [
+            f"{c['book']}.{c['chapter']}" for c in snapped[:30]
+        ],
+        "problems": problems,
+        "ok": not problems,
+    }
+
+
+def check_grammar(grammar: dict, column: list[int], offsets: dict) -> dict:
+    """Validate the stage6 grammatical index. Runs from stage6, like the above.
+
+    The column is indexed by global offset, so a length that disagrees with the
+    offset primitive means every grammatical hit would name the wrong word —
+    hard fail. Ambiguity rates are reported, not judged.
+    """
+    sigs = grammar["sigs"]
+    problems: list[str] = []
+
+    if len(column) != offsets["token_count"]:
+        problems.append(
+            f"column length {len(column)} != token_count {offsets['token_count']}"
+        )
+    if grammar["token_count"] != offsets["token_count"]:
+        problems.append("grammar/offsets token_count disagree — mismatched build")
+    bad = [i for i, s in enumerate(column) if not 0 <= s < len(sigs)]
+    if bad:
+        problems.append(f"{len(bad)} out-of-range signature ids (first at {bad[0]})")
+    for slot, name in ((grammar["reserved"]["unkeyed"], "unkeyed"),
+                       (grammar["reserved"]["unanalysed"], "unanalysed")):
+        if sigs[slot]:
+            problems.append(f"reserved slot {slot} ({name}) is not empty")
+
+    # Ambiguity, per category: of the tokens that license a value for it, how
+    # many license more than one? This is the honesty signal — it counts values
+    # a reader could be shown, not analysis records.
+    analysed = sum(1 for s in column if sigs[s])
+    ambiguity: dict[str, dict] = {}
+    for category in grammar["categories"]:
+        present = ambiguous = 0
+        for sid, count in _counts(column).items():
+            readings = sigs[sid]
+            if not readings:
+                continue
+            values = {v for r in readings for v in r.get(category, [])}
+            if not values:
+                continue
+            present += count
+            if len(values) > 1:
+                ambiguous += count
+        if present:
+            ambiguity[category] = {
+                "tokens": present,
+                "ambiguous": ambiguous,
+                "rate": round(ambiguous / present, 4),
+            }
+
+    return {
+        "signatures": len(sigs),
+        "width_bytes": grammar["width"],
+        "tokens": len(column),
+        "tokens_analysed": analysed,
+        "tokens_unkeyed": sum(1 for s in column if s == grammar["reserved"]["unkeyed"]),
+        "tokens_unanalysed": sum(
+            1 for s in column if s == grammar["reserved"]["unanalysed"]
+        ),
+        "ambiguity": ambiguity,
+        "problems": problems,
+        "ok": not problems,
+    }
+
+
+def _counts(column: list[int]) -> dict[int, int]:
+    out: dict[int, int] = defaultdict(int)
+    for s in column:
+        out[s] += 1
+    return out
+
+
 def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) -> dict:
     report: dict = {"checks": {}}
     segments = spine["segments"]

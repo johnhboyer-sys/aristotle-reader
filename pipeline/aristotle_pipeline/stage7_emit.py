@@ -459,7 +459,15 @@ def run(manifest: Manifest) -> Path:
     _merge_shared_lsj()
 
     (out_dir / "search").mkdir(exist_ok=True)
-    for f in ["greek_lemma.json", "greek_form.json", "english.json", "meta.json"]:
+    for f in [
+        "greek_lemma.json",
+        "greek_form.json",
+        "english.json",
+        "meta.json",
+        "offsets.json",
+        "grammar-dict.json",
+        "grammar-col.bin",
+    ]:
         shutil.copy(BUILD_DIR / "stage6" / f, out_dir / "search" / f)
 
     work = manifest.data["work"]
