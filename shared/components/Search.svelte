@@ -1323,7 +1323,8 @@
 
     <p class="search-hint">
       Type Greek in Greek letters or <button type="button" class="link-btn" on:click={openHelp}>Beta Code</button>
-      (<code>texnh</code> = τέχνη). Use <code>*</code> for a wildcard: <code>fron*</code> matches φρόνησις, φρόνιμος, etc.
+      (<code>texnh</code> = τέχνη). <code>*</code> matches any run of characters; <code>?</code> matches exactly one.
+      Use either inside or at the end of a word. At the start, <code>*</code> is the Beta Code capital marker, not a wildcard.
     </p>
   </form>
 

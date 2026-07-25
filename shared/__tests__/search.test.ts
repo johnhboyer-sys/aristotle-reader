@@ -15,6 +15,8 @@ const greekIndex = {
   kai: [[0, 5]],
   yuxh: [[1, 0]],
   texnh: [[2, 0]],
+  lozzz: [[0, 4]],
+  xlogos: [[2, 1]],
 } satisfies Record<string, [number, number][]>;
 
 const englishIndex = {
@@ -69,11 +71,52 @@ describe('search', () => {
     expect((await search('areth logos', '', 'phrase', 'all', 'and', ['TPhraseHit'])).results).toHaveLength(0);
   });
 
-  it('supports wildcards for Greek and English terms', async () => {
-    const greek = (await search('tex*', '', 'all', 'all', 'and', ['TGreekWildcard'])).results;
-    const english = (await search('', 'hap*', 'all', 'all', 'and', ['TEngWildcard'])).results;
-    expect(greek.map((r) => r.meta.id)).toEqual(['s3']);
-    expect(english.map((r) => r.meta.id)).toEqual(['s2']);
+  it('matches a mid-word Greek * without widening it to a prefix', async () => {
+    const matching = (await search('l*s', '', 'all', 'all', 'and', ['TGreekMidStar'])).results;
+    const missing = (await search('l*x', '', 'all', 'all', 'and', ['TGreekMidStar'])).results;
+    expect(matching.map((r) => [r.meta.id, r.grkPositions])).toEqual([
+      ['s1', [0]],
+      ['s2', [1]],
+    ]);
+    expect(missing).toHaveLength(0);
+  });
+
+  it('keeps the trailing-* prefix fast path', async () => {
+    const hits = (await search('tex*', '', 'all', 'all', 'and', ['TGreekTrailingStar'])).results;
+    expect(hits.map((r) => r.meta.id)).toEqual(['s3']);
+  });
+
+  it('makes Greek ? match exactly one fold character', async () => {
+    const one = (await search('l?gos', '', 'all', 'all', 'and', ['TGreekQuestion'])).results;
+    const zero = (await search('l?ogos', '', 'all', 'all', 'and', ['TGreekQuestion'])).results;
+    const two = (await search('l?os', '', 'all', 'all', 'and', ['TGreekQuestion'])).results;
+    expect(one.map((r) => r.meta.id)).toEqual(['s1', 's2']);
+    expect(zero).toHaveLength(0);
+    expect(two).toHaveLength(0);
+  });
+
+  it('treats a leading Greek * as a capital marker', async () => {
+    const hits = (await search('*logos', '', 'all', 'all', 'and', ['TGreekLeadingStar'])).results;
+    expect(hits.map((r) => r.meta.id)).toEqual(['s1', 's2']);
+  });
+
+  it('matches a mid-word English * instead of looking up it literally', async () => {
+    const hits = (await search('', 'hap*ness', 'all', 'all', 'and', ['TEnglishMidStar'])).results;
+    expect(hits.map((r) => r.meta.id)).toEqual(['s2']);
+  });
+
+  it('makes English ? match exactly one fold character', async () => {
+    const one = (await search('', 'c?aft', 'all', 'all', 'and', ['TEnglishQuestion'])).results;
+    const zero = (await search('', 'c?raft', 'all', 'all', 'and', ['TEnglishQuestion'])).results;
+    const two = (await search('', 'c?ft', 'all', 'all', 'and', ['TEnglishQuestion'])).results;
+    expect(one.map((r) => r.meta.id)).toEqual(['s3']);
+    expect(zero).toHaveLength(0);
+    expect(two).toHaveLength(0);
+  });
+
+  it('keeps a bare English * matching every segment', async () => {
+    const hits = (await search('', '*', 'all', 'all', 'and', ['TEnglishBareStar'])).results;
+    expect(hits.map((r) => r.meta.id)).toEqual(['s1', 's2', 's3']);
   });
 
   it('combines Greek and English boxes with AND or OR', async () => {
