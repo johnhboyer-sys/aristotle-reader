@@ -257,8 +257,21 @@ function phraseStarts(idx: GrkIndex, terms: string[]): Map<number, number[]> {
 function engPhraseMatches(text: string, terms: string[]): boolean {
   if (terms.length === 0) return true;
   const lower = text.toLowerCase();
-  const phrase = terms.map(t => t.toLowerCase().replace(/[^a-z']/g, '')).join(' ');
-  return lower.includes(phrase);
+  // Keep the wildcards. Folding them away here would leave `hap* virtue` looking
+  // for the literal string "hap virtue", so the postings would find the phrase
+  // and this check would then throw it away.
+  const parts = terms.map(t =>
+    [...t.toLowerCase().replace(/^\*+/, '')]
+      .filter(ch => /[a-z'*?]/.test(ch))
+      .join(''));
+  if (!parts.some(p => p.includes('*') || p.includes('?'))) {
+    return lower.includes(parts.join(' '));
+  }
+  const body = parts
+    .map(p => [...p].map(ch =>
+      ch === '*' ? "[a-z']*" : ch === '?' ? "[a-z']" : ch).join(''))
+    .join(' ');
+  return new RegExp(body).test(lower);
 }
 
 // -- Public search API ----------------------------------------------------

@@ -24,6 +24,7 @@ const englishIndex = {
   habit: [0],
   choice: [0],
   happiness: [1],
+  and: [1],
   craft: [2],
   making: [2],
 } satisfies Record<string, number[]>;
@@ -141,6 +142,22 @@ describe('search', () => {
   it('rejects phrase terms that are present but not adjacent or out of order', async () => {
     expect((await search('meqodos pasa', '', 'phrase', 'all', 'and', ['TPhraseOrder'], 'form')).results).toHaveLength(0);
     expect((await search('pasa kai', '', 'phrase', 'all', 'and', ['TPhraseGap'], 'form')).results).toHaveLength(0);
+  });
+
+  // A wildcard term inside a phrase must contribute its postings to adjacency,
+  // and must survive the phrase VERIFICATION as well as the posting lookup.
+  it('allows a wildcard inside a Greek phrase', async () => {
+    const hits = (await search('pas* meqodos', '', 'phrase', 'all', 'and', ['TPhraseWild'], 'form')).results;
+    expect(hits.map((r) => r.meta.id)).toEqual(['s1']);
+    expect(hits[0].grkPositions).toEqual([2, 3]);
+  });
+
+  it('allows a wildcard inside an English phrase', async () => {
+    // Regression: the phrase check folded `*` away and then looked for the
+    // literal string "happ virtue", so the postings matched and the check
+    // discarded them.
+    const hits = (await search('', 'happ* and virtue', 'phrase', 'phrase', 'and', ['TEngPhraseWild'])).results;
+    expect(hits.map((r) => r.meta.id)).toEqual(['s2']);
   });
 
   it.each([

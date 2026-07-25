@@ -104,10 +104,28 @@
   let accentSensitive = false;
   // NFC + lowercase + final-sigma normalisation, diacritics KEPT.
   const accentNorm = (s: string) => s.normalize('NFC').toLowerCase().replace(/ς/g, 'σ');
+  // This filter compares ACCENTED tokens, so it cannot reuse the engine's
+  // fold-form matcher — but it has to honour the same wildcard syntax, or a `?`
+  // or mid-word `*` query with accents on would find its hits in the index and
+  // then silently drop every one of them here.
+  const _accentRe = new Map<string, RegExp>();
+  function accentRegex(q: string): RegExp {
+    let re = _accentRe.get(q);
+    if (!re) {
+      const body = [...q].map(ch =>
+        ch === '*' ? '.*' : ch === '?' ? '.' : ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('');
+      re = new RegExp(`^${body}$`);
+      _accentRe.set(q, re);
+    }
+    return re;
+  }
   function accentTokenMatch(token: string, terms: string[]): boolean {
     const t = accentNorm(token);
-    return terms.some(q =>
-      q.endsWith('*') ? t.startsWith(q.slice(0, -1)) : t === q);
+    return terms.some(q => {
+      const p = q.replace(/^\*+/, '');           // leading * is the capital marker
+      if (!p.includes('*') && !p.includes('?')) return t === p;
+      return accentRegex(p).test(t);
+    });
   }
 
   // ── Grammatical search ─────────────────────────────────────────────────────
@@ -1324,7 +1342,8 @@
     <p class="search-hint">
       Type Greek in Greek letters or <button type="button" class="link-btn" on:click={openHelp}>Beta Code</button>
       (<code>texnh</code> = τέχνη). <code>*</code> matches any run of characters; <code>?</code> matches exactly one.
-      Use either inside or at the end of a word. At the start, <code>*</code> is the Beta Code capital marker, not a wildcard.
+      Use either inside or at the end of a word, in Greek or English. At the start,
+      <code>*</code> is read as the Beta Code capital marker and ignored — there is no suffix wildcard.
     </p>
   </form>
 
