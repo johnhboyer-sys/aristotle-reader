@@ -490,6 +490,344 @@ export async function searchGrammar(
   return { results: perWork.flat(), failedWorks };
 }
 
+// -- Combo search ---------------------------------------------------------
+//
+// Query-time, over the global offset. A query is a list of slots, each naming
+// its own match type; a hit is a place where every slot lands within one
+// proximity window. Distinct from the precomputed n-gram engine: combo answers
+// "these terms, near each other", n-grams answer "what phrases recur".
+//
+// Boundary rule (shared with n-grams, not forked): a window NEVER spans a book
+// edge. Chapters are a toggle, default keep — chapter divisions are editorial
+// and an argument routinely runs across one.
+
+export type SlotKind = 'phrase' | 'form' | 'lemma' | 'grammatical';
+
+// Where a slot must fall relative to the FIRST slot — not to the slot before
+// it. "before"/"after" answer the question a reader actually asks ("does the
+// qualification come before the term or after it?"); chaining each slot to its
+// predecessor instead is the whole-query `ordered` lock.
+export type SlotRelation = 'near' | 'before' | 'after';
+
+export interface ComboSlot {
+  kind: SlotKind;
+  // phrase: the token run, whitespace-separated. form: one surface token.
+  // lemma: the fold keys the user ticked in the picker, unioned.
+  terms?: string[];
+  // grammatical only.
+  query?: GrammarQuery;
+  // Ignored on the first slot, which is what the others are placed against.
+  relation?: SlotRelation;
+}
+
+export type WindowUnit = 'words' | 'line' | 'chapter';
+
+export interface ComboOptions {
+  window: number;          // words; ignored for the line/chapter units
+  unit: WindowUnit;
+  ordered: boolean;        // slots must appear in the order given
+  crossChapter: boolean;   // default true — keep hits that straddle a chapter
+}
+
+// A slot's hits in one work, as global offsets. `span` is how many tokens the
+// slot occupies (a phrase covers more than one), so an ordered query can
+// require the next slot to start after this one ends.
+interface SlotHit { start: number; span: number; certain: boolean; values?: Record<string, string[]> }
+
+// The proximity default: 5 words, which is roughly half a Bekker line (the
+// corpus averages 9.5 tokens per line). Capped at 50 — about five lines — since
+// past that "near" stops meaning anything.
+export const COMBO_WINDOW_DEFAULT = 5;
+export const COMBO_WINDOW_MAX = 50;
+
+function slotHits(
+  slot: ComboSlot,
+  base: number[],
+  lemmaIdx: GrkIndex | null,
+  formIdx: GrkIndex | null,
+  dict: GrammarDict | null,
+  column: Uint16Array | Uint32Array | null,
+): SlotHit[] {
+  const out: SlotHit[] = [];
+  if (slot.kind === 'grammatical') {
+    if (!dict || !column || !slot.query) return out;
+    const wanted = compileQuery(dict, slot.query);
+    if (!wanted.size) return out;
+    for (let g = 0; g < column.length; g++) {
+      const hit = wanted.get(column[g]);
+      if (hit) out.push({ start: g, span: 1, certain: hit.certain, values: hit.values });
+    }
+    return out;
+  }
+
+  const terms = slot.terms ?? [];
+  if (!terms.length) return out;
+  // A lemma slot carries the exact heads the user ticked, so its terms are
+  // unioned; a form or phrase slot is a single sequence.
+  const idx = slot.kind === 'lemma' ? lemmaIdx : formIdx;
+  if (!idx) return out;
+
+  if (slot.kind === 'phrase' && terms.length > 1) {
+    for (const [si, starts] of phraseStarts(idx, terms)) {
+      for (const p of starts) out.push({ start: base[si] + p, span: terms.length, certain: true });
+    }
+    return out;
+  }
+  for (const term of terms) {
+    for (const [si, positions] of termPositions(idx, term)) {
+      for (const p of positions) out.push({ start: base[si] + p, span: 1, certain: true });
+    }
+  }
+  return out;
+}
+
+// The structural unit an offset falls in, as a half-open [start, end) range of
+// global offsets. Bounds are sorted, so this is a binary search over a short
+// array. Used for the line/chapter window units and the book-edge rule.
+function unitRange(starts: number[], global: number, total: number): [number, number] {
+  let lo = 0;
+  let hi = starts.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (starts[mid] <= global) lo = mid;
+    else hi = mid - 1;
+  }
+  return [starts[lo], lo + 1 < starts.length ? starts[lo + 1] : total];
+}
+
+// First index in a sorted hit list whose start is >= target.
+function lowerBound(hits: SlotHit[], target: number): number {
+  let lo = 0;
+  let hi = hits.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (hits[mid].start < target) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+// Flatten the per-segment line runs into one array of line-start offsets, so a
+// same-line window is the same kind of lookup as same-chapter.
+function lineStarts(offsets: Offsets): number[] {
+  const out: number[] = [];
+  offsets.segments.forEach((seg, i) => {
+    let at = offsets.seg_base_offset[i];
+    for (const [, count] of seg.line_runs) { out.push(at); at += count; }
+  });
+  return out;
+}
+
+export interface ComboHit {
+  work: string;
+  seg_idx: number;
+  pos: number;             // token position of the leftmost slot, within its segment
+  global: number;
+  positions: number[];     // every matched token position in that segment
+  certain: boolean;        // false if ANY slot rested on an ambiguous parse
+  values?: Record<string, string[]>;
+}
+
+// Given each slot's hits, find every window where all slots co-occur.
+//
+// Anchors on the FIRST slot's hits and, for each, asks whether every other slot
+// has a hit in range. That is O(hits) with a sorted scan per slot rather than a
+// cross-product, and it makes the ordered case a simple forward walk.
+export function comboWindows(
+  perSlot: SlotHit[][],
+  opts: ComboOptions,
+  offsets: Offsets,
+  relations: SlotRelation[] = [],
+): { start: number; end: number; hits: SlotHit[] }[] {
+  if (!perSlot.length || perSlot.some(h => !h.length)) return [];
+  const sorted = perSlot.map(h => [...h].sort((a, b) => a.start - b.start));
+  const total = offsets.token_count;
+  const bookStarts = offsets.book_bounds.map(b => b.start);
+  const chapStarts = offsets.chapter_bounds.map(c => c.start);
+  const lines = opts.unit === 'line' ? lineStarts(offsets) : null;
+
+  // The offsets an anchor's partners may occupy: the structural unit the anchor
+  // sits in, intersected with the word window. Computed once per anchor, so each
+  // slot is then a binary search rather than a scan — which would be quadratic
+  // on a grammatical slot holding tens of thousands of hits.
+  //
+  // The word window is measured over the WHOLE match, not outward from the
+  // anchor. Measuring from the anchor would make an unordered query depend on
+  // which slot happened to be listed first (with W=5 and hits at 0, 5 and 10,
+  // anchoring on 0 rejects and anchoring on 5 accepts) and would quietly admit
+  // a span of 2W. A window of W now means every slot lands within W tokens of
+  // every other, whatever order the slots were typed in.
+  const structural = (at: number): [number, number] => {
+    let lo = 0;
+    let hi = total;
+    const clamp = ([s, e]: [number, number]) => { if (s > lo) lo = s; if (e < hi) hi = e; };
+    clamp(unitRange(bookStarts, at, total));                       // never cross a book
+    if (!opts.crossChapter && chapStarts.length) clamp(unitRange(chapStarts, at, total));
+    if (opts.unit === 'line' && lines) clamp(unitRange(lines, at, total));
+    if (opts.unit === 'chapter' && chapStarts.length) clamp(unitRange(chapStarts, at, total));
+    return [lo, hi];
+  };
+
+  const out: { start: number; end: number; hits: SlotHit[] }[] = [];
+  for (const anchor of sorted[0]) {
+    const [unitLo, unitHi] = structural(anchor.start);
+    const chosen: SlotHit[] = [anchor];
+    let ok = true;
+    // The running extent of the match so far, so the window bounds the whole
+    // group. A slot's END must also fall inside the unit: a phrase may not run
+    // off the end of the line or chapter it is being measured in.
+    let spanLo = anchor.start;
+    let spanHi = anchor.start + anchor.span - 1;
+    for (let s = 1; s < sorted.length && ok; s++) {
+      let lo = unitLo;
+      let hi = unitHi;
+      if (opts.unit === 'words') {
+        // Anything further than W from either end of the current extent would
+        // put some pair of slots more than W apart.
+        lo = Math.max(lo, spanHi - opts.window);
+        hi = Math.min(hi, spanLo + opts.window + 1);
+      }
+      // Ordered: each slot starts at or after the previous one ends. Taking the
+      // earliest valid hit is optimal — every hit in a slot has the same span,
+      // so the earliest also ends earliest and blocks nothing a later one would
+      // have allowed.
+      if (opts.ordered) lo = Math.max(lo, spanHi + 1);
+      // Placement against the FIRST slot, which is the anchor.
+      const relation = relations[s] ?? 'near';
+      if (relation === 'after') lo = Math.max(lo, anchor.start + anchor.span);
+      if (relation === 'before') hi = Math.min(hi, anchor.start);
+
+      let candidate: SlotHit | null = null;
+      if (relation === 'before') {
+        // The hit must END at or before the anchor begins. Spans are uniform
+        // within a slot, so that is a bound on `start`. Take the LAST such hit:
+        // the nearest one reads as the match a user meant, and any hit in range
+        // would satisfy the query equally.
+        const span = sorted[s][0].span;
+        const j = lowerBound(sorted[s], anchor.start - span + 1) - 1;
+        if (j >= 0 && sorted[s][j].start >= lo) candidate = sorted[s][j];
+      } else {
+        const i = lowerBound(sorted[s], lo);
+        if (i < sorted[s].length
+          && sorted[s][i].start < hi
+          && sorted[s][i].start + sorted[s][i].span <= unitHi) candidate = sorted[s][i];
+      }
+      if (!candidate) { ok = false; break; }
+      chosen.push(candidate);
+      spanLo = Math.min(spanLo, candidate.start);
+      spanHi = Math.max(spanHi, candidate.start + candidate.span - 1);
+    }
+    // The anchor's own phrase must sit inside the unit too.
+    if (!ok || anchor.start + anchor.span > unitHi) continue;
+    out.push({ start: spanLo, end: spanHi, hits: chosen });
+  }
+  return out;
+}
+
+async function comboSearchWork(
+  work: string,
+  slots: ComboSlot[],
+  opts: ComboOptions,
+): Promise<SearchResult[]> {
+  const needLemma = slots.some(s => s.kind === 'lemma');
+  const needForm = slots.some(s => s.kind === 'form' || s.kind === 'phrase');
+  const needGrammar = slots.some(s => s.kind === 'grammatical');
+
+  const [meta, offsets, lemmaIdx, formIdx, dict] = await Promise.all([
+    loadIndex<SegMeta[]>(work, 'meta.json'),
+    loadIndex<Offsets>(work, 'offsets.json'),
+    needLemma ? loadIndex<GrkIndex>(work, 'greek_lemma.json') : Promise.resolve(null),
+    needForm ? loadIndex<GrkIndex>(work, 'greek_form.json') : Promise.resolve(null),
+    needGrammar ? loadIndex<GrammarDict>(work, 'grammar-dict.json') : Promise.resolve(null),
+  ]);
+  let column: Uint16Array | Uint32Array | null = null;
+  if (dict) {
+    if (dict.token_count !== offsets.token_count) {
+      throw new Error(`${work}: grammar/offsets built from different runs`);
+    }
+    const buffer = await loadBinary(work, 'grammar-col.bin');
+    column = dict.width === 4 ? new Uint32Array(buffer) : new Uint16Array(buffer);
+    // A short column would silently drop every grammatical hit past its end and
+    // still report a complete result, so check it here as well as in
+    // grammarSearchWork.
+    if (column.length !== offsets.token_count) {
+      throw new Error(`${work}: grammar column length does not match token count`);
+    }
+  }
+
+  const base = offsets.seg_base_offset;
+  const perSlot = slots.map(s => slotHits(s, base, lemmaIdx, formIdx, dict, column));
+  const windows = comboWindows(perSlot, opts, offsets, slots.map(s => s.relation ?? 'near'));
+
+  const bySeg = new Map<number, SearchResult>();
+  const seenBySeg = new Map<number, Set<number>>();
+  for (const w of windows) {
+    const [si] = locate(base, w.start);
+    let result = bySeg.get(si);
+    if (!result) {
+      result = { work, meta: meta[si], grkMatch: true, engMatch: false, grkPositions: [], grammar: [] };
+      bySeg.set(si, result);
+      seenBySeg.set(si, new Set());
+    }
+    const seen = seenBySeg.get(si)!;
+    // Report every matched token so the KWIC marks all of them. Ambiguity is
+    // recorded PER SLOT, not per window: a lexically matched word is certain
+    // whatever its neighbour's parse allows, and labelling it with the other
+    // slot's alternatives would attribute morphology to the wrong word. Merging
+    // the two slots' values would be worse still — a second grammatical slot
+    // would overwrite the first's alternatives and hide the very ambiguity that
+    // made the hit uncertain.
+    for (const h of w.hits) {
+      for (let k = 0; k < h.span; k++) {
+        const [hs, hp] = locate(base, h.start + k);
+        // A window may run past the end of a segment; those tokens belong to
+        // the next segment's result, which its own window will report.
+        if (hs !== si) continue;
+        if (seen.has(hp)) continue;
+        seen.add(hp);
+        result.grkPositions.push(hp);
+        result.grammar!.push({ values: h.values ?? {}, certain: h.certain });
+      }
+    }
+  }
+  for (const r of bySeg.values()) {
+    const order = r.grkPositions.map((p, i) => [p, i] as const).sort((a, b) => a[0] - b[0]);
+    r.grkPositions = order.map(([p]) => p);
+    r.grammar = order.map(([, i]) => r.grammar![i]);
+  }
+  return [...bySeg.keys()].sort((a, b) => a - b).map(si => bySeg.get(si)!);
+}
+
+// Combo search across one or more works.
+export async function searchCombo(
+  slots: ComboSlot[],
+  opts: ComboOptions,
+  works: string[],
+): Promise<SearchOutcome> {
+  const usable = slots.filter(s =>
+    s.kind === 'grammatical' ? Object.keys(s.query ?? {}).length : (s.terms ?? []).length);
+  if (usable.length < 2 || !works.length) return { results: [], failedWorks: [] };
+
+  const bounded: ComboOptions = {
+    ...opts,
+    window: Math.max(1, Math.min(opts.window || COMBO_WINDOW_DEFAULT, COMBO_WINDOW_MAX)),
+  };
+  const failedWorks: string[] = [];
+  const perWork = await pool(works, 8, async w => {
+    try {
+      return await comboSearchWork(w, usable, bounded);
+    } catch (err) {
+      console.warn(`searchCombo: skipping ${w} —`, err);
+      failedWorks.push(w);
+      return [] as SearchResult[];
+    }
+  });
+  if (failedWorks.length === works.length) {
+    throw new Error('Could not load the search index — check your connection and try again.');
+  }
+  return { results: perWork.flat(), failedWorks };
+}
+
 // Unified search across one or more works. `matchMode` chooses the Greek index
 // (lemma = all forms of a headword, form = the exact inflected token).
 export async function search(
