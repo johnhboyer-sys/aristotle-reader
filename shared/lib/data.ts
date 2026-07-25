@@ -310,9 +310,16 @@ export function fetchLemmaPickerShard(letter: string): Promise<Record<string, Le
   // Reject rather than resolving empty on a failed fetch: an empty object would
   // be cached as a real (silent) answer, and the picker would report "no lemmas
   // start with that text" for the rest of the session with no way to retry.
-  const p = fetch(`${ROOT()}/lemma-picker/${letter}.json`).then(r => {
+  const p = fetch(`${ROOT()}/lemma-picker/${letter}.json`).then(async r => {
     if (!r.ok) throw new Error(`HTTP ${r.status} for lemma-picker/${letter}.json`);
-    return r.json();
+    const shard = await r.json();
+    // A shard built by an older script would have the wrong shape and render as
+    // blank counts rather than failing, so check one entry and refuse it here.
+    const first = Object.values(shard)[0] as LemmaChoice | undefined;
+    if (first && !Array.isArray((first as LemmaChoice).c)) {
+      throw new Error(`lemma-picker/${letter}.json is stale — rebuild the lemma data`);
+    }
+    return shard;
   });
   p.catch(() => { if (_pickerCache.get(letter) === p) _pickerCache.delete(letter); });
   _pickerCache.set(letter, p);

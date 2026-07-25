@@ -159,7 +159,8 @@ function lsjHead(key) {
 // picker and typing "aret" fetches one small file, not the whole vocabulary.
 const FOLD = /[^a-z']/g;
 const fold = (beta) => beta.toLowerCase().replace(FOLD, '');
-const picker = new Map();   // fold -> Map(lsjKey -> {head, count})
+const picker = new Map();        // fold -> Map(lsjKey -> {lemmaBeta, count})
+const pickerTokens = new Map();  // fold -> tokens a search on that key returns
 function pickerAdd(a) {
   const key = (a.lsj && a.lsj[0]) || a.lemma;
   if (!key || !a.lemma) return;
@@ -192,14 +193,20 @@ for (const w of works) {
         for (const tok of gl.tokens ?? []) {
           const ans = analyses[tok.k];
           if (!ans || ans.length === 0) continue;
-          const pickerSeen = new Set();
+          // For the picker, count this TOKEN once per fold key and once per
+          // (fold key, headword) — never once per analysis, which would inflate
+          // both wherever several analyses share a lemma. The fold-key count is
+          // what a search actually returns, so it is the one shown.
+          const seenPair = new Set();
+          const seenFold = new Set();
           for (const a of ans) {
             const key = (a.lsj && a.lsj[0]) || a.lemma;
             const f = a.lemma && fold(a.lemma);
             if (!key || !f) continue;
+            if (!seenFold.has(f)) { seenFold.add(f); pickerTokens.set(f, (pickerTokens.get(f) ?? 0) + 1); }
             const pair = `${f}\0${key}`;
-            if (pickerSeen.has(pair)) continue;
-            pickerSeen.add(pair);
+            if (seenPair.has(pair)) continue;
+            seenPair.add(pair);
             pickerAdd(a);
           }
           const a0 = ans[0];                              // primary analysis
@@ -290,10 +297,15 @@ writeFileSync(join(DATA, 'lemmata.json'), JSON.stringify(manifest));
 writeFileSync(join(OUT, '_index.json'), JSON.stringify(index));
 
 // ── Emit the picker shards ──────────────────────────────────────────────────
-// One file per fold-initial letter: { fold: [{ h: head, k: lsjKey, n: count,
-// s: slug? }] }, heads ordered by frequency so the likeliest reading is first.
-// `s` is present only where the lemma has a page — that is where the picker
-// fetches a gloss from, on demand.
+// One file per fold-initial letter: { fold: { n: tokens, c: [{ h: head,
+// k: lsjKey, s: slug? }] } }.
+//
+// `n` is the fold key's OWN token count, not the sum of its headwords'. The
+// index is accent-folded, so ὅρος, ὄρος and ὀρός are one key that no search can
+// split; the picker offers one choice per key and must show the count that
+// choice actually returns. Headwords are ordered commonest-first so the likeliest
+// reading reads first. `s` is present only where the lemma has a page — that is
+// where the picker fetches a gloss from, on demand.
 const PICKER_OUT = join(DATA, 'lemma-picker');
 if (existsSync(PICKER_OUT)) rmSync(PICKER_OUT, { recursive: true });
 mkdirSync(PICKER_OUT, { recursive: true });
@@ -322,14 +334,14 @@ for (const [f, heads] of picker) {
   const entries = [...heads.entries()]
     .sort((x, y) => y[1].count - x[1].count)
     .map(([key, v]) => {
-      const e = { h: lsjHead(key) ?? v.lemmaBeta, k: key, n: v.count };
+      const e = { h: lsjHead(key) ?? v.lemmaBeta, k: key };
       if (manifest[key]) e.s = manifest[key].slug;
       return e;
     });
   if (!entries.length) unresolved++;
   pickerHeads += entries.length;
   if (!shards.has(letter)) shards.set(letter, {});
-  shards.get(letter)[f] = entries;
+  shards.get(letter)[f] = { n: pickerTokens.get(f) ?? 0, c: entries };
 }
 for (const [letter, data] of shards) {
   writeFileSync(join(PICKER_OUT, `${letter}.json`), JSON.stringify(data));
