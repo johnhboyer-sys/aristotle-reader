@@ -268,6 +268,7 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
     is skipped and re-pinned via `extra` at its authoritative Bekker start."""
     grc_path = SOURCES_DIR / grc_rel
     joined, owner, wstart, book_start = _spine_words(spine)
+    spine_words = joined.split()
     if chapter_marker == "milestone":
         openings = _chapter_openings_milestone(grc_path, chapter_subtype, book_subtype)
     else:
@@ -322,11 +323,10 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 # APr I.4 diverges at word 4 (spine λέγωμεν vs TEI λέγομεν), so a
                 # 3-word prefix saves it; Top VIII.13 diverges at word 2 (spine
                 # δὲ vs TEI δ᾿), so we must skip leading particles and match a
-                # later window, then step back to the true opening. Longer windows
-                # are tried first (more specific), and the monotonic `after`
-                # pointer keeps a short window from matching before the previous
-                # chapter. The step-back assumes the skipped leading words exist
-                # in the spine (just spelled differently), which holds for elision.
+                # later window, then step back to the inferred opening. Longer
+                # windows are tried first (more specific), and the monotonic
+                # `after` pointer keeps a short window from matching before the
+                # previous chapter.
                 for kk in (4, 3):
                     for start in (0, 1, 2, 3):
                         if len(ow) < start + kk:
@@ -336,9 +336,14 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                             w = joined[:p].count(" ")
                             widx = max(0, w - start)
                             after = wstart[w]
-                            # A later opening window genuinely matched the text;
-                            # stepping back only restores its true start.
-                            word_anchor = True
+                            # The suffix match proves the stepped-back position
+                            # only when the skipped normalized words are really
+                            # present there. Keep the historical position either
+                            # way, but never label an inference as word-exact.
+                            word_anchor = (
+                                w >= start
+                                and spine_words[w - start:w] == ow[:start]
+                            )
                             break
                     if widx is not None:
                         break

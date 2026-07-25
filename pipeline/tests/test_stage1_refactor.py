@@ -125,6 +125,43 @@ def test_stage1_chapters_clamps_to_spine_book_cut(tmp_path):
     assert (chapters[2]["column"], chapters[2]["line"]) == ("1378a", "17")
 
 
+def test_stage1_chapter_step_back_does_not_claim_unverified_word_anchor(tmp_path):
+    """A suffix match may infer the historical position without proving it.
+
+    Here the TEI has a leading word absent from the spine. The existing
+    step-back therefore lands on the preceding token; retain that position for
+    compatibility, but do not let stage6 call it exact.
+    """
+    spine = {
+        "work": "TST",
+        "segments": [
+            {
+                "id": "1:1a",
+                "book": 1,
+                "column": "1a",
+                "lines": [
+                    {"n": 1, "text": "Alpha beta gamma delta."},
+                    {"n": 2, "text": "Epsilon zeta eta theta iota kappa."},
+                ],
+            },
+        ],
+    }
+    path = tmp_path / "chapters.xml"
+    path.write_text(
+        """<TEI><text><body><div subtype="book" n="1">
+<div subtype="chapter" n="1"><p>Alpha beta.</p></div>
+<div subtype="chapter" n="2"><p>Missing epsilon zeta eta theta iota kappa.</p></div>
+</div></body></text></TEI>""",
+        encoding="utf-8",
+    )
+
+    chapters = stage1_chapters.extract_chapters_grc(spine, str(path))
+
+    assert chapters[1]["chapter"] == "2"
+    assert (chapters[1]["line"], chapters[1]["wordIndex"]) == ("1", 3)
+    assert "wordAnchor" not in chapters[1]
+
+
 def test_stage1_greek_matches_golden(tmp_path):
     path = tmp_path / "greek.xml"
     fixtures.write_greek_tei(path)

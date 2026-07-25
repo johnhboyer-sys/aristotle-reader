@@ -7,6 +7,7 @@ parse; expanding syncretic values inside each reading is what makes the
 ambiguity count mean what a reader is told it means.
 """
 
+import copy
 import sys
 from pathlib import Path
 
@@ -18,10 +19,58 @@ from aristotle_pipeline.stage6_search import (  # noqa: E402
     remap_word_index,
     signature,
 )
+from aristotle_pipeline.stage2_validate import check_grammar, check_offsets  # noqa: E402
 
 
 def _tokens(*surfaces):
     return [{"t": s, "o": 0} for s in surfaces]
+
+
+def _semantic_fixture():
+    segments = [
+        {
+            "id": "1:1a",
+            "lines": [
+                {
+                    "n": 1,
+                    "tokens": [
+                        {"t": "alpha", "k": "alpha"},
+                        {"t": "beta", "k": "beta"},
+                    ],
+                },
+                {
+                    "n": 2,
+                    "tokens": [
+                        {"t": "gamma", "k": "alpha"},
+                        {"t": "delta", "k": "beta"},
+                    ],
+                },
+            ],
+        }
+    ]
+    key_map = {"alpha": "alpha", "beta": "beta"}
+    analyses = {
+        "alpha": [{"parse": "masc nom sg"}],
+        "beta": [{"parse": "fem acc pl"}],
+    }
+    sigs = [(), ()]
+    for key in ("alpha", "beta"):
+        sigs.append(signature(analyses[key]))
+    grammar = {
+        "token_count": 4,
+        "width": 2,
+        "categories": ["case", "gender", "number"],
+        "reserved": {"unkeyed": 0, "unanalysed": 1},
+        "sigs": [
+            [
+                {category: list(values) for category, values in reading}
+                for reading in sig
+            ]
+            for sig in sigs
+        ],
+    }
+    offsets = {"token_count": 4}
+    return segments, key_map, analyses, grammar, offsets, [2, 3, 2, 3]
 
 
 class TestParseReading:
@@ -125,3 +174,71 @@ class TestRemapWordIndex:
         text = "ἐπὶ τῶν"
         assert remap_word_index(text, _tokens("ἐπὶ", "τῶν"), 5) is None
         assert remap_word_index(text, _tokens("ἐπὶ", "τῶν"), -1) is None
+
+
+class TestStage6Validators:
+    def test_offsets_compare_line_runs_pairwise(self):
+        segments = [
+            {
+                "id": "1:1a",
+                "lines": [
+                    {"n": 1, "tokens": _tokens("a", "b")},
+                    {"n": 2, "tokens": _tokens("c", "d")},
+                ],
+            }
+        ]
+        offsets = {
+            "token_count": 4,
+            "seg_base_offset": [0],
+            "segments": [{"line_runs": [[2, 2], [1, 2]]}],
+            "chapter_bounds": [],
+        }
+
+        result = check_offsets(offsets, segments)
+
+        assert not result["ok"]
+        assert "line_runs do not match stage3 lines" in result["problems"][0]
+
+    def test_grammar_semantic_sample_accepts_the_true_column(self):
+        segments, key_map, analyses, grammar, offsets, column = _semantic_fixture()
+
+        result = check_grammar(
+            grammar, column, offsets, segments, key_map, analyses, signature
+        )
+
+        assert result["ok"]
+        assert result["semantic_offsets_sampled"] == 4
+
+    def test_grammar_semantic_sample_rejects_transposed_signature_ids(self):
+        segments, key_map, analyses, grammar, offsets, column = _semantic_fixture()
+        corrupt = [3 if sid == 2 else 2 for sid in column]
+
+        result = check_grammar(
+            grammar, corrupt, offsets, segments, key_map, analyses, signature
+        )
+
+        assert not result["ok"]
+        assert "grammar semantic mismatch at global offset 0" in result["problems"][0]
+
+    def test_grammar_semantic_sample_rejects_rotated_column(self):
+        segments, key_map, analyses, grammar, offsets, column = _semantic_fixture()
+        corrupt = column[-1:] + column[:-1]
+
+        result = check_grammar(
+            grammar, corrupt, offsets, segments, key_map, analyses, signature
+        )
+
+        assert not result["ok"]
+        assert any("grammar semantic mismatch" in p for p in result["problems"])
+
+    def test_grammar_semantic_sample_rejects_wrong_signature_content(self):
+        segments, key_map, analyses, grammar, offsets, column = _semantic_fixture()
+        corrupt = copy.deepcopy(grammar)
+        corrupt["sigs"][2] = corrupt["sigs"][3]
+
+        result = check_grammar(
+            corrupt, column, offsets, segments, key_map, analyses, signature
+        )
+
+        assert not result["ok"]
+        assert "grammar semantic mismatch at global offset 0" in result["problems"][0]

@@ -8,13 +8,15 @@ import { searchCombo, COMBO_WINDOW_DEFAULT, COMBO_WINDOW_MAX, type ComboOptions 
 const meta = [
   { id: '1:1000a', book: 1, column: '1000a', greek_head: '', english_head: '' },
   { id: '2:1001a', book: 2, column: '1001a', greek_head: '', english_head: '' },
+  { id: '2:1001b', book: 2, column: '1001b', greek_head: '', english_head: '' },
 ];
 const offsets = {
   token_count: 40,
-  seg_base_offset: [0, 20],
+  seg_base_offset: [0, 20, 30],
   segments: [
     { book: 1, column: '1000a', line_runs: [[1, 5], [2, 5], [3, 5], [4, 5]] },
-    { book: 2, column: '1001a', line_runs: [[1, 5], [2, 5], [3, 5], [4, 5]] },
+    { book: 2, column: '1001a', line_runs: [[1, 5], [2, 5]] },
+    { book: 2, column: '1001b', line_runs: [[1, 5], [2, 5]] },
   ],
   book_bounds: [{ book: 1, start: 0 }, { book: 2, start: 20 }],
   chapter_bounds: [
@@ -44,6 +46,9 @@ const form: Record<string, [number, number][]> = {
   iota: [[0, 10]],
   kappa: [[0, 5], [0, 12]],
   lambda: [[0, 18]],
+  // Either side of the column boundary at global 30, both inside book 2.
+  mu: [[1, 9]],    // global 29, last token of 1001a
+  nu: [[2, 0]],    // global 30, first token of 1001b
 };
 
 function json(data: unknown) {
@@ -153,6 +158,35 @@ describe('searchCombo', () => {
       [slot('iota'), slot('kappa'), slot('lambda')], opts({ window: 7 }), ['CG2'],
     );
     expect(results).toHaveLength(0);
+  });
+
+  it('marks both halves of a window that crosses a column boundary', async () => {
+    // mu@29 ends column 1001a and nu@30 opens 1001b, same book. The match used
+    // to be filed under 1001a with nu dropped, so the reader saw a hit with one
+    // of its terms missing.
+    const { results } = await searchCombo([slot('mu'), slot('nu')], opts({ window: 5 }), ['CX1']);
+    expect(results.map((r) => [r.meta.id, r.grkPositions])).toEqual([
+      ['2:1001a', [9]],
+      ['2:1001b', [0]],
+    ]);
+  });
+
+  it('will not satisfy two identical slots with one token', async () => {
+    // alpha occurs once, so "alpha near alpha" has nothing to pair it with.
+    const one = await searchCombo([slot('alpha'), slot('alpha')], opts({ window: 5 }), ['CD1']);
+    expect(one.results).toHaveLength(0);
+    // kappa occurs at 5 and 12 — two genuine occurrences 7 apart.
+    const two = await searchCombo([slot('kappa'), slot('kappa')], opts({ window: 8 }), ['CD2']);
+    expect(two.results[0].grkPositions).toEqual([5, 12]);
+  });
+
+  it('lets two DIFFERENT slots match the same token', async () => {
+    // A lemma slot and a form slot both landing on alpha is the "λόγος in the
+    // nominative" shape, and must keep working.
+    const { results } = await searchCombo(
+      [{ kind: 'lemma', terms: ['alpha'] }, slot('alpha')], opts({ window: 5 }), ['CD3'],
+    );
+    expect(results[0].grkPositions).toEqual([2]);
   });
 
   it('unions the heads a lemma slot carries', async () => {
