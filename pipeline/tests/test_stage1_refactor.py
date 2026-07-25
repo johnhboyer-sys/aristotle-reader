@@ -114,11 +114,11 @@ def test_stage1_chapters_clamps_to_spine_book_cut(tmp_path):
 
     # Book 2 chapter 1 is clamped onto the spine's book-2 cut, not left on the
     # book-1 column its opening words matched in.
-    # wordAnchor marks a wordIndex matched against the Greek text; stage 6 needs
-    # it to tell a token-exact chapter bound from a line-snapped one.
+    # The clamp is authoritative but replaces the Greek-text match, so stage 6
+    # must not treat the resulting wordIndex as token-exact.
     assert chapters[1] == {
         "book": 2, "chapter": "1", "column": "1378a", "line": "16",
-        "wordIndex": 0, "wordAnchor": True, "bookstart": True,
+        "wordIndex": 0, "bookstart": True,
     }
     # Later chapters still text-align normally after the clamp.
     assert chapters[2]["chapter"] == "2"

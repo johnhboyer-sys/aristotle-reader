@@ -147,6 +147,31 @@ function lsjHead(key) {
   return _shard.get(letter)[key]?.head ?? null;
 }
 
+// ── Lemma picker shards ─────────────────────────────────────────────────────
+// The concordance below is a PAGES index: primary analysis only, stopwords
+// dropped, count >= MIN_COUNT. The combo-search lemma picker needs the opposite
+// — every headword a lemma search can actually match — so it is accumulated
+// separately here, by the same rule stage 6 uses to key greek_lemma.json:
+// fold(every analysis's lemma), not just the primary one. Built from the same
+// walk, so there is no second pass over the corpus.
+//
+// Emitted sharded by fold-initial letter (the LSJ shard pattern), so opening the
+// picker and typing "aret" fetches one small file, not the whole vocabulary.
+const FOLD = /[^a-z']/g;
+const fold = (beta) => beta.toLowerCase().replace(FOLD, '');
+const picker = new Map();   // fold -> Map(lsjKey -> {head, count})
+function pickerAdd(a) {
+  const key = (a.lsj && a.lsj[0]) || a.lemma;
+  if (!key || !a.lemma) return;
+  const f = fold(a.lemma);
+  if (!f) return;
+  let heads = picker.get(f);
+  if (!heads) { heads = new Map(); picker.set(f, heads); }
+  const e = heads.get(key);
+  if (e) e.count++;
+  else heads.set(key, { lemmaBeta: a.lemma, count: 1 });
+}
+
 // ── Accumulate the concordance ──────────────────────────────────────────────
 // key = primary analysis's lsj[0] (else its lemma beta). One bucket per lemma.
 const lemmata = new Map();
@@ -167,6 +192,16 @@ for (const w of works) {
         for (const tok of gl.tokens ?? []) {
           const ans = analyses[tok.k];
           if (!ans || ans.length === 0) continue;
+          const pickerSeen = new Set();
+          for (const a of ans) {
+            const key = (a.lsj && a.lsj[0]) || a.lemma;
+            const f = a.lemma && fold(a.lemma);
+            if (!key || !f) continue;
+            const pair = `${f}\0${key}`;
+            if (pickerSeen.has(pair)) continue;
+            pickerSeen.add(pair);
+            pickerAdd(a);
+          }
           const a0 = ans[0];                              // primary analysis
           const key = (a0.lsj && a0.lsj[0]) || a0.lemma;
           if (!key) continue;
@@ -254,6 +289,52 @@ for (const b of top) {
 writeFileSync(join(DATA, 'lemmata.json'), JSON.stringify(manifest));
 writeFileSync(join(OUT, '_index.json'), JSON.stringify(index));
 
+// ── Emit the picker shards ──────────────────────────────────────────────────
+// One file per fold-initial letter: { fold: [{ h: head, k: lsjKey, n: count,
+// s: slug? }] }, heads ordered by frequency so the likeliest reading is first.
+// `s` is present only where the lemma has a page — that is where the picker
+// fetches a gloss from, on demand.
+const PICKER_OUT = join(DATA, 'lemma-picker');
+if (existsSync(PICKER_OUT)) rmSync(PICKER_OUT, { recursive: true });
+mkdirSync(PICKER_OUT, { recursive: true });
+
+// Seed from the search indexes themselves, which are what a lemma slot actually
+// queries. The walk above resolves analyses[tok.k] directly, whereas stage 6
+// goes through key_map, so a couple of hundred keys differ; the Isagoge is also
+// deliberately out of the lemma pages but is still searchable. Anything still
+// missing a headword is listed under its fold key rather than dropped, so the
+// picker can never be quieter than the index.
+for (const w of readdirSync(DATA, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name)) {
+  const p = join(DATA, w, 'search', 'greek_lemma.json');
+  if (!existsSync(p)) continue;
+  for (const f of Object.keys(JSON.parse(readFileSync(p, 'utf8')))) {
+    if (!picker.has(f)) picker.set(f, new Map());
+  }
+}
+
+const shards = new Map();
+let pickerHeads = 0;
+let unresolved = 0;
+for (const [f, heads] of picker) {
+  const letter = /[a-z]/.test(f[0]) ? f[0] : '_';
+  const entries = [...heads.entries()]
+    .sort((x, y) => y[1].count - x[1].count)
+    .map(([key, v]) => {
+      const e = { h: lsjHead(key) ?? v.lemmaBeta, k: key, n: v.count };
+      if (manifest[key]) e.s = manifest[key].slug;
+      return e;
+    });
+  if (!entries.length) unresolved++;
+  pickerHeads += entries.length;
+  if (!shards.has(letter)) shards.set(letter, {});
+  shards.get(letter)[f] = entries;
+}
+for (const [letter, data] of shards) {
+  writeFileSync(join(PICKER_OUT, `${letter}.json`), JSON.stringify(data));
+}
+
 // ── Report ──────────────────────────────────────────────────────────────────
 console.log(`works scanned      : ${works.length}`);
 console.log(`tokens resolved    : ${tokenTotal.toLocaleString()}`);
@@ -262,3 +343,5 @@ console.log(`pages emitted      : ${top.length.toLocaleString()} (count ≥ ${MI
 console.log(`  freq range       : ${top[0].count.toLocaleString()} … ${top[top.length - 1].count}`);
 console.log(`held back (<${MIN_COUNT})   : ${(ranked.length - top.length).toLocaleString()} rarer lemmata`);
 console.log(`sample slugs       : ${top.slice(0, 12).map((b) => manifest[b.key].slug).join(', ')}`);
+console.log(`picker fold keys   : ${picker.size.toLocaleString()} (${pickerHeads.toLocaleString()} headwords, ${shards.size} shards)`);
+console.log(`  no headword      : ${unresolved.toLocaleString()} (listed under the fold key)`);

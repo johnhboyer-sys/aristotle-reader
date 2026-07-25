@@ -291,6 +291,48 @@ export function fetchLemmata(): Promise<Record<string, LemmaRef>> {
   return p;
 }
 
+// The combo-search lemma picker: fold key -> the headwords a lemma slot can
+// match, commonest first. Sharded by fold-initial letter like the LSJ, so
+// typing into the picker fetches one small file rather than the whole
+// vocabulary. Covers every key in greek_lemma.json by construction; the few
+// with no resolvable headword arrive with an empty list and are shown under
+// their fold key. `slug` is present only where the lemma has a reference page,
+// which is where a gloss can be fetched from on demand.
+export interface LemmaCandidate { h: string; k: string; s?: string; }
+// `n` belongs to the fold key, not to any one headword: the index is
+// accent-folded, so several headwords can share a key that no search can split,
+// and the count a user is shown must be the one their search returns.
+export interface LemmaChoice { n: number; c: LemmaCandidate[]; }
+const _pickerCache = new Map<string, Promise<Record<string, LemmaChoice>>>();
+export function fetchLemmaPickerShard(letter: string): Promise<Record<string, LemmaChoice>> {
+  const cached = _pickerCache.get(letter);
+  if (cached) return cached;
+  // Reject rather than resolving empty on a failed fetch: an empty object would
+  // be cached as a real (silent) answer, and the picker would report "no lemmas
+  // start with that text" for the rest of the session with no way to retry.
+  const p = fetch(`${ROOT()}/lemma-picker/${letter}.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for lemma-picker/${letter}.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_pickerCache.get(letter) === p) _pickerCache.delete(letter); });
+  _pickerCache.set(letter, p);
+  return p;
+}
+
+// A lemma page's short glosses, fetched only when the picker needs to show one
+// (the pages are ~4.7 KB each, so they are never loaded in bulk).
+const _glossCache = new Map<string, Promise<string[]>>();
+export function fetchLemmaGlosses(slug: string): Promise<string[]> {
+  const cached = _glossCache.get(slug);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/lemmata/${slug}.json`)
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => (d?.glosses ?? []) as string[]);
+  p.catch(() => { if (_glossCache.get(slug) === p) _glossCache.delete(slug); });
+  _glossCache.set(slug, p);
+  return p;
+}
+
 export function lsjShard(key: string): string {
   for (const ch of key) {
     if (ch === '*') continue;
