@@ -131,6 +131,64 @@ def check_offsets(offsets: dict, segments: list[dict]) -> dict:
     }
 
 
+def check_ngram_streams(
+    form_stream: list,
+    lemma_stream: list,
+    greek_form: dict,
+    greek_lemma: dict,
+    base: list[int],
+    token_count: int,
+) -> dict:
+    """The n-gram streams must say exactly what the search indexes say.
+
+    They are gathered in a different walk from the posting lists, so nothing but
+    a comparison stops the two drifting. If they drift, the phrase browser would
+    offer phrases the search cannot find — or miss ones it can.
+    """
+    problems: list[str] = []
+    if len(form_stream) != token_count or len(lemma_stream) != token_count:
+        problems.append(
+            f"stream lengths {len(form_stream)}/{len(lemma_stream)} != "
+            f"token_count {token_count}"
+        )
+        return {"problems": problems, "ok": False}
+
+    expected_form: list = [None] * token_count
+    for key, posts in greek_form.items():
+        for si, pos in posts:
+            expected_form[base[si] + pos] = key
+    expected_lemma: list = [set() for _ in range(token_count)]
+    for key, posts in greek_lemma.items():
+        for si, pos in posts:
+            expected_lemma[base[si] + pos].add(key)
+
+    form_bad = [i for i in range(token_count) if expected_form[i] != form_stream[i]]
+    lemma_bad = [
+        i for i in range(token_count)
+        if (sorted(expected_lemma[i]) or None) != lemma_stream[i]
+    ]
+    if form_bad:
+        i = form_bad[0]
+        problems.append(
+            f"{len(form_bad)} form-stream mismatches (first at offset {i}: "
+            f"index says {expected_form[i]!r}, stream says {form_stream[i]!r})"
+        )
+    if lemma_bad:
+        i = lemma_bad[0]
+        problems.append(
+            f"{len(lemma_bad)} lemma-stream mismatches (first at offset {i}: "
+            f"index says {sorted(expected_lemma[i]) or None!r}, "
+            f"stream says {lemma_stream[i]!r})"
+        )
+    return {
+        "form_tokens": sum(1 for t in form_stream if t),
+        "lemma_tokens": sum(1 for t in lemma_stream if t),
+        "multi_lemma_tokens": sum(1 for t in lemma_stream if t and len(t) > 1),
+        "problems": problems,
+        "ok": not problems,
+    }
+
+
 def check_grammar(
     grammar: dict,
     column: list[int],

@@ -46,7 +46,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .config import BUILD_DIR, Manifest
-from .stage2_validate import check_grammar, check_offsets
+from .stage2_validate import check_grammar, check_ngram_streams, check_offsets
 
 _FOLD = re.compile(r"[^a-z']")  # keep only base letters and apostrophe
 _EN_WORD = re.compile(r"[a-z']+")
@@ -349,15 +349,31 @@ def run(manifest: Manifest) -> Path:
     sig_ids: dict[tuple, int] = {}
     sig_list: list[tuple] = [(), ()]  # slots 0 and 1 are the reserved kinds
     column: list[int] = []
+    # The n-gram source, gathered in the same walk. Two fold streams indexed by
+    # global offset, keyed exactly as greek_form.json and greek_lemma.json are —
+    # so a phrase found here is a phrase the search can find. null marks a token
+    # no index can key, which breaks the stream: an n-gram may not span it.
+    form_stream: list[str | None] = []
+    lemma_stream: list[list[str] | None] = []
     for seg in segments:
         for line in seg["lines"]:
             for tok in line["tokens"]:
                 key = tok.get("k")
+                form_stream.append(fold_lemma(key) or None if key else None)
                 if not key:
                     column.append(SIG_UNKEYED)
+                    lemma_stream.append(None)
                     continue
                 stored = key_map.get(key)
                 entries = analyses.get(stored, []) if stored else []
+                # Every lemma this token licenses, not a chosen one: which lemma
+                # an ambiguous position contributes is a policy the corpus pass
+                # settles, and deciding it here would hide the choice.
+                lemmas = sorted({
+                    fold_lemma(a["lemma"]) if a["lemma"] else fold_lemma(stored)
+                    for a in entries
+                } - {""})
+                lemma_stream.append(lemmas or None)
                 sig = signature(entries)
                 if not sig:
                     column.append(SIG_UNANALYSED)
@@ -383,11 +399,15 @@ def run(manifest: Manifest) -> Path:
         ],
     }
 
+    streams_check = check_ngram_streams(
+        form_stream, lemma_stream, greek_form, greek_lemma, seg_base_offset, token_count
+    )
     offsets_check = check_offsets(offsets, segments)
     grammar_check = check_grammar(
         grammar_dict, column, offsets, segments, key_map, analyses, signature
     )
-    for name, check in (("offset", offsets_check), ("grammar", grammar_check)):
+    for name, check in (("offset", offsets_check), ("grammar", grammar_check),
+                        ("n-gram stream", streams_check)):
         if not check["ok"]:
             raise ValueError(
                 f"stage6: {name} validation failed —\n  "
@@ -404,6 +424,28 @@ def run(manifest: Manifest) -> Path:
     )
     (out_dir / "grammar-col.bin").write_bytes(
         struct.pack(f"<{len(column)}{'I' if width == 4 else 'H'}", *column)
+    )
+
+    # The n-gram source goes OUTSIDE build/stage6, which is per-work scratch and
+    # is overwritten by the next work. The corpus n-gram pass is the pipeline's
+    # first cross-work stage and needs every work's stream present at once.
+    ngram_dir = BUILD_DIR / "ngrams"
+    ngram_dir.mkdir(parents=True, exist_ok=True)
+    (ngram_dir / f"{manifest.work_id}.json").write_text(
+        json.dumps(
+            {
+                "work": manifest.work_id,
+                # Fingerprint: the corpus pass refuses to merge streams that
+                # disagree with the offsets they are supposed to index.
+                "token_count": token_count,
+                "book_bounds": book_bounds,
+                "chapter_bounds": chapter_bounds,
+                "form": form_stream,
+                "lemma": lemma_stream,
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
     )
     (out_dir / "greek_lemma.json").write_text(
         json.dumps(greek_lemma, ensure_ascii=False), encoding="utf-8"
@@ -429,6 +471,8 @@ def run(manifest: Manifest) -> Path:
         ),
         "signatures": grammar_check["signatures"],
         "tokens_unanalysed": grammar_check["tokens_unanalysed"],
+        "ngram_form_tokens": streams_check["form_tokens"],
+        "ngram_multi_lemma": streams_check["multi_lemma_tokens"],
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=1))
     (out_dir / "grammar_report.json").write_text(
