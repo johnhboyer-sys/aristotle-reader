@@ -47,3 +47,25 @@ def test_strength_separates_one_witness_from_two(index):
                  for w in ('ἄμα', 'ἀφῆς')}
     assert strengths['ἄμα'] == 'strong'      # corpus and LSJ both attest ἅμα
     assert strengths['ἀφῆς'] == 'weak'       # corpus only
+
+
+def test_reads_through_the_raw_ligature(index):
+    """Text keeps ȣ raw; the lexicon spells it ου. Look up the spelled form."""
+    r = check('ἀλȣργής', index)
+    assert r is not None
+    assert r['wrote'] == 'ἀλȣργής'                       # report what is printed
+    # breath_key is decomposed (α + combining rough), so compare through it
+    assert r['expected'] == breath_key('ἁλουργης')       # judge the spelled form
+    assert r['printed'] == breath_key('ἀλουργης')
+
+
+@pytest.mark.parametrize('word,expected,want', [
+    ('ἄμα', 'ἁμα', 'ἅμα'),            # precomposed expected
+    ('ἀμαρτία', 'ἁμαρτια', 'ἁμαρτία'),
+    ('ἀλȣργής', 'ἁλουργης', 'ἁλȣργής'),  # ligature stays raw in the text
+    ('ἐξῆς', 'ἑξης', 'ἑξῆς'),
+    ('αλλα', 'ἀλλα', 'ἀλλα'),         # breathing absent entirely
+])
+def test_rebreathe_keeps_accent_and_ligature(word, expected, want):
+    from bonitz_pipeline.lexreview import _rebreathe
+    assert _rebreathe(word, expected) == want

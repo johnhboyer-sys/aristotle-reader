@@ -90,12 +90,23 @@ def load_index():
     return _CACHE
 
 
+def expand(w: str) -> str:
+    """Ligatures are kept raw in the text; the lexicon spells them out."""
+    return (w.replace('ȣ', 'ου').replace('Ȣ', 'Ου')
+             .replace('ϗ', 'και').replace('Ϗ', 'Και'))
+
+
 def check(word: str, index=None) -> dict | None:
     """None when the lexicon has no clear opinion."""
     corpus, lsj = index or load_index()
-    b = bare(word)
+    # test the ligature BEFORE expanding: a word that starts with it carries
+    # no usable breathing, but its expansion would start with a plain omicron
     first = unicodedata.normalize('NFD', word.lower())[:1]
-    if len(b) < 3 or not first or first[0] not in BREATHABLE:
+    if not first or first[0] not in BREATHABLE:
+        return None
+    spelled = expand(word)
+    b = bare(spelled)
+    if len(b) < 3:
         return None
     c, l = corpus.get(b, set()), lsj.get(b, set())
     both = c | l
@@ -103,7 +114,7 @@ def check(word: str, index=None) -> dict | None:
     if len(both) != 1:
         return None
     expected = next(iter(both))
-    printed = breath_key(nfc(word))
+    printed = breath_key(nfc(spelled))
     if printed == expected:
         return None
     return {'wrote': word, 'printed': printed, 'expected': expected,

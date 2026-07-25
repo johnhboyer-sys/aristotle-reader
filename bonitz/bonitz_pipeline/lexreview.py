@@ -43,12 +43,43 @@ def crop(page: int, col: str, line: int, total: int) -> str | None:
     return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
 
 
-def build(pages: list[int]) -> Path:
+def _breathing_rows(page: int, col: str, index, strong_only: bool) -> list[dict]:
+    """Breathing findings, reshaped to the same fields the page renders."""
+    from .breathing import scan as breath_scan
+    out = []
+    for r in breath_scan(page, col, index):
+        if strong_only and r['strength'] != 'strong':
+            continue
+        expected = unicodedata.normalize('NFC', r['expected'])
+        out.append({**r, 'attested_as': expected,
+                    'proposed': _rebreathe(r['wrote'], r['expected'])})
+    return out
+
+
+def _rebreathe(word: str, expected: str) -> str:
+    """The printed word with its breathing swapped for the attested one."""
+    from .breathing import ROUGH, SMOOTH
+    # `expected` may arrive precomposed (ἁ) or decomposed (α + U+0314); the
+    # marks are only visible in NFD, so normalise before looking for them
+    want = ROUGH if ROUGH in unicodedata.normalize('NFD', expected) else SMOOTH
+    d = unicodedata.normalize('NFD', word)
+    # breathing sits directly on the first vowel, ahead of any accent, so drop
+    # whatever breathing is there and reinsert the attested one in that slot
+    body = [c for c in d[1:] if c not in (SMOOTH, ROUGH)]
+    return unicodedata.normalize('NFC', ''.join([d[0], want] + body))
+
+
+def build(pages: list[int], mode: str = 'ligature', strong_only: bool = True) -> Path:
     forms = load_forms()
+    index = None
+    if mode == 'breathing':
+        from .breathing import load_index
+        index = load_index()
     items = []
     for p in pages:
         for col in ('L', 'R'):
-            rows = scan_reconciled(p, col, forms)
+            rows = (scan_reconciled(p, col, forms) if mode == 'ligature'
+                    else _breathing_rows(p, col, index, strong_only))
             if not rows:
                 continue
             total = len(unicodedata.normalize('NFC', (
@@ -76,10 +107,8 @@ def build(pages: list[int]) -> Path:
  .warn {{ background:#ffe9e9; border-left:4px solid #c00; padding:.5rem .7rem; margin:.5rem 0 }}
  img {{ width:100%; border:1px solid #ccc; margin-top:.6rem }}
 </style>
-<h1>Bonitz — {len(items)} ligatures no reader caught</h1>
-<div class="lead">All three readers agreed on each of these, so none was ever flagged.
-The evidence is lexical: the written form is not a Greek word, and reading one
-υ as the ou-ligature makes it one. <b>None has been applied.</b>
+<h1>Bonitz — {len(items)} {'ligatures no reader caught' if mode=='ligature' else 'breathings the lexicon disputes'}</h1>
+<div class="lead">{'All three readers agreed on each of these, so none was ever flagged. The evidence is lexical: the written form is not a Greek word, and reading one υ as the ou-ligature makes it one.' if mode=='ligature' else 'Breathing is lexical, not editorial — ἁλουργής is rough because it comes from ἅλς. These are shown only where the corpus and LSJ are unanimous against the printed form.'} <b>None has been applied.</b>
 <br><br><b>Careful:</b> Bonitz sometimes prints a non-word deliberately, recording a
 variant reading (ἀβελτηρίας against Bekker&#39;s ἀβελτερίας; αἰτώλιος against
 αἰγώλιος). Lines carrying <i>Bk</i>, <i>l l</i>, <i>coni</i>, <i>vl</i> or
@@ -92,15 +121,16 @@ variant reading (ἀβελτηρίας against Bekker&#39;s ἀβελτερία�
         out.append(f"""<div class="item">
 <div class="hd">{k}. p{it['page']:03d}{it['col']} · line {it['line']} ·
  <span class="grk">{esc(w)}</span> →
- <span class="prop grk">{esc(w.replace('υ', 'ȣ'))}</span></div>
+ <span class="prop grk">{esc(it.get('proposed') or w.replace('υ', 'ȣ'))}</span></div>
 {'<div class="warn">line carries a variant marker — check before correcting</div>'
  if it['variant_risk'] else ''}
 <div class="ctx grk">{marked}</div>
-<div class="why">not attested; <b>{esc(it['attested_as'])}</b> is an attested Aristotle form</div>
+<div class="why">{'not attested; <b>' + esc(it['attested_as']) + '</b> is an attested Aristotle form' if mode=='ligature' else 'printed <b>' + esc(unicodedata.normalize('NFC', it['printed'])) + '</b>; attested <b>' + esc(it['attested_as']) + '</b> [' + it.get('strength','') + ']'}</div>
 {f'<img src="{it["crop"]}">' if it['crop'] else '<i>no strip image</i>'}
 </div>""")
 
-    dest = ROOT / 'work/LEXICON-REVIEW.html'
+    dest = ROOT / ('work/LEXICON-REVIEW.html' if mode == 'ligature'
+                   else 'work/BREATHING-REVIEW.html')
     dest.write_text('\n'.join(out), encoding='utf-8')
     print(f'{len(items)} items -> {dest}  ({dest.stat().st_size/1e6:.2f} MB)')
     return dest
@@ -109,4 +139,8 @@ variant reading (ἀβελτηρίας against Bekker&#39;s ἀβελτερία�
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--pages', required=True)
-    build(parse_pages(ap.parse_args().pages))
+    ap.add_argument('--check', choices=('ligature', 'breathing'), default='ligature')
+    ap.add_argument('--all', action='store_true',
+                    help='breathing: include WEAK findings (one witness only)')
+    a = ap.parse_args()
+    build(parse_pages(a.pages), mode=a.check, strong_only=not a.all)
