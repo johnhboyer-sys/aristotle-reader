@@ -25,12 +25,42 @@ export interface SegMeta {
   book: number;
   column: string;
   greek_head: string;
-  greek_tokens: string;  // space-joined fold token sequence
   english_head: string;
 }
 
 type GrkIndex = Record<string, [number, number][]>; // fold → [[seg_idx, pos], ...]
 type EngIndex = Record<string, number[]>;            // word → [seg_idx, ...]
+
+// The word-offset primitive: one running token number per work, in document
+// order, with the structural coordinates beside it. Global offset of a posting
+// is seg_base_offset[seg_idx] + token_pos.
+export interface Offsets {
+  token_count: number;
+  seg_base_offset: number[];
+  segments: { book: number; column: string; line_runs: [number, number][] }[];
+  book_bounds: { book: number; start: number }[];
+  // accuracy is 'exact' where the chapter start was matched against the Greek
+  // text, 'line-snapped' where the source knew only the Bekker line.
+  chapter_bounds: { book: number; chapter: string; start: number; accuracy: string }[];
+}
+
+// A morphological reading: category → the values it licenses. A reading with
+// more than one value for a category is syncretic ("fem nom/voc sg"), which is
+// as genuinely ambiguous as two separate analyses.
+type Reading = Record<string, string[]>;
+
+// Signature dictionary + packed column. sigs[id] is the distinct readings a
+// token's analyses license; the column holds one id per token, by global offset.
+export interface GrammarDict {
+  token_count: number;
+  width: number;               // bytes per column entry
+  categories: string[];
+  reserved: { unkeyed: number; unanalysed: number };
+  sigs: Reading[][];
+}
+
+// A grammatical query: category → required value, e.g. { mood: 'opt' }.
+export type GrammarQuery = Record<string, string>;
 
 // Greek search can match by dictionary headword ('lemma', every inflected form)
 // or by the exact surface form as written ('form').
@@ -60,6 +90,21 @@ function loadIndex<T>(work: string, file: string): Promise<T> {
   p.catch(() => { if (_fileCache.get(key) === p) _fileCache.delete(key); });
   _fileCache.set(key, p);
   return p as Promise<T>;
+}
+
+// The grammatical column is binary (one small int per token, indexed by global
+// offset), so it needs arrayBuffer rather than json. Cached the same way.
+function loadBinary(work: string, file: string): Promise<ArrayBuffer> {
+  const key = `${work}/${file}`;
+  const cached = _fileCache.get(key);
+  if (cached) return cached as Promise<ArrayBuffer>;
+  const p = fetch(`${searchBase(work)}/${file}`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ${key}`);
+    return r.arrayBuffer();
+  });
+  p.catch(() => { if (_fileCache.get(key) === p) _fileCache.delete(key); });
+  _fileCache.set(key, p);
+  return p as Promise<ArrayBuffer>;
 }
 
 // Run `fn` over `items` with at most `limit` in flight at once (bounds the
@@ -141,11 +186,28 @@ function union(a: Set<number>, b: Set<number>): Set<number> {
   return new Set([...a, ...b]);
 }
 
-// Phrase check: do all folded terms appear in order (adjacent, space-separated)?
-function phraseMatches(foldTokenSeq: string, foldTerms: string[]): boolean {
-  if (foldTerms.length === 0) return true;
-  const pattern = foldTerms.join(' ');
-  return foldTokenSeq.includes(pattern);
+// Phrase check, by posting adjacency: seg_idx → start positions of every run
+// where the terms occupy consecutive token positions, in order.
+//
+// This works off the same postings the query already intersected, so it uses
+// whichever index the match mode selected (surface forms for 'form', every
+// analysis lemma for 'lemma'), and wildcard terms participate via their prefix
+// postings. Token positions count EVERY token, so an unanalysed word between
+// two terms correctly breaks adjacency.
+function phraseStarts(idx: GrkIndex, terms: string[]): Map<number, number[]> {
+  const out = new Map<number, number[]>();
+  const perTerm = terms.map(t => termPositions(idx, t));
+  const first = perTerm[0];
+  if (!first) return out;
+  for (const [si, firstPositions] of first) {
+    const rest = perTerm.slice(1).map(m => new Set(m.get(si) ?? []));
+    if (rest.some(s => s.size === 0)) continue;
+    const starts = [...new Set(firstPositions)]
+      .filter(p => rest.every((s, j) => s.has(p + j + 1)))
+      .sort((a, b) => a - b);
+    if (starts.length) out.set(si, starts);
+  }
+  return out;
 }
 
 // English phrase: do all terms appear in order in the text?
@@ -167,6 +229,10 @@ export interface SearchResult {
   grkMatch: boolean;
   engMatch: boolean;
   grkPositions: number[]; // token positions in the segment where a Greek term matched
+  // Grammatical hits only, parallel to grkPositions: the values each position's
+  // readings license for the queried categories, and whether every reading
+  // agrees. `certain: false` must be shown as one-of-N, never asserted.
+  grammar?: { values: Record<string, string[]>; certain: boolean }[];
 }
 
 // search() returns the hits PLUS any works whose index failed to load, so the
@@ -200,24 +266,16 @@ function termPositions(idx: GrkIndex, term: string): Map<number, number[]> {
 // For each segment in `hits`, the token positions to highlight in a KWIC snippet.
 function greekPositions(
   idx: GrkIndex,
-  meta: SegMeta[],
   terms: string[],
   mode: SearchMode,
   hits: Set<number>,
 ): Map<number, number[]> {
   const out = new Map<number, number[]>();
   if (mode === 'phrase' && terms.length > 1) {
-    const foldTerms = terms.map(t => greekFold(t.replace('*', '')));
-    for (const si of hits) {
-      const toks = meta[si].greek_tokens.split(' ');
+    for (const [si, starts] of phraseStarts(idx, terms)) {
+      if (!hits.has(si)) continue;
       const ps: number[] = [];
-      for (let i = 0; i + foldTerms.length <= toks.length; i++) {
-        let ok = true;
-        for (let j = 0; j < foldTerms.length; j++) {
-          if (toks[i + j] !== foldTerms[j]) { ok = false; break; }
-        }
-        if (ok) for (let j = 0; j < foldTerms.length; j++) ps.push(i + j);
-      }
+      for (const s of starts) for (let j = 0; j < terms.length; j++) ps.push(s + j);
       out.set(si, ps);
     }
   } else {
@@ -268,10 +326,7 @@ async function searchWork(
     } else {
       grkHits = postings.reduce(intersect);
       if (grkMode === 'phrase' && grkTerms.length > 1) {
-        const foldTerms = grkTerms.map(t => greekFold(t.replace('*', '')));
-        grkHits = new Set([...grkHits].filter(si =>
-          phraseMatches(meta[si].greek_tokens, foldTerms)
-        ));
+        grkHits = new Set(phraseStarts(grkIdx, grkTerms).keys());
       }
     }
   }
@@ -298,7 +353,7 @@ async function searchWork(
   }
 
   const grkPos = grkHits && grkIdx
-    ? greekPositions(grkIdx, meta, grkTerms, grkMode, grkHits)
+    ? greekPositions(grkIdx, grkTerms, grkMode, grkHits)
     : new Map<number, number[]>();
 
   return [...combined]
@@ -310,6 +365,129 @@ async function searchWork(
       engMatch: engHits?.has(si) ?? false,
       grkPositions: grkPos.get(si) ?? [],
     }));
+}
+
+// -- Grammatical search ---------------------------------------------------
+//
+// A separate engine from the lexical one above, deliberately: it answers "which
+// words are in the optative", not "where does this word occur". Combining the
+// two in one query is combo search, which is a later piece of work.
+//
+// Honesty rules, applied here and rendered by the UI:
+//   possible — at least one of a token's readings satisfies the query. That is
+//              what a match means, and it is all a match ever claims.
+//   certain  — every reading satisfies it AND each queried category has exactly
+//              one licensed value. Anything else is one-of-N.
+// A token whose sole analysis is "fem nom/voc sg" is NOT certain for case: one
+// analysis record, two possible cases.
+
+function readingSatisfies(reading: Reading, query: GrammarQuery): boolean {
+  for (const category in query) {
+    if (!reading[category]?.includes(query[category])) return false;
+  }
+  return true;
+}
+
+// Which signature ids satisfy the query, and how ambiguous each one is. The
+// dictionary is small (a few thousand entries), so this is compiled once per
+// work and the column scan then costs one lookup per token.
+function compileQuery(dict: GrammarDict, query: GrammarQuery) {
+  const matches = new Map<number, { values: Record<string, string[]>; certain: boolean }>();
+  dict.sigs.forEach((readings, id) => {
+    if (!readings.length || !readings.some(r => readingSatisfies(r, query))) return;
+    const values: Record<string, string[]> = {};
+    for (const category in query) {
+      const licensed = new Set<string>();
+      for (const reading of readings) for (const v of reading[category] ?? []) licensed.add(v);
+      values[category] = [...licensed].sort();
+    }
+    const certain =
+      readings.every(r => readingSatisfies(r, query)) &&
+      Object.values(values).every(v => v.length === 1);
+    matches.set(id, { values, certain });
+  });
+  return matches;
+}
+
+// Turn a global offset back into (seg_idx, token_pos).
+function locate(base: number[], global: number): [number, number] {
+  let lo = 0;
+  let hi = base.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (base[mid] <= global) lo = mid;
+    else hi = mid - 1;
+  }
+  return [lo, global - base[lo]];
+}
+
+async function grammarSearchWork(work: string, query: GrammarQuery): Promise<SearchResult[]> {
+  const [meta, offsets, dict] = await Promise.all([
+    loadIndex<SegMeta[]>(work, 'meta.json'),
+    loadIndex<Offsets>(work, 'offsets.json'),
+    loadIndex<GrammarDict>(work, 'grammar-dict.json'),
+  ]);
+  // The column is joined to the offsets by position alone, so a mismatched
+  // token_count means the two files came from different builds — refuse rather
+  // than silently report the wrong words.
+  if (dict.token_count !== offsets.token_count) {
+    throw new Error(`${work}: grammar/offsets built from different runs`);
+  }
+  const wanted = compileQuery(dict, query);
+  if (!wanted.size) return [];
+
+  const buffer = await loadBinary(work, 'grammar-col.bin');
+  const column = dict.width === 4 ? new Uint32Array(buffer) : new Uint16Array(buffer);
+  if (column.length !== offsets.token_count) {
+    throw new Error(`${work}: grammar column length does not match token count`);
+  }
+
+  const bySeg = new Map<number, SearchResult>();
+  for (let global = 0; global < column.length; global++) {
+    const hit = wanted.get(column[global]);
+    if (!hit) continue;
+    const [si, pos] = locate(offsets.seg_base_offset, global);
+    let result = bySeg.get(si);
+    if (!result) {
+      result = {
+        work,
+        meta: meta[si],
+        grkMatch: true,
+        engMatch: false,
+        grkPositions: [],
+        grammar: [],
+      };
+      bySeg.set(si, result);
+    }
+    result.grkPositions.push(pos);
+    result.grammar!.push(hit);
+  }
+  return [...bySeg.keys()].sort((a, b) => a - b).map(si => bySeg.get(si)!);
+}
+
+// Grammatical search across one or more works. Same per-work failure tolerance
+// as search(): a work whose index will not load is reported, not fatal.
+export async function searchGrammar(
+  query: GrammarQuery,
+  works: string[],
+): Promise<SearchOutcome> {
+  if (!Object.keys(query).length || !works.length) {
+    return { results: [], failedWorks: [] };
+  }
+  const failedWorks: string[] = [];
+  const perWork = await pool(works, 8, async w => {
+    try {
+      return await grammarSearchWork(w, query);
+    } catch (err) {
+      console.warn(`searchGrammar: skipping ${w} —`, err);
+      failedWorks.push(w);
+      return [] as SearchResult[];
+    }
+  });
+  if (failedWorks.length === works.length) {
+    throw new Error('Could not load the grammar index — check your connection and try again.');
+  }
+  return { results: perWork.flat(), failedWorks };
 }
 
 // Unified search across one or more works. `matchMode` chooses the Greek index

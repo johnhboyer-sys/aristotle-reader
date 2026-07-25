@@ -349,7 +349,12 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
         bookstart = not any(c["book"] == book for c in chapters)
         chapters.append({
             "book": book, "chapter": chap, "column": col,
-            "line": str(line), "wordIndex": word, "bookstart": bookstart,
+            # wordAnchor marks a wordIndex matched against the Greek text, as
+            # opposed to the explicit/extra paths below, which know only the
+            # Bekker line and write 0. Stage 6 resolves chapter bounds to a
+            # token offset and will not claim token precision without it.
+            "line": str(line), "wordIndex": word, "wordAnchor": True,
+            "bookstart": bookstart,
         })
 
     if extra:

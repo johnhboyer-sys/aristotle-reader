@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { search, type SearchMode, type LangOp, type MatchMode, type SearchResult } from '../lib/search';
+  import { search, searchGrammar, type SearchMode, type LangOp, type MatchMode, type SearchResult, type GrammarQuery } from '../lib/search';
   import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
   import { escapeRe, highlightPrefixMatches, searchTermPrefix } from '../lib/text';
   import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
@@ -13,6 +13,9 @@
     ref: string;       // e.g. "1097a15"
     html: string;      // KWIC snippet
     jumpUrl: string;
+    // Grammatical hits only: the reading is stated as one-of-N when the parse
+    // does not settle it. Absent when the parse is unambiguous.
+    oneOf?: string;
   }
   // All instances within one chapter, merged into a single (collapsible) card.
   interface ChapterGroup {
@@ -81,6 +84,36 @@
     return terms.some(q =>
       q.endsWith('*') ? t.startsWith(q.slice(0, -1)) : t === q);
   }
+
+  // ── Grammatical search ─────────────────────────────────────────────────────
+  // A separate engine over the same offsets, not a filter on the Greek box:
+  // it answers "which words are in the optative". Combining it with named terms
+  // is combo search, which is not built yet — so the Greek/English boxes are
+  // disabled while a grammatical query is active.
+  //
+  // The vocabulary is exactly what Morpheus emits, nothing inferred. There is
+  // no part-of-speech option: the analyses carry no noun/verb/adjective field,
+  // and deriving one from feature presence would claim more than the data says.
+  const GRAMMAR_CATEGORIES: { key: string; label: string; values: string[] }[] = [
+    { key: 'case',   label: 'Case',   values: ['nom', 'gen', 'dat', 'acc', 'voc'] },
+    { key: 'number', label: 'Number', values: ['sg', 'pl', 'dual'] },
+    { key: 'gender', label: 'Gender', values: ['masc', 'fem', 'neut'] },
+    { key: 'tense',  label: 'Tense',  values: ['pres', 'imperf', 'fut', 'aor', 'perf', 'plup', 'futperf'] },
+    { key: 'mood',   label: 'Mood',   values: ['ind', 'subj', 'opt', 'imperat', 'inf', 'part'] },
+    { key: 'voice',  label: 'Voice',  values: ['act', 'mid', 'pass', 'mp'] },
+    { key: 'person', label: 'Person', values: ['1st', '2nd', '3rd'] },
+    { key: 'degree', label: 'Degree', values: ['comp', 'superl'] },
+  ];
+  let grammarQuery: GrammarQuery = {};
+  $: grammarActive = Object.keys(grammarQuery).length > 0;
+  function setGrammar(key: string, value: string) {
+    const next = { ...grammarQuery };
+    if (value) next[key] = value; else delete next[key];
+    grammarQuery = next;
+  }
+  function clearGrammar() { grammarQuery = {}; }
+  // "mood: opt · voice: act" — also the label the results header shows back.
+  $: grammarLabel = Object.entries(grammarQuery).map(([k, v]) => `${k}: ${v}`).join(' · ');
 
   // Shared option list for the per-language mode selectors.
   const MODE_OPTS: { v: SearchMode; l: string }[] = [
@@ -387,12 +420,22 @@
         if (ctx.grkAccentTerms.length) {
           for (const line of seg.greek) for (const tok of line.tokens) toks.push(tok.t);
         }
-        for (const pos of r.grkPositions) {
+        for (let i = 0; i < r.grkPositions.length; i++) {
+          const pos = r.grkPositions[i];
           if (ctx.grkAccentTerms.length
             && !accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms)) continue;
           const line = lineOfPosition(seg, pos);
           const ch = lookup(seg.column, line);
-          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
+          // r.grammar runs parallel to grkPositions on a grammatical search.
+          // Where the parse doesn't settle the reading, say so on the hit
+          // rather than letting the match imply a certainty it doesn't have.
+          const g = r.grammar?.[i];
+          const oneOf = g && !g.certain
+            ? Object.entries(g.values)
+                .map(([cat, vals]) => `${cat} ${vals.join(' or ')}`)
+                .join(' · ')
+            : undefined;
+          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line), oneOf });
         }
       }
       if (r.engMatch) {
@@ -474,7 +517,7 @@
 
   async function doSearch(e?: Event) {
     e?.preventDefault();
-    if (!grkQuery.trim() && !engQuery.trim()) return;
+    if (!grkQuery.trim() && !engQuery.trim() && !grammarActive) return;
     loading = true;
     error = '';
     failedWorks = [];
@@ -485,14 +528,18 @@
       const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
       // Snapshot the submitted query for all deferred (per-page / CSV) rendering.
       searchCtx = {
-        grkQuery: grkQuery.trim(),
-        engQuery: engQuery.trim(),
-        engTerms: engQuery.trim().split(/\s+/).filter(Boolean),
-        grkAccentTerms: accentSensitive
+        // A grammatical query names no words, so there is nothing for the
+        // reader to highlight on jump and no accent post-filter to apply.
+        grkQuery: grammarActive ? '' : grkQuery.trim(),
+        engQuery: grammarActive ? '' : engQuery.trim(),
+        engTerms: grammarActive ? [] : engQuery.trim().split(/\s+/).filter(Boolean),
+        grkAccentTerms: !grammarActive && accentSensitive
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
       };
-      const { results, failedWorks: failed } = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
+      const { results, failedWorks: failed } = grammarActive
+        ? await searchGrammar(grammarQuery, works)
+        : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
       failedWorks = failed;
       totalInstances = results.reduce((n, r) => n + instCount(r), 0);
       pages = paginate(results);
@@ -664,6 +711,7 @@
         autocorrect="off"
         autocapitalize="none"
         spellcheck="false"
+        disabled={grammarActive}
       />
       <button type="button" class="help-btn" on:click={openHelp} aria-haspopup="dialog" title="How to type Greek">
         ⌨ Type Greek
@@ -688,6 +736,33 @@
       </fieldset>
     </div>
 
+    <details class="grammar-panel" open={grammarActive}>
+      <summary>
+        Grammatical form
+        {#if grammarActive}<span class="grammar-active">{grammarLabel}</span>{/if}
+      </summary>
+      <p class="grammar-note">
+        Finds every word with these features, whatever its dictionary form. This
+        searches on its own — it ignores the Greek and English boxes above.
+        Many Greek forms carry more than one possible parse; where the analysis
+        does not settle it, the result says so rather than picking one.
+      </p>
+      <div class="grammar-grid">
+        {#each GRAMMAR_CATEGORIES as cat}
+          <label class="grammar-field">
+            <span>{cat.label}</span>
+            <select value={grammarQuery[cat.key] ?? ''} on:change={(e) => setGrammar(cat.key, e.currentTarget.value)}>
+              <option value="">any</option>
+              {#each cat.values as v}<option value={v}>{v}</option>{/each}
+            </select>
+          </label>
+        {/each}
+      </div>
+      {#if grammarActive}
+        <button type="button" class="grammar-clear" on:click={clearGrammar}>Clear grammatical form</button>
+      {/if}
+    </details>
+
     <div class="query-row">
       <label class="query-label" for="eng-input">English</label>
       <input
@@ -698,6 +773,7 @@
         bind:value={engQuery}
         on:keydown={onEnter}
         autocomplete="off"
+        disabled={grammarActive}
       />
     </div>
 
@@ -917,6 +993,9 @@
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                       {@html inst.html}
                     </span>
+                    {#if inst.oneOf}
+                      <span class="inst-oneof" title="The morphological analysis allows more than one reading of this form">{inst.oneOf}</span>
+                    {/if}
                   </li>
                 {/each}
               </ul>
@@ -1003,6 +1082,80 @@
     align-items: center;
     gap: 1rem;
     margin: -0.3rem 0 0.1rem 4.25rem;  /* align under the input, past the label */
+  }
+
+  /* --- Grammatical form panel ------------------------------------------- */
+  .grammar-panel {
+    margin: 0.35rem 0 0.1rem 4.25rem;  /* align under the inputs, past the label */
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--input-bg);
+    padding: 0.45rem 0.75rem;
+    font-family: var(--font-ui);
+  }
+  .grammar-panel > summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text-mid);
+  }
+  .grammar-active {
+    margin-left: 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--accent);
+  }
+  .grammar-note {
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-mid);
+    max-width: 62ch;
+  }
+  .grammar-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+  }
+  .grammar-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.78rem;
+    color: var(--text-mid);
+  }
+  .grammar-field select {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    padding: 0.2rem 0.3rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--col-bg);
+    color: var(--text);
+  }
+  .grammar-clear {
+    margin-top: 0.6rem;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--col-bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  /* A hit whose parse allows more than one reading. Stated, never implied. */
+  .inst-oneof {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    color: var(--text-mid);
+    border: 1px dashed var(--border);
+    border-radius: 3px;
+    padding: 0 0.3rem;
+    white-space: nowrap;
   }
 
   /* --- Collapsible works selector --------------------------------------- */
