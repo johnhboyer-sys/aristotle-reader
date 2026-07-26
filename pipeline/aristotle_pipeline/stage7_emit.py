@@ -65,6 +65,23 @@ def merge_short_def(
     return gloss
 
 
+def resolve_parses(parses: list[dict], short_defs: dict[str, str]) -> list[dict]:
+    """Drop spurious readings, then extend the survivors' truncated glosses.
+
+    The order matters: filter_parses recognizes a spurious reading by its gloss
+    exactly duplicating a resolved sibling's, and those are Morpheus glosses.
+    Extending them first would make the duplicate stop looking like one, so the
+    junk reading would survive — and can then become the token's primary
+    analysis, which shifts the lemma bucket a lexicon page is built from.
+    """
+    kept = filter_parses(parses)
+    for parse in kept:
+        parse["gloss"] = merge_short_def(
+            parse["gloss"], parse["lemma"], parse["lsj"], short_defs
+        )
+    return kept
+
+
 def _greek_cells(text: str, tokens: list[dict]):
     """If a Greek line is a table row (contains the ⎪ column divider), split it
     into cells, partitioning the clickable tokens by their char offset and
@@ -363,18 +380,13 @@ def emit_analyses(out_dir: Path) -> dict:
         parses = [
             {
                 "lemma": g["lemma"],
-                "gloss": merge_short_def(
-                    g["gloss"].strip(),
-                    g["lemma"],
-                    lemma_map.get(g["lemma"], []),
-                    short_defs,
-                ),
+                "gloss": g["gloss"].strip(),
                 "parse": g["parse"],
                 "lsj": lemma_map.get(g["lemma"], []),
             }
             for g in analyses[stored_key]
         ]
-        kept = filter_parses(parses)
+        kept = resolve_parses(parses, short_defs)
         dropped += len(parses) - len(kept)
         merged[token_key] = kept
     (out_dir / "analyses.json").write_text(
