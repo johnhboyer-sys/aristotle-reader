@@ -340,6 +340,63 @@ export function fetchLemmaGlosses(slug: string): Promise<string[]> {
   return p;
 }
 
+// Recurrent phrases (stage 8), sharded by the phrase's fold-initial letter.
+//
+// The browse list and the occurrences are separate fetches on purpose: browsing
+// needs every phrase, but only an EXPANDED phrase needs its offsets, and one
+// combined shard reached 10.4 MB. A row is positional to keep the list small —
+// [length, corpus count, distinctiveness score, works, occurrences straddling a
+// chapter?]. The score orders the list; it never removes anything from it.
+export type NgramRow = [number, number, number, number, number?];
+export type NgramStream = 'form' | 'lemma';
+
+const _ngramCache = new Map<string, Promise<Record<string, NgramRow>>>();
+export function fetchNgramShard(
+  stream: NgramStream,
+  letter: string,
+): Promise<Record<string, NgramRow>> {
+  const key = `${stream}/${letter}`;
+  const cached = _ngramCache.get(key);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/ngrams/${key}.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ngrams/${key}.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_ngramCache.get(key) === p) _ngramCache.delete(key); });
+  _ngramCache.set(key, p);
+  return p;
+}
+
+// work -> global offsets, delta-encoded after the first.
+const _occCache = new Map<string, Promise<Record<string, Record<string, number[]>>>>();
+export function fetchNgramOccurrences(
+  stream: NgramStream,
+  letter: string,
+  n: number,
+): Promise<Record<string, Record<string, number[]>>> {
+  const key = `${stream}/occ/${letter}-${n}`;
+  const cached = _occCache.get(key);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/ngrams/${key}.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ngrams/${key}.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_occCache.get(key) === p) _occCache.delete(key); });
+  _occCache.set(key, p);
+  return p;
+}
+
+// Undo the delta encoding: [first, +d, +d, ...] -> absolute global offsets.
+export function decodeOffsets(deltas: number[]): number[] {
+  const out: number[] = [];
+  let at = 0;
+  for (let i = 0; i < deltas.length; i++) {
+    at = i === 0 ? deltas[0] : at + deltas[i];
+    out.push(at);
+  }
+  return out;
+}
+
 export function lsjShard(key: string): string {
   for (const ch of key) {
     if (ch === '*') continue;
