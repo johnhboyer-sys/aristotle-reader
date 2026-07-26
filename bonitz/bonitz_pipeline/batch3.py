@@ -124,21 +124,47 @@ def stage_llamaparse(pages: list[int]) -> None:
     for p, d in zip(todo, docs):
         f = out / f'page-{p:03d}.md'
         f.write_text(d.text, encoding='utf-8')
-        # LlamaParse silently flattens the ou-ligature to plain upsilon on
-        # roughly a fifth of pages, and it is the reader the comparator leans
-        # on for that character — if it flattens, all three can agree on υ and
-        # nothing is flagged. A page of this index with no ȣ at all is not a
-        # page, it is a failed parse. Re-running usually fixes it.
-        n_lig = d.text.count('ȣ')
-        if n_lig == 0:
-            flat.append(p)
-        print(f'wrote {f} ({len(d.text)} chars, {n_lig} ligatures)'
-              + ('  <-- FLATTENED, re-run this page' if n_lig == 0 else ''))
+        n_lig, n_flat, examples = _ligature_health(d.text)
+        if n_flat:
+            flat.append((p, n_flat))
+        print(f'wrote {f} ({len(d.text)} chars, {n_lig} ligatures'
+              + (f', {n_flat} FLATTENED: {", ".join(examples[:3])}' if n_flat else '')
+              + ')')
     if flat:
-        print(f'\nWARNING: {len(flat)} page(s) came back with no ou-ligature at '
-              f'all: {flat}. Re-run `llamaparse --pages` for them; if a page '
-              f'stays flat after a retry, it has no usable ligature vote and '
-              f'lexcheck --scan-reconciled is the only net under it.')
+        worst = sorted(flat, key=lambda t: -t[1])
+        print(f'\nWARNING: {sum(n for _, n in flat)} flattened words across '
+              f'{len(flat)} page(s). Worst: '
+              + ', '.join(f'p{p} ({n})' for p, n in worst[:6]))
+        print('Re-running a page often fixes it. Note a page can look healthy '
+              'on ligature count and still flatten a handful of words, so this '
+              'counts the non-words directly rather than trusting the count.')
+
+
+def _ligature_health(text: str) -> tuple[int, int, list[str]]:
+    """(ligatures, flattened non-words, examples) for one LlamaParse page.
+
+    LlamaParse drops the ou-ligature in two different ways. Sometimes it
+    EXPANDS it to ου, which loses the raw form but keeps the reading. Sometimes
+    it FLATTENS it to plain υ, which produces a non-word and destroys the
+    reading — and it is the reader the comparator leans on for this character,
+    so a flattened vote lets all three agree on υ with nothing flagged.
+
+    Counting ligatures per page misses partial flattening: page 152 came back
+    with 28 ligatures AND 39 flattened words. So test the non-words directly,
+    the same way lexcheck --scan-reconciled does.
+    """
+    from .lexcheck import WORD_RE, bare, load_forms, nfc
+    forms = load_forms()
+    t = nfc(text)
+    bad = []
+    for w in WORD_RE.findall(t):
+        b = bare(w)
+        if 'υ' not in b or len(b) < 4 or b in forms:
+            continue
+        if any(b[:i] + 'ου' + b[i + 1:] in forms
+               for i, c in enumerate(b) if c == 'υ'):
+            bad.append(w)
+    return t.count('ȣ'), len(bad), bad
 
 
 # --- genie slice by fold-anchor search --------------------------------------
