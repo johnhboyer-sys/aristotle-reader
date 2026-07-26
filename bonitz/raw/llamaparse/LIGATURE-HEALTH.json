@@ -1,0 +1,1067 @@
+{
+ "_": [
+  "Ligature health of each LlamaParse page, recorded when parsed.",
+  "LlamaParse drops the ou-ligature two ways: EXPANDING it to ου keeps the",
+  "reading, FLATTENING it to plain upsilon destroys it and produces a",
+  "non-word. It is the reader the comparator leans on for this character,",
+  "so a flattened page lets all three readers agree on υ with nothing",
+  "flagged. Re-running a page usually fixes it.",
+  "Pages 138 and 154 stayed flat through THREE attempts — they have no",
+  "usable ligature vote and lexcheck --scan-reconciled is the only net."
+ ],
+ "persistently_flat": [
+  138,
+  154
+ ],
+ "pages": {
+  "015": {
+   "ligatures": 27,
+   "flattened": 0,
+   "examples": []
+  },
+  "016": {
+   "ligatures": 22,
+   "flattened": 4,
+   "examples": [
+    "ἀμείνυς",
+    "βελτίυς",
+    "νόμυς",
+    "ὀλίγυς"
+   ]
+  },
+  "017": {
+   "ligatures": 27,
+   "flattened": 0,
+   "examples": []
+  },
+  "018": {
+   "ligatures": 25,
+   "flattened": 3,
+   "examples": [
+    "διαφέρυσι",
+    "ἀκύσιον",
+    "συνυσίᾳ"
+   ]
+  },
+  "019": {
+   "ligatures": 16,
+   "flattened": 0,
+   "examples": []
+  },
+  "020": {
+   "ligatures": 32,
+   "flattened": 0,
+   "examples": []
+  },
+  "021": {
+   "ligatures": 19,
+   "flattened": 0,
+   "examples": []
+  },
+  "022": {
+   "ligatures": 32,
+   "flattened": 1,
+   "examples": [
+    "ἀδυλία"
+   ]
+  },
+  "023": {
+   "ligatures": 0,
+   "flattened": 3,
+   "examples": [
+    "Μυσαῖος",
+    "νεοττὺς",
+    "ἔχυσαι"
+   ]
+  },
+  "024": {
+   "ligatures": 28,
+   "flattened": 1,
+   "examples": [
+    "κινύμενος"
+   ]
+  },
+  "025": {
+   "ligatures": 48,
+   "flattened": 0,
+   "examples": []
+  },
+  "026": {
+   "ligatures": 38,
+   "flattened": 1,
+   "examples": [
+    "ὖσαν"
+   ]
+  },
+  "027": {
+   "ligatures": 36,
+   "flattened": 1,
+   "examples": [
+    "ἀκύσιον"
+   ]
+  },
+  "028": {
+   "ligatures": 36,
+   "flattened": 5,
+   "examples": [
+    "σταλαγμύς",
+    "κατέχυσιν",
+    "ἐξαιρυμένων",
+    "βυβαλίδος"
+   ]
+  },
+  "029": {
+   "ligatures": 21,
+   "flattened": 1,
+   "examples": [
+    "ζωοτοκύντων"
+   ]
+  },
+  "030": {
+   "ligatures": 24,
+   "flattened": 0,
+   "examples": []
+  },
+  "031": {
+   "ligatures": 51,
+   "flattened": 0,
+   "examples": []
+  },
+  "032": {
+   "ligatures": 46,
+   "flattened": 2,
+   "examples": [
+    "ὕθεν",
+    "ὁμολογύμενα"
+   ]
+  },
+  "033": {
+   "ligatures": 56,
+   "flattened": 1,
+   "examples": [
+    "βύλεται"
+   ]
+  },
+  "034": {
+   "ligatures": 45,
+   "flattened": 0,
+   "examples": []
+  },
+  "035": {
+   "ligatures": 54,
+   "flattened": 1,
+   "examples": [
+    "τυγχάνυσι"
+   ]
+  },
+  "036": {
+   "ligatures": 18,
+   "flattened": 1,
+   "examples": [
+    "ὑθέν"
+   ]
+  },
+  "037": {
+   "ligatures": 52,
+   "flattened": 6,
+   "examples": [
+    "κινύμενον",
+    "κινύμενα",
+    "κινυμένη",
+    "πλείυς"
+   ]
+  },
+  "038": {
+   "ligatures": 98,
+   "flattened": 5,
+   "examples": [
+    "ὕτως",
+    "ὐσίᾳ",
+    "τύτοις",
+    "ὐδενί"
+   ]
+  },
+  "039": {
+   "ligatures": 40,
+   "flattened": 35,
+   "examples": [
+    "ἀκυεί",
+    "ἀκύει",
+    "ἀκύειν",
+    "ἀκύειν"
+   ]
+  },
+  "040": {
+   "ligatures": 42,
+   "flattened": 0,
+   "examples": []
+  },
+  "041": {
+   "ligatures": 43,
+   "flattened": 2,
+   "examples": [
+    "πλύσιοι",
+    "ἄκρυλοι"
+   ]
+  },
+  "042": {
+   "ligatures": 62,
+   "flattened": 0,
+   "examples": []
+  },
+  "043": {
+   "ligatures": 8,
+   "flattened": 1,
+   "examples": [
+    "ὐσίαν"
+   ]
+  },
+  "044": {
+   "ligatures": 23,
+   "flattened": 4,
+   "examples": [
+    "τύτῳ",
+    "τύτων",
+    "τοιύτων",
+    "τύτων"
+   ]
+  },
+  "045": {
+   "ligatures": 39,
+   "flattened": 3,
+   "examples": [
+    "τύτοις",
+    "ἑκύσιος",
+    "ἀρρωστύντων"
+   ]
+  },
+  "046": {
+   "ligatures": 65,
+   "flattened": 0,
+   "examples": []
+  },
+  "047": {
+   "ligatures": 34,
+   "flattened": 16,
+   "examples": [
+    "ἀκύοντας",
+    "καλυμέναις",
+    "ἀλυργής",
+    "ἀλυργές"
+   ]
+  },
+  "048": {
+   "ligatures": 19,
+   "flattened": 0,
+   "examples": []
+  },
+  "049": {
+   "ligatures": 31,
+   "flattened": 0,
+   "examples": []
+  },
+  "050": {
+   "ligatures": 38,
+   "flattened": 0,
+   "examples": []
+  },
+  "051": {
+   "ligatures": 18,
+   "flattened": 4,
+   "examples": [
+    "ἀμυσία",
+    "ἄμυσος",
+    "ἄμυσος",
+    "ἄμυσος"
+   ]
+  },
+  "052": {
+   "ligatures": 44,
+   "flattened": 1,
+   "examples": [
+    "ἐποίκυς"
+   ]
+  },
+  "053": {
+   "ligatures": 17,
+   "flattened": 1,
+   "examples": [
+    "ὐδὲν"
+   ]
+  },
+  "054": {
+   "ligatures": 0,
+   "flattened": 9,
+   "examples": [
+    "συλλογισμῦς",
+    "συλλογισμῦς",
+    "λόγυς",
+    "ἐλέγχυ"
+   ]
+  },
+  "055": {
+   "ligatures": 38,
+   "flattened": 0,
+   "examples": []
+  },
+  "056": {
+   "ligatures": 25,
+   "flattened": 4,
+   "examples": [
+    "ἀναγνωρισμῦ",
+    "ἀναγνωρισμῦ",
+    "δῦναι",
+    "θεὺς"
+   ]
+  },
+  "057": {
+   "ligatures": 38,
+   "flattened": 2,
+   "examples": [
+    "ὐδὲν",
+    "ὐδὲν"
+   ]
+  },
+  "058": {
+   "ligatures": 35,
+   "flattened": 0,
+   "examples": []
+  },
+  "059": {
+   "ligatures": 26,
+   "flattened": 0,
+   "examples": []
+  },
+  "060": {
+   "ligatures": 33,
+   "flattened": 1,
+   "examples": [
+    "τύτων"
+   ]
+  },
+  "061": {
+   "ligatures": 44,
+   "flattened": 0,
+   "examples": []
+  },
+  "062": {
+   "ligatures": 41,
+   "flattened": 0,
+   "examples": []
+  },
+  "063": {
+   "ligatures": 49,
+   "flattened": 0,
+   "examples": []
+  },
+  "064": {
+   "ligatures": 6,
+   "flattened": 1,
+   "examples": [
+    "ἀναλάμπυσι"
+   ]
+  },
+  "065": {
+   "ligatures": 18,
+   "flattened": 0,
+   "examples": []
+  },
+  "066": {
+   "ligatures": 28,
+   "flattened": 0,
+   "examples": []
+  },
+  "067": {
+   "ligatures": 42,
+   "flattened": 1,
+   "examples": [
+    "ὕθεὶς"
+   ]
+  },
+  "068": {
+   "ligatures": 35,
+   "flattened": 1,
+   "examples": [
+    "ἀκύων"
+   ]
+  },
+  "069": {
+   "ligatures": 34,
+   "flattened": 1,
+   "examples": [
+    "ἐπικυρίαν"
+   ]
+  },
+  "070": {
+   "ligatures": 47,
+   "flattened": 1,
+   "examples": [
+    "καλυμένας"
+   ]
+  },
+  "071": {
+   "ligatures": 41,
+   "flattened": 0,
+   "examples": []
+  },
+  "072": {
+   "ligatures": 49,
+   "flattened": 1,
+   "examples": [
+    "ὕτως"
+   ]
+  },
+  "073": {
+   "ligatures": 22,
+   "flattened": 0,
+   "examples": []
+  },
+  "074": {
+   "ligatures": 10,
+   "flattened": 8,
+   "examples": [
+    "τύτοις",
+    "ἀνομολογύμενον",
+    "ἀνομολογύμενα",
+    "ὁμολογυμένων"
+   ]
+  },
+  "075": {
+   "ligatures": 33,
+   "flattened": 0,
+   "examples": []
+  },
+  "076": {
+   "ligatures": 25,
+   "flattened": 0,
+   "examples": []
+  },
+  "077": {
+   "ligatures": 41,
+   "flattened": 3,
+   "examples": [
+    "ἀντίξυν",
+    "ἀντίπυς",
+    "ὕτως"
+   ]
+  },
+  "078": {
+   "ligatures": 31,
+   "flattened": 2,
+   "examples": [
+    "τύτοις",
+    "τύτοις"
+   ]
+  },
+  "079": {
+   "ligatures": 34,
+   "flattened": 1,
+   "examples": [
+    "ἀκυσθέν"
+   ]
+  },
+  "080": {
+   "ligatures": 32,
+   "flattened": 0,
+   "examples": []
+  },
+  "081": {
+   "ligatures": 21,
+   "flattened": 0,
+   "examples": []
+  },
+  "082": {
+   "ligatures": 67,
+   "flattened": 0,
+   "examples": []
+  },
+  "083": {
+   "ligatures": 35,
+   "flattened": 0,
+   "examples": []
+  },
+  "084": {
+   "ligatures": 53,
+   "flattened": 0,
+   "examples": []
+  },
+  "085": {
+   "ligatures": 46,
+   "flattened": 0,
+   "examples": []
+  },
+  "086": {
+   "ligatures": 60,
+   "flattened": 0,
+   "examples": []
+  },
+  "087": {
+   "ligatures": 37,
+   "flattened": 1,
+   "examples": [
+    "τὐναντίον"
+   ]
+  },
+  "088": {
+   "ligatures": 52,
+   "flattened": 0,
+   "examples": []
+  },
+  "089": {
+   "ligatures": 14,
+   "flattened": 4,
+   "examples": [
+    "κῦφα",
+    "δῦναι",
+    "ἁπλυστέρως",
+    "ἀκύει"
+   ]
+  },
+  "090": {
+   "ligatures": 41,
+   "flattened": 0,
+   "examples": []
+  },
+  "091": {
+   "ligatures": 51,
+   "flattened": 0,
+   "examples": []
+  },
+  "092": {
+   "ligatures": 51,
+   "flattened": 0,
+   "examples": []
+  },
+  "093": {
+   "ligatures": 41,
+   "flattened": 1,
+   "examples": [
+    "καλυμένη"
+   ]
+  },
+  "094": {
+   "ligatures": 33,
+   "flattened": 2,
+   "examples": [
+    "ἀποκρινόμενύ",
+    "καλυμένων"
+   ]
+  },
+  "095": {
+   "ligatures": 46,
+   "flattened": 1,
+   "examples": [
+    "διαβάλλυσιν"
+   ]
+  },
+  "096": {
+   "ligatures": 47,
+   "flattened": 1,
+   "examples": [
+    "ἀκολυθεῖ"
+   ]
+  },
+  "097": {
+   "ligatures": 27,
+   "flattened": 3,
+   "examples": [
+    "ὗτος",
+    "ὐσίας",
+    "ὐσία"
+   ]
+  },
+  "098": {
+   "ligatures": 19,
+   "flattened": 4,
+   "examples": [
+    "ὐκέτι",
+    "τύτῳ",
+    "ὐδὲν",
+    "καλυμένας"
+   ]
+  },
+  "099": {
+   "ligatures": 42,
+   "flattened": 0,
+   "examples": []
+  },
+  "100": {
+   "ligatures": 54,
+   "flattened": 7,
+   "examples": [
+    "ἀπυσία",
+    "ἀπυσία",
+    "ἀπυσία",
+    "ἀπυσίᾳ"
+   ]
+  },
+  "101": {
+   "ligatures": 13,
+   "flattened": 2,
+   "examples": [
+    "διαιρυμένων",
+    "τύτων"
+   ]
+  },
+  "102": {
+   "ligatures": 29,
+   "flattened": 0,
+   "examples": []
+  },
+  "103": {
+   "ligatures": 30,
+   "flattened": 6,
+   "examples": [
+    "προαποτίκτυσιν",
+    "ἐπῳάζυσαι",
+    "τίκτυσιν",
+    "προαποτίκτυσιν"
+   ]
+  },
+  "104": {
+   "ligatures": 46,
+   "flattened": 2,
+   "examples": [
+    "ἑκύσιον",
+    "ὐσίαν"
+   ]
+  },
+  "105": {
+   "ligatures": 42,
+   "flattened": 1,
+   "examples": [
+    "καλυμένοις"
+   ]
+  },
+  "106": {
+   "ligatures": 30,
+   "flattened": 10,
+   "examples": [
+    "βύλεται",
+    "τύτων",
+    "ὐδένα",
+    "ὐρανὸν"
+   ]
+  },
+  "107": {
+   "ligatures": 24,
+   "flattened": 1,
+   "examples": [
+    "καλυμένῃ"
+   ]
+  },
+  "108": {
+   "ligatures": 6,
+   "flattened": 0,
+   "examples": []
+  },
+  "109": {
+   "ligatures": 3,
+   "flattened": 1,
+   "examples": [
+    "τύτων"
+   ]
+  },
+  "110": {
+   "ligatures": 13,
+   "flattened": 0,
+   "examples": []
+  },
+  "111": {
+   "ligatures": 12,
+   "flattened": 0,
+   "examples": []
+  },
+  "112": {
+   "ligatures": 5,
+   "flattened": 0,
+   "examples": []
+  },
+  "113": {
+   "ligatures": 15,
+   "flattened": 0,
+   "examples": []
+  },
+  "114": {
+   "ligatures": 7,
+   "flattened": 0,
+   "examples": []
+  },
+  "115": {
+   "ligatures": 7,
+   "flattened": 0,
+   "examples": []
+  },
+  "116": {
+   "ligatures": 23,
+   "flattened": 0,
+   "examples": []
+  },
+  "117": {
+   "ligatures": 25,
+   "flattened": 1,
+   "examples": [
+    "τυτῳ"
+   ]
+  },
+  "118": {
+   "ligatures": 48,
+   "flattened": 1,
+   "examples": [
+    "τύτων"
+   ]
+  },
+  "119": {
+   "ligatures": 54,
+   "flattened": 1,
+   "examples": [
+    "ἀρῦντες"
+   ]
+  },
+  "120": {
+   "ligatures": 21,
+   "flattened": 4,
+   "examples": [
+    "ὐδενὶ",
+    "πλείυς",
+    "ὐδὲν",
+    "ὐσία"
+   ]
+  },
+  "121": {
+   "ligatures": 33,
+   "flattened": 1,
+   "examples": [
+    "καλυμένην"
+   ]
+  },
+  "122": {
+   "ligatures": 26,
+   "flattened": 0,
+   "examples": []
+  },
+  "123": {
+   "ligatures": 23,
+   "flattened": 0,
+   "examples": []
+  },
+  "124": {
+   "ligatures": 36,
+   "flattened": 0,
+   "examples": []
+  },
+  "125": {
+   "ligatures": 14,
+   "flattened": 0,
+   "examples": []
+  },
+  "126": {
+   "ligatures": 23,
+   "flattened": 0,
+   "examples": []
+  },
+  "127": {
+   "ligatures": 27,
+   "flattened": 0,
+   "examples": []
+  },
+  "128": {
+   "ligatures": 33,
+   "flattened": 1,
+   "examples": [
+    "ἐπικαλύμενος"
+   ]
+  },
+  "129": {
+   "ligatures": 34,
+   "flattened": 0,
+   "examples": []
+  },
+  "130": {
+   "ligatures": 34,
+   "flattened": 0,
+   "examples": []
+  },
+  "131": {
+   "ligatures": 30,
+   "flattened": 0,
+   "examples": []
+  },
+  "132": {
+   "ligatures": 31,
+   "flattened": 0,
+   "examples": []
+  },
+  "133": {
+   "ligatures": 23,
+   "flattened": 0,
+   "examples": []
+  },
+  "134": {
+   "ligatures": 47,
+   "flattened": 0,
+   "examples": []
+  },
+  "135": {
+   "ligatures": 23,
+   "flattened": 2,
+   "examples": [
+    "ὔσης",
+    "πνέυσιν"
+   ]
+  },
+  "136": {
+   "ligatures": 21,
+   "flattened": 3,
+   "examples": [
+    "κινῦν",
+    "αὐτοματιζύσης",
+    "καλύμεναι"
+   ]
+  },
+  "137": {
+   "ligatures": 22,
+   "flattened": 2,
+   "examples": [
+    "ὗτος",
+    "ὕτως"
+   ]
+  },
+  "138": {
+   "ligatures": 0,
+   "flattened": 2,
+   "examples": [
+    "τύτων",
+    "ὐσίας"
+   ]
+  },
+  "139": {
+   "ligatures": 34,
+   "flattened": 2,
+   "examples": [
+    "βυλήν",
+    "ὕδεν"
+   ]
+  },
+  "140": {
+   "ligatures": 43,
+   "flattened": 0,
+   "examples": []
+  },
+  "141": {
+   "ligatures": 24,
+   "flattened": 0,
+   "examples": []
+  },
+  "142": {
+   "ligatures": 37,
+   "flattened": 1,
+   "examples": [
+    "ἄφρυρος"
+   ]
+  },
+  "143": {
+   "ligatures": 44,
+   "flattened": 1,
+   "examples": [
+    "ἔχυσι"
+   ]
+  },
+  "144": {
+   "ligatures": 30,
+   "flattened": 0,
+   "examples": []
+  },
+  "145": {
+   "ligatures": 32,
+   "flattened": 1,
+   "examples": [
+    "μυσικῆς"
+   ]
+  },
+  "146": {
+   "ligatures": 30,
+   "flattened": 0,
+   "examples": []
+  },
+  "147": {
+   "ligatures": 37,
+   "flattened": 1,
+   "examples": [
+    "καλυμένων"
+   ]
+  },
+  "148": {
+   "ligatures": 26,
+   "flattened": 0,
+   "examples": []
+  },
+  "149": {
+   "ligatures": 27,
+   "flattened": 0,
+   "examples": []
+  },
+  "150": {
+   "ligatures": 42,
+   "flattened": 2,
+   "examples": [
+    "σύννυν",
+    "ὑδείς"
+   ]
+  },
+  "151": {
+   "ligatures": 32,
+   "flattened": 2,
+   "examples": [
+    "καλυμένῃ",
+    "ὗτοι"
+   ]
+  },
+  "152": {
+   "ligatures": 28,
+   "flattened": 39,
+   "examples": [
+    "Βύλεσθαι",
+    "καλυμένην",
+    "βυβαλίδος",
+    "βυβαλίδος"
+   ]
+  },
+  "153": {
+   "ligatures": 23,
+   "flattened": 3,
+   "examples": [
+    "πλείυς",
+    "πλείυς",
+    "κύυσαι"
+   ]
+  },
+  "154": {
+   "ligatures": 0,
+   "flattened": 3,
+   "examples": [
+    "ἀναπνέυσιν",
+    "κινύμενον",
+    "κῶλυ"
+   ]
+  },
+  "155": {
+   "ligatures": 31,
+   "flattened": 1,
+   "examples": [
+    "ἀκύεται"
+   ]
+  },
+  "156": {
+   "ligatures": 38,
+   "flattened": 0,
+   "examples": []
+  },
+  "157": {
+   "ligatures": 44,
+   "flattened": 0,
+   "examples": []
+  },
+  "158": {
+   "ligatures": 27,
+   "flattened": 2,
+   "examples": [
+    "γαμψύμενον",
+    "λῦσται"
+   ]
+  },
+  "159": {
+   "ligatures": 15,
+   "flattened": 1,
+   "examples": [
+    "τὔνομα"
+   ]
+  },
+  "160": {
+   "ligatures": 48,
+   "flattened": 16,
+   "examples": [
+    "ὐσίας",
+    "ὐσίαν",
+    "ὐθενός",
+    "ὐσίας"
+   ]
+  },
+  "161": {
+   "ligatures": 41,
+   "flattened": 0,
+   "examples": []
+  },
+  "162": {
+   "ligatures": 45,
+   "flattened": 0,
+   "examples": []
+  },
+  "163": {
+   "ligatures": 41,
+   "flattened": 0,
+   "examples": []
+  },
+  "164": {
+   "ligatures": 50,
+   "flattened": 3,
+   "examples": [
+    "τύτῳ",
+    "ἐκδύνυσιν",
+    "γερυσία"
+   ]
+  },
+  "165": {
+   "ligatures": 44,
+   "flattened": 0,
+   "examples": []
+  },
+  "166": {
+   "ligatures": 21,
+   "flattened": 3,
+   "examples": [
+    "βύληταί",
+    "ὕδεις",
+    "Ἡρακλέυς"
+   ]
+  },
+  "167": {
+   "ligatures": 46,
+   "flattened": 0,
+   "examples": []
+  },
+  "168": {
+   "ligatures": 47,
+   "flattened": 4,
+   "examples": [
+    "ὕδεν",
+    "γλυτός",
+    "γλυτός",
+    "ὑπογλυτίς"
+   ]
+  },
+  "169": {
+   "ligatures": 25,
+   "flattened": 4,
+   "examples": [
+    "ὕλων",
+    "ὕδενος",
+    "ὔσης",
+    "κάμνυσι"
+   ]
+  },
+  "170": {
+   "ligatures": 45,
+   "flattened": 2,
+   "examples": [
+    "καλυμένην",
+    "καλυμένη"
+   ]
+  },
+  "171": {
+   "ligatures": 59,
+   "flattened": 0,
+   "examples": []
+  }
+ }
+}
