@@ -48,3 +48,30 @@ them with confidence, and treat the lightened estimates as approximate.
 *Note:* between two confirmed marks, individual lines are spaced out by the length
 of the Greek they cover — a reasonable estimate, shown as such. The solid marks
 are the ones we've verified.
+
+## Lettered lines (5a, 5b …)
+
+Bekker numbers a handful of lines with a letter — Physics 244b runs 1–5, then
+5a, 5b, 5c, 5d, then 6–15 — where an edition inserts text after an already
+numbered line. They are ordinary lines of text, not headings or apparatus.
+
+We hold them with the number of the line they follow plus a `sub` field
+(`{"n": 5, "sub": "a"}`), so a citation to *244b5* still resolves and document
+order still sorts. Anything keyed on the line number alone will collide with
+the plain line of the same number; key on `(n, sub)`.
+
+This was found the hard way in July 2026, via a Bonitz citation. `stage1_greek`
+had been filing lettered lines as headings and dropping them from the text
+flow. Because Ross splits a word across that seam — `ἀλλοιού-` ending line 5,
+`μενον` opening 5a — the hyphen rejoin then took its continuation from the next
+*surviving* line, fusing line 5 to line 6's first word and stealing it from
+line 6. Physics 244b lost about 57 words and gained the non-word
+`ἀλλοιούεἰρημένων`, with nothing raising an error.
+
+Two lessons worth keeping. Our TLG source was clean throughout — verified
+against Ross on every neighbouring column, including the two-run structure in
+243a that looked like a merge bug. And no cheap heuristic finds this class of
+damage after the fact: counting accents drowns in enclitics, long-hapax
+filtering drowns in rare inflections, and the `k` field is a transliteration of
+the surface form rather than a morphological analysis. The way to size it is to
+re-export and diff.
