@@ -397,6 +397,22 @@ export function decodeOffsets(deltas: number[]): number[] {
   return out;
 }
 
+// fold(surface) -> the headwords that surface can belong to. Lets a typed
+// phrase be widened to its inflected variants without the reader knowing any
+// dictionary forms. Sharded by fold-initial letter like everything else.
+const _lemmaMapCache = new Map<string, Promise<Record<string, string[]>>>();
+export function fetchLemmaMapShard(letter: string): Promise<Record<string, string[]>> {
+  const cached = _lemmaMapCache.get(letter);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/lemma-map/${letter}.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for lemma-map/${letter}.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_lemmaMapCache.get(letter) === p) _lemmaMapCache.delete(letter); });
+  _lemmaMapCache.set(letter, p);
+  return p;
+}
+
 export function lsjShard(key: string): string {
   for (const ch of key) {
     if (ch === '*') continue;

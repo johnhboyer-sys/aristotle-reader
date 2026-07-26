@@ -92,6 +92,21 @@ function loadIndex<T>(work: string, file: string): Promise<T> {
   return p as Promise<T>;
 }
 
+// Corpus-level indexes live beside the per-work ones rather than inside them.
+// Same cache, keyed by path so it cannot collide with a work called "lemma-map".
+function loadShared<T>(path: string): Promise<T> {
+  const key = `::${path}`;
+  const cached = _fileCache.get(key);
+  if (cached) return cached as Promise<T>;
+  const p = fetch(`${ROOT()}/${path}`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ${path}`);
+    return r.json();
+  });
+  p.catch(() => { if (_fileCache.get(key) === p) _fileCache.delete(key); });
+  _fileCache.set(key, p);
+  return p as Promise<T>;
+}
+
 // The grammatical column is binary (one small int per token, indexed by global
 // offset), so it needs arrayBuffer rather than json. Cached the same way.
 function loadBinary(work: string, file: string): Promise<ArrayBuffer> {
@@ -570,6 +585,127 @@ export async function searchGrammar(
     throw new Error('Could not load the grammar index — check your connection and try again.');
   }
   return { results: perWork.flat(), failedWorks };
+}
+
+// -- Inflected variants of a typed phrase ---------------------------------
+//
+// A reader who types τὸ τί ἦν εἶναι gets the places where those exact words
+// stand. The same formula also appears as τῷ τί ἦν εἶναι and τοῦ τί ἦν εἶναι,
+// which an exact phrase cannot reach — the surface string differs. Finding
+// those means knowing that τό, τῷ and τοῦ all lemmatise to ὁ, which is exactly
+// the knowledge a reader should not need. So widen it for them.
+//
+// Widening is a FAN-OUT, not a lookup: `hn` alone belongs to five headwords
+// (ἐάν, εἰμί, ἠμί, ἤν, ὅς), so a four-word phrase can have several readings.
+// Every reading is tried and their OFFSETS ARE UNIONED, never summed — in the
+// Metaphysics the εἰμί and ἠμί readings hit exactly the same 67 tokens, being
+// one passage under two parses, and adding them would report 135 results for
+// 68 places.
+
+// Above this many readings the fan-out is truncated rather than run, and the
+// caller is told. A phrase of common ambiguous words could otherwise multiply
+// out to thousands of index scans for nothing.
+export const VARIANT_READING_CAP = 64;
+
+export interface VariantOutcome extends SearchOutcome {
+  readings: string[][];        // the lemma readings actually tried
+  productive: string[][];      // those that matched anything
+  cappedFrom: number;          // 0 unless the fan-out was truncated
+}
+
+// The cartesian product of each term's headwords, in the order typed.
+function lemmaReadings(perTerm: string[][], cap: number): { readings: string[][]; total: number } {
+  let total = 1;
+  for (const options of perTerm) total *= Math.max(options.length, 1);
+  let readings: string[][] = [[]];
+  for (const options of perTerm) {
+    const next: string[][] = [];
+    for (const so_far of readings) {
+      for (const option of options) {
+        if (next.length >= cap) break;
+        next.push([...so_far, option]);
+      }
+    }
+    readings = next;
+  }
+  return { readings, total };
+}
+
+// Every place the phrase stands under ANY reading of its words.
+export async function searchPhraseVariants(
+  grkQuery: string,
+  works: string[],
+): Promise<VariantOutcome> {
+  const terms = grkQuery.trim().split(/\s+/).filter(Boolean).map(t => t.replace(/^\*+/, ''));
+  const empty: VariantOutcome = {
+    results: [], failedWorks: [], readings: [], productive: [], cappedFrom: 0,
+  };
+  if (terms.length < 2 || !works.length) return empty;
+
+  // Resolve each typed word to the headwords it can belong to.
+  const folds = terms.map(t => greekFold(t));
+  if (folds.some(f => !f)) return empty;
+  const perTerm: string[][] = [];
+  for (const fold of folds) {
+    const letter = /^[a-z]/.test(fold) ? fold[0] : '_';
+    let shard: Record<string, string[]> = {};
+    try {
+      shard = await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
+    } catch {
+      return empty;   // without the map there is nothing to widen with
+    }
+    perTerm.push(shard[fold] ?? []);
+  }
+  if (perTerm.some(options => !options.length)) return empty;
+
+  const { readings, total } = lemmaReadings(perTerm, VARIANT_READING_CAP);
+  const cappedFrom = total > readings.length ? total : 0;
+
+  const failedWorks: string[] = [];
+  const productiveKeys = new Set<string>();
+  const perWork = await pool(works, 8, async work => {
+    try {
+      const [meta, idx] = await Promise.all([
+        loadIndex<SegMeta[]>(work, 'meta.json'),
+        loadIndex<GrkIndex>(work, 'greek_lemma.json'),
+      ]);
+      // seg_idx -> the token positions any reading matched. A Set because two
+      // readings routinely land on the same token.
+      const bySeg = new Map<number, Set<number>>();
+      for (const reading of readings) {
+        const starts = phraseStarts(idx, reading);
+        if (starts.size) productiveKeys.add(reading.join(' '));
+        for (const [si, positions] of starts) {
+          let seen = bySeg.get(si);
+          if (!seen) { seen = new Set(); bySeg.set(si, seen); }
+          for (const start of positions) {
+            for (let k = 0; k < reading.length; k++) seen.add(start + k);
+          }
+        }
+      }
+      return [...bySeg.keys()].sort((a, b) => a - b).map(si => ({
+        work,
+        meta: meta[si],
+        grkMatch: true,
+        engMatch: false,
+        grkPositions: [...bySeg.get(si)!].sort((a, b) => a - b),
+      } as SearchResult));
+    } catch (err) {
+      console.warn(`searchPhraseVariants: skipping ${work} —`, err);
+      failedWorks.push(work);
+      return [] as SearchResult[];
+    }
+  });
+  if (failedWorks.length === works.length) {
+    throw new Error('Could not load the search index — check your connection and try again.');
+  }
+  return {
+    results: perWork.flat(),
+    failedWorks,
+    readings,
+    productive: readings.filter(r => productiveKeys.has(r.join(' '))),
+    cappedFrom,
+  };
 }
 
 // -- Combo search ---------------------------------------------------------

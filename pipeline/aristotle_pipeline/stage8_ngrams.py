@@ -32,6 +32,11 @@ Rules, none of them re-derived here:
     unimplementable. Each phrase records how many of its occurrences cross a
     chapter so the UI can say so.
 
+Also emits build/dist/lemma-map/<letter>.json — fold(surface) -> the headwords
+that surface can belong to. Not an n-gram artifact, but it needs the same
+corpus-wide pass, and it is what lets a typed phrase be widened to its inflected
+variants without the reader knowing any headwords.
+
 Both streams are indexed: `form` (the surface word as written) and `lemma`. A
 position licensing several lemmas contributes EVERY reading, not a chosen one —
 excluding a reading here would put it beyond the reach of any later filter.
@@ -100,6 +105,12 @@ def run() -> Path:
             "stage8: no per-work streams in build/ngrams — run stage6 for every work first"
         )
 
+    # fold(surface) -> the headwords that surface can belong to. Small (about
+    # 200 KB gzipped) and a by-product of the streams, but it is what lets a
+    # reader widen a typed phrase to its inflected variants without knowing any
+    # headwords — the barrier that otherwise makes the lemma index unusable to
+    # anyone not already thinking in dictionary forms.
+    surface_lemmas: dict[str, set] = defaultdict(set)
     counts: dict[str, Counter] = {s: Counter() for s in STREAMS}
     offsets: dict[str, dict[str, dict[str, list[int]]]] = {
         s: defaultdict(lambda: defaultdict(list)) for s in STREAMS
@@ -120,6 +131,9 @@ def run() -> Path:
             )
         books = [b["start"] for b in doc["book_bounds"]]
         chapters = {c["start"] for c in doc["chapter_bounds"]}
+        for surface, lemmas in zip(doc["form"], doc["lemma"]):
+            if surface and lemmas:
+                surface_lemmas[surface].update(lemmas)
 
         for stream_name in STREAMS:
             # One list of options per position, so both streams n-gram the
@@ -198,6 +212,23 @@ def run() -> Path:
             "shards": len(shards),
             "by_n": {str(n): by_n[n] for n in NS},
         }
+
+    # Sharded by fold-initial letter, like every other index here.
+    map_dir = BUILD_DIR / "dist" / "lemma-map"
+    map_dir.mkdir(parents=True, exist_ok=True)
+    for existing in map_dir.glob("*.json"):
+        existing.unlink()
+    map_shards: dict[str, dict] = defaultdict(dict)
+    for surface, lemmas in surface_lemmas.items():
+        map_shards[_shard_letter(surface)][surface] = sorted(lemmas)
+    for letter, data in map_shards.items():
+        (map_dir / f"{letter}.json").write_text(
+            json.dumps(data, ensure_ascii=False), encoding="utf-8"
+        )
+    summary["surface_forms"] = len(surface_lemmas)
+    summary["surface_forms_ambiguous"] = sum(
+        1 for v in surface_lemmas.values() if len(v) > 1
+    )
 
     (out_root / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     return out_root
