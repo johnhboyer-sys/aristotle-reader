@@ -4,6 +4,7 @@
     search,
     searchGrammar,
     searchCombo,
+    searchPhraseVariants,
     greekFold,
     COMBO_WINDOW_DEFAULT,
     COMBO_WINDOW_MAX,
@@ -73,6 +74,48 @@
   // Works whose chapter edges are line-precise only; set solely when the query
   // depends on chapter geometry, so it is never noise.
   let approximateChapters: string[] = [];
+
+  // Inflected variants of a typed phrase. Offered only for a Greek phrase
+  // searched by surface form, which is the case where finding the variants by
+  // hand means knowing every word's dictionary form.
+  let variantNote = '';
+  let variantBusy = false;
+  let variantsShown = false;
+  $: canWiden = !comboActive && !grammarActive && grkMode === 'phrase'
+    && matchMode === 'form' && grkQuery.trim().split(/\s+/).filter(Boolean).length > 1;
+
+  async function findVariants() {
+    variantBusy = true;
+    error = '';
+    try {
+      const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
+      const outcome = await searchPhraseVariants(searchCtx.grkQuery || grkQuery, works);
+      if (!outcome.results.length && !outcome.readings.length) {
+        variantNote = 'No dictionary form is recorded for one of these words, so there is nothing to widen.';
+        return;
+      }
+      failedWorks = outcome.failedWorks;
+      totalInstances = outcome.results.reduce((n, r) => n + instCount(r), 0);
+      pages = paginate(outcome.results);
+      searched = true;
+      variantsShown = true;
+      if (pages.length) await renderPage(0);
+      else { groups = []; pageIdx = 0; }
+      // Say what was actually searched. Two readings of one word routinely land
+      // on the same tokens — one passage under two parses — so the places are
+      // unioned, not added up, and the count below is places, not readings.
+      const readings = outcome.productive.length || outcome.readings.length;
+      variantNote =
+        `Showing every place this phrase stands under any dictionary form of its words`
+        + ` (${readings} reading${readings === 1 ? '' : 's'} matched`
+        + (outcome.cappedFrom ? `, of ${outcome.cappedFrom} possible — the rest were not tried` : '')
+        + ').';
+    } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+    } finally {
+      variantBusy = false;
+    }
+  }
   let showHelp = false;
   let helpModal: HTMLDivElement;
   let helpTrigger: HTMLElement | null = null;
@@ -775,6 +818,8 @@
     error = '';
     failedWorks = [];
     approximateChapters = [];
+    variantNote = '';
+    variantsShown = false;
     pageError = '';
     csvNote = '';
     searched = false;
@@ -1433,12 +1478,21 @@
             (searchCtx.grkAccentTerms.length ? ' before accent filtering' : '') +
             (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '')}
       </p>
+      {#if canWiden && !variantsShown}
+        <button type="button" class="export-btn" on:click={findVariants} disabled={variantBusy}
+          title="τὸ τί ἦν εἶναι also stands as τῷ τί ἦν εἶναι — same formula, different endings">
+          {variantBusy ? 'Looking…' : 'Also find inflected variants'}
+        </button>
+      {/if}
       {#if totalInstances > 0}
         <button type="button" class="export-btn" on:click={exportCsv} disabled={csvBusy}>
           {csvBusy ? 'Preparing CSV…' : 'Export results as CSV'}
         </button>
       {/if}
     </div>
+    {#if variantNote}
+      <p class="search-approximate">{variantNote}</p>
+    {/if}
     {#if csvNote}
       <p class="search-note">{csvNote}</p>
     {/if}
