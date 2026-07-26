@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "pipeline"))
 
 from aristotle_pipeline.stage5_lsj import derive_short_def
-from aristotle_pipeline.stage7_emit import merge_short_def
+from aristotle_pipeline.stage7_emit import merge_short_def, resolve_parses
 
 
 @pytest.mark.parametrize(
@@ -136,3 +136,31 @@ def test_merge_short_def_prefers_exact_key_when_multiple_candidates_match():
         ["test1", "test"],
         {"test1": "take the first fallback", "test": "take the exact entry"},
     ) == "take the exact entry"
+
+
+def test_resolve_parses_filters_on_morpheus_glosses_before_extending():
+    """A spurious LSJ-less reading is recognized by its gloss duplicating a
+    resolved sibling's — so the extension has to happen after the filter, or the
+    junk reading survives and can become the token's primary analysis."""
+    parses = [
+        {"lemma": "e)pimele/omai", "gloss": "take", "parse": "aor inf mp",
+         "lsj": ["e)pimele/omai"]},
+        {"lemma": "e)pimela/omai", "gloss": "take", "parse": "aor inf mp", "lsj": []},
+    ]
+    short_defs = {"e)pimele/omai": "take care of, have charge or management of"}
+
+    kept = resolve_parses(parses, short_defs)
+
+    assert [p["lemma"] for p in kept] == ["e)pimele/omai"]
+    assert kept[0]["gloss"] == "take care of, have charge or management of"
+
+
+def test_resolve_parses_keeps_a_distinct_unresolved_reading():
+    parses = [
+        {"lemma": "a", "gloss": "take", "parse": "p", "lsj": ["a"]},
+        {"lemma": "b", "gloss": "wholly other", "parse": "p", "lsj": []},
+    ]
+
+    kept = resolve_parses(parses, {"a": "take care of"})
+
+    assert [p["gloss"] for p in kept] == ["take care of", "wholly other"]
