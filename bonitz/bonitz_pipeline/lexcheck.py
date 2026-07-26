@@ -106,7 +106,11 @@ def judge(lig_word: str, forms: set[str]) -> tuple[str, str]:
     return 'unknown', f'neither {u} nor {o} is a corpus form'
 
 
-WORD_RE = re.compile(r'[^\W\d_]+', re.UNICODE)
+# Python's \w excludes combining marks, so a word splits wherever its accent
+# is a separate codepoint — which is exactly the ligature, ȣ having no
+# precomposed accented form. μιμȣ́μενον became μιμȣ + μενον, and the tail was
+# then judged as a word in its own right. Combining marks must be word chars.
+WORD_RE = re.compile(r'(?:[^\W\d_]|[\u0300-\u036F\u1DC0-\u1DFF])+', re.UNICODE)
 
 
 def sweep_column(page: int, col: str, forms: set[str]) -> list[dict]:

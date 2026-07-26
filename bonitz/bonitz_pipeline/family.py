@@ -25,7 +25,7 @@ from .batch3 import ROOT, parse_pages
 from .lexcheck import bare, nfc
 
 SMOOTH, ROUGH = '̓', '̔'
-WORD_RE = re.compile(r'[^\W\d_]+', re.UNICODE)
+from .lexcheck import WORD_RE  # combining marks are word chars
 STEM_LEN = 4
 
 

@@ -37,7 +37,7 @@ def crop(page: int, col: str, line: int, total: int) -> str | None:
     if im is None:
         return None
     y = (line - 0.5) / total * im.height
-    box = (0, max(0, int(y) - 260), 1400, min(im.height, int(y) + 260))
+    box = (0, max(0, int(y) - 170), 1400, min(im.height, int(y) + 170))
     buf = io.BytesIO()
     im.crop(box).convert('L').save(buf, 'PNG', optimize=True)
     return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()

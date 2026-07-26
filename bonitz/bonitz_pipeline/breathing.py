@@ -38,7 +38,7 @@ from pathlib import Path
 from .lexcheck import CORPUS, LSJ, ROOT, bare, nfc, parse_pages
 
 SMOOTH, ROUGH = '̓', '̔'
-WORD_RE = re.compile(r'[^\W\d_]+', re.UNICODE)
+from .lexcheck import WORD_RE  # combining marks are word chars
 # a breathing sits on an initial vowel or rho; the ou-ligature is excluded
 # deliberately — in this font it routinely takes an accent with no breathing
 # at all, so its bare form proves nothing about what the printer intended
