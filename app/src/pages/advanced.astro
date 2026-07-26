@@ -1,0 +1,470 @@
+---
+import ThemeInit from '../components/ThemeInit.astro';
+import Pwa from '../components/Pwa.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import { jsonLdSafe } from '../lib/jsonld';
+import '@shared/styles/global.css';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const title = 'Advanced search: a guide';
+const description =
+  'How to use the advanced search tools for Aristotle in Greek — wildcards,' +
+  ' grammatical search, proximity search, inflected variants, and the corpus' +
+  ' phrase index — with worked examples and an account of what each tool can' +
+  ' and cannot tell you.';
+const canonical = Astro.site ? new URL(`${base}/advanced/`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  name: title,
+  description,
+  ...(canonical ? { url: canonical } : {}),
+  isPartOf: { '@type': 'WebSite', name: 'The Aristotle Reader' },
+};
+// Every figure below was measured against this corpus. Keep them together so a
+// rebuild that changes the data has one place to correct.
+const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhrases: '390,238' };
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <ThemeInit />
+  <Pwa />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:site_name" content="The Aristotle Reader" />
+  {canonical && <meta property="og:url" content={canonical} />}
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+  <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="simple-header">
+    <div class="header-title">
+      <a class="home-link" href={`${base}/`}>Home</a>
+      <span class="title-sep">›</span>
+      <span class="header-static">Advanced search</span>
+    </div>
+    <nav class="header-actions" aria-label="Navigation">
+      <a href={`${base}/`} class="search-link">All works</a>
+      <a href={`${base}/lemma/`} class="search-link">Lexicon</a>
+      <a href={`${base}/search`} class="search-link">Search</a>
+      <a href={`${base}/phrases/`} class="search-link">Phrases</a>
+      <ThemeToggle />
+    </nav>
+  </header>
+
+  <main class="guide">
+    <p class="guide-eyebrow">A guide</p>
+    <h1>Advanced search</h1>
+    <p class="guide-lede">
+      Five tools for asking questions of Aristotle's Greek that a plain word
+      search cannot answer. You need no Greek to use most of them, and you can
+      read the sections in any order. Each number on this page comes from the
+      texts this site serves: {corpus.works} works, {corpus.tokens} Greek words.
+      Check any of them against the search itself.
+    </p>
+
+    <nav class="guide-toc" aria-label="On this page">
+      <ol>
+        <li><a href="#wildcards">Wildcards</a> — find a word you only partly know</li>
+        <li><a href="#variants">Word endings</a> — one phrase, all its forms</li>
+        <li><a href="#grammatical">Search by grammar</a> — find forms, not spellings</li>
+        <li><a href="#combo">Words near each other</a> — two ideas in one passage</li>
+        <li><a href="#phrases">The phrase index</a> — what Aristotle repeats</li>
+        <li><a href="#honesty">What these tools cannot tell you</a></li>
+      </ol>
+    </nav>
+
+    <section id="first">
+      <h2>First, two things worth knowing</h2>
+      <p>
+        <strong>Greek changes the ends of words.</strong> English mostly does not:
+        "virtue" looks the same wherever it stands. Greek changes the ending to
+        show the word's job — <span lang="grc">ἀρετή</span>,
+        <span lang="grc">ἀρετῆς</span>, <span lang="grc">ἀρετήν</span> are one
+        word doing three jobs. So a search for one spelling misses most of the
+        places that word occurs. Several of these tools exist to fix that.
+      </p>
+      <p>
+        <strong>You can type Greek in plain letters.</strong> With no Greek
+        keyboard, type the sounds instead — scholars call this Beta Code.
+        <code>texnh</code> gives <span lang="grc">τέχνη</span>. The search page
+        has a key to it, and this page shows examples both ways.
+      </p>
+      <p class="guide-note">
+        Numbers like <strong>1094a18</strong> are Bekker numbers, the standard way
+        of citing Aristotle. Most editions print them in the margin, so the same
+        number finds the same passage in any edition or translation. Results here
+        use them throughout.
+      </p>
+    </section>
+
+    <section id="wildcards">
+      <h2>Wildcards</h2>
+      <p class="guide-q">Use this when you know part of a word but not all of it.</p>
+      <p>
+        Type <code>*</code> to stand for any run of letters, or <code>?</code> for
+        exactly one letter. Both work in the middle of a word as well as at the
+        end.
+      </p>
+      <p>
+        A wildcard in the middle <em>narrows</em> a search. <code>l*</code>
+        reaches 70 different words; <code>l*s</code> reaches 35 — every word that
+        starts with λ and ends in ς, and no others. <code>l?gos</code> finds
+        <span lang="grc">λόγος</span> and <span lang="grc">λέγος</span> alone,
+        since <code>?</code> stands for one letter. <code>di*sun*</code> finds
+        <span lang="grc">δικαιοσύνη</span>, which helps when you half-remember a
+        long word.
+      </p>
+      <p class="guide-note">
+        One exception. A <code>*</code> at the <em>start</em> of a word is not a
+        wildcard: in Beta Code it marks a capital, so <code>*a)nqrwpos</code>
+        means <span lang="grc">Ἄνθρωπος</span> and the search reads it as that
+        exact word. You cannot search by word ending alone.
+      </p>
+    </section>
+
+    <section id="variants">
+      <h2>Word endings</h2>
+      <p class="guide-q">
+        Use this when you know a phrase but want every form of it, not just the
+        one you typed.
+      </p>
+      <p>
+        Since Greek changes word endings, an exact phrase search finds only the
+        version you typed. This tool finds the rest.
+      </p>
+      <p>
+        Take <span lang="grc">τὸ τί ἦν εἶναι</span> — a phrase Aristotle uses for
+        what a thing fundamentally is, usually translated "essence". Search it as
+        an exact phrase and you find <strong>102 passages</strong>. Press
+        <em>Find this phrase in any inflection</em> and you find
+        <strong>132</strong>. The extra thirty are the same phrase with a
+        different ending on its first word:
+        <span lang="grc">τῷ τί ἦν εἶναι</span>,
+        <span lang="grc">τοῦ τί ἦν εἶναι</span>. No exact search can reach them,
+        because the letters on the page are different.
+      </p>
+      <p>
+        To find them yourself you would need to know that
+        <span lang="grc">τό</span>, <span lang="grc">τῷ</span> and
+        <span lang="grc">τοῦ</span> are forms of one word, and that
+        <span lang="grc">ἦν</span> and <span lang="grc">εἶναι</span> both belong
+        to the verb "to be". The tool knows it for you. Type the words as they
+        stand on the page.
+      </p>
+      <p class="guide-note">
+        It invents nothing. <span lang="grc">κατὰ συμβεβηκός</span>
+        ("accidentally") goes from 329 passages to 329, because across all
+        {corpus.works} works that phrase takes one form only. A tool that always
+        found more would tell you nothing.
+      </p>
+    </section>
+
+    <section id="grammatical">
+      <h2>Search by grammar</h2>
+      <p class="guide-q">
+        Use this to find a kind of word rather than a particular word.
+      </p>
+      <p>
+        Every Greek word here carries a grammatical description: singular or
+        plural, past or present, and so on. You can search those descriptions
+        instead of the spelling. Pick as many as you like; a word must match them
+        all.
+      </p>
+      <p>
+        So you can ask for every optative (the form Greek uses for wishes and
+        possibilities — "would that it were"), every genitive plural, or every
+        preposition. You need not know how those forms are spelled. You pick the
+        description; the search finds the words.
+      </p>
+      <h3>Why some results say "one of several readings"</h3>
+      <p>
+        The same Greek letters can be two different forms. When that happens the
+        tool marks the result instead of choosing one for you.
+      </p>
+      <p>
+        Search the Nicomachean Ethics for optatives and you get 537 words. Of
+        those, 280 have one possible reading. The tool marks the other 257,
+        because you could read those letters another way. The mark shows no flaw
+        in the search. It reports a fact about the Greek.
+      </p>
+      <p>
+        A clearer case: ask for the genitive dual (the dual describes pairs of
+        things) and you get 31 results, <strong>none of them certain</strong>. In
+        the dual, genitive and dative share one ending. The search cannot tell
+        them apart because Greek does not, and it says so instead of deciding for
+        you.
+      </p>
+      <p class="guide-note">
+        You will find no option for "noun", "verb" or "adjective". We left it
+        out on purpose. The descriptions this site uses do not record parts of
+        speech, and we cannot work them out — a participle behaves as both verb
+        and noun, and nothing separates a noun from an adjective. Offering the
+        choice would mean making it up.
+      </p>
+    </section>
+
+    <section id="combo">
+      <h2>Words near each other</h2>
+      <p class="guide-q">
+        Use this to find where two ideas are discussed together.
+      </p>
+      <p>
+        Ask for two or more things close together in the text. Each slot takes an
+        exact phrase, a single word, a word in all its forms, or a grammatical
+        description, and you can mix them. "This word near a verb in the
+        optative" is a question you can put here.
+      </p>
+      <p>
+        In the Nicomachean Ethics, <span lang="grc">ἀρετή</span> ("virtue") and
+        <span lang="grc">ψυχή</span> ("soul") fall within ten words of each other
+        <strong>13 times</strong>, and share a line <strong>5 times</strong> —
+        among them 1139a17 and 1144a30, where Aristotle discusses the parts of the
+        soul and their virtues. Search either word alone and you get 273 and 44
+        passages to check.
+      </p>
+      <h3>The controls</h3>
+      <ul>
+        <li>
+          <strong>Window</strong> — how close is close. Five words by default,
+          which is about half a line of Greek. You can widen it to 50, about five
+          lines.
+        </li>
+        <li>
+          <strong>Measured in</strong> — count that distance in words, or ask
+          instead for the same line or the same chapter.
+        </li>
+        <li>
+          <strong>Relative to the first term</strong> — you can require a term to
+          come before or after the first one, rather than simply near it.
+        </li>
+        <li>
+          <strong>In this order</strong> — everything must appear in the order you
+          typed it.
+        </li>
+      </ul>
+      <p class="guide-note">
+        A match never crosses from one book into the next, however wide the
+        window: the last words of one book and the first of the next are not near
+        each other in any useful sense. Matches do cross chapter boundaries by
+        default, since an argument often runs through one, but you can turn that
+        off.
+      </p>
+    </section>
+
+    <section id="phrases">
+      <h2>The phrase index</h2>
+      <p class="guide-q">
+        Use this when you do not yet know what to look for.
+      </p>
+      <p>
+        Search answers "where does this occur?" The
+        <a href={`${base}/phrases/`}>phrase index</a> answers a different
+        question: <em>what does Aristotle repeat?</em> It lists every phrase of two
+        to five words that appears at least twice anywhere in his works —
+        {corpus.formPhrases} of them as written, and {corpus.lemmaPhrases} when
+        forms of the same word count together. (If you have met the
+        term, these are what linguists call n-grams.)
+      </p>
+      <p>
+        This matters because much of Aristotle's technical vocabulary consists of
+        set phrases rather than single words, and no word search will show them
+        to you:
+        <span lang="grc">ὡς ἐπὶ τὸ πολύ</span> ("for the most part") occurs 204
+        times across 22 of the {corpus.works} works;
+        <span lang="grc">τὸ τί ἦν εἶναι</span> ("essence") 103 times;
+        <span lang="grc">κατὰ συμβεβηκός</span> ("accidentally") 329 times across
+        25 works. Not one of those is a word. Each is an idea, and browsing is the
+        only way to meet them.
+      </p>
+      <h3>Reading the list</h3>
+      <ul>
+        <li>
+          <strong>As written, or by dictionary form.</strong> The first lists
+          phrases exactly as they appear. The second gathers the different
+          endings of one phrase together, which finds more but is harder to read —
+          in dictionary form, <span lang="grc">τὸ τί ἦν εἶναι</span> comes out as
+          <span lang="grc">ὁ τίς εἰμί εἰμί</span>.
+        </li>
+        <li>
+          <strong>Distinctiveness</strong> orders the list by default. It asks
+          whether a phrase occurs more often than the commonness of its words
+          would lead you to expect. That is why
+          <span lang="grc">κατὰ συμβεβηκός</span> comes near the top of the κ list
+          and <span lang="grc">καὶ τό</span> ("and the") does not, though "and
+          the" occurs eleven times as often. Sort by plain frequency and you see
+          the grammar of Greek rather than the thought of Aristotle.
+        </li>
+        <li>
+          <strong>Filters</strong> narrow the list by phrase length, by how often
+          a phrase occurs, and by which work it appears in. Sorting never removes
+          anything — it only changes the order.
+        </li>
+      </ul>
+      <p>
+        Click any phrase to see every place it occurs, grouped by work, each one
+        linked to that passage in the reader.
+      </p>
+      <h3>A way to use it</h3>
+      <p>
+        Pick the work you are reading and a phrase length of four or five, then
+        sort by distinctiveness. You get that work's set expressions — often the
+        technical vocabulary of its argument, including phrases no glossary would
+        have sent you to look for. Click one to see where else in Aristotle it
+        stands.
+      </p>
+    </section>
+
+    <section id="honesty">
+      <h2>What these tools cannot tell you</h2>
+      <p>
+        All of this depends on a word-by-word grammatical description of the
+        Greek, and that description is often uncertain. Where it is, these tools
+        say so rather than choose an answer and present it as fact. The limits
+        worth knowing:
+      </p>
+      <ul>
+        <li>
+          A result marked as having several possible readings comes from a form
+          the description cannot settle. Of the words that have a case, about half
+          leave it open which case that is.
+        </li>
+        <li>
+          Searches ignore accents, so <span lang="grc">λόγος</span> and
+          <span lang="grc">λογός</span> count as one word. The search page has a
+          setting to match accents exactly.
+        </li>
+        <li>
+          The phrase index shows Greek without accents, because it does not
+          record them. We do not guess them.
+        </li>
+        <li>
+          Later editors made the chapter divisions, not Aristotle. In most works
+          we know where a chapter begins to the exact word; in Categories and De
+          Interpretatione we know it only to the line, and any search that turns
+          on chapter boundaries says so when those works are involved.
+        </li>
+        <li>
+          An exact phrase search cannot match across the boundary between two
+          columns of the printed text; the phrase index and the proximity search
+          can. This is why the index counts
+          <span lang="grc">τὸ τί ἦν εἶναι</span> 103 times while an exact search
+          finds 102. One occurrence straddles a column break.
+        </li>
+        <li>
+          None of these tools reads Greek. They match forms and count them. What
+          a passage means remains your work.
+        </li>
+      </ul>
+      <p class="guide-note">
+        The Greek text is the TLG. The grammatical descriptions come from
+        Morpheus, by way of Diogenes; the dictionary is Liddell–Scott–Jones.
+      </p>
+    </section>
+
+    <p class="guide-back">
+      <a href={`${base}/search`}>Back to search</a> ·
+      <a href={`${base}/phrases/`}>Browse phrases</a>
+    </p>
+  </main>
+</body>
+</html>
+
+<style>
+  .guide {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 4rem;
+    font-family: var(--font-english);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .guide-eyebrow {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    margin: 0 0 0.2rem;
+  }
+  .guide h1 {
+    font-size: 2rem;
+    margin: 0 0 0.6rem;
+    line-height: 1.15;
+  }
+  .guide-lede {
+    font-size: 1.05rem;
+    color: var(--text-mid);
+    margin: 0 0 2rem;
+  }
+  .guide-toc {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 2.5rem;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+  }
+  .guide-toc ol { margin: 0; padding-left: 1.2rem; }
+  .guide-toc li { margin: 0.3rem 0; color: var(--text-mid); }
+  .guide-toc a { color: var(--accent); font-weight: 600; }
+  .guide section { margin-bottom: 2.75rem; scroll-margin-top: 1rem; }
+  .guide h2 {
+    font-size: 1.4rem;
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .guide h3 {
+    font-size: 1.05rem;
+    margin: 1.5rem 0 0.5rem;
+  }
+  .guide p { margin: 0 0 0.9rem; }
+  .guide ul { margin: 0 0 0.9rem; padding-left: 1.2rem; }
+  .guide li { margin: 0.45rem 0; }
+  .guide code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9em;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.05em 0.3em;
+  }
+  .guide [lang='grc'] { font-family: var(--font-greek); }
+  /* A limit or caveat, set apart so it reads as part of the account rather
+     than small print. */
+  .guide-note {
+    border-left: 2px solid var(--border);
+    padding: 0.15rem 0 0.15rem 0.8rem;
+    color: var(--text-mid);
+    font-size: 0.95rem;
+  }
+  .guide-back {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+  }
+  @media (max-width: 640px) {
+    .guide h1 { font-size: 1.6rem; }
+  }
+</style>

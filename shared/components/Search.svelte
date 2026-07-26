@@ -31,6 +31,8 @@
   import { escapeRe, highlightPrefixMatches, searchTermPrefix } from '../lib/text';
   import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
 
+  const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
+
   // One match occurrence, located precisely enough to label and jump to.
   interface Instance {
     lang: 'grk' | 'eng';
@@ -296,12 +298,18 @@
     .map((editor) => comboSlot(editor, comboOrdered))
     .filter((slot): slot is ComboSlot => slot !== null);
   $: comboActive = comboSearchSlots.length >= 2;
+  let advancedOpen = false;
+  $: if (grammarActive || comboActive) advancedOpen = true;
   $: comboOptions = {
     window: comboWindow,
     unit: comboUnit,
     ordered: comboOrdered,
     crossChapter: comboCrossChapter,
   } satisfies ComboOptions;
+
+  function toggleAdvanced() {
+    advancedOpen = grammarActive || comboActive ? true : !advancedOpen;
+  }
 
   function setComboKind(id: number, kind: SlotKind) {
     const index = comboEditors.findIndex((slot) => slot.id === id);
@@ -713,9 +721,8 @@
     if (ctx.grkQuery) qs.set('hlg', ctx.grkQuery);
     if (ctx.engQuery) qs.set('hle', ctx.engQuery);
     const base = qs.toString();
-    const root = import.meta.env.BASE_URL.replace(/\/$/, '');
     const jumpFor = (work: string, book: number, column: string, line: number) =>
-      `${root}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+      `${BASE_URL}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${line}`;
 
     for (const r of results) {
       const seg = segMap.get(`${r.work}:${r.meta.id}`);
@@ -1051,256 +1058,282 @@
       </fieldset>
     </div>
 
-    <details class="grammar-panel" open={grammarActive}>
-      <summary>
-        Grammatical form
-        {#if grammarActive}<span class="grammar-active">{grammarLabel}</span>{/if}
-      </summary>
-      <p class="grammar-note">
-        Finds every word with these features, whatever its dictionary form. This
-        searches on its own — it ignores the Greek and English boxes above.
-        Many Greek forms carry more than one possible parse; where the analysis
-        does not settle it, the result says so rather than picking one.
-      </p>
-      <div class="grammar-grid">
-        {#each GRAMMAR_CATEGORIES as cat}
-          <label class="grammar-field">
-            <span>{cat.label}</span>
-            <select
-              value={grammarQuery[cat.key] ?? ''}
-              disabled={comboActive}
-              on:change={(e) => setGrammar(cat.key, e.currentTarget.value)}
-            >
-              <option value="">any</option>
-              {#each cat.values as v}<option value={v}>{v}</option>{/each}
-            </select>
-          </label>
-        {/each}
+    <div class="advanced-panel">
+      <div class="advanced-head">
+        <button
+          type="button"
+          class="advanced-trigger"
+          aria-expanded={advancedOpen}
+          aria-controls="advanced-tools"
+          on:click={toggleAdvanced}
+        >
+          Advanced search <span aria-hidden="true">{advancedOpen ? '▴' : '▾'}</span>
+        </button>
+        <a
+          class="guide-link"
+          href={`${BASE_URL}/advanced`}
+          target="_blank"
+          rel="noreferrer"
+        >What these tools do</a>
       </div>
-      {#if grammarActive}
-        <button type="button" class="grammar-clear" on:click={clearGrammar}>Clear grammatical form</button>
-      {/if}
-    </details>
-
-    <details class="combo-panel" open={comboActive}>
-      <summary>
-        Combo search
-        {#if comboActive}<span class="combo-active">{comboSearchSlots.length} terms ready</span>{/if}
-      </summary>
-
-      <div class="combo-slots">
-        {#each comboEditors as slot, slotIndex (slot.id)}
-          <section class="combo-slot" aria-labelledby={`combo-slot-${slot.id}`}>
-            <div class="combo-slot-head">
-              <span id={`combo-slot-${slot.id}`} class="combo-slot-number">Term {slotIndex + 1}</span>
-              <label class="combo-kind">
-                <span>Kind</span>
-                <select
-                  value={slot.kind}
-                  aria-label={`Kind for term ${slotIndex + 1}`}
-                  on:change={(e) => setComboKind(slot.id, e.currentTarget.value as SlotKind)}
-                >
-                  <option value="phrase">Phrase</option>
-                  <option value="form">Form</option>
-                  <option value="lemma">Lemma</option>
-                  <option value="grammatical">Grammatical</option>
-                </select>
-              </label>
-              {#if slotIndex > 0}
-                <!-- Placed against term 1, not against the term above it, so
-                     each answers "before or after the word I am studying?".
-                     The order lock is the stronger whole-query constraint and
-                     supersedes these. -->
-                <label class="combo-kind">
-                  <span>Relative to term 1</span>
+      {#if advancedOpen}
+        <div id="advanced-tools" class="advanced-body">
+          <details class="grammar-panel" open={grammarActive}>
+            <summary>
+              Grammatical form
+              {#if grammarActive}<span class="grammar-active">{grammarLabel}</span>{/if}
+            </summary>
+            <p class="grammar-note">
+              Finds every word with these features, whatever its dictionary form.
+              This searches on its own — it ignores the Greek and English boxes
+              above. <a class="guide-link" href={`${BASE_URL}/advanced#grammatical`} target="_blank" rel="noreferrer">What is this?</a>
+              Many Greek forms carry more than one possible parse; where the
+              analysis does not settle it, the result says so rather than picking
+              one.
+            </p>
+            <div class="grammar-grid">
+              {#each GRAMMAR_CATEGORIES as cat}
+                <label class="grammar-field">
+                  <span>{cat.label}</span>
                   <select
-                    value={slot.relation}
-                    disabled={comboOrdered}
-                    aria-label={`Position of term ${slotIndex + 1} relative to term 1`}
-                    on:change={(e) => setComboRelation(slot.id, e.currentTarget.value as SlotRelation)}
+                    value={grammarQuery[cat.key] ?? ''}
+                    disabled={comboActive}
+                    on:change={(e) => setGrammar(cat.key, e.currentTarget.value)}
                   >
-                    <option value="near">Near</option>
-                    <option value="before">Before</option>
-                    <option value="after">After</option>
+                    <option value="">any</option>
+                    {#each cat.values as v}<option value={v}>{v}</option>{/each}
                   </select>
                 </label>
-              {/if}
-              <button
-                type="button"
-                class="combo-remove"
-                disabled={comboEditors.length <= 2}
-                aria-label={`Remove term ${slotIndex + 1}`}
-                on:click={() => removeComboEditor(slot.id)}
-              >Remove</button>
+              {/each}
             </div>
+            {#if grammarActive}
+              <button type="button" class="grammar-clear" on:click={clearGrammar}>Clear grammatical form</button>
+            {/if}
+          </details>
 
-            {#if slot.kind === 'phrase'}
-              <label class="combo-text-field" for={`combo-text-${slot.id}`}>
-                <span>Phrase tokens</span>
-                <input
-                  id={`combo-text-${slot.id}`}
-                  lang="grc"
-                  type="text"
-                  value={slot.text}
-                  on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
-                  autocomplete="off"
-                  autocorrect="off"
-                  autocapitalize="none"
-                  spellcheck="false"
-                />
-              </label>
-            {:else if slot.kind === 'form'}
-              <label class="combo-text-field" for={`combo-text-${slot.id}`}>
-                <span>Surface form</span>
-                <input
-                  id={`combo-text-${slot.id}`}
-                  lang="grc"
-                  type="text"
-                  value={slot.text}
-                  on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
-                  autocomplete="off"
-                  autocorrect="off"
-                  autocapitalize="none"
-                  spellcheck="false"
-                />
-              </label>
-            {:else if slot.kind === 'lemma'}
-              <label class="combo-text-field" for={`combo-lemma-${slot.id}`}>
-                <span>Find a lemma</span>
-                <input
-                  id={`combo-lemma-${slot.id}`}
-                  lang="grc"
-                  type="search"
-                  value={slot.lemmaInput}
-                  on:input={(e) => searchLemmaChoices(slot.id, e.currentTarget.value)}
-                  autocomplete="off"
-                  autocorrect="off"
-                  autocapitalize="none"
-                  spellcheck="false"
-                />
-              </label>
+          <details class="combo-panel" open={comboActive}>
+            <summary>
+              Combo search
+              {#if comboActive}<span class="combo-active">{comboSearchSlots.length} terms ready</span>{/if}
+            </summary>
 
-              {#if slot.picked.length}
-                <div class="lemma-chips" aria-label={`Picked lemmas for term ${slotIndex + 1}`}>
-                  {#each slot.picked as key}
-                    <button
-                      type="button"
-                      class="lemma-chip"
-                      aria-label={`Remove picked lemma ${key}`}
-                      on:click={() => toggleComboLemma(slot.id, key)}
-                    >{key} <span aria-hidden="true">×</span></button>
-                  {/each}
-                </div>
-              {/if}
-
-              {#if slot.lemmaLoading}
-                <p class="lemma-status" aria-live="polite">Loading lemmas…</p>
-              {:else if slot.lemmaError}
-                <p class="lemma-status lemma-error" role="alert">{slot.lemmaError}</p>
-              {:else if slot.lemmaInput.trim() && slot.lemmaMatches.length === 0}
-                <p class="lemma-status">No lemmas start with that text.</p>
-              {:else if slot.lemmaMatches.length}
-                <div class="lemma-candidates" role="group" aria-label={`Lemma choices for term ${slotIndex + 1}`}>
-                  <!-- One choice per fold key, not per headword. The index is
-                       accent-folded, so ὅρος, ὄρος and ὀρός are a single key
-                       and no search can separate them; offering them as three
-                       ticks would promise a distinction that does not exist. -->
-                  {#each slot.lemmaMatches as match (match.key)}
-                    {#if match.candidates.length}
-                      <label class="lemma-candidate" use:glossOnMount={match.candidates.find((c) => c.s)?.s}>
-                        <input
-                          type="checkbox"
-                          checked={slot.picked.includes(match.key)}
-                          aria-label={`Select ${match.candidates.map((c) => c.h).join(', ')}, lemma key ${match.key}`}
-                          on:change={() => toggleComboLemma(slot.id, match.key)}
-                        />
-                        <span class="lemma-head" lang="grc">{match.candidates.map((c) => c.h).join(' · ')}</span>
-                        <span class="lemma-key">{match.key}</span>
-                        <span class="lemma-frequency">{match.count}×</span>
-                        {#if match.candidates.length > 1}
-                          <span class="lemma-shared">searched together — the accent-folded index cannot separate them</span>
-                        {/if}
-                        {#each match.candidates.filter((c) => c.s && lemmaGlosses[c.s]?.length).slice(0, 1) as glossed}
-                          <span class="lemma-gloss">{lemmaGlosses[glossed.s!].slice(0, 2).join('; ')}</span>
-                        {/each}
-                      </label>
-                    {:else}
-                      <label class="lemma-candidate">
-                        <input
-                          type="checkbox"
-                          checked={slot.picked.includes(match.key)}
-                          aria-label={`Select unresolved lemma key ${match.key}`}
-                          on:change={() => toggleComboLemma(slot.id, match.key)}
-                        />
-                        <span class="lemma-head unresolved">{match.key}</span>
-                        <span class="lemma-key">unresolved headword</span>
+            <div class="combo-slots">
+              {#each comboEditors as slot, slotIndex (slot.id)}
+                <section class="combo-slot" aria-labelledby={`combo-slot-${slot.id}`}>
+                  <div class="combo-slot-head">
+                    <span id={`combo-slot-${slot.id}`} class="combo-slot-number">Term {slotIndex + 1}</span>
+                    <label class="combo-kind">
+                      <span>Kind</span>
+                      <select
+                        value={slot.kind}
+                        aria-label={`Kind for term ${slotIndex + 1}`}
+                        on:change={(e) => setComboKind(slot.id, e.currentTarget.value as SlotKind)}
+                      >
+                        <option value="phrase">Phrase</option>
+                        <option value="form">Form</option>
+                        <option value="lemma">Lemma</option>
+                        <option value="grammatical">Grammatical</option>
+                      </select>
+                    </label>
+                    {#if slotIndex > 0}
+                      <!-- Placed against term 1, not against the term above it, so
+                           each answers "before or after the word I am studying?".
+                           The order lock is the stronger whole-query constraint and
+                           supersedes these. -->
+                      <label class="combo-kind">
+                        <span>Relative to term 1</span>
+                        <select
+                          value={slot.relation}
+                          disabled={comboOrdered}
+                          aria-label={`Position of term ${slotIndex + 1} relative to term 1`}
+                          on:change={(e) => setComboRelation(slot.id, e.currentTarget.value as SlotRelation)}
+                        >
+                          <option value="near">Near</option>
+                          <option value="before">Before</option>
+                          <option value="after">After</option>
+                        </select>
                       </label>
                     {/if}
-                  {/each}
-                </div>
-                {#if slot.lemmaCapped}
-                  <p class="lemma-status">Showing the first 30 matching lemma keys. Type more to narrow the list.</p>
-                {/if}
-              {/if}
-            {:else}
-              <div class="combo-grammar-grid">
-                {#each GRAMMAR_CATEGORIES as cat}
-                  <label class="grammar-field">
-                    <span>{cat.label}</span>
-                    <select
-                      value={slot.grammar[cat.key] ?? ''}
-                      on:change={(e) => setComboGrammar(slot.id, cat.key, e.currentTarget.value)}
-                    >
-                      <option value="">any</option>
-                      {#each cat.values as v}<option value={v}>{v}</option>{/each}
-                    </select>
-                  </label>
-                {/each}
-              </div>
-            {/if}
-          </section>
-        {/each}
-      </div>
+                    <button
+                      type="button"
+                      class="combo-remove"
+                      disabled={comboEditors.length <= 2}
+                      aria-label={`Remove term ${slotIndex + 1}`}
+                      on:click={() => removeComboEditor(slot.id)}
+                    >Remove</button>
+                  </div>
 
-      <button
-        type="button"
-        class="combo-add"
-        disabled={comboEditors.length >= 4}
-        on:click={addComboEditor}
-      >Add term</button>
+                  {#if slot.kind === 'phrase'}
+                    <label class="combo-text-field" for={`combo-text-${slot.id}`}>
+                      <span>Phrase tokens</span>
+                      <input
+                        id={`combo-text-${slot.id}`}
+                        lang="grc"
+                        type="text"
+                        value={slot.text}
+                        on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                      />
+                    </label>
+                  {:else if slot.kind === 'form'}
+                    <label class="combo-text-field" for={`combo-text-${slot.id}`}>
+                      <span>Surface form</span>
+                      <input
+                        id={`combo-text-${slot.id}`}
+                        lang="grc"
+                        type="text"
+                        value={slot.text}
+                        on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                      />
+                    </label>
+                  {:else if slot.kind === 'lemma'}
+                    <label class="combo-text-field" for={`combo-lemma-${slot.id}`}>
+                      <span>Find a lemma</span>
+                      <input
+                        id={`combo-lemma-${slot.id}`}
+                        lang="grc"
+                        type="search"
+                        value={slot.lemmaInput}
+                        on:input={(e) => searchLemmaChoices(slot.id, e.currentTarget.value)}
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                      />
+                    </label>
 
-      <div class="combo-proximity">
-        <label class="combo-option combo-window">
-          <span>Window (words)</span>
-          <input
-            type="number"
-            min="1"
-            max={COMBO_WINDOW_MAX}
-            bind:value={comboWindow}
-            disabled={comboUnit !== 'words'}
-            on:blur={clampComboWindow}
-          />
-        </label>
-        <label class="combo-option">
-          <span>Unit</span>
-          <select bind:value={comboUnit}>
-            <option value="words">Words</option>
-            <option value="line">Same line</option>
-            <option value="chapter">Same chapter</option>
-          </select>
-        </label>
-        <label class="combo-check"><input type="checkbox" bind:checked={comboOrdered} /> In this order</label>
-        <label class="combo-check"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
-      </div>
+                    {#if slot.picked.length}
+                      <div class="lemma-chips" aria-label={`Picked lemmas for term ${slotIndex + 1}`}>
+                        {#each slot.picked as key}
+                          <button
+                            type="button"
+                            class="lemma-chip"
+                            aria-label={`Remove picked lemma ${key}`}
+                            on:click={() => toggleComboLemma(slot.id, key)}
+                          >{key} <span aria-hidden="true">×</span></button>
+                        {/each}
+                      </div>
+                    {/if}
 
-      <p class="combo-note">
-        Combo search runs on its own and ignores the Greek and English boxes.
-        Every term after the first can be placed near, before or after term 1;
-        the order lock is stronger and overrides those. A window never spans a
-        book boundary. Where a slot rests on an ambiguous parse, the hit is
-        reported as one-of-N.
-      </p>
-    </details>
+                    {#if slot.lemmaLoading}
+                      <p class="lemma-status" aria-live="polite">Loading lemmas…</p>
+                    {:else if slot.lemmaError}
+                      <p class="lemma-status lemma-error" role="alert">{slot.lemmaError}</p>
+                    {:else if slot.lemmaInput.trim() && slot.lemmaMatches.length === 0}
+                      <p class="lemma-status">No lemmas start with that text.</p>
+                    {:else if slot.lemmaMatches.length}
+                      <div class="lemma-candidates" role="group" aria-label={`Lemma choices for term ${slotIndex + 1}`}>
+                        <!-- One choice per fold key, not per headword. The index is
+                             accent-folded, so ὅρος, ὄρος and ὀρός are a single key
+                             and no search can separate them; offering them as three
+                             ticks would promise a distinction that does not exist. -->
+                        {#each slot.lemmaMatches as match (match.key)}
+                          {#if match.candidates.length}
+                            <label class="lemma-candidate" use:glossOnMount={match.candidates.find((c) => c.s)?.s}>
+                              <input
+                                type="checkbox"
+                                checked={slot.picked.includes(match.key)}
+                                aria-label={`Select ${match.candidates.map((c) => c.h).join(', ')}, lemma key ${match.key}`}
+                                on:change={() => toggleComboLemma(slot.id, match.key)}
+                              />
+                              <span class="lemma-head" lang="grc">{match.candidates.map((c) => c.h).join(' · ')}</span>
+                              <span class="lemma-key">{match.key}</span>
+                              <span class="lemma-frequency">{match.count}×</span>
+                              {#if match.candidates.length > 1}
+                                <span class="lemma-shared">searched together — the accent-folded index cannot separate them</span>
+                              {/if}
+                              {#each match.candidates.filter((c) => c.s && lemmaGlosses[c.s]?.length).slice(0, 1) as glossed}
+                                <span class="lemma-gloss">{lemmaGlosses[glossed.s!].slice(0, 2).join('; ')}</span>
+                              {/each}
+                            </label>
+                          {:else}
+                            <label class="lemma-candidate">
+                              <input
+                                type="checkbox"
+                                checked={slot.picked.includes(match.key)}
+                                aria-label={`Select unresolved lemma key ${match.key}`}
+                                on:change={() => toggleComboLemma(slot.id, match.key)}
+                              />
+                              <span class="lemma-head unresolved">{match.key}</span>
+                              <span class="lemma-key">unresolved headword</span>
+                            </label>
+                          {/if}
+                        {/each}
+                      </div>
+                      {#if slot.lemmaCapped}
+                        <p class="lemma-status">Showing the first 30 matching lemma keys. Type more to narrow the list.</p>
+                      {/if}
+                    {/if}
+                  {:else}
+                    <div class="combo-grammar-grid">
+                      {#each GRAMMAR_CATEGORIES as cat}
+                        <label class="grammar-field">
+                          <span>{cat.label}</span>
+                          <select
+                            value={slot.grammar[cat.key] ?? ''}
+                            on:change={(e) => setComboGrammar(slot.id, cat.key, e.currentTarget.value)}
+                          >
+                            <option value="">any</option>
+                            {#each cat.values as v}<option value={v}>{v}</option>{/each}
+                          </select>
+                        </label>
+                      {/each}
+                    </div>
+                  {/if}
+                </section>
+              {/each}
+            </div>
+
+            <button
+              type="button"
+              class="combo-add"
+              disabled={comboEditors.length >= 4}
+              on:click={addComboEditor}
+            >Add term</button>
+
+            <div class="combo-proximity">
+              <label class="combo-option combo-window">
+                <span>Window (words)</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={COMBO_WINDOW_MAX}
+                  bind:value={comboWindow}
+                  disabled={comboUnit !== 'words'}
+                  on:blur={clampComboWindow}
+                />
+              </label>
+              <label class="combo-option">
+                <span>Unit</span>
+                <select bind:value={comboUnit}>
+                  <option value="words">Words</option>
+                  <option value="line">Same line</option>
+                  <option value="chapter">Same chapter</option>
+                </select>
+              </label>
+              <label class="combo-check"><input type="checkbox" bind:checked={comboOrdered} /> In this order</label>
+              <label class="combo-check"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
+            </div>
+
+            <p class="combo-note">
+              Combo search runs on its own and ignores the Greek and English
+              boxes. <a class="guide-link" href={`${BASE_URL}/advanced#combo`} target="_blank" rel="noreferrer">What is this?</a>
+              Every term after the first can be placed near, before or after term
+              1; the order lock is stronger and overrides those. A window never
+              spans a book boundary. Where a slot rests on an ambiguous parse,
+              the hit is reported as one-of-N. <a class="guide-link" href={`${BASE_URL}/advanced#honesty`} target="_blank" rel="noreferrer">What is this?</a>
+            </p>
+          </details>
+        </div>
+      {/if}
+    </div>
 
     <div class="query-row">
       <label class="query-label" for="eng-input">English</label>
@@ -1404,6 +1437,7 @@
     <p class="search-hint">
       Type Greek in Greek letters or <button type="button" class="link-btn" on:click={openHelp}>Beta Code</button>
       (<code>texnh</code> = τέχνη). <code>*</code> matches any run of characters; <code>?</code> matches exactly one.
+      <a class="guide-link" href={`${BASE_URL}/advanced#wildcards`} target="_blank" rel="noreferrer">What is this?</a>
       Use either inside or at the end of a word, in Greek or English. At the start,
       <code>*</code> is read as the Beta Code capital marker and ignored — there is no suffix wildcard.
     </p>
@@ -1495,6 +1529,7 @@
           title="τὸ τί ἦν εἶναι also stands as τῷ τί ἦν εἶναι — same formula, different endings">
           {variantBusy ? 'Looking…' : 'Find this phrase in any inflection'}
         </button>
+        <a class="guide-link result-guide" href={`${BASE_URL}/advanced#variants`} target="_blank" rel="noreferrer">What is this?</a>
       {/if}
       {#if totalInstances > 0}
         <button type="button" class="export-btn" on:click={exportCsv} disabled={csvBusy}>
@@ -1648,9 +1683,37 @@
     margin: -0.3rem 0 0.1rem 4.25rem;  /* align under the input, past the label */
   }
 
+  .advanced-panel {
+    margin: 0.35rem 0 0.1rem 4.25rem;
+    font-family: var(--font-ui);
+  }
+  .advanced-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .advanced-trigger {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text-mid);
+  }
+  .advanced-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 0.55rem;
+  }
+
   /* --- Grammatical form panel ------------------------------------------- */
   .grammar-panel {
-    margin: 0.35rem 0 0.1rem 4.25rem;  /* align under the inputs, past the label */
+    margin: 0;
     border: 1px solid var(--border);
     border-radius: 5px;
     background: var(--input-bg);
@@ -1712,7 +1775,7 @@
 
   /* --- Combo search panel ----------------------------------------------- */
   .combo-panel {
-    margin: 0.35rem 0 0.1rem 4.25rem;
+    margin: 0;
     border: 1px solid var(--border);
     border-radius: 5px;
     background: var(--input-bg);
@@ -2131,6 +2194,16 @@
     cursor: pointer;
     text-decoration: underline;
   }
+  .guide-link {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--text-light);
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+  .guide-link:hover { color: var(--accent); }
 
   /* --- Help modal --- */
   .help-backdrop {
@@ -2504,7 +2577,7 @@
     .query-row { flex-direction: column; align-items: stretch; }
     .query-label { width: auto; }
     .below-query { margin-left: 0; gap: 0.75rem; }
-    .combo-panel { margin-left: 0; }
+    .advanced-panel { margin-left: 0; }
     .combo-slot-head { flex-wrap: wrap; }
     .combo-kind { margin-left: 0; }
     .lemma-candidate { grid-template-columns: auto minmax(5rem, 1fr) auto; }

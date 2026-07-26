@@ -328,6 +328,7 @@
       Browse every recurrent two- to five-word phrase in the corpus: 173,617
       surface-form phrases and 390,238 dictionary-form phrases, each occurring
       at least twice.
+      <a class="guide-link" href={`${BASE_URL}/advanced#phrases`} target="_blank" rel="noreferrer">What is this?</a>
     </p>
   </header>
 
@@ -626,6 +627,18 @@
     font-size: 1rem;
     line-height: 1.55;
     color: var(--text-mid);
+  }
+
+  .guide-link {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    color: var(--text-light);
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+
+  .guide-link:hover {
+    color: var(--accent);
   }
 
   .phrase-panel {
