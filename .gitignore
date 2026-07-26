@@ -52,3 +52,6 @@ app/src/data/
 # (Clarendon, 1963): the Bekker-key guide + a local-only third translation.
 sources/cat-ackrill/
 sources/int-ackrill/
+
+# Playwright MCP scratch (browser snapshots/console logs from a verification run)
+.playwright-mcp/
