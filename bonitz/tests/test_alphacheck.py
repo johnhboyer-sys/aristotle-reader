@@ -1,0 +1,34 @@
+"""Headwords run in alphabetical order, so a misread one falls out of the run.
+
+Ground truth is p051-L:16, where the printed line reads
+    ἀμυργοὶ λαμπτῆρες (Emped 222, v l ἀμοργȣ́ς)
+The variant cited in the line is ἀμοργȣ́ς, so the headword is ἀμοργοί and the
+υ is a misreading. No lexical test sees it — ἀμυργοί and ἀμοργοί are both
+unattested in our corpus — but the alphabetical position is decisive: ἀμοργ-
+belongs between ἄμορφος and ἀμουσία, which is exactly where it sits.
+"""
+
+from bonitz_pipeline.alphacheck import scan, sort_key
+
+
+def test_sort_key_spells_out_the_ligature():
+    """ἀκολȣθ- must file where ἀκολουθ- belongs, not after ω."""
+    assert sort_key('ἀκολȣθεῖ') == sort_key('ἀκολουθει')
+    assert sort_key('ἀκολȣθεῖ') < sort_key('ἀκρα')
+
+
+def test_sort_key_ignores_accent_breathing_and_final_sigma():
+    assert sort_key('ἅμα') == sort_key('αμα')
+    assert sort_key('ἀλιεύς') == sort_key('αλιευσ')
+
+
+def test_a_single_misplaced_word_is_reported_alone():
+    """The LIS formulation must not indict every headword after the bad one."""
+    v = scan(list(range(15, 52)))
+    words = [x['word'] for x in v]
+    # the known misread headword is flagged...
+    assert 'ἀμυργοὶ' in words
+    # ...and the run does not cascade: neighbours stay clean
+    assert 'ἀμορφος' not in words and 'ἀμπελίνα' not in words
+    # signal stays sparse enough to be reviewable by hand
+    assert len(v) < 40
