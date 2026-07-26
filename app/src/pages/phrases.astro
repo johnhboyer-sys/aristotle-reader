@@ -1,29 +1,25 @@
 ---
-import Search from '@shared/components/Search.svelte';
+import Phrases from '@shared/components/Phrases.svelte';
 import ThemeInit from '../components/ThemeInit.astro';
 import Pwa from '../components/Pwa.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
+
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const searchDescription =
-  'Search the complete works of Aristotle across the original Greek and English' +
-  ' translation — by word or phrase, in Greek script or Beta Code, with results' +
-  ' cited by Bekker number.';
-const canonical = Astro.site ? new URL(`${base}/search/`, Astro.site).href : undefined;
+const phraseDescription =
+  'Browse recurrent two- to five-word Greek phrases across the complete Aristotle' +
+  ' corpus, sortable by distinctiveness, frequency, length, or alphabetically,' +
+  ' with every occurrence linked by Bekker citation.';
+const canonical = Astro.site ? new URL(`${base}/phrases/`, Astro.site).href : undefined;
 const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebPage',
-  name: 'Search Aristotle in Greek and English',
-  description: searchDescription,
+  name: 'Phrases in Aristotle',
+  description: phraseDescription,
   ...(canonical ? { url: canonical } : {}),
   isPartOf: { '@type': 'WebSite', name: 'The Aristotle Reader' },
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: canonical ? `${canonical}?q={search_term_string}` : undefined,
-    'query-input': 'required name=search_term_string',
-  },
 };
 ---
 <html lang="en">
@@ -32,20 +28,20 @@ const jsonLd = {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <ThemeInit />
   <Pwa />
-  <title>Search Aristotle in Greek and English</title>
-  <meta name="description" content={searchDescription} />
+  <title>Phrases in Aristotle</title>
+  <meta name="description" content={phraseDescription} />
   {canonical && <link rel="canonical" href={canonical} />}
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Search Aristotle in Greek and English" />
-  <meta property="og:description" content={searchDescription} />
+  <meta property="og:title" content="Phrases in Aristotle" />
+  <meta property="og:description" content={phraseDescription} />
   <meta property="og:site_name" content="The Aristotle Reader" />
   {canonical && <meta property="og:url" content={canonical} />}
   {ogImage && <meta property="og:image" content={ogImage} />}
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Search Aristotle in Greek and English" />
-  <meta name="twitter:description" content={searchDescription} />
+  <meta name="twitter:title" content="Phrases in Aristotle" />
+  <meta name="twitter:description" content={phraseDescription} />
   {ogImage && <meta name="twitter:image" content={ogImage} />}
   <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
@@ -58,15 +54,15 @@ const jsonLd = {
     <div class="header-title">
       <a class="home-link" href={`${base}/`}>Home</a>
       <span class="title-sep">›</span>
-      <span class="header-static">Search</span>
+      <span class="header-static">Phrases</span>
     </div>
     <nav class="header-actions" aria-label="Navigation">
       <a href={`${base}/`} class="search-link">All works</a>
       <a href={`${base}/lemma/`} class="search-link">Lexicon</a>
-      <a href={`${base}/phrases`} class="search-link">Phrases</a>
+      <a href={`${base}/search`} class="search-link">Search</a>
       <ThemeToggle />
     </nav>
   </header>
-  <Search client:load />
+  <Phrases client:load />
 </body>
 </html>

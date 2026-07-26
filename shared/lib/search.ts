@@ -430,6 +430,25 @@ async function searchWork(
     }));
 }
 
+// Turn a global offset into a citable position, using only offsets.json — the
+// phrase browser shows hundreds of citations at once and must not have to fetch
+// a whole book for each. line_runs exists for exactly this.
+export interface OffsetRef { seg_idx: number; pos: number; book: number; column: string; line: number }
+
+export function offsetRef(offsets: Offsets, global: number): OffsetRef | null {
+  const base = offsets.seg_base_offset;
+  if (!base.length || global < 0 || global >= offsets.token_count) return null;
+  const [seg_idx, pos] = locate(base, global);
+  const seg = offsets.segments[seg_idx];
+  if (!seg) return null;
+  let left = pos;
+  for (const [line, count] of seg.line_runs) {
+    if (left < count) return { seg_idx, pos, book: seg.book, column: seg.column, line };
+    left -= count;
+  }
+  return null;
+}
+
 // -- Grammatical search ---------------------------------------------------
 //
 // A separate engine from the lexical one above, deliberately: it answers "which
