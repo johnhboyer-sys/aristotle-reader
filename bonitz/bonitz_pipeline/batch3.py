@@ -120,10 +120,25 @@ def stage_llamaparse(pages: list[int]) -> None:
         raise RuntimeError(f'asked {len(todo)} pages, got {len(docs)} docs')
     out = ROOT / 'raw/llamaparse'
     out.mkdir(parents=True, exist_ok=True)
+    flat = []
     for p, d in zip(todo, docs):
         f = out / f'page-{p:03d}.md'
         f.write_text(d.text, encoding='utf-8')
-        print(f'wrote {f} ({len(d.text)} chars)')
+        # LlamaParse silently flattens the ou-ligature to plain upsilon on
+        # roughly a fifth of pages, and it is the reader the comparator leans
+        # on for that character — if it flattens, all three can agree on υ and
+        # nothing is flagged. A page of this index with no ȣ at all is not a
+        # page, it is a failed parse. Re-running usually fixes it.
+        n_lig = d.text.count('ȣ')
+        if n_lig == 0:
+            flat.append(p)
+        print(f'wrote {f} ({len(d.text)} chars, {n_lig} ligatures)'
+              + ('  <-- FLATTENED, re-run this page' if n_lig == 0 else ''))
+    if flat:
+        print(f'\nWARNING: {len(flat)} page(s) came back with no ou-ligature at '
+              f'all: {flat}. Re-run `llamaparse --pages` for them; if a page '
+              f'stays flat after a retry, it has no usable ligature vote and '
+              f'lexcheck --scan-reconciled is the only net under it.')
 
 
 # --- genie slice by fold-anchor search --------------------------------------
