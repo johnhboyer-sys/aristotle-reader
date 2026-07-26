@@ -1,0 +1,128 @@
+[
+ {
+  "ctx": "πο24.1460a11.cfἦθος.ἀῆναι.ἀέν",
+  "verdict": "ἀῆναι",
+  "agrees_with": "none",
+  "confidence": "uncertain",
+  "note": "Column top reads 'ἀῆναι.' (smooth breathing, circumflex); the 'Ἀθῆναι' prefix claimed by genie/llama is not present in this column (boundary misalignment), and opus's '.' is wrong; llama's ἄῆναι has a spurious acute on α."
+ },
+ {
+  "ctx": "ρὶτὸνκαλȣ́μενονἀέρατίςαὐτȣ̃ἡφύ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "αὐτȣ̃ (=αὐτοῦ); the glyph is the ȣ ligature with circumflex, matching ὑγρȣ̃/θερμȣ̃ on the same page."
+ },
+ {
+  "ctx": "ςὁἀὴρΓβ3.330b4,22.ὁἀὴρὑγρȣ̃μᾶ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ὑγρȣ̃ (=ὑγροῦ); ȣ ligature + circumflex."
+ },
+ {
+  "ctx": "4,22.ὁἀὴρὑγρȣ̃μᾶλλονἢθερμȣ̃Γβ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "θερμȣ̃ (=θερμοῦ); ȣ ligature + circumflex."
+ },
+ {
+  "ctx": "ταιταλαντιαῖονξύλονμολίβδȣμνα",
+  "verdict": "ȣμναίȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Both are the ȣ ligature: μολίβδȣ μναίȣ; final glyph is ȣ, not final sigma."
+ },
+ {
+  "ctx": "ὴρδιὰτὴνπληγὴντῇκινήσειγίγνετ",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "No extra γ between πληγὴν and τῇ; opus's 'γ' is spurious."
+ },
+ {
+  "ctx": "ιπῦρΟβ7.289a27.—ὁπεριέχων.ὁθύ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Round dot on baseline with no comma tail after περιέχων."
+ },
+ {
+  "ctx": "9a27.—ὁπεριέχων.ὁθύραθενἀὴρΖγ",
+  "verdict": "ὴρΖγδ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀὴρ (grave) then siglum Ζγδ before 10; genie dropped δ, llama misread it as '6'."
+ },
+ {
+  "ctx": "μα3.340a34,b24.ἀτμιδώδηςἀὴρΖγε",
+  "verdict": "ὴρΖγε",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀὴρ (grave) then siglum Ζγε before 6; genie dropped ε."
+ },
+ {
+  "ctx": "ηςἀτμὶςἀέροςἔχειδύναμινΖγε4.7",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Siglum Ζγε4; ε present. opus and llama both correct; genie dropped ε."
+ },
+ {
+  "ctx": "χειδύναμινΖγε4.784b15.ἀὴρȣ́τωκ",
+  "verdict": "ȣ̔́",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "Word-initial ȣ of οὕτω carries a printed breathing + acute (NOT bare); opus wrote it bare (ȣ́), genie/llama caught the breathing but dropped the ligature (ὕ). Correct = ȣ ligature with rough breathing + acute."
+ },
+ {
+  "ctx": "κἔστιζῷαμδ4.382a7.—ἀὴρκινȣ́μεν",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "κινȣ́μενος (=κινούμενος); mid-word ȣ ligature + acute, no breathing."
+ },
+ {
+  "ctx": "τ2.464a14.ἀὴρκαθεστηκώςπκϛ2.94",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Book numeral stigma ϛ in siglum πκϛ (Problemata 26); llama read final sigma, genie dropped it."
+ },
+ {
+  "ctx": "ύσιντȣ̃ὕδατοςμγ4.374a2.Ζγε6.78",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Siglum Ζγε6; ε present. opus and llama correct; genie dropped ε."
+ },
+ {
+  "ctx": "7.1481a2.ἀῆται(Ηomδ567)πκϛ31.9",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Book numeral stigma ϛ in siglum πκϛ; genie/llama read final sigma."
+ },
+ {
+  "ctx": "ήττητονὁθυμόςΠη7.1328a7.ηεγ1.1",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Siglum ηεγ1; ε present. opus and llama correct; genie dropped ε."
+ },
+ {
+  "ctx": "distζωὴἀίδιοςτδ5.126b35.βȣ́λησ",
+  "verdict": "ȣ́",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "βȣ́λησις (=βούλησις); ȣ ligature + acute. opus and llama correct; genie read ό."
+ },
+ {
+  "ctx": "νδέχεταιΗκ7.1177b33.ἀθανα-τίζε",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "A line-break hyphen is physically printed after 'ἀθανα', but it is soft (word-continuation) hyphenation of ἀθανατίζειν; genie/llama correctly drop it, opus kept it."
+ }
+]

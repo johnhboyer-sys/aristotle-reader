@@ -1,0 +1,121 @@
+[
+ {
+  "ctx": "οκεῖἀλλότριονἀγαθὸνεἶναιΗε3.1130a3.10.1134b5.φαίνετ",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "lunate ε (open C with a mid-bar) after the roman capital Η; roman 'e' on this page is a closed bowl with a straight bar"
+ },
+ {
+  "ctx": "γορεύσαντατὸἀλλότριονἀποφῆσαιτῶνοἰκείωντιπο21.1457b31",
+  "verdict": "ῆσα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "η under a circumflex hood, then σ then α; no acute over an alpha and no epsilon in the ending"
+ },
+ {
+  "ctx": "ριονἀποφῆσαιτῶνοἰκείωντιπο21.1457b31.ἐὰνἔχῃμεταφορὰ",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "closed round bowl after π; alpha in this italic is a bowl with a right-hand tail"
+ },
+ {
+  "ctx": "ἀφείσθω,ϗ̀γάρἐστινἀλλοτριώτεραΗθ10.1159b24.—ἀλλοτριώτατ",
+  "verdict": "ώτερχ",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "final glyph is an x-shape with a lower-left tail, matching the χ of ἀρχή three lines down and unlike the bowl-and-tail α of ταῦτα one line up; acute is printed over ω. Reads as a printer's error for ἀλλοτριώτερα, so sending to review"
+ },
+ {
+  "ctx": "ς(deusualicuiusvοcabuli,οppκυριώτατος)Κ15.15b29.12.1",
+  "verdict": "pp",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "upright roman p's with straight serifed stems, set inside the roman 'de usu alicuius vocabuli'; Greek rho here is italic with a curved bowl"
+ },
+ {
+  "ctx": "εινρ37.1445a21.ἀλλοτριότητοςἀρχήΠε10.1311b15.ἀλλοτρι",
+  "verdict": "το",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "the letterspaced headword reads α λ λ ο τ ρ ι ό τ η τ ο ς — after η there is a clear τ and ο before the final ς, so -τητος not -της"
+ },
+ {
+  "ctx": "ςἀρχήΠε10.1311b15.ἀλλοτριȣ͂ν.ἠλλοτριωμένονπκδ17.937b",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "one stacked double-loop ligature under a circumflex, not the two letters ε+ι; the preceding ι is a separate stroke"
+ },
+ {
+  "ctx": "τριωμένονπκδ17.937b19.ἀλλοτρόπωςφτα3.818a23.ἀλλοφρονεῖν.",
+  "verdict": "οτρόπω",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "after π comes a wide double-humped ω then final ς; the acute sits on the preceding ο"
+ },
+ {
+  "ctx": "0a12.ἁλμυρίζειν.γῆἁλμυρίζȣσαΖμ7.613a3.ἁλμυρὶςγεώδηςὑφίσ",
+  "verdict": "ȣσαΖιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "closed double-loop ligature (the plain υ earlier in ἁλμυρ- is an open V); after Ζ stand two short discrete iota strokes, no μ bowl. Ζιθ10.596a26 two lines up prints the same Ζι + book-letter pattern"
+ },
+ {
+  "ctx": "ι4.442a18,26.ψβ10.422b12,a19.μβ2.355b9.πλβ4.960b19.",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "superscript roman a with a serifed foot, identical to the a of 442ᵃ18 on the line above; Greek α here is larger and italic"
+ },
+ {
+  "ctx": "αχύτεροντὸἁλμυρὸντȣ͂ποτίμȣμβ3.359a6.2.355a33.πκγ8.9",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "stacked closed double-loop after τ — no omega humps, no subscript iota; ποτίμȣ on the next line prints the same glyph, contrasting with the open υ of ἁλμυρόν alongside"
+ },
+ {
+  "ctx": "5a33.πκγ8.932b9.22.934a9.οἰηθȣ́μενονγίνεσθαιτὸἁλμυρὸνπότ",
+  "verdict": "διηθȣ́",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "bowl with a tick rising off its top-right plus a detached stroke above it = a δ whose ascender is broken; the omicrons on this line (τὸ, πότιμον) are bare closed bowls. Then ι, η, θ (closed oval with crossbar), then the ligature with an acute. The ascender is only partly inked, hence medium"
+ },
+ {
+  "ctx": "8)πο25.1461b19.ἀλόγιστοιτῷπείσεσθαίτιΡβ8.1385b32,30",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "τ followed by the closed double-loop ligature under a circumflex; no omega humps and nothing under the glyph"
+ },
+ {
+  "ctx": "δι'ἀλόγιστον(ἄλογονSpglΒka)Ρα10.1369a2.ἄλογος.ἡδονῆςπ",
+  "verdict": "a)Ρ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "superscript roman a on Bk, same glyph as the column letter in 1369ᵃ2; the capital after the paren has one stem with a single closed bowl = Ρ, not the two stems of Π"
+ },
+ {
+  "ctx": "δυνάμειςἄλογοι,οppμετὰλόγȣε13.22b39.Μθ2.1046b2Βζ.τῆςψ",
+  "verdict": "ȣε1",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "closed double-loop ligature ends λόγȣ; the siglum is a lunate Greek ε followed by the roman 1 of 13"
+ },
+ {
+  "ctx": "λόγονἔχον,τὸἄλογονδιττόνΗκ13.1102a18-1103a10.γ13.11",
+  "verdict": "κ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "the glyph after Η is the x-shaped ϰ, the same form as the κ of Ηκ2.1172 six lines above, and unlike the bowl-and-tail α printed in ἄλογα on that same line or in Ρα10. Ink says κ, but 1102a18-1103a10 is EN book α, so this looks like a printer's error — sending to review"
+ },
+ {
+  "ctx": "ς,ἄλογοςὁρμή,ἄλογαπάθηsimΡα10.1369a4.11.1370a18.Ηγ3",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "one vertical stem with a closed bowl at the top = Ρ; the Πη15 lower in the column shows the two-legged Π for contrast"
+ }
+]

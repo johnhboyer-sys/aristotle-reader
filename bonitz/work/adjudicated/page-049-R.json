@@ -1,0 +1,114 @@
+[
+ {
+  "ctx": "ἀμαρτωλότερονΗβ9.1109a33.ἌμασιςΡβ8.1386a19.eiusλόγο",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "mark left of capital Α is a small comma-tick plus a separate slanted acute; identical stack sits over the α of ἄμβροτος lower in the column. Rough breathing on this page (ἡ ἀκοή) is a solid C opening right — not this shape"
+ },
+ {
+  "ctx": "θαλάττιοςὄφιςἀμαυρότεροςΖμ37.621a4.—φωναὶἀμαυραίακ8",
+  "verdict": "ιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "two separate upright iota strokes after Ζ, each with its own foot serif, no joining bowl and no left descender; italic μ on this same line (ἀμαυρότερος) drops a clear descending stem. Ζιι = HA bk ix, and 621a4 is HA ix.37"
+ },
+ {
+  "ctx": "ἀμαυρότεραϗ̀βραχυβιώτεραΖμ1.608a11.—ἀμαυρῶς,οppἀκρι",
+  "verdict": "ιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "same two detached iota strokes after Ζ as the earlier citation; no μ bowl. Ζιι1 = HA ix.1, which begins exactly at 608a11"
+ },
+ {
+  "ctx": "μβ8.367b28.Ζμγ4.667a19.πκϛ18.942a24,ἡἡδονήΗκ4.1175a",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "flat-topped stroke with a curved tail dropping below the baseline = stigma, set between κ and the roman 18; πκϛ (Probl. xxvi) matches 942a"
+ },
+ {
+  "ctx": ".Ζμγ4.667a19.πκϛ18.942a24,ἡἡδονήΗκ4.1175a10.ἠμαύρωτ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "mark carries a tail hanging below the baseline, unlike the square full stops elsewhere on the line"
+ },
+ {
+  "ctx": "αύρωταιτȣ͂ἀνδρὸςἡδύναμιςπδ25.879a34.ἀμαυρȣ͂σθαικατὰ",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "tall curved ascender over an open lower loop; no closed oval, no horizontal crossbar, so not θ (compare θερμόν on the line above)"
+ },
+ {
+  "ctx": "ιȣ́τωνμορίων,οἷονἀκρωτηρίȣτινὸςἢτῶνἄλλωνμελῶν(μερῶν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "narrow Y-shaped top sitting on a small closed loop = ou-ligature; omega-with-iota elsewhere is a wide three-lobed form with a separate subscript stroke"
+ },
+ {
+  "ctx": "ψβ8.420b2.ἡἀκοὴἀμβλυτέρααἴσθησιςτῆςὄψεωςπζ5.886b32.τὰαἴτ",
+  "verdict": "ἴσθησι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "reads α-ἴ-σ-θ-η-σ-ι-ς: crossbarred closed θ, then η with descender, then σ and a plain ι; only one accent, and no final iota-eta cluster"
+ },
+ {
+  "ctx": "βλὺἢὀξὺὁρᾶνΖγε1.780a26.πλα8.958b1.ἀμβλύτερονβλέπειν",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "a full italic alpha (closed bowl plus right stem) stands between λ and the roman 8"
+ },
+ {
+  "ctx": "μβρακία,θυγάτηρΦόρβαντοςτȣ͂Ἡλίȣf437.1550a23.—Ἀμβρακιωτῶν",
+  "verdict": "ȣ͂Ἡλίȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τ carries the stacked ligature under a circumflex; upright capital Η has a rough breathing to its left, acute over ί, and the word closes with the same loop-and-fork ligature"
+ },
+ {
+  "ctx": "ωτῶνπολιτείαf437.ἀμβροσίαςϗ̀νέκταροςγεύσασθαιΜβ4.1000",
+  "verdict": "ςϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "final sigma of ἀμβροσίας, then the kai-ligature: x-crossing with a hooked tail below the baseline and a short slanted tick above; plain κ on this page has no descender"
+ },
+ {
+  "ctx": "̀νέκταροςγεύσασθαιΜβ4.1000a12,17.ἄμβροτος(ΟrphicVΙ1",
+  "verdict": "0",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "three identical closed ovals of even stroke weight follow the 1; the figure 8 elsewhere on the page shows two stacked bowls with a pinched waist"
+ },
+ {
+  "ctx": "2,17.ἄμβροτος(ΟrphicVΙ12)χ7.401b2.ἀμεγέθης.ἀσώματον",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "x-form sits wholly on the baseline; χ in this italic (ἀχλυώδης, χυμȣς) drops a long tail well below. 401b2 is De Mundo, siglum κ"
+ },
+ {
+  "ctx": "ος(ΟrphicVΙ12)χ7.401b2.ἀμεγέθης.ἀσώματονϗ̀ἀμέγεθεςΓα5.3",
+  "verdict": "εγέθη",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "lemma prints ἀ-μ-ε-γ-έ-θ-η-ς: γ with descender before the accented ε, then crossbarred θ and η; nothing elided"
+ },
+ {
+  "ctx": "5b29.Γα2.316a27.5.320b32.ȣ̔κινεῖταιτὸἀμέγεθεςΦθ10.26",
+  "verdict": "ȣ̓",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "base glyph is unmistakably the ou-ligature (fork over closed loop). The mark above is a thin two-bend tick lacking the solid vertical spine of the rough breathing on ἡ (ἡ ἀκοή, same page); weight and slant match the smooth breathing on ἀμέγεθες. Fine print — genuine judgment call"
+ },
+ {
+  "ctx": "3a12.ἀμέλγεσθαιγάλαπολύΖιγ21.523a7.20.522a15.πι6.",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "single curved stroke dipping below the baseline with no left shoulder; η in this italic has two full stems joined at the top. Ζιγ = HA bk iii, and 523a7 falls in HA iii.21"
+ }
+]

@@ -1,0 +1,146 @@
+[
+ {
+  "ctx": "368a18.ἄμαϗ̀..ϗ̀μδ9.386b20.ἄμа",
+  "sonnet_verdict": "ἅμαϗ̀..ϗ̀μδ",
+  "sonnet_confidence": "medium",
+  "opus_verdict": "ἅμαϗ̀..ϗ̀μδ",
+  "agree": true,
+  "opus_confidence": "medium",
+  "note": "Both ϗ ligatures carry clear grave accents; digit after μ is the open-loop italic δ (not θ). Headword breathing genuinely hard at this resolution, but the mark over α reads as rough+acute (ἅμα, the correct word), matching the verdict over opus's smooth ἄμα."
+ },
+ {
+  "ctx": "αδὲφανερόνalΜβ4.1008a30.Πδ9.12",
+  "sonnet_verdict": "δ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "δ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Πδ9: open-loop δ, and Bekker 1294a32 is Politics book IV (Δ), so δ not θ. Confirmed."
+ },
+ {
+  "ctx": "ίαπαρακολȣθεῖτῇἀφροσύνῃαρ6.125",
+  "sonnet_verdict": "6",
+  "sonnet_confidence": "high",
+  "opus_verdict": "6",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "αρ6: clear Arabic numeral 6 with closed lower loop, distinct from θ. Confirmed."
+ },
+ {
+  "ctx": "a14.ἀμάλακτος.περὶἀμαλάκτȣμδ9.",
+  "sonnet_verdict": "ȣμδ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣμδ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Word-final ȣ ligature then μδ (open-loop δ); Bekker 385b is Meteorologica book IV (Δ). Confirmed over ωμθ/αμθ."
+ },
+ {
+  "ctx": "01b4.ἀμαρτάνειν,οppκατορθεῖνΗβ",
+  "sonnet_verdict": "ȣ͂",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ͂",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "κατορθȣ͂ν: θ + ȣ ligature bearing a circumflex + ν. Opus's εῖ is wrong letters, llama missed the circumflex. Confirmed."
+ },
+ {
+  "ctx": "30.1437b5.οppὀρθῶςποιεῖνΗδ11.1",
+  "sonnet_verdict": "δ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "δ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Ηδ11: open-loop musical-note δ; Bekker 1126a is EN book IV (Δ). Confirmed over θ."
+ },
+ {
+  "ctx": "ἁμαρτάνειντῆςπροστάξεως,τȣ́τȣΗ",
+  "sonnet_verdict": "ȣ́τȣ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ́τȣ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "τȣ́τȣ: two ȣ ligatures, first with acute, second plain — matches opus exactly. Confirmed over spelled-out ότυ/ύτυ."
+ },
+ {
+  "ctx": "οντὴνἁμαρτίανΠθ4.1338b12.ȣ̓συγ",
+  "sonnet_verdict": "ȣ̓",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ̓",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "ȣ ligature with a smooth-breathing comma directly after 1338b12; llama's '25' is a misread of the breathing. Confirmed."
+ },
+ {
+  "ctx": "ἁμαρτάνȣσινὅσοιτῶνποιητῶνἩρακλ",
+  "sonnet_verdict": "Ἡρακληί",
+  "sonnet_confidence": "high",
+  "opus_verdict": "Ἡρακληί",
+  "agree": true,
+  "opus_confidence": "medium",
+  "note": "Rough breathing over Η confirmed. Over ι there is a single acute stroke, not a diaeresis; the tall curl to its right is the following δ's ascender. Genie/llama both misread the δ ascender as a diaeresis (ΐ). Close call given two readers saw dots, but the mark is a single diagonal stroke — no diaeresis."
+ },
+ {
+  "ctx": "ιητῶνἩρακληίδαπεποιήκασιπς8.14",
+  "sonnet_verdict": "ς",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ς",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "πς8 (Poetics ch. 8): open lunate-sigma 'C' hook after π, not closed ο or barred θ. Confirmed."
+ },
+ {
+  "ctx": "αρτάνεται,τὸδὲμέσονκατορθȣ͂ται",
+  "sonnet_verdict": "ȣ͂τ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ͂τ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "κατορθȣ͂ται: θ + ȣ ligature with a clear circumflex + τ. Confirmed; genie's plain θ dropped the ligature."
+ },
+ {
+  "ctx": "31.ἁμάρτημα.ἐντοῖςἀιδίοιςȣ̓δὲν",
+  "sonnet_verdict": "ȣ̓δὲνȣ̓́",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ̓δὲνȣ̓́",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "On tight zoom the letter after the first (smooth-breathed) ȣ ligature is δ — open loop with curling ascender, no θ crossbar — so ȣ̓δὲν (οὐδέν); second ȣ carries breathing+acute (ȣ̓́τε). Both genie/llama misread δ as θ (οὐθέν); the visible ascender settles it as δ."
+ },
+ {
+  "ctx": "τέραταἁμαρτήματατȣ͂ἕνεκάτȣΦβ8.",
+  "sonnet_verdict": "ȣ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Second τȣ is the plain ou-ligature, not a spelled υ (genie). Confirmed."
+ },
+ {
+  "ctx": "distἀτύχημα,ἀδίκημαΗε10.1835b1",
+  "sonnet_verdict": "8",
+  "sonnet_confidence": "high",
+  "opus_verdict": "8",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "1835: the disputed digit is an unambiguous figure-8 (double loop), not a 1 (llama). Printed page number is likely a typo for 1135 but the glyph is 8. Confirmed."
+ },
+ {
+  "ctx": "αίνεινἁμαρτίαςΜμ8.1084b24,4.ἡτ",
+  "sonnet_verdict": ",",
+  "sonnet_confidence": "high",
+  "opus_verdict": ",",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "After 1084b24 the mark sits on the baseline with a downward tail (comma), followed by ' 4.' — not a period. Confirmed over genie's '.'."
+ },
+ {
+  "ctx": "ίαἐπιστήμης,περὶαἴσθησιν,οppὀρ",
+  "sonnet_verdict": "opp",
+  "sonnet_confidence": "high",
+  "opus_verdict": "opp",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Roman-type 'opp' abbreviation, as used throughout the page; not Greek ορρ (genie). Confirmed."
+ }
+]

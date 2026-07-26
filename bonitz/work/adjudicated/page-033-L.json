@@ -1,0 +1,14 @@
+[
+ {"ctx": "ςΖια6.491a23.Με1.1025b11.κ7.10", "verdict": "κ", "agrees_with": "multiple", "confidence": "high", "note": "Metaph K (κ7); italic κ printed x-shaped, not χ"},
+ {"ctx": "ὰςαἰσθήσεις,synτὰαἰσθητάΜκ6.10", "verdict": "κ", "agrees_with": "opus", "confidence": "high", "note": "Μκ6 = Metaph K; italic κ looks like x, not χ"},
+ {"ctx": "ρὰτὴναἴσθησινΖγβ8.747b10.2.αἴσ", "verdict": "2.", "agrees_with": "multiple", "confidence": "high", "note": "section marker '2.' clearly present"},
+ {"ctx": "τήριον(quamquamplerumqueαἰσθήσ", "verdict": "ἰσθήσε", "agrees_with": "opus", "confidence": "high", "note": "printed plural αἰσθήσεις (accent on η), not singular"},
+ {"ctx": "27.875a31.τὰςαἰσθήσειςβεβαρῦνθ", "verdict": "αρύ", "agrees_with": "none", "confidence": "medium", "note": "βεβαρύνθαι: opus right on α+υ but accent is acute not circumflex; genie/llama misread as ρῆ"},
+ {"ctx": "τοῖςδεξιοῖς,ἀριστεροῖςπλα12.95", "verdict": "1", "agrees_with": "multiple", "confidence": "high", "note": "digit 1 of '12', not iota"},
+ {"ctx": "ῖς,ἀριστεροῖςπλα12.958b16.3.αἴ", "verdict": ".3", "agrees_with": "multiple", "confidence": "high", "note": "paragraph marker '3.' present"},
+ {"ctx": "οneactiοnisvelfacultatisτȣαἰσθ", "verdict": "ȣ", "agrees_with": "opus", "confidence": "medium", "note": "τȣ ligature (=τοῦ) with faint mark above; genie/llama shapes (ῷ/ὰ) wrong"},
+ {"ctx": ".Ρβ8.1386a32(αἰσθήσειcοdΑc,Vhl", "verdict": "ᶜ", "agrees_with": "genie", "confidence": "medium", "note": "cod Aᶜ: the c is clearly printed raised/superscript"},
+ {"ctx": "1386a32(αἰσθήσειcοdΑc,Vhl11,ἐσ", "verdict": "11", "agrees_with": "opus", "confidence": "medium", "note": "'Vhl 1 1' printed as spaced digit ones, not letters ll"},
+ {"ctx": "7.τὰαἰσθητήριαὁμοιομερῆ,οppτῶν", "verdict": "pp", "agrees_with": "opus", "confidence": "high", "note": "Latin 'opp' in roman type, not Greek ρρ"},
+ {"ctx": "διεφθαρμένον,λελωβημένονΜκ6.10", "verdict": "κ", "agrees_with": "opus", "confidence": "high", "note": "Μκ6 = Metaph K; italic κ looks like x, not χ"}
+]

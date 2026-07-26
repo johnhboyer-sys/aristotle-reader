@@ -1,0 +1,85 @@
+[
+ {
+  "ctx": "αυστόςτιςϗἀθάνατοςκίνησιςΦθ1.2",
+  "verdict": "Φθ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἀθάνατος·ἀθάνατόνμιναὐξήσȣσιΜȣ",
+  "verdict": "ȣσιΜȣ̃",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "opus/llama keep the ȣ ligatures correctly (genie wrongly expands to ου/υ); all omit the circumflex printed on Μȣ̃σαι, restored here."
+ },
+ {
+  "ctx": "sberCr,atherinaveraCrΚΑΖιΙ121.",
+  "verdict": "Ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Serifed capital letter I (AZι I 121), not the digit 1; opus and llama agree."
+ },
+ {
+  "ctx": "οιinterἀγελαῖαnumeranturΖιι2.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "HA siglum Ζι + book-ι fused into an apparent 'u'; correct reading is ιι."
+ },
+ {
+  "ctx": "θ6.1341b7.Ἀ.ἀπέβαλετὰςαὐλάςΠθ6",
+  "verdict": "ȣ́",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "Word is αὐλȣ́ς (τοὺς αὐλούς); ligature ȣ clear, acute faint but present. opus/genie misread the vowel."
+ },
+ {
+  "ctx": "18a29.ἐπ'ἄρχοντοςἈθ.Εὐκλέȣςsim",
+  "verdict": "ȣςsim",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Εὐκλέȣς sim (Latin 'sim'); genie wrongly read Greek σιμ and expanded the ligature."
+ },
+ {
+  "ctx": "47b45.—ἈθηναῖοιΑδ11.94a36-b7.θ",
+  "verdict": "-",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Short hyphen in 94a36-b7, not an em-dash."
+ },
+ {
+  "ctx": "9b26.Ἀθηναίωνπολιτείαf343-431.",
+  "verdict": "-",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Short hyphen in f343-431, not an em-dash."
+ },
+ {
+  "ctx": "ιτείαf343-431.ἈθηναῖοιἀπὸἼωνος",
+  "verdict": "Ἴωνος",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ἴων gen. sing., smooth breathing + acute; llama's Ἰώνων is the wrong form."
+ },
+ {
+  "ctx": "ἐκλήθησανf343.1535b37,39.Ὅμηρο",
+  "verdict": "Ὅ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ὅμηρος, rough breathing + acute; genie's smooth breathing is wrong."
+ },
+ {
+  "ctx": "ανf343.1535b37,39.ὍμηροςμόνȣςἈ",
+  "verdict": "όνȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "μόνȣς (μόνους): omicron-acute + ȣ ligature; genie/llama misread the vowel."
+ },
+ {
+  "ctx": ".380.1541b3.386.1542b2.Ἀ.Ὁμήρῳ",
+  "verdict": "Ὁ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ὁμήρῳ, rough breathing; genie split-mark reading is equivalent but opus/llama's precomposed form is correct."
+ }
+]

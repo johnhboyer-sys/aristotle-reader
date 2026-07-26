@@ -1,0 +1,156 @@
+[
+ {
+  "ctx": "χȣσινπαρ'ὅλοντὸἔντερονπαρυφα",
+  "verdict": "υφα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "the word is printed in full as π-α-ρ-υ-φ-α-σ-μ-έ-ν-η-ν; the υ is an open two-stroke u (no closed bowl, so not the ligature) and the φ has its full vertical through the bowl"
+ },
+ {
+  "ctx": "μδ2.676b21.Ζιβ15.506b13.πῆγίν",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "after π the glyph has upsilon arms over a fully closed bottom ring = ou-ligature, with a clear circumflex above it (πȣ͂)"
+ },
+ {
+  "ctx": "τον,ἀναπλέȣσινεἰςτȣςποταμȣς",
+  "verdict": "ȣ̀",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τȣ̀ς printed with the closed-bowl ligature carrying a grave (stroke falling left-to-right); plain υ on this page is open at the base"
+ },
+ {
+  "ctx": "θ13.598a22,27.19.601b21.πῶςθη",
+  "verdict": "ῶ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "three connected downstrokes of even height under a circumflex = omega; no closed bowl anywhere in the glyph"
+ },
+ {
+  "ctx": "1b21.πῶςθηρίοντιἀμύνȣσινΖιι",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀμύνȣσιν: the fifth glyph is arms-over-closed-ring, contrasting with the plain open ύ two letters earlier in the same word"
+ },
+ {
+  "ctx": "1b21.πῶςθηρίοντιἀμύνȣσινΖιι37",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "two discrete short upright strokes after the Z, with a gap between them; no rounded bowl (μ) and no descender (η). 621a17 is HA book 9, so Ζιι"
+ },
+ {
+  "ctx": "uvF304,9,scοmbersardοΚaΖιadα1",
+  "verdict": "adα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "'ad' is upright roman (serifed a, d with straight ascender); the next letter is a cursive italic Greek alpha (bowl with a trailing tail), unlike the roman a in 'sarda' on the same line"
+ },
+ {
+  "ctx": "a17.γ4.429a18.5.430a18.ἡδέαἐσ",
+  "verdict": "έ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἡδέα: epsilon with acute followed directly by alpha; no iota stroke and no circumflex between them"
+ },
+ {
+  "ctx": "ιςἀμιγέστεραμᾶλλοντοιαῦτατγ5",
+  "verdict": "τ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "the siglum is printed as a tau with its full crossbar followed by gamma (τγ5), separate from the final alpha of τοιαῦτα"
+ },
+ {
+  "ctx": "ινΜΑ8.989b1.τὸμεμιγμένοντῷἀμ",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "after τ the glyph is arms-over-closed-ring with a circumflex above; omega on this page prints as three even connected strokes (cf. φωνῇ two lines down) and there is no iota subscript"
+ },
+ {
+  "ctx": "989b1.τὸμεμιγμένοντῷἀμίκτῳἥδι",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "ἀμίκτȣ ends in the same arms-over-closed-ring ligature as τȣ͂ before it, unaccented; the two together read τȣ͂ ἀμίκτȣ"
+ },
+ {
+  "ctx": "θόγγοιἀμικτότεροιτῇφωνῇπιθ43",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "closed oval with a horizontal bar straight through it = theta; beta in this face has a tall ascender and an open left side"
+ },
+ {
+  "ctx": "5b18.ἀμίς.αἱἀμίδεςδιὰτίχριώζ",
+  "verdict": "ώ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "three downstrokes at 11px pitch spanning 25px, geometrically identical to the omega in φωνῇ (3 strokes, 11px pitch, 25px); the hairline joining strokes 1 and 2 failed to print, leaving a gap that reads as ι+υ, while the second connector is present. Acute sits over the right stroke"
+ },
+ {
+  "ctx": "ἄμισθος.ἐκκλησιάζεινἀμίσθȣςΠ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "after θ the glyph shows the closed lower ring of the ou-ligature, not the open base of omega or upsilon"
+ },
+ {
+  "ctx": "5)πο25.1461a20.ἄμμος,defπκγ33",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "the x-shaped letter sits wholly on the baseline; chi on this page (e.g. ȣ̓χ further down) drops a long tail below the line"
+ },
+ {
+  "ctx": "ῶνθ48.833b23.f248.1524a7.Ἀμμύ",
+  "verdict": "Ἀμμȣ́",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "the vowel is the stacked ligature — two upsilon arms over a fully closed ring — carrying an acute, so Ἀμμȣ́ς; the readers' plain υ has no closed base"
+ },
+ {
+  "ctx": "547b14,15.ι37.620b16.μέλιȣχȣτ",
+  "verdict": "ȣ̓χȣ̔́",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "both vowels are closed-ring ligatures; the first carries a comma-shaped smooth breathing, the second a hooked rough breathing plus acute; the chi between them descends well below the baseline"
+ },
+ {
+  "ctx": "'ὡσανεὶἀμμῶδεςθ19.831b30.῎Αμμ",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two marks to the upper left of the capital A: a comma-shaped smooth breathing plus a separate rising acute stroke (compare the single comma over ἐν on the same line)"
+ },
+ {
+  "ctx": "δεςθ19.831b30.῎Αμμων.αἱἐν῎Αμμ",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "same pair of marks — smooth breathing then acute — set to the left of the capital A"
+ },
+ {
+  "ctx": "ναιf488.1557b23.—ὁἐπὶτὴντῷ῎Αμ",
+  "verdict": "ȣ͂Ἄ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "tau followed by the closed-ring ligature under a circumflex (τȣ͂), then capital A with smooth breathing plus acute; no omega strokes and no iota subscript"
+ },
+ {
+  "ctx": "ρηςἱερὰf403.1545b4,18.Ἀμνέαπρ",
+  "verdict": "έ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ἀμνέα: epsilon carries the acute and is followed straight by alpha; no iota stroke between them"
+ },
+ {
+  "ctx": "μνέαπροσαγορεύȣσιτὸνὀρθόνωτο",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "a small fully closed circle, the same size as the two omicrons earlier in ὀρθόνοτον; omega on this page is a wide three-stroke form"
+ }
+]

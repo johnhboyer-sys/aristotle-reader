@@ -1,0 +1,86 @@
+[
+ {
+  "ctx": "ήσεωςδοκεῖεἶναιΚ7.7b36.ἡτȣ͂αἰσ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ligature with circumflex (τοῦ αἰσθητοῦ), both clearly perispomenon"
+ },
+ {
+  "ctx": ".446b3.Μθ7.1084b23,33Βζ.—ȣ̓́τε",
+  "verdict": "ȣ̓́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ ligature with smooth+acute = οὔτε"
+ },
+ {
+  "ctx": "ῆςψυχῆςἴδιοντὸαἰσθάνεσθαιȣ̓́τε",
+  "verdict": "ȣ̓́τετȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὔτε τοῦ: smooth+acute then circumflex ligature"
+ },
+ {
+  "ctx": "fτα15.106b23.αἰσθάνεσθαιαὐτῶνἁ",
+  "verdict": "ὐτῶνἁπτ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "αὐτῶν smooth, ἁπτ rough breathing"
+ },
+ {
+  "ctx": ",29.β11.423b7.αι4.442b1.—b.λεκ",
+  "verdict": "b",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "roman division letter b, not Greek δ"
+ },
+ {
+  "ctx": "μία,ἀριθμός,σχῆμα,κίνησις.Τrdl",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "baseline dot, no comma tail"
+ },
+ {
+  "ctx": "44a28.Γβ1.329a11.Μκ3.1061a32.τ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "raised a (a32)"
+ },
+ {
+  "ctx": "25(ΑlexΑphrαπ.κ.λ.ΙΙΙ7).Ηι7.11",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηι7 book-iota present"
+ },
+ {
+  "ctx": "τῷ(cοddαὐτὸ)αἰσθάνεσθαιηεη12.1",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "leading eta of Ηεη12 present"
+ },
+ {
+  "ctx": "ὰτῶνκαθ'ἕκασταψβ5.417b27.Αα27.",
+  "verdict": "Α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "capital A with crossbar, not Λ"
+ },
+ {
+  "ctx": "μόνονϗνοεῖνψγ7.431a8.περὶȣ̔͂αἰ",
+  "verdict": "ȣ̔͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὗ: rough+circumflex ligature"
+ },
+ {
+  "ctx": ".448a5,25,26.Πα5.1254b22.ȣ̓θεν",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὐθενὸς: smooth breathing ligature"
+ }
+]

@@ -1,0 +1,333 @@
+[
+ {
+  "ctx": "Ζγα18.725b18,21.cfπη9.888a4.—ε",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "παθὼνμὴἀποδῴηδι'ἀδυναμίαννεη10",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "image reads ηεη10; first char is eta not nu"
+ },
+ {
+  "ctx": "ττειντὰπολιτικά)Πε11.1314a23.μ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιορίζειν,πορίζειν,βλέπεινalΜζ1",
+  "verdict": "al",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "lΜζ11.1036b7.Ηε3.1129b34.ι3.11",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "leading book-iota (EN ι) present; genie dropped it"
+ },
+ {
+  "ctx": ".1165b22.9.1169b7.κ5.1175a4,b3",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "7.μγ4.375b14.τζ4.141b17.Ζιι34.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "HA siglum Ζι+book fuses to printed 'u' = ιι"
+ },
+ {
+  "ctx": "b19.Ζγδ1.765b15,10,35,766a31.7",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "765b15,10,35,766a31.7.776a3.ε4",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "σθαι)τȣτοποιήσειΜζ12.1038a13.ȣ",
+  "verdict": "a13.ȣθ'ὁ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "ȣθ' letters certain; ȣ reads bare (marks above are bleed from line 5)"
+ },
+ {
+  "ctx": "ὁπροαιρȣ́μενοςἀδυνατῶνδέ,ȣθ'ὁδ",
+  "verdict": "ȣθ'",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ ligature bare in print; genie/llama wrongly expanded to υ"
+ },
+ {
+  "ctx": "τδ5.126b9.—ἀδυνατεῖνabsοlieἀδύ",
+  "verdict": "i",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "εῖν,ἀνάγκηἀδυνατεῖνυ1.454a27,3",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "πίωσιϗἀδυνατȣ͂σινΖιη5.585a33.κ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "b2127.Φζ10.241b5.Οα11.281a2-27",
+  "verdict": "a2-",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "short hyphen, not em-dash"
+ },
+ {
+  "ctx": "b5.Οα11.281a2-27.Ζγδ1.766a2.Ζκ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ν)ἐναντίαστέρησιςΜθ1.1046a29.δ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ίαστέρησιςΜθ1.1046a29.δ12:1019",
+  "verdict": ":",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "δ12: printed with a colon"
+ },
+ {
+  "ctx": "τορικόςΡβ2.1379b2.ἀδύνατοιieim",
+  "verdict": "ιi",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "final iota of ἀδύνατοι + Latin i"
+ },
+ {
+  "ctx": "νατοιieimbecilliπια62.906a10.ο",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ὸσῶμαπεπηρωμένοιf430.1549a38,b",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τωςἔχειπρεσβεύεινρ25.1435a16.ἐ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τώτερονοἱἄνθρωποιπα24.862a27.κ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ονοἱἄνθρωποιπα24.862a27.κϛ42.9",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "numeral stigma (κϛ=26), not final sigma"
+ },
+ {
+  "ctx": "ρωποιπα24.862a27.κϛ42.945a14.2",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "4.311b32.γ2.300b4.Γα9.327a14.Φ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".300b4.Γα9.327a14.Φθ9.265a19.Α",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "327a14.Φθ9.265a19.Αα15.34a9.Μβ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "15.34a9.Μβ4.999b11.6.1003a5.ἀδ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".999b11.6.1003a5.ἀδύνατονȣτὸἐν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "bare ȣ ligature (οὐ); genie/llama wrong"
+ },
+ {
+  "ctx": "ῦδοςΜθ4.1047b13Βζ.Αα15.34a25-2",
+  "verdict": "a25-",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "short hyphen, not em-dash"
+ },
+ {
+  "ctx": "α12.281b3,9,14,15.ψα3.406a2.ἀδ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".281b4.περὶδυνατȣ͂ϗἀδυνάτȣΡβ19",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "bare ȣ ligature (ἀδυνάτȣ), not ω"
+ },
+ {
+  "ctx": "ὶδυνατȣ͂ϗἀδυνάτȣΡβ19.1392a8-b1",
+  "verdict": "a8-",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "short hyphen, not em-dash"
+ },
+ {
+  "ctx": "λεπῶνἢτῶνἀδυνάτωνἐστίΚ7.8a30Wζ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Wζ.cfΠθ6.1340b24.Μμ9.1085a29.π",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Πθ6.1340b24.Μμ9.1085a29.πδ13.8",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣ̓δεὶς: second char is δ; genie ὸ wrong"
+ },
+ {
+  "ctx": "0b24.Μμ9.1085a29.πδ13.877a13.ȣ",
+  "verdict": "a13.ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "smooth breathing over ȣ (οὐδείς); llama missed it"
+ },
+ {
+  "ctx": "ρεῖτοῖςἀδυνάτοιςΠε11.1314a24.Ρ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "οιςΠε11.1314a24.Ρβ19.1392a24.c",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "340b1.β3.357b21,33.δ3.380a22,b",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αεἶναιΜθ4.1047b5Βζ(Wζad22a14).",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νἀλλ'ἐνδεχομένοιςΖγδ8.777a20.π",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τοιȣ́τȣγένȣςἀίδιοςεἶναιΖγβ1.73",
+  "verdict": "β",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζγβ (GA book 2); genie δ wrong"
+ },
+ {
+  "ctx": "ynἄτοπονΦδ8.216b12.α2.185a30.Μ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "216b12.α2.185a30.Μν2.1089a13.ἐ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "α2.185a30.Μν2.1089a13.ἐντȣ́τοι",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ ligature with acute (τȣ́τοις)"
+ },
+ {
+  "ctx": "απᾶσιτοῖςεὐλόγοιςΜμ9.1085a14.τ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αίφασινμα6.343b7.Πδ8.1294a1.φα",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "b7.Πδ8.1294a1.φανερὸνὅτιτȣ͂τ'ἀ",
+  "verdict": "ȣ͂τ'",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "ȣ with circumflex (τȣ͂τ'); circumflex partly clipped but present"
+ },
+ {
+  "ctx": "ὸνὅτιτȣ͂τ'ἀδύνατονμα8.345a32.τ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τȣ͂τ'ἀδύνατονμα8.345a32.τȣ͂τοδ",
+  "verdict": "ȣ͂τοδ'",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ with circumflex (τȣ͂το); llama bare, genie expanded"
+ }
+]

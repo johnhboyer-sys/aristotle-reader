@@ -1,0 +1,93 @@
+[
+ {
+  "ctx": "f299.1529a15.ἀλληλοφάγοιτȣ̃γέν",
+  "verdict": "ȣ̃γένȣςτȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Reads τȣ̃ γένȣς τȣ̃ (τοῦ γένους τοῦ); ȣ ligatures, first/last with circumflex. genie/llama misread ȣ as ο/ῇ."
+ },
+ {
+  "ctx": "ληλοφάγοιτȣ̃γένȣςτȣ̃οἰκείȣȣ̓κε",
+  "verdict": "ȣȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "End of οἰκείȣ (ȣ) then ȣ̓κ (οὐκ, smooth breathing). Clearly two ȣ ligatures, not ᾳὑ."
+ },
+ {
+  "ctx": "λλήλωνδιαφέρεινΠδ2.1289a34.γίγ",
+  "verdict": "4",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Bold number reads 1289 a34; final digit is unmistakably 4, not 1."
+ },
+ {
+  "ctx": "ἰσθητῶνϗ̀ἐνμόνοιςὑπάρχειτȣ́τοι",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ́τοις (τούτοις): ȣ ligature with acute, not έ."
+ },
+ {
+  "ctx": "ερονȣ̓χὑπῆρχεν,ἠλλοίωταιτȣ̃τοΓ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃το (τοῦτο): ȣ ligature with circumflex. llama ȣ͂ is the same glyph, different codepoint; genie ῦ."
+ },
+ {
+  "ctx": "αιτȣ̃τοΓα5.321b4.(cfὄντωνϗ̀μὴἠ",
+  "verdict": "ϗ̀μὴἠ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ϗ (καί ligature) carries a grave; followed by μὴ ἠλλοιωμένων (eta smooth). genie read κὴ, llama dropped accent and read ἀ."
+ },
+ {
+  "ctx": "ωνΓα10.327b1).ἀλλοιȣ̃σθαιȣ̓κατ",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀλλοιȣ̃σθαι ȣ̓ κατὰ (ἀλλοιοῦσθαι οὐ κατὰ): ȣ ligature with smooth breathing at line end, not ϗ/κη."
+ },
+ {
+  "ctx": "σινΖκ11.703b11.τὸπεπονθὸςϗ̀ἠλλ",
+  "verdict": "ϗ̀ἠ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "πεπονθὸς ϗ̀ ἠλλοιωμένον: καί ligature with grave, then ἠ (eta smooth). genie κὴ, llama bare ϗ + ἀ both wrong."
+ },
+ {
+  "ctx": "ιωμένονὁμωνύμωςπροσαγορεύȣμενΦ",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "προσαγορεύομεν: plain round ο, not the ȣ ligature. opus wrong."
+ },
+ {
+  "ctx": "λλοιȣμένῳΓα5.321b7.τὸἐπιδȣ̃ναι",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐπιδȣ̃ναι (ἐπιδοῦναι): ȣ ligature with circumflex. genie ῦ, llama ό wrong."
+ },
+ {
+  "ctx": "τόςΦγ1.201a12al.ἀλλοίωσις.defμ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἀλλοίωσις, def — a comma follows, not a period. opus wrong."
+ },
+ {
+  "ctx": "ςΜλ2.1069b12.ν1.1088a32.Κ14.15",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Print reads K4. 15b12 — chapter is K4, no leading 1. opus's extra '1' (K14) is spurious."
+ },
+ {
+  "ctx": "9b10,33.ἐνμόνοιςὑπάρχειἀλ-λοίω",
+  "verdict": "λοίω",
+  "agrees_with": "genie",
+  "confidence": "high",
+  "note": "ἀλ-λοίωσις broken across line; accent sits on οι (λοίω). llama misplaced accent (λοιώ); opus prepended the line-break hyphen already carried by 'ἀλ-'."
+ }
+]

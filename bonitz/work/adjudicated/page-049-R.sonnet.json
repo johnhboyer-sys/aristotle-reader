@@ -1,0 +1,114 @@
+[
+ {
+  "ctx": "ἀμαρτωλότερονΗβ9.1109a33.Ἄμασι",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Breathing+accent mark opens rightward (smooth/psili hook + acute tick), not the left-opening rough breathing genie shows."
+ },
+ {
+  "ctx": "θαλάττιοςὄφιςἀμαυρότεροςΖμ37.6",
+  "verdict": "υ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Boxy serifed U-shape, no descending hook; compared directly against a genuine μ (in Ζμγ4/μα7 nearby) which has a clear curled tail — this glyph lacks it."
+ },
+ {
+  "ctx": "ἀμαυρότεραϗ̀βραχυβιώτεραΖμ1.60",
+  "verdict": "υ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Same boxy U-shape as the other Ζ_ siglum in this entry (spine_off 3120), no mu-style hooked descender."
+ },
+ {
+  "ctx": "μβ8.367b28.Ζμγ4.667a19.πκϛ18.9",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "A distinct stigma/ϛ glyph (curved top + horizontal bar) is clearly printed between κ and 18 — not blank as genie/llama read."
+ },
+ {
+  "ctx": ".Ζμγ4.667a19.πκϛ18.942a24,ἡἡδο",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Mark sits at baseline with a downward hook/tail, the shape of a comma, not a raised dot (period)."
+ },
+ {
+  "ctx": "αύρωταιτȣ͂ἀνδρὸςἡδύναμιςπδ25.8",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Triangular wedge body with a thin rising ascender-flag — matches italic delta; compared against a clear θ nearby (ἀμαυρῦσθαι) which is an oval with a crossbar, quite different."
+ },
+ {
+  "ctx": "ιȣ́τωνμορίων,οἷονἀκρωτηρίȣτινὸ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Word-final glyph is a stacked double-loop (figure-8) ligature, not the wavy three-hump ω body with iota-subscript hook that ῳ would show."
+ },
+ {
+  "ctx": "ψβ8.420b2.ἡἀκοὴἀμβλυτέρααἴσθησ",
+  "verdict": "ἴσθησι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Printed word is αἴσθησις with the breathing+acute clearly over the first ι (not over η), ending in -σις; opus's span (accent on iota, ending -σι) matches exactly."
+ },
+ {
+  "ctx": "βλὺἢὀξὺὁρᾶνΖγε1.780a26.πλα8.95",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Alpha is plainly visible between λ and 8 in πλα8 — genie's empty reading missed a clearly printed letter."
+ },
+ {
+  "ctx": "μβρακία,θυγάτηρΦόρβαντοςτȣ͂Ἡλί",
+  "verdict": "ȣ͂Ἡλίȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Both τῶ and Ἡλίῳ end in the clear figure-8 ȣ ligature (first with circumflex), not a bare υ/ι as genie has it."
+ },
+ {
+  "ctx": "ωτῶνπολιτείαf437.ἀμβροσίαςϗ̀νέ",
+  "verdict": "ςϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "The καί-ligature (curved kappa-lambda shape, not a plain κ) carries a visible grave accent above it — llama's bare ϗ misses the mark, genie misreads the ligature as κ."
+ },
+ {
+  "ctx": "̀νέκταροςγεύσασθαιΜβ4.1000a12,",
+  "verdict": "0",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"1000\" is printed with four round, uniform zeros — no 8 shape anywhere in the number."
+ },
+ {
+  "ctx": "2,17.ἄμβροτος(ΟrphicVΙ12)χ7.40",
+  "verdict": "χ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Full X-cross shape (two crossing diagonals, no vertical stem) matches χ; compared to a genuine κ elsewhere (πκς) which has a vertical stroke with two right-branching diagonals — visibly different letterform."
+ },
+ {
+  "ctx": "ος(ΟrphicVΙ12)χ7.401b2.ἀμεγέθη",
+  "verdict": "εγέθη",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Heading word reads plainly ἀμεγέθης (α-μ-ε-γ-έ-θ-η-ς); genie's span drops the γ, llama's ending is wrong."
+ },
+ {
+  "ctx": "5b29.Γα2.316a27.5.320b32.ȣ̔κιν",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Base glyph is clearly the double-loop ȣ ligature (not a plain υ as genie has it). Breathing mark is a curled/hooked shape matching rough-breathing exemplars (ἡ, ἢ) elsewhere on the page rather than the simple small comma of smooth breathing (ὀξὺ, ὁρᾶν) — genuinely fine print, so kept at medium confidence per the known ȣ-breathing trap. | Opus recheck override: smooth breathing (οὐ)."
+ },
+ {
+  "ctx": "3a12.ἀμέλγεσθαιγάλαπολύΖιγ21.5",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clear single diagonal descender below baseline (italic gamma), not the double-vertical-stroke-plus-crossbar shape of eta."
+ }
+]

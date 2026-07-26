@@ -1,0 +1,11 @@
+[
+ {"ctx": "γνῶτας(cfθ2.1155b35,anἀγνιῶτας", "verdict": "ι", "agrees_with": "opus", "confidence": "high", "note": "Word is ἀγνιῶτας with clear iota after γν."},
+ {"ctx": "ληἀναθυμίασιςἄγονοςὕδατοςχ4.39", "verdict": "κ", "agrees_with": "multiple", "confidence": "high", "note": "κ4=De mundo; glyph is kappa not chi."},
+ {"ctx": "ἱεὐνȣ͂χοι(ὀξὺφθέγγονται)πια16.", "verdict": "ι", "agrees_with": "multiple", "confidence": "high", "note": "Small italic ι = Problemata book 10 before chapter 37."},
+ {"ctx": "ι)πια16.900b15.34.903a27.ι37.8", "verdict": "ι", "agrees_with": "opus", "confidence": "high", "note": "Same ι (Problems book 10) misread as digit 1 by others."},
+ {"ctx": "6a5.23.577b13.Ζγβ8.748b7,ὀρεῖς", "verdict": "ὀρεῖ", "agrees_with": "multiple", "confidence": "high", "note": "Word is ὀρεῖς."},
+ {"ctx": "a29.μέχριἀγορᾶςπληθυȣσηςΖιι32.", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "Ζιι = Hist.An. book ι (9); two iotas, 619 is HA bk 9."},
+ {"ctx": "τὰπερὶτὴνἀγορὰνσυμβόλαιαΠδ15.1", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "Πδ=Politics bk 4; 1300 confirms delta."},
+ {"ctx": "αιονϗοἶνονϗτὴνἄλληνἀγοράνοβ134", "verdict": "ο", "agrees_with": "opus", "confidence": "high", "note": "οβ=Oeconomica bk 2; 1347 confirms omicron."},
+ {"ctx": "ᾶσινδιατρῖβονΠδ4.1291b19,a4.πλ", "verdict": "a", "agrees_with": "multiple", "confidence": "high", "note": "Inline raised a in citation a4, not digit 3."}
+]

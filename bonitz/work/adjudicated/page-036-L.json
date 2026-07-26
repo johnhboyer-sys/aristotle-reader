@@ -1,0 +1,21 @@
+[
+ {"ctx": "μοιομερῶνΖμβ2.647b16.cfΖιδ1.52", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "siglum Ζιδ; llama misread δ as θ"},
+ {"ctx": "θα,sarmentaspinishοrridaΖιι8.6", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA siglum Ζu = Ζιι fusion"},
+ {"ctx": "uaedam,fοrtcnicusferοxL)Ζιι1.6", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "Ζu = Ζιι fusion"},
+ {"ctx": "ȣ̓́τεἄλλοτῶνἀκανθηροτέρωνȣ̓θέν", "verdict": "ȣ̓θένΖιι", "agrees_with": "opus", "confidence": "high", "note": "οὐθέν ligature ȣ̓ + siglum Ζu=Ζιι"},
+ {"ctx": "5a29,b27.γαλεοὶϗἀκανθίαιΖιι37.", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "Ζu = Ζιι fusion"},
+ {"ctx": "hiasΖιζ10etrajaacanthiasΖιι37S", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "Ζu = Ζιι fusion"},
+ {"ctx": "dldΒerlΑkad1840p193.235ΑΖιΙ145", "verdict": "ι", "agrees_with": "opus", "confidence": "high", "note": "subscript ι in AΖι siglum is present"},
+ {"ctx": "άνθιαλεπτάΖιγ7.516b19(vΑΖιΙ335", "verdict": "ι", "agrees_with": "opus", "confidence": "high", "note": "subscript ι in AΖι"},
+ {"ctx": "χροοι,φωνὴνλιγυρὰνἔχȣσινΖιι17.", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "Ζu = Ζιι fusion"},
+ {"ctx": "cοmmemοratisspecimenΙp1ΑΖιΙ86;", "verdict": "ι", "agrees_with": "opus", "confidence": "high", "note": "subscript ι in AΖι"},
+ {"ctx": "futatSu).ἄκανθος.τῆςἀκάνθȣεἶδο", "verdict": "ȣ", "agrees_with": "opus", "confidence": "high", "note": "ἀκάνθȣ genitive, bare ου ligature"},
+ {"ctx": "ς.τῆςἀκάνθȣεἶδοςπερὶτὴνἘρίθεια", "verdict": "ί", "agrees_with": "opus", "confidence": "high", "note": "Ἐρίθειαν, accented ι not υ"},
+ {"ctx": "thalus)pendulinusΚGlοgerΙ2ΑΖιΙ", "verdict": "2ΑΖι", "agrees_with": "multiple", "confidence": "high", "note": "I 2 AΖι; genie dropped the 2 and ι"},
+ {"ctx": "ανθῶδεςφύσειτὸῥόδόνἐστίπιβ8.90", "verdict": "β", "agrees_with": "multiple", "confidence": "high", "note": "πιβ8; genie misread β as θ"},
+ {"ctx": "ῶνπολυκοιλίωνΖμγ14.674b3,a29.ἀ", "verdict": "a", "agrees_with": "multiple", "confidence": "high", "note": "raised a in 674a29; llama dropped it"},
+ {"ctx": "4b3,a29.ἀκανθώδηςγλῶτταΖιβ10.5", "verdict": "β", "agrees_with": "multiple", "confidence": "high", "note": "Ζιβ10; genie misread β as θ"},
+ {"ctx": "ύσιςΖμβ9.655a20.ἀκανθώδηςȣ̓ράΖ", "verdict": "ȣ̓", "agrees_with": "multiple", "confidence": "high", "note": "οὐρά ligature ȣ̓ with smooth breathing"},
+ {"ctx": "6.490b28.Ζγε3.781b33.κραγγῶνος", "verdict": "γ", "agrees_with": "opus", "confidence": "high", "note": "κραγγῶνος double gamma"},
+ {"ctx": "μαἀκανθῶδεςΖμδ13.696b5.Ζιβ13.5", "verdict": "β1", "agrees_with": "multiple", "confidence": "high", "note": "Ζιβ13; genie misread β as θ"}
+]

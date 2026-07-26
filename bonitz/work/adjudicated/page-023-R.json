@@ -1,0 +1,262 @@
+[
+ {
+  "ctx": "φ3.808a37.ἀεισκῶπεςdescrΖιι28.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Fused Ζι+book-ι siglum, prints as 'Ζu'"
+ },
+ {
+  "ctx": "psetοtusSu96n5cfΚ985;σκώψ.ephi",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "uncertain",
+  "note": "Mark after σκώψ ambiguous period/comma; genie+llama read comma"
+ },
+ {
+  "ctx": "985;σκώψ.ephialtesscοpsΑΖιΙ77n",
+  "verdict": "ιΙ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "βολεῖνΖγε3.783b10,20.ἀελίȣχήρω",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἀέρινοςΜθ7.1049a26.ȣ̓χἁπλȣ̃ντὸ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ςΜθ7.1049a26.ȣ̓χἁπλȣ̃ντὸτȣ̃ζώȣ",
+  "verdict": "ȣ̃ζώȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "435a12.ἀέριος.ἐξῆςτῆςἀερίȣφύσε",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ῆςτῆςἀερίȣφύσεωςθάλασσαἐρήρεισ",
+  "verdict": "ήρεισταικ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "Verb ἐρήρεισται; following De Mundo siglum is κ"
+ },
+ {
+  "ctx": "ῷαἀέρια,distνηκτά,χερσαῖαχ6.39",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "De Mundo siglum κ, matches κ in νηκτά not descending χ"
+ },
+ {
+  "ctx": "ςχ3.793b5.ἀερώδης.ὑπὸτῆςτȣ̃πλε",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ὸπυρῶδες,τὸδὲἧττονταχὺἀερῶδεςχ",
+  "verdict": "ῶδεςκ",
+  "agrees_with": "genie",
+  "confidence": "high",
+  "note": "De Mundo siglum κ"
+ },
+ {
+  "ctx": "quilaeetfalcοnesSu104;ΑΖιΙ77)π",
+  "verdict": "Ι",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "falcοnesSu104;ΑΖιΙ77)πτηνόν,πτ",
+  "verdict": "ό",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "90a6.γ9.517b2.ἀετῶνγένηΖιθ3.59",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ανεςΖιζ6.563b5.ι32.618b18-619a",
+  "verdict": "-",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Hyphen within citation range"
+ },
+ {
+  "ctx": "3b5.ι32.618b18-619a10.ἐκτȣ̃ζεύ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "cribiturφ6.811a37,812b6.Ζιι34.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "φασινεἶναιμόνοντῶνὀρνέωνΖιι32.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ρανΖιθ3.592b1.18.601b2.ι11.615",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ι11 = HA book-ι chapter 11, two digits"
+ },
+ {
+  "ctx": "15,30,b1.10.1.609a4.τίσιζώȣιςπ",
+  "verdict": "ῴο",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "opus misread ο as ȣ; word is ζῴοις"
+ },
+ {
+  "ctx": "ναζῷαμάχεταιπρὸςτὸνἀετόνΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "275.1527b25.πῶςνεοττεύειΖιι32.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "3a17,27.πῶςτρέφειτȣςνεοττȣςΖιζ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "medium"
+ },
+ {
+  "ctx": "20,27,b25,34.32.618b30.βίȣμῆκο",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "32.618b30.βίȣμῆκος,γῆραςΖιι32.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ζιε5.540b18(raiaaquilaΚad11cfC",
+  "verdict": "11",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Reads as digits '11' matching font's 1-glyph"
+ },
+ {
+  "ctx": "a12.ἄζυξὢνὥσπερἐνπεττοῖςΠκ2.12",
+  "verdict": "κ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Glyph is x-shaped italic κ"
+ },
+ {
+  "ctx": "νπγ18.873b31,35,26,36.καρκίνȣς",
+  "verdict": "κίνȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "6,36.καρκίνȣςπίνεινἀηδέςΖιι5.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Fused Ζu = Ζιι despite genie/llama reading υ"
+ },
+ {
+  "ctx": "ηδῆἐστίν,ἃπράττεινἐπιχειρȣ̃σιν",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ίν,ἃπράττεινἐπιχειρȣ̃σινρ35.14",
+  "verdict": "3",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "1.—ἀηδῶςἀκȣ́ειν,οppἡδέωςΗδ8.11",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "1.1171b26.ἀηδών,πῶςᾄδειΖιδ9.53",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιδ9; 536a = HA book δ"
+ },
+ {
+  "ctx": ".536a29,b17.ι49Β.632b21.ακ804a",
+  "verdict": "κ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "De audibilibus siglum ακ; compact κ, no descender"
+ },
+ {
+  "ctx": "a26.ἴδιονἀηδόνιπαρὰτὰςἄλλȣςὄρν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιθαςτὸμὴἔχειντῆςγλώττηςτὸὀξύΖι",
+  "verdict": "ὀξύΖιι",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "ὀξύ acute + fused Ζιι"
+ },
+ {
+  "ctx": "ὸὀξύΖιι15.616b8.μεταβολὴτȣ̃χρώ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "16b8.μεταβολὴτȣ̃χρώματοςΖιι49Β",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "uscSt,luscveraSu109n40ΑΖιΙ77.n",
+  "verdict": "Ι77.",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "2).ἀήθης.ἄηθειςτραγῳδίαι,synȣ̓",
+  "verdict": "synȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ηθειςτραγῳδίαι,synȣ̓δὲνἔχȣσαιἦ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ }
+]

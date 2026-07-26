@@ -1,0 +1,174 @@
+[
+ {
+  "ctx": "1390b10.cfΠη16.1335a30.ὁβȣ͂ςἀκ",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "37.621b19.ὁνέοςϗ̀ἀκμάζωνΗγ13.1",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "θηΡβ14.ἀκμαῖος.οἱἀκμαῖοιΗκ4.11",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic kappa (looks like x); siglum Ηκ4"
+ },
+ {
+  "ctx": "ίτασις,ἄνεσιςΟβ6.288a19.οppαὔξ",
+  "verdict": "pp",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "roman Latin 'opp', not Greek"
+ },
+ {
+  "ctx": "0.γ12.434a24.cf9.432b24.οppνεό",
+  "verdict": "pp",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "roman Latin 'opp', not Greek"
+ },
+ {
+  "ctx": "κμὴποίωνἠθῶνἐστίνΡβ14.ἀνθȣ͂σαν",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ὴνἐναίμȣτεȣ̓́σηςϗ̀διαθέρμȣf259",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "1525b33.ἄκμωνΖγε8.789b11.ακ802",
+  "verdict": "ακ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "De audibilibus siglum ακ; italic kappa looks like x"
+ },
+ {
+  "ctx": "κοή.1.περὶἀκοῆςψβ8.ἡἀκοὴτȣ͂ἀκȣ",
+  "verdict": "ȣ͂ἀκȣστȣ͂ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ψβ8.ἡἀκοὴτȣ͂ἀκȣστȣ͂ϗ̀ἀνηκȣ́στȣ",
+  "verdict": "ȣ́στȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τȣ͂ἀκȣστȣ͂ϗ̀ἀνηκȣ́στȣ,ψόφȣτεϗ̀",
+  "verdict": "ȣτεϗ̀σιγῆςψ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ὴpeculiarinοminediciturἄκȣσις)",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἄκȣσις = ἄκουσις, ligature ȣ"
+ },
+ {
+  "ctx": "κοὴἔστινὡςἕνἐστιϗ̀ἔστινὡςȣχἕνψ",
+  "verdict": "ȣχἕνψ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "εικαθαριότητιἀκοὴγεύσεωςΗκ5.11",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic kappa; siglum Ηκ5"
+ },
+ {
+  "ctx": "συμβάλλονταιf39.1481a12.τῶνζῴω",
+  "verdict": "ῶ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τῶν, omega circumflex not ligature"
+ },
+ {
+  "ctx": "a24.cf15.494b13.β10.503a5.12.5",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ήνΖιβ13.505a34.δ8.533a34,b4,53",
+  "verdict": "b",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "raised roman column letter b"
+ },
+ {
+  "ctx": "ἀκοὴνἔχειτὸζῷονὅπωςσημαίνῃτιαὐ",
+  "verdict": "ῃτιαὐτῷψ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "breathing on αυ faint; read smooth per opus and standard DA text"
+ },
+ {
+  "ctx": "1,13.cfΜΑ1.980a25,b23Βζ.Ζιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "HA siglum Ζι+book-ι fused (looks like u) = Ζιι"
+ },
+ {
+  "ctx": "νἀκοὴνμάλισταἐκγενετῆςπηρȣ͂ντα",
+  "verdict": "ȣ͂νται",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "κή(cfαἰσθητικὴἐπιστήμη),οppἡμα",
+  "verdict": "pp",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "roman Latin 'opp'"
+ },
+ {
+  "ctx": "eτὸτῆςἀκοῆςαἰσθητήριον.δυσὶνὄμ",
+  "verdict": "οῖ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "word is δυοῖν, omicron+iota"
+ },
+ {
+  "ctx": "are).ἀφὴτῆςἀκοῆςἀνομοίαγίγνετα",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "no extra γ; opus doubled"
+ },
+ {
+  "ctx": "ὴτῆςἀκοῆςἀνομοίαγίγνεταιακ803b",
+  "verdict": "κ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "De audibilibus siglum ακ803; italic kappa"
+ },
+ {
+  "ctx": "803b8.ἀκοὴδεξιά,ἀριστεράπλα29.",
+  "verdict": "λ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "siglum πλα, clear lambda"
+ },
+ {
+  "ctx": "ασίαςΗγ13-15.ηεγ2.ημα22.πκη.94",
+  "verdict": "κη.",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "siglum πκη. with period; italic kappa"
+ }
+]

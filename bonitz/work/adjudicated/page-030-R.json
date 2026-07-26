@@ -1,0 +1,21 @@
+[
+ {"ctx": "151b1.αἱρεῖσθαιϗ̀φιλεῖνηεη2.1236", "verdict": "η", "agrees_with": "opus", "confidence": "high", "note": "EE siglum ηε + book η (7); citation 1236a11 is EE VII.2"},
+ {"ctx": "1.1116a11,14.κ2.1173a12.Ρα5.136", "verdict": "α", "agrees_with": "multiple", "confidence": "high", "note": "Greek italic α (Topica book α), not Latin a"},
+ {"ctx": "̓χαἱρετέονὁμοίωςπερὶἱματίȣϗ̀φίλ", "verdict": "ȣϗ̀φίλȣ", "agrees_with": "opus", "confidence": "high", "note": "ȣ ligatures raw; the kai ligature carries a printed grave"},
+ {"ctx": "οπαΑγ33.89a27.αἱρεῖσθαιτὸx(scμ", "verdict": "κ", "agrees_with": "none", "confidence": "medium", "note": "italic κ printed as x-form (variable); not α and not literal x"},
+ {"ctx": "αἱρεῖσθαιτὸx(scμᾶλλον)ἢτὸδΑβ22", "verdict": "δ", "agrees_with": "opus", "confidence": "high", "note": "clear delta before siglum Αβ22"},
+ {"ctx": ",11.8.113b32sqq.γ3.118b33-35.4", "verdict": "-", "agrees_with": "multiple", "confidence": "high", "note": "short range hyphen in 118b33-35"},
+ {"ctx": "ἁπλῶςἀγαθόν,αὑτῷδὲτὸαὑτῷ(lαὑτῷ", "verdict": "l", "agrees_with": "opus", "confidence": "high", "note": "Latin l = lege in variant-reading parenthesis"},
+ {"ctx": "097b17.αἱρετώτεροντὸαὐταρχέστε", "verdict": "κ", "agrees_with": "multiple", "confidence": "high", "note": "αὐταρκέστερον; italic κ misread as χ by opus"},
+ {"ctx": "αύτηςσωτηρίαςαἱρετώτεροςΗγ11.11", "verdict": "γ", "agrees_with": "multiple", "confidence": "high", "note": "Ηγ11 (NE III), 1116b20"},
+ {"ctx": "1.αἱρετωτάτηζωή,πολιτείαΠγ18.12", "verdict": "γ", "agrees_with": "multiple", "confidence": "high", "note": "Πγ18 (Pol III), 1288a37"},
+ {"ctx": "3.1199a5.τὰὑπὸτὴναἵρεσινΗβ2.110", "verdict": "β", "agrees_with": "opus", "confidence": "high", "note": "Ηβ2 (NE II), 1104b35; clearly beta not zeta"},
+ {"ctx": "hnδ6.1292b35).αἶσα,etymοliqἀεὶ", "verdict": "iqἀεὶȣ͂", "agrees_with": "opus", "confidence": "high", "note": "reads 'etymol i q ἀεὶ οὖσα'; ȣ͂ = ου ligature + circumflex"},
+ {"ctx": ",descr,τίσιζῴοιςπολέμιοςΖιι1.60", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA siglum Ζι + book ι fused into u-shape; 609b is HA IX"},
+ {"ctx": "σθαι,αἰσθητός.cfαἴσθησις.a.τῷαἰ", "verdict": "a", "agrees_with": "opus", "confidence": "medium", "note": "roman lowercase subsection marker, not Greek α"},
+ {"ctx": "ῷονπρὸςτὸμὴζῷονδιορίζομενζ1.46", "verdict": "ζ", "agrees_with": "opus", "confidence": "high", "note": "single lowercase italic ζ siglum; not Ζι"},
+ {"ctx": "24.υ2.455b23.ψα2.403b27.τȣ͂μὴαἰ", "verdict": "ȣ͂", "agrees_with": "opus", "confidence": "medium", "note": "ȣ ligature + circumflex = τοῦ; genitive with τί τὸ αἴτιον"},
+ {"ctx": "27.τȣ͂μὴαἰσθάνεσθαιτὰφυτὰτίτὸαἴ", "verdict": "τίτ", "agrees_with": "opus", "confidence": "high", "note": "τί present: 'τὰ φυτὰ τί τὸ αἴτιον'"},
+ {"ctx": "τὸαἴτιονψβ12.424a33.τὰαἰσβανόμ", "verdict": "θ", "agrees_with": "multiple", "confidence": "medium", "note": "αἰσθανόμενα; glyph β-like but word requires θ"},
+ {"ctx": "ψβ12.424a33.τὰαἰσβανόμεναȣπάντ", "verdict": "ȣ", "agrees_with": "opus", "confidence": "medium", "note": "ȣ ligature = οὐ; 'οὐ πάντα κινητικά'"}
+]

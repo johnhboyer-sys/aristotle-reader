@@ -1,0 +1,165 @@
+# Bonitz human queue
+
+**✅ FULL REVIEW COMPLETE 2026-07-22 (John, via REVIEW.html items 1–101, pages 15–44).**
+All 101 items dispositioned; 44 corrections applied to work/reconciled/.
+Residual uncertainties John flagged (kept as adjudicated, revisit only if they matter downstream):
+- item 10 (p20L:60) — period after κύκνος/κόττυφος illegible; kept as printed guess.
+- item 15 (p23L:51) — printed `αεῖ` (variant note); accent illegible, circumflex assumed per John.
+- items 31 (p25L:16), 45 (p27R:22) — period-vs-comma illegible; kept as adjudicated.
+- item 72 (p34R:19) — `ȣ̓͂` per John's best reading ("hard to tell").
+Notes: item 3/24 sigla confirmed Ζιι (HA book 9 = ι; siglum Ζι + book ι). Items 12/52: bottom `v.` printer's marks are dropped by the cleaner by design.
+The per-item bullets below are superseded by this review; kept for the record.
+
+
+- ~~**p15R** ctx `γαθὸναȣταρκεςΗα5.1097b8.Πκ2.1253a`~~ — **RESOLVED by John 2026-07-22: printed `αὔταρκες Ηα5. 1097b8. Πα2.1253a1`.** Two fixes applied to reconciled: `αȣ`→`αὔ` (the ligature read was a misread of ὔ) and `Πκ2`→`Πα2`. The x-shaped glyph after Π is Bonitz's ITALIC α, not κ — and `Πκ` is impossible (Politics has books α–θ only). Genie's `α` was right against a 2-1 majority.
+- ~~**p17L** ctx `ὁπότεροιἂνὑπερέχωσι.καθ'αὑτὰςἄ`~~ — **RESOLVED by John 2026-07-22: printed `καθ᾽ αὑτȣ̀ς ἄγȣσι` (ligature WITH grave).** Applied to reconciled, printed line break restored (the verdict insertion had glued two lines — see reconcile line-break bug note).
+- ~~**p17R** ctx `b8.f17.1477a9.ȣσίαιἀγένηταιϗἄφ`~~ — **RESOLVED by John 2026-07-22: printed `ȣ̓σίαι ἀγένητοι ϗ̀ ἄφθαρτοι`** (smooth breathing on ȣ, endings -οι, grave on the ϗ ligature). Applied to reconciled.
+- **p17R** ctx `23.τὰςἀγέλαςποιȣνταιὅτανκινῶσι` — verdict `ύω` (medium); O=`ινῶ` G=`ύω` L=`ύω`. reads κυῶσιν (of fish spawning); genie+llama agree, opus κινῶσιν wrong
+- **p19L** ctx `τράποδαϗἄγριαΖιθ5.594b28.15.61` — verdict `1` (medium); O=`1` G=`ι` L=`ι`. Chapter number 15; same short-1/iota glyph as flag 21.
+- **p19L** ctx `02b15.28.606a7.29.607a11.15.61` — verdict `1` (medium); O=`1` G=`ι` L=`ι`. Chapter number 15; leading glyph is a short digit that resembles iota, but context is an Arabic chapter numeral.- **p20L** ctx `nimalibus,κύκνος.κόττυφος` — verdict `.ἀηδὼ` (medium); O=`.ἀηδὼ` G=`,ἀηδώ` L=`,ἀηδὼ`. period after κόττυφος; ἀηδὼν grave (oxytone before word), not acute
+- **p20L** ctx `1a37.—deanimalibus,κύκνος` — verdict `.` (medium); O=`.` G=`,` L=`,`. period after κύκνος in bird list
+- **p20L** ctx `4.1543b18.ἄδεια,οppζημίαΠ` — verdict `δ` (medium); O=`δ` G=`θ` L=`δ`. book letter glyph is delta not theta
+- **p20L** ctx `tδιαλεκτικαίτθ11.161a24.ι` — verdict `ι` (medium); O=`1` G=`α` L=`1`. printed Greek iota = book-siglum ι (SE cited as Topics bk 9); opus/llama read digit 1, genie α
+- **p20L** ctx `3a6.οἱἀγωνιῶντεςδιψητικο` — verdict `,ἱδρῶ` (medium); O=`.ἱδρῶ` G=`,ἱδρῶ` L=`,ἱδρȣ͂`. comma after διψητικοί; llama's ligature ȣ is wrong (it is ῶ)
+- **p21L** ctx `ικεῖνϗτὸἀδικεῖσθαιἄμφωμὲνV.φαῦ` — verdict `` (medium); O=`V.` G=`` L=``. The 'V.' stands alone on its own line at the column/page foot — a printer's signature mark, not running text; genie/llama correctly omit it.
+- **p22R** ctx `b7.Πδ8.1294a1.φανερὸνὅτιτȣ͂τ'ἀ` — verdict `ȣ͂τ'` (medium); O=`ȣ͂τ'` G=`ἄτ&apοs;` L=`ἆτ'`. ȣ with circumflex (τȣ͂τ'); circumflex partly clipped but present
+- **p22R** ctx `σθαι)τȣτοποιήσειΜζ12.1038a13.ȣ` — verdict `a13.ȣθ'ὁ` (medium); O=`a13.ȣθ'ὁ` G=`ª13.ἐθ&apοs;ὁ` L=`a13.ἐφ'ὃ`. ȣθ' letters certain; ȣ reads bare (marks above are bleed from line 5)
+- **p23L** ctx `ἀεικέλιοςδίφρος(Ηοmυ259)ieμοχθ` — verdict `e` (medium); O=`e` G=`ο` L=`ο`. i e = id est
+- **p23L** ctx `(ΗοmΑ1)πο19.1456b16.φησὶΜȣσαῖο` — verdict `ȣ` (medium); O=`ȣ` G=`υ` L=`υ`. Μȣσαῖος = Μουσαῖος, ou-ligature
+- **p23L** ctx `οἀεὶΡβ23.1398a12restituitcἀεῖV` — verdict `cαἰεῖ` (uncertain); O=`cἀεῖ` G=`εἶ` L=`ex`. tiny worn word reads c + αἰεῖ; opus closest but has ἀ for αἰ
+- **p23R** ctx `ιθαςτὸμὴἔχειντῆςγλώττηςτὸὀξύΖι` — verdict `ὀξύΖιι` (medium); O=`ὀξύΖιι` G=`ἐξὺΖυ` L=`ὀξὺΖι`. ὀξύ acute + fused Ζιι
+- **p23R** ctx `.536a29,b17.ι49Β.632b21.ακ804a` — verdict `κ` (medium); O=`κ` G=`χ` L=`χ`. De audibilibus siglum ακ; compact κ, no descender
+- ~~**p23R** ctx `a12.ἄζυξὢνὥσπερἐνπεττοῖςΠκ2.12`~~ — **RESOLVED 2026-07-22: `Πκ2`→`Πα2`** (same x-shaped italic-α glyph as the p15R case John corrected; 1253a7 = Politics I 2, and `Πκ` is impossible — Politics has books α–θ only). Applied to reconciled.
+- **p23R** ctx `Ζιε5.540b18(raiaaquilaΚad11cfC` — verdict `11` (medium); O=`11` G=`ll` L=`ll`. Reads as digits '11' matching font's 1-glyph
+- **p23R** ctx `3a17,27.πῶςτρέφειτȣςνεοττȣςΖιζ` — verdict `ȣ` (medium); O=`ȣ` G=`ύ` L=`ὺ`. 
+- **p23R** ctx `15,30,b1.10.1.609a4.τίσιζώȣιςπ` — verdict `ῴο` (medium); O=`ώȣ` G=`ῴο` L=`ῴο`. opus misread ο as ȣ; word is ζῴοις
+- **p23R** ctx `psetοtusSu96n5cfΚ985;σκώψ.ephi` — verdict `,` (uncertain); O=`.` G=`,` L=`,`. Mark after σκώψ ambiguous period/comma; genie+llama read comma
+- **p24L** ctx `νδέχεταιΗκ7.1177b33.ἀθανα-τίζε` — verdict `` (medium); O=`-` G=`` L=``. A line-break hyphen is physically printed after 'ἀθανα', but it is soft (word-continuation) hyphenation of ἀθανατίζειν; genie/llama correctly drop it, opus kept it.
+- **p24L** ctx `χειδύναμινΖγε4.784b15.ἀὴρȣ́τωκ` — verdict `ȣ̔́` (medium); O=`ȣ́` G=`ὕ` L=`ὕ`. Word-initial ȣ of οὕτω carries a printed breathing + acute (NOT bare); opus wrote it bare (ȣ́), genie/llama caught the breathing but dropped the ligature (ὕ). Correct = ȣ ligature with rough breathing + acute.
+- **p24L** ctx `πο24.1460a11.cfἦθος.ἀῆναι.ἀέν` — verdict `ἀῆναι` (uncertain); O=`.` G=`Ἀθῆναιἀῆναι,` L=`Ἀθῆναιἄῆναι,`. Column top reads 'ἀῆναι.' (smooth breathing, circumflex); the 'Ἀθῆναι' prefix claimed by genie/llama is not present in this column (boundary misalignment), and opus's '.' is wrong; llama's ἄῆναι has a spurious acute on α.
+- **p24R** ctx `θ6.1341b7.Ἀ.ἀπέβαλετὰςαὐλάςΠθ6` — verdict `ȣ́` (medium); O=`ά` G=`ὴ` L=`ȣ́`. Word is αὐλȣ́ς (τοὺς αὐλούς); ligature ȣ clear, acute faint but present. opus/genie misread the vowel.
+- **p24R** ctx `ἀθάνατος·ἀθάνατόνμιναὐξήσȣσιΜȣ` — verdict `ȣσιΜȣ̃` (medium); O=`ȣσιΜȣ` G=`ουσιΜῦ` L=`ȣσιΜȣ`. opus/llama keep the ȣ ligatures correctly (genie wrongly expands to ου/υ); all omit the circumflex printed on Μȣ̃σαι, restored here.
+- **p25L** ctx `ὰςτιμὰςδȣ̀ναι,ἀφαιρεῖσθαι.οppἐ` — verdict `,` (medium); O=`.` G=`,` L=`,`. Mark after ἀφαιρεῖσθαι tailed; comma before opp (genie+llama).
+- **p25L** ctx `ονΖγβ4.737b35.ἄθροισιςὑγρȣ.νεφ` — verdict `ȣ` (medium); O=`ȣ.` G=`οῦ,` L=`ȣ͂,`. ὑγρȣ, : bare ȣ-ligature then comma; opus gave period, genie expanded οῦ, llama added spurious circumflex.
+- **p25L** ctx `ῖνf374.1540b6.ἆθλονἀρετῆς.νίκη` — verdict `.` (medium); O=`.` G=`,` L=`,`. Clean baseline dot after ἀρετῆς, no tail = period; genie/llama read comma.
+- **p25L** ctx `338b10.ἄθλιος,οppεὐδαίμων.μακά` — verdict `,` (medium); O=`.` G=`,` L=`,`. Mark after εὐδαίμων faint-tailed; comma in list before μακάριος (genie+llama).
+- **p25L** ctx `3.768b29.οἱἀθληταὶ·ἄχροοι.δύσρ` — verdict `,` (medium); O=`.` G=`,` L=`,`. Mark after ἄχροοι has a tail; reads as comma in a list (genie+llama).
+- **p25L** ctx `ηναῖοιȣ̓́ραγαΖιζ1.559a12.ȣχαλε` — verdict `ȣ̓` (medium); O=`ȣ` G=`ὁ` L=`ὃ`. ȣ-ligature (=οὐ) with smooth breathing; opus right on letter but omitted breathing; genie/llama read omicron.
+- **p25R** ctx `21b20(pοpulusnigraL).ΑἰγεὺςΕὐρ` — verdict `ὺςEuripidis` (medium); O=`ὺςΕὐριπίδου` G=`ύςΕuripidis` L=`ύςΕuripidis`. Greek Αἰγεὺς (grave υ) + Latin roman 'Euripidis'; opus mis-Greeked the Latin, genie/llama put acute.
+- **p26L** ctx `μενοςΗβ7.1108a34.κόρηαἰδε-σθεῖ` — verdict `` (medium); O=`-` G=`` L=``. Line-break hyphen in αἰδε-σθεῖσα; dropped to rejoin word.
+- **p26R** ctx `Ζια13.493a32.β1.500b3,4.πο26.8` — verdict `δ` (medium); O=`ο` G=`δ` L=`δ`. round-bellied δ with upper flourish; Problems bk δ, 879b (on genitals)
+- **p26R** ctx `maliumusurpatur,ἐλέφαντος.ἵππο` — verdict `.ἵππου.` (medium); O=`.ἵππου.` G=`,ἵππου,` L=`,ἵππȣ,`. periods flank ἵππου; word spelled ου
+- **p26R** ctx `ἐπίπονον,ὅσωπερἂνἀιδιώτερȣνἢΟβ` — verdict `ονᾖ` (medium); O=`ȣνἢ` G=`ονἦ` L=`ονᾖ`. word ends -ον; following subjunctive ᾖ has circumflex + iota subscript
+- **p26R** ctx `εΜενέλαοςαἰδεῖσθαιγαμετὴνȣσαντ` — verdict `ȣ̓͂` (medium); O=`ȣ` G=`ὕ` L=`ὖ`. ou-ligature carries smooth breathing+circumflex (οὖσαν); opus dropped the diacritic, genie/llama used an upsilon base
+- **p27L** ctx `70b32,772b26.παίδωνἐνίοιςὃκατὰ` — verdict `ȣ῾` (uncertain); O=`ὃ` G=`καὶ` L=`ϗ`. ου-ligature (οὗ) with breathing; all three missed the ligature
+- **p27L** ctx `.953b37.οἱἀφροδισιάζοντεςϗȣ́ρη` — verdict `ϗȣ᾿` (medium); O=`ϗȣ́` G=`καὶβ` L=`ϗὑ`. kai-lig + ου-lig (οὐρητιῶντες) with smooth breathing; opus read acute
+- **p27R** ctx `dοmesticusetcatusSΚCrSuΑΖιΙ63)` — verdict `iI` (medium); O=`ιΙ` G=`iΙ` L=`ι`. Roman-type apparatus: lowercase i + capital I
+- **p27R** ctx `2.ιδ4.909a27.Ζιγ9.517a18.ȣλότρ` — verdict `ȣ` (medium); O=`ȣ` G=`ὀ` L=`ὁ`. ου-ligature (οὐλότριχες), printed bare
+- **p27R** ctx `ι5.167a11.φ6.812a13,b31.πι66.8` — verdict `ι` (medium); O=`ι` G=`` L=`.`. Iota present between π and 66 in the siglum
+- **p27R** ctx `τὰςὀδόντας.βλαισοί,δειλοίτι5.1` — verdict `τι` (medium); O=`τι` G=`πι` L=`τι`. Italic τ+ι (single tau stem), not π
+- **p27R** ctx `ςμέλανες,λευκοὶτὰςὀδόντας.βλαι` — verdict `,` (medium); O=`.` G=`,` L=`,`. Comma after ὀδόντας in a list of adjectives
+- **p27R** ctx `.—Αἰθίοπεςμέλανες,λευκοὶτὰςὀδό` — verdict `ȣ` (medium); O=`ὰ` G=`οὺ` L=`ȣ`. ου-ligature (τοὺς), printed bare
+- **p28L** ctx `γονὴκοινὰγῆςϗὕδατοςϗἀέρος.τὸμὲ` — verdict `.` (medium); O=`.` G=`,` L=`,`. baseline dot, no descender = period
+- **p28R** ctx `rp272n12).λέγεταιὅτιαἰγίθȣϗἄνθ` — verdict `ȣϗἄνθȣ` (medium); O=`ȣϗἄνθȣ` G=`ῳκῂἄνθῳ` L=`ῳϗἀνθῳ`. Ligatures ȣ ϗ ȣ certain; accent on ἄνθȣ hard to confirm.
+- **p29L** ctx `ρροΐδεςϗ̀αἱτῶνκαταμηνίων·v.ϗ̀γ` — verdict `v.ϗ̀` (medium); O=`v.ϗ̀` G=`κ.` L=`ϗ`. Lowercase v. confirmed in image; following ϗ cut off at column foot, grave inferred from page style.
+- **p29R** ctx `.11.1412a24.αἴξ.1.ἡαἴξetὁ'αἴξ,` — verdict `αἴξ,` (medium); O=`'αἴξ,` G=`αἴξ.` L=`αἴξ.`. No leading apostrophe; terminal comma (sentence continues into 'inter...refertur').
+- **p29R** ctx `87b1.αἱμωδιᾶν.αἱμωδιῶμεντȣςὀξὺ` — verdict `ȣςὀξὺ` (medium); O=`ȣςὀξὺ` G=`ὰςὄψει` L=`ȣ̀ςὀξȣ̀`. τȣς ὀξὺ: bare ligature, then plain ὀξὺ (not a second ligature).
+- **p29R** ctx `νῶνῥύσις·ἐὰνδέτισυμβαίνῃτȣτων.` — verdict `ȣ́των,` (medium); O=`ȣτων.` G=`ούτων,` L=`ȣ́των,`. Accent on ligature present; terminal mark is a comma.
+- **p30L** ctx `36.ἐνΚεφαλληνίᾳθ9.831a19.2.αἲξ` — verdict `2.αἶ` (medium); O=`2.αἲ` G=`αἴ` L=`2.αἲ`. numeral '2.' present (genie omitted it); iota carries circumflex like parallel αἶ forms, not opus/llama grave
+- **p30R** ctx `ψβ12.424a33.τὰαἰσβανόμεναȣπάντ` — verdict `ȣ` (medium); O=`ȣ` G=`ἢ` L=`ϗ`. ȣ ligature = οὐ; 'οὐ πάντα κινητικά'
+- **p30R** ctx `τὸαἴτιονψβ12.424a33.τὰαἰσβανόμ` — verdict `θ` (medium); O=`β` G=`θ` L=`θ`. αἰσθανόμενα; glyph β-like but word requires θ
+- **p30R** ctx `24.υ2.455b23.ψα2.403b27.τȣ͂μὴαἰ` — verdict `ȣ͂` (medium); O=`ȣ͂` G=`ῷ` L=`ῷ`. ȣ ligature + circumflex = τοῦ; genitive with τί τὸ αἴτιον
+- **p30R** ctx `σθαι,αἰσθητός.cfαἴσθησις.a.τῷαἰ` — verdict `a` (medium); O=`a` G=`α` L=`α`. roman lowercase subsection marker, not Greek α
+- **p30R** ctx `οπαΑγ33.89a27.αἱρεῖσθαιτὸx(scμ` — verdict `κ` (medium); O=`x` G=`α` L=`α`. italic κ printed as x-form (variable); not α and not literal x
+- **p31L** ctx `μία,ἀριθμός,σχῆμα,κίνησις.Τrdl` — verdict `.` (medium); O=`.` G=`,` L=`,`. baseline dot, no comma tail
+- **p32R** ctx `.ψβ7.419a26.Ηγ13.1118a19.πιγ5.` — verdict `πι` (unadjudicated); O=`πι` G=`Π` L=`π`. 
+- **p33L** ctx `1386a32(αἰσθήσειcοdΑc,Vhl11,ἐσ` — verdict `11` (medium); O=`11` G=`ll` L=`ll`. 'Vhl 1 1' printed as spaced digit ones, not letters ll
+- **p33L** ctx `.Ρβ8.1386a32(αἰσθήσειcοdΑc,Vhl` — verdict `ᶜ` (medium); O=`c` G=`ᶜ` L=`c`. cod Aᶜ: the c is clearly printed raised/superscript
+- **p33L** ctx `οneactiοnisvelfacultatisτȣαἰσθ` — verdict `ȣ` (medium); O=`ȣ` G=`ῷ` L=`ὰ`. τȣ ligature (=τοῦ) with faint mark above; genie/llama shapes (ῷ/ὰ) wrong
+- **p33L** ctx `27.875a31.τὰςαἰσθήσειςβεβαρῦνθ` — verdict `αρύ` (medium); O=`αρῦ` G=`ρῆ` L=`ρῆ`. βεβαρύνθαι: opus right on α+υ but accent is acute not circumflex; genie/llama misread as ρῆ
+- **p33R** ctx `εγάληνἔχοντεςαἰσθητικοί,οppἀνα` — verdict `ppἀναί` (medium); O=`ppἀναι` G=`ρρἀναί` L=`ρρἀναί`. Latin roman 'opp' not ρρ (opus right); ἀναί has acute (genie/llama right).
+- **p33R** ctx `ναμιςδιχῶς(τὸμὲνὡςἀπεπιστῆμȣν,` — verdict `ῆμο` (medium); O=`ῆμȣ` G=`ήμω` L=`ήμω`. Circumflex η + omicron (…στῆμον); opus right on ῆ, wrong final; genie/llama wrong accent+vowel.
+- **p33R** ctx `413b12.3.414a32.ἢαἰσθητικόν,τα` — verdict `ἢ` (medium); O=`όν` G=`ή` L=`ή`. Single eta (the conjunction 'or'), grave/smooth; opus 'όν' wrong, genie/llama lack breathing.
+- **p34L** ctx `22(afferturversusfr249),Νώβηπο` — verdict `ιό` (medium); O=`ώ` G=`ιό` L=`ιό`. Iota clearly present (rules out opus's ώ); vowel glyph is omicron/omega ambiguous, name Νιόβη.
+- **p34R** ctx `Α2.982b2.τὸαἴτιονπρότερονȣ` — verdict `ȣ͂αἴτιον` (medium); O=`ȣ͂αἴτιον` G=`τοῦαἰτίου` L=`ϗαἴτιον`. ȣ ligature (=οὗ) with combined breathing/circumflex hook, then αἴτιον; not ϗ, not τοῦαἰτίου.
+- **p35L** ctx `437b23.εἴτιςαἰτίανἔχεικακȣντȣςγ` — verdict `ῶντȣς` (medium); O=`ȣντȣς` G=`ῶντῆς` L=`ȣ͂τȣ͂`. κακῶν (omega) τοὺς (ou-ligature); genie right on ῶ, opus right on τȣς
+- **p35L** ctx `διὰτȣ͂μέσȣδείκνυνταιΑδ11.ȣ̔αἴτιο` — verdict `ȣ̔` (medium); O=`ȣ̔` G=`ἕ` L=`ȣ̓`. οὗ, ou-ligature with rough breathing (not ᾧ, not smooth)
+- **p35L** ctx `βηκόςΦβ5.196b25.6.198a9.Μκ8.10` — verdict `κ` (medium); O=`κ` G=`ν` L=`ν`. 1065a30 = Metaph. book K; italic κ renders x/ν-like in this scan
+- **p35R** ctx `17b22.Ζγα5.717b31(cfἀκανθȣίδειςτρ` — verdict `ώ` (medium); O=`ȣί` G=`ώ` L=`ώ`. reads ἀκανθώδεις; glyph ambiguous with ligature
+- **p35R** ctx `rinaS,actiniaStΚCrΚaΖμFrΑΖιΙ173;` — verdict `Ζι` (medium); O=`Ζι` G=`Ζ:` L=`ζ:`. siglum Z + iota, no colon
+- **p35R** ctx `έλη(Θεοδώρȣ)περὶτὰςαἰώρας,f472.1` — verdict `` (medium); O=`,` G=`` L=``. no clear comma after αἰώρας
+- **p37L** ctx `9.ἀκμαζȣ́σηςτῆςκαθάρσεως(ȣ̓̀γίνετα` — verdict `ȣ̓̀` (uncertain); O=`ȣ̓̀` G=`ἢ` L=`ϗ`. ȣ ligature (=οὐ) with breathing; grave faint/ambiguous. genie ἢ, llama ϗ both wrong.
+- **p37L** ctx `κῆςἕνεκενΖμβ9.654b35.ἀνθρώπȣμόνȣ` — verdict `ώπȣμόνȣτὸȣ̓͂` (medium); O=`ώπȣμόνȣτὸȣ̓͂` G=`ωπῳμόνῳτὸοὖ` L=`ώπῳμόνῳτὸὗ`. ἀνθρώπȣ μόνȣ τὸ ȣ̓͂(ς): raw ligatures; final breathing+circumflex mark faint.
+- **p37R** ctx `ἀκοὴνἔχειτὸζῷονὅπωςσημαίνῃτιαὐ` — verdict `ῃτιαὐτῷψ` (medium); O=`ῃτιαὐτῷψ` G=`ητιαὑτῷψ` L=`ῃτιαὑτȣ͂Ψ`. breathing on αυ faint; read smooth per opus and standard DA text
+- **p38L** ctx `ολȣθεῖνγενομένοις,distπροϊȣσης` — verdict `ϊȣ` (medium); O=`ϊȣ` G=`ιύ` L=`ιό`. proiousis: iota + bare ou-ligature (over genie/llama's accented vowel); diaeresis faint.
+- **p38L** ctx `b25.cf10.778a1,777b35.ἐκτȣἀκολ` — verdict `ȣ` (medium); O=`ȣ` G=`ὸ` L=`ȣ`. ou-ligature (opus/llama), not genie's omicron; a circumflex for tou not clearly resolved.
+- **p38L** ctx `ὰἀνάγκημεθίστασθαιτῶνἀκολȣθȣντ` — verdict `ȣθȣ́` (medium); O=`ȣθȣ` G=`ουθύ` L=`ȣθύ`. akolouthounton: 2nd ligature carries an acute (faint but present).
+- **p39R** ctx `εῖνΑα1.24b14.τη3.153a11.Φκ8.19` — verdict `κ` (medium); O=`κ` G=`α` L=`α`. glyph is the κ-form (matches confirmed κ in Ηκ3), differs from round α; but 191b29 is Physics I, so citation is bibliographically odd
+- **p39R** ctx `ατὰμέροςsiveκατὰπρόσθεσιν.velu` — verdict `,` (medium); O=`.` G=`,` L=`,`. low mark with slight tail before veluti-list
+- **p39R** ctx `κρατὴςμεταμελητικός,ἰατός.ἡμιπ` — verdict `.` (medium); O=`.` G=`,` L=`,`. period after ἰατός (round dot, unlike the comma after μεταμελητικός)
+- **p39R** ctx `1.6.1148a4-11.9.1151a4,2028.ι4` — verdict `28.1` (medium); O=`28.ι` G=`28.1` L=`28.1`. arabic chapter number 14; not iota
+- **p40R** ctx `367b26.—ἀκρόνυχονadverbπκϛ18.9` — verdict `ϛ` (medium); O=`ϛ` G=`ς` L=`ς`. numeral stigma (descender below baseline) in πκϛ
+- **p41L** ctx `aactertiafigurasyllοgismο-rumΑ` — verdict `` (medium); O=`-` G=`` L=``. opus's '-' is a line-break hyphen of 'syllogismorum'
+- **p42L** ctx `μοί,οppψυχροί,χειμερινοίμχ5.46` — verdict `χ` (medium); O=`χ` G=`κ` L=`κ`. siglum μχ (de longitudine vitae, 466b); glyph matches chi of ψυχροί/χειμερινοί on same line; fresh siglum, not Problems-elision
+- **p42L** ctx `1.499a30.ἀλγεῖντȣςπόδας,τȣςὤμ` — verdict `ȣςὤμȣ` (uncertain); O=`ȣςὤμȣ` G=`ὰςὤμα` L=`ȣ̀ςὤμȣ`. grave on τȣς (τοὺς) not clearly legible at this resolution; llama's added grave plausible
+- **p42L** ctx `)πλ1.953a24.ἀλατοπωλίατῶνἀλῶνο` — verdict `ἁλῶνο` (medium); O=`ἀλῶνο` G=`ἁλῶνε` L=`ἁλῶνε`. final char is ο (siglum οβ, Oec II 1346b — opus right); but breathing is rough ἁλῶν (genie/llama right); no reader matches both
+- **p42L** ctx `1127b17,21.οα4.1344a19.ἀλ.αζον` — verdict `` (medium); O=`.` G=`` L=``. stray ink between λ and α of the letter-spaced headword ἀλαζονικόν, not a real period
+- **p43L** ctx `τῆςπερὶτὰςἱέρακαςἕνεκαἀλεώραςΖ` — verdict `ώραςΖιι` (medium); O=`ώραςΖιι` G=`υρίαςΖυ` L=`υρίαςΖη`. ἀλεώρας omega + acute; siglum Ζu=Ζιι
+- **p43L** ctx `phasianusgallusmasLStΚCrΑΖιΙ77` — verdict `Ζι` (medium); O=`Ζι` G=`ζ:` L=`Ζ:`. edition siglum; cap Zeta + small iota, not a colon
+- **p44R** ctx `ιςτὰεἰρημέναΖγγ6.757a13.—ἄλιςἐ` — verdict `ἅλιςἐγὼ` (medium); O=`ἄλιςἐγὼ` G=`ἅλιςἔγω` L=`ἅλιςἔχω`. rough ἅλις + ἐγὼ; opus wrong breathing, genie wrong accent, llama wrong word
+- **p44R** ctx `ωνἄλιςΗκ1.1172b7.περὶμὲντȣ́των` — verdict `ȣ́τωνἅ` (medium); O=`ȣ́τωνἄ` G=`ήτωνἅ` L=`ύτωνἅ`. ȣ ligature + rough breathing; no reader has both
+- **p44R** ctx `3.13.1102b11.τῶνμὲνȣ͂ντοιȣ́των` — verdict `ȣ́τωνἅ` (medium); O=`ȣ́τωνἄ` G=`ύτωνἅ` L=`ύτωνἅ`. ȣ ligature + rough breathing; no reader has both
+- **p44R** ctx `θ107.840a20.ἄλις.περὶμὲντȣ́των` — verdict `ȣ́τωνἅ` (medium); O=`ȣ́τωνἄ` G=`ήτωνἅ` L=`ύτωνἅ`. ȣ ligature (opus) + rough ἅλις (genie/llama); no reader has both
+- **p44R** ctx `ιὰςἄμπελοςf554.1569b35.Ἀλθήφιο` — verdict `θήφ` (medium); O=`θήφ` G=`θ` L=`ήφ`. damaged glyph; reads θ + η-acute + φ
+- **p45R** ctx `tiesἀλλὰusurpatur,ubiἀλλ'ἢexsp` — verdict `ἢexs` (medium); O=`ἢexs` G=`ἤex` L=`ἤex`. accent on ἢ reads as grave (descends right); grave matches recurring ἀλλ' ἢ; genie/llama acute; mark small
+- **p46L** ctx `9b10,33.ἐνμόνοιςὑπάρχειἀλ-λοίω` — verdict `λοίω` (cross-column); O=`-λοίω` G=`λοίω` L=`λοιώ`. ἀλ-λοίωσις broken across line; accent sits on οι (λοίω). llama misplaced accent (λοιώ); opus prepended the line-break hyphen already carried by 'ἀλ-'.
+- **p46R** ctx `ς.ἄλλοdefetdist,synἕτερον.οppτ` — verdict `,` (medium); O=`.` G=`,` L=`,`. mark after ἕτερον sits low with slight tail; reads as comma
+- **p47L** ctx `5a33.πκγ8.932b9.22.934a9.οἰηθȣ` — verdict `οἰηθȣ́` (medium); O=`οἰηθȣ́` G=`ἐπιθύ` L=`διηθȣ́`. First glyph is round vowel lacking delta's tall ascender, then ιηθ; not διηθ (llama) or ἐπιθ (genie, no pi)
+- **p47L** ctx `0a12.ἁλμυρίζειν.γῆἁλμυρίζȣσαΖμ` — verdict `ȣσαΖι` (medium); O=`ȣσαΖμ` G=`ουσαΖι` L=`ȣσαΖα`. ȣ ligature (opus/llama) + HA siglum Ζι u-shape (genie, 613a=HA bk9); no reader has both right
+- **p47L** ctx `ἀφείσθω,ϗ̀γάρἐστινἀλλοτριώτερα` — verdict `ώτερα` (medium); O=`ώτερα` G=`ώτερα` L=`ωτερχ`. Word ἀλλοτριώτερα; terminal alpha printed x-shaped (italic-α trap), not chi
+- **p47R** ctx `φονται(?)Ζιε24.555a14.—τὸἔλοςπ` — verdict `ἕ` (medium); O=`ἔ` G=`ἅ` L=`ἕ`. letter clearly ε (rules out genie ἅ); breathing faint, rough (ἕλος = marsh) most consistent.
+- **p47R** ctx `fλογοδέστερον.ἀλοιφὴσυνεχὴςΖμ4` — verdict `ήςΖιι` (medium); O=`ὴςΖμ` G=`ήςΖυ` L=`ήςΖυ`. συνεχής acute (ής); HA siglum Ζι+book ι(9, 624a)=Ζιι printed as fused u-shape. Genie/llama got accent, none got siglum.
+- **p48L** ctx `rΜed297)Ρβ2.1394a34.Ἀλφειῷθυγά` — verdict `ῷ` (medium); O=`ῷ` G=`ᾶ` L=`ȣ`. Glyph is a single round omega bowl with circumflex, ruling out genie's angular ᾶ and llama's double-lobed ȣ ligature (compared directly against ȣ elsewhere on the page); no iota-subscript dot is clearly visible under the omega, so subscript presence itself is uncertain, but omega+circumflex is the best-supported base reading.
+- **p48R** ctx `ωςἐστὶνἔμφασιςλαμπρότητοςἄστρυ` — verdict `ἄστρȣ περι` (medium); O=`ἄστρυπερί` G=`ἄστρῳπερι-` L=`ἀστρȣπερι`. ἄστρȣ has a combined breathing+acute over alpha (matches opus/genie's ἄ, not llama's plain ἀ) but the vowel is the ou-ligature ȣ (matches llama, not opus's υ or genie's ῳ); περι- shows no accent mark on the iota (contra opus's περί), just the line-break hyphen.
+- **p48R** ctx `ῆςἀλώπεκοςκυνοραϊστὰςπολλὺςἐχύ` — verdict `ȣ̀ς ἐχȣ́σης` (medium); O=`ὺςἐχύσης` G=`ὰςἐχούσης` L=`ὰςἐχȣσης`. Both disputed letters are the ou-ligature (ȣ) with grave then acute accent, clearly not alpha (compare distinct alpha loop-shape in nearby κυνοραϊστὰς) and not spelled-out ου; none of the three readers captured this exactly (genie/llama wrongly read alpha, opus omitted the ligature form).
+- **p49L** ctx `368a18.ἄμαϗ̀..ϗ̀μδ9.386b20.ἄμα` — verdict `ἅμαϗ̀..ϗ̀μδ` (medium); O=`ἄμαϗ̀..ϗ̀μδ` G=`ἅμακ̣.κ̣μθ` L=`ἅμαϗ..ϗμθ`. Both ϗ ligatures clearly carry grave accents and the digit after μ is δ (open-loop shape, not θ) — matches opus/llama, not genie's κ̣/μθ. Breathing on the headword: the hook shape matches the rough-breathing mark seen on unflagged ἁμαρτάνειν elsewhere on this page, so ἅμα (genie/llama) is likelier than opus's ἄμα; genuinely hard to read at this resolution.
+- **p49R** ctx `5b29.Γα2.316a27.5.320b32.ȣ̔κιν` — verdict `ȣ̓` (medium); O=`ȣ̔` G=`ὕ` L=`ȣ̓`. Base glyph is clearly the double-loop ȣ ligature (not a plain υ as genie has it). Breathing mark is a curled/hooked shape matching rough-breathing exemplars (ἡ, ἢ) elsewhere on the page rather than the simple small comma of smooth breathing (ὀξὺ, ὁρᾶν) — genuinely fine print, so kept at medium confidence per the known ȣ-breathing trap. | Opus recheck override: smooth breathing (οὐ).
+- **p50R** ctx `547b14,15.ι37.620b16.μέλιȣχȣτω` — verdict `ȣ̓χȣ̔` (medium); O=`ȣχȣ` G=`ὐχὕ` L=`ȣ̓χȣ`. Both vowels are the closed-loop ligature (opus/llama shape right, genie's plain upsilon wrong), but breathing marks differ between the two instances (first smooth, second appears rough), matching genie's breathing pattern rather than either ligature-reader's; no single reader combined both correctly.
+- **p50R** ctx `ῶνθ48.833b23.f248.1524a7.Ἀμμύς` — verdict `Ἀμμȣ́ς` (medium); O=`Ἀμμύ` G=`Ἄμμύ` L=`Ἀμμό`. Side-by-side with 'εύς' (Ζεύς) on the same line, the Ἀμμ[?]ς vowel shows the closed-loop ligature, not the open-V plain upsilon any reader recorded; breathing before Α is a single smooth mark (matches opus/llama's Ἀ, not genie's added acute Ἄ).
+- **p50R** ctx `5)πο25.1461a20.ἄμμος,defπκγ33.` — verdict `κ` (medium); O=`κ` G=`χ` L=`κ`. πκγ33: the crossing stroke stays within x-height with no descender below baseline, more consistent with kappa than chi.
+- **p50R** ctx `5b18.ἀμίς.αἱἀμίδεςδιὰτίχριώζον` — verdict `ύ` (medium); O=`ιώ` G=`υ` L=`υ`. One accented upsilon after χρ (not two separate glyphs ι+ω as opus split it); genie/llama had the right base letter but missed the acute.
+- **p50R** ctx `τον,ἀναπλέȣσινεἰςτȣςποταμȣςΖιθ` — verdict `ȣ́` (medium); O=`ȣ` G=`ὺ` L=`ȣ`. ποταμȣς: closed-loop ligature confirmed (opus/llama shape correct) but print carries an acute accent none of the three recorded.
+- **p51L** ctx `αιτόςπδ21.879a10.ἀμύνειντὺ` — verdict `ȣ̀ςἐπιόν` (medium); O=`ὺςἐπιόν` G=`οῖςἐπίοι` L=`ȣςἐπιόν`. was 'ὺςἐπιόν' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation.
+- **p51L** ctx `18.θέναρκακῶςϗ̀ἀμυδρῶςμιμύμ` — verdict `ȣ́` (medium); O=`ύ` G=`ή` L=`ȣ`. was 'ύ' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation.
+- **p51L** ctx `1.1421a33.γίγνεταιἐκμυσικῷἄ` — verdict `ῷ` (medium); O=`ῷ` G=`ῆ` L=`ῆ`. Final letter is bowl+two-prong shape with circumflex, no descender below baseline — structurally rules out eta (compare ἀμυγδαλῆ, which has a clear right-side descender). Residual ambiguity between omega-iota-subscript and the οὐ-ligature (both render identically in this font under a bare circumflex with no breathing), but eta is definitively wrong, leaving opus's reading as the viable option among those offered.
+- **p51L** ctx `αμπτῆρες(Εmped222,vlἀμοργύς)` — verdict `ȣ́` (medium); O=`ύ` G=`ό` L=`ό`. was 'ύ' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation.
+
+
+## ⚠ UNFLAGGED ligature leaks, pages 50–51 (found by deterministic sweep, NOT by the comparator)
+
+These are NOT in REVIEW.html — the comparator never flagged them, so reconcile never touched them.
+Cause: `compare3.py:115` flags an opus+genie majority only when the region is near a citation.
+The Sonnet reader and Genie share the same plain-upsilon misreading, so they outvote LlamaParse,
+which read the ligature correctly at every one of these spots. Each reconciled form below is a non-word.
+**John: confirm and I will apply them (they are not yet edited into work/reconciled/).**
+
+- `work/reconciled/page-050-L.txt:50` — reconciled has **ἀκολυθεῖ**, LlamaParse reads **ἀκολȣθεῖ** (ligature). Proposed: ἀκολυθεῖ → ἀκολȣθεῖ
+- `work/reconciled/page-050-L.txt:51` — reconciled has **διαφέρυσι**, LlamaParse reads **διαφέρȣσι** (ligature). Proposed: διαφέρυσι → διαφέρȣσι
+- `work/reconciled/page-050-L.txt:61` — reconciled has **ἔχυσιν**, LlamaParse reads **ἔχȣσιν** (ligature). Proposed: ἔχυσιν → ἔχȣσιν
+- `work/reconciled/page-050-L.txt:22` — reconciled has **καθόλυ**, LlamaParse reads **καθόλȣ** (ligature). Proposed: καθόλυ → καθόλȣ
+- `work/reconciled/page-051-R.txt:47` — reconciled has **σκέλυς**, LlamaParse reads **σκέλȣς** (ligature). Proposed: σκέλυς → σκέλȣς
+- `work/reconciled/page-051-R.txt:1` — reconciled has **τὺς**, LlamaParse reads **τȣ̀ς** (ligature). Proposed: τὺς → τȣ̀ς
+- `work/reconciled/page-051-R.txt:61` — reconciled has **τὺς**, LlamaParse reads **τȣ̀ς** (ligature). Proposed: τὺς → τȣ̀ς
+- **p47L** ctx `λόγονἔχον,τὸἄλογονδιττόνΗκ13.1102a18-1103a10.γ13.11` — verdict `κ` (medium); O=`κ` G=`α` L=`α`. the glyph after Η is the x-shaped ϰ, the same form as the κ of Ηκ2.1172 six lines above, and unlike the bowl-and-tail α printed in ἄλογα on that same line or in Ρα10. Ink says κ, but 1102a18-1103a10 is EN book α, so this looks like a printer's error — sending to review
+- **p47L** ctx `5a33.πκγ8.932b9.22.934a9.οἰηθȣ́μενονγίνεσθαιτὸἁλμυρὸνπότ` — verdict `διηθȣ́` (medium); O=`οἰηθȣ́` G=`ἐπιθύ` L=`διηθȣ́`. bowl with a tick rising off its top-right plus a detached stroke above it = a δ whose ascender is broken; the omicrons on this line (τὸ, πότιμον) are bare closed bowls. Then ι, η, θ (closed oval with crossbar), then the ligature with an acute. The ascender is only partly inked, hence medium
+- **p47L** ctx `ἀφείσθω,ϗ̀γάρἐστινἀλλοτριώτεραΗθ10.1159b24.—ἀλλοτριώτατ` — verdict `ώτερχ` (medium); O=`ώτερα` G=`ώτερα` L=`ωτερχ`. final glyph is an x-shape with a lower-left tail, matching the χ of ἀρχή three lines down and unlike the bowl-and-tail α of ταῦτα one line up; acute is printed over ω. Reads as a printer's error for ἀλλοτριώτερα, so sending to review
+- **p48L** ctx `ερὶἄλφιταπκα1-26.τὰἄλφιταἀδράπ` — verdict `ἁδρά` (medium); O=`ἀδρά` G=`ἁδρὰ` L=`ἀορά`. Breathing over the alpha matches the rough of ὁ on the line above (c-curl opening right), not the smooth of ἀλφηστικός; second letter has a delta ascender (not omicron); final accent slants up-right = acute. So ἁδρά
+- **p49L** ctx `ιητῶνἩρακληίδαπεποιήκασιπς8.1451a20.—ἁμαρτάνεινπολλ` — verdict `ο` (medium); O=`ς` G=`ο` L=`θ`. the oval is broken open on the right so it reads c-like, but it has no descender (rules out ς) and no crossbar (rules out θ); the closed omicron of πο5 later in this column is the same width and slope. πο is the only Poetica siglum and 1451a20 is Poet. 8
+- **p49R** ctx `5b29.Γα2.316a27.5.320b32.ȣ̔κινεῖταιτὸἀμέγεθεςΦθ10.26` — verdict `ȣ̓` (medium); O=`ȣ̔` G=`ὕ` L=`ȣ̓`. base glyph is unmistakably the ou-ligature (fork over closed loop). The mark above is a thin two-bend tick lacking the solid vertical spine of the rough breathing on ἡ (ἡ ἀκοή, same page); weight and slant match the smooth breathing on ἀμέγεθες. Fine print — genuine judgment call
+- **p50L** ctx `2)ξ2.975b2.—τῶνἀγρίωνὀρνέιωνοἱμὲ` — verdict `ι` (medium); O=`ι` G=`` L=``. a separate narrow vertical stroke stands between the accented epsilon and the double-arch omega, identical in shape and spacing to the confirmed iota of ἀγρίων earlier on the same line; fine print, so flagged for human eyes
+- **p50R** ctx `5b18.ἀμίς.αἱἀμίδεςδιὰτίχριώζ` — verdict `ώ` (medium); O=`ιώ` G=`υ` L=`υ`. three downstrokes at 11px pitch spanning 25px, geometrically identical to the omega in φωνῇ (3 strokes, 11px pitch, 25px); the hairline joining strokes 1 and 2 failed to print, leaving a gap that reads as ι+υ, while the second connector is present. Acute sits over the right stroke
+- **p51L** ctx `αιτόςπδ21.879a10.ἀμύνειντὺ` — verdict `ȣ̀ςἐπιόν` (medium); O=`ὺςἐπιόν` G=`οῖςἐπίοι` L=`ȣςἐπιόν`. was 'ὺςἐπιόν' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation.
+- **p51L** ctx `18.θέναρκακῶςϗ̀ἀμυδρῶςμιμύμ` — verdict `ȣ́` (medium); O=`ύ` G=`ή` L=`ȣ`. was 'ύ' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation.
+- **p51L** ctx `1.1421a33.γίγνεταιἐκμυσικῷἄ` — verdict `ῷ` (medium); O=`ῷ` G=`ῆ` L=`ῆ`. Final letter is bowl+two-prong shape with circumflex, no descender below baseline — structurally rules out eta (compare ἀμυγδαλῆ, which has a clear right-side descender). Residual ambiguity between omega-iota-subscript and the οὐ-ligature (both render identically in this font under a bare circumflex with no breathing), but eta is definitively wrong, leaving opus's reading as the viable option among those offered.
+- **p51L** ctx `αμπτῆρες(Εmped222,vlἀμοργύς)` — verdict `ȣ́` (medium); O=`ύ` G=`ό` L=`ό`. was 'ύ' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation.
+- **p51R** ctx `ἀμφί.οἱἀμφ'αὐτὸνβασιλέακ6.39` — verdict `.` (medium); O=`:` G=`.` L=`.`. one heavy baseline blob plus a much fainter, offset speck above it; the lower mark alone matches the period ink elsewhere on the line

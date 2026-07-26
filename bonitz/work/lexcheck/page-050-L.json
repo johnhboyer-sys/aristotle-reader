@@ -1,0 +1,46 @@
+[
+  {
+    "page": 50,
+    "col": "L",
+    "line": 51,
+    "wrote": "διαφέρυσι",
+    "llamaparse": "διαφέρȣσι",
+    "proposed": "διαφέρουσι",
+    "lexical_verdict": "ligature",
+    "why": "διαφερουσι is a corpus form; διαφερυσι is not",
+    "context": "ἄμετρος. διαφέρυσι τῷ ἔμμετρα λέγειν ἢ ἄμετρα πο9. 1451"
+  },
+  {
+    "page": 50,
+    "col": "L",
+    "line": 22,
+    "wrote": "καθόλυ",
+    "llamaparse": "καθόλȣ",
+    "proposed": "καθόλου",
+    "lexical_verdict": "ligature",
+    "why": "καθολου is a corpus form; καθολυ is not",
+    "context": "402 b1. ηεβ1. 1219 b32. — τὰ καθόλυ dicuntur ἀμερῆ"
+  },
+  {
+    "page": 50,
+    "col": "L",
+    "line": 50,
+    "wrote": "ἀκολυθεῖ",
+    "llamaparse": "ἀκολȣθεῖ",
+    "proposed": "ἀκολουθεῖ",
+    "lexical_verdict": "ligature",
+    "why": "ακολουθει is a corpus form; ακολυθει is not",
+    "context": "ἀμετρία ἀκολυθεῖ τῇ ἀνελευθεριότητι αρ7. 1251 b15."
+  },
+  {
+    "page": 50,
+    "col": "L",
+    "line": 61,
+    "wrote": "ἔχυσιν",
+    "llamaparse": "ἔχȣσιν",
+    "proposed": "ἔχουσιν",
+    "lexical_verdict": "ligature",
+    "why": "εχουσιν is a corpus form; εχυσιν is not",
+    "context": "ἔχυσιν ὀδόντας ἰσχυρȣς Ζιι37. 621 a19. σαρκοφάγοι εἰσίν,"
+  }
+]

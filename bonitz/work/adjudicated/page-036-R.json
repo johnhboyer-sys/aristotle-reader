@@ -1,0 +1,21 @@
+[
+ {"ctx": "λευκόν,γίνεταιἐνκηρῷπαλαιȣμένῳ,", "verdict": "ȣ", "agrees_with": "opus", "confidence": "high", "note": "παλαιȣμένῳ = παλαιουμένῳ; clear ȣ ou-ligature, not ω"},
+ {"ctx": ",ὥσπερἐνξύλῳΖιε32.557b8.('duοdi", "verdict": "'", "agrees_with": "opus", "confidence": "high", "note": "opening single-quote before 'duo is present; llama dropped it, genie entity-encoded it"},
+ {"ctx": "alterumἀκαρίtermesfataleL'SΙ392", "verdict": "'", "agrees_with": "multiple", "confidence": "high", "note": "apostrophe after L present (opus+llama)"},
+ {"ctx": "ρῷcietinterpracarussirοΑΖιΙ159", "verdict": "ι", "agrees_with": "multiple", "confidence": "high", "note": "AZι siglum: small ι after Z is present (opus+llama); genie dropped it"},
+ {"ctx": "μεταβάλλοντοςΖιθ2.590a3.τȣ͂οἴακο", "verdict": "ȣ͂", "agrees_with": "multiple", "confidence": "high", "note": "τȣ͂ = τοῦ, ou-ligature with circumflex (opus+llama)"},
+ {"ctx": "b10.τὰἄκαρπα,οppτὰκάρπιμαοα6.13", "verdict": "ο", "agrees_with": "opus", "confidence": "high", "note": "οα6 = Oeconomica α; clear round omicron, not σ"},
+ {"ctx": "θεριώτερατῶνκαρπίμωνϗὠφελίμωνΡα", "verdict": "ί", "agrees_with": "opus", "confidence": "high", "note": "ὠφελίμων: short iota with acute, no eta descender"},
+ {"ctx": "27,23.Ηδ8.1125a12.Ἄκαστος.ὁἐνἸο", "verdict": ".", "agrees_with": "opus", "confidence": "high", "note": "period after 1125a12 (end of entry before headword Ἄκαστος)"},
+ {"ctx": ".Ηδ8.1125a12.Ἄκαστος.ὁἐνἸολκῷἀγ", "verdict": "ο", "agrees_with": "opus", "confidence": "high", "note": "article ὁ = small omicron with rough breathing, not ω"},
+ {"ctx": "b31.ἀκάτακτος.περὶἀκατάκτȣμδ8.3", "verdict": "ȣμδ", "agrees_with": "opus", "confidence": "high", "note": "ἀκατάκτȣ + μδ (Meteor. bk 4), δ not ζ"},
+ {"ctx": "κατάκτȣμδ8.385a14.9.386a9-17(di", "verdict": "-", "agrees_with": "multiple", "confidence": "high", "note": "short range hyphen 9-17 (opus+llama)"},
+ {"ctx": "νὑπάτηνὁρῶντεςἀκατάληπτονȣ͂σανπι", "verdict": "ȣ͂", "agrees_with": "opus", "confidence": "high", "note": "ȣ͂σαν = οὖσαν, ou-ligature with circumflex; not ἦσαν"},
+ {"ctx": "ατος.πνεύματαἀκατάσταταπκϛ13.94", "verdict": "ϛ", "agrees_with": "opus", "confidence": "high", "note": "πκϛ = Problems bk 26; numeral stigma ϛ, not final sigma"},
+ {"ctx": "92b14.ἄκαυστος.περὶἀκαύστȣμδ8.3", "verdict": "ȣμδ", "agrees_with": "opus", "confidence": "high", "note": "ἀκαύστȣ + μδ (Meteor. bk 4), δ not ζ"},
+ {"ctx": "καύστȣμδ8.385a18.9.387a17-22.ἀκ", "verdict": "-22.ἀκεῖ", "agrees_with": "multiple", "confidence": "high", "note": "opus+llama; genie inserted gutter line-number 35 and misread em-dash/ἀκεί"},
+ {"ctx": "ῖσθαιτὸδιερρωγὸςἀράχνιονΖιι39.6", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA siglum Ζι + book ι fused into u-glyph = ιι (Ζιι); standalone ι40 nearby confirms book ι"},
+ {"ctx": "ἀράχνιονΖιι39.623a18.τὴντȣ͂μεγέθ", "verdict": "ȣ͂", "agrees_with": "multiple", "confidence": "high", "note": "τȣ͂ = τοῦ (opus+llama)"},
+ {"ctx": "Ζγγ10.759b4.οppἔγκεντροςΖιι41.6", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA siglum Ζιι (Ζι + book ι), fused u-glyph; not υ or μ"},
+ {"ctx": "52a26.ἀκινησία,ieνηνεμίαμβ8.366", "verdict": "β", "agrees_with": "opus", "confidence": "high", "note": "μβ8 = Meteor. bk 2; clear beta, not ζ (Meteor. has only 4 books)"}
+]

@@ -1,0 +1,246 @@
+[
+ {
+  "ctx": "νf472.1556a3,6,1555b41.Ἀλθηφιὰ",
+  "verdict": "θηφιὰ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιὰςἄμπελοςf554.1569b35.Ἀλθήφιο",
+  "verdict": "θήφ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "damaged glyph; reads θ + η-acute + φ"
+ },
+ {
+  "ctx": "ι32.619a4.34.620a1-12.ἐκτȣ͂ζεύ",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "opus and llama agree; ȣ ligature w/ circumflex"
+ },
+ {
+  "ctx": "οmmunisadΖι32.34Su106n30ΑΖιΙ77",
+  "verdict": "Ζι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "HA siglum; opus and llama agree"
+ },
+ {
+  "ctx": "άς.ῥύμηςτῆςἀλιάδοςψόφοςΖιδ8.53",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "533b = HA book 4 (δ); glyph is δ"
+ },
+ {
+  "ctx": "ἀλ.τὰδελέαταἀποβάλλȣσινπκβ2.95",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πκθ=book 29 (950b); glyph θ; genie and llama agree"
+ },
+ {
+  "ctx": "ὰτῶνἀλιέωνf510.1561b24.οἱἀλ.ϗπ",
+  "verdict": "ἁλ.ϗ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "rough breathing; ϗ (καί) ligature, not οἱ"
+ },
+ {
+  "ctx": "966b25.ἐμπειρικοὶἀλιεῖςΖιδ7.53",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "532b = HA book 4 (δ)"
+ },
+ {
+  "ctx": "depiscibusοbservatiοnesΖιδ8.53",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "533b = HA book 4 (δ)"
+ },
+ {
+  "ctx": "5.720b34.γ5.756a32.ἀλιεύς.βάτρ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "period ending the lemma ἁλιεύς"
+ },
+ {
+  "ctx": "ςβίοςΠα8.1256b2.κάλαμοςΖμδ12.6",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "693a = PA book 4 (δ); opus and genie agree"
+ },
+ {
+  "ctx": "υτικόνcοllective(εἶδοςδήμȣ)Πδ4",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "δήμȣ ligature; opus and llama agree"
+ },
+ {
+  "ctx": "22.ἀλίζειν,synἀθροίζεινπκδ9.93",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "πκδ=book 24 (936b); glyph δ"
+ },
+ {
+  "ctx": "θ107.840a20.ἄλις.περὶμὲντȣ́των",
+  "verdict": "ȣ́τωνἅ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "ȣ ligature (opus) + rough ἅλις (genie/llama); no reader has both"
+ },
+ {
+  "ctx": "3.13.1102b11.τῶνμὲνȣ͂ντοιȣ́των",
+  "verdict": "ȣ́τωνἅ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "ȣ ligature + rough breathing; no reader has both"
+ },
+ {
+  "ctx": "ωνἄλιςΗκ1.1172b7.περὶμὲντȣ́των",
+  "verdict": "ȣ́τωνἅ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "ȣ ligature + rough breathing; no reader has both"
+ },
+ {
+  "ctx": "ιςτὰεἰρημέναΖγγ6.757a13.—ἄλιςἐ",
+  "verdict": "ἅλιςἐγὼ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "rough ἅλις + ἐγὼ; opus wrong breathing, genie wrong accent, llama wrong word"
+ },
+ {
+  "ctx": "νίαςἑαλωκυίαςΠγ3.1276a29.ἀλȣ͂σ",
+  "verdict": "ἁλȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "rough breathing + ȣ ligature"
+ },
+ {
+  "ctx": "ςΠγ3.1276a29.ἀλȣ͂σαΠολυκρίτηf5",
+  "verdict": "ί",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Πολυκρίτη"
+ },
+ {
+  "ctx": ".ἀλίσκεσθαιὑπὸπλευρίτιδος.μέθη",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "period after πλευρίτιδος (round baseline dot)"
+ },
+ {
+  "ctx": "σθαιὑπὸπλευρίτιδος.μέθηςπγ1.87",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πγ = Problems book 3 (871a); opus and genie agree"
+ },
+ {
+  "ctx": "ενίαςἀλόντεςf451.1545a13.Ἀλκαῖ",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "opus and llama agree; genie encoded breathing as apostrophe"
+ },
+ {
+  "ctx": "νείκειΠιττακῷf65.1486b34.Ἀλκαῖ",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "opus and llama agree"
+ },
+ {
+  "ctx": "ηςΕἰρήνη)ἐπὶἄρχοντοςἈλκαίȣ(ieΟ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ἀλκαίȣ ligature; opus and llama agree"
+ },
+ {
+  "ctx": "eΟl89,3)f579.1573a24.ἀλκή.πρὸς",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "period ending lemma ἀλκή; opus and genie agree"
+ },
+ {
+  "ctx": ".1573a24.ἀλκή.πρὸςὑγίειανϗἀλκή",
+  "verdict": "ϗἀλκή",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ϗ ligature; opus and llama agree"
+ },
+ {
+  "ctx": "ν)ὄργανα,distπρὸςτροφήνΖιδ11.5",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "538b = HA book 4 (δ)"
+ },
+ {
+  "ctx": "πρὸςτροφήνΖιδ11.538b15.Ζμβ9.65",
+  "verdict": "β",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζμβ = PA book 2 (655b); opus and genie agree"
+ },
+ {
+  "ctx": "ἐνοἷςἐστὶνἀλκήΗγ9.1115b4.Ἀλκιβ",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "opus and llama agree"
+ },
+ {
+  "ctx": "κήΗγ9.1115b4.Ἀλκιβιάδηςπο9.145",
+  "verdict": "9",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πο9 = Poetics ch 9 (1451b); opus and genie agree"
+ },
+ {
+  "ctx": "4.Ἀλκιβιάδηςπο9.1451b11.πȣ͂ἐτε",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πȣ͂ (ποῦ) ligature; opus and llama agree"
+ },
+ {
+  "ctx": "ςπο9.1451b11.πȣ͂ἐτελεύτησινΖιζ",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιζ HA siglum; opus and genie agree"
+ },
+ {
+  "ctx": "λίαςf403.1545a35,b12.οἱἀπ'Ἀλκι",
+  "verdict": "'Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "elision apostrophe + Ἀ; opus and llama agree"
+ },
+ {
+  "ctx": "1545a35,b12.οἱἀπ'ἈλκιβιάδȣΡβ15",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ἀλκιβιάδȣ ligature; opus and llama agree"
+ },
+ {
+  "ctx": "ἀπ'ἈλκιβιάδȣΡβ15.1390b29.Ἀλκ.,",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "opus and llama agree"
+ }
+]

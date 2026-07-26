@@ -1,0 +1,186 @@
+[
+ {
+  "ctx": ".616b10.διὰτίπολέμιοςὄνῳΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "HA siglum printed as fused 'Ζu' = Ζιι."
+ },
+ {
+  "ctx": "έμιοςὄνῳΖιι1.609a31.αἰγίθȣϗ̀ἄν",
+  "verdict": "ȣϗ̀ἄνθȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "1.609a31.αἰγίθȣϗ̀ἄνθȣαἷμαȣσυμμ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ου-ligature standing for οὐ, printed bare."
+ },
+ {
+  "ctx": "μίγνυσθαιἀλλήλοιςλέγεταιΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "'Ζu1' = Ζιι1."
+ },
+ {
+  "ctx": "ιΡβ22.1396a19.Αἰγ.ἐπλήθυνανf43",
+  "verdict": "a",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Raised Bekker column letter a (1396 a19); opus α and others ο both wrong."
+ },
+ {
+  "ctx": "575a31.αἴγληλευκή(Ηοmζ45)κ6.40",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic κ that looks like x (siglum κ6)."
+ },
+ {
+  "ctx": "0a5.αἰγοθήλας,avis,descrΖιι30.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "'Ζu30' = Ζιι30."
+ },
+ {
+  "ctx": "urοpaeusLStΚCrSu131n95ΑΖι1.77.",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Arabic digit 1 after AZι, not capital iota."
+ },
+ {
+  "ctx": "4b32.αἰγυπιός,avis,descrΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "'Ζu1' = Ζιι1."
+ },
+ {
+  "ctx": "ντῇἈσίᾳοἱδὲτῇΛιβύῃπροσάπτȣσικ3",
+  "verdict": "ȣσικ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Raw ου-ligature + italic-κ siglum (looks like x)."
+ },
+ {
+  "ctx": "ἡἀπὸΚυρήνηςπρὸςΑἴγυπτονΖιε31.5",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "51b28,352b21.κοίλητὰκάτωπκϛ44.",
+  "verdict": "κϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Siglum πκϛ; final glyph is stigma ϛ, not ξ."
+ },
+ {
+  "ctx": "505a14.κατ'Α.ὁνότοςȣπνεῖπκϛ44.",
+  "verdict": "κϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Siglum πκϛ; stigma ϛ."
+ },
+ {
+  "ctx": "ὁἐνΑ.βȣς,ὃνὡςἌπιντιμῶσινηεα5.1",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "περὶΑἴγυπτονἐπιμέλειατῶνζώωνΖι",
+  "verdict": "ῴωνΖιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "ζῴων has iota subscript (opus missed it); siglum Ζιι (genie/llama read Ζι/Ζu)."
+ },
+ {
+  "ctx": "142.845a11.f271.1527a32.πολύγο",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πολύγονοι."
+ },
+ {
+  "ctx": "περὶΑἴγυπτονΖγδ4.770a35.Ζιη4.5",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Siglum Ζιη retains the iota; llama dropped it."
+ },
+ {
+  "ctx": "φτα4.819a11.7.821a33,b8.πκ32.9",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Siglum πκ32."
+ },
+ {
+  "ctx": "stitutaacmοresΠγ15.1286a13.η10",
+  "verdict": "3",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "1286 a13, final digit 3 not 8."
+ },
+ {
+  "ctx": "12.292a8.μα6.343b10,28.ὃτȣςἀφι",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τȣς = τοὺς, ου-ligature."
+ },
+ {
+  "ctx": "β1350b33.Αἰγύπτιονπέλαγοςκ3.39",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic κ looks like x (siglum κ3)."
+ },
+ {
+  "ctx": "ctiοnemαἰτώλιοςsecutus,αἰγώλιο",
+  "verdict": "τ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "αἰτώλιον with τ (matches lectionem αἰτώλιος)."
+ },
+ {
+  "ctx": "ἰτίαν,distγλαυκά,χαροπάΖγε1.77",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "λαυκά,χαροπάΖγε1.779b14.πι11.8",
+  "verdict": "ι1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Siglum πι followed by 11; iota + digit 1."
+ },
+ {
+  "ctx": "ι11.892a3.ὀφθαλμὸςαἰγωπὸςἥδυςβ",
+  "verdict": "ἤθȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "ἤθȣς (ἤθους): acute eta + ου-ligature; opus 'ἥδυ' wrong."
+ },
+ {
+  "ctx": "ί,χαροποί,μελανόφθαλμοιΖγε1.77",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "μενοςΗβ7.1108a34.κόρηαἰδε-σθεῖ",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Line-break hyphen in αἰδε-σθεῖσα; dropped to rejoin word."
+ }
+]

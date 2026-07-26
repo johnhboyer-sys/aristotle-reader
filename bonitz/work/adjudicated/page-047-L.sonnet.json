@@ -1,0 +1,114 @@
+[
+ {
+  "ctx": "οκεῖἀλλότριονἀγαθὸνεἶναιΗε3.11",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Book letter of Ethics siglum Ηε (EN bk 5, 1130a); clearly Greek epsilon, not Latin e"
+ },
+ {
+  "ctx": "γορεύσαντατὸἀλλότριονἀποφῆσαιτ",
+  "verdict": "ῆσα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Word printed ἀποφῆσαι (η+circumflex, σαι); not ἀποφάσει"
+ },
+ {
+  "ctx": "ριονἀποφῆσαιτῶνοἰκείωντιπο21.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πο = Poetics siglum (1457b); clear omicron, not alpha"
+ },
+ {
+  "ctx": "ἀφείσθω,ϗ̀γάρἐστινἀλλοτριώτερα",
+  "verdict": "ώτερα",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Word ἀλλοτριώτερα; terminal alpha printed x-shaped (italic-α trap), not chi"
+ },
+ {
+  "ctx": "ς(deusualicuiusvοcabuli,οppκυρ",
+  "verdict": "pp",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin abbreviation opp; roman pp, not Greek ρρ"
+ },
+ {
+  "ctx": "εινρ37.1445a21.ἀλλοτριότητοςἀρ",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἀλλοτριότητος printed clean with no doubled 'το'; opus over-read"
+ },
+ {
+  "ctx": "ςἀρχήΠε10.1311b15.ἀλλοτριȣ͂ν.ἠ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀλλοτριȣ͂ν = ἀλλοτριοῦν; ȣ ligature with circumflex, not εῖ"
+ },
+ {
+  "ctx": "τριωμένονπκδ17.937b19.ἀλλοτρόπ",
+  "verdict": "οτρόπω",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἀλλοτρόπως clearly printed"
+ },
+ {
+  "ctx": "0a12.ἁλμυρίζειν.γῆἁλμυρίζȣσαΖμ",
+  "verdict": "ȣσαΖι",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "ȣ ligature (opus/llama) + HA siglum Ζι u-shape (genie, 613a=HA bk9); no reader has both right"
+ },
+ {
+  "ctx": "ι4.442a18,26.ψβ10.422b12,a19.μ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Bekker column letter a (roman), matches the b markers, not Greek alpha"
+ },
+ {
+  "ctx": "αχύτεροντὸἁλμυρὸντȣ͂ποτίμȣμβ3.",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ποτίμȣ = ποτίμου (genitive of comparison); ȣ ligature, not ῳ"
+ },
+ {
+  "ctx": "5a33.πκγ8.932b9.22.934a9.οἰηθȣ",
+  "verdict": "οἰηθȣ́",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "First glyph is round vowel lacking delta's tall ascender, then ιηθ; not διηθ (llama) or ἐπιθ (genie, no pi)"
+ },
+ {
+  "ctx": "δι'ἀλόγιστον(ἄλογονSpglΒka)Ρα1",
+  "verdict": "a)Ρ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Bkª) superscript-a; siglum Ρα (rho, Rhetoric 1369a), not Π"
+ },
+ {
+  "ctx": "δυνάμειςἄλογοι,οppμετὰλόγȣε13.",
+  "verdict": "ȣε1",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "λόγȣ ligature + De Int siglum ε + Arabic 1 of chapter 13; not iota"
+ },
+ {
+  "ctx": "λόγονἔχον,τὸἄλογονδιττόνΗκ13.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηα book letter (EN bk1, 1102a-1103a); x-shaped italic alpha (trap), not kappa"
+ },
+ {
+  "ctx": "ς,ἄλογοςὁρμή,ἄλογαπάθηsimΡα10.",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Rhetoric siglum Ρα (rho, 1369a), not Π"
+ }
+]

@@ -1,0 +1,100 @@
+[
+ {
+  "ctx": "tplurἁλσίμδ9.385b9,ἅλασιπκγ32.",
+  "verdict": "κ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Print clearly shows πκγ32 (pi-kappa-gamma), matching opus/genie."
+ },
+ {
+  "ctx": "xemplumἐντελεχείαςτῷκινητῷΦγ1.",
+  "verdict": "ῷ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "κινητῷ clearly shows omega with visible iota-subscript hook and circumflex, not the ȣ ligature."
+ },
+ {
+  "ctx": ".1065b20.ἄλσος.οἰκεῖνἄλσηΖμ32.",
+  "verdict": "ιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "High-res zoom shows two separate thin iota strokes with serifs (the documented 'u-shape' fused-iota trap), not μ, u, or α. Bekker 618b is consistent with HA book ι per the trap's own 610a-b=book-9 anchor."
+ },
+ {
+  "ctx": "Ζμδ6.683b3.ἈλυάττȣπαῖςἈδράμυτο",
+  "verdict": "άμυτος",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Print clearly reads Ἀδράμυτος (single τ, upsilon before tau, no sigma), matching opus exactly."
+ },
+ {
+  "ctx": "δρὼςἁλυκάἐστινπε37.884b29.τὰμέ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "'884b29.' is followed by a period; the '20' genie/llama appended is the right-margin every-5-lines counter, not running text (confirmed absent from the canonical ctx itself)."
+ },
+ {
+  "ctx": "ϗ̀ἡἀλυπίαΡα7.1365b13.τὴντȣ́των",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Zoomed image shows a clear acute accent mark above the ȣ ligature in τȣ́των (=τούτων)."
+ },
+ {
+  "ctx": "1126b14.αὕτηἡδειλίαἄλυποςΗγ15.",
+  "verdict": "Ηγ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Letter after Η clearly has the hooked descender shape of γ (matching γ in εντυγχ- above), not η."
+ },
+ {
+  "ctx": "479a20.ζωὴἄλυποςϗ̀μακαρίαΟβ31.",
+  "verdict": "Οβ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Print reads 'Οβ1.' with no '3' digit between β and 1; De Caelo (Ο) book β (2) chapter 1 fits Bekker 284a29 (start of Book 2), confirming no chapter 31/3 exists to support opus's extra digit."
+ },
+ {
+  "ctx": "ίαΟβ31.284a29.τῷθεῷἄλυπονἄπονό",
+  "verdict": "ἄπο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Print clearly shows ἄπονόν (smooth breathing, ο not α), part of ἄλυπον ἄπονόν τε — matches opus."
+ },
+ {
+  "ctx": "ωντὸἄλυπονφ4.808b37.—ἄλυπαιἡδο",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Print clearly shows ἄλυποι (omicron-iota), grammatically correct plural agreeing with ἡδοναί; matches genie/llama."
+ },
+ {
+  "ctx": "υτάΖγβ6.743a7.μδ6.383b10,a30.τ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Print clearly shows '383b10, a30.' with a visible superscript a before 30; genie's empty reading misses it."
+ },
+ {
+  "ctx": "rΜed297)Ρβ2.1394a34.Ἀλφειῷθυγά",
+  "verdict": "ῷ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Glyph is a single round omega bowl with circumflex, ruling out genie's angular ᾶ and llama's double-lobed ȣ ligature (compared directly against ȣ elsewhere on the page); no iota-subscript dot is clearly visible under the omega, so subscript presence itself is uncertain, but omega+circumflex is the best-supported base reading."
+ },
+ {
+  "ctx": "οιαἐντῷἈλκμαίωνιτῷΘεοδέκτȣΡβ23",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Zoomed image shows the double-lobed ȣ ligature in Θεοδέκτȣ with no accent, matching opus/llama; genie's 'ουtext' is an OCR artifact."
+ },
+ {
+  "ctx": "ερὶἄλφιταπκα1-26.τὰἄλφιταἀδράπ",
+  "verdict": "ἀδρά",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Print clearly shows ἀδρά with smooth breathing (matching the breathing on ἄλφιτα beside it) and δ-ρ sequence, not ἁδρὰ or ἀορά."
+ }
+]

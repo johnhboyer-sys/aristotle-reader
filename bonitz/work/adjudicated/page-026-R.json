@@ -1,0 +1,150 @@
+[
+ {
+  "ctx": "εΜενέλαοςαἰδεῖσθαιγαμετὴνȣσαντ",
+  "verdict": "ȣ̓͂",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "ou-ligature carries smooth breathing+circumflex (οὖσαν); opus dropped the diacritic, genie/llama used an upsilon base"
+ },
+ {
+  "ctx": "ἰδήμωνdefΗβ7.1108a32,35.ηεγ7.1",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "b33,γέροντεςΠε6.1306a17.—ȣ̓σία",
+  "verdict": "ȣ̓",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νποιεῖνἀιδίωνΜν3.1091a12.ȣ̓κἀί",
+  "verdict": "ȣ̓κἀίδιο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "iota has plain acute, no diaeresis"
+ },
+ {
+  "ctx": "23.ȣ̓δὲνὡςἔτυχενȣ̓δ'ἀπὸταȣτομά",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "base is the ou-ligature, not upsilon"
+ },
+ {
+  "ctx": "ᾳτῶνφθαρτῶνΜθ8.1050b7.τὰἀίδιαϗ",
+  "verdict": "ίδιαϗ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "kai-ligature ϗ; iota plain acute"
+ },
+ {
+  "ctx": "Μθ8.1050b7.τὰἀίδιαϗπρῶτα,οppγε",
+  "verdict": "oppγε",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Latin roman opp (oppositum), not Greek"
+ },
+ {
+  "ctx": "τάΓβ9.335a29,24.τὰἐξἀρχῆςϗτὰἀί",
+  "verdict": "ϗτὰἀί",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "kai-ligature ϗ; iota plain acute"
+ },
+ {
+  "ctx": "νȣ͂ςψγ5.430a23.ζωὴἀίδιος,synἀθ",
+  "verdict": "syn",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Latin roman abbreviation"
+ },
+ {
+  "ctx": "9a25.Φθ8.263a3(ubiprοἐπὶἀίδιον",
+  "verdict": "ίδιο",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιοντὸπᾶν,τὸὅλονμβ3.356b8.a14.3",
+  "verdict": "a",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "raised Bekker column letter a"
+ },
+ {
+  "ctx": "742b25,31.ἀίδιον,synκαθόλȣΑγ7.",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ou-ligature (καθόλȣ)"
+ },
+ {
+  "ctx": "ἐπίπονον,ὅσωπερἂνἀιδιώτερȣνἢΟβ",
+  "verdict": "ονᾖ",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "word ends -ον; following subjunctive ᾖ has circumflex + iota subscript"
+ },
+ {
+  "ctx": "ςαἰδοῖονΖια13.493a25,31cfκ5.63",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic κ resembling x; siglum kappa"
+ },
+ {
+  "ctx": "maliumusurpatur,ἐλέφαντος.ἵππο",
+  "verdict": ".ἵππου.",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "periods flank ἵππου; word spelled ου"
+ },
+ {
+  "ctx": ".ἵππου.αἰγός,ταύρου,καμήλȣ.φώκ",
+  "verdict": "ȣ.",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "καμήλȣ ligature + period"
+ },
+ {
+  "ctx": ",ταύρου,καμήλȣ.φώκης,γίννȣ.ἰκτ",
+  "verdict": "ȣ.",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "γίννȣ ligature + period"
+ },
+ {
+  "ctx": "δοςΖιβ1.500b7.γ20.522a14.ε2.54",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ζια13.493a32.β1.500b3,4.πο26.8",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "round-bellied δ with upper flourish; Problems bk δ, 879b (on genitals)"
+ },
+ {
+  "ctx": "stiumscrοtumὀσχέατȣ͂αἰδοίȣappe",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "αἰδοίȣ ligature (genitive -ου)"
+ },
+ {
+  "ctx": "ὀσχέατȣ͂αἰδοίȣappellaturπκζ11.",
+  "verdict": "κζ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "94b3.17.497a25.β1.500b14.ε14.5",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ }
+]

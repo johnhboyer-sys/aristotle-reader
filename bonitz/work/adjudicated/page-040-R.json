@@ -1,0 +1,18 @@
+[
+ {"ctx": ".363b32.ἡφύσιςȣκἀκριβοῖΖγδ9.77", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "Ζγδ9 — clear delta"},
+ {"ctx": "ἰλιγμένονΖιδ7.532b10.θήλεσιτὸτ", "verdict": "σ", "agrees_with": "multiple", "confidence": "high", "note": "θήλεσι — single sigma"},
+ {"ctx": "νταιϗ̀ἐκπέττονταισκώληκες,ἐκδύ", "verdict": ",ἐκδύνȣ", "agrees_with": "opus", "confidence": "high", "note": "comma after σκώληκες; ȣ ligature raw"},
+ {"ctx": "ȣ͂σιν)ἀκρίδεςΖικ6.637b16.δ9.53", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "δ9 — clear delta, not θ"},
+ {"ctx": "κ6.637b16.δ9.535b12.φωνὴλιγυρά", "verdict": "ιγ", "agrees_with": "multiple", "confidence": "high", "note": "λιγυρά"},
+ {"ctx": "3.—πῶςμάχονταιτοῖςὄφεσινΖιι6.6", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "fused-u siglum Ζιι"},
+ {"ctx": "ἐνΑἰτωλοῖςφασὶνὁρᾶντὰςἀσπαλάκȣ", "verdict": "αλάκȣ", "agrees_with": "opus", "confidence": "high", "note": "ἀσπαλάκȣς — ȣ ligature raw"},
+ {"ctx": "incertumΑΖγ35,acridiumΑΖιΙ156n", "verdict": "Ι", "agrees_with": "opus", "confidence": "high", "note": "tall capital-I glyph present after AZι"},
+ {"ctx": "ιΙ156n2,lοcustacridiumetΖιι6sp", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "fused-u siglum Ζιι (Zu)"},
+ {"ctx": "2,lοcustacridiumetΖιι6spexlace", "verdict": "xlac", "agrees_with": "multiple", "confidence": "high", "note": "spex lacerticida"},
+ {"ctx": "408b5.—ΘάλητοςἀκροατὴςΛυκȣ͂ργο", "verdict": "ȣ͂ργος", "agrees_with": "multiple", "confidence": "high", "note": "Λυκȣ͂ργος — ȣ͂ ligature"},
+ {"ctx": "ῆςȣκοἰκεῖοςἀκροατὴςὁνέοςΗκ1.10", "verdict": "κ", "agrees_with": "opus", "confidence": "high", "note": "glyph is italic κ, identical to κ in Ζικ6 same page; printed Ηκ though 1095a2 is EN bk α"},
+ {"ctx": "έοςΗκ1.1095a2.ἀκροατικός.ἔγραψ", "verdict": "ἔγραψ", "agrees_with": "opus", "confidence": "high", "note": "ψ clear (cup-on-stem), not φ"},
+ {"ctx": "ψυχοιφ6.812b24.ἀκρόδρυον.ȣτ'ἀκ", "verdict": "ȣτ", "agrees_with": "opus", "confidence": "high", "note": "οὔτ' — ȣ ligature raw"},
+ {"ctx": "b24.ἀκρόδρυον.ȣτ'ἀκρόδρυαȣτ'ὀπ", "verdict": "ȣτ'ὀπώ", "agrees_with": "opus", "confidence": "high", "note": "ȣτ' ὀπώρα"},
+ {"ctx": "367b26.—ἀκρόνυχονadverbπκϛ18.9", "verdict": "ϛ", "agrees_with": "opus", "confidence": "medium", "note": "numeral stigma (descender below baseline) in πκϛ"}
+]

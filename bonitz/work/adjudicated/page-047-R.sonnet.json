@@ -1,0 +1,128 @@
+[
+ {
+  "ctx": "iqirratiοnalisΑγ10.76b9.οppῥητ",
+  "verdict": "pp",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin 'opp' (opponitur); clearly roman pp, not Greek ρρ."
+ },
+ {
+  "ctx": "iοnalisΑγ10.76b9.οppῥητόςατ968",
+  "verdict": "ατ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic Greek siglum ατ (De lineis insecab., 968b); alpha+tau, not roman at."
+ },
+ {
+  "ctx": "ὲμάτηνποιεῖΟβ11.291b13.μηθὲνἀξ",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "μηθὲν: closed oval with horizontal crossbar = theta, not delta."
+ },
+ {
+  "ctx": "γωςὑπολαμβάνειν,συμβαίνεινΗα3.",
+  "verdict": "ν",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "final ν clearly printed (ὑπολαμβάνειν/συμβαίνειν); llama dropped it."
+ },
+ {
+  "ctx": "5.212b34,30.ἀλογωδέστερονvlπν2",
+  "verdict": "vl",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin v.l. abbreviation (roman v + l); genie misread as ν1."
+ },
+ {
+  "ctx": "fλογοδέστερον.ἀλοιφὴσυνεχὴςΖμ4",
+  "verdict": "ήςΖιι",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "συνεχής acute (ής); HA siglum Ζι+book ι(9, 624a)=Ζιι printed as fused u-shape. Genie/llama got accent, none got siglum."
+ },
+ {
+  "ctx": "οσάχναις,πλὴντȣ͂χρώματοςΖμ14.6",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "HA siglum fused ιι (Ζιι, 616a=bk9); u-shape, not μ."
+ },
+ {
+  "ctx": "ς).τὸἀλυργόν,cοniτὸφοινικȣ͂ναι",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φοινικȣ͂ν: ou-ligature with circumflex, not ῶ."
+ },
+ {
+  "ctx": "a8.χ2.792a7,b2,distφοινικȣ͂νμγ",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φοινικȣ͂ν: ou-ligature with circumflex, not ῶ."
+ },
+ {
+  "ctx": "ταιχ2.792a15-26.τὸἀλυργὸνᾧγίγν",
+  "verdict": "ȣ̓γίγ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "ou-ligature + smooth breathing = οὐ (negative 'does not become'); all three readers wrong."
+ },
+ {
+  "ctx": "χρωμάτωντὸἀλυργὸνϗ̀φοινικȣ͂ναι",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φοινικȣ͂ν: ou-ligature with circumflex, not ῶ."
+ },
+ {
+  "ctx": "μέρηοἰκίαςΠα3.1253b7.ἅλςὁ.οἱἅλ",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "period after gender mark ὁ (baseline dot, no comma tail)."
+ },
+ {
+  "ctx": "ρȣὀσμώδειςαι5.443a13.ἅλες.χονδ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "period present between ἅλες. and χον- (line-break); genie/llama dropped it."
+ },
+ {
+  "ctx": "516a24.ἡτῶνἁλῶνἁλατοπωλίαοβ134",
+  "verdict": "ο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Oeconomica siglum οβ (1346b=bk2); clear omicron, not σ."
+ },
+ {
+  "ctx": "νπα38.863b11.ζ9.887b1.ψοφȣ͂σιν",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ψοφȣ͂σιν: ou-ligature with circumflex, not ῶ."
+ },
+ {
+  "ctx": "φονται(?)Ζιε24.555a14.—τὸἔλοςπ",
+  "verdict": "ἕ",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "letter clearly ε (rules out genie ἅ); breathing faint, rough (ἕλος = marsh) most consistent."
+ },
+ {
+  "ctx": "fπαροιμίαι)Ρβ23.1399a26.τȣ̀ςλε",
+  "verdict": "ȣ̀",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τȣ̀ς (=τοὺς): ou-ligature with grave, not ὰ."
+ },
+ {
+  "ctx": "ςεν3.461b16.Ζιζ27.580b31(vlἅλλ",
+  "verdict": "vl",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin v.l. abbreviation (roman v + l); genie misread as ν1."
+ }
+]

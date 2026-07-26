@@ -1,0 +1,149 @@
+[
+ {
+  "ctx": "γεταιπολλαχῶςηεγ2.1230a38-b9.τ",
+  "verdict": "-",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Hyphen joining the a38-b9 line range."
+ },
+ {
+  "ctx": "ςdefΗη8.1150a21.ηεβ3.1221a19.τ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Raised a in 1221a19."
+ },
+ {
+  "ctx": "qq.ημβ6.1203a1.ὁἀκόλαστοςȣ̓μετ",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ou-ligature with smooth breathing (=ou)."
+ },
+ {
+  "ctx": "όλαστοιοἱπολλοὶτῶνἀσώτωνΗδ3.11",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Hδ3; delta not theta."
+ },
+ {
+  "ctx": "νἀφροδισίωνΖιζ18.572a12.η1.582",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Digit 1 (matches the 1s in 18/12/582), not iota."
+ },
+ {
+  "ctx": "ἂνπροείπῃς,ἀποδίδȣτὰςἀκολȣθȣντ",
+  "verdict": "ȣθȣ͂",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Raw ligatures (opus/llama right on these); 2nd ligature carries a printed circumflex."
+ },
+ {
+  "ctx": "6a7.cfγ1.370b14.οἱνέοιοἷοιἀκολ",
+  "verdict": "ί",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Final iota of oioi is acute; the following 15 is a gutter line-number, no eisin is printed."
+ },
+ {
+  "ctx": "φύσιναὐτὴνȣτωςἐπάγεινἀκολȣθȣμε",
+  "verdict": "ȣθȣ͂",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Raw ligatures; 2nd ligature has a printed circumflex (akolouthoumen)."
+ },
+ {
+  "ctx": "ἡἐποποιίατῇτραγῳδίᾳμέχριτȣτȣἠκ",
+  "verdict": "ȣ́τȣ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "toutou: 1st ligature acute, 2nd bare."
+ },
+ {
+  "ctx": "ῳδίᾳμέχριτȣτȣἠκολȣθησεν,οppταύ",
+  "verdict": "pp",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Latin 'opp' in roman type, not Greek rho-rho."
+ },
+ {
+  "ctx": "ὰἀνάγκημεθίστασθαιτῶνἀκολȣθȣντ",
+  "verdict": "ȣθȣ́",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "akolouthounton: 2nd ligature carries an acute (faint but present)."
+ },
+ {
+  "ctx": "b25.cf10.778a1,777b35.ἐκτȣἀκολ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "ou-ligature (opus/llama), not genie's omicron; a circumflex for tou not clearly resolved."
+ },
+ {
+  "ctx": "ἀκολȣθεῖνκαθ'ὁμοιότηταΗη11.115",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Hη11: digit present; genie dropped it."
+ },
+ {
+  "ctx": "b24.μᾶλλονἀκολȣθȣσιπαιδείαϗεὐγ",
+  "verdict": "αϗεὐγένειατο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "paideia [kai-lig] eugeneia to(is); nominatives, bare final alphas."
+ },
+ {
+  "ctx": "εὐγένειατοῖςεὐπορωτέροιςΠθ8.12",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πδ8 (Politics IV); delta not theta."
+ },
+ {
+  "ctx": "ἱἄλλαιδιαφοραὶταύταιςἀκολȣθȣσι",
+  "verdict": "ȣθȣ͂",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Raw ligatures; 2nd ligature has a printed circumflex (akolouthousi)."
+ },
+ {
+  "ctx": "μβ1.646a18.τὰἤθησχεδὸνἀεὶτȣτοι",
+  "verdict": "τȣ́",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "toutois: tau + ou-ligature with acute (opus had ligature but no accent; genie/llama expanded)."
+ },
+ {
+  "ctx": "χῶς,ϗαἱφύσειςϗαἱἕξειςἀκολȣθήσȣ",
+  "verdict": "ȣθήσȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "akolouthesousin: both ligatures bare, accent on eta."
+ },
+ {
+  "ctx": "52b28.cfΜδ10.1018a36.ἀκολȣθȣσι",
+  "verdict": "ȣθȣ͂",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Raw ligatures; 2nd ligature has a printed circumflex (akolouthousi)."
+ },
+ {
+  "ctx": "ολȣθεῖνγενομένοις,distπροϊȣσης",
+  "verdict": "ϊȣ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "proiousis: iota + bare ou-ligature (over genie/llama's accented vowel); diaeresis faint."
+ },
+ {
+  "ctx": "νημένῳἀκολȣθεῖφαντασίατιςȣ͂μέμ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ou (relative), ou-ligature with circumflex; genie/llama misread."
+ }
+]

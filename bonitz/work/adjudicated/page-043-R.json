@@ -1,0 +1,101 @@
+[
+ {
+  "ctx": "009b1.—τῇἀληθείᾳ(ieἀληθῶς.τῷὄν",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "όξαν,πρὸςδόξαν,δοξαστικῶς.φαίν",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "6a8,10.β16.65a36.τα10.104a32.θ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἂνἔχεινἀλήθειανΠγ11.1281a12.—2",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "1281 a12; genie misread as 4"
+ },
+ {
+  "ctx": "ότηςἀλαζονείαςϗεἰρωνείαςΗβ7.11",
+  "verdict": "β",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηβ7; llama ζ wrong"
+ },
+ {
+  "ctx": "23.ἀληθεύειν.ὁλέγωνἀληθεύσειΜκ",
+  "verdict": "σειΜκ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "italic kappa in Μκ5"
+ },
+ {
+  "ctx": "έψευσταιΜγ4.1008b3.5.1009a14.θ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "a3.10.20a34.Ηδ13.1127a19.οἷςἀλ",
+  "verdict": "ο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οἷς clearly"
+ },
+ {
+  "ctx": "εὶἀληθεύοντα,οἷονἐπιστήμηἢνȣςψ",
+  "verdict": "ἢνȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἢ νȣς with ou-ligature; llama ϗ and genie ῦ wrong"
+ },
+ {
+  "ctx": "0.Ρα11.1371a10,14.β6.1384a33.7",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "21.ἡφάσις,ἡἀπόφασιςἀληθεύσεται",
+  "verdict": "σ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀληθεύσεται future σ present"
+ },
+ {
+  "ctx": "σις,ἡἀπόφασιςἀληθεύσεταιΜκ5.10",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic kappa in Μκ5"
+ },
+ {
+  "ctx": "ῶςκατηγορεῖται)κατάτινοςτδ1.12",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τδ1; genie ὸ wrong"
+ },
+ {
+  "ctx": "γορεῖται)κατάτινοςτδ1.121a20.ε",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "άτινοςτε5.134a23,25,b11.Μκ6.10",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic kappa in Μκ6"
+ }
+]

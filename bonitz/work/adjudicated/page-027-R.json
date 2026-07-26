@@ -1,0 +1,148 @@
+[
+ {
+  "ctx": "8.961a10.f91.1492a36.ἀλλάμεκωλ",
+  "verdict": "μ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἰδώς(Αlcfr55)Ρα9.1367a10.Ἄητος",
+  "verdict": "Αἴ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Capital A followed by a separate iota; opus dropped the iota"
+ },
+ {
+  "ctx": "οσωνόμασαντὸνἀνωτάτωτόπον.ἀπὸτ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Baseline period after τόπον, no comma tail"
+ },
+ {
+  "ctx": "0b22.μα3.339b25.κ2.392a8.ȣρανȣ",
+  "verdict": "ȣρανȣϗ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Raw ου-ligatures + kai-ligature; genie wrongly expanded"
+ },
+ {
+  "ctx": "a11.ζ19.573b28.institutaΠο4.12",
+  "verdict": "ο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Politics siglum Πο with abbreviation stroke, not delta"
+ },
+ {
+  "ctx": ".—Αἰθίοπεςμέλανες,λευκοὶτὰςὀδό",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "ου-ligature (τοὺς), printed bare"
+ },
+ {
+  "ctx": "ςμέλανες,λευκοὶτὰςὀδόντας.βλαι",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Comma after ὀδόντας in a list of adjectives"
+ },
+ {
+  "ctx": "τὰςὀδόντας.βλαισοί,δειλοίτι5.1",
+  "verdict": "τι",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Italic τ+ι (single tau stem), not π"
+ },
+ {
+  "ctx": "ι5.167a11.φ6.812a13,b31.πι66.8",
+  "verdict": "ι",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Iota present between π and 66 in the siglum"
+ },
+ {
+  "ctx": "2.ιδ4.909a27.Ζιγ9.517a18.ȣλότρ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "ου-ligature (οὐλότριχες), printed bare"
+ },
+ {
+  "ctx": ".Ζιγ9.517a18.ȣλότριχεςΖγε3.782",
+  "verdict": "3",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Digit 3 (Ζγε3 = GA V.3, 782b), not 8"
+ },
+ {
+  "ctx": "1.τὰἐντῇγῇτῶνΑἰθιόπωνφυτάφτα4.",
+  "verdict": "φτ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "De plantis siglum φτ; genie wrongly read Φ"
+ },
+ {
+  "ctx": "ἰθρίαιςμα6.343b19.αἰθρίαςὕσηςμ",
+  "verdict": "ȣ́",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "ου-ligature with acute (word is οὔσης); opus/genie/llama all wrong"
+ },
+ {
+  "ctx": "κρίνειϗαἰθριαζειτὸνἀέραπκϛ8.94",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Numeral stigma ϛ in πκϛ = Problems bk 26; genie missed it"
+ },
+ {
+  "ctx": "εςμβ6.364b29.3.358b1,2.πκϛ20.9",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Numeral stigma ϛ in πκϛ = Problems bk 26"
+ },
+ {
+  "ctx": "νταῖςπερὶθάλαττανπέτραις,ȣ̓φωλ",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ου-ligature with smooth breathing (οὐ, not); llama=ϗ and genie=ἐν wrong"
+ },
+ {
+  "ctx": "ερὶθάλαττανπέτραις,ȣ̓φωλεύειΖι",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φωλεύει with υ, not ω"
+ },
+ {
+  "ctx": "αυνίαις(vlταιςΚαυνίαις)σ9.73a1",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Period after σ9 present; Bekker number reads 73 with no visible leading 1 (not invented)"
+ },
+ {
+  "ctx": ".ζ35.580a23.ὀρνιθοφάγοιΖιι6.61",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιι fused ligature (HA Ζι+book ι); genie misread as η"
+ },
+ {
+  "ctx": "dοmesticusetcatusSΚCrSuΑΖιΙ63)",
+  "verdict": "iI",
+  "agrees_with": "genie",
+  "confidence": "medium",
+  "note": "Roman-type apparatus: lowercase i + capital I"
+ },
+ {
+  "ctx": "τίἐστιν.τῶνὑγρῶνμόνονκαθ'ἅπαντ",
+  "verdict": "ἅπα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Alpha carries rough breathing+acute (καθ' confirms aspiration); genie/llama dropped diacritics"
+ }
+]

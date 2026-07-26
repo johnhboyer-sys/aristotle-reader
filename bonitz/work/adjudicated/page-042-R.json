@@ -1,0 +1,150 @@
+[
+ {
+  "ctx": "28.ἀλείμματιἰᾶσθαιτȣ̀ςκόπȣςπα3",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "20.ε38.884b37.ἀλεῖν.φρίττȣσινὄ",
+  "verdict": "ȣσινὄνȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ζιε13.544a32.eiusμέγεθοςΖιι9.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "fused u-glyph = HA siglum Zi + book-iota"
+ },
+ {
+  "ctx": "ια,κονιστικάΖγγ1.749b13.Ζιι49Β",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "fused u-glyph = iota iota"
+ },
+ {
+  "ctx": "Β.633b1.varietasquaedamαἱἈδρια",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Alpha with smooth breathing"
+ },
+ {
+  "ctx": "νερὰὅτανὀχευθῆναιδέηταιΖικ6.63",
+  "verdict": "κ6.6",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic kappa; page 637"
+ },
+ {
+  "ctx": "συνίσταταιϗτελειȣ͂ταιἐνδέκ'ἡμέ",
+  "verdict": "χ'",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "dech aspirated before hemerais"
+ },
+ {
+  "ctx": "2.559a15.ἀλεκτορίδωννεοττίδωνὠ",
+  "verdict": "ίδωνὠ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "delta present, omega no subscript"
+ },
+ {
+  "ctx": "ταιἐντοῖςπολυτόκοιςμᾶλλονἢμάλι",
+  "verdict": "ϗ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "kai-ligature"
+ },
+ {
+  "ctx": "φ'ἑαυτὰςἀγόμεναιτȣ̀ςνεοττȣ̀ςΖι",
+  "verdict": "ȣ̀ςΖιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "grave accent; Zii"
+ },
+ {
+  "ctx": "ὅταννικήσωσιτȣ̀ςἄρρεναςΖιι9.63",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Zii9"
+ },
+ {
+  "ctx": "ισιαστικόνΖια1.488b4,ἐπίγειον,",
+  "verdict": "ειον,ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "epigeion, ou"
+ },
+ {
+  "ctx": "88b4,ἐπίγειον,ȣ̓πτητικόν,ȣ̓κὀξ",
+  "verdict": "ȣ̓κ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ouk"
+ },
+ {
+  "ctx": "ςσημεῖόνἐστινἀνδρείȣἢδειλȣ͂φ2.",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "deilou ligature"
+ },
+ {
+  "ctx": "0a6.eiusκάλλαιον,πλῆκτραΖιι49.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused u-glyph = iota iota"
+ },
+ {
+  "ctx": "λίας,τὰςἀποφυάδαςτȣ͂ἐντέρȣΖιβ1",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ρȣΖιβ17.508b27,509a20.—ᾄδȣσιμᾶ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".—ᾄδȣσιμᾶλλοντῶνθηλειῶνΖιδ9.53",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic delta not theta"
+ },
+ {
+  "ctx": "536a31.ἀλεκτρυόνωνφωνὴνἀκȣ́ειν",
+  "verdict": "ȣ́",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νφωνὴνἀκȣ́εινεν3.462a24.τȣ̀ςτρ",
+  "verdict": "ȣ̀",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νσυνδυασμόν,πῶςμάχονταιΖιδ9.53",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic delta not theta"
+ },
+ {
+  "ctx": "οῖςἄνευθηλειῶνἀνάκεινταιΖιι8.6",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused u-glyph = iota iota"
+ }
+]

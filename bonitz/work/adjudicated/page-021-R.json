@@ -1,0 +1,89 @@
+[
+ {
+  "ctx": "ὸναὑτὸνἀδικεῖνΗε15.11.1136a33.",
+  "verdict": "6",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "35b121136a3.Ρα13.1374b8.τȣἀδικ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ρβ16.1391a18.α14.1375a6.Πβ9.12",
+  "verdict": "β",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "1271a17=Politics bk2=β"
+ },
+ {
+  "ctx": "8.α14.1375a6.Πβ9.1271a17.δ11.1",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "1295b10=Politics bk4=δ"
+ },
+ {
+  "ctx": "ίαςΗε.ημα34.πκθ.ἀδικίαdefap1.1",
+  "verdict": "αρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Greek alpha-rho siglum, ρ descends"
+ },
+ {
+  "ctx": "a25.7.1251a30-b3,eiusεἴδηap7.1",
+  "verdict": "αρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Greek alpha-rho siglum"
+ },
+ {
+  "ctx": "1199b12,a21.ἡἀδ.πότερονφαῦλόνἐ",
+  "verdict": "ῦλόνἐστι",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "stὁἀδικῶνΗε10.1134a18,21.η9.11",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic eta"
+ },
+ {
+  "ctx": "8,21.η9.1151a10.ȣκἄδικος,ȣγὰρἐ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ou-ligature"
+ },
+ {
+  "ctx": "κύηματὸπρῶτονἀδιόριστονΖγγ9.75",
+  "verdict": "γ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "image shows Ζγγ9, two clear gammas"
+ },
+ {
+  "ctx": "9a28.δεικτέονἐκτȣἀδιορίστȣΑα5.",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "9a6.15.35b11.—ἀδιόριστον,ieȣδὲ",
+  "verdict": "ieȣδὲ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "i e (id est) + ȣδὲν ligature"
+ },
+ {
+  "ctx": "9.α19.726b16.ἀδιορίστωςἐπέρριψ",
+  "verdict": "έρριψε",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐπέρριψε"
+ }
+]

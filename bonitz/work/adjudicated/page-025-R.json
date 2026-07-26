@@ -1,0 +1,20 @@
+[
+ {"ctx": "18,378a5.πλα15.958b37.ἀθρόονἐκ", "verdict": "ό", "agrees_with": "multiple", "confidence": "high", "note": "ἀθρόον with acute omicron; llama's ȣ ligature wrong."},
+ {"ctx": "καγχάζεινΗη8.1150b11.—ἀθρώτερα", "verdict": "ώ", "agrees_with": "multiple", "confidence": "high", "note": "ἀθροώτερα: clear omega with acute."},
+ {"ctx": ".πνεῦμαἀφιέναιἀθρώτερονπκε2.93", "verdict": "ε", "agrees_with": "multiple", "confidence": "high", "note": "siglum reads πκε2; llama dropped the ε."},
+ {"ctx": "ώτερονπκε2.938a5.πῆξιςἀθρωτέρα", "verdict": "ωτέ", "agrees_with": "multiple", "confidence": "high", "note": "ἀθροωτέρα: omega, not ȣ."},
+ {"ctx": "ρωτέραμα12.348b22.ὄψιςἀθρωτέρα", "verdict": "ωτέ", "agrees_with": "multiple", "confidence": "high", "note": "ἀθροωτέρα: omega, not ȣ."},
+ {"ctx": ".ἔκκρισιςὑγρȣἀθρόως(ἀέροςvl)μδ", "verdict": "v", "agrees_with": "opus", "confidence": "high", "note": "Latin varia-lectio 'v l' in roman type, not Greek ν."},
+ {"ctx": "ἔνθυμαΠη7.1327b28,30.ἀθύμȣσημε", "verdict": "ȣ", "agrees_with": "multiple", "confidence": "high", "note": "ἀθύμȣ ends in bare ȣ ligature (=ου), not ῳ."},
+ {"ctx": "η7.1327b28,30.ἀθύμȣσημεῖαφ3.80", "verdict": "φ", "agrees_with": "multiple", "confidence": "high", "note": "siglum φ3 clearly phi, not psi."},
+ {"ctx": "υμότερατὰθήλεατῶνἀρρένωνΖιι1.6", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA siglum Ζιι printed as fused 'u' (=ιι)."},
+ {"ctx": "410a11.σφόδραὑψηλὸνὄροςπκς36.9", "verdict": "ς", "agrees_with": "multiple", "confidence": "high", "note": "πκς (stigma numeral 6), not ζ."},
+ {"ctx": "ερμότερονπνεῦμαπροίεσθαιΖγε7.7", "verdict": "γ", "agrees_with": "multiple", "confidence": "high", "note": "Ζγε7 clearly gamma, not η."},
+ {"ctx": "χολικόςπλ1.953a21.ἐπιτάφιȣνἐπὶ", "verdict": "ο", "agrees_with": "multiple", "confidence": "high", "note": "ἐπιτάφιον with plain omicron, not ȣ."},
+ {"ctx": "άφιȣνἐπὶΑἴαντοςτȣΤελαμωνίȣf596", "verdict": "ȣ", "agrees_with": "multiple", "confidence": "high", "note": "τȣ (=τοῦ) ligature; genie's σ wrong."},
+ {"ctx": "αςὁὈιλέως,ἐπιτάφιονἐπ'αὐτȣf596", "verdict": "ȣ", "agrees_with": "multiple", "confidence": "high", "note": "αὐτȣ (=αὐτοῦ) ligature; genie's ῷ wrong."},
+ {"ctx": "21b20(pοpulusnigraL).ΑἰγεὺςΕὐρ", "verdict": "ὺςEuripidis", "agrees_with": "none", "confidence": "medium", "note": "Greek Αἰγεὺς (grave υ) + Latin roman 'Euripidis'; opus mis-Greeked the Latin, genie/llama put acute."},
+ {"ctx": "kfrtrp289).αἰγιαλός.περὶτȣ̀ςαἰ", "verdict": "ȣ̀ς", "agrees_with": "opus", "confidence": "high", "note": "τȣ̀ς: ȣ ligature carries a grave, not circumflex; genie expanded it."},
+ {"ctx": ").αἰγιαλός.περὶτȣ̀ςαἰγιαλȣ̀ςμβ", "verdict": "ȣ̀ςμβ", "agrees_with": "opus", "confidence": "high", "note": "αἰγιαλȣ̀ς grave ligature + siglum μβ; llama's circumflex and μδ both wrong."},
+ {"ctx": "λῶνεἴδητρίαΖιθ3.592b17-21(paru", "verdict": "(parusCSStK", "agrees_with": "multiple", "confidence": "high", "note": "Latin roman editor sigla '(parus C S St K'; llama hallucinated a citation. Final K is Latin roman."}
+]

@@ -1,0 +1,12 @@
+[
+ {"ctx": "b23-34,77a3.ρ20.1433b17.οppἀ", "verdict": "pp", "agrees_with": "multiple", "confidence": "high", "note": "Latin 'opp' in roman type, not Greek ρρ."},
+ {"ctx": "ὸκαθὸἰσαχῶςϗ̀τὸαἴτιονὑπάρξε", "verdict": "χ", "agrees_with": "multiple", "confidence": "high", "note": "ἰσαχῶς has clear chi."},
+ {"ctx": "2a20.αἰτία,synetdistἀρχή,vἀ", "verdict": "v", "agrees_with": "opus", "confidence": "high", "note": "Latin roman 'v' (vide), not Greek nu."},
+ {"ctx": "Α2.982b2.τὸαἴτιονπρότερονȣ", "verdict": "ȣ͂αἴτιον", "agrees_with": "opus", "confidence": "medium", "note": "ȣ ligature (=οὗ) with combined breathing/circumflex hook, then αἴτιον; not ϗ, not τοῦαἰτίου."},
+ {"ctx": "νεὔλογονΖμβ17.660b16.ἀποδȣ", "verdict": "ȣ͂", "agrees_with": "multiple", "confidence": "high", "note": "ȣ with circumflex (ἀποδοῦναι)."},
+ {"ctx": "͂ναιτὴναἰτίανΖγε1.779b21.ȣ", "verdict": "ȣ̓", "agrees_with": "multiple", "confidence": "high", "note": "ȣ with smooth breathing (οὐ μικρόν)."},
+ {"ctx": "044a33sqq.λ4.1070b26.πῶςτȣ", "verdict": "ȣ͂αὐτȣ͂", "agrees_with": "opus", "confidence": "high", "note": "τοῦ αὐτοῦ, both ȣ ligatures with circumflex; not τὰ αὐτὰ."},
+ {"ctx": "τός,οppἔξω,ἐκτόςΦβ5.197a2:", "verdict": ":", "agrees_with": "opus", "confidence": "high", "note": "Colon after 197a2, before chapter 6."},
+ {"ctx": "δοςτῆςὕληςΖγβ1.732a4.πλείȣ", "verdict": "ȣ", "agrees_with": "multiple", "confidence": "high", "note": "Bare ȣ ligature (πλείους)."},
+ {"ctx": "mοtrix:μα2.339a24,31.ἡκινȣ", "verdict": "ȣ͂", "agrees_with": "multiple", "confidence": "high", "note": "ȣ with circumflex (κινοῦσα)."}
+]

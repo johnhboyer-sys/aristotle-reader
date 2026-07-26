@@ -1,0 +1,114 @@
+[
+ {
+  "ctx": "368a18.ἄμαϗ̀..ϗ̀μδ9.386b20.ἄμα",
+  "verdict": "ἅμαϗ̀..ϗ̀μδ",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Both ϗ ligatures clearly carry grave accents and the digit after μ is δ (open-loop shape, not θ) — matches opus/llama, not genie's κ̣/μθ. Breathing on the headword: the hook shape matches the rough-breathing mark seen on unflagged ἁμαρτάνειν elsewhere on this page, so ἅμα (genie/llama) is likelier than opus's ἄμα; genuinely hard to read at this resolution."
+ },
+ {
+  "ctx": "αδὲφανερόνalΜβ4.1008a30.Πδ9.12",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "\"Πδ9\" shows the open-loop italic δ with curled ascender, matching δ elsewhere on the page (e.g. Ηθ16 nearby has a visibly different closed θ)."
+ },
+ {
+  "ctx": "ίαπαρακολȣθεῖτῇἀφροσύνῃαρ6.125",
+  "verdict": "6",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Clear Arabic numeral 6 (chapter number of De Virtutibus et Vitiis, siglum αρ), distinct in shape from θ."
+ },
+ {
+  "ctx": "a14.ἀμάλακτος.περὶἀμαλάκτȣμδ9.",
+  "verdict": "ȣμδ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Word-final letter of ἀμαλάκτȣ is the ȣ ligature (closed loop with ascender), and the following book letter is δ, not ω/α or θ."
+ },
+ {
+  "ctx": "01b4.ἀμαρτάνειν,οppκατορθεῖνΗβ",
+  "verdict": "ȣ͂",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "The word is κατορθȣ͂ν: θ followed by the ȣ ligature carrying a circumflex, then ν. Opus's \"εῖ\" is the wrong letters entirely; genie spelled it out as \"οῦ\" instead of the ligature; llama has the ligature but missed the circumflex."
+ },
+ {
+  "ctx": "30.1437b5.οppὀρθῶςποιεῖνΗδ11.1",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "\"Ηδ11\" shows the same open-loop δ shape confirmed elsewhere on the page."
+ },
+ {
+  "ctx": "ἁμαρτάνειντῆςπροστάξεως,τȣ́τȣΗ",
+  "verdict": "ȣ́τȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "\"τύτȣ\" clearly shows two ȣ ligatures, the first with an acute accent, the second unaccented — matches opus exactly."
+ },
+ {
+  "ctx": "οντὴνἁμαρτίανΠθ4.1338b12.ȣ̓συγ",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "The ȣ ligature with a smooth-breathing mark is visible directly after \"1338b12.\"; genie omitted it, llama misread the mark as the digits \"25\"."
+ },
+ {
+  "ctx": "ἁμαρτάνȣσινὅσοιτῶνποιητῶνἩρακλ",
+  "verdict": "Ἡρακληί",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Rough breathing over Η (hook before the capital) and a plain acute over ι (the extra squiggle is the following δ's own curled ascender, not a diaeresis) — no diaeresis present, contra genie/llama."
+ },
+ {
+  "ctx": "ιητῶνἩρακληίδαπεποιήκασιπς8.14",
+  "verdict": "ς",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "The character after π is an open lunate-sigma hook (\"C\" shape), clearly distinct from the closed circle ο or the barred θ seen nearby."
+ },
+ {
+  "ctx": "αρτάνεται,τὸδὲμέσονκατορθȣ͂ται",
+  "verdict": "ȣ͂τ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "\"κατορθȣ͂ται\" — θ then the ȣ ligature with a circumflex, then τ. Matches opus exactly; genie's plain θ misses the ligature entirely."
+ },
+ {
+  "ctx": "31.ἁμάρτημα.ἐντοῖςἀιδίοιςȣ̓δὲν",
+  "verdict": "ȣ̓δὲνȣ̓́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Both ȣ ligatures are visible on close zoom (breathing only on the first, breathing+acute on the second), and the letter after the first is δ (open-loop), not θ. Genie/llama both missed the ligatures and misread δ as θ."
+ },
+ {
+  "ctx": "τέραταἁμαρτήματατȣ͂ἕνεκάτȣΦβ8.",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Second τȣ clearly shows the ou-ligature shape, not a plain υ (genie)."
+ },
+ {
+  "ctx": "distἀτύχημα,ἀδίκημαΗε10.1835b1",
+  "verdict": "8",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Clear figure-8 digit (double loop) in \"1835\" — the printed page number itself looks like an error for 1135, but the digit as printed is unambiguously 8, not 1."
+ },
+ {
+  "ctx": "αίνεινἁμαρτίαςΜμ8.1084b24,4.ἡτ",
+  "verdict": ",",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "The mark after \"1084b24\" sits low with a curling tail, matching a comma rather than a period."
+ },
+ {
+  "ctx": "ίαἐπιστήμης,περὶαἴσθησιν,οppὀρ",
+  "verdict": "opp",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Standard roman-type \"opp\" abbreviation (as used consistently elsewhere on the page), not Greek letters — genie's \"ορρ\" and llama's omission are both wrong."
+ }
+]

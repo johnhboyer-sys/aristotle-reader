@@ -1,0 +1,107 @@
+[
+ {
+  "ctx": "b5.Ζμγ2.662b29.ἀμύνασθαιτὺςἀ",
+  "verdict": "ȣ̀",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed double-loop bowl with right hook under a grave; contrast the open u-shaped υ two words earlier in ἀμύνασθαι"
+ },
+ {
+  "ctx": "ςΠε10.1311b14.—Ἀμύνταςὁμικ",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "small x-form sitting on the baseline, same as both letters of κακῶς above; chi on this page (χαρίεις) has a long descender"
+ },
+ {
+  "ctx": "εἰςτὸπρόσθεν,οἷςἀμύνεταιΖιι5.",
+  "verdict": "ιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "two separate upright strokes each with its own foot, not joined at the bottom as italic υ is; reads Ζιι (HA bk ι), matching 611b"
+ },
+ {
+  "ctx": "05b23.ἀμύττειντοῖςὄνυξινΖιι32.",
+  "verdict": "ιι3",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "same paired iota strokes as the other Ζιι sigla, then a clear roman 3; 619a is HA, not PA"
+ },
+ {
+  "ctx": "ἀμφί.οἱἀμφ'αὐτὸνβασιλέακ6.39",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "one heavy baseline blob plus a much fainter, offset speck above it; the lower mark alone matches the period ink elsewhere on the line"
+ },
+ {
+  "ctx": "6:398a20.Ἀμφιάραος.Πιττακȣ͂ἀ",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed bowl at the baseline with two prongs and the diagonal crossbar — identical to the ȣ of Καρκίνȣ on the next line; omega on this page is a broad open double-bowl"
+ },
+ {
+  "ctx": ".1389a16.—ἈμφιάραοςΚαρκίνȣπο",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "closed bottom loop with right-hand hook, no open V; the ligature form"
+ },
+ {
+  "ctx": "45b24)19.23.179a20.ἡπερὶτȣ́τȣἀ",
+  "verdict": "ȣ́τȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "both glyphs are closed hooked loops, the first carrying an acute; neither has the open u-bowl of υ"
+ },
+ {
+  "ctx": "νασθαιπρὸςτὰἀμφίβολαδιαιρȣ͂ντ",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "after rho, a closed bowl with right hook under a circumflex; not the flat-topped ῦ nor an epsilon"
+ },
+ {
+  "ctx": "ξιοντῶνἄλλωνζῴωνἄνθρωποςΖιβ1",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "a single short stroke between Ζ and the capital Β; 497b confirms HA"
+ },
+ {
+  "ctx": "a8.τι17.176b23.ὅσαἀμφιδοξȣ͂σιν",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "after xi, a closed round bowl with two prongs under a circumflex — ligature, not ῦ or ᾶ"
+ },
+ {
+  "ctx": ".1431b23.ἀμφικέφαλος.σκέλȣςτὸ",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed oval bottom joining two prongs; the plain υ in this italic (e.g. ἀμύνεται) is an open u with no closed bowl"
+ },
+ {
+  "ctx": "ον.ἡτῶνἀμφικυπέλλωνβάσιςΖιι40",
+  "verdict": "ιι",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "two discrete strokes with separate feet after Ζ; 624a is HA"
+ },
+ {
+  "ctx": "ινωμήσει(Αeschylfr297,8)Ζιι49Β",
+  "verdict": "ιι",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "paired iota strokes, clearly split at the baseline; 633a is HA"
+ },
+ {
+  "ctx": ",Ἀμφιπολῖται,στάσειςπρὸςτȣ̀ςΧ",
+  "verdict": "ȣ̀",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed hooked loop under a grave, matching the ȣ of τȣ́τȣ; not the open υ of πρὸς-adjacent forms"
+ }
+]

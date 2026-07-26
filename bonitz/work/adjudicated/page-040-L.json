@@ -1,0 +1,58 @@
+[
+ {
+  "ctx": "τεύεινϗμηδὲνἀκριβὲςἔχεινπκθ13.",
+  "verdict": "κθ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Citation reads πκθ13; genie's δ is wrong."
+ },
+ {
+  "ctx": "βὲςἔχεινπκθ13.951b35.—τὸτȣἀριθ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ = τοῦ, bare ligature (genitive), not dative ῷ."
+ },
+ {
+  "ctx": "ινπκθ13.951b35.—τὸτȣἀριθμȣμέτρ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀριθμȣ = ἀριθμοῦ, bare ligature, not dative ῷ."
+ },
+ {
+  "ctx": "νἔχεινμὴἀκριβῶς,synμέχριτȣπο8.",
+  "verdict": "ȣπο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Bare ȣ then π + omicron; llama read ο as zero, genie added δ."
+ },
+ {
+  "ctx": "ϗἀκριβῶςλέγεινμα3.341a14.ȣχὁμο",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Bare ȣ ligature (οὐχ); genie fused gutter line-number 45."
+ },
+ {
+  "ctx": "369b2.διατρίβεινἀκριβολογȣμένȣ",
+  "verdict": "ȣμένȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκριβολογουμένους: both ligatures bare ȣ; llama misread second as ω."
+ },
+ {
+  "ctx": "ατὰμέρος,οppκαθόλȣλέγεινΠα11.1",
+  "verdict": "α",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Politica siglum Πα (book α); genie/llama misread as π."
+ },
+ {
+  "ctx": "ὸςεἶναιφαινόμενον,ȣκἀκριβοῖδέμ",
+  "verdict": "οῖδέ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκριβοῖ δέ with acute; not grave (genie) nor ligature (llama)."
+ }
+]

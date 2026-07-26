@@ -1,0 +1,122 @@
+[
+ {
+  "ctx": "ntasquasdam,quaefiuntὑπὸτȣ̀ςστ",
+  "verdict": "ȣ̀",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "tὑπὸτȣ̀ςσταλαγμȣ̀ς,ὅλωςὅπȣσυμβ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νειγίνεσθαιμετρίαὑδάτωνἔκρυσις",
+  "verdict": "ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "rho in ἔκρυσις; genie misread"
+ },
+ {
+  "ctx": "νεσθαιμετρίαὑδάτωνἔκρυσιςχ5.79",
+  "verdict": "χ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "χ siglum before 5"
+ },
+ {
+  "ctx": "ccοmmuneVauchsignificariciJΒΜe",
+  "verdict": "i",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "the i in 'ci'"
+ },
+ {
+  "ctx": ").ἀναγκαῖονἢἔχειναἷμαἢτὸτȣ́τῳτ",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ou-ligature with acute (τούτῳ)"
+ },
+ {
+  "ctx": "ἀνάλογονsimΖμβ2.648a20,1.α5.64",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Greek book-letter α in Ζγα"
+ },
+ {
+  "ctx": "δ4.678a9.Ζγα20.728a20,b1.δ1.76",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "γ5.688b11.μδ11.389b9.αἷμαϗγονὴ",
+  "verdict": "ϗ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "γονὴκοινὰγῆςϗὕδατοςϗἀέρος.τὸμὲ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "baseline dot, no descender = period"
+ },
+ {
+  "ctx": ".cf7.384a16,25.ἀτελὲςαἷμαἷςϗἰχ",
+  "verdict": "ἷςϗἰχώ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αἵματοςἀρχήνΖμβ9.654b9.ὅπȣἄντι",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ȣχαἷμαπν6.484a34),quamvisȣσυνε",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὐ after quamvis"
+ },
+ {
+  "ctx": "mvisȣσυνεχὲςτὸαἷματῇσαρκὶȣδὲσυ",
+  "verdict": "ȣδὲ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὐδὲ"
+ },
+ {
+  "ctx": ".654b9.γ5.667b27.πῶςκατέχȣσινα",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "κατέχουσιν"
+ },
+ {
+  "ctx": "651a21,b7,20.γ9.672a4.ἐκτȣ̃αἵμ",
+  "verdict": "ȣ̃αἵ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τοῦ, circumflex present"
+ },
+ {
+  "ctx": "ὸαἷμαἐντῷσώματιπύον,ἐκδὲτȣ̃πύȣ",
+  "verdict": "ȣ̃πύȣπῶρο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τοῦ πύου, circumflex clear"
+ },
+ {
+  "ctx": "τȣ̃αἵματοςΖγα19.726b6,727a35).",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "raised a in 727a35"
+ }
+]

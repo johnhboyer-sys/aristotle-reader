@@ -1,0 +1,23 @@
+[
+ {"ctx": ",30.5.1146b25,1147b1,18.τῶνἀκρ", "verdict": "ῶ", "agrees_with": "multiple", "confidence": "high", "note": "part of ἀκρασιῶν (line-broken ἀκρα-σιῶν); genie ίνω is a misread"},
+ {"ctx": "1.6.1148a4-11.9.1151a4,2028.ι4", "verdict": "28.1", "agrees_with": "multiple", "confidence": "medium", "note": "arabic chapter number 14; not iota"},
+ {"ctx": "3a37.8.1224b19.ψγ9.433a3.τζ8.1", "verdict": "τζ8.146b25.πκη2", "agrees_with": "opus", "confidence": "high", "note": "τ (Topics), Bekker 146 = Topics bk 6; π clear on πκη"},
+ {"ctx": "κρατὴςμεταμελητικός,ἰατός.ἡμιπ", "verdict": ".", "agrees_with": "opus", "confidence": "medium", "note": "period after ἰατός (round dot, unlike the comma after μεταμελητικός)"},
+ {"ctx": "ατὰμέροςsiveκατὰπρόσθεσιν.velu", "verdict": ",", "agrees_with": "multiple", "confidence": "medium", "note": "low mark with slight tail before veluti-list"},
+ {"ctx": "σιν.velutiθυμȣ,τιμῆς,κέρδȣςalΗ", "verdict": "ȣςal", "agrees_with": "multiple", "confidence": "high", "note": "ȣ ligature raw + Latin 'al'"},
+ {"ctx": "13,14.ἀκρατὴςπρὸςτὸνοἶνονsim;π", "verdict": "sim;", "agrees_with": "opus", "confidence": "high", "note": "Latin sim + semicolon (dot over comma)"},
+ {"ctx": "ς,τῶνὄπισθενΖγβ6.744a31.Ζιι12.", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA fused-u siglum = ιι"},
+ {"ctx": ".ἄκρατος.'ζωρότερονκέραιε'ȣ(ση", "verdict": "'ȣ", "agrees_with": "opus", "confidence": "high", "note": "closing quote + ȣ ligature (=οὐ), not ϗ"},
+ {"ctx": "ἄκρατοςτῆςδιανοίαςὀργή(cf'Ἀλκι", "verdict": "'", "agrees_with": "opus", "confidence": "high", "note": "raised apostrophe before Ἀλκιδάμας"},
+ {"ctx": "ἥδιον(desοnis,cfἄμικτον)πιθ38.", "verdict": "ι", "agrees_with": "opus", "confidence": "high", "note": "πιθ (Problemata bk 19, de sonis); ι present"},
+ {"ctx": "γγωνακ801b2,804a28,31.κατ'ἀκρί", "verdict": "'", "agrees_with": "multiple", "confidence": "high", "note": "elision apostrophe; genie entity is garble"},
+ {"ctx": "ανf257.1525a26.ἀκρίβειαντȣτων(", "verdict": "ȣτ", "agrees_with": "opus", "confidence": "high", "note": "τȣτων with ȣ ligature raw"},
+ {"ctx": "7,2.ἡτῆςδιανοίαςἀκρίβειαΖιι7.6", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA fused-u siglum = ιι"},
+ {"ctx": "λαφυρώτεροςΠβ12.1274b7.δι'ἀκρι", "verdict": "'", "agrees_with": "multiple", "confidence": "high", "note": "elision apostrophe; genie entity is garble"},
+ {"ctx": "εῖνΑα1.24b14.τη3.153a11.Φκ8.19", "verdict": "κ", "agrees_with": "opus", "confidence": "medium", "note": "glyph is the κ-form (matches confirmed κ in Ηκ3), differs from round α; but 191b29 is Physics I, so citation is bibliographically odd"},
+ {"ctx": ".Ζγα20.728b12.γ2.753b14.Ηκ3.11", "verdict": "κ", "agrees_with": "multiple", "confidence": "high", "note": "italic κ (x-glyph); EN 1174b = bk 10 (κ)"},
+ {"ctx": "b14.Ηκ3.1174b2.αν12.477a6.κ6.3", "verdict": ".", "agrees_with": "multiple", "confidence": "high", "note": "period after 477a6"},
+ {"ctx": ".αν12.477a6.κ6.397b11.κατ'ἀκρί", "verdict": "'", "agrees_with": "multiple", "confidence": "high", "note": "elision apostrophe; genie entity is garble"},
+ {"ctx": "b11.κατ'ἀκρίβειανζητεῖνηεγ2.12", "verdict": "η", "agrees_with": "multiple", "confidence": "high", "note": "EE siglum ηε + bk η (7); 1236b is EE bk 7"},
+ {"ctx": "ιανζητεῖνηεγ2.1236b18.—ὅπȣμάλι", "verdict": "ȣ", "agrees_with": "multiple", "confidence": "high", "note": "ὅπȣ with ȣ ligature (=ου) raw"}
+]

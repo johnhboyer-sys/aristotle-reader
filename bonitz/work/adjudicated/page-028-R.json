@@ -1,0 +1,182 @@
+[
+ {
+  "ctx": "ρδίᾳτοῖςζῴοις,ϗπρὶνὅλονδιηρθρῶ",
+  "verdict": "ηρθρῶσθ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "οςμεταβολήπν6.484a15.αἷμαϗτὸἀν",
+  "verdict": "ϗ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ",ὑστάτη,τελευταίατροφή,ἐξȣ͂γίν",
+  "verdict": "ȣ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Bare ligature (=οὗ); opus added a circumflex not printed, genie/llama misread as ἧς."
+ },
+ {
+  "ctx": "διαφοραί.τὸαἷμαδιάφορονΖμα3.64",
+  "verdict": "α",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Siglum Ζμα (de partibus bk α)."
+ },
+ {
+  "ctx": "Ζμβ7.652a32,36.δ10.686a9.αι5.4",
+  "verdict": "αι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Bare siglum αι."
+ },
+ {
+  "ctx": "6a9.αι5.444a10.υ3.458a13.φτβ3.",
+  "verdict": "φτ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "φτ = de plantis (φυτά); 824 falls in that range."
+ },
+ {
+  "ctx": "1.τὸαἷμαδιὰτίμέλανγίνεταιχ6.79",
+  "verdict": "χ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "χ = de coloribus; chi with descenders, not kappa."
+ },
+ {
+  "ctx": "ελάντερονπλη9.967b15.διφυȣςὄντ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "διφυȣς bare ligature; opus+llama agree."
+ },
+ {
+  "ctx": "ντοςτȣ͂αἵματοςϗκεχωρισμένȣΖμγ4",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "κεχωρισμένȣ bare ligature; opus+llama agree."
+ },
+ {
+  "ctx": "αἵματοςἐντοῖςζῴοις:ἀνθρώπȣλεπτ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀνθρώπȣ genitive ligature."
+ },
+ {
+  "ctx": "ις:ἀνθρώπȣλεπτότατον,ταύρȣϗὄνȣ",
+  "verdict": "ȣϗὄνȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ταύρȣ ϗ ὄνȣ, ligatures throughout."
+ },
+ {
+  "ctx": "ελάντατονΖιγ19.521a3,ταύρȣ,κάπ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ταύρȣ."
+ },
+ {
+  "ctx": "τονΖιγ19.521a3,ταύρȣ,κάπρȣΖμβ4",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "κάπρȣ."
+ },
+ {
+  "ctx": "αύρȣ,κάπρȣΖμβ4.651a2,ἐλάφȣ,προ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐλάφȣ."
+ },
+ {
+  "ctx": "άπρȣΖμβ4.651a2,ἐλάφȣ,προκός,τα",
+  "verdict": "ό",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "προκός, round omicron with acute, not iota."
+ },
+ {
+  "ctx": "4.651a2,ἐλάφȣ,προκός,ταύρȣ,βȣβ",
+  "verdict": "ȣ,βȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ταύρȣ, βȣβαλίδος."
+ },
+ {
+  "ctx": "rp272n12).λέγεταιὅτιαἰγίθȣϗἄνθ",
+  "verdict": "ȣϗἄνθȣ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Ligatures ȣ ϗ ȣ certain; accent on ἄνθȣ hard to confirm."
+ },
+ {
+  "ctx": "αἷμαȣσυμμίγνυταιἀλλήλοιςΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι = HA bk ι(9); fused-iota 'u' trap, 610a7 confirms."
+ },
+ {
+  "ctx": "22.μδ7.384a31.πι2.891a16.θ5.89",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Oval with crossbar = theta, not 8 or δ."
+ },
+ {
+  "ctx": "13.πι2.891a13.ὁπέλλοςαἷμαὑςφασ",
+  "verdict": "υἷ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Two glyphs υ+ἷ; genie+llama agree."
+ },
+ {
+  "ctx": "ίησινἐκτῶνὀφθαλμῶνὀχεύωνΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι = HA bk ι(9); fused-iota trap, 609b24."
+ },
+ {
+  "ctx": "σηκὸςτȣ͂τοτὸαἷμακαλεῖταιῥȣ͂ςΖι",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ῥȣ͂ς, circumflex printed over ligature; opus+llama agree."
+ },
+ {
+  "ctx": "μένȣἔξωπλείονοςμὲνἐκθνήσκȣσι.π",
+  "verdict": "ȣσι.",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐκθνήσκȣσι ligature + period (not comma)."
+ },
+ {
+  "ctx": "θνήσκȣσι.πολλȣ͂δ'ἄγανἀποθνήσκȣ",
+  "verdict": "νήσκȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀποθνήσκȣσιν ligature."
+ },
+ {
+  "ctx": "ἀποθνήσκȣσινΖιγ19.521a11.α4.48",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Baseline Greek α siglum, not raised Latin a; opus+llama agree."
+ },
+ {
+  "ctx": "γα19.726b12.πν5.484a11.Ζιη10.5",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιη = HA bk η(7); eta descender visible, 587a; opus+llama agree."
+ }
+]

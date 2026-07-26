@@ -1,0 +1,289 @@
+[
+ {
+  "ctx": "ς)ἐπὶτὴνβάσινΟβ4.287b8.ἤχθωδιά",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "μεναἄγεταιὅπȣἄντιςἐθέλῃΖιθ9.59",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ȣἄντιςἐθέλῃΖιθ9.595b13.—ἡθάλατ",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "pοndushabere)τρεῖςμνᾶςsimθ45.8",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "518a38.—ἀκτέοντζ8.147a6.Πθ6.13",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ζειν.ἀγελάζονταιφάτται,ἰχθῦςΖι",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἀγελάζονταιφάτται,ἰχθῦςΖιθ12.5",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιφάτται,ἰχθῦςΖιθ12.597b7.12.61",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "siglum subscript iota; opus misread as digit 1"
+ },
+ {
+  "ctx": ".τετραπόδωνζῳοτοκȣ́ντωνΖιθ7.59",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ζῳοτοκȣ́ντωνΖιθ7.595b15.23.604",
+  "verdict": "3",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "citation digit clearly 3; llama '5' is outlier"
+ },
+ {
+  "ctx": "τωνΖιθ7.595b15.23.604a13.150.6",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "siglum subscript iota; opus misread as digit 1"
+ },
+ {
+  "ctx": "ἀγελαῖαΖιζ18.571b29),ὀρνίθωνΖι",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ῖαΖιζ18.571b29),ὀρνίθωνΖιθ12.5",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "θωνΖιθ12.597b29.3.593b22.125.6",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "siglum subscript iota; opus misread as digit 1"
+ },
+ {
+  "ctx": "29.3.593b22.125.617b21,ἰχθύωνΖ",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "593b22.125.617b21,ἰχθύωνΖιι2.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "HA book iota (610b=bk9): Ζιι"
+ },
+ {
+  "ctx": "6.1528b6.313.1531a28.cfΖιθ13.5",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "98a28.δ11.538a29,ἐντόμωνΖιι40.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι40; double-iota looks like u/mu to others"
+ },
+ {
+  "ctx": "23.τὰςἀγέλαςποιȣνταιὅτανκινῶσι",
+  "verdict": "ύω",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "reads κυῶσιν (of fish spawning); genie+llama agree, opus κινῶσιν wrong"
+ },
+ {
+  "ctx": "γέλαςποιȣνταιὅτανκινῶσινΖιι2.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι2 (610b=bk9)"
+ },
+ {
+  "ctx": "2.282a28.ὁχρόνοςἀγένητονΦθ1.25",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τότεἀγένητονἄφθαρτονϗτὸἄφθαρτο",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "θ in ἄφθαρτον; genie dropped it, llama gave ϑ"
+ },
+ {
+  "ctx": "ὸἄφθαρτονἀγένητονΟα12.282.a31.",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "period after 282 present at line end"
+ },
+ {
+  "ctx": "ονϗἀγένητονΟα12.281b26.ἄφθαρτο",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "1a28.γ4.203b8.f17.1477a9.ȣσίαι",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "οὐσίαι ligature; opus+llama"
+ },
+ {
+  "ctx": "b8.f17.1477a9.ȣσίαιἀγένηταιϗἄφ",
+  "verdict": "αιϗἄφθαρτα",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "endings -αι, ϗ raw, θ upright"
+ },
+ {
+  "ctx": "Ζιζ1.558b16.Ζγγ1.749b31.—ȣκἀγε",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "— ȣκ (οὐκ); genie+llama read ἐ wrongly"
+ },
+ {
+  "ctx": "(ἐστιν)ἐνἐκείνοιςσεμνύνεσθαιΗδ",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "1a27.ἄγευστοςpassἡγεῦσιςτȣγευσ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ ligature (genitive τοῦ)"
+ },
+ {
+  "ctx": "γευστοςpassἡγεῦσιςτȣγευστȣϗἀγε",
+  "verdict": "ȣϗ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "γευστȣ ϗ"
+ },
+ {
+  "ctx": "assἡγεῦσιςτȣγευστȣϗἀγεύστȣψβ10",
+  "verdict": "ȣψ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀγεύστȣ ψ; genie+llama read ῳ wrongly"
+ },
+ {
+  "ctx": "b8.—actἄγευστοιἡδονῆςἐλευθερίȣ",
+  "verdict": "θερίȣ,τȣκαλȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐλευθερίȣ,τȣ καλȣ (genitive -ου ligatures), θ upright"
+ },
+ {
+  "ctx": "ωμέτρητος.ἐνἀγεωμετρήτοιςȣδιαλ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὐ διαλεκτέον"
+ },
+ {
+  "ctx": "7b23.ἀγήρατονϗἀναλλοίωτονϗἀπαθ",
+  "verdict": "ϗἀπαθ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ϗ raw, θ upright"
+ },
+ {
+  "ctx": "λλοίωτονϗἀπαθέςΟα3.270b2.ἀγήρω",
+  "verdict": "ἀγήρωςϗἄφθ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "accent on η, ϗ raw, θ upright"
+ },
+ {
+  "ctx": "όσμος,ἡφύσιςκ5.397a16,27.Ἀγησί",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "precomposed capital w/ breathing; opus+llama"
+ },
+ {
+  "ctx": "ΚινάδωνοςἐπίθεσιςΠε7.130635.Ἀγ",
+  "verdict": "35.Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "pglΒk3cοllΧenΗell4,7,2prοἩγήσι",
+  "verdict": "Ἡ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "οςΡβ23.1398b32.ἄγιοςὅρκοςθ57.8",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "οςθ57.834b11.ἀγιστεῖαιτῶνθεῶνΟ",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιστεῖαιτῶνθεῶνΟα1.268a14.Ἀγκαῖ",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "λογέωργοςf530.1566a42,15.Ἀγαπή",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "23.καταπίνειντὸἄγκιστρονΖιι37.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιι37; opus+genie"
+ },
+ {
+  "ctx": "ιι37.621a7.ἀγκιστροφάγοςΖιι37.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιι37; opus+genie"
+ }
+]

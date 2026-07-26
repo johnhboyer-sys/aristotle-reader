@@ -1,0 +1,127 @@
+[
+ {
+  "ctx": "γ5.515b23,σπέρμαΖιγ22.523a13.τ",
+  "verdict": "a",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Raised page-column letter of 523a13 at column top; genie/llama hallucinated a later lemma."
+ },
+ {
+  "ctx": "πέρμαΖιγ22.523a13.τὸκαθαρωτάτῳ",
+  "verdict": "ωτάτῳϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τηκενἡτῶνσπλάγχνωνφύσιςΖμδ5.67",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζμδ = De part. siglum."
+ },
+ {
+  "ctx": "οςδιαφοράνΖμβ5.651a21,25.ὗςὅσο",
+  "verdict": "ὗ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ὗς with rough breathing + circumflex."
+ },
+ {
+  "ctx": "ζονἡμῶντὰσώματαφυσικῶςπλη9.967",
+  "verdict": "9",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Printed digit 9, not θ."
+ },
+ {
+  "ctx": "χειαἴσθησινΖιγ19.520b15.Ζμβ5.6",
+  "verdict": "μ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζμβ subscript μ prints u-like; work siglum, not υ."
+ },
+ {
+  "ctx": "ὰτὸἦθοςϗ̀κατὰτὴναἴσθησινΖμβ4.6",
+  "verdict": "μ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζμβ subscript μ prints u-like; 651a12 is PA bk2."
+ },
+ {
+  "ctx": "ίνεινἀράχνιονΖιθ4.594a11.ι39.6",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Book ι (HA 9) before ch.39; genie dropped it."
+ },
+ {
+  "ctx": "εν2.460a7.αἱματικὴὑγρότης.ἰκμά",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Comma after ὑγρότης separating the gloss ἰκμάς."
+ },
+ {
+  "ctx": "γρότης.ἰκμάςΖγδ8.777a7.Ζμγ10.6",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζγδ = De gen. siglum, gamma has descender."
+ },
+ {
+  "ctx": "46a3.Ζγδ1.766b17.αἱμ.ὕληΖμγ4.6",
+  "verdict": "μ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζμγ subscript μ prints u-like; work siglum, not υ."
+ },
+ {
+  "ctx": "γδ1.766b22.αἱματικὴφύσιςΖμβ1.6",
+  "verdict": "μ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζμβ subscript μ prints u-like; work siglum, not υ."
+ },
+ {
+  "ctx": "ὴΖμγ9.672a4.ἶνεςαἱματικαί.σπλά",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Comma after αἱματικαί."
+ },
+ {
+  "ctx": "a15.Ζμβ1.647b7.γ12.673b27.τὰαἱ",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Period after 673b27; llama's ,30 invented."
+ },
+ {
+  "ctx": "αἱματίνηἐντῷλευκῷἡκαρδίαΖιζ3.5",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Subscript ι in Ζιζ (HA bk7); genie dropped it."
+ },
+ {
+  "ctx": "ύημαΖγγ2.752b5(cfὀρνίθωνγενή,τ",
+  "verdict": "ενή,",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ὀρνίθων γενή with epsilon and following comma."
+ },
+ {
+  "ctx": "ἱμορροΐς.1.αἱμορροΐδεςἄπονοιἐκ",
+  "verdict": "νοι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἄπονοι; genie/llama misread as υσι."
+ },
+ {
+  "ctx": "ρροΐδεςϗ̀αἱτῶνκαταμηνίων·v.ϗ̀γ",
+  "verdict": "v.ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Lowercase v. confirmed in image; following ϗ cut off at column foot, grave inferred from page style."
+ }
+]

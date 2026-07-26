@@ -1,0 +1,156 @@
+[
+ {
+  "llamaparse_word": "διαφέρȣσι",
+  "ou_form": "διαφέρουσι",
+  "upsilon_form": "διαφέρυσι",
+  "lexical_verdict": "ligature",
+  "why": "διαφερουσι is a corpus form; διαφερυσι is not"
+ },
+ {
+  "llamaparse_word": "καθόλȣ",
+  "ou_form": "καθόλου",
+  "upsilon_form": "καθόλυ",
+  "lexical_verdict": "ligature",
+  "why": "καθολου is a corpus form; καθολυ is not"
+ },
+ {
+  "llamaparse_word": "λόγȣ",
+  "ou_form": "λόγου",
+  "upsilon_form": "λόγυ",
+  "lexical_verdict": "ligature",
+  "why": "λογου is a corpus form; λογυ is not"
+ },
+ {
+  "llamaparse_word": "πȣ",
+  "ou_form": "που",
+  "upsilon_form": "πυ",
+  "lexical_verdict": "ligature",
+  "why": "που is a corpus form; πυ is not"
+ },
+ {
+  "llamaparse_word": "πȣς",
+  "ou_form": "πους",
+  "upsilon_form": "πυς",
+  "lexical_verdict": "ligature",
+  "why": "πους is a corpus form; πυς is not"
+ },
+ {
+  "llamaparse_word": "παρακολȣθεῖ",
+  "ou_form": "παρακολουθεῖ",
+  "upsilon_form": "παρακολυθεῖ",
+  "lexical_verdict": "ligature",
+  "why": "παρακολουθει is a corpus form; παρακολυθει is not"
+ },
+ {
+  "llamaparse_word": "ποταμȣς",
+  "ou_form": "ποταμους",
+  "upsilon_form": "ποταμυς",
+  "lexical_verdict": "ligature",
+  "why": "ποταμους is a corpus form; ποταμυς is not"
+ },
+ {
+  "llamaparse_word": "πρȣπάρχειν",
+  "ou_form": "προυπάρχειν",
+  "upsilon_form": "πρυπάρχειν",
+  "lexical_verdict": "ligature",
+  "why": "προυπαρχειν is a corpus form; πρυπαρχειν is not"
+ },
+ {
+  "llamaparse_word": "προσαγορεύȣσι",
+  "ou_form": "προσαγορεύουσι",
+  "upsilon_form": "προσαγορεύυσι",
+  "lexical_verdict": "ligature",
+  "why": "προσαγορευουσι is a corpus form; προσαγορευυσι is not"
+ },
+ {
+  "llamaparse_word": "σπȣδαῖος",
+  "ou_form": "σπουδαῖος",
+  "upsilon_form": "σπυδαῖος",
+  "lexical_verdict": "ligature",
+  "why": "σπουδαιος is a corpus form; σπυδαιος is not"
+ },
+ {
+  "llamaparse_word": "τȣ",
+  "ou_form": "του",
+  "upsilon_form": "τυ",
+  "lexical_verdict": "ligature",
+  "why": "του is a corpus form; τυ is not"
+ },
+ {
+  "llamaparse_word": "τȣς",
+  "ou_form": "τους",
+  "upsilon_form": "τυς",
+  "lexical_verdict": "ligature",
+  "why": "τους is a corpus form; τυς is not"
+ },
+ {
+  "llamaparse_word": "ἀκολȣθεῖ",
+  "ou_form": "ἀκολουθεῖ",
+  "upsilon_form": "ἀκολυθεῖ",
+  "lexical_verdict": "ligature",
+  "why": "ακολουθει is a corpus form; ακολυθει is not"
+ },
+ {
+  "llamaparse_word": "ἀμίσθȣς",
+  "ou_form": "ἀμίσθους",
+  "upsilon_form": "ἀμίσθυς",
+  "lexical_verdict": "ligature",
+  "why": "αμισθους is a corpus form; αμισθυς is not"
+ },
+ {
+  "llamaparse_word": "ἀμερȣς",
+  "ou_form": "ἀμερους",
+  "upsilon_form": "ἀμερυς",
+  "lexical_verdict": "ligature",
+  "why": "αμερους is a corpus form; αμερυς is not"
+ },
+ {
+  "llamaparse_word": "ἀναπλέȣσιν",
+  "ou_form": "ἀναπλέουσιν",
+  "upsilon_form": "ἀναπλέυσιν",
+  "lexical_verdict": "ligature",
+  "why": "αναπλεουσιν is a corpus form; αναπλευσιν is not"
+ },
+ {
+  "llamaparse_word": "ἁπλȣ",
+  "ou_form": "ἁπλου",
+  "upsilon_form": "ἁπλυ",
+  "lexical_verdict": "ligature",
+  "why": "απλου is a corpus form; απλυ is not"
+ },
+ {
+  "llamaparse_word": "ἄμμȣ",
+  "ou_form": "ἄμμου",
+  "upsilon_form": "ἄμμυ",
+  "lexical_verdict": "ligature",
+  "why": "αμμου is a corpus form; αμμυ is not"
+ },
+ {
+  "llamaparse_word": "ἐμβάλλȣσιν",
+  "ou_form": "ἐμβάλλουσιν",
+  "upsilon_form": "ἐμβάλλυσιν",
+  "lexical_verdict": "ligature",
+  "why": "εμβαλλουσιν is a corpus form; εμβαλλυσιν is not"
+ },
+ {
+  "llamaparse_word": "ἔχȣσιν",
+  "ou_form": "ἔχουσιν",
+  "upsilon_form": "ἔχυσιν",
+  "lexical_verdict": "ligature",
+  "why": "εχουσιν is a corpus form; εχυσιν is not"
+ },
+ {
+  "llamaparse_word": "ἰσχυρȣς",
+  "ou_form": "ἰσχυρους",
+  "upsilon_form": "ἰσχυρυς",
+  "lexical_verdict": "ligature",
+  "why": "ισχυρους is a corpus form; ισχυρυς is not"
+ },
+ {
+  "llamaparse_word": "ὅπȣ",
+  "ou_form": "ὅπου",
+  "upsilon_form": "ὅπυ",
+  "lexical_verdict": "ligature",
+  "why": "οπου is a corpus form; οπυ is not"
+ }
+]

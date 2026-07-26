@@ -1,0 +1,106 @@
+[
+ {
+  "ctx": ".αἰσθητικός(cfαἴσθησις1).a.ὥρι",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "413b12.3.414a32.ἢαἰσθητικόν,τα",
+  "verdict": "ἢ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "Single eta (the conjunction 'or'), grave/smooth; opus 'όν' wrong, genie/llama lack breathing."
+ },
+ {
+  "ctx": "κῆςἀρχῆςψβ3.415a1,414b31.a5.41",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Greek book-siglum α (de An I); 411b30 = de An I.5."
+ },
+ {
+  "ctx": "λὰδυνάμειμόνονψβ5.417a6.τȣαἰσθ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ου-ligature (τοῦ), matches surrounding ligatures."
+ },
+ {
+  "ctx": "μόνονψβ5.417a6.τȣαἰσθητικȣμορί",
+  "verdict": "ȣμορίȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Genitive τοῦ αἰσθητικοῦ μορίου, all ȣ-ligatures."
+ },
+ {
+  "ctx": "3.247a6.αἰσθητικὴκίνησιςΦθ2.25",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φθ = Physics VIII; 253a is bk 8."
+ },
+ {
+  "ctx": "ναμιςδιχῶς(τὸμὲνὡςἀπεπιστῆμȣν,",
+  "verdict": "ῆμο",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "Circumflex η + omicron (…στῆμον); opus right on ῆ, wrong final; genie/llama wrong accent+vowel."
+ },
+ {
+  "ctx": "ιστῆμȣν,τὸδ'ὡςἐπιστήμηνἔχονἀλλ",
+  "verdict": "ο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Omicron ending -μον."
+ },
+ {
+  "ctx": "ὡςἐπιστήμηνἔχονἀλλὰμὴθεωρȣν)ψβ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "θεωρȣν = θεωροῦν, ligature."
+ },
+ {
+  "ctx": "ȣν)ψβ5.417b32(cfαἴσθησις1a),in",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin ref '1a'."
+ },
+ {
+  "ctx": "49a17.τὸπρῶτοναἰσθητικόνμν1.45",
+  "verdict": "υ",
+  "agrees_with": "genie",
+  "confidence": "high",
+  "note": "Work-siglum υ (de Somno); 454a23."
+ },
+ {
+  "ctx": "ικόνμν1.450a11.υ1.454a23.ȣτ'ἄν",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣτ' = οὔτ', ligature."
+ },
+ {
+  "ctx": "67a9,14).μίααἰσθητικὴψυχή.ψυχῆ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Comma after ψυχή."
+ },
+ {
+  "ctx": "έραἡἀφὴτȣἀλλοτρίȣἢτȣοἰκείȣπλε1",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τȣ = τοῦ, genitive ligature."
+ },
+ {
+  "ctx": "εγάληνἔχοντεςαἰσθητικοί,οppἀνα",
+  "verdict": "ppἀναί",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "Latin roman 'opp' not ρρ (opus right); ἀναί has acute (genie/llama right)."
+ }
+]

@@ -1,0 +1,139 @@
+[
+ {
+  "ctx": "ηεη2.1238b6,7).ἕκαστονἰδίᾳἀγαθ",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ς,distφύσειΗζ13.1144b7.—τȣ͂ἀγα",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ou-ligature with circumflex (τοῦ)"
+ },
+ {
+  "ctx": "φύσειΗζ13.1144b7.—τȣ͂ἀγαθȣ͂τὸμ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ou-ligature with circumflex (ἀγαθοῦ)"
+ },
+ {
+  "ctx": "λόνΜμ3.1078a31(cfcοniunctaἀγαθ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "raised Bekker citation letter"
+ },
+ {
+  "ctx": "b18Fr.ἀγαθὰμέν,ἐπαινετὰδ'ȣ́ηεη",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὔ via ou-ligature with acute"
+ },
+ {
+  "ctx": "siveσυμφέρον)Ηθ2.1115b19.γεη2.",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "EE abbrev ηεη; italic η, not γ"
+ },
+ {
+  "ctx": "αμεῖν,μαθεῖνΗβ5.1106a20.Ζι15.6",
+  "verdict": "υ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ζι15.616a11.ἀγαθοὶφαγεῖνΖι34.6",
+  "verdict": "υ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".383b4.αἱκοχλίαιπότεἀμείνȣς(sc",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀμείνȣς = ἀμείνους"
+ },
+ {
+  "ctx": "Ηζ13.1144b1.Πγ4.1277a15.τγ1.11",
+  "verdict": "γ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τγ = Topica bk 3, 116a"
+ },
+ {
+  "ctx": "άἐστινἀγαθάηεη15.1248b27.ȣχοἷό",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣχ = οὐχ"
+ },
+ {
+  "ctx": "f623.1583a17.γίνεσθαιἀγαθȣςφύσ",
+  "verdict": "ȣ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ-ligature with grave (ἀγαθοὺς); opus omitted the accent"
+ },
+ {
+  "ctx": "πολιτείαΠγ13.1284b25.ὁαὐτὸςὅρο",
+  "verdict": "ὸ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "αὐτὸς"
+ },
+ {
+  "ctx": "η15.1334a13.—ἀγαθοί,βελτίȣς,ἄρ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "βελτίȣς = βελτίους"
+ },
+ {
+  "ctx": "εῖςΠε1.1302a1.β6.1266a21.γ7.12",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Politics bk γ, 1279a"
+ },
+ {
+  "ctx": ".ἐξἀγαθῶνἀγαθοίΠα6.1255b2.γ13.",
+  "verdict": ".γ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "period separator + γ (Politics bk 3)"
+ },
+ {
+  "ctx": "οίΠα6.1255b2.γ13.1283a36.Ρα9.1",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ρα9 = Rhetoric I, 1367b"
+ },
+ {
+  "ctx": "ἴσωςδιελθεῖνημβ11.1208b7.ȣβέλτ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ = οὐ (bare ligature)"
+ },
+ {
+  "ctx": "νημβ11.1208b7.ȣβέλτιον(ieȣχἀγα",
+  "verdict": "ȣχ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὐχ; consonant is χ not κ, no breathing"
+ },
+ {
+  "ctx": "08b7.ȣβέλτιον(ieȣχἀγαθόν)τι25.",
+  "verdict": "τ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τι25 abbrev, tau"
+ }
+]

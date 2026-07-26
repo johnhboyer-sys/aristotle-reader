@@ -1,0 +1,121 @@
+[
+ {
+  "ctx": ",(cf245b13).4.248a13,15.τȣ̃ἀλλ",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "ou-ligature (τοῦ) with circumflex; genie ῦ misses ligature, opus used tilde not perispomeni"
+ },
+ {
+  "ctx": "3,15.τȣ̃ἀλλοιωτȣ̃ἢἀλλοιωτὸνἐντ",
+  "verdict": "ὸ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀλλοιωτὸν: clear omicron+grave, not ῶ"
+ },
+ {
+  "ctx": "ς(ἰσοταχεῖς),φορὰδ'ἐστίνΦθ14.2",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φδ delta (Physics IV, 223b); delta descender curl, not θ"
+ },
+ {
+  "ctx": "ρόαἡἀλλοίωσιςΦθ3.253b25.α3.186",
+  "verdict": "3",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φθ3 chapter 3 (Physics VIII.3, 253b); plain arabic 3, not ἰ8"
+ },
+ {
+  "ctx": "ς.ἄλλοdefetdist,synἕτερον.οppτ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "mark after ἕτερον sits low with slight tail; reads as comma"
+ },
+ {
+  "ctx": "9.1271a20.ἄλλοςγίγνεταιηεη10.1",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ηεη10 siglum (Eth.Eud. bk η, 1243b); final η present, genie dropped it"
+ },
+ {
+  "ctx": "ίγνεταιηεη10.1243b19.ἄλλοϗ̀ἄλλ",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "kai ligature with clear grave accent, mid-phrase ἄλλο ϗ̀ ἄλλο"
+ },
+ {
+  "ctx": "4.342a6.β3.357b30(aliterδ'9.38",
+  "verdict": "'",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "aliter δ'9: distinct apostrophe tick after δ, separate from letter"
+ },
+ {
+  "ctx": "ȣ̃τονἄλλοπάθοςμα8.345a18.ϗ̀τἆλ",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "kai ligature with grave accent before τἆλλα"
+ },
+ {
+  "ctx": "ςμα8.345a18.ϗ̀τἆλλατὰτοιαῦτα,ϗ",
+  "verdict": "ῦτα,ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τοιαῦτα plain upsilon+circumflex (αῦ) + comma + kai with grave"
+ },
+ {
+  "ctx": "λατὰτοιαῦτα,ϗ̀ὅσαἄλλατοιαῦταμδ",
+  "verdict": "ῦ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "second τοιαῦτα: upsilon+circumflex, not ligature"
+ },
+ {
+  "ctx": "αροιμίαι)ημβ15.1213a13.ηεη12.1",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ηεη12 siglum (Eth.Eud. bk η, 1245a); final η present, genie dropped it"
+ },
+ {
+  "ctx": "ὸναὐτὸντρόπονμδ6.383a16.—ϗ̀ἄλλ",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "kai ligature with grave accent after dash before ἄλλως"
+ },
+ {
+  "ctx": "ρήσιμαΖμγ2.663b4.—ἄλλωςτεϗ̀Ηα4",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἄλλως τε ϗ̀ Ηα: kai ligature with grave accent"
+ },
+ {
+  "ctx": "Ηα4.1096a15.Πβ5.1263b18.γ15.12",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "γ15 Politics III ch15; arabic 1 matching 1286/1263, not iota"
+ },
+ {
+  "ctx": "15.1286b9al.ἄλλωςτεἐπειδὴϗ̀Ζιγ",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐπειδὴ ϗ̀ Ζιγ: kai ligature with grave accent"
+ },
+ {
+  "ctx": "86a12.ἀλλότριοντὴνφύσινΖγθ7.77",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζγδ7 De Gen.An. bk δ (776a); delta with descender, not θ"
+ }
+]

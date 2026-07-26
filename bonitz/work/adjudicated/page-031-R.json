@@ -1,0 +1,13 @@
+[
+ {"ctx": "οςψβ9.421a11.αἰσθάνεσθαιτȣ͂λυπ", "verdict": "ȣ͂", "agrees_with": "opus", "confidence": "high", "note": "genitive λυπηροῦ, printed ou-ligature with circumflex, not omega"},
+ {"ctx": "21a11.αἰσθάνεσθαιτȣ͂λυπηρȣ͂ϗ́ἡ", "verdict": "ȣ͂ϗ́", "agrees_with": "opus", "confidence": "high", "note": "ou-ligature+circumflex then raw kai-ligature ϗ with acute"},
+ {"ctx": "α2.1253a13.ἐνταῖςκυήσεσιτȣ͂οἴν", "verdict": "ȣ͂οἴνȣ", "agrees_with": "opus", "confidence": "high", "note": "τοῦ οἴνου; both datives are ou-ligatures"},
+ {"ctx": "terquecasus,ubiacceditπάθȣςali", "verdict": "ȣ", "agrees_with": "opus", "confidence": "high", "note": "πάθȣς = πάθους, ou-ligature"},
+ {"ctx": "ῆςαἰσθήσεωςγενόμενονἴσμενὑςτῷἐ", "verdict": "ὑ", "agrees_with": "opus", "confidence": "high", "note": "printed glyph is single-bowl upsilon, not omega"},
+ {"ctx": "λητήΜλ1.1069a30.2.1069b3.ȣκαλῶ", "verdict": "ȣ", "agrees_with": "multiple", "confidence": "high", "note": "οὐ = ou-ligature with acute; opus+llama"},
+ {"ctx": "34.Ηη12.1152b13.—αἰσθητῶς.συνε", "verdict": ".", "agrees_with": "opus", "confidence": "high", "note": "clear period after lemma αἰσθητῶς"},
+ {"ctx": "ἷοντύποντινὰτȣ͂αἰσθήματοςμν1.4", "verdict": "μ", "agrees_with": "multiple", "confidence": "high", "note": "siglum μν (De memoria), italic mu with descender; opus+genie"},
+ {"ctx": "ντάτενοήματαϗ́τὰαἰσθήματαf76.1", "verdict": "f", "agrees_with": "multiple", "confidence": "high", "note": "upright roman f (fragment ref), not φ; opus+llama"},
+ {"ctx": "τῶνζώντωνμόνον,τῶνφυτῶνΖμγ4.66", "verdict": "γ", "agrees_with": "multiple", "confidence": "high", "note": "siglum Ζμγ, gamma not eta; opus+genie"},
+ {"ctx": "tVοlkmannΑristΡsychp15).αἰσθήσ", "verdict": "ἰσθήσεω", "agrees_with": "multiple", "confidence": "high", "note": "αἰσθήσεως genitive; opus+llama"}
+]

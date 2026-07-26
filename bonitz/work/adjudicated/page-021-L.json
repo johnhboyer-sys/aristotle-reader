@@ -1,0 +1,51 @@
+[
+ {
+  "ctx": "Ζιβ10.503a4.ἐλέφαςτὰπερὶτὰςδακ",
+  "verdict": "ȣ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Printed word is τȣς (bare ȣ ligature = τοὺς); genie/llama caught the ου sound but expanded it, opus misread as τὰς."
+ },
+ {
+  "ctx": "τα7.103a11.δ1.121b15,22.Φθ8.26",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φθ = Physics book θ (8); 262a2 is Physics 8. Clear theta, not delta."
+ },
+ {
+  "ctx": "δ19.100a16.Μζ12.1038a16.Ηκ5.11",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic κ printed as x-shape (known trap); Ηκ = EN book 10, 1176a. llama fell for the χ misread."
+ },
+ {
+  "ctx": "νȣσίανϗἐνὄντατι24.179a38.ȣκατὰ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Bare ȣ ligature (= οὐ) after 179a38."
+ },
+ {
+  "ctx": "ν.ὡςδὴδιαμαρτόνταἐντῇἀρχῇϗεȣ̃π",
+  "verdict": "ϗεὖ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "Reads ἀρχῇ ϗ εὖ; opus misread εὖ as εȣ̃, genie expanded ϗ to καὶ."
+ },
+ {
+  "ctx": "tἄδικονεἶναιΗε10.1134a21.η9.11",
+  "verdict": "η",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Italic η siglum; Ηη = EN book 7, 1151a. Not κ."
+ },
+ {
+  "ctx": "ικεῖνϗτὸἀδικεῖσθαιἄμφωμὲνV.φαῦ",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "The 'V.' stands alone on its own line at the column/page foot — a printer's signature mark, not running text; genie/llama correctly omit it."
+ }
+]

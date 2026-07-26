@@ -1,0 +1,107 @@
+[
+ {
+  "ctx": "υργοὶλαμπτῆρες(Εmped222,vlἀμο",
+  "verdict": "l",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clear serif lowercase 'l' (v l = varia lectio abbreviation), not digit 1."
+ },
+ {
+  "ctx": "αμπτῆρες(Εmped222,vlἀμοργύς)",
+  "verdict": "ȣ́",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "was 'ύ' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation."
+ },
+ {
+  "ctx": "αθυμίαἄμυσοςρ1.1421a33.γίγνε",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "First letter of γίγνεται is a plain, unambiguous gamma; genie dropped it."
+ },
+ {
+  "ctx": "1.1421a33.γίγνεταιἐκμυσικῷἄ",
+  "verdict": "ῷ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Final letter is bowl+two-prong shape with circumflex, no descender below baseline — structurally rules out eta (compare ἀμυγδαλῆ, which has a clear right-side descender). Residual ambiguity between omega-iota-subscript and the οὐ-ligature (both render identically in this font under a bare circumflex with no breathing), but eta is definitively wrong, leaving opus's reading as the viable option among those offered."
+ },
+ {
+  "ctx": "α3.818b35.ἄμπελόςτιςἦνκαλῦσ",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "καλῦσι is one of the task brief's confirmed opus non-word errors (should be καλοῦσι). Image rules out genie's omega (no double-bowl 'w' shape present, compare ἀμυδρῶς); ligature reading confirmed."
+ },
+ {
+  "ctx": "L).ἀμπέχειν.ἀμπεχόμενοι,οpp",
+  "verdict": "pp",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Roman-type 'opp' (Latin opponitur abbreviation) is clearly printed in upright letters, not Greek ρρ."
+ },
+ {
+  "ctx": "ντῇσελήνῃκ4.396a26(Ιdelerad",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clear lowercase italic superscript 'a' after 396, not capital A."
+ },
+ {
+  "ctx": "έρειπερὶτὰσμήνηἀμυγδαλῆνΖμ4",
+  "verdict": "ιι",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "Image shows Z followed by two distinct thin iota strokes (Ζιι40), not mu. Page 627 falls in HA book 9 range (610-638), confirming Ζιι per the siglum rule."
+ },
+ {
+  "ctx": "κολάπτηςἀμύγδαλονδιέκοψεΖμ9",
+  "verdict": "ιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Image unambiguously shows Ζιι9 (two clear iota strokes), matching neither reader's guess. Page 614 falls in HA book 9 range (610-638), confirming Ζιι."
+ },
+ {
+  "ctx": "18.θέναρκακῶςϗ̀ἀμυδρῶςμιμύμ",
+  "verdict": "ȣ́",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "was 'ύ' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation."
+ },
+ {
+  "ctx": "έρειΠβ5.1263a40.Ἀμυκλαεῖς.ὁ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Mark is a small dot sitting at mid-height with no descending tail, unlike the clear hooked comma seen elsewhere on the page (e.g. after 'Emped 222,')."
+ },
+ {
+  "ctx": "νίωνπρὸςἈμυκλαεῖςπόλεμοςf.4",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "No punctuation mark visible after πόλεμος at line end; opus hallucinated a period."
+ },
+ {
+  "ctx": "1557b42,1558a5.ἀμύλιονἐκτῷσ",
+  "verdict": "ῷσταιτό",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Image shows unaccented iota in σταιτός (rules out genie's σταῖτός) and the accent sits on the final omicron, not the iota (rules out llama's σταίτος); opus and genie already agree on the first-vowel glyph."
+ },
+ {
+  "ctx": "αιτόςπδ21.879a10.ἀμύνειντὺ",
+  "verdict": "ȣ̀ςἐπιόν",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "was 'ὺςἐπιόν' (agrees_with opus, high). Claude re-checked this against a zoomed crop of the ink: the glyph is the stacked ou-ligature carrying an accent, not a plain upsilon. The adjudicator's rule (accent without breathing => plain upsilon) is wrong for this font; the ligature routinely takes acute/grave with no breathing (cf. John's 15-44 review: tous is normally printed with the accented ligature). Downgraded to medium for John's confirmation."
+ },
+ {
+  "ctx": "ταςΠβ7.1267a25.οmοbiectοΖμ3",
+  "verdict": "ιι",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "Image shows Ζιι37 (two clear iota strokes). Page 621 falls in HA book 9 range (610-638), confirming Ζιι."
+ }
+]

@@ -1,0 +1,167 @@
+[
+ {
+  "ctx": ".Ζγα18.722a3.Μγ1.1002b32.ι6.10",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "0b7.Οδ2.309b11.Φδ8.216a5.ȣδὲνἀ",
+  "verdict": "ȣδὲ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιλέγεινἀδύναταμα6.343a21.ȣδὲνἀ",
+  "verdict": "ȣδὲ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "θ4.1047b11.Γα2.316a21,19.εὐηθι",
+  "verdict": "εὐηθι",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "19.εὐηθικώτερονἢὥστεπερὶαὐτȣτὰ",
+  "verdict": "ὐτȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "printed ou-ligature carries a circumflex; base is ligature not omicron"
+ },
+ {
+  "ctx": "αιτὸἀδύνατονΑα15.34b3.ἐκτȣἀδυν",
+  "verdict": "ȣἀδυνάτȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐκ τȣ ἀδυνάτȣ, both ligatures"
+ },
+ {
+  "ctx": "τȣδεικνύναιΑα17.37a9.διὰτȣἀδ.δ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "5.34a3,35a40.29.45b3.διὰτȣἀδ.π",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "31.23.41a23.44.50a29.διὰτȣἀδ.σ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "27,28.τθ2.157b34sqq.ὁδιὰτȣἀδ.σ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".ὁδιὰτȣἀδ.συλλογισμόςΑβ11-14.α",
+  "verdict": "-",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "range hyphen 11-14, not an em-dash"
+ },
+ {
+  "ctx": ".α15.34b30.23.41a36.ἡδιὰτȣἀδ.δ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "α29.45a35.21.39b32.τὸδιὰτȣἀδ.μ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "βανόμενοςχρόνοςΦδ10.218a1.φησὶ",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "llama's ,30 is a spurious gutter number"
+ },
+ {
+  "ctx": "λλ'ἔσεσθαιγετὸνἀεὶχρόνονΟα10.2",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "alpha of ἀεὶ"
+ },
+ {
+  "ctx": "τὸνἀεὶχρόνονΟα10.280a31.τȣἀεὶϗ",
+  "verdict": "ȣἀεὶϗἀπείρȣȣκ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ ἀεὶ ϗ ἀπείρȣ ȣκ"
+ },
+ {
+  "ctx": "0.τὸἀεὶσυνεχές,τὸδ'ἐφεξῆςȣσυνε",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ = οὐ (ἐφεξῆς ȣ συνεχές)"
+ },
+ {
+  "ctx": "νεχές,τὸδ'ἐφεξῆςȣσυνεχέςΦθ6.25",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Φθ Physics VIII, θ not ϑ"
+ },
+ {
+  "ctx": "1.337b35.Με2.1026b27.ἵνατȣἀεὶϗ",
+  "verdict": "ȣἀεὶϗτȣθείȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ ἀεὶ ϗ τȣ θείȣ"
+ },
+ {
+  "ctx": "hlΡοetΙV431.ἀεὶγὰρἑκάστῳτȣθ'αἱ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ = οὗ before τυχεῖν"
+ },
+ {
+  "ctx": "τατον,ȣτυχεῖνἔστινἀκροτάτȣsimΠ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκροτάτȣ ends in ligature"
+ },
+ {
+  "ctx": "Πη14.1333a29.θ1.1337a17.—ἀείex",
+  "verdict": "αἰ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "epic form αἰεί, not ἀεί"
+ },
+ {
+  "ctx": "οἀεὶΡβ23.1398a12restituitcἀεῖV",
+  "verdict": "cαἰεῖ",
+  "agrees_with": "none",
+  "confidence": "uncertain",
+  "note": "tiny worn word reads c + αἰεῖ; opus closest but has ἀ for αἰ"
+ },
+ {
+  "ctx": "(ΗοmΑ1)πο19.1456b16.φησὶΜȣσαῖο",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Μȣσαῖος = Μουσαῖος, ou-ligature"
+ },
+ {
+  "ctx": "ἀεικέλιοςδίφρος(Ηοmυ259)ieμοχθ",
+  "verdict": "e",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "i e = id est"
+ }
+]

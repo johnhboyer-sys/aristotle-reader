@@ -1,0 +1,198 @@
+[
+ {
+  "ctx": "τέτριξ,ἣνκαλȣ͂σινἈθηναῖοιȣ̓́ρα",
+  "verdict": "ȣ̓́ρα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ligature ȣ with breathing+acute, then ρα; genie/llama expansions wrong."
+ },
+ {
+  "ctx": "ηναῖοιȣ̓́ραγαΖιζ1.559a12.ȣχαλε",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "ȣ-ligature (=οὐ) with smooth breathing; opus right on letter but omitted breathing; genie/llama read omicron."
+ },
+ {
+  "ctx": "ιγιγνώσκȣσινἈθηναῖοιΜεγαρῆαςηε",
+  "verdict": "ῆ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Μεγαρῆας: eta with circumflex."
+ },
+ {
+  "ctx": "23,b33.1351a18.1353a15.ἀθήρ.ὅτ",
+  "verdict": "ή",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἀθήρ: eta with acute (opus+llama)."
+ },
+ {
+  "ctx": "26,31.ἀθλητής,οppἰδιώτηςΗγ11.1",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηγ11: gamma with descender (opus+llama)."
+ },
+ {
+  "ctx": "pἰδιώτηςΗγ11.1116b13.κληρȣντȣς",
+  "verdict": "ȣ͂ντȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "κληρȣ͂ν: first ȣ carries a clear circumflex; opus missed it."
+ },
+ {
+  "ctx": "αγίαΖγδ3.768b29.οἱἀθληταὶ·ἄχρο",
+  "verdict": "·",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Middle dot after ἀθληταὶ before ἄχροοι."
+ },
+ {
+  "ctx": "3.768b29.οἱἀθληταὶ·ἄχροοι.δύσρ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Mark after ἄχροοι has a tail; reads as comma in a list (genie+llama)."
+ },
+ {
+  "ctx": "η4.887b22.α28.862b21.—αὐτȣςἀθλ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "αὐτȣς: bare ȣ-ligature (opus+llama)."
+ },
+ {
+  "ctx": "338b10.ἄθλιος,οppεὐδαίμων.μακά",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Mark after εὐδαίμων faint-tailed; comma in list before μακάριος (genie+llama)."
+ },
+ {
+  "ctx": "ν.μακάριοςΗα11.1100a29,b5,1101",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Comma within citation (a29,/b5,); opus+genie."
+ },
+ {
+  "ctx": "ῖνf374.1540b6.ἆθλονἀρετῆς.νίκη",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Clean baseline dot after ἀρετῆς, no tail = period; genie/llama read comma."
+ },
+ {
+  "ctx": "δ7.1123b35,20.Πβ9.1270b24.δ11.",
+  "verdict": "20.",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Print reads '35, 20.' — number is 20; genie's '25' is a digit misread; opus caught only period, llama only comma."
+ },
+ {
+  "ctx": "ἀθρεῖν.ἀθρήσειεν(ΗοmΚ11)πο25.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πο25 Poetics siglum: small omicron (opus+llama); genie's σ wrong."
+ },
+ {
+  "ctx": "7b11.ἀθροίζεταιἡσύγκρισις.ἡπύκ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Comma after σύγκρισις, matching πύκνωσις, in list (genie+llama)."
+ },
+ {
+  "ctx": "σις.ἡπύκνωσις,τὸπερίττωμαsimμα",
+  "verdict": "sim",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Latin roman 'sim' (=similiter), upright type; genie/llama read Greek σιμ."
+ },
+ {
+  "ctx": "7.725b4(cοnisynσυρρεῖ).πκς56.9",
+  "verdict": "ς",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "πκς: Greek numeral stigma/final-sigma ς; genie read digit 5, llama dropped it."
+ },
+ {
+  "ctx": "άντωνἠθροισμένον(Αnaxag)Οβ3.30",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ογ3 De Caelo: gamma with descender (genie+llama); opus β wrong."
+ },
+ {
+  "ctx": "ονΖγβ4.737b35.ἄθροισιςὑγρȣ.νεφ",
+  "verdict": "ȣ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "ὑγρȣ, : bare ȣ-ligature then comma; opus gave period, genie expanded οῦ, llama added spurious circumflex."
+ },
+ {
+  "ctx": "37b35.ἄθροισιςὑγρȣ.νεφῶνπβ1.88",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πδ1 Problems: italic delta (genie+llama); opus β wrong."
+ },
+ {
+  "ctx": "ισιςὑγρȣ.νεφῶνπβ1.889b12.κς56.",
+  "verdict": "κς",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "κς (numeral 26): italic κ looks like x; opus+llama right, genie πχ fell for the trap."
+ },
+ {
+  "ctx": "340a31.ἀθρόος.ἀθρόος,ἀθρόαι,οp",
+  "verdict": "α",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀθρόαι: alpha ending; genie/llama read ο."
+ },
+ {
+  "ctx": "καθ'ἕκαστονΠδ14.1298a12.γ13.12",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πδ14: digit 14, first digit 1 (opus+genie); llama read iota."
+ },
+ {
+  "ctx": "ὰςτιμὰςδȣ̀ναι,ἀφαιρεῖσθαι.οppἐ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Mark after ἀφαιρεῖσθαι tailed; comma before opp (genie+llama)."
+ },
+ {
+  "ctx": "im,οppεἰςπλάτοςδιαταθῆναι.ἀφικ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Comma after διαταθῆναι before ἀφικέσθαι (genie+llama); opus period wrong."
+ },
+ {
+  "ctx": "1.3.357a24.8.368a4.τὰξύλαἀθρόο",
+  "verdict": "ἀθρό",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀθρόον: omicron 4th char; genie ύ, llama ȣ wrong."
+ },
+ {
+  "ctx": "4.τὰξύλαἀθρόονἔχειτὸὑγρὸνϗδι'ὅ",
+  "verdict": "ϗ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Raw kai-ligature ϗ; genie/llama wrongly expanded to κᾀ/κᾲ."
+ },
+ {
+  "ctx": ",ἀλλοίωσις,μετάβασιςἀθρόαΦα3.1",
+  "verdict": "Φα3.",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φα3 Physics: capital phi (opus+genie); llama read 'f'."
+ }
+]

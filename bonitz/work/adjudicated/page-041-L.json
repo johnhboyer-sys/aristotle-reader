@@ -1,0 +1,214 @@
+[
+ {
+  "ctx": "ςϗ̀βαλάνȣΖια13.493a29.διὰτίȣ̓σ",
+  "verdict": "τίȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".ἄκρος,α,ον,τὸἄκρον.ἄκρα,ieτὰμ",
+  "verdict": "ie",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νσημεῖονδυνάμειἐστὶμέσονΦθ8.26",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Φθ8=Physics VIII; subscript θ, not δ"
+ },
+ {
+  "ctx": "(intγραμμή)ἄκρα,τὸΖἄκρονΦθ8.26",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φθ8=Physics VIII"
+ },
+ {
+  "ctx": "αιὧντὰἄκραἅμαΦε3.226b23.Μκ12.1",
+  "verdict": "κ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "italic κ resembles x/χ; Μκ=Metaph. XI (1068b27)"
+ },
+ {
+  "ctx": "νἢκατὰτὸμέσονμχ26.857a5.τȣ̃πολ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃=τοῦ, ou-lig with circumflex"
+ },
+ {
+  "ctx": ".τȣ̃πολυαγκίστρȣτὸἄκρονΖιδ7.53",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιδ=HA IV (532b26)"
+ },
+ {
+  "ctx": "7.532b26.ἐπ'ἄκρῳτῷδένδρῳΖιι33.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζι+book-ι fused to look like 'u'; HA IX"
+ },
+ {
+  "ctx": "αχ5.796b29.τὰἄκρατῶνφυτῶνφτβ1.",
+  "verdict": "φ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φτβ=de plantis II"
+ },
+ {
+  "ctx": "καρδίαςΖιβ17.507a9.ἐπ'ἄκρȣτῶνκ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἄκρȣ ou-ligature, not ῳ"
+ },
+ {
+  "ctx": "γ9.517a22.ἐπ'ἄκρωντῶνπτερυγίων",
+  "verdict": "υγίωνΖιι13.",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ρυγίωνΖιι13.615b29.ἐπ'ἄκρȣτȣ̃ᾠ",
+  "verdict": "ȣτȣ̃ᾠȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἄκρȣ τȣ̃ ᾠȣ̃ = ἄκρου τοῦ ᾠοῦ"
+ },
+ {
+  "ctx": "ριχώματαλευκαίνεταιἐπ'ἄκρȣΖγα5",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ραχ6.798a5,10.ὁὄνυξἐπ'ἄκρȣ(τῶν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "κάμπτειντὸνδάκτυλονἀπ'ἄκρȣΖιε3",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ζιδ2.525b19.(πόδες)ἐπ'ἄκρȣ,ἐξἄ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "5b19.(πόδες)ἐπ'ἄκρȣ,ἐξἄκρȣΖιβ8",
+  "verdict": "ȣΖιβ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".ε32.557b15.πλεκτάνηἐξἄκρȣδικρ",
+  "verdict": "ȣδικρό",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αΖιδ1.524a6.τὰἄκρατῶνπτερυγίων",
+  "verdict": "υγίωνΖιι",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιι13.615b29.τὰἄκρατȣ̃ῥύγχȣςΖμγ",
+  "verdict": "ȣς",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ῥύγχȣς ending ou-lig+s"
+ },
+ {
+  "ctx": "ηεγ2.1231a13.γλῶτταἐπ'ἄκρȣτριχ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "19.β17.507a5.Ζμγ4.666b1,τȣ̃αἰδ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃=τοῦ with circumflex"
+ },
+ {
+  "ctx": "νΖια13.493a26.γ1.510b18,τȣ̃ᾠȣ̃",
+  "verdict": "ȣ̃ᾠȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ ᾠȣ̃ = τοῦ ᾠοῦ"
+ },
+ {
+  "ctx": "28.Ζγγ2.752b12.3.754b14,τȣ̃κέρ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃=τοῦ with circumflex"
+ },
+ {
+  "ctx": "2.752b12.3.754b14,τȣ̃κέρκȣΖιε1",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "κέρκȣ ending"
+ },
+ {
+  "ctx": "ςτίθεταιϗἐπὶτῶνἄκρωνϗἐπὶτȣ̃μέσ",
+  "verdict": "ȣ̃μέσȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ μέσȣ = τοῦ μέσου"
+ },
+ {
+  "ctx": "0.1457a2.—incivitateἄκροιiqπλȣ",
+  "verdict": "iqπλȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "roman 'i q' + πλȣ́σιοι"
+ },
+ {
+  "ctx": "scfἂνληφθῇτὰἄκραἑκατέρων(ieτȣ̃",
+  "verdict": "ieτȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "roman 'i e' + τȣ̃=τοῦ"
+ },
+ {
+  "ctx": "14.τὸμέσονεἶναίπωςἄκρονΗβ36.11",
+  "verdict": "3",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "printed 'Ηβ36'; apparent Bonitz misprint for Ηβ6"
+ },
+ {
+  "ctx": "τὸπρῶτοντῶνἄκρωνΑα31.46b2,τὸμε",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νΑα4.26a18-22Wζ,τὸἄκρονΑα88.49",
+  "verdict": "8",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "printed 'Αα88' (two figure-8 digits); Bonitz misprint for 38"
+ },
+ {
+  "ctx": "aactertiafigurasyllοgismο-rumΑ",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "opus's '-' is a line-break hyphen of 'syllogismorum'"
+ }
+]

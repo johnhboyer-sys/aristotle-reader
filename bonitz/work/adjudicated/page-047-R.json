@@ -1,0 +1,142 @@
+[
+ {
+  "ctx": "8a17.πλ1.954b35.—μηδὲνἀξιῶνἀξί",
+  "verdict": "ȣ͂νἀξίω",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "ink shows the stacked ou-ligature with circumflex (ἀξιȣ͂ν), and the acute in ἀξίωμ' sits on the iota"
+ },
+ {
+  "ctx": "iqirratiοnalisΑγ10.76b9.οppῥητ",
+  "verdict": "pp",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "upright roman 'opp'; p-forms with straight serifed stems, not Greek rho"
+ },
+ {
+  "ctx": "iοnalisΑγ10.76b9.οppῥητόςατ968",
+  "verdict": "ατ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Greek italic alpha+tau (curved italic forms), clearly distinct from the roman letters in 'opp'"
+ },
+ {
+  "ctx": "ὲμάτηνποιεῖΟβ11.291b13.μηθὲνἀξ",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "closed oval with a horizontal crossbar = upright theta; delta in this font has a tall looped ascender"
+ },
+ {
+  "ctx": "ποιεῖΟβ11.291b13.μηθὲνἀξιῶνἀλό",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "bowl-with-two-prongs ou-ligature under a circumflex: ἀξιȣ͂ν, not omega"
+ },
+ {
+  "ctx": "γωςὑπολαμβάνειν,συμβαίνεινΗα3.",
+  "verdict": "ν",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "final nu of συμβαίνειν is printed"
+ },
+ {
+  "ctx": "5.212b34,30.ἀλογωδέστερονvlπν2",
+  "verdict": "vl",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "upright roman v and serifed l, spaced 'v l'"
+ },
+ {
+  "ctx": "fλογοδέστερον.ἀλοιφὴσυνεχὴςΖμ4",
+  "verdict": "ήςΖιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "acute on συνεχής (mark rises left-to-right); siglum is Z + two separate iota strokes, not a joined upsilon; 624a17 is HA IX, confirming Ζιι"
+ },
+ {
+  "ctx": "οσάχναις,πλὴντȣ͂χρώματοςΖμ14.6",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two discrete short strokes after Z, unlike the rounded upsilon elsewhere in the line; 616a20 = HA IX.14, so Ζιι"
+ },
+ {
+  "ctx": "ς).τὸἀλυργόν,cοniτὸφοινικȣ͂ναι",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φοινικȣ͂ν printed with the ou-ligature under a circumflex"
+ },
+ {
+  "ctx": "a8.χ2.792a7,b2,distφοινικȣ͂νμγ",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φοινικȣ͂ν ligature, same glyph as elsewhere in this entry"
+ },
+ {
+  "ctx": "ταιχ2.792a15-26.τὸἀλυργὸνᾧγίγν",
+  "verdict": "ȣ̓γίγ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "the single glyph is the ou-ligature carrying a smooth breathing (ȣ̓ = οὐ), not omega-iota-subscript or the kai-ligature"
+ },
+ {
+  "ctx": "χρωμάτωντὸἀλυργὸνϗ̀φοινικȣ͂ναι",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φοινικȣ͂ν ligature under circumflex"
+ },
+ {
+  "ctx": "μέρηοἰκίαςΠα3.1253b7.ἅλςὁ.οἱἅλ",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "compact baseline dot with no descending tail; commas in this font trail below the line"
+ },
+ {
+  "ctx": "ρȣὀσμώδειςαι5.443a13.ἅλες.χονδ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "baseline dot between ἅλες and χον-, same weight and shape as the sentence periods on the line"
+ },
+ {
+  "ctx": "516a24.ἡτῶνἁλῶνἁλατοπωλίαοβ134",
+  "verdict": "ο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "fully closed circle = omicron; sigma here has an open top with a leftward hook. Matches οα3.1343b13 earlier in the column"
+ },
+ {
+  "ctx": "νπα38.863b11.ζ9.887b1.ψοφȣ͂σιν",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ψοφȣ͂σιν printed with the ou-ligature under a circumflex"
+ },
+ {
+  "ctx": "φονται(?)Ζιε24.555a14.—τὸἔλοςπ",
+  "verdict": "ἕ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "epsilon with rough breathing + acute; the breathing matches the Γ-shaped rough mark of ἅλας, not the comma-shaped smooth mark of ἄλοχος"
+ },
+ {
+  "ctx": "fπαροιμίαι)Ρβ23.1399a26.τȣ̀ςλε",
+  "verdict": "ȣ̀",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τȣ̀ς and λεγομένȣς both printed with the ou-ligature; first carries a grave"
+ },
+ {
+  "ctx": "ςεν3.461b16.Ζιζ27.580b31(vlἅλλ",
+  "verdict": "vl",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "upright roman v and serifed l inside the parenthesis"
+ }
+]

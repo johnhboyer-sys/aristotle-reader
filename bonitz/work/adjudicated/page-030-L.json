@@ -1,0 +1,173 @@
+[
+ {
+  "ctx": "Ζιδ10.536b29.τίποιȣσιφρονίμω",
+  "verdict": "Ζιδ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ζιδ10.536b29.τίποιȣσιφρονίμωςπ",
+  "verdict": "ȣσι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "μωςπρὸςβοήθειανΖιι6.612a3.θ4.8",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "κἔστιναἲξἄγριοςΖιι6.612a3.θ28.",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "rtaegοceruspictusΑΖιΙ63n2d).ἐν",
+  "verdict": "d",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "superscript note-letter d; genie kept it as unicode superscript"
+ },
+ {
+  "ctx": "raΑngοrensisStΚCrΑΖιΙ63n2c).χί",
+  "verdict": "c",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "clearly c; genie misread as e"
+ },
+ {
+  "ctx": "2b33.αἶγεςπερὶτὴνΟἴτην,ἐνΛήμνῳ",
+  "verdict": "Λήμν",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "initial lambda (Λῆμνος)"
+ },
+ {
+  "ctx": "36.ἐνΚεφαλληνίᾳθ9.831a19.2.αἲξ",
+  "verdict": "2.αἶ",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "numeral '2.' present (genie omitted it); iota carries circumflex like parallel αἶ forms, not opus/llama grave"
+ },
+ {
+  "ctx": "leucοpsisSu,cfΑΖιΙ86n10).3.αἶγ",
+  "verdict": "3.",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ι86n10).3.αἶγεςἐντῷȣ̓ρανῷ.οἱκα",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "period; the tail below is the iota subscript of ῷ, not a comma"
+ },
+ {
+  "ctx": "δαλοὶϗαἶγεςδιὰτίν'αἰτίανμα4.34",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "alpha of αἶγες; llama misread as κ"
+ },
+ {
+  "ctx": ".Αἰολεῖςf66.1487a8.Αἰολίςοβ135",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "omicron siglum οβ; genie misread as σ"
+ },
+ {
+  "ctx": "νιϗἀκαιρίαιτῶνπνευμάτωνπκϛ13.9",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "stigma numeral (κϛ=26, Problems on winds); genie/llama read ζ"
+ },
+ {
+  "ctx": "νευμάτωνπκϛ13.941b24.Αἰόλȣκαλȣ",
+  "verdict": "ȣκαλȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "both ου-ligatures raw (Αἰόλȣ καλȣμεναι)"
+ },
+ {
+  "ctx": "entumL).αἴρειν,οppπιέζεινΡα5.1",
+  "verdict": "Ρα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Greek Ρ+α (Rhetoric); not Πα, not Latin a"
+ },
+ {
+  "ctx": "ppἕλκεινΗη8.1150b4.ἆραι(τȣ̀ςπό",
+  "verdict": "ȣ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ου-ligature with grave (τȣ̀ς)"
+ },
+ {
+  "ctx": "θαιβραδέως,ῥᾷονἀπὸτῆςγῆς,ἦρθαι",
+  "verdict": "ἦρθαι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αιἀπὸτῆςγῆς(deavibussim)Ζιι32.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "fused Ζιι (HA siglum), ref 619b5=HA; genie/llama read μ from following Ζμδ"
+ },
+ {
+  "ctx": "6.683a32,35.κῦμαμετέωροναἴρειν",
+  "verdict": "ἴρει",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "0.843a7.ἄνεμοςαἰρόμενοςπκϛ21.9",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "stigma numeral (πκϛ=Problems 26)"
+ },
+ {
+  "ctx": "μοςαἰρόμενοςπκϛ21.942b11.ἡλίȣα",
+  "verdict": "ἡλίȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ίȣαἰρομένȣ,οppκαταφερομένȣμγ2.",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "8.πιε9.912a35.κε7.938b9.κϛ34.9",
+  "verdict": "ϛ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "stigma numeral (κϛ=26); genie/llama read final sigma"
+ },
+ {
+  "ctx": "εινφύματαπδ13.878a15.ἡαἴρȣσαθε",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "7.1328a2.—ἀρθέντοςτȣ͂αἰτίȣ(sub",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ῖσθαιτὴνἀρχὴνἀριστίνδην,τȣ̀ςἄρ",
+  "verdict": "ȣ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ου-ligature with grave (τȣ̀ς ἄρχοντας)"
+ }
+]

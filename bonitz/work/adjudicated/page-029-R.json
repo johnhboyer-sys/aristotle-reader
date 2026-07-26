@@ -1,0 +1,209 @@
+[
+ {
+  "ctx": "νῶνῥύσις·ἐὰνδέτισυμβαίνῃτȣτων.",
+  "verdict": "ȣ́των,",
+  "agrees_with": "llama",
+  "confidence": "medium",
+  "note": "Accent on ligature present; terminal mark is a comma."
+ },
+ {
+  "ctx": "ΡDa),ὀστρακόδερμονdescrΖιδ4.53",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "caΚ,fοrtaplysiadepilansΑΖ,Ι175",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Subscript siglum ι (AZι), not a comma."
+ },
+ {
+  "ctx": "87b1.αἱμωδιᾶν.αἱμωδιῶμεντȣςὀξὺ",
+  "verdict": "ȣςὀξὺ",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "τȣς ὀξὺ: bare ligature, then plain ὀξὺ (not a second ligature)."
+ },
+ {
+  "ctx": "a24-26.τὸαἴνιγματὸεὐδοκιμȣνΡγ2",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "εὐδοκιμȣν: clear ȣ ligature."
+ },
+ {
+  "ctx": "νρ36.1441b22.ΑἴνιοιΠε10.1311b2",
+  "verdict": "3",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ρ36: first digit is 3."
+ },
+ {
+  "ctx": ".11.1412a24.αἴξ.1.ἡαἴξetὁ'αἴξ,",
+  "verdict": "αἴξ,",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "No leading apostrophe; terminal comma (sentence continues into 'inter...refertur')."
+ },
+ {
+  "ctx": "ῶντετραπόδωνἐναίμωνζωοτοκȣντων",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ζωοτοκȣντων: clear ȣ ligature."
+ },
+ {
+  "ctx": "δίχαλακερατοφόραreferturΖιβ1.4",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιβ: HA subscript ι, not υ."
+ },
+ {
+  "ctx": "91b15.ἤρυγγος(ciSylb,cοddὄρυγγ",
+  "verdict": "ὄ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "codd ὄρυγγος: round omicron, not epsilon."
+ },
+ {
+  "ctx": "ρυγγος(ciSylb,cοddὄρυγγος.κρύγ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ddὄρυγγος.κρύγγος),οἷονθρὶξΖιι",
+  "verdict": "ὶξΖιι3.6",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Fused-u siglum = ιι (Ζιι3), not μ; θρὶξ grave."
+ },
+ {
+  "ctx": "0b29.ἀντὶὀνύχωνχηλὰςἔχειΖιβ1.4",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιβ: HA subscript ι."
+ },
+ {
+  "ctx": "χειΖιβ1.499b17.μηρυκάζει,ȣκἀμφ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣκ = οὐκ ligature."
+ },
+ {
+  "ctx": "ει,ȣκἀμφώδȣςΖμγ14.674b8.Ζιι50.",
+  "verdict": "ιι5",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι50: fused-u = ιι, not μ/υ."
+ },
+ {
+  "ctx": "γύλονΖμγ12.673b33.οἱζωμοὶȣπήγν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "standalone ȣ = οὐ ('do not congeal')."
+ },
+ {
+  "ctx": "οὶȣπήγνυνταιΖιγ17.520a10.ȣκἀλη",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣκ = οὐκ ligature."
+ },
+ {
+  "ctx": "τὰὦταΖια11.492a14.ἐντοῖςμηροῖς",
+  "verdict": "ια",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Printed Ζια11 (HA subscript ι + α); opus read η, others κ for α."
+ },
+ {
+  "ctx": "ροῖςἔχειδύομαστȣς,διὰτίΖμδ10.6",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζμδ: delta, not σ."
+ },
+ {
+  "ctx": "μαστȣς,διὰτίΖμδ10.688b25.ϗὁἄρρ",
+  "verdict": "ϗ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "kai-ligature ϗ, not 'κ.'."
+ },
+ {
+  "ctx": "ιςΖιζ18.572b31.πῶςὀχεύει,ὀχεύε",
+  "verdict": "ὀ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ὀχεύει: round omicron with smooth breathing."
+ },
+ {
+  "ctx": "χȣσινοἱἄρρενεςτῶνθηλειῶνΖιβ3.5",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιβ: HA subscript ι."
+ },
+ {
+  "ctx": "άγος(cfhv)Ζιζ13.573b30.—b.(biο",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ποιȣνταιΖιθ10.596a13.φυσιωδῶνἔ",
+  "verdict": "ωδῶν",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "φυσιω-δῶν across line break; full = φυσιωδῶν."
+ },
+ {
+  "ctx": "ῶςοἱπερὶτὴνΟἴτηντρίβȣσιτὰȣ́βατ",
+  "verdict": "ȣ́θ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Word is οὔθατα (udders): ȣ́ ligature + θ; opus right on ligature but read β, others misread ȣ́ as ὕ."
+ },
+ {
+  "ctx": "ἰγοθήλαςθηλάζειτὰςαἴγαςΖιι30.6",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "θηλάζει/αἰγοθήλας θ, not ι."
+ },
+ {
+  "ctx": "b5.πῶςκατάκεινταιαἱαἶγεςΖιι3.6",
+  "verdict": "ιι3",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι3: fused-u = ιι, not μ."
+ },
+ {
+  "ctx": "0.αἶγεςetοἴεςcοmparanturΖιι3.6",
+  "verdict": "ιι3",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι3: fused-u = ιι, not μ."
+ },
+ {
+  "ctx": "6.ἔχȣσικρότωνας.φθεῖραςδ'ȣΖιε3",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "δ' ȣ = δ' οὐ ligature."
+ },
+ {
+  "ctx": ".φθεῖραςδ'ȣΖιε31.557a16.πόσαζῶ",
+  "verdict": "ό",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πόσα: omicron with acute, not ᾶ."
+ }
+]

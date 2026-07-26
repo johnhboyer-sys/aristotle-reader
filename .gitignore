@@ -13,6 +13,22 @@ TLG Files/
 *.IDT
 Diogenes-Resources/
 
+# ...but the Bonitz index is a public-domain 1870 volume we OCR'd ourselves,
+# not TLG. This filesystem is case-insensitive, so the *.TXT rule above also
+# matches .txt and was silently keeping every transcription, adjudication and
+# reconciled column out of version control.
+!bonitz/**/*.txt
+
+# The Bonitz scan itself and everything derived from it is large and
+# reproducible from book.pdf — 791MB that a bare `git add bonitz` would
+# otherwise sweep in alongside the 3.7MB of transcription that matters.
+bonitz/book.pdf
+bonitz/images/
+bonitz/chunks/
+bonitz/work/review_crops/
+bonitz/work/*.html
+bonitz/work/aristotle-forms.json
+
 # Python
 __pycache__/
 *.pyc

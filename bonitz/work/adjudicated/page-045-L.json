@@ -1,0 +1,156 @@
+[
+ {
+  "ctx": "3b18.β23.1397a11.exemplaτȣ͂ψυχ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ψυχρȣ shows ȣ ligature with circumflex; not ῷ or bare ȣ"
+ },
+ {
+  "ctx": "τρασφῆκεςμείζȣςϗ̀ἄλκιμοιΖιι41.",
+  "verdict": "ι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζι siglum + book ι fuses to u-shape (Ζιι41); book letter ι present"
+ },
+ {
+  "ctx": "ςϗ̀ἄλκιμοιΖιι41.628b6.ζῷα·τὰςὄ",
+  "verdict": "·",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "raised dot after ζῷα clearly printed"
+ },
+ {
+  "ctx": "ιςἀγριώτεραϗ̀ἀλκιμώτεραΖιθ29.6",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιθ29 — upright theta book letter present"
+ },
+ {
+  "ctx": "ίνȣἀπόλογοςΡγ16.1417a13.πο16.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Poetics siglum πο; clear omicron, not σ"
+ },
+ {
+  "ctx": "6.1417a13.πο16.1455a2.Ἀλκινόȣθ",
+  "verdict": "ινόȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ἀλκινόȣ — ι ν ό ȣ ligature; genie wrongly expanded ȣ→ου"
+ },
+ {
+  "ctx": "κάαf463.1554a33.Ἀλκμαίωνπο13.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Poetics siglum πο13; omicron not σ"
+ },
+ {
+  "ctx": "4.1573a12.Ἀ.Ἀστυδάμαντοςπο14.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Poetics siglum πο14; omicron not σ"
+ },
+ {
+  "ctx": "ατȣ͂σώματος,τῶνπτερύγων,τȣ͂ῥύγ",
+  "verdict": "ȣ͂ῥύγχȣςΖι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ (circumflex) ῥύγχȣς Ζι; llama missed circumflex, genie over-expanded"
+ },
+ {
+  "ctx": "ιι14.616a14.13.615b29.πῶςϗ̀πότ",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "kai-ligature with grave accent clearly printed"
+ },
+ {
+  "ctx": "ρέφειτὰνεόττια,ζῇἰχθυοφαγȣ͂σα·",
+  "verdict": "ȣ͂σα·",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἰχθυοφαγȣ̃σα· — ȣ circumflex + raised dot both present"
+ },
+ {
+  "ctx": "mοnidfr12)Ζιε8.542b10.(?CΙΙ409",
+  "verdict": "Π",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two verticals joined by top bar = capital Pi, not II"
+ },
+ {
+  "ctx": "nsisSu133n98,alcedοispidaΛΖιΙ7",
+  "verdict": "Λ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ΛΖι — lambda (no base bar), not Δ"
+ },
+ {
+  "ctx": "xοrsam,velutiεἰμὴγὰρκατὰτȣ͂πρά",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "κατὰ τȣ̃ — ȣ ligature with circumflex, not ὸ"
+ },
+ {
+  "ctx": "ατὰτȣ͂πράγματος..,ἀλλὰπερὶτȣ͂ἤ",
+  "verdict": "ὶτȣ͂ἤθȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "περὶ τȣ̃ ἤθȣς; llama missed circumflex, genie over-expanded"
+ },
+ {
+  "ctx": "278a9.δ2.1289b16,ὅταν—ἀλλὰΖγδ8",
+  "verdict": "ὰΖγδ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀλλὰ (grave) Ζγδ — cursive delta book letter (GA bk 4, 777a)"
+ },
+ {
+  "ctx": ".Φα7.190a15.Πβ11.1273a7.πο13.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Poetics siglum πο13; omicron not σ"
+ },
+ {
+  "ctx": "οninterpοsitοaliοvοcabulοοα3.1",
+  "verdict": "οα",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Oec siglum οα3 (1343b); omicron+alpha, not σa"
+ },
+ {
+  "ctx": "τβ9.828b15.—ἀλλ'ἢpοstenunciati",
+  "verdict": "c",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "enunciationem spelled with c; opus+llama correct"
+ },
+ {
+  "ctx": "b17.τα7.103a21.β4.111b31(ἄλλοἢ",
+  "verdict": "ἄλλοἢ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "(ἄλλο ἢ Wz) — neuter ἄλλο + ἢ, not ἀλλ'ἤ"
+ },
+ {
+  "ctx": "1.ε4.1130a32.10.1135a18.πο16.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Poetics siglum πο16; omicron not σ"
+ },
+ {
+  "ctx": "interdumadsignificatiοnemV.par",
+  "verdict": "V.",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "final line 'V.' present after significationem"
+ }
+]

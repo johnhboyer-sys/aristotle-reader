@@ -1,0 +1,8 @@
+[
+ {"ctx": "ἀβέβαια(velutiλαμπάδες,δοξίδες", "verdict": "κ", "agrees_with": "multiple", "confidence": "high", "note": "Siglum before 4.395b15 is x-shaped kappa, not ξ."},
+ {"ctx": "velutiλαμπάδες,δοξίδες,πίβοι)κ4", "verdict": "θ", "agrees_with": "multiple", "confidence": "high", "note": "θ of ὀφθαλμὸς; opus misread as β."},
+ {"ctx": "ευἀβελτηρίας(ἀβελτερίαςΒk2)Πε1", "verdict": "2", "agrees_with": "multiple", "confidence": "high", "note": "Bk² superscript two."},
+ {"ctx": "οetοβ1352b8ἀβελτηρίαcumcοddΒk", "verdict": "dd", "agrees_with": "opus", "confidence": "high", "note": "Reads 'cum codd Bk' with double d."},
+ {"ctx": "simΖιβ14.505b20.δ5.531a2.ι28.6", "verdict": "ι2", "agrees_with": "opus", "confidence": "high", "note": "Iota siglum then 28 (628a1); llama read iota as 1, genie wrong."},
+ {"ctx": "icumοβ1349a3.ἀγαθοδαιμονιαστήςη", "verdict": "α", "agrees_with": "opus", "confidence": "high", "note": "Headword ἀγαθοδαιμονιαστής keeps the alpha (parenthetical variant drops it)."}
+]

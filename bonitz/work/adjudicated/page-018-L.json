@@ -1,0 +1,142 @@
+[
+ {
+  "ctx": ".844b11.οἰκεῖβήσσαςϗἄγκηΖιι32.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".ἄγκυραϗκρέμαθραπῶςδιαφέρȣσιΡγ",
+  "verdict": "ȣσ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "412a14.βάλλεσθαιἀγκύραςΖιδ1.52",
+  "verdict": "δ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "HA book δ (523b=book IV); genie/llama dropped it"
+ },
+ {
+  "ctx": "523b33.ἄγκυραιβέβληνταιΖμγ7.67",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "γκύραιςταῖςπροβοσκίσινὁρμȣσινf",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ou-ligature printed in ὁρμȣσιν; others normalized to ῶ"
+ },
+ {
+  "ctx": ".1531b40.ἀγκών,brachiumΖμδ10.6",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νεςἐκπλαγίȣπροσκείμενοιΖμδ10.6",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἐπὶτὸπολύΖια15.493b24,27.Ἀγλαΐ",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".1135a24,30,32.ψα5.410b4.ȣδεὶς",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιἀγνοεῖΡα9.1368b12.ἀγνοῶνϗ(ϗΒk",
+  "verdict": "ϗ(ϗΒk3",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "kai-ligature raw; superscript after Bk reads 3"
+ },
+ {
+  "ctx": "ὼνϗεἰδώςΡα13.1373b34.ἀγνοȣντες",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".1373b34.ἀγνοȣντεςἁμαρτάνȣσινΡ",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νοȣσινἀλλήλȣςὑπάρξειενἂνΗι6.11",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "114b10.ἄγνοια,οppἐπιστήμηΑβ21.",
+  "verdict": "Αβ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "glyph resembles digit 3 but is book-letter β (66b26=APr II.21, parallel γ12=APo I)"
+ },
+ {
+  "ctx": "α,οppἐπιστήμηΑβ21.66b26.γ12.77",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "digit in citation number; llama misread as ι"
+ },
+ {
+  "ctx": "βολήπο11.1452a30.παρὰτὴντȣτωνγ",
+  "verdict": "ȣτωνγνῶσινἢἄγνοι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Wζ,cf12.77b18.τζ9.148a5.τȣτωνε",
+  "verdict": "ȣτωνεὐίατοςἡ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ρείαηεγ1.1229a16,b26.ἀγνοȣντως",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ρωνθέμιςἀγνήf624.1583a26.ἀγνὲθ",
+  "verdict": "ἁγνὲ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "rough breathing (ἁγνός root), grave epsilon; genie's η is wrong final vowel"
+ },
+ {
+  "ctx": "βόλεf621.1583a2.ἄγνος,ἀφ'ὧνφέρ",
+  "verdict": "ὧ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "letter is omega (ὧν); llama read upsilon"
+ },
+ {
+  "ctx": "γνος,ἀφ'ὧνφέρȣσιμέλιτταιΖιι40.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "sL).Ἄγνων.ΘηραμένηςὁἌγνωνιςf37",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ὁ Ἄγνωνος = son of Hagnon (genitive); opus misread ο as ι"
+ }
+]

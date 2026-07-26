@@ -1,0 +1,135 @@
+[
+ {
+  "ctx": "1b4.ἀμέλγονταιαἱματώδεςΖιγ20.522",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "third letter of the siglum is a descending gamma (single stroke dropping below baseline), not eta with its two stems; reads Ζιγ20"
+ },
+ {
+  "ctx": ".522a10.ἀμέλγεταιμῆναςὀκτώΖιγ21",
+  "verdict": "ώΖιγ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "accent on the omega rises left-to-right = acute; siglum again Ζ+ι+descending gamma, Ζιγ21"
+ },
+ {
+  "ctx": "ἀμέλει(ἡφύσιςσυνήγαγενal)χ5.396",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "the x-shaped glyph sits wholly on the baseline with no descender; chi on this page (ἀμήχανος, ἔχȣσιν) drops a long tail below the line"
+ },
+ {
+  "ctx": ",ἀπονίαιΡα11.1370a15.ἀκολυθεῖτῇ",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed stacked double-loop after lambda, not the open V of upsilon; ἀκολȣθεῖ"
+ },
+ {
+  "ctx": ".1426a12.οppπροσέχειντὸννῦνΠε12",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "the glyph between the two nus is the closed double-loop ligature carrying a printed circumflex; νȣ͂ν, not νῦν (llama had the base right but dropped the circumflex)"
+ },
+ {
+  "ctx": "ελέτητος,οppγεγυμνάσθαιτι16.175",
+  "verdict": "ι",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "after the italic tau comes a short italic iota with the sloped italic serif, then the upright figures 1 and 6; the digit 1 on this page has a flat foot serif and a top flag"
+ },
+ {
+  "ctx": "κεςἐλάττυςϗ̀ἀμενηνότεροιΖμ41.628",
+  "verdict": "ιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "at 6x the mark after Ζ resolves into two separate hooked iota strokes of equal height, no mu bowl or descender; Ζιι41"
+ },
+ {
+  "ctx": "ιἀμερέςατ968a2.ἀμερὲςἀμερῶςȣ̓κἔσ",
+  "verdict": "ȣ͂ςȣ̓",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "both glyphs are the closed double-loop ligature; the first carries a circumflex (ἀμερȣ͂ς), the second a smooth breathing (ȣ̓κ) — llama had the bases right but dropped the circumflex"
+ },
+ {
+  "ctx": "2b1.ηεβ1.1219b32.—τὰκαθόλυdicun",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "final glyph is the stacked closed ligature, wider and closed at the foot; καθόλȣ"
+ },
+ {
+  "ctx": "2.71b27.3.72b22.17.81a36.ȣ̓κἐνδέχ",
+  "verdict": "ȣ̓",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "closed double-loop with a smooth-breathing comma above; ȣ̓κ"
+ },
+ {
+  "ctx": "δ10.94a9.τῶνἀμέσωνγνῶσιςπῶςΑδ19",
+  "verdict": "ῶ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "three-arch open omega with circumflex, the same letterform as the omega in γνῶσις immediately before it; no closed loops, so not the ligature — llama over-fired"
+ },
+ {
+  "ctx": "ςΗβ3.1105a33.ἀμεταμέλητοςὁσπυδαῖ",
+  "verdict": "ὁσπȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "after pi comes the closed double-loop ligature; σπȣδαῖος"
+ },
+ {
+  "ctx": "πόληψιςἀμετάπειστοςὑπὸλόγυτε2.13",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "word-final closed stacked loop, unlike the open upsilon of ὑπὸ on the same line; λόγȣ"
+ },
+ {
+  "ctx": "11.1209b13,14.ἀμετρίαἀκολυθεῖτῇἀ",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed double-loop between lambda and theta; ἀκολȣθεῖ"
+ },
+ {
+  "ctx": "ρ7.1251b15.ἄμετρος.διαφέρυσιτῷἔμ",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed double-loop after rho, distinct from the open-topped omega of τῷ two words later; διαφέρȣσι"
+ },
+ {
+  "ctx": "2)ξ2.975b2.—τῶνἀγρίωνὀρνέιωνοἱμὲ",
+  "verdict": "ι",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "a separate narrow vertical stroke stands between the accented epsilon and the double-arch omega, identical in shape and spacing to the confirmed iota of ἀγρίων earlier on the same line; fine print, so flagged for human eyes"
+ },
+ {
+  "ctx": "τὸνβίον,οἱδ'ἀμηχανώτεροιΖμ11.614",
+  "verdict": "ιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "two equal hooked strokes after Ζ, same form as the Ζιι at 628b4 above; no mu bowl; Ζιι11"
+ },
+ {
+  "ctx": "ἀγελαῖαΖια1.488a7.ἀμίαιἔχυσινὀδό",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "closed stacked loop after chi; ἔχȣσιν"
+ },
+ {
+  "ctx": "7.ἀμίαιἔχυσινὀδόντας ἰσχυρύςΖμ37",
+  "verdict": "ȣ́ςΖιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "after rho the closed double-loop ligature carrying an acute (ἰσχυρȣ́ς), then Ζ followed by two hooked iota strokes; the genuine open upsilon earlier in ἰσχυ- shows the contrast"
+ }
+]

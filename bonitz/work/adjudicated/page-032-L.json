@@ -1,0 +1,13 @@
+[
+ {"ctx": "ςπάσηςπρὸςτὸαἰσθητὸνἐνεργȣ́σης", "verdict": "ȣ́ση", "agrees_with": "opus", "confidence": "high", "note": "ἐνεργȣ́σης (=ἐνεργούσης); printed ȣ ligature with acute, not ήσῃ."},
+ {"ctx": "μάτωναἰσθητήριονεν2.460a25.ταχ", "verdict": "5.ταχεῖα", "agrees_with": "multiple", "confidence": "high", "note": "citation reads a25."},
+ {"ctx": "νεν2.460a25.ταχεῖαἡαἴσθησιςεν2", "verdict": "ιςε", "agrees_with": "multiple", "confidence": "high"},
+ {"ctx": "τιώσεωςψβ11.424a4.ἡαἴσθησιςδȣ́", "verdict": "ιςδύ", "agrees_with": "llama", "confidence": "high", "note": "δύναμις has plain upsilon, not ȣ ligature; final ις bare."},
+ {"ctx": "432a16.(Ρlatοniἡαἴσθησιςτȣ̃στε", "verdict": "ȣ̃", "agrees_with": "opus", "confidence": "high", "note": "τȣ̃ (=τοῦ); ȣ ligature with circumflex, not ῷ."},
+ {"ctx": "(Ρlatοniἡαἴσθησιςτȣ̃στερεȣ̃ψα2", "verdict": "ȣ̃", "agrees_with": "opus", "confidence": "high", "note": "στερεȣ̃ (=στερεοῦ); ȣ ligature with circumflex."},
+ {"ctx": "ήσεωςδοκεῖεἶναιΚ7.7b36.ἡτȣ̃αἰσ", "verdict": "ȣ̃", "agrees_with": "opus", "confidence": "high", "note": "ȣ ligature with circumflex; llama used same letter with different combining mark."},
+ {"ctx": ".Ζκ7.701b17.τὸἐγρηγορέναιὥριστ", "verdict": "ὥρισ", "agrees_with": "opus", "confidence": "high", "note": "printed ὥρισται, not ὑφίσ/ὕφισ."},
+ {"ctx": "ώοιςαἰσθήσειςσυμβαίνȣσινΖγε1.7", "verdict": "γ", "agrees_with": "multiple", "confidence": "high", "note": "siglum Ζγε; the letter is γ, not η."},
+ {"ctx": "θαιτὴναἴσθησιναι3.440a19.ȣ̀δὲν", "verdict": "ȣ̀δὲ", "agrees_with": "opus", "confidence": "high", "note": "ȣ̀δὲν (=οὐδὲν); ȣ ligature with grave."},
+ {"ctx": "b21.αἰσθήσειςἁπτικαί,distδι'ἄλ", "verdict": "δι'ἄλλȣ", "agrees_with": "opus", "confidence": "high", "note": "printed δι' ἄλλȣ (=δι' ἄλλου); preceding Latin abbr is 'dist'."}
+]

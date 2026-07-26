@@ -1,0 +1,80 @@
+[
+ {
+  "page": 15,
+  "col": "L",
+  "spine_off": 708,
+  "ctx": "ἀβέβαια(velutiλαμπάδες,δοξίδες,πίβοι)κ4.395b15.ὀφθα",
+  "opus": "ξ",
+  "genie": "κ",
+  "llama": "κ",
+  "cls": "majority-other",
+  "vote": "κ",
+  "flag": true,
+  "citation": false
+ },
+ {
+  "page": 15,
+  "col": "L",
+  "spine_off": 716,
+  "ctx": "velutiλαμπάδες,δοξίδες,πίβοι)κ4.395b15.ὀφθαλμὸςἀβέβ",
+  "opus": "β",
+  "genie": "θ",
+  "llama": "θ",
+  "cls": "majority-other",
+  "vote": "θ",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "L",
+  "spine_off": 863,
+  "ctx": "ευἀβελτηρίας(ἀβελτερίαςΒk2)Πε11.1315a3.hοclοcοetοβ1",
+  "opus": "2",
+  "genie": "1",
+  "llama": "2",
+  "cls": "majority-opus",
+  "vote": "2",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "L",
+  "spine_off": 908,
+  "ctx": "οetοβ1352b8ἀβελτηρίαcumcοddΒkscripsit.ἀβέλτεροςρ5.14",
+  "opus": "dd",
+  "genie": "d",
+  "llama": "d",
+  "cls": "majority-other",
+  "vote": "d",
+  "flag": true,
+  "citation": false
+ },
+ {
+  "page": 15,
+  "col": "L",
+  "spine_off": 1361,
+  "ctx": "simΖιβ14.505b20.δ5.531a2.ι28.618a1.Ζμδ5.681a5.καρποὶ",
+  "opus": "ι2",
+  "genie": "Ζδ",
+  "llama": "12",
+  "cls": "three-way",
+  "vote": null,
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "L",
+  "spine_off": 1563,
+  "ctx": "icumοβ1349a3.ἀγαθοδαιμονιαστήςηεγ6.1233b3(ἀγαθοδαιμ",
+  "opus": "α",
+  "genie": "",
+  "llama": "",
+  "cls": "majority-other",
+  "vote": "",
+  "flag": true,
+  "citation": false
+ }
+]

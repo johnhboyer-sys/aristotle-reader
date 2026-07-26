@@ -1,0 +1,79 @@
+[
+ {
+  "llamaparse_word": "Καρκίνȣ",
+  "ou_form": "Καρκίνου",
+  "upsilon_form": "Καρκίνυ",
+  "lexical_verdict": "ligature",
+  "why": "καρκινου is a corpus form; καρκινυ is not"
+ },
+ {
+  "llamaparse_word": "λεγομένȣς",
+  "ou_form": "λεγομένους",
+  "upsilon_form": "λεγομένυς",
+  "lexical_verdict": "ligature",
+  "why": "λεγομενους is a corpus form; λεγομενυς is not"
+ },
+ {
+  "llamaparse_word": "λογισμȣ",
+  "ou_form": "λογισμου",
+  "upsilon_form": "λογισμυ",
+  "lexical_verdict": "ligature",
+  "why": "λογισμου is a corpus form; λογισμυ is not"
+ },
+ {
+  "llamaparse_word": "λόγȣ",
+  "ou_form": "λόγου",
+  "upsilon_form": "λόγυ",
+  "lexical_verdict": "ligature",
+  "why": "λογου is a corpus form; λογυ is not"
+ },
+ {
+  "llamaparse_word": "παρασύρȣσι",
+  "ou_form": "παρασύρουσι",
+  "upsilon_form": "παρασύρυσι",
+  "lexical_verdict": "ligature",
+  "why": "παρασυρουσι is a corpus form; παρασυρυσι is not"
+ },
+ {
+  "llamaparse_word": "παύȣσι",
+  "ou_form": "παύουσι",
+  "upsilon_form": "παύυσι",
+  "lexical_verdict": "ligature",
+  "why": "παυουσι is a corpus form; παυυσι is not"
+ },
+ {
+  "llamaparse_word": "ποτίμȣ",
+  "ou_form": "ποτίμου",
+  "upsilon_form": "ποτίμυ",
+  "lexical_verdict": "ligature",
+  "why": "ποτιμου is a corpus form; ποτιμυ is not"
+ },
+ {
+  "llamaparse_word": "τȣ",
+  "ou_form": "του",
+  "upsilon_form": "τυ",
+  "lexical_verdict": "ligature",
+  "why": "του is a corpus form; τυ is not"
+ },
+ {
+  "llamaparse_word": "φοινικȣ",
+  "ou_form": "φοινικου",
+  "upsilon_form": "φοινικυ",
+  "lexical_verdict": "ligature",
+  "why": "φοινικου is a corpus form; φοινικυ is not"
+ },
+ {
+  "llamaparse_word": "ψοφȣ",
+  "ou_form": "ψοφου",
+  "upsilon_form": "ψοφυ",
+  "lexical_verdict": "ligature",
+  "why": "ψοφου is a corpus form; ψοφυ is not"
+ },
+ {
+  "llamaparse_word": "ἀξιȣ",
+  "ou_form": "ἀξιου",
+  "upsilon_form": "ἀξιυ",
+  "lexical_verdict": "ligature",
+  "why": "αξιου is a corpus form; αξιυ is not"
+ }
+]

@@ -1,0 +1,177 @@
+[
+ {
+  "ctx": "οιτὰδ'ȣχεῖρονΜμ1.1076a15.Ηκ10.",
+  "verdict": "Ηκ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "EN book 10 = kappa; llama also read kappa."
+ },
+ {
+  "ctx": "Μμ1.1076a15.Ηκ10.1179b18.Ἀγαπή",
+  "verdict": "Ἀ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Rough breathing on A; genie's 'Α is same letter."
+ },
+ {
+  "ctx": "a22.ἄγασθαιτὸννομοθέτην,τȣ̃νομ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Genitive τοῦ νομοθέτου, ou-ligature with circumflex."
+ },
+ {
+  "ctx": "9a34.σπᾶσθαιεἰςτὸἀγγεῖονΟδ5.31",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "De Caelo IV (312b); llama misread δ as ϑ."
+ },
+ {
+  "ctx": ".312b13.ἀγγεῖασαττόμεναπκα14.9",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πκα = Problemata 21; genie dropped α."
+ },
+ {
+  "ctx": "ῖζονΖιδ1.525a5.ε18.550a2.ᾠὰἐκπ",
+  "verdict": "ᾠ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ᾠά (eggs), omega+iota subscript."
+ },
+ {
+  "ctx": "ζ2.559b5.ἀγγεῖονκήρινονΖιβ2.59",
+  "verdict": "θ",
+  "agrees_with": "genie",
+  "confidence": "high",
+  "note": "Glyph is theta not beta; 590a25 = HA bk θ; opus misread as β."
+ },
+ {
+  "ctx": "νονΖιβ2.590a25.ἀγγεῖονοἴνȣ,κέγ",
+  "verdict": "ȣ,κέγχρȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "οἴνȣ, κέγχρȣ ou-ligatures."
+ },
+ {
+  "ctx": "iqἐνφωλεοῖς,Ζιζ2.559b5)Ζιθ16.6",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιθ16; llama read variant ϑ."
+ },
+ {
+  "ctx": "ιςὑπάρχει,ὥσπερϗαἷμαἐνφλεψὶϗμυ",
+  "verdict": "ψὶϗ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "φλεψὶ (dat.pl.) + kai-ligature ϗ."
+ },
+ {
+  "ctx": "2al,κοιλίαἀγγεῖοντροφῆςΖιβ17.5",
+  "verdict": "β",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιβ17 = HA bk 2 (506b); llama misread as ϑ."
+ },
+ {
+  "ctx": "b30,ἀγγεῖαπεριττώματοςὑγρȣ̃Ζμδ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ὑγροῦ, ou-ligature with circumflex printed."
+ },
+ {
+  "ctx": "γεῖαπνεύματοςΖγε7.787a3.αχ800a",
+  "verdict": "χ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "αχ800 abbreviation; clear chi cross-glyph."
+ },
+ {
+  "ctx": "Εmped354)αν7.473b20.ἐξἄγγȣςκ6.",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἄγγȣς ou-ligature."
+ },
+ {
+  "ctx": "ςτιf415.1547b2.ἄγεινἐποίκȣςΠε6",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἐποίκȣς ou-ligature."
+ },
+ {
+  "ctx": "ἥλιοςτὰςτέσσαραςὥραςἄγωντȣ̃ἔτȣ",
+  "verdict": "ȣ̃ἔτȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ ἔτȣς, first ou-ligature carries circumflex."
+ },
+ {
+  "ctx": "ςτὰςμαθήσεις,εἰςπαιδείανΠθ6.13",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πθ6 = Politics bk 8; llama read variant ϑ."
+ },
+ {
+  "ctx": "οςἐπὶτὸἀποθανεῖν,ὡςἀποθανȣμενο",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀποθανȣμενος (fut. ptc.) ou-ligature at line break."
+ },
+ {
+  "ctx": ".1095b4.β2.1104b11.ἄγειντȣςβασ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣς βασιλέας ou-ligature."
+ },
+ {
+  "ctx": "3a19.ἄγειντὰςγυναῖκαςἐπὶτȣςνόμ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣς νόμȣς, first ou-ligature."
+ },
+ {
+  "ctx": "ἄγειντὰςγυναῖκαςἐπὶτȣςνόμȣςΠβ9",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "νόμȣς ou-ligature."
+ },
+ {
+  "ctx": "270a6.ὁπότεροιἂνὑπερέχωσι.καθ'",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Period after ὑπερέχωσι, not comma."
+ },
+ {
+  "ctx": "ὁπότεροιἂνὑπερέχωσι.καθ'αὑτὰςἄ",
+  "verdict": "ὑτȣςἄγȣ",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "Printed αὑτȣς (ou-ligature); all three misread the ligature vowel."
+ },
+ {
+  "ctx": "9.ἄγειν(ἀνάγεινWζ,cfshv)τȣςλόγ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣς λόγȣς ou-ligature."
+ },
+ {
+  "ctx": "ςτα1.101a16.μβ5.362b1.ἡἀχθεῖσα",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἀχθεῖσα; llama read variant ϑ."
+ }
+]

@@ -1,0 +1,100 @@
+[
+ {
+  "llamaparse_word": "ȣδὲν",
+  "ou_form": "ουδὲν",
+  "upsilon_form": "υδὲν",
+  "lexical_verdict": "ligature",
+  "why": "ουδεν is a corpus form; υδεν is not"
+ },
+ {
+  "llamaparse_word": "ȣκ",
+  "ou_form": "ουκ",
+  "upsilon_form": "υκ",
+  "lexical_verdict": "ligature",
+  "why": "ουκ is a corpus form; υκ is not"
+ },
+ {
+  "llamaparse_word": "Καρκίνȣ",
+  "ou_form": "Καρκίνου",
+  "upsilon_form": "Καρκίνυ",
+  "lexical_verdict": "ligature",
+  "why": "καρκινου is a corpus form; καρκινυ is not"
+ },
+ {
+  "llamaparse_word": "Πιττακȣ",
+  "ou_form": "Πιττακου",
+  "upsilon_form": "Πιττακυ",
+  "lexical_verdict": "ligature",
+  "why": "πιττακου is a corpus form; πιττακυ is not"
+ },
+ {
+  "llamaparse_word": "διαιρȣντα",
+  "ou_form": "διαιρουντα",
+  "upsilon_form": "διαιρυντα",
+  "lexical_verdict": "ligature",
+  "why": "διαιρουντα is a corpus form; διαιρυντα is not"
+ },
+ {
+  "llamaparse_word": "κȣκ",
+  "ou_form": "κουκ",
+  "upsilon_form": "κυκ",
+  "lexical_verdict": "ligature",
+  "why": "κουκ is a corpus form; κυκ is not"
+ },
+ {
+  "llamaparse_word": "καλȣσι",
+  "ou_form": "καλουσι",
+  "upsilon_form": "καλυσι",
+  "lexical_verdict": "ligature",
+  "why": "καλουσι is a corpus form; καλυσι is not"
+ },
+ {
+  "llamaparse_word": "κατηγορȣμενον",
+  "ou_form": "κατηγορουμενον",
+  "upsilon_form": "κατηγορυμενον",
+  "lexical_verdict": "ligature",
+  "why": "κατηγορουμενον is a corpus form; κατηγορυμενον is not"
+ },
+ {
+  "llamaparse_word": "μιμȣμενον",
+  "ou_form": "μιμουμενον",
+  "upsilon_form": "μιμυμενον",
+  "lexical_verdict": "ligature",
+  "why": "μιμουμενον is a corpus form; μιμυμενον is not"
+ },
+ {
+  "llamaparse_word": "σκέλȣς",
+  "ou_form": "σκέλους",
+  "upsilon_form": "σκέλυς",
+  "lexical_verdict": "ligature",
+  "why": "σκελους is a corpus form; σκελυς is not"
+ },
+ {
+  "llamaparse_word": "τȣ",
+  "ou_form": "του",
+  "upsilon_form": "τυ",
+  "lexical_verdict": "ligature",
+  "why": "του is a corpus form; τυ is not"
+ },
+ {
+  "llamaparse_word": "τȣς",
+  "ou_form": "τους",
+  "upsilon_form": "τυς",
+  "lexical_verdict": "ligature",
+  "why": "τους is a corpus form; τυς is not"
+ },
+ {
+  "llamaparse_word": "ἀμφιδοξȣσιν",
+  "ou_form": "ἀμφιδοξουσιν",
+  "upsilon_form": "ἀμφιδοξυσιν",
+  "lexical_verdict": "ligature",
+  "why": "αμφιδοξουσιν is a corpus form; αμφιδοξυσιν is not"
+ },
+ {
+  "llamaparse_word": "Ἀρχελάȣ",
+  "ou_form": "Ἀρχελάου",
+  "upsilon_form": "Ἀρχελάυ",
+  "lexical_verdict": "ligature",
+  "why": "αρχελαου is a corpus form; αρχελαυ is not"
+ }
+]

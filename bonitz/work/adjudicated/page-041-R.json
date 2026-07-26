@@ -1,0 +1,12 @@
+[
+ {"ctx": "llοgismο-rumΑβ27.70b4Wζ.28.68", "verdict": "3", "agrees_with": "multiple", "confidence": "high", "note": "Wz. 23 — trailing digit is a clear 3, not 8."},
+ {"ctx": "ώτατονȣτυχεῖνἔστινἀκροτάτῃΗα2", "verdict": "ȣ", "agrees_with": "llama", "confidence": "high", "note": "ou-ligature ȣ (= οὗ) with circumflex."},
+ {"ctx": "ιορίσασθαιφτα3.818a36.ἄκρȣλοι", "verdict": "ȣ", "agrees_with": "opus", "confidence": "high", "note": "Same ou-ligature form as elsewhere on page; ἄκρȣλοι."},
+ {"ctx": "ν(πάρδιον)Ζιβ1.498b30sqq.ι4", "verdict": "ι", "agrees_with": "multiple", "confidence": "high", "note": "Leading book-iota ι45 is present; genie dropped it."},
+ {"ctx": "κτοςτῷστόματιτὴνἀκρωμίανδακȣσ", "verdict": "ακȣ", "agrees_with": "opus", "confidence": "high", "note": "δακȣσα = δακοῦσα; ou-ligature, no ν."},
+ {"ctx": "νἔχȣσιβόεςτινὲςϗκάμηλοιΖιθ28", "verdict": "θ", "agrees_with": "multiple", "confidence": "high", "note": "Ζιθ — theta with crossbar, not β."},
+ {"ctx": "νὀστῶνΖιγ8.517a4.ἀκτὴστενοπό", "verdict": "ȣ", "agrees_with": "none", "confidence": "high", "note": "στενȣπόρος — printed glyph is the ou-ligature; none read it as such."},
+ {"ctx": "οἰκεῖνπερὶθάλαττανϗἀκτάςΖιι32", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA siglum Ζι + book-ι fused into 'u' shape = ιι."},
+ {"ctx": "τανϗἀκτάςΖιι32.619a6.διασημ", "verdict": "ημήν", "agrees_with": "multiple", "confidence": "high", "note": "διασημήνασθαι — η μ ή ν in order."},
+ {"ctx": "ϗποιῦσισκιάνμγ4.374b4.λήγȣσι", "verdict": "ȣ", "agrees_with": "opus", "confidence": "high", "note": "λήγȣσι — ou-ligature raw."}
+]

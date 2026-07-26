@@ -1,0 +1,159 @@
+[
+ {
+  "ctx": "2a26,b2.20.574a32.—2.αἰδοίȣ(pe",
+  "verdict": "ίȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νοἰκεῖοντόπον,θερμαινομένȣτῷαἰ",
+  "verdict": "ȣτȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "genitive absolute θερμαινομένȣ τȣ; ligature ȣ printed on the article"
+ },
+ {
+  "ctx": "χεταιτὸσπέρμαΖγβ4.737b31.a18.7",
+  "verdict": "a",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "raised Bekker column letter a, not Greek alpha"
+ },
+ {
+  "ctx": "αἔχειτάτεἄλλαϗτὸαἰδοῖονΖιη3.58",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "τὸαἰδοῖονΖιη3.583b19.—αἱτῷαἰδο",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "printed τȣ (ου-ligature, genitive τοῦ), matching surrounding ȣ"
+ },
+ {
+  "ctx": "ςϗπότεγίνεταιΖιβ1.500b22.η1.58",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "9a15.λ1.953b34,954a4.αἰδοίȣσυν",
+  "verdict": "ίȣ",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ίαΖιε2.540a6.πιγ6.908b8.ξύεσθα",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ξύεσθαι"
+ },
+ {
+  "ctx": ".953b37.οἱἀφροδισιάζοντεςϗȣ́ρη",
+  "verdict": "ϗȣ᾿",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "kai-lig + ου-lig (οὐρητιῶντες) with smooth breathing; opus read acute"
+ },
+ {
+  "ctx": "σπῶσιτὰαἰδοῖαπδ22.879a11.κζ7.9",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "italic κ (κζ=Probl. 27), not χ"
+ },
+ {
+  "ctx": "ȣσυντονίανπδ20.879a3.—4.τȣ͂αἰδ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ȣ carries circumflex (τοῦ)"
+ },
+ {
+  "ctx": ",a33.γ1.509a35.τὰζωοτόκαποῖονἔ",
+  "verdict": "ῳ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "printed ω with iota subscript (ζῳοτόκα); no reader matched"
+ },
+ {
+  "ctx": "ῳοτοκεῖἐκτόςΖγα13.720a24,οἱὄφε",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "omicron in ζῳοτοκεῖ"
+ },
+ {
+  "ctx": "2(cfδ1.524a8.Ζγα15.720b32vαἰδο",
+  "verdict": "v",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Latin 'v' (vide) in roman type"
+ },
+ {
+  "ctx": "διὰτίΖγα7.718a23.τοῖςἱππεύȣσισ",
+  "verdict": "ύȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἱππεύȣσι = ἱππεύουσι"
+ },
+ {
+  "ctx": "70b32,772b26.παίδωνἐνίοιςὃκατὰ",
+  "verdict": "ȣ῾",
+  "agrees_with": "none",
+  "confidence": "uncertain",
+  "note": "ου-ligature (οὗ) with breathing; all three missed the ligature"
+ },
+ {
+  "ctx": "δ1.524a8.Ζγα15.720b32(cfdeeare",
+  "verdict": "ee",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "'de ea re'; genie dropped a letter"
+ },
+ {
+  "ctx": "schelΑrchfΝaturg1856).Αἰδώλιος",
+  "verdict": "ώλ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Αἰδώλιος"
+ },
+ {
+  "ctx": "3b26.ημα30.1193a1.περὶαἰδȣ͂ςΗδ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "αἰδȣ͂ς = αἰδοῦς"
+ },
+ {
+  "ctx": "ἰδὼςφόβοςτιςπια53.905a6.οppφόβ",
+  "verdict": "pp",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin 'opp' in roman type, not Greek ρρ"
+ },
+ {
+  "ctx": "͂καλȣ͂ὄρεξιν,οppδιὰφόβονΗγ11.1",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηγ11 (EN book 3)"
+ },
+ {
+  "ctx": "ὰφόβονΗγ11.1126a28,31.αἰδȣ͂ςἀξ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "αἰδȣ͂ς = αἰδοῦς"
+ },
+ {
+  "ctx": "͂ςἀξίαπροθυμίαμᾶλλονἢθράσȣςΟβ1",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "θράσȣς = θράσους, bare ȣ"
+ }
+]

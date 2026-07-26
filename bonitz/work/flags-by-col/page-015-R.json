@@ -1,0 +1,93 @@
+[
+ {
+  "page": 15,
+  "col": "R",
+  "spine_off": 2039,
+  "ctx": "ντοςτινὸςθείȣϗἀγαθȣ̃ϗἐφετȣ̃Φα9.191a17.Ζκ6.700b25.τἀγ",
+  "opus": "ȣ̃",
+  "genie": "ῷ",
+  "llama": "ȣ",
+  "cls": "majority-opus",
+  "vote": "ȣ̃",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "R",
+  "spine_off": 2070,
+  "ctx": "191a17.Ζκ6.700b25.τἀγαθὸνϗτὸεȣ̃Ηα6.1097b27.ȣδεὶςὑπολαμβά",
+  "opus": "ϗτὸεȣ̃",
+  "genie": "καὶτὸεὖ",
+  "llama": "ϗτὸεὖ",
+  "cls": "majority-other",
+  "vote": "καὶτὸεὖ",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "R",
+  "spine_off": 2514,
+  "ctx": "b4.βέλτιονϗθειότερονἡἀρχὴἢκινȣ̃σαΖγβ1.732a3,7.cfΗη9.1151",
+  "opus": "ἢκινȣ̃",
+  "genie": "ἢκινῆ",
+  "llama": "ἡκινȣ",
+  "cls": "majority-opus",
+  "vote": "ἢκινȣ̃",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "R",
+  "spine_off": 3132,
+  "ctx": "a24.τὸἀγαθὸντȣ̃πεπερασμένȣΗβ5.1106b30(cfΦθ6.259a11)",
+  "opus": "ȣ",
+  "genie": "ῳ",
+  "llama": "ȣ",
+  "cls": "majority-opus",
+  "vote": "ȣ",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "R",
+  "spine_off": 3246,
+  "ctx": "ὸνπολύμορφονηεη5.1239b11.2.speciesτȣ̃ἀγαθȣ̃distinguu",
+  "opus": "2.",
+  "genie": "",
+  "llama": "2.",
+  "cls": "majority-opus",
+  "vote": "2.",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 15,
+  "col": "R",
+  "spine_off": 3511,
+  "ctx": "1185a1,2.τὸτέλειονἀγαθὸναȣταρκεςΗα5.1097b8.Πκ2.1253",
+  "opus": "ȣ",
+  "genie": "ὐ",
+  "llama": "ὐ",
+  "cls": "majority-other",
+  "vote": "ὐ",
+  "flag": true,
+  "citation": false
+ },
+ {
+  "page": 15,
+  "col": "R",
+  "spine_off": 3530,
+  "ctx": "γαθὸναȣταρκεςΗα5.1097b8.Πκ2.1253a1.—τὸπρακτὸνἀγαθὸν",
+  "opus": "κ",
+  "genie": "α",
+  "llama": "κ",
+  "cls": "majority-opus",
+  "vote": "κ",
+  "flag": true,
+  "citation": true
+ }
+]

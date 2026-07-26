@@ -1,0 +1,79 @@
+[
+ {
+  "ctx": "δίμνȣτῶνἀλφίτωντετραδράχμȣοβ13",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Both ȣ occurrences (μεδίμνȣ, τετραδράχμȣ) show the bare ou-ligature glyph, no accent visible; matches opus/llama."
+ },
+ {
+  "ctx": "τὴνμορφήνΖγβ4.738b31.—πανῦργος",
+  "verdict": "ȣ̃",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "πανȣ̃ργος/κακȣ̃ργος: character under the circumflex is the rounded ou-ligature (horn shape), clearly distinct from the plain V-shaped υ seen elsewhere (e.g. τυφλά) on this page."
+ },
+ {
+  "ctx": "ςὃτίκτειἐνδέρματιἀλώπεκοςΖι33.",
+  "verdict": "Ζι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Glyph looks fused/u-shaped (font quirk for italic ι), but Bekker 619b falls in HA book 9 = letter ι, confirming single iota, not Ζu or Ζμ."
+ },
+ {
+  "ctx": "ρὶἀλώπεκοςθ99.838b4.Αἰσώπυλόγο",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "Αἰσώπȣ: final letter clearly shows the rounded horn-shaped ou-ligature, not a plain upsilon or ῳ."
+ },
+ {
+  "ctx": "ῆςἀλώπεκοςκυνοραϊστὰςπολλὺςἐχύ",
+  "verdict": "ȣ̀ς ἐχȣ́σης",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "Both disputed letters are the ou-ligature (ȣ) with grave then acute accent, clearly not alpha (compare distinct alpha loop-shape in nearby κυνοραϊστὰς) and not spelled-out ου; none of the three readers captured this exactly (genie/llama wrongly read alpha, opus omitted the ligature form)."
+ },
+ {
+  "ctx": "piscis,referturinterγαλεοσιδεῖ",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "γαλεοειδεῖς: letter clearly shows flat-topped epsilon shape, not lunate sigma; matches genie/llama."
+ },
+ {
+  "ctx": "ωςἐστὶνἔμφασιςλαμπρότητοςἄστρυ",
+  "verdict": "ἄστρȣ περι",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "ἄστρȣ has a combined breathing+acute over alpha (matches opus/genie's ἄ, not llama's plain ἀ) but the vowel is the ou-ligature ȣ (matches llama, not opus's υ or genie's ῳ); περι- shows no accent mark on the iota (contra opus's περί), just the line-break hyphen."
+ },
+ {
+  "ctx": "κιςγίγνονταιμγ3.373a27.ἅλ.ωσις",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Small baseline dot clearly visible after ἅλ, consistent with Bonitz's abbreviated-headword convention."
+ },
+ {
+  "ctx": "γνονταιμγ3.373a27.ἅλ.ωσις.γίνε",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Mark after ωσις is a plain baseline dot (same shape/size as the preceding period), not a comma with a downward tail like the commas seen elsewhere on the page (e.g. τυφλά,)."
+ },
+ {
+  "ctx": "86a3al.ἅμα..τε..ϗ̀μα3.340b5.ἅμ",
+  "verdict": "b",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Superscript letter after 340 has the straight-stem+bowl shape of 'b', distinct from the hook+bowl 'a' seen a few words earlier (386ª3); matches opus/llama."
+ },
+ {
+  "ctx": ".ἅμα..τε..ϗ̀μα3.340b5.ἅμαϗ̀μβ8",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Kai-ligature ϗ clearly carries a grave accent stroke above it; genie's 'χωρὶς' is a different word altogether and not what's printed, llama omitted the accent."
+ }
+]

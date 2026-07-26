@@ -1,0 +1,128 @@
+[
+ {
+  "ctx": "μὴprοpeaccedit,velutiδιὰτȣτοȣ̓",
+  "verdict": "ȣτοȣ̓τȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "διὰ τȣτο ȣ̓ τȣ̃: ligatures + smooth breathing on standalone ȣ̓ + circumflex on τȣ̃, all matched by opus"
+ },
+ {
+  "ctx": "velutiδιὰτȣτοȣ̓τȣ̃γεωμέτρȣθεωρ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "word-final -ου of γεωμέτρȣ is the ȣ ligature, not ῳ"
+ },
+ {
+  "ctx": "κυήσεωςἢμήἐστιν,ȣδένπωσυνȣ͂πτα",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "συνȣ͂πται: ȣ ligature with circumflex, not ω"
+ },
+ {
+  "ctx": "ν,ȣδένπωσυνȣ͂πταιμέχριγετȣ̃νȣ̃",
+  "verdict": "ȣ̃νȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ νȣ̃ν: both ȣ ligatures carry circumflex"
+ },
+ {
+  "ctx": "perindeatqueapartπλὴνenunciati",
+  "verdict": "c",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin enunciatio, clear c (opus+llama); genie t wrong"
+ },
+ {
+  "ctx": "νονπροσέοικενἱέρακι,πλὴντȣ̃μὲν",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "πλὴν τȣ̃ (=τοῦ) μὲν: ȣ ligature+circumflex, not ὸ/ὰ"
+ },
+ {
+  "ctx": "ὰποικίλαοἷονγραμμαίεἰσι,τȣ̃δὲκ",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ (=τοῦ) δὲ κόκκυγος: ȣ ligature+circumflex, not ῷ/ὰ"
+ },
+ {
+  "ctx": "tiesἀλλὰusurpatur,ubiἀλλ'ἢexsp",
+  "verdict": "ἢexs",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "accent on ἢ reads as grave (descends right); grave matches recurring ἀλλ' ἢ; genie/llama acute; mark small"
+ },
+ {
+  "ctx": "ὰτȣτοιςϗ̀ȣτωδιακειμένοιςΗκ5.11",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηκ5.1176a22 = EN book 10 (κ); italic κ is x-shaped, not χ (opus+genie)"
+ },
+ {
+  "ctx": "ἀλλ'ἢδιὰχρημάτωνμεταβολῆςΠα9.1",
+  "verdict": "Π",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πα9.1257b21 = Politics book 1; clear Π not Ρ (opus+genie)"
+ },
+ {
+  "ctx": "mfrequensapudΑr,veladοrdiendum",
+  "verdict": "e",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "clean Latin 'admodum frequens apud Ar, vel ad ordiendum'; letter e (opus+llama); genie na spurious"
+ },
+ {
+  "ctx": "4.1007b29.ζ13.1039a19al.—ȣμὴνἀ",
+  "verdict": "ȣ̓",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "standalone οὐ: ȣ ligature clearly bears smooth breathing (ȣ̓); opus dropped it, genie expanded οὐ, llama ϗ"
+ },
+ {
+  "ctx": "9.ζ13.1039a19al.—ȣμὴνἀλλὰvsȣ.—",
+  "verdict": "vsȣ̓",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Latin abbrev 'v s' + ȣ̓; opus closest (v,s,ȣ correct) but omitted smooth breathing on ȣ; genie misread v→ν, llama wrong"
+ },
+ {
+  "ctx": "38.Φδ7.214a6.Μθ8.1050a2.πο25.1",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πο25.1461a1 = Poetics ch25; letter ο not σ (opus+genie)"
+ },
+ {
+  "ctx": "λλ'ȣcοddΒk),inapοdοsienunciati",
+  "verdict": "c",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin 'codd' (codices), c (opus+llama); genie t wrong"
+ },
+ {
+  "ctx": "nsetΤοrstr),inapοdοsienunciati",
+  "verdict": "c",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Latin 'conditionalis'/censet, c (opus+llama); genie t wrong"
+ },
+ {
+  "ctx": "unciatiοniscοnditiοnalisτζ13.1",
+  "verdict": "ζ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τζ13.150a9 = Topics book 6 (ζ); 150a is within Topics VI (opus+llama); genie η wrong"
+ },
+ {
+  "ctx": "λλαχόσεf381.1541b23.ἀλλαχȣ̃φτα",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀλλαχȣ̃ (=ἀλλαχοῦ): ȣ ligature with circumflex, clearly not ῇ"
+ }
+]

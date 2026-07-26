@@ -1,0 +1,327 @@
+[
+ {
+  "ctx": "αταυτὰλεγόντωνακ801b16.ἀκȣ́ει(",
+  "verdict": "ȣ́ει",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "́ειὁπρῶτοςϗὁὕστερος,ἔστιδ'ὡςȣ́",
+  "verdict": "'ὡςȣ́αι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "standalone οὐ printed as ȣ́ with acute"
+ },
+ {
+  "ctx": "έν,ὡςφασίνΗη15.1154b8.—ἀκȣ́ειν",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "5.1154b8.—ἀκȣ́εινcgenμικρȣ̃ψόφ",
+  "verdict": "ȣ̃ψόφȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "μικρȣ̃ circumflex, ψόφȣ bare"
+ },
+ {
+  "ctx": "nμικρȣ̃ψόφȣΟα11.281a22.ἀκȣ́ειν",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αρακȣ́εινδέΗη7.1149a26.ἀκȣσάτω",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "7.1149a26.ἀκȣσάτωτȣ̃ἩσιόδȣΗα2.",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τȣ̃=τοῦ; opus+llama agree, genie misread ῳ"
+ },
+ {
+  "ctx": "ȣ̃ἩσιόδȣΗα2.1095b9.caccἀκȣσόμε",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ȣσόμενοςτὰπαραγγελλόμεναΠὁ14.1",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Politics bk4=δ (Πδ14, 1298a19); opus misread ὁ"
+ },
+ {
+  "ctx": "a23.ȣχἡἀπόδειξιςαἰτία,ἀλλ'ὁἀκȣ",
+  "verdict": "'ὁἀκȣ́",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἀλλ'ὁἀκȣ́ωνΑγ24.85b22.—ἀκȣ́ειν",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".ἀρχὴνταύτηνἄξιονἀκȣ̃σαιτȣ̃ζῴȣ",
+  "verdict": "ȣ̃ζῴȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ circumflex, ζῴȣ bare"
+ },
+ {
+  "ctx": "̃σαιτȣ̃ζῴȣΖγβ4.740a20.—ἀκȣστός",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκȣστός ligature; genie/llama wrongly υ"
+ },
+ {
+  "ctx": "ȣ̃ζῴȣΖγβ4.740a20.—ἀκȣστός.τὸἀκ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκȣστός. period, not comma"
+ },
+ {
+  "ctx": "Ζγβ4.740a20.—ἀκȣστός.τὸἀκȣστόν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἀκȣστός.τὸἀκȣστόν,οppἀνήκȣστον",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "421b4.τὸφωνῆενἔχειφωνὴνἀκȣστήν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ὁλόγοςαἴτιοςτῆςμαθήσεωςἀκȣστὸς",
+  "verdict": "ȣστὸ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ςἀκȣστὸςὤναι1.437a13.τὸἀκȣστὸν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "κεφθάνεσθαικ4.395a17.τὸἀκȣστὸν",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "μόνονἦθοςἔχειτῶναἰσθητῶνπιθ27.",
+  "verdict": "ι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "πιθ = Probl. bk ιθ(19); ι is real"
+ },
+ {
+  "ctx": "ῶναἰσθητῶνπιθ27.919b26.ἀκȣ́σιο",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "headword ἀκȣ́σιος accented"
+ },
+ {
+  "ctx": "26.ἀκȣ́σιος.κινεῖταίτιναςϗἀκȣσ",
+  "verdict": "ϗἀκȣσίȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ητῶνζῴωνΖκ11.703b4.περὶἑκȣσίȣϗ",
+  "verdict": "ȣσίȣϗἀκȣσίȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "Ηγ1.1109b35.τὰβίᾳϗἀπάτῃἀκȣσιαΡ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκȣσια printed bare"
+ },
+ {
+  "ctx": "ἀπάτῃἀκȣσιαΡα15.1377b5.ἀκȣ́σιο",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκȣ́σιον accented at line break"
+ },
+ {
+  "ctx": "Ρα15.1377b5.ἀκȣ́σιον,distȣχἑκȣ",
+  "verdict": "ȣχἑκȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὐχ ἑκȣσιον, ȣ bare"
+ },
+ {
+  "ctx": "ἀκȣ́σια,νῦνδὲϗἀντὶτῶνδεἑκȣσιαΗ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκȣσια bare"
+ },
+ {
+  "ctx": "ἀντὶτῶνδεἑκȣσιαΗγ1.1110a8-b7.ἀ",
+  "verdict": "-",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Bekker range 1110 a8-b7 (hyphen)"
+ },
+ {
+  "ctx": "νδεἑκȣσιαΗγ1.1110a8-b7.ἀκȣσιασ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "συναλλάγματαΗε5.1131a3.φονικȣ̃",
+  "verdict": "νικȣ̃εἴδη",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "φονικȣ̃ circumflex, εἴδη"
+ },
+ {
+  "ctx": "ικȣ̃εἴδητὰἐκπρονοίας,τὰἀκȣσιαΠ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἴδητὰἐκπρονοίας,τὰἀκȣσιαΠὁ16.1",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Politics bk4=δ (Πδ16); opus misread ὁ"
+ },
+ {
+  "ctx": "αΠὁ16.1300b26.δικάζεινφόνȣἀκȣσ",
+  "verdict": "ȣἀκȣσίȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "όνȣἀκȣσίȣf417.1547b28.—ἀκȣσίως",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "b30.τοῖςκακῶςδεδρακόσινἀκȣσίως",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "1397a14(frtragadesp55).ἄκȣσις,",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "σις,ἡκατ'ἐνέργειανἀκοή,ἡτȣ̃ἀκȣ",
+  "verdict": "ȣ̃ἀκȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ circumflex + ἀκȣ"
+ },
+ {
+  "ctx": "6.οppκωφότηςτε6.135b32.ἀκȣ́σμα",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀκȣ́σματα accented"
+ },
+ {
+  "ctx": "2.ἀκȣ́σματα,synἀκροάματαΗκ4.11",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "EN bk10=κ (10th letter), italic κ; opus+genie κ, llama misread χ"
+ },
+ {
+  "ctx": "αΗκ4.1174b28.2.1173b18.ἀκȣ́σμα",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "νελευθερίαςΠη17.1336b2.ἀκȣστικ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ȣ̃πατρόςΗα13.1103a3.—τὸἀκȣστικ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "13.1103a3.—τὸἀκȣστικόν:ἡτȣ̃ἀκȣ",
+  "verdict": "ȣ̃ἀκȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ̃ circumflex + ἀκȣ"
+ },
+ {
+  "ctx": "τȣ̃ἀκȣστικȣ̃ἐνέργεια(cfἄκȣσις)",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ευκαίνεταιἀπ'ἄκραςἡθρίξΖιγ11.5",
+  "verdict": "γ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "HA bk3 (Ζιγ, 518a9); opus+llama γ, genie misread η"
+ },
+ {
+  "ctx": "ντῇθαλάττῃμγ4.373b10.ἡἽππȣἄκρα",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ἵππȣ=Ἵππου; opus+llama ȣ, genie misread ε"
+ },
+ {
+  "ctx": "Ρα12.1372b13.β19.1392b23.αρ6.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "siglum αρ (περὶ ἀρετῶν, 1251); llama misread π"
+ },
+ {
+  "ctx": "ασίαπαρακολȣθεῖτῇἀφροσύνῃαρ6.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "siglum αρ; llama misread π"
+ },
+ {
+  "ctx": "β6.1203a30sqq.ἀκράτειαdefαρ1.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "siglum αρ (ἀκράτεια def αρ1); llama misread π"
+ }
+]

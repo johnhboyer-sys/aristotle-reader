@@ -1,0 +1,35 @@
+[
+  {
+    "page": 51,
+    "col": "R",
+    "line": 47,
+    "wrote": "σκέλυς",
+    "llamaparse": "σκέλȣς",
+    "proposed": "σκέλους",
+    "lexical_verdict": "ligature",
+    "why": "σκελους is a corpus form; σκελυς is not",
+    "context": "ἀμφικέφαλος. σκέλυς τὸ μὲν ἀμφικέφαλον μηρός Ζια15."
+  },
+  {
+    "page": 51,
+    "col": "R",
+    "line": 1,
+    "wrote": "τὺς",
+    "llamaparse": "τȣς",
+    "proposed": "τους",
+    "lexical_verdict": "ligature",
+    "why": "τους is a corpus form; τυς is not",
+    "context": "Ζμγ2. 662 b29. ἀμύνασθαι τὺς ἀδικήσαντας sim ρ3. 1425"
+  },
+  {
+    "page": 51,
+    "col": "R",
+    "line": 61,
+    "wrote": "τὺς",
+    "llamaparse": "τȣς",
+    "proposed": "τους",
+    "lexical_verdict": "ligature",
+    "why": "τους is a corpus form; τυς is not",
+    "context": "Ἀμφίπολις, Ἀμφιπολῖται, στάσεις πρὸς τὺς Χαλκιδέων"
+  }
+]

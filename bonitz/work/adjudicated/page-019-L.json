@@ -1,0 +1,148 @@
+[
+ {
+  "ctx": "ρεύειν.οἱνόμοιοὕτωςἀγορεύȣσιΡα",
+  "verdict": "ȣσιΡα",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἱνόμοιἀγορεύȣσιπερίτινοςΡα13.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "σιπερίτινοςΡα13.1374a20.Ηθ3.11",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηε3 = Ethics book ε(5); 1129b in book 5."
+ },
+ {
+  "ctx": "ε3.1303a30.ἀγράμματος.δηλȣσίτι",
+  "verdict": "ȣ͂σίτιϗ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Print: δηλȣ͂σί with circumflex; opus had right letters (ȣ,ϗ) but dropped circumflex; genie/llama misread ligature as οῖ."
+ },
+ {
+  "ctx": "ματα,οppδιάλεκτονἔχονταΖια1.48",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "pγεγραμμένοιΗκ10.1180b1.Πϛ5.13",
+  "verdict": "ζ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Politics book ζ (8-book Α–Θ lettering); glyph is zeta with overbar."
+ },
+ {
+  "ctx": "Ηκ10.1180b1.Πϛ5.1319b40.Ρα13.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "5.1162b22(οppκατὰνόμον).Ρα14.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ρὰπᾶσινὁμολογεῖσθαιδοκεῖΡα10.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αίνεινintrζῷαἀγριαίνονταΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζι (HA) + book ι(9); two iota strokes, not upsilon."
+ },
+ {
+  "ctx": "εις,τὰμὲνἄγριατὰδὲἥμεραΖια1.48",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἥμεραΖια1.488a26.β1.499a5.θ6.5",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "γρίῳϗτῷἡμέρῳδιαιρεῖσθαιΖια1.48",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "5.895b24.ἀεὶἥμεραἄνθρωποςϗὀρεύ",
+  "verdict": "ϗὀρεύςΖια",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "αὶπρὸςπραότηταϗἀγριότηταΖιι44.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ιότηταΖιι44.629b5.ἡἀνδρίαȣκἀκο",
+  "verdict": "ȣκ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "οὐκ printed with ȣ ligature."
+ },
+ {
+  "ctx": "erumqueτὰἄρρεναἀγριώτεραΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ήλωνζῶσιϗαὐτὰτὰἀγριώταταΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ερώτατοντῶνἀγρίωνὁἐλέφαςΖιι46.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ῶντετραπόδωνζῳοτοκȣντωνΖια1.48",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high"
+ },
+ {
+  "ctx": "02b15.28.606a7.29.607a11.15.61",
+  "verdict": "1",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Chapter number 15; leading glyph is a short digit that resembles iota, but context is an Arabic chapter numeral."
+ },
+ {
+  "ctx": "τράποδαϗἄγριαΖιθ5.594b28.15.61",
+  "verdict": "1",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "Chapter number 15; same short-1/iota glyph as flag 21."
+ },
+ {
+  "ctx": "8.15.611a15.Ζγε6.786a31.πȣϗπόθ",
+  "verdict": "ȣ͂ϗ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "ποῦ: ȣ ligature carries a circumflex; llama matched exactly."
+ }
+]

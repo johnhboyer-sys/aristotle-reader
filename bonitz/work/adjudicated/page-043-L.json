@@ -1,0 +1,177 @@
+[
+ {
+  "ctx": "ϗθηλυδρίαιτινὲςἐκγενετῆςΖιι49.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζu fusion = Ζιι (HA siglum)"
+ },
+ {
+  "ctx": "631b13,17.πῶςἐκτέμνονταιΖιι50.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζu fusion = Ζιι"
+ },
+ {
+  "ctx": "phasianusgallusmasLStΚCrΑΖιΙ77",
+  "verdict": "Ζι",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "edition siglum; cap Zeta + small iota, not a colon"
+ },
+ {
+  "ctx": "n13Su137n106Μ299).ἀλέκτωρiqἀλε",
+  "verdict": "iq",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Latin i. q. (idem quod), roman type"
+ },
+ {
+  "ctx": "β1352a16.ἈλέξανδροςὁΠριάμȣΡα6.",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πριάμȣ ligature ου"
+ },
+ {
+  "ctx": ".β23.1397b21,22,23,1399a3.24.1",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "period after 1399a3"
+ },
+ {
+  "ctx": "μίῳἈλεξάνδρȣ)Ρβ23.1398a22.24.1",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "period after 1398a22"
+ },
+ {
+  "ctx": "f571.1572a7.ἌλεξιςϗἘπειός,Ἠλεί",
+  "verdict": ",Ἠλείȣυἱοί",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "comma after Ἐπειός; Ἠλείȣ ends in ου ligature"
+ },
+ {
+  "ctx": "575a16.ἀλεπίδωτατὰσελάχηΖμδ13.",
+  "verdict": "μδ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζμδ = De Part An δ; μ printed u-like, raised δ"
+ },
+ {
+  "ctx": "ρίσσῃΠε6.1306a30.ἈλεύαςΘετταλό",
+  "verdict": "ττ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Θετταλός"
+ },
+ {
+  "ctx": "ευρον.ἄλευρακαταπάσαντεςΖιι40.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζu fusion = Ζιι"
+ },
+ {
+  "ctx": "πι27.893b31.τὸἄλευρονἐλαίȣἐπιχ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐλαίȣ ligature ου"
+ },
+ {
+  "ctx": "1.τὸἄλευρονἐλαίȣἐπιχεομένȣλευκ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἐπιχεομένȣ ligature ου"
+ },
+ {
+  "ctx": "b15.22.929b8.26.930a3.ἀλεώρα.Β",
+  "verdict": "ώρα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "headword ἀλεώρα, omega"
+ },
+ {
+  "ctx": "26.930a3.ἀλεώρα.Βkmοdοἀλεώραex",
+  "verdict": "ώρα",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "modo ἀλεώρα, omega"
+ },
+ {
+  "ctx": "mοdοἀλεώραexhibet,mοdοἀλεωρά,m",
+  "verdict": "ωρ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "modo ἀλεωρά, omega"
+ },
+ {
+  "ctx": "xhibet,mοdοἀλεωρά,mοdοἀλεωρή.ἡ",
+  "verdict": "ωρή",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "modo ἀλεωρή, omega"
+ },
+ {
+  "ctx": "mοdοἀλεωρή.ἡπερὶτὸσῶμαἀλεύραΖμ",
+  "verdict": "ύραΖμδ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "genuinely printed υ: ἀλεύρα; siglum Ζμδ"
+ },
+ {
+  "ctx": "τῆςπερὶτὰςἱέρακαςἕνεκαἀλεώραςΖ",
+  "verdict": "ώραςΖιι",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "ἀλεώρας omega + acute; siglum Ζu=Ζιι"
+ },
+ {
+  "ctx": "ᾠοῖςἀλεύραΖγγ3.754b8.—ἀλεωρὰνἔ",
+  "verdict": "ωρὰ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀλεωρὰν, omega"
+ },
+ {
+  "ctx": "γγ3.754b8.—ἀλεωρὰνἔχεινΖμδ5.67",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζμδ5, δ present"
+ },
+ {
+  "ctx": "5.679b28.—ἔχειἐναὐτοῖςἀλεωρήνΖ",
+  "verdict": "ωρήν",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀλεωρήν, omega"
+ },
+ {
+  "ctx": "3a18.ἡἀλήθεια,οppτὰὅμοιαΠθ5.13",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πθ5 theta"
+ },
+ {
+  "ctx": "ατὰτὴνἀλήθειαν,οppμῦθοςΖιθ12.5",
+  "verdict": "θ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιθ12 theta, not 9"
+ },
+ {
+  "ctx": "νμβ3.356b17.Φθ1.251a6.δηλȣντὴν",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "δηλȣν ligature ου, not ῶ"
+ }
+]

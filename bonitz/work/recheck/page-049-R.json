@@ -1,0 +1,146 @@
+[
+ {
+  "ctx": "ἀμαρτωλότερονΗβ9.1109a33.Ἄμασι",
+  "sonnet_verdict": "Ἄ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "Ἄ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Mark opens rightward with an acute tick (smooth+acute); Ἄμασις is invariably smooth-breathing. Not the left-opening rough genie shows."
+ },
+ {
+  "ctx": "θαλάττιοςὄφιςἀμαυρότεροςΖμ37.6",
+  "sonnet_verdict": "υ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "υ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Clean serifed U-shape with no descending mu-tail. Definitely not μ (likely the HA Ζι+ι fusion, but among the offered readings υ is correct)."
+ },
+ {
+  "ctx": "ἀμαυρότεραϗ̀βραχυβιώτεραΖμ1.60",
+  "sonnet_verdict": "υ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "υ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Same boxy U-shape as spine_off 3120, no mu descender. Not μ."
+ },
+ {
+  "ctx": "μβ8.367b28.Ζμγ4.667a19.πκϛ18.9",
+  "sonnet_verdict": "ϛ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ϛ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Distinct stigma glyph (curled top + baseline foot) clearly printed between κ and 18; genie/llama dropped it."
+ },
+ {
+  "ctx": ".Ζμγ4.667a19.πκϛ18.942a24,ἡἡδο",
+  "sonnet_verdict": ",",
+  "sonnet_confidence": "high",
+  "opus_verdict": ",",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Baseline mark with a downward tail (comma), not a raised dot, after 24."
+ },
+ {
+  "ctx": "αύρωταιτȣ͂ἀνδρὸςἡδύναμιςπδ25.8",
+  "sonnet_verdict": "δ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "δ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Angular/looped italic delta with rising ascender; distinct from the crossbar-oval θ in θερμόν on the same entry. πδ = Problemata δ."
+ },
+ {
+  "ctx": "ιȣ́τωνμορίων,οἷονἀκρωτηρίȣτινὸ",
+  "sonnet_verdict": "ȣ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Word-final figure-8 ȣ ligature (=ου), genitive ἀκρωτηρίου; not the ω+iota-subscript of ῳ."
+ },
+ {
+  "ctx": "ψβ8.420b2.ἡἀκοὴἀμβλυτέρααἴσθησ",
+  "sonnet_verdict": "ἴσθησι",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ἴσθησι",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Printed word is nominative αἴσθησις, ending clearly -σις with the breathing+acute over the αι-diphthong; matches opus, not genie's -σει or llama's -ση."
+ },
+ {
+  "ctx": "βλὺἢὀξὺὁρᾶνΖγε1.780a26.πλα8.95",
+  "sonnet_verdict": "α",
+  "sonnet_confidence": "high",
+  "opus_verdict": "α",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Clear alpha between λ and 8 in πλα8; genie's empty reading missed it."
+ },
+ {
+  "ctx": "μβρακία,θυγάτηρΦόρβαντοςτȣ͂Ἡλί",
+  "sonnet_verdict": "ȣ͂Ἡλίȣ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ͂Ἡλίȣ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "τοῦ Ἡλίου: first ȣ ligature carries a circumflex, Ἡ carries rough breathing, word-final ȣ ligature — both figure-8 forms, not bare υ/ι."
+ },
+ {
+  "ctx": "ωτῶνπολιτείαf437.ἀμβροσίαςϗ̀νέ",
+  "sonnet_verdict": "ςϗ̀",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ςϗ̀",
+  "agree": true,
+  "opus_confidence": "medium",
+  "note": "Base glyph is unmistakably the καί-ligature ϗ (X-top + descender), ruling out genie's plain κ. Grave is consistent with every other ϗ on this page, though on this instance the grave is faint; agree with opus but hold at medium on the accent."
+ },
+ {
+  "ctx": "̀νέκταροςγεύσασθαιΜβ4.1000a12,",
+  "sonnet_verdict": "0",
+  "sonnet_confidence": "high",
+  "opus_verdict": "0",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "1000 printed with four round, uniform zeros; no 8 anywhere in the number."
+ },
+ {
+  "ctx": "2,17.ἄμβροτος(ΟrphicVΙ12)χ7.40",
+  "sonnet_verdict": "χ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "χ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Clean X-cross (two crossing diagonals, no vertical stem), matching genuine χ in χρώμασιν; the adjacent κ in κινεῖται has a vertical stem — visibly different. χ confirmed."
+ },
+ {
+  "ctx": "ος(ΟrphicVΙ12)χ7.401b2.ἀμεγέθη",
+  "sonnet_verdict": "εγέθη",
+  "sonnet_confidence": "high",
+  "opus_verdict": "εγέθη",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Heading reads plainly ἀμεγέθης (α-μ-ε-γ-έ-θ-η-ς); γ present, so genie's -εθη drops it."
+ },
+ {
+  "ctx": "5b29.Γα2.316a27.5.320b32.ȣ̔κιν",
+  "sonnet_verdict": "ȣ̔",
+  "sonnet_confidence": "medium",
+  "opus_verdict": "ȣ̓",
+  "agree": false,
+  "opus_confidence": "medium",
+  "note": "OVERRIDE. Base glyph is the ȣ ligature (=οὐ, 'the sizeless is not moved'). οὐ is invariably SMOOTH-breathing. At maximum zoom the printed mark is a small near-horizontal stroke showing no clear rightward rough hook — ambiguous, not the rough exemplars' shape. The adjudicator over-read an unclear mark against orthography; siding with llama's smooth ȣ̓."
+ },
+ {
+  "ctx": "3a12.ἀμέλγεσθαιγάλαπολύΖιγ21.5",
+  "sonnet_verdict": "γ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "γ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Clear diagonal descender below baseline = γ, not the two-vertical η. Ζι+γ = HA book 3, consistent with Bekker 523a."
+ }
+]

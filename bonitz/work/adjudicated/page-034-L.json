@@ -1,0 +1,19 @@
+[
+ {"ctx": "1557a2.ΑἰσχίνηςπερὶΚρατύλȣΡγ16", "verdict": "ȣ", "agrees_with": "multiple", "confidence": "high", "note": "Κρατύλȣ ends in the ου-ligature."},
+ {"ctx": "τύλȣΡγ16.1417b1.αἶσχοςἀνώδυνον", "verdict": "δυν", "agrees_with": "opus", "confidence": "high", "note": "ἀνώδυνον clearly printed."},
+ {"ctx": "γίανἐξορίζεινἐκτῆςπόλεωςΠη17.1", "verdict": "η", "agrees_with": "multiple", "confidence": "high", "note": "Politics siglum Πη."},
+ {"ctx": "άττεινΗδ1.1120a15.αἰσχρός.εἶνα", "verdict": ".", "agrees_with": "opus", "confidence": "high", "note": "Baseline dot after headword αἰσχρός; no comma tail."},
+ {"ctx": "5.1232b2.—περὶκαλȣ͂ϗαἰσχρȣ͂Ρα9", "verdict": "ȣ͂", "agrees_with": "opus", "confidence": "high", "note": "καλȣ͂ genitive ligature with circumflex; llama omitted the diacritic."},
+ {"ctx": "441b20.ἀποκαλεῖνὡςἐναἰσχρȣ͂Ηι8", "verdict": "ῷ", "agrees_with": "multiple", "confidence": "high", "note": "αἰσχρῷ dative, omega with iota subscript, not the ligature."},
+ {"ctx": "νὡςἐναἰσχρȣ͂Ηι8.1168a30.τȣ͂αἰσ", "verdict": "ȣ͂", "agrees_with": "opus", "confidence": "high", "note": "τȣ͂ (τοῦ) genitive ligature, not ὸ."},
+ {"ctx": "22(afferturversusfr249),Νώβηπο", "verdict": "ιό", "agrees_with": "multiple", "confidence": "medium", "note": "Iota clearly present (rules out opus's ώ); vowel glyph is omicron/omega ambiguous, name Νιόβη."},
+ {"ctx": "6.ΑeschyliversuscitanturΖιι49Β", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "Ζι+book-ι fused into the 'u'-shape trap."},
+ {"ctx": "342b36,343a27.αἰσχύνεσθαι.εἰςτ", "verdict": ".", "agrees_with": "opus", "confidence": "high", "note": "Period after headword αἰσχύνεσθαι."},
+ {"ctx": "εσθαι(iecοntumeliaaffici)(ὑπὸ)", "verdict": "(ὑπὸ)", "agrees_with": "opus", "confidence": "high", "note": "Round parentheses, matching the 'fici)' paren; not angle brackets."},
+ {"ctx": "ταςαἰσχύνεταιΡβ6.1384b24.ȣ̓καἰ", "verdict": "ȣ̓", "agrees_with": "multiple", "confidence": "high", "note": "ȣ̓κ = οὐκ, ligature with smooth breathing."},
+ {"ctx": "1,22.distφόβοςτδ5.126a8.—ἤμπισ", "verdict": "ἤμπισχ", "agrees_with": "opus", "confidence": "high", "note": "Letters η-μ-π-ι-σ-χ clear; smooth breathing per augmented ἀμπίσχω."},
+ {"ctx": "13.1390a2.6.1385a9.οἱαἰσχ.ȣ̓μα", "verdict": ".ȣ̓", "agrees_with": "opus", "confidence": "high", "note": "Abbreviation 'αἰσχ.' then ου-ligature (οὐ), not ϗ and not expanded."},
+ {"ctx": "l).Αἰσώπȣλόγοςὑπὲρδημαγωγȣ͂Ρβ2", "verdict": "ȣ͂", "agrees_with": "multiple", "confidence": "high", "note": "δημαγωγȣ͂ genitive ligature with circumflex."},
+ {"ctx": ",23.αἰτήσεταιΑα24.41b8.δεικνύν", "verdict": "ικνύν", "agrees_with": "multiple", "confidence": "high", "note": "δεικνύναι fully printed."},
+ {"ctx": "θαι(synλαμβάνειν)τὸἐνἀρχῇsiveτ", "verdict": "sive", "agrees_with": "opus", "confidence": "high", "note": "Latin 'sive' in roman type."}
+]

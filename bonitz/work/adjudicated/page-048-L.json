@@ -1,0 +1,107 @@
+[
+ {
+  "ctx": "tplurἁλσίμδ9.385b9,ἅλασιπκγ32.",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clearly πκγ32 (Probl. 23.32, 935a8); kappa not eta"
+ },
+ {
+  "ctx": "ἅλσιςexemplumἐντελεχείαςτῷκινη",
+  "verdict": "ȣ̃",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Stacked ou-ligature with circumflex: τ὿... printed τȣ̃ (τοῦ); llama had the ligature but dropped the circumflex, opus/genie read omega"
+ },
+ {
+  "ctx": "xemplumἐντελεχείαςτῷκινητῷΦγ1.",
+  "verdict": "ȣ̃",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Same line, κινητȣ̃ (κινητοῦ): ou-ligature + circumflex, not ῷ"
+ },
+ {
+  "ctx": ".1065b20.ἄλσος.οἰκεῖνἄλσηΖμ32.",
+  "verdict": "Ζιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Two separate iota strokes after Zeta: Ζιι = HA bk 9; 618b is in HA range 486-638, so Ζμ (PA) is impossible"
+ },
+ {
+  "ctx": "Ζμδ6.683b3.ἈλυάττȣπαῖςἈδράμυτο",
+  "verdict": "άμυτος",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ἀδράμυτος: mu-upsilon-tau, no doubled tau and no sigma"
+ },
+ {
+  "ctx": "δρὼςἁλυκάἐστινπε37.884b29.τὰμέ",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Print reads πε37. 884 b29. followed by marginal line-number 20 in the right margin; the 20 is not text"
+ },
+ {
+  "ctx": "ϗ̀ἡἀλυπίαΡα7.1365b13.τὴντȣ́των",
+  "verdict": "ȣ́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τȣ́των: stacked ou-ligature with acute, visibly rounder/taller than the plain upsilon in the adjacent ἀλυπίαν"
+ },
+ {
+  "ctx": "1126b14.αὕτηἡδειλίαἄλυποςΗγ15.",
+  "verdict": "Ηγ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηγ15 (EN III.15, 1119a29); gamma with descender, not eta"
+ },
+ {
+  "ctx": "479a20.ζωὴἄλυποςϗ̀μακαρίαΟβ31.",
+  "verdict": "Οβ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Print is Οβ1. 284 a29 (De caelo II.1); no 3 before the 1"
+ },
+ {
+  "ctx": "ίαΟβ31.284a29.τῷθεῷἄλυπονἄπονό",
+  "verdict": "ἄπο",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἄπονόν: smooth+acute alpha, pi, omicron - matches ἄλυπον earlier in the line"
+ },
+ {
+  "ctx": "ωντὸἄλυπονφ4.808b37.—ἄλυπαιἡδο",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἄλυποι: closed round omicron, unlike the x-shaped italic alpha of the following αἱ"
+ },
+ {
+  "ctx": "υτάΖγβ6.743a7.μδ6.383b10,a30.τ",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Superscript a is printed: 383 b10, a30"
+ },
+ {
+  "ctx": "rΜed297)Ρβ2.1394a34.Ἀλφειῷθυγά",
+  "verdict": "ȣ̃",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Ἀλφειȣ̃ (= Ἀλφειοῦ): stacked ligature with circumflex, contrasts with the plain v-shaped upsilon of the next word θυγάτηρ"
+ },
+ {
+  "ctx": "οιαἐντῷἈλκμαίωνιτῷΘεοδέκτȣΡβ23",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Θεοδέκτȣ: bare ou-ligature, no accent"
+ },
+ {
+  "ctx": "ερὶἄλφιταπκα1-26.τὰἄλφιταἀδράπ",
+  "verdict": "ἁδρά",
+  "agrees_with": "none",
+  "confidence": "medium",
+  "note": "Breathing over the alpha matches the rough of ὁ on the line above (c-curl opening right), not the smooth of ἀλφηστικός; second letter has a delta ascender (not omicron); final accent slants up-right = acute. So ἁδρά"
+ }
+]

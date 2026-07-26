@@ -1,0 +1,51 @@
+[
+ {
+  "ctx": "ντοςτινὸςθείȣϗἀγαθȣ̃ϗἐφετȣ̃Φα9.",
+  "verdict": "ȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀγαθȣ̃ (=ἀγαθοῦ), ou-digraph with circumflex; not ῷ."
+ },
+ {
+  "ctx": "191a17.Ζκ6.700b25.τἀγαθὸνϗτὸεȣ̃Η",
+  "verdict": "ϗτὸεὖ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "Raw ϗ ligature; word is εὖ (upsilon+circumflex), not the ou-digraph."
+ },
+ {
+  "ctx": "b4.βέλτιονϗθειότερονἡἀρχὴἢκινȣ̃σα",
+  "verdict": "ἢκινȣ̃",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἢ (than) + κινȣ̃σα (=κινοῦσα, circumflexed digraph)."
+ },
+ {
+  "ctx": "a24.τὸἀγαθὸντȣ̃πεπερασμένȣΗβ5.110",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πεπερασμένȣ (=πεπερασμένου, genitive), bare ou-digraph; not ῳ."
+ },
+ {
+  "ctx": "ὸνπολύμορφονηεη5.1239b11.2.specie",
+  "verdict": "2.",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Section number '2.' is printed; genie dropped it."
+ },
+ {
+  "ctx": "1185a1,2.τὸτέλειονἀγαθὸναȣταρκεςΗα",
+  "verdict": "ὐ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Word is αὔταρκες, base letter is upsilon, not the ou-digraph."
+ },
+ {
+  "ctx": "γαθὸναȣταρκεςΗα5.1097b8.Πκ2.1253a",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "medium",
+  "note": "Glyph after Π is clearly κ (unlike the round α in 'Πα2' three lines up); philologically 1253a1 is Politics I so α is expected, but printed glyph reads κ."
+ }
+]

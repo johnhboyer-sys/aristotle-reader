@@ -1,0 +1,86 @@
+[
+ {
+  "ctx": "δίμνȣτῶνἀλφίτωντετραδράχμȣοβ13",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "τετραδράχμȣ: stacked ou-ligature (V-top over closed bowl), identical to the unambiguous ȣ in μεδίμνȣ on the line above; no accent. Matches opus/llama."
+ },
+ {
+  "ctx": "τὴνμορφήνΖγβ4.738b31.—πανῦργος",
+  "verdict": "ȣ͂",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "πανȣ͂ργος: glyph under the circumflex is the ou-ligature (closed round bowl under a V), plainly unlike the open V-shaped υ in τυφλά / πολυσχιδῆ in the same column. llama had the ligature but dropped the circumflex; opus/genie had the circumflex but a plain upsilon."
+ },
+ {
+  "ctx": "Ζγβ4.738b31.—πανῦργος,κακῦργος",
+  "verdict": "ȣ͂",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "κακȣ͂ργος: same ligature+perispomeni as the preceding πανȣ͂ργος, two words to its left on the same line."
+ },
+ {
+  "ctx": "ςὃτίκτειἐνδέρματιἀλώπεκοςΖι33.",
+  "verdict": "Ζιι",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Two separate short iota strokes after the zeta: Ζιι = Historia animalium book 9. Bekker 619b15 sits in HA IX (608a-633b), inside the HA range 486-638, so llama's Ζμ (De part. an., 639-697) is impossible; opus dropped the second iota."
+ },
+ {
+  "ctx": "ρὶἀλώπεκοςθ99.838b4.Αἰσώπυλόγο",
+  "verdict": "ȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "Αἰσώπȣ: final glyph is the bare ou-ligature (V over closed bowl), no accent and no iota subscript; not υ (opus) and not ῳ (genie)."
+ },
+ {
+  "ctx": "ῆςἀλώπεκοςκυνοραϊστὰςπολλὺςἐχύ",
+  "verdict": "ȣ̀ςἐχȣ́σης",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "πολλȣ̀ς ἐχȣ́σης: both disputed vowels are the ou-ligature, the first with a grave, the second with an acute. Compare the unmistakable alpha of κυνοραϊστὰς immediately before: quite a different shape, so genie/llama's alpha is wrong; opus's plain upsilon is the known ligature-to-upsilon failure."
+ },
+ {
+  "ctx": "piscis,referturinterγαλεοσιδεῖ",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "γαλεοειδεῖς: the letter after omicron is a three-barred epsilon, matching the epsilon in γαλε- two letters earlier, not a lunate sigma. Matches genie/llama."
+ },
+ {
+  "ctx": "ωςἐστὶνἔμφασιςλαμπρότητοςἄστρυ",
+  "verdict": "ἄστρȣπερί",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "Alpha carries smooth breathing + acute (ἄ); the vowel after rho is the ou-ligature ȣ, not υ (opus) or ῳ (genie); the iota of περί clearly bears an acute before the line-break hyphen (contra genie/llama's περι). No single reader had all three."
+ },
+ {
+  "ctx": "κιςγίγνονταιμγ3.373a27.ἅλ.ωσις",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "A distinct baseline dot after ἅλ, the abbreviation point in the headword ἅλ.ωσις; genie/llama dropped it."
+ },
+ {
+  "ctx": "γνονταιμγ3.373a27.ἅλ.ωσις.γίνε",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "The mark after ωσις sits on the baseline (ink y=624-632) whereas the comma after ἅλωσις later on the same line descends below it (y=633-641) with a tail. It is a period, not a comma."
+ },
+ {
+  "ctx": "86a3al.ἅμα..τε..ϗ̀μα3.340b5.ἅμ",
+  "verdict": "b",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Superscript column letter in 340b5 is a clear b (straight ascender + bowl), unlike the a of 386a3 earlier on the line. Matches opus/llama."
+ },
+ {
+  "ctx": ".ἅμα..τε..ϗ̀μα3.340b5.ἅμαϗ̀μβ8",
+  "verdict": "ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Final ϗ carries a plainly printed grave stroke above it. genie's 'χωρὶς' is not what stands there; llama omitted the accent."
+ }
+]

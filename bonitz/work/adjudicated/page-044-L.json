@@ -1,0 +1,16 @@
+[
+ {"ctx": "ὸμὲνἀληθὲςτὸδὲψεῦδοςΚ10.13b2sq", "verdict": "3", "agrees_with": "multiple", "confidence": "high", "note": "citation reads K10. 13 b2 sqq.; genie's 051 is garble"},
+ {"ctx": "ογȣ́μενονπάντηΑα32.47a8.Ηκ8.109", "verdict": "κ", "agrees_with": "opus", "confidence": "high", "note": "x-shaped italic κ, distinct from round α in adjacent Αα32"},
+ {"ctx": "μβ3.358a16.ἀληθὲςdistἀληθὲςτȣ́", "verdict": "ὲςτȣ́", "agrees_with": "opus", "confidence": "high", "note": "grave ἀληθὲς + ου-ligature τȣ́τῳ"},
+ {"ctx": "συμβαίνειποτὲἀληθὲςκακόνΠδ12.1", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "cursive swash δ (Πδ12)"},
+ {"ctx": "29.μ3.1077b33.saepeοmissοvἐστι", "verdict": "vἐ", "agrees_with": "opus", "confidence": "high", "note": "Latin roman v then Greek ἐστιν with smooth breathing"},
+ {"ctx": "8.τζ1.139a25.Οα12.283b6.Μδ9.10", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "cursive swash δ (Μδ9)"},
+ {"ctx": "ὸμὲνἀληθέςadverbiiinstarΠδ8.12", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "swash δ (Πδ8), distinct from Πθ4 nearby"},
+ {"ctx": "b25.—ἀληθέστερονϗβέλτιονΠδ3.12", "verdict": "δ", "agrees_with": "multiple", "confidence": "high", "note": "swash δ (Πδ3)"},
+ {"ctx": "̃ς,ὃνκαλȣ̃σιναὐθέκαστονηεγ7.12", "verdict": "γ", "agrees_with": "multiple", "confidence": "high", "note": "γ with descender in ηεγ7 (Eth.Eud.)"},
+ {"ctx": "ρᾶταιΖιε5.541a31.ὑποκάτωτȣ́των", "verdict": "ȣ́", "agrees_with": "opus", "confidence": "high", "note": "ου-ligature in τȣ́των (=τούτων), not ή"},
+ {"ctx": "ςμέρηταὐτὰτοῖςἀληθινοῖςΖιδ8.53", "verdict": "δ", "agrees_with": "opus", "confidence": "high", "note": "swash δ in Ζιδ8"},
+ {"ctx": "ςἀληθινώταταπο17.1455a32.ὁγ'ἀλ", "verdict": "ὅγ'", "agrees_with": "llama", "confidence": "high", "note": "omicron carries rough breathing + acute (ὅ)"},
+ {"ctx": "ὸςπλȣ̃τοςΠα8.1256b30.τόνγ'ἀληθ", "verdict": "'", "agrees_with": "multiple", "confidence": "high", "note": "apostrophe in τόν γ'; genie emitted an HTML-entity garble"},
+ {"ctx": "ςπροσᾳδόμενονf472.1556a3,6,155", "verdict": "6,", "agrees_with": "opus", "confidence": "high", "note": "print reads 1556 a3, 6, 1555 b41; genie/llama dropped the 6"}
+]

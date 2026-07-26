@@ -1,0 +1,72 @@
+[
+ {
+  "ctx": "5.886b32,35.αἴσθησιςἀδιάφθορος",
+  "verdict": "",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Print siglum reads ηεη2 (eta-epsilon-eta); opus's extra θ is spurious, no theta present."
+ },
+ {
+  "ctx": "b32,35.αἴσθησιςἀδιάφθοροςηεη2.",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Eta in ηεη2; genie misread as κ."
+ },
+ {
+  "ctx": "οροςηεη2.1236a1.ἡαἴσθησιςȣδύνα",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Bare ȣ ligature (=οὐ): ἡ αἴσθησις ȣ δύναται."
+ },
+ {
+  "ctx": "σθησιςϗτὸκύριοναἰσθητήριονἕνυ2",
+  "verdict": "νἕνυ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "...αἰσθητήριον ἕν υ2; opus keeps the ν, ἕν and siglum υ."
+ },
+ {
+  "ctx": "81b6.24.86a29.Φα5.189a7.Ηβ9.1",
+  "verdict": "β",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ηβ9 (Eth.Nic. II), confirmed by 1109b23; genie/llama's ζ wrong."
+ },
+ {
+  "ctx": "9,21.ἐπὶτῆςαἰσθήσεως,ἐπὶτȣλόγȣ",
+  "verdict": "ȣ͂λόγȣ",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "First ȣ carries a printed circumflex (τῦ=τοῦ); second ȣ bare. opus dropped the circumflex."
+ },
+ {
+  "ctx": "γ31.αἴσθησις,distἐπιστήμη.φρόν",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Comma after ἐπιστήμη (tail below baseline)."
+ },
+ {
+  "ctx": "ήσεωςγίγνεταιΑδ2.90a26sqq.19.1",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Period; all sqq./19. marks are round baseline dots."
+ },
+ {
+  "ctx": "ςτὴναὐτὴντῷνῷχώρανἔχȣσινΖυ6.70",
+  "verdict": "υ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζυ6, 700b20 = De motu animalium, genuine italic upsilon; genie's ι wrong."
+ },
+ {
+  "ctx": "661a9.ἔχειναἴσθησίντινοςΖιι31.",
+  "verdict": "ιι3",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ζιι31, 618b16 = Historia Animalium; the 'u' glyph is the fused Ζι+ι trap, not upsilon."
+ }
+]

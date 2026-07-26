@@ -1,0 +1,23 @@
+[
+ {"ctx": "ηνῶνϗτῶνἀγώνωντραγικώτατ", "verdict": "ιsimπο", "agrees_with": "opus", "confidence": "high", "note": "reads 'τραγικώταται sim πο6'; genie/llama garbled 'sim'"},
+ {"ctx": "ήσαςf624.1583a28.ἀγωνία1.", "verdict": "iq", "agrees_with": "opus", "confidence": "high", "note": "Latin abbreviation 'i q' (id quod)"},
+ {"ctx": "ρὸςἡντινȣνἀγωνίανΗγ7.111", "verdict": ".", "agrees_with": "opus", "confidence": "high", "note": "period printed after 1114"},
+ {"ctx": "1.1288b17.πλ11.956b16.—2.", "verdict": "οἱ", "agrees_with": "opus", "confidence": "high"},
+ {"ctx": "3a6.οἱἀγωνιῶντεςδιψητικο", "verdict": ",ἱδρῶ", "agrees_with": "genie", "confidence": "medium", "note": "comma after διψητικοί; llama's ligature ȣ is wrong (it is ῶ)"},
+ {"ctx": "καλὸνκίνδυνονΠθ4.1338b31.", "verdict": "Ἥραȣ̓", "agrees_with": "opus", "confidence": "high", "note": "ου-ligature with smooth breathing, not ἡ; rough breathing on Ἥρα"},
+ {"ctx": "γωνίζεσθαιτοῖςπράγμασιν,", "verdict": "pp", "agrees_with": "opus", "confidence": "high", "note": "Latin 'opp'"},
+ {"ctx": "νίζονται,μιμȣνταιδ'ὀλίγα", "verdict": "ο", "agrees_with": "multiple", "confidence": "high", "note": "omicron in πο24, not zero"},
+ {"ctx": "1020a25.ἀγωνίσματαποιεῖνπ", "verdict": "ο", "agrees_with": "multiple", "confidence": "high", "note": "omicron in πο9, not zero"},
+ {"ctx": "7a21.ὁὑποκριτὴςἀγωνιστήςπ", "verdict": "ι", "agrees_with": "multiple", "confidence": "high", "note": "siglum πιθ (Problemata bk ιθ=19); iota present"},
+ {"ctx": "tδιαλεκτικαίτθ11.161a24.ι", "verdict": "ι", "agrees_with": "none", "confidence": "medium", "note": "printed Greek iota = book-siglum ι (SE cited as Topics bk 9); opus/llama read digit 1, genie α"},
+ {"ctx": "ικὴλέξιςἡὑποκριτικωτάτη,", "verdict": "pp", "agrees_with": "opus", "confidence": "high", "note": "Latin 'opp'"},
+ {"ctx": "έγεσθαιτθ14.164b15.ᾄδεινπ", "verdict": "ι", "agrees_with": "multiple", "confidence": "high", "note": "siglum πιθ15; iota present"},
+ {"ctx": "5.918b21.Ἀδάμας.ἀπέστηΚότ", "verdict": "υ", "agrees_with": "opus", "confidence": "high", "note": "Κότυος (Cotys), upsilon"},
+ {"ctx": "οσίωνf394.1543b18.ἄδεια,ο", "verdict": "pp", "agrees_with": "opus", "confidence": "high", "note": "Latin 'opp'"},
+ {"ctx": "4.1543b18.ἄδεια,οppζημίαΠ", "verdict": "δ", "agrees_with": "multiple", "confidence": "medium", "note": "book letter glyph is delta not theta"},
+ {"ctx": "ρὸςαὐλόνἢλύραν,ᾄδεινἄνευ", "verdict": "όγȣπι", "agrees_with": "multiple", "confidence": "high", "note": "λόγȣ (ου-ligature) πιθ9; genie garbled to λογικῆς"},
+ {"ctx": "ιπᾶςγεγηθὼςὁμὴδι'ἀνάγκην", "verdict": "ι", "agrees_with": "multiple", "confidence": "high", "note": "siglum πιθ40; iota present"},
+ {"ctx": "1a37.—deanimalibus,κύκνος", "verdict": ".", "agrees_with": "opus", "confidence": "medium", "note": "period after κύκνος in bird list"},
+ {"ctx": "nimalibus,κύκνος.κόττυφος", "verdict": ".ἀηδὼ", "agrees_with": "opus", "confidence": "medium", "note": "period after κόττυφος; ἀηδὼν grave (oxytone before word), not acute"},
+ {"ctx": "ύκνος.κόττυφος.ἀηδὼνᾄδειΖ", "verdict": "ιι", "agrees_with": "opus", "confidence": "high", "note": "HA siglum Ζ + book-ι fused; the 'u'/'μ' shape resolves to ιι"}
+]

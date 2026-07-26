@@ -1,0 +1,86 @@
+[
+ {
+  "llamaparse_word": "αὐτȣ",
+  "ou_form": "αὐτου",
+  "upsilon_form": "αὐτυ",
+  "lexical_verdict": "ligature",
+  "why": "αυτου is a corpus form; αυτυ is not"
+ },
+ {
+  "llamaparse_word": "βȣ",
+  "ou_form": "βου",
+  "upsilon_form": "βυ",
+  "lexical_verdict": "upsilon",
+  "why": "βυ is a corpus form; βου is not"
+ },
+ {
+  "llamaparse_word": "κατορθȣν",
+  "ou_form": "κατορθουν",
+  "upsilon_form": "κατορθυν",
+  "lexical_verdict": "ligature",
+  "why": "κατορθουν is a corpus form; κατορθυν is not"
+ },
+ {
+  "llamaparse_word": "κατορθȣται",
+  "ou_form": "κατορθουται",
+  "upsilon_form": "κατορθυται",
+  "lexical_verdict": "ligature",
+  "why": "κατορθουται is a corpus form; κατορθυται is not"
+ },
+ {
+  "llamaparse_word": "λέγȣσιν",
+  "ou_form": "λέγουσιν",
+  "upsilon_form": "λέγυσιν",
+  "lexical_verdict": "ligature",
+  "why": "λεγουσιν is a corpus form; λεγυσιν is not"
+ },
+ {
+  "llamaparse_word": "πȣ",
+  "ou_form": "που",
+  "upsilon_form": "πυ",
+  "lexical_verdict": "ligature",
+  "why": "που is a corpus form; πυ is not"
+ },
+ {
+  "llamaparse_word": "παρακολȣθεῖ",
+  "ou_form": "παρακολουθεῖ",
+  "upsilon_form": "παρακολυθεῖ",
+  "lexical_verdict": "ligature",
+  "why": "παρακολουθει is a corpus form; παρακολυθει is not"
+ },
+ {
+  "llamaparse_word": "τȣ",
+  "ou_form": "του",
+  "upsilon_form": "τυ",
+  "lexical_verdict": "ligature",
+  "why": "του is a corpus form; τυ is not"
+ },
+ {
+  "llamaparse_word": "τεμνομένȣ",
+  "ou_form": "τεμνομένου",
+  "upsilon_form": "τεμνομένυ",
+  "lexical_verdict": "ligature",
+  "why": "τεμνομενου is a corpus form; τεμνομενυ is not"
+ },
+ {
+  "llamaparse_word": "χυμȣ",
+  "ou_form": "χυμου",
+  "upsilon_form": "χυμυ",
+  "lexical_verdict": "ligature",
+  "why": "χυμου is a corpus form; χυμυ is not"
+ },
+ {
+  "llamaparse_word": "ἁμαρτάνȣσιν",
+  "ou_form": "ἁμαρτάνουσιν",
+  "upsilon_form": "ἁμαρτάνυσιν",
+  "lexical_verdict": "ligature",
+  "why": "αμαρτανουσιν is a corpus form; αμαρτανυσιν is not"
+ },
+ {
+  "llamaparse_word": "Ἡλίȣ",
+  "ou_form": "Ἡλίου",
+  "upsilon_form": "Ἡλίυ",
+  "lexical_verdict": "ligature",
+  "why": "ηλιου is a corpus form; ηλιυ is not"
+ }
+]

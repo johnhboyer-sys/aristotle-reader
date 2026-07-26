@@ -1,0 +1,118 @@
+[
+ {
+  "ctx": "τειτὰπλεῖσταΖιε13.544a25.18.61",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"ι8\"=Hist.An. book ι(9) ch 8, Bekker 614a9; thin iota, not arabic 1"
+ },
+ {
+  "ctx": "άλλειτὴνἰδέανκατὰτὰςὥραςΖιι15.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "two close iotas (siglum-ι + book-ι 9), reads as u-shape"
+ },
+ {
+  "ctx": "γε6.786a31.eοrumοἰκήσειςΖιι11.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": ".—ἔντομαἄγριαΖιε31.557a5.141.6",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"ι41\"=book ι(9) ch 41, Bekker 627b23"
+ },
+ {
+  "ctx": "ηςΖιθ1.588a21.οppπραότηςΖιι44.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "ἀγροικίαἤθȣςΡγ16.1417a21.ἀγροῖ",
+  "verdict": "ἀγροῖκος(ἄγροι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "lemma ἀγροῖκος circumflex; paren ἄγροικος acute"
+ },
+ {
+  "ctx": "17a21.ἀγροῖκος(ἄγροικοςΖια1.48",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "book α(1), Bekker 488b2; Greek alpha not latin a"
+ },
+ {
+  "ctx": "stἔρεια,συνανθρωπίζονταΖια1.48",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "book α(1), Bekker 488b2"
+ },
+ {
+  "ctx": "0a10.ἀγρυπνίαδιὰτὸνοεῖνπιη7.91",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"πιη\"=Problemata book ιη(18)"
+ },
+ {
+  "ctx": "14b35.τὸθῆλυἀγρυπνότερονΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high"
+ },
+ {
+  "ctx": "608b13.—νοήσειςἄγρυπνοιπιη7.91",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"πιη\"=Problemata book ιη(18)"
+ },
+ {
+  "ctx": "Ηζ10.1142b6.ημα5.1185b5.αο4.12",
+  "verdict": "ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"αρ4\" siglum (De virt.); rho has descender, not omicron"
+ },
+ {
+  "ctx": "αο4.1250a36.cοniεὐμάθειαΡα6.13",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"Ρα6\" Rhet book α(1), Bekker 1362b24"
+ },
+ {
+  "ctx": "γχίνωςχρήσασθαιλόγῳ,ἔργῳαο4.12",
+  "verdict": "ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"αρ4\" siglum; rho"
+ },
+ {
+  "ctx": "τȣςνόμȣςΠδ5.1292b14,16.ἐφ'ὁποτ",
+  "verdict": "'",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "elision apostrophe ἐφ᾿; genie emitted entity garble"
+ },
+ {
+  "ctx": "ἀγωγὴντὸδίκαιονἐφαρμόσειΡα15.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"Ρα15\" Rhet book α(1), Bekker 1375b12"
+ },
+ {
+  "ctx": "2b7.νικᾶνἀγῶναστεφανίτηνΡα2.13",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "\"Ρα2\" Rhet book α(1), Bekker 1357a19"
+ }
+]

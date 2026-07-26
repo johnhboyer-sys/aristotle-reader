@@ -1,0 +1,114 @@
+[
+ {
+  "ctx": "368a18.ἄμαϗ̀..ϗ̀μδ9.386b20.ἄμαcdatμβ8.368a3",
+  "verdict": "ἅμαϗ̀..ϗ̀μδ",
+  "agrees_with": "none",
+  "confidence": "high",
+  "note": "over the alpha there are two marks: a reversed-comma rough breathing at left plus an acute, so ἅμα; both kai-ligatures carry a grave (thick top-left, thin bottom-right); the siglum letter has an open bowl with a tall right-curling ascender = δ, not the closed crossbarred θ"
+ },
+ {
+  "ctx": "αδὲφανερόνalΜβ4.1008a30.Πδ9.1294a32.Ηθ16.1163b22.Φα",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "open bowl with a looped ascender rising right = δ; no horizontal crossbar. 1294a32 is Pol IV, matching Πδ"
+ },
+ {
+  "ctx": "ίαπαρακολȣθεῖτῇἀφροσύνῃαρ6.1251a2.ἀμαθύνει(ΗοmΙ593)",
+  "verdict": "6",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "upright roman numeral: closed lower loop with a curved stroke sweeping up-right, no crossbar; theta in this font is a slanted oval with a horizontal bar"
+ },
+ {
+  "ctx": "a14.ἀμάλακτος.περὶἀμαλάκτȣμδ9.385b6-26.8.385a13.7.384",
+  "verdict": "ȣμδ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "final glyph of ἀμαλάκτȣ is the stacked double-loop ligature sitting on the baseline, not omega and not alpha; δ follows μ with the usual curled ascender"
+ },
+ {
+  "ctx": "01b4.ἀμαρτάνειν,οppκατορθεῖνΗβ6.1107a15al.ρ30.1437b5",
+  "verdict": "ȣ͂",
+  "agrees_with": "llama",
+  "confidence": "high",
+  "note": "κατορθȣ͂ν: closed double-loop ligature under a printed circumflex; no epsilon-iota and no separate omicron-upsilon pair"
+ },
+ {
+  "ctx": "30.1437b5.οppὀρθῶςποιεῖνΗδ11.1126a34.distἀτυχεῖνΗε1",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ηδ11: open bowl plus right-curling ascender; the θ of ὀρθῶς earlier on the same line is a closed oval with a bar, plainly a different glyph"
+ },
+ {
+  "ctx": "ἁμαρτάνειντῆςπροστάξεως,τȣ́τȣΗη7.1149a28.Πε1.1301a28.ἁ",
+  "verdict": "ȣ́τȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "both glyphs are the double-loop ligature with a closed lower bowl and no descender; the first carries an acute with no breathing, which is normal here"
+ },
+ {
+  "ctx": "οντὴνἁμαρτίανΠθ4.1338b12.ȣ̓συγχωρήσωἈθηναίοιςδὶςἁμαρ",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ligature with a comma-shaped smooth breathing; the '2' further right is the start of the marginal line-number 25, set clear of the text block"
+ },
+ {
+  "ctx": "ἁμαρτάνȣσινὅσοιτῶνποιητῶνἩρακληίδαπεποιήκασιπς8.1451a20.—",
+  "verdict": "Ἡρακληί",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "rough breathing curl before the roman capital H with no accent on it; over the iota a single slanted acute stroke, no pair of diaeresis dots"
+ },
+ {
+  "ctx": "ιητῶνἩρακληίδαπεποιήκασιπς8.1451a20.—ἁμαρτάνεινπολλ",
+  "verdict": "ο",
+  "agrees_with": "genie",
+  "confidence": "medium",
+  "note": "the oval is broken open on the right so it reads c-like, but it has no descender (rules out ς) and no crossbar (rules out θ); the closed omicron of πο5 later in this column is the same width and slope. πο is the only Poetica siglum and 1451a20 is Poet. 8"
+ },
+ {
+  "ctx": "αρτάνεται,τὸδὲμέσονκατορθȣ͂ταιΗβ5.1106b25.cf6.1107a25",
+  "verdict": "ȣ͂τ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "θ (closed oval, horizontal bar) then the double-loop ligature under a clear circumflex"
+ },
+ {
+  "ctx": "31.ἁμάρτημα.ἐντοῖςἀιδίοιςȣ̓δὲνȣ̓́τεκακὸνȣ̓́τεἁμάρτημαΜθ9.1",
+  "verdict": "ȣ̓δὲνȣ̓́",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "first word: ligature with smooth breathing, then a bowl with an ascender stroke rising right and no crossbar = δ, then ε with grave; second word begins with the ligature carrying breathing plus acute"
+ },
+ {
+  "ctx": "τέραταἁμαρτήματατȣ͂ἕνεκάτȣΦβ8.199b4.—κοινὸνπᾶσινἁμά",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two prongs joined onto a closed lower loop = ligature; plain upsilon on this page (e.g. ὑποτιθεμένοις) is an open u with no closed bowl"
+ },
+ {
+  "ctx": "distἀτύχημα,ἀδίκημαΗε10.1835b12-1136a3.Ρα13.1374b7.",
+  "verdict": "8",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two stacked closed loops, unmistakably an 8 beside the serifed vertical stems of the 1s. The number is impossible for EN, so the print itself has 1835 for 1135 — a compositor's error, not an OCR one"
+ },
+ {
+  "ctx": "αίνεινἁμαρτίαςΜμ8.1084b24,4.ἡτῆςᾠδῆςἁμαρτίαπιθ43.92",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "the mark after 24 has a tail hooking well below the baseline; the periods on this line are compact dots sitting on the line"
+ },
+ {
+  "ctx": "ίαἐπιστήμης,περὶαἴσθησιν,οppὀρθότηςΗζ10.1142b10.τβ4.1",
+  "verdict": "opp",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "upright roman: closed round o and two p's with straight serifed stems and descenders, distinct from the slanted Greek ρ of ὀρθότης immediately after"
+ }
+]
