@@ -56,7 +56,9 @@ def tokenize(spine: dict) -> tuple[dict, list[dict], list[dict]]:
     for seg in spine["segments"]:
         lines_out = []
         for line in seg["lines"]:
-            ref = f"{seg['column']}{line['n']}"
+            # lettered lines (244b5a) share a number with 244b5, so the
+            # suffix must be part of the ref or the two collide
+            ref = f"{seg['column']}{line['n']}{line.get('sub', '')}"
             text = line["text"]
             tokens = []
             # Em-dashes glue clauses together with no spaces; they are
@@ -74,7 +76,10 @@ def tokenize(spine: dict) -> tuple[dict, list[dict], list[dict]]:
                 except ValueError as err:
                     key_failures.append({"ref": ref, "token": token, "error": str(err)})
                 tokens.append(entry)
-            lines_out.append({"n": line["n"], "tokens": tokens})
+            entry_line = {"n": line["n"], "tokens": tokens}
+            if line.get("sub"):
+                entry_line["sub"] = line["sub"]
+            lines_out.append(entry_line)
         segments_out.append(
             {"id": seg["id"], "book": seg["book"], "column": seg["column"], "lines": lines_out}
         )
