@@ -81,8 +81,20 @@
   let variantNote = '';
   let variantBusy = false;
   let variantsShown = false;
-  $: canWiden = !comboActive && !grammarActive && grkMode === 'phrase'
-    && matchMode === 'form' && grkQuery.trim().split(/\s+/).filter(Boolean).length > 1;
+  // Offered for ANY multi-word Greek query, not only a form-phrase one. Tying it
+  // to "Exact phrase" + "Exact form" hid it behind two controls a reader has no
+  // reason to touch, so the people it helps most were the least likely to meet
+  // it. What it does does not depend on the current mode: it finds the phrase
+  // under every dictionary form of its words.
+  $: canWiden = !comboActive && !grammarActive
+    && grkQuery.trim().split(/\s+/).filter(Boolean).length > 1;
+
+  // Lemma mode matches dictionary forms, so a phrase typed as it stands on the
+  // page (τὸ τί ἦν εἶναι) finds nothing — τό is not a headword, ὁ is. That reads
+  // as "no such phrase" when it is really "wrong kind of input", and it is
+  // exactly the case widening answers.
+  $: lemmaDeadEnd = searched && !error && totalInstances === 0 && !variantsShown
+    && matchMode === 'lemma' && canWiden && !engQuery.trim();
 
   async function findVariants() {
     variantBusy = true;
@@ -1481,7 +1493,7 @@
       {#if canWiden && !variantsShown}
         <button type="button" class="export-btn" on:click={findVariants} disabled={variantBusy}
           title="τὸ τί ἦν εἶναι also stands as τῷ τί ἦν εἶναι — same formula, different endings">
-          {variantBusy ? 'Looking…' : 'Also find inflected variants'}
+          {variantBusy ? 'Looking…' : 'Find this phrase in any inflection'}
         </button>
       {/if}
       {#if totalInstances > 0}
@@ -1490,6 +1502,13 @@
         </button>
       {/if}
     </div>
+    {#if lemmaDeadEnd}
+      <p class="search-approximate">
+        Lemma search matches dictionary forms, so a phrase typed as it stands on
+        the page will not match — τό is not a headword, ὁ is. Searching for the
+        phrase in any inflection takes the words as you typed them.
+      </p>
+    {/if}
     {#if variantNote}
       <p class="search-approximate">{variantNote}</p>
     {/if}
