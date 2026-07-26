@@ -242,7 +242,10 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
     by_book: dict[int, list[dict]] = defaultdict(list)
     for seg in spine["segments"]:
         tok_seg = tokens_by_id[seg["id"]]
-        tok_lines = {l["n"]: l["tokens"] for l in tok_seg["lines"]}
+        # keyed by (n, sub): a lettered line shares its number with the
+        # plain line it follows, so keying on n alone hands both the same
+        # tokens and silently drops one line's worth
+        tok_lines = {(l["n"], l.get("sub")): l["tokens"] for l in tok_seg["lines"]}
         eng = english_by_id.get(seg["id"])
         line_ns = [line["n"] for line in seg["lines"]]
         chapter_starts = _chapter_starts(
@@ -259,9 +262,10 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
                     {
                         "n": line["n"],
                         "text": line["text"],
+                        **({"sub": line["sub"]} if line.get("sub") else {}),
                         **({"joined": True} if line.get("joined") else {}),
-                        "tokens": tok_lines[line["n"]],
-                        **({"cells": cells} if (cells := _greek_cells(line["text"], tok_lines[line["n"]])) else {}),
+                        "tokens": tok_lines[(line["n"], line.get("sub"))],
+                        **({"cells": cells} if (cells := _greek_cells(line["text"], tok_lines[(line["n"], line.get("sub"))])) else {}),
                     }
                     for line in seg["lines"]
                 ],
