@@ -16,7 +16,9 @@ to build/dist/reports/ for the Milestone 2 review.
 from __future__ import annotations
 
 import json
+import re
 import shutil
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -29,6 +31,38 @@ def _load(rel: str):
 
 
 _COLSEP = "⎪"  # U+23AA — the TLG column divider inside Aristotle's inline tables
+
+
+def _normalized_gloss(value: str) -> str:
+    normalized = " ".join(value.lower().split())
+    while normalized and (
+        normalized[-1].isspace()
+        or unicodedata.category(normalized[-1]).startswith("P")
+    ):
+        normalized = normalized[:-1]
+    return normalized
+
+
+def merge_short_def(
+    gloss: str, lemma: str, candidate_keys: list[str], short_defs: dict[str, str]
+) -> str:
+    """Conservatively extend a truncated Morpheus gloss from an LSJ definition."""
+    normalized_gloss = _normalized_gloss(gloss)
+    if not normalized_gloss:
+        return gloss
+
+    candidates = sorted(candidate_keys, key=lambda key: key != lemma)
+    for key in candidates:
+        derived = short_defs.get(key)
+        if not derived:
+            continue
+        normalized_derived = _normalized_gloss(derived)
+        if (
+            len(normalized_derived) > len(normalized_gloss)
+            and re.match(rf"^{re.escape(normalized_gloss)}\b", normalized_derived)
+        ):
+            return derived
+    return gloss
 
 
 def _greek_cells(text: str, tokens: list[dict]):
@@ -319,13 +353,22 @@ def emit_analyses(out_dir: Path) -> dict:
     analyses = _load("stage4/analyses.json")
     key_map = _load("stage4/key_map.json")
     lemma_map = _load("stage5/lemma_map.json")
+    # Absent when stage7 is re-run alone over a build predating short defs;
+    # the glosses then stay as Morpheus shipped them.
+    short_defs_path = BUILD_DIR / "stage5" / "short_defs.json"
+    short_defs = _load("stage5/short_defs.json") if short_defs_path.exists() else {}
     merged: dict[str, list[dict]] = {}
     dropped = 0
     for token_key, stored_key in key_map.items():
         parses = [
             {
                 "lemma": g["lemma"],
-                "gloss": g["gloss"].strip(),
+                "gloss": merge_short_def(
+                    g["gloss"].strip(),
+                    g["lemma"],
+                    lemma_map.get(g["lemma"], []),
+                    short_defs,
+                ),
                 "parse": g["parse"],
                 "lsj": lemma_map.get(g["lemma"], []),
             }

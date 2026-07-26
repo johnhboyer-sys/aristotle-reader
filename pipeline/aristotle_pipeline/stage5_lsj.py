@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from collections import defaultdict
 from html import escape
 from pathlib import Path
@@ -38,6 +39,9 @@ _TAG_MAP = {
 
 _BASE_STRIP = re.compile(r"[0-9_^\-]")
 _FOLD_STRIP = re.compile(r"[0-9_^\-/=\\|+]")
+_CONNECTIVE = re.compile(r"^[\s,;]*(?:(?:or|and)[\s,;]*)?$", re.IGNORECASE)
+_DANGLING_CONNECTIVE = re.compile(r"(?:\s*[,;]\s*)?\b(?:or|and)\s*$", re.IGNORECASE)
+_DANGLING_ARTICLE = re.compile(r"\b(?:an?|the)$", re.IGNORECASE)
 
 
 def base_key(key: str) -> str:
@@ -118,6 +122,52 @@ def entry_html(div2) -> str:
     return "".join(parts).strip()
 
 
+def _strip_edge_punctuation(value: str) -> str:
+    while value and (
+        value[0].isspace() or unicodedata.category(value[0]).startswith("P")
+    ):
+        value = value[1:]
+    while value and (
+        value[-1].isspace() or unicodedata.category(value[-1]).startswith("P")
+    ):
+        value = value[:-1]
+    return value
+
+
+def derive_short_def(div2) -> str:
+    """Derive a compact definition from an LSJ entry's leading italic run."""
+    sense = next((el for el in div2.iter() if el.tag == "sense"), None)
+    body = sense if sense is not None else div2
+    children = list(body)
+    first_i = next((i for i, child in enumerate(children) if child.tag == "i"), None)
+    if first_i is None:
+        return ""
+
+    parts = ["".join(children[first_i].itertext())]
+    previous = children[first_i]
+    for child in children[first_i + 1 :]:
+        if child.tag != "i" or not _CONNECTIVE.fullmatch(previous.tail or ""):
+            break
+        parts.extend((previous.tail or "", "".join(child.itertext())))
+        previous = child
+
+    short_def = " ".join("".join(parts).split())
+    short_def = _strip_edge_punctuation(short_def)
+    short_def = _DANGLING_CONNECTIVE.sub("", short_def)
+    short_def = _strip_edge_punctuation(short_def)
+    # Adjectives in -ikos/-ios are glossed "of or belonging to a <Greek noun>",
+    # and the noun is untranslated Greek outside the italic run: the derivation
+    # would end on a stranded article. Give up rather than ship broken English.
+    if _DANGLING_ARTICLE.search(short_def):
+        return ""
+    # A definition this long is one continuous italic clause (technical terms
+    # like kefalaiwth/s), never a joined run — cutting it would reintroduce the
+    # truncation this function exists to repair, so keep the shipped gloss.
+    if len(short_def) > 100:
+        return ""
+    return short_def
+
+
 def needed_lemmata(analyses: dict) -> set[str]:
     lemmata = set()
     for groups in analyses.values():
@@ -176,6 +226,7 @@ def run(manifest: Manifest) -> Path:
 
     # Pass 2: extract and convert just the wanted entries.
     shards: dict[str, dict] = defaultdict(dict)
+    short_defs: dict[str, str] = {}
     n_kept = 0
     buf: list[str] = []
     want = False
@@ -200,6 +251,9 @@ def run(manifest: Manifest) -> Path:
                         "head": head,
                         "html": entry_html(div2),
                     }
+                    short_def = derive_short_def(div2)
+                    if short_def:
+                        short_defs[key] = short_def
                     n_kept += 1
                     want = False
 
@@ -212,12 +266,16 @@ def run(manifest: Manifest) -> Path:
     (out_dir / "lemma_map.json").write_text(
         json.dumps(lemma_map, ensure_ascii=False), encoding="utf-8"
     )
+    (out_dir / "short_defs.json").write_text(
+        json.dumps(short_defs, ensure_ascii=False), encoding="utf-8"
+    )
     (out_dir / "missing_lemmata.json").write_text(
         json.dumps(missing, ensure_ascii=False, indent=1), encoding="utf-8"
     )
     summary = {
         "lemmata_needed": len(lemmata),
         "lsj_entries_kept": n_kept,
+        "short_defs": len(short_defs),
         "shards": len(shards),
         "lemmata_without_entry": len(missing),
     }
