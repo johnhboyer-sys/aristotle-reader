@@ -347,6 +347,106 @@ const corpus = { works: 41, tokens: '848,592', formPhrases: '173,884', lemmaPhra
         25 works. Not one of those is a word. Each is an idea, and browsing is the
         only way to meet them.
       </p>
+      <h3>Reading a row</h3>
+      <p>
+        Every row is one phrase and four numbers. This is the row for
+        <span lang="grc">τὸ τί ἦν εἶναι</span>:
+      </p>
+      <figure class="anatomy">
+        <div class="anatomy-row">
+          <span class="anatomy-phrase">
+            <span lang="grc">τὸ τί ἦν εἶναι</span>
+            <small>to ti hn einai</small>
+          </span>
+          <span class="anatomy-cell"><b>4</b><small>Words</small></span>
+          <span class="anatomy-cell"><b>103</b><small>Count</small></span>
+          <span class="anatomy-cell"><b>8</b><small>Works</small></span>
+          <span class="anatomy-cell score"><b>1,611.9</b><small>Score</small></span>
+        </div>
+        <dl class="anatomy-key">
+          <dt>Words</dt>
+          <dd>How many words long. Two to five.</dd>
+          <dt>Count</dt>
+          <dd>How often it occurs in the whole corpus — here 103 times.</dd>
+          <dt>Works</dt>
+          <dd>
+            How many of the {corpus.works} works it appears in. Eight, and the
+            Metaphysics holds 56 of the 103 on its own.
+          </dd>
+          <dt>Score</dt>
+          <dd>
+            Distinctiveness: how much more often the phrase occurs than the
+            commonness of its words on their own would lead you to expect. It
+            orders the list and removes nothing.
+          </dd>
+        </dl>
+      </figure>
+
+      <h3>The same phrase, counted two ways</h3>
+      <p>
+        The two buttons at the top of the page are the same corpus read
+        differently, and it is worth seeing what changes.
+        <strong>Word as written</strong> counts the letters on the page: change
+        one ending and it is a different row. <strong>Dictionary word</strong>
+        counts the words behind the letters, so every inflection of the phrase
+        gathers into a single row. The same expression appears in both:
+      </p>
+      <figure class="anatomy">
+        <div class="anatomy-row">
+          <span class="anatomy-phrase">
+            <span lang="grc">τὸ τί ἦν εἶναι</span>
+            <small>as written</small>
+          </span>
+          <span class="anatomy-cell"><b>4</b><small>Words</small></span>
+          <span class="anatomy-cell"><b>103</b><small>Count</small></span>
+          <span class="anatomy-cell"><b>8</b><small>Works</small></span>
+          <span class="anatomy-cell score"><b>1,611.9</b><small>Score</small></span>
+        </div>
+        <div class="anatomy-row">
+          <span class="anatomy-phrase">
+            <span lang="grc">ὁ τίς εἰμί εἰμί</span>
+            <small>dictionary words</small>
+          </span>
+          <span class="anatomy-cell"><b>4</b><small>Words</small></span>
+          <span class="anatomy-cell"><b>127</b><small>Count</small></span>
+          <span class="anatomy-cell"><b>10</b><small>Works</small></span>
+          <span class="anatomy-cell score"><b>629.8</b><small>Score</small></span>
+        </div>
+      </figure>
+      <p>
+        The dictionary row gathers ten different spellings into one:
+      </p>
+      <table class="variant-table">
+        <thead>
+          <tr><th>Occurrences</th><th>As it stands on the page</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>103</td><td lang="grc">τὸ τί ἦν εἶναι</td></tr>
+          <tr><td>13</td><td lang="grc">τοῦ τί ἦν εἶναι</td></tr>
+          <tr><td>3</td><td lang="grc">τῷ τί ἦν εἶναι</td></tr>
+          <tr><td>2</td><td lang="grc">τῶν τί ἦν εἶναι</td></tr>
+          <tr><td>1 each</td><td lang="grc">τοὺς τί ἦν εἶναι · τὰ τί ἦν εἶναι · τοῦ τί ἐστιν εἶναι · τοῦ τί ἐστιν εἴη · τοῦ τί ἐστιν ἔστω · τὸ τί ὂν ἔστω</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The first four are the phrase you were looking for, declined. The last
+        six are not: they merely happen to be built from the same dictionary
+        words, and the tool cannot tell the difference — <span lang="grc">εἰμί</span>
+        covers <span lang="grc">ἦν</span>, <span lang="grc">ἐστιν</span>,
+        <span lang="grc">εἴη</span> and <span lang="grc">ἔστω</span> alike. So the
+        dictionary reading finds more and asks more of you. Use it to discover
+        what you would otherwise miss, then read as written to see what you have.
+      </p>
+      <p class="guide-note">
+        Notice the score falls from 1,611.9 to 629.8 for what is, in the main,
+        the same expression. Nothing has weakened: <span lang="grc">ὁ</span> and
+        <span lang="grc">εἰμί</span> are among the commonest words in Greek, so a
+        phrase made of them is far less surprising than one made of
+        <span lang="grc">ἦν</span> and <span lang="grc">εἶναι</span> in that
+        exact shape. Distinctiveness measures surprise against the words a phrase
+        is made of, and the two readings are made of different words.
+      </p>
+
       <h3>Reading the list</h3>
       <ul>
         <li>
@@ -504,6 +604,102 @@ const corpus = { works: 41, tokens: '848,592', formPhrases: '173,884', lemmaPhra
   .guide [lang='grc'] { font-family: var(--font-greek); }
   /* A limit or caveat, set apart so it reads as part of the account rather
      than small print. */
+  /* An index row reproduced, so the numbers can be pointed at. */
+  .anatomy {
+    margin: 1rem 0;
+    padding: 0;
+  }
+  .anatomy-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 1.4rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg, transparent);
+  }
+  .anatomy-row + .anatomy-row {
+    margin-top: 0.45rem;
+  }
+  .anatomy-phrase {
+    flex: 1 1 14rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .anatomy-phrase > span {
+    font-family: var(--font-greek);
+    font-size: 1.05rem;
+  }
+  .anatomy-phrase small,
+  .anatomy-cell small {
+    font-family: var(--font-ui);
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+  }
+  .anatomy-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .anatomy-cell b {
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+  }
+  .anatomy-cell.score b {
+    color: var(--accent);
+  }
+  .anatomy-key {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.3rem 1rem;
+    margin: 0.8rem 0 0;
+    font-size: 0.86rem;
+  }
+  .anatomy-key dt {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    padding-top: 0.15rem;
+  }
+  .anatomy-key dd {
+    margin: 0;
+  }
+  .variant-table {
+    border-collapse: collapse;
+    margin: 0.8rem 0;
+    font-size: 0.9rem;
+  }
+  .variant-table th,
+  .variant-table td {
+    text-align: left;
+    padding: 0.3rem 1rem 0.3rem 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: baseline;
+  }
+  .variant-table th {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+  }
+  .variant-table td:first-child {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--text-mid);
+  }
+  .variant-table td[lang='grc'] {
+    font-family: var(--font-greek);
+  }
+
   .guide-note {
     border-left: 2px solid var(--border);
     padding: 0.15rem 0 0.15rem 0.8rem;
