@@ -1041,7 +1041,7 @@
   }
 </script>
 
-  {#snippet lemmaPicker(editor, groupLabel)}
+  {#snippet lemmaPicker(editor: ComboEditor, groupLabel: string)}
                   <label class="combo-text-field" for={`lemma-${editor.id}`}>
                     <span>Find a lemma</span>
                     <input
