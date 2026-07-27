@@ -218,3 +218,59 @@ def test_stage1_ostwald_matches_golden(tmp_path):
             "counts": counts,
         }
     ) == _golden("stage1_ostwald_parse_golden.json")
+
+
+class TestArchiveFurniture:
+    """The Internet Classics Archive wraps every page in navigation, and a long
+    work is served across several pages — so the chrome repeats mid-document.
+    It shipped inside the English of 14 works and showed in the reader.
+    """
+
+    def test_strips_the_navigation_block_however_the_page_wrapped_it(self):
+        from aristotle_pipeline.stage1_ross import _strip_furniture
+
+        # As the page actually serves it: the words of a phrase split across
+        # lines, which is why matching them as contiguous strings missed.
+        text = (
+            "Translated by J. I. Beare\n" + "x " * 150 + "\n"
+            "the end in view is the good.\n"
+            "THE END\n\n\n   \n\nTable of Contents\n\n\nHome\n\n\n"
+            "Browse and\nComment\n\n\nSearch\n\n\nBuy Books and\nCD-ROMs\n\n"
+            "Help\n\n\n© 1994-2009\n"
+        )
+        out = _strip_furniture(text)
+
+        for gone in ("THE END", "Table of Contents", "Browse and", "Buy Books",
+                     "CD-ROMs", "1994-2009"):
+            assert gone not in out, f"{gone!r} survived"
+        # and Aristotle's telos is untouched
+        assert "the end in view is the good." in out
+
+    def test_keeps_the_text_after_a_mid_document_page_break(self):
+        """Cutting the document at the first nav block threw away the second
+        half of De Sensu — the furniture is noise to excise, not an end marker.
+        """
+        from aristotle_pipeline.stage1_ross import _strip_furniture
+
+        text = (
+            "Translated by J. I. Beare\n" + "first half " * 60 + "\n"
+            "Table of Contents\nHome\nBrowse and\nComment\nSearch\n"
+            "Translated by J. I. Beare\n" + "second half " * 60 + "\n"
+        )
+        out = _strip_furniture(text)
+
+        assert "first half" in out
+        assert "second half" in out, "the page break truncated the work"
+        assert "Table of Contents" not in out
+
+    def test_leaves_a_circled_letter_used_as_a_geometry_label(self):
+        """The Mechanica uses © to label a point. Matching the rest of the line
+        after any © removed 2,845 words of Aristotle.
+        """
+        from aristotle_pipeline.stage1_ross import _strip_furniture
+
+        text = ("Translated by E. S. Forster\n" + "x " * 150 + "\n"
+                "from © let OQ be drawn parallel to AB, and ZY perpendicular.\n")
+        out = _strip_furniture(text)
+
+        assert "let OQ be drawn parallel to AB" in out
