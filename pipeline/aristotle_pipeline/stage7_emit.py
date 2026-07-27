@@ -46,13 +46,23 @@ def _normalized_gloss(value: str) -> str:
 def merge_short_def(
     gloss: str, lemma: str, candidate_keys: list[str], short_defs: dict[str, str]
 ) -> str:
-    """Conservatively extend a truncated Morpheus gloss from an LSJ definition."""
+    """Conservatively extend a truncated Morpheus gloss from an LSJ definition.
+
+    A lemma usually maps to numbered homonyms rather than to itself (e)/xw ->
+    e)/xw1, e)/xw2), and nothing in a Morpheus reading says which entry it
+    belongs to. So extend only where the choice is forced: either the lemma is
+    itself one of the LSJ keys, or every key that extends the gloss extends it
+    the same way. Where the homonyms disagree — u(podeh/s1 "somewhat deficient,
+    inferior" against u(podeh/s2 "somewhat fearful", both extending "somewhat"
+    — keep the gloss Morpheus shipped rather than pick one.
+    """
     normalized_gloss = _normalized_gloss(gloss)
     if not normalized_gloss:
         return gloss
 
-    candidates = sorted(candidate_keys, key=lambda key: key != lemma)
-    for key in candidates:
+    keys = [lemma] if lemma in candidate_keys else candidate_keys
+    extensions = set()
+    for key in keys:
         derived = short_defs.get(key)
         if not derived:
             continue
@@ -61,7 +71,9 @@ def merge_short_def(
             len(normalized_derived) > len(normalized_gloss)
             and re.match(rf"^{re.escape(normalized_gloss)}\b", normalized_derived)
         ):
-            return derived
+            extensions.add(derived)
+    if len(extensions) == 1:
+        return extensions.pop()
     return gloss
 
 
@@ -371,9 +383,15 @@ def emit_analyses(out_dir: Path) -> dict:
     key_map = _load("stage4/key_map.json")
     lemma_map = _load("stage5/lemma_map.json")
     # Absent when stage7 is re-run alone over a build predating short defs;
-    # the glosses then stay as Morpheus shipped them.
+    # the glosses then stay as Morpheus shipped them. Say so — a silent
+    # fallback ships "make" for poie/w and looks like a successful build.
     short_defs_path = BUILD_DIR / "stage5" / "short_defs.json"
-    short_defs = _load("stage5/short_defs.json") if short_defs_path.exists() else {}
+    if short_defs_path.exists():
+        short_defs = _load("stage5/short_defs.json")
+    else:
+        short_defs = {}
+        print("  stage7 WARNING: no stage5/short_defs.json — shipping raw "
+              "Morpheus glosses; re-run stage5 to repair them")
     merged: dict[str, list[dict]] = {}
     dropped = 0
     for token_key, stored_key in key_map.items():
