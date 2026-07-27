@@ -199,6 +199,47 @@ const grammarOffsets = {
 };
 const grammarColumn = Uint16Array.from([0, 2, 3, 4]);
 
+describe('lemma search resolves an inflected word to its headword', () => {
+  beforeEach(() => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      const path = String(url);
+      if (path.endsWith('/meta.json')) return json(meta);
+      if (path.endsWith('/greek_lemma.json') || path.endsWith('/greek_form.json')) return json(greekIndex);
+      if (path.endsWith('/english.json')) return json(englishIndex);
+      // fold(surface) -> the headwords it can belong to
+      if (path.endsWith('/lemma-map/l.json')) return json({ logou: ['logos'], logos: ['logos'] });
+      if (path.endsWith('/lemma-map/y.json')) return json({ yuxhs: ['yuxh'] });
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('finds the whole word from a form the reader met on the page', async () => {
+    // logou is not a key in the lemma index; logos is. Before the map was
+    // consulted this returned nothing for a word occurring twice.
+    const { results } = await search('logou', '', 'all', 'all', 'and', ['TInflected'], 'lemma');
+    expect(results.map((r) => r.meta.id)).toEqual(['s1', 's2']);
+  });
+
+  it('still finds it when the reader types the dictionary form', async () => {
+    const { results } = await search('logos', '', 'all', 'all', 'and', ['TDictForm'], 'lemma');
+    expect(results.map((r) => r.meta.id)).toEqual(['s1', 's2']);
+  });
+
+  it('leaves a wildcard alone — it is a pattern over keys, not a word to resolve', async () => {
+    const { results } = await search('l*s', '', 'all', 'all', 'and', ['TWild'], 'lemma');
+    expect(results.map((r) => r.meta.id)).toEqual(['s1', 's2']);
+  });
+
+  it('does not resolve in form mode, where the typed spelling is the query', async () => {
+    const { results } = await search('logou', '', 'all', 'all', 'and', ['TFormMode'], 'form');
+    expect(results).toEqual([]);
+  });
+});
+
 describe('searchGrammar', () => {
   beforeEach(() => {
     vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {

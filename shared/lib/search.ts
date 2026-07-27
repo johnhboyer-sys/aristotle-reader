@@ -344,20 +344,20 @@ function termPositions(idx: GrkIndex, term: string): Map<number, number[]> {
 // For each segment in `hits`, the token positions to highlight in a KWIC snippet.
 function greekPositions(
   idx: GrkIndex,
-  terms: string[],
+  terms: string[][],
   mode: SearchMode,
   hits: Set<number>,
 ): Map<number, number[]> {
   const out = new Map<number, number[]>();
   if (mode === 'phrase' && terms.length > 1) {
-    for (const [si, starts] of phraseStarts(idx, terms)) {
+    for (const [si, starts] of phraseStarts(idx, terms.map(alts => alts[0]))) {
       if (!hits.has(si)) continue;
       const ps: number[] = [];
       for (const s of starts) for (let j = 0; j < terms.length; j++) ps.push(s + j);
       out.set(si, ps);
     }
   } else {
-    for (const t of terms) {
+    for (const t of terms.flat()) {
       for (const [si, ps] of termPositions(idx, t)) {
         if (!hits.has(si)) continue;
         const arr = out.get(si);
@@ -373,7 +373,7 @@ function greekPositions(
 // Search one work, returning hits tagged with that work.
 async function searchWork(
   work: string,
-  grkTerms: string[],
+  grkTerms: string[][],
   engTerms: string[],
   grkMode: SearchMode,
   engMode: SearchMode,
@@ -398,13 +398,21 @@ async function searchWork(
   let engHits: Set<number> | null = null;
 
   if (grkTerms.length > 0 && grkIdx) {
-    const postings = grkTerms.map(t => grkPosting(grkIdx, t));
+    // Each term carries the keys it may match — one for a form search, the
+    // headwords a typed inflection belongs to for a lemma one — so a term is
+    // satisfied by ANY of its keys before the modes combine the terms.
+    const postings = grkTerms.map(alts =>
+      alts.map(t => grkPosting(grkIdx, t)).reduce(union));
     if (grkMode === 'any') {
       grkHits = postings.reduce(union);
     } else {
       grkHits = postings.reduce(intersect);
       if (grkMode === 'phrase' && grkTerms.length > 1) {
-        grkHits = new Set(phraseStarts(grkIdx, grkTerms).keys());
+        // A phrase needs its words in order, which resolving each word to
+        // several headwords cannot express. Match the first key of each term —
+        // for a form search that is the typed word, and for a lemma search a
+        // typed phrase is what "find this phrase in any inflection" is for.
+        grkHits = new Set(phraseStarts(grkIdx, grkTerms.map(alts => alts[0])).keys());
       }
     }
   }
@@ -1104,6 +1112,36 @@ export async function searchCombo(
   return { results: perWork.flat(), failedWorks, approximateChapters };
 }
 
+/** The headwords each typed word can belong to, for a lemma search.
+ *
+ * A lemma index is keyed on dictionary forms, so matching the typed word
+ * against it directly only works when the reader already typed the dictionary
+ * form — the one form the text in front of them is least likely to show. Typing
+ * lo/gou found nothing while lo/gos found 2,269 of the same word. The corpus
+ * lemma map turns the inflection into its headwords, so the reader can type
+ * what stands on the page.
+ *
+ * The typed fold is kept alongside the headwords: a reader who does know the
+ * dictionary form must never come off worse, and a word absent from the map
+ * still searches as itself. Wildcards are left alone — they are patterns over
+ * index keys, not surface words to resolve.
+ */
+async function resolveHeadwords(terms: string[]): Promise<string[][]> {
+  return Promise.all(terms.map(async term => {
+    if (/[*?]/.test(term)) return [term];
+    const fold = greekFold(term);
+    if (!fold) return [term];
+    const letter = /^[a-z]/.test(fold) ? fold[0] : '_';
+    try {
+      const shard = await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
+      const heads = shard[fold];
+      return heads?.length ? [...new Set([fold, ...heads])] : [term];
+    } catch {
+      return [term];   // without the map, behave exactly as before
+    }
+  }));
+}
+
 // Unified search across one or more works. `matchMode` chooses the Greek index
 // (lemma = all forms of a headword, form = the exact inflected token).
 export async function search(
@@ -1118,7 +1156,10 @@ export async function search(
   if (!grkQuery.trim() && !engQuery.trim()) return { results: [], failedWorks: [] };
   if (!works.length) return { results: [], failedWorks: [] };
 
-  const grkTerms = grkQuery.trim().split(/\s+/).filter(Boolean);
+  const typedGrk = grkQuery.trim().split(/\s+/).filter(Boolean);
+  const grkTerms = matchMode === 'lemma'
+    ? await resolveHeadwords(typedGrk)
+    : typedGrk.map(t => [t]);
   const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
 
   // Bound how many works load at once, and let a single work's failed index

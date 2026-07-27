@@ -92,8 +92,10 @@
 
   // Lemma mode matches dictionary forms, so a phrase typed as it stands on the
   // page (τὸ τί ἦν εἶναι) finds nothing — τό is not a headword, ὁ is. That reads
-  // as "no such phrase" when it is really "wrong kind of input", and it is
-  // exactly the case widening answers.
+  // as "no such phrase" when it is really "not in one passage". A typed
+  // inflection now resolves to its headword, so this no longer fires for the
+  // reader who simply did not know the dictionary form — what is left is a
+  // genuine miss, and widening is what answers it.
   $: lemmaDeadEnd = searched && !error && totalInstances === 0 && !variantsShown
     && matchMode === 'lemma' && canWiden && !engQuery.trim();
 
@@ -1153,10 +1155,10 @@
           <label><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} /> {opt.l}</label>
         {/each}
       </fieldset>
-      <fieldset class="mode-group" title="Lemma matches every inflected form of a headword; Exact form matches the word only as written">
-        <legend>Form</legend>
-        <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Lemma</label>
-        <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Exact form</label>
+      <fieldset class="mode-group" title="Any form: type the word as it stands on the page and every form of it is found. Only as I typed it: the spelling you gave, and no other.">
+        <legend>Match</legend>
+        <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Any form of this word</label>
+        <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Only as I typed it</label>
       </fieldset>
       <fieldset class="mode-group" title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens.">
         <legend>Accents</legend>
@@ -1559,9 +1561,9 @@
     </div>
     {#if lemmaDeadEnd}
       <p class="search-approximate">
-        Lemma search matches dictionary forms, so a phrase typed as it stands on
-        the page will not match — τό is not a headword, ὁ is. Searching for the
-        phrase in any inflection takes the words as you typed them.
+        These words occur, but not together in one passage. Searching for the
+        phrase in any inflection looks for them in the order you typed them,
+        which is usually what an empty result means here.
       </p>
     {/if}
     {#if variantNote}
