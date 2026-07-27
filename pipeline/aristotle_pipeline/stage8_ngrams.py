@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -53,7 +54,15 @@ from .config import BUILD_DIR
 
 NS = (2, 3, 4, 5)
 MIN_COUNT = 2          # corpus-wide; the whole point of a cross-work stage
-STREAMS = ("form", "lemma")
+GREEK_STREAMS = ("form", "lemma")
+# The translations are indexed too. Everything past ingestion is stream-agnostic
+# — counting, scoring, sharding and the occurrence files do not care which
+# language they hold — so English joins as a third stream rather than a second
+# system. What differs is where the tokens come from (the emitted books, not
+# stage 6's fold streams) and what bounds a phrase (a segment, not a book).
+ENGLISH_STREAM = "english"
+STREAMS = (*GREEK_STREAMS, ENGLISH_STREAM)
+_ENGLISH_WORD = re.compile(r"[a-z']+")
 
 
 def _shard_letter(phrase: str) -> str:
@@ -97,6 +106,39 @@ def _phrases(stream: list, books: list[int], total: int):
                     yield " ".join(reading), i
 
 
+def _english_stream(work: str) -> tuple[list[list[str]], list[int], list[dict]]:
+    """One work's English as a token stream, with the segment bounds it obeys.
+
+    Returns (stream, bounds, segments). `stream` is one list per position so it
+    can go through _phrases unchanged — English carries a single reading, where
+    the Greek lemma stream may carry several. `bounds` are the offsets a phrase
+    may not cross: a segment, not a book, because the translation is aligned and
+    stored one block per segment and a phrase running from the end of one into
+    the start of the next would join two passages that are not adjacent prose.
+    `segments` is what turns an offset back into a citation.
+    """
+    stream: list[list[str]] = []
+    bounds: list[int] = []
+    segments: list[dict] = []
+    work_dir = BUILD_DIR / "dist" / work
+    for book_path in sorted(work_dir.glob("book-*.json")):
+        book = json.loads(book_path.read_text(encoding="utf-8"))
+        for seg in book.get("segments", []):
+            text = (seg.get("english") or {}).get("text") or ""
+            words = _ENGLISH_WORD.findall(text.lower())
+            if not words:
+                continue
+            bounds.append(len(stream))
+            segments.append({
+                "book": book.get("book"),
+                "column": seg.get("column"),
+                "base": len(stream),
+                "words": len(words),
+            })
+            stream.extend([w] for w in words)
+    return stream, bounds, segments
+
+
 def run() -> Path:
     source = BUILD_DIR / "ngrams"
     files = sorted(source.glob("*.json"))
@@ -119,6 +161,9 @@ def run() -> Path:
     unigrams: dict[str, Counter] = {s: Counter() for s in STREAMS}
     tokens: dict[str, int] = {s: 0 for s in STREAMS}
     works: list[str] = []
+    # offset -> citation for the English stream, the counterpart of the Greek
+    # offsets.json the reader already fetches.
+    english_segments: dict[str, list[dict]] = {}
 
     for path in files:
         doc = json.loads(path.read_text(encoding="utf-8"))
@@ -135,7 +180,7 @@ def run() -> Path:
             if surface and lemmas:
                 surface_lemmas[surface].update(lemmas)
 
-        for stream_name in STREAMS:
+        for stream_name in GREEK_STREAMS:
             # One list of options per position, so both streams n-gram the
             # same way: the form stream simply never has more than one.
             raw = doc[stream_name]
@@ -156,6 +201,21 @@ def run() -> Path:
                 offsets[stream_name][gram][work].append(at)
                 if any(x in chapters for x in range(at + 1, at + gram.count(" ") + 1)):
                     straddles[stream_name][gram] += 1
+
+        # English, from the emitted books rather than stage 6's fold streams.
+        eng_stream, eng_bounds, eng_segments = _english_stream(work)
+        if eng_stream:
+            english_segments[work] = eng_segments
+            for options in eng_stream:
+                unigrams[ENGLISH_STREAM][options[0]] += 1
+                tokens[ENGLISH_STREAM] += 1
+            # Segment bounds stand in for book bounds: _phrases never lets a
+            # window cross one. Chapter straddling is not recorded — the English
+            # is stored per segment, so a phrase cannot straddle anything the
+            # reader would care about.
+            for gram, at in _phrases(eng_stream, eng_bounds, len(eng_stream)):
+                counts[ENGLISH_STREAM][gram] += 1
+                offsets[ENGLISH_STREAM][gram][work].append(at)
 
     summary: dict = {"works": len(works), "streams": {}}
     out_root = BUILD_DIR / "dist" / "ngrams"
@@ -212,6 +272,14 @@ def run() -> Path:
             "shards": len(shards),
             "by_n": {str(n): by_n[n] for n in NS},
         }
+
+    # What an English occurrence offset means. One corpus-wide file rather than
+    # one per work: it is small, and a reader browsing English phrases crosses
+    # works constantly.
+    (out_root / "english-segments.json").write_text(
+        json.dumps(english_segments, ensure_ascii=False), encoding="utf-8"
+    )
+    summary["english_works"] = len(english_segments)
 
     # Sharded by fold-initial letter, like every other index here.
     map_dir = BUILD_DIR / "dist" / "lemma-map"

@@ -348,7 +348,29 @@ export function fetchLemmaGlosses(slug: string): Promise<string[]> {
 // [length, corpus count, distinctiveness score, works, occurrences straddling a
 // chapter?]. The score orders the list; it never removes anything from it.
 export type NgramRow = [number, number, number, number, number?];
-export type NgramStream = 'form' | 'lemma';
+// 'english' indexes the translations. Same shape, same shards, different
+// language — and its occurrences resolve through english-segments.json rather
+// than a work's offsets.json, because the English is aligned per segment.
+export type NgramStream = 'form' | 'lemma' | 'english';
+
+export interface EnglishSegment {
+  book: number;
+  column: string;
+  base: number;
+  words: number;
+}
+
+let _englishSegments: Promise<Record<string, EnglishSegment[]>> | null = null;
+export function fetchEnglishSegments(): Promise<Record<string, EnglishSegment[]>> {
+  if (_englishSegments) return _englishSegments;
+  const p = fetch(`${ROOT()}/ngrams/english-segments.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ngrams/english-segments.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_englishSegments === p) _englishSegments = null; });
+  _englishSegments = p;
+  return p;
+}
 
 const _ngramCache = new Map<string, Promise<Record<string, NgramRow>>>();
 export function fetchNgramShard(

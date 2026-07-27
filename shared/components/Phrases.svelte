@@ -2,13 +2,14 @@
   import { onMount } from 'svelte';
   import {
     decodeOffsets,
+    fetchEnglishSegments,
     fetchNgramOccurrences,
     fetchNgramShard,
     type NgramRow,
     type NgramStream,
   } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
-  import { offsetRef, type Offsets } from '../lib/search';
+  import { greekFold, offsetRef, type Offsets } from '../lib/search';
   import { WORKS, getWork, workPath } from '../lib/works';
 
   type SortMode = 'score' | 'frequency' | 'length' | 'alphabetical';
@@ -20,7 +21,9 @@
 
   interface Citation {
     column: string;
-    line: number;
+    // null for English: the translation is aligned per segment, so the
+    // citation is the column and there is no line to name.
+    line: number | null;
     book: number;
     href: string;
   }
@@ -40,6 +43,21 @@
   }
 
   const DEFAULT_LETTER = 'k';
+  // The three the guide works through, so the page and the explainer teach the
+  // same phrases rather than each inventing its own.
+  const EXAMPLES = [
+    { beta: 'to ti hn einai', greek: '\u03c4\u1f78 \u03c4\u03af \u1f26\u03bd \u03b5\u1f36\u03bd\u03b1\u03b9', gloss: 'the essence — 103 times' },
+    { beta: 'ws epi to polu', greek: '\u1f61\u03c2 \u1f10\u03c0\u1f76 \u03c4\u1f78 \u03c0\u03bf\u03bb\u03cd', gloss: 'for the most part — 204 times' },
+    { beta: 'kata sumbebhkos', greek: '\u03ba\u03b1\u03c4\u1f70 \u03c3\u03c5\u03bc\u03b2\u03b5\u03b2\u03b7\u03ba\u03cc\u03c2', gloss: 'accidentally — 330 times' },
+  ];
+  // Chosen the same way: real rows, and each standing in many works so it is
+  // Aristotle recurring rather than one translator's habit.
+  const ENGLISH_EXAMPLES = [
+    { beta: 'as a general rule', greek: 'as a general rule', gloss: '80 times, 9 works' },
+    { beta: 'equal to two right angles', greek: 'equal to two right angles', gloss: '40 times, 12 works' },
+    { beta: 'it makes no difference whether', greek: 'it makes no difference whether', gloss: '38 times, 16 works' },
+  ];
+  const BROWSE_LETTERS = 'abcdefghiklmnoprstuwxyz'.split('');
   const PAGE_SIZE = 50;
   const CITATION_CAP = 40;
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -75,7 +93,20 @@
 
   const offsetsCache = new Map<string, Promise<Offsets>>();
 
-  $: normalizedPrefix = prefix.trim().toLowerCase().replace(/\s+/g, ' ');
+  // The index is keyed on accent-folded Beta Code, but nobody should have to
+  // know that: fold whatever is typed, Greek or Latin. greekFold drops every
+  // character it does not recognise — including the spaces between a phrase's
+  // words — so it has to run per word and the words be rejoined.
+  $: isEnglish = stream === 'english';
+  $: normalizedPrefix = isEnglish
+    ? prefix.trim().toLowerCase().replace(/[^a-z' ]+/g, '').replace(/\s+/g, ' ')
+    : prefix
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .map(greekFold)
+      .filter(Boolean)
+      .join(' ');
   $: letter = /^[a-z]/.test(normalizedPrefix)
     ? normalizedPrefix[0]
     : normalizedPrefix
@@ -284,19 +315,46 @@
         citations: [],
       }));
 
+      const englishSegments = isEnglish ? await fetchEnglishSegments() : null;
+
       await pool(entries, 6, async ([work, deltas], index) => {
         try {
-          const offsets = await fetchWorkOffsets(work);
-          const citations = decodeOffsets(deltas)
-            .map((global) => offsetRef(offsets, global))
-            .filter((ref): ref is NonNullable<typeof ref> => ref !== null)
-            .slice(0, CITATION_CAP)
-            .map((ref) => ({
-              column: ref.column,
-              line: ref.line,
-              book: ref.book,
-              href: `${BASE_URL}${workPath(work, ref.book)}?loc=${ref.column}:${ref.line}`,
-            }));
+          // The English is aligned one block per segment, so an English offset
+          // resolves to a column and no further. A Greek offset resolves to the
+          // line, because the Greek is indexed per token.
+          let citations: Citation[];
+          if (englishSegments) {
+            const segs = englishSegments[work] ?? [];
+            citations = decodeOffsets(deltas)
+              .map((global) => {
+                let found: (typeof segs)[number] | null = null;
+                for (const seg of segs) {
+                  if (seg.base > global) break;
+                  found = seg;
+                }
+                return found;
+              })
+              .filter((seg): seg is (typeof segs)[number] => seg !== null)
+              .slice(0, CITATION_CAP)
+              .map((seg) => ({
+                column: seg.column,
+                line: null,
+                book: seg.book,
+                href: `${BASE_URL}${workPath(work, seg.book)}?loc=${seg.column}`,
+              }));
+          } else {
+            const offsets = await fetchWorkOffsets(work);
+            citations = decodeOffsets(deltas)
+              .map((global) => offsetRef(offsets, global))
+              .filter((ref): ref is NonNullable<typeof ref> => ref !== null)
+              .slice(0, CITATION_CAP)
+              .map((ref) => ({
+                column: ref.column,
+                line: ref.line,
+                book: ref.book,
+                href: `${BASE_URL}${workPath(work, ref.book)}?loc=${ref.column}:${ref.line}`,
+              }));
+          }
           groups[index] = { ...groups[index], citations };
         } catch {
           groups[index] = {
@@ -336,7 +394,7 @@
     <h2 id="phrase-filters">Filter the index</h2>
 
     <fieldset class="stream-control">
-      <legend>Stream</legend>
+      <legend>Count phrases by</legend>
       <label>
         <input
           type="radio"
@@ -345,7 +403,7 @@
           bind:group={stream}
           on:change={() => page = 0}
         />
-        Surface form
+        Word as written
       </label>
       <label>
         <input
@@ -355,7 +413,17 @@
           bind:group={stream}
           on:change={() => page = 0}
         />
-        Dictionary form (lemma)
+        Dictionary word (all its forms)
+      </label>
+      <label>
+        <input
+          type="radio"
+          name="phrase-stream"
+          value="english"
+          bind:group={stream}
+          on:change={() => page = 0}
+        />
+        English translation
       </label>
     </fieldset>
 
@@ -373,9 +441,13 @@
         spellcheck="false"
       />
       <small>
-        Type a lowercase fold key. {normalizedPrefix
-          ? `The ${letter.toUpperCase()} shard is loaded and prefix-filtered.`
-          : `The whole ${DEFAULT_LETTER.toUpperCase()} shard is loaded by default.`}
+        {#if isEnglish}
+          Type the English words as they stand in the translation.
+        {:else}
+          Type Greek or plain letters — <span lang="grc">τὸ τί</span> and
+          <code>to ti</code> both work. Accents are ignored.
+        {/if}
+        {#if normalizedPrefix}Matching <code>{normalizedPrefix}</code>.{/if}
       </small>
     </label>
 
@@ -458,10 +530,38 @@
           </p>
         {/if}
       </div>
-      <span class="loaded-shard">{stream === 'form' ? 'Surface' : 'Lemma'} · {letter.toUpperCase()}</span>
+      <span class="loaded-shard">{stream === 'form' ? 'Surface' : stream === 'lemma' ? 'Lemma' : 'English'} · {letter.toUpperCase()}</span>
     </div>
 
-    {#if shardLoading}
+    {#if !normalizedPrefix}
+      <div class="phrase-start">
+        <p>
+          Every run of two to five words that Aristotle uses more than once,
+          counted. Start with one of these, or type a phrase above.
+          {#if isEnglish}
+            These are the translations, so a phrase standing in one work alone is
+            that translator's habit; one standing in many is Aristotle recurring.
+            The <em>Works</em> column tells them apart.
+          {/if}
+        </p>
+        <ul class="phrase-examples">
+          {#each (isEnglish ? ENGLISH_EXAMPLES : EXAMPLES) as ex}
+            <li>
+              <button type="button" class="phrase-example" on:click={() => { prefix = ex.beta; page = 0; }}>
+                <span lang={isEnglish ? 'en' : 'grc'}>{ex.greek}</span>
+                <small>{ex.gloss}</small>
+              </button>
+            </li>
+          {/each}
+        </ul>
+        <p class="phrase-start-browse">
+          Or browse phrases beginning with a letter:
+          {#each BROWSE_LETTERS as l}
+            <button type="button" class="letter-button" on:click={() => { prefix = l; page = 0; }}>{l}</button>
+          {/each}
+        </p>
+      </div>
+    {:else if shardLoading}
       <p class="status" aria-live="polite">Loading the {letter.toUpperCase()} phrase shard…</p>
     {:else if shardError}
       <div class="status error" role="alert">
@@ -505,8 +605,12 @@
               on:click={() => togglePhrase(item)}
             >
               <span class="phrase-name">
-                <span class="phrase-greek" lang="grc">{betaToGreek(item.key)}</span>
-                <span class="phrase-key">{item.key}</span>
+                {#if isEnglish}
+                  <span class="phrase-english">{item.key}</span>
+                {:else}
+                  <span class="phrase-greek" lang="grc">{betaToGreek(item.key)}</span>
+                  <span class="phrase-key">{item.key}</span>
+                {/if}
               </span>
               <span class="metric" data-label="Words">{item.row[0]}</span>
               <span class="metric" data-label="Count">{countFormat.format(item.row[1])}</span>
@@ -548,7 +652,7 @@
                           {#each group.citations as citation}
                             <li>
                               <a href={citation.href}>
-                                {citation.column}{citation.line}
+                                {citation.column}{citation.line ?? ''}
                               </a>
                             </li>
                           {/each}
@@ -862,6 +966,64 @@
     margin-left: 0.5rem;
     padding: 0.15rem 0.45rem;
     font-size: 0.78rem;
+  }
+
+  .phrase-start {
+    padding: 0.4rem 0.7rem 0.9rem;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    max-width: 62ch;
+  }
+  .phrase-examples {
+    list-style: none;
+    margin: 0.7rem 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .phrase-example {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    text-align: left;
+    font: inherit;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--col-bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .phrase-example:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .phrase-example span {
+    font-family: var(--font-greek);
+    font-size: 1rem;
+  }
+  .phrase-example small {
+    color: var(--text-mid);
+    font-size: 0.72rem;
+  }
+  .phrase-start-browse {
+    margin-top: 0.9rem;
+    line-height: 2;
+  }
+  .letter-button {
+    font: inherit;
+    font-size: 0.8rem;
+    margin-left: 0.25rem;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--col-bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .letter-button:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
   }
 
   .column-head,
