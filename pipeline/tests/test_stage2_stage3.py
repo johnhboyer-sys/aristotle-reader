@@ -146,3 +146,20 @@ def test_deterministic_stage2_stage3_smoke_matches_golden_fixture():
         (FIXTURES / "deterministic_stage2_stage3_golden.json").read_text(encoding="utf-8")
     )
     assert smoke == expected
+
+
+def test_a_lettered_line_is_not_a_line_gap():
+    """Bekker's 5a hangs off line 5 and keeps its number, so the pair 5 -> 5a
+    is not a gap. Reading the numbers alone made every lettered line — Physics
+    244b 5a-5d, DA 416b25a-c, Mete 346a9a-d — fail validation."""
+    spine = _tiny_spine()
+    spine["segments"][0]["lines"] = [
+        {"n": 1, "text": "Ἀγαθός ἐστι."},
+        {"n": 1, "sub": "a", "text": "καὶ τὸ μέσον"},
+        {"n": 1, "sub": "b", "text": "τῆς ἀρετῆς"},
+        {"n": 2, "text": "τῷ λόγος"},
+    ]
+
+    report = validate(TinyManifest(), spine, _tiny_english(), _tiny_alignment())
+
+    assert report["checks"]["line_gaps"]["unexpected"] == []

@@ -77,7 +77,13 @@ _COMPOUND_N = re.compile(r"^\d+(?:\s*,\s*\d+)+$")
 # Bekker numbers a few lines 5a, 5b … where an edition inserts text after a
 # numbered line — Physics VII 244b runs 1-5, 5a-5d, 6-15. These are ordinary
 # lines of text, not headings.
-_LETTERED_N = re.compile(r"^(\d+)([a-z])$")
+#
+# Only a-e. The suffix letter is not always a Bekker sub-line: TLG also numbers
+# a heading 23t (title) and 17n (note), and both carry a <label type="head">
+# whose text _line_text drops, so admitting them files an EMPTY line into the
+# spine and repeats the line number it hangs off. Across the corpus's exports
+# the text sub-lines run a-d (52 of them), against 98 t and 37 n headings.
+_LETTERED_N = re.compile(r"^(\d+)([a-e])$")
 
 
 def _line_no(n: str | None) -> tuple[int, str | None] | None:

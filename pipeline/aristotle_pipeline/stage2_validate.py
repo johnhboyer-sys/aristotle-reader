@@ -400,7 +400,14 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
     gaps = []
     lines_by_col: dict[str, list[int]] = defaultdict(list)
     for seg in segments:
-        lines_by_col[seg["column"]].extend(l["n"] for l in seg["lines"])
+        nums = lines_by_col[seg["column"]]
+        for line in seg["lines"]:
+            # A lettered line (Bekker's 244b 5a-5d) hangs off the line it
+            # follows and keeps its number, so it never advances the count —
+            # reading it as one would make 5 -> 5a look like a gap.
+            if line.get("sub") and nums and nums[-1] == line["n"]:
+                continue
+            nums.append(line["n"])
     for col, nums in lines_by_col.items():
         for a, b in zip(nums, nums[1:]):
             if b != a + 1:

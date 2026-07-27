@@ -243,6 +243,9 @@ def _validate_books(
     expected_gaps = expected_gaps or set()
     segments_by_book_col: dict[tuple[int, str], dict[str, Any]] = {}
     anchors: set[tuple[int, str, int]] = set()
+    # Every (anchor, lettered suffix) actually emitted — what the duplicate
+    # check counts, since `anchors` deliberately forgets the suffix.
+    placed: set[tuple[tuple[int, str, int], str | None]] = set()
     token_keys: set[str] = set()
     seen_segment_ids: set[str] = set()
     previous_segment_key: tuple[int, str, int] | None = None
@@ -298,9 +301,19 @@ def _validate_books(
                 if bekker_native and prior_line is not None and n < prior_line and not declared_gap:
                     problems.append((manifest.work_id, name, f"{seg_id}: Greek Bekker lines are out of order at {column}{n}"))
                 previous_line = n
+                # A lettered line keeps the number of the line it follows
+                # (Physics 244b runs 1-5, 5a-5d, 6-15), so the suffix tells the
+                # two apart — as it already does in stage3's refs and stage7's
+                # token keys. Without it each of Bekker's 48 lettered lines
+                # reads as a duplicate of the line above it. It stays out of
+                # `anchors`, which a citation resolves against by line number
+                # alone: 244b5 must still land whether or not 5a follows it.
+                sub = line.get("sub")
                 anchor = (book["n"], column, n)
-                if bekker_native and anchor in anchors and not declared_gap:
-                    problems.append((manifest.work_id, name, f"duplicate Bekker anchor {column}{n}"))
+                if bekker_native and (anchor, sub) in placed and not declared_gap:
+                    problems.append((manifest.work_id, name,
+                                     f"duplicate Bekker anchor {column}{n}{sub or ''}"))
+                placed.add((anchor, sub))
                 anchors.add(anchor)
                 line_numbers.add(n)
                 _collect_token_keys(manifest, name, seg_id or f"segments[{i}]", line, token_keys, problems)

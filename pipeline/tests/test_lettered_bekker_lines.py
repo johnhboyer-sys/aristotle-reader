@@ -90,3 +90,34 @@ def test_tokenizer_gives_each_lettered_line_its_own_tokens():
     assert got[(6, None)] == ["eirhmenwn"]
     # three distinct lines survived, none overwritten
     assert len(got) == 3
+
+
+HEADING_TEI = """<TEI><text><body>
+<div type="Bekker-page" n="244b">
+<l n="4">hapasi gar</l>
+<l n="9t"><label type="head" rend="indent(12)">B.</label> </l>
+<l n="9">to prwton</l>
+</div>
+</body></text></TEI>"""
+
+
+def test_line_no_admits_lettered_lines_but_not_heading_markers():
+    """The suffix letter does not by itself mean a Bekker sub-line. TLG numbers
+    a title 23t and a note 17n, and both hold a <label type="head"> whose text
+    _line_text drops — so admitting them files an empty line into the spine
+    under the number of the line they precede."""
+    assert stage1_greek._line_no("5a") == (5, "a")
+    assert stage1_greek._line_no("5d") == (5, "d")
+    assert stage1_greek._line_no("23t") is None
+    assert stage1_greek._line_no("17n") is None
+
+
+def test_a_heading_marker_puts_no_empty_line_in_the_spine(tmp_path):
+    p = tmp_path / "heading.xml"
+    p.write_text(HEADING_TEI, encoding="utf-8")
+
+    spine = stage1_greek.parse_spine(p, Manifest())
+
+    got = [(l["n"], l.get("sub"), l["text"])
+           for seg in spine["segments"] for l in seg["lines"]]
+    assert got == [(4, None, "hapasi gar"), (9, None, "to prwton")]

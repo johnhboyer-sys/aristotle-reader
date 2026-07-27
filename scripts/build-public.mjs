@@ -59,6 +59,16 @@ for (const work of works) {
   });
 }
 
+// Stage 8 is the one corpus-wide stage: it merges every work's token stream
+// from build/ngrams into the shared phrase browser. It takes no --work and so
+// is not part of 'all', and its output lives under build/dist, which this
+// script just cleaned — without this call a full rebuild emits a site whose
+// /phrases pages have no data behind them.
+console.log('\nBuilding the corpus-wide phrase index');
+run('uv', ['run', 'python', '-m', 'aristotle_pipeline', 'stage8'], {
+  cwd: join(ROOT, 'pipeline'),
+});
+
 const dataDir = join(ROOT, 'build', 'dist');
 const dataProblem = dataDirProblem(dataDir);
 if (dataProblem) {
