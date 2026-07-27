@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Summa Contra Mundum</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="cabinet" aria-label="Summa Contra Mundum game">
+        <div class="marquee">
+          <div>
+            <p class="kicker">16-bit philosophical action</p>
+            <h1>Summa Contra Mundum</h1>
+          </div>
+          <div class="status-strip" aria-live="polite">
+            <span id="heroName">Aristotle</span>
+            <span id="stageName">The Lyceum Road</span>
+          </div>
+        </div>
+
+        <div class="screen-wrap">
+          <canvas id="game" width="1280" height="720" aria-label="Playable side-scrolling action game"></canvas>
+          <div class="scanlines" aria-hidden="true"></div>
+          <button
+            id="showKeys"
+            class="keys-button"
+            type="button"
+            aria-expanded="false"
+            aria-controls="keysGuide"
+          >
+            ? Keys
+          </button>
+          <section id="keysGuide" class="keys-guide" role="dialog" aria-label="Game controls" hidden>
+            <div class="keys-guide-heading">
+              <div>
+                <span class="keys-guide-kicker">Command tablet</span>
+                <h2>Game keys</h2>
+              </div>
+              <button id="hideKeys" class="keys-close" type="button" aria-label="Close game keys">×</button>
+            </div>
+            <dl class="keys-list">
+              <div><dt>Move</dt><dd><kbd>A</kbd><kbd>D</kbd> or <kbd>←</kbd><kbd>→</kbd></dd></div>
+              <div><dt>Jump</dt><dd><kbd>W</kbd>, <kbd>↑</kbd>, or <kbd>Space</kbd></dd></div>
+              <div><dt>Attack</dt><dd><kbd>J</kbd> or <kbd>X</kbd></dd></div>
+              <div><dt>Dash</dt><dd><kbd>Q</kbd>, <kbd>E</kbd>, or <kbd>Ctrl</kbd></dd></div>
+              <div><dt>Block</dt><dd><kbd>C</kbd>, <kbd>L</kbd>, or <kbd>Shift</kbd></dd></div>
+              <div><dt>Special</dt><dd><kbd>K</kbd> or <kbd>Z</kbd></dd></div>
+              <div><dt>Heroes</dt><dd><kbd>1</kbd> Aristotle · <kbd>2</kbd> Aquinas · <kbd>3</kbd> Socrates</dd></div>
+              <div><dt>Pause</dt><dd><kbd>P</kbd></dd></div>
+              <div><dt>Music</dt><dd><kbd>N</kbd> soundtrack on or off</dd></div>
+              <div><dt>Sound</dt><dd><kbd>M</kbd> mute or unmute</dd></div>
+              <div><dt>Start</dt><dd><kbd>Enter</kbd></dd></div>
+            </dl>
+          </section>
+        </div>
+
+        <div class="panel">
+          <div class="hero-select" role="group" aria-label="Choose philosopher">
+            <button id="chooseAristotle" class="select-button active" type="button">
+              <span class="portrait aristotle" aria-hidden="true"></span>
+              <span>Aristotle</span>
+            </button>
+            <button id="chooseAquinas" class="select-button" type="button">
+              <span class="portrait aquinas" aria-hidden="true"></span>
+              <span>Aquinas</span>
+            </button>
+            <button id="chooseSocrates" class="select-button" type="button">
+              <span class="portrait socrates" aria-hidden="true"></span>
+              <span>Socrates</span>
+            </button>
+          </div>
+
+          <div class="actions" role="group" aria-label="Game actions">
+            <button id="startGame" class="primary" type="button">Start</button>
+            <button id="pauseGame" type="button">Pause</button>
+            <button id="resetGame" type="button">Reset</button>
+          </div>
+        </div>
+
+        <div class="touch" aria-label="Touch controls">
+          <div class="touch-move">
+            <button data-touch="left" type="button" aria-label="Move left">◀</button>
+            <button data-touch="right" type="button" aria-label="Move right">▶</button>
+          </div>
+          <div class="touch-act">
+            <button data-touch="jump" type="button" aria-label="Jump">◆</button>
+            <button data-touch="attack" type="button" aria-label="Attack">✦</button>
+            <button data-touch="dash" type="button" aria-label="Dash">»</button>
+            <button data-touch="block" type="button" aria-label="Block">◈</button>
+            <button data-touch="special" type="button" aria-label="Special">✚</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js?v=17"></script>
+  </body>
+</html>
