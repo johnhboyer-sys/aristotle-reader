@@ -325,8 +325,8 @@
     <p class="eyebrow">Corpus phrase index</p>
     <h1>Phrases</h1>
     <p>
-      Browse every recurrent two- to five-word phrase in the corpus: 173,617
-      surface-form phrases and 390,238 dictionary-form phrases, each occurring
+      Browse every recurrent two- to five-word phrase in the corpus: 173,884
+      surface-form phrases and 390,675 dictionary-form phrases, each occurring
       at least twice.
       <a class="guide-link" href={`${BASE_URL}/advanced#phrases`} target="_blank" rel="noreferrer">What is this?</a>
     </p>

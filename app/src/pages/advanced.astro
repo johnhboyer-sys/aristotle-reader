@@ -24,7 +24,11 @@ const jsonLd = {
 };
 // Every figure below was measured against this corpus. Keep them together so a
 // rebuild that changes the data has one place to correct.
-const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhrases: '390,238' };
+// Last measured 2026-07-27, after the rebuild that restored Bekker's lettered
+// lines (+413 tokens across 13 works). tokens = the sum of token_count over
+// every search/offsets.json; formPhrases and lemmaPhrases = streams.*.kept in
+// build/dist/ngrams/summary.json.
+const corpus = { works: 41, tokens: '848,592', formPhrases: '173,884', lemmaPhrases: '390,675' };
 ---
 <html lang="en">
 <head>
@@ -83,6 +87,7 @@ const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhra
     <nav class="guide-toc" aria-label="On this page">
       <ol>
         <li><a href="#wildcards">Wildcards</a> — find a word you only partly know</li>
+        <li><a href="#lemma">A single lemma</a> — one dictionary word, every form</li>
         <li><a href="#variants">Word endings</a> — one phrase, all its forms</li>
         <li><a href="#grammatical">Search by grammar</a> — find forms, not spellings</li>
         <li><a href="#combo">Words near each other</a> — two ideas in one passage</li>
@@ -124,19 +129,60 @@ const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhra
         end.
       </p>
       <p>
-        A wildcard in the middle <em>narrows</em> a search. <code>l*</code>
-        reaches 70 different words; <code>l*s</code> reaches 35 — every word that
-        starts with λ and ends in ς, and no others. <code>l?gos</code> finds
+        A wildcard in the middle <em>narrows</em> a search. Take one work, the
+        <em>Nicomachean Ethics</em>: there <code>l*</code> reaches 70 different
+        words, while <code>l*s</code> reaches 35 — every word that starts with λ
+        and ends in ς, and no others. <code>l?gos</code> finds
         <span lang="grc">λόγος</span> and <span lang="grc">λέγος</span> alone,
         since <code>?</code> stands for one letter. <code>di*sun*</code> finds
         <span lang="grc">δικαιοσύνη</span>, which helps when you half-remember a
         long word.
       </p>
       <p class="guide-note">
+        Those four counts are for one work because a wildcard reaches further the
+        more text you give it: across all {corpus.works}, <code>l*</code> reaches
+        348 words and <code>l*s</code> 191, and <code>l?gos</code> picks up a
+        third word, <span lang="grc">λύγος</span> ("willow"). The search counts
+        occurrences rather than distinct words, so it answers <code>l*</code> with
+        a total, not with 348.
+      </p>
+      <p class="guide-note">
         One exception. A <code>*</code> at the <em>start</em> of a word is not a
         wildcard: in Beta Code it marks a capital, so <code>*a)nqrwpos</code>
         means <span lang="grc">Ἄνθρωπος</span> and the search reads it as that
         exact word. You cannot search by word ending alone.
+      </p>
+    </section>
+
+    <section id="lemma">
+      <h2>A single lemma</h2>
+      <p class="guide-q">
+        Use this when you want one dictionary word wherever it stands, in every
+        form it takes.
+      </p>
+      <p>
+        Typing a word finds the word you typed. This finds the <em>lemma</em> —
+        the form a dictionary lists it under — and with it every inflected form
+        that belongs to it. Type a few letters and the tool offers the headwords
+        that begin that way, each with the number of times it occurs and a short
+        definition where we have one. Tick the one you meant.
+      </p>
+      <p>
+        The picking matters. <code>aitia</code> offers
+        <span lang="grc">αἰτία</span> ("cause", 884 occurrences) and
+        <span lang="grc">αἰτιάομαι</span> ("accuse", 19) among others: words that
+        begin alike and mean different things. Choosing the headword gets you the
+        one you meant instead of everything that merely looks like it. Tick more
+        than one and you get any of them.
+      </p>
+      <p class="guide-note">
+        One limit worth knowing. The index ignores accents, so
+        <span lang="grc">ὅρος</span> ("boundary"),
+        <span lang="grc">ὄρος</span> ("mountain") and
+        <span lang="grc">ὀρός</span> ("whey") share a single entry and no search
+        here can separate them. Where that happens the tool lists the headwords
+        together and says they are searched together, rather than offering a
+        choice it cannot honour.
       </p>
     </section>
 
@@ -171,7 +217,7 @@ const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhra
       </p>
       <p class="guide-note">
         It invents nothing. <span lang="grc">κατὰ συμβεβηκός</span>
-        ("accidentally") goes from 329 passages to 329, because across all
+        ("accidentally") goes from 330 passages to 330, because across all
         {corpus.works} works that phrase takes one form only. A tool that always
         found more would tell you nothing.
       </p>
@@ -189,9 +235,17 @@ const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhra
         all.
       </p>
       <p>
-        So you can ask for every optative (the form Greek uses for wishes and
-        possibilities — "would that it were"), every genitive plural, or every
-        preposition. You need not know how those forms are spelled. You pick the
+        Grammar is <strong>one term inside a combo search</strong>, never a
+        search of its own. On its own it would not be a question: there are
+        33,504 genitive plural feminines in {corpus.works} works, and a list of
+        them tells you something about Greek rather than about Aristotle. Beside
+        another term it earns its keep — <em>this word near a verb in the
+        optative</em> is a real question, and it is the one the tool answers.
+        Set a term's Kind to <em>Grammatical</em> under
+        <a href="#combo">Words near each other</a>.
+      </p>
+      <p>
+        You need not know how any of these forms are spelled. You pick the
         description; the search finds the words.
       </p>
       <h3>Why some results say "one of several readings"</h3>
@@ -200,17 +254,16 @@ const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhra
         tool marks the result instead of choosing one for you.
       </p>
       <p>
-        Search the Nicomachean Ethics for optatives and you get 537 words. Of
-        those, 280 have one possible reading. The tool marks the other 257,
+        The Nicomachean Ethics holds 537 optatives. Of those, 280 have one
+        possible reading; a hit on any of the other 257 comes back marked,
         because you could read those letters another way. The mark shows no flaw
         in the search. It reports a fact about the Greek.
       </p>
       <p>
-        A clearer case: ask for the genitive dual (the dual describes pairs of
-        things) and you get 31 results, <strong>none of them certain</strong>. In
-        the dual, genitive and dative share one ending. The search cannot tell
-        them apart because Greek does not, and it says so instead of deciding for
-        you.
+        A clearer case: of the 31 genitive duals (the dual describes pairs of
+        things), <strong>not one is certain</strong>. In the dual, genitive and
+        dative share one ending. The search cannot tell them apart because Greek
+        does not, and it says so instead of deciding for you.
       </p>
       <p class="guide-note">
         You will find no option for "noun", "verb" or "adjective". We left it
@@ -290,7 +343,7 @@ const corpus = { works: 41, tokens: '848,179', formPhrases: '173,617', lemmaPhra
         <span lang="grc">ὡς ἐπὶ τὸ πολύ</span> ("for the most part") occurs 204
         times across 22 of the {corpus.works} works;
         <span lang="grc">τὸ τί ἦν εἶναι</span> ("essence") 103 times;
-        <span lang="grc">κατὰ συμβεβηκός</span> ("accidentally") 329 times across
+        <span lang="grc">κατὰ συμβεβηκός</span> ("accidentally") 330 times across
         25 works. Not one of those is a word. Each is an idea, and browsing is the
         only way to meet them.
       </p>

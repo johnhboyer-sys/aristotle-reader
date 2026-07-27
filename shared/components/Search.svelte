@@ -2,7 +2,6 @@
   import { onMount, tick } from 'svelte';
   import {
     search,
-    searchGrammar,
     searchCombo,
     searchPhraseVariants,
     greekFold,
@@ -88,7 +87,7 @@
   // reason to touch, so the people it helps most were the least likely to meet
   // it. What it does does not depend on the current mode: it finds the phrase
   // under every dictionary form of its words.
-  $: canWiden = !comboActive && !grammarActive
+  $: canWiden = !comboActive && !soloLemmaActive
     && grkQuery.trim().split(/\s+/).filter(Boolean).length > 1;
 
   // Lemma mode matches dictionary forms, so a phrase typed as it stands on the
@@ -210,16 +209,11 @@
     // stranding them.
     { key: 'marker', label: 'Word class', values: ['adverb', 'adverbial', 'particle', 'prep', 'conj', 'interrog', 'exclam', 'indecl', 'numeral', 'letter'] },
   ];
-  let grammarQuery: GrammarQuery = {};
-  $: grammarActive = Object.keys(grammarQuery).length > 0;
-  function setGrammar(key: string, value: string) {
-    const next = { ...grammarQuery };
-    if (value) next[key] = value; else delete next[key];
-    grammarQuery = next;
-  }
-  function clearGrammar() { grammarQuery = {}; }
-  // "mood: opt · voice: act" — also the label the results header shows back.
-  $: grammarLabel = Object.entries(grammarQuery).map(([k, v]) => `${k}: ${v}`).join(' · ');
+  // GRAMMAR_CATEGORIES is now reached only through a combo slot. Grammatical
+  // features do not make a question on their own: asked alone, "genitive plural
+  // feminine" answers with 33,504 hits, which is a fact about Greek and not an
+  // answer to anything. As one term beside another — this word near a genitive
+  // plural — the same index earns its keep.
 
   // ── Combo search ──────────────────────────────────────────────────────────
   interface LemmaMatch {
@@ -262,6 +256,23 @@
   }
 
   let comboEditors: ComboEditor[] = [newComboEditor('lemma'), newComboEditor('form')];
+
+  // One dictionary word on its own. Combo could express it with a single slot,
+  // but asking for every occurrence of a lemma is the commonest scholarly
+  // question there is, and it should not cost the reader a proximity query to
+  // ask. It reuses the combo lemma picker so both offer the same headword list.
+  let soloLemma = newComboEditor('lemma');
+  $: soloLemmaActive = soloLemma.picked.length > 0;
+
+  // The picker edits whichever of these holds the id; combo slots live in an
+  // array, the solo term on its own, so reads and writes go through these.
+  function editorById(id: number): ComboEditor | undefined {
+    return id === soloLemma.id ? soloLemma : comboEditors.find((slot) => slot.id === id);
+  }
+  function commitEditor(id: number) {
+    if (id === soloLemma.id) soloLemma = soloLemma;
+    else comboEditors = [...comboEditors];
+  }
   let comboWindow = COMBO_WINDOW_DEFAULT;
   let comboUnit: WindowUnit = 'words';
   let comboOrdered = false;
@@ -299,7 +310,17 @@
     .filter((slot): slot is ComboSlot => slot !== null);
   $: comboActive = comboSearchSlots.length >= 2;
   let advancedOpen = false;
-  $: if (grammarActive || comboActive) advancedOpen = true;
+  $: if (comboActive || soloLemmaActive) advancedOpen = true;
+  // Whether the tool's <details> is open has to live in component state. Bound
+  // one way as open={comboActive}, a panel the reader opened by hand is only
+  // ever open in the DOM — the component still thinks it is shut, so the next
+  // render that re-applies the attribute slams it closed under them. This keeps
+  // the auto-open (activating the tool reveals it) while recording the reader's
+  // own toggle, so nothing they typed can collapse the panel they typed it in.
+  let comboPanelOpen = false;
+  let soloPanelOpen = false;
+  $: if (comboActive) comboPanelOpen = true;
+  $: if (soloLemmaActive) soloPanelOpen = true;
   $: comboOptions = {
     window: comboWindow,
     unit: comboUnit,
@@ -308,7 +329,7 @@
   } satisfies ComboOptions;
 
   function toggleAdvanced() {
-    advancedOpen = grammarActive || comboActive ? true : !advancedOpen;
+    advancedOpen = comboActive || soloLemmaActive ? true : !advancedOpen;
   }
 
   function setComboKind(id: number, kind: SlotKind) {
@@ -353,7 +374,7 @@
   }
 
   async function searchLemmaChoices(id: number, input: string) {
-    const editor = comboEditors.find((slot) => slot.id === id);
+    const editor = editorById(id);
     if (!editor) return;
     editor.lemmaInput = input;
     editor.lemmaMatches = [];
@@ -367,11 +388,11 @@
     editor.lemmaRequest = request;
     if (!folded) {
       editor.lemmaLoading = false;
-      comboEditors = [...comboEditors];
+      commitEditor(id);
       return;
     }
     editor.lemmaLoading = true;
-    comboEditors = [...comboEditors];
+    commitEditor(id);
     const letter = /^[a-z]/.test(folded) ? folded[0] : '_';
     try {
       const shard = await fetchLemmaPickerShard(letter);
@@ -382,28 +403,28 @@
       const found = Object.entries(shard)
         .filter(([key]) => key.startsWith(folded))
         .sort(([a, ca], [b, cb]) => cb.n - ca.n || a.localeCompare(b));
-      const current = comboEditors.find((slot) => slot.id === id);
+      const current = editorById(id);
       if (!current || current.lemmaRequest !== request) return;
       current.lemmaMatches = found.slice(0, 30).map(([key, choice]) => ({ key, count: choice.n, candidates: choice.c }));
       current.lemmaCapped = found.length > 30;
       current.lemmaLoading = false;
-      comboEditors = [...comboEditors];
+      commitEditor(id);
     } catch {
-      const current = comboEditors.find((slot) => slot.id === id);
+      const current = editorById(id);
       if (!current || current.lemmaRequest !== request) return;
       current.lemmaLoading = false;
       current.lemmaError = 'Lemma choices could not be loaded. Try typing again.';
-      comboEditors = [...comboEditors];
+      commitEditor(id);
     }
   }
 
   function toggleComboLemma(id: number, key: string) {
-    const editor = comboEditors.find((slot) => slot.id === id);
+    const editor = editorById(id);
     if (!editor) return;
     editor.picked = editor.picked.includes(key)
       ? editor.picked.filter((picked) => picked !== key)
       : [...editor.picked, key];
-    comboEditors = [...comboEditors];
+    commitEditor(id);
   }
 
   async function loadLemmaGlosses(slug: string) {
@@ -832,7 +853,7 @@
 
   async function doSearch(e?: Event) {
     e?.preventDefault();
-    if (!grkQuery.trim() && !engQuery.trim() && !grammarActive && !comboActive) return;
+    if (!grkQuery.trim() && !engQuery.trim() && !comboActive && !soloLemmaActive) return;
     loading = true;
     error = '';
     failedWorks = [];
@@ -849,17 +870,21 @@
         // Grammatical and combo queries name no single word, so there is
         // nothing for the reader to highlight on jump and no accent
         // post-filter to apply.
-        grkQuery: grammarActive || comboActive ? '' : grkQuery.trim(),
-        engQuery: grammarActive || comboActive ? '' : engQuery.trim(),
-        engTerms: grammarActive || comboActive ? [] : engQuery.trim().split(/\s+/).filter(Boolean),
-        grkAccentTerms: !grammarActive && !comboActive && accentSensitive
+        grkQuery: comboActive ? '' : soloLemmaActive ? soloLemma.picked.join(' ') : grkQuery.trim(),
+        engQuery: comboActive ? '' : engQuery.trim(),
+        engTerms: comboActive ? [] : engQuery.trim().split(/\s+/).filter(Boolean),
+        // A picked lemma is a fold key, not the reader's spelling, so there is
+        // no typed accent pattern to post-filter against.
+        grkAccentTerms: !comboActive && !soloLemmaActive && accentSensitive
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
       };
       const { results, failedWorks: failed, approximateChapters: approximate } = comboActive
         ? await searchCombo(comboSearchSlots, comboOptions, works)
-        : grammarActive
-          ? await searchGrammar(grammarQuery, works)
+        // Picked headwords are OR-ed: choosing two spellings of one word, or two
+        // homonyms, asks for either, never for both in the same passage.
+        : soloLemmaActive
+          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'lemma')
           : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
       failedWorks = failed;
       approximateChapters = approximate ?? [];
@@ -1014,6 +1039,87 @@
   }
 </script>
 
+  {#snippet lemmaPicker(editor, groupLabel)}
+                  <label class="combo-text-field" for={`lemma-${editor.id}`}>
+                    <span>Find a lemma</span>
+                    <input
+                      id={`lemma-${editor.id}`}
+                      lang="grc"
+                      type="search"
+                      value={editor.lemmaInput}
+                      on:input={(e) => searchLemmaChoices(editor.id, e.currentTarget.value)}
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="none"
+                      spellcheck="false"
+                    />
+                  </label>
+
+                  {#if editor.picked.length}
+                    <div class="lemma-chips" aria-label={`Picked lemmas for ${groupLabel}`}>
+                      {#each editor.picked as key}
+                        <button
+                          type="button"
+                          class="lemma-chip"
+                          aria-label={`Remove picked lemma ${key}`}
+                          on:click={() => toggleComboLemma(editor.id, key)}
+                        >{key} <span aria-hidden="true">×</span></button>
+                      {/each}
+                    </div>
+                  {/if}
+
+                  {#if editor.lemmaLoading}
+                    <p class="lemma-status" aria-live="polite">Loading lemmas…</p>
+                  {:else if editor.lemmaError}
+                    <p class="lemma-status lemma-error" role="alert">{editor.lemmaError}</p>
+                  {:else if editor.lemmaInput.trim() && editor.lemmaMatches.length === 0}
+                    <p class="lemma-status">No lemmas start with that text.</p>
+                  {:else if editor.lemmaMatches.length}
+                    <div class="lemma-candidates" role="group" aria-label={`Lemma choices for ${groupLabel}`}>
+                      <!-- One choice per fold key, not per headword. The index is
+                           accent-folded, so ὅρος, ὄρος and ὀρός are a single key
+                           and no search can separate them; offering them as three
+                           ticks would promise a distinction that does not exist. -->
+                      {#each editor.lemmaMatches as match (match.key)}
+                        {#if match.candidates.length}
+                          <label class="lemma-candidate" use:glossOnMount={match.candidates.find((c) => c.s)?.s}>
+                            <input
+                              type="checkbox"
+                              checked={editor.picked.includes(match.key)}
+                              aria-label={`Select ${match.candidates.map((c) => c.h).join(', ')}, lemma key ${match.key}`}
+                              on:change={() => toggleComboLemma(editor.id, match.key)}
+                            />
+                            <span class="lemma-head" lang="grc">{match.candidates.map((c) => c.h).join(' · ')}</span>
+                            <span class="lemma-key">{match.key}</span>
+                            <span class="lemma-frequency">{match.count}×</span>
+                            {#if match.candidates.length > 1}
+                              <span class="lemma-shared">searched together — the accent-folded index cannot separate them</span>
+                            {/if}
+                            {#each match.candidates.filter((c) => c.s && lemmaGlosses[c.s]?.length).slice(0, 1) as glossed}
+                              <span class="lemma-gloss">{lemmaGlosses[glossed.s!].slice(0, 2).join('; ')}</span>
+                            {/each}
+                          </label>
+                        {:else}
+                          <label class="lemma-candidate">
+                            <input
+                              type="checkbox"
+                              checked={editor.picked.includes(match.key)}
+                              aria-label={`Select unresolved lemma key ${match.key}`}
+                              on:change={() => toggleComboLemma(editor.id, match.key)}
+                            />
+                            <span class="lemma-head unresolved">{match.key}</span>
+                            <span class="lemma-key">unresolved headword</span>
+                          </label>
+                        {/if}
+                      {/each}
+                    </div>
+                    {#if editor.lemmaCapped}
+                      <p class="lemma-status">Showing the first 30 matching lemma keys. Type more to narrow the list.</p>
+                    {/if}
+                  {/if}
+  {/snippet}
+
+
 <svelte:window on:keydown={onHelpKey} />
 
 <main class="search-page">
@@ -1033,7 +1139,7 @@
         autocorrect="off"
         autocapitalize="none"
         spellcheck="false"
-        disabled={grammarActive || comboActive}
+        disabled={comboActive || soloLemmaActive}
       />
       <button type="button" class="help-btn" on:click={openHelp} aria-haspopup="dialog" title="How to type Greek">
         ⌨ Type Greek
@@ -1078,40 +1184,30 @@
       </div>
       {#if advancedOpen}
         <div id="advanced-tools" class="advanced-body">
-          <details class="grammar-panel" open={grammarActive}>
+          <details class="lemma-panel" bind:open={soloPanelOpen}>
             <summary>
-              Grammatical form
-              {#if grammarActive}<span class="grammar-active">{grammarLabel}</span>{/if}
+              Single lemma
+              {#if soloLemmaActive}<span class="combo-active">{soloLemma.picked.length} picked</span>{/if}
             </summary>
-            <p class="grammar-note">
-              Finds every word with these features, whatever its dictionary form.
-              This searches on its own — it ignores the Greek and English boxes
-              above. <a class="guide-link" href={`${BASE_URL}/advanced#grammatical`} target="_blank" rel="noreferrer">What is this?</a>
-              Many Greek forms carry more than one possible parse; where the
-              analysis does not settle it, the result says so rather than picking
-              one.
+            <p class="lemma-panel-note">
+              Every occurrence of one dictionary word, in all its forms. Pick the
+              headword rather than typing a spelling, so you get the word you
+              meant and not the ones that merely look like it.
+              <a class="guide-link" href={`${BASE_URL}/advanced#endings`} target="_blank" rel="noreferrer">What is this?</a>
+              Picking more than one asks for any of them.
+              This searches on its own — it ignores the Greek box above.
             </p>
-            <div class="grammar-grid">
-              {#each GRAMMAR_CATEGORIES as cat}
-                <label class="grammar-field">
-                  <span>{cat.label}</span>
-                  <select
-                    value={grammarQuery[cat.key] ?? ''}
-                    disabled={comboActive}
-                    on:change={(e) => setGrammar(cat.key, e.currentTarget.value)}
-                  >
-                    <option value="">any</option>
-                    {#each cat.values as v}<option value={v}>{v}</option>{/each}
-                  </select>
-                </label>
-              {/each}
-            </div>
-            {#if grammarActive}
-              <button type="button" class="grammar-clear" on:click={clearGrammar}>Clear grammatical form</button>
+            {@render lemmaPicker(soloLemma, 'the single lemma search')}
+            {#if soloLemmaActive}
+              <button
+                type="button"
+                class="lemma-panel-clear"
+                on:click={() => { soloLemma.picked = []; soloLemma = soloLemma; }}
+              >Clear picked lemmas</button>
             {/if}
           </details>
 
-          <details class="combo-panel" open={comboActive}>
+          <details class="combo-panel" bind:open={comboPanelOpen}>
             <summary>
               Combo search
               {#if comboActive}<span class="combo-active">{comboSearchSlots.length} terms ready</span>{/if}
@@ -1194,83 +1290,7 @@
                       />
                     </label>
                   {:else if slot.kind === 'lemma'}
-                    <label class="combo-text-field" for={`combo-lemma-${slot.id}`}>
-                      <span>Find a lemma</span>
-                      <input
-                        id={`combo-lemma-${slot.id}`}
-                        lang="grc"
-                        type="search"
-                        value={slot.lemmaInput}
-                        on:input={(e) => searchLemmaChoices(slot.id, e.currentTarget.value)}
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="none"
-                        spellcheck="false"
-                      />
-                    </label>
-
-                    {#if slot.picked.length}
-                      <div class="lemma-chips" aria-label={`Picked lemmas for term ${slotIndex + 1}`}>
-                        {#each slot.picked as key}
-                          <button
-                            type="button"
-                            class="lemma-chip"
-                            aria-label={`Remove picked lemma ${key}`}
-                            on:click={() => toggleComboLemma(slot.id, key)}
-                          >{key} <span aria-hidden="true">×</span></button>
-                        {/each}
-                      </div>
-                    {/if}
-
-                    {#if slot.lemmaLoading}
-                      <p class="lemma-status" aria-live="polite">Loading lemmas…</p>
-                    {:else if slot.lemmaError}
-                      <p class="lemma-status lemma-error" role="alert">{slot.lemmaError}</p>
-                    {:else if slot.lemmaInput.trim() && slot.lemmaMatches.length === 0}
-                      <p class="lemma-status">No lemmas start with that text.</p>
-                    {:else if slot.lemmaMatches.length}
-                      <div class="lemma-candidates" role="group" aria-label={`Lemma choices for term ${slotIndex + 1}`}>
-                        <!-- One choice per fold key, not per headword. The index is
-                             accent-folded, so ὅρος, ὄρος and ὀρός are a single key
-                             and no search can separate them; offering them as three
-                             ticks would promise a distinction that does not exist. -->
-                        {#each slot.lemmaMatches as match (match.key)}
-                          {#if match.candidates.length}
-                            <label class="lemma-candidate" use:glossOnMount={match.candidates.find((c) => c.s)?.s}>
-                              <input
-                                type="checkbox"
-                                checked={slot.picked.includes(match.key)}
-                                aria-label={`Select ${match.candidates.map((c) => c.h).join(', ')}, lemma key ${match.key}`}
-                                on:change={() => toggleComboLemma(slot.id, match.key)}
-                              />
-                              <span class="lemma-head" lang="grc">{match.candidates.map((c) => c.h).join(' · ')}</span>
-                              <span class="lemma-key">{match.key}</span>
-                              <span class="lemma-frequency">{match.count}×</span>
-                              {#if match.candidates.length > 1}
-                                <span class="lemma-shared">searched together — the accent-folded index cannot separate them</span>
-                              {/if}
-                              {#each match.candidates.filter((c) => c.s && lemmaGlosses[c.s]?.length).slice(0, 1) as glossed}
-                                <span class="lemma-gloss">{lemmaGlosses[glossed.s!].slice(0, 2).join('; ')}</span>
-                              {/each}
-                            </label>
-                          {:else}
-                            <label class="lemma-candidate">
-                              <input
-                                type="checkbox"
-                                checked={slot.picked.includes(match.key)}
-                                aria-label={`Select unresolved lemma key ${match.key}`}
-                                on:change={() => toggleComboLemma(slot.id, match.key)}
-                              />
-                              <span class="lemma-head unresolved">{match.key}</span>
-                              <span class="lemma-key">unresolved headword</span>
-                            </label>
-                          {/if}
-                        {/each}
-                      </div>
-                      {#if slot.lemmaCapped}
-                        <p class="lemma-status">Showing the first 30 matching lemma keys. Type more to narrow the list.</p>
-                      {/if}
-                    {/if}
+                    {@render lemmaPicker(slot, `term ${slotIndex + 1}`)}
                   {:else}
                     <div class="combo-grammar-grid">
                       {#each GRAMMAR_CATEGORIES as cat}
@@ -1345,7 +1365,7 @@
         bind:value={engQuery}
         on:keydown={onEnter}
         autocomplete="off"
-        disabled={grammarActive || comboActive}
+        disabled={comboActive}
       />
     </div>
 
@@ -1711,40 +1731,7 @@
     margin-top: 0.55rem;
   }
 
-  /* --- Grammatical form panel ------------------------------------------- */
-  .grammar-panel {
-    margin: 0;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    background: var(--input-bg);
-    padding: 0.45rem 0.75rem;
-    font-family: var(--font-ui);
-  }
-  .grammar-panel > summary {
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: .04em;
-    color: var(--text-mid);
-  }
-  .grammar-active {
-    margin-left: 0.5rem;
-    font-weight: 400;
-    letter-spacing: 0;
-    color: var(--accent);
-  }
-  .grammar-note {
-    margin: 0.5rem 0;
-    font-size: 0.8rem;
-    line-height: 1.45;
-    color: var(--text-mid);
-    max-width: 62ch;
-  }
-  .grammar-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem 1rem;
-  }
+  /* --- Grammatical fields (inside a combo slot) ------------------------ */
   .grammar-field {
     display: flex;
     flex-direction: column;
@@ -1761,7 +1748,31 @@
     background: var(--col-bg);
     color: var(--text);
   }
-  .grammar-clear {
+
+  /* --- Combo search panel ----------------------------------------------- */
+  .lemma-panel {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--input-bg);
+    padding: 0.45rem 0.75rem;
+    font-family: var(--font-ui);
+  }
+  .lemma-panel > summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text-mid);
+  }
+  .lemma-panel-note {
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-mid);
+    max-width: 62ch;
+  }
+  .lemma-panel-clear {
     margin-top: 0.6rem;
     font-family: var(--font-ui);
     font-size: 0.8rem;
@@ -1772,8 +1783,6 @@
     color: var(--text);
     cursor: pointer;
   }
-
-  /* --- Combo search panel ----------------------------------------------- */
   .combo-panel {
     margin: 0;
     border: 1px solid var(--border);
