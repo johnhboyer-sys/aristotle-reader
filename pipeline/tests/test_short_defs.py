@@ -138,6 +138,42 @@ def test_merge_short_def_prefers_exact_key_when_multiple_candidates_match():
     ) == "take the exact entry"
 
 
+def test_merge_short_def_refuses_to_choose_between_disagreeing_homonyms():
+    """A lemma normally maps to numbered homonyms and not to itself, so there is
+    no exact key to prefer. When two of them extend the same gloss differently,
+    picking either would ship one sense's definition onto the other's reading."""
+    assert merge_short_def(
+        "somewhat",
+        "u(podeh/s",
+        ["u(podeh/s1", "u(podeh/s2"],
+        {
+            "u(podeh/s1": "somewhat deficient, inferior",
+            "u(podeh/s2": "somewhat fearful",
+        },
+    ) == "somewhat"
+
+
+def test_merge_short_def_extends_when_the_homonyms_agree():
+    assert merge_short_def(
+        "somewhat",
+        "u(podeh/s",
+        ["u(podeh/s1", "u(podeh/s2"],
+        {
+            "u(podeh/s1": "somewhat deficient, inferior",
+            "u(podeh/s2": "somewhat deficient, inferior",
+        },
+    ) == "somewhat deficient, inferior"
+
+
+def test_merge_short_def_does_not_fall_through_from_the_exact_key():
+    """The lemma's own entry decides. If it does not extend the gloss, a sibling
+    homonym's entry is the wrong entry, not a fallback."""
+    assert merge_short_def(
+        "run", "test", ["test", "test1"],
+        {"test": "flow, stream", "test1": "run away, flee"},
+    ) == "run"
+
+
 def test_resolve_parses_filters_on_morpheus_glosses_before_extending():
     """A spurious LSJ-less reading is recognized by its gloss duplicating a
     resolved sibling's — so the extension has to happen after the filter, or the
