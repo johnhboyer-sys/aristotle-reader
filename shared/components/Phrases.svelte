@@ -58,6 +58,38 @@
     { beta: 'it makes no difference whether', greek: 'it makes no difference whether', gloss: '38 times, 16 works' },
   ];
   const BROWSE_LETTERS = 'abcdefghiklmnoprstuwxyz'.split('');
+
+  // Distinctiveness ranks the English badly. English builds its grammar out of
+  // small words in fixed order — "in the case of" is nearly the only order those
+  // four ever take — so the measure reads them as inseparable and they take the
+  // whole top of the list: it is (8,508), of the (12,183), the same (4,490).
+  // Greek does that work with endings instead, so its small words move freely
+  // and do not clump as hard.
+  //
+  // This filters the DEFAULT VIEW; it changes no score and hides nothing the
+  // reader cannot unhide. Strictly grammatical words only: nothing that could
+  // carry weight in Aristotle — no end, mean, part, whole, cause, form.
+  //
+  // Known cost, John's call 2026-07-27: phrases made only of these words go too,
+  // including some that do philosophical work — that which is (τὸ ὄν, 988),
+  // what it is (τί ἐστι, 93), that it is (721). Judged too common here to be
+  // worth finding this way; an allowlist is the later fix.
+  const FUNCTION_WORDS = new Set(`a an the this that these those which who whom whose what
+    and or but nor if then than as so because although though while whereas
+    of in on at to for from by with without within into upon about against
+    among between through during over under above below across along
+    is are was were be been being am do does did done have has had having
+    will would shall should may might can could must let
+    it its he she they them their his her our your my we you i one
+    not no nor never ever also too very much more most less least
+    there here now when where how why some any all both each every other another same`
+    .split(/\s+/));
+
+  function contentWords(phrase: string): number {
+    let n = 0;
+    for (const w of phrase.split(' ')) if (!FUNCTION_WORDS.has(w)) n++;
+    return n;
+  }
   const PAGE_SIZE = 50;
   const CITATION_CAP = 40;
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -72,6 +104,7 @@
   let minCount = 2;
   let selectedWorks: string[] = [];
   let sort: SortMode = 'score';
+  let hideCommon = true;
   let page = 0;
 
   let shard: Record<string, NgramRow> = {};
@@ -139,7 +172,8 @@
         .filter(([key, row]) =>
           (!normalizedPrefix || key.startsWith(normalizedPrefix)) &&
           lengths.includes(row[0]) &&
-          row[1] >= minimum)
+          row[1] >= minimum &&
+          (!isEnglish || !hideCommon || contentWords(key) >= 2))
         .map(([key, row]) => ({ key, row }))
     : [];
 
@@ -474,6 +508,20 @@
           on:change={clampMinimum}
         />
       </label>
+
+      {#if isEnglish}
+        <label class="field common-words">
+          <span>
+            <input type="checkbox" bind:checked={hideCommon} on:change={() => page = 0} />
+            Hide phrases of common words only
+          </span>
+          <small>
+            English builds its grammar from small words in fixed order, so
+            <em>of the</em> and <em>it is</em> outrank anything Aristotle says.
+            This hides them; it changes no count and no score.
+          </small>
+        </label>
+      {/if}
 
       <label class="field compact-field" for="phrase-sort">
         <span>Sort</span>
@@ -1024,6 +1072,12 @@
   }
   .letter-button:hover {
     background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .common-words small {
+    display: block;
+    margin-top: 0.25rem;
+    max-width: 46ch;
   }
 
   .column-head,
