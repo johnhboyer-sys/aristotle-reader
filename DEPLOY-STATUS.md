@@ -3,7 +3,23 @@
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
 Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-07-27 (advanced search + English phrase index + furniture strip + game)
+## Latest deploy — 2026-07-28 (phrase index takes the inflected phrase + sort/work controls)
+
+- **gh-pages:** `de0cfb2f` → `99f0b57f`
+- **Source:** `origin/main` `35c3ed89a` (PR #57 merge)
+- **What shipped:**
+  - **The dictionary-form phrase index now takes the phrase as it stands on the page.** It is keyed on headwords, so `to ti hn einai` matched nothing typed literally — τό is not a headword, ὁ is — and the commonest formula in the Metaphysics returned zero rows while occurring 127 times. Each typed word now resolves through `/data/lemma-map` and every reading is matched: 47 rows, with a line under the box naming what it read. Rules: a single character never widens (the letter-browse buttons type into the same box, and `h` is the surface of ἡ → ὁ); a mapped word uses its headwords alone (a dictionary form is always among its own headwords, and reading τό literally fetched a 3.3 MB shard with nothing in it); an unmapped word falls back to itself, which is the fragment still being typed.
+  - **A query resolves to a plan of (shard letter, prefixes) pairs**, because the readings of one phrase do not share a shard — `hn einai` reads E, H and O and merges 686 rows. Worst case across all 45,942 mapped surface forms is 4 shards; 96% of words need 1.
+  - **A row's occurrences now come from the row's own key**, not the typed letter, which had been silently reaching into the wrong shard for any widened row.
+  - **Sort moved above the results it orders** (out of the filter panel), and the **work filter is a checkbox list** — picking two works out of 41 in a `<select multiple>` needs a modifier key nobody is told about, and one stray click discarded the whole selection. Stream radio relabelled "Word in any of its forms".
+- **Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22, `bonitz.astro` moved aside) — **not** `build:public`, no corpus data changed. Link integrity **0 broken** (6,610 pages / 555,051 links / 428,859 anchors).
+- **Deploy diff:** 171 files, **0 data files changed** — 6 bundle changes (`Phrases`, `phrases.css`, `search`, `Search`, `Reader`, `CommandPalette`; the shared chunks rehash because `search.ts` gained two exports) propagated to 162 pages. Checked for dangling references to all six removed bundle hashes: 0.
+- **bonitz:** `bonitz.astro` moved aside during the build → no `app/dist/bonitz` to remove; source restored after; `/bonitz/` 404 confirmed live.
+- **Leak-check:** clean, same baseline as prior deploys. Ackrill 0, Tredennick 0, Irwin 0. Rackham = `EN/manifest.json` attribution ("H. Rackham (Loeb, 1926)", US public domain) + two of Ostwald's own footnotes citing him as an *editor of the Greek*. "Barnes" hits are Joshua Barnes (d. 1712) in LSJ's own apparatus (`cj. Barnes`) in `lsj/{q,n}.json`, both byte-identical to what was already live — not Jonathan Barnes.
+- **LSJ gloss-repair hold resolved:** the 1,678 extended glosses were already live. `EN/analyses.json` and `lsj/p.json` compare byte-identical local vs live (0 differing keys), so they shipped with the 2026-07-27 corpus rebuild. Nothing held rode along with this deploy.
+- **Live-verified (functional, not just status codes):** `/` · `/search/` · `/advanced/` · `/phrases/` · `/game/` · `/Cat/book/1/` · `/EN/book/1/` · `/Meta/book/7/` · `/lemma/genos/` all 200; `/bonitz/` and the two removed bundles 404. On the live page: `to ti hn einai` in dictionary-form mode → 47 rows, note reads *Reading these words as ο τις εαν ειμι, ο τις ειμι ειμι, ο τις ημι ειμι*, badge `Lemma · O`; expanding ὁ τίς εἰμί εἰμί fetched `ngrams/lemma/occ/o-4.json` and resolved citations with working links (Isagoge 12a3, Physics 185b9, …); ticking Metaphysics + Categories with **plain clicks** took 47 → 35 and fetched occurrence files for the O shard only; Sort present in the results head and absent from the filter panel; 41 checkboxes, old `#phrase-works` select gone. Surface stream `Surface · T` 19 rows unchanged; English `English · A` 15 rows unchanged; single-letter `h` stays an exact H browse with no widening. No console errors.
+
+## Previous deploy — 2026-07-27 (advanced search + English phrase index + furniture strip + game)
 
 - **gh-pages:** `f3dc1025` → `de0cfb2f`
 - **Source:** `origin/main` `203c3c11f` (PR #56 merge) + one follow-up on main removing the game card
