@@ -21,7 +21,7 @@
  "1:1094b": [
   {
    "chapter": "2",
-   "text": "Second chapter sentence. -THE END-",
+   "text": "Second chapter sentence.",
    "cont": false,
    "bekker": [
     {
@@ -31,7 +31,7 @@
     },
     {
      "n": 5,
-     "offset": 34,
+     "offset": 24,
      "real": false
     }
    ]

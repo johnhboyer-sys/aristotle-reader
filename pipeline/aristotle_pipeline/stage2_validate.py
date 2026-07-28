@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import statistics
 import unicodedata
+from bisect import bisect_right
 from collections import defaultdict
 from pathlib import Path
 
@@ -33,6 +34,8 @@ def _base(text: str) -> str:
 
 # Characters we expect in Bywater's text besides Greek letters.
 EXPECTED_NON_GREEK = set(" .,·;'’ʼ—-()[]")
+GRAMMAR_EVEN_SAMPLES = 257
+GRAMMAR_EDGE_SEGMENTS = 32
 
 
 def _is_greek_letter(ch: str) -> bool:
@@ -42,6 +45,313 @@ def _is_greek_letter(ch: str) -> bool:
         return "GREEK" in unicodedata.name(ch)
     except ValueError:
         return False
+
+
+def check_offsets(offsets: dict, segments: list[dict]) -> dict:
+    """Validate the stage6 word-offset primitive against the stage3 segments.
+
+    Lives here with the other checks, but runs from stage6 — offsets.json does
+    not exist yet when stage 2 runs.
+
+    Structural failures (a base that walks backwards, a base delta that misses
+    its segment's token count, an out-of-range chapter anchor) are hard: every
+    offset-indexed feature downstream would silently read the wrong word. A
+    line-snapped chapter bound is not a failure — it is a known limit of the
+    source, counted here so it can be surfaced rather than hidden.
+    """
+    base = offsets["seg_base_offset"]
+    coords = offsets["segments"]
+    problems: list[str] = []
+
+    if len(base) != len(segments) or len(coords) != len(segments):
+        problems.append(
+            f"length mismatch: {len(base)} bases / {len(coords)} coords / "
+            f"{len(segments)} segments"
+        )
+    else:
+        for i, seg in enumerate(segments):
+            count = sum(len(l["tokens"]) for l in seg["lines"])
+            if i and base[i] < base[i - 1]:
+                problems.append(f"base decreases at seg {i} ({seg['id']})")
+            expected = base[i] + count
+            actual = base[i + 1] if i + 1 < len(base) else offsets["token_count"]
+            if actual != expected:
+                problems.append(
+                    f"seg {i} ({seg['id']}): base delta {actual - base[i]} != "
+                    f"token count {count}"
+                )
+            expected_runs = [[line["n"], len(line["tokens"])] for line in seg["lines"]]
+            if coords[i]["line_runs"] != expected_runs:
+                problems.append(
+                    f"seg {i} ({seg['id']}): line_runs do not match stage3 lines "
+                    f"(expected {expected_runs!r}, got {coords[i]['line_runs']!r})"
+                )
+
+    # Round-trip a sample: global -> (seg, pos) must return the original.
+    def to_local(g: int) -> tuple[int, int]:
+        lo, hi = 0, len(base) - 1
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if base[mid] <= g:
+                lo = mid
+            else:
+                hi = mid - 1
+        return lo, g - base[lo]
+
+    sampled = 0
+    if not problems:
+        for i, seg in enumerate(segments):
+            count = sum(len(l["tokens"]) for l in seg["lines"])
+            for pos in {0, count // 2, count - 1}:
+                if not 0 <= pos < count:
+                    continue
+                sampled += 1
+                if to_local(base[i] + pos) != (i, pos):
+                    problems.append(f"round-trip failed at seg {i} pos {pos}")
+
+    bounds = offsets["chapter_bounds"]
+    for c in bounds:
+        if not 0 <= c["start"] < max(offsets["token_count"], 1):
+            problems.append(
+                f"chapter {c['book']}.{c['chapter']}: start {c['start']} out of range"
+            )
+
+    snapped = [c for c in bounds if c["accuracy"] != "exact"]
+    return {
+        "token_count": offsets["token_count"],
+        "segments": len(segments),
+        "round_trips_sampled": sampled,
+        "chapter_bounds": len(bounds),
+        "chapter_bounds_exact": len(bounds) - len(snapped),
+        "chapter_bounds_line_snapped": [
+            f"{c['book']}.{c['chapter']}" for c in snapped[:30]
+        ],
+        "problems": problems,
+        "ok": not problems,
+    }
+
+
+def check_ngram_streams(
+    form_stream: list,
+    lemma_stream: list,
+    greek_form: dict,
+    greek_lemma: dict,
+    base: list[int],
+    token_count: int,
+) -> dict:
+    """The n-gram streams must say exactly what the search indexes say.
+
+    They are gathered in a different walk from the posting lists, so nothing but
+    a comparison stops the two drifting. If they drift, the phrase browser would
+    offer phrases the search cannot find — or miss ones it can.
+    """
+    problems: list[str] = []
+    if len(form_stream) != token_count or len(lemma_stream) != token_count:
+        problems.append(
+            f"stream lengths {len(form_stream)}/{len(lemma_stream)} != "
+            f"token_count {token_count}"
+        )
+        return {"problems": problems, "ok": False}
+
+    expected_form: list = [None] * token_count
+    for key, posts in greek_form.items():
+        for si, pos in posts:
+            expected_form[base[si] + pos] = key
+    expected_lemma: list = [set() for _ in range(token_count)]
+    for key, posts in greek_lemma.items():
+        for si, pos in posts:
+            expected_lemma[base[si] + pos].add(key)
+
+    form_bad = [i for i in range(token_count) if expected_form[i] != form_stream[i]]
+    lemma_bad = [
+        i for i in range(token_count)
+        if (sorted(expected_lemma[i]) or None) != lemma_stream[i]
+    ]
+    if form_bad:
+        i = form_bad[0]
+        problems.append(
+            f"{len(form_bad)} form-stream mismatches (first at offset {i}: "
+            f"index says {expected_form[i]!r}, stream says {form_stream[i]!r})"
+        )
+    if lemma_bad:
+        i = lemma_bad[0]
+        problems.append(
+            f"{len(lemma_bad)} lemma-stream mismatches (first at offset {i}: "
+            f"index says {sorted(expected_lemma[i]) or None!r}, "
+            f"stream says {lemma_stream[i]!r})"
+        )
+    return {
+        "form_tokens": sum(1 for t in form_stream if t),
+        "lemma_tokens": sum(1 for t in lemma_stream if t),
+        "multi_lemma_tokens": sum(1 for t in lemma_stream if t and len(t) > 1),
+        "problems": problems,
+        "ok": not problems,
+    }
+
+
+def check_grammar(
+    grammar: dict,
+    column: list[int],
+    offsets: dict,
+    segments: list[dict],
+    key_map: dict,
+    analyses: dict,
+    signature_fn,
+) -> dict:
+    """Validate the stage6 grammatical index. Runs from stage6, like the above.
+
+    The column is indexed by global offset, so a length that disagrees with the
+    offset primitive means every grammatical hit would name the wrong word —
+    hard fail. Ambiguity rates are reported, not judged.
+    """
+    sigs = grammar["sigs"]
+    problems: list[str] = []
+
+    if len(column) != offsets["token_count"]:
+        problems.append(
+            f"column length {len(column)} != token_count {offsets['token_count']}"
+        )
+    if grammar["token_count"] != offsets["token_count"]:
+        problems.append("grammar/offsets token_count disagree — mismatched build")
+    bad = [i for i, s in enumerate(column) if not 0 <= s < len(sigs)]
+    if bad:
+        problems.append(f"{len(bad)} out-of-range signature ids (first at {bad[0]})")
+    for slot, name in ((grammar["reserved"]["unkeyed"], "unkeyed"),
+                       (grammar["reserved"]["unanalysed"], "unanalysed")):
+        if sigs[slot]:
+            problems.append(f"reserved slot {slot} ({name}) is not empty")
+
+    # Range checks cannot detect a well-formed column joined to the wrong token.
+    # Re-derive morphology from stage3/stage4 at deterministic offsets spread
+    # across the work, with extra coverage at early segment boundaries.
+    nonempty_starts: list[int] = []
+    nonempty_indexes: list[int] = []
+    expected_count = 0
+    edge_segments = 0
+    samples: set[int] = set()
+    for si, seg in enumerate(segments):
+        count = sum(len(line["tokens"]) for line in seg["lines"])
+        if count:
+            nonempty_starts.append(expected_count)
+            nonempty_indexes.append(si)
+            if edge_segments < GRAMMAR_EDGE_SEGMENTS:
+                samples.update((expected_count, expected_count + count - 1))
+                edge_segments += 1
+        expected_count += count
+
+    if expected_count:
+        evenly_spaced = min(GRAMMAR_EVEN_SAMPLES, expected_count)
+        if evenly_spaced == 1:
+            samples.add(0)
+        else:
+            samples.update(
+                i * (expected_count - 1) // (evenly_spaced - 1)
+                for i in range(evenly_spaced)
+            )
+
+    semantic_sampled = 0
+    for g in sorted(samples):
+        if g >= len(column):
+            continue  # the length failure above already names this corruption
+        sid = column[g]
+        if not 0 <= sid < len(sigs):
+            continue  # likewise for the signature-id range failure
+        nonempty_i = bisect_right(nonempty_starts, g) - 1
+        si = nonempty_indexes[nonempty_i]
+        local = g - nonempty_starts[nonempty_i]
+        token = None
+        token_pos = local
+        for line in segments[si]["lines"]:
+            if token_pos < len(line["tokens"]):
+                token = line["tokens"][token_pos]
+                break
+            token_pos -= len(line["tokens"])
+        if token is None:
+            problems.append(f"semantic sample {g} did not resolve to a stage3 token")
+            continue
+
+        semantic_sampled += 1
+        key = token.get("k")
+        if not key:
+            expected_sid = grammar["reserved"]["unkeyed"]
+            if sid != expected_sid:
+                problems.append(
+                    f"grammar semantic mismatch at global offset {g} "
+                    f"(seg {si} {segments[si]['id']}, token {local}): "
+                    f"unkeyed token expected reserved id {expected_sid}, got {sid}"
+                )
+            continue
+
+        stored = key_map.get(key)
+        entries = analyses.get(stored, []) if stored else []
+        expected_sig = signature_fn(entries)
+        if not expected_sig:
+            expected_sid = grammar["reserved"]["unanalysed"]
+            if sid != expected_sid:
+                problems.append(
+                    f"grammar semantic mismatch at global offset {g} "
+                    f"(seg {si} {segments[si]['id']}, token {local}, key {key!r}): "
+                    f"unanalysed token expected reserved id {expected_sid}, got {sid}"
+                )
+            continue
+
+        expected_content = [
+            {category: list(values) for category, values in reading}
+            for reading in expected_sig
+        ]
+        if sigs[sid] != expected_content:
+            problems.append(
+                f"grammar semantic mismatch at global offset {g} "
+                f"(seg {si} {segments[si]['id']}, token {local}, key {key!r}): "
+                f"expected {expected_content!r}, got id {sid} -> {sigs[sid]!r}"
+            )
+
+    # Ambiguity, per category: of the tokens that license a value for it, how
+    # many license more than one? This is the honesty signal — it counts values
+    # a reader could be shown, not analysis records.
+    valid_ids = [s for s in column if 0 <= s < len(sigs)]
+    analysed = sum(1 for s in valid_ids if sigs[s])
+    ambiguity: dict[str, dict] = {}
+    for category in grammar["categories"]:
+        present = ambiguous = 0
+        for sid, count in _counts(valid_ids).items():
+            readings = sigs[sid]
+            if not readings:
+                continue
+            values = {v for r in readings for v in r.get(category, [])}
+            if not values:
+                continue
+            present += count
+            if len(values) > 1:
+                ambiguous += count
+        if present:
+            ambiguity[category] = {
+                "tokens": present,
+                "ambiguous": ambiguous,
+                "rate": round(ambiguous / present, 4),
+            }
+
+    return {
+        "signatures": len(sigs),
+        "width_bytes": grammar["width"],
+        "tokens": len(column),
+        "semantic_offsets_sampled": semantic_sampled,
+        "tokens_analysed": analysed,
+        "tokens_unkeyed": sum(1 for s in column if s == grammar["reserved"]["unkeyed"]),
+        "tokens_unanalysed": sum(
+            1 for s in column if s == grammar["reserved"]["unanalysed"]
+        ),
+        "ambiguity": ambiguity,
+        "problems": problems,
+        "ok": not problems,
+    }
+
+
+def _counts(column: list[int]) -> dict[int, int]:
+    out: dict[int, int] = defaultdict(int)
+    for s in column:
+        out[s] += 1
+    return out
 
 
 def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) -> dict:
@@ -90,7 +400,14 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
     gaps = []
     lines_by_col: dict[str, list[int]] = defaultdict(list)
     for seg in segments:
-        lines_by_col[seg["column"]].extend(l["n"] for l in seg["lines"])
+        nums = lines_by_col[seg["column"]]
+        for line in seg["lines"]:
+            # A lettered line (Bekker's 244b 5a-5d) hangs off the line it
+            # follows and keeps its number, so it never advances the count —
+            # reading it as one would make 5 -> 5a look like a gap.
+            if line.get("sub") and nums and nums[-1] == line["n"]:
+                continue
+            nums.append(line["n"])
     for col, nums in lines_by_col.items():
         for a, b in zip(nums, nums[1:]):
             if b != a + 1:

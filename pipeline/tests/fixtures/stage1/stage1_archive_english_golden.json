@@ -33,7 +33,7 @@
    "id": "1:1094b",
    "book": 1,
    "column": "1094b",
-   "text": "Second chapter sentence. -THE END-",
+   "text": "Second chapter sentence.",
    "notes": [],
    "markers": [
     {
@@ -50,7 +50,7 @@
     },
     {
      "n": 5,
-     "offset": 34,
+     "offset": 24,
      "real": false
     }
    ]

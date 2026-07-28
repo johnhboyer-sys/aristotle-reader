@@ -16,7 +16,9 @@ to build/dist/reports/ for the Milestone 2 review.
 from __future__ import annotations
 
 import json
+import re
 import shutil
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -29,6 +31,67 @@ def _load(rel: str):
 
 
 _COLSEP = "⎪"  # U+23AA — the TLG column divider inside Aristotle's inline tables
+
+
+def _normalized_gloss(value: str) -> str:
+    normalized = " ".join(value.lower().split())
+    while normalized and (
+        normalized[-1].isspace()
+        or unicodedata.category(normalized[-1]).startswith("P")
+    ):
+        normalized = normalized[:-1]
+    return normalized
+
+
+def merge_short_def(
+    gloss: str, lemma: str, candidate_keys: list[str], short_defs: dict[str, str]
+) -> str:
+    """Conservatively extend a truncated Morpheus gloss from an LSJ definition.
+
+    A lemma usually maps to numbered homonyms rather than to itself (e)/xw ->
+    e)/xw1, e)/xw2), and nothing in a Morpheus reading says which entry it
+    belongs to. So extend only where the choice is forced: either the lemma is
+    itself one of the LSJ keys, or every key that extends the gloss extends it
+    the same way. Where the homonyms disagree — u(podeh/s1 "somewhat deficient,
+    inferior" against u(podeh/s2 "somewhat fearful", both extending "somewhat"
+    — keep the gloss Morpheus shipped rather than pick one.
+    """
+    normalized_gloss = _normalized_gloss(gloss)
+    if not normalized_gloss:
+        return gloss
+
+    keys = [lemma] if lemma in candidate_keys else candidate_keys
+    extensions = set()
+    for key in keys:
+        derived = short_defs.get(key)
+        if not derived:
+            continue
+        normalized_derived = _normalized_gloss(derived)
+        if (
+            len(normalized_derived) > len(normalized_gloss)
+            and re.match(rf"^{re.escape(normalized_gloss)}\b", normalized_derived)
+        ):
+            extensions.add(derived)
+    if len(extensions) == 1:
+        return extensions.pop()
+    return gloss
+
+
+def resolve_parses(parses: list[dict], short_defs: dict[str, str]) -> list[dict]:
+    """Drop spurious readings, then extend the survivors' truncated glosses.
+
+    The order matters: filter_parses recognizes a spurious reading by its gloss
+    exactly duplicating a resolved sibling's, and those are Morpheus glosses.
+    Extending them first would make the duplicate stop looking like one, so the
+    junk reading would survive — and can then become the token's primary
+    analysis, which shifts the lemma bucket a lexicon page is built from.
+    """
+    kept = filter_parses(parses)
+    for parse in kept:
+        parse["gloss"] = merge_short_def(
+            parse["gloss"], parse["lemma"], parse["lsj"], short_defs
+        )
+    return kept
 
 
 def _greek_cells(text: str, tokens: list[dict]):
@@ -242,7 +305,10 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
     by_book: dict[int, list[dict]] = defaultdict(list)
     for seg in spine["segments"]:
         tok_seg = tokens_by_id[seg["id"]]
-        tok_lines = {l["n"]: l["tokens"] for l in tok_seg["lines"]}
+        # keyed by (n, sub): a lettered line shares its number with the
+        # plain line it follows, so keying on n alone hands both the same
+        # tokens and silently drops one line's worth
+        tok_lines = {(l["n"], l.get("sub")): l["tokens"] for l in tok_seg["lines"]}
         eng = english_by_id.get(seg["id"])
         line_ns = [line["n"] for line in seg["lines"]]
         chapter_starts = _chapter_starts(
@@ -259,9 +325,10 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
                     {
                         "n": line["n"],
                         "text": line["text"],
+                        **({"sub": line["sub"]} if line.get("sub") else {}),
                         **({"joined": True} if line.get("joined") else {}),
-                        "tokens": tok_lines[line["n"]],
-                        **({"cells": cells} if (cells := _greek_cells(line["text"], tok_lines[line["n"]])) else {}),
+                        "tokens": tok_lines[(line["n"], line.get("sub"))],
+                        **({"cells": cells} if (cells := _greek_cells(line["text"], tok_lines[(line["n"], line.get("sub"))])) else {}),
                     }
                     for line in seg["lines"]
                 ],
@@ -315,6 +382,16 @@ def emit_analyses(out_dir: Path) -> dict:
     analyses = _load("stage4/analyses.json")
     key_map = _load("stage4/key_map.json")
     lemma_map = _load("stage5/lemma_map.json")
+    # Absent when stage7 is re-run alone over a build predating short defs;
+    # the glosses then stay as Morpheus shipped them. Say so — a silent
+    # fallback ships "make" for poie/w and looks like a successful build.
+    short_defs_path = BUILD_DIR / "stage5" / "short_defs.json"
+    if short_defs_path.exists():
+        short_defs = _load("stage5/short_defs.json")
+    else:
+        short_defs = {}
+        print("  stage7 WARNING: no stage5/short_defs.json — shipping raw "
+              "Morpheus glosses; re-run stage5 to repair them")
     merged: dict[str, list[dict]] = {}
     dropped = 0
     for token_key, stored_key in key_map.items():
@@ -327,7 +404,7 @@ def emit_analyses(out_dir: Path) -> dict:
             }
             for g in analyses[stored_key]
         ]
-        kept = filter_parses(parses)
+        kept = resolve_parses(parses, short_defs)
         dropped += len(parses) - len(kept)
         merged[token_key] = kept
     (out_dir / "analyses.json").write_text(
@@ -459,7 +536,15 @@ def run(manifest: Manifest) -> Path:
     _merge_shared_lsj()
 
     (out_dir / "search").mkdir(exist_ok=True)
-    for f in ["greek_lemma.json", "greek_form.json", "english.json", "meta.json"]:
+    for f in [
+        "greek_lemma.json",
+        "greek_form.json",
+        "english.json",
+        "meta.json",
+        "offsets.json",
+        "grammar-dict.json",
+        "grammar-col.bin",
+    ]:
         shutil.copy(BUILD_DIR / "stage6" / f, out_dir / "search" / f)
 
     work = manifest.data["work"]

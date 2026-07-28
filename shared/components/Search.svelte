@@ -1,9 +1,36 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { search, type SearchMode, type LangOp, type MatchMode, type SearchResult } from '../lib/search';
-  import { fetchBook, fetchChapters, type Segment, type ChapterRef } from '../lib/data';
+  import {
+    search,
+    searchCombo,
+    searchPhraseVariants,
+    greekFold,
+    COMBO_WINDOW_DEFAULT,
+    COMBO_WINDOW_MAX,
+    type SearchMode,
+    type LangOp,
+    type MatchMode,
+    type SearchResult,
+    type GrammarQuery,
+    type SlotKind,
+    type ComboSlot,
+    type SlotRelation,
+    type ComboOptions,
+    type WindowUnit,
+  } from '../lib/search';
+  import {
+    fetchBook,
+    fetchChapters,
+    fetchLemmaPickerShard,
+    fetchLemmaGlosses,
+    type Segment,
+    type ChapterRef,
+    type LemmaCandidate,
+  } from '../lib/data';
   import { escapeRe, highlightPrefixMatches, searchTermPrefix } from '../lib/text';
   import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
+
+  const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   // One match occurrence, located precisely enough to label and jump to.
   interface Instance {
@@ -13,6 +40,9 @@
     ref: string;       // e.g. "1097a15"
     html: string;      // KWIC snippet
     jumpUrl: string;
+    // Grammatical hits only: the reading is stated as one-of-N when the parse
+    // does not settle it. Absent when the parse is unambiguous.
+    oneOf?: string;
   }
   // All instances within one chapter, merged into a single (collapsible) card.
   interface ChapterGroup {
@@ -42,6 +72,65 @@
   let searched = false;
   let error = '';
   let failedWorks: string[] = [];         // works whose index didn't load this run
+  // Works whose chapter edges are line-precise only; set solely when the query
+  // depends on chapter geometry, so it is never noise.
+  let approximateChapters: string[] = [];
+
+  // Inflected variants of a typed phrase. Offered only for a Greek phrase
+  // searched by surface form, which is the case where finding the variants by
+  // hand means knowing every word's dictionary form.
+  let variantNote = '';
+  let variantBusy = false;
+  let variantsShown = false;
+  // Offered for ANY multi-word Greek query, not only a form-phrase one. Tying it
+  // to "Exact phrase" + "Exact form" hid it behind two controls a reader has no
+  // reason to touch, so the people it helps most were the least likely to meet
+  // it. What it does does not depend on the current mode: it finds the phrase
+  // under every dictionary form of its words.
+  $: canWiden = !comboActive && !soloLemmaActive
+    && grkQuery.trim().split(/\s+/).filter(Boolean).length > 1;
+
+  // Lemma mode matches dictionary forms, so a phrase typed as it stands on the
+  // page (τὸ τί ἦν εἶναι) finds nothing — τό is not a headword, ὁ is. That reads
+  // as "no such phrase" when it is really "not in one passage". A typed
+  // inflection now resolves to its headword, so this no longer fires for the
+  // reader who simply did not know the dictionary form — what is left is a
+  // genuine miss, and widening is what answers it.
+  $: lemmaDeadEnd = searched && !error && totalInstances === 0 && !variantsShown
+    && matchMode === 'lemma' && canWiden && !engQuery.trim();
+
+  async function findVariants() {
+    variantBusy = true;
+    error = '';
+    try {
+      const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
+      const outcome = await searchPhraseVariants(searchCtx.grkQuery || grkQuery, works);
+      if (!outcome.results.length && !outcome.readings.length) {
+        variantNote = 'No dictionary form is recorded for one of these words, so there is nothing to widen.';
+        return;
+      }
+      failedWorks = outcome.failedWorks;
+      totalInstances = outcome.results.reduce((n, r) => n + instCount(r), 0);
+      pages = paginate(outcome.results);
+      searched = true;
+      variantsShown = true;
+      if (pages.length) await renderPage(0);
+      else { groups = []; pageIdx = 0; }
+      // Say what was actually searched. Two readings of one word routinely land
+      // on the same tokens — one passage under two parses — so the places are
+      // unioned, not added up, and the count below is places, not readings.
+      const readings = outcome.productive.length || outcome.readings.length;
+      variantNote =
+        `Showing every place this phrase stands under any dictionary form of its words`
+        + ` (${readings} reading${readings === 1 ? '' : 's'} matched`
+        + (outcome.cappedFrom ? `, of ${outcome.cappedFrom} possible — the rest were not tried` : '')
+        + ').';
+    } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+    } finally {
+      variantBusy = false;
+    }
+  }
   let showHelp = false;
   let helpModal: HTMLDivElement;
   let helpTrigger: HTMLElement | null = null;
@@ -76,10 +165,293 @@
   let accentSensitive = false;
   // NFC + lowercase + final-sigma normalisation, diacritics KEPT.
   const accentNorm = (s: string) => s.normalize('NFC').toLowerCase().replace(/ς/g, 'σ');
+  // This filter compares ACCENTED tokens, so it cannot reuse the engine's
+  // fold-form matcher — but it has to honour the same wildcard syntax, or a `?`
+  // or mid-word `*` query with accents on would find its hits in the index and
+  // then silently drop every one of them here.
+  const _accentRe = new Map<string, RegExp>();
+  function accentRegex(q: string): RegExp {
+    let re = _accentRe.get(q);
+    if (!re) {
+      const body = [...q].map(ch =>
+        ch === '*' ? '.*' : ch === '?' ? '.' : ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('');
+      re = new RegExp(`^${body}$`);
+      _accentRe.set(q, re);
+    }
+    return re;
+  }
   function accentTokenMatch(token: string, terms: string[]): boolean {
     const t = accentNorm(token);
-    return terms.some(q =>
-      q.endsWith('*') ? t.startsWith(q.slice(0, -1)) : t === q);
+    return terms.some(q => {
+      const p = q.replace(/^\*+/, '');           // leading * is the capital marker
+      if (!p.includes('*') && !p.includes('?')) return t === p;
+      return accentRegex(p).test(t);
+    });
+  }
+
+  // ── Grammatical search ─────────────────────────────────────────────────────
+  // A separate engine over the same offsets, not a filter on the Greek box:
+  // it answers "which words are in the optative". The Greek/English boxes are
+  // disabled while a grammatical query is active.
+  //
+  // The vocabulary is exactly what Morpheus emits, nothing inferred. There is
+  // no part-of-speech option: the analyses carry no noun/verb/adjective field,
+  // and deriving one from feature presence would claim more than the data says.
+  const GRAMMAR_CATEGORIES: { key: string; label: string; values: string[] }[] = [
+    { key: 'case',   label: 'Case',   values: ['nom', 'gen', 'dat', 'acc', 'voc'] },
+    { key: 'number', label: 'Number', values: ['sg', 'pl', 'dual'] },
+    { key: 'gender', label: 'Gender', values: ['masc', 'fem', 'neut'] },
+    { key: 'tense',  label: 'Tense',  values: ['pres', 'imperf', 'fut', 'aor', 'perf', 'plup', 'futperf'] },
+    { key: 'mood',   label: 'Mood',   values: ['ind', 'subj', 'opt', 'imperat', 'inf', 'part'] },
+    { key: 'voice',  label: 'Voice',  values: ['act', 'mid', 'pass', 'mp'] },
+    { key: 'person', label: 'Person', values: ['1st', '2nd', '3rd'] },
+    { key: 'degree', label: 'Degree', values: ['comp', 'superl', 'irreg_comp'] },
+    // Morpheus's own explicit word-class tags — the only part-of-speech-like
+    // claim the analyses actually support. Indexed, so offer them rather than
+    // stranding them.
+    { key: 'marker', label: 'Word class', values: ['adverb', 'adverbial', 'particle', 'prep', 'conj', 'interrog', 'exclam', 'indecl', 'numeral', 'letter'] },
+  ];
+  // GRAMMAR_CATEGORIES is now reached only through a combo slot. Grammatical
+  // features do not make a question on their own: asked alone, "genitive plural
+  // feminine" answers with 33,504 hits, which is a fact about Greek and not an
+  // answer to anything. As one term beside another — this word near a genitive
+  // plural — the same index earns its keep.
+
+  // ── Combo search ──────────────────────────────────────────────────────────
+  interface LemmaMatch {
+    key: string;
+    count: number;              // tokens a search on this fold key returns
+    candidates: LemmaCandidate[];
+  }
+  interface ComboEditor {
+    id: number;
+    kind: SlotKind;
+    text: string;
+    picked: string[];
+    grammar: GrammarQuery;
+    lemmaInput: string;
+    lemmaMatches: LemmaMatch[];
+    lemmaCapped: boolean;
+    lemmaLoading: boolean;
+    lemmaError: string;
+    lemmaRequest: number;
+    relation: SlotRelation;
+  }
+
+  let nextComboId = 1;
+  let nextLemmaRequest = 1;
+  function newComboEditor(kind: SlotKind): ComboEditor {
+    return {
+      id: nextComboId++,
+      kind,
+      text: '',
+      picked: [],
+      grammar: {},
+      lemmaInput: '',
+      lemmaMatches: [],
+      lemmaCapped: false,
+      lemmaLoading: false,
+      lemmaError: '',
+      lemmaRequest: 0,
+      relation: 'near',
+    };
+  }
+
+  let comboEditors: ComboEditor[] = [newComboEditor('lemma'), newComboEditor('form')];
+
+  // One dictionary word on its own. Combo could express it with a single slot,
+  // but asking for every occurrence of a lemma is the commonest scholarly
+  // question there is, and it should not cost the reader a proximity query to
+  // ask. It reuses the combo lemma picker so both offer the same headword list.
+  let soloLemma = newComboEditor('lemma');
+  $: soloLemmaActive = soloLemma.picked.length > 0;
+
+  // The picker edits whichever of these holds the id; combo slots live in an
+  // array, the solo term on its own, so reads and writes go through these.
+  function editorById(id: number): ComboEditor | undefined {
+    return id === soloLemma.id ? soloLemma : comboEditors.find((slot) => slot.id === id);
+  }
+  function commitEditor(id: number) {
+    if (id === soloLemma.id) soloLemma = soloLemma;
+    else comboEditors = [...comboEditors];
+  }
+  let comboWindow = COMBO_WINDOW_DEFAULT;
+  let comboUnit: WindowUnit = 'words';
+  let comboOrdered = false;
+  let comboCrossChapter = true;
+  let lemmaGlosses: Record<string, string[]> = {};
+  const lemmaGlossLoading = new Set<string>();
+
+  // `ordered` is passed in rather than read from scope so the reactive
+  // statement below re-runs when the order lock is toggled.
+  function comboSlot(editor: ComboEditor, ordered: boolean): ComboSlot | null {
+    // The order lock is a whole-query constraint, so it supersedes the per-slot
+    // relations rather than combining with them (the two can contradict).
+    const relation = ordered ? 'near' : editor.relation;
+    if (editor.kind === 'grammatical') {
+      return Object.keys(editor.grammar).length
+        ? { kind: editor.kind, query: { ...editor.grammar }, relation }
+        : null;
+    }
+    if (editor.kind === 'lemma') {
+      return editor.picked.length
+        ? { kind: editor.kind, terms: [...editor.picked], relation }
+        : null;
+    }
+    const text = editor.text.trim();
+    if (!text) return null;
+    return {
+      kind: editor.kind,
+      terms: editor.kind === 'phrase' ? text.split(/\s+/) : [text],
+      relation,
+    };
+  }
+
+  $: comboSearchSlots = comboEditors
+    .map((editor) => comboSlot(editor, comboOrdered))
+    .filter((slot): slot is ComboSlot => slot !== null);
+  $: comboActive = comboSearchSlots.length >= 2;
+  let advancedOpen = false;
+  $: if (comboActive || soloLemmaActive) advancedOpen = true;
+  // Whether the tool's <details> is open has to live in component state. Bound
+  // one way as open={comboActive}, a panel the reader opened by hand is only
+  // ever open in the DOM — the component still thinks it is shut, so the next
+  // render that re-applies the attribute slams it closed under them. This keeps
+  // the auto-open (activating the tool reveals it) while recording the reader's
+  // own toggle, so nothing they typed can collapse the panel they typed it in.
+  let comboPanelOpen = false;
+  let soloPanelOpen = false;
+  $: if (comboActive) comboPanelOpen = true;
+  $: if (soloLemmaActive) soloPanelOpen = true;
+  $: comboOptions = {
+    window: comboWindow,
+    unit: comboUnit,
+    ordered: comboOrdered,
+    crossChapter: comboCrossChapter,
+  } satisfies ComboOptions;
+
+  function toggleAdvanced() {
+    advancedOpen = comboActive || soloLemmaActive ? true : !advancedOpen;
+  }
+
+  function setComboKind(id: number, kind: SlotKind) {
+    const index = comboEditors.findIndex((slot) => slot.id === id);
+    if (index < 0 || comboEditors[index].kind === kind) return;
+    const relation = comboEditors[index].relation;   // not kind-specific; keep it
+    comboEditors[index] = newComboEditor(kind);
+    comboEditors[index].id = id;
+    comboEditors[index].relation = relation;
+    comboEditors = [...comboEditors];
+  }
+
+  function setComboRelation(id: number, relation: SlotRelation) {
+    const editor = comboEditors.find((slot) => slot.id === id);
+    if (!editor) return;
+    editor.relation = relation;
+    comboEditors = [...comboEditors];
+  }
+
+  function setComboText(id: number, text: string) {
+    const editor = comboEditors.find((slot) => slot.id === id);
+    if (!editor) return;
+    editor.text = text;
+    comboEditors = [...comboEditors];
+  }
+
+  function addComboEditor() {
+    if (comboEditors.length < 4) comboEditors = [...comboEditors, newComboEditor('form')];
+  }
+
+  function removeComboEditor(id: number) {
+    if (comboEditors.length > 2) comboEditors = comboEditors.filter((slot) => slot.id !== id);
+  }
+
+  function setComboGrammar(id: number, key: string, value: string) {
+    const editor = comboEditors.find((slot) => slot.id === id);
+    if (!editor) return;
+    const next = { ...editor.grammar };
+    if (value) next[key] = value; else delete next[key];
+    editor.grammar = next;
+    comboEditors = [...comboEditors];
+  }
+
+  async function searchLemmaChoices(id: number, input: string) {
+    const editor = editorById(id);
+    if (!editor) return;
+    editor.lemmaInput = input;
+    editor.lemmaMatches = [];
+    editor.lemmaCapped = false;
+    editor.lemmaError = '';
+    const folded = greekFold(input.trim());
+    // Counted across the panel, not per editor: changing a slot's kind swaps in
+    // a fresh editor under the same id, so a per-editor counter would restart
+    // and let an in-flight response from the old editor pass the staleness check.
+    const request = nextLemmaRequest++;
+    editor.lemmaRequest = request;
+    if (!folded) {
+      editor.lemmaLoading = false;
+      commitEditor(id);
+      return;
+    }
+    editor.lemmaLoading = true;
+    commitEditor(id);
+    const letter = /^[a-z]/.test(folded) ? folded[0] : '_';
+    try {
+      const shard = await fetchLemmaPickerShard(letter);
+      // Commonest first, not alphabetical: typing "log" should offer λόγος
+      // before λόγιον. Candidates within a key are already frequency-ordered by
+      // the build, so the first one carries the key's weight. Ties fall back to
+      // alphabetical so the list is stable.
+      const found = Object.entries(shard)
+        .filter(([key]) => key.startsWith(folded))
+        .sort(([a, ca], [b, cb]) => cb.n - ca.n || a.localeCompare(b));
+      const current = editorById(id);
+      if (!current || current.lemmaRequest !== request) return;
+      current.lemmaMatches = found.slice(0, 30).map(([key, choice]) => ({ key, count: choice.n, candidates: choice.c }));
+      current.lemmaCapped = found.length > 30;
+      current.lemmaLoading = false;
+      commitEditor(id);
+    } catch {
+      const current = editorById(id);
+      if (!current || current.lemmaRequest !== request) return;
+      current.lemmaLoading = false;
+      current.lemmaError = 'Lemma choices could not be loaded. Try typing again.';
+      commitEditor(id);
+    }
+  }
+
+  function toggleComboLemma(id: number, key: string) {
+    const editor = editorById(id);
+    if (!editor) return;
+    editor.picked = editor.picked.includes(key)
+      ? editor.picked.filter((picked) => picked !== key)
+      : [...editor.picked, key];
+    commitEditor(id);
+  }
+
+  async function loadLemmaGlosses(slug: string) {
+    if (lemmaGlosses[slug] || lemmaGlossLoading.has(slug)) return;
+    lemmaGlossLoading.add(slug);
+    try {
+      lemmaGlosses = { ...lemmaGlosses, [slug]: await fetchLemmaGlosses(slug) };
+    } catch {
+      lemmaGlosses = { ...lemmaGlosses, [slug]: [] };
+    } finally {
+      lemmaGlossLoading.delete(slug);
+    }
+  }
+
+  function glossOnMount(_node: HTMLElement, slug?: string) {
+    if (slug) loadLemmaGlosses(slug);
+    return {
+      update(next?: string) {
+        if (next) loadLemmaGlosses(next);
+      },
+    };
+  }
+
+  function clampComboWindow() {
+    comboWindow = Math.max(1, Math.min(Number(comboWindow) || COMBO_WINDOW_DEFAULT, COMBO_WINDOW_MAX));
   }
 
   // Shared option list for the per-language mode selectors.
@@ -372,9 +744,8 @@
     if (ctx.grkQuery) qs.set('hlg', ctx.grkQuery);
     if (ctx.engQuery) qs.set('hle', ctx.engQuery);
     const base = qs.toString();
-    const root = import.meta.env.BASE_URL.replace(/\/$/, '');
     const jumpFor = (work: string, book: number, column: string, line: number) =>
-      `${root}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${line}`;
+      `${BASE_URL}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${line}`;
 
     for (const r of results) {
       const seg = segMap.get(`${r.work}:${r.meta.id}`);
@@ -387,12 +758,22 @@
         if (ctx.grkAccentTerms.length) {
           for (const line of seg.greek) for (const tok of line.tokens) toks.push(tok.t);
         }
-        for (const pos of r.grkPositions) {
+        for (let i = 0; i < r.grkPositions.length; i++) {
+          const pos = r.grkPositions[i];
           if (ctx.grkAccentTerms.length
             && !accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms)) continue;
           const line = lineOfPosition(seg, pos);
           const ch = lookup(seg.column, line);
-          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line) });
+          // r.grammar runs parallel to grkPositions on a grammatical search.
+          // Where the parse doesn't settle the reading, say so on the hit
+          // rather than letting the match imply a certainty it doesn't have.
+          const g = r.grammar?.[i];
+          const oneOf = g && !g.certain
+            ? Object.entries(g.values)
+                .map(([cat, vals]) => `${cat} ${vals.join(' or ')}`)
+                .join(' · ')
+            : undefined;
+          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${line}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line), oneOf });
         }
       }
       if (r.engMatch) {
@@ -474,10 +855,13 @@
 
   async function doSearch(e?: Event) {
     e?.preventDefault();
-    if (!grkQuery.trim() && !engQuery.trim()) return;
+    if (!grkQuery.trim() && !engQuery.trim() && !comboActive && !soloLemmaActive) return;
     loading = true;
     error = '';
     failedWorks = [];
+    approximateChapters = [];
+    variantNote = '';
+    variantsShown = false;
     pageError = '';
     csvNote = '';
     searched = false;
@@ -485,15 +869,27 @@
       const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
       // Snapshot the submitted query for all deferred (per-page / CSV) rendering.
       searchCtx = {
-        grkQuery: grkQuery.trim(),
-        engQuery: engQuery.trim(),
-        engTerms: engQuery.trim().split(/\s+/).filter(Boolean),
-        grkAccentTerms: accentSensitive
+        // Grammatical and combo queries name no single word, so there is
+        // nothing for the reader to highlight on jump and no accent
+        // post-filter to apply.
+        grkQuery: comboActive ? '' : soloLemmaActive ? soloLemma.picked.join(' ') : grkQuery.trim(),
+        engQuery: comboActive ? '' : engQuery.trim(),
+        engTerms: comboActive ? [] : engQuery.trim().split(/\s+/).filter(Boolean),
+        // A picked lemma is a fold key, not the reader's spelling, so there is
+        // no typed accent pattern to post-filter against.
+        grkAccentTerms: !comboActive && !soloLemmaActive && accentSensitive
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
       };
-      const { results, failedWorks: failed } = await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
+      const { results, failedWorks: failed, approximateChapters: approximate } = comboActive
+        ? await searchCombo(comboSearchSlots, comboOptions, works)
+        // Picked headwords are OR-ed: choosing two spellings of one word, or two
+        // homonyms, asks for either, never for both in the same passage.
+        : soloLemmaActive
+          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'lemma')
+          : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
       failedWorks = failed;
+      approximateChapters = approximate ?? [];
       totalInstances = results.reduce((n, r) => n + instCount(r), 0);
       pages = paginate(results);
       searched = true;
@@ -645,6 +1041,87 @@
   }
 </script>
 
+  {#snippet lemmaPicker(editor: ComboEditor, groupLabel: string)}
+                  <label class="combo-text-field" for={`lemma-${editor.id}`}>
+                    <span>Find a lemma</span>
+                    <input
+                      id={`lemma-${editor.id}`}
+                      lang="grc"
+                      type="search"
+                      value={editor.lemmaInput}
+                      on:input={(e) => searchLemmaChoices(editor.id, e.currentTarget.value)}
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="none"
+                      spellcheck="false"
+                    />
+                  </label>
+
+                  {#if editor.picked.length}
+                    <div class="lemma-chips" aria-label={`Picked lemmas for ${groupLabel}`}>
+                      {#each editor.picked as key}
+                        <button
+                          type="button"
+                          class="lemma-chip"
+                          aria-label={`Remove picked lemma ${key}`}
+                          on:click={() => toggleComboLemma(editor.id, key)}
+                        >{key} <span aria-hidden="true">×</span></button>
+                      {/each}
+                    </div>
+                  {/if}
+
+                  {#if editor.lemmaLoading}
+                    <p class="lemma-status" aria-live="polite">Loading lemmas…</p>
+                  {:else if editor.lemmaError}
+                    <p class="lemma-status lemma-error" role="alert">{editor.lemmaError}</p>
+                  {:else if editor.lemmaInput.trim() && editor.lemmaMatches.length === 0}
+                    <p class="lemma-status">No lemmas start with that text.</p>
+                  {:else if editor.lemmaMatches.length}
+                    <div class="lemma-candidates" role="group" aria-label={`Lemma choices for ${groupLabel}`}>
+                      <!-- One choice per fold key, not per headword. The index is
+                           accent-folded, so ὅρος, ὄρος and ὀρός are a single key
+                           and no search can separate them; offering them as three
+                           ticks would promise a distinction that does not exist. -->
+                      {#each editor.lemmaMatches as match (match.key)}
+                        {#if match.candidates.length}
+                          <label class="lemma-candidate" use:glossOnMount={match.candidates.find((c) => c.s)?.s}>
+                            <input
+                              type="checkbox"
+                              checked={editor.picked.includes(match.key)}
+                              aria-label={`Select ${match.candidates.map((c) => c.h).join(', ')}, lemma key ${match.key}`}
+                              on:change={() => toggleComboLemma(editor.id, match.key)}
+                            />
+                            <span class="lemma-head" lang="grc">{match.candidates.map((c) => c.h).join(' · ')}</span>
+                            <span class="lemma-key">{match.key}</span>
+                            <span class="lemma-frequency">{match.count}×</span>
+                            {#if match.candidates.length > 1}
+                              <span class="lemma-shared">searched together — the accent-folded index cannot separate them</span>
+                            {/if}
+                            {#each match.candidates.filter((c) => c.s && lemmaGlosses[c.s]?.length).slice(0, 1) as glossed}
+                              <span class="lemma-gloss">{lemmaGlosses[glossed.s!].slice(0, 2).join('; ')}</span>
+                            {/each}
+                          </label>
+                        {:else}
+                          <label class="lemma-candidate">
+                            <input
+                              type="checkbox"
+                              checked={editor.picked.includes(match.key)}
+                              aria-label={`Select unresolved lemma key ${match.key}`}
+                              on:change={() => toggleComboLemma(editor.id, match.key)}
+                            />
+                            <span class="lemma-head unresolved">{match.key}</span>
+                            <span class="lemma-key">unresolved headword</span>
+                          </label>
+                        {/if}
+                      {/each}
+                    </div>
+                    {#if editor.lemmaCapped}
+                      <p class="lemma-status">Showing the first 30 matching lemma keys. Type more to narrow the list.</p>
+                    {/if}
+                  {/if}
+  {/snippet}
+
+
 <svelte:window on:keydown={onHelpKey} />
 
 <main class="search-page">
@@ -664,6 +1141,7 @@
         autocorrect="off"
         autocapitalize="none"
         spellcheck="false"
+        disabled={comboActive || soloLemmaActive}
       />
       <button type="button" class="help-btn" on:click={openHelp} aria-haspopup="dialog" title="How to type Greek">
         ⌨ Type Greek
@@ -677,15 +1155,206 @@
           <label><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} /> {opt.l}</label>
         {/each}
       </fieldset>
-      <fieldset class="mode-group" title="Lemma matches every inflected form of a headword; Exact form matches the word only as written">
-        <legend>Form</legend>
-        <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Lemma</label>
-        <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Exact form</label>
+      <fieldset class="mode-group" title="Any form: type the word as it stands on the page and every form of it is found. Only as I typed it: the spelling you gave, and no other.">
+        <legend>Match</legend>
+        <label><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /> Any form of this word</label>
+        <label><input type="radio" name="matchmode" value="form" bind:group={matchMode} /> Only as I typed it</label>
       </fieldset>
       <fieldset class="mode-group" title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens.">
         <legend>Accents</legend>
         <label><input type="checkbox" bind:checked={accentSensitive} /> Match accents exactly</label>
       </fieldset>
+    </div>
+
+    <div class="advanced-panel">
+      <div class="advanced-head">
+        <button
+          type="button"
+          class="advanced-trigger"
+          aria-expanded={advancedOpen}
+          aria-controls="advanced-tools"
+          on:click={toggleAdvanced}
+        >
+          Advanced search <span aria-hidden="true">{advancedOpen ? '▴' : '▾'}</span>
+        </button>
+        <a
+          class="guide-link"
+          href={`${BASE_URL}/advanced`}
+          target="_blank"
+          rel="noreferrer"
+        >What these tools do</a>
+      </div>
+      {#if advancedOpen}
+        <div id="advanced-tools" class="advanced-body">
+          <details class="lemma-panel" bind:open={soloPanelOpen}>
+            <summary>
+              Single lemma
+              {#if soloLemmaActive}<span class="combo-active">{soloLemma.picked.length} picked</span>{/if}
+            </summary>
+            <p class="lemma-panel-note">
+              Every occurrence of one dictionary word, in all its forms. Pick the
+              headword rather than typing a spelling, so you get the word you
+              meant and not the ones that merely look like it.
+              <a class="guide-link" href={`${BASE_URL}/advanced#endings`} target="_blank" rel="noreferrer">What is this?</a>
+              Picking more than one asks for any of them.
+              This searches on its own — it ignores the Greek box above.
+            </p>
+            {@render lemmaPicker(soloLemma, 'the single lemma search')}
+            {#if soloLemmaActive}
+              <button
+                type="button"
+                class="lemma-panel-clear"
+                on:click={() => { soloLemma.picked = []; soloLemma = soloLemma; }}
+              >Clear picked lemmas</button>
+            {/if}
+          </details>
+
+          <details class="combo-panel" bind:open={comboPanelOpen}>
+            <summary>
+              Combo search
+              {#if comboActive}<span class="combo-active">{comboSearchSlots.length} terms ready</span>{/if}
+            </summary>
+
+            <div class="combo-slots">
+              {#each comboEditors as slot, slotIndex (slot.id)}
+                <section class="combo-slot" aria-labelledby={`combo-slot-${slot.id}`}>
+                  <div class="combo-slot-head">
+                    <span id={`combo-slot-${slot.id}`} class="combo-slot-number">Term {slotIndex + 1}</span>
+                    <label class="combo-kind">
+                      <span>Kind</span>
+                      <select
+                        value={slot.kind}
+                        aria-label={`Kind for term ${slotIndex + 1}`}
+                        on:change={(e) => setComboKind(slot.id, e.currentTarget.value as SlotKind)}
+                      >
+                        <option value="phrase">Phrase</option>
+                        <option value="form">Form</option>
+                        <option value="lemma">Lemma</option>
+                        <option value="grammatical">Grammatical</option>
+                      </select>
+                    </label>
+                    {#if slotIndex > 0}
+                      <!-- Placed against term 1, not against the term above it, so
+                           each answers "before or after the word I am studying?".
+                           The order lock is the stronger whole-query constraint and
+                           supersedes these. -->
+                      <label class="combo-kind">
+                        <span>Relative to term 1</span>
+                        <select
+                          value={slot.relation}
+                          disabled={comboOrdered}
+                          aria-label={`Position of term ${slotIndex + 1} relative to term 1`}
+                          on:change={(e) => setComboRelation(slot.id, e.currentTarget.value as SlotRelation)}
+                        >
+                          <option value="near">Near</option>
+                          <option value="before">Before</option>
+                          <option value="after">After</option>
+                        </select>
+                      </label>
+                    {/if}
+                    <button
+                      type="button"
+                      class="combo-remove"
+                      disabled={comboEditors.length <= 2}
+                      aria-label={`Remove term ${slotIndex + 1}`}
+                      on:click={() => removeComboEditor(slot.id)}
+                    >Remove</button>
+                  </div>
+
+                  {#if slot.kind === 'phrase'}
+                    <label class="combo-text-field" for={`combo-text-${slot.id}`}>
+                      <span>Phrase tokens</span>
+                      <input
+                        id={`combo-text-${slot.id}`}
+                        lang="grc"
+                        type="text"
+                        value={slot.text}
+                        on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                      />
+                    </label>
+                  {:else if slot.kind === 'form'}
+                    <label class="combo-text-field" for={`combo-text-${slot.id}`}>
+                      <span>Surface form</span>
+                      <input
+                        id={`combo-text-${slot.id}`}
+                        lang="grc"
+                        type="text"
+                        value={slot.text}
+                        on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                      />
+                    </label>
+                  {:else if slot.kind === 'lemma'}
+                    {@render lemmaPicker(slot, `term ${slotIndex + 1}`)}
+                  {:else}
+                    <div class="combo-grammar-grid">
+                      {#each GRAMMAR_CATEGORIES as cat}
+                        <label class="grammar-field">
+                          <span>{cat.label}</span>
+                          <select
+                            value={slot.grammar[cat.key] ?? ''}
+                            on:change={(e) => setComboGrammar(slot.id, cat.key, e.currentTarget.value)}
+                          >
+                            <option value="">any</option>
+                            {#each cat.values as v}<option value={v}>{v}</option>{/each}
+                          </select>
+                        </label>
+                      {/each}
+                    </div>
+                  {/if}
+                </section>
+              {/each}
+            </div>
+
+            <button
+              type="button"
+              class="combo-add"
+              disabled={comboEditors.length >= 4}
+              on:click={addComboEditor}
+            >Add term</button>
+
+            <div class="combo-proximity">
+              <label class="combo-option combo-window">
+                <span>Window (words)</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={COMBO_WINDOW_MAX}
+                  bind:value={comboWindow}
+                  disabled={comboUnit !== 'words'}
+                  on:blur={clampComboWindow}
+                />
+              </label>
+              <label class="combo-option">
+                <span>Unit</span>
+                <select bind:value={comboUnit}>
+                  <option value="words">Words</option>
+                  <option value="line">Same line</option>
+                  <option value="chapter">Same chapter</option>
+                </select>
+              </label>
+              <label class="combo-check"><input type="checkbox" bind:checked={comboOrdered} /> In this order</label>
+              <label class="combo-check"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
+            </div>
+
+            <p class="combo-note">
+              Combo search runs on its own and ignores the Greek and English
+              boxes. <a class="guide-link" href={`${BASE_URL}/advanced#combo`} target="_blank" rel="noreferrer">What is this?</a>
+              Every term after the first can be placed near, before or after term
+              1; the order lock is stronger and overrides those. A window never
+              spans a book boundary. Where a slot rests on an ambiguous parse,
+              the hit is reported as one-of-N. <a class="guide-link" href={`${BASE_URL}/advanced#honesty`} target="_blank" rel="noreferrer">What is this?</a>
+            </p>
+          </details>
+        </div>
+      {/if}
     </div>
 
     <div class="query-row">
@@ -698,6 +1367,7 @@
         bind:value={engQuery}
         on:keydown={onEnter}
         autocomplete="off"
+        disabled={comboActive}
       />
     </div>
 
@@ -788,7 +1458,10 @@
 
     <p class="search-hint">
       Type Greek in Greek letters or <button type="button" class="link-btn" on:click={openHelp}>Beta Code</button>
-      (<code>texnh</code> = τέχνη). Use <code>*</code> for a wildcard: <code>fron*</code> matches φρόνησις, φρόνιμος, etc.
+      (<code>texnh</code> = τέχνη). <code>*</code> matches any run of characters; <code>?</code> matches exactly one.
+      <a class="guide-link" href={`${BASE_URL}/advanced#wildcards`} target="_blank" rel="noreferrer">What is this?</a>
+      Use either inside or at the end of a word, in Greek or English. At the start,
+      <code>*</code> is read as the Beta Code capital marker and ignored — there is no suffix wildcard.
     </p>
   </form>
 
@@ -858,6 +1531,13 @@
         <button type="button" class="retry-btn" on:click={doSearch}>Retry</button>
       </p>
     {/if}
+    {#if approximateChapters.length}
+      <p class="search-approximate">
+        Chapter starts in {approximateChapters.map((w) => getWork(w)?.title ?? w).join(', ')}
+        are recorded to the Bekker line, not the word, so a hit within the first
+        line of a chapter may belong to the one before it.
+      </p>
+    {/if}
     <div class="result-bar">
       <p class="result-count">
         {totalInstances === 0
@@ -866,12 +1546,29 @@
             (searchCtx.grkAccentTerms.length ? ' before accent filtering' : '') +
             (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '')}
       </p>
+      {#if canWiden && !variantsShown}
+        <button type="button" class="export-btn" on:click={findVariants} disabled={variantBusy}
+          title="τὸ τί ἦν εἶναι also stands as τῷ τί ἦν εἶναι — same formula, different endings">
+          {variantBusy ? 'Looking…' : 'Find this phrase in any inflection'}
+        </button>
+        <a class="guide-link result-guide" href={`${BASE_URL}/advanced#variants`} target="_blank" rel="noreferrer">What is this?</a>
+      {/if}
       {#if totalInstances > 0}
         <button type="button" class="export-btn" on:click={exportCsv} disabled={csvBusy}>
           {csvBusy ? 'Preparing CSV…' : 'Export results as CSV'}
         </button>
       {/if}
     </div>
+    {#if lemmaDeadEnd}
+      <p class="search-approximate">
+        These words occur, but not together in one passage. Searching for the
+        phrase in any inflection looks for them in the order you typed them,
+        which is usually what an empty result means here.
+      </p>
+    {/if}
+    {#if variantNote}
+      <p class="search-approximate">{variantNote}</p>
+    {/if}
     {#if csvNote}
       <p class="search-note">{csvNote}</p>
     {/if}
@@ -917,6 +1614,9 @@
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                       {@html inst.html}
                     </span>
+                    {#if inst.oneOf}
+                      <span class="inst-oneof" title="The morphological analysis allows more than one reading of this form">{inst.oneOf}</span>
+                    {/if}
                   </li>
                 {/each}
               </ul>
@@ -1003,6 +1703,296 @@
     align-items: center;
     gap: 1rem;
     margin: -0.3rem 0 0.1rem 4.25rem;  /* align under the input, past the label */
+  }
+
+  .advanced-panel {
+    margin: 0.35rem 0 0.1rem 4.25rem;
+    font-family: var(--font-ui);
+  }
+  .advanced-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .advanced-trigger {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text-mid);
+  }
+  .advanced-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: 0.55rem;
+  }
+
+  /* --- Grammatical fields (inside a combo slot) ------------------------ */
+  .grammar-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.78rem;
+    color: var(--text-mid);
+  }
+  .grammar-field select {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    padding: 0.2rem 0.3rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--col-bg);
+    color: var(--text);
+  }
+
+  /* --- Combo search panel ----------------------------------------------- */
+  .lemma-panel {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--input-bg);
+    padding: 0.45rem 0.75rem;
+    font-family: var(--font-ui);
+  }
+  .lemma-panel > summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text-mid);
+  }
+  .lemma-panel-note {
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-mid);
+    max-width: 62ch;
+  }
+  .lemma-panel-clear {
+    margin-top: 0.6rem;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--col-bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .combo-panel {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--input-bg);
+    padding: 0.45rem 0.75rem;
+    font-family: var(--font-ui);
+  }
+  .combo-panel > summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text-mid);
+  }
+  .combo-active {
+    margin-left: 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--accent);
+  }
+  .combo-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
+  .combo-slot {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--col-bg);
+    padding: 0.55rem 0.65rem 0.65rem;
+  }
+  .combo-slot-head {
+    display: flex;
+    align-items: end;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .combo-slot-number {
+    align-self: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-mid);
+  }
+  .combo-kind,
+  .combo-text-field,
+  .combo-option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--text-mid);
+  }
+  .combo-kind { margin-left: auto; }
+  .combo-kind select,
+  .combo-text-field input,
+  .combo-option select,
+  .combo-option input,
+  .combo-grammar-grid select {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--input-bg);
+    color: var(--text);
+    padding: 0.25rem 0.4rem;
+  }
+  .combo-text-field input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--font-greek);
+    font-size: 0.95rem;
+  }
+  .combo-kind select:focus,
+  .combo-text-field input:focus,
+  .combo-option select:focus,
+  .combo-option input:focus,
+  .combo-grammar-grid select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .combo-remove,
+  .combo-add {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--input-bg);
+    color: var(--accent);
+    padding: 0.25rem 0.55rem;
+    cursor: pointer;
+  }
+  .combo-remove:disabled,
+  .combo-add:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .combo-grammar-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+  }
+  .lemma-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+  }
+  .lemma-chip {
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    color: var(--accent);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.12rem 0.5rem;
+    cursor: pointer;
+  }
+  .lemma-candidates {
+    max-height: 13rem;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-top: 0.45rem;
+    background: var(--input-bg);
+  }
+  .lemma-candidate {
+    display: grid;
+    grid-template-columns: auto minmax(5rem, auto) minmax(4rem, auto) auto minmax(7rem, 1fr);
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.3rem 0.45rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text);
+  }
+  .lemma-candidate:last-child { border-bottom: none; }
+  .lemma-head {
+    font-family: var(--font-greek);
+    font-size: 0.95rem;
+  }
+  .lemma-head.unresolved { font-family: var(--font-ui); }
+  .lemma-key,
+  .lemma-frequency {
+    font-size: 0.7rem;
+    color: var(--text-mid);
+  }
+  .lemma-frequency { font-variant-numeric: tabular-nums; }
+  .lemma-gloss {
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: var(--text-mid);
+  }
+  /* Says why several headwords share one tick. Full width, so it never
+     competes with the headwords themselves for the eye. */
+  .lemma-shared {
+    grid-column: 2 / -1;
+    font-size: 0.68rem;
+    font-style: italic;
+    color: var(--text-mid);
+  }
+  .lemma-status {
+    margin: 0.4rem 0 0;
+    font-size: 0.72rem;
+    color: var(--text-mid);
+  }
+  .lemma-error { color: var(--text); }
+  .combo-add { margin-top: 0.6rem; }
+  .combo-proximity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.6rem 0.9rem;
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--border);
+  }
+  .combo-window input { width: 4.5rem; }
+  .combo-option input:disabled { opacity: 0.5; }
+  .combo-check {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--text);
+    cursor: pointer;
+    padding-bottom: 0.25rem;
+  }
+  .combo-note {
+    margin: 0.6rem 0 0.15rem;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-mid);
+    max-width: 62ch;
+  }
+
+  /* A hit whose parse allows more than one reading. Stated, never implied. */
+  .inst-oneof {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    color: var(--text-mid);
+    border: 1px dashed var(--border);
+    border-radius: 3px;
+    padding: 0 0.3rem;
+    white-space: nowrap;
   }
 
   /* --- Collapsible works selector --------------------------------------- */
@@ -1215,6 +2205,16 @@
     cursor: pointer;
     text-decoration: underline;
   }
+  .guide-link {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--text-light);
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+  .guide-link:hover { color: var(--accent); }
 
   /* --- Help modal --- */
   .help-backdrop {
@@ -1384,6 +2384,17 @@
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     margin: 0.5rem 0;
+  }
+  /* A limit of the source, not an error — stated plainly, styled quietly. */
+  .search-approximate {
+    color: var(--text-mid);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    border-left: 2px solid var(--border);
+    padding: 0.1rem 0 0.1rem 0.6rem;
+    margin: 0.5rem 0;
+    max-width: 70ch;
   }
   .retry-btn {
     font: inherit;
@@ -1577,6 +2588,11 @@
     .query-row { flex-direction: column; align-items: stretch; }
     .query-label { width: auto; }
     .below-query { margin-left: 0; gap: 0.75rem; }
+    .advanced-panel { margin-left: 0; }
+    .combo-slot-head { flex-wrap: wrap; }
+    .combo-kind { margin-left: 0; }
+    .lemma-candidate { grid-template-columns: auto minmax(5rem, 1fr) auto; }
+    .lemma-gloss { grid-column: 2 / -1; }
     .controls-row { gap: 0.5rem; }
     .search-btn { margin-left: 0; width: 100%; margin-top: 0.25rem; }
   }

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import FootnotePopup from '../components/FootnotePopup.svelte';
 import Reader from '../components/Reader.svelte';
 import Search from '../components/Search.svelte';
+import Phrases from '../components/Phrases.svelte';
 import WordPopup from '../components/WordPopup.svelte';
 import type { BookData } from '../lib/data';
 
@@ -45,7 +46,7 @@ vi.mock('../lib/search', async (importOriginal) => {
       results: [
         {
           work: 'EN',
-          meta: { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', greek_tokens: 'logos', english_head: 'Virtue and κόσμος' },
+          meta: { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', english_head: 'Virtue and κόσμος' },
           grkMatch: true,
           engMatch: true,
           grkPositions: [0],
@@ -121,6 +122,11 @@ describe('component accessibility', () => {
   it('Search has no serious or critical axe violations', async () => {
     const { container } = render(Search);
 
+    await expectNoSeriousAxeViolations(container);
+  });
+
+  it('Phrases has no serious or critical axe violations', async () => {
+    const { container } = render(Phrases);
     await expectNoSeriousAxeViolations(container);
   });
 

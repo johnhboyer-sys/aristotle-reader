@@ -291,6 +291,150 @@ export function fetchLemmata(): Promise<Record<string, LemmaRef>> {
   return p;
 }
 
+// The combo-search lemma picker: fold key -> the headwords a lemma slot can
+// match, commonest first. Sharded by fold-initial letter like the LSJ, so
+// typing into the picker fetches one small file rather than the whole
+// vocabulary. Covers every key in greek_lemma.json by construction; the few
+// with no resolvable headword arrive with an empty list and are shown under
+// their fold key. `slug` is present only where the lemma has a reference page,
+// which is where a gloss can be fetched from on demand.
+export interface LemmaCandidate { h: string; k: string; s?: string; }
+// `n` belongs to the fold key, not to any one headword: the index is
+// accent-folded, so several headwords can share a key that no search can split,
+// and the count a user is shown must be the one their search returns.
+export interface LemmaChoice { n: number; c: LemmaCandidate[]; }
+const _pickerCache = new Map<string, Promise<Record<string, LemmaChoice>>>();
+export function fetchLemmaPickerShard(letter: string): Promise<Record<string, LemmaChoice>> {
+  const cached = _pickerCache.get(letter);
+  if (cached) return cached;
+  // Reject rather than resolving empty on a failed fetch: an empty object would
+  // be cached as a real (silent) answer, and the picker would report "no lemmas
+  // start with that text" for the rest of the session with no way to retry.
+  const p = fetch(`${ROOT()}/lemma-picker/${letter}.json`).then(async r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for lemma-picker/${letter}.json`);
+    const shard = await r.json();
+    // A shard built by an older script would have the wrong shape and render as
+    // blank counts rather than failing, so check one entry and refuse it here.
+    const first = Object.values(shard)[0] as LemmaChoice | undefined;
+    if (first && !Array.isArray((first as LemmaChoice).c)) {
+      throw new Error(`lemma-picker/${letter}.json is stale — rebuild the lemma data`);
+    }
+    return shard;
+  });
+  p.catch(() => { if (_pickerCache.get(letter) === p) _pickerCache.delete(letter); });
+  _pickerCache.set(letter, p);
+  return p;
+}
+
+// A lemma page's short glosses, fetched only when the picker needs to show one
+// (the pages are ~4.7 KB each, so they are never loaded in bulk).
+const _glossCache = new Map<string, Promise<string[]>>();
+export function fetchLemmaGlosses(slug: string): Promise<string[]> {
+  const cached = _glossCache.get(slug);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/lemmata/${slug}.json`)
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => (d?.glosses ?? []) as string[]);
+  p.catch(() => { if (_glossCache.get(slug) === p) _glossCache.delete(slug); });
+  _glossCache.set(slug, p);
+  return p;
+}
+
+// Recurrent phrases (stage 8), sharded by the phrase's fold-initial letter.
+//
+// The browse list and the occurrences are separate fetches on purpose: browsing
+// needs every phrase, but only an EXPANDED phrase needs its offsets, and one
+// combined shard reached 10.4 MB. A row is positional to keep the list small —
+// [length, corpus count, distinctiveness score, works, occurrences straddling a
+// chapter?]. The score orders the list; it never removes anything from it.
+export type NgramRow = [number, number, number, number, number?];
+// 'english' indexes the translations. Same shape, same shards, different
+// language — and its occurrences resolve through english-segments.json rather
+// than a work's offsets.json, because the English is aligned per segment.
+export type NgramStream = 'form' | 'lemma' | 'english';
+
+export interface EnglishSegment {
+  book: number;
+  column: string;
+  base: number;
+  words: number;
+}
+
+let _englishSegments: Promise<Record<string, EnglishSegment[]>> | null = null;
+export function fetchEnglishSegments(): Promise<Record<string, EnglishSegment[]>> {
+  if (_englishSegments) return _englishSegments;
+  const p = fetch(`${ROOT()}/ngrams/english-segments.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ngrams/english-segments.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_englishSegments === p) _englishSegments = null; });
+  _englishSegments = p;
+  return p;
+}
+
+const _ngramCache = new Map<string, Promise<Record<string, NgramRow>>>();
+export function fetchNgramShard(
+  stream: NgramStream,
+  letter: string,
+): Promise<Record<string, NgramRow>> {
+  const key = `${stream}/${letter}`;
+  const cached = _ngramCache.get(key);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/ngrams/${key}.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ngrams/${key}.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_ngramCache.get(key) === p) _ngramCache.delete(key); });
+  _ngramCache.set(key, p);
+  return p;
+}
+
+// work -> global offsets, delta-encoded after the first.
+const _occCache = new Map<string, Promise<Record<string, Record<string, number[]>>>>();
+export function fetchNgramOccurrences(
+  stream: NgramStream,
+  letter: string,
+  n: number,
+): Promise<Record<string, Record<string, number[]>>> {
+  const key = `${stream}/occ/${letter}-${n}`;
+  const cached = _occCache.get(key);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/ngrams/${key}.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ngrams/${key}.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_occCache.get(key) === p) _occCache.delete(key); });
+  _occCache.set(key, p);
+  return p;
+}
+
+// Undo the delta encoding: [first, +d, +d, ...] -> absolute global offsets.
+export function decodeOffsets(deltas: number[]): number[] {
+  const out: number[] = [];
+  let at = 0;
+  for (let i = 0; i < deltas.length; i++) {
+    at = i === 0 ? deltas[0] : at + deltas[i];
+    out.push(at);
+  }
+  return out;
+}
+
+// fold(surface) -> the headwords that surface can belong to. Lets a typed
+// phrase be widened to its inflected variants without the reader knowing any
+// dictionary forms. Sharded by fold-initial letter like everything else.
+const _lemmaMapCache = new Map<string, Promise<Record<string, string[]>>>();
+export function fetchLemmaMapShard(letter: string): Promise<Record<string, string[]>> {
+  const cached = _lemmaMapCache.get(letter);
+  if (cached) return cached;
+  const p = fetch(`${ROOT()}/lemma-map/${letter}.json`).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status} for lemma-map/${letter}.json`);
+    return r.json();
+  });
+  p.catch(() => { if (_lemmaMapCache.get(letter) === p) _lemmaMapCache.delete(letter); });
+  _lemmaMapCache.set(letter, p);
+  return p;
+}
+
 export function lsjShard(key: string): string {
   for (const ch of key) {
     if (ch === '*') continue;

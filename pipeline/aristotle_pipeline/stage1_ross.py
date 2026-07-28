@@ -102,6 +102,51 @@ def _book_text(path: Path) -> str:
     return text
 
 
+# The archive wraps every page in navigation, and a long work is served across
+# several pages — so the furniture repeats MID-DOCUMENT, each time followed by a
+# fresh "Translated by" line. It is noise to excise, not an end marker: cutting
+# the document at the first block would have thrown away the second half of De
+# Sensu.
+#
+# The old strip looked for the phrases as contiguous strings, but the page wraps
+# them ("Browse and\nComment"), so it missed and cut instead at "Buy Books" —
+# below the links — leaving "THE END Table of Contents Home Browse and Comment
+# Search" inside the translation of 14 works, visible in the reader.
+#
+# Two or more nav items in a row are required, so a lone legitimate "Search" or
+# "Home" in the prose is safe. Case-sensitive: "THE END" is the archive's
+# marker, "the end" is Aristotle's telos, 326 times over.
+# Unambiguous on their own — none of these is ever Aristotle.
+_NAV_STRONG = re.compile(
+    r"(?:-?\bTHE\s+END\b-?"
+    r"|Table\s+of\s+Contents"
+    r"|Browse\s+and\s+Comment"
+    r"|Buy\s+Books(?:\s+and\s+CD-ROMs)?"
+    # A copyright YEAR, not a bare ©: the Mechanica translation uses © as a
+    # label for a geometric point, and "©[^\n]*" ate 2,845 words of Aristotle.
+    r"|©\s*\d{4}(?:\s*-\s*\d{4})?)"
+)
+# Ordinary words, so only dropped where two or more stand together — which is
+# what is left once the strong items around them are gone.
+_NAV_WEAK = re.compile(r"(?:(?:^|\n)[ \t]*(?:Home|Search|Help)[ \t]*(?=\n|$)){2,}")
+# The page header repeats at every page break inside a long work. The FIRST one
+# is the landmark parse_book uses to skip the title page, so only later ones go.
+_PAGE_HEADER = re.compile(r"\n[ \t]*Translated\s+by[^\n]*")
+# These do end the document — they only ever appear once, at the bottom.
+_DOC_ENDS = (re.compile(r"Commentary:"), re.compile(r"How\s+to\s+cite"))
+
+
+def _strip_furniture(txt: str) -> str:
+    """Drop the web page's own chrome, wherever in the file it falls."""
+    for pattern in _DOC_ENDS:
+        m = pattern.search(txt, 200)
+        if m:
+            txt = txt[:m.start()]
+    txt = _NAV_STRONG.sub("", txt)
+    txt = _NAV_WEAK.sub("\n", txt)
+    return _PAGE_HEADER.sub("", txt)
+
+
 def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
     """{chapter_number: prose} for one archive book file. Chapters start with a
     standalone marker line (bare number, or "Part N") in ascending sequence;
@@ -112,10 +157,7 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
     i = txt.find("Translated by")
     if i >= 0:
         txt = txt[i:]
-    for end in ("Commentary:", "How to cite", "-THE END-", "Buy Books", "Browse and Comment"):
-        j = txt.find(end, 200)
-        if j > 0:
-            txt = txt[:j]
+    txt = _strip_furniture(txt)
     chapters: dict[int, str] = {}
     cur: int | None = None
     buf: list = []

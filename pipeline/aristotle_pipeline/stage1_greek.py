@@ -74,13 +74,32 @@ def _line_text(el: etree._Element, strip_bars: bool = False) -> str:
 
 
 _COMPOUND_N = re.compile(r"^\d+(?:\s*,\s*\d+)+$")
+# Bekker numbers a few lines 5a, 5b … where an edition inserts text after a
+# numbered line — Physics VII 244b runs 1-5, 5a-5d, 6-15. These are ordinary
+# lines of text, not headings.
+#
+# Only a-e. The suffix letter is not always a Bekker sub-line: TLG also numbers
+# a heading 23t (title) and 17n (note), and both carry a <label type="head">
+# whose text _line_text drops, so admitting them files an EMPTY line into the
+# spine and repeats the line number it hangs off. Across the corpus's exports
+# the text sub-lines run a-d (52 of them), against 98 t and 37 n headings.
+_LETTERED_N = re.compile(r"^(\d+)([a-e])$")
 
 
-def _line_no(n: str | None) -> int | None:
-    """The Bekker line number of a plain-numeral <l n="…">, or None otherwise
-    (a heading label or a compound range, both handled by the caller)."""
-    if n and n.isdigit():
-        return int(n)
+def _line_no(n: str | None) -> tuple[int, str | None] | None:
+    """(Bekker line, letter suffix) for an <l n="…">, or None for a heading.
+
+    Returns a suffix of None for a plain numeral. A lettered line keeps the
+    number of the line it follows, so a citation to 244b5 still resolves and
+    document order still sorts, while `sub` preserves which line it is.
+    """
+    if not n:
+        return None
+    if n.isdigit():
+        return int(n), None
+    m = _LETTERED_N.match(n)
+    if m:
+        return int(m.group(1)), m.group(2)
     return None
 
 
@@ -144,11 +163,16 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
                 continue
             if compound:
                 flush()
-            line_no = _line_no(n)
-            if line_no is None:
+            parsed = _line_no(n)
+            if parsed is None:
                 headings.append({"column": column, "text": _line_text(l, strip_bars=True)})
                 continue
-            flat.append({"column": column, "n": line_no, "text": _line_text(l, strip_bars=True)})
+            line_no, sub = parsed
+            line = {"column": column, "n": line_no,
+                    "text": _line_text(l, strip_bars=True)}
+            if sub:
+                line["sub"] = sub
+            flat.append(line)
         if compound:
             flush()
 
@@ -189,6 +213,8 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
             seg_by_key[key] = seg
             segments.append(seg)
         entry = {"n": line["n"], "text": line["text"]}
+        if line.get("sub"):
+            entry["sub"] = line["sub"]
         if line.get("joined"):
             entry["joined"] = True
         seg["lines"].append(entry)

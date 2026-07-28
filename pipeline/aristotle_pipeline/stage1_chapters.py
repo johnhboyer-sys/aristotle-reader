@@ -268,6 +268,7 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
     is skipped and re-pinned via `extra` at its authoritative Bekker start."""
     grc_path = SOURCES_DIR / grc_rel
     joined, owner, wstart, book_start = _spine_words(spine)
+    spine_words = joined.split()
     if chapter_marker == "milestone":
         openings = _chapter_openings_milestone(grc_path, chapter_subtype, book_subtype)
     else:
@@ -278,8 +279,11 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
     chapters: list[dict] = []
     after = 0
     for book, chap, opening, mcol, mline in openings:
+        word_anchor = False
         if not chapters:
-            widx = 0  # the work's first chapter starts the spine
+            # The work-start boundary is authoritative, but it was not found by
+            # matching the chapter's opening words against the spine.
+            widx = 0
         else:
             widx = None
             ow = _norm(opening).split()
@@ -290,16 +294,20 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 if p >= 0:
                     widx = joined[:p].count(" ")
                     after = wstart[widx]
+                    # This position genuinely matched the chapter opening.
+                    word_anchor = True
                     break
             if widx is None and mcol is not None:
                 # Orthographic divergence missed the text match; fall back to the
                 # milestone's own Bekker position (heading pinned at line start).
+                # This is authoritative but not a word-matched anchor.
                 widx = _first_word_at(owner, mcol, mline)
                 # Some First1KGreek chapter divs begin immediately after a page
                 # milestone, before their first line milestone.  The page is
                 # still authoritative; retain the division at the first word in
                 # that page following the previous chapter rather than dropping
-                # it solely because the line is implicit.
+                # it solely because the line is implicit. This page-only
+                # position likewise was not matched to the opening words.
                 if widx is None and mline is None:
                     widx = next(
                         (i for i, (col, _, _) in enumerate(owner)
@@ -315,11 +323,10 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 # APr I.4 diverges at word 4 (spine λέγωμεν vs TEI λέγομεν), so a
                 # 3-word prefix saves it; Top VIII.13 diverges at word 2 (spine
                 # δὲ vs TEI δ᾿), so we must skip leading particles and match a
-                # later window, then step back to the true opening. Longer windows
-                # are tried first (more specific), and the monotonic `after`
-                # pointer keeps a short window from matching before the previous
-                # chapter. The step-back assumes the skipped leading words exist
-                # in the spine (just spelled differently), which holds for elision.
+                # later window, then step back to the inferred opening. Longer
+                # windows are tried first (more specific), and the monotonic
+                # `after` pointer keeps a short window from matching before the
+                # previous chapter.
                 for kk in (4, 3):
                     for start in (0, 1, 2, 3):
                         if len(ow) < start + kk:
@@ -329,6 +336,14 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                             w = joined[:p].count(" ")
                             widx = max(0, w - start)
                             after = wstart[w]
+                            # The suffix match proves the stepped-back position
+                            # only when the skipped normalized words are really
+                            # present there. Keep the historical position either
+                            # way, but never label an inference as word-exact.
+                            word_anchor = (
+                                w >= start
+                                and spine_words[w - start:w] == ow[:start]
+                            )
                             break
                     if widx is not None:
                         break
@@ -345,12 +360,21 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
         if bstart is not None and widx < bstart:
             widx = bstart
             after = max(after, wstart[widx])
+            # The clamp replaces any earlier text match with the spine's book
+            # boundary, so the resulting position is no longer word-exact.
+            word_anchor = False
         col, line, word = owner[widx]
         bookstart = not any(c["book"] == book for c in chapters)
-        chapters.append({
+        chapter = {
             "book": book, "chapter": chap, "column": col,
-            "line": str(line), "wordIndex": word, "bookstart": bookstart,
-        })
+            "line": str(line), "wordIndex": word,
+        }
+        # Stage 6 claims token precision only for a wordIndex genuinely matched
+        # against the Greek text; authoritative fallback positions stay coarser.
+        if word_anchor:
+            chapter["wordAnchor"] = True
+        chapter["bookstart"] = bookstart
+        chapters.append(chapter)
 
     if extra:
         from .refs import line_key
