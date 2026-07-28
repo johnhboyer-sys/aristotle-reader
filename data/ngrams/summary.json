@@ -1,0 +1,44 @@
+{
+ "works": 41,
+ "streams": {
+  "form": {
+   "distinct": 2661103,
+   "kept": 173884,
+   "occurrences": 905979,
+   "shards": 24,
+   "by_n": {
+    "2": 75269,
+    "3": 63546,
+    "4": 24811,
+    "5": 10258
+   }
+  },
+  "lemma": {
+   "distinct": 5341742,
+   "kept": 390675,
+   "occurrences": 2152004,
+   "shards": 24,
+   "by_n": {
+    "2": 97334,
+    "3": 155579,
+    "4": 95412,
+    "5": 42350
+   }
+  },
+  "english": {
+   "distinct": 3296098,
+   "kept": 325766,
+   "occurrences": 1943854,
+   "shards": 27,
+   "by_n": {
+    "2": 98517,
+    "3": 123476,
+    "4": 71568,
+    "5": 32205
+   }
+  }
+ },
+ "english_works": 41,
+ "surface_forms": 45942,
+ "surface_forms_ambiguous": 6204
+}

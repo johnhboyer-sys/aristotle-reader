@@ -1,0 +1,346 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-m4elyh4q> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('ne-theme');
+      document.documentElement.dataset.theme = saved === 'dark' ? 'dark' : 'light';
+    } catch (e) {
+      /* localStorage unavailable: fall back to light (CSS default). */
+    }
+  })();
+</script><link rel="manifest" href="/aristotle-reader/manifest.webmanifest"><script>(function(){const swUrl = "/aristotle-reader/sw.js";
+const swScope = "/aristotle-reader/";
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(swUrl, { scope: swScope }).catch(() => {});
+    });
+  }
+})();</script><title>Advanced search: a guide</title><meta name="description" content="How to use the advanced search tools for Aristotle in Greek — wildcards, grammatical search, proximity search, inflected variants, and the corpus phrase index — with worked examples and an account of what each tool can and cannot tell you."><link rel="canonical" href="https://johnhboyer-sys.github.io/aristotle-reader/advanced/"><meta property="og:type" content="article"><meta property="og:title" content="Advanced search: a guide"><meta property="og:description" content="How to use the advanced search tools for Aristotle in Greek — wildcards, grammatical search, proximity search, inflected variants, and the corpus phrase index — with worked examples and an account of what each tool can and cannot tell you."><meta property="og:site_name" content="The Aristotle Reader"><meta property="og:url" content="https://johnhboyer-sys.github.io/aristotle-reader/advanced/"><meta property="og:image" content="https://johnhboyer-sys.github.io/aristotle-reader/og-default.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Advanced search: a guide"><meta name="twitter:description" content="How to use the advanced search tools for Aristotle in Greek — wildcards, grammatical search, proximity search, inflected variants, and the corpus phrase index — with worked examples and an account of what each tool can and cannot tell you."><meta name="twitter:image" content="https://johnhboyer-sys.github.io/aristotle-reader/og-default.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","name":"Advanced search: a guide","description":"How to use the advanced search tools for Aristotle in Greek — wildcards, grammatical search, proximity search, inflected variants, and the corpus phrase index — with worked examples and an account of what each tool can and cannot tell you.","url":"https://johnhboyer-sys.github.io/aristotle-reader/advanced/","isPartOf":{"@type":"WebSite","name":"The Aristotle Reader"}}</script><link rel="icon" href="/aristotle-reader/favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="/aristotle-reader/_astro/global.Cczc2-ML.css">
+<link rel="stylesheet" href="/aristotle-reader/_astro/advanced.BEzHc_38.css"></head> <body data-astro-cid-m4elyh4q> <header class="simple-header" data-astro-cid-m4elyh4q> <div class="header-title" data-astro-cid-m4elyh4q> <a class="home-link" href="/aristotle-reader/" data-astro-cid-m4elyh4q>Home</a> <span class="title-sep" data-astro-cid-m4elyh4q>›</span> <span class="header-static" data-astro-cid-m4elyh4q>Advanced search</span> </div> <nav class="header-actions" aria-label="Navigation" data-astro-cid-m4elyh4q> <a href="/aristotle-reader/" class="search-link" data-astro-cid-m4elyh4q>All works</a> <a href="/aristotle-reader/lemma/" class="search-link" data-astro-cid-m4elyh4q>Lexicon</a> <a href="/aristotle-reader/search" class="search-link" data-astro-cid-m4elyh4q>Search</a> <a href="/aristotle-reader/phrases/" class="search-link" data-astro-cid-m4elyh4q>Phrases</a> <button type="button" class="theme-toggle" aria-label="Toggle night mode" title="Toggle night mode"> <span class="theme-icon" aria-hidden="true"></span> </button> <script>
+  (function () {
+    var btn = document.querySelector('.theme-toggle');
+    if (!btn) return;
+    var icon = btn.querySelector('.theme-icon');
+
+    // Sleek, stroked line icons (Feather-style) that inherit currentColor, so
+    // they read as a refined monochrome glyph rather than a gold emoji.
+    var MOON =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var SUN =
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.4 4.4l1.6 1.6M18 18l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.4 19.6l1.6-1.6M18 6l1.6-1.6"/></svg>';
+
+    function render() {
+      var dark = document.documentElement.dataset.theme === 'dark';
+      // Icon shows the theme you'll switch TO: moon in light, sun in dark.
+      icon.innerHTML = dark ? SUN : MOON;
+      btn.setAttribute('aria-pressed', String(dark));
+    }
+    render();
+
+    // Flip the theme. Wrapped in a View Transition so the browser snapshots the
+    // page, applies the change, then crossfades old→new as ONE uniform fade —
+    // chrome, borders, text and the icon swap all dissolve together instead of
+    // the body fading while everything else snaps. Browsers without the API (or
+    // with reduce-motion on) fall back to a clean instant flip.
+    function applyTheme() {
+      var next =
+        document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem('ne-theme', next);
+      } catch (e) {}
+      render();
+    }
+
+    btn.addEventListener('click', function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (document.startViewTransition && !reduce) {
+        document.startViewTransition(applyTheme);
+      } else {
+        applyTheme();
+      }
+    });
+  })();
+</script> </nav> </header> <main class="guide" data-astro-cid-m4elyh4q> <p class="guide-eyebrow" data-astro-cid-m4elyh4q>A guide</p> <h1 data-astro-cid-m4elyh4q>Advanced search</h1> <p class="guide-lede" data-astro-cid-m4elyh4q>
+Five tools for asking questions of Aristotle's Greek that a plain word
+      search cannot answer. You need no Greek to use most of them, and you can
+      read the sections in any order. Each number on this page comes from the
+      texts this site serves: 41 works, 848,592 Greek words.
+      Check any of them against the search itself.
+</p> <nav class="guide-toc" aria-label="On this page" data-astro-cid-m4elyh4q> <ol data-astro-cid-m4elyh4q> <li data-astro-cid-m4elyh4q><a href="#wildcards" data-astro-cid-m4elyh4q>Wildcards</a> — find a word you only partly know</li> <li data-astro-cid-m4elyh4q><a href="#lemma" data-astro-cid-m4elyh4q>A single lemma</a> — one dictionary word, every form</li> <li data-astro-cid-m4elyh4q><a href="#variants" data-astro-cid-m4elyh4q>Word endings</a> — one phrase, all its forms</li> <li data-astro-cid-m4elyh4q><a href="#grammatical" data-astro-cid-m4elyh4q>Search by grammar</a> — find forms, not spellings</li> <li data-astro-cid-m4elyh4q><a href="#combo" data-astro-cid-m4elyh4q>Words near each other</a> — two ideas in one passage</li> <li data-astro-cid-m4elyh4q><a href="#phrases" data-astro-cid-m4elyh4q>The phrase index</a> — what Aristotle repeats</li> <li data-astro-cid-m4elyh4q><a href="#honesty" data-astro-cid-m4elyh4q>What these tools cannot tell you</a></li> </ol> </nav> <section id="first" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>First, two things worth knowing</h2> <p data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>Greek changes the ends of words.</strong> English mostly does not:
+        "virtue" looks the same wherever it stands. Greek changes the ending to
+        show the word's job — <span lang="grc" data-astro-cid-m4elyh4q>ἀρετή</span>,
+<span lang="grc" data-astro-cid-m4elyh4q>ἀρετῆς</span>, <span lang="grc" data-astro-cid-m4elyh4q>ἀρετήν</span> are one
+        word doing three jobs. So a search for one spelling misses most of the
+        places that word occurs. Several of these tools exist to fix that.
+</p> <p data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>You can type Greek in plain letters.</strong> With no Greek
+        keyboard, type the sounds instead — scholars call this Beta Code.
+<code data-astro-cid-m4elyh4q>texnh</code> gives <span lang="grc" data-astro-cid-m4elyh4q>τέχνη</span>. The search page
+        has a key to it, and this page shows examples both ways.
+</p> <p class="guide-note" data-astro-cid-m4elyh4q>
+Numbers like <strong data-astro-cid-m4elyh4q>1094a18</strong> are Bekker numbers, the standard way
+        of citing Aristotle. Most editions print them in the margin, so the same
+        number finds the same passage in any edition or translation. Results here
+        use them throughout.
+</p> </section> <section id="wildcards" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>Wildcards</h2> <p class="guide-q" data-astro-cid-m4elyh4q>Use this when you know part of a word but not all of it.</p> <p data-astro-cid-m4elyh4q>
+Type <code data-astro-cid-m4elyh4q>*</code> to stand for any run of letters, or <code data-astro-cid-m4elyh4q>?</code> for
+        exactly one letter. Both work in the middle of a word as well as at the
+        end.
+</p> <p data-astro-cid-m4elyh4q>
+A wildcard in the middle <em data-astro-cid-m4elyh4q>narrows</em> a search. Take one work, the
+<em data-astro-cid-m4elyh4q>Nicomachean Ethics</em>: there <code data-astro-cid-m4elyh4q>l*</code> reaches 70 different
+        words, while <code data-astro-cid-m4elyh4q>l*s</code> reaches 35 — every word that starts with λ
+        and ends in ς, and no others. <code data-astro-cid-m4elyh4q>l?gos</code> finds
+<span lang="grc" data-astro-cid-m4elyh4q>λόγος</span> and <span lang="grc" data-astro-cid-m4elyh4q>λέγος</span> alone,
+        since <code data-astro-cid-m4elyh4q>?</code> stands for one letter. <code data-astro-cid-m4elyh4q>di*sun*</code> finds
+<span lang="grc" data-astro-cid-m4elyh4q>δικαιοσύνη</span>, which helps when you half-remember a
+        long word.
+</p> <p class="guide-note" data-astro-cid-m4elyh4q>
+Those four counts are for one work because a wildcard reaches further the
+        more text you give it: across all 41, <code data-astro-cid-m4elyh4q>l*</code> reaches
+        348 words and <code data-astro-cid-m4elyh4q>l*s</code> 191, and <code data-astro-cid-m4elyh4q>l?gos</code> picks up a
+        third word, <span lang="grc" data-astro-cid-m4elyh4q>λύγος</span> ("willow"). The search counts
+        occurrences rather than distinct words, so it answers <code data-astro-cid-m4elyh4q>l*</code> with
+        a total, not with 348.
+</p> <p class="guide-note" data-astro-cid-m4elyh4q>
+One exception. A <code data-astro-cid-m4elyh4q>*</code> at the <em data-astro-cid-m4elyh4q>start</em> of a word is not a
+        wildcard: in Beta Code it marks a capital, so <code data-astro-cid-m4elyh4q>*a)nqrwpos</code>
+means <span lang="grc" data-astro-cid-m4elyh4q>Ἄνθρωπος</span> and the search reads it as that
+        exact word. You cannot search by word ending alone.
+</p> </section> <section id="lemma" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>A single lemma</h2> <p class="guide-q" data-astro-cid-m4elyh4q>
+Use this when you want one dictionary word wherever it stands, in every
+        form it takes.
+</p> <p data-astro-cid-m4elyh4q>
+The Greek box already does most of this: set to
+<em data-astro-cid-m4elyh4q>Any form of this word</em> it takes
+        whatever form you type — <span lang="grc" data-astro-cid-m4elyh4q>λόγου</span> as readily as
+<span lang="grc" data-astro-cid-m4elyh4q>λόγος</span> — works out which dictionary word it
+        belongs to, and finds every form of it. Use this panel when you would
+        rather choose the word than have it worked out: type a few letters and it
+        offers the headwords that begin that way, each with the number of times
+        it occurs and a short definition where we have one. Tick the one you
+        meant.
+</p> <p data-astro-cid-m4elyh4q>
+The picking matters. <code data-astro-cid-m4elyh4q>aitia</code> offers
+<span lang="grc" data-astro-cid-m4elyh4q>αἰτία</span> ("cause", 884 occurrences) and
+<span lang="grc" data-astro-cid-m4elyh4q>αἰτιάομαι</span> ("accuse", 19) among others: words that
+        begin alike and mean different things. Choosing the headword gets you the
+        one you meant instead of everything that merely looks like it. Tick more
+        than one and you get any of them.
+</p> <p class="guide-note" data-astro-cid-m4elyh4q>
+One limit worth knowing. The index ignores accents, so
+<span lang="grc" data-astro-cid-m4elyh4q>ὅρος</span> ("boundary"),
+<span lang="grc" data-astro-cid-m4elyh4q>ὄρος</span> ("mountain") and
+<span lang="grc" data-astro-cid-m4elyh4q>ὀρός</span> ("whey") share a single entry and no search
+        here can separate them. Where that happens the tool lists the headwords
+        together and says they are searched together, rather than offering a
+        choice it cannot honour.
+</p> </section> <section id="variants" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>Word endings</h2> <p class="guide-q" data-astro-cid-m4elyh4q>
+Use this when you know a phrase but want every form of it, not just the
+        one you typed.
+</p> <p data-astro-cid-m4elyh4q>
+Since Greek changes word endings, an exact phrase search finds only the
+        version you typed. This tool finds the rest.
+</p> <p data-astro-cid-m4elyh4q>
+Take <span lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</span> — a phrase Aristotle uses for
+        what a thing fundamentally is, usually translated "essence". Search it as
+        an exact phrase and you find <strong data-astro-cid-m4elyh4q>102 passages</strong>. Press
+<em data-astro-cid-m4elyh4q>Find this phrase in any inflection</em> and you find
+<strong data-astro-cid-m4elyh4q>132</strong>. The extra thirty are the same phrase with a
+        different ending on its first word:
+<span lang="grc" data-astro-cid-m4elyh4q>τῷ τί ἦν εἶναι</span>,
+<span lang="grc" data-astro-cid-m4elyh4q>τοῦ τί ἦν εἶναι</span>. No exact search can reach them,
+        because the letters on the page are different.
+</p> <p data-astro-cid-m4elyh4q>
+To find them yourself you would need to know that
+<span lang="grc" data-astro-cid-m4elyh4q>τό</span>, <span lang="grc" data-astro-cid-m4elyh4q>τῷ</span> and
+<span lang="grc" data-astro-cid-m4elyh4q>τοῦ</span> are forms of one word, and that
+<span lang="grc" data-astro-cid-m4elyh4q>ἦν</span> and <span lang="grc" data-astro-cid-m4elyh4q>εἶναι</span> both belong
+        to the verb "to be". The tool knows it for you. Type the words as they
+        stand on the page.
+</p> <p class="guide-note" data-astro-cid-m4elyh4q>
+It invents nothing. <span lang="grc" data-astro-cid-m4elyh4q>κατὰ συμβεβηκός</span>
+("accidentally") goes from 330 passages to 330, because across all
+41 works that phrase takes one form only. A tool that always
+        found more would tell you nothing.
+</p> </section> <section id="grammatical" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>Search by grammar</h2> <p class="guide-q" data-astro-cid-m4elyh4q>
+Use this to find a kind of word rather than a particular word.
+</p> <p data-astro-cid-m4elyh4q>
+Every Greek word here carries a grammatical description: singular or
+        plural, past or present, and so on. You can search those descriptions
+        instead of the spelling. Pick as many as you like; a word must match them
+        all.
+</p> <p data-astro-cid-m4elyh4q>
+Grammar is <strong data-astro-cid-m4elyh4q>one term inside a combo search</strong>, never a
+        search of its own. On its own it would not be a question: there are
+        33,504 genitive plural feminines in 41 works, and a list of
+        them tells you something about Greek rather than about Aristotle. Beside
+        another term it earns its keep — <em data-astro-cid-m4elyh4q>this word near a verb in the
+        optative</em> is a real question, and it is the one the tool answers.
+        Set a term's Kind to <em data-astro-cid-m4elyh4q>Grammatical</em> under
+<a href="#combo" data-astro-cid-m4elyh4q>Words near each other</a>.
+</p> <p data-astro-cid-m4elyh4q>
+You need not know how any of these forms are spelled. You pick the
+        description; the search finds the words.
+</p> <h3 data-astro-cid-m4elyh4q>Why some results say "one of several readings"</h3> <p data-astro-cid-m4elyh4q>
+The same Greek letters can be two different forms. When that happens the
+        tool marks the result instead of choosing one for you.
+</p> <p data-astro-cid-m4elyh4q>
+The Nicomachean Ethics holds 537 optatives. Of those, 280 have one
+        possible reading; a hit on any of the other 257 comes back marked,
+        because you could read those letters another way. The mark shows no flaw
+        in the search. It reports a fact about the Greek.
+</p> <p data-astro-cid-m4elyh4q>
+A clearer case: of the 31 genitive duals (the dual describes pairs of
+        things), <strong data-astro-cid-m4elyh4q>not one is certain</strong>. In the dual, genitive and
+        dative share one ending. The search cannot tell them apart because Greek
+        does not, and it says so instead of deciding for you.
+</p> <p class="guide-note" data-astro-cid-m4elyh4q>
+You will find no option for "noun", "verb" or "adjective". We left it
+        out on purpose. The descriptions this site uses do not record parts of
+        speech, and we cannot work them out — a participle behaves as both verb
+        and noun, and nothing separates a noun from an adjective. Offering the
+        choice would mean making it up.
+</p> </section> <section id="combo" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>Words near each other</h2> <p class="guide-q" data-astro-cid-m4elyh4q>
+Use this to find where two ideas are discussed together.
+</p> <p data-astro-cid-m4elyh4q>
+Ask for two or more things close together in the text. Each slot takes an
+        exact phrase, a single word, a word in all its forms, or a grammatical
+        description, and you can mix them. "This word near a verb in the
+        optative" is a question you can put here.
+</p> <p data-astro-cid-m4elyh4q>
+In the Nicomachean Ethics, <span lang="grc" data-astro-cid-m4elyh4q>ἀρετή</span> ("virtue") and
+<span lang="grc" data-astro-cid-m4elyh4q>ψυχή</span> ("soul") fall within ten words of each other
+<strong data-astro-cid-m4elyh4q>13 times</strong>, and share a line <strong data-astro-cid-m4elyh4q>5 times</strong> —
+        among them 1139a17 and 1144a30, where Aristotle discusses the parts of the
+        soul and their virtues. Search either word alone and you get 273 and 44
+        passages to check.
+</p> <h3 data-astro-cid-m4elyh4q>The controls</h3> <ul data-astro-cid-m4elyh4q> <li data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>Window</strong> — how close is close. Five words by default,
+          which is about half a line of Greek. You can widen it to 50, about five
+          lines.
+</li> <li data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>Measured in</strong> — count that distance in words, or ask
+          instead for the same line or the same chapter.
+</li> <li data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>Relative to the first term</strong> — you can require a term to
+          come before or after the first one, rather than simply near it.
+</li> <li data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>In this order</strong> — everything must appear in the order you
+          typed it.
+</li> </ul> <p class="guide-note" data-astro-cid-m4elyh4q>
+A match never crosses from one book into the next, however wide the
+        window: the last words of one book and the first of the next are not near
+        each other in any useful sense. Matches do cross chapter boundaries by
+        default, since an argument often runs through one, but you can turn that
+        off.
+</p> </section> <section id="phrases" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>The phrase index</h2> <p class="guide-q" data-astro-cid-m4elyh4q>
+Use this when you do not yet know what to look for.
+</p> <p data-astro-cid-m4elyh4q>
+Search answers "where does this occur?" The
+<a href="/aristotle-reader/phrases/" data-astro-cid-m4elyh4q>phrase index</a> answers a different
+        question: <em data-astro-cid-m4elyh4q>what does Aristotle repeat?</em> It lists every phrase of two
+        to five words that appears at least twice anywhere in his works —
+173,884 of them as written, and 390,675 when
+        forms of the same word count together. (If you have met the
+        term, these are what linguists call n-grams.)
+</p> <p data-astro-cid-m4elyh4q>
+This matters because much of Aristotle's technical vocabulary consists of
+        set phrases rather than single words, and no word search will show them
+        to you:
+<span lang="grc" data-astro-cid-m4elyh4q>ὡς ἐπὶ τὸ πολύ</span> ("for the most part") occurs 204
+        times across 22 of the 41 works;
+<span lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</span> ("essence") 103 times;
+<span lang="grc" data-astro-cid-m4elyh4q>κατὰ συμβεβηκός</span> ("accidentally") 330 times across
+        25 works. Not one of those is a word. Each is an idea, and browsing is the
+        only way to meet them.
+</p> <h3 data-astro-cid-m4elyh4q>Reading a row</h3> <p data-astro-cid-m4elyh4q>
+Every row is one phrase and four numbers. This is the row for
+<span lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</span>:
+</p> <figure class="anatomy" data-astro-cid-m4elyh4q> <div class="anatomy-row" data-astro-cid-m4elyh4q> <span class="anatomy-phrase" data-astro-cid-m4elyh4q> <span lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</span> <small data-astro-cid-m4elyh4q>to ti hn einai</small> </span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>4</b><small data-astro-cid-m4elyh4q>Words</small></span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>103</b><small data-astro-cid-m4elyh4q>Count</small></span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>8</b><small data-astro-cid-m4elyh4q>Works</small></span> <span class="anatomy-cell score" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>1,611.9</b><small data-astro-cid-m4elyh4q>Score</small></span> </div> <dl class="anatomy-key" data-astro-cid-m4elyh4q> <dt data-astro-cid-m4elyh4q>Words</dt> <dd data-astro-cid-m4elyh4q>How many words long. Two to five.</dd> <dt data-astro-cid-m4elyh4q>Count</dt> <dd data-astro-cid-m4elyh4q>How often it occurs in the whole corpus — here 103 times.</dd> <dt data-astro-cid-m4elyh4q>Works</dt> <dd data-astro-cid-m4elyh4q>
+How many of the 41 works it appears in. Eight, and the
+            Metaphysics holds 56 of the 103 on its own.
+</dd> <dt data-astro-cid-m4elyh4q>Score</dt> <dd data-astro-cid-m4elyh4q>
+Distinctiveness: how much more often the phrase occurs than the
+            commonness of its words on their own would lead you to expect. It
+            orders the list and removes nothing.
+</dd> </dl> </figure> <h3 data-astro-cid-m4elyh4q>The same phrase, counted two ways</h3> <p data-astro-cid-m4elyh4q>
+The two buttons at the top of the page are the same corpus read
+        differently, and it is worth seeing what changes.
+<strong data-astro-cid-m4elyh4q>Word as written</strong> counts the letters on the page: change
+        one ending and it is a different row. <strong data-astro-cid-m4elyh4q>Dictionary word</strong>
+counts the words behind the letters, so every inflection of the phrase
+        gathers into a single row. The same expression appears in both:
+</p> <figure class="anatomy" data-astro-cid-m4elyh4q> <div class="anatomy-row" data-astro-cid-m4elyh4q> <span class="anatomy-phrase" data-astro-cid-m4elyh4q> <span lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</span> <small data-astro-cid-m4elyh4q>as written</small> </span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>4</b><small data-astro-cid-m4elyh4q>Words</small></span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>103</b><small data-astro-cid-m4elyh4q>Count</small></span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>8</b><small data-astro-cid-m4elyh4q>Works</small></span> <span class="anatomy-cell score" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>1,611.9</b><small data-astro-cid-m4elyh4q>Score</small></span> </div> <div class="anatomy-row" data-astro-cid-m4elyh4q> <span class="anatomy-phrase" data-astro-cid-m4elyh4q> <span lang="grc" data-astro-cid-m4elyh4q>ὁ τίς εἰμί εἰμί</span> <small data-astro-cid-m4elyh4q>dictionary words</small> </span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>4</b><small data-astro-cid-m4elyh4q>Words</small></span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>127</b><small data-astro-cid-m4elyh4q>Count</small></span> <span class="anatomy-cell" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>10</b><small data-astro-cid-m4elyh4q>Works</small></span> <span class="anatomy-cell score" data-astro-cid-m4elyh4q><b data-astro-cid-m4elyh4q>629.8</b><small data-astro-cid-m4elyh4q>Score</small></span> </div> </figure> <p data-astro-cid-m4elyh4q>
+The dictionary row gathers ten different spellings into one:
+</p> <table class="variant-table" data-astro-cid-m4elyh4q> <thead data-astro-cid-m4elyh4q> <tr data-astro-cid-m4elyh4q><th data-astro-cid-m4elyh4q>Occurrences</th><th data-astro-cid-m4elyh4q>As it stands on the page</th></tr> </thead> <tbody data-astro-cid-m4elyh4q> <tr data-astro-cid-m4elyh4q><td data-astro-cid-m4elyh4q>103</td><td lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</td></tr> <tr data-astro-cid-m4elyh4q><td data-astro-cid-m4elyh4q>13</td><td lang="grc" data-astro-cid-m4elyh4q>τοῦ τί ἦν εἶναι</td></tr> <tr data-astro-cid-m4elyh4q><td data-astro-cid-m4elyh4q>3</td><td lang="grc" data-astro-cid-m4elyh4q>τῷ τί ἦν εἶναι</td></tr> <tr data-astro-cid-m4elyh4q><td data-astro-cid-m4elyh4q>2</td><td lang="grc" data-astro-cid-m4elyh4q>τῶν τί ἦν εἶναι</td></tr> <tr data-astro-cid-m4elyh4q><td data-astro-cid-m4elyh4q>1 each</td><td lang="grc" data-astro-cid-m4elyh4q>τοὺς τί ἦν εἶναι · τὰ τί ἦν εἶναι · τοῦ τί ἐστιν εἶναι · τοῦ τί ἐστιν εἴη · τοῦ τί ἐστιν ἔστω · τὸ τί ὂν ἔστω</td></tr> </tbody> </table> <p data-astro-cid-m4elyh4q>
+The first four are the phrase you were looking for, declined. The last
+        six are not: they merely happen to be built from the same dictionary
+        words, and the tool cannot tell the difference — <span lang="grc" data-astro-cid-m4elyh4q>εἰμί</span>
+covers <span lang="grc" data-astro-cid-m4elyh4q>ἦν</span>, <span lang="grc" data-astro-cid-m4elyh4q>ἐστιν</span>,
+<span lang="grc" data-astro-cid-m4elyh4q>εἴη</span> and <span lang="grc" data-astro-cid-m4elyh4q>ἔστω</span> alike. So the
+        dictionary reading finds more and asks more of you. Use it to discover
+        what you would otherwise miss, then read as written to see what you have.
+</p> <p class="guide-note" data-astro-cid-m4elyh4q>
+Notice the score falls from 1,611.9 to 629.8 for what is, in the main,
+        the same expression. Nothing has weakened: <span lang="grc" data-astro-cid-m4elyh4q>ὁ</span> and
+<span lang="grc" data-astro-cid-m4elyh4q>εἰμί</span> are among the commonest words in Greek, so a
+        phrase made of them is far less surprising than one made of
+<span lang="grc" data-astro-cid-m4elyh4q>ἦν</span> and <span lang="grc" data-astro-cid-m4elyh4q>εἶναι</span> in that
+        exact shape. Distinctiveness measures surprise against the words a phrase
+        is made of, and the two readings are made of different words.
+</p> <h3 data-astro-cid-m4elyh4q>Reading the list</h3> <ul data-astro-cid-m4elyh4q> <li data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>As written, or by dictionary form.</strong> The first lists
+          phrases exactly as they appear. The second gathers the different
+          endings of one phrase together, which finds more but is harder to read —
+          in dictionary form, <span lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</span> comes out as
+<span lang="grc" data-astro-cid-m4elyh4q>ὁ τίς εἰμί εἰμί</span>.
+</li> <li data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>Distinctiveness</strong> orders the list by default. It asks
+          whether a phrase occurs more often than the commonness of its words
+          would lead you to expect. That is why
+<span lang="grc" data-astro-cid-m4elyh4q>κατὰ συμβεβηκός</span> comes near the top of the κ list
+          and <span lang="grc" data-astro-cid-m4elyh4q>καὶ τό</span> ("and the") does not, though "and
+          the" occurs eleven times as often. Sort by plain frequency and you see
+          the grammar of Greek rather than the thought of Aristotle.
+</li> <li data-astro-cid-m4elyh4q> <strong data-astro-cid-m4elyh4q>Filters</strong> narrow the list by phrase length, by how often
+          a phrase occurs, and by which work it appears in. Sorting never removes
+          anything — it only changes the order.
+</li> </ul> <p data-astro-cid-m4elyh4q>
+Click any phrase to see every place it occurs, grouped by work, each one
+        linked to that passage in the reader.
+</p> <h3 data-astro-cid-m4elyh4q>A way to use it</h3> <p data-astro-cid-m4elyh4q>
+Pick the work you are reading and a phrase length of four or five, then
+        sort by distinctiveness. You get that work's set expressions — often the
+        technical vocabulary of its argument, including phrases no glossary would
+        have sent you to look for. Click one to see where else in Aristotle it
+        stands.
+</p> </section> <section id="honesty" data-astro-cid-m4elyh4q> <h2 data-astro-cid-m4elyh4q>What these tools cannot tell you</h2> <p data-astro-cid-m4elyh4q>
+All of this depends on a word-by-word grammatical description of the
+        Greek, and that description is often uncertain. Where it is, these tools
+        say so rather than choose an answer and present it as fact. The limits
+        worth knowing:
+</p> <ul data-astro-cid-m4elyh4q> <li data-astro-cid-m4elyh4q>
+A result marked as having several possible readings comes from a form
+          the description cannot settle. Of the words that have a case, about half
+          leave it open which case that is.
+</li> <li data-astro-cid-m4elyh4q>
+Searches ignore accents, so <span lang="grc" data-astro-cid-m4elyh4q>λόγος</span> and
+<span lang="grc" data-astro-cid-m4elyh4q>λογός</span> count as one word. The search page has a
+          setting to match accents exactly.
+</li> <li data-astro-cid-m4elyh4q>
+The phrase index shows Greek without accents, because it does not
+          record them. We do not guess them.
+</li> <li data-astro-cid-m4elyh4q>
+Later editors made the chapter divisions, not Aristotle. In most works
+          we know where a chapter begins to the exact word; in Categories and De
+          Interpretatione we know it only to the line, and any search that turns
+          on chapter boundaries says so when those works are involved.
+</li> <li data-astro-cid-m4elyh4q>
+An exact phrase search cannot match across the boundary between two
+          columns of the printed text; the phrase index and the proximity search
+          can. This is why the index counts
+<span lang="grc" data-astro-cid-m4elyh4q>τὸ τί ἦν εἶναι</span> 103 times while an exact search
+          finds 102. One occurrence straddles a column break.
+</li> <li data-astro-cid-m4elyh4q>
+None of these tools reads Greek. They match forms and count them. What
+          a passage means remains your work.
+</li> </ul> <p class="guide-note" data-astro-cid-m4elyh4q>
+The Greek text is the TLG. The grammatical descriptions come from
+        Morpheus, by way of Diogenes; the dictionary is Liddell–Scott–Jones.
+</p> </section> <p class="guide-back" data-astro-cid-m4elyh4q> <a href="/aristotle-reader/search" data-astro-cid-m4elyh4q>Back to search</a> ·
+<a href="/aristotle-reader/phrases/" data-astro-cid-m4elyh4q>Browse phrases</a> </p> </main></body></html>

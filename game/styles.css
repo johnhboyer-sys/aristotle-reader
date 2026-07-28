@@ -1,0 +1,442 @@
+:root {
+  color-scheme: dark;
+  --ink: #120b18;
+  --ink-2: #241333;
+  --gold: #f0c15b;
+  --gold-2: #b6782d;
+  --vellum: #e9d99a;
+  --aqua: #6dd6c4;
+  --rose: #d85c7f;
+  --green: #87bc4c;
+  --stone: #766a80;
+  --paper: #f7e9b6;
+  --focus: #ffffff;
+  font-family: "Trebuchet MS", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(18, 11, 24, 0.4), rgba(18, 11, 24, 0.98)),
+    repeating-linear-gradient(90deg, #1c1028 0 22px, #211231 22px 44px);
+  color: var(--paper);
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  color: var(--paper);
+  background: #342044;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.35), 0 3px 0 #09050e;
+}
+
+button:hover {
+  filter: brightness(1.13);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+}
+
+.cabinet {
+  width: min(1120px, 100%);
+  display: grid;
+  gap: 10px;
+}
+
+.marquee {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 14px 12px;
+  border: 4px solid #07040a;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(240, 193, 91, 0.2), transparent 55%),
+    #261433;
+  box-shadow: inset 0 0 0 3px #4f2b62, 0 8px 0 #07040a;
+}
+
+.kicker {
+  margin: 0 0 5px;
+  color: var(--aqua);
+  font-family: Monaco, Consolas, monospace;
+  font-size: clamp(0.7rem, 1.5vw, 0.86rem);
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.85rem, 4.4vw, 3.15rem);
+  line-height: 0.88;
+  letter-spacing: 0;
+  text-shadow: 4px 4px 0 #060309, 7px 7px 0 #7d3e52;
+}
+
+.status-strip {
+  min-width: 220px;
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  font-family: Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  color: #f9f1c9;
+}
+
+.status-strip span {
+  padding: 5px 8px;
+  border: 2px solid #08040d;
+  background: #3b2548;
+}
+
+.screen-wrap {
+  position: relative;
+  justify-self: center;
+  width: min(100%, calc((100vh - 202px) * 16 / 9));
+  overflow: hidden;
+  border: 6px solid #07040a;
+  border-radius: 8px;
+  background: #050309;
+  box-shadow:
+    inset 0 0 0 5px #3c244b,
+    0 10px 0 #07040a,
+    0 22px 70px rgba(109, 214, 196, 0.12);
+  aspect-ratio: 16 / 9;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: auto;
+}
+
+.scanlines {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04) 0,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 1px,
+    transparent 5px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.55;
+}
+
+.keys-button {
+  position: absolute;
+  z-index: 3;
+  top: 14px;
+  right: 14px;
+  padding: 8px 11px;
+  border: 2px solid #08040d;
+  color: #120b18;
+  background: var(--gold);
+  font-family: Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: inset 0 -3px 0 var(--gold-2), 0 3px 0 #08040d;
+}
+
+.keys-button[aria-expanded="true"] {
+  background: var(--aqua);
+  box-shadow: inset 0 -3px 0 #398e82, 0 3px 0 #08040d;
+}
+
+.keys-guide {
+  position: absolute;
+  z-index: 4;
+  top: 54px;
+  right: 14px;
+  width: min(380px, calc(100% - 28px));
+  max-height: calc(100% - 68px);
+  overflow: auto;
+  padding: 16px;
+  border: 4px solid #08040d;
+  border-radius: 6px;
+  color: var(--paper);
+  background:
+    linear-gradient(135deg, rgba(240, 193, 91, 0.11), transparent 42%),
+    rgba(31, 18, 40, 0.97);
+  box-shadow: inset 0 0 0 2px #58356b, 7px 7px 0 rgba(8, 4, 13, 0.78);
+  font-family: Monaco, Consolas, monospace;
+}
+
+.keys-guide[hidden] {
+  display: none;
+}
+
+.keys-guide-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 11px;
+  border-bottom: 2px solid #5b4663;
+}
+
+.keys-guide-kicker {
+  color: var(--aqua);
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.keys-guide h2 {
+  margin: 2px 0 0;
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.keys-close {
+  width: 32px;
+  height: 30px;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.keys-list {
+  display: grid;
+  gap: 0;
+  margin: 9px 0 0;
+}
+
+.keys-list > div {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 2px;
+  border-bottom: 1px solid #493651;
+}
+
+.keys-list > div:last-child {
+  border-bottom: 0;
+}
+
+.keys-list dt {
+  color: #d7c786;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.keys-list dd {
+  margin: 0;
+  color: #f9f1c9;
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 23px;
+  margin: 1px;
+  padding: 1px 5px 2px;
+  border: 1px solid #75657d;
+  border-bottom-width: 3px;
+  border-radius: 3px;
+  color: #fff8dc;
+  background: #35253e;
+  font: inherit;
+  text-align: center;
+}
+
+.panel {
+  justify-self: center;
+  width: min(100%, calc((100vh - 202px) * 16 / 9));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 4px solid #07040a;
+  border-radius: 8px;
+  background: #20142b;
+}
+
+.hero-select,
+.actions,
+.touch-move,
+.touch-act {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.select-button {
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  color: #f6e8b8;
+}
+
+.select-button.active {
+  color: #130d19;
+  background: var(--gold);
+  box-shadow: inset 0 -4px 0 var(--gold-2), 0 3px 0 #09050e;
+}
+
+.portrait {
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+  border: 2px solid #08040d;
+  image-rendering: pixelated;
+  background-size: 4px 4px, 100% 100%;
+}
+
+.portrait.aristotle {
+  background:
+    linear-gradient(135deg, transparent 0 44%, #a64f58 44% 58%, transparent 58%),
+    linear-gradient(90deg, #120b18 0 4px, #d7c48b 4px 8px, #f1c99a 8px 20px, #d7c48b 20px 24px, #120b18 24px),
+    linear-gradient(#120b18 0 4px, #d7c48b 4px 10px, #f1c99a 10px 15px, #fff0c7 15px 25px, #7a4f34 25px);
+}
+
+.portrait.aquinas {
+  background:
+    linear-gradient(#f0c15b 0 3px, transparent 3px),
+    linear-gradient(90deg, #120b18 0 5px, #6a4b35 5px 8px, #f3c99d 8px 20px, #6a4b35 20px 23px, #120b18 23px),
+    linear-gradient(90deg, #120b18 0 5px, #f4f0ce 5px 23px, #120b18 23px),
+    linear-gradient(#f0c15b 0 3px, #f3c99d 3px 13px, #f4f0ce 13px 25px, #120b18 25px);
+}
+
+.portrait.socrates {
+  background:
+    linear-gradient(90deg, transparent 0 7px, #f6d2a8 7px 21px, transparent 21px),
+    linear-gradient(90deg, #120b18 0 5px, #f3c99d 5px 23px, #120b18 23px),
+    linear-gradient(#f3c99d 0 12px, #b9b1a6 12px 18px, #607e91 18px 25px, #d9aa7d 25px);
+}
+
+.actions button {
+  min-width: 86px;
+  padding: 11px 14px;
+}
+
+.actions .primary {
+  color: #120b18;
+  background: var(--green);
+  box-shadow: inset 0 -4px 0 #4f8232, 0 3px 0 #09050e;
+}
+
+.touch {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.touch button {
+  width: 54px;
+  height: 48px;
+  font-size: 1.2rem;
+  touch-action: none;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    padding: 10px;
+    place-items: start center;
+  }
+
+  .marquee,
+  .panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .status-strip {
+    justify-items: start;
+  }
+
+  .hero-select,
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .select-button {
+    flex: 1 1 138px;
+  }
+
+  .actions button {
+    flex: 1 1 88px;
+  }
+
+  .touch {
+    display: flex;
+  }
+
+  .keys-button {
+    top: 8px;
+    right: 8px;
+    padding: 6px 8px;
+    font-size: 0.65rem;
+  }
+
+  .keys-guide {
+    top: 42px;
+    right: 8px;
+    width: calc(100% - 16px);
+    max-height: calc(100% - 50px);
+    padding: 12px;
+  }
+
+  .keys-list > div {
+    grid-template-columns: 70px 1fr;
+    padding: 5px 0;
+  }
+
+  .touch-move,
+  .touch-act {
+    gap: 7px;
+  }
+
+  .touch button {
+    width: 40px;
+  }
+
+  .screen-wrap,
+  .panel {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
