@@ -9,7 +9,14 @@
     type NgramStream,
   } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
-  import { greekFold, offsetRef, type Offsets } from '../lib/search';
+  import {
+    VARIANT_READING_CAP,
+    greekFold,
+    lemmaOptions,
+    lemmaReadings,
+    offsetRef,
+    type Offsets,
+  } from '../lib/search';
   import { WORKS, getWork, workPath } from '../lib/works';
 
   type SortMode = 'score' | 'frequency' | 'length' | 'alphabetical';
@@ -17,6 +24,19 @@
   interface PhraseItem {
     key: string;
     row: NgramRow;
+  }
+
+  // What the typed prefix resolves to: the shards to read and, in each, the key
+  // prefixes that count as a match. One letter and one prefix for the surface
+  // and English streams; for dictionary forms, one prefix per reading of the
+  // typed words, and those readings do not all live in the same shard.
+  interface Plan {
+    key: string;                 // stream + typed prefix, the signature it answers
+    stream: NgramStream;
+    // An empty prefix list on a letter means every phrase in that shard.
+    byLetter: Array<{ letter: string; prefixes: string[] }>;
+    readings: string[][];        // dictionary forms only; [] when nothing was widened
+    cappedFrom: number;          // 0 unless the fan-out was truncated
   }
 
   interface Citation {
@@ -90,6 +110,15 @@
     for (const w of phrase.split(' ')) if (!FUNCTION_WORDS.has(w)) n++;
     return n;
   }
+
+  // The shard a phrase lives in, by its first letter — the same rule stage 8
+  // sharded it with. Taken from the phrase itself, never from the typed box: a
+  // widened query reads several shards at once, and a row's citations must be
+  // fetched from the shard that actually holds it.
+  function shardLetter(phrase: string): string {
+    const first = phrase[0] ?? '';
+    return first >= 'a' && first <= 'z' ? first : '_';
+  }
   const PAGE_SIZE = 50;
   const CITATION_CAP = 40;
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -107,11 +136,17 @@
   let hideCommon = true;
   let page = 0;
 
-  let shard: Record<string, NgramRow> = {};
+  let plan: Plan = { key: '', stream: 'form', byLetter: [], readings: [], cappedFrom: 0 };
+  let planLoading = false;
+  let requestedPlanKey = '';
+  let planRequest = 0;
+
+  // One entry per shard the plan asks for, in its order.
+  let loadedShards: Array<Record<string, NgramRow>> = [];
+  let loadedShardSignature = '';
   let shardLoading = false;
   let shardError = '';
-  let requestedShardKey = '';
-  let loadedShardKey = '';
+  let requestedShardSignature = '';
   let shardRequest = 0;
 
   let requestedWorkSignature = '';
@@ -131,6 +166,7 @@
   // character it does not recognise — including the spaces between a phrase's
   // words — so it has to run per word and the words be rejoined.
   $: isEnglish = stream === 'english';
+  $: isLemma = stream === 'lemma';
   $: normalizedPrefix = isEnglish
     ? prefix.trim().toLowerCase().replace(/[^a-z' ]+/g, '').replace(/\s+/g, ' ')
     : prefix
@@ -140,48 +176,74 @@
       .map(greekFold)
       .filter(Boolean)
       .join(' ');
-  $: letter = /^[a-z]/.test(normalizedPrefix)
-    ? normalizedPrefix[0]
-    : normalizedPrefix
-      ? '_'
-      : DEFAULT_LETTER;
-  $: activeShardKey = `${stream}/${letter}`;
+  $: letter = normalizedPrefix ? shardLetter(normalizedPrefix) : DEFAULT_LETTER;
   $: minimum = Number.isFinite(minCount) ? Math.max(2, Math.floor(minCount)) : 2;
   $: selectedLengthKey = [...lengths].sort((a, b) => a - b).join(',');
   $: selectedWorkKey = [...selectedWorks].sort().join(',');
-  $: workSignature = selectedWorks.length
-    ? `${activeShardKey}|${selectedLengthKey}|${selectedWorkKey}`
+
+  $: planKey = `${stream}|${normalizedPrefix}`;
+  $: if (mounted && planKey !== requestedPlanKey) {
+    void makePlan(planKey, stream, normalizedPrefix, letter);
+  }
+
+  // Nothing downstream may act on a plan that answers an older query.
+  $: activePlan = plan.key === planKey ? plan : null;
+  $: shardSignature = activePlan
+    ? `${activePlan.stream}/${activePlan.byLetter.map((b) => b.letter).join(',')}`
     : '';
 
-  $: if (mounted && activeShardKey !== requestedShardKey) {
-    void loadShard(stream, letter);
+  $: if (mounted && shardSignature && shardSignature !== requestedShardSignature) {
+    void loadShards(shardSignature, activePlan!);
   }
+
+  $: scan = loadedShardSignature === shardSignature && activePlan
+    ? scanShards(activePlan, loadedShards, lengths, minimum, isEnglish && hideCommon)
+    : { rows: [] as PhraseItem[], matched: [] as string[] };
+  $: localRows = scan.rows;
+
+  // The work filter reads occurrence files, one per shard letter per length.
+  // Only the letters that actually produced rows are worth fetching: widening
+  // ἦν asks for three shards and two of them are routinely dead ends.
+  $: matchedLetters = [...new Set(localRows.map((item) => shardLetter(item.key)))].sort();
+  $: workSignature = selectedWorks.length && matchedLetters.length
+    ? `${stream}/${matchedLetters.join(',')}|${selectedLengthKey}|${selectedWorkKey}`
+    : '';
 
   $: if (mounted && workSignature !== requestedWorkSignature) {
     void loadWorkFilter(
       workSignature,
       stream,
-      letter,
+      [...matchedLetters],
       [...lengths],
       [...selectedWorks],
     );
   }
-
-  $: localRows = loadedShardKey === activeShardKey
-    ? Object.entries(shard)
-        .filter(([key, row]) =>
-          (!normalizedPrefix || key.startsWith(normalizedPrefix)) &&
-          lengths.includes(row[0]) &&
-          row[1] >= minimum &&
-          (!isEnglish || !hideCommon || contentWords(key) >= 2))
-        .map(([key, row]) => ({ key, row }))
-    : [];
 
   $: filteredRows = selectedWorks.length === 0
     ? localRows
     : loadedWorkSignature === workSignature && matchingWorkPhrases
       ? localRows.filter((item) => matchingWorkPhrases?.has(item.key))
       : [];
+
+  $: shardBadge = (activePlan?.byLetter ?? [{ letter }])
+    .map((b) => b.letter.toUpperCase())
+    .join(', ');
+  $: widened = activePlan?.readings.length ? activePlan : null;
+
+  // The readings for the line under the box: the ones that produced rows, not
+  // the ones that were tried — ἦν licenses five headwords and most are dead
+  // ends. Listed rather than counted, because a reader has to be able to see
+  // that ἦν was read as εἰμί; long lists are cut off rather than allowed to
+  // bury the page.
+  const READINGS_SHOWN = 6;
+  $: matchedReadings = widened
+    ? scan.matched.slice(0, READINGS_SHOWN).map((p) => betaToGreek(p))
+    : [];
+  $: matchedRest = widened ? Math.max(0, scan.matched.length - READINGS_SHOWN) : 0;
+  $: triedReadings = widened
+    ? widened.readings.slice(0, READINGS_SHOWN).map((r) => betaToGreek(r.join(' ')))
+    : [];
+  $: triedRest = widened ? Math.max(0, widened.readings.length - READINGS_SHOWN) : 0;
 
   $: sortedRows = [...filteredRows].sort((a, b) => comparePhrases(a, b, sort));
   $: pageCount = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE));
@@ -205,33 +267,158 @@
     return b.row[2] - a.row[2] || b.row[1] - a.row[1] || a.key.localeCompare(b.key);
   }
 
-  async function loadShard(nextStream: NgramStream, nextLetter: string) {
-    const key = `${nextStream}/${nextLetter}`;
+  // A single word is left alone. The letter buttons below type into the same
+  // box, and widening one letter would quietly move the browse elsewhere: h is
+  // the surface of ἡ, whose headword is ὁ, so browsing H would show the O shard.
+  function widenable(prefixText: string): boolean {
+    return prefixText.length > 1;
+  }
+
+  /** Which shards to read for the typed prefix, and what counts as a match.
+   *
+   * The dictionary-form index is keyed on headwords, so the phrase a reader has
+   * in front of them matches nothing typed literally: τὸ τί ἦν εἶναι is stored
+   * as ὁ τίς εἰμί εἰμί, and knowing that is exactly the knowledge the index is
+   * supposed to save them. So resolve each typed word to the headwords it can
+   * belong to and match every reading of the phrase.
+   *
+   * A word the map does not record falls back to itself — that is the fragment
+   * still being typed, and it is what keeps the list narrowing as a reader types.
+   * A word the map DOES record is left to its headwords alone: a dictionary form
+   * is always among its own headwords (ὁ maps to ὁ and ὅ), so adding it back
+   * changes no result and can cost a whole extra shard — τό is not a headword of
+   * anything, and reading it literally fetched 3.3 MB with nothing in it.
+   */
+  async function makePlan(
+    key: string,
+    nextStream: NgramStream,
+    prefixText: string,
+    fallbackLetter: string,
+  ) {
+    const request = ++planRequest;
+    requestedPlanKey = key;
+    const literal: Plan = {
+      key,
+      stream: nextStream,
+      byLetter: [{
+        letter: prefixText ? shardLetter(prefixText) : fallbackLetter,
+        prefixes: prefixText ? [prefixText] : [],
+      }],
+      readings: [],
+      cappedFrom: 0,
+    };
+
+    if (nextStream !== 'lemma' || !widenable(prefixText)) {
+      plan = literal;
+      planLoading = false;
+      return;
+    }
+
+    planLoading = true;
+    try {
+      const terms = prefixText.split(' ');
+      const options = await lemmaOptions(terms);
+      if (request !== planRequest) return;
+      // No map, or no headword recorded for any word: match what was typed,
+      // which is what this page did before widening existed.
+      if (!options || options.every((o) => !o.length)) {
+        plan = literal;
+        return;
+      }
+      const perTerm = terms.map((term, i) => (options[i].length ? options[i] : [term]));
+      const { readings, total } = lemmaReadings(perTerm, VARIANT_READING_CAP);
+      const byLetter = new Map<string, string[]>();
+      for (const reading of readings) {
+        const l = shardLetter(reading[0]);
+        const prefixes = byLetter.get(l) ?? [];
+        prefixes.push(reading.join(' '));
+        byLetter.set(l, prefixes);
+      }
+      plan = {
+        key,
+        stream: nextStream,
+        byLetter: [...byLetter].map(([l, prefixes]) => ({ letter: l, prefixes })),
+        readings,
+        cappedFrom: total > readings.length ? total : 0,
+      };
+    } catch {
+      if (request !== planRequest) return;
+      plan = literal;
+    } finally {
+      if (request === planRequest) planLoading = false;
+    }
+  }
+
+  async function loadShards(signature: string, forPlan: Plan) {
     const request = ++shardRequest;
-    requestedShardKey = key;
+    requestedShardSignature = signature;
     shardLoading = true;
     shardError = '';
     page = 0;
     expanded = new Set();
     try {
-      const next = await fetchNgramShard(nextStream, nextLetter);
+      const next = await Promise.all(
+        forPlan.byLetter.map((b) => fetchNgramShard(forPlan.stream, b.letter)),
+      );
       if (request !== shardRequest) return;
-      shard = next;
-      loadedShardKey = key;
+      loadedShards = next;
+      loadedShardSignature = signature;
     } catch {
       if (request !== shardRequest) return;
-      shard = {};
-      loadedShardKey = '';
-      shardError = `The ${nextLetter.toUpperCase()} phrase shard could not be loaded.`;
+      loadedShards = [];
+      loadedShardSignature = '';
+      const letters = forPlan.byLetter.map((b) => b.letter.toUpperCase()).join(', ');
+      shardError = forPlan.byLetter.length > 1
+        ? `The ${letters} phrase shards could not be loaded.`
+        : `The ${letters} phrase shard could not be loaded.`;
     } finally {
       if (request === shardRequest) shardLoading = false;
     }
   }
 
+  /** The rows that pass every filter, and the readings that produced them.
+   *
+   * One pass, because a shard holds up to 93,000 phrases and the prefix test is
+   * per reading. Each shard is only tested against the readings that begin with
+   * its own letter, which is what keeps the fan-out from multiplying the work.
+   */
+  function scanShards(
+    forPlan: Plan,
+    shards: Array<Record<string, NgramRow>>,
+    keepLengths: number[],
+    minimumCount: number,
+    dropCommon: boolean,
+  ): { rows: PhraseItem[]; matched: string[] } {
+    const rows: PhraseItem[] = [];
+    const seenMatch = new Set<string>();
+    forPlan.byLetter.forEach(({ prefixes }, i) => {
+      const shard = shards[i];
+      if (!shard) return;
+      for (const [key, row] of Object.entries(shard)) {
+        let hit = '';
+        if (prefixes.length) {
+          for (const p of prefixes) if (key.startsWith(p)) { hit = p; break; }
+          if (!hit) continue;
+        }
+        if (!keepLengths.includes(row[0])) continue;
+        if (row[1] < minimumCount) continue;
+        if (dropCommon && contentWords(key) < 2) continue;
+        rows.push({ key, row });
+        if (hit) seenMatch.add(hit);
+      }
+    });
+    // In the order the readings were generated, not the order the shards happen
+    // to be iterated, so the note under the box does not reshuffle itself.
+    const matched = forPlan.readings
+      .map((r) => r.join(' '))
+      .filter((p) => seenMatch.has(p));
+    return { rows, matched };
+  }
+
   async function loadWorkFilter(
     signature: string,
     nextStream: NgramStream,
-    nextLetter: string,
+    nextLetters: string[],
     nextLengths: number[],
     works: string[],
   ) {
@@ -249,9 +436,11 @@
     workFilterLoading = true;
     try {
       const occurrences = await Promise.all(
-        [...nextLengths]
-          .sort((a, b) => a - b)
-          .map((n) => fetchNgramOccurrences(nextStream, nextLetter, n)),
+        nextLetters.flatMap((l) =>
+          [...nextLengths]
+            .sort((a, b) => a - b)
+            .map((n) => fetchNgramOccurrences(nextStream, l, n)),
+        ),
       );
       if (request !== workRequest) return;
       const matches = new Set<string>();
@@ -272,7 +461,7 @@
   }
 
   function retryShard() {
-    requestedShardKey = '';
+    requestedShardSignature = '';
   }
 
   function retryWorkFilter() {
@@ -290,7 +479,7 @@
   }
 
   function phraseId(item: PhraseItem): string {
-    return `${stream}-${letter}-${item.row[0]}-${item.key.replace(/[^a-z0-9_-]+/g, '-')}`;
+    return `${stream}-${shardLetter(item.key)}-${item.row[0]}-${item.key.replace(/[^a-z0-9_-]+/g, '-')}`;
   }
 
   function togglePhrase(item: PhraseItem) {
@@ -334,7 +523,11 @@
   async function loadPhraseDetails(id: string, item: PhraseItem) {
     details = { ...details, [id]: { loading: true, error: '', works: [] } };
     try {
-      const occurrenceShard = await fetchNgramOccurrences(stream, letter, item.row[0]);
+      const occurrenceShard = await fetchNgramOccurrences(
+        stream,
+        shardLetter(item.key),
+        item.row[0],
+      );
       const byWork = occurrenceShard[item.key];
       if (!byWork) throw new Error('Phrase missing from its occurrence shard');
 
@@ -447,7 +640,7 @@
           bind:group={stream}
           on:change={() => page = 0}
         />
-        Dictionary word (all its forms)
+        Word in any of its forms
       </label>
       <label>
         <input
@@ -477,13 +670,28 @@
       <small>
         {#if isEnglish}
           Type the English words as they stand in the translation.
+        {:else if isLemma}
+          Type Greek or plain letters, as the words stand on the page: this list
+          stores <span lang="grc">τὸ τί ἦν εἶναι</span> as
+          <span lang="grc">ὁ τίς εἰμί εἰμί</span>, and either finds it.
         {:else}
           Type Greek or plain letters — <span lang="grc">τὸ τί</span> and
           <code>to ti</code> both work. Accents are ignored.
         {/if}
-        {#if normalizedPrefix}Matching <code>{normalizedPrefix}</code>.{/if}
+        {#if normalizedPrefix && !widened}Matching <code>{normalizedPrefix}</code>.{/if}
       </small>
     </label>
+
+    {#if widened && matchedReadings.length}
+      <p class="widen-note" aria-live="polite">
+        Reading these words as
+        {#each matchedReadings as reading, i}<span lang="grc">{reading}</span>{i < matchedReadings.length - 1 ? ', ' : ''}{/each}{#if matchedRest} and {countFormat.format(matchedRest)} more{/if}.
+        {#if widened.cappedFrom}
+          These words have {countFormat.format(widened.cappedFrom)} readings in
+          all; the first {VARIANT_READING_CAP} were tried.
+        {/if}
+      </p>
+    {/if}
 
     <div class="control-grid">
       <fieldset class="length-control">
@@ -523,45 +731,39 @@
         </label>
       {/if}
 
-      <label class="field compact-field" for="phrase-sort">
-        <span>Sort</span>
-        <select id="phrase-sort" bind:value={sort} on:change={() => page = 0}>
-          <option value="score">Distinctiveness</option>
-          <option value="frequency">Frequency</option>
-          <option value="length">Length</option>
-          <option value="alphabetical">Alphabetical</option>
-        </select>
-      </label>
     </div>
 
-    <p class="score-note">
-      Distinctiveness measures how much more often the phrase occurs than its
-      words appearing independently would predict. It only orders the list; it
-      never removes anything.
-    </p>
-
     <div class="work-field">
-      <label for="phrase-works">Work</label>
-      <select
-        id="phrase-works"
-        multiple
-        size="7"
-        bind:value={selectedWorks}
-        on:change={() => page = 0}
-        aria-describedby="work-filter-note"
-      >
-        {#each WORKS as work}
-          <option value={work.id}>{work.title}</option>
-        {/each}
-      </select>
+      <!-- Checkboxes, not a multi-select list. Picking two works out of 41 in a
+           list box takes a modifier key nobody is told about, and one stray
+           click throws the whole selection away. -->
+      <fieldset class="work-list" aria-describedby="work-filter-note">
+        <legend>Work</legend>
+        <div class="work-options">
+          {#each WORKS as work}
+            <label>
+              <input
+                type="checkbox"
+                value={work.id}
+                bind:group={selectedWorks}
+                on:change={() => page = 0}
+              />
+              {work.title}
+            </label>
+          {/each}
+        </div>
+      </fieldset>
       <div class="work-meta">
         <p id="work-filter-note">
-          No selection includes every work. Select one or more works to keep
-          phrases found in any of them. This filter needs an extra occurrence
-          fetch for each selected phrase length.
+          No selection includes every work. Tick one or more to keep phrases
+          found in any of them. This filter needs an extra occurrence fetch for
+          each selected phrase length, and one more for each shard the words are
+          read in.
         </p>
         {#if selectedWorks.length}
-          <button type="button" class="quiet-button" on:click={clearWorks}>Clear work filter</button>
+          <button type="button" class="quiet-button" on:click={clearWorks}>
+            Clear work filter ({selectedWorks.length})
+          </button>
         {/if}
       </div>
     </div>
@@ -578,8 +780,25 @@
           </p>
         {/if}
       </div>
-      <span class="loaded-shard">{stream === 'form' ? 'Surface' : stream === 'lemma' ? 'Lemma' : 'English'} · {letter.toUpperCase()}</span>
+      <div class="results-tools">
+        <label class="sort-field" for="phrase-sort">
+          <span>Sort</span>
+          <select id="phrase-sort" bind:value={sort} on:change={() => page = 0}>
+            <option value="score">Distinctiveness</option>
+            <option value="frequency">Frequency</option>
+            <option value="length">Length</option>
+            <option value="alphabetical">Alphabetical</option>
+          </select>
+        </label>
+        <span class="loaded-shard">{stream === 'form' ? 'Surface' : stream === 'lemma' ? 'Lemma' : 'English'} · {shardBadge}</span>
+      </div>
     </div>
+
+    <p class="score-note">
+      Distinctiveness measures how much more often the phrase occurs than its
+      words appearing independently would predict. It only orders the list; it
+      never removes anything.
+    </p>
 
     {#if !normalizedPrefix}
       <div class="phrase-start">
@@ -609,8 +828,13 @@
           {/each}
         </p>
       </div>
-    {:else if shardLoading}
-      <p class="status" aria-live="polite">Loading the {letter.toUpperCase()} phrase shard…</p>
+    {:else if planLoading}
+      <p class="status" aria-live="polite">Looking up the forms of these words…</p>
+    {:else if shardLoading || !activePlan}
+      <p class="status" aria-live="polite">
+        Loading the {shardBadge} phrase
+        {(activePlan?.byLetter.length ?? 1) > 1 ? 'shards' : 'shard'}…
+      </p>
     {:else if shardError}
       <div class="status error" role="alert">
         {shardError}
@@ -627,6 +851,10 @@
       <p class="status">
         No phrases match these filters. Try a shorter prefix, a lower count, or
         another work.
+        {#if widened && !matchedReadings.length}
+          No reading of these words recurs in the corpus. Tried
+          {#each triedReadings as reading, i}<span lang="grc">{reading}</span>{i < triedReadings.length - 1 ? ', ' : ''}{/each}{#if triedRest} and {countFormat.format(triedRest)} more{/if}.
+        {/if}
       </p>
     {:else}
       <div class="column-head" aria-hidden="true">
@@ -820,8 +1048,7 @@
   }
 
   legend,
-  .field > span,
-  .work-field > label {
+  .field > span {
     font-family: var(--font-ui);
     font-size: 0.76rem;
     font-weight: 600;
@@ -920,25 +1147,56 @@
   }
 
   .score-note {
-    padding: 0.65rem 0;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    padding: 0 0 0.65rem;
+  }
+
+  .widen-note {
+    margin: -0.35rem 0 0;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text-mid);
+  }
+
+  .widen-note span[lang='grc'] {
+    font-family: var(--font-greek);
+    color: var(--text);
   }
 
   .work-field {
     display: grid;
-    grid-template-columns: 4rem minmax(13rem, 17rem) 1fr;
+    grid-template-columns: minmax(17rem, 26rem) 1fr;
     align-items: start;
-    gap: 0.45rem 0.75rem;
+    gap: 0.45rem 1rem;
   }
 
-  .work-field > label {
-    padding-top: 0.35rem;
+  .work-list legend {
+    margin-bottom: 0.3rem;
   }
 
-  .work-field select {
-    width: 100%;
-    padding: 0.2rem;
+  /* Forty-one works: two columns, and scrolled rather than allowed to push the
+     results off the screen. */
+  .work-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.1rem 0.75rem;
+    max-height: 9.5rem;
+    padding: 0.35rem 0.5rem;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--input-bg);
+  }
+
+  .work-options label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text);
+    cursor: pointer;
   }
 
   .work-meta {
@@ -979,6 +1237,22 @@
 
   .results-head p {
     margin: 0.25rem 0 0;
+    font-family: var(--font-ui);
+    font-size: 0.76rem;
+    color: var(--text-mid);
+  }
+
+  .results-tools {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .sort-field {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     font-family: var(--font-ui);
     font-size: 0.76rem;
     color: var(--text-mid);
@@ -1304,12 +1578,8 @@
       align-items: start;
     }
 
-    .work-field > label {
-      padding: 0;
-    }
-
-    .work-field select {
-      max-width: none;
+    .work-options {
+      grid-template-columns: 1fr;
     }
 
     .column-head {

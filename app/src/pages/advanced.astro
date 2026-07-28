@@ -391,9 +391,13 @@ const corpus = { works: 41, tokens: '848,592', formPhrases: '173,884', lemmaPhra
         The two buttons at the top of the page are the same corpus read
         differently, and it is worth seeing what changes.
         <strong>Word as written</strong> counts the letters on the page: change
-        one ending and it is a different row. <strong>Dictionary word</strong>
-        counts the words behind the letters, so every inflection of the phrase
-        gathers into a single row. The same expression appears in both:
+        one ending and it is a different row.
+        <strong>Word in any of its forms</strong> counts the words behind the
+        letters, so every inflection of the phrase gathers into a single row.
+        Either takes the phrase as it stands on the page — type
+        <span lang="grc">τὸ τί ἦν εἶναι</span> and the second finds it under
+        <span lang="grc">ὁ τίς εἰμί εἰμί</span>, which is where it is stored. The
+        same expression appears in both:
       </p>
       <figure class="anatomy">
         <div class="anatomy-row">
@@ -454,11 +458,13 @@ const corpus = { works: 41, tokens: '848,592', formPhrases: '173,884', lemmaPhra
       <h3>Reading the list</h3>
       <ul>
         <li>
-          <strong>As written, or by dictionary form.</strong> The first lists
+          <strong>As written, or in any of its forms.</strong> The first lists
           phrases exactly as they appear. The second gathers the different
           endings of one phrase together, which finds more but is harder to read —
           in dictionary form, <span lang="grc">τὸ τί ἦν εἶναι</span> comes out as
-          <span lang="grc">ὁ τίς εἰμί εἰμί</span>.
+          <span lang="grc">ὁ τίς εἰμί εἰμί</span>. You need not know that: type
+          the words as they stand and the page resolves them, telling you which
+          reading it matched.
         </li>
         <li>
           <strong>Distinctiveness</strong> orders the list by default. It asks
