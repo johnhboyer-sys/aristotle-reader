@@ -621,8 +621,30 @@ export interface VariantOutcome extends SearchOutcome {
   cappedFrom: number;          // 0 unless the fan-out was truncated
 }
 
+/** The headwords each folded word can belong to, one list per word.
+ *
+ * `null` means the corpus map itself could not be loaded: there is nothing to
+ * widen with, and a caller should fall back to matching what was typed rather
+ * than report an empty corpus. A word the map does not record yields an empty
+ * list, which callers read differently — the phrase search takes it as nothing
+ * to widen, the phrase index falls back to that one word as typed.
+ */
+export async function lemmaOptions(folds: string[]): Promise<string[][] | null> {
+  const perTerm: string[][] = [];
+  for (const fold of folds) {
+    const letter = /^[a-z]/.test(fold) ? fold[0] : '_';
+    try {
+      const shard = await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
+      perTerm.push(shard[fold] ?? []);
+    } catch {
+      return null;
+    }
+  }
+  return perTerm;
+}
+
 // The cartesian product of each term's headwords, in the order typed.
-function lemmaReadings(perTerm: string[][], cap: number): { readings: string[][]; total: number } {
+export function lemmaReadings(perTerm: string[][], cap: number): { readings: string[][]; total: number } {
   let total = 1;
   for (const options of perTerm) total *= Math.max(options.length, 1);
   let readings: string[][] = [[]];
@@ -653,17 +675,8 @@ export async function searchPhraseVariants(
   // Resolve each typed word to the headwords it can belong to.
   const folds = terms.map(t => greekFold(t));
   if (folds.some(f => !f)) return empty;
-  const perTerm: string[][] = [];
-  for (const fold of folds) {
-    const letter = /^[a-z]/.test(fold) ? fold[0] : '_';
-    let shard: Record<string, string[]> = {};
-    try {
-      shard = await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
-    } catch {
-      return empty;   // without the map there is nothing to widen with
-    }
-    perTerm.push(shard[fold] ?? []);
-  }
+  const perTerm = await lemmaOptions(folds);
+  if (!perTerm) return empty;   // without the map there is nothing to widen with
   if (perTerm.some(options => !options.length)) return empty;
 
   const { readings, total } = lemmaReadings(perTerm, VARIANT_READING_CAP);
