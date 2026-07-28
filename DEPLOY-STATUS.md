@@ -3,7 +3,22 @@
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
 Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-07-13 (d · popup reload + AA contrast + partial-search disclosure)
+## Latest deploy — 2026-07-27 (advanced search + English phrase index + furniture strip + game)
+
+- **gh-pages:** `f3dc1025` → `de0cfb2f`
+- **Source:** `origin/main` `203c3c11f` (PR #56 merge) + one follow-up on main removing the game card
+- **What shipped:**
+  - **Advanced search (PR #56, the held 42-commit body of work)** — grammar is combo-only (a standalone `gen-pl-fem` returning 33,504 hits was the argument against it), a **Single lemma picker** panel over 14.9k lemmas, and **a lemma search now takes the word as it stands on the page** (`logou` previously returned nothing for a word occurring 2,269×). Radios relabelled "Any form of this word" / "Only as I typed it". Phrases page made usable, with an illustrated explainer and corrected guide metrics (848,592 words · 173,884 form n-grams · 390,675 lemma).
+  - **English phrase index** — 325k phrases over the public translations, ranked with function words filtered out.
+  - **Archive furniture strip (`cf5a872bf`)** — `stage1_ross.py` now removes archive.org page furniture (line-wrapped headers, page breaks, ©-labels) from the English. Two near-misses caught by regression tests and deliberately avoided: truncating at the first marker loses half of De Sensu (the furniture repeats mid-document), and `©[^\n]*` eats 2,845 words of the Mechanica (© labels a geometric point there).
+  - **Game (PRs #54/#55)** — self-contained retro game at `/game/`, reachable from the home footer ("Play a game"). No external requests, no `eval`/`fetch`/`innerHTML`, no CDN assets; it loads only its own `styles.css` and `game.js`. **PR #54's home-page card was removed** — #54 and #55 each added the game independently and both landed, so main briefly carried a card *and* a footer link; John chose footer-only, which was #55's stated intent.
+- **Build:** corpus data reused from the verified 17:54 local rebuild (`build/dist`); app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22, `bonitz.astro` moved aside). Corpus gates run standalone and green: **preflight ok**, **shared LSJ ok** (14,045 entries / 24 shards / 63,238 referenced keys across 41 works). Link integrity **0 broken** (6,610 pages / 555,051 links / 428,859 anchors).
+- **Deploy diff:** 8,473 files (577 A / 7,872 M / 17 D / 7 R). Adds are the new `data/ngrams/{english,lemma,form}` shards, `data/lemma-map`, `data/lemma-picker`, and `game/`; the 7,872 modifications are the English furniture strip plus the JS/CSS bundle rehash. Deletions are 15 superseded `_astro` bundles and one lemma (`syzeo`) that no longer occurs — nothing links to it (link check clean).
+- **bonitz:** `bonitz.astro` moved aside during the build → no `app/dist/bonitz` to remove; `/bonitz/` 404 confirmed live.
+- **Leak-check:** clean. Only `Rackham` hits in data are `EN/manifest.json`'s `english_translation` attribution (Loeb 1926, US public domain) and two of Ostwald's own footnotes citing him as an editor — same state cleared in prior deploys. Ackrill 0, Tredennick 0.
+- **Live-verified:** `/` · `/search/` · `/advanced/` · `/phrases/` · `/game/` · `/Cat/book/1/` · `/EN/book/1/` · `/lemma/genos/` all 200; `/bonitz/` and the deleted `/lemma/syzeo/` both 404. Home page has "Play a game" in the footer and **zero** "Summa Contra Mundum" card. Data shards served: `ngrams/english/v.json` (returns real phrase rows), `ngrams/lemma/l.json`, `lemma-picker/a.json`, `lemma-map/l.json`. Inflected-form fix confirmed live: `lemma-map` resolves `logou` → `logos`. Archive furniture absent from `/EN/book/1/`.
+
+## Previous deploy — 2026-07-13 (d · popup reload + AA contrast + partial-search disclosure)
 
 - **gh-pages:** `7bf65538` → `f3dc1025`
 - **Source:** `origin/main` `d5f6a12b5` (3 commits, direct to main: `2bfe0bc53`, `fd735df35`, `d5f6a12b5`)
