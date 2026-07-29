@@ -3,7 +3,18 @@
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
 Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-07-29 (b · word popup closes on click, honest non-modal)
+## Latest deploy — 2026-07-29 (c · footnote click closes word panel)
+
+- **gh-pages:** `a0c67b95` → `9222625e`
+- **Source:** `origin/main` PR #60 merge — John's ruling on the stopPropagation interplay flagged in the b-deploy: **a footnote click closes the word panel.**
+- **What shipped:** the outside-click close listener moved to the **capture phase**. Reader's footnote-marker / Bekker-info / print-menu handlers `stopPropagation()`, so the bubble listener never saw those clicks and the word panel stayed open behind the popup they raised. Capture sees every outside click first; the `.word-sidebar`/`.tok` exemptions are unchanged (swap and in-panel clicks unaffected).
+- **Reviews:** Codex re-raised the focus-restore concern; refuted for this exact path — the footnote popup takes focus on open and holds it through the word panel's teardown (pointer-opened panels capture `body` as `previousFocus`; tokens aren't keyboard-focusable).
+- **Build/gates:** app-only `PUBLIC_SHOW_PRIVATE=0` build (Node 22, bonitz aside, `/bonitz/` 404); link integrity **0 broken** (6,610 pages); leak baseline unchanged. Deploy diff: 118 files (one `Reader` rehash `CuX9yajB → C48ZWL93` + 117 pages), **0 data files**, 0 dangling refs.
+- **Tests:** 167/167 (new: outside click with stopped propagation still closes).
+- **Live-verified:** footnote-marker click closes the word panel and opens the footnote; swap / in-panel / empty-space behaviors unregressed.
+- **⚠️ Cross-repo:** plato-reader and classical-philosophy-reader still close on the bubble phase — the ruling should be applied there too.
+
+## Previous deploy — 2026-07-29 (b · word popup closes on click, honest non-modal)
 
 - **gh-pages:** `3333a919` → `a0c67b95`
 - **Source:** `origin/main` PR #59 merge (backport of classical-philosophy-reader `1c7a538`, Sol/GPT-5.6 adversarial-review fixes)
