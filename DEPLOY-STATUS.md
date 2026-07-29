@@ -3,7 +3,18 @@
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
 Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-07-29 (word popup closes via outside pointerdown)
+## Latest deploy — 2026-07-29 (b · word popup closes on click, honest non-modal)
+
+- **gh-pages:** `3333a919` → `a0c67b95`
+- **Source:** `origin/main` PR #59 merge (backport of classical-philosophy-reader `1c7a538`, Sol/GPT-5.6 adversarial-review fixes)
+- **What shipped:** two fixes to the morning's close path. (1) Close on window **click**, not pointerdown — a touch pan, text-selection drag, or right-click no longer dismisses the panel mid-gesture or fights the Reader's ~360ms open scroll pin; same tap-not-pan semantics the old backdrop had. (2) Dropped `aria-modal="true"` and the Tab focus trap — the panel is genuinely non-modal (word clicks swap it, outside clicks land on targets), so claiming modality misinformed assistive tech. Escape-close, mount focus, and both `preventScroll` restores stay.
+- **Reviews:** Codex cross-review raised two P2s, both verified empirically. Focus-steal: **refuted** — opening always goes through a click on a non-focusable token, which blurs any control first, so `previousFocus` is `body` and the restore is a no-op (probed with a control focused pre-open; the closing control kept focus at +150ms and +900ms). stopPropagation interplay: **real but pre-existing in the reviewed reference** — a footnote-marker click opens the footnote without closing the word panel; spun off as a UX decision (task chip), applies to all three reader repos.
+- **Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22, `bonitz.astro` moved aside). Link integrity **0 broken** (6,610 pages / 555,051 links / 428,859 anchors). Leak-check at baseline (Ackrill 0, Tredennick 0, Rackham = EN attribution + Ostwald footnotes).
+- **Deploy diff:** 119 files, **0 data files** — one bundle rehash (`Reader.BmRS7_R7 → Reader.CuX9yajB`; no CSS change) touching only the 117 pages that load Reader. Dangling references to the removed hash: 0.
+- **Tests:** shared suite 166/166 (close matrix on real `MouseEvent('click')`; new test pins bare pointerdown / right-button mousedown do NOT close).
+- **Live-verified (functional, touch context):** `/EN/book/1/` — swap in place Πᾶσα → πᾶσα; genuine touch pan (CDP scroll gesture) leaves the panel open while the page scrolls; right-click outside leaves it open; plain click on empty space closes; `aria-modal` absent from the DOM.
+
+## Previous deploy — 2026-07-29 (a · word popup closes via outside pointerdown)
 
 - **gh-pages:** `99f0b57f` → `3333a919`
 - **Source:** `origin/main` `3971e93ec` (PR #58 merge)
