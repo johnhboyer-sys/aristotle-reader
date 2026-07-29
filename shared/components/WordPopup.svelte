@@ -65,7 +65,10 @@
   // click only fires after press+release on the same target, so a touch pan,
   // a text-selection drag, or a right-click never dismisses the panel — the
   // same tap-not-pan semantics the old backdrop had (Sol adversarial-review
-  // catch, 2026-07-29).
+  // catch, 2026-07-29). Capture phase, not bubble: Reader's footnote-marker,
+  // Bekker-info, and print-menu handlers stopPropagation(), which would keep
+  // the panel open behind the popup they raise — John's ruling 2026-07-29:
+  // a footnote click closes the word panel.
   function onOutsideClick(e: MouseEvent) {
     const t = e.target as HTMLElement | null;
     if (!t || t.closest('.word-sidebar') || t.closest('.tok')) return;
@@ -84,7 +87,7 @@
   });
 </script>
 
-<svelte:window on:keydown={onKey} on:click={onOutsideClick} />
+<svelte:window on:keydown={onKey} on:click|capture={onOutsideClick} />
 
 <!-- Desktop: slide-in sidebar. Mobile: bottom sheet. Both via CSS.
      A non-modal dialog, honestly: the reader can click other words (swap),

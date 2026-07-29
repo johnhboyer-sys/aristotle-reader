@@ -74,6 +74,26 @@ describe('WordPopup', () => {
     tok.remove();
   });
 
+  it('closes even when the outside click stops propagation (footnote marker)', async () => {
+    // Reader's fn-marker / Bekker-info / print-menu handlers stopPropagation();
+    // the close listener runs in the capture phase so it still sees the click
+    // (John's ruling 2026-07-29: a footnote click closes the word panel).
+    const marker = document.createElement('button');
+    marker.className = 'fn-marker';
+    marker.addEventListener('click', (e) => e.stopPropagation());
+    document.body.appendChild(marker);
+
+    const onClose = vi.fn();
+    render(WordPopup, { props: { ...baseProps, onClose } });
+    await screen.findByText('word, account');
+
+    marker.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    marker.remove();
+  });
+
   it('does NOT close on a bare pointerdown (touch pan / selection drag / right-click)', async () => {
     // A pan or drag produces pointerdown with no click; closing there would
     // dismiss the panel the moment a touch scroll starts (Sol review catch).
