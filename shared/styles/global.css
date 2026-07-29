@@ -1076,13 +1076,6 @@ body {
 
 /* ── Word sidebar ─────────────────────────────────────────────────── */
 
-.popup-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 8;
-  background: transparent;
-}
-
 .word-sidebar {
   position: fixed;
   top: 0; right: 0; bottom: 0;
@@ -2303,7 +2296,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   .reader-controls,
   .toc-sidebar, .toc-backdrop,
   .settings-sidebar, .settings-backdrop,
-  .popup, .popup-backdrop,
+  .popup,
   .help-trigger, .help-backdrop, .help-modal,
   .bekker-note {
     display: none !important;
