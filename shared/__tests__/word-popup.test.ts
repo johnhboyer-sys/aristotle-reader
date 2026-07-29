@@ -46,7 +46,7 @@ describe('WordPopup', () => {
     expect(lookupWord).toHaveBeenLastCalledWith('EN', 'areth');
   });
 
-  it('closes on pointerdown outside, but not on the panel or on a Greek token', async () => {
+  it('closes on click outside, but not on the panel or on a Greek token', async () => {
     const tok = document.createElement('span');
     tok.className = 'tok';
     document.body.appendChild(tok);
@@ -56,22 +56,35 @@ describe('WordPopup', () => {
     await screen.findByText('word, account');
 
     // On a Greek token: the token's own handler swaps the word — no close.
-    tok.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    tok.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await tick();
     expect(onClose).not.toHaveBeenCalled();
 
     // Inside the panel: no close.
     document.querySelector('.word-sidebar')!
-      .dispatchEvent(new Event('pointerdown', { bubbles: true }));
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await tick();
     expect(onClose).not.toHaveBeenCalled();
 
     // Anywhere else: close.
-    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await tick();
     expect(onClose).toHaveBeenCalledTimes(1);
 
     tok.remove();
+  });
+
+  it('does NOT close on a bare pointerdown (touch pan / selection drag / right-click)', async () => {
+    // A pan or drag produces pointerdown with no click; closing there would
+    // dismiss the panel the moment a touch scroll starts (Sol review catch).
+    const onClose = vi.fn();
+    render(WordPopup, { props: { ...baseProps, onClose } });
+    await screen.findByText('word, account');
+
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 2 }));
+    await tick();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('renders no click-blocking backdrop', async () => {

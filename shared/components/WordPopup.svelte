@@ -58,41 +58,18 @@
     if (e.key === 'Escape') onClose();
   }
 
-  // Close on any pointer-down outside the panel — EXCEPT on a Greek token,
-  // whose own click handler swaps the popup to the new word. (A blocking
-  // backdrop here would swallow that click and force close-then-reopen, with
-  // two page reflows; see the bug report of 2026-07-29.)
-  function onOutsidePointer(e: PointerEvent) {
+  // Close on any CLICK outside the panel — EXCEPT on a Greek token, whose
+  // own click handler swaps the popup to the new word. (A blocking backdrop
+  // here would swallow that click and force close-then-reopen, with two page
+  // reflows; see the bug report of 2026-07-29.) Click, not pointerdown: a
+  // click only fires after press+release on the same target, so a touch pan,
+  // a text-selection drag, or a right-click never dismisses the panel — the
+  // same tap-not-pan semantics the old backdrop had (Sol adversarial-review
+  // catch, 2026-07-29).
+  function onOutsideClick(e: MouseEvent) {
     const t = e.target as HTMLElement | null;
     if (!t || t.closest('.word-sidebar') || t.closest('.tok')) return;
     onClose();
-  }
-
-  function focusableEls(): HTMLElement[] {
-    return dialogEl
-      ? Array.from(dialogEl.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        )).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1)
-      : [];
-  }
-
-  function onDialogKey(e: KeyboardEvent) {
-    if (e.key !== 'Tab') return;
-    const els = focusableEls();
-    if (els.length === 0) {
-      e.preventDefault();
-      dialogEl?.focus();
-      return;
-    }
-    const first = els[0];
-    const last = els[els.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
   }
 
   onMount(() => {
@@ -107,18 +84,21 @@
   });
 </script>
 
-<svelte:window on:keydown={onKey} on:pointerdown={onOutsidePointer} />
+<svelte:window on:keydown={onKey} on:click={onOutsideClick} />
 
-<!-- Desktop: slide-in sidebar. Mobile: bottom sheet. Both via CSS. -->
+<!-- Desktop: slide-in sidebar. Mobile: bottom sheet. Both via CSS.
+     A non-modal dialog, honestly: the reader can click other words (swap),
+     footnotes, and links while it is open, so aria-modal and a Tab trap would
+     tell assistive tech the background is unavailable while pointer users
+     interact with it freely (Sol adversarial-review catch, 2026-07-29).
+     Escape still closes; focus returns to the opener. -->
 <div
   class="word-sidebar"
   bind:this={dialogEl}
   transition:fly={isMobile ? { y: 600, duration: 260, opacity: 1 } : { x: 420, duration: 220, opacity: 1 }}
   role="dialog"
   aria-label="Word analysis"
-  aria-modal="true"
   tabindex="-1"
-  on:keydown={onDialogKey}
 >
   <div class="word-sidebar-head">
     <span class="popup-surface" lang="grc">{token.t}</span>
