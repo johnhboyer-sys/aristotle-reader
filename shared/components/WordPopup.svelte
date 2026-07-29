@@ -58,6 +58,16 @@
     if (e.key === 'Escape') onClose();
   }
 
+  // Close on any pointer-down outside the panel — EXCEPT on a Greek token,
+  // whose own click handler swaps the popup to the new word. (A blocking
+  // backdrop here would swallow that click and force close-then-reopen, with
+  // two page reflows; see the bug report of 2026-07-29.)
+  function onOutsidePointer(e: PointerEvent) {
+    const t = e.target as HTMLElement | null;
+    if (!t || t.closest('.word-sidebar') || t.closest('.tok')) return;
+    onClose();
+  }
+
   function focusableEls(): HTMLElement[] {
     return dialogEl
       ? Array.from(dialogEl.querySelectorAll<HTMLElement>(
@@ -87,17 +97,17 @@
 
   onMount(() => {
     previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    setTimeout(() => dialogEl?.focus(), 0);
+    setTimeout(() => dialogEl?.focus({ preventScroll: true }), 0);
   });
 
   onDestroy(() => {
-    previousFocus?.focus();
+    // preventScroll: the reader pins its own scroll position across the close
+    // reflow; letting focus() scroll to the old word snaps the page around.
+    previousFocus?.focus({ preventScroll: true });
   });
 </script>
 
-<svelte:window on:keydown={onKey} />
-
-<div class="popup-backdrop" on:click={onClose} on:keydown={() => {}} role="presentation"></div>
+<svelte:window on:keydown={onKey} on:pointerdown={onOutsidePointer} />
 
 <!-- Desktop: slide-in sidebar. Mobile: bottom sheet. Both via CSS. -->
 <div
