@@ -3,7 +3,19 @@
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
 Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-07-28 (phrase index takes the inflected phrase + sort/work controls)
+## Latest deploy — 2026-07-29 (word popup closes via outside pointerdown)
+
+- **gh-pages:** `99f0b57f` → `3333a919`
+- **Source:** `origin/main` `3971e93ec` (PR #58 merge)
+- **What shipped:** port of the plato-reader WordPopup fix (2026-07-29). The transparent full-page `.popup-backdrop` swallowed clicks on other Greek words (close-then-reopen, two page snaps) — deleted, replaced by a window `pointerdown` handler that ignores targets inside `.word-sidebar` or `.tok`, so clicking a second word swaps the analysis in place. Focus restore on open and close passes `preventScroll`, so closing no longer snaps the page. The reactive `lookupWord` + request-id guard was already present here (2026-07-13 deploy); unchanged. Regression tests ported (`shared/__tests__/word-popup.test.ts`, shared suite 165/165).
+- **Reviews:** Codex standard review clean (svelte-check 0 errors). Codex adversarial review flagged one medium ("teardown steals focus from an outside control the user clicked") — **refuted empirically**: Svelte runs `onDestroy` synchronously at pointerdown, before native mousedown focus lands on the clicked control, so the control keeps focus (verified headless: ☰ Contents button retains focus through teardown). Same code order as plato-reader.
+- **Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22, `bonitz.astro` moved aside) — no corpus data changed. Link integrity **0 broken** (6,610 pages / 555,051 links / 428,859 anchors).
+- **Deploy diff:** 6,611 files, **0 data files changed** — 2 bundle rehashes (`Reader` = popup, `global.css` = backdrop CSS removal) propagated to every page. Dangling references to the two removed hashes: 0.
+- **bonitz:** `bonitz.astro` moved aside during the build → no `app/dist/bonitz`; `/bonitz/` 404 confirmed live.
+- **Leak-check:** clean, same baseline — Ackrill 0, Tredennick 0, Rackham only `EN/manifest.json` attribution + Ostwald footnotes (`EN/footnotes.json`).
+- **Live-verified (functional):** `/` · `/EN/book/1/` · `/Cat/book/1/` · `/search/` all 200; `/bonitz/` and both removed bundles 404; new `Reader.BmRS7_R7.js` + `global.C0E-2nPH.css` 200. On the live page: no `.popup-backdrop` in the DOM; clicking Πᾶσα opens the panel, clicking πᾶσα directly swaps it in place (one sidebar throughout); clicking empty margin closes it with zero scroll delta. Pre-deploy dev-server check also confirmed the clicked word holds its viewport position to within 0.02px across close when scrolled mid-text.
+
+## Previous deploy — 2026-07-28 (phrase index takes the inflected phrase + sort/work controls)
 
 - **gh-pages:** `de0cfb2f` → `99f0b57f`
 - **Source:** `origin/main` `35c3ed89a` (PR #57 merge)
