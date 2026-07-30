@@ -689,6 +689,19 @@ describe('filename helpers', () => {
     expect(compileDefaultFilename(META, 'bilingual')).toBe('Metaphysics — Aristotle (Greek and translation).docx');
   });
 
+  it('bilingual filename names the work OWN source language, not Greek', () => {
+    // An imported document can be Latin, German, anything — "Greek and
+    // translation" was wrong for every work that is not Aristotle's.
+    expect(compileDefaultFilename({ ...META, title: 'Summa Theologiae', author: '', language: 'Latin' } as never, 'bilingual')).toBe(
+      'Summa Theologiae (Latin and translation).docx',
+    );
+    // No declared language at all: a neutral word, never a wrong one.
+    const { originalLanguage: _drop, ...noLanguage } = META as { originalLanguage?: string };
+    expect(compileDefaultFilename({ ...noLanguage, author: '' } as never, 'bilingual')).toBe(
+      'Metaphysics (source and translation).docx',
+    );
+  });
+
   it('default filename with no mode specified falls back to english wording', () => {
     expect(compileDefaultFilename(META, undefined)).toBe('Metaphysics — Aristotle (translation).docx');
   });

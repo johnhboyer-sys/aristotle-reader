@@ -201,7 +201,9 @@
             </label>
             <label class="mode-option">
               <input type="radio" name="compile-mode" value="bilingual" bind:group={mode} />
-              Greek and English
+              <!-- Not "Greek and English": a document work's source may be
+                   Latin, German, or anything the user imported. -->
+              Bilingual
             </label>
           </fieldset>
 
