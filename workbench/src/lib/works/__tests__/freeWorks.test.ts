@@ -113,6 +113,27 @@ describe('free-work registry (works.json in the library root)', () => {
     expect((await listFreeWorkRecords(storage))[0]).toEqual({ ...RECORD, language: 'Latin' });
   });
 
+  it("updateFreeWorkAuthor keeps a work's Books and level profile intact", async () => {
+    // Author, Books and levels are three separate read-modify-write cycles over
+    // the same works.json — saving one must never drop the others.
+    const storage = new MemStorage();
+    const furnished = {
+      ...RECORD,
+      levels: [{ name: 'Question', navRole: 'chapter' as const, depth: 0 }],
+      bookContainers: [
+        { label: 'Prima Pars', start: 1 },
+        { label: 'Secunda Pars', start: 4 },
+      ],
+    };
+    await registerFreeWork(furnished, storage);
+
+    await updateFreeWorkAuthor('my-doc', 'Thomas Aquinas', storage);
+    expect((await listFreeWorkRecords(storage))[0]).toEqual({
+      ...furnished,
+      author: 'Thomas Aquinas',
+    });
+  });
+
   it('updateFreeWorkAuthor is a no-op for an unknown work id', async () => {
     const storage = new MemStorage();
     await registerFreeWork(RECORD, storage);

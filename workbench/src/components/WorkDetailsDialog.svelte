@@ -36,9 +36,13 @@
 </script>
 
 <div class="scrim" role="presentation">
-  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="work-details-title">
+  <div class="dialog" role="dialog" aria-modal="true" aria-label="Work details">
     <header class="dialog-head">
-      <h2 id="work-details-title">{title}</h2>
+      <!-- The head label stays literal. This h2 wears the small uppercase
+           section-label styling shared with the other dialogs, which turns a
+           work's own title into "SUMMA THEOLOGIAE" — and mangles a Greek title
+           outright. The title belongs in the body, set in the reading face. -->
+      <h2>Work details</h2>
       <button class="close-btn" onclick={onClose} aria-label="Close">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M6 6l12 12M18 6L6 18" />
@@ -47,6 +51,7 @@
     </header>
 
     <form class="dialog-body" onsubmit={submit}>
+      <p class="work-title">{title}</p>
       {#if errorMessage}
         <p class="error">{errorMessage}</p>
       {/if}
@@ -116,6 +121,15 @@
   }
   .dialog-body {
     padding: var(--space-4);
+  }
+  /* The work's own title, in the reading serif the library rail uses for work
+     names — a title, not a UI label, so Greek and Latin keep their case. */
+  .work-title {
+    margin-bottom: var(--space-3);
+    font-family: var(--font-english);
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--text);
   }
   .dialog-body label {
     display: block;
