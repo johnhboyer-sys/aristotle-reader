@@ -7,6 +7,7 @@ import {
   listFreeWorks,
   registerFreeWork,
   sanitizeBooks,
+  updateFreeWorkAuthor,
   updateFreeWorkBookContainers,
   updateFreeWorkBooks,
   updateFreeWorkLevels,
@@ -27,14 +28,27 @@ describe('free-work registry (works.json in the library root)', () => {
     expect(await listFreeWorks(new MemStorage())).toEqual([]);
   });
 
-  it('register → list round-trips records (language kept verbatim)', async () => {
+  it('register → list round-trips records (author trimmed; language kept verbatim)', async () => {
     const storage = new MemStorage();
-    await registerFreeWork({ ...RECORD, language: 'German' }, storage);
+    await registerFreeWork({ ...RECORD, author: '  Jane Austen  ', language: 'German' }, storage);
     await registerFreeWork({ id: 'verse', title: 'Verse', scheme: 'plain-line' }, storage);
     expect(await listFreeWorkRecords(storage)).toEqual([
-      { ...RECORD, language: 'German' },
+      { ...RECORD, author: 'Jane Austen', language: 'German' },
       { id: 'verse', title: 'Verse', scheme: 'plain-line' },
     ]);
+  });
+
+  it('omits an empty stored author', async () => {
+    const storage = new MemStorage();
+    await storage.write(
+      FREE_WORKS_STORAGE_ID,
+      'works.json',
+      JSON.stringify({
+        version: 1,
+        works: [{ id: 'my-doc', title: 'My Doc', author: '   ', citation_scheme: 'paragraph' }],
+      }),
+    );
+    expect(await listFreeWorkRecords(storage)).toEqual([RECORD]);
   });
 
   it('persists and reads back a work organization profile (levels)', async () => {
@@ -82,6 +96,28 @@ describe('free-work registry (works.json in the library root)', () => {
     await registerFreeWork(RECORD, storage);
     await updateFreeWorkLevels('nope', [{ name: 'X', navRole: 'book', depth: 0 }], storage);
     expect((await listFreeWorkRecords(storage))[0].levels).toBeUndefined();
+  });
+
+  it('updateFreeWorkAuthor sets, trims, and clears the author without changing other fields', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, language: 'Latin' }, storage);
+
+    await updateFreeWorkAuthor('my-doc', '  Thomas Aquinas  ', storage);
+    expect((await listFreeWorkRecords(storage))[0]).toEqual({
+      ...RECORD,
+      author: 'Thomas Aquinas',
+      language: 'Latin',
+    });
+
+    await updateFreeWorkAuthor('my-doc', '', storage);
+    expect((await listFreeWorkRecords(storage))[0]).toEqual({ ...RECORD, language: 'Latin' });
+  });
+
+  it('updateFreeWorkAuthor is a no-op for an unknown work id', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await updateFreeWorkAuthor('nope', 'Nobody', storage);
+    expect(await listFreeWorkRecords(storage)).toEqual([RECORD]);
   });
 
   it('stores the registry as works.json under the reserved root id', async () => {
@@ -169,6 +205,10 @@ describe('freeWorkManifest', () => {
       books: [{ n: 1, label: '' }],
       profile: DEFAULT_PROFILE,
     });
+  });
+
+  it('surfaces the record author on the manifest', () => {
+    expect(freeWorkManifest({ ...RECORD, author: 'Jane Austen' }).author).toBe('Jane Austen');
   });
 
   it('surfaces the record levels as the manifest profile (custom over default)', () => {

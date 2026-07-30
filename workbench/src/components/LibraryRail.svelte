@@ -90,6 +90,7 @@
     onOutlineRename,
     onOutlineSetLevel,
     onManageLevels,
+    onWorkDetails,
     onDivide,
     onAddBookContainer,
     onAddBookContainerAfter,
@@ -126,6 +127,8 @@
     onOutlineSetLevel?: (rowIndex: number, level: number | null) => void;
     /** Open the "Manage levels…" profile editor for a document work. */
     onManageLevels?: (workId: string) => void;
+    /** Open the work-details editor for a document work. */
+    onWorkDetails?: (workId: string) => void;
     /** "Divide into chapters…" — split the open single document at its
      * Book/Chapter markers into one file per chapter (bulk shortcut). */
     onDivide?: (workId: string) => void;
@@ -265,6 +268,7 @@
   const RAIL_MENU_W = 230;
   const RAIL_MENU_MARGIN = 8;
   let railMenu = $state<{ rowIndex: number; level: number; label: string; rootOrdinal: number; x: number; y: number; maxHeight: number } | null>(null);
+  let workMenu = $state<{ workId: string; title: string; x: number; y: number; maxHeight: number } | null>(null);
   /** Clamp a menu to the viewport (shared by the heading and Book menus). */
   function menuAt(e: MouseEvent): { x: number; y: number; maxHeight: number } {
     const vw = window.innerWidth;
@@ -276,6 +280,8 @@
   function openRailMenu(e: MouseEvent, rowIndex: number, level: number, label: string) {
     e.preventDefault();
     if (!onOutlineSetLevel || levels.length === 0) return;
+    workMenu = null;
+    bookMenu = null;
     railMenu = {
       rowIndex,
       level,
@@ -304,7 +310,23 @@
     if (e.key === 'Escape') {
       railMenu = null;
       bookMenu = null;
+      workMenu = null;
     }
+  }
+
+  function openWorkMenu(e: MouseEvent, workId: string, title: string) {
+    e.preventDefault();
+    if (!onWorkDetails) return;
+    railMenu = null;
+    bookMenu = null;
+    workMenu = { workId, title, ...menuAt(e) };
+  }
+
+  function workMenuDetails() {
+    if (!workMenu) return;
+    const { workId } = workMenu;
+    workMenu = null;
+    onWorkDetails?.(workId);
   }
 
   // ── Book containers: expand key, inline rename, right-click menu ───────────
@@ -344,6 +366,8 @@
   let bookMenu = $state<{ index: number; label: string; x: number; y: number; maxHeight: number } | null>(null);
   function openBookMenu(e: MouseEvent, index: number, label: string) {
     e.preventDefault();
+    railMenu = null;
+    workMenu = null;
     bookMenu = { index, label, ...menuAt(e) };
   }
   function bookMenuRename() {
@@ -451,6 +475,28 @@
   </div>
 {/if}
 
+{#if workMenu}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="rail-menu-backdrop"
+    onclick={() => (workMenu = null)}
+    oncontextmenu={(e) => {
+      e.preventDefault();
+      workMenu = null;
+    }}
+  ></div>
+  <div
+    class="rail-menu"
+    role="menu"
+    style={`left:${workMenu.x}px; top:${workMenu.y}px; max-height:${workMenu.maxHeight}px;`}
+  >
+    <div class="rail-menu-label">{workMenu.title}</div>
+    <button class="rail-menu-item" role="menuitem" onclick={workMenuDetails}>
+      <span class="rail-menu-check" aria-hidden="true"></span>Work details…
+    </button>
+  </div>
+{/if}
+
 <!-- Recursive nav-tree of the open document's headings (D8): Book › Chapter ›
      heading, each node a jump-to button; children nest in their own <ul>. -->
 {#snippet outlineNodes(nodes: import('../lib/editor/outline').OutlineNode[])}
@@ -534,7 +580,16 @@
   {#each railWorks as rw (rw.work.id)}
     <div class="work">
       <div class="work-head">
-        <span class="work-title">{rw.work.title}</span>
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <span
+          class="work-title"
+          title={rw.document && onWorkDetails
+            ? `${rw.work.title} — right-click for work details`
+            : undefined}
+          oncontextmenu={rw.document && onWorkDetails
+            ? (e) => openWorkMenu(e, rw.work.id, rw.work.title)
+            : undefined}
+        >{rw.work.title}</span>
         {#if rw.status === 'ready' && (onImportChapter || onImportReference)}
           <span class="work-actions">
             {#if onImportChapter}

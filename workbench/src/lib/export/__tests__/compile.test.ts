@@ -220,6 +220,15 @@ describe('compileWorkMarkdown — headings via the citation contract', () => {
     expect(result.markdown).toContain('# Ζ');
   });
 
+  it('leaves a corpus export book-first — the byline belongs to imported documents', () => {
+    // Aristotle's manifest names an author, but a corpus export has always
+    // opened on its book heading; a byline here would be a title page nobody
+    // asked for.
+    const result = compileWorkMarkdown([metaChapter(7, 17)], META);
+    expect(result.markdown.startsWith('# Ζ\n\n## Chapter 17')).toBe(true);
+    expect(result.markdown).not.toContain('*Aristotle*');
+  });
+
   it('book heading uses Roman-numeral labels for bekker-standard (posterior-analytics)', () => {
     const chapter: ChapterFile = {
       meta: {
@@ -512,6 +521,19 @@ describe('compileWorkMarkdown — document-spine single-document route (D8)', ()
     expect(result.included).toEqual([{ book: 1, chapter: 1 }]);
   });
 
+  it('puts a non-empty author in an italic paragraph under the title', () => {
+    const result = compileWorkMarkdown(
+      [freeChapter()],
+      { ...FREE_WORK, author: 'Jane Austen' },
+    );
+    expect(result.markdown).toBe(
+      '# Free Doc\n\n' +
+        '*Jane Austen*\n\n' +
+        'First translated paragraph.\n\n' +
+        'Second paragraph from paragraph layer.\n',
+    );
+  });
+
   // Bilingual mode previously IGNORED the mode for document-spine works and
   // silently produced English-only output under the bilingual filename. Now
   // it interleaves per unit: source block, then English block (untranslated
@@ -638,6 +660,20 @@ describe('compileWorkMarkdown — document-spine multi-chapter container (D8 str
     const result = compileWorkMarkdown([q(1, 'Article one.')], CONTAINER);
     expect(result.markdown).toBe(
       '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Article one.\n',
+    );
+  });
+
+  it('puts the author under the title before the container headings', () => {
+    const result = compileWorkMarkdown(
+      [q(1, 'Article one.')],
+      { ...CONTAINER, author: 'Thomas Aquinas' },
+    );
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '*Thomas Aquinas*\n\n' +
         '## Prima Pars\n\n' +
         '### Question 2\n\n' +
         'Article one.\n',

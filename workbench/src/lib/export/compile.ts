@@ -206,6 +206,20 @@ function chapterHeading(chapter: ChapterFile, work: WorkMeta): string {
   return `## Chapter ${chapter.meta.chapter} (${range})`;
 }
 
+/** Italic work byline, omitted for anonymous works. */
+function authorByline(work: WorkMeta): string | null {
+  const author = work.author.trim();
+  return author.length > 0 ? `*${author}*` : null;
+}
+
+/** Insert the byline under a rendered document's existing title heading. */
+function addAuthorByline(markdown: string, work: WorkMeta): string {
+  const byline = authorByline(work);
+  if (!byline) return markdown;
+  const title = `# ${work.title}\n\n`;
+  return markdown.startsWith(title) ? `${title}${byline}\n\n${markdown.slice(title.length)}` : markdown;
+}
+
 // ── Bekker stamping (shared row-address + stamp-text logic, same rules as
 // single-chapter export — see pandocMarkdown.ts for the authoritative
 // commentary on the column_starts vs fallback-heuristic split) ─────────────
@@ -300,7 +314,9 @@ export function compileWorkMarkdown(
     const containerBooks = (work as { documentBooks?: DocumentBook[] }).documentBooks;
     if (!containerBooks || containerBooks.length === 0) {
       const markdown =
-        ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work, resolved.mode) : `# ${work.title}\n\n`;
+        ordered.length > 0
+          ? addAuthorByline(documentToPandocMarkdown(ordered[0], work, resolved.mode), work)
+          : [`# ${work.title}`, authorByline(work)].filter((section) => section !== null).join('\n\n') + '\n\n';
       return { markdown, gapReport, included };
     }
 
@@ -309,6 +325,8 @@ export function compileWorkMarkdown(
     // namespaced per chapter so two chapters' local id "1" don't collide in the
     // concatenated pandoc document (same rule as the corpus arm below).
     const docSections: string[] = [`# ${work.title}`];
+    const docByline = authorByline(work);
+    if (docByline) docSections.push(docByline);
     let docBook: number | null = null;
     ordered.forEach((chapter, index) => {
       if (chapter.meta.book !== docBook) {
@@ -342,6 +360,10 @@ export function compileWorkMarkdown(
     return { markdown: docSections.join('\n\n') + '\n', gapReport, included };
   }
 
+  // Corpus arm: deliberately unchanged. These exports have always opened on
+  // the BOOK heading; handing them a title page because the manifest happens to
+  // name an author is a different change from the one asked for — a byline on
+  // the imported documents, which already print their own title.
   const sections: string[] = [];
   let currentBook: number | null = null;
 

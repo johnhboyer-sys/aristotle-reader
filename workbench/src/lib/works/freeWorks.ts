@@ -14,7 +14,7 @@
  * string). No real work may claim this id (slugForTitle can't produce it).
  *
  * Registry shape (JSON): { "version": 1, "works": [ { "id", "title",
- * "language"?, "citation_scheme" } ] }. Unreadable files and invalid entries
+ * "author"?, "language"?, "citation_scheme" } ] }. Unreadable files and invalid entries
  * are SKIPPED with a console warning, never a hard failure — a registry
  * defect must not take down the whole library rail.
  */
@@ -55,6 +55,8 @@ export interface FreeBook {
 export interface FreeWorkRecord {
   id: string;
   title: string;
+  /** Work author, omitted when the work is anonymous. */
+  author?: string;
   /** Free-text original language, e.g. "Greek", "German" (optional). */
   language?: string;
   /** A document-spine scheme ('paragraph' | 'plain-line'). */
@@ -73,6 +75,7 @@ export interface FreeWorkRecord {
 interface RawRegistryEntry {
   id?: unknown;
   title?: unknown;
+  author?: unknown;
   language?: unknown;
   citation_scheme?: unknown;
   levels?: unknown;
@@ -120,6 +123,9 @@ function recordFromRaw(raw: unknown): FreeWorkRecord | null {
   // Only document-spine schemes belong here (capability gate, not scheme id).
   if (getScheme(v.citation_scheme).spineSource !== 'document') return null;
   const record: FreeWorkRecord = { id: v.id, title: v.title, scheme: v.citation_scheme };
+  if (typeof v.author === 'string' && v.author.trim().length > 0) {
+    record.author = v.author.trim();
+  }
   if (typeof v.language === 'string' && v.language.trim().length > 0) {
     record.language = v.language.trim();
   }
@@ -176,7 +182,7 @@ export function freeWorkManifest(record: FreeWorkRecord): WorkManifest {
   const manifest: WorkManifest = {
     id: record.id,
     title: record.title,
-    author: '',
+    author: record.author ?? '',
     scheme: record.scheme,
     books: [{ n: 1, label: '' }],
     profile: record.levels ? { levels: record.levels } : DEFAULT_PROFILE,
@@ -233,6 +239,7 @@ export async function registerFreeWork(
     works: works.map((w) => ({
       id: w.id,
       title: w.title,
+      ...(w.author ? { author: w.author } : {}),
       ...(w.language ? { language: w.language } : {}),
       citation_scheme: w.scheme,
       ...(w.levels && w.levels.length > 0 ? { levels: w.levels } : {}),
@@ -259,6 +266,24 @@ export async function updateFreeWorkLevels(
   if (!record) return;
   const sanitized = sanitizeLevels(levels);
   await registerFreeWork({ ...record, levels: sanitized }, storage);
+}
+
+/**
+ * Update the author of an existing free work. Empty text clears the author;
+ * an unknown work id is a no-op.
+ */
+export async function updateFreeWorkAuthor(
+  workId: string,
+  author: string,
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  const record = (await listFreeWorkRecords(storage)).find((w) => w.id === workId);
+  if (!record) return;
+  const next: FreeWorkRecord = { ...record };
+  const trimmed = author.trim();
+  if (trimmed) next.author = trimmed;
+  else delete next.author;
+  await registerFreeWork(next, storage);
 }
 
 /**

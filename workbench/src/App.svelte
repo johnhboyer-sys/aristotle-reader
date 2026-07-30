@@ -12,6 +12,7 @@
   import ImportDialog from './components/ImportDialog.svelte';
   import NewDocumentDialog from './components/NewDocumentDialog.svelte';
   import ProfileDialog from './components/ProfileDialog.svelte';
+  import WorkDetailsDialog from './components/WorkDetailsDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import AskPanel from './components/AskPanel.svelte';
   import AiPanel from './components/AiPanel.svelte';
@@ -25,7 +26,11 @@
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
-  import { listFreeWorks, updateFreeWorkBookContainers } from './lib/works/freeWorks';
+  import {
+    listFreeWorks,
+    updateFreeWorkAuthor,
+    updateFreeWorkBookContainers,
+  } from './lib/works/freeWorks';
   import {
     withAddedBookContainer,
     withInsertedBookContainerAfter,
@@ -76,6 +81,7 @@
   // The document work whose organization profile the "Manage levels…" dialog
   // is editing (null = closed).
   let manageLevelsWork = $state<WorkManifest | null>(null);
+  let workDetailsWork = $state<WorkManifest | null>(null);
   let importOpen = $state(false);
   let importDefaultWorkId = $state<string | undefined>(undefined);
   let referenceImportWorkId = $state<string | null>(null);
@@ -310,6 +316,16 @@
     await reloadWorks();
     await refreshLibraryStatus();
     select(workId, 1, 1);
+  }
+
+  function openWorkDetails(workId: string) {
+    const work = works.find((candidate) => candidate.id === workId);
+    workDetailsWork = work && isDocumentWork(work) ? work : null;
+  }
+
+  async function saveWorkAuthor(workId: string, author: string) {
+    await updateFreeWorkAuthor(workId, author);
+    await reloadWorks();
   }
 
   // ── Book containers (D8): organization WITHOUT touching the text ─────────
@@ -677,6 +693,7 @@
             onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
             onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
+            onWorkDetails={openWorkDetails}
             bookContainers={docBookContainers}
             onAddBookContainer={isTauri() || import.meta.env.DEV ? addBookContainer : undefined}
             onAddBookContainerAfter={addBookContainerAfter}
@@ -781,6 +798,15 @@
       initialLevels={manageLevelsWork.profile?.levels ?? []}
       onClose={() => (manageLevelsWork = null)}
       onSaved={reloadWorks}
+    />
+  {/if}
+
+  {#if workDetailsWork}
+    <WorkDetailsDialog
+      title={workDetailsWork.title}
+      initialAuthor={workDetailsWork.author}
+      onClose={() => (workDetailsWork = null)}
+      onSave={(author) => saveWorkAuthor(workDetailsWork!.id, author)}
     />
   {/if}
 

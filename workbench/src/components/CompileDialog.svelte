@@ -28,9 +28,11 @@
   } = $props();
 
   type Phase = 'loading' | 'ready' | 'empty' | 'exporting' | 'done';
+  type FileType = 'docx' | 'markdown';
   let phase = $state<Phase>('loading');
   let note = $state<string | null>(null);
   let mode = $state<CompileMode>('english');
+  let fileType = $state<FileType>('docx');
   let chapters = $state<ChapterFile[]>([]);
   let gapSummary = $state<string>('');
 
@@ -86,50 +88,46 @@
     if (phase !== 'ready' || chapters.length === 0) return;
     phase = 'exporting';
     note = null;
+    const asMarkdown = fileType === 'markdown';
     try {
-      const shell = await import('@tauri-apps/plugin-shell');
-      // GUI-PATH fix (d4 rider, same as ExportButton): a Finder-launched app
-      // has no Homebrew dirs on PATH, so resolve the pandoc scope name by
-      // actually running `--version` — absolute Homebrew/usr-local scopes
-      // first, bare 'pandoc' last for terminal launches. Running IS the probe.
-      const { resolvePandocProgramByRun } = await import('../lib/export');
-      const pandocProgram = await resolvePandocProgramByRun(async (program) => {
-        const r = await shell.Command.create(program, ['--version']).execute().catch(() => null);
-        return !!r && r.code === 0;
-      });
-      if (!pandocProgram) {
-        note = PANDOC_UNAVAILABLE_MESSAGE;
-        phase = 'ready';
-        return;
+      // Pandoc is only required for Word. Markdown export writes the compiled
+      // markdown straight to the save path — no probe, no intermediate file.
+      let pandocProgram: string | null = null;
+      let shell: typeof import('@tauri-apps/plugin-shell') | null = null;
+      if (!asMarkdown) {
+        shell = await import('@tauri-apps/plugin-shell');
+        // GUI-PATH fix (d4 rider, same as ExportButton): a Finder-launched app
+        // has no Homebrew dirs on PATH, so resolve the pandoc scope name by
+        // actually running `--version` — absolute Homebrew/usr-local scopes
+        // first, bare 'pandoc' last for terminal launches. Running IS the probe.
+        const { resolvePandocProgramByRun } = await import('../lib/export');
+        pandocProgram = await resolvePandocProgramByRun(async (program) => {
+          const r = await shell!.Command.create(program, ['--version']).execute().catch(() => null);
+          return !!r && r.code === 0;
+        });
+        if (!pandocProgram) {
+          note = PANDOC_UNAVAILABLE_MESSAGE;
+          phase = 'ready';
+          return;
+        }
       }
 
       const dialog = await import('@tauri-apps/plugin-dialog');
-      const defaultPath = compileDefaultFilename(work, mode);
-      const docxPath = await dialog.save({
+      // compileDefaultFilename always returns .docx; swap extension for markdown
+      // here so other export paths that share that helper stay unchanged.
+      const defaultPath = asMarkdown
+        ? compileDefaultFilename(work, mode).replace(/\.docx$/i, '.md')
+        : compileDefaultFilename(work, mode);
+      const savePath = await dialog.save({
         defaultPath,
-        filters: [{ name: 'Word document', extensions: ['docx'] }],
+        filters: asMarkdown
+          ? [{ name: 'Markdown', extensions: ['md'] }]
+          : [{ name: 'Word document', extensions: ['docx'] }],
       });
-      if (!docxPath) {
+      if (!savePath) {
         phase = 'ready';
         return; // user cancelled — not a failure
       }
-
-      const pathApi = await import('@tauri-apps/api/path');
-      const fs = await import('@tauri-apps/plugin-fs');
-      const appData = await pathApi.appDataDir();
-      await fs.mkdir(appData, { recursive: true }).catch(() => {});
-      const mdPath = await pathApi.join(appData, 'export-compile-intermediate.md');
-
-      let referenceDocPath: string | undefined;
-      try {
-        referenceDocPath = await pathApi.resolveResource('reference.docx');
-      } catch (err) {
-        console.warn('[compile] reference.docx resource not found — using pandoc defaults', err);
-      }
-
-      const writeFile = async (p: string, contents: string) => {
-        await fs.writeTextFile(p, contents);
-      };
 
       // exportWorkToDocx (index.ts) runs pandoc via node:child_process,
       // which doesn't exist under Tauri's webview — so the compile step
@@ -150,26 +148,67 @@
         compileWork = prepared.work as typeof work;
       }
       const compiled = compileWorkMarkdown(compileChapters, compileWork, { mode });
-      await writeFile(mdPath, compiled.markdown);
 
-      const { runPandocTauri } = await import('../lib/export');
-      const run = await runPandocTauri({ markdownPath: mdPath, docxPath, referenceDocPath }, shell, pandocProgram);
-      if (run.code !== 0) {
-        console.error('[compile] pandoc failed:', run.stderr);
-        note = "The Word document couldn't be created.";
-        phase = 'ready';
-        return;
+      const fs = await import('@tauri-apps/plugin-fs');
+      if (asMarkdown) {
+        await fs.writeTextFile(savePath, compiled.markdown);
+      } else {
+        const pathApi = await import('@tauri-apps/api/path');
+        const appData = await pathApi.appDataDir();
+        await fs.mkdir(appData, { recursive: true }).catch(() => {});
+        const mdPath = await pathApi.join(appData, 'export-compile-intermediate.md');
+
+        // The bundler keeps a resource's declared RELATIVE PATH, so
+        // "resources/reference.docx" in tauri.conf.json lands at
+        // Contents/Resources/resources/reference.docx. Resolving the bare
+        // filename produced a path that does not exist, and pandoc — which
+        // does not treat a missing --reference-doc as optional — failed every
+        // whole-work export. Verify the file is really there and fall back to
+        // pandoc's own styling if it is not: a missing template is a worse
+        // look, not a reason to refuse the export.
+        let referenceDocPath: string | undefined;
+        try {
+          const candidate = await pathApi.resolveResource('resources/reference.docx');
+          referenceDocPath = (await fs.exists(candidate)) ? candidate : undefined;
+        } catch (err) {
+          console.warn('[compile] reference.docx resource not found — using pandoc defaults', err);
+        }
+
+        await fs.writeTextFile(mdPath, compiled.markdown);
+
+        const { runPandocTauri } = await import('../lib/export');
+        const run = await runPandocTauri(
+          { markdownPath: mdPath, docxPath: savePath, referenceDocPath },
+          shell!,
+          pandocProgram!,
+        );
+        if (run.code !== 0) {
+          console.error('[compile] pandoc failed:', run.stderr);
+          // Say WHAT went wrong. A bare "couldn't be created" leaves the user
+          // (and anyone helping them) with nothing to act on — pandoc's own
+          // first line names the actual problem.
+          note = `The Word document couldn't be created. ${firstLine(run.stderr) || `pandoc exited ${run.code}.`}`;
+          phase = 'ready';
+          return;
+        }
       }
 
       phase = 'done';
       note = 'Exported.';
       const opener = await import('@tauri-apps/plugin-opener');
-      void opener.revealItemInDir(docxPath).catch(() => {});
+      void opener.revealItemInDir(savePath).catch(() => {});
     } catch (err) {
       console.error('[compile]', err);
-      note = "The Word document couldn't be created.";
+      const what = asMarkdown ? "The Markdown file couldn't be created." : "The Word document couldn't be created.";
+      note = `${what} ${firstLine(err instanceof Error ? err.message : String(err))}`.trim();
       phase = 'ready';
     }
+  }
+
+  /** One readable line of a stderr blob / error message for the dialog. */
+  function firstLine(text: string | undefined): string {
+    const line = (text ?? '').split('\n').map((l) => l.trim()).find((l) => l.length > 0) ?? '';
+    return line.length > 160 ? `${line.slice(0, 157)}…` : line;
   }
 </script>
 
@@ -196,14 +235,26 @@
           <fieldset class="mode-choice">
             <legend>Format</legend>
             <label class="mode-option">
-              <input type="radio" name="compile-mode" value="english" bind:group={mode} />
+              <input type="radio" name="compile-mode" value="english" disabled={phase === 'exporting'} bind:group={mode} />
               English only
             </label>
             <label class="mode-option">
-              <input type="radio" name="compile-mode" value="bilingual" bind:group={mode} />
+              <input type="radio" name="compile-mode" value="bilingual" disabled={phase === 'exporting'} bind:group={mode} />
               <!-- Not "Greek and English": a document work's source may be
                    Latin, German, or anything the user imported. -->
               Bilingual
+            </label>
+          </fieldset>
+
+          <fieldset class="mode-choice">
+            <legend>File type</legend>
+            <label class="mode-option">
+              <input type="radio" name="compile-file-type" value="docx" disabled={phase === 'exporting'} bind:group={fileType} />
+              Word (.docx)
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="compile-file-type" value="markdown" disabled={phase === 'exporting'} bind:group={fileType} />
+              Markdown (.md)
             </label>
           </fieldset>
 
