@@ -55,7 +55,7 @@ describe('"+ Book" creates a container, never a line of text', () => {
         new RegExp(`editBookContainers\\(\\(current\\) =>\\s*${op}\\(current`),
       );
     }
-    expect(appSource).toContain('void bookQueue.edit(docBookContainers, transform);');
+    expect(appSource).toContain('void bookQueue.edit(workId, docBookContainers, transform);');
     expect(appSource).toContain('await updateFreeWorkBookContainers(workId, containers);');
     expect(appSource).toContain('await reloadWorks();');
   });

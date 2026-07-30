@@ -328,16 +328,17 @@
 
   // Serialized so two quick clicks can't both transform the same saved list and
   // silently drop one of the edits (bookContainerQueue.ts).
-  const bookQueue = createBookContainerQueue(async (containers) => {
-    const workId = selection?.workId;
-    if (!workId) return;
+  const bookQueue = createBookContainerQueue(async (workId, containers) => {
     await updateFreeWorkBookContainers(workId, containers);
     await reloadWorks();
   });
 
   function editBookContainers(transform: (current: BookContainer[]) => BookContainer[]) {
-    if (!selection?.workId) return;
-    void bookQueue.edit(docBookContainers, transform);
+    // The work is captured HERE, not when the write runs: opening another
+    // document while a save is in flight must not land these Books on it.
+    const workId = selection?.workId;
+    if (!workId) return;
+    void bookQueue.edit(workId, docBookContainers, transform);
   }
 
   /** Placeholder name — the user renames from the Book's right-click menu.
