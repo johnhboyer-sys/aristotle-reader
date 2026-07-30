@@ -960,7 +960,10 @@
     outline: none;
   }
   .outline-children {
-    /* Each nesting level steps in from its parent. */
+    /* Each nesting level steps in from its parent. The reset is not
+       inherited here: the browser's own `ul ul` rule applies directly to a
+       nested list and puts a hollow bullet back. */
+    list-style: none;
     padding-left: var(--space-3);
   }
   .outline-row.outline-book {
