@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildOutline, buildOutlineTree, type OutlineItem } from '../outline';
+import {
+  buildOutline,
+  buildOutlineTree,
+  groupOutlineByBooks,
+  type OutlineItem,
+} from '../outline';
 import { buildRowDoc, type InlineRun } from '../serialize';
 import { emptyRowDocJSON } from '../schema';
 import type { RowModel } from '../model';
@@ -185,5 +190,51 @@ describe('buildOutlineTree', () => {
       item(5, 4, 'heading'), // Reply
     ]);
     expect(shape(tree)).toEqual([[0, [[1, [[2, []], [3, []], [4, []], [5, []]]]]]]);
+  });
+
+  it('groups root nodes into Books as an exact partition, including an empty trailing Book', () => {
+    const roots = buildOutlineTree([
+      item(0, 0, 'chapter'),
+      item(1, 0, 'chapter'),
+      item(2, 0, 'chapter'),
+      item(3, 0, 'chapter'),
+      item(4, 0, 'chapter'),
+    ]);
+    const grouped = groupOutlineByBooks(roots, [
+      { label: 'Prima Pars', start: 1 },
+      { label: 'Secunda Pars', start: 3 },
+      { label: 'Tertia Pars', start: 6 },
+    ]);
+
+    expect(grouped.map((book) => book.nodes.map((node) => node.item.rowIndex))).toEqual([
+      [0, 1],
+      [2, 3, 4],
+      [],
+    ]);
+    const partition = grouped.flatMap((book) => book.nodes);
+    expect(partition).toEqual(roots);
+    expect(new Set(partition).size).toBe(roots.length);
+  });
+
+  it('returns no Book groups when the container list is empty', () => {
+    expect(groupOutlineByBooks([], [])).toEqual([]);
+  });
+
+  it('keeps the partition exact when Books share a boundary or nothing is marked yet', () => {
+    const roots = buildOutlineTree([item(0, 0, 'chapter'), item(1, 0, 'chapter')]);
+    // Two Books beginning at the same root: the earlier one is empty, and no
+    // root may be dropped or claimed twice.
+    const shared = groupOutlineByBooks(roots, [
+      { label: 'I', start: 1 },
+      { label: 'II', start: 1 },
+    ]);
+    expect(shared.map((book) => book.nodes.map((node) => node.item.rowIndex))).toEqual([[], [0, 1]]);
+    // Books added to a document with nothing marked yet: every Book renders, all empty.
+    expect(
+      groupOutlineByBooks([], [
+        { label: 'I', start: 1 },
+        { label: 'II', start: 4 },
+      ]).map((book) => book.nodes),
+    ).toEqual([[], []]);
   });
 });

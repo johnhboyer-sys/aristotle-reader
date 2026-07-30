@@ -9,6 +9,8 @@ import type { RowModel } from './model';
 import { docFromJSON } from './schema';
 import { navRoleOf, levelDepth } from '../works/profile';
 import type { NavRole, WorkProfile } from '../works/profile';
+import { normalizeContainers } from '../works/bookContainers';
+import type { BookContainer } from '../works/bookContainers';
 
 export interface OutlineItem {
   /** 1-based? No — the MODEL row index (0-based), matching model.rows. */
@@ -37,6 +39,13 @@ export interface OutlineNode {
    * subtitle before the next real node wins.
    */
   subtitle?: { rowIndex: number; label: string };
+}
+
+export interface OutlineBook {
+  /** 0-based index into the container list (menu callbacks key off this). */
+  index: number;
+  label: string;
+  nodes: OutlineNode[];
 }
 
 /** Plain text (no markup) of a JSON doc, empty on any failure. */
@@ -127,4 +136,25 @@ export function buildOutlineTree(items: OutlineItem[]): OutlineNode[] {
     lastNode = node;
   }
   return roots;
+}
+
+/**
+ * Partition root outline nodes by saved Book boundaries. Normalizing here keeps
+ * the pure grouping safe even when a caller has not yet round-tripped through
+ * registry sanitation: every root belongs to exactly one Book, while duplicate
+ * or trailing boundaries remain visible as legitimate empty Books.
+ */
+export function groupOutlineByBooks(
+  roots: OutlineNode[],
+  containers: BookContainer[],
+): OutlineBook[] {
+  const normalized = normalizeContainers(containers);
+  return normalized.map((container, index) => {
+    const nextStart = normalized[index + 1]?.start;
+    return {
+      index,
+      label: container.label,
+      nodes: roots.slice(container.start - 1, nextStart === undefined ? roots.length : nextStart - 1),
+    };
+  });
 }

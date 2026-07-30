@@ -7,6 +7,7 @@ import {
   listFreeWorks,
   registerFreeWork,
   sanitizeBooks,
+  updateFreeWorkBookContainers,
   updateFreeWorkBooks,
   updateFreeWorkLevels,
   withAddedBook,
@@ -15,6 +16,7 @@ import {
   withRenamedChapter,
 } from '../freeWorks';
 import type { FreeBook, FreeWorkRecord } from '../freeWorks';
+import type { BookContainer } from '../bookContainers';
 import { DEFAULT_PROFILE } from '../profile';
 
 const RECORD: FreeWorkRecord = { id: 'my-doc', title: 'My Doc', scheme: 'paragraph' };
@@ -279,6 +281,77 @@ describe('explicit Book/Chapter structure (D8 structure tools)', () => {
     expect(withAddedChapter(added, 9, 'x')).toEqual(added);
     expect(withRenamedBook(added, 9, 'x')).toEqual(added);
     expect(withRenamedChapter(added, 1, 9, 'x')).toEqual(added);
+  });
+});
+
+describe('document Book-container persistence', () => {
+  const CONTAINERS: BookContainer[] = [
+    { label: 'Prima Pars', start: 1 },
+    { label: 'Secunda Pars', start: 4 },
+  ];
+
+  it('register → list round-trips Book containers and writes their own registry key', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, bookContainers: CONTAINERS }, storage);
+
+    expect((await listFreeWorkRecords(storage))[0].bookContainers).toEqual(CONTAINERS);
+    const parsed = JSON.parse(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)!);
+    expect(parsed.works[0].bookContainers).toEqual(CONTAINERS);
+  });
+
+  it('sanitizes bad starts and out-of-order boundaries on registry read', async () => {
+    const storage = new MemStorage();
+    await storage.write(
+      FREE_WORKS_STORAGE_ID,
+      'works.json',
+      JSON.stringify({
+        version: 1,
+        works: [
+          {
+            id: 'my-doc',
+            title: 'My Doc',
+            citation_scheme: 'paragraph',
+            bookContainers: [
+              { label: 'I', start: -3 },
+              { label: 'II', start: 8 },
+              { label: 'III', start: 2 },
+            ],
+          },
+        ],
+      }),
+    );
+    expect((await listFreeWorkRecords(storage))[0].bookContainers).toEqual([
+      { label: 'I', start: 1 },
+      { label: 'II', start: 8 },
+      { label: 'III', start: 8 },
+    ]);
+  });
+
+  it('surfaces Book containers on the free-work manifest', () => {
+    expect(freeWorkManifest({ ...RECORD, bookContainers: CONTAINERS }).documentBookContainers).toEqual(
+      CONTAINERS,
+    );
+  });
+
+  it('updates only Book containers and clears the key for an empty array', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, language: 'Latin' }, storage);
+    await updateFreeWorkBookContainers('my-doc', CONTAINERS, storage);
+    expect(await listFreeWorkRecords(storage)).toEqual([
+      { ...RECORD, language: 'Latin', bookContainers: CONTAINERS },
+    ]);
+
+    await updateFreeWorkBookContainers('my-doc', [], storage);
+    expect((await listFreeWorkRecords(storage))[0].bookContainers).toBeUndefined();
+    const parsed = JSON.parse(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)!);
+    expect('bookContainers' in parsed.works[0]).toBe(false);
+  });
+
+  it('does nothing for an unknown work id', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await updateFreeWorkBookContainers('nope', CONTAINERS, storage);
+    expect(await listFreeWorkRecords(storage)).toEqual([RECORD]);
   });
 });
 

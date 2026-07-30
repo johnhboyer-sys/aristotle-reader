@@ -94,3 +94,156 @@ describe('documentCompileInput — split a marker-driven document for export', (
     expect(dbs?.map((b) => b.label)).toEqual(['Prima Pars', 'Secunda Pars']);
   });
 });
+
+describe('documentCompileInput — documentBookContainers grouping', () => {
+  // Four chapter roots, no preface: parts line up 1:1 with roots.
+  const fourChapters = () =>
+    docFile(['Q1', 'Q2', 'Q3', 'Q4'], [
+      { row: 1, level: 2 },
+      { row: 2, level: 2 },
+      { row: 3, level: 2 },
+      { row: 4, level: 2 },
+    ]);
+
+  it('groups split parts by container boundaries; Book labels from containers', () => {
+    const work: WorkManifest = {
+      ...WORK,
+      documentBookContainers: [
+        { label: 'Prima Pars', start: 1 },
+        { label: 'Secunda Pars', start: 3 },
+      ],
+    };
+    const out = documentCompileInput(fourChapters(), work);
+    expect(out.chapters.map((c) => `${c.meta.book}.${c.meta.chapter}`)).toEqual([
+      '1.1',
+      '1.2',
+      '2.1',
+      '2.2',
+    ]);
+    expect((out.work as WorkManifest).documentBooks).toEqual([
+      {
+        n: 1,
+        label: 'Prima Pars',
+        chapters: [
+          { n: 1, label: 'Q1' },
+          { n: 2, label: 'Q2' },
+        ],
+      },
+      {
+        n: 2,
+        label: 'Secunda Pars',
+        chapters: [
+          { n: 1, label: 'Q3' },
+          { n: 2, label: 'Q4' },
+        ],
+      },
+    ]);
+    expect((out.work as WorkManifest).books).toEqual([
+      { n: 1, label: 'Prima Pars' },
+      { n: 2, label: 'Secunda Pars' },
+    ]);
+  });
+
+  it('empty trailing Book (start past root count) is present with no chapters', () => {
+    const work: WorkManifest = {
+      ...WORK,
+      documentBookContainers: [
+        { label: 'Only Book', start: 1 },
+        { label: 'Empty Trailing', start: 5 }, // four roots → empty
+      ],
+    };
+    const out = documentCompileInput(fourChapters(), work);
+    expect(out.chapters.map((c) => `${c.meta.book}.${c.meta.chapter}`)).toEqual([
+      '1.1',
+      '1.2',
+      '1.3',
+      '1.4',
+    ]);
+    expect((out.work as WorkManifest).documentBooks).toEqual([
+      {
+        n: 1,
+        label: 'Only Book',
+        chapters: [
+          { n: 1, label: 'Q1' },
+          { n: 2, label: 'Q2' },
+          { n: 3, label: 'Q3' },
+          { n: 4, label: 'Q4' },
+        ],
+      },
+      { n: 2, label: 'Empty Trailing', chapters: [] },
+    ]);
+  });
+
+  it('single Book wrapping everything uses the container label', () => {
+    const work: WorkManifest = {
+      ...WORK,
+      documentBookContainers: [{ label: 'The Whole Summa', start: 1 }],
+    };
+    const out = documentCompileInput(fourChapters(), work);
+    expect(out.chapters.map((c) => `${c.meta.book}.${c.meta.chapter}`)).toEqual([
+      '1.1',
+      '1.2',
+      '1.3',
+      '1.4',
+    ]);
+    expect((out.work as WorkManifest).documentBooks).toEqual([
+      {
+        n: 1,
+        label: 'The Whole Summa',
+        chapters: [
+          { n: 1, label: 'Q1' },
+          { n: 2, label: 'Q2' },
+          { n: 3, label: 'Q3' },
+          { n: 4, label: 'Q4' },
+        ],
+      },
+    ]);
+  });
+
+  it('leading preface part joins the first Book (not a root, still exported)', () => {
+    // parts: preface + Q1 + Q2; roots: Q1, Q2 only — not 1:1 with parts.
+    const file = docFile(['Preface', 'Question 1', 'Question 2'], [
+      { row: 2, level: 2 },
+      { row: 3, level: 2 },
+    ]);
+    const work: WorkManifest = {
+      ...WORK,
+      documentBookContainers: [
+        { label: 'Book A', start: 1 },
+        { label: 'Book B', start: 2 },
+      ],
+    };
+    const out = documentCompileInput(file, work);
+    expect(out.chapters.map((c) => `${c.meta.book}.${c.meta.chapter}`)).toEqual([
+      '1.1', // preface → first Book
+      '1.2', // Q1
+      '2.1', // Q2
+    ]);
+    expect((out.work as WorkManifest).documentBooks).toEqual([
+      {
+        n: 1,
+        label: 'Book A',
+        chapters: [
+          { n: 1, label: 'Chapter 1' },
+          { n: 2, label: 'Question 1' },
+        ],
+      },
+      {
+        n: 2,
+        label: 'Book B',
+        chapters: [{ n: 1, label: 'Question 2' }],
+      },
+    ]);
+  });
+
+  it('absent documentBookContainers keeps the mark-derived path (no container labels)', () => {
+    // Same file as the existing "chapter marks" case — containers absent must
+    // still emit the default "Book 1", not a container label.
+    const file = docFile(['Preface', 'Question 2', 'Question 3'], [
+      { row: 2, level: 2 },
+      { row: 3, level: 2 },
+    ]);
+    const out = documentCompileInput(file, WORK);
+    expect((out.work as WorkManifest).documentBooks?.[0]?.label).toBe('Book 1');
+  });
+});

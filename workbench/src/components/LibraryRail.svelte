@@ -2,7 +2,9 @@
   // The rail's input shapes (App builds these from manifests + corpus).
   import type { WorkManifest } from '../lib/works/manifest';
   import type { OutlineItem } from '../lib/editor/outline';
-  import { buildOutlineTree } from '../lib/editor/outline';
+  import { buildOutlineTree, groupOutlineByBooks } from '../lib/editor/outline';
+  import type { BookContainer } from '../lib/works/bookContainers';
+  import type { NavRole } from '../lib/works/profile';
 
   export interface RailChapterStatus {
     /** Not yet downloaded to this Mac (iCloud "Optimize Mac Storage" stub). */
@@ -56,6 +58,11 @@
      * the navigation; clicking a node scrolls the editor there.
      */
     document?: boolean;
+    /**
+     * Saved Book CONTAINERS for a document work — boundaries over the outline,
+     * never text. Empty = the rail renders the flat outline exactly as before.
+     */
+    bookContainers?: BookContainer[];
   }
 
   export interface RailSelection {
@@ -78,13 +85,17 @@
     selected,
     outline = [],
     levels = [],
+    bookContainers = [],
     onOutlineSelect,
     onOutlineRename,
     onOutlineSetLevel,
     onManageLevels,
     onDivide,
-    onAddBook,
-    onAddChapter,
+    onAddBookContainer,
+    onAddBookContainerAfter,
+    onRenameBookContainer,
+    onRemoveBookContainer,
+    onSetBookStart,
     onRenameBook,
     onRenameChapter,
     onSelect,
@@ -100,8 +111,13 @@
      * by the heading's translation. Empty for corpus works / untagged docs. */
     outline?: OutlineItem[];
     /** The open document work's profile tiers, in order — labels the rail's
-     * right-click "Mark as" menu (index + 1 = the level a row would carry). */
-    levels?: { name: string }[];
+     * right-click "Mark as" menu (index + 1 = the level a row would carry).
+     * The navRole rides along so Book tiers can be withheld: a Book is a
+     * container now, and marking a row as one would write into the document. */
+    levels?: { name: string; navRole?: NavRole }[];
+    /** The open document work's saved Book containers, in document order.
+     * Empty = no Books, and the outline renders flat (no visual change). */
+    bookContainers?: BookContainer[];
     /** Jump the editor to a heading row (rail outline click). */
     onOutlineSelect?: (rowIndex: number) => void;
     /** Set a heading's rail title override (double-click rename; '' clears). */
@@ -113,10 +129,16 @@
     /** "Divide into chapters…" — split the open single document at its
      * Book/Chapter markers into one file per chapter (bulk shortcut). */
     onDivide?: (workId: string) => void;
-    /** Insert a new Book-tier heading line into the open document (rail "+ Book"). */
-    onAddBook?: (workId: string) => void;
-    /** Insert a new Chapter-tier heading line into the open document (rail "+ Chapter"). */
-    onAddChapter?: (workId: string) => void;
+    /** "+ Book" — create an empty Book CONTAINER. Inserts no text anywhere. */
+    onAddBookContainer?: () => void;
+    /** "Add Book after" from a Book's right-click menu (0-based index). */
+    onAddBookContainerAfter?: (index: number) => void;
+    /** Rename a Book container (inline rename on the Book row). */
+    onRenameBookContainer?: (index: number, label: string) => void;
+    /** Remove a Book container. Its chapters regroup; no text is touched. */
+    onRemoveBookContainer?: (index: number) => void;
+    /** Move a Book's boundary to a 1-based outline ROOT ordinal. */
+    onSetBookStart?: (index: number, rootOrdinal: number) => void;
     /** Rename a Book / chapter slot (double-click). */
     onRenameBook?: (workId: string, bookN: number, label: string) => void;
     onRenameChapter?: (workId: string, bookN: number, chapterN: number, label: string) => void;
@@ -139,6 +161,39 @@
   // the tiers' nav-roles (buildOutlineTree). Pure derivation of the prop.
   const outlineTree = $derived(buildOutlineTree(outline));
 
+  // Book containers partition the ROOT nodes of that tree. With none saved the
+  // grouping is empty and the flat tree renders exactly as it always has.
+  const outlineBooks = $derived(groupOutlineByBooks(outlineTree, bookContainers));
+
+  // The tiers a row can be MARKED as, keeping each tier's 1-based level. Book
+  // tiers are withheld: a Book is a container the rail creates with "+ Book",
+  // and marking a row as one would write heading metadata into the chapter
+  // file — the text-mutating path this redesign exists to remove. A legacy
+  // Book-marked row still renders and can still be re-tiered or removed.
+  const markableLevels = $derived(
+    levels.flatMap((lvl, i) => (lvl.navRole === 'book' ? [] : [{ ...lvl, level: i + 1 }])),
+  );
+
+  // rowIndex → 1-based root ordinal. Book boundaries are expressed in root
+  // ordinals, so the right-click menu needs this to offer "Begin a book here"
+  // on a root node (and to stay silent on a nested heading, which is no
+  // boundary the model can express).
+  //
+  // Only a Book- or Chapter-marked root is offered. A heading can be a root too
+  // (a heading mark before the document's first Chapter has nothing to nest
+  // under), but the export never cuts the text at a heading — so a Book that
+  // began there would show one grouping in this rail and compile to another.
+  // The boundary has to be a place the document can actually be divided.
+  const rootOrdinalByRow = $derived(
+    new Map(
+      outlineTree.flatMap((node, i) =>
+        node.item.navRole === 'book' || node.item.navRole === 'chapter'
+          ? [[node.item.rowIndex, i + 1] as const]
+          : [],
+      ),
+    ),
+  );
+
   // Expanded books, keyed "workId:bookN". Start with the selected book open.
   let expanded = $state<Record<string, boolean>>(
     selected ? { [`${selected.workId}:${selected.book}`]: true } : {},
@@ -149,8 +204,8 @@
     expanded[key] = !expanded[key];
   }
 
-  // Keep the selected book open — so landing on a chapter (e.g. just after
-  // "+ Book" / "+ Chapter" creates and selects a slot) reveals it without a
+  // Keep the selected book open — so landing on a chapter (e.g. just after an
+  // import creates and selects a slot) reveals it without a
   // manual expand. Runs only when the selection itself changes (it reads
   // `selected`, not `expanded`), so it never fights a manual collapse of
   // another book.
@@ -209,15 +264,31 @@
   // ── rail right-click menu: make a line a Book/Chapter/heading, rename, remove ─
   const RAIL_MENU_W = 230;
   const RAIL_MENU_MARGIN = 8;
-  let railMenu = $state<{ rowIndex: number; level: number; label: string; x: number; y: number; maxHeight: number } | null>(null);
-  function openRailMenu(e: MouseEvent, rowIndex: number, level: number, label: string) {
-    e.preventDefault();
-    if (!onOutlineSetLevel || levels.length === 0) return;
+  let railMenu = $state<{ rowIndex: number; level: number; label: string; rootOrdinal: number; x: number; y: number; maxHeight: number } | null>(null);
+  /** Clamp a menu to the viewport (shared by the heading and Book menus). */
+  function menuAt(e: MouseEvent): { x: number; y: number; maxHeight: number } {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const x = Math.max(RAIL_MENU_MARGIN, Math.min(e.clientX, vw - RAIL_MENU_W - RAIL_MENU_MARGIN));
     const y = Math.max(RAIL_MENU_MARGIN, Math.min(e.clientY, vh - 120));
-    railMenu = { rowIndex, level, label, x, y, maxHeight: Math.max(140, vh - y - RAIL_MENU_MARGIN) };
+    return { x, y, maxHeight: Math.max(140, vh - y - RAIL_MENU_MARGIN) };
+  }
+  function openRailMenu(e: MouseEvent, rowIndex: number, level: number, label: string) {
+    e.preventDefault();
+    if (!onOutlineSetLevel || levels.length === 0) return;
+    railMenu = {
+      rowIndex,
+      level,
+      label,
+      // 0 = not a root node: only a root can begin a Book, because boundaries
+      // are ordinals into the root list.
+      rootOrdinal: rootOrdinalByRow.get(rowIndex) ?? 0,
+      ...menuAt(e),
+    };
+  }
+  function railMenuSetBookStart(bookIndex: number) {
+    if (railMenu && railMenu.rootOrdinal > 0) onSetBookStart?.(bookIndex, railMenu.rootOrdinal);
+    railMenu = null;
   }
   function railMenuPick(level: number | null) {
     if (railMenu) onOutlineSetLevel?.(railMenu.rowIndex, level);
@@ -230,7 +301,56 @@
     startRename(rowIndex, label); // reuses the inline rename input (no click-to-open race)
   }
   function onRailMenuKey(e: KeyboardEvent) {
-    if (e.key === 'Escape') railMenu = null;
+    if (e.key === 'Escape') {
+      railMenu = null;
+      bookMenu = null;
+    }
+  }
+
+  // ── Book containers: expand key, inline rename, right-click menu ───────────
+  // A Book is a boundary, not a row, so every action here is a pure container
+  // edit — nothing below ever inserts, moves, or deletes translation text.
+  const bookKey = (index: number) => `${selected?.workId ?? ''}:book:${index}`;
+  /** Books start OPEN: they are the document's navigation, not a drawer. */
+  const bookOpen = (index: number) => expanded[bookKey(index)] !== false;
+  function toggleContainerBook(index: number) {
+    expanded[bookKey(index)] = !bookOpen(index);
+  }
+
+  // Kept separate from editingRow so a Book and a heading can never both be
+  // editing (the two rename inputs live in different lists).
+  let editingBook = $state<number | null>(null);
+  let bookEditValue = $state('');
+  function startBookRename(index: number, current: string) {
+    editingRow = null;
+    editingBook = index;
+    bookEditValue = current;
+  }
+  function commitBookRename(index: number) {
+    if (editingBook !== index) return;
+    editingBook = null;
+    onRenameBookContainer?.(index, bookEditValue.trim());
+  }
+  function onBookRenameKey(e: KeyboardEvent, index: number) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitBookRename(index);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      editingBook = null;
+    }
+  }
+
+  let bookMenu = $state<{ index: number; label: string; x: number; y: number; maxHeight: number } | null>(null);
+  function openBookMenu(e: MouseEvent, index: number, label: string) {
+    e.preventDefault();
+    bookMenu = { index, label, ...menuAt(e) };
+  }
+  function bookMenuRename() {
+    if (!bookMenu) return;
+    const { index, label } = bookMenu;
+    bookMenu = null;
+    startBookRename(index, label);
   }
 </script>
 
@@ -252,7 +372,8 @@
     style={`left:${railMenu.x}px; top:${railMenu.y}px; max-height:${railMenu.maxHeight}px;`}
   >
     <div class="rail-menu-label">Make this a…</div>
-    {#each levels as lvl, i (i)}
+    {#each markableLevels as lvl (lvl.level)}
+      {@const i = lvl.level - 1}
       <button
         class="rail-menu-item"
         role="menuitemradio"
@@ -268,6 +389,64 @@
     </button>
     <button class="rail-menu-item" role="menuitem" onclick={() => railMenuPick(null)}>
       <span class="rail-menu-check" aria-hidden="true"></span>Remove from outline
+    </button>
+    {#if outlineBooks.length > 1 && railMenu.rootOrdinal > 0}
+      <!-- Moving a Book's boundary here is how chapters "move into" a Book:
+           the Book simply begins at this chapter. No text moves. The FIRST Book
+           is never offered — it always begins at the top of the document, so
+           picking it could only be a no-op. -->
+      <div class="rail-menu-sep" aria-hidden="true"></div>
+      <div class="rail-menu-label">Begin a book here…</div>
+      {#each outlineBooks.slice(1) as bk (bk.index)}
+        <button class="rail-menu-item" role="menuitem" onclick={() => railMenuSetBookStart(bk.index)}>
+          <span class="rail-menu-check" aria-hidden="true"></span>{bk.label}
+        </button>
+      {/each}
+    {/if}
+  </div>
+{/if}
+
+{#if bookMenu}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="rail-menu-backdrop"
+    onclick={() => (bookMenu = null)}
+    oncontextmenu={(e) => {
+      e.preventDefault();
+      bookMenu = null;
+    }}
+  ></div>
+  <div
+    class="rail-menu"
+    role="menu"
+    style={`left:${bookMenu.x}px; top:${bookMenu.y}px; max-height:${bookMenu.maxHeight}px;`}
+  >
+    <div class="rail-menu-label">{bookMenu.label}</div>
+    <button class="rail-menu-item" role="menuitem" onclick={bookMenuRename}>
+      <span class="rail-menu-check" aria-hidden="true"></span>Rename…
+    </button>
+    <button
+      class="rail-menu-item"
+      role="menuitem"
+      onclick={() => {
+        const index = bookMenu?.index ?? 0;
+        bookMenu = null;
+        onAddBookContainerAfter?.(index);
+      }}
+    >
+      <span class="rail-menu-check" aria-hidden="true"></span>Add Book after
+    </button>
+    <div class="rail-menu-sep" aria-hidden="true"></div>
+    <button
+      class="rail-menu-item"
+      role="menuitem"
+      onclick={() => {
+        const index = bookMenu?.index ?? 0;
+        bookMenu = null;
+        onRemoveBookContainer?.(index);
+      }}
+    >
+      <span class="rail-menu-check" aria-hidden="true"></span>Remove Book (chapters stay)
     </button>
   </div>
 {/if}
@@ -383,8 +562,9 @@
       {#if rw.status === 'ready' && rw.document}
         <!-- Corpus-free document (marker-driven, D8): the lines you mark in the
              text ARE the Books & Chapters. The rail mirrors the live outline —
-             click a node to jump there; right-click to make it a Book/Chapter,
-             rename, or remove; "+ Book/Chapter" inserts a new marked line. -->
+             click a node to jump there; right-click to make it a Chapter,
+             rename, or remove. "+ Book" adds a CONTAINER over those chapters —
+             it never writes a line into the text. -->
         <ul class="chapters doc-nav">
           {#if !isSelected(rw.work.id, 1, 1)}
             <li>
@@ -393,19 +573,76 @@
               </button>
             </li>
           {:else}
-            {#if outlineTree.length > 0}
+            {#if outlineBooks.length > 0}
+              <!-- Books are CONTAINERS: boundaries over the same outline nodes,
+                   rendered by the same snippet. Nothing here is a text row. -->
+              {#each outlineBooks as bk (bk.index)}
+                <li class="book">
+                  {#if editingBook === bk.index}
+                    <!-- svelte-ignore a11y_autofocus -->
+                    <input
+                      class="outline-rename"
+                      type="text"
+                      bind:value={bookEditValue}
+                      use:focusOnMount
+                      onkeydown={(e) => onBookRenameKey(e, bk.index)}
+                      onblur={() => commitBookRename(bk.index)}
+                    />
+                  {:else}
+                    <button
+                      class="book-row"
+                      onclick={() => toggleContainerBook(bk.index)}
+                      oncontextmenu={(e) => openBookMenu(e, bk.index, bk.label)}
+                      aria-expanded={bookOpen(bk.index)}
+                      title={`${bk.label} — right-click to rename, add a Book after, or remove it`}
+                    >
+                      <svg
+                        class="chevron"
+                        class:open={bookOpen(bk.index)}
+                        viewBox="0 0 24 24"
+                        width="12"
+                        height="12"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M9 6l6 6-6 6" />
+                      </svg>
+                      <span class="book-label">{bk.label}</span>
+                    </button>
+                  {/if}
+                  {#if bookOpen(bk.index)}
+                    <ul class="outline-children">
+                      {#if bk.nodes.length > 0}
+                        {@render outlineNodes(bk.nodes)}
+                      {:else}
+                        <li>
+                          {#if bk.index === 0}
+                            <!-- The first Book always begins at the top, so it can
+                                 only be empty because the NEXT Book starts there
+                                 too — that is the boundary to move. -->
+                            <p class="doc-hint">No chapters yet — right-click the chapter where the next Book should begin and choose “Begin a book here…”.</p>
+                          {:else}
+                            <p class="doc-hint">No chapters yet — right-click a chapter and choose “Begin a book here…”, then “{bk.label}”.</p>
+                          {/if}
+                        </li>
+                      {/if}
+                    </ul>
+                  {/if}
+                </li>
+              {/each}
+            {:else if outlineTree.length > 0}
               {@render outlineNodes(outlineTree)}
             {:else}
               <li>
-                <p class="doc-hint">No Book or Chapter marks yet. Right-click a line in the text (or use the buttons below) to mark one — it becomes a chapter here.</p>
+                <p class="doc-hint">No Chapter marks yet. Right-click a line in the text to mark one — it becomes a chapter here.</p>
               </li>
             {/if}
             <li class="doc-controls">
-              {#if onAddBook}
-                <button class="add-slot" title="Insert a Book heading line" onclick={() => onAddBook?.(rw.work.id)}>+ Book</button>
-              {/if}
-              {#if onAddChapter}
-                <button class="add-slot" title="Insert a Chapter heading line" onclick={() => onAddChapter?.(rw.work.id)}>+ Chapter</button>
+              {#if onAddBookContainer}
+                <button class="add-slot" title="Add a Book — a container over the chapters; it writes no text" onclick={() => onAddBookContainer?.()}>+ Book</button>
               {/if}
               {#if onManageLevels}
                 <button class="manage-levels" onclick={() => onManageLevels?.(rw.work.id)}>Manage levels…</button>
@@ -861,7 +1098,7 @@
     color: var(--accent);
     background: color-mix(in srgb, var(--accent) 14%, transparent);
   }
-  /* "+ Book" / "+ Chapter" insert-a-marked-line affordances (doc-controls). */
+  /* "+ Book" add-a-container affordance (doc-controls). */
   .add-slot {
     font-family: var(--font-ui);
     font-size: 0.78rem;

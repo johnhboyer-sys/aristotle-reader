@@ -14,6 +14,7 @@ import yaml from 'js-yaml';
 import type { SchemeId, WorkMeta } from '../citation/types';
 import { isKnownScheme } from '../citation/registry';
 import type { WorkProfile } from './profile';
+import type { BookContainer } from './bookContainers';
 
 import metaphysicsYaml from './manifests/metaphysics.yaml?raw';
 import posteriorAnalyticsYaml from './manifests/posterior-analytics.yaml?raw';
@@ -57,6 +58,9 @@ export interface WorkManifest extends WorkMeta {
    * mirrors these entries' `n`/`label` and this carries the per-book chapter
    * slots the rail, editor, and compiler navigate. */
   documentBooks?: DocumentBook[];
+  /** Book boundaries over the document's marker-built root outline nodes.
+   * Unlike legacy `documentBooks`, these containers never create text or files. */
+  documentBookContainers?: BookContainer[];
 }
 
 interface RawManifestBook {

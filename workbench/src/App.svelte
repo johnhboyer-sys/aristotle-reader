@@ -21,10 +21,20 @@
   import ExportButton from './components/ExportButton.svelte';
   import ChapterEditor from './lib/editor/ChapterEditor.svelte';
   import type { OutlineItem } from './lib/editor/outline';
+  import { buildOutlineTree } from './lib/editor/outline';
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
-  import { listFreeWorks } from './lib/works/freeWorks';
+  import { listFreeWorks, updateFreeWorkBookContainers } from './lib/works/freeWorks';
+  import {
+    withAddedBookContainer,
+    withInsertedBookContainerAfter,
+    withRenamedBookContainer,
+    withRemovedBookContainer,
+    withBookStartAt,
+  } from './lib/works/bookContainers';
+  import type { BookContainer } from './lib/works/bookContainers';
+  import { createBookContainerQueue } from './lib/works/bookContainerQueue';
   import { invalidateCorpus, loadCorpus } from './lib/data/corpusStore';
   import type { WorkCorpus } from './lib/data/corpusStore';
   import { bookChapterNumbers, chapterForEditor } from './lib/data/chapterRows';
@@ -107,7 +117,13 @@
         // Corpus-free document (D8): the lines marked in the text ARE its Books
         // & Chapters. The rail mirrors the live heading outline — no separate
         // container slots — so a mark and its sidebar entry can never drift.
-        return { work, status: 'ready' as const, books: [], document: true };
+        return {
+          work,
+          status: 'ready' as const,
+          books: [],
+          document: true,
+          bookContainers: work.documentBookContainers ?? [],
+        };
       }
       const corpus = corpora[work.id] ?? null;
       const statuses = libraryStatus[work.id];
@@ -296,15 +312,53 @@
     select(workId, 1, 1);
   }
 
-  // "+ Book" / "+ Chapter" (marker-driven model): insert a new marked heading
-  // line into the open document at the Book/Chapter tier — the user types its
-  // title, and it appears in the rail as a Book/Chapter (the mark IS the entry).
-  function addBook(_workId: string) {
-    editorRef?.appendHeadingForRole('book');
+  // ── Book containers (D8): organization WITHOUT touching the text ─────────
+  // The workbench edits TRANSLATIONS, so a Book must never be a line in the
+  // document — it is a saved boundary over the outline's root nodes. Every
+  // handler below is the same shape: pure transform → persist → reload.
+  // Chapters are still made by MARKING a line, in the text or in the rail.
+
+  /** The open document work's saved Books (empty when it has none). */
+  const docBookContainers: BookContainer[] = $derived(
+    railWorks.find((rw) => rw.work.id === selection?.workId)?.bookContainers ?? [],
+  );
+
+  /** Root outline nodes = the chapters a Book boundary can point at. */
+  const docRootCount = $derived(buildOutlineTree(docOutline).length);
+
+  // Serialized so two quick clicks can't both transform the same saved list and
+  // silently drop one of the edits (bookContainerQueue.ts).
+  const bookQueue = createBookContainerQueue(async (containers) => {
+    const workId = selection?.workId;
+    if (!workId) return;
+    await updateFreeWorkBookContainers(workId, containers);
+    await reloadWorks();
+  });
+
+  function editBookContainers(transform: (current: BookContainer[]) => BookContainer[]) {
+    if (!selection?.workId) return;
+    void bookQueue.edit(docBookContainers, transform);
   }
-  function addChapter(_workId: string) {
-    editorRef?.appendHeadingForRole('chapter');
-  }
+
+  /** Placeholder name — the user renames from the Book's right-click menu.
+   * Derived from the list the transform actually sees, so two fast "+ Book"
+   * clicks name themselves 1 and 2 rather than both claiming the same number. */
+  const nextBookLabel = (current: BookContainer[]) => `Book ${current.length + 1}`;
+
+  const addBookContainer = () =>
+    editBookContainers((current) =>
+      withAddedBookContainer(current, nextBookLabel(current), docRootCount),
+    );
+  const addBookContainerAfter = (index: number) =>
+    editBookContainers((current) =>
+      withInsertedBookContainerAfter(current, index, nextBookLabel(current), docRootCount),
+    );
+  const renameBookContainer = (index: number, label: string) =>
+    editBookContainers((current) => withRenamedBookContainer(current, index, label));
+  const removeBookContainer = (index: number) =>
+    editBookContainers((current) => withRemovedBookContainer(current, index));
+  const setBookStart = (index: number, rootOrdinal: number) =>
+    editBookContainers((current) => withBookStartAt(current, index, rootOrdinal));
 
   // ── reference-translation import (design doc D5 §5) ─────────────────────
   function openReferenceImport(workId: string) {
@@ -622,8 +676,12 @@
             onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
             onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
-            onAddBook={isTauri() || import.meta.env.DEV ? addBook : undefined}
-            onAddChapter={isTauri() || import.meta.env.DEV ? addChapter : undefined}
+            bookContainers={docBookContainers}
+            onAddBookContainer={isTauri() || import.meta.env.DEV ? addBookContainer : undefined}
+            onAddBookContainerAfter={addBookContainerAfter}
+            onRenameBookContainer={renameBookContainer}
+            onRemoveBookContainer={removeBookContainer}
+            onSetBookStart={setBookStart}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}

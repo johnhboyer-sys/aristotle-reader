@@ -26,6 +26,8 @@ import type { LibraryStorage } from '../library/storage';
 import type { WorkManifest, OriginalLanguage, DocumentBook } from './manifest';
 import type { WorkLevel } from './profile';
 import { DEFAULT_PROFILE, sanitizeLevels } from './profile';
+import { sanitizeContainers } from './bookContainers';
+import type { BookContainer } from './bookContainers';
 
 /** The reserved storage id whose "work dir" is the library root itself. */
 export const FREE_WORKS_STORAGE_ID = '.';
@@ -63,6 +65,9 @@ export interface FreeWorkRecord {
   /** Explicit Book/Chapter containers (D8 structure tools). Absent = a
    * single-document "bookless" work (the legacy shape). Sanitized on read. */
   books?: FreeBook[];
+  /** Book boundaries over the document's root outline nodes. They organize the
+   * rail without adding Book rows to the translated document. */
+  bookContainers?: BookContainer[];
 }
 
 interface RawRegistryEntry {
@@ -72,6 +77,7 @@ interface RawRegistryEntry {
   citation_scheme?: unknown;
   levels?: unknown;
   books?: unknown;
+  bookContainers?: unknown;
 }
 
 /**
@@ -121,6 +127,8 @@ function recordFromRaw(raw: unknown): FreeWorkRecord | null {
   if (levels) record.levels = levels;
   const books = sanitizeBooks(v.books);
   if (books) record.books = books;
+  const bookContainers = sanitizeContainers(v.bookContainers);
+  if (bookContainers) record.bookContainers = bookContainers;
   return record;
 }
 
@@ -186,6 +194,9 @@ export function freeWorkManifest(record: FreeWorkRecord): WorkManifest {
     manifest.books = documentBooks.map((b) => ({ n: b.n, label: b.label }));
     manifest.documentBooks = documentBooks;
   }
+  if (record.bookContainers && record.bookContainers.length > 0) {
+    manifest.documentBookContainers = record.bookContainers;
+  }
   const lang = record.language?.toLowerCase();
   if (lang === 'greek' || lang === 'latin') {
     manifest.originalLanguage = lang as OriginalLanguage;
@@ -226,6 +237,7 @@ export async function registerFreeWork(
       citation_scheme: w.scheme,
       ...(w.levels && w.levels.length > 0 ? { levels: w.levels } : {}),
       ...(w.books && w.books.length > 0 ? { books: w.books } : {}),
+      ...(w.bookContainers?.length ? { bookContainers: w.bookContainers } : {}),
     })),
   };
   await storage.write(FREE_WORKS_STORAGE_ID, REGISTRY_FILE, JSON.stringify(payload, null, 2) + '\n');
@@ -247,6 +259,25 @@ export async function updateFreeWorkLevels(
   if (!record) return;
   const sanitized = sanitizeLevels(levels);
   await registerFreeWork({ ...record, levels: sanitized }, storage);
+}
+
+/**
+ * Persist the Book boundaries for an existing document work. The registry read
+ * sanitizes first, and an empty or unusable result removes the key so old or
+ * corrupt data cannot leave the rail in a half-structured state.
+ */
+export async function updateFreeWorkBookContainers(
+  workId: string,
+  containers: BookContainer[],
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  const record = (await listFreeWorkRecords(storage)).find((w) => w.id === workId);
+  if (!record) return;
+  const sanitized = sanitizeContainers(containers);
+  const next: FreeWorkRecord = { ...record };
+  if (sanitized) next.bookContainers = sanitized;
+  else delete next.bookContainers;
+  await registerFreeWork(next, storage);
 }
 
 // ── explicit Book/Chapter structure (D8 structure tools) ─────────────────────
