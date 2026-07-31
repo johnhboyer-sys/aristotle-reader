@@ -14,7 +14,12 @@
   let loaded = $state(false);
   let stampMode = $state<StampMode>('every-5');
   let mode = $state<CompileMode>('english');
-  let bilingualLayout = $state<BilingualLayout>('block');
+  /** 'auto' is the UNSET state, not a fourth layout: there is no single
+   * default to show, because the compile dialog picks block for a Bekker work
+   * and alternating for a document spine. Showing 'block' here claimed a
+   * default the Summa never had, and saving from this pane would have pinned
+   * it. Choosing 'auto' omits the key entirely (see persist). */
+  let bilingualLayout = $state<BilingualLayout | 'auto'>('auto');
   let bilingualOrder = $state<BilingualOrder>('original-first');
   let referenceDocPath = $state<string | null>(null);
   let outputDir = $state<string | null>(null);
@@ -29,7 +34,7 @@
       const e = settings.export ?? {};
       stampMode = e.stampMode ?? 'every-5';
       mode = e.mode ?? 'english';
-      bilingualLayout = e.bilingualLayout ?? 'block';
+      bilingualLayout = e.bilingualLayout ?? 'auto';
       bilingualOrder = e.bilingualOrder ?? 'original-first';
       referenceDocPath = e.referenceDocPath ?? null;
       outputDir = e.outputDir ?? null;
@@ -43,7 +48,8 @@
    * those anyway — this keeps the file tidy at the source). */
   async function persist() {
     if (!loaded) return; // never write before the first read has landed
-    const patch: ExportSettings = { stampMode, mode, bilingualLayout, bilingualOrder };
+    const patch: ExportSettings = { stampMode, mode, bilingualOrder };
+    if (bilingualLayout !== 'auto') patch.bilingualLayout = bilingualLayout;
     if (referenceDocPath) patch.referenceDocPath = referenceDocPath;
     if (outputDir) patch.outputDir = outputDir;
     if (pandocPath) patch.pandocPath = pandocPath;
@@ -158,6 +164,10 @@
 <fieldset class="settings-group">
   <legend>Bilingual layout</legend>
   <label class="settings-radio">
+    <input type="radio" name="export-layout" value="auto" bind:group={bilingualLayout} onchange={persist} />
+    Whatever suits each work
+  </label>
+  <label class="settings-radio">
     <input type="radio" name="export-layout" value="block" bind:group={bilingualLayout} onchange={persist} />
     One language after the other
   </label>
@@ -169,6 +179,12 @@
     <input type="radio" name="export-layout" value="table" bind:group={bilingualLayout} onchange={persist} />
     Side by side (two-column table)
   </label>
+  <p class="settings-hint">
+    Leave this on “Whatever suits each work” and every work exports the way it always has —
+    one language after the other for a numbered text, alternating paragraphs for a document.
+    Any other choice applies to every work. You can still change the layout for a single export
+    in the export window.
+  </p>
   <p class="settings-hint">
     Side by side keeps each paragraph level with its translation. It is a Word table, so the two
     columns stay locked together — at the cost of being fiddlier to edit afterwards.
