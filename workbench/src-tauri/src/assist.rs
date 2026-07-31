@@ -334,6 +334,87 @@ fn spawn_pipe_reader<R: Read + Send + 'static>(
     })
 }
 
+// ── run_program (export's user-chosen pandoc) ───────────────────────────────
+//
+// Same trust boundary as assist_run: an ABSOLUTE executable the user picked
+// themselves (here, via the Export settings' native file picker), run under
+// execve with a frontend-supplied argv array — no shell ever parses it. The
+// one difference is the success test. assist_run treats "exit 0 with EMPTY
+// stdout" as a failure, because an AI CLI that prints nothing has told us
+// nothing; pandoc on success prints nothing at all, so that heuristic would
+// report every successful export as a failure. This command therefore reports
+// the exit code plainly and leaves the verdict to the caller.
+//
+// stderr comes back to the frontend here (assist_run deliberately withholds
+// it) because pandoc's stderr IS the diagnosis for a failed conversion, and
+// the export UI already has a "console only, one plain sentence to the user"
+// discipline for it — see ExportButton.svelte / CompileDialog.svelte.
+
+#[derive(Serialize)]
+pub struct RunOutcome {
+    /// Exit code; None when the process was killed (timeout) or never spawned.
+    code: Option<i32>,
+    stdout: String,
+    stderr: String,
+    timed_out: bool,
+    /// False when the binary isn't an absolute executable, or wouldn't spawn.
+    spawned: bool,
+}
+
+/// Run an absolute executable with a fixed argv array and capture its result.
+#[tauri::command]
+pub async fn run_program(bin_path: String, args: Vec<String>, timeout_ms: u64) -> RunOutcome {
+    tauri::async_runtime::spawn_blocking(move || run_program_blocking(&bin_path, &args, timeout_ms))
+        .await
+        .unwrap_or_else(|err| {
+            eprintln!("[run_program] task panicked: {err}");
+            RunOutcome {
+                code: None,
+                stdout: String::new(),
+                stderr: String::new(),
+                timed_out: false,
+                spawned: false,
+            }
+        })
+}
+
+fn run_program_blocking(bin_path: &str, args: &[String], timeout_ms: u64) -> RunOutcome {
+    let not_spawned = || RunOutcome {
+        code: None,
+        stdout: String::new(),
+        stderr: String::new(),
+        timed_out: false,
+        spawned: false,
+    };
+
+    let path = Path::new(bin_path);
+    if !path.is_absolute() || !is_executable_file(path) {
+        eprintln!("[run_program] bin_path is not an absolute executable: {bin_path}");
+        return not_spawned();
+    }
+
+    let mut cmd = Command::new(bin_path);
+    cmd.args(args);
+    cmd.env("PATH", augmented_path());
+    // Neutral cwd, same reasoning as run_blocking: a subprocess's file access
+    // is attributed to the parent app under macOS TCC.
+    cmd.current_dir(std::env::temp_dir());
+
+    match run_with_timeout(cmd, None, Duration::from_millis(timeout_ms)) {
+        Ok(out) => RunOutcome {
+            code: out.status,
+            stdout: out.stdout,
+            stderr: out.stderr,
+            timed_out: out.timed_out,
+            spawned: true,
+        },
+        Err(err) => {
+            eprintln!("[run_program] failed to spawn {bin_path}: {err}");
+            not_spawned()
+        }
+    }
+}
+
 // ── tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]

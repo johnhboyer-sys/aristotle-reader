@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: read/write the app-data workspace; native dialogs for import/export; clipboard for copy actions; shell to run Diogenes' perl exporter and pandoc as subprocesses. The fs:allow-exists scope covers onboarding's existence checks only (Diogenes install location and the user-picked TLG folder). The broader read/write/mkdir/read-dir/stat '/**' scopes support a user-picked library folder (shared-folder sync, build spec §11) — the folder is chosen explicitly via the native picker, same trust model as the TLG folder. The pandoc-homebrew/pandoc-usr-local entries pin ABSOLUTE pandoc paths: a Finder-launched .app inherits launchd's minimal PATH (no Homebrew dirs), so the bare 'pandoc' name only works from a terminal launch — the frontend probes which absolute path exists and prefers it (src/lib/export/pandoc.ts), keeping bare 'pandoc' as the last resort. The AI-assist commands (assist_which/assist_run — d7 §B, replacing the former Claude-specific assist_resolve_claude/assist_suggest) are app-owned Rust commands registered via invoke_handler (src-tauri/src/assist.rs) — they are not plugin commands, so they need no shell scope here; core:default covers app commands. Security boundary (d7 §B): assist_run executes a frontend-named ABSOLUTE executable with a frontend-supplied argv array; the binaries actually invoked come from the fixed built-in tool registry (Claude Code / Codex / Gemini) plus the user's explicit custom-command config — the same trust as the user running that tool in their own terminal. The prompt is data (a stdin stream or a single argv element under execve), never shell syntax, so no shell ever parses it. assist_which validates bin_name against ^[A-Za-z0-9_-]+$ before it is interpolated into the login-shell 'command -v' resolution rung, rejecting any shell metacharacter without running the shell. This is a small, documented widening of an app-owned command that previously only ran 'claude'.",
+  "description": "Main window: read/write the app-data workspace; native dialogs for import/export; clipboard for copy actions; shell to run Diogenes' perl exporter and pandoc as subprocesses. The fs:allow-exists scope covers onboarding's existence checks only (Diogenes install location and the user-picked TLG folder). The broader read/write/mkdir/read-dir/stat '/**' scopes support a user-picked library folder (shared-folder sync, build spec §11) — the folder is chosen explicitly via the native picker, same trust model as the TLG folder. The pandoc-homebrew/pandoc-usr-local entries pin ABSOLUTE pandoc paths: a Finder-launched .app inherits launchd's minimal PATH (no Homebrew dirs), so the bare 'pandoc' name only works from a terminal launch — the frontend probes which absolute path exists and prefers it (src/lib/export/pandoc.ts), keeping bare 'pandoc' as the last resort. The AI-assist commands (assist_which/assist_run — d7 §B, replacing the former Claude-specific assist_resolve_claude/assist_suggest) are app-owned Rust commands registered via invoke_handler (src-tauri/src/assist.rs) — they are not plugin commands, so they need no shell scope here; core:default covers app commands. Security boundary (d7 §B): assist_run executes a frontend-named ABSOLUTE executable with a frontend-supplied argv array; the binaries actually invoked come from the fixed built-in tool registry (Claude Code / Codex / Gemini) plus the user's explicit custom-command config — the same trust as the user running that tool in their own terminal. The prompt is data (a stdin stream or a single argv element under execve), never shell syntax, so no shell ever parses it. assist_which validates bin_name against ^[A-Za-z0-9_-]+$ before it is interpolated into the login-shell 'command -v' resolution rung, rejecting any shell metacharacter without running the shell. This is a small, documented widening of an app-owned command that previously only ran 'claude'. The open/read/seek entries exist for Latin lookup: Diogenes' latin-analyses.txt is ~43MB and must be read by byte range through its companion index rather than slurped whole (src/lib/lexicon/latinAnalyses.ts), and the existing read-text-file/stat scopes are whole-file only. Their '/**' scope matches the read-text-file grant already present — the file being read is the user's own Diogenes install, whose location the user sets. run_program (src-tauri/src/assist.rs) is the assist_run sibling used to run a user-chosen pandoc for export: same trust boundary — an absolute executable picked by the user through the native file picker, run under execve with a frontend argv array — differing only in that it reports the exit code plainly instead of treating empty stdout as failure, which pandoc's silent success would otherwise trip.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -32,6 +32,18 @@
     },
     {
       "identifier": "fs:allow-stat",
+      "allow": [{ "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-open",
+      "allow": [{ "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-read",
+      "allow": [{ "path": "/**" }]
+    },
+    {
+      "identifier": "fs:allow-seek",
       "allow": [{ "path": "/**" }]
     },
     "clipboard-manager:allow-write-text",

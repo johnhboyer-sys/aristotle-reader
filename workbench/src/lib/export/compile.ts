@@ -18,8 +18,10 @@
  *      display numbers Word shows are continuous by construction; see
  *      scripts/export-harness.mjs's whole-work checks),
  *   4. supports two modes: 'english' (default manuscript) and 'bilingual'
- *      (Greek block, Bekker-stamped, then the English block, per chapter —
- *      stacked, not interleaved; docx cannot do row-locked parallel columns).
+ *      (source and translation together, per chapter), the latter laid out
+ *      per `bilingualLayout`: stacked blocks (the default and original
+ *      behaviour), alternating paragraphs, or a two-column table — a table
+ *      being the only way docx gets row-locked parallel columns.
  *
  * The stored chapter files are NEVER mutated by any function here — every
  * function takes ChapterFile values and returns strings/data, never writes
@@ -29,8 +31,17 @@
 import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
-import type { StampMode } from './pandocMarkdown';
-import { chapterSegments, documentChapterSections, documentRowSourceLine, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
+import type { BilingualLayout, BilingualOrder, StampMode } from './pandocMarkdown';
+import {
+  assembleBilingual,
+  chapterSegments,
+  documentChapterSections,
+  documentRowSourceLine,
+  documentToPandocMarkdown,
+  markupToPandoc,
+  renderSegmentsGrouped,
+  renderSegmentsPaired,
+} from './pandocMarkdown';
 import type { DocumentBook } from '../works/manifest';
 
 export type CompileMode = 'english' | 'bilingual';
@@ -38,8 +49,17 @@ export type CompileMode = 'english' | 'bilingual';
 export interface CompileOptions {
   /** Bekker-ref stamping density, same knob as single-chapter export. Default 'every-5'. */
   stampMode?: StampMode;
-  /** 'english' = manuscript only (default); 'bilingual' = Greek block + English block per chapter. */
+  /** 'english' = manuscript only (default); 'bilingual' = source and translation together. */
   mode?: CompileMode;
+  /**
+   * How the two languages sit together in bilingual mode. UNSET means this
+   * path's historical shape — 'block' (the whole chapter's Greek, then the
+   * whole chapter's English) — so an export made before this option existed
+   * is unchanged. See BilingualLayout.
+   */
+  bilingualLayout?: BilingualLayout;
+  /** Which language leads in bilingual mode. Default 'original-first'. */
+  bilingualOrder?: BilingualOrder;
 }
 
 export interface CompiledChapterRef {
@@ -298,9 +318,14 @@ export function compileWorkMarkdown(
   work: WorkMeta,
   options: CompileOptions = {},
 ): CompileWorkResult {
-  const resolved: Required<CompileOptions> = {
+  const resolved = {
     stampMode: options.stampMode ?? 'every-5',
     mode: options.mode ?? 'english',
+    // Undefined stays undefined here and is resolved per rendering path — the
+    // corpus path below defaults to 'block', the document-spine path to
+    // 'alternating' (see BilingualLayout's note on historical shapes).
+    bilingualLayout: options.bilingualLayout,
+    bilingualOrder: options.bilingualOrder ?? ('original-first' as BilingualOrder),
   };
 
   const ordered = sortChaptersManifestOrder(chapters, work, (c) => ({ book: c.meta.book, chapter: c.meta.chapter }));
@@ -326,7 +351,16 @@ export function compileWorkMarkdown(
     if (!containerBooks || containerBooks.length === 0) {
       const markdown =
         ordered.length > 0
-          ? addAuthorByline(documentToPandocMarkdown(ordered[0], work, resolved.mode), work)
+          ? addAuthorByline(
+              documentToPandocMarkdown(
+                ordered[0],
+                work,
+                resolved.mode,
+                resolved.bilingualLayout,
+                resolved.bilingualOrder,
+              ),
+              work,
+            )
           : [`# ${work.title}`, authorByline(work)].filter((section) => section !== null).join('\n\n') + '\n\n';
       return { markdown, gapReport, included };
     }
@@ -364,6 +398,8 @@ export function compileWorkMarkdown(
         namespaced,
         resolved.mode,
         headingRow ?? undefined,
+        resolved.bilingualLayout,
+        resolved.bilingualOrder,
       );
       if (paragraphs.length > 0) docSections.push(...paragraphs);
       // Footnote-definition blocks with the SAME namespacing as the corpus arm
@@ -383,6 +419,7 @@ export function compileWorkMarkdown(
       if (fnBlocks.length > 0) docSections.push(fnBlocks.join('\n\n'));
     });
     return { markdown: docSections.join('\n\n') + '\n', gapReport, included };
+
   }
 
   // Corpus arm: deliberately unchanged. These exports have always opened on
@@ -416,23 +453,47 @@ export function compileWorkMarkdown(
     };
     const segments = chapterSegments(namespacedChapter);
 
-    if (resolved.mode === 'bilingual') {
-      const { paragraphs: greekParagraphs } = renderSegmentsGrouped(
+    // Footnote ids collected from whichever rendering path ran below.
+    let footnoteIdsUsed: string[];
+
+    const layout = resolved.bilingualLayout ?? 'block';
+    if (resolved.mode === 'bilingual' && layout !== 'block') {
+      // Alternating and table need matched pairs, so both sides render in one
+      // walk — see renderSegmentsPaired for why zipping two independent passes
+      // would mis-pair.
+      const paired = renderSegmentsPaired(segments, useStamps, resolved.stampMode);
+      footnoteIdsUsed = paired.footnoteIdsUsed;
+      const assembled = assembleBilingual(paired.pairs, layout, resolved.bilingualOrder);
+      if (assembled.length > 0) sections.push(assembled.join('\n\n'));
+    } else {
+      // English mode, and bilingual 'block' — the original two-independent-
+      // passes path, kept verbatim so the default export is unchanged.
+      const english = renderSegmentsGrouped(
         segments,
-        (seg) => seg.greekSlice,
+        (seg) => seg.englishMarkup,
         useStamps,
         resolved.stampMode,
       );
-      if (greekParagraphs.length > 0) sections.push(greekParagraphs.join('\n\n'));
-    }
+      footnoteIdsUsed = english.footnoteIdsUsed;
 
-    const { paragraphs: englishParagraphs, footnoteIdsUsed } = renderSegmentsGrouped(
-      segments,
-      (seg) => seg.englishMarkup,
-      useStamps,
-      resolved.stampMode,
-    );
-    if (englishParagraphs.length > 0) sections.push(englishParagraphs.join('\n\n'));
+      if (resolved.mode === 'bilingual') {
+        const { paragraphs: greekParagraphs } = renderSegmentsGrouped(
+          segments,
+          (seg) => seg.greekSlice,
+          useStamps,
+          resolved.stampMode,
+        );
+        const blocks =
+          resolved.bilingualOrder === 'translation-first'
+            ? [english.paragraphs, greekParagraphs]
+            : [greekParagraphs, english.paragraphs];
+        for (const block of blocks) {
+          if (block.length > 0) sections.push(block.join('\n\n'));
+        }
+      } else if (english.paragraphs.length > 0) {
+        sections.push(english.paragraphs.join('\n\n'));
+      }
+    }
 
     const used = new Set(footnoteIdsUsed);
     const footnoteBlocks: string[] = [];

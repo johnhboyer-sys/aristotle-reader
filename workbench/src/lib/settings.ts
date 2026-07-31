@@ -10,6 +10,15 @@
  */
 
 import { isTauri } from './runtime';
+// Type-only imports: erased at compile time, so this module stays free of any
+// runtime dependency on the export pipeline (settings.ts is imported almost
+// everywhere; lib/export is heavy and Tauri-shaped).
+import type { BilingualLayout, BilingualOrder, StampMode } from './export/pandocMarkdown';
+import type { CompileMode } from './export/compile';
+
+// Re-exported so a settings consumer (the Export pane) has one import for the
+// whole shape. Type-only — nothing from lib/export reaches runtime through here.
+export type { BilingualLayout, BilingualOrder, StampMode, CompileMode };
 
 export interface LastOpened {
   workId: string;
@@ -56,6 +65,28 @@ export interface AssistSettings {
   includeDraft?: boolean;
 }
 
+/**
+ * Export defaults. Every field is optional and every consumer falls back to the
+ * same literal it used before these settings existed, so an empty blob (or a
+ * settings file written by an older build) exports exactly as it always did.
+ */
+export interface ExportSettings {
+  /** Bekker-ref stamping density. Unset → 'every-5'. */
+  stampMode?: StampMode;
+  /** Whole-work compile default. Unset → 'english'. */
+  mode?: CompileMode;
+  /** Bilingual pairing. Unset → 'block'. */
+  bilingualLayout?: BilingualLayout;
+  /** Which language leads. Unset → 'original-first'. */
+  bilingualOrder?: BilingualOrder;
+  /** Absolute path to the user's own reference .docx. Unset → the bundled one. */
+  referenceDocPath?: string;
+  /** Folder the save dialog opens in. Unset → the system default. */
+  outputDir?: string;
+  /** Absolute path to pandoc, tried BEFORE the PATH-scope probe. Unset → probe only. */
+  pandocPath?: string;
+}
+
 export interface WorkbenchSettings {
   /** Directory containing the TLG texts (AUTHTAB.DIR etc.). */
   tlgDir?: string;
@@ -77,6 +108,7 @@ export interface WorkbenchSettings {
    */
   referenceRoot?: string;
   assist?: AssistSettings;
+  export?: ExportSettings;
 }
 
 const LS_KEY = 'workbench:settings';
@@ -163,6 +195,54 @@ export function sanitizeAssist(raw: unknown): AssistSettings | undefined {
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+const STAMP_MODES: readonly StampMode[] = ['every-line', 'every-5', 'columns'];
+const COMPILE_MODES: readonly CompileMode[] = ['english', 'bilingual'];
+const BILINGUAL_LAYOUTS: readonly BilingualLayout[] = ['block', 'alternating', 'table'];
+const BILINGUAL_ORDERS: readonly BilingualOrder[] = ['original-first', 'translation-first'];
+
+/**
+ * Sanitize the persisted `export` blob. Same posture as sanitizeAssist: every
+ * field is checked independently, anything unrecognized is dropped rather than
+ * carried, and an all-garbage blob returns undefined so an empty object never
+ * persists. A dropped field is not an error — the consumer's own default takes
+ * over, which is the pre-settings behaviour.
+ *
+ * Exported for unit testing (settings.test.ts).
+ */
+export function sanitizeExport(raw: unknown): ExportSettings | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const e = raw as Record<string, unknown>;
+  const out: ExportSettings = {};
+
+  if (typeof e.stampMode === 'string' && (STAMP_MODES as readonly string[]).includes(e.stampMode)) {
+    out.stampMode = e.stampMode as StampMode;
+  }
+  if (typeof e.mode === 'string' && (COMPILE_MODES as readonly string[]).includes(e.mode)) {
+    out.mode = e.mode as CompileMode;
+  }
+  if (
+    typeof e.bilingualLayout === 'string' &&
+    (BILINGUAL_LAYOUTS as readonly string[]).includes(e.bilingualLayout)
+  ) {
+    out.bilingualLayout = e.bilingualLayout as BilingualLayout;
+  }
+  if (
+    typeof e.bilingualOrder === 'string' &&
+    (BILINGUAL_ORDERS as readonly string[]).includes(e.bilingualOrder)
+  ) {
+    out.bilingualOrder = e.bilingualOrder as BilingualOrder;
+  }
+  for (const key of ['referenceDocPath', 'outputDir', 'pandocPath'] as const) {
+    const value = e[key];
+    // An empty string is "cleared", not "set to nothing" — dropping it here
+    // keeps a blanked-out text field from persisting as a path that resolves
+    // to the current directory downstream.
+    if (typeof value === 'string' && value.length > 0) out[key] = value;
+  }
+
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /** Exported for unit testing (settings.test.ts) — the full-blob sanitizer. */
 export function sanitize(value: unknown): WorkbenchSettings {
   if (typeof value !== 'object' || value === null) return {};
@@ -174,6 +254,8 @@ export function sanitize(value: unknown): WorkbenchSettings {
   if (typeof v.referenceRoot === 'string') out.referenceRoot = v.referenceRoot;
   const assist = sanitizeAssist(v.assist);
   if (assist) out.assist = assist;
+  const exportSettings = sanitizeExport(v.export);
+  if (exportSettings) out.export = exportSettings;
   const lo = v.lastOpened as Record<string, unknown> | undefined;
   if (
     typeof lo === 'object' &&
@@ -246,6 +328,7 @@ export async function updateSettings(
     'libraryRoot',
     'referenceRoot',
     'assist',
+    'export',
   ] as const) {
     if (key in patch) {
       const value = patch[key];

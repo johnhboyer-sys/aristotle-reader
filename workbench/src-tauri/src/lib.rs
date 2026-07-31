@@ -1,4 +1,5 @@
 mod assist;
+mod packs;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -10,7 +11,11 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             assist::assist_which,
-            assist::assist_run
+            assist::assist_run,
+            assist::run_program,
+            packs::install_lexicon_pack,
+            packs::list_lexicon_packs,
+            packs::remove_lexicon_pack
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

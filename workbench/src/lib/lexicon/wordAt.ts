@@ -48,3 +48,30 @@ export function wordAt(text: string, offset: number): WordSpan | null {
 
   return { text: text.slice(start, end), start, end };
 }
+
+// Latin letters: ASCII plus the accented/quantity-marked forms an edition may
+// carry (Latin-1 Supplement, Latin Extended-A/B) and the combining marks NFD
+// splits them into. The æ/œ ligatures live inside those ranges.
+const LATIN_WORD_CHAR = /[A-Za-zÀ-ÖØ-öø-ɏ̀-ͯ]/;
+
+/**
+ * Find the LATIN word span containing `offset` in `text`. Same contract as
+ * `wordAt`, with two differences that follow from Latin's own conventions:
+ * there is no elision apostrophe to absorb, and an interior hyphen is a word
+ * boundary here (it is an editorial mark, not part of the lookup key — see
+ * latinKey's hyphenated-token note).
+ */
+export function latinWordAt(text: string, offset: number): WordSpan | null {
+  if (text.length === 0) return null;
+  const clamped = Math.max(0, Math.min(offset, text.length - 1));
+  const isLatin = (ch: string) => LATIN_WORD_CHAR.test(ch);
+  if (!isLatin(text[clamped])) return null;
+
+  let start = clamped;
+  while (start > 0 && isLatin(text[start - 1])) start--;
+
+  let end = clamped + 1;
+  while (end < text.length && isLatin(text[end])) end++;
+
+  return { text: text.slice(start, end), start, end };
+}
