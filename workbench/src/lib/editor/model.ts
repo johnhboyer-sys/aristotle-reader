@@ -14,6 +14,22 @@ export interface RowModel {
   /** The Greek spine line — read-only in the editor. */
   greek: string;
   /**
+   * Heading level (D8 heading tools), document-spine works only: a 1-based rank
+   * into the work's organization profile (works/profile.ts), level 1 the top
+   * tier. A heading row keeps both columns (stays translatable) but renders as
+   * a title and drops out of the flowing Lane/Weave grouping. Absent = ordinary
+   * row. Persisted via the chapter-file `headers` frontmatter (row:level).
+   */
+  headingLevel?: number;
+  /**
+   * Optional heading TITLE OVERRIDE (D8 heading tools): a short label shown in
+   * the rail outline for this heading INSTEAD of its translation/original text
+   * (e.g. "Objection 2" on a long marked paragraph). Meaningful only on a row
+   * with a headingLevel. Persisted via the chapter-file `[HEADING_TITLES]`
+   * section. Absent = the outline falls back to translation, then original.
+   */
+  headingTitle?: string;
+  /**
    * Committed English row doc (PM JSON) of SEGMENT 0. Live views may be
    * ahead until commit. On a paragraph-split line (design doc D6) the
    * continuation segments live in `english2` — use englishDocsOf/segmentCount

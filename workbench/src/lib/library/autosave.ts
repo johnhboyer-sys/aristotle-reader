@@ -52,7 +52,7 @@ import {
   decodeParaLine,
 } from '../editor/serialize';
 import { parseChapterFile, serializeChapterFile, rowAddress, isValidSplitOffset, ChapterFileError } from '../chapterfile';
-import type { ChapterFile, ColumnStart, LineSplit } from '../chapterfile';
+import type { ChapterFile, ColumnStart, HeaderMark, LineSplit } from '../chapterfile';
 import { libraryStorage } from './storage';
 import type { LibraryStorage } from './storage';
 
@@ -237,6 +237,20 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
     : undefined;
   const englishParaLines = strippedParaLines?.some((line) => line.length > 0) ? strippedParaLines : undefined;
 
+  // Heading roles (D8 heading tools) → chapter-file `headers` (row:level).
+  // Derived from the rows' role, so the round-trip mirrors hydration exactly.
+  const headers: HeaderMark[] = [];
+  model.rows.forEach((r, i) => {
+    if (r.headingLevel) headers.push({ row: i + 1, level: r.headingLevel });
+  });
+
+  // Heading title overrides → chapter-file `[HEADING_TITLES]` (one line per row,
+  // blank when none; newlines flattened so the 1-line-per-row invariant holds).
+  // Only emitted when some row carries a title (serializeChapterFile drops an
+  // all-empty section, so an unconditional array would fail the self-check).
+  const headingTitles = model.rows.map((r) => (r.headingTitle ?? '').replace(/[\r\n]+/g, ' '));
+  const headingTitleLines = headingTitles.some((t) => t.length > 0) ? headingTitles : undefined;
+
   return {
     meta: {
       schemaVersion: 1,
@@ -256,10 +270,13 @@ export function chapterFileFromModel(model: ChapterModel, spans: ChapterSpans = 
       ...(model.paragraphStarts && model.paragraphStarts.length > 0
         ? { paragraphStarts: model.paragraphStarts }
         : {}),
+      // headers rides last, matching parseChapterFile's meta key order.
+      ...(headers.length > 0 ? { headers } : {}),
     },
     greekLines: model.rows.map((r) => r.greek),
     englishLines: model.rows.map((r) => serializeRowSegments(englishDocsOf(r))),
     ...(englishParaLines ? { englishParaLines } : {}),
+    ...(headingTitleLines ? { headingTitleLines } : {}),
     footnotes,
   };
 }
@@ -439,6 +456,25 @@ export function hydrateFromFile(file: ChapterFile, spine: SpineRow[], scheme: Sc
       ...(englishPara ? { englishPara } : {}),
       ...(offsets.length > 0 ? { splitOffsets: offsets } : {}),
       ...(segments.length > 1 ? { english2: segments.slice(1) } : {}),
+    });
+  }
+
+  // Heading roles (D8 heading tools): apply the chapter-file `headers`
+  // (row:level, 1-based, already range-filtered at parse) onto the rows.
+  // Document-spine only — a stray `headers:` line in a hand-edited CORPUS file
+  // must never turn a Bekker row into a heading (flow/typography key off it).
+  if (file.meta.headers && schemeDef.spineSource === 'document') {
+    for (const h of file.meta.headers) {
+      const row = rows[h.row - 1];
+      if (row) row.headingLevel = h.level;
+    }
+  }
+
+  // Heading title overrides (`[HEADING_TITLES]`, 1:1 with rows) — document-spine
+  // only, same gate as headers. A blank line = no override.
+  if (file.headingTitleLines && schemeDef.spineSource === 'document') {
+    file.headingTitleLines.forEach((title, i) => {
+      if (title.length > 0 && rows[i]) rows[i].headingTitle = title;
     });
   }
 

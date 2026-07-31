@@ -77,6 +77,9 @@ export interface StructuralRowSnapshot {
   splitOffsets?: number[];
   /** Paragraph-layer English, when the row has one. */
   englishPara?: PMNode;
+  /** Heading level (D8 heading tools), when the row carries one — so an
+   * inserted/marked heading survives structural undo/redo. */
+  headingLevel?: number;
 }
 
 /**
@@ -104,6 +107,18 @@ export interface UndoEntry {
    * the same stack so grouping gestures undo like everything else.
    */
   paraStarts?: { before: number[]; after: number[] };
+  /**
+   * Heading-mark change (D8 heading tools): one row's headingLevel before/after
+   * a "Mark as …/Clear heading" toggle (null = ordinary row). Rides the same
+   * stack — mirrors `paraStarts` — so a plain heading mark is its own ⌘Z step.
+   */
+  headingLevel?: { row: number; before: number | null; after: number | null };
+  /**
+   * Heading TITLE-override change (D8 heading tools): one row's headingTitle
+   * before/after a rail rename (null = no override). Rides the same stack like
+   * `headingLevel`, so a rename is its own ⌘Z step.
+   */
+  headingTitle?: { row: number; before: string | null; after: string | null };
   fnBefore?: Footnote[];
   fnAfter?: Footnote[];
   selBefore: SelRef | null;

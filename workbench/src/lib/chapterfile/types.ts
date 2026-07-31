@@ -64,6 +64,35 @@ export interface ChapterFileMeta {
    * paragraph group. Meaningful only for line-segmented corpus-free imports.
    */
   paragraphStarts?: number[];
+  /**
+   * OPTIONAL heading roles for document-spine works (frontmatter `headers`,
+   * D8 heading tools): the rows the user has marked as a heading/section title
+   * and their level. Absent = no headings. Like `paragraphStarts` this is
+   * lenient display metadata; out-of-range/duplicate/junk entries degrade at
+   * parse (sanitizeHeaders) instead of refusing the file.
+   */
+  headers?: HeaderMark[];
+}
+
+/**
+ * A row's heading LEVEL in a document-spine work (D8 heading tools): a 1-based
+ * rank into the work's organization profile (works/profile.ts), level 1 being
+ * the top tier. Absent = an ordinary content row. Headings stay TRANSLATABLE
+ * (both columns keep their text); the level only changes how the row renders
+ * (as a title, out of the flowing views), how deep it nests in the outline,
+ * and — via the profile's navRole — whether it anchors a book/chapter boundary.
+ */
+export type RowHeaderLevel = number;
+
+/**
+ * One `<rowOrdinal>:<level>` pair from the frontmatter `headers` field: the
+ * 1-based row ordinal that carries a heading and its 1-based level rank. Like
+ * `paragraph_starts` this is OPTIONAL, LENIENT display metadata — a malformed
+ * value degrades (see sanitizeHeaders) rather than refusing the file.
+ */
+export interface HeaderMark {
+  row: number;
+  level: RowHeaderLevel;
 }
 
 export interface Footnote {
@@ -77,6 +106,15 @@ export interface ChapterFile {
   englishLines: string[];
   /** Optional paragraph-granularity translation layer, one physical line per row. */
   englishParaLines?: string[];
+  /**
+   * Optional per-row heading TITLE OVERRIDE (D8 heading tools, `[HEADING_TITLES]`
+   * section): one physical line per row, blank when the row has no override.
+   * When present it is what the rail outline shows for that heading instead of
+   * its translation — lets a long marked paragraph carry a clean short title
+   * ("Objection 2") without touching its content. Present only when at least
+   * one row carries a title; 1:1 with the rows like englishParaLines.
+   */
+  headingTitleLines?: string[];
   footnotes: Footnote[];
   /**
    * True when frontmatter `paragraph_starts` carried entries the parser had

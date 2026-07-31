@@ -11,6 +11,8 @@
   import AddWorkDialog from './components/AddWorkDialog.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import NewDocumentDialog from './components/NewDocumentDialog.svelte';
+  import ProfileDialog from './components/ProfileDialog.svelte';
+  import WorkDetailsDialog from './components/WorkDetailsDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
   import AskPanel from './components/AskPanel.svelte';
   import AiPanel from './components/AiPanel.svelte';
@@ -19,10 +21,25 @@
   import ReferenceImportDialog from './components/ReferenceImportDialog.svelte';
   import ExportButton from './components/ExportButton.svelte';
   import ChapterEditor from './lib/editor/ChapterEditor.svelte';
+  import type { OutlineItem } from './lib/editor/outline';
+  import { buildOutlineTree } from './lib/editor/outline';
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
   import type { WorkManifest } from './lib/works/manifest';
-  import { listFreeWorks } from './lib/works/freeWorks';
+  import {
+    listFreeWorks,
+    updateFreeWorkAuthor,
+    updateFreeWorkBookContainers,
+  } from './lib/works/freeWorks';
+  import {
+    withAddedBookContainer,
+    withInsertedBookContainerAfter,
+    withRenamedBookContainer,
+    withRemovedBookContainer,
+    withBookStartAt,
+  } from './lib/works/bookContainers';
+  import type { BookContainer } from './lib/works/bookContainers';
+  import { createBookContainerQueue } from './lib/works/bookContainerQueue';
   import { invalidateCorpus, loadCorpus } from './lib/data/corpusStore';
   import type { WorkCorpus } from './lib/data/corpusStore';
   import { bookChapterNumbers, chapterForEditor } from './lib/data/chapterRows';
@@ -61,6 +78,10 @@
   let addWorkOpen = $state(false);
   let newDocumentOpen = $state(false);
   let librarySettingsOpen = $state(false);
+  // The document work whose organization profile the "Manage levels…" dialog
+  // is editing (null = closed).
+  let manageLevelsWork = $state<WorkManifest | null>(null);
+  let workDetailsWork = $state<WorkManifest | null>(null);
   let importOpen = $state(false);
   let importDefaultWorkId = $state<string | undefined>(undefined);
   let referenceImportWorkId = $state<string | null>(null);
@@ -72,6 +93,11 @@
   let corpora = $state<Record<string, WorkCorpus | null>>({});
   let booted = $state(false);
   let selection = $state<RailSelection | null>(null);
+  // Heading outline of the OPEN document-spine work (D8 heading tools), emitted
+  // by the editor; drives the rail's table-of-contents. Reset on every
+  // selection change so a previous doc's outline never leaks to the next.
+  let docOutline = $state<OutlineItem[]>([]);
+  let editorRef = $state<ReturnType<typeof ChapterEditor>>();
 
   // Per-work library-file status (placeholders/conflicted copies — build
   // spec §11), keyed by chapterFileName. Tauri only (mtime/listing are null
@@ -94,9 +120,16 @@
   const railWorks: RailWork[] = $derived(
     works.map((work) => {
       if (isDocumentWork(work)) {
-        // Corpus-free document: always "ready" (its chapter file IS the
-        // work), one Document row instead of a book tree.
-        return { work, status: 'ready' as const, books: [], singleDocument: true };
+        // Corpus-free document (D8): the lines marked in the text ARE its Books
+        // & Chapters. The rail mirrors the live heading outline — no separate
+        // container slots — so a mark and its sidebar entry can never drift.
+        return {
+          work,
+          status: 'ready' as const,
+          books: [],
+          document: true,
+          bookContainers: work.documentBookContainers ?? [],
+        };
       }
       const corpus = corpora[work.id] ?? null;
       const statuses = libraryStatus[work.id];
@@ -169,7 +202,7 @@
   const breadcrumb = $derived.by(() => {
     if (!selection || !currentWork) return { work: 'Translation Workbench', locus: null };
     if (isDocumentWork(currentWork)) {
-      // A single-document work has no book/chapter locus worth showing.
+      // A document work's locus lives in its outline, not the breadcrumb.
       return { work: currentWork.title, locus: null };
     }
     const label = currentWork.books[selection.book - 1]?.label ?? String(selection.book);
@@ -179,7 +212,8 @@
   function validSelection(sel: RailSelection): boolean {
     const work = works.find((w) => w.id === sel.workId);
     if (work && isDocumentWork(work)) {
-      // v1 free works are a single document (book 1, chapter 1).
+      // Marker-driven document work: one file (book 1, chapter 1); the in-text
+      // marks provide the navigation, not separate chapter files.
       return sel.book === 1 && sel.chapter === 1;
     }
     const corpus = corpora[sel.workId];
@@ -255,6 +289,13 @@
   });
 
   function select(workId: string, book: number, chapter: number) {
+    // Clear the outline whenever the open locus changes so a previous chapter's
+    // table of contents never lingers under a different (or empty) selection —
+    // the editor re-emits it for the chapter it actually loads.
+    const sel = selection;
+    if (!sel || sel.workId !== workId || sel.book !== book || sel.chapter !== chapter) {
+      docOutline = [];
+    }
     selection = { workId, book, chapter };
     void updateSettings({ lastOpened: { workId, book, chapter } });
   }
@@ -276,6 +317,65 @@
     await refreshLibraryStatus();
     select(workId, 1, 1);
   }
+
+  function openWorkDetails(workId: string) {
+    const work = works.find((candidate) => candidate.id === workId);
+    workDetailsWork = work && isDocumentWork(work) ? work : null;
+  }
+
+  async function saveWorkAuthor(workId: string, author: string) {
+    await updateFreeWorkAuthor(workId, author);
+    await reloadWorks();
+  }
+
+  // ── Book containers (D8): organization WITHOUT touching the text ─────────
+  // The workbench edits TRANSLATIONS, so a Book must never be a line in the
+  // document — it is a saved boundary over the outline's root nodes. Every
+  // handler below is the same shape: pure transform → persist → reload.
+  // Chapters are still made by MARKING a line, in the text or in the rail.
+
+  /** The open document work's saved Books (empty when it has none). */
+  const docBookContainers: BookContainer[] = $derived(
+    railWorks.find((rw) => rw.work.id === selection?.workId)?.bookContainers ?? [],
+  );
+
+  /** Root outline nodes = the chapters a Book boundary can point at. */
+  const docRootCount = $derived(buildOutlineTree(docOutline).length);
+
+  // Serialized so two quick clicks can't both transform the same saved list and
+  // silently drop one of the edits (bookContainerQueue.ts).
+  const bookQueue = createBookContainerQueue(async (workId, containers) => {
+    await updateFreeWorkBookContainers(workId, containers);
+    await reloadWorks();
+  });
+
+  function editBookContainers(transform: (current: BookContainer[]) => BookContainer[]) {
+    // The work is captured HERE, not when the write runs: opening another
+    // document while a save is in flight must not land these Books on it.
+    const workId = selection?.workId;
+    if (!workId) return;
+    void bookQueue.edit(workId, docBookContainers, transform);
+  }
+
+  /** Placeholder name — the user renames from the Book's right-click menu.
+   * Derived from the list the transform actually sees, so two fast "+ Book"
+   * clicks name themselves 1 and 2 rather than both claiming the same number. */
+  const nextBookLabel = (current: BookContainer[]) => `Book ${current.length + 1}`;
+
+  const addBookContainer = () =>
+    editBookContainers((current) =>
+      withAddedBookContainer(current, nextBookLabel(current), docRootCount),
+    );
+  const addBookContainerAfter = (index: number) =>
+    editBookContainers((current) =>
+      withInsertedBookContainerAfter(current, index, nextBookLabel(current), docRootCount),
+    );
+  const renameBookContainer = (index: number, label: string) =>
+    editBookContainers((current) => withRenamedBookContainer(current, index, label));
+  const removeBookContainer = (index: number) =>
+    editBookContainers((current) => withRemovedBookContainer(current, index));
+  const setBookStart = (index: number, rootOrdinal: number) =>
+    editBookContainers((current) => withBookStartAt(current, index, rootOrdinal));
 
   // ── reference-translation import (design doc D5 §5) ─────────────────────
   function openReferenceImport(workId: string) {
@@ -587,6 +687,19 @@
           <LibraryRail
             {railWorks}
             selected={selection}
+            outline={docOutline}
+            levels={currentWork?.profile?.levels ?? []}
+            onOutlineSelect={(rowIndex) => editorRef?.scrollToRow(rowIndex)}
+            onOutlineRename={(rowIndex, title) => editorRef?.setHeadingTitle(rowIndex, title)}
+            onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
+            onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
+            onWorkDetails={openWorkDetails}
+            bookContainers={docBookContainers}
+            onAddBookContainer={isTauri() || import.meta.env.DEV ? addBookContainer : undefined}
+            onAddBookContainerAfter={addBookContainerAfter}
+            onRenameBookContainer={renameBookContainer}
+            onRemoveBookContainer={removeBookContainer}
+            onSetBookStart={setBookStart}
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
@@ -603,7 +716,7 @@
           <!-- corpus still loading; keep the viewport quiet -->
         {:else if currentChapter}
           {#key `${selection?.workId}:${selection?.book}.${selection?.chapter}`}
-            <ChapterEditor fixture={currentChapter} />
+            <ChapterEditor bind:this={editorRef} fixture={currentChapter} onOutline={(o) => (docOutline = o)} />
           {/key}
         {:else if selection}
           <div class="empty-state-wrap">
@@ -676,6 +789,24 @@
       existingIds={works.map((w) => w.id)}
       onClose={() => (newDocumentOpen = false)}
       onCreated={handleDocumentCreated}
+    />
+  {/if}
+
+  {#if manageLevelsWork}
+    <ProfileDialog
+      workId={manageLevelsWork.id}
+      initialLevels={manageLevelsWork.profile?.levels ?? []}
+      onClose={() => (manageLevelsWork = null)}
+      onSaved={reloadWorks}
+    />
+  {/if}
+
+  {#if workDetailsWork}
+    <WorkDetailsDialog
+      title={workDetailsWork.title}
+      initialAuthor={workDetailsWork.author}
+      onClose={() => (workDetailsWork = null)}
+      onSave={(author) => saveWorkAuthor(workDetailsWork!.id, author)}
     />
   {/if}
 

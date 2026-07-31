@@ -16,7 +16,7 @@ import type { ChapterFile } from '../chapterfile/types';
 import type { WorkMeta } from '../citation/types';
 
 export type { StampMode, PandocMarkdownOptions } from './pandocMarkdown';
-export { chapterToPandocMarkdown, documentToPandocMarkdown, markupToPandoc, deriveRowAddresses } from './pandocMarkdown';
+export { chapterToPandocMarkdown, documentToPandocMarkdown, markupToPandoc, deriveRowAddresses, stripLanguageSpans } from './pandocMarkdown';
 export { pandocAvailable, pandocDocxArgs, runPandocNode, runPandocTauri, resolvePandocProgram, resolvePandocProgramByRun, PANDOC_SCOPE_CANDIDATES, PANDOC_UNAVAILABLE_MESSAGE, NATIVE_FOOTNOTES_NOTES } from './pandoc';
 export type { PandocDocxJob, RunResult } from './pandoc';
 export {
@@ -200,9 +200,21 @@ export function sanitizeFilenameComponent(text: string): string {
  * Default filename for a whole-work compile export, e.g.
  * "Metaphysics — Aristotle (translation).docx" (English mode) or
  * "Metaphysics — Aristotle (Greek and translation).docx" (bilingual mode).
+ *
+ * The bilingual suffix names the work's OWN source language — an imported
+ * document may be Latin, German, or anything else, and "Greek" was wrong for
+ * every one of them. It falls back to "source and translation" when the work
+ * declares no language.
  */
 export function compileDefaultFilename(work: WorkMeta, mode: CompileOptions['mode']): string {
-  const suffix = mode === 'bilingual' ? 'Greek and translation' : 'translation';
+  const declared = (work as { language?: string }).language?.trim();
+  const source =
+    declared && declared.length > 0
+      ? declared
+      : work.originalLanguage
+        ? work.originalLanguage.charAt(0).toUpperCase() + work.originalLanguage.slice(1)
+        : 'source';
+  const suffix = mode === 'bilingual' ? `${source} and translation` : 'translation';
   const byline = work.author.trim().length > 0 ? ` — ${work.author}` : '';
   const base = `${work.title}${byline} (${suffix})`;
   return `${sanitizeFilenameComponent(base)}.docx`;

@@ -220,6 +220,15 @@ describe('compileWorkMarkdown — headings via the citation contract', () => {
     expect(result.markdown).toContain('# Ζ');
   });
 
+  it('leaves a corpus export book-first — the byline belongs to imported documents', () => {
+    // Aristotle's manifest names an author, but a corpus export has always
+    // opened on its book heading; a byline here would be a title page nobody
+    // asked for.
+    const result = compileWorkMarkdown([metaChapter(7, 17)], META);
+    expect(result.markdown.startsWith('# Ζ\n\n## Chapter 17')).toBe(true);
+    expect(result.markdown).not.toContain('*Aristotle*');
+  });
+
   it('book heading uses Roman-numeral labels for bekker-standard (posterior-analytics)', () => {
     const chapter: ChapterFile = {
       meta: {
@@ -512,6 +521,19 @@ describe('compileWorkMarkdown — document-spine single-document route (D8)', ()
     expect(result.included).toEqual([{ book: 1, chapter: 1 }]);
   });
 
+  it('puts a non-empty author in an italic paragraph under the title', () => {
+    const result = compileWorkMarkdown(
+      [freeChapter()],
+      { ...FREE_WORK, author: 'Jane Austen' },
+    );
+    expect(result.markdown).toBe(
+      '# Free Doc\n\n' +
+        '*Jane Austen*\n\n' +
+        'First translated paragraph.\n\n' +
+        'Second paragraph from paragraph layer.\n',
+    );
+  });
+
   // Bilingual mode previously IGNORED the mode for document-spine works and
   // silently produced English-only output under the bilingual filename. Now
   // it interleaves per unit: source block, then English block (untranslated
@@ -586,6 +608,159 @@ describe('compileWorkMarkdown — document-spine single-document route (D8)', ()
   });
 });
 
+describe('compileWorkMarkdown — document-spine multi-chapter container (D8 structure)', () => {
+  // A container work: one Book "Prima Pars" with two named chapter slots.
+  const CONTAINER: WorkMeta = {
+    id: 'summa',
+    title: 'Summa Theologiae',
+    author: '',
+    scheme: 'paragraph',
+    books: [{ n: 1, label: 'Prima Pars' }],
+    // documentBooks rides along at runtime (WorkManifest); compile reads it
+    // defensively for the chapter labels.
+    documentBooks: [
+      { n: 1, label: 'Prima Pars', chapters: [{ n: 1, label: 'Question 2' }, { n: 2, label: 'Question 3' }] },
+    ],
+  } as WorkMeta;
+
+  function q(chapter: number, english: string, footnotes: ChapterFile['footnotes'] = []): ChapterFile {
+    return {
+      meta: {
+        schemaVersion: 1,
+        work: 'summa',
+        book: 1,
+        chapter,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶1',
+      },
+      greekLines: [`Source Q${chapter}.`],
+      englishLines: [english],
+      footnotes,
+    };
+  }
+
+  it('renders the title once, then Book + named-Chapter headings and each body', () => {
+    const result = compileWorkMarkdown([q(1, 'Article one.'), q(2, 'Article two.')], CONTAINER);
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Article one.\n\n' +
+        '### Question 3\n\n' +
+        'Article two.\n',
+    );
+    expect(result.included).toEqual([{ book: 1, chapter: 1 }, { book: 1, chapter: 2 }]);
+  });
+
+  it('a container work with only ONE saved chapter still emits its Book/Chapter headings', () => {
+    // Regression: gate the byte-identical single-doc shortcut on the absence of
+    // documentBooks, not on chapter count — otherwise a work just after "+ Book"
+    // (one saved chapter) would export without the headings the user just typed.
+    const result = compileWorkMarkdown([q(1, 'Article one.')], CONTAINER);
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Article one.\n',
+    );
+  });
+
+  it('does not print the marked line twice — as its heading and again as body', () => {
+    // The row the chapter heading came from carries a `headers` mark after
+    // splitDocument re-bases it. Exporting it again as the body's first
+    // paragraph printed "Question 2" as a heading and then "Question 2" as a
+    // paragraph directly under it.
+    const marked: ChapterFile = {
+      ...q(1, 'Question 2'),
+      meta: { ...q(1, 'Question 2').meta, headers: [{ row: 1, level: 2 }] },
+      greekLines: ['Quaestio 2', 'Corpus of the article.'],
+      englishLines: ['Question 2', 'Body of the article.'],
+    };
+    const result = compileWorkMarkdown([marked], CONTAINER);
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Body of the article.\n',
+    );
+  });
+
+  it('bilingual keeps the marked line\'s SOURCE under the heading, once', () => {
+    // English heading, source italic beneath (John's choice). Dropping the row
+    // outright would lose "Quaestio 2" from a bilingual export entirely.
+    const marked: ChapterFile = {
+      ...q(1, 'Question 2'),
+      meta: { ...q(1, 'Question 2').meta, headers: [{ row: 1, level: 2 }] },
+      greekLines: ['Quaestio 2', 'Corpus articuli.'],
+      englishLines: ['Question 2', 'Body of the article.'],
+    };
+    const result = compileWorkMarkdown([marked], CONTAINER, { mode: 'bilingual' });
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        '*Quaestio 2*\n\n' +
+        'Corpus articuli.\n\n' +
+        'Body of the article.\n',
+    );
+    // The heading text appears exactly once as a heading and never as a body line.
+    expect(result.markdown.match(/Question 2/g)).toHaveLength(1);
+  });
+
+  it('an unmarked opening part (a preface) keeps its first line', () => {
+    // Only a part whose first row carries a mark supplied a heading; a preface
+    // that opens on plain text must still export that text.
+    const preface = q(1, 'Opening words.');
+    const result = compileWorkMarkdown([preface], CONTAINER);
+    expect(result.markdown).toContain('### Question 2\n\nOpening words.\n');
+  });
+
+  it('puts the author under the title before the container headings', () => {
+    const result = compileWorkMarkdown(
+      [q(1, 'Article one.')],
+      { ...CONTAINER, author: 'Thomas Aquinas' },
+    );
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '*Thomas Aquinas*\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Article one.\n',
+    );
+  });
+
+  it('namespaces footnote ids so two chapters’ local id 1 don’t collide', () => {
+    const result = compileWorkMarkdown(
+      [
+        q(1, 'A {^1:first note}.', [{ id: 1, body: 'first' }]),
+        q(2, 'B {^1:second note}.', [{ id: 1, body: 'second' }]),
+      ],
+      CONTAINER,
+    );
+    // Distinct namespaced refs + definitions, no collision.
+    expect(result.markdown).toContain('[^c1-1]: first');
+    expect(result.markdown).toContain('[^c2-1]: second');
+  });
+
+  it('falls back to "Book N" / "Chapter N" when a container has empty labels', () => {
+    // A container (documentBooks present) whose labels are empty still exports
+    // as a structured work — with numeric fallbacks, not the single-doc path.
+    const emptyLabels: WorkMeta = {
+      id: 'summa',
+      title: 'Summa Theologiae',
+      author: '',
+      scheme: 'paragraph',
+      books: [{ n: 1, label: '' }],
+      documentBooks: [{ n: 1, label: '', chapters: [{ n: 1, label: '' }, { n: 2, label: '' }] }],
+    } as WorkMeta;
+    const result = compileWorkMarkdown([q(1, 'One.'), q(2, 'Two.')], emptyLabels);
+    expect(result.markdown).toContain('## Book 1');
+    expect(result.markdown).toContain('### Chapter 1');
+    expect(result.markdown).toContain('### Chapter 2');
+  });
+});
+
 describe('filename helpers', () => {
   it('sanitizes illegal filename characters and collapses whitespace', () => {
     expect(sanitizeFilenameComponent('A: B / C * D?')).toBe('A B C D');
@@ -598,6 +773,19 @@ describe('filename helpers', () => {
 
   it('default filename for bilingual mode', () => {
     expect(compileDefaultFilename(META, 'bilingual')).toBe('Metaphysics — Aristotle (Greek and translation).docx');
+  });
+
+  it('bilingual filename names the work OWN source language, not Greek', () => {
+    // An imported document can be Latin, German, anything — "Greek and
+    // translation" was wrong for every work that is not Aristotle's.
+    expect(compileDefaultFilename({ ...META, title: 'Summa Theologiae', author: '', language: 'Latin' } as never, 'bilingual')).toBe(
+      'Summa Theologiae (Latin and translation).docx',
+    );
+    // No declared language at all: a neutral word, never a wrong one.
+    const { originalLanguage: _drop, ...noLanguage } = META as { originalLanguage?: string };
+    expect(compileDefaultFilename({ ...noLanguage, author: '' } as never, 'bilingual')).toBe(
+      'Metaphysics (source and translation).docx',
+    );
   });
 
   it('default filename with no mode specified falls back to english wording', () => {

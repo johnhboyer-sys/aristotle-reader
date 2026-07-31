@@ -46,6 +46,10 @@ export interface DisplayRow {
   englishDoc: PMDocJSON;
   /** True for every segment after the first (indented Greek, D6 §5). */
   continuation: boolean;
+  /** Heading level of the model row (D8 heading tools), mirrored onto every
+   * segment; absent = ordinary row. The views render a heading row as a title
+   * and break the flowing Lane/Weave grouping around it. */
+  headingLevel?: number;
   /** Stable render key — see the module header on remount churn. */
   key: string;
 }
@@ -91,7 +95,10 @@ export function expandRows(rows: RowModel[], granularity: GridGranularity = 'sen
         greekStart: 0,
         englishDoc: row.english,
         continuation: false,
-        key: `${rowIndex}.unit:${row.address.raw}`,
+        ...(row.headingLevel ? { headingLevel: row.headingLevel } : {}),
+        // headingLevel rides the key so toggling a heading remounts into/out of
+        // the title branch (empty suffix when absent → existing keys unchanged).
+        key: `${rowIndex}.unit:${row.address.raw}${row.headingLevel ? `#h${row.headingLevel}` : ''}`,
       });
       continue;
     }
@@ -111,7 +118,8 @@ export function expandRows(rows: RowModel[], granularity: GridGranularity = 'sen
         greekStart: start,
         englishDoc: docs[segment],
         continuation: segment > 0,
-        key: `${rowIndex}.${segment}:${row.address.raw}@${start}`,
+        ...(row.headingLevel ? { headingLevel: row.headingLevel } : {}),
+        key: `${rowIndex}.${segment}:${row.address.raw}@${start}${row.headingLevel ? `#h${row.headingLevel}` : ''}`,
       });
     }
   }

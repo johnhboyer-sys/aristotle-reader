@@ -30,7 +30,8 @@ import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
 import type { StampMode } from './pandocMarkdown';
-import { chapterSegments, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
+import { chapterSegments, documentChapterSections, documentRowSourceLine, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
+import type { DocumentBook } from '../works/manifest';
 
 export type CompileMode = 'english' | 'bilingual';
 
@@ -184,6 +185,26 @@ function bookHeading(book: number, work: WorkMeta): string {
   return `# ${scheme.bookLabel(book, work)}`;
 }
 
+/**
+ * The row a document part's heading was taken FROM, or null when the part
+ * opens on unmarked text (a preface). splitDocument cuts at Book/Chapter marks
+ * and re-bases `headers` onto each part, so a mark on the part's first row is
+ * exactly the line that supplied its heading — and must not be printed again
+ * as body text.
+ */
+function documentHeadingRow(chapter: ChapterFile): number | null {
+  return (chapter.meta.headers ?? []).some((h) => h.row === 1) ? 0 : null;
+}
+
+/** A container chapter slot's display label ("Question 2") for the export
+ * heading, read defensively from the work's documentBooks (the runtime work is
+ * a WorkManifest even where the type is WorkMeta). Falls back to "Chapter N". */
+function documentChapterLabel(work: WorkMeta, book: number, chapter: number): string {
+  const books = (work as { documentBooks?: DocumentBook[] }).documentBooks;
+  const label = books?.[book - 1]?.chapters?.[chapter - 1]?.label?.trim();
+  return label && label.length > 0 ? label : `Chapter ${chapter}`;
+}
+
 function chapterHeading(chapter: ChapterFile, work: WorkMeta): string {
   const scheme = getScheme(chapter.meta.citationScheme);
   const range = scheme.formatRange({
@@ -194,6 +215,20 @@ function chapterHeading(chapter: ChapterFile, work: WorkMeta): string {
     end: scheme.parseAddress(chapter.meta.spanEnd),
   });
   return `## Chapter ${chapter.meta.chapter} (${range})`;
+}
+
+/** Italic work byline, omitted for anonymous works. */
+function authorByline(work: WorkMeta): string | null {
+  const author = work.author.trim();
+  return author.length > 0 ? `*${author}*` : null;
+}
+
+/** Insert the byline under a rendered document's existing title heading. */
+function addAuthorByline(markdown: string, work: WorkMeta): string {
+  const byline = authorByline(work);
+  if (!byline) return markdown;
+  const title = `# ${work.title}\n\n`;
+  return markdown.startsWith(title) ? `${title}${byline}\n\n${markdown.slice(title.length)}` : markdown;
 }
 
 // ── Bekker stamping (shared row-address + stamp-text logic, same rules as
@@ -280,15 +315,80 @@ export function compileWorkMarkdown(
     // source + English per unit (renderDocumentSpineBilingual) — previously
     // this branch ignored `mode` and silently produced English-only output
     // under the bilingual filename.
-    const markdown =
-      ordered.length > 0 ? documentToPandocMarkdown(ordered[0], work, resolved.mode) : `# ${work.title}\n\n`;
-    return {
-      markdown,
-      gapReport,
-      included: ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter })),
-    };
+    const included = ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter }));
+
+    // Bookless single document (no explicit containers): unchanged,
+    // byte-identical. Gate on the ABSENCE of documentBooks, NOT on chapter
+    // count — a container work with only one saved chapter (e.g. just after
+    // "+ Book" absorbed the existing document) must still emit its Book/Chapter
+    // headings, so it takes the container branch below.
+    const containerBooks = (work as { documentBooks?: DocumentBook[] }).documentBooks;
+    if (!containerBooks || containerBooks.length === 0) {
+      const markdown =
+        ordered.length > 0
+          ? addAuthorByline(documentToPandocMarkdown(ordered[0], work, resolved.mode), work)
+          : [`# ${work.title}`, authorByline(work)].filter((section) => section !== null).join('\n\n') + '\n\n';
+      return { markdown, gapReport, included };
+    }
+
+    // Container work (D8 Book/Chapter structure): the work title once,
+    // then each chapter's body under its Book/Chapter heading. Footnote ids are
+    // namespaced per chapter so two chapters' local id "1" don't collide in the
+    // concatenated pandoc document (same rule as the corpus arm below).
+    const docSections: string[] = [`# ${work.title}`];
+    const docByline = authorByline(work);
+    if (docByline) docSections.push(docByline);
+    let docBook: number | null = null;
+    ordered.forEach((chapter, index) => {
+      if (chapter.meta.book !== docBook) {
+        docBook = chapter.meta.book;
+        docSections.push(`## ${workScheme.bookLabel(chapter.meta.book, work) || `Book ${chapter.meta.book}`}`);
+      }
+      docSections.push(`### ${documentChapterLabel(work, chapter.meta.book, chapter.meta.chapter)}`);
+      const prefix = `c${index + 1}-`;
+      const namespaced: ChapterFile = {
+        ...chapter,
+        englishLines: chapter.englishLines.map((l) => namespaceFootnoteRefs(l, prefix)),
+      };
+      // The marked line BECAME the heading just above, so it must not also run
+      // as the first paragraph of the body — that printed "Question 2" twice
+      // (three times bilingual: heading, Latin, English). In bilingual the
+      // source half of that line still belongs on the page, as an italic line
+      // under the English heading, or the Latin would simply vanish.
+      const headingRow = documentHeadingRow(chapter);
+      if (headingRow !== null && resolved.mode === 'bilingual') {
+        const sourceLine = documentRowSourceLine(namespaced, headingRow);
+        if (sourceLine) docSections.push(sourceLine);
+      }
+      const { paragraphs, footnoteIdsUsed } = documentChapterSections(
+        namespaced,
+        resolved.mode,
+        headingRow ?? undefined,
+      );
+      if (paragraphs.length > 0) docSections.push(...paragraphs);
+      // Footnote-definition blocks with the SAME namespacing as the corpus arm
+      // (prefix + local id), so two chapters' local id "1" resolve distinctly.
+      const used = new Set(footnoteIdsUsed);
+      const fnBlocks: string[] = [];
+      for (const fn of chapter.footnotes) {
+        const namespacedId = `${prefix}${fn.id}`;
+        if (!used.has(namespacedId)) continue;
+        const bodyLines = fn.body.split('\n').map((l) => namespaceFootnoteRefs(l, prefix));
+        const rendered = bodyLines.map((l) => markupToPandoc(l).markdown);
+        const [first, ...rest] = rendered;
+        let block = `[^${namespacedId}]: ${first}`;
+        for (const line of rest) block += `\n    ${line}`;
+        fnBlocks.push(block);
+      }
+      if (fnBlocks.length > 0) docSections.push(fnBlocks.join('\n\n'));
+    });
+    return { markdown: docSections.join('\n\n') + '\n', gapReport, included };
   }
 
+  // Corpus arm: deliberately unchanged. These exports have always opened on
+  // the BOOK heading; handing them a title page because the manifest happens to
+  // name an author is a different change from the one asked for — a byline on
+  // the imported documents, which already print their own title.
   const sections: string[] = [];
   let currentBook: number | null = null;
 

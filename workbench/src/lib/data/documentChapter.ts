@@ -3,8 +3,10 @@
  * (workbench-design/d8-view-modes.md §1/§6: corpus-free documents). There is
  * no corpus here: the chapter file itself is the spine, so the editor's rows
  * come from the file's [GREEK] section with synthetic ordinal addresses
- * (rowAddressSource's document arm), book/chapter fixed at 1/1 (v1 free works
- * are a single document).
+ * (rowAddressSource's document arm). book/chapter come from the FILE's meta —
+ * a single-document work is 1/1, but a document split into parts (D8 heading
+ * tools → navigable chapters) opens each part at its own book/chapter, and the
+ * fixture must carry those so the editor labels + autosaves to the right file.
  *
  * The mirror of chapterRows.ts's chapterForEditor for spineSource:
  * 'document' — App gates between the two on the scheme CAPABILITY, never on
@@ -15,6 +17,7 @@ import { getScheme } from '../citation/registry';
 import type { WorkManifest } from '../works/manifest';
 import type { ChapterFile } from '../chapterfile';
 import { rowAddressSource } from '../library/autosave';
+import { DEFAULT_PROFILE } from '../works/profile';
 import type { FixtureChapter } from '../../dev/fixture-meta-z17';
 
 /**
@@ -50,14 +53,17 @@ export function documentChapterForEditor(
     // for the assist prompts; there is no 'greek' default here on purpose.
     ...(work.language !== undefined ? { language: work.language } : {}),
     scheme: work.scheme,
-    book: 1,
-    bookLabel: scheme.bookLabel(1, work),
-    chapter: 1,
+    book: file.meta.book,
+    bookLabel: scheme.bookLabel(file.meta.book, work),
+    chapter: file.meta.chapter,
     bekkerRange: scheme.formatRange({
       scheme: work.scheme,
       start: lines[0].address,
       end: lines[count - 1].address,
     }),
+    // The work's organization profile (D8 heading tools) rides on the fixture so
+    // the editor's heading menu shows the user's named tiers; default otherwise.
+    profile: work.profile ?? DEFAULT_PROFILE,
     lines,
   };
 }

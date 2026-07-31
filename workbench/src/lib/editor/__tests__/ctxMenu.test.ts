@@ -77,6 +77,119 @@ describe('buildCtxMenu — the per-view menu matrix', () => {
       AI,
     ]);
   });
+
+  // The default two-tier profile → "Heading" / "Section title".
+  const DEFAULT_NAMES = ['Heading', 'Section title'];
+  // First menu group's TOP-LEVEL item titles (the heading group when present).
+  function headTitles(input: Partial<CtxMenuInput>): string[] {
+    return buildCtxMenu({ ...BASE, ...input }).groups[0].map((i) => i.title);
+  }
+  // Tier names under the "Mark as ▸" submenu of the heading group.
+  function markSubTitles(input: Partial<CtxMenuInput>): string[] {
+    const markAs = buildCtxMenu({ ...BASE, ...input }).groups[0].find((i) => i.id === 'heading-mark-menu');
+    return (markAs?.submenu ?? []).map((i) => i.title);
+  }
+
+  it('document-spine source cell, ordinary row → "Mark as ▸" with a tier per level', () => {
+    const input = {
+      scheme: paragraphScheme,
+      heading: { level: null, levelNames: DEFAULT_NAMES },
+      paraDoc: { canMergePrev: false, joinBoundary: null },
+    };
+    expect(headTitles(input)).toEqual(['Mark as']);
+    expect(markSubTitles(input)).toEqual(['Heading', 'Section title']);
+  });
+
+  // Which submenu mark is flagged as the row's current tier (checked).
+  function markChecked(input: Partial<CtxMenuInput>): string[] {
+    const markAs = buildCtxMenu({ ...BASE, ...input }).groups[0].find((i) => i.id === 'heading-mark-menu');
+    return (markAs?.submenu ?? []).filter((i) => i.checked).map((i) => i.title);
+  }
+
+  it('document-spine source cell, already level 1 → submenu shows ALL tiers, level 1 checked, + clear', () => {
+    const input = { scheme: plainLineScheme, heading: { level: 1, levelNames: DEFAULT_NAMES } };
+    expect(headTitles(input)).toEqual(['Mark as', 'Clear heading']);
+    expect(markSubTitles(input)).toEqual(['Heading', 'Section title']);
+    expect(markChecked(input)).toEqual(['Heading']);
+  });
+
+  it('document-spine source cell, already level 2 → all tiers shown, level 2 checked, + clear', () => {
+    const input = { scheme: plainLineScheme, heading: { level: 2, levelNames: DEFAULT_NAMES } };
+    expect(headTitles(input)).toEqual(['Mark as', 'Clear heading']);
+    expect(markSubTitles(input)).toEqual(['Heading', 'Section title']);
+    expect(markChecked(input)).toEqual(['Section title']);
+  });
+
+  it('a custom N-tier profile offers EVERY tier in the submenu, current one checked', () => {
+    const input = { scheme: plainLineScheme, heading: { level: 2, levelNames: ['Part', 'Question', 'Article'] } };
+    expect(headTitles(input)).toEqual(['Mark as', 'Clear heading']);
+    expect(markSubTitles(input)).toEqual(['Part', 'Question', 'Article']);
+    expect(markChecked(input)).toEqual(['Question']);
+  });
+
+  it('every submenu mark carries its target level; the parent does not', () => {
+    const markAs = buildCtxMenu({
+      ...BASE,
+      scheme: plainLineScheme,
+      heading: { level: null, levelNames: ['Part', 'Question', 'Article'] },
+    }).groups[0].find((i) => i.id === 'heading-mark-menu')!;
+    expect(markAs.level).toBeUndefined();
+    expect((markAs.submenu ?? []).map((i) => i.level)).toEqual([1, 2, 3]);
+  });
+
+  it('canInsertHeading adds "Insert heading line here" to the heading group (top level)', () => {
+    expect(
+      headTitles({
+        scheme: paragraphScheme,
+        heading: { level: null, levelNames: DEFAULT_NAMES },
+        canInsertHeading: true,
+        paraDoc: { canMergePrev: false, joinBoundary: null },
+      }),
+    ).toEqual(['Mark as', 'Insert heading line here']);
+  });
+
+  it('the insert item is offered even on a row that already has a level', () => {
+    expect(
+      headTitles({
+        scheme: paragraphScheme,
+        heading: { level: 1, levelNames: DEFAULT_NAMES },
+        canInsertHeading: true,
+        paraDoc: { canMergePrev: false, joinBoundary: null },
+      }),
+    ).toEqual(['Mark as', 'Clear heading', 'Insert heading line here']);
+  });
+
+  it('the "Insert heading line here" item is a tier-picker submenu (one heading-insert per tier, carrying its level)', () => {
+    const insert = buildCtxMenu({
+      ...BASE,
+      scheme: paragraphScheme,
+      heading: { level: null, levelNames: ['Part', 'Question', 'Article'] },
+      canInsertHeading: true,
+      paraDoc: { canMergePrev: false, joinBoundary: null },
+    }).groups[0].find((i) => i.id === 'heading-insert-menu')!;
+    expect(insert.level).toBeUndefined();
+    expect((insert.submenu ?? []).map((i) => i.title)).toEqual(['Part', 'Question', 'Article']);
+    expect((insert.submenu ?? []).map((i) => i.id)).toEqual(['heading-insert', 'heading-insert', 'heading-insert']);
+    expect((insert.submenu ?? []).map((i) => i.level)).toEqual([1, 2, 3]);
+  });
+
+  it('without canInsertHeading there is no insert item (plain-line docs cannot splice)', () => {
+    expect(
+      headTitles({ scheme: plainLineScheme, heading: { level: null, levelNames: DEFAULT_NAMES } }),
+    ).not.toContain('Insert heading line here');
+  });
+
+  it('corpus works never carry the heading group (no heading input)', () => {
+    expect(
+      ids({}).some((g) => g.some((id) => id === 'heading-mark' || id === 'heading-mark-menu' || id === 'heading-clear')),
+    ).toBe(false);
+  });
+
+  it('the heading group is suppressed on an AI-only (English) cell', () => {
+    expect(ids({ scheme: plainLineScheme, heading: { level: null, levelNames: DEFAULT_NAMES }, aiOnly: true })).toEqual([
+      AI,
+    ]);
+  });
 });
 
 describe('buildCtxMenu — wording', () => {

@@ -20,6 +20,11 @@ export type CtxMenuItemId =
   | 'para-merge'
   | 'sentence-split'
   | 'sentence-join'
+  | 'heading-mark'
+  | 'heading-mark-menu'
+  | 'heading-clear'
+  | 'heading-insert'
+  | 'heading-insert-menu'
   | 'ai-translate'
   | 'ai-translate-batch'
   | 'ai-reference'
@@ -30,6 +35,15 @@ export interface CtxMenuItem {
   id: CtxMenuItemId;
   title: string;
   desc?: string;
+  /** For a `heading-mark`/`heading-insert` item: the 1-based level it targets. */
+  level?: number;
+  /** For a `heading-mark` item: true on the tier the row currently IS (shown
+   * with a ✓ so the current role is visible, not omitted). */
+  checked?: boolean;
+  /** When present, this item is a SUBMENU parent: it dispatches no action; the
+   * children fly out to the side (D8 heading tools — keeps "Mark as ▸" compact
+   * however many tiers a profile has). */
+  submenu?: CtxMenuItem[];
 }
 
 /** Groups render in order with a divider between consecutive groups (the
@@ -48,6 +62,21 @@ export interface CtxMenuInput {
   aiOnly?: boolean;
   /** Plain-line chunk-grouping toggle state (absent = not offered). */
   chunk?: 'add' | 'remove';
+  /**
+   * Heading state for document-spine works (D8 heading tools): the clicked
+   * row's current 1-based level (null for an ordinary row) plus the work
+   * profile's level names in rank order (`levelNames[0]` = level 1). Absent =
+   * not offered (corpus works never carry it). Populated only for the
+   * source-cell menu of a document-spine work.
+   */
+  heading?: { level: number | null; levelNames: string[] };
+  /**
+   * Whether an "Insert heading line here" item is offered (D8 heading tools).
+   * True only on a document-spine work whose rows can be spliced (paragraph
+   * unit — canEditRowStructure); rides in the heading group. Ignored without
+   * `heading`.
+   */
+  canInsertHeading?: boolean;
   /** D6: the clicked row is already split → offer the merge. */
   merge: boolean;
   /** Rows a batch translate would act on (≤1 = single-row flow). */
@@ -60,8 +89,51 @@ export interface CtxMenuInput {
   sourceNoun: string;
 }
 
+/**
+ * The heading group (D8 heading tools). Both tier lists are collapsed under
+ * submenus so the menu stays short however many tiers a profile has (John: a
+ * flat list of 8 got "waaaaaay too big"):
+ *  - "Mark as ▸" lists EVERY tier, the row's current one shown with a ✓ (so the
+ *    role is visible, not omitted — clicking it is a harmless no-op);
+ *  - "Insert heading line here ▸" is a tier PICKER — pick the tier the new
+ *    inserted line should be (John: a blank inserted line had no clear place to
+ *    set its role).
+ * "Clear heading" (when the row has a level) stays top-level.
+ */
+function headingGroup(level: number | null, levelNames: string[], canInsert: boolean): CtxMenuItem[] {
+  const items: CtxMenuItem[] = [];
+  const marks: CtxMenuItem[] = levelNames.map((name, i) => ({
+    id: 'heading-mark' as const,
+    title: name,
+    level: i + 1,
+    ...(i + 1 === level ? { checked: true } : {}),
+  }));
+  if (marks.length > 0) {
+    items.push({ id: 'heading-mark-menu', title: 'Mark as', submenu: marks });
+  }
+  if (level !== null) {
+    items.push({ id: 'heading-clear', title: 'Clear heading' });
+  }
+  if (canInsert && levelNames.length > 0) {
+    const inserts: CtxMenuItem[] = levelNames.map((name, i) => ({
+      id: 'heading-insert' as const,
+      title: name,
+      level: i + 1,
+    }));
+    items.push({ id: 'heading-insert-menu', title: 'Insert heading line here', submenu: inserts });
+  }
+  return items;
+}
+
 export function buildCtxMenu(input: CtxMenuInput): CtxMenuModel {
   const groups: CtxMenuItem[][] = [];
+  // Heading roles ride at the very top of a document-spine source-cell menu
+  // (house convention: structure first). Present only when the caller passes
+  // `heading` — i.e. a document-spine work's source cell, never corpus.
+  if (input.heading && !input.aiOnly) {
+    const group = headingGroup(input.heading.level, input.heading.levelNames, input.canInsertHeading ?? false);
+    if (group.length > 0) groups.push(group);
+  }
   if (input.paraDoc) {
     // Document-spine paragraph rows (D8 §2/§3): row-level paragraph ops
     // first, then the sentence fix-up — the D6 splitOffsets machinery

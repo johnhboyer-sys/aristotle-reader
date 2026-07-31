@@ -39,6 +39,14 @@ describe('documentChapterForEditor', () => {
     expect(documentChapterForEditor(work, empty)).toBeNull();
   });
 
+  it('takes book/chapter from the FILE meta, not a hard-coded 1/1 (split parts)', () => {
+    const { work, file } = freeDoc('paragraphs', 'One sentence.\n\nSecond block');
+    const part: ChapterFile = { ...file, meta: { ...file.meta, book: 2, chapter: 3 } };
+    const fixture = documentChapterForEditor(work, part);
+    expect(fixture!.book).toBe(2);
+    expect(fixture!.chapter).toBe(3);
+  });
+
   it('refuses a corpus-spine work (capability gate)', () => {
     const { file } = freeDoc('lines', 'alpha');
     expect(() => documentChapterForEditor(getWork('metaphysics'), file)).toThrow(/corpus-spine/);

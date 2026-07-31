@@ -283,4 +283,47 @@ describe('structural undo entries ride AppHistory unchanged (D8 §2)', () => {
     const entry = h.undo()!;
     expect(entry.paraStarts).toEqual({ before: [1], after: [1, 3] });
   });
+
+  it('a headingLevel entry (D8 heading mark) round-trips its before/after', () => {
+    const h = new AppHistory();
+    // Mark row 2 as level 3 (from ordinary).
+    h.push({ edits: [], headingLevel: { row: 2, before: null, after: 3 }, selBefore: null, selAfter: null });
+    const undone = h.undo()!;
+    expect(undone.headingLevel).toEqual({ row: 2, before: null, after: 3 });
+    const redone = h.redo()!;
+    expect(redone.headingLevel).toEqual({ row: 2, before: null, after: 3 });
+  });
+
+  it('a headingTitle entry (D8 rail rename) round-trips its before/after', () => {
+    const h = new AppHistory();
+    h.push({ edits: [], headingTitle: { row: 4, before: null, after: 'Objection 2' }, selBefore: null, selAfter: null });
+    const undone = h.undo()!;
+    expect(undone.headingTitle).toEqual({ row: 4, before: null, after: 'Objection 2' });
+    const redone = h.redo()!;
+    expect(redone.headingTitle).toEqual({ row: 4, before: null, after: 'Objection 2' });
+  });
+});
+
+describe('heading role survives split/merge (D8 heading tools — no silent demotion)', () => {
+  it('split keeps the heading on `first`, leaves `second` ordinary', () => {
+    const res = splitParagraphRow(paraRow({ headingLevel: 3 }), O1)!;
+    expect(res.first.headingLevel).toBe(3);
+    expect(res.second.headingLevel).toBeUndefined();
+  });
+
+  it('a non-heading row splits with no heading on either side', () => {
+    const res = splitParagraphRow(paraRow(), O1)!;
+    expect(res.first.headingLevel).toBeUndefined();
+    expect(res.second.headingLevel).toBeUndefined();
+  });
+
+  it('merge preserves a heading from `a` (the row merged into)', () => {
+    const merged = mergeParagraphRows(paraRow({ headingLevel: 2 }), paraRow());
+    expect(merged.row.headingLevel).toBe(2);
+  });
+
+  it('merge preserves a heading carried only by `b`', () => {
+    const merged = mergeParagraphRows(paraRow(), paraRow({ headingLevel: 4 }));
+    expect(merged.row.headingLevel).toBe(4);
+  });
 });

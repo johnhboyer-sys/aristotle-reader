@@ -7,6 +7,7 @@
 // — this chapter exists so the row-lock editor has a real spine to type
 // against before the corpus data layer lands.
 import type { Address, SchemeId } from '../lib/citation/types';
+import type { WorkProfile } from '../lib/works/profile';
 
 const SCHEME: SchemeId = 'bekker-metaphysics';
 
@@ -29,6 +30,10 @@ export interface FixtureChapter {
   chapter: number;
   /** Display-only range label; formatting via CitationScheme comes later. */
   bekkerRange: string;
+  /** Organization profile (document-spine works, D8 heading tools) — the named
+   * heading tiers. Absent on corpus fixtures; the editor falls back to the
+   * default profile. */
+  profile?: WorkProfile;
   lines: FixtureLine[];
 }
 

@@ -30,6 +30,8 @@
     flash,
     focused,
     chunkStart = false,
+    headingLevel = undefined,
+    subtitle = false,
     pasteConfirm,
     onPasteConfirm,
     onPasteCancel,
@@ -66,6 +68,11 @@
     focused: boolean;
     /** First unit of a paragraph chunk/group (§3/§5 grouping). */
     chunkStart?: boolean;
+    /** Heading level (D8 heading tools): renders the unit as a title, deeper
+     * levels progressively smaller. Absent = ordinary row. */
+    headingLevel?: number;
+    /** The heading tier is the 'subtitle' nav-role — render as a small subtitle. */
+    subtitle?: boolean;
     pasteConfirm: number | null;
     onPasteConfirm: () => void;
     onPasteCancel: () => void;
@@ -87,6 +94,9 @@
   class="interp-unit"
   class:row-focus={focused}
   class:chunk-start={chunkStart}
+  class:row-heading={!!headingLevel && !subtitle}
+  class:row-subtitle={subtitle}
+  data-heading-level={subtitle ? undefined : (headingLevel ?? undefined)}
   data-row={gridRow}
 >
   <div class="interp-addr">{addr}</div>

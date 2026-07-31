@@ -62,6 +62,8 @@
   import { modelFromFixture, nextFootnoteId, cloneFootnotes, displayNumbers, segmentCount, englishDocsOf, hasSentenceEnglish, hasParagraphEnglish } from './model';
   import type { ChapterModel, RowModel } from './model';
   import { rowSchema, docFromJSON, markerIdsIn, emptyRowDocJSON } from './schema';
+  import { buildOutline } from './outline';
+  import type { OutlineItem } from './outline';
   import type { PMDocJSON } from './schema';
   import { assertRoundTrip, buildRowDoc, runsOf, orphanFnRefIds, joinRowDocs } from './serialize';
   import type { InlineRun } from './serialize';
@@ -151,12 +153,34 @@
   import RowGutter from './RowGutter.svelte';
   import EnglishCell from './EnglishCell.svelte';
   import InterpolatedUnit from './InterpolatedUnit.svelte';
+  import { DEFAULT_PROFILE, levelName, navRoleOf } from '../works/profile';
+  import type { NavRole } from '../works/profile';
   import './editor.css';
 
-  let { fixture }: { fixture: FixtureChapter } = $props();
+  let {
+    fixture,
+    onOutline,
+  }: {
+    fixture: FixtureChapter;
+    /** Emitted whenever the heading outline changes (roles toggled or a
+     * heading's translation commits). Document-spine works only carry one. */
+    onOutline?: (items: OutlineItem[]) => void;
+  } = $props();
 
   // ── model + non-reactive machinery ─────────────────────────────────────
   const model: ChapterModel = modelFromFixture(fixture);
+  // The work's organization profile (D8 heading tools): names the heading tiers
+  // shown in the "Mark as…" menu and looked up for status text. Default (two
+  // in-page tiers) when the work carries none.
+  // $derived so an edit to the work's organization profile (Manage levels…)
+  // flows in without remounting the editor: App reloads the work, currentChapter
+  // re-derives the fixture with the new profile, and this recomputes.
+  const profile = $derived(fixture.profile ?? DEFAULT_PROFILE);
+  const levelNames = $derived(profile.levels.map((l) => l.name));
+  /** A heading row whose tier is the 'subtitle' nav-role renders as a small
+   * subtitle (under its heading) rather than a big title. */
+  const isSubtitleLevel = (headingLevel: number | undefined): boolean =>
+    headingLevel != null && navRoleOf(profile, headingLevel) === 'subtitle';
   const history = new AppHistory();
   const storage = libraryStorage();
   const fileName = chapterFileName(fixture.book, fixture.chapter);
@@ -414,6 +438,36 @@
   let displayRows = $state<DisplayRow[]>([]);
   function refreshDisplayRows() {
     displayRows = expandRows(model.rows, paragraphUnitView ? 'unit' : 'sentence');
+    refreshOutline();
+  }
+
+  // Heading outline (D8 heading tools) for the rail's table-of-contents. The
+  // model is non-reactive, so — like displayRows — this is refreshed
+  // explicitly: on every structural change (via refreshDisplayRows) and when a
+  // heading's translation commits (commitRowNow). The $effect re-emits to the
+  // host whenever the array identity changes.
+  let outline = $state<OutlineItem[]>([]);
+  function refreshOutline() {
+    outline = buildOutline(model.rows, profile);
+  }
+  $effect(() => {
+    onOutline?.(outline);
+  });
+  // Recompute the outline when the work's profile changes (Manage levels…) so
+  // the rail's nav-roles/labels reflect the new tiers. The model is
+  // non-reactive, so this profile dependency must be wired explicitly.
+  $effect(() => {
+    void profile;
+    refreshOutline();
+  });
+
+  /** Scroll a model row into view (rail outline click). Resolves the row to its
+   * segment-0 display ordinal, then scrolls the matching grid cell. */
+  export function scrollToRow(rowIndex: number): void {
+    const g = displayRows.findIndex((d) => d.rowIndex === rowIndex && d.segment === 0);
+    if (g < 0) return;
+    const el = gridEl?.querySelector<HTMLElement>(`[data-row-en="${g}"], [data-row="${g}"]`);
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
   // Flowing-view paragraph grouping (John 2026-07-14): a D6 line-split is a
   // paragraph break, so group the display rows into paragraphs — a new group
@@ -423,10 +477,17 @@
   // carries its global display index `g` (cell identity / focus / handlers all
   // key off it). Purely a display regrouping — the per-line model is untouched.
   const flowParagraphs = $derived.by(() => {
-    const groups: { key: string; rows: { d: DisplayRow; g: number }[] }[] = [];
+    const groups: { key: string; heading: boolean; rows: { d: DisplayRow; g: number }[] }[] = [];
+    let prevWasHeading = false;
     displayRows.forEach((d, g) => {
-      if (g === 0 || d.continuation) groups.push({ key: d.key, rows: [] });
+      // A heading row (D8 heading tools) never flows: it is its own single-row
+      // group, and the row after it opens a fresh paragraph too.
+      const isHeading = !!d.headingLevel;
+      if (g === 0 || d.continuation || isHeading || prevWasHeading) {
+        groups.push({ key: d.key, heading: isHeading, rows: [] });
+      }
       groups[groups.length - 1]?.rows.push({ d, g });
+      prevWasHeading = isHeading;
     });
     return groups;
   });
@@ -482,41 +543,83 @@
     paraDoc?: { canMergePrev: boolean; joinBoundary: number | null };
     /** Plain-line document-spine rows (D8 §5): grouping toggle for this row. */
     chunk?: 'add' | 'remove';
+    /** Heading-role toggle for document-spine source cells (D8 heading tools):
+     * the clicked row's current role. Set only by the source handlers under
+     * the document-spine gate; corpus menus never carry it. */
+    heading?: { level: number | null; levelNames: string[] };
+    /** Whether the heading group offers "Insert heading line here" (document
+     * paragraph docs only — canEditRowStructure). */
+    canInsertHeading?: boolean;
+    /** Viewport-clamped cap on the menu's height (px): the menu grows to fit
+     * or scrolls internally, never off the bottom of the window. */
+    maxHeight: number;
+    /** True when the "Mark as ▸" submenu must open to the LEFT (no room right). */
+    submenuFlip: boolean;
     /** The rendered items — built by buildCtxMenu (ctxMenu.ts) from the
      * fields above; the template renders the model, never re-decides it. */
     model: CtxMenuModel;
   } | null>(null);
+  // The open "Mark as ▸" flyout (D8 heading tools). Rendered as a SEPARATE
+  // fixed element (not a child of the scrollable menu, whose overflow would
+  // clip it) with JS-computed, viewport-clamped coordinates.
+  let openSubmenu = $state<{ items: CtxMenuItem[]; x: number; y: number; maxHeight: number } | null>(null);
+  // Close the flyout whenever the menu itself closes.
+  $effect(() => {
+    if (!ctxMenu) openSubmenu = null;
+  });
+  /** Open the "Mark as ▸" flyout beside its parent item, clamped to the window
+   * (flips left when submenuFlip; never runs off top/bottom — caps + scrolls). */
+  function openMarkSubmenu(e: MouseEvent, items: CtxMenuItem[]) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const MARGIN = 8;
+    const SUB_W = 200;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let x = ctxMenu?.submenuFlip ? rect.left - SUB_W : rect.right;
+    x = Math.max(MARGIN, Math.min(x, vw - SUB_W - MARGIN));
+    const y = Math.max(MARGIN, Math.min(rect.top - 4, vh - MARGIN - Math.min(160, vh - 2 * MARGIN)));
+    const maxHeight = Math.max(120, vh - y - MARGIN);
+    openSubmenu = { items, x, y, maxHeight };
+  }
   /** Attach the display model to a menu state: every ctxMenu assignment
    * routes through here so items/wording/grouping have exactly one source
    * of truth (buildCtxMenu — matrix-tested in ctxMenu.test.ts). */
-  /** Keep the context menu inside the viewport: it's position:fixed at the
-   * click point (max-width 19rem), so a right-/bottom-edge click would run it
-   * off-screen (seen first in the full-width Weave flow). Clamp against the
-   * window using the CSS max-width and a generous height estimate — a menu that
-   * would overflow flips back in rather than being cut off. */
-  function clampMenu(x: number, y: number): { x: number; y: number } {
+  /** Keep the context menu fully inside the viewport: it's position:fixed at
+   * the click point (max-width 19rem). Clamp x against the CSS max-width; clamp
+   * the TOP so the menu keeps a minimum visible height, and cap `maxHeight` to
+   * the space from the (clamped) top to the bottom margin — the menu grows to
+   * fit or scrolls internally (never off the bottom, John's screenshot).
+   * `submenuFlip` says the "Mark as ▸" flyout must open LEFT (not enough room
+   * to its right). */
+  function clampMenu(x: number, y: number): { x: number; y: number; maxHeight: number; submenuFlip: boolean } {
     const MARGIN = 8;
     const MENU_W = 304; // 19rem max-width
-    const MENU_H = 360; // ~tallest menu (Greek word: split + 4 AI items)
+    const SUBMENU_W = 200; // ~12rem flyout
+    const MIN_MENU_H = 160; // keep at least a few items visible near the bottom
     const vw = typeof window !== 'undefined' ? window.innerWidth : Infinity;
     const vh = typeof window !== 'undefined' ? window.innerHeight : Infinity;
-    return {
-      x: Math.max(MARGIN, Math.min(x, vw - MENU_W - MARGIN)),
-      y: Math.max(MARGIN, Math.min(y, vh - MENU_H - MARGIN)),
-    };
+    const cx = Math.max(MARGIN, Math.min(x, vw - MENU_W - MARGIN));
+    const cy = Math.max(MARGIN, Math.min(y, vh - MARGIN - Math.min(MIN_MENU_H, vh - 2 * MARGIN)));
+    const maxHeight = Math.max(MIN_MENU_H, vh - cy - MARGIN);
+    const submenuFlip = cx + MENU_W + SUBMENU_W > vw;
+    return { x: cx, y: cy, maxHeight, submenuFlip };
   }
-  function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model'>): NonNullable<typeof ctxMenu> {
+  function withMenuModel(m: Omit<NonNullable<typeof ctxMenu>, 'model' | 'maxHeight' | 'submenuFlip'>): NonNullable<typeof ctxMenu> {
     menuPointer = { x: m.x, y: m.y }; // raw click, before the menu clamp below
-    const { x, y } = clampMenu(m.x, m.y);
+    const { x, y, maxHeight, submenuFlip } = clampMenu(m.x, m.y);
     return {
       ...m,
       x,
       y,
+      maxHeight,
+      submenuFlip,
       model: buildCtxMenu({
         scheme,
         paraDoc: m.paraDoc,
         aiOnly: m.aiOnly,
         chunk: m.chunk,
+        heading: m.heading,
+        canInsertHeading: m.canInsertHeading,
         merge: m.merge,
         batchRowCount: m.translateRows?.length ?? 1,
         noun: m.noun,
@@ -710,6 +813,7 @@
       docs: englishDocsOf(row).map((d) => docFromJSON(d)),
       ...(offsets && offsets.length > 0 ? { splitOffsets: offsets.slice() } : {}),
       ...(para && para.content.size > 0 ? { englishPara: para } : {}),
+      ...(row.headingLevel ? { headingLevel: row.headingLevel } : {}),
     };
   }
 
@@ -723,17 +827,20 @@
       ...(s.english2 && s.english2.length > 0 ? { english2: s.english2 } : {}),
       ...(s.splitOffsets && s.splitOffsets.length > 0 ? { splitOffsets: s.splitOffsets } : {}),
       ...(s.englishPara ? { englishPara: s.englishPara } : {}),
+      ...(s.headingLevel ? { headingLevel: s.headingLevel } : {}),
     };
   }
 
   function rowModelFromStructSnapshot(s: StructuralRowSnapshot): RowModel {
-    return rowModelFromStruct({
+    const row = rowModelFromStruct({
       greek: s.greek,
       english: s.docs[0]?.toJSON() ?? emptyRowDocJSON(),
       ...(s.docs.length > 1 ? { english2: s.docs.slice(1).map((d) => d.toJSON()) } : {}),
       ...(s.splitOffsets && s.splitOffsets.length > 0 ? { splitOffsets: s.splitOffsets.slice() } : {}),
       ...(s.englishPara ? { englishPara: s.englishPara.toJSON() } : {}),
     });
+    if (s.headingLevel) row.headingLevel = s.headingLevel;
+    return row;
   }
 
   /** Re-derive every row's ordinal address (¶N / N) after a splice — for
@@ -908,6 +1015,8 @@
     if (changed) {
       markModelDirty();
       publishFootnotes(); // anchored-phrase snippets follow the text
+      // A heading's translation just changed → refresh its rail-outline label.
+      if (row.headingLevel) refreshOutline();
     }
   }
 
@@ -1396,6 +1505,26 @@
         const starts = dir === 'undo' ? entry.paraStarts.before : entry.paraStarts.after;
         model.paragraphStarts = starts.length > 0 ? starts.slice() : undefined;
         markModelDirty();
+      }
+      // Heading mark (D8 heading tools): restore the row's headingLevel; the
+      // refreshDisplayRows below re-renders the title + rail outline.
+      if (entry.headingLevel) {
+        const hl = dir === 'undo' ? entry.headingLevel.before : entry.headingLevel.after;
+        const row = model.rows[entry.headingLevel.row];
+        if (row) {
+          row.headingLevel = hl === null ? undefined : hl;
+          markModelDirty();
+        }
+      }
+      // Heading title override (D8 heading tools): restore the row's headingTitle;
+      // refreshDisplayRows re-derives the rail outline label.
+      if (entry.headingTitle) {
+        const t = dir === 'undo' ? entry.headingTitle.before : entry.headingTitle.after;
+        const row = model.rows[entry.headingTitle.row];
+        if (row) {
+          row.headingTitle = t === null ? undefined : t;
+          markModelDirty();
+        }
       }
       refreshDisplayRows();
       const fnTable = dir === 'undo' ? entry.fnBefore : entry.fnAfter;
@@ -2358,6 +2487,16 @@
     // EVERY view; para-layer targets read/write englishPara.
     const noun = assistUnitFor(activeLayer(), d.rowIndex);
     const rowNoun = rowUnitNoun();
+    // Heading roles (D8 heading tools): offered on a document-spine work's
+    // source cell only, at the row's first segment. Undefined elsewhere (corpus
+    // menus never show it); buildCtxMenu drops it on aiOnly cells too.
+    const heading =
+      scheme.spineSource === 'document' && d.segment === 0
+        ? { level: model.rows[d.rowIndex].headingLevel ?? null, levelNames }
+        : undefined;
+    // "Insert heading line here" rides the heading group, but only where rows
+    // can be spliced (paragraph-unit document works — canEditRowStructure).
+    const canInsertHeading = heading ? canEditRowStructure(scheme) : undefined;
     // Paragraph-unit view (D8 §4): document-spine paragraph docs get
     // STRUCTURE editing here (D8 §2/§3): row-level paragraph split/merge plus
     // the sentence-boundary fix-up — the same snapped-click offset drives
@@ -2382,6 +2521,8 @@
           noun,
           rowNoun,
           translateRows: paraTranslateRows,
+          heading,
+          canInsertHeading,
           paraDoc: {
             canMergePrev: d.rowIndex > 0,
             joinBoundary: within === null ? null : joinBoundaryAt(paraRow.splitOffsets, within),
@@ -2409,7 +2550,7 @@
     const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
     if (segmentCount(row) > 1) {
       // Already split (Phase-1 UI is single-split): offer the merge.
-      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk });
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk, heading });
       return;
     }
     // Split gesture (John's §4.1): the offset is the click's nearest word
@@ -2417,7 +2558,7 @@
     // snapToWordStart) rejects offset 0 and the line end.
     const within = caretOffsetFromPoint(e);
     const offset = within === null ? null : snapToWordStart(row.greek, d.greekStart + within);
-    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk });
+    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk, heading });
   }
 
   /** Right-click the English cell → the 4 AI modes only. Split/Merge is a
@@ -2464,6 +2605,11 @@
     const row = model.rows[d.rowIndex];
     const selRows = selectedGreekModelRows();
     const translateRows = selRows.length > 1 && selRows.includes(d.rowIndex) ? selRows : undefined;
+    // Heading roles (D8 heading tools): same document-spine gate as the grid.
+    const heading =
+      scheme.spineSource === 'document' && d.segment === 0
+        ? { level: model.rows[d.rowIndex].headingLevel ?? null, levelNames }
+        : undefined;
     if (canEditRowStructure(scheme)) {
       // Unit granularity displays the whole row (its sentence separators
       // contribute no text); sentence granularity displays one slice of it —
@@ -2488,6 +2634,8 @@
         noun,
         rowNoun,
         translateRows,
+        heading,
+        canInsertHeading: canEditRowStructure(scheme),
         paraDoc: {
           canMergePrev: d.rowIndex > 0,
           joinBoundary: mapped === null ? null : joinBoundaryAt(row.splitOffsets, mapped),
@@ -2508,12 +2656,12 @@
           : ('add' as const)
         : undefined;
     if (segmentCount(row) > 1) {
-      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk: chunkState });
+      ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: true, offset: null, noun, rowNoun, translateRows, chunk: chunkState, heading });
       return;
     }
     const local = within === null ? null : sourceOffsetAtDisplay(d.greekSlice, undefined, within);
     const offset = local === null ? null : snapToWordStart(row.greek, d.greekStart + local);
-    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk: chunkState });
+    ctxMenu = withMenuModel({ x: e.clientX, y: e.clientY, row: d.rowIndex, segment: d.segment, merge: false, offset, noun, rowNoun, translateRows, chunk: chunkState, heading });
   }
 
   function menuSplit() {
@@ -2578,6 +2726,38 @@
     toggleChunkStart(m.row, m.chunk);
   }
 
+  function menuSetLevel(level: number | null) {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    setRowLevel(m.row, level);
+  }
+
+  function menuInsertLevel(level?: number) {
+    const m = ctxMenu;
+    ctxMenu = null;
+    if (!m) return;
+    performInsertHeading(m.row, level);
+  }
+
+  /** Dispatch a clicked menu item. `heading-mark`/`heading-insert` carry a
+   * per-tier level on the item (one id, N tiers); everything else is a static
+   * id → command. */
+  function runMenuItem(item: CtxMenuItem) {
+    // A submenu parent ("Mark as ▸" / "Insert heading line ▸") dispatches
+    // nothing — its children do.
+    if (item.submenu) return;
+    if (item.id === 'heading-mark') {
+      menuSetLevel(item.level ?? 1);
+      return;
+    }
+    if (item.id === 'heading-insert') {
+      menuInsertLevel(item.level);
+      return;
+    }
+    menuActions[item.id]();
+  }
+
   /** Right-click the Greek → "Translate with AI" (the discoverable entry
    * point; the hover glyph + ⌘⏎ still work). Translates the whole Bekker
    * line via the same per-row assist flow; the suggestion lands in this
@@ -2636,6 +2816,14 @@
     'para-merge': menuParaMerge,
     'sentence-split': menuSentenceSplit,
     'sentence-join': menuSentenceJoin,
+    // heading-mark / heading-insert carry a per-item level → dispatched by
+    // runMenuItem; the *-menu ids are submenu parents (also runMenuItem). All
+    // are no-ops here, kept only to satisfy the exhaustive Record.
+    'heading-mark': () => {},
+    'heading-mark-menu': () => {},
+    'heading-clear': () => menuSetLevel(null),
+    'heading-insert': () => {},
+    'heading-insert-menu': () => {},
     'ai-translate': menuAssist,
     'ai-translate-batch': menuAssist,
     'ai-reference': menuReference,
@@ -2766,6 +2954,48 @@
   }
 
   // ── document-spine structure editing (D8 §2/§3/§5) ──────────────────────
+  /**
+   * Insert a NEW empty heading row ABOVE row r (D8 heading tools) and focus it
+   * so the user types the label immediately. Document paragraph works only
+   * (canEditRowStructure — where paragraphStarts never coexists, so nothing to
+   * shift). Reuses the row-splice primitive: ordinal addresses re-derive, and
+   * headingLevel + footnote anchoring ride on the row objects. ONE structural
+   * undo entry removes it (headingLevel now round-trips in the snapshot). The
+   * label lives in the row's English/translation cell; the Greek column stays
+   * empty (a user-authored marker, not source text).
+   */
+  function performInsertHeading(r: number, level?: number) {
+    if (!canEditRowStructure(scheme)) return;
+    if (r < 0 || r > model.rows.length) return;
+    // The tier is picked from the "Insert heading line ▸" submenu; fall back to
+    // the shallowest in-page heading tier (else level 1) if invoked without one.
+    const headingIdx = profile.levels.findIndex((l) => l.navRole === 'heading');
+    const lvl = level ?? (headingIdx >= 0 ? headingIdx : 0) + 1;
+    dismissAssist();
+    history.breakCoalescing();
+    const selBefore = focusedSelRef();
+    const newRow: RowModel = {
+      address: { scheme: model.scheme, raw: '' },
+      greek: '',
+      english: emptyRowDocJSON(),
+      headingLevel: lvl,
+    };
+    spliceRows(r, 0, [newRow]);
+    const selAfter: SelRef = { row: r, segment: 0, layer: activeLayer(), anchor: 0, head: 0 };
+    history.push({
+      edits: [],
+      structural: { index: r, before: [], after: [structSnapshotOfRow(newRow)] },
+      selBefore,
+      selAfter,
+    });
+    markModelDirty();
+    setStatus(`Inserted a ${levelName(profile, lvl)} line — type its text.`);
+    void tick().then(() => {
+      refreshFnDisplay();
+      focusSel(selAfter);
+    });
+  }
+
   /**
    * Row-level PARAGRAPH SPLIT (D8 §2 — the user owns row count): model row r
    * becomes TWO rows at a validated word-start offset. Distribution is the
@@ -2941,6 +3171,65 @@
     markModelDirty();
     refreshDisplayRows(); // chunkStartGrids re-derives from the fresh displayRows
     setStatus(mode === 'add' ? 'Paragraph starts here.' : 'Merged with the paragraph above.');
+  }
+
+  /** Set (or clear) a row's heading level (D8 heading tools). Document-spine
+   * only; `level` is a 1-based rank into the work profile, null clears it.
+   * Pushes its own undo/redo entry (headingLevel before/after) so a mis-mark is
+   * one ⌘Z. Autosave persists it as the chapter-file `headers` frontmatter. */
+  function setRowLevel(r: number, level: number | null) {
+    if (scheme.spineSource !== 'document' || r < 0 || r >= model.rows.length) return;
+    const before = model.rows[r].headingLevel ?? null;
+    if (before === level) return;
+    const sel = focusedSelRef();
+    history.breakCoalescing();
+    model.rows[r].headingLevel = level === null ? undefined : level;
+    history.push({ edits: [], headingLevel: { row: r, before, after: level }, selBefore: sel, selAfter: sel });
+    markModelDirty();
+    refreshDisplayRows();
+    setStatus(level === null ? 'Heading cleared.' : `Marked as ${levelName(profile, level)}.`);
+  }
+
+  /** Re-tier (or clear) a row from the RAIL right-click menu — same gated,
+   * undoable mutator as the text "Mark as"; the outline refreshes through
+   * refreshDisplayRows so the rail updates in place. */
+  export function setRowLevelAt(rowIndex: number, level: number | null): void {
+    setRowLevel(rowIndex, level);
+  }
+
+  /** Append a new heading line at the given nav-role's tier (rail "+ Book" /
+   * "+ Chapter"): inserts an empty marked row at the end of the document and
+   * focuses it so the user types its title. No-op if the profile has no tier
+   * with that role, or the scheme can't carry heading rows. */
+  export function appendHeadingForRole(role: NavRole): void {
+    const idx = profile.levels.findIndex((l) => l.navRole === role);
+    if (idx < 0) {
+      // No tier of this role in the work's profile — tell the user rather than
+      // failing silently (a default document has only heading tiers).
+      setStatus(`This work has no ${role} tier yet — add one in “Manage levels…” first.`);
+      return;
+    }
+    performInsertHeading(model.rows.length, idx + 1);
+  }
+
+  /** Set (or clear) a heading row's rail TITLE OVERRIDE (D8 heading tools) —
+   * called from the rail's inline rename. Document-spine heading rows only; an
+   * empty title clears the override (rail falls back to translation/original).
+   * Its own ⌘Z step (headingTitle before/after); persisted to [HEADING_TITLES]. */
+  export function setHeadingTitle(rowIndex: number, title: string): void {
+    const r = rowIndex;
+    if (scheme.spineSource !== 'document' || r < 0 || r >= model.rows.length) return;
+    if (!model.rows[r].headingLevel) return; // only headings carry a title
+    const next = title.replace(/[\r\n]+/g, ' ').trim();
+    const before = model.rows[r].headingTitle ?? null;
+    const after = next.length > 0 ? next : null;
+    if (before === after) return;
+    history.breakCoalescing();
+    model.rows[r].headingTitle = after === null ? undefined : after;
+    history.push({ edits: [], headingTitle: { row: r, before, after }, selBefore: null, selAfter: null });
+    markModelDirty();
+    refreshDisplayRows();
+    setStatus(after === null ? 'Heading title cleared.' : `Renamed to “${after}”.`);
   }
 
   // ── commands (toolbar + shortcuts) ─────────────────────────────────────
@@ -3635,6 +3924,8 @@
             sentenceText={null}
             {host}
             flash={flashRowIdx === g}
+            headingLevel={d.headingLevel}
+            subtitle={isSubtitleLevel(d.headingLevel)}
             pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
             onPasteConfirm={confirmPaste}
             onPasteCancel={cancelPaste}
@@ -3654,6 +3945,9 @@
             {#each displayRows as d, g (d.key)}{#if d.continuation}<div class="flow-break" aria-hidden="true"></div>{/if}<!-- svelte-ignore a11y_no_static_element_interactions --><div
                 class="weave-pair"
                 class:lit={focusRow === d.rowIndex && focusSeg === d.segment}
+                class:row-heading={!!d.headingLevel && !isSubtitleLevel(d.headingLevel)}
+                class:row-subtitle={isSubtitleLevel(d.headingLevel)}
+                data-heading-level={isSubtitleLevel(d.headingLevel) ? undefined : (d.headingLevel ?? undefined)}
                 data-row={g}
               ><div
                   class="weave-grc flow-grc"
@@ -3669,7 +3963,13 @@
                stacked line per row. -->
           <div class="interp-flow lane" bind:this={gridEl}>
             {#each flowParagraphs as para (para.key)}
-              <section class="flow-para">
+              <section
+                class="flow-para"
+                class:flow-heading={para.heading}
+                class:row-heading={!!para.rows[0]?.d.headingLevel && !isSubtitleLevel(para.rows[0]?.d.headingLevel)}
+                class:row-subtitle={isSubtitleLevel(para.rows[0]?.d.headingLevel)}
+                data-heading-level={isSubtitleLevel(para.rows[0]?.d.headingLevel) ? undefined : (para.rows[0]?.d.headingLevel ?? undefined)}
+              >
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div class="flow-grc-block" lang="grc">
                   {#each para.rows as { d, g } (d.key)}<span
@@ -3702,6 +4002,8 @@
             slices={interpSlices(d)}
             paraText={paragraphUnitView || d.segment !== 0 ? null : paraLayerText(d.rowIndex)}
             sentenceText={paragraphUnitView ? sentenceLayerText(d.rowIndex) : null}
+            headingLevel={d.headingLevel}
+            subtitle={isSubtitleLevel(d.headingLevel)}
             flash={flashRowIdx === g}
             focused={focusRow === d.rowIndex && focusSeg === d.segment}
             chunkStart={chunkStartGrids.has(g)}
@@ -3741,6 +4043,8 @@
           flash={flashRowIdx === g}
           focused={focusRow === d.rowIndex && focusSeg === d.segment}
           chunkStart={chunkStartGrids.has(g)}
+          headingLevel={d.headingLevel}
+          subtitle={isSubtitleLevel(d.headingLevel)}
           onContext={(e) => onGreekContextMenu(e, g)}
         />
       {/each}
@@ -3762,6 +4066,8 @@
           {host}
           flash={flashRowIdx === g}
           chunkStart={chunkStartGrids.has(g)}
+          headingLevel={d.headingLevel}
+          subtitle={isSubtitleLevel(d.headingLevel)}
           pasteConfirm={pendingPaste?.grid === g ? pendingPaste.segments.length : null}
           onPasteConfirm={confirmPaste}
           onPasteCancel={cancelPaste}
@@ -3779,21 +4085,66 @@
   {#if ctxMenu}
     <!-- Items, wording and grouping all come from buildCtxMenu (ctxMenu.ts)
          — the per-view matrix is decided (and tested) there, never here. -->
-    <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px">
+    <div class="ctx-menu" role="menu" style="left: {ctxMenu.x}px; top: {ctxMenu.y}px; max-height: {ctxMenu.maxHeight}px">
       {#each ctxMenu.model.groups as group, gi (gi)}
         {#if gi > 0}
           <div class="ctx-menu-divider" role="separator"></div>
         {/if}
-        {#each group as item (item.id)}
-          <button class="ctx-menu-item" type="button" role="menuitem" onclick={menuActions[item.id]}>
-            <span class="ctx-menu-title">{item.title}</span>
-            {#if item.desc}
-              <span class="ctx-menu-desc">{item.desc}</span>
-            {/if}
-          </button>
+        {#each group as item (item.title)}
+          {#if item.submenu}
+            <button
+              class="ctx-menu-item has-submenu"
+              type="button"
+              role="menuitem"
+              aria-haspopup="menu"
+              onmouseenter={(e) => openMarkSubmenu(e, item.submenu ?? [])}
+              onfocus={(e) => openMarkSubmenu(e, item.submenu ?? [])}
+              onclick={(e) => openMarkSubmenu(e, item.submenu ?? [])}
+            >
+              <span class="ctx-menu-title">{item.title}</span>
+              <span class="ctx-submenu-caret" aria-hidden="true">▸</span>
+            </button>
+          {:else}
+            <button
+              class="ctx-menu-item"
+              type="button"
+              role="menuitem"
+              onmouseenter={() => (openSubmenu = null)}
+              onfocus={() => (openSubmenu = null)}
+              onclick={() => runMenuItem(item)}
+            >
+              <span class="ctx-menu-title">{item.title}</span>
+              {#if item.desc}
+                <span class="ctx-menu-desc">{item.desc}</span>
+              {/if}
+            </button>
+          {/if}
         {/each}
       {/each}
     </div>
+    {#if openSubmenu}
+      <!-- Separate fixed element so the scrollable parent's overflow can't clip
+           it; coordinates are viewport-clamped in openMarkSubmenu. -->
+      <div
+        class="ctx-menu ctx-submenu"
+        role="menu"
+        style="left: {openSubmenu.x}px; top: {openSubmenu.y}px; max-height: {openSubmenu.maxHeight}px"
+      >
+        {#each openSubmenu.items as sub (sub.title)}
+          <button
+            class="ctx-menu-item ctx-menu-choice"
+            class:checked={sub.checked}
+            type="button"
+            role="menuitem"
+            aria-checked={sub.checked ? 'true' : undefined}
+            onclick={() => runMenuItem(sub)}
+          >
+            <span class="ctx-menu-check" aria-hidden="true">{sub.checked ? '✓' : ''}</span>
+            <span class="ctx-menu-title">{sub.title}</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
   {/if}
 
   {#if session.status}

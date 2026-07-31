@@ -324,6 +324,30 @@ describe('model → file → model round trip', () => {
     const h = hydrateFromFile(file, spineOf(model), SCHEME);
     expect(h.footnotes).toEqual([{ id: '1', body: '', anchored: true }]);
   });
+
+  it('serializes + parses heading levels; a CORPUS hydrate ignores them (gate)', () => {
+    const model = makeModel();
+    model.rows[0].headingLevel = 1;
+    model.rows[1].headingLevel = 3; // a deep tier — levels are no longer 1|2
+    const content = serializeModel(model);
+    expect(content).toContain('headers: "1:1,2:3"');
+    const file = parseChapterFile(content, 'levels-rt');
+    expect(file.meta.headers).toEqual([
+      { row: 1, level: 1 },
+      { row: 2, level: 3 },
+    ]);
+    // A stray headers: line in a Bekker (corpus) file must NEVER turn a row into
+    // a heading — hydration only applies headers to document-spine works. The
+    // document-spine round-trip is covered in the document-spine describe below.
+    const h = hydrateFromFile(file, spineOf(model), SCHEME);
+    expect(h.rows[0].headingLevel).toBeUndefined();
+    expect(h.rows[1].headingLevel).toBeUndefined();
+  });
+
+  it('writes no headers key when no row carries a heading level', () => {
+    const content = serializeModel(makeModel());
+    expect(content).not.toContain('headers:');
+  });
 });
 
 describe('loadChapterFile', () => {
@@ -742,6 +766,36 @@ describe('document-spine chapter files (D8 Phase B)', () => {
     expect(h.rows[0].splitOffsets).toEqual([16]);
     expect(h.rows[0].english2).toHaveLength(1);
     expect(textOf(h.rows[0].englishPara!)).toBe('Paragraph one whole');
+  });
+
+  it('round-trips heading levels through a document-spine file (deep tiers)', () => {
+    const model = paragraphModel();
+    model.rows[0].headingLevel = 2;
+    model.rows[1].headingLevel = 1;
+    const content = serializeModel(model);
+    expect(content).toContain('headers: "1:2,2:1"');
+    const h = hydrateFromFile(parseChapterFile(content, 'para-headers'), [], 'paragraph');
+    expect(h.rows[0].headingLevel).toBe(2);
+    expect(h.rows[1].headingLevel).toBe(1);
+  });
+
+  it('round-trips a heading TITLE override through [HEADING_TITLES]', () => {
+    const model = paragraphModel();
+    model.rows[0].headingLevel = 1;
+    model.rows[0].headingTitle = 'Objection 2';
+    // row 1 stays an ordinary heading with no override
+    model.rows[1].headingLevel = 1;
+    const content = serializeModel(model);
+    expect(content).toContain('[HEADING_TITLES]\nObjection 2');
+    const h = hydrateFromFile(parseChapterFile(content, 'para-titles'), [], 'paragraph');
+    expect(h.rows[0].headingTitle).toBe('Objection 2');
+    expect(h.rows[1].headingTitle).toBeUndefined();
+  });
+
+  it('writes no [HEADING_TITLES] when no row carries an override', () => {
+    const model = paragraphModel();
+    model.rows[0].headingLevel = 1;
+    expect(serializeModel(model)).not.toContain('[HEADING_TITLES]');
   });
 
   it('saves paragraph-layer newlines as one physical [ENGLISH.PARA] row and hydrates them back', () => {
