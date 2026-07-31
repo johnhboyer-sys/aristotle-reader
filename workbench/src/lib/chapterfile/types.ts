@@ -48,6 +48,20 @@ export interface ChapterFileMeta {
    */
   columnStarts?: ColumnStart[];
   /**
+   * OPTIONAL explicit per-row addresses (frontmatter `row_refs`), one entry
+   * per row in row order. Written by source imports (TLG/PHI, Perseus),
+   * where the addresses are the SOURCE's own citations and follow no
+   * derivable pattern: "1.1, 1.2, 2.1" restarts, and "17a, 17b" ends in a
+   * letter, so neither the ordinal derivation nor `column_starts`
+   * run-length encoding (which requires a trailing line number) can express
+   * them.
+   *
+   * Absent in every file that doesn't need it — including all older files —
+   * so every consumer must handle absence. Length must equal the row count;
+   * that is checked at parse, alongside the other cross-section checks.
+   */
+  rowRefs?: string[];
+  /**
    * OPTIONAL paragraph-split points (frontmatter `line_splits`), design doc
    * D6. Absent in unsplit files — every consumer must handle absence. The
    * parser checks STRUCTURE only (pair shape, scheme-parseable refs, positive

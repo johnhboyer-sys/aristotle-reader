@@ -8,11 +8,13 @@
 //!
 //! Installed layout, under the app-data directory:
 //!
-//!     packs/grc/pack.json          the manifest (format, entry count, …)
-//!     packs/grc/lsj/<letter>.json  Liddell & Scott, sharded by initial letter
-//!     packs/grc/short_defs.json    one-line senses (Greek only)
-//!     packs/grc/morphology/greek-analyses.txt + .idt
-//!     packs/lat/…                  the same shape, 'ls' shards
+//! ```text
+//! packs/grc/pack.json          the manifest (format, entry count, …)
+//! packs/grc/lsj/<letter>.json  Liddell & Scott, sharded by initial letter
+//! packs/grc/short_defs.json    one-line senses (Greek only)
+//! packs/grc/morphology/greek-analyses.txt + .idt
+//! packs/lat/…                  the same shape, 'ls' shards
+//! ```
 //!
 //! Why unzip here rather than in the frontend: a pack is 127-225 MB unpacked,
 //! and this streams it entry by entry to disk instead of materializing it in

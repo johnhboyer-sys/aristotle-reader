@@ -206,6 +206,39 @@ function parseColumnStarts(
   return out;
 }
 
+/**
+ * Structural validation of the frontmatter `row_refs` field: a comma-joined
+ * list of one address per row, each parseable under the file's scheme. STRICT
+ * like column_starts rather than lenient like paragraph_starts, because these
+ * are citations, not display metadata — a garbled ref would silently mis-cite
+ * the text. The count-vs-row-count check needs the row count and so lives with
+ * the other cross-section checks below.
+ */
+function parseRowRefs(
+  val: unknown,
+  scheme: ReturnType<typeof getScheme>,
+  lineNo: number,
+  source: string,
+): string[] {
+  const at = lineNo > 0 ? `line ${lineNo}: ` : '';
+  if (typeof val !== 'string' || val.length === 0) {
+    throw new ChapterFileError(
+      `${source}: ${at}frontmatter field "row_refs", when present, must be a non-empty comma-separated list of addresses`,
+    );
+  }
+  const refs = val.split(',').map((r) => r.trim());
+  for (let i = 0; i < refs.length; i++) {
+    try {
+      scheme.parseAddress(refs[i]);
+    } catch (err) {
+      throw new ChapterFileError(
+        `${source}: ${at}row_refs entry ${i + 1} (${JSON.stringify(refs[i])}) does not parse under scheme "${scheme.id}": ${(err as Error).message}`,
+      );
+    }
+  }
+  return refs;
+}
+
 const LINE_SPLITS_PAIR_RE = /^([^@]+)@(\d+)$/;
 
 /**
@@ -361,7 +394,7 @@ export function isValidSplitOffset(greek: string, offset: number): boolean {
 function parseFrontmatter(
   normalized: string,
   source: string,
-): { meta: ChapterFileMeta; rest: string; columnStartsLine: number; paragraphStartsSanitized: boolean } {
+): { meta: ChapterFileMeta; rest: string; columnStartsLine: number; rowRefsLine: number; paragraphStartsSanitized: boolean } {
   const m = FRONTMATTER_RE.exec(normalized);
   if (!m) {
     throw new ChapterFileError(`${source}: missing YAML frontmatter (expected a leading "---" block)`);
@@ -434,6 +467,14 @@ function parseFrontmatter(
     columnStarts = parseColumnStarts(v['column_starts'], spanStart, scheme, columnStartsLine, source);
   }
 
+  // Optional row_refs (only source imports carry it).
+  let rowRefs: string[] | undefined;
+  let rowRefsLine = 0;
+  if ('row_refs' in v) {
+    rowRefsLine = frontmatterKeyLine(m[1], 'row_refs');
+    rowRefs = parseRowRefs(v['row_refs'], scheme, rowRefsLine, source);
+  }
+
   // Optional line_splits (unsplit files lack it). Structure only — see the
   // layering note in the format doc above.
   let lineSplits: LineSplit[] | undefined;
@@ -464,11 +505,12 @@ function parseFrontmatter(
     spanStart,
     spanEnd,
     ...(columnStarts ? { columnStarts } : {}),
+    ...(rowRefs ? { rowRefs } : {}),
     ...(lineSplits ? { lineSplits } : {}),
     ...(paragraphStarts ? { paragraphStarts } : {}),
     ...(headers ? { headers } : {}),
   };
-  return { meta, rest, columnStartsLine, paragraphStartsSanitized };
+  return { meta, rest, columnStartsLine, rowRefsLine, paragraphStartsSanitized };
 }
 
 // ── body sections ────────────────────────────────────────────────────────────
@@ -581,7 +623,7 @@ function parseFootnotes(lines: string[], sectionStartLine: number, source: strin
 
 export function parseChapterFile(raw: string, source = '<chapterfile>'): ChapterFile {
   const normalized = normalizeLineEndings(raw);
-  const { meta, rest, columnStartsLine, paragraphStartsSanitized } = parseFrontmatter(normalized, source);
+  const { meta, rest, columnStartsLine, rowRefsLine, paragraphStartsSanitized } = parseFrontmatter(normalized, source);
   const sections = splitSections(rest, source);
 
   const greekLines = trimTrailingBlank(sections.get('[GREEK]')!.lines);
@@ -608,6 +650,13 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
   if (headingTitleLines !== undefined && greekLines.length !== headingTitleLines.length) {
     throw new ChapterFileError(
       `${source}: [GREEK] has ${greekLines.length} line(s) but [HEADING_TITLES] has ${headingTitleLines.length} line(s) — they must match 1:1`
+    );
+  }
+
+  if (meta.rowRefs && meta.rowRefs.length !== greekLines.length) {
+    const at = rowRefsLine > 0 ? `line ${rowRefsLine}: ` : '';
+    throw new ChapterFileError(
+      `${source}: ${at}row_refs has ${meta.rowRefs.length} address(es) but the chapter has ${greekLines.length} row(s) — they must match 1:1`,
     );
   }
 
@@ -709,6 +758,14 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
       throw new ChapterFileError('serializeChapterFile: column_starts, when present, must contain at least one <columnRef>@<rowIndex> pair');
     }
     lines.push(`column_starts: "${meta.columnStarts.map((s) => `${s.ref}@${s.rowIndex}`).join(',')}"`);
+  }
+  if (meta.rowRefs !== undefined) {
+    if (meta.rowRefs.length === 0) {
+      // Same anti-lossy policy as column_starts: an empty list would
+      // round-trip to "absent" — refuse loudly instead.
+      throw new ChapterFileError('serializeChapterFile: row_refs, when present, must contain at least one address');
+    }
+    lines.push(`row_refs: "${meta.rowRefs.join(',')}"`);
   }
   if (meta.lineSplits !== undefined) {
     if (meta.lineSplits.length === 0) {

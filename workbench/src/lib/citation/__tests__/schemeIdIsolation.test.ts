@@ -37,6 +37,7 @@ const SCHEME_IDS: SchemeId[] = [
   'busse-paragraph',
   'paragraph',
   'plain-line',
+  'source-ref',
 ];
 
 function listTsFiles(fsMod: FS, path: PathMod, dir: string): string[] {
