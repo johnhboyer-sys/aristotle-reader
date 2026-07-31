@@ -6,7 +6,13 @@
   import { isTauri } from '../lib/runtime';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
   import { parseChapterFile } from '../lib/chapterfile';
-  import { chapterToPandocMarkdown, runPandocTauri, resolvePandocProgramByRun, PANDOC_UNAVAILABLE_MESSAGE } from '../lib/export';
+  import { chapterToPandocMarkdown } from '../lib/export';
+  import {
+    defaultSavePath,
+    exportSettings,
+    resolveExportPandoc,
+    resolveReferenceDoc,
+  } from '../lib/export/tauriExport';
   import type { WorkManifest } from '../lib/works/manifest';
   import CompileDialog from './CompileDialog.svelte';
 
@@ -38,30 +44,25 @@
       }
       const parsed = parseChapterFile(raw);
 
-      const shell = await import('@tauri-apps/plugin-shell');
-      // GUI-PATH fix (d4 rider): a Finder-launched app has no Homebrew dirs on
-      // PATH, so bare 'pandoc' won't resolve. Try each scope name by actually
-      // running `--version` and take the first that exits cleanly (absolute
-      // Homebrew/usr-local scopes first, bare 'pandoc' last for terminal
-      // launches). Running it IS the availability probe — no separate check.
-      const pandocProgram = await resolvePandocProgramByRun(async (program) => {
-        const r = await shell.Command.create(program, ['--version']).execute().catch(() => null);
-        return !!r && r.code === 0;
-      });
-      if (!pandocProgram) {
-        note(PANDOC_UNAVAILABLE_MESSAGE);
+      // Export defaults come from Settings › Export; each fallback below is the
+      // literal this component used before those settings existed.
+      const prefs = await exportSettings();
+
+      const pandoc = await resolveExportPandoc(prefs.pandocPath);
+      if ('message' in pandoc) {
+        note(pandoc.message);
         return;
       }
 
       const dialog = await import('@tauri-apps/plugin-dialog');
       const label = work.books[book - 1]?.label ?? String(book);
       const docxPath = await dialog.save({
-        defaultPath: `${work.title} ${label}.${chapter}.docx`,
+        defaultPath: await defaultSavePath(`${work.title} ${label}.${chapter}.docx`, prefs.outputDir),
         filters: [{ name: 'Word document', extensions: ['docx'] }],
       });
       if (!docxPath) return; // user cancelled — not a failure
 
-      const markdown = chapterToPandocMarkdown(parsed, work, { stampMode: 'every-5' });
+      const markdown = chapterToPandocMarkdown(parsed, work, { stampMode: prefs.stampMode ?? 'every-5' });
       const pathApi = await import('@tauri-apps/api/path');
       const fs = await import('@tauri-apps/plugin-fs');
       const appData = await pathApi.appDataDir();
@@ -69,7 +70,10 @@
       const mdPath = await pathApi.join(appData, 'export-intermediate.md');
       await fs.writeTextFile(mdPath, markdown);
 
-      const run = await runPandocTauri({ markdownPath: mdPath, docxPath }, shell, pandocProgram);
+      // No bundled fallback here: single-chapter export has never applied the
+      // house reference doc, and an unset setting must not start doing so.
+      const referenceDocPath = await resolveReferenceDoc(prefs.referenceDocPath, false);
+      const run = await pandoc.run({ markdownPath: mdPath, docxPath, referenceDocPath });
       if (run.code !== 0) {
         console.error('[export] pandoc failed:', run.stderr);
         note("The Word document couldn't be created.");

@@ -4,11 +4,13 @@
 // the user's own TLG texts via Diogenes — that part is never bundled (TLG is
 // the user's, not ours to ship). What onboarding CANNOT produce on its own is
 // the precomputed per-work chapters.json (chapter-anchor list) and
-// analyses.json (morphology for the click-to-parse lexicon), plus the shared
-// LSJ dictionary shards — those come from this repo's own pipeline output
-// (build/dist/<PipelineWork>/) and are public-domain citation/lexicon data,
-// safe to ship as app resources (NOT TLG text; TLG's Greek is not among
+// analyses.json (that work's own morphology) — those come from this repo's own
+// pipeline output (build/dist/<PipelineWork>/) and are public-domain citation
+// data, safe to ship as app resources (NOT TLG text; TLG's Greek is not among
 // these files — see the module docstring above).
+//
+// DICTIONARIES ARE NOT STAGED HERE any more — they ship as separately
+// installed lexicon packs. See the note further down.
 //
 // This script copies that data into src-tauri/resources/corpus/, which
 // tauri.conf.json's bundle.resources wires into every packaged build.
@@ -80,20 +82,21 @@ for (const { workId, pipelineDir } of WORKS) {
   console.log(`${workId}: chapters.json + analyses.json staged`);
 }
 
-// ── shared LSJ dictionary shards (one copy, used by every work) ────────────
-const lsjSrcDir = path.join(distRoot, 'lsj');
-if (existsSync(lsjSrcDir)) {
-  const lsjOutDir = path.join(outRoot, 'lsj');
-  mkdirSync(lsjOutDir, { recursive: true });
-  const shards = readdirSync(lsjSrcDir).filter((f) => f.endsWith('.json'));
-  for (const shard of shards) {
-    copyFileSync(path.join(lsjSrcDir, shard), path.join(lsjOutDir, shard));
-  }
-  console.log(`lsj: ${shards.length} shards staged`);
-} else {
-  console.error(`lsj: shard directory not found at ${lsjSrcDir}`);
-  failed = true;
-}
+// ── dictionaries are NOT bundled ───────────────────────────────────────────
+//
+// They used to be: a 48 MB LSJ shard set went into every build. Two problems
+// with that. It was incomplete — 14,049 of Liddell & Scott's 116,728 entries,
+// only the vocabulary this repo's own corpus uses — and it was dead weight for
+// anyone working in Latin, or in Greek texts outside that corpus.
+//
+// Dictionaries now ship as LEXICON PACKS the user installs from Settings ›
+// Lexicon: one .zip per language holding the COMPLETE dictionary and the
+// COMPLETE Morpheus parsing table, so lookup works for any author. Build them
+// with scripts/build_lexicon_pack.py; they are distributed separately, never
+// bundled. See src-tauri/src/packs.rs for the installed layout.
+//
+// The per-work analyses.json above stays: it is that work's own corpus data,
+// arriving with the work, not a dictionary.
 
 if (failed) {
   console.error('Corpus resource staging FAILED — see errors above.');

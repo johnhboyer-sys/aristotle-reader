@@ -30,6 +30,33 @@ import { isValidSplitOffset, rowAddress } from '../chapterfile';
 
 export type StampMode = 'every-line' | 'every-5' | 'columns';
 
+/**
+ * How the two languages sit next to each other in a bilingual export.
+ *   'block'       — one language's whole block, then the other's.
+ *   'alternating' — paragraph by paragraph, lead side then its counterpart.
+ *   'table'       — a two-column Word table, one language per column.
+ *
+ * Left UNSET by default on purpose: each rendering path keeps its own
+ * historical shape (the corpus/Bekker path was block, the document-spine path
+ * was alternating), so an export made before this setting existed does not
+ * change underfoot. Once the user picks a layout, every path honours it.
+ */
+export type BilingualLayout = 'block' | 'alternating' | 'table';
+
+/** Which language leads in a bilingual export. Default 'original-first'. */
+export type BilingualOrder = 'original-first' | 'translation-first';
+
+/**
+ * One source↔translation pairing unit — a paragraph group of the corpus path,
+ * or a unit/paragraph group of a document spine. Either side may be empty (an
+ * untranslated group has no translation paragraphs); the assembler below is
+ * what decides how an empty side reads in each layout.
+ */
+export interface BilingualPair {
+  source: string[];
+  translation: string[];
+}
+
 export interface PandocMarkdownOptions {
   /** Bekker-ref stamping density. Default 'every-5'. */
   stampMode?: StampMode;
@@ -425,6 +452,151 @@ export function renderSegmentsGrouped(
   return { paragraphs, footnoteIdsUsed };
 }
 
+/**
+ * Render BOTH sides of `segments` in one walk, so every paragraph group yields
+ * a matched (source, translation) pair. Used by the 'alternating' and 'table'
+ * layouts, which need structural parity between the two sides to pair or to
+ * fill a table row.
+ *
+ * Why not reuse two renderSegmentsGrouped passes and zip them: the two sides
+ * do NOT produce the same number of paragraphs. The English side inserts an
+ * ellipsis paragraph for a gap between translated content and drops blank
+ * segments entirely, while a Greek slice is never blank — so paragraph index N
+ * of one side is not in general the counterpart of index N of the other. This
+ * function flushes both sides at the SAME boundaries (`seg.segment > 0`, the
+ * split rule), which is exactly the bilingual parity the block layout already
+ * relies on, and leaves the translation side EMPTY for an untranslated group
+ * rather than resynchronizing with an ellipsis — the assembler renders that
+ * emptiness per layout (an `…` paragraph when alternating, a blank cell in a
+ * table), so a gap is visible either way.
+ *
+ * The 'block' layout deliberately does NOT come through here: it stays on the
+ * two-independent-passes path it has always used, so the default export is
+ * byte-for-byte what it was before layouts existed.
+ */
+export function renderSegmentsPaired(
+  segments: ChapterSegment[],
+  useStamps: boolean,
+  stampMode: StampMode,
+): { pairs: BilingualPair[]; footnoteIdsUsed: string[] } {
+  const pairs: BilingualPair[] = [];
+  const footnoteIdsUsed: string[] = [];
+  let source: string[] = [];
+  let translation: string[] = [];
+
+  const flush = () => {
+    if (source.length > 0 || translation.length > 0) {
+      pairs.push({
+        source: source.length > 0 ? [source.join(' ')] : [],
+        translation: translation.length > 0 ? [translation.join(' ')] : [],
+      });
+      source = [];
+      translation = [];
+    }
+  };
+
+  /** Render one side's raw markup into a stamped piece, or null when blank. */
+  const piece = (raw: string, seg: ChapterSegment, collectFootnotes: boolean): string | null => {
+    if (raw.trim().length === 0) return null;
+    const { markdown, footnoteIdsUsed: used } = markupToPandoc(raw);
+    if (markdown.length === 0) return null;
+    if (collectFootnotes) footnoteIdsUsed.push(...used);
+    if (useStamps && seg.isStampSegment && seg.address) {
+      const addr = parseBekkerLineAddr(seg.address);
+      const stamp = stampFor(addr, seg.rowIndex, stampMode, seg.colStart);
+      if (stamp) return `${stamp} ${markdown}`;
+    }
+    return markdown;
+  };
+
+  for (const seg of segments) {
+    if (seg.segment > 0) flush();
+    // Footnotes anchor to English prose only — the Greek side has no {^id:}
+    // syntax, so only the translation pass collects ids (same rule as the
+    // block layout's two passes).
+    const src = piece(seg.greekSlice, seg, false);
+    const tr = piece(seg.englishMarkup, seg, true);
+    if (src !== null) source.push(src);
+    if (tr !== null) translation.push(tr);
+  }
+  flush();
+
+  return { pairs, footnoteIdsUsed };
+}
+
+// ── bilingual assembly (layout × order) ─────────────────────────────────────
+
+/** The hard line break the plain-line document renderer emits inside a block. */
+const HARD_LINE_BREAK = '\\' + '\n';
+
+/**
+ * A pipe-table cell holds exactly one physical line, so a block carrying hard
+ * line breaks is split into one piece per line — each becomes its own table
+ * row, which is what side-by-side verse wants anyway. Empty pieces are dropped
+ * so a trailing break doesn't manufacture a blank row.
+ */
+function cellPieces(paragraphs: string[]): string[] {
+  return paragraphs
+    .flatMap((p) => p.split(HARD_LINE_BREAK))
+    // Trimmed because a paragraph group can end in a space (a split segment
+    // keeps the source's trailing space), and a stray space before the cell
+    // delimiter is just noise in the table source.
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * `|` is a cell delimiter in a pipe table and is NOT among the characters
+ * escapePandocText escapes. No construct this module emits introduces a `|`,
+ * so every pipe present is literal text and all of them escape.
+ */
+function escapeTableCell(text: string): string {
+  return text.replaceAll('|', '\\|');
+}
+
+/**
+ * Turn pairs into the finished Pandoc sections for the chosen layout and order.
+ * Returns section strings the caller joins with '\n\n' (the table layout is one
+ * section — a single table — per call).
+ */
+export function assembleBilingual(
+  pairs: BilingualPair[],
+  layout: BilingualLayout,
+  order: BilingualOrder,
+): string[] {
+  const lead = (p: BilingualPair) => (order === 'translation-first' ? p.translation : p.source);
+  const follow = (p: BilingualPair) => (order === 'translation-first' ? p.source : p.translation);
+
+  if (layout === 'block') {
+    return [...pairs.flatMap(lead), ...pairs.flatMap(follow)];
+  }
+
+  if (layout === 'alternating') {
+    return pairs.flatMap((p) => {
+      const l = lead(p);
+      const f = follow(p);
+      // A group present on one side only still shows the gap, same intent as
+      // renderSegmentsGrouped's ellipsis paragraph.
+      return [...(l.length > 0 ? l : [ELLIPSIS_PARAGRAPH]), ...(f.length > 0 ? f : [ELLIPSIS_PARAGRAPH])];
+    });
+  }
+
+  // table: one headerless two-column pipe table, one row per paired piece.
+  // Uneven sides pad with a blank cell rather than dropping content.
+  const rows: string[] = [];
+  for (const p of pairs) {
+    const l = cellPieces(lead(p));
+    const f = cellPieces(follow(p));
+    for (let i = 0; i < Math.max(l.length, f.length); i++) {
+      rows.push(`| ${escapeTableCell(l[i] ?? '')} | ${escapeTableCell(f[i] ?? '')} |`);
+    }
+  }
+  if (rows.length === 0) return [];
+  // An empty header row is Pandoc's headerless-table form: the docx writer
+  // emits a plain two-column table with no header styling.
+  return [['|  |  |', '|:---|:---|', ...rows].join('\n')];
+}
+
 function rowEnglishSegments(chapter: ChapterFile, rowIndex: number): string[] {
   return parseRowSegments(chapter.englishLines[rowIndex]).map((doc) => serializeRow(docFromJSON(doc)));
 }
@@ -580,8 +752,8 @@ function renderSourceLine(chapter: ChapterFile, rowIndex: number): string {
   return markupToPandoc(raw).markdown;
 }
 
-function renderDocumentParagraphRowsBilingual(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
-  const paragraphs: string[] = [];
+function renderDocumentParagraphRowsBilingual(chapter: ChapterFile, skipRow?: number): DocumentBilingualPairs {
+  const pairs: BilingualPair[] = [];
   const footnoteIdsUsed: string[] = [];
 
   for (let i = 0; i < chapter.englishLines.length; i++) {
@@ -590,20 +762,21 @@ function renderDocumentParagraphRowsBilingual(chapter: ChapterFile, skipRow?: nu
     const english = renderDocumentRow(chapter, i);
     if (source.length === 0 && english.markdown === null) continue; // fully empty unit
 
-    if (source.length > 0) paragraphs.push(source);
-    if (english.markdown !== null) {
-      paragraphs.push(english.markdown);
-      footnoteIdsUsed.push(...english.footnoteIdsUsed);
-    } else {
-      paragraphs.push(ELLIPSIS_PARAGRAPH);
-    }
+    if (english.markdown !== null) footnoteIdsUsed.push(...english.footnoteIdsUsed);
+    pairs.push({
+      source: source.length > 0 ? [source] : [],
+      // An untranslated unit's ellipsis is left to the assembler (it renders
+      // the empty side per layout), so a table gets a blank cell rather than
+      // a column of literal "…".
+      translation: english.markdown !== null ? [english.markdown] : [],
+    });
   }
 
-  return { paragraphs, footnoteIdsUsed };
+  return { pairs, footnoteIdsUsed };
 }
 
-function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
-  const paragraphs: string[] = [];
+function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: number): DocumentBilingualPairs {
+  const pairs: BilingualPair[] = [];
   const footnoteIdsUsed: string[] = [];
   const starts = new Set(chapter.meta.paragraphStarts ?? []);
   const hardLineBreak = '\\' + '\n';
@@ -653,25 +826,45 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: nu
     // A group always yields ≥1 English block (every row either adds a line or
     // ends as a pending gap → one `…`), so no empty-group special case.
 
-    if (source.length > 0) paragraphs.push(source);
-    paragraphs.push(...englishBlocks);
+    // A group translated nowhere reduces to the assembler's empty side (it
+    // emits the ellipsis itself), so the two document renderers agree on what
+    // "no translation here" looks like.
+    const untranslated = englishBlocks.length === 1 && englishBlocks[0] === ELLIPSIS_PARAGRAPH;
+    pairs.push({
+      source: source.length > 0 ? [source] : [],
+      translation: untranslated ? [] : englishBlocks,
+    });
   }
 
-  return { paragraphs, footnoteIdsUsed };
+  return { pairs, footnoteIdsUsed };
 }
 
-export function renderDocumentSpineBilingual(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
+/** Paired document-spine output — see BilingualPair. */
+export interface DocumentBilingualPairs {
+  pairs: BilingualPair[];
+  footnoteIdsUsed: string[];
+}
+
+export function renderDocumentSpineBilingual(
+  chapter: ChapterFile,
+  skipRow?: number,
+): DocumentBilingualPairs {
   const scheme = getScheme(chapter.meta.citationScheme);
   switch (scheme.gutter.rowUnit) {
     case 'paragraph':
       return renderDocumentParagraphRowsBilingual(chapter, skipRow);
     case 'plain-line':
       return renderDocumentPlainLineRowsBilingual(chapter, skipRow);
-    default:
+    default: {
       // Unreachable for the shipped document-spine schemes (paragraph /
       // plain-line are the only two); degrade to the English-only rendering
       // rather than throw, mirroring renderDocumentSpineEnglish's default.
-      return renderDocumentSpineEnglish(chapter, skipRow);
+      const english = renderDocumentSpineEnglish(chapter, skipRow);
+      return {
+        pairs: english.paragraphs.map((p) => ({ source: [], translation: [p] })),
+        footnoteIdsUsed: english.footnoteIdsUsed,
+      };
+    }
   }
 }
 
@@ -837,8 +1030,14 @@ export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, op
 /**
  * Whole document for a document-spine work. `mode` mirrors compile.ts's
  * CompileMode (single-chapter export always passes 'english'; the whole-work
- * compile dialog passes its selected mode): 'bilingual' interleaves source
- * and English per unit — see renderDocumentSpineBilingual.
+ * compile dialog passes its selected mode): 'bilingual' pairs source and
+ * English per unit — see renderDocumentSpineBilingual — and lays those pairs
+ * out per `layout`/`order`.
+ *
+ * `layout` unset means this path's historical shape, alternating (source unit,
+ * then its English) — NOT the corpus path's historical 'block'. The two paths
+ * differ here on purpose: neither export changes shape until the user picks a
+ * layout explicitly. See BilingualLayout.
  */
 /**
  * A single document-spine chapter's rendered body paragraphs + the footnote
@@ -852,12 +1051,19 @@ export function documentChapterSections(
   chapter: ChapterFile,
   mode: 'english' | 'bilingual' = 'english',
   skipRow?: number,
+  layout?: BilingualLayout,
+  order: BilingualOrder = 'original-first',
 ): { paragraphs: string[]; footnoteIdsUsed: string[] } {
-  const { paragraphs, footnoteIdsUsed } =
-    mode === 'bilingual'
-      ? renderDocumentSpineBilingual(chapter, skipRow)
-      : renderDocumentSpineEnglish(chapter, skipRow);
-  return { paragraphs, footnoteIdsUsed };
+  if (mode !== 'bilingual') return renderDocumentSpineEnglish(chapter, skipRow);
+  // The bilingual renderer returns PAIRS; how they sit on the page is the
+  // assembler's call, so a document work honours the same layout/order
+  // settings as a corpus work. An unset layout keeps this path's historical
+  // shape, alternating — see BilingualLayout.
+  const paired = renderDocumentSpineBilingual(chapter, skipRow);
+  return {
+    paragraphs: assembleBilingual(paired.pairs, layout ?? 'alternating', order),
+    footnoteIdsUsed: paired.footnoteIdsUsed,
+  };
 }
 
 /**
@@ -901,8 +1107,16 @@ export function documentToPandocMarkdown(
   chapter: ChapterFile,
   work: WorkMeta,
   mode: 'english' | 'bilingual' = 'english',
+  layout?: BilingualLayout,
+  order: BilingualOrder = 'original-first',
 ): string {
-  const { paragraphs, footnoteIdsUsed } = documentChapterSections(chapter, mode);
+  const { paragraphs, footnoteIdsUsed } = documentChapterSections(
+    chapter,
+    mode,
+    undefined,
+    layout,
+    order,
+  );
   const footnoteBlocks = buildFootnoteBlocks(chapter, footnoteIdsUsed);
   const sections = [`# ${work.title}`, ...(paragraphs.length > 0 ? paragraphs : [''])];
   if (footnoteBlocks.length > 0) sections.push(footnoteBlocks.join('\n\n'));

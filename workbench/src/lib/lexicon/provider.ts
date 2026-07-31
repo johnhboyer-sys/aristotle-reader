@@ -1,25 +1,37 @@
 /**
  * LexiconProvider — language-abstracted click-to-parse lookup for the bottom
- * drawer. `greekProvider(workId)` is the Phase-1/2 implementation (Greek);
- * a Latin provider can implement the same interface later (Phase 3) without
- * touching the drawer component.
+ * drawer. `greekProvider(workId)` is the Greek implementation and
+ * `latinProvider()` the Latin one; the drawer picks between them by the work's
+ * language and knows nothing else about either.
  *
  * Data shape and locations mirror the read-only reader app's data layer
  * (app/src/lib/data.ts: fetchAnalyses / lsjShard / fetchLsjShard /
  * lookupWord) and the Workbench's corpusStore pattern:
  *   Tauri:    $APPDATA/corpus/<workId>/analyses.json
- *             $APPDATA/corpus/lsj/<letter>.json
+ *             $APPDATA/corpus/lsj/<letter>.json   (Greek — LSJ)
+ *             $APPDATA/corpus/ls/<letter>.json    (Latin — Lewis & Short)
  *   Browser:  /corpus/<workId>/analyses.json      (vite dev middleware)
- *             /corpus/lsj/<letter>.json
+ *             /corpus/lsj/<letter>.json, /corpus/ls/<letter>.json
  *
- * A missing file (corpus not onboarded, word not analyzed, LSJ shard absent)
- * is a NORMAL state — every lookup resolves to an empty-but-valid result,
- * never throws. The drawer shows "No entry found" rather than an error.
+ * The two languages differ in where MORPHOLOGY comes from, and deliberately so:
+ * Greek reads a precomputed per-work analyses.json that ships with the app,
+ * which is why Greek lookup only works for a known work; Latin reads the user's
+ * own Diogenes morphology at lookup time (see latinAnalyses.ts), so a Latin
+ * text the app has never seen still parses. The DICTIONARY half is the same
+ * shape for both: shared per-letter shards under corpus/.
+ *
+ * A missing file (corpus not onboarded, word not analyzed, shard absent) is a
+ * NORMAL state — every lookup resolves to an empty-but-valid result, never
+ * throws. The drawer shows "No entry found" rather than an error.
  */
 
 import { isTauri } from '../runtime';
 import { greekToBeta } from './greekToBeta';
 import { betaToGreek } from '../betacode';
+import { isCapitalizedSurface, latinLookupVariants, toLatinKey } from './latinKey';
+import { lookupAnalyses } from './morphology';
+import { packFor } from './packs';
+import type { LexiconLanguage, LexiconPack } from './packs';
 
 export interface LexiconAnalysis {
   form: string; // the clicked surface form (Unicode Greek), echoed for display
@@ -125,24 +137,63 @@ export function lsjShardLetter(key: string): string {
   return '_';
 }
 
-async function loadLsjShardUncached(letter: string): Promise<Record<string, RawLsjEntry>> {
-  const text = await readCorpusFile(`lsj/${letter}.json`);
+/** Read one dictionary shard out of an installed pack (an absolute path). */
+async function readPackShard(pack: LexiconPack, letter: string): Promise<string | null> {
+  try {
+    const fs = await import('@tauri-apps/plugin-fs');
+    const path = `${pack.path}/${pack.shardDir}/${letter}.json`;
+    if (!(await fs.exists(path))) return null;
+    return await fs.readTextFile(path);
+  } catch (err) {
+    console.warn(`lexicon: could not read shard ${letter} from the ${pack.language} pack`, err);
+    return null;
+  }
+}
+
+async function loadDictShardUncached(
+  language: LexiconLanguage,
+  letter: string,
+): Promise<Record<string, RawLsjEntry>> {
+  const pack = await packFor(language);
+  // The pack is the real source. The corpus/ path below is the dev harness's
+  // served shards (and any pre-pack install's leftovers) — a fallback, not a
+  // parallel feature: a packaged build ships no shards there at all.
+  const text = pack
+    ? await readPackShard(pack, letter)
+    : await readCorpusFile(`${language === 'grc' ? 'lsj' : 'ls'}/${letter}.json`);
   if (text === null) return {};
   try {
     return JSON.parse(text) as Record<string, RawLsjEntry>;
   } catch (err) {
-    console.warn(`lexicon: lsj/${letter}.json is present but unparsable`, err);
+    console.warn(`lexicon: the ${language} '${letter}' shard is present but unparsable`, err);
     return {};
   }
 }
 
-function loadLsjShard(letter: string): Promise<Record<string, RawLsjEntry>> {
-  let p = lsjShardCache.get(letter);
+/**
+ * One shard directory per dictionary — 'lsj' for Greek (Liddell & Scott),
+ * 'ls' for Latin (Lewis & Short). They are kept apart because the two key
+ * spaces can collide (Beta Code vs Latin with quantity marks); this mirrors
+ * the pipeline's own SHARD_DIR convention.
+ */
+function loadDictShard(
+  language: LexiconLanguage,
+  letter: string,
+): Promise<Record<string, RawLsjEntry>> {
+  const cacheKey = `${language}:${letter}`;
+  let p = lsjShardCache.get(cacheKey);
   if (!p) {
-    p = loadLsjShardUncached(letter);
-    lsjShardCache.set(letter, p);
+    p = loadDictShardUncached(language, letter);
+    lsjShardCache.set(cacheKey, p);
   }
   return p;
+}
+
+/** Drop cached dictionary/morphology reads — call after a pack changes. */
+export function invalidateLexiconCaches(): void {
+  lsjShardCache.clear();
+  lsBaseIndexCache.clear();
+  analysesCache.clear();
 }
 
 // ── key-variant fallback chain ──────────────────────────────────────────
@@ -211,42 +262,229 @@ function keyVariants(beta: string): string[] {
 
 // ── the Greek provider ──────────────────────────────────────────────────
 
+/**
+ * Greek lookup. `workId` selects the work's own precomputed analyses table
+ * when there is one — that ships with an onboarded corpus work and is the
+ * cheapest path — but it is not required: with the Greek pack installed, a
+ * word from ANY text resolves against the complete Morpheus table, which is
+ * what lets a document pasted in from Scaife parse like a corpus work.
+ *
+ * Order matters and is deliberate: the per-work table first (already loaded,
+ * carries the pipeline's own LSJ key mapping), the pack second. They are the
+ * same underlying Morpheus data, so this is a cost ordering, not a
+ * correctness one.
+ */
 export function greekProvider(workId: string): LexiconProvider {
   return {
     async lookup(word: string): Promise<LexiconResult> {
       const trimmed = word.trim();
       if (!trimmed) return EMPTY_RESULT;
 
-      const table = await loadAnalyses(workId);
-      if (!table) return EMPTY_RESULT;
-
       const beta = greekToBeta(trimmed);
-      let raw: RawAnalysis[] | undefined;
-      for (const variant of keyVariants(beta)) {
-        raw = table[variant];
-        if (raw && raw.length > 0) break;
-      }
-      if (!raw || raw.length === 0) return EMPTY_RESULT;
+      const variants = keyVariants(beta);
 
-      const lsjEntries: LsjEntryView[] = [];
-      const seenLsj = new Set<string>();
-      for (const a of raw) {
-        for (const lsjKey of a.lsj) {
-          if (seenLsj.has(lsjKey)) continue;
-          seenLsj.add(lsjKey);
-          const shard = await loadLsjShard(lsjShardLetter(lsjKey));
-          const entry = shard[lsjKey];
-          if (entry) lsjEntries.push({ key: entry.key, head: entry.head, html: entry.html });
+      // 1. The work's own analyses, when this is an onboarded corpus work.
+      const table = await loadAnalyses(workId);
+      if (table) {
+        for (const variant of variants) {
+          const raw = table[variant];
+          if (raw && raw.length > 0) return greekResultFromWorkTable(trimmed, raw);
         }
       }
+
+      // 2. The pack's complete table — any author, no corpus needed. Its
+      //    analyses carry no LSJ key, so entries are found by lemma the same
+      //    way the Latin side does.
+      const packAnalyses = await lookupAnalyses('grc', variants);
+      if (packAnalyses.length === 0) return EMPTY_RESULT;
+
+      const lsjEntries = await dictEntriesForLemmas(
+        'grc',
+        packAnalyses.map((a) => a.lemma),
+      );
+      return {
+        analyses: packAnalyses.map((a) => ({
+          form: trimmed,
+          lemma: a.lemma,
+          lemmaDisplay: betaToGreek(dictBaseKey(a.lemma)),
+          parse: a.parse,
+          gloss: a.gloss,
+          lsjKeys: [],
+        })),
+        lsjEntries,
+      };
+    },
+  };
+}
+
+/** Build a result from a work's own analyses table, which carries LSJ keys. */
+async function greekResultFromWorkTable(
+  surface: string,
+  raw: RawAnalysis[],
+): Promise<LexiconResult> {
+  const lsjEntries: LsjEntryView[] = [];
+  const seenLsj = new Set<string>();
+  for (const a of raw) {
+    for (const lsjKey of a.lsj) {
+      if (seenLsj.has(lsjKey)) continue;
+      seenLsj.add(lsjKey);
+      const shard = await loadDictShard('grc', lsjShardLetter(lsjKey));
+      const entry = shard[lsjKey];
+      if (entry) lsjEntries.push({ key: entry.key, head: entry.head, html: entry.html });
+    }
+  }
+  return {
+    analyses: raw.map((a) => ({
+      form: surface,
+      lemma: a.lemma,
+      lemmaDisplay: betaToGreek(a.lemma),
+      parse: a.parse,
+      gloss: a.gloss,
+      lsjKeys: a.lsj,
+    })),
+    lsjEntries,
+  };
+}
+
+// ── dictionary matching, shared by both languages ──────────────────────────
+//
+// A dictionary heads its entries differently from a morphology table. Lewis &
+// Short writes `va^co`, `va_gi_na`, `vallus1`, where Morpheus says `vaco`,
+// `vagina`, `vallus`; LSJ marks homonyms `ei)mi/1`, `ei)mi/2` where Morpheus
+// says `ei)mi/`. So the two sides are matched on a STRIPPED form rather than by
+// exact key — dictBaseKey, which is the pipeline's own `base_key` rule doing at
+// lookup time what it does at build time there.
+
+/**
+ * Strip everything that distinguishes a dictionary's spelling of a headword
+ * from a morphology table's: quantity marks (`_` long, `^` short), homonym
+ * markers (a trailing digit, or Morpheus' `#`), and compound hyphens. Accents
+ * and breathings are NOT stripped — for Greek they are part of the identity of
+ * the word, not decoration.
+ */
+export function dictBaseKey(key: string): string {
+  return key.replace(/[0-9_^\-#]/g, '');
+}
+
+/** Kept as the old name for the Latin-specific tests and callers. */
+export const latinBaseKey = dictBaseKey;
+
+/** Which shard file a key lives in: first ASCII a–z, skipping any leading
+ * capital (so `Py_tha^go^ras` shards under 'y') and Beta Code's `*` marker. */
+function dictShardLetter(key: string): string {
+  for (const ch of key) {
+    if (ch >= 'a' && ch <= 'z') return ch;
+  }
+  return '_';
+}
+
+/** `${language}:${letter}` → base key → the dictionary keys reducing to it. */
+const lsBaseIndexCache = new Map<string, Promise<Map<string, string[]>>>();
+
+async function dictBaseIndex(
+  language: LexiconLanguage,
+  letter: string,
+): Promise<Map<string, string[]>> {
+  const cacheKey = `${language}:${letter}`;
+  let p = lsBaseIndexCache.get(cacheKey);
+  if (!p) {
+    p = (async () => {
+      const shard = await loadDictShard(language, letter);
+      const index = new Map<string, string[]>();
+      for (const key of Object.keys(shard)) {
+        const base = dictBaseKey(key);
+        const bucket = index.get(base);
+        if (bucket) bucket.push(key);
+        else index.set(base, [key]);
+      }
+      return index;
+    })();
+    lsBaseIndexCache.set(cacheKey, p);
+  }
+  return p;
+}
+
+/**
+ * Dictionary entries for one lemma. A lemma with a homonym marker (`edo#1`)
+ * reduces to the same base as its siblings, so ALL of that base's entries come
+ * back — the workbench has no corpus-wide parse statistics to choose between
+ * homonyms with, and showing both readings is more useful to a translator than
+ * silently picking one.
+ */
+async function dictEntriesForLemma(
+  language: LexiconLanguage,
+  lemma: string,
+): Promise<LsjEntryView[]> {
+  const base = dictBaseKey(lemma);
+  if (base.length === 0) return [];
+  const letter = dictShardLetter(base);
+  const shard = await loadDictShard(language, letter);
+
+  // An exact hit is possible for a headword carrying no quantity marks.
+  const exact = shard[lemma] ?? shard[base];
+  if (exact) return [{ key: exact.key, head: exact.head, html: exact.html }];
+
+  const index = await dictBaseIndex(language, letter);
+  const out: LsjEntryView[] = [];
+  for (const key of index.get(base) ?? []) {
+    const entry = shard[key];
+    if (entry) out.push({ key: entry.key, head: entry.head, html: entry.html });
+  }
+  return out;
+}
+
+/** Entries for several lemmas, de-duplicated, order preserved. */
+async function dictEntriesForLemmas(
+  language: LexiconLanguage,
+  lemmas: string[],
+): Promise<LsjEntryView[]> {
+  const out: LsjEntryView[] = [];
+  const seen = new Set<string>();
+  for (const lemma of lemmas) {
+    for (const entry of await dictEntriesForLemma(language, lemma)) {
+      if (seen.has(entry.key)) continue;
+      seen.add(entry.key);
+      out.push(entry);
+    }
+  }
+  return out;
+}
+
+// ── the Latin provider ──────────────────────────────────────────────────────
+
+/**
+ * Latin lookup. Unlike the Greek provider this takes no workId: there is never
+ * per-work Latin data, which is exactly what lets it parse a text the app has
+ * never processed.
+ *
+ * Degraded state worth knowing: with no Latin pack installed there are no
+ * analyses and no dictionary, and the drawer says which pack would answer the
+ * click. With a pack, an inflected form resolves through morphology; the
+ * lookup also falls back to treating the clicked word as a lemma, so a word
+ * that IS its own headword still finds its entry.
+ */
+export function latinProvider(): LexiconProvider {
+  return {
+    async lookup(word: string): Promise<LexiconResult> {
+      const trimmed = word.trim();
+      if (!trimmed) return EMPTY_RESULT;
+
+      const key = toLatinKey(trimmed);
+      const variants = latinLookupVariants(key, isCapitalizedSurface(trimmed));
+      const raw = await lookupAnalyses('lat', variants);
+
+      const lemmas = raw.length > 0 ? raw.map((a) => a.lemma) : [key];
+      const lsjEntries = await dictEntriesForLemmas('lat', lemmas);
 
       const analyses: LexiconAnalysis[] = raw.map((a) => ({
         form: trimmed,
         lemma: a.lemma,
-        lemmaDisplay: betaToGreek(a.lemma),
+        // Quantity marks and homonym digits are lookup plumbing, not something
+        // to show a reader.
+        lemmaDisplay: dictBaseKey(a.lemma),
         parse: a.parse,
-        gloss: a.gloss,
-        lsjKeys: a.lsj,
+        gloss: a.gloss, // always blank for Latin — see morphology.ts
+        lsjKeys: [],
       }));
 
       return { analyses, lsjEntries };

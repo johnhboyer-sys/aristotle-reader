@@ -16,7 +16,13 @@
     compileDefaultFilename,
     PANDOC_UNAVAILABLE_MESSAGE,
   } from '../lib/export';
-  import type { CompileMode } from '../lib/export';
+  import type { BilingualLayout, BilingualOrder, CompileMode, StampMode } from '../lib/export';
+  import {
+    defaultSavePath,
+    exportSettings,
+    resolveExportPandoc,
+    resolveReferenceDoc,
+  } from '../lib/export/tauriExport';
   import type { WorkManifest } from '../lib/works/manifest';
 
   let {
@@ -36,11 +42,28 @@
   let chapters = $state<ChapterFile[]>([]);
   let gapSummary = $state<string>('');
 
+  // Seeded from Settings › Export, then editable for THIS export only — a
+  // change here is not written back, so the settings stay the standing default.
+  let bilingualLayout = $state<BilingualLayout>('block');
+  let bilingualOrder = $state<BilingualOrder>('original-first');
+  let stampMode: StampMode | undefined;
+
   const CHAPTER_FILE_RE = /^b\d{2,}c\d{2,}\.md$/;
 
   async function loadChapters() {
     phase = 'loading';
     try {
+      const prefs = await exportSettings();
+      mode = prefs.mode ?? 'english';
+      // With no configured layout, seed the one THIS work's rendering path has
+      // always used, so an unset setting exports exactly as it did before —
+      // block for a corpus (Bekker) work, alternating for a document spine.
+      bilingualLayout =
+        prefs.bilingualLayout ??
+        (getScheme(work.scheme).spineSource === 'document' ? 'alternating' : 'block');
+      bilingualOrder = prefs.bilingualOrder ?? 'original-first';
+      stampMode = prefs.stampMode;
+
       const storage = libraryStorage();
       // A document-spine work is ONE file (its in-text marks become the
       // chapters at export time — documentCompileInput below). Only ever
@@ -92,32 +115,29 @@
     try {
       // Pandoc is only required for Word. Markdown export writes the compiled
       // markdown straight to the save path — no probe, no intermediate file.
-      let pandocProgram: string | null = null;
-      let shell: typeof import('@tauri-apps/plugin-shell') | null = null;
+      const prefs = await exportSettings();
+      let pandoc: Awaited<ReturnType<typeof resolveExportPandoc>> | null = null;
       if (!asMarkdown) {
-        shell = await import('@tauri-apps/plugin-shell');
-        // GUI-PATH fix (d4 rider, same as ExportButton): a Finder-launched app
-        // has no Homebrew dirs on PATH, so resolve the pandoc scope name by
-        // actually running `--version` — absolute Homebrew/usr-local scopes
-        // first, bare 'pandoc' last for terminal launches. Running IS the probe.
-        const { resolvePandocProgramByRun } = await import('../lib/export');
-        pandocProgram = await resolvePandocProgramByRun(async (program) => {
-          const r = await shell!.Command.create(program, ['--version']).execute().catch(() => null);
-          return !!r && r.code === 0;
-        });
-        if (!pandocProgram) {
-          note = PANDOC_UNAVAILABLE_MESSAGE;
+        // resolveExportPandoc honours a pandoc chosen in Settings › Export and
+        // otherwise runs the same GUI-PATH probe this used to run inline.
+        const resolved = await resolveExportPandoc(prefs.pandocPath);
+        if ('message' in resolved) {
+          note = resolved.message;
           phase = 'ready';
           return;
         }
+        pandoc = resolved;
       }
 
       const dialog = await import('@tauri-apps/plugin-dialog');
       // compileDefaultFilename always returns .docx; swap extension for markdown
       // here so other export paths that share that helper stay unchanged.
-      const defaultPath = asMarkdown
-        ? compileDefaultFilename(work, mode).replace(/\.docx$/i, '.md')
-        : compileDefaultFilename(work, mode);
+      const defaultPath = await defaultSavePath(
+        asMarkdown
+          ? compileDefaultFilename(work, mode).replace(/\.docx$/i, '.md')
+          : compileDefaultFilename(work, mode),
+        prefs.outputDir,
+      );
       const savePath = await dialog.save({
         defaultPath,
         filters: asMarkdown
@@ -147,7 +167,12 @@
         compileChapters = prepared.chapters;
         compileWork = prepared.work as typeof work;
       }
-      const compiled = compileWorkMarkdown(compileChapters, compileWork, { mode });
+      const compiled = compileWorkMarkdown(compileChapters, compileWork, {
+        mode,
+        stampMode,
+        bilingualLayout,
+        bilingualOrder,
+      });
 
       const fs = await import('@tauri-apps/plugin-fs');
       if (asMarkdown) {
@@ -170,21 +195,15 @@
         // whole-work export. Verify the file is really there and fall back to
         // pandoc's own styling if it is not: a missing template is a worse
         // look, not a reason to refuse the export.
-        let referenceDocPath: string | undefined;
-        try {
-          const candidate = await pathApi.resolveResource('resources/reference.docx');
-          referenceDocPath = (await fs.exists(candidate)) ? candidate : undefined;
-        } catch (err) {
-          console.warn('[compile] reference.docx resource not found — using pandoc defaults', err);
-        }
+        // The user's own template if they set one, else the bundled resource
+        // (whose declared relative path this helper carries — see
+        // resolveReferenceDoc).
+        const referenceDocPath = await resolveReferenceDoc(prefs.referenceDocPath);
 
         await fs.writeTextFile(mdPath, compiled.markdown);
 
-        const { runPandocTauri } = await import('../lib/export');
-        const run = await runPandocTauri(
+        const run = await (pandoc as { run: (job: { markdownPath: string; docxPath: string; referenceDocPath?: string }) => Promise<{ code: number | null; stdout: string; stderr: string }> }).run(
           { markdownPath: mdPath, docxPath: savePath, referenceDocPath },
-          shell!,
-          pandocProgram!,
         );
         if (run.code !== 0) {
           console.error('[compile] pandoc failed:', run.stderr);
@@ -261,6 +280,36 @@
               Markdown (.md)
             </label>
           </fieldset>
+
+          {#if mode === 'bilingual'}
+            <fieldset class="mode-choice">
+              <legend>Layout</legend>
+              <label class="mode-option">
+                <input type="radio" name="compile-layout" value="block" bind:group={bilingualLayout} />
+                One language after the other
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="compile-layout" value="alternating" bind:group={bilingualLayout} />
+                Alternating paragraphs
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="compile-layout" value="table" bind:group={bilingualLayout} />
+                Side by side (two-column table)
+              </label>
+            </fieldset>
+
+            <fieldset class="mode-choice">
+              <legend>Order</legend>
+              <label class="mode-option">
+                <input type="radio" name="compile-order" value="original-first" bind:group={bilingualOrder} />
+                Original first
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="compile-order" value="translation-first" bind:group={bilingualOrder} />
+                Translation first
+              </label>
+            </fieldset>
+          {/if}
 
           {#if note}
             <p class="line note">{note}</p>

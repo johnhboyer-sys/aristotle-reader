@@ -796,3 +796,218 @@ describe('filename helpers', () => {
     expect(compileDefaultFilename(FREE_WORK, 'english')).toBe('Free Doc (translation).docx');
   });
 });
+
+describe('compileWorkMarkdown — bilingual layout and order', () => {
+  // Row index 2 splits (see splitChapter above), so every chapter here has
+  // exactly two paragraph groups per side — enough to tell "stacked blocks"
+  // apart from "alternating pairs".
+  function twoGroupChapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
+    return metaChapter(1, 1, {
+      greekLines: ['g1', 'g2', 'gamma gamma-second', 'g4', 'g5'],
+      englishLines: ['one', 'two', 'three¶four', 'five', 'six'],
+      meta: { ...metaChapter(1, 1).meta, lineSplits: [{ ref: '1041a8', offset: 6 }] },
+      ...overrides,
+    });
+  }
+
+  function docChapter(overrides: Partial<ChapterFile> = {}): ChapterFile {
+    return {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-doc',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'paragraph',
+        spanStart: '¶1',
+        spanEnd: '¶2',
+      },
+      greekLines: ['Source one.', 'Source two.'],
+      englishLines: ['First translated paragraph.', ''],
+      englishParaLines: ['', 'Second paragraph from paragraph layer.'],
+      footnotes: [],
+      ...overrides,
+    };
+  }
+
+  function bodyParts(markdown: string): string[] {
+    const bodyStart = markdown.indexOf('## Chapter 1');
+    return markdown.slice(bodyStart).split('\n\n').map((p) => p.trimEnd());
+  }
+
+  it('an unset layout is the historical block layout, byte for byte', () => {
+    const explicit = compileWorkMarkdown([twoGroupChapter()], META, { mode: 'bilingual', bilingualLayout: 'block' });
+    const unset = compileWorkMarkdown([twoGroupChapter()], META, { mode: 'bilingual' });
+    expect(unset.markdown).toBe(explicit.markdown);
+  });
+
+  it('alternating pairs each source group with its own translation group', () => {
+    const result = compileWorkMarkdown([twoGroupChapter()], META, {
+      mode: 'bilingual',
+      bilingualLayout: 'alternating',
+    });
+    const parts = bodyParts(result.markdown);
+    // heading, g-1, en-1, g-2, en-2 — interleaved, not stacked
+    expect(parts).toHaveLength(5);
+    expect(parts[1]).toBe('g1 g2 gamma');
+    expect(parts[2]).toBe('one two three');
+    expect(parts[3]).toBe('gamma-second g4 [1041a10] g5');
+    expect(parts[4]).toBe('four five [1041a10] six');
+  });
+
+  it('translation-first flips the lead side in both block and alternating', () => {
+    const block = bodyParts(
+      compileWorkMarkdown([twoGroupChapter()], META, {
+        mode: 'bilingual',
+        bilingualLayout: 'block',
+        bilingualOrder: 'translation-first',
+      }).markdown,
+    );
+    expect(block[1]).toBe('one two three');
+    expect(block[3]).toBe('g1 g2 gamma');
+
+    const alternating = bodyParts(
+      compileWorkMarkdown([twoGroupChapter()], META, {
+        mode: 'bilingual',
+        bilingualLayout: 'alternating',
+        bilingualOrder: 'translation-first',
+      }).markdown,
+    );
+    expect(alternating[1]).toBe('one two three');
+    expect(alternating[2]).toBe('g1 g2 gamma');
+  });
+
+  it('table emits one headerless two-column pipe table, one row per pair', () => {
+    const result = compileWorkMarkdown([twoGroupChapter()], META, {
+      mode: 'bilingual',
+      bilingualLayout: 'table',
+    });
+    const parts = bodyParts(result.markdown);
+    expect(parts).toHaveLength(2); // heading + the table, one section
+    expect(parts[1]).toBe(
+      '|  |  |\n' +
+        '|:---|:---|\n' +
+        '| g1 g2 gamma | one two three |\n' +
+        '| gamma-second g4 [1041a10] g5 | four five [1041a10] six |',
+    );
+  });
+
+  it('table respects translation-first by swapping the columns', () => {
+    const result = compileWorkMarkdown([twoGroupChapter()], META, {
+      mode: 'bilingual',
+      bilingualLayout: 'table',
+      bilingualOrder: 'translation-first',
+    });
+    expect(result.markdown).toContain('| one two three | g1 g2 gamma |');
+  });
+
+  it('table escapes a literal pipe in the text so it cannot split a cell', () => {
+    const result = compileWorkMarkdown(
+      [twoGroupChapter({ englishLines: ['a | b', 'two', 'three¶four', 'five', 'six'] })],
+      META,
+      { mode: 'bilingual', bilingualLayout: 'table' },
+    );
+    expect(result.markdown).toContain('| a \\| b two three |');
+  });
+
+  it('an untranslated group is a blank cell in a table and an ellipsis when alternating', () => {
+    const untranslated = twoGroupChapter({ englishLines: ['one', 'two', 'three¶', '', ''] });
+
+    const table = compileWorkMarkdown([untranslated], META, {
+      mode: 'bilingual',
+      bilingualLayout: 'table',
+    });
+    // No [1041a10] on either side: isStampSegment is derived from the English
+    // markup, so an untranslated row carries no stamp at all — the same rule
+    // the block layout has always followed.
+    expect(table.markdown).toContain('| gamma-second g4 g5 |  |');
+
+    const alternating = compileWorkMarkdown([untranslated], META, {
+      mode: 'bilingual',
+      bilingualLayout: 'alternating',
+    });
+    const parts = bodyParts(alternating.markdown);
+    expect(parts[3]).toBe('gamma-second g4 g5');
+    expect(parts[4]).toBe('…');
+  });
+
+  it('footnotes still resolve under the table layout', () => {
+    const c = twoGroupChapter({
+      englishLines: ['one {^1:noted}', 'two', 'three¶four', 'five', 'six'],
+      footnotes: [{ id: 1, body: 'the note' }],
+    });
+    const result = compileWorkMarkdown([c], META, { mode: 'bilingual', bilingualLayout: 'table' });
+    expect(result.markdown).toContain('noted[^c1-1]');
+    expect(result.markdown).toContain('[^c1-1]: the note');
+  });
+
+  it('document-spine works keep alternating as their unset default, and honour an explicit layout', () => {
+    const unset = compileWorkMarkdown([docChapter()], FREE_WORK, { mode: 'bilingual' });
+    const alternating = compileWorkMarkdown([docChapter()], FREE_WORK, {
+      mode: 'bilingual',
+      bilingualLayout: 'alternating',
+    });
+    expect(unset.markdown).toBe(alternating.markdown);
+
+    const block = compileWorkMarkdown([docChapter()], FREE_WORK, {
+      mode: 'bilingual',
+      bilingualLayout: 'block',
+    });
+    expect(block.markdown).toBe(
+      '# Free Doc\n\n' +
+        'Source one.\n\n' +
+        'Source two.\n\n' +
+        'First translated paragraph.\n\n' +
+        'Second paragraph from paragraph layer.\n',
+    );
+
+    const table = compileWorkMarkdown([docChapter()], FREE_WORK, {
+      mode: 'bilingual',
+      bilingualLayout: 'table',
+    });
+    expect(table.markdown).toBe(
+      '# Free Doc\n\n' +
+        '|  |  |\n' +
+        '|:---|:---|\n' +
+        '| Source one. | First translated paragraph. |\n' +
+        '| Source two. | Second paragraph from paragraph layer. |\n',
+    );
+  });
+
+  it('table layout puts each hard-broken line of a plain-line doc in its own row', () => {
+    const FREE_LINES: WorkMeta = {
+      id: 'free-lines',
+      title: 'Free Lines',
+      author: '',
+      scheme: 'plain-line',
+      books: [{ n: 1, label: '' }],
+    };
+    const c: ChapterFile = {
+      meta: {
+        schemaVersion: 1,
+        work: 'free-lines',
+        book: 1,
+        chapter: 1,
+        citationScheme: 'plain-line',
+        spanStart: '1',
+        spanEnd: '2',
+        paragraphStarts: [1],
+      },
+      greekLines: ['L1', 'L2'],
+      englishLines: ['Line one', 'Line two'],
+      footnotes: [],
+    };
+    const result = compileWorkMarkdown([c], FREE_LINES, {
+      mode: 'bilingual',
+      bilingualLayout: 'table',
+    });
+    // A pipe-table cell is one physical line, so the hard break becomes a row
+    // break — which is what side-by-side verse wants anyway.
+    expect(result.markdown).toBe(
+      '# Free Lines\n\n' +
+        '|  |  |\n' +
+        '|:---|:---|\n' +
+        '| L1 | Line one |\n' +
+        '| L2 | Line two |\n',
+    );
+  });
+});

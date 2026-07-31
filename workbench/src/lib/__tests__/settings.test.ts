@@ -4,7 +4,7 @@
 // pin that an OLD settings.json loads unchanged (migrates + re-serializes
 // sanely) and that every NEW field is defensively sanitized (garbage rejected).
 import { describe, expect, it } from 'vitest';
-import { sanitize, sanitizeAssist } from '../settings';
+import { sanitize, sanitizeAssist, sanitizeExport } from '../settings';
 import type { AssistSettings } from '../settings';
 
 describe('sanitizeAssist — migration from the old d4 shape', () => {
@@ -140,5 +140,54 @@ describe('sanitizeAssist — defensive sanitizing of the new fields', () => {
   it('includeDraft must be a boolean', () => {
     expect(sanitizeAssist({ includeDraft: true })).toEqual({ includeDraft: true });
     expect(sanitizeAssist({ includeDraft: 'yes' as unknown })).toBeUndefined();
+  });
+});
+
+describe('sanitizeExport', () => {
+  it('keeps every recognized field', () => {
+    expect(
+      sanitizeExport({
+        stampMode: 'columns',
+        mode: 'bilingual',
+        bilingualLayout: 'table',
+        bilingualOrder: 'translation-first',
+        referenceDocPath: '/refs/house.docx',
+        outputDir: '/Users/john/Exports',
+        pandocPath: '/opt/homebrew/bin/pandoc',
+      }),
+    ).toEqual({
+      stampMode: 'columns',
+      mode: 'bilingual',
+      bilingualLayout: 'table',
+      bilingualOrder: 'translation-first',
+      referenceDocPath: '/refs/house.docx',
+      outputDir: '/Users/john/Exports',
+      pandocPath: '/opt/homebrew/bin/pandoc',
+    });
+  });
+
+  it('drops unrecognized enum values rather than carrying them', () => {
+    expect(
+      sanitizeExport({ stampMode: 'every-3', mode: 'trilingual', bilingualLayout: 'columns', bilingualOrder: 'greek' }),
+    ).toBeUndefined();
+    // a good field survives alongside a bad one
+    expect(sanitizeExport({ stampMode: 'every-line', mode: 'nonsense' })).toEqual({ stampMode: 'every-line' });
+  });
+
+  it('treats an empty path string as cleared, not set', () => {
+    expect(sanitizeExport({ referenceDocPath: '', outputDir: '', pandocPath: '' })).toBeUndefined();
+    expect(sanitizeExport({ outputDir: '/out', referenceDocPath: '' })).toEqual({ outputDir: '/out' });
+  });
+
+  it('non-object garbage → undefined', () => {
+    expect(sanitizeExport(null)).toBeUndefined();
+    expect(sanitizeExport('hi')).toBeUndefined();
+    expect(sanitizeExport(undefined)).toBeUndefined();
+  });
+
+  it('rides along in the full-blob sanitizer, and an absent blob stays absent', () => {
+    const loaded = sanitize({ tlgDir: '/tlg', export: { mode: 'bilingual', bogus: 1 } });
+    expect(loaded.export).toEqual({ mode: 'bilingual' });
+    expect(sanitize({ tlgDir: '/tlg' })).not.toHaveProperty('export');
   });
 });

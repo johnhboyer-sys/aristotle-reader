@@ -57,27 +57,44 @@ export async function copyBundledResourceIfPresent(
 }
 
 /**
- * Copy the shared corpus/lsj/ shard directory from bundled resources into
- * app data, once. Idempotence guard: if corpus/lsj/ already exists in app
- * data (prior onboarding, or a pre-seeded install), this is a no-op — the
- * ~46 MB shard set is never re-copied per work.
+ * Copy one shared dictionary shard directory from bundled resources into app
+ * data, once. Idempotence guard: if the directory already exists in app data
+ * (prior onboarding, or a pre-seeded install), this is a no-op — the shard sets
+ * are tens of megabytes and are never re-copied per work.
+ *
+ * `dir` is 'lsj' (Greek, LSJ) or 'ls' (Latin, Lewis & Short). A missing
+ * resource directory is the NORMAL case now, not a failure: since dictionaries
+ * became separately-installed lexicon packs (src-tauri/src/packs.rs), a
+ * packaged build stages no shards at all and this is a silent no-op. It stays
+ * so that an install predating packs keeps its shards where lookup still
+ * checks for them.
  */
-export async function copySharedLsjIfMissing(fs: FsModule): Promise<void> {
+export async function copySharedShardsIfMissing(fs: FsModule, dir: string): Promise<void> {
+  const path = `corpus/${dir}`;
   try {
-    if (await fs.exists('corpus/lsj', { baseDir: fs.BaseDirectory.AppData })) return;
-    if (!(await fs.exists('corpus/lsj', { baseDir: fs.BaseDirectory.Resource }))) return;
-    const entries = await fs.readDir('corpus/lsj', { baseDir: fs.BaseDirectory.Resource });
-    await fs.mkdir('corpus/lsj', { baseDir: fs.BaseDirectory.AppData, recursive: true });
+    if (await fs.exists(path, { baseDir: fs.BaseDirectory.AppData })) return;
+    if (!(await fs.exists(path, { baseDir: fs.BaseDirectory.Resource }))) return;
+    const entries = await fs.readDir(path, { baseDir: fs.BaseDirectory.Resource });
+    await fs.mkdir(path, { baseDir: fs.BaseDirectory.AppData, recursive: true });
     for (const entry of entries) {
       if (!entry.isFile) continue;
-      await fs.copyFile(`corpus/lsj/${entry.name}`, `corpus/lsj/${entry.name}`, {
+      await fs.copyFile(`${path}/${entry.name}`, `${path}/${entry.name}`, {
         fromPathBaseDir: fs.BaseDirectory.Resource,
         toPathBaseDir: fs.BaseDirectory.AppData,
       });
     }
   } catch (err) {
-    console.warn('onboarding: failed copying shared lsj/ resources', err);
+    console.warn(`onboarding: failed copying shared ${dir}/ resources`, err);
   }
+}
+
+/**
+ * Both dictionaries' shards, if any were staged. Kept for pre-pack installs
+ * only — see copySharedShardsIfMissing.
+ */
+export async function copySharedLsjIfMissing(fs: FsModule): Promise<void> {
+  await copySharedShardsIfMissing(fs, 'lsj');
+  await copySharedShardsIfMissing(fs, 'ls');
 }
 
 /** The Diogenes server directory to run the exporter from (settings override

@@ -8,18 +8,21 @@
   // Resizable by dragging the top edge (clamped 160px..60vh), reopens at its
   // last dragged height (persisted to localStorage — dev-harness-only
   // storage, matching lib/settings.ts's convention for this project).
-  import { greekProvider } from '../lib/lexicon/provider';
+  import { greekProvider, latinProvider } from '../lib/lexicon/provider';
   import type { LexiconResult } from '../lib/lexicon/provider';
 
   let {
     workId,
     word,
+    language = 'greek',
     onClose,
   }: {
     workId: string;
-    /** The word currently under lookup (Unicode Greek surface form), or null
+    /** The word currently under lookup (the surface form as written), or null
      * when the drawer has nothing to show yet. */
     word: string | null;
+    /** Which lexicon to look the word up in. Greek unless the work says Latin. */
+    language?: 'greek' | 'latin';
     onClose: () => void;
   } = $props();
 
@@ -48,6 +51,14 @@
   let dragStartY = 0;
   let dragStartHeight = 0;
 
+  /**
+   * Only Greek is tagged. Tagging Latin `lang="la"` made WebKit substitute a
+   * "v" glyph for an ordinary "u" ("Articulus" displayed as "Articvlvs")
+   * while the untagged dictionary entry beside it rendered correctly — a
+   * display fault only, the lookup itself resolves on the real characters.
+   */
+  const langTag = $derived<string | undefined>(language === 'latin' ? undefined : 'grc');
+
   let result = $state<LexiconResult | null>(null);
   let loading = $state(false);
   let loadedFor = '';
@@ -61,11 +72,13 @@
       loading = false;
       return;
     }
-    const token = `${workId}:${current}:${Date.now()}`;
+    const token = `${workId}:${language}:${current}:${Date.now()}`;
     loadedFor = token;
     loading = true;
     result = null;
-    greekProvider(workId)
+    // The Latin provider takes no workId — its morphology is corpus-wide, not
+    // per work (see provider.ts).
+    (language === 'latin' ? latinProvider() : greekProvider(workId))
       .lookup(current)
       .then((r) => {
         if (loadedFor === token) {
@@ -131,7 +144,7 @@
 
   <header class="lex-head">
     {#if word}
-      <span class="lex-headword" lang="grc">{word}</span>
+      <span class="lex-headword" lang={langTag}>{word}</span>
     {:else}
       <h2 class="lex-title">Lexicon</h2>
     {/if}
@@ -145,31 +158,38 @@
 
   <div class="lex-body">
     {#if !word}
-      <p class="lex-placeholder">Click a Greek word to see its analysis and dictionary entry here.</p>
+      <p class="lex-placeholder">
+        Click a {language === 'latin' ? 'Latin' : 'Greek'} word to see its analysis and dictionary
+        entry here.
+      </p>
     {:else if loading}
       <!-- Quiet: no spinner, no layout jump — the previous content (if any)
            has already been cleared, so this is just empty space until data
            arrives. -->
-    {:else if !result || result.analyses.length === 0}
+    {:else if !result || (result.analyses.length === 0 && result.lsjEntries.length === 0)}
       <p class="lex-placeholder">No entry found for “{word}”.</p>
     {:else}
       {#each result.analyses as a, i (i)}
         <div class="lex-analysis">
-          <span class="lex-form" lang="grc">{a.form}</span>
+          <span class="lex-form" lang={langTag}>{a.form}</span>
           <span class="lex-sep">—</span>
           <span class="lex-parse">{a.parse}</span>
-          <span class="lex-sep">—</span>
-          <span class="lex-gloss">{a.gloss}</span>
+          <!-- Latin analyses carry no gloss (Diogenes' table has none), so the
+               separator goes with it rather than dangling. -->
+          {#if a.gloss}
+            <span class="lex-sep">—</span>
+            <span class="lex-gloss">{a.gloss}</span>
+          {/if}
           <div class="lex-lemma-line">
             <span class="lex-lemma-label">lemma</span>
-            <span class="lex-lemma" lang="grc">{a.lemmaDisplay}</span>
+            <span class="lex-lemma" lang={langTag}>{a.lemmaDisplay}</span>
           </div>
         </div>
       {/each}
 
       {#if result.lsjEntries.length > 0}
         <div class="lex-lsj-section">
-          <div class="lex-lsj-label">LSJ</div>
+          <div class="lex-lsj-label">{language === 'latin' ? 'Lewis & Short' : 'LSJ'}</div>
           {#each result.lsjEntries as entry, i (entry.key + i)}
             {#if i > 0}<hr class="lex-lsj-sep" />{/if}
             <div class="lex-lsj-entry">

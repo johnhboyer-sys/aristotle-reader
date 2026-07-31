@@ -49,13 +49,13 @@
   import type { FixtureChapter } from './dev/fixture-meta-z17';
   import { loadSettings, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
-  import { wordAt } from './lib/lexicon/wordAt';
+  import { wordAt, latinWordAt } from './lib/lexicon/wordAt';
   import { libraryStorage, chapterFileName } from './lib/library/storage';
   import { chapterLibraryStatuses } from './lib/library/sync';
   import type { ChapterLibraryStatus } from './lib/library/sync';
   import { session, syncCommands } from './lib/editor/session.svelte';
   import { zoomIn, zoomOut, zoomReset, zoomAtMin, zoomAtMax, zoomPercent } from './lib/editor/zoom.svelte';
-  import LibrarySettingsDialog from './components/LibrarySettingsDialog.svelte';
+  import SettingsDialog from './components/SettingsDialog.svelte';
 
   // Built-in works from the static manifests, plus corpus-free documents
   // from the library's free-work registry (loaded at boot / after creation).
@@ -77,7 +77,7 @@
   let lexiconOpen = $state(false);
   let addWorkOpen = $state(false);
   let newDocumentOpen = $state(false);
-  let librarySettingsOpen = $state(false);
+  let settingsOpen = $state(false);
   // The document work whose organization profile the "Manage levels…" dialog
   // is editing (null = closed).
   let manageLevelsWork = $state<WorkManifest | null>(null);
@@ -459,6 +459,16 @@
   // range, then unwrapped again so the cell's plain-text contract used by
   // caretRangeFromPoint on subsequent clicks is undisturbed.
   let lexiconWord = $state<string | null>(null);
+
+  /** Which lexicon the open work's source column belongs to. A free work
+   * declares its language as free text, so anything that reads as Latin counts;
+   * built-in manifests use the `original_language` field. */
+  const lexiconLanguage = $derived.by<'greek' | 'latin'>(() => {
+    const work = currentWork;
+    if (!work) return 'greek';
+    if (work.originalLanguage) return work.originalLanguage;
+    return work.language?.trim().toLowerCase() === 'latin' ? 'latin' : 'greek';
+  });
   let highlightTimer: ReturnType<typeof setTimeout> | undefined;
 
   function caretOffsetInCell(cell: HTMLElement, x: number, y: number): number | null {
@@ -539,7 +549,9 @@
     const offset = caretOffsetInCell(cell, e.clientX, e.clientY);
     if (offset === null) return;
     const text = cell.textContent ?? '';
-    const span = wordAt(text, offset);
+    // A Latin source cell needs its own word-boundary rule (Latin letters, no
+    // elision apostrophe) — see lib/lexicon/wordAt.
+    const span = (lexiconLanguage === 'latin' ? latinWordAt : wordAt)(text, offset);
     if (!span) return;
     lexiconWord = span.text;
     lexiconOpen = true;
@@ -665,7 +677,7 @@
       {#if isTauri() || import.meta.env.DEV}
         <button
           class="icon-btn"
-          onclick={() => (librarySettingsOpen = true)}
+          onclick={() => (settingsOpen = true)}
           title="Settings…"
           aria-label="Settings"
         >
@@ -735,7 +747,12 @@
       </main>
 
       {#if lexiconOpen}
-        <LexiconDrawer workId={selection?.workId ?? ''} word={lexiconWord} onClose={closeLexicon} />
+        <LexiconDrawer
+          workId={selection?.workId ?? ''}
+          word={lexiconWord}
+          language={lexiconLanguage}
+          onClose={closeLexicon}
+        />
       {/if}
     </div>
 
@@ -810,8 +827,8 @@
     />
   {/if}
 
-  {#if librarySettingsOpen}
-    <LibrarySettingsDialog {works} onClose={() => (librarySettingsOpen = false)} />
+  {#if settingsOpen}
+    <SettingsDialog {works} onClose={() => (settingsOpen = false)} />
   {/if}
 
   {#if importOpen}
