@@ -12,7 +12,7 @@
 // In the browser dev harness (no Tauri), the same records live in
 // localStorage so the whole flow is testable in a plain browser.
 
-import { fetchBook, fetchChapters, type BookData, type RossPiece } from '@shared/lib/data';
+import { fetchBook, fetchChapters, type BookData, type OverlayPiece } from '@shared/lib/data';
 import type { TranslationRef } from '@shared/lib/works';
 import { getWork } from '@shared/lib/works';
 import { isTauri } from './runtime';
@@ -29,12 +29,12 @@ export interface ImportRecord {
   warnings: string[];
   stats: { tagged: number; placed: number; interpolated: number; chapters: number };
   /** book number → segment id → overlay pieces (precomputed at import time). */
-  overlaysByBook: Record<string, Record<string, RossPiece[]>>;
+  overlaysByBook: Record<string, Record<string, OverlayPiece[]>>;
   /**
    * book number → Bekker COLUMN (not segment id — matches the rendered DOM's
    * `#col-{column}` element directly) → that column's overlay pieces'
    * emphasis spans (precomputed at import time, PARALLEL to overlaysByBook —
-   * never stored on RossPiece itself; see import-align.ts's emitOverlayPieces
+   * never stored on OverlayPiece itself; see import-align.ts's emitOverlayPieces
    * doc comment for why). Optional so records written before this field
    * existed still load — paintEmphasis (annotations.ts) just has nothing to
    * paint for them.
@@ -221,7 +221,7 @@ function sparseTicks(
   return filtered.length === ticks.length ? ticks : filtered;
 }
 
-function sparsifyPieces(pieces: RossPiece[]): RossPiece[] {
+function sparsifyPieces(pieces: OverlayPiece[]): OverlayPiece[] {
   return pieces.map(p => {
     if (!p.bekker) return p;
     const bekker = sparseTicks(p.bekker);
@@ -299,8 +299,8 @@ export async function loadImports(): Promise<number> {
  * Emphasis spans for one imported translation's rendered Bekker column
  * (matches the DOM's `#col-{column}` element directly) — each entry carries
  * its own piece's full text (PieceEmphasis.pieceText) so the caller can match
- * it against the right `.ross-prose` block by CONTENT (a column can render
- * several chapter-blocks' worth of `.ross-prose`; see import-align.ts's
+ * it against the right `.overlay-prose` block by CONTENT (a column can render
+ * several chapter-blocks' worth of `.overlay-prose`; see import-align.ts's
  * PieceEmphasis doc comment for why content-matching, not a lookup key, is
  * the robust join). Returns [] (never throws) when `id` isn't a registered
  * import, the book/column carries no emphasis, or the record predates this
@@ -491,7 +491,7 @@ export async function runImport(
   const books = [...new Set(chapters.map(c => c.book))].sort((a, b) => a - b);
   const aligned: ChapterAlignment[] = [];
   const alignment: Record<string, ChapterAlignment> = {};
-  const overlaysByBook: Record<string, Record<string, RossPiece[]>> = {};
+  const overlaysByBook: Record<string, Record<string, OverlayPiece[]>> = {};
   const emphasisByBook: Record<string, Record<string, PieceEmphasis[]>> = {};
   for (const b of books) {
     onProgress(`Aligning Book ${b} of ${workMeta.books}…`);

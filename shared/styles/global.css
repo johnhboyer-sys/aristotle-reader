@@ -760,7 +760,7 @@ body {
 .reader-body.trans-compare.view-both .seg-row { grid-template-columns: 1fr 1fr 1fr; }
 .reader-body.trans-compare.view-english .seg-row { grid-template-columns: 1fr 1fr; }
 .reader-body.trans-compare.view-english .english-col { max-width: none; margin: 0; }
-.ross-col {
+.overlay-col {
   font-family: var(--font-english);
   font-size: var(--fs-english);
   line-height: var(--lh-english);
@@ -946,22 +946,22 @@ body {
    positioned with only `left` set, so it keeps its static vertical position
    (the line it falls on) while shifting into the gutter — no row break, no
    in-text number, no sentence-boundary snapping, no JS measurement. */
-.ross-prose {
+.overlay-prose {
   position: relative;
   padding-left: 2.6rem;
   line-height: 1.75;
 }
-.ross-prose .bk-seg { /* inline text run — flows normally */ }
+.overlay-prose .bk-seg { /* inline text run — flows normally */ }
 /* An imported translation's own converter-derived chapter title (Reader.svelte's
    importChapterTitle) — this edition's editorial paratext, rendered unaligned at
    the start of its chapter, INSIDE only that import's own overlay column. Not
    part of the reference text: no `.bk-num` gutter tick ever sits beside it, and
    clean-copy skips it (annotations.ts's COPY_EXCLUDE_SELECTOR). It renders as a
-   SIBLING before .ross-prose, not inside it (see Reader.svelte's transFlow
-   comment: offset walkers + the Greek-flush alignment), so .ross-prose's gutter
+   SIBLING before .overlay-prose, not inside it (see Reader.svelte's transFlow
+   comment: offset walkers + the Greek-flush alignment), so .overlay-prose's gutter
    indent is replicated here to keep the title at the prose's left edge, not the
    gutter's. */
-.ross-chapter-title {
+.overlay-chapter-title {
   font-family: var(--font-ui);
   font-size: 0.86rem;
   font-style: italic;
@@ -969,7 +969,7 @@ body {
   color: var(--text-light);
   margin: 0 0 0.5rem;
   line-height: 1.3;
-  padding-left: 2.6rem; /* = .ross-prose's gutter indent */
+  padding-left: 2.6rem; /* = .overlay-prose's gutter indent */
 }
 /* The Greek column's invisible counterweight to a visible imported title in
    the same row's English cell: the SAME class (same font metrics, line-height,
@@ -980,7 +980,7 @@ body {
    that track max-content (desktop.css) and a wide title would otherwise
    stretch the whole Greek column. No gutter indent: it sits in the Greek
    column, which has none. */
-.ross-chapter-title-spacer {
+.overlay-chapter-title-spacer {
   visibility: hidden;
   width: 0;
   white-space: nowrap;
@@ -1010,9 +1010,9 @@ body {
    gutter: hide the floated line numbers and reclaim the gutter padding so the
    translation reads as plain prose beside the section reference (p. N). */
 .reader-body.busse .bk-num { display: none; }
-.reader-body.busse .ross-prose { padding-left: 0; }
+.reader-body.busse .overlay-prose { padding-left: 0; }
 /* …and the imported chapter title tracks the prose's (reclaimed) left edge. */
-.reader-body.busse .ross-chapter-title { padding-left: 0; }
+.reader-body.busse .overlay-chapter-title { padding-left: 0; }
 /* No dividing rules for a non-Bekker work: drop the control-strip underline and
    the accent line trailing each section heading. */
 .reader-body.busse .reader-controls { border-bottom: none; }
@@ -1630,7 +1630,7 @@ body {
   .reader-body.trans-compare .greek-line { gap: 0.35rem; }
   .reader-body.trans-compare .line-num { min-width: 1.8rem; font-size: var(--fs-linenum); }
   .reader-body.trans-compare .english-col,
-  .reader-body.trans-compare .ross-col {
+  .reader-body.trans-compare .overlay-col {
     font-size: var(--fs-english);
     border-top: 1px solid var(--border);
     padding-top: 0.6rem;
@@ -2317,7 +2317,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 
   /* Near-black ink on plain white stock (white background saves ink). */
   .greek-col, .english-col, .english-col .bk-seg,
-  .ross-prose, .ross-col, .line-text { color: #1d1b16; }
+  .overlay-prose, .overlay-col, .line-text { color: #1d1b16; }
 
   /* Drop the on-screen per-segment separator rule (the line between Bekker
      columns) — in print the masthead hairline and chapter rules carry the
@@ -2331,7 +2331,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   .reader-body.view-both .seg-row { grid-template-columns: auto minmax(0, 1fr); gap: 0.6rem; }
   .reader-body.view-both .greek-col { font-size: 12px; line-height: 1.82; }
   .reader-body.view-both .english-col { font-size: 15px; line-height: 1.66; margin-top: -4px; }
-  .reader-body.view-both .ross-prose { text-align: justify; hyphens: auto; }
+  .reader-body.view-both .overlay-prose { text-align: justify; hyphens: auto; }
   .reader-body.view-both .greek-line { gap: 0.55em; }
   /* Greek line numbers: EB Garamond, left-aligned flush with the chapter label
      and Bekker ref. */
@@ -2353,10 +2353,10 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   .seg-ref { break-after: avoid; }
   .greek-line { break-inside: avoid; }
   .greek-table, .eng-table { break-inside: avoid; }
-  .ross-prose { orphans: 3; widows: 3; }
+  .overlay-prose { orphans: 3; widows: 3; }
 
   /* The Bekker margin gutter is paint-only (relative prose + absolute markers)
-     and carries over as-is — do NOT alter .ross-prose padding or .bk-num
+     and carries over as-is — do NOT alter .overlay-prose padding or .bk-num
      positioning here, or the markers will detach from their lines. */
 
   /* ── Critical-edition styling (ported from the Claude Design spec) ─────────

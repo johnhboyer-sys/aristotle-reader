@@ -15,7 +15,7 @@
 // cannot be painted the same way annotations are.
 //
 // The route that DOES work without touching the shared reader: real DOM surgery. The
-// Reader's rendered prose is ordinary text nodes inside `.ross-prose` — this
+// Reader's rendered prose is ordinary text nodes inside `.overlay-prose` — this
 // module resolves each import's stored EmphasisRange (offsets into one
 // overlay PIECE's own text — see import-align.ts's emitOverlayPieces) to a
 // live Range in that already-rendered DOM (same TreeWalker/offset technique
@@ -28,7 +28,7 @@
 //
 // Idempotency: wrapping mutates the DOM, which re-fires the app's own
 // MutationObserver (App.svelte) that re-runs this on a debounce. A
-// `data-emph-painted` marker on each `.ross-prose` we've already processed
+// `data-emph-painted` marker on each `.overlay-prose` we've already processed
 // makes re-entry a no-op; a genuinely fresh render (new chapter/navigation)
 // is a NEW DOM subtree with no marker, so it repaints correctly.
 
@@ -38,7 +38,7 @@ import { getImportEmphasis } from './imports';
 const nodeEl = (n: Node): Element | null =>
   n.nodeType === Node.ELEMENT_NODE ? (n as Element) : n.parentElement;
 
-/** Clean prose text of a `.ross-prose` container — same walk/exclusions as
+/** Clean prose text of a `.overlay-prose` container — same walk/exclusions as
  *  annotations.ts's proseOffsetAt, so offsets captured there and offsets
  *  computed here (from the same rendered DOM) agree. */
 function proseText(root: Element): string {
@@ -52,7 +52,7 @@ function proseText(root: Element): string {
 }
 
 /** Locate the (node, offset-within-node) for a char offset into a
- *  `.ross-prose`'s clean text — mirrors annotations.ts's proseOffsetAt
+ *  `.overlay-prose`'s clean text — mirrors annotations.ts's proseOffsetAt
  *  inverted (offset -> position, rather than position -> offset). */
 function locate(root: Element, target: number): [Node, number] | null {
   let acc = 0;
@@ -73,7 +73,7 @@ function locate(root: Element, target: number): [Node, number] | null {
 /** Wrap one emphasis span in a real `<em>`/`<strong>` element. Falls back to
  *  a manual split+wrap when Range.surroundContents throws (it requires the
  *  range's boundaries not to split a non-Text node in a way that would leave
- *  a partial element on either side — never true for `.ross-prose`'s flat
+ *  a partial element on either side — never true for `.overlay-prose`'s flat
  *  text-node content, but guarded defensively rather than letting a paint
  *  pass throw and abort every subsequent span in this piece). */
 function wrapRange(root: Element, start: number, end: number, tag: 'em' | 'strong'): void {
@@ -90,7 +90,7 @@ function wrapRange(root: Element, start: number, end: number, tag: 'em' | 'stron
     r.surroundContents(wrapper);
   } catch {
     // Range spans multiple sibling text nodes in a way surroundContents can't
-    // wrap directly (shouldn't happen for a `.ross-prose` piece's own flat
+    // wrap directly (shouldn't happen for a `.overlay-prose` piece's own flat
     // text, but a prior paint pass's <em> wrapper sitting exactly at the
     // boundary could produce this) — skip rather than corrupt the DOM.
   }
@@ -106,7 +106,7 @@ function wrapRange(root: Element, start: number, end: number, tag: 'em' | 'stron
  * paint (getImportEmphasis returns []).
  */
 // Cheap content fingerprint (not a real hash — length + endpoints is enough
-// to detect "this .ross-prose's text changed since we painted it", which is
+// to detect "this .overlay-prose's text changed since we painted it", which is
 // all the marker needs to do). Svelte can reuse/patch an existing DOM node
 // across a navigation rather than replacing it outright, so a plain boolean
 // marker could survive onto a node whose text has since changed — keying the
@@ -119,10 +119,10 @@ function fingerprint(s: string): string {
 export function paintEmphasis(work: string, book: number, shown: string[]): void {
   for (const importId of shown) {
     const cols = document.querySelectorAll<HTMLElement>(
-      `.english-col[data-trans="${cssEscape(importId)}"], .ross-col[data-trans="${cssEscape(importId)}"]`,
+      `.english-col[data-trans="${cssEscape(importId)}"], .overlay-col[data-trans="${cssEscape(importId)}"]`,
     );
     for (const col of cols) {
-      const prose = col.querySelector<HTMLElement>('.ross-prose');
+      const prose = col.querySelector<HTMLElement>('.overlay-prose');
       if (!prose) continue;
       const text = proseText(prose);
       const fp = fingerprint(text);

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type RossPiece } from '../lib/data';
+  import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { highlightPrefixMatches } from '../lib/text';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -38,7 +38,7 @@
   const translations = workMeta ? visibleTranslations(workMeta) : [];
   // The reader can render any number of translations. The primary parallel
   // chunk is the 'english' slot; every other translation is a chapter-anchored
-  // overlay read from its segment field (ross / third / overlays[id]).
+  // overlay read from its segment field (secondary / third / overlays[id]).
   // `secondaries` is the ordered list of non-primary translations.
   const engSlot = translations.find(t => t.slot === 'english');
   const thirdSlot = translations.find(t => t.slot === 'third');  // bears footnotes/tables
@@ -61,9 +61,11 @@
   const secondaries = translations.filter(t => t.slot !== 'english');
   const canCompare = translations.length >= 2;
   // Overlay pieces for a translation in a segment, selected by its slot.
-  const piecesFor = (seg: Segment, t: TranslationRef | undefined | null): RossPiece[] => {
+  const piecesFor = (seg: Segment, t: TranslationRef | undefined | null): OverlayPiece[] => {
     if (!t) return [];
-    if (t.slot === 'ross') return seg.ross ?? [];
+    // `seg.ross` is the pre-rename emitted field name; stage7_emit still writes
+    // it, so read the new name first and fall back until the corpus is rebuilt.
+    if (t.slot === 'secondary') return seg.secondary ?? seg.ross ?? [];
     if (t.slot === 'third') return seg.third ?? [];
     if (t.slot === 'overlay') return seg.overlays?.[t.id] ?? [];
     return [];
@@ -682,10 +684,10 @@
     // so any number of overlays render (the 'third'/footnote-bearing one also
     // carries diagram tables).
     const secPieces = secondaries.map((t) => ({ t, pieces: piecesFor(seg, t) }));
-    const flowOf = (p: RossPiece | undefined): FlowPart[] =>
+    const flowOf = (p: OverlayPiece | undefined): FlowPart[] =>
       (!p || !p.text) ? [] : flowParts(p.text, (p.bekker ?? []).map(t => ({ n: t.n, real: t.real, off: t.offset })));
-    const pieceCont = (pieces: RossPiece[]) => pieces.find(p => p.cont) ?? pieces[0];
-    const pieceFor = (pieces: RossPiece[], chapter: string | null) =>
+    const pieceCont = (pieces: OverlayPiece[]) => pieces.find(p => p.cont) ?? pieces[0];
+    const pieceFor = (pieces: OverlayPiece[], chapter: string | null) =>
       pieces.find(p => !p.cont && p.chapter === chapter);
     // {transId: flow} + {transId: tables} for a block, picking each overlay's
     // continuation slice or the slice for `chapter` (null → continuation).
@@ -1173,21 +1175,21 @@
     {#if flow.length}
       {@const chTitle = importChapterTitle(transId, block.chapter)}
       <!-- An imported translation's chapter-opening title: a SIBLING before
-           .ross-prose, not its first child — (a) inside .ross-prose it pushed
+           .overlay-prose, not its first child — (a) inside .overlay-prose it pushed
            the English prose one line below the Greek (John's review of
            631ff971); the Greek column gets a matching invisible spacer
            instead (see the .greek-col markup below), so Greek line 1 and
            English prose line 1 stay flush and the title takes its own space
            above; (b) the offset walkers (annotations.ts proseOffsetAt,
-           emphasis-paint.ts proseText) root at col.querySelector('.ross-prose')
+           emphasis-paint.ts proseText) root at col.querySelector('.overlay-prose')
            and exclude only .bk-num/.eng-table, so title text INSIDE
-           .ross-prose would leak into captured offsets — as a sibling they
+           .overlay-prose would leak into captured offsets — as a sibling they
            never see it, keeping the render-only/no-offset-shift guarantee
            structural. -->
-      {#if chTitle}<div class="ross-chapter-title">{chTitle}</div>{/if}
+      {#if chTitle}<div class="overlay-chapter-title">{chTitle}</div>{/if}
       {#if fnTransIds.has(transId)}
         <div
-          class="ross-prose"
+          class="overlay-prose"
           on:mouseover={onFootnoteOver}
           on:mouseout={onFootnoteOut}
           on:focus={onFootnoteFocus}
@@ -1220,7 +1222,7 @@
           {/each}
         </div>
       {:else}
-        <div class="ross-prose">
+        <div class="overlay-prose">
           {#each attachTicks(flow) as part}
             {#if part.text === '\n'}
               <br class="para-br" />
@@ -1331,7 +1333,7 @@
           <!-- If the on-screen primary translation (English cell of this row)
                opens this chapter with an imported title, the Greek column gets
                an invisible spacer of the same one-line height (see
-               .ross-chapter-title-spacer in global.css) so both columns are
+               .overlay-chapter-title-spacer in global.css) so both columns are
                pushed down equally: title above, Greek line 1 flush with
                English prose line 1. Same gates as the visible title in
                transFlow (chapter start + that import's flow present here);
@@ -1347,7 +1349,7 @@
           <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
             <div class="greek-col" lang="grc">
-              {#if spacerTitle}<div class="ross-chapter-title ross-chapter-title-spacer" aria-hidden="true">{spacerTitle}</div>{/if}
+              {#if spacerTitle}<div class="overlay-chapter-title overlay-chapter-title-spacer" aria-hidden="true">{spacerTitle}</div>{/if}
               {#each greekItems(block.lines) as item}
                 {#if item.table}
                   <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->
@@ -1387,7 +1389,7 @@
             <!-- Right compare column: the second chosen translation beside the
                  first (hidden in Greek-only). -->
             {#if trans === 'compare' && view !== 'greek'}
-              <div class="ross-col" data-trans={compareRight}>
+              <div class="overlay-col" data-trans={compareRight}>
                 <div class="col-label">{transById(compareRight)?.short ?? ''}</div>
                 {@render transFlow(block, compareRight)}
               </div>

@@ -1,5 +1,5 @@
 // Phase-3 §B3: emitOverlayPieces re-inserts each footnote marker's
-// `[^label]` text into the emitted RossPiece, right-to-left, and must not
+// `[^label]` text into the emitted OverlayPiece, right-to-left, and must not
 // silently corrupt the Bekker-tick or emphasis piece-local offsets that were
 // computed against the piece's PRE-insertion text. Not part of the spec's
 // explicit §C test tables, but this is genuinely novel logic (an insertion,
@@ -129,7 +129,7 @@ describe('emitOverlayPieces: PieceEmphasis marker-free invariant (Fix 1 regressi
   const { pieces, emphasis } = emitOverlayPieces(book, aligned);
   const piece = pieces['seg-1094a'][0];
 
-  it('splices the marker into the on-screen RossPiece text', () => {
+  it('splices the marker into the on-screen OverlayPiece text', () => {
     expect(piece.text).toBe('Every good[^1] thing.');
   });
 

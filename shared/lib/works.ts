@@ -8,7 +8,7 @@
 //
 // `translations[].slot` says which emitted segment field the reader renders for
 // that translation: 'english' is the primary parallel chunk (Rackham / Smith),
-// 'ross' the secondary chapter-anchored overlay (Ross / Hicks), 'third' an
+// 'secondary' the chapter-anchored overlay (Wallace / Owen / Taylor), 'third' an
 // optional third overlay (e.g. Ackrill), and 'overlay' any further overlay
 // (4th onward) read from seg.overlays[id] — so a work can carry any number of
 // translations. The picker lists them in registry order.
@@ -17,7 +17,7 @@ export interface TranslationRef {
   id: string;
   name: string;     // full citation, for the picker + attribution
   short: string;    // chip label
-  slot: 'english' | 'ross' | 'third' | 'overlay';
+  slot: 'english' | 'secondary' | 'third' | 'overlay';
   // Carries inline `[^N]` footnote markers + a footnotes.json popup map (e.g.
   // the Isagoge's Owen). Independent of slot — the reader renders the markers
   // for whichever translation sets this.
@@ -101,7 +101,7 @@ const ACKRILL: TranslationRef[] = SHOW_PRIVATE ? [
 // Rackham's Loeb (1935) Eudemian Ethics is US-copyright until ~2031; carried as
 // the secondary overlay in the local build, gated out of the public deploy.
 const EE_RACKHAM: TranslationRef[] = SHOW_PRIVATE ? [
-  { id: 'rackham', name: 'H. Rackham (Loeb, 1935)', short: 'Rackham', slot: 'ross', private: true },
+  { id: 'rackham', name: 'H. Rackham (Loeb, 1935)', short: 'Rackham', slot: 'secondary', private: true },
 ] : [];
 
 // Display order follows the traditional arrangement of the corpus: the Organon
@@ -127,7 +127,7 @@ export const WORKS: Work[] = [
     // keyed to Bekker via Ackrill's per-paragraph stamps.
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
+      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'secondary' },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
@@ -151,7 +151,7 @@ export const WORKS: Work[] = [
     // from the 1812 Organon scan (CLAA's ch14 page was a broken duplicate).
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'ross' },
+      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'secondary' },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
@@ -263,7 +263,7 @@ export const WORKS: Work[] = [
     // divisions match the Greek spine exactly (5/12/13), no anchors file.
     translations: [
       { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
-      { id: 'wallace', name: 'Edwin Wallace (Cambridge, 1882)', short: 'Wallace', slot: 'ross' },
+      { id: 'wallace', name: 'Edwin Wallace (Cambridge, 1882)', short: 'Wallace', slot: 'secondary' },
     ],
     blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
   },
@@ -515,7 +515,7 @@ export const WORKS: Work[] = [
     },
     translations: [
       { id: 'jenkinson', name: 'A. J. Jenkinson (Oxford, 1928)', short: 'Jenkinson', slot: 'english' },
-      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'ross' },
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'secondary' },
     ],
     blurb: 'Aristotle’s theory of the syllogism and deductive inference, in two books.',
   },
@@ -536,7 +536,7 @@ export const WORKS: Work[] = [
     // chapters, pinned to the Greek spine; gutter interpolated (no anchors.yaml).
     translations: [
       { id: 'mure', name: 'G. R. G. Mure (Oxford, 1928)', short: 'Mure', slot: 'english' },
-      { id: 'bouchier', name: 'E. S. Bouchier (Blackwell, 1901)', short: 'Bouchier', slot: 'ross' },
+      { id: 'bouchier', name: 'E. S. Bouchier (Blackwell, 1901)', short: 'Bouchier', slot: 'secondary' },
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'third' },
     ],
     blurb: 'Aristotle on demonstration, scientific knowledge, and first principles, in two books.',
@@ -555,7 +555,7 @@ export const WORKS: Work[] = [
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
-      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'ross' },
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'secondary' },
     ],
     blurb: 'Aristotle’s manual of dialectical argument and the topoi, in eight books.',
   },
@@ -573,7 +573,7 @@ export const WORKS: Work[] = [
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
-      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'ross' },
+      { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'secondary' },
     ],
     blurb: 'Aristotle on fallacies and sophistical argument — the closing work of the Organon, in thirty-four chapters.',
   },
@@ -592,7 +592,7 @@ export const WORKS: Work[] = [
     },
     translations: [
       { id: 'rackham', name: 'H. Rackham (Loeb, 1926)', short: 'Rackham', slot: 'english' },
-      { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'ross' },
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'secondary' },
       // Public domain (Bobbs-Merrill 1962, copyright not renewed — verified), so
       // it ships in the public build. Bekker-keyed from its inline apparatus and
       // carries Ostwald's 505 footnotes (shown as popups in the reader).
@@ -657,7 +657,7 @@ export const WORKS: Work[] = [
     // divisions match the Greek spine exactly (13/12/18/16/12/8/17/7).
     translations: [
       { id: 'jowett', name: 'Benjamin Jowett (Oxford, 1885)', short: 'Jowett', slot: 'english' },
-      { id: 'ellis', name: 'William Ellis (1776; rev. 1912)', short: 'Ellis', slot: 'ross' },
+      { id: 'ellis', name: 'William Ellis (1776; rev. 1912)', short: 'Ellis', slot: 'secondary' },
     ],
     blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
   },
@@ -891,7 +891,7 @@ export const WORKS: Work[] = [
     // chapters, pinned to the Greek spine; gutter interpolated (no anchors.yaml).
     translations: [
       { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
-      { id: 'roberts', name: 'W. Rhys Roberts (Oxford, 1924)', short: 'Roberts', slot: 'ross' },
+      { id: 'roberts', name: 'W. Rhys Roberts (Oxford, 1924)', short: 'Roberts', slot: 'secondary' },
     ],
     blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
   },
@@ -912,7 +912,7 @@ export const WORKS: Work[] = [
     // interpolated (no anchors.yaml).
     translations: [
       { id: 'fyfe', name: 'W. H. Fyfe (Loeb, 1932)', short: 'Fyfe', slot: 'english' },
-      { id: 'butcher', name: 'S. H. Butcher (Macmillan, 1895)', short: 'Butcher', slot: 'ross' },
+      { id: 'butcher', name: 'S. H. Butcher (Macmillan, 1895)', short: 'Butcher', slot: 'secondary' },
     ],
     blurb: 'Aristotle on poetry and tragedy — the founding work of literary theory.',
   },

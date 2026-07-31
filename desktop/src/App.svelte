@@ -352,7 +352,7 @@
   // those keys absent, which used to make this resolve to [] and blank out
   // every compare-view highlight/note. Most robust source of truth is the
   // rendered DOM itself: the compare columns carry a `data-trans` attribute
-  // (see Reader's .english-col/.ross-col) naming exactly what's on screen,
+  // (see Reader's .english-col/.overlay-col) naming exactly what's on screen,
   // regardless of how the pair was arrived at. Fall back to the localStorage
   // keys, then to Reader's own default-pair resolution (mirrored here) for
   // the brief window right after mount/nav before the Reader has painted —
@@ -360,7 +360,7 @@
   const shownTranslations = (t: string): string[] => {
     if (t !== 'compare') return [t];
     const fromDom = new Set<string>();
-    document.querySelectorAll<HTMLElement>('.english-col[data-trans], .ross-col[data-trans]')
+    document.querySelectorAll<HTMLElement>('.english-col[data-trans], .overlay-col[data-trans]')
       .forEach(el => { const v = el.getAttribute('data-trans'); if (v) fromDom.add(v); });
     if (fromDom.size) return [...fromDom];
     try {

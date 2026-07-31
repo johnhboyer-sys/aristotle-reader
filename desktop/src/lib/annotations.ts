@@ -206,13 +206,13 @@ export async function writeClipboard(text: string): Promise<boolean> {
 //   .fn-marker  — Ostwald's inline `[^N]` footnote reference button
 //                 (rendered as a clickable superscript digit, see
 //                 Reader.svelte's renderThird/.fn-marker)
-//   .ross-chapter-title — an imported translation's own converter-derived
+//   .overlay-chapter-title — an imported translation's own converter-derived
 //                 chapter title (Reader.svelte's importChapterTitle):
 //                 editorial paratext rendered inside that import's column,
 //                 not part of the reference text
 //   .eng-table  — kept for parity with the existing offset walker below,
 //                 though its own text is usually outside any prose selection
-const COPY_EXCLUDE_SELECTOR = '.bk-num, .line-num, .col-label, .fn-marker, .ross-chapter-title, .eng-table';
+const COPY_EXCLUDE_SELECTOR = '.bk-num, .line-num, .col-label, .fn-marker, .overlay-chapter-title, .eng-table';
 
 /**
  * Extract a Range's text the way a "clean copy" should read: skips gutter
@@ -277,11 +277,11 @@ function wordIndexAt(container: Node, lineHost: Element): number {
 
 /** Char offset of a range boundary within a column's prose (.bk-seg text only). */
 function proseOffsetAt(col: Element, container: Node, offset: number): number {
-  // Scope to the prose subtree: in compare view .english-col/.ross-col carry a
-  // leading .col-label (translation name) before .ross-prose — walking from
+  // Scope to the prose subtree: in compare view .english-col/.overlay-col carry a
+  // leading .col-label (translation name) before .overlay-prose — walking from
   // `col` itself would count that label text into the offset, shifting every
   // compare-captured offset relative to the same selection made in mono view.
-  const root = col.querySelector('.ross-prose') ?? col;
+  const root = col.querySelector('.overlay-prose') ?? col;
   let acc = 0;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (n) =>
@@ -310,7 +310,7 @@ export const CROSS_COLUMN = 'cross-column' as const;
 /** Which of the three column kinds (if any) a node lives in, for the
  * cross-column check below. */
 function columnOf(el: Element | null): Element | null {
-  return el?.closest('.greek-col, .english-col, .ross-col') ?? null;
+  return el?.closest('.greek-col, .english-col, .overlay-col') ?? null;
 }
 
 /**
@@ -348,7 +348,7 @@ export function captureSelection(book: number, activeTranslation: string): Captu
   const endCol = columnOf(nodeEl(range.endContainer));
   if (startCol && endCol && startCol !== endCol) return CROSS_COLUMN;
 
-  const col = nodeEl(range.startContainer)?.closest('.english-col, .ross-col');
+  const col = nodeEl(range.startContainer)?.closest('.english-col, .overlay-col');
   const seg = nodeEl(range.startContainer)?.closest('.segment');
   const colId = seg?.id.match(/^col-(.+)$/)?.[1];
   if (col && colId && col.contains(range.endContainer)) {
@@ -417,17 +417,17 @@ export function englishRange(t: EnglishTarget, shown: string[]): Range[] {
   const seg = document.getElementById(`col-${t.column}`);
   if (!seg) return [];
   // Locate the specific column element carrying this translation. Compare
-  // view can have both an .english-col and a .ross-col under the same
+  // view can have both an .english-col and a .overlay-col under the same
   // segment, each tagged with its own data-trans; mono view has only
   // .english-col and (pre-existing markup) may carry no data-trans at all,
   // so fall back to the old unconditional .english-col lookup in that case.
-  const candidates = [...seg.querySelectorAll('.english-col, .ross-col')];
+  const candidates = [...seg.querySelectorAll('.english-col, .overlay-col')];
   const col = candidates.find(c => c.getAttribute('data-trans') === t.translation)
     ?? seg.querySelector('.english-col');
   if (!col) return [];
   // Scope to the prose subtree — mirrors the capture-side offset walk so a
   // compare column's leading .col-label text is never counted.
-  const root = col.querySelector('.ross-prose') ?? col;
+  const root = col.querySelector('.overlay-prose') ?? col;
   const locate = (target: number): [Node, number] | null => {
     let acc = 0;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
