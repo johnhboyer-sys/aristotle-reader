@@ -3,13 +3,30 @@
 Tracks every translation that has had real Bekker line-ticks placed by the
 gloss-aligner ([recipe](gloss-aligner-recipe.md)). The **Review** links open the
 per-book HTML pages (Greek window · gloss · translation prose with a ▸ at the placed
-offset; Spot-on / Early / Late buttons + JSON export) for works **still awaiting human
-verification**. Already-verified, shipped works are kept for the record.
+offset; Spot-on / Early / Late buttons + JSON export).
 
 Tick counts are real ticks (`column` + `five_line` tiers); `chapter`/`line`-tier
 anchors are structural/interpolated and not counted.
 
-## ⚠ Needs verification
+> **What "confirmed" means here (corrected 2026-07-31).** Every `confirmed` /
+> `reliable` / `uncertain` count in this file is an **Opus verifier's** judgment of
+> the Sonnet gloss pass — a model checking a model. It is not a human reading.
+>
+> Almost no tedious human verification has been done on this corpus. Audited
+> 2026-07-31: **the repo contains no human verdict export for any work.** The
+> review pages export Spot-on/Early/Late JSON (see "How to verify a work"), and no
+> such file exists anywhere in `build/align/` or `alignment-results/`. The
+> `*_review.json` files hold the aligner's own `confidence`/`score`/`flags`, not
+> reviewer marks, and cover only the flagged subset (EN/Ross: 138 rows, not 1293).
+>
+> The one alignment work with a committed human correction is **Poet / Fyfe**
+> (`63d41aa2`, 8 word-exact pins). Human passes claimed below for SE and HA Book 1
+> have no surviving artifact either way. Treat every other "reviewed" as machine-only.
+>
+> Outside alignment, the real hand-verification lives in `bonitz/` — the adjudicated
+> page files and the 67 rulings frozen as a fixture in `2e1e6471`.
+
+## ⚠ Not shipped — machine-verified only
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
@@ -38,11 +55,13 @@ anchors are structural/interpolated and not counted.
   early/late verdicts are a `current_placement` lead-in artifact (the judge is shown a clause
   before the true offset). Quality is comparable to Ross-EN; **needs a human review pass**
   (watch for clause-level early drift on the ~18% harder ticks) before promoting to shipped.
-- **SE / Pickard-Cambridge** — aligned 2026-06-23 (sonnet gloss · opus verify ×2 + human
-  review pass). 100 ticks human-reviewed (60 ok, 24 early, 16 late; 51 word-clicked to pin
-  exact phrase). Remaining 216 ticks verified by Opus — **Opus marked 87% early/late on
-  the unreviewed chapters, which is high vs the human rate of 40%; the unreviewed chapters
-  need a further human pass before shipping.** Phase B wired via
+- **SE / Pickard-Cambridge** — aligned 2026-06-23 (sonnet gloss · opus verify ×2 + a
+  claimed human review pass). 100 ticks recorded as human-reviewed (60 ok, 24 early, 16
+  late; 51 word-clicked to pin exact phrase) — **no verdict export survives, so this
+  cannot be confirmed and the reviewed ticks can no longer be told apart from the rest.**
+  Remaining 216 ticks verified by Opus — **Opus marked 87% early/late on
+  the unreviewed chapters, which is high vs the claimed human rate of 40%; the unreviewed
+  chapters need a further human pass before shipping.** Phase B wired via
   `sources/sr-pickard/anchors.yaml` + `anchors:` in `manifests/SE.yaml`; not yet committed.
 - **DA / Smith** — aligned 2026-07-06 (sonnet gloss · opus verify ×1 · one correction pass
   §5b). 460 real ticks (454 confirmed, 6 reliable/uncertain); the **primary** translation
@@ -53,7 +72,8 @@ anchors are structural/interpolated and not counted.
   key_failures=0; reader gutter 486 real / 3 interp (99.4%). **Needs a human review pass**
   (`smith/review/book-0{1,2,3}.html`) before shipping; not yet deployed.
 - **HA / Thompson** — the corpus's longest work, aligned 2026-06-22 (sonnet gloss · opus
-  verify). Book 1 human-reviewed & approved. **§5b correction pass status:** Book 7 applied
+  verify). Book 1 recorded as human-reviewed & approved — **no verdict export survives to
+  confirm it.** **§5b correction pass status:** Book 7 applied
   (`d24550c`); **Books 8+9 applied 2026-07-06** (opus, 634 ticks re-judged; move-size vs
   verify-once: median 0 / mean 6.4 / max 82 chars, 0 moves >100). Books 1–6 intentionally
   left at verify-once (the original build's scratch was lost; the correction is a marginal
@@ -67,7 +87,7 @@ anchors are structural/interpolated and not counted.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
 
-## ✅ Verified & shipped live
+## ✅ Shipped live (machine-verified unless noted)
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
@@ -77,10 +97,14 @@ anchors are structural/interpolated and not counted.
 | Physics (`Phys`) | R. P. Hardie & R. K. Gaye (public primary) | 71 | 1200 | 1199 confirmed · 1 reliable | [index](../alignment-results/hardie/index.html) · Bk [1](../alignment-results/hardie/review/book-01.html) [2](../alignment-results/hardie/review/book-02.html) [3](../alignment-results/hardie/review/book-03.html) [4](../alignment-results/hardie/review/book-04.html) [5](../alignment-results/hardie/review/book-05.html) [6](../alignment-results/hardie/review/book-06.html) [7](../alignment-results/hardie/review/book-07.html) [8](../alignment-results/hardie/review/book-08.html) |
 | Poetics (`Poet`) | W. H. Fyfe (Loeb, 1932) — primary | 26 | 233 | 232 confirmed · 1 uncertain | [Bk 1](../alignment-results/fyfe/review/book-01.html) · [index](../alignment-results/fyfe/index.html) |
 
-- **EN / Ross** — every tick read-and-checked (2026-06-17); shipped, reader consumes
-  the combined gloss map via `stage1_ross`.
-- **Pol / Jowett** — shipped live `d322247` after a 2nd Greek-grounded audit round;
-  wired via `sources/pol-jowett/anchors.yaml` (archive primary).
+- **EN / Ross** — shipped 2026-06-17; reader consumes the combined gloss map via
+  `stage1_ross`. **Correction 2026-07-31:** this entry used to read "every tick
+  read-and-checked", which nothing supports. What exists is `EN_ross_review.json` (138
+  rows) and `EN_ross_gloss_review.json` (134) — the aligner's own confidence/score/flags
+  over the flagged subset, no reviewer marks. All 1293 ticks are machine-verified.
+- **Pol / Jowett** — shipped live `d322247` after a 2nd Greek-grounded audit round
+  (**machine**, not a human pass — no verdict export exists); wired via
+  `sources/pol-jowett/anchors.yaml` (archive primary).
 - **APr / Jenkinson** — Phase A aligned 2026-06-21 (sonnet gloss · opus verify; lone
   `reliable` tick `37b20`, Bk 1 ch 18, where Jenkinson condenses the line). Phase B wired
   same day via `sources/apr-jenkinson/anchors.yaml` (774 `chapter`+`five_line` entries,
@@ -89,8 +113,8 @@ anchors are structural/interpolated and not counted.
   pins each column's first line structurally. Build: stage2 PASS, 1 unresolved (`32b40`,
   a column-end straddle → interpolated); gutter renders 858 real vs 5 interpolated ticks.
   Deploys on the next gh-pages push.
-- **Phys / Hardie & Gaye** — aligned + reviewed + shipped 2026-06-22 (sonnet gloss · opus
-  verify + one opus correction pass; lone `reliable` tick in Bk 7 where the phrase wasn't
+- **Phys / Hardie & Gaye** — aligned + shipped 2026-06-22 (sonnet gloss · opus
+  verify + one opus correction pass — **no human pass**; lone `reliable` tick in Bk 7 where the phrase wasn't
   located verbatim). Phase B wired via `sources/phys-hardie/anchors.yaml` (1105
   `chapter`+`five_line` entries from `tools/gloss_map_to_anchors.py`) + `anchors:` under
   `english.primary` in `manifests/Phys.yaml`. Build: stage2 PASS, key_failures=0, 8
@@ -98,7 +122,10 @@ anchors are structural/interpolated and not counted.
   7 interpolated ticks.
 - **Poet / Fyfe** — aligned + human-reviewed + shipped live 2026-06-24 (gh-pages `b6cff15`;
   sonnet gloss · opus verify ×1 + one scoped opus correction pass + 8 word-exact human
-  anchor pins). 233 real ticks, **232 confirmed · 1 uncertain** (`1458b10`, ch 22, where Fyfe
+  anchor pins). **The only alignment work with a committed human correction** — `63d41aa2`
+  records John flagging 9 ticks early/late and pinning the exact phrase for each; the
+  aligner had snapped those sub-clause (3–51 char) fixes away, so they were written into
+  `anchors.yaml` directly. 233 real ticks, **232 confirmed · 1 uncertain** (`1458b10`, ch 22, where Fyfe
   condenses the line). **First gloss-aligned work whose primary was converted from the Perseus
   `perseus_tei` path to archive:** Fyfe's prose was extracted from the eng TEI to
   `sources/poet-fyfe/book-01.html` by `tools/extract_fyfe_poetics.py` (footnotes + Bekker
@@ -106,6 +133,14 @@ anchors are structural/interpolated and not counted.
   to `model: archive` + `anchors: poet-fyfe/anchors.yaml` (231 anchors, **0 unresolved**).
   Reader gutter renders **257 real ticks, 0 interpolated**. NB Fyfe's footnotes are dropped by
   the archive conversion (a content tradeoff vs the old `perseus_tei` build).
+
+## Related
+
+- **UGARIT word-aligner spike** (2026-07-31) — tested whether an open Ancient-Greek
+  word-alignment model could place these ticks instead of the gloss pipeline. It can't
+  (it refines a position rather than finding one), but it beats the interpolated
+  fallback 2–4× and could serve translations with no anchors file. See
+  [ugarit-aligner-spike.md](ugarit-aligner-spike.md).
 
 ## Not gloss-aligned (different method, for completeness)
 
@@ -124,4 +159,8 @@ anchors are structural/interpolated and not counted.
    **Late** (it's *before* the ▸); add notes as needed. Verdicts auto-save in the browser.
 3. Click **Export JSON** to save the verdicts; the Early/Late ones drive a re-gather +
    re-verify pass on those chapters (`tools/verify_gather.py <book> 4000 <chapters>`).
-4. When clean, do Phase B wiring (see each work's note above) + commit/deploy.
+4. **Commit the export.** Step 2's verdicts live in browser storage only — if the export
+   isn't saved into the repo, the pass leaves no trace and the work has to be redone. This
+   is why the SE and HA Book 1 passes can't be confirmed today: nothing was committed, so
+   there is no way to tell which ticks a human actually looked at.
+5. When clean, do Phase B wiring (see each work's note above) + commit/deploy.

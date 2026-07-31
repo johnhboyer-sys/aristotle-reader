@@ -47,7 +47,7 @@ const bookFiles = readdirSync(workDir).filter(f => /^book-\d+\.json$/.test(f)).s
 const inputs = [];
 for (const f of bookFiles) {
   const book = JSON.parse(readFileSync(path.join(workDir, f), 'utf-8'));
-  const prose = reassembleOverlay(book, 'ross');
+  const prose = reassembleOverlay(book, 'secondary');
   if (prose.size === 0) continue; // no overlay translation in this book
   inputs.push(...buildChapterInputs(book, chapters, prose));
 }

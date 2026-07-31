@@ -15,3 +15,13 @@ dependencies = [
 align = [
     "sentence-transformers>=2.2",
 ]
+# tools/ugarit_align.py only. XLM-R's tokenizer is a sentencepiece model and the
+# UGARIT repo ships no tokenizer.json, so the slow→fast conversion needs
+# sentencepiece + protobuf at load time. Install with: uv sync --extra ugarit
+ugarit = [
+    "torch>=2.0",
+    "transformers>=4.30",
+    "scikit-learn>=1.0",
+    "sentencepiece>=0.2",
+    "protobuf>=4.0",
+]

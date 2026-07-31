@@ -130,15 +130,16 @@ export function buildChapterInputs(
 }
 
 /**
- * Reassemble a chapter-anchored overlay translation (Ross-style pieces
- * distributed across columns) back into per-chapter prose — used by the
- * parity/regression harness to give the TS engine the same unmarked target
- * the pipeline aligned. Keyed "book:chapter".
+ * Reassemble a chapter-anchored overlay translation (pieces distributed across
+ * columns) back into per-chapter prose — used by the parity/regression harness
+ * to give the TS engine the same unmarked target the pipeline aligned. Keyed
+ * "book:chapter".
  */
-export function reassembleOverlay(book: BookData, slot: 'ross' | 'third' = 'ross'): Map<string, string> {
+export function reassembleOverlay(book: BookData, slot: 'secondary' | 'third' = 'secondary'): Map<string, string> {
   const out = new Map<string, string>();
   for (const seg of book.segments) {
-    for (const p of (slot === 'ross' ? seg.ross : seg.third) ?? []) {
+    // `seg.ross` is the pre-rename emitted name; drop it after a corpus rebuild.
+    for (const p of (slot === 'secondary' ? (seg.secondary ?? seg.ross) : seg.third) ?? []) {
       const key = `${book.book}:${p.chapter}`;
       const prev = out.get(key);
       if (prev === undefined) {

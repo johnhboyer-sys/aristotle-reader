@@ -16,7 +16,7 @@
 // pieces ({chapter, text, cont, bekker ticks with real/estimate flags}) in
 // exactly the shape Reader.svelte renders from seg.overlays[id].
 
-import type { BookData, RossPiece } from '@shared/lib/data';
+import type { BookData, OverlayPiece } from '@shared/lib/data';
 import { alignChapter, dedupMonotonic, interpolate, snapWord, type Anchor, type ChapterInput } from './engine';
 import type { EmphasisSpan, FootnoteMarker, InlineTag, TagDensity } from '../translation-file';
 
@@ -28,7 +28,7 @@ export interface ChapterAlignment {
   emphasis: EmphasisSpan[];   // offsets into `text`, carried through unchanged (alignment never rewrites the chapter's own text/offsets)
   // §B3: same treatment as emphasis — offsets into `text`, carried through
   // unchanged; emitOverlayPieces re-inserts each marker's `[^label]` text
-  // into the emitted RossPiece at the matching piece-local position.
+  // into the emitted OverlayPiece at the matching piece-local position.
   footnoteMarkers: FootnoteMarker[];
   stats: { tagged: number; placed: number; interpolated: number };
 }
@@ -235,26 +235,26 @@ function pyRoundLocal(x: number): number {
 // ── overlay emission ─────────────────────────────────────────────────────────
 
 // A piece's emphasis ranges, offsets rebased into that PIECE's own text (same
-// offset space piecesFor/flowOf in Reader.svelte read RossPiece.text with).
+// offset space piecesFor/flowOf in Reader.svelte read OverlayPiece.text with).
 //
 // `pieceText` carries the piece's FULL clean text so the desktop-side painter
-// can match a rendered `.ross-prose` block by CONTENT rather than by trying
+// can match a rendered `.overlay-prose` block by CONTENT rather than by trying
 // to reconstruct which array index/chapter-key the Reader resolved it to: a
 // single Bekker column can render several blocks (one per chapter that starts
 // or continues there — see Reader.svelte's splitSegment, one `.seg-row`/
-// `.english-col`/`.ross-prose` per block), and there's no DOM attribute that
-// cleanly exposes "this .ross-prose is the cont-piece vs. chapter X's own
+// `.english-col`/`.overlay-prose` per block), and there's no DOM attribute that
+// cleanly exposes "this .overlay-prose is the cont-piece vs. chapter X's own
 // piece" the way the Reader's internal pieceFor/pieceCont lookup does — so an
-// exact-text match against each candidate `.ross-prose` in that column is the
+// exact-text match against each candidate `.overlay-prose` in that column is the
 // robust join, not an inferred ordering/key.
 export interface PieceEmphasis { pieceText: string; start: number; end: number; style: EmphasisSpan['style']; }
 
 /**
  * Slice aligned chapter prose across a book's column segments, producing the
  * per-segment overlay pieces the Reader renders (seg.overlays[id] shape), and
- * — in a PARALLEL structure, never on RossPiece itself (Reader.svelte only
+ * — in a PARALLEL structure, never on OverlayPiece itself (Reader.svelte only
  * reads text/cont/chapter/bekker/tables off a piece; an extra field would be
- * harmless but there's no need to touch the shared RossPiece type at all) —
+ * harmless but there's no need to touch the shared OverlayPiece type at all) —
  * each piece's emphasis ranges rebased to that piece's own text.
  *
  * Column boundaries inside a chapter come from that chapter's anchors: the
@@ -266,9 +266,9 @@ export interface PieceEmphasis { pieceText: string; start: number; end: number; 
 export function emitOverlayPieces(
   book: BookData,
   aligned: ChapterAlignment[],
-): { pieces: Record<string, RossPiece[]>; emphasis: Record<string /* column */, PieceEmphasis[]> } {
+): { pieces: Record<string, OverlayPiece[]>; emphasis: Record<string /* column */, PieceEmphasis[]> } {
   const byChapter = new Map(aligned.filter(c => c.book === book.book).map(c => [c.chapter, c]));
-  const out: Record<string, RossPiece[]> = {};
+  const out: Record<string, OverlayPiece[]> = {};
   const emphOut: Record<string, PieceEmphasis[]> = {};
 
   // Which chapters appear in which segments, in order — walk chapterStarts.
@@ -377,7 +377,7 @@ export function emitOverlayPieces(
         .filter(t => Number.isFinite(t.n) && t.n > 0)
         .sort((x, y) => x.n - y.n);
 
-      const piece: RossPiece = {
+      const piece: OverlayPiece = {
         chapter: span.chapter,
         text: finalPieceText,
         cont: !isFirst,
@@ -396,7 +396,7 @@ export function emitOverlayPieces(
       // the desktop-side paint pass runs on a debounce after every Reader
       // re-render and must resolve straight to a DOM id without a BookData
       // fetch in the hot path. `pieceText` (== pieceText, this piece's own
-      // clean text) lets the painter match the right `.ross-prose` by content.
+      // clean text) lets the painter match the right `.overlay-prose` by content.
       // INVARIANT: the emphasis key + offsets must live in the SAME character
       // space the desktop painter measures. The painter reads rendered DOM
       // text via proseText(), which now excludes `.fn-marker` button text
@@ -407,7 +407,7 @@ export function emitOverlayPieces(
       // piece resolves to is this piece's PRE-marker-insertion, PRE-insertion
       // text with newlines removed — i.e. `pieceText` (the raw slice, before
       // `[^label]` splicing), not `finalPieceText` (which has markers spliced
-      // in for on-screen RossPiece.text rendering). Store the emphasis
+      // in for on-screen OverlayPiece.text rendering). Store the emphasis
       // pieceText/offsets in that marker-free, newline-free space — clipped
       // only for removed '\n', with NO shiftForInsertions carry — so
       // `pieceText === proseText(prose)` holds and the offsets line up.
@@ -421,7 +421,7 @@ export function emitOverlayPieces(
       // (Imports carry no [[sN]]/[[figN]] markers; '\n' is the only
       // transform an import column's text undergoes relative to the aligned
       // chapter prose, in this clean-emphasis space — `[^label]` footnote
-      // markers exist only in finalPieceText/RossPiece.text, never here.)
+      // markers exist only in finalPieceText/OverlayPiece.text, never here.)
       const cleanPieceText = pieceText.replace(/\n/g, '');
       const toClean = (rawLocal: number) =>
         rawLocal - (pieceText.slice(0, rawLocal).match(/\n/g)?.length ?? 0);
