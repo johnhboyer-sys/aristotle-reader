@@ -93,17 +93,27 @@ def _find_phrase(text: str, phrase: str) -> int:
     """Offset of `phrase` in `text`, falling back to progressively shorter
     word-prefixes when the full phrase isn't found verbatim — e.g. when the
     proportional column cut split the anchor phrase across two chunks. Returns
-    -1 if even a 4-word prefix is absent."""
+    -1 if even a 4-word prefix is absent.
+
+    Anchor phrases are stored whitespace-COLLAPSED (see
+    tools/gloss_map_to_anchors.py `_phrase`), so a phrase spanning a paragraph
+    break carries a space where the prose has a newline and no amount of
+    prefix-shortening finds it — every prefix straddles the break too. Matching
+    on `\\s+` between words fixes 66 of the 68 anchors that genuinely failed to
+    resolve corpus-wide (HA 24, Phys 24, DA 8, Mete 3, ...), which were being
+    written off as column straddles. The remaining 2 are real straddles.
+    """
     off = text.find(phrase)
     if off >= 0:
         return off
     words = phrase.split()
-    for k in (8, 6, 5, 4):
-        if len(words) <= k:
+    for k in (None, 8, 6, 5, 4):
+        part = words if k is None else words[:k]
+        if k is not None and len(words) <= k:
             continue
-        off = text.find(" ".join(words[:k]))
-        if off >= 0:
-            return off
+        m = re.search(r"\s+".join(re.escape(w) for w in part), text)
+        if m:
+            return m.start()
     return -1
 
 
@@ -129,17 +139,30 @@ def _inject_real_ticks(chunks: dict[str, list[dict]], anchors_rel: str,
             continue
         column, line = m.group(1), int(m.group(2))
         phrase = e["at"].strip()
+        # Segment ids are "{book}:{column}", so the old `chunks[f"1:{column}"]`
+        # only ever matched book 1 — every anchor in books 2+ fell through to the
+        # any-piece scan below. Match on the column suffix instead, which also
+        # picks up both pieces of a mid-column book start (DA's 424b).
+        own = [p for sid, ps in chunks.items() if sid.endswith(f":{column}") for p in ps]
         hit = None
-        ordered = chunks.get(f"1:{column}", [])              # prefer the right column
-        for p in ordered + [p for sid, ps in chunks.items() for p in ps if sid != f"1:{column}"]:
+        for p in own:
             off = _find_phrase(p["text"], phrase)
             if off >= 0:
                 hit = (p, off)
                 break
         if not hit:
-            missing.append(ref)
-            continue
-        p, off = hit
+            # The phrase spilled past the proportional column cut. Do NOT drop the
+            # tick into another column's piece: pieces carry no column of their
+            # own, so the reader would label it with the host column and cite the
+            # wrong Bekker line — and two such ticks sharing a line number would
+            # silently overwrite each other. Pin it to the end of its own column,
+            # as _resolve_anchors does for the same case.
+            if not own:
+                missing.append(ref)
+                continue
+            p = own[-1]
+            bounds = [m.end() for m in re.finditer(r'[.?!][")\']?\s', p["text"])]
+            off = bounds[-1] if bounds else len(p["text"])
         p["bekker"] = [t for t in p["bekker"] if t["n"] != line]
         p["bekker"].append({"n": line, "offset": off, "real": True})
         p["bekker"].sort(key=lambda t: t["offset"])
@@ -164,7 +187,9 @@ def _attach_tables(chunks: dict[str, list[dict]], cfg: dict) -> None:
         if not m:
             continue
         column, line = m.group(1), int(m.group(2))
-        for p in chunks.get(f"1:{column}", []):
+        # Same "{book}:{column}" id shape as _inject_real_ticks — a hardcoded
+        # book 1 would silently drop every table in books 2+.
+        for p in [p for sid, ps in chunks.items() if sid.endswith(f":{column}") for p in ps]:
             if any(t["n"] == line for t in p.get("bekker", [])):
                 p.setdefault("tables", []).append({"n": line, "rows": tbl["rows"]})
                 break
