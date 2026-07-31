@@ -666,6 +666,56 @@ describe('compileWorkMarkdown — document-spine multi-chapter container (D8 str
     );
   });
 
+  it('does not print the marked line twice — as its heading and again as body', () => {
+    // The row the chapter heading came from carries a `headers` mark after
+    // splitDocument re-bases it. Exporting it again as the body's first
+    // paragraph printed "Question 2" as a heading and then "Question 2" as a
+    // paragraph directly under it.
+    const marked: ChapterFile = {
+      ...q(1, 'Question 2'),
+      meta: { ...q(1, 'Question 2').meta, headers: [{ row: 1, level: 2 }] },
+      greekLines: ['Quaestio 2', 'Corpus of the article.'],
+      englishLines: ['Question 2', 'Body of the article.'],
+    };
+    const result = compileWorkMarkdown([marked], CONTAINER);
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        'Body of the article.\n',
+    );
+  });
+
+  it('bilingual keeps the marked line\'s SOURCE under the heading, once', () => {
+    // English heading, source italic beneath (John's choice). Dropping the row
+    // outright would lose "Quaestio 2" from a bilingual export entirely.
+    const marked: ChapterFile = {
+      ...q(1, 'Question 2'),
+      meta: { ...q(1, 'Question 2').meta, headers: [{ row: 1, level: 2 }] },
+      greekLines: ['Quaestio 2', 'Corpus articuli.'],
+      englishLines: ['Question 2', 'Body of the article.'],
+    };
+    const result = compileWorkMarkdown([marked], CONTAINER, { mode: 'bilingual' });
+    expect(result.markdown).toBe(
+      '# Summa Theologiae\n\n' +
+        '## Prima Pars\n\n' +
+        '### Question 2\n\n' +
+        '*Quaestio 2*\n\n' +
+        'Corpus articuli.\n\n' +
+        'Body of the article.\n',
+    );
+    // The heading text appears exactly once as a heading and never as a body line.
+    expect(result.markdown.match(/Question 2/g)).toHaveLength(1);
+  });
+
+  it('an unmarked opening part (a preface) keeps its first line', () => {
+    // Only a part whose first row carries a mark supplied a heading; a preface
+    // that opens on plain text must still export that text.
+    const preface = q(1, 'Opening words.');
+    const result = compileWorkMarkdown([preface], CONTAINER);
+    expect(result.markdown).toContain('### Question 2\n\nOpening words.\n');
+  });
+
   it('puts the author under the title before the container headings', () => {
     const result = compileWorkMarkdown(
       [q(1, 'Article one.')],

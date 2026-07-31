@@ -4,6 +4,7 @@ import {
   deriveRowAddresses,
   documentToPandocMarkdown,
   markupToPandoc,
+  stripLanguageSpans,
 } from '../pandocMarkdown';
 import { compileWorkMarkdown } from '../compile';
 import { parseManifest } from '../../works/manifest';
@@ -722,5 +723,29 @@ describe('chapterToPandocMarkdown — footnote blocks', () => {
   it('no [FOOTNOTES] section at all produces no trailing block', () => {
     const md = chapterToPandocMarkdown(chapter({ footnotes: [] }), META);
     expect(md).not.toMatch(/\[\^/);
+  });
+});
+
+describe('stripLanguageSpans (markdown deliverable)', () => {
+  it('unwraps language spans and leaves everything else alone', () => {
+    const md = [
+      'we must define what we mean by “said of all” ([τὸ κατὰ παντὸς]{lang=el-GR}),',
+      'an [underlined phrase]{.underline} keeps its span,',
+      'a footnote marker[^1] and a literal \\[bracketed\\]{lang=el-GR} escape survive,',
+      'and nesting: [[τὸ καθόλου]{lang=el-GR}]{.underline}.',
+    ].join('\n');
+    expect(stripLanguageSpans(md)).toBe(
+      [
+        'we must define what we mean by “said of all” (τὸ κατὰ παντὸς),',
+        'an [underlined phrase]{.underline} keeps its span,',
+        'a footnote marker[^1] and a literal \\[bracketed\\]{lang=el-GR} escape survive,',
+        'and nesting: [τὸ καθόλου]{.underline}.',
+      ].join('\n'),
+    );
+  });
+
+  it('leaves markdown with no language spans byte-identical', () => {
+    const md = '# Title\n\nplain *english* text[^1]\n\n[^1]: a note\n';
+    expect(stripLanguageSpans(md)).toBe(md);
   });
 });

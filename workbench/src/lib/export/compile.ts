@@ -30,7 +30,7 @@ import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
 import type { StampMode } from './pandocMarkdown';
-import { chapterSegments, documentChapterSections, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
+import { chapterSegments, documentChapterSections, documentRowSourceLine, documentToPandocMarkdown, markupToPandoc, renderSegmentsGrouped } from './pandocMarkdown';
 import type { DocumentBook } from '../works/manifest';
 
 export type CompileMode = 'english' | 'bilingual';
@@ -183,6 +183,17 @@ export function buildGapReport(present: CompiledChapterRef[], work: WorkMeta): C
 function bookHeading(book: number, work: WorkMeta): string {
   const scheme = getScheme(work.scheme);
   return `# ${scheme.bookLabel(book, work)}`;
+}
+
+/**
+ * The row a document part's heading was taken FROM, or null when the part
+ * opens on unmarked text (a preface). splitDocument cuts at Book/Chapter marks
+ * and re-bases `headers` onto each part, so a mark on the part's first row is
+ * exactly the line that supplied its heading — and must not be printed again
+ * as body text.
+ */
+function documentHeadingRow(chapter: ChapterFile): number | null {
+  return (chapter.meta.headers ?? []).some((h) => h.row === 1) ? 0 : null;
 }
 
 /** A container chapter slot's display label ("Question 2") for the export
@@ -339,7 +350,21 @@ export function compileWorkMarkdown(
         ...chapter,
         englishLines: chapter.englishLines.map((l) => namespaceFootnoteRefs(l, prefix)),
       };
-      const { paragraphs, footnoteIdsUsed } = documentChapterSections(namespaced, resolved.mode);
+      // The marked line BECAME the heading just above, so it must not also run
+      // as the first paragraph of the body — that printed "Question 2" twice
+      // (three times bilingual: heading, Latin, English). In bilingual the
+      // source half of that line still belongs on the page, as an italic line
+      // under the English heading, or the Latin would simply vanish.
+      const headingRow = documentHeadingRow(chapter);
+      if (headingRow !== null && resolved.mode === 'bilingual') {
+        const sourceLine = documentRowSourceLine(namespaced, headingRow);
+        if (sourceLine) docSections.push(sourceLine);
+      }
+      const { paragraphs, footnoteIdsUsed } = documentChapterSections(
+        namespaced,
+        resolved.mode,
+        headingRow ?? undefined,
+      );
       if (paragraphs.length > 0) docSections.push(...paragraphs);
       // Footnote-definition blocks with the SAME namespacing as the corpus arm
       // (prefix + local id), so two chapters' local id "1" resolve distinctly.

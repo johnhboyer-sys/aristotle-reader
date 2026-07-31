@@ -151,7 +151,11 @@
 
       const fs = await import('@tauri-apps/plugin-fs');
       if (asMarkdown) {
-        await fs.writeTextFile(savePath, compiled.markdown);
+        // The markdown IS the deliverable here, so the pandoc-only language
+        // spans around every Greek phrase come back out — they exist to tag
+        // Word runs, and nothing downstream of this file reads them.
+        const { stripLanguageSpans } = await import('../lib/export');
+        await fs.writeTextFile(savePath, stripLanguageSpans(compiled.markdown));
       } else {
         const pathApi = await import('@tauri-apps/api/path');
         const appData = await pathApi.appDataDir();

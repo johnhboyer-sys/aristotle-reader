@@ -483,12 +483,13 @@ function renderDocumentRow(chapter: ChapterFile, rowIndex: number): { markdown: 
   return { markdown: null, footnoteIdsUsed: [] };
 }
 
-function renderDocumentParagraphRows(chapter: ChapterFile): RenderedParagraphs {
+function renderDocumentParagraphRows(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
   let gap = false;
 
   for (let i = 0; i < chapter.englishLines.length; i++) {
+    if (i === skipRow) continue; // already rendered as this part's heading
     const rendered = renderDocumentRow(chapter, i);
     if (rendered.markdown === null) {
       gap = true;
@@ -504,7 +505,7 @@ function renderDocumentParagraphRows(chapter: ChapterFile): RenderedParagraphs {
   return { paragraphs, footnoteIdsUsed };
 }
 
-function renderDocumentPlainLineRows(chapter: ChapterFile): RenderedParagraphs {
+function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
   const paragraphStarts = new Set(chapter.meta.paragraphStarts ?? []);
@@ -521,6 +522,7 @@ function renderDocumentPlainLineRows(chapter: ChapterFile): RenderedParagraphs {
 
   for (let i = 0; i < chapter.englishLines.length; i++) {
     if (i === 0 || paragraphStarts.has(i + 1)) flush();
+    if (i === skipRow) continue; // already rendered as this part's heading
 
     const rendered = renderDocumentRow(chapter, i);
     if (rendered.markdown === null) {
@@ -542,13 +544,13 @@ function renderDocumentPlainLineRows(chapter: ChapterFile): RenderedParagraphs {
   return { paragraphs, footnoteIdsUsed };
 }
 
-export function renderDocumentSpineEnglish(chapter: ChapterFile): RenderedParagraphs {
+export function renderDocumentSpineEnglish(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
   const scheme = getScheme(chapter.meta.citationScheme);
   switch (scheme.gutter.rowUnit) {
     case 'paragraph':
-      return renderDocumentParagraphRows(chapter);
+      return renderDocumentParagraphRows(chapter, skipRow);
     case 'plain-line':
-      return renderDocumentPlainLineRows(chapter);
+      return renderDocumentPlainLineRows(chapter, skipRow);
     default:
       return renderSegmentsGrouped(chapterSegments(chapter), (seg) => seg.englishMarkup, false, 'every-5');
   }
@@ -578,11 +580,12 @@ function renderSourceLine(chapter: ChapterFile, rowIndex: number): string {
   return markupToPandoc(raw).markdown;
 }
 
-function renderDocumentParagraphRowsBilingual(chapter: ChapterFile): RenderedParagraphs {
+function renderDocumentParagraphRowsBilingual(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
 
   for (let i = 0; i < chapter.englishLines.length; i++) {
+    if (i === skipRow) continue; // already rendered as this part's heading
     const source = renderSourceLine(chapter, i);
     const english = renderDocumentRow(chapter, i);
     if (source.length === 0 && english.markdown === null) continue; // fully empty unit
@@ -599,7 +602,7 @@ function renderDocumentParagraphRowsBilingual(chapter: ChapterFile): RenderedPar
   return { paragraphs, footnoteIdsUsed };
 }
 
-function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile): RenderedParagraphs {
+function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
   const starts = new Set(chapter.meta.paragraphStarts ?? []);
@@ -610,6 +613,7 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile): RenderedPar
   const groups: number[][] = [];
   for (let i = 0; i < chapter.englishLines.length; i++) {
     if (i === 0 || starts.has(i + 1)) groups.push([]);
+    if (i === skipRow) continue; // already rendered as this part's heading
     groups[groups.length - 1].push(i);
   }
 
@@ -656,18 +660,18 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile): RenderedPar
   return { paragraphs, footnoteIdsUsed };
 }
 
-export function renderDocumentSpineBilingual(chapter: ChapterFile): RenderedParagraphs {
+export function renderDocumentSpineBilingual(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
   const scheme = getScheme(chapter.meta.citationScheme);
   switch (scheme.gutter.rowUnit) {
     case 'paragraph':
-      return renderDocumentParagraphRowsBilingual(chapter);
+      return renderDocumentParagraphRowsBilingual(chapter, skipRow);
     case 'plain-line':
-      return renderDocumentPlainLineRowsBilingual(chapter);
+      return renderDocumentPlainLineRowsBilingual(chapter, skipRow);
     default:
       // Unreachable for the shipped document-spine schemes (paragraph /
       // plain-line are the only two); degrade to the English-only rendering
       // rather than throw, mirroring renderDocumentSpineEnglish's default.
-      return renderDocumentSpineEnglish(chapter);
+      return renderDocumentSpineEnglish(chapter, skipRow);
   }
 }
 
@@ -847,10 +851,50 @@ export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, op
 export function documentChapterSections(
   chapter: ChapterFile,
   mode: 'english' | 'bilingual' = 'english',
+  skipRow?: number,
 ): { paragraphs: string[]; footnoteIdsUsed: string[] } {
   const { paragraphs, footnoteIdsUsed } =
-    mode === 'bilingual' ? renderDocumentSpineBilingual(chapter) : renderDocumentSpineEnglish(chapter);
+    mode === 'bilingual'
+      ? renderDocumentSpineBilingual(chapter, skipRow)
+      : renderDocumentSpineEnglish(chapter, skipRow);
   return { paragraphs, footnoteIdsUsed };
+}
+
+/**
+ * The SOURCE text of one row, rendered as an italic line — the second half of a
+ * bilingual heading. The compiled heading carries the translation ("Question
+ * 2"); this keeps the line the translator actually marked ("Quaestio 2") on the
+ * page under it, instead of dropping source text on the floor.
+ */
+export function documentRowSourceLine(chapter: ChapterFile, rowIndex: number): string | null {
+  const source = renderSourceLine(chapter, rowIndex);
+  return source.length > 0 ? `*${source}*` : null;
+}
+
+/**
+ * Strip the language spans from compiled markdown, for an export whose
+ * deliverable IS the markdown file.
+ *
+ * `[τὸ κατὰ παντὸς]{lang=el-GR}` exists so pandoc tags that run as Greek in
+ * Word — it does the job and then disappears. Read as markdown, it is noise
+ * wrapped around every Greek phrase. Only the language attribute goes: the
+ * `{.underline}` span still carries editorial meaning that plain text cannot.
+ *
+ * Safe to do textually: renderRuns escapes `[` and `]` in the user's own text
+ * (PANDOC_SPECIAL), so an UNescaped bracketed span is always one we emitted.
+ * Runs until stable, since spans nest (Greek inside an underline).
+ */
+export function stripLanguageSpans(markdown: string): string {
+  // The leading group keeps an ESCAPED bracket from opening a span: a literal
+  // "\[" in the user's own prose is text, not markup we emitted.
+  const LANG_SPAN = /(^|[^\\])\[((?:\\.|[^\]\\])*)\]\{lang=[A-Za-z-]+\}/g;
+  let out = markdown;
+  for (let pass = 0; pass < 4; pass += 1) {
+    const next = out.replace(LANG_SPAN, '$1$2');
+    if (next === out) break;
+    out = next;
+  }
+  return out;
 }
 
 export function documentToPandocMarkdown(
