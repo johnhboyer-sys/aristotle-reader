@@ -191,6 +191,44 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
   return null;
 }
 
+/**
+ * Running references for an IMPORTED work, whose rows carry the source's own
+ * citations (`row_refs`). Returns the 0-based row indexes that should show a
+ * stamp, and what it says.
+ *
+ * The rule is "stamp when a tier ABOVE the line changes", which puts 327.a,
+ * 327.b, 327.c down the margin and no line numbers at all — how these texts
+ * are printed, and what a reader cites. It falls out of the addresses
+ * themselves, so it works at any tier depth without knowing the source's
+ * vocabulary: Bekker pages, Stephanus sections and epigram numbers are all
+ * just "the components before the last one".
+ *
+ * Deliberately NOT the Bekker stamper's every-5-lines rule: that counts lines,
+ * and an imported work's line tier is frequently not a line at all.
+ *
+ * Two cases produce nothing, both correct:
+ *  - a file with no row_refs (not an import);
+ *  - addresses with a single component, where there IS no tier above the line,
+ *    so every row would stamp and the margin would be a column of noise.
+ */
+export function sourceRefStamps(chapter: ChapterFile): Map<number, string> {
+  const refs = chapter.meta.rowRefs;
+  const out = new Map<number, string>();
+  if (!refs) return out;
+
+  let previous: string | null = null;
+  for (let i = 0; i < refs.length; i++) {
+    const parts = refs[i].split('.');
+    if (parts.length < 2) continue;
+    const prefix = parts.slice(0, -1).join('.');
+    if (prefix !== previous) {
+      out.set(i, `[${prefix}]`);
+      previous = prefix;
+    }
+  }
+  return out;
+}
+
 // ── per-row addressing, shared by both export paths ────────────────────────
 
 /**
@@ -681,6 +719,7 @@ function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): Re
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
   const paragraphStarts = new Set(chapter.meta.paragraphStarts ?? []);
+  const stamps = sourceRefStamps(chapter);
   const hardLineBreak = '\\' + '\n';
   let currentLines: string[] = [];
   let gap = false;
@@ -708,7 +747,8 @@ function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): Re
       paragraphs.push(ELLIPSIS_PARAGRAPH);
     }
     gap = false;
-    currentLines.push(rendered.markdown);
+    const stamp = stamps.get(i);
+    currentLines.push(stamp ? `${stamp} ${rendered.markdown}` : rendered.markdown);
     footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
   }
   flush();
@@ -780,6 +820,9 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: nu
   const footnoteIdsUsed: string[] = [];
   const starts = new Set(chapter.meta.paragraphStarts ?? []);
   const hardLineBreak = '\\' + '\n';
+  // Stamps go on the ORIGINAL side only: the reference belongs to the source
+  // text, and repeating it in both columns would just be clutter.
+  const stamps = sourceRefStamps(chapter);
 
   // Row indexes grouped by paragraph_starts (row 1 implicitly opens group 1,
   // exactly like renderDocumentPlainLineRows / the editor's chunk view).
@@ -792,7 +835,14 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: nu
 
   for (const group of groups) {
     // Source block: the group's non-blank lines, hard-line-break joined.
-    const sourceLines = group.map((i) => renderSourceLine(chapter, i)).filter((s) => s.length > 0);
+    const sourceLines = group
+      .map((i) => {
+        const line = renderSourceLine(chapter, i);
+        if (line.length === 0) return line;
+        const stamp = stamps.get(i);
+        return stamp ? `${stamp} ${line}` : line;
+      })
+      .filter((s) => s.length > 0);
     const source = sourceLines.join(hardLineBreak);
 
     // English block(s): translated rows flow with hard line breaks; each
