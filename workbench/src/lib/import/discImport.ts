@@ -190,11 +190,19 @@ export async function importFromDisc(req: DiscImportRequest): Promise<SourceImpo
   const num = authorNumber(req.author.id);
   if (num === null) throw new Error(`The disc gave an author id we can’t use (${req.author.id}).`);
 
-  const exportDir = req.exportDir ?? 'corpus/disc-export';
+  // Verse mode by default, as the corpus pipeline runs it: it is the only mode
+  // that keeps line numbers, so a Bekker page comes back as 402a.1, 402a.2
+  // rather than one 900-character block addressed 402a three times over.
+  // Diogenes' own 'auto' calls most of Aristotle prose and throws them away.
+  const lineMode: LineMode = req.lineMode ?? 'lines';
+
+  // The mode is part of the cache path: the same work exported as lines and as
+  // prose are different texts, and a cached one must not answer for the other.
+  const exportDir = req.exportDir ?? `corpus/disc-export/${lineMode}`;
   const xmlPath = exportedWorkPath(exportDir, corpus, num, req.work.number);
 
   if (!(await fs.exists(xmlPath))) {
-    await runExport(req, corpus, num, exportDir);
+    await runExport({ ...req, lineMode }, corpus, num, exportDir);
   }
   if (!(await fs.exists(xmlPath))) {
     // The export ran but produced nothing for this work — a real thing when a

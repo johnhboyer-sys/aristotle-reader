@@ -196,35 +196,51 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
  * citations (`row_refs`). Returns the 0-based row indexes that should show a
  * stamp, and what it says.
  *
- * The rule is "stamp when a tier ABOVE the line changes", which puts 327.a,
- * 327.b, 327.c down the margin and no line numbers at all — how these texts
- * are printed, and what a reader cites. It falls out of the addresses
- * themselves, so it works at any tier depth without knowing the source's
- * vocabulary: Bekker pages, Stephanus sections and epigram numbers are all
- * just "the components before the last one".
+ * The rule is "stamp the citable address whenever it changes", where the
+ * citable address is the row's own address minus a line number. Nobody cites a
+ * line of prose, so De anima 402a.1…402a.20 stamp once, as [402a]; but the
+ * Republic's rows ARE 1.327a, 1.327b, 1.327c, and each one gets its own stamp,
+ * because that is precisely what a reader cites and what the printed margin
+ * shows.
+ *
+ * Only the part that changed is printed: [1.327a] then [327b], [327c], and
+ * [2.357a] when the book turns over. Repeating the book on every line is how a
+ * margin becomes unreadable.
+ *
+ * A line number is recognised by shape, not by name: all digits, or the single
+ * "t" Diogenes gives a work's title line. That is a guess, and it is wrong in
+ * one known case — a Perseus edition divided only to the chapter, whose last
+ * component is a chapter number and gets dropped as though it were a line. The
+ * alternative is to thread the work's tier names through five render
+ * functions that have no other use for them; if that case starts to matter,
+ * that is the fix.
  *
  * Deliberately NOT the Bekker stamper's every-5-lines rule: that counts lines,
  * and an imported work's line tier is frequently not a line at all.
  *
- * Two cases produce nothing, both correct:
- *  - a file with no row_refs (not an import);
- *  - addresses with a single component, where there IS no tier above the line,
- *    so every row would stamp and the margin would be a column of noise.
+ * A file with no row_refs is not an import and gets nothing.
  */
+const LINE_COMPONENT = /^(\d+|t)$/;
+
 export function sourceRefStamps(chapter: ChapterFile): Map<number, string> {
   const refs = chapter.meta.rowRefs;
   const out = new Map<number, string>();
   if (!refs) return out;
 
-  let previous: string | null = null;
+  let previous: string[] = [];
   for (let i = 0; i < refs.length; i++) {
     const parts = refs[i].split('.');
-    if (parts.length < 2) continue;
-    const prefix = parts.slice(0, -1).join('.');
-    if (prefix !== previous) {
-      out.set(i, `[${prefix}]`);
-      previous = prefix;
-    }
+    // Drop the line number, but never the whole address: a single-component
+    // ref is the citation itself.
+    const cite = parts.length > 1 && LINE_COMPONENT.test(parts[parts.length - 1])
+      ? parts.slice(0, -1)
+      : parts;
+    if (cite.join('.') === previous.join('.')) continue;
+
+    let from = 0;
+    while (from < cite.length - 1 && cite[from] === previous[from]) from += 1;
+    out.set(i, `[${cite.slice(from).join('.')}]`);
+    previous = cite;
   }
   return out;
 }

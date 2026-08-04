@@ -17,10 +17,12 @@ const chapterOf = (spec: Parameters<typeof createSourceImport>[0]) => createSour
 
 describe('sourceRefStamps', () => {
   it('stamps when a tier above the line changes, not every line', () => {
+    // Only the changed tail is printed — repeating "327." on every stamp is
+    // how a margin becomes unreadable.
     const stamps = sourceRefStamps(chapterOf({ title: 'Respublica', rows }));
     expect([...stamps.entries()]).toEqual([
       [0, '[327.a]'],
-      [2, '[327.b]'],
+      [2, '[b]'],
       [3, '[328.a]'],
     ]);
   });
@@ -44,10 +46,39 @@ describe('sourceRefStamps', () => {
     expect([...sourceRefStamps(bekker).values()]).toEqual(['[402a]', '[402b]']);
   });
 
-  it('gives nothing when there is no tier above the line', () => {
-    // Every row would stamp, and the margin would be a column of noise.
+  it('stamps a one-component address, which is the citation itself', () => {
+    // Nothing to strip: an epigram numbered 1, 2, 3 is cited by that number.
     const flat = chapterOf({ title: 'F', rows: [{ ref: '1', text: 'a' }, { ref: '2', text: 'b' }] });
-    expect(sourceRefStamps(flat).size).toBe(0);
+    expect([...sourceRefStamps(flat).values()]).toEqual(['[1]', '[2]']);
+  });
+
+  it('stamps every section of a Perseus prose text, because each is cited', () => {
+    // The shape a real Republic import produces: book . Stephanus section, and
+    // the section is the row. Dropping it would leave one [1] for the book.
+    const republic = chapterOf({
+      title: 'Respublica',
+      rows: [
+        { ref: '1.327a', text: 'κατέβην' },
+        { ref: '1.327b', text: 'προσευξάμενοι' },
+        { ref: '1.327c', text: 'καὶ ὀλίγῳ' },
+        { ref: '2.357a', text: 'ἐγὼ μὲν οὖν' },
+      ],
+    });
+    expect([...sourceRefStamps(republic).values()]).toEqual(['[1.327a]', '[327b]', '[327c]', '[2.357a]']);
+  });
+
+  it('stamps a Bekker page once, not each of its lines', () => {
+    // The shape a real disc import produces in verse mode, title line included.
+    const deAnima = chapterOf({
+      title: 'De anima',
+      rows: [
+        { ref: '402a.t', text: 'ΠΕΡΙ ΨΥΧΗΣ Α' },
+        { ref: '402a.1', text: 'Τῶν καλῶν' },
+        { ref: '402a.2', text: 'λον δ’ ἑτέραν' },
+        { ref: '402b.1', text: 'ἔστι δὲ' },
+      ],
+    });
+    expect([...sourceRefStamps(deAnima).values()]).toEqual(['[402a]', '[402b]']);
   });
 
   it('gives nothing for a file that is not an import', () => {
@@ -65,7 +96,7 @@ describe('sourceRefStamps', () => {
         { ref: '1.a.2', text: 'three' },
       ],
     });
-    expect([...sourceRefStamps(jumbled).values()]).toEqual(['[1.a]', '[1.b]', '[1.a]']);
+    expect([...sourceRefStamps(jumbled).values()]).toEqual(['[1.a]', '[b]', '[a]']);
   });
 });
 

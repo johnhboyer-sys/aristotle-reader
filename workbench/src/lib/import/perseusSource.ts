@@ -23,11 +23,21 @@ import { parseTeiRows } from '../corpus/teiRows';
 import { createSourceImport } from './createSourceImport';
 import type { SourceImport } from './createSourceImport';
 
-/** The two CTS namespaces Perseus publishes, and their repositories. */
-const REPOSITORIES: Record<string, string> = {
-  greekLit: 'PerseusDL/canonical-greekLit',
-  latinLit: 'PerseusDL/canonical-latinLit',
+/**
+ * The CTS namespaces Perseus publishes, and the repositories that hold them —
+ * more than one for Greek. canonical-greekLit is the Perseus core; the bulk of
+ * Aristotle is not in it. De Anima, the Physics, the Ethics and thirty-nine
+ * more sit in OpenGreekAndLatin/First1KGreek, under the same urns and the same
+ * directory layout. Both are tried in turn, so a user pasting a Scaife address
+ * never has to know which project published the text.
+ */
+const REPOSITORIES: Record<string, string[]> = {
+  greekLit: ['PerseusDL/canonical-greekLit', 'OpenGreekAndLatin/First1KGreek'],
+  latinLit: ['PerseusDL/canonical-latinLit'],
 };
+
+/** Version ids beginning this way are First1KGreek's — try that repo first. */
+const FIRST1K_MARKER = '1st1K';
 
 const RAW_HOST = 'https://raw.githubusercontent.com';
 const BRANCH = 'master';
@@ -77,15 +87,23 @@ export function parseCtsUrn(input: string): CtsUrn | null {
 }
 
 /**
- * The raw file URL for a urn. A urn with no version can't name a file — an
- * work has several editions and translations — so this returns null and the
- * caller asks for a more specific address.
+ * Every raw file URL a urn could name, in the order worth trying. A urn with
+ * no version can't name a file — a work has several editions and translations
+ * — so this returns an empty list and the caller asks for a fuller address.
  */
-export function teiUrlFor(urn: CtsUrn): string | null {
-  const repo = REPOSITORIES[urn.namespace];
-  if (!repo || !urn.version) return null;
+export function teiUrlCandidates(urn: CtsUrn): string[] {
+  const repos = REPOSITORIES[urn.namespace];
+  if (!repos || !urn.version) return [];
   const file = `${urn.group}.${urn.work}.${urn.version}.xml`;
-  return `${RAW_HOST}/${repo}/${BRANCH}/data/${urn.group}/${urn.work}/${file}`;
+  const ordered = urn.version.includes(FIRST1K_MARKER)
+    ? [...repos].sort((a, b) => Number(b.includes('First1KGreek')) - Number(a.includes('First1KGreek')))
+    : repos;
+  return ordered.map((repo) => `${RAW_HOST}/${repo}/${BRANCH}/data/${urn.group}/${urn.work}/${file}`);
+}
+
+/** The first URL worth trying, or null when the urn names no edition. */
+export function teiUrlFor(urn: CtsUrn): string | null {
+  return teiUrlCandidates(urn)[0] ?? null;
 }
 
 /** Injected so tests never touch the network. */
@@ -99,27 +117,36 @@ export async function fetchPerseusTei(input: string, fetcher: Fetcher = globalTh
   const urn = parseCtsUrn(input);
   if (urn === null) throw new Error(NOT_A_URN_MESSAGE);
 
-  const url = teiUrlFor(urn);
-  if (url === null) {
+  const urls = teiUrlCandidates(urn);
+  if (urls.length === 0) {
     throw new Error(
       'That address names a work but not which edition. Open it in Scaife, choose the edition you want, and copy that address.',
     );
   }
 
-  let response: Awaited<ReturnType<Fetcher>>;
-  try {
-    response = await fetcher(url);
-  } catch (err) {
-    console.error('[perseus] fetch failed', url, err);
-    throw new Error(FETCH_FAILED_MESSAGE);
+  // A 404 is not a failure while another repository is still untried — it just
+  // means this text belongs to the other project. Any other error is fatal at
+  // once: a network that is down for one host is down for both.
+  let unreachable = false;
+  for (const url of urls) {
+    let response: Awaited<ReturnType<Fetcher>>;
+    try {
+      response = await fetcher(url);
+    } catch (err) {
+      console.error('[perseus] fetch failed', url, err);
+      unreachable = true;
+      continue;
+    }
+    if (response.status === 404) continue;
+    if (!response.ok) {
+      console.error('[perseus] fetch returned', response.status, url);
+      unreachable = true;
+      continue;
+    }
+    return response.text();
   }
 
-  if (response.status === 404) throw new Error(NOT_FOUND_MESSAGE);
-  if (!response.ok) {
-    console.error('[perseus] fetch returned', response.status, url);
-    throw new Error(FETCH_FAILED_MESSAGE);
-  }
-  return response.text();
+  throw new Error(unreachable ? FETCH_FAILED_MESSAGE : NOT_FOUND_MESSAGE);
 }
 
 /** Language of a CTS namespace, for the work record. */

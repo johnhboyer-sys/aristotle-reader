@@ -147,3 +147,92 @@ describe('header metadata', () => {
     expect(doc.author).toBeUndefined();
   });
 });
+
+// Everything below came out of QA against the real published files. Each case
+// is a shape I did not invent, and each one broke the importer before it was
+// handled — see the comments in teiRows.ts for what each costs when missed.
+describe('real Perseus structure', () => {
+  it('does not read the CTS edition wrapper as a citation tier', () => {
+    // `<div type="edition" n="urn:cts:…">` opens every canonical file. Read as
+    // a tier it prefixed the urn onto every address and no Perseus text could
+    // be imported at all.
+    const doc = parseTeiRows(
+      tei(
+        '<div type="edition" n="urn:cts:greekLit:tlg0012.tlg001.perseus-grc2">' +
+          '<div type="textpart" subtype="Book" n="1"><l n="1">μῆνιν ἄειδε</l></div>' +
+          '</div>',
+      ),
+    );
+    expect(doc.rows).toEqual([{ ref: '1.1', text: 'μῆνιν ἄειδε' }]);
+  });
+
+  it('names a tier from its subtype, since every modern div is "textpart"', () => {
+    const doc = parseTeiRows(
+      tei('<div type="textpart" subtype="Book" n="1"><l n="1">x</l></div>'),
+    );
+    expect(doc.levelNames).toEqual(['Book', 'line']);
+  });
+
+  it('splits a prose paragraph at its section milestones', () => {
+    // The Republic divides no finer than the Stephanus page; 327a/b/c live in
+    // milestones inside the paragraph. Without the split a row is the whole
+    // page and the letters are lost.
+    const doc = parseTeiRows(
+      tei(
+        '<div type="textpart" subtype="book" n="1">' +
+          '<div type="textpart" subtype="section" n="327">' +
+          '<p><said who="#Σωκράτης"><milestone unit="page" n="327"/><milestone unit="section" n="327a"/>' +
+          'κατέβην χθὲς<milestone unit="section" n="327b"/>προσευξάμενοι δὲ</said></p>' +
+          '</div></div>',
+      ),
+    );
+    expect(doc.rows).toEqual([
+      { ref: '1.327a', text: 'κατέβην χθὲς' },
+      { ref: '1.327b', text: 'προσευξάμενοι δὲ' },
+    ]);
+    expect(doc.levelNames).toEqual(['book', 'section']);
+  });
+
+  it('keeps two milestone tiers when neither restates the other', () => {
+    // A Bekker page and a line are two tiers, and both survive alongside the
+    // enclosing division.
+    const doc = parseTeiRows(
+      tei('<div type="book" n="5"><p><milestone unit="page" n="12b"/><milestone unit="line" n="3"/>Τῶν καλῶν</p></div>'),
+    );
+    expect(doc.rows).toEqual([{ ref: '5.12b.3', text: 'Τῶν καλῶν' }]);
+  });
+
+  it('collapses on the written form, which can swallow a short outer number', () => {
+    // The limit of the rule, pinned so a change to it is deliberate: it reads
+    // characters, not meaning, so book 1 disappears under a page numbered
+    // "1a". Harmless on every file seen — no source both numbers a division
+    // and restates it in a milestone this way — and the alternative rules
+    // (match on tier name, or on the unit) all fail the Republic, which is the
+    // case that actually occurs.
+    const doc = parseTeiRows(
+      tei('<div type="book" n="1"><p><milestone unit="page" n="1a"/><milestone unit="line" n="1"/>Τῶν καλῶν</p></div>'),
+    );
+    expect(doc.rows).toEqual([{ ref: '1a.1', text: 'Τῶν καλῶν' }]);
+  });
+
+  it('leaves a numbered verse line alone — 1.1 must keep its book', () => {
+    // The collapse rule would eat the book of Iliad 1.1 if it ran on rows that
+    // carry no milestones.
+    const doc = parseTeiRows(tei('<div type="Book" n="1"><l n="1">μῆνιν</l></div>'));
+    expect(doc.rows).toEqual([{ ref: '1.1', text: 'μῆνιν' }]);
+  });
+
+  it('does not claim a line tier for prose that has no line numbers', () => {
+    const doc = parseTeiRows(tei('<div type="chapter" n="1"><p>Τῶν καλῶν</p><p>δοκεῖ δὲ</p></div>'));
+    expect(doc.levelNames).toEqual(['chapter']);
+    expect(doc.rows.map((r) => r.ref)).toEqual(['1', '1']);
+  });
+
+  it('ignores milestones that mark layout rather than citation', () => {
+    // `<milestone unit="para"/>` has no @n; a paragraph break is not a citation.
+    const doc = parseTeiRows(
+      tei('<div type="s" n="1"><p>one<milestone ed="P" unit="para"/>two</p></div>'),
+    );
+    expect(doc.rows).toEqual([{ ref: '1', text: 'onetwo' }]);
+  });
+});

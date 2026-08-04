@@ -10,6 +10,7 @@
   import { pickDiscDir, readDiscAuthors, readAuthorWorks, importFromDisc } from '../lib/import/discImport';
   import type { DiscAuthor } from '../lib/corpus/authtab';
   import type { DiscWork } from '../lib/corpus/idtWorks';
+  import type { LineMode } from '../lib/corpus/discExport';
   import { filterAuthors } from '../lib/corpus/authtab';
   import { fetchPerseusTei, importPerseusTei, parseCtsUrn, languageFor } from '../lib/import/perseusSource';
   import type { SourceImport } from '../lib/import/createSourceImport';
@@ -42,6 +43,9 @@
   let selectedAuthor = $state<DiscAuthor | null>(null);
   let works = $state<DiscWork[]>([]);
   let selectedWork = $state<DiscWork | null>(null);
+  // Verse by default: it is the only mode that keeps the edition's line
+  // numbers, and it is what the corpus pipeline has always run.
+  let lineMode = $state<LineMode>('lines');
 
   // Cap what's rendered: a TLG disc lists ~1,800 authors and drawing them all
   // makes every keystroke in the filter box janky.
@@ -148,7 +152,7 @@
       // Diogenes cannot export one work, so the first import of an author
       // exports all of them. Say so instead of looking frozen.
       busy = `Reading ${selectedAuthor?.name ?? 'the author'} from the disc — this can take a few minutes the first time…`;
-      return importFromDisc({ discDir: discDir!, author: selectedAuthor!, work: selectedWork! });
+      return importFromDisc({ discDir: discDir!, author: selectedAuthor!, work: selectedWork!, lineMode });
     }
     if (route === 'file') {
       busy = 'Reading the file…';
@@ -250,6 +254,22 @@
           </ul>
         {:else if selectedAuthor}
           <p class="hint">That author has no works listed on this disc.</p>
+        {/if}
+
+        {#if selectedWork}
+          <label class="field">
+            <span>Rows</span>
+            <select bind:value={lineMode}>
+              <option value="lines">One printed line each, numbered — 402a.1, 402a.2</option>
+              <option value="prose">One section each, lines run together — 402a</option>
+              <option value="auto">Whatever Diogenes judges right for this work</option>
+            </select>
+          </label>
+          <p class="hint">
+            Numbered lines are what a citation like <em>De anima</em> 402a.7 refers to. Running them
+            together reads better but loses the numbers, and Diogenes' own judgment calls most of
+            Aristotle prose.
+          </p>
         {/if}
       {:else if route === 'file'}
         <p class="note">
