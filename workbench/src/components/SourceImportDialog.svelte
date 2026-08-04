@@ -10,7 +10,7 @@
   import { pickDiscDir, readDiscAuthors, readAuthorWorks, importFromDisc } from '../lib/import/discImport';
   import type { DiscAuthor } from '../lib/corpus/authtab';
   import type { DiscWork } from '../lib/corpus/idtWorks';
-  import type { LineMode } from '../lib/corpus/discExport';
+  import type { Corpus, LineMode } from '../lib/corpus/discExport';
   import { filterAuthors } from '../lib/corpus/authtab';
   import { fetchPerseusTei, importPerseusTei, parseCtsUrn, languageFor } from '../lib/import/perseusSource';
   import type { SourceImport } from '../lib/import/createSourceImport';
@@ -64,18 +64,37 @@
     void (async () => {
       const settings = await loadSettings();
       const saved = settings.tlgDir ?? settings.phiDir;
-      if (saved && discDir === null) await useDisc(saved, false);
+      if (saved && discDir === null) await useDisc(saved, null);
     })();
   });
 
-  async function chooseDisc() {
-    const picked = await pickDiscDir();
-    if (picked === null) return;
-    await useDisc(picked, true);
+  /**
+   * What to show the user for a thrown value. Tauri's `invoke` rejects with a
+   * plain STRING, not an Error, so an `instanceof Error` check alone throws
+   * away the only useful sentence — a missing fs permission surfaced as the
+   * generic fallback and said nothing about which permission.
+   */
+  function messageOf(err: unknown, fallback: string): string {
+    if (err instanceof Error) return err.message;
+    if (typeof err === 'string' && err.trim().length > 0) return err;
+    return fallback;
   }
 
-  /** Read a disc folder's author list. `remember` saves it for next time. */
-  async function useDisc(dir: string, remember: boolean) {
+  /**
+   * One button per disc. Which corpus a folder holds is the user's to say, not
+   * ours to infer: the two discs sit in separate folders, Diogenes reads them
+   * through separate environment variables, and the app remembers them
+   * separately — so guessing from the first author id it happened to find was
+   * both fragile and a thing the user could not correct.
+   */
+  async function chooseDisc(corpus: Corpus) {
+    const picked = await pickDiscDir(corpus);
+    if (picked === null) return;
+    await useDisc(picked, corpus);
+  }
+
+  /** Read a disc folder's author list. A corpus given means remember it. */
+  async function useDisc(dir: string, corpus: Corpus | null) {
     errorMessage = null;
     busy = 'Reading the disc…';
     try {
@@ -85,15 +104,12 @@
       selectedAuthor = null;
       works = [];
       selectedWork = null;
-      if (remember) {
-        // Which disc this is decides which setting it lands in — Diogenes
-        // reads them through different environment variables.
-        const isPhi = list.length > 0 && !list[0].id.startsWith('TLG');
-        await updateSettings(isPhi ? { phiDir: dir } : { tlgDir: dir });
+      if (corpus !== null) {
+        await updateSettings(corpus === 'phi' ? { phiDir: dir } : { tlgDir: dir });
       }
     } catch (err) {
       console.error('[import] reading disc failed', err);
-      errorMessage = err instanceof Error ? err.message : 'That folder could not be read.';
+      errorMessage = messageOf(err, 'That folder could not be read.');
     } finally {
       busy = null;
     }
@@ -109,7 +125,7 @@
       works = await readAuthorWorks(discDir, author);
     } catch (err) {
       console.error('[import] reading works failed', err);
-      errorMessage = err instanceof Error ? err.message : 'That author’s works could not be read.';
+      errorMessage = messageOf(err, 'That author’s works could not be read.');
     }
   }
 
@@ -177,7 +193,7 @@
       onCreated(work.id);
     } catch (err) {
       console.error('[import] failed', err);
-      errorMessage = err instanceof Error ? err.message : 'That text could not be imported.';
+      errorMessage = messageOf(err, 'That text could not be imported.');
     } finally {
       busy = null;
     }
@@ -215,11 +231,12 @@
         </p>
 
         <div class="row">
-          <button class="secondary-btn" onclick={chooseDisc}>Choose your TLG or PHI folder…</button>
-          {#if discDir}
-            <span class="path">{discDir}</span>
-          {/if}
+          <button class="secondary-btn" onclick={() => chooseDisc('tlg')}>Choose your TLG folder…</button>
+          <button class="secondary-btn" onclick={() => chooseDisc('phi')}>Choose your PHI folder…</button>
         </div>
+        {#if discDir}
+          <p class="path">Reading {discDir}</p>
+        {/if}
 
         {#if authors.length > 0}
           <label class="field">
@@ -316,20 +333,23 @@
   .scrim {
     position: fixed;
     inset: 0;
-    background: var(--scrim, rgba(0, 0, 0, 0.35));
+    background: rgba(0, 0, 0, 0.22);
     display: grid;
     place-items: center;
     z-index: 50;
   }
 
   .dialog {
-    width: min(38rem, calc(100vw - 2rem));
-    height: 34rem;
+    /* Sized to the window, not to a guess. The author list on a TLG disc runs
+       to ~1,800 names and the work list to 56 for Aristotle alone, so the
+       lists want every row the screen can give them. */
+    width: min(44rem, calc(100vw - 2rem));
+    height: min(46rem, calc(100vh - 4rem));
     display: flex;
     flex-direction: column;
-    background: var(--surface);
-    border-radius: var(--radius-2, 8px);
-    box-shadow: var(--shadow-3, 0 12px 40px rgba(0, 0, 0, 0.3));
+    background: var(--col-bg);
+    border-radius: 10px;
+    box-shadow: var(--popup-shadow);
   }
 
   .dialog-head {
@@ -337,7 +357,7 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--border);
   }
 
   .dialog-head h2 {
@@ -350,7 +370,7 @@
   .close-btn {
     background: none;
     border: 0;
-    color: var(--ink-3);
+    color: var(--text-light);
     cursor: pointer;
     padding: var(--space-1);
   }
@@ -367,7 +387,7 @@
   .routes {
     display: flex;
     gap: var(--space-1);
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--border);
   }
 
   .routes button {
@@ -375,19 +395,19 @@
     border: 0;
     border-bottom: 2px solid transparent;
     padding: var(--space-2) var(--space-3);
-    color: var(--ink-2);
+    color: var(--text-mid);
     cursor: pointer;
     font: inherit;
   }
 
   .routes button.active {
-    color: var(--ink-1);
+    color: var(--text);
     border-bottom-color: var(--accent, currentColor);
   }
 
   .note {
     margin: 0;
-    color: var(--ink-2);
+    color: var(--text-mid);
     font-size: 0.9rem;
     line-height: 1.5;
   }
@@ -400,7 +420,8 @@
   }
 
   .path {
-    color: var(--ink-3);
+    margin: 0;
+    color: var(--text-light);
     font-size: 0.8rem;
     word-break: break-all;
   }
@@ -413,26 +434,29 @@
 
   .field span {
     font-size: 0.8rem;
-    color: var(--ink-2);
+    color: var(--text-mid);
   }
 
   .field input {
     font: inherit;
     padding: var(--space-2);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-1, 4px);
-    background: var(--surface-2, transparent);
-    color: var(--ink-1);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
   }
 
   .picker {
     list-style: none;
     margin: 0;
     padding: 0;
-    max-height: 11rem;
+    /* Share out whatever the dialog has left rather than taking a fixed slice:
+       with one list open it fills the panel, with both open they split it. */
+    flex: 1 1 12rem;
+    min-height: 8rem;
     overflow-y: auto;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-1, 4px);
+    border: 1px solid var(--border);
+    border-radius: 6px;
   }
 
   .picker button {
@@ -444,30 +468,30 @@
     background: none;
     border: 0;
     padding: var(--space-2) var(--space-3);
-    color: var(--ink-1);
+    color: var(--text);
     cursor: pointer;
     font: inherit;
   }
 
   .picker button.selected {
-    background: var(--surface-3, rgba(127, 127, 127, 0.16));
+    background: var(--ui-hover);
   }
 
   .levels {
-    color: var(--ink-3);
+    color: var(--text-light);
     font-size: 0.75rem;
     white-space: nowrap;
   }
 
   .hint {
     margin: 0;
-    color: var(--ink-3);
+    color: var(--text-light);
     font-size: 0.8rem;
   }
 
   .error {
     margin: 0;
-    color: var(--danger, #b3261e);
+    color: var(--error);
     font-size: 0.9rem;
   }
 
@@ -477,14 +501,14 @@
     justify-content: flex-end;
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--border);
   }
 
   .primary-btn {
     font: inherit;
     padding: var(--space-2) var(--space-4);
     border: 0;
-    border-radius: var(--radius-1, 4px);
+    border-radius: 6px;
     background: var(--accent, #6b4423);
     color: var(--on-accent, #fff);
     cursor: pointer;
@@ -498,10 +522,10 @@
   .secondary-btn {
     font: inherit;
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-1, 4px);
+    border: 1px solid var(--border);
+    border-radius: 6px;
     background: none;
-    color: var(--ink-1);
+    color: var(--text);
     cursor: pointer;
   }
 </style>
