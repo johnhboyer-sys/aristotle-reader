@@ -57,13 +57,14 @@ interface RunOutcome {
   spawned: boolean;
 }
 
-/** Native folder picker for a disc; null when cancelled. */
-export async function pickDiscDir(): Promise<string | null> {
+/** Native folder picker for a disc; null when cancelled. The corpus only names
+ * the picker's title — the user is choosing a folder, not a format. */
+export async function pickDiscDir(corpus?: Corpus): Promise<string | null> {
   const dialog = await import('@tauri-apps/plugin-dialog');
   const picked = await dialog.open({
     directory: true,
     multiple: false,
-    title: 'Choose your TLG or PHI folder',
+    title: corpus ? `Choose your ${corpus.toUpperCase()} folder` : 'Choose your TLG or PHI folder',
   });
   return typeof picked === 'string' ? picked : null;
 }
