@@ -173,8 +173,22 @@ export interface DiscImportRequest {
   author: DiscAuthor;
   work: DiscWork;
   lineMode?: LineMode;
-  /** Where exports are cached. Defaults to app data. */
+  /** Where exports are cached. Defaults to app data. Must be ABSOLUTE. */
   exportDir?: string;
+}
+
+/**
+ * Where cached exports live: <app data>/corpus/disc-export.
+ *
+ * Absolute, and it has to be. A relative path fails twice over — plugin-fs
+ * refuses it (relative paths are resolved against a BaseDirectory, so a bare
+ * "corpus/…" matches no scope and comes back "forbidden path"), and Diogenes
+ * is a perl subprocess that has never heard of app data and would resolve the
+ * same string against its own directory inside /Applications.
+ */
+async function defaultExportDir(): Promise<string> {
+  const { appDataDir } = await import('@tauri-apps/api/path');
+  return `${(await appDataDir()).replace(/[\\/]+$/, '')}/corpus/disc-export`;
 }
 
 /**
@@ -199,7 +213,7 @@ export async function importFromDisc(req: DiscImportRequest): Promise<SourceImpo
 
   // The mode is part of the cache path: the same work exported as lines and as
   // prose are different texts, and a cached one must not answer for the other.
-  const exportDir = req.exportDir ?? `corpus/disc-export/${lineMode}`;
+  const exportDir = req.exportDir ?? `${await defaultExportDir()}/${lineMode}`;
   const xmlPath = exportedWorkPath(exportDir, corpus, num, req.work.number);
 
   if (!(await fs.exists(xmlPath))) {
@@ -237,6 +251,12 @@ async function runExport(req: DiscImportRequest, corpus: Corpus, num: string, ex
     console.error('[discImport] no usable perl among', perlCandidates(platform, server));
     throw new Error(NO_DIOGENES_MESSAGE);
   }
+
+  // xml-export.pl writes into the -o directory but does not create it, and it
+  // runs with its cwd set to Diogenes' own folder, so a missing one fails there
+  // rather than here.
+  const fs = await fsPlugin();
+  await fs.mkdir(exportDir, { recursive: true });
 
   const cmd = buildDiscExportCommand({
     corpus,

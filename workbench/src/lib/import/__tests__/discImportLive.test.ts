@@ -1,0 +1,74 @@
+// Every cached Diogenes export, run through the importer.
+//
+// This is the test that would have caught the Physics failing to import. Hand
+// written TEI proves the rules I already believe; 122,429 real citations prove
+// the ones I don't. Of those, 78 join two line numbers — "205a.25,29",
+// "184b.25-26", "110/111" — and the citation scheme rejected all three, which
+// cost the entire work rather than the one line. Nothing smaller than a whole
+// corpus finds a defect that rare.
+//
+// Self-skipping: the cache only exists once someone has imported from a disc,
+// so a machine without one is a normal machine, not a failure. node:fs comes in
+// through a structural shim, as in corpus/__tests__/authtabLive.test.ts.
+import { describe, expect, it } from 'vitest';
+import { parseTeiRows } from '../../corpus/teiRows';
+import { createSourceImport } from '../createSourceImport';
+
+interface NodeFs {
+  existsSync(path: string): boolean;
+  readFileSync(path: string, encoding: string): string;
+  readdirSync(path: string): string[];
+}
+const fsSpecifier = 'node:fs';
+const { existsSync, readFileSync, readdirSync } = (await import(/* @vite-ignore */ fsSpecifier)) as unknown as NodeFs;
+
+function env(name: string): string | undefined {
+  return (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[name];
+}
+
+/**
+ * Where importFromDisc caches exports. WORKBENCH_EXPORT_CACHE points it
+ * elsewhere, which is also how this runs on Windows.
+ */
+const CACHE =
+  env('WORKBENCH_EXPORT_CACHE') ??
+  `${env('HOME') ?? ''}/Library/Application Support/org.aristotlereader.workbench/corpus/disc-export/lines/Diogenes-Resources/xml/tlg`;
+
+const available = CACHE.length > 0 && existsSync(CACHE);
+const when = available ? describe : describe.skip;
+
+when('every cached disc export', () => {
+  const files = available
+    ? readdirSync(CACHE).filter((f) => f.endsWith('.xml') && f !== 'authtab.xml').sort()
+    : [];
+
+  it('imports without a single unusable citation', () => {
+    const failures: string[] = [];
+    let imported = 0;
+
+    for (const file of files) {
+      try {
+        const doc = parseTeiRows(readFileSync(`${CACHE}/${file}`, 'utf8'));
+        if (doc.rows.length === 0) {
+          failures.push(`${file}: parsed to no rows`);
+          continue;
+        }
+        createSourceImport({ title: doc.title || file, rows: doc.rows, levelNames: doc.levelNames });
+        imported += 1;
+      } catch (err) {
+        failures.push(`${file}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    expect(failures).toEqual([]);
+    expect(imported).toBe(files.length);
+  });
+
+  it('gives Bekker-style addresses, not one row per page', () => {
+    // Verse mode is the default precisely so this holds; if the cache were
+    // built in prose mode the addresses would lose their line numbers.
+    const doc = parseTeiRows(readFileSync(`${CACHE}/${files[0]}`, 'utf8'));
+    expect(doc.levelNames.length).toBeGreaterThanOrEqual(2);
+    expect(doc.rows.length).toBeGreaterThan(100);
+  });
+});

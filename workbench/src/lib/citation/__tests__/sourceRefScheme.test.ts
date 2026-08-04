@@ -47,7 +47,9 @@ describe('parseAddress', () => {
 
   it('refuses punctuation and symbols, so parser junk cannot pass as a citation', () => {
     expect(() => addr('!!!not-a-real-address!!!')).toThrow(/letters and digits/);
-    expect(() => addr('1.5-9')).toThrow(/letters and digits/);
+    expect(() => addr('1.5:9')).toThrow(/letters and digits/);
+    // "1.5-9" used to be here. Real TLG data prints paired line numbers that
+    // way, so it is now accepted — see the paired-line-numbers tests below.
   });
 
   it('accepts a Greek book letter as a component', () => {
@@ -128,5 +130,34 @@ describe('spine ownership', () => {
 
   it('shows the source address in the gutter', () => {
     expect(sourceRefScheme.gutter.gutterMode).toBe('address');
+  });
+});
+
+// From QA against a real TLG disc: 78 of Aristotle's 122,429 citations join two
+// line numbers, and rejecting them lost the whole work — the Physics failed on
+// 205a.25,29. All three spellings occur in Diogenes' output.
+describe('line numbers the edition printed as a pair', () => {
+  it('accepts a comma, a hyphen and a slash between runs', () => {
+    for (const raw of ['205a.25,29', '184b.25-26', '110/111', '1a.8,9']) {
+      expect(() => sourceRefScheme.parseAddress(raw)).not.toThrow();
+    }
+  });
+
+  it('still sorts such a line by its first number', () => {
+    const at = (raw: string) => sourceRefScheme.parseAddress(raw);
+    expect(sourceRefScheme.compareAddress(at('205a.24'), at('205a.25,29'))).toBeLessThan(0);
+    expect(sourceRefScheme.compareAddress(at('205a.25,29'), at('205a.26'))).toBeLessThan(0);
+  });
+
+  it('refuses a separator that leads, trails, or doubles', () => {
+    // Widening the rule must not turn it into "anything goes".
+    for (const raw of ['-25', '25-', '25--26', '25,,29', '.']) {
+      expect(() => sourceRefScheme.parseAddress(raw)).toThrow();
+    }
+  });
+
+  it('still refuses parser junk', () => {
+    // The reason the rule exists at all: a CTS urn must never pass as a citation.
+    expect(() => sourceRefScheme.parseAddress('urn:cts:greekLit:tlg0059')).toThrow();
   });
 });
