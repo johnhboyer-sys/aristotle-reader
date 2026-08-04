@@ -1,0 +1,83 @@
+{
+ "work": "DA",
+ "version": "wallace-ugarit",
+ "exported": "2026-07-31T20:07:27.024Z",
+ "verdicts": {
+  "403b20": {
+   "verdict": "on",
+   "citation": "403b20",
+   "chapter": "1.2",
+   "ts": "2026-07-31T19:54:01.731Z"
+  },
+  "407b25": {
+   "verdict": "early",
+   "citation": "407b25",
+   "chapter": "1.3",
+   "ts": "2026-07-31T19:54:30.727Z",
+   "note": "goes at \"speaking of the carpenter's art\""
+  },
+  "409a31": {
+   "note": "The prior gloss is for the wrong line (32 not 31) but both wallace and smith nail line 31.",
+   "citation": "409a31",
+   "chapter": "1.5",
+   "verdict": "on",
+   "ts": "2026-07-31T19:56:21.381Z"
+  },
+  "416b32": {
+   "verdict": "on",
+   "citation": "416b32",
+   "chapter": "2.5",
+   "ts": "2026-07-31T19:57:17.305Z"
+  },
+  "422a20": {
+   "verdict": "early",
+   "citation": "422a20",
+   "chapter": "2.10",
+   "ts": "2026-07-31T19:57:33.225Z",
+   "note": "off by four words. Should be pinned to \"Sight, we saw, is concerned at once\""
+  },
+  "424b10": {
+   "verdict": "on",
+   "citation": "424b10",
+   "chapter": "2.12",
+   "ts": "2026-07-31T19:58:16.492Z"
+  },
+  "426a30": {
+   "note": "Wallace is way off. i don't see any overlap with smith... Smith is bang on.",
+   "citation": "426a30",
+   "chapter": "3.2"
+  },
+  "426b15": {
+   "verdict": "on",
+   "citation": "426b15",
+   "chapter": "3.2",
+   "ts": "2026-07-31T20:00:35.035Z"
+  },
+  "430a15": {
+   "note": "Smith is spot on. No tick for wallace.",
+   "citation": "430a15",
+   "chapter": "3.5"
+  },
+  "430b10": {
+   "note": "Smith is spot on. Wallace, though, should be pegged either at \"Length, may be conceived of either as divided or undivided\" (if we are matching the first greek word of line 10) or to \"And therefore it is impossible to state what was thought\" (if we are pegging to the majority of line 10's content). Wallace has a different word order here, with a clause moved to the end of the sentence that smith (faithfully) has earlier.",
+   "citation": "430b10",
+   "chapter": "3.6",
+   "verdict": "early",
+   "ts": "2026-07-31T20:02:20.293Z"
+  },
+  "432b5": {
+   "note": "Both are spot on.",
+   "citation": "432b5",
+   "chapter": "3.9",
+   "verdict": "on",
+   "ts": "2026-07-31T20:06:22.408Z"
+  },
+  "435b5": {
+   "verdict": "late",
+   "citation": "435b5",
+   "chapter": "3.13",
+   "ts": "2026-07-31T20:06:53.339Z",
+   "note": "Wallace should be pegged at \"of this sense alone must involve the animal's death\". Smith is spot on."
+  }
+ }
+}
