@@ -117,6 +117,18 @@ export function rowAddressSource(
   spine: SpineRow[],
   scheme: CitationScheme,
 ): RowAddressProvider {
+  // Explicit per-row addresses from a source import win outright: they ARE
+  // the source's citations, and nothing can re-derive them.
+  const refs = meta.rowRefs;
+  if (refs) {
+    return (rowIndex: number) => {
+      const raw = refs[rowIndex - 1];
+      if (raw === undefined) {
+        throw new ChapterFileError(`rowAddressSource: row index ${rowIndex} is out of range for row_refs (${refs.length} row(s))`);
+      }
+      return scheme.parseAddress(raw);
+    };
+  }
   if (meta.columnStarts) {
     return (rowIndex: number) => scheme.parseAddress(rowAddress(meta, rowIndex));
   }

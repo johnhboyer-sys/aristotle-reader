@@ -102,6 +102,7 @@
     onSelect,
     onAddWork,
     onNewDocument,
+    onImportSource,
     onImportChapter,
     onImportReference,
   }: {
@@ -150,6 +151,10 @@
     /** "New document…" — create a corpus-free document (D8 §6). Gated like
      * onImportChapter (Tauri or dev harness). */
     onNewDocument?: () => void;
+    /** "Import a text…" — bring in any author from a TLG/PHI disc or from
+     * Perseus, keeping the source's own citations. Tauri only: every route
+     * reads a file, a disc, or the network. */
+    onImportSource?: () => void;
     /** "Import chapter…" for a ready work (Tauri only — App gates the prop
      * the same way onAddWork is gated). Receives the work id so the dialog
      * can default its work picker to the one the user clicked from. */
@@ -766,13 +771,16 @@
     </div>
   {/each}
 
-  {#if onAddWork || onNewDocument}
+  {#if onAddWork || onNewDocument || onImportSource}
     <div class="rail-foot">
       {#if onAddWork}
         <button class="add-work" onclick={onAddWork}>Add work…</button>
       {/if}
       {#if onNewDocument}
         <button class="add-work" onclick={onNewDocument}>New document…</button>
+      {/if}
+      {#if onImportSource}
+        <button class="add-work" onclick={onImportSource}>Import a text…</button>
       {/if}
     </div>
   {/if}

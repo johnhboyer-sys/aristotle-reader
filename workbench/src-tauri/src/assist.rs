@@ -363,9 +363,17 @@ pub struct RunOutcome {
 
 /// Run an absolute executable with a fixed argv array and capture its result.
 #[tauri::command]
-pub async fn run_program(bin_path: String, args: Vec<String>, timeout_ms: u64) -> RunOutcome {
-    tauri::async_runtime::spawn_blocking(move || run_program_blocking(&bin_path, &args, timeout_ms))
-        .await
+pub async fn run_program(
+    bin_path: String,
+    args: Vec<String>,
+    timeout_ms: u64,
+    cwd: Option<String>,
+    env: Option<std::collections::HashMap<String, String>>,
+) -> RunOutcome {
+    tauri::async_runtime::spawn_blocking(move || {
+        run_program_blocking(&bin_path, &args, timeout_ms, cwd.as_deref(), env.as_ref())
+    })
+    .await
         .unwrap_or_else(|err| {
             eprintln!("[run_program] task panicked: {err}");
             RunOutcome {
@@ -378,7 +386,20 @@ pub async fn run_program(bin_path: String, args: Vec<String>, timeout_ms: u64) -
         })
 }
 
-fn run_program_blocking(bin_path: &str, args: &[String], timeout_ms: u64) -> RunOutcome {
+/// Environment variables a caller may set. Deliberately a FIXED list rather
+/// than "whatever the frontend passes": the corpus importer needs exactly
+/// these three, they name a folder the user picked through the native picker,
+/// and an open-ended env map on a subprocess is a much wider door than this
+/// feature needs (PATH, DYLD_*, PERL5LIB all change what code runs).
+const ALLOWED_ENV: &[&str] = &["TLG_DIR", "PHI_DIR", "DDP_DIR"];
+
+fn run_program_blocking(
+    bin_path: &str,
+    args: &[String],
+    timeout_ms: u64,
+    cwd: Option<&str>,
+    env: Option<&std::collections::HashMap<String, String>>,
+) -> RunOutcome {
     let not_spawned = || RunOutcome {
         code: None,
         stdout: String::new(),
@@ -396,9 +417,21 @@ fn run_program_blocking(bin_path: &str, args: &[String], timeout_ms: u64) -> Run
     let mut cmd = Command::new(bin_path);
     cmd.args(args);
     cmd.env("PATH", augmented_path());
-    // Neutral cwd, same reasoning as run_blocking: a subprocess's file access
-    // is attributed to the parent app under macOS TCC.
-    cmd.current_dir(std::env::temp_dir());
+    for (key, value) in env.into_iter().flatten() {
+        if ALLOWED_ENV.contains(&key.as_str()) {
+            cmd.env(key, value);
+        } else {
+            eprintln!("[run_program] ignoring environment variable outside the allow-list: {key}");
+        }
+    }
+    // Neutral cwd by default, same reasoning as run_blocking: a subprocess's
+    // file access is attributed to the parent app under macOS TCC. Diogenes'
+    // exporter is the exception — it loads its own modules by relative path,
+    // so it only runs from its own directory.
+    match cwd {
+        Some(dir) if Path::new(dir).is_dir() => cmd.current_dir(dir),
+        _ => cmd.current_dir(std::env::temp_dir()),
+    };
 
     match run_with_timeout(cmd, None, Duration::from_millis(timeout_ms)) {
         Ok(out) => RunOutcome {
@@ -468,6 +501,64 @@ mod tests {
             .unwrap();
         assert_eq!(out.status, Some(0));
         assert_eq!(out.stdout, "σύνθεσις\n\nline");
+    }
+
+    // ── run_program: cwd and environment ─────────────────────────────────────
+
+    #[test]
+    fn run_program_sets_an_allowed_environment_variable() {
+        // Diogenes finds the user's disc through exactly this.
+        let out = run_program_blocking(
+            "/bin/sh",
+            &["-c".into(), "printf %s \"$TLG_DIR\"".into()],
+            5000,
+            None,
+            Some(&std::collections::HashMap::from([(
+                "TLG_DIR".to_string(),
+                "/discs/TLG".to_string(),
+            )])),
+        );
+        assert!(out.spawned);
+        assert_eq!(out.stdout, "/discs/TLG");
+    }
+
+    #[test]
+    fn run_program_refuses_an_environment_variable_outside_the_allow_list() {
+        // The one that matters: PERL5LIB (or PATH, or DYLD_*) would change
+        // which code the interpreter loads.
+        let out = run_program_blocking(
+            "/bin/sh",
+            &["-c".into(), "printf %s \"$PERL5LIB\"".into()],
+            5000,
+            None,
+            Some(&std::collections::HashMap::from([(
+                "PERL5LIB".to_string(),
+                "/tmp/evil".to_string(),
+            )])),
+        );
+        assert!(out.spawned);
+        assert_eq!(out.stdout, "");
+    }
+
+    #[test]
+    fn run_program_runs_in_a_given_directory() {
+        // The exporter loads its modules by relative path, so this is load-bearing.
+        let out = run_program_blocking("/bin/sh", &["-c".into(), "pwd".into()], 5000, Some("/bin"), None);
+        assert!(out.spawned);
+        assert_eq!(out.stdout.trim(), "/bin");
+    }
+
+    #[test]
+    fn run_program_falls_back_to_a_neutral_directory_when_cwd_is_missing() {
+        let out = run_program_blocking(
+            "/bin/sh",
+            &["-c".into(), "pwd".into()],
+            5000,
+            Some("/no/such/directory"),
+            None,
+        );
+        assert!(out.spawned);
+        assert_ne!(out.stdout.trim(), "/no/such/directory");
     }
 
     // ── assist_run: bin_path validation ──────────────────────────────────────

@@ -17,6 +17,7 @@ import { aquinasStub } from '../schemes/aquinasStub';
 import { busseParagraph } from '../schemes/busseParagraph';
 import { paragraphScheme } from '../schemes/paragraphScheme';
 import { plainLineScheme } from '../schemes/plainLineScheme';
+import { sourceRefScheme } from '../schemes/sourceRefScheme';
 import { getScheme } from '../registry';
 
 /** Everything the registry knows about, plus a well-formed sample address
@@ -71,6 +72,14 @@ const freeLineWork: WorkMeta = {
   books: [],
 };
 
+const importedWork: WorkMeta = {
+  id: 'free-doc-3',
+  title: 'Something Imported From Perseus',
+  author: 'Unknown',
+  scheme: 'source-ref',
+  books: [],
+};
+
 const FIXTURES: Fixture[] = [
   {
     scheme: bekkerStandard,
@@ -98,6 +107,13 @@ const FIXTURES: Fixture[] = [
     ascendingRaws: ['1', '2', '10'],
   },
   {
+    scheme: sourceRefScheme,
+    work: importedWork,
+    // Mixed depth on purpose: the contract only demands a total order, and
+    // this scheme has to order a short address against a longer one.
+    ascendingRaws: ['1.9', '1.10', '2'],
+  },
+  {
     scheme: aquinasStub,
     throws: true,
     work: isagogeWork, // unused — every method throws before touching it
@@ -115,6 +131,7 @@ const REGISTERED_IDS = [
   'busse-paragraph',
   'paragraph',
   'plain-line',
+  'source-ref',
 ] as const;
 
 describe('contract fixture roster matches the registry', () => {

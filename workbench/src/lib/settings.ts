@@ -90,8 +90,19 @@ export interface ExportSettings {
 export interface WorkbenchSettings {
   /** Directory containing the TLG texts (AUTHTAB.DIR etc.). */
   tlgDir?: string;
+  /** Directory containing the PHI Latin texts. Same shape as tlgDir — a
+   * separate field because the two discs are separate folders, and Diogenes
+   * reads each through its own environment variable. */
+  phiDir?: string;
   /** Override for the Diogenes server directory (the one holding xml-export.pl). */
   diogenesPath?: string;
+  /**
+   * Absolute path to a perl interpreter, tried before the platform guesses.
+   * Exists mainly for Windows: macOS and Linux have a system perl at a known
+   * place, but the Windows Diogenes build ships its own and we cannot yet say
+   * where. Unset → try the platform candidates in order.
+   */
+  perlPath?: string;
   lastOpened?: LastOpened;
   /**
    * User-chosen folder holding the library (chapter files), e.g. a synced
@@ -249,7 +260,9 @@ export function sanitize(value: unknown): WorkbenchSettings {
   const v = value as Record<string, unknown>;
   const out: WorkbenchSettings = {};
   if (typeof v.tlgDir === 'string') out.tlgDir = v.tlgDir;
+  if (typeof v.phiDir === 'string') out.phiDir = v.phiDir;
   if (typeof v.diogenesPath === 'string') out.diogenesPath = v.diogenesPath;
+  if (typeof v.perlPath === 'string') out.perlPath = v.perlPath;
   if (typeof v.libraryRoot === 'string') out.libraryRoot = v.libraryRoot;
   if (typeof v.referenceRoot === 'string') out.referenceRoot = v.referenceRoot;
   const assist = sanitizeAssist(v.assist);
@@ -323,7 +336,9 @@ export async function updateSettings(
   const next: WorkbenchSettings = { ...current };
   for (const key of [
     'tlgDir',
+    'phiDir',
     'diogenesPath',
+    'perlPath',
     'lastOpened',
     'libraryRoot',
     'referenceRoot',

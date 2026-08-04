@@ -191,6 +191,60 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
   return null;
 }
 
+/**
+ * Running references for an IMPORTED work, whose rows carry the source's own
+ * citations (`row_refs`). Returns the 0-based row indexes that should show a
+ * stamp, and what it says.
+ *
+ * The rule is "stamp the citable address whenever it changes", where the
+ * citable address is the row's own address minus a line number. Nobody cites a
+ * line of prose, so De anima 402a.1…402a.20 stamp once, as [402a]; but the
+ * Republic's rows ARE 1.327a, 1.327b, 1.327c, and each one gets its own stamp,
+ * because that is precisely what a reader cites and what the printed margin
+ * shows.
+ *
+ * Only the part that changed is printed: [1.327a] then [327b], [327c], and
+ * [2.357a] when the book turns over. Repeating the book on every line is how a
+ * margin becomes unreadable.
+ *
+ * A line number is recognised by shape, not by name: all digits, or the single
+ * "t" Diogenes gives a work's title line. That is a guess, and it is wrong in
+ * one known case — a Perseus edition divided only to the chapter, whose last
+ * component is a chapter number and gets dropped as though it were a line. The
+ * alternative is to thread the work's tier names through five render
+ * functions that have no other use for them; if that case starts to matter,
+ * that is the fix.
+ *
+ * Deliberately NOT the Bekker stamper's every-5-lines rule: that counts lines,
+ * and an imported work's line tier is frequently not a line at all.
+ *
+ * A file with no row_refs is not an import and gets nothing.
+ */
+const LINE_COMPONENT = /^(\d+|t)$/;
+
+export function sourceRefStamps(chapter: ChapterFile): Map<number, string> {
+  const refs = chapter.meta.rowRefs;
+  const out = new Map<number, string>();
+  if (!refs) return out;
+
+  let previous: string[] = [];
+  for (let i = 0; i < refs.length; i++) {
+    const parts = refs[i].split('.');
+    // Drop the line number, but never the whole address: a single-component
+    // ref is the citation itself.
+    const cite = parts.length > 1 && LINE_COMPONENT.test(parts[parts.length - 1])
+      ? parts.slice(0, -1)
+      : parts;
+    if (cite.join('.') === previous.join('.')) continue;
+
+    let from = 0;
+    while (from < cite.length - 1 && cite[from] === previous[from]) from += 1;
+    out.set(i, `[${cite.slice(from).join('.')}]`);
+    previous = cite;
+  }
+  return out;
+}
+
 // ── per-row addressing, shared by both export paths ────────────────────────
 
 /**
@@ -681,6 +735,7 @@ function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): Re
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
   const paragraphStarts = new Set(chapter.meta.paragraphStarts ?? []);
+  const stamps = sourceRefStamps(chapter);
   const hardLineBreak = '\\' + '\n';
   let currentLines: string[] = [];
   let gap = false;
@@ -708,7 +763,8 @@ function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): Re
       paragraphs.push(ELLIPSIS_PARAGRAPH);
     }
     gap = false;
-    currentLines.push(rendered.markdown);
+    const stamp = stamps.get(i);
+    currentLines.push(stamp ? `${stamp} ${rendered.markdown}` : rendered.markdown);
     footnoteIdsUsed.push(...rendered.footnoteIdsUsed);
   }
   flush();
@@ -780,6 +836,9 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: nu
   const footnoteIdsUsed: string[] = [];
   const starts = new Set(chapter.meta.paragraphStarts ?? []);
   const hardLineBreak = '\\' + '\n';
+  // Stamps go on the ORIGINAL side only: the reference belongs to the source
+  // text, and repeating it in both columns would just be clutter.
+  const stamps = sourceRefStamps(chapter);
 
   // Row indexes grouped by paragraph_starts (row 1 implicitly opens group 1,
   // exactly like renderDocumentPlainLineRows / the editor's chunk view).
@@ -792,7 +851,14 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: nu
 
   for (const group of groups) {
     // Source block: the group's non-blank lines, hard-line-break joined.
-    const sourceLines = group.map((i) => renderSourceLine(chapter, i)).filter((s) => s.length > 0);
+    const sourceLines = group
+      .map((i) => {
+        const line = renderSourceLine(chapter, i);
+        if (line.length === 0) return line;
+        const stamp = stamps.get(i);
+        return stamp ? `${stamp} ${line}` : line;
+      })
+      .filter((s) => s.length > 0);
     const source = sourceLines.join(hardLineBreak);
 
     // English block(s): translated rows flow with hard line breaks; each

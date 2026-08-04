@@ -11,6 +11,7 @@
   import AddWorkDialog from './components/AddWorkDialog.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import NewDocumentDialog from './components/NewDocumentDialog.svelte';
+  import SourceImportDialog from './components/SourceImportDialog.svelte';
   import ProfileDialog from './components/ProfileDialog.svelte';
   import WorkDetailsDialog from './components/WorkDetailsDialog.svelte';
   import LexiconDrawer from './components/LexiconDrawer.svelte';
@@ -77,6 +78,7 @@
   let lexiconOpen = $state(false);
   let addWorkOpen = $state(false);
   let newDocumentOpen = $state(false);
+  let sourceImportOpen = $state(false);
   let settingsOpen = $state(false);
   // The document work whose organization profile the "Manage levels…" dialog
   // is editing (null = closed).
@@ -311,6 +313,13 @@
   }
 
   // ── corpus-free "New document…" (design doc D8 §6) ──────────────────────
+  /** An imported work lands exactly like a created one — same registry, same
+   * storage — so it opens the same way. */
+  async function handleSourceImported(workId: string) {
+    sourceImportOpen = false;
+    await handleDocumentCreated(workId);
+  }
+
   async function handleDocumentCreated(workId: string) {
     newDocumentOpen = false;
     await reloadWorks();
@@ -715,6 +724,7 @@
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
+            onImportSource={isTauri() ? () => (sourceImportOpen = true) : undefined}
             onImportChapter={isTauri() || import.meta.env.DEV ? openImportDialog : undefined}
             onImportReference={isTauri() || import.meta.env.DEV ? openReferenceImport : undefined}
           />
@@ -806,6 +816,14 @@
       existingIds={works.map((w) => w.id)}
       onClose={() => (newDocumentOpen = false)}
       onCreated={handleDocumentCreated}
+    />
+  {/if}
+
+  {#if sourceImportOpen}
+    <SourceImportDialog
+      existingIds={works.map((w) => w.id)}
+      onClose={() => (sourceImportOpen = false)}
+      onCreated={handleSourceImported}
     />
   {/if}
 

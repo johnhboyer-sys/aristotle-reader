@@ -13,7 +13,8 @@ export type SchemeId =
   | 'aquinas-tbd'
   | 'busse-paragraph'
   | 'paragraph'
-  | 'plain-line';
+  | 'plain-line'
+  | 'source-ref';
 
 /** Opaque scheme-owned address, e.g. "1041a6". Only the owning scheme parses/compares it. */
 export interface Address {

@@ -10,6 +10,7 @@ import { aquinasStub } from './schemes/aquinasStub';
 import { busseParagraph } from './schemes/busseParagraph';
 import { paragraphScheme } from './schemes/paragraphScheme';
 import { plainLineScheme } from './schemes/plainLineScheme';
+import { sourceRefScheme } from './schemes/sourceRefScheme';
 
 const SCHEMES = new Map<SchemeId, CitationScheme>([
   [bekkerStandard.id, bekkerStandard],
@@ -18,6 +19,7 @@ const SCHEMES = new Map<SchemeId, CitationScheme>([
   [busseParagraph.id, busseParagraph],
   [paragraphScheme.id, paragraphScheme],
   [plainLineScheme.id, plainLineScheme],
+  [sourceRefScheme.id, sourceRefScheme],
 ]);
 
 /** Look up a citation scheme by id. Throws on an unknown scheme id. */
