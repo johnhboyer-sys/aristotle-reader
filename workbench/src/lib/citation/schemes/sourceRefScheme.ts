@@ -35,14 +35,23 @@ export const MAX_COMPONENTS = 8;
 const RUN_RE = /\d+|\D+/g;
 
 /**
- * A component is letters and digits only — no punctuation, no symbols.
- * Deliberately strict: this scheme's addresses arrive from a PARSER (TEI
- * attributes, Diogenes output), and the failure mode to guard against is
- * junk being blessed as a citation because it happened to be non-empty.
- * Letters are matched by Unicode class, so a Greek book letter (Ζ) is a
- * legitimate component.
+ * A component is runs of letters and digits, which may be JOINED by a comma,
+ * hyphen or slash — "25,29", "25-26", "110/111".
+ *
+ * Those three all say the same thing in a printed edition: this row carries
+ * two of its line numbers, because the editor set two lines as one. Real TLG
+ * data has 78 of them across Aristotle's 122,429 citations, and rejecting
+ * them cost the whole work — the Physics failed to import on line 205a.25,29.
+ *
+ * Still deliberately strict at the edges: the separators must sit BETWEEN
+ * alphanumeric runs, never lead or trail, and nothing else gets in. These
+ * addresses arrive from a PARSER (TEI attributes, Diogenes output), and the
+ * failure mode to guard against is junk being blessed as a citation because
+ * it happened to be non-empty — a stray "urn:cts:greekLit:tlg0059" must still
+ * be refused. Letters are matched by Unicode class, so a Greek book letter (Ζ)
+ * is a legitimate component.
  */
-const COMPONENT_RE = /^[\p{L}\p{N}]+$/u;
+const COMPONENT_RE = /^[\p{L}\p{N}]+(?:[,\-/][\p{L}\p{N}]+)*$/u;
 
 function parseComponents(raw: string): string[] {
   if (typeof raw !== 'string' || raw.length === 0) {
@@ -65,7 +74,7 @@ function parseComponents(raw: string): string[] {
   const bad = parts.find((p) => !COMPONENT_RE.test(p));
   if (bad !== undefined) {
     throw new Error(
-      `source-ref address component must be letters and digits only, got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
+      `source-ref address component must be letters and digits, optionally joined by , - or /, got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
     );
   }
   return parts;
