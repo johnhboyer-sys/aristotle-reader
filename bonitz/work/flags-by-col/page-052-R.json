@@ -1,0 +1,80 @@
+[
+ {
+  "page": 52,
+  "col": "R",
+  "spine_off": 2928,
+  "ctx": "74b23.6.377b12.δ7.383b31.Ρα7.1364a16.β7.1385b4.ξ1.9",
+  "opus": "Ρ",
+  "genie": "Π",
+  "llama": "Ρ",
+  "cls": "majority-opus",
+  "vote": "Ρ",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 52,
+  "col": "R",
+  "spine_off": 3453,
+  "ctx": "a30.τὰἄμφω:ἀδύνατονἑκατέρȣμέρȣςμηδὲνἔχοντοςβάροςτὰἄμφωἔχ",
+  "opus": "ȣμέρȣς",
+  "genie": "ῳμέρει",
+  "llama": "ῳμέρει",
+  "cls": "majority-other",
+  "vote": "ῳμέρει",
+  "flag": true,
+  "citation": false
+ },
+ {
+  "page": 52,
+  "col": "R",
+  "spine_off": 3716,
+  "ctx": "ιςἀποδιδόναιΠη9.1329a16.τȣ̀ςἐξἀμφοῖνπολιτῶνΠγ5.1278a",
+  "opus": "ȣ̀",
+  "genie": "ῆ",
+  "llama": "ȣ",
+  "cls": "majority-opus",
+  "vote": "ȣ̀",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 52,
+  "col": "R",
+  "spine_off": 3832,
+  "ctx": "πολιτῶνϗμὴθατέρȣ(cfἐξὁποτερȣ͂νΠζ4.1319b9)μόνονΠγ2.1275",
+  "opus": "ερȣ͂",
+  "genie": "έρω",
+  "llama": "ερεȣ",
+  "cls": "three-way",
+  "vote": null,
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 52,
+  "col": "R",
+  "spine_off": 4640,
+  "ctx": "ιςΖιβ17.507b29,34,τὸἐπίπλȣνΖια16.495b31.γ14.519b10,",
+  "opus": "ȣ",
+  "genie": "υο",
+  "llama": "ȣ",
+  "cls": "majority-opus",
+  "vote": "ȣ",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 52,
+  "col": "R",
+  "spine_off": 5120,
+  "ctx": "αἴξ,βȣ͂ς,κάμηλος,πρόβαταΖιι50.632b2.β1.499a23,501a1",
+  "opus": "ι",
+  "genie": "",
+  "llama": "",
+  "cls": "majority-other",
+  "vote": "",
+  "flag": true,
+  "citation": true
+ }
+]

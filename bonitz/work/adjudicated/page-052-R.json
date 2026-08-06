@@ -1,0 +1,44 @@
+[
+ {
+  "ctx": "74b23.6.377b12.δ7.383b31.Ρα7",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "printed letter is an open-loop P-shape (rho), not the two-legged Π; citation 1364a16 falls in the Rhet range (1354-1420), confirming Ρ over Π"
+ },
+ {
+  "ctx": "a30.τὰἄμφω:ἀδύνατονἑκατέρȣμέ",
+  "verdict": "ἑκατέρȣμέρȣς",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "both syllables show the stacked closed-loop ou-ligature, not an omega+iota (ῳ) or ει; genie/llama's 'ῳμέρει' does not match the ink shape at either spot"
+ },
+ {
+  "ctx": "ιςἀποδιδόναιΠη9.1329a16.τȣ̀ς",
+  "verdict": "τȣ̀ς",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "zoomed crop shows the closed double-loop ligature carrying a grave accent, then sigma; not eta (genie) and llama has the right ligature but missed the grave"
+ },
+ {
+  "ctx": "πολιτῶνϗμὴθατέρȣ(cfἐξὁποτερȣ",
+  "verdict": "ερȣȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "OPUS RECHECK OVERRIDE (was 'ερȣ͂'). OVERRIDE. At 16x (strip-03, line 29) there are TWO ou-ligatures between ρ and ν, not one: two separate closed loops, each with its own pair of horns, clearly spaced, and the circumflex sits over the SECOND one only. The word is ὁποτερȣȣ͂ν = ὁποτερουοῦν, the genitive of ὁποτεροσοῦν, which is exactly the form at Pol Ζ4 1319b9 and exactly what the entry needs ('from whichever of the two' answering 'ἐξ ἀμφοτέρων ... ϗ μὴ θατέρȣ'). All three readers dropped a ligature (opus one glyph, llama split it as ερεȣ, genie flattened to έρω) and the adjudicator ratified the majority shape. This is the trap-2 case: the readers' shared blind spot, not the ink."
+ },
+ {
+  "ctx": "ιςΖιβ17.507b29,34,τὸἐπίπλȣν",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἐπίπλȣν shows the single closed-loop ou-ligature, not two separate letters upsilon+omicron as genie split it"
+ },
+ {
+  "ctx": "αἴξ,βȣ͂ς,κάμηλος,πρόβαταΖιι50",
+  "verdict": "ι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "zoomed crop shows Z followed by two discrete short iota strokes each with its own foot, not a single joined glyph - the second iota is real ink, not noise; genie/llama dropped it entirely"
+ }
+]

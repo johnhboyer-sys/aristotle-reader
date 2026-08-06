@@ -1,0 +1,146 @@
+[
+ {
+  "ctx": "ἐποίκȣςΠε3.1303b2.6.1306a2.—ἡΘ",
+  "sonnet_verdict": "ȣ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 9x the glyph after κ is the stacked ou-ligature: a closed lower loop with an open U riding on top, of the same build as the ȣ in ἀμφισβητȣ͂ντες three lines below. The ν immediately following ligature-forms elsewhere on the page is a clean open V, and this is not that; nor does it have omega's three arches. No accent on it, which is irrelevant either way."
+ },
+ {
+  "ctx": "εςπροστιθέασινἀεὶτὸἴσωςΡβά13.1",
+  "sonnet_verdict": "ά",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ἀ",
+  "agree": false,
+  "opus_confidence": "high",
+  "note": "OVERRIDE. Pixel-dumped the mark (strip-01, y190-201, x89-96). It starts as a horizontal bar, descends to the RIGHT, then curls back LEFT at the bottom rows. That is the smooth-breathing/apostrophe hook. The acute in this font (e.g. over the ο of ’νόματος on the very next line, and over the ε of προστιθέασιν) is a monotonic straight diagonal of constant width with no leftward curl. Placed side by side at 14x, the disputed mark is indistinguishable from the breathing of ἀεὶ on the line above and from the aphaeresis apostrophe of ’νόματος on the line below, and plainly unlike either acute. Sonnet's stated ground is also wrong on its own terms: the line-3 descender IS visible, as a separate thin stroke at y178-186, x81-84 — well above and left of the hook, which sits below line 3's baseline and directly over the α's right shoulder. The reading is semantically odd (Bonitz's book sigla are otherwise bare: Ρα, Ρβ, Πγ, Ζγδ), but it is odd under 'ά' too, and this is a diplomatic transcription: the ink shows a breathing-shaped hook."
+ },
+ {
+  "ctx": "ὶτȣ͂δικαίȣ,τῶνζημιώσεων,τȣ͂'νό",
+  "sonnet_verdict": "ȣ͂'",
+  "sonnet_confidence": "medium",
+  "opus_verdict": "ȣ͂'",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Line 4 ends τȣ͂ — closed ligature loop under a circumflex, no iota subscript and no omega arches, so ῷ is out. Line 5 opens with the hook mark and then νόματος directly: at 7x there is no omicron between them, and the gap to the ν is a normal letter gap, not a broken-type void. I would call it an aphaeresis apostrophe rather than a 'defective print' (the mark is a properly cast apostrophe, identical in shape to the breathings on this page), but the glyph string is the same. Raising confidence to high: this one is not close."
+ },
+ {
+  "ctx": ",22.15.1299a29.γ9.1281a9.Ρα6.1",
+  "sonnet_verdict": "Ρ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "Ρ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 6x the letter is a single stem with one closed bowl at the top — rho. Π on this same page (Πε3, Πδ16, Πγ, Πη1) is two full-height stems under a wide top bar with visible serifs at all four feet; nothing like it. 1363b6 sits in Rhet 1354-1420, outside Pol 1252-1342."
+ },
+ {
+  "ctx": "ολογȣ͂σι,τὴνδὲοἷςἀμφισβητȣ͂σιΠ",
+  "sonnet_verdict": "ȣ͂",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ͂",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 9x, ἀμφισβητȣ͂σι shows the closed double-loop ligature under a circumflex, matching ὁμολογȣ͂σι earlier in the same line. Lexcheck independently rules out -υσι."
+ },
+ {
+  "ctx": "ῇτῶνμωνύχωνδίχηλόνἐστινΖγδ6.77",
+  "sonnet_verdict": "δ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "δ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 8x the letter after Ζγ is a small bowl with a tall ascender curving up and right — δ. θ in this font (θ118, θ58, Φθ3 on this page) is a closed oval with a horizontal bar through it; there is no bar here. 774b22 is in GA 715-789, confirming Ζγ = GA, book δ."
+ },
+ {
+  "ctx": "279b9.ηεα3.1215a6.—ἀμφ.ὡςȣ̓δεῖ",
+  "sonnet_verdict": "ȣ̓",
+  "sonnet_confidence": "medium",
+  "opus_verdict": "ȣ̓",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "First glyph of the line at 8x: closed lower loop with open top, carrying a smooth-breathing hook — the ligature, giving ὡς οὐ δεῖ. It is not ἢ (no eta stem/descender) and not ϗ (which appears twice further down this column as a distinct two-stroke kappa-and-tail). The '20' the other two readers swallowed is the marginal line number sitting at the right edge of the previous line, not part of the text. Raising confidence to high."
+ },
+ {
+  "ctx": "γκαλεῖν).οἱἀμφισβητȣ͂ντεςΡα1.1",
+  "sonnet_verdict": "Ρ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "Ρ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 9x: one stem, one closed bowl, serifed foot — rho, not Π. 1354a27 is the opening of the Rhetoric."
+ },
+ {
+  "ctx": "b26.23.1399b31.οἱἀμφισβητȣ͂ντε",
+  "sonnet_verdict": "ȣ͂",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ͂",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Closed double-loop under circumflex; the ν two letters later in the same word is an open V, so the contrast is visible within one word."
+ },
+ {
+  "ctx": "ἱἀμφισβητȣ͂ντεςautκατηγορȣ͂σιν",
+  "sonnet_verdict": "ȣ͂",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ͂",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "κατηγορȣ͂σιν at 9x: the glyph after ρ is the closed ligature under a circumflex, not the open upsilon that appears in ἱερεῦσιν further down the column."
+ },
+ {
+  "ctx": "ςautκατηγορȣ͂σινautἀπολογȣ͂ντα",
+  "sonnet_verdict": "ȣ͂νταιΡ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ͂νταιΡ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "ἀπολογȣ͂νται: ligature under circumflex, then ν as an open V — both shapes present within three letters, so the discrimination is direct. The following capital is a bowled rho; 1358b12 is Rhet I.3."
+ },
+ {
+  "ctx": "0a17.Ογ3.302a17.Πβ9.1270b89.ἀμ",
+  "sonnet_verdict": "8",
+  "sonnet_confidence": "high",
+  "opus_verdict": "8",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 18x the digit has two fully enclosed counters, upper and lower, closed on the left as well as the right. The 3 of '302' at the head of the same line, cropped at the same magnification, is open along its whole left side — two right-hand bowls only. This is an 8. b89 is an impossible Bekker line, so it is Bonitz's own misprint for b39 and stands as printed. A case where genie and llama agreed and were both wrong."
+ },
+ {
+  "ctx": "σιμαἀγαθά,οppὁμολογȣ́μεναΡα6.1",
+  "sonnet_verdict": "Ρ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "Ρ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Bowled rho at 6x; 1362b29 is Rhet I.6, matching the α6 that follows."
+ },
+ {
+  "ctx": "οςΦθ3.253a34.Οβ13.294b31.Ρα13.",
+  "sonnet_verdict": "Ρ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "Ρ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Bowled rho at 8x; 1374a11 is Rhet I.13, and the γ5. 1416a9 following in the same run is Rhet III.5 — the whole run is Rhetoric."
+ },
+ {
+  "ctx": "nsiαἱπερὶτῶνἱερῶντοῖςἱερεῦσινἀ",
+  "sonnet_verdict": "ῦ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ῦ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 16x the glyph is an open U — two strokes meeting in a round bottom, wide open at the top, with no lower loop at all — under a circumflex. Set against the ligatures elsewhere in the column it is a different letter, not a flattened one. This is the page's one genuine plain upsilon, and lexcheck agrees (ιερευσιν attested, ιερεουσιν not)."
+ },
+ {
+  "ctx": "αἱτȣ͂μέλιτοςϗτῶνσχαδόνωνΖιι40.",
+  "sonnet_verdict": "ιι",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ιι",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "At 14x, two separate vertical strokes follow the Ζ, each with its own serifed foot and a clear white channel between them — no joining bowl, so not υ, and two strokes, so not a single ι. Content settles it too: 624a8 is HA (486-638) and HA book ι chapter 40 is the bee chapter at 623b-627; HA book α has no chapter 40, so genie's Ζα is impossible."
+ }
+]

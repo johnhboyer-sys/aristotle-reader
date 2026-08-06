@@ -1,0 +1,56 @@
+[
+ {
+  "ctx": "74b23.6.377b12.δ7.383b31.Ρα7",
+  "sonnet_verdict": "Ρ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "Ρ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Zoomed 6x at line 8: capital with a single stem and one closed bowl at the top right — a rho. Compared on the same page against unambiguous Π in 'Πβ3' (line 4), 'Πγ4' (line 6), 'Πε1' (line 15): those have a flat top bar over two full-height legs, nothing like this glyph. Bekker 1364a16 sits in Rhet 1354-1420, which agrees."
+ },
+ {
+  "ctx": "a30.τὰἄμφω:ἀδύνατονἑκα-",
+  "sonnet_verdict": "ἑκατέρȣμέρȣς",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ἑκατέρȣμέρȣς",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Line 21 at 14x: both glyphs are one closed bottom loop with two short upward horns (left and right) — the ou-ligature as this fount cuts it. No iota stroke or subscript under either, so ῳ is out; the second is followed directly by ς with no epsilon, so ει is out. Lexically ἑκατέρου μέρους."
+ },
+ {
+  "ctx": "ιςἀποδιδόναιΠη9.1329a16.τȣ̀ς",
+  "sonnet_verdict": "τȣ̀ς",
+  "sonnet_confidence": "high",
+  "opus_verdict": "τȣ̀ς",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Line 26 at 14x: after τ the base is a closed round loop with the left horn visible; the right horn runs up and merges with a stroke that descends left-to-right, i.e. a grave. Closed bowl rules out upsilon (open V, cf 'δύο' line 24) and there is no eta crossbar or descender, so genie's ῆ is impossible. τοὺς ἐξ ἀμφοῖν πολιτῶν."
+ },
+ {
+  "ctx": "πολιτῶνϗμὴθατέρȣ(cfἐξὁποτερȣ",
+  "sonnet_verdict": "ερȣ͂",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ερȣȣ͂",
+  "agree": false,
+  "opus_confidence": "high",
+  "note": "OVERRIDE. At 16x (strip-03, line 29) there are TWO ou-ligatures between ρ and ν, not one: two separate closed loops, each with its own pair of horns, clearly spaced, and the circumflex sits over the SECOND one only. The word is ὁποτερȣȣ͂ν = ὁποτερουοῦν, the genitive of ὁποτεροσοῦν, which is exactly the form at Pol Ζ4 1319b9 and exactly what the entry needs ('from whichever of the two' answering 'ἐξ ἀμφοτέρων ... ϗ μὴ θατέρȣ'). All three readers dropped a ligature (opus one glyph, llama split it as ερεȣ, genie flattened to έρω) and the adjudicator ratified the majority shape. This is the trap-2 case: the readers' shared blind spot, not the ink."
+ },
+ {
+  "ctx": "ιςΖιβ17.507b29,34,τὸἐπίπλȣν",
+  "sonnet_verdict": "ȣ",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ȣ",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Line 48 at 11x: after λ a single glyph, one closed loop with two horns, then ν. Not two letters — there is no separate omicron bowl and no upsilon V. ἐπίπλουν (omentum), the HA sense, and 495b31/519b10 are in HA range."
+ },
+ {
+  "ctx": "αἴξ,βȣ͂ς,κάμηλος,πρόβαταΖιι50",
+  "sonnet_verdict": "ι",
+  "sonnet_confidence": "high",
+  "opus_verdict": "ι",
+  "agree": true,
+  "opus_confidence": "high",
+  "note": "Line 59 at 13x: Ζ then two distinct short strokes, each with its own hooked head and foot, separated by white — two iotas, not one glyph and not a mu (mu on this column, e.g. Ζμγ14 lines 42/45/52/57, is a full round-shouldered minuscule of double the width). 632b2 is HA (486-638), so Ζι + book ι ch 50 is right; Ζμ would be impossible at 632."
+ }
+]

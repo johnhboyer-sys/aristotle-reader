@@ -31,10 +31,38 @@ _GREEK = {
     'phi': 'φ', 'chi': 'χ', 'psi': 'ψ', 'omega': 'ω',
 }
 _GREEK.update({k.capitalize(): v.upper() for k, v in _GREEK.items()})
+# LaTeX variant spellings Genie also emits
+_GREEK.update({'varepsilon': 'ε', 'varsigma': 'ς', 'varphi': 'φ',
+               'vartheta': 'θ', 'varrho': 'ρ', 'varpi': 'π',
+               'varkappa': 'κ', 'omicron': 'ο'})
 
 _SUPERS = {'ᵃ': 'a', 'ᵇ': 'b', 'ᵅ': 'a', 'ª': 'a', 'º': 'o',
            'ͣ': 'a', 'ͨ': 'b',   # Genie's combining-letter renderings of raised a/b
            '¹': '1', '²': '2', '³': '3'}
+
+
+# Genie sometimes sets a whole entry as a math run, spelling the Greek out
+# letter by letter and rendering the diacritics as LaTeX accent commands:
+#   $\dot{\alpha} \nu \alpha \lambda \text{ογίζεσθαι}$  -> ἀναλογίζεσθαι
+#   $\tau\grave{o}$ -> τὸ   $\tau\tilde{\eta}\varsigma$ -> τῆς
+# The old fallback mapped an unknown \command to its own NAME, so \dot{α}
+# came out as "dotα" and \text{ογ} as "textογ" — which turned page 60 into
+# 154 junk flags where Genie was the lone dissenter on almost every one.
+_LATEX_WRAPPERS = ('text', 'mathrm', 'textrm', 'mathit', 'operatorname')
+# Accent commands are DROPPED, keeping the base letter. Genie's marks are not
+# trustworthy enough to convert: it puts \dot on the wrong letter (λαμβ\dot{ν}
+# for λαμβάνεσθαι) and uses it for both a smooth breathing and a misplaced
+# acute. Stripping makes Genie abstain on diacritics and still vote on the
+# letters; converting would manufacture a confident wrong vote instead.
+_LATEX_ACCENTS = ('acute', 'grave', 'tilde', 'hat', 'dot', 'ddot', 'bar',
+                  'breve', 'check', 'vec', 'mathring')
+_RE_WRAPPER = re.compile(r'\\(?:%s)\s*\{([^{}]*)\}' % '|'.join(_LATEX_WRAPPERS))
+_RE_ACCENT = re.compile(r'\\(?:%s)\s*\{([^{}]*)\}' % '|'.join(_LATEX_ACCENTS))
+# Known names first (longest first) so that \tau immediately followed by a
+# letter — "\tau\grave{o}" collapsing to "\tauo" — is read as tau + o and not
+# as an unknown command called "tauo".
+_RE_CMD = re.compile(
+    r'\\(' + '|'.join(sorted(_GREEK, key=len, reverse=True)) + r'|[A-Za-z]+)')
 
 
 def _latex_to_plain(text: str) -> str:
@@ -44,8 +72,14 @@ def _latex_to_plain(text: str) -> str:
         inner = re.sub(r'\^\\text\{([^}]*)\}', r'\1', inner)
         inner = re.sub(r'\^\{([^}]*)\}', r'\1', inner)
         inner = inner.replace('^', '')
-        inner = re.sub(
-            r'\\([A-Za-z]+)',
+        # unwrap \text{...} and strip accent commands, innermost first, so
+        # nested forms like \acute{\varepsilon} resolve fully
+        for _ in range(6):
+            new = _RE_ACCENT.sub(r'\1', _RE_WRAPPER.sub(r'\1', inner))
+            if new == inner:
+                break
+            inner = new
+        inner = _RE_CMD.sub(
             lambda g: _GREEK.get(g.group(1), g.group(1)), inner)
         return inner.replace('{', '').replace('}', '').replace(' ', '')
     return re.sub(r'\$([^$]*)\$', _one, text)

@@ -290,14 +290,17 @@
    ]
   },
   "054": {
-   "ligatures": 0,
-   "flattened": 9,
+   "ligatures": 9,
+   "flattened": 2,
    "examples": [
-    "συλλογισμῦς",
-    "συλλογισμῦς",
-    "λόγυς",
-    "ἐλέγχυ"
-   ]
+    "τύτων",
+    "ὐθέν"
+   ],
+   "reparsed": "2026-08-06",
+   "superseded": {
+    "ligatures": 0,
+    "flattened": 9
+   }
   },
   "055": {
    "ligatures": 38,
@@ -305,14 +308,14 @@
    "examples": []
   },
   "056": {
-   "ligatures": 25,
-   "flattened": 4,
-   "examples": [
-    "ἀναγνωρισμῦ",
-    "ἀναγνωρισμῦ",
-    "δῦναι",
-    "θεὺς"
-   ]
+   "ligatures": 42,
+   "flattened": 0,
+   "examples": [],
+   "reparsed": "2026-08-06",
+   "superseded": {
+    "ligatures": 25,
+    "flattened": 4
+   }
   },
   "057": {
    "ligatures": 38,
@@ -417,14 +420,21 @@
    "examples": []
   },
   "074": {
-   "ligatures": 10,
-   "flattened": 8,
+   "ligatures": 16,
+   "flattened": 6,
    "examples": [
     "τύτοις",
     "ἀνομολογύμενον",
     "ἀνομολογύμενα",
-    "ὁμολογυμένων"
-   ]
+    "ὁμολογυμένων",
+    "ἀνομολογύμενα",
+    "ὕτως"
+   ],
+   "reparsed": "2026-08-06",
+   "superseded": {
+    "ligatures": 10,
+    "flattened": 8
+   }
   },
   "075": {
    "ligatures": 33,
@@ -437,13 +447,17 @@
    "examples": []
   },
   "077": {
-   "ligatures": 41,
-   "flattened": 3,
+   "ligatures": 42,
+   "flattened": 2,
    "examples": [
     "ἀντίξυν",
-    "ἀντίπυς",
-    "ὕτως"
-   ]
+    "ἀντίπυς"
+   ],
+   "reparsed": "2026-08-06",
+   "superseded": {
+    "ligatures": 41,
+    "flattened": 3
+   }
   },
   "078": {
    "ligatures": 31,
@@ -508,14 +522,18 @@
    "examples": []
   },
   "089": {
-   "ligatures": 14,
-   "flattened": 4,
+   "ligatures": 15,
+   "flattened": 3,
    "examples": [
     "κῦφα",
     "δῦναι",
-    "ἁπλυστέρως",
-    "ἀκύει"
-   ]
+    "ἁπλυστέρως"
+   ],
+   "reparsed": "2026-08-06",
+   "superseded": {
+    "ligatures": 14,
+    "flattened": 4
+   }
   },
   "090": {
    "ligatures": 41,
@@ -1063,5 +1081,20 @@
    "flattened": 0,
    "examples": []
   }
- }
+ },
+ "_reparse_note": [
+  "2026-08-06: pages 54, 56, 74, 77, 89 re-parsed with a fresh key.",
+  "Result: 54  0lig/9flat -> 9/2 | 56 25/4 -> 42/0 (clean) | 74 10/8 -> 16/6",
+  "        77 41/3 -> 42/2 | 89 14/4 -> 15/3.",
+  "FINDING: re-running past the FIRST retry is wasted credits. Attempts 2 and 3",
+  "were byte-identical to attempt 1 on every page, so residual flattening is",
+  "deterministic, not random. The old docstring advice 'Re-running a page often",
+  "fixes it' holds only for the first re-parse of a stale result.",
+  "FINDING: char-count deltas after a re-parse are NOT content loss - LlamaParse",
+  "alternates between <sup>a</sup>, plain a, and the Unicode superscript a for",
+  "the Bekker column letter. Normalise before comparing. Verified: citation",
+  "counts held (150->151, 124->123, 112, 110, 205->205) and the only dropped",
+  "citation was p56 395a9, whose raised letter is blotted (review item B8).",
+  "Originals kept at raw/llamaparse/superseded/page-NNN.md.flat."
+ ]
 }

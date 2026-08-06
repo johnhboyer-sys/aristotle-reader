@@ -1,0 +1,170 @@
+[
+ {
+  "llamaparse_word": "ȣ̓κ",
+  "ou_form": "οὐκ",
+  "upsilon_form": "ὐκ",
+  "lexical_verdict": "ligature",
+  "why": "ουκ is a corpus form; υκ is not"
+ },
+ {
+  "llamaparse_word": "βȣς",
+  "ou_form": "βους",
+  "upsilon_form": "βυς",
+  "lexical_verdict": "ligature",
+  "why": "βους is a corpus form; βυς is not"
+ },
+ {
+  "llamaparse_word": "δασύπȣς",
+  "ou_form": "δασύπους",
+  "upsilon_form": "δασύπυς",
+  "lexical_verdict": "ligature",
+  "why": "δασυπους is a corpus form; δασυπυς is not"
+ },
+ {
+  "llamaparse_word": "δικαίȣ",
+  "ou_form": "δικαίου",
+  "upsilon_form": "δικαίυ",
+  "lexical_verdict": "ligature",
+  "why": "δικαιου is a corpus form; δικαιυ is not"
+ },
+ {
+  "llamaparse_word": "θατέρȣ",
+  "ou_form": "θατέρου",
+  "upsilon_form": "θατέρυ",
+  "lexical_verdict": "ligature",
+  "why": "θατερου is a corpus form; θατερυ is not"
+ },
+ {
+  "llamaparse_word": "κατηγορȣσιν",
+  "ou_form": "κατηγορουσιν",
+  "upsilon_form": "κατηγορυσιν",
+  "lexical_verdict": "ligature",
+  "why": "κατηγορουσιν is a corpus form; κατηγορυσιν is not"
+ },
+ {
+  "llamaparse_word": "μετέχȣσι",
+  "ou_form": "μετέχουσι",
+  "upsilon_form": "μετέχυσι",
+  "lexical_verdict": "ligature",
+  "why": "μετεχουσι is a corpus form; μετεχυσι is not"
+ },
+ {
+  "llamaparse_word": "οἴνȣ",
+  "ou_form": "οἴνου",
+  "upsilon_form": "οἴνυ",
+  "lexical_verdict": "ligature",
+  "why": "οινου is a corpus form; οινυ is not"
+ },
+ {
+  "llamaparse_word": "προσθίȣς",
+  "ou_form": "προσθίους",
+  "upsilon_form": "προσθίυς",
+  "lexical_verdict": "ligature",
+  "why": "προσθιους is a corpus form; προσθιυς is not"
+ },
+ {
+  "llamaparse_word": "συμβȣλεύοντες",
+  "ou_form": "συμβουλεύοντες",
+  "upsilon_form": "συμβυλεύοντες",
+  "lexical_verdict": "ligature",
+  "why": "συμβουλευοντες is a corpus form; συμβυλευοντες is not"
+ },
+ {
+  "llamaparse_word": "σωθησομένȣς",
+  "ou_form": "σωθησομένους",
+  "upsilon_form": "σωθησομένυς",
+  "lexical_verdict": "ligature",
+  "why": "σωθησομενους is a corpus form; σωθησομενυς is not"
+ },
+ {
+  "llamaparse_word": "τȣ",
+  "ou_form": "του",
+  "upsilon_form": "τυ",
+  "lexical_verdict": "ligature",
+  "why": "του is a corpus form; τυ is not"
+ },
+ {
+  "llamaparse_word": "τȣς",
+  "ou_form": "τους",
+  "upsilon_form": "τυς",
+  "lexical_verdict": "ligature",
+  "why": "τους is a corpus form; τυς is not"
+ },
+ {
+  "llamaparse_word": "ἀμφισβητȣμενα",
+  "ou_form": "ἀμφισβητουμενα",
+  "upsilon_form": "ἀμφισβητυμενα",
+  "lexical_verdict": "ligature",
+  "why": "αμφισβητουμενα is a corpus form; αμφισβητυμενα is not"
+ },
+ {
+  "llamaparse_word": "ἀμφισβητȣν",
+  "ou_form": "ἀμφισβητουν",
+  "upsilon_form": "ἀμφισβητυν",
+  "lexical_verdict": "ligature",
+  "why": "αμφισβητουν is a corpus form; αμφισβητυν is not"
+ },
+ {
+  "llamaparse_word": "ἀμφισβητȣντες",
+  "ou_form": "ἀμφισβητουντες",
+  "upsilon_form": "ἀμφισβητυντες",
+  "lexical_verdict": "ligature",
+  "why": "αμφισβητουντες is a corpus form; αμφισβητυντες is not"
+ },
+ {
+  "llamaparse_word": "ἀμφισβητȣντων",
+  "ou_form": "ἀμφισβητουντων",
+  "upsilon_form": "ἀμφισβητυντων",
+  "lexical_verdict": "ligature",
+  "why": "αμφισβητουντων is a corpus form; αμφισβητυντων is not"
+ },
+ {
+  "llamaparse_word": "ἀμφισβητȣσι",
+  "ou_form": "ἀμφισβητουσι",
+  "upsilon_form": "ἀμφισβητυσι",
+  "lexical_verdict": "ligature",
+  "why": "αμφισβητουσι is a corpus form; αμφισβητυσι is not"
+ },
+ {
+  "llamaparse_word": "ἀμφοτέρȣς",
+  "ou_form": "ἀμφοτέρους",
+  "upsilon_form": "ἀμφοτέρυς",
+  "lexical_verdict": "ligature",
+  "why": "αμφοτερους is a corpus form; αμφοτερυς is not"
+ },
+ {
+  "llamaparse_word": "ἀμφώδȣσι",
+  "ou_form": "ἀμφώδουσι",
+  "upsilon_form": "ἀμφώδυσι",
+  "lexical_verdict": "ligature",
+  "why": "αμφωδουσι is a corpus form; αμφωδυσι is not"
+ },
+ {
+  "llamaparse_word": "ἀπολογȣνται",
+  "ou_form": "ἀπολογουνται",
+  "upsilon_form": "ἀπολογυνται",
+  "lexical_verdict": "ligature",
+  "why": "απολογουνται is a corpus form; απολογυνται is not"
+ },
+ {
+  "llamaparse_word": "ἱερεȣσιν",
+  "ou_form": "ἱερεουσιν",
+  "upsilon_form": "ἱερευσιν",
+  "lexical_verdict": "upsilon",
+  "why": "ιερευσιν is a corpus form; ιερεουσιν is not"
+ },
+ {
+  "llamaparse_word": "ὁμολογȣμενα",
+  "ou_form": "ὁμολογουμενα",
+  "upsilon_form": "ὁμολογυμενα",
+  "lexical_verdict": "ligature",
+  "why": "ομολογουμενα is a corpus form; ομολογυμενα is not"
+ },
+ {
+  "llamaparse_word": "ὁμολογȣσι",
+  "ou_form": "ὁμολογουσι",
+  "upsilon_form": "ὁμολογυσι",
+  "lexical_verdict": "ligature",
+  "why": "ομολογουσι is a corpus form; ομολογυσι is not"
+ }
+]

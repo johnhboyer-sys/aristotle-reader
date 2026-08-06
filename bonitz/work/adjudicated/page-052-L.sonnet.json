@@ -1,0 +1,114 @@
+[
+ {
+  "ctx": "ἐποίκȣςΠε3.1303b2.6.1306a2.—ἡΘ",
+  "verdict": "ȣ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "closed stacked ou-ligature under the acute, not the open-V of upsilon or an omega loop; ἐποίκȣς = ἐποίκους is the plain sense"
+ },
+ {
+  "ctx": "εςπροστιθέασινἀεὶτὸἴσωςΡβά13.1",
+  "verdict": "ά",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "italic bowl-and-tail alpha with a plain acute; the mark genie read as a breathing is the descender of the μ bleeding down from the line above, not a diacritic on this alpha; too curved to be llama's roman a"
+ },
+ {
+  "ctx": "ὶτȣ͂δικαίȣ,τῶνζημιώσεων,τȣ͂'νό",
+  "verdict": "ȣ͂'",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "line ends with the closed ou-ligature under a circumflex (τȣ͂), and the next line opens with a lone breathing mark before νόματος (the omicron of ὀνόματος dropped from the type) — no ῷ omega-iota shape anywhere in the ink"
+ },
+ {
+  "ctx": ",22.15.1299a29.γ9.1281a9.Ρα6.1",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "serif capital rho, and 1363b6 falls in the Rhetoric's 1354-1420 range, not Politics' 1252-1342"
+ },
+ {
+  "ctx": "ολογȣ͂σι,τὴνδὲοἷςἀμφισβητȣ͂σιΠ",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "closed loop-ligature shape under circumflex on both verbs (ὁμολογȣ͂σι, ἀμφισβητȣ͂σι); lexicon confirms -ουσι forms are real, -υσι are not"
+ },
+ {
+  "ctx": "ῇτῶνμωνύχωνδίχηλόνἐστινΖγδ6.77",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "clear open-loop delta with tall ascender in 'Ζγδ6'; genie dropped the letter entirely"
+ },
+ {
+  "ctx": "279b9.ηεα3.1215a6.—ἀμφ.ὡςȣ̓δεῖ",
+  "verdict": "ȣ̓",
+  "agrees_with": "opus",
+  "confidence": "medium",
+  "note": "small glyph but same two-prong-over-loop construction as the ou-ligature elsewhere, with a breathing mark above right; reads ὡς οὐ δεῖ (as one ought not), not ὡς ἢ/ϗ δεῖ"
+ },
+ {
+  "ctx": "γκαλεῖν).οἱἀμφισβητȣ͂ντεςΡα1.1",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "serif capital rho; 1354a27 sits at the very start of the Rhetoric's range, ruling out Politics"
+ },
+ {
+  "ctx": "b26.23.1399b31.οἱἀμφισβητȣ͂ντε",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "closed loop-ligature under circumflex; lexicon confirms ἀμφισβητουντες is the attested form"
+ },
+ {
+  "ctx": "ἱἀμφισβητȣ͂ντεςautκατηγορȣ͂σιν",
+  "verdict": "ȣ͂",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "same ligature shape repeated in κατηγορȣ͂σιν; κατηγορουσιν is the real corpus form, κατηγορυσιν is not"
+ },
+ {
+  "ctx": "ςautκατηγορȣ͂σινautἀπολογȣ͂ντα",
+  "verdict": "ȣ͂νταιΡ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "ἀπολογȣ͂νται keeps the same ligature shape (ἀπολογουνται is the real form), and the following siglum is a serif Ρ — 1358b12 is in the Rhetoric's range, not Politics"
+ },
+ {
+  "ctx": "0a17.Ογ3.302a17.Πβ9.1270b89.ἀμ",
+  "verdict": "8",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "unambiguous stacked-loop figure 8, not a 3 (which would be open on the right); this is Bonitz's own misprint of b39, transcribed diplomatically as printed"
+ },
+ {
+  "ctx": "σιμαἀγαθά,οppὁμολογȣ́μεναΡα6.1",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "serif capital rho; 1362b29 is within the Rhetoric's range"
+ },
+ {
+  "ctx": "οςΦθ3.253a34.Οβ13.294b31.Ρα13.",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "serif capital rho; 1374a11 is within the Rhetoric's range, not Politics"
+ },
+ {
+  "ctx": "nsiαἱπερὶτῶνἱερῶντοῖςἱερεῦσινἀ",
+  "verdict": "ῦ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "open V-shaped upsilon under circumflex, clearly distinct from the closed ligature seen elsewhere on this page; lexicon confirms ἱερεῦσιν (dative of ἱερεύς) is the real form, not ἱερεουσιν"
+ },
+ {
+  "ctx": "αἱτȣ͂μέλιτοςϗτῶνσχαδόνωνΖιι40.",
+  "verdict": "ιι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "two discrete iota strokes each with its own foot after the Ζ, matching the known Ζιι (HA + book iota) siglum, not a joined-υ Ζμ/Ζυ or a single ι"
+ }
+]
