@@ -150,6 +150,105 @@ ITEMS = [
   "1 or a poorly-inked 2?",
   "The superscript is a digit, not a raised 'a' (no bowl; compare the raised a in a35 on the same "
   "line). Shape reads as a serifed 1; a badly-inked 2 cannot be fully excluded."),
+ # ---- pages 58-62 (added after the second compare) ----
+ ("A9", "060", "L", 1, "print", "<code>τι8</code> — Topics has no book ι",
+  "κατ' ἀναλογίαν λαμβάνεσθαι τι8. 138b24.",
+  "Record as printed?",
+  "At 14× the letter after τ is an unmistakable serifed vertical, i.e. iota. But "
+  "Topics (τ) runs α–θ only, so τι is not a possible book letter, and 138b24 is "
+  "Topics ε. Same class as Ρβ10 and κ82."),
+ ("A10", "061", "L", 16, "print", "<code>μν2.</code> with no Bekker number at all",
+  "μν2. γίγνεται",
+  "Record the omission as printed?",
+  "Verified at high zoom that no Bekker number follows the chapter before γίγνεται. "
+  "Third candidate source-omission in the run, after Ζγ1 (p57-L) and the τι8/Ρβ10 "
+  "siglum conflicts."),
+ ("A11", "059", "R", 5, "print", "Period splitting <code>766b7</code> across the line break",
+  "…Ζγδ1. 766.   ← next line opens b7.",
+  "Record the stray period? (Better evidenced than A7.)",
+  "Square, baseline, the size of the other periods. Unlike A7 on p53-L, here BOTH "
+  "Opus and Genie read the period — as they also do for the same shape at l.4 "
+  "(1095.). So it is genuinely printed, and my earlier suspicion of an Opus "
+  "line-break artifact is refuted."),
+ ("A12", "055", "R", 25, "print", "Line numbers out of order: <code>1338 b41, 40</code>",
+  "1338 b41, 40,",
+  "Record as printed?",
+  "Digits verified at 8×. SECOND instance of this class, after 1386a6, 5, 7 on "
+  "p57-R. Two independent occurrences suggest a real Bonitz habit rather than a "
+  "one-off slip."),
+ ("A13", "060", "L", 25, "print", "A genuinely BARE <code>ϗ</code> — exception to the accent policy",
+  "ϗ  (no accent)",
+  "Keep bare? This contradicts the ϗ̀-everywhere rule from 15–44.",
+  "Checked on a contrast-thresholded 10× crop: no accent present, and the nearby tick "
+  "is the iota subscript of τηγορίᾳ bleeding down from the line above. The column's "
+  "other three ϗ all carry a clear grave, so this is a real outlier, not a lapse."),
+ ("A14", "055", "R", 11, "print", "<code>βελ.τίονος</code> — baseline dot inside the word",
+  "βελ.τίονος",
+  "Foul case, or record as printed?",
+  "Same size and weight as the periods in 692 a3., and visible in BOTH strip-01 and "
+  "strip-02, so not a one-crop scan artifact. Probable foul case; other readers will "
+  "likely print βελτίονος."),
+
+ ("B16", "061", "R", 14, "unresolved", "A solid lozenge at x-height, spaced as its own sort",
+  "989a30-b21.  [?]  ὁμȣ͂",
+  "What is this mark?",
+  "Well-formed solid diamond, distinctly larger than and raised above the baseline "
+  "period two glyphs to its left, with space on both sides. Unidentifiable — possibly "
+  "a Bonitz editorial mark not yet catalogued."),
+ ("B17", "061", "R", 37, "unresolved", "An isolated <code>c</code> between citation and word",
+  "369b14.  c  πύρινα",
+  "Stray sort, or a Latin abbreviation?",
+  "Upright, x-height, top and bottom strokes turning right, no descender, spaced on "
+  "both sides. Transcribed literally as c."),
+ ("B18", "061", "R", 36, "unresolved", "A raised dash between two words",
+  "προσαγορεύει - ταὐτό",
+  "Hyphen, dash, or damage?",
+  "Short horizontal stroke raised to x-height with small spaces either side. Shape is "
+  "unambiguous; identity is not."),
+ ("B19", "058", "L", 6, "unresolved", "<code>μιδῆ</code> where grammar wants ῇ",
+  "κομιδῆ",
+  "Is the iota subscript really absent?",
+  "The reader looked for it and refused to supply it. Pixel profile of the "
+  "below-baseline ink is a SINGLE 4–5px stroke over 11 rows, identical to the plain-η "
+  "descender two lines below, and there is no detached tick like the unmistakable "
+  "ones under χρόνῳ (l.9), ᾠά (l.55), ᾠῶν (l.57)."),
+ ("B20", "058", "R", 44, "unresolved", "<code>ȣ̔́τω</code> vs <code>ȣ̓́πω</code> — rough or smooth?",
+  "ȣ̔́τω   (cf. l.13 ȣ̓́πω)",
+  "Confirm the breathings on this pair.",
+  "The reader's least certain pair on the page: both cropped at identical 16× and set "
+  "side by side; l.44 has a horizontal top arm off a vertical stem (rough), l.13 has "
+  "none and slants down-right (smooth). It did NOT reason from οὔπω/οὕτω."),
+ ("B21", "060", "R", 56, "unresolved", "<code>(τὸν υ[?]τον)</code> — genuinely illegible",
+  "(τὸν υ[?]τον)",
+  "Can you read it?",
+  "υ, then a glyph descending below the baseline with a leftward hook, carrying a "
+  "heavy blob diacritic positioned over the gap between the letters, then τον."),
+ ("B22", "060", "R", 5, "unresolved", "A solid black rectangle in the left margin",
+  "[blot] ἄναλοι ἄρτοι",
+  "Broken sort, or a printer's mark?",
+  "A solid black rectangular ink blot stands at the far left of the line, before "
+  "ἄναλοι. Not a letter, so not transcribed — but it is on the page."),
+ ("B23", "055", "R", 57, "unresolved", "<code>Vhl l l)</code> — two isolated glyphs",
+  "Vhl l l)",
+  "Lowercase l, capital I, or digit 1?",
+  "Decided on a metric, not a guess: both span scan rows 190–223, identical to the l "
+  "of Vhl and 5 rows taller than the digits 35 on the same line. Capital I ruled out "
+  "(the II on l.54 has symmetric serifs). The reader notes the reading looks odd "
+  "semantically but the measurement is unambiguous."),
+ ("B24", "059", "L", 39, "unresolved", "Alphabetical check fires on <code>ἀνακύπτειν</code>",
+  "ἀνακύπτειν",
+  "Real violation, or a checker artifact?",
+  "UNRESOLVED, flagged rather than dismissed. The printed order looks correct — "
+  "ἀνακομίζειν (l.20), ἀνακȣφίζει (l.22), ἀνακύπτειν (l.39), ἀνακωχεύειν (l.42), i.e. "
+  "ανακομ &lt; ανακουφ &lt; ανακυπ &lt; ανακωχ — and alphacheck.sort_key DOES fold "
+  "ȣ→ου, so the obvious explanation is ruled out. Either a headword was mis-detected "
+  "from the Genie bold runs, or there is a violation I could not locate."),
+ ("B25", "059", "L", 47, "unresolved", "<code>υἱς</code> again — the confirmed Opus artifact",
+  "ὁ Μαίων υἱς ἴδιον ἔτρεφεν",
+  "Confirm ὡς. Adjudicators must not ratify υἱς.",
+  "Second of exactly two occurrences of υἱς in all 96 Opus reads, and both times "
+  "Genie and LlamaParse independently read ὡ. Sense settles it: ὡς ἴδιον ἔτρεφεν, "
+  "raised him as his own. υἱς is not a Greek word."),
 ]
 
 # p52 items keyed by ctx rather than line number
@@ -218,6 +317,22 @@ VOTES = {
         "misread. HA book θ is book 8, and <b>606b12 falls squarely in HA VIII</b> &mdash; "
         "so Ζιθ28 would resolve the citation conflict that made the reader uneasy about β. "
         "Do not let this be settled 2&ndash;1 as '6'; it needs the image."),
+ "A9":  ("no flag &mdash; all three readers agree on <b>τι8</b>",
+         "Strengthened. The impossible book letter is really on the page."),
+ "A11": ("opus <b>.</b> &middot; genie <b>.</b> &middot; llama <b>(nothing)</b>",
+         "Genie agrees here, and again at l.4 (1095.). So the period is genuinely "
+         "printed &mdash; and my earlier hypothesis that Opus invents a period at a "
+         "split citation is <b>refuted</b>. A7 on p53-L, where Opus really was alone, "
+         "stays the odd one out."),
+ "B19": ("no flag &mdash; all three readers agree there is no subscript",
+         "Strengthened considerably. The reader expected to be overruled; instead "
+         "Genie and LlamaParse independently read no iota subscript either."),
+ "B20": ("opus <b>ȣ̔́τω</b> &middot; genie <b>ὕτω</b> &middot; llama <b>ȣ̓́τω</b>",
+         "2&ndash;1 for ROUGH (Genie&rsquo;s ὕ is rough+acute). LlamaParse is the lone "
+         "vote for smooth."),
+ "B25": ("opus <b>υἱ</b> &middot; genie <b>ὡ</b> &middot; llama <b>ὡ</b>",
+         "Same 2&ndash;1 as p55-L. Tested across all 96 Opus reads: υἱς occurs exactly "
+         "twice and both are ὡς."),
 }
 
 CSS = """
