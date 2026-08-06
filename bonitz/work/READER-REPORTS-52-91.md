@@ -638,3 +638,40 @@ p017-R and p059-R l.4, and is absent only on p020-L and p053-L. So the
 period is usually really printed; Opus over-reports it rather than inventing
 it. No reader-slot defect here. Review item A7 stays demoted but is not
 dismissed — p053-L specifically is still Opus-only.
+
+---
+
+# DETERMINISTIC CHECKS — pages 53-62, run PRE-adjudication
+
+Run against the raw Opus spine (the pre-adjudication text) via a scratch
+mirror, so nothing misleading was written into `work/reconciled/`. Caveat:
+adjudication may still change some of these.
+
+| check | result |
+|---|---|
+| Bekker impossible pages | **0** |
+| lexcheck ligature leaks (no reader caught) | **0** |
+| family (word vs its own headword) | **0** |
+| alphabetical order | **1 flagged** — needs a look |
+| breathing (strong) | **2** |
+
+**Breathing 1 — p062-L:30 `ωσπερ` → ὡσπερ.** This is review item A8, found
+independently by a check that never saw the image. **Do NOT apply.** John's
+diplomatic rule governs: the reader verified at 6× with the crop extended
+above the line that no mark is printed, and lines 26/29 of the same column
+print ὥσπερ correctly. Same class as `αλλα`/`πασχει`. The check proposes; it
+never auto-applies. Its value here is confirming A8 is really unaccented.
+
+**Breathing 2 — p056-L:56 `Ηρᾳ` → ἡρα.** Confirms review item B12's rough
+reading. Also exposes an ENCODING question: the reader wrote the breathing as
+a separate spacing dasia (`῾Η`) rather than precomposed `Ἡ`, because the print
+sets it as a separate mark before the capital. Worth one global ruling.
+
+**Alphabetical — p059-L:39 `ἀνακύπτειν` out of run [ἀνακομίζειν … ἀνακȣφίζει].**
+UNRESOLVED. On inspection the printed order looks correct: ἀνακομιδή (l.19),
+ἀνακομίζειν (l.20), ἀνακȣφίζει (l.22), ἀνακύπτειν (l.39), ἀνακωχεύειν (l.42)
+— i.e. ανακομ < ανακουφ < ανακυπ < ανακωχ, which is right. `alphacheck.sort_key`
+DOES fold ȣ→ου (line 43), so the obvious explanation is ruled out. Either a
+headword was mis-detected from the Genie bold runs, or there is a real
+violation I have not located. **Not chased further — flagged honestly rather
+than dismissed.**
