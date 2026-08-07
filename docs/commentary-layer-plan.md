@@ -90,12 +90,34 @@ Labeling: a visible "AI TRANSLATION" badge plus a methods note stating what it i
 4. **Persistent presentations** (rail/drawer forms) as judgment calls once real reading experience exists.
 5. **AI-translation pilot** can run parallel to 2–3; it is pipeline work, not UI work.
 
-## Open questions (decide early)
+## Unknowns register
 
-- Does commentary prose join the search index? (Third searchable stream; gating implications.)
-- Are notes citable/exportable like text?
-- Ratify the "all translations" recommendation above.
-- Pilot commentator choice (Themistius proposed; confirm against CAG text availability and OCR cost).
+Surfaced 2026-08-07. Suggested defaults are unratified.
+
+### Unregistered risks (found in blindspot pass)
+
+1. **Ingestion cost dominates the feature and is unestimated.** Hicks is ~600pp of mixed polytonic Greek and English; Newman is four volumes. Digitizing one line-keyed commentary likely exceeds all v1 UI work. *Default: before any UI design pass, run one chapter of Hicks end-to-end (OCR → schema → QA) and extrapolate.*
+2. **CAG digital source may be legally unusable.** The Berlin editions are PD, but TLG-derived text (the Diogenes path) carries a restrictive license. Hosting CAG Greek may require OCR from PD scans, which changes the pilot's cost. *Resolve before choosing the pilot commentator.*
+3. **Aquinas's lemmata are Moerbeke's Latin, not Aristotle's Greek.** Divisio-to-Bekker mapping needs the editorial apparatus hop; and the critical Latin editions (Leonine In De Anima, 1984) are in copyright — the PD Latin is an older edition (Parma/Vivès), and Corpus Thomisticum has its own terms. "Latin is PD" is true of the text, not of every edition.
+4. **English-only gutter dots inherit bekker-tick quality — and English-only is the mobile default.** Where ticks are `estimate`, dot placement will be visibly wrong in the most-used view. *Default: tick quality becomes a per-work precondition, or dots degrade to paragraph grain where ticks are estimated.*
+5. **Deploy and search scale.** Commentary prose could rival the corpus in size, hitting two existing sore spots: gh-pages deploy strain and search-shard growth. *Get a size estimate before phase 2, whatever the indexing decision.*
+6. **Lemma highlight sits on parser territory.** The highlighted span is made of clickable word tokens; event interplay with the word-popup (capture-phase handlers, close-path) must be prototyped early in the A design pass.
+7. **Edition variants will trip the lemma-match gate legitimately.** Hicks printed his own Greek; CAG authors quote a different Aristotle. *Default: three verdicts — `matches / error / variant-reading` — with variants displayable as scholarly content.*
+
+### Known open questions
+
+8. **Which ingestion stack owns commentaries** — Python pipeline or Workbench (which already has endnote import modes)?
+9. **Acceptance criteria for the AI translation** before a full run: sample review by John plus a divergence-rate threshold from the reference check.
+10. **PD-map caveat rows** (Poste, Grant, Susemihl–Hicks, Cope, G. R. T. Ross, Butcher, Margoliouth) still need renewal-record verification before hosting.
+11. **Corrections channel** for the AI translation (presumably GitHub issues; name it in the methods note).
+12. Does commentary prose join the search index? (Third searchable stream; gating implications.)
+13. Are notes citable/exportable like text?
+14. Ratify the "all translations" recommendation above.
+
+### Unwritten standards (to externalize before the A design pass)
+
+15. **Actual audience is unknown** — no analytics; the persona table is hypothetical. *Default: design for John's own reading practice first, and say so.*
+16. **What "slick" means.** Strong aesthetic bar exists but is not yet spec. *Default: name 2–3 existing readers to react to (Scaife dual panes, Sefaria panels, print Clarendon conventions) and extract the implicit rules; a prior-art survey is underway to feed this.*
 
 ## Non-goals for v1
 
