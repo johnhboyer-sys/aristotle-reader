@@ -6,6 +6,8 @@
 
 Mockup artifact (five UI approaches, real DA 402a content): https://claude.ai/code/artifact/1fa4f361-269b-499b-a37f-819e950a45d2
 
+Reference shots of ten existing commentary interfaces, read against this plan: https://claude.ai/code/artifact/edded879-cae1-4e6d-83e0-810f4a1482e7
+
 ## What this is
 
 A layer of textual commentaries over the corpus: line-keyed philological commentaries (Hicks on DA, Ross on Meta, Newman on Pol, Stewart/Burnet/Grant on EN), lectio-structured commentaries (Aquinas), and eventually the ancient Greek commentators (CAG). Which commentaries are hostable, and when, is mapped in the PD commentary map; copyright state is a first-class property of the data, not an afterthought.
@@ -92,13 +94,17 @@ Labeling: a visible "AI TRANSLATION" badge plus a methods note stating what it i
 
 ## Unknowns register
 
-Surfaced 2026-08-07. Suggested defaults are unratified.
+Surfaced 2026-08-07. Suggested defaults are unratified. Items 2, 3 and 10 were answered by a licensing pass on 2026-08-08 (Grok research, spot-checked against the GitHub API, the TEI headers themselves, and the repositories named); the resolutions are inline below. None of it is legal advice.
 
 ### Unregistered risks (found in blindspot pass)
 
 1. **Ingestion cost dominates the feature and is unestimated.** Hicks is ~600pp of mixed polytonic Greek and English; Newman is four volumes. Digitizing one line-keyed commentary likely exceeds all v1 UI work. *Default: before any UI design pass, run one chapter of Hicks end-to-end (OCR → schema → QA) and extrapolate.*
 2. **CAG digital source may be legally unusable.** The Berlin editions are PD, but TLG-derived text (the Diogenes path) carries a restrictive license. Hosting CAG Greek may require OCR from PD scans, which changes the pilot's cost. *Resolve before choosing the pilot commentator.*
+
+   **Resolved 2026-08-08 — hostable, by two routes.** TLG stays off the table: its terms forbid redistribution, so the Diogenes path cannot feed the site. But Open Greek and Latin's [`cag-dev`](https://github.com/OpenGreekAndLatin/cag-dev) carries TEI-XML for all 23 volumes, and each file's `<availability>` states CC BY-SA 4.0 — the repo itself has no LICENSE file, so the header is the grant we would be relying on. Themistius on *De Anima* is inside `commentaria_05_1-3.xml` (Heinze's text with Spengel page marginals, ~5,600 lines), not a separate file. The text is dev-grade OCR with errors in the chapter headings themselves (ΠΑΡΑΣΡΑΣΙΣ for ΠΑΡΑΦΡΑΣΙΣ) — a correction pass is part of the cost either way. It carries `<pb>`, `<lb n=>`, marginal page numbers and a footnote apparatus, but no Bekker anchors. Last push 2016. The alternative is OCR of the PD Berlin scans, which owes nothing to anyone. See item 17.
 3. **Aquinas's lemmata are Moerbeke's Latin, not Aristotle's Greek.** Divisio-to-Bekker mapping needs the editorial apparatus hop; and the critical Latin editions (Leonine In De Anima, 1984) are in copyright — the PD Latin is an older edition (Parma/Vivès), and Corpus Thomisticum has its own terms. "Latin is PD" is true of the text, not of every edition.
+
+   **Confirmed 2026-08-08.** Leonine is in copyright well into the century; Parma (1852–73) and Vivès are PD with scans on archive.org; Corpus Thomisticum claims all rights reserved on its electronic Latin, so we may link and quote but not mirror. English translations are the softer spot: Foster–Humphries (Yale, 1951) falls in the 1929–1963 renewal window and its status is genuinely unresolved — being freely hosted elsewhere is not evidence. The Moerbeke-to-Bekker apparatus hop is unaffected and still ours to build.
 4. **English-only gutter dots inherit bekker-tick quality — and English-only is the mobile default.** Where ticks are `estimate`, dot placement will be visibly wrong in the most-used view. *Default: tick quality becomes a per-work precondition, or dots degrade to paragraph grain where ticks are estimated.*
 5. **Deploy and search scale.** Commentary prose could rival the corpus in size, hitting two existing sore spots: gh-pages deploy strain and search-shard growth. *Get a size estimate before phase 2, whatever the indexing decision.*
 6. **Lemma highlight sits on parser territory.** The highlighted span is made of clickable word tokens; event interplay with the word-popup (capture-phase handlers, close-path) must be prototyped early in the A design pass.
@@ -108,16 +114,38 @@ Surfaced 2026-08-07. Suggested defaults are unratified.
 
 8. **Which ingestion stack owns commentaries** — Python pipeline or Workbench (which already has endnote import modes)?
 9. **Acceptance criteria for the AI translation** before a full run: sample review by John plus a divergence-rate threshold from the reference check.
-10. **PD-map caveat rows** (Poste, Grant, Susemihl–Hicks, Cope, G. R. T. Ross, Butcher, Margoliouth) still need renewal-record verification before hosting.
+10. **PD-map caveat rows** (Poste, Grant, Susemihl–Hicks, Cope, G. R. T. Ross, Butcher, Margoliouth) still need renewal-record verification before hosting. **Cleared 2026-08-08:** every one of them was first published before 1930 — Poste 1866, Grant 1857/1885, Susemihl–Hicks 1894, Cope–Sandys 1877, Ross 1906, Butcher (editions through 1922), Margoliouth 1911, and Hicks *De Anima* 1907 — so all are PD in the US on publication date alone. No renewal search needed, and the UK/EU terms expired decades ago too.
 11. **Corrections channel** for the AI translation (presumably GitHub issues; name it in the methods note).
 12. Does commentary prose join the search index? (Third searchable stream; gating implications.)
 13. Are notes citable/exportable like text?
 14. Ratify the "all translations" recommendation above.
+17. **Which CAG Greek source — and does share-alike propagate?** (New, from the 2026-08-08 licensing pass.) Building on OGL's `cag-dev` is the cheap route, but BY-SA carries forward: our corrected text inherits it, and an AI translation made from that Greek plausibly does too, which would set the license on the pilot's output. OCR'ing the PD Berlin scans ourselves costs a pipeline run and owes nothing. The choice is a licensing decision, not a sourcing convenience, and it should be made before the pilot starts rather than after there is text to relicense.
+18. **Sorabji/Bloomsbury and the Leonine Latin are confirmed blocked** (~2082 and ~2079 respectively), which fixes the AI pilot as the only route to English CAG. Nothing to decide; recorded so the question is not reopened.
 
 ### Unwritten standards (to externalize before the A design pass)
 
 15. **Actual audience is unknown** — no analytics; the persona table is hypothetical. *Default: design for John's own reading practice first, and say so.*
 16. **What "slick" means.** Strong aesthetic bar exists but is not yet spec. *Default: name 2–3 existing readers to react to (Scaife dual panes, Sefaria panels, print Clarendon conventions) and extract the implicit rules; a prior-art survey is underway to feed this.*
+
+## Post-survey design suggestions
+
+*Appended 2026-08-08 at John's direction, from the design conversation that followed the prior-art survey. Direction, not design — same status as everything above; each still faces its phase's design pass. Wording here is a fuller statement of points made in that session.*
+
+1. **The line number is the locus hub.** The Bekker number in the gutter is already the one stable, meaningful handle on the page; make it the affordance. Clicking it opens a small menu for that locus: copy citation, link here, notes at this line, which commentaries cover it. This gives the survey's "deep link + share of (work, Bekker, commentary, mode)" a home that costs no new chrome.
+
+2. **Annotation-density minimap.** A thin strip beside the scrollbar showing where the selected commentary is dense and where it is silent across the whole work. It answers the coverage-honesty gap the Scaife review exposed (uneven coverage presented as if uniform), and it turns "find the heavily discussed passages" into a glance rather than a hunt.
+
+3. **Weight-encoded ticks.** Gutter dots are not uniform: size or opacity encodes the weight of what is behind them, so a one-line gloss and a two-page essay do not look identical. This is the discipline that keeps `ticks` from degrading into Genius-style saturation, where every span is marked and none is informative.
+
+4. **Graded peek → pin → flip.** The handoff between the two poles is a continuum, not a toggle buried in a menu: the ephemeral peek offers "keep this open" (→ `persistent`), and the persistent note offers "read this commentary" (→ commentary-primary), each step proposed in context from the one before, place preserved throughout. The flip stays available directly for people who know they want it.
+
+5. **URLs as citations.** The address bar carries `(work, locus, commentary, mode)` — e.g. `?comm=hicks#402a2` — so copy-link yields something a student can paste into a paper and a reader can open to exactly this view. Sefaria's `with=` is the precedent; the requirement is that every state worth returning to is addressable.
+
+6. **Coverage bars on the work homepage.** Each work's homepage lists the commentaries that exist for it with their PD-map state — host now / unlocks in YYYY / link out — and a small bar showing what Bekker range each actually covers. This makes the copyright map user-facing information instead of internal metadata, and sets expectations before a reader goes looking for notes that are not there.
+
+7. **Interleave subordination constraint.** If interleave is ever built (it is optional, phase 4 at the earliest), notes must be typographically subordinate to the base text: the text keeps its measure and weight, notes are indented and smaller, and no note breaks the integrity of a Bekker line. This is a hard constraint, not a preference — the ctext reports in the survey show what happens when base and note carry equal visual weight.
+
+8. **One-frame peek latency budget.** The peek opens within one frame of the click, from data already in memory: commentary for the visible span ships with or alongside the work shard, and nothing about opening a note waits on a network round-trip. Most of what reads as "slick" is latency; this is the cheapest place to buy it and the most expensive to retrofit.
 
 ## Non-goals for v1
 
