@@ -41,6 +41,10 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from bonitz_pipeline.mark_review import (CLASSES, candidates, crop_word,
                                              load)
+try:
+    from . import john_rulings
+except ImportError:
+    from bonitz_pipeline import john_rulings
 
 ROOT = Path(__file__).resolve().parent.parent
 RULINGS = ROOT / 'work/sweeps/mark-rulings.json'
@@ -56,6 +60,8 @@ body{font:16px/1.5 -apple-system,Segoe UI,sans-serif;margin:0;padding:20px;
 #ink{background:#fff;border:1px solid #ddd;border-radius:6px;padding:8px;
      overflow-x:auto;min-height:120px}
 #ink img{display:block;max-width:100%;height:auto}
+.whole{margin-top:10px;padding-top:8px;border-top:1px dashed #ccc;
+       font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.05em}
 #ctx{font-family:"GFS Didot",Georgia,serif;font-size:15px;color:#555;
      background:#f1f0ed;padding:8px 10px;border-radius:5px;margin:10px 0}
 #btns{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0}
@@ -98,7 +104,9 @@ function show(){
  const s=S[i];
  where.textContent=s.col+' : line '+s.line;
  count.textContent=(i+1)+' of '+S.length+'  ·  '+S.filter(x=>x.ruled).length+' ruled';
- ink.innerHTML='<img src="/img/'+i+'.png" alt="">';
+ ink.innerHTML='<img src="/img/'+i+'.png" alt="">'+
+   '<div class="whole">the whole printed line<br>'+
+   '<img src="/line/'+i+'.png" alt=""></div>';
  ctx.textContent=s.context;
  warn.innerHTML=(s.guard?'<span id="guard">⛔ '+s.guard+'</span><br>':'')+
    (s.score<0.6?'⚠ line match '+s.score.toFixed(2)+
@@ -135,33 +143,47 @@ def _load_rulings() -> dict:
                  'acted on.', 'rulings': {}}
 
 
-def build(classes: list[str], real: bool):
-    """Sites, their crops and their candidate readings, ready to serve."""
+def build(classes: list[str], real: bool, redo: bool = False):
+    """Sites, their crops and their candidate readings, ready to serve.
+
+    `redo` serves ONLY the sites John marked unsure.  He explained what an
+    unsure means — *"either because you didn't give me the correct option or
+    because the crop wasn't making the case visible"* — so it is a defect
+    report against this tool, and the answer is to fix the options and put the
+    same site back in front of him, not to leave it in a backlog.
+    """
     ruled = _load_rulings()['rulings']
-    out, imgs = [], []
+    unsure = {k for k, v in ruled.items() if v.get('form') == '?'}
+    out, imgs, lines = [], [], []
     for s in load():
-        if classes and s.cls not in classes:
+        sid0 = f'{s.col}:{s.line}:{s.corpus}'
+        if redo and sid0 not in unsure:
             continue
-        if real and (s.guard or s.shape):
-            continue
-        if s.verdict:                     # already decided and acted on
-            continue
+        if not redo:
+            if classes and s.cls not in classes:
+                continue
+            if real and (s.guard or s.shape):
+                continue
+            if s.verdict:                 # already decided and acted on
+                continue
         im, score = crop_word(s.col, s.line, s.corpus, scale=5.0)
+        ln, _ = crop_word(s.col, s.line, s.corpus, scale=2.0, whole=True)
         sid = f'{s.col}:{s.line}:{s.corpus}'
-        buf = io.BytesIO()
-        if im:
-            im.save(buf, format='PNG')
-        imgs.append(buf.getvalue())
+        for target, pic in ((imgs, im), (lines, ln)):
+            buf = io.BytesIO()
+            if pic:
+                pic.save(buf, format='PNG')
+            target.append(buf.getvalue())
         out.append({'id': sid, 'col': s.col, 'line': s.line,
                     'corpus': s.corpus, 'llama': s.llama, 'cls': s.cls,
                     'context': s.context, 'score': score,
                     'guard': s.guard or s.shape,
                     'cands': candidates(s.corpus, s.llama) + [['?', 'unsure']],
-                    'ruled': sid in ruled})
-    return out, imgs
+                    'ruled': sid in ruled and ruled[sid].get('form') != '?'})
+    return out, imgs, lines
 
 
-def handler(sites, imgs):
+def handler(sites, imgs, lines):
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
             pass
@@ -179,10 +201,11 @@ def handler(sites, imgs):
             elif self.path == '/api/sites':
                 self._send(json.dumps(sites, ensure_ascii=False).encode(),
                            'application/json; charset=utf-8')
-            elif self.path.startswith('/img/'):
+            elif self.path.startswith(('/img/', '/line/')):
+                pool = imgs if self.path.startswith('/img/') else lines
                 try:
-                    n = int(self.path[5:].split('.')[0])
-                    self._send(imgs[n], 'image/png')
+                    n = int(self.path.rsplit('/', 1)[1].split('.')[0])
+                    self._send(pool[n], 'image/png')
                 except (ValueError, IndexError):
                     self.send_error(404)
             else:
@@ -203,6 +226,22 @@ def handler(sites, imgs):
             RULINGS.parent.mkdir(parents=True, exist_ok=True)
             RULINGS.write_text(json.dumps(store, ensure_ascii=False, indent=1),
                                encoding='utf-8')
+            # …and into the one ledger that holds every ruling he has made,
+            # so it is current the moment he clicks rather than after a
+            # migration someone has to remember to run.  John asked for this
+            # directly: "can't we have a comprehensive john_rulings.py that
+            # gets updated whenever i rule?"  An unsure is NOT a ruling — it
+            # is a defect report against the buttons — so it is not recorded
+            # as one.
+            col, line, corpus = d['id'].rsplit(':', 2)
+            if d.get('form') != '?':
+                john_rulings.add(
+                    'keep' if d['form'] == corpus else 'text',
+                    col=col, line=int(line), form=d['form'],
+                    ruled=d.get('label', ''), source='review server',
+                    applied=False,
+                    note='recorded on the click; applied separately and '
+                         'verified against the suite')
             print(f'  {d["id"]}  ->  {d.get("form")}  ({d.get("label")})',
                   flush=True)
             self.send_response(204)
@@ -216,13 +255,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument('--real', action='store_true', default=True)
     p.add_argument('--all', dest='real', action='store_false',
                    help='include the rows a guard already answers')
+    p.add_argument('--redo', action='store_true',
+                   help='serve only the sites John marked unsure')
     p.add_argument('--port', type=int, default=8787)
     a = p.parse_args(argv)
-    sites, imgs = build(a.cls or [], a.real)
+    sites, imgs, lines = build(a.cls or [], a.real, a.redo)
     if not sites:
         sys.exit('nothing to rule')
     print(f'{len(sites)} sites  ->  http://127.0.0.1:{a.port}/', flush=True)
-    HTTPServer(('127.0.0.1', a.port), handler(sites, imgs)).serve_forever()
+    HTTPServer(('127.0.0.1', a.port),
+               handler(sites, imgs, lines)).serve_forever()
     return 0
 
 

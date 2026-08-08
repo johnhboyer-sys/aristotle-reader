@@ -196,8 +196,8 @@ def _lines(col: str) -> list[tuple[int, int, int, int, str]]:
     return sorted(out, key=lambda t: t[1])
 
 
-def crop_word(col: str, lineno: int, word: str,
-              scale: float = 3.0) -> tuple[object, float]:
+def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
+              whole: bool = False) -> tuple[object, float]:
     """The ink at one word: the line found by TEXT, the word by proportion.
 
     Line numbers do not carry across — `work/reconciled` counts printed lines
@@ -231,7 +231,11 @@ def crop_word(col: str, lineno: int, word: str,
         y0, y1, score = int((lineno - 1) * h), int(lineno * h), 0.0
     pad = int((y1 - y0) * 0.45)
     # Place the word across the line's ink extent by character offset.
-    at = want.find(word)
+    # `whole` shows the entire printed line.  The word window is placed by
+    # character proportion over a line that is not monospaced, so it can miss —
+    # which is one of the two reasons John gave for clicking "unsure".  Seeing
+    # the whole line costs a little resolution and never lies about position.
+    at = -1 if whole else want.find(word)
     if at < 0 or not want.strip():
         wx0, wx1 = x0, x1
     else:
