@@ -1,0 +1,1265 @@
+{
+ "_": [
+  "Which LlamaParse run won each page, and every run's count.",
+  "Selection is by ligature count: LlamaParse misses them often",
+  "and invents them rarely, so more is a better reading."
+ ],
+ "pages": {
+  "015": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 28,
+   "all": {
+    "400dpi-best-of-2": 28,
+    "300dpi-original": 27
+   }
+  },
+  "016": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 31,
+   "all": {
+    "400dpi-best-of-2": 31,
+    "300dpi-original": 22
+   }
+  },
+  "017": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 34,
+    "300dpi-original": 27
+   }
+  },
+  "018": {
+   "chosen": "300dpi-original",
+   "ligatures": 25,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 25
+   }
+  },
+  "019": {
+   "chosen": "300dpi-original",
+   "ligatures": 16,
+   "all": {
+    "400dpi-best-of-2": 12,
+    "300dpi-original": 16
+   }
+  },
+  "020": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 34,
+    "300dpi-original": 32
+   }
+  },
+  "021": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 33,
+   "all": {
+    "400dpi-best-of-2": 33,
+    "300dpi-original": 19
+   }
+  },
+  "022": {
+   "chosen": "300dpi-original",
+   "ligatures": 32,
+   "all": {
+    "400dpi-best-of-2": 16,
+    "300dpi-original": 32
+   }
+  },
+  "023": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 52,
+   "all": {
+    "400dpi-best-of-2": 52,
+    "300dpi-original": 0
+   }
+  },
+  "024": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 35,
+   "all": {
+    "400dpi-best-of-2": 35,
+    "300dpi-original": 28
+   }
+  },
+  "025": {
+   "chosen": "300dpi-original",
+   "ligatures": 48,
+   "all": {
+    "400dpi-best-of-2": 12,
+    "300dpi-original": 48
+   }
+  },
+  "026": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 44,
+   "all": {
+    "400dpi-best-of-2": 44,
+    "300dpi-original": 38
+   }
+  },
+  "027": {
+   "chosen": "300dpi-original",
+   "ligatures": 36,
+   "all": {
+    "400dpi-best-of-2": 35,
+    "300dpi-original": 36
+   }
+  },
+  "028": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 43,
+   "all": {
+    "400dpi-best-of-2": 43,
+    "300dpi-original": 36
+   }
+  },
+  "029": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 29,
+   "all": {
+    "400dpi-best-of-2": 29,
+    "300dpi-original": 21
+   }
+  },
+  "030": {
+   "chosen": "300dpi-original",
+   "ligatures": 24,
+   "all": {
+    "400dpi-best-of-2": 8,
+    "300dpi-original": 24
+   }
+  },
+  "031": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 60,
+   "all": {
+    "400dpi-best-of-2": 60,
+    "300dpi-original": 51
+   }
+  },
+  "032": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 48,
+   "all": {
+    "400dpi-best-of-2": 48,
+    "300dpi-original": 46
+   }
+  },
+  "033": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 62,
+   "all": {
+    "400dpi-best-of-2": 62,
+    "300dpi-original": 56
+   }
+  },
+  "034": {
+   "chosen": "300dpi-original",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 44,
+    "300dpi-original": 45
+   }
+  },
+  "035": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 62,
+   "all": {
+    "400dpi-best-of-2": 62,
+    "300dpi-original": 54
+   }
+  },
+  "036": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 18,
+   "all": {
+    "400dpi-best-of-2": 18,
+    "300dpi-original": 18
+   }
+  },
+  "037": {
+   "chosen": "300dpi-original",
+   "ligatures": 52,
+   "all": {
+    "400dpi-best-of-2": 47,
+    "300dpi-original": 52
+   }
+  },
+  "038": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 118,
+   "all": {
+    "400dpi-best-of-2": 118,
+    "300dpi-original": 98
+   }
+  },
+  "039": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 79,
+   "all": {
+    "400dpi-best-of-2": 79,
+    "300dpi-original": 40
+   }
+  },
+  "040": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 42
+   }
+  },
+  "041": {
+   "chosen": "300dpi-original",
+   "ligatures": 43,
+   "all": {
+    "400dpi-best-of-2": 41,
+    "300dpi-original": 43
+   }
+  },
+  "042": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 62,
+   "all": {
+    "400dpi-best-of-2": 62,
+    "300dpi-original": 62
+   }
+  },
+  "043": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 10,
+   "all": {
+    "400dpi-best-of-2": 10,
+    "300dpi-original": 8
+   }
+  },
+  "044": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 25,
+   "all": {
+    "400dpi-best-of-2": 25,
+    "300dpi-original": 23
+   }
+  },
+  "045": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 46,
+   "all": {
+    "400dpi-best-of-2": 46,
+    "300dpi-original": 39
+   }
+  },
+  "046": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 67,
+   "all": {
+    "400dpi-best-of-2": 67,
+    "300dpi-original": 65
+   }
+  },
+  "047": {
+   "chosen": "300dpi-original",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 34
+   }
+  },
+  "048": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 20,
+   "all": {
+    "400dpi-best-of-2": 20,
+    "300dpi-original": 19
+   }
+  },
+  "049": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 38,
+   "all": {
+    "400dpi-best-of-2": 38,
+    "300dpi-original": 31
+   }
+  },
+  "050": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 38,
+   "all": {
+    "400dpi-best-of-2": 38,
+    "300dpi-original": 38
+   }
+  },
+  "051": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 21,
+   "all": {
+    "400dpi-best-of-2": 21,
+    "300dpi-original": 18
+   }
+  },
+  "052": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 53,
+   "all": {
+    "400dpi-best-of-2": 53,
+    "300dpi-original": 44
+   }
+  },
+  "053": {
+   "chosen": "300dpi-original",
+   "ligatures": 17,
+   "all": {
+    "400dpi-best-of-2": 11,
+    "300dpi-original": 17
+   }
+  },
+  "054": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 17,
+   "all": {
+    "400dpi-best-of-2": 17,
+    "300dpi-original": 9
+   }
+  },
+  "055": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 40,
+   "all": {
+    "400dpi-best-of-2": 40,
+    "300dpi-original": 38
+   }
+  },
+  "056": {
+   "chosen": "300dpi-original",
+   "ligatures": 42,
+   "all": {
+    "400dpi-best-of-2": 40,
+    "300dpi-original": 42
+   }
+  },
+  "057": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 38
+   }
+  },
+  "058": {
+   "chosen": "300dpi-original",
+   "ligatures": 35,
+   "all": {
+    "400dpi-best-of-2": 31,
+    "300dpi-original": 35
+   }
+  },
+  "059": {
+   "chosen": "300dpi-original",
+   "ligatures": 26,
+   "all": {
+    "400dpi-best-of-2": 25,
+    "300dpi-original": 26
+   }
+  },
+  "060": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 34,
+    "300dpi-original": 33
+   }
+  },
+  "061": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 44,
+   "all": {
+    "400dpi-best-of-2": 44,
+    "300dpi-original": 44
+   }
+  },
+  "062": {
+   "chosen": "300dpi-original",
+   "ligatures": 41,
+   "all": {
+    "400dpi-best-of-2": 35,
+    "300dpi-original": 41
+   }
+  },
+  "063": {
+   "chosen": "300dpi-original",
+   "ligatures": 49,
+   "all": {
+    "400dpi-best-of-2": 10,
+    "300dpi-original": 49
+   }
+  },
+  "064": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 37,
+   "all": {
+    "400dpi-best-of-2": 37,
+    "300dpi-original": 6
+   }
+  },
+  "065": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 35,
+   "all": {
+    "400dpi-best-of-2": 35,
+    "300dpi-original": 18
+   }
+  },
+  "066": {
+   "chosen": "300dpi-original",
+   "ligatures": 28,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 28
+   }
+  },
+  "067": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 46,
+   "all": {
+    "400dpi-best-of-2": 46,
+    "300dpi-original": 42
+   }
+  },
+  "068": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 40,
+   "all": {
+    "400dpi-best-of-2": 40,
+    "300dpi-original": 35
+   }
+  },
+  "069": {
+   "chosen": "300dpi-original",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 33,
+    "300dpi-original": 34
+   }
+  },
+  "070": {
+   "chosen": "300dpi-original",
+   "ligatures": 47,
+   "all": {
+    "400dpi-best-of-2": 44,
+    "300dpi-original": 47
+   }
+  },
+  "071": {
+   "chosen": "300dpi-original",
+   "ligatures": 41,
+   "all": {
+    "400dpi-best-of-2": 39,
+    "300dpi-original": 41
+   }
+  },
+  "072": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 50,
+   "all": {
+    "400dpi-best-of-2": 50,
+    "300dpi-original": 49
+   }
+  },
+  "073": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 35,
+   "all": {
+    "400dpi-best-of-2": 35,
+    "300dpi-original": 22
+   }
+  },
+  "074": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 23,
+   "all": {
+    "400dpi-best-of-2": 23,
+    "300dpi-original": 16
+   }
+  },
+  "075": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 38,
+   "all": {
+    "400dpi-best-of-2": 38,
+    "300dpi-original": 33
+   }
+  },
+  "076": {
+   "chosen": "300dpi-original",
+   "ligatures": 25,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 25
+   }
+  },
+  "077": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 44,
+   "all": {
+    "400dpi-best-of-2": 44,
+    "300dpi-original": 42
+   }
+  },
+  "078": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 32,
+   "all": {
+    "400dpi-best-of-2": 32,
+    "300dpi-original": 31
+   }
+  },
+  "079": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 46,
+   "all": {
+    "400dpi-best-of-2": 46,
+    "300dpi-original": 34
+   }
+  },
+  "080": {
+   "chosen": "300dpi-original",
+   "ligatures": 32,
+   "all": {
+    "400dpi-best-of-2": 26,
+    "300dpi-original": 32
+   }
+  },
+  "081": {
+   "chosen": "300dpi-original",
+   "ligatures": 21,
+   "all": {
+    "400dpi-best-of-2": 15,
+    "300dpi-original": 21
+   }
+  },
+  "082": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 68,
+   "all": {
+    "400dpi-best-of-2": 68,
+    "300dpi-original": 67
+   }
+  },
+  "083": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 37,
+   "all": {
+    "400dpi-best-of-2": 37,
+    "300dpi-original": 35
+   }
+  },
+  "084": {
+   "chosen": "300dpi-original",
+   "ligatures": 53,
+   "all": {
+    "400dpi-best-of-2": 49,
+    "300dpi-original": 53
+   }
+  },
+  "085": {
+   "chosen": "300dpi-original",
+   "ligatures": 46,
+   "all": {
+    "400dpi-best-of-2": 37,
+    "300dpi-original": 46
+   }
+  },
+  "086": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 61,
+   "all": {
+    "400dpi-best-of-2": 61,
+    "300dpi-original": 60
+   }
+  },
+  "087": {
+   "chosen": "300dpi-original",
+   "ligatures": 37,
+   "all": {
+    "400dpi-best-of-2": 12,
+    "300dpi-original": 37
+   }
+  },
+  "088": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 54,
+   "all": {
+    "400dpi-best-of-2": 54,
+    "300dpi-original": 52
+   }
+  },
+  "089": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 15,
+   "all": {
+    "400dpi-best-of-2": 15,
+    "300dpi-original": 15
+   }
+  },
+  "090": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 41
+   }
+  },
+  "091": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 51,
+   "all": {
+    "400dpi-best-of-2": 51,
+    "300dpi-original": 51
+   }
+  },
+  "092": {
+   "chosen": "300dpi-original",
+   "ligatures": 51,
+   "all": {
+    "400dpi-best-of-2": 50,
+    "300dpi-original": 51
+   }
+  },
+  "093": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 51,
+   "all": {
+    "400dpi-best-of-2": 51,
+    "300dpi-original": 41
+   }
+  },
+  "094": {
+   "chosen": "300dpi-original",
+   "ligatures": 33,
+   "all": {
+    "400dpi-best-of-2": 27,
+    "300dpi-original": 33
+   }
+  },
+  "095": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 49,
+   "all": {
+    "400dpi-best-of-2": 49,
+    "300dpi-original": 46
+   }
+  },
+  "096": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 55,
+   "all": {
+    "400dpi-best-of-2": 55,
+    "300dpi-original": 47
+   }
+  },
+  "097": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 36,
+   "all": {
+    "400dpi-best-of-2": 36,
+    "300dpi-original": 27
+   }
+  },
+  "098": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 30,
+   "all": {
+    "400dpi-best-of-2": 30,
+    "300dpi-original": 19
+   }
+  },
+  "099": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 46,
+   "all": {
+    "400dpi-best-of-2": 46,
+    "300dpi-original": 42
+   }
+  },
+  "100": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 61,
+   "all": {
+    "400dpi-best-of-2": 61,
+    "300dpi-original": 54
+   }
+  },
+  "101": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 39,
+   "all": {
+    "400dpi-best-of-2": 39,
+    "300dpi-original": 13
+   }
+  },
+  "102": {
+   "chosen": "300dpi-original",
+   "ligatures": 29,
+   "all": {
+    "400dpi-best-of-2": 14,
+    "300dpi-original": 29
+   }
+  },
+  "103": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 44,
+   "all": {
+    "400dpi-best-of-2": 44,
+    "300dpi-original": 30
+   }
+  },
+  "104": {
+   "chosen": "300dpi-original",
+   "ligatures": 46,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 46
+   }
+  },
+  "105": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 42,
+   "all": {
+    "400dpi-best-of-2": 42,
+    "300dpi-original": 42
+   }
+  },
+  "106": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 51,
+   "all": {
+    "400dpi-best-of-2": 51,
+    "300dpi-original": 30
+   }
+  },
+  "107": {
+   "chosen": "300dpi-original",
+   "ligatures": 24,
+   "all": {
+    "400dpi-best-of-2": 15,
+    "300dpi-original": 24
+   }
+  },
+  "108": {
+   "chosen": "300dpi-original",
+   "ligatures": 6,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 6
+   }
+  },
+  "109": {
+   "chosen": "300dpi-original",
+   "ligatures": 3,
+   "all": {
+    "400dpi-best-of-2": 2,
+    "300dpi-original": 3
+   }
+  },
+  "110": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 13,
+   "all": {
+    "400dpi-best-of-2": 13,
+    "300dpi-original": 13
+   }
+  },
+  "111": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 15,
+   "all": {
+    "400dpi-best-of-2": 15,
+    "300dpi-original": 12
+   }
+  },
+  "112": {
+   "chosen": "300dpi-original",
+   "ligatures": 5,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 5
+   }
+  },
+  "113": {
+   "chosen": "300dpi-original",
+   "ligatures": 15,
+   "all": {
+    "400dpi-best-of-2": 11,
+    "300dpi-original": 15
+   }
+  },
+  "114": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 8,
+   "all": {
+    "400dpi-best-of-2": 8,
+    "300dpi-original": 7
+   }
+  },
+  "115": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 8,
+   "all": {
+    "400dpi-best-of-2": 8,
+    "300dpi-original": 7
+   }
+  },
+  "116": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 23,
+   "all": {
+    "400dpi-best-of-2": 23,
+    "300dpi-original": 23
+   }
+  },
+  "117": {
+   "chosen": "300dpi-original",
+   "ligatures": 25,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 25
+   }
+  },
+  "118": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 50,
+   "all": {
+    "400dpi-best-of-2": 50,
+    "300dpi-original": 48
+   }
+  },
+  "119": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 60,
+   "all": {
+    "400dpi-best-of-2": 60,
+    "300dpi-original": 54
+   }
+  },
+  "120": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 34,
+    "300dpi-original": 21
+   }
+  },
+  "121": {
+   "chosen": "300dpi-original",
+   "ligatures": 33,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 33
+   }
+  },
+  "122": {
+   "chosen": "300dpi-original",
+   "ligatures": 26,
+   "all": {
+    "400dpi-best-of-2": 20,
+    "300dpi-original": 26
+   }
+  },
+  "123": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 27,
+   "all": {
+    "400dpi-best-of-2": 27,
+    "300dpi-original": 23
+   }
+  },
+  "124": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 36,
+   "all": {
+    "400dpi-best-of-2": 36,
+    "300dpi-original": 36
+   }
+  },
+  "125": {
+   "chosen": "300dpi-original",
+   "ligatures": 14,
+   "all": {
+    "400dpi-best-of-2": 9,
+    "300dpi-original": 14
+   }
+  },
+  "126": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 31,
+   "all": {
+    "400dpi-best-of-2": 31,
+    "300dpi-original": 23
+   }
+  },
+  "127": {
+   "chosen": "300dpi-original",
+   "ligatures": 27,
+   "all": {
+    "400dpi-best-of-2": 26,
+    "300dpi-original": 27
+   }
+  },
+  "128": {
+   "chosen": "300dpi-original",
+   "ligatures": 33,
+   "all": {
+    "400dpi-best-of-2": 31,
+    "300dpi-original": 33
+   }
+  },
+  "129": {
+   "chosen": "300dpi-original",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 27,
+    "300dpi-original": 34
+   }
+  },
+  "130": {
+   "chosen": "300dpi-original",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 30,
+    "300dpi-original": 34
+   }
+  },
+  "131": {
+   "chosen": "300dpi-original",
+   "ligatures": 30,
+   "all": {
+    "400dpi-best-of-2": 24,
+    "300dpi-original": 30
+   }
+  },
+  "132": {
+   "chosen": "300dpi-original",
+   "ligatures": 31,
+   "all": {
+    "400dpi-best-of-2": 22,
+    "300dpi-original": 31
+   }
+  },
+  "133": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 31,
+   "all": {
+    "400dpi-best-of-2": 31,
+    "300dpi-original": 23
+   }
+  },
+  "134": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 47,
+   "all": {
+    "400dpi-best-of-2": 47,
+    "300dpi-original": 47
+   }
+  },
+  "135": {
+   "chosen": "300dpi-original",
+   "ligatures": 23,
+   "all": {
+    "400dpi-best-of-2": 22,
+    "300dpi-original": 23
+   }
+  },
+  "136": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 33,
+   "all": {
+    "400dpi-best-of-2": 33,
+    "300dpi-original": 21
+   }
+  },
+  "137": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 29,
+   "all": {
+    "400dpi-best-of-2": 29,
+    "300dpi-original": 22
+   }
+  },
+  "138": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 0,
+   "all": {
+    "400dpi-best-of-2": 0,
+    "300dpi-original": 0
+   }
+  },
+  "139": {
+   "chosen": "300dpi-original",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 31,
+    "300dpi-original": 34
+   }
+  },
+  "140": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 48,
+   "all": {
+    "400dpi-best-of-2": 48,
+    "300dpi-original": 43
+   }
+  },
+  "141": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 24,
+   "all": {
+    "400dpi-best-of-2": 24,
+    "300dpi-original": 24
+   }
+  },
+  "142": {
+   "chosen": "300dpi-original",
+   "ligatures": 37,
+   "all": {
+    "400dpi-best-of-2": 34,
+    "300dpi-original": 37
+   }
+  },
+  "143": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 44
+   }
+  },
+  "144": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 33,
+   "all": {
+    "400dpi-best-of-2": 33,
+    "300dpi-original": 30
+   }
+  },
+  "145": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 37,
+   "all": {
+    "400dpi-best-of-2": 37,
+    "300dpi-original": 32
+   }
+  },
+  "146": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 30,
+   "all": {
+    "400dpi-best-of-2": 30,
+    "300dpi-original": 30
+   }
+  },
+  "147": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 52,
+   "all": {
+    "400dpi-best-of-2": 52,
+    "300dpi-original": 37
+   }
+  },
+  "148": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 28,
+   "all": {
+    "400dpi-best-of-2": 28,
+    "300dpi-original": 26
+   }
+  },
+  "149": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 40,
+   "all": {
+    "400dpi-best-of-2": 40,
+    "300dpi-original": 27
+   }
+  },
+  "150": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 42
+   }
+  },
+  "151": {
+   "chosen": "300dpi-original",
+   "ligatures": 32,
+   "all": {
+    "400dpi-best-of-2": 26,
+    "300dpi-original": 32
+   }
+  },
+  "152": {
+   "chosen": "300dpi-original",
+   "ligatures": 28,
+   "all": {
+    "400dpi-best-of-2": 27,
+    "300dpi-original": 28
+   }
+  },
+  "153": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 103,
+   "all": {
+    "400dpi-best-of-2": 103,
+    "300dpi-original": 23
+   }
+  },
+  "154": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 31,
+   "all": {
+    "400dpi-best-of-2": 31,
+    "300dpi-original": 0
+   }
+  },
+  "155": {
+   "chosen": "300dpi-original",
+   "ligatures": 31,
+   "all": {
+    "400dpi-best-of-2": 21,
+    "300dpi-original": 31
+   }
+  },
+  "156": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 40,
+   "all": {
+    "400dpi-best-of-2": 40,
+    "300dpi-original": 38
+   }
+  },
+  "157": {
+   "chosen": "300dpi-original",
+   "ligatures": 44,
+   "all": {
+    "400dpi-best-of-2": 9,
+    "300dpi-original": 44
+   }
+  },
+  "158": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 34,
+   "all": {
+    "400dpi-best-of-2": 34,
+    "300dpi-original": 27
+   }
+  },
+  "159": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 25,
+   "all": {
+    "400dpi-best-of-2": 25,
+    "300dpi-original": 15
+   }
+  },
+  "160": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 55,
+   "all": {
+    "400dpi-best-of-2": 55,
+    "300dpi-original": 48
+   }
+  },
+  "161": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 46,
+   "all": {
+    "400dpi-best-of-2": 46,
+    "300dpi-original": 41
+   }
+  },
+  "162": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 53,
+   "all": {
+    "400dpi-best-of-2": 53,
+    "300dpi-original": 45
+   }
+  },
+  "163": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 41
+   }
+  },
+  "164": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 78,
+   "all": {
+    "400dpi-best-of-2": 78,
+    "300dpi-original": 50
+   }
+  },
+  "165": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 50,
+   "all": {
+    "400dpi-best-of-2": 50,
+    "300dpi-original": 44
+   }
+  },
+  "166": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 37,
+   "all": {
+    "400dpi-best-of-2": 37,
+    "300dpi-original": 21
+   }
+  },
+  "167": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 57,
+   "all": {
+    "400dpi-best-of-2": 57,
+    "300dpi-original": 46
+   }
+  },
+  "168": {
+   "chosen": "300dpi-original",
+   "ligatures": 47,
+   "all": {
+    "400dpi-best-of-2": 35,
+    "300dpi-original": 47
+   }
+  },
+  "169": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 25
+   }
+  },
+  "170": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 45,
+   "all": {
+    "400dpi-best-of-2": 45,
+    "300dpi-original": 45
+   }
+  },
+  "171": {
+   "chosen": "400dpi-best-of-2",
+   "ligatures": 62,
+   "all": {
+    "400dpi-best-of-2": 62,
+    "300dpi-original": 59
+   }
+  }
+ }
+}

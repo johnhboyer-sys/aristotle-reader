@@ -1,0 +1,280 @@
+{
+ "_": [
+  "Which Codex sample won each column, and every sample's counts.",
+  "Selection is by ligature count: Codex undercounts ȣ/ϗ and does",
+  "not invent them, so more is a better reading. The ϗ decision is",
+  "per-column all-or-nothing, which is why best-of-N exists here."
+ ],
+ "columns": {
+  "page-053-L": {
+   "chosen": "r1",
+   "ȣ": 8,
+   "ϗ": 1,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 8,
+     "ϗ": 1,
+     "lines": 61
+    },
+    "r2": {
+     "ȣ": 7,
+     "ϗ": 1,
+     "lines": 61
+    }
+   }
+  },
+  "page-053-R": {
+   "chosen": "r2",
+   "ȣ": 16,
+   "ϗ": 2,
+   "lines": 61,
+   "all": {
+    "r2": {
+     "ȣ": 16,
+     "ϗ": 2,
+     "lines": 61
+    },
+    "r1": {
+     "ȣ": 15,
+     "ϗ": 1,
+     "lines": 61
+    }
+   }
+  },
+  "page-054-L": {
+   "chosen": "r1",
+   "ȣ": 21,
+   "ϗ": 2,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 21,
+     "ϗ": 2,
+     "lines": 61
+    }
+   }
+  },
+  "page-054-R": {
+   "chosen": "r1",
+   "ȣ": 19,
+   "ϗ": 10,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 19,
+     "ϗ": 10,
+     "lines": 61
+    }
+   }
+  },
+  "page-055-L": {
+   "chosen": "r1",
+   "ȣ": 14,
+   "ϗ": 1,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 14,
+     "ϗ": 1,
+     "lines": 61
+    }
+   }
+  },
+  "page-055-R": {
+   "chosen": "r1",
+   "ȣ": 20,
+   "ϗ": 1,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 20,
+     "ϗ": 1,
+     "lines": 61
+    }
+   }
+  },
+  "page-056-L": {
+   "chosen": "r1",
+   "ȣ": 31,
+   "ϗ": 0,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 31,
+     "ϗ": 0,
+     "lines": 61
+    }
+   }
+  },
+  "page-056-R": {
+   "chosen": "r1",
+   "ȣ": 13,
+   "ϗ": 10,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 13,
+     "ϗ": 10,
+     "lines": 61
+    }
+   }
+  },
+  "page-057-L": {
+   "chosen": "r1",
+   "ȣ": 18,
+   "ϗ": 11,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 18,
+     "ϗ": 11,
+     "lines": 61
+    }
+   }
+  },
+  "page-057-R": {
+   "chosen": "r1",
+   "ȣ": 31,
+   "ϗ": 1,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 31,
+     "ϗ": 1,
+     "lines": 61
+    }
+   }
+  },
+  "page-058-L": {
+   "chosen": "r1",
+   "ȣ": 9,
+   "ϗ": 6,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 9,
+     "ϗ": 6,
+     "lines": 61
+    }
+   }
+  },
+  "page-058-R": {
+   "chosen": "r1",
+   "ȣ": 16,
+   "ϗ": 1,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 16,
+     "ϗ": 1,
+     "lines": 61
+    }
+   }
+  },
+  "page-059-L": {
+   "chosen": "r1",
+   "ȣ": 15,
+   "ϗ": 3,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 15,
+     "ϗ": 3,
+     "lines": 61
+    }
+   }
+  },
+  "page-059-R": {
+   "chosen": "r1",
+   "ȣ": 10,
+   "ϗ": 2,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 10,
+     "ϗ": 2,
+     "lines": 61
+    }
+   }
+  },
+  "page-060-L": {
+   "chosen": "r1",
+   "ȣ": 10,
+   "ϗ": 3,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 10,
+     "ϗ": 3,
+     "lines": 61
+    }
+   }
+  },
+  "page-060-R": {
+   "chosen": "r1",
+   "ȣ": 22,
+   "ϗ": 5,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 22,
+     "ϗ": 5,
+     "lines": 61
+    }
+   }
+  },
+  "page-061-L": {
+   "chosen": "r1",
+   "ȣ": 16,
+   "ϗ": 6,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 16,
+     "ϗ": 6,
+     "lines": 61
+    }
+   }
+  },
+  "page-061-R": {
+   "chosen": "r1",
+   "ȣ": 25,
+   "ϗ": 10,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 25,
+     "ϗ": 10,
+     "lines": 61
+    }
+   }
+  },
+  "page-062-L": {
+   "chosen": "r1",
+   "ȣ": 19,
+   "ϗ": 5,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 19,
+     "ϗ": 5,
+     "lines": 61
+    }
+   }
+  },
+  "page-062-R": {
+   "chosen": "r1",
+   "ȣ": 16,
+   "ϗ": 2,
+   "lines": 61,
+   "all": {
+    "r1": {
+     "ȣ": 16,
+     "ϗ": 2,
+     "lines": 61
+    }
+   }
+  }
+ }
+}

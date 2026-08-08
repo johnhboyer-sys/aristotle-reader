@@ -69,16 +69,21 @@ def _latex_to_plain(text: str) -> str:
     """Convert Genie's $...$ math runs to plain characters."""
     def _one(m: re.Match) -> str:
         inner = m.group(1)
-        inner = re.sub(r'\^\\text\{([^}]*)\}', r'\1', inner)
-        inner = re.sub(r'\^\{([^}]*)\}', r'\1', inner)
-        inner = inner.replace('^', '')
-        # unwrap \text{...} and strip accent commands, innermost first, so
-        # nested forms like \acute{\varepsilon} resolve fully
+        # Unwrap \text{...} and strip accent commands, innermost first, so
+        # nested forms like \acute{\varepsilon} resolve fully.  This runs
+        # BEFORE the superscript rules: reading the 400 dpi scan Genie sets
+        # Bekker column letters as `$^{\text{b}}$`, and `[^}]*` cannot span
+        # the inner `\text{b}`, so both superscript rules missed it and left
+        # a bare `\b` behind.  Unwrapping first reduces it to `^{b}`, which
+        # they already handle.
         for _ in range(6):
             new = _RE_ACCENT.sub(r'\1', _RE_WRAPPER.sub(r'\1', inner))
             if new == inner:
                 break
             inner = new
+        inner = re.sub(r'\^\\text\{([^}]*)\}', r'\1', inner)
+        inner = re.sub(r'\^\{([^}]*)\}', r'\1', inner)
+        inner = inner.replace('^', '')
         inner = _RE_CMD.sub(
             lambda g: _GREEK.get(g.group(1), g.group(1)), inner)
         return inner.replace('{', '').replace('}', '').replace(' ', '')

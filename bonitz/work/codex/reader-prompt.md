@@ -13,11 +13,27 @@ them, and do NOT substitute a plain vowel.
       Writing "ου" or "υ" where the print shows ȣ is an ERROR.
       It routinely carries an accent with NO breathing: ȣ́  ȣ̀  ȣ͂  are all normal
       and must not be "corrected" by adding a breathing.
-  ϗ   U+03D7, the kai-ligature. Type ϗ, never καί or κ.
+  ϗ   U+03D7, the kai-ligature: a single glyph, a kappa whose tail descends
+      below the baseline. Type ϗ where you see that glyph.
+
+      BOTH FORMS OCCUR IN THIS BOOK AND THE DIFFERENCE IS REAL. Bonitz prints
+      the ligature ϗ in some places and spells καί / καὶ out in full in others,
+      often on the same page. Transcribe whichever one is actually printed.
+      Writing ϗ over a spelled-out καί is just as much an error as writing καί
+      over a ϗ. Count the letters: three letters (κ, α, ι) is καί; one glyph
+      with a descending tail is ϗ.
+
+      It is also not an eta — ἢ has a bowl and a breathing mark, ϗ has neither.
+      Do not let syntax decide it for you: "and" and "or" are both grammatical
+      between two nouns, so the sentence reads fine either way. Reading fine is
+      not evidence. Decide from the strokes.
+
+      ϗ sometimes carries a grave and sometimes does not. Copy the mark only if
+      you see it on THIS occurrence.
 
 Examples from elsewhere in this volume:
-  CORRECT  ἀκολȣθεῖ    καθόλȣ    τȣ̀ς    ἁλȣργής    ϗ̀
-  WRONG    ἀκολουθεῖ   καθόλου   τούς   ἁλουργής   καί
+  CORRECT  ἀκολȣθεῖ    καθόλȣ    τȣ̀ς    ἁλȣργής
+  WRONG    ἀκολουθεῖ   καθόλου   τούς   ἁλουργής
   WRONG    ἀκολυθεῖ    καθόλυ    τὺς    ἁλυργής
 
 ## Everything else

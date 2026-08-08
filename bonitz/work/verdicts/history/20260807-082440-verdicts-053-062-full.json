@@ -1,0 +1,104 @@
+{
+ "range": "053-062",
+ "view": "full",
+ "verdicts": [
+  {
+   "item": 1,
+   "page": 53,
+   "col": "R",
+   "line": 2,
+   "verdict": ""
+  },
+  {
+   "item": 2,
+   "page": 53,
+   "col": "R",
+   "line": 14,
+   "verdict": "."
+  },
+  {
+   "item": 3,
+   "page": 54,
+   "col": "L",
+   "line": 7,
+   "verdict": "θ"
+  },
+  {
+   "item": 4,
+   "page": 55,
+   "col": "L",
+   "line": 28,
+   "verdict": "ὡςȣ̓"
+  },
+  {
+   "item": 5,
+   "page": 55,
+   "col": "R",
+   "line": 11,
+   "verdict": "ȣ͂βελ"
+  },
+  {
+   "item": 6,
+   "page": 56,
+   "col": "L",
+   "line": 22,
+   "verdict": "ȣ"
+  },
+  {
+   "item": 7,
+   "page": 56,
+   "col": "L",
+   "line": 25,
+   "verdict": ","
+  },
+  {
+   "item": 8,
+   "page": 57,
+   "col": "L",
+   "line": 44,
+   "verdict": ","
+  },
+  {
+   "item": 9,
+   "page": 57,
+   "col": "R",
+   "line": 24,
+   "verdict": ","
+  },
+  {
+   "item": 10,
+   "page": 57,
+   "col": "R",
+   "line": 26,
+   "verdict": ","
+  },
+  {
+   "item": 11,
+   "page": 59,
+   "col": "L",
+   "line": 26,
+   "verdict": ""
+  },
+  {
+   "item": 12,
+   "page": 59,
+   "col": "L",
+   "line": 47,
+   "verdict": "ὡ"
+  },
+  {
+   "item": 13,
+   "page": 60,
+   "col": "R",
+   "line": 56,
+   "verdict": "ὦ"
+  },
+  {
+   "item": 14,
+   "page": 61,
+   "col": "R",
+   "line": 14,
+   "verdict": "ὁμȣ͂"
+  }
+ ]
+}

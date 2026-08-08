@@ -1,0 +1,27 @@
+{
+ "range": "053-062",
+ "view": "full",
+ "verdicts": [
+  {
+   "item": 1,
+   "page": 53,
+   "col": "R",
+   "line": 2,
+   "verdict": ""
+  },
+  {
+   "item": 2,
+   "page": 53,
+   "col": "R",
+   "line": 14,
+   "verdict": "."
+  },
+  {
+   "item": 3,
+   "page": 54,
+   "col": "L",
+   "line": 7,
+   "verdict": "θ"
+  }
+ ]
+}

@@ -55,3 +55,19 @@ sources/int-ackrill/
 
 # Playwright MCP scratch (browser snapshots/console logs from a verification run)
 .playwright-mcp/
+
+# --- bonitz: 8 GB of scans, models and derived crops (2026-08-08) ---
+# `git add bonitz` without these pulls in the lot. The text record that
+# matters is mirrored in ~/Developer/bonitz-text.git.
+bonitz/work/scan400/
+bonitz/work/kraken/
+!bonitz/work/kraken/NOTES.md
+bonitz/work/kraken400/
+bonitz/work/review4_crops_*/
+bonitz/work/review5_crops_*/
+bonitz/work/sweeps/crops/
+bonitz/work/codex/strips400/
+bonitz/raw/genie400/
+bonitz/raw/llama400/
+bonitz/raw/llama400-pilot*/
+bonitz/work/*.log

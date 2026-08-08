@@ -1,0 +1,38 @@
+{
+ "_": "Bonitz's own errors: preserved in work/reconciled, corrected in the revised edition. See README.md.",
+ "entries": [
+  {
+   "page": 35,
+   "col": "L",
+   "line": 39,
+   "printed": "κακȣ͂ν",
+   "correct": "κακῶν",
+   "rule": "verdict_drift",
+   "authority": "Genitive plural of κακόν requires omega; the ou-ligature spells ου, which gives no word here. Sense: εἴ τις αἰτίαν ἔχει κακῶν τοὺς γονέας.",
+   "checked": "400dpi 2026-08-08",
+   "note": "The printed glyph is IDENTICAL to the ligature in `τȣ̀ς` on the same line and unlike the ω of `ἀνωλέθρον` on 017-R — so the compositor set the ligature where an omega belongs. John ruled `κακῶν (omega)` in July against the 300 dpi 1955 reprint; at 400 dpi the ink does not support it. Preserved as printed per the diplomatic rule; banked for the revised edition."
+  },
+  {
+   "page": 44,
+   "col": "R",
+   "line": 27,
+   "printed": "ἀλίζειν",
+   "correct": "ἁλίζειν",
+   "rule": "family.py revert",
+   "authority": "ἁλίζω 'to salt', from ἅλς, takes the rough breathing. The entry is about salted bread (ἠλισμένοι, opp ἄναλοι).",
+   "checked": "400dpi 2026-08-08",
+   "note": "The ink has the SMOOTH — identical in shape to `ἄρτοι` beside it, and unlike the rough on `ὑπὸ` at l.42. Bonitz prints it smooth; preserved. family.py had 'corrected' it to rough by propagation from the ruled headword ἁλιεύς, and that was reverted."
+  },
+  {
+   "page": 44,
+   "col": "R",
+   "line": 42,
+   "printed": "ἀλίσκεσθαι",
+   "correct": "ἁλίσκεσθαι",
+   "rule": "family.py revert",
+   "authority": "ἁλίσκομαι takes the rough breathing.",
+   "checked": "400dpi 2026-08-08",
+   "note": "Same line carries `ὑπὸ` with a plain rough (reversed comma, opening left) against this word's smooth (comma, opening right) — the two glyphs are distinct at 400 dpi. John ruled the same lemma smooth at l.15 in July. Occurrences at ll.38, 40, 41, 43, 44 are the same word and the same ruling."
+  }
+ ]
+}

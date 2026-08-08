@@ -8,6 +8,11 @@ instead of at ~250k API tokens per column.*
 Prepared 2026-08-06. Everything below was verified on this machine today
 unless marked UNVERIFIED.
 
+**Later the same day the training began. `bonitz/work/kraken/NOTES.md` records
+what it measured, and corrects this file on three points: recognition training
+cannot use MPS, the 7.1 default architecture is 15× too slow here, and the
+marginal line numbers need more care than §2 suggests. Read it first.**
+
 ---
 
 ## 0. Why
