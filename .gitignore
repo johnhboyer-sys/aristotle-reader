@@ -66,6 +66,12 @@ bonitz/work/kraken400/
 bonitz/work/review4_crops_*/
 bonitz/work/review5_crops_*/
 bonitz/work/sweeps/crops/
+# Review pages embed their 400 dpi crops as base64, so one runs 6-17 MB, and
+# they regenerate from the TSV plus the scans:
+#   python3 -m bonitz_pipeline.mark_review --class A --html <path>
+# John's ruling, 2026-08-08: keep them out. The VERDICTS are text and stay in
+# (work/sweeps/mark-verdicts.json) — the page is a view of them, not the record.
+bonitz/work/sweeps/*.html
 bonitz/work/codex/strips400/
 bonitz/raw/genie400/
 bonitz/raw/llama400/

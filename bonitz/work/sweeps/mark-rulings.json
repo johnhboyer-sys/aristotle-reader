@@ -1,0 +1,295 @@
+{
+ "_": [
+  "Rulings clicked by John on the review page. Recorded, not applied.",
+  "applied: whether the ruling was written into work/reconciled. Verified after applying: 204/204 tests, every hard Smyth rule zero, verdict_drift unchanged at 7 losses so no earlier ruling was overwritten."
+ ],
+ "rulings": {
+  "page-032-L:13:ȣ̀": {
+   "form": "ȣ̓",
+   "label": "smooth only",
+   "at": "2026-08-08T22:38:52+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓"
+  },
+  "page-032-L:43:ȣ̀": {
+   "form": "ȣ̓",
+   "label": "smooth only",
+   "at": "2026-08-08T22:38:55+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓"
+  },
+  "page-046-L:42:ἀλλοιȣ̃σθαι": {
+   "form": "ἀλλοιȣ̃σθαι",
+   "label": "keep",
+   "at": "2026-08-08T22:38:58+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-046-L:44:ἀλλοιȣ̃σθαι": {
+   "form": "ἀλλοιȣ̃σθαι",
+   "label": "keep",
+   "at": "2026-08-08T22:39:00+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-046-L:53:ἀλλοιȣ̃σθαι": {
+   "form": "ἀλλοιȣ̃σθαι",
+   "label": "keep",
+   "at": "2026-08-08T22:39:01+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-046-L:54:ἀλλοιȣ̃σθαι": {
+   "form": "ἀλλοιȣ̃σθαι",
+   "label": "keep",
+   "at": "2026-08-08T22:39:02+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-032-L:14:ȣ́τε": {
+   "form": "ȣ̓́τε",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:39:10+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓́τε",
+   "note": "applied at BOTH occurrences on the line: it is a correlative οὔτε … οὔτε and the 400 dpi ink shows the same smooth+acute on each"
+  },
+  "page-038-L:6:ȣ́τε": {
+   "form": "ȣ̓́τε",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:39:13+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓́τε"
+  },
+  "page-046-L:27:ἀλλοιȣ̃ται": {
+   "form": "ἀλλοιȣ̃ται",
+   "label": "keep",
+   "at": "2026-08-08T22:39:15+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-046-L:37:ἀλλοιȣ̃ται": {
+   "form": "ἀλλοιȣ̃ται",
+   "label": "keep",
+   "at": "2026-08-08T22:39:17+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-046-L:47:ἀλλοιȣ̃ται": {
+   "form": "ἀλλοιȣ̃ται",
+   "label": "keep",
+   "at": "2026-08-08T22:39:19+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-016-L:25:ȣ́": {
+   "form": "ȣ̓́",
+   "label": "smooth + accent",
+   "at": "2026-08-08T22:39:27+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓́"
+  },
+  "page-039-L:5:ȣ́": {
+   "form": "ȣ́",
+   "label": "keep",
+   "at": "2026-08-08T22:39:46+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-015-L:31:τȣ́ς": {
+   "form": "τȣ̀ς",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:39:49+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "τȣ̀ς"
+  },
+  "page-015-L:32:τȣ́ς": {
+   "form": "τȣ̀ς",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:39:53+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "τȣ̀ς"
+  },
+  "page-039-R:56:ἀποδȣναι": {
+   "form": "ἀποδȣ͂ναι",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:39:56+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ἀποδȣ͂ναι"
+  },
+  "page-040-L:9:ἀποδȣναι": {
+   "form": "ἀποδȣ͂ναι",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:39:58+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ἀποδȣ͂ναι"
+  },
+  "page-024-L:8:θερμȣ̃": {
+   "form": "θερμȣ̃",
+   "label": "keep",
+   "at": "2026-08-08T22:40:02+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-028-L:36:θερμȣ̃": {
+   "form": "θερμȣ̃",
+   "label": "keep",
+   "at": "2026-08-08T22:40:04+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-038-L:35:ἀκολȣθȣσι": {
+   "form": "ἀκολȣθȣ͂σι",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:06+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ἀκολȣθȣ͂σι"
+  },
+  "page-038-L:42:ἀκολȣθȣσι": {
+   "form": "ἀκολȣθȣ͂σι",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:08+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ἀκολȣθȣ͂σι"
+  },
+  "page-027-L:57:καλȣ͂": {
+   "form": "καλȣ͂",
+   "label": "keep",
+   "at": "2026-08-08T22:40:12+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-034-L:14:καλȣ͂": {
+   "form": "καλȣ͂",
+   "label": "keep",
+   "at": "2026-08-08T22:40:16+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-032-L:44:ȣ̀κ": {
+   "form": "ȣ̓κ",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:20+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓κ"
+  },
+  "page-048-L:46:ȣ̔κ": {
+   "form": "ȣ̓κ",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:24+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓κ"
+  },
+  "page-035-L:32:ȣ̓̃": {
+   "form": "?",
+   "label": "unsure",
+   "at": "2026-08-08T22:40:29+00:00",
+   "applied": "no — unsure, left for John"
+  },
+  "page-037-L:49:ȣ̓̀": {
+   "form": "ȣ̓",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:32+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓"
+  },
+  "page-044-R:35:ȣ̓̃ν": {
+   "form": "ȣ̓̃ν",
+   "label": "keep",
+   "at": "2026-08-08T22:40:34+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-022-L:27:ȣ́τως": {
+   "form": "ȣ̔́τως",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:41+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̔́τως"
+  },
+  "page-022-R:37:ȣ̓τως": {
+   "form": "ȣ̔́τως",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:43+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̔́τως"
+  },
+  "page-015-R:18:κινȣ̃σα": {
+   "form": "κινȣ̃σα",
+   "label": "keep",
+   "at": "2026-08-08T22:40:46+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-022-R:18:προαιρȣ́μενος": {
+   "form": "προαιρȣ́μενος",
+   "label": "keep",
+   "at": "2026-08-08T22:40:51+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-030-R:54:ȣ͂σα": {
+   "form": "ȣ̓͂σα",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:40:55+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓͂σα"
+  },
+  "page-046-L:46:ἀλλοιȣ̃σθαί": {
+   "form": "ἀλλοιȣ̃σθαί",
+   "label": "keep",
+   "at": "2026-08-08T22:40:59+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-019-L:44:ἐνιαυτȣ": {
+   "form": "ἐνιαυτȣ͂",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:41:02+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ἐνιαυτȣ͂"
+  },
+  "page-021-L:54:κακȣργικὰ": {
+   "form": "κακȣργικὰ",
+   "label": "keep",
+   "at": "2026-08-08T22:41:06+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-024-L:58:ȣρανȣ̃": {
+   "form": "ȣ̓ρανȣ͂",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:41:09+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓ρανȣ͂"
+  },
+  "page-033-R:20:ἀλλοιȣται": {
+   "form": "?",
+   "label": "unsure",
+   "at": "2026-08-08T22:41:22+00:00",
+   "applied": "no — unsure, left for John"
+  },
+  "page-037-L:54:σπȣδαῖα": {
+   "form": "?",
+   "label": "unsure",
+   "at": "2026-08-08T22:41:34+00:00",
+   "applied": "no — unsure, left for John"
+  },
+  "page-038-R:5:ȣδενί": {
+   "form": "ȣ̓",
+   "label": "smooth only",
+   "at": "2026-08-08T22:41:47+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓δενί",
+   "note": "the button offered a TRUNCATED form (ȣ̓), which would have deleted δενί from the line; the button builder was fixed and John's intent — smooth on the ligature — written as ȣ̓δενί"
+  },
+  "page-039-R:46:ȣδεμίαν": {
+   "form": "ȣ̓δεμίαν",
+   "label": "LlamaParse",
+   "at": "2026-08-08T22:41:52+00:00",
+   "applied": "yes, 2026-08-08",
+   "written": "ȣ̓δεμίαν"
+  },
+  "page-040-L:5:ἁπλȣ": {
+   "form": "?",
+   "label": "unsure",
+   "at": "2026-08-08T22:42:02+00:00",
+   "applied": "no — unsure, left for John"
+  },
+  "page-041-L:9:ὁτιȣ̃ν": {
+   "form": "ὁτιȣ̃ν",
+   "label": "keep",
+   "at": "2026-08-08T22:42:07+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  },
+  "page-042-R:41:νεοττȣ̀ς": {
+   "form": "νεοττȣ̀ς",
+   "label": "keep",
+   "at": "2026-08-08T22:42:10+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
+  }
+ }
+}
