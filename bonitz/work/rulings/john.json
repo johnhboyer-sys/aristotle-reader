@@ -1390,6 +1390,19 @@
    "applied": null
   },
   {
+   "id": ":0:Opus adjudicates; the all-Sonnet adjudicator config is RETIRED",
+   "kind": "policy",
+   "col": "",
+   "line": 0,
+   "form": "",
+   "ruled": "Opus adjudicates; the all-Sonnet adjudicator config is RETIRED",
+   "quote": "",
+   "note": "Ruled 2026-08-07 (\"Opus moves out of the reader slot and into adjudication only\"), resolving the leak rate RUN-NOTES-52-91.md had flagged for him. The `*.sonnet.json` files on pp.47-49 and 52 are superseded backups; the live files carry the Opus recheck. ⚠ On 2026-08-08 I re-opened this as an open question and John corrected me — the ruling was ~1,100 lines away in NOTES.md from the config it replaced. A policy ruling belongs HERE, where it cannot be missed.",
+   "source": "work/kraken/NOTES.md",
+   "date": "2026-08-07",
+   "applied": null
+  },
+  {
    "id": ":0:Codex's kai-ligature vote stays UNMUTED",
    "kind": "policy",
    "col": "",

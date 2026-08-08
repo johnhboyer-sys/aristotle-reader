@@ -243,6 +243,15 @@ def migrate() -> dict:
         ('a 2-2 reader split always flags',
          'A genuine deadlock deserves a human; a tiebreak rule would be '
          'guessing dressed as arithmetic.', '2026-08-07'),
+        ('Opus adjudicates; the all-Sonnet adjudicator config is RETIRED',
+         'Ruled 2026-08-07 ("Opus moves out of the reader slot and into '
+         'adjudication only"), resolving the leak rate RUN-NOTES-52-91.md had '
+         'flagged for him. The `*.sonnet.json` files on pp.47-49 and 52 are '
+         'superseded backups; the live files carry the Opus recheck. ⚠ On '
+         '2026-08-08 I re-opened this as an open question and John corrected '
+         'me — the ruling was ~1,100 lines away in NOTES.md from the config it '
+         'replaced. A policy ruling belongs HERE, where it cannot be missed.',
+         '2026-08-07'),
         ("Codex's kai-ligature vote stays UNMUTED",
          'This run is its evaluation as a reader; muting the character it is '
          'weakest on would grade it on a curve.', '2026-08-07'),
