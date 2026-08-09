@@ -10,18 +10,32 @@
 # generate again (review pages, crops, kraken checkpoints) stays out. The
 # pipeline, the reader outputs and the corpus stay in.
 #
-# These rules previously lived in .git/info/exclude, which works but does not
-# survive a clone — so the next person to check this out would have got the
-# scans and the checkpoints along with it.
+# ⚠ AN ALLOWLIST FAILS SILENTLY IN THE OTHER DIRECTION TOO. The first version of
+# this file kept out `pyproject.toml` — without which the package will not even
+# install — along with five of the six readers' outputs, the persisted
+# adversarial reviews, and the explainer. Nothing complained; they were simply
+# not there. When adding a directory, check `git status --short --ignored`
+# rather than assuming the rules below still cover it.
 
 /*
 !.gitignore
-!bonitz_pipeline/
-!tests/
 !*.md
 
-# The resolved dependency set the test suite actually ran against.
+# The package itself, and the resolved dependency set the tests ran against.
+!pyproject.toml
 !uv.lock
+!bonitz_pipeline/
+!tests/
+!run_pilot_compare.py
+
+# The explainer and anything else written to be read by a person.
+!docs/
+
+# EVERY reader's output, not just the adjudicator's. The whole method here is
+# that independent readers disagree and the disagreement is the signal, so
+# keeping only `opus` would throw away the evidence and leave the verdicts
+# unfalsifiable.
+!raw/
 
 !work/
 work/*
@@ -33,6 +47,19 @@ work/*
 !work/sigla/
 !work/rulings/
 !work/sweeps/
+!work/lexcheck/
+!work/recheck/
+!work/prompts/
+!work/flags-by-col/
+!work/flags4-by-col/
+!work/flags5-by-col/
+!work/aristotle-forms.json
+
+# The adversarial reviews, persisted deliberately: two finished ones were lost
+# to a reboot on 2026-08-09 because they lived only in a temp directory, and a
+# review nobody read is indistinguishable from a review nobody ran.
+!work/reviews/
+
 !work/kraken/
 work/kraken/*
 !work/kraken/NOTES.md
@@ -41,15 +68,15 @@ work/kraken/*
 # 6.7 MB of base64 crops on its own. Every one regenerates from its module:
 #   python3 -m bonitz_pipeline.mark_review    --html <path>
 #   python3 -m bonitz_pipeline.book_review
+#   python3 -m bonitz_pipeline.siglum_review
 work/sweeps/*.html
 
 # The rulings themselves are the point, and they are tiny. Keep them.
 !work/sweeps/*.json
 !work/sweeps/*.tsv
-
-!raw/
-raw/*
-!raw/opus/
+!work/sweeps/*.txt
 
 __pycache__/
 *.pyc
+.pytest_cache/
+.DS_Store
