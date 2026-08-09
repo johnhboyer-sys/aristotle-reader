@@ -32,11 +32,13 @@ import argparse
 import base64
 import csv
 import difflib
+import functools
 import io
 import json
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -196,8 +198,68 @@ def _lines(col: str) -> list[tuple[int, int, int, int, str]]:
     return sorted(out, key=lambda t: t[1])
 
 
+@functools.lru_cache(maxsize=None)
+def _profile(col: str, n: int) -> tuple[tuple[int, int, int, int], ...]:
+    """Line boxes read off the ink, for columns kraken quarantined.
+
+    page-033-R has no PageXML, so `_lines` is empty and the old fallback cut
+    the column into `n` equal slices from top edge to bottom edge.  That
+    drifts by most of a line, because the margins and the running head are not
+    text — which is why John clicked "unsure" on 033-R:20 twice.
+
+    Here the rows carrying ink give the text block its real top and bottom.
+    The running head is dropped when the gap beneath it runs several times the
+    leading.  The rest is divided by the line count we already know from
+    `work/reconciled`, and every interior cut is snapped to the quietest row
+    nearby, which absorbs the printer's uneven leading.  Returns () when the
+    page does not look like a plain text block, so the caller can fall back
+    rather than trust a bad fit.
+    """
+    src = ROOT / f'work/kraken400/cols/{col}.png'
+    if not src.exists() or n < 2:
+        return ()
+    import numpy as np
+    a = np.asarray(Image.open(src).convert('L'))
+    ink = (a < 160).sum(axis=1)
+    if not ink.max():
+        return ()
+    on = ink > max(3, ink.max() * 0.02)
+    bands, s = [], None
+    for i, v in enumerate(on):
+        if v and s is None:
+            s = i
+        elif not v and s is not None:
+            bands.append((s, i))
+            s = None
+    if s is not None:
+        bands.append((s, len(on)))
+    bands = [b for b in bands if b[1] - b[0] >= 8]
+    if len(bands) < 3:
+        return ()
+    gaps = [bands[i + 1][0] - bands[i][1] for i in range(len(bands) - 1)]
+    if gaps[0] > float(np.median(gaps)) * 4:
+        bands = bands[1:]          # the running head, set off by its own space
+    top, bot = bands[0][0], bands[-1][1]
+    pitch = (bot - top) / n
+    if pitch < 12 or pitch > a.shape[0] / 4:
+        return ()
+    cuts = [top]
+    for k in range(1, n):
+        p, w = int(top + k * pitch), max(2, int(pitch * 0.35))
+        lo, hi = max(0, p - w), min(len(ink), p + w)
+        cuts.append(lo + int(np.argmin(ink[lo:hi])) if hi > lo else p)
+    cuts.append(bot)
+    out = []
+    for k in range(n):
+        y0, y1 = cuts[k], cuts[k + 1]
+        cols = (a[y0:y1] < 160).sum(axis=0).nonzero()[0]
+        x0, x1 = (int(cols[0]), int(cols[-1]) + 1) if len(cols) else (0, a.shape[1])
+        out.append((x0, y0, x1, y1))
+    return tuple(out)
+
+
 def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
-              whole: bool = False) -> tuple[object, float]:
+              whole: bool = False, spread: int = 7) -> tuple[object, float]:
     """The ink at one word: the line found by TEXT, the word by proportion.
 
     Line numbers do not carry across — `work/reconciled` counts printed lines
@@ -216,19 +278,36 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
     want = lines[lineno - 1]
     cand = _lines(col)
     im = Image.open(src)
+    box_, score = None, 0.0
     if cand:
         x0, y0, x1, y1, got = max(cand, key=lambda t: difflib.SequenceMatcher(
             None, _key(want), _key(t[4]), autojunk=False).ratio())
         score = difflib.SequenceMatcher(None, _key(want), _key(got),
                                         autojunk=False).ratio()
-    else:
-        # No PageXML for this column (page-033-R is quarantined).  Fall back to
-        # proportional placement over the whole column, the way 047-R:20 and
-        # 031-R:10 were cropped — and say so, by scoring it 0.
-        n = max(1, len(lines))
-        h = im.height / n
-        x0, x1 = 0, im.width
-        y0, y1, score = int((lineno - 1) * h), int(lineno * h), 0.0
+        box_ = (x0, y0, x1, y1)
+    if score < 0.6:
+        # Either there is no PageXML (page-033-R is quarantined) or the best
+        # segmented line is not this line at all.  Both happen: kraken drops
+        # marginal lines, so on 026-R, 028-R and 046-R the closest match was
+        # several lines away and the crop showed the wrong text entirely.
+        #
+        # The ink profile does not use kraken.  It counts the printed lines
+        # against `work/reconciled`, which is authoritative for how many lines
+        # the column has, so it is the better answer whenever the text match
+        # is weak.  It is a geometric fit, not a text match, so it scores 0.9
+        # — past the "do not rule on it" warning, short of a matched line's
+        # certainty.  If the profile refuses the page, fall back to equal
+        # slices over the whole column and say so by scoring it 0.
+        boxes = _profile(col, len(lines))
+        if boxes:
+            x0, y0, x1, y1 = boxes[lineno - 1]
+            score = 0.9
+        elif box_ is None:
+            h = im.height / max(1, len(lines))
+            x0, x1 = 0, im.width
+            y0, y1 = int((lineno - 1) * h), int(lineno * h)
+        else:
+            x0, y0, x1, y1 = box_
     pad = int((y1 - y0) * 0.45)
     # Place the word across the line's ink extent by character offset.
     # `whole` shows the entire printed line.  The word window is placed by
@@ -246,8 +325,14 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
         # useful evidence anyway: the surest way to judge a missing accent is
         # a word beside it that has one.
         span = x1 - x0
-        wx0 = x0 + int(span * at / len(want)) - pad * 7
-        wx1 = x0 + int(span * (at + len(word)) / len(want)) + pad * 7
+        # `spread` is how many pad-widths of neighbouring text to keep either
+        # side.  The default 7 is generous because a neighbouring word that
+        # DOES carry a mark is the best evidence for one that is missing.  The
+        # review page passes less: its crops are shown fitted to the column,
+        # so a wide crop arrives downscaled and the mark under question is the
+        # first thing the downscaling costs.
+        wx0 = x0 + int(span * at / len(want)) - pad * spread
+        wx1 = x0 + int(span * (at + len(word)) / len(want)) + pad * spread
     box = (max(0, wx0), max(0, y0 - pad),
            min(im.width, max(wx1, wx0 + 60)), min(im.height, y1 + pad))
     c = im.crop(box)
@@ -332,6 +417,7 @@ def _b64(im) -> str:
 
 
 SUBSCRIPT = 'ͅ'
+VOWELS = 'αεηιουωȣ'                # ȣ counts: it is the ου the mark sits on
 _MARK_NAMES = {'': 'bare', ACUTE: 'acute', GRAVE: 'grave', CIRC: 'circumflex',
                SMOOTH: 'smooth', ROUGH: 'rough', SUBSCRIPT: 'subscript'}
 
@@ -379,26 +465,49 @@ def candidates(corpus: str, llama: str) -> list[tuple[str, str]]:
     if i < 0:
         i = next((k for k, (bs, m) in enumerate(a) if m), -1)
     if i >= 0:
-        base = a[i][0]
-        head = ''.join(x + m for x, m in a[:i])
-        tail = ''.join(x + m for x, m in a[i + 1:])
-        # ⚠ head/tail keep the REST of the word intact.  The first version took
-        # d[:1] as the base and threw the rest away, so "smooth only" on
-        # `ȣδενί` offered `ȣ̓` — which would have deleted δενί from the line.
-        # John clicked it on 038-R:5 and it was caught before it was written.
-        # A button that can silently truncate a word has no business here.
-        initial = i == 0 or base in 'ȣϗ'
-        combos = ['', ACUTE, GRAVE, CIRC]
-        if initial:
-            combos += [SMOOTH, ROUGH,
-                       SMOOTH + ACUTE, SMOOTH + GRAVE, SMOOTH + CIRC,
-                       ROUGH + ACUTE, ROUGH + GRAVE, ROUGH + CIRC]
-        if base in 'αηω':
-            combos.append(SUBSCRIPT)
-        for m in combos:
-            form = unicodedata.normalize('NFC', head + base + m + tail)
-            if all(form != f for f, _ in out):
-                out.append((form, _name(m)))
+        # WHICH VOWEL of the run?  The readers disagree at one letter, but the
+        # mark on the page may sit on its neighbour: at 033-R:20 the corpus and
+        # LlamaParse differ on the ι of `ἀλλοιȣται`, while the ink carries the
+        # perispomeni over the ȣ (= ου) — the ου is the syllable, ἀλ-λοι-ȣ-ται.
+        # Offering the ι alone gave John four buttons none of which was right,
+        # and he clicked "unsure".  So the whole vowel run is offered, nearest
+        # letter first.
+        run = [i]
+        if a[i][0] in VOWELS:
+            lo = hi = i
+            while lo > 0 and a[lo - 1][0] in VOWELS:
+                lo -= 1
+            while hi + 1 < len(a) and a[hi + 1][0] in VOWELS:
+                hi += 1
+            run = sorted(range(lo, hi + 1), key=lambda k: (abs(k - i), k))
+        for k in run:
+            base = a[k][0]
+            head = ''.join(x + m for x, m in a[:k])
+            tail = ''.join(x + m for x, m in a[k + 1:])
+            # ⚠ head/tail keep the REST of the word intact.  The first version
+            # took d[:1] as the base and threw the rest away, so "smooth only"
+            # on `ȣδενί` offered `ȣ̓` — which would have deleted δενί from the
+            # line.  John clicked it on 038-R:5 and it was caught before it was
+            # written.  A button that can truncate a word has no business here.
+            #
+            # Breathings only word-initially (§9), or where a reading already
+            # shows one — which is how a crasis keeps its options (§68a).  The
+            # old test also let any medial ligature take a breathing, so
+            # `ἀλλοιȣται` was offered eight impossible forms.
+            initial = k == 0 or any(
+                c in (a[k][1] + (b[k][1] if k < len(b) else ''))
+                for c in (SMOOTH, ROUGH))
+            combos = ['', ACUTE, GRAVE, CIRC]
+            if initial:
+                combos += [SMOOTH, ROUGH,
+                           SMOOTH + ACUTE, SMOOTH + GRAVE, SMOOTH + CIRC,
+                           ROUGH + ACUTE, ROUGH + GRAVE, ROUGH + CIRC]
+            if base in 'αηω':
+                combos.append(SUBSCRIPT)
+            for m in combos:
+                form = unicodedata.normalize('NFC', head + base + m + tail)
+                if all(form != f for f, _ in out):
+                    out.append((form, _name(m)))
     if llama and all(llama != f for f, _ in out):
         out.append((llama, 'LlamaParse'))
     # de-duplicate, keep order
@@ -410,6 +519,91 @@ def candidates(corpus: str, llama: str) -> list[tuple[str, str]]:
     return uniq
 
 
+def spot(keep: str, form: str) -> str:
+    """The one letter `form` changes, with its marks — for the button face.
+
+    Covering the whole vowel run means a dozen buttons whose words differ by a
+    single mark at 40px.  John asked for the difference to be dead simple to
+    see, so the button leads with the letter under question and prints the
+    whole word small underneath: a glance answers "which letter", a read
+    answers "which word".
+    """
+    def cl(s):
+        out = []
+        for ch in unicodedata.normalize('NFD', s).replace(CIRC_ALT, CIRC):
+            if unicodedata.combining(ch) and out:
+                out[-1] += ch
+            else:
+                out.append(ch)
+        return out
+
+    a, b = cl(keep), cl(form)
+    for k in range(min(len(a), len(b))):
+        if a[k] != b[k]:
+            return unicodedata.normalize('NFC', b[k])
+    return ''
+
+
+def _diff(a: str, b: str) -> tuple[str, str]:
+    """(a, b) as HTML with the one cluster they differ at marked in both.
+
+    John's condition on this page was that it be *"DEAD SIMPLE TO RECOGNIZE
+    WHETHER YOUR CHANGE WAS RIGHT"*.  Two Greek words differing by one accent,
+    set side by side in prose, are not that — the eye has to hunt.  Marking the
+    cluster in both lines puts the eye where the question is.
+    """
+    def cl(s):
+        out = []
+        for ch in unicodedata.normalize('NFD', s).replace(CIRC_ALT, CIRC):
+            if unicodedata.combining(ch) and out:
+                out[-1] += ch
+            else:
+                out.append(ch)
+        return out
+
+    x, y = cl(a), cl(b)
+    i = next((k for k in range(min(len(x), len(y))) if x[k] != y[k]), -1)
+    if i < 0:
+        return a, b
+
+    def wrap(cs):
+        if i >= len(cs):
+            return unicodedata.normalize('NFC', ''.join(cs))
+        n = unicodedata.normalize
+        return (n('NFC', ''.join(cs[:i])) + '<mark>' + n('NFC', cs[i]) +
+                '</mark>' + n('NFC', ''.join(cs[i + 1:])))
+    return wrap(x), wrap(y)
+
+
+def verdict_rows(s: Site, verdict: str) -> str:
+    """The two lines that answer "is this change right?" without prose.
+
+    A FIX shows WAS against NOW, so the question is whether the marked letter
+    in NOW is the one in the photograph above.  A PRESERVE shows the corpus
+    against LlamaParse and says which of them the ink backs — the corpus is
+    right at every PRESERVE here, and saying so beside the disagreement is
+    what makes "nothing to do" checkable rather than merely asserted.
+    """
+    v = verdict.split()[0].upper()
+    if v == 'FIX' and s.proposed:
+        was, now = _diff(s.corpus, s.proposed)
+        head = (f'<tr><th>was</th><td class="grk">{was}</td></tr>'
+                f'<tr><th>now</th><td class="grk prop">{now}</td></tr>')
+    elif v == 'ADJUDICATE' and s.proposed:
+        was, now = _diff(s.corpus, s.proposed)
+        head = (f'<tr><th>corpus has</th><td class="grk">{was}</td></tr>'
+                f'<tr><th>ink looks like</th><td class="grk prop">{now}'
+                f'</td></tr>')
+    else:
+        a, b = _diff(s.corpus, s.llama)
+        head = (f'<tr><th>corpus</th><td class="grk">{a}</td>'
+                f'<td class="ok">← the ink backs this</td></tr>'
+                f'<tr><th>LlamaParse</th><td class="grk dim">{b}</td></tr>')
+    return (f'<table class="cmp">{head}</table>'
+            f'<p class="why">{s.why}</p>' if s.why else
+            f'<table class="cmp">{head}</table>')
+
+
 def html(sites: list[Site], out: Path, title: str, applied: bool) -> Path:
     """The review page: the ink first, then what was read, then what changed.
 
@@ -417,6 +611,13 @@ def html(sites: list[Site], out: Path, title: str, applied: bool) -> Path:
     sits directly above the two readings, and the changed letter is marked in
     both.
     """
+    # What needs John comes first, then what was changed and wants approving,
+    # then what was left alone.  Queue order would scatter the four sites that
+    # actually want his attention through sixteen that do not.
+    rank = {'ADJUDICATE': 0, 'FIX': 1, 'UNRULED': 2, 'PRESERVE': 3}
+    sites = sorted(sites, key=lambda s: (
+        rank.get((s.verdict or 'UNRULED').split()[0].upper(), 2),
+        s.col, s.line))
     rows = []
     for s in sites:
         sid = f'{s.col}:{s.line}:{s.corpus}'
@@ -452,13 +653,7 @@ def html(sites: list[Site], out: Path, title: str, applied: bool) -> Path:
   <div class="ink">{img}</div>
   {btns}
   {warn}
-  <table>
-    <tr><th>corpus</th><td class="grk">{s.corpus}</td>
-        <th>LlamaParse</th><td class="grk">{s.llama}</td>
-        <th>marks</th><td>{s.marks}</td></tr>
-    {f'<tr><th>proposed</th><td class="grk prop">{s.proposed}</td>'
-     f'<th colspan="3">{s.why}</th></tr>' if s.proposed or s.why else ''}
-  </table>
+  {verdict_rows(s, verdict)}
   <p class="ctx">{s.context}</p>
 </section>''')
     css = '''
@@ -468,8 +663,12 @@ h1{font-size:22px} h3{font-size:15px;margin:0 0 8px;font-weight:600}
 .site{background:#fff;border:1px solid #ddd;border-radius:6px;padding:16px;
       margin:0 0 18px}
 .site.guarded{border-color:#c00;background:#fff6f6}
-.ink{background:#fff;border:1px solid #eee;overflow-x:auto;padding:6px}
-.ink img{display:block;image-rendering:-webkit-optimize-contrast}
+.ink{background:#fff;border:1px solid #eee;padding:6px}
+/* The crop is wide on purpose — a neighbouring word with a mark is the
+   best evidence for a mark that is missing — so it is fitted to the column
+   rather than allowed to scroll off the side, where it goes unread. */
+.ink img{display:block;max-width:100%;height:auto;
+         image-rendering:-webkit-optimize-contrast}
 .grk{font-family:"GFS Didot","Times New Roman",serif;font-size:21px}
 .prop{color:#0a6}
 table{border-collapse:collapse;margin:10px 0;font-size:13px}
@@ -485,6 +684,17 @@ td{padding:3px 20px 3px 0}
 .v-fix{background:#fdf0d0;color:#850}
 .v-preserve{background:#e4e8f5;color:#345}
 .v-john,.v-adjudicate{background:#fde0e0;color:#900}
+.cmp{border-collapse:collapse;margin:12px 0 6px}
+.cmp th{text-align:right;padding:2px 12px 2px 0;color:#777;font-weight:600;
+        font-size:12px;text-transform:uppercase;letter-spacing:.05em;
+        white-space:nowrap;vertical-align:baseline}
+.cmp td{padding:2px 16px 2px 0;vertical-align:baseline}
+.cmp .grk{font-size:30px;line-height:1.25}
+.cmp mark{background:#ffe89a;color:inherit;padding:0 2px;border-radius:3px}
+.cmp .prop mark{background:#a8ecc0}
+.dim{color:#999}
+.ok{font-size:12px;color:#0a6;white-space:nowrap}
+.why{font-size:13.5px;color:#444;margin:2px 0 0;max-width:82ch}
 .warn{color:#b00;font-size:13px;margin:6px 0 0}
 .guard{color:#c00;font-weight:600;font-size:13px;margin:6px 0 0}
 .lead{background:#fff;border-left:3px solid #999;padding:10px 14px;
@@ -540,15 +750,31 @@ document.addEventListener('click',async e=>{
  }
 });'''
     n_open = sum(1 for s in sites if not s.verdict) if not applied else 0
+    # A page where every site is already decided has nothing to click, and a
+    # bar reading "0 of 0 ruled — click a glyph" invites a click that does
+    # nothing.  Count the decisions instead, which is what such a page is for.
+    tally = Counter((s.verdict or 'UNRULED').split()[0].upper() for s in sites)
+    if n_open:
+        bar = (f'<div id="bar"><span><b><span id="n">0</span></b> of {n_open} '
+               f'ruled</span><span class="status">click a glyph — it saves as '
+               f'you go</span></div>')
+        lead = ('<b>The buttons show glyphs, not advice</b> — pick the shape '
+                'you see.')
+    else:
+        bar = ('<div id="bar"><span>' + ' · '.join(
+            f'<b>{v}</b> {k.lower()}' for k, v in tally.most_common()) +
+            '</span><span class="status">nothing to click — this page is a '
+            'record of what was decided</span></div>')
+        lead = ('Every site here is already decided; <b>ADJUDICATE</b> marks '
+                'the ones held back for you.')
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(f'''<!doctype html><meta charset="utf-8">
 <title>{title}</title><style>{css}</style>
 <h1>{title}</h1>
-<div id="bar"><span><b><span id="n">0</span></b> of {n_open} ruled</span>
-  <span class="status">click a glyph — it saves as you go</span></div>
+{bar}
 <div class="lead">{len(sites)} sites. The photograph is the 400 dpi ink of the
-1870 original, cropped at the word. <b>The buttons show glyphs, not advice</b> —
-pick the shape you see. LlamaParse is a second opinion and is wrong at five of
+1870 original, cropped at the word. {lead}
+LlamaParse is a second opinion and is wrong at five of
 class D's eight sites, so its column is never a recommendation.</div>
 {''.join(rows)}
 <script>{js}</script>''', encoding='utf-8')
@@ -563,6 +789,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument('--real', action='store_true',
                    help='drop the rows a guard already answers — John\'s '
                         'rulings, line-break fragments, headword abbreviations')
+    p.add_argument('--keep-corrigenda', action='store_true',
+                   help='with --real, still show sites guarded only because '
+                        'the misprint was banked in work/corrigenda — a review '
+                        'of what was decided must not omit two of its own '
+                        'decisions')
     p.add_argument('--sheets', type=Path)
     p.add_argument('--html', type=Path)
     p.add_argument('--title', default='Bonitz — the mark queue against the ink')
@@ -572,7 +803,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.cls:
         sites = [s for s in sites if s.cls in args.cls]
     if args.real:
-        sites = [s for s in sites if not s.guard and not s.shape]
+        def ok(s):
+            if s.shape:
+                return False
+            if not s.guard:
+                return True
+            return args.keep_corrigenda and s.guard.startswith('corrigendum')
+        sites = [s for s in sites if ok(s)]
 
     if args.list:
         from collections import Counter

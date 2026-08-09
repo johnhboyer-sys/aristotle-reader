@@ -1453,6 +1453,19 @@
    "source": "review server",
    "date": "2026-08-09",
    "applied": true
+  },
+  {
+   "id": "page-033-R:20:ἀλλοιȣται",
+   "kind": "text",
+   "col": "page-033-R",
+   "line": 20,
+   "form": "ἀλλοιȣ͂ται",
+   "ruled": "circumflex on the ligature",
+   "quote": "33-r line twenty is circumflex over ligature",
+   "note": "Was `ἀλλοιȣται` in the corpus. Ruled in chat rather than on the review page. Neither reader had it: the corpus carried no mark at all and LlamaParse put the perispomeni on the ι. It belongs on the ligature — ȣ spells the ου of ἀλλοιοῦται, and the syllable is ἀλ-λοι-ȣ-ται. The site was twice unrulable: the column is quarantined so the crop showed the wrong line, and the buttons only offered the ι.",
+   "source": "chat",
+   "date": "2026-08-08",
+   "applied": true
   }
  ]
 }

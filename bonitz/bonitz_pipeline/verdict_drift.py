@@ -64,6 +64,16 @@ def main(argv: list[str] | None = None) -> int:
             tally['column missing'] += 1
             continue
         for r in json.load(open(f, encoding='utf-8')):
+            if r.get('superseded'):
+                # A later look at the ink overruled this verdict, and the
+                # entry says why.  Without this bucket an overruled verdict
+                # reports RULING LOST for ever — the same alarm a silent
+                # overwrite raises — and an alarm you cannot clear by doing
+                # the right thing stops being read.  Overruling means editing
+                # the entry by hand, so it cannot happen as a side effect,
+                # which is what keeps the remaining count worth trusting.
+                tally['superseded by a later look at the ink'] += 1
+                continue
             # Both sides must go through `canonical`, or the two encodings of
             # the printed circumflex — combining tilde against perispomeni —
             # report every ligature ruling as lost.  Same fold the comparator

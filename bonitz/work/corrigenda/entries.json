@@ -2,6 +2,17 @@
  "_": "Bonitz's own errors: preserved in work/reconciled, corrected in the revised edition. See README.md.",
  "entries": [
   {
+   "page": 17,
+   "col": "L",
+   "line": 37,
+   "printed": "τεχνήν",
+   "correct": "τέχνην",
+   "rule": "diacritic_sweep class C",
+   "authority": "τέχνη is a first-declension noun with a short final -η in the accusative singular; the accent cannot stand on the ultima. Smyth §163. The following τινα is a disyllabic enclitic after a paroxytone, which keeps its own accent (§183d) and throws nothing back.",
+   "checked": "400dpi 2026-08-08",
+   "note": "The acute stands plainly over the η of -νήν, well clear of the χ, and the line's other accents (μαθήσεις, πρὸς, τὰς) are set normally. LlamaParse read τέχνην, i.e. it silently corrected the print. Preserved as printed per the diplomatic rule."
+  },
+  {
    "page": 35,
    "col": "L",
    "line": 39,
@@ -11,6 +22,17 @@
    "authority": "Genitive plural of κακόν requires omega; the ou-ligature spells ου, which gives no word here. Sense: εἴ τις αἰτίαν ἔχει κακῶν τοὺς γονέας.",
    "checked": "400dpi 2026-08-08",
    "note": "The printed glyph is IDENTICAL to the ligature in `τȣ̀ς` on the same line and unlike the ω of `ἀνωλέθρον` on 017-R — so the compositor set the ligature where an omega belongs. John ruled `κακῶν (omega)` in July against the 300 dpi 1955 reprint; at 400 dpi the ink does not support it. Preserved as printed per the diplomatic rule; banked for the revised edition."
+  },
+  {
+   "page": 39,
+   "col": "R",
+   "line": 54,
+   "printed": "ἀκριβεία",
+   "correct": "ἀκριβείᾳ",
+   "rule": "diacritic_sweep class C",
+   "authority": "The article τῇ is dative singular, so the noun must be ἀκριβείᾳ with the iota subscript. Smyth §216.",
+   "checked": "400dpi 2026-08-08",
+   "note": "The accent placement our reader has is right — the acute is on the -εί- of ἀκριβεία, not on the first ι as LlamaParse read it — but the final α carries no subscript in the ink, while the τῇ two words earlier plainly does. Bonitz's own omission; preserved."
   },
   {
    "page": 44,

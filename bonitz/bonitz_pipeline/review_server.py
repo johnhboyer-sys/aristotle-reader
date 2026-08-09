@@ -33,14 +33,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 try:
-    from .mark_review import CLASSES, candidates, crop_word, load
+    from .mark_review import CLASSES, candidates, crop_word, load, spot
 except ImportError:
     # `.claude/launch.json` starts this by absolute path, not as a module, so
     # the relative import has no package to resolve against.  Put the project
     # root on the path and import the same names absolutely.
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from bonitz_pipeline.mark_review import (CLASSES, candidates, crop_word,
-                                             load)
+                                             load, spot)
 try:
     from . import john_rulings
 except ImportError:
@@ -65,11 +65,17 @@ body{font:16px/1.5 -apple-system,Segoe UI,sans-serif;margin:0;padding:20px;
 #ctx{font-family:"GFS Didot",Georgia,serif;font-size:15px;color:#555;
      background:#f1f0ed;padding:8px 10px;border-radius:5px;margin:10px 0}
 #btns{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0}
-button{display:flex;flex-direction:column;align-items:center;gap:3px;
-       min-width:120px;padding:18px 22px;border:2px solid #c4c4c4;
+button{display:flex;flex-direction:column;align-items:center;gap:2px;
+       flex:1 1 130px;max-width:210px;padding:12px 10px;border:2px solid #c4c4c4;
        border-radius:12px;background:#fff;cursor:pointer;font:inherit}
 button:hover{border-color:#555;background:#f2f2f2}
-.g{font-family:"GFS Didot",Georgia,serif;font-size:40px;line-height:1}
+/* The whole vowel run is offered, so a dozen buttons can differ by one mark
+   at 40px.  Lead with the letter in question — that is the question — and
+   print the word small underneath so the choice is still legible as a word. */
+.g{font-family:"GFS Didot",Georgia,serif;font-size:46px;line-height:1.1;
+   min-height:52px}
+.w{font-family:"GFS Didot",Georgia,serif;font-size:17px;line-height:1.2;
+   color:#333;word-break:break-all}
 .n{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.05em}
 .keep{border-color:#9bb89b}
 .skip{border-style:dashed}
@@ -115,7 +121,9 @@ function show(){
  s.cands.forEach((c,k)=>{
   const b=document.createElement('button');
   b.className=c[1]==='keep'?'keep':(c[0]==='?'?'skip':'');
-  b.innerHTML='<span class="g">'+c[0]+'</span><span class="n">'+(k+1)+'. '+c[1]+'</span>';
+  b.innerHTML='<span class="g">'+(c[2]||c[0])+'</span>'+
+   (c[2]?'<span class="w">'+c[0]+'</span>':'')+
+   '<span class="n">'+(k+1)+'. '+c[1]+'</span>';
   b.onclick=()=>pick(c[0],c[1]);
   btns.appendChild(b);
  });
@@ -192,7 +200,9 @@ def build(classes: list[str], real: bool, redo: bool = False):
                     'corpus': s.corpus, 'llama': s.llama, 'cls': s.cls,
                     'context': s.context, 'score': score,
                     'guard': s.guard or s.shape,
-                    'cands': candidates(s.corpus, s.llama) + [['?', 'unsure']],
+                    'cands': [[f, n, spot(s.corpus, f)]
+                              for f, n in candidates(s.corpus, s.llama)]
+                             + [['?', 'unsure', '']],
                     'ruled': sid in ruled and ruled[sid].get('form') != '?'})
     return out, imgs, lines
 

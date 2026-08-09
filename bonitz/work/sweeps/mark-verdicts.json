@@ -14,44 +14,255 @@
   "Keyed `column:line:corpus-form`."
  ],
  "verdicts": {
-  "page-025-L:13:βȣλονται": {"verdict": "FIX", "proposed": "βȣ́λονται",
-    "why": "The acute stands plainly over the ligature, the same slash as on ἀθλητήν in the same line. Class (b): our reader dropped an accent over ȣ, which is its known weak spot."},
-  "page-049-L:30:βȣλονται": {"verdict": "FIX", "proposed": "βȣ́λονται",
-    "why": "Acute clear over the ligature, against the bare digits of Φδ6 beside it. Same word, same defect as 025-L:13."},
-  "page-026-L:8:καλȣμενον": {"verdict": "FIX", "proposed": "καλȣ́μενον",
-    "why": "Acute clear over the ligature; Αἴγινα beside it carries its own marks, so the printer is setting them on this line."},
-  "page-030-L:28:καλȣμενοι": {"verdict": "FIX", "proposed": "καλȣ́μενοι",
-    "why": "Acute clear over the ligature, and ὑπό directly after it is fully marked."},
-  "page-040-L:1:τοιȣτων": {"verdict": "FIX", "proposed": "τοιȣ́των",
-    "why": "Acute over the ligature, between τῶν and τὰς, both of which carry their marks."},
-  "page-025-L:28:δȣλοις": {"verdict": "FIX", "proposed": "δȣ́λοις",
-    "why": "Acute over the ligature; τοῖς before it and ἆθλον after it are both marked."},
-  "page-027-R:46:ταις": {"verdict": "FIX", "proposed": "ταῖς",
-    "why": "The circumflex is plainly set. Inside a variant reading — (v l ταῖς Καυνίαις) — but that is Bonitz quoting, and quoting it accurately means recording the marks he printed."},
-  "page-025-L:35:σκεψις": {"verdict": "LOOK AGAIN", "proposed": "",
-    "why": "Line match 0.35 — the crop is not this line, so nothing was ruled. Also a line-start fragment, so it likely needs no mark at all."},
-  "page-032-L:1:αλλα": {"verdict": "JOHN", "proposed": "",
-    "why": "Already ruled, 2026-07-25: the print has no breathing and no accent, a printer's error, recorded as printed. The guard held."},
-
-  "page-029-L:3:ȣ͂": {"verdict": "FIX", "proposed": "ȣ̔͂",
-    "why": "JOHN'S RULING, 2026-08-08: circumflex AND rough breathing. The word is οὗ (ἐξ οὗ συνέστηκεν). Applied."},
-  "page-034-R:31:ȣ͂": {"verdict": "FIX", "proposed": "ȣ̔͂",
-    "why": "JOHN'S RULING, 2026-08-08, made on the review page itself: circumflex and rough breathing. ἐξ οὗ γίγνεται. He first raised print-loss as an alternative and then ruled against it. The `ȣ̓σία` two lines down carries the SMOOTH and is a plainly different comma-shaped mark — the internal control. Applied."},
-  "page-034-R:35:ȣ͂": {"verdict": "FIX", "proposed": "ȣ̔͂",
-    "why": "JOHN'S RULING (p.34): τὸ οὗ ἕνεκα, the final cause. Applied."},
-  "page-034-R:36:ȣ͂": {"verdict": "FIX", "proposed": "ȣ̔͂",
-    "why": "JOHN'S RULING (p.34): τὸ οὗ ἕνεκα ϗ̀ τἀγαθόν. Applied."},
-  "page-034-R:47:ȣ͂": {"verdict": "FIX", "proposed": "ȣ̔͂",
-    "why": "JOHN'S RULING (p.34). ⚠ This line holds TWO ligature-circumflex forms — `νȣ͂ν` (νοῦν) and the standalone `ȣ͂` (οὗ). Only the standalone one is word-initial and takes the breathing; νοῦν must NOT be touched. Applied with a word-boundary match, νȣ͂ν left alone."},
-  "page-034-R:51:ȣ͂": {"verdict": "FIX", "proposed": "ȣ̔͂",
-    "why": "JOHN'S RULING (p.34). The clearest of the six: the same line carries a bare rough on `ἡ`, whose hook matches the left half of the ligature's compound mark. Applied."},
-
-  "page-032-L:1:ȣ̀": {"verdict": "FIX", "proposed": "ȣ̓",
-    "why": "JOHN'S RULING, 2026-08-08: `ȣ̓`. The word is οὐ (ȣ̓ μόνον … ἀλλὰ). ⚠ This line also carries his July `αλλα` ruling — the guard is on the LINE, so only the ligature was touched and `αλλα` was left as printed. Applied."},
-  "page-032-L:5:ȣ̀": {"verdict": "FIX", "proposed": "ȣ̓",
-    "why": "JOHN'S RULING, 2026-08-08: `ȣ̓`. ἡ αἴσθησις οὐ μέγεθος ἀλλὰ … Applied."},
-
-  "page-038-L:56:ȣ͂": {"verdict": "JOHN", "proposed": "ȣ̔͂",
-    "why": "⏳ NOT APPLIED. Same construction — `φαντασία τις οὗ μέμνηται` — and it will almost certainly take the same rough, but John's ruling named pages 29 and 34 and this is page 38. Wants his eye before it is touched."}
+  "page-025-L:13:βȣλονται": {
+   "verdict": "FIX",
+   "proposed": "βȣ́λονται",
+   "why": "The acute stands plainly over the ligature, the same slash as on ἀθλητήν in the same line. Class (b): our reader dropped an accent over ȣ, which is its known weak spot."
+  },
+  "page-049-L:30:βȣλονται": {
+   "verdict": "FIX",
+   "proposed": "βȣ́λονται",
+   "why": "Acute clear over the ligature, against the bare digits of Φδ6 beside it. Same word, same defect as 025-L:13."
+  },
+  "page-026-L:8:καλȣμενον": {
+   "verdict": "FIX",
+   "proposed": "καλȣ́μενον",
+   "why": "Acute clear over the ligature; Αἴγινα beside it carries its own marks, so the printer is setting them on this line."
+  },
+  "page-030-L:28:καλȣμενοι": {
+   "verdict": "FIX",
+   "proposed": "καλȣ́μενοι",
+   "why": "Acute clear over the ligature, and ὑπό directly after it is fully marked."
+  },
+  "page-040-L:1:τοιȣτων": {
+   "verdict": "FIX",
+   "proposed": "τοιȣ́των",
+   "why": "Acute over the ligature, between τῶν and τὰς, both of which carry their marks."
+  },
+  "page-025-L:28:δȣλοις": {
+   "verdict": "FIX",
+   "proposed": "δȣ́λοις",
+   "why": "Acute over the ligature; τοῖς before it and ἆθλον after it are both marked."
+  },
+  "page-027-R:46:ταις": {
+   "verdict": "FIX",
+   "proposed": "ταῖς",
+   "why": "The circumflex is plainly set. Inside a variant reading — (v l ταῖς Καυνίαις) — but that is Bonitz quoting, and quoting it accurately means recording the marks he printed."
+  },
+  "page-025-L:35:σκεψις": {
+   "verdict": "LOOK AGAIN",
+   "proposed": "",
+   "why": "Line match 0.35 — the crop is not this line, so nothing was ruled. Also a line-start fragment, so it likely needs no mark at all."
+  },
+  "page-032-L:1:αλλα": {
+   "verdict": "JOHN",
+   "proposed": "",
+   "why": "Already ruled, 2026-07-25: the print has no breathing and no accent, a printer's error, recorded as printed. The guard held."
+  },
+  "page-029-L:3:ȣ͂": {
+   "verdict": "FIX",
+   "proposed": "ȣ̔͂",
+   "why": "JOHN'S RULING, 2026-08-08: circumflex AND rough breathing. The word is οὗ (ἐξ οὗ συνέστηκεν). Applied."
+  },
+  "page-034-R:31:ȣ͂": {
+   "verdict": "FIX",
+   "proposed": "ȣ̔͂",
+   "why": "JOHN'S RULING, 2026-08-08, made on the review page itself: circumflex and rough breathing. ἐξ οὗ γίγνεται. He first raised print-loss as an alternative and then ruled against it. The `ȣ̓σία` two lines down carries the SMOOTH and is a plainly different comma-shaped mark — the internal control. Applied."
+  },
+  "page-034-R:35:ȣ͂": {
+   "verdict": "FIX",
+   "proposed": "ȣ̔͂",
+   "why": "JOHN'S RULING (p.34): τὸ οὗ ἕνεκα, the final cause. Applied."
+  },
+  "page-034-R:36:ȣ͂": {
+   "verdict": "FIX",
+   "proposed": "ȣ̔͂",
+   "why": "JOHN'S RULING (p.34): τὸ οὗ ἕνεκα ϗ̀ τἀγαθόν. Applied."
+  },
+  "page-034-R:47:ȣ͂": {
+   "verdict": "FIX",
+   "proposed": "ȣ̔͂",
+   "why": "JOHN'S RULING (p.34). ⚠ This line holds TWO ligature-circumflex forms — `νȣ͂ν` (νοῦν) and the standalone `ȣ͂` (οὗ). Only the standalone one is word-initial and takes the breathing; νοῦν must NOT be touched. Applied with a word-boundary match, νȣ͂ν left alone."
+  },
+  "page-034-R:51:ȣ͂": {
+   "verdict": "FIX",
+   "proposed": "ȣ̔͂",
+   "why": "JOHN'S RULING (p.34). The clearest of the six: the same line carries a bare rough on `ἡ`, whose hook matches the left half of the ligature's compound mark. Applied."
+  },
+  "page-032-L:1:ȣ̀": {
+   "verdict": "FIX",
+   "proposed": "ȣ̓",
+   "why": "JOHN'S RULING, 2026-08-08: `ȣ̓`. The word is οὐ (ȣ̓ μόνον … ἀλλὰ). ⚠ This line also carries his July `αλλα` ruling — the guard is on the LINE, so only the ligature was touched and `αλλα` was left as printed. Applied."
+  },
+  "page-032-L:5:ȣ̀": {
+   "verdict": "FIX",
+   "proposed": "ȣ̓",
+   "why": "JOHN'S RULING, 2026-08-08: `ȣ̓`. ἡ αἴσθησις οὐ μέγεθος ἀλλὰ … Applied."
+  },
+  "page-038-L:56:ȣ͂": {
+   "verdict": "JOHN",
+   "proposed": "ȣ̔͂",
+   "why": "⏳ NOT APPLIED. Same construction — `φαντασία τις οὗ μέμνηται` — and it will almost certainly take the same rough, but John's ruling named pages 29 and 34 and this is page 38. Wants his eye before it is touched."
+  },
+  "page-029-L:51:γενή": {
+   "verdict": "FIX",
+   "proposed": "γονή",
+   "why": "The ink has an OMICRON, not an epsilon: a closed round bowl, unlike the open ε of λευκὸν four words later on the same line. γονή (generation, seed) is also what the sentence needs — ὀρνίθων γονή, τὸ μὲν πρῶτον μικρὸν ϗ̀ λευκὸν φαίνεται. Both readers misread the letter; this is the only site in the mark queue where the disagreement was never about a mark at all.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:09:44+00:00",
+   "applied": "yes — written into work/reconciled, awaiting John's approval"
+  },
+  "page-029-R:57:αἴγας": {
+   "verdict": "FIX",
+   "proposed": "αἶγας",
+   "why": "Smooth breathing plus PERISPOMENI over the ι — the same hook-and-tilde as the αἶγες Bonitz sets later in the same line, and unlike the plain acute of κατάκεινται beside it. Class (b): our reader read the circumflex as an acute.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:09:44+00:00",
+   "applied": "yes — written into work/reconciled, awaiting John's approval"
+  },
+  "page-039-L:1:ταυτὰ": {
+   "verdict": "FIX",
+   "proposed": "ταὐτὰ",
+   "why": "A clear raised comma stands over the υ: this is the crasis of τὰ αὐτά, keeping the smooth breathing of the second word (Smyth §68a), with the grave that §154a requires before λεγόμενα. Contrast 031-L:49 and 046-R:30, where Bonitz sets ταυτόν and ταυτό with nothing over the υ — so the mark here is deliberate, not house style.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:09:44+00:00",
+   "applied": "yes — written into work/reconciled, awaiting John's approval"
+  },
+  "page-045-R:41:ἢν": {
+   "verdict": "FIX",
+   "proposed": "ἦν",
+   "why": "The mark over the η is a tilde, not a downstroke — compare the unmistakable graves on πρὶν and ἀλλαγὴ in the same line. ἦν πρὶν τὸ νόμισμα εἶναι, \"existed before money did\" (EN Ε8. 1133 b26), needs the imperfect, not ἤν. Class (b).",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:09:44+00:00",
+   "applied": "yes — written into work/reconciled, awaiting John's approval"
+  },
+  "page-049-R:12:ἴρις": {
+   "verdict": "FIX",
+   "proposed": "ἶρις",
+   "why": "Hook and tilde over the ι — smooth breathing plus circumflex — against the plain acutes of ἀμαυροτέρα and χρώμασιν on the same line. ἶρις is the nominative LSJ prints for the rainbow, the subject of Meteor. γ4. Class (b).",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:09:44+00:00",
+   "applied": "yes — written into work/reconciled, awaiting John's approval"
+  },
+  "page-017-L:37:τεχνήν": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "The acute stands over the η of -νήν, clear of the χ, while μαθήσεις and πρὸς on the same line are accented normally. This is Bonitz's own error — τέχνη cannot take an accent on the ultima (§163) — so it is PRESERVED and banked in work/corrigenda. LlamaParse read τέχνην, i.e. it silently corrected the print.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-026-R:10:Ἀίδης": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "Smooth breathing before the capital Α and an acute on the ι: Ἀίδης, the trisyllabic Homeric form Bonitz cross-refers to ἅδης. LlamaParse's Ἅιδης moves the breathing onto the wrong letter and makes it rough.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-028-R:45:αἱμορροῒς": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "Over the final ι: a diaeresis with a stroke above it that falls to the right — a grave, against the plainly rising acutes of ἥ beside it and ῥύσεις on the next line. §154a puts a grave here, since the oxytone is followed by ἥ.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-029-L:31:αἱματικὰ": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "The line settles it by itself: the first αἱματικὰ carries a falling stroke, the second — τὰ αἱματικά i q — a rising one, and the corpus has both. Bonitz applies §154a before the parenthesis and not before the Latin.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-039-R:54:ἀκριβεία": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "The acute sits on the -εί-, not on the first ι where LlamaParse put it; ἀκριβείας on the next line is set the same way. The final α carries no subscript in the ink although τῇ two words earlier does — Bonitz's omission, PRESERVED and banked in work/corrigenda.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-046-L:24:ἀλλοία": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "A rising stroke over the ι. ἀλλοία is the feminine agreeing with ἡ φωνή; its ultima is long, so the penult can only take an acute (§163). LlamaParse's ἀλλοῖα is the neuter plural and would not agree.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-050-R:29:μῖξις": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "A tilde over the ι, unlike the acute on ἀμιξία at the head of the same line. μῖξις is the form LSJ prints, and it is set here as the opposite of ἀμιξία.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-018-R:28:ἄγονόν": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "Both accents are on the page. ἄγονον is proparoxytone and ποτε follows as an enclitic, so §183c throws an acute onto the ultima. LlamaParse strips this second accent as a matter of course; it is wrong at five of the eight class D sites for exactly this reason.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-018-R:43:ἄγονά": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "Second acute plain in the ink, thrown back by the enclitic ἐστιν (§183c). Same defect in LlamaParse as 018-R:28.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-031-L:49:ταυτόν": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "NOTHING stands over the υ — no coronis, no breathing — and the acute is on the ο. Bonitz sets the crasis without its mark here. Contrast 039-L:1, where he does print ταὐτὰ, so the two are a real difference in the setting and not a house rule. LlamaParse's ταὐτὸν invents both the breathing and the grave.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-037-R:7:ποῖοί": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "Circumflex on the οι and acute on the final ι, both clear. ποῖοι is properispomenon and τινές follows as an enclitic (§183c).",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-039-L:21:κινεῖταί": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "Circumflex on the ει and a second acute on the final αι, thrown back by the enclitic τινας (§183c).",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-046-R:30:ταυτό": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "Acute on the ο and nothing over the υ, as at 031-L:49. Bonitz's crasis is unmarked here. LlamaParse's ταὐτό adds a breathing the page does not have.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-051-L:5:γίνεταί": {
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "The second acute is on the page, thrown back by the enclitic τινι (§183c). This is the pattern that first showed LlamaParse to be systematically wrong on this class.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "nothing to apply — the corpus already matches the ink"
+  },
+  "page-041-R:3:ἀκροτάτῃ": {
+   "verdict": "ADJUDICATE",
+   "proposed": "ἀκροτάτη",
+   "why": "The ink shows no iota subscript under the η, while κορυφῇ two words later plainly has one. If that reading is right the corpus has ADDED a mark the page lacks, and the fix is to remove it and bank Bonitz's slip against Hom. Α 499 in work/corrigenda. Held back because removing a mark on the strength of absent ink is the one move that cannot be checked by looking harder — it needs your eye, not mine.",
+   "by": "Opus, against the 400 dpi ink",
+   "at": "2026-08-09T01:13:59+00:00",
+   "applied": "no — held for John"
+  }
  }
 }

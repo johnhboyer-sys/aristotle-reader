@@ -60,7 +60,11 @@ sources/int-ackrill/
 # `git add bonitz` without these pulls in the lot. The text record that
 # matters is mirrored in ~/Developer/bonitz-text.git.
 bonitz/work/scan400/
-bonitz/work/kraken/
+# NOT `bonitz/work/kraken/` — git never descends into an excluded DIRECTORY,
+# so the negation below could never fire and NOTES.md, the running record of
+# every decision on this corpus, was silently untracked. Exclude the contents
+# and the negation works.
+bonitz/work/kraken/*
 !bonitz/work/kraken/NOTES.md
 bonitz/work/kraken400/
 bonitz/work/review4_crops_*/

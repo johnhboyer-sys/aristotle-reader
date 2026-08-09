@@ -108,7 +108,12 @@
   "verdict": "ενή,",
   "agrees_with": "opus",
   "confidence": "high",
-  "note": "ὀρνίθων γενή with epsilon and following comma."
+  "note": "ὀρνίθων γενή with epsilon and following comma.",
+  "superseded": {
+   "by": "Opus, 400 dpi ink, 2026-08-08",
+   "now": "γονή",
+   "why": "The letter is an OMICRON. In one field of view the bowl is closed and round, identical to the ο of ὀρνίθων and of τὸ on the same line, and unlike the open mid-stroked ε of μὲν three words later. γονή also reads: ὀρνίθων γονή, τὸ μὲν πρῶτον μικρὸν ϗ̀ λευκὸν φαίνεται (HA Ζ2. 559 b9). The original verdict agreed with the Opus reader at high confidence, so it recorded a shared misreading, not an independent check."
+  }
  },
  {
   "ctx": "ἱμορροΐς.1.αἱμορροΐδεςἄπονοιἐκ",
