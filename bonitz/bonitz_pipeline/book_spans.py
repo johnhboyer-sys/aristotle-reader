@@ -117,6 +117,31 @@ def check(cites, table: dict) -> list[tuple]:
     return bad
 
 
+def missing_book(cites, table: dict) -> list[tuple]:
+    """Citations that name a multi-book work and no book at all.
+
+    ⚠ THIS IS THE ONE PLACE BOTH OTHER CHECKS ARE BLIND.  `Ζι 37. 621a` passes
+    the work check, because Ζι really does contain 621; and `check` above never
+    looks at it, because there is no book letter to test.  But the Historia
+    animalium has nine books and Bonitz does not cite it without naming one —
+    99 of his 100 book-ι citations write `Ζιι`.  The hundredth lost an iota.
+
+    John, 2026-08-09: *"we've had numbers cases of Ζιι misread."*  He was right
+    and I had been looking in the wrong place — at ιι inside Greek words, where
+    the lexical sweep finds nothing, instead of at this siglum, which is the
+    hardest thing in the book to read: `Ζιι` has been written `Ζυ` twice, `Ζιθ`
+    once, and here dropped to `Ζι`.
+    """
+    spans = table['spans']
+    out = []
+    for c in cites:
+        if c.how not in ('explicit', 'inherited') or c.book or c.work not in spans:
+            continue
+        owner = [b for b, (lo, hi) in spans[c.work].items() if lo <= c.page <= hi]
+        out.append((c, c.work, owner[0] if owner else '?'))
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
     p.add_argument('--check', action='store_true',
@@ -161,6 +186,16 @@ def main(argv: list[str] | None = None) -> int:
     if not fresh:
         print('  (nothing new — the settled ones are preserved by ruling and '
               'recorded in work/corrigenda/entries.json)')
+
+    gap = [t for t in missing_book(cites, table)
+           if f'{t[0].col}:{t[0].line}:{t[0].token}:{t[0].page}' not in ruled]
+    if gap:
+        print(f'\n{len(gap)} name a multi-book work and no book at all — the '
+              f'blind spot between the two checks:')
+        for c, w, owner in sorted(gap, key=lambda t: (t[0].col, t[0].line)):
+            print(f'  {c.col}:{c.line:<4} {c.raw!r}')
+            print(f'      {w} has {len(table["spans"][w])} books and none is '
+                  f'named; {c.page} is in book {owner!r}, so read {w}{owner}')
     return 0
 
 

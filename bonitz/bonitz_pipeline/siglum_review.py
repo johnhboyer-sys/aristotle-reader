@@ -194,19 +194,41 @@ def page_candidates(page: int, lo: int, hi: int) -> list[int]:
 
 
 def sites() -> list[Site]:
+    """Everything that needs a reader's eye, in one queue.
+
+    Two classes, and the second is the one John pointed at: a citation naming a
+    multi-book work with NO book letter passes the work check (Ζι really does
+    contain 621) and never reaches the book check (there is no letter to test).
+    `Ζι 37. 621a` sat in that gap. Bonitz writes `Ζιι` 100 times and this is the
+    hundred-and-first, an iota short.
+    """
+    import json as _json
+    from bonitz_pipeline.book_spans import OUT as _SPANS, missing_book
     works = inventory()
     cites = read()
     resolve(cites, works)
     seen = usage(cites)
+    table = _json.loads(_SPANS.read_text(encoding='utf-8'))
+    gap = {}
+    for c, w, owner in missing_book(cites, table):
+        if owner != '?':
+            gap[id(c)] = (c, w + owner)
+    queue = [c for c in cites if c.how == 'unresolved'] + \
+            [c for c, _ in gap.values()]
     out = []
-    for c in sorted((c for c in cites if c.how == 'unresolved'),
-                    key=lambda c: (c.col, c.line)):
-        s = Site(c.col, c.line, c.raw, c.token, c.page, c.why)
+    for c in sorted(queue, key=lambda c: (c.col, c.line)):
+        why = c.why or (
+            f'{c.work} has books and none is named here; {c.page} is in book '
+            f'{gap[id(c)][1][len(c.work):]!r}. Bonitz names the book everywhere '
+            f'else — this reads like a lost letter, not a citation of the work.')
+        s = Site(c.col, c.line, c.raw, c.token, c.page, why)
         im, _, how = crop_word(c.col, c.line, c.token, scale=3.0, spread=8)
         s.crop, s.how = _b64(im), how
         s.whole = _b64(crop_word(c.col, c.line, c.token, scale=1.6,
                                  whole=True)[0])
         s.sigla = siglum_candidates(c.token, c.page, works, seen)
+        if id(c) in gap and gap[id(c)][1] not in s.sigla:
+            s.sigla = [gap[id(c)][1]] + s.sigla[:MAX_CANDIDATES - 1]
         opts = split(c.token, works)
         if opts:
             w = works[opts[0][0]]
