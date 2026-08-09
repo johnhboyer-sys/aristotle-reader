@@ -171,12 +171,61 @@ def test_a_bare_letter_whose_page_names_one_work_is_inferred_not_condemned():
     assert 'Φ' in cs[1].why, 'the report must name the context it overrode'
 
 
-def test_page_inference_supplies_context_to_what_follows():
-    """The page is better evidence than inheritance, so a citation it settles
-    becomes the context for the next bare letter."""
+def test_an_inference_does_not_become_the_context_for_what_follows():
+    """⚠ THIS TEST REPLACES ONE THAT CLAIMED THE OPPOSITE, and the claim was
+    wrong. I had page-inference set the work last named, reasoning that the page
+    is better evidence than inheritance. Grok's review of the fix, 2026-08-09:
+    *"the code confuses 'context was invisible' with 'context was wrong'."*
+
+    A page can be mistyped. If it is, and the wrong page happens to name some
+    other work uniquely, then setting the context from it spends the one error
+    signal we had on repairing the context — and every bare letter after it
+    inherits the wrong work in silence, with the work-level check content.
+
+    Nothing is lost by refusing. A following bare letter that really is in the
+    same work will infer that work from its OWN page, and be labelled an
+    inference rather than borrowing the standing of one."""
     cs = [cite('Φθ', 260), cite('β', 731), cite('δ', 764)]
     resolve(cs, WORKS)
-    assert cs[2].work == 'Ζγ' and cs[2].how == 'inherited'
+    assert cs[2].work == 'Ζγ', 'the page still names De generatione'
+    assert cs[2].how == 'page-inferred', (
+        f'reported as {cs[2].how!r} — it must stand on its own page, not on the '
+        f'inference before it')
+
+
+def test_page_inference_is_not_blocked_by_the_numeral_bound():
+    """The bound belongs to the INHERITANCE claim, not to the branch. It used to
+    gate both, so a bare Metaphysics μ or ν after any non-Metaphysics work was
+    thrown out before the page was ever consulted: read against the wrong work
+    they are 40 and 50, over the bound, and the branch was skipped whole.
+
+    The asymmetry is the tell — bare κ (20) after Physics inferred the
+    Metaphysics happily, and bare μ (40) did not, though the page is just as
+    decisive for both."""
+    for letter, page in (('μ', 1080), ('ν', 1090), ('κ', 1050)):
+        cs = [cite('Φθ', 260), cite(letter, page)]
+        resolve(cs, WORKS)
+        assert cs[1].how == 'page-inferred', (
+            f'bare {letter} at {page} reported as {cs[1].how!r}; {page} is in the '
+            f'Metaphysics and nothing else')
+        assert cs[1].work == 'Μ'
+
+
+def test_a_book_numeral_too_large_for_its_own_work_is_reported():
+    """`Πο4. 1290b` resolved as healthy Politics — book ο, which is 70. The
+    numeral guard existed and was never applied on the path where a work IS
+    named, which is where a complete piece of garbage most often sits: page 1290
+    really is in the Politics, so nothing else could catch it.
+
+    1290 is Politics book δ, and δ/ο is the kind of confusion the ink decides."""
+    cs = [cite('Πο', 1290)]
+    resolve(cs, WORKS)
+    assert cs[0].how == 'unresolved', (
+        f'reported as {cs[0].how!r} — the 70th book of the Politics')
+    assert '70' in cs[0].why, f'the report should name the number: {cs[0].why!r}'
+    ok = [cite('Πδ', 1290)]
+    resolve(ok, WORKS)
+    assert ok[0].how == 'explicit', 'the guard must not touch a real book letter'
 
 
 def test_a_page_no_work_owns_is_still_unresolved():

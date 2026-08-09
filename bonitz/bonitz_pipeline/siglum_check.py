@@ -180,6 +180,11 @@ def split(token: str, works: dict[str, Work]) -> list[tuple[str, str]]:
     return out
 
 
+def value(token: str) -> int:
+    """`λβ` -> 32.  A book letter read as the number it is."""
+    return sum(NUMERAL[c] for c in token)
+
+
 def book_ok(work: str, token: str) -> bool:
     """Can `token` be a book of `work`?  A numeral question, not a lexical one.
 
@@ -245,15 +250,35 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
         options = split(c.token, works)
         # 1. an explicit work whose range contains the page
         fit = [(w, b) for w, b in options if works[w].holds(c.page)]
-        if fit:
-            c.work, c.book = fit[0]
+        good = [(w, b) for w, b in fit if book_ok(w, b)]
+        if good:
+            c.work, c.book = good[0]
             c.how = 'explicit'
             last = c.work
             continue
+        # THE WORK IS RIGHT AND THE BOOK LETTER IS IMPOSSIBLE.  `Πο4. 1290b`
+        # resolved as healthy Politics — book ο, which is 70.  This is where a
+        # wholly corrupt book letter most often sits, and it is the one place
+        # nothing else can catch it: 1290 really is in the Politics, so the page
+        # agrees with the work and only the numeral objects.
+        if fit:
+            c.work, c.book = fit[0]
+            c.how = 'unresolved'
+            c.why = (f'{c.page} is inside {c.work} ({works[c.work].title}), but '
+                     f'{c.book!r} reads as book {value(c.book)} and no work of '
+                     f'Aristotle has that many')
+            last = c.work        # the WORK is not in doubt, only its book
+            continue
         # 2. the whole token as a book letter of the work last named
-        if last and all(ch in BOOK_LETTERS for ch in c.token) \
-                and book_ok(last, c.token):
-            if works[last].holds(c.page):
+        #
+        # ⚠ THE NUMERAL BOUND GATES THE INHERITANCE CLAIM, NOT THE BRANCH.  It
+        # used to gate both, and so threw out a bare Metaphysics μ or ν after any
+        # non-Metaphysics work before the page was ever consulted — read against
+        # the wrong work they are 40 and 50, over the bound.  The asymmetry was
+        # the tell: bare κ (20) after Physics inferred the Metaphysics happily
+        # and bare μ did not, though the page is equally decisive for both.
+        if last and all(ch in BOOK_LETTERS for ch in c.token):
+            if book_ok(last, c.token) and works[last].holds(c.page):
                 c.work, c.book, c.how = last, c.token, 'inherited'
                 continue
             # THE ANALYTICS.  Bonitz letters four books α β γ δ across TWO
@@ -273,8 +298,19 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
             # outcome and not a resolution: it says the citation is sound and our
             # context was not — a parser complaint, not a reader's misreading —
             # so it must not sit in the pile John rules on.
+            #
+            # ⚠ AN INFERENCE DOES NOT BECOME THE CONTEXT FOR WHAT FOLLOWS.  It
+            # used to, on the reasoning that the page is better evidence than
+            # inheritance.  But a page can be mistyped, and if the wrong page
+            # names some other work uniquely then setting the context from it
+            # spends the one error signal we had on repairing the context —
+            # after which every bare letter that follows inherits the wrong work
+            # in silence, with the work-level check content.  Nothing is lost by
+            # refusing: a following bare letter really in that work will infer it
+            # from its OWN page, and be labelled an inference rather than
+            # borrowing the standing of one.
             guess = by_page(c.token, c.page, works)
-            if guess and guess[0] != last:
+            if guess:
                 c.work, c.book = guess
                 c.how = 'page-inferred'
                 c.why = (f'reads as book {c.token} of {last} (the work last '
@@ -282,7 +318,6 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
                          f'({works[last].lo}-{works[last].hi}); {c.page} is in '
                          f'{c.work} and nothing else, so the work last named is '
                          f'what is wrong here, not the citation')
-                last = c.work
                 continue
             if not options:
                 c.how, c.why = 'unresolved', (
