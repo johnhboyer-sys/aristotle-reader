@@ -1,0 +1,340 @@
+<title>Reading Bonitz — the conventions of the Index Aristotelicus</title>
+<style>
+:root{
+  --paper:#F7F6F2; --ink:#1A1D20; --rule:#D2D0C8; --muted:#6B6963;
+  --gloss:#8A6516; --cite:#12595F; --wash:#12595F14; --gwash:#8A651614;
+  --plate:#FDFCFA; --shadow:0 1px 0 #0000000a, 0 8px 28px -18px #0000002e;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#15181B; --ink:#E6E4DE; --rule:#2C3136; --muted:#918E86;
+    --gloss:#D3A64A; --cite:#63B8BC; --wash:#63B8BC1f; --gwash:#D3A64A1a;
+    --plate:#1A1E22; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15181B; --ink:#E6E4DE; --rule:#2C3136; --muted:#918E86;
+  --gloss:#D3A64A; --cite:#63B8BC; --wash:#63B8BC1f; --gwash:#D3A64A1a;
+  --plate:#1A1E22; --shadow:none;
+}
+:root[data-theme="light"]{
+  --paper:#F7F6F2; --ink:#1A1D20; --rule:#D2D0C8; --muted:#6B6963;
+  --gloss:#8A6516; --cite:#12595F; --wash:#12595F14; --gwash:#8A651614;
+  --plate:#FDFCFA; --shadow:0 1px 0 #0000000a, 0 8px 28px -18px #0000002e;
+}
+
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:Charter,"Iowan Old Style",Georgia,"Times New Roman",serif;
+  font-size:17px; line-height:1.62; margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:41rem; margin:0 auto; padding:4rem 1.5rem 7rem;}
+.wide{max-width:52rem;}
+
+h1,h2,h3,.eyebrow{font-family:Superclarendon,"Bookman Old Style",Rockwell,Georgia,serif;}
+h1{font-size:2.55rem; line-height:1.08; letter-spacing:-.015em; margin:0 0 .6rem; text-wrap:balance;}
+h2{font-size:1.4rem; line-height:1.2; margin:0 0 .2rem; text-wrap:balance;}
+h3{font-size:1.02rem; margin:0 0 .35rem;}
+.eyebrow{
+  font-size:.7rem; text-transform:uppercase; letter-spacing:.14em;
+  color:var(--muted); margin:0 0 1.1rem; font-weight:600;
+}
+.lede{font-size:1.16rem; line-height:1.55; color:var(--ink); margin:0 0 1.2rem;}
+.sub{color:var(--muted);}
+p{margin:0 0 1.05rem;}
+a{color:var(--cite);}
+
+section{margin-top:3.4rem;}
+section > h2 + .kicker{
+  font-size:.82rem; color:var(--muted); margin:0 0 1.3rem;
+  font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; letter-spacing:.01em;
+}
+hr.rule{border:0; border-top:1px solid var(--rule); margin:3.4rem 0 0;}
+
+/* ---------------------------------------------------------------- the plate */
+.plate{
+  background:var(--plate); border:1px solid var(--rule); box-shadow:var(--shadow);
+  padding:1.6rem 1.5rem; margin:0 0 .9rem; border-radius:2px;
+  font-family:"New Athena Unicode","Palatino Linotype",Palatino,"Book Antiqua","Times New Roman",serif;
+  font-size:1.06rem; line-height:1.85; text-align:justify; hyphens:none;
+}
+.plate .hw{font-weight:700; letter-spacing:.02em;}
+.plate .sn{font-family:Charter,Georgia,serif; font-style:italic; color:var(--gloss); font-weight:600;}
+.plate .la{font-family:Charter,Georgia,serif; font-style:italic; color:var(--gloss);}
+.plate .ct{color:var(--cite); font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace;
+  font-size:.82em; font-variant-numeric:tabular-nums; white-space:nowrap; letter-spacing:-.01em;}
+.plate .xr{font-family:Charter,Georgia,serif; font-style:italic; color:var(--gloss);}
+.plate .ed{font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; font-size:.82em; color:var(--muted);}
+.plate .dash{color:var(--muted); padding:0 .12em;}
+
+/* the silent sigla, restored */
+.gh{display:none; opacity:.5; font-style:italic;}
+.plate.ghosts .gh{display:inline;}
+.plate.ghosts .gh::after{content:"";}
+
+/* highlight washes driven by the legend */
+.plate.hi-wk .wk, .plate.hi-bk .bk, .plate.hi-ch .ch, .plate.hi-pg .pg{
+  background:var(--wash); box-shadow:0 0 0 2px var(--wash); border-radius:2px;
+}
+.plate.hi-la .la, .plate.hi-la .sn, .plate.hi-la .xr{
+  background:var(--gwash); box-shadow:0 0 0 2px var(--gwash); border-radius:2px;
+}
+.plate.hi-gk .gk{background:var(--wash); border-radius:2px;}
+
+/* ------------------------------------------------------------- the controls */
+.controls{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:0 0 2rem;}
+.chip{
+  font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; font-size:.72rem;
+  letter-spacing:.02em; padding:.34rem .6rem; border:1px solid var(--rule);
+  background:transparent; color:var(--muted); border-radius:2px; cursor:pointer;
+}
+.chip:hover{border-color:var(--cite); color:var(--cite);}
+.chip[aria-pressed="true"]{background:var(--cite); border-color:var(--cite); color:var(--plate);}
+.chip:focus-visible{outline:2px solid var(--cite); outline-offset:2px;}
+.chip.warm:hover{border-color:var(--gloss); color:var(--gloss);}
+.chip.warm[aria-pressed="true"]{background:var(--gloss); border-color:var(--gloss);}
+.spacer{flex:1 1 1rem;}
+@media (prefers-reduced-motion:no-preference){
+  .chip{transition:background .12s ease, color .12s ease, border-color .12s ease;}
+}
+
+/* ---------------------------------------------------------------- the table */
+.scroll{overflow-x:auto; margin:0 0 1.1rem;}
+table{border-collapse:collapse; width:100%; font-size:.86rem;}
+th,td{text-align:left; padding:.44rem .7rem .44rem 0; border-bottom:1px solid var(--rule);
+  vertical-align:baseline;}
+th{font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; font-size:.68rem;
+  text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:600;}
+td.raw{font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; color:var(--cite);
+  font-variant-numeric:tabular-nums; white-space:nowrap;}
+td.gk{font-family:"New Athena Unicode","Palatino Linotype",Palatino,serif;}
+tr.inh td.raw{color:var(--muted);}
+.tag{font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; font-size:.66rem;
+  text-transform:uppercase; letter-spacing:.08em; color:var(--muted);}
+
+/* ---------------------------------------------------------------- the parts */
+.grammar{
+  font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace;
+  background:var(--plate); border:1px solid var(--rule); border-radius:2px;
+  padding:1.3rem 1.2rem; margin:0 0 1.2rem; overflow-x:auto;
+}
+.grammar .row{display:flex; gap:0; font-size:1.5rem; letter-spacing:.02em; white-space:nowrap;}
+.grammar .row span{padding:0 .1em;}
+.grammar .labels{display:flex; gap:0; font-size:.62rem; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--muted); margin-top:.5rem; white-space:nowrap;}
+.grammar .labels span{padding:0 .1em; border-top:1px solid var(--rule); padding-top:.35rem;}
+.c-wk{color:var(--cite); font-weight:700;}
+.c-bk{color:var(--cite);}
+.c-ch{color:var(--ink);}
+.c-pg{color:var(--ink); font-weight:700;}
+
+dl.gloss{margin:0; display:grid; grid-template-columns:auto 1fr; gap:.1rem 1rem; align-items:baseline;}
+dl.gloss dt{
+  font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; font-size:.82rem;
+  color:var(--gloss); font-weight:600; white-space:nowrap;
+}
+dl.gloss dd{margin:0 0 .45rem; font-size:.94rem;}
+dl.gloss dd em{color:var(--muted); font-style:italic;}
+
+.note{
+  border-left:2px solid var(--rule); padding:.1rem 0 .1rem 1.1rem;
+  color:var(--muted); font-size:.94rem; margin:0 0 1.05rem;
+}
+.note strong{color:var(--ink);}
+code{font-family:"SF Mono",Menlo,Consolas,ui-monospace,monospace; font-size:.86em;
+  font-variant-numeric:tabular-nums;}
+.gkin{font-family:"New Athena Unicode","Palatino Linotype",Palatino,serif;}
+footer{margin-top:4rem; padding-top:1.4rem; border-top:1px solid var(--rule);
+  color:var(--muted); font-size:.84rem;}
+</style>
+
+<div class="wrap wide">
+
+<p class="eyebrow">Index Aristotelicus · Berlin 1870</p>
+<h1>How to read an entry in Bonitz</h1>
+<p class="lede">An entry is three voices set solid in one column: <span style="color:var(--ink)">Aristotle's Greek</span>, <span style="color:var(--gloss)">Bonitz's Latin</span>, and <span style="color:var(--cite)">the citations</span> that bind them. Learn to see the three and the density stops being density.</p>
+<p class="sub">Worked on <span class="gkin">τὸ ἀγαθόν</span>, one of the longest entries in the book — it runs most of a column before its second sense even opens.</p>
+
+<hr class="rule">
+
+<section>
+<h2>The specimen</h2>
+<p class="kicker">p. 1, col. 2 — the head of the entry</p>
+
+<div class="controls">
+  <button class="chip" aria-pressed="false" data-hi="wk">work</button>
+  <button class="chip" aria-pressed="false" data-hi="bk">book</button>
+  <button class="chip" aria-pressed="false" data-hi="ch">chapter</button>
+  <button class="chip" aria-pressed="false" data-hi="pg">page · col · line</button>
+  <button class="chip warm" aria-pressed="false" data-hi="la">Bonitz's Latin</button>
+  <span class="spacer"></span>
+  <button class="chip" aria-pressed="false" id="ghost">restore the silent sigla</button>
+</div>
+
+<div class="plate" id="plate">
+<span class="hw gk">τὸ ἀγαθόν</span> <span class="sn">1. notio.</span> <span class="gk">καλῶς ἀπεφήναντο τἀγαθόν, ȣ͂ πάντ' ἐφίεται· τὸ αὐτȣ͂ ἕνεκα ϗ̀ μὴ ἄλλȣ αἱρετόν, τὸ ȣ͂ ἕνεκα ϗ̀ τὸ τέλος</span> <span class="la">sim</span> <span class="ct"><span class="wk">Η</span><span class="bk">α</span><span class="ch">1.</span> <span class="pg">1094a3</span></span>. <span class="ct"><span class="gh">Ηα</span><span class="ch">5.</span> <span class="pg">1097a18,20</span></span>. <span class="ct"><span class="gh">Η</span><span class="bk">ε</span><span class="ch">7.</span><span class="pg">1131b23</span></span>. <span class="ct"><span class="wk">ημ</span><span class="bk">β</span><span class="ch">7.</span> <span class="pg">1205b35</span></span>. <span class="ct"><span class="wk">ηε</span><span class="bk">α</span><span class="ch">8.</span> <span class="pg">1218b6</span></span>. <span class="ct"><span class="wk">Ρ</span><span class="bk">α</span><span class="ch">6.</span> <span class="pg">1362a22, 1363a9</span></span>. <span class="ct"><span class="gh">Ρα</span><span class="ch">7.</span> <span class="pg">1363b13, 1364b17, 25</span></span>. <span class="ct"><span class="wk">Π</span><span class="bk">α</span><span class="ch">2.</span> <span class="pg">1252b34</span></span>. <span class="ct"><span class="gh">Π</span><span class="bk">β</span><span class="ch">8.</span><span class="pg">1269a4</span></span>. <span class="ct"><span class="gh">Π</span><span class="bk">γ</span><span class="ch">12.</span><span class="pg">1282b15</span></span>. <span class="ct"><span class="wk">Μ</span><span class="bk">Α</span><span class="ch">3.</span><span class="pg">983a32</span></span> <span class="ed">Bz.</span> <span class="ct"><span class="gh">ΜΑ</span><span class="ch">7.</span><span class="pg">988b9</span></span>. <span class="ct"><span class="gh">Μ</span><span class="bk">β</span><span class="ch">2.</span> <span class="pg">996a24</span></span>. <span class="ct"><span class="gh">Μ</span><span class="bk">κ</span><span class="ch">1.</span> <span class="pg">1050a36</span></span>. <span class="ct"><span class="gh">Μ</span><span class="bk">λ</span><span class="ch">10.</span><span class="pg">1075a37</span></span>. <span class="ct"><span class="wk">τ</span><span class="bk">γ</span><span class="ch">1.</span> <span class="pg">116a19</span></span> <span class="la">al.</span> <span class="gk">ὄντος τινὸς θείȣ ϗ̀ ἀγαθȣ͂ ϗ̀ ἐφετȣ͂</span> <span class="ct"><span class="wk">Φ</span><span class="bk">α</span><span class="ch">9.</span> <span class="pg">191a17</span></span>. <span class="ct"><span class="wk">Ζκ</span><span class="ch">6.</span> <span class="pg">700b25</span></span>. <span class="gk">τἀγαθὸν ϗ̀ τὸ εὖ</span> <span class="ct"><span class="wk">Η</span><span class="bk">α</span><span class="ch">6.</span> <span class="pg">1097b27</span></span>. <span class="gk">ȣδεὶς ὑπολαμβάνων πράττει παρὰ τὸ βέλτιστον</span> <span class="ct"><span class="wk">Η</span><span class="bk">η</span><span class="ch">3.</span> <span class="pg">1145b26</span></span>. <span class="gk">ὀρεκτόν ἐστιν ἢ τὸ ἀγαθὸν ἢ τὸ φαινόμενον</span> (<span class="la">sive</span> <span class="gk">δοκȣ͂ν</span>) <span class="gk">ἀγαθόν</span> <span class="ct"><span class="wk">ψ</span><span class="bk">γ</span><span class="ch">10.</span><span class="pg">433a28</span></span>. <span class="ct"><span class="wk">Π</span><span class="bk">α</span><span class="ch">1.</span> <span class="pg">1252a3</span></span>. <span class="gk">…</span> <span class="gk">ἀγαθά</span> <span class="la">def et enumerantur</span> <span class="ct"><span class="wk">Ρ</span><span class="bk">α</span><span class="ch">6.</span></span> <span class="gk">τὸ ἀγαθὸν ȣκ ἔστιν ἐν γένει, ἀλλ' αὐτὸ γένος</span> <span class="ct"><span class="wk">Κ</span><span class="ch">11.</span> <span class="pg">14a23</span></span>. <span class="gk">…</span> <span class="gk">πᾶν ἡ φύσις ἢ διὰ τὸ ἀναγκαῖον ποιεῖ ἢ διὰ τὸ βέλτιον</span> <span class="ct"><span class="wk">Ζγ</span><span class="bk">α</span><span class="ch">4.</span> <span class="pg">717a16</span></span>. <span class="ct"><span class="gh">Ζγ</span><span class="bk">β</span><span class="ch">1.</span><span class="pg">731b23, 21</span></span>. <span class="ct"><span class="gh">Ζγβ</span><span class="ch">4.</span> <span class="pg">738b1</span></span>. <span class="xr">cf</span> <span class="gk">φύσις</span> <span class="xr">2 c.</span> <span class="gk">…</span> <span class="gk">ἀγαθὸν κατὰ τὰς Πυθαγορείȣς τὸ δεξιὸν ϗ̀ ἄνω ϗ̀ ἔμπροσθεν</span> <span class="ct"><span class="wk">f</span><span class="ch">195.</span> <span class="pg">1513a24</span></span>. <span class="dash">—</span> <span class="gk">τἀγαθὸν οἰκεῖόν τι ϗ̀ δυσαφαίρετον</span> <span class="ct"><span class="wk">Η</span><span class="bk">α</span><span class="ch">3.</span> <span class="pg">1095b25</span></span>. <span class="gk">τὸ ἀγαθὸν ἁπλȣ͂ν, τὸ κακὸν πολύμορφον</span> <span class="ct"><span class="wk">ηε</span><span class="bk">η</span><span class="ch">5.</span> <span class="pg">1239b11</span></span>.
+<br><br>
+<span class="sn">2. species τȣ͂ ἀγαθȣ͂ distinguuntur.</span> <span class="gk">τἀγαθὰ τὰ μὲν καθ' αὐτά, ἕτερα δὲ διὰ ταῦτα· τὰ μέν ἐστι τέλη, τὰ δ' ȣ τέλη</span> <span class="ct"><span class="wk">Η</span><span class="bk">α</span><span class="ch">4.</span> <span class="pg">1096b13</span></span>. <span class="ct"><span class="wk">ημ</span><span class="bk">α</span><span class="ch">2.</span> <span class="pg">1184a3-14</span></span>. <span class="gk">τἀγαθὸν ϗ̀ τὸ ἄριστον, τὸ ἀκρότατον τῶν πρακτῶν ἀγαθῶν</span> <span class="ct"><span class="wk">Η</span><span class="bk">α</span><span class="ch">1.</span> <span class="pg">1094a22</span></span>.<span class="ct"><span class="gh">Ηα</span><span class="ch">2.</span><span class="pg">1095a17</span></span>. <span class="gk">τὸ ἄριστον ἀγαθόν,</span> <span class="la">syn</span> <span class="gk">τέλειον ἀγαθόν</span> <span class="ct"><span class="wk">ημ</span><span class="bk">α</span><span class="ch">2.</span> <span class="pg">1184a36</span></span>. <span class="ct"><span class="gh">ημα</span><span class="ch">4.</span> <span class="pg">1184b36, 1185a1, 2</span></span>.
+</div>
+<p class="sub" style="font-size:.85rem; margin-bottom:2rem;">Transcribed from the 400 dpi scan; the entry runs on. Ellipses mark passages cut for length — nothing else is abridged.</p>
+</section>
+
+<section>
+<h2>The citation grammar</h2>
+<p class="kicker">work · book · chapter · Bekker page, column, line</p>
+
+<div class="grammar">
+  <div class="row">
+    <span class="c-wk">Η</span><span class="c-bk">α</span><span class="c-ch">1.</span><span>&nbsp;</span><span class="c-pg">1094a3</span>
+  </div>
+  <div class="labels">
+    <span>work</span><span>book</span><span>chap.</span><span>&nbsp;</span><span>page&nbsp;col&nbsp;line</span>
+  </div>
+</div>
+
+<p>Read it right to left and it is unambiguous. <code>1094a3</code> is a Bekker address — page 1094, left column, line 3 — and Bekker's pages run in one unbroken series across the whole corpus, never repeating. So the page alone fixes the work. Everything to the left of it is Bonitz telling you where you are in Aristotle's own divisions: <span class="gkin">Η</span> is the <em>Nicomachean Ethics</em>, <span class="gkin">α</span> its first book, chapter 1.</p>
+
+<p>That redundancy is the whole reason the text can be checked by machine, and the reason it can be read at speed. Two independent statements of the same fact, side by side: if they disagree, one of them is a misprint or a misreading.</p>
+
+<div class="note"><strong>Case is significant and is Bonitz's own.</strong> <span class="gkin">Ζι</span> is the <em>Historia animalium</em> and <span class="gkin">ζ</span> is <span class="gkin">περὶ Νεότητος</span>; <span class="gkin">Μ</span> is the <em>Metaphysics</em> and <span class="gkin">μ</span> the <em>Meteorologica</em>; <span class="gkin">Π</span> is the <em>Politics</em> and <span class="gkin">π</span> the <em>Problemata</em>. Nothing in the layout warns you. There are 48 sigla and the key is on p. 14.</div>
+</section>
+
+<section>
+<h2>What Bonitz leaves out</h2>
+<p class="kicker">the hardest convention in the book</p>
+
+<p>A column of this density is bought by omission. Once a work is named, Bonitz stops naming it, and he drops it at two different depths — which is why the run of citations after the first lemma looks like noise until you know the rule.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>As printed</th><th>Reads as</th><th>What was dropped</th></tr></thead>
+<tbody>
+<tr><td class="raw">Ηα1. 1094a3</td><td>EN I.1</td><td class="tag">nothing — the work is named</td></tr>
+<tr class="inh"><td class="raw">5. 1097a18,20</td><td>EN I.5</td><td class="tag">work and book both</td></tr>
+<tr class="inh"><td class="raw">ε7. 1131b23</td><td>EN V.7</td><td class="tag">work only — new book</td></tr>
+<tr><td class="raw">ημβ7. 1205b35</td><td>Magna Moralia II.7</td><td class="tag">nothing</td></tr>
+<tr><td class="raw">ηεα8. 1218b6</td><td>Eudemian Ethics I.8</td><td class="tag">nothing</td></tr>
+<tr><td class="raw">Ρα6. 1362a22, 1363a9</td><td>Rhetoric I.6, twice</td><td class="tag">nothing</td></tr>
+<tr class="inh"><td class="raw">7. 1363b13, 1364b17, 25</td><td>Rhetoric I.7, three times</td><td class="tag">work and book</td></tr>
+<tr><td class="raw">Πα2. 1252b34</td><td>Politics I.2</td><td class="tag">nothing</td></tr>
+<tr class="inh"><td class="raw">β8. 1269a4</td><td>Politics II.8</td><td class="tag">work only</td></tr>
+<tr class="inh"><td class="raw">γ12. 1282b15</td><td>Politics III.12</td><td class="tag">work only</td></tr>
+<tr><td class="raw">ΜΑ3. 983a32</td><td>Metaphysics A.3</td><td class="tag">nothing</td></tr>
+<tr class="inh"><td class="raw">β2. 996a24</td><td>Metaphysics B.2</td><td class="tag">work only</td></tr>
+<tr><td class="raw">τγ1. 116a19</td><td>Topics III.1</td><td class="tag">nothing</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>So a bare Greek letter is a <em>book</em> of the work you are already in, and a bare number is a <em>chapter</em> of the book you are already in. The trap is that book letters and work sigla are drawn from the same alphabet. <code>ζ1. 558b13</code> is not the work <span class="gkin">ζ</span>; it is book 6 of whatever was last named — and the page settles it, because <span class="gkin">ζ</span> occupies 467b–470b and 558 is nowhere near it.</p>
+
+<div class="note">Press <strong>restore the silent sigla</strong> above and the omitted works reappear in grey, where Bonitz assumed you were carrying them.</div>
+</section>
+
+<section>
+<h2>Bonitz's Latin</h2>
+<p class="kicker">the editorial voice — everything that is not Aristotle</p>
+
+<p>The Greek is quoted; the Latin is Bonitz speaking. He uses it for three jobs: numbering the senses, describing what a passage <em>does</em>, and pointing sideways. It is compressed to the edge of legibility and never explained, because his reader had the Latin.</p>
+
+<dl class="gloss">
+  <dt>notio</dt><dd>the concept itself <em>— sense 1 is almost always this</em></dd>
+  <dt>species … distinguuntur</dt><dd>the kinds of it are distinguished</dd>
+  <dt>def et enumerantur</dt><dd>defined and listed</dd>
+  <dt>idea boni refutatur</dt><dd>the Form of the Good is refuted</dd>
+  <dt>sim</dt><dd><em>similiter</em> — and similarly at</dd>
+  <dt>cf</dt><dd>compare</dd>
+  <dt>al</dt><dd><em>alibi</em> — and elsewhere; the list is not exhaustive</dd>
+  <dt>sive</dt><dd>or, introducing an alternative wording</dd>
+  <dt>syn</dt><dd>synonymous with</dd>
+  <dt>opp</dt><dd>opposed to</dd>
+  <dt>veluti</dt><dd>as for example</dd>
+  <dt>i e</dt><dd><em>id est</em></dd>
+</dl>
+
+<p style="margin-top:1.2rem">A cross-reference points into the index itself, not into Aristotle: <code>cf <span class="gkin">φύσις</span> 2 c.</code> means <em>see the entry</em> <span class="gkin">φύσις</span><em>, sense 2, subsection c</em> — so the senses carry lettered subdivisions below the numbers, and the index is a graph, not a list.</p>
+</section>
+
+<section>
+<h2>Sorts you will not recognise</h2>
+<p class="kicker">ligatures, numerals, and the fragments</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Sort</th><th>Is</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td class="gk" style="font-size:1.3rem">ȣ</td><td>ου</td><td>a true ligature, and it takes its own accents — <span class="gkin">ȣ͂</span> is <span class="gkin">οῦ</span></td></tr>
+<tr><td class="gk" style="font-size:1.3rem">ϗ</td><td><span class="gkin">καί</span></td><td>the kai-compendium; <span class="gkin">ϗ̀</span> carries the grave it would have had</td></tr>
+<tr><td class="gk" style="font-size:1.3rem">ϛ</td><td>6</td><td>stigma, in book numerals only — <span class="gkin">πκϛ</span> is Problemata 26</td></tr>
+<tr><td class="raw">f</td><td>fragment</td><td><code>f195. 1513a24</code> — Bekker's fragment pages, past the end of the works</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Book numerals are ordinary Greek alphabetic numbers, so a two-letter book is arithmetic: <span class="gkin">πκϛ</span> is <span class="gkin">π</span> (Problemata) plus <span class="gkin">κ</span>&nbsp;20 + <span class="gkin">ϛ</span>&nbsp;6. The <em>Metaphysics</em> is the exception that catches everyone — its book letters are <strong>names</strong>, not numbers, the tradition's own Α, α&nbsp;elatton, Β, Γ … Ν. That is why <span class="gkin">ΜΑ</span> takes a capital where nothing else does, and why <span class="gkin">Μν</span> is the fourteenth book and not the fiftieth.</p>
+</section>
+
+<section>
+<h2>Editors, not works</h2>
+<p class="kicker">a siglum that follows the page number</p>
+
+<p>In the specimen, <code>ΜΑ3. 983a32 <span class="ed" style="color:var(--muted)">Bz.</span></code> — <code>Bz</code> is Bonitz's own 1848 edition of the <em>Metaphysics</em>, cited for a reading at that line. Editor sigla always <em>follow</em> the Bekker number; work sigla always precede it, so position alone tells them apart.</p>
+
+<dl class="gloss">
+  <dt>Bk</dt><dd>Bekker — the Academy text itself; <em>Bk2, Bk3</em> are his later editions of some books</dd>
+  <dt>Bz</dt><dd>Bonitz, <em>Aristotelis Metaphysica</em>, Berlin 1848</dd>
+  <dt>Did</dt><dd>the Didot <em>Opera omnia</em>, Paris 1848 ff.</dd>
+  <dt>A</dt><dd>Aubert &amp; Wimmer — and it <em>takes a work siglum</em>: <code>AΖι</code> is Aubert on the <em>Historia animalium</em></dd>
+</dl>
+
+<p style="margin-top:1.2rem">Bonitz closes the key with a sentence worth keeping: everything not abbreviated in that list is written out in full, so an unexplained compound is a compound you have misread.</p>
+</section>
+
+<section>
+<h2>Where the checking stops</h2>
+<p class="kicker">what the page alone cannot settle</p>
+
+<p>Because Bekker's pages are disjoint per work, a machine can confirm every citation whose work is named — and can recover the work for one whose siglum was dropped. That is how the corpus is validated: 4,886 citations, of which 26 do not resolve.</p>
+
+<p>It stops one level short. The checker knows where a <em>work</em> runs, not where each of its <em>books</em> runs — and this very entry has two citations that name a book whose Bekker span does not contain the page:</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>As printed</th><th>Names</th><th>But the page sits in</th></tr></thead>
+<tbody>
+<tr><td class="raw">Μδ2. 1031b26</td><td>Metaphysics Δ, 1012b–1025a</td><td>book Ζ</td></tr>
+<tr><td class="raw">κ1. 1050a36</td><td>Metaphysics Κ, 1059a–1069a</td><td>book Θ</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Both pass every check, because 1031b and 1050a are inside the <em>Metaphysics</em> and that is all the machine knows. Whether these are Bonitz's slips, the compositor's, or our reading of the ink is a question only the scan can answer — and it is the next check to build.</p>
+</section>
+
+<footer>
+Specimen transcribed from Hermann Bonitz, <em>Index Aristotelicus</em> (Berlin 1870), p. 1 col. 2, at 400 dpi. Sigla per Bonitz's own keys, pp. 11–12 and 14. Citation readings produced by <code>siglum_check</code> against the transcription, not from memory.
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var plate = document.getElementById('plate');
+
+  document.querySelectorAll('.chip[data-hi]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var on = chip.getAttribute('aria-pressed') === 'true';
+      chip.setAttribute('aria-pressed', on ? 'false' : 'true');
+      plate.classList.toggle('hi-' + chip.dataset.hi, !on);
+    });
+  });
+
+  var ghost = document.getElementById('ghost');
+  ghost.addEventListener('click', function () {
+    var on = ghost.getAttribute('aria-pressed') === 'true';
+    ghost.setAttribute('aria-pressed', on ? 'false' : 'true');
+    plate.classList.toggle('ghosts', !on);
+  });
+})();
+</script>
