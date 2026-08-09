@@ -2022,3 +2022,53 @@ is.
 **There is no Latin abbreviation key in this volume.** Front matter is
 half-title (p.13), the work-siglum key (p.14), index (p.15). `Bk`, `Bz`, `cf`,
 `opp`, `vl`, `ci`, `codd`, `fort`, `i q` are all used unexplained.
+
+## ⚠ The abbreviation key EXISTS — PDF pp. 11-12. I said it did not.
+
+I checked pp. 13-15 (half-title, work-siglum key, index) and reported that
+Bonitz never explains his Latin abbreviations. **Wrong.** Grok, asked to search
+for 19th-century German scholarly conventions, came back with the claim that
+the key is in the volume; it is, two pages before the one I had transcribed.
+
+    p.11   Editores et interpretes his siglis significavimus — Bekker (Bk,
+           Bk², Bk³), Bonitz (Bz), Waitz (Wz), Spengel (Spgl), Schneider
+           (S, with commentary volumes S I and S II), and for the fragments
+           Bergk, Nauck, Meineke, Mullach
+    p.12   In parte zoologica et botanica … notavimus siglis — Cuvier,
+           Cuvier & Valenciennes, Artedi/Schneider Synonymia piscium, the
+           Expédition scientifique de Morée, Monro, v. Martens,
+           Peters-Carus-Gerstäcker, Rondelet, Erhard, Forskål, van der
+           Hoeven, Harvey, Heldreich, and more
+
+**Lesson: "the volume does not explain X" is a claim about the whole volume,
+and I made it from four pages.** The front matter had been rendered once, for
+the work sigla, and I treated that one page as the whole of it.
+
+### The volume corrects Grok too — `AZ` is not a siglum
+
+Grok read `AZι I 77` as siglum "AZ" (Aubert & Wimmer) plus a book letter.
+p.11 says otherwise, in as many words:
+
+    litterae A, ubi opus erat, additum est siglum eius libri Aristotelici ad
+    quem pertinet horum interpretum adnotatio, velut AΖι …
+
+So the siglum is **A** alone — Aubert & Wimmer, *Aristoteles Thierkunde*,
+Lpz. 1868 — and what follows is **the ARISTOTELIAN WORK SIGLUM**, not a book
+letter. `AΖι` is A on *Historia animalium*; `AΖγ` is A on *De generatione
+animalium*, a different work entirely. Then a volume and page: `AΖι I 77`.
+
+### A fourth encoding split, found by the same rule
+
+Four Aubert-Wimmer references are in the corpus and **they disagree with each
+other**: `AΖι` twice with a Latin A (right — the editor sigla are Latin, like
+Bk and Wz beside them) and `ΑΖι`/`ΑΖγ` twice with a Greek Α (wrong). The same
+defect as the 63, pointing the other way.
+
+**The 63 conversions did not touch these**, and that is the two-test rule
+earning its keep: `ΑΖγ` transliterates to nothing in Bonitz's key, so it never
+passed "must be a siglum AND page-confirmed" and was left alone. A rule that
+only converted homoglyphs would have mangled Aubert-Wimmer into the Analytics.
+
+Not applied — 2 sites, and it depends on reading p.12 properly, which is
+pending: the PDF text layer for these pages is Greek-mangled OCR and the image
+render could not be read in that session.
