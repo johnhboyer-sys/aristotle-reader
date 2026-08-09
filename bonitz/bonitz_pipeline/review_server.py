@@ -121,10 +121,24 @@ function show(){
  });
 }
 async function pick(form,label){
- const s=S[i]; s.ruled=true;
- await fetch('/verdict',{method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({id:s.id,form:form,label:label})});
- i++; show();
+ // A ruling that cannot be SAVED must not advance: advancing would lose it
+ // silently, and a silent loss is the one failure this whole apparatus
+ // exists to prevent. John hit this when the server had been stopped under
+ // an open page — the fetch rejected, the handler died, and the click
+ // "did nothing" with no way to tell why.
+ const s=S[i];
+ try{
+  const r=await fetch('/verdict',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:s.id,form:form,label:label})});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+ }catch(err){
+  warn.innerHTML='<span id="guard">⛔ NOT SAVED — the collector is not '+
+   'running, so this click was lost. Restart it and click again; '+
+   'nothing before this point is affected.</span>';
+  return;
+ }
+ s.ruled=true; i++; show();
 }
 addEventListener('keydown',e=>{
  if(e.key==='ArrowLeft'&&i>0){i--;show();return;}

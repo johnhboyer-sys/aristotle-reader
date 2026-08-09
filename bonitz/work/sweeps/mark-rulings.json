@@ -169,10 +169,11 @@
    "written": "ȣ̓κ"
   },
   "page-035-L:32:ȣ̓̃": {
-   "form": "?",
-   "label": "unsure",
-   "at": "2026-08-08T22:40:29+00:00",
-   "applied": "no — unsure, left for John"
+   "form": "ȣ̔͂",
+   "label": "rough + circumflex",
+   "at": "2026-08-09T00:34:15+00:00",
+   "written": "ȣ̔͂",
+   "applied": "yes, 2026-08-08"
   },
   "page-037-L:49:ȣ̓̀": {
    "form": "ȣ̓",
@@ -249,14 +250,14 @@
   "page-033-R:20:ἀλλοιȣται": {
    "form": "?",
    "label": "unsure",
-   "at": "2026-08-08T22:41:22+00:00",
+   "at": "2026-08-09T00:35:17+00:00",
    "applied": "no — unsure, left for John"
   },
   "page-037-L:54:σπȣδαῖα": {
-   "form": "?",
-   "label": "unsure",
-   "at": "2026-08-08T22:41:34+00:00",
-   "applied": "no — unsure, left for John"
+   "form": "σπȣδαῖα",
+   "label": "keep",
+   "at": "2026-08-09T00:35:29+00:00",
+   "applied": "no — ruled KEEP, corpus already right"
   },
   "page-038-R:5:ȣδενί": {
    "form": "ȣ̓",
@@ -274,10 +275,12 @@
    "written": "ȣ̓δεμίαν"
   },
   "page-040-L:5:ἁπλȣ": {
-   "form": "?",
-   "label": "unsure",
-   "at": "2026-08-08T22:42:02+00:00",
-   "applied": "no — unsure, left for John"
+   "form": "ἁπλȣ͂",
+   "label": "circumflex",
+   "at": "2026-08-09T00:35:48+00:00",
+   "written": "ἁπλȣ͂",
+   "applied": "yes, 2026-08-08",
+   "note": "the line holds ἁπλȣστεραι too; applied on a word boundary so only the standalone ἁπλȣ (ἁπλοῦ) changed"
   },
   "page-041-L:9:ὁτιȣ̃ν": {
    "form": "ὁτιȣ̃ν",

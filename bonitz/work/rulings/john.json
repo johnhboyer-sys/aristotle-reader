@@ -1414,6 +1414,45 @@
    "source": "work/kraken/NOTES.md",
    "date": "2026-08-07",
    "applied": null
+  },
+  {
+   "id": "page-035-L:32:ȣ̔͂",
+   "kind": "text",
+   "col": "page-035-L",
+   "line": 32,
+   "form": "ȣ̔͂",
+   "ruled": "rough + circumflex",
+   "quote": "",
+   "note": "recorded on the click; applied separately and verified against the suite",
+   "source": "review server",
+   "date": "2026-08-09",
+   "applied": true
+  },
+  {
+   "id": "page-037-L:54:σπȣδαῖα",
+   "kind": "keep",
+   "col": "page-037-L",
+   "line": 54,
+   "form": "σπȣδαῖα",
+   "ruled": "keep",
+   "quote": "",
+   "note": "recorded on the click; applied separately and verified against the suite",
+   "source": "review server",
+   "date": "2026-08-09",
+   "applied": true
+  },
+  {
+   "id": "page-040-L:5:ἁπλȣ͂",
+   "kind": "text",
+   "col": "page-040-L",
+   "line": 5,
+   "form": "ἁπλȣ͂",
+   "ruled": "circumflex",
+   "quote": "",
+   "note": "recorded on the click; applied separately and verified against the suite",
+   "source": "review server",
+   "date": "2026-08-09",
+   "applied": true
   }
  ]
 }
