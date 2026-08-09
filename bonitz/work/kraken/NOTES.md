@@ -1962,3 +1962,63 @@ single add class, which the round-2 evaluation scored perfectly well. The
 honest version: **the smooth breathing (+21) and perispomeni (+16) corrections
 land in the weak classes — `ȣ̓` at 10.53%, perispomeni at 67.44% — and the
 subscript and base-letter corrections are simply corpus quality.**
+
+## 63 citation sigla were written with Latin capitals
+
+`Pα` for `Ρα`, `Hε` for `Ηε`, `Zγγ` for `Ζγγ`, `Mλ`, `Aδ`. Identical ink,
+different codepoints: right on the page, wrong in the file. **Nothing could
+have caught this before** — every check either exempts siglum-shaped tokens or
+folds only Greek, so a Latin `P` never even looked like a siglum. It surfaced
+only because `siglum_check` demanded a POSITIVE match against Bonitz's key.
+
+The pattern is exact: **uppercase sigla went Latin, lowercase stayed Greek.**
+page-021-R line 1 has Latin `Hε15`, line 3 has Greek `ημα34`. Five columns
+carry all 63 (021-R ×34, 034-R ×20, 023-R ×7, 019-L ×4, 020-L, 035-L).
+
+### What proves the Greek reading, and it is not the Bekker range
+
+The printed key on PDF p.14 gives every siglum as **the initial letter of its
+GREEK title**:
+
+    Η  Ηθικὰ Νικομάχεια      Ρ  τέχνη Ῥητορική
+    Κ  Κατηγορίαι            Φ  Φυσικὴ ἀκρόασις
+    Μ  τὰ Μετὰ τὰ φυσικά     Ο  περὶ Οὐρανȣ͂
+    Π  Πολιτικά              Γ  περὶ Γενέσεως ϗ φθορᾶς
+
+They are Greek by construction. `f — Fragmenta Aristotelica` is the one genuinely Latin
+siglum in the key, which is why it has no Bekker range and is skipped.
+
+Each change was still confirmed twice before it was made — the Greek reading
+must be a siglum in the key AND the Bekker page beside it must fall in that
+work's range — so nothing could be invented.
+
+### ⚠ `49 B` is NOT a siglum, and not `Bz` either
+
+Four instances of a bare roman `B` sit in citations of HA book ι. John asked
+what it stands for; both of my first answers were wrong, and the ordering
+settles it. By Bekker page:
+
+    Ζιι46      630b18
+    Ζιι49      631b13
+    Ζιι50      631b25, 632b2, 632b8
+    Ζιι49 B    632b17, b21, b25, b27, 633a26   ← AFTER 50
+
+So it is **not** a subdivision between 49 and 50, which is what I first said.
+It is a SECOND chapter numbered 49, printed after 50 at the end of book ι
+(HA IX ends at 633a; the spurious book X starts 633b), distinguished by `B`.
+The content agrees — 632b is the nightingale, with `luscinia` glossed in the
+ink beside it, and 633a26 quotes Aeschylus.
+
+Against John's `Bz.` hypothesis, which was the better guess: **`Bz` and `Bk`
+always FOLLOW the Bekker number** in this volume (`1047 b13 Bz.`, `codd Bk`),
+never precede it, and `B` here sits in the chapter slot, in the same
+`chapter. page` shape as the `12.` of `Ζιι12. 615 b4`.
+
+Left alone in all six places. ⚠ One of them, page-051-R:60, is encoded with a
+GREEK `Β` where the ink shows the same roman B as the other five — the same
+defect pointing the other way. Not touched pending John's reading of what `B`
+is.
+
+**There is no Latin abbreviation key in this volume.** Front matter is
+half-title (p.13), the work-siglum key (p.14), index (p.15). `Bk`, `Bz`, `cf`,
+`opp`, `vl`, `ci`, `codd`, `fort`, `i q` are all used unexplained.

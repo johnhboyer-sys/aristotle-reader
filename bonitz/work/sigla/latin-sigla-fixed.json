@@ -1,0 +1,451 @@
+{
+ "_": [
+  "Citation sigla re-encoded from Latin to Greek codepoints, 2026-08-08. Identical ink, different codepoints: the citation was right on the page and wrong in the file.",
+  "Each was confirmed twice before it was touched — the Greek reading must be a siglum in Bonitz's printed key, AND the Bekker page beside it must fall in that work's range. Neither test alone could invent a work; together they cannot.",
+  "NOT touched: `49 B` in Ζιι49 B. 632b17 and its three fellows. That B is a CHAPTER subdivision of HA book 9, not a work siglum."
+ ],
+ "at": "2026-08-09T04:05:46+00:00",
+ "sites": [
+  {
+   "col": "page-019-L",
+   "line": 11,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1354
+  },
+  {
+   "col": "page-019-L",
+   "line": 12,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1374
+  },
+  {
+   "col": "page-019-L",
+   "line": 22,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1373
+  },
+  {
+   "col": "page-019-L",
+   "line": 24,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1375
+  },
+  {
+   "col": "page-021-R",
+   "line": 1,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1138
+  },
+  {
+   "col": "page-021-R",
+   "line": 2,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1136
+  },
+  {
+   "col": "page-021-R",
+   "line": 6,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1136
+  },
+  {
+   "col": "page-021-R",
+   "line": 8,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1135
+  },
+  {
+   "col": "page-021-R",
+   "line": 9,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1135
+  },
+  {
+   "col": "page-021-R",
+   "line": 10,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1135
+  },
+  {
+   "col": "page-021-R",
+   "line": 11,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1374
+  },
+  {
+   "col": "page-021-R",
+   "line": 12,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1134
+  },
+  {
+   "col": "page-021-R",
+   "line": 14,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1373
+  },
+  {
+   "col": "page-021-R",
+   "line": 17,
+   "now": "Ρβ",
+   "work": "Ρ",
+   "page": 1391
+  },
+  {
+   "col": "page-021-R",
+   "line": 22,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1130
+  },
+  {
+   "col": "page-021-R",
+   "line": 23,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1366
+  },
+  {
+   "col": "page-021-R",
+   "line": 23,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1130
+  },
+  {
+   "col": "page-021-R",
+   "line": 25,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1134
+  },
+  {
+   "col": "page-021-R",
+   "line": 31,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1129
+  },
+  {
+   "col": "page-021-R",
+   "line": 32,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1129
+  },
+  {
+   "col": "page-021-R",
+   "line": 32,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1129
+  },
+  {
+   "col": "page-021-R",
+   "line": 33,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1134
+  },
+  {
+   "col": "page-021-R",
+   "line": 34,
+   "now": "Ηη",
+   "work": "Η",
+   "page": 1152
+  },
+  {
+   "col": "page-021-R",
+   "line": 39,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1129
+  },
+  {
+   "col": "page-021-R",
+   "line": 40,
+   "now": "Ηε",
+   "work": "Η",
+   "page": 1135
+  },
+  {
+   "col": "page-021-R",
+   "line": 41,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1373
+  },
+  {
+   "col": "page-021-R",
+   "line": 42,
+   "now": "Ηθ",
+   "work": "Η",
+   "page": 1160
+  },
+  {
+   "col": "page-021-R",
+   "line": 43,
+   "now": "Ρβ",
+   "work": "Ρ",
+   "page": 1402
+  },
+  {
+   "col": "page-021-R",
+   "line": 44,
+   "now": "Αα",
+   "work": "Αα",
+   "page": 26
+  },
+  {
+   "col": "page-021-R",
+   "line": 46,
+   "now": "Ηκ",
+   "work": "Η",
+   "page": 1175
+  },
+  {
+   "col": "page-021-R",
+   "line": 47,
+   "now": "Ζγγ",
+   "work": "Ζγ",
+   "page": 758
+  },
+  {
+   "col": "page-021-R",
+   "line": 48,
+   "now": "Ζγα",
+   "work": "Ζγ",
+   "page": 720
+  },
+  {
+   "col": "page-021-R",
+   "line": 50,
+   "now": "Ζγβ",
+   "work": "Ζγ",
+   "page": 741
+  },
+  {
+   "col": "page-021-R",
+   "line": 52,
+   "now": "Αα",
+   "work": "Αα",
+   "page": 26
+  },
+  {
+   "col": "page-021-R",
+   "line": 52,
+   "now": "Αα",
+   "work": "Αα",
+   "page": 24
+  },
+  {
+   "col": "page-021-R",
+   "line": 53,
+   "now": "Αα",
+   "work": "Αα",
+   "page": 26
+  },
+  {
+   "col": "page-021-R",
+   "line": 54,
+   "now": "Αα",
+   "work": "Αα",
+   "page": 27
+  },
+  {
+   "col": "page-021-R",
+   "line": 58,
+   "now": "Ζμα",
+   "work": "Ζμ",
+   "page": 639
+  },
+  {
+   "col": "page-023-R",
+   "line": 6,
+   "now": "Ργ",
+   "work": "Ρ",
+   "page": 1405
+  },
+  {
+   "col": "page-023-R",
+   "line": 7,
+   "now": "Ργ",
+   "work": "Ρ",
+   "page": 1418
+  },
+  {
+   "col": "page-023-R",
+   "line": 11,
+   "now": "Ρβ",
+   "work": "Ρ",
+   "page": 1378
+  },
+  {
+   "col": "page-023-R",
+   "line": 44,
+   "now": "Ρα",
+   "work": "Ρ",
+   "page": 1372
+  },
+  {
+   "col": "page-034-R",
+   "line": 1,
+   "now": "Αβ",
+   "work": "Αβ",
+   "page": 64
+  },
+  {
+   "col": "page-034-R",
+   "line": 2,
+   "now": "Μγ",
+   "work": "Μ",
+   "page": 1006
+  },
+  {
+   "col": "page-034-R",
+   "line": 4,
+   "now": "Αδ",
+   "work": "Αδ",
+   "page": 96
+  },
+  {
+   "col": "page-034-R",
+   "line": 5,
+   "now": "Αγ",
+   "work": "Αγ",
+   "page": 76
+  },
+  {
+   "col": "page-034-R",
+   "line": 6,
+   "now": "Αδ",
+   "work": "Αδ",
+   "page": 97
+  },
+  {
+   "col": "page-034-R",
+   "line": 11,
+   "now": "Ηδ",
+   "work": "Η",
+   "page": 1120
+  },
+  {
+   "col": "page-034-R",
+   "line": 16,
+   "now": "Μα",
+   "work": "Μ",
+   "page": 994
+  },
+  {
+   "col": "page-034-R",
+   "line": 18,
+   "now": "Μγ",
+   "work": "Μ",
+   "page": 1003
+  },
+  {
+   "col": "page-034-R",
+   "line": 20,
+   "now": "Αδ",
+   "work": "Αδ",
+   "page": 98
+  },
+  {
+   "col": "page-034-R",
+   "line": 21,
+   "now": "Μγ",
+   "work": "Μ",
+   "page": 1003
+  },
+  {
+   "col": "page-034-R",
+   "line": 23,
+   "now": "Μλ",
+   "work": "Μ",
+   "page": 1070
+  },
+  {
+   "col": "page-034-R",
+   "line": 38,
+   "now": "Αδ",
+   "work": "Αδ",
+   "page": 94
+  },
+  {
+   "col": "page-034-R",
+   "line": 42,
+   "now": "Μβ",
+   "work": "Μ",
+   "page": 996
+  },
+  {
+   "col": "page-034-R",
+   "line": 44,
+   "now": "Μλ",
+   "work": "Μ",
+   "page": 1070
+  },
+  {
+   "col": "page-034-R",
+   "line": 45,
+   "now": "Μλ",
+   "work": "Μ",
+   "page": 1070
+  },
+  {
+   "col": "page-034-R",
+   "line": 46,
+   "now": "Μλ",
+   "work": "Μ",
+   "page": 1070
+  },
+  {
+   "col": "page-034-R",
+   "line": 57,
+   "now": "Αδ",
+   "work": "Αδ",
+   "page": 94
+  },
+  {
+   "col": "page-034-R",
+   "line": 58,
+   "now": "Ηγ",
+   "work": "Η",
+   "page": 1112
+  },
+  {
+   "col": "page-034-R",
+   "line": 59,
+   "now": "Μλ",
+   "work": "Μ",
+   "page": 1070
+  },
+  {
+   "col": "page-034-R",
+   "line": 59,
+   "now": "Μζ",
+   "work": "Μ",
+   "page": 1041
+  },
+  {
+   "col": "page-035-L",
+   "line": 48,
+   "now": "Α",
+   "work": "Μ",
+   "page": 985
+  }
+ ]
+}
