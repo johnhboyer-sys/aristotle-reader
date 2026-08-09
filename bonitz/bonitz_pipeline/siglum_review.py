@@ -48,6 +48,19 @@ MAX_CANDIDATES = 4
 # because reading it for a stigma is the error that puts `κς` in this queue.
 BARE = set(BOOK_LETTERS + 'ς')
 
+# ⚠ ONE VISUAL ERROR IS NOT ALWAYS ONE CHARACTER EDIT.  John, 2026-08-09, on the
+# crop at 016-L:32: "Clear double iota."  The ink reads `Ζιι` — Historia
+# animalium, book ι — and our reader wrote `Ζυ`, because in this type two
+# adjacent iotas sit exactly where a υ sits.  That is a single confusion to the
+# eye and two edits to a string, so an edit-distance search cannot reach it, and
+# the card offered only `Ζι` — the work with no book at all.
+#
+# Pairs are bidirectional and are applied as ONE edit. Keep this list to
+# confusions seen in this type, not to everything Greek: each entry widens the
+# candidate row, and a row full of readings nobody would see is the same
+# failure as a row with nothing in it.
+CONFUSIONS = (('ιι', 'υ'),)
+
 # Every character Bonitz uses in a siglum or a book numeral, so a substitution
 # search covers the letters that actually occur — including ϛ, which is the
 # whole point for the πκς family, and the capitals his work sigla use.
@@ -119,6 +132,16 @@ def siglum_candidates(token: str, page: int, works: dict,
         for s in near(token[:-1], works):
             if works[s].holds(page) and book_ok(s, token[-1]):
                 out.add(s + token[-1])
+    # …and the pairs the eye confuses, which the character edits above miss
+    for a, b in CONFUSIONS:
+        for frm, to in ((a, b), (b, a)):
+            start = 0
+            while (i := token.find(frm, start)) >= 0:
+                alt = token[:i] + to + token[i + len(frm):]
+                for w, bk in split(alt, works):
+                    if works[w].holds(page) and (not bk or book_ok(w, bk)):
+                        out.add(alt)
+                start = i + 1
     # ⚠ AND THE EDIT MAY BE INSIDE THE BOOK NUMERAL, not in the work siglum.
     # `πκς` is the Problemata, book κϛ — 26 — with a final sigma read for a
     # stigma, and π is perfectly correct. Proposing only whole work sigla left
