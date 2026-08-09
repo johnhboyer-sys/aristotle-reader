@@ -31,6 +31,11 @@ planned changes.md
 # Pipeline-generated app data (same category as build/ — never committed)
 app/src/data/
 
+# Vendored page scans — public domain, but far too large for git. Every file is
+# re-fetchable from the Internet Archive identifier recorded in the sibling
+# PROVENANCE.md; the notes stay tracked, the rasters do not.
+sources/*/scan/
+
 # Copyright-encumbered translation sources — kept LOCAL ONLY for the full build,
 # never committed/published (the -public manifests don't use them). J. L. Ackrill
 # (Clarendon, 1963): the Bekker-key guide + a local-only third translation.
