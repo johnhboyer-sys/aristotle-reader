@@ -21,7 +21,24 @@ FS = findings()
 
 
 def test_there_is_a_site_for_every_finding():
-    assert len(FS) == 27, f'{len(FS)} sites; the check reports 27'
+    """⚠ THIS TEST USED TO PIN THE NUMBER 27, and 27 stopped being true the
+    moment John's six fixes went into the corpus — the remaining 21 are the ones
+    he preserved as Bonitz's own errors, and they will disagree with the book
+    table for as long as the transcription is diplomatic.
+
+    A count is not the invariant. The invariant is that the page shows every
+    finding there is: a finding with no card cannot be ruled on, and would sit
+    in the corpus unexamined while the report claimed it had been seen."""
+    import json
+
+    from bonitz_pipeline.book_spans import OUT as SPANS, check as book_check
+    from bonitz_pipeline.siglum_check import inventory, read, resolve
+
+    cites = read()
+    resolve(cites, inventory())
+    assert len(FS) == len(book_check(cites, json.loads(
+        SPANS.read_text(encoding='utf-8')))), (
+        'the page and the check disagree about how many findings there are')
 
 
 def test_every_crop_is_placed_by_matching_the_line_text():

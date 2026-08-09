@@ -136,12 +136,31 @@ def main(argv: list[str] | None = None) -> int:
     cites = read()
     resolve(cites, inventory())
     bad = check(cites, table)
-    print(f'{len(bad)} citations whose book letter excludes the page:\n')
-    for c, stem, lo, hi, owner in sorted(bad, key=lambda t: (t[0].col, t[0].line)):
+
+    # ⚠ A SITE JOHN HAS ALREADY RULED IS NOT A FINDING.  Twenty-one of these are
+    # Bonitz's own errors, preserved on purpose and banked in work/corrigenda —
+    # they will disagree with the table for as long as the transcription is
+    # diplomatic, which is forever.  A check that reports them every run is a
+    # check that stops being read, and this module exists because of exactly
+    # that failure mode elsewhere in the pipeline.
+    ruled = {}
+    store = ROOT / 'work/sweeps/book-rulings.json'
+    if store.exists():
+        ruled = json.loads(store.read_text(encoding='utf-8'))
+    fresh = [t for t in bad
+             if f'{t[0].col}:{t[0].line}:{t[0].token}:{t[0].page}' not in ruled]
+    settled = len(bad) - len(fresh)
+
+    print(f'{len(bad)} citations whose book letter excludes the page — '
+          f'{settled} already ruled, {len(fresh)} new:\n')
+    for c, stem, lo, hi, owner in sorted(fresh, key=lambda t: (t[0].col, t[0].line)):
         n = book_number(stem, c.book)
         print(f'  {c.col}:{c.line:<4} {c.raw!r}')
         print(f'      {stem}{c.book} is book {n} at {lo}-{hi}; {c.page} is in '
               f'book {owner!r}')
+    if not fresh:
+        print('  (nothing new — the settled ones are preserved by ruling and '
+              'recorded in work/corrigenda/entries.json)')
     return 0
 
 

@@ -165,6 +165,20 @@ button:focus-visible{outline:2px solid var(--fix);outline-offset:2px}
 .lbl{font:.7rem "SF Mono",Menlo,monospace;color:var(--muted);
      text-transform:uppercase;letter-spacing:.08em;width:100%;margin:.35rem 0 0}
 .warnflag{color:var(--warn);font-size:.8rem}
+/* Ruled from an iPad, every target is a fingertip. Buttons grow, the crop gets
+   the full width it can have, and the card stops wasting margin on chrome. */
+@media(pointer:coarse){
+  body{font-size:17px}
+  main{padding:.7rem}
+  .card{padding:.9rem .8rem}
+  button{padding:.85rem 1rem;font-size:.95rem;min-height:44px}
+  .row{gap:.55rem}
+  details summary{padding:.6rem 0}
+}
+@media(max-width:640px){
+  header{padding:.7rem .8rem;flex-wrap:wrap;gap:.3rem}
+  h1{font-size:.95rem}
+}
 """
 
 JS = """
@@ -240,7 +254,26 @@ def html(fs: list[Finding], out: Path = PAGE) -> Path:
     return out
 
 
-def serve(fs: list[Finding], port: int = 8791) -> None:
+def lan_address() -> str:
+    """This machine's address on the WiFi, for ruling from the iPad."""
+    import subprocess
+    for dev in ('en0', 'en1'):
+        try:
+            ip = subprocess.run(['ipconfig', 'getifaddr', dev],
+                                capture_output=True, text=True, timeout=2).stdout.strip()
+            if ip:
+                return ip
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return '127.0.0.1'
+
+
+def serve(fs: list[Finding], port: int = 8791, host: str = '127.0.0.1') -> None:
+    """⚠ `--wifi` BINDS TO EVERY INTERFACE, so anything on the network can read
+    the page and post rulings. There is no authentication and none is wanted —
+    it is a scan of a book printed in 1870 and a JSON file of letter choices —
+    but it is open while it runs, so stop it when the queue is done.
+    """
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
     body = PAGE.read_bytes()
@@ -277,13 +310,17 @@ def serve(fs: list[Finding], port: int = 8791) -> None:
                                encoding='utf-8')
             self.send_response(204); self.end_headers()
 
+    if host == '0.0.0.0':
+        print(f'http://{lan_address()}:{port}   (open on the WiFi)')
     print(f'http://localhost:{port}  ->  {RULINGS}')
-    HTTPServer(('127.0.0.1', port), H).serve_forever()
+    HTTPServer((host, port), H).serve_forever()
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
     p.add_argument('--serve', action='store_true')
+    p.add_argument('--wifi', action='store_true',
+                   help='bind to every interface, to rule from another device')
     p.add_argument('--port', type=int, default=8791)
     a = p.parse_args(argv)
 
@@ -295,8 +332,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f'{len(weak)} crops placed by geometry rather than text match:')
         for s in weak:
             print(f'   {s}')
-    if a.serve:
-        serve(fs, a.port)
+    if a.serve or a.wifi:
+        serve(fs, a.port, '0.0.0.0' if a.wifi else '127.0.0.1')
     return 0
 
 

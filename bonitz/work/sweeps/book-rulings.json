@@ -1,0 +1,110 @@
+{
+ "page-015-R:7:κ:1050": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-015-R:12:Μδ:1031": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-016-L:8:ηεδ:1231": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-016-L:26:Ηθ:1115": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-016-L:40:η:1276": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-020-L:54:Πδ:1279": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-025-L:23:Ηκ:1095": {
+  "verdict": "fix-letter",
+  "detail": "α"
+ },
+ "page-025-R:24:Ζιδ:607": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-027-L:57:Ηγ:1126": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-028-L:12:Ζμγ:688": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-028-R:24:Ζμγ:679": {
+  "verdict": "fix-page",
+  "detail": 673
+ },
+ "page-029-L:20:Ζιθ:532": {
+  "verdict": "fix-letter",
+  "detail": "δ"
+ },
+ "page-029-R:3:Ζιγ:529": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-029-R:57:Ζιθ:618": {
+  "verdict": "fix-letter",
+  "detail": "ι"
+ },
+ "page-031-L:16:Μθ:1084": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-035-L:12:Μν:1065": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-036-R:53:Ηγ:1154": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-038-L:34:Ηι:1129": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-039-R:53:Πη:1318": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-040-L:14:Μα:1053": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-040-R:43:Ηκ:1095": {
+  "verdict": "fix-letter",
+  "detail": "α"
+ },
+ "page-041-L:23:Ζγα:785": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-044-L:5:Ηκ:1098": {
+  "verdict": "fix-letter",
+  "detail": "α"
+ },
+ "page-046-R:42:Μγ:1044": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-049-L:8:Μβ:1008": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-049-L:24:Ζιθ:575": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-052-R:16:Ρβ:1407": {
+  "verdict": "preserve",
+  "detail": ""
+ }
+}
