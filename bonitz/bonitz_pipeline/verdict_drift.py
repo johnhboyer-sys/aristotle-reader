@@ -53,6 +53,13 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
 
     files = sorted(glob.glob(str(ROOT / 'work/adjudicated/*.json')))
+    # `*.sonnet.json` are archived backups of the Sonnet adjudication of
+    # pp.47-49 and 52, kept when an Opus recheck changed 22 of its 113 verdicts.
+    # The live files carry the corrections and nothing downstream reads these.
+    # Counting them reported 8 phantom "column missing" rows — there is no
+    # `work/reconciled/page-047-L.sonnet.txt` and never will be — which is a
+    # number that invites someone to go looking for a problem that is not there.
+    files = [f for f in files if not Path(f).stem.endswith('.sonnet')]
     if not files:
         sys.exit('no adjudicated verdicts found')
 

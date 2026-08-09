@@ -157,6 +157,30 @@ boot();
 </script>'''
 
 
+def parse_site_id(sid: object) -> tuple[str, int, str] | None:
+    """(column, line, corpus) from a `col:line:corpus` id, or None.
+
+    Pulled out of `do_POST` so it can be tested without a socket.  The store
+    used to be written BEFORE the id was parsed, so a malformed id landed in
+    `mark-rulings.json` and then raised — leaving a key the ruling tests could
+    not unpack, which broke pytest collection until it was deleted by hand.
+    A request that cannot be understood must change nothing.
+    """
+    if not isinstance(sid, str):
+        return None
+    if sid.count(':') < 2:
+        return None
+    # LEFT to right.  The id is built as f'{col}:{line}:{corpus}', and the
+    # column never contains a colon while a Greek corpus form might — so
+    # rsplit would take the last two colons and hand back a column of
+    # 'page-015-L:7' with a line of 'a'.  No key on disk is affected today
+    # (checked), but the id scheme allows it and the parse should not.
+    col, line, corpus = sid.split(':', 2)
+    if not col or not corpus or not line.isdigit():
+        return None
+    return col, int(line), corpus
+
+
 def _load_rulings() -> dict:
     if RULINGS.exists():
         return json.loads(RULINGS.read_text(encoding='utf-8'))
@@ -243,8 +267,19 @@ def handler(sites, imgs, lines):
                 d = json.loads(self.rfile.read(n))
             except Exception:
                 return self.send_error(400)
+            # ⚠ VALIDATE THE ID BEFORE WRITING ANYTHING.  An id that does not
+            # parse used to be stored anyway and then crash on the rsplit
+            # below, after the file had been written — so the store kept a key
+            # the ruling tests could not parse, and pytest collection failed
+            # with `ValueError: not enough values to unpack` until it was
+            # removed by hand.  A malformed request must change nothing.
+            sid = d.get('id')
+            parsed = parse_site_id(sid)
+            if parsed is None:
+                return self.send_error(400, 'malformed site id')
+            col, line, corpus = parsed
             store = _load_rulings()
-            store['rulings'][d['id']] = {
+            store['rulings'][sid] = {
                 'form': d.get('form', ''), 'label': d.get('label', ''),
                 'at': datetime.now(timezone.utc).isoformat(timespec='seconds')}
             RULINGS.parent.mkdir(parents=True, exist_ok=True)
@@ -257,16 +292,15 @@ def handler(sites, imgs, lines):
             # gets updated whenever i rule?"  An unsure is NOT a ruling — it
             # is a defect report against the buttons — so it is not recorded
             # as one.
-            col, line, corpus = d['id'].rsplit(':', 2)
-            if d.get('form') != '?':
+            if d.get('form') and d['form'] != '?':
                 john_rulings.add(
                     'keep' if d['form'] == corpus else 'text',
-                    col=col, line=int(line), form=d['form'],
+                    col=col, line=line, form=d['form'],
                     ruled=d.get('label', ''), source='review server',
                     applied=False,
                     note='recorded on the click; applied separately and '
                          'verified against the suite')
-            print(f'  {d["id"]}  ->  {d.get("form")}  ({d.get("label")})',
+            print(f'  {sid}  ->  {d.get("form")}  ({d.get("label")})',
                   flush=True)
             self.send_response(204)
             self.end_headers()
