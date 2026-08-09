@@ -189,6 +189,18 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
             if works[last].holds(c.page):
                 c.work, c.book, c.how = last, c.token, 'inherited'
                 continue
+            # THE ANALYTICS.  Bonitz letters four books α β γ δ across TWO
+            # works that share the siglum Α — Αα Αβ are the Prior, Αγ Αδ the
+            # Posterior — so after `Αβ21. 66b26` a bare `γ12. 77b18` does not
+            # mean "book γ of the Prior Analytics". It means Αγ, a different
+            # work. Retry the bare letter against the last work's STEM, which
+            # is the only reading that puts 77 inside 71-100.
+            stem = last[:-1]
+            if stem and stem + c.token in works \
+                    and works[stem + c.token].holds(c.page):
+                c.work, c.book, c.how = stem + c.token, c.token, 'inherited'
+                last = c.work
+                continue
             c.how, c.why = 'unresolved', (
                 f'reads as book {c.token} of {last} (the work last named), '
                 f'but {c.page} is outside {last} '
