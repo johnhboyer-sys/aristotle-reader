@@ -1,0 +1,185 @@
+"""The bare-book-letter rule, pinned before the checker is believed.
+
+John's condition on this work: model the inheritance FIRST, because a checker
+that reads a bare book letter as a work siglum condemns 29 correct citations
+and buries the real errors under them.  A report nobody trusts is a report
+nobody reads, so the inheritance is the load-bearing part and everything else
+is arithmetic.
+
+The rule: `Ζιε13. 544a32. ζ1. 558b13` — the second citation drops the work and
+means "book ζ of the work I last named".  It does NOT mean the work ζ
+(περὶ Νεότητος), even though ζ is a real siglum in Bonitz's key.
+
+What makes this decidable without heuristics is that the BEKKER PAGE
+adjudicates.  The work ζ runs 467b-470b; 558 is not in it.  HA runs 486a-638b;
+558 is.  Both readings are offered to the page and the page picks.
+"""
+
+import pytest
+
+from bonitz_pipeline.siglum_check import (BOOK_LETTERS, CITE, Cite, inventory,
+                                          resolve, split)
+
+WORKS = inventory()
+
+
+def cite(token, page, col='page-000-L', line=1, chapter='1', column='a'):
+    return Cite(col, line, f'{token}{chapter}. {page}{column}', token,
+                chapter, page, column)
+
+
+# ---------------------------------------------------------------- inventory
+
+def test_the_three_range_entries_expand_to_their_members():
+    """Bonitz prints `Ααβ` and `τα-θ` for families, not as sigla. A citation
+    uses one member, so the family must be expanded or every Prior Analytics
+    and Topics citation reports as an unknown siglum."""
+    for s in ('Αα', 'Αβ', 'Αγ', 'Αδ'):
+        assert s in WORKS, f'{s} missing — the Ααβ/Αγδ ranges did not expand'
+    for s in ('τα', 'τβ', 'τγ', 'τδ', 'τε', 'τζ', 'τη', 'τθ'):
+        assert s in WORKS, f'{s} missing — the τα-θ range did not expand'
+    assert 'Ααβ' not in WORKS and 'τα-θ' not in WORKS, \
+        'the family shorthand is not itself a citable siglum'
+    assert 'τϛ' not in WORKS, 'the Topics has eight books, α…θ, with no stigma'
+
+
+def test_the_ambiguous_sigla_are_all_present():
+    """Case is Bonitz's own and is significant — Ζι/ζ, Μ/μ, Ο/ο, Π/π are
+    different works. If the loader ever folds case, this fails."""
+    for s in ('Ζι', 'ζ', 'Μ', 'μ', 'Ο', 'ο', 'Π', 'π', 'Ρ', 'ρ', 'Φ', 'φ',
+              'Κ', 'κ'):
+        assert s in WORKS, f'{s} is missing from the inventory'
+    assert WORKS['Ζι'].lo != WORKS['ζ'].lo, 'Ζι and ζ collapsed into one work'
+
+
+# ------------------------------------------------------------------- split
+
+def test_split_enumerates_rather_than_decides():
+    """`ζ` is a work AND a book letter; `Ζιε` is a work plus a book. The
+    splitter must offer both readings, because only the page can choose."""
+    assert ('ζ', '') in split('ζ', WORKS)
+    assert ('Ζι', 'ε') in split('Ζιε', WORKS)
+
+
+def test_split_refuses_a_tail_that_is_not_a_book_letter():
+    assert split('Ζι9', WORKS) == []
+
+
+# ------------------------------------------------------- the inheritance rule
+
+def test_a_bare_book_letter_inherits_the_work_last_named():
+    """The load-bearing case, from NOTES: HA book 6, not the work ζ."""
+    cs = [cite('Ζιε', 544), cite('ζ', 558)]
+    resolve(cs, WORKS)
+    assert cs[0].work == 'Ζι' and cs[0].how == 'explicit'
+    assert cs[1].work == 'Ζι', (
+        f'bare ζ resolved to {cs[1].work!r}; it must inherit HA from the '
+        f'citation before it')
+    assert cs[1].book == 'ζ' and cs[1].how == 'inherited'
+
+
+def test_the_same_letter_inherits_a_different_work_in_another_context():
+    """`Ηζ2. 1139b9. ζ4. 1140a19` is EN book 6. Same letter, same shape,
+    different answer — which is why this cannot be a lookup table."""
+    cs = [cite('Ηζ', 1139), cite('ζ', 1140)]
+    resolve(cs, WORKS)
+    assert cs[0].work == 'Η'
+    assert cs[1].work == 'Η' and cs[1].how == 'inherited'
+
+
+def test_the_work_wins_when_the_page_is_actually_in_it():
+    """Inheritance must not swallow a genuine citation of the work ζ. Given a
+    page inside 467b-470b, ζ is the work and nothing is inherited."""
+    lo = WORKS['ζ'].lo
+    cs = [cite('Ζιε', 544), cite('ζ', lo + 1)]
+    resolve(cs, WORKS)
+    assert cs[1].work == 'ζ' and cs[1].how == 'explicit'
+
+
+def test_inheritance_does_not_cross_an_unresolved_citation():
+    """A misreading must not become the context for what follows it, or one
+    bad siglum silently re-labels every bare book letter after it."""
+    cs = [cite('Ζιε', 544), cite('Ζμ', 9999), cite('ζ', 558)]
+    resolve(cs, WORKS)
+    assert cs[1].how == 'unresolved'
+    assert cs[2].work == 'Ζι', 'inheritance took its context from a misreading'
+
+
+def test_a_bare_letter_with_no_context_is_unresolved_not_guessed():
+    cs = [cite('δ', 1295)]
+    resolve(cs, WORKS)
+    assert cs[0].how == 'unresolved'
+
+
+# ----------------------------------------------------------- the real finding
+
+def test_a_work_named_beside_the_wrong_page_is_reported():
+    """The Ζιθ28 class, and the whole point of the exercise: Ζμ is De partibus
+    at 639-697, so it cannot stand beside a page in the 600s that belongs to
+    HA... nor beside 1139, which is the Ethics."""
+    cs = [cite('Ζμ', 1139)]
+    resolve(cs, WORKS)
+    assert cs[0].how == 'unresolved'
+    assert 'De part' in cs[0].why or str(WORKS['Ζμ'].lo) in cs[0].why
+
+
+def test_an_unknown_siglum_is_reported_as_such():
+    cs = [cite('Ζυ', 616)]
+    resolve(cs, WORKS)
+    assert cs[0].how == 'unresolved'
+
+
+def test_final_sigma_is_not_accepted_as_the_numeral_six():
+    """`πκς` against `πκϛ`×14 — ς in a numeral slot is a misread stigma, and
+    accepting it would launder a known reader error."""
+    assert 'ς' not in BOOK_LETTERS
+    assert 'ϛ' in BOOK_LETTERS
+
+
+# ------------------------------------------------------------------- regex
+
+@pytest.mark.parametrize('text,token,page', [
+    ('Ζγβ6. 743 b36, 37.', 'Ζγβ', 743),
+    ('ψγ7. 431 a5.', 'ψγ', 431),
+    ('Ηε8. 1133 b26.', 'Ηε', 1133),
+    ('κ6. 399a23.', 'κ', 399),
+    ('δ10. 1295 a14.', 'δ', 1295),
+])
+def test_the_citation_regex_finds_the_shapes_bonitz_prints(text, token, page):
+    m = CITE.search(text)
+    assert m, f'no citation found in {text!r}'
+    assert m.group(1) == token and int(m.group(3)) == page
+
+
+# ------------------------------------------------------- Latin/Greek homoglyphs
+
+def test_a_latin_capital_in_a_greek_siglum_is_caught_not_skipped():
+    """Ρ and P are identical ink and different codepoints, so a reader typing
+    the Latin one writes a citation that is correct on the page and wrong in
+    the file. 67 are in the corpus and nothing caught them: every check either
+    exempts siglum-shaped tokens or folds only Greek, and a Latin P never even
+    looked like a siglum."""
+    from bonitz_pipeline.siglum_check import HOMOGLYPH
+    cs = [cite('Pα', 1354)]           # Rhetoric book α — Ρ written as Latin P
+    resolve(cs, WORKS)
+    assert cs[0].how == 'latin', (
+        f'Latin-headed siglum reported as {cs[0].how!r}; it must be named as '
+        f'the encoding error it is, not buried in the unresolved pile')
+    assert cs[0].work == 'Ρ'
+    assert HOMOGLYPH['P'] == 'Ρ'
+
+
+def test_a_latin_headed_siglum_still_supplies_context_to_what_follows():
+    """The citation is RIGHT on the page — only its encoding is wrong — so a
+    bare book letter after it must still inherit. Treating it as unresolved
+    would cascade into every citation that follows."""
+    cs = [cite('Pα', 1354), cite('β', 1380)]
+    resolve(cs, WORKS)
+    assert cs[1].work == 'Ρ' and cs[1].how == 'inherited'
+
+
+def test_a_latin_lookalike_that_is_not_a_real_siglum_stays_unresolved():
+    """The homoglyph map must not become a way to invent sigla."""
+    cs = [cite('XQ', 999)]
+    resolve(cs, WORKS)
+    assert cs[0].how == 'unresolved'
