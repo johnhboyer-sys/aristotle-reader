@@ -1,0 +1,55 @@
+# What this repository keeps, and what it does not.
+#
+# An ALLOWLIST, not a denylist: everything at the root is excluded and the parts
+# worth versioning are named back in. A denylist here would be wrong — the
+# working directory accumulates scans, crops, checkpoints and rendered pages
+# faster than anyone can remember to exclude them, and the failure mode is
+# silent: a 400 dpi column PNG committed once is in the history forever.
+#
+# John's rule, 2026-08-09: anything we can download again (the scan PDF) or
+# generate again (review pages, crops, kraken checkpoints) stays out. The
+# pipeline, the reader outputs and the corpus stay in.
+#
+# These rules previously lived in .git/info/exclude, which works but does not
+# survive a clone — so the next person to check this out would have got the
+# scans and the checkpoints along with it.
+
+/*
+!.gitignore
+!bonitz_pipeline/
+!tests/
+!*.md
+
+# The resolved dependency set the test suite actually ran against.
+!uv.lock
+
+!work/
+work/*
+!work/reconciled/
+!work/adjudicated/
+!work/verdicts/
+!work/damage/
+!work/corrigenda/
+!work/sigla/
+!work/rulings/
+!work/sweeps/
+!work/kraken/
+work/kraken/*
+!work/kraken/NOTES.md
+
+# Review pages are build artifacts and they are not small — book-review.html is
+# 6.7 MB of base64 crops on its own. Every one regenerates from its module:
+#   python3 -m bonitz_pipeline.mark_review    --html <path>
+#   python3 -m bonitz_pipeline.book_review
+work/sweeps/*.html
+
+# The rulings themselves are the point, and they are tiny. Keep them.
+!work/sweeps/*.json
+!work/sweeps/*.tsv
+
+!raw/
+raw/*
+!raw/opus/
+
+__pycache__/
+*.pyc

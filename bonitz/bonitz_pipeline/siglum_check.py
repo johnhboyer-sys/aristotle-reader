@@ -191,8 +191,19 @@ def book_ok(work: str, token: str) -> bool:
     Every character of `token` is already known to be a book letter; what is not
     known is whether they make a possible NUMBER.  `πο` does not: 80 + 70 = 150.
     """
+    # A work cited with NO book letter is the ordinary case for a single-book
+    # work, and the Metaphysics carries eleven of them. There is no numeral to
+    # judge, so there is nothing to refuse.
+    if not token:
+        return True
     if work in NAMED_BOOKS:            # the Metaphysics letters are names
         return len(token) == 1 and token.lower() in NAMED_SERIES
+    # ⚠ THE CALLER MAY NOT HAVE CHECKED. `resolve` only reaches here behind
+    # `all(ch in BOOK_LETTERS ...)`, but `by_page` does not, so a token carrying
+    # a ligature or a capital used to raise KeyError out of a predicate — a
+    # function whose whole job is to answer yes or no. Answer no.
+    if any(c not in NUMERAL for c in token):
+        return False
     values = [NUMERAL[c] for c in token]
     if values != sorted(values, reverse=True):
         return False                   # numerals are written high to low: κϛ, λβ

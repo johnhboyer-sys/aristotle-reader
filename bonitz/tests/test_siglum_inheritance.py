@@ -309,3 +309,20 @@ def test_a_latin_lookalike_that_is_not_a_real_siglum_stays_unresolved():
     cs = [cite('XQ', 999)]
     resolve(cs, WORKS)
     assert cs[0].how == 'unresolved'
+
+
+def test_a_predicate_answers_rather_than_raising():
+    """`book_ok` used to index NUMERAL directly, so a token carrying a ligature
+    or a capital raised KeyError out of a function whose whole job is to answer
+    yes or no. `resolve` never hit it — it only calls through a
+    `all(ch in BOOK_LETTERS ...)` guard — but `by_page` does not, and building
+    the work-level review queue crashed on `ȣ` the first time it ran."""
+    from bonitz_pipeline.siglum_check import book_ok, by_page
+    for token in ('ȣ', 'ϗ', 'Α', 'πκς', 'x'):
+        assert book_ok('Ζι', token) is False, f'{token!r} should be refused'
+    assert by_page('ȣ', 616, WORKS) is None
+    assert book_ok('Ζι', 'ε') is True, 'a real book letter still passes'
+    # A work cited with NO book letter is the ordinary case, and the Metaphysics
+    # carries eleven. There is no numeral to judge, so there is nothing to
+    # refuse — guarding empty as invalid broke a genuine citation of the work ζ.
+    assert book_ok('ζ', '') is True and book_ok('Μ', '') is True

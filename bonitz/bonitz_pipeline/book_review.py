@@ -268,7 +268,9 @@ def lan_address() -> str:
     return '127.0.0.1'
 
 
-def serve(fs: list[Finding], port: int = 8791, host: str = '127.0.0.1') -> None:
+def serve(fs, port: int = 8791, host: str = '127.0.0.1',
+          page: Path = None, store: Path = None, verdicts: tuple = (
+              'preserve', 'fix-letter', 'fix-page')) -> None:
     """⚠ `--wifi` BINDS TO EVERY INTERFACE, so anything on the network can read
     the page and post rulings. There is no authentication and none is wanted —
     it is a scan of a book printed in 1870 and a JSON file of letter choices —
@@ -276,7 +278,12 @@ def serve(fs: list[Finding], port: int = 8791, host: str = '127.0.0.1') -> None:
     """
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    body = PAGE.read_bytes()
+    # `page` and `store` are parameters so the work-level queue can reuse this
+    # server without a second copy of it. Defaults keep the book-level caller
+    # unchanged.
+    page = page or PAGE
+    store = store or RULINGS
+    body = page.read_bytes()
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
@@ -297,22 +304,21 @@ def serve(fs: list[Finding], port: int = 8791, host: str = '127.0.0.1') -> None:
                 self.send_response(400); self.end_headers(); return
             sid, verdict = d.get('id'), d.get('verdict')
             valid = {s.sid for s in fs}
-            if sid not in valid or verdict not in ('preserve', 'fix-letter',
-                                                   'fix-page'):
+            if sid not in valid or verdict not in verdicts:
                 # A malformed id used to be written straight to the store, so a
                 # typo in the page silently produced a ruling on nothing.
                 self.send_response(400); self.end_headers(); return
-            store = (json.loads(RULINGS.read_text(encoding='utf-8'))
-                     if RULINGS.exists() else {})
-            store[sid] = {'verdict': verdict, 'detail': d.get('detail', '')}
-            RULINGS.parent.mkdir(parents=True, exist_ok=True)
-            RULINGS.write_text(json.dumps(store, ensure_ascii=False, indent=1),
-                               encoding='utf-8')
+            have = (json.loads(store.read_text(encoding='utf-8'))
+                    if store.exists() else {})
+            have[sid] = {'verdict': verdict, 'detail': d.get('detail', '')}
+            store.parent.mkdir(parents=True, exist_ok=True)
+            store.write_text(json.dumps(have, ensure_ascii=False, indent=1),
+                             encoding='utf-8')
             self.send_response(204); self.end_headers()
 
     if host == '0.0.0.0':
         print(f'http://{lan_address()}:{port}   (open on the WiFi)')
-    print(f'http://localhost:{port}  ->  {RULINGS}')
+    print(f'http://localhost:{port}  ->  {store}')
     HTTPServer((host, port), H).serve_forever()
 
 
