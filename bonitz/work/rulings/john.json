@@ -1466,6 +1466,19 @@
    "source": "chat",
    "date": "2026-08-08",
    "applied": true
+  },
+  {
+   "id": "page-041-R:3:ἀκροτάτῃ",
+   "kind": "keep",
+   "col": "page-041-R",
+   "line": 3,
+   "form": "ἀκροτάτῃ",
+   "ruled": "subscript is on the page",
+   "quote": "ἀκροτἀτῃ",
+   "note": "Held for him because removing a mark on the strength of absent ink cannot be checked by looking harder. He read the subscript as present and the corpus already had it, so nothing was written. A keep carries no trace in the text, which is exactly why it is in the ledger.",
+   "source": "chat",
+   "date": "2026-08-08",
+   "applied": true
   }
  ]
 }

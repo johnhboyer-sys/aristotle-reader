@@ -352,6 +352,13 @@ def load(queue: Path = QUEUE) -> list[Site]:
         s.guard = guards.get((s.col, s.line), '')
         s.shape = shape(s.col, s.line, s.corpus)
         out.append(s)
+    # TWO stores, and both have to be read.  `mark-verdicts.json` is what was
+    # acted on; `mark-rulings.json` is what John clicked on the review page.
+    # Reading only the first reported all 45 class B sites he ruled as UNRULED,
+    # so the next session would have put them in front of him again — the same
+    # quiet loss of a human decision that the ledger exists to prevent, wearing
+    # a different hat.  His click wins where the two disagree: it is the one
+    # with a person behind it.
     v = ROOT / 'work/sweeps/mark-verdicts.json'
     if v.exists():
         ruled = json.loads(v.read_text(encoding='utf-8'))['verdicts']
@@ -364,6 +371,17 @@ def load(queue: Path = QUEUE) -> list[Site]:
                 s.verdict, s.why = 'JOHN', s.guard
             elif s.shape:
                 s.verdict, s.why = 'NO CHANGE', s.shape
+    c = ROOT / 'work/sweeps/mark-rulings.json'
+    if c.exists():
+        clicks = json.loads(c.read_text(encoding='utf-8'))['rulings']
+        for s in out:
+            r = clicks.get(f'{s.col}:{s.line}:{s.corpus}')
+            if not r or r.get('form') == '?':   # '?' is "unsure": still open
+                continue
+            s.verdict = 'JOHN'
+            s.proposed = '' if r['form'] == s.corpus else r['form']
+            s.why = (f'John ruled this on the review page: {r["label"]}'
+                     f' — {r.get("applied", "")}')
     return out
 
 

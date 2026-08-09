@@ -257,12 +257,12 @@
    "applied": "nothing to apply — the corpus already matches the ink"
   },
   "page-041-R:3:ἀκροτάτῃ": {
-   "verdict": "ADJUDICATE",
-   "proposed": "ἀκροτάτη",
-   "why": "The ink shows no iota subscript under the η, while κορυφῇ two words later plainly has one. If that reading is right the corpus has ADDED a mark the page lacks, and the fix is to remove it and bank Bonitz's slip against Hom. Α 499 in work/corrigenda. Held back because removing a mark on the strength of absent ink is the one move that cannot be checked by looking harder — it needs your eye, not mine.",
-   "by": "Opus, against the 400 dpi ink",
-   "at": "2026-08-09T01:13:59+00:00",
-   "applied": "no — held for John"
+   "verdict": "PRESERVE",
+   "proposed": "",
+   "why": "John ruled the subscript IS on the page (2026-08-08), against my reading that it was absent. Nothing changes: the corpus already has ἀκροτάτῃ, which is also what Hom. Α 499 requires, so no corrigendum is due either. I had read the η of ἀκροτάτη as having a plain descender beside the ῳ of ἄκρῳ on the line above; he looked at the same crop and read the hook.",
+   "by": "John Boyer, against the 400 dpi ink",
+   "at": "2026-08-09T03:02:41+00:00",
+   "applied": "nothing to apply — the corpus already matches his ruling"
   }
  }
 }

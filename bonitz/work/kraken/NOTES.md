@@ -1796,3 +1796,33 @@ raises the same alarm as a silent overwrite, permanently. An alarm you cannot
 clear by being right stops being read. Overruling means hand-editing the
 entry, so it cannot happen as a side effect — which is what keeps the
 remaining 7 worth looking at.
+
+### 041-R:3 — John overruled my reading, and nothing changed
+
+I held `ἀκροτάτῃ` back because the ink looked to me like a plain descender on
+the η beside the obvious subscript hook on the `ῳ` of `ἄκρῳ` one line above.
+He looked at the same crop and read the hook: **the subscript IS on the
+page.** The corpus already had `ἀκροτάτῃ`, so nothing was written — and no
+corrigendum is due either, since that is also what Hom. Α 499 requires.
+
+Recorded as a `keep` in the ledger. **A keep leaves no trace in the text,
+which is exactly why it has to be recorded** — the two ἁλι- words on 044-R
+were keeps, and a family propagation "corrected" both because nothing showed
+a human had already looked.
+
+That closes classes C and D: 15 preserved, 5 changed, none outstanding.
+
+### Two ruling stores, one of them unread
+
+`load()` read verdicts from `mark-verdicts.json` only. The review server
+writes John's clicks to `mark-rulings.json`. So **all 45 class B sites he
+ruled reported as UNRULED**, and the next session to open the queue would
+have put them in front of him a second time.
+
+Nothing was lost — the text carries the rulings and the ledger holds them —
+but this is the same failure the ledger exists to prevent, wearing a
+different hat: a human decision that the machinery cannot see. `load()` now
+reads both, and a click wins where they disagree, because it is the one with
+a person behind it. An `'?'` form still means unsure and stays open.
+
+All 78 real sites now carry a verdict; 46 of them are his.
