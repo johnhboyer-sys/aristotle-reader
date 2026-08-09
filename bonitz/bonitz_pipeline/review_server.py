@@ -114,9 +114,17 @@ function show(){
    '<div class="whole">the whole printed line<br>'+
    '<img src="/line/'+i+'.png" alt=""></div>';
  ctx.textContent=s.context;
+ // Say WHICH WAY the line was found. Scoring geometry 0.9 to clear the
+ // warning was false confidence: a shifted grid then looked like a strong
+ // text match. `score` is now the text-match ratio and nothing else.
+ const HOW={text:'', ink:'ⓘ no segmentation for this column — line found by '+
+   'its ink, not its text. Check the words either side read as expected.',
+   slices:'⚠ line placed by dividing the column evenly. It may well be the '+
+   'wrong line — do not rule on it.',
+   mismatch:'⚠ the nearest segmented line is not this line (match '+
+   'SCORE) and the ink profile refused the page. Do not rule on it.'};
  warn.innerHTML=(s.guard?'<span id="guard">⛔ '+s.guard+'</span><br>':'')+
-   (s.score<0.6?'⚠ line match '+s.score.toFixed(2)+
-    ' — the crop may not be this line':'');
+   (HOW[s.how]||'').replace('SCORE', s.score.toFixed(2));
  btns.innerHTML='';
  s.cands.forEach((c,k)=>{
   const b=document.createElement('button');
@@ -212,8 +220,9 @@ def build(classes: list[str], real: bool, redo: bool = False):
                 continue
             if s.verdict:                 # already decided and acted on
                 continue
-        im, score = crop_word(s.col, s.line, s.corpus, scale=5.0)
-        ln, _ = crop_word(s.col, s.line, s.corpus, scale=2.0, whole=True)
+        im, score, how = crop_word(s.col, s.line, s.corpus, scale=5.0)
+        ln, _, _ = crop_word(s.col, s.line, s.corpus, scale=2.0,
+                             whole=True)
         sid = f'{s.col}:{s.line}:{s.corpus}'
         for target, pic in ((imgs, im), (lines, ln)):
             buf = io.BytesIO()
@@ -222,7 +231,7 @@ def build(classes: list[str], real: bool, redo: bool = False):
             target.append(buf.getvalue())
         out.append({'id': sid, 'col': s.col, 'line': s.line,
                     'corpus': s.corpus, 'llama': s.llama, 'cls': s.cls,
-                    'context': s.context, 'score': score,
+                    'context': s.context, 'score': score, 'how': how,
                     'guard': s.guard or s.shape,
                     'cands': [[f, n, spot(s.corpus, f)]
                               for f, n in candidates(s.corpus, s.llama)]

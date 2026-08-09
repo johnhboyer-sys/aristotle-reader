@@ -169,7 +169,8 @@ class Site:
     cls: str = ''
     guard: str = ''            # John ruled this line: never touch it
     shape: str = ''            # not a whole word, so no mark is expected
-    score: float = 0.0
+    score: float = 0.0          # TEXT-match ratio only; 0.0 when geometric
+    how: str = 'text'           # how the line was found: see `crop_word`
     img: object = None          # PIL image of the word, at the ink
     verdict: str = ''           # filled in by adjudication
     proposed: str = ''
@@ -243,6 +244,15 @@ def _profile(col: str, n: int) -> tuple[tuple[int, int, int, int], ...]:
     pitch = (bot - top) / n
     if pitch < 12 or pitch > a.shape[0] / 4:
         return ()
+    # ⚠ These bounds are weak on their own: for n≈60 almost any pitch passes.
+    # The real check is that the page LOOKS like n lines of text.  Ink bands
+    # merge when descenders touch, so the count runs under n, never far over —
+    # 033-R gives 51 raw bands for 62 lines.  A page that yields far fewer, or
+    # more than n, is not a plain text block and the equal-division model does
+    # not describe it.  Refusing is correct: the caller falls back and says so,
+    # where a confident wrong grid would put John on the wrong line.
+    if not (n * 0.55 <= len(bands) <= n * 1.15):
+        return ()
     cuts = [top]
     for k in range(1, n):
         p, w = int(top + k * pitch), max(2, int(pitch * 0.35))
@@ -259,7 +269,8 @@ def _profile(col: str, n: int) -> tuple[tuple[int, int, int, int], ...]:
 
 
 def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
-              whole: bool = False, spread: int = 7) -> tuple[object, float]:
+              whole: bool = False, spread: int = 7
+              ) -> tuple[object, float, str]:
     """The ink at one word: the line found by TEXT, the word by proportion.
 
     Line numbers do not carry across — `work/reconciled` counts printed lines
@@ -271,14 +282,14 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
     src = ROOT / f'work/kraken400/cols/{col}.png'
     txt = ROOT / f'work/reconciled/{col}.txt'
     if not src.exists() or not txt.exists():
-        return None, 0.0
+        return None, 0.0, 'none'
     lines = txt.read_text(encoding='utf-8').splitlines()
     if lineno > len(lines):
-        return None, 0.0
+        return None, 0.0, 'none'
     want = lines[lineno - 1]
     cand = _lines(col)
     im = Image.open(src)
-    box_, score = None, 0.0
+    box_, score, how = None, 0.0, 'text'
     if cand:
         x0, y0, x1, y1, got = max(cand, key=lambda t: difflib.SequenceMatcher(
             None, _key(want), _key(t[4]), autojunk=False).ratio())
@@ -301,13 +312,19 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
         boxes = _profile(col, len(lines))
         if boxes:
             x0, y0, x1, y1 = boxes[lineno - 1]
-            score = 0.9
+            how = 'ink'
         elif box_ is None:
             h = im.height / max(1, len(lines))
             x0, x1 = 0, im.width
             y0, y1 = int((lineno - 1) * h), int(lineno * h)
+            how = 'slices'
         else:
+            # The profile refused AND the only segmented line is a poor match.
+            # Keeping that box is failing open — the crop is probably the wrong
+            # line — so it is returned with its real score and labelled, never
+            # dressed up.
             x0, y0, x1, y1 = box_
+            how = 'mismatch'
     pad = int((y1 - y0) * 0.45)
     # Place the word across the line's ink extent by character offset.
     # `whole` shows the entire printed line.  The word window is placed by
@@ -339,7 +356,7 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
     if c.width and c.height:
         c = c.resize((int(c.width * scale), int(c.height * scale)),
                      Image.LANCZOS)
-    return c, score
+    return c, score, how
 
 
 def load(queue: Path = QUEUE) -> list[Site]:
@@ -651,10 +668,26 @@ def html(sites: list[Site], out: Path, title: str, applied: bool) -> Path:
                 f'</button></div>')
         img = f'<img src="data:image/png;base64,{_b64(s.img)}">' if s.img \
             else '<p class="nocrop">no crop — see note</p>'
+        # Say HOW the line was found rather than quoting a number that means
+        # different things in different branches.  Scoring the geometric fit
+        # 0.9 so it cleared the warning was false confidence — a drifted grid
+        # then read as a strong text match.
+        HOW = {
+            'text': '',
+            'ink': '<p class="note">ⓘ no segmentation for this column — the '
+                   'line was found by its ink, not its text. Check the words '
+                   'either side read as expected.</p>',
+            'slices': '<p class="warn">⚠ the line was placed by dividing the '
+                      'column evenly; it may well be the wrong line. Do not '
+                      'rule on it.</p>',
+            'mismatch': '<p class="warn">⚠ the nearest segmented line is not '
+                        'this line (match {:.2f}) and the ink profile refused '
+                        'the page. Do not rule on it.</p>',
+            'none': '<p class="warn">⚠ no crop</p>',
+        }
         warn = ''
-        if s.img is not None and s.score < 0.6:
-            warn = ('<p class="warn">⚠ line match {:.2f} — the crop may not be '
-                    'this line; do not rule on it</p>'.format(s.score))
+        if s.img is not None:
+            warn = HOW.get(s.how, '').format(s.score)
         if s.guard:
             warn += f'<p class="guard">⛔ {s.guard}</p>'
         # NOT "proposed": an unruled site has no proposal behind it, and
@@ -714,6 +747,7 @@ td{padding:3px 20px 3px 0}
 .ok{font-size:12px;color:#0a6;white-space:nowrap}
 .why{font-size:13.5px;color:#444;margin:2px 0 0;max-width:82ch}
 .warn{color:#b00;font-size:13px;margin:6px 0 0}
+.note{color:#666;font-size:12.5px;margin:6px 0 0}
 .guard{color:#c00;font-weight:600;font-size:13px;margin:6px 0 0}
 .lead{background:#fff;border-left:3px solid #999;padding:10px 14px;
       margin:0 0 20px}
@@ -841,7 +875,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.sheets or args.html:
         for s in sites:
-            s.img, s.score = crop_word(s.col, s.line, s.corpus)
+            s.img, s.score, s.how = crop_word(s.col, s.line, s.corpus)
     if args.sheets:
         made = sheet(sites, args.sheets)
         print(f'{len(made)} sheets -> {args.sheets}')

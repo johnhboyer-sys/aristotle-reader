@@ -107,7 +107,7 @@
   "page-029-L:51:γενή": {
    "verdict": "FIX",
    "proposed": "γονή",
-   "why": "The ink has an OMICRON, not an epsilon: a closed round bowl, unlike the open ε of λευκὸν four words later on the same line. γονή (generation, seed) is also what the sentence needs — ὀρνίθων γονή, τὸ μὲν πρῶτον μικρὸν ϗ̀ λευκὸν φαίνεται. Both readers misread the letter; this is the only site in the mark queue where the disagreement was never about a mark at all.",
+   "why": "The ink has an OMICRON, not an epsilon: a closed round bowl, unlike the open ε of λευκὸν four words later on the same line. γονή (generation, seed) is also what the sentence needs — ὀρνίθων γονή, τὸ μὲν πρῶτον μικρὸν ϗ̀ λευκὸν φαίνεται. Both readers misread the letter; this is the only site in the mark queue where the disagreement was never about a mark at all. ⚠ RESIDUAL RISK, flagged by adversarial review (Grok, 2026-08-08): this is the only change here that alters a BASE LETTER, and base-letter overrides are the class that produced the 40 reverts of 2026-08-08. Sense prefers γονή but cannot by itself separate class (b) — our readers misread — from class (a), Bonitz printed γενή and we should preserve it. Only the ink separates them, and the ink is why this was applied: at 10× the bowl is closed and round, identical to the ο of ὀρνίθων and of τὸ on the same line, and unlike the open mid-stroked ε of μὲν three words on. Worth John's own eye all the same.",
    "by": "Opus, against the 400 dpi ink",
    "at": "2026-08-09T01:09:44+00:00",
    "applied": "yes — written into work/reconciled, awaiting John's approval"
@@ -123,7 +123,7 @@
   "page-039-L:1:ταυτὰ": {
    "verdict": "FIX",
    "proposed": "ταὐτὰ",
-   "why": "A clear raised comma stands over the υ: this is the crasis of τὰ αὐτά, keeping the smooth breathing of the second word (Smyth §68a), with the grave that §154a requires before λεγόμενα. Contrast 031-L:49 and 046-R:30, where Bonitz sets ταυτόν and ταυτό with nothing over the υ — so the mark here is deliberate, not house style.",
+   "why": "A clear raised comma stands over the υ. That is the crasis of τὰ αὐτά, keeping the smooth breathing of the second word, with the grave §154a requires before λεγόμενα. THE MARK ON THIS PAGE IS THE WHOLE ARGUMENT. ⚠ Adversarial review (Grok, 2026-08-08) was right to object to the reasoning I first gave: I pointed at 031-L:49 and 046-R:30, where Bonitz sets ταυτόν and ταυτό bare, and called the mark here \"deliberate, not house style\". That is backwards. Two absences say the house was not strict; they cannot make a third site's mark intentional, and if anything they should have raised my doubt that the stroke is a fleck. Mixed practice in a 19th-century index is ordinary. The contrast is context; it is not evidence.",
    "by": "Opus, against the 400 dpi ink",
    "at": "2026-08-09T01:09:44+00:00",
    "applied": "yes — written into work/reconciled, awaiting John's approval"
@@ -219,7 +219,7 @@
   "page-031-L:49:ταυτόν": {
    "verdict": "PRESERVE",
    "proposed": "",
-   "why": "NOTHING stands over the υ — no coronis, no breathing — and the acute is on the ο. Bonitz sets the crasis without its mark here. Contrast 039-L:1, where he does print ταὐτὰ, so the two are a real difference in the setting and not a house rule. LlamaParse's ταὐτὸν invents both the breathing and the grave.",
+   "why": "NOTHING stands over the υ — no coronis, no breathing — and the acute is on the ο. Bonitz sets this crasis bare. LlamaParse's ταὐτὸν invents both the breathing and the grave. (Contrast 039-L:1, where the mark IS printed. Neither site is evidence about the other; each was read on its own page.)",
    "by": "Opus, against the 400 dpi ink",
    "at": "2026-08-09T01:13:59+00:00",
    "applied": "nothing to apply — the corpus already matches the ink"
@@ -227,7 +227,7 @@
   "page-037-R:7:ποῖοί": {
    "verdict": "PRESERVE",
    "proposed": "",
-   "why": "Circumflex on the οι and acute on the final ι, both clear. ποῖοι is properispomenon and τινές follows as an enclitic (§183c).",
+   "why": "Circumflex on the οι and acute on the final ι, both clear. ποῖοι is properispomenon and τινές follows as an enclitic, so §183c throws the acute onto the ultima. ⚠ Note what §183c does NOT explain, caught in adversarial review (Grok, 2026-08-08): the corpus also accents τινές itself, and a disyllabic enclitic after a properispomenon is normally left bare. It is accented here because εἰσι follows and the enclitics chain (§185) — the first passes its accent back and takes one from the second. The PRESERVE stands; the note stopped one rule short.",
    "by": "Opus, against the 400 dpi ink",
    "at": "2026-08-09T01:13:59+00:00",
    "applied": "nothing to apply — the corpus already matches the ink"
@@ -243,7 +243,7 @@
   "page-046-R:30:ταυτό": {
    "verdict": "PRESERVE",
    "proposed": "",
-   "why": "Acute on the ο and nothing over the υ, as at 031-L:49. Bonitz's crasis is unmarked here. LlamaParse's ταὐτό adds a breathing the page does not have.",
+   "why": "Acute on the ο, nothing over the υ, as at 031-L:49. Bonitz sets this crasis bare. LlamaParse's ταὐτό adds a breathing the page does not have.",
    "by": "Opus, against the 400 dpi ink",
    "at": "2026-08-09T01:13:59+00:00",
    "applied": "nothing to apply — the corpus already matches the ink"

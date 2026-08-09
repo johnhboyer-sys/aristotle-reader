@@ -1890,3 +1890,75 @@ so the recovered line improves the EVALUATION, not the training.
     Bekker refs 5,188 unspaced / 0 spaced
     combining tilde 0, perispomeni 3,394
     ȣ 1,645 occurrences, ȣ̓ 155
+
+### Adversarial review of all of the above — Grok, 2026-08-08
+
+Full brief: judge the Greek and the code, treat every claim about ink as a
+hypothesis (it cannot see the scans). Five findings landed. All five are fixed
+above; recording them because each is a habit, not an incident.
+
+**1. `crop_word` scored geometry 0.9 — the worst of the five.** The ink-profile
+fallback returned `score = 0.9` so it would clear the page's `score < 0.6`
+warning. Grok: *"A bad geometric crop therefore looks like a strong text
+match."* Exactly right, and worse than any of the text disputes, **because
+this is the code that decides what John is allowed to see.** `score` is now
+the text-match ratio and nothing else — 0.0 when nothing was matched — and a
+new `how` field says which method produced the box: `text`, `ink`, `slices`,
+`mismatch`. The page warns off `how`. Pinned by `tests/test_crop_reports_how.py`.
+
+Also caught: when the profile refuses AND the only segmented line is a poor
+match, the old code silently kept the bad box. It still keeps it — there is
+nothing better — but it now returns `mismatch` and the page says do not rule.
+
+**2. `_profile` could pass a garbage page.** The pitch bounds are near-vacuous
+for n≈60. Added the check that actually bites: the number of ink bands must
+fall between 0.55n and 1.15n. Bands merge when descenders touch, so the count
+runs under n and never far over — 033-R gives 51 for 62. A page outside that
+is not a plain text block and the equal-division model does not describe it.
+
+**3. The `τεχνήν` corrigendum cited Smyth §163, which does not say what I used
+it for.** §163 limits how far back the accent may stand; it says nothing
+against a first-declension oxytone, and τιμή/τιμήν are perfectly legal. The
+objection to τεχνήν is not that the declension forbids an accented ultima but
+that THIS noun does not accent it: τέχνη is barytone and a noun's accent is
+persistent. Classification right, authority wrong, now LSJ s.v. τέχνη.
+
+**4. My crasis argument was rationalisation.** I wrote that Bonitz setting
+ταυτόν and ταυτό bare elsewhere made the mark at 039-L:1 "deliberate, not
+house style". Backwards. Two absences show the house was not strict; they
+cannot make a third site's mark intentional, and if anything they should have
+raised my doubt that the stroke is a fleck. Mixed practice in a 19th-century
+index is ordinary. The verdict stands on the ink alone, which is where it
+should have stood in the first place.
+
+**5. `ποῖοί τινές` stopped one rule short.** §183c explains the acute thrown
+onto ποῖοι. It does not explain the accent on τινές itself — a disyllabic
+enclitic after a properispomenon is normally bare. It is accented because εἰσι
+follows and the enclitics chain (§185).
+
+**Checked and upheld:** the 114/91/41 count reproduces exactly; all five
+§183c second accents are grammatically required; τεχνήν and ἀκριβεία are
+class (a) and not (c); αἶγας, ἦν, ἶρις, ταὐτὰ are the forms Greek wants given
+the ink; the `_profile` cut loop has no off-by-one; `candidates()`' vowel-run
+expansion is the right response to 033-R:20.
+
+**Two cautions worth keeping, neither of them fixable by code:**
+
+- **γενή → γονή is the one change that can re-create the 2026-08-08 failure.**
+  It is the only BASE-LETTER override here, made against a high-confidence
+  adjudicated verdict, and sense alone cannot separate "our readers misread"
+  from "Bonitz printed γενή and we should preserve it". The ink separates
+  them and is why it was applied. It still wants John's own eye.
+- **`superseded` and `reversed_by` are alarm mutes as well as records.** The
+  code cannot tell a real overrule from making the dashboard green. Both
+  require a hand edit and a written reason, which is a discipline, not a
+  mechanism.
+
+**And one correction to my own arithmetic.** I wrote "26 base-letter edits";
+that counts every substitution twice. It is **13 substitutions, ~10 letters
+introduced**. Grok also caught the gloss: calling the whole 114 "concentrated
+in the model's weakest classes" folds in **+23 iota subscripts**, the largest
+single add class, which the round-2 evaluation scored perfectly well. The
+honest version: **the smooth breathing (+21) and perispomeni (+16) corrections
+land in the weak classes — `ȣ̓` at 10.53%, perispomeni at 67.44% — and the
+subscript and base-letter corrections are simply corpus quality.**

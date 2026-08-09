@@ -8,9 +8,9 @@
    "printed": "τεχνήν",
    "correct": "τέχνην",
    "rule": "diacritic_sweep class C",
-   "authority": "τέχνη is a first-declension noun with a short final -η in the accusative singular; the accent cannot stand on the ultima. Smyth §163. The following τινα is a disyllabic enclitic after a paroxytone, which keeps its own accent (§183d) and throws nothing back.",
+   "authority": "τέχνη is barytone — the nominative accents the penult — and a noun's accent is persistent, staying where the nominative puts it unless a long ultima forces it forward. The accusative singular is therefore τέχνην. LSJ s.v. τέχνη.",
    "checked": "400dpi 2026-08-08",
-   "note": "The acute stands plainly over the η of -νήν, well clear of the χ, and the line's other accents (μαθήσεις, πρὸς, τὰς) are set normally. LlamaParse read τέχνην, i.e. it silently corrected the print. Preserved as printed per the diplomatic rule."
+   "note": "The acute stands plainly over the η of -νήν, well clear of the χ, and the line's other accents (μαθήσεις, πρὸς, τὰς) are set normally. LlamaParse read τέχνην, i.e. it silently corrected the print. Preserved as printed per the diplomatic rule. ⚠ The authority field first cited Smyth §163 for this, which is wrong and was caught in adversarial review (Grok, 2026-08-08): §163 limits how far back the accent may stand, and says nothing against a first-declension oxytone — τιμή, τιμήν are perfectly legal. The objection to τεχνήν is not that the ultima cannot be accented in the declension, but that THIS noun does not accent it. The classification was right; the citation was not."
   },
   {
    "page": 35,
