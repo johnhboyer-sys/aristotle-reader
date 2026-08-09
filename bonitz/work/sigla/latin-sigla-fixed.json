@@ -447,5 +447,23 @@
    "work": "Μ",
    "page": 985
   }
- ]
+ ],
+ "aubert": {
+  "at": "2026-08-09T12:34:10+00:00",
+  "why": "The OTHER direction. Bonitz's editor key (PDF p.11) makes the Aubert-Wimmer siglum the LATIN letter A, in a Latin apparatus beside Bk, Bz, Wz, S, C, Cr, St, K, followed by the GREEK work siglum: 'litterae A ... additum est siglum eius libri Aristotelici ... veluti AΖι i e Aub ad Ζι'. Two sites had the Latin A already; three had a Greek Α and are corrected here. The 63 work-siglum fixes went Latin->Greek; these three go Greek->Latin, because the key says the siglum is a Latin letter and the work siglum after it is Greek.",
+  "sites": [
+   {
+    "col": "page-042-R",
+    "line": 44
+   },
+   {
+    "col": "page-042-R",
+    "line": 45
+   },
+   {
+    "col": "page-044-R",
+    "line": 11
+   }
+  ]
+ }
 }

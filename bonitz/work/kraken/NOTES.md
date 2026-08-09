@@ -2072,3 +2072,62 @@ only converted homoglyphs would have mangled Aubert-Wimmer into the Analytics.
 Not applied — 2 sites, and it depends on reading p.12 properly, which is
 pending: the PDF text layer for these pages is Greek-mangled OCR and the image
 render could not be read in that session.
+
+## Bonitz's apparatus keys — pp.11 and 12, transcribed
+
+⚠ **I told John there was no Latin abbreviation key in this volume. There is.**
+I had looked only at pp.13-15 and concluded from three pages that the front
+matter held nothing else. Grok found it. Both keys are now in
+`work/sigla/apparatus-sigla.json`:
+
+- **p.11** *"Editores et interpretes librorum Aristotelicorum his siglis
+  significavimus"* — A/Aub, Bk (Bk² Bk³), Bsm, Bz, C, Cr, Did, F, Fr, Ka, K,
+  S (S I, S II), Spgl, St, Trdllbg, Vhl, Wz, Eucken, Prantl.
+- **p.12** *"In parte zoologica et botanica indicis auctores et libros saepe
+  adhibitos his notavimus siglis"* — Ar, B, Cuv, Da (Da I, Da II), E, Fo, G,
+  H, Harvey, Hehn, Heldreich, Lnd, M, Mo, Mr, PCG, R, Siebld, SMz, Sonnenburg,
+  Sprgl, Stn, Su.
+
+Bonitz closes p.11: *"Reliqua editorum et interpretum nomina cum sine
+compendio scripta sint explicationem non requirunt"* — anything not listed is
+written out in full. So the two lists are complete by design.
+
+### The seven unknowns, all settled
+
+| siglum | expansion | Grok |
+|---|---|---|
+| `Su` | Sundevall, *Die Thierarten des Aristoteles*, Stockholm 1863 | right |
+| `C` | Camus, *Histoire des animaux d'Aristote*, Paris 1783 | right |
+| `Cr` | Cresswell, *Aristotle's History of Animals*, London 1862 | right |
+| `St` | Strack, *Naturgeschichte der Thiere*, Frankfurt 1816 | right |
+| `K` | Külb, *Thiergeschichte*, Stuttgart 1856 | right |
+| `S` | Schneider, *De animalibus historiae libri decem*, Leipzig 1811 | right |
+| `A` | Aubert & Wimmer | **structure wrong** |
+
+Six of seven confirmed exactly. Worth recording that a web search returned six
+correct nineteenth-century bibliographic expansions, and that the one it got
+wrong was the one the volume states explicitly.
+
+### ⚠ `AZ` is not a siglum — it is `A` + a WORK siglum
+
+Bonitz, p.11: *"litterae A ubi opus erat additum est siglum eius libri
+Aristotelici, ad quem pertinet horum interpretum adnotatio, veluti **AΖι i e
+Aub ad Ζι**."* So `AΖι` is Aubert on **Ζι** (Historia animalium) and `AΖγ` is
+Aubert on **Ζγ** (De generatione animalium). Not "AZ plus a book letter",
+which is how both Grok and I first read it.
+
+**`Ka` (Karsch) does the same**: *"alter liber ab altero distinguitur siglis
+KΖμ. KΖι."* No KΖ tokens appear in pp.15-52, but they will further in.
+
+### The same encoding defect, pointing the other way
+
+Five `A`+work references are in the corpus: **two with a Latin A, three with a
+Greek Α**. The key settles it — `A` sits in a Latin apparatus beside Bk, Bz,
+Wz, S, C, Cr, St, K, so the Latin letter is right and the Greek three are the
+error. Corrected at 042-R:44, 042-R:45, 044-R:11.
+
+So the corpus had this defect in **both** directions: 63 work sigla written
+Latin that should be Greek, and 3 apparatus sigla written Greek that should be
+Latin. The two-test rule refused to touch these three when it fixed the 63 —
+`ΑΖι` is not a work siglum, so it failed confirmation and was left alone. That
+is the rule doing its job, and it is why the 63 could be applied unattended.
