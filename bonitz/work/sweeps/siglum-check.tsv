@@ -1,114 +1,27 @@
 column	line	citation	token	page	why
-page-015-R	22	β1.731b	β	731	reads as book β of Φ (the work last named), but 731 is outside Φ (184-267)
 page-016-L	32	Ζυ15. 616a	Ζυ	616	'Ζυ' is not one of Bonitz's sigla
 page-016-L	33	Ζυ34. 619b	Ζυ	619	'Ζυ' is not one of Bonitz's sigla
-page-017-L	13	ε18. 550a	ε	550	reads as book ε of π (the work last named), but 550 is outside π (859-967)
-page-017-L	25	πκ34. 726b	πκ	726	reads as book πκ of Ζι (the work last named), but 726 is outside Ζι (486-633)
-page-017-L	27	αχ800a	αχ	800	reads as book αχ of Ζγ (the work last named), but 800 is outside Ζγ (715-789)
-page-018-R	3	θ2. 1155b	θ	1155	reads as book θ of ηε (the work last named), but 1155 is outside ηε (1214-1249)
-page-018-R	28	Ζικ6. 637b	Ζικ	637	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-633, and the page beside it is 637
-page-019-R	7	κ36. 927 a	κ	927	reads as book κ of φτ (the work last named), but 927 is outside φτ (815-830)
-page-019-R	39	η10. 888 a	η	888	reads as book η of Μ (the work last named), but 888 is outside Μ (980-1093)
+page-017-L	25	πκ34. 726b	πκ	726	π is Προβλήματα at 859-967, and the page beside it is 726
+page-017-L	27	αχ800a	αχ	800	'αχ' is not one of Bonitz's sigla
 page-020-L	7	Πβ18. 1391 b	Πβ	1391	Π is Πολιτικά at 1252-1342, and the page beside it is 1391
-page-020-L	7	γ1. 1403 b	γ	1403	reads as book γ of πο (the work last named), but 1403 is outside πο (1447-1462)
-page-020-L	22	β26. 868 b	β	868	reads as book β of Ρ (the work last named), but 868 is outside Ρ (1354-1420)
-page-020-L	22	ια31. 902 b	ια	902	reads as book ια of Ρ (the work last named), but 902 is outside Ρ (1354-1420)
-page-021-L	55	α14. 1375 a	α	1375	reads as book α of Π (the work last named), but 1375 is outside Π (1252-1342)
-page-021-R	60	α19. 726 b	α	726	reads as book α of Γ (the work last named), but 726 is outside Γ (314-338)
-page-022-L	7	κις 31. 181 b	κις	181	'κις' is not one of Bonitz's sigla
-page-022-L	11	γ3. 1406 a	γ	1406	reads as book γ of Η (the work last named), but 1406 is outside Η (1094-1181)
-page-023-L	5	ι6. 1056 b	ι	1056	reads as book ι of Ζγ (the work last named), but 1056 is outside Ζγ (715-789)
-page-023-L	19	α15. 34 b	α	34	reads as book α of τθ (the work last named), but 34 is outside τθ (100-164)
-page-024-L	12	β6. 364b	β	364	reads as book β of Φ (the work last named), but 364 is outside Φ (184-267)
-page-024-L	12	γ4. 373b	γ	373	reads as book γ of Φ (the work last named), but 373 is outside Φ (184-267)
-page-024-R	18	σιν 32. 88 a	σιν	88	reads as book σιν of Ζι (the work last named), but 88 is outside Ζι (486-633)
-page-024-R	19	μ8. 1084 b	μ	1084	reads as book μ of Ζι (the work last named), but 1084 is outside Ζι (486-633)
-page-024-R	38	ι31. 618 b	ι	618	reads as book ι of Π (the work last named), but 618 is outside Π (1252-1342)
-page-024-R	57	ε4. 1304 a	ε	1304	reads as book ε of Ρ (the work last named), but 1304 is outside Ρ (1354-1420)
-page-025-L	3	γ14. 1415 b	γ	1415	reads as book γ of πο (the work last named), but 1415 is outside πο (1447-1462)
+page-024-R	28	οβ1374 a	οβ	1374	ο is Οἰκονομικά at 1343-1353, and the page beside it is 1374
 page-025-L	43	πκς 56. 946 b	πκς	946	'πκς' is not one of Bonitz's sigla
 page-025-L	46	κς56. 946 b	κς	946	'κς' is not one of Bonitz's sigla
-page-025-L	61	θ3. 253 b	θ	253	reads as book θ of ψ (the work last named), but 253 is outside ψ (402-435)
 page-025-R	27	πκς36. 944 b	πκς	944	'πκς' is not one of Bonitz's sigla
-page-026-L	6	ε6. 1306 a	ε	1306	reads as book ε of Μ (the work last named), but 1306 is outside Μ (980-1093)
-page-026-L	48	ς 609 a	ς	609	'ς' is not one of Bonitz's sigla
-page-026-L	49	θ3. 592 b	θ	592	reads as book θ of κ (the work last named), but 592 is outside κ (391-401)
-page-026-L	49	ι1. 609 a	ι	609	reads as book ι of κ (the work last named), but 609 is outside κ (391-401)
-page-026-R	50	κ5. 637 a	κ	637	reads as book κ of Ζι (the work last named), but 637 is outside Ζι (486-633)
-page-026-R	51	δ1. 764 a	δ	764	reads as book δ of Ζι (the work last named), but 764 is outside Ζι (486-633)
-page-027-L	3	ζ32. 579 b	ζ	579	reads as book ζ of Ζγ (the work last named), but 579 is outside Ζγ (715-789)
-page-027-L	5	Ζιβ1. 449 a	Ζιβ	449	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-633, and the page beside it is 449
-page-027-L	5	ε30. 556 a	ε	556	reads as book ε of Ζγ (the work last named), but 556 is outside Ζγ (715-789)
-page-027-R	1	λβ8. 961 a	λβ	961	reads as book λβ of Ρ (the work last named), but 961 is outside Ρ (1354-1420)
-page-027-R	47	σ9. 73 a	σ	73	reads as book σ of Ζι (the work last named), but 73 is outside Ζι (486-633)
-page-027-R	53	ζ35. 580 a	ζ	580	reads as book ζ of Π (the work last named), but 580 is outside Π (1252-1342)
-page-028-L	9	α5. 645 b	α	645	reads as book α of χ (the work last named), but 645 is outside χ (791-799)
-page-028-L	9	δ4. 678 a	δ	678	reads as book δ of χ (the work last named), but 678 is outside χ (791-799)
-page-028-L	28	υ3. 485 a	υ	485	reads as book υ of Ζμ (the work last named), but 485 is outside Ζμ (639-697)
-page-029-L	56	η10. 587 a	η	587	reads as book η of μ (the work last named), but 587 is outside μ (338-390)
-page-029-R	50	Ζικ7. 638a	Ζικ	638	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-633, and the page beside it is 638
-page-030-L	31	β1351 b	β	1351	reads as book β of μ (the work last named), but 1351 is outside μ (338-390)
-page-030-L	50	Ζικ3. 636 a	Ζικ	636	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-633, and the page beside it is 636
-page-030-R	18	γ3. 118b	γ	118	reads as book γ of Αβ (the work last named), but 118 is outside Αβ (24-70)
-page-030-R	19	ε4. 133a	ε	133	reads as book ε of Αβ (the work last named), but 133 is outside Αβ (24-70)
-page-030-R	53	δ6. 1292b	δ	1292	reads as book δ of ηε (the work last named), but 1292 is outside ηε (1214-1249)
-page-031-L	19	β11. 423 b	β	423	reads as book β of υ (the work last named), but 423 is outside υ (453-458)
-page-031-L	33	β12. 424 a	β	424	reads as book β of Ζγ (the work last named), but 424 is outside Ζγ (715-789)
-page-031-R	23	ν3. 1090b	ν	1090	reads as book ν of Ο (the work last named), but 1090 is outside Ο (268-313)
-page-031-R	23	μ2. 1077a	μ	1077	reads as book μ of Ο (the work last named), but 1077 is outside Ο (268-313)
-page-031-R	34	μη 100a	μη	100	reads as book μη of εν (the work last named), but 100 is outside εν (458-462)
-page-032-L	5	β12. 424 a	β	424	reads as book β of εν (the work last named), but 424 is outside εν (458-462)
-page-032-R	20	γ3. 665 a	γ	665	reads as book γ of υ (the work last named), but 665 is outside υ (453-458)
-page-032-R	28	η5. 1147 a	η	1147	reads as book η of Φ (the work last named), but 1147 is outside Φ (184-267)
-page-032-R	28	ζ9. 1142a	ζ	1142	reads as book ζ of Φ (the work last named), but 1142 is outside Φ (184-267)
-page-032-R	41	β4. 999 b	β	999	reads as book β of τβ (the work last named), but 999 is outside τβ (100-164)
-page-032-R	41	γ5. 1009 b	γ	1009	reads as book γ of τβ (the work last named), but 1009 is outside τβ (100-164)
+page-027-L	5	Ζιβ1. 449 a	Ζιβ	449	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-638, and the page beside it is 449
+page-027-R	47	σ9. 73 a	σ	73	σ is ἀνέμων θέσεις ϗ προσηγορίαι at 973-973, and the page beside it is 73
+page-028-L	28	υ3. 485 a	υ	485	υ is περὶ Ὕπνȣ ϗ ἐγρηγόρσεως at 453-458, and the page beside it is 485
 page-032-R	51	Ζυ6. 700 b	Ζυ	700	'Ζυ' is not one of Bonitz's sigla
-page-033-L	3	γ11. 1281 b	γ	1281	reads as book γ of Η (the work last named), but 1281 is outside Η (1094-1181)
-page-033-R	29	μυ1. 450 a	μυ	450	reads as book μυ of ψ (the work last named), but 450 is outside ψ (402-435)
-page-034-R	41	β2. 996b	β	996	reads as book β of Φ (the work last named), but 996 is outside Φ (184-267)
-page-035-L	3	δ3. 767b	δ	767	reads as book δ of Μ (the work last named), but 767 is outside Μ (980-1093)
-page-035-L	4	δ8. 776a	δ	776	reads as book δ of Μ (the work last named), but 776 is outside Μ (980-1093)
+page-033-R	29	μυ1. 450 a	μυ	450	μ is Μετεωρολογικά at 338-390, and the page beside it is 450
 page-035-L	22	Οβ13. 259a	Οβ	259	Ο is περὶ Οὐρανȣ̃ at 268-313, and the page beside it is 259
 page-035-L	48	Α4. 985a	Α	985	'Α' is not one of Bonitz's sigla
-page-035-R	18	β1. 283 b	β	283	reads as book β of Φ (the work last named), but 283 is outside Φ (184-267)
-page-035-R	35	δ6. 531 a	δ	531	reads as book δ of Ζμ (the work last named), but 531 is outside Ζμ (639-697)
-page-035-R	35	θ1. 588 b	θ	588	reads as book θ of Ζμ (the work last named), but 588 is outside Ζμ (639-697)
-page-036-R	44	γ15. 676a	γ	676	reads as book γ of Ζι (the work last named), but 676 is outside Ζι (486-633)
-page-036-R	44	δ10. 686b	δ	686	reads as book δ of Ζι (the work last named), but 686 is outside Ζι (486-633)
-page-037-L	3	θ2. 590a	θ	590	reads as book θ of Ζγ (the work last named), but 590 is outside Ζγ (715-789)
-page-037-L	15	γ5. 1010a	γ	1010	reads as book γ of Φ (the work last named), but 1010 is outside Φ (184-267)
-page-037-R	4	ε14. 546a	ε	546	reads as book ε of Π (the work last named), but 546 is outside Π (1252-1342)
-page-037-R	4	ι37. 621b	ι	621	reads as book ι of Π (the work last named), but 621 is outside Π (1252-1342)
-page-038-L	36	γ2. 517a	γ	517	reads as book γ of Η (the work last named), but 517 is outside Η (1094-1181)
-page-038-R	4	δ6. 1016 b	δ	1016	reads as book δ of Αα (the work last named), but 1016 is outside Αα (24-70)
 page-038-R	52	Πγ7. 1408 b	Πγ	1408	Π is Πολιτικά at 1252-1342, and the page beside it is 1408
 page-039-R	9	Ι4. 1166b	Ι	1166	'Ι' is not one of Bonitz's sigla
-page-040-L	44	πο8. 1408 b	πο	1408	reads as book πο of Π (the work last named), but 1408 is outside Π (1252-1342)
-page-040-R	10	ε19. 550b	ε	550	reads as book ε of πο (the work last named), but 550 is outside πο (1447-1462)
-page-040-R	18	Ζικ6. 637b	Ζικ	637	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-633, and the page beside it is 637
-page-040-R	21	Ζικ6. 637b	Ζικ	637	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-633, and the page beside it is 637
-page-041-L	43	δ10. 1125 b	δ	1125	reads as book δ of Π (the work last named), but 1125 is outside Π (1252-1342)
+page-040-L	44	πο8. 1408 b	πο	1408	πο is περὶ Ποιητικῆς at 1447-1462, and the page beside it is 1408
+page-041-L	3	Τδ3. 123 b	Τδ	123	'Τδ' is not one of Bonitz's sigla
 page-041-R	10	Ζκ7. 638b	Ζκ	638	Ζκ is περὶ Ζῴων κινήσεως at 698-704, and the page beside it is 638
-page-042-L	7	χ7. 401 b	χ	401	reads as book χ of Ζγ (the work last named), but 401 is outside Ζγ (715-789)
-page-042-L	19	γ7. 1234 a	γ	1234	reads as book γ of Η (the work last named), but 1234 is outside Η (1094-1181)
-page-042-L	27	χ3. 393 b	χ	393	reads as book χ of ο (the work last named), but 393 is outside ο (1343-1353)
-page-042-R	27	Ζικ6. 637b	Ζικ	637	Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-633, and the page beside it is 637
-page-043-R	44	β7. 1108 a	β	1108	reads as book β of Αα (the work last named), but 1108 is outside Αα (24-70)
-page-043-R	59	κ1. 1172 b	κ	1172	reads as book κ of Ρ (the work last named), but 1172 is outside Ρ (1354-1420)
-page-044-R	54	ε8. 788 b	ε	788	reads as book ε of Ζμ (the work last named), but 788 is outside Ζμ (639-697)
-page-045-L	59	β4. 111 b	β	111	reads as book β of Αγ (the work last named), but 111 is outside Αγ (71-100)
-page-045-L	59	δ6. 127 a	δ	127	reads as book δ of Αγ (the work last named), but 127 is outside Αγ (71-100)
-page-046-L	58	η2. 243 a	η	243	reads as book η of Κ (the work last named), but 243 is outside Κ (1-15)
-page-046-R	6	λ2. 1069 b	λ	1069	reads as book λ of Κ (the work last named), but 1069 is outside Κ (1-15)
-page-046-R	6	ν1. 1088 a	ν	1088	reads as book ν of Κ (the work last named), but 1088 is outside Κ (1-15)
+page-042-L	7	χ7. 401 b	χ	401	χ is περὶ Χρωμάτων at 791-799, and the page beside it is 401
+page-042-L	27	χ3. 393 b	χ	393	χ is περὶ Χρωμάτων at 791-799, and the page beside it is 393
 page-046-R	12	ΓΒ4. 331 a	ΓΒ	331	'ΓΒ' is not one of Bonitz's sigla
-page-046-R	20	θ7. 260 a	θ	260	reads as book θ of ψ (the work last named), but 260 is outside ψ (402-435)
-page-046-R	31	ν1. 1087 b	ν	1087	reads as book ν of αι (the work last named), but 1087 is outside αι (436-449)
-page-047-R	16	δ2. 1120b	δ	1120	reads as book δ of Ο (the work last named), but 1120 is outside Ο (268-313)
-page-047-R	54	ζ9. 887b	ζ	887	reads as book ζ of Ζι (the work last named), but 887 is outside Ζι (486-633)
-page-048-R	24	ι1. 609 b	ι	609	reads as book ι of φ (the work last named), but 609 is outside φ (805-814)
-page-048-R	49	α7. 344 b	α	344	reads as book α of κ (the work last named), but 344 is outside κ (391-401)
 page-049-L	51	Ηε10. 1835 b	Ηε	1835	Η is Ἠθικὰ Νικομάχεια at 1094-1181, and the page beside it is 1835
-page-050-R	13	γ4. 429a	γ	429	reads as book γ of Φ (the work last named), but 429 is outside Φ (184-267)
 page-050-R	31	Πζ5. 1820a	Πζ	1820	Π is Πολιτικά at 1252-1342, and the page beside it is 1820

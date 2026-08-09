@@ -33,6 +33,7 @@ the finding.
 
 from __future__ import annotations
 import argparse
+import bisect
 import json
 import re
 import sys
@@ -47,6 +48,28 @@ SIGLA = ROOT / 'work/sigla/work-sigla.json'
 # ς (final sigma) in that slot is a misreading of it and is deliberately NOT
 # accepted here — `πκς` against `πκϛ`×14 is a known reader error.
 BOOK_LETTERS = 'αβγδεϛζηθικλμνξοπρστυφχψω'
+
+# The alphabetic numerals, for reading a book letter as the NUMBER it is.  This
+# is what tells `πο` from a book: read as a numeral it is 80 + 70 = 150, and no
+# work of Aristotle has 150 books — so `πο8. 1408b` is περὶ Ποιητικῆς misread or
+# mispaged, not the 150th book of the Rhetoric, which is what the checker used to
+# call it (silently, because 1408 really is in the Rhetoric).
+NUMERAL = dict(zip(BOOK_LETTERS,
+                   (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80,
+                    100, 200, 300, 400, 500, 600, 700, 800)))
+
+# The longest work in the corpus is the Problemata, and Bonitz cites `πλη` — book
+# 38.  Nothing legitimate goes higher, so a token that reads as a larger numeral
+# is not a book letter at all.  The bound is deliberately the OBSERVED maximum
+# rather than a per-work book count: inventing 48 book counts would be inventing
+# data, and this one number is in the corpus and can be pointed at.
+MAX_BOOK = 38
+
+# ⚠ THE METAPHYSICS IS EXEMPT FROM THAT BOUND, because its book letters are NAMES
+# and not numerals — Α α Β Γ … Μ Ν, the tradition's own titles for the fourteen
+# books.  Read as numerals its last books are μ = 40 and ν = 50, both over the
+# bound, and applying it would condemn `Μν` and every bare `ν` after it.
+NAMED_SERIES = 'αβγδεζηθικλμν'
 
 # METAPHYSICS BOOKS ARE NAMED, NOT NUMBERED.  Bonitz writes ΜΑ, Μα, Μβ … Μν,
 # using the alphabet as book NAMES — the tradition's Α, α-ελαττον, Β, Γ … — so
@@ -72,8 +95,14 @@ HOMOGLYPH = {'A': 'Α', 'B': 'Β', 'E': 'Ε', 'H': 'Η', 'I': 'Ι', 'K': 'Κ',
 # groups are free to divide any run of digits between them, and `οβ 1352b8`
 # parsed as chapter 13, page 52 — reporting a perfectly good Oeconomica
 # citation as out of range. Bonitz always sets the stop: `Πε 11. 1315a3`.
+# ⚠ THE GUARD MUST COVER ACCENTED LETTERS.  It used to read `(?<![Α-Ωα-ω])`, which
+# is U+0391-U+03A9 and U+03B1-U+03C9 — the UNACCENTED letters only.  Every accented
+# Greek letter sits outside that span (precomposed from U+03AC, Greek Extended from
+# U+1F00) and a decomposed one ends in a combining mark from U+0300, so the guard
+# passed exactly the case that occurs: a word accented early and ending in plain
+# letters.  `θέσιν 32. 88a` parsed as a citation of a work called `σιν`.
 CITE = re.compile(
-    r'(?<![Α-Ωα-ω])'
+    r'(?<![̀-ͯͰ-Ͽἀ-῿ȣ])'
     r'([Α-Ωα-ωϗȣϛABEHIKMNOPTXYZ]{1,4})'   # work siglum and/or book letter
     r'\s?(?:(\d{1,3})\s*\.)?\s*'   # chapter, always with its stop
     r'(\d{2,4})\s?([ab])'          # Bekker page and column
@@ -151,6 +180,43 @@ def split(token: str, works: dict[str, Work]) -> list[tuple[str, str]]:
     return out
 
 
+def book_ok(work: str, token: str) -> bool:
+    """Can `token` be a book of `work`?  A numeral question, not a lexical one.
+
+    Every character of `token` is already known to be a book letter; what is not
+    known is whether they make a possible NUMBER.  `πο` does not: 80 + 70 = 150.
+    """
+    if work in NAMED_BOOKS:            # the Metaphysics letters are names
+        return len(token) == 1 and token.lower() in NAMED_SERIES
+    values = [NUMERAL[c] for c in token]
+    if values != sorted(values, reverse=True):
+        return False                   # numerals are written high to low: κϛ, λβ
+    return sum(values) <= MAX_BOOK
+
+
+def by_page(token: str, page: int, works: dict[str, Work]) -> tuple[str, str] | None:
+    """The work the PAGE names, for a bare book letter whose context failed.
+
+    The module's promise is that the page adjudicates, but step 2 only ever put
+    one candidate to it — the work last named.  When that is wrong the page still
+    knows the answer, because Bekker spans are disjoint: 731 is De generatione and
+    can be nothing else.
+
+    Returns None where the page is genuinely ambiguous, which happens only at a
+    RANGE family (Αα/Αβ share a span, τα…τθ share a span) that the book letter
+    cannot pick a member of.
+    """
+    holders = sorted(s for s, w in works.items() if w.holds(page))
+    if not holders:
+        return None
+    if len(holders) > 1:               # an expanded family; the letter picks
+        for stem in {s[:-1] for s in holders}:
+            if stem + token in works and works[stem + token].holds(page):
+                return stem + token, token
+        return None
+    return (holders[0], token) if book_ok(holders[0], token) else None
+
+
 @dataclass
 class Cite:
     col: str
@@ -185,7 +251,8 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
             last = c.work
             continue
         # 2. the whole token as a book letter of the work last named
-        if last and all(ch in BOOK_LETTERS for ch in c.token):
+        if last and all(ch in BOOK_LETTERS for ch in c.token) \
+                and book_ok(last, c.token):
             if works[last].holds(c.page):
                 c.work, c.book, c.how = last, c.token, 'inherited'
                 continue
@@ -201,11 +268,30 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
                 c.work, c.book, c.how = stem + c.token, c.token, 'inherited'
                 last = c.work
                 continue
-            c.how, c.why = 'unresolved', (
-                f'reads as book {c.token} of {last} (the work last named), '
-                f'but {c.page} is outside {last} '
-                f'({works[last].lo}-{works[last].hi})')
-            continue
+            # THE PAGE STILL KNOWS.  Bekker spans are disjoint, so a page names
+            # its work whatever context we carried into it.  This is a THIRD
+            # outcome and not a resolution: it says the citation is sound and our
+            # context was not — a parser complaint, not a reader's misreading —
+            # so it must not sit in the pile John rules on.
+            guess = by_page(c.token, c.page, works)
+            if guess and guess[0] != last:
+                c.work, c.book = guess
+                c.how = 'page-inferred'
+                c.why = (f'reads as book {c.token} of {last} (the work last '
+                         f'named), but {c.page} is outside {last} '
+                         f'({works[last].lo}-{works[last].hi}); {c.page} is in '
+                         f'{c.work} and nothing else, so the work last named is '
+                         f'what is wrong here, not the citation')
+                last = c.work
+                continue
+            if not options:
+                c.how, c.why = 'unresolved', (
+                    f'reads as book {c.token} of {last} (the work last named), '
+                    f'but {c.page} is outside {last} '
+                    f'({works[last].lo}-{works[last].hi})')
+                continue
+            # fall through: the token is a work in its own right, and saying so
+            # is more use than calling it a book of something it is not
         # 3. named a work, but the page is not in it — the Ζιθ28 class
         if options:
             w = options[0][0]
@@ -227,16 +313,42 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
 
 
 def read(pages: range | None = None) -> list[Cite]:
+    """Every citation in the column, INCLUDING the ones that wrap.
+
+    ⚠ THE COLUMN IS READ AS A STREAM, NOT A LIST OF LINES.  790 citations in the
+    corpus are split across a line break, in two shapes:
+
+        Ζγα4. 717 | a16.        the page ends the line, the column letter the next
+        Ζιζ 22.   | 576b15.     siglum and chapter end the line, the page the next
+
+    Neither is anything Bonitz did — a printed column wraps where the measure runs
+    out, and our reconciled files keep his breaks because the transcription is
+    diplomatic.  Reading a line at a time makes the break semantic, which it is
+    not, and the cost is not only 790 unchecked citations: a work named on the near
+    side of a break never becomes the context for what follows, so the bare book
+    letters after it inherit whatever was named BEFORE it and are then reported as
+    errors.  `015-R:22` is the specimen.
+
+    `CITE` needed no change for this.  Its `\\s?` and `\\s*` match a newline
+    already; iterating by line was the whole of the bug.
+    """
     out = []
     for f in sorted((ROOT / 'work/reconciled').glob('*.txt')):
         n = int(f.stem.split('-')[1])
         if pages is not None and n not in pages:
             continue
-        for i, line in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
-            for m in CITE.finditer(line):
-                tok, chap, page, col = m.groups()
-                out.append(Cite(f.stem, i, m.group(0), tok, chap,
-                                int(page), col))
+        text = f.read_text(encoding='utf-8')
+        # offset of each line start, so a citation can still be filed under the
+        # line it BEGINS on — John rules on these against the scan
+        starts, pos = [], 0
+        for line in text.splitlines(keepends=True):
+            starts.append(pos)
+            pos += len(line)
+        for m in CITE.finditer(text):
+            tok, chap, page, col = m.groups()
+            out.append(Cite(f.stem, bisect.bisect_right(starts, m.start()),
+                            ' '.join(m.group(0).split()), tok, chap,
+                            int(page), col))
     return out
 
 

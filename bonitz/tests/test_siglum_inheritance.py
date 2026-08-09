@@ -43,6 +43,22 @@ def test_the_three_range_entries_expand_to_their_members():
     assert 'τϛ' not in WORKS, 'the Topics has eight books, α…θ, with no stigma'
 
 
+def test_the_historia_animalium_runs_through_book_kappa():
+    """`486a-633b` is the Historia animalium WITHOUT book κ — 633b is exactly where
+    book ι ends. Bonitz cites book κ eight times (636a, 637b ×4, 638a, and the bare
+    `κ5. 637a`, `κ7. 638b`), so the range in this table has to hold them.
+
+    This number is mine, not Bonitz's: his key prints the siglum and the title, and
+    the Bekker spans in `work-sigla.json` are supplied reference data. Nothing
+    diplomatic is at stake — it was simply wrong, and it manufactured seven of the
+    thirteen "work named beside the wrong page" findings out of nothing."""
+    assert WORKS['Ζι'].hi == 638, (
+        f"Historia animalium ends at {WORKS['Ζι'].hi}; book κ runs 633b-638b and "
+        f"Bonitz cites it")
+    assert WORKS['Ζι'].holds(637) and WORKS['Ζι'].holds(638)
+    assert not WORKS['Ζι'].holds(639), 'De partibus starts at 639a'
+
+
 def test_the_ambiguous_sigla_are_all_present():
     """Case is Bonitz's own and is significant — Ζι/ζ, Μ/μ, Ο/ο, Π/π are
     different works. If the loader ever folds case, this fails."""
@@ -134,6 +150,67 @@ def test_final_sigma_is_not_accepted_as_the_numeral_six():
     accepting it would launder a known reader error."""
     assert 'ς' not in BOOK_LETTERS
     assert 'ϛ' in BOOK_LETTERS
+
+
+# ------------------------------------------- when the page knows and nothing else does
+
+def test_a_bare_letter_whose_page_names_one_work_is_inferred_not_condemned():
+    """The module's docstring promises the page adjudicates, and step 2 only ever
+    offered the page ONE candidate — the work last named. When that fails, the page
+    still knows the answer: Bekker spans are disjoint, so 731 is De generatione and
+    nothing else.
+
+    This is a THIRD outcome, not a resolution. It says the citation is sound and the
+    context we carried into it was not, which is a parser complaint, not a reader's
+    misreading — so it must not sit in the same pile as `Ζιθ28`."""
+    cs = [cite('Φθ', 260), cite('β', 731)]
+    resolve(cs, WORKS)
+    assert cs[1].how == 'page-inferred', (
+        f'reported as {cs[1].how!r}; 731 is uniquely De generatione')
+    assert cs[1].work == 'Ζγ' and cs[1].book == 'β'
+    assert 'Φ' in cs[1].why, 'the report must name the context it overrode'
+
+
+def test_page_inference_supplies_context_to_what_follows():
+    """The page is better evidence than inheritance, so a citation it settles
+    becomes the context for the next bare letter."""
+    cs = [cite('Φθ', 260), cite('β', 731), cite('δ', 764)]
+    resolve(cs, WORKS)
+    assert cs[2].work == 'Ζγ' and cs[2].how == 'inherited'
+
+
+def test_a_page_no_work_owns_is_still_unresolved():
+    """Inference must not become a way of never failing."""
+    cs = [cite('Ζιε', 544), cite('β', 1835)]
+    resolve(cs, WORKS)
+    assert cs[1].how == 'unresolved'
+
+
+def test_a_named_work_beside_a_wrong_page_is_not_relabelled_as_a_book_letter():
+    """`πο8. 1408b` was reported as "book πο of the work last named" — and 1408 IS
+    in the Rhetoric, so it did not even fail; it resolved, wrongly and silently.
+    Both π and ο are book letters, so step 2 claimed the token and step 3 never ran.
+
+    πο is περὶ Ποιητικῆς, a work in its own right. That is the fact a reader needs,
+    because the choice in front of them is `Ργ7` against a misread Poetics siglum.
+    Read as a numeral, πο is 80+70 = 150, and no work of Aristotle has 150 books.
+
+    Inheritance still wins when it WORKS; this only governs what is said when the
+    book numeral is impossible."""
+    cs = [cite('Ρα', 1354), cite('πο', 1408)]
+    resolve(cs, WORKS)
+    assert cs[1].how == 'unresolved', (
+        f'reported as {cs[1].how!r} — a 150th book of the Rhetoric')
+    assert 'Ποιητ' in cs[1].why or '1447' in cs[1].why, (
+        f'the report says {cs[1].why!r} — it must name πο as a work in its own '
+        f'right, since that is the reading a misreading would have corrupted')
+
+
+def test_inheritance_still_wins_where_it_works():
+    """The guard on the change above: the load-bearing case must not regress."""
+    cs = [cite('Ζιε', 544), cite('ζ', 558)]
+    resolve(cs, WORKS)
+    assert cs[1].work == 'Ζι' and cs[1].how == 'inherited'
 
 
 # ------------------------------------------------------------------- regex
