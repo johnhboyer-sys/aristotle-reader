@@ -109,6 +109,15 @@ def check(r: dict) -> tuple[bool, str]:
     """(holds, why not).  A ruling that cannot be checked returns True with a
     reason, so an unverifiable ruling never masquerades as a verified one."""
     kind = r['kind']
+    if r.get('reversed_by'):
+        # John changed his mind, and the ledger's job is to keep BOTH rulings,
+        # not to pick one.  Deleting the old entry would erase the fact that he
+        # once ruled the other way — and the reason he reversed it (the scan
+        # improved) is the kind of thing a later session needs to see.  So the
+        # superseded ruling stays, stops being checked, and points at the
+        # ruling that replaced it.  ⚠ Only a hand-added field does this: a
+        # reversal cannot happen as a side effect of any pass over the text.
+        return True, f'reversed by {r["reversed_by"]}'
     if kind not in CHECKABLE:
         return True, f'not checkable ({kind})'
     if kind == 'damage':

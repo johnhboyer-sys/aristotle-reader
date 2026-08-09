@@ -1,6 +1,14 @@
 {
  "column": "page-042-R",
- "damaged": [7, 48],
- "note": "7: the ou-ligature of ἀλȣ́μενος is worn and images as a upsilon — training on it would teach the model to read real upsilons as the ligature. 48: ἐπίγειον, the ε printed only in part and the ι not at all.",
- "ruled_by": "John, 2026-08-06"
+ "damaged": [
+  7
+ ],
+ "note": "7: the ou-ligature of ἀλȣ́μενος is worn and images as a upsilon — training on it would teach the model to read real upsilons as the ligature. STILL RULED DAMAGED.",
+ "ruled_by": "John, 2026-08-06",
+ "reversed": {
+  "line": 48,
+  "at": "2026-08-08",
+  "why": "ἐπίγειον was ruled damaged on 2026-08-06 against the 300 dpi 1955 reprint, where there is γ, a fragment of ε, blank paper, then ο. At 400 dpi the ε is still broken — weak middle bar, printed as a dot — but a clear short vertical follows it. John, on the 10× crop: \"Look like epsilon iota.\" The ε breaks in BOTH copies, which is the type; the ι is whole in one and absent in the other, which is reproduction loss, not a failed impression. Held until this rebuild so the ruling would not disagree with the data the running model was trained on.",
+  "rule": "Record the printer's errors as printed means the PRINTER'S, not the photocopier's. Re-check every damage site when the scan changes."
+ }
 }

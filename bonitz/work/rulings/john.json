@@ -1332,10 +1332,11 @@
    "form": "",
    "ruled": "impression failed",
    "quote": "",
-   "note": "7: the ou-ligature of ἀλȣ́μενος is worn and images as a upsilon — training on it would teach the model to read real upsilons as the ligature. 48: ἐπίγειον, the ε printed only in part and the ι not at all.",
+   "note": "7: the ou-ligature of ἀλȣ́μενος is worn and images as a upsilon — training on it would teach the model to read real upsilons as the ligature. 48: ἐπίγειον, the ε printed only in part and the ι not at all. — REVERSED 2026-08-08: ruled against the 300 dpi 1955 reprint; at 400 dpi John read \"epsilon iota\". Line 48 is back in the training corpus. Line 7 stands.",
    "source": "work/damage/page-042-R.json",
    "date": "2026-08-06",
-   "applied": true
+   "applied": true,
+   "reversed_by": "page-042-R:48:line 48 is NOT damaged — epsilon iota (2026-08-08)"
   },
   {
    "id": ":0:Bekker references are unspaced",
@@ -1477,6 +1478,19 @@
    "quote": "ἀκροτἀτῃ",
    "note": "Held for him because removing a mark on the strength of absent ink cannot be checked by looking harder. He read the subscript as present and the corpus already had it, so nothing was written. A keep carries no trace in the text, which is exactly why it is in the ledger.",
    "source": "chat",
+   "date": "2026-08-08",
+   "applied": true
+  },
+  {
+   "id": "page-042-R:48:line 48 is NOT damaged — epsilon iota",
+   "kind": "policy",
+   "col": "page-042-R",
+   "line": 48,
+   "form": "",
+   "ruled": "line 48 is NOT damaged — epsilon iota",
+   "quote": "Look like epsilon iota.",
+   "note": "Reverses the 2026-08-06 damage ruling, which was made against the 300 dpi reprint. Line 48 returns to the training corpus at this rebuild; line 7 stays excluded.",
+   "source": "work/kraken/NOTES.md",
    "date": "2026-08-08",
    "applied": true
   }

@@ -1826,3 +1826,67 @@ reads both, and a click wins where they disagree, because it is the one with
 a person behind it. An `'?'` form still means unsure and stays open.
 
 All 78 real sites now carry a verdict; 46 of them are his.
+
+## Retrain round 3 — the corpus, not the pixels
+
+### ⚠ Found before training: the circumflex was a coin flip on the ligature
+
+`work/reconciled` carried **two encodings of one printed mark**: 3,238
+combining perispomeni (U+0342) and 156 combining tilde (U+0303). The split was
+not random — **the tilde occurs only on the ou-ligature**, 160 of 161
+instances. So `ȣ` + circumflex was written `ȣ̃` 160 times and `ȣ͂` 239 times.
+
+That is the same shape taught under two labels, 40/60, on the single character
+class this whole project turns on. `ketos -u NFC` cannot merge them: `ᾶ` has a
+precomposed form and `ȣ` + mark does not, so both survive NFC as distinct
+codepoints in the training targets.
+
+`canonical()` and `fold()` have always unified them, which is exactly why it
+went unnoticed for so long — every comparison in the pipeline was blind to it,
+including the reader comparator and `verdict_drift`. **A normalisation that
+makes a defect invisible to your own checks will hide it indefinitely.**
+
+Normalised to U+0342 throughout, asserting per column that `canonical()` was
+unchanged — this moves no text, it spells one mark one way.
+
+This is the same shape of confound as the Bekker spacing coin flip found
+before round 2, and that one turned out to be worth nearly all of round 2's
+apparent CER improvement.
+
+### What changed in the corpus since `m-best-epoch09`
+
+**114 character edits over 91 lines in 41 columns** (`git diff 0602395 HEAD --
+work/reconciled`), concentrated in the model's weakest classes:
+
+| added | | removed | |
+|---|---|---|---|
+| iota subscript | +23 | grave | −12 |
+| smooth breathing | +21 | acute | −9 |
+| perispomeni | +16 | smooth | −3 |
+| acute | +12 | perispomeni | −4 |
+| rough breathing | +9 | rough, diaeresis | −4 |
+
+plus 26 base-letter edits. Round 2 measured `ȣ̓` at **10.53%** — the worst
+class outright — and perispomeni at 67.44%.
+
+Plus the encoding fix above, which is 161 more targets in the same class.
+
+### page-042-R line 48 restored
+
+The 2026-08-06 damage ruling was made against the 300 dpi reprint. Reversed at
+this rebuild as NOTES directed: the ledger keeps BOTH rulings, the old one
+carrying `reversed_by` and no longer checked. `john_rulings.check()` grew that
+field for the purpose — same reasoning as `superseded` in `verdict_drift`. A
+ruling John made is never deleted, only pointed past.
+
+Line 7 stands. 481 holdout lines against 480; page-042-R is a holdout column,
+so the recovered line improves the EVALUATION, not the training.
+
+### Corpus before training
+
+    75 columns paired, 1 quarantined (page-033-R, 63 kept vs 62 gt)
+    3,823 train lines / 481 holdout — identical split, HOLDOUT is hardcoded,
+      so the delta against round 2 is attributable to the corpus alone
+    Bekker refs 5,188 unspaced / 0 spaced
+    combining tilde 0, perispomeni 3,394
+    ȣ 1,645 occurrences, ȣ̓ 155
