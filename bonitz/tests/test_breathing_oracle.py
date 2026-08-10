@@ -74,3 +74,33 @@ def test_silence_is_reported_as_silence():
     """Where it cannot decide it must return None, not a guess. A tool that
     always answers cannot be trusted on the answers that matter."""
     assert decide('ξξξξ') is None
+
+
+@pytest.mark.parametrize('word,other', [
+    ('ἕκτος', 'ἐκτός'),        # sixth / outside — LSJ holds both
+    ('ὀδών', 'ὁδῶν'),          # a tooth / of roads — LSJ has one, the corpus the other
+])
+def test_a_skeleton_two_real_words_share_is_never_decided(word, other):
+    """⚠ CODEX FOUND THIS AND IT WAS A WRONG AUTOMATIC DECISION. `decide("ἕκτος")`
+    returned SMOOTH, because Aristotle writes ἐκτός (outside) 137 times and
+    never ἕκτος (sixth) — so the corpus, asked about a skeleton, answered about
+    a different word. LSJ held both and knew.
+
+    It is the ἐξ/ἕξ failure in its second form: that fix covered the case where
+    Aristotle writes BOTH breathings, and left the case where he writes only
+    one of two real words. Frequency cannot settle which word is on the page.
+
+    ⚠ AND AMBIGUITY IS THE UNION OF BOTH AUTHORITIES. Checking LSJ alone still
+    let `ὀδών` through — LSJ holds it smooth, the corpus holds `ὁδῶν` rough, so
+    neither source is internally ambiguous and together they are."""
+    assert decide(word) is None, (
+        f'{word!r} was decided, but {other!r} shares its skeleton with the '
+        f'opposite breathing — no corpus count can say which is on the page')
+
+
+def test_an_exact_form_still_settles_itself():
+    """The strictness must not swallow the ordinary case: where Aristotle writes
+    this very word, breathing and all, there is nothing to decide."""
+    for w in ('ὁδῶν', 'ἐκτός', 'ἁφῆς'):
+        got = decide(w)
+        assert got and got[0] == breathing(w), f'{w!r} -> {got}'

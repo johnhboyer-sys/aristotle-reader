@@ -116,6 +116,31 @@ def decide(word: str) -> tuple[str, str] | None:
     """
     skel = skeleton(word)
     seen = attested().get(skel)
+
+    # ⚠ THE EXACT FORM SETTLES ITSELF. If Aristotle writes this very word,
+    # breathing and all, there is nothing to decide and nothing to flag.
+    if seen and word in seen:
+        return breathing(word), f'Aristotle writes {word} ({seen[word]}x)'
+
+    # ⚠ AND A DICTIONARY'S REAL JOB IS TO SAY WHEN GREEK IS AMBIGUOUS, not to
+    # count. Codex, 2026-08-10: `decide("ἕκτος")` returned SMOOTH, because
+    # Aristotle writes ἐκτός (outside) 137 times and never ἕκτος (sixth) — so
+    # the corpus, asked about a skeleton, answered about a different word.
+    # LSJ holds BOTH under `εκτος` and knew perfectly well. Same for ὀδών
+    # against ὁδῶν.
+    #
+    # This is the ἐξ/ἕξ failure again in its second form: there I fixed the case
+    # where Aristotle writes both, and left the case where he writes only one.
+    # Frequency cannot settle which word is on the page; only the page can.
+    # ⚠ AMBIGUITY IS THE UNION OF WHAT BOTH AUTHORITIES KNOW. Checking LSJ
+    # alone still let `ὀδών` through: LSJ holds it (smooth, a tooth) and the
+    # corpus holds `ὁδῶν` (rough, of roads), so NEITHER source is internally
+    # ambiguous and together they are. A skeleton two real Greek words share is
+    # undecidable however each authority looks on its own.
+    known = set(headwords().get(skel) or ()) | set((seen or {}))
+    if len({breathing(k) for k in known if breathing(k) != 'none'}) > 1:
+        return None
+
     if seen:
         # ⚠ ONLY FORMS THAT CARRY A BREATHING MAY VOTE ON ONE. Aristotle's text
         # holds uppercase runs like `ΑΓ` which have none, and skeletonising
