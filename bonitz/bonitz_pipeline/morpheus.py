@@ -50,8 +50,13 @@ LETTER = dict(zip('abgdezhqiklmncoprstufxyw', 'αβγδεζηθικλμνξοπ�
 # Morpheus writes the marks after the vowel they sit on, which is exactly where
 # a combining character belongs, so no reordering is needed.
 MARK = {')': '̓', '(': '̔', '/': '́', '\\': '̀',
-        '=': '͂', '|': 'ͅ', '+': '̈'}
+        '=': '͂', '|': 'ͅ', '+': '̈', "'": '᾽'}
 DROP = '_^*'          # vowel length, and the marker for a capital
+
+# ⚠ ONE ELISION MARK, THREE CHARACTERS. Bonitz's readers set U+1FBD, U+1FBF or
+# U+2019 for the same apostrophe; Morpheus writes ASCII. Folding them is what
+# makes `ἀλλ᾽` and `a)ll'` the same word.
+ELISION = {'᾽': '᾽', '᾿': '᾽', '’': '᾽', "'": '᾽'}
 
 
 def greek(raw: str) -> str | None:
@@ -76,8 +81,14 @@ def key(w: str) -> str:
     most nouns and adjectives, `ἁλουργός` among them — missed in silence while
     the coverage count looked healthy. Fourth time today that an unfolded
     character quietly stopped a lookup instead of failing it.
+
+    ⚠ AND THE ELISION MARK IS FOUR CHARACTERS ACROSS THE TWO SOURCES. Before
+    folding it, `greek()` rejected every key holding an apostrophe outright —
+    15,072 of them, every elided form Morpheus generates — and the index simply
+    came up 1.7% smaller with nothing to show that it had.
     """
-    return skeleton(w).replace('ς', 'σ')
+    s = skeleton(w).replace('ς', 'σ')
+    return ''.join(ELISION.get(c, c) for c in s)
 
 
 @lru_cache(maxsize=1)

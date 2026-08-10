@@ -81,3 +81,28 @@ def test_it_never_contradicts_the_lexicon_oracle():
                 if a and b and a[0] != b[0]:
                     clash.append((w, a[0], b[0]))
     assert not clash, f'{len(clash)} contradictions, e.g. {clash[:5]}'
+
+
+def test_the_decoder_drops_almost_nothing():
+    """⚠ THE CHECK THAT FOUND THE ELISION BUG. `greek()` returns None for a key
+    it cannot read, and a decoder that silently refused 15,072 keys — every
+    elided form Morpheus generates — produced an index 1.7% smaller with
+    nothing anywhere to say so. Counting the refusals is the only way that is
+    visible, so the count is the test."""
+    dropped = kept = 0
+    with morpheus.ANALYSES.open(encoding='utf-8', errors='replace') as fh:
+        for line in fh:
+            raw = line.split('\t', 1)[0]
+            if raw.startswith('!'):
+                continue
+            if morpheus.greek(raw) is None:
+                dropped += 1
+            else:
+                kept += 1
+    assert dropped < 100, f'{dropped:,} keys unread of {kept + dropped:,}'
+
+
+def test_one_elision_mark_across_two_sources():
+    """Bonitz's readers set U+1FBD, U+1FBF or U+2019; Morpheus writes ASCII."""
+    assert morpheus.greek("a)ll'") == 'ἀλλ᾽'
+    assert morpheus.key('ἀλλ᾽') == morpheus.key('ἀλλ’') == morpheus.key('ἀλλ᾿')
