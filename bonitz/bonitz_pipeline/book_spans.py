@@ -51,6 +51,9 @@ DIST = Path('/Users/johnboyer/Developer/aristotle-reader/build/dist')
 OUT = ROOT / 'work/sigla/book-spans.json'
 
 PLAIN = 'αβγδεζηθικλμνξοπρστυφχψω'
+# Bonitz letters the Topics α…θ with no stigma, so the family expands
+# on the plain alphabet — the same series `inventory()` uses.
+FAMILY = PLAIN
 META = 'Ααβγδεζηθικλμν'
 TOLERANCE = 1          # columns, for a boundary that falls inside a column
 
@@ -70,11 +73,36 @@ def derive(dist: Path = DIST) -> dict:
     key = json.loads((ROOT / 'work/sigla/work-sigla.json').read_text(encoding='utf-8'))
     out, provenance = {}, {}
     for e in key['works']:
-        m = e.get('manifest') or ''
+        m, note = e.get('manifest') or '', (e.get('note') or '')
+        sig = e['siglum']
         books = sorted(glob.glob(str(dist / m / 'book-*.json'))) if m else []
         if len(books) < 2:
             continue                        # single-book works need no table
+        # ⚠ A RANGE ENTRY IS NOT A CITABLE SIGLUM, and keying spans by it made
+        # this whole check a no-op for the works it covers. Bonitz's key prints
+        # `Ααβ` and `τα-θ` for families; a citation uses a MEMBER — `Αα`, `τζ` —
+        # and `inventory()` expands them, so a table keyed `Ααβ` never matched
+        # anything resolved. The Analytics and the Topics have never been
+        # book-checked, and nothing said so.
+        #
+        # Worse, the key gives ONE Bekker range per family, so `Αα` and `Αβ`
+        # both carried 24-70 — the whole Prior Analytics — and a book-α citation
+        # sitting on a book-β page passed. Each member gets its own book here.
         stem, spans = e['siglum'], {}
+        if 'RANGE' in note:
+            members = ([f'{sig[:-2]}{c}' for c in sig[-2:]] if '-' not in sig
+                       else [sig.partition('-')[0][:-1] + c
+                             for c in FAMILY[
+                                 FAMILY.index(sig.partition('-')[0][-1]):
+                                 FAMILY.index(sig.partition('-')[2]) + 1]])
+            for i, m in enumerate(members):
+                if i < len(books):
+                    cols = [g['column'] for g in
+                            json.loads(Path(books[i]).read_text())['segments']]
+                    out[m] = {'': [int(re.sub(r'\D', '', cols[0])),
+                                   int(re.sub(r'\D', '', cols[-1]))]}
+                    provenance[m] = f'{m}: {Path(books[i]).name}'
+            continue
         for p in books:
             n = int(re.search(r'book-(\d+)', p).group(1))
             cols = [s['column'] for s in json.loads(Path(p).read_text())['segments']]
@@ -104,7 +132,22 @@ def check(cites, table: dict) -> list[tuple]:
     spans = table['spans']
     bad = []
     for c in cites:
-        if c.how not in ('explicit', 'inherited') or not c.book or not c.work:
+        if c.how not in ('explicit', 'inherited') or not c.work:
+            continue
+        # ⚠ A FAMILY MEMBER IS ITS OWN BOOK. `Αα` is Prior Analytics book α —
+        # there is no separate letter to test — and the key gives ONE Bekker
+        # range for the whole family, so both `Αα` and `Αβ` carried 24-70 and a
+        # book-α citation on a book-β page passed. The member's own span is
+        # derived now, so check it directly.
+        if not c.book and c.work in spans and '' in spans[c.work]:
+            lo, hi = spans[c.work]['']
+            if not (lo - TOLERANCE <= c.page <= hi + TOLERANCE):
+                sibs = [w for w, t in spans.items()
+                        if '' in t and t[''][0] <= c.page <= t[''][1]
+                        and w[:-1] == c.work[:-1]]
+                bad.append((c, c.work, lo, hi, sibs[0][-1] if sibs else '?'))
+            continue
+        if not c.book:
             continue
         stem = c.work[:-len(c.book)] if c.work.endswith(c.book) else c.work
         if stem not in spans or c.book not in spans[stem]:
@@ -148,6 +191,12 @@ def missing_book(cites, table: dict) -> list[tuple]:
     out = []
     for c in cites:
         if c.how not in ('explicit', 'inherited') or c.work not in spans:
+            continue
+        # ⚠ A FAMILY MEMBER HAS NO BOOK TO MISS. `Αα` IS Prior Analytics book α;
+        # its span table is keyed '' because there is no further letter, and
+        # reading that as "a book is missing" flagged 246 perfectly good
+        # citations at once — the check inventing work for a reader.
+        if set(spans[c.work]) == {''}:
             continue
         if c.book:
             last_book[c.work] = c.book
