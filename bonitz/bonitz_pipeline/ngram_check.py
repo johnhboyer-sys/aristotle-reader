@@ -99,7 +99,12 @@ def main(argv: list[str] | None = None) -> int:
         if int(f.stem.split('-')[1]) not in rng:
             continue
         text = f.read_text(encoding='utf-8')
-        for ln, line in enumerate(text.splitlines(), 1):
+        # ⚠ THE LINE BREAK IS NOT A BOUNDARY, and this loop made it one — the
+        # module's own docstring says so and the code did the opposite. A
+        # quotation wrapping the column yields no n-gram across the break.
+        lines = text.splitlines()
+        for ln in range(1, len(lines) + 1):
+            line = lines[ln - 1] + (' ' + lines[ln] if ln < len(lines) else '')
             for ch in chunks(line):
                 for g in grams(ch, a.n):
                     if f' {g} ' in corpus:

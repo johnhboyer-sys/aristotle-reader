@@ -120,7 +120,19 @@ def main(argv: list[str] | None = None) -> int:
     for c in cites:
         lines = (ROOT / f'work/reconciled/{c.col}.txt').read_text(
             encoding='utf-8').splitlines()
-        q, q_raw = quoted(lines[c.line - 1], c.at)
+        # ⚠ A QUOTATION WRAPS THE COLUMN. Codex, 2026-08-10: `quoted()` was
+        # handed one physical line, so a quotation beginning on the previous
+        # line and ending before this citation was cut — often below the
+        # three-word minimum, and the citation then skipped in silence. Same
+        # defect as the 790 citations hidden by line-at-a-time reading.
+        #
+        # The PREVIOUS line is prepended and the offset shifted to match, so a
+        # quotation that runs across the break is seen whole. The break itself
+        # is not a boundary: Bonitz's measure ran out, he did not stop quoting.
+        prev = lines[c.line - 2] if c.line > 1 else ''
+        joined = (prev + ' ' + lines[c.line - 1]) if prev else lines[c.line - 1]
+        shift = len(prev) + 1 if prev else 0
+        q, q_raw = quoted(joined, c.at + shift)
         if len(q.split()) < MIN_WORDS:
             continue
         checked += 1
