@@ -23,8 +23,10 @@ his edition's and Morpheus generates its own; a grave where it writes an acute
 is not a disagreement about anything.  Comparing the full form would turn every
 such difference into a false finding.
 
-⚠ AND IT IS NOT INSTALLED EVERYWHERE.  The file ships inside Diogenes, 120MB,
-and this module returns silence rather than failing when it is absent.
+⚠ AND IF IT IS MISSING, THAT IS A FAULT.  The file ships inside Diogenes, 120MB,
+and the corpus pipeline reads the same one for stage-4 morphology.  An oracle
+that answers "I cannot say" because its authority quietly vanished is the exact
+mistake this module exists to stop making, so absence raises.
 
     python3 -m bonitz_pipeline.morpheus            # what it can decide
 """
@@ -86,10 +88,20 @@ def index() -> dict[str, set[str]]:
     and their key is breathing-STRIPPED, so reading them as ordinary entries
     makes the file look like it disagrees with Aristotle 4% of the time. It
     does not; those lines were being asked a question they do not answer.
+
+    ⚠ AND ITS ABSENCE IS A BREAKAGE, NOT A CONFIGURATION. This first returned an
+    empty index when the file was missing, so a moved or upgraded Diogenes would
+    have switched the authority off and left every count looking merely
+    cautious. That is the same failure that has cost this module four separate
+    bugs in one day. Diogenes is installed here; there is no machine in this
+    project where absence is normal, so absence is a fault and says so.
     """
-    out: dict[str, set[str]] = collections.defaultdict(set)
     if not ANALYSES.exists():
-        return {}
+        raise FileNotFoundError(
+            f'Morpheus is not at {ANALYSES}. It ships inside Diogenes, and the '
+            f'corpus pipeline reads the same file for stage-4 morphology — so '
+            f'this is a moved or broken install, not a machine without it.')
+    out: dict[str, set[str]] = collections.defaultdict(set)
     with ANALYSES.open(encoding='utf-8', errors='replace') as fh:
         for line in fh:
             raw = line.split('\t', 1)[0]
@@ -119,9 +131,6 @@ def main(argv: list[str] | None = None) -> int:
     a = p.parse_args(argv)
 
     idx = index()
-    if not idx:
-        print(f'Morpheus is not installed at {ANALYSES}')
-        return 0
     print(f'{len(idx):,} skeletons\n')
 
     from bonitz_pipeline.breathing_oracle import decide as lexicon

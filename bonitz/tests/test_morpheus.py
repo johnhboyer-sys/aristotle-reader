@@ -13,8 +13,13 @@ import pytest
 from bonitz_pipeline import morpheus
 from bonitz_pipeline.breathing_oracle import decide as lexicon
 
-pytestmark = pytest.mark.skipif(not morpheus.ANALYSES.exists(),
-                                reason='Morpheus ships inside Diogenes')
+def test_morpheus_is_installed():
+    """⚠ NOT A SKIP. Diogenes is installed on this machine, so a missing file
+    is a moved or broken install — and an authority that switches itself off
+    quietly is the failure this whole module was written to stop making."""
+    assert morpheus.ANALYSES.exists(), (
+        f'{morpheus.ANALYSES} is gone; the corpus pipeline reads the same file '
+        f'for stage-4 morphology, so this breaks more than the oracle')
 
 
 def test_the_beta_code_reader_is_actually_reading():
