@@ -192,3 +192,44 @@ def test_arbitration_will_not_prefer_the_attested_member_of_a_split_pair():
     assert arbitrate({'a': 'οἷα', 'b': 'οἶα'}) is None, (
         'οἷος and οἶος are two words; the corpus holding only one of them is '
         'a fact about Aristotle, not about the page')
+
+
+# ── the tokenizer must keep a terminal elision mark ────────────────────────
+
+@pytest.mark.parametrize('form', [
+    "ȣ̓́θ'",   # page-022-R:17 — the form that exposed this
+    "ἀλλ'",
+    "ἀλλ’",   # U+2019
+    "ἀλλ᾽",   # U+1FBD koronis
+    "ἀλλ᾿",   # U+1FBF psili
+    "ὥστ'",
+    "ἀμφ'",
+])
+def test_an_elided_token_is_captured_whole(form):
+    """⚠ THE APOSTROPHE WAS THROWN AWAY AND THE WORD NEVER ARRIVED. Without it,
+    skeleton length of `ȣ̓́θ'` is 3 and the length gate drops the form before
+    decide runs. Coverage looks fine; a class of words is simply missing."""
+    from bonitz_pipeline.breathing_oracle import WORD
+    assert WORD.findall(form + ' ὁ') == [form]
+    assert WORD.findall(form) == [form]
+
+
+def test_an_apostrophe_does_not_glue_two_words():
+    """Elision ends the first word. ἀλλ'ὅταν is two tokens, not one."""
+    from bonitz_pipeline.breathing_oracle import WORD
+    assert WORD.findall("ἀλλ'ὅταν") == ["ἀλλ'", "ὅταν"]
+    assert WORD.findall("ἀλλ’ὅταν") == ["ἀλλ’", "ὅταν"]
+
+
+def test_latin_is_still_excluded():
+    """Bonitz's Latin and his abbreviations use the same marks. The trailer is
+    only legal after a Greek body, so Latin never enters the oracle."""
+    from bonitz_pipeline.breathing_oracle import WORD
+    for text in (
+        "ceterum 'de re' videtur",
+        "'duo",
+        "men᾽ ceterum",
+        "intelligi'",
+        "d'Alembert",
+    ):
+        assert WORD.findall(text) == [], f'{text!r} leaked into WORD'

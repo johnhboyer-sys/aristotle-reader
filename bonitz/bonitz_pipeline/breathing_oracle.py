@@ -40,7 +40,12 @@ ROOT = Path(__file__).resolve().parent.parent
 DIST = Path('/Users/johnboyer/Developer/aristotle-reader/build/dist')
 
 ROUGH, SMOOTH = '̔', '̓'
-WORD = re.compile(r'[Ͱ-Ͽἀ-῿̀-ͯȣϗ]{2,}')
+# ⚠ ELISION TERMINATES THE TOKEN. Four characters print the same mark —
+# U+1FBD koronis, U+1FBF psili, U+2019, ASCII ' — and only the first two sit
+# inside ἀ-῿, so without an explicit trailer `ȣ̓́θ'` became `ȣ̓́θ` (skeleton
+# length 3) and never reached the oracle. The trailer is OPTIONAL AND FINAL
+# only: ἀλλ'ὅταν stays two words, and Latin d'Alembert is never glued on.
+WORD = re.compile(r"[Ͱ-Ͽἀ-῿̀-ͯȣϗ]{2,}['᾽᾿’]?")
 
 
 def skeleton(w: str) -> str:
