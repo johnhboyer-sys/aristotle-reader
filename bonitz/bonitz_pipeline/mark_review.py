@@ -269,7 +269,7 @@ def _profile(col: str, n: int) -> tuple[tuple[int, int, int, int], ...]:
 
 
 def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
-              whole: bool = False, spread: int = 7
+              whole: bool = False, spread: int = 7, at: int | None = None
               ) -> tuple[object, float, str]:
     """The ink at one word: the line found by TEXT, the word by proportion.
 
@@ -337,7 +337,13 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
     # character proportion over a line that is not monospaced, so it can miss —
     # which is one of the two reasons John gave for clicking "unsure".  Seeing
     # the whole line costs a little resolution and never lies about position.
-    at = -1 if whole else want.find(word)
+    # ⚠ `find` TAKES THE FIRST OCCURRENCE, AND A TOKEN CAN REPEAT ON ITS LINE.
+    # 048-R:39 ends `… Ζι` and also contains `Ζιζ10. 565 b1`, so a crop anchored
+    # on `Ζι` centred on the WRONG citation and John was shown ink belonging to
+    # a different reference — the worst failure available here, because the card
+    # is confidently wrong rather than merely unhelpful. Callers that know the
+    # offset pass it; `find` remains the fallback.
+    at = -1 if whole else (at if at is not None else want.find(word))
     if at < 0 or not want.strip():
         wx0, wx1 = x0, x1
     else:

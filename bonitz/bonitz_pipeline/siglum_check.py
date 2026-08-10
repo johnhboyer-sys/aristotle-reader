@@ -242,6 +242,10 @@ class Cite:
     chapter: str
     page: int
     column: str
+    # Character offset of the citation within its line. Without it a crop is
+    # placed by `str.find`, which takes the FIRST occurrence of the token — and
+    # 417 citations sit on a line where their token appears more than once.
+    at: int = 0
     work: str = ''
     book: str = ''
     how: str = ''        # 'explicit' | 'inherited' | 'unresolved'
@@ -288,6 +292,16 @@ def resolve(cites: list[Cite], works: dict[str, Work]) -> None:
         # the wrong work they are 40 and 50, over the bound.  The asymmetry was
         # the tell: bare κ (20) after Physics inferred the Metaphysics happily
         # and bare μ did not, though the page is equally decisive for both.
+        # ⚠ A NAMED BOOK MAY BE UPPERCASE, and only for the Metaphysics, whose
+        # first book is called Α. `Μδ2. 1013b13. Α4. 985a21` is ordinary
+        # inheritance — Μδ names the work, bare Α is its book Α, and 985 sits
+        # inside 980-993 — but the test below is lowercase-only, so the citation
+        # came out unresolved and was ruled a misprint. It is not one. Bonitz
+        # set it perfectly; we could not read it.
+        if last in NAMED_BOOKS and book_ok(last, c.token) \
+                and works[last].holds(c.page):
+            c.work, c.book, c.how = last, c.token, 'inherited'
+            continue
         if last and all(ch in BOOK_LETTERS for ch in c.token):
             if book_ok(last, c.token) and works[last].holds(c.page):
                 c.work, c.book, c.how = last, c.token, 'inherited'
@@ -392,9 +406,10 @@ def read(pages: range | None = None) -> list[Cite]:
             pos += len(line)
         for m in CITE.finditer(text):
             tok, chap, page, col = m.groups()
-            out.append(Cite(f.stem, bisect.bisect_right(starts, m.start()),
-                            ' '.join(m.group(0).split()), tok, chap,
-                            int(page), col))
+            ln = bisect.bisect_right(starts, m.start())
+            out.append(Cite(f.stem, ln, ' '.join(m.group(0).split()), tok,
+                            chap, int(page), col,
+                            at=m.start() - starts[ln - 1]))
     return out
 
 

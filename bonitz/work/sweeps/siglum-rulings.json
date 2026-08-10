@@ -24,29 +24,92 @@
   "detail": ""
  },
  "page-025-L:43:πκς:946": {
-  "verdict": "preserve",
-  "detail": "",
-  "superseded": "John, 2026-08-10: \"those preserve on sigma sites are due to the problems with the cards.\" The card rendered ς and ϛ identically, so the click recorded what the screen showed rather than what he judged. Withdrawn by him, not overridden by a rule."
+  "verdict": "confirm-rule",
+  "detail": "πκϛ",
+  "superseded": "John, 2026-08-10: \"those preserve on sigma sites are due to the problems with the cards.\" The card rendered ς and ϛ identically, so the click recorded what the screen showed rather than what he judged. Withdrawn by him, not overridden by a rule.",
+  "confirmed": "John read the ink, 2026-08-10: \"Pi kappa stigma.\" The numeral-slot rule is confirmed against the scan, not merely asserted from the grammar."
  },
  "page-025-L:46:κς:946": {
-  "verdict": "preserve",
-  "detail": "",
-  "superseded": "John, 2026-08-10: \"those preserve on sigma sites are due to the problems with the cards.\" The card rendered ς and ϛ identically, so the click recorded what the screen showed rather than what he judged. Withdrawn by him, not overridden by a rule."
+  "verdict": "confirm-rule",
+  "detail": "κϛ",
+  "superseded": "John, 2026-08-10: \"those preserve on sigma sites are due to the problems with the cards.\" The card rendered ς and ϛ identically, so the click recorded what the screen showed rather than what he judged. Withdrawn by him, not overridden by a rule.",
+  "confirmed": "John read the ink, 2026-08-10: \"Pi kappa stigma.\" The numeral-slot rule is confirmed against the scan, not merely asserted from the grammar."
  },
  "page-025-R:27:πκς:944": {
-  "verdict": "preserve",
-  "detail": "",
-  "superseded": "John, 2026-08-10: \"those preserve on sigma sites are due to the problems with the cards.\" The card rendered ς and ϛ identically, so the click recorded what the screen showed rather than what he judged. Withdrawn by him, not overridden by a rule."
+  "verdict": "confirm-rule",
+  "detail": "πκϛ",
+  "superseded": "John, 2026-08-10: \"those preserve on sigma sites are due to the problems with the cards.\" The card rendered ς and ϛ identically, so the click recorded what the screen showed rather than what he judged. Withdrawn by him, not overridden by a rule.",
+  "confirmed": "John read the ink, 2026-08-10: \"Pi kappa stigma.\" The numeral-slot rule is confirmed against the scan, not merely asserted from the grammar."
  },
  "page-027-L:5:Ζιβ:449": {
   "verdict": "preserve",
   "detail": ""
  },
  "page-027-R:47:σ:73": {
+  "verdict": "fix-page",
+  "detail": 973
+ },
+ "page-028-L:28:υ:485": {
   "verdict": "preserve",
   "detail": ""
  },
- "page-028-L:28:υ:485": {
+ "page-027-R:21:Πο:1290": {
+  "verdict": "fix-siglum",
+  "detail": "Πδ"
+ },
+ "page-032-R:51:Ζυ:700": {
+  "verdict": "fix-siglum-and-record",
+  "detail": "Ζιι"
+ },
+ "page-033-R:29:μυ:450": {
+  "verdict": "fix-siglum",
+  "detail": "μν"
+ },
+ "page-035-L:22:Οβ:259": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-035-L:48:Α:985": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-038-R:52:Πγ:1408": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-039-L:14:Ππ:1285": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-040-L:44:πο:1408": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-041-L:3:Τδ:123": {
+  "verdict": "fix-siglum",
+  "detail": "τδ"
+ },
+ "page-041-R:10:Ζκ:638": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-042-L:7:χ:401": {
+  "verdict": "fix-siglum",
+  "detail": "κ"
+ },
+ "page-042-L:27:χ:393": {
+  "verdict": "fix-siglum",
+  "detail": "κ"
+ },
+ "page-046-R:12:ΓΒ:331": {
+  "verdict": "fix-siglum",
+  "detail": "Γβ"
+ },
+ "page-049-L:51:Ηε:1835": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-050-R:31:Πζ:1820": {
   "verdict": "preserve",
   "detail": ""
  }

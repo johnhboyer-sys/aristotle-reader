@@ -131,12 +131,32 @@ def missing_book(cites, table: dict) -> list[tuple]:
     the lexical sweep finds nothing, instead of at this siglum, which is the
     hardest thing in the book to read: `Ζιι` has been written `Ζυ` twice, `Ζιθ`
     once, and here dropped to `Ζι`.
+
+    ⚠ INHERITANCE IS TESTED FIRST, and it has to be. John, 2026-08-10: "did you
+    not bundle inheritance rule into this rule?" A bare BOOK letter inherits its
+    work; the symmetric reading is that a work named with no book inherits the
+    BOOK last used for it — `Ζιζ10. 565b1 … Ζι 37. 621a12` would then be book ζ
+    again. That is a citation, not a lost letter, and calling it one would put a
+    false misprint in the register.
+
+    Here it does not save the case — HA book ζ ends well before 621 — which is
+    why the lost-iota reading stands. But the check must run before the verdict,
+    not after John asks for it.
     """
     spans = table['spans']
+    last_book = {}
     out = []
     for c in cites:
-        if c.how not in ('explicit', 'inherited') or c.book or c.work not in spans:
+        if c.how not in ('explicit', 'inherited') or c.work not in spans:
             continue
+        if c.book:
+            last_book[c.work] = c.book
+            continue
+        prev = last_book.get(c.work)
+        if prev:
+            span = spans[c.work].get(prev)
+            if span and span[0] <= c.page <= span[1]:
+                continue          # the book carries over; nothing is missing
         owner = [b for b, (lo, hi) in spans[c.work].items() if lo <= c.page <= hi]
         out.append((c, c.work, owner[0] if owner else '?'))
     return out

@@ -362,7 +362,12 @@ def sites() -> list[Site]:
             byrule[(r['col'], r['line'], r['form'].split()[0].rstrip('.'))] = r
     seen_rule = set()
     if RULINGS.exists():
-        seen_rule = {k for k, v in _j2.loads(
+        # ⚠ A SITE ID CONTAINS THE TOKEN, AND CORRECTING THE TEXT CHANGES IT.
+        # `page-025-L:43:πκς:946` became `…:πκϛ:946` the moment the rule ran, so
+        # John's confirmation could never match the card again and the card came
+        # back forever. Any ruling keyed to text that a later pass may edit is
+        # orphaned the same way — match on the PLACE, which does not move.
+        seen_rule = {tuple(k.split(':')[:2]) for k, v in _j2.loads(
             RULINGS.read_text(encoding='utf-8')).items()
             if v.get('verdict') == 'confirm-rule'}
 
@@ -370,7 +375,7 @@ def sites() -> list[Site]:
             [c for c, _ in gap.values()] + \
             [c for c in cites
              if (c.col, c.line, c.raw.split()[0].rstrip('.')) in byrule
-             and f'{c.col}:{c.line}:{c.token}:{c.page}' not in seen_rule]
+             and (c.col, str(c.line)) not in seen_rule]
     out = []
     for c in sorted(queue, key=lambda c: (c.col, c.line)):
         # ⚠ THREE KINDS REACH HERE NOW, and only one of them has a `why`.
@@ -388,7 +393,8 @@ def sites() -> list[Site]:
         else:
             why = (f'Now reads {c.work}{c.book}, and {c.page} sits inside it.')
         s = Site(c.col, c.line, c.raw, c.token, c.page, why)
-        im, _, how = crop_word(c.col, c.line, c.token, scale=3.0, spread=8)
+        im, _, how = crop_word(c.col, c.line, c.token, scale=3.0, spread=8,
+                               at=c.at)
         s.crop, s.how = _b64(im), how
         s.whole = _b64(crop_word(c.col, c.line, c.token, scale=1.6,
                                  whole=True)[0])
@@ -431,6 +437,20 @@ NAMED = {'ϛ': 'stigma, 6', 'ς': 'final sigma, no value', 'ι': 'iota',
          'υ': 'upsilon', 'ο': 'omicron', 'δ': 'delta', 'θ': 'theta',
          'κ': 'kappa', 'β': 'beta', 'ν': 'nu', 'γ': 'gamma', 'ε': 'epsilon',
          'ζ': 'zeta', 'η': 'eta', 'α': 'alpha', 'χ': 'chi', 'π': 'pi'}
+
+
+def loud(text: str) -> str:
+    """Mark every sort a screen font will not separate, anywhere it is shown.
+
+    ⚠ THE HEADLINE WAS LYING BY OMISSION. `spell()` gave the BUTTONS a loud
+    stigma and the citation at the top of the card kept a plain one — so a card
+    whose title had already been corrected to `πκϛ` still read as `πκς` on the
+    phone, which is exactly the complaint that started all of this. A treatment
+    applied to one part of the card and not the rest is worse than none: it
+    makes the reader trust the shape they can see.
+    """
+    return ''.join(f'<mark class="loud">{c}</mark>' if c in LOUD else c
+                   for c in text)
 
 
 def spell(token: str, cand: str) -> str:
@@ -617,8 +637,8 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
         cards.append(f"""
 <div class="card" id="{s.sid}">
   <div class="loc">{s.col} · line {s.line}</div>
-  <div class="said gk">{s.raw}</div>
-  <div class="why">{s.why}</div>
+  <div class="said gk">{loud(s.raw)}</div>
+  <div class="why gk">{loud(s.why)}</div>
   {('<div class="lbl">what the citations around it are</div><div class="why gk">'
     + ' &nbsp;·&nbsp; '.join(s.near) + '</div>') if s.near else ''}
   {warn}
