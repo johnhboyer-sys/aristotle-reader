@@ -180,11 +180,23 @@ def holds(cand: str, page: int, works: dict) -> bool:
             if span is None or not (span[0] <= page <= span[1]):
                 continue
         return True
-    # A BARE BOOK LETTER NAMES NO WORK, so `split` says nothing about it. `κϛ`
-    # is book ϛ of whatever Bonitz last named, and 946 is the Problemata — it
-    # carries its page perfectly well. Without this it looked like an ink/page
-    # disagreement and was recommended as a compound, which it is not.
-    return by_page(cand, page, works) is not None
+    return False
+
+
+def holds_or_inherits(cand: str, page: int, works: dict) -> bool:
+    """…or is a bare book letter of the work that owns the page.
+
+    ⚠ KEEP THIS OUT OF `holds`. Folding it in to rescue `κϛ` made EVERY single
+    Greek letter a valid candidate everywhere — δ, θ, κ, γ all pass, because
+    some work owns every page — and they promptly outranked the real answers:
+    `Α4. 985a` was recommended `α` instead of `ΜΑ`, `Ι4. 1166b` got `ι` instead
+    of `Ηι`, `χ7. 401b` got `θ` instead of `κ`. A test that accepts everything
+    ranks nothing.
+
+    Inheritance is only a reading when the TOKEN is bare to begin with, which
+    is why it lives here and is called from the one branch that knows that.
+    """
+    return holds(cand, page, works) or by_page(cand, page, works) is not None
 
 
 def well_formed(cand: str, works: dict) -> bool:
@@ -401,7 +413,8 @@ def recommend(s: Site) -> tuple[str, str, str]:
     """
     if s.sigla:
         top = s.sigla[0]
-        if edit_rank(s.token, top) == 0 and not holds(top, s.page, INV):
+        if edit_rank(s.token, top) == 0 and \
+                not holds_or_inherits(top, s.page, INV):
             # The ink is one thing, the page another, and neither is our text.
             page_says = [c for c in s.sigla if holds(c, s.page, INV)]
             return ('fix-siglum-and-record', top,
