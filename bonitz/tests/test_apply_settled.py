@@ -236,3 +236,34 @@ def test_queue_groups_identical_form_sets_and_counts_distinct():
     for e in entries:
         assert 'page' in e and 'col' in e and 'word_off' in e
         assert 'readers' in e and 'kind' in e and 'reason' in e
+        assert 'char_at' in e
+
+
+def test_queue_puts_siglum_proposals_first():
+    from bonitz_pipeline.settle import AUTH_SIGLUM, Proposal, REASON_SIGLUM_PROPOSAL
+    common = _wf('accent-only', {'opus': 'ἂ', 'kraken': 'ᾶ'},
+                 page=53, col='L', word_off=1)
+    common2 = _wf('accent-only', {'opus': 'ἂ', 'kraken': 'ᾶ'},
+                  page=54, col='L', word_off=2)
+    sig = _wf('letters', {'opus': 'Ζγβ', 'kraken': 'Ζηβ'},
+              page=55, col='R', word_off=0)
+    prop = Proposal(form='Ζγβ', authority=AUTH_SIGLUM,
+                    reason='Ζγβ → Ζγ book β holds Bekker 748 (715-789)',
+                    bekker_page=748, work='Ζγ', book='β', lo=715, hi=789)
+    s_common = _settle(common, None, AUTH_REFUSE, 'accent-only:x')
+    s_common2 = _settle(common2, None, AUTH_REFUSE, 'accent-only:x')
+    s_sig = Settlement(
+        word=sig, forms=frozenset(sig.readers.values()),
+        winner=None, authority=AUTH_REFUSE,
+        reason=REASON_SIGLUM_PROPOSAL, readers=tuple(sig.readers),
+        proposal=prop,
+    )
+    entries, n_distinct = build_queue(
+        [s_common, s_common2, s_sig], opus_dir=ROOT / 'raw' / 'opus')
+    assert n_distinct == 2
+    # Siglum proposal leads even though the accent form-set has more members.
+    assert entries[0]['proposal']['form'] == 'Ζγβ'
+    assert entries[0]['proposal']['work'] == 'Ζγ'
+    assert entries[0]['proposal']['bekker_page'] == 748
+    assert entries[0]['n_same_form_set'] == 1
+    assert entries[1]['n_same_form_set'] == 2

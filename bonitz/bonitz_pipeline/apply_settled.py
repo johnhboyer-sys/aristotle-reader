@@ -32,6 +32,8 @@ from pathlib import Path
 from bonitz_pipeline.normalize import canonical, clean_opus
 from bonitz_pipeline.settle import (
     AUTH_REFUSE,
+    AUTH_SIGLUM,
+    REASON_SIGLUM_PROPOSAL,
     STRONG_READERS,
     Settlement,
     SettleReport,
@@ -275,12 +277,12 @@ def build_queue(
 ) -> tuple[list[dict], int]:
     """One queue entry per refused dispute; identical form-sets grouped first.
 
-    Returns (entries, n_distinct_form_sets). Cheapest decisions first: form
-    sets that recur most often lead, so one ruling on `ἂ` vs `ᾶ` can settle
-    every instance before rarer fights.
+    Returns (entries, n_distinct_form_sets). Order is cheapest-decision-first:
+    siglum proposals lead (they carry evidence and should be fast), then form
+    sets that recur most often, so one ruling settles the most instances.
     """
     opus_dir = opus_dir or DEFAULT_OPUS
-    # Cache cleaned base per column for line numbers.
+    # Cache cleaned base per column for line numbers and char-in-line offset.
     bases: dict[tuple[int, str], str] = {}
     streams: dict[tuple[int, str], tuple[str, list[int]]] = {}
 
@@ -305,9 +307,17 @@ def build_queue(
         key = form_set_key(s.word.readers, reader_names)
         groups[key].append(s)
 
-    # Most frequent form-sets first (one ruling settles the most).
-    ordered_keys = sorted(groups.keys(),
-                          key=lambda k: (-len(groups[k]), k))
+    def _has_siglum_proposal(fkey: tuple[str, ...]) -> bool:
+        return any(
+            s.proposal is not None and s.proposal.authority == AUTH_SIGLUM
+            for s in groups[fkey]
+        )
+
+    # Siglum proposals first, then most frequent form-sets.
+    ordered_keys = sorted(
+        groups.keys(),
+        key=lambda k: (0 if _has_siglum_proposal(k) else 1, -len(groups[k]), k),
+    )
 
     entries: list[dict] = []
     for fkey in ordered_keys:
@@ -317,20 +327,32 @@ def build_queue(
             w = s.word
             base, stream, offs = _col(w.page, w.col)
             line = 0
+            char_at = -1  # offset of the word within its printed line
             if 0 <= w.word_off < len(offs):
-                line = line_at(base, offs[w.word_off])
-            entries.append({
+                base_off = offs[w.word_off]
+                line = line_at(base, base_off)
+                # Character offset on the line (for crop_word's `at`, not find).
+                line_start = base.rfind('\n', 0, base_off) + 1
+                char_at = base_off - line_start
+            entry = {
                 'page': w.page,
                 'col': w.col,
                 'line': line,
                 'word_off': w.word_off,
+                'char_at': char_at,
                 'readers': dict(w.readers),
                 'kind': w.kind,
                 'reason': s.reason,
                 'forms': list(fkey),
                 'form_set': list(fkey),
                 'n_same_form_set': len(groups[fkey]),
-            })
+            }
+            if s.proposal is not None:
+                entry['proposal'] = s.proposal.as_dict()
+            elif s.reason == REASON_SIGLUM_PROPOSAL:
+                # Should not happen — proposal was required — but never silent.
+                entry['proposal'] = None
+            entries.append(entry)
     return entries, len(groups)
 
 

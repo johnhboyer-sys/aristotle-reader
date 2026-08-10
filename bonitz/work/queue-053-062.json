@@ -1,19 +1,1340 @@
 {
  "source_flags": "work/flags5-053-062.jsonl",
- "n_refused": 355,
- "n_distinct_decisions": 283,
+ "n_refused": 404,
+ "n_distinct_decisions": 300,
  "entries": [
+  {
+   "page": 53,
+   "col": "R",
+   "line": 44,
+   "word_off": 1911,
+   "char_at": 21,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγε",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 721 (715-789)",
+    "bekker_page": 721,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 57,
+   "col": "L",
+   "line": 8,
+   "word_off": 336,
+   "char_at": 32,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 720 (715-789)",
+    "bekker_page": 720,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 57,
+   "col": "R",
+   "line": 7,
+   "word_off": 269,
+   "char_at": 24,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 726 (715-789)",
+    "bekker_page": 726,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 57,
+   "col": "R",
+   "line": 50,
+   "word_off": 2251,
+   "char_at": 49,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 731 (715-789)",
+    "bekker_page": 731,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 28,
+   "word_off": 1115,
+   "char_at": 36,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 726 (715-789)",
+    "bekker_page": 726,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 30,
+   "word_off": 1213,
+   "char_at": 43,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 727 (715-789)",
+    "bekker_page": 727,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 60,
+   "col": "R",
+   "line": 10,
+   "word_off": 374,
+   "char_at": 27,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 726 (715-789)",
+    "bekker_page": 726,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 60,
+   "col": "R",
+   "line": 12,
+   "word_off": 485,
+   "char_at": 49,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 728 (715-789)",
+    "bekker_page": 728,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 60,
+   "col": "R",
+   "line": 24,
+   "word_off": 1006,
+   "char_at": 39,
+   "readers": {
+    "opus": "Ζγα",
+    "codex": "Ζηα",
+    "llama": "Ζγα",
+    "kraken": "Ζγα",
+    "genie": "Ζγα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "form_set": [
+    "Ζγα",
+    "Ζηα"
+   ],
+   "n_same_form_set": 9,
+   "proposal": {
+    "form": "Ζγα",
+    "authority": "siglum.holds",
+    "reason": "Ζγα → Ζγ book α holds Bekker 724 (715-789)",
+    "bekker_page": 724,
+    "work": "Ζγ",
+    "book": "α",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 56,
+   "col": "L",
+   "line": 9,
+   "word_off": 356,
+   "char_at": 45,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 761 (715-789)",
+    "bekker_page": 761,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 56,
+   "col": "L",
+   "line": 58,
+   "word_off": 2267,
+   "char_at": 5,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 753 (715-789)",
+    "bekker_page": 753,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 56,
+   "col": "L",
+   "line": 59,
+   "word_off": 2318,
+   "char_at": 13,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 753 (715-789)",
+    "bekker_page": 753,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 56,
+   "word_off": 2323,
+   "char_at": 13,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 756 (715-789)",
+    "bekker_page": 756,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 57,
+   "word_off": 2370,
+   "char_at": 44,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 756 (715-789)",
+    "bekker_page": 756,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 58,
+   "col": "R",
+   "line": 44,
+   "word_off": 1905,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 758 (715-789)",
+    "bekker_page": 758,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 60,
+   "col": "R",
+   "line": 49,
+   "word_off": 2078,
+   "char_at": 7,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 755 (715-789)",
+    "bekker_page": 755,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 61,
+   "col": "R",
+   "line": 53,
+   "word_off": 2385,
+   "char_at": 33,
+   "readers": {
+    "opus": "Ζγγ",
+    "codex": "Ζηγ",
+    "llama": "Ζγγ",
+    "kraken": "Ζγγ",
+    "genie": "Ζγγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "form_set": [
+    "Ζγγ",
+    "Ζηγ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγγ",
+    "authority": "siglum.holds",
+    "reason": "Ζγγ → Ζγ book γ holds Bekker 756 (715-789)",
+    "bekker_page": 756,
+    "work": "Ζγ",
+    "book": "γ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 54,
+   "col": "R",
+   "line": 21,
+   "word_off": 912,
+   "char_at": 16,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγδ",
+    "authority": "siglum.holds",
+    "reason": "Ζγδ → Ζγ book δ holds Bekker 767 (715-789)",
+    "bekker_page": 767,
+    "work": "Ζγ",
+    "book": "δ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 55,
+   "col": "L",
+   "line": 44,
+   "word_off": 1983,
+   "char_at": 33,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγδ",
+    "authority": "siglum.holds",
+    "reason": "Ζγδ → Ζγ book δ holds Bekker 770 (715-789)",
+    "bekker_page": 770,
+    "work": "Ζγ",
+    "book": "δ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 55,
+   "col": "L",
+   "line": 61,
+   "word_off": 2728,
+   "char_at": 46,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:no_bekker_page",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8
+  },
+  {
+   "page": 58,
+   "col": "R",
+   "line": 46,
+   "word_off": 2012,
+   "char_at": 17,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγδ",
+    "authority": "siglum.holds",
+    "reason": "Ζγδ → Ζγ book δ holds Bekker 765 (715-789)",
+    "bekker_page": 765,
+    "work": "Ζγ",
+    "book": "δ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 58,
+   "col": "R",
+   "line": 57,
+   "word_off": 2523,
+   "char_at": 20,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγδ",
+    "authority": "siglum.holds",
+    "reason": "Ζγδ → Ζγ book δ holds Bekker 775 (715-789)",
+    "bekker_page": 775,
+    "work": "Ζγ",
+    "book": "δ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 29,
+   "word_off": 1153,
+   "char_at": 28,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγδ",
+    "authority": "siglum.holds",
+    "reason": "Ζγδ → Ζγ book δ holds Bekker 775 (715-789)",
+    "bekker_page": 775,
+    "work": "Ζγ",
+    "book": "δ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 61,
+   "col": "R",
+   "line": 52,
+   "word_off": 2313,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγδ",
+    "authority": "siglum.holds",
+    "reason": "Ζγδ → Ζγ book δ holds Bekker 763 (715-789)",
+    "bekker_page": 763,
+    "work": "Ζγ",
+    "book": "δ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 62,
+   "col": "R",
+   "line": 3,
+   "word_off": 114,
+   "char_at": 20,
+   "readers": {
+    "opus": "Ζγδ",
+    "codex": "Ζηδ",
+    "llama": "Ζγδ",
+    "kraken": "Ζγδ",
+    "genie": "Ζγδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "form_set": [
+    "Ζγδ",
+    "Ζηδ"
+   ],
+   "n_same_form_set": 8,
+   "proposal": {
+    "form": "Ζγδ",
+    "authority": "siglum.holds",
+    "reason": "Ζγδ → Ζγ book δ holds Bekker 769 (715-789)",
+    "bekker_page": 769,
+    "work": "Ζγ",
+    "book": "δ",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 53,
+   "col": "R",
+   "line": 42,
+   "word_off": 1836,
+   "char_at": 40,
+   "readers": {
+    "opus": "Ζγβ",
+    "codex": "Ζηβ",
+    "llama": "Ζγβ",
+    "kraken": "Ζγβ",
+    "genie": "Ζγβ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγβ",
+    "Ζηβ"
+   ],
+   "form_set": [
+    "Ζγβ",
+    "Ζηβ"
+   ],
+   "n_same_form_set": 2,
+   "proposal": {
+    "form": "Ζγβ",
+    "authority": "siglum.holds",
+    "reason": "Ζγβ → Ζγ book β holds Bekker 748 (715-789)",
+    "bekker_page": 748,
+    "work": "Ζγ",
+    "book": "β",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 57,
+   "col": "L",
+   "line": 9,
+   "word_off": 367,
+   "char_at": 16,
+   "readers": {
+    "opus": "Ζγβ",
+    "codex": "Ζηβ",
+    "llama": "Ζγβ",
+    "kraken": "Ζγβ",
+    "genie": "Ζγβ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζγβ",
+    "Ζηβ"
+   ],
+   "form_set": [
+    "Ζγβ",
+    "Ζηβ"
+   ],
+   "n_same_form_set": 2,
+   "proposal": {
+    "form": "Ζγβ",
+    "authority": "siglum.holds",
+    "reason": "Ζγβ → Ζγ book β holds Bekker 733 (715-789)",
+    "bekker_page": 733,
+    "work": "Ζγ",
+    "book": "β",
+    "lo": 715,
+    "hi": 789,
+    "range": "715-789"
+   }
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 38,
+   "word_off": 1528,
+   "char_at": 14,
+   "readers": {
+    "opus": "Ζιγ",
+    "codex": "Ζηγ",
+    "llama": "Ζιγ",
+    "kraken": "Ζιγ",
+    "genie": "Ζιγ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζηγ",
+    "Ζιγ"
+   ],
+   "form_set": [
+    "Ζηγ",
+    "Ζιγ"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "Ζιγ",
+    "authority": "siglum.holds",
+    "reason": "Ζιγ → Ζι book γ holds Bekker 510 (486-638)",
+    "bekker_page": 510,
+    "work": "Ζι",
+    "book": "γ",
+    "lo": 486,
+    "hi": 638,
+    "range": "486-638"
+   }
+  },
+  {
+   "page": 59,
+   "col": "L",
+   "line": 19,
+   "word_off": 873,
+   "char_at": 37,
+   "readers": {
+    "opus": "Ζιθ",
+    "codex": "Ζθ",
+    "llama": "Ζιθ",
+    "kraken": "Ζιθ",
+    "genie": "Ζιθ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζθ",
+    "Ζιθ"
+   ],
+   "form_set": [
+    "Ζθ",
+    "Ζιθ"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "Ζιθ",
+    "authority": "siglum.holds",
+    "reason": "Ζιθ → Ζι book θ holds Bekker 597 (486-638)",
+    "bekker_page": 597,
+    "work": "Ζι",
+    "book": "θ",
+    "lo": 486,
+    "hi": 638,
+    "range": "486-638"
+   }
+  },
+  {
+   "page": 55,
+   "col": "R",
+   "line": 48,
+   "word_off": 2105,
+   "char_at": 50,
+   "readers": {
+    "opus": "πιθ",
+    "codex": "Ζιθ",
+    "llama": "πιθ",
+    "kraken": "πιθ",
+    "genie": "πιθ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Ζιθ",
+    "πιθ"
+   ],
+   "form_set": [
+    "Ζιθ",
+    "πιθ"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "πιθ",
+    "authority": "siglum.holds",
+    "reason": "πιθ → π book ιθ holds Bekker 918 (859-967)",
+    "bekker_page": 918,
+    "work": "π",
+    "book": "ιθ",
+    "lo": 859,
+    "hi": 967,
+    "range": "859-967"
+   }
+  },
+  {
+   "page": 62,
+   "col": "R",
+   "line": 2,
+   "word_off": 72,
+   "char_at": 26,
+   "readers": {
+    "opus": "Οα",
+    "codex": "Θα",
+    "llama": "Οα",
+    "kraken": "Οα",
+    "genie": "Οα"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "Θα",
+    "Οα"
+   ],
+   "form_set": [
+    "Θα",
+    "Οα"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "Οα",
+    "authority": "siglum.holds",
+    "reason": "Οα → Ο book α holds Bekker 273 (268-313)",
+    "bekker_page": 273,
+    "work": "Ο",
+    "book": "α",
+    "lo": 268,
+    "hi": 313,
+    "range": "268-313"
+   }
+  },
+  {
+   "page": 60,
+   "col": "L",
+   "line": 17,
+   "word_off": 735,
+   "char_at": 43,
+   "readers": {
+    "opus": "ηεη",
+    "codex": "γεη",
+    "llama": "ηεη",
+    "kraken": "ηεη",
+    "genie": "ηεη"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "γεη",
+    "ηεη"
+   ],
+   "form_set": [
+    "γεη",
+    "ηεη"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "ηεη",
+    "authority": "siglum.holds",
+    "reason": "ηεη → ηε book η holds Bekker 1243 (1214-1249)",
+    "bekker_page": 1243,
+    "work": "ηε",
+    "book": "η",
+    "lo": 1214,
+    "hi": 1249,
+    "range": "1214-1249"
+   }
+  },
+  {
+   "page": 58,
+   "col": "R",
+   "line": 37,
+   "word_off": 1634,
+   "char_at": 34,
+   "readers": {
+    "opus": "μχ",
+    "codex": "μκ",
+    "llama": "μγ",
+    "kraken": "μχ",
+    "genie": "μχ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "μκ",
+    "μχ"
+   ],
+   "form_set": [
+    "μκ",
+    "μχ"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "μχ",
+    "authority": "siglum.holds",
+    "reason": "μχ → μχ book — holds Bekker 851 (847-858)",
+    "bekker_page": 851,
+    "work": "μχ",
+    "book": "",
+    "lo": 847,
+    "hi": 858,
+    "range": "847-858"
+   }
+  },
+  {
+   "page": 53,
+   "col": "R",
+   "line": 45,
+   "word_off": 1957,
+   "char_at": 38,
+   "readers": {
+    "opus": "πδ",
+    "codex": "πο",
+    "llama": "πδ",
+    "kraken": "πδ",
+    "genie": "πδ"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "πδ",
+    "πο"
+   ],
+   "form_set": [
+    "πδ",
+    "πο"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "πδ",
+    "authority": "siglum.holds",
+    "reason": "πδ → π book δ holds Bekker 876 (859-967)",
+    "bekker_page": 876,
+    "work": "π",
+    "book": "δ",
+    "lo": 859,
+    "hi": 967,
+    "range": "859-967"
+   }
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 26,
+   "word_off": 1064,
+   "char_at": 55,
+   "readers": {
+    "opus": "τι",
+    "codex": "πι",
+    "llama": "τι",
+    "kraken": "τι",
+    "genie": "τι"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "πι",
+    "τι"
+   ],
+   "form_set": [
+    "πι",
+    "τι"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "τι",
+    "authority": "siglum.holds",
+    "reason": "τι → τι book — holds Bekker 167 (164-184)",
+    "bekker_page": 167,
+    "work": "τι",
+    "book": "",
+    "lo": 164,
+    "hi": 184,
+    "range": "164-184"
+   }
+  },
+  {
+   "page": 61,
+   "col": "R",
+   "line": 47,
+   "word_off": 2109,
+   "char_at": 23,
+   "readers": {
+    "opus": "πιϛ",
+    "codex": "πις",
+    "llama": "πς",
+    "kraken": "πιϛ",
+    "genie": "πις"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "πις",
+    "πιϛ"
+   ],
+   "form_set": [
+    "πις",
+    "πιϛ"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "πιϛ",
+    "authority": "siglum.holds",
+    "reason": "πιϛ → π book ιϛ holds Bekker 914 (859-967)",
+    "bekker_page": 914,
+    "work": "π",
+    "book": "ιϛ",
+    "lo": 859,
+    "hi": 967,
+    "range": "859-967"
+   }
+  },
+  {
+   "page": 60,
+   "col": "L",
+   "line": 7,
+   "word_off": 265,
+   "char_at": 26,
+   "readers": {
+    "opus": "πο",
+    "codex": "πρ",
+    "genie": "πο",
+    "kraken": "πο"
+   },
+   "kind": "letters",
+   "reason": "siglum:proposal_only",
+   "forms": [
+    "πο",
+    "πρ"
+   ],
+   "form_set": [
+    "πο",
+    "πρ"
+   ],
+   "n_same_form_set": 1,
+   "proposal": {
+    "form": "πο",
+    "authority": "siglum.holds",
+    "reason": "πο → πο book — holds Bekker 1457 (1447-1462)",
+    "bekker_page": 1457,
+    "work": "πο",
+    "book": "",
+    "lo": 1447,
+    "hi": 1462,
+    "range": "1447-1462"
+   }
+  },
   {
    "page": 53,
    "col": "L",
    "line": 9,
    "word_off": 349,
+   "char_at": 29,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "οὐκ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -32,12 +1353,13 @@
    "col": "R",
    "line": 11,
    "word_off": 472,
+   "char_at": 30,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -56,12 +1378,13 @@
    "col": "R",
    "line": 12,
    "word_off": 505,
+   "char_at": 18,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -80,12 +1403,13 @@
    "col": "L",
    "line": 28,
    "word_off": 1284,
+   "char_at": 31,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "καὶοὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "καὶοὐκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -104,12 +1428,13 @@
    "col": "L",
    "line": 28,
    "word_off": 1305,
+   "char_at": 56,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -128,12 +1453,13 @@
    "col": "L",
    "line": 51,
    "word_off": 2290,
+   "char_at": 40,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -152,12 +1478,13 @@
    "col": "L",
    "line": 53,
    "word_off": 2363,
+   "char_at": 26,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -176,12 +1503,13 @@
    "col": "R",
    "line": 38,
    "word_off": 1644,
+   "char_at": 35,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "ἐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "ἐκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -200,12 +1528,13 @@
    "col": "L",
    "line": 36,
    "word_off": 1591,
+   "char_at": 30,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣκ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -224,12 +1553,13 @@
    "col": "R",
    "line": 16,
    "word_off": 702,
+   "char_at": 27,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὂν",
+    "codex": "ȣκ",
     "llama": "ȣκ",
-    "codex": "ȣκ"
+    "kraken": "ȣκ",
+    "genie": "οὂν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -248,12 +1578,13 @@
    "col": "R",
    "line": 18,
    "word_off": 783,
+   "char_at": 11,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣκ",
     "llama": "ȣκ",
-    "codex": "ȣκ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -272,12 +1603,13 @@
    "col": "R",
    "line": 52,
    "word_off": 2353,
+   "char_at": 57,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣ̓κ",
-    "genie": "οὐκ",
+    "codex": "ȣκ",
     "llama": "ȣκ",
-    "codex": "ȣκ"
+    "kraken": "ȣ̓κ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -296,12 +1628,13 @@
    "col": "R",
    "line": 55,
    "word_off": 2456,
+   "char_at": 18,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "ἐκ",
+    "codex": "ȣκ",
     "llama": "ȣκ",
-    "codex": "ȣκ"
+    "kraken": "ȣκ",
+    "genie": "ἐκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -320,12 +1653,13 @@
    "col": "R",
    "line": 38,
    "word_off": 1531,
+   "char_at": 31,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -344,12 +1678,13 @@
    "col": "R",
    "line": 27,
    "word_off": 1114,
+   "char_at": 0,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "ἐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "ἐκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -368,12 +1703,13 @@
    "col": "R",
    "line": 51,
    "word_off": 2158,
+   "char_at": 20,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -392,12 +1728,13 @@
    "col": "R",
    "line": 35,
    "word_off": 1545,
+   "char_at": 0,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ȣ̓κ",
     "llama": "ȣ̓κ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -416,11 +1753,12 @@
    "col": "R",
    "line": 32,
    "word_off": 1361,
+   "char_at": 22,
    "readers": {
     "opus": "ȣ̓κ",
+    "codex": "ȣ̓κ",
     "genie": "ἐκ",
-    "kraken": "ȣκ",
-    "codex": "ȣ̓κ"
+    "kraken": "ȣκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -439,12 +1777,13 @@
    "col": "R",
    "line": 37,
    "word_off": 1568,
+   "char_at": 0,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τὰς",
-    "genie": "τοὺς",
+    "codex": "τȣ̀ς",
     "llama": "τὰς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τοὺς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -463,12 +1802,13 @@
    "col": "L",
    "line": 25,
    "word_off": 1088,
+   "char_at": 51,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τὰς",
-    "genie": "τοὺς",
+    "codex": "τȣ̀ς",
     "llama": "τοὺς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τοὺς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -487,12 +1827,13 @@
    "col": "L",
    "line": 31,
    "word_off": 1336,
+   "char_at": 19,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τὰς",
-    "genie": "τοὺς",
+    "codex": "τȣ̀ς",
     "llama": "τοὺς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τοὺς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -511,12 +1852,13 @@
    "col": "L",
    "line": 35,
    "word_off": 1551,
+   "char_at": 48,
    "readers": {
     "opus": "τὰς",
-    "kraken": "τὰς",
-    "genie": "τὰς",
+    "codex": "τȣ̀ς",
     "llama": "τοὺς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τὰς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -535,12 +1877,13 @@
    "col": "L",
    "line": 14,
    "word_off": 585,
+   "char_at": 48,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τὰς",
-    "genie": "τὰς",
+    "codex": "τȣ̀ς",
     "llama": "τȣ̀ς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τὰς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -559,12 +1902,13 @@
    "col": "R",
    "line": 7,
    "word_off": 290,
+   "char_at": 48,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τὰς",
-    "genie": "τοὺς",
+    "codex": "τȣ̀ς",
     "llama": "τȣς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τοὺς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -583,12 +1927,13 @@
    "col": "L",
    "line": 28,
    "word_off": 1183,
+   "char_at": 23,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τὰς",
-    "genie": "τὰς",
+    "codex": "τȣ̀ς",
     "llama": "τοὺς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τὰς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -607,12 +1952,13 @@
    "col": "L",
    "line": 50,
    "word_off": 2220,
+   "char_at": 23,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τὰς",
-    "genie": "τὰς",
+    "codex": "τȣ̀ς",
     "llama": "τȣ̀ς",
-    "codex": "τȣ̀ς"
+    "kraken": "τὰς",
+    "genie": "τὰς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -631,12 +1977,13 @@
    "col": "L",
    "line": 34,
    "word_off": 1493,
+   "char_at": 30,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τὸ",
+    "codex": "τῷ",
     "llama": "τῷ",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τὸ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -655,12 +2002,13 @@
    "col": "L",
    "line": 3,
    "word_off": 97,
+   "char_at": 6,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τοῦ",
+    "codex": "τῷ",
     "llama": "τȣ͂",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τοῦ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -679,12 +2027,13 @@
    "col": "L",
    "line": 1,
    "word_off": 24,
+   "char_at": 28,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τῷ",
+    "codex": "τῷ",
     "llama": "τῷ",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τῷ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -703,12 +2052,13 @@
    "col": "L",
    "line": 11,
    "word_off": 465,
+   "char_at": 22,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τῷ",
+    "codex": "τῷ",
     "llama": "τȣ",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τῷ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -727,12 +2077,13 @@
    "col": "R",
    "line": 22,
    "word_off": 838,
+   "char_at": 12,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τῇ",
+    "codex": "τῷ",
     "llama": "τȣ͂",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τῇ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -751,12 +2102,13 @@
    "col": "R",
    "line": 24,
    "word_off": 1081,
+   "char_at": 38,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τῶ",
+    "codex": "τῷ",
     "llama": "τῷ",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τῶ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -775,12 +2127,13 @@
    "col": "R",
    "line": 14,
    "word_off": 605,
+   "char_at": 5,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τὸ",
+    "codex": "τῷ",
     "llama": "τȣ͂",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τὸ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -799,12 +2152,13 @@
    "col": "R",
    "line": 14,
    "word_off": 614,
+   "char_at": 17,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂",
-    "genie": "τὸ",
+    "codex": "τῷ",
     "llama": "τȣ͂",
-    "codex": "τῷ"
+    "kraken": "τȣ͂",
+    "genie": "τὸ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -823,12 +2177,13 @@
    "col": "L",
    "line": 38,
    "word_off": 1670,
+   "char_at": 25,
    "readers": {
     "opus": "ψα",
-    "kraken": "ψα",
-    "genie": "Ψα",
+    "codex": "Ψα",
     "llama": "ψα",
-    "codex": "Ψα"
+    "kraken": "ψα",
+    "genie": "Ψα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -847,12 +2202,13 @@
    "col": "R",
    "line": 42,
    "word_off": 1899,
+   "char_at": 31,
    "readers": {
     "opus": "ψα",
-    "kraken": "ψα",
-    "genie": "ψα",
+    "codex": "Ψα",
     "llama": "ψα",
-    "codex": "Ψα"
+    "kraken": "ψα",
+    "genie": "ψα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -871,12 +2227,13 @@
    "col": "L",
    "line": 15,
    "word_off": 594,
+   "char_at": 15,
    "readers": {
     "opus": "ψα",
-    "kraken": "ψα",
-    "genie": "ψα",
+    "codex": "Ψα",
     "llama": "ψα",
-    "codex": "Ψα"
+    "kraken": "ψα",
+    "genie": "ψα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -895,12 +2252,13 @@
    "col": "R",
    "line": 19,
    "word_off": 865,
+   "char_at": 45,
    "readers": {
     "opus": "ψα",
-    "kraken": "ψα",
-    "genie": "ψα",
+    "codex": "Ψα",
     "llama": "ψα",
-    "codex": "Ψα"
+    "kraken": "ψα",
+    "genie": "ψα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -919,12 +2277,13 @@
    "col": "R",
    "line": 23,
    "word_off": 1011,
+   "char_at": 4,
    "readers": {
     "opus": "ψα",
-    "kraken": "ψα",
-    "genie": "ψα",
+    "codex": "Ψα",
     "llama": "ψα",
-    "codex": "Ψα"
+    "kraken": "ψα",
+    "genie": "ψα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -943,12 +2302,13 @@
    "col": "R",
    "line": 56,
    "word_off": 2521,
+   "char_at": 29,
    "readers": {
     "opus": "ψα",
-    "kraken": "ψα",
-    "genie": "ψα",
+    "codex": "Ψα",
     "llama": "ψα",
-    "codex": "Ψα"
+    "kraken": "ψα",
+    "genie": "ψα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -967,12 +2327,13 @@
    "col": "R",
    "line": 57,
    "word_off": 2579,
+   "char_at": 45,
    "readers": {
     "opus": "ψα",
-    "kraken": "ψα",
-    "genie": "ψα",
+    "codex": "Ψα",
     "llama": "ψα",
-    "codex": "Ψα"
+    "kraken": "ψα",
+    "genie": "ψα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -988,15 +2349,238 @@
   },
   {
    "page": 54,
+   "col": "R",
+   "line": 18,
+   "word_off": 807,
+   "char_at": 58,
+   "readers": {
+    "opus": "ϗ̀",
+    "genie": "καὶ"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ϗ̀"
+   ],
+   "form_set": [
+    "ϗ̀"
+   ],
+   "n_same_form_set": 6
+  },
+  {
+   "page": 57,
+   "col": "L",
+   "line": 59,
+   "word_off": 2621,
+   "char_at": 0,
+   "readers": {
+    "opus": "ϗ̀",
+    "genie": "κὶ"
+   },
+   "kind": "letters",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ϗ̀"
+   ],
+   "form_set": [
+    "ϗ̀"
+   ],
+   "n_same_form_set": 6
+  },
+  {
+   "page": 60,
+   "col": "L",
+   "line": 18,
+   "word_off": 787,
+   "char_at": 51,
+   "readers": {
+    "opus": "ϗ̀",
+    "genie": "καὶ"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ϗ̀"
+   ],
+   "form_set": [
+    "ϗ̀"
+   ],
+   "n_same_form_set": 6
+  },
+  {
+   "page": 61,
+   "col": "L",
+   "line": 23,
+   "word_off": 967,
+   "char_at": 48,
+   "readers": {
+    "opus": "ϗ̀",
+    "genie": "καὶ"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ϗ̀"
+   ],
+   "form_set": [
+    "ϗ̀"
+   ],
+   "n_same_form_set": 6
+  },
+  {
+   "page": 61,
+   "col": "R",
+   "line": 40,
+   "word_off": 1800,
+   "char_at": 41,
+   "readers": {
+    "opus": "ϗ̀",
+    "genie": "καὶ"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ϗ̀"
+   ],
+   "form_set": [
+    "ϗ̀"
+   ],
+   "n_same_form_set": 6
+  },
+  {
+   "page": 62,
+   "col": "L",
+   "line": 56,
+   "word_off": 2466,
+   "char_at": 52,
+   "readers": {
+    "opus": "ϗ̀",
+    "genie": "ουκαὶ"
+   },
+   "kind": "letters",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ϗ̀"
+   ],
+   "form_set": [
+    "ϗ̀"
+   ],
+   "n_same_form_set": 6
+  },
+  {
+   "page": 55,
+   "col": "L",
+   "line": 9,
+   "word_off": 435,
+   "char_at": 41,
+   "readers": {
+    "opus": "ȣ̓",
+    "llama": "ȣ̓",
+    "genie": "οὐ"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ȣ̓"
+   ],
+   "form_set": [
+    "ȣ̓"
+   ],
+   "n_same_form_set": 5
+  },
+  {
+   "page": 58,
+   "col": "R",
+   "line": 48,
+   "word_off": 2126,
+   "char_at": 47,
+   "readers": {
+    "opus": "ȣ̓",
+    "llama": "ȣ̓",
+    "genie": "οὐ"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ȣ̓"
+   ],
+   "form_set": [
+    "ȣ̓"
+   ],
+   "n_same_form_set": 5
+  },
+  {
+   "page": 58,
+   "col": "R",
+   "line": 52,
+   "word_off": 2301,
+   "char_at": 28,
+   "readers": {
+    "opus": "ȣ̓",
+    "genie": "οὐ"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ȣ̓"
+   ],
+   "form_set": [
+    "ȣ̓"
+   ],
+   "n_same_form_set": 5
+  },
+  {
+   "page": 60,
+   "col": "R",
+   "line": 26,
+   "word_off": 1104,
+   "char_at": 46,
+   "readers": {
+    "opus": "ȣ̓",
+    "genie": "εἰ"
+   },
+   "kind": "letters",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ȣ̓"
+   ],
+   "form_set": [
+    "ȣ̓"
+   ],
+   "n_same_form_set": 5
+  },
+  {
+   "page": 61,
+   "col": "R",
+   "line": 57,
+   "word_off": 2542,
+   "char_at": 0,
+   "readers": {
+    "opus": "ȣ̓",
+    "genie": "τὸ"
+   },
+   "kind": "letters",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ȣ̓"
+   ],
+   "form_set": [
+    "ȣ̓"
+   ],
+   "n_same_form_set": 5
+  },
+  {
+   "page": 54,
    "col": "L",
    "line": 8,
    "word_off": 298,
+   "char_at": 33,
    "readers": {
     "opus": "μγ",
-    "kraken": "μγ",
-    "genie": "μγ",
+    "codex": "μη",
     "llama": "μγ",
-    "codex": "μη"
+    "kraken": "μγ",
+    "genie": "μγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1015,12 +2599,13 @@
    "col": "L",
    "line": 47,
    "word_off": 2033,
+   "char_at": 26,
    "readers": {
     "opus": "μγ",
-    "kraken": "μγ",
-    "genie": "μγ",
+    "codex": "μη",
     "llama": "μγ",
-    "codex": "μη"
+    "kraken": "μγ",
+    "genie": "μγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1039,12 +2624,13 @@
    "col": "L",
    "line": 14,
    "word_off": 597,
+   "char_at": 13,
    "readers": {
     "opus": "μγ",
-    "kraken": "μγ",
-    "genie": "μγ",
+    "codex": "μη",
     "llama": "μγ",
-    "codex": "μη"
+    "kraken": "μγ",
+    "genie": "μγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1063,12 +2649,13 @@
    "col": "L",
    "line": 10,
    "word_off": 414,
+   "char_at": 33,
    "readers": {
     "opus": "μγ",
-    "kraken": "μγ",
-    "genie": "μγ",
+    "codex": "μη",
     "llama": "μγ",
-    "codex": "μη"
+    "kraken": "μγ",
+    "genie": "μγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1087,12 +2674,13 @@
    "col": "L",
    "line": 50,
    "word_off": 2203,
+   "char_at": 25,
    "readers": {
     "opus": "ἂν",
-    "kraken": "ἂν",
-    "genie": "ἄν",
+    "codex": "ἄν",
     "llama": "ἂν",
-    "codex": "ἄν"
+    "kraken": "ἂν",
+    "genie": "ἄν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1111,12 +2699,13 @@
    "col": "R",
    "line": 5,
    "word_off": 192,
+   "char_at": 20,
    "readers": {
     "opus": "ἄν",
-    "kraken": "ἄν",
-    "genie": "ἄν",
+    "codex": "ἂν",
     "llama": "ἄν",
-    "codex": "ἂν"
+    "kraken": "ἄν",
+    "genie": "ἄν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1135,12 +2724,13 @@
    "col": "R",
    "line": 6,
    "word_off": 248,
+   "char_at": 28,
    "readers": {
     "opus": "ἄν",
-    "kraken": "ἄν",
-    "genie": "ἄν",
+    "codex": "ἂν",
     "llama": "ἄν",
-    "codex": "ἂν"
+    "kraken": "ἄν",
+    "genie": "ἄν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1159,12 +2749,13 @@
    "col": "R",
    "line": 14,
    "word_off": 585,
+   "char_at": 0,
    "readers": {
     "opus": "ἄν",
-    "kraken": "ἄν",
-    "genie": "ἄν",
+    "codex": "ἂν",
     "llama": "ἄν",
-    "codex": "ἂν"
+    "kraken": "ἄν",
+    "genie": "ἄν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1183,12 +2774,13 @@
    "col": "R",
    "line": 6,
    "word_off": 271,
+   "char_at": 51,
    "readers": {
     "opus": "ἐστιν",
-    "kraken": "ἐστιν",
-    "genie": "ἐστιν",
+    "codex": "ἐστὶν",
     "llama": "ἐστιν",
-    "codex": "ἐστὶν"
+    "kraken": "ἐστιν",
+    "genie": "ἐστιν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1207,12 +2799,13 @@
    "col": "R",
    "line": 35,
    "word_off": 1559,
+   "char_at": 9,
    "readers": {
     "opus": "ἐστιν",
-    "kraken": "ἐστιν",
-    "genie": "ἐστὶν",
+    "codex": "ἐστὶν",
     "llama": "ἐστὶν",
-    "codex": "ἐστὶν"
+    "kraken": "ἐστιν",
+    "genie": "ἐστὶν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1231,12 +2824,13 @@
    "col": "R",
    "line": 36,
    "word_off": 1525,
+   "char_at": 41,
    "readers": {
     "opus": "ἐστὶν",
-    "kraken": "ἐστὶν",
-    "genie": "ἐστὶν",
+    "codex": "ἐστιν",
     "llama": "ἐστὶν",
-    "codex": "ἐστιν"
+    "kraken": "ἐστὶν",
+    "genie": "ἐστὶν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1255,12 +2849,13 @@
    "col": "R",
    "line": 38,
    "word_off": 1619,
+   "char_at": 46,
    "readers": {
     "opus": "ἐστιν",
-    "kraken": "ἐστιν",
-    "genie": "ἐστιν",
+    "codex": "ἐστὶν",
     "llama": "ἐστιν",
-    "codex": "ἐστὶν"
+    "kraken": "ἐστιν",
+    "genie": "ἐστιν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1279,10 +2874,11 @@
    "col": "R",
    "line": 12,
    "word_off": 498,
+   "char_at": 9,
    "readers": {
     "opus": "ȣ̔͂",
-    "genie": "ὧν",
     "llama": "ȣ̓",
+    "genie": "ὧν",
     "kraken": "ȣ͂"
    },
    "kind": "letters",
@@ -1302,12 +2898,13 @@
    "col": "R",
    "line": 14,
    "word_off": 606,
+   "char_at": 27,
    "readers": {
     "opus": "ȣ̔͂",
-    "kraken": "ȣ͂",
-    "genie": "οὗ",
+    "codex": "ȣ̔͂",
     "llama": "ȣ̓",
-    "codex": "ȣ̔͂"
+    "kraken": "ȣ͂",
+    "genie": "οὗ"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -1326,12 +2923,13 @@
    "col": "R",
    "line": 18,
    "word_off": 772,
+   "char_at": 15,
    "readers": {
     "opus": "ȣ̔͂",
-    "kraken": "ȣ͂",
-    "genie": "ὧν",
+    "codex": "ȣ̔͂",
     "llama": "ȣ̓",
-    "codex": "ȣ̔͂"
+    "kraken": "ȣ͂",
+    "genie": "ὧν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -1350,11 +2948,12 @@
    "col": "R",
    "line": 49,
    "word_off": 2118,
+   "char_at": 11,
    "readers": {
     "opus": "ψγ",
+    "codex": "Ψγ",
     "genie": "ψγ",
-    "kraken": "ψγ",
-    "codex": "Ψγ"
+    "kraken": "ψγ"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -1373,12 +2972,13 @@
    "col": "L",
    "line": 12,
    "word_off": 575,
+   "char_at": 37,
    "readers": {
     "opus": "ψγ",
-    "kraken": "ψγ",
-    "genie": "ψγ",
+    "codex": "Ψγ",
     "llama": "Ψγ",
-    "codex": "Ψγ"
+    "kraken": "ψγ",
+    "genie": "ψγ"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -1397,12 +2997,13 @@
    "col": "L",
    "line": 15,
    "word_off": 651,
+   "char_at": 47,
    "readers": {
     "opus": "ψγ",
-    "kraken": "ψγ",
-    "genie": "ψγ",
+    "codex": "Ψγ",
     "llama": "ϗγ",
-    "codex": "Ψγ"
+    "kraken": "ψγ",
+    "genie": "ψγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1421,12 +3022,13 @@
    "col": "L",
    "line": 11,
    "word_off": 417,
+   "char_at": 13,
    "readers": {
     "opus": "αὐτὸν",
-    "kraken": "αὐτὸν",
-    "genie": "αὑτὸν",
+    "codex": "αὑτὸν",
     "llama": "αὑτὸν",
-    "codex": "αὑτὸν"
+    "kraken": "αὐτὸν",
+    "genie": "αὑτὸν"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -1445,12 +3047,13 @@
    "col": "R",
    "line": 17,
    "word_off": 726,
+   "char_at": 13,
    "readers": {
     "opus": "αὑτὸν",
-    "kraken": "αὐτὸν",
-    "genie": "αὑτὸν",
+    "codex": "αὑτὸν",
     "llama": "αὑτὸν",
-    "codex": "αὑτὸν"
+    "kraken": "αὐτὸν",
+    "genie": "αὑτὸν"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -1469,12 +3072,13 @@
    "col": "L",
    "line": 20,
    "word_off": 905,
+   "char_at": 23,
    "readers": {
     "opus": "αὑτὸν",
-    "kraken": "αὐτὸν",
-    "genie": "αὑτὸν",
+    "codex": "αὐτὸν",
     "llama": "αὑτὸν",
-    "codex": "αὐτὸν"
+    "kraken": "αὐτὸν",
+    "genie": "αὑτὸν"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -1493,12 +3097,13 @@
    "col": "L",
    "line": 30,
    "word_off": 1286,
+   "char_at": 13,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τȣς",
-    "genie": "τοὺς",
+    "codex": "τȣ̀ς",
     "llama": "τοὺς",
-    "codex": "τȣ̀ς"
+    "kraken": "τȣς",
+    "genie": "τοὺς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1517,12 +3122,13 @@
    "col": "R",
    "line": 2,
    "word_off": 91,
+   "char_at": 54,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τȣς",
-    "genie": "τοὺς",
+    "codex": "τȣ̀ς",
     "llama": "τοὺς",
-    "codex": "τȣ̀ς"
+    "kraken": "τȣς",
+    "genie": "τοὺς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -1541,12 +3147,13 @@
    "col": "R",
    "line": 13,
    "word_off": 524,
+   "char_at": 40,
    "readers": {
     "opus": "τȣ̀ς",
-    "kraken": "τȣς",
-    "genie": "τὰς",
+    "codex": "τȣ̀ς",
     "llama": "τȣ̀ς",
-    "codex": "τȣ̀ς"
+    "kraken": "τȣς",
+    "genie": "τὰς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -1565,12 +3172,13 @@
    "col": "R",
    "line": 15,
    "word_off": 593,
+   "char_at": 10,
    "readers": {
     "opus": "ȣ̓́τ'",
-    "kraken": "ȣ́τ'",
-    "genie": "ἔτ'",
+    "codex": "ὅτ'",
     "llama": "ϗτ'",
-    "codex": "ὅτ'"
+    "kraken": "ȣ́τ'",
+    "genie": "ἔτ'"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -1591,12 +3199,13 @@
    "col": "R",
    "line": 15,
    "word_off": 607,
+   "char_at": 27,
    "readers": {
     "opus": "ȣ̓́τ'",
-    "kraken": "ȣ́τ'",
-    "genie": "ἔτ'",
+    "codex": "ὅτ'",
     "llama": "ϗτ'",
-    "codex": "ὅτ'"
+    "kraken": "ȣ́τ'",
+    "genie": "ἔτ'"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -1617,12 +3226,13 @@
    "col": "L",
    "line": 37,
    "word_off": 1651,
+   "char_at": 57,
    "readers": {
     "opus": "ȣ̔́τως",
-    "kraken": "ȣ́τως",
-    "genie": "ὅτως",
+    "codex": "ȣ̔́τως",
     "llama": "οὕτως",
-    "codex": "ȣ̔́τως"
+    "kraken": "ȣ́τως",
+    "genie": "ὅτως"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -1641,12 +3251,13 @@
    "col": "L",
    "line": 55,
    "word_off": 2447,
+   "char_at": 19,
    "readers": {
     "opus": "ȣ̔́τως",
-    "kraken": "ȣ́τως",
-    "genie": "ὄντως",
+    "codex": "ȣ̔́τως",
     "llama": "ὅτως",
-    "codex": "ȣ̔́τως"
+    "kraken": "ȣ́τως",
+    "genie": "ὄντως"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -1665,12 +3276,13 @@
    "col": "L",
    "line": 12,
    "word_off": 529,
+   "char_at": 47,
    "readers": {
     "opus": "Ζιι",
-    "kraken": "Ζιι",
-    "genie": "Ζυ",
+    "codex": "Ζι",
     "llama": "Ζυ",
-    "codex": "Ζι"
+    "kraken": "Ζιι",
+    "genie": "Ζυ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1689,12 +3301,13 @@
    "col": "R",
    "line": 56,
    "word_off": 2395,
+   "char_at": 4,
    "readers": {
     "opus": "Ζιι",
-    "kraken": "Ζιι",
-    "genie": "Ζι",
+    "codex": "Ζι",
     "llama": "Ζι",
-    "codex": "Ζι"
+    "kraken": "Ζιι",
+    "genie": "Ζι"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1713,12 +3326,13 @@
    "col": "L",
    "line": 7,
    "word_off": 257,
+   "char_at": 36,
    "readers": {
     "opus": "Ζιβ",
-    "kraken": "Ζιθ",
-    "genie": "Ζιθ",
+    "codex": "Ζιθ",
     "llama": "Ζιθ",
-    "codex": "Ζιθ"
+    "kraken": "Ζιθ",
+    "genie": "Ζιθ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1737,11 +3351,12 @@
    "col": "L",
    "line": 59,
    "word_off": 2307,
+   "char_at": 0,
    "readers": {
     "opus": "Ζιβ",
+    "codex": "Ζιθ",
     "genie": "Ζιθ",
-    "kraken": "Ζιθ",
-    "codex": "Ζιθ"
+    "kraken": "Ζιθ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1760,12 +3375,13 @@
    "col": "R",
    "line": 22,
    "word_off": 943,
+   "char_at": 28,
    "readers": {
     "opus": "Ηγ",
-    "kraken": "Ηγ",
-    "genie": "Ηγ",
+    "codex": "Ηη",
     "llama": "Ηγ",
-    "codex": "Ηη"
+    "kraken": "Ηγ",
+    "genie": "Ηγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1784,12 +3400,13 @@
    "col": "R",
    "line": 32,
    "word_off": 1359,
+   "char_at": 21,
    "readers": {
     "opus": "Ηγ",
-    "kraken": "Ηγ",
-    "genie": "Ηγ",
+    "codex": "Ηη",
     "llama": "Ηγ",
-    "codex": "Ηη"
+    "kraken": "Ηγ",
+    "genie": "Ηγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1808,12 +3425,13 @@
    "col": "R",
    "line": 49,
    "word_off": 2184,
+   "char_at": 0,
    "readers": {
     "opus": "φτα",
-    "kraken": "φτα",
-    "genie": "φτα",
+    "codex": "Φτα",
     "llama": "πρα",
-    "codex": "Φτα"
+    "kraken": "φτα",
+    "genie": "φτα"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -1832,12 +3450,13 @@
    "col": "R",
    "line": 50,
    "word_off": 2240,
+   "char_at": 19,
    "readers": {
     "opus": "φτα",
-    "kraken": "φτα",
-    "genie": "φτα",
+    "codex": "Φτα",
     "llama": "φτα",
-    "codex": "Φτα"
+    "kraken": "φτα",
+    "genie": "φτα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -1856,12 +3475,13 @@
    "col": "L",
    "line": 37,
    "word_off": 1481,
+   "char_at": 12,
    "readers": {
     "opus": "αὑτόν",
-    "kraken": "αὐτόν",
-    "genie": "αὑτόν",
+    "codex": "αὑτόν",
     "llama": "αὑτόν",
-    "codex": "αὑτόν"
+    "kraken": "αὐτόν",
+    "genie": "αὑτόν"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -1880,12 +3500,13 @@
    "col": "L",
    "line": 37,
    "word_off": 1491,
+   "char_at": 24,
    "readers": {
     "opus": "αὑτόν",
-    "kraken": "αὐτόν",
-    "genie": "αὑτόν",
+    "codex": "αὑτόν",
     "llama": "αὑτόν",
-    "codex": "αὑτόν"
+    "kraken": "αὐτόν",
+    "genie": "αὑτόν"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -1904,12 +3525,13 @@
    "col": "L",
    "line": 45,
    "word_off": 1889,
+   "char_at": 27,
    "readers": {
     "opus": "αὑτὸ",
-    "kraken": "αὐτὸ",
-    "genie": "αὑτὸ",
+    "codex": "αὐτὸ",
     "llama": "αὑτὸ",
-    "codex": "αὐτὸ"
+    "kraken": "αὐτὸ",
+    "genie": "αὑτὸ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -1928,12 +3550,13 @@
    "col": "R",
    "line": 12,
    "word_off": 525,
+   "char_at": 24,
    "readers": {
     "opus": "αὑτὸ",
-    "kraken": "αὐτὸ",
-    "genie": "αὑτὸ",
+    "codex": "αὐτὸ",
     "llama": "αὑτὸ",
-    "codex": "αὐτὸ"
+    "kraken": "αὐτὸ",
+    "genie": "αὑτὸ"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -1952,12 +3575,13 @@
    "col": "L",
    "line": 8,
    "word_off": 374,
+   "char_at": 33,
    "readers": {
     "opus": "γίγνεται",
-    "kraken": "γίγνεται",
-    "genie": "γίνεται",
+    "codex": "γίνεται",
     "llama": "γίγνεται",
-    "codex": "γίνεται"
+    "kraken": "γίγνεται",
+    "genie": "γίνεται"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -1976,12 +3600,13 @@
    "col": "R",
    "line": 6,
    "word_off": 268,
+   "char_at": 37,
    "readers": {
     "opus": "γίγνεται",
-    "kraken": "γίγνεται",
-    "genie": "γίγνεται",
+    "codex": "γίνεται",
     "llama": "γίγνεται",
-    "codex": "γίνεται"
+    "kraken": "γίγνεται",
+    "genie": "γίγνεται"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2000,12 +3625,13 @@
    "col": "R",
    "line": 14,
    "word_off": 599,
+   "char_at": 18,
    "readers": {
     "opus": "κϛ",
-    "kraken": "κϛ",
-    "genie": "κζ",
+    "codex": "κζ",
     "llama": "κς",
-    "codex": "κζ"
+    "kraken": "κϛ",
+    "genie": "κζ"
    },
    "kind": "letters",
    "reason": "siglum:no_reading_holds_page",
@@ -2024,11 +3650,12 @@
    "col": "R",
    "line": 51,
    "word_off": 2174,
+   "char_at": 12,
    "readers": {
     "opus": "κϛ",
-    "genie": "κς",
+    "codex": "κζ",
     "llama": "κζ",
-    "codex": "κζ"
+    "genie": "κς"
    },
    "kind": "letters",
    "reason": "siglum:no_reading_holds_page",
@@ -2047,12 +3674,13 @@
    "col": "L",
    "line": 6,
    "word_off": 221,
+   "char_at": 50,
    "readers": {
     "opus": "πκγ",
-    "kraken": "πκγ",
-    "genie": "πηγ",
+    "codex": "πκη",
     "llama": "πχγ",
-    "codex": "πκη"
+    "kraken": "πκγ",
+    "genie": "πηγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -2071,12 +3699,13 @@
    "col": "L",
    "line": 59,
    "word_off": 2330,
+   "char_at": 27,
    "readers": {
     "opus": "πκγ",
-    "kraken": "πκγ",
-    "genie": "πκγ",
+    "codex": "πκη",
     "llama": "πκγ",
-    "codex": "πκη"
+    "kraken": "πκγ",
+    "genie": "πκγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -2095,11 +3724,12 @@
    "col": "L",
    "line": 34,
    "word_off": 1335,
+   "char_at": 32,
    "readers": {
     "opus": "πκϛ",
+    "codex": "πκζ",
     "genie": "πκπ",
-    "kraken": "πκϛ",
-    "codex": "πκζ"
+    "kraken": "πκϛ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -2118,12 +3748,13 @@
    "col": "R",
    "line": 51,
    "word_off": 2203,
+   "char_at": 45,
    "readers": {
     "opus": "πκϛ",
-    "kraken": "πκϛ",
-    "genie": "πκς",
+    "codex": "πκζ",
     "llama": "πκζ",
-    "codex": "πκζ"
+    "kraken": "πκϛ",
+    "genie": "πκς"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -2142,12 +3773,13 @@
    "col": "R",
    "line": 10,
    "word_off": 441,
+   "char_at": 45,
    "readers": {
     "opus": "τȣ́των",
-    "kraken": "τȣτων",
-    "genie": "τότων",
+    "codex": "τȣ́των",
     "llama": "τούτων",
-    "codex": "τȣ́των"
+    "kraken": "τȣτων",
+    "genie": "τότων"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2166,12 +3798,13 @@
    "col": "L",
    "line": 38,
    "word_off": 1683,
+   "char_at": 39,
    "readers": {
     "opus": "τȣ́των",
-    "kraken": "τȣτων",
-    "genie": "τούτων",
+    "codex": "τȣ́των",
     "llama": "τȣ́των",
-    "codex": "τȣ́των"
+    "kraken": "τȣτων",
+    "genie": "τούτων"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -2190,12 +3823,13 @@
    "col": "R",
    "line": 57,
    "word_off": 2495,
+   "char_at": 0,
    "readers": {
     "opus": "τίς",
-    "kraken": "τίς",
-    "genie": "τίς",
+    "codex": "τις",
     "llama": "τίς",
-    "codex": "τις"
+    "kraken": "τίς",
+    "genie": "τίς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -2214,12 +3848,13 @@
    "col": "R",
    "line": 34,
    "word_off": 1543,
+   "char_at": 47,
    "readers": {
     "opus": "τίς",
-    "kraken": "τίς",
-    "genie": "τίς",
+    "codex": "τις",
     "llama": "τις",
-    "codex": "τις"
+    "kraken": "τίς",
+    "genie": "τίς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -2238,12 +3873,13 @@
    "col": "L",
    "line": 28,
    "word_off": 1302,
+   "char_at": 52,
    "readers": {
     "opus": "υἱς",
-    "kraken": "ὡς",
-    "genie": "ὡς",
+    "codex": "ὡς",
     "llama": "ὡς",
-    "codex": "ὡς"
+    "kraken": "ὡς",
+    "genie": "ὡς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2262,12 +3898,13 @@
    "col": "L",
    "line": 47,
    "word_off": 1973,
+   "char_at": 23,
    "readers": {
     "opus": "υἱς",
-    "kraken": "ὡς",
-    "genie": "ὡς",
+    "codex": "ὡς",
     "llama": "ὡς",
-    "codex": "ὡς"
+    "kraken": "ὡς",
+    "genie": "ὡς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2286,12 +3923,13 @@
    "col": "L",
    "line": 9,
    "word_off": 359,
+   "char_at": 24,
    "readers": {
     "opus": "ἀριθμȣ͂",
-    "kraken": "ἀριθμȣ͂",
-    "genie": "ἀριθμῷ",
+    "codex": "ἀριθμῷ",
     "llama": "ἀριθμȣ͂",
-    "codex": "ἀριθμῷ"
+    "kraken": "ἀριθμȣ͂",
+    "genie": "ἀριθμῷ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2310,12 +3948,13 @@
    "col": "L",
    "line": 9,
    "word_off": 375,
+   "char_at": 43,
    "readers": {
     "opus": "ἀριθμȣ͂",
-    "kraken": "ἀριθμȣ͂",
-    "genie": "ἀριθμῷ",
+    "codex": "ἀριθμῷ",
     "llama": "ἀριθμȣ͂",
-    "codex": "ἀριθμῷ"
+    "kraken": "ἀριθμȣ͂",
+    "genie": "ἀριθμῷ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2334,12 +3973,13 @@
    "col": "L",
    "line": 13,
    "word_off": 501,
+   "char_at": 6,
    "readers": {
     "opus": "ἀρχάς",
-    "kraken": "ἀρχάς",
-    "genie": "ἀρχάς",
+    "codex": "ἀρχὰς",
     "llama": "ἀρχάς",
-    "codex": "ἀρχὰς"
+    "kraken": "ἀρχάς",
+    "genie": "ἀρχάς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -2358,12 +3998,13 @@
    "col": "L",
    "line": 38,
    "word_off": 1665,
+   "char_at": 19,
    "readers": {
     "opus": "ἀρχάς",
-    "kraken": "ἀρχάς",
-    "genie": "ἀρχάς",
+    "codex": "ἀρχὰς",
     "llama": "ἀρχάς",
-    "codex": "ἀρχὰς"
+    "kraken": "ἀρχάς",
+    "genie": "ἀρχάς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -2382,12 +4023,13 @@
    "col": "R",
    "line": 18,
    "word_off": 693,
+   "char_at": 19,
    "readers": {
     "opus": "ἓν",
-    "kraken": "ἓν",
-    "genie": "ἓν",
+    "codex": "ἐν",
     "llama": "ἐν",
-    "codex": "ἐν"
+    "kraken": "ἓν",
+    "genie": "ἓν"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -2406,12 +4048,13 @@
    "col": "R",
    "line": 53,
    "word_off": 2215,
+   "char_at": 50,
    "readers": {
     "opus": "ἓν",
-    "kraken": "ἐν",
-    "genie": "ἕν",
+    "codex": "ἐν",
     "llama": "ἓν",
-    "codex": "ἐν"
+    "kraken": "ἐν",
+    "genie": "ἕν"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -2430,10 +4073,11 @@
    "col": "L",
    "line": 45,
    "word_off": 1862,
+   "char_at": 20,
    "readers": {
     "opus": "ȣ̓́",
-    "genie": "οὔ",
     "llama": "ȣ̓",
+    "genie": "οὔ",
     "kraken": "ȣ́"
    },
    "kind": "marks-only",
@@ -2453,10 +4097,11 @@
    "col": "R",
    "line": 13,
    "word_off": 539,
+   "char_at": 11,
    "readers": {
     "opus": "ȣ̓́πω",
-    "genie": "ἔπω",
     "llama": "ȣ̓́πω",
+    "genie": "ἔπω",
     "kraken": "ȣ́πω"
    },
    "kind": "letters",
@@ -2476,10 +4121,11 @@
    "col": "R",
    "line": 49,
    "word_off": 2160,
+   "char_at": 26,
    "readers": {
     "opus": "ȣ̓́τ'",
-    "llama": "ἅτ'",
     "codex": "ȣ̓́τ'",
+    "llama": "ἅτ'",
     "kraken": "ȣ́τ'"
    },
    "kind": "letters",
@@ -2499,12 +4145,13 @@
    "col": "R",
    "line": 49,
    "word_off": 2187,
+   "char_at": 57,
    "readers": {
     "opus": "ȣ̓́τε",
-    "kraken": "ȣ́τε",
-    "genie": "ὅτε",
+    "codex": "ȣ̓́τε",
     "llama": "ȣ̓τε",
-    "codex": "ȣ̓́τε"
+    "kraken": "ȣ́τε",
+    "genie": "ὅτε"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2523,12 +4170,13 @@
    "col": "R",
    "line": 30,
    "word_off": 1249,
+   "char_at": 0,
    "readers": {
     "opus": "ȣ̔́τω",
-    "kraken": "ȣ́τω",
-    "genie": "ἔτω",
+    "codex": "ȣ̔́τω",
     "llama": "ȣ̔́τω",
-    "codex": "ȣ̔́τω"
+    "kraken": "ȣ́τω",
+    "genie": "ἔτω"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2547,12 +4195,13 @@
    "col": "R",
    "line": 44,
    "word_off": 1916,
+   "char_at": 13,
    "readers": {
     "opus": "ȣ̔́τω",
-    "kraken": "ȣ́τω",
-    "genie": "οὕτω",
+    "codex": "ȣδ'",
     "llama": "ȣ̔́τω",
-    "codex": "ȣδ'"
+    "kraken": "ȣ́τω",
+    "genie": "οὕτω"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2573,12 +4222,13 @@
    "col": "L",
    "line": 50,
    "word_off": 2124,
+   "char_at": 33,
    "readers": {
     "opus": "ȣ̔́τως",
-    "kraken": "ȣ́τως",
-    "genie": "ὅπως",
+    "codex": "ὅπως",
     "llama": "ὅπως",
-    "codex": "ὅπως"
+    "kraken": "ȣ́τως",
+    "genie": "ὅπως"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2599,10 +4249,11 @@
    "col": "L",
    "line": 41,
    "word_off": 1626,
+   "char_at": 50,
    "readers": {
     "opus": "ȣ̓́",
-    "llama": "ȣ̓",
-    "codex": "ȣ̓"
+    "codex": "ȣ̓",
+    "llama": "ȣ̓"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -2621,10 +4272,11 @@
    "col": "R",
    "line": 40,
    "word_off": 1710,
+   "char_at": 0,
    "readers": {
     "opus": "ȣ̔͂",
-    "genie": "οὐ",
-    "codex": "ȣ̓"
+    "codex": "ȣ̓",
+    "genie": "οὐ"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -2643,10 +4295,11 @@
    "col": "R",
    "line": 18,
    "word_off": 819,
+   "char_at": 36,
    "readers": {
     "opus": "ȣ̓",
-    "llama": "ȣ̓",
-    "codex": "ἐκ"
+    "codex": "ἐκ",
+    "llama": "ȣ̓"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2665,6 +4318,7 @@
    "col": "R",
    "line": 50,
    "word_off": 2149,
+   "char_at": 33,
    "readers": {
     "opus": "ȣ̓",
     "codex": "ὃς"
@@ -2686,6 +4340,7 @@
    "col": "R",
    "line": 14,
    "word_off": 644,
+   "char_at": 49,
    "readers": {
     "opus": "ȣ̓",
     "codex": "ὡς"
@@ -2707,12 +4362,13 @@
    "col": "R",
    "line": 28,
    "word_off": 1222,
+   "char_at": 0,
    "readers": {
     "opus": "ȣ̓́σας",
-    "kraken": "ȣσας",
-    "genie": "ὅσας",
+    "codex": "ȣ̓́σας",
     "llama": "ὅσας",
-    "codex": "ȣ̓́σας"
+    "kraken": "ȣσας",
+    "genie": "ὅσας"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2731,12 +4387,13 @@
    "col": "L",
    "line": 17,
    "word_off": 784,
+   "char_at": 14,
    "readers": {
     "opus": "ȣ̓͂ν",
-    "kraken": "ȣ͂ν",
-    "genie": "ὅν",
+    "codex": "ȣ͂ν",
     "llama": "ȣ̓͂ν",
-    "codex": "ȣ͂ν"
+    "kraken": "ȣ͂ν",
+    "genie": "ὅν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2755,12 +4412,13 @@
    "col": "L",
    "line": 1,
    "word_off": 12,
+   "char_at": 15,
    "readers": {
     "opus": "ȣ̓͂ν",
-    "kraken": "ȣν",
-    "genie": "οὖν",
+    "codex": "ἐν",
     "llama": "ȣ̓͂ν",
-    "codex": "ἐν"
+    "kraken": "ȣν",
+    "genie": "οὖν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2781,12 +4439,13 @@
    "col": "R",
    "line": 50,
    "word_off": 2180,
+   "char_at": 0,
    "readers": {
     "opus": "ȣ̓͂ν",
-    "kraken": "ȣν",
-    "genie": "οὖν",
+    "codex": "ὧν",
     "llama": "ȣ̓͂ν",
-    "codex": "ὧν"
+    "kraken": "ȣν",
+    "genie": "οὖν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2807,12 +4466,13 @@
    "col": "R",
    "line": 22,
    "word_off": 960,
+   "char_at": 22,
    "readers": {
     "opus": "ȣ̓͂σα",
-    "kraken": "ȣσα",
-    "genie": "ἦσα",
+    "codex": "ἕως",
     "llama": "ὅσα",
-    "codex": "ἕως"
+    "kraken": "ȣσα",
+    "genie": "ἦσα"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2833,12 +4493,13 @@
    "col": "R",
    "line": 15,
    "word_off": 658,
+   "char_at": 8,
    "readers": {
     "opus": "ȣ̓δὲ",
-    "kraken": "ȣδὲ",
-    "genie": "οὐδὲ",
+    "codex": "οἱδὲ",
     "llama": "ȣ̓δὲ",
-    "codex": "οἱδὲ"
+    "kraken": "ȣδὲ",
+    "genie": "οὐδὲ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2859,12 +4520,13 @@
    "col": "L",
    "line": 8,
    "word_off": 369,
+   "char_at": 27,
    "readers": {
     "opus": "ȣ̓δὲν",
-    "kraken": "ȣδὲν",
-    "genie": "οὐδὲν",
+    "codex": "ὅδεν",
     "llama": "ὅθεν",
-    "codex": "ὅδεν"
+    "kraken": "ȣδὲν",
+    "genie": "οὐδὲν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2885,12 +4547,13 @@
    "col": "R",
    "line": 33,
    "word_off": 1331,
+   "char_at": 22,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ἂν",
     "llama": "ȣ̓κ",
-    "codex": "ἂν"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2911,12 +4574,13 @@
    "col": "R",
    "line": 19,
    "word_off": 839,
+   "char_at": 36,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "οὐκ",
+    "codex": "ἐκ",
     "llama": "ȣ̓κ",
-    "codex": "ἐκ"
+    "kraken": "ȣκ",
+    "genie": "οὐκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2937,12 +4601,13 @@
    "col": "L",
    "line": 49,
    "word_off": 2050,
+   "char_at": 22,
    "readers": {
     "opus": "ȣ̓κ",
-    "kraken": "ȣκ",
-    "genie": "ἐκ",
+    "codex": "ἕως",
     "llama": "ἐκ",
-    "codex": "ἕως"
+    "kraken": "ȣκ",
+    "genie": "ἐκ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2959,16 +4624,37 @@
    "n_same_form_set": 1
   },
   {
+   "page": 54,
+   "col": "R",
+   "line": 12,
+   "word_off": 531,
+   "char_at": 49,
+   "readers": {
+    "opus": "ȣ̔͂",
+    "llama": "ȣ̓"
+   },
+   "kind": "marks-only",
+   "reason": "readers:fewer_than_two_present",
+   "forms": [
+    "ȣ̔͂"
+   ],
+   "form_set": [
+    "ȣ̔͂"
+   ],
+   "n_same_form_set": 1
+  },
+  {
    "page": 58,
    "col": "L",
    "line": 7,
    "word_off": 309,
+   "char_at": 48,
    "readers": {
     "opus": "ȣ͂σα",
-    "kraken": "ȣσα",
-    "genie": "οὖσα",
+    "codex": "ὅσα",
     "llama": "ὅσα",
-    "codex": "ὅσα"
+    "kraken": "ȣσα",
+    "genie": "οὖσα"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -2989,12 +4675,13 @@
    "col": "R",
    "line": 26,
    "word_off": 1158,
+   "char_at": 21,
    "readers": {
     "opus": "Ἀν",
-    "kraken": "Ἀν",
-    "genie": "Ἀν",
+    "codex": "Αν",
     "llama": "Ἀν",
-    "codex": "Αν"
+    "kraken": "Ἀν",
+    "genie": "Ἀν"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -3013,12 +4700,13 @@
    "col": "L",
    "line": 26,
    "word_off": 1049,
+   "char_at": 37,
    "readers": {
     "opus": "Λγ",
-    "kraken": "Λγ",
-    "genie": "Λγ",
+    "codex": "Δγ",
     "llama": "Δγ",
-    "codex": "Δγ"
+    "kraken": "Λγ",
+    "genie": "Λγ"
    },
    "kind": "letters",
    "reason": "morpheus:no_real_form",
@@ -3033,40 +4721,17 @@
    "n_same_form_set": 1
   },
   {
-   "page": 55,
-   "col": "L",
-   "line": 61,
-   "word_off": 2728,
-   "readers": {
-    "opus": "Ζγδ",
-    "kraken": "Ζγδ",
-    "genie": "Ζγδ",
-    "llama": "Ζγδ",
-    "codex": "Ζηδ"
-   },
-   "kind": "letters",
-   "reason": "siglum:no_bekker_page",
-   "forms": [
-    "Ζγδ",
-    "Ζηδ"
-   ],
-   "form_set": [
-    "Ζγδ",
-    "Ζηδ"
-   ],
-   "n_same_form_set": 1
-  },
-  {
    "page": 57,
    "col": "R",
    "line": 57,
    "word_off": 2541,
+   "char_at": 50,
    "readers": {
     "opus": "Ζιγ",
-    "kraken": "Ζιγ",
-    "genie": "Ζιγ",
+    "codex": "Ζιη",
     "llama": "Ζιγ",
-    "codex": "Ζιη"
+    "kraken": "Ζιγ",
+    "genie": "Ζιγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -3085,12 +4750,13 @@
    "col": "L",
    "line": 38,
    "word_off": 1556,
+   "char_at": 40,
    "readers": {
     "opus": "Ζμγ",
-    "kraken": "Ζμγ",
-    "genie": "Ζμγ",
+    "codex": "Ζμη",
     "llama": "Ζμγ",
-    "codex": "Ζμη"
+    "kraken": "Ζμγ",
+    "genie": "Ζμγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -3109,12 +4775,13 @@
    "col": "R",
    "line": 42,
    "word_off": 1777,
+   "char_at": 20,
    "readers": {
     "opus": "Ηθ",
-    "kraken": "Ηθ",
-    "genie": "Ηθ",
+    "codex": "ΗΑ",
     "llama": "Ηθ",
-    "codex": "ΗΑ"
+    "kraken": "Ηθ",
+    "genie": "Ηθ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -3133,12 +4800,13 @@
    "col": "L",
    "line": 52,
    "word_off": 2239,
+   "char_at": 45,
    "readers": {
     "opus": "Μλ",
-    "kraken": "Μλ",
-    "genie": "Μλ",
+    "codex": "ΜΛ",
     "llama": "Μλ",
-    "codex": "ΜΛ"
+    "kraken": "Μλ",
+    "genie": "Μλ"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -3157,12 +4825,13 @@
    "col": "L",
    "line": 47,
    "word_off": 1968,
+   "char_at": 17,
    "readers": {
     "opus": "Μαίων",
-    "kraken": "Μαίων",
-    "genie": "Μαίων",
+    "codex": "Μαΐων",
     "llama": "Μαίων",
-    "codex": "Μαΐων"
+    "kraken": "Μαίων",
+    "genie": "Μαίων"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3181,15 +4850,16 @@
    "col": "R",
    "line": 54,
    "word_off": 2393,
+   "char_at": 50,
    "readers": {
     "opus": "Ὀδυσ",
-    "kraken": "Οδυσ",
-    "genie": "Ὀδυσ",
+    "codex": "Ὀδυσ",
     "llama": "Ὀδυσ",
-    "codex": "Ὀδυσ"
+    "kraken": "Οδυσ",
+    "genie": "Ὀδυσ"
    },
    "kind": "breathing-only",
-   "reason": "breathing-only:breathing_authorities_silent",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "Οδυσ",
     "Ὀδυσ"
@@ -3205,12 +4875,13 @@
    "col": "L",
    "line": 19,
    "word_off": 767,
+   "char_at": 0,
    "readers": {
     "opus": "Πα",
-    "kraken": "Πα",
-    "genie": "Ππ",
+    "codex": "Πι",
     "llama": "Πβ",
-    "codex": "Πι"
+    "kraken": "Πα",
+    "genie": "Ππ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -3229,12 +4900,13 @@
    "col": "L",
    "line": 61,
    "word_off": 2652,
+   "char_at": 43,
    "readers": {
     "opus": "Πθ",
-    "kraken": "Πθ",
-    "genie": "Πθ",
+    "codex": "Πδ",
     "llama": "Πθ",
-    "codex": "Πδ"
+    "kraken": "Πθ",
+    "genie": "Πθ"
    },
    "kind": "letters",
    "reason": "siglum:no_bekker_page",
@@ -3253,12 +4925,13 @@
    "col": "L",
    "line": 50,
    "word_off": 2231,
+   "char_at": 36,
    "readers": {
     "opus": "Πη",
-    "kraken": "Πη",
-    "genie": "Πη",
+    "codex": "Πζ",
     "llama": "Πγ",
-    "codex": "Πζ"
+    "kraken": "Πη",
+    "genie": "Πη"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -3277,11 +4950,12 @@
    "col": "R",
    "line": 21,
    "word_off": 936,
+   "char_at": 43,
    "readers": {
     "opus": "ϗ̀",
+    "codex": "αἡ",
     "genie": "ακαὶ",
-    "kraken": "ϗ̀",
-    "codex": "αἡ"
+    "kraken": "ϗ̀"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3300,12 +4974,13 @@
    "col": "L",
    "line": 29,
    "word_off": 1270,
+   "char_at": 49,
    "readers": {
     "opus": "οἱ",
-    "kraken": "οἱ",
-    "genie": "οἱ",
+    "codex": "αἱ",
     "llama": "οἱ",
-    "codex": "αἱ"
+    "kraken": "οἱ",
+    "genie": "οἱ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3324,12 +4999,13 @@
    "col": "R",
    "line": 61,
    "word_off": 2711,
+   "char_at": 18,
    "readers": {
     "opus": "αἴτιον",
-    "kraken": "αἴηι",
-    "genie": "αἴτιον",
+    "codex": "αἴτιον",
     "llama": "αἴτιον",
-    "codex": "αἴτιον"
+    "kraken": "αἴηι",
+    "genie": "αἴτιον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3348,12 +5024,13 @@
    "col": "L",
    "line": 37,
    "word_off": 1548,
+   "char_at": 5,
    "readers": {
     "opus": "αὐτȣ́ς",
-    "kraken": "αὐτȣ́ς",
-    "genie": "αὐτάς",
+    "codex": "αὐτȣ̀ς",
     "llama": "αὐτάς",
-    "codex": "αὐτȣ̀ς"
+    "kraken": "αὐτȣ́ς",
+    "genie": "αὐτάς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3372,12 +5049,13 @@
    "col": "L",
    "line": 61,
    "word_off": 2616,
+   "char_at": 0,
    "readers": {
     "opus": "αὐτά",
-    "kraken": "αὐτά",
-    "genie": "αὐτά",
+    "codex": "αὐτὰ",
     "llama": "αὐτά",
-    "codex": "αὐτὰ"
+    "kraken": "αὐτά",
+    "genie": "αὐτά"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3396,12 +5074,13 @@
    "col": "L",
    "line": 51,
    "word_off": 2170,
+   "char_at": 13,
    "readers": {
     "opus": "βία",
-    "kraken": "βίᾳ",
-    "genie": "βίᾳ",
+    "codex": "βίᾳ",
     "llama": "βίᾳ",
-    "codex": "βίᾳ"
+    "kraken": "βίᾳ",
+    "genie": "βίᾳ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3420,12 +5099,13 @@
    "col": "L",
    "line": 42,
    "word_off": 1715,
+   "char_at": 43,
    "readers": {
     "opus": "βυθȣ͂",
-    "kraken": "βυθȣ",
-    "genie": "βυθᾶ",
+    "codex": "βυθȣ͂",
     "llama": "βυθȣ͂",
-    "codex": "βυθȣ͂"
+    "kraken": "βυθȣ",
+    "genie": "βυθᾶ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3444,12 +5124,13 @@
    "col": "R",
    "line": 39,
    "word_off": 1723,
+   "char_at": 5,
    "readers": {
     "opus": "γαλαξίȣ",
-    "kraken": "γαλαξίȣ",
-    "genie": "γαλαξίω",
+    "codex": "χαλάζης",
     "llama": "γαλαξίȣ",
-    "codex": "χαλάζης"
+    "kraken": "γαλαξίȣ",
+    "genie": "γαλαξίω"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3468,12 +5149,13 @@
    "col": "R",
    "line": 56,
    "word_off": 2463,
+   "char_at": 0,
    "readers": {
     "opus": "γενομένη",
-    "kraken": "γενομένῃ",
-    "genie": "γενομένῃ",
+    "codex": "γενομένῃ",
     "llama": "γενομένῃ",
-    "codex": "γενομένῃ"
+    "kraken": "γενομένῃ",
+    "genie": "γενομένῃ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3492,12 +5174,13 @@
    "col": "L",
    "line": 3,
    "word_off": 114,
+   "char_at": 27,
    "readers": {
     "opus": "γεροντομανίᾳ",
-    "kraken": "γεροντομανία",
-    "genie": "γεροντομανίᾳ",
+    "codex": "γεροντομανίᾳ",
     "llama": "γεροντομανίᾳ",
-    "codex": "γεροντομανίᾳ"
+    "kraken": "γεροντομανία",
+    "genie": "γεροντομανίᾳ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3516,12 +5199,13 @@
    "col": "R",
    "line": 43,
    "word_off": 1727,
+   "char_at": 18,
    "readers": {
     "opus": "γεωμετρική",
-    "kraken": "γεωμετρική",
-    "genie": "γεωμετρική",
+    "codex": "γεωμετρικὴ",
     "llama": "γεωμετρική",
-    "codex": "γεωμετρικὴ"
+    "kraken": "γεωμετρική",
+    "genie": "γεωμετρική"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3540,12 +5224,13 @@
    "col": "R",
    "line": 54,
    "word_off": 2367,
+   "char_at": 17,
    "readers": {
     "opus": "γνώριμον",
-    "kraken": "γνωριμον",
-    "genie": "γνώριμον",
+    "codex": "γνώριμον",
     "llama": "γνώριμον",
-    "codex": "γνώριμον"
+    "kraken": "γνωριμον",
+    "genie": "γνώριμον"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3564,12 +5249,13 @@
    "col": "L",
    "line": 41,
    "word_off": 1829,
+   "char_at": 56,
    "readers": {
     "opus": "γονὴ",
-    "kraken": "γονὴ",
-    "genie": "γονὴ",
+    "codex": "γυνὴ",
     "llama": "γονὴ",
-    "codex": "γυνὴ"
+    "kraken": "γονὴ",
+    "genie": "γονὴ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3588,12 +5274,13 @@
    "col": "L",
    "line": 8,
    "word_off": 291,
+   "char_at": 25,
    "readers": {
     "opus": "γραμμαί",
-    "kraken": "γραμμαί",
-    "genie": "γραμμαί",
+    "codex": "γραμμαὶ",
     "llama": "γραμμαί",
-    "codex": "γραμμαὶ"
+    "kraken": "γραμμαί",
+    "genie": "γραμμαί"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3612,11 +5299,12 @@
    "col": "R",
    "line": 44,
    "word_off": 1921,
+   "char_at": 19,
    "readers": {
     "opus": "ϗ̀",
+    "codex": "δ'",
     "genie": "καὶ",
-    "kraken": "ϗ̀",
-    "codex": "δ'"
+    "kraken": "ϗ̀"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3635,12 +5323,13 @@
    "col": "L",
    "line": 24,
    "word_off": 1033,
+   "char_at": 13,
    "readers": {
     "opus": "διαιρȣ́μενα",
-    "kraken": "διαιρȣμενα",
-    "genie": "διαιρούμενα",
+    "codex": "διαιρούμενα",
     "llama": "διαιρούμενα",
-    "codex": "διαιρούμενα"
+    "kraken": "διαιρȣμενα",
+    "genie": "διαιρούμενα"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3661,12 +5350,13 @@
    "col": "R",
    "line": 42,
    "word_off": 1700,
+   "char_at": 40,
    "readers": {
     "opus": "διῃρημένη",
-    "kraken": "διηρημένη",
-    "genie": "διῃρημένη",
+    "codex": "διῃρημένη",
     "llama": "διῃρημένη",
-    "codex": "διῃρημένη"
+    "kraken": "διηρημένη",
+    "genie": "διῃρημένη"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3685,12 +5375,13 @@
    "col": "R",
    "line": 49,
    "word_off": 2096,
+   "char_at": 36,
    "readers": {
     "opus": "δικαστάς",
-    "kraken": "δικαστάς",
-    "genie": "δικαστάς",
+    "codex": "δικαστὰς",
     "llama": "δικαστάς",
-    "codex": "δικαστὰς"
+    "kraken": "δικαστάς",
+    "genie": "δικαστάς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3709,12 +5400,13 @@
    "col": "R",
    "line": 9,
    "word_off": 359,
+   "char_at": 26,
    "readers": {
     "opus": "διπλῆ",
-    "kraken": "διπλῇ",
-    "genie": "διπλῆ",
+    "codex": "διπλῆ",
     "llama": "διπλῆ",
-    "codex": "διπλῆ"
+    "kraken": "διπλῇ",
+    "genie": "διπλῆ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3733,12 +5425,13 @@
    "col": "L",
    "line": 60,
    "word_off": 2695,
+   "char_at": 37,
    "readers": {
     "opus": "δοκȣ͂σιν",
-    "kraken": "δοκȣ͂σιν",
-    "genie": "δοκοῦσιν",
+    "codex": "δοκεῖν",
     "llama": "δοκȣσιν",
-    "codex": "δοκεῖν"
+    "kraken": "δοκȣ͂σιν",
+    "genie": "δοκοῦσιν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3757,12 +5450,13 @@
    "col": "L",
    "line": 2,
    "word_off": 75,
+   "char_at": 40,
    "readers": {
     "opus": "ὁτιȣ͂ν",
-    "kraken": "δτιȣ͂ν",
-    "genie": "ὁτιοῦν",
+    "codex": "ὄν",
     "llama": "ὁτιȣ͂ν",
-    "codex": "ὄν"
+    "kraken": "δτιȣ͂ν",
+    "genie": "ὁτιοῦν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3783,12 +5477,13 @@
    "col": "L",
    "line": 21,
    "word_off": 864,
+   "char_at": 8,
    "readers": {
     "opus": "εἴ",
-    "kraken": "εἴ",
-    "genie": "εἴ",
+    "codex": "εἰ",
     "llama": "εἴ",
-    "codex": "εἰ"
+    "kraken": "εἴ",
+    "genie": "εἴ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3807,12 +5502,13 @@
    "col": "R",
    "line": 37,
    "word_off": 1590,
+   "char_at": 21,
    "readers": {
     "opus": "εἰκός",
-    "kraken": "εἰκός",
-    "genie": "εἰκὸς",
+    "codex": "εἰκὸς",
     "llama": "εἰκὸς",
-    "codex": "εἰκὸς"
+    "kraken": "εἰκός",
+    "genie": "εἰκὸς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3831,12 +5527,13 @@
    "col": "L",
    "line": 10,
    "word_off": 409,
+   "char_at": 27,
    "readers": {
     "opus": "εἰσιν",
-    "kraken": "εἰσιν",
-    "genie": "εἰσιν",
+    "codex": "εἰσὶ",
     "llama": "εἰσιν",
-    "codex": "εἰσὶ"
+    "kraken": "εἰσιν",
+    "genie": "εἰσιν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3855,12 +5552,13 @@
    "col": "R",
    "line": 19,
    "word_off": 848,
+   "char_at": 31,
    "readers": {
     "opus": "εἴτ'",
-    "kraken": "εἶτ'",
-    "genie": "εἴτ'",
+    "codex": "εἴτ'",
     "llama": "εἴτ'",
-    "codex": "εἴτ'"
+    "kraken": "εἶτ'",
+    "genie": "εἴτ'"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3879,12 +5577,13 @@
    "col": "L",
    "line": 47,
    "word_off": 2115,
+   "char_at": 41,
    "readers": {
     "opus": "εἶναί",
-    "kraken": "εἶναί",
-    "genie": "εἶναί",
+    "codex": "εἶναι",
     "llama": "εἶναί",
-    "codex": "εἶναι"
+    "kraken": "εἶναί",
+    "genie": "εἶναί"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3903,12 +5602,13 @@
    "col": "R",
    "line": 42,
    "word_off": 1846,
+   "char_at": 49,
    "readers": {
     "opus": "ζῳοτοκȣ͂ντα",
-    "kraken": "ζῳοτοκȣ͂ντα",
-    "genie": "ζωοτοκῦντα",
+    "codex": "ζωοτοκȣ͂ντα",
     "llama": "ζῳοτοκȣντα",
-    "codex": "ζωοτοκȣ͂ντα"
+    "kraken": "ζῳοτοκȣ͂ντα",
+    "genie": "ζωοτοκῦντα"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -3927,12 +5627,13 @@
    "col": "R",
    "line": 38,
    "word_off": 1679,
+   "char_at": 0,
    "readers": {
     "opus": "ζῴοις",
-    "kraken": "ζώοις",
-    "genie": "ζῴοις",
+    "codex": "ζῴοις",
     "llama": "ζῴοις",
-    "codex": "ζῴοις"
+    "kraken": "ζώοις",
+    "genie": "ζῴοις"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -3951,12 +5652,13 @@
    "col": "R",
    "line": 32,
    "word_off": 1409,
+   "char_at": 12,
    "readers": {
     "opus": "ηεη",
-    "kraken": "ηεη",
-    "genie": "ηεη",
+    "codex": "ηεγ",
     "llama": "ηεγ",
-    "codex": "ηεγ"
+    "kraken": "ηεη",
+    "genie": "ηεη"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -3975,12 +5677,13 @@
    "col": "R",
    "line": 57,
    "word_off": 2515,
+   "char_at": 11,
    "readers": {
     "opus": "ηὐξάνετο",
-    "kraken": "ηὐξάνετο",
-    "genie": "ηὐξάνετο",
+    "codex": "ηὔξανετο",
     "llama": "ηὐξάνετο",
-    "codex": "ηὔξανετο"
+    "kraken": "ηὐξάνετο",
+    "genie": "ηὐξάνετο"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -3999,12 +5702,13 @@
    "col": "L",
    "line": 61,
    "word_off": 2694,
+   "char_at": 3,
    "readers": {
     "opus": "θ'",
-    "kraken": "θᾖ",
-    "genie": "θ'",
+    "codex": "θ'",
     "llama": "θ'",
-    "codex": "θ'"
+    "kraken": "θᾖ",
+    "genie": "θ'"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4023,12 +5727,13 @@
    "col": "R",
    "line": 43,
    "word_off": 1849,
+   "char_at": 51,
    "readers": {
     "opus": "θεȣ́ς",
-    "kraken": "θεȣ́ς",
-    "genie": "θεάς",
+    "codex": "θεȣ̀ς",
     "llama": "θεȣ́ς",
-    "codex": "θεȣ̀ς"
+    "kraken": "θεȣ́ς",
+    "genie": "θεάς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4047,12 +5752,13 @@
    "col": "L",
    "line": 53,
    "word_off": 2059,
+   "char_at": 17,
    "readers": {
     "opus": "θεȣ̀ς",
-    "kraken": "θεὰς",
-    "genie": "θεὺς",
+    "codex": "θεȣ̀ς",
     "llama": "θεȣ̀ς",
-    "codex": "θεȣ̀ς"
+    "kraken": "θεὰς",
+    "genie": "θεὺς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4071,12 +5777,13 @@
    "col": "R",
    "line": 25,
    "word_off": 1098,
+   "char_at": 28,
    "readers": {
     "opus": "θεωρȣ͂νται",
-    "kraken": "θεωρȣ͂νται",
-    "genie": "θεωρεῖται",
+    "codex": "θεωρεῖται",
     "llama": "θεωρȣνται",
-    "codex": "θεωρεῖται"
+    "kraken": "θεωρȣ͂νται",
+    "genie": "θεωρεῖται"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4095,12 +5802,13 @@
    "col": "L",
    "line": 46,
    "word_off": 1839,
+   "char_at": 4,
    "readers": {
     "opus": "θυμόν",
-    "kraken": "θυμόν",
-    "genie": "θυμόν",
+    "codex": "θυμὸν",
     "llama": "θυμόν",
-    "codex": "θυμὸν"
+    "kraken": "θυμόν",
+    "genie": "θυμόν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4119,12 +5827,13 @@
    "col": "L",
    "line": 36,
    "word_off": 1461,
+   "char_at": 41,
    "readers": {
     "opus": "καικίας",
-    "kraken": "καικίας",
-    "genie": "καικίας",
+    "codex": "κακίας",
     "llama": "καικίας",
-    "codex": "κακίας"
+    "kraken": "καικίας",
+    "genie": "καικίας"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4143,12 +5852,13 @@
    "col": "L",
    "line": 31,
    "word_off": 1334,
+   "char_at": 10,
    "readers": {
     "opus": "καρδίᾳ",
-    "kraken": "καρδία",
-    "genie": "καρδίᾳ",
+    "codex": "καρδίᾳ",
     "llama": "καρδίᾳ",
-    "codex": "καρδίᾳ"
+    "kraken": "καρδία",
+    "genie": "καρδίᾳ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4167,12 +5877,13 @@
    "col": "L",
    "line": 50,
    "word_off": 2207,
+   "char_at": 9,
    "readers": {
     "opus": "καταδȣλȣ͂σθαι",
-    "kraken": "καταδȣλȣσθαι",
-    "genie": "καταδυλάσθαι",
+    "codex": "καταδȣλȣ͂σθαι",
     "llama": "καταδȣλȣ͂σθαι",
-    "codex": "καταδȣλȣ͂σθαι"
+    "kraken": "καταδȣλȣσθαι",
+    "genie": "καταδυλάσθαι"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4191,12 +5902,13 @@
    "col": "R",
    "line": 10,
    "word_off": 409,
+   "char_at": 8,
    "readers": {
     "opus": "κγ",
-    "kraken": "κγ",
-    "genie": "κγ",
+    "codex": "κη",
     "llama": "κγ",
-    "codex": "κη"
+    "kraken": "κγ",
+    "genie": "κγ"
    },
    "kind": "letters",
    "reason": "siglum:no_reading_holds_page",
@@ -4215,12 +5927,13 @@
    "col": "R",
    "line": 35,
    "word_off": 1553,
+   "char_at": 10,
    "readers": {
     "opus": "κενόν",
-    "kraken": "κενόν",
-    "genie": "κενόν",
+    "codex": "κενὸν",
     "llama": "κενόν",
-    "codex": "κενὸν"
+    "kraken": "κενόν",
+    "genie": "κενόν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4239,12 +5952,13 @@
    "col": "R",
    "line": 22,
    "word_off": 841,
+   "char_at": 16,
    "readers": {
     "opus": "κηρȣ͂",
-    "kraken": "κηρȣ͂",
-    "genie": "κηρῷ",
+    "codex": "κηρῷ",
     "llama": "κηρȣ͂",
-    "codex": "κηρῷ"
+    "kraken": "κηρȣ͂",
+    "genie": "κηρῷ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4263,12 +5977,13 @@
    "col": "R",
    "line": 29,
    "word_off": 1288,
+   "char_at": 42,
    "readers": {
     "opus": "κινȣ͂σαν",
-    "kraken": "κινȣ͂σαν",
-    "genie": "κινοῦσαν",
+    "codex": "κινήσασαν",
     "llama": "κινȣ͂σαν",
-    "codex": "κινήσασαν"
+    "kraken": "κινȣ͂σαν",
+    "genie": "κινοῦσαν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4287,12 +6002,13 @@
    "col": "R",
    "line": 8,
    "word_off": 352,
+   "char_at": 33,
    "readers": {
     "opus": "κινητικήν",
-    "kraken": "κινητικήν",
-    "genie": "κινητικήν",
+    "codex": "κινητικὴν",
     "llama": "κινητικήν",
-    "codex": "κινητικὴν"
+    "kraken": "κινητικήν",
+    "genie": "κινητικήν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4311,12 +6027,13 @@
    "col": "R",
    "line": 27,
    "word_off": 1214,
+   "char_at": 28,
    "readers": {
     "opus": "κραγγὼν",
-    "kraken": "κραγγὼν",
-    "genie": "πραγωγὼν",
+    "codex": "κραγὼν",
     "llama": "κραγγὼν",
-    "codex": "κραγὼν"
+    "kraken": "κραγγὼν",
+    "genie": "πραγωγὼν"
    },
    "kind": "letters",
    "reason": "morpheus:no_real_form",
@@ -4335,12 +6052,13 @@
    "col": "R",
    "line": 45,
    "word_off": 1807,
+   "char_at": 6,
    "readers": {
     "opus": "κυβικοὶ",
-    "kraken": "κυβικοὶ",
-    "genie": "κυβικοὶ",
+    "codex": "κυβικαὶ",
     "llama": "κυβικοὶ",
-    "codex": "κυβικαὶ"
+    "kraken": "κυβικοὶ",
+    "genie": "κυβικοὶ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4359,12 +6077,13 @@
    "col": "L",
    "line": 41,
    "word_off": 1675,
+   "char_at": 20,
    "readers": {
     "opus": "κύκλῳ",
-    "kraken": "κύκλ",
-    "genie": "κύκλῳ",
+    "codex": "κύκλῳ",
     "llama": "κύκλῳ",
-    "codex": "κύκλῳ"
+    "kraken": "κύκλ",
+    "genie": "κύκλῳ"
    },
    "kind": "letters",
    "reason": "morpheus:glue_suspect",
@@ -4383,12 +6102,13 @@
    "col": "L",
    "line": 47,
    "word_off": 2075,
+   "char_at": 11,
    "readers": {
     "opus": "κἂν",
-    "kraken": "κᾶν",
-    "genie": "κἂν",
+    "codex": "κἄν",
     "llama": "κἂν",
-    "codex": "κἄν"
+    "kraken": "κᾶν",
+    "genie": "κἂν"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -4409,15 +6129,16 @@
    "col": "L",
    "line": 35,
    "word_off": 1582,
+   "char_at": 48,
    "readers": {
     "opus": "λεπτότε",
-    "kraken": "λεπτότε",
-    "genie": "λεπτότε",
+    "codex": "λεπτοτέ",
     "llama": "λεπτότε",
-    "codex": "λεπτοτέ"
+    "kraken": "λεπτότε",
+    "genie": "λεπτότε"
    },
    "kind": "marks-only",
-   "reason": "marks-only:breathing_authorities_silent",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "λεπτοτέ",
     "λεπτότε"
@@ -4433,12 +6154,13 @@
    "col": "R",
    "line": 48,
    "word_off": 2103,
+   "char_at": 20,
    "readers": {
     "opus": "Ἴλιον",
-    "kraken": "λιον",
-    "genie": "Ἴλιον",
+    "codex": "Ἴλιον",
     "llama": "Ἴλιον",
-    "codex": "Ἴλιον"
+    "kraken": "λιον",
+    "genie": "Ἴλιον"
    },
    "kind": "letters",
    "reason": "morpheus:glue_suspect",
@@ -4457,12 +6179,13 @@
    "col": "R",
    "line": 10,
    "word_off": 414,
+   "char_at": 15,
    "readers": {
     "opus": "μάλιστ'",
-    "kraken": "μάλιστ'",
-    "genie": "μάλιστ'",
+    "codex": "μάλιστα",
     "llama": "μάλιστ'",
-    "codex": "μάλιστα"
+    "kraken": "μάλιστ'",
+    "genie": "μάλιστ'"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4481,12 +6204,13 @@
    "col": "R",
    "line": 54,
    "word_off": 2408,
+   "char_at": 43,
    "readers": {
     "opus": "μέν",
-    "kraken": "μέν",
-    "genie": "μέν",
+    "codex": "μὲν",
     "llama": "μέν",
-    "codex": "μὲν"
+    "kraken": "μέν",
+    "genie": "μέν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4505,12 +6229,13 @@
    "col": "R",
    "line": 14,
    "word_off": 608,
+   "char_at": 9,
    "readers": {
     "opus": "μέσȣ",
-    "kraken": "μέσȣ",
-    "genie": "μέσον",
+    "codex": "μέσῳ",
     "llama": "μέσȣ",
-    "codex": "μέσῳ"
+    "kraken": "μέσȣ",
+    "genie": "μέσον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4529,15 +6254,16 @@
    "col": "R",
    "line": 49,
    "word_off": 2223,
+   "char_at": 49,
    "readers": {
     "opus": "μή",
-    "kraken": "μη",
-    "genie": "μή",
+    "codex": "μή",
     "llama": "μή",
-    "codex": "μή"
+    "kraken": "μη",
+    "genie": "μή"
    },
    "kind": "accent-only",
-   "reason": "accent-only:not_positional_or_ambiguous",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "μή",
     "μη"
@@ -4553,12 +6279,13 @@
    "col": "R",
    "line": 37,
    "word_off": 1678,
+   "char_at": 37,
    "readers": {
     "opus": "μετεχομένȣ",
-    "kraken": "μετεχομένȣ",
-    "genie": "μετεχομένου",
+    "codex": "μετέχομένȣ",
     "llama": "μετεχομένȣ",
-    "codex": "μετέχομένȣ"
+    "kraken": "μετεχομένȣ",
+    "genie": "μετεχομένου"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4577,12 +6304,13 @@
    "col": "R",
    "line": 40,
    "word_off": 1725,
+   "char_at": 19,
    "readers": {
     "opus": "μηρȣ́ς",
-    "kraken": "μηρȣ́ς",
-    "genie": "μηρούς",
+    "codex": "μηρȣ̀ς",
     "llama": "μηρȣς",
-    "codex": "μηρȣ̀ς"
+    "kraken": "μηρȣ́ς",
+    "genie": "μηρούς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4601,12 +6329,13 @@
    "col": "L",
    "line": 6,
    "word_off": 226,
+   "char_at": 0,
    "readers": {
     "opus": "μιδῆ",
-    "kraken": "μιδῇ",
-    "genie": "μιδῇ",
+    "codex": "μιδῇ",
     "llama": "μιδῇ",
-    "codex": "μιδῇ"
+    "kraken": "μιδῇ",
+    "genie": "μιδῇ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4625,12 +6354,13 @@
    "col": "R",
    "line": 61,
    "word_off": 2716,
+   "char_at": 15,
    "readers": {
     "opus": "ὅμοιον",
-    "kraken": "μοιον",
-    "genie": "ὅμοιον",
+    "codex": "ὅμοιον",
     "llama": "ὅμοιον",
-    "codex": "ὅμοιον"
+    "kraken": "μοιον",
+    "genie": "ὅμοιον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4649,12 +6379,13 @@
    "col": "L",
    "line": 9,
    "word_off": 350,
+   "char_at": 14,
    "readers": {
     "opus": "μοναδικȣ͂",
-    "kraken": "μοναδικȣ͂",
-    "genie": "μοναδικῷ",
+    "codex": "μοναδικῷ",
     "llama": "μοναδικȣ͂",
-    "codex": "μοναδικῷ"
+    "kraken": "μοναδικȣ͂",
+    "genie": "μοναδικῷ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4673,12 +6404,13 @@
    "col": "R",
    "line": 43,
    "word_off": 1910,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναίδεια",
-    "kraken": "ναίδεια",
-    "genie": "ἀναίδεια",
+    "codex": "ἀναίδεια",
     "llama": "ἀναίδεια",
-    "codex": "ἀναίδεια"
+    "kraken": "ναίδεια",
+    "genie": "ἀναίδεια"
    },
    "kind": "letters",
    "reason": "morpheus:glue_suspect",
@@ -4697,12 +6429,13 @@
    "col": "R",
    "line": 57,
    "word_off": 2498,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναίσθητος",
-    "kraken": "ναίσθητος",
-    "genie": "ἀναίσθητος",
+    "codex": "ἀναίσθητος",
     "llama": "ἀναίσθητος",
-    "codex": "ἀναίσθητος"
+    "kraken": "ναίσθητος",
+    "genie": "ἀναίσθητος"
    },
    "kind": "letters",
    "reason": "morpheus:glue_suspect",
@@ -4721,12 +6454,13 @@
    "col": "R",
    "line": 44,
    "word_off": 1948,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναιδὴς",
-    "kraken": "ναιδὴς",
-    "genie": "ἀναιδής",
+    "codex": "ἀναιδὴς",
     "llama": "ἀναιδὴς",
-    "codex": "ἀναιδὴς"
+    "kraken": "ναιδὴς",
+    "genie": "ἀναιδής"
    },
    "kind": "letters",
    "reason": "morpheus:glue_suspect",
@@ -4745,12 +6479,13 @@
    "col": "R",
    "line": 47,
    "word_off": 2086,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναιμία",
-    "kraken": "ναιμία",
-    "genie": "ἀναιμία",
+    "codex": "ἀναιμία",
     "llama": "ἀναιμία",
-    "codex": "ἀναιμία"
+    "kraken": "ναιμία",
+    "genie": "ἀναιμία"
    },
    "kind": "letters",
    "reason": "morpheus:no_real_form",
@@ -4769,12 +6504,13 @@
    "col": "R",
    "line": 49,
    "word_off": 2138,
+   "char_at": 0,
    "readers": {
     "opus": "ἄναιμος",
-    "kraken": "ναιμος",
-    "genie": "ἄναιμος",
+    "codex": "ἄναιμος",
     "llama": "ἄναιμος",
-    "codex": "ἄναιμος"
+    "kraken": "ναιμος",
+    "genie": "ἄναιμος"
    },
    "kind": "letters",
    "reason": "morpheus:glue_suspect",
@@ -4793,12 +6529,13 @@
    "col": "R",
    "line": 50,
    "word_off": 2209,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναισθησία",
-    "kraken": "ναισθησία",
-    "genie": "ἀναισθησία",
+    "codex": "ἀναισθησία",
     "llama": "ἀναισθησία",
-    "codex": "ἀναισθησία"
+    "kraken": "ναισθησία",
+    "genie": "ἀναισθησία"
    },
    "kind": "letters",
    "reason": "morpheus:glue_suspect",
@@ -4817,12 +6554,13 @@
    "col": "L",
    "line": 30,
    "word_off": 1239,
+   "char_at": 41,
    "readers": {
     "opus": "νεοττȣ́ς",
-    "kraken": "νεοττȣ́ς",
-    "genie": "νεοττὰς",
+    "codex": "νεοττȣ̀ς",
     "llama": "νεοττȣς",
-    "codex": "νεοττȣ̀ς"
+    "kraken": "νεοττȣ́ς",
+    "genie": "νεοττὰς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4841,12 +6579,13 @@
    "col": "R",
    "line": 20,
    "word_off": 868,
+   "char_at": 28,
    "readers": {
     "opus": "νοτέρὰ",
-    "kraken": "νοτερὰ",
-    "genie": "νοτερὰ",
+    "codex": "νοτερὰ",
     "llama": "νοτερὰ",
-    "codex": "νοτερὰ"
+    "kraken": "νοτερὰ",
+    "genie": "νοτερὰ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4865,12 +6604,13 @@
    "col": "R",
    "line": 27,
    "word_off": 1192,
+   "char_at": 19,
    "readers": {
     "opus": "ξηράν",
-    "kraken": "ξηράν",
-    "genie": "ξηράν",
+    "codex": "ξηρὰν",
     "llama": "ξηράν",
-    "codex": "ξηρὰν"
+    "kraken": "ξηράν",
+    "genie": "ξηράν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -4889,11 +6629,12 @@
    "col": "L",
    "line": 2,
    "word_off": 82,
+   "char_at": 48,
    "readers": {
     "opus": "ϗ̀",
+    "codex": "οἱ",
     "genie": "κἀ",
-    "kraken": "ϗ̀",
-    "codex": "οἱ"
+    "kraken": "ϗ̀"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4912,12 +6653,13 @@
    "col": "R",
    "line": 19,
    "word_off": 834,
+   "char_at": 14,
    "readers": {
     "opus": "οἴωνται",
-    "kraken": "οἴωνται",
-    "genie": "οἴωνται",
+    "codex": "οἴονται",
     "llama": "οἴωνται",
-    "codex": "οἴονται"
+    "kraken": "οἴωνται",
+    "genie": "οἴωνται"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4936,12 +6678,13 @@
    "col": "R",
    "line": 25,
    "word_off": 1061,
+   "char_at": 50,
    "readers": {
     "opus": "πάχȣς",
-    "kraken": "πάχȣς",
-    "genie": "πάχους",
+    "codex": "πάγȣς",
     "llama": "πάχȣς",
-    "codex": "πάγȣς"
+    "kraken": "πάχȣς",
+    "genie": "πάχους"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4960,12 +6703,13 @@
    "col": "L",
    "line": 35,
    "word_off": 1422,
+   "char_at": 24,
    "readers": {
     "opus": "πάλιν",
-    "kraken": "πόλιν",
-    "genie": "πάλιν",
+    "codex": "πάλιν",
     "llama": "πάλιν",
-    "codex": "πάλιν"
+    "kraken": "πόλιν",
+    "genie": "πάλιν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -4984,12 +6728,13 @@
    "col": "R",
    "line": 19,
    "word_off": 834,
+   "char_at": 30,
    "readers": {
     "opus": "τέρας",
-    "kraken": "τέρας",
-    "genie": "τέρας",
+    "codex": "πέρας",
     "llama": "τέρας",
-    "codex": "πέρας"
+    "kraken": "τέρας",
+    "genie": "τέρας"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5008,12 +6753,13 @@
    "col": "L",
    "line": 43,
    "word_off": 1916,
+   "char_at": 43,
    "readers": {
     "opus": "παραπλησίαν",
-    "kraken": "παραπλησίαν",
-    "genie": "παραπλησίαν",
+    "codex": "παραπλήσιον",
     "llama": "παραπλησίαν",
-    "codex": "παραπλήσιον"
+    "kraken": "παραπλησίαν",
+    "genie": "παραπλησίαν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5032,12 +6778,13 @@
    "col": "R",
    "line": 55,
    "word_off": 2425,
+   "char_at": 8,
    "readers": {
     "opus": "περί",
-    "kraken": "περί",
-    "genie": "περὶ",
+    "codex": "περὶ",
     "llama": "περὶ",
-    "codex": "περὶ"
+    "kraken": "περί",
+    "genie": "περὶ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5056,12 +6803,13 @@
    "col": "R",
    "line": 47,
    "word_off": 2021,
+   "char_at": 45,
    "readers": {
     "opus": "πιη",
-    "kraken": "πιη",
-    "genie": "πιη",
+    "codex": "πη",
     "llama": "πμ",
-    "codex": "πη"
+    "kraken": "πιη",
+    "genie": "πιη"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -5080,12 +6828,13 @@
    "col": "L",
    "line": 4,
    "word_off": 119,
+   "char_at": 10,
    "readers": {
     "opus": "πιη",
-    "kraken": "πιη",
-    "genie": "πη",
+    "codex": "πιγ",
     "llama": "πικ",
-    "codex": "πιγ"
+    "kraken": "πιη",
+    "genie": "πη"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -5104,12 +6853,13 @@
    "col": "R",
    "line": 30,
    "word_off": 1203,
+   "char_at": 31,
    "readers": {
     "opus": "πιμέλην",
-    "kraken": "πιμέλην",
-    "genie": "πιμελήν",
+    "codex": "πιμελὴν",
     "llama": "πιμελήν",
-    "codex": "πιμελὴν"
+    "kraken": "πιμέλην",
+    "genie": "πιμελήν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5128,12 +6878,13 @@
    "col": "L",
    "line": 39,
    "word_off": 1645,
+   "char_at": 41,
    "readers": {
     "opus": "πινȣ́σας",
-    "kraken": "πινȣσας",
-    "genie": "πινώσας",
+    "codex": "πινȣ́σας",
     "llama": "πινȣ́σας",
-    "codex": "πινȣ́σας"
+    "kraken": "πινȣσας",
+    "genie": "πινώσας"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5152,12 +6903,13 @@
    "col": "R",
    "line": 35,
    "word_off": 1554,
+   "char_at": 22,
    "readers": {
     "opus": "πκϛ",
-    "kraken": "πκϛ",
-    "genie": "πκς",
+    "codex": "πκγ",
     "llama": "πκς",
-    "codex": "πκγ"
+    "kraken": "πκϛ",
+    "genie": "πκς"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -5176,12 +6928,13 @@
    "col": "L",
    "line": 40,
    "word_off": 1688,
+   "char_at": 35,
    "readers": {
     "opus": "πλγ",
-    "kraken": "πλγ",
-    "genie": "πλγ",
+    "codex": "πλη",
     "llama": "πλη",
-    "codex": "πλη"
+    "kraken": "πλγ",
+    "genie": "πλγ"
    },
    "kind": "letters",
    "reason": "siglum:multiple_readings_hold_page",
@@ -5200,12 +6953,13 @@
    "col": "L",
    "line": 23,
    "word_off": 945,
+   "char_at": 32,
    "readers": {
     "opus": "ποίαν",
-    "kraken": "ποίαν",
-    "genie": "ποίαν",
+    "codex": "ποιεῖν",
     "llama": "ποίαν",
-    "codex": "ποιεῖν"
+    "kraken": "ποίαν",
+    "genie": "ποίαν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5224,12 +6978,13 @@
    "col": "R",
    "line": 31,
    "word_off": 1330,
+   "char_at": 9,
    "readers": {
     "opus": "ποιȣ͂νται",
-    "kraken": "ποιȣ͂νται",
-    "genie": "ποιοῦνται",
+    "codex": "ποιεῖται",
     "llama": "ποιοῦνται",
-    "codex": "ποιεῖται"
+    "kraken": "ποιȣ͂νται",
+    "genie": "ποιοῦνται"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5248,12 +7003,13 @@
    "col": "R",
    "line": 37,
    "word_off": 1588,
+   "char_at": 24,
    "readers": {
     "opus": "ποταμȣ́ς",
-    "kraken": "ποταμȣ́ς",
-    "genie": "ποταμούς",
+    "codex": "ποταμȣ̀ς",
     "llama": "ποταμȣς",
-    "codex": "ποταμȣ̀ς"
+    "kraken": "ποταμȣ́ς",
+    "genie": "ποταμούς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5272,12 +7028,13 @@
    "col": "L",
    "line": 17,
    "word_off": 709,
+   "char_at": 14,
    "readers": {
     "opus": "ποῖα",
-    "kraken": "ποῖα",
-    "genie": "ποῖα",
+    "codex": "πῶς",
     "llama": "οἷα",
-    "codex": "πῶς"
+    "kraken": "ποῖα",
+    "genie": "ποῖα"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5296,12 +7053,13 @@
    "col": "R",
    "line": 26,
    "word_off": 1153,
+   "char_at": 40,
    "readers": {
     "opus": "προσενέγκῃ",
-    "kraken": "προσενέγκη",
-    "genie": "προσενέγκῃ",
+    "codex": "προσενέγκῃ",
     "llama": "προσενέγκῃ",
-    "codex": "προσενέγκῃ"
+    "kraken": "προσενέγκη",
+    "genie": "προσενέγκῃ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5320,12 +7078,13 @@
    "col": "R",
    "line": 9,
    "word_off": 384,
+   "char_at": 14,
    "readers": {
     "opus": "πῶς",
-    "kraken": "πῶς",
-    "genie": "πῶς",
+    "codex": "πως",
     "llama": "πῶς",
-    "codex": "πως"
+    "kraken": "πῶς",
+    "genie": "πῶς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5344,10 +7103,11 @@
    "col": "L",
    "line": 36,
    "word_off": 1557,
+   "char_at": 0,
    "readers": {
     "opus": "ρȣ̀ς",
-    "llama": "ρούς",
     "codex": "ρȣ̀ς",
+    "llama": "ρούς",
     "kraken": "ρȣς"
    },
    "kind": "accent-only",
@@ -5367,12 +7127,13 @@
    "col": "R",
    "line": 32,
    "word_off": 1421,
+   "char_at": 11,
    "readers": {
     "opus": "σαρξίν",
-    "kraken": "σαρξίν",
-    "genie": "σαρξίν",
+    "codex": "σαρξὶν",
     "llama": "σαρξίν",
-    "codex": "σαρξὶν"
+    "kraken": "σαρξίν",
+    "genie": "σαρξίν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5391,12 +7152,13 @@
    "col": "L",
    "line": 37,
    "word_off": 1495,
+   "char_at": 27,
    "readers": {
     "opus": "σκάρȣ",
-    "kraken": "σκάρȣ",
-    "genie": "σκάρο",
+    "codex": "τυφλȣ",
     "llama": "σκάρῳ",
-    "codex": "τυφλȣ"
+    "kraken": "σκάρȣ",
+    "genie": "σκάρο"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5415,12 +7177,13 @@
    "col": "R",
    "line": 54,
    "word_off": 2328,
+   "char_at": 32,
    "readers": {
     "opus": "σοβήσῃ",
-    "kraken": "σοβήση",
-    "genie": "σοβήσῃ",
+    "codex": "σοβήσῃ",
     "llama": "σοβήσῃ",
-    "codex": "σοβήσῃ"
+    "kraken": "σοβήση",
+    "genie": "σοβήσῃ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5439,12 +7202,13 @@
    "col": "L",
    "line": 39,
    "word_off": 1736,
+   "char_at": 42,
    "readers": {
     "opus": "σπερματικόν",
-    "kraken": "σπερματικόν",
-    "genie": "σπερματικόν",
+    "codex": "σπερματικὸν",
     "llama": "σπερματικόν",
-    "codex": "σπερματικὸν"
+    "kraken": "σπερματικόν",
+    "genie": "σπερματικόν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5463,12 +7227,13 @@
    "col": "R",
    "line": 15,
    "word_off": 629,
+   "char_at": 0,
    "readers": {
     "opus": "στῆσαι",
-    "kraken": "στῆσαι",
-    "genie": "στῆσαι",
+    "codex": "στήσαι",
     "llama": "στῆσαι",
-    "codex": "στήσαι"
+    "kraken": "στῆσαι",
+    "genie": "στῆσαι"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5487,15 +7252,16 @@
    "col": "R",
    "line": 55,
    "word_off": 2460,
+   "char_at": 52,
    "readers": {
     "opus": "συγ",
-    "kraken": "συγ",
-    "genie": "συγ",
+    "codex": "συν",
     "llama": "συγ",
-    "codex": "συν"
+    "kraken": "συγ",
+    "genie": "συγ"
    },
    "kind": "letters",
-   "reason": "siglum:no_bekker_page",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "συγ",
     "συν"
@@ -5511,12 +7277,13 @@
    "col": "L",
    "line": 26,
    "word_off": 1092,
+   "char_at": 0,
    "readers": {
     "opus": "συλλογισμȣ̀ς",
-    "kraken": "συλλογισμȣ̀ς",
-    "genie": "συλλογισμούς",
+    "codex": "συλλογισμȣ́ς",
     "llama": "συλλογισμούς",
-    "codex": "συλλογισμȣ́ς"
+    "kraken": "συλλογισμȣ̀ς",
+    "genie": "συλλογισμούς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5535,12 +7302,13 @@
    "col": "R",
    "line": 16,
    "word_off": 644,
+   "char_at": 14,
    "readers": {
     "opus": "συλλογισμȣ̀ς",
-    "kraken": "συλλογισμȣς",
-    "genie": "συλλογισμοὺς",
+    "codex": "συλλογισμȣ̀ς",
     "llama": "συλλογισμȣ̀ς",
-    "codex": "συλλογισμȣ̀ς"
+    "kraken": "συλλογισμȣς",
+    "genie": "συλλογισμοὺς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5559,12 +7327,13 @@
    "col": "R",
    "line": 6,
    "word_off": 262,
+   "char_at": 41,
    "readers": {
     "opus": "συμβαῖνόν",
-    "kraken": "συμβαῖνόν",
-    "genie": "συμβαῖνόν",
+    "codex": "συμβαῖνον",
     "llama": "συμβαῖνόν",
-    "codex": "συμβαῖνον"
+    "kraken": "συμβαῖνόν",
+    "genie": "συμβαῖνόν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5583,12 +7352,13 @@
    "col": "L",
    "line": 49,
    "word_off": 2189,
+   "char_at": 31,
    "readers": {
     "opus": "συμμετρία",
-    "kraken": "συμμετρία",
-    "genie": "συμμετρία",
+    "codex": "συμμετρίᾳ",
     "llama": "συμμετρία",
-    "codex": "συμμετρίᾳ"
+    "kraken": "συμμετρία",
+    "genie": "συμμετρία"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5607,12 +7377,13 @@
    "col": "R",
    "line": 12,
    "word_off": 522,
+   "char_at": 39,
    "readers": {
     "opus": "συναιτίȣ",
-    "kraken": "συναιτίȣ",
-    "genie": "συναιτίων",
+    "codex": "συναιτίῳ",
     "llama": "συναιον",
-    "codex": "συναιτίῳ"
+    "kraken": "συναιτίȣ",
+    "genie": "συναιτίων"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5631,12 +7402,13 @@
    "col": "L",
    "line": 53,
    "word_off": 2212,
+   "char_at": 15,
    "readers": {
     "opus": "συνεχεῖς",
-    "kraken": "συνεχεῖς",
-    "genie": "συνεχεῖς",
+    "codex": "συνεχείς",
     "llama": "συνεχεῖς",
-    "codex": "συνεχείς"
+    "kraken": "συνεχεῖς",
+    "genie": "συνεχεῖς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5655,12 +7427,13 @@
    "col": "L",
    "line": 55,
    "word_off": 2455,
+   "char_at": 26,
    "readers": {
     "opus": "συντελȣ́ντων",
-    "kraken": "συντελȣ́ντων",
-    "genie": "συντελόντων",
+    "codex": "συντελούντων",
     "llama": "συντελȣντων",
-    "codex": "συντελούντων"
+    "kraken": "συντελȣ́ντων",
+    "genie": "συντελόντων"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5679,12 +7452,13 @@
    "col": "L",
    "line": 26,
    "word_off": 1121,
+   "char_at": 4,
    "readers": {
     "opus": "σχεδὸν",
-    "kraken": "σχεδον",
-    "genie": "σχεδὸν",
+    "codex": "σχεδὸν",
     "llama": "σχεδὸν",
-    "codex": "σχεδὸν"
+    "kraken": "σχεδον",
+    "genie": "σχεδὸν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5703,12 +7477,13 @@
    "col": "R",
    "line": 57,
    "word_off": 2567,
+   "char_at": 30,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ",
-    "genie": "τῶ",
+    "codex": "τȣ͂",
     "llama": "τȣ͂",
-    "codex": "τȣ͂"
+    "kraken": "τȣ",
+    "genie": "τῶ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5727,12 +7502,13 @@
    "col": "L",
    "line": 10,
    "word_off": 378,
+   "char_at": 15,
    "readers": {
     "opus": "τȣ́σδε",
-    "kraken": "τȣσδε",
-    "genie": "τάσδε",
+    "codex": "τȣ́σδε",
     "llama": "τήσδε",
-    "codex": "τȣ́σδε"
+    "kraken": "τȣσδε",
+    "genie": "τάσδε"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5751,12 +7527,13 @@
    "col": "R",
    "line": 18,
    "word_off": 796,
+   "char_at": 45,
    "readers": {
     "opus": "τȣ́τȣ",
-    "kraken": "τȣτȣ",
-    "genie": "τύτυ",
+    "codex": "τȣ́τȣ",
     "llama": "τούτȣ",
-    "codex": "τȣ́τȣ"
+    "kraken": "τȣτȣ",
+    "genie": "τύτυ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5775,12 +7552,13 @@
    "col": "R",
    "line": 30,
    "word_off": 1337,
+   "char_at": 36,
    "readers": {
     "opus": "τȣ̓ναντίον",
-    "kraken": "τȣναντίον",
-    "genie": "τἀναντίον",
+    "codex": "τȣ̓ναντίον",
     "llama": "τὐναντίον",
-    "codex": "τȣ̓ναντίον"
+    "kraken": "τȣναντίον",
+    "genie": "τἀναντίον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5799,12 +7577,13 @@
    "col": "R",
    "line": 1,
    "word_off": 43,
+   "char_at": 53,
    "readers": {
     "opus": "τȣ͂",
-    "kraken": "τȣ͂͂",
-    "genie": "τῆ",
+    "codex": "τȣ͂",
     "llama": "τῶ",
-    "codex": "τȣ͂"
+    "kraken": "τȣ͂͂",
+    "genie": "τῆ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5823,11 +7602,12 @@
    "col": "R",
    "line": 28,
    "word_off": 1211,
+   "char_at": 0,
    "readers": {
     "opus": "τά",
-    "genie": "τὰ",
+    "codex": "τὰ",
     "llama": "τὰ",
-    "codex": "τὰ"
+    "genie": "τὰ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5846,12 +7626,13 @@
    "col": "L",
    "line": 13,
    "word_off": 560,
+   "char_at": 45,
    "readers": {
     "opus": "τί",
-    "kraken": "τί",
-    "genie": "τί",
+    "codex": "τι",
     "llama": "τί",
-    "codex": "τι"
+    "kraken": "τί",
+    "genie": "τί"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5870,12 +7651,13 @@
    "col": "R",
    "line": 40,
    "word_off": 1710,
+   "char_at": 43,
    "readers": {
     "opus": "τίνα",
-    "kraken": "τίνα",
-    "genie": "τίνα",
+    "codex": "τινα",
     "llama": "τίνα",
-    "codex": "τινα"
+    "kraken": "τίνα",
+    "genie": "τίνα"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5894,12 +7676,13 @@
    "col": "R",
    "line": 9,
    "word_off": 368,
+   "char_at": 0,
    "readers": {
     "opus": "ταί",
-    "kraken": "ταί",
-    "genie": "ταί",
+    "codex": "ται",
     "llama": "ταί",
-    "codex": "ται"
+    "kraken": "ταί",
+    "genie": "ταί"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5918,12 +7701,13 @@
    "col": "L",
    "line": 51,
    "word_off": 2257,
+   "char_at": 12,
    "readers": {
     "opus": "ταῖς",
-    "kraken": "ταῖς",
-    "genie": "ταῖς",
+    "codex": "τοῖς",
     "llama": "ταῖς",
-    "codex": "τοῖς"
+    "kraken": "ταῖς",
+    "genie": "ταῖς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -5942,15 +7726,16 @@
    "col": "R",
    "line": 52,
    "word_off": 2353,
+   "char_at": 47,
    "readers": {
     "opus": "τετρα",
-    "kraken": "τετρα",
-    "genie": "τετρα",
+    "codex": "τετρά",
     "llama": "τετρα",
-    "codex": "τετρά"
+    "kraken": "τετρα",
+    "genie": "τετρα"
    },
    "kind": "accent-only",
-   "reason": "accent-only:not_positional_or_ambiguous",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "τετρά",
     "τετρα"
@@ -5966,12 +7751,13 @@
    "col": "L",
    "line": 24,
    "word_off": 1015,
+   "char_at": 0,
    "readers": {
     "opus": "τηγορίᾳ",
-    "kraken": "τηγορίᾳ",
-    "genie": "τηγορίᾳ",
+    "codex": "τηγορία",
     "llama": "τηγορίᾳ",
-    "codex": "τηγορία"
+    "kraken": "τηγορίᾳ",
+    "genie": "τηγορίᾳ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -5990,12 +7776,13 @@
    "col": "L",
    "line": 41,
    "word_off": 1699,
+   "char_at": 47,
    "readers": {
     "opus": "τὴν",
-    "kraken": "την",
-    "genie": "τὴν",
+    "codex": "τὴν",
     "llama": "τὴν",
-    "codex": "τὴν"
+    "kraken": "την",
+    "genie": "τὴν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6014,12 +7801,13 @@
    "col": "L",
    "line": 14,
    "word_off": 562,
+   "char_at": 22,
    "readers": {
     "opus": "τιμήν",
-    "kraken": "τιμήν",
-    "genie": "τιμήν",
+    "codex": "τιμὴν",
     "llama": "τιμήν",
-    "codex": "τιμὴν"
+    "kraken": "τιμήν",
+    "genie": "τιμήν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6038,12 +7826,13 @@
    "col": "L",
    "line": 21,
    "word_off": 868,
+   "char_at": 14,
    "readers": {
     "opus": "τοιȣ͂τον",
-    "kraken": "τοιȣ͂τον",
-    "genie": "τοιοῦτον",
+    "codex": "τοιȣ́τȣ",
     "llama": "τοιοῦτον",
-    "codex": "τοιȣ́τȣ"
+    "kraken": "τοιȣ͂τον",
+    "genie": "τοιοῦτον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6062,12 +7851,13 @@
    "col": "L",
    "line": 32,
    "word_off": 1267,
+   "char_at": 2,
    "readers": {
     "opus": "τοσȣ́τȣ",
-    "kraken": "τοσȣ́τȣ",
-    "genie": "τοσαύτην",
+    "codex": "τοσȣ͂τȣ",
     "llama": "τοσȣ́τȣ",
-    "codex": "τοσȣ͂τȣ"
+    "kraken": "τοσȣ́τȣ",
+    "genie": "τοσαύτην"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6086,12 +7876,13 @@
    "col": "R",
    "line": 42,
    "word_off": 1884,
+   "char_at": 14,
    "readers": {
     "opus": "τἄλλα",
-    "kraken": "τᾶλλα",
-    "genie": "τἆλλα",
+    "codex": "τἆλλα",
     "llama": "τἆλλα",
-    "codex": "τἆλλα"
+    "kraken": "τᾶλλα",
+    "genie": "τἆλλα"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -6112,12 +7903,13 @@
    "col": "R",
    "line": 61,
    "word_off": 2731,
+   "char_at": 49,
    "readers": {
     "opus": "τῶν",
-    "kraken": "τῶ",
-    "genie": "τῶν",
+    "codex": "τῶν",
     "llama": "τῶν",
-    "codex": "τῶν"
+    "kraken": "τῶ",
+    "genie": "τῶν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6136,12 +7928,13 @@
    "col": "L",
    "line": 37,
    "word_off": 1616,
+   "char_at": 17,
    "readers": {
     "opus": "τῷ",
-    "kraken": "τῶ",
-    "genie": "τῷ",
+    "codex": "τῷ",
     "llama": "τῷ",
-    "codex": "τῷ"
+    "kraken": "τῶ",
+    "genie": "τῷ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6160,12 +7953,13 @@
    "col": "R",
    "line": 61,
    "word_off": 2734,
+   "char_at": 45,
    "readers": {
     "opus": "τῶν",
-    "kraken": "ῳν",
-    "genie": "τῶν",
+    "codex": "τῶν",
     "llama": "τῶν",
-    "codex": "τῶν"
+    "kraken": "ῳν",
+    "genie": "τῶν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6184,12 +7978,13 @@
    "col": "R",
    "line": 5,
    "word_off": 197,
+   "char_at": 54,
    "readers": {
     "opus": "υἱȣ́ς",
-    "kraken": "ἱȣ́ς",
-    "genie": "υἱός",
+    "codex": "υἱέας",
     "llama": "υἱȣς",
-    "codex": "υἱέας"
+    "kraken": "ἱȣ́ς",
+    "genie": "υἱός"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6210,12 +8005,13 @@
    "col": "L",
    "line": 41,
    "word_off": 1680,
+   "char_at": 26,
    "readers": {
     "opus": "φαμὲν",
-    "kraken": "φαμὲν",
-    "genie": "φαμὲν",
+    "codex": "φαμεν",
     "llama": "φαμὲν",
-    "codex": "φαμεν"
+    "kraken": "φαμὲν",
+    "genie": "φαμὲν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6234,12 +8030,13 @@
    "col": "L",
    "line": 39,
    "word_off": 1725,
+   "char_at": 26,
    "readers": {
     "opus": "φθεῖρας",
-    "kraken": "φθεῖρας",
-    "genie": "φθείρας",
+    "codex": "φθείρας",
     "llama": "φθεῖρας",
-    "codex": "φθείρας"
+    "kraken": "φθεῖρας",
+    "genie": "φθείρας"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6258,12 +8055,13 @@
    "col": "R",
    "line": 33,
    "word_off": 1344,
+   "char_at": 38,
    "readers": {
     "opus": "φρȣ͂δον",
-    "kraken": "φρȣ͂δον",
-    "genie": "φροῦδον",
+    "codex": "φθεῖρον",
     "llama": "φρȣ͂δον",
-    "codex": "φθεῖρον"
+    "kraken": "φρȣ͂δον",
+    "genie": "φροῦδον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6282,12 +8080,13 @@
    "col": "L",
    "line": 60,
    "word_off": 2665,
+   "char_at": 0,
    "readers": {
     "opus": "φωνήν",
-    "kraken": "φωνήν",
-    "genie": "φωνήν",
+    "codex": "φωνὴν",
     "llama": "φωνήν",
-    "codex": "φωνὴν"
+    "kraken": "φωνήν",
+    "genie": "φωνήν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6306,12 +8105,13 @@
    "col": "R",
    "line": 16,
    "word_off": 687,
+   "char_at": 11,
    "readers": {
     "opus": "χρῆσθαι",
-    "kraken": "χρῆσθαι",
-    "genie": "χρῆσθαι",
+    "codex": "χρήσθαι",
     "llama": "χρῆσθαι",
-    "codex": "χρήσθαι"
+    "kraken": "χρῆσθαι",
+    "genie": "χρῆσθαι"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6330,12 +8130,13 @@
    "col": "L",
    "line": 11,
    "word_off": 478,
+   "char_at": 37,
    "readers": {
     "opus": "χρόνȣ",
-    "kraken": "χρόνȣ",
-    "genie": "χρόνῳ",
+    "codex": "χρόνῳ",
     "llama": "χρόνȣ",
-    "codex": "χρόνῳ"
+    "kraken": "χρόνȣ",
+    "genie": "χρόνῳ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6354,12 +8155,13 @@
    "col": "R",
    "line": 38,
    "word_off": 1688,
+   "char_at": 12,
    "readers": {
     "opus": "ψβ",
-    "kraken": "ψβ",
-    "genie": "Ψβ",
+    "codex": "ὴΨβ",
     "llama": "ψβ",
-    "codex": "ὴΨβ"
+    "kraken": "ψβ",
+    "genie": "Ψβ"
    },
    "kind": "letters",
    "reason": "morpheus:no_real_form",
@@ -6378,11 +8180,12 @@
    "col": "L",
    "line": 2,
    "word_off": 62,
+   "char_at": 24,
    "readers": {
     "opus": "ϗ̀",
+    "codex": "ἂν",
     "genie": "κἀ",
-    "kraken": "ϗ̀",
-    "codex": "ἂν"
+    "kraken": "ϗ̀"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6401,11 +8204,12 @@
    "col": "R",
    "line": 16,
    "word_off": 697,
+   "char_at": 29,
    "readers": {
     "opus": "ϗ̀",
+    "codex": "ἐξ",
     "genie": "καὶ",
-    "kraken": "ϗ̀",
-    "codex": "ἐξ"
+    "kraken": "ϗ̀"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6424,12 +8228,13 @@
    "col": "L",
    "line": 49,
    "word_off": 2197,
+   "char_at": 31,
    "readers": {
     "opus": "ἀΐδια",
-    "kraken": "ἀίδια",
-    "genie": "ἀίδια",
+    "codex": "ἀΐδια",
     "llama": "ἀΐδια",
-    "codex": "ἀΐδια"
+    "kraken": "ἀίδια",
+    "genie": "ἀίδια"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6448,12 +8253,13 @@
    "col": "L",
    "line": 30,
    "word_off": 1382,
+   "char_at": 51,
    "readers": {
     "opus": "ἀκίνητον",
-    "kraken": "ἀκίνητον",
-    "genie": "ἀκίνητον",
+    "codex": "ἀκινήτȣ",
     "llama": "ἀκίνητον",
-    "codex": "ἀκινήτȣ"
+    "kraken": "ἀκίνητον",
+    "genie": "ἀκίνητον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6472,12 +8278,13 @@
    "col": "R",
    "line": 18,
    "word_off": 800,
+   "char_at": 22,
    "readers": {
     "opus": "ἀκολȣ́θησις",
-    "kraken": "ἀκολȣθησις",
-    "genie": "ἀκολόθησις",
+    "codex": "ἀκολȣ́θησις",
     "llama": "ἀκολȣ́θησις",
-    "codex": "ἀκολȣ́θησις"
+    "kraken": "ἀκολȣθησις",
+    "genie": "ἀκολόθησις"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6496,12 +8303,13 @@
    "col": "L",
    "line": 51,
    "word_off": 1969,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναθερμαίνεται",
-    "kraken": "ἀν",
-    "genie": "ἀναθερμαίνεται",
+    "codex": "ἀναθερμαίνεται",
     "llama": "ἀναθερμαίνεται",
-    "codex": "ἀναθερμαίνεται"
+    "kraken": "ἀν",
+    "genie": "ἀναθερμαίνεται"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6520,12 +8328,13 @@
    "col": "R",
    "line": 27,
    "word_off": 1195,
+   "char_at": 34,
    "readers": {
     "opus": "ἀνάγκῃ",
-    "kraken": "ἀνάγκη",
-    "genie": "ἀνάγκῃ",
+    "codex": "ἀνάγκῃ",
     "llama": "ἀνάγκῃ",
-    "codex": "ἀνάγκῃ"
+    "kraken": "ἀνάγκη",
+    "genie": "ἀνάγκῃ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6544,12 +8353,13 @@
    "col": "L",
    "line": 10,
    "word_off": 401,
+   "char_at": 18,
    "readers": {
     "opus": "ἀνάλογόν",
-    "kraken": "ἀνάλογόν",
-    "genie": "ἀνάλογόν",
+    "codex": "ἀνάλογον",
     "llama": "ἀνάλογόν",
-    "codex": "ἀνάλογον"
+    "kraken": "ἀνάλογόν",
+    "genie": "ἀνάλογόν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6568,12 +8378,13 @@
    "col": "R",
    "line": 36,
    "word_off": 1429,
+   "char_at": 18,
    "readers": {
     "opus": "ἀναύξητον",
-    "kraken": "ἀναύξητον",
-    "genie": "ἀναύξητον",
+    "codex": "ἀνάυξητον",
     "llama": "ἀναύξητον",
-    "codex": "ἀνάυξητον"
+    "kraken": "ἀναύξητον",
+    "genie": "ἀναύξητον"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -6592,12 +8403,13 @@
    "col": "R",
    "line": 39,
    "word_off": 1752,
+   "char_at": 12,
    "readers": {
     "opus": "ἀνῄρηται",
-    "kraken": "ἀνήρηται",
-    "genie": "ἀνῄρηται",
+    "codex": "ἀνῄρηται",
     "llama": "ἀνῄρηται",
-    "codex": "ἀνῄρηται"
+    "kraken": "ἀνήρηται",
+    "genie": "ἀνῄρηται"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6616,12 +8428,13 @@
    "col": "R",
    "line": 39,
    "word_off": 1761,
+   "char_at": 22,
    "readers": {
     "opus": "ἀνῄρητο",
-    "kraken": "ἀνήρητο",
-    "genie": "ἀνήρητο",
+    "codex": "ἀνῄρητο",
     "llama": "ἀνῄρητο",
-    "codex": "ἀνῄρητο"
+    "kraken": "ἀνήρητο",
+    "genie": "ἀνήρητο"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6640,12 +8453,13 @@
    "col": "L",
    "line": 6,
    "word_off": 230,
+   "char_at": 5,
    "readers": {
     "opus": "ἀναισθήτȣ",
-    "kraken": "ἀναισθήτȣ",
-    "genie": "ἀναισθήτη",
+    "codex": "ἀναίσθητός",
     "llama": "ἀναίσθητός",
-    "codex": "ἀναίσθητός"
+    "kraken": "ἀναισθήτȣ",
+    "genie": "ἀναισθήτη"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6664,12 +8478,13 @@
    "col": "L",
    "line": 58,
    "word_off": 2280,
+   "char_at": 21,
    "readers": {
     "opus": "ἀναθολȣ͂ται",
-    "kraken": "ἀναθολȣ͂ται",
-    "genie": "ἀναβολήται",
+    "codex": "ἀναβάλλεται",
     "llama": "ἀναθολȣ͂ται",
-    "codex": "ἀναβάλλεται"
+    "kraken": "ἀναθολȣ͂ται",
+    "genie": "ἀναβολήται"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6688,12 +8503,13 @@
    "col": "L",
    "line": 57,
    "word_off": 2245,
+   "char_at": 33,
    "readers": {
     "opus": "ἀναθολοῖ",
-    "kraken": "ἀναθολοῖ",
-    "genie": "ἀναβολὴ",
+    "codex": "ἀναβάλλοι",
     "llama": "ἀναθολῇ",
-    "codex": "ἀναβάλλοι"
+    "kraken": "ἀναθολοῖ",
+    "genie": "ἀναβολὴ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6712,15 +8528,16 @@
    "col": "R",
    "line": 59,
    "word_off": 2537,
+   "char_at": 49,
    "readers": {
     "opus": "ἀναβο",
-    "kraken": "ἄναβο",
-    "genie": "ἀναβο",
+    "codex": "ἀναβο",
     "llama": "ἀναβο",
-    "codex": "ἀναβο"
+    "kraken": "ἄναβο",
+    "genie": "ἀναβο"
    },
    "kind": "accent-only",
-   "reason": "accent-only:not_positional_or_ambiguous",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "ἀναβο",
     "ἄναβο"
@@ -6736,12 +8553,13 @@
    "col": "L",
    "line": 57,
    "word_off": 2216,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναθολȣ͂ν",
-    "kraken": "ἀναθολȣ͂ν",
-    "genie": "ἀναβολήν",
+    "codex": "ἀναβολή",
     "llama": "ἀναθολήν",
-    "codex": "ἀναβολή"
+    "kraken": "ἀναθολȣ͂ν",
+    "genie": "ἀναβολήν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6760,12 +8578,13 @@
    "col": "L",
    "line": 57,
    "word_off": 2455,
+   "char_at": 36,
    "readers": {
     "opus": "ἀναγκαῖον",
-    "kraken": "ἀναγκαῖον",
-    "genie": "ἀναγκαῖον",
+    "codex": "ἀναγκαίȣ",
     "llama": "ἀναγκαῖον",
-    "codex": "ἀναγκαίȣ"
+    "kraken": "ἀναγκαῖον",
+    "genie": "ἀναγκαῖον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6784,12 +8603,13 @@
    "col": "R",
    "line": 19,
    "word_off": 842,
+   "char_at": 40,
    "readers": {
     "opus": "ἀναγκαῖον",
-    "kraken": "ἀναγκαῖον",
-    "genie": "ἀναγκαῖον",
+    "codex": "ἀναγκαίων",
     "llama": "ἀναγκαῖον",
-    "codex": "ἀναγκαίων"
+    "kraken": "ἀναγκαῖον",
+    "genie": "ἀναγκαῖον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6808,12 +8628,13 @@
    "col": "L",
    "line": 60,
    "word_off": 2342,
+   "char_at": 0,
    "readers": {
     "opus": "ἀναθρώσκει",
-    "kraken": "ἀναθρώσκει",
-    "genie": "ἀναθρώσκει",
+    "codex": "ἀναθρῴσκει",
     "llama": "ἀναθρώσκει",
-    "codex": "ἀναθρῴσκει"
+    "kraken": "ἀναθρώσκει",
+    "genie": "ἀναθρώσκει"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6832,12 +8653,13 @@
    "col": "R",
    "line": 44,
    "word_off": 1985,
+   "char_at": 45,
    "readers": {
     "opus": "ἀναιδȣ͂ς",
-    "kraken": "ἀναιδȣ͂ς",
-    "genie": "ἀναιδῶς",
+    "codex": "ἀναιδὲς",
     "llama": "ἀναιδὲς",
-    "codex": "ἀναιδὲς"
+    "kraken": "ἀναιδȣ͂ς",
+    "genie": "ἀναιδῶς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6856,12 +8678,13 @@
    "col": "L",
    "line": 46,
    "word_off": 2040,
+   "char_at": 23,
    "readers": {
     "opus": "ἄναιμά",
-    "kraken": "ἄναιμά",
-    "genie": "ἄναιμά",
+    "codex": "ἀναιμά",
     "llama": "ἀναιμά",
-    "codex": "ἀναιμά"
+    "kraken": "ἄναιμά",
+    "genie": "ἄναιμά"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6880,12 +8703,13 @@
    "col": "L",
    "line": 11,
    "word_off": 468,
+   "char_at": 26,
    "readers": {
     "opus": "ἀναισθήτȣ",
-    "kraken": "ἀναισθήτȣ",
-    "genie": "ἀναισθήτῳ",
+    "codex": "ἀναισθήτῳ",
     "llama": "ἀναισθήτȣ",
-    "codex": "ἀναισθήτῳ"
+    "kraken": "ἀναισθήτȣ",
+    "genie": "ἀναισθήτῳ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6904,12 +8728,13 @@
    "col": "L",
    "line": 17,
    "word_off": 726,
+   "char_at": 34,
    "readers": {
     "opus": "ἀναισχυντȣ͂σιν",
-    "kraken": "ἀναισχυντȣ͂σιν",
-    "genie": "ἀναισχυντῶσιν",
+    "codex": "ἀναισχυντῶσιν",
     "llama": "ἀναισχυντȣσιν",
-    "codex": "ἀναισχυντῶσιν"
+    "kraken": "ἀναισχυντȣ͂σιν",
+    "genie": "ἀναισχυντῶσιν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6928,12 +8753,13 @@
    "col": "L",
    "line": 18,
    "word_off": 754,
+   "char_at": 9,
    "readers": {
     "opus": "ἀναισχυντῶν",
-    "kraken": "ἀναισχυντῶν",
-    "genie": "ἀναισχυντῶν",
+    "codex": "ἀναισχύντων",
     "llama": "ἀναισχυντῶν",
-    "codex": "ἀναισχύντων"
+    "kraken": "ἀναισχυντῶν",
+    "genie": "ἀναισχυντῶν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -6952,12 +8778,13 @@
    "col": "L",
    "line": 49,
    "word_off": 2053,
+   "char_at": 26,
    "readers": {
     "opus": "ἀνακάμπτȣσιν",
-    "kraken": "ἀνακάμπτȣσιν",
-    "genie": "ἀνακάμπτουσιν",
+    "codex": "ἀνακάμπτωσιν",
     "llama": "ἀνακάμπτυσιν",
-    "codex": "ἀνακάμπτωσιν"
+    "kraken": "ἀνακάμπτȣσιν",
+    "genie": "ἀνακάμπτουσιν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -6976,12 +8803,13 @@
    "col": "L",
    "line": 36,
    "word_off": 1439,
+   "char_at": 15,
    "readers": {
     "opus": "ἀνακάμπτει",
-    "kraken": "ἄνακάμπτει",
-    "genie": "ἀνακάμπτει",
+    "codex": "ἀνακάμπτει",
     "llama": "ἀνακάμπτει",
-    "codex": "ἀνακάμπτει"
+    "kraken": "ἄνακάμπτει",
+    "genie": "ἀνακάμπτει"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7000,12 +8828,13 @@
    "col": "R",
    "line": 40,
    "word_off": 1716,
+   "char_at": 0,
    "readers": {
     "opus": "ἀνακοινȣ͂σθαί",
-    "kraken": "ἀνακοινȣσθαί",
-    "genie": "ἀνακοινοῦσθαι",
+    "codex": "ἀνακοινȣ͂σθαί",
     "llama": "ἀνακοινȣσθαί",
-    "codex": "ἀνακοινȣ͂σθαί"
+    "kraken": "ἀνακοινȣσθαί",
+    "genie": "ἀνακοινοῦσθαι"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7024,12 +8853,13 @@
    "col": "L",
    "line": 33,
    "word_off": 1376,
+   "char_at": 16,
    "readers": {
     "opus": "ἀνακυΐσκει",
-    "kraken": "ἀνακυίσκει",
-    "genie": "ἀνακυΐσκει",
+    "codex": "ἀνακυΐσκει",
     "llama": "ἀνακυΐσκει",
-    "codex": "ἀνακυΐσκει"
+    "kraken": "ἀνακυίσκει",
+    "genie": "ἀνακυΐσκει"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7048,12 +8878,13 @@
    "col": "L",
    "line": 32,
    "word_off": 1315,
+   "char_at": 0,
    "readers": {
     "opus": "ἀνακυΐσκειν",
-    "kraken": "ἀνακυίσκειν",
-    "genie": "ἀνακυΐσκειν",
+    "codex": "ἀνακυΐσκειν",
     "llama": "ἀνακυΐσκειν",
-    "codex": "ἀνακυΐσκειν"
+    "kraken": "ἀνακυίσκειν",
+    "genie": "ἀνακυΐσκειν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7072,12 +8903,13 @@
    "col": "R",
    "line": 28,
    "word_off": 1104,
+   "char_at": 24,
    "readers": {
     "opus": "ἀναλίσκȣσιν",
-    "kraken": "ἀναλίσκȣσιν",
-    "genie": "ἀναλίσκουσιν",
+    "codex": "ἀναλίσκουσιν",
     "llama": "ἀναλίσκȣσιν",
-    "codex": "ἀναλίσκουσιν"
+    "kraken": "ἀναλίσκȣσιν",
+    "genie": "ἀναλίσκουσιν"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -7096,12 +8928,13 @@
    "col": "R",
    "line": 54,
    "word_off": 2237,
+   "char_at": 22,
    "readers": {
     "opus": "ἀναλογίᾳ",
-    "kraken": "ἀναλογίᾳ",
-    "genie": "ἀναλογίᾳ",
+    "codex": "ἀναλογία",
     "llama": "ἀναλογίᾳ",
-    "codex": "ἀναλογία"
+    "kraken": "ἀναλογίᾳ",
+    "genie": "ἀναλογίᾳ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7120,12 +8953,13 @@
    "col": "R",
    "line": 36,
    "word_off": 1527,
+   "char_at": 3,
    "readers": {
     "opus": "ἀναλυτικά",
-    "kraken": "ἀναλυτικά",
-    "genie": "ἀναλυτικά",
+    "codex": "ἀναλυτικὰ",
     "llama": "ἀναλυτικά",
-    "codex": "ἀναλυτικὰ"
+    "kraken": "ἀναλυτικά",
+    "genie": "ἀναλυτικά"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7144,12 +8978,13 @@
    "col": "R",
    "line": 38,
    "word_off": 1609,
+   "char_at": 35,
    "readers": {
     "opus": "ἀναπαύσεώς",
-    "kraken": "ἀναπαύσεώς",
-    "genie": "ἀναπαύσεώς",
+    "codex": "ἀναπαύσεως",
     "llama": "ἀναπαύσεώς",
-    "codex": "ἀναπαύσεως"
+    "kraken": "ἀναπαύσεώς",
+    "genie": "ἀναπαύσεώς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7168,12 +9003,13 @@
    "col": "R",
    "line": 55,
    "word_off": 2380,
+   "char_at": 40,
    "readers": {
     "opus": "ἀναπτᾶσα",
-    "kraken": "ἀναπτᾶσα",
-    "genie": "ἀναπτᾶσα",
+    "codex": "ἀναπτάσα",
     "llama": "ἀναπτᾶσα",
-    "codex": "ἀναπτάσα"
+    "kraken": "ἀναπτᾶσα",
+    "genie": "ἀναπτᾶσα"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7192,12 +9028,13 @@
    "col": "R",
    "line": 9,
    "word_off": 381,
+   "char_at": 35,
    "readers": {
     "opus": "ἀνδρεῖος",
-    "kraken": "ἀνδρεῖος",
-    "genie": "ἀνδρεῖος",
+    "codex": "ἀνδρείος",
     "llama": "ἀνδρεῖος",
-    "codex": "ἀνδρείος"
+    "kraken": "ἀνδρεῖος",
+    "genie": "ἀνδρεῖος"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7216,15 +9053,16 @@
    "col": "R",
    "line": 35,
    "word_off": 1592,
+   "char_at": 48,
    "readers": {
     "opus": "ἀνῃρη",
-    "kraken": "ἀνηρη",
-    "genie": "ἀνῃρη",
+    "codex": "ἀνῃρη",
     "llama": "ἀνῃρη",
-    "codex": "ἀνῃρη"
+    "kraken": "ἀνηρη",
+    "genie": "ἀνῃρη"
    },
    "kind": "accent-only",
-   "reason": "accent-only:not_positional_or_ambiguous",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "ἀνηρη",
     "ἀνῃρη"
@@ -7240,12 +9078,13 @@
    "col": "R",
    "line": 39,
    "word_off": 1769,
+   "char_at": 31,
    "readers": {
     "opus": "ἀνῃρημένον",
-    "kraken": "ἀνηρημένον",
-    "genie": "ἀνῃρημένον",
+    "codex": "ἀνῃρημένον",
     "llama": "ἀνῃρημένον",
-    "codex": "ἀνῃρημένον"
+    "kraken": "ἀνηρημένον",
+    "genie": "ἀνῃρημένον"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7264,12 +9103,13 @@
    "col": "R",
    "line": 10,
    "word_off": 430,
+   "char_at": 47,
    "readers": {
     "opus": "ἀνῃρῆσθαι",
-    "kraken": "ἀνηρῆσθαι",
-    "genie": "ἀνῃρῆσθαι",
+    "codex": "ἀνῃρῆσθαι",
     "llama": "ἀνῃρῆσθαι",
-    "codex": "ἀνῃρῆσθαι"
+    "kraken": "ἀνηρῆσθαι",
+    "genie": "ἀνῃρῆσθαι"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7288,12 +9128,13 @@
    "col": "L",
    "line": 46,
    "word_off": 2047,
+   "char_at": 36,
    "readers": {
     "opus": "ἀνθρώπȣ",
-    "kraken": "ἄνθρώπȣ",
-    "genie": "ἀνθρώπῳ",
+    "codex": "ἀνθρώπȣ",
     "llama": "ἀνθρώπȣ",
-    "codex": "ἀνθρώπȣ"
+    "kraken": "ἄνθρώπȣ",
+    "genie": "ἀνθρώπῳ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7312,12 +9153,13 @@
    "col": "R",
    "line": 18,
    "word_off": 695,
+   "char_at": 22,
    "readers": {
     "opus": "ἀνώδυνόν",
-    "kraken": "ἀνώδυνόν",
-    "genie": "ἀνώδυνόν",
+    "codex": "ἀνωδύνῳ",
     "llama": "ἀνωδύνῳ",
-    "codex": "ἀνωδύνῳ"
+    "kraken": "ἀνώδυνόν",
+    "genie": "ἀνώδυνόν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7336,12 +9178,13 @@
    "col": "L",
    "line": 17,
    "word_off": 719,
+   "char_at": 40,
    "readers": {
     "opus": "ἀριθμȣ́ς",
-    "kraken": "ἀριθμȣ́ς",
-    "genie": "ἀριθμούς",
+    "codex": "ἀριθμȣ̀ς",
     "llama": "ἀριθμούς",
-    "codex": "ἀριθμȣ̀ς"
+    "kraken": "ἀριθμȣ́ς",
+    "genie": "ἀριθμούς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7360,12 +9203,13 @@
    "col": "L",
    "line": 35,
    "word_off": 1550,
+   "char_at": 10,
    "readers": {
     "opus": "ἀρχή",
-    "kraken": "ἀρχή",
-    "genie": "ἀρχή",
+    "codex": "ἀρχῆς",
     "llama": "ἀρχή",
-    "codex": "ἀρχῆς"
+    "kraken": "ἀρχή",
+    "genie": "ἀρχή"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7384,12 +9228,13 @@
    "col": "L",
    "line": 5,
    "word_off": 156,
+   "char_at": 24,
    "readers": {
     "opus": "ἀτμίς",
-    "kraken": "ἀτμίς",
-    "genie": "ἀτμὶς",
+    "codex": "ἀτμὶς",
     "llama": "ἀτμὶς",
-    "codex": "ἀτμὶς"
+    "kraken": "ἀτμίς",
+    "genie": "ἀτμὶς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7408,12 +9253,13 @@
    "col": "L",
    "line": 24,
    "word_off": 1055,
+   "char_at": 38,
    "readers": {
     "opus": "ἀφῃρημένης",
-    "kraken": "ἀφηρημένης",
-    "genie": "ἀφῃρημένης",
+    "codex": "ἀφῃρημένης",
     "llama": "ἀφῃρημένης",
-    "codex": "ἀφῃρημένης"
+    "kraken": "ἀφηρημένης",
+    "genie": "ἀφῃρημένης"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7432,12 +9278,13 @@
    "col": "L",
    "line": 1,
    "word_off": 39,
+   "char_at": 47,
    "readers": {
     "opus": "ἁπλȣ͂ν",
-    "kraken": "ἁπλȣ͂ν",
-    "genie": "ἁπλοῦν",
+    "codex": "ἁπλῶς",
     "llama": "ἁπλȣ͂ν",
-    "codex": "ἁπλῶς"
+    "kraken": "ἁπλȣ͂ν",
+    "genie": "ἁπλοῦν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7456,12 +9303,13 @@
    "col": "R",
    "line": 55,
    "word_off": 2363,
+   "char_at": 20,
    "readers": {
     "opus": "ᾄδȣσι",
-    "kraken": "ἄδȣσι",
-    "genie": "ᾄδουσι",
+    "codex": "ᾄδȣσι",
     "llama": "ᾄδȣσι",
-    "codex": "ᾄδȣσι"
+    "kraken": "ἄδȣσι",
+    "genie": "ᾄδουσι"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7480,12 +9328,13 @@
    "col": "R",
    "line": 14,
    "word_off": 617,
+   "char_at": 21,
    "readers": {
     "opus": "ἄκρȣ",
-    "kraken": "ἄκρȣ",
-    "genie": "ἄκρον",
+    "codex": "ἄκρῳ",
     "llama": "ἄκρȣ",
-    "codex": "ἄκρῳ"
+    "kraken": "ἄκρȣ",
+    "genie": "ἄκρον"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7504,12 +9353,13 @@
    "col": "R",
    "line": 61,
    "word_off": 2715,
+   "char_at": 29,
    "readers": {
     "opus": "ἄναιμα",
-    "kraken": "ἄναμμα",
-    "genie": "ἄναιμα",
+    "codex": "ἄναιμα",
     "llama": "ἄναιμα",
-    "codex": "ἄναιμα"
+    "kraken": "ἄναμμα",
+    "genie": "ἄναιμα"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7528,10 +9378,11 @@
    "col": "L",
    "line": 12,
    "word_off": 505,
+   "char_at": 0,
    "readers": {
     "opus": "Ἀναξιλάȣ",
-    "llama": "Ἀναξιλάν",
     "codex": "Ἀναξίλας",
+    "llama": "Ἀναξιλάν",
     "kraken": "Ἀναξιλάȣ"
    },
    "kind": "letters",
@@ -7551,10 +9402,11 @@
    "col": "L",
    "line": 20,
    "word_off": 861,
+   "char_at": 20,
    "readers": {
     "opus": "Ἀναξιμάνδρȣ",
-    "llama": "Ἀναξιμάνδρȣ",
     "codex": "Ἀναξίμανδρος",
+    "llama": "Ἀναξιμάνδρȣ",
     "kraken": "Ἀναξιμάνδρȣ"
    },
    "kind": "letters",
@@ -7574,12 +9426,13 @@
    "col": "L",
    "line": 46,
    "word_off": 1841,
+   "char_at": 34,
    "readers": {
     "opus": "Ἀναξαγόρᾳ",
-    "kraken": "Ἀναξαγόρα",
-    "genie": "Ἀναξαγόρα",
+    "codex": "Ἀναξαγόρᾳ",
     "llama": "Ἀναξαγόρᾳ",
-    "codex": "Ἀναξαγόρᾳ"
+    "kraken": "Ἀναξαγόρα",
+    "genie": "Ἀναξαγόρα"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7598,15 +9451,16 @@
    "col": "R",
    "line": 2,
    "word_off": 87,
+   "char_at": 52,
    "readers": {
     "opus": "ἐκι",
-    "kraken": "ἑκι",
-    "genie": "ἐκι",
+    "codex": "ἐκι",
     "llama": "ἐκι",
-    "codex": "ἐκι"
+    "kraken": "ἑκι",
+    "genie": "ἐκι"
    },
    "kind": "breathing-only",
-   "reason": "breathing-only:breathing_authorities_silent",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "ἐκι",
     "ἑκι"
@@ -7622,12 +9476,13 @@
    "col": "L",
    "line": 26,
    "word_off": 1132,
+   "char_at": 18,
    "readers": {
     "opus": "ἐνȣ́σας",
-    "kraken": "ἐνȣσας",
-    "genie": "ἐνύσας",
+    "codex": "ἐνȣ́σας",
     "llama": "ἐνȣ́σας",
-    "codex": "ἐνȣ́σας"
+    "kraken": "ἐνȣσας",
+    "genie": "ἐνύσας"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7646,12 +9501,13 @@
    "col": "L",
    "line": 39,
    "word_off": 1769,
+   "char_at": 35,
    "readers": {
     "opus": "ἐνέργειάν",
-    "kraken": "ἐνέργειάν",
-    "genie": "ἐνέργειάν",
+    "codex": "ἐνέργειαν",
     "llama": "ἐνέργειάν",
-    "codex": "ἐνέργειαν"
+    "kraken": "ἐνέργειάν",
+    "genie": "ἐνέργειάν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7670,12 +9526,13 @@
    "col": "L",
    "line": 41,
    "word_off": 1827,
+   "char_at": 38,
    "readers": {
     "opus": "ἐξαδυνατȣ͂ν",
-    "kraken": "ἐξαδυνατȣ͂ν",
-    "genie": "ἐξαδυνατῶν",
+    "codex": "ἐξαδυνατῶν",
     "llama": "ἐξαδυνατῶν",
-    "codex": "ἐξαδυνατῶν"
+    "kraken": "ἐξαδυνατȣ͂ν",
+    "genie": "ἐξαδυνατῶν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7694,12 +9551,13 @@
    "col": "R",
    "line": 44,
    "word_off": 1905,
+   "char_at": 9,
    "readers": {
     "opus": "ἐπιτύχῃ",
-    "kraken": "ἐπιτύχη",
-    "genie": "ἐπιτύχῃ",
+    "codex": "ἐπιτύχῃ",
     "llama": "ἐπιτύχῃ",
-    "codex": "ἐπιτύχῃ"
+    "kraken": "ἐπιτύχη",
+    "genie": "ἐπιτύχῃ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7718,12 +9576,13 @@
    "col": "L",
    "line": 6,
    "word_off": 239,
+   "char_at": 15,
    "readers": {
     "opus": "ἐστίν",
-    "kraken": "ἐστίν",
-    "genie": "ἐστίν",
+    "codex": "ἐστιν",
     "llama": "ἐστιν",
-    "codex": "ἐστιν"
+    "kraken": "ἐστίν",
+    "genie": "ἐστίν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7742,12 +9601,13 @@
    "col": "L",
    "line": 22,
    "word_off": 973,
+   "char_at": 52,
    "readers": {
     "opus": "ἐστι",
-    "kraken": "ἐστι",
-    "genie": "ἐστι",
+    "codex": "ἐστὶ",
     "llama": "ἐστι",
-    "codex": "ἐστὶ"
+    "kraken": "ἐστι",
+    "genie": "ἐστι"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7766,12 +9626,13 @@
    "col": "R",
    "line": 53,
    "word_off": 2339,
+   "char_at": 45,
    "readers": {
     "opus": "ἑαυτȣ͂",
-    "kraken": "ἑαυτȣ͂",
-    "genie": "ἑαυτῷ",
+    "codex": "ἑαυτῷ",
     "llama": "ἑαυτȣ͂",
-    "codex": "ἑαυτῷ"
+    "kraken": "ἑαυτȣ͂",
+    "genie": "ἑαυτῷ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7790,12 +9651,13 @@
    "col": "L",
    "line": 14,
    "word_off": 574,
+   "char_at": 5,
    "readers": {
     "opus": "ἔνιοι",
-    "kraken": "ἔνιοι",
-    "genie": "ἔνιοι",
+    "codex": "ἔνια",
     "llama": "ἔνιοι",
-    "codex": "ἔνια"
+    "kraken": "ἔνιοι",
+    "genie": "ἔνιοι"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7814,12 +9676,13 @@
    "col": "R",
    "line": 2,
    "word_off": 66,
+   "char_at": 19,
    "readers": {
     "opus": "ἔξȣσιν",
-    "kraken": "ἕξȣσιν",
-    "genie": "ἔχουσιν",
+    "codex": "ἕξȣσιν",
     "llama": "ἔχȣσιν",
-    "codex": "ἕξȣσιν"
+    "kraken": "ἕξȣσιν",
+    "genie": "ἔχουσιν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7835,17 +9698,42 @@
   },
   {
    "page": 62,
+   "col": "R",
+   "line": 12,
+   "word_off": 553,
+   "char_at": 54,
+   "readers": {
+    "opus": "ἔχȣ",
+    "codex": "ἕξȣ",
+    "llama": "ἔχȣ",
+    "kraken": "ἔχȣ"
+   },
+   "kind": "letters",
+   "reason": "fragment:broken_at_line_end",
+   "forms": [
+    "ἔχȣ",
+    "ἕξȣ"
+   ],
+   "form_set": [
+    "ἔχȣ",
+    "ἕξȣ"
+   ],
+   "n_same_form_set": 1
+  },
+  {
+   "page": 62,
    "col": "L",
    "line": 19,
    "word_off": 841,
+   "char_at": 44,
    "readers": {
     "opus": "Ἐμπε",
-    "llama": "Ἐμπε",
     "codex": "Ἐμπε",
+    "llama": "Ἐμπε",
     "kraken": "Ἡμπε"
    },
    "kind": "letters",
-   "reason": "morpheus:no_real_form",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "Ἐμπε",
     "Ἡμπε"
@@ -7861,12 +9749,13 @@
    "col": "R",
    "line": 5,
    "word_off": 178,
+   "char_at": 18,
    "readers": {
     "opus": "ἡλισμένοι",
-    "kraken": "ἠλισμένοι",
-    "genie": "ἡλισμένοι",
+    "codex": "ἡλισμένοι",
     "llama": "ἡλισμένοι",
-    "codex": "ἡλισμένοι"
+    "kraken": "ἠλισμένοι",
+    "genie": "ἡλισμένοι"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -7885,12 +9774,13 @@
    "col": "R",
    "line": 15,
    "word_off": 642,
+   "char_at": 0,
    "readers": {
     "opus": "ἠρεμȣ́ντων",
-    "kraken": "ἠρεμȣντων",
-    "genie": "ἠρεμούντων",
+    "codex": "ἠρεμȣ́ντων",
     "llama": "ἠρεμȣ́ντων",
-    "codex": "ἠρεμȣ́ντων"
+    "kraken": "ἠρεμȣντων",
+    "genie": "ἠρεμούντων"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7909,12 +9799,13 @@
    "col": "R",
    "line": 46,
    "word_off": 2058,
+   "char_at": 22,
    "readers": {
     "opus": "ἡλίȣ",
-    "kraken": "ἡλίȣ",
-    "genie": "ἡλίω",
+    "codex": "ἡλίου",
     "llama": "ἡλίȣ",
-    "codex": "ἡλίου"
+    "kraken": "ἡλίȣ",
+    "genie": "ἡλίω"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -7933,12 +9824,13 @@
    "col": "L",
    "line": 40,
    "word_off": 1554,
+   "char_at": 22,
    "readers": {
     "opus": "ἡλικίᾳ",
-    "kraken": "ἡλικία",
-    "genie": "ἡλικίᾳ",
+    "codex": "ἡλικίᾳ",
     "llama": "ἡλικίᾳ",
-    "codex": "ἡλικίᾳ"
+    "kraken": "ἡλικία",
+    "genie": "ἡλικίᾳ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -7957,12 +9849,13 @@
    "col": "R",
    "line": 1,
    "word_off": 37,
+   "char_at": 42,
    "readers": {
     "opus": "ἣν",
-    "kraken": "ἢν",
-    "genie": "ἣν",
+    "codex": "ἣν",
     "llama": "ἣν",
-    "codex": "ἣν"
+    "kraken": "ἢν",
+    "genie": "ἣν"
    },
    "kind": "breathing-only",
    "reason": "breathing-only:breathing_authorities_silent",
@@ -7981,12 +9874,13 @@
    "col": "R",
    "line": 48,
    "word_off": 2113,
+   "char_at": 32,
    "readers": {
     "opus": "ἤδη",
-    "kraken": "ἦδη",
-    "genie": "ἤδη",
+    "codex": "ἤδη",
     "llama": "ἤδη",
-    "codex": "ἤδη"
+    "kraken": "ἦδη",
+    "genie": "ἤδη"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8005,10 +9899,11 @@
    "col": "R",
    "line": 28,
    "word_off": 1215,
+   "char_at": 4,
    "readers": {
     "opus": "Ἥρα",
-    "llama": "Ἥρα",
     "codex": "Ἥρα",
+    "llama": "Ἥρα",
     "kraken": "Ἡρα"
    },
    "kind": "accent-only",
@@ -8028,12 +9923,13 @@
    "col": "R",
    "line": 27,
    "word_off": 1185,
+   "char_at": 23,
    "readers": {
     "opus": "ἰσχυροτάτῃ",
-    "kraken": "ἰσχυροτάτη",
-    "genie": "ἰσχυροτάτῃ",
+    "codex": "ἰσχυροτάτῃ",
     "llama": "ἰσχυροτάτῃ",
-    "codex": "ἰσχυροτάτῃ"
+    "kraken": "ἰσχυροτάτη",
+    "genie": "ἰσχυροτάτῃ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8052,12 +9948,13 @@
    "col": "L",
    "line": 61,
    "word_off": 2729,
+   "char_at": 48,
    "readers": {
     "opus": "ἰσχύν",
-    "kraken": "ἰσχύν",
-    "genie": "ἰσχύν",
+    "codex": "ἰσχὺν",
     "llama": "ἰσχύν",
-    "codex": "ἰσχὺν"
+    "kraken": "ἰσχύν",
+    "genie": "ἰσχύν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8076,12 +9973,13 @@
    "col": "R",
    "line": 25,
    "word_off": 1087,
+   "char_at": 14,
    "readers": {
     "opus": "ὀλίγη",
-    "kraken": "ὀλίγῃ",
-    "genie": "ὀλίγη",
+    "codex": "ὀλίγη",
     "llama": "ὀλίγη",
-    "codex": "ὀλίγη"
+    "kraken": "ὀλίγῃ",
+    "genie": "ὀλίγη"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8100,12 +9998,13 @@
    "col": "R",
    "line": 45,
    "word_off": 1916,
+   "char_at": 6,
    "readers": {
     "opus": "ὀρθόν",
-    "kraken": "ὀρθόν",
-    "genie": "ὀρθόν",
+    "codex": "ὀρθὸν",
     "llama": "ὀρθόν",
-    "codex": "ὀρθὸν"
+    "kraken": "ὀρθόν",
+    "genie": "ὀρθόν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8124,12 +10023,13 @@
    "col": "L",
    "line": 45,
    "word_off": 1870,
+   "char_at": 4,
    "readers": {
     "opus": "ὀσμάς",
-    "kraken": "ὀσμάς",
-    "genie": "ὀσμάς",
+    "codex": "ὀσμὰς",
     "llama": "ὀσμάς",
-    "codex": "ὀσμὰς"
+    "kraken": "ὀσμάς",
+    "genie": "ὀσμάς"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8148,12 +10048,13 @@
    "col": "L",
    "line": 3,
    "word_off": 135,
+   "char_at": 49,
    "readers": {
     "opus": "ὀφθαλμοί",
-    "kraken": "ὀφθαλμοί",
-    "genie": "ὀφθαλμοί",
+    "codex": "ὀφθαλμοὶ",
     "llama": "ὀφθαλμοί",
-    "codex": "ὀφθαλμοὶ"
+    "kraken": "ὀφθαλμοί",
+    "genie": "ὀφθαλμοί"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8172,12 +10073,13 @@
    "col": "R",
    "line": 25,
    "word_off": 1094,
+   "char_at": 23,
    "readers": {
     "opus": "ὄψει",
-    "kraken": "ὀψει",
-    "genie": "ὄψει",
+    "codex": "ὄψει",
     "llama": "ὄψει",
-    "codex": "ὄψει"
+    "kraken": "ὀψει",
+    "genie": "ὄψει"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8196,12 +10098,13 @@
    "col": "R",
    "line": 14,
    "word_off": 625,
+   "char_at": 35,
    "readers": {
     "opus": "ὁμȣ͂",
-    "kraken": "ὁμȣ",
-    "genie": "ὁμοῦ",
+    "codex": "ὁμȣ͂",
     "llama": "ὁμȣ͂",
-    "codex": "ὁμȣ͂"
+    "kraken": "ὁμȣ",
+    "genie": "ὁμοῦ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8220,12 +10123,13 @@
    "col": "L",
    "line": 29,
    "word_off": 1272,
+   "char_at": 11,
    "readers": {
     "opus": "ὁμοιότητά",
-    "kraken": "ὁμοιότητά",
-    "genie": "ὁμοιότητά",
+    "codex": "ὁμοιότητα",
     "llama": "ὁμοιότητά",
-    "codex": "ὁμοιότητα"
+    "kraken": "ὁμοιότητά",
+    "genie": "ὁμοιότητά"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8244,12 +10148,13 @@
    "col": "L",
    "line": 20,
    "word_off": 822,
+   "char_at": 0,
    "readers": {
     "opus": "ὁρισμόν",
-    "kraken": "ὁρισμόν",
-    "genie": "ὁρισμόν",
+    "codex": "ὁρισμὸν",
     "llama": "ὁρισμόν",
-    "codex": "ὁρισμὸν"
+    "kraken": "ὁρισμόν",
+    "genie": "ὁρισμόν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8268,12 +10173,13 @@
    "col": "R",
    "line": 22,
    "word_off": 945,
+   "char_at": 4,
    "readers": {
     "opus": "ὁρμήν",
-    "kraken": "ὁρμήν",
-    "genie": "ὁρμήν",
+    "codex": "ὁρμὴν",
     "llama": "ὁρμήν",
-    "codex": "ὁρμὴν"
+    "kraken": "ὁρμήν",
+    "genie": "ὁρμήν"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8292,12 +10198,13 @@
    "col": "L",
    "line": 1,
    "word_off": 16,
+   "char_at": 20,
    "readers": {
     "opus": "ὄμματα",
-    "kraken": "ὄμματα",
-    "genie": "ὄμματα",
+    "codex": "ὄμμασιν",
     "llama": "ὄμματα",
-    "codex": "ὄμμασιν"
+    "kraken": "ὄμματα",
+    "genie": "ὄμματα"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -8316,12 +10223,13 @@
    "col": "L",
    "line": 31,
    "word_off": 1378,
+   "char_at": 23,
    "readers": {
     "opus": "ὑγρȣ͂",
-    "kraken": "ὑγρȣ",
-    "genie": "ὑγροῦ",
+    "codex": "ὑγρȣ͂",
     "llama": "ὑγρȣ͂",
-    "codex": "ὑγρȣ͂"
+    "kraken": "ὑγρȣ",
+    "genie": "ὑγροῦ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8340,12 +10248,13 @@
    "col": "L",
    "line": 23,
    "word_off": 933,
+   "char_at": 10,
    "readers": {
     "opus": "ὑπεροχή",
-    "kraken": "ὑπεροχή",
-    "genie": "ὑπεροχή",
+    "codex": "ὑπεροχὴ",
     "llama": "ὑπεροχή",
-    "codex": "ὑπεροχὴ"
+    "kraken": "ὑπεροχή",
+    "genie": "ὑπεροχή"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8364,12 +10273,13 @@
    "col": "L",
    "line": 12,
    "word_off": 478,
+   "char_at": 25,
    "readers": {
     "opus": "ὑποτυπȣ͂ν",
-    "kraken": "ὑποτυπȣ͂ν",
-    "genie": "ὑποτυπῶν",
+    "codex": "ὑποτυπῶν",
     "llama": "ὑποτυπȣ͂ν",
-    "codex": "ὑποτυπῶν"
+    "kraken": "ὑποτυπȣ͂ν",
+    "genie": "ὑποτυπῶν"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -8388,12 +10298,13 @@
    "col": "R",
    "line": 58,
    "word_off": 2554,
+   "char_at": 8,
    "readers": {
     "opus": "ὑστέραι",
-    "kraken": "ὑστέραι",
-    "genie": "ὑστέραι",
+    "codex": "ὕστεραι",
     "llama": "ὑστέραι",
-    "codex": "ὕστεραι"
+    "kraken": "ὑστέραι",
+    "genie": "ὑστέραι"
    },
    "kind": "marks-only",
    "reason": "marks-only:breathing_authorities_silent",
@@ -8412,12 +10323,13 @@
    "col": "R",
    "line": 14,
    "word_off": 587,
+   "char_at": 3,
    "readers": {
     "opus": "ὕλῃ",
-    "kraken": "ὕλη",
-    "genie": "ὕλῃ",
+    "codex": "ὕλῃ",
     "llama": "ὕλῃ",
-    "codex": "ὕλῃ"
+    "kraken": "ὕλη",
+    "genie": "ὕλῃ"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",
@@ -8436,12 +10348,13 @@
    "col": "L",
    "line": 61,
    "word_off": 2394,
+   "char_at": 13,
    "readers": {
     "opus": "ὗς",
-    "kraken": "ὕς",
-    "genie": "ὓς",
+    "codex": "ὡς",
     "llama": "ὗς",
-    "codex": "ὡς"
+    "kraken": "ὕς",
+    "genie": "ὓς"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -8462,12 +10375,13 @@
    "col": "L",
    "line": 48,
    "word_off": 2113,
+   "char_at": 10,
    "readers": {
     "opus": "ὥσπερ",
-    "kraken": "ὕσπερ",
-    "genie": "ὥσπερ",
+    "codex": "ὥσπερ",
     "llama": "ὥσπερ",
-    "codex": "ὥσπερ"
+    "kraken": "ὕσπερ",
+    "genie": "ὥσπερ"
    },
    "kind": "letters",
    "reason": "morpheus:multiple_real_forms",
@@ -8486,15 +10400,16 @@
    "col": "R",
    "line": 43,
    "word_off": 1946,
+   "char_at": 52,
    "readers": {
     "opus": "ῥα",
-    "kraken": "ῥᾳ",
-    "genie": "ῥᾳ",
+    "codex": "ῥᾳ",
     "llama": "ῥᾳ",
-    "codex": "ῥᾳ"
+    "kraken": "ῥᾳ",
+    "genie": "ῥᾳ"
    },
    "kind": "accent-only",
-   "reason": "accent-only:not_positional_or_ambiguous",
+   "reason": "fragment:broken_at_line_end",
    "forms": [
     "ῥα",
     "ῥᾳ"
@@ -8510,12 +10425,13 @@
    "col": "R",
    "line": 42,
    "word_off": 1794,
+   "char_at": 40,
    "readers": {
     "opus": "ῥαθυμίαι",
-    "kraken": "ῥαθυμίαι",
-    "genie": "ῥαθυμίαι",
+    "codex": "ῥᾳθυμίαι",
     "llama": "ῥᾳθυμίαι",
-    "codex": "ῥᾳθυμίαι"
+    "kraken": "ῥαθυμίαι",
+    "genie": "ῥαθυμίαι"
    },
    "kind": "accent-only",
    "reason": "accent-only:not_positional_or_ambiguous",

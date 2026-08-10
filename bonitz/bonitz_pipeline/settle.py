@@ -102,9 +102,46 @@ AUTH_SIGLUM = 'siglum.holds'
 AUTH_ACCENT_POS = 'accent.positional'
 AUTH_AGREE = 'readers.agree'
 AUTH_REFUSE = 'refuse'
+# Refusal reason when siglum.holds has a unique reading — never auto-written.
+# Attached as a Proposal for John; still scored by measure_settle_gt.
+REASON_SIGLUM_PROPOSAL = 'siglum:proposal_only'
 
 
 # --- data -------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class Proposal:
+    """A candidate form an authority suggests but will not write alone.
+
+    ⚠ SIGLUM ANSWERS THE WRONG QUESTION FOR DIPLOMACY. `siglum.holds` says
+    which work owns the Bekker page; the diplomatic question is what Bonitz
+    printed. Those come apart when Bonitz is wrong or abbreviates oddly —
+    exactly the sites we must not touch. So a unique hold becomes a proposal
+    John can accept with one look, never a settlement.
+    """
+    form: str
+    authority: str
+    reason: str
+    bekker_page: int | None = None
+    work: str = ''
+    book: str = ''
+    lo: int | None = None
+    hi: int | None = None
+
+    def as_dict(self) -> dict:
+        return {
+            'form': self.form,
+            'authority': self.authority,
+            'reason': self.reason,
+            'bekker_page': self.bekker_page,
+            'work': self.work,
+            'book': self.book,
+            'lo': self.lo,
+            'hi': self.hi,
+            'range': (f'{self.lo}-{self.hi}'
+                      if self.lo is not None and self.hi is not None else ''),
+        }
+
 
 @dataclass(frozen=True)
 class Settlement:
@@ -116,6 +153,7 @@ class Settlement:
     reason: str
     readers: tuple[str, ...]
     suspicious: bool = False
+    proposal: Proposal | None = None
 
     @property
     def settled(self) -> bool:
@@ -511,27 +549,51 @@ def by_siglum_holds(
         page: int | None,
         works: dict | None = None,
 ) -> tuple[str, str] | None:
-    """Exactly one reading is a work+book whose Bekker range holds `page`."""
+    """Exactly one reading is a work+book whose Bekker range holds `page`.
+
+    Measurable still (measure_settle_gt scores this independently), but the
+    settle chain must not write the winner — see Proposal / settle_one.
+    """
+    prop = siglum_proposal(forms, page, works)
+    if prop is None:
+        return None
+    return prop.form, prop.reason
+
+
+def siglum_proposal(
+        forms: set[str],
+        page: int | None,
+        works: dict | None = None,
+) -> Proposal | None:
+    """Build a siglum.holds Proposal, or None when zero/many readings hold."""
     if page is None:
         return None
     works = works if works is not None else inventory()
-    good: set[str] = set()
-    why: dict[str, str] = {}
+    good: dict[str, Proposal] = {}
     for f in forms:
         for t in _siglum_tokens(f):
+            hit = False
             for work_sig, book in split(t, works):
                 w = works[work_sig]
                 if w.holds(page) and book_ok(work_sig, book):
-                    good.add(f)
-                    why[f] = (f'{t} → {work_sig} book {book or "—"} '
-                              f'holds Bekker {page} ({w.lo}-{w.hi})')
+                    good[f] = Proposal(
+                        form=f,
+                        authority=AUTH_SIGLUM,
+                        reason=(f'{t} → {work_sig} book {book or "—"} '
+                                f'holds Bekker {page} ({w.lo}-{w.hi})'),
+                        bekker_page=page,
+                        work=work_sig,
+                        book=book or '',
+                        lo=w.lo,
+                        hi=w.hi,
+                    )
+                    hit = True
                     break
-            if f in good:
+            if hit:
                 break
     if len(good) != 1:
         return None
-    winner = next(iter(good))
-    return winner, why[winner]
+    return next(iter(good.values()))
 
 
 def by_accent_positional(
@@ -745,11 +807,14 @@ def settle_one(
     if word.kind == 'letters':
         if looks_like_citation(form_set, wrks):
             page = bekker_after(stream, word.word_off, opus_form) if stream else None
-            got = by_siglum_holds(form_set, page, wrks)
-            if got:
+            # ⚠ PROPOSE, DO NOT SETTLE. A unique hold is evidence for John, not
+            # a form to write — the page can lie about what Bonitz printed.
+            prop = siglum_proposal(form_set, page, wrks)
+            if prop is not None:
                 return Settlement(
-                    winner=got[0], authority=AUTH_SIGLUM, reason=got[1],
-                    suspicious=False, **base)
+                    winner=None, authority=AUTH_REFUSE,
+                    reason=REASON_SIGLUM_PROPOSAL,
+                    proposal=prop, suspicious=False, **base)
             # Do NOT fall through to Morpheus: short sigla are false friends.
             return Settlement(
                 winner=None, authority=AUTH_REFUSE,

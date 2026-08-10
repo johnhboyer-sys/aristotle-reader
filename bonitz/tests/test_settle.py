@@ -18,6 +18,7 @@ from bonitz_pipeline.settle import (
     AUTH_MORPHEUS_MEMBER,
     AUTH_REFUSE,
     AUTH_SIGLUM,
+    REASON_SIGLUM_PROPOSAL,
     ALL_READERS,
     STRONG_READERS,
     Following,
@@ -35,6 +36,7 @@ from bonitz_pipeline.settle import (
     settle_one,
     settle_path,
     settle_words,
+    siglum_proposal,
 )
 from bonitz_pipeline.word_flags import WordFlag
 
@@ -230,17 +232,39 @@ def test_settle_one_refuses_ex_hex_both_real():
     assert s.reason  # non-empty; not a vanished lookup
 
 
-def test_settle_one_citation_uses_siglum_not_morpheus():
-    """`πα` is a Morpheus form; citation disputes must not crown it that way."""
+def test_settle_one_citation_proposes_siglum_does_not_settle():
+    """`πα` is a Morpheus form; citation disputes must not crown it that way.
+
+    ⚠ AND SIGLUM MUST NOT SETTLE. It answers which work holds the page; the
+    diplomatic question is what Bonitz printed. Unique hold → proposal only.
+    """
     w = _wf('letters', {
         'opus': 'Ζγβ', 'kraken': 'Ζηβ', 'codex': 'Ζγβ',
     }, page=53, col='R', word_off=0)
     # Provide a stream with a Bekker page after the token.
     stream = 'Ζγβ748a16.rest'
     s = settle_one(w, STRONG_READERS, stream=stream)
-    assert s.settled
-    assert s.winner == 'Ζγβ'
-    assert s.authority == AUTH_SIGLUM
+    assert not s.settled
+    assert s.winner is None
+    assert s.authority == AUTH_REFUSE
+    assert s.reason == REASON_SIGLUM_PROPOSAL
+    assert s.proposal is not None
+    assert s.proposal.form == 'Ζγβ'
+    assert s.proposal.authority == AUTH_SIGLUM
+    assert s.proposal.bekker_page == 748
+    assert s.proposal.work
+    assert s.proposal.lo is not None and s.proposal.hi is not None
+
+
+def test_siglum_proposal_carries_page_work_range():
+    prop = siglum_proposal({'Ζγβ', 'Ζηβ'}, 748)
+    assert prop is not None
+    assert prop.form == 'Ζγβ'
+    assert prop.authority == AUTH_SIGLUM
+    d = prop.as_dict()
+    assert d['bekker_page'] == 748
+    assert d['work']
+    assert d['range']  # e.g. "715-789"
 
 
 def test_settle_one_agree_when_strong_collapse():
@@ -354,7 +378,14 @@ def test_flags5_settlement_fires_and_counts_at_scale():
                    if s.kind == 'letters' and s.authority != AUTH_AGREE]
     assert len(letter_auto) >= 30, (
         f'only {len(letter_auto)} letter auto-settlements; membership looks dead')
-    assert AUTH_MORPHEUS_MEMBER in rep.by_authority or AUTH_SIGLUM in rep.by_authority
+    assert AUTH_MORPHEUS_MEMBER in rep.by_authority
+    # siglum.holds is proposal-only — must not appear among settled winners.
+    assert AUTH_SIGLUM not in rep.by_authority
+    n_sig_prop = sum(1 for s in rep.refused
+                     if s.reason == REASON_SIGLUM_PROPOSAL)
+    assert n_sig_prop >= 1, 'siglum proposals vanished'
+    assert all(s.proposal is not None and s.proposal.form
+               for s in rep.refused if s.reason == REASON_SIGLUM_PROPOSAL)
     # Refusals are counted, not dropped.
     assert len(rep.refused) >= 1
     assert sum(rep.refuse_reasons.values()) == len(rep.refused)
