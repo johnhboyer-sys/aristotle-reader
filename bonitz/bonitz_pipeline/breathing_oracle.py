@@ -252,6 +252,12 @@ def decide(word: str) -> tuple[str, str] | None:
 
 
 def arbitrate(readings: dict[str, str]) -> tuple[str, str] | None:
+    # ⚠ AN APPLIER MUST CHANGE THE BREATHING AND NOTHING ELSE. Codex,
+    # 2026-08-10: the evidence string reads `LSJ has ἁλουργός`, and a caller
+    # that took it for a replacement SPELLING would quietly rewrite Bonitz's
+    # `ȣ` — the ligature is his ink and our expansion of it is a lookup key,
+    # never a reading. Thirteen of the current proposals print `ἀλȣργ…`. No
+    # applier exists yet; this is here for the one that will.
     """Given reader -> word, which reading does the lexicon accept?
 
     Returns (word, why) only where the lexicon ACCEPTS SOME AND REJECTS OTHERS.
