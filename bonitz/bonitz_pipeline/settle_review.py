@@ -43,6 +43,7 @@ from bonitz_pipeline.book_review import CSS as _BASE_CSS, _b64, serve
 from bonitz_pipeline.breathing_oracle import ROUGH, SMOOTH
 from bonitz_pipeline.mark_review import crop_word
 from bonitz_pipeline.normalize import canonical, clean_opus
+from bonitz_pipeline.siglum_check import BOOK_LETTERS
 from bonitz_pipeline.siglum_review import MOBILE_CSS
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -112,6 +113,34 @@ class Card:
 
 def form_set_key(forms: list[str]) -> tuple[str, ...]:
     return tuple(sorted(forms))
+
+
+# Book-numeral alphabet plus final sigma (the misread of stigma). A token
+# made only of these is a numeral-slot form, not a word like τίς (acute) or
+# πῶς (circumflex) — those carry marks outside this set.
+_NUMERAL_CHARS = set(BOOK_LETTERS + 'ς')
+
+
+def is_numeral_form(form: str) -> bool:
+    """True when every character is a book-numeral letter (or misread ς)."""
+    return bool(form) and all(c in _NUMERAL_CHARS for c in form)
+
+
+def encoding_only_form_set(forms: list[str] | tuple[str, ...]) -> bool:
+    """True when the only dispute is ς vs ϛ on a numeral form.
+
+    That is a codepoint choice, not an ink ruling — numeral_fix settles it.
+    Leaving it in the queue makes John hand-rule what a sweep already knows.
+    """
+    forms = list(forms)
+    if len(forms) < 2:
+        return False
+    if not any('ς' in f for f in forms):
+        return False
+    folded = {f.replace('ς', 'ϛ') for f in forms}
+    if len(folded) != 1:
+        return False
+    return all(is_numeral_form(f.replace('ς', 'ϛ')) for f in forms)
 
 
 def load_queue(path: Path = DEFAULT_QUEUE) -> list[dict]:
@@ -300,6 +329,75 @@ def crop_at_offset(
 
 ACCENTS = {'\u0301': 'acute', '\u0300': 'grave', '\u0342': 'circumflex'}
 
+# ⚠ THE FONT WILL NOT SEPARATE THESE, AND THE INK DOES. John, 2026-08-10:
+# "i can't tell stigma from sigma in the card font. i can tell the diff in the
+# ink though." A card that shows him two glyphs he cannot distinguish has
+# handed the decision back to the tool's typography — and `ϛ` against `ς` is
+# the single most consequential pair in this index, because one is the numeral
+# 6 and the other is a letter with no value. `siglum_review` already learned
+# this and marks them; naming them in words needs no font at all.
+CONFUSABLE = {'ϛ': 'stigma = 6', 'ς': 'final sigma, no value',
+              'ι': 'iota', 'ί': 'iota acute', 'υ': 'upsilon',
+              'ο': 'omicron', 'θ': 'theta', 'β': 'beta', 'δ': 'delta',
+              'γ': 'gamma', 'η': 'eta', 'ν': 'nu', 'κ': 'kappa',
+              'π': 'pi', 'ρ': 'rho', 'Ρ': 'Rho (Greek)', 'P': 'P (Latin)',
+              'Η': 'Eta (Greek)', 'H': 'H (Latin)', 'Μ': 'Mu (Greek)',
+              'M': 'M (Latin)'}
+
+
+MARK_NAMES = [('\u0314', 'rough'), ('\u0313', 'smooth'), ('\u0342', 'circumflex'),
+              ('\u0301', 'acute'), ('\u0300', 'grave'), ('\u0345', 'iota sub'),
+              ('\u0308', 'diaeresis')]
+
+
+def marks_on_ligature(form: str) -> str:
+    """Spell out every mark a form carries, when it sits on a ligature.
+
+    ⚠ TWO COMBINING MARKS OVER `ȣ` DO NOT RENDER. John, 2026-08-10, reading a
+    card that held `ȣ̔͂` — OU + rough + circumflex, which is οὗ: the browser drew
+    something he first took for an apostrophe, and the headline looked like a
+    bare circumflex with the ROUGH BREATHING INVISIBLE. The stored form was
+    right and his ruling would have been right, but he could not see what he
+    was agreeing to, which is the same defect as the stigma he could not tell
+    from a final sigma. The ink is legible; our rendering of it is not.
+    """
+    if not any(c in form for c in 'ȣȢϗ'):
+        return ''
+    import unicodedata as _u
+    d = _u.normalize('NFD', form)
+    bits = [name for mark, name in MARK_NAMES if mark in d]
+    return ' · ' + ' + '.join(bits) if bits else ''
+
+
+def name_letters(form: str, other: str) -> str:
+    """Name the letters that differ, for pairs a screen font draws alike."""
+    if len(form) != len(other):
+        return ''
+    diff = [(a, b) for a, b in zip(form, other) if a != b]
+    bits = [CONFUSABLE[a] for a, b in diff
+            if a in CONFUSABLE and b in CONFUSABLE]
+    return ' · ' + ', '.join(dict.fromkeys(bits)) if bits else ''
+
+
+
+def tally(card: 'Card', form: str) -> str:
+    """ ' · 4 of 5 readers' — who actually read this.
+
+    ⚠ `keep as printed` NAMED OPUS'S READING AS THE INK, and Opus is one
+    reader. On `Ζιβ / Ζιθ` the crop plainly reads Ζιθ and four of five readers
+    said so, but the card offered Opus's Ζιβ under a label asserting it was
+    what the page shows — and it was taken. The preserve option is still
+    correct and still first, because a misprint must be preservable; what was
+    wrong was dressing one reader's guess as the printing.
+    """
+    # A card groups sites that share a form-set; the reader split is the same
+    # question at each, so the first member speaks for the group.
+    readers = card.members[0].readers if card.members else {}
+    if not readers:
+        return ''
+    n = sum(1 for v in readers.values() if v == form)
+    return f' · {n} of {len(readers)} readers'
+
 
 def describe(form: str, printed: str) -> str:
     """What actually differs, named — ' · rough', ' · grave', ' · iota sub'.
@@ -337,42 +435,106 @@ def options_for(card: Card) -> list[dict]:
     Each option states a form and a consequence. No typing path.
     """
     printed = card.printed
+    # ⚠ FINAL SIGMA IS NOT A NUMBER. In a numeral slot the printed sort is the
+    # stigma glyph; storing ς was a codepoint choice, never Bonitz's. Offering
+    # "keep as printed · πκς" asserts a reading that cannot be what he meant —
+    # stigma is 6, final sigma has no value. State the stigma on the button.
+    printed_is_numeral_sigma = bool(
+        printed and is_numeral_form(printed) and 'ς' in printed)
+    if printed_is_numeral_sigma:
+        true_print = printed.replace('ς', 'ϛ')
+    else:
+        true_print = printed
+
     forms = list(card.form_set)
     # Always offer the printed form, even if somehow missing from the set.
-    if printed and printed not in forms:
-        forms = [printed] + forms
+    # When the codepoint was wrong, offer the true printed sort (stigma).
+    offer_printed = true_print if printed_is_numeral_sigma else printed
+    if offer_printed and offer_printed not in forms:
+        forms = [offer_printed] + forms
     out: list[dict] = []
     # Preserve-as-printed first when a proposal disagrees with it — the
     # diplomatic option must never be buried under authority.
-    if printed:
-        out.append({
-            'form': printed,
-            'verdict': 'preserve',
-            'detail': printed,
-            'label': f'keep as printed · {printed}',
-            'consequence': (
-                'corpus untouched · recorded as corrigendum if authorities '
-                'disagree with the ink'
-            ),
-            'kind': 'preserve',
-        })
+    if offer_printed:
+        if printed_is_numeral_sigma:
+            # Encoding fix, not a misprint to preserve: corpus becomes stigma.
+            out.append({
+                'form': true_print,
+                'verdict': 'accept',
+                'detail': true_print,
+                'label': (f'keep as printed · {true_print}'
+                          f' · {CONFUSABLE["ϛ"]}'),
+                'consequence': (
+                    f'corpus becomes {true_print} · final sigma is not a '
+                    f'number; the printed sort is stigma'
+                ),
+                'kind': 'preserve',
+            })
+        else:
+            out.append({
+                'form': printed,
+                'verdict': 'preserve',
+                'detail': printed,
+                'label': (f'keep as printed · {printed}'
+                          f'{name_letters(printed, next((x for x in card.form_set if x != printed), printed))}'
+                          f'{marks_on_ligature(printed)}{tally(card, printed)}'),
+                'consequence': (
+                    'corpus untouched · recorded as corrigendum if authorities '
+                    'disagree with the ink'
+                ),
+                'kind': 'preserve',
+            })
     for f in forms:
-        if f == printed:
+        if f == offer_printed:
+            continue
+        # Never offer final sigma as a reading of a numeral form — it has no
+        # numeric value. The stigma button (above or among accepts) is enough.
+        if is_numeral_form(f) and 'ς' in f and 'ϛ' not in f:
             continue
         out.append({
             'form': f,
             'verdict': 'accept',
             'detail': f,
-            'label': f'read {f}{describe(f, printed)}',
+            'label': (f'read {f}{describe(f, offer_printed)}'
+                      f'{name_letters(f, offer_printed or "")}{tally(card, f)}'),
             'consequence': f'corpus becomes {f} at every site in this group',
             'kind': 'accept',
         })
+    # ⚠ THE READERS CANNOT OFFER WHAT NONE OF THEM SAW. John, 2026-08-10, on
+    # `πκζ / πκς`: "this is clearly a stigma" — and STIGMA WAS NOT A BUTTON,
+    # because the card's options are built from what the readers read and not
+    # one of them read ϛ. So the only correct answer could not be given, which
+    # is worse than a hard card: it is a card that forces a wrong ruling.
+    #
+    # ς and ϛ are the same printed sort. Always offer stigma where a form has
+    # final sigma. For a NUMERAL form never offer the reverse: final sigma is
+    # not a number, so `πκς` must not appear as a live option.
+    for f in list(o['form'] for o in out):
+        pairs = [('ς', 'ϛ')]
+        if not is_numeral_form(f):
+            pairs.append(('ϛ', 'ς'))
+        for a, b in pairs:
+            if a not in f:
+                continue
+            alt = f.replace(a, b)
+            if any(x['form'] == alt for x in out):
+                continue
+            out.append({
+                'form': alt,
+                'verdict': 'accept',
+                'detail': alt,
+                'label': f'read {alt} · {CONFUSABLE[b]}',
+                'consequence': (f'no reader read this — offered because '
+                                f'{a} and {b} are one sort in the type'),
+                'kind': 'accept',
+            })
+
     # Siglum proposal: offer even if already among forms (as the recommended
     # accept), so the evidence is one click.
     if card.proposal and card.proposal.get('form'):
         pf = card.proposal['form']
         if not any(o['form'] == pf and o['verdict'] == 'accept' for o in out):
-            if pf != printed:
+            if pf != offer_printed:
                 out.append({
                     'form': pf,
                     'verdict': 'accept',
@@ -389,6 +551,24 @@ def options_for(card: Card) -> list[dict]:
                 # covers it; tag the first option so the card can highlight.
                 out[0]['kind'] = 'proposal-preserve'
     return out
+
+
+def _arg(v: str) -> str:
+    """A Python string as a JS literal, safe inside an HTML attribute.
+
+    ⚠ `{x!r}` IS NOT AN ESCAPER, AND IT KILLED EVERY ELIDED CARD. Python's repr
+    switches to DOUBLE quotes when the string contains a single quote, so a
+    form like the elided ὅτ' rendered as  onclick="rule(...,"ὅτ'")"  — the
+    attribute ended at that inner double quote and the button had no handler at
+    all. Perfectly silent: no console error, nothing to see, the click just did
+    nothing.
+
+    Elision is everywhere in Bonitz, and the tokenizer fix that admitted these
+    forms this morning is what made the cards appear. json.dumps gives a real
+    JS literal; escaping & and " makes it safe as an attribute.
+    """
+    return (json.dumps(v, ensure_ascii=False)
+            .replace('&', '&amp;').replace('"', '&quot;'))
 
 
 def fill_crops(cards: list[Card]) -> tuple[int, int]:
@@ -463,7 +643,8 @@ def html(cards: list[Card], out: Path = PAGE) -> Path:
                 cls += ' go'
             buttons.append(
                 f'<button class="{cls}" '
-                f'onclick="rule({card.sid!r},{o["verdict"]!r},{o["detail"]!r},this)">'
+                f'onclick="rule({_arg(card.sid)},{_arg(o["verdict"])},'
+                f'{_arg(o["detail"])},this)">'
                 f'<span class="gk">{o["label"]}</span>'
                 f'<span class="sub2">{o["consequence"]}</span>'
                 f'</button>'
@@ -510,8 +691,17 @@ button .sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
    An adjudication tool that does not show its own state makes the reader do
    the bookkeeping — which is the same defect as asking him to type. */
 .card.done{opacity:.45;border-color:#3a7d44}
+.card.unsaved{opacity:1;border-color:#b23b3b;border-width:3px}
+.card.unsaved::after{content:'NOT SAVED';color:#b23b3b}
+#warn{position:sticky;top:0;z-index:99;background:#b23b3b;color:#fff;
+  padding:.8rem 1rem;font-weight:700;letter-spacing:.02em}
 .card.done .crop{filter:grayscale(1)}
-.card.done button{pointer-events:none}
+/* ⚠ NOT `pointer-events:none`. Locking a ruled card made a MISCLICK
+   PERMANENT from the phone, and John hit one within thirty cards. The tool
+   exists to capture his judgment, so it must let him change it; the ✓ and the
+   dimming say a ruling was recorded, they do not say it is final. */
+.card.done button{cursor:pointer}
+.card.done:hover{opacity:.85}
 .card.done .chosen{opacity:1;background:#3a7d44;color:#fff;font-weight:600}
 .card.done::after{content:'✓ ruled';position:absolute;top:.5rem;right:.7rem;
   color:#3a7d44;font-weight:700;font-size:.9rem;letter-spacing:.04em}
@@ -543,23 +733,56 @@ button .sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
         "const done={};\n"
         "async function rule(sid,verdict,detail,btn){\n"
         "  const card=btn.closest('.card');\n"
-        "  card.querySelectorAll('button').forEach(b=>"
-        "b.setAttribute('aria-pressed','false'));\n"
+        "  card.querySelectorAll('button').forEach(b=>{\n"
+        "    b.setAttribute('aria-pressed','false');\n"
+        "    b.classList.remove('chosen');\n"
+        "  });\n"
         "  btn.setAttribute('aria-pressed','true');\n"
         "  card.classList.add('done'); done[sid]={verdict,detail};\n"
         "  if(btn) btn.classList.add('chosen');\n"
         "  document.getElementById('count').textContent=\n"
         "    Object.keys(done).length+' / '+"
         "document.querySelectorAll('.card').length+' ruled';\n"
-        "  try{ await fetch('/ruling',{method:'POST',"
+        "  try{\n"
+        "    const r=await fetch('/ruling',{method:'POST',"
         "headers:{'Content-Type':'application/json'},\n"
-        "       body:JSON.stringify({id:sid,verdict,detail})}); }\n"
-        "  catch(e){ /* saved only when served */ }\n"
+        "       body:JSON.stringify({id:sid,verdict,detail})});\n"
+        "    if(!r.ok) throw new Error('HTTP '+r.status);\n"
+        "    card.dataset.saved='1';\n"
+        "  }catch(e){\n"
+        # ⚠ THIS CATCH WAS EMPTY AND IT COST JOHN 28 RULINGS. The
+        # server was restarted under a tab he was still working in, so
+        # every POST failed, every card still went green, and nothing
+        # said a word. A card that LOOKS ruled and is not saved is
+        # worse than one that refuses to be clicked.
+        "    card.classList.add('unsaved'); card.classList.remove('done');\n"
+        "    let w=document.getElementById('warn');\n"
+        "    if(!w){ w=document.createElement('div'); w.id='warn';\n"
+        "      document.body.prepend(w); }\n"
+        "    w.textContent='NOT SAVED - the server is not answering. "
+        "Nothing you click is being recorded. Reload once it is back.';\n"
+        "  }\n"
         "}\n"
         '</script>',
         encoding='utf-8',
     )
     return out
+
+
+def record_ruling(store: Path, sid: str, verdict: str, detail: str = '') -> dict:
+    """Write one ruling by sid. A second click REPLACES the first — never appends.
+
+    The serve handler assigns `have[sid] = {...}`. That is the whole contract:
+    one key, last write wins, no list of history. John re-rules after a
+    misclick; the store must not keep both.
+    """
+    have = (json.loads(store.read_text(encoding='utf-8'))
+            if store.exists() else {})
+    have[sid] = {'verdict': verdict, 'detail': detail}
+    store.parent.mkdir(parents=True, exist_ok=True)
+    store.write_text(json.dumps(have, ensure_ascii=False, indent=1) + '\n',
+                     encoding='utf-8')
+    return have
 
 
 def cards_from_queue(path: Path = DEFAULT_QUEUE) -> list[Card]:
@@ -581,12 +804,20 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     cards = cards_from_queue(a.queue)
+    # Pure ς/ϛ numeral form-sets are encoding, not ink. Drop them from the
+    # page John sees (numeral_fix owns them) but leave them in the queue JSON
+    # so an already-recorded ruling still resolves under settle_apply.
+    n_encoding = sum(1 for c in cards if encoding_only_form_set(c.form_set))
+    cards = [c for c in cards if not encoding_only_form_set(c.form_set)]
     n_skip = 0
     if a.no_crops:
         print(f'{len(cards)} cards (crops skipped)')
     else:
         n_ok, n_skip = fill_crops(cards)
         print(f'{len(cards)} cards · crops ok={n_ok} skipped={n_skip}')
+    if n_encoding:
+        print(f'  dropped {n_encoding} encoding-only numeral card'
+              f'{"s" if n_encoding != 1 else ""} (ς/ϛ)')
     html(cards)
     print(f'-> {PAGE}')
     n_prop = sum(1 for c in cards if c.proposal)

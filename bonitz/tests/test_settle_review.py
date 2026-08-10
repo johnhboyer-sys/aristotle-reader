@@ -82,6 +82,66 @@ def test_printed_as_is_option_is_always_present():
     assert any(o['form'] == 'ἁμῶς' for o in accept)
 
 
+def test_numeral_slot_preserve_states_stigma_not_final_sigma():
+    """⚠ "keep as printed · πκς" ASSERTS A NON-NUMBER IS THE PRINTING.
+
+    Final sigma has no numeric value. In a numeral slot the printed sort is
+    stigma. The preserve button must name stigma, never claim ς is what Bonitz
+    set.
+    """
+    card = Card(
+        form_set=('πκζ', 'πκς'),
+        printed='πκς',
+        members=[Member(55, 'L', 1, 0, 0,
+                        {'opus': 'πκς', 'kraken': 'πκζ'}, 'letters', 'x')],
+    )
+    opts = options_for(card)
+    # No option may present final-sigma-as-printed for a numeral form.
+    labels = [o['label'] for o in opts]
+    assert not any('keep as printed · πκς' in lab for lab in labels)
+    # The printed-sort button names stigma.
+    keep = [o for o in opts if o['label'].startswith('keep as printed')]
+    assert len(keep) == 1
+    assert keep[0]['form'] == 'πκϛ'
+    assert 'stigma' in keep[0]['label']
+    # And final sigma is not a live accept option either.
+    assert not any(o['form'] == 'πκς' for o in opts)
+
+
+def test_second_click_overwrites_ruling_not_duplicates(tmp_path: Path):
+    """A misclick must be fixable. Second write replaces the first key."""
+    from bonitz_pipeline.settle_review import record_ruling
+    store = tmp_path / 'settle-rulings.json'
+    record_ruling(store, 'forms:πκζ|πκϛ', 'preserve', 'πκϛ')
+    record_ruling(store, 'forms:πκζ|πκϛ', 'accept', 'πκζ')
+    data = json.loads(store.read_text(encoding='utf-8'))
+    assert list(data.keys()) == ['forms:πκζ|πκϛ']
+    assert data['forms:πκζ|πκϛ'] == {'verdict': 'accept', 'detail': 'πκζ'}
+    # A second distinct card coexists; still one entry each.
+    record_ruling(store, 'forms:ἂ|ᾶ', 'preserve', 'ἂ')
+    data = json.loads(store.read_text(encoding='utf-8'))
+    assert len(data) == 2
+    assert data['forms:πκζ|πκϛ']['verdict'] == 'accept'
+
+
+def test_encoding_only_numeral_form_set_is_flagged():
+    """ς vs ϛ on a numeral is numeral_fix's job, not a hand-ruling card."""
+    from bonitz_pipeline.settle_review import encoding_only_form_set
+    assert encoding_only_form_set(['πις', 'πιϛ'])
+    assert encoding_only_form_set(['κς', 'κϛ'])
+    assert not encoding_only_form_set(['πκζ', 'πκϛ'])  # letter dispute
+    assert not encoding_only_form_set(['τίς', 'τις'])   # not a numeral form
+    # Still groupable (queue keeps them for settle_apply); the page drops them.
+    entries = [
+        {'page': 61, 'col': 'R', 'line': 47, 'word_off': 0, 'char_at': 0,
+         'readers': {'opus': 'πιϛ', 'kraken': 'πις'}, 'kind': 'letters',
+         'reason': 'x', 'forms': ['πις', 'πιϛ'], 'form_set': ['πις', 'πιϛ']},
+    ]
+    cards = group_entries(entries)
+    assert len(cards) == 1
+    assert encoding_only_form_set(cards[0].form_set)
+
+
 def test_printed_present_even_when_missing_from_form_set():
     """Authorities may all disagree with the page — printed still offered."""
     card = Card(

@@ -22,22 +22,47 @@ does that check before ever labelling a citation `latin`.
 
 from __future__ import annotations
 import argparse
+import bisect
 import json
 import sys
 from pathlib import Path
 
 from bonitz_pipeline.numeral_fix import already_ruled
-from bonitz_pipeline.siglum_check import (CITE, HOMOGLYPH, inventory, read,
+from bonitz_pipeline.siglum_check import (CITE, HOMOGLYPH, Cite, inventory,
                                           resolve)
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / 'work/rulings/john.json'
+DEFAULT_DIR = ROOT / 'work/reconciled'
 DATE = '2026-08-10'
 
 
-def find() -> list[tuple]:
+def read_dir(dir: Path | str | None = None) -> list[Cite]:
+    """Citations under `dir` (default work/reconciled), stream-wise like
+    `siglum_check.read` — kept here so `--dir` can point at reconciled-auto
+    without rewiring the checker."""
+    base = Path(dir) if dir is not None else DEFAULT_DIR
+    if not base.is_absolute():
+        base = ROOT / base
+    out = []
+    for f in sorted(base.glob('*.txt')):
+        text = f.read_text(encoding='utf-8')
+        starts, pos = [], 0
+        for line in text.splitlines(keepends=True):
+            starts.append(pos)
+            pos += len(line)
+        for m in CITE.finditer(text):
+            tok, chap, page, col = m.groups()
+            ln = bisect.bisect_right(starts, m.start())
+            out.append(Cite(f.stem, ln, ' '.join(m.group(0).split()), tok,
+                            chap, int(page), col,
+                            at=m.start() - starts[ln - 1]))
+    return out
+
+
+def find(dir: Path | str | None = None) -> list[tuple]:
     """Every citation `resolve` labelled `latin`, with its Greek reading."""
-    cites = read()
+    cites = read_dir(dir)
     resolve(cites, inventory())
     out = []
     for c in cites:
@@ -51,9 +76,15 @@ def find() -> list[tuple]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[1])
     ap.add_argument('--apply', action='store_true')
+    ap.add_argument('--dir', type=Path, default=DEFAULT_DIR,
+                    help='column text directory (default: work/reconciled)')
     a = ap.parse_args(argv)
 
-    hits = find()
+    target = a.dir if a.dir.is_absolute() else ROOT / a.dir
+    hits = find(target)
+    # ⚠ SITE-BASED GUARD — same as numeral_fix. A ruling on page-060-R:1
+    # blocks the rewrite whether the text lives under reconciled or
+    # reconciled-auto.
     ruled = already_ruled()
     clash = [(c, g) for c, g in hits if (c.col, c.line) in ruled]
     hits = [(c, g) for c, g in hits if (c.col, c.line) not in ruled]
@@ -72,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
 
     changed = 0
     for c, greek in hits:
-        p = ROOT / f'work/reconciled/{c.col}.txt'
+        p = target / f'{c.col}.txt'
         lines = p.read_text(encoding='utf-8').splitlines(keepends=True)
         i = c.line - 1
         # Anchored at the offset the regex matched, so a token that repeats on

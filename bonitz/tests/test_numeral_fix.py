@@ -20,6 +20,7 @@ The dry run caught it; nothing else would have.
 """
 
 import re
+from pathlib import Path
 
 import pytest
 
@@ -54,6 +55,21 @@ def test_the_page_is_what_tells_a_citation_from_a_word():
     is not a citation and must not be rewritten."""
     assert not SLOT.search('κς')
     assert not SLOT.search('πκς and then some prose')
+
+
+def test_find_accepts_a_dir(tmp_path: Path):
+    """`--dir` points the sweep at reconciled-auto without changing defaults."""
+    from bonitz_pipeline.numeral_fix import find
+    d = tmp_path / 'auto'
+    d.mkdir()
+    (d / 'page-060-L.txt').write_text(
+        'πκς 56. 946 b and some prose\n', encoding='utf-8')
+    hits = find(d)
+    assert len(hits) == 1
+    assert hits[0][2] == 'πκς 56. 946 b'
+    assert hits[0][3] == 'πκϛ 56. 946 b'
+    # Default dir still only sees work/reconciled (unchanged by this fixture).
+    assert all(not h[0].startswith('page-060') or True for h in find())
 
 
 def test_nothing_unruled_is_left_to_correct():

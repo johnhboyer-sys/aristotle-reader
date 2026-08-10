@@ -89,9 +89,16 @@ SLOT = re.compile(r'(?<![̀-ͯͰ-Ͽἀ-῿ȣ])'
                   r'(\s?\d{1,3}\s*\.\s*\d{2,4}\s?[ab])')
 
 
-def find() -> list[tuple[str, int, str, str]]:
+DEFAULT_DIR = ROOT / 'work/reconciled'
+
+
+def find(dir: Path | str | None = None) -> list[tuple[str, int, str, str]]:
+    """Sites with final sigma in a numeral slot under `dir` (default reconciled)."""
+    base = Path(dir) if dir is not None else DEFAULT_DIR
+    if not base.is_absolute():
+        base = ROOT / base
     out = []
-    for f in sorted((ROOT / 'work/reconciled').glob('*.txt')):
+    for f in sorted(base.glob('*.txt')):
         for n, line in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
             for m in SLOT.finditer(line):
                 out.append((f.stem, n, m.group(0),
@@ -102,9 +109,14 @@ def find() -> list[tuple[str, int, str, str]]:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
     p.add_argument('--apply', action='store_true')
+    p.add_argument('--dir', type=Path, default=DEFAULT_DIR,
+                   help='column text directory (default: work/reconciled)')
     a = p.parse_args(argv)
 
-    hits = find()
+    target = a.dir if a.dir.is_absolute() else ROOT / a.dir
+    hits = find(target)
+    # ⚠ THE GUARD IS SITE-BASED, NOT DIRECTORY-BASED. John's rulings bind
+    # wherever the same column:line is touched — including reconciled-auto.
     ruled = already_ruled()
     clash = [(c, l, w, n) for c, l, w, n in hits if (c, l) in ruled]
     hits = [h for h in hits if (h[0], h[1]) not in ruled]
@@ -126,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     for col, line, was, now in hits:
-        p_ = ROOT / f'work/reconciled/{col}.txt'
+        p_ = target / f'{col}.txt'
         lines = p_.read_text(encoding='utf-8').splitlines(keepends=True)
         if lines[line - 1].count(was) != 1:
             raise SystemExit(f'{col}:{line}: {was!r} is not unique on its line')
