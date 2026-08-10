@@ -382,9 +382,19 @@ def recommend(s: Site) -> tuple[str, str, str]:
                     f'the ink reads {top}, which cannot carry {s.page} — so fix '
                     f'the text to {top} and record it as the edition\'s error'
                     + (f' for {page_says[0]}' if page_says else ''))
-        if edit_rank(s.token, top) == 0:
+        if 'ς' in s.token and top == s.token.replace('ς', 'ϛ'):
+            # ⚠ NOT A JUDGEMENT ABOUT THE INK. John, 2026-08-10: "I can't tell
+            # the difference here between sigma and stigma in the font used
+            # here." Nor can anyone — they are the same shape in this type. But
+            # a book number is a NUMERAL, and final sigma has no numeric value
+            # while stigma is 6, so the slot admits exactly one reading whatever
+            # the glyph looks like. Asking a reader to see a difference that
+            # carries no information is the tool wasting the only thing it
+            # cannot automate.
             return ('fix-siglum', top,
-                    f'a known confusion — the same ink reads both ways')
+                    'a book number is a numeral, and final sigma has no value '
+                    '— only stigma (6) can stand here, whatever the glyph looks '
+                    'like. Bonitz writes it 17 times elsewhere')
         if edit_rank(s.token, top) == 1:
             return ('fix-siglum', top, 'the same letter in the other case')
         if s.near:
