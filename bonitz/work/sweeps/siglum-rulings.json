@@ -112,5 +112,9 @@
  "page-050-R:31:Πζ:1820": {
   "verdict": "preserve",
   "detail": ""
+ },
+ "page-048-R:39:Ζι:621": {
+  "verdict": "fix-siglum",
+  "detail": "Ζιι"
  }
 }

@@ -266,6 +266,19 @@ def siglum_candidates(token: str, page: int, works: dict,
             if (BARE.issuperset(token) and not split(token, works)
                     and by_page(alt, page, works)):
                 out.add(alt)
+    # ⚠ A CASE VARIANT IS A READING, AND A BARE LETTER STAYS BARE. John on
+    # `Ι4. 1166b`, 2026-08-10: "that's lower case iota 4." The ink reads a bare
+    # ι — a book letter inheriting Η from `Ηη2. 1145b` beside it — and EN book
+    # ι is 1163-1172, so the citation is perfectly correct and only its case is
+    # ours. The card recommended `Ηι`, which writes a work siglum the page does
+    # not carry: the same defect that put `Μθ1. 1050` in the corrigenda.
+    #
+    # It was missed because the bare-token branch requires the token to be
+    # lowercase already, and this one is not — the very thing under repair.
+    for alt in {token.lower(), token.upper(),
+                token[:1].swapcase() + token[1:]} - {token}:
+        if holds_or_inherits(alt, page, works):
+            out.add(alt)
     # ⚠ AND OFFER WHAT THE INK READS EVEN WHEN IT CANNOT HOLD THE PAGE.
     # John on `Ζυ6. 700b`, 2026-08-09: "Double iota." The ink reads `Ζιι`, and
     # the Historia animalium ends at 638, so `Ζιι` cannot carry 700 — while the
