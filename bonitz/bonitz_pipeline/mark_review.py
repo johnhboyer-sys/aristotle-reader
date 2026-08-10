@@ -305,10 +305,16 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
         # The ink profile does not use kraken.  It counts the printed lines
         # against `work/reconciled`, which is authoritative for how many lines
         # the column has, so it is the better answer whenever the text match
-        # is weak.  It is a geometric fit, not a text match, so it scores 0.9
-        # — past the "do not rule on it" warning, short of a matched line's
-        # certainty.  If the profile refuses the page, fall back to equal
-        # slices over the whole column and say so by scoring it 0.
+        # is weak.
+        #
+        # ⚠ IT SCORES 0, AND SAYS `ink` IN `how`.  This comment used to claim it
+        # scored 0.9 — "past the warning, short of a matched line's certainty" —
+        # which was the defect Grok found on 2026-08-08: `score` meant two
+        # different things, and a drifted geometric grid cleared the review
+        # page's warning and put John on a line he was not ruling.  The score is
+        # now the TEXT-match ratio and nothing else, and `how` carries the
+        # method.  The comment outlived the fix by a day; it is the kind of
+        # stale note that teaches the next reader the bug rather than the rule.
         boxes = _profile(col, len(lines))
         if boxes:
             x0, y0, x1, y1 = boxes[lineno - 1]
