@@ -61,3 +61,35 @@ def test_nothing_is_left_to_correct_once_applied():
     later pass that reintroduces one will show up here rather than in a queue
     John has to read."""
     assert find() == [], f'still uncorrected: {find()}'
+
+
+def test_a_rule_never_overrides_a_ruling():
+    """⚠ THIS TEST EXISTS BECAUSE THE MODULE DID IT. On 2026-08-10 it rewrote
+    three citations John had explicitly PRESERVED, because it never looked at
+    his rulings — the same failure the corrigenda README records from
+    2026-08-08, when two of his rulings were silently overwritten and had to be
+    reverted.
+
+    It is worse than any misreading. A corpus that quietly disagrees with its
+    own adjudication record cannot be trusted at all, and the disagreement is
+    invisible: the text looks fine, the tests pass, and only the person who
+    made the ruling would ever notice.
+
+    His click is the authority. A rule that thinks otherwise reports the
+    conflict and stops."""
+    from bonitz_pipeline.numeral_fix import already_ruled, find
+    ruled = already_ruled()
+    assert ruled, 'no rulings loaded — the guard would pass vacuously'
+    clashes = [(c, l) for c, l, _, _ in find() if (c, l) in ruled]
+    assert not clashes or all(ruled[k] for k in clashes), (
+        'find() may still REPORT a ruled site, but main() must skip it')
+    # the three John preserved must still read as he left them
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    for col, line, want in (('page-025-L', 43, 'πκς'),
+                            ('page-025-L', 46, 'κς'),
+                            ('page-025-R', 27, 'πκς')):
+        text = (root / f'work/reconciled/{col}.txt').read_text(
+            encoding='utf-8').splitlines()[line - 1]
+        assert want in text, (
+            f'{col}:{line} no longer reads {want!r} — John ruled preserve here')

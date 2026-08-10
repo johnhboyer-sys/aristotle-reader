@@ -35,7 +35,34 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / 'work/rulings/john.json'
+RULED = (ROOT / 'work/sweeps/siglum-rulings.json',
+         ROOT / 'work/sweeps/book-rulings.json',
+         ROOT / 'work/sweeps/mark-rulings.json')
 DATE = '2026-08-10'
+
+
+def already_ruled() -> dict:
+    """Sites John has already decided, by column and line.
+
+    ⚠ A RULE MAY NOT OVERRIDE A RULING, however good the rule. On 2026-08-10
+    this module rewrote three citations John had explicitly PRESERVED, because
+    it never looked. That is the same failure the corrigenda README records
+    from 2026-08-08, when two of his rulings were silently overwritten and had
+    to be reverted — and it is worse than any misreading, because a corpus that
+    quietly disagrees with its own adjudication record cannot be trusted at all.
+
+    His click is the authority. A rule that thinks otherwise reports the
+    conflict and stops.
+    """
+    out = {}
+    for store in RULED:
+        if not store.exists():
+            continue
+        for sid, v in json.loads(store.read_text(encoding='utf-8')).items():
+            parts = sid.split(':')
+            if len(parts) >= 2 and parts[1].isdigit():
+                out[(parts[0], int(parts[1]))] = v.get('verdict', '?')
+    return out
 
 # A siglum, then a run of numeral letters ending in the sigma that should be a
 # stigma, then the chapter and the Bekker page that prove it is a citation and
@@ -68,10 +95,24 @@ def main(argv: list[str] | None = None) -> int:
     a = p.parse_args(argv)
 
     hits = find()
+    ruled = already_ruled()
+    clash = [(c, l, w, n) for c, l, w, n in hits if (c, l) in ruled]
+    hits = [h for h in hits if (h[0], h[1]) not in ruled]
+
     for col, line, was, now in hits:
         print(f'  {col}:{line:<4} {was!r} -> {now!r}')
+    if clash:
+        print(f'\n⚠ {len(clash)} sites SKIPPED — John has already ruled them, '
+              f'and a rule does not override a ruling:')
+        for col, line, was, now in clash:
+            print(f'    {col}:{line:<4} {was!r}  he ruled '
+                  f'{ruled[(col, line)]!r}')
+        print('    To change one, change the ruling — not the corpus.')
     if not a.apply:
         print(f'\ndry run — {len(hits)} would change. Pass --apply.')
+        return 0
+    if not hits:
+        print('\nnothing to do.')
         return 0
 
     for col, line, was, now in hits:
