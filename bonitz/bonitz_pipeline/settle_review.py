@@ -960,6 +960,12 @@ def cards_from_queue(path: Path = DEFAULT_QUEUE) -> list[Card]:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
     p.add_argument('--queue', type=Path, default=DEFAULT_QUEUE)
+    # A re-read gets its own store so a fresh sitting cannot overwrite the
+    # rulings already given — see carry_rulings.
+    p.add_argument('--rulings', type=Path, default=RULINGS)
+    p.add_argument('--only-unruled', action='store_true',
+                   help='build the page from cards the store has no answer '
+                        'for — the ruled ones still resolve under settle_apply')
     p.add_argument('--serve', action='store_true')
     p.add_argument('--wifi', action='store_true')
     p.add_argument('--port', type=int, default=8793)
@@ -977,6 +983,12 @@ def main(argv: list[str] | None = None) -> int:
     # so an already-recorded ruling still resolves under settle_apply.
     n_encoding = sum(1 for c in cards if encoding_only_form_set(c.form_set))
     cards = [c for c in cards if not encoding_only_form_set(c.form_set)]
+    n_answered = 0
+    if a.only_unruled and a.rulings.exists():
+        answered = set(json.loads(a.rulings.read_text(encoding='utf-8')))
+        before = len(cards)
+        cards = [c for c in cards if c.sid not in answered]
+        n_answered = before - len(cards)
     n_skip = 0
     if a.no_crops:
         print(f'{len(cards)} cards (crops skipped)')
@@ -986,6 +998,9 @@ def main(argv: list[str] | None = None) -> int:
     if n_encoding:
         print(f'  dropped {n_encoding} encoding-only numeral card'
               f'{"s" if n_encoding != 1 else ""} (ς/ϛ)')
+    if n_answered:
+        print(f'  {n_answered} card{"s" if n_answered != 1 else ""} already '
+              f'answered in {a.rulings.name} — off the page, still applied')
     html(cards)
     print(f'-> {PAGE}')
     n_prop = sum(1 for c in cards if c.proposal)
@@ -996,7 +1011,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f'  ⚠ {n_skip} cards have no ink crop — do not serve those for ruling')
     if a.serve or a.wifi:
         serve(cards, a.port, '0.0.0.0' if a.wifi else '127.0.0.1',
-              page=PAGE, store=RULINGS, verdicts=VERDICTS)
+              page=PAGE, store=a.rulings, verdicts=VERDICTS)
     return 0
 
 

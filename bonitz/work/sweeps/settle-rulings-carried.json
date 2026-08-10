@@ -1,0 +1,1669 @@
+{
+ "forms:Ζγα|Ζηα": {
+  "verdict": "preserve",
+  "detail": "Ζγα",
+  "carried_from": [
+   "forms:Ζγα|Ζηα"
+  ]
+ },
+ "forms:Ζγγ|Ζηγ": {
+  "verdict": "preserve",
+  "detail": "Ζγγ",
+  "carried_from": [
+   "forms:Ζγγ|Ζηγ"
+  ]
+ },
+ "forms:Ζγδ|Ζηδ": {
+  "verdict": "preserve",
+  "detail": "Ζγδ",
+  "carried_from": [
+   "forms:Ζγδ|Ζηδ"
+  ]
+ },
+ "forms:Ζγβ|Ζηβ": {
+  "verdict": "preserve",
+  "detail": "Ζγβ",
+  "carried_from": [
+   "forms:Ζγβ|Ζηβ"
+  ]
+ },
+ "forms:Ζηγ|Ζιγ": {
+  "verdict": "preserve",
+  "detail": "Ζιγ",
+  "carried_from": [
+   "forms:Ζηγ|Ζιγ"
+  ]
+ },
+ "forms:Ζθ|Ζιθ": {
+  "verdict": "preserve",
+  "detail": "Ζιθ",
+  "carried_from": [
+   "forms:Ζθ|Ζιθ"
+  ]
+ },
+ "forms:Ζιθ|πιθ": {
+  "verdict": "preserve",
+  "detail": "πιθ",
+  "carried_from": [
+   "forms:Ζιθ|πιθ"
+  ]
+ },
+ "forms:Θα|Οα": {
+  "verdict": "preserve",
+  "detail": "Οα",
+  "carried_from": [
+   "forms:Θα|Οα"
+  ]
+ },
+ "forms:γεη|ηεη": {
+  "verdict": "preserve",
+  "detail": "ηεη",
+  "carried_from": [
+   "forms:γεη|ηεη"
+  ]
+ },
+ "forms:μκ|μχ": {
+  "verdict": "preserve",
+  "detail": "μχ",
+  "carried_from": [
+   "forms:μκ|μχ"
+  ]
+ },
+ "forms:πδ|πο": {
+  "verdict": "preserve",
+  "detail": "πδ",
+  "carried_from": [
+   "forms:πδ|πο"
+  ]
+ },
+ "forms:πι|τι": {
+  "verdict": "preserve",
+  "detail": "τι",
+  "carried_from": [
+   "forms:πι|τι"
+  ]
+ },
+ "forms:πις|πιϛ": {
+  "verdict": "preserve",
+  "detail": "πιϛ",
+  "carried_from": [
+   "forms:πις|πιϛ"
+  ]
+ },
+ "forms:πο|πρ": {
+  "verdict": "preserve",
+  "detail": "πο",
+  "carried_from": [
+   "forms:πο|πρ"
+  ]
+ },
+ "forms:τȣ͂|τῷ": {
+  "verdict": "preserve",
+  "detail": "τȣ͂",
+  "carried_from": [
+   "forms:τȣ͂|τῷ"
+  ]
+ },
+ "forms:Ψα|ψα": {
+  "verdict": "preserve",
+  "detail": "ψα",
+  "carried_from": [
+   "forms:Ψα|ψα"
+  ]
+ },
+ "forms:ȣ̔͂|ȣ͂": {
+  "verdict": "preserve",
+  "detail": "ȣ̔͂",
+  "carried_from": [
+   "forms:ȣ̔͂",
+   "forms:ȣ̔͂|ȣ͂"
+  ]
+ },
+ "forms:μγ|μη": {
+  "verdict": "preserve",
+  "detail": "μγ",
+  "carried_from": [
+   "forms:μγ|μη"
+  ]
+ },
+ "forms:ȣ̓": {
+  "verdict": "preserve",
+  "detail": "ȣ̓",
+  "carried_from": [
+   "forms:ȣ̓"
+  ]
+ },
+ "forms:Ψγ|ψγ": {
+  "verdict": "preserve",
+  "detail": "ψγ",
+  "carried_from": [
+   "forms:Ψγ|ψγ"
+  ]
+ },
+ "forms:αὐτὸν|αὑτὸν": {
+  "verdict": "accept",
+  "detail": "αὑτὸν",
+  "carried_from": [
+   "forms:αὐτὸν|αὑτὸν"
+  ]
+ },
+ "forms:ȣ́τ'|ȣ̓́τ'|ὅτ'": {
+  "verdict": "preserve",
+  "detail": "ȣ̓́τ'",
+  "carried_from": [
+   "forms:ȣ́τ'|ȣ̓́τ'|ὅτ'"
+  ]
+ },
+ "forms:Ζιβ|Ζιθ": {
+  "verdict": "accept",
+  "detail": "Ζιθ",
+  "carried_from": [
+   "forms:Ζιβ|Ζιθ"
+  ]
+ },
+ "forms:Ηγ|Ηη": {
+  "verdict": "preserve",
+  "detail": "Ηγ",
+  "carried_from": [
+   "forms:Ηγ|Ηη"
+  ]
+ },
+ "forms:Φτα|φτα": {
+  "verdict": "preserve",
+  "detail": "φτα",
+  "carried_from": [
+   "forms:Φτα|φτα"
+  ]
+ },
+ "forms:αὐτόν|αὑτόν": {
+  "verdict": "preserve",
+  "detail": "αὑτόν",
+  "carried_from": [
+   "forms:αὐτόν|αὑτόν"
+  ]
+ },
+ "forms:αὐτὸ|αὑτὸ": {
+  "verdict": "preserve",
+  "detail": "αὑτὸ",
+  "carried_from": [
+   "forms:αὐτὸ|αὑτὸ"
+  ]
+ },
+ "forms:γίγνεται|γίνεται": {
+  "verdict": "preserve",
+  "detail": "γίγνεται",
+  "carried_from": [
+   "forms:γίγνεται|γίνεται"
+  ]
+ },
+ "forms:κζ|κϛ": {
+  "verdict": "preserve",
+  "detail": "κϛ",
+  "carried_from": [
+   "forms:κζ|κϛ"
+  ]
+ },
+ "forms:πκγ|πκη": {
+  "verdict": "preserve",
+  "detail": "πκγ",
+  "carried_from": [
+   "forms:πκγ|πκη"
+  ]
+ },
+ "forms:πκζ|πκϛ": {
+  "verdict": "preserve",
+  "detail": "πκϛ",
+  "carried_from": [
+   "forms:πκζ|πκϛ"
+  ]
+ },
+ "forms:τίς|τις": {
+  "verdict": "preserve",
+  "detail": "τίς",
+  "carried_from": [
+   "forms:τίς|τις"
+  ]
+ },
+ "forms:υἱς|ὡς": {
+  "verdict": "accept",
+  "detail": "ὡς",
+  "carried_from": [
+   "forms:υἱς|ὡς"
+  ]
+ },
+ "forms:ἀριθμȣ͂|ἀριθμῷ": {
+  "verdict": "preserve",
+  "detail": "ἀριθμȣ͂",
+  "carried_from": [
+   "forms:ἀριθμȣ͂|ἀριθμῷ"
+  ]
+ },
+ "forms:ἀρχάς|ἀρχὰς": {
+  "verdict": "preserve",
+  "detail": "ἀρχάς",
+  "carried_from": [
+   "forms:ἀρχάς|ἀρχὰς"
+  ]
+ },
+ "forms:ἐν|ἓν": {
+  "verdict": "preserve",
+  "detail": "ἓν",
+  "carried_from": [
+   "forms:ἐν|ἓν"
+  ]
+ },
+ "forms:ȣ́πω|ȣ̓́πω": {
+  "verdict": "preserve",
+  "detail": "ȣ̓́πω",
+  "carried_from": [
+   "forms:ȣ́πω|ȣ̓́πω"
+  ]
+ },
+ "forms:ȣ́τω|ȣ̔́τω": {
+  "verdict": "preserve",
+  "detail": "ȣ̔́τω",
+  "carried_from": [
+   "forms:ȣ́τω|ȣ̔́τω"
+  ]
+ },
+ "forms:ȣ̓|ȣ̓́": {
+  "verdict": "preserve",
+  "detail": "ȣ̓́",
+  "carried_from": [
+   "forms:ȣ̓|ȣ̓́"
+  ]
+ },
+ "forms:ȣ̓|ȣ̔͂|ȣ͂": {
+  "verdict": "preserve",
+  "detail": "ȣ̔͂",
+  "carried_from": [
+   "forms:ȣ̓|ȣ̔͂"
+  ]
+ },
+ "forms:ȣ̓|ἐκ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓",
+  "carried_from": [
+   "forms:ȣ̓|ἐκ"
+  ]
+ },
+ "forms:ȣ̓|ὃς": {
+  "verdict": "preserve",
+  "detail": "ȣ̓",
+  "carried_from": [
+   "forms:ȣ̓|ὃς"
+  ]
+ },
+ "forms:ȣ̓|ὡς": {
+  "verdict": "preserve",
+  "detail": "ȣ̓",
+  "carried_from": [
+   "forms:ȣ̓|ὡς"
+  ]
+ },
+ "forms:ȣ̓́τε|ȣ̔́τε": {
+  "verdict": "preserve",
+  "detail": "ȣ̓́τε",
+  "carried_from": [
+   "forms:ȣ́τε|ȣ̓́τε"
+  ]
+ },
+ "forms:ȣ̓͂ν|ȣ̔͂ν|ȣ͂ν": {
+  "verdict": "preserve",
+  "detail": "ȣ̓͂ν",
+  "carried_from": [
+   "forms:ȣ̓͂ν|ȣ͂ν"
+  ]
+ },
+ "forms:ȣ̓͂ν|ȣ̔͂ν|ἐν": {
+  "verdict": "preserve",
+  "detail": "ȣ̓͂ν",
+  "carried_from": [
+   "forms:ȣ̓͂ν|ȣν|ἐν"
+  ]
+ },
+ "forms:ȣ̓͂ν|ȣ̔͂ν|ὧν": {
+  "verdict": "preserve",
+  "detail": "ȣ̓͂ν",
+  "carried_from": [
+   "forms:ȣ̓͂ν|ȣν|ὧν"
+  ]
+ },
+ "forms:ȣ̓͂σα|ȣ͂σα|ἕως": {
+  "verdict": "preserve",
+  "detail": "ȣ̓͂σα",
+  "carried_from": [
+   "forms:ȣ̓͂σα|ȣσα|ἕως"
+  ]
+ },
+ "forms:ȣ̓δὲ|ȣδὲ|οἱδὲ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓δὲ",
+  "carried_from": [
+   "forms:ȣ̓δὲ|ȣδὲ|οἱδὲ"
+  ]
+ },
+ "forms:ȣ̓δὲν|ȣδὲν|ὅδεν": {
+  "verdict": "preserve",
+  "detail": "ȣ̓δὲν",
+  "carried_from": [
+   "forms:ȣ̓δὲν|ȣδὲν|ὅδεν"
+  ]
+ },
+ "forms:ȣ̓κ|ȣκ|ἂν": {
+  "verdict": "preserve",
+  "detail": "ȣ̓κ",
+  "carried_from": [
+   "forms:ȣ̓κ|ȣκ|ἂν"
+  ]
+ },
+ "forms:ȣ̓κ|ȣκ|ἐκ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓κ",
+  "carried_from": [
+   "forms:ȣ̓κ|ȣκ|ἐκ"
+  ]
+ },
+ "forms:ȣ̓κ|ȣκ|ἕως": {
+  "verdict": "preserve",
+  "detail": "ȣ̓κ",
+  "carried_from": [
+   "forms:ȣ̓κ|ȣκ|ἕως"
+  ]
+ },
+ "forms:ȣ̔́τω|ȣδ'": {
+  "verdict": "preserve",
+  "detail": "ȣ̔́τω",
+  "carried_from": [
+   "forms:ȣ́τω|ȣ̔́τω|ȣδ'"
+  ]
+ },
+ "forms:ȣ̔́τως|ȣ̔τως": {
+  "verdict": "preserve",
+  "detail": "ȣ̔́τως",
+  "carried_from": [
+   "forms:ȣ́τως|ȣ̔́τως"
+  ]
+ },
+ "forms:ȣ̔́τως|ȣ̔τως|ὅπως": {
+  "verdict": "preserve",
+  "detail": "ȣ̔́τως",
+  "carried_from": [
+   "forms:ȣ́τως|ȣ̔́τως|ὅπως"
+  ]
+ },
+ "forms:ȣ̔́τως|̔τως": {
+  "verdict": "preserve",
+  "detail": "ȣ̔́τως",
+  "carried_from": [
+   "forms:ȣ́τως|ȣ̔́τως"
+  ]
+ },
+ "forms:ȣ͂σα|̓σα|ὅσα": {
+  "verdict": "accept",
+  "detail": "ȣ̓͂σα",
+  "carried_from": [
+   "forms:ȣ͂σα|ȣσα|ὅσα"
+  ]
+ },
+ "forms:Αν|Ἀν": {
+  "verdict": "preserve",
+  "detail": "Ἀν",
+  "carried_from": [
+   "forms:Αν|Ἀν"
+  ]
+ },
+ "forms:Δγ|Λγ": {
+  "verdict": "preserve",
+  "detail": "Λγ",
+  "carried_from": [
+   "forms:Δγ|Λγ"
+  ]
+ },
+ "forms:Ζιγ|Ζιη": {
+  "verdict": "preserve",
+  "detail": "Ζιγ",
+  "carried_from": [
+   "forms:Ζιγ|Ζιη"
+  ]
+ },
+ "forms:Ζμγ|Ζμη": {
+  "verdict": "preserve",
+  "detail": "Ζμγ",
+  "carried_from": [
+   "forms:Ζμγ|Ζμη"
+  ]
+ },
+ "forms:ΗΑ|Ηθ": {
+  "verdict": "preserve",
+  "detail": "Ηθ",
+  "carried_from": [
+   "forms:ΗΑ|Ηθ"
+  ]
+ },
+ "forms:ΜΛ|Μλ": {
+  "verdict": "preserve",
+  "detail": "Μλ",
+  "carried_from": [
+   "forms:ΜΛ|Μλ"
+  ]
+ },
+ "forms:Μαΐων|Μαίων": {
+  "verdict": "preserve",
+  "detail": "Μαίων",
+  "carried_from": [
+   "forms:Μαΐων|Μαίων"
+  ]
+ },
+ "forms:Οδυσ|Ὀδυσ": {
+  "verdict": "preserve",
+  "detail": "Ὀδυσ",
+  "carried_from": [
+   "forms:Οδυσ|Ὀδυσ"
+  ]
+ },
+ "forms:Πα|Πι": {
+  "verdict": "preserve",
+  "detail": "Πα",
+  "carried_from": [
+   "forms:Πα|Πι"
+  ]
+ },
+ "forms:Πδ|Πθ": {
+  "verdict": "preserve",
+  "detail": "Πθ",
+  "carried_from": [
+   "forms:Πδ|Πθ"
+  ]
+ },
+ "forms:Πζ|Πη": {
+  "verdict": "preserve",
+  "detail": "Πη",
+  "carried_from": [
+   "forms:Πζ|Πη"
+  ]
+ },
+ "forms:αἡ|ϗ̀": {
+  "verdict": "preserve",
+  "detail": "ϗ̀",
+  "carried_from": [
+   "forms:αἡ|ϗ̀"
+  ]
+ },
+ "forms:αἱ|οἱ": {
+  "verdict": "preserve",
+  "detail": "οἱ",
+  "carried_from": [
+   "forms:αἱ|οἱ"
+  ]
+ },
+ "forms:αἴτιον|αἴτοι": {
+  "verdict": "preserve",
+  "detail": "αἴτιον",
+  "carried_from": [
+   "forms:αἴηι|αἴτιον"
+  ]
+ },
+ "forms:αὐτȣ̀ς|αὐτȣ́ς|αὐτȣς": {
+  "verdict": "preserve",
+  "detail": "αὐτȣ́ς",
+  "carried_from": [
+   "forms:αὐτȣ̀ς|αὐτȣ́ς"
+  ]
+ },
+ "forms:αὐτά|αὐτὰ": {
+  "verdict": "preserve",
+  "detail": "αὐτά",
+  "carried_from": [
+   "forms:αὐτά|αὐτὰ"
+  ]
+ },
+ "forms:βία|βίᾳ": {
+  "verdict": "accept",
+  "detail": "βίᾳ",
+  "carried_from": [
+   "forms:βία|βίᾳ"
+  ]
+ },
+ "forms:γαλαξίȣ|χαλάζης": {
+  "verdict": "preserve",
+  "detail": "γαλαξίȣ",
+  "carried_from": [
+   "forms:γαλαξίȣ|χαλάζης"
+  ]
+ },
+ "forms:γενομένη|γενομένῃ": {
+  "verdict": "preserve",
+  "detail": "γενομένη",
+  "carried_from": [
+   "forms:γενομένη|γενομένῃ"
+  ]
+ },
+ "forms:γεωμετρική|γεωμετρικὴ": {
+  "verdict": "preserve",
+  "detail": "γεωμετρική",
+  "carried_from": [
+   "forms:γεωμετρική|γεωμετρικὴ"
+  ]
+ },
+ "forms:γονὴ|γυνὴ": {
+  "verdict": "preserve",
+  "detail": "γονὴ",
+  "carried_from": [
+   "forms:γονὴ|γυνὴ"
+  ]
+ },
+ "forms:γραμμαί|γραμμαὶ": {
+  "verdict": "preserve",
+  "detail": "γραμμαί",
+  "carried_from": [
+   "forms:γραμμαί|γραμμαὶ"
+  ]
+ },
+ "forms:δ'|ϗ̀": {
+  "verdict": "preserve",
+  "detail": "ϗ̀",
+  "carried_from": [
+   "forms:δ'|ϗ̀"
+  ]
+ },
+ "forms:διηρημένη|διῃρημένη": {
+  "verdict": "preserve",
+  "detail": "διῃρημένη",
+  "carried_from": [
+   "forms:διηρημένη|διῃρημένη"
+  ]
+ },
+ "forms:δικαστάς|δικαστὰς": {
+  "verdict": "preserve",
+  "detail": "δικαστάς",
+  "carried_from": [
+   "forms:δικαστάς|δικαστὰς"
+  ]
+ },
+ "forms:δοκȣ͂σιν|δοκεῖν": {
+  "verdict": "preserve",
+  "detail": "δοκȣ͂σιν",
+  "carried_from": [
+   "forms:δοκȣ͂σιν|δοκεῖν"
+  ]
+ },
+ "forms:εἰ|εἴ": {
+  "verdict": "preserve",
+  "detail": "εἴ",
+  "carried_from": [
+   "forms:εἰ|εἴ"
+  ]
+ },
+ "forms:εἰκός|εἰκὸς": {
+  "verdict": "preserve",
+  "detail": "εἰκός",
+  "carried_from": [
+   "forms:εἰκός|εἰκὸς"
+  ]
+ },
+ "forms:εἰσιν|εἰσὶ": {
+  "verdict": "preserve",
+  "detail": "εἰσιν",
+  "carried_from": [
+   "forms:εἰσιν|εἰσὶ"
+  ]
+ },
+ "forms:εἴτ'|εἶτ'": {
+  "verdict": "accept",
+  "detail": "εἶτ'",
+  "carried_from": [
+   "forms:εἴτ'|εἶτ'"
+  ]
+ },
+ "forms:εἶναί|εἶναι": {
+  "verdict": "preserve",
+  "detail": "εἶναί",
+  "carried_from": [
+   "forms:εἶναί|εἶναι"
+  ]
+ },
+ "forms:ζωοτοκȣ͂ντα|ζῳοτοκȣ͂ντα": {
+  "verdict": "preserve",
+  "detail": "ζῳοτοκȣ͂ντα",
+  "carried_from": [
+   "forms:ζωοτοκȣ͂ντα|ζῳοτοκȣ͂ντα"
+  ]
+ },
+ "forms:ηεγ|ηεη": {
+  "verdict": "preserve",
+  "detail": "ηεη",
+  "carried_from": [
+   "forms:ηεγ|ηεη"
+  ]
+ },
+ "forms:ηὐξάνετο|ηὔξανετο": {
+  "verdict": "preserve",
+  "detail": "ηὐξάνετο",
+  "carried_from": [
+   "forms:ηὐξάνετο|ηὔξανετο"
+  ]
+ },
+ "forms:θεȣ̀ς|θεȣ́ς": {
+  "verdict": "preserve",
+  "detail": "θεȣ́ς",
+  "carried_from": [
+   "forms:θεȣ̀ς|θεȣ́ς"
+  ]
+ },
+ "forms:θεȣ̀ς|θὲς": {
+  "verdict": "preserve",
+  "detail": "θεȣ̀ς",
+  "carried_from": [
+   "forms:θεȣ̀ς|θεὰς"
+  ]
+ },
+ "forms:θεωρȣ͂νται|θεωρεῖται": {
+  "verdict": "preserve",
+  "detail": "θεωρȣ͂νται",
+  "carried_from": [
+   "forms:θεωρȣ͂νται|θεωρεῖται"
+  ]
+ },
+ "forms:θυμόν|θυμὸν": {
+  "verdict": "preserve",
+  "detail": "θυμόν",
+  "carried_from": [
+   "forms:θυμόν|θυμὸν"
+  ]
+ },
+ "forms:καικίας|κακίας": {
+  "verdict": "preserve",
+  "detail": "καικίας",
+  "carried_from": [
+   "forms:καικίας|κακίας"
+  ]
+ },
+ "forms:κγ|κη": {
+  "verdict": "preserve",
+  "detail": "κγ",
+  "carried_from": [
+   "forms:κγ|κη"
+  ]
+ },
+ "forms:κενόν|κενὸν": {
+  "verdict": "preserve",
+  "detail": "κενόν",
+  "carried_from": [
+   "forms:κενόν|κενὸν"
+  ]
+ },
+ "forms:κηρȣ͂|κηρῷ": {
+  "verdict": "preserve",
+  "detail": "κηρȣ͂",
+  "carried_from": [
+   "forms:κηρȣ͂|κηρῷ"
+  ]
+ },
+ "forms:κινȣ͂σαν|κινήσασαν": {
+  "verdict": "preserve",
+  "detail": "κινȣ͂σαν",
+  "carried_from": [
+   "forms:κινȣ͂σαν|κινήσασαν"
+  ]
+ },
+ "forms:κινητικήν|κινητικὴν": {
+  "verdict": "preserve",
+  "detail": "κινητικήν",
+  "carried_from": [
+   "forms:κινητικήν|κινητικὴν"
+  ]
+ },
+ "forms:κραγγὼν|κραγὼν": {
+  "verdict": "preserve",
+  "detail": "κραγγὼν",
+  "carried_from": [
+   "forms:κραγγὼν|κραγὼν"
+  ]
+ },
+ "forms:κυβικαὶ|κυβικοὶ": {
+  "verdict": "preserve",
+  "detail": "κυβικοὶ",
+  "carried_from": [
+   "forms:κυβικαὶ|κυβικοὶ"
+  ]
+ },
+ "forms:κἂν|κἄν": {
+  "verdict": "preserve",
+  "detail": "κἂν",
+  "carried_from": [
+   "forms:κἂν|κἄν|κᾶν"
+  ]
+ },
+ "forms:λεπτοτέ|λεπτότε": {
+  "verdict": "preserve",
+  "detail": "λεπτότε",
+  "carried_from": [
+   "forms:λεπτοτέ|λεπτότε"
+  ]
+ },
+ "forms:μάλιστ'|μάλιστα": {
+  "verdict": "preserve",
+  "detail": "μάλιστ'",
+  "carried_from": [
+   "forms:μάλιστ'|μάλιστα"
+  ]
+ },
+ "forms:μέν|μὲν": {
+  "verdict": "preserve",
+  "detail": "μέν",
+  "carried_from": [
+   "forms:μέν|μὲν"
+  ]
+ },
+ "forms:μέσȣ|μέσῳ": {
+  "verdict": "preserve",
+  "detail": "μέσȣ",
+  "carried_from": [
+   "forms:μέσȣ|μέσῳ"
+  ]
+ },
+ "forms:μή|μη": {
+  "verdict": "preserve",
+  "detail": "μή",
+  "carried_from": [
+   "forms:μή|μη"
+  ]
+ },
+ "forms:μετέχομένȣ|μετεχομένȣ": {
+  "verdict": "preserve",
+  "detail": "μετεχομένȣ",
+  "carried_from": [
+   "forms:μετέχομένȣ|μετεχομένȣ"
+  ]
+ },
+ "forms:μηρȣ̀ς|μηρȣ́ς": {
+  "verdict": "preserve",
+  "detail": "μηρȣ́ς",
+  "carried_from": [
+   "forms:μηρȣ̀ς|μηρȣ́ς"
+  ]
+ },
+ "forms:μιδῆ|μιδῇ": {
+  "verdict": "preserve",
+  "detail": "μιδῆ",
+  "carried_from": [
+   "forms:μιδῆ|μιδῇ"
+  ]
+ },
+ "forms:μοναδικȣ͂|μοναδικῷ": {
+  "verdict": "preserve",
+  "detail": "μοναδικȣ͂",
+  "carried_from": [
+   "forms:μοναδικȣ͂|μοναδικῷ"
+  ]
+ },
+ "forms:νεοττȣ̀ς|νεοττȣ́ς": {
+  "verdict": "preserve",
+  "detail": "νεοττȣ́ς",
+  "carried_from": [
+   "forms:νεοττȣ̀ς|νεοττȣ́ς"
+  ]
+ },
+ "forms:νοτέρὰ|νοτερὰ": {
+  "verdict": "accept",
+  "detail": "νοτερὰ",
+  "carried_from": [
+   "forms:νοτέρὰ|νοτερὰ"
+  ]
+ },
+ "forms:ξηράν|ξηρὰν": {
+  "verdict": "preserve",
+  "detail": "ξηράν",
+  "carried_from": [
+   "forms:ξηράν|ξηρὰν"
+  ]
+ },
+ "forms:οἱ|ϗ̀": {
+  "verdict": "preserve",
+  "detail": "ϗ̀",
+  "carried_from": [
+   "forms:οἱ|ϗ̀"
+  ]
+ },
+ "forms:οἴονται|οἴωνται": {
+  "verdict": "preserve",
+  "detail": "οἴωνται",
+  "carried_from": [
+   "forms:οἴονται|οἴωνται"
+  ]
+ },
+ "forms:πάγȣς|πάχȣς": {
+  "verdict": "preserve",
+  "detail": "πάχȣς",
+  "carried_from": [
+   "forms:πάγȣς|πάχȣς"
+  ]
+ },
+ "forms:πέρας|τέρας": {
+  "verdict": "preserve",
+  "detail": "τέρας",
+  "carried_from": [
+   "forms:πέρας|τέρας"
+  ]
+ },
+ "forms:παραπλήσιον|παραπλησίαν": {
+  "verdict": "preserve",
+  "detail": "παραπλησίαν",
+  "carried_from": [
+   "forms:παραπλήσιον|παραπλησίαν"
+  ]
+ },
+ "forms:περί|περὶ": {
+  "verdict": "preserve",
+  "detail": "περί",
+  "carried_from": [
+   "forms:περί|περὶ"
+  ]
+ },
+ "forms:πη|πιη": {
+  "verdict": "preserve",
+  "detail": "πιη",
+  "carried_from": [
+   "forms:πη|πιη"
+  ]
+ },
+ "forms:πιγ|πιη": {
+  "verdict": "preserve",
+  "detail": "πιη",
+  "carried_from": [
+   "forms:πιγ|πιη"
+  ]
+ },
+ "forms:πιμέλην|πιμελὴν": {
+  "verdict": "preserve",
+  "detail": "πιμέλην",
+  "carried_from": [
+   "forms:πιμέλην|πιμελὴν"
+  ]
+ },
+ "forms:πινȣ́σας|πινȣσας": {
+  "verdict": "preserve",
+  "detail": "πινȣ́σας",
+  "carried_from": [
+   "forms:πινȣ́σας|πινȣσας"
+  ]
+ },
+ "forms:πκγ|πκϛ": {
+  "verdict": "preserve",
+  "detail": "πκϛ",
+  "carried_from": [
+   "forms:πκγ|πκϛ"
+  ]
+ },
+ "forms:πλγ|πλη": {
+  "verdict": "preserve",
+  "detail": "πλγ",
+  "carried_from": [
+   "forms:πλγ|πλη"
+  ]
+ },
+ "forms:ποίαν|ποιεῖν": {
+  "verdict": "preserve",
+  "detail": "ποίαν",
+  "carried_from": [
+   "forms:ποίαν|ποιεῖν"
+  ]
+ },
+ "forms:ποιȣ͂νται|ποιεῖται": {
+  "verdict": "preserve",
+  "detail": "ποιȣ͂νται",
+  "carried_from": [
+   "forms:ποιȣ͂νται|ποιεῖται"
+  ]
+ },
+ "forms:ποταμȣ̀ς|ποταμȣ́ς": {
+  "verdict": "preserve",
+  "detail": "ποταμȣ́ς",
+  "carried_from": [
+   "forms:ποταμȣ̀ς|ποταμȣ́ς"
+  ]
+ },
+ "forms:ποῖα|πῶς": {
+  "verdict": "preserve",
+  "detail": "ποῖα",
+  "carried_from": [
+   "forms:ποῖα|πῶς"
+  ]
+ },
+ "forms:προσενέγκη|προσενέγκῃ": {
+  "verdict": "preserve",
+  "detail": "προσενέγκῃ",
+  "carried_from": [
+   "forms:προσενέγκη|προσενέγκῃ"
+  ]
+ },
+ "forms:πως|πῶς": {
+  "verdict": "preserve",
+  "detail": "πῶς",
+  "carried_from": [
+   "forms:πως|πῶς"
+  ]
+ },
+ "forms:ρȣ̀ς|ρȣ́ς": {
+  "verdict": "accept",
+  "detail": "ρȣ́ς",
+  "carried_from": [
+   "forms:ρȣ̀ς|ρȣς"
+  ]
+ },
+ "forms:σαρξίν|σαρξὶν": {
+  "verdict": "preserve",
+  "detail": "σαρξίν",
+  "carried_from": [
+   "forms:σαρξίν|σαρξὶν"
+  ]
+ },
+ "forms:σκάρȣ|τυφλȣ": {
+  "verdict": "preserve",
+  "detail": "σκάρȣ",
+  "carried_from": [
+   "forms:σκάρȣ|τυφλȣ"
+  ]
+ },
+ "forms:σοβήση|σοβήσῃ": {
+  "verdict": "preserve",
+  "detail": "σοβήσῃ",
+  "carried_from": [
+   "forms:σοβήση|σοβήσῃ"
+  ]
+ },
+ "forms:σπερματικόν|σπερματικὸν": {
+  "verdict": "preserve",
+  "detail": "σπερματικόν",
+  "carried_from": [
+   "forms:σπερματικόν|σπερματικὸν"
+  ]
+ },
+ "forms:στήσαι|στῆσαι": {
+  "verdict": "preserve",
+  "detail": "στῆσαι",
+  "carried_from": [
+   "forms:στήσαι|στῆσαι"
+  ]
+ },
+ "forms:συγ|συν": {
+  "verdict": "preserve",
+  "detail": "συγ",
+  "carried_from": [
+   "forms:συγ|συν"
+  ]
+ },
+ "forms:συλλογισμȣ̀ς|συλλογισμȣ́ς": {
+  "verdict": "preserve",
+  "detail": "συλλογισμȣ̀ς",
+  "carried_from": [
+   "forms:συλλογισμȣ̀ς|συλλογισμȣ́ς"
+  ]
+ },
+ "forms:συμβαῖνον|συμβαῖνόν": {
+  "verdict": "preserve",
+  "detail": "συμβαῖνόν",
+  "carried_from": [
+   "forms:συμβαῖνον|συμβαῖνόν"
+  ]
+ },
+ "forms:συμμετρία|συμμετρίᾳ": {
+  "verdict": "preserve",
+  "detail": "συμμετρία",
+  "carried_from": [
+   "forms:συμμετρία|συμμετρίᾳ"
+  ]
+ },
+ "forms:συναιτίȣ|συναιτίῳ": {
+  "verdict": "preserve",
+  "detail": "συναιτίȣ",
+  "carried_from": [
+   "forms:συναιτίȣ|συναιτίῳ"
+  ]
+ },
+ "forms:συνεχείς|συνεχεῖς": {
+  "verdict": "preserve",
+  "detail": "συνεχεῖς",
+  "carried_from": [
+   "forms:συνεχείς|συνεχεῖς"
+  ]
+ },
+ "forms:συντελȣ́ντων|συντελούντων": {
+  "verdict": "preserve",
+  "detail": "συντελȣ́ντων",
+  "carried_from": [
+   "forms:συντελȣ́ντων|συντελούντων"
+  ]
+ },
+ "forms:σχεδον|σχεδὸν": {
+  "verdict": "preserve",
+  "detail": "σχεδὸν",
+  "carried_from": [
+   "forms:σχεδον|σχεδὸν"
+  ]
+ },
+ "forms:τȣ̀ς|τὰς": {
+  "verdict": "preserve",
+  "detail": "τὰς",
+  "carried_from": [
+   "forms:τȣ̀ς|τὰς"
+  ]
+ },
+ "forms:τȣ̓ναντίον|τȣναντίον": {
+  "verdict": "preserve",
+  "detail": "τȣ̓ναντίον",
+  "carried_from": [
+   "forms:τȣ̓ναντίον|τȣναντίον"
+  ]
+ },
+ "forms:τά|τὰ": {
+  "verdict": "accept",
+  "detail": "τὰ",
+  "carried_from": [
+   "forms:τά|τὰ"
+  ]
+ },
+ "forms:τί|τι": {
+  "verdict": "preserve",
+  "detail": "τί",
+  "carried_from": [
+   "forms:τί|τι"
+  ]
+ },
+ "forms:τίνα|τινα": {
+  "verdict": "preserve",
+  "detail": "τίνα",
+  "carried_from": [
+   "forms:τίνα|τινα"
+  ]
+ },
+ "forms:ταί|ται": {
+  "verdict": "preserve",
+  "detail": "ταί",
+  "carried_from": [
+   "forms:ταί|ται"
+  ]
+ },
+ "forms:ταῖς|τοῖς": {
+  "verdict": "preserve",
+  "detail": "ταῖς",
+  "carried_from": [
+   "forms:ταῖς|τοῖς"
+  ]
+ },
+ "forms:τετρά|τετρα": {
+  "verdict": "preserve",
+  "detail": "τετρα",
+  "carried_from": [
+   "forms:τετρά|τετρα"
+  ]
+ },
+ "forms:τηγορία|τηγορίᾳ": {
+  "verdict": "preserve",
+  "detail": "τηγορίᾳ",
+  "carried_from": [
+   "forms:τηγορία|τηγορίᾳ"
+  ]
+ },
+ "forms:τιμήν|τιμὴν": {
+  "verdict": "preserve",
+  "detail": "τιμήν",
+  "carried_from": [
+   "forms:τιμήν|τιμὴν"
+  ]
+ },
+ "forms:τοιȣ́τȣ|τοιȣ͂τον": {
+  "verdict": "preserve",
+  "detail": "τοιȣ͂τον",
+  "carried_from": [
+   "forms:τοιȣ́τȣ|τοιȣ͂τον"
+  ]
+ },
+ "forms:τοσȣ́τȣ|τοσȣ͂τȣ": {
+  "verdict": "preserve",
+  "detail": "τοσȣ́τȣ",
+  "carried_from": [
+   "forms:τοσȣ́τȣ|τοσȣ͂τȣ"
+  ]
+ },
+ "forms:τἄλλα|τἆλλα": {
+  "verdict": "accept",
+  "detail": "τἆλλα",
+  "carried_from": [
+   "forms:τἄλλα|τἆλλα|τᾶλλα"
+  ]
+ },
+ "forms:υἱȣ́ς|υἱέας": {
+  "verdict": "preserve",
+  "detail": "υἱȣ́ς",
+  "carried_from": [
+   "forms:υἱȣ́ς|υἱέας|ἱȣ́ς"
+  ]
+ },
+ "forms:φαμεν|φαμὲν": {
+  "verdict": "preserve",
+  "detail": "φαμὲν",
+  "carried_from": [
+   "forms:φαμεν|φαμὲν"
+  ]
+ },
+ "forms:φθείρας|φθεῖρας": {
+  "verdict": "preserve",
+  "detail": "φθεῖρας",
+  "carried_from": [
+   "forms:φθείρας|φθεῖρας"
+  ]
+ },
+ "forms:φθεῖρον|φρȣ͂δον": {
+  "verdict": "preserve",
+  "detail": "φρȣ͂δον",
+  "carried_from": [
+   "forms:φθεῖρον|φρȣ͂δον"
+  ]
+ },
+ "forms:φωνήν|φωνὴν": {
+  "verdict": "preserve",
+  "detail": "φωνήν",
+  "carried_from": [
+   "forms:φωνήν|φωνὴν"
+  ]
+ },
+ "forms:χρήσθαι|χρῆσθαι": {
+  "verdict": "preserve",
+  "detail": "χρῆσθαι",
+  "carried_from": [
+   "forms:χρήσθαι|χρῆσθαι"
+  ]
+ },
+ "forms:χρόνȣ|χρόνῳ": {
+  "verdict": "preserve",
+  "detail": "χρόνȣ",
+  "carried_from": [
+   "forms:χρόνȣ|χρόνῳ"
+  ]
+ },
+ "forms:ψβ|ὴΨβ": {
+  "verdict": "preserve",
+  "detail": "ψβ",
+  "carried_from": [
+   "forms:ψβ|ὴΨβ"
+  ]
+ },
+ "forms:ϗ̀": {
+  "verdict": "preserve",
+  "detail": "ϗ̀",
+  "carried_from": [
+   "forms:ϗ̀"
+  ]
+ },
+ "forms:ϗ̀|ἂν": {
+  "verdict": "preserve",
+  "detail": "ϗ̀",
+  "carried_from": [
+   "forms:ϗ̀|ἂν"
+  ]
+ },
+ "forms:ϗ̀|ἐξ": {
+  "verdict": "preserve",
+  "detail": "ϗ̀",
+  "carried_from": [
+   "forms:ϗ̀|ἐξ"
+  ]
+ },
+ "forms:ἀΐδια|ἀίδια": {
+  "verdict": "accept",
+  "detail": "ἀίδια",
+  "carried_from": [
+   "forms:ἀΐδια|ἀίδια"
+  ]
+ },
+ "forms:ἀκίνητον|ἀκινήτȣ": {
+  "verdict": "preserve",
+  "detail": "ἀκίνητον",
+  "carried_from": [
+   "forms:ἀκίνητον|ἀκινήτȣ"
+  ]
+ },
+ "forms:ἀνάλογον|ἀνάλογόν": {
+  "verdict": "preserve",
+  "detail": "ἀνάλογόν",
+  "carried_from": [
+   "forms:ἀνάλογον|ἀνάλογόν"
+  ]
+ },
+ "forms:ἀνάυξητον|ἀναύξητον": {
+  "verdict": "preserve",
+  "detail": "ἀναύξητον",
+  "carried_from": [
+   "forms:ἀνάυξητον|ἀναύξητον"
+  ]
+ },
+ "forms:ἀνήρηται|ἀνῄρηται": {
+  "verdict": "preserve",
+  "detail": "ἀνῄρηται",
+  "carried_from": [
+   "forms:ἀνήρηται|ἀνῄρηται"
+  ]
+ },
+ "forms:ἀνήρητο|ἀνῄρητο": {
+  "verdict": "preserve",
+  "detail": "ἀνῄρητο",
+  "carried_from": [
+   "forms:ἀνήρητο|ἀνῄρητο"
+  ]
+ },
+ "forms:ἀναίσθητός|ἀναισθήτȣ": {
+  "verdict": "preserve",
+  "detail": "ἀναισθήτȣ",
+  "carried_from": [
+   "forms:ἀναίσθητός|ἀναισθήτȣ"
+  ]
+ },
+ "forms:ἀναβάλλεται|ἀναθολȣ͂ται": {
+  "verdict": "preserve",
+  "detail": "ἀναθολȣ͂ται",
+  "carried_from": [
+   "forms:ἀναβάλλεται|ἀναθολȣ͂ται"
+  ]
+ },
+ "forms:ἀναβάλλοι|ἀναθολοῖ": {
+  "verdict": "preserve",
+  "detail": "ἀναθολοῖ",
+  "carried_from": [
+   "forms:ἀναβάλλοι|ἀναθολοῖ"
+  ]
+ },
+ "forms:ἀναβολή|ἀναθολȣ͂ν": {
+  "verdict": "preserve",
+  "detail": "ἀναθολȣ͂ν",
+  "carried_from": [
+   "forms:ἀναβολή|ἀναθολȣ͂ν"
+  ]
+ },
+ "forms:ἀναγκαίȣ|ἀναγκαῖον": {
+  "verdict": "preserve",
+  "detail": "ἀναγκαῖον",
+  "carried_from": [
+   "forms:ἀναγκαίȣ|ἀναγκαῖον"
+  ]
+ },
+ "forms:ἀναγκαίων|ἀναγκαῖον": {
+  "verdict": "preserve",
+  "detail": "ἀναγκαῖον",
+  "carried_from": [
+   "forms:ἀναγκαίων|ἀναγκαῖον"
+  ]
+ },
+ "forms:ἀναθρώσκει|ἀναθρῴσκει": {
+  "verdict": "preserve",
+  "detail": "ἀναθρώσκει",
+  "carried_from": [
+   "forms:ἀναθρώσκει|ἀναθρῴσκει"
+  ]
+ },
+ "forms:ἀναιδȣ͂ς|ἀναιδὲς": {
+  "verdict": "preserve",
+  "detail": "ἀναιδȣ͂ς",
+  "carried_from": [
+   "forms:ἀναιδȣ͂ς|ἀναιδὲς"
+  ]
+ },
+ "forms:ἀναιμά|ἄναιμά": {
+  "verdict": "preserve",
+  "detail": "ἄναιμά",
+  "carried_from": [
+   "forms:ἀναιμά|ἄναιμά"
+  ]
+ },
+ "forms:ἀναισθήτȣ|ἀναισθήτῳ": {
+  "verdict": "preserve",
+  "detail": "ἀναισθήτȣ",
+  "carried_from": [
+   "forms:ἀναισθήτȣ|ἀναισθήτῳ"
+  ]
+ },
+ "forms:ἀναισχυντȣ͂σιν|ἀναισχυντῶσιν": {
+  "verdict": "preserve",
+  "detail": "ἀναισχυντȣ͂σιν",
+  "carried_from": [
+   "forms:ἀναισχυντȣ͂σιν|ἀναισχυντῶσιν"
+  ]
+ },
+ "forms:ἀναισχυντῶν|ἀναισχύντων": {
+  "verdict": "preserve",
+  "detail": "ἀναισχυντῶν",
+  "carried_from": [
+   "forms:ἀναισχυντῶν|ἀναισχύντων"
+  ]
+ },
+ "forms:ἀνακάμπτȣσιν|ἀνακάμπτωσιν": {
+  "verdict": "preserve",
+  "detail": "ἀνακάμπτȣσιν",
+  "carried_from": [
+   "forms:ἀνακάμπτȣσιν|ἀνακάμπτωσιν"
+  ]
+ },
+ "forms:ἀναλίσκȣσιν|ἀναλίσκουσιν": {
+  "verdict": "preserve",
+  "detail": "ἀναλίσκȣσιν",
+  "carried_from": [
+   "forms:ἀναλίσκȣσιν|ἀναλίσκουσιν"
+  ]
+ },
+ "forms:ἀναλογία|ἀναλογίᾳ": {
+  "verdict": "preserve",
+  "detail": "ἀναλογίᾳ",
+  "carried_from": [
+   "forms:ἀναλογία|ἀναλογίᾳ"
+  ]
+ },
+ "forms:ἀναλυτικά|ἀναλυτικὰ": {
+  "verdict": "preserve",
+  "detail": "ἀναλυτικά",
+  "carried_from": [
+   "forms:ἀναλυτικά|ἀναλυτικὰ"
+  ]
+ },
+ "forms:ἀναπαύσεως|ἀναπαύσεώς": {
+  "verdict": "preserve",
+  "detail": "ἀναπαύσεώς",
+  "carried_from": [
+   "forms:ἀναπαύσεως|ἀναπαύσεώς"
+  ]
+ },
+ "forms:ἀναπτάσα|ἀναπτᾶσα": {
+  "verdict": "preserve",
+  "detail": "ἀναπτᾶσα",
+  "carried_from": [
+   "forms:ἀναπτάσα|ἀναπτᾶσα"
+  ]
+ },
+ "forms:ἀνδρείος|ἀνδρεῖος": {
+  "verdict": "preserve",
+  "detail": "ἀνδρεῖος",
+  "carried_from": [
+   "forms:ἀνδρείος|ἀνδρεῖος"
+  ]
+ },
+ "forms:ἀνηρη|ἀνῃρη": {
+  "verdict": "preserve",
+  "detail": "ἀνῃρη",
+  "carried_from": [
+   "forms:ἀνηρη|ἀνῃρη"
+  ]
+ },
+ "forms:ἀνηρημένον|ἀνῃρημένον": {
+  "verdict": "preserve",
+  "detail": "ἀνῃρημένον",
+  "carried_from": [
+   "forms:ἀνηρημένον|ἀνῃρημένον"
+  ]
+ },
+ "forms:ἀνηρῆσθαι|ἀνῃρῆσθαι": {
+  "verdict": "preserve",
+  "detail": "ἀνῃρῆσθαι",
+  "carried_from": [
+   "forms:ἀνηρῆσθαι|ἀνῃρῆσθαι"
+  ]
+ },
+ "forms:ἀνθρώπȣ|ἄνθρώπȣ": {
+  "verdict": "accept",
+  "detail": "ἄνθρώπȣ",
+  "carried_from": [
+   "forms:ἀνθρώπȣ|ἄνθρώπȣ"
+  ]
+ },
+ "forms:ἀνωδύνῳ|ἀνώδυνόν": {
+  "verdict": "preserve",
+  "detail": "ἀνώδυνόν",
+  "carried_from": [
+   "forms:ἀνωδύνῳ|ἀνώδυνόν"
+  ]
+ },
+ "forms:ἀριθμȣ̀ς|ἀριθμȣ́ς": {
+  "verdict": "preserve",
+  "detail": "ἀριθμȣ́ς",
+  "carried_from": [
+   "forms:ἀριθμȣ̀ς|ἀριθμȣ́ς"
+  ]
+ },
+ "forms:ἀρχή|ἀρχῆς": {
+  "verdict": "preserve",
+  "detail": "ἀρχή",
+  "carried_from": [
+   "forms:ἀρχή|ἀρχῆς"
+  ]
+ },
+ "forms:ἀτμίς|ἀτμὶς": {
+  "verdict": "preserve",
+  "detail": "ἀτμίς",
+  "carried_from": [
+   "forms:ἀτμίς|ἀτμὶς"
+  ]
+ },
+ "forms:ἀφηρημένης|ἀφῃρημένης": {
+  "verdict": "preserve",
+  "detail": "ἀφῃρημένης",
+  "carried_from": [
+   "forms:ἀφηρημένης|ἀφῃρημένης"
+  ]
+ },
+ "forms:ἁπλȣ͂ν|ἁπλῶς": {
+  "verdict": "preserve",
+  "detail": "ἁπλȣ͂ν",
+  "carried_from": [
+   "forms:ἁπλȣ͂ν|ἁπλῶς"
+  ]
+ },
+ "forms:ἄκρȣ|ἄκρῳ": {
+  "verdict": "preserve",
+  "detail": "ἄκρȣ",
+  "carried_from": [
+   "forms:ἄκρȣ|ἄκρῳ"
+  ]
+ },
+ "forms:Ἀναξίλας|Ἀναξιλάȣ": {
+  "verdict": "preserve",
+  "detail": "Ἀναξιλάȣ",
+  "carried_from": [
+   "forms:Ἀναξίλας|Ἀναξιλάȣ"
+  ]
+ },
+ "forms:Ἀναξίμανδρος|Ἀναξιμάνδρȣ": {
+  "verdict": "preserve",
+  "detail": "Ἀναξιμάνδρȣ",
+  "carried_from": [
+   "forms:Ἀναξίμανδρος|Ἀναξιμάνδρȣ"
+  ]
+ },
+ "forms:ἐκι|ἑκι": {
+  "verdict": "none",
+  "detail": "",
+  "carried_from": [
+   "forms:ἐκι|ἑκι"
+  ]
+ },
+ "forms:ἐνέργειάν|ἐνέργειαν": {
+  "verdict": "preserve",
+  "detail": "ἐνέργειάν",
+  "carried_from": [
+   "forms:ἐνέργειάν|ἐνέργειαν"
+  ]
+ },
+ "forms:ἐξαδυνατȣ͂ν|ἐξαδυνατῶν": {
+  "verdict": "preserve",
+  "detail": "ἐξαδυνατȣ͂ν",
+  "carried_from": [
+   "forms:ἐξαδυνατȣ͂ν|ἐξαδυνατῶν"
+  ]
+ },
+ "forms:ἐστίν|ἐστιν": {
+  "verdict": "preserve",
+  "detail": "ἐστίν",
+  "carried_from": [
+   "forms:ἐστίν|ἐστιν"
+  ]
+ },
+ "forms:ἐστι|ἐστὶ": {
+  "verdict": "preserve",
+  "detail": "ἐστι",
+  "carried_from": [
+   "forms:ἐστι|ἐστὶ"
+  ]
+ },
+ "forms:ἑαυτȣ͂|ἑαυτῷ": {
+  "verdict": "preserve",
+  "detail": "ἑαυτȣ͂",
+  "carried_from": [
+   "forms:ἑαυτȣ͂|ἑαυτῷ"
+  ]
+ },
+ "forms:ἔνια|ἔνιοι": {
+  "verdict": "preserve",
+  "detail": "ἔνιοι",
+  "carried_from": [
+   "forms:ἔνια|ἔνιοι"
+  ]
+ },
+ "forms:ἔξȣσιν|ἕξȣσιν": {
+  "verdict": "preserve",
+  "detail": "ἔξȣσιν",
+  "carried_from": [
+   "forms:ἔξȣσιν|ἕξȣσιν"
+  ]
+ },
+ "forms:ἔχȣ|ἕξȣ": {
+  "verdict": "preserve",
+  "detail": "ἔχȣ",
+  "carried_from": [
+   "forms:ἔχȣ|ἕξȣ"
+  ]
+ },
+ "forms:ἡλίȣ|ἡλίου": {
+  "verdict": "preserve",
+  "detail": "ἡλίȣ",
+  "carried_from": [
+   "forms:ἡλίȣ|ἡλίου"
+  ]
+ },
+ "forms:ἰσχύν|ἰσχὺν": {
+  "verdict": "preserve",
+  "detail": "ἰσχύν",
+  "carried_from": [
+   "forms:ἰσχύν|ἰσχὺν"
+  ]
+ },
+ "forms:ὀλίγη|ὀλίγῃ": {
+  "verdict": "accept",
+  "detail": "ὀλίγῃ",
+  "carried_from": [
+   "forms:ὀλίγη|ὀλίγῃ"
+  ]
+ },
+ "forms:ὀρθόν|ὀρθὸν": {
+  "verdict": "preserve",
+  "detail": "ὀρθόν",
+  "carried_from": [
+   "forms:ὀρθόν|ὀρθὸν"
+  ]
+ },
+ "forms:ὀσμάς|ὀσμὰς": {
+  "verdict": "preserve",
+  "detail": "ὀσμάς",
+  "carried_from": [
+   "forms:ὀσμάς|ὀσμὰς"
+  ]
+ },
+ "forms:ὀφθαλμοί|ὀφθαλμοὶ": {
+  "verdict": "preserve",
+  "detail": "ὀφθαλμοί",
+  "carried_from": [
+   "forms:ὀφθαλμοί|ὀφθαλμοὶ"
+  ]
+ },
+ "forms:ὁμȣ|ὁμȣ͂": {
+  "verdict": "preserve",
+  "detail": "ὁμȣ͂",
+  "carried_from": [
+   "forms:ὁμȣ|ὁμȣ͂"
+  ]
+ },
+ "forms:ὁμοιότητά|ὁμοιότητα": {
+  "verdict": "preserve",
+  "detail": "ὁμοιότητά",
+  "carried_from": [
+   "forms:ὁμοιότητά|ὁμοιότητα"
+  ]
+ },
+ "forms:ὁρισμόν|ὁρισμὸν": {
+  "verdict": "preserve",
+  "detail": "ὁρισμόν",
+  "carried_from": [
+   "forms:ὁρισμόν|ὁρισμὸν"
+  ]
+ },
+ "forms:ὁρμήν|ὁρμὴν": {
+  "verdict": "preserve",
+  "detail": "ὁρμήν",
+  "carried_from": [
+   "forms:ὁρμήν|ὁρμὴν"
+  ]
+ },
+ "forms:ὁτιȣ͂ν|ὄν": {
+  "verdict": "preserve",
+  "detail": "ὁτιȣ͂ν",
+  "carried_from": [
+   "forms:δτιȣ͂ν|ὁτιȣ͂ν|ὄν"
+  ]
+ },
+ "forms:ὄμμασιν|ὄμματα": {
+  "verdict": "preserve",
+  "detail": "ὄμματα",
+  "carried_from": [
+   "forms:ὄμμασιν|ὄμματα"
+  ]
+ },
+ "forms:ὑπεροχή|ὑπεροχὴ": {
+  "verdict": "preserve",
+  "detail": "ὑπεροχή",
+  "carried_from": [
+   "forms:ὑπεροχή|ὑπεροχὴ"
+  ]
+ },
+ "forms:ὑποτυπȣ͂ν|ὑποτυπȣν|ὑποτυπῶν": {
+  "verdict": "preserve",
+  "detail": "ὑποτυπȣ͂ν",
+  "carried_from": [
+   "forms:ὑποτυπȣ͂ν|ὑποτυπῶν"
+  ]
+ },
+ "forms:ὑστέραι|ὕστεραι": {
+  "verdict": "preserve",
+  "detail": "ὑστέραι",
+  "carried_from": [
+   "forms:ὑστέραι|ὕστεραι"
+  ]
+ },
+ "forms:ὗς|ὡς": {
+  "verdict": "preserve",
+  "detail": "ὗς",
+  "carried_from": [
+   "forms:ὕς|ὗς|ὡς"
+  ]
+ },
+ "forms:ῥα|ῥᾳ": {
+  "verdict": "accept",
+  "detail": "ῥᾳ",
+  "carried_from": [
+   "forms:ῥα|ῥᾳ"
+  ]
+ },
+ "forms:ῥαθυμίαι|ῥᾳθυμίαι": {
+  "verdict": "preserve",
+  "detail": "ῥαθυμίαι",
+  "carried_from": [
+   "forms:ῥαθυμίαι|ῥᾳθυμίαι"
+  ]
+ }
+}
