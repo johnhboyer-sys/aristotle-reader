@@ -263,6 +263,34 @@ def looks_like_citation(forms: set[str],
     return any_split
 
 
+HYPHEN = '-‐‑–'
+
+
+def broken_at_the_measure(ct: '_ColText', word_off: int, word: str) -> bool:
+    """Is this word only half of one, broken across Bonitz's column?
+
+    ⚠ A FRAGMENT IS NOT A LEMMA, AND IT ALWAYS LOOKS LIKE SOME SHORTER WORD.
+    Measured 2026-08-10 against John's adjudicated text: the column breaks
+    `δοκί-` / `δες` for δοκίδες, and asked which of `δοξί`/`δοκί` is real Greek,
+    Morpheus crowned `δοξί` — a real form, and the wrong one. That was the sole
+    failure of `morpheus.membership` in the ground-truth run, 9 of 10.
+
+    ⚠ AND IT CANNOT BE ASKED OF THE STREAM. `canonical` strips ALL whitespace,
+    so the broken word arrives joined as `δοξίδες` with no hyphen left to find,
+    and "is a Greek letter next?" is true of very nearly every word in the
+    column — a first attempt at this refused 371 sites on pages 53-62 and would
+    have thrown away a third of the settlements. The question only means
+    anything against the ORIGINAL SPACED TEXT, which is what `offs` is for.
+
+    Reader agreement is deliberately left alone: readers can see the page, and
+    it is only a lexicon that cannot tell a word from a piece of one.
+    """
+    if word_off < 0 or word_off >= len(ct.offs):
+        return False
+    end = ct.offs[word_off] + len(word)
+    return bool(re.match(r'[-‐‑–]\s*\n', ct.base[end:end + 4]))
+
+
 def bekker_after(stream: str, word_off: int, word: str) -> int | None:
     """Bekker page printed after this token in the whitespace-free Opus stream.
 
@@ -700,6 +728,15 @@ def settle_one(
             suspicious=False, **base)
 
     form_set = set(forms)
+    # ⚠ NO LEXICON MAY RULE ON HALF A WORD. Checked before any authority runs,
+    # because every one of them asks a question only a whole word can answer.
+    _ct = column_text(word.page, word.col)
+    if _ct is not None and broken_at_the_measure(
+            _ct, word.word_off, word.readers.get('opus') or next(iter(form_set))):
+        return Settlement(
+            winner=None, authority=AUTH_REFUSE,
+            reason='fragment:broken_at_line_end',
+            suspicious=False, **base)
     idx = index if index is not None else morpheus.index()
     wrks = works if works is not None else inventory()
     opus_form = word.readers.get('opus') or next(iter(form_set))
