@@ -121,3 +121,19 @@ def test_one_elision_mark_across_two_sources():
     """Bonitz's readers set U+1FBD, U+1FBF or U+2019; Morpheus writes ASCII."""
     assert morpheus.greek("a)ll'") == 'ἀλλ᾽'
     assert morpheus.key('ἀλλ᾽') == morpheus.key('ἀλλ’') == morpheus.key('ἀλλ᾿')
+
+
+def test_the_one_known_wrong_proposal_is_still_wrong():
+    """⚠ AN OCR FAILURE THAT LANDS ON A REAL WORD IS INVISIBLE HERE. Grok,
+    2026-08-10: `χȣ̔́τω` is the χ of οὐχ glued onto οὕτω, and the glued result is
+    Morpheus's crasis entry χοὔτω, smooth-only. So the module proposes smooth
+    against a printed rough that is CORRECT — the only wrong proposal of 60.
+
+    This pins it rather than fixing it, because the fix is not in this module:
+    asking "is this a word?" cannot catch a word that was manufactured. An
+    applier must not take this row, and the day the answer changes, someone
+    should have to look at why."""
+    got = morpheus.decide('χȣ̔́τω')
+    assert got and got[0] == 'smooth', (
+        f'χȣ̔́τω -> {got}. If this now returns None or rough, the behaviour '
+        f'changed and the known-bad case needs re-judging, not re-pinning')

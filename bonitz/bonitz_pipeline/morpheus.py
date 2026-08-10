@@ -18,6 +18,21 @@ a statement about Greek rather than about anybody's reading habits.
 both authorities speak, **5,848 agreements and no contradictions**.  That is the
 only reason it is trusted here.
 
+⚠ BUT THEY ARE NOT INDEPENDENT WITNESSES, AND I OVERSOLD THAT.  Grok,
+2026-08-10: every genuinely hard word — εἶναι, ἄλλα/ἅλλα, οἷον/οἶον,
+ἄνθρωπος/ἅνθρωπος — falls in the 879 both-are-real bucket, OUTSIDE the
+agreement claim entirely.  The two agree where standard orthography is
+uncontested, because both encode the same standard.  So zero contradictions
+means "no mechanical fault", not "confirmed by a second opinion".
+
+⚠ AND A GLUED WORD CAN MATCH A REAL ONE.  Grok found the one wrong proposal:
+`χȣ̔́τω` at page-050-R:50.  The reader glued the χ of `οὐχ` onto `οὕτω`, and the
+result happens to be Morpheus's crasis entry `χοὔτω`, which is smooth-only — so
+the module proposes smooth, while the printed rough belongs to οὕτω and is
+CORRECT.  Applying it would erase good ink.  The lesson is not about crasis: an
+OCR failure that produces a real Greek word is invisible to an authority that
+only asks "is this a word?".
+
 ⚠ IT IS MATCHED ON LETTERS AND BREATHING, NEVER ON ACCENT.  Bonitz's accents are
 his edition's and Morpheus generates its own; a grave where it writes an acute
 is not a disagreement about anything.  Comparing the full form would turn every
