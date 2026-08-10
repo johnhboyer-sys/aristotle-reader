@@ -57,30 +57,49 @@ def index() -> tuple[str, list, list]:
         for seg in json.loads(Path(p).read_text(encoding='utf-8')).get('segments', []):
             for g in seg.get('greek', []):
                 rows.append((work, seg['column'], g['n'],
-                             ' '.join(strip(g['text']).split())))
+                             ' '.join(strip(g['text']).split()),
+                             ' '.join(g['text'].split())))
     stream, offs, starts, pos = [], [], [], 0
-    for work, col, n, text in rows:
-        offs.append((work, col, n))
+    for work, col, n, text, raw in rows:
+        offs.append((work, col, n, raw))
         starts.append(pos)
         stream.append(text)
         pos += len(text) + 1
     return ' '.join(stream), starts, offs
 
 
-def address(i: int) -> tuple[str, str, int]:
+def address(i: int) -> tuple[str, str, int, str]:
     _, starts, offs = index()
     return offs[bisect.bisect_right(starts, i) - 1]
 
 
-def quoted(line: str, at: int) -> str:
-    """The Greek immediately before a citation — what it is a citation OF."""
+def marks_agree(bonitz: str, found: str) -> bool:
+    """Do the two readings carry the same diacritics, not merely the same letters?
+
+    ⚠ A UNIQUE MATCH UNDER A LOSSY KEY IS STILL A GUESS. Grok, 2026-08-10:
+    Bonitz prints `ἡ ἀρχὴ ἢ κινȣ͂σα` — the principle OR the moving — and
+    `strip()` collapses ἢ and ἡ to the same `η`, so it matched GA 788a5, which
+    reads `ἡ ἀρχὴ ἡ κινοῦσα`. Different Greek, same skeleton, and the match was
+    manufactured by our own normalisation.
+
+    Bonitz's accents are his own and our text follows a different edition, so
+    they will not agree everywhere — but a proposal shown to a reader as a FIX
+    must at least agree on the marks it does carry. Where they differ, the
+    locator has found a lookalike and should say nothing.
+    """
+    a = [c for c in unicodedata.normalize('NFD', bonitz) if unicodedata.combining(c)]
+    b = [c for c in unicodedata.normalize('NFD', found) if unicodedata.combining(c)]
+    return a == b
+
+
+def quoted(line: str, at: int) -> tuple[str, str]:
+    """(stripped, as printed) — the Greek a citation is a citation OF."""
     head = line[:at]
-    # back up to the previous citation or Latin word; that is where this
-    # quotation began.
     cut = 0
     for m in re.finditer(r'[.;·]|[A-Za-z]{2,}', head):
         cut = m.end()
-    return ' '.join(strip(head[cut:]).split())
+    raw = head[cut:]
+    return ' '.join(strip(raw).split()), ' '.join(raw.split())
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -96,12 +115,12 @@ def main(argv: list[str] | None = None) -> int:
     cites = read(rng)
     resolve(cites, works)
 
-    checked = right = moved = unplaceable = 0
+    checked = right = moved = unplaceable = unverified = 0
     near, far = [], []
     for c in cites:
         lines = (ROOT / f'work/reconciled/{c.col}.txt').read_text(
             encoding='utf-8').splitlines()
-        q = quoted(lines[c.line - 1], c.at)
+        q, q_raw = quoted(lines[c.line - 1], c.at)
         if len(q.split()) < MIN_WORDS:
             continue
         checked += 1
@@ -129,7 +148,16 @@ def main(argv: list[str] | None = None) -> int:
         if i < 0:
             unplaceable += 1
             continue
-        work, col, n = address(i + 1)
+        work, col, n, found_raw = address(i + 1)
+        # ⚠ VERIFY THE MARKS BEFORE PROPOSING ANYTHING. The stripped key found
+        # it; only the accents can say it is the same passage.
+        take = len(probe.split())
+        bw = q_raw.split()[-take:] if len(q_raw.split()) >= take else []
+        fw = [w for w in found_raw.split()]
+        if not bw or not any(marks_agree(' '.join(bw), ' '.join(fw[j:j + take]))
+                             for j in range(max(1, len(fw) - take + 1))):
+            unverified += 1
+            continue
         if col.rstrip('ab') == str(c.page) and col[-1] == c.column:
             right += 1
         else:
@@ -148,6 +176,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f'  {right:>5,} the quotation is where Bonitz says')
     print(f'  {len(near):>5,} elsewhere INSIDE the work cited — an address to propose')
     print(f'  {len(far):>5,} elsewhere in ANOTHER work — reported, claimed for nothing')
+    print(f'  {unverified:>5,} letters matched but the DIACRITICS did not — a lookalike')
     print(f'  {unplaceable:>5,} not found in our text (edition, or not a quotation)\n')
     for col, ln, raw, found, probe, w in near[:a.show]:
         print(f'  {col}:{ln:<4} {raw:<16} -> {w} {found:<10} {probe[:36]}')
