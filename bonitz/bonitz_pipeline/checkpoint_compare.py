@@ -65,34 +65,67 @@ def as_char(s: str) -> str:
     return s
 
 
-def classify(raw: str) -> str:
-    """Which class of character the model was supposed to produce."""
-    expected = as_char(raw)
-    if not expected.strip():
-        return 'space'
-    d = unicodedata.normalize('NFD', expected)
-    marks = {c for c in d if unicodedata.combining(c)}
-    if 'ȣ' in expected:
-        return 'ou-ligature ȣ'
-    if 'ϗ' in expected:
-        return 'kai ϗ'
-    if 'ϛ' in expected:
-        return 'stigma ϛ'
-    if marks & {SMOOTH, ROUGH}:
+# The SPACING forms of the breathings — a psili or dasia standing on its own
+# rather than combining. ketos emits them by name and they are breathings, not
+# letters, however the Greek block is organised.
+SPACING = {'\u1fbf': SMOOTH, '\u1ffe': ROUGH, '\u1fcd': SMOOTH,
+           '\u1fce': SMOOTH, '\u1fcf': SMOOTH, '\u1fdd': ROUGH,
+           '\u1fde': ROUGH, '\u1fdf': ROUGH}
+PUNCT = '\u0387\u037e\u0374\u0375\u00b7'
+
+
+def marks_of(s: str) -> set:
+    """Every diacritic in `s`, combining or spacing, as combining codepoints."""
+    d = unicodedata.normalize('NFD', s)
+    out = {c for c in d if unicodedata.combining(c)}
+    out |= {SPACING[c] for c in d if c in SPACING}
+    return out
+
+
+def classify(raw: str, got_raw: str = '') -> str:
+    """WHAT WENT WRONG — judged by the difference, not by the gold alone.
+
+    ⚠ THIS USED TO READ THE EXPECTED CHARACTER ONLY, and so counted half the
+    errors it was built to count. `ἀ` read as `α` is a dropped breathing and
+    landed in `breathing`; `α` read as `ἀ` is an INVENTED breathing and landed
+    in `greek letter`, invisible. Grok, 2026-08-09: *"the headline 'e10 is worst
+    on breathings' only measures gold-has-breathing failures."* It was right,
+    and the bias sat in exactly the column used to prefer one checkpoint over
+    another — so the comparison argued from half its evidence.
+
+    ⚠ MARKS ARE TESTED BEFORE LIGATURES. They used to be tested after, so `ȣ̓`
+    — a smooth breathing over the ou-ligature — was filed as `ou-ligature` and
+    never as `breathing`. That is the exact failure this module's docstring
+    names as the thing an aggregate hides.
+    """
+    expected, got = as_char(raw), as_char(got_raw)
+    diff = marks_of(expected) ^ marks_of(got)
+    if diff & {SMOOTH, ROUGH}:
         return 'breathing'
-    if CIRC in marks:
+    if CIRC in diff:
         return 'perispomeni'
-    if marks & {ACUTE, GRAVE}:
+    if diff & {ACUTE, GRAVE}:
         return 'acute/grave'
-    if SUBSCRIPT in marks:
+    if SUBSCRIPT in diff:
         return 'iota subscript'
-    if DIAERESIS in marks:
+    if DIAERESIS in diff:
         return 'diaeresis'
-    if expected.isdigit():
+    ref = expected if expected.strip() else got
+    if not ref.strip():
+        return 'space'
+    if 'ȣ' in ref:
+        return 'ou-ligature ȣ'
+    if 'ϗ' in ref:
+        return 'kai ϗ'
+    if 'ϛ' in ref:
+        return 'stigma ϛ'
+    if any(c in PUNCT for c in ref):
+        return 'punctuation'
+    if ref.isdigit():
         return 'digit'
-    if re.fullmatch(r'[A-Za-z]', expected):
+    if re.fullmatch(r'[A-Za-z]', ref):
         return 'latin letter'
-    if re.fullmatch(r'[Ͱ-Ͽἀ-῿]', expected):
+    if re.fullmatch(r'[Ͱ-Ͽἀ-῿]+', ref):
         return 'greek letter'
     return 'other'
 
@@ -126,9 +159,9 @@ def evaluate(ckpt: Path, holdout: str = HOLDOUT) -> dict:
             # this project has spent the most adjudication on. Twenty-four of
             # the leader's two hundred errors are this.
             e, g = as_char(exp), as_char(got)
-            cl = classify(exp)
-            if cl == 'space' and g.strip():
-                cl = 'spurious ' + classify(got)
+            cl = classify(exp, got)
+            if not e.strip() and g.strip():
+                cl = 'spurious ' + classify(got, '')
             res['by_class'][cl] += n
             res['worst'].append((n, e, g))
     res['worst'].sort(reverse=True)

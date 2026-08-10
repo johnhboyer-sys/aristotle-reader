@@ -1,0 +1,33 @@
+2 checkpoints within 0.0 of 0.992, on holdout.arrow — about 40s each
+
+  checkpoint_10-0.9920       99.2%  200 errors
+  checkpoint_22-0.9920       99.2%  200 errors
+
+ERRORS BY THE CLASS OF THE CHARACTER EXPECTED
+
+                             10      22
+breathing                    47      31  <- spread
+space                        25      41  <- spread
+greek letter                 29      34  <- spread
+other                        17      22  <- spread
+spurious acute/grave         14      12
+acute/grave                  10      14  <- spread
+spurious perispomeni         12      10
+latin letter                 17       5  <- spread
+iota subscript                6      12  <- spread
+digit                        10       6  <- spread
+spurious breathing            2       7  <- spread
+perispomeni                   4       3
+spurious greek letter         3       3
+ou-ligature ȣ                 4       0  <- spread
+TOTAL                       200     200
+
+Most frequent single confusions in the leader:
+   17  '̓' read as '(nothing)'   [breathing]
+   14  '(space)' read as '(nothing)'   [space]
+   13  '(space)' read as '̀'   [space]
+   11  '(space)' read as '͂'   [space]
+   11  '(space)' read as '(nothing)'   [space]
+    9  'ἁ' read as 'ἀ'   [breathing]
+    4  'ὑ' read as 'ὐ'   [breathing]
+    3  'ν' read as '(nothing)'   [greek letter]
