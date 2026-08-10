@@ -113,6 +113,16 @@ So Grok earns a place as a **second reader** — a genuinely independent set of
 eyes whose disagreements with Opus are worth adjudicating, and whose uncertainty
 register is the most detailed of the four. It is not the model of record.
 
+**Constrain it with flags, not with prose.** The prompt for all ten pages said
+"Do not write scripts to re-crop or process the images. Read them." All ten ran
+shell anyway, and most wrote their own zoom crops to a scratch directory; that
+is where the tool-call counts (22 to 170 a page) and most of the ~900k tokens
+went. The network came off only because `--disable-web-search` blocks it, not
+because the prompt forbade it. Assume any instruction that merely asks Grok to
+refrain will be ignored on a vision task, and reach for a hard block or a
+stripped toolset instead — `--disallowed-tools` for the terminal if the crops
+are not wanted, though letting it crop is cheap enough to tolerate.
+
 Manufacturing corrigenda is worse than misreading, because a misreading is
 caught by a second pass and a fabricated printer's error survives into the
 apparatus. Grok is a plausible **second reader** — its uncertainty register was
