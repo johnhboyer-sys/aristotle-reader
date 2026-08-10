@@ -13,7 +13,8 @@ import pytest
 
 from bonitz_pipeline.siglum_check import inventory
 from bonitz_pipeline.siglum_review import (CONFUSIONS, page_candidates,
-                                           siglum_candidates, sites, usage)
+                                           recommend, siglum_candidates,
+                                           sites, usage)
 from bonitz_pipeline.siglum_check import read, resolve
 
 WORKS = inventory()
@@ -40,13 +41,34 @@ def test_two_iotas_read_as_an_upsilon_is_one_error_not_two():
     assert got[0] == 'Ζιι', 'and it should lead, being the form Bonitz writes'
 
 
-def test_the_page_still_refuses_the_confusion_where_it_cannot_hold():
-    """The same misreading appears at 700b, and there it is NOT `Ζιι` — the
-    Historia animalium ends at 638. 700 is De motu, so the only candidate is
-    `Ζκ`. Three identical tokens, two different errors, decided by the page."""
+def test_where_the_ink_and_the_page_disagree_both_readings_are_offered():
+    """⚠ THIS TEST REPLACES ONE THAT REFUSED `Ζιι` AT 700, and the refusal was
+    wrong. John read the ink, 2026-08-09: "Double iota." It IS `Ζιι` on the
+    page — and the Historia animalium ends at 638, so `Ζιι` cannot carry 700,
+    while the Greek quoted beside it is De motu 700b20, which is `Ζκ`.
+
+    Both are wrong at once: our transcription is not what is printed, and what
+    is printed is not what is meant. Offering only `Ζκ` hid the first half, and
+    the only remaining button — `preserve` — would have banked OUR misreading
+    as Bonitz's, which is the one thing the corrigenda register must never
+    contain.
+
+    So both readings are offered, and `recommend` names the compound."""
     got = siglum_candidates('Ζυ', 700, WORKS, SEEN)
-    assert 'Ζιι' not in got, f'HA cannot hold 700: {got}'
-    assert got == ['Ζκ']
+    assert 'Ζιι' in got, f'what the ink reads must be offered: {got}'
+    assert 'Ζκ' in got, f'and what the page names: {got}'
+    site = next(s for s in SS if s.col == 'page-032-R' and s.line == 51)
+    verdict, detail, why = recommend(site)
+    assert verdict == 'fix-siglum-and-record' and detail == 'Ζιι'
+    assert 'Ζκ' in why, 'the reason must name what it should have been'
+
+
+def test_the_same_confusion_stays_a_plain_fix_where_the_page_agrees():
+    """At 616 and 619 `Ζιι` carries its own page, so there is nothing to
+    record — the edition is right and only we were wrong."""
+    for page in (616, 619):
+        site = next(s for s in SS if s.page == page and s.token == 'Ζυ')
+        assert recommend(site)[0] == 'fix-siglum'
 
 
 def test_zeta_upsilon_is_never_a_real_siglum():
@@ -73,12 +95,18 @@ def test_no_candidate_is_offered_that_the_page_cannot_hold():
     work that owns the page. `κϛ` is the second kind: κ is περὶ Κόσμου and does
     not hold 946, but the citation is book ϛ of the work Bonitz last named."""
     from bonitz_pipeline.siglum_check import by_page
+    from bonitz_pipeline.siglum_review import edit_rank
     for s in SS:
         for c in s.sigla:
             named = [w for w in WORKS if c.startswith(w) and WORKS[w].holds(s.page)]
-            assert named or by_page(c, s.page, WORKS), (
-                f'{s.sid}: {c!r} is neither a work holding {s.page} nor a book '
-                f'letter of the work that does')
+            # …OR it is what the ink plainly reads, offered precisely because it
+            # does NOT hold the page: that disagreement is the finding, not a
+            # reason to hide the reading. Only a known confusion earns this.
+            ink = edit_rank(s.token, c) == 0
+            assert named or by_page(c, s.page, WORKS) or ink, (
+                f'{s.sid}: {c!r} is neither a work holding {s.page}, nor a book '
+                f'letter of the work that does, nor a known confusion of '
+                f'{s.token!r}')
 
 
 def test_page_candidates_are_one_digit_edit_away_in_any_direction():
