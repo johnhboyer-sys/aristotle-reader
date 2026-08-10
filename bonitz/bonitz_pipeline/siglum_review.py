@@ -232,6 +232,24 @@ def siglum_candidates(token: str, page: int, works: dict,
             if (BARE.issuperset(token) and not split(token, works)
                     and by_page(alt, page, works)):
                 out.add(alt)
+    # ⚠ AND OFFER WHAT THE INK READS EVEN WHEN IT CANNOT HOLD THE PAGE.
+    # John on `Ζυ6. 700b`, 2026-08-09: "Double iota." The ink reads `Ζιι`, and
+    # the Historia animalium ends at 638, so `Ζιι` cannot carry 700 — while the
+    # Greek quoted beside it ("φαντασία and αἴσθησις occupy the same place as
+    # νοῦς") is De motu 700b20, which is `Ζκ`.
+    #
+    # So BOTH are wrong: our transcription is not what is printed, and what is
+    # printed is not what is meant. Pressing `preserve` there would bank OUR
+    # misreading as Bonitz's, which is the one outcome the corrigenda register
+    # must never contain. The reading is offered so it can be chosen, and
+    # `recommend` names it a compound: fix the text to the ink, then record the
+    # ink as the edition's error.
+    for a, b in CONFUSIONS:
+        for frm, to in ((a, b), (b, a)):
+            if frm in token:
+                alt = token.replace(frm, to, 1)
+                if any(alt.startswith(w) for w in works):
+                    out.add(alt)
     # ⚠ ALWAYS OFFER THE WORK THE PAGE NAMES, however far it is from the token.
     # John on `πκ34. 726b`, 2026-08-09: "The hell am I judging." The card gave
     # him `preserve` and one page repair, because no siglum sits within one edit
@@ -323,6 +341,9 @@ def sites() -> list[Site]:
     return out
 
 
+INV = inventory()
+
+
 def recommend(s: Site) -> tuple[str, str, str]:
     """One answer, one reason. Returns (verdict, detail, why).
 
@@ -334,6 +355,13 @@ def recommend(s: Site) -> tuple[str, str, str]:
     """
     if s.sigla:
         top = s.sigla[0]
+        if edit_rank(s.token, top) == 0 and not holds(top, s.page, INV):
+            # The ink is one thing, the page another, and neither is our text.
+            page_says = [c for c in s.sigla if holds(c, s.page, INV)]
+            return ('fix-siglum-and-record', top,
+                    f'the ink reads {top}, which cannot carry {s.page} — so fix '
+                    f'the text to {top} and record it as the edition\'s error'
+                    + (f' for {page_says[0]}' if page_says else ''))
         if edit_rank(s.token, top) == 0:
             return ('fix-siglum', top,
                     f'a known confusion — the same ink reads both ways')
@@ -370,6 +398,8 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
         rv, rd, rw = recommend(s)
         rface = ('keep <span class="gk">%s</span> as printed' % s.token
                  if rv == 'preserve' else
+                 'read <span class="gk">%s</span> · and record it' % rd
+                 if rv == 'fix-siglum-and-record' else
                  'read <span class="gk">%s</span>' % rd)
         none = ('<div class="warnflag">no repair suggested — nothing one edit '
                 'away lands in range. Read the line and preserve, or say so.'
@@ -432,7 +462,8 @@ def main(argv: list[str] | None = None) -> int:
     if a.serve or a.wifi:
         serve(ss, a.port, '0.0.0.0' if a.wifi else '127.0.0.1',
               page=PAGE, store=RULINGS,
-              verdicts=('preserve', 'fix-siglum', 'fix-page'))
+              verdicts=('preserve', 'fix-siglum', 'fix-page',
+                        'fix-siglum-and-record'))
     return 0
 
 
