@@ -41,6 +41,9 @@ DATE = '2026-08-10'
 RULE = 'settle queue: John ruled the ink on the refused form-set'
 
 
+ASIDE = ROOT / 'work/sweeps/settle-none.json'
+
+
 def plan(queue_path: Path = DEFAULT_QUEUE,
          rulings_path: Path = RULINGS) -> list[dict]:
     """Every ruling expanded to its member sites, with printed → becomes."""
@@ -54,10 +57,21 @@ def plan(queue_path: Path = DEFAULT_QUEUE,
                          + (f' (+{len(unknown) - 10})' if len(unknown) > 10 else ''))
 
     steps = []
+    aside = []
     for sid, v in sorted(rulings.items()):
         card = cards[sid]
         verdict = v['verdict']
         detail = v.get('detail', '')
+        # ⚠ NONE MEANS THE INK SHOWS SOMETHING NO READER OFFERED, so there is
+        # nothing to write and it must not be silently treated as a keep. The
+        # site is set aside, listed, and left exactly as Opus read it — the one
+        # honest outcome when every candidate is wrong.
+        if verdict == 'none':
+            for m in card.members:
+                aside.append({'sid': sid, 'member': m.sid, 'page': m.page,
+                              'col': m.col, 'line': m.line,
+                              'readers': dict(m.readers)})
+            continue
         if verdict not in ('accept', 'preserve'):
             raise SystemExit(f'{sid}: unknown verdict {verdict!r}')
         if verdict == 'accept' and not detail:
@@ -80,6 +94,10 @@ def plan(queue_path: Path = DEFAULT_QUEUE,
                 'becomes': becomes,
                 'kind': m.kind,
             })
+    if aside:
+        ASIDE.parent.mkdir(parents=True, exist_ok=True)
+        ASIDE.write_text(json.dumps(aside, ensure_ascii=False, indent=1),
+                         encoding='utf-8')
     return steps
 
 

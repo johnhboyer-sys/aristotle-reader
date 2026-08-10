@@ -1,0 +1,16 @@
+[
+ {
+  "sid": "forms:ἐκι|ἑκι",
+  "member": "page-058-R:2:87",
+  "page": 58,
+  "col": "R",
+  "line": 2,
+  "readers": {
+   "opus": "ἐκι",
+   "codex": "ἐκι",
+   "kraken": "ἑκι",
+   "llama": "ἐκι",
+   "genie": "ἐκι"
+  }
+ }
+]
