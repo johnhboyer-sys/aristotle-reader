@@ -48,6 +48,10 @@ MAX_CANDIDATES = 4
 # because reading it for a stigma is the error that puts `κς` in this queue.
 BARE = set(BOOK_LETTERS + 'ς')
 
+# Per-book Bekker spans, so a candidate can be tested at BOOK level.
+from bonitz_pipeline.book_spans import OUT as _SPAN_FILE
+_SPANS = json.loads(_SPAN_FILE.read_text(encoding='utf-8'))['spans']
+
 # ⚠ ONE VISUAL ERROR IS NOT ALWAYS ONE CHARACTER EDIT.  John, 2026-08-09, on the
 # crop at 016-L:32: "Clear double iota."  The ink reads `Ζιι` — Historia
 # animalium, book ι — and our reader wrote `Ζυ`, because in this type two
@@ -97,6 +101,9 @@ ALPHABET = ''.join(sorted(set(BOOK_LETTERS + 'ϛȣϗ' +
 
 @dataclass
 class Site:
+    # The citations either side, already resolved. A siglum is read in company:
+    # the ἀγγεῖον entry cites Ζιγ, Ζμγ, Ζγβ, Ζιβ, Ζμδ, Ζμδ, Ζγε around one
+    # disputed token, and that neighbourhood settles more than any crop does.
     col: str
     line: int
     raw: str
@@ -108,6 +115,7 @@ class Site:
     how: str = ''
     sigla: list[str] = field(default_factory=list)
     pages: list[int] = field(default_factory=list)
+    near: list[str] = field(default_factory=list)
 
     @property
     def sid(self) -> str:
@@ -147,17 +155,45 @@ def usage(cites) -> dict:
     return n
 
 
+def holds(cand: str, page: int, works: dict) -> bool:
+    """Does this reading actually contain the page — at BOOK level, not work?
+
+    ⚠ IT USED TO ASK ONLY WHETHER THE WORK HELD THE PAGE, and that made the
+    tool worse than useless on exactly the sites it exists for. John on
+    `Πο4. 1290b`, 2026-08-09: **"Pi delta."** The ink reads `Πδ`, Politics book
+    δ runs 1288-1301, and the citation is simply correct — but every one of the
+    eight Politics books passed the work test, frequency put `Πε` first, and
+    `Πδ` was ranked out of a four-button row. The tool offered four wrong
+    readings and hid the right one.
+
+    We have had per-book spans since this morning. Use them.
+    """
+    for w, b in split(cand, works):
+        if not works[w].holds(page):
+            continue
+        table = _SPANS.get(w, {})
+        if b and table:
+            span = table.get(b)
+            # A book the work does not have is not a reading. The Politics has
+            # eight, α-θ, so `Πι` and `Πκ` are not near-misses to weigh — they
+            # are impossible, and an impossible button is worse than no button.
+            if span is None or not (span[0] <= page <= span[1]):
+                continue
+        return True
+    return False
+
+
 def siglum_candidates(token: str, page: int, works: dict,
                       seen: dict | None = None) -> list[str]:
-    """Readings one edit away whose work actually contains the page."""
+    """Readings one edit away whose work AND book actually contain the page."""
     out = set()
     for s in near(token, works):
-        if works[s].holds(page):
+        if holds(s, page, works):
             out.add(s)
     # …and the same, read as work + book letter, where that book can exist
     if len(token) > 1 and token[-1] in BOOK_LETTERS:
         for s in near(token[:-1], works):
-            if works[s].holds(page) and book_ok(s, token[-1]):
+            if book_ok(s, token[-1]) and holds(s + token[-1], page, works):
                 out.add(s + token[-1])
     # …and the pairs the eye confuses, which the character edits above miss
     for a, b in CONFUSIONS:
@@ -165,9 +201,8 @@ def siglum_candidates(token: str, page: int, works: dict,
             start = 0
             while (i := token.find(frm, start)) >= 0:
                 alt = token[:i] + to + token[i + len(frm):]
-                for w, bk in split(alt, works):
-                    if works[w].holds(page) and (not bk or book_ok(w, bk)):
-                        out.add(alt)
+                if holds(alt, page, works):
+                    out.add(alt)
                 start = i + 1
     # ⚠ AND THE EDIT MAY BE INSIDE THE BOOK NUMERAL, not in the work siglum.
     # `πκς` is the Problemata, book κϛ — 26 — with a final sigma read for a
@@ -179,9 +214,8 @@ def siglum_candidates(token: str, page: int, works: dict,
             if ch == token[i]:
                 continue
             alt = token[:i] + ch + token[i + 1:]
-            for w, b in split(alt, works):
-                if works[w].holds(page) and (not b or book_ok(w, b)):
-                    out.add(alt)
+            if holds(alt, page, works):
+                out.add(alt)
             # A BARE BOOK LETTER NAMES NO WORK, so `split` can say nothing
             # about it — `κς` is book κϛ of whatever was last named, and the
             # only reason it is in this queue is the final sigma. Ask the page.
@@ -198,6 +232,21 @@ def siglum_candidates(token: str, page: int, works: dict,
             if (BARE.issuperset(token) and not split(token, works)
                     and by_page(alt, page, works)):
                 out.add(alt)
+    # ⚠ ALWAYS OFFER THE WORK THE PAGE NAMES, however far it is from the token.
+    # John on `πκ34. 726b`, 2026-08-09: "The hell am I judging." The card gave
+    # him `preserve` and one page repair, because no siglum sits within one edit
+    # of `πκ` — so the only reading it did NOT offer was the one the evidence
+    # supports. 726 is De generatione, every citation around it in the ἀγγεῖον
+    # entry is zoological, and the page is the hardest fact on the card.
+    # Distance from the token is a hypothesis about the ink; the span is a fact.
+    owner = [w for w, wk in works.items() if wk.holds(page)]
+    if len(owner) == 1:
+        w = owner[0]
+        from bonitz_pipeline.book_spans import OUT as _S
+        import json as _j
+        sp = _j.loads(_S.read_text(encoding='utf-8'))['spans'].get(w, {})
+        bk = [b for b, (lo, hi) in sp.items() if lo <= page <= hi]
+        out.add(w + (bk[0] if bk else ''))
     seen = seen or {}
     return sorted(out, key=lambda c: (edit_rank(token, c),
                                       -seen.get(c, 0), c))[:MAX_CANDIDATES]
@@ -231,12 +280,12 @@ def sites() -> list[Site]:
     hundred-and-first, an iota short.
     """
     import json as _json
-    from bonitz_pipeline.book_spans import OUT as _SPANS, missing_book
+    from bonitz_pipeline.book_spans import OUT as _SPAN_PATH, missing_book
     works = inventory()
     cites = read()
     resolve(cites, works)
     seen = usage(cites)
-    table = _json.loads(_SPANS.read_text(encoding='utf-8'))
+    table = _json.loads(_SPAN_PATH.read_text(encoding='utf-8'))
     gap = {}
     for c, w, owner in missing_book(cites, table):
         if owner != '?':
@@ -254,15 +303,52 @@ def sites() -> list[Site]:
         s.crop, s.how = _b64(im), how
         s.whole = _b64(crop_word(c.col, c.line, c.token, scale=1.6,
                                  whole=True)[0])
+        s.near = [f'{o.raw} = {o.work}{o.book}' for o in cites
+                  if o.col == c.col and abs(o.line - c.line) <= 2
+                  and o.how in ('explicit', 'inherited') and o is not c][:6]
         s.sigla = siglum_candidates(c.token, c.page, works, seen)
         if id(c) in gap and gap[id(c)][1] not in s.sigla:
             s.sigla = [gap[id(c)][1]] + s.sigla[:MAX_CANDIDATES - 1]
         opts = split(c.token, works)
         if opts:
-            w = works[opts[0][0]]
-            s.pages = page_candidates(c.page, w.lo, w.hi)
+            wk, bk = opts[0]
+            # ⚠ BOUND BY THE BOOK, NOT THE WORK. Offering 1291-1294 for
+            # `Πο4. 1290b` proposed pages inside the POLITICS while the token
+            # names a book that does not contain any of them — repairs that
+            # cannot both be right.
+            span = _SPANS.get(wk, {}).get(bk)
+            lo, hi = span if span else (works[wk].lo, works[wk].hi)
+            s.pages = page_candidates(c.page, lo, hi)
         out.append(s)
     return out
+
+
+def recommend(s: Site) -> tuple[str, str, str]:
+    """One answer, one reason. Returns (verdict, detail, why).
+
+    John, 2026-08-09: **"I just want an easy process."** A row of four buttons
+    is not a process, it is a menu — it hands the reasoning back to the reader
+    at every site, and the reader already has the hard part, which is reading
+    the ink. So the tool commits to an answer and the reader ratifies or
+    overrides it. Everything it considered stays on the card, smaller.
+    """
+    if s.sigla:
+        top = s.sigla[0]
+        if edit_rank(s.token, top) == 0:
+            return ('fix-siglum', top,
+                    f'a known confusion — the same ink reads both ways')
+        if edit_rank(s.token, top) == 1:
+            return ('fix-siglum', top, 'the same letter in the other case')
+        if s.near:
+            works = ', '.join(sorted({n.split('= ')[1][:2] for n in s.near}))
+            return ('fix-siglum', top,
+                    f'{s.page} is in {top}, and the citations around it are '
+                    f'{works}')
+        return ('fix-siglum', top, f'{s.page} is in {top} and nothing else')
+    if s.pages:
+        return ('fix-page', str(s.pages[0]),
+                f'one digit from what we hold, and inside the work named')
+    return ('preserve', '', 'nothing one edit away lands in range')
 
 
 def html(ss: list[Site], out: Path = PAGE) -> Path:
@@ -281,6 +367,10 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
             f'{p},this)">{p}</button>' for p in s.pages)
         pgs = (f'<div class="lbl">or the page is ours, and the ink reads</div>'
                f'<div class="row">{pgs}</div>') if pgs else ''
+        rv, rd, rw = recommend(s)
+        rface = ('keep <span class="gk">%s</span> as printed' % s.token
+                 if rv == 'preserve' else
+                 'read <span class="gk">%s</span>' % rd)
         none = ('<div class="warnflag">no repair suggested — nothing one edit '
                 'away lands in range. Read the line and preserve, or say so.'
                 '</div>') if not (s.sigla or s.pages) else ''
@@ -289,6 +379,8 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
   <div class="loc">{s.col} · line {s.line}</div>
   <div class="said gk">{s.raw}</div>
   <div class="why">{s.why}</div>
+  {('<div class="lbl">what the citations around it are</div><div class="why gk">'
+    + ' &nbsp;·&nbsp; '.join(s.near) + '</div>') if s.near else ''}
   {warn}
   <div class="crops">
     <img src="data:image/png;base64,{s.crop}" alt="the citation in the scan">
@@ -296,12 +388,19 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
       <img src="data:image/png;base64,{s.whole}" alt="the whole line"></details>
   </div>
   {none}
-  <div class="lbl">the ink reads what we hold — Bonitz set it wrong</div>
-  <div class="row">
-    <button class="keep" onclick="rule({s.sid!r},'preserve','',this)">
-      preserve <span class="gk">{s.token}</span> · corrigenda</button>
+  <div class="rec">
+    <div class="reclbl">most likely — {rw}</div>
+    <button class="go" onclick="rule({s.sid!r},{rv!r},{rd!r},this)">
+      {rface}</button>
   </div>
-  {sig}{pgs}
+  <details class="alts"><summary>something else</summary>
+    <div class="lbl">the ink reads what we hold — Bonitz set it wrong</div>
+    <div class="row">
+      <button class="keep" onclick="rule({s.sid!r},'preserve','',this)">
+        preserve <span class="gk">{s.token}</span> · corrigenda</button>
+    </div>
+    {sig}{pgs}
+  </details>
 </div>""")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(

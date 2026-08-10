@@ -1,0 +1,50 @@
+{
+ "page-016-L:32:Ζυ:616": {
+  "verdict": "fix-siglum",
+  "detail": "Ζιι"
+ },
+ "page-016-L:33:Ζυ:619": {
+  "verdict": "fix-siglum",
+  "detail": "Ζιι"
+ },
+ "page-017-L:25:πκ:726": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-017-L:27:αχ:800": {
+  "verdict": "fix-siglum",
+  "detail": "ακ"
+ },
+ "page-020-L:7:Πβ:1391": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-024-R:28:οβ:1374": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-025-L:43:πκς:946": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-025-L:46:κς:946": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-025-R:27:πκς:944": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-027-L:5:Ζιβ:449": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-027-R:47:σ:73": {
+  "verdict": "preserve",
+  "detail": ""
+ },
+ "page-028-L:28:υ:485": {
+  "verdict": "preserve",
+  "detail": ""
+ }
+}
