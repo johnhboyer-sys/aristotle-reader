@@ -69,6 +69,7 @@ def test_it_never_contradicts_the_lexicon_oracle():
     from bonitz_pipeline.breathing_oracle import WORD, breathing, skeleton
     root = Path(__file__).resolve().parent.parent
     clash = []
+    compared = 0
     for f in sorted((root / 'work/reconciled').glob('*.txt')):
         for line in f.read_text(encoding='utf-8').splitlines():
             for m in WORD.finditer(line):
@@ -78,8 +79,14 @@ def test_it_never_contradicts_the_lexicon_oracle():
                 if line[m.end():m.end() + 1] in ('.', '-'):
                     continue
                 a, b = morpheus.decide(w), lexicon(w)
+                if a and b:
+                    compared += 1
                 if a and b and a[0] != b[0]:
                     clash.append((w, a[0], b[0]))
+    # ⚠ AND ASSERT IT COMPARED SOMETHING. A test that iterates an empty set
+    # passes for the wrong reason — the exact failure this project keeps
+    # finding in its own lookups.
+    assert compared > 5_000, f'only {compared} comparisons; the test went blind'
     assert not clash, f'{len(clash)} contradictions, e.g. {clash[:5]}'
 
 
@@ -95,11 +102,19 @@ def test_the_decoder_drops_almost_nothing():
             raw = line.split('\t', 1)[0]
             if raw.startswith('!'):
                 continue
-            if morpheus.greek(raw) is None:
+            g = morpheus.greek(raw)
+            if g is None:
                 dropped += 1
             else:
+                assert g != '', f'{raw!r} decoded to nothing and would vanish'
                 kept += 1
-    assert dropped < 100, f'{dropped:,} keys unread of {kept + dropped:,}'
+    # ⚠ A THRESHOLD IS NOT A MEASUREMENT. Codex, 2026-08-10: `dropped < 100`
+    # would have passed with 99 corrupted records, and `greek()` returning an
+    # EMPTY string counts as kept here while `index()` silently discards it.
+    # Pin the exact number instead, so any new unreadable key has to be looked
+    # at rather than absorbed.
+    assert dropped == 13, f'{dropped:,} keys unread of {kept + dropped:,}'
+    assert kept > 911_000, kept
 
 
 def test_one_elision_mark_across_two_sources():

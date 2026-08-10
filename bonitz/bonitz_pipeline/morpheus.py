@@ -14,8 +14,8 @@ a statement about Greek rather than about anybody's reading habits.
     ἁλουργός    in Morpheus
     ἀλουργός    ABSENT          -> the printed smooth breathing is a reader's
 
-⚠ MEASURED AGAINST THE EXISTING ORACLE ON THE WHOLE CORPUS: 4,214 words where
-both authorities speak, **4,214 agreements and no contradictions**.  That is the
+⚠ MEASURED AGAINST THE EXISTING ORACLE ON THE WHOLE CORPUS: 5,848 words where
+both authorities speak, **5,848 agreements and no contradictions**.  That is the
 only reason it is trusted here.
 
 ⚠ IT IS MATCHED ON LETTERS AND BREATHING, NEVER ON ACCENT.  Bonitz's accents are
@@ -50,7 +50,7 @@ LETTER = dict(zip('abgdezhqiklmncoprstufxyw', 'αβγδεζηθικλμνξοπ�
 # Morpheus writes the marks after the vowel they sit on, which is exactly where
 # a combining character belongs, so no reordering is needed.
 MARK = {')': '̓', '(': '̔', '/': '́', '\\': '̀',
-        '=': '͂', '|': 'ͅ', '+': '̈', "'": '᾽'}
+        '=': '͂', '|': 'ͅ', '+': '̈', "'": '᾽', ',': ','}
 DROP = '_^*'          # vowel length, and the marker for a capital
 
 # ⚠ ONE ELISION MARK, THREE CHARACTERS. Bonitz's readers set U+1FBD, U+1FBF or
@@ -145,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f'{len(idx):,} skeletons\n')
 
     from bonitz_pipeline.breathing_oracle import decide as lexicon
-    same = contra = both = absent = clash = 0
+    same = contra = both = absent = unbreathed = clash = 0
     rows = []
     for f in sorted((ROOT / 'work/reconciled').glob('*.txt')):
         for n, line in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
@@ -157,8 +157,18 @@ def main(argv: list[str] | None = None) -> int:
                     continue
                 got = decide(w)
                 if got is None:
-                    if key(w) in idx:
+                    # ⚠ SILENCE HAS THREE CAUSES AND THEY ARE NOT THE SAME.
+                    # Codex, 2026-08-10: `̓γίγνεται` (a stray combining
+                    # breathing) keys to γιγνεται, whose only recorded value is
+                    # 'none' — no second spelling exists, yet it was counted
+                    # under "both are real Greek". A tally that files unknowns
+                    # as ambiguity overstates how much the language is genuinely
+                    # undecided, which is the number this module is judged on.
+                    marks = (idx.get(key(w)) or set()) - {'none'}
+                    if len(marks) > 1:
                         both += 1
+                    elif key(w) in idx:
+                        unbreathed += 1
                     else:
                         absent += 1
                     continue
@@ -173,6 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f'  {same:>5,} confirmed as printed')
     print(f'  {contra:>5,} Greek has ONLY the other breathing')
     print(f'  {both:>5,} both spellings are real words — silent')
+    print(f'  {unbreathed:>5,} Morpheus has it, but with no breathing at all')
     print(f'  {absent:>5,} not a form Morpheus generates\n')
     print(f'  {clash:>5,} contradict the lexicon oracle '
           f'(any number but 0 needs explaining)\n')
