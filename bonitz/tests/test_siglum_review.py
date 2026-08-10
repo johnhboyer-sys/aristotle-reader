@@ -57,7 +57,12 @@ def test_where_the_ink_and_the_page_disagree_both_readings_are_offered():
     got = siglum_candidates('Ζυ', 700, WORKS, SEEN)
     assert 'Ζιι' in got, f'what the ink reads must be offered: {got}'
     assert 'Ζκ' in got, f'and what the page names: {got}'
-    site = next(s for s in SS if s.col == 'page-032-R' and s.line == 51)
+    # ⚠ ASSERTED OFF THE LIVE QUEUE and went red the moment the site was
+    # applied and left it. The rule is what must hold, not the presence of
+    # a card, so it is exercised on a constructed site instead.
+    from bonitz_pipeline.siglum_review import Site
+    site = Site('page-032-R', 51, 'Ζυ6. 700 b', 'Ζυ', 700, 'x',
+                sigla=got, pages=[])
     verdict, detail, why = recommend(site)
     assert verdict == 'fix-siglum-and-record' and detail == 'Ζιι'
     assert 'Ζκ' in why, 'the reason must name what it should have been'
@@ -66,9 +71,13 @@ def test_where_the_ink_and_the_page_disagree_both_readings_are_offered():
 def test_the_same_confusion_stays_a_plain_fix_where_the_page_agrees():
     """At 616 and 619 `Ζιι` carries its own page, so there is nothing to
     record — the edition is right and only we were wrong."""
+    from bonitz_pipeline.siglum_review import Site
     for page in (616, 619):
-        site = next(s for s in SS if s.page == page and s.token == 'Ζυ')
-        assert recommend(site)[0] == 'fix-siglum'
+        cands = siglum_candidates('Ζυ', page, WORKS, SEEN)
+        site = Site('page-016-L', 32, f'Ζυ1. {page}a', 'Ζυ', page, 'x',
+                    sigla=cands, pages=[])
+        assert recommend(site)[0] == 'fix-siglum', (
+            f'at {page} the double iota carries its own page — nothing to record')
 
 
 def test_zeta_upsilon_is_never_a_real_siglum():

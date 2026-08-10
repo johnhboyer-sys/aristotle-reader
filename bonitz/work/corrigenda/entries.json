@@ -302,6 +302,138 @@
    "checked": "400dpi 2026-08-09",
    "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ρβ5. 1407' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
    "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1400, 1401, 1402, 1403, 1404 fall inside Ρβ (1378-1404), against the printed 1407. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+  },
+  {
+   "page": 17,
+   "col": "L",
+   "line": 25,
+   "printed": "πκ34. 726b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'πκ34. 726b'. 'πκ' disagrees with the Bekker page 726 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 20,
+   "col": "L",
+   "line": 7,
+   "printed": "Πβ18. 1391 b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Πβ18. 1391 b'. 'Πβ' disagrees with the Bekker page 1391 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 24,
+   "col": "R",
+   "line": 28,
+   "printed": "οβ1374 a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'οβ1374 a'. 'οβ' disagrees with the Bekker page 1374 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 27,
+   "col": "L",
+   "line": 5,
+   "printed": "Ζιβ1. 449 a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Ζιβ1. 449 a'. 'Ζιβ' disagrees with the Bekker page 449 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 28,
+   "col": "L",
+   "line": 28,
+   "printed": "υ3. 485 a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'υ3. 485 a'. 'υ' disagrees with the Bekker page 485 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 35,
+   "col": "L",
+   "line": 22,
+   "printed": "Οβ13. 259a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Οβ13. 259a'. 'Οβ' disagrees with the Bekker page 259 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 38,
+   "col": "R",
+   "line": 52,
+   "printed": "Πγ7. 1408 b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Πγ7. 1408 b'. 'Πγ' disagrees with the Bekker page 1408 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 39,
+   "col": "L",
+   "line": 14,
+   "printed": "Ππ14. 1285 a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Ππ14. 1285 a'. 'Ππ' disagrees with the Bekker page 1285 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 40,
+   "col": "L",
+   "line": 44,
+   "printed": "πο8. 1408 b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'πο8. 1408 b'. 'πο' disagrees with the Bekker page 1408 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 41,
+   "col": "R",
+   "line": 10,
+   "printed": "Ζκ7. 638b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Ζκ7. 638b'. 'Ζκ' disagrees with the Bekker page 638 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 49,
+   "col": "L",
+   "line": 51,
+   "printed": "Ηε10. 1835 b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Ηε10. 1835 b'. 'Ηε' disagrees with the Bekker page 1835 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 50,
+   "col": "R",
+   "line": 31,
+   "printed": "Πζ5. 1820a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Πζ5. 1820a'. 'Πζ' disagrees with the Bekker page 1820 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
   }
  ]
 }

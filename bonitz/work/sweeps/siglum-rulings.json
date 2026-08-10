@@ -70,8 +70,9 @@
   "detail": ""
  },
  "page-035-L:48:Α:985": {
-  "verdict": "preserve",
-  "detail": ""
+  "verdict": "not-an-error",
+  "detail": "",
+  "superseded": "John, 2026-08-10: \"note that the Μδ2. 1013b13. Α4. 985a21 is correct and not an error.\" He is right and the card was wrong: Μδ names the Metaphysics, bare Α is its first book, and 985 sits inside 980-993 — ordinary inheritance, correctly set by Bonitz. The preserve was made on a card that framed OUR parser bug as his error, and the parser has since been taught that the Metaphysics alone has an uppercase book name. Withdrawn by him. Nothing was banked, so the corrigenda register never carried the false claim."
  },
  "page-038-R:52:Πγ:1408": {
   "verdict": "preserve",
@@ -116,5 +117,9 @@
  "page-048-R:39:Ζι:621": {
   "verdict": "fix-siglum",
   "detail": "Ζιι"
+ },
+ "page-039-R:9:Ι:1166": {
+  "verdict": "fix-siglum",
+  "detail": "ι"
  }
 }

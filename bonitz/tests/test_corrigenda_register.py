@@ -72,8 +72,14 @@ def test_a_correction_never_invents_a_character_the_page_does_not_carry():
     as "what the printed form should become". The work belongs in `authority`.
 
     Grok, 2026-08-09. A bare inherited letter stays bare."""
+    # ⚠ A PLACEHOLDER IS NOT A CORRECTION. The work-level preserves record
+    # `(unsettled — see authority)`, because John ruled that the PAGE reads as
+    # printed without being asked WHICH of siglum or page Bonitz got wrong.
+    # That is the honest entry, and it must not be measured as if it were a
+    # proposed reading.
     grown = [(e['printed'], e['correct']) for e in ENTRIES
-             if len(e['correct']) > len(e['printed'])]
+             if not e['correct'].startswith('(')
+             and len(e['correct']) > len(e['printed'])]
     assert not grown, f'corrections longer than what was printed: {grown}'
 
 
