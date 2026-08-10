@@ -311,20 +311,57 @@ def crop_at_offset(
 
     pad = int((y1 - y0) * 0.45)
     # ⚠ OFFSET, NOT FIND. `at` is the character index on the printed line.
-    use_at = -1 if whole else at
-    if use_at is None or use_at < 0 or not want.strip():
-        wx0, wx1 = x0, x1
+    # The mark is the RAW proportional span. `spread` widens the crop, not the
+    # pointer: a rule eight pads wide names half the line and points at
+    # nothing.
+    if at is None or at < 0 or not want.strip():
+        mark = None
     else:
         span = x1 - x0
-        wx0 = x0 + int(span * use_at / len(want)) - pad * spread
-        wx1 = x0 + int(span * (use_at + len(word)) / len(want)) + pad * spread
+        mark = (x0 + int(span * at / len(want)),
+                x0 + int(span * (at + len(word)) / len(want)))
+
+    use_at = -1 if whole else at
+    if use_at is None or use_at < 0 or mark is None:
+        wx0, wx1 = x0, x1
+    else:
+        wx0, wx1 = mark[0] - pad * spread, mark[1] + pad * spread
     box = (max(0, wx0), max(0, y0 - pad),
            min(im.width, max(wx1, wx0 + 60)), min(im.height, y1 + pad))
     c = im.crop(box)
+    if mark is not None:
+        # The crop is padded above and below, so it carries the neighbouring
+        # lines too. Draw under the TARGET line — the bottom of its own box —
+        # or the rule lands beneath a word nobody asked about.
+        c = _mark_word(c, mark[0] - box[0], mark[1] - box[0], y1 - box[1])
     if c.width and c.height:
         c = c.resize((int(c.width * scale), int(c.height * scale)),
                      Image.LANCZOS)
     return c, score, how
+
+
+def _mark_word(im, a: int, b: int, baseline: int):
+    """Underline the target inside its line.
+
+    A rectangle round the word would sit on top of the accents, which are the
+    whole question, so the rule goes under the ink and stops there. It is drawn
+    from a PROPORTIONAL estimate of where the word falls — a pointer, never a
+    measurement. The card prints `how` beside it so the estimate is never
+    mistaken for a fact.
+    """
+    from PIL import ImageDraw
+    a, b = max(0, min(a, im.width)), max(0, min(b, im.width))
+    if b - a < 4 or not (0 < baseline < im.height):
+        return im
+    im = im.convert('RGB')
+    d = ImageDraw.Draw(im)
+    t = max(2, im.height // 40)
+    y = min(baseline, im.height - t - 1)
+    d.rectangle([a, y, b, y + t], fill=(200, 30, 30))
+    for x in (a, b):
+        d.rectangle([x - t // 2, y - t * 4, x + t // 2, y + t],
+                    fill=(200, 30, 30))
+    return im
 
 
 ACCENTS = {'\u0301': 'acute', '\u0300': 'grave', '\u0342': 'circumflex'}
