@@ -14,19 +14,25 @@ import pytest
 from bonitz_pipeline.breathing_oracle import breathing, decide, skeleton
 
 
-@pytest.mark.parametrize('word', ['ἐξ', 'ἕξ', 'ἐν', 'ἕν', 'ἣν', 'ἦν'])
-def test_it_refuses_a_word_aristotle_writes_both_ways(word):
-    """⚠ THE FIRST VERSION DECIDED THESE, AND WAS WRONG EVERY TIME. `ἐξ` (out
-    of) and `ἕξ` (six) share the skeleton `εξ`, and LSJ carries only one of them
-    as a headword — so asking LSJ produced "rough", condemning 2,111 legitimate
-    instances. The colliding skeletons are the high-frequency function words, so
-    the error was constant rather than rare.
+@pytest.mark.parametrize('a,b', [('ἐξ', 'ἕξ'), ('ἐν', 'ἕν'), ('ἣν', 'ἦν')])
+def test_it_never_chooses_between_two_words_aristotle_writes(a, b):
+    """⚠ THIS TEST ASSERTED THE WRONG THING and went red when `decide` learned
+    to accept an exact attested form. Both members of each pair ARE real words
+    Aristotle writes, so confirming either on its own is right — `ἐξ` in the
+    corpus is not an error.
 
-    Aristotle's own text shows both, which is the truth: the word is ambiguous
-    in fact and no authority may choose."""
-    assert decide(word) is None, (
-        f'{word!r} was decided; Aristotle writes both breathings for this '
-        f'skeleton and silence is the only honest answer')
+    What must never happen is the oracle CHOOSING between them, and that is
+    `arbitrate`, not `decide`. Asserting refusal from `decide` conflated
+    "is this a word?" with "which word is on the page?" — the second question
+    is the only one arbitration asks, and the only one it may get wrong."""
+    from bonitz_pipeline.breathing_oracle import arbitrate
+    assert arbitrate({'reader1': a, 'reader2': b}) is None, (
+        f'the oracle chose between {a!r} and {b!r}; Aristotle writes both and '
+        f'only the ink can say which is printed')
+    for w in (a, b):
+        got = decide(w)
+        assert got and got[0] == breathing(w), (
+            f'{w!r} is attested exactly and should be confirmed, not refused')
 
 
 @pytest.mark.parametrize('word,want', [
