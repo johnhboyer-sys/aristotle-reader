@@ -1,0 +1,867 @@
+"""Settle word-level OCR disputes with every authority we have — separately.
+
+`word_flags` turns character-level flag sites into whole-word disputes. This
+module asks, of the readings those disputes offer, which ones an authority
+will accept. Each authority is tried on its own and reported on its own, so
+we can see which earn their place.
+
+The untested idea that is the main point of this module: Morpheus has only
+ever been asked "does the PRINTED form exist?". It has never been asked the
+arbitration question — of the readings the readers offer, which are real
+Greek words? When kraken reads `ἁμιῶς` and opus reads `ἁμῶς`, only one is
+Greek. That should settle a share of the LETTER disputes no authority has
+pointed at before.
+
+⚠ THREE HARD SAFETY RULES (each learned from a real defect):
+
+1. AN OCR FAILURE CAN MANUFACTURE A REAL WORD. `χȣ̔́τω` (page-050-R:50) is the
+   χ of `οὐχ` glued onto `οὕτω`; the glued result is a real Morpheus crasis
+   entry. Prefer a reading that does not require gluing or splitting at the
+   word boundary; treat a lone "winner" that only becomes valid by absorbing
+   or shedding a neighbouring letter as suspect and refuse.
+
+2. SILENCE IS ALWAYS ACCEPTABLE, A WRONG SETTLEMENT IS NOT. Where more than
+   one reading is real Greek, do not choose — that is the ink's job.
+
+3. WEAK READERS POISON ARBITRATION. Including genie and llama makes both
+   breathings look attested. Every rate is reported BOTH ways: strong
+   readers only (opus/kraken/codex) and all five.
+
+⚠ ACCENT-ONLY IS MOSTLY NOT SETTLEABLE FROM A LEXICON. Acute-vs-grave is
+positional (Smyth §154): a final acute becomes grave before a following
+word. Morpheus stores citation accents and never generates contextual
+graves; treating its silence on a grave as evidence is a known trap. This
+module offers an optional positional check from the next character in the
+Opus stream, measured separately, and never confuses Morpheus silence for
+an accent ruling.
+
+    python3 -m bonitz_pipeline.settle work/flags5-053-062.jsonl
+    python3 -m bonitz_pipeline.settle work/flags5-053-062.jsonl --sample 20
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+import unicodedata
+from collections import Counter
+from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
+
+from bonitz_pipeline import morpheus
+from bonitz_pipeline.breathing_oracle import (
+    arbitrate as lexicon_arbitrate,
+    breathing,
+    decide as lexicon_decide,
+)
+from bonitz_pipeline.normalize import canonical, clean_opus
+from bonitz_pipeline.siglum_check import book_ok, inventory, split
+from bonitz_pipeline.word_flags import WordFlag, skeleton, words
+
+ROOT = Path(__file__).resolve().parent.parent
+
+STRONG_READERS = ('opus', 'kraken', 'codex')
+ALL_READERS = ('opus', 'genie', 'llama', 'kraken', 'codex')
+
+ACUTE, GRAVE, CIRC = '́', '̀', '͂'
+# Stop punctuation: final acute stays acute (Smyth §154 does not apply).
+STOP = set('.,;:·!?—–‐-')
+# Bekker page immediately after a citation token in the whitespace-free stream.
+BEKKER = re.compile(r'(\d{2,4})\s*([ab])')
+
+# Authority names — stable strings for reports and tests.
+AUTH_MORPHEUS_MEMBER = 'morpheus.membership'
+AUTH_MORPHEUS_DECIDE = 'morpheus.decide'
+AUTH_LEX_ARB = 'breathing_oracle.arbitrate'
+AUTH_LEX_DECIDE = 'breathing_oracle.decide'
+AUTH_SIGLUM = 'siglum.holds'
+AUTH_ACCENT_POS = 'accent.positional'
+AUTH_AGREE = 'readers.agree'
+AUTH_REFUSE = 'refuse'
+
+
+# --- data -------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class Settlement:
+    """One dispute's outcome under one reader set."""
+    word: WordFlag
+    forms: frozenset[str]
+    winner: str | None
+    authority: str
+    reason: str
+    readers: tuple[str, ...]
+    suspicious: bool = False
+
+    @property
+    def settled(self) -> bool:
+        return self.winner is not None
+
+    @property
+    def kind(self) -> str:
+        return self.word.kind
+
+
+@dataclass
+class SettleReport:
+    """Settlements for one reader set, with refusal counts kept visible."""
+    settlements: list[Settlement] = field(default_factory=list)
+    reader_set: tuple[str, ...] = STRONG_READERS
+
+    @property
+    def settled(self) -> list[Settlement]:
+        return [s for s in self.settlements if s.settled]
+
+    @property
+    def refused(self) -> list[Settlement]:
+        return [s for s in self.settlements if not s.settled]
+
+    @property
+    def by_kind(self) -> Counter:
+        return Counter(s.kind for s in self.settlements)
+
+    @property
+    def settled_by_kind(self) -> Counter:
+        return Counter(s.kind for s in self.settled)
+
+    @property
+    def refused_by_kind(self) -> Counter:
+        return Counter(s.kind for s in self.refused)
+
+    @property
+    def by_authority(self) -> Counter:
+        return Counter(s.authority for s in self.settled)
+
+    @property
+    def refuse_reasons(self) -> Counter:
+        return Counter(s.reason for s in self.refused)
+
+    @property
+    def suspicious(self) -> list[Settlement]:
+        return [s for s in self.settlements if s.suspicious]
+
+    def assert_complete(self) -> None:
+        """Every input is settled or refused with a reason — nothing vanishes."""
+        n = len(self.settlements)
+        assert n == len(self.settled) + len(self.refused)
+        assert all(s.reason for s in self.settlements)
+        assert all(s.authority for s in self.settlements)
+        for s in self.refused:
+            assert s.winner is None
+            assert s.authority == AUTH_REFUSE
+
+
+# --- pure helpers -----------------------------------------------------------
+
+def select_readings(word: WordFlag,
+                    reader_names: tuple[str, ...] | list[str]
+                    ) -> dict[str, str]:
+    """Readings present both in the word and in the chosen reader set."""
+    return {n: word.readers[n] for n in reader_names if n in word.readers}
+
+
+def is_real_greek(form: str,
+                  index: dict[str, set[str]] | None = None) -> bool:
+    """True when Morpheus generates this skeleton (any breathing).
+
+    Letter disputes differ in letters, so skeleton membership is the right
+    question. Accent is deliberately ignored — Morpheus and Bonitz do not
+    share an accent system (see morpheus module docstring).
+    """
+    idx = index if index is not None else morpheus.index()
+    return morpheus.key(form) in idx
+
+
+def boundary_glue_suspect(winner: str, rivals: set[str]) -> bool:
+    """True if the winner is longer than a rival by one letter at either edge.
+
+    That is the χ+οὕτω → χοὔτω class: the sole "real" form only looks Greek
+    because OCR absorbed a neighbouring letter. Mid-word insertions
+    (ἁμῶς / ἁμιῶς) are ordinary letter fights and must NOT trip this.
+
+    A SHORTER winner against a longer rival is the preferred reading (no
+    glue) and is not suspect — refuse only absorption, not the clean form.
+    """
+    ws = skeleton(winner)
+    if not ws:
+        return False
+    for r in rivals:
+        rs = skeleton(r)
+        if not rs:
+            continue
+        if len(ws) == len(rs) + 1 and (ws[1:] == rs or ws[:-1] == rs):
+            return True
+    return False
+
+
+def _siglum_tokens(form: str) -> list[str]:
+    """Candidate tokens to hand to siglum_check.split."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for t in (form, skeleton(form)):
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        out.append(t)
+        if t[0].islower():
+            cap = t[0].upper() + t[1:]
+            if cap not in seen:
+                seen.add(cap)
+                out.append(cap)
+        # Homoglyph Latin → Greek is siglum_check's problem on full lines;
+        # word-level tokens here are already Greek from word_flags.
+    return out
+
+
+def looks_like_citation(forms: set[str],
+                        works: dict | None = None) -> bool:
+    """True when every reading is bare (no diacritics) and at least one splits
+    as a Bonitz work+book token.
+
+    Short bare runs like `Πα` / `Πι` are ALSO real-looking Greek to Morpheus
+    (`πα` is a form). Citation disputes must not fall through to membership.
+    """
+    if not forms:
+        return False
+    works = works if works is not None else inventory()
+    any_split = False
+    for f in forms:
+        d = unicodedata.normalize('NFD', f)
+        if any(unicodedata.combining(c) for c in d):
+            return False
+        sk = skeleton(f)
+        if not (1 <= len(sk) <= 4):
+            return False
+        for t in _siglum_tokens(f):
+            if split(t, works):
+                any_split = True
+                break
+    return any_split
+
+
+def bekker_after(stream: str, word_off: int, word: str) -> int | None:
+    """Bekker page printed after this token in the whitespace-free Opus stream.
+
+    A citation states the same fact twice (siglum+book, and page). The page
+    is what adjudicates which reading of the token is possible.
+    """
+    if word_off < 0 or word_off > len(stream):
+        return None
+    # Search a short window starting at the token; accept the first page that
+    # begins at or after the token's end (minus one, for tight packing).
+    window = stream[word_off:word_off + len(word) + 48]
+    end = len(word)
+    for m in BEKKER.finditer(window):
+        if m.start() >= max(0, end - 1):
+            return int(m.group(1))
+    return None
+
+
+def final_accent_mark(form: str) -> str | None:
+    """The acute/grave/circumflex on the last accented vowel, or None."""
+    d = unicodedata.normalize('NFD', form)
+    last: str | None = None
+    i = 0
+    while i < len(d):
+        if unicodedata.combining(d[i]):
+            i += 1
+            continue
+        j = i + 1
+        marks: list[str] = []
+        while j < len(d) and unicodedata.combining(d[j]):
+            if d[j] in (ACUTE, GRAVE, CIRC):
+                marks.append(d[j])
+            j += 1
+        if marks:
+            last = marks[-1]
+        i = j
+    return last
+
+
+def following_char(stream: str, word_off: int, word: str) -> str:
+    """Next character after the Opus form in the whitespace-free stream."""
+    at = word_off + len(word)
+    if 0 <= at < len(stream):
+        return stream[at]
+    return ''
+
+
+# --- authorities (each returns (winner, reason) or None) --------------------
+
+def by_morpheus_membership(
+        forms: set[str],
+        index: dict[str, set[str]] | None = None,
+) -> tuple[str, str] | None:
+    """Exactly one reading is a form Morpheus generates — take it.
+
+    Refuses (returns None) when zero or many are real, and when the sole
+    real form is a boundary-glue suspect against a rival.
+    """
+    idx = index if index is not None else morpheus.index()
+    real = {f for f in forms if is_real_greek(f, idx)}
+    if len(real) != 1:
+        return None
+    winner = next(iter(real))
+    rivals = forms - {winner}
+    if boundary_glue_suspect(winner, rivals):
+        return None
+    return winner, f'only {winner!r} is a Morpheus form'
+
+
+def by_morpheus_decide(forms: set[str]) -> tuple[str, str] | None:
+    """Morpheus admits exactly one breathing; exactly one reading has it."""
+    if len(forms) < 2:
+        return None
+    # Same skeleton required for a breathing fight; letter fights belong to
+    # membership. If skeletons differ, decide() keys differently per form.
+    if len({morpheus.key(f) for f in forms}) != 1:
+        return None
+    probe = next(iter(forms))
+    got = morpheus.decide(probe)
+    if got is None:
+        return None
+    want, evidence = got
+    match = {f for f in forms if breathing(f) == want}
+    if len(match) != 1:
+        return None
+    winner = next(iter(match))
+    return winner, evidence
+
+
+def by_lexicon_arbitrate(
+        readings: dict[str, str],
+) -> tuple[str, str] | None:
+    """breathing_oracle.arbitrate: accepts some readings, rejects others."""
+    got = lexicon_arbitrate(readings)
+    if got is None:
+        return None
+    return got[0], got[1]
+
+
+def by_lexicon_decide(forms: set[str]) -> tuple[str, str] | None:
+    """Unique form whose breathing decide() confirms; others not confirmed.
+
+    Narrower than arbitrate: no family-ambiguity pre-gate across the set, so
+    it can fire where arbitrate stays silent — and can also over-reach, which
+    is why it is reported separately and applied after arbitrate.
+    """
+    good: dict[str, str] = {}
+    for f in forms:
+        d = lexicon_decide(f)
+        if d and d[0] == breathing(f):
+            good[f] = d[1]
+    if len(good) == 1 and len(good) < len(forms):
+        w, why = next(iter(good.items()))
+        return w, why
+    return None
+
+
+def by_siglum_holds(
+        forms: set[str],
+        page: int | None,
+        works: dict | None = None,
+) -> tuple[str, str] | None:
+    """Exactly one reading is a work+book whose Bekker range holds `page`."""
+    if page is None:
+        return None
+    works = works if works is not None else inventory()
+    good: set[str] = set()
+    why: dict[str, str] = {}
+    for f in forms:
+        for t in _siglum_tokens(f):
+            for work_sig, book in split(t, works):
+                w = works[work_sig]
+                if w.holds(page) and book_ok(work_sig, book):
+                    good.add(f)
+                    why[f] = (f'{t} → {work_sig} book {book or "—"} '
+                              f'holds Bekker {page} ({w.lo}-{w.hi})')
+                    break
+            if f in good:
+                break
+    if len(good) != 1:
+        return None
+    winner = next(iter(good))
+    return winner, why[winner]
+
+
+# ⚠ SMYTH §154 HAS A SECOND EXCEPTION AND THIS DOES NOT HANDLE IT. An oxytone
+# keeps its acute before an ENCLITIC (§183: ἀγαθός τις, not ἀγαθὸς τις), and
+# this rule sees only "a Greek letter follows" and rules grave. That is a wrong
+# automatic settlement in a diplomatic transcription, which is the one outcome
+# worth more than all 37 settlements it wins — so it is OFF by default and must
+# be asked for with --accent-positional. Handling enclitics needs the FOLLOWING
+# WORD, not the following character, which this stream does not give cheaply.
+def by_accent_positional(
+        forms: set[str],
+        next_char: str,
+) -> tuple[str, str] | None:
+    """Smyth §154 for final acute-vs-grave only.
+
+    Before a following Greek word → grave; before stop punctuation or end →
+    acute. Circumflex fights and non-final accent fights are refused. Next
+    character that is Latin or unknown → refuse (Bonitz mixes languages;
+    the rule is about Greek sandhi).
+    """
+    if len(forms) < 2:
+        return None
+    marks = {final_accent_mark(f) for f in forms}
+    if marks != {ACUTE, GRAVE}:
+        return None
+    # Every form must carry its accent on the same skeleton (accent-only).
+    if len({skeleton(f) for f in forms}) != 1:
+        return None
+
+    if not next_char:
+        want, where = ACUTE, 'end of stream'
+    elif next_char in STOP:
+        want, where = ACUTE, f'before stop {next_char!r}'
+    elif _is_greek_letter(next_char):
+        want, where = GRAVE, 'before following Greek word'
+    else:
+        return None
+
+    match = {f for f in forms if final_accent_mark(f) == want}
+    if len(match) != 1:
+        return None
+    winner = next(iter(match))
+    return winner, f'Smyth §154: final {("grave" if want == GRAVE else "acute")} {where}'
+
+
+def _is_greek_letter(c: str) -> bool:
+    if not c:
+        return False
+    base = unicodedata.normalize('NFD', c)[0]
+    o = ord(base)
+    return (0x0370 <= o <= 0x03FF) or (0x1F00 <= o <= 0x1FFF) or base in 'ȣȢϗϛ'
+
+
+# --- column stream cache for Bekker / following-char ------------------------
+
+@lru_cache(maxsize=1)
+def _opus_streams(opus_dir: str) -> dict[tuple[int, str], str]:
+    root = Path(opus_dir)
+    out: dict[tuple[int, str], str] = {}
+    for p in sorted(root.glob('page-*-*.txt')):
+        # page-053-L.txt
+        parts = p.stem.split('-')
+        if len(parts) != 3:
+            continue
+        try:
+            page = int(parts[1])
+        except ValueError:
+            continue
+        col = parts[2]
+        stream, _ = canonical(clean_opus(p.read_text(encoding='utf-8')))
+        out[(page, col)] = stream
+    return out
+
+
+def column_stream(page: int, col: str,
+                  opus_dir: Path | None = None) -> str | None:
+    d = str(opus_dir or (ROOT / 'raw' / 'opus'))
+    return _opus_streams(d).get((page, col))
+
+
+# --- refuse-reason classifiers (visible, not silent) ------------------------
+
+def _membership_refusal(forms: set[str],
+                        index: dict[str, set[str]] | None = None) -> str:
+    idx = index if index is not None else morpheus.index()
+    real = {f for f in forms if is_real_greek(f, idx)}
+    if len(real) == 0:
+        return 'morpheus:no_real_form'
+    if len(real) > 1:
+        return 'morpheus:multiple_real_forms'
+    winner = next(iter(real))
+    if boundary_glue_suspect(winner, forms - {winner}):
+        return 'morpheus:glue_suspect'
+    return 'morpheus:unsettled'
+
+
+def _siglum_refusal(forms: set[str], page: int | None,
+                    works: dict | None = None) -> str:
+    if page is None:
+        return 'siglum:no_bekker_page'
+    works = works if works is not None else inventory()
+    n = 0
+    for f in forms:
+        for t in _siglum_tokens(f):
+            hit = False
+            for work_sig, book in split(t, works):
+                if works[work_sig].holds(page) and book_ok(work_sig, book):
+                    n += 1
+                    hit = True
+                    break
+            if hit:
+                break
+    if n == 0:
+        return 'siglum:no_reading_holds_page'
+    if n > 1:
+        return 'siglum:multiple_readings_hold_page'
+    return 'siglum:unsettled'
+
+
+# --- per-dispute settlement -------------------------------------------------
+
+def settle_one(
+        word: WordFlag,
+        reader_names: tuple[str, ...] = STRONG_READERS,
+        *,
+        index: dict[str, set[str]] | None = None,
+        works: dict | None = None,
+        stream: str | None = None,
+        allow_accent_positional: bool = False,
+) -> Settlement:
+    """Apply authorities in a fixed order; silence when no unique winner.
+
+    Order matters only among successful settlements (first win ends the
+    chain). Refusals always carry an explicit reason so a dead lookup cannot
+    look like caution.
+    """
+    names = tuple(reader_names)
+    readings = select_readings(word, names)
+    forms = frozenset(readings.values())
+    base = dict(word=word, forms=forms, readers=names)
+
+    if len(forms) < 2:
+        if len(forms) == 1:
+            only = next(iter(forms))
+            return Settlement(
+                winner=only, authority=AUTH_AGREE,
+                reason='chosen readers agree on one form',
+                suspicious=False, **base)
+        return Settlement(
+            winner=None, authority=AUTH_REFUSE,
+            reason='no_readings_in_reader_set',
+            suspicious=False, **base)
+
+    form_set = set(forms)
+    idx = index if index is not None else morpheus.index()
+    wrks = works if works is not None else inventory()
+    opus_form = word.readers.get('opus') or next(iter(form_set))
+
+    # --- letters ------------------------------------------------------------
+    if word.kind == 'letters':
+        if looks_like_citation(form_set, wrks):
+            page = bekker_after(stream, word.word_off, opus_form) if stream else None
+            got = by_siglum_holds(form_set, page, wrks)
+            if got:
+                return Settlement(
+                    winner=got[0], authority=AUTH_SIGLUM, reason=got[1],
+                    suspicious=False, **base)
+            # Do NOT fall through to Morpheus: short sigla are false friends.
+            return Settlement(
+                winner=None, authority=AUTH_REFUSE,
+                reason=_siglum_refusal(form_set, page, wrks),
+                suspicious=False, **base)
+
+        got = by_morpheus_membership(form_set, idx)
+        if got:
+            return Settlement(
+                winner=got[0], authority=AUTH_MORPHEUS_MEMBER, reason=got[1],
+                suspicious=False, **base)
+        return Settlement(
+            winner=None, authority=AUTH_REFUSE,
+            reason=_membership_refusal(form_set, idx),
+            suspicious=False, **base)
+
+    # --- breathing-only / marks-only (breathing authorities) ----------------
+    if word.kind in ('breathing-only', 'marks-only'):
+        for auth, fn in (
+            (AUTH_MORPHEUS_DECIDE, lambda: by_morpheus_decide(form_set)),
+            (AUTH_LEX_ARB, lambda: by_lexicon_arbitrate(readings)),
+            (AUTH_LEX_DECIDE, lambda: by_lexicon_decide(form_set)),
+        ):
+            got = fn()
+            if got:
+                return Settlement(
+                    winner=got[0], authority=auth, reason=got[1],
+                    suspicious=False, **base)
+        return Settlement(
+            winner=None, authority=AUTH_REFUSE,
+            reason=f'{word.kind}:breathing_authorities_silent',
+            suspicious=False, **base)
+
+    # --- accent-only --------------------------------------------------------
+    if word.kind == 'accent-only':
+        if allow_accent_positional and stream is not None:
+            nxt = following_char(stream, word.word_off, opus_form)
+            got = by_accent_positional(form_set, nxt)
+            if got:
+                return Settlement(
+                    winner=got[0], authority=AUTH_ACCENT_POS, reason=got[1],
+                    suspicious=False, **base)
+            return Settlement(
+                winner=None, authority=AUTH_REFUSE,
+                reason='accent-only:not_positional_or_ambiguous',
+                suspicious=False, **base)
+        return Settlement(
+            winner=None, authority=AUTH_REFUSE,
+            reason='accent-only:lexicon_cannot_settle',
+            suspicious=False, **base)
+
+    return Settlement(
+        winner=None, authority=AUTH_REFUSE,
+        reason=f'unknown_kind:{word.kind}',
+        suspicious=False, **base)
+
+
+def settle_words(
+        word_list: list[WordFlag],
+        reader_names: tuple[str, ...] = STRONG_READERS,
+        *,
+        opus_dir: Path | None = None,
+        allow_accent_positional: bool = False,
+) -> SettleReport:
+    """Settle every word dispute under one reader set."""
+    idx = morpheus.index()
+    wrks = inventory()
+    odir = opus_dir or (ROOT / 'raw' / 'opus')
+    # Prime the stream cache once.
+    _ = _opus_streams(str(odir))
+
+    out: list[Settlement] = []
+    for w in word_list:
+        stream = column_stream(w.page, w.col, odir)
+        out.append(settle_one(
+            w, reader_names,
+            index=idx, works=wrks, stream=stream,
+            allow_accent_positional=allow_accent_positional,
+        ))
+    rep = SettleReport(settlements=out, reader_set=tuple(reader_names))
+    rep.assert_complete()
+    return rep
+
+
+def settle_path(
+        path: Path | str,
+        reader_names: tuple[str, ...] = STRONG_READERS,
+        *,
+        opus_dir: Path | None = None,
+        allow_accent_positional: bool = False,
+) -> SettleReport:
+    """Load word flags from a flags JSONL and settle them."""
+    return settle_words(
+        words(path, opus_dir=opus_dir),
+        reader_names,
+        opus_dir=opus_dir,
+        allow_accent_positional=allow_accent_positional,
+    )
+
+
+# --- per-authority measurement (no short-circuit) ---------------------------
+
+def measure_authorities(
+        word_list: list[WordFlag],
+        reader_names: tuple[str, ...] = STRONG_READERS,
+        *,
+        opus_dir: Path | None = None,
+) -> dict[str, Counter]:
+    """How often each authority COULD settle, kind by kind — independently.
+
+    Unlike settle_one, this does not short-circuit. A dispute may be counted
+    under more than one authority. Used for the report that decides which
+    authorities earn their place.
+    """
+    idx = morpheus.index()
+    wrks = inventory()
+    odir = opus_dir or (ROOT / 'raw' / 'opus')
+    _ = _opus_streams(str(odir))
+
+    # authority -> Counter(kind -> n)
+    hits: dict[str, Counter] = {
+        AUTH_MORPHEUS_MEMBER: Counter(),
+        AUTH_MORPHEUS_DECIDE: Counter(),
+        AUTH_LEX_ARB: Counter(),
+        AUTH_LEX_DECIDE: Counter(),
+        AUTH_SIGLUM: Counter(),
+        AUTH_ACCENT_POS: Counter(),
+        AUTH_AGREE: Counter(),
+    }
+    # also track glue / multi refusals for membership
+    membership_block = Counter()
+
+    for w in word_list:
+        readings = select_readings(w, reader_names)
+        form_set = set(readings.values())
+        if len(form_set) < 2:
+            if len(form_set) == 1:
+                hits[AUTH_AGREE][w.kind] += 1
+            continue
+        stream = column_stream(w.page, w.col, odir)
+        opus_form = w.readers.get('opus') or next(iter(form_set))
+
+        # membership (letter disputes only; skip pure citations)
+        if w.kind == 'letters' and not looks_like_citation(form_set, wrks):
+            real = {f for f in form_set if is_real_greek(f, idx)}
+            if len(real) == 1:
+                win = next(iter(real))
+                if boundary_glue_suspect(win, form_set - {win}):
+                    membership_block['glue_suspect'] += 1
+                else:
+                    hits[AUTH_MORPHEUS_MEMBER][w.kind] += 1
+            elif len(real) > 1:
+                membership_block['multiple_real'] += 1
+            else:
+                membership_block['no_real'] += 1
+
+        if w.kind in ('breathing-only', 'marks-only', 'letters'):
+            if by_morpheus_decide(form_set):
+                hits[AUTH_MORPHEUS_DECIDE][w.kind] += 1
+            if by_lexicon_arbitrate(readings):
+                hits[AUTH_LEX_ARB][w.kind] += 1
+            if by_lexicon_decide(form_set):
+                hits[AUTH_LEX_DECIDE][w.kind] += 1
+
+        if w.kind == 'letters' and looks_like_citation(form_set, wrks):
+            page = bekker_after(stream, w.word_off, opus_form) if stream else None
+            if by_siglum_holds(form_set, page, wrks):
+                hits[AUTH_SIGLUM][w.kind] += 1
+
+        if w.kind == 'accent-only' and stream is not None:
+            nxt = following_char(stream, w.word_off, opus_form)
+            if by_accent_positional(form_set, nxt):
+                hits[AUTH_ACCENT_POS][w.kind] += 1
+
+    hits['_membership_block'] = membership_block  # type: ignore[assignment]
+    return hits
+
+
+# --- report / CLI -----------------------------------------------------------
+
+def _print_report(
+        path: Path,
+        strong: SettleReport,
+        all5: SettleReport,
+        word_list: list[WordFlag],
+        sample_n: int,
+) -> None:
+    n = len(word_list)
+    kinds = Counter(w.kind for w in word_list)
+    print(f'flags: {path}')
+    print(f'word disputes: {n}')
+    print(f'  by kind: {dict(kinds)}')
+    print()
+
+    for label, rep in (('STRONG (opus/kraken/codex)', strong),
+                      ('ALL FIVE (opus/genie/llama/kraken/codex)', all5)):
+        # Collapsed = readers.agree (dispute vanishes under this reader set)
+        n_agree = sum(1 for s in rep.settlements if s.authority == AUTH_AGREE)
+        n_auto = sum(1 for s in rep.settled if s.authority != AUTH_AGREE)
+        n_human = len(rep.refused)
+        print(f'=== {label} ===')
+        print(f'  agree (dispute collapses): {n_agree}')
+        print(f'  auto-settled (authority):  {n_auto}')
+        print(f'  still need John:           {n_human}')
+        print(f'  total accounted:           {n_agree + n_auto + n_human} '
+              f'(of {n})')
+        print(f'  settled by kind:  {dict(rep.settled_by_kind)}')
+        print(f'  refused by kind:  {dict(rep.refused_by_kind)}')
+        print(f'  by authority:     {dict(rep.by_authority)}')
+        print(f'  refuse reasons:   {dict(rep.refuse_reasons)}')
+        if rep.suspicious:
+            print(f'  suspicious:       {len(rep.suspicious)}')
+        print()
+
+    # Independent authority measurement on STRONG
+    print('=== Per-authority hits (STRONG, independent — no short-circuit) ===')
+    hits = measure_authorities(word_list, STRONG_READERS)
+    block = hits.pop('_membership_block', Counter())
+    for auth, ctr in hits.items():
+        if sum(ctr.values()):
+            print(f'  {auth:<32} {dict(ctr)}  total={sum(ctr.values())}')
+    if block:
+        print(f'  morpheus.membership blocks:   {dict(block)}')
+    print()
+
+    print('=== Per-authority hits (ALL FIVE, independent) ===')
+    hits5 = measure_authorities(word_list, ALL_READERS)
+    hits5.pop('_membership_block', None)
+    for auth, ctr in hits5.items():
+        if sum(ctr.values()):
+            print(f'  {auth:<32} {dict(ctr)}  total={sum(ctr.values())}')
+    print()
+
+    # Recommendation
+    s_auto = sum(1 for s in strong.settled if s.authority != AUTH_AGREE)
+    a_auto = sum(1 for s in all5.settled if s.authority != AUTH_AGREE)
+    s_breath = sum(1 for s in strong.settled
+                   if s.kind == 'breathing-only' and s.authority != AUTH_AGREE)
+    a_breath = sum(1 for s in all5.settled
+                   if s.kind == 'breathing-only' and s.authority != AUTH_AGREE)
+    print('=== Recommendation ===')
+    print(f'  Strong auto-settles {s_auto} (breathing-only {s_breath}); '
+          f'all-five auto-settles {a_auto} (breathing-only {a_breath}).')
+    if s_breath >= a_breath:
+        print('  Use STRONG readers (opus/kraken/codex) for arbitration. '
+              'Weak readers add noise that makes both breathings look attested.')
+    else:
+        print('  All-five settles more here; re-check quality before adopting.')
+    print()
+
+    # Sample of settled LETTER disputes
+    letter_settled = [s for s in strong.settled
+                      if s.kind == 'letters' and s.authority != AUTH_AGREE]
+    print(f'=== Sample of {min(sample_n, len(letter_settled))} settled LETTER '
+          f'disputes (STRONG) ===')
+    for s in letter_settled[:sample_n]:
+        w = s.word
+        forms = ', '.join(f'{n}={w.readers[n]!r}'
+                          for n in s.readers if n in w.readers)
+        print(f'  {w.page}-{w.col}:{w.word_off}  {forms}')
+        print(f'      -> {s.winner!r}  [{s.authority}] {s.reason}')
+    print()
+
+    # What we cannot do
+    print('=== What this cannot do ===')
+    n_acc = kinds.get('accent-only', 0)
+    acc_pos = sum(1 for s in strong.settled if s.authority == AUTH_ACCENT_POS)
+    acc_ref = sum(1 for s in strong.refused if s.kind == 'accent-only')
+    print(f'  Accent-only disputes: {n_acc}. Positional §154 settled {acc_pos} '
+          f'under STRONG; {acc_ref} still refused.')
+    print('  Acute/grave is positional (Smyth §154), not lexical. Morpheus')
+    print('  stores citation accents and does not generate contextual graves;')
+    print('  its silence on a grave is NOT evidence. Circumflex fights and')
+    print('  non-final accent fights stay with John.')
+    print('  locate() places quoted phrases at Bekker lines — useful for')
+    print('  mis-cited quotations, not for choosing between OCR spellings of')
+    print('  a single index word. Not applied here.')
+    multi = strong.refuse_reasons.get('morpheus:multiple_real_forms', 0)
+    glue = strong.refuse_reasons.get('morpheus:glue_suspect', 0)
+    print(f'  Letter disputes with multiple real forms (STRONG refuse): {multi}')
+    print(f'  Letter disputes refused as boundary-glue suspects: {glue}')
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
+    p.add_argument('flags', nargs='?',
+                   default=str(ROOT / 'work' / 'flags5-053-062.jsonl'),
+                   help='flags JSONL (default: work/flags5-053-062.jsonl)')
+    p.add_argument('--sample', type=int, default=20,
+                   help='how many settled letter disputes to print')
+    p.add_argument('--accent-positional', action='store_true',
+                   help='enable the Smyth §154 rule; OFF by default because it '
+                        'does not handle enclitics (see by_accent_positional)')
+    p.add_argument('--no-accent-positional', action='store_true',
+                   help='disable Smyth §154 positional accent settlement')
+    a = p.parse_args(argv)
+
+    path = Path(a.flags)
+    if not path.exists():
+        print(f'not found: {path}', file=sys.stderr)
+        return 2
+
+    allow = a.accent_positional and not a.no_accent_positional
+    word_list = words(path)
+    strong = settle_words(word_list, STRONG_READERS,
+                          allow_accent_positional=allow)
+    all5 = settle_words(word_list, ALL_READERS,
+                        allow_accent_positional=allow)
+    _print_report(path, strong, all5, word_list, a.sample)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
