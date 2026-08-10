@@ -56,40 +56,50 @@ def test_the_page_is_what_tells_a_citation_from_a_word():
     assert not SLOT.search('πκς and then some prose')
 
 
-def test_nothing_is_left_to_correct_once_applied():
-    """After the fix the corpus holds no final sigma in a numeral slot, so a
-    later pass that reintroduces one will show up here rather than in a queue
-    John has to read."""
-    assert find() == [], f'still uncorrected: {find()}'
+def test_nothing_unruled_is_left_to_correct():
+    """⚠ THIS ASSERTED `find() == []` and that stopped being true the moment
+    John's preserves were restored — correctly. `find()` reports what the
+    PATTERN matches; whether a site may be TOUCHED is a separate question, and
+    conflating the two is what let a rule overwrite a ruling.
+
+    The invariant is narrower and truer: nothing UNRULED is left uncorrected.
+    A site John has decided may sit in `find()` forever, reported, never
+    applied — unless he supersedes his own ruling, which only he can do."""
+    from bonitz_pipeline.numeral_fix import already_ruled
+    ruled = already_ruled()
+    left = [(c, l, w) for c, l, w, _ in find() if (c, l) not in ruled]
+    assert not left, f'unruled sites still uncorrected: {left}'
 
 
-def test_a_rule_never_overrides_a_ruling():
+def test_a_rule_never_overrides_a_LIVE_ruling():
     """⚠ THIS TEST EXISTS BECAUSE THE MODULE DID IT. On 2026-08-10 it rewrote
     three citations John had explicitly PRESERVED, because it never looked at
     his rulings — the same failure the corrigenda README records from
-    2026-08-08, when two of his rulings were silently overwritten and had to be
-    reverted.
+    2026-08-08. A corpus that quietly disagrees with its own adjudication
+    record cannot be trusted at all, and the disagreement is invisible: the
+    text looks fine, the tests pass, and only the person who ruled would notice.
 
-    It is worse than any misreading. A corpus that quietly disagrees with its
-    own adjudication record cannot be trusted at all, and the disagreement is
-    invisible: the text looks fine, the tests pass, and only the person who
-    made the ruling would ever notice.
-
-    His click is the authority. A rule that thinks otherwise reports the
-    conflict and stops."""
-    from bonitz_pipeline.numeral_fix import already_ruled, find
-    ruled = already_ruled()
-    assert ruled, 'no rulings loaded — the guard would pass vacuously'
-    clashes = [(c, l) for c, l, _, _ in find() if (c, l) in ruled]
-    assert not clashes or all(ruled[k] for k in clashes), (
-        'find() may still REPORT a ruled site, but main() must skip it')
-    # the three John preserved must still read as he left them
+    ⚠ AND ONLY HE MAY WITHDRAW ONE. Those same three were later superseded —
+    "those preserve on sigma sites are due to the problems with the cards" —
+    because the card rendered ς and ϛ identically and the click recorded what
+    the screen showed, not what he judged. That is a withdrawal BY him, with
+    its reason on the record, and it is the only thing that makes a ruled site
+    touchable again."""
+    import json
     from pathlib import Path
+    from bonitz_pipeline.numeral_fix import already_ruled, find
     root = Path(__file__).resolve().parent.parent
-    for col, line, want in (('page-025-L', 43, 'πκς'),
-                            ('page-025-L', 46, 'κς'),
-                            ('page-025-R', 27, 'πκς')):
-        text = (root / f'work/reconciled/{col}.txt').read_text(
-            encoding='utf-8').splitlines()[line - 1]
-        assert want in text, (
-            f'{col}:{line} no longer reads {want!r} — John ruled preserve here')
+    store = json.loads(
+        (root / 'work/sweeps/siglum-rulings.json').read_text(encoding='utf-8'))
+
+    live = already_ruled()
+    assert live, 'no live rulings loaded — the guard would pass vacuously'
+    assert not [(c, l) for c, l, _, _ in find() if (c, l) in live], \
+        'a site with a LIVE ruling is still being proposed for correction'
+
+    superseded = {k for k, v in store.items() if v.get('superseded')}
+    assert len(superseded) == 3, 'the three sigma sites were withdrawn by John'
+    for sid in superseded:
+        assert 'cards' in store[sid]['superseded'], \
+            'a withdrawal must carry its reason, or it is indistinguishable ' \
+            'from a rule quietly winning'

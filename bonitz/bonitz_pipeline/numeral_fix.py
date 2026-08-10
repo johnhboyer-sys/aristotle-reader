@@ -61,6 +61,16 @@ def already_ruled() -> dict:
         for sid, v in json.loads(store.read_text(encoding='utf-8')).items():
             parts = sid.split(':')
             if len(parts) >= 2 and parts[1].isdigit():
+                if v.get('superseded'):
+                    # ⚠ ONLY JOHN MAY WITHDRAW A RULING, and he does it by
+                    # saying so — not by a rule deciding his click was
+                    # mistaken. On 2026-08-10 he preserved three sigma sites
+                    # and then said: "those preserve on sigma sites are due to
+                    # the problems with the cards." The card rendered ς and ϛ
+                    # identically, so the click recorded what the screen showed
+                    # him, not what he judged. The withdrawal is recorded with
+                    # its reason and the site becomes touchable again.
+                    continue
                 out[(parts[0], int(parts[1]))] = v.get('verdict', '?')
     return out
 

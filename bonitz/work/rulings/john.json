@@ -1844,6 +1844,45 @@
    "source": "work/sweeps/book-rulings.json",
    "date": "2026-08-09",
    "applied": true
+  },
+  {
+   "id": "page-025-L:43:πκϛ 56. 946 b",
+   "kind": "text",
+   "col": "page-025-L",
+   "line": 43,
+   "form": "πκϛ 56. 946 b",
+   "ruled": "numeral-slot/applied",
+   "quote": "",
+   "note": "final sigma has no numeric value; a book number is a numeral, so only stigma (6) can stand in this slot. The two sorts are the same shape in this type — the ambiguity is in the glyph, not in the text, and the codepoint was always our choice rather than Bonitz's.",
+   "source": "bonitz_pipeline.numeral_fix",
+   "date": "2026-08-10",
+   "applied": true
+  },
+  {
+   "id": "page-025-L:46:κϛ56. 946 b",
+   "kind": "text",
+   "col": "page-025-L",
+   "line": 46,
+   "form": "κϛ56. 946 b",
+   "ruled": "numeral-slot/applied",
+   "quote": "",
+   "note": "final sigma has no numeric value; a book number is a numeral, so only stigma (6) can stand in this slot. The two sorts are the same shape in this type — the ambiguity is in the glyph, not in the text, and the codepoint was always our choice rather than Bonitz's.",
+   "source": "bonitz_pipeline.numeral_fix",
+   "date": "2026-08-10",
+   "applied": true
+  },
+  {
+   "id": "page-025-R:27:πκϛ36. 944 b",
+   "kind": "text",
+   "col": "page-025-R",
+   "line": 27,
+   "form": "πκϛ36. 944 b",
+   "ruled": "numeral-slot/applied",
+   "quote": "",
+   "note": "final sigma has no numeric value; a book number is a numeral, so only stigma (6) can stand in this slot. The two sorts are the same shape in this type — the ambiguity is in the glyph, not in the text, and the codepoint was always our choice rather than Bonitz's.",
+   "source": "bonitz_pipeline.numeral_fix",
+   "date": "2026-08-10",
+   "applied": true
   }
  ]
 }
