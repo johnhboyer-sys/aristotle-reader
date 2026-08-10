@@ -364,6 +364,32 @@ def sites() -> list[Site]:
 INV = inventory()
 
 
+# Characters this type renders identically, or near enough that a SCREEN font
+# will not separate them either. John, 2026-08-10: "I think I can tell in the
+# ink but the problem is the card." The crop was legible; `read πκϛ` against
+# `keep πκς` was not, because on screen they are the same string twice.
+NAMED = {'ϛ': 'stigma, 6', 'ς': 'final sigma, no value', 'ι': 'iota',
+         'υ': 'upsilon', 'ο': 'omicron', 'δ': 'delta', 'θ': 'theta',
+         'κ': 'kappa', 'β': 'beta', 'ν': 'nu', 'γ': 'gamma', 'ε': 'epsilon',
+         'ζ': 'zeta', 'η': 'eta', 'α': 'alpha', 'χ': 'chi', 'π': 'pi'}
+
+
+def spell(token: str, cand: str) -> str:
+    """`cand` with the character that differs marked and NAMED.
+
+    A button whose face is a Greek string is useless when the difference is one
+    letter the screen draws the same way. Mark the letter, then say what it is.
+    """
+    if len(token) == len(cand):
+        at = [i for i, (a, b) in enumerate(zip(token, cand)) if a != b]
+        if len(at) == 1:
+            i = at[0]
+            name = NAMED.get(cand[i])
+            return (f'{cand[:i]}<mark>{cand[i]}</mark>{cand[i + 1:]}'
+                    + (f' <em>({name})</em>' if name else ''))
+    return cand
+
+
 def recommend(s: Site) -> tuple[str, str, str]:
     """One answer, one reason. Returns (verdict, detail, why).
 
@@ -417,7 +443,8 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
                 '</div>') if s.how != 'text' else ''
         sig = ''.join(
             f'<button class="fix" onclick="rule({s.sid!r},\'fix-siglum\','
-            f'{c!r},this)"><span class="gk">{c}</span></button>' for c in s.sigla)
+            f'{c!r},this)"><span class="gk">{spell(s.token, c)}</span>'
+            f'</button>' for c in s.sigla)
         sigbtn = sig or '<span class="does">nothing else is possible here</span>'
         pgs = ''.join(
             f'<button class="fix" onclick="rule({s.sid!r},\'fix-page\','
@@ -439,9 +466,10 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
         }[rv]
         rface = ('keep <span class="gk">%s</span> as printed' % s.token
                  if rv == 'preserve' else
-                 'read <span class="gk">%s</span> · and record it' % rd
-                 if rv == 'fix-siglum-and-record' else
-                 'read <span class="gk">%s</span>' % rd)
+                 'read <span class="gk">%s</span> · and record it'
+                 % spell(s.token, rd) if rv == 'fix-siglum-and-record' else
+                 'read <span class="gk">%s</span>'
+                 % (spell(s.token, rd) if rv == 'fix-siglum' else rd))
         none = ('<div class="warnflag">no repair suggested — nothing one edit '
                 'away lands in range. Read the line and preserve, or say so.'
                 '</div>') if not (s.sigla or s.pages) else ''
@@ -472,7 +500,7 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
       register for the revised edition.</div>
     <div class="row">
       <button class="keep" onclick="rule({s.sid!r},'preserve','',this)">
-        keep <span class="gk">{s.token}</span></button>
+        keep <span class="gk">{spell(s.sigla[0], s.token) if s.sigla else s.token}</span></button>
     </div>
     <div class="lbl">the ink reads a different siglum</div>
     <div class="does">We misread it. The corpus <b>is</b> corrected, and
