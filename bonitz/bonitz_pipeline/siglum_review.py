@@ -116,6 +116,9 @@ class Site:
     sigla: list[str] = field(default_factory=list)
     pages: list[int] = field(default_factory=list)
     near: list[str] = field(default_factory=list)
+    # Set when a RULE already changed this citation and John has not seen it.
+    # An automated correction nobody audits is an assertion, not a finding.
+    applied: str = ''
 
     @property
     def sid(self) -> str:
@@ -340,19 +343,58 @@ def sites() -> list[Site]:
     for c, w, owner in missing_book(cites, table):
         if owner != '?':
             gap[id(c)] = (c, w + owner)
+    # ⚠ A RULE THAT RAN WITHOUT HIM STILL OWES HIM A LOOK. John, 2026-08-10:
+    # "I want to double check your rule." `numeral_fix` corrected three
+    # citations mechanically, and because they now resolve cleanly they had
+    # vanished from the queue — the automation had made itself unauditable.
+    # They come back as confirmation cards, showing what the rule did and why,
+    # until he has seen each one.
+    import json as _j2
+    led = _j2.loads((ROOT / 'work/rulings/john.json').read_text(encoding='utf-8'))
+    lk = 'rulings' if 'rulings' in led else [x for x in led if x != '_'][0]
+    # ⚠ KEY ON THE CITATION, NOT THE LINE. A line carries several citations —
+    # 025-L:46 holds both `κϛ56. 946b` and `πδ1. 889b` — so keying on (col,
+    # line) flagged a neighbour the rule never touched and asked John to
+    # confirm a change that was never made to it.
+    byrule = {}
+    for r in led[lk]:
+        if r.get('source') == 'bonitz_pipeline.numeral_fix':
+            byrule[(r['col'], r['line'], r['form'].split()[0].rstrip('.'))] = r
+    seen_rule = set()
+    if RULINGS.exists():
+        seen_rule = {k for k, v in _j2.loads(
+            RULINGS.read_text(encoding='utf-8')).items()
+            if v.get('verdict') == 'confirm-rule'}
+
     queue = [c for c in cites if c.how == 'unresolved'] + \
-            [c for c, _ in gap.values()]
+            [c for c, _ in gap.values()] + \
+            [c for c in cites
+             if (c.col, c.line, c.raw.split()[0].rstrip('.')) in byrule
+             and f'{c.col}:{c.line}:{c.token}:{c.page}' not in seen_rule]
     out = []
     for c in sorted(queue, key=lambda c: (c.col, c.line)):
-        why = c.why or (
-            f'{c.work} has books and none is named here; {c.page} is in book '
-            f'{gap[id(c)][1][len(c.work):]!r}. Bonitz names the book everywhere '
-            f'else — this reads like a lost letter, not a citation of the work.')
+        # ⚠ THREE KINDS REACH HERE NOW, and only one of them has a `why`.
+        # An unresolved citation carries its own; a missing-book gap gets the
+        # sentence below; a rule-applied citation resolves cleanly and has
+        # neither, which used to raise KeyError off `gap` the moment the
+        # confirmation cards were added.
+        if c.why:
+            why = c.why
+        elif id(c) in gap:
+            why = (f'{c.work} has books and none is named here; {c.page} is in '
+                   f'book {gap[id(c)][1][len(c.work):]!r}. Bonitz names the '
+                   f'book everywhere else — this reads like a lost letter, not '
+                   f'a citation of the work.')
+        else:
+            why = (f'Now reads {c.work}{c.book}, and {c.page} sits inside it.')
         s = Site(c.col, c.line, c.raw, c.token, c.page, why)
         im, _, how = crop_word(c.col, c.line, c.token, scale=3.0, spread=8)
         s.crop, s.how = _b64(im), how
         s.whole = _b64(crop_word(c.col, c.line, c.token, scale=1.6,
                                  whole=True)[0])
+        rk = (c.col, c.line, c.raw.split()[0].rstrip('.'))
+        if rk in byrule and c.how != 'unresolved':
+            s.applied = byrule[rk]['note']
         s.near = [f'{o.raw} = {o.work}{o.book}' for o in cites
                   if o.col == c.col and abs(o.line - c.line) <= 2
                   and o.how in ('explicit', 'inherited') and o is not c][:6]
@@ -380,6 +422,11 @@ INV = inventory()
 # will not separate them either. John, 2026-08-10: "I think I can tell in the
 # ink but the problem is the card." The crop was legible; `read πκϛ` against
 # `keep πκς` was not, because on screen they are the same string twice.
+# Sorts a screen font will not separate at reading size, however good the type.
+# Stigma against final sigma is the worst pair in this book; iota against
+# upsilon and omicron against delta are the others that have cost a ruling.
+LOUD = 'ϛςιυοδΒβ'
+
 NAMED = {'ϛ': 'stigma, 6', 'ς': 'final sigma, no value', 'ι': 'iota',
          'υ': 'upsilon', 'ο': 'omicron', 'δ': 'delta', 'θ': 'theta',
          'κ': 'kappa', 'β': 'beta', 'ν': 'nu', 'γ': 'gamma', 'ε': 'epsilon',
@@ -397,7 +444,15 @@ def spell(token: str, cand: str) -> str:
         if len(at) == 1:
             i = at[0]
             name = NAMED.get(cand[i])
-            return (f'{cand[:i]}<mark>{cand[i]}</mark>{cand[i + 1:]}'
+            # ⚠ SOME SORTS MUST BE UNMISTAKABLE, NOT MERELY MARKED. John,
+            # 2026-08-10: "for stigma/sigma, make stigma BOLD so it clearly
+            # pops." A highlight says WHERE the difference is; it does not make
+            # ϛ look unlike ς, and on a phone at 19px they are still one shape
+            # with a background behind it. These characters get their own size
+            # and weight so the reader is not asked to resolve, at screen
+            # resolution, the very distinction the scan could not settle.
+            cls = ' class="loud"' if cand[i] in LOUD else ''
+            return (f'{cand[:i]}<mark{cls}>{cand[i]}</mark>{cand[i + 1:]}'
                     + (f' <em>({name})</em>' if name else ''))
     return cand
 
@@ -440,6 +495,20 @@ button.go{font-size:1.25rem;padding:1.05rem 1.5rem;width:100%;min-height:64px}
 details summary{font-size:.9rem;padding:.9rem 0}
 .alts{border-top:1px solid var(--rule);margin-top:.9rem}
 mark{padding:0 .18em}
+mark.loud{font-size:1.5em;font-weight:800;line-height:1;padding:0 .16em;
+  vertical-align:-.06em}
+.ask{font:600 1.15rem/1.3 Superclarendon,Rockwell,Georgia,serif;
+  margin:1rem 0 .7rem}
+.rec{display:flex;flex-direction:column;gap:.6rem;margin:0 0 .6rem}
+button.go{width:100%;text-align:left;display:flex;flex-direction:column;
+  gap:.25rem;font-size:1.1rem;padding:.95rem 1.1rem;min-height:64px}
+button.go.no{background:var(--fix);border-color:var(--fix)}
+button.go.yes{background:transparent;border:2px solid var(--keep);
+  color:var(--keep)}
+button.go.bothb{background:transparent;border:2px dashed var(--warn);
+  color:var(--warn)}
+.sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
+.reclbl{font-size:.82rem;margin:.2rem 0 0}
 
 @media(min-width:760px){
   body{font-size:17px}
@@ -517,6 +586,13 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
                f'corrected to the page you read.</div>'
                f'<div class="row">{pgs}</div>') if pgs else ''
         rv, rd, rw = recommend(s)
+        ask = ('A rule already changed this. Was it right?' if s.applied
+               else 'Did Bonitz print this wrong?')
+        both = ('<button class="go bothb" onclick="rule(%r,'
+                r'&#39;fix-siglum-and-record&#39;,%r,this)">Both — we misread '
+                r'it AND he printed it wrong<span class="sub2">corpus becomes '
+                r'%s, and %s is recorded</span></button>'
+                % (s.sid, rd, rd, rd)) if rv == 'fix-siglum-and-record' else ''
         rdoes = {
             'preserve': 'Corpus untouched; the error goes to the corrigenda '
                         'register.',
@@ -527,6 +603,8 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
                                      'printed, AND what is printed is recorded '
                                      'as the edition\'s own error.',
         }[rv]
+        ruled = (f'<div class="applied"><b>Already corrected by rule.</b> '
+                 f'{s.applied}</div>') if s.applied else ''
         rface = ('keep <span class="gk">%s</span> as printed' % s.token
                  if rv == 'preserve' else
                  'read <span class="gk">%s</span> · and record it'
@@ -555,24 +633,21 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
     </details>
   </div>
   {none}
+  <div class="ask">{ask}</div>
+  {both}
+  {ruled}
   <div class="rec">
-    <div class="reclbl">most likely — {rw}</div>
-    <div class="does">{rdoes}</div>
-    <button class="go" onclick="rule({s.sid!r},{rv!r},{rd!r},this)">
-      {rface}</button>
+    <button class="go no" onclick="rule({s.sid!r},{rv!r},{rd!r},this)">
+      No — we misread it<span class="sub2">the corpus becomes {rface}</span>
+    </button>
+    <button class="go yes" onclick="rule({s.sid!r},'preserve','',this)">
+      Yes — he printed it wrong<span class="sub2">corpus untouched · goes to
+      corrigenda</span>
+    </button>
   </div>
-  <details class="alts"><summary>something else</summary>
-    <div class="lbl">the ink really does read <span class="gk">{s.token}</span></div>
-    <div class="does">Bonitz set it wrong. The corpus is <b>not</b> touched —
-      the reading stands as printed, and the error is banked in the corrigenda
-      register for the revised edition.</div>
-    <div class="row">
-      <button class="keep" onclick="rule({s.sid!r},'preserve','',this)">
-        keep <span class="gk">{spell(s.sigla[0], s.token) if s.sigla else s.token}</span></button>
-    </div>
+  <div class="reclbl">{rw}</div>
+  <details class="alts"><summary>we misread it, but not as {rd}</summary>
     <div class="lbl">the ink reads a different siglum</div>
-    <div class="does">We misread it. The corpus <b>is</b> corrected, and
-      nothing is recorded — the edition was never wrong.</div>
     <div class="row">{sigbtn}</div>
     {pgs}
   </details>
