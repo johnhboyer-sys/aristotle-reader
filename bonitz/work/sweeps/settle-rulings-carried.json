@@ -140,13 +140,6 @@
    "forms:Ψγ|ψγ"
   ]
  },
- "forms:αὐτὸν|αὑτὸν": {
-  "verdict": "accept",
-  "detail": "αὑτὸν",
-  "carried_from": [
-   "forms:αὐτὸν|αὑτὸν"
-  ]
- },
  "forms:ȣ́τ'|ȣ̓́τ'|ὅτ'": {
   "verdict": "preserve",
   "detail": "ȣ̓́τ'",
@@ -1041,13 +1034,6 @@
   "detail": "σχεδὸν",
   "carried_from": [
    "forms:σχεδον|σχεδὸν"
-  ]
- },
- "forms:τȣ̀ς|τὰς": {
-  "verdict": "preserve",
-  "detail": "τὰς",
-  "carried_from": [
-   "forms:τȣ̀ς|τὰς"
   ]
  },
  "forms:τȣ̓ναντίον|τȣναντίον": {

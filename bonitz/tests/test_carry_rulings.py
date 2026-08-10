@@ -107,6 +107,28 @@ def test_sites_he_ruled_differently_are_reported_not_merged(tmp_path):
     assert [c.sid for c in todo] == ['forms:ἂν|ἄν']
 
 
+def test_a_member_printing_something_else_was_never_answered(tmp_path):
+    """A card shows one exemplar. A member printing another was not the thing
+    he looked at, so it is unruled — and carrying it forward would launder a
+    non-answer into an answer. Seven sites on 53-62 are like this."""
+    old = _queue(tmp_path / 'old.json', [
+        _site(10, {'opus': 'αὐτὸν', 'kraken': 'αὑτὸν'}),
+        # same card, but Opus reads the OTHER form here
+        _site(50, {'opus': 'αὑτὸν', 'kraken': 'αὐτὸν'}),
+    ])
+    new = _queue(tmp_path / 'new.json',
+                 [_site(50, {'opus': 'αὑτὸν', 'kraken': 'αὐτὸν'})])
+    r = tmp_path / 'r.json'
+    r.write_text(json.dumps({'forms:αὐτὸν|αὑτὸν':
+                             {'verdict': 'accept', 'detail': 'αὑτὸν'}}),
+                 encoding='utf-8')
+
+    assert (900, 'L', 50) not in carry_rulings.ruled_sites(old, r)
+    carried, todo, _ = carry_rulings.carry(new, old, r)
+    assert carried == {}
+    assert [c.sid for c in todo] == ['forms:αὐτὸν|αὑτὸν']
+
+
 # --- the live re-read ------------------------------------------------------
 
 FILTERED = (Path(__file__).resolve().parent.parent
@@ -115,13 +137,18 @@ FILTERED = (Path(__file__).resolve().parent.parent
 
 @pytest.mark.skipif(not FILTERED.exists(), reason='no re-read queue yet')
 def test_the_kraken_reread_costs_no_ruling():
-    """78 of the 300 cards dissolved. Not one of the 404 sites did."""
+    """78 of the 300 cards dissolved. Not one of the 397 answered sites did."""
     ruled = carry_rulings.ruled_sites()
-    assert len(ruled) == 404, len(ruled)
+    # 404 member sites, less the 7 whose printed form was never on a card.
+    assert len(ruled) == 397, len(ruled)
     carried, todo, conflicts = carry_rulings.carry(FILTERED)
-    assert len(carried) == 238, len(carried)
-    assert sum(c.n for c in todo) == 58, sum(c.n for c in todo)
-    assert len(conflicts) == 2, conflicts
+    assert len(carried) == 236, len(carried)
+    assert sum(c.n for c in todo) == 62, sum(c.n for c in todo)
+    # No conflicts left on this range: the two that looked like contradictory
+    # answers (ἄν/ἂν, ἐστιν/ἐστὶν) were drift sites, and dropping those from
+    # `ruled` sends the cards back to him for the simpler and truer reason —
+    # they hold a site he was never shown.
+    assert conflicts == [], conflicts
 
     # Every site he answered still resolves to the form he chose — either
     # carried onto a new card, or gone from the queue because the readers now

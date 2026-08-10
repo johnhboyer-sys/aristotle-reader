@@ -54,6 +54,13 @@ def ruled_sites(queue_path: Path = DEFAULT_QUEUE,
             continue
         for m in card.members:
             printed = m.readers.get('opus') or card.printed
+            # ⚠ NOT EVERY MEMBER OF AN ANSWERED CARD WAS ANSWERED. A card shows
+            # one exemplar; a member printing something else was never the
+            # thing he looked at, so it is unruled and has to be asked. Seven
+            # sites on 53-62 are like this, and carrying them forward would
+            # launder a non-answer into an answer.
+            if printed != card.printed:
+                continue
             form = (printed if v['verdict'] == 'preserve'
                     else surface_form(v.get('detail', ''), m.readers))
             out[(m.page, m.col, m.word_off)] = {
