@@ -61,8 +61,30 @@ work/*
 !work/reviews/
 
 !work/kraken/
+# ⚠ THIS IS AN ALLOWLIST AND IT FAILS IN SILENCE. Everything under work/ is
+# ignored unless named here, so a new output directory is simply absent from
+# `git status` and looks like work that was never done. It has cost this repo
+# five of six reader outputs for a day. After writing any new artifact under
+# work/, run `git status --short --ignored` and check it is not on the !! list.
+!work/reconciled-auto/
+!work/reconciled-auto-checks/
+!work/queue-053-062.json
+!work/flags5-gt-015-052.jsonl
+!work/flags5-gt-by-col/
+!work/settle-gt-report.txt
 work/kraken/*
-!work/kraken/NOTES.md
+!work/kraken/
+# ⚠ THIS IS AN ALLOWLIST AND IT FAILS IN SILENCE. Everything under work/ is
+# ignored unless named here, so a new output directory is simply absent from
+# `git status` and looks like work that was never done. It has cost this repo
+# five of six reader outputs for a day. After writing any new artifact under
+# work/, run `git status --short --ignored` and check it is not on the !! list.
+!work/reconciled-auto/
+!work/reconciled-auto-checks/
+!work/queue-053-062.json
+!work/flags5-gt-015-052.jsonl
+!work/flags5-gt-by-col/
+!work/settle-gt-report.txtNOTES.md
 
 # Review pages are build artifacts and they are not small — book-review.html is
 # 6.7 MB of base64 crops on its own. Every one regenerates from its module:

@@ -1,0 +1,70 @@
+=== Build five-reader flags for GT columns ===
+flags: work/flags5-gt-015-052.jsonl
+word disputes: 172
+  by kind: {'accent-only': 47, 'letters': 82, 'breathing-only': 10, 'marks-only': 33}
+  by column: {'015-L': 25, '020-L': 40, '030-R': 57, '052-L': 50}
+
+=== settle (STRONG ('opus', 'kraken', 'codex')) ===
+  settlements: 111
+  refusals:    61
+  by authority: {'readers.agree': 85, 'morpheus.decide': 6, 'morpheus.membership': 10, 'siglum.holds': 4, 'accent.positional': 6}
+  refuse reasons: {'accent-only:not_positional_or_ambiguous': 21, 'siglum:no_bekker_page': 2, 'morpheus:multiple_real_forms': 18, 'morpheus:no_real_form': 1, 'marks-only:breathing_authorities_silent': 8, 'breathing-only:breathing_authorities_silent': 7, 'siglum:multiple_readings_hold_page': 4}
+
+=== Settlement accuracy (position-matched vs reconciled) ===
+  settlements total:     111
+  checked (verifiable):  111
+  match:                 107
+  DO NOT match:          4
+  unverifiable:          0
+  accuracy (checked):    107/111 = 96.4%
+
+=== Accuracy per authority (settle chain winner; position-matched) ===
+  accent.positional                ok=4  wrong=2  unv=0  checked=6  acc=66.7%
+  morpheus.decide                  ok=6  wrong=0  unv=0  checked=6  acc=100.0%
+  morpheus.membership              ok=9  wrong=1  unv=0  checked=10  acc=90.0%
+  readers.agree                    ok=85  wrong=0  unv=0  checked=85  acc=100.0%
+  siglum.holds                     ok=3  wrong=1  unv=0  checked=4  acc=75.0%
+
+=== Per-authority independent accuracy (no short-circuit) ===
+  accent.positional                fire=6  ok=4  wrong=2  unv=0  checked=6  acc=66.7%
+  breathing_oracle.arbitrate       fire=14  ok=13  wrong=1  unv=0  checked=14  acc=92.9%
+  breathing_oracle.decide          fire=17  ok=13  wrong=4  unv=0  checked=17  acc=76.5%
+  morpheus.decide                  fire=7  ok=7  wrong=0  unv=0  checked=7  acc=100.0%
+  morpheus.membership              fire=10  ok=9  wrong=1  unv=0  checked=10  acc=90.0%
+  readers.agree                    fire=85  ok=85  wrong=0  unv=0  checked=85  acc=100.0%
+  siglum.holds                     fire=4  ok=3  wrong=1  unv=0  checked=4  acc=75.0%
+
+=== EVERY WRONG settlement (position-matched) ===
+  015-L:706  kind=letters
+    readings: opus='δοξί', kraken='δοκί', codex='δοκί'
+    winner:   'δοξί'  [morpheus.membership] only 'δοξί' is a Morpheus form
+    truth:    'δοκί'
+  020-L:293  kind=letters
+    readings: opus='Πβ', kraken='Πβ', codex='Ρβ'
+    winner:   'Ρβ'  [siglum.holds] Ρβ → Ρ book β holds Bekker 1391 (1354-1420)
+    truth:    'Πβ'
+  020-L:2483  kind=accent-only
+    readings: opus='αὐλόν', kraken='αὐλόν', codex='αὐλὸν'
+    winner:   'αὐλὸν'  [accent.positional] Smyth §154: final grave before following Greek word 'ἢ'
+    truth:    'αὐλόν'
+  030-R:2481  kind=accent-only
+    readings: opus='τίσι', kraken='τίσι', codex='τισὶ'
+    winner:   'τισὶ'  [accent.positional] Smyth §154: final grave before following Greek word 'ζῴοις'
+    truth:    'τίσι'
+
+=== Cost of caution (refusals where truth was uniquely available) ===
+  refusals (excl. <2-readers): checked=61  unv=0
+  truth uniquely among readings: 60
+  truth not uniquely available:  1
+  (These are sites settle left for John; if an oracle had picked the
+   unique matching form, that many would have been correct.)
+
+=== Caveats ===
+  Columns: 015-L, 020-L, 030-R, 052-L
+  kraken trained on reconciled 15-52 — its vote here is not
+  independent evidence; it is present so the strong panel exists
+  for measuring the *authorities* (lexicon/Morpheus/siglum/agree).
+  Codex best-of-N: 015-L→r1, 020-L→r1, 030-R→r3, 052-L→r1
+    (by ȣ count, same codex_best.py rule as production).
+  Model: work/kraken400/model96/best_0.9920.safetensors
+  Seg reused: work/kraken400/seg/page-*.xml

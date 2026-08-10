@@ -29,11 +29,13 @@ pointed at before.
 
 ⚠ ACCENT-ONLY IS MOSTLY NOT SETTLEABLE FROM A LEXICON. Acute-vs-grave is
 positional (Smyth §154): a final acute becomes grave before a following
-word. Morpheus stores citation accents and never generates contextual
-graves; treating its silence on a grave as evidence is a known trap. This
-module offers an optional positional check from the next character in the
-Opus stream, measured separately, and never confuses Morpheus silence for
-an accent ruling.
+word, stays acute before stop punctuation or an enclitic (§183), and does
+not apply before citation apparatus (siglum / Bekker / Latin). Morpheus
+stores citation accents and never generates contextual graves; treating
+its silence on a grave as evidence is a known trap. This module recovers
+the following WORD from the spaced Opus column (not just the next char)
+and applies §154/§183; it never confuses Morpheus silence for an accent
+ruling.
 
     python3 -m bonitz_pipeline.settle work/flags5-053-062.jsonl
     python3 -m bonitz_pipeline.settle work/flags5-053-062.jsonl --sample 20
@@ -58,7 +60,7 @@ from bonitz_pipeline.breathing_oracle import (
 )
 from bonitz_pipeline.normalize import canonical, clean_opus
 from bonitz_pipeline.siglum_check import book_ok, inventory, split
-from bonitz_pipeline.word_flags import WordFlag, skeleton, words
+from bonitz_pipeline.word_flags import WordFlag, is_word_char, skeleton, words
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -66,10 +68,30 @@ STRONG_READERS = ('opus', 'kraken', 'codex')
 ALL_READERS = ('opus', 'genie', 'llama', 'kraken', 'codex')
 
 ACUTE, GRAVE, CIRC = '́', '̀', '͂'
-# Stop punctuation: final acute stays acute (Smyth §154 does not apply).
+# Stop punctuation: final acute stays acute (Smyth §154a.4: colon/period;
+# comma usage varies — we treat it as pause → acute, one common convention).
 STOP = set('.,;:·!?—–‐-')
 # Bekker page immediately after a citation token in the whitespace-free stream.
 BEKKER = re.compile(r'(\d{2,4})\s*([ab])')
+
+# Greek enclitics (Smyth §181), stored as skeletons (skeleton() folds final
+# ς→σ and lowercases). Free particle δέ is orthotone — not listed. 2sg εἶ /
+# φῄς never enclitic. Orthotone ἔστι (existence) is filtered at match time by
+# requiring the token to carry no acute/circumflex of its own.
+ENCLITICS = frozenset({
+    # particles
+    'τε', 'γε', 'τοι', 'περ',
+    # personal pronouns
+    'μου', 'μοι', 'με', 'σου', 'σοι', 'σε', 'ου', 'οι', 'ε', 'σφισι',
+    # indefinite τις (all cases)
+    'τισ', 'τι', 'τινοσ', 'τινι', 'τινα', 'τινων', 'τισι', 'τισιν',
+    'τινεσ', 'τινασ', 'τινε', 'τινοιν',
+    # indefinite adverbs
+    'που', 'ποθι', 'πη', 'ποι', 'ποθεν', 'ποτε', 'πω', 'πωσ',
+    # εἰμί / φημί present except 2sg
+    'ειμι', 'εστι', 'εστιν', 'εσμεν', 'εστε', 'εισι', 'εισιν',
+    'φημι', 'φησι', 'φησιν', 'φαμεν', 'φατε', 'φασι', 'φασιν',
+})
 
 # Authority names — stable strings for reports and tests.
 AUTH_MORPHEUS_MEMBER = 'morpheus.membership'
@@ -288,6 +310,104 @@ def following_char(stream: str, word_off: int, word: str) -> str:
     return ''
 
 
+def _has_acute_or_circ(form: str) -> bool:
+    d = unicodedata.normalize('NFD', form)
+    return ACUTE in d or CIRC in d
+
+
+def is_enclitic_form(form: str) -> bool:
+    """True when form is an unaccented (or grave-only) enclitic.
+
+    Orthotone ἔστι / φησί keep an acute and must NOT trip the enclitic
+    exception — before them the host takes the grave (ordinary §154).
+    """
+    if not form:
+        return False
+    if skeleton(form) not in ENCLITICS:
+        return False
+    # Enclitic has lost its accent; orthotone writing keeps acute/circumflex.
+    return not _has_acute_or_circ(form)
+
+
+@dataclass(frozen=True)
+class Following:
+    """What comes after a word in the spaced column text."""
+    raw: str
+    kind: str          # end | stop | greek | latin | digit | other
+    is_enclitic: bool = False
+    is_citation: bool = False  # work siglum / Bekker apparatus, not prose sandhi
+
+
+def following_token(
+        stream: str,
+        offs: list[int],
+        base: str,
+        word_off: int,
+        word: str,
+) -> Following:
+    """Next spaced token after `word` at stream[word_off:].
+
+    The whitespace-free stream alone cannot recover word boundaries (Greek
+    runs glue together). Map through `offs` into the original spaced `base`,
+    which is how word_flags already rebuilds words.
+    """
+    end = word_off + len(word)
+    if end <= 0 or not stream or end > len(stream):
+        return Following('', 'end')
+    if end == len(stream):
+        return Following('', 'end')
+    # Base offset just after the last stream char of this word.
+    base_at = offs[end - 1] + 1 if end - 1 < len(offs) else len(base)
+    i = base_at
+    while i < len(base) and base[i].isspace():
+        i += 1
+    if i >= len(base):
+        return Following('', 'end')
+    c0 = base[i]
+    if c0 in STOP:
+        return Following(c0, 'stop')
+    # Parentheses / quotes often open a gloss; not prose sandhi — refuse.
+    if c0 in '()[]{}«»"\'':
+        return Following(c0, 'other')
+    if c0.isdigit():
+        j = i
+        while j < len(base) and (base[j].isdigit() or base[j] in 'ab.'):
+            j += 1
+        return Following(base[i:j], 'digit', is_citation=True)
+    if c0.isascii() and c0.isalpha():
+        j = i
+        while j < len(base) and base[j].isascii() and (
+                base[j].isalpha() or base[j] in '.-'):
+            j += 1
+        return Following(base[i:j], 'latin', is_citation=True)
+    if not (is_word_char(c0) or _is_greek_letter(c0)):
+        return Following(c0, 'other')
+    j = i
+    while j < len(base) and not base[j].isspace() and is_word_char(base[j]):
+        j += 1
+    raw = base[i:j]
+    while raw and raw[-1] in STOP | set('()[]{}'):
+        raw = raw[:-1]
+    if not raw:
+        return Following(base[i:j], 'other')
+    # Citation apparatus: short bare Greek hard against a Bekker page.
+    # Do NOT use siglum_check.split here — almost any short Greek string
+    # parses as some work+book (τι, τε, ε+στι, …), which would refuse all
+    # real sandhi. The digit that always follows a Bonitz citation is the
+    # reliable signal. Smyth §154 is about words in the sentence, not sigla.
+    sk = skeleton(raw)
+    k = j
+    while k < len(base) and base[k].isspace():
+        k += 1
+    citation = (
+        1 <= len(sk) <= 4
+        and k < len(base)
+        and base[k].isdigit()
+    )
+    encl = (not citation) and is_enclitic_form(raw)
+    return Following(raw, 'greek', is_enclitic=encl, is_citation=citation)
+
+
 # --- authorities (each returns (winner, reason) or None) --------------------
 
 def by_morpheus_membership(
@@ -386,23 +506,22 @@ def by_siglum_holds(
     return winner, why[winner]
 
 
-# ⚠ SMYTH §154 HAS A SECOND EXCEPTION AND THIS DOES NOT HANDLE IT. An oxytone
-# keeps its acute before an ENCLITIC (§183: ἀγαθός τις, not ἀγαθὸς τις), and
-# this rule sees only "a Greek letter follows" and rules grave. That is a wrong
-# automatic settlement in a diplomatic transcription, which is the one outcome
-# worth more than all 37 settlements it wins — so it is OFF by default and must
-# be asked for with --accent-positional. Handling enclitics needs the FOLLOWING
-# WORD, not the following character, which this stream does not give cheaply.
 def by_accent_positional(
         forms: set[str],
-        next_char: str,
+        nxt: Following | str,
 ) -> tuple[str, str] | None:
-    """Smyth §154 for final acute-vs-grave only.
+    """Smyth §154 / §183 for final acute-vs-grave only.
 
-    Before a following Greek word → grave; before stop punctuation or end →
-    acute. Circumflex fights and non-final accent fights are refused. Next
-    character that is Latin or unknown → refuse (Bonitz mixes languages;
-    the rule is about Greek sandhi).
+    - Before ordinary following Greek word → grave (§154).
+    - Before enclitic → acute (§154a.1 / §183a: ἀγαθός τις).
+    - Before stop punctuation or end of stream → acute (§154a.4).
+    - Before Latin, digit, work-siglum, or other non-prose → refuse.
+      Bonitz's page is dense with citations; a siglum is not "another word
+      in the sentence," so sandhi does not apply.
+    - Circumflex fights and non-final accent fights → refuse.
+
+    `nxt` may be a Following (preferred) or a bare next-character string for
+    the old char-level call sites and tests.
     """
     if len(forms) < 2:
         return None
@@ -413,12 +532,29 @@ def by_accent_positional(
     if len({skeleton(f) for f in forms}) != 1:
         return None
 
-    if not next_char:
+    if isinstance(nxt, str):
+        # Back-compat path: single following character (no word recovery).
+        if not nxt:
+            foll = Following('', 'end')
+        elif nxt in STOP:
+            foll = Following(nxt, 'stop')
+        elif _is_greek_letter(nxt):
+            foll = Following(nxt, 'greek')
+        else:
+            return None
+    else:
+        foll = nxt
+
+    if foll.kind == 'end':
         want, where = ACUTE, 'end of stream'
-    elif next_char in STOP:
-        want, where = ACUTE, f'before stop {next_char!r}'
-    elif _is_greek_letter(next_char):
-        want, where = GRAVE, 'before following Greek word'
+    elif foll.kind == 'stop':
+        want, where = ACUTE, f'before stop {foll.raw!r}'
+    elif foll.is_citation or foll.kind in ('latin', 'digit'):
+        return None
+    elif foll.kind == 'greek' and foll.is_enclitic:
+        want, where = ACUTE, f'before enclitic {foll.raw!r}'
+    elif foll.kind == 'greek':
+        want, where = GRAVE, f'before following Greek word {foll.raw!r}'
     else:
         return None
 
@@ -437,12 +573,19 @@ def _is_greek_letter(c: str) -> bool:
     return (0x0370 <= o <= 0x03FF) or (0x1F00 <= o <= 0x1FFF) or base in 'ȣȢϗϛ'
 
 
-# --- column stream cache for Bekker / following-char ------------------------
+# --- column cache for Bekker / following-word --------------------------------
+
+@dataclass(frozen=True)
+class _ColText:
+    stream: str
+    offs: list[int]
+    base: str
+
 
 @lru_cache(maxsize=1)
-def _opus_streams(opus_dir: str) -> dict[tuple[int, str], str]:
+def _opus_columns(opus_dir: str) -> dict[tuple[int, str], _ColText]:
     root = Path(opus_dir)
-    out: dict[tuple[int, str], str] = {}
+    out: dict[tuple[int, str], _ColText] = {}
     for p in sorted(root.glob('page-*-*.txt')):
         # page-053-L.txt
         parts = p.stem.split('-')
@@ -453,15 +596,24 @@ def _opus_streams(opus_dir: str) -> dict[tuple[int, str], str]:
         except ValueError:
             continue
         col = parts[2]
-        stream, _ = canonical(clean_opus(p.read_text(encoding='utf-8')))
-        out[(page, col)] = stream
+        cleaned = clean_opus(p.read_text(encoding='utf-8'))
+        stream, offs = canonical(cleaned)
+        base = unicodedata.normalize('NFC', cleaned)
+        out[(page, col)] = _ColText(stream, offs, base)
     return out
 
 
 def column_stream(page: int, col: str,
                   opus_dir: Path | None = None) -> str | None:
     d = str(opus_dir or (ROOT / 'raw' / 'opus'))
-    return _opus_streams(d).get((page, col))
+    ct = _opus_columns(d).get((page, col))
+    return ct.stream if ct else None
+
+
+def column_text(page: int, col: str,
+                opus_dir: Path | None = None) -> _ColText | None:
+    d = str(opus_dir or (ROOT / 'raw' / 'opus'))
+    return _opus_columns(d).get((page, col))
 
 
 # --- refuse-reason classifiers (visible, not silent) ------------------------
@@ -512,7 +664,7 @@ def settle_one(
         index: dict[str, set[str]] | None = None,
         works: dict | None = None,
         stream: str | None = None,
-        allow_accent_positional: bool = False,
+        allow_accent_positional: bool = True,
 ) -> Settlement:
     """Apply authorities in a fixed order; silence when no unique winner.
 
@@ -525,16 +677,26 @@ def settle_one(
     forms = frozenset(readings.values())
     base = dict(word=word, forms=forms, readers=names)
 
-    if len(forms) < 2:
-        if len(forms) == 1:
-            only = next(iter(forms))
-            return Settlement(
-                winner=only, authority=AUTH_AGREE,
-                reason='chosen readers agree on one form',
-                suspicious=False, **base)
+    # Degenerate input: fewer than two of the *requested* readers present.
+    # One reader's opinion is not agreement — refuse with a counted reason.
+    # (The old path treated a lone opus reading as readers.agree and "settled"
+    # thousands of three-reader flags under STRONG without kraken/codex.)
+    if len(readings) < 2:
+        if len(readings) == 0:
+            reason = 'no_readings_in_reader_set'
+        else:
+            reason = 'readers:fewer_than_two_present'
         return Settlement(
             winner=None, authority=AUTH_REFUSE,
-            reason='no_readings_in_reader_set',
+            reason=reason,
+            suspicious=False, **base)
+
+    if len(forms) < 2:
+        # ≥2 readers present and they all wrote the same form.
+        only = next(iter(forms))
+        return Settlement(
+            winner=only, authority=AUTH_AGREE,
+            reason='chosen readers agree on one form',
             suspicious=False, **base)
 
     form_set = set(forms)
@@ -587,7 +749,16 @@ def settle_one(
     # --- accent-only --------------------------------------------------------
     if word.kind == 'accent-only':
         if allow_accent_positional and stream is not None:
-            nxt = following_char(stream, word.word_off, opus_form)
+            # Prefer spaced-column following word when this stream is that
+            # column (production path). A synthetic stream (tests) falls
+            # back to the next-character rule.
+            col = column_text(word.page, word.col)
+            if col is not None and stream == col.stream:
+                nxt: Following | str = following_token(
+                    col.stream, col.offs, col.base,
+                    word.word_off, opus_form)
+            else:
+                nxt = following_char(stream, word.word_off, opus_form)
             got = by_accent_positional(form_set, nxt)
             if got:
                 return Settlement(
@@ -613,14 +784,14 @@ def settle_words(
         reader_names: tuple[str, ...] = STRONG_READERS,
         *,
         opus_dir: Path | None = None,
-        allow_accent_positional: bool = False,
+        allow_accent_positional: bool = True,
 ) -> SettleReport:
     """Settle every word dispute under one reader set."""
     idx = morpheus.index()
     wrks = inventory()
     odir = opus_dir or (ROOT / 'raw' / 'opus')
-    # Prime the stream cache once.
-    _ = _opus_streams(str(odir))
+    # Prime the column cache once.
+    _ = _opus_columns(str(odir))
 
     out: list[Settlement] = []
     for w in word_list:
@@ -640,7 +811,7 @@ def settle_path(
         reader_names: tuple[str, ...] = STRONG_READERS,
         *,
         opus_dir: Path | None = None,
-        allow_accent_positional: bool = False,
+        allow_accent_positional: bool = True,
 ) -> SettleReport:
     """Load word flags from a flags JSONL and settle them."""
     return settle_words(
@@ -668,7 +839,7 @@ def measure_authorities(
     idx = morpheus.index()
     wrks = inventory()
     odir = opus_dir or (ROOT / 'raw' / 'opus')
-    _ = _opus_streams(str(odir))
+    _ = _opus_columns(str(odir))
 
     # authority -> Counter(kind -> n)
     hits: dict[str, Counter] = {
@@ -686,11 +857,15 @@ def measure_authorities(
     for w in word_list:
         readings = select_readings(w, reader_names)
         form_set = set(readings.values())
+        # Same gate as settle_one: one present reader is not agreement.
+        if len(readings) < 2:
+            continue
         if len(form_set) < 2:
             if len(form_set) == 1:
                 hits[AUTH_AGREE][w.kind] += 1
             continue
         stream = column_stream(w.page, w.col, odir)
+        col = column_text(w.page, w.col, odir)
         opus_form = w.readers.get('opus') or next(iter(form_set))
 
         # membership (letter disputes only; skip pure citations)
@@ -721,7 +896,12 @@ def measure_authorities(
                 hits[AUTH_SIGLUM][w.kind] += 1
 
         if w.kind == 'accent-only' and stream is not None:
-            nxt = following_char(stream, w.word_off, opus_form)
+            if col is not None:
+                nxt: Following | str = following_token(
+                    col.stream, col.offs, col.base,
+                    w.word_off, opus_form)
+            else:
+                nxt = following_char(stream, w.word_off, opus_form)
             if by_accent_positional(form_set, nxt):
                 hits[AUTH_ACCENT_POS][w.kind] += 1
 
@@ -819,12 +999,14 @@ def _print_report(
     n_acc = kinds.get('accent-only', 0)
     acc_pos = sum(1 for s in strong.settled if s.authority == AUTH_ACCENT_POS)
     acc_ref = sum(1 for s in strong.refused if s.kind == 'accent-only')
-    print(f'  Accent-only disputes: {n_acc}. Positional §154 settled {acc_pos} '
-          f'under STRONG; {acc_ref} still refused.')
-    print('  Acute/grave is positional (Smyth §154), not lexical. Morpheus')
-    print('  stores citation accents and does not generate contextual graves;')
-    print('  its silence on a grave is NOT evidence. Circumflex fights and')
-    print('  non-final accent fights stay with John.')
+    print(f'  Accent-only disputes: {n_acc}. Positional §154/§183 settled '
+          f'{acc_pos} under STRONG; {acc_ref} still refused.')
+    print('  Acute/grave is positional (Smyth §154 + enclitic §183), not')
+    print('  lexical. Citation apparatus (siglum+Bekker) is refused, not')
+    print('  treated as a following Greek word. Morpheus stores citation')
+    print('  accents and does not generate contextual graves; its silence')
+    print('  on a grave is NOT evidence. Circumflex fights and non-final')
+    print('  accent fights stay with John.')
     print('  locate() places quoted phrases at Bekker lines — useful for')
     print('  mis-cited quotations, not for choosing between OCR spellings of')
     print('  a single index word. Not applied here.')
@@ -842,8 +1024,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument('--sample', type=int, default=20,
                    help='how many settled letter disputes to print')
     p.add_argument('--accent-positional', action='store_true',
-                   help='enable the Smyth §154 rule; OFF by default because it '
-                        'does not handle enclitics (see by_accent_positional)')
+                   help='enable Smyth §154/§183 positional accent (default ON)')
     p.add_argument('--no-accent-positional', action='store_true',
                    help='disable Smyth §154 positional accent settlement')
     a = p.parse_args(argv)
@@ -853,7 +1034,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f'not found: {path}', file=sys.stderr)
         return 2
 
-    allow = a.accent_positional and not a.no_accent_positional
+    # Default ON: enclitic guard + citation refuse are in place (§154/§183).
+    allow = not a.no_accent_positional
+    if a.accent_positional:
+        allow = True
     word_list = words(path)
     strong = settle_words(word_list, STRONG_READERS,
                           allow_accent_positional=allow)

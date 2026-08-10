@@ -20,6 +20,7 @@ from bonitz_pipeline.settle import (
     AUTH_SIGLUM,
     ALL_READERS,
     STRONG_READERS,
+    Following,
     Settlement,
     SettleReport,
     boundary_glue_suspect,
@@ -27,6 +28,7 @@ from bonitz_pipeline.settle import (
     by_morpheus_membership,
     by_siglum_holds,
     final_accent_mark,
+    is_enclitic_form,
     is_real_greek,
     looks_like_citation,
     select_readings,
@@ -128,7 +130,7 @@ def test_siglum_holds_settles_by_bekker_page():
 def test_accent_positional_smyth_154():
     """Final acute → grave before a following Greek word; acute before stop."""
     forms = {'ἰσχύν', 'ἰσχὺν'}
-    got = by_accent_positional(forms, 'π')  # following Greek
+    got = by_accent_positional(forms, 'π')  # following Greek (char path)
     assert got is not None and got[0] == 'ἰσχὺν'
     got = by_accent_positional(forms, '.')
     assert got is not None and got[0] == 'ἰσχύν'
@@ -136,6 +138,43 @@ def test_accent_positional_smyth_154():
     assert by_accent_positional(forms, 's') is None
     # Circumflex fight → refuse.
     assert by_accent_positional({'τιμῆς', 'τιμής'}, 'π') is None
+
+
+def test_accent_positional_enclitic_keeps_acute():
+    """Smyth §183a: oxytone keeps acute before enclitic (ἀγαθός τις)."""
+    forms = {'ἀγαθός', 'ἀγαθὸς'}
+    nxt = Following('τις', 'greek', is_enclitic=True)
+    got = by_accent_positional(forms, nxt)
+    assert got is not None and got[0] == 'ἀγαθός'
+    assert 'enclitic' in got[1]
+    # Ordinary Greek word still → grave.
+    nxt = Following('λόγος', 'greek', is_enclitic=False)
+    got = by_accent_positional(forms, nxt)
+    assert got is not None and got[0] == 'ἀγαθὸς'
+
+
+def test_accent_positional_refuses_citation_follower():
+    """Siglum / Bekker / Latin after the word: sandhi does not apply."""
+    forms = {'ἀρχάς', 'ἀρχὰς'}
+    assert by_accent_positional(
+        forms, Following('Ηγ', 'greek', is_citation=True)) is None
+    assert by_accent_positional(
+        forms, Following('Metaph', 'latin', is_citation=True)) is None
+    assert by_accent_positional(
+        forms, Following('1026', 'digit', is_citation=True)) is None
+
+
+def test_is_enclitic_form_rejects_orthotone_esti():
+    """ἔστι (existence, acute) is orthotone; ἐστι (no acute) is enclitic."""
+    assert is_enclitic_form('ἐστι')
+    assert is_enclitic_form('τις')   # skeleton τις→τισ (final ς folds)
+    assert is_enclitic_form('τι')
+    assert is_enclitic_form('τινος')
+    assert not is_enclitic_form('ἔστι')  # orthotone existence
+    assert not is_enclitic_form('λόγος')
+    # bare 'με' matches the enclitic pronoun; citation gate (digit after a
+    # short token) is what blocks work-siglum Με 2.1026b.
+    assert is_enclitic_form('με')
 
 
 def test_final_accent_mark():
@@ -213,6 +252,34 @@ def test_settle_one_agree_when_strong_collapse():
     assert s.settled
     assert s.authority == AUTH_AGREE
     assert s.winner == 'ἁμῶς'
+
+
+def test_settle_one_refuses_when_fewer_than_two_requested_readers_present():
+    """A lone reader in the requested set is not agreement — refuse.
+
+    Running STRONG over three-reader flags (opus/genie/llama only) used to
+    crown every site as readers.agree on opus alone and look like success.
+    """
+    # Only opus present; STRONG asks for opus/kraken/codex.
+    w = _wf('letters', {'opus': 'ἁμῶς', 'genie': 'ἁμιῶς', 'llama': 'ἁμῶς'})
+    s = settle_one(w, STRONG_READERS)
+    assert not s.settled
+    assert s.winner is None
+    assert s.authority == AUTH_REFUSE
+    assert s.reason == 'readers:fewer_than_two_present'
+
+    # Zero of the requested set present.
+    w0 = _wf('letters', {'genie': 'ἁμῶς', 'llama': 'ἁμιῶς'})
+    s0 = settle_one(w0, STRONG_READERS)
+    assert not s0.settled
+    assert s0.reason == 'no_readings_in_reader_set'
+
+    # Exactly two present and same form → still real agreement.
+    w2 = _wf('letters', {'opus': 'ἁμῶς', 'kraken': 'ἁμῶς', 'genie': 'nope'})
+    s2 = settle_one(w2, STRONG_READERS)
+    assert s2.settled
+    assert s2.authority == AUTH_AGREE
+    assert s2.winner == 'ἁμῶς'
 
 
 def test_settle_one_accent_positional_with_stream():
