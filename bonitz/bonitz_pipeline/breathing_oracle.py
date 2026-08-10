@@ -44,7 +44,15 @@ WORD = re.compile(r'[Ͱ-Ͽἀ-῿̀-ͯȣϗ]{2,}')
 
 
 def skeleton(w: str) -> str:
-    """The word with every mark stripped — what two readings share."""
+    """The word with every mark stripped — what two readings share.
+
+    ⚠ BONITZ'S LIGATURES ARE LETTERS TO US AND SORTS TO HIM. `ȣ` is ου and `ϗ`
+    is καί, set as one piece of type; a skeleton that keeps them is a key no
+    Greek index can hold, so `ἔχȣσιν` matched neither Aristotle's text nor LSJ
+    nor the lemma map — three authorities silent at once, all for a typographic
+    convention. `locate.strip()` expanded them from the start; this did not.
+    """
+    w = w.replace('ȣ', 'ου').replace('Ȣ', 'ου').replace('ϗ', 'και')
     return ''.join(c for c in unicodedata.normalize('NFD', w)
                    if not unicodedata.combining(c)).lower()
 
@@ -94,6 +102,9 @@ def headwords() -> dict[str, set[str]]:
 
 
 BETA = dict(zip('αβγδεζηθικλμνξοπρστυφχψωςϲ', 'abgdezhqiklmncoprstufxywss'))
+# Bonitz's page, not the lemma map's alphabet: the ου ligature, καί, and the
+# three characters an OCR reader may set for an elision mark.
+BETA |= {'ȣ': 'ou', 'ϗ': 'kai', '᾽': "'", '᾿': "'", '’': "'"}
 
 
 def beta(skel: str) -> str:
@@ -103,6 +114,13 @@ def beta(skel: str) -> str:
     visible: `ἁφῆς` became `afhς`, missed, and looked exactly like a word the
     lemma map does not hold. Every Greek noun ending in -ς — most of them —
     would have failed that way in silence.
+
+    ⚠ AND SO IS `ȣ`. Grok, 2026-08-10: Bonitz sets the ου ligature as a single
+    sort, and 1,696 of his words carry it. Every one of them passed the
+    ligature through unmapped — `ἔχȣσιν` -> `exȣsin` — and missed. 1,532 join
+    once it is spelled `ou`. Third time this exact shape of bug has been found
+    in this module: an unmapped character does not raise, it just quietly stops
+    matching, and the coverage number that would reveal it looks fine.
     """
     return ''.join(BETA.get(c, c) for c in skel)
 
@@ -158,6 +176,11 @@ def decide(word: str) -> tuple[str, str] | None:
     sharing this skeleton takes the same breathing — where he writes both, the
     word is ambiguous in fact and no authority should pretend otherwise.
     """
+    # ⚠ THE SAME WORD IN TWO NORMAL FORMS IS TWO DICTIONARY KEYS. Grok,
+    # 2026-08-10: an NFD `ἁφῆς` misses the exact-form check that its NFC twin
+    # passes, and falls through to a different branch. Bonitz's files are NFC
+    # today, so this is latent — which is precisely when it is cheap to close.
+    word = unicodedata.normalize('NFC', word)
     skel = skeleton(word)
     seen = attested().get(skel)
 
@@ -238,6 +261,18 @@ def arbitrate(readings: dict[str, str]) -> tuple[str, str] | None:
     """
     if len(set(readings.values())) < 2:
         return None
+    # ⚠ AND `decide` IS NOT ENOUGH ON ITS OWN HERE. Grok, 2026-08-10: it
+    # returns early for any form Aristotle actually writes, BEFORE the family
+    # gate runs — so on a genuinely split pair it confirms the attested member
+    # and says nothing about the other, and arbitration reads that silence as a
+    # verdict. Confirming a word is safe; PREFERRING it over an equally real
+    # alternative is the one thing arbitration must never do on absence.
+    for w in set(readings.values()):
+        s = skeleton(w)
+        known = (set(headwords().get(s) or ()) | set(attested().get(s) or {})
+                 | family(s))
+        if len({breathing(k) for k in known if breathing(k) != 'none'}) > 1:
+            return None
     good = {}
     for w in set(readings.values()):
         d = decide(w)
@@ -272,7 +307,13 @@ def main(argv: list[str] | None = None) -> int:
                 # ⚠ AN ABBREVIATED HEADWORD IS NOT A WORD. Bonitz sets `ἀγ.`
                 # for ἀγαθόν throughout his own entries, and judging its
                 # breathing against a lexicon judges a fragment.
-                if line[m.end():m.end() + 1] == '.':
+                #
+                # ⚠ NOR IS HALF OF A WORD BROKEN AT THE MEASURE. Grok,
+                # 2026-08-10: `αἰδε-` is the head of αἰδεῖσθαι and the lemma map
+                # matched the fragment to ὅδε, so the oracle proposed ROUGH for
+                # a smooth word; `ἡμαρ-` (ἡμαρτημένοι) drew ἦμαρ out of LSJ the
+                # same way. A fragment always looks like some shorter word.
+                if line[m.end():m.end() + 1] in ('.', '-', '‐', '‑', '–'):
                     continue
                 d = decide(w)
                 if d is None:

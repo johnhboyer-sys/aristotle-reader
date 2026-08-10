@@ -134,7 +134,13 @@ def test_the_lemma_map_is_actually_reachable():
 @pytest.mark.parametrize('word,why', [
     ('οἶα', 'οἶος alone / οἷος such as — Aristotle writes only the second'),
     ('ὀῖαν', 'the same pair, and 25 attestations of οἵαν do not settle it'),
-    ('ἀλκυόνα', 'LSJ carries the halcyon both ἀλκυών and ἁλκυών'),
+    # ⚠ THIS COMMENT ONCE CLAIMED LSJ CARRIES THE HALCYON BOTH WAYS. It does
+    # not — this dump has only smooth ἀλκυών. The silence is real but comes
+    # from the authorities DISAGREEING WITH EACH OTHER, which is the stronger
+    # reason and the one worth naming. A test that passes for a stated reason
+    # that is false is a test agreeing with itself.
+    ('ἀλκυόνα', 'LSJ has the halcyon smooth and our Aristotle text writes it '
+                'rough; when the authorities split, neither may rule'),
 ])
 def test_it_will_not_generalise_across_a_split_lemma(word, why):
     """⚠ ABSENCE FROM ONE AUTHOR IS NOT ABSENCE FROM THE LANGUAGE. Grok,
@@ -146,7 +152,43 @@ def test_it_will_not_generalise_across_a_split_lemma(word, why):
 
 
 def test_the_guard_costs_almost_nothing():
-    """It withdraws six proposals and keeps the rest: a form whose lemma is
+    """It withdraws five proposals and keeps the rest: a form whose lemma is
     single-breathed is still decided, and that is the overwhelming majority."""
     for w in ('ἁφῆς', 'ἁμαρτάνειν', 'ἀγαθόν'):
         assert decide(w) is not None, f'{w} should still be decidable'
+
+
+def test_the_ou_ligature_is_a_letter_and_not_a_mark():
+    """⚠ THREE AUTHORITIES SILENT AT ONCE, FOR A TYPOGRAPHIC CONVENTION. Grok,
+    2026-08-10: Bonitz sets ου as the single sort `ȣ`, and 1,696 of his words
+    carry it. `skeleton()` kept the ligature, so the key `εχȣσιν` matched
+    neither Aristotle's text nor LSJ nor the lemma map — and silence from every
+    source is indistinguishable from a word no one has heard of.
+
+    Expanding it closed 667 of the 1,220 skeletons nothing held. That gap was
+    never a lexical gap; it was ours."""
+    from bonitz_pipeline.breathing_oracle import beta, skeleton
+    assert skeleton('ἔχȣσιν') == 'εχουσιν'
+    assert beta(skeleton('ἔχȣσιν')) == 'exousin'
+    assert skeleton('ϗ') == 'και'
+    got = decide('ἔχȣσιν')
+    assert got and got[0] == 'smooth', 'the ligature must not hide the word'
+
+
+def test_it_reads_the_same_word_in_either_normal_form():
+    """NFC and NFD are two keys for one word, and the exact-form check saw only
+    one of them. Bonitz's files are NFC today; this is latent, not live."""
+    import unicodedata
+    for w in ('ἁφῆς', 'ἀγαθόν', 'ἕκαστον'):
+        assert decide(unicodedata.normalize('NFD', w)) == decide(w), w
+
+
+def test_arbitration_will_not_prefer_the_attested_member_of_a_split_pair():
+    """⚠ `decide` CONFIRMS AN ATTESTED FORM BEFORE THE FAMILY GATE RUNS, and
+    arbitration used to read "one confirmed, one silent" as a verdict. On a
+    genuinely split pair both readings are real Greek and only the ink decides;
+    confirming a word is safe, PREFERRING it on the other's absence is not."""
+    from bonitz_pipeline.breathing_oracle import arbitrate
+    assert arbitrate({'a': 'οἷα', 'b': 'οἶα'}) is None, (
+        'οἷος and οἶος are two words; the corpus holding only one of them is '
+        'a fact about Aristotle, not about the page')
