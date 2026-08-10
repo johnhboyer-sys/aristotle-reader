@@ -93,17 +93,61 @@ def headwords() -> dict[str, set[str]]:
     return out
 
 
+BETA = dict(zip('αβγδεζηθικλμνξοπρστυφχψωςϲ', 'abgdezhqiklmncoprstufxywss'))
+
+
+def beta(skel: str) -> str:
+    """A Greek skeleton in Beta Code, which is how the lemma map is keyed.
+
+    ⚠ FINAL SIGMA IS A SEPARATE LETTER and omitting it here cost nothing
+    visible: `ἁφῆς` became `afhς`, missed, and looked exactly like a word the
+    lemma map does not hold. Every Greek noun ending in -ς — most of them —
+    would have failed that way in silence.
+    """
+    return ''.join(BETA.get(c, c) for c in skel)
+
+
 @lru_cache(maxsize=1)
 def lemmas() -> dict[str, list[str]]:
-    """form skeleton -> lemma names, for words that are not headwords.
+    """form skeleton (BETA CODE) -> lemma names, for words that are not headwords.
 
     ⚠ THE MAP IS DIACRITIC-FREE, which is why it cannot arbitrate on its own —
     it folds exactly the mark under dispute. It is used only to get from an
     inflected form to a LEMMA, whose breathing LSJ then supplies.
+
+    ⚠ AND IT IS KEYED `outos`, NOT `ουτος`. It was looked up with a Greek
+    skeleton for as long as it existed, so it matched NOTHING, 45,942 entries
+    answering every question with silence — indistinguishable from a lexicon
+    that simply had no opinion. Nothing failed; the fallback just never ran.
     """
     out: dict[str, list[str]] = {}
     for f in glob.glob(str(DIST / 'lemma-map/*.json')):
         out.update(json.loads(Path(f).read_text(encoding='utf-8')))
+    return out
+
+
+@lru_cache(maxsize=1)
+def by_lemma() -> dict[str, set[str]]:
+    """lemma name (bare Beta) -> its accented LSJ headwords.
+
+    LSJ keys carry their marks — `a)be/baios` — and the lemma map's names do
+    not, so the join is on the bare letters. One bare name can reach two
+    headwords, and that is the point: `oios` reaches BOTH οἶος and οἷος.
+    """
+    out: dict[str, set[str]] = {}
+    for f in glob.glob(str(DIST / 'lsj/*.json')):
+        for k, v in json.loads(Path(f).read_text(encoding='utf-8')).items():
+            head = v.get('head') or ''
+            if head:
+                out.setdefault(re.sub(r'[^a-z]', '', k.lower()), set()).add(head)
+    return out
+
+
+def family(skel: str) -> set[str]:
+    """Every accented headword this form could be an inflection of."""
+    out: set[str] = set()
+    for name in lemmas().get(beta(skel)) or ():
+        out |= by_lemma().get(re.sub(r'[^a-z]', '', name.lower())) or set()
     return out
 
 
@@ -137,7 +181,18 @@ def decide(word: str) -> tuple[str, str] | None:
     # corpus holds `ὁδῶν` (rough, of roads), so NEITHER source is internally
     # ambiguous and together they are. A skeleton two real Greek words share is
     # undecidable however each authority looks on its own.
-    known = set(headwords().get(skel) or ()) | set((seen or {}))
+    # ⚠ AND THE WORD'S OWN LEMMA IS AN AUTHORITY TOO. Grok, 2026-08-10: the
+    # corpus generalised from a skeleton whenever it held no counterexample —
+    # so `οἶα`, which Aristotle does not write, was corrected to `οἷα`, which
+    # he writes 39 times. But οἶος (alone) and οἷος (such as) are two words,
+    # and only the second is his. Absence from one author is not absence from
+    # the language, and an INFLECTED form has no headword of its own to say so:
+    # the skeleton check above sees nothing, because `οια` is nobody's headword.
+    #
+    # The lemma map crosses that gap — `oia` -> `oios` -> {οἶος, οἷος} — and two
+    # breathings in one family is the same disqualification as two headwords.
+    known = (set(headwords().get(skel) or ()) | set((seen or {}))
+             | family(skel))
     if len({breathing(k) for k in known if breathing(k) != 'none'}) > 1:
         return None
 
@@ -164,14 +219,11 @@ def decide(word: str) -> tuple[str, str] | None:
     # a name it does not contain.
     if word[:1].isupper():
         return None
-    hw = headwords()
-    for key in (skel, *(skeleton(l) for l in lemmas().get(skel, []))):
-        cands = hw.get(key)
-        if not cands or len(cands) != 1:
+    for cands in (headwords().get(skel), family(skel)):
+        marked = {h for h in (cands or ()) if breathing(h) != 'none'}
+        if len(marked) != 1:
             continue
-        head = next(iter(cands))
-        if breathing(head) == 'none':
-            continue
+        head = next(iter(marked))
         return breathing(head), f'LSJ has {head}'
     return None
 

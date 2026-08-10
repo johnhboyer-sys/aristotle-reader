@@ -110,3 +110,43 @@ def test_an_exact_form_still_settles_itself():
     for w in ('ὁδῶν', 'ἐκτός', 'ἁφῆς'):
         got = decide(w)
         assert got and got[0] == breathing(w), f'{w!r} -> {got}'
+
+
+# ── the lemma map, which for its whole life matched nothing ────────────────
+
+def test_the_lemma_map_is_actually_reachable():
+    """⚠ THE JOIN WAS DEAD AND NOTHING WENT RED. `lemmas()` is keyed in Beta
+    Code — `outos`, `twn` — and was looked up with a Greek skeleton, so 45,942
+    entries answered every question with silence. A lexicon with no opinion
+    looks exactly the same from the outside.
+
+    This asserts the fallback FIRES, on a word whose answer is known. Coverage
+    numbers cannot catch a dead branch; only a positive case can."""
+    from bonitz_pipeline.breathing_oracle import beta, family, lemmas
+    assert lemmas().get(beta('οια')) == ['oios']
+    assert family('οια') == {'οἶος', 'οἷος'}
+    # final sigma is a letter of its own, and forgetting it silently loses
+    # every Greek noun that ends in one
+    assert beta('αφης') == 'afhs'
+    assert family('αγνευτικα') == {'ἁγνευτικός'}
+
+
+@pytest.mark.parametrize('word,why', [
+    ('οἶα', 'οἶος alone / οἷος such as — Aristotle writes only the second'),
+    ('ὀῖαν', 'the same pair, and 25 attestations of οἵαν do not settle it'),
+    ('ἀλκυόνα', 'LSJ carries the halcyon both ἀλκυών and ἁλκυών'),
+])
+def test_it_will_not_generalise_across_a_split_lemma(word, why):
+    """⚠ ABSENCE FROM ONE AUTHOR IS NOT ABSENCE FROM THE LANGUAGE. Grok,
+    2026-08-10: the corpus generalised from a skeleton whenever it held no
+    counterexample, so a word Aristotle happens not to use was corrected into
+    one he does. An INFLECTED form has no headword to object with — `οια` is
+    nobody's headword — so the objection has to come from its lemma."""
+    assert decide(word) is None, f'{word}: {why}'
+
+
+def test_the_guard_costs_almost_nothing():
+    """It withdraws six proposals and keeps the rest: a form whose lemma is
+    single-breathed is still decided, and that is the overwhelming majority."""
+    for w in ('ἁφῆς', 'ἁμαρτάνειν', 'ἀγαθόν'):
+        assert decide(w) is not None, f'{w} should still be decidable'
