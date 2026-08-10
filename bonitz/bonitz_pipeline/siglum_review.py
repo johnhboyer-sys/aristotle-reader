@@ -34,7 +34,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from bonitz_pipeline.book_review import CSS, JS, _b64, serve
+from bonitz_pipeline.book_review import CSS as _BASE_CSS, JS, _b64, serve
 from bonitz_pipeline.mark_review import crop_word
 from bonitz_pipeline.siglum_check import (BOOK_LETTERS, book_ok, by_page,
                                           inventory, read, resolve, split)
@@ -402,6 +402,56 @@ def spell(token: str, cand: str) -> str:
     return cand
 
 
+# ⚠ RULED ON A PHONE, so the phone is the design and the desktop is the
+# override. John, 2026-08-10: "Bigger font. Optimized for mobile."
+#
+# The hard part is not the type — it is the CROP. A 1743px scan scaled into a
+# 390px viewport makes the one letter under judgement about four pixels wide,
+# which is no better than not showing it. So on a narrow screen the crop goes
+# FULL BLEED and keeps its own scrollbar: it renders at a size where the ink is
+# legible and the reader pans, rather than fitting a whole line into a width
+# that destroys it.
+MOBILE_CSS = """
+html{-webkit-text-size-adjust:100%}
+body{font-size:19px;line-height:1.5}
+main{padding:.6rem;max-width:none}
+header{padding:.6rem .8rem}
+h1{font-size:1rem;line-height:1.25}
+.card{padding:1rem .85rem;margin:0 0 1.6rem;border-radius:4px}
+.loc{font-size:.78rem}
+.said{font-size:1.5rem;line-height:1.35;margin:.4rem 0 .2rem}
+.why{font-size:1rem;line-height:1.45}
+.does{font-size:.95rem;line-height:1.45}
+.lbl{font-size:.76rem}
+.reclbl{font-size:.78rem}
+
+/* The crop at a size the eye can use, panned rather than shrunk. */
+.crops{margin:.8rem -.85rem .9rem;gap:.4rem}
+.scrollcrop{overflow-x:auto;-webkit-overflow-scrolling:touch;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  background:#fff}
+.scrollcrop img{max-width:none;height:190px;width:auto;border:0;border-radius:0}
+.panhint{font:.72rem "SF Mono",Menlo,monospace;color:var(--muted);
+  padding:.25rem .85rem 0}
+
+button{font-size:1rem;padding:.9rem 1.1rem;min-height:52px}
+button.go{font-size:1.25rem;padding:1.05rem 1.5rem;width:100%;min-height:64px}
+.row{gap:.5rem}
+details summary{font-size:.9rem;padding:.9rem 0}
+.alts{border-top:1px solid var(--rule);margin-top:.9rem}
+mark{padding:0 .18em}
+
+@media(min-width:760px){
+  body{font-size:17px}
+  main{max-width:62rem;padding:1.2rem}
+  .said{font-size:1.25rem}
+  .crops{margin:.8rem 0 .9rem}
+  .scrollcrop img{height:auto;max-width:100%;width:auto}
+  button.go{width:auto}
+}
+"""
+
+
 def recommend(s: Site) -> tuple[str, str, str]:
     """One answer, one reason. Returns (verdict, detail, why).
 
@@ -495,9 +545,14 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
     + ' &nbsp;·&nbsp; '.join(s.near) + '</div>') if s.near else ''}
   {warn}
   <div class="crops">
-    <img src="data:image/png;base64,{s.crop}" alt="the citation in the scan">
+    <div class="scrollcrop">
+      <img src="data:image/png;base64,{s.crop}" alt="the citation in the scan">
+    </div>
+    <div class="panhint">drag the scan sideways · pinch to zoom</div>
     <details><summary>the whole printed line</summary>
-      <img src="data:image/png;base64,{s.whole}" alt="the whole line"></details>
+      <div class="scrollcrop">
+        <img src="data:image/png;base64,{s.whole}" alt="the whole line"></div>
+    </details>
   </div>
   {none}
   <div class="rec">
@@ -524,8 +579,10 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
 </div>""")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
-        f'<!doctype html><meta charset="utf-8"><title>Work-level findings</title>'
-        f'<style>{CSS}</style>'
+        f'<!doctype html><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">'
+        '<title>Work-level findings</title>'
+        f'<style>{_BASE_CSS}{MOBILE_CSS}</style>'
         f'<header><h1>Which is wrong — the siglum, the page, or Bonitz?</h1>'
         f'<span id="count">0 / {len(ss)} ruled</span></header>'
         f'<main>{"".join(cards)}</main><script>{JS}</script>',
