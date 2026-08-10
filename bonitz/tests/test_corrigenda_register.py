@@ -13,6 +13,7 @@ page.  Two of John's rulings were overwritten exactly that way on 2026-08-08
 """
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -65,6 +66,35 @@ def test_no_two_entries_record_the_same_place_twice():
     keys = [(e['page'], e['col'], e['line'], e['printed']) for e in ENTRIES]
     dupes = {k for k in keys if keys.count(k) > 1}
     assert not dupes, f'the same place recorded twice: {dupes}'
+
+
+def test_every_impossible_word_in_the_corpus_is_registered():
+    """A word carrying two accents with the second off the ultima cannot be
+    Greek. Wherever the transcription holds one, either a reader corrupted it —
+    which is a defect — or Bonitz set it that way, which belongs in this
+    register. Silence is not one of the options.
+
+    Across everything transcribed so far there is exactly one, `ἄνθρώπȣ` at
+    060-L:46, and it is entry 39. That the count is one is what makes the
+    finding credible: the same rule run over the whole corpus does not cry
+    wolf."""
+    from bonitz_pipeline.settle_apply import impossible_reason
+    word = re.compile(r"[Ͱ-Ͽἀ-῿̀-ͯȣȢϗ]{2,}['᾽᾿’]?")
+    known = {(e['page'], e['col'], e['line'], e['printed']) for e in ENTRIES}
+    loose = []
+    for stage in ('reconciled', 'reconciled-auto'):
+        for p in sorted((ROOT / 'work' / stage).glob('page-*.txt')):
+            _, num, col = p.stem.split('-')
+            for i, line in enumerate(p.read_text(encoding='utf-8')
+                                     .splitlines(), 1):
+                for w in word.findall(line):
+                    if (impossible_reason(w)
+                            and (int(num), col, i, w) not in known):
+                        loose.append((int(num), col, i, w))
+    assert not loose, (
+        f'{len(loose)} words no grammar allows are in the corpus and in no '
+        f'register — each is either a reader corruption or an unrecorded '
+        f'misprint, and only the crop says which: {loose[:10]}')
 
 
 def test_the_book_level_rulings_are_all_registered():
