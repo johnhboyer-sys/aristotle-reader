@@ -801,6 +801,14 @@ def html(cards: list[Card], out: Path = PAGE) -> Path:
 button{display:flex;flex-direction:column;align-items:flex-start;gap:.25rem;
   text-align:left;width:100%;max-width:36rem}
 button .sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
+/* ⚠ THE GREEK IS THE THING BEING JUDGED, SO SET IT LARGE. John, 2026-08-10:
+   "make the font bigger so it's easier to see accents." Body-size type on a
+   phone is where ἂ and ἄ become the same shape, and a card that cannot show
+   the mark under dispute is asking him to rule on faith. The consequence text
+   stays small — it is read once; the glyphs are read every card. */
+button .gk{font-size:1.6rem;line-height:1.5}
+.card .said{font-size:2rem;line-height:1.4}
+.card.done .said{font-size:1rem}
 /* ⚠ `classList.add('done')` STYLED NOTHING. The click recorded a ruling and
    the card looked exactly as it had a moment before, so on a 300-card phone
    queue there was no way to see where you were or that a tap had registered.
