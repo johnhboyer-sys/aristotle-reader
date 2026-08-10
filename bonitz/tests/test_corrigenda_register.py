@@ -23,9 +23,18 @@ ENTRIES = json.loads((ROOT / 'work/corrigenda/entries.json')
 
 
 def line_of(e: dict) -> str:
+    """The corpus line an entry claims to describe.
+
+    Pages settled but not yet promoted live in `reconciled-auto`. Checking
+    those too is the point — a register entry for a page nobody can look at is
+    exactly the kind of unguarded claim this file exists to stop.
+    """
     col = f'page-{e["page"]:03d}-{e["col"]}'
-    return (ROOT / f'work/reconciled/{col}.txt').read_text(
-        encoding='utf-8').splitlines()[e['line'] - 1]
+    for stage in ('reconciled', 'reconciled-auto'):
+        p = ROOT / f'work/{stage}/{col}.txt'
+        if p.exists():
+            return p.read_text(encoding='utf-8').splitlines()[e['line'] - 1]
+    raise AssertionError(f'{col} is in the register but in no corpus stage')
 
 
 def test_every_recorded_error_is_still_in_the_corpus_as_printed():
