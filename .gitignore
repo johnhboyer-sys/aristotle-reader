@@ -31,10 +31,22 @@ planned changes.md
 # Pipeline-generated app data (same category as build/ — never committed)
 app/src/data/
 
+# ...but `*.TXT` above matches lowercase `.txt` too, because git on macOS is
+# case-insensitive. Model transcriptions live under sources/*/work/ and must not
+# be swallowed by the TLG rule.
+!sources/*/work/*/out/*.txt
+
 # Vendored page scans — public domain, but far too large for git. Every file is
 # re-fetchable from the Internet Archive identifier recorded in the sibling
 # PROVENANCE.md; the notes stay tracked, the rasters do not.
 sources/*/scan/
+
+# Derived page rasters under sources/*/work/ — tiles cut for a reading pass and
+# zoom crops made while checking the ink. Regenerable from the scan; the
+# transcriptions and prompts beside them stay tracked.
+sources/*/work/*/tiles/
+sources/*/work/*/tmpzoom/
+sources/*/work/verify/
 
 # Copyright-encumbered translation sources — kept LOCAL ONLY for the full build,
 # never committed/published (the -public manifests don't use them). J. L. Ackrill

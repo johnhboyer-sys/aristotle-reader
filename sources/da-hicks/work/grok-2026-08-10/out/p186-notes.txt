@@ -1,0 +1,65 @@
+I'll read all six page tiles in order and transcribe only what the ink shows.I'll re-read the tiles carefully for Greek diacritics, italics, and exact line breaks — the first pass may have normalized some forms.Checking hard Greek passages and line breaks tile by tile, especially diacritics.Re-examining the ἓν/ἐν breathings and other hard diacritics at higher zoom.Checking a few final details: Bekker spacing, the ᾗ character, and whether the body starts mid-note without a lemma.I have enough from the ink. Assembling the diplomatic transcription with exact line breaks, diacritics, and Bekker spacing (`1043a 34`, not `1043 a 34`).
+
+186                            *NOTES*                            I. I
+
+first stated for soul, animal being adduced as an illustration, while afterwards
+A. goes on to speak of animal, the illustration, leaving soul out of sight. But
+to lose the immediate subject in the illustration is quite in A.'s manner. Cf.
+403a 12 sqq., 431a 17 sqq. Further, there is good reason why he should begin
+with soul and continue with animal; for the latter term is in his view equally
+applicable to both; at any rate he allows such a view to be tenable. Cf.
+*Metaph.* 1043a 34 καὶ ζῷον πότερον ψυχὴ ἐν σώματι ἢ ψυχή...εἴη δ' ἂν καὶ ἐπ'
+ἀμφοτέροις τὸ ζῷον, οὐχ ὡς ἑνὶ λόγῳ λεγόμενον ἀλλ' ὡς πρὸς ἕν. The possibility of
+such a double application is impartially admitted *Metaph.* 1036a 16—19, 24 sq.,
+1037a 5—10. When we speak of defining, it is always with the tacit assumption
+that the particular, as such, the compound of form and matter which is perish-
+able and subject to change, is incapable, properly speaking, of being defined:
+*Metaph.* 1039b 20—1040a 7. If animal denoted an infima species instead of a
+genus, the identity of animal and soul for the purpose of definition would be
+complete; but this is not the case. Animal, as universal, like man as universal,
+denotes a class which, like its individual members, is a σύνολον or compound of
+form and matter, form capable, matter incapable, of definition: *Metaph.* 1035b
+27—30, 1037a 5—7. Such a class is not οὐσία (1035b 28, 1038b 8—16, 35),
+for it denotes not τόδε τι but τοιόνδε (1039a 1 sq., 16). This is what A. means
+by ἢ οὐδέν ἐστιν=οὐκ ἔστιν οὐσία τοῦ ζῴου τοῦ καθόλου. As a mere universal
+notion or class-name, animal denotes the common characteristic or charac-
+teristics by which species are combined in a genus; and similarly man, as
+mere universal, denotes the common characteristic or characteristics by which
+particular men are combined in an infima species. In other words, animal is
+neither ἓν παρὰ τὰ πολλὰ nor ἓν ἐπὶ πολλῶν, but simply ἓν κατὰ πολλῶν or κοινῇ
+κατηγορούμενον (402b 8). Nevertheless, it is ὄν τι, a logical entity, owing its
+existence to thought: cf. Philop. 38, 3 ἔχει γὰρ τὴν ὑπόστασιν ἐν τῷ νοεῖσθαι, ὡς
+μέντοι καθ' αὐτὸ ὑφεστηκὸς οὐδέν ἐστι. As thus described, it is ὕστερον, posterior
+to every member of the class, to every possessor of the characteristic or charac-
+teristics which it predicates as held in common: for πάθη are necessarily
+posterior to οὐσία; otherwise they would exist independently, apart from οὐσία
+(*Metaph.* 1038b 23—29).
+
+  But it may be urged that elsewhere καθόλου is described as κατὰ παντός, καθ'
+αὐτό, ᾗ αὐτό, *Anal. Post.* I. 4. 73b 26 sq., whereby it is given a place ἐν τῷ τί
+ἐστιν, and that γένος is part of the definition and, as such, prior to the definition
+of which it is a part (*Metaph.* Z. c. 10, especially 1034b 31 sq., 1035b 14—20).
+We cannot define man, horse, dog, if we do not know animal, which forms part
+of the definition of each of these species. A. himself allows full weight to this
+objection: 1039a 14—23. But, instead of modifying his view of the universal
+as μὴ οὐσία and therefore posterior, he is content with the remark that an
+objection which, if true without qualification, would make definition impossible,
+must somehow admit of qualification (1039a 21 sq.). He held that, strictly
+speaking, infimae species were alone capable of definition, because to them
+alone belongs the form or quiddity (1030a 11), which we define (λόγος τῆς
+οὐσίας) by collecting the essential, and excluding the accidental, characteristics
+shared by the members of the infima species. Thus we obtain a single
+definition for the entire species: *Metaph.* 998b 12. This method of comparing
+individuals and obtaining a καθόλου or common predicate is an aid to defining
+and well adapted to the conditions under which human knowledge is acquired:
+but the community of predication has really nothing to do with οὐσία. If the
+species were reduced to a single member, the specific form would continue to
+be the quiddity of the sole survivor; whereas the genus, e.g. οὐσία ἔμψυχος
+
+---UNCERTAIN---
+7 | εἴη | accent over ει: smooth breathing clear; acute vs circumflex on the diphthong not fully settled from the ink (mark is compact/curved)
+25 | ἓν (three times) | diacritic is a substantial rounded mark (circumflex-like), distinct from plain smooth on nearby ἐπὶ; rough vs smooth component of the combined glyph not 100% certain at tile resolution — read as rough+circumflex ἓν
+28 | καθ' αὐτὸ | breathing on αὐ is smooth (clear beside rough on ὑφεστηκὸς); philosophical “in itself” often takes rough αὑτό — ink is smooth, not claimed as printer’s error
+34 | ᾗ | top diacritic on η is clear (circumflex/rough complex); iota subscript under η is small and harder to certify from the tile
+20 | ζῴου | iota subscript under ω is present; accent on ω reads as acute rather than the wide circumflex used on ζῷον elsewhere on the page
+header | I. I | right running head: both characters read as roman capital I (Book I, Chapter I), not arabic 1

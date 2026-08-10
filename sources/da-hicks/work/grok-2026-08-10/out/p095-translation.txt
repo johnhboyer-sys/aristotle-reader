@@ -1,0 +1,54 @@
+I'll read all six page tiles in order and transcribe only what the ink shows.Re-examining the apparatus and marginal notes for exact diacritics and line breaks.Checking how other pages in this work were transcribed for formatting conventions.Checking a completed transcription only for formatting conventions (margin layout), not content.Checking a few hard spots once more: space before the colon, apparatus breathings, and margin alignment.Looking at tile 04 once more for the colon spacing — the image shows a clear gap: `in it : salt`.CHS. 9, 10                        422 a 4—422 a 31                        95
+
+reason why animals which breathe cannot smell in the water. For
+it is necessary for them to take in breath before smelling and
+this they cannot do in the water. Odour is included under that
+which is dry, as flavour under that which is moist, and the organ of
+smell is potentially dry also.
+
+    The object of taste is a species of tangible. And this is the 10
+Taste   reason why it is not perceived through a foreign body
+        as medium: for touch employs no such medium either.
+The body, too, in which the flavour resides, the proper object of
+has no  taste, has the moist, which is something tangible, for its
+external matter or vehicle. Hence, even if we lived in water,
+medium. we should still perceive anything sweet thrown into the
+water, but our perception would not have come through the 2
+medium, but by the admixture of sweetness with the fluid, as is
+the case with what we drink. But it is not in this way, namely, by
+admixture, that colour is perceived, nor yet by emanations.
+Nothing, then, corresponds to the medium; but to colour, which is
+the object of sight, corresponds the flavour, which is the object of
+Moisture taste. But nothing produces perception of flavour in the
+indispens- absence of moisture, but either actually or potentially the
+able.   producing cause must have liquid in it : salt, for instance,
+for that is easily dissolved and acts as a dissolvent upon the tongue.
+    Again, sight is of the invisible as well as the visible (for dark- 3
+ness is invisible and this, too, sight discerns as well as light) and,
+further, of that which is exceedingly bright, which is likewise in-
+visible, though in a different way from darkness. Similarly hearing
+has to do with noise and silence, the former being audible, the latter
+inaudible, and, further, with loud noise, to which it is related as
+vision is to brightness, a loud and a violent sound being in a manner
+just as inaudible as a faint sound. The term invisible, be it noted,
+is applied not only to that which it is wholly impossible to see,
+which corresponds to other cases of the impossible, but also when
+a thing has imperfectly or not at all its natural properties, answer-
+ing to the footless and the kernel-less. So, too, taste has for object
+The object not only that which can be tasted, but also the tasteless,
+of taste. by which we mean that which has little flavour or hardly
+any at all, or a flavour destructive of the taste. Now in flavour
+this distinction is supposed to start with the drinkable and the
+
+Torst. Trend. || 27. <μὴ ἔχον χρῶμα> post ὅλως addendum censet Essen || 27. ὥσπερ...
+28. ἀδύνατον in parenth. posuit Rodier || 28. ἂν E || 29. ἁπτὸν S, ἁπλοῦν E, ἅπουν
+Philop. Simpl. || τὸ ante ἀπύρ. om. E T U Simpl. || δὲ E T U W Simpl., δὴ etiam
+Them. 71, 7 et Soph. 94, 28 videntur legisse || 30. καὶ τοῦ ἀγ. S V Them., om. τοῦ
+Simpl. || ἢ] καὶ V X.
+---UNCERTAIN---
+1 | 422 a 4—422 a 31 | Dash may be en-dash or em-dash; numeral 1 in this font is I-shaped (looks like capital I)
+24 | in it : salt | Thin space before colon is present in the ink (not a tight it:); width of the space is hard to judge exactly
+app 29 | ἁπτὸν S, ἁπλοῦν E, ἅπουν | Apparatus type is small; rough breathings resolved from ink as best as possible (ἁ not ἀ). Combined mark on ἅπουν (rough+acute) is especially tight
+app 29 | ἅπουν | If the intended word is the privative ἄπουν, the rough breathing would be a PRINTER'S ERROR — claimed only if the rough is correctly read; mark is hard at this size
+app | μὴ ἔχον χρῶμα / ὅλως / ὥσπερ / ἂν / τὸ / ἀπύρ. / δὲ / δὴ / καὶ / τοῦ / ἀγ. / ἢ | Remaining apparatus diacritics read from small type; confidence high on acutes/graves/circumflexes, lower on the hardest breathings noted above
+margin | Taste / has no external medium. / Moisture indispens- able. / The object of taste. | Side-notes may be italic small type; slant not certain enough at this resolution to mark with *asterisks*

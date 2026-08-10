@@ -1,0 +1,64 @@
+I'll read all six page tiles in order and transcribe only what the ink shows.Reading the remaining tiles and rechecking the Greek carefully.Re-examining each tile closely for polytonic Greek and line breaks.Looking again at the Greek passages that need exact diacritics.I'll re-read tiles 2–4 with close attention to Greek diacritics and italics.I'll re-check a few hard spots: the Metaph. quote, `I. cc.`, and `ὕλη ὄψεως`.Recropping with better coordinates based on full-tile layout.Checking format conventions from other finished pages and this page's prompt—not their text.Checking a few last hard spots on the original tiles, then finalizing.I have enough from the ink. Producing the diplomatic transcription.
+
+314                            *NOTES*                            II. I
+
+grapes) is what we call the fruit; in nuts it is the shell, in peas and beans the
+pod. With more precision from the botanical standpoint, A. reserves the term
+καρπὸς for that which, when sown, will produce the plant after its kind, as the
+apple pip or the grape stone. The leaf, as a protection of the "pericarp," is
+well exemplified in the hazel-nut.
+  b 3. αἱ δὲ ῥίζαι τῷ στόματι ἀνάλογον. Cf. *De Part. An.* IV. 10, 686 b 28
+sqq., especially 686 b 32 καὶ τὸ κατὰ τὴν κεφαλὴν μόριον τέλος ἀκίνητόν ἐστι καὶ
+ἀναίσθητον, καὶ γίνεται φυτόν, ἔχον τὰ μὲν ἄνω κάτω, τὰ δὲ κάτω ἄνω· αἱ γὰρ ῥίζαι
+τοῖς φυτοῖς στόματος καὶ κεφαλῆς ἔχουσι δύναμιν κτέ.
+  b 4. κοινὸν ἐπὶ πάσης ψυχῆς. Cf. *supra* 412 a 5 κοινότατος λόγος. Again it
+becomes clear that we are not so much laying down the nature of soul as indi-
+cating the scope of the enquiry.
+412 b 6—9. There is no need to question the unity of soul and body,
+the one being form, and the other the matter corresponding to it; for that
+which is in the fullest sense actual possesses being and unity [§ 7].
+  b 6. διὸ καὶ οὐ. With the foregoing view of the relation of soul to body and
+that of form to its appropriate matter, it becomes idle to enquire whether soul
+and body form a unity or are absolutely distinct. The analysis began with
+concrete things (οὐσίαι), which A. calls individuals (ἄτομα), implying that they
+cannot be further divided except in thought. We cannot be too often reminded
+that matter and form are not things, but "causes" or "principles" of things,
+distinguishable in thought or reasoning and in rational description (λόγῳ), but
+not by sense.
+  b 7. τὸν κηρὸν καὶ τὸ σχῆμα. The waxen impression may be regarded either
+as so much wax (οὐσία ὡς ὕλη) or as a form (σχῆμα) impressed by the seal.
+But, howsoever viewed, the thing is numerically one and the same.  οὐδ' ὅλως.
+And, as with the wax and the impress, so universally with every concrete
+existence, whether sensible (αἰσθητὸν) or cogitable (νοητόν). In *Metaph.* 1075 b 34
+A. complains that no preceding philosopher had explained what it is that makes
+soul and body, or, generally, the thing and its form one: ἔτι τίνι οἱ ἀριθμοὶ ἓν η
+ἡ ψυχὴ καὶ τὸ σῶμα καὶ ὅλως τὸ εἶδος καὶ τὸ πρᾶγμα, οὐδὲν λέγει οὐδείς. He justifies
+his contention at greater length *Metaph.* 1045 a 7—b 23.
+  b 8. τὸ οὗ ἡ ὕλη. Cf. b 20 *infra* ὕλη ὄψεως, "the form of which it is the
+matter," i.e. the form correlative to the matter. Special care is needed or else
+this expression may be misleading. Properly both the form and the matter are
+form and matter of the concrete thing, and even where A., as here, incautiously
+expresses himself, this and nothing else can be his meaning.
+  b 8. τὸ γὰρ ἕν. The terms "one" and "unity" are susceptible of various
+meanings, which are discriminated in *Metaph.* Δ., c. 6 and I. cc. 1—3, 1052 a 15
+sqq. A. holds that unity is a universal (καθόλου). There is no such separate real
+thing as unity, but there is no real thing of which unity cannot be predicated
+in some degree, for things possess this attribute in varying degrees. But
+that which is most properly said to be one and self-identical is ἐντελέχεια,
+that is, the complete actualisation or perfected reality. Contrasted with this,
+every previous stage of development presents something less perfect, something
+potential, but half realised and therefore possessing less unity.  καὶ τὸ εἶναι.
+Being, like unity, is a term of various meanings. A.'s enumeration is (1) Being
+in the sense of the categories, substance and its appendages (quality, quantity,
+relation), (2) Being in the sense of truth, to which "Not-being" in the sense
+of falsehood is opposed, (3) Being in the sense of accident (συμβεβηκός) or
+incidental fact, (4) Being in the contrasted senses of "actual" and "potential"
+(cf. *Metaph.* Δ., c. 7, E., c. 2, Θ., c. 1, 1045 b 27 sqq.). In the present passage
+
+---UNCERTAIN---
+32 | ἓν η | final η has no visible grave; ink shows plain η (likely printer's omission of grave for ἢ "or," which the English "or, generally" on the same line supports). Transcribed as plain η.
+32 | ἓν η | PRINTER'S ERROR: plain η for expected ἢ (grave missing; no accent mark visible at 3× on the ink)
+35 | ὕλη ὄψεως | first letter of ὕλη is small; rough breathing + acute on υ resolved as ὕ, but the letter body is tight at this size
+12 | b 4. | faint horizontal marks may sit left of "b 4." in the tile; treated as scan/overlap noise, not transcribed
+40 | I. cc. | capital I (book Iota) rather than lowercase l or Greek Ι; shape matches Latin I in this type
+52 | συμβεβηκός | accent on the omicron of -κος read as acute (κός); grave would also be possible at this size but acute fits the ink better

@@ -1,0 +1,68 @@
+I'll read all six page tiles in order and produce a diplomatic transcription from the ink only.Re-reading each tile carefully for polytonic diacritics and exact line breaks.Rechecking a few hard diacritics, then assembling the final diplomatic text.584                            *NOTES*                            III. 13
+
+  a 14.  τὰ δὲ ἄλλα ἔξω γῆς, int. στοιχεῖα: αἰσθητήρια will then be predicate. A.
+should rather have said "air and water." See 425 a 3 τῶν δὲ ἁπλῶν ἐκ δύο
+τούτων αἰσθητήρια μόνον ἐστίν, ἐξ ἀέρος καὶ ὕδατος...τὸ δὲ πῦρ ἢ οὐθενὸς ἢ κοινὸν
+πάντων (since none of the sense-organs is independent of heat). From this
+interpretation of our passage Professor Beare dissents. He says (*Greek
+Theories*, p. 198, *n.* 1): "The obvious opposition here between τὰ ἄλλα and
+ἡ ἁφή below" (435 a 17) "makes it certain that by ἄλλα is meant not στοιχεῖα,
+but αἰσθητήρια." Accordingly he renders: "Now the other organs of sense
+might conceivably be formed without earth, since they all effect sensation by
+some medium or third thing, external to the body, through which each per-
+ceives its object." The hyperbaton in itself is no objection to the proposed
+construction, but the close proximity of τὰ ἄλλα to ἔξω γῆς would naturally
+suggest that earth is one of the class of things to which τὰ ἄλλα belong. The
+preposition properly means "outside of," "apart from," "except," and its force
+is strained if γίγνεσθαι ἔξω means "to be formed without including," i.e. to
+exclude from their composition, earth. Nor am I satisfied with the opposition
+which Prof. Beare discovers between τὰ ἄλλα αἰσθητήρια and ἡ ἁφή, for he has
+himself quite rightly pointed out (p. 245) that sometimes, e.g. 424 b 1 sqq., A.
+has used αἰσθητήρια in a narrower sense and treats the mediated organs of sight,
+hearing and smell as if they alone were called αἰσθητήρια.
+  a 15 πάντα δὲ τῷ δι' ἑτέρου...16 διὰ τῶν μεταξύ. See 424 b 24 sqq.
+  a 17. αὐτῶν, int. τῶν αἰσθητῶν, or more specifically τῶν ἁπτῶν. So 423 b 11,
+424 b 28, 29, 426 b 16.     τοὔνομα. The sense of touch, touching, derives its
+name from the contact which is its necessary condition, i.e. the contact between
+the external body and the surface of the animal body. Bodies can be in
+contact without any sensation resulting. See *note* on 434 b 12. Cf. 423 a 23—
+b 1 and 424 a 32—b 3, where plants are said to have no sense of touch, though
+not only in contact with but affected by, i.e. warmed or cooled by, contact with
+external objects. As just before A. has said or implied that ἁφή, the sense
+of touch, discerns by touching, i.e. being in direct contact, so immediately
+afterwards he reminds us that the other or telepathic senses also discern by
+contact, τῇ ἁφῇ, though by indirect contact.
+  a 18 καίτοι...19 ἑτέρου. Cf. 423 b 1 sqq., where it is shown that for touch the
+flesh is an inseparable medium, while the three higher senses perceive objects
+at a greater distance than tangibles: cf. 423 b 4—6. See 419 a 26—28, 434 b 29—
+435 a 2.
+  a 19. αὕτη δὲ δοκεῖ μόνη δι' αὑτῆς. Strictly construed, this would make flesh
+the organ of touch, whereas A. has declared it to be the medium and not the
+organ 423 b 22 sq. But δοκεῖ implies popular opinion, to which he does not
+necessarily commit himself, cf. 427 a 19 sq. If the interpretation of 426 b 15—17
+which I have given is correct, A. in that passage, as also in 424 b 27—30, has, in
+spite of his dissent in II., c. 11, returned to the popular opinion and used it
+where his distinction is unimportant for the question under discussion. See
+*note* on 422 b 34, p. 405.
+  a 19. τῶν μὲν τοιούτων στοιχείων, the elements which serve for the con-
+struction of the sense-organs in the narrower sense of the word noted above on
+a 14, i.e. the organs of sight, hearing and smell, which might be formed of air,
+water and fire. Cf. Simpl. 327, 10 συμπεραίνεται οὖν, ὡς τῶν λεπτομερῶν στοιχείων
+κἂν τινα ᾖ αἰσθητήρια, ἀλλ' οὐκ ἂν γένοιτο τοιοῦτον αἰσθητήριον, οἷον τὸ τοῦ ὅλου
+ζῴου ἐστὶ σῶμα.
+  a 21. γήϊνον. Cf. a 25 *infra* γῆς ἐστίν. See also 410 a 30 sq. and 423 a 12—
+15, where it is assumed that the body cannot consist solely of earth.  πάντων...
+
+---UNCERTAIN---
+3 | ἁπλῶν | breathing on alpha is small; read as rough ἁ (as ἁπλοῦς), but mark is tight at tile size
+5 | οὐθενὸς | accent on final omicron read as grave (mid-phrase before ἢ); acute οὐθενός also possible at this size
+9 | ἡ ἁφή | both rough breathings resolved from ink; breathing marks are compact
+23 | a 15 | no period after 15 in the ink (unlike a 14. / a 17. / a 19. / a 21.); transcribed as printed
+25 | (spaces before τοὔνομα) | wide gap after 426 b 16.; about four or five spaces, exact count uncertain
+35 | a 18 | no period after 18 in the ink (range lemma 18…19); transcribed as printed
+39 | δι' αὑτῆς | breathing on αυ read as rough (αὑτῆς, reflexive), matching αὕτη on the same line; mark is small
+51 | τινα | no clear accent on final alpha at tile resolution; transcribed without accent
+51 | ᾖ | iota subscript under eta is present but fine; circumflex on eta clear
+52 | ζῴου | iota subscript under omega present; circumflex on omega read as such
+54 | (spaces before πάντων...) | gap after earth. before the new lemma; about two spaces, exact count uncertain
+8 | *n.* 1 | n. appears italic in the citation; p. does not
