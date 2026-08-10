@@ -276,7 +276,7 @@ def serve(fs, port: int = 8791, host: str = '127.0.0.1',
     it is a scan of a book printed in 1870 and a JSON file of letter choices —
     but it is open while it runs, so stop it when the queue is done.
     """
-    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     # `page` and `store` are parameters so the work-level queue can reuse this
     # server without a second copy of it. Defaults keep the book-level caller
@@ -290,11 +290,26 @@ def serve(fs, port: int = 8791, host: str = '127.0.0.1',
             pass
 
         def do_GET(self):
+            # ⚠ SO A RELOAD SHOWS WHERE HE LEFT OFF. The done-marks lived only
+            # in the tab, so every reload — and there have been several today,
+            # some of them mine — wiped 300 cards back to unruled and left him
+            # scrolling to find his place. The rulings were on disk the whole
+            # time; nothing ever handed them back to the page.
+            if self.path.rstrip('/') == '/rulings':
+                return self.do_GET_rulings()
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.send_header('Content-Length', str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+        def do_GET_rulings(self):
+            have = (store.read_bytes() if store and store.exists() else b'{}')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(have)))
+            self.end_headers()
+            self.wfile.write(have)
 
         def do_POST(self):
             n = int(self.headers.get('Content-Length', 0))
@@ -319,7 +334,14 @@ def serve(fs, port: int = 8791, host: str = '127.0.0.1',
     if host == '0.0.0.0':
         print(f'http://{lan_address()}:{port}   (open on the WiFi)')
     print(f'http://localhost:{port}  ->  {store}')
-    HTTPServer((host, port), H).serve_forever()
+    # ⚠ ONE THREAD CANNOT SERVE AN 80MB PAGE AND TAKE A RULING AT THE SAME
+    # TIME. John, 2026-08-10, on his phone: NOT SAVED across the top while the
+    # server sat there listening. It was listening — and blocked, still pushing
+    # the page body down the wire, so every POST queued behind the download and
+    # timed out. The banner was telling the truth; the diagnosis "server is
+    # down" was wrong. Threading it costs nothing here: one reader, a handful
+    # of requests, no shared state but a JSON file rewritten whole.
+    ThreadingHTTPServer((host, port), H).serve_forever()
 
 
 def main(argv: list[str] | None = None) -> int:

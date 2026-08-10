@@ -61,7 +61,7 @@ ALTO_NS = '{http://www.loc.gov/standards/alto/ns-v4#}'
 #   { sid: { "verdict": <str>, "detail": <str> } }
 # accept  → corpus becomes `detail` at every member of the form-set
 # preserve → keep what is printed (Opus); record as corrigendum when detail set
-VERDICTS = ('accept', 'preserve')
+VERDICTS = ('accept', 'preserve', 'none')
 
 
 @dataclass
@@ -350,6 +350,28 @@ MARK_NAMES = [('\u0314', 'rough'), ('\u0313', 'smooth'), ('\u0342', 'circumflex'
               ('\u0308', 'diaeresis')]
 
 
+def religate(form: str) -> str:
+    """`οὖσα` -> `ȣ̓͂σα`: ου written out, put back as the sort, marks intact."""
+    import unicodedata as _u
+    d = _u.normalize('NFD', form)
+    out, i = [], 0
+    while i < len(d):
+        if d[i] in 'οΟ':
+            j = i + 1
+            marks = ''
+            while j < len(d) and _u.combining(d[j]):
+                marks += d[j]; j += 1
+            if j < len(d) and d[j] in 'υΥ':
+                k = j + 1
+                while k < len(d) and _u.combining(d[k]):
+                    marks += d[k]; k += 1
+                out.append('ȣ' + marks)
+                i = k
+                continue
+        out.append(d[i]); i += 1
+    return _u.normalize('NFC', ''.join(out))
+
+
 def marks_on_ligature(form: str) -> str:
     """Spell out every mark a form carries, when it sits on a ligature.
 
@@ -529,6 +551,56 @@ def options_for(card: Card) -> list[dict]:
                 'kind': 'accept',
             })
 
+    # ⚠ A READER CAN BE RIGHT ABOUT THE MARKS AND WRONG ABOUT THE SORT. John,
+    # 2026-08-10, on `ȣ͂σα / ȣσα / ὅσα`: "it's smooth + circumflex" — which is
+    # genie's `οὖσα`, the only reading with both marks right. But genie always
+    # SPELLS OUT the ligature, so accepting it would replace Bonitz's `ȣ` with
+    # `ου` and change the ink to fix a diacritic. The form that is actually
+    # correct, `ȣ̓͂σα`, was offered by nobody.
+    #
+    # Re-ligating is mechanical and loses nothing: ου carrying marks becomes ȣ
+    # carrying the same marks.
+    # ⚠ AND THE FORM-SET IS NOT EVERY READING. The card's forms come from the
+    # strong panel, so genie — the reader that spells `ου` out and therefore the
+    # one whose marks most often survive — is not in it. Religating only the
+    # offered forms fired ZERO times on 299 cards, which is exactly the shape of
+    # a check that matches nothing and looks like a check that found nothing.
+    seen_forms = {o['form'] for o in out}
+    every = list(seen_forms) + [v for m in card.members
+                                for v in m.readers.values()]
+    for f in [x for x in every if x]:
+        lig = religate(f)
+        if lig != f and lig not in {x['form'] for x in out}:
+            out.append({
+                'form': lig,
+                'verdict': 'accept',
+                'detail': lig,
+                'label': f'read {lig}{marks_on_ligature(lig)} · ligature kept',
+                'consequence': (f'the marks of {f} on Bonitz\'s ȣ — no reader '
+                                f'offered this, it spells ου back as the sort'),
+                'kind': 'accept',
+            })
+
+    # ⚠ THE READERS CAN ALL BE WRONG TOGETHER, AND THE CARD MUST SAY SO. John,
+    # 2026-08-10: "we need a NONE for when all 5 are wrong." Every option here
+    # is built from what some reader read, so a card literally cannot express a
+    # reading none of them produced — and five readers sharing one misreading is
+    # not rare, it is the normal case for a mark over a ligature.
+    #
+    # Without this the only exits are a wrong ruling or a skip, and a skip is
+    # indistinguishable from a card never reached. NONE records the judgment
+    # that the ink shows something else, costs one tap, and needs no typing —
+    # these sites collect in their own short list to be read properly.
+    out.append({
+        'form': '',
+        'verdict': 'none',
+        'detail': '',
+        'label': 'none of these · the ink shows something else',
+        'consequence': ('corpus untouched · this site is set aside for a '
+                        'proper reading, not left to a reader'),
+        'kind': 'none',
+    })
+
     # Siglum proposal: offer even if already among forms (as the recommended
     # accept), so the evidence is one click.
     if card.proposal and card.proposal.get('form'):
@@ -553,6 +625,12 @@ def options_for(card: Card) -> list[dict]:
     return out
 
 
+def _attr(v: str) -> str:
+    """A value safe inside a double-quoted HTML attribute."""
+    return (v.replace('&', '&amp;').replace('"', '&quot;')
+             .replace('<', '&lt;').replace('>', '&gt;'))
+
+
 def _arg(v: str) -> str:
     """A Python string as a JS literal, safe inside an HTML attribute.
 
@@ -571,10 +649,46 @@ def _arg(v: str) -> str:
             .replace('&', '&amp;').replace('"', '&quot;'))
 
 
+CROP_CACHE = ROOT / 'work/sweeps/settle-crops.json'
+
+
+def _crop_key(card: 'Card', m: 'Member') -> str:
+    """One key, used to read AND write. ⚠ I first wrote two subtly different
+    expressions for it — the read carried the sid and the write did not — so the
+    cache would have missed on every card while looking perfectly healthy."""
+    return f'{card.sid}|{m.page}|{m.col}|{m.line}|{m.char_at}'
+
+
 def fill_crops(cards: list[Card]) -> tuple[int, int]:
-    """Attach ink crops. Returns (n_ok, n_skipped)."""
+    """Attach ink crops. Returns (n_ok, n_skipped).
+
+    ⚠ AND CACHE THEM. Cropping 299 cards takes three to four minutes, and it
+    ran on EVERY server start — six or seven restarts today, each one John
+    sitting waiting while the same crops were cut from the same scans again.
+    The cache is keyed by the card's sid and the crop geometry, so a card whose
+    site or word changes still re-crops.
+    """
+    # ⚠ THE CACHE IS OFF, AND IT STAYS OFF UNTIL IT IS PROVED. John,
+    # 2026-08-10: "your crops messed up kraken on these." A crop is the ONLY
+    # evidence on the card — get it wrong and the reader is shown one word's
+    # ink while being asked about another, which is how 417 citations were
+    # mis-cropped once before. The key reads `m.char_at` BEFORE the loop below
+    # computes it and writes the computed value back, so a read and its write
+    # can key differently, and a stale entry can be served for a moved site.
+    # Four minutes of cropping is worth less than one wrong crop.
     ok = skip = 0
+    cache = {}
+    fresh = {}
     for card in cards:
+        m0 = card.exemplar
+        hit = cache.get(_crop_key(card, m0))
+        if hit:
+            card.crop, card.whole, card.how = hit['crop'], hit['whole'], hit['how']
+            ok += 1
+            continue
+    for card in cards:
+        if card.crop:                 # already restored from the cache
+            continue
         m = card.exemplar
         word = m.readers.get('opus') or card.printed or (
             card.form_set[0] if card.form_set else '')
@@ -598,6 +712,8 @@ def fill_crops(cards: list[Card]) -> tuple[int, int]:
             m.page, m.col, m.line, word, at, scale=1.6, whole=True)
         card.whole = _b64(whole_im) if whole_im is not None else ''
         ok += 1
+        fresh[_crop_key(card, m)] = {
+            'crop': card.crop, 'whole': card.whole, 'how': card.how}
     return ok, skip
 
 
@@ -642,7 +758,7 @@ def html(cards: list[Card], out: Path = PAGE) -> Path:
             if o.get('kind') in ('proposal', 'proposal-preserve'):
                 cls += ' go'
             buttons.append(
-                f'<button class="{cls}" '
+                f'<button class="{cls}" data-detail="{_attr(o["detail"])}" '
                 f'onclick="rule({_arg(card.sid)},{_arg(o["verdict"])},'
                 f'{_arg(o["detail"])},this)">'
                 f'<span class="gk">{o["label"]}</span>'
@@ -690,7 +806,22 @@ button .sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
    queue there was no way to see where you were or that a tap had registered.
    An adjudication tool that does not show its own state makes the reader do
    the bookkeeping — which is the same defect as asking him to type. */
-.card.done{opacity:.45;border-color:#3a7d44}
+/* ⚠ A RULED CARD IS DEAD WEIGHT AND IT STILL FILLED THE SCREEN. John,
+   2026-08-10: "having issues scrolling down fast to get past ruled cards." 68
+   answered cards, each with a full-width scan, stood between him and the next
+   question. Collapse them to a line; tapping the line opens it again, because
+   a ruling must stay changeable. */
+.card.done{opacity:.55;border-color:#3a7d44;max-height:3.2rem;overflow:hidden;
+  cursor:pointer;padding-top:.5rem;padding-bottom:.5rem}
+.card.done.open{max-height:none;opacity:1}
+.card.done .crop,.card.done .rec,.card.done .why,.card.done .said,
+.card.done .reclbl,.card.done details,.card.done .ask,
+.card.done .warnflag{display:none}
+.card.done.open .crop,.card.done.open .rec,.card.done.open .why,
+.card.done.open .said,.card.done.open .reclbl,.card.done.open details,
+.card.done.open .ask,.card.done.open .warnflag{display:revert}
+.card.done .loc::after{content:' — ruled, tap to change';color:#3a7d44;
+  font-weight:600}
 .card.unsaved{opacity:1;border-color:#b23b3b;border-width:3px}
 .card.unsaved::after{content:'NOT SAVED';color:#b23b3b}
 #warn{position:sticky;top:0;z-index:99;background:#b23b3b;color:#fff;
@@ -703,6 +834,8 @@ button .sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
 .card.done button{cursor:pointer}
 .card.done:hover{opacity:.85}
 .card.done .chosen{opacity:1;background:#3a7d44;color:#fff;font-weight:600}
+button.none{border-color:#8a6d3b;color:#8a6d3b}
+button.none .gk{font-style:italic}
 .card.done::after{content:'✓ ruled';position:absolute;top:.5rem;right:.7rem;
   color:#3a7d44;font-weight:700;font-size:.9rem;letter-spacing:.04em}
 .card{position:relative}
@@ -731,6 +864,31 @@ button .sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
         "  document.body.prepend(b);\n"
         "}\n"
         "const done={};\n"
+        "addEventListener('DOMContentLoaded', async ()=>{\n"
+        "  try{\n"
+        "    const r=await fetch('/rulings'); if(!r.ok) return;\n"
+        "    const have=await r.json();\n"
+        "    for(const sid in have){\n"
+        "      const c=document.getElementById(sid); if(!c) continue;\n"
+        "      c.classList.add('done'); done[sid]=have[sid];\n"
+        "      c.querySelectorAll('button').forEach(b=>{\n"
+        "        if(b.dataset.detail===have[sid].detail){\n"
+        "          b.classList.add('chosen');\n"
+        "          b.setAttribute('aria-pressed','true'); }});\n"
+        "    }\n"
+        "    document.getElementById('count').textContent=\n"
+        "      Object.keys(done).length+' / '+"
+        "document.querySelectorAll('.card').length+' ruled';\n"
+        "  }catch(e){}\n"
+        "  document.querySelectorAll('.card').forEach(c=>{\n"
+        "    c.addEventListener('click', ev=>{\n"
+        "      if(ev.target.closest('button')) return;\n"
+        "      if(c.classList.contains('done')) c.classList.toggle('open');\n"
+        "    });\n"
+        "  });\n"
+        "  const next=document.querySelector('.card:not(.done)');\n"
+        "  if(next) next.scrollIntoView({block:'start'});\n"
+        "});\n"
         "async function rule(sid,verdict,detail,btn){\n"
         "  const card=btn.closest('.card');\n"
         "  card.querySelectorAll('button').forEach(b=>{\n"
@@ -749,6 +907,8 @@ button .sub2{font-size:.82rem;font-weight:400;opacity:.9;line-height:1.3}
         "       body:JSON.stringify({id:sid,verdict,detail})});\n"
         "    if(!r.ok) throw new Error('HTTP '+r.status);\n"
         "    card.dataset.saved='1';\n"
+        "    card.classList.remove('unsaved');\n"
+        "    const w0=document.getElementById('warn'); if(w0) w0.remove();\n"
         "  }catch(e){\n"
         # ⚠ THIS CATCH WAS EMPTY AND IT COST JOHN 28 RULINGS. The
         # server was restarted under a tab he was still working in, so
