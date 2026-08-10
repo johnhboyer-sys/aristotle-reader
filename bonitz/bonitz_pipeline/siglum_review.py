@@ -180,7 +180,26 @@ def holds(cand: str, page: int, works: dict) -> bool:
             if span is None or not (span[0] <= page <= span[1]):
                 continue
         return True
-    return False
+    # A BARE BOOK LETTER NAMES NO WORK, so `split` says nothing about it. `κϛ`
+    # is book ϛ of whatever Bonitz last named, and 946 is the Problemata — it
+    # carries its page perfectly well. Without this it looked like an ink/page
+    # disagreement and was recommended as a compound, which it is not.
+    return by_page(cand, page, works) is not None
+
+
+def well_formed(cand: str, works: dict) -> bool:
+    """Is this a citation shape at all, page aside?
+
+    `μιι` is not. The confusion rule turns `μυ` into it, `μ` is a real work, and
+    nothing asked whether the Meteorologica has a book `ιι` — it has four,
+    α to δ. An impossible reading recommended as the answer is worse than no
+    recommendation.
+    """
+    for w, b in split(cand, works):
+        table = _SPANS.get(w, {})
+        if not b or not table or b in table:
+            return True
+    return bool(by_page(cand, 0, works)) or not split(cand, works)
 
 
 def siglum_candidates(token: str, page: int, works: dict,
@@ -248,7 +267,8 @@ def siglum_candidates(token: str, page: int, works: dict,
         for frm, to in ((a, b), (b, a)):
             if frm in token:
                 alt = token.replace(frm, to, 1)
-                if any(alt.startswith(w) for w in works):
+                if any(alt.startswith(w) for w in works) and \
+                        well_formed(alt, works):
                     out.add(alt)
     # ⚠ ALWAYS OFFER THE WORK THE PAGE NAMES, however far it is from the token.
     # John on `πκ34. 726b`, 2026-08-09: "The hell am I judging." The card gave
@@ -388,14 +408,25 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
         sig = ''.join(
             f'<button class="fix" onclick="rule({s.sid!r},\'fix-siglum\','
             f'{c!r},this)"><span class="gk">{c}</span></button>' for c in s.sigla)
-        sig = (f'<div class="lbl">the siglum is ours, and the ink reads</div>'
-               f'<div class="row">{sig}</div>') if sig else ''
+        sigbtn = sig or '<span class="does">nothing else is possible here</span>'
         pgs = ''.join(
             f'<button class="fix" onclick="rule({s.sid!r},\'fix-page\','
             f'{p},this)">{p}</button>' for p in s.pages)
-        pgs = (f'<div class="lbl">or the page is ours, and the ink reads</div>'
+        pgs = (f'<div class="lbl">the page digits are ours</div>'
+               f'<div class="does">We misread a digit. The corpus <b>is</b> '
+               f'corrected to the page you read.</div>'
                f'<div class="row">{pgs}</div>') if pgs else ''
         rv, rd, rw = recommend(s)
+        rdoes = {
+            'preserve': 'Corpus untouched; the error goes to the corrigenda '
+                        'register.',
+            'fix-siglum': 'Corpus corrected. Nothing recorded — the edition was '
+                          'never wrong, only our reading of it.',
+            'fix-page': 'Corpus corrected. Nothing recorded.',
+            'fix-siglum-and-record': 'BOTH: the corpus is corrected to what is '
+                                     'printed, AND what is printed is recorded '
+                                     'as the edition\'s own error.',
+        }[rv]
         rface = ('keep <span class="gk">%s</span> as printed' % s.token
                  if rv == 'preserve' else
                  'read <span class="gk">%s</span> · and record it' % rd
@@ -420,16 +451,24 @@ def html(ss: list[Site], out: Path = PAGE) -> Path:
   {none}
   <div class="rec">
     <div class="reclbl">most likely — {rw}</div>
+    <div class="does">{rdoes}</div>
     <button class="go" onclick="rule({s.sid!r},{rv!r},{rd!r},this)">
       {rface}</button>
   </div>
   <details class="alts"><summary>something else</summary>
-    <div class="lbl">the ink reads what we hold — Bonitz set it wrong</div>
+    <div class="lbl">the ink really does read <span class="gk">{s.token}</span></div>
+    <div class="does">Bonitz set it wrong. The corpus is <b>not</b> touched —
+      the reading stands as printed, and the error is banked in the corrigenda
+      register for the revised edition.</div>
     <div class="row">
       <button class="keep" onclick="rule({s.sid!r},'preserve','',this)">
-        preserve <span class="gk">{s.token}</span> · corrigenda</button>
+        keep <span class="gk">{s.token}</span></button>
     </div>
-    {sig}{pgs}
+    <div class="lbl">the ink reads a different siglum</div>
+    <div class="does">We misread it. The corpus <b>is</b> corrected, and
+      nothing is recorded — the edition was never wrong.</div>
+    <div class="row">{sigbtn}</div>
+    {pgs}
   </details>
 </div>""")
     out.parent.mkdir(parents=True, exist_ok=True)
