@@ -63,3 +63,31 @@ def test_the_book_level_rulings_are_all_registered():
     belong here; the 6 he fixed are ours and must NOT."""
     book = [e for e in ENTRIES if e['rule'].startswith('book_spans')]
     assert len(book) == 21, f'{len(book)} book-level corrigenda; John preserved 21'
+
+
+def test_a_correction_never_invents_a_character_the_page_does_not_carry():
+    """The register records the PRINTED page, so a correction may not add a work
+    siglum the ink never had. `κ1. 1050` was written `Μθ1. 1050` and
+    `η4. 1276` was written `Πγ4. 1276` — fine as fully expanded citations, wrong
+    as "what the printed form should become". The work belongs in `authority`.
+
+    Grok, 2026-08-09. A bare inherited letter stays bare."""
+    grown = [(e['printed'], e['correct']) for e in ENTRIES
+             if len(e['correct']) > len(e['printed'])]
+    assert not grown, f'corrections longer than what was printed: {grown}'
+
+
+def test_a_contestable_correction_says_so():
+    """`correct` moves the book letter on the reasoning that the page is the
+    sound member. For 16 of the 21 book-level entries a SINGLE DIGIT would
+    validate the letter as printed instead — `ηεδ … 1231` against book δ at
+    1234, `Ρβ … 1407` against β ending 1404. John ruled what is printed, not
+    which of the two Bonitz got wrong, and a default must not read as a
+    verdict."""
+    book = [e for e in ENTRIES if e['rule'].startswith('book_spans')]
+    flagged = [e for e in book if e.get('contested')]
+    assert len(flagged) == 16, (
+        f'{len(flagged)} of {len(book)} flagged; the near-boundary cases must '
+        f'carry the warning or the revised edition inherits a guess as a fact')
+    for e in flagged:
+        assert 'CONTESTABLE' in e['contested']

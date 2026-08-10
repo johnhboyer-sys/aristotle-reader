@@ -61,6 +61,33 @@ BARE = set(BOOK_LETTERS + 'ς')
 # failure as a row with nothing in it.
 CONFUSIONS = (('ιι', 'υ'),)
 
+# ⚠ RANK BY WHAT THE EYE CONFUSES, THEN BY FREQUENCY.  Frequency alone put
+# `πκγ` in front of `πκϛ`, `κε` in front of `κϛ` and `Γα` in front of `Γβ` —
+# Grok, 2026-08-09: "the docstring's own story — alphabetical order cut πκϛ off
+# the row — is fixed, then recreated as 'frequent near-miss leads'."  It was
+# right.  A sibling book letter Bonitz happens to use often is not a likelier
+# READING of this ink than the letter that differs by a known confusion.
+#
+# Lower rank sorts first.  Each entry is a pair the scans actually confuse, and
+# the rank is how much the confusion explains: an identical-ink pair outranks a
+# case difference, which outranks a plain substitution.
+EDIT_RANK = (
+    (0, (('ς', 'ϛ'), ('ιι', 'υ'), ('ȣ', 'υ'))),      # the same ink, twice over
+    (1, 'case'),                                      # Γ/γ, Ι/ι, Α/α, Τ/τ
+)
+
+
+def edit_rank(token: str, cand: str) -> int:
+    """How well a known confusion explains the difference. Lower is better."""
+    if token.lower() == cand.lower() and token != cand:
+        return 1                                      # case alone
+    for rank, pairs in EDIT_RANK[:1]:
+        for a, b in pairs:
+            for frm, to in ((a, b), (b, a)):
+                if frm in token and token.replace(frm, to, 1) == cand:
+                    return rank
+    return 2
+
 # Every character Bonitz uses in a siglum or a book numeral, so a substitution
 # search covers the letters that actually occur — including ϛ, which is the
 # whole point for the πκς family, and the capitals his work sigla use.
@@ -172,7 +199,8 @@ def siglum_candidates(token: str, page: int, works: dict,
                     and by_page(alt, page, works)):
                 out.add(alt)
     seen = seen or {}
-    return sorted(out, key=lambda c: (-seen.get(c, 0), c))[:MAX_CANDIDATES]
+    return sorted(out, key=lambda c: (edit_rank(token, c),
+                                      -seen.get(c, 0), c))[:MAX_CANDIDATES]
 
 
 def page_candidates(page: int, lo: int, hi: int) -> list[int]:

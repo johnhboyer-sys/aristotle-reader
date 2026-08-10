@@ -60,9 +60,23 @@ def repair(printed: str, f, verdict: str, detail: str) -> str:
     if verdict == 'fix-letter':
         # Only the BOOK letter moves. The work stem is not in question — the
         # page put the citation inside that work, which is why it is here.
-        return printed.replace(f.token, f.stem + detail, 1)
+        #
+        # ⚠ AND A BARE LETTER STAYS BARE. Writing `f.stem + detail` put a work
+        # siglum into the correction that the ink never carried: `κ1. 1050`
+        # became `Μθ1. 1050` and `η4. 1276` became `Πγ4. 1276`. Fine as a fully
+        # expanded citation, wrong as "what the printed form should become" —
+        # and the corrigenda register is a record of the PRINTED page, so a
+        # correction may not invent characters that are not on it. The work is
+        # named in `authority`, where it belongs.
+        whole = f.stem + detail if f.token != f.book else detail
+        return printed.replace(f.token, whole, 1)
     if verdict == 'fix-page':
-        return printed.replace(str(f.page), str(detail), 1)
+        # ⚠ REPLACE THE PAGE, NOT THE FIRST MATCHING DIGITS. `str.replace` on
+        # the raw number rewrites the CHAPTER when the two happen to share a
+        # digit string — `Ζμγ12. 12` would become `Ζμγ13. 12`, editing the
+        # chapter and leaving the page alone. Anchor on the end of the string,
+        # which is where the page sits.
+        return re.sub(rf'{f.page}(?!.*\d)', str(detail), printed, count=1)
     return printed
 
 

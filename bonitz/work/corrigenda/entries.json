@@ -65,18 +65,20 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Μδ is book 'δ' of that work, which Bekker sets at 1012-1025; the page printed beside it is 1031, which falls in book 'ζ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μδ2. 1031' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μδ2. 1031' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1021 fall inside Μδ (1012-1025), against the printed 1031. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 15,
    "col": "R",
    "line": 7,
    "printed": "κ1. 1050",
-   "correct": "Μθ1. 1050",
+   "correct": "θ1. 1050",
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Μκ is book 'κ' of that work, which Bekker sets at 1059-1069; the page printed beside it is 1050, which falls in book 'θ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'κ1. 1050' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'κ1. 1050' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1059, 1060 fall inside Μκ (1059-1069), against the printed 1050. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 16,
@@ -87,14 +89,15 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ηθ is book 'θ' of that work, which Bekker sets at 1155-1163; the page printed beside it is 1115, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηθ2. 1115' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηθ2. 1115' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1155 fall inside Ηθ (1155-1163), against the printed 1115. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 16,
    "col": "L",
    "line": 40,
    "printed": "η4. 1276",
-   "correct": "Πγ4. 1276",
+   "correct": "γ4. 1276",
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Πη is book 'η' of that work, which Bekker sets at 1323-1337; the page printed beside it is 1276, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
@@ -109,7 +112,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "ηεδ is book 'δ' of that work, which Bekker sets at 1234-1246; the page printed beside it is 1231, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'ηεδ4.1231' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'ηεδ4.1231' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1234, 1235, 1236, 1237, 1238 fall inside ηεδ (1234-1246), against the printed 1231. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 20,
@@ -120,7 +124,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Πδ is book 'δ' of that work, which Bekker sets at 1288-1301; the page printed beside it is 1279, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Πδ13. 1279' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Πδ13. 1279' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1289, 1299 fall inside Πδ (1288-1301), against the printed 1279. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 25,
@@ -142,7 +147,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ηγ is book 'γ' of that work, which Bekker sets at 1109-1119; the page printed beside it is 1126, which falls in book 'δ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηγ11. 1126' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηγ11. 1126' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1116 fall inside Ηγ (1109-1119), against the printed 1126. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 28,
@@ -153,7 +159,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ζμγ is book 'γ' of that work, which Bekker sets at 661-676; the page printed beside it is 688, which falls in book 'δ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζμγ5. 688' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζμγ5. 688' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 668 fall inside Ζμγ (661-676), against the printed 688. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 29,
@@ -164,7 +171,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ζιγ is book 'γ' of that work, which Bekker sets at 509-523; the page printed beside it is 529, which falls in book 'δ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιγ19. 529' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιγ19. 529' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 509, 519, 520, 521, 522 fall inside Ζιγ (509-523), against the printed 529. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 31,
@@ -197,7 +205,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ηγ is book 'γ' of that work, which Bekker sets at 1109-1119; the page printed beside it is 1154, which falls in book 'η'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηγ15. 1154' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηγ15. 1154' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1114 fall inside Ηγ (1109-1119), against the printed 1154. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 38,
@@ -208,7 +217,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ηι is book 'ι' of that work, which Bekker sets at 1163-1172; the page printed beside it is 1129, which falls in book 'ε'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηι1. 1129' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηι1. 1129' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1169 fall inside Ηι (1163-1172), against the printed 1129. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 39,
@@ -219,7 +229,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Πη is book 'η' of that work, which Bekker sets at 1323-1337; the page printed beside it is 1318, which falls in book 'ζ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Πη7. 1318' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Πη7. 1318' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1328 fall inside Πη (1323-1337), against the printed 1318. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 40,
@@ -241,7 +252,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ζγα is book 'α' of that work, which Bekker sets at 715-731; the page printed beside it is 785, which falls in book 'ε'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζγα5. 785' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζγα5. 785' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 715, 725 fall inside Ζγα (715-731), against the printed 785. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 46,
@@ -252,7 +264,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Μγ is book 'γ' of that work, which Bekker sets at 1003-1012; the page printed beside it is 1044, which falls in book 'η'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μγ4. 1044' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μγ4. 1044' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1004 fall inside Μγ (1003-1012), against the printed 1044. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 49,
@@ -263,7 +276,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ζιθ is book 'θ' of that work, which Bekker sets at 588-608; the page printed beside it is 575, which falls in book 'ζ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιθ21. 575' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιθ21. 575' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 595 fall inside Ζιθ (588-608), against the printed 575. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 49,
@@ -274,7 +288,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Μβ is book 'β' of that work, which Bekker sets at 995-1003; the page printed beside it is 1008, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μβ4. 1008' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μβ4. 1008' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1000, 1001, 1002, 1003 fall inside Μβ (995-1003), against the printed 1008. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 52,
@@ -285,7 +300,8 @@
    "rule": "book_spans: the book letter excludes the Bekker page",
    "authority": "Ρβ is book 'β' of that work, which Bekker sets at 1378-1404; the page printed beside it is 1407, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ρβ5. 1407' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ρβ5. 1407' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1400, 1401, 1402, 1403, 1404 fall inside Ρβ (1378-1404), against the printed 1407. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   }
  ]
 }
