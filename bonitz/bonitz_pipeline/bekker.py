@@ -66,7 +66,16 @@ WORKS: dict[str, tuple[int, int]] = {
 PREFIXES = sorted(WORKS, key=len, reverse=True)
 
 # <siglum><book/chapter letters and digits>. <page><column>  e.g. Ζμδ10. 688a3
-CITE = re.compile(r'([Α-Ωα-ωϗȣ]{1,3})[α-ω]{0,2}\s?(\d{0,3})\.?\s*(\d{2,4})\s?([ab])')
+#
+# ⚠ THE PERIOD AFTER THE BOOK NUMBER IS LOAD-BEARING. With `(\d{0,3})\.?` the
+# separator was optional, so the book-number group ate the leading digits of
+# any four-digit Bekker page that lacked one: `οβ 1352b8` resolved to 52b,
+# `1306a31` to 06a, `1183b8` to 83b. Every citation above Bekker 1000 without
+# a `<book>.` in front of it was validated against the wrong page — and this is
+# the check that reported "0 impossible pages". Requiring the period makes the
+# page group take every digit that belongs to it. Same fix as quotecheck.
+CITE = re.compile(
+    r'([Α-Ωα-ωϗȣ]{1,3})[α-ω]{0,2}\s?(?:(\d{1,3})[.,]\s*)?(\d{2,4})\s?([ab])')
 IMPOSSIBLE = 1590  # nothing in the corpus, fragments included, runs past this
 
 
