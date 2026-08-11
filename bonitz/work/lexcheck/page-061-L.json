@@ -1,0 +1,13 @@
+[
+  {
+    "page": 61,
+    "col": "L",
+    "line": 45,
+    "wrote": "τοιαῦτ",
+    "llamaparse": "τοιαȣ͂τ",
+    "proposed": null,
+    "lexical_verdict": "unknown",
+    "why": "neither τοιαυτ nor τοιαουτ is a corpus form",
+    "context": "1216a11. ἀπόφθεγμα, ὅτι τοιαῦτ' αὐτοῖς ἔσται τὰ ὄντα"
+  }
+]
