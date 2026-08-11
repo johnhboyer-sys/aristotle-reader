@@ -1,6 +1,6 @@
 """Interactive bead editor for the INTERPOLATION edition (local web app).
 
-Reads the task units (build/align/interp_tasks/<WORK>/1-<ch>.json) and the
+Reads the task units (build/align/interp_tasks/<WORK>/<book>-<ch>.json) and the
 machine beads (interp_out/...), and lets you fix the alignment by nudging bead
 boundaries. Human fixes are written as an OVERLAY to
 build/align/interp_corrections/<WORK>/ — interp_out is never touched; render and
@@ -39,25 +39,41 @@ TASKS, OUT, COR = ALIGN / "interp_tasks", ALIGN / "interp_out", ALIGN / "interp_
 
 WORK = "Cat"
 TRANS = "edghill"
-_GOLD = None   # {chap: [(sg, se)]}, {chap: n_greek_units}
+_GOLD = None   # {(book, chap): [(sg, se)]}, {(book, chap): n_greek_units}
 
 
 # --------------------------------------------------------------------------- data
+def _key(book, chap):
+    return f"{book}-{chap}"
+
+
+def _parse_key(k):
+    book, chap = k.split("-", 1)
+    return int(book), int(chap)
+
+
 def chapters():
-    return sorted(int(p.stem.split("-")[1]) for p in (TASKS / WORK).glob("1-*.json"))
+    out = []
+    for p in (TASKS / WORK).glob("*.json"):
+        try:
+            book, chap = _parse_key(p.stem)
+        except ValueError:
+            continue
+        out.append((book, chap))
+    return sorted(out)
 
 
-def units(chap):
-    t = json.loads((TASKS / WORK / f"1-{chap}.json").read_text("utf-8"))
+def units(book, chap):
+    t = json.loads((TASKS / WORK / f"{book}-{chap}.json").read_text("utf-8"))
     return t["greek"], t["english"]
 
 
-def load_beads(chap):
-    cp = COR / WORK / f"1-{chap}.json"
+def load_beads(book, chap):
+    cp = COR / WORK / f"{book}-{chap}.json"
     if cp.exists():
         d = json.loads(cp.read_text("utf-8"))
         return d["beads"], d.get("reviewed", []), "human"
-    op = OUT / WORK / f"1-{chap}.json"
+    op = OUT / WORK / f"{book}-{chap}.json"
     if op.exists():
         return json.loads(op.read_text("utf-8")).get("beads", []), [], "machine"
     return [], [], "none"
@@ -69,28 +85,31 @@ def _build_gold(examples):
     that grain, so callers can pick the grain whose count matches the task file."""
     from sentence_spike import segment_greek
     from aristotle_pipeline.align.glossing import chapter_lines
-    l2c = si.line_to_chapter()
     man = si.Manifest.for_work(WORK).data["english"]
     slot_of = {man[s]["id"]: s for s in ("primary", "secondary", "third") if man.get(s)}
     slot = slot_of.get(TRANS)
-    chinfo = {}                          # chap -> (line2sent, n_greek)
+    l2c = {}
+    chinfo = {}                          # (book, chap) -> (line2sent, n_greek)
     for ch in chapter_lines():
         gs, _ls, l2s = segment_greek(ch.lines, {}, soft=True, examples=examples)
-        chinfo[ch.chapter] = (l2s, len(gs))
+        key = (ch.book, ch.chapter)
+        chinfo[key] = (l2s, len(gs))
+        for ln in ch.lines:
+            l2c[ln.citation] = key
     g, counts = {}, {c: chinfo[c][1] for c in chinfo}
     if slot:
         _id, prose, anchors = si.load_translation(WORK, slot)
-        esent = {c: si.eng_sentences(prose[(1, c)], fine=True) for c in chinfo if (1, c) in prose}
+        esent = {c: si.eng_sentences(prose[c], fine=True) for c in chinfo if c in prose}
         for a in anchors:
-            chap = l2c.get(a["bekker"])
-            if chap is None or (1, chap) not in prose:
+            key = l2c.get(a["bekker"])
+            if key is None or key not in prose:
                 continue
-            sg = chinfo[chap][0].get(a["bekker"])
-            off = prose[(1, chap)].find(a["at"])
+            sg = chinfo[key][0].get(a["bekker"])
+            off = prose[key].find(a["at"])
             if sg is None or off < 0:
                 continue
-            se = si.eng_sent_index(esent[chap][1], off)
-            g.setdefault(chap, []).append((sg, se))
+            se = si.eng_sent_index(esent[key][1], off)
+            g.setdefault(key, []).append((sg, se))
     return g, counts
 
 
@@ -107,21 +126,22 @@ def gold():
     return _GOLD
 
 
-def anchors_for(chap, n_greek):
+def anchors_for(book, chap, n_greek):
     """Pick the grain whose greek-unit count matches the chapter's task file."""
     g = gold()
+    key = (book, chap)
     for ex in (True, False):
         golds, counts = g[ex]
-        if counts.get(chap) == n_greek:
-            return golds.get(chap, [])
+        if counts.get(key) == n_greek:
+            return golds.get(key, [])
     return []                            # no grain matches -> no reliable anchors
 
 
-def flag_counts(chap):
-    beads, reviewed, _ = load_beads(chap)
+def flag_counts(book, chap):
+    beads, reviewed, _ = load_beads(book, chap)
     rev = set(reviewed)
-    ng, _ne = units(chap)
-    anc = anchors_for(chap, len(ng))
+    ng, _ne = units(book, chap)
+    anc = anchors_for(book, chap, len(ng))
     g2b = {}
     for bi, b in enumerate(beads):
         for gi in b["g"]:
@@ -163,14 +183,14 @@ def validate(beads, ng, ne):
     return None
 
 
-def save(chap, beads, reviewed):
-    ng, ne = (len(x) for x in units(chap))
+def save(book, chap, beads, reviewed):
+    ng, ne = (len(x) for x in units(book, chap))
     err = validate(beads, ng, ne)
     if err:
         return err
     d = COR / WORK
     d.mkdir(parents=True, exist_ok=True)
-    (d / f"1-{chap}.json").write_text(
+    (d / f"{book}-{chap}.json").write_text(
         json.dumps({"beads": beads, "reviewed": sorted(set(reviewed)),
                     "source": "human", "base": "interp_out"},
                    ensure_ascii=False, indent=1), "utf-8")
@@ -196,27 +216,31 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, PAGE.replace("__WORK__", WORK).replace("__TRANS__", TRANS),
                               "text/html; charset=utf-8")
         if u.path == "/api/init":
-            chs = [dict(n=c, **flag_counts(c)) for c in chapters()]
+            chs = [
+                dict(key=_key(book, chap), book=book, chapter=chap, **flag_counts(book, chap))
+                for book, chap in chapters()
+            ]
             return self._send(200, json.dumps(dict(work=WORK, trans=TRANS, chapters=chs)))
         if u.path == "/api/chapter":
-            c = int(parse_qs(u.query)["n"][0])
-            g, e = units(c)
-            beads, reviewed, src = load_beads(c)
+            book, chap = _parse_key(parse_qs(u.query)["n"][0])
+            g, e = units(book, chap)
+            beads, reviewed, src = load_beads(book, chap)
             return self._send(200, json.dumps(dict(
-                n=c, greek=g, english=e, beads=beads, source=src,
-                reviewed=reviewed, anchors=anchors_for(c, len(g)))))
+                key=_key(book, chap), book=book, chapter=chap,
+                greek=g, english=e, beads=beads, source=src,
+                reviewed=reviewed, anchors=anchors_for(book, chap, len(g)))))
         return self._send(404, "{}")
 
     def do_POST(self):
         u = urlparse(self.path)
         if u.path == "/api/chapter":
-            c = int(parse_qs(u.query)["n"][0])
+            book, chap = _parse_key(parse_qs(u.query)["n"][0])
             n = int(self.headers.get("Content-Length", 0))
             data = json.loads(self.rfile.read(n) or b"{}")
-            err = save(c, data.get("beads", []), data.get("reviewed", []))
+            err = save(book, chap, data.get("beads", []), data.get("reviewed", []))
             if err:
                 return self._send(400, json.dumps(dict(ok=False, error=err)))
-            return self._send(200, json.dumps(dict(ok=True, flags=flag_counts(c))))
+            return self._send(200, json.dumps(dict(ok=True, flags=flag_counts(book, chap))))
         return self._send(404, "{}")
 
 
@@ -264,12 +288,12 @@ async function init(){
  const c=document.getElementById('chs');
  c.innerHTML='';
  d.chapters.forEach(ch=>{
-  const el=document.createElement('div'); el.className='ch'; el.dataset.n=ch.n;
-  el.innerHTML=`<span>ch ${ch.n}</span><span>`+
+  const el=document.createElement('div'); el.className='ch'; el.dataset.n=ch.key;
+  el.innerHTML=`<span>${ch.book}.${ch.chapter}</span><span>`+
     (ch.red?`<span class=b>${ch.red}</span> `:'')+(ch.amber?`<span class=a>${ch.amber}</span>`:'')+`</span>`;
-  el.onclick=()=>load(ch.n); c.appendChild(el);
+  el.onclick=()=>load(ch.key); c.appendChild(el);
  });
- load(d.chapters[0].n);
+ load(d.chapters[0].key);
 }
 async function load(n){
  if(dirty && !confirm('Discard unsaved changes?')) return;
@@ -277,11 +301,11 @@ async function load(n){
  CH=n; greek=d.greek; english=d.english; anchors=d.anchors||[]; reviewed=new Set(d.reviewed||[]);
  beads=d.beads.map(b=>({g:b.g.slice(),e:b.e.slice()}));
  sel=0; hist=[]; dirty=false;
- document.querySelectorAll('.ch').forEach(e=>e.classList.toggle('sel',+e.dataset.n===n));
+ document.querySelectorAll('.ch').forEach(e=>e.classList.toggle('sel',e.dataset.n===n));
  render(); status(d.source==='human'?'loaded (your corrected version)':'loaded (machine)');
 }
-function gtext(i){return (greek.find(x=>x.i===i)||{}).text||'';}
-function etext(j){return (english.find(x=>x.j===j)||{}).text||'';}
+function gtext(i){return greek[i]||'';}
+function etext(j){return english[j]||'';}
 function isRev(b){return b.g.length>0 && b.g.every(g=>reviewed.has(g));}
 function computeFlags(){
  const g2b={}; beads.forEach((b,bi)=>b.g.forEach(g=>g2b[g]=bi));
