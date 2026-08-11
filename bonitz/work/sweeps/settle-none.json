@@ -1,5 +1,19 @@
 [
  {
+  "sid": "forms:οἱ|οἷ",
+  "member": "page-062-L:29:1264",
+  "page": 62,
+  "col": "L",
+  "line": 29,
+  "readers": {
+   "opus": "οἱ",
+   "genie": "οἳ",
+   "codex": "οἱ",
+   "kraken": "οἷ",
+   "llama": "οἳ"
+  }
+ },
+ {
   "sid": "forms:ἐκι|ἑκι",
   "member": "page-058-R:2:87",
   "page": 58,
@@ -7,10 +21,10 @@
   "line": 2,
   "readers": {
    "opus": "ἐκι",
+   "genie": "ἐκι",
    "codex": "ἐκι",
    "kraken": "ἑκι",
-   "llama": "ἐκι",
-   "genie": "ἐκι"
+   "llama": "ἐκι"
   }
  }
 ]

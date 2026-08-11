@@ -289,8 +289,9 @@ def test_the_live_plan_still_applies_cleanly():
     """Guards that refuse everything are as bad as guards that refuse nothing.
 
     John's 300 rulings still resolve to the same 16 accepts and 385 keeps, and
-    nothing is refused: 15 of the accepts are already in reconciled-auto, and
-    the sixteenth is 056-L:59, which the stale-offset bug used to reject.
+    nothing is refused. All 16 now stand in reconciled-auto: 15 were written
+    the first time, and 056-L:59 — the one the stale-offset bug rejected —
+    followed once `_anchor` could find it, 2026-08-10.
     """
     steps = settle_apply.plan()
     assert settle_apply.unruled() == [], 'a card lost its ruling'
@@ -300,7 +301,38 @@ def test_the_live_plan_still_applies_cleanly():
     out = settle_apply.apply(steps, write=False)
     assert out['skips'] == [], out['skips'][:10]
     assert out['counts']['preserve'] == 385, out['counts']
-    assert out['counts']['already'] == 15, out['counts']
+    assert out['counts']['already'] == 16, out['counts']
+
+
+def test_the_carried_plan_is_the_one_that_now_applies():
+    """The store above is history; this is the live one.
+
+    After the kraken re-read, what gets applied is the FILTERED queue against
+    the CARRIED rulings — 270 of them, 236 carried by site plus the 34 John
+    answered afterwards. The two stores must agree about the page even though
+    they group it differently: same 16 accepts, all standing, nothing refused.
+
+    ⚠ Testing only the old defaults would have guarded a file nobody applies —
+    the same shape of hole as a gate reading a column that is not there.
+    """
+    root = Path(settle_apply.__file__).resolve().parent.parent
+    q = root / 'work' / 'queue-053-062-filtered.json'
+    r = root / 'work' / 'sweeps' / 'settle-rulings-carried.json'
+    steps = settle_apply.plan(q, r)
+    assert settle_apply.unruled(q, r) == [], 'a card lost its ruling'
+    accepts = [s for s in steps if s['verdict'] == 'accept'
+               and s['printed'] != s['becomes']]
+    assert len(accepts) == 16, len(accepts)
+    out = settle_apply.apply(steps, write=False)
+    assert out['skips'] == [], out['skips'][:10]
+    assert out['counts'] == {'edited': 0, 'preserve': 341, 'noop': 0,
+                             'already': 16, 'skipped': 0}, out['counts']
+    # The two sites this store settles that the old grouping could not:
+    # 054-L:35, which exemplar drift withheld until he was asked, and
+    # 056-L:59. Both are in the corpus now.
+    assert settle_apply.corrigenda_for(steps) and [
+        (e['printed'], e['correct']) for e in settle_apply.corrigenda_for(steps)
+    ] == [('ἄνθρώπȣ', 'ἀνθρώπȣ')]
 
 
 def test_only_one_live_ruling_belongs_in_the_register():
