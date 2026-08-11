@@ -46,7 +46,15 @@ from .normalize import corpus_column
 from .lexcheck import CORPUS, WORD_RE, bare, nfc
 
 # A citation: optional siglum, then Bekker page, column letter, line.
-CITE_RE = re.compile(r'([Α-Ωα-ω]{0,3}[α-ω]?\s?\d{0,3}\.?\s*)(\d{2,4})\s?([ab])(\d{1,3})')
+#
+# ⚠ THE PERIOD AFTER THE BOOK NUMBER IS LOAD-BEARING. `\d{0,3}\.?` made that
+# separator optional, so in `οβ1347a9` — Oeconomica β, no space before the
+# Bekker page — the siglum group ate `13` and the citation resolved to column
+# 47a. Bonitz's quotation was then scored against a line of the Organon, came
+# back at zero overlap, and read as HIS error rather than ours. Requiring the
+# period forces the Bekker number to take every digit that belongs to it.
+CITE_RE = re.compile(
+    r'([Α-Ωα-ω]{0,3}[α-ω]?\s?(?:\d{1,3}[.,]\s*)?)(\d{2,4})\s?([ab])(\d{1,3})')
 
 # Running Greek prose carries these; a list of lemmata does not.
 FUNCTION_WORDS = {
