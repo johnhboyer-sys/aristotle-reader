@@ -24,6 +24,7 @@ import json
 import re
 import unicodedata
 from pathlib import Path
+from .normalize import corpus_column
 
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS = ROOT.parent / 'app/dist/data'
@@ -120,8 +121,8 @@ def sweep_column(page: int, col: str, forms: set[str]) -> list[dict]:
     text (falling back to the raw reader) wrote plain upsilon instead.
     """
     lp = ROOT / f'raw/llamaparse/page-{page:03d}.md'
-    target = ROOT / f'work/reconciled/page-{page:03d}-{col}.txt'
-    if not target.exists():
+    target = corpus_column(page, col, required=False)
+    if target is None:
         target = ROOT / f'raw/opus/page-{page:03d}-{col}.txt'
     if not (lp.exists() and target.exists()):
         return []

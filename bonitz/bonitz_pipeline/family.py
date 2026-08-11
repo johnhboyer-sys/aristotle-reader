@@ -22,6 +22,7 @@ import unicodedata
 
 from .alphacheck import reconciled_headwords
 from .batch3 import ROOT, parse_pages
+from .normalize import corpus_column
 from .lexcheck import bare, nfc
 
 SMOOTH, ROUGH = '̓', '̔'
@@ -43,8 +44,8 @@ def breathing_of(word: str) -> str | None:
 
 
 def scan(page: int, col: str) -> list[dict]:
-    path = ROOT / f'work/reconciled/page-{page:03d}-{col}.txt'
-    if not path.exists():
+    path = corpus_column(page, col, required=False)
+    if path is None:
         return []
     lines = nfc(path.read_text(encoding='utf-8')).splitlines()
     heads = [(w, ln) for (w, c, ln) in reconciled_headwords(page) if c == col]

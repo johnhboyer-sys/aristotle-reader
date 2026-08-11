@@ -42,6 +42,7 @@ import re
 from pathlib import Path
 
 from .batch3 import ROOT, parse_pages
+from .normalize import corpus_column
 from .lexcheck import CORPUS, WORD_RE, bare, nfc
 
 # A citation: optional siglum, then Bekker page, column letter, line.
@@ -99,7 +100,9 @@ def load_corpus() -> tuple[dict[str, dict[int, list[str]]], set[str]]:
 
 def scan(page: int, col: str, index=None) -> list[dict]:
     cols, excluded = index or load_corpus()
-    path = ROOT / f'work/reconciled/page-{page:03d}-{col}.txt'
+    path = corpus_column(page, col, required=False)
+    if path is None:
+        return []
     if not path.exists():
         return []
     text = nfc(path.read_text(encoding='utf-8'))

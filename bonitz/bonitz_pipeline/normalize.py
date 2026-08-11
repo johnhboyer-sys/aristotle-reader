@@ -256,3 +256,37 @@ def fold(s: str) -> str:
     s = ''.join(c for c in s if not unicodedata.combining(c))
     # final-sigma and case folds so ς/σ and Α/α don't count as disagreement
     return unicodedata.normalize('NFC', s).replace('ς', 'σ').lower()
+
+
+# --- which stage of the corpus holds a column -------------------------------
+
+CORPUS_STAGES = ('reconciled', 'reconciled-auto')
+
+
+def corpus_column(page: int, col: str, *, required: bool = True):
+    """The transcribed column, from whichever stage currently holds it.
+
+    ⚠ THIS EXISTS BECAUSE THREE GATES CERTIFIED PAGES 53-62 CLEAN WITHOUT
+    READING THEM. `alphacheck`, `family` and `bekker` each opened
+    `work/reconciled/page-NNN-C.txt`, found nothing — those pages are settled
+    but not yet promoted, so they live in `reconciled-auto` — and returned an
+    empty result, which prints identically to a page with no defects.
+    alphacheck said "0 order violations in 0 headword candidates" over twenty
+    columns of a dictionary index, which is nothing but headwords.
+
+    So: search every stage, and RAISE when a caller asks for a column that is
+    in none of them. A gate must never mistake an absent page for a clean one.
+    Pass `required=False` only where absence is genuinely an answer.
+    """
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    for stage in CORPUS_STAGES:
+        p = root / 'work' / stage / f'page-{page:03d}-{col}.txt'
+        if p.exists():
+            return p
+    if required:
+        raise FileNotFoundError(
+            f'page-{page:03d}-{col} is in no corpus stage '
+            f'({", ".join(CORPUS_STAGES)}) — it has not been transcribed, so '
+            f'no check can report it clean')
+    return None

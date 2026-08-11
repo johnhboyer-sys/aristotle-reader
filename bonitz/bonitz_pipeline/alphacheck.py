@@ -27,6 +27,7 @@ import unicodedata
 from pathlib import Path
 
 from .batch3 import ROOT, parse_pages
+from .normalize import corpus_column
 from .lexcheck import bare, nfc
 
 BOLD_RE = re.compile(r'\*\*([^*\n]+)\*\*')
@@ -73,8 +74,8 @@ def reconciled_headwords(page: int) -> list[tuple[str, str, int]]:
     import difflib
     lines = []
     for col in ('L', 'R'):
-        p = ROOT / f'work/reconciled/page-{page:03d}-{col}.txt'
-        if p.exists():
+        p = corpus_column(page, col, required=False)
+        if p is not None:
             text = nfc(p.read_text(encoding='utf-8')).splitlines()
             for i, line in enumerate(text, 1):
                 # the tail of a hyphen-broken word is not a headword, and it

@@ -33,6 +33,7 @@ import re
 from pathlib import Path
 
 from .batch3 import ROOT, parse_pages
+from .normalize import corpus_column
 from .lexcheck import nfc
 
 # Bonitz's siglum -> (first Bekker page, last). Longest prefix wins, so πο
@@ -77,8 +78,8 @@ def work_of(siglum: str) -> str | None:
 
 
 def scan(page: int, col: str, ranges: bool = False) -> tuple[list[dict], collections.Counter]:
-    path = ROOT / f'work/reconciled/page-{page:03d}-{col}.txt'
-    if not path.exists():
+    path = corpus_column(page, col, required=False)
+    if path is None:
         return [], collections.Counter()
     bad, unknown = [], collections.Counter()
     for i, line in enumerate(nfc(path.read_text(encoding='utf-8')).splitlines(), 1):
