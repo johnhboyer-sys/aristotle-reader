@@ -10,33 +10,134 @@
   "I had looked only at pp.13-15. Grok found it.",
   "Bonitz closes p.11: 'Reliqua editorum et interpretum nomina cum sine",
   "compendio scripta sint explicationem non requirunt' — everything not listed",
-  "here is written out in full."
+  "here is written out in full.",
+  "CORRECTED 2026-08-11 against the 1870 original (archive.org aristotelisopera05arisuoft leaf 261), not the reprint: added P/Pik, and re-keyed Prantl to its printed siglum Prtl. Trdllbg was checked and is right as it stands — the double l is on the page."
  ],
  "editors_p11": {
-  "A": {"who": "H. Aubert and Fr. Wimmer", "works": ["Aristoteles von der Zeugung und Entwicklung der Thiere, Lpz 1860", "Aristoteles Thierkunde, Lpz 1868"],
-        "rule": "TAKES A WORK SIGLUM. Bonitz: 'litterae A ubi opus erat additum est siglum eius libri Aristotelici, ad quem pertinet horum interpretum adnotatio, veluti AΖι i e Aub ad Ζι.' So AΖι is A + Ζι (Historia animalium) and AΖγ is A + Ζγ (De gen. an.) — NOT 'AZ' plus a book letter.",
-        "also": "Aub"},
-  "Bk": {"who": "Bekker", "note": "the Academy edition text itself; Bk2 and Bk3 are his second and third editions of some books"},
-  "Bsm": {"who": "Bussemaker", "works": ["emendationes et observationes criticae in the Didot Aristotle"]},
-  "Bz": {"who": "Hermann Bonitz", "works": ["Aristotelis Metaphysica, Berol. 1848"]},
-  "C": {"who": "M. Camus", "works": ["Histoire des animaux d'Aristote, avec la traduction française, Paris 1783"]},
-  "Cr": {"who": "Richard Cresswell", "works": ["Aristotle's History of Animals, London 1862"]},
-  "Did": {"who": "Didot", "works": ["Aristotelis opera omnia, Paris 1848 sqq."]},
-  "F": {"who": "A. v. Frantzius", "works": ["Aristoteles über die Theile der Thiere, Lpz. 1853"]},
-  "Fr": {"who": "A. T. H. Fritzsche", "also": "Fritzsche"},
-  "Ka": {"who": "A. Karsch", "works": ["Ar über die Theile der Thiere; Ar Naturgeschichte der Thiere, Stuttgart 1855, 1866"],
-         "rule": "ALSO TAKES A WORK SIGLUM: 'alter liber ab altero distinguitur siglis KΖμ. KΖι.'"},
-  "K": {"who": "Ph. H. Külb", "works": ["Ar Thiergeschichte, von den Theilen der Thiere, Stuttg. 1856"]},
-  "S": {"who": "J. G. Schneider", "works": ["Ar de animalibus historiae libri decem, Lips 1811"],
-        "rule": "the first and second commentary volumes (= the whole work's third and fourth) are S I and S II"},
-  "Spgl": {"who": "Leonard Spengel", "works": ["Ar ars rhetorica, Lips. 1867", "Anaximenis ars rhetorica, 1844"]},
-  "St": {"who": "Fr. Strack", "works": ["Ar Naturgeschichte der Thiere, Frankf. 1816"]},
-  "Trdllbg": {"who": "A. Trendelenburg", "works": ["Ar de anima libri III, Jenae 1833"]},
-  "Vhl": {"who": "J. Vahlen", "works": ["Ar de arte poetica, Berol. 1867"],
-          "rule": "Vhl Poet. I-IV and Vhl Rhet are his Beiträge and Kritik papers in the Vienna Academy annals"},
-  "Wz": {"who": "Theodor Waitz", "works": ["Ar Organon, Lips. 1844"]},
-  "Eucken": {"who": "Rudolph Eucken", "note": "'Eucken' or 'Eucken I' = de Aristotelico usu particularum; 'Eucken II' = Ueber den Sprachgebrauch des Aristoteles, Berl. 1868"},
-  "Prantl": {"who": "C. Prantl", "works": ["(de generatione et corruptione) griechisch und deutsch, Lpz. 1854, 1857"]}
+  "A": {
+   "who": "H. Aubert and Fr. Wimmer",
+   "works": [
+    "Aristoteles von der Zeugung und Entwicklung der Thiere, Lpz 1860",
+    "Aristoteles Thierkunde, Lpz 1868"
+   ],
+   "rule": "TAKES A WORK SIGLUM. Bonitz: 'litterae A ubi opus erat additum est siglum eius libri Aristotelici, ad quem pertinet horum interpretum adnotatio, veluti AΖι i e Aub ad Ζι.' So AΖι is A + Ζι (Historia animalium) and AΖγ is A + Ζγ (De gen. an.) — NOT 'AZ' plus a book letter.",
+   "also": "Aub"
+  },
+  "Bk": {
+   "who": "Bekker",
+   "note": "the Academy edition text itself; Bk2 and Bk3 are his second and third editions of some books"
+  },
+  "Bsm": {
+   "who": "Bussemaker",
+   "works": [
+    "emendationes et observationes criticae in the Didot Aristotle"
+   ]
+  },
+  "Bz": {
+   "who": "Hermann Bonitz",
+   "works": [
+    "Aristotelis Metaphysica, Berol. 1848"
+   ]
+  },
+  "C": {
+   "who": "M. Camus",
+   "works": [
+    "Histoire des animaux d'Aristote, avec la traduction française, Paris 1783"
+   ]
+  },
+  "Cr": {
+   "who": "Richard Cresswell",
+   "works": [
+    "Aristotle's History of Animals, London 1862"
+   ]
+  },
+  "Did": {
+   "who": "Didot",
+   "works": [
+    "Aristotelis opera omnia, Paris 1848 sqq."
+   ]
+  },
+  "F": {
+   "who": "A. v. Frantzius",
+   "works": [
+    "Aristoteles über die Theile der Thiere, Lpz. 1853"
+   ]
+  },
+  "Fr": {
+   "who": "A. T. H. Fritzsche",
+   "also": "Fritzsche"
+  },
+  "Ka": {
+   "who": "A. Karsch",
+   "works": [
+    "Ar über die Theile der Thiere; Ar Naturgeschichte der Thiere, Stuttgart 1855, 1866"
+   ],
+   "rule": "ALSO TAKES A WORK SIGLUM: 'alter liber ab altero distinguitur siglis KΖμ. KΖι.'"
+  },
+  "K": {
+   "who": "Ph. H. Külb",
+   "works": [
+    "Ar Thiergeschichte, von den Theilen der Thiere, Stuttg. 1856"
+   ]
+  },
+  "S": {
+   "who": "J. G. Schneider",
+   "works": [
+    "Ar de animalibus historiae libri decem, Lips 1811"
+   ],
+   "rule": "the first and second commentary volumes (= the whole work's third and fourth) are S I and S II"
+  },
+  "Spgl": {
+   "who": "Leonard Spengel",
+   "works": [
+    "Ar ars rhetorica, Lips. 1867",
+    "Anaximenis ars rhetorica, 1844"
+   ]
+  },
+  "St": {
+   "who": "Fr. Strack",
+   "works": [
+    "Ar Naturgeschichte der Thiere, Frankf. 1816"
+   ]
+  },
+  "Trdllbg": {
+   "who": "A. Trendelenburg",
+   "works": [
+    "Ar de anima libri III, Jenae 1833"
+   ]
+  },
+  "Vhl": {
+   "who": "J. Vahlen",
+   "works": [
+    "Ar de arte poetica, Berol. 1867"
+   ],
+   "rule": "Vhl Poet. I-IV and Vhl Rhet are his Beiträge and Kritik papers in the Vienna Academy annals"
+  },
+  "Wz": {
+   "who": "Theodor Waitz",
+   "works": [
+    "Ar Organon, Lips. 1844"
+   ]
+  },
+  "Eucken": {
+   "who": "Rudolph Eucken",
+   "note": "'Eucken' or 'Eucken I' = de Aristotelico usu particularum; 'Eucken II' = Ueber den Sprachgebrauch des Aristoteles, Berl. 1868"
+  },
+  "Prtl": {
+   "who": "C. Prantl",
+   "works": [
+    "(de generatione et corruptione) griechisch und deutsch, Lpz. 1854, 1857"
+   ],
+   "printed_siglum": "Prtl."
+  },
+  "P": {
+   "who": "N. S. Πικκόλȣ (Piccolos)",
+   "also": "Pik",
+   "works": [
+    "Ἀριστοτέλους περὶ ζῴων ἱστορίας βιβλία θ′ ἐφ′ οἷς ϗ̀ δέκατον τὸ νόθον, ἐπιμελείᾳ ϗ̀ διορθώσει Ν. Σ. Πικκόλȣ ἰατρȣ͂. Paris 1863"
+   ],
+   "note": "Added 2026-08-11 from the 1870 leaf; absent from the 2026-08-09 pass, which read the 1955 reprint."
+  }
  },
  "zoological_p12": {
   "Ar": "Petri Artedi Synonymia piscium, auctore J. G. Schneider. Lips. 1789",

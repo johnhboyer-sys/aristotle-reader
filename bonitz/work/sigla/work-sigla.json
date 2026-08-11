@@ -1,363 +1,367 @@
 {
-  "_": [
-    "Bonitz's own list of work sigla, VERIFIED against the 1870 original at 400 dpi",
-    "on 2026-08-08: archive.org `aristotelisopera05arisuoft`, leaf n263.",
-    "(Printed p. VII, the EDITOR sigla — Bk, Bz, Did — is leaf n260; do not confuse",
-    "the two lists. The front matter is not in work/scan400/, which starts at 015.)",
-    "",
-    "A citation siglum is WORK + BOOK NUMERAL: `Ζιι` is Ζι (Historia animalium)",
-    "plus book ι, `Ζμβ` is Ζμ plus book β, `πκγ` is π (Problemata) plus κγ = 23.",
-    "So the vowels inside a siglum are accounted for in exactly two ways — as part",
-    "of the work siglum itself (αι, ακ, αν, αρ, ατ, εν, ε, ηε, ημ, ο, υ ...) or as",
-    "a Greek alphabetic book numeral. Anything else is a misread siglum, and until",
-    "now nothing checked: the `siglum` and `label` guards exempt ANY siglum-shaped",
-    "token, so `Ζιι` correctly escapes and a corrupted `Ζμ`/`Ζυ` escapes with it.",
-    "That is the `Ζιβ28` failure of 2026-08-06, where all three readers were wrong",
-    "and no check fired.",
-    "",
-    "Case is significant and is Bonitz's own: Ζι vs ζ, Μ vs μ, Ο vs ο, Π vs π,",
-    "Ρ vs ρ, Φ vs φ, Κ vs κ are all DIFFERENT works.",
-    "",
-    "⚠ THE LIST IS NOT A DICTIONARY. `ζ` names TWO title-lines — περὶ Ζωῆς ϗ",
-    "θανάτȣ and περὶ Νεότητος ϗ γήρως — so 48 printed rows carry 47 distinct",
-    "sigla. The list is alphabetised by TITLE, which is why the two ζ rows sit far",
-    "apart. This corrects the earlier reading `ν` for περὶ Νεότητος, which was a",
-    "300 dpi guess from the work's name: at 400 dpi the glyph is a zeta, identical",
-    "to the ζ of περὶ Ζωῆς and nothing like the ν of μν directly above it. The two",
-    "works are contiguous in Bekker (both inside Juv, 467b-480b), so a range check",
-    "is unaffected by the ambiguity — but a parser keyed by siglum is not.",
-    "",
-    "`bekker` is the Bekker page range. `manifest` names the file in the wider",
-    "repo's manifests/ that is the authority for it — those carry first/last",
-    "column AND per-book ranges, and build/dist/<id>/chapters.json carries",
-    "per-chapter spans. Entries with \"source\": \"hand\" are NOT in the repo and",
-    "were entered from standard Bekker pagination; a check must stay silent on",
-    "them until they are verified, or it will manufacture false errors the way",
-    "bekker.py's guessed table did (103 of them).",
-    "",
-    "⚠ THE BIGGEST TRAP FOR A RANGE CHECK: a bare book letter inherits the",
-    "previous citation's work. Verified 2026-08-08 by page number — `Ζιε13.",
-    "544a32. ζ1. 558b13` is HA book 6, `Ηζ2. 1139b9. ζ4. 1140a19` is EN book 6,",
-    "`Πδ15. 1299a8. ζ2. 1317b41` is Politics book 6. 29 of the 40 bare-ζ tokens",
-    "in the corpus are this, not the work ζ. A checker that reads them as work",
-    "sigla condemns every one. Resolve the inherited work from the preceding",
-    "citation BEFORE testing any Bekker page.",
-    "",
-    "OPEN: two rows — αι and Μ — print a small `i e` between siglum and title.",
-    "Unexplained; look at it before writing the citation parser."
-  ],
-  "works": [
-    {
-      "siglum": "αι",
-      "title": "περὶ Αἰσθήσεως ϗ αἰσθητῶν",
-      "manifest": "Sens",
-      "bekker": "436a-449b",
-      "note": "prints `i e` after the siglum"
-    },
-    {
-      "siglum": "ακ",
-      "title": "περὶ Ἀκȣστῶν",
-      "manifest": "Aud",
-      "bekker": "800a-804b"
-    },
-    {
-      "siglum": "Ααβ",
-      "title": "Ἀναλυτικὰ πρότερα",
-      "manifest": "APr",
-      "bekker": "24a-70b",
-      "note": "RANGE: Αα and Αβ are books 1 and 2"
-    },
-    {
-      "siglum": "Αγδ",
-      "title": "Ἀναλυτικὰ ὕστερα",
-      "manifest": "APo",
-      "bekker": "71a-100b",
-      "note": "RANGE: Αγ and Αδ are books 1 and 2"
-    },
-    {
-      "siglum": "αν",
-      "title": "περὶ Ἀναπνοῆς",
-      "manifest": null,
-      "bekker": "470b-480b",
-      "source": "hand",
-      "note": "inside the repo's Juv block 467b-480b"
-    },
-    {
-      "siglum": "αρ",
-      "title": "περὶ Ἀρετῶν ϗ κακιῶν",
-      "manifest": "VV",
-      "bekker": "1249a-1251b"
-    },
-    {
-      "siglum": "ατ",
-      "title": "περὶ Ἀτόμων γραμμῶν",
-      "manifest": "Lin",
-      "bekker": "968a-972b"
-    },
-    {
-      "siglum": "Γ",
-      "title": "περὶ Γενέσεως ϗ φθορᾶς",
-      "manifest": "GC",
-      "bekker": "314a-338b"
-    },
-    {
-      "siglum": "εν",
-      "title": "περὶ Ἐνυπνίων",
-      "manifest": "Insomn",
-      "bekker": "458a-462b"
-    },
-    {
-      "siglum": "ε",
-      "title": "περὶ Ἑρμηνείας",
-      "manifest": "Int",
-      "bekker": "16a-24b"
-    },
-    {
-      "siglum": "ζ",
-      "title": "περὶ Ζωῆς ϗ θανάτȣ",
-      "manifest": null,
-      "bekker": "467b-470b",
-      "source": "corpus-verified",
-      "note": "Shares its siglum with περὶ Νεότητος: Bekker prints the two titles as one continuous text, and Bonitz alphabetises by title, so one code appears twice in his list. All 11 ζ-as-work citations in the corpus land in 467-470."
-    },
-    {
-      "siglum": "Ζι",
-      "title": "περὶ τὰ Ζῷα ἱστορίαι",
-      "manifest": "HA",
-      "bekker": "486a-638b",
-      "note": "Bekker span supplied, not printed in the key: 486a-638b runs through book κ, which Bonitz cites at 636-638. The earlier 633b was books α-ι only."
-    },
-    {
-      "siglum": "Ζγ",
-      "title": "περὶ Ζῴων γενέσεως",
-      "manifest": "GA",
-      "bekker": "715a-789b"
-    },
-    {
-      "siglum": "Ζκ",
-      "title": "περὶ Ζῴων κινήσεως",
-      "manifest": "MA",
-      "bekker": "698a-704b"
-    },
-    {
-      "siglum": "Ζμ",
-      "title": "περὶ Ζῴων μορίων",
-      "manifest": "PA",
-      "bekker": "639a-697b"
-    },
-    {
-      "siglum": "Ζπ",
-      "title": "περὶ Ζῴων πορείας",
-      "manifest": "IA",
-      "bekker": "704a-714b"
-    },
-    {
-      "siglum": "Η",
-      "title": "Ἠθικὰ Νικομάχεια",
-      "manifest": "EN",
-      "bekker": "1094a-1181b"
-    },
-    {
-      "siglum": "ημ",
-      "title": "Ἠθικὰ μεγάλα",
-      "manifest": null,
-      "bekker": "1181a-1213b",
-      "source": "hand",
-      "note": "Magna Moralia; not in the repo"
-    },
-    {
-      "siglum": "ηε",
-      "title": "Ἠθικὰ Εὐδήμεια",
-      "manifest": "EE",
-      "bekker": "1214a-1249b"
-    },
-    {
-      "siglum": "θ",
-      "title": "περὶ Θαυμασίων ἀκȣσμάτων",
-      "manifest": "Mirab",
-      "bekker": "830a-847b"
-    },
-    {
-      "siglum": "Κ",
-      "title": "Κατηγορίαι",
-      "manifest": "Cat",
-      "bekker": "1a-15b"
-    },
-    {
-      "siglum": "κ",
-      "title": "περὶ Κόσμȣ",
-      "manifest": "DM",
-      "bekker": "391a-401b"
-    },
-    {
-      "siglum": "μκ",
-      "title": "περὶ Μακροβιότητος ϗ βραχυβιότητος",
-      "manifest": "Long",
-      "bekker": "464b-467b"
-    },
-    {
-      "siglum": "μτ",
-      "title": "περὶ Μαντικῆς τῆς ἐν τοῖς ὕπνοις",
-      "manifest": "DivSomn",
-      "bekker": "462b-464b"
-    },
-    {
-      "siglum": "Μ",
-      "title": "τὰ Μετὰ τὰ φυσικά",
-      "manifest": "Meta",
-      "bekker": "980a-1093b",
-      "note": "prints `i e` after the siglum; books are LETTER NAMES (ΜΑ, Μμ, Μν), not numerals"
-    },
-    {
-      "siglum": "μ",
-      "title": "Μετεωρολογικά",
-      "manifest": "Mete",
-      "bekker": "338a-390b"
-    },
-    {
-      "siglum": "μχ",
-      "title": "Μηχανικά",
-      "manifest": "Mech",
-      "bekker": "847a-858b"
-    },
-    {
-      "siglum": "μν",
-      "title": "περὶ Μνήμης ϗ ἀναμνήσεως",
-      "manifest": "Mem",
-      "bekker": "449b-453b"
-    },
-    {
-      "siglum": "ζ",
-      "title": "περὶ Νεότητος ϗ γήρως",
-      "manifest": "Juv",
-      "bekker": "467b-470b",
-      "source": "corpus-verified",
-      "note": "⚠ SECOND ζ, the same code as περὶ Ζωῆς — one treatise, two titles. Read as `ν` at 300 dpi; the 400 dpi ink is a zeta. The repo's Juv manifest spans 467b-480b, which is this work PLUS αν (De Respiratione, 470b-480b); do not use the manifest range for ζ alone."
-    },
-    {
-      "siglum": "ξ",
-      "title": "περὶ Ξενοφάνȣς κτλ.",
-      "manifest": "MXG",
-      "bekker": "974a-980b"
-    },
-    {
-      "siglum": "ο",
-      "title": "Οἰκονομικά",
-      "manifest": "Oec",
-      "bekker": "1343a-1353b"
-    },
-    {
-      "siglum": "Ο",
-      "title": "περὶ Οὐρανȣ̃",
-      "manifest": "Cael",
-      "bekker": "268a-313b"
-    },
-    {
-      "siglum": "πν",
-      "title": "περὶ Πνεύματος",
-      "manifest": null,
-      "bekker": "481a-486a",
-      "source": "hand",
-      "note": "De Spiritu; not in the repo"
-    },
-    {
-      "siglum": "πο",
-      "title": "περὶ Ποιητικῆς",
-      "manifest": "Poet",
-      "bekker": "1447a-1462b"
-    },
-    {
-      "siglum": "Π",
-      "title": "Πολιτικά",
-      "manifest": "Pol",
-      "bekker": "1252a-1342b"
-    },
-    {
-      "siglum": "π",
-      "title": "Προβλήματα",
-      "manifest": null,
-      "bekker": "859a-967b",
-      "source": "hand",
-      "note": "Problemata; not in the repo, and the 6th commonest citation in the corpus (229)"
-    },
-    {
-      "siglum": "Ρ",
-      "title": "τέχνη Ῥητορική",
-      "manifest": "Rhet",
-      "bekker": "1354a-1420a"
-    },
-    {
-      "siglum": "ρ",
-      "title": "Ῥητορικὴ πρὸς Ἀλέξανδρον",
-      "manifest": null,
-      "bekker": "1420a-1447b",
-      "source": "hand",
-      "note": "Rhetorica ad Alexandrum; not in the repo"
-    },
-    {
-      "siglum": "σ",
-      "title": "ἀνέμων θέσεις ϗ προσηγορίαι",
-      "manifest": "Vent",
-      "bekker": "973a-973b"
-    },
-    {
-      "siglum": "τι",
-      "title": "Σοφιστικοὶ ἔλεγχοι",
-      "manifest": "SE",
-      "bekker": "164a-184b"
-    },
-    {
-      "siglum": "τα-θ",
-      "title": "Τοπικά",
-      "manifest": "Top",
-      "bekker": "100a-164b",
-      "note": "RANGE: τα … τθ are books 1-8"
-    },
-    {
-      "siglum": "υ",
-      "title": "περὶ Ὕπνȣ ϗ ἐγρηγόρσεως",
-      "manifest": "Somn",
-      "bekker": "453b-458a"
-    },
-    {
-      "siglum": "Φ",
-      "title": "Φυσικὴ ἀκρόασις",
-      "manifest": "Phys",
-      "bekker": "184a-267b"
-    },
-    {
-      "siglum": "φ",
-      "title": "Φυσιογνωμονικά",
-      "manifest": "Phgn",
-      "bekker": "805a-814b"
-    },
-    {
-      "siglum": "φτ",
-      "title": "περὶ Φυτῶν",
-      "manifest": null,
-      "bekker": "815a-830a",
-      "source": "hand",
-      "note": "De Plantis; not in the repo"
-    },
-    {
-      "siglum": "χ",
-      "title": "περὶ Χρωμάτων",
-      "manifest": "Col",
-      "bekker": "791a-799b"
-    },
-    {
-      "siglum": "ψ",
-      "title": "περὶ Ψυχῆς",
-      "manifest": "DA",
-      "bekker": "402a-435b"
-    },
-    {
-      "siglum": "f",
-      "title": "Fragmenta Aristotelica",
-      "manifest": null,
-      "bekker": null,
-      "source": "hand",
-      "note": "fragments are cited by fragment number, not by Bekker page"
-    }
-  ]
+ "_": [
+  "Bonitz's own list of work sigla, VERIFIED against the 1870 original at 400 dpi",
+  "on 2026-08-08: archive.org `aristotelisopera05arisuoft`, leaf 264 (IIIF index; the file previously said n263, which is the half-title).",
+  "(Printed p. VII, the EDITOR sigla — Bk, Bz, Did — is leaf n260; do not confuse",
+  "the two lists. The front matter is not in work/scan400/, which starts at 015.)",
+  "",
+  "A citation siglum is WORK + BOOK NUMERAL: `Ζιι` is Ζι (Historia animalium)",
+  "plus book ι, `Ζμβ` is Ζμ plus book β, `πκγ` is π (Problemata) plus κγ = 23.",
+  "So the vowels inside a siglum are accounted for in exactly two ways — as part",
+  "of the work siglum itself (αι, ακ, αν, αρ, ατ, εν, ε, ηε, ημ, ο, υ ...) or as",
+  "a Greek alphabetic book numeral. Anything else is a misread siglum, and until",
+  "now nothing checked: the `siglum` and `label` guards exempt ANY siglum-shaped",
+  "token, so `Ζιι` correctly escapes and a corrupted `Ζμ`/`Ζυ` escapes with it.",
+  "That is the `Ζιβ28` failure of 2026-08-06, where all three readers were wrong",
+  "and no check fired.",
+  "",
+  "Case is significant and is Bonitz's own: Ζι vs ζ, Μ vs μ, Ο vs ο, Π vs π,",
+  "Ρ vs ρ, Φ vs φ, Κ vs κ are all DIFFERENT works.",
+  "",
+  "⚠ THE LIST IS NOT A DICTIONARY. `ζ` names TWO title-lines — περὶ Ζωῆς ϗ",
+  "θανάτȣ and περὶ Νεότητος ϗ γήρως — so 48 printed rows carry 47 distinct",
+  "sigla. The list is alphabetised by TITLE, which is why the two ζ rows sit far",
+  "apart. This corrects the earlier reading `ν` for περὶ Νεότητος, which was a",
+  "300 dpi guess from the work's name: at 400 dpi the glyph is a zeta, identical",
+  "to the ζ of περὶ Ζωῆς and nothing like the ν of μν directly above it. The two",
+  "works are contiguous in Bekker (both inside Juv, 467b-480b), so a range check",
+  "is unaffected by the ambiguity — but a parser keyed by siglum is not.",
+  "",
+  "`bekker` is the Bekker page range. `manifest` names the file in the wider",
+  "repo's manifests/ that is the authority for it — those carry first/last",
+  "column AND per-book ranges, and build/dist/<id>/chapters.json carries",
+  "per-chapter spans. Entries with \"source\": \"hand\" are NOT in the repo and",
+  "were entered from standard Bekker pagination; a check must stay silent on",
+  "them until they are verified, or it will manufacture false errors the way",
+  "bekker.py's guessed table did (103 of them).",
+  "",
+  "⚠ THE BIGGEST TRAP FOR A RANGE CHECK: a bare book letter inherits the",
+  "previous citation's work. Verified 2026-08-08 by page number — `Ζιε13.",
+  "544a32. ζ1. 558b13` is HA book 6, `Ηζ2. 1139b9. ζ4. 1140a19` is EN book 6,",
+  "`Πδ15. 1299a8. ζ2. 1317b41` is Politics book 6. 29 of the 40 bare-ζ tokens",
+  "in the corpus are this, not the work ζ. A checker that reads them as work",
+  "sigla condemns every one. Resolve the inherited work from the preceding",
+  "citation BEFORE testing any Bekker page.",
+  "",
+  "OPEN: two rows — αι and Μ — print a small `i e` between siglum and title.",
+  "Unexplained; look at it before writing the citation parser."
+ ],
+ "works": [
+  {
+   "siglum": "αι",
+   "title": "περὶ Αἰσθήσεως ϗ̀ αἰσθητῶν",
+   "manifest": "Sens",
+   "bekker": "436a-449b",
+   "note": "prints `i e` after the siglum"
+  },
+  {
+   "siglum": "ακ",
+   "title": "περὶ Ἀκȣστῶν",
+   "manifest": "Aud",
+   "bekker": "800a-804b"
+  },
+  {
+   "siglum": "Ααβ",
+   "title": "Ἀναλυτικὰ πρότερα",
+   "manifest": "APr",
+   "bekker": "24a-70b",
+   "note": "RANGE: Αα and Αβ are books 1 and 2"
+  },
+  {
+   "siglum": "Αγδ",
+   "title": "Ἀναλυτικὰ ὕστερα",
+   "manifest": "APo",
+   "bekker": "71a-100b",
+   "note": "RANGE: Αγ and Αδ are books 1 and 2",
+   "printed": "—  ὕστερα"
+  },
+  {
+   "siglum": "αν",
+   "title": "περὶ Ἀναπνοῆς",
+   "manifest": null,
+   "bekker": "470b-480b",
+   "source": "hand",
+   "note": "inside the repo's Juv block 467b-480b"
+  },
+  {
+   "siglum": "αρ",
+   "title": "περὶ Ἀρετῶν ϗ̀ κακιῶν",
+   "manifest": "VV",
+   "bekker": "1249a-1251b"
+  },
+  {
+   "siglum": "ατ",
+   "title": "περὶ Ἀτόμων γραμμῶν",
+   "manifest": "Lin",
+   "bekker": "968a-972b"
+  },
+  {
+   "siglum": "Γ",
+   "title": "περὶ Γενέσεως ϗ̀ φθορᾶς",
+   "manifest": "GC",
+   "bekker": "314a-338b"
+  },
+  {
+   "siglum": "εν",
+   "title": "περὶ Ἐνυπνίων",
+   "manifest": "Insomn",
+   "bekker": "458a-462b"
+  },
+  {
+   "siglum": "ε",
+   "title": "περὶ Ἑρμηνείας",
+   "manifest": "Int",
+   "bekker": "16a-24b"
+  },
+  {
+   "siglum": "ζ",
+   "title": "περὶ Ζωῆς ϗ̀ θανάτȣ",
+   "manifest": null,
+   "bekker": "467b-470b",
+   "source": "corpus-verified",
+   "note": "Shares its siglum with περὶ Νεότητος: Bekker prints the two titles as one continuous text, and Bonitz alphabetises by title, so one code appears twice in his list. All 11 ζ-as-work citations in the corpus land in 467-470."
+  },
+  {
+   "siglum": "Ζι",
+   "title": "περὶ τὰ Ζῷα ἱστορίαι",
+   "manifest": "HA",
+   "bekker": "486a-638b",
+   "note": "Bekker span supplied, not printed in the key: 486a-638b runs through book κ, which Bonitz cites at 636-638. The earlier 633b was books α-ι only."
+  },
+  {
+   "siglum": "Ζγ",
+   "title": "περὶ Ζῴων γενέσεως",
+   "manifest": "GA",
+   "bekker": "715a-789b"
+  },
+  {
+   "siglum": "Ζκ",
+   "title": "περὶ Ζῴων κινήσεως",
+   "manifest": "MA",
+   "bekker": "698a-704b"
+  },
+  {
+   "siglum": "Ζμ",
+   "title": "περὶ Ζῴων μορίων",
+   "manifest": "PA",
+   "bekker": "639a-697b"
+  },
+  {
+   "siglum": "Ζπ",
+   "title": "περὶ Ζῴων πορείας",
+   "manifest": "IA",
+   "bekker": "704a-714b"
+  },
+  {
+   "siglum": "Η",
+   "title": "Ἠθικὰ Νικομάχεια",
+   "manifest": "EN",
+   "bekker": "1094a-1181b",
+   "printed": "Ηθικὰ Νικομάχεια"
+  },
+  {
+   "siglum": "ημ",
+   "title": "Ἠθικὰ μεγάλα",
+   "manifest": null,
+   "bekker": "1181a-1213b",
+   "source": "hand",
+   "note": "Magna Moralia; not in the repo",
+   "printed": "—  μεγάλα"
+  },
+  {
+   "siglum": "ηε",
+   "title": "Ἠθικὰ Εὐδήμεια",
+   "manifest": "EE",
+   "bekker": "1214a-1249b",
+   "printed": "—  Εὐδήμεια"
+  },
+  {
+   "siglum": "θ",
+   "title": "περὶ Θαυμασίων ἀκȣσμάτων",
+   "manifest": "Mirab",
+   "bekker": "830a-847b"
+  },
+  {
+   "siglum": "Κ",
+   "title": "Κατηγορίαι",
+   "manifest": "Cat",
+   "bekker": "1a-15b"
+  },
+  {
+   "siglum": "κ",
+   "title": "περὶ Κόσμȣ",
+   "manifest": "DM",
+   "bekker": "391a-401b"
+  },
+  {
+   "siglum": "μκ",
+   "title": "περὶ Μακροβιότητος ϗ̀ βραχυβιότητος",
+   "manifest": "Long",
+   "bekker": "464b-467b"
+  },
+  {
+   "siglum": "μτ",
+   "title": "περὶ Μαντικῆς τῆς ἐν τοῖς ὕπνοις",
+   "manifest": "DivSomn",
+   "bekker": "462b-464b"
+  },
+  {
+   "siglum": "Μ",
+   "title": "τὰ Μετὰ τὰ φυσικά",
+   "manifest": "Meta",
+   "bekker": "980a-1093b",
+   "note": "prints `i e` after the siglum; books are LETTER NAMES (ΜΑ, Μμ, Μν), not numerals"
+  },
+  {
+   "siglum": "μ",
+   "title": "Μετεωρολογικά",
+   "manifest": "Mete",
+   "bekker": "338a-390b"
+  },
+  {
+   "siglum": "μχ",
+   "title": "Μηχανικά",
+   "manifest": "Mech",
+   "bekker": "847a-858b"
+  },
+  {
+   "siglum": "μν",
+   "title": "περὶ Μνήμης ϗ̀ ἀναμνήσεως",
+   "manifest": "Mem",
+   "bekker": "449b-453b"
+  },
+  {
+   "siglum": "ζ",
+   "title": "περὶ Νεότητος ϗ̀ γήρως",
+   "manifest": "Juv",
+   "bekker": "467b-470b",
+   "source": "corpus-verified",
+   "note": "⚠ SECOND ζ, the same code as περὶ Ζωῆς — one treatise, two titles. Read as `ν` at 300 dpi; the 400 dpi ink is a zeta. The repo's Juv manifest spans 467b-480b, which is this work PLUS αν (De Respiratione, 470b-480b); do not use the manifest range for ζ alone."
+  },
+  {
+   "siglum": "ξ",
+   "title": "περὶ Ξενοφάνȣς κτλ.",
+   "manifest": "MXG",
+   "bekker": "974a-980b"
+  },
+  {
+   "siglum": "ο",
+   "title": "Οἰκονομικά",
+   "manifest": "Oec",
+   "bekker": "1343a-1353b"
+  },
+  {
+   "siglum": "Ο",
+   "title": "περὶ Οὐρανȣ͂",
+   "manifest": "Cael",
+   "bekker": "268a-313b"
+  },
+  {
+   "siglum": "πν",
+   "title": "περὶ Πνεύματος",
+   "manifest": null,
+   "bekker": "481a-486a",
+   "source": "hand",
+   "note": "De Spiritu; not in the repo"
+  },
+  {
+   "siglum": "πο",
+   "title": "περὶ Ποιητικῆς",
+   "manifest": "Poet",
+   "bekker": "1447a-1462b"
+  },
+  {
+   "siglum": "Π",
+   "title": "Πολιτικά",
+   "manifest": "Pol",
+   "bekker": "1252a-1342b"
+  },
+  {
+   "siglum": "π",
+   "title": "Προβλήματα",
+   "manifest": null,
+   "bekker": "859a-967b",
+   "source": "hand",
+   "note": "Problemata; not in the repo, and the 6th commonest citation in the corpus (229)"
+  },
+  {
+   "siglum": "Ρ",
+   "title": "τέχνη Ῥητορική",
+   "manifest": "Rhet",
+   "bekker": "1354a-1420a"
+  },
+  {
+   "siglum": "ρ",
+   "title": "Ῥητορικὴ πρὸς Ἀλέξανδρον",
+   "manifest": null,
+   "bekker": "1420a-1447b",
+   "source": "hand",
+   "note": "Rhetorica ad Alexandrum; not in the repo"
+  },
+  {
+   "siglum": "σ",
+   "title": "ἀνέμων θέσεις ϗ̀ προσηγορίαι",
+   "manifest": "Vent",
+   "bekker": "973a-973b"
+  },
+  {
+   "siglum": "τι",
+   "title": "Σοφιστικοὶ ἔλεγχοι",
+   "manifest": "SE",
+   "bekker": "164a-184b"
+  },
+  {
+   "siglum": "τα-θ",
+   "title": "Τοπικά",
+   "manifest": "Top",
+   "bekker": "100a-164b",
+   "note": "RANGE: τα … τθ are books 1-8"
+  },
+  {
+   "siglum": "υ",
+   "title": "περὶ Ὕπνȣ ϗ̀ ἐγρηγόρσεως",
+   "manifest": "Somn",
+   "bekker": "453b-458a"
+  },
+  {
+   "siglum": "Φ",
+   "title": "Φυσικὴ ἀκρόασις",
+   "manifest": "Phys",
+   "bekker": "184a-267b"
+  },
+  {
+   "siglum": "φ",
+   "title": "Φυσιογνωμονικά",
+   "manifest": "Phgn",
+   "bekker": "805a-814b"
+  },
+  {
+   "siglum": "φτ",
+   "title": "περὶ Φυτῶν",
+   "manifest": null,
+   "bekker": "815a-830a",
+   "source": "hand",
+   "note": "De Plantis; not in the repo"
+  },
+  {
+   "siglum": "χ",
+   "title": "περὶ Χρωμάτων",
+   "manifest": "Col",
+   "bekker": "791a-799b"
+  },
+  {
+   "siglum": "ψ",
+   "title": "περὶ Ψυχῆς",
+   "manifest": "DA",
+   "bekker": "402a-435b"
+  },
+  {
+   "siglum": "f",
+   "title": "Fragmenta Aristotelica",
+   "manifest": null,
+   "bekker": null,
+   "source": "hand",
+   "note": "fragments are cited by fragment number, not by Bekker page"
+  }
+ ]
 }
