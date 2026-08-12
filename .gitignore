@@ -36,3 +36,15 @@ app/src/data/
 # (Clarendon, 1963): the Bekker-key guide + a local-only third translation.
 sources/cat-ackrill/
 sources/int-ackrill/
+
+# Bonitz working rasters and PDFs — the Index Aristotelicus scan (105 MB), the
+# page chunks cut from it, the TIFF page images, and the OCR scratch. These were
+# untracked but NOT ignored, which left 1.1 GB sitting one `git add -A` away
+# from the history; book.pdf alone exceeds GitHub's 100 MiB per-file hard limit,
+# so such a push is rejected only AFTER the commit exists locally. Same rule as
+# sources/*/scan/ above: the scan is re-fetchable and the crops regenerable,
+# while the transcriptions under bonitz/output stay tracked.
+bonitz/book.pdf
+bonitz/chunks/
+bonitz/images/
+bonitz/work/
