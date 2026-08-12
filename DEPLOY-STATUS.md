@@ -3,7 +3,20 @@
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
 Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-07-29 (c · footnote click closes word panel)
+## Latest deploy — 2026-08-11 (⌘K jumps to a Bekker citation from anywhere)
+
+- **gh-pages:** `9222625e` → `4de53972`
+- **Source:** `origin/main` `79a170ad0` (pushed direct to main, no PR)
+- **What shipped:** the ⌘K palette only offered a citation jump when a work was already open **and** that work owned the column, so `1103a14` from the home page — or from any other work — fell through to corpus search. `parseCitation` also demanded 3–4 digits, rejecting every Organon citation (`8b20`, `16a3`). A new build step (`app/scripts/build-bekker-index.mjs`, wired into `app`'s `build`) aggregates every work's `columns.json` into **`data/bekker.json`** (2,537 columns / 41 works / 63 KB), fetched on the first keystroke that looks like a citation. `citationTargets()` picks the book whose line range holds the citation, snaps to the nearer range in a gap, puts the work being read first on a tie, and drops works paginated by another editor — the Isagoge's Busse pages collide with the Categories' columns and mean something else. The corpus-search item is dropped once a citation resolves.
+- **Rode along (John cleared it):** Bekker **tick re-anchoring** in the English column, 32 data files — interpolated ticks (`real: false`) becoming real anchors, offsets nudged. De Anima re-anchored on every segment (from `sources/da-wallace/anchors.yaml`, committed after the deploy); single-tick fixes in Phys, HA, Pol, APo, APr, Cat, GC, Mete, SE. **No translation prose changed.**
+- **Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22, `bonitz.astro` moved aside → no `app/dist/bonitz`). Corpus gates run standalone: **preflight ok**. Link integrity **0 broken** (6,610 pages / 555,051 links / 428,859 anchors).
+- **Deploy diff:** 6,658 files — 9 bundle rehashes (`CommandPalette`, `Reader`, `Search`, `data`, `works`, `BekkerJump`, `Phrases`, `WorkSwitcher`, `global.css`) propagated to 6,606 pages; 39 data files (1 new `bekker.json`, 32 tick re-anchorings, 6 pipeline reports). Dangling references to the 9 removed hashes: **0**.
+- **Leak-check:** at baseline — Ackrill 0, Tredennick 0, Rackham = `EN/manifest.json` attribution + Ostwald's own footnotes in `EN/footnotes.json`.
+- **Tests:** shared 173/173 (6 new palette tests, written failing first), app 2/2.
+- **Live-verified (functional):** `/` `/EN/book/2/` `/Cat/book/1/` `/search/` `/data/bekker.json` 200, `/bonitz/` 404. On the live home page ⌘K + `1103a14` → one result "Nicomachean Ethics · Book 2"; opening it lands on `/EN/book/2/?loc=1103a:14` with `L1103a-14` carrying `.target` (Διττῆς δὴ τῆς ἀρετῆς…). From the reader, `100b18` → **Topics I first, Posterior Analytics II second** — the shared column split by line.
+- **⚠️ Note for the next deploy:** the reader's `?loc=` jump uses `scrollIntoView({behavior:'smooth'})`, which is a no-op in the in-app browser pane (an instant `scrollIntoView` on the same element scrolls fine, and the target line does get `.target`). Pre-existing on the path search results already used — unverified in a real browser.
+
+## Previous deploy — 2026-07-29 (c · footnote click closes word panel)
 
 - **gh-pages:** `a0c67b95` → `9222625e`
 - **Source:** `origin/main` PR #60 merge — John's ruling on the stopPropagation interplay flagged in the b-deploy: **a footnote click closes the word panel.**
