@@ -1,12 +1,13 @@
 """Emit per-chapter sentence-alignment tasks for an LLM bead aligner/verifier.
 
-Writes build/align/interp_tasks/<WORK>/1-<chapter>.json =
-  { "chapter": <n>,
+Writes build/align/interp_tasks/<WORK>/<book>-<chapter>.json =
+  { "book": <n>,
+    "chapter": <n>,
     "greek":   ["<soft-segmented Greek clause>", ...],
     "english": ["<fine-segmented English unit>", ...] }
 
 An agent reads it and returns the monotonic bead grouping (which Greek clauses go
-with which English units), written to build/align/interp_out/<WORK>/1-<chapter>.json
+with which English units), written to build/align/interp_out/<WORK>/<book>-<chapter>.json
 = { "beads": [ {"g": [i,...], "e": [j,...]}, ... ] }.
 
 Read-only emit (writes only the gitignored build/ task dir).
@@ -35,21 +36,22 @@ def main(work_id: str, vid: str, chapters, examples: bool = False):
     out = si.BUILD_DIR / "align" / "interp_tasks" / work_id
     out.mkdir(parents=True, exist_ok=True)
 
-    gch = {ch.chapter: ch.lines for ch in chapter_lines()}
     n = 0
-    for chap, lines in gch.items():
+    for ch in chapter_lines():
+        book, chap, lines = ch.book, ch.chapter, ch.lines
         if chapters and chap not in chapters:
             continue
-        if (1, chap) not in prose:
+        if (book, chap) not in prose:
             continue
         gsents, _ls, _l2s = segment_greek(lines, {}, soft=True, examples=examples)
-        esents, _starts = si.eng_sentences(prose[(1, chap)], fine=True)
+        esents, _starts = si.eng_sentences(prose[(book, chap)], fine=True)
         task = {
+            "book": book,
             "chapter": chap,
             "greek": [s.text for s in gsents],
             "english": [t for _, t in esents],
         }
-        (out / f"1-{chap}.json").write_text(
+        (out / f"{book}-{chap}.json").write_text(
             json.dumps(task, ensure_ascii=False, indent=1), encoding="utf-8")
         n += 1
     print(f"{work_id}/{vid}: wrote {n} align-task files -> {out}")

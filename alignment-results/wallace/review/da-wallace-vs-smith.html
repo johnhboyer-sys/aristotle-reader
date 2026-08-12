@@ -1,0 +1,925 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DA — Wallace tick review</title><style>
+:root{--bg:#0e1116;--panel:#151920;--line:#252b35;--ink:#dfe4ec;--dim:#8b94a3;
+--grk:#e8d9a8;--gls:#a8c0e8;--tick:#e0a94a;--on:#6fd48b;--early:#e8b45c;--late:#e8767c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#0e1116ee;backdrop-filter:blur(8px);
+border-bottom:1px solid var(--line);padding:.8rem 1.2rem}
+h1{margin:0 0 .25rem;font-size:1.05rem}
+.sub{font-size:12.5px;color:var(--dim);max-width:1400px}
+.wrap{max-width:1400px;margin:0 auto;padding:1rem 1.2rem;display:flex;flex-direction:column;gap:1rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.card.done{border-color:#384150}
+.bar{display:flex;gap:.7rem;align-items:center;padding:.55rem .9rem;
+border-bottom:1px solid var(--line);background:#191c22}
+.cit{font:600 14px/1 ui-monospace,monospace;color:var(--tick)}
+.meta{font:12px/1 ui-monospace,monospace;color:var(--dim)}
+.badge{font:11px/1 ui-monospace,monospace;padding:.2rem .45rem;border-radius:5px;
+background:#222732;color:var(--dim)}
+.grid{display:grid;grid-template-columns:1.05fr 1.05fr 1.45fr 1.45fr;gap:0}
+.col{padding:.7rem .9rem;min-width:0}
+.col+.col{border-left:1px solid var(--line)}
+.lab{font:11px/1 ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;
+color:var(--dim);margin-bottom:.45rem}
+.ln{margin:.15rem 0}
+.ln .n{font:10px/1 ui-monospace,monospace;color:#5a626f;margin-right:.5rem}
+.greek .t{color:var(--grk);font-size:.97rem}
+.gloss .t{color:var(--gls);font-size:.9rem}
+.greek .ln.tk .t{color:#fff4d6;background:#3a3115;padding:0 3px;border-radius:3px}
+.gloss .ln.tk .t{color:#dbe8ff;background:#1f2c46;padding:0 3px;border-radius:3px}
+.nogloss{font:11.5px/1.4 ui-monospace,monospace;color:#c99a5e;background:#2a2015;
+border-radius:5px;padding:.35rem .5rem;margin-bottom:.4rem}
+.prose .p{font:14.5px/1.62 Georgia,serif;color:#c2c8d2}
+.prose .b{color:#79808d}
+.mark{color:#0a0d12;background:var(--tick);font-weight:700;border-radius:3px;padding:0 4px;margin:0 2px}
+.actions{display:flex;gap:.5rem;align-items:center;padding:.5rem .9rem;
+border-top:1px solid var(--line);flex-wrap:wrap}
+.actions.set{background:#161b16}
+.who{font:11px/1 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.05em;
+width:74px;color:var(--dim)}
+.v{border:1px solid var(--line);background:#20242d;color:var(--ink);border-radius:7px;
+padding:.45rem .8rem;cursor:pointer;font-weight:600;font-size:.9rem}
+.v:hover{filter:brightness(1.15)}
+.v[data-v=on].sel{background:var(--on);color:#08120c;border-color:var(--on)}
+.v[data-v=early].sel{background:var(--early);color:#1a1206;border-color:var(--early)}
+.v[data-v=late].sel{background:var(--late);color:#1a0a0c;border-color:var(--late)}
+.note{flex:1;min-width:160px;background:#13161b;border:1px solid var(--line);
+border-radius:7px;color:var(--ink);padding:.45rem .6rem;font:13px/1.4 inherit}
+.exp{border:1px solid var(--line);background:#20242d;color:var(--ink);border-radius:7px;
+padding:.45rem .8rem;cursor:pointer;font-weight:600}
+#prog{font:12px/1 ui-monospace,monospace;color:var(--dim)}
+@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<header><h1>DA — Wallace tick review <span id="prog"></span></h1>
+<div class="sub">Judge <b>each</b> column independently. A tick is right when its ▸ sits at the
+<b>bulk of that Bekker line's content</b>, not at whatever renders its first Greek word.
+<b>Smith is not gold</b> — it is the gloss pipeline's machine placement and is wrong
+often enough to be worth marking. Keys: <b>1/2/3</b> = Wallace on/early/late,
+<b>8/9/0</b> = Smith. <b>Δ</b> is only how far the two ticks sit apart — it does
+<i>not</i> indicate correctness. 39 of 424 anchors, evenly strided.
+<button class="exp" id="exp" style="margin-left:.6rem">⬇ Export JSON</button>
+<br><b>Commit the export</b> — verdicts live in browser storage and vanish otherwise.
+</div></header>
+<div class="wrap">
+<div class="card" data-id="402a1" data-cit="402a1" data-chap="1.1">
+  <div class="bar"><span class="cit">402a1</span>
+    <span class="meta">DA 1.1</span>
+    <span class="badge">Δ 0.0% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">1</span><span class="t">Τῶν καλῶν καὶ τιμίων τὴν εἴδησιν ὑπολαμβάνοντες, μᾶλλον</span></div><div class="ln"><span class="n">2</span><span class="t">δ&#x27; ἑτέραν ἑτέρας ἢ κατ&#x27; ἀκρίβειαν ἢ τῷ βελτιόνων τε</span></div><div class="ln"><span class="n">3</span><span class="t">καὶ θαυμασιωτέρων εἶναι, δι&#x27; ἀμφότερα ταῦτα τὴν περὶ τῆς ψυχῆς</span></div><div class="ln"><span class="n">4</span><span class="t">ἱστορίαν εὐλόγως ἂν ἐν πρώτοις τιθείημεν. δοκεῖ δὲ καὶ</span></div><div class="ln"><span class="n">5</span><span class="t">πρὸς ἀλήθειαν ἅπασαν ἡ γνῶσις αὐτῆς μεγάλα συμβάλλεσθαι,</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">1</span><span class="t">Supposing knowledge to be among the noble and honorable things, and one</span></div><div class="ln"><span class="n">2</span><span class="t">more so than another either in precision or in being of better and</span></div><div class="ln"><span class="n">4</span><span class="t">more admirable objects, on both accounts we might reasonably rank the inquiry concerning the soul among the first.</span></div><div class="ln"><span class="n">5</span><span class="t">It seems too that the knowledge of it contributes greatly to truth as a whole,</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p"><span class="b"></span><span class="mark">▸</span>The acquisition of knowledge is, we conceive, always something high and honourable: but one form of knowledge is superior to another either in virtue of the self-contained simplicity of its truths or by the greater dignity and wondrousness of its contents: and on both these grounds the investigation of the soul might with justice claim a  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p"><span class="b"></span><span class="mark">▸</span>Holding as we do that, while knowledge of any kind is a thing to be honoured and prized, one kind of it may, either by reason of its greater exactness or of a higher dignity and greater wonderfulness in its objects, be more honourable and precious than another, on both accounts we should naturally be led to place in the front rank the stu …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="403a30" data-cit="403a30" data-chap="1.1">
+  <div class="bar"><span class="cit">403a30</span>
+    <span class="meta">DA 1.1</span>
+    <span class="badge">Δ 1.2% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">30</span><span class="t">ἕκαστον αὐτῶν, οἷον ὀργὴ τί ἐστιν· ὁ μὲν γὰρ ὄρεξιν ἀντιλυπήσεως</span></div><div class="ln"><span class="n">31</span><span class="t">ἤ τι τοιοῦτον, ὁ δὲ ζέσιν τοῦ περὶ καρδίαν αἵματος</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">30</span><span class="t">each of these differently, for example what anger is: the one would say it is a desire for retaliation for pain,</span></div><div class="ln"><span class="n">31</span><span class="t">or something of the sort, while the other would say it is a boiling of the blood around the heart</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">nd as on the other hand excited by such and such a cause and due to such and such motives.
+These facts themselves shew it to lie within the province of the natural philosopher to investigate the soul, either in its whole extent or with reference to the states we have described. Every such state however would be differently defined by the </span><span class="mark">▸</span>natural philosopher and by the transcendentalism Take, for instance, the question — what is anger? The transcendentalist would define it as the effort after retaliation or the like, the natural philosopher would describe it as a ferment of the pericardial blood or heat.Here then the latter describes the material aspect of the phenomenon,  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ch and such a body (or part or faculty of a body) by this or that cause and for this or that end. That is precisely why the study of the soul must fall within the science of Nature, at least so far as in its affections it manifests this double character. Hence a physicist would define an affection of soul differently from a dialectician; </span><span class="mark">▸</span>the latter would define e.g. anger as the appetite for returning pain for pain, or something like that, while the former would define it as a boiling of the blood or warm substance surround the heart. The latter assigns the material conditions, the former the form or formulable essence; for what he states is the formulable essence of the  …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="404a10" data-cit="404a10" data-chap="1.2">
+  <div class="bar"><span class="cit">404a10</span>
+    <span class="meta">DA 1.2</span>
+    <span class="badge">Δ 1.3% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">10</span><span class="t">τὴν ἀναπνοήν· συνάγοντος γὰρ τοῦ περιέχοντος τὰ σώματα</span></div><div class="ln"><span class="n">11</span><span class="t">καὶ ἐκθλίβοντος τῶν σχημάτων τὰ παρέχοντα τοῖς ζῴοις</span></div><div class="ln"><span class="n">12</span><span class="t">τὴν κίνησιν διὰ τὸ μηδ&#x27; αὐτὰ ἠρεμεῖν μηδέποτε, βοήθειαν</span></div><div class="ln"><span class="n">13</span><span class="t">γίνεσθαι θύραθεν ἐπεισιόντων ἄλλων τοιούτων ἐν τῷ ἀναπνεῖν·</span></div><div class="ln"><span class="n">14</span><span class="t">κωλύειν γὰρ αὐτὰ καὶ τὰ ἐνυπάρχοντα ἐν τοῖς ζῴοις ἐκκρίνεσθαι,</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">10</span><span class="t">for as the surrounding air compresses bodies</span></div><div class="ln"><span class="n">11</span><span class="t">and squeezes out those shapes which, by imparting movement to living things,</span></div><div class="ln"><span class="n">14</span><span class="t">for he says these shapes prevent even those already present in living things from being expelled,</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">on why they maintain that the spherical atoms constitute the soul, is that atoms of such configuration are best able to penetrate through everything, and to set the other things in motion at the same time as they are moved themselves, the assumption here being that the soul is that which supplies animals with motion. This same assumption </span><span class="mark">▸</span>led them to regard respiration as the boundary with which life was coterminous. It was, they held, the tendency of the encircling atmosphere to cause contraction in the animal body and to expel those atomic forms, which, from never being at rest themselves, supply animals with movement. This tendency however was counteracted by the reinfo …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ure (Leucippus gives a similar account); the spherical atoms are identified with soul because atoms of that shape are most adapted to permeate everywhere, and to set all the others moving by being themselves in movement. This implies the view that soul is identical with what produces movement in animals. That is why, further, they regard </span><span class="mark">▸</span>respiration as the characteristic mark of life; as the environment compresses the bodies of animals, and tends to extrude those atoms which impart movement to them, because they themselves are never at rest, there must be a reinforcement of these by similar atoms coming in from without in the act of respiration; for they prevent the extru …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="405b30" data-cit="405b30" data-chap="1.2">
+  <div class="bar"><span class="cit">405b30</span>
+    <span class="meta">DA 1.2</span>
+    <span class="badge">Δ 0.4% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">30</span><span class="t">ψυχῆς, καὶ δι&#x27; ἃς αἰτίας λέγουσιν οὕτω, ταῦτ&#x27; ἐστίν.</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">30</span><span class="t">the soul, and the reasons for which they speak thus, are these.</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">manner into some one or other of these elements. Hence further such thinkers follow etymologies: some maintaining soul to be the *hot&#x27; because it is from the name of heating or &#x27;seething&#x27; that the word to live is etymologically derived: others holding soul to be the &#x27;cold&#x27; because it is from respiration and cooling that the word for soul </span><span class="mark">▸</span>has been constructed.
+Such then are the opinions which have been handed down respecting soul, as also the grounds on which they rest.</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ese. That is why, also, they allow themselves to be guided by the names; those who identify soul with the hot argue that sen (to live) is derived from sein (to boil), while those who identify it with the cold say that soul (psuche) is so called from the process of respiration and (katapsuxis). Such are the traditional opinions concerning </span><span class="mark">▸</span>soul, together with the grounds on which they are maintained. </div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="410a20" data-cit="410a20" data-chap="1.5">
+  <div class="bar"><span class="cit">410a20</span>
+    <span class="meta">DA 1.5</span>
+    <span class="badge">Δ 0.7% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">20</span><span class="t">ἔσται ἄρα ποσὸν καὶ ποιὸν καὶ οὐσία. ἀλλ&#x27; ἀδύνατον ἐκ</span></div><div class="ln"><span class="n">21</span><span class="t">τῶν τοῦ ποσοῦ στοιχείων οὐσίαν εἶναι καὶ μὴ ποσόν. τοῖς δὴ</span></div><div class="ln"><span class="n">22</span><span class="t">λέγουσιν ἐκ πάντων ταῦτά τε καὶ τοιαῦθ&#x27; ἕτερα συμβαίνει.</span></div><div class="ln"><span class="n">23</span><span class="t">ἄτοπον δὲ καὶ τὸ φάναι μὲν ἀπαθὲς εἶναι τὸ ὅμοιον ὑπὸ τοῦ</span></div><div class="ln"><span class="n">24</span><span class="t">ὁμοίου, αἰσθάνεσθαι δὲ τὸ ὅμοιον τοῦ ὁμοίου καὶ γινώσκειν</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">20</span><span class="t">will it then be quantity and quality and substance? But it is impossible that from</span></div><div class="ln"><span class="n">21</span><span class="t">the elements of quantity there be a substance and not a quantity. To those, then,</span></div><div class="ln"><span class="n">24</span><span class="t">of the like, and to perceive is for the like to be affected by the like and to know</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">, we may ask, the soul consist merely of the elements that fall under the category of &#x27; substance? In that case, how does it come to have knowledge of each also of the other categories? Will it be said that every category of being has its own elements and appropriate principles and that the soul consists of these? The result then will be </span><span class="mark">▸</span>that the soul will have to be a quantity and quality as well .as a substance. But out of the elements of quantity it is impossible that a substance should be formed: only a quantity can arise from elements of quantity. Such are the difficulties as well as others of a similar character involved in holding that the Soul consists of all the  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> these or not? It does not appear that all have common elements. Is the soul formed out of those elements alone which enter into substances? so how will it be able to know each of the other kinds of thing? Will it be said that each kind of thing has elements or principles of its own, and that the soul is formed out of the whole of these? </span><span class="mark">▸</span>In that case, the soul must be a quantum and a quale and a substance. But all that can be made out of the elements of a quantum is a quantum, not a substance. These (and others like them) are the consequences of the view that the soul is composed of all the elements.
+It is absurd, also, to say both (a) that like is not capable of being af …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="410a5" data-cit="410a5" data-chap="1.5">
+  <div class="bar"><span class="cit">410a5</span>
+    <span class="meta">DA 1.5</span>
+    <span class="badge">Δ 13.8% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">5</span><span class="t">τὼ δύο τῶν ὀκτὼ μερέων λάχε νήστιδος αἴγλης,</span></div><div class="ln"><span class="n">6</span><span class="t">τέσσαρα δ&#x27; Ἡφαίστοιο· τὰ δ&#x27; ὀστέα λευκὰ γένοντο.</span></div><div class="ln"><span class="n">7</span><span class="t">οὐδὲν οὖν ὄφελος ἐνεῖναι τὰ στοιχεῖα ἐν τῇ ψυχῇ, εἰ μὴ καὶ</span></div><div class="ln"><span class="n">8</span><span class="t">οἱ λόγοι ἐνέσονται καὶ ἡ σύνθεσις· γνωριεῖ γὰρ ἕκαστον τὸ</span></div><div class="ln"><span class="n">9</span><span class="t">ὅμοιον, τὸ δ&#x27; ὀστοῦν ἢ τὸν ἄνθρωπον οὐθέν, εἰ μὴ καὶ ταῦτ&#x27;</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">5</span><span class="t">&quot;received two of the eight parts from bright Nestis,&quot;</span></div><div class="ln"><span class="n">6</span><span class="t">&quot;and four from Hephaestus; and the bones became white.&quot;</span></div><div class="ln"><span class="n">9</span><span class="t">like, but bone or man in no way, unless these too</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b"> is a further inconsistency in the supporters of this doctrine that, while asserting that like perceives like and that we know like by like, they maintain that like is unaffected by like, and at the same time explain perception as a kind of affection and of being moved, and treat thinking and cognition in a similar fashion. There are in. </span><span class="mark">▸</span>fact many difficulties and perplexities involved in saying with Empedocles that everything is known through the corporeal elements and that the similar is apprehended by the similar — as is especially attested by the fact that all those parts within the bodies of animals, which are composed of earth simply-^as for example bones, sinews, h …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">s is made up; but by what means will it know or perceive the composite whole, e.g.what God, man, flesh, bone (or any other compound) is? For each is, not merely the elements of which it is composed, but those elements combined in a determinate mode or ratio, as Empedocles himself says of bone, The kindly Earth in its broad-bosomed moulds </span><span class="mark">▸</span>Won of clear Water two parts out of eight, And four of Fire; and so white bones were formed.
+Nothing, therefore, will be gained by the presence of the elements in the soul, unless there be also present there the various formulae of proportion and the various compositions in accordance with them. Each element will indeed know its fellow ou …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="410b15" data-cit="410b15" data-chap="1.5">
+  <div class="bar"><span class="cit">410b15</span>
+    <span class="meta">DA 1.5</span>
+    <span class="badge">Δ 1.0% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">κατὰ φύσιν, τὰ δὲ στοιχεῖά φασι πρῶτα τῶν ὄντων εἶναι.</span></div><div class="ln"><span class="n">16</span><span class="t">πάντες δὲ καὶ οἱ διὰ τὸ γνωρίζειν καὶ αἰσθάνεσθαι τὰ ὄντα</span></div><div class="ln"><span class="n">17</span><span class="t">τὴν ψυχὴν ἐκ τῶν στοιχείων λέγοντες αὐτήν, καὶ οἱ τὸ κινητικώτατον,</span></div><div class="ln"><span class="n">18</span><span class="t">οὐ περὶ πάσης λέγουσι ψυχῆς. οὔτε γὰρ τὰ</span></div><div class="ln"><span class="n">19</span><span class="t">αἰσθανόμενα πάντα κινητικά (φαίνεται γὰρ εἶναί τινα μόνιμα</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">by nature, whereas they say the elements are the first of existing things.</span></div><div class="ln"><span class="n">16</span><span class="t">But all who, both those who explain the soul through knowing and perceiving what exists</span></div><div class="ln"><span class="n">19</span><span class="t">as perceiving all as capable of motion (for some animals appear to be stationary</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">veral or all of them; and such objects must necessarily know one thing or some or all.
+The question might besides be raised, what is it that brings the elements to unity? The elements themselves resemble mere unformed matter, and it is the synthetic force, whatever it may be, which is most important Now it is impossible that there should </span><span class="mark">▸</span>be anything superior to soul or dominating it: and still more impossible that there should be anything superior to reason: for reason, it is to be believed, is by nature first born and supreme. And yet the philosophers in question make the elements the first forms of existence.
+A general objection which may be brought both against those w …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">to a soul? The elements correspond, it would appear, to the matter; what unites them, whatever it is, is the supremely important factor. But it is impossible that there should be something superior to, and dominant over, the soul (and a fortiori over the mind); it is reasonable to hold that mind is by nature most primordial and dominant, </span><span class="mark">▸</span>while their statement that it is the elements which are first of all that is.
+All, both those who assert that the soul, because of its knowledge or perception of what is compounded out of the elements, and is those who assert that it is of all things the most originative of movement, fail to take into consideration all kinds of soul. In f …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="411a15" data-cit="411a15" data-chap="1.5">
+  <div class="bar"><span class="cit">411a15</span>
+    <span class="meta">DA 1.5</span>
+    <span class="badge">Δ 0.6% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">ζῷον τὸ πῦρ ἢ τὸν ἀέρα τῶν παραλογωτέρων ἐστί, καὶ τὸ</span></div><div class="ln"><span class="n">16</span><span class="t">μὴ λέγειν ζῷα ψυχῆς ἐνούσης ἄτοπον. ὑπολαβεῖν δ&#x27; ἐοίκασιν</span></div><div class="ln"><span class="n">17</span><span class="t">εἶναι τὴν ψυχὴν ἐν τούτοις ὅτι τὸ ὅλον τοῖς μορίοις ὁμοειδές·</span></div><div class="ln"><span class="n">18</span><span class="t">ὥστ&#x27; ἀναγκαῖον αὐτοῖς λέγειν καὶ τὴν ψυχὴν ὁμοειδῆ τοῖς</span></div><div class="ln"><span class="n">19</span><span class="t">μορίοις εἶναι, εἰ τῷ ἀπολαμβάνεσθαί τι τοῦ περιέχοντος ἐν</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">fire or air is an animal is among the more irrational things, and</span></div><div class="ln"><span class="n">16</span><span class="t">not to call them animals when soul is present in them is absurd. They seem to suppose</span></div><div class="ln"><span class="n">19</span><span class="t">that soul is present in the parts, if by the cutting off of a portion of the surrounding air within</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b"> animal organism, while it does so in those objects which are mixed and compound, and this too though such thinkers hold the soul dispersed within the former to be the superior? With reference to which, we might further ask why it is that the soul in air is, as they hold, more excellent and more immortal than that amongst animals. In two </span><span class="mark">▸</span>ways, in fact, their theory is inconsistent with itself and paradoxical. To speak of fire or air as of an animal is rather paradoxical: to hold, on the other hand, that soul is present in them and yet not call them animals is inconsistent. So again, the ground on which they conceive soul to be present in these elements is the opinion that …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">xtures of the elements, and that although it is held to be of higher quality when contained in the former? (One might add the question, why the soul in air is maintained to be higher and more immortal than that in animals.) Both possible ways of replying to the former question lead to absurdity or paradox; for it is beyond paradox to say </span><span class="mark">▸</span>that fire or air is an animal, and it is absurd to refuse the name of animal to what has soul in it. The opinion that the elements have soul in them seems to have arisen from the doctrine that a whole must be homogeneous with its parts. If it is true that animals become animate by drawing into themselves a portion of what surrounds them,  …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="414b15" data-cit="414b15" data-chap="2.3">
+  <div class="bar"><span class="cit">414b15</span>
+    <span class="meta">DA 2.3</span>
+    <span class="badge">Δ 0.9% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">εἰρήσθω, ὅτι τῶν ζώντων τοῖς ἔχουσιν ἁφὴν καὶ ὄρεξις ὑπάρχει.</span></div><div class="ln"><span class="n">16</span><span class="t">περὶ δὲ φαντασίας ἄδηλον, ὕστερον δ&#x27; ἐπισκεπτέον. ἐνίοις</span></div><div class="ln"><span class="n">17</span><span class="t">δὲ πρὸς τούτοις ὑπάρχει καὶ τὸ κατὰ τόπον κινητικόν,</span></div><div class="ln"><span class="n">18</span><span class="t">ἑτέροις δὲ καὶ τὸ διανοητικόν τε καὶ νοῦς, οἷον ἀνθρώποις καὶ</span></div><div class="ln"><span class="n">19</span><span class="t">εἴ τι τοιοῦτον ἕτερον ἔστιν ἢ τιμιώτερον.</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">be said, that of living things, to those that have touch also desire belongs.</span></div><div class="ln"><span class="n">16</span><span class="t">concerning imagination it is unclear, and must be considered later. to some</span></div><div class="ln"><span class="n">19</span><span class="t">whether there is any other such thing, or something more honorable.</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">e. Now hunger and thirst, which attach to taste, are forms of appetite, hunger being concerned with what is hot and dry, thirst with what is cold and moist, while flavour is as it were their seasoning. These subjects we must afterwards discuss with more detail. Meanwhile it need only be asserted that those animals which possess the sense </span><span class="mark">▸</span>of touch have also the attribute of desire. Whether in addition they possess imagination is an obscure subject which must be investigated afterwards. Some animals possess, beside such faculties, the power of local movement also: others, as for instance men or other beings similar or superior to them, if there be any such, possess also und …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">s, and odours contribute nothing to nutriment; flavours fall within the field of tangible qualities. Hunger and thirst are forms of desire, hunger a desire for what is dry and hot, thirst a desire for what is cold and moist; flavour is a sort of seasoning added to both. We must later clear up these points, but at present it may be enough </span><span class="mark">▸</span>to say that all animals that possess the sense of touch have also appetition. The case of imagination is obscure; we must examine it later. Certain kinds of animals possess in addition the power of locomotion, and still another order of animate beings, i.e. man and possibly another order like man or superior to him, the power of thinking, …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="415a15" data-cit="415a15" data-chap="2.4">
+  <div class="bar"><span class="cit">415a15</span>
+    <span class="meta">DA 2.4</span>
+    <span class="badge">Δ 0.4% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">λαβεῖν ἕκαστον αὐτῶν τί ἐστιν, εἶθ&#x27; οὕτως περὶ τῶν ἐχομένων</span></div><div class="ln"><span class="n">16</span><span class="t">καὶ περὶ τῶν ἄλλων ἐπιζητεῖν. εἰ δὲ χρὴ λέγειν τί ἕκαστον</span></div><div class="ln"><span class="n">17</span><span class="t">αὐτῶν, οἷον τί τὸ νοητικὸν ἢ τὸ αἰσθητικὸν ἢ τὸ θρεπτικόν,</span></div><div class="ln"><span class="n">18</span><span class="t">πρότερον ἔτι λεκτέον τί τὸ νοεῖν καὶ τί τὸ αἰσθάνεσθαι· πρότεραι</span></div><div class="ln"><span class="n">19</span><span class="t">γάρ εἰσι τῶν δυνάμεων αἱ ἐνέργειαι καὶ αἱ πράξεις κατὰ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">to grasp what each of them is, and then in this way to inquire concerning the things that follow</span></div><div class="ln"><span class="n">16</span><span class="t">and concerning the rest. But if we must say what each of them is</span></div><div class="ln"><span class="n">19</span><span class="t">for the activities and actions are prior in account</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p"><span class="b">The investigation of the faculties of the soul demands that we should discover what each of them </span><span class="mark">▸</span>is and then proceed similarly to consider allied and remaining questions. In order however to state the nature of each of them, as for example the faculty of thought or sense or of nutrition, we must beforehand explain what is thinking and what is the act of perception: for viewed in the light of their essential notion the actions which g …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p"><span class="b">It is necessary for the student of these forms of soul </span><span class="mark">▸</span>first to find a definition of each, expressive of what it is, and then to investigate its derivative properties, &amp;c. But if we are to express what each is, viz. what the thinking power is, or the perceptive, or the nutritive, we must go farther back and first give an account of thinking or perceiving, for in the order of investigation the …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="415b20" data-cit="415b20" data-chap="2.4">
+  <div class="bar"><span class="cit">415b20</span>
+    <span class="meta">DA 2.4</span>
+    <span class="badge">Δ 2.5% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">20</span><span class="t">τῶν φυτῶν, ὡς ἕνεκα τῆς ψυχῆς ὄντα· διττῶς δὲ τὸ οὗ</span></div><div class="ln"><span class="n">21</span><span class="t">ἕνεκα, τό τε οὗ καὶ τὸ ᾧ. ἀλλὰ μὴν καὶ ὅθεν πρῶτον ἡ</span></div><div class="ln"><span class="n">22</span><span class="t">κατὰ τόπον κίνησις, ψυχή· οὐ πᾶσι δ&#x27; ὑπάρχει τοῖς ζῶσιν</span></div><div class="ln"><span class="n">23</span><span class="t">ἡ δύναμις αὕτη. ἔστι δὲ καὶ ἀλλοίωσις καὶ αὔξησις κατὰ</span></div><div class="ln"><span class="n">24</span><span class="t">ψυχήν· ἡ μὲν γὰρ αἴσθησις ἀλλοίωσίς τις εἶναι δοκεῖ, αἰσθάνεται</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">20</span><span class="t">of plants, as being for the sake of the soul; and twofold is the that-for-the-sake-of-which,</span></div><div class="ln"><span class="n">21</span><span class="t">namely that for which and that to which. But further also that from which first the</span></div><div class="ln"><span class="n">24</span><span class="t">soul: for perception seems to be a kind of alteration, and nothing perceives</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">lly clear that soul is cause in the sense of end or final cause. Like reason, nature acts for the sake of some object; and this object is its end. Now in the animal world the soul is naturally something of this character. All natural bodies are instruments of the soul: and just as it is with the bodies of animals so also is it with those </span><span class="mark">▸</span>of plants, all being there simply for the sake of soul. But in saying that the soul is the end or final cause, we must remember that the word *end&#x27; is used in two senses, and must understand it as meaning that at which a thing aims quite as much as that for which it exists.
+Lastly, the soul is also cause as being the original source of lo …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> final cause of its body. For Nature, like mind, always does whatever it does for the sake of something, which something is its end. To that something corresponds in the case of animals the soul and in this it follows the order of nature; all natural bodies are organs of the soul. This is true of those that enter into the constitution of </span><span class="mark">▸</span>plants as well as of those which enter into that of animals. This shows that that the sake of which they are is soul. We must here recall the two senses of &#x27;that for the sake of which&#x27;, viz. (a) the end to achieve which, and (b) the being in whose interest, anything is or is done.
+We must maintain, further, that the soul is also the cause …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="416a25" data-cit="416a25" data-chap="2.4">
+  <div class="bar"><span class="cit">416a25</span>
+    <span class="meta">DA 2.4</span>
+    <span class="badge">Δ 2.2% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">25</span><span class="t">ποσά, οἷον ὑγιὲς ἐκ κάμνοντος. φαίνεται δ&#x27; οὐδ&#x27; ἐκεῖνα τὸν</span></div><div class="ln"><span class="n">26</span><span class="t">αὐτὸν τρόπον ἀλλήλοις εἶναι τροφή, ἀλλὰ τὸ μὲν ὕδωρ</span></div><div class="ln"><span class="n">27</span><span class="t">τῷ πυρὶ τροφή, τὸ δὲ πῦρ οὐ τρέφει τὸ ὕδωρ. ἐν μὲν οὖν</span></div><div class="ln"><span class="n">28</span><span class="t">τοῖς ἁπλοῖς σώμασι ταῦτ&#x27; εἶναι δοκεῖ μάλιστα τὸ μὲν</span></div><div class="ln"><span class="n">29</span><span class="t">τροφὴ τὸ δὲ τρεφόμενον. ἀπορίαν δ&#x27; ἔχει· φασὶ γὰρ οἱ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">25</span><span class="t">in quantity, as the healthy out of the ailing. But those cases too appear not</span></div><div class="ln"><span class="n">26</span><span class="t">to be nourishment for one another in the same way, but water is</span></div><div class="ln"><span class="n">29</span><span class="t">nourishment, and the other the thing nourished. But it has a difficulty; for they say</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">e by the opposite. This however need not be taken to mean that every opposite is nurtured by every other, but is meant to be applied only to all those opposites that derive not only their origin, but also their increase from one another: for there are many things that originate from one another, e. g. health from sickness, but the change </span><span class="mark">▸</span>does not always take the form of a quantitative increase. But it appears that not even do such quantitative contraries act as nutriment to one another in the same manner: liquid, for example, serves as nutriment to fire: but fire does not conversely serve as nutriment to liquid. And indeed it seems to be especially in the case of simple b …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">food to a living thing is what is contrary to it-not that in every pair of contraries each is food to the other: to be food a contrary must not only be transformable into the other and vice versa, it must also in so doing increase the bulk of the other. Many a contrary is transformed into its other and vice versa, where neither is even a </span><span class="mark">▸</span>quantum and so cannot increase in bulk, e.g. an invalid into a healthy subject. It is clear that not even those contraries which satisfy both the conditions mentioned above are food to one another in precisely the same sense; water may be said to feed fire, but not fire water. Where the members of the pair are elementary bodies only one o …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="416a30" data-cit="416a30" data-chap="2.4">
+  <div class="bar"><span class="cit">416a30</span>
+    <span class="meta">DA 2.4</span>
+    <span class="badge">Δ 1.6% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">30</span><span class="t">μὲν τὸ ὅμοιον τῷ ὁμοίῳ τρέφεσθαι, καθάπερ καὶ αὐξάνεσθαι,</span></div><div class="ln"><span class="n">31</span><span class="t">τοῖς δ&#x27; ὥσπερ εἴπομεν τοὔμπαλιν δοκεῖ, τὸ ἐναντίον</span></div><div class="ln"><span class="n">32</span><span class="t">τῷ ἐναντίῳ, ὡς ἀπαθοῦς ὄντος τοῦ ὁμοίου ὑπὸ τοῦ ὁμοίου,</span></div><div class="ln"><span class="n">33</span><span class="t">τὴν δὲ τροφὴν δεῖν μεταβάλλειν καὶ πέττεσθαι· ἡ δὲ μεταβολὴ</span></div><div class="ln"><span class="n">34</span><span class="t">πᾶσιν εἰς τὸ ἀντικείμενον ἢ τὸ μεταξύ. ἔτι πάσχει</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">30</span><span class="t">on the one hand that like is nourished by like, just as it also grows,</span></div><div class="ln"><span class="n">31</span><span class="t">while to others, as we said, the opposite seems true, that the contrary</span></div><div class="ln"><span class="n">34</span><span class="t">for all things is nourished by its opposite or by an intermediate. Further, it suffers</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">s as nutriment to fire: but fire does not conversely serve as nutriment to liquid. And indeed it seems to be especially in the case of simple bodies that the contraries stand to one another in the relation of nourishment and nourished. Here, however, a difficulty meets us. There are some who on the one hand maintain that like is nurtured </span><span class="mark">▸</span>by the like, just as the like is increased by the like: while others, as we have said, hold on the other hand that the contrary is so by the contrary, because (they say) the like cannot be affected by the like. The nutriment, they maintain, changes and suffers digestion, and change, they add, always tends towards the opposite or the inter …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ich satisfy both the conditions mentioned above are food to one another in precisely the same sense; water may be said to feed fire, but not fire water. Where the members of the pair are elementary bodies only one of the contraries, it would appear, can be said to feed the other. But there is a difficulty here. One set of thinkers assert </span><span class="mark">▸</span>that like fed, as well as increased in amount, by like. Another set, as we have said, maintain the very reverse, viz. that what feeds and what is fed are contrary to one another; like, they argue, is incapable of being affected by like; but food is changed in the process of digestion, and change is always to what is opposite or to what is …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="417a20" data-cit="417a20" data-chap="2.5">
+  <div class="bar"><span class="cit">417a20</span>
+    <span class="meta">DA 2.5</span>
+    <span class="badge">Δ 1.4% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">20</span><span class="t">πάσχει μὲν γὰρ τὸ ἀνόμοιον, πεπονθὸς δ&#x27; ὅμοιόν ἐστιν.</span></div><div class="ln"><span class="n">21</span><span class="t">διαιρετέον δὲ καὶ περὶ δυνάμεως καὶ ἐντελεχείας· νῦν</span></div><div class="ln"><span class="n">22</span><span class="t">γὰρ ἁπλῶς ἐλέγομεν περὶ αὐτῶν. ἔστι μὲν γὰρ οὕτως ἐπιστῆμόν</span></div><div class="ln"><span class="n">23</span><span class="t">τι ὡς ἂν εἴποιμεν ἄνθρωπον ἐπιστήμονα ὅτι ὁ</span></div><div class="ln"><span class="n">24</span><span class="t">ἄνθρωπος τῶν ἐπιστημόνων καὶ ἐχόντων ἐπιστήμην· ἔστι δ&#x27;</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">20</span><span class="t">for it is the unlike that is affected, but having been affected it is like.</span></div><div class="ln"><span class="n">21</span><span class="t">We must also draw distinctions concerning potentiality and actuality; for now</span></div><div class="ln"><span class="n">24</span><span class="t">man among those who possess knowledge and have understanding; and there is another sense</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">ty, though, as has been elsewhere said, it is imperfect. Now in every instance things are impressed and set in movement by something which is capable of producing an impression and which exists in full activity. And thus an impression is in one sense made by the like, in another sense by the unlike, as has been already said; for it is as </span><span class="mark">▸</span>unlike that anything suffers an impression: after the impression has been made, it is converted into like.
+But, in the second place, a distinction must be drawn with reference to potentiality and actuality; at present we are speaking about them as if they admitted of no variations of meaning. For instance any individual may be described a …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">r affected, and (ii) being active, for movement is a kind of activity-an imperfect kind, as has elsewhere been explained. Everything that is acted upon or moved is acted upon by an agent which is actually at work. Hence it is that in one sense, as has already been stated, what acts and what is acted upon are like, in another unlike, i.e. </span><span class="mark">▸</span>prior to and during the change the two factors are unlike, after it like.
+But we must now distinguish not only between what is potential and what is actual but also different senses in which things can be said to be potential or actual; up to now we have been speaking as if each of these phrases had only one sense. We can speak of somethi …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="417a30" data-cit="417a30" data-chap="2.5">
+  <div class="bar"><span class="cit">417a30</span>
+    <span class="meta">DA 2.5</span>
+    <span class="badge">Δ 1.1% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">30</span><span class="t">ἀμφότεροι μὲν οὖν οἱ πρῶτοι, κατὰ δύναμιν ἐπιστήμονες</span></div><div class="ln tk"><span class="n">30</span><span class="t">&lt;ὄντες, ἐνεργείᾳ γίνονται ἐπιστήμονες,&gt;</span></div><div class="ln"><span class="n">31</span><span class="t">ἀλλ&#x27; ὁ μὲν διὰ μαθήσεως ἀλλοιωθεὶς καὶ πολλάκις ἐξ</span></div><div class="ln"><span class="n">32</span><span class="t">ἐναντίας μεταβαλὼν ἕξεως, ὁ δ&#x27; ἐκ τοῦ ἔχειν τὴν ἀριθμητικὴν</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">30</span><span class="t">Both, then, the first pair are, in potentiality, knowers,</span></div><div class="ln tk"><span class="n">30</span><span class="t">Both, then, the first pair are, in potentiality, knowers,</span></div><div class="ln"><span class="n">31</span><span class="t">but the one is altered through learning, and often changing from</span></div><div class="ln"><span class="n">32</span><span class="t">a contrary state, while the other, from having arithmetic</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">al nature of man is of this description, the other because if he wished he would be able to apply his knowledge, supposing that no obstacle prevented him. He on the other hand (3) who has advanced so far as to apply his knowledge is in a state of full realization and knows in the strict sense of the word — for instance that this definite </span><span class="mark">▸</span>thing is A, As compared then with this third, both of these first mentioned possess knowledge only in potentiality: but they do so in different senses, the one because in order to become a man of knowledge he must have been transformed by learning and in many cases changed from the directly contrary state: the other because, while possess …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">his kind or matter is such and such, the other (b), because he can in the absence of any external counteracting cause realize his knowledge in actual knowing at will. This implies a third meaning of &#x27;a knower&#x27; (c), one who is already realizing his knowledge-he is a knower in actuality and in the most proper sense is knowing, e.g. this A. </span><span class="mark">▸</span>Both the former are potential knowers, who realize their respective potentialities, the one (a) by change of quality, i.e. repeated transitions from one state to its opposite under instruction, the other (b) by the transition from the inactive possession of sense or grammar to their active exercise.The two kinds of transition are distinct …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="417b30" data-cit="417b30" data-chap="2.5">
+  <div class="bar"><span class="cit">417b30</span>
+    <span class="meta">DA 2.5</span>
+    <span class="badge">Δ 2.0% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">30</span><span class="t">δυνάμει λεγομένου, ἀλλὰ τοῦ μὲν ὥσπερ ἂν εἴποιμεν τὸν παῖδα</span></div><div class="ln"><span class="n">31</span><span class="t">δύνασθαι στρατηγεῖν, τοῦ δὲ ὡς τὸν ἐν ἡλικίᾳ ὄντα, οὕτως ἔχει</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">30</span><span class="t">but is spoken of, the one as we would say the boy is</span></div><div class="ln"><span class="n">31</span><span class="t">able to be a general, the other as one who is already of age; so it is with</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b"> phenomena: and this too for the same reason, because the objects of sense are individual and external.
+We must however postpone the fuller discussion of this subject to another occasion. At present we may regard this much as settled — that just as what is described as potential is not used in one single sense, but on the one hand in the </span><span class="mark">▸</span>sense according to which we should speak of the boy as able potentially to be a general and on the other hand in that according to which we should say that the man in prime of life is potentially so able: so also is it with the power of sense-perception.Since however the distinction in question, although we have settled that the two sense …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">a sensible object must be there. A similar statement must be made about our knowledge of what is sensible-on the same ground, viz. that the sensible objects are individual and external.
+A later more appropriate occasion may be found thoroughly to clear up all this. At present it must be enough to recognize the distinctions already drawn; </span><span class="mark">▸</span>a thing may be said to be potential in either of two senses, (a) in the sense in which we might say of a boy that he may become a general or (b) in the sense in which we might say the same of an adult, and there are two corresponding senses of the term &#x27;a potential sentient&#x27;.There are no separate names for the two stages of potentiality;  …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="418a25" data-cit="418a25" data-chap="2.6">
+  <div class="bar"><span class="cit">418a25</span>
+    <span class="meta">DA 2.6</span>
+    <span class="badge">Δ 3.1% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">25</span><span class="t">αἰσθητά, καὶ πρὸς ἃ ἡ οὐσία πέφυκεν ἑκάστης αἰσθήσεως.</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">25</span><span class="t">objects of perception, and it is to these that the substance of each perception is naturally suited.</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">he object which is perceived is an incident or property of what is white. Hence then the organ of sense is affected in no way by the object of sense so far as it is such and such a person or thing. But among those objects of sense which are perceived directly in themselves, it is those special to the separate senses that are strictly the </span><span class="mark">▸</span>objects of perception and those for which the essential nature of each sense is naturally adapted.</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">visible white patch we speak of the son of Diares as being (incidentally) perceived or seen by us. Because this is only incidentally an object of sense, it in no way as such affects the senses. Of the two former kinds, both of which are in their own nature perceptible by sense, the first kind-that of special objects of the several senses-</span><span class="mark">▸</span>constitute the objects of sense in the strictest sense of the term and it is to them that in the nature of things the structure of each several sense is adapted. </div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="419b4" data-cit="419b4" data-chap="2.8">
+  <div class="bar"><span class="cit">419b4</span>
+    <span class="meta">DA 2.8</span>
+    <span class="badge">Δ 0.0% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">4</span><span class="t">Νῦν δὲ πρῶτον περὶ ψόφου καὶ ἀκοῆς διορίσωμεν. ἔστι</span></div><div class="ln"><span class="n">5</span><span class="t">δὲ διττὸς ὁ ψόφος· ὁ μὲν γὰρ ἐνέργειά τις, ὁ δὲ δύναμις·</span></div><div class="ln"><span class="n">6</span><span class="t">τὰ μὲν γὰρ οὔ φαμεν ἔχειν ψόφον, οἷον σπόγγον, ἔρια, τὰ</span></div><div class="ln"><span class="n">7</span><span class="t">δ&#x27; ἔχειν, οἷον χαλκὸν καὶ ὅσα στερεὰ καὶ λεῖα, ὅτι δύναται</span></div><div class="ln"><span class="n">8</span><span class="t">ψοφῆσαι (τοῦτο δ&#x27; ἐστὶν αὐτοῦ μεταξὺ καὶ τῆς ἀκοῆς</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">4</span><span class="t">Now let us first give a determination concerning sound and hearing. There is</span></div><div class="ln"><span class="n">5</span><span class="t">a twofold sound: the one is a certain actuality, the other a potentiality;</span></div><div class="ln"><span class="n">6</span><span class="t">for some things we say have no sound, such as sponge, wool, while others,</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p"><span class="b"></span><span class="mark">▸</span>Sound may be regarded from two aspects, either as potential or as actual: for there are some things which we say have no sound, as for example sponge and wool, whereas we say that others have, as for example bronze and all hard and smooth substances, because they possess potentially the power of making sound: that is, they are able actual …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p"><span class="b"></span><span class="mark">▸</span>Now let us, to begin with, make certain distinctions about sound and hearing.
+Sound may mean either of two things (a) actual, and (b) potential, sound. There are certain things which, as we say, &#x27;have no sound&#x27;, e.g. sponges or wool, others which have, e.g. bronze and in general all things which are smooth and solid-the latter are said to …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="419b5" data-cit="419b5" data-chap="2.8">
+  <div class="bar"><span class="cit">419b5</span>
+    <span class="meta">DA 2.8</span>
+    <span class="badge">Δ 0.5% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">5</span><span class="t">δὲ διττὸς ὁ ψόφος· ὁ μὲν γὰρ ἐνέργειά τις, ὁ δὲ δύναμις·</span></div><div class="ln"><span class="n">6</span><span class="t">τὰ μὲν γὰρ οὔ φαμεν ἔχειν ψόφον, οἷον σπόγγον, ἔρια, τὰ</span></div><div class="ln"><span class="n">7</span><span class="t">δ&#x27; ἔχειν, οἷον χαλκὸν καὶ ὅσα στερεὰ καὶ λεῖα, ὅτι δύναται</span></div><div class="ln"><span class="n">8</span><span class="t">ψοφῆσαι (τοῦτο δ&#x27; ἐστὶν αὐτοῦ μεταξὺ καὶ τῆς ἀκοῆς</span></div><div class="ln"><span class="n">9</span><span class="t">ἐμποιῆσαι ψόφον ἐνεργείᾳ)· γίνεται δ&#x27; ὁ κατ&#x27; ἐνέργειαν ψόφος</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">5</span><span class="t">a twofold sound: the one is a certain actuality, the other a potentiality;</span></div><div class="ln"><span class="n">6</span><span class="t">for some things we say have no sound, such as sponge, wool, while others,</span></div><div class="ln"><span class="n">9</span><span class="t">produce sound in actuality)- and the sound that is in actuality always arises</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p"><span class="b">Sound may be regarded from two aspects, either as potential or as actual: for there are some things which we say have no sound, </span><span class="mark">▸</span>as for example sponge and wool, whereas we say that others have, as for example bronze and all hard and smooth substances, because they possess potentially the power of making sound: that is, they are able actually to create a sound between the thing sounding and the sense of hearing. As for actual sound, it is always of something on some …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p"><span class="b">Now let us, to begin with, make certain distinctions about sound and hearing.
+</span><span class="mark">▸</span>Sound may mean either of two things (a) actual, and (b) potential, sound. There are certain things which, as we say, &#x27;have no sound&#x27;, e.g. sponges or wool, others which have, e.g. bronze and in general all things which are smooth and solid-the latter are said to have a sound because they can make a sound, i.e. can generate actual sound be …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="420b10" data-cit="420b10" data-chap="2.8">
+  <div class="bar"><span class="cit">420b10</span>
+    <span class="meta">DA 2.8</span>
+    <span class="badge">Δ 0.1% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">10</span><span class="t">φωνήν, οἷον τά τε ἄναιμα καὶ τῶν ἐναίμων ἰχθύες (καὶ</span></div><div class="ln"><span class="n">11</span><span class="t">τοῦτ&#x27; εὐλόγως, εἴπερ ἀέρος κίνησίς τίς ἐστιν ὁ ψόφος), ἀλλ&#x27;</span></div><div class="ln"><span class="n">12</span><span class="t">οἱ λεγόμενοι φωνεῖν, οἷον &lt;οἱ&gt; ἐν τῷ Ἀχελῴῳ, ψοφοῦσι τοῖς</span></div><div class="ln"><span class="n">13</span><span class="t">βραγχίοις ἤ τινι ἑτέρῳ τοιούτῳ, φωνὴ δ&#x27; ἐστὶ ζῴου ψόφος</span></div><div class="ln"><span class="n">14</span><span class="t">οὐ τῷ τυχόντι μορίῳ. ἀλλ&#x27; ἐπεὶ πᾶν ψοφεῖ τύπτοντός</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">10</span><span class="t">voice, such as the bloodless ones, and among the blooded ones fishes (and</span></div><div class="ln"><span class="n">11</span><span class="t">this is reasonable, if indeed sound is a certain movement of air), but</span></div><div class="ln"><span class="n">14</span><span class="t">not by any chance part. But since everything sounds when something strikes</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">other to be slow. Thus much then on sound in general.
+Voice is the sound produced by an animate being: no inanimate object being said to speak except in virtue of the similarity between it and the human voice, as is for instance the case with pipe and lyre and all other inanimate objects which possess those qualities of pitch and measure </span><span class="mark">▸</span>and articulation which seem to characterize the human voice also. Many animals however do not have a voice, as is the case with all bloodless animals, and is among sanguineous species the case with fishes — those which are said to speak, as is the case with the fishes in the Achelous, only in reality making a noise with their gills or wit …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ce, it being only by a metaphor that we speak of the voice of the flute or the lyre or generally of what (being without soul) possesses the power of producing a succession of notes which differ in length and pitch and timbre. The metaphor is based on the fact that all these differences are found also in voice. Many animals are voiceless, </span><span class="mark">▸</span>e.g. all non-sanuineous animals and among sanguineous animals fish. This is just what we should expect, since voice is a certain movement of air. The fish, like those in the Achelous, which are said to have voice, really make the sounds with their gills or some similar organ. Voice is the sound made by an animal, and that with a special o …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="421a5" data-cit="421a5" data-chap="2.8">
+  <div class="bar"><span class="cit">421a5</span>
+    <span class="meta">DA 2.8</span>
+    <span class="badge">Δ 0.3% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">5</span><span class="t">δὲ τὸ μόριον οὐκ ἔχουσιν ὅτι οὐ δέχονται τὸν ἀέρα οὐδ&#x27; ἀναπνέουσιν.</span></div><div class="ln"><span class="n">6</span><span class="t">δι&#x27; ἣν μὲν οὖν αἰτίαν, ἕτερός ἐστι λόγος.</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">5</span><span class="t">part they do not have because they do not admit air nor do they breathe.</span></div><div class="ln"><span class="n">6</span><span class="t">For what cause this is so is a matter for another account.</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">n the windpipe against the windpipe itself.This explanation of the voice is confirmed by the fact that it is impossible to speak when inhaling air or respiring, but only when we hold the breath: because in checking thus the breath we move the air that has been taken in. This also explains why fishes are devoid of voice: viz. because they </span><span class="mark">▸</span>have no windpipe, this organ itself being absent because fishes do not inhale the air nor yet respire — a fact of which the reason must be discussed elsewhere.</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">e the breath in the windpipe is used as an instrument to knock with against the walls of the windpipe.This is confirmed by our inability to speak when we are breathing either out or in-we can only do so by holding our breath; we make the movements with the breath so checked. It is clear also why fish are voiceless; they have no windpipe. </span><span class="mark">▸</span>And they have no windpipe because they do not breathe or take in air. Why they do not is a question belonging to another inquiry. </div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="423b10" data-cit="423b10" data-chap="2.11">
+  <div class="bar"><span class="cit">423b10</span>
+    <span class="meta">DA 2.11</span>
+    <span class="badge">Δ 0.2% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">10</span><span class="t">ὅτι διείργει, ὁμοίως ἂν ἔχοιμεν ὥσπερ καὶ νῦν ἐν</span></div><div class="ln"><span class="n">11</span><span class="t">τῷ ὕδατι καὶ ἐν τῷ ἀέρι· δοκοῦμεν γὰρ νῦν αὐτῶν ἅπτεσθαι</span></div><div class="ln"><span class="n">12</span><span class="t">καὶ οὐδὲν εἶναι διὰ μέσου. ἀλλὰ διαφέρει τὸ ἁπτὸν τῶν ὁρατῶν</span></div><div class="ln"><span class="n">13</span><span class="t">καὶ τῶν ψοφητικῶν, ὅτι ἐκείνων μὲν αἰσθανόμεθα τῷ</span></div><div class="ln"><span class="n">14</span><span class="t">τὸ μεταξὺ ποιεῖν τι ἡμᾶς, τῶν δὲ ἁπτῶν οὐχ ὑπὸ τοῦ μεταξὺ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">10</span><span class="t">that it stood between, we should be in the same condition as we now are in</span></div><div class="ln"><span class="n">11</span><span class="t">water and air; for we seem now to be touching them</span></div><div class="ln"><span class="n">14</span><span class="t">the medium makes us perceive something, whereas with tangible things it is not by the medium</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">e being that in the one case the objects are further off, in the other case more close at hand. And thus, by reason of the close proximity, the fact escapes our notice, the real truth being that we perceive all objects through the intervention of some medium, although we fail to observe it in the senses we have mentioned. Yet, as we said </span><span class="mark">▸</span>before, were we to perceive all the objects of touch through a membrane of whose intervention we were unconscious, we should be in the same condition as we are in now both in water and in air, in which we imagine ourselves to touch the very objects themselves, and think of no intervening medium.
+There is, however, this difference between  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">t the latter are perceived over a greater distance than the former; that is why the facts escape our notice. For we do perceive everything through a medium; but in these cases the fact escapes us. Yet, to repeat what we said before, if the medium for touch were a membrane separating us from the object without our observing its existence, </span><span class="mark">▸</span>we should be relatively to it in the same condition as we are now to air or water in which we are immersed; in their case we fancy we can touch objects, nothing coming in between us and them. But there remains this difference between what can be touched and what can be seen or can sound; in the latter two cases we perceive because the med …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="423b5" data-cit="423b5" data-chap="2.11">
+  <div class="bar"><span class="cit">423b5</span>
+    <span class="meta">DA 2.11</span>
+    <span class="badge">Δ 0.1% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">5</span><span class="t">ἑτέρων αἰσθανόμεθα, ὥσπερ καὶ τὸ ψοφητικὸν καὶ τὸ ὁρατὸν</span></div><div class="ln"><span class="n">6</span><span class="t">καὶ τὸ ὀσφραντόν· ἀλλὰ τὰ μὲν πόρρωθεν, τὰ δ&#x27; ἐγγύθεν, διὸ</span></div><div class="ln"><span class="n">7</span><span class="t">λανθάνει· ἐπεὶ αἰσθανόμεθά γε πάντων διὰ τοῦ μέσου, ἀλλ&#x27;</span></div><div class="ln"><span class="n">8</span><span class="t">ἐπὶ τούτων λανθάνει. καίτοι καθάπερ εἴπομεν καὶ πρότερον,</span></div><div class="ln"><span class="n">9</span><span class="t">κἂν εἰ δι&#x27; ὑμένος αἰσθανοίμεθα τῶν ἁπτῶν ἁπάντων λανθάνοντος</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">5</span><span class="t">perceive through other things, just as we perceive the sonorous and the visible</span></div><div class="ln"><span class="n">6</span><span class="t">and the odorous; but some things from far off, others from near, and for this reason</span></div><div class="ln"><span class="n">9</span><span class="t">and if we perceived all tangible things through a membrane without noticing</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">kinds of objects are perceived in different manners. Popular thought accepts the latter view, and holds that the perceptions of touch and taste take place through immediate contact with their object, while the other senses operate at a distance. This however is not really the case. We really perceive both the hard and soft through media, </span><span class="mark">▸</span>just as we also do the sonorous, the visible, and odorous: the only difference being that in the one case the objects are further off, in the other case more close at hand. And thus, by reason of the close proximity, the fact escapes our notice, the real truth being that we perceive all objects through the intervention of some medium, alt …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> then, is: does the perception of all objects of sense take place in the same way, or does it not, e.g. taste and touch requiring contact (as they are commonly thought to do), while all other senses perceive over a distance? The distinction is unsound; we perceive what is hard or soft, as well as the objects of hearing, sight, and smell, </span><span class="mark">▸</span>through a &#x27;medium&#x27;, only that the latter are perceived over a greater distance than the former; that is why the facts escape our notice. For we do perceive everything through a medium; but in these cases the fact escapes us. Yet, to repeat what we said before, if the medium for touch were a membrane separating us from the object without o …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="424a15" data-cit="424a15" data-chap="2.11">
+  <div class="bar"><span class="cit">424a15</span>
+    <span class="meta">DA 2.11</span>
+    <span class="badge">Δ 0.3% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">τὰ φθαρτικά. καθ&#x27; ἑκάστην μὲν οὖν τῶν αἰσθήσεων εἴρηται</span></div><div class="ln"><span class="n">16</span><span class="t">τύπῳ.</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">the destructive ones. Concerning each of the senses, then, it has been stated</span></div><div class="ln"><span class="n">16</span><span class="t">in outline.</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">ngible, just as we saw that eye-sight was in a way perceptive both of the visible and the invisible and that the other senses equally applied themselves to opposites. By the intangible must here be understood both that which presents too slight differences to be discriminated by touch, (for instance, air,) and also those objects of touch </span><span class="mark">▸</span>which are in such excess as to be destructive of all sense-perception. A sketch has thus been given of the separate senses.</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ible and what was invisible (and there was a parallel truth about all the other senses discussed), so touch has for its object both what is tangible and what is intangible. Here by &#x27;intangible&#x27; is meant (a) what like air possesses some quality of tangible things in a very slight degree and (b) what possesses it in an excessive degree, as </span><span class="mark">▸</span>destructive things do.
+We have now given an outline account of each of the several senses. </div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="426a10" data-cit="426a10" data-chap="3.2">
+  <div class="bar"><span class="cit">426a10</span>
+    <span class="meta">DA 3.2</span>
+    <span class="badge">Δ 0.8% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">10</span><span class="t">πάθησις ἐν τῷ πάσχοντι ἀλλ&#x27; οὐκ ἐν τῷ ποιοῦντι, οὕτω καὶ ἡ τοῦ</span></div><div class="ln"><span class="n">11</span><span class="t">αἰσθητοῦ ἐνέργεια καὶ ἡ τοῦ αἰσθητικοῦ ἐν τῷ αἰσθητικῷ. ἀλλ&#x27;</span></div><div class="ln"><span class="n">12</span><span class="t">ἐπ&#x27; ἐνίων μὲν ὠνόμασται, οἷον ἡ ψόφησις καὶ ἡ ἄκουσις, ἐπ&#x27;</span></div><div class="ln"><span class="n">13</span><span class="t">ἐνίων δ&#x27; ἀνώνυμον θάτερον· ὅρασις γὰρ λέγεται ἡ τῆς ὄψεως</span></div><div class="ln"><span class="n">14</span><span class="t">ἐνέργεια, ἡ δὲ τοῦ χρώματος ἀνώνυμος, καὶ γεῦσις ἡ τοῦ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">10</span><span class="t">being-affected are in the thing affected and not in the thing acting, so too the actuality of the</span></div><div class="ln"><span class="n">11</span><span class="t">object of perception and that of the faculty of perception are in the faculty of perception. But</span></div><div class="ln"><span class="n">14</span><span class="t">actuality [has a name, i.e. hearing], while that of color is nameless, and [there is] taste, [the actuality] of the</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">sound or sounding, the actualization of the capacity to hear is hearing as completed or in process: both sound and hearing being taken in a twofold sense. The same account holds good also of other senses and their objects. For just as creative action and passive receptivity are manifested in the subject which receives impressions, not in </span><span class="mark">▸</span>the object which produces them, so also the actualization at once of the object and of the faculty of sense lies in the faculty of sense. Sometimes both states have names assigned them, as is the case with the terms &#x27;sounding&#x27; and &#x27;hearing&#x27;: sometimes again the one or other is without a name. Thus the actual exercise of sight is known as  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">f the active or motive factor is realized; that is why that which causes movement may be at rest. Now the actuality of that which can sound is just sound or sounding, and the actuality of that which can hear is hearing or hearkening; &#x27;sound&#x27; and &#x27;hearing&#x27; are both ambiguous. The same account applies to the other senses and their objects. </span><span class="mark">▸</span>For as the-acting-and-being-acted-upon is to be found in the passive, not in the active factor, so also the actuality of the sensible object and that of the sensitive subject are both realized in the latter. But while in some cases each aspect of the total actuality has a distinct name, e.g. sounding and hearkening, in some one or other i …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="426a30" data-cit="426a30" data-chap="3.2">
+  <div class="bar"><span class="cit">426a30</span>
+    <span class="meta">DA 3.2</span>
+    <span class="badge">Δ 5.8% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">30</span><span class="t">καὶ διὰ τοῦτο καὶ φθείρει ἕκαστον ὑπερβάλλον, καὶ τὸ</span></div><div class="ln"><span class="n">31</span><span class="t">ὀξὺ καὶ τὸ βαρύ, τὴν ἀκοήν· ὁμοίως δὲ καὶ ἐν χυμοῖς τὴν</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">30</span><span class="t">And for this reason each thing that exceeds destroys [the sense], both the</span></div><div class="ln"><span class="n">31</span><span class="t">high-pitched and the low-pitched destroy the hearing; and likewise in flavors what</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">e harmony is a ratio, hearing, it follows, must be also a sort of ratio. This is in fact the reason why every excess, whether it be high or low, destroys hearing; just as similarly every excess in flavours destroys taste, every excess among colours, whether over-brilliant or overdark, destroys vision, or just again as all violent odours, </span><span class="mark">▸</span>whether sweet or bitter, destroy the sense of smell.Perception, in fact, always involves a sort of ratio between the object and the faculty of sense. Hence also it is that flavours are pleasant, when, being pure and unblended, they are combined in definite proportions, as is the case with what is piquant, or sweet, or, saltish — flavours  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> either potentialities or actualities: the statement is true of the latter, false of the former. This ambiguity they wholly failed to notice.
+If voice always implies a concord, and if the voice and the hearing of it are in one sense one and the same, and if concord always implies a ratio, hearing as well as what is heard must be a ratio. </span><span class="mark">▸</span>That is why the excess of either the sharp or the flat destroys the hearing. (So also in the case of savours excess destroys the sense of taste, and in the case of colours excessive brightness or darkness destroys the sight, and in the case of smell excess of strength whether in the direction of sweetness or bitterness is destructive.) Th …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="426b15" data-cit="426b15" data-chap="3.2">
+  <div class="bar"><span class="cit">426b15</span>
+    <span class="meta">DA 3.2</span>
+    <span class="badge">Δ 6.5% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">αἰσθητὰ γάρ ἐστιν. ᾗ καὶ δῆλον ὅτι ἡ σὰρξ οὐκ ἔστι</span></div><div class="ln"><span class="n">16</span><span class="t">τὸ ἔσχατον αἰσθητήριον· ἀνάγκη γὰρ ἂν ἦν ἁπτόμενον αὐτὸ</span></div><div class="ln"><span class="n">17</span><span class="t">κρίνειν τὸ κρῖνον. οὔτε δὴ κεχωρισμένοις ἐνδέχεται κρίνειν ὅτι</span></div><div class="ln"><span class="n">18</span><span class="t">ἕτερον τὸ γλυκὺ τοῦ λευκοῦ, ἀλλὰ δεῖ ἑνί τινι ἄμφω δῆλα</span></div><div class="ln"><span class="n">19</span><span class="t">εἶναι—οὕτω μὲν γὰρ κἂν εἰ τοῦ μὲν ἐγὼ τοῦ δὲ σὺ αἴσθοιο,</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">for they are objects of perception. Hence it is also clear that flesh is not</span></div><div class="ln"><span class="n">16</span><span class="t">the ultimate sense-organ; for it would be necessary that the thing touching itself</span></div><div class="ln"><span class="n">19</span><span class="t">be [the organ] -- for thus, even if I perceived one thing and you another,</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">cause the qualities to be compared are objects of sense. But if sense be the power which thus distinguishes the different qualities of objects. It is evident that the mere fleshly organism is not the ultimate organ of sense-perception: because in that case the discriminating faculty would have to distinguish on merely coming into contact </span><span class="mark">▸</span>with the sensible object Thus then it is impossible for the senses taken apart from one another, to decide that what is (say) sweet is different from what is white: on the contrary, both the qualities must be exhibited to some one faculty. It is just in fact as if I were to perceive the one and you the other; it would then be evident that …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> sense-organ as such and discriminates the differences which exist within that group; e.g. sight discriminates white and black, taste sweet and bitter, and so in all cases. Since we also discriminate white from sweet, and indeed each sensible quality from every other, with what do we perceive that they are different? It must be by sense; </span><span class="mark">▸</span>for what is before us is sensible objects. (Hence it is also obvious that the flesh cannot be the ultimate sense-organ: if it were, the discriminating power could not do its work without immediate contact with the object.)
+Therefore (1) discrimination between white and sweet cannot be effected by two agencies which remain separate; both t …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="426b25" data-cit="426b25" data-chap="3.2">
+  <div class="bar"><span class="cit">426b25</span>
+    <span class="meta">DA 3.2</span>
+    <span class="badge">Δ 3.9% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">25</span><span class="t">λέγει ὅτι ἕτερον τὸ ἀγαθὸν καὶ τὸ κακόν, οὕτω καὶ ὅτε θάτερον</span></div><div class="ln"><span class="n">26</span><span class="t">λέγει ὅτι ἕτερον καὶ θάτερον (οὐ κατὰ συμβεβηκὸς τὸ</span></div><div class="ln"><span class="n">27</span><span class="t">ὅτε, λέγω δ&#x27;, οἷον νῦν λέγω ὅτι ἕτερον, οὐ μέντοι ὅτι νῦν ἕτερον,</span></div><div class="ln"><span class="n">28</span><span class="t">ἀλλ&#x27; οὕτω λέγει, καὶ νῦν καὶ ὅτι νῦν)· ἅμα ἄρα. ὥστε</span></div><div class="ln"><span class="n">29</span><span class="t">ἀχώριστον καὶ ἐν ἀχωρίστῳ χρόνῳ. ἀλλὰ μὴν ἀδύνατον ἅμα</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">25</span><span class="t">says that the good and the bad are different, so too whenever the one</span></div><div class="ln"><span class="n">26</span><span class="t">says that it is different, it likewise [says of] the other (not incidentally the</span></div><div class="ln"><span class="n">29</span><span class="t">indivisible, and in indivisible time. But surely it is impossible for the same thing, insofar as it is indivisible, to</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">tions. Nor, further, can such a judgment be passed at different times. Just as it is one and the same principle which asserts that the good and bad are different, so further when it maintains the one to be different it also at the same time maintains the other to be so also. Nor is this identity of time simply incidental: it is not, that </span><span class="mark">▸</span>is, as if its assertion were merely like saying &quot; I at present assert the difference,&quot; without adding also that &quot;the difference holds good at present&quot; — rather the one principle, which thus distinguishes both, maintains at present the difference, and maintains it to hold good at present: that is to say, it makes the two statements simulta …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> must be self-identical, and as what asserts, so also what thinks or perceives. That it is not possible by means of two agencies which remain separate to discriminate two objects which are separate, is therefore obvious; and that (it is not possible to do this in separate movements of time may be seen&#x27; if we look at it as follows. For as </span><span class="mark">▸</span>what asserts the difference between the good and the bad is one and the same, so also the time at which it asserts the one to be different and the other to be different is not accidental to the assertion (as it is for instance when I now assert a difference but do not assert that there is now a difference); it asserts thus-both now and th …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="428b10" data-cit="428b10" data-chap="3.3">
+  <div class="bar"><span class="cit">428b10</span>
+    <span class="meta">DA 3.3</span>
+    <span class="badge">Δ 1.5% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">10</span><span class="t">ἀλλ&#x27; ἐπειδὴ ἔστι κινηθέντος τουδὶ κινεῖσθαι ἕτερον ὑπὸ</span></div><div class="ln"><span class="n">11</span><span class="t">τούτου, ἡ δὲ φαντασία κίνησίς τις δοκεῖ εἶναι καὶ οὐκ ἄνευ</span></div><div class="ln"><span class="n">12</span><span class="t">αἰσθήσεως γίνεσθαι ἀλλ&#x27; αἰσθανομένοις καὶ ὧν αἴσθησις</span></div><div class="ln"><span class="n">13</span><span class="t">ἔστιν, ἔστι δὲ γίνεσθαι κίνησιν ὑπὸ τῆς ἐνεργείας τῆς αἰσθήσεως,</span></div><div class="ln"><span class="n">14</span><span class="t">καὶ ταύτην ὁμοίαν ἀνάγκη εἶναι τῇ αἰσθήσει, εἴη ἂν</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">10</span><span class="t">but since it is possible, when one thing has been moved, for another to be moved by</span></div><div class="ln"><span class="n">11</span><span class="t">that thing, and imagination seems to be a kind of movement and not to occur without</span></div><div class="ln"><span class="n">14</span><span class="t">and it is necessary that this be similar to perception, this movement would be</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">ess we are to suppose that he has forgotten or been led to change his views, or if he still preserves his opinion, then it follows necessarily that the same opinion is true and false. (Of course, it might be said that an opinion previously true would become false, in case the object were to alter in its character without our cognizance.)
+</span><span class="mark">▸</span>Imagination, then, is not to be identified with any of these faculties, nor is it the result of their combination. It is, however, a law of nature that whenever one object is moved, another is moved by it. Now imagination is thought to be a form of movement, and is believed to be dependent on the senses so far as to arise only in those wh …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">orgotten nor lost belief in the true opinion which he had, that opinion has disappeared, or (b) if he retains it then his opinion is at once true and false. A true opinion, however, becomes false only when the fact alters without being noticed.
+Imagination is therefore neither any one of the states enumerated, nor compounded out of them.
+</span><span class="mark">▸</span>But since when one thing has been set in motion another thing may be moved by it, and imagination is held to be a movement and to be impossible without sensation, i.e. to occur in beings that are percipient and to have for its content what can be perceived, and since movement may be produced by actual sensation and that movement is necess …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="428b20" data-cit="428b20" data-chap="3.3">
+  <div class="bar"><span class="cit">428b20</span>
+    <span class="meta">DA 3.3</span>
+    <span class="badge">Δ 0.0% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">20</span><span class="t">συμβεβηκέναι ταῦτα &lt;ἃ συμβέβηκε τοῖς αἰσθητοῖς&gt;·</span></div><div class="ln tk"><span class="n">20</span><span class="t">καὶ ἐνταῦθα ἤδη ἐνδέχεται διαψεύδεσθαι·</span></div><div class="ln"><span class="n">21</span><span class="t">ὅτι μὲν γὰρ λευκόν, οὐ ψεύδεται, εἰ δὲ τοῦτο τὸ λευκὸν</span></div><div class="ln"><span class="n">22</span><span class="t">ἢ ἄλλο τι, ψεύδεται. τρίτον δὲ τῶν κοινῶν καὶ ἑπομένων</span></div><div class="ln"><span class="n">23</span><span class="t">τοῖς συμβεβηκόσιν οἷς ὑπάρχει τὰ ἴδια (λέγω δ&#x27; οἷον κίνησις</span></div><div class="ln"><span class="n">24</span><span class="t">καὶ μέγεθος) [ἃ συμβέβηκε τοῖς αἰσθητοῖς]· περὶ ἃ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">20</span><span class="t">attributes that belong &lt;to what belongs to the objects of perception&gt;—</span></div><div class="ln tk"><span class="n">20</span><span class="t">attributes that belong &lt;to what belongs to the objects of perception&gt;—</span></div><div class="ln"><span class="n">21</span><span class="t">being deceived; for that it is white, one is not deceived, but if this white thing</span></div><div class="ln"><span class="n">24</span><span class="t">and magnitude) [which belong to the objects of perception]—concerning which</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">hat do not have perceptive powers. It follows, further, that the possessor of this faculty may be both active and receptive in many ways regarding it, and the imagination itself may be both true and false. This results from the following considerations. The perception of the particular qualities of sense is true or marked by falsity only </span><span class="mark">▸</span>to the smallest possible degree. But, secondly, there is the perception of the concomitance of these qualities. And here error is possible: for while sense is never mistaken in that the object is for instance white, it may be mistaken as to whether it is this thing or some other object that is white. Thirdly, we must note the perception o …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">in virtue of its possession that in which it is found may present various phenomena both active and passive, and (such that it may be either true or false.
+The reason of the last characteristic is as follows. Perception (1) of the special objects of sense is never in error or admits the least possible amount of falsehood. (2) That of the </span><span class="mark">▸</span>concomitance of the objects concomitant with the sensible qualities comes next: in this case certainly we may be deceived; for while the perception that there is white before us cannot be false, the perception that what is white is this or that may be false. (3) Third comes the perception of the universal attributes which accompany the co …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="429b10" data-cit="429b10" data-chap="3.4">
+  <div class="bar"><span class="cit">429b10</span>
+    <span class="meta">DA 3.4</span>
+    <span class="badge">Δ 0.2% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">10</span><span class="t">ἐπεὶ δ&#x27; ἄλλο ἐστὶ τὸ μέγεθος καὶ τὸ μεγέθει εἶναι, καὶ</span></div><div class="ln"><span class="n">11</span><span class="t">ὕδωρ καὶ ὕδατι εἶναι (οὕτω δὲ καὶ ἐφ&#x27; ἑτέρων πολλῶν, ἀλλ&#x27;</span></div><div class="ln"><span class="n">12</span><span class="t">οὐκ ἐπὶ πάντων· ἐπ&#x27; ἐνίων γὰρ ταὐτόν ἐστι), τὸ σαρκὶ εἶναι</span></div><div class="ln"><span class="n">13</span><span class="t">καὶ σάρκα ἢ ἄλλῳ ἢ ἄλλως ἔχοντι κρίνει· ἡ γὰρ σὰρξ</span></div><div class="ln"><span class="n">14</span><span class="t">οὐκ ἄνευ τῆς ὕλης, ἀλλ&#x27; ὥσπερ τὸ σιμόν, τόδε ἐν τῷδε. τῷ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">10</span><span class="t">Since magnitude and being magnitude are different, and</span></div><div class="ln"><span class="n">11</span><span class="t">water and being water are different (and likewise in many other cases too, though not</span></div><div class="ln"><span class="n">14</span><span class="t">not without matter, but as the snub, this in this. With the</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">t the same as what it was before it learned or discovered: and it may in this final stage be said to think itself.
+[The difference between sense and reason may be exhibited also in this manner.] There is a difference between magnitude as a simple fact and magnitude as a real notion, just as there is between water and its essential being: </span><span class="mark">▸</span>as indeed a similar difference holds good in most things, though not in all, there being some abstract objects in which matter and form combine together into one. It is then either by a different faculty, or by a faculty differently applied, that the mind judges of the essential nature of flesh and simple flesh itself, because flesh does  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> phrase is used of one who is actually a man of science (this happens when he is now able to exercise the power on his own initiative), its condition is still one of potentiality, but in a different sense from the potentiality which preceded the acquisition of knowledge by learning or discovery: the mind too is then able to think itself.
+</span><span class="mark">▸</span>Since we can distinguish between a spatial magnitude and what it is to be such, and between water and what it is to be water, and so in many other cases (though not in all; for in certain cases the thing and its form are identical), flesh and what it is to be flesh are discriminated either by different faculties, or by the same faculty in …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="429b30" data-cit="429b30" data-chap="3.4">
+  <div class="bar"><span class="cit">429b30</span>
+    <span class="meta">DA 3.4</span>
+    <span class="badge">Δ 1.4% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">30</span><span class="t">κοινόν τι διῄρηται πρότερον, ὅτι δυνάμει πώς ἐστι τὰ νοητὰ</span></div><div class="ln"><span class="n">31</span><span class="t">ὁ νοῦς, ἀλλ&#x27; ἐντελεχείᾳ οὐδέν, πρὶν ἂν νοῇ· δυνάμει δ&#x27; οὕτως</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">30</span><span class="t">something common belong, as was distinguished earlier, in that the intellect is potentially in a way the objects of thought,</span></div><div class="ln"><span class="n">31</span><span class="t">though actually none of them, before it thinks; and it must be potentially so</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">through anything outside itself, but simply in and by itself, and supposing that the object of thought is always something homogeneous: or it must have some element compounded with it which makes it capable of being thought like other real things. Or may we not rather hold that the receptivity of reason is possible only in virtue of some </span><span class="mark">▸</span>common element? And hence it has been already said that reason is in a way potentially one with the ideas of reason, though it is actually nothing but a mere capacity before the exercise of thought.We must suppose, in short, that the process of thought is like that of writing on a writing-tablet on which nothing is yet actually written.
+T …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">of thought to itself? For if mind is thinkable per se and what is thinkable is in kind one and the same, then either (a) mind will belong to everything, or (b) mind will contain some element common to it with all other realities which makes them all thinkable.
+(1) Have not we already disposed of the difficulty about interaction involving </span><span class="mark">▸</span>a common element, when we said that mind is in a sense potentially whatever is thinkable, though actually it is nothing until it has thought?What it thinks must be in it just as characters may be said to be on a writingtablet on which as yet nothing actually stands written: this is exactly what happens with mind.
+(Mind is itself thinkable …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="429b5" data-cit="429b5" data-chap="3.4">
+  <div class="bar"><span class="cit">429b5</span>
+    <span class="meta">DA 3.4</span>
+    <span class="badge">Δ 0.4% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">5</span><span class="t">μὲν γὰρ αἰσθητικὸν οὐκ ἄνευ σώματος, ὁ δὲ χωριστός. ὅταν</span></div><div class="ln"><span class="n">6</span><span class="t">δ&#x27; οὕτως ἕκαστα γένηται ὡς ὁ ἐπιστήμων λέγεται ὁ κατ&#x27; ἐνέργειαν</span></div><div class="ln"><span class="n">7</span><span class="t">(τοῦτο δὲ συμβαίνει ὅταν δύνηται ἐνεργεῖν δι&#x27; αὑτοῦ),</span></div><div class="ln"><span class="n">8</span><span class="t">ἔστι μὲν καὶ τότε δυνάμει πως, οὐ μὴν ὁμοίως καὶ πρὶν</span></div><div class="ln"><span class="n">9</span><span class="t">μαθεῖν ἢ εὑρεῖν· καὶ αὐτὸς δι&#x27; αὑτοῦ τότε δύναται νοεῖν.</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">5</span><span class="t">the perceptive faculty is not without body, but the intellect is separate. Whenever</span></div><div class="ln"><span class="n">6</span><span class="t">it has become each thing in the way that the knower in actuality is so called</span></div><div class="ln"><span class="n">9</span><span class="t">learning or discovering; and it itself is then able through itself to think.</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">too violent colours and odours.Reason, on the contrary, when it applies itself to something extremely intellectual, does not lessen but rather increases its power of thinking inferior objects, the explanation being that the faculty of sense is not independent of the body, whereas reason is separated from it. And since reason becomes each </span><span class="mark">▸</span>of its objects in the sense in which he who is in actual possession of knowledge is described as knowing — this resulting when he can apply his knowledge by himself — the reason as a developed capacity is similar to what it was previously as a mere unformed faculty though not the same as what it was before it learned or discovered: and it …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ise it than before, as e.g.in the case of a loud sound we cannot hear easily immediately after, or in the case of a bright colour or a powerful odour we cannot see or smell, but in the case of mind thought about an object that is highly intelligible renders it more and not less able afterwards to think objects that are less intelligible: </span><span class="mark">▸</span>the reason is that while the faculty of sensation is dependent upon the body, mind is separable from it.
+Once the mind has become each set of its possible objects, as a man of science has, when this phrase is used of one who is actually a man of science (this happens when he is now able to exercise the power on his own initiative), its co …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="430a15" data-cit="430a15" data-chap="3.5">
+  <div class="bar"><span class="cit">430a15</span>
+    <span class="meta">DA 3.5</span>
+    <span class="badge">Δ 5.8% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">γίνεσθαι, ὁ δὲ τῷ πάντα ποιεῖν, ὡς ἕξις τις, οἷον τὸ φῶς·</span></div><div class="ln"><span class="n">16</span><span class="t">τρόπον γάρ τινα καὶ τὸ φῶς ποιεῖ τὰ δυνάμει ὄντα χρώματα</span></div><div class="ln"><span class="n">17</span><span class="t">ἐνεργείᾳ χρώματα. καὶ οὗτος ὁ νοῦς χωριστὸς καὶ</span></div><div class="ln"><span class="n">18</span><span class="t">ἀπαθὴς καὶ ἀμιγής, τῇ οὐσίᾳ ὢν ἐνέργεια· ἀεὶ γὰρ τιμιώτερον</span></div><div class="ln"><span class="n">19</span><span class="t">τὸ ποιοῦν τοῦ πάσχοντος καὶ ἡ ἀρχὴ τῆς ὕλης. [τὸ δ&#x27;</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">all things, and the other by making all things, as a kind of state, like light;</span></div><div class="ln"><span class="n">16</span><span class="t">for in a way light too makes the colors that are potentially colors</span></div><div class="ln"><span class="n">19</span><span class="t">what makes is distinct from what is acted upon, and so is the principle of the matter. [And this</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b"> substratum to each class of objects, this being that which is potentially all of them: on the other hand, there is the element which is causal and creative in virtue of its producing all things, and which stands towards the other in the same relation as that in which art stands towards the materials on which it operates. Thus reason is, </span><span class="mark">▸</span>on the one hand, of such a character as to become all things, on the other hand of such a nature as to create all things, acting then much in the same way as some positive quality, such as for instance light: for light also in a way creates actual out of potential colour.
+This phase of reason is separate from and uncompounded with materia …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">the particulars included in the class, (2) a cause which is productive in the sense that it makes them all (the latter standing to the former, as e.g. an art to its material), these distinct elements must likewise be found within the soul.
+And in fact mind as we have described it is what it is what it is by virtue of becoming all things, </span><span class="mark">▸</span>while there is another which is what it is by virtue of making all things: this is a sort of positive state like light; for in a sense light makes potential colours into actual colours.
+Mind in this sense of it is separable, impassible, unmixed, since it is in its essential nature activity (for always the active is superior to the passive …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="430a5" data-cit="430a5" data-chap="3.4">
+  <div class="bar"><span class="cit">430a5</span>
+    <span class="meta">DA 3.4</span>
+    <span class="badge">Δ 1.8% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">5</span><span class="t">τὸ οὕτως ἐπιστητὸν τὸ αὐτό ἐστιν (τοῦ δὲ μὴ ἀεὶ νοεῖν τὸ</span></div><div class="ln"><span class="n">6</span><span class="t">αἴτιον ἐπισκεπτέον)· ἐν δὲ τοῖς ἔχουσιν ὕλην δυνάμει ἕκαστον</span></div><div class="ln"><span class="n">7</span><span class="t">ἔστι τῶν νοητῶν. ὥστ&#x27; ἐκείνοις μὲν οὐχ ὑπάρξει νοῦς (ἄνευ</span></div><div class="ln"><span class="n">8</span><span class="t">γὰρ ὕλης δύναμις ὁ νοῦς τῶν τοιούτων), ἐκείνῳ δὲ τὸ νοητὸν</span></div><div class="ln"><span class="n">9</span><span class="t">ὑπάρξει.</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">5</span><span class="t">the thing thus knowable are the same (and the cause of why it does not always think must</span></div><div class="ln"><span class="n">6</span><span class="t">be investigated); but among things having matter each of the objects of thought is present potentially</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">at of writing on a writing-tablet on which nothing is yet actually written.
+Thus the reason can be thought just in the same way as can objects of thought generally. [For such objects of thought are either immaterial or material.] Now in the case of immaterial objects, the subject thinking and the object thought are one and the same: just </span><span class="mark">▸</span>as speculative science is equivalent to the objects and ideas of speculative knowledge (a fact, it is true, which leaves the question — why we do not always think, to be investigated). In the case, on the contrary, of those objects which are imbedded in matter, each of the ideas of reason is present, if only potentially and implicitly. An …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">characters may be said to be on a writingtablet on which as yet nothing actually stands written: this is exactly what happens with mind.
+(Mind is itself thinkable in exactly the same way as its objects are. For (a) in the case of objects which involve no matter, what thinks and what is thought are identical; for speculative knowledge and </span><span class="mark">▸</span>its object are identical. (Why mind is not always thinking we must consider later.) (b) In the case of those which contain matter each of the objects of thought is only potentially present. It follows that while they will not have mind in them (for mind is a potentiality of them only in so far as they are capable of being disengaged from  …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="431a15" data-cit="431a15" data-chap="3.7">
+  <div class="bar"><span class="cit">431a15</span>
+    <span class="meta">DA 3.7</span>
+    <span class="badge">Δ 0.6% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">τὰ φαντάσματα οἷον αἰσθήματα ὑπάρχει, ὅταν δὲ ἀγαθὸν</span></div><div class="ln"><span class="n">16</span><span class="t">ἢ κακὸν φήσῃ ἢ ἀποφήσῃ, φεύγει ἢ διώκει· διὸ οὐδέποτε</span></div><div class="ln"><span class="n">17</span><span class="t">νοεῖ ἄνευ φαντάσματος ἡ ψυχή. —ὥσπερ δὲ ὁ ἀὴρ τὴν κόρην</span></div><div class="ln"><span class="n">18</span><span class="t">τοιανδὶ ἐποίησεν, αὕτη δ&#x27; ἕτερον, καὶ ἡ ἀκοὴ ὡςαύτως,</span></div><div class="ln"><span class="n">19</span><span class="t">τὸ δὲ ἔσχατον ἕν, καὶ μία &lt;ἡ&gt; μεσότης, τὸ δ&#x27; εἶναι αὐτῇ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">the images are present as it were as perceptions; but when it affirms good</span></div><div class="ln"><span class="n">16</span><span class="t">or bad, it denies or [affirms], it avoids or pursues; hence it never</span></div><div class="ln"><span class="n">19</span><span class="t">But the last term is one, and the mean is one, though its being is</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">nd thus the faculty of desire and of aversion are not different either from one another or from the faculty of sense: although, indeed, the mode in which they manifest themselves is different. So similarly to the understanding the images of sense-impressions are related just as the impressions themselves are to sense: it is only when the </span><span class="mark">▸</span>mind proceeds to assert something to be good or bad that it either pursues or avoids its object The soul, then, never thinks of anything as good or bad without the help of images of sense. [But this sensuous image is only a condition of its exercise]: it is simply like the air which makes the pupil of such and such a character, while the  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">ject. To feel pleasure or pain is to act with the sensitive mean towards what is good or bad as such. Both avoidance and appetite when actual are identical with this: the faculty of appetite and avoidance are not different, either from one another or from the faculty of sense-perception; but their being is different.
+To the thinking soul </span><span class="mark">▸</span>images serve as if they were contents of perception (and when it asserts or denies them to be good or bad it avoids or pursues them). That is why the soul never thinks without an image. The process is like that in which the air modifies the pupil in this or that way and the pupil transmits the modification to some third thing (and similar …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="431b20" data-cit="431b20" data-chap="3.8">
+  <div class="bar"><span class="cit">431b20</span>
+    <span class="meta">DA 3.8</span>
+    <span class="badge">Δ 0.0% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">20</span><span class="t">Νῦν δέ, περὶ ψυχῆς τὰ λεχθέντα συγκεφαλαιώσαντες,</span></div><div class="ln"><span class="n">21</span><span class="t">εἴπωμεν πάλιν ὅτι ἡ ψυχὴ τὰ ὄντα πώς ἐστι πάντα· ἢ</span></div><div class="ln"><span class="n">22</span><span class="t">γὰρ αἰσθητὰ τὰ ὄντα ἢ νοητά, ἔστι δ&#x27; ἡ ἐπιστήμη μὲν</span></div><div class="ln"><span class="n">23</span><span class="t">τὰ ἐπιστητά πως, ἡ δ&#x27; αἴσθησις τὰ αἰσθητά· πῶς δὲ τοῦτο,</span></div><div class="ln"><span class="n">24</span><span class="t">δεῖ ζητεῖν. τέμνεται οὖν ἡ ἐπιστήμη καὶ ἡ αἴσθησις εἰς τὰ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">20</span><span class="t">But now, having summed up what has been said about the soul,</span></div><div class="ln"><span class="n">21</span><span class="t">let us say again that the soul is in a way all existing things; for</span></div><div class="ln"><span class="n">24</span><span class="t">one must inquire. Knowledge and perception, then, are divided into the</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p"><span class="b"></span><span class="mark">▸</span>We will now sum up the conclusions we have made about the soul. The soul, we have seen, is in a way all existing things. For the objects of existence are either objects of sense or objects of thought: and while science is in a way identical with the objects of thought, sense again is one with the objects of sense. How this comes about is  …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p"><span class="b"></span><span class="mark">▸</span>Let us now summarize our results about soul, and repeat that the soul is in a way all existing things; for existing things are either sensible or thinkable, and knowledge is in a way what is knowable, and sensation is in a way what is sensible: in what way we must inquire.
+Knowledge and sensation are divided to correspond with the realiti …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="434b15" data-cit="434b15" data-chap="3.12">
+  <div class="bar"><span class="cit">434b15</span>
+    <span class="meta">DA 3.12</span>
+    <span class="badge">Δ 2.8% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">15</span><span class="t">δι&#x27; ἑτέρων αἰσθάνονται, οἷον ὄσφρησις ὄψις ἀκοή·</span></div><div class="ln"><span class="n">16</span><span class="t">ἁπτόμενον δέ, εἰ μὴ ἕξει αἴσθησιν, οὐ δυνήσεται τὰ μὲν</span></div><div class="ln"><span class="n">17</span><span class="t">φεύγειν τὰ δὲ λαβεῖν. εἰ δὲ τοῦτο, ἀδύνατον ἔσται σώζεσθαι</span></div><div class="ln"><span class="n">18</span><span class="t">τὸ ζῷον. διὸ καὶ ἡ γεῦσίς ἐστιν ὥσπερ ἁφή τις· τροφῆς</span></div><div class="ln"><span class="n">19</span><span class="t">γάρ ἐστιν, ἡ δὲ τροφὴ τὸ σῶμα ἁπτόν. ψόφος δὲ</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">15</span><span class="t">perceive through other media, as smell, sight, hearing;</span></div><div class="ln"><span class="n">16</span><span class="t">but if a thing that touches does not have perception, it will not be able</span></div><div class="ln"><span class="n">19</span><span class="t">is, and nourishment is the tangible body. But sound</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">following considerations. Since the animal is a body possessed of soul, and every body is tangible: it follows, since the tangible is perceived by touch, that the body of the living animal must be also endowed with the sense of touch, if the animal is to be able to maintain itself. For the other senses, such as smell, sight, and hearing, </span><span class="mark">▸</span>perceive their objects through the medium of other substances: but if an animal, when it came in contact with different substances, were not to have the sense of touch, it would not be able to avoid some and take others: and under these circumstances it would be impossible for it to preserve itself. Hence taste is, as it were, a sort of t …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b">her simple or compound. And simple it cannot be; for then it could not have touch, which is indispensable. This is clear from what follows. An animal is a body with soul in it: every body is tangible, i.e. perceptible by touch; hence necessarily, if an animal is to survive, its body must have tactual sensation. All the other senses, e.g. </span><span class="mark">▸</span>smell, sight, hearing, apprehend through media; but where there is immediate contact the animal, if it has no sensation, will be unable to avoid some things and take others, and so will find it impossible to survive. That is why taste also is a sort of touch; it is relative to nutriment, which is just tangible body; whereas sound, colour, …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div>
+<div class="card" data-id="435a5" data-cit="435a5" data-chap="3.12">
+  <div class="bar"><span class="cit">435a5</span>
+    <span class="meta">DA 3.12</span>
+    <span class="badge">Δ 0.9% of chapter</span></div>
+  <div class="grid">
+    <div class="col greek"><div class="lab">Greek</div><div class="ln tk"><span class="n">5</span><span class="t">ποιεῖ καὶ πάσχει, ἐὰν μένῃ καὶ εἷς ᾖ. διὸ καὶ περὶ ἀνακλάσεως</span></div><div class="ln"><span class="n">6</span><span class="t">βέλτιον ἢ τὴν ὄψιν ἐξιοῦσαν ἀνακλᾶσθαι τὸν ἀέρα</span></div><div class="ln"><span class="n">7</span><span class="t">πάσχειν ὑπὸ τοῦ σχήματος καὶ χρώματος, μέχρι περ οὗ</span></div><div class="ln"><span class="n">8</span><span class="t">ἂν ᾖ εἷς. ἐπὶ δὲ τοῦ λείου ἐστὶν εἷς· διὸ πάλιν οὗτος τὴν ὄψιν</span></div><div class="ln"><span class="n">9</span><span class="t">κινεῖ, ὥσπερ ἂν εἰ τὸ ἐν τῷ κηρῷ σημεῖον διεδίδοτο μέχρι</span></div></div>
+    <div class="col gloss"><div class="lab">Prior gloss</div><div class="ln tk"><span class="n">5</span><span class="t">both acts and is affected, provided it remains one and continuous. Wherefore also concerning reflection</span></div><div class="ln"><span class="n">6</span><span class="t">it is better that the sight, going out, should not be reflected, but rather that the air</span></div><div class="ln"><span class="n">9</span><span class="t">moves it, just as if the mark in the wax were transmitted as far as</span></div></div>
+    <div class="col prose"><div class="lab">Wallace — under review</div><div class="p">… <span class="b">ing that the alteration is effected without change of position.Thus, if one were to plunge anything in wax, the wax would be moved so far as one plunged it: a stone under similar treatment would not be moved at all, and water would be so to a still greater degree. Air, on the other hand, is moved to the greatest possible extent, and both </span><span class="mark">▸</span>impresses and is impressed so long as it continues still and remains a whole. And thus, also, to touch upon the theory of &quot; repercussion,&quot; it is better to suppose that the air is affected by the colour and the form, so long as it remains unbroken (and it is so over every smooth surface), than that the visual ray after it has issued from t …</div></div>
+    <div class="col prose"><div class="lab">Smith — reference</div><div class="p">… <span class="b"> that the agent produces produces it without the patient&#x27;s changing its place.Thus if an object is dipped into wax, the movement goes on until submersion has taken place, and in stone it goes no distance at all, while in water the disturbance goes far beyond the object dipped: in air the disturbance is propagated farthest of all, the air </span><span class="mark">▸</span>acting and being acted upon, so long as it maintains an unbroken unity. That is why in the case of reflection it is better, instead of saying that the sight issues from the eye and is reflected, to say that the air, so long as it remains one, is affected by the shape and colour. On a smooth surface the air possesses unity; hence it is tha …</div></div>
+  </div>
+  <div class="actions" data-who="target"><span class="who">Wallace</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button></div>
+  <div class="actions" data-who="reference"><span class="who">Smith</span>
+    <button class="v" data-v="on">✓ Spot on</button>
+    <button class="v" data-v="early">◀ Early</button>
+    <button class="v" data-v="late">Late ▶</button>
+    <input class="note" placeholder="note (only when the buttons can't say it)…"></div>
+</div></div><script>
+const KEY='da_wallace_review_v2';
+const store=JSON.parse(localStorage.getItem(KEY)||'{}');
+const rec=id=>store[id]||(store[id]={});
+const save=()=>localStorage.setItem(KEY,JSON.stringify(store));
+function count(){const cards=[...document.querySelectorAll('.card')];
+  const done=cards.filter(c=>{const r=store[c.dataset.id]||{};return r.target&&r.reference;}).length;
+  const part=cards.filter(c=>{const r=store[c.dataset.id]||{};
+    return (r.target||r.reference)&&!(r.target&&r.reference);}).length;
+  document.getElementById('prog').innerHTML='<b>'+done+'</b> / '+cards.length+
+    ' complete'+(part?' · '+part+' partial':'');}
+function paint(id){const c=document.querySelector('.card[data-id="'+CSS.escape(id)+'"]');
+  if(!c)return;const r=store[id]||{};
+  c.querySelectorAll('.actions').forEach(a=>{const v=r[a.dataset.who];
+    a.querySelectorAll('.v').forEach(b=>b.classList.toggle('sel',b.dataset.v===v));
+    a.classList.toggle('set',!!v);});
+  c.classList.toggle('done',!!(r.target&&r.reference));}
+document.querySelectorAll('.card').forEach(c=>{const id=c.dataset.id;
+  c.querySelectorAll('.actions').forEach(a=>{const who=a.dataset.who;
+    a.querySelectorAll('.v').forEach(b=>b.addEventListener('click',()=>{
+      const r=rec(id);r[who]=r[who]===b.dataset.v?undefined:b.dataset.v;
+      r.citation=c.dataset.cit;r.chapter=c.dataset.chap;r.ts=new Date().toISOString();
+      save();paint(id);count();}));});
+  const nt=c.querySelector('.note');
+  nt.addEventListener('input',()=>{const r=rec(id);r.note=nt.value;
+    r.citation=c.dataset.cit;r.chapter=c.dataset.chap;save();});
+  if(store[id]&&store[id].note)nt.value=store[id].note;paint(id);});
+count();
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;
+  const m={'1':['target','on'],'2':['target','early'],'3':['target','late'],
+           '8':['reference','on'],'9':['reference','early'],'0':['reference','late']}[e.key];
+  if(!m)return;
+  const c=[...document.querySelectorAll('.card')].find(x=>{
+    const b=x.getBoundingClientRect();return b.top>-b.height/2;});
+  if(c){const r=rec(c.dataset.id);r[m[0]]=m[1];r.citation=c.dataset.cit;
+    r.chapter=c.dataset.chap;r.ts=new Date().toISOString();save();paint(c.dataset.id);count();}});
+document.getElementById('exp').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({work:'DA',target:'Wallace',reference:'Smith',
+    rule:'a tick pegs to the BULK of its Bekker line, not its first Greek word',
+    exported:new Date().toISOString(),verdicts:store},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='DA-Wallace-verdicts.json';a.click();});
+</script></body></html>

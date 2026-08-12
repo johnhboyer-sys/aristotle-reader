@@ -143,6 +143,47 @@ describe('Reader.svelte', () => {
     expect(container.querySelectorAll('.english-col .para-br')).toHaveLength(0);
   });
 
+  // Ostwald italicizes transliterated Greek and titles; the transcription keeps
+  // that as Markdown *emphasis*, which used to reach the page as literal
+  // asterisks ("formed by habit, *ethos,*").
+  it('renders a footnote-bearing translation\'s emphasis as italics', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'formed by habit, *ethos,* and its name.[^1]',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/formed by habit/);
+    expect([...container.querySelectorAll('em')].map(e => e.textContent)).toEqual(['ethos,']);
+    expect(container.textContent).not.toContain('*');
+    // The footnote marker still renders alongside the emphasis.
+    expect(container.querySelector('.fn-marker')).toHaveAttribute('data-fn', '1');
+  });
+
+  // A footnote label may itself be a star, so the emphasis pass runs after the
+  // marker pass — otherwise two `[^*]` references read as one long emphasis.
+  it('never reads a pair of star footnote labels as emphasis', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'one[^*] and two[^*] again.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/again/);
+    expect(container.querySelectorAll('em')).toHaveLength(0);
+    expect(container.querySelectorAll('.fn-marker')).toHaveLength(2);
+  });
+
   it('keeps existing sidenote and figure inline markers out of rendered prose', async () => {
     window.history.replaceState(null, '', '/Isa/book/1');
     const book: BookData = structuredClone(fixtureBook);
