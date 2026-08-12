@@ -449,14 +449,21 @@ def run(manifest: Manifest) -> Path:
     english = _load("stage1/english_chunks.json")
     ross_path = BUILD_DIR / "stage1" / "ross_chunks.json"
     ross = json.loads(ross_path.read_text(encoding="utf-8")) if ross_path.exists() else {}
+    # build/stage1 is scratch SHARED by every work, so a third-translation
+    # artifact left there by the last build is still on disk when a work that has
+    # no third translation is emitted. Read those files only when this manifest
+    # declares one — otherwise the Isagoge inherits the Ethics' apparatus (its
+    # chunks miss silently, since segment ids don't collide, but its titles and
+    # footnotes would land).
+    has_third = bool((manifest.data.get("english") or {}).get("third"))
     third_path = BUILD_DIR / "stage1" / "third_chunks.json"
-    third = json.loads(third_path.read_text(encoding="utf-8")) if third_path.exists() else {}
+    third = json.loads(third_path.read_text(encoding="utf-8")) if has_third and third_path.exists() else {}
     overlays_path = BUILD_DIR / "stage1" / "overlays.json"
     overlays = json.loads(overlays_path.read_text(encoding="utf-8")) if overlays_path.exists() else {}
     # A third translation may ship footnotes (NE Ostwald): a {N: html} map the
     # reader loads to fill the footnote popups. Emit it alongside the books.
     footnotes_path = BUILD_DIR / "stage1" / "third_footnotes.json"
-    if footnotes_path.exists():
+    if has_third and footnotes_path.exists():
         shutil.copy(footnotes_path, out_dir / "footnotes.json")
     else:
         # Primary (archive) translation footnotes, vendored beside its HTML as
@@ -472,8 +479,13 @@ def run(manifest: Manifest) -> Path:
     # — the reader shows it over that translation's column, not in the shared
     # chapter heading, because the title is the translator's, not the work's.
     titles_path = BUILD_DIR / "stage1" / "third_titles.json"
-    if titles_path.exists():
-        shutil.copy(titles_path, out_dir / "third-titles.json")
+    out_titles = out_dir / "third-titles.json"
+    if has_third and titles_path.exists():
+        shutil.copy(titles_path, out_titles)
+    elif out_titles.exists():
+        # A previous build of this work may have written one; an incremental
+        # rebuild must not leave it behind as data no manifest accounts for.
+        out_titles.unlink()
     # Primary translation's analytical sidenotes ({N: text}); the prose carries
     # [[sN]] markers and the reader floats each note into a right-hand rail. The
     # Isagoge (Owen) carries 61. Emitted to sidenotes.json beside the books.
