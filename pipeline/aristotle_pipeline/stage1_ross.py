@@ -211,6 +211,13 @@ def _snap_word(text: str, off: int) -> int:
         return off
     if text[off] == " ":
         return off + 1
+    # Already a word start: nothing to snap. The search below looks for spaces
+    # only, so a paragraph boundary ("\n", how the prose marks one) reads as
+    # mid-word and drags the tick onto the paragraph's *second* word — which is
+    # what happened to Ostwald's 1095b10 once the quoted verse lost the
+    # blockquote marker that had been standing in for the break.
+    if text[off - 1].isspace():
+        return off
     left = text.rfind(" ", 0, off)
     right = text.find(" ", off)
     cands = [c + 1 for c in (left, right) if c != -1]

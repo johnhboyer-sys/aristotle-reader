@@ -37,6 +37,13 @@ _PAGE = re.compile(r"^1\d{3}[ab]$")
 _LINE = re.compile(r"^(5|10|15|20|25|30|35|40)$")
 # Markdown emphasis *like this* (single asterisks, not ** bold), for footnotes.
 _EMPH = re.compile(r"\*(?!\s)([^*]+?)\*")
+# Blockquote markers. Ostwald sets quoted verse (and two long prose quotations,
+# one of them doubly marked `> >`) as Markdown blockquotes; where the
+# transcription ran several verse lines together the markers ended up mid-line,
+# so they are stripped wherever they stand as their own token, not just at line
+# start. The translation itself never uses ASCII `>` — Ostwald's editorial
+# insertions are ⟨angle brackets⟩ — so this can't eat prose.
+_QUOTE_MARK = re.compile(r"(?:(?<=\s)|^)>+(?=\s|$)")
 
 _ROMAN = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}
 
@@ -50,6 +57,17 @@ def _roman_int(s: str) -> int:
         total += -v if v < prev else v
         prev = max(prev, v)
     return total
+
+
+def _strip_markup(line: str) -> str:
+    """Drop the transcription's Markdown furniture: blockquote markers and the
+    `&nbsp;` that holds the printed indent of a runover verse line. The reader
+    flows a quotation inline with the prose around it, so neither carries any
+    meaning downstream — left in, both showed as literal text. Whitespace is
+    collapsed so a stripped marker leaves no gap for the tokenizer or for a
+    footnote definition (which is kept whole, not tokenized)."""
+    out = _QUOTE_MARK.sub(" ", line).replace("&nbsp;", " ")
+    return re.sub(r"\s+", " ", out).strip()
 
 
 def _render_footnote(text: str) -> str:
@@ -103,7 +121,7 @@ def parse_ostwald(md_path: Path):
 
     in_footnotes = False
     for raw in lines:
-        line = raw.strip()
+        line = _strip_markup(raw)
         # The trailing footnote section opens with a `## Footnotes` header and
         # then one `[^N]: …` definition per line. Stop accumulating body text.
         if line == "## Footnotes" or _FOOTNOTE_DEF.match(line):

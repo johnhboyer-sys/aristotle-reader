@@ -220,6 +220,68 @@ def test_stage1_ostwald_matches_golden(tmp_path):
     ) == _golden("stage1_ostwald_parse_golden.json")
 
 
+class TestTickWordSnap:
+    """A Bekker tick rebased onto a translation piece is snapped to a word start
+    so it never splits a word. The search looked for spaces only, so the "\\n"
+    that marks a paragraph break read as mid-word and pushed a tick that landed
+    on the first word of a paragraph onto the second word.
+    """
+
+    def test_an_offset_after_a_paragraph_break_stays_put(self):
+        text = "he lend an ear to Hesiod's words:\nThat man is all-best"
+        off = text.index("That")
+        assert stage1_ross._snap_word(text, off) == off
+
+    def test_a_mid_word_offset_still_snaps(self):
+        text = "he lend an ear to Hesiod's words:\nThat man is all-best"
+        assert stage1_ross._snap_word(text, text.index("man") + 1) == text.index("man")
+
+
+class TestOstwaldQuotedVerse:
+    """Ostwald sets quoted verse as a Markdown blockquote, and the transcription
+    keeps the printed indent of a runover line as `&nbsp;`. The parser used to
+    tokenize both as content words, so the reader showed the markup in the prose
+    ("> That man is all-best who himself works out > every problem").
+    """
+
+    SRC = """# BOOK I
+## 1. Opening
+1094a Let him lend an ear to Hesiod's words:
+
+> That man is all-best who himself works out 5
+> every problem. . . .
+> 10 &nbsp;That man, too, is admirable.
+
+> > A block quotation, doubly marked.
+
+## Footnotes
+[^1]: Quoted at 1013a24-35: > We speak of "cause" in one sense.
+"""
+
+    def _parse(self, tmp_path):
+        path = tmp_path / "ostwald.md"
+        path.write_text(self.SRC, encoding="utf-8")
+        return stage1_ostwald.parse_ostwald(path)
+
+    def test_blockquote_markers_never_reach_the_prose(self, tmp_path):
+        prose, _, footnotes, _ = self._parse(tmp_path)
+        text = prose[(1, 1)]
+        assert ">" not in text and "&nbsp;" not in text
+        assert "himself works out every problem" in text
+        assert "10 &nbsp;That" not in text
+        assert ">" not in footnotes[1] and "&gt;" not in footnotes[1]
+
+    def test_the_bekker_anchors_still_land_on_their_words(self, tmp_path):
+        prose, align, _, counts = self._parse(tmp_path)
+        text = prose[(1, 1)]
+        at = {a["citation"]: a["offset"] for a in align["1:1"]["anchors"]}
+        assert text.startswith("Let him lend")
+        assert text[at["1094a1"]:].startswith("Let him")
+        assert text[at["1094a5"]:].startswith("every problem")
+        assert text[at["1094a10"]:].startswith("That man, too")
+        assert counts["line_marks"] == 2
+
+
 class TestArchiveFurniture:
     """The Internet Classics Archive wraps every page in navigation, and a long
     work is served across several pages — so the chrome repeats mid-document.
