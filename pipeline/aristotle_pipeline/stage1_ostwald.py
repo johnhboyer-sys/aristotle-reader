@@ -43,8 +43,13 @@ _FIGURE = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 # A bare Bekker page label, e.g. 1094a … 1181b (range-checked below).
 _PAGE = re.compile(r"^1\d{3}[ab]$")
 # A bare Bekker line number: line 1 is implied by the page label, the rest are
-# every fifth line. Pages run to ~38 lines, so 5…40 covers the cadence.
-_LINE = re.compile(r"^(5|10|15|20|25|30|35|40)$")
+# every fifth line. Pages run to ~38 lines, so 5…40 covers the cadence. The
+# number is sometimes OCR'd inside the sentence it interrupts, carrying that
+# sentence's punctuation along with it ("to our standards 20; but this is") —
+# 37 of them across the work. Such a token is still the marginal number, and
+# the punctuation belongs to the word before it, so both are recovered rather
+# than left to print as a stray digit in the reading text.
+_LINE = re.compile(r"^(5|10|15|20|25|30|35|40)([.,;:!?)\]]*)$")
 # Markdown emphasis *like this* (single asterisks, not ** bold), for footnotes.
 _EMPH = re.compile(r"\*(?!\s)([^*]+?)\*")
 # Blockquote markers. Ostwald sets quoted verse (and two long prose quotations,
@@ -254,12 +259,19 @@ def parse_ostwald(md_path: Path):
                 pending.append(f"{page}1")
                 counts["pages"] += 1
                 continue
-            if _LINE.match(tok):
+            ml = _LINE.match(tok)
+            if ml:
                 if page is not None:
-                    pending.append(f"{page}{tok}")
+                    pending.append(f"{page}{ml.group(1)}")
                     counts["line_marks"] += 1
                 else:
                     counts["skipped_nums"] += 1
+                # Punctuation the number was OCR'd in front of belongs to the
+                # word before it ("standards 20;" → "standards;"), so give it
+                # back rather than dropping it with the marker.
+                if ml.group(2) and parts and isinstance(parts[-1], str):
+                    parts[-1] += ml.group(2)
+                    length += len(ml.group(2))
                 continue
             # Content word: its start offset resolves any pending markers.
             start = length + 1 if parts else 0

@@ -423,3 +423,28 @@ class TestArchiveFurniture:
         out = _strip_furniture(text)
 
         assert "let OQ be drawn parallel to AB" in out
+
+
+class TestOstwaldInlineLineNumber:
+    """A marginal Bekker number is sometimes OCR'd inside the sentence it
+    interrupts, taking that sentence's punctuation with it ("to our standards
+    20; but this is"). It was neither recognised as a marker nor removed, so the
+    tick stayed interpolated and the digit printed in the reading text.
+    """
+
+    SRC = """# BOOK I
+## 1. Opening
+1094a Refer the gods to our standards 20; but this is precisely what praising them means.
+"""
+
+    def test_the_number_anchors_and_its_punctuation_goes_back_to_the_word(self, tmp_path):
+        path = tmp_path / "ostwald.md"
+        path.write_text(self.SRC, encoding="utf-8")
+        prose, align, _, counts, _ = stage1_ostwald.parse_ostwald(path)
+
+        text = prose[(1, 1)]
+        assert "standards; but this is" in text
+        assert "20" not in text
+        at = {a["citation"]: a["offset"] for a in align["1:1"]["anchors"]}
+        assert text[at["1094a20"]:].startswith("but this is")
+        assert counts["line_marks"] == 1
