@@ -54,6 +54,13 @@ english:
     dir: "da-wallace"
     books: 3
     chapter_marker: number
+    # Tier 1 (machine): 433 anchors placed by UGARIT/grc-alignment via
+    # tools/ugarit_align.py, NOT by the gloss pipeline and NOT human-reviewed.
+    # Median disagreement with Smith's confirmed ticks is 69 chars — the same
+    # order as the 65 chars two independently ALIGNED translations differ by
+    # (Cat: Edghill vs Taylor), i.e. within ordinary translator variance.
+    # Replaces a fully interpolated gutter; see docs/ugarit-aligner-spike.md.
+    anchors: "da-wallace/anchors.yaml"
 
 mid_column_book_starts:
   - { book: 3, column: "424b" }
