@@ -1313,6 +1313,12 @@ body {
   color: var(--text);
 }
 .footnote-text em { font-style: italic; }
+/* Two of Ostwald's notes ARE diagrams (the equal-lines construction at 1132b,
+   the diagonal pairing at 1133a): a block of its own between the sentences that
+   introduce and read it. `currentColor` strokes inherit the note's text colour,
+   so the figure follows the light/dark theme without a second declaration. */
+.fn-figure { margin: 0.7rem 0; text-align: center; }
+.fn-figure svg { width: 100%; max-width: 20rem; height: auto; }
 /* Glossary cross-reference link injected into Ostwald's footnotes. */
 .footnote-text a.gloss-ref { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
 .footnote-text a.gloss-ref:hover { border-bottom-color: var(--accent); }

@@ -11,6 +11,16 @@
 // (WordPopup, FootnotePopup, EndnoteSidebar) apply the SAME rules. app/src/lib/
 // html.ts re-exports this so existing app imports keep working.
 
+// Ostwald prints two diagrams inside his notes (the equal-lines construction at
+// 1132b and the diagonal pairing at 1133a): the figure IS the note, so it has
+// to survive into the popup. Only shape and label elements are allowed, and the
+// dangerous parts of SVG are deliberately absent — `use`/`image`/`foreignObject`
+// (they fetch or embed foreign content), `animate`/`set` (they can retarget
+// another element's attributes), `style` and `script`. Nothing left in the set
+// takes a URL, and every `on*` attribute is dropped below, so no allowlisted
+// figure can fetch or execute anything.
+const SVG_TAGS = new Set(['svg', 'g', 'path', 'text', 'figure', 'figcaption']);
+
 const ALLOWED_TAGS = new Set([
   'a',
   'b',
@@ -25,9 +35,22 @@ const ALLOWED_TAGS = new Set([
   'sub',
   'sup',
   'ul',
+  ...SVG_TAGS,
 ]);
 
 const VOID_TAGS = new Set(['br']);
+
+// Attribute names arrive lowercased; the HTML parser restores the camelCase of
+// known SVG attributes (viewBox) when it adopts them into the SVG namespace.
+const SVG_ATTRS = new Set([
+  'viewbox', 'd', 'x', 'y', 'width', 'height', 'role', 'fill', 'stroke',
+  'stroke-width', 'stroke-linecap', 'stroke-dasharray', 'font-size',
+  'font-style', 'text-anchor',
+]);
+// Geometry, path data (letters + numbers), and keyword colours — never a URL,
+// a quote, or a bracket, so a value can neither escape the attribute nor smuggle
+// url(...) into a presentation attribute.
+const SVG_VALUE = /^[\w\s.,#%-]*$/;
 
 function escapeAttr(value: string): string {
   return value
@@ -71,6 +94,8 @@ function sanitizeAttrs(raw: string, tag: string): string {
       attrs.push(`${name}="${escapeAttr(value)}"`);
     } else if (name === 'style' && tag === 'span' && /^\s*font-variant\s*:\s*small-caps\s*;?\s*$/i.test(value)) {
       attrs.push('style="font-variant: small-caps"');
+    } else if (SVG_TAGS.has(tag) && SVG_ATTRS.has(name) && SVG_VALUE.test(value)) {
+      attrs.push(`${name}="${escapeAttr(value)}"`);
     }
   }
   return attrs.length ? ` ${attrs.join(' ')}` : '';

@@ -2,6 +2,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "pipeline"))
 sys.path.insert(0, str(ROOT / "pipeline" / "tests" / "fixtures" / "stage1"))
@@ -208,7 +210,7 @@ def test_stage1_archive_matches_golden(tmp_path):
 def test_stage1_ostwald_matches_golden(tmp_path):
     path = tmp_path / "ostwald.md"
     fixtures.write_ostwald(path)
-    prose, align, footnotes, counts = stage1_ostwald.parse_ostwald(path)
+    prose, align, footnotes, counts, _titles = stage1_ostwald.parse_ostwald(path)
 
     assert _json_bytes(
         {
@@ -264,7 +266,7 @@ class TestOstwaldQuotedVerse:
         return stage1_ostwald.parse_ostwald(path)
 
     def test_blockquote_markers_never_reach_the_prose(self, tmp_path):
-        prose, _, footnotes, _ = self._parse(tmp_path)
+        prose, _, footnotes, _, _ = self._parse(tmp_path)
         text = prose[(1, 1)]
         assert ">" not in text and "&nbsp;" not in text
         assert "himself works out every problem" in text
@@ -272,7 +274,7 @@ class TestOstwaldQuotedVerse:
         assert ">" not in footnotes[1] and "&gt;" not in footnotes[1]
 
     def test_the_bekker_anchors_still_land_on_their_words(self, tmp_path):
-        prose, align, _, counts = self._parse(tmp_path)
+        prose, align, _, counts, _ = self._parse(tmp_path)
         text = prose[(1, 1)]
         at = {a["citation"]: a["offset"] for a in align["1:1"]["anchors"]}
         assert text.startswith("Let him lend")
@@ -280,6 +282,91 @@ class TestOstwaldQuotedVerse:
         assert text[at["1094a5"]:].startswith("every problem")
         assert text[at["1094a10"]:].startswith("That man, too")
         assert counts["line_marks"] == 2
+
+
+class TestOstwaldChapterApparatus:
+    """Ostwald heads every chapter with a title of his own, sometimes hanging the
+    chapter's footnote off it, and restarts his footnote numbering at each book.
+    The parser used to drop heading lines whole — so six notes were defined but
+    never cited, unreachable from the page — and numbered the notes straight
+    through, so no number on screen matched a number in the printed edition.
+    """
+
+    SRC = """# BOOK I
+## 1. *The good as the aim of action*
+1094a First words.[^1]
+
+## 2. *Politics as the master science*[^2]
+More words.[^3]
+
+# BOOK II
+## 1. *Moral virtue*[^4]
+1103a Formed by habit.[^5]
+
+## Footnotes
+[^1]: A note.
+[^2]: A note hung on a chapter heading.
+[^3]: Another note.
+[^4]: A note opening the second book.
+[^5]: The last note.
+"""
+
+    def _parse(self, tmp_path):
+        path = tmp_path / "ostwald.md"
+        path.write_text(self.SRC, encoding="utf-8")
+        prose, align, footnotes, counts, titles = stage1_ostwald.parse_ostwald(path)
+        labels = stage1_ostwald.renumber_by_book(prose, titles, footnotes)
+        return prose, footnotes, titles, labels
+
+    def test_the_chapter_titles_are_kept(self, tmp_path):
+        _, _, titles, _ = self._parse(tmp_path)
+        assert titles[(1, 1)] == "The good as the aim of action"
+        assert titles[(2, 1)] == "Moral virtue[^2.1]"
+
+    def test_a_note_hung_on_a_heading_is_still_cited(self, tmp_path):
+        _, footnotes, titles, labels = self._parse(tmp_path)
+        # [^2] is only ever referenced by chapter 2's heading.
+        assert labels[2] == "1.2"
+        assert "[^1.2]" in titles[(1, 2)]
+        assert footnotes["1.2"] == "A note hung on a chapter heading."
+
+    def test_the_numbering_restarts_at_every_book(self, tmp_path):
+        prose, footnotes, _, labels = self._parse(tmp_path)
+        assert labels == {1: "1.1", 2: "1.2", 3: "1.3", 4: "2.1", 5: "2.2"}
+        assert sorted(footnotes) == ["1.1", "1.2", "1.3", "2.1", "2.2"]
+        assert "[^2.2]" in prose[(2, 1)]
+
+    def test_an_uncitable_note_stops_the_build(self, tmp_path):
+        path = tmp_path / "ostwald.md"
+        path.write_text(self.SRC + "[^6]: A note nothing points at.\n", encoding="utf-8")
+        prose, _, footnotes, _, titles = stage1_ostwald.parse_ostwald(path)
+        with pytest.raises(ValueError, match="never cited"):
+            stage1_ostwald.renumber_by_book(prose, titles, footnotes)
+
+
+class TestOstwaldFootnoteFigures:
+    """Two of Ostwald's notes ARE diagrams. The transcription holds each as a
+    `![alt](figure-id)` placeholder, which reached the popup as literal Markdown.
+    """
+
+    def test_a_placeholder_resolves_to_the_vetted_figure(self):
+        html = stage1_ostwald._render_footnote(
+            "See ![Diagram: two crossing lines](page-03-figure) for the pairing.",
+            {"page-03-figure": '<figure class="fn-figure"><svg viewBox="0 0 2 2"></svg></figure>'},
+        )
+        assert html.startswith("See <figure")
+        assert "![" not in html and "page-03-figure" not in html
+        assert html.endswith("for the pairing.")
+
+    def test_an_unknown_figure_id_stops_the_build(self):
+        with pytest.raises(KeyError, match="figures.json"):
+            stage1_ostwald._render_footnote("![alt](no-such-figure)", {})
+
+    def test_markup_around_a_figure_is_still_escaped(self):
+        html = stage1_ostwald._render_footnote(
+            "<b>x</b> ![alt](f) *emphasis*", {"f": "<svg></svg>"})
+        assert "&lt;b&gt;x&lt;/b&gt;" in html
+        assert "<svg></svg>" in html and "<em>emphasis</em>" in html
 
 
 class TestArchiveFurniture:
