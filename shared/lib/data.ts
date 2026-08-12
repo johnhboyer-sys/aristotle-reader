@@ -242,6 +242,35 @@ export function fetchColumns(work: string): Promise<Record<string, ColumnRef[]>>
   return p;
 }
 
+// One work's claim on a Bekker column, from the corpus-wide index.
+export interface BekkerRef { work: string; book: number; lo: number; hi: number; }
+
+// bekker.json is written as tuples — [work, book, lo, hi] — to keep the
+// corpus-wide index small enough to fetch on the first keystroke that looks
+// like a citation. Built by scripts/build-bekker-index.mjs.
+type BekkerTuple = [string, number, number, number];
+
+let _bekkerCache: Promise<Record<string, BekkerRef[]>> | null = null;
+
+// Every Bekker column in the corpus → the works and books that carry it. Used
+// by the ⌘K palette to jump to a citation from anywhere on the site.
+export function fetchBekkerIndex(): Promise<Record<string, BekkerRef[]>> {
+  if (_bekkerCache) return _bekkerCache;
+  const p = fetch(`${ROOT()}/bekker.json`)
+    .then(r => (r.ok ? r.json() : {}))
+    .then((raw: Record<string, BekkerTuple[]>) => {
+      const out: Record<string, BekkerRef[]> = {};
+      for (const [column, entries] of Object.entries(raw)) {
+        out[column] = entries.map(([work, book, lo, hi]) => ({ work, book, lo, hi }));
+      }
+      return out;
+    });
+  // A missing index just means no citation jumps — don't cache the failure.
+  p.catch(() => { if (_bekkerCache === p) _bekkerCache = null; });
+  _bekkerCache = p;
+  return p;
+}
+
 // Parse a raw Bekker citation (e.g. "1097a15", "1097a 15", "1097a.15") into
 // its column ("1097a") and line (15). Returns null if it isn't a citation.
 export function parseBekker(raw: string): { column: string; line: number } | null {

@@ -4,15 +4,47 @@
 // name/abbreviation (open that work, resuming its saved position), or Greek
 // (lemma lookup). Everything else falls through to corpus search.
 
-import { WORKS, type Work } from './works';
+import { WORKS, getWork, type Work } from './works';
 import { greekFold } from './search';
-import type { LemmaRef } from './data';
+import type { BekkerRef, LemmaRef } from './data';
 
 // "1103a14" (column+line) or a bare column "1103a" — tolerant of spaces/case.
+// One- and two-digit columns are citations too: the Categories runs 1a–15b.
 export function parseCitation(q: string): { column: string; line: number | null } | null {
-  const m = q.trim().toLowerCase().replace(/\s+/g, '').match(/^(\d{3,4})([ab])\.?(\d+)?$/);
+  const m = q.trim().toLowerCase().replace(/\s+/g, '').match(/^(\d{1,4})([ab])\.?(\d+)?$/);
   if (!m) return null;
   return { column: m[1] + m[2], line: m[3] ? Number(m[3]) : null };
+}
+
+// Which work (and book) a Bekker citation belongs to, corpus-wide — the palette
+// jumps to a citation from anywhere on the site, not only from the work that
+// happens to be open. A column shared by two works or two books is decided by
+// the line, snapping to the nearer range when the line falls in a gap; the work
+// being read wins a tie so a citation you're looking at doesn't send you away.
+// Works paginated by another editor (the Isagoge's Busse pages) are skipped:
+// their page numbers collide with real Bekker columns but mean something else.
+export function citationTargets(
+  index: Record<string, BekkerRef[]>,
+  column: string,
+  line: number,
+  currentWork: string | null,
+): { work: string; book: number }[] {
+  const entries = (index[column] ?? []).filter(
+    (e) => (getWork(e.work)?.citation?.scheme ?? 'bekker') === 'bekker',
+  );
+  if (!entries.length) return [];
+  const dist = (e: BekkerRef) => (line < e.lo ? e.lo - line : line > e.hi ? line - e.hi : 0);
+  const best = new Map<string, { e: BekkerRef; d: number }>();
+  for (const e of entries) {
+    const d = dist(e);
+    const cur = best.get(e.work);
+    if (!cur || d < cur.d) best.set(e.work, { e, d });
+  }
+  return [...best.values()]
+    .sort((a, b) =>
+      Number(b.e.work === currentWork) - Number(a.e.work === currentWork) || a.d - b.d,
+    )
+    .map(({ e }) => ({ work: e.work, book: e.book }));
 }
 
 export function hasGreek(q: string): boolean {

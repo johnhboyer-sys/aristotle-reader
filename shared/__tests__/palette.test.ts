@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
-import type { LemmaRef } from '../lib/data';
+import { citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
+import type { BekkerRef, LemmaRef } from '../lib/data';
 
 describe('parseCitation', () => {
   it('parses a full citation', () => {
@@ -12,10 +12,50 @@ describe('parseCitation', () => {
   it('tolerates spaces and a dot separator', () => {
     expect(parseCitation(' 1094 a.1 ')).toEqual({ column: '1094a', line: 1 });
   });
+  it('parses the short columns of the Organon', () => {
+    // Categories runs 1a–15b, De Interpretatione 16a–24b: one- and two-digit
+    // columns are citations too, not stray numbers.
+    expect(parseCitation('8b20')).toEqual({ column: '8b', line: 20 });
+    expect(parseCitation('16a3')).toEqual({ column: '16a', line: 3 });
+  });
   it('rejects prose and work names', () => {
     expect(parseCitation('ethics')).toBeNull();
     expect(parseCitation('12c4')).toBeNull();
     expect(parseCitation('')).toBeNull();
+  });
+});
+
+describe('citationTargets', () => {
+  const index: Record<string, BekkerRef[]> = {
+    '1103a': [{ work: 'EN', book: 2, lo: 1, hi: 34 }],
+    // Posterior Analytics ends inside 100b, where the Topics begins.
+    '100b': [
+      { work: 'APo', book: 2, lo: 1, hi: 17 },
+      { work: 'Top', book: 1, lo: 18, hi: 43 },
+    ],
+    // The Isagoge is paginated by Busse, not Bekker — its "1a" is a different
+    // page from the Categories' 1a and must never be offered as a jump.
+    '1a': [
+      { work: 'Cat', book: 1, lo: 1, hi: 25 },
+      { work: 'Isa', book: 1, lo: 1, hi: 22 },
+    ],
+  };
+
+  it('finds the work that owns a citation from anywhere in the site', () => {
+    expect(citationTargets(index, '1103a', 14, null)).toEqual([{ work: 'EN', book: 2 }]);
+  });
+  it('picks the book whose line range holds the citation', () => {
+    expect(citationTargets(index, '100b', 5, null)[0]).toEqual({ work: 'APo', book: 2 });
+    expect(citationTargets(index, '100b', 30, null)[0]).toEqual({ work: 'Top', book: 1 });
+  });
+  it('puts the work being read first when it owns the column', () => {
+    expect(citationTargets(index, '100b', 5, 'Top')[0]).toEqual({ work: 'Top', book: 1 });
+  });
+  it('drops works that are not cited by Bekker', () => {
+    expect(citationTargets(index, '1a', 5, null)).toEqual([{ work: 'Cat', book: 1 }]);
+  });
+  it('returns nothing for a column no work carries', () => {
+    expect(citationTargets(index, '9999a', 1, null)).toEqual([]);
   });
 });
 

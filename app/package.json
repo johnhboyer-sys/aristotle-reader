@@ -7,8 +7,9 @@
   },
   "scripts": {
     "dev": "PUBLIC_SHOW_PRIVATE=1 astro dev",
-    "build": "node scripts/build-lemmata.mjs && astro build",
+    "build": "node scripts/build-lemmata.mjs && node scripts/build-bekker-index.mjs && astro build",
     "build:lemmata": "node scripts/build-lemmata.mjs",
+    "build:bekker": "node scripts/build-bekker-index.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "shots": "node scripts/shoot.mjs",
