@@ -485,6 +485,19 @@
         const display = fnDisplay(label);
         return `<span class="fn-anchor">${lead}<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button></span>`;
       },
+    ).replace(
+      // Ostwald italicizes a transliterated Greek word or a title (*ethos,*
+      // *Metaphysics*), and the Markdown transcription keeps that as emphasis —
+      // the same convention the pipeline already renders as <em> in the
+      // footnote text (stage1_ostwald._render_footnote), so the two layers
+      // agree. Runs AFTER the footnote pass: a footnote label may itself be a
+      // star ([^*]), and a pair of those would otherwise read as one long
+      // emphasis. The capture stops at tag brackets and entities, so it can
+      // neither span a marker's markup nor unbalance highlightEng's own; a span
+      // split across a Bekker gutter boundary (each flow part renders on its
+      // own) just stays literal rather than emitting an unclosed tag.
+      /\*(?!\s)([^*<>&]+?)\*/g,
+      '<em>$1</em>',
     );
   }
 
