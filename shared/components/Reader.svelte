@@ -21,6 +21,12 @@
   // by ReaderShell from chapter-titles.json. Shown in the chapter heading in
   // place of "Chapter N" (used by non-Bekker works like the Isagoge).
   export let chapterTitles: Record<string, string> = {};
+  // A translation's OWN chapter titles for this book, {transId: {chapter: title}}
+  // — passed by ReaderShell from third-titles.json. Ostwald heads every chapter
+  // with a title of his own ("(e) Theoretical wisdom"), which belongs over his
+  // column rather than in the shared chapter heading. A title may carry the
+  // footnote reference its heading bore.
+  export let transTitles: Record<string, Record<string, string>> = {};
 
   const workMeta = getWork(work);
   // Non-Bekker works (e.g. Porphyry's Isagoge) are cited by Busse page, not a
@@ -90,8 +96,15 @@
     const hook = (globalThis as {
       __ARISTOTLE_IMPORT_TITLE_HOOK__?: (work: string, id: string, book: number, chapter: string) => string | null;
     }).__ARISTOTLE_IMPORT_TITLE_HOOK__;
-    return (hook ? hook(work, transId, bookNum, chapter) : null) ?? '';
+    // The desktop app answers for an imported work; on the site the titles are
+    // built data (transTitles), keyed by the translation that wrote them —
+    // Ostwald's chapter headings are his, so they belong over his column only.
+    return (hook ? hook(work, transId, bookNum, chapter) : null)
+      ?? transTitles[transId]?.[chapter] ?? '';
   }
+  // A title may carry the footnote its heading bore: strip the marker for the
+  // Greek column's invisible spacer, which only needs the same one-line height.
+  const titleText = (s: string) => s.replace(/\[\^[\w.*†]+\]/g, '').trim();
 
   // Compare mode shows two translations side by side; which two is chosen in the
   // settings sidebar. Defaults: primary + first secondary. Persisted per work.
@@ -485,6 +498,19 @@
         const display = fnDisplay(label);
         return `<span class="fn-anchor">${lead}<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button></span>`;
       },
+    ).replace(
+      // Ostwald italicizes a transliterated Greek word or a title (*ethos,*
+      // *Metaphysics*), and the Markdown transcription keeps that as emphasis —
+      // the same convention the pipeline already renders as <em> in the
+      // footnote text (stage1_ostwald._render_footnote), so the two layers
+      // agree. Runs AFTER the footnote pass: a footnote label may itself be a
+      // star ([^*]), and a pair of those would otherwise read as one long
+      // emphasis. The capture stops at tag brackets and entities, so it can
+      // neither span a marker's markup nor unbalance highlightEng's own; a span
+      // split across a Bekker gutter boundary (each flow part renders on its
+      // own) just stays literal rather than emitting an unclosed tag.
+      /\*(?!\s)([^*<>&]+?)\*/g,
+      '<em>$1</em>',
     );
   }
 
@@ -1186,7 +1212,7 @@
            .overlay-prose would leak into captured offsets — as a sibling they
            never see it, keeping the render-only/no-offset-shift guarantee
            structural. -->
-      {#if chTitle}<div class="overlay-chapter-title">{chTitle}</div>{/if}
+      {#if chTitle}<div class="overlay-chapter-title">{#if fnTransIds.has(transId)}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(chTitle, transId)}{:else}{chTitle}{/if}</div>{/if}
       {#if fnTransIds.has(transId)}
         <div
           class="overlay-prose"
@@ -1349,7 +1375,7 @@
           <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
             <div class="greek-col" lang="grc">
-              {#if spacerTitle}<div class="overlay-chapter-title overlay-chapter-title-spacer" aria-hidden="true">{spacerTitle}</div>{/if}
+              {#if spacerTitle}<div class="overlay-chapter-title overlay-chapter-title-spacer" aria-hidden="true">{titleText(spacerTitle)}</div>{/if}
               {#each greekItems(block.lines) as item}
                 {#if item.table}
                   <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->

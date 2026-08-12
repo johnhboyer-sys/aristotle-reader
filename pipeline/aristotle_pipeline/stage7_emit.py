@@ -467,6 +467,13 @@ def run(manifest: Manifest) -> Path:
             src = SOURCES_DIR / prim["dir"] / "footnotes.json"
             if src.exists():
                 shutil.copy(src, out_dir / "footnotes.json")
+    # A third translation may also head every chapter with a title of its own
+    # (Ostwald: "(e) Theoretical wisdom"), keyed {transId: {book: {chapter: …}}}
+    # — the reader shows it over that translation's column, not in the shared
+    # chapter heading, because the title is the translator's, not the work's.
+    titles_path = BUILD_DIR / "stage1" / "third_titles.json"
+    if titles_path.exists():
+        shutil.copy(titles_path, out_dir / "third-titles.json")
     # Primary translation's analytical sidenotes ({N: text}); the prose carries
     # [[sN]] markers and the reader floats each note into a right-hand rail. The
     # Isagoge (Owen) carries 61. Emitted to sidenotes.json beside the books.

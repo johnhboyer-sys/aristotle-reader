@@ -57,6 +57,19 @@ try {
   );
 } catch { /* no titles yet */ }
 
+// A translation's own chapter titles, {transId: {book: {chapter: title}}} —
+// Ostwald heads each chapter of the Ethics himself. Written by the pipeline;
+// absent for every work whose translations carry none.
+let transTitles: Record<string, Record<string, Record<string, string>>> = {};
+try {
+  transTitles = JSON.parse(
+    readFileSync(`public/data/${workId}/third-titles.json`, 'utf-8'),
+  );
+} catch { /* this work's translations head no chapters */ }
+const bookTransTitles = Object.fromEntries(
+  Object.entries(transTitles).map(([id, byBook]) => [id, byBook[String(n)] ?? {}]),
+);
+
 // The full-work outline for the sidebar: every book, its chapters in order.
 const outline = Array.from({ length: work.books }, (_, i) => {
   const b = i + 1;
@@ -426,6 +439,6 @@ const intro =
   </script>
 
   <CommandPalette work={workId} client:load />
-  <Reader work={workId} bookNum={n} bookData={bookData} chapterTitles={chapterTitles[String(n)] ?? {}} client:load />
+  <Reader work={workId} bookNum={n} bookData={bookData} chapterTitles={chapterTitles[String(n)] ?? {}} transTitles={bookTransTitles} client:load />
 </body>
 </html>
