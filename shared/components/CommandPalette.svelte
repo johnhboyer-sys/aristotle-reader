@@ -1,9 +1,9 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import { fetchColumns, fetchLemmata, resolveBekker, type LemmaRef } from '../lib/data';
+  import { fetchBekkerIndex, fetchLemmata, type LemmaRef } from '../lib/data';
   import { workPath, getWork } from '../lib/works';
   import { resumeFor } from '../lib/resume';
-  import { hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
+  import { citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
 
   // The work currently open in the reader (enables Bekker-citation jumps);
   // null on pages with no work context (home, landings).
@@ -71,21 +71,21 @@
     const trimmed = q.trim();
     if (!trimmed) { items = []; selected = 0; return; }
 
-    // 1. A Bekker citation jumps within the current work.
-    const cite = work ? parseCitation(trimmed) : null;
-    if (cite && work) {
-      const cols = await fetchColumns(work).catch(() => null);
+    // 1. A Bekker citation jumps straight to the passage, in whichever work
+    //    carries it — the work being read first when it owns the column.
+    const cite = parseCitation(trimmed);
+    if (cite) {
+      const index = await fetchBekkerIndex().catch(() => ({}));
       if (mySeq !== seq) return; // a newer keystroke superseded this pass
-      const book = cols ? resolveBekker(cols, cite.column, cite.line ?? 1) : null;
-      if (book != null) {
-        const w = getWork(work);
+      for (const hit of citationTargets(index, cite.column, cite.line ?? 1, work)) {
+        const w = getWork(hit.work);
         out.push({
           kind: 'bekker',
           label: `Go to ${cite.column}${cite.line ?? ''}`,
-          detail: w ? `${w.title} · Book ${book}` : `Book ${book}`,
+          detail: w ? `${w.title} · Book ${hit.book}` : `${hit.work} · Book ${hit.book}`,
           href: cite.line != null
-            ? `${base}${workPath(work, book)}?loc=${cite.column}:${cite.line}`
-            : `${base}${workPath(work, book)}#${cite.column}`,
+            ? `${base}${workPath(hit.work, hit.book)}?loc=${cite.column}:${cite.line}`
+            : `${base}${workPath(hit.work, hit.book)}#${cite.column}`,
         });
       }
     }
@@ -116,8 +116,9 @@
       }
     }
 
-    // 4. Always offer the full corpus search.
-    out.push({
+    // 4. Offer the full corpus search — except for a citation that resolved,
+    //    where searching the text for a line number finds nothing.
+    if (!(cite && out.some((i) => i.kind === 'bekker'))) out.push({
       kind: 'search',
       label: `Search the corpus for “${trimmed}”`,
       detail: 'Greek & English · all works',
