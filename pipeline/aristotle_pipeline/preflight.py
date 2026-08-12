@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -216,7 +217,71 @@ def _validate_work_data(data_dir: Path, manifest: WorkManifest, problems: list[P
     _validate_chapters(manifest, loaded.get("chapters.json"), segments, anchors, problems, bekker_native)
     _validate_columns(manifest, loaded.get("columns.json"), segments, problems)
     _validate_analyses(manifest, data_dir, loaded.get("analyses.json"), token_keys, problems)
+    _validate_footnotes(manifest, work_dir, loaded, problems)
     _validate_public_gating(manifest, loaded, problems)
+
+
+_FN_REF = re.compile(r"\[\^([\w.*†]+)\]")
+
+
+def _validate_footnotes(manifest: WorkManifest, work_dir: Path, loaded: dict[str, Any],
+                        problems: list[Problem]) -> None:
+    """Every note must be reachable from the page, and every marker must resolve.
+
+    A note whose marker never made it into the prose is invisible — nothing on
+    the page can open it — and the failure is silent, which is how thirteen of
+    them (six of Ostwald's, seven of Owen's) sat unread. An empty definition is
+    the same defect one layer down: the marker opens a popup with nothing in it.
+    """
+    path = work_dir / "footnotes.json"
+    if not path.exists():
+        return
+    try:
+        notes = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        problems.append((manifest.work_id, "footnotes.json", f"invalid JSON: {exc}"))
+        return
+    if not isinstance(notes, dict):
+        problems.append((manifest.work_id, "footnotes.json", "root must be an object"))
+        return
+
+    cited: set[str] = set()
+    # A chapter title can carry a marker too (Ostwald hangs six notes off his
+    # chapter headings), and the reader renders it there, so a title counts as a
+    # citation — otherwise this check reports a reachable note as lost.
+    titles_path = work_dir / "third-titles.json"
+    if titles_path.exists():
+        try:
+            for by_book in json.loads(titles_path.read_text(encoding="utf-8")).values():
+                for chapters in (by_book or {}).values():
+                    for title in (chapters or {}).values():
+                        cited |= set(_FN_REF.findall(str(title)))
+        except Exception as exc:
+            problems.append((manifest.work_id, "third-titles.json", f"invalid JSON: {exc}"))
+    for name, book in loaded.items():
+        if not name.startswith("book-") or not isinstance(book, dict):
+            continue
+        for seg in book.get("segments") or []:
+            if not isinstance(seg, dict):
+                continue
+            slots = [seg.get("english")]
+            for key in ("ross", "third"):
+                slots.extend(seg.get(key) or [])
+            for pieces in (seg.get("overlays") or {}).values():
+                slots.extend(pieces or [])
+            for piece in slots:
+                if isinstance(piece, dict):
+                    cited |= set(_FN_REF.findall(piece.get("text") or ""))
+
+    for label in sorted(set(notes) - cited):
+        problems.append((manifest.work_id, "footnotes.json",
+                         f"note {label} is never cited, so nothing on the page can open it"))
+    for label in sorted(cited - set(notes)):
+        problems.append((manifest.work_id, "footnotes.json",
+                         f"note {label} is cited in the prose but has no definition"))
+    for label in sorted(n for n, html in notes.items() if not str(html).strip()):
+        problems.append((manifest.work_id, "footnotes.json",
+                         f"note {label} is empty, so its marker opens an empty popup"))
 
 
 def _validate_emitted_manifest(manifest: WorkManifest, emitted: Any, problems: list[Problem]) -> None:
