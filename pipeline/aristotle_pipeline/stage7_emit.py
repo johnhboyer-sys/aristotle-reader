@@ -378,6 +378,41 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
     return stats
 
 
+def emit_third_titles(*, build_dir: Path, out_dir: Path, third: dict | None) -> None:
+    """Emit third-titles.json, but only the titles this work's third owns.
+
+    A third translation may head every chapter with a title of its own
+    (Ostwald: "(e) Theoretical wisdom"), keyed {transId: {book: {chapter: …}}}
+    — the reader shows it over that translation's column, not in the shared
+    chapter heading, because the title is the translator's, not the work's.
+
+    build/stage1 is scratch SHARED by every work and is NOT cleaned between
+    them, so the titles left there by the last work that had any are still on
+    disk when the next work is emitted. Gating on "does this manifest declare a
+    third translation" is not enough — a work with a third of its own passes
+    that gate and copies whatever the scratch holds. That is how the Posterior
+    Analytics (third = Owen) shipped Ostwald's Ethics titles.
+
+    The file names its own translator, so that is the gate: keep the entries
+    whose key is this manifest's third id, and write nothing if none are.
+    """
+    titles_path = build_dir / "stage1" / "third_titles.json"
+    out_titles = out_dir / "third-titles.json"
+    third_id = (third or {}).get("id")
+    mine = {}
+    if third_id and titles_path.exists():
+        scratch = json.loads(titles_path.read_text(encoding="utf-8"))
+        mine = {k: v for k, v in scratch.items() if k == third_id}
+    if mine:
+        out_titles.write_text(
+            json.dumps(mine, ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
+        )
+    elif out_titles.exists():
+        # A previous build of this work may have written one; a rebuild must
+        # not leave it behind as data no manifest accounts for.
+        out_titles.unlink()
+
+
 def emit_analyses(out_dir: Path) -> dict:
     analyses = _load("stage4/analyses.json")
     key_map = _load("stage4/key_map.json")
@@ -478,14 +513,11 @@ def run(manifest: Manifest) -> Path:
     # (Ostwald: "(e) Theoretical wisdom"), keyed {transId: {book: {chapter: …}}}
     # — the reader shows it over that translation's column, not in the shared
     # chapter heading, because the title is the translator's, not the work's.
-    titles_path = BUILD_DIR / "stage1" / "third_titles.json"
-    out_titles = out_dir / "third-titles.json"
-    if has_third and titles_path.exists():
-        shutil.copy(titles_path, out_titles)
-    elif out_titles.exists():
-        # A previous build of this work may have written one; an incremental
-        # rebuild must not leave it behind as data no manifest accounts for.
-        out_titles.unlink()
+    emit_third_titles(
+        build_dir=BUILD_DIR,
+        out_dir=out_dir,
+        third=(manifest.data.get("english") or {}).get("third"),
+    )
     # Primary translation's analytical sidenotes ({N: text}); the prose carries
     # [[sN]] markers and the reader floats each note into a right-hand rail. The
     # Isagoge (Owen) carries 61. Emitted to sidenotes.json beside the books.
