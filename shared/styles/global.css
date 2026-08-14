@@ -2486,3 +2486,135 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
 }
 .endnote-text p { margin: 0 0 0.75em; }
 .endnote-text p:last-child { margin-bottom: 0; }
+
+/* ── Short landscape: the pared-down phone-in-landscape reader ─────────
+   Ported from homer-reader (shared/styles/global.css, its own
+   `orientation: landscape and max-height: 500px` block), adapted to this
+   reader's header and its sticky control strip.
+
+   The problem this solves: a phone held sideways is WIDE — an iPhone Pro Max
+   in landscape is 932x430 — so every width-keyed phone rule in this file
+   (all `max-width: 680px`) misses it entirely and the reader serves the full
+   desktop chrome: a two-row header (identity bar + the Bekker jump / Books /
+   Chapters nav panel) plus the sticky .reader-controls strip. That is ~130px
+   of furniture on a viewport only 430px tall — roughly a third of the screen,
+   before a single line of Aristotle. `max-height: 500px` is the honest test
+   here: it keys on the dimension that is actually scarce, and no desktop
+   window is that short, so nothing here reaches a mouse-driven browser.
+
+   Everything hidden below has another home that is already reachable:
+   navigation lives in the Contents (☰) drawer, which carries the same Bekker
+   jump and the full book/chapter outline; the translation picker, view
+   toggle and print control move into the ⚙ Settings sidebar exactly as they
+   do on a portrait phone.
+
+   Deliberately NOT changed: type size. The portrait phone block cuts
+   --fs-greek/--fs-english for a 375px-wide column; landscape has 932px of
+   width and no such squeeze, and the reader this was built for is vision
+   impaired. Less furniture, same size text. */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Reclaim vertical padding — this is the one row that remains. */
+  .page-header { padding: 0.45rem 0.9rem; gap: 0.4rem; }
+
+  /* Labels off; every control in the bar becomes its icon. */
+  .toc-toggle-text { display: none; }
+  .header-search .hs-text { display: none; }
+  .header-search .hs-kbd { display: none; }   /* no ⌘K on a phone */
+  .header-search { padding: 0.4rem 0.5rem; }
+  .header-support .hsup-text { display: none; }
+  .header-support { padding: 0.4rem 0.5rem; }
+  .settings-text { display: none; }
+  /* Help is desktop-only (its own component hides it under 680px); the
+     Contents drawer carries "Help · How to use this reader". Needs the
+     .page-header .bar-actions prefix: HelpButton.svelte styles .help-trigger
+     from its own scoped stylesheet, so the rule it sets there is (0,2,0) and
+     a bare .help-trigger here would lose to it. */
+  .page-header .bar-actions .help-trigger { display: none; }
+
+  /* Drop the whole nav row (Bekker jump · Books · Chapters). The short
+     viewport cannot spare a second header row, and the Contents drawer
+     carries the same jump plus the full outline. Portrait phones already do
+     this; desktop keeps the row (its height can afford it). */
+  .nav-panel { display: none; }
+
+  /* Force ONE compact row: leading ☰, a flexible ellipsizing title, then the
+     icon cluster pinned right. The `.page-header`-prefixed selectors are
+     deliberate — they out-specify the portrait block's own `.header-title {
+     flex: 1 1 100% }` two-row split, which co-applies on a narrow phone in
+     landscape (an iPhone SE is 667x375: under 680px wide AND under 500px
+     tall). Without them that phone would keep the two-row header this block
+     exists to collapse. */
+  .page-header .header-bar { flex-wrap: nowrap; }
+  .page-header .header-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-right: auto;
+    overflow: hidden;
+  }
+  /* "Aristotle ›" goes; the drawer has "‹ All works". */
+  .page-header .header-title .home-link,
+  .page-header .header-title .title-sep { display: none; }
+  /* The work picker is a native <select> and sizes to its widest option, so
+     cap it and let the displayed title ellipsize rather than shove the icons
+     off-screen (same fix as the portrait block). */
+  .work-switcher {
+    min-width: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .page-header .toc-toggle { order: 0; flex-shrink: 0; }
+  .page-header .bar-actions { order: 0; flex: 0 0 auto; gap: 0.35rem; }
+  .page-header .bar-actions .header-search,
+  .page-header .bar-actions .header-support,
+  .page-header .bar-actions .settings-toggle,
+  .page-header .bar-actions .theme-toggle { order: 0; margin-left: 0; flex-shrink: 0; }
+
+  /* It is still a phone: keep the touch targets a phone needs. The
+     `.page-header` prefix beats the 36px `min-height` those buttons set on
+     their own class later in this file. */
+  .page-header .toc-toggle,
+  .page-header .header-search,
+  .page-header .header-support,
+  .page-header .settings-toggle,
+  .page-header .theme-toggle { min-height: 40px; }
+
+  /* Give the Contents drawer back the two rows it drops above 681px. That
+     rule (`@media (min-width: 681px)`, ~L1787) hides the drawer's Bekker
+     jump / Search / Lexicon band and its Help row on the stated grounds that
+     "the header already carries Search + Bekker (top band) and Help (a
+     top-bar icon)" — which this block has just stopped being true: the nav
+     panel that held the Bekker jump is gone and the ? is hidden. Without
+     these two lines a phone in landscape would have NO route to the Bekker
+     jump or to Help anywhere in the reader. Same specificity as the 681px
+     rule, later in the file, so it wins. */
+  .toc-actions-top { display: flex; }
+  .toc-actions-bottom .toc-help { display: flex; }   /* flex, not block — .toc-action is a column flex row */
+  /* Those two bands cost 165px of a 430px-tall drawer, which left barely one
+     chapter of the outline visible above the fold. Drop the explanatory
+     sublines ("Greek & English", "Word frequency & concordance", "How to use
+     this reader") — the row names carry the meaning, and the ~50px they give
+     back is three more chapters. Tap targets are untouched: .toc-action keeps
+     its own min-height: 40px. */
+  .toc-action-hint { display: none; }
+  /* Same reasoning for the drawer's own work title: it repeats the work
+     switcher sitting in the header row directly behind the drawer, and costs
+     another 52px of outline. */
+  .toc-work-head { display: none; }
+
+  /* With the view toggle and picker moved into Settings, the sticky
+     sub-toolbar has nothing left to show — drop it so reading starts
+     immediately under the one header row. */
+  .reader-controls { display: none; }
+  /* …and re-home its controls in the Settings sidebar. Extra specificity
+     (.settings-body …) so these beat the unconditional `display: none`
+     defaults that appear later in this stylesheet — a media query adds no
+     specificity of its own. */
+  .settings-body .settings-trans { display: block; }
+  .settings-body .settings-mobile-only { display: block; }
+
+  /* Reading column: trim the side gutters a little, and the deep bottom
+     padding hard — 4rem of empty page is most of a landscape screen. */
+  .reader-body { padding: 0.9rem 0.8rem 1.5rem; }
+}
