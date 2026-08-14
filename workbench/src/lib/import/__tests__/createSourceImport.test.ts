@@ -130,3 +130,42 @@ describe('round trip', () => {
     expect(addressOf(3).raw).toBe('2.1');
   });
 });
+
+// Navigation for an imported work. Verified against real Diogenes exports:
+// the Physics yields its eight books, De Anima three.
+describe('title rows become the outline', () => {
+  const rowsOf = (refs: string[]) => refs.map((ref, i) => ({ ref, text: `line ${i}` }));
+
+  it('marks the rows Diogenes numbered as titles', () => {
+    const { file } = createSourceImport({
+      title: 'Physica',
+      rows: [
+        { ref: '184a.t', text: 'ΦΥΣΙΚΗΣ ΑΚΡΟΑΣΕΩΣ Α' },
+        { ref: '184a.10', text: 'τῶν' },
+        { ref: '192b.8t', text: 'Β.' },
+        { ref: '192b.9', text: 'ἐπεὶ' },
+      ],
+    });
+    expect(file.meta.headers).toEqual([{ row: 1, level: 1 }, { row: 3, level: 1 }]);
+  });
+
+  it('never marks a content line, which would drop it from the text', () => {
+    // A heading renders as a title and leaves the flowing views. Marking the
+    // first line of each Bekker page would give an outline and silently lose
+    // eight hundred lines of Aristotle.
+    const { file } = createSourceImport({ title: 'P', rows: rowsOf(['184a.1', '184b.1', '185a.1']) });
+    expect(file.meta.headers).toBeUndefined();
+  });
+
+  it('leaves headers off a work with no title rows at all', () => {
+    // Perseus texts have none; the field must be absent, not an empty list.
+    const { file } = createSourceImport({ title: 'R', rows: rowsOf(['1.327a', '1.327b']) });
+    expect('headers' in file.meta).toBe(false);
+  });
+
+  it('does not mistake a line number ending in a letter for a title', () => {
+    // "25a" is a real line; only "t" (optionally after a number) is a title.
+    const { file } = createSourceImport({ title: 'D', rows: rowsOf(['403a.25a', '403a.1n', '403a.26']) });
+    expect(file.meta.headers).toBeUndefined();
+  });
+});

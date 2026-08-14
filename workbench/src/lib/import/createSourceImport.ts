@@ -17,7 +17,7 @@
  */
 
 import { getScheme } from '../citation/registry';
-import type { ChapterFile, ChapterFileMeta } from '../chapterfile';
+import type { ChapterFile, ChapterFileMeta, HeaderMark } from '../chapterfile';
 import { emptyRowDocJSON } from '../editor/schema';
 import { serializeRowSegments } from '../editor/serialize';
 import type { FreeWorkRecord } from '../works/freeWorks';
@@ -79,6 +79,37 @@ function levelsFor(names: string[] | undefined): WorkLevel[] | undefined {
 }
 
 /**
+ * A row whose line number is "t" is a TITLE the edition printed, not a line of
+ * the text — Diogenes' convention, and "8t" means a title sitting at line 8.
+ * In the Physics those eight rows are the eight books:
+ *
+ *   t   ΦΥΣΙΚΗΣ ΑΚΡΟΑΣΕΩΣ Α      21t  Ε.
+ *   8t  Β.                       21t  Ζ.
+ *   12t Γ.                       34t  Η.
+ *   27t Δ.                       11t  Θ.
+ *
+ * Marking them as headings is the whole navigation an imported work gets: they
+ * are the only rows in the file that are titles rather than text, and without
+ * them the Physics arrives as one undivided 651 KB document with nothing in
+ * the outline to click.
+ *
+ * Only these rows, never a content line. A heading renders as a title and
+ * drops out of the flowing views, so marking the first line of each Bekker
+ * page — tempting, since it would give an outline too — would quietly delete
+ * that line from the reading text.
+ */
+const TITLE_LINE_RE = /^\d*t$/;
+
+function titleRowHeaders(refs: string[]): HeaderMark[] {
+  const out: HeaderMark[] = [];
+  for (let i = 0; i < refs.length; i++) {
+    const parts = refs[i].split('.');
+    if (TITLE_LINE_RE.test(parts[parts.length - 1])) out.push({ row: i + 1, level: 1 });
+  }
+  return out;
+}
+
+/**
  * Build the chapter file + registration record for an imported source text.
  *
  * Throws a plain-language Error when the title is blank, no row has any text,
@@ -128,6 +159,9 @@ export function createSourceImport(
     spanEnd: refs[refs.length - 1],
     rowRefs: refs,
   };
+
+  const headers = titleRowHeaders(refs);
+  if (headers.length > 0) meta.headers = headers;
 
   const file: ChapterFile = {
     meta,
