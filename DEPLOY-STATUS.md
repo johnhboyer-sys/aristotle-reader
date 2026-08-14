@@ -1,9 +1,28 @@
 # Deploy Status
 
 Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
-Deploy recipe: build `app/dist` (`PUBLIC_HIDE_PRIVATE=1 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
+Deploy recipe: build `app/dist` (`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22, `bonitz.astro` moved aside during the build), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
-## Latest deploy — 2026-08-11 (⌘K jumps to a Bekker citation from anywhere)
+The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden); `PUBLIC_HIDE_PRIVATE` is a stale name that appears in older entries below and sets nothing. **Move `bonitz.astro` aside — do not just delete `app/dist/bonitz` after the build.** Deleting the directory removes the page but leaves `_astro/bonitz.*.css` behind, which no previous deploy has ever shipped (caught 2026-08-13).
+
+## Latest deploy — 2026-08-13 (Ostwald apparatus + pared-down phone-landscape reader)
+
+- **gh-pages:** `4de53972` → `5955ce62`
+- **Source:** `origin/main` `6c11c5313` (PRs #75, #76, #77 merged this session; the held #70–#74 rode along)
+- **The hold is released.** Live had predated PRs #70–#74 since 2026-08-12 at John's explicit word. This deploy ships them.
+- **What shipped:**
+  - **Ostwald's apparatus as the 1962 edition prints it (#70–#74, held since 2026-08-12)** — Markdown furniture stripped, emphasis as `<em>`, footnotes renumbered per book (`5.28`), all 116 chapter titles rendered over Ostwald's own column, 13 previously unreachable notes cited, both note diagrams drawn as SVG, three transcription splices repaired, 44 marginal line numbers restored from photographs of John's copy, 35 punctuation-glued line numbers parsed. Book I is 133 real Bekker ticks of 133; Ostwald overall 1,297 real of 1,327.
+  - **Pared-down phone-landscape reader (#76)** — every phone rule in `global.css` is keyed on `max-width: 680px`, so a phone held sideways (an iPhone Pro Max in landscape is 932×430) missed all of them and got the full desktop chrome: **221 px of furniture on a 430 px screen, first line of Greek at y=375**. A new `(orientation: landscape) and (max-height: 500px)` block collapses the header to one 55 px row and drops the nav panel and control strip, re-homing what they carried in the Contents drawer and the Settings sidebar. Type size deliberately NOT cut — the reader this was built for is vision impaired. Desktop measures identical before and after, live-verified.
+  - **#75** — commentary-layer plan and UX survey, Hicks 1907 scan vendored with provenance, workbench source import. Deploy-neutral (nothing under `app/`, `shared/`, `build/`, `pipeline/`).
+- **⚠️ Bug caught in the deploy diff, fixed before shipping (#77):** the rebuild emitted `data/APo/third-titles.json` holding **Ostwald's Ethics titles** — "The good as the aim of action" over the Posterior Analytics. `build/stage1` is scratch shared by every work and `build-public.mjs` does not clean it, so the last work's `third_titles.json` is still on disk for the next. stage7's existing guard asked *whether* a work declares a third translation; APo declares one of its own (Owen), so it passed and copied the stale file. The guard caught the Isagoge (no third at all) and missed this. The file is keyed by translator, so that is the gate now. 5 tests written failing first; pipeline suite 131 passed. **Verified live: `/data/APo/third-titles.json` 404, and `/APo/book/1/` carries 0 occurrences of the Ostwald title.**
+- **⚠️ bonitz gotcha, corrected:** deleting `app/dist/bonitz/` after the build removes the page but leaves `_astro/bonitz.*.css`, which no previous deploy had ever shipped. Rebuilt with `bonitz.astro` moved aside instead (the recipe at the top of this file). Do it that way.
+- **Build:** full `npm run build:public` (Node 22) — the pipeline and the Ostwald/Owen/Wallace sources had changed since the last deploy and `build/dist` is not tracked, so an app-only build would have served the new reader code over stale Ethics data. All 46 works rebuilt, every one `overall: PASS`. Gates: **preflight ok**; **shared LSJ ok** (14,045 entries / 24 shards / 63,238 keys / 41 works); link integrity **0 broken** (6,610 pages / 555,051 links / 428,859 anchors).
+- **Deploy diff:** 6,633 files — 2 bundle changes (`Reader.B4vnZepr → CGZQQ5l4` for the Ostwald apparatus, `global.PbNm8Zdq → BYSQEDPF` for the landscape block) propagated to every page; 23 data files (EN books 1–10 + footnotes, Isa book/footnotes/search-meta, Poet, Rhet book-02, 6 pipeline reports); 1 new `data/EN/third-titles.json`. Dangling references to the two removed hashes: **0**.
+- **Leak-check:** at baseline — Ackrill 0, Tredennick 0, Irwin 0, Rackham = `EN/manifest.json` attribution + two of Ostwald's own footnotes citing him as an *editor of the Greek*. Inspected in context, not just counted.
+- **Tests:** pipeline 131 passed (5 new), app 4/4, workbench 1,760 passed / 36 skipped.
+- **Live-verified (functional):** `/` `/EN/book/1/` `/APo/book/1/` `/Cat/book/1/` `/Isa/book/1/` `/search/` `/data/EN/third-titles.json` all 200; `/bonitz/`, `/data/APo/third-titles.json`, and the old `global.PbNm8Zdq.css` all 404. Live `EN/third-titles.json` has 10 books keyed `ostwald`, I.1 = "The good as the aim of action"; live `EN/footnotes.json` keys are per-book (`1.1`…) and `5.28` resolves. At 932×430 on the live site: header **55 px**, nav panel and control strip `none`, Help hidden, Ostwald's chapter title rendering over his column. At 1280×800: header 135 px, nav panel and control strip `flex`, Help visible, drawer's top actions hidden — desktop untouched.
+
+## Previous deploy — 2026-08-11 (⌘K jumps to a Bekker citation from anywhere)
 
 - **gh-pages:** `9222625e` → `4de53972`
 - **Source:** `origin/main` `79a170ad0` (pushed direct to main, no PR)
