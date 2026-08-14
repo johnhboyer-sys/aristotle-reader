@@ -6,6 +6,7 @@ Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to Git
 
 - `app/` — the Astro site. `pipeline/` — Python corpus pipeline (Diogenes → per-work data). `build/dist` — built corpus data. `shared/` — reader core shared with sibling readers (plato-reader, homer). `workbench/` — Translation Workbench (Tauri, isolated from the site). `desktop/` — desktop reader app (Tauri). `bonitz/` — Index Aristotelicus OCR work, not deployed.
 - `ocr_translations/CLAUDE.md` is a self-contained OCR recipe, not project instructions.
+- `HANDOFF.md` carries the state of the most recent session — what is done, what was decided and why, what failed. Read it at the start of a session; rewrite it (don't append) when handing off.
 
 ## Build and deploy invariants
 
