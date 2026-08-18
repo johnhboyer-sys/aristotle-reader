@@ -2,6 +2,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "pipeline"))
 
@@ -167,7 +169,9 @@ def test_a_lettered_line_is_not_a_line_gap():
     assert report["checks"]["line_gaps"]["unexpected"] == []
 
 
-def test_stage3_writes_report_and_stays_report_only(tmp_path, monkeypatch, capsys):
+def test_stage3_hard_gate_fails_on_unexpected_but_still_writes_report(
+    tmp_path, monkeypatch, capsys
+):
     spine = _tiny_spine()
     spine["segments"] = [spine["segments"][0]]
     spine["segments"][0]["lines"] = [
@@ -189,8 +193,10 @@ def test_stage3_writes_report_and_stays_report_only(tmp_path, monkeypatch, capsy
     monkeypatch.setattr(stage3_tokenize, "BUILD_DIR", build_dir)
     monkeypatch.setattr(pipeline_main, "BUILD_DIR", build_dir)
 
-    assert quality.HARD_GATE is False
-    pipeline_main._stage3(manifest)
+    assert quality.HARD_GATE is True
+    with pytest.raises(SystemExit) as exc:
+        pipeline_main._stage3(manifest)
+    assert exc.value.code == 1
 
     report = json.loads(
         (build_dir / "stage3" / "quality_report.json").read_text(encoding="utf-8")
@@ -207,3 +213,28 @@ def test_stage3_writes_report_and_stays_report_only(tmp_path, monkeypatch, capsy
         "reason": "allowlist",
     }
     assert "stage3-quality: checked=2 unexpected=1 FLAGGED" in capsys.readouterr().out
+
+
+def test_stage3_hard_gate_passes_a_clean_work(tmp_path, monkeypatch, capsys):
+    spine = _tiny_spine()
+    spine["segments"] = [spine["segments"][0]]
+    spine["segments"][0]["lines"] = [
+        {"n": 1, "text": "ἄνθρωπος κἀγώ καλοκἀγαθία ἐῤῥήθη"},
+    ]
+    manifest = TinyManifest()
+    build_dir = tmp_path / "build"
+    stage1 = build_dir / "stage1"
+    stage1.mkdir(parents=True)
+    (stage1 / "greek_spine.json").write_text(
+        json.dumps(spine, ensure_ascii=False), encoding="utf-8"
+    )
+    monkeypatch.setattr(stage3_tokenize, "BUILD_DIR", build_dir)
+    monkeypatch.setattr(pipeline_main, "BUILD_DIR", build_dir)
+
+    pipeline_main._stage3(manifest)
+
+    report = json.loads(
+        (build_dir / "stage3" / "quality_report.json").read_text(encoding="utf-8")
+    )
+    assert report["ok"] is True
+    assert "stage3-quality:" in capsys.readouterr().out
