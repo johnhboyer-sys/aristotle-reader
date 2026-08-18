@@ -25,6 +25,11 @@ describe('sanitizeHtml', () => {
     expect(out).toContain('<a>y</a>');
   });
 
+  it('keeps a safe relative link', () => {
+    expect(sanitizeHtml('<a href="/EN/book/1?loc=1094a:5">EN 1094a5</a>'))
+      .toBe('<a href="/EN/book/1?loc=1094a:5">EN 1094a5</a>');
+  });
+
   // Two of Ostwald's footnotes ARE diagrams, so a small SVG subset reaches the
   // popup. What is allowed is shapes and labels; what is not is anything that
   // can fetch, embed, or retarget.

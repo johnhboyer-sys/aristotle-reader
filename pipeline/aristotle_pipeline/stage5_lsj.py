@@ -19,6 +19,7 @@ from pathlib import Path
 from lxml import etree
 
 from .config import BUILD_DIR, Manifest
+from .lsj_citation_map import resolve_citation
 
 # Letter-class spans keep the CSS in charge of presentation.
 _TAG_MAP = {
@@ -42,6 +43,34 @@ _FOLD_STRIP = re.compile(r"[0-9_^\-/=\\|+]")
 _CONNECTIVE = re.compile(r"^[\s,;]*(?:(?:or|and)[\s,;]*)?$", re.IGNORECASE)
 _DANGLING_CONNECTIVE = re.compile(r"(?:\s*[,;]\s*)?\b(?:or|and)\s*$", re.IGNORECASE)
 _DANGLING_ARTICLE = re.compile(r"\b(?:an?|the)$", re.IGNORECASE)
+_BIBL_REF = re.compile(
+    r"^Perseus:abo:tlg,0086,(\d{3}):(\d+[ab]):(\d+)$"
+)
+_MANIFEST_CACHE: dict[str, Manifest | None] = {}
+
+
+def _bibl_href(value: str | None) -> str | None:
+    match = _BIBL_REF.fullmatch(value or "")
+    if not match:
+        return None
+    tlg_work, column, raw_line = match.groups()
+    work_id = resolve_citation(tlg_work, column)
+    if not work_id:
+        return None
+
+    if work_id not in _MANIFEST_CACHE:
+        try:
+            _MANIFEST_CACHE[work_id] = Manifest.for_work(work_id)
+        except OSError:
+            _MANIFEST_CACHE[work_id] = None
+    manifest = _MANIFEST_CACHE[work_id]
+    if manifest is None:
+        return None
+    line = int(raw_line)
+    book = manifest.book_for_line(column, line)
+    if book is None:
+        return None
+    return f"/{work_id}/book/{book}?loc={column}:{line}"
 
 
 def base_key(key: str) -> str:
@@ -81,12 +110,20 @@ def shard_letter(key: str) -> str:
 def _to_html(el) -> str:
     tag = el.tag if isinstance(el.tag, str) else None
     parts = []
+    bibl_href = None
     if tag == "sense":
         level = el.get("level") or "1"
         n = el.get("n") or ""
         parts.append(f'<div class="lsj-sense" data-level="{escape(level)}">')
         if n:
             parts.append(f'<b class="lsj-sense-n">{escape(n)}.</b> ')
+        body_open = True
+    elif tag == "bibl":
+        bibl_href = _bibl_href(el.get("n"))
+        if bibl_href:
+            parts.append(f'<a class="lsj-bibl" href="{bibl_href}">')
+        else:
+            parts.append('<span class="lsj-bibl">')
         body_open = True
     elif tag in _TAG_MAP:
         html_tag, cls = _TAG_MAP[tag]
@@ -105,6 +142,8 @@ def _to_html(el) -> str:
     if body_open:
         if tag == "sense":
             parts.append("</div>")
+        elif bibl_href:
+            parts.append("</a>")
         else:
             html_tag = _TAG_MAP.get(tag, ("span", None))[0]
             parts.append(f"</{html_tag}>")

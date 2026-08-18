@@ -113,3 +113,18 @@ export function sanitizeHtml(html: string): string {
       return `<${tag}${sanitizeAttrs(rawAttrs ?? '', tag)}>`;
     });
 }
+
+// LSJ shard HTML carries site-root-relative citation hrefs (the pipeline
+// cannot know the deploy base); every renderer must prefix them. The pattern
+// matches sanitizeHtml's own serialization (class before href, as stage5
+// emits) — the word-popup round-trip test locks that. Idempotent: an
+// already-prefixed href is left alone, and an empty or bare-slash base is a
+// no-op rather than a protocol-relative "//" corruption.
+export function prefixLsjCitationHrefs(html: string, base: string): string {
+  if (!base || base === '/') return html;
+  const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return html.replace(
+    new RegExp(`(<a class="lsj-bibl" href=")(?!${escaped}/)/`, 'g'),
+    `$1${base}/`,
+  );
+}

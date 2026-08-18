@@ -130,18 +130,7 @@ async function main() {
     return null;
   }
 
-  async function checkReference(source, raw, kind) {
-    const href = decodeEntities(raw.trim());
-    if (!href || href.startsWith('#')) {
-      if (href.startsWith('#') && href.length > 1) {
-        anchors++;
-        const ids = await idsFor(source);
-        if (!ids?.has(decodePath(href.slice(1)))) report(source, raw, 'fragment id not found');
-      }
-      return;
-    }
-    if (isExternal(href) || (kind !== 'a' && /^data:/i.test(href))) return;
-    links++;
+  async function checkTarget(source, raw, href, { nearestLineOk = false } = {}) {
     const parts = splitReference(href);
     const target = await resolve(source, parts.pathname);
     if (!target) {
@@ -161,10 +150,34 @@ async function main() {
       if (match) {
         const ids = await idsFor(target);
         if (!ids?.has(`L${match[1]}-${match[2]}`) && !ids?.has(`L${match[1]}-${match[2]}-c`)) {
-          report(source, raw, `Bekker target L${match[1]}-${match[2]} not found`);
+          // LSJ cites its own editions' lineation, which can differ from ours
+          // by a line or two; the reader snaps a missing line to the nearest
+          // line in the column. Mirror that contract: the column must exist,
+          // the exact line need not.
+          const colOk = nearestLineOk && ids
+            && (ids.has(`col-${match[1]}`)
+              || [...ids].some((id) => id.startsWith(`L${match[1]}-`)));
+          if (!colOk) {
+            report(source, raw, `Bekker target L${match[1]}-${match[2]} not found`);
+          }
         }
       }
     }
+  }
+
+  async function checkReference(source, raw, kind, { nearestLineOk = false } = {}) {
+    const href = decodeEntities(raw.trim());
+    if (!href || href.startsWith('#')) {
+      if (href.startsWith('#') && href.length > 1) {
+        anchors++;
+        const ids = await idsFor(source);
+        if (!ids?.has(decodePath(href.slice(1)))) report(source, raw, 'fragment id not found');
+      }
+      return;
+    }
+    if (isExternal(href) || (kind !== 'a' && /^data:/i.test(href))) return;
+    links++;
+    await checkTarget(source, raw, href, { nearestLineOk });
   }
 
   for await (const source of htmlFiles(dist)) {
@@ -176,7 +189,47 @@ async function main() {
       const kind = tagMatch[1].toLowerCase();
       const attribute = (kind === 'img' || kind === 'script') ? 'src' : 'href';
       const attr = new RegExp("\\b" + attribute + "\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s\"'=<>`]+))", 'i').exec(tagMatch[0]);
-      if (attr) await checkReference(source, attr[1] ?? attr[2] ?? attr[3], kind);
+      // LSJ citation anchors get the reader's nearest-line contract (see
+      // checkTarget); every other link keeps the strict exact-line check.
+      const nearestLineOk = kind === 'a' && /\bclass="[^"]*\blsj-bibl\b/.test(tagMatch[0]);
+      if (attr) await checkReference(source, attr[1] ?? attr[2] ?? attr[3], kind, { nearestLineOk });
+    }
+  }
+
+  const lsjDir = path.join(dist, 'data', 'lsj');
+  let lsjShards;
+  try {
+    lsjShards = await fs.readdir(lsjDir, { withFileTypes: true });
+  } catch {
+    // A dist with pages but no LSJ shards is a broken build, not a skippable
+    // case — exiting 0 here would leave every popup citation link unchecked.
+    report(lsjDir, '', 'LSJ shard directory missing or unreadable');
+    lsjShards = [];
+  }
+  for (const entry of lsjShards) {
+    if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.json')) continue;
+    const source = path.join(lsjDir, entry.name);
+    let shard;
+    try {
+      shard = JSON.parse(await fs.readFile(source, 'utf8'));
+    } catch {
+      report(source, '', 'cannot read LSJ shard');
+      continue;
+    }
+    for (const value of Object.values(shard)) {
+      if (typeof value?.html !== 'string') continue;
+      for (const tagMatch of value.html.matchAll(/<a\b[^>]*>/gi)) {
+        const attr = /\bhref="([^"]*)"/i.exec(tagMatch[0]);
+        if (!attr) continue;
+        const raw = attr[1];
+        const href = decodeEntities(raw.trim());
+        if (!href || href.startsWith('#') || isExternal(href)) continue;
+        links++;
+        // Same provenance rule as the HTML crawl: only .lsj-bibl anchors get
+        // the reader's nearest-line contract.
+        const nearestLineOk = /\bclass="[^"]*\blsj-bibl\b/.test(tagMatch[0]);
+        await checkTarget(source, raw, href, { nearestLineOk });
+      }
     }
   }
 
