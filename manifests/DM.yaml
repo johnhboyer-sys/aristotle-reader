@@ -37,9 +37,6 @@ english:
 books:
   - { n: 1, start: "391a1", end: "401b29" }
 
-expected_line_gaps:
-  - { column: "401a", after: 1, next: 3 }
-
 sources:
   tlg_dir_env: "TLG_DIR"
   tlg_dir_default: "../TLG Files/TLG"
