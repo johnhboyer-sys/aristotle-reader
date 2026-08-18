@@ -1,0 +1,37 @@
+{
+ "checks": {
+  "breathing_position": {
+   "tokens_checked": 26296,
+   "flagged": [
+    {
+     "ref": "1248b10",
+     "surface": "καλοκἀγαθίαν",
+     "allowed": true,
+     "reason": "crasis"
+    },
+    {
+     "ref": "1249a2",
+     "surface": "καλοκἀγαθίαν",
+     "allowed": true,
+     "reason": "crasis"
+    },
+    {
+     "ref": "1249a16",
+     "surface": "καλοκἀγαθία",
+     "allowed": true,
+     "reason": "crasis"
+    },
+    {
+     "ref": "1249b24",
+     "surface": "καλοκἀγαθίας",
+     "allowed": true,
+     "reason": "crasis"
+    }
+   ],
+   "unexpected": [],
+   "per_10k": 1.52114390021296,
+   "ok": true
+  }
+ },
+ "ok": true
+}

@@ -1,0 +1,31 @@
+{
+ "checks": {
+  "breathing_position": {
+   "tokens_checked": 10205,
+   "flagged": [
+    {
+     "ref": "10b16",
+     "surface": "πυῤῥῷ",
+     "allowed": true,
+     "reason": "rho-breathing"
+    },
+    {
+     "ref": "11b13",
+     "surface": "ἐῤῥήθη",
+     "allowed": true,
+     "reason": "rho-breathing"
+    },
+    {
+     "ref": "11b15",
+     "surface": "ἐῤῥήθη",
+     "allowed": true,
+     "reason": "rho-breathing"
+    }
+   ],
+   "unexpected": [],
+   "per_10k": 2.939735423811857,
+   "ok": true
+  }
+ },
+ "ok": true
+}

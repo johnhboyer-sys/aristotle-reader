@@ -1,134 +1,29 @@
 [
  {
-  "key": "a",
-  "surface": "Α",
-  "first_ref": "72b38",
-  "count": 225,
-  "analyses": []
- },
- {
-  "key": "b",
-  "surface": "Β",
-  "first_ref": "72b38",
-  "count": 204,
-  "analyses": []
- },
- {
-  "key": "g",
-  "surface": "Γ",
-  "first_ref": "72b38",
-  "count": 171,
-  "analyses": []
- },
- {
-  "key": "d",
-  "surface": "Δ",
-  "first_ref": "78a15",
-  "count": 67,
-  "analyses": []
- },
- {
-  "key": "e",
-  "surface": "Ε",
-  "first_ref": "78a17",
-  "count": 26,
-  "analyses": []
- },
- {
-  "key": "z",
-  "surface": "Ζ",
-  "first_ref": "79b9",
-  "count": 13,
-  "analyses": []
- },
- {
-  "key": "h",
-  "surface": "Η",
-  "first_ref": "81b36",
-  "count": 7,
-  "analyses": []
- },
- {
-  "key": "q",
-  "surface": "Θ",
-  "first_ref": "79b10",
-  "count": 5,
-  "analyses": []
- },
- {
-  "key": "ai(di/",
-  "surface": "αἱδὶ",
-  "first_ref": "88b11",
-  "count": 3,
-  "analyses": []
- },
- {
-  "key": "toiandi/",
-  "surface": "τοιανδὶ",
-  "first_ref": "76a40",
-  "count": 2,
-  "analyses": []
- },
- {
-  "key": "e)/qemen",
-  "surface": "ἔθεμεν",
-  "first_ref": "71b20",
+  "key": "u(pomonhtiko/n",
+  "surface": "ὑπομονητικὸν",
+  "first_ref": "1250b14",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "e(tero/mhkes",
-  "surface": "ἑτερόμηκες",
-  "first_ref": "73b1",
+  "key": "a)ge/neis",
+  "surface": "ἀγένεις",
+  "first_ref": "1251b16",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "e)ciw/mata",
-  "surface": "ἐξιώματα",
-  "first_ref": "75a41",
+  "key": "eu)meniko/n",
+  "surface": "εὐμενικὸν",
+  "first_ref": "1251b32",
   "count": 1,
   "analyses": []
  },
  {
-  "key": "o(poteranou=n",
-  "surface": "ὁποτερανοῦν",
-  "first_ref": "80a39",
-  "count": 1,
-  "analyses": []
- },
- {
-  "key": "peperasmena/kis",
-  "surface": "πεπερασμενάκις",
-  "first_ref": "82b32",
-  "count": 1,
-  "analyses": []
- },
- {
-  "key": "ke/ntauros",
-  "surface": "κένταυρος",
-  "first_ref": "89b32",
-  "count": 1,
-  "analyses": []
- },
- {
-  "key": "mikromere/steron",
-  "surface": "μικρομερέστερον",
-  "first_ref": "94b29",
-  "count": 1,
-  "analyses": []
- },
- {
-  "key": "tarta/rw|",
-  "surface": "ταρτάρῳ",
-  "first_ref": "94b34",
-  "count": 1,
-  "analyses": []
- },
- {
-  "key": "sh/pion",
-  "surface": "σήπιον",
-  "first_ref": "98a21",
+  "key": "fi/loikon",
+  "surface": "φίλοικον",
+  "first_ref": "1251b35",
   "count": 1,
   "analyses": []
  }
