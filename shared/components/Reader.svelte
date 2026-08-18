@@ -4,6 +4,7 @@
   import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { highlightPrefixMatches } from '../lib/text';
+  import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
   import { touchRecent } from '../lib/resume';
   import WordPopup from './WordPopup.svelte';
@@ -532,16 +533,19 @@
   // The char position where token `w` begins in a line's text (0 at the start,
   // text.length at/after the end), so a cut preserves the verbatim
   // punctuation/sigla between words on the correct side.
+  // locateToken (not a plain indexOf) so a word printed with an editorial
+  // siglum inside it ("ἀνακε<κλ>ίσθαι") cuts at its real start; missing it
+  // would put the head of the word on both sides of the cut.
   function tokenPos(line: GreekLine, w: number): number {
     if (w <= 0) return 0;
     if (w >= line.tokens.length) return line.text.length;
     let ptr = 0;
     for (let i = 0; i < w; i++) {
-      const idx = line.text.indexOf(line.tokens[i].t, ptr);
-      if (idx >= 0) ptr = idx + line.tokens[i].t.length;
+      const at = locateToken(line.text, line.tokens[i].t, ptr);
+      if (at) ptr = at.end;
     }
-    const cut = line.text.indexOf(line.tokens[w].t, ptr);
-    return cut >= 0 ? cut : ptr;
+    const cut = locateToken(line.text, line.tokens[w].t, ptr);
+    return cut ? cut.start : ptr;
   }
 
   // The sub-line covering tokens [fromW, toW) — used to split a Greek line at a
@@ -628,34 +632,6 @@
     return out;
   }
 
-  // Split a line into clickable words and the verbatim text between them.
-  // The tokens hold bare words (for the popup lookup); the line `text` keeps
-  // the original punctuation AND the OCT editorial sigla ( ) [ ] < > † " — so
-  // we locate each word in `text` and render the gaps (sigla/punctuation) as
-  // plain, non-clickable text, preserving the critical edition faithfully.
-  interface LinePart { text: string; tok: Token | null; }
-  function lineParts(line: GreekLine): LinePart[] {
-    const parts: LinePart[] = [];
-    const text = line.text;
-    let ptr = 0;
-    for (const tok of line.tokens) {
-      const i = text.indexOf(tok.t, ptr);
-      if (i < 0) {            // shouldn't happen; keep the word clickable anyway
-        parts.push({ text: tok.t, tok });
-        continue;
-      }
-      if (i > ptr) parts.push({ text: text.slice(ptr, i), tok: null });
-      parts.push({ text: tok.t, tok });
-      ptr = i + tok.t.length;
-    }
-    if (ptr < text.length) parts.push({ text: text.slice(ptr), tok: null });
-    return parts;
-  }
-
-  // Clickable parts for a table cell (same shape as a line: text + tokens).
-  function cellParts(cell: { text: string; tokens: Token[] }): LinePart[] {
-    return lineParts(cell as unknown as GreekLine);
-  }
   // Group a block's Greek lines into render items: runs of table rows (lines
   // carrying `cells`, e.g. the De Int 22a modal square) become one table; other
   // lines render individually.
@@ -1181,7 +1157,7 @@
   {#snippet greekToks(parts: LinePart[])}{#each parts as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
         class="tok"
         class:active={popup?.token === part.tok}
-        class:hit={isHit(part.text)}
+        class:hit={isHit(part.tok.t)}
         on:click={(e) => handleTokenClick(e, part.tok)}
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
