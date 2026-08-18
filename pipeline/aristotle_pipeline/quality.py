@@ -5,7 +5,10 @@ from __future__ import annotations
 import unicodedata
 
 
-HARD_GATE = False
+# Flipped 2026-08-18 after the baseline pass: 848k tokens, 7 flagged (all
+# classified crasis / rho-breathing), 0 unexpected — the one genuine hit
+# (PA 689a12) was root-caused and fixed in PR #83.
+HARD_GATE = True
 
 BREATHINGS = {'̓', '̔'}          # smooth, rough
 VOWELS = set('αειηιουωΑΕΗΙΟΥΩ')
