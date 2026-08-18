@@ -283,6 +283,32 @@ def chapter_ranges(spine, chapters) -> dict[tuple, str]:
     return ranges
 
 
+def _paired_tokens(seg: dict, tok_seg: dict) -> list[list[dict]]:
+    """This segment's token lists, one per spine line, in spine order.
+
+    stage3 tokenizes the spine line by line, so the two lists are parallel.
+    A repeated line number is legitimate (a secluded block splits a line in
+    two), which is exactly why the pairing cannot be a lookup by number — and
+    exactly why a drift between the two documents has to raise here rather
+    than hand a line another line's words.
+    """
+    spine_lines, tok_lines = seg["lines"], tok_seg["lines"]
+    if len(spine_lines) != len(tok_lines):
+        raise ValueError(
+            f"stage7: column {seg['column']} has {len(spine_lines)} spine lines "
+            f"but {len(tok_lines)} tokenized lines — the two are out of step"
+        )
+    for spine_line, tok_line in zip(spine_lines, tok_lines):
+        spine_ref = (spine_line["n"], spine_line.get("sub"))
+        tok_ref = (tok_line["n"], tok_line.get("sub"))
+        if spine_ref != tok_ref:
+            raise ValueError(
+                f"stage7: column {seg['column']} line {spine_ref} is paired with "
+                f"tokenized line {tok_ref} — the two documents disagree on order"
+            )
+    return [l["tokens"] for l in tok_lines]
+
+
 def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
                third=None, overlays=None) -> list[dict]:
     tokens_by_id = {s["id"]: s for s in tokens_doc["segments"]}
@@ -305,10 +331,15 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
     by_book: dict[int, list[dict]] = defaultdict(list)
     for seg in spine["segments"]:
         tok_seg = tokens_by_id[seg["id"]]
-        # keyed by (n, sub): a lettered line shares its number with the
-        # plain line it follows, so keying on n alone hands both the same
-        # tokens and silently drops one line's worth
-        tok_lines = {(l["n"], l.get("sub")): l["tokens"] for l in tok_seg["lines"]}
+        # Paired POSITIONALLY, not by (n, sub): a column can carry the same
+        # number twice with no letter suffix, where the OCT sets a secluded or
+        # transposed block inside a line and stage1 emits the halves as
+        # separate lines (DA 430b.20, APr 68a.16, Phys 205b.1). Keying on
+        # (n, sub) collapsed those halves into one entry, so both rendered the
+        # LAST half's tokens — one line's words printed over the other's text.
+        # stage3 walks the same spine in the same order, so the two line lists
+        # are parallel by construction; check it rather than trust it.
+        tok_lines = _paired_tokens(seg, tok_seg)
         eng = english_by_id.get(seg["id"])
         line_ns = [line["n"] for line in seg["lines"]]
         chapter_starts = _chapter_starts(
@@ -327,10 +358,10 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
                         "text": line["text"],
                         **({"sub": line["sub"]} if line.get("sub") else {}),
                         **({"joined": True} if line.get("joined") else {}),
-                        "tokens": tok_lines[(line["n"], line.get("sub"))],
-                        **({"cells": cells} if (cells := _greek_cells(line["text"], tok_lines[(line["n"], line.get("sub"))])) else {}),
+                        "tokens": toks,
+                        **({"cells": cells} if (cells := _greek_cells(line["text"], toks)) else {}),
                     }
-                    for line in seg["lines"]
+                    for line, toks in zip(seg["lines"], tok_lines)
                 ],
                 "english": (
                     {
