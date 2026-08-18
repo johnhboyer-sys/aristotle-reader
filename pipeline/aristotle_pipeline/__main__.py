@@ -169,7 +169,7 @@ def _stage2(manifest):
 
 
 def _stage3(manifest):
-    from . import stage3_tokenize
+    from . import quality, stage3_tokenize
 
     out = stage3_tokenize.run(manifest)
     tokens = json.loads(out.read_text(encoding="utf-8"))
@@ -179,6 +179,15 @@ def _stage3(manifest):
     print(f"stage3: tokens={n} sigla_strips={len(sigla)} key_failures={len(failures)}")
     for fail in failures[:10]:
         print(f"  FAIL {fail['ref']}: {fail['token']} — {fail['error']}")
+    report = json.loads((BUILD_DIR / "stage3" / "quality_report.json").read_text())
+    check = report["checks"]["breathing_position"]
+    status = "ok" if report["ok"] else "FLAGGED"
+    print(
+        f"stage3-quality: checked={check['tokens_checked']} "
+        f"unexpected={len(check['unexpected'])} {status}"
+    )
+    if not report["ok"] and quality.HARD_GATE:
+        raise SystemExit(1)
 
 
 def _stage4(manifest):

@@ -35,11 +35,19 @@ characters, not positions.
    walks every token and already writes sibling diagnostics
    (`sigla_log.json`, `key_failures.json` — `stage3_tokenize.py:54-77`); this
    is a third check of the same kind at the same altitude.
-3. **Crasis is a special case, not a blanket exemption.** Crasis forms (κἀγώ,
-   τἀγαθόν) legitimately carry a breathing-shaped coronis mid-word. Detect the
-   crasis pattern and mark those hits `reason: "crasis"` rather than skipping
-   the check near them; a rare crasis form the detection misses goes in the
-   allowlist by hand.
+3. **Crasis is a special case, not a blanket exemption — and it is lexical,
+   not mark-based.** U+0343 (coronis) canonically decomposes to U+0313 (smooth
+   breathing) under NFD, so coronis cannot be detected by codepoint. The
+   detector already passes first-cluster crasis untouched (κἀγώ, τἀγαθόν,
+   τοὐναντίον — the breathing sits in the opening vowel cluster); the
+   classifier only needs known crasis whose fusion sits past the first
+   cluster, kept as a small documented NFD-prefix set (ἐγᾠ-/ἐγᾦ-, μεντἀ-,
+   καλοκἀ- — the καλοκἀγαθία family is the one such form in the emitted
+   corpus). Hits match → `reason: "crasis"`; rarities go in the allowlist.
+   Separately, a breathing on **rho** is never the run-together signature:
+   this spine writes orthodox medial ῤῥ (ἐῤῥήθη, πυῤῥῷ), which the detector
+   flags — classified `reason: "rho-breathing"` when every flagged breathing
+   in the token sits on ρ.
 4. **Allowlist = manifest-declared exceptions, the established pattern.**
    `illegal_breathing_allow: [{ref, surface}]` — its own shape, consulted the
    way `alignment_allow_unmatched` is (`stage2_validate.py:438`, the closest

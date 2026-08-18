@@ -14,6 +14,7 @@ from pathlib import Path
 
 from .beta import to_beta_key
 from .config import BUILD_DIR, Manifest
+from .quality import check_breathing
 
 # Stripped silently from token edges: ordinary punctuation. The pipe `|` marks
 # verse-line divisions inside quoted hexameter (e.g. the Empedocles fragments in
@@ -90,6 +91,32 @@ def tokenize(spine: dict) -> tuple[dict, list[dict], list[dict]]:
     )
 
 
+def _quality_tokens(tokens: dict) -> list[dict]:
+    records = []
+    for seg in tokens["segments"]:
+        for line in seg["lines"]:
+            ref = f"{seg['column']}{line['n']}{line.get('sub', '')}"
+            records.extend({"ref": ref, "surface": token["t"]} for token in line["tokens"])
+    return records
+
+
+def _quality_markdown(report: dict) -> str:
+    check = report["checks"]["breathing_position"]
+    lines = [
+        "# Stage 3 text quality report",
+        "",
+        f"Overall: {'PASS' if report['ok'] else 'FAIL'}",
+        "",
+        "## Breathing position",
+        f"- {check['tokens_checked']} tokens checked; {len(check['flagged'])} flagged; "
+        f"{len(check['unexpected'])} unexpected; {check['per_10k']:.2f} per 10k",
+    ]
+    for entry in check["flagged"]:
+        status = entry.get("reason", "**UNEXPECTED**")
+        lines.append(f"  - {entry['ref']}: {entry['surface']} ({status})")
+    return "\n".join(lines) + "\n"
+
+
 def run(manifest: Manifest) -> Path:
     spine = json.loads(
         (BUILD_DIR / "stage1" / "greek_spine.json").read_text(encoding="utf-8")
@@ -104,5 +131,15 @@ def run(manifest: Manifest) -> Path:
     )
     (out_dir / "key_failures.json").write_text(
         json.dumps(key_failures, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    quality_report = check_breathing(
+        _quality_tokens(tokens),
+        manifest.data.get("illegal_breathing_allow", []),
+    )
+    (out_dir / "quality_report.json").write_text(
+        json.dumps(quality_report, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    (out_dir / "quality_report.md").write_text(
+        _quality_markdown(quality_report), encoding="utf-8"
     )
     return out

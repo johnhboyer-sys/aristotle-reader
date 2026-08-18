@@ -7,6 +7,8 @@ sys.path.insert(0, str(ROOT / "pipeline"))
 
 from aristotle_pipeline.stage2_validate import validate
 from aristotle_pipeline.stage3_tokenize import tokenize
+from aristotle_pipeline import __main__ as pipeline_main
+from aristotle_pipeline import quality, stage3_tokenize
 
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -163,3 +165,45 @@ def test_a_lettered_line_is_not_a_line_gap():
     report = validate(TinyManifest(), spine, _tiny_english(), _tiny_alignment())
 
     assert report["checks"]["line_gaps"]["unexpected"] == []
+
+
+def test_stage3_writes_report_and_stays_report_only(tmp_path, monkeypatch, capsys):
+    spine = _tiny_spine()
+    spine["segments"] = [spine["segments"][0]]
+    spine["segments"][0]["lines"] = [
+        {"n": 1, "text": "ποιοῦσιναἱ τὴνφορὰνἔφαμεν"},
+    ]
+    manifest = TinyManifest()
+    manifest.data = {
+        **TinyManifest.data,
+        "illegal_breathing_allow": [
+            {"ref": "1094a1", "surface": "τὴνφορὰνἔφαμεν"}
+        ],
+    }
+    build_dir = tmp_path / "build"
+    stage1 = build_dir / "stage1"
+    stage1.mkdir(parents=True)
+    (stage1 / "greek_spine.json").write_text(
+        json.dumps(spine, ensure_ascii=False), encoding="utf-8"
+    )
+    monkeypatch.setattr(stage3_tokenize, "BUILD_DIR", build_dir)
+    monkeypatch.setattr(pipeline_main, "BUILD_DIR", build_dir)
+
+    assert quality.HARD_GATE is False
+    pipeline_main._stage3(manifest)
+
+    report = json.loads(
+        (build_dir / "stage3" / "quality_report.json").read_text(encoding="utf-8")
+    )
+    check = report["checks"]["breathing_position"]
+    assert report["ok"] is False
+    assert check["unexpected"] == [
+        {"ref": "1094a1", "surface": "ποιοῦσιναἱ"}
+    ]
+    assert check["flagged"][1] == {
+        "ref": "1094a1",
+        "surface": "τὴνφορὰνἔφαμεν",
+        "allowed": True,
+        "reason": "allowlist",
+    }
+    assert "stage3-quality: checked=2 unexpected=1 FLAGGED" in capsys.readouterr().out
