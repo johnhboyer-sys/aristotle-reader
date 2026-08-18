@@ -1,0 +1,593 @@
+<title>Counting Aristotle's Particles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+
+<style>
+:root{
+  --paper:#F6F7F9; --raise:#FFFFFF; --ink:#131820; --ink-2:#3C4654; --muted:#58616F;
+  --rule:#DBDFE6; --rule-soft:#E8EBF0;
+  --rubric:#BE4150; --blue:#3369B6; --teal:#0E9280;
+  --rubric-wash:#BE41501A; --blue-wash:#3369B61A;
+  --shadow:0 1px 2px #13182014, 0 8px 24px #1318200A;
+  /* Anchored to the VIEWPORT, not to a parent: inside .bleed a percentage would
+     resolve against .col (660px) and silently compute to zero. */
+  --content: min(calc(100vw - 48px), 1032px);
+  --gutter: clamp(0px, calc((var(--content) - 660px) * .38), 200px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11151C; --raise:#171C25; --ink:#E7EBF1; --ink-2:#BAC3D0; --muted:#98A2B2;
+    --rule:#262E3A; --rule-soft:#1D242E;
+    --rubric:#DB5F70; --blue:#4E8FDE; --teal:#0FA894;
+    --rubric-wash:#DB5F7022; --blue-wash:#4E8FDE22;
+    --shadow:0 1px 2px #0006, 0 8px 24px #0004;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11151C; --raise:#171C25; --ink:#E7EBF1; --ink-2:#BAC3D0; --muted:#98A2B2;
+  --rule:#262E3A; --rule-soft:#1D242E;
+  --rubric:#DB5F70; --blue:#4E8FDE; --teal:#0FA894;
+  --rubric-wash:#DB5F7022; --blue-wash:#4E8FDE22;
+  --shadow:0 1px 2px #0006, 0 8px 24px #0004;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Spectral",Georgia,"Times New Roman",serif;
+  font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+.grk{font-family:"Gentium Book Plus","Spectral",Georgia,serif; font-size:1.04em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace}
+
+/* ---- page frame: reading column with a marginal rail, as in a critical edition ---- */
+.wrap{max-width:1080px; margin:0 auto; padding:0 24px}
+.col{max-width:660px; margin-left:var(--gutter)}
+section{display:flex; flex-direction:column; gap:1.1rem; padding:0 0 4.5rem}
+p{margin:0; max-width:66ch}
+h1,h2,h3{margin:0; text-wrap:balance; line-height:1.18; font-weight:600}
+h1{font-size:clamp(2.5rem,6vw,3.9rem); font-weight:700; letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,3vw,1.95rem); letter-spacing:-.01em}
+h3{font-size:1.06rem; font-weight:600}
+a{color:var(--blue)}
+em{font-style:italic}
+
+/* marginal study label, echoing a Bekker column number in the gutter */
+.marg{position:relative}
+.marg::before{
+  content:attr(data-marg); position:absolute; left:-130px; top:.55em; width:110px;
+  text-align:right; font-family:"IBM Plex Mono",monospace; font-size:.62rem;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--muted); line-height:1.5;
+}
+@media (max-width:900px){
+  :root{--gutter:0px}
+  .marg::before{position:static; display:block; width:auto; text-align:left; margin-bottom:.5rem}
+}
+
+/* ---- masthead ---- */
+header{padding:clamp(3.5rem,9vw,6.5rem) 0 3.2rem}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:.68rem; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--rubric); margin-bottom:1.5rem;
+}
+.standfirst{font-size:1.22rem; color:var(--ink-2); max-width:60ch; margin-top:1.4rem}
+.byline{
+  margin-top:2rem; padding-top:1.1rem; border-top:1px solid var(--rule);
+  font-family:"IBM Plex Mono",monospace; font-size:.72rem; letter-spacing:.06em;
+  color:var(--muted); display:flex; flex-wrap:wrap; gap:.4rem 1.4rem;
+}
+
+/* ---- corpus stat strip ---- */
+.stats{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  gap:1px; background:var(--rule); border:1px solid var(--rule); margin:0 0 4.5rem;
+}
+.stat{background:var(--paper); padding:1.1rem 1.2rem}
+.stat b{
+  display:block; font-family:"IBM Plex Mono",monospace; font-size:1.42rem;
+  font-weight:500; letter-spacing:-.02em; font-variant-numeric:tabular-nums;
+}
+.stat span{
+  display:block; margin-top:.25rem; font-family:"IBM Plex Mono",monospace;
+  font-size:.63rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+}
+
+/* ---- figures ---- */
+figure{margin:1.2rem 0; display:flex; flex-direction:column; gap:.85rem}
+.bleed{width:var(--content); max-width:none; margin-left:calc(-1 * var(--gutter))}
+figcaption{font-size:.86rem; color:var(--muted); max-width:70ch; line-height:1.55}
+.figtitle{
+  font-family:"IBM Plex Mono",monospace; font-size:.68rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-2);
+}
+.panel{background:var(--raise); border:1px solid var(--rule); padding:1.4rem 1.5rem; box-shadow:var(--shadow)}
+.scroll{overflow-x:auto}
+svg{display:block; max-width:100%; height:auto}
+
+/* legend */
+.legend{display:flex; flex-wrap:wrap; gap:.35rem 1.3rem; align-items:center;
+  font-family:"IBM Plex Mono",monospace; font-size:.7rem; color:var(--ink-2)}
+.legend i{display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:.45rem;
+  vertical-align:-1px}
+
+/* ---- callout ---- */
+.callout{
+  border-left:3px solid var(--rubric); background:var(--rubric-wash);
+  padding:1.1rem 1.3rem; display:flex; flex-direction:column; gap:.7rem;
+}
+.callout.blue{border-left-color:var(--blue); background:var(--blue-wash)}
+.callout h3{font-family:"IBM Plex Mono",monospace; font-size:.68rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted)}
+
+/* ---- tables ---- */
+table{border-collapse:collapse; width:100%; font-size:.9rem}
+th,td{text-align:left; padding:.52rem .8rem; border-bottom:1px solid var(--rule-soft)}
+th{font-family:"IBM Plex Mono",monospace; font-size:.63rem; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--muted); font-weight:500; white-space:nowrap}
+td.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; text-align:right}
+tr.hi td{background:var(--rubric-wash)}
+tbody tr:last-child td{border-bottom:none}
+
+.tag{font-family:"IBM Plex Mono",monospace; font-size:.66rem; letter-spacing:.06em;
+  padding:.16rem .5rem; border-radius:2px; white-space:nowrap}
+.tag.ee{background:var(--rubric); color:#fff}
+.tag.en{background:var(--blue); color:#fff}
+
+ul{margin:0; padding-left:1.15rem; display:flex; flex-direction:column; gap:.6rem; max-width:66ch}
+li::marker{color:var(--muted)}
+
+/* tooltip */
+#tip{
+  position:fixed; pointer-events:none; opacity:0; transition:opacity .12s;
+  background:var(--ink); color:var(--paper); padding:.45rem .6rem; border-radius:3px;
+  font-family:"IBM Plex Mono",monospace; font-size:.7rem; line-height:1.5; z-index:9;
+  box-shadow:0 4px 14px #0003; white-space:nowrap;
+}
+.mark{cursor:pointer}
+.mark:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+
+footer{border-top:1px solid var(--rule); padding:2.2rem 0 4rem; color:var(--muted); font-size:.86rem}
+</style>
+
+<div class="wrap">
+<div class="col">
+
+<header>
+  <div class="eyebrow">Stylometry · Corpus Aristotelicum</div>
+  <h1>Counting Aristotle's Particles</h1>
+  <p class="standfirst">Eight hundred thousand words of Greek, 161 function words, and one
+  question that has been argued since the 1840s: which of the two Ethics do the books they
+  share actually belong to?</p>
+  <div class="byline">
+    <span>830,726 tokens · 39 works</span>
+    <span>Burrows's Delta on function-word frequencies</span>
+    <span>All figures reproducible: <span class="mono">analysis/run_all.py</span></span>
+  </div>
+</header>
+
+<div class="stats bleed">
+  <div class="stat"><b>830,726</b><span>Greek tokens</span></div>
+  <div class="stat"><b>48,244</b><span>distinct types</span></div>
+  <div class="stat"><b>39</b><span>works</span></div>
+  <div class="stat"><b>161</b><span>function words</span></div>
+  <div class="stat"><b>53.3%</b><span>token coverage</span></div>
+</div>
+
+<section class="marg" data-marg="The method">
+  <h2>Why count the small words</h2>
+  <p>Content words tell you what a text is about. In a corpus that runs from the dissection of
+  cuttlefish to the definition of justice, that is exactly the wrong signal — cluster on content
+  and you recover the table of contents, not the author.</p>
+  <p>Function words are the opposite. <span class="grk">μέν</span>, <span class="grk">δέ</span>,
+  <span class="grk">γάρ</span>, <span class="grk">ἀλλά</span>, <span class="grk">ὥστε</span> — particles,
+  connectives, prepositions, the article — are semantically near-empty, indeclinable or nearly so,
+  and enormously frequent. Their rates track how a writer builds a sentence rather than what the
+  sentence says. They are also, usefully, the words an author has no reason to think about. Here
+  they account for 53.3% of every token in the corpus.</p>
+  <p>This is the class Anthony Kenny counted by hand in <em>The Aristotelian Ethics</em> (1978), for
+  the same reasons. What follows re-runs that kind of question over the whole corpus at once.</p>
+</section>
+
+<section class="marg" data-marg="Finding 1 · The common books">
+  <h2>The common books side with the <em>Eudemian</em></h2>
+  <p>Nicomachean Ethics V–VII and Eudemian Ethics IV–VI are not similar texts. They are the
+  same text. Every modern editor prints it once, inside the Nicomachean Ethics, and
+  cross-references it from the Eudemian. Which treatise it was written for is the oldest live
+  question in Aristotelian scholarship.</p>
+  <p>That printing convention is what makes this testable cleanly. Because the common books sit
+  inside the Nicomachean Ethics, they are in the <strong>same file, set by the same editor</strong>
+  — Bywater's 1894 Oxford text — as the books they are being compared against. No editorial
+  difference can separate them.</p>
+
+  <figure class="bleed">
+    <div class="figtitle">Each Nicomachean book, held out and classified</div>
+    <div class="panel scroll"><div id="c1"></div></div>
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>nearer the rest of the Nicomachean</span>
+      <span><i style="background:var(--rubric)"></i>nearer the Eudemian</span>
+    </div>
+    <figcaption>Every one of the ten surviving Nicomachean books was removed in turn and scored
+    against the two centroids. Bars show Δ(Nicomachean) − Δ(Eudemian): right of the line means the
+    book's own treatise fits it worse. The sign flips at exactly books V, VI and VII, and nowhere
+    else.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <h3>The result in one number</h3>
+    <p>Ten out of ten books agree with the philological tradition about which three are the common
+    books — and all three go to the Eudemian. Under the null that the three Eudemian-leaning books
+    are an arbitrary three of ten, <span class="mono">p = 1/C(10,3) = 0.0083</span>.</p>
+    <p>That the seven undisputed books classify correctly is what makes the other three
+    interpretable. The method is not simply dragging everything toward the Eudemian.</p>
+  </div>
+
+  <h3>It survived everything I tried to break it with</h3>
+  <div class="panel scroll">
+  <table>
+    <thead><tr><th>Robustness test</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Chunk size 1000 / 1500 / 2000 / 2500 / 3000 tokens</td><td>Eudemian preferred at every size</td></tr>
+      <tr><td>200 random half-vocabularies</td><td><strong>200 / 200</strong> prefer the Eudemian</td></tr>
+      <tr><td>Connectives only · article only · prepositions only</td><td>Eudemian preferred in all</td></tr>
+      <tr><td>Particles only (14 features)</td><td>4 / 8 — too few features to decide</td></tr>
+      <tr><td>Chunk-level effect size</td><td>Cliff's <em>d</em> = +0.81, <span class="mono">p</span> = 0.0003</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The words carrying the difference: <span class="grk">ἀλλά</span>, <span class="grk">μόνον</span>,
+  <span class="grk">ὥστε</span>, <span class="grk">ὅταν</span> run higher in the common books;
+  <span class="grk">ἴσως</span>, <span class="grk">δή</span>, <span class="grk">μάλιστα</span>,
+  <span class="grk">μᾶλλον</span> run lower.</p>
+
+  <div class="callout blue">
+    <h3>The objection that survives</h3>
+    <p>Not the editions. W. D. Ross edited four works across four genres; if the editor drove the
+    clustering they would clump, and they do not — mean Δ between two Ross-edited works is
+    <span class="mono">0.981</span>, versus <span class="mono">0.939</span> from Ross to
+    everyone else.</p>
+    <p>What a token count cannot settle is the manuscript tradition. If Bywater took his text of
+    books V–VII from a different family, or leaned on Susemihl's Eudemian when printing them, this
+    entire pattern would follow with no authorial difference at all. That question belongs to the
+    apparatus criticus.</p>
+  </div>
+</section>
+
+<section class="marg" data-marg="Finding 2 · Authenticity">
+  <h2>The corpus knows which works are not Aristotle's</h2>
+  <p>The Corpus Aristotelicum carries about a dozen works that essentially nobody now attributes to
+  Aristotle. That consensus was reached philologically, over four centuries, without counting
+  anything — which makes it an answer key written in advance by someone else. The labels were used
+  only to grade the result; the clustering never saw them.</p>
+
+  <figure class="bleed">
+    <div class="figtitle">Every work by stylistic distance from the genuine core</div>
+    <div class="panel scroll"><div id="c2"></div></div>
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>genuine</span>
+      <span><i style="background:var(--rubric)"></i>consensus spurious</span>
+      <span><i style="background:var(--teal)"></i>disputed</span>
+    </div>
+    <figcaption>Leave-one-work-out: no work is ever compared against a centroid containing itself.
+    Spurious works average Δ 0.753 against the genuine 0.673 (<span class="mono">p</span> = 0.0013,
+    AUC 0.824). Labelled points are the four genuine works the test gets wrong and the most distant
+    spurious ones.</figcaption>
+  </figure>
+
+  <p>The errors are the interesting part, because they are systematic rather than random. The
+  genuine works wrongly ranked as distant are the <strong>Topics, both Analytics and the
+  Physics</strong> — the four most formal works in the corpus. The first principal component is
+  carried by <span class="grk">εἰ</span>, <span class="grk">ὅτι</span>, <span class="grk">τι</span>,
+  <span class="grk">οὐκ</span>: that axis is logical formalism against discursive prose, not
+  authorship.</p>
+  <p>So the headline figure is partly measuring genre. Scoring each spurious work only against
+  genuine works of comparable kind and length separates the two:</p>
+
+  <div class="panel scroll">
+  <table>
+    <thead><tr><th>Genre-matched comparison</th><th class="num">genuine</th><th class="num">spurious</th><th class="num">AUC</th></tr></thead>
+    <tbody>
+      <tr><td>Whole corpus, unmatched</td><td class="num">0.673</td><td class="num">0.753</td><td class="num">0.824</td></tr>
+      <tr class="hi"><td>Short natural treatises</td><td class="num">0.621</td><td class="num">0.752</td><td class="num">0.921</td></tr>
+      <tr class="hi"><td>Practical philosophy</td><td class="num">0.691</td><td class="num">0.836</td><td class="num">1.000</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <figcaption>Within genre the authorship signal is far stronger than across it.</figcaption>
+</section>
+
+<section class="marg" data-marg="Finding 3 · Seams">
+  <h2>One book stands out from its own treatise</h2>
+  <p>Aristotle's treatises are not books in the modern sense; they are lecture material assembled
+  after his death, and particular books have long been argued to sit oddly inside particular
+  treatises. Scoring each book against the other books of its own treatise holds work, genre,
+  editor and manuscript tradition constant at once — the best-controlled comparison available
+  here.</p>
+
+  <figure class="bleed">
+    <div class="figtitle">Most distinctive books, corrected for length</div>
+    <div class="panel scroll"><div id="c3"></div></div>
+    <figcaption>Shorter books drift from any centroid for purely statistical reasons — across 72
+    books, raw Δ correlates −0.487 with log length. Bars show the residual after regressing that
+    out: how much odder a book is than a book of its size should be.</figcaption>
+  </figure>
+
+  <p><strong>History of Animals X</strong> is the most extreme book in the corpus, and it is the one
+  book here that scholarship rejects outright — it scores AUC 1.00 against the other nine books of
+  its treatise. <strong>Parts of Animals I</strong>, the general methodological preface to the
+  biological works, comes second.</p>
+</section>
+
+<section class="marg" data-marg="What failed">
+  <h2>What did not work</h2>
+  <p>Three results went the wrong way, and they matter as much as the ones that went right.</p>
+  <ul>
+    <li><strong>Metaphysics α <em>elatton</em> dissolved.</strong> On raw Δ it is the biggest outlier
+    in the Metaphysics — which looks like a spectacular confirmation of the ancient ascription to
+    Pasicles of Rhodes. It is also the shortest book in the treatise, at 1,149 tokens. After the
+    length correction its residual is unremarkable. The confirmation was mostly an artefact of its
+    length, and I would have reported it if I had not checked.</li>
+    <li><strong>A designed control failed outright.</strong> The plan was to show that elision and
+    movable nu track the modern editor while particles track the author, separating the two layers
+    cleanly. They do not: editor explains η² = 0.036 of the variance in elision rate, and within
+    Bekker's 1837 text alone it runs from 0.73% to 4.15%. These are features of the transmitted
+    work, not of the printing house. The test was abandoned, not reinterpreted.</li>
+    <li><strong>Famous seams are invisible.</strong> Metaphysics Λ, often held to be an independent
+    lecture, is the <em>least</em> distinctive book in its treatise. Metaphysics K, whose
+    authenticity has been doubted for a century, is unremarkable. Politics VII, central to Jaeger's
+    developmental argument, is second-least distinctive. On this measure, four traditional seams
+    simply are not there.</li>
+  </ul>
+</section>
+
+<section class="marg" data-marg="Limits">
+  <h2>What this cannot tell you</h2>
+  <ul>
+    <li><strong>There is no out-of-corpus author.</strong> Theophrastus or Plato would calibrate how
+    large a between-author distance ought to be. The pseudo-Aristotelian works are the only
+    different-author signal available, and they are many different authors rather than one control.</li>
+    <li><strong>Three works are missing.</strong> Categories, De Interpretatione and the Isagoge have
+    no Greek text in this repository. The Magna Moralia is absent entirely — a real loss here, since
+    it is the third ethical treatise and Kenny's argument uses it.</li>
+    <li><strong>Genre is not fully controlled</strong> in the authenticity study, as the study itself
+    demonstrates.</li>
+    <li><strong>Stylometry attributes nothing on its own.</strong> "These books group with the
+    Eudemian" is a fact about particle frequencies. Whether that means Aristotle wrote them for the
+    Eudemian course, revised them later, or a pupil transmitted them is not something a token count
+    can decide.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Toolkit and results in <span class="mono">analysis/</span> — corpus loader, feature
+  vocabularies, Burrows's Delta with permutation tests and bootstrap intervals, four studies, and
+  the JSON behind every figure above. Greek text from the Perseus and First1KGreek TEI editions
+  already vendored in this repository.</p>
+</footer>
+
+</div>
+</div>
+<div id="tip" role="status"></div>
+
+<script>
+const S = getComputedStyle(document.documentElement);
+const C = n => S.getPropertyValue(n).trim();
+const tip = document.getElementById('tip');
+function wire(el, html){
+  const show = e => {
+    tip.innerHTML = html; tip.style.opacity = 1;
+    const r = tip.getBoundingClientRect();
+    let x = (e.clientX ?? 0) + 14, y = (e.clientY ?? 0) - r.height - 12;
+    if (x + r.width > innerWidth - 8) x = innerWidth - r.width - 8;
+    if (y < 8) y = (e.clientY ?? 0) + 18;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  };
+  el.addEventListener('mousemove', show);
+  el.addEventListener('mouseenter', show);
+  el.addEventListener('mouseleave', () => tip.style.opacity = 0);
+  el.addEventListener('focus', e => {
+    const b = el.getBoundingClientRect();
+    show({clientX: b.left + b.width/2, clientY: b.top});
+  });
+  el.addEventListener('blur', () => tip.style.opacity = 0);
+  el.setAttribute('tabindex','0');
+  el.classList.add('mark');
+}
+const svgEl = (n,a={}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', n);
+  for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+/* ---------- Chart 1: diverging, EN books ---------- */
+(function(){
+  const data = [
+    {b:'I',   en:0.665, ee:0.722}, {b:'II',  en:0.629, ee:0.686},
+    {b:'III', en:0.519, ee:0.665}, {b:'IV',  en:0.538, ee:0.660},
+    {b:'V',   en:0.674, ee:0.535, cb:1}, {b:'VI', en:0.679, ee:0.618, cb:1},
+    {b:'VII', en:0.598, ee:0.511, cb:1},
+    {b:'VIII',en:0.570, ee:0.793}, {b:'IX',  en:0.520, ee:0.708},
+    {b:'X',   en:0.472, ee:0.630},
+  ].map(d => ({...d, v: d.en - d.ee}));
+
+  const W=980, rowH=34, padT=62, padB=34, padL=118, padR=150;
+  const H = padT + data.length*rowH + padB;
+  const max = 0.24, mid = padL + (W-padL-padR)/2;
+  const x = v => mid + (v/max) * ((W-padL-padR)/2);
+
+  const svg = svgEl('svg',{viewBox:`0 0 ${W} ${H}`, width:W, role:'img',
+    'aria-label':'Diverging bar chart: Nicomachean books V, VI and VII lean Eudemian; all others lean Nicomachean'});
+
+  [-0.2,-0.1,0,0.1,0.2].forEach(t=>{
+    svg.appendChild(svgEl('line',{x1:x(t),x2:x(t),y1:padT-16,y2:H-padB+4,
+      stroke:t===0?C('--muted'):C('--rule'), 'stroke-width':t===0?1.5:1}));
+    const lb = svgEl('text',{x:x(t), y:padT-24, 'text-anchor':'middle', fill:C('--muted'),
+      'font-family':'IBM Plex Mono, monospace','font-size':10});
+    lb.textContent = t===0 ? '0' : (t>0?'+':'') + t.toFixed(1); svg.appendChild(lb);
+  });
+  const cap=(t,xx,anc)=>{const e=svgEl('text',{x:xx,y:16,'text-anchor':anc,fill:C('--muted'),
+    'font-family':'IBM Plex Mono, monospace','font-size':10,'letter-spacing':'0.1em'});
+    e.textContent=t; svg.appendChild(e);};
+  cap('◀ FITS ITS OWN TREATISE BETTER', mid-14,'end');
+  cap('FITS THE EUDEMIAN BETTER ▶', mid+14,'start');
+
+  data.forEach((d,i)=>{
+    const y = padT + i*rowH, h = 19, ry = y + (rowH-h)/2;
+    const lab = svgEl('text',{x:padL-16, y:ry+14, 'text-anchor':'end',
+      fill:d.cb?C('--rubric'):C('--ink'), 'font-family':'IBM Plex Mono, monospace',
+      'font-size':12,'font-weight':d.cb?600:400});
+    lab.textContent='Book '+d.b; svg.appendChild(lab);
+
+    const pos = d.v>0, x0 = pos?mid+1:x(d.v), w = Math.abs(x(d.v)-mid)-1;
+    const r = svgEl('rect',{x:x0, y:ry, width:Math.max(w,1), height:h,
+      fill: pos?C('--rubric'):C('--blue'),
+      rx:3, ry:3});
+    svg.appendChild(r);
+    wire(r, `<b>Nicomachean ${d.b}</b><br>Δ to Nicomachean ${d.en.toFixed(3)}<br>Δ to Eudemian ${d.ee.toFixed(3)}<br>→ nearer the ${pos?'Eudemian':'Nicomachean'}`);
+
+    // Long bars carry their value inside; short ones outside. Otherwise the
+    // widest bar's label collides with the book name in the left margin.
+    const inside = w > 74;
+    const vt = svgEl('text',{
+      x: inside ? (pos ? x(d.v)-8 : x(d.v)+8) : (pos ? x(d.v)+9 : x(d.v)-9),
+      y:ry+13.5,
+      'text-anchor': inside ? (pos?'end':'start') : (pos?'start':'end'),
+      fill: inside ? C('--raise') : C('--muted'),
+      'font-family':'IBM Plex Mono, monospace','font-size':10.5});
+    vt.textContent=(d.v>0?'+':'\u2212')+Math.abs(d.v).toFixed(3); svg.appendChild(vt);
+
+    if(d.cb){
+      const t = svgEl('text',{x:W-padR+64, y:ry+14, fill:C('--rubric'),
+        'font-family':'IBM Plex Mono, monospace','font-size':10,'letter-spacing':'.08em'});
+      t.textContent='COMMON BOOK'; svg.appendChild(t);
+    }
+  });
+  document.getElementById('c1').appendChild(svg);
+})();
+
+/* ---------- Chart 2: authenticity strip ---------- */
+(function(){
+  const d=[["Long",.549,"c"],["Sens",.574,"c"],["Insomn",.590,"c"],["Somn",.597,"c"],
+   ["MA",.612,"d"],["Poet",.624,"c"],["GA",.633,"c"],["DA",.636,"c"],["Spir",.651,"s"],
+   ["Juv",.658,"c"],["Mete",.663,"c"],["PA",.668,"c"],["IA",.668,"c"],["SE",.671,"c"],
+   ["Cael",.673,"c"],["EN",.677,"c"],["EE",.681,"c"],["GC",.681,"c"],["Rhet",.688,"c"],
+   ["Pol",.691,"c"],["Lin",.696,"s"],["Mech",.697,"s"],["HA",.709,"c"],["Mem",.714,"c"],
+   ["Col",.725,"s"],["Meta",.726,"c"],["Mirab",.742,"s"],["APo",.749,"c"],["Phys",.752,"c"],
+   ["Aud",.753,"s"],["APr",.772,"c"],["DM",.774,"s"],["Top",.779,"c"],["Phgn",.781,"s"],
+   ["Oec",.823,"s"],["MXG",.893,"s"]];
+  // Only the four extremes are labelled. The dense middle is left to the
+  // tooltips; labelling it produced unreadable overlaps.
+  const LBL={Long:'above',MXG:'below',Spir:'below',Top:'above'};
+  const LANES=[['c','genuine',   '--blue'],
+               ['d','disputed',  '--teal'],
+               ['s','spurious',  '--rubric']];
+
+  const W=980,padL=104,padR=30,padT=44,laneH=62,padB=56;
+  const H=padT+LANES.length*laneH+padB;
+  const lo=.52,hi=.92, x=v=>padL+(v-lo)/(hi-lo)*(W-padL-padR);
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,width:W,role:'img',
+    'aria-label':'Dot plot of 36 works by stylistic distance from the genuine core, split into genuine, disputed and spurious lanes'});
+
+  for(let t=.55;t<=.9001;t+=.05){
+    svg.appendChild(svgEl('line',{x1:x(t),x2:x(t),y1:padT-14,y2:H-padB+6,
+      stroke:C('--rule'),'stroke-width':1}));
+    const e=svgEl('text',{x:x(t),y:H-padB+24,'text-anchor':'middle',fill:C('--muted'),
+      'font-family':'IBM Plex Mono, monospace','font-size':10});
+    e.textContent=t.toFixed(2); svg.appendChild(e);
+  }
+  const ax=svgEl('text',{x:padL,y:H-padB+44,fill:C('--muted'),
+    'font-family':'IBM Plex Mono, monospace','font-size':10,'letter-spacing':'.1em'});
+  ax.textContent='BURROWS\u2019S \u0394 FROM THE GENUINE CORE  \u2192  MORE UNLIKE ARISTOTLE';
+  svg.appendChild(ax);
+
+  const MEANS={c:0.673,s:0.753};
+  LANES.forEach(([k,label,cc],li)=>{
+    const cy=padT+li*laneH+laneH/2;
+    const lb=svgEl('text',{x:padL-18,y:cy+4,'text-anchor':'end',fill:C(cc),
+      'font-family':'IBM Plex Mono, monospace','font-size':11,'letter-spacing':'.06em'});
+    lb.textContent=label; svg.appendChild(lb);
+
+    if(MEANS[k]!==undefined){
+      svg.appendChild(svgEl('line',{x1:x(MEANS[k]),x2:x(MEANS[k]),y1:cy-24,y2:cy+24,
+        stroke:C(cc),'stroke-width':2,'stroke-dasharray':'3 3',opacity:.85}));
+      const mt=svgEl('text',{x:x(MEANS[k]),y:cy-29,'text-anchor':'middle',fill:C(cc),
+        'font-family':'IBM Plex Mono, monospace','font-size':9.5});
+      mt.textContent='mean '+MEANS[k].toFixed(3); svg.appendChild(mt);
+    }
+
+    const pts=d.filter(r=>r[2]===k).sort((p,q)=>p[1]-q[1]);
+    const placed=[];
+    pts.forEach(([n,v])=>{
+      const cx=x(v);
+      // nudge onto a sub-row only when a neighbour is too close to read
+      let sub=0;
+      while(placed.some(u=>u.sub===sub && Math.abs(u.cx-cx)<13) && sub<2) sub++;
+      placed.push({cx,sub});
+      const yy=cy+(sub===0?0:(sub===1?-13:13));
+      const c=svgEl('circle',{cx,cy:yy,r:6,fill:C(cc),stroke:C('--raise'),'stroke-width':2});
+      svg.appendChild(c);
+      wire(c,`<b>${n}</b><br>\u0394 ${v.toFixed(3)}<br>${label}`);
+      if(LBL[n]){
+        const above=LBL[n]==='above';
+        const t=svgEl('text',{x:cx,y:above?yy-13:yy+21,'text-anchor':'middle',
+          fill:C('--ink-2'),'font-family':'IBM Plex Mono, monospace','font-size':10});
+        t.textContent=n; svg.appendChild(t);
+      }
+    });
+  });
+
+  document.getElementById('c2').appendChild(svg);
+})();
+
+/* ---------- Chart 3: seam residuals ---------- */
+(function(){
+  const d=[["History of Animals X",.444,"rejected as post-Aristotelian",1],
+   ["Parts of Animals I",.434,"methodological preface",1],
+   ["Generation of Animals I",.226,"",0],["Generation of Animals V",.201,"",0],
+   ["Politics I",.191,"",0],["Parts of Animals IV",.188,"",0],
+   ["Politics III",.158,"",0],["Topics V",.143,"",0],
+   ["Generation of Animals II",.118,"",0],["Politics V",.112,"",0],
+   ["Metaphysics α elatton",.104,"ascribed to Pasicles in antiquity",0],
+   ["Metaphysics K",-.085,"authenticity long doubted",0],
+   ["Politics VII",-.109,"Jaeger’s ideal-state book",0],
+   ["Metaphysics Λ",-.203,"held to be an independent lecture",0]];
+  const W=980,rowH=27,padT=34,padB=48,padL=240,padR=250;
+  const H=padT+d.length*rowH+padB;
+  const lo=-.24,hi=.48, x=v=>padL+(v-lo)/(hi-lo)*(W-padL-padR);
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,width:W,role:'img',
+    'aria-label':'Bar chart of length-corrected distinctiveness for individual books'});
+
+  [-0.2,0,0.2,0.4].forEach(t=>{
+    svg.appendChild(svgEl('line',{x1:x(t),x2:x(t),y1:padT-16,y2:H-padB+2,
+      stroke:t===0?C('--muted'):C('--rule'),'stroke-width':t===0?1.5:1}));
+    const e=svgEl('text',{x:x(t),y:padT-24,'text-anchor':'middle',fill:C('--muted'),
+      'font-family':'IBM Plex Mono, monospace','font-size':10});
+    e.textContent=(t>0?'+':(t<0?'\u2212':''))+Math.abs(t).toFixed(1); svg.appendChild(e);
+  });
+  const at=svgEl('text',{x:padL,y:H-padB+22,fill:C('--muted'),
+    'font-family':'IBM Plex Mono, monospace','font-size':10,'letter-spacing':'.1em'});
+  at.textContent='LENGTH-CORRECTED RESIDUAL  \u2192  ODDER THAN ITS SIZE EXPLAINS';
+  svg.appendChild(at);
+
+  d.forEach((r,i)=>{
+    const [n,v,note,hot]=r, y=padT+i*rowH, h=15, ry=y+(rowH-h)/2;
+    const lb=svgEl('text',{x:padL-14,y:ry+12,'text-anchor':'end',
+      fill:hot?C('--ink'):C('--ink-2'),'font-family':'Spectral, serif',
+      'font-size':12.5,'font-weight':hot?600:400});
+    lb.textContent=n; svg.appendChild(lb);
+
+    const pos=v>0, x0=pos?x(0)+1:x(v), w=Math.abs(x(v)-x(0))-1;
+    const rc=svgEl('rect',{x:x0,y:ry,width:Math.max(w,1),height:h,rx:3,ry:3,
+      fill: hot?C('--rubric'):(pos?C('--blue'):C('--muted')),
+      opacity: hot?1:(pos?.72:.42)});
+    svg.appendChild(rc);
+    wire(rc,`<b>${n}</b><br>length-corrected residual ${v>0?'+':''}${v.toFixed(3)}${note?'<br>'+note:''}`);
+
+    if(note){
+      const t=svgEl('text',{x:W-padR+16,y:ry+12,fill:C('--muted'),
+        'font-family':'Spectral, serif','font-size':11.5,'font-style':'italic'});
+      t.textContent=note; svg.appendChild(t);
+    }
+  });
+  document.getElementById('c3').appendChild(svg);
+})();
+</script>

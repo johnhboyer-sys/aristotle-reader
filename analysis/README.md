@@ -37,7 +37,9 @@ Corpus as loaded: **830,726 tokens, 48,244 types, 39 works.**
 
 ## Reading the results
 
-`FINDINGS.md` has the results and the caveats. Two things are worth knowing
+`FINDINGS.md` has the results and the caveats; `report.html` is the same
+material as a self-contained page with the figures drawn (published at
+https://claude.ai/code/artifact/0480cf4b-78ed-4395-90da-fca27a9f9828). Two things are worth knowing
 before trusting any number in it:
 
 - **Genre is a real confounder** and is not fully removed. The most formal works
