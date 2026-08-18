@@ -48,18 +48,22 @@ mid_column_book_starts:
   - { book: 3, column: "661a" }
   - { book: 4, column: "676a" }
 
-# Mid-book Bekker line-number skips in the TLG text (faithful to the edition).
+# Mid-book Bekker line-number skips: at each of these the Louis edition prints
+# one physical line straddling two Bekker numbers (the export tags it with a
+# range, e.g. 689a n="13-14"); stage1 files the line under the first number, so
+# the second has no line of its own. At 678b the range starts on the number of
+# the preceding plain line (5, "5-6"), so the two merge and 6 is the gap.
 expected_line_gaps:
-  - { column: "668b", after: 12, next: 15 }
-  - { column: "669b", after: 2,  next: 5  }
-  - { column: "670b", after: 7,  next: 10 }
-  - { column: "674b", after: 27, next: 30 }
-  - { column: "677a", after: 32, next: 35 }
-  - { column: "677b", after: 17, next: 20 }
-  - { column: "678a", after: 18, next: 21 }
+  - { column: "668b", after: 13, next: 15 }
+  - { column: "669b", after: 3,  next: 5  }
+  - { column: "670b", after: 8,  next: 10 }
+  - { column: "674b", after: 28, next: 30 }
+  - { column: "677a", after: 33, next: 35 }
+  - { column: "677b", after: 18, next: 20 }
+  - { column: "678a", after: 19, next: 21 }
   - { column: "678b", after: 5,  next: 7  }
-  - { column: "689a", after: 12, next: 15 }
-  - { column: "697b", after: 27, next: 30 }
+  - { column: "689a", after: 13, next: 15 }
+  - { column: "697b", after: 28, next: 30 }
 
 books:
   - { n: 1, start: "639a1",  end: "646a4"  }

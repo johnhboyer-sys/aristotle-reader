@@ -34,10 +34,6 @@ mid_column_book_starts:
   - { book: 3, column: "298a" }
   - { book: 4, column: "307b" }
 
-# Mid-book Bekker line-number skip in the TLG text (faithful to the edition).
-expected_line_gaps:
-  - { column: "294a", after: 25, next: 28 }
-
 books:
   - { n: 1, start: "268a1",  end: "283b22" }
   - { n: 2, start: "283b26", end: "298a20" }

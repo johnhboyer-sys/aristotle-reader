@@ -73,7 +73,9 @@ def _line_text(el: etree._Element, strip_bars: bool = False) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-_COMPOUND_N = re.compile(r"^\d+(?:\s*,\s*\d+)+$")
+# Comma-separated (APo 99b "8,9") or hyphen-range (PA 689a "13-14", also in
+# Cael and DM) — both mean one physical line straddling two Bekker numbers.
+_COMPOUND_N = re.compile(r"^\d+(?:\s*[,-]\s*\d+)+$")
 # Bekker numbers a few lines 5a, 5b … where an edition inserts text after a
 # numbered line — Physics VII 244b runs 1-5, 5a-5d, 6-15. These are ordinary
 # lines of text, not headings.
@@ -105,18 +107,23 @@ def _line_no(n: str | None) -> tuple[int, str | None] | None:
 
 def _expand_compound(items: list[tuple[str, str]]) -> list[tuple[int, str]]:
     """Reconstruct true Bekker lines from a run of compound-numbered physical
-    lines. In a few places Ross's OCT prints one physical line that straddles
-    two Bekker lines, tagging it with both numbers (n="8,9") and an in-line `|`
-    at the internal break (seen only at APo 99b8-14). For each physical line we
-    rejoin a word the break splits (καθόλου πρῶ|τον → πρῶτον, kept whole on the
-    earlier line, as with hyphenation), then split the remainder at word-boundary
-    `|`s and map the pieces onto the line's Bekker numbers. Pieces that share a
-    Bekker number across adjacent physical lines are concatenated, so every
-    Bekker line is recovered exactly once and in order."""
+    lines. In a few places an edition prints one physical line that straddles
+    two Bekker lines, tagging it with both numbers — comma-separated (n="8,9",
+    APo 99b8-14) or as a hyphen range (n="13-14", PA/Cael/DM) — usually with an
+    in-line `|` at the internal break. For each physical line we rejoin a word
+    the break splits (καθόλου πρῶ|τον → πρῶτον, kept whole on the earlier line,
+    as with hyphenation), then split the remainder at word-boundary `|`s and
+    map the pieces onto the line's Bekker numbers. Pieces that share a Bekker
+    number across adjacent physical lines are concatenated, so every Bekker
+    line is recovered exactly once and in order. A line with no `|` at all (the
+    PA prose ranges) is one piece and lands whole on its first number — the
+    second number then has no line of its own, a real gap the manifest
+    declares. Where a range overlaps a flanking plain-numbered line (Cael 294a,
+    DM 401a), parse_spine merges the two entries after the hyphen rejoin."""
     by_line: dict[int, list[str]] = {}
     order: list[int] = []
     for n_str, raw in items:
-        nums = [int(x) for x in n_str.split(",")]
+        nums = [int(x) for x in re.split(r"\s*[,-]\s*", n_str)]
         text = re.sub(r"(?<=\S)\|(?=\S)", "", raw)      # rejoin mid-word break
         pieces = re.split(r"\s*\|\s*", text)            # split word-boundary breaks
         for i, piece in enumerate(pieces):
@@ -153,7 +160,8 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
 
         def flush():
             for line_no, text in _expand_compound(compound):
-                flat.append({"column": column, "n": line_no, "text": text})
+                flat.append({"column": column, "n": line_no, "text": text,
+                             "compound": True})
             compound.clear()
 
         for l in div.iter("{*}l"):
@@ -191,6 +199,26 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
         line["text"] = line["text"][:-1] + head
         line["joined"] = True
         nxt["text"] = rest
+
+    # A compound range can overlap a flanking plain-numbered line (Cael 294a:
+    # plain 25 then n="25-26"; DM 401a: n="2-3" ending παρ- then plain 3).
+    # Both entries are halves of the same Bekker line, so merge them. Only
+    # compound-derived entries qualify — two plain lines sharing a number is a
+    # data defect the validators must still see.
+    merged: list[dict] = []
+    for line in flat:
+        prev = merged[-1] if merged else None
+        if (prev is not None
+                and (prev.get("compound") or line.get("compound"))
+                and prev["column"] == line["column"]
+                and prev["n"] == line["n"]
+                and not prev.get("sub") and not line.get("sub")):
+            prev["text"] = (prev["text"] + " " + line["text"]).strip()
+            if line.get("joined"):
+                prev["joined"] = True
+            continue
+        merged.append(line)
+    flat = merged
 
     # Group into per-(book, column) segments, preserving document order.
     segments: list[dict] = []
