@@ -1,0 +1,313 @@
+{
+  "editorial_profile": {
+    "APr": {
+      "elision_rate": 2.908926385266408,
+      "movable_nu_esti": 51.506024096385545,
+      "movable_nu_houto": 60.8,
+      "tokens": 37574,
+      "editor": "Bekker1837"
+    },
+    "APo": {
+      "elision_rate": 4.146631964356611,
+      "movable_nu_esti": 50.865051903114185,
+      "movable_nu_houto": 53.211009174311926,
+      "tokens": 22669,
+      "editor": "Bekker1837"
+    },
+    "Top": {
+      "elision_rate": 2.822105358600054,
+      "movable_nu_esti": 49.714285714285715,
+      "movable_nu_houto": 68.0,
+      "tokens": 44116,
+      "editor": "Bekker1837"
+    },
+    "SE": {
+      "elision_rate": 3.528161530286929,
+      "movable_nu_esti": 48.818897637795274,
+      "movable_nu_houto": 73.33333333333333,
+      "tokens": 14115,
+      "editor": "Bekker1837"
+    },
+    "Phys": {
+      "elision_rate": 3.231859503379425,
+      "movable_nu_esti": 62.44186046511628,
+      "movable_nu_houto": 51.5625,
+      "tokens": 54891,
+      "editor": "Ross1960"
+    },
+    "Cael": {
+      "elision_rate": 3.150906517490059,
+      "movable_nu_esti": 52.77777777777778,
+      "movable_nu_houto": 51.31578947368421,
+      "tokens": 29674,
+      "editor": "Prantl1881"
+    },
+    "GC": {
+      "elision_rate": 3.0047858484279395,
+      "movable_nu_esti": 43.867924528301884,
+      "movable_nu_houto": 44.89795918367347,
+      "tokens": 16507,
+      "editor": "Forster"
+    },
+    "Mete": {
+      "elision_rate": 3.0931802036466967,
+      "movable_nu_esti": 49.30362116991643,
+      "movable_nu_houto": 44.66019417475728,
+      "tokens": 33784,
+      "editor": "Bekker1837"
+    },
+    "DM": {
+      "elision_rate": 1.4591741695125737,
+      "movable_nu_esti": 50.0,
+      "movable_nu_houto": 75.0,
+      "tokens": 6442,
+      "editor": "Bekker1837"
+    },
+    "DA": {
+      "elision_rate": 3.563901130484767,
+      "movable_nu_esti": 52.94117647058823,
+      "movable_nu_houto": 50.666666666666664,
+      "tokens": 20876,
+      "editor": "Bekker1837"
+    },
+    "Sens": {
+      "elision_rate": 3.4951703101169294,
+      "movable_nu_esti": 52.27272727272727,
+      "movable_nu_houto": 51.724137931034484,
+      "tokens": 7868,
+      "editor": "Bekker1837"
+    },
+    "Mem": {
+      "elision_rate": 3.618290258449304,
+      "movable_nu_esti": 50.0,
+      "movable_nu_houto": 36.36363636363637,
+      "tokens": 2515,
+      "editor": "Bekker1837"
+    },
+    "Somn": {
+      "elision_rate": 3.5797925727668116,
+      "movable_nu_esti": 52.5,
+      "movable_nu_houto": 33.333333333333336,
+      "tokens": 2989,
+      "editor": "Bekker1837"
+    },
+    "Insomn": {
+      "elision_rate": 2.6683087027914616,
+      "movable_nu_esti": 35.294117647058826,
+      "movable_nu_houto": 30.0,
+      "tokens": 2436,
+      "editor": "Bekker1837"
+    },
+    "DivSomn": {
+      "elision_rate": 4.0,
+      "movable_nu_esti": 62.5,
+      "movable_nu_houto": 44.44444444444444,
+      "tokens": 1200,
+      "editor": "Bekker1837"
+    },
+    "Long": {
+      "elision_rate": 3.0743432084963667,
+      "movable_nu_esti": 45.833333333333336,
+      "movable_nu_houto": 66.66666666666667,
+      "tokens": 1789,
+      "editor": "Bekker1837"
+    },
+    "Juv": {
+      "elision_rate": 3.255813953488372,
+      "movable_nu_esti": 63.23529411764706,
+      "movable_nu_houto": 57.142857142857146,
+      "tokens": 7955,
+      "editor": "Bekker1837"
+    },
+    "Spir": {
+      "elision_rate": 3.0241349229427157,
+      "movable_nu_esti": 42.857142857142854,
+      "movable_nu_houto": 30.0,
+      "tokens": 3439,
+      "editor": "Jaeger1913"
+    },
+    "HA": {
+      "elision_rate": 3.3522938706076233,
+      "movable_nu_esti": 38.80597014925373,
+      "movable_nu_houto": 42.016806722689076,
+      "tokens": 94055,
+      "editor": "Bekker1837"
+    },
+    "PA": {
+      "elision_rate": 3.214447675194067,
+      "movable_nu_esti": 50.09671179883946,
+      "movable_nu_houto": 36.111111111111114,
+      "tokens": 37487,
+      "editor": "Langkavel1868"
+    },
+    "MA": {
+      "elision_rate": 3.456669912366115,
+      "movable_nu_esti": 47.22222222222222,
+      "movable_nu_houto": 68.75,
+      "tokens": 4108,
+      "editor": "Jaeger1913"
+    },
+    "IA": {
+      "elision_rate": 3.4227129337539433,
+      "movable_nu_esti": 37.03703703703704,
+      "movable_nu_houto": 41.666666666666664,
+      "tokens": 6340,
+      "editor": "Jaeger1913"
+    },
+    "GA": {
+      "elision_rate": 2.921178042312217,
+      "movable_nu_esti": 53.13059033989266,
+      "movable_nu_houto": 50.48543689320388,
+      "tokens": 50151,
+      "editor": "Bekker1837"
+    },
+    "Col": {
+      "elision_rate": 1.679328268692523,
+      "movable_nu_esti": 48.83720930232558,
+      "movable_nu_houto": 71.42857142857143,
+      "tokens": 5002,
+      "editor": "Bekker1837"
+    },
+    "Aud": {
+      "elision_rate": 1.6323024054982818,
+      "movable_nu_esti": 66.66666666666667,
+      "movable_nu_houto": 28.571428571428573,
+      "tokens": 3492,
+      "editor": "Bekker1837"
+    },
+    "Phgn": {
+      "elision_rate": 0.7287870900572618,
+      "movable_nu_esti": 42.10526315789474,
+      "movable_nu_houto": 75.0,
+      "tokens": 5763,
+      "editor": "Bekker1837"
+    },
+    "Mirab": {
+      "elision_rate": 1.710239651416122,
+      "movable_nu_esti": 40.90909090909091,
+      "movable_nu_houto": 36.36363636363637,
+      "tokens": 9180,
+      "editor": "Bekker1837"
+    },
+    "Mech": {
+      "elision_rate": 1.6894320632638389,
+      "movable_nu_esti": 53.6231884057971,
+      "movable_nu_houto": 52.94117647058823,
+      "tokens": 8346,
+      "editor": "Bekker1837"
+    },
+    "Lin": {
+      "elision_rate": 3.2432432432432434,
+      "movable_nu_esti": 53.84615384615385,
+      "movable_nu_houto": 100.0,
+      "tokens": 2960,
+      "editor": "Bekker1837"
+    },
+    "Vent": {
+      "elision_rate": 0.9389671361502347,
+      "movable_nu_esti": NaN,
+      "movable_nu_houto": NaN,
+      "tokens": 426,
+      "editor": "Bekker1837"
+    },
+    "MXG": {
+      "elision_rate": 2.8319310486353375,
+      "movable_nu_esti": 51.06382978723404,
+      "movable_nu_houto": 71.05263157894737,
+      "tokens": 4873,
+      "editor": "Bekker1837"
+    },
+    "Meta": {
+      "elision_rate": 3.085894324952676,
+      "movable_nu_esti": 52.13740458015267,
+      "movable_nu_houto": 58.57142857142857,
+      "tokens": 78713,
+      "editor": "Ross1924"
+    },
+    "EN": {
+      "elision_rate": 4.345822551487009,
+      "movable_nu_esti": 54.09153952843273,
+      "movable_nu_houto": 41.142857142857146,
+      "tokens": 56422,
+      "editor": "Bywater1894"
+    },
+    "EE": {
+      "elision_rate": 4.0759416303766525,
+      "movable_nu_esti": 48.9010989010989,
+      "movable_nu_houto": 52.30769230769231,
+      "tokens": 26178,
+      "editor": "Susemihl1884"
+    },
+    "VV": {
+      "elision_rate": 4.032258064516129,
+      "movable_nu_esti": 28.30188679245283,
+      "movable_nu_houto": NaN,
+      "tokens": 1488,
+      "editor": "Bekker1831"
+    },
+    "Pol": {
+      "elision_rate": 2.674409719569038,
+      "movable_nu_esti": 49.369085173501574,
+      "movable_nu_houto": 44.52554744525548,
+      "tokens": 65435,
+      "editor": "Ross1957"
+    },
+    "Oec": {
+      "elision_rate": 1.7166693406064495,
+      "movable_nu_esti": 46.666666666666664,
+      "movable_nu_houto": 45.45454545454545,
+      "tokens": 6233,
+      "editor": "Armstrong"
+    },
+    "Rhet": {
+      "elision_rate": 2.3431331568436207,
+      "movable_nu_esti": 70.70524412296564,
+      "movable_nu_houto": 60.0,
+      "tokens": 43062,
+      "editor": "Ross1959"
+    },
+    "Poet": {
+      "elision_rate": 1.798879386611619,
+      "movable_nu_esti": 71.6867469879518,
+      "movable_nu_houto": 38.46153846153846,
+      "tokens": 10173,
+      "editor": "Kassel1965"
+    }
+  },
+  "elision_anova": {
+    "eta2_editor": 0.03631993333671899,
+    "bekker_min": 0.7287870900572618,
+    "bekker_max": 4.146631964356611
+  },
+  "ross_control": {
+    "ross_ross": 0.9808338637027917,
+    "ross_other": 0.9391539918097527,
+    "other_other": 0.9050854723091072,
+    "verdict": "NOT editor-driven"
+  },
+  "common_book_features": {
+    "EN-proper": {
+      "elision_rate": 4.422579499923923,
+      "movable_nu_esti": 56.79012345679013,
+      "movable_nu_houto": 37.77777777777778,
+      "tokens": 39434
+    },
+    "CommonBooks": {
+      "elision_rate": 4.167647751353897,
+      "movable_nu_esti": 50.63291139240506,
+      "movable_nu_houto": 52.5,
+      "tokens": 16988
+    },
+    "EE": {
+      "elision_rate": 4.0759416303766525,
+      "movable_nu_esti": 48.9010989010989,
+      "movable_nu_houto": 52.30769230769231,
+      "tokens": 26178
+    }
+  },
+  "common_book_feature_side": [
+    "EE",
+    "EE",
+    "EE"
+  ]
+}

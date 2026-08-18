@@ -1,0 +1,873 @@
+{
+  "chunk": 1500,
+  "works": [
+    {
+      "wid": "APr",
+      "status": "core",
+      "group": "logic",
+      "chunks": 25,
+      "delta": 0.7722580070545852,
+      "ci": [
+        0.7394881633658315,
+        0.8056766644825066
+      ],
+      "nearest": "APo",
+      "nearest_delta": 0.4527443129890119
+    },
+    {
+      "wid": "APo",
+      "status": "core",
+      "group": "logic",
+      "chunks": 15,
+      "delta": 0.7488468034962491,
+      "ci": [
+        0.7093546436767892,
+        0.7901121732633842
+      ],
+      "nearest": "Phys",
+      "nearest_delta": 0.3458634134140998
+    },
+    {
+      "wid": "Top",
+      "status": "core",
+      "group": "logic",
+      "chunks": 29,
+      "delta": 0.7793143820920708,
+      "ci": [
+        0.743838781376427,
+        0.8189485792008501
+      ],
+      "nearest": "SE",
+      "nearest_delta": 0.4388726767743758
+    },
+    {
+      "wid": "SE",
+      "status": "core",
+      "group": "logic",
+      "chunks": 9,
+      "delta": 0.6707553542346949,
+      "ci": [
+        0.6024879805197183,
+        0.7467059873306828
+      ],
+      "nearest": "EE",
+      "nearest_delta": 0.429036151007636
+    },
+    {
+      "wid": "Phys",
+      "status": "core",
+      "group": "physics",
+      "chunks": 36,
+      "delta": 0.7516105445673279,
+      "ci": [
+        0.7246337941507797,
+        0.7813203065178159
+      ],
+      "nearest": "Meta",
+      "nearest_delta": 0.31380741847787996
+    },
+    {
+      "wid": "Cael",
+      "status": "core",
+      "group": "physics",
+      "chunks": 20,
+      "delta": 0.6732656037320348,
+      "ci": [
+        0.6409653205942871,
+        0.7088438641944669
+      ],
+      "nearest": "Phys",
+      "nearest_delta": 0.31845971228667397
+    },
+    {
+      "wid": "GC",
+      "status": "core",
+      "group": "physics",
+      "chunks": 11,
+      "delta": 0.6812271005728708,
+      "ci": [
+        0.6461876575749635,
+        0.7211101082975304
+      ],
+      "nearest": "Meta",
+      "nearest_delta": 0.3268834491358406
+    },
+    {
+      "wid": "Mete",
+      "status": "core",
+      "group": "physics",
+      "chunks": 22,
+      "delta": 0.6630185973711357,
+      "ci": [
+        0.6270655900897943,
+        0.6979678021504704
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.29707952406442506
+    },
+    {
+      "wid": "DM",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 4,
+      "delta": 0.7740521578879378,
+      "ci": [
+        0.7514134324642214,
+        0.7966908833116542
+      ],
+      "nearest": "HA",
+      "nearest_delta": 0.5613743149865038
+    },
+    {
+      "wid": "DA",
+      "status": "core",
+      "group": "psych",
+      "chunks": 14,
+      "delta": 0.6356931419355002,
+      "ci": [
+        0.6100609465078685,
+        0.6628317168894906
+      ],
+      "nearest": "Meta",
+      "nearest_delta": 0.31895258228534434
+    },
+    {
+      "wid": "Sens",
+      "status": "core",
+      "group": "psych",
+      "chunks": 5,
+      "delta": 0.5741078169217594,
+      "ci": [
+        0.5270762139272019,
+        0.639518542907565
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.35759263152349613
+    },
+    {
+      "wid": "Mem",
+      "status": "core",
+      "group": "psych",
+      "chunks": 2,
+      "delta": 0.7144767798984037,
+      "ci": [
+        NaN,
+        NaN
+      ],
+      "nearest": "DA",
+      "nearest_delta": 0.5895676749103262
+    },
+    {
+      "wid": "Somn",
+      "status": "core",
+      "group": "psych",
+      "chunks": 2,
+      "delta": 0.5967037155569292,
+      "ci": [
+        NaN,
+        NaN
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.46433255569742055
+    },
+    {
+      "wid": "Insomn",
+      "status": "core",
+      "group": "psych",
+      "chunks": 2,
+      "delta": 0.5900850386107486,
+      "ci": [
+        NaN,
+        NaN
+      ],
+      "nearest": "Sens",
+      "nearest_delta": 0.49712155586414486
+    },
+    {
+      "wid": "Long",
+      "status": "core",
+      "group": "psych",
+      "chunks": 1,
+      "delta": 0.5485305518544282,
+      "ci": [
+        NaN,
+        NaN
+      ],
+      "nearest": "Sens",
+      "nearest_delta": 0.5432638446536113
+    },
+    {
+      "wid": "Juv",
+      "status": "core",
+      "group": "psych",
+      "chunks": 5,
+      "delta": 0.6576292221739781,
+      "ci": [
+        0.6151564978945558,
+        0.7175246479757906
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.3570439250811819
+    },
+    {
+      "wid": "Spir",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 2,
+      "delta": 0.650581126420634,
+      "ci": [
+        NaN,
+        NaN
+      ],
+      "nearest": "Meta",
+      "nearest_delta": 0.5528567323894001
+    },
+    {
+      "wid": "HA",
+      "status": "core",
+      "group": "bio",
+      "chunks": 63,
+      "delta": 0.7086384471488223,
+      "ci": [
+        0.6971948965071365,
+        0.7210447708299664
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.34960981797611956
+    },
+    {
+      "wid": "PA",
+      "status": "core",
+      "group": "bio",
+      "chunks": 25,
+      "delta": 0.6675166099705022,
+      "ci": [
+        0.6454937576734769,
+        0.6897433537668969
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.2609361167769387
+    },
+    {
+      "wid": "MA",
+      "status": "disputed",
+      "group": "bio",
+      "chunks": 3,
+      "delta": 0.6124219995361477,
+      "ci": [
+        0.5628900722742988,
+        0.6727227367561776
+      ],
+      "nearest": "Cael",
+      "nearest_delta": 0.42001990045085724
+    },
+    {
+      "wid": "IA",
+      "status": "core",
+      "group": "bio",
+      "chunks": 4,
+      "delta": 0.6683524558910275,
+      "ci": [
+        0.6393620271191783,
+        0.6973428846628769
+      ],
+      "nearest": "PA",
+      "nearest_delta": 0.4236826291461317
+    },
+    {
+      "wid": "GA",
+      "status": "core",
+      "group": "bio",
+      "chunks": 33,
+      "delta": 0.6334818114440988,
+      "ci": [
+        0.6100484242705243,
+        0.6604559731510427
+      ],
+      "nearest": "PA",
+      "nearest_delta": 0.2609361167769387
+    },
+    {
+      "wid": "Col",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 3,
+      "delta": 0.7250320242108953,
+      "ci": [
+        0.6861117704309013,
+        0.7610260373706682
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.4958418881720285
+    },
+    {
+      "wid": "Aud",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 2,
+      "delta": 0.7525307558578789,
+      "ci": [
+        NaN,
+        NaN
+      ],
+      "nearest": "Col",
+      "nearest_delta": 0.549871302534721
+    },
+    {
+      "wid": "Phgn",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 4,
+      "delta": 0.7812670721435713,
+      "ci": [
+        0.6862939207497966,
+        0.8762402235373459
+      ],
+      "nearest": "HA",
+      "nearest_delta": 0.5617950588022902
+    },
+    {
+      "wid": "Mirab",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 6,
+      "delta": 0.7415051471098258,
+      "ci": [
+        0.7128740689306459,
+        0.7779060827415162
+      ],
+      "nearest": "HA",
+      "nearest_delta": 0.5232510139908777
+    },
+    {
+      "wid": "Mech",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 5,
+      "delta": 0.6974369855440927,
+      "ci": [
+        0.6504252775924061,
+        0.7394684509901761
+      ],
+      "nearest": "Mete",
+      "nearest_delta": 0.50745663964544
+    },
+    {
+      "wid": "Lin",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 2,
+      "delta": 0.6963728710739345,
+      "ci": [
+        NaN,
+        NaN
+      ],
+      "nearest": "Cael",
+      "nearest_delta": 0.5737332139553383
+    },
+    {
+      "wid": "MXG",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 3,
+      "delta": 0.8925039051151034,
+      "ci": [
+        0.854878581704885,
+        0.9411214903513626
+      ],
+      "nearest": "Meta",
+      "nearest_delta": 0.6901417096766157
+    },
+    {
+      "wid": "Meta",
+      "status": "core",
+      "group": "meta",
+      "chunks": 52,
+      "delta": 0.7257681697284226,
+      "ci": [
+        0.7051471717753562,
+        0.7480405891973567
+      ],
+      "nearest": "Phys",
+      "nearest_delta": 0.31380741847787996
+    },
+    {
+      "wid": "EN",
+      "status": "core",
+      "group": "ethics",
+      "chunks": 38,
+      "delta": 0.6773957864801206,
+      "ci": [
+        0.6589152603660252,
+        0.6961811577001279
+      ],
+      "nearest": "EE",
+      "nearest_delta": 0.299211222389749
+    },
+    {
+      "wid": "EE",
+      "status": "core",
+      "group": "ethics",
+      "chunks": 17,
+      "delta": 0.6807957522752613,
+      "ci": [
+        0.6565560400710696,
+        0.7052812683332926
+      ],
+      "nearest": "EN",
+      "nearest_delta": 0.299211222389749
+    },
+    {
+      "wid": "Pol",
+      "status": "core",
+      "group": "ethics",
+      "chunks": 44,
+      "delta": 0.6910758343433796,
+      "ci": [
+        0.6736765500543492,
+        0.7090471204667778
+      ],
+      "nearest": "GA",
+      "nearest_delta": 0.35738902619076796
+    },
+    {
+      "wid": "Oec",
+      "status": "spurious",
+      "group": "spuria",
+      "chunks": 4,
+      "delta": 0.8230312620109228,
+      "ci": [
+        0.6704434060861852,
+        0.9384953430929619
+      ],
+      "nearest": "Mirab",
+      "nearest_delta": 0.5921382219761836
+    },
+    {
+      "wid": "Rhet",
+      "status": "core",
+      "group": "rhet",
+      "chunks": 29,
+      "delta": 0.6875673912868338,
+      "ci": [
+        0.6585850202878217,
+        0.7178602272644538
+      ],
+      "nearest": "EE",
+      "nearest_delta": 0.34243905587889156
+    },
+    {
+      "wid": "Poet",
+      "status": "core",
+      "group": "rhet",
+      "chunks": 7,
+      "delta": 0.6239171367409462,
+      "ci": [
+        0.5803709831899403,
+        0.6701339897703508
+      ],
+      "nearest": "Rhet",
+      "nearest_delta": 0.39895204454353667
+    }
+  ],
+  "meta": {
+    "APr": {
+      "skipped": false,
+      "tokens": 37574,
+      "chunks": 25,
+      "status": "core",
+      "group": "logic",
+      "editor": "Bekker1837",
+      "title": "Prior Analytics"
+    },
+    "APo": {
+      "skipped": false,
+      "tokens": 22669,
+      "chunks": 15,
+      "status": "core",
+      "group": "logic",
+      "editor": "Bekker1837",
+      "title": "Posterior Analytics"
+    },
+    "Top": {
+      "skipped": false,
+      "tokens": 44116,
+      "chunks": 29,
+      "status": "core",
+      "group": "logic",
+      "editor": "Bekker1837",
+      "title": "Topics"
+    },
+    "SE": {
+      "skipped": false,
+      "tokens": 14115,
+      "chunks": 9,
+      "status": "core",
+      "group": "logic",
+      "editor": "Bekker1837",
+      "title": "Sophistical Refutations"
+    },
+    "Phys": {
+      "skipped": false,
+      "tokens": 54891,
+      "chunks": 36,
+      "status": "core",
+      "group": "physics",
+      "editor": "Ross1960",
+      "title": "Physics"
+    },
+    "Cael": {
+      "skipped": false,
+      "tokens": 29674,
+      "chunks": 20,
+      "status": "core",
+      "group": "physics",
+      "editor": "Prantl1881",
+      "title": "On the Heavens"
+    },
+    "GC": {
+      "skipped": false,
+      "tokens": 16507,
+      "chunks": 11,
+      "status": "core",
+      "group": "physics",
+      "editor": "Forster",
+      "title": "Generation & Corruption"
+    },
+    "Mete": {
+      "skipped": false,
+      "tokens": 33784,
+      "chunks": 22,
+      "status": "core",
+      "group": "physics",
+      "editor": "Bekker1837",
+      "title": "Meteorology"
+    },
+    "DM": {
+      "skipped": false,
+      "tokens": 6442,
+      "chunks": 4,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "De Mundo"
+    },
+    "DA": {
+      "skipped": false,
+      "tokens": 20876,
+      "chunks": 14,
+      "status": "core",
+      "group": "psych",
+      "editor": "Bekker1837",
+      "title": "De Anima"
+    },
+    "Sens": {
+      "skipped": false,
+      "tokens": 7868,
+      "chunks": 5,
+      "status": "core",
+      "group": "psych",
+      "editor": "Bekker1837",
+      "title": "Sense and Sensibilia"
+    },
+    "Mem": {
+      "skipped": false,
+      "tokens": 2515,
+      "chunks": 2,
+      "status": "core",
+      "group": "psych",
+      "editor": "Bekker1837",
+      "title": "On Memory"
+    },
+    "Somn": {
+      "skipped": false,
+      "tokens": 2989,
+      "chunks": 2,
+      "status": "core",
+      "group": "psych",
+      "editor": "Bekker1837",
+      "title": "On Sleep"
+    },
+    "Insomn": {
+      "skipped": false,
+      "tokens": 2436,
+      "chunks": 2,
+      "status": "core",
+      "group": "psych",
+      "editor": "Bekker1837",
+      "title": "On Dreams"
+    },
+    "DivSomn": {
+      "skipped": true,
+      "tokens": 1200
+    },
+    "Long": {
+      "skipped": false,
+      "tokens": 1789,
+      "chunks": 1,
+      "status": "core",
+      "group": "psych",
+      "editor": "Bekker1837",
+      "title": "Length of Life"
+    },
+    "Juv": {
+      "skipped": false,
+      "tokens": 7955,
+      "chunks": 5,
+      "status": "core",
+      "group": "psych",
+      "editor": "Bekker1837",
+      "title": "Youth, Life, Respiration"
+    },
+    "Spir": {
+      "skipped": false,
+      "tokens": 3439,
+      "chunks": 2,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Jaeger1913",
+      "title": "De Spiritu"
+    },
+    "HA": {
+      "skipped": false,
+      "tokens": 94055,
+      "chunks": 63,
+      "status": "core",
+      "group": "bio",
+      "editor": "Bekker1837",
+      "title": "History of Animals"
+    },
+    "PA": {
+      "skipped": false,
+      "tokens": 37487,
+      "chunks": 25,
+      "status": "core",
+      "group": "bio",
+      "editor": "Langkavel1868",
+      "title": "Parts of Animals"
+    },
+    "MA": {
+      "skipped": false,
+      "tokens": 4108,
+      "chunks": 3,
+      "status": "disputed",
+      "group": "bio",
+      "editor": "Jaeger1913",
+      "title": "Movement of Animals"
+    },
+    "IA": {
+      "skipped": false,
+      "tokens": 6340,
+      "chunks": 4,
+      "status": "core",
+      "group": "bio",
+      "editor": "Jaeger1913",
+      "title": "Progression of Animals"
+    },
+    "GA": {
+      "skipped": false,
+      "tokens": 50151,
+      "chunks": 33,
+      "status": "core",
+      "group": "bio",
+      "editor": "Bekker1837",
+      "title": "Generation of Animals"
+    },
+    "Col": {
+      "skipped": false,
+      "tokens": 5002,
+      "chunks": 3,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "On Colours"
+    },
+    "Aud": {
+      "skipped": false,
+      "tokens": 3492,
+      "chunks": 2,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "De Audibilibus"
+    },
+    "Phgn": {
+      "skipped": false,
+      "tokens": 5763,
+      "chunks": 4,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "Physiognomonics"
+    },
+    "Mirab": {
+      "skipped": false,
+      "tokens": 9180,
+      "chunks": 6,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "De Mirabilibus"
+    },
+    "Mech": {
+      "skipped": false,
+      "tokens": 8346,
+      "chunks": 5,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "Mechanica"
+    },
+    "Lin": {
+      "skipped": false,
+      "tokens": 2960,
+      "chunks": 2,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "On Indivisible Lines"
+    },
+    "Vent": {
+      "skipped": true,
+      "tokens": 426
+    },
+    "MXG": {
+      "skipped": false,
+      "tokens": 4873,
+      "chunks": 3,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Bekker1837",
+      "title": "Melissus Xenophanes Gorgias"
+    },
+    "Meta": {
+      "skipped": false,
+      "tokens": 78713,
+      "chunks": 52,
+      "status": "core",
+      "group": "meta",
+      "editor": "Ross1924",
+      "title": "Metaphysics"
+    },
+    "EN": {
+      "skipped": false,
+      "tokens": 56422,
+      "chunks": 38,
+      "status": "core",
+      "group": "ethics",
+      "editor": "Bywater1894",
+      "title": "Nicomachean Ethics"
+    },
+    "EE": {
+      "skipped": false,
+      "tokens": 26178,
+      "chunks": 17,
+      "status": "core",
+      "group": "ethics",
+      "editor": "Susemihl1884",
+      "title": "Eudemian Ethics"
+    },
+    "VV": {
+      "skipped": true,
+      "tokens": 1488
+    },
+    "Pol": {
+      "skipped": false,
+      "tokens": 65435,
+      "chunks": 44,
+      "status": "core",
+      "group": "ethics",
+      "editor": "Ross1957",
+      "title": "Politics"
+    },
+    "Oec": {
+      "skipped": false,
+      "tokens": 6233,
+      "chunks": 4,
+      "status": "spurious",
+      "group": "spuria",
+      "editor": "Armstrong",
+      "title": "Oeconomica"
+    },
+    "Rhet": {
+      "skipped": false,
+      "tokens": 43062,
+      "chunks": 29,
+      "status": "core",
+      "group": "rhet",
+      "editor": "Ross1959",
+      "title": "Rhetoric"
+    },
+    "Poet": {
+      "skipped": false,
+      "tokens": 10173,
+      "chunks": 7,
+      "status": "core",
+      "group": "rhet",
+      "editor": "Kassel1965",
+      "title": "Poetics"
+    }
+  },
+  "core_mean": 0.6728812822152852,
+  "spurious_mean": 0.7534313307374797,
+  "p": 0.0012999350032498376,
+  "cliffs_delta": 0.648,
+  "auc": 0.824,
+  "top_k_hits": 6,
+  "k": 10,
+  "genre_matched": {
+    "short natural treatises": {
+      "core": [
+        "Sens",
+        "Mem",
+        "Somn",
+        "Insomn",
+        "Long",
+        "Juv",
+        "IA"
+      ],
+      "spurious": [
+        "Col",
+        "Aud",
+        "Phgn",
+        "Lin",
+        "Spir",
+        "Mech",
+        "Mirab",
+        "DM",
+        "MXG"
+      ],
+      "core_mean": 0.62114417011448,
+      "spurious_mean": 0.7522766199602021,
+      "auc": 0.9206349206349206
+    },
+    "practical philosophy": {
+      "core": [
+        "EN",
+        "EE",
+        "Pol",
+        "Rhet"
+      ],
+      "spurious": [
+        "Oec"
+      ],
+      "core_mean": 0.6905408094837048,
+      "spurious_mean": 0.8359453555617604,
+      "auc": 1.0
+    }
+  },
+  "pca_explained": [
+    0.08217288287325857,
+    0.0410005557411548
+  ],
+  "pc1_features": [
+    "ει",
+    "των",
+    "οτι",
+    "τοισ",
+    "τι",
+    "ουκ",
+    "το",
+    "την"
+  ]
+}
