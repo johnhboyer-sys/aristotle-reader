@@ -9,21 +9,36 @@ flow; the hyphen rejoin then took its continuation from the next
 SURVIVING line, fusing `ὑπο-` with 15's `ὑγρὰ` into ὑποὑγρὰ (the
 internal rough breathing proves the fusion — a real compound aspirates
 to ὑφ-). The same failure mode as the lettered-lines drop of 2026-07-26,
-one notation over. 19 such lines: PA ×10, Cael ×4, DM ×4 (and the
+one notation over. 18 tagged ranges: PA ×10, Cael ×4, DM ×4 (and the
 manifests' expected_line_gaps had been masking the drops as edition
-quirks).
+quirks), plus one collateral damaged line — DM 401a3 was never dropped
+but survived shorn of its παρ- (εχόμενα).
 
-Three shapes occur in the exports:
+The shapes that occur in the exports, each covered below:
   - PA prose: plain 12, "13-14" with no internal break marker, plain 15.
     The whole physical line carries the first Bekker number; the second
     number simply has no line of its own (a real, now correctly
     described, numbering gap).
-  - DM: "24-25" with an in-line `|` at the internal break, same as the
-    comma-compound lines (APo 99b8-14) — split at the bar, one piece per
-    number.
-  - Cael 294a / DM 401a: the range OVERLAPS a flanking plain line
-    (plain 25, then "25-26"; or "2-3" ending `παρ-`, then plain 3). The
-    two flat entries for one Bekker number merge into one line.
+  - DM 391b: "24-25" with an in-line `|` at the internal break, same as
+    the comma-compound lines (APo 99b8-14) — split at the bar, one piece
+    per number.
+  - Cael 294a: the range's FIRST number overlaps a preceding plain line
+    (plain 25, then "25-26"): the two flat entries merge into one line.
+  - DM 401a: the range's LAST piece ends hyphenated and its number
+    overlaps the FOLLOWING plain line ("2-3" ending `παρ-`, then plain
+    3): the hyphen rejoin then the merge yield one line 3.
+  - Cael 300b: a barless range sandwiched between the plain lines of
+    BOTH its numbers (plain 30, "30-31", plain 31): the range merges
+    into 30 and plain 31 stands alone.
+
+The merge deliberately also covers comma compounds: at Phys 226b Ross
+prints plain 26 ("ἐν ἐλα-") then n="26,27", which used to emit two line-
+26 rows (declared in Phys.yaml as a 26→26 "gap"); they now merge into
+the one physical Bekker line. Plain+plain duplicates (Phys 205b's two
+n="1") stay two rows — the merge requires a compound-derived entry. And
+reversed comma compounds (Phys 226b n="27,23", Ross's marginal
+renumbering) must keep parsing in document order, so no reversed-range
+guard: both locked in below.
 """
 
 from aristotle_pipeline import stage1_greek
@@ -144,7 +159,84 @@ def test_hyphenated_range_piece_merges_with_its_plain_line(tmp_path):
     assert by[3] == "parexomena xreias, platanoi"
 
 
-# --- guard: comma compounds and headings keep their behavior ------------
+# --- Cael 300b: barless range sandwiched between both its plain lines ---
+
+SANDWICH_TEI = """<TEI><text><body>
+<div type="Bekker-page" n="689a">
+<l n="30">legei gar ws</l>
+<l n="30-31">pollai men korsai anauxenes</l>
+<l n="31">tois d apeira</l>
+</div>
+</body></text></TEI>"""
+
+
+def test_sandwiched_range_merges_only_with_its_first_number(tmp_path):
+    got = _lines(tmp_path, SANDWICH_TEI)
+    nums = [n for n, _, _ in got]
+    assert nums == [30, 31], f"duplicate or missing lines: {got}"
+    by = {n: t for n, _, t in got}
+    assert by[30] == "legei gar ws pollai men korsai anauxenes"
+    assert by[31] == "tois d apeira"
+
+
+# --- Phys 226b: the merge covers comma compounds too --------------------
+
+COMMA_OVERLAP_TEI = """<TEI><text><body>
+<div type="Bekker-page" n="689a">
+<l n="26">en ela-</l>
+<l n="26,27">xistois d esti to metaxu | esti ths</l>
+</div>
+</body></text></TEI>"""
+
+
+def test_comma_compound_merges_with_its_plain_line(tmp_path):
+    """Plain 26 (`en ela-`) + n="26,27" is one physical Bekker line of
+    Ross's edition, hyphen-split typographically — one row 26, one row 27,
+    not the two line-26 rows the old 26→26 gap declaration described."""
+    got = _lines(tmp_path, COMMA_OVERLAP_TEI)
+    nums = [n for n, _, _ in got]
+    assert nums == [26, 27], f"duplicate or missing lines: {got}"
+    by = {n: t for n, _, t in got}
+    assert by[26] == "en elaxistois d esti to metaxu"
+    assert by[27] == "esti ths"
+
+
+PLAIN_DUP_TEI = """<TEI><text><body>
+<div type="Bekker-page" n="689a">
+<l n="1">first row</l>
+<l n="1">second row</l>
+</div>
+</body></text></TEI>"""
+
+
+def test_plain_plain_duplicate_stays_two_rows(tmp_path):
+    """Phys 205b prints line 1 twice (Ross's doubled line, declared 1→1 in
+    the manifest). Neither row is compound-derived, so they must NOT merge —
+    a plain duplicate is the validators' business."""
+    got = _lines(tmp_path, PLAIN_DUP_TEI)
+    assert [(n, t) for n, _, t in got] == [(1, "first row"), (1, "second row")]
+
+
+REVERSED_COMMA_TEI = """<TEI><text><body>
+<div type="Bekker-page" n="689a">
+<l n="26,27">xistois men gar | esti ths</l>
+<l n="27,23">metabolhs to enantion, | metaxu de eis o</l>
+</div>
+</body></text></TEI>"""
+
+
+def test_reversed_comma_compound_parses_in_document_order(tmp_path):
+    """Phys 226b n="27,23" runs backwards (Ross's marginal renumbering) and
+    must keep working — which is why there is no reversed-range guard."""
+    got = _lines(tmp_path, REVERSED_COMMA_TEI)
+    assert [(n, t) for n, _, t in got] == [
+        (26, "xistois men gar"),
+        (27, "esti ths metabolhs to enantion,"),
+        (23, "metaxu de eis o"),
+    ]
+
+
+# --- guard: headings keep their behavior --------------------------------
 
 def test_line_no_still_rejects_headings():
     assert stage1_greek._line_no("23t") is None

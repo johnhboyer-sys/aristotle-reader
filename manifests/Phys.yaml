@@ -47,7 +47,6 @@ expected_line_gaps:
   - { column: "205a", after: 35, next: 25 }
   - { column: "205b", after: 1,  next: 1 }
   - { column: "226b", after: 23, next: 26 }
-  - { column: "226b", after: 26, next: 26 }
   - { column: "226b", after: 27, next: 23 }
   - { column: "226b", after: 25, next: 27 }
   - { column: "227a", after: 10, next: 1 }
