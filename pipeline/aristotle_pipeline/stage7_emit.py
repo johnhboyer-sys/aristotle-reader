@@ -615,13 +615,15 @@ def run(manifest: Manifest) -> Path:
 
     reports = BUILD_DIR / "dist" / "reports"
     reports.mkdir(exist_ok=True)
-    for rel in [
-        "stage2/validation_report.md",
-        "stage2/validation_report.json",
-        "stage3/sigla_log.json",
-        "stage4/unmatched.json",
-        "stage4/summary.json",
-        "stage5/missing_lemmata.json",
+    for rel, dest_name in [
+        ("stage2/validation_report.md", "validation_report.md"),
+        ("stage2/validation_report.json", "validation_report.json"),
+        ("stage3/sigla_log.json", "sigla_log.json"),
+        ("stage4/unmatched.json", "unmatched.json"),
+        ("stage4/summary.json", "summary.json"),
+        ("stage5/missing_lemmata.json", "missing_lemmata.json"),
+        ("stage3/quality_report.json", f"quality_{manifest.work_id}.json"),
+        ("stage3/quality_report.md", f"quality_{manifest.work_id}.md"),
     ]:
-        shutil.copy(BUILD_DIR / rel, reports / Path(rel).name)
+        shutil.copy(BUILD_DIR / rel, reports / dest_name)
     return out_dir
