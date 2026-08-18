@@ -85,6 +85,14 @@ before relying on them.) Link only what fully resolves; never guess.
    fetched from `app/dist/data/lsj/<letter>.json` — invisible to the crawler.
    A shard pass over `app/dist/data/lsj/*.json` covers the popup path and any
    entry no lemma page renders.
+8. **LSJ-sourced `?loc=` lines check against the reader's contract, not exact
+   ids.** LSJ cites its own editions' lineation, which can differ from ours by
+   a line or two (~48 of ~21k on the first build — Phys 7, PA 3, Rhet 2–3);
+   the reader already snaps a missing line to the nearest line in the column
+   (`Reader.svelte` nearest-line fallback). The gate mirrors that: for
+   `.lsj-bibl` anchors (in HTML and in the shard pass) the COLUMN must exist
+   on the target page, the exact line need not. Every other link keeps the
+   strict exact-line check — real-data links have no excuse.
 
 ## Files
 

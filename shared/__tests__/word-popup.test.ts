@@ -5,6 +5,7 @@
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import WordPopup from '../components/WordPopup.svelte';
+import { prefixLsjCitationHrefs } from '../lib/html';
 import { lookupWord } from '../lib/data';
 
 vi.mock('../lib/data', async (importOriginal) => {
@@ -34,6 +35,35 @@ const baseProps = {
 };
 
 describe('WordPopup', () => {
+  it('prepends the site base to LSJ citation links', () => {
+    expect(prefixLsjCitationHrefs(
+      '<a class="lsj-bibl" href="/EN/book/1?loc=1094a:5">1094a5</a>',
+      '/aristotle-reader',
+    )).toBe(
+      '<a class="lsj-bibl" href="/aristotle-reader/EN/book/1?loc=1094a:5">1094a5</a>',
+    );
+  });
+
+  // The rewrite pattern matches the SANITIZED serialization, not stage5's raw
+  // output — if sanitizeHtml ever reorders attributes, the rewrite misses
+  // silently and readers get base-less 404 links. Lock the round trip.
+  it('rewrites citation links after the sanitize round trip', async () => {
+    const { sanitizeHtml } = await import('../lib/html');
+    const sanitized = sanitizeHtml(
+      '<a class="lsj-bibl" href="/APo/book/1?loc=71a:3">71a3</a>',
+    );
+    const rewritten = prefixLsjCitationHrefs(sanitized, '/aristotle-reader');
+    expect(rewritten).toContain('href="/aristotle-reader/APo/book/1?loc=71a:3"');
+  });
+
+  it('is idempotent and leaves an empty or bare-slash base alone', () => {
+    const html = '<a class="lsj-bibl" href="/EN/book/1?loc=1094a:5">1094a5</a>';
+    const once = prefixLsjCitationHrefs(html, '/aristotle-reader');
+    expect(prefixLsjCitationHrefs(once, '/aristotle-reader')).toBe(once);
+    expect(prefixLsjCitationHrefs(html, '')).toBe(html);
+    expect(prefixLsjCitationHrefs(html, '/')).toBe(html);
+  });
+
   it('re-runs the lookup when the token changes (word-to-word jump)', async () => {
     const { rerender } = render(WordPopup, {
       props: { ...baseProps, onClose: vi.fn() },

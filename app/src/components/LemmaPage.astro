@@ -12,7 +12,7 @@ import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, workPath, workLanding, bookLabel, isBookless } from '@shared/lib/works';
-import { sanitizeHtml } from '../lib/html';
+import { sanitizeHtml, prefixLsjCitationHrefs } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
 
@@ -48,7 +48,7 @@ try {
   const shard = JSON.parse(
     readFileSync(`public/data/lsj/${lsjShardLetter(data.key)}.json`, 'utf-8'),
   );
-  lsjHtml = sanitizeHtml(shard[data.key]?.html ?? '');
+  lsjHtml = prefixLsjCitationHrefs(sanitizeHtml(shard[data.key]?.html ?? ''), base);
 } catch { /* no shard */ }
 
 // Deep-link an instance back into the reader: scroll to the Bekker line and
