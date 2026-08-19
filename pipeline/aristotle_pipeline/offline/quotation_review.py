@@ -116,6 +116,7 @@ def render_html(work: str, candidates: list[dict]) -> str:
     rows = []
     for i, row in enumerate(candidates):
         cite = html.escape(str(row.get("cite") or ""))
+        badge = '<span class="dk">DK-attested</span> ' if row.get("dk") else ""
         url = html.escape(str(row.get("url") or ""), quote=True)
         author = html.escape(str(row.get("source_author") or ""))
         loc = html.escape(str(row.get("source_loc") or ""))
@@ -149,7 +150,7 @@ def render_html(work: str, candidates: list[dict]) -> str:
             f'</div></td>'
             f'<td class="ari">{ari}</td>'
             f'<td class="src"><div class="meta">{author} {work_id} {loc}</div>'
-            f'{src}<div class="link"><a href="{url}" target="_blank" rel="noopener">{cite}</a></div></td>'
+            f'{src}<div class="link">{badge}<a href="{url}" target="_blank" rel="noopener">{cite}</a></div></td>'
             f'</tr>'
         )
     body = "\n".join(rows) if rows else '<tr><td colspan="4">No candidates.</td></tr>'
@@ -164,12 +165,27 @@ def render_html(work: str, candidates: list[dict]) -> str:
     )
 
 
-def write_review(work: str, candidates: list[dict] | None = None) -> Path:
+def write_review(
+    work: str,
+    candidates: list[dict] | None = None,
+    attested_only: bool = True,
+) -> Path:
     if candidates is None:
         src = CANDIDATES_DIR / f"{work}.json"
         if not src.is_file():
             raise FileNotFoundError(src)
         candidates = json.loads(src.read_text(encoding="utf-8"))
+    if attested_only:
+        # The ship bar (spec, John's ruling 2026-08-19): only rows a scholar
+        # attributed may become citations. Everything else is research data.
+        candidates = [row for row in candidates if row.get("dk")]
+    for row in candidates:
+        # A DK attestation (stamped by dk_answer_key.annotate_candidates) is
+        # the citation scholars want; it replaces the guess in display AND in
+        # the exported cite, and the export records the authority.
+        if row.get("dk"):
+            row["cite"] = row["dk"]
+            row["attestation"] = "DK"
     REVIEW_PATH.mkdir(parents=True, exist_ok=True)
     out = REVIEW_PATH / f"quotation_review_{work}.html"
     out.write_text(render_html(work, candidates), encoding="utf-8")
@@ -180,11 +196,15 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work", required=True, help="work slug (e.g. Meta)")
     parser.add_argument("--candidates", type=Path, help="override candidates JSON")
+    parser.add_argument(
+        "--include-unattested", action="store_true",
+        help="research mode: include matcher-only candidates (never shipped)",
+    )
     args = parser.parse_args(argv)
     candidates = None
     if args.candidates:
         candidates = json.loads(args.candidates.read_text(encoding="utf-8"))
-    path = write_review(args.work, candidates)
+    path = write_review(args.work, candidates, attested_only=not args.include_unattested)
     print(path)
 
 
@@ -205,6 +225,7 @@ _TEMPLATE = """<!doctype html>
  .ari,.src{width:34%} .src{background:#fcfbf7}
  .meta{font:11px sans-serif;color:#666;margin-bottom:.25rem}
  .link{margin-top:.4rem} .link a{font:13px sans-serif}
+ .dk{font:11px sans-serif;color:#15803d;border:1px solid #15803d;border-radius:4px;padding:1px 5px;vertical-align:1px}
  .rate{width:11rem} .rate button{display:block;width:100%;margin:0 0 6px;font:14px sans-serif;
    padding:11px 0;cursor:pointer;border:1px solid #bbb;background:#f3f3f3;border-radius:6px}
  .rate .acc{color:#15803d} .rate .rej{color:#b91c1c} .rate .fix{color:#1d4ed8}
@@ -409,14 +430,16 @@ document.getElementById("exp").addEventListener("click", () => {
       markUrl(tr, d.action, url);
       continue;
     }
-    out.push({
+    const row = {
       column: c.column,
       lo: t.lo,
       hi: t.hi,
       cite: c.cite,
       author: c.source_author || c.author,
       url: url,
-    });
+    };
+    if (c.attestation) row.attestation = c.attestation;
+    out.push(row);
   }
   const sum = document.getElementById("sum");
   sum.textContent = "exported " + out.length + " · blocked " + blocked + " invalid URL";

@@ -153,7 +153,9 @@ def guess_reader(author_id: str, author_name: str, work_tlg: str, loc: str) -> d
         if m:
             book, line = m.group(1), m.group(2)
             cite = f"{abbrev} {book}.{line}"
-            url = f"{HOMER_READER}/{slug}/book/{book}?loc={line}"
+            # homer-reader's loc grammar is "book.line" ("9.366", never
+            # column:line) — verified against its shared/lib/search.ts.
+            url = f"{HOMER_READER}/{slug}/book/{book}?loc={book}.{line}"
         else:
             cite = f"{abbrev} {loc}".strip()
             url = f"{HOMER_READER}/{slug}"

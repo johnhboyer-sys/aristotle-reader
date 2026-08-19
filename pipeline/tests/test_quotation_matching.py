@@ -1,3 +1,6 @@
+import pytest
+
+from aristotle_pipeline.offline import quotation_matching
 from aristotle_pipeline.offline.quotation_matching import (
     DEFAULT_N,
     dedup_clusters,
@@ -7,6 +10,14 @@ from aristotle_pipeline.offline.quotation_matching import (
     score_run,
     surface_key,
 )
+
+
+@pytest.fixture(autouse=True)
+def _pin_frequency_counts(monkeypatch):
+    # The frequency ceiling reads build/dist/lemmata.json fail-loud — right
+    # for real runs, absent on CI. Tests pin an empty table; individual tests
+    # override with their own counts.
+    monkeypatch.setattr(quotation_matching, "_ARISTOTLE_COUNTS", {})
 
 
 def test_exact_ngram_emits_one_maximal_run():
@@ -138,3 +149,17 @@ def test_apparatus_hi_small_and_notes_excluded_from_export_text(tmp_path):
     assert "μένει" in blob
     assert "ἔτι" in blob
     assert "ῥήμα" in blob
+
+
+def test_frequency_ceiling_marks_hyperfrequent_lemmata_as_function(monkeypatch):
+    from aristotle_pipeline.offline import quotation_matching as qm
+
+    monkeypatch.setattr(qm, "_ARISTOTLE_COUNTS", {"ei)mi/": 28269, "u(/dwr": 1003})
+    # The copula is grammar at any ceiling; water stays content — it carries
+    # the real Empedocles B109 match.
+    assert qm.is_function_lemma("ei)mi/")
+    assert not qm.is_function_lemma("u(/dwr")
+    # Correlative conjunctions come from the static list (287x — under any
+    # sane ceiling — yet pure grammar): the Meno 90b false-quote case.
+    assert qm.is_function_lemma("ei)/te")
+    assert qm.score_run(["ei)/te", "ei)mi/", "ei)/te", "mh/", "ei)mi/", "kai/"]) == 0
