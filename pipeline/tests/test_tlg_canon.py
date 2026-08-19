@@ -162,3 +162,13 @@ def test_unreliable_attestation_rule():
     assert is_unreliable_attestation("De sensu [Dub.]", "Cod", direct)
     assert not is_unreliable_attestation("Historiae", "Cod", direct)
     assert not is_unreliable_attestation("Argonautica", "Pap", direct)
+
+    # The canon's other spellings (Sol review, 2026-08-19): Plato's Spuria is
+    # Cod; Callisthenes has "Testimonium et fragmentum"; Menander a
+    # "fragmentum dubium" without brackets.
+    assert is_unreliable_attestation("Spuria", "Cod", direct)
+    assert is_unreliable_attestation("Testimonium et fragmentum", "Pap", direct)
+    assert is_unreliable_attestation("Theophorumenae fragmentum dubium", "Pap", direct)
+    # A real papyrus work carrying "fragmenta" late in its title is direct
+    # physical evidence and must NOT be excluded.
+    assert not is_unreliable_attestation("Comoediae: papyri et membranae", "Pap", direct)

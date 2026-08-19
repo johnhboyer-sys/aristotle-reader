@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -170,7 +171,12 @@ def cached_author_counts(
     count_dir: Path,
     direct_works: set[str] | None = None,
 ) -> tuple[Counter[str], Counter[str], set[str]]:
-    cache = count_dir / f"{author}.v{CACHE_VERSION}.json"
+    # The direct/fragments split is part of the cache identity: a changed
+    # canon rule must not silently reuse a split it did not produce.
+    partition = hashlib.md5(
+        ",".join(sorted(direct_works or ())).encode()
+    ).hexdigest()[:8]
+    cache = count_dir / f"{author}.v{CACHE_VERSION}.{partition}.json"
     if cache.exists():
         data = json.loads(cache.read_text(encoding="utf-8"))
         return (

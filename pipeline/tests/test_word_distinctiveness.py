@@ -124,7 +124,16 @@ def test_count_cache_filename_is_versioned_and_ignores_legacy_cache(tmp_path, mo
     assert fragments == Counter({"frag": 1})
     assert capitalized == {"fresh"}
     assert calls == [[Path("work.xml")]]
-    assert (tmp_path / f"0001.v{CACHE_VERSION}.json").is_file()
+    caches = list(tmp_path.glob(f"0001.v{CACHE_VERSION}.*.json"))
+    assert len(caches) == 1
+
+    # The cache key carries the direct/fragments partition: a different
+    # direct-works set must MISS this cache and recount.
+    counts2, fragments2, _ = cached_author_counts(
+        "0001", [Path("work.xml")], tmp_path, {"001"}
+    )
+    assert len(calls) == 2
+    assert len(list(tmp_path.glob(f"0001.v{CACHE_VERSION}.*.json"))) == 2
 
 
 def test_limit_run_writes_smoke_output_not_canonical(tmp_path, monkeypatch):

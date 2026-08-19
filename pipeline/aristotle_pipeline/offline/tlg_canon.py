@@ -194,9 +194,13 @@ def is_unreliable_attestation(title: str, xmt: str, direct_xmt: set[str]) -> boo
     if xmt not in direct_xmt:
         return True
     low = title.lower()
-    if "testimonia" in low or low.startswith("fragment"):
+    # startswith, not substring: real papyrus works carry "fragmenta" later in
+    # their titles and ARE direct physical evidence. testimoni/spuri/dubi as
+    # word stems cover the canon's spelling range (Testimonia, Testimonium et
+    # fragmentum, Spuria, [Sp.], fragmentum dubium, [Dub.]).
+    if low.startswith("fragment"):
         return True
-    return "[sp.]" in low or "[dub.]" in low
+    return bool(re.search(r"\b(?:testimoni|spuri|dubi)|\[sp\.\]|\[dub\.\]", low))
 
 
 def main(argv: list[str] | None = None) -> None:
