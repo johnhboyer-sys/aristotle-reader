@@ -55,11 +55,20 @@ def extract_key(dist: Path = SIBLING_DIST) -> list[dict]:
     return key
 
 
+def _fragment_number(source_loc: str) -> str:
+    """'109' from '109', '7' from '7,8', '15a' from '15a'."""
+    match = re.match(r"(\d+[a-z]?)", (source_loc or "").strip())
+    return match.group(1) if match else ""
+
+
 def annotate_candidates(candidates: list[dict], key: list[dict]) -> int:
     """Stamp candidates matching an attested site with their DK citation.
 
-    A candidate matches when its source author has a keyed fragment whose
-    frame cites the candidate's Bekker column. Returns the count stamped.
+    A candidate matches only when BOTH agree: the keyed fragment's frame
+    cites the candidate's Bekker column, AND the candidate actually matched
+    that fragment's text (its source_loc fragment number equals the DK
+    number). Column alone once blurred cites across rows sharing a column —
+    the B109 match at 1000b wore B30's citation.
     """
     by_author: dict[str, list[dict]] = {}
     for entry in key:
@@ -67,9 +76,14 @@ def annotate_candidates(candidates: list[dict], key: list[dict]) -> int:
     stamped = 0
     for cand in candidates:
         author = cand.get("source_author", "").lower()
+        fragment = _fragment_number(cand.get("source_loc", ""))
         for entry in by_author.get(author, []):
-            if cand.get("column") in entry["sites"]:
-                cand["dk"] = f"{author.capitalize()} fr. {entry['dk'].lstrip('B')} DK"
+            if (
+                cand.get("column") in entry["sites"]
+                and fragment
+                and entry["dk"].lstrip("AB") == fragment
+            ):
+                cand["dk"] = f"{author.capitalize()} fr. {fragment} DK"
                 stamped += 1
                 break
     return stamped
