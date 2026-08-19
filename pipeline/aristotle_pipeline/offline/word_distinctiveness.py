@@ -18,16 +18,48 @@ from ..stage1_greek import _line_text
 from ..stage3_tokenize import tokenize
 from ..stage4_morphology import parse_analysis_line
 from ..stage5_lsj import base_key, fold_key, lemma_candidates
-from .tlg_canon import CONTEMPORARY, STRICT_BEFORE, parse_canon
+from .tlg_canon import (
+    CONTEMPORARY,
+    STRICT_BEFORE,
+    is_unreliable_attestation,
+    parse_canon,
+    parse_work_titles,
+    parse_work_xmt,
+)
 
 EXPORT_DIR = BUILD_DIR / "offline" / "export"
 COUNT_DIR = BUILD_DIR / "offline" / "counts"
 OUTPUT_PATH = REPO_ROOT / "pipeline" / "data" / "word_distinctiveness.json"
 SMOKE_OUTPUT_PATH = REPO_ROOT / "pipeline" / "data" / "word_distinctiveness.smoke.json"
-CACHE_VERSION = 2
+CACHE_VERSION = 4
+
+SCHOOL = "school"
+FRAGMENTS = "fragments"
+
+# John's rulings, 2026-08-19:
+# - Only directly transmitted works (xmt Cod, or Pap — a papyrus is as direct
+#   as transmission gets) count toward before/contemporary. Q/NQ/Epigr and
+#   unmarked works survive as quotations inside later authors, so their Greek
+#   may be the quoting author's; they land in `fragments`, which informs but
+#   never defeats a label.
+# - The school's use is reception, not priority: Peripatetic hits land in
+#   `school` and never defeat "coined".
+DIRECT_XMT = {"Cod", "Pap"}
+PERIPATETICS = {
+    "0093",  # Theophrastus
+    "1357",  # Eudemus of Rhodes
+    "0088",  # Aristoxenus
+}
 
 
-def derive_label(before: int, contemporary: int, in_aristotle: int) -> str | None:
+def derive_label(
+    before: int, contemporary: int, in_aristotle: int, key: str = ""
+) -> str | None:
+    # Capitalized lemmata (beta * prefix) are names of peoples and places; a
+    # rare ethnonym is not a coinage (John's ruling, 2026-08-19). Numbers
+    # still ship; only the label is suppressed.
+    if key.startswith("*"):
+        return None
     if before == 0 and contemporary == 0 and in_aristotle >= 3:
         return "coined by Aristotle"
     if 0 < before < 5:
@@ -84,10 +116,25 @@ def export_author(
     return paths
 
 
-def count_exported_tokens(paths: Iterable[Path]) -> tuple[Counter[str], set[str]]:
+def _work_id_of(path: Path) -> str:
+    """tlg0086010.xml -> '010'."""
+    return path.stem[7:]
+
+
+def count_exported_tokens(
+    paths: Iterable[Path],
+    direct_works: set[str] | None = None,
+) -> tuple[Counter[str], Counter[str], set[str]]:
+    """(direct counts, fragment counts, capitalized keys) for one author.
+
+    ``direct_works`` holds the work ids whose transmission is direct
+    (DIRECT_XMT); everything else counts as fragments. None = all direct.
+    """
     counts: Counter[str] = Counter()
+    fragment_counts: Counter[str] = Counter()
     capitalized: set[str] = set()
     for path in paths:
+        into = counts if direct_works is None or _work_id_of(path) in direct_works else fragment_counts
         tree = etree.parse(str(path))
         lines = [
             {"n": number, "text": _line_text(line, strip_bars=True)}
@@ -111,31 +158,42 @@ def count_exported_tokens(paths: Iterable[Path]) -> tuple[Counter[str], set[str]
                     key = token.get("k")
                     if key is None:
                         continue
-                    counts[key] += 1
+                    into[key] += 1
                     if token["t"][:1].isupper():
                         capitalized.add(key)
-    return counts, capitalized
+    return counts, fragment_counts, capitalized
 
 
 def cached_author_counts(
     author: str,
     paths: Iterable[Path],
     count_dir: Path,
-) -> tuple[Counter[str], set[str]]:
+    direct_works: set[str] | None = None,
+) -> tuple[Counter[str], Counter[str], set[str]]:
     cache = count_dir / f"{author}.v{CACHE_VERSION}.json"
     if cache.exists():
         data = json.loads(cache.read_text(encoding="utf-8"))
-        return Counter(data["counts"]), set(data["capitalized"])
+        return (
+            Counter(data["counts"]),
+            Counter(data["fragments"]),
+            set(data["capitalized"]),
+        )
 
-    counts, capitalized = count_exported_tokens(paths)
+    counts, fragment_counts, capitalized = count_exported_tokens(paths, direct_works)
     count_dir.mkdir(parents=True, exist_ok=True)
     tmp = cache.with_suffix(".tmp")
     tmp.write_text(
-        json.dumps({"counts": counts, "capitalized": sorted(capitalized)}),
+        json.dumps(
+            {
+                "counts": counts,
+                "fragments": fragment_counts,
+                "capitalized": sorted(capitalized),
+            }
+        ),
         encoding="utf-8",
     )
     tmp.replace(cache)
-    return counts, capitalized
+    return counts, fragment_counts, capitalized
 
 
 def _lemma_indexes(
@@ -231,11 +289,15 @@ def build_table(
         in_count = int(in_aristotle[key])
         before = int(totals.get(key, {}).get(STRICT_BEFORE, 0))
         contemporary = int(totals.get(key, {}).get(CONTEMPORARY, 0))
+        school = int(totals.get(key, {}).get(SCHOOL, 0))
+        fragments = int(totals.get(key, {}).get(FRAGMENTS, 0))
         table[key] = {
             "in_aristotle": in_count,
             "before_aristotle": before,
             "contemporary": contemporary,
-            "label": derive_label(before, contemporary, in_count),
+            "school": school,
+            "fragments": fragments,
+            "label": derive_label(before, contemporary, in_count, key),
         }
     return table
 
@@ -246,7 +308,10 @@ def run(
     limit: int | None = None,
     output_path: Path | None = None,
 ) -> Path:
-    authors = parse_canon(canon_path.read_bytes())
+    canon_bytes = canon_path.read_bytes()
+    authors = parse_canon(canon_bytes)
+    work_xmt = parse_work_xmt(canon_bytes)
+    work_titles = parse_work_titles(canon_bytes)
     selected = [
         author
         for author, record in sorted(authors.items())
@@ -255,7 +320,12 @@ def run(
     if limit is not None:
         selected = selected[:limit]
 
-    form_counts = {STRICT_BEFORE: Counter(), CONTEMPORARY: Counter()}
+    form_counts = {
+        STRICT_BEFORE: Counter(),
+        CONTEMPORARY: Counter(),
+        SCHOOL: Counter(),
+        FRAGMENTS: Counter(),
+    }
     capitalized: set[str] = set()
     for index, author in enumerate(selected, start=1):
         print(f"[{index}/{len(selected)}] TLG {author} {authors[author]['name']}")
@@ -265,8 +335,18 @@ def run(
             manifest.diogenes_server(),
             manifest.tlg_dir(),
         )
-        counts, author_capitalized = cached_author_counts(author, paths, COUNT_DIR)
-        form_counts[authors[author]["bucket"]].update(counts)
+        direct_works = {
+            work for (aid, work), mark in work_xmt.items()
+            if aid == author and not is_unreliable_attestation(
+                work_titles.get((aid, work), ""), mark, DIRECT_XMT
+            )
+        }
+        counts, fragment_counts, author_capitalized = cached_author_counts(
+            author, paths, COUNT_DIR, direct_works
+        )
+        bucket = SCHOOL if author in PERIPATETICS else authors[author]["bucket"]
+        form_counts[bucket].update(counts)
+        form_counts[FRAGMENTS].update(fragment_counts)
         capitalized.update(author_capitalized)
 
     analyses_path = manifest.diogenes_data() / "greek-analyses.txt"

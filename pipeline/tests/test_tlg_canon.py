@@ -130,3 +130,35 @@ def test_work_titles_and_testimonia_predicate():
     assert titles[("1342", "004")] == "Fragmenta"
     assert is_testimonia(titles[("1342", "003")])
     assert not is_testimonia(titles[("1342", "004")])
+
+
+def test_hesiod_override_and_work_xmt():
+    from aristotle_pipeline.offline.tlg_canon import (
+        BUCKET_OVERRIDES, STRICT_BEFORE, parse_canon, parse_work_xmt,
+    )
+
+    data = (
+        b"\xffkey 0020 \x80nam HESIODUS \x80dat 8%3`7 B.C.? "
+        b"\xffkey 0020 001 \x80wrk &1Opera et dies& \x80xmt Cod "
+        b"\xffkey 0020 005 \x80wrk &1Testimonia& \x80xmt Q "
+    )
+    authors = parse_canon(data)
+    assert BUCKET_OVERRIDES["0020"] == STRICT_BEFORE
+    assert authors["0020"]["bucket"] == STRICT_BEFORE  # the ?-rule is overridden
+
+    xmt = parse_work_xmt(data)
+    assert xmt[("0020", "001")] == "Cod"
+    assert xmt[("0020", "005")] == "Q"
+
+
+def test_unreliable_attestation_rule():
+    from aristotle_pipeline.offline.tlg_canon import is_unreliable_attestation
+
+    direct = {"Cod", "Pap"}
+    assert is_unreliable_attestation("Epistulae", "Q", direct)          # quotation
+    assert is_unreliable_attestation("Fragmenta", "Pap", direct)        # Speusippus quirk
+    assert is_unreliable_attestation("Testimonia", "Cod", direct)       # doxography
+    assert is_unreliable_attestation("Epistulae [Sp.]", "Cod", direct)  # canon spuria
+    assert is_unreliable_attestation("De sensu [Dub.]", "Cod", direct)
+    assert not is_unreliable_attestation("Historiae", "Cod", direct)
+    assert not is_unreliable_attestation("Argonautica", "Pap", direct)
