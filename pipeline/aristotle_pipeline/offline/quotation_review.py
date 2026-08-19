@@ -165,18 +165,27 @@ def render_html(work: str, candidates: list[dict]) -> str:
     )
 
 
-def write_review(work: str, candidates: list[dict] | None = None) -> Path:
+def write_review(
+    work: str,
+    candidates: list[dict] | None = None,
+    attested_only: bool = True,
+) -> Path:
     if candidates is None:
         src = CANDIDATES_DIR / f"{work}.json"
         if not src.is_file():
             raise FileNotFoundError(src)
         candidates = json.loads(src.read_text(encoding="utf-8"))
+    if attested_only:
+        # The ship bar (spec, John's ruling 2026-08-19): only rows a scholar
+        # attributed may become citations. Everything else is research data.
+        candidates = [row for row in candidates if row.get("dk")]
     for row in candidates:
         # A DK attestation (stamped by dk_answer_key.annotate_candidates) is
         # the citation scholars want; it replaces the guess in display AND in
-        # the exported cite.
+        # the exported cite, and the export records the authority.
         if row.get("dk"):
             row["cite"] = row["dk"]
+            row["attestation"] = "DK"
     REVIEW_PATH.mkdir(parents=True, exist_ok=True)
     out = REVIEW_PATH / f"quotation_review_{work}.html"
     out.write_text(render_html(work, candidates), encoding="utf-8")
@@ -187,11 +196,15 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work", required=True, help="work slug (e.g. Meta)")
     parser.add_argument("--candidates", type=Path, help="override candidates JSON")
+    parser.add_argument(
+        "--include-unattested", action="store_true",
+        help="research mode: include matcher-only candidates (never shipped)",
+    )
     args = parser.parse_args(argv)
     candidates = None
     if args.candidates:
         candidates = json.loads(args.candidates.read_text(encoding="utf-8"))
-    path = write_review(args.work, candidates)
+    path = write_review(args.work, candidates, attested_only=not args.include_unattested)
     print(path)
 
 
@@ -417,14 +430,16 @@ document.getElementById("exp").addEventListener("click", () => {
       markUrl(tr, d.action, url);
       continue;
     }
-    out.push({
+    const row = {
       column: c.column,
       lo: t.lo,
       hi: t.hi,
       cite: c.cite,
       author: c.source_author || c.author,
       url: url,
-    });
+    };
+    if (c.attestation) row.attestation = c.attestation;
+    out.push(row);
   }
   const sum = document.getElementById("sum");
   sum.textContent = "exported " + out.length + " · blocked " + blocked + " invalid URL";

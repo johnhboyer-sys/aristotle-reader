@@ -25,6 +25,18 @@ is not in this repo, so re-check there before hard-coding anything.
 Presocratic fragments matter beyond convenience: many survive *because*
 Aristotle quotes them.
 
+## The ship bar (John's ruling, 2026-08-19)
+
+**A citation ships only when a scholar did the attribution.** The matcher
+locates spans; it never confers authority. Current authorities: the DK frames
+extracted from classical-philosophy-reader (`dk_answer_key.py`) for the
+Presocratics; Bonitz's Index Aristotelicus entries (Homerus, Plato, the
+poets) join as their pages are transcribed. Every shipped row carries its
+authority (`attestation` field; the cite text names it, e.g. "Empedocles
+fr. 30 DK"). Matcher-only candidates stay an internal research list — if they
+ever surface, it is under the survey's feature 7 as visibly hedged parallels,
+never as citations.
+
 ## Pipeline: match → review → ship
 
 **1. Match (offline).** A fuzzy matcher over **lemma-stream n-grams (3–6)**,
