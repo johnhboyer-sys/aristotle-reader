@@ -130,13 +130,36 @@ def parse_canon(data: bytes) -> dict[str, dict[str, str]]:
             current["dat_raw"] = _date_value(raw)
 
     for author, record in authors.items():
-        bucket = date_bucket(record["dat_raw"])
-        record["bucket"] = IGNORED if author == "0086" else bucket
+        if author == "0086":
+            record["bucket"] = IGNORED
+        elif author in BUCKET_OVERRIDES:
+            record["bucket"] = BUCKET_OVERRIDES[author]
+        else:
+            record["bucket"] = date_bucket(record["dat_raw"])
     return authors
+
+
+# Reviewed overrides of the ?-rule (John, 2026-08-19). Hesiod's canon date is
+# "8/7 B.C.?" — the uncertainty is 8th vs 7th century, both long before
+# Aristotle, so excluding him only inflated "unattested before".
+BUCKET_OVERRIDES = {"0020": STRICT_BEFORE}
 
 
 _WORK_KEY = re.compile(r"key (\d{4}) (\d{3})")
 _WRK_TITLE = re.compile(r"wrk ([^\x80-\xff]+)")
+_WRK_XMT = re.compile(r"xmt ([^\x80-\xff]+)")
+
+
+def parse_work_xmt(data: bytes) -> dict[tuple[str, str], str]:
+    """(author, work) -> canon `xmt` transmission mark (Cod, Q, Pap, ...)."""
+    text = data.decode("latin-1")
+    xmt: dict[tuple[str, str], str] = {}
+    for match in _WORK_KEY.finditer(text):
+        rest = text[match.end() : match.end() + 400]
+        mark = _WRK_XMT.search(rest)
+        if mark:
+            xmt[(match.group(1), match.group(2))] = mark.group(1).strip()
+    return xmt
 
 
 def parse_work_titles(data: bytes) -> dict[tuple[str, str], str]:
@@ -157,6 +180,27 @@ def is_testimonia(title: str) -> bool:
     text is largely later authors quoting (often Aristotle himself), so it
     must never serve as a quotation SOURCE."""
     return "testimonia" in title.lower()
+
+
+def is_unreliable_attestation(title: str, xmt: str, direct_xmt: set[str]) -> bool:
+    """True when a work cannot date its own words to its author's century.
+
+    Quotation-transmitted works (xmt Q/NQ/...), testimonia and fragment
+    collections (whatever their xmt — the canon marks Speusippus's Fragmenta
+    'Pap' though the words are overwhelmingly later quoters'), and works the
+    canon itself brands spurious or doubtful ([Sp.], [Dub.]). Extends John's
+    2026-08-19 fragments ruling to every same-shaped transmission problem.
+    """
+    if xmt not in direct_xmt:
+        return True
+    low = title.lower()
+    # startswith, not substring: real papyrus works carry "fragmenta" later in
+    # their titles and ARE direct physical evidence. testimoni/spuri/dubi as
+    # word stems cover the canon's spelling range (Testimonia, Testimonium et
+    # fragmentum, Spuria, [Sp.], fragmentum dubium, [Dub.]).
+    if low.startswith("fragment"):
+        return True
+    return bool(re.search(r"\b(?:testimoni|spuri|dubi)|\[sp\.\]|\[dub\.\]", low))
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 from pathlib import Path
 from types import SimpleNamespace
@@ -110,18 +111,30 @@ def test_count_cache_filename_is_versioned_and_ignores_legacy_cache(tmp_path, mo
     legacy.write_text('{"counts":{"stale":99},"capitalized":[]}', encoding="utf-8")
     calls = []
 
-    def fake_count(paths):
+    def fake_count(paths, direct_works=None):
         calls.append(list(paths))
-        return Counter({"fresh": 2}), {"fresh"}
+        return Counter({"fresh": 2}), Counter({"frag": 1}), {"fresh"}
 
     monkeypatch.setattr(word_distinctiveness, "count_exported_tokens", fake_count)
 
-    counts, capitalized = cached_author_counts("0001", [Path("work.xml")], tmp_path)
+    counts, fragments, capitalized = cached_author_counts(
+        "0001", [Path("work.xml")], tmp_path
+    )
 
     assert counts == Counter({"fresh": 2})
+    assert fragments == Counter({"frag": 1})
     assert capitalized == {"fresh"}
     assert calls == [[Path("work.xml")]]
-    assert (tmp_path / f"0001.v{CACHE_VERSION}.json").is_file()
+    caches = list(tmp_path.glob(f"0001.v{CACHE_VERSION}.*.json"))
+    assert len(caches) == 1
+
+    # The cache key carries the direct/fragments partition: a different
+    # direct-works set must MISS this cache and recount.
+    counts2, fragments2, _ = cached_author_counts(
+        "0001", [Path("work.xml")], tmp_path, {"001"}
+    )
+    assert len(calls) == 2
+    assert len(list(tmp_path.glob(f"0001.v{CACHE_VERSION}.*.json"))) == 2
 
 
 def test_limit_run_writes_smoke_output_not_canonical(tmp_path, monkeypatch):
@@ -148,12 +161,12 @@ def test_limit_run_writes_smoke_output_not_canonical(tmp_path, monkeypatch):
     monkeypatch.setattr(
         word_distinctiveness,
         "cached_author_counts",
-        lambda *args: (Counter(), set()),
+        lambda *args: (Counter(), Counter(), set()),
     )
     monkeypatch.setattr(
         word_distinctiveness,
         "load_lemma_inputs",
-        lambda path: ({"lemma"}, {"lemma": 3}),
+        lambda path: ({"lemma"}, {"lemma": 3}, {"lemma": []}),
     )
     monkeypatch.setattr(word_distinctiveness, "OUTPUT_PATH", canonical)
     monkeypatch.setattr(word_distinctiveness, "SMOKE_OUTPUT_PATH", smoke)
@@ -177,7 +190,7 @@ def test_explicit_output_overrides_limit_smoke_path(tmp_path, monkeypatch):
     monkeypatch.setattr(
         word_distinctiveness,
         "load_lemma_inputs",
-        lambda path: ({"lemma"}, {"lemma": 3}),
+        lambda path: ({"lemma"}, {"lemma": 3}, {"lemma": []}),
     )
 
     written = run(canon, manifest, limit=1, output_path=custom)
@@ -202,6 +215,102 @@ def test_build_table_uses_aristotle_counts_and_lsj_intersection():
         "in_aristotle": 3,
         "before_aristotle": 0,
         "contemporary": 0,
+        "school": 0,
+        "fragments": 0,
         "label": "coined by Aristotle",
     }
     assert table["lo/gos"]["label"] == "rare before Aristotle"
+
+
+def test_rulings_2026_08_19():
+    from collections import Counter
+    from aristotle_pipeline.offline.word_distinctiveness import (
+        DIRECT_XMT, PERIPATETICS, build_table, derive_label,
+    )
+
+    # Proper nouns never carry a label, whatever the numbers say.
+    assert derive_label(0, 0, 100, "*keltoi/") is None
+    assert derive_label(2, 0, 100, "*keltoi/") is None
+    # School and fragments do not defeat "coined" (they are not parameters).
+    assert derive_label(0, 0, 139, "e)ntele/xeia") == "coined by Aristotle"
+    # Transmission and school constants encode the rulings.
+    assert DIRECT_XMT == {"Cod", "Pap"}
+    assert {"0093", "1357", "0088"} == PERIPATETICS
+
+    # build_table reports school/fragments as separate fields.
+    table = build_table(
+        {"e)ntele/xeia"},
+        {"e)ntele/xeia": 139},
+        {"e)ntele/xeia": Counter({"school": 4, "fragments": 1})},
+    )
+    row = table["e)ntele/xeia"]
+    assert (row["before_aristotle"], row["contemporary"]) == (0, 0)
+    assert (row["school"], row["fragments"]) == (4, 1)
+    assert row["label"] == "coined by Aristotle"
+
+
+def test_count_split_routes_q_works_to_fragments(tmp_path):
+    from aristotle_pipeline.offline.word_distinctiveness import _work_id_of
+
+    assert _work_id_of(Path("tlg1342003.xml")) == "003"
+    assert _work_id_of(Path("tlg0012001.xml")) == "001"
+
+
+def test_lsj_corroboration_rules_the_coined_label():
+    from collections import Counter
+    from aristotle_pipeline.offline.word_distinctiveness import build_table, lsj_verdict
+
+    # LSJ cites Euripides and Aristophanes for the sea-eagle: the label dies,
+    # and the kill is visible in the lsj field. (The 2026-08-19 probe case —
+    # our disc corpus missed the bird; LSJ's editors did not.)
+    assert lsj_verdict(["E.", "Ar."]) == "earlier-attested"
+    # Later reception (Theophrastus, Plutarch, Galen) does not defeat.
+    assert lsj_verdict(["Thphr.", "Plu.", "Gal."]) == "corroborated"
+    # The commentator is not the comic poet.
+    assert lsj_verdict(["Alex.Aphr."]) == "corroborated"
+    assert lsj_verdict(["Alex."]) == "earlier-attested"
+    # An entry citing no one else is the strongest support.
+    assert lsj_verdict(["Arist."]) == "only-aristotle"
+    assert lsj_verdict([]) == "only-aristotle"
+
+    table = build_table(
+        {"a(lia/etos", "e)ntele/xeia"},
+        {"a(lia/etos": 3, "e)ntele/xeia": 139},
+        {},
+        {"a(lia/etos": ["Arist.", "E.", "Ar."], "e)ntele/xeia": ["Arist.", "Plu."]},
+    )
+    assert table["a(lia/etos"]["label"] is None
+    assert table["a(lia/etos"]["lsj"] == "earlier-attested"
+    assert table["e)ntele/xeia"]["label"] == "coined by Aristotle"
+    assert table["e)ntele/xeia"]["lsj"] == "corroborated"
+
+
+def test_overrides_kill_visibly(tmp_path, monkeypatch):
+    from collections import Counter
+    from aristotle_pipeline.offline import word_distinctiveness as wd
+
+    canon = tmp_path / "canon.bin"
+    canon.write_bytes(b"")
+    analyses_dir = tmp_path / "dd"
+    analyses_dir.mkdir()
+    (analyses_dir / "greek-analyses.txt").write_text("", encoding="utf-8")
+    manifest = SimpleNamespace(diogenes_data=lambda: analyses_dir)
+    monkeypatch.setattr(wd, "parse_canon", lambda data: {})
+    monkeypatch.setattr(wd, "parse_work_xmt", lambda data: {})
+    monkeypatch.setattr(wd, "parse_work_titles", lambda data: {})
+    monkeypatch.setattr(
+        wd, "load_lemma_inputs",
+        lambda path: ({"kori/skos"}, {"kori/skos": 63}, {"kori/skos": ["Arist."]}),
+    )
+    ov = tmp_path / "overrides.json"
+    ov.write_text('{"kori/skos": "proper name"}', encoding="utf-8")
+    monkeypatch.setattr(wd, "REPO_ROOT", tmp_path)
+    (tmp_path / "pipeline" / "data").mkdir(parents=True)
+    (tmp_path / "pipeline" / "data" / "distinctiveness_overrides.json").write_text(
+        '{"kori/skos": "proper name"}', encoding="utf-8"
+    )
+    out = tmp_path / "out.json"
+    wd.run(canon, manifest, limit=1, output_path=out)
+    table = json.loads(out.read_text(encoding="utf-8"))
+    assert table["kori/skos"]["label"] is None
+    assert table["kori/skos"]["overridden"] == "proper name"
