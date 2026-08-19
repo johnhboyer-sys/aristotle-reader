@@ -64,6 +64,36 @@ describe('WordPopup', () => {
     expect(prefixLsjCitationHrefs(html, '/')).toBe(html);
   });
 
+  // The popup renders LSJ through the shared renderLsjEntry, so the sense
+  // hierarchy has to survive into its DOM — it was stripped there too until
+  // the sanitizer allowed the sense divs (2026-08-19).
+  it('renders an LSJ entry with its sense hierarchy intact', async () => {
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nom sg', lsj: ['logos'] }],
+      lsj: [{
+        key: 'logos',
+        head: 'λόγος',
+        html: '<b class="lsj-head">λόγος</b>, '
+          + '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> computation'
+          + '<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">I.</b> account of money'
+          + '</div></div>',
+      }],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('word, account');
+
+    const entry = container.querySelector('.lsj-entry')!;
+    expect(entry).toBeTruthy();
+    expect(entry.querySelector('.lsj-sense[data-level="1"]')).toBeTruthy();
+    // Nested, not flattened: the sub-sense sits INSIDE its parent sense.
+    expect(entry.querySelector('.lsj-sense[data-level="1"] .lsj-sense[data-level="2"]'))
+      .toBeTruthy();
+    // The popup is a sidebar: no jump list, and no anchor ids to collide with
+    // the reader's own.
+    expect(entry.querySelector('.lsj-outline')).toBeNull();
+    expect(entry.querySelector('[id]')).toBeNull();
+  });
+
   it('re-runs the lookup when the token changes (word-to-word jump)', async () => {
     const { rerender } = render(WordPopup, {
       props: { ...baseProps, onClose: vi.fn() },

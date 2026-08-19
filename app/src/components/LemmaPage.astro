@@ -12,7 +12,7 @@ import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, workPath, workLanding, bookLabel, isBookless } from '@shared/lib/works';
-import { sanitizeHtml, prefixLsjCitationHrefs, outlineLsjSenses } from '../lib/html';
+import { renderLsjEntry } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
 
@@ -43,23 +43,19 @@ function lsjShardLetter(key: string): string {
   for (const ch of key) { if (ch === '*') continue; if (/[a-z]/.test(ch)) return ch; }
   return '_';
 }
+// Sanitized, base-prefixed, sense hierarchy intact, with the top-level senses
+// of a long entry lifted into a jump list above it — all of that lives in
+// shared/, so this page and the desktop lexicon and the sibling readers render
+// an LSJ entry identically. Empty string when the lemma has no shard entry.
 let lsjHtml = '';
 try {
   const shard = JSON.parse(
     readFileSync(`public/data/lsj/${lsjShardLetter(data.key)}.json`, 'utf-8'),
   );
-  lsjHtml = prefixLsjCitationHrefs(sanitizeHtml(shard[data.key]?.html ?? ''), base);
+  lsjHtml = renderLsjEntry(shard[data.key]?.html ?? '', {
+    base, scale: 'page', outline: true,
+  });
 } catch { /* no shard */ }
-
-// The big entries (λόγος, ἔχω) run to hundreds of lines: lift their top-level
-// senses into a jump list so the shape of the entry is legible before you
-// scroll it. Ids are stamped on the sense divs by the same pass. Two senses
-// are not an outline — the threshold keeps short entries clean.
-const { html: lsjBodyHtml, senses: lsjSenses } = outlineLsjSenses(lsjHtml);
-const lsjOutline = lsjSenses.length >= 3 ? lsjSenses : [];
-// Precomputed, like every other conditional on this page: a comparison operator
-// inside an inline template expression confuses Astro's JSX parser.
-const showLsjOutline = lsjOutline.length > 0;
 
 // Deep-link an instance back into the reader: scroll to the Bekker line and
 // highlight the Greek word (the same ?hlg=&loc= mechanism search uses).
@@ -206,41 +202,8 @@ const breadcrumb = Astro.site ? {
     .fb-ch-head { display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 0.35rem; }
     .fb-ch-label { font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; color: var(--text-mid); }
     .fb-ch-bekker { font-family: var(--font-ui); font-size: 0.72rem; color: var(--text-mid); font-variant-numeric: tabular-nums; opacity: .8; }
-    /* The entry itself is styled once, in shared/styles/global.css under
-       .lsj-entry, so the lemma page and the reader's word popup render LSJ
-       hierarchy identically. Only the scale differs: this is a full-width
-       reference page, not a 420px sidebar. */
-    .lx-lsj {
-      --lsj-step: 1.3em;
-      --lsj-hang: 1.7em;
-      font-size: 0.98rem;
-      line-height: 1.62;
-    }
-    .lx-lsj :global(.lsj-sense) { scroll-margin-top: 1.5rem; }
-    .lx-lsj :global(.lsj-sense[data-level="1"]:target) {
-      background: var(--target-bg);
-      border-radius: 4px;
-      box-shadow: 0 0 0 0.4rem var(--target-bg);
-    }
-    /* Jump list over the top-level senses. */
-    .lsj-outline { margin: 0 0 1.4rem; }
-    .lsj-outline-label {
-      font-family: var(--font-ui); font-size: 0.72rem; font-weight: 600;
-      letter-spacing: .08em; text-transform: uppercase; color: var(--text-light);
-      margin: 0 0 0.45rem;
-    }
-    .lsj-outline-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.15rem; }
-    .lsj-outline-list a {
-      display: grid; grid-template-columns: 1.8rem 1fr; gap: 0.5rem;
-      align-items: baseline; padding: 0.22rem 0.4rem; border-radius: 4px;
-      text-decoration: none; color: var(--text-mid); font-size: 0.88rem;
-    }
-    .lsj-outline-list a:hover { background: var(--col-bg); color: var(--text); }
-    .lsj-outline-n {
-      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700;
-      color: var(--accent); letter-spacing: .03em;
-    }
-    .lsj-outline-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* No LSJ rules here: the entry, its hierarchy and its sense outline are
+       styled once in shared/styles/global.css, which every reader copies. */
     .lx-bonitz { border: 1px dashed var(--border); border-radius: 8px; padding: 1rem 1.1rem; color: var(--text-mid); font-size: 0.9rem; line-height: 1.6; }
     .lx-bonitz b { color: var(--text); }
     .lx-note { font-size: 0.82rem; color: var(--text-mid); margin: 0.4rem 0 0; }
@@ -340,23 +303,8 @@ const breadcrumb = Astro.site ? {
     {lsjHtml && (
       <>
         <h2 class="lx-h">Dictionary (LSJ)</h2>
-        {showLsjOutline && (
-          <nav class="lsj-outline" aria-label="Senses in this entry">
-            <p class="lsj-outline-label">{lsjOutline.length} main senses</p>
-            <ol class="lsj-outline-list">
-              {lsjOutline.map((sense) => (
-                <li>
-                  <a href={`#${sense.id}`}>
-                    <span class="lsj-outline-n">{sense.n}</span>
-                    <span class="lsj-outline-text">{sense.label}</span>
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )}
         <!-- eslint-disable-next-line -->
-        <div class="lsj-entry lx-lsj" set:html={lsjBodyHtml} />
+        <Fragment set:html={lsjHtml} />
       </>
     )}
 

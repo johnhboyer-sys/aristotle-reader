@@ -6,6 +6,7 @@
   // the stub is honest, not filler). Citation chips jump into the reader via
   // the same ?hlg=&loc= contract the site's search uses.
   import { fetchLsjShard, lsjShard } from '@shared/lib/data';
+  import { renderLsjEntry } from '@shared/lib/html';
   import { getWork, bookLabel, isBookless } from '@shared/lib/works';
 
   export let slug: string;
@@ -44,12 +45,35 @@
       if (loadedFor !== s) return; // superseded by a newer selection
       data = d;
       const shard = await fetchLsjShard(lsjShard(d.key));
-      if (loadedFor === s) lsjHtml = shard[d.key]?.html ?? '';
+      // Same renderer the site uses: sanitized, sense hierarchy intact, with a
+      // jump list over the top-level senses. No base — the desktop serves the
+      // reader at the root. (Until 2026-08-19 this injected shard HTML raw,
+      // which both skipped the sanitizer and lost every sense boundary.)
+      if (loadedFor === s) {
+        lsjHtml = renderLsjEntry(shard[d.key]?.html ?? '', {
+          scale: 'page', outline: true,
+        });
+      }
     } catch (e) {
       if (loadedFor === s) error = String(e);
     } finally {
       if (loadedFor === s) loading = false;
     }
+  }
+
+  // The sense outline links by fragment (`#lsj-sense-a`), which is right on the
+  // site — a lemma page is its own document. Here the lexicon is an OVERLAY
+  // over the reader, sharing one location.hash, and App.svelte reads that hash
+  // as the live citation (the rail's scroll-spy and Copy Citation). So scroll
+  // to the sense ourselves and leave the hash alone. Delegated, because the
+  // entry is injected HTML; a keyboard Enter on the link fires this same click.
+  function onEntryClick(e: MouseEvent) {
+    const link = (e.target as HTMLElement | null)?.closest?.('.lsj-outline-list a');
+    if (!(link instanceof HTMLAnchorElement)) return;
+    const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   $: maxWork = data?.byWork[0]?.count ?? 1;
@@ -153,8 +177,13 @@
 
     {#if lsjHtml}
       <h2 class="lx-h">Dictionary (LSJ)</h2>
-      <!-- eslint-disable-next-line svelte/no-at-html-tags — pipeline-produced LSJ HTML, same as the site -->
-      <div class="lsj">{@html lsjHtml}</div>
+      <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+      <!-- The handler only ever acts on real <a> elements inside, which carry
+           their own keyboard semantics; Enter on one fires this click. -->
+      <div on:click={onEntryClick}>
+        <!-- eslint-disable-next-line svelte/no-at-html-tags — sanitized by renderLsjEntry, same as the site -->
+        {@html lsjHtml}
+      </div>
     {/if}
 
     <h2 class="lx-h">Key passages &amp; sense analysis (Bonitz)</h2>
@@ -223,8 +252,8 @@
   .fb-ch-head { display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 0.35rem; }
   .fb-ch-label { font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; color: var(--text-mid); }
   .fb-ch-bekker { font-family: var(--font-ui); font-size: 0.72rem; color: var(--text-mid); font-variant-numeric: tabular-nums; opacity: .8; }
-  .lsj { font-size: 0.95rem; line-height: 1.6; }
-  .lsj :global(.lsj-head) { font-family: var(--font-greek); }
+  /* No LSJ rules here: shared/styles/global.css styles the entry, its sense
+     hierarchy and its outline for every host. */
   .lx-bonitz { border: 1px dashed var(--border); border-radius: 8px; padding: 1rem 1.1rem; color: var(--text-mid); font-size: 0.9rem; line-height: 1.6; }
   .lx-bonitz b { color: var(--text); }
 </style>

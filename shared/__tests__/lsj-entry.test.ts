@@ -4,7 +4,12 @@
 // never reached the page — the stylesheet's .lsj-sense rules had nothing to
 // match and entries rendered as one wall of prose. These lock the structure in.
 import { describe, expect, it } from 'vitest';
-import { outlineLsjSenses, prefixLsjCitationHrefs, sanitizeHtml } from '../lib/html';
+import {
+  outlineLsjSenses,
+  prefixLsjCitationHrefs,
+  renderLsjEntry,
+  sanitizeHtml,
+} from '../lib/html';
 
 // The shape stage5_lsj.py emits (nested senses, sense number in a leading <b>).
 const ENTRY = [
@@ -121,5 +126,71 @@ describe('outlineLsjSenses', () => {
     const { html } = outlineLsjSenses(sanitized);
     expect(prefixLsjCitationHrefs(html, '/aristotle-reader'))
       .toContain('<a class="lsj-bibl" href="/aristotle-reader/EN/book/1?loc=1094a:5">');
+  });
+});
+
+// renderLsjEntry is the whole contract a host implements — the site's lemma
+// page and word popup, the desktop lexicon, and any sibling reader that copies
+// shared/ call this one function and get identical typography. Everything it
+// needs to know is in its arguments; nothing about Aristotle is.
+describe('renderLsjEntry', () => {
+  it('sanitizes, wraps, and keeps the sense hierarchy in one call', () => {
+    const out = renderLsjEntry(`${ENTRY}<script>alert(1)</script>`);
+    expect(out.startsWith('<div class="lsj-entry">')).toBe(true);
+    expect(out.endsWith('</div>')).toBe(true);
+    expect(out).toContain('<div class="lsj-sense" data-level="3">');
+    expect(out).not.toContain('alert(1)');
+  });
+
+  it('prefixes citation links with the host\'s deploy base', () => {
+    expect(renderLsjEntry(ENTRY, { base: '/aristotle-reader' }))
+      .toContain('href="/aristotle-reader/EN/book/1?loc=1094a:5"');
+    // A host served at the root (the desktop app) passes no base and keeps the
+    // shard's own hrefs.
+    expect(renderLsjEntry(ENTRY)).toContain('href="/EN/book/1?loc=1094a:5"');
+  });
+
+  it('renders nothing at all for a missing or empty entry', () => {
+    // The shard lookup for a lemma with no dictionary entry yields undefined;
+    // the host's own `{#if}` keys off the empty string this returns.
+    for (const empty of ['', '   ', '<script>x</script>', undefined as unknown as string]) {
+      expect(renderLsjEntry(empty)).toBe('');
+    }
+  });
+
+  it('adds the outline only when asked, and only when it earns its place', () => {
+    expect(renderLsjEntry(ENTRY)).not.toContain('lsj-outline');
+    const withOutline = renderLsjEntry(ENTRY, { outline: true });
+    expect(withOutline).toContain('<p class="lsj-outline-label">3 main senses</p>');
+    expect(withOutline).toContain('<a href="#lsj-sense-a">');
+    // Two senses are a list, not an outline.
+    const two = '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> one</div>'
+      + '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">B.</b> two</div>';
+    expect(renderLsjEntry(two, { outline: true })).not.toContain('lsj-outline');
+    expect(renderLsjEntry(two, { outline: true, outlineMin: 2 })).toContain('lsj-outline');
+  });
+
+  it('escapes sense text on its way into the outline', () => {
+    const nasty = '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> '
+      + 'a &amp; b &lt;script&gt;alert(1)&lt;/script&gt;</div>'
+      + '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">B.</b> two</div>'
+      + '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">C.</b> three</div>';
+    const out = renderLsjEntry(nasty, { outline: true });
+    expect(out).toContain('a &amp; b &lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(out).not.toContain('<script>');
+  });
+
+  it('takes the page scale for a reference view and the popup scale by default', () => {
+    expect(renderLsjEntry(ENTRY, { scale: 'page' }))
+      .toContain('<div class="lsj-entry lsj-entry-page">');
+    expect(renderLsjEntry(ENTRY)).toContain('<div class="lsj-entry">');
+  });
+
+  it('keeps anchor ids distinct when one view renders several entries', () => {
+    const a = renderLsjEntry(ENTRY, { outline: true, idPrefix: 'e1' });
+    const b = renderLsjEntry(ENTRY, { outline: true, idPrefix: 'e2' });
+    expect(a).toContain('id="e1-a"');
+    expect(b).toContain('id="e2-a"');
+    expect(a).not.toContain('id="e2-a"');
   });
 });

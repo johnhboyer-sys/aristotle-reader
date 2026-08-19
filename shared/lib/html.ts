@@ -223,3 +223,73 @@ export function outlineLsjSenses(
   }
   return { html: out + html.slice(cursor), senses };
 }
+
+// ── one LSJ entry, rendered ─────────────────────────────────────────────────
+// The single entry point every host uses to put an LSJ entry on screen: the
+// site's lemma page and word popup, the desktop lexicon, and the sibling
+// readers (plato-reader, homer-reader, classical-philosophy-reader) that copy
+// this directory. Sanitize → base-prefix the citation links → optionally lift
+// the top-level senses into a jump list → wrap in the class the stylesheet
+// styles. Keeping all four steps here is what makes the presentation portable:
+// a host supplies shard HTML and a base, and gets identical typography for
+// free. Nothing in it is Aristotle-specific — see shared/README.md.
+export interface RenderLsjEntryOptions {
+  /** Deploy base for the shards' root-relative citation hrefs (site only). */
+  base?: string;
+  /** 'page' for a full-width reference view, 'popup' (default) for a sidebar. */
+  scale?: 'popup' | 'page';
+  /** Lift the top-level senses into a jump list above the entry. */
+  outline?: boolean;
+  /** Fewest top-level senses worth an outline — below it, none is rendered. */
+  outlineMin?: number;
+  /** Anchor-id prefix; give each entry its own when a page renders several. */
+  idPrefix?: string;
+}
+
+function escapeText(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function outlineHtml(senses: LsjSenseRef[]): string {
+  const items = senses
+    .map(
+      (sense) =>
+        `<li><a href="#${sense.id}">` +
+        `<span class="lsj-outline-n">${escapeText(sense.n)}</span>` +
+        `<span class="lsj-outline-text">${escapeText(sense.label)}</span>` +
+        '</a></li>',
+    )
+    .join('');
+  return (
+    '<nav class="lsj-outline" aria-label="Senses in this entry">' +
+    `<p class="lsj-outline-label">${senses.length} main senses</p>` +
+    `<ol class="lsj-outline-list">${items}</ol></nav>`
+  );
+}
+
+export function renderLsjEntry(
+  raw: string,
+  options: RenderLsjEntryOptions = {},
+): string {
+  const {
+    base = '',
+    scale = 'popup',
+    outline = false,
+    outlineMin = 3,
+    idPrefix = 'lsj-sense',
+  } = options;
+  const sanitized = prefixLsjCitationHrefs(sanitizeHtml(raw ?? ''), base);
+  // An absent shard entry must render nothing at all, not an empty box: the
+  // host's own `{#if}` keys off this string.
+  if (!sanitized.trim()) return '';
+  const { html, senses } = outline
+    ? outlineLsjSenses(sanitized, idPrefix)
+    : { html: sanitized, senses: [] as LsjSenseRef[] };
+  const nav = senses.length >= outlineMin ? outlineHtml(senses) : '';
+  const cls = scale === 'page' ? 'lsj-entry lsj-entry-page' : 'lsj-entry';
+  return `<div class="${cls}">${nav}${html}</div>`;
+}
