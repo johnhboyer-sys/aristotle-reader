@@ -1,3 +1,6 @@
+import pytest
+
+from aristotle_pipeline.offline import quotation_matching
 from aristotle_pipeline.offline.quotation_matching import (
     DEFAULT_N,
     dedup_clusters,
@@ -7,6 +10,14 @@ from aristotle_pipeline.offline.quotation_matching import (
     score_run,
     surface_key,
 )
+
+
+@pytest.fixture(autouse=True)
+def _pin_frequency_counts(monkeypatch):
+    # The frequency ceiling reads build/dist/lemmata.json fail-loud — right
+    # for real runs, absent on CI. Tests pin an empty table; individual tests
+    # override with their own counts.
+    monkeypatch.setattr(quotation_matching, "_ARISTOTLE_COUNTS", {})
 
 
 def test_exact_ngram_emits_one_maximal_run():
