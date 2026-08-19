@@ -165,7 +165,7 @@ def test_limit_run_writes_smoke_output_not_canonical(tmp_path, monkeypatch):
     monkeypatch.setattr(
         word_distinctiveness,
         "load_lemma_inputs",
-        lambda path: ({"lemma"}, {"lemma": 3}),
+        lambda path: ({"lemma"}, {"lemma": 3}, {"lemma": []}),
     )
     monkeypatch.setattr(word_distinctiveness, "OUTPUT_PATH", canonical)
     monkeypatch.setattr(word_distinctiveness, "SMOKE_OUTPUT_PATH", smoke)
@@ -189,7 +189,7 @@ def test_explicit_output_overrides_limit_smoke_path(tmp_path, monkeypatch):
     monkeypatch.setattr(
         word_distinctiveness,
         "load_lemma_inputs",
-        lambda path: ({"lemma"}, {"lemma": 3}),
+        lambda path: ({"lemma"}, {"lemma": 3}, {"lemma": []}),
     )
 
     written = run(canon, manifest, limit=1, output_path=custom)
@@ -253,3 +253,32 @@ def test_count_split_routes_q_works_to_fragments(tmp_path):
 
     assert _work_id_of(Path("tlg1342003.xml")) == "003"
     assert _work_id_of(Path("tlg0012001.xml")) == "001"
+
+
+def test_lsj_corroboration_rules_the_coined_label():
+    from collections import Counter
+    from aristotle_pipeline.offline.word_distinctiveness import build_table, lsj_verdict
+
+    # LSJ cites Euripides and Aristophanes for the sea-eagle: the label dies,
+    # and the kill is visible in the lsj field. (The 2026-08-19 probe case —
+    # our disc corpus missed the bird; LSJ's editors did not.)
+    assert lsj_verdict(["E.", "Ar."]) == "earlier-attested"
+    # Later reception (Theophrastus, Plutarch, Galen) does not defeat.
+    assert lsj_verdict(["Thphr.", "Plu.", "Gal."]) == "corroborated"
+    # The commentator is not the comic poet.
+    assert lsj_verdict(["Alex.Aphr."]) == "corroborated"
+    assert lsj_verdict(["Alex."]) == "earlier-attested"
+    # An entry citing no one else is the strongest support.
+    assert lsj_verdict(["Arist."]) == "only-aristotle"
+    assert lsj_verdict([]) == "only-aristotle"
+
+    table = build_table(
+        {"a(lia/etos", "e)ntele/xeia"},
+        {"a(lia/etos": 3, "e)ntele/xeia": 139},
+        {},
+        {"a(lia/etos": ["Arist.", "E.", "Ar."], "e)ntele/xeia": ["Arist.", "Plu."]},
+    )
+    assert table["a(lia/etos"]["label"] is None
+    assert table["a(lia/etos"]["lsj"] == "earlier-attested"
+    assert table["e)ntele/xeia"]["label"] == "coined by Aristotle"
+    assert table["e)ntele/xeia"]["lsj"] == "corroborated"

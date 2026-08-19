@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -51,6 +52,46 @@ PERIPATETICS = {
     "1357",  # Eudemus of Rhodes
     "0088",  # Aristoxenus
 }
+
+
+# LSJ author abbreviations for authors BEFORE or CONTEMPORARY with Aristotle
+# (John's ruling, 2026-08-19: "coined by Aristotle" needs independent
+# scholarly support — LSJ's editors read the literature, and their citations
+# are that support). A coined label dies if the lemma's LSJ entry cites any
+# of these; later authors (Thphr., Plu., Gal., ...) are reception and do not
+# defeat. Exact-match against the entry's author spans. NOTE the traps:
+# "Ar." is Aristophanes (pre), "Arist." is Aristotle; "Alex." is Alexis the
+# comic poet (contemporary), "Alex.Aphr." is the later commentator.
+PRE_ARISTOTLE_LSJ_AUTHORS = {
+    # epic / didactic / lyric
+    "Hom.", "Il.", "Od.", "Hes.", "h.Hom.", "Thgn.", "Sol.", "Tyrt.",
+    "Mimn.", "Archil.", "Alc.", "Sapph.", "Alcm.", "Stesich.", "Ibyc.",
+    "Anacr.", "Simon.", "Pi.", "B.",
+    # tragedy / comedy through the 4th c.
+    "A.", "S.", "E.", "Ar.", "Cratin.", "Eup.", "Pherecr.", "Alex.",
+    "Antiph.", "Anaxandr.", "Eub.", "Philem.",
+    # prose: history, oratory, philosophy, medicine
+    "Hdt.", "Th.", "X.", "Pl.", "Hp.", "Isoc.", "D.", "Lys.", "Aeschin.",
+    "And.", "Antipho", "Is.", "Lycurg.", "Hyp.", "Din.", "Gorg.",
+    # Presocratics as LSJ abbreviates them
+    "Emp.", "Parm.", "Heraclit.", "Democr.", "Anaxag.", "Xenoph.",
+    "Pythag.", "Hecat.", "Hellanic.", "Pherecyd.",
+}
+
+
+def lsj_verdict(cited_authors: Iterable[str]) -> str:
+    """LSJ's testimony about a coined candidate.
+
+    'only-aristotle': the entry cites no one else — the strongest support.
+    'corroborated': others cited, all later — reception, coinage stands.
+    'earlier-attested': a pre/contemporary author is cited — the label dies.
+    """
+    others = [a for a in cited_authors if not a.startswith("Arist")]
+    if not others:
+        return "only-aristotle"
+    if any(a in PRE_ARISTOTLE_LSJ_AUTHORS for a in others):
+        return "earlier-attested"
+    return "corroborated"
 
 
 def derive_label(
@@ -268,27 +309,36 @@ def aggregate_lemma_counts(
     return dict(totals)
 
 
-def load_lemma_inputs(dist_dir: Path) -> tuple[set[str], dict[str, int]]:
+_LSJ_AUTHOR = re.compile(r'lsj-author">([^<]+)<')
+
+
+def load_lemma_inputs(
+    dist_dir: Path,
+) -> tuple[set[str], dict[str, int], dict[str, list[str]]]:
     shard_dir = dist_dir / "lsj"
     shards = sorted(shard_dir.glob("*.json"))
     if not shards:
         raise FileNotFoundError(f"no LSJ shards in {shard_dir}")
-    universe = {
-        key
-        for path in shards
-        for key in json.loads(path.read_text(encoding="utf-8"))
-    }
+    universe: set[str] = set()
+    cited_authors: dict[str, list[str]] = {}
+    for path in shards:
+        for key, entry in json.loads(path.read_text(encoding="utf-8")).items():
+            universe.add(key)
+            cited_authors[key] = [
+                m.strip() for m in _LSJ_AUTHOR.findall(entry.get("html", ""))
+            ]
 
     lemmata_path = dist_dir / "lemmata.json"
     lemmata = json.loads(lemmata_path.read_text(encoding="utf-8"))
     in_aristotle = {key: row["count"] for key, row in lemmata.items()}
-    return universe, in_aristotle
+    return universe, in_aristotle, cited_authors
 
 
 def build_table(
     universe: set[str],
     in_aristotle: Mapping[str, int],
     totals: Mapping[str, Counter[str]],
+    cited_authors: Mapping[str, list[str]] | None = None,
 ) -> dict[str, dict[str, int | str | None]]:
     table = {}
     for key in sorted(universe.intersection(in_aristotle)):
@@ -297,14 +347,24 @@ def build_table(
         contemporary = int(totals.get(key, {}).get(CONTEMPORARY, 0))
         school = int(totals.get(key, {}).get(SCHOOL, 0))
         fragments = int(totals.get(key, {}).get(FRAGMENTS, 0))
-        table[key] = {
+        label = derive_label(before, contemporary, in_count, key)
+        row: dict[str, int | str | None] = {
             "in_aristotle": in_count,
             "before_aristotle": before,
             "contemporary": contemporary,
             "school": school,
             "fragments": fragments,
-            "label": derive_label(before, contemporary, in_count, key),
+            "label": label,
         }
+        # The two-source rule: our counting proposes a coinage, LSJ's own
+        # citations must not contradict it. Verdict recorded either way so a
+        # killed label is visible, not vanished.
+        if label == "coined by Aristotle" and cited_authors is not None:
+            verdict = lsj_verdict(cited_authors.get(key, []))
+            row["lsj"] = verdict
+            if verdict == "earlier-attested":
+                row["label"] = None
+        table[key] = row
     return table
 
 
@@ -358,10 +418,10 @@ def run(
     analyses_path = manifest.diogenes_data() / "greek-analyses.txt"
     if not analyses_path.is_file():
         raise FileNotFoundError(analyses_path)
-    universe, in_aristotle = load_lemma_inputs(BUILD_DIR / "dist")
+    universe, in_aristotle, cited_authors = load_lemma_inputs(BUILD_DIR / "dist")
     with analyses_path.open(encoding="utf-8", errors="replace") as lines:
         totals = aggregate_lemma_counts(form_counts, capitalized, lines, universe)
-    table = build_table(universe, in_aristotle, totals)
+    table = build_table(universe, in_aristotle, totals, cited_authors)
 
     destination = output_path or (SMOKE_OUTPUT_PATH if limit is not None else OUTPUT_PATH)
     destination.parent.mkdir(parents=True, exist_ok=True)

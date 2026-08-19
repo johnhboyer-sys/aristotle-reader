@@ -1509,7 +1509,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a(lmu^ro/s": {
   "in_aristotle": 40,
@@ -1525,7 +1526,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a(lourgh/s": {
   "in_aristotle": 18,
@@ -1605,7 +1607,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a(pto/s": {
   "in_aristotle": 51,
@@ -2165,7 +2168,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)/mfw": {
   "in_aristotle": 562,
@@ -2421,7 +2425,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)/pistos": {
   "in_aristotle": 21,
@@ -2445,7 +2450,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)/plhstos": {
   "in_aristotle": 3,
@@ -2541,7 +2547,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)/qlios": {
   "in_aristotle": 9,
@@ -2861,7 +2868,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)/tru_tos": {
   "in_aristotle": 3,
@@ -2925,7 +2933,8 @@
   "contemporary": 0,
   "school": 12,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)/yu_xos": {
   "in_aristotle": 91,
@@ -2957,7 +2966,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)be/baios": {
   "in_aristotle": 9,
@@ -3045,7 +3055,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)deh/s1": {
   "in_aristotle": 3,
@@ -3069,7 +3080,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)delfo/s": {
   "in_aristotle": 24,
@@ -3085,7 +3097,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)di/khma": {
   "in_aristotle": 33,
@@ -3133,7 +3146,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)diai/retos": {
   "in_aristotle": 213,
@@ -3141,7 +3155,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 63,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)diki/a": {
   "in_aristotle": 73,
@@ -3333,7 +3348,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)fete/on": {
   "in_aristotle": 6,
@@ -3389,7 +3405,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)fodeu/w": {
   "in_aristotle": 4,
@@ -3597,7 +3614,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)ggei=on": {
   "in_aristotle": 73,
@@ -3653,7 +3671,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)gora/": {
   "in_aristotle": 28,
@@ -3789,7 +3808,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)i/+dios": {
   "in_aristotle": 229,
@@ -3829,7 +3849,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)kanqi/as": {
   "in_aristotle": 3,
@@ -3837,7 +3858,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)kanqi/s": {
   "in_aristotle": 4,
@@ -3861,7 +3883,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)kate/rgastos": {
   "in_aristotle": 4,
@@ -3869,7 +3892,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)ke/omai": {
   "in_aristotle": 36,
@@ -3917,7 +3941,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)kinhti/zw": {
   "in_aristotle": 18,
@@ -3925,7 +3950,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)kma/zw": {
   "in_aristotle": 27,
@@ -4005,7 +4031,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)kosmi/a": {
   "in_aristotle": 3,
@@ -4069,7 +4096,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)krath/s": {
   "in_aristotle": 64,
@@ -4125,7 +4153,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)kro/a_sis": {
   "in_aristotle": 4,
@@ -4333,7 +4362,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)lhqh/s": {
   "in_aristotle": 904,
@@ -4445,7 +4475,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)lloiwto/s": {
   "in_aristotle": 11,
@@ -4453,7 +4484,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)lo/gistos": {
   "in_aristotle": 7,
@@ -4493,7 +4525,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)maqh/s": {
   "in_aristotle": 6,
@@ -4597,7 +4630,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)metablhsi/a": {
   "in_aristotle": 4,
@@ -4605,7 +4639,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)mfi/": {
   "in_aristotle": 5,
@@ -4709,7 +4744,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 8,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)mi^gh/s": {
   "in_aristotle": 10,
@@ -4725,7 +4761,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)mnh/mwn": {
   "in_aristotle": 4,
@@ -4997,7 +5034,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)nafu_sa/w": {
   "in_aristotle": 6,
@@ -5149,7 +5187,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)naisqhsi/a": {
   "in_aristotle": 12,
@@ -5253,7 +5292,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)nalogi/a": {
   "in_aristotle": 61,
@@ -5317,7 +5357,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)naneu/w": {
   "in_aristotle": 6,
@@ -5357,7 +5398,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)naple/w": {
   "in_aristotle": 3,
@@ -5389,7 +5431,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)napne/w": {
   "in_aristotle": 163,
@@ -5445,7 +5488,8 @@
   "contemporary": 0,
   "school": 9,
   "fragments": 36,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)naqumia/w": {
   "in_aristotle": 10,
@@ -5453,7 +5497,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 9,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)narra/ssw": {
   "in_aristotle": 3,
@@ -5501,7 +5546,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)naspa/w": {
   "in_aristotle": 33,
@@ -5589,7 +5635,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)natre/pw": {
   "in_aristotle": 12,
@@ -5693,7 +5740,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)ne/gklhtos": {
   "in_aristotle": 5,
@@ -5709,7 +5757,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)ne/rxomai": {
   "in_aristotle": 3,
@@ -5757,7 +5806,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)nepisth/mwn": {
   "in_aristotle": 6,
@@ -5781,7 +5831,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)nh/r": {
   "in_aristotle": 208,
@@ -5869,7 +5920,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)noi/dhsis": {
   "in_aristotle": 4,
@@ -5877,7 +5929,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)noi/gnu_mi": {
   "in_aristotle": 16,
@@ -5909,7 +5962,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)nomologe/omai": {
   "in_aristotle": 5,
@@ -5941,7 +5995,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)nqrh/nh": {
   "in_aristotle": 20,
@@ -6069,7 +6124,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 19,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)nti/fhmi": {
   "in_aristotle": 5,
@@ -6085,7 +6141,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)nti/keimai": {
   "in_aristotle": 412,
@@ -6141,7 +6198,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)ntifa^tiko/s": {
   "in_aristotle": 4,
@@ -6149,7 +6207,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)ntife/rw": {
   "in_aristotle": 3,
@@ -6197,7 +6256,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)ntikrou/w": {
   "in_aristotle": 4,
@@ -6253,7 +6313,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)ntiperi/sta^sis": {
   "in_aristotle": 8,
@@ -6261,7 +6322,8 @@
   "contemporary": 0,
   "school": 6,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)ntiperii/+sthmi": {
   "in_aristotle": 10,
@@ -6269,7 +6331,8 @@
   "contemporary": 0,
   "school": 5,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)ntipoie/w": {
   "in_aristotle": 15,
@@ -6293,7 +6356,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)ntispa/w": {
   "in_aristotle": 12,
@@ -6317,7 +6381,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)ntisullogi/zomai": {
   "in_aristotle": 3,
@@ -6325,7 +6390,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)ntitei/nw": {
   "in_aristotle": 14,
@@ -6693,7 +6759,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)peiri/a1": {
   "in_aristotle": 16,
@@ -6765,7 +6832,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)pi/melos": {
   "in_aristotle": 6,
@@ -6773,7 +6841,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)pi/qa^nos": {
   "in_aristotle": 4,
@@ -6853,7 +6922,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)po/fhmi": {
   "in_aristotle": 57,
@@ -6949,7 +7019,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)po/sta^sis": {
   "in_aristotle": 12,
@@ -7045,7 +7116,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)podeikto/s": {
   "in_aristotle": 12,
@@ -7053,7 +7125,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)podekte/on": {
   "in_aristotle": 4,
@@ -7077,7 +7150,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)podi/dwmi": {
   "in_aristotle": 505,
@@ -7125,7 +7199,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 18,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)pofai/nw": {
   "in_aristotle": 63,
@@ -7141,7 +7216,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)pofe/rw": {
   "in_aristotle": 4,
@@ -7173,7 +7249,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)pofu^teu/w": {
   "in_aristotle": 6,
@@ -7181,7 +7258,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)pogi/gnomai": {
   "in_aristotle": 12,
@@ -7213,7 +7291,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)poka^/qa^rsis": {
   "in_aristotle": 3,
@@ -7325,7 +7404,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)polei/pw": {
   "in_aristotle": 56,
@@ -7645,7 +7725,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)potugxa/nw": {
   "in_aristotle": 10,
@@ -7861,7 +7942,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)re/skw": {
   "in_aristotle": 14,
@@ -8053,7 +8135,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)rrenogoni/a": {
   "in_aristotle": 5,
@@ -8061,7 +8144,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)rrenotoke/w": {
   "in_aristotle": 6,
@@ -8069,7 +8153,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)rrenwpo/s": {
   "in_aristotle": 3,
@@ -8213,7 +8298,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)safh/s": {
   "in_aristotle": 26,
@@ -8301,7 +8387,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)spari/zw": {
   "in_aristotle": 3,
@@ -8309,7 +8396,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "a)spi/s": {
   "in_aristotle": 28,
@@ -8349,7 +8437,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)sta^si/astos": {
   "in_aristotle": 5,
@@ -8445,7 +8534,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)stu^gei/twn": {
   "in_aristotle": 3,
@@ -8485,7 +8575,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)su/ndetos": {
   "in_aristotle": 6,
@@ -8565,7 +8656,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)sxole/w": {
   "in_aristotle": 9,
@@ -8613,7 +8705,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)teleu/thtos": {
   "in_aristotle": 3,
@@ -8677,7 +8770,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)tmw/dhs": {
   "in_aristotle": 3,
@@ -8685,7 +8779,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "a)tte/la^bos": {
   "in_aristotle": 5,
@@ -8725,7 +8820,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "a)xlu/s": {
   "in_aristotle": 10,
@@ -8789,7 +8885,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ai(ma^tw/dhs": {
   "in_aristotle": 29,
@@ -8997,7 +9094,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "ai)gu^pio/s": {
   "in_aristotle": 3,
@@ -9013,7 +9111,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ai)gwpo/s": {
   "in_aristotle": 4,
@@ -9021,7 +9120,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "ai)ki/a": {
   "in_aristotle": 7,
@@ -9077,7 +9177,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ai)sqa/nomai": {
   "in_aristotle": 342,
@@ -9189,7 +9290,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ai)w/n": {
   "in_aristotle": 17,
@@ -9205,7 +9307,8 @@
   "contemporary": 0,
   "school": 4,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "au)/ch": {
   "in_aristotle": 9,
@@ -9301,7 +9404,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "au)ga/zw": {
   "in_aristotle": 7,
@@ -9437,7 +9541,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "au)toe/kastos": {
   "in_aristotle": 3,
@@ -9445,7 +9550,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "au)tokra/twr": {
   "in_aristotle": 4,
@@ -9765,7 +9871,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "bare/w": {
   "in_aristotle": 14,
@@ -9989,7 +10096,8 @@
   "contemporary": 0,
   "school": 31,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "ble/fa^ron": {
   "in_aristotle": 36,
@@ -10157,7 +10265,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "boli/taina": {
   "in_aristotle": 3,
@@ -10165,7 +10274,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "bombe/w": {
   "in_aristotle": 6,
@@ -10373,7 +10483,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "bre/gma": {
   "in_aristotle": 9,
@@ -10685,7 +10796,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "da^su^/pous": {
   "in_aristotle": 24,
@@ -10693,7 +10805,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 15,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "da_lo/s1": {
   "in_aristotle": 6,
@@ -11077,7 +11190,8 @@
   "contemporary": 0,
   "school": 7,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "derma^tw/dhs": {
   "in_aristotle": 3,
@@ -11085,7 +11199,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "dermo/pteros": {
   "in_aristotle": 5,
@@ -11093,7 +11208,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "desme/w": {
   "in_aristotle": 3,
@@ -11149,7 +11265,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "despotiko/s": {
   "in_aristotle": 33,
@@ -11485,7 +11602,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "di/qu^ros": {
   "in_aristotle": 21,
@@ -11493,7 +11611,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "di/s": {
   "in_aristotle": 53,
@@ -11533,7 +11652,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "di/xroos": {
   "in_aristotle": 10,
@@ -11541,7 +11661,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "di/ya": {
   "in_aristotle": 8,
@@ -11685,7 +11806,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "di^kaiosu/nh": {
   "in_aristotle": 147,
@@ -11733,7 +11855,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "di^toke/w": {
   "in_aristotle": 4,
@@ -11741,7 +11864,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "di^xa/w": {
   "in_aristotle": 7,
@@ -12237,7 +12361,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "diaire/w": {
   "in_aristotle": 583,
@@ -12549,7 +12674,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "diarke/w": {
   "in_aristotle": 5,
@@ -12629,7 +12755,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "diaste/llw": {
   "in_aristotle": 8,
@@ -12645,7 +12772,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "diastre/fw": {
   "in_aristotle": 16,
@@ -12725,7 +12853,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "diatri/bw": {
   "in_aristotle": 44,
@@ -12749,7 +12878,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "diaxe/w": {
   "in_aristotle": 16,
@@ -12845,7 +12975,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "dieuru/nw": {
   "in_aristotle": 3,
@@ -12893,7 +13024,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "dihqe/w": {
   "in_aristotle": 18,
@@ -13013,7 +13145,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "dioru/ssw": {
   "in_aristotle": 3,
@@ -13053,7 +13186,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "diplo/os": {
   "in_aristotle": 28,
@@ -13093,7 +13227,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "dixo/w": {
   "in_aristotle": 100,
@@ -13341,7 +13476,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "du/h": {
   "in_aristotle": 24,
@@ -13493,7 +13629,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "du^sa/ni^os": {
   "in_aristotle": 4,
@@ -13501,7 +13638,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "du^sapa/llaktos": {
   "in_aristotle": 3,
@@ -13517,7 +13655,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "du^so/rghtos": {
   "in_aristotle": 3,
@@ -13525,7 +13664,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "du^so/ristos": {
   "in_aristotle": 3,
@@ -13533,7 +13673,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "du^sw/dhs": {
   "in_aristotle": 12,
@@ -13597,7 +13738,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "dustoke/w": {
   "in_aristotle": 4,
@@ -13925,7 +14067,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e(ch/konta": {
   "in_aristotle": 16,
@@ -14061,7 +14204,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e(lw/dhs": {
   "in_aristotle": 7,
@@ -14125,7 +14269,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e(pta^kai/deka": {
   "in_aristotle": 4,
@@ -14221,7 +14366,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e(tero/ths": {
   "in_aristotle": 8,
@@ -14445,7 +14591,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)/kplhcis": {
   "in_aristotle": 8,
@@ -14813,7 +14960,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)/oika": {
   "in_aristotle": 544,
@@ -15189,7 +15337,8 @@
   "contemporary": 0,
   "school": 4,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)cagge/llw": {
   "in_aristotle": 3,
@@ -15205,7 +15354,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)cagwgh/": {
   "in_aristotle": 6,
@@ -15413,7 +15563,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)dw/dimos": {
   "in_aristotle": 16,
@@ -15773,7 +15924,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)kbolh/": {
   "in_aristotle": 4,
@@ -15813,7 +15965,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)kei=": {
   "in_aristotle": 139,
@@ -15885,7 +16038,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)kklhsi/a": {
   "in_aristotle": 25,
@@ -16029,7 +16183,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)kpe/mpw": {
   "in_aristotle": 20,
@@ -16149,7 +16304,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)kte/mnw": {
   "in_aristotle": 35,
@@ -16205,7 +16361,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)ktre/fw": {
   "in_aristotle": 42,
@@ -16245,7 +16402,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)la/sswn": {
   "in_aristotle": 813,
@@ -16349,7 +16507,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)legei=on": {
   "in_aristotle": 3,
@@ -16381,7 +16540,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)leu/qeros": {
   "in_aristotle": 86,
@@ -16621,7 +16781,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)mpodw/n": {
   "in_aristotle": 5,
@@ -16661,7 +16822,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)mpureu/w": {
   "in_aristotle": 5,
@@ -16821,7 +16983,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)ndu/w": {
   "in_aristotle": 4,
@@ -16861,7 +17024,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)ni/hmi": {
   "in_aristotle": 31,
@@ -16957,7 +17121,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)nqousiastiko/s": {
   "in_aristotle": 4,
@@ -16989,7 +17154,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)ntau=qa": {
   "in_aristotle": 235,
@@ -17013,7 +17179,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)nteu=qen": {
   "in_aristotle": 90,
@@ -17077,7 +17244,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)oiko/tws": {
   "in_aristotle": 28,
@@ -17205,7 +17373,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pakto/s": {
   "in_aristotle": 3,
@@ -17253,7 +17422,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)panafe/rw": {
   "in_aristotle": 6,
@@ -17357,7 +17527,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pe/rxomai": {
   "in_aristotle": 38,
@@ -17413,7 +17584,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)peisodio/w": {
   "in_aristotle": 4,
@@ -17421,7 +17593,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)peisodiw/dhs": {
   "in_aristotle": 4,
@@ -17429,7 +17602,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pektei/nw": {
   "in_aristotle": 17,
@@ -17437,7 +17611,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)perwta/w": {
   "in_aristotle": 7,
@@ -17621,7 +17796,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pi/purros": {
   "in_aristotle": 3,
@@ -17629,7 +17805,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pi/qesis": {
   "in_aristotle": 7,
@@ -17837,7 +18014,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pifu/w": {
   "in_aristotle": 7,
@@ -17885,7 +18063,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pika/qhmai": {
   "in_aristotle": 5,
@@ -18101,7 +18280,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pipro/sqhsis": {
   "in_aristotle": 5,
@@ -18109,7 +18289,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)piqe/w": {
   "in_aristotle": 6,
@@ -18149,7 +18330,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)piqu_mi/a": {
   "in_aristotle": 189,
@@ -18197,7 +18379,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)piske/ptomai": {
   "in_aristotle": 39,
@@ -18261,7 +18444,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 13,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pisthto/s": {
   "in_aristotle": 83,
@@ -18333,7 +18517,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)pith/deios": {
   "in_aristotle": 20,
@@ -18445,7 +18630,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "e)pixe/w": {
   "in_aristotle": 12,
@@ -18541,7 +18727,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)popoio/s": {
   "in_aristotle": 3,
@@ -18581,7 +18768,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)qe/lw": {
   "in_aristotle": 63,
@@ -18613,7 +18801,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)ra/w1": {
   "in_aristotle": 37,
@@ -18717,7 +18906,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)ri_neo/n": {
   "in_aristotle": 7,
@@ -18733,7 +18923,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "e)ristiko/s": {
   "in_aristotle": 45,
@@ -18805,7 +18996,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)rwthte/on": {
   "in_aristotle": 8,
@@ -18813,7 +19005,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "e)rwthtiko/s": {
   "in_aristotle": 3,
@@ -18957,7 +19150,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "ei)/sdu^sis": {
   "in_aristotle": 6,
@@ -18965,7 +19159,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ei)/seimi": {
   "in_aristotle": 52,
@@ -19037,7 +19232,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 9,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "ei)doi/": {
   "in_aristotle": 41,
@@ -19053,7 +19249,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ei)ka/zw": {
   "in_aristotle": 24,
@@ -19325,7 +19522,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "eu)/kolos": {
   "in_aristotle": 3,
@@ -19397,7 +19595,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "eu)/poros": {
   "in_aristotle": 81,
@@ -19413,7 +19612,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)/qu_mos": {
   "in_aristotle": 4,
@@ -19445,7 +19645,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)/ri_pos": {
   "in_aristotle": 16,
@@ -19589,7 +19790,8 @@
   "contemporary": 0,
   "school": 32,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)bi/otos": {
   "in_aristotle": 10,
@@ -19597,7 +19799,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)bosi/a": {
   "in_aristotle": 8,
@@ -19605,7 +19808,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)bouli/a": {
   "in_aristotle": 12,
@@ -19621,7 +19825,8 @@
   "contemporary": 0,
   "school": 4,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "eu)dai/mwn": {
   "in_aristotle": 80,
@@ -19669,7 +19874,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)di/a": {
   "in_aristotle": 19,
@@ -19685,7 +19891,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)diai/retos": {
   "in_aristotle": 10,
@@ -19693,7 +19900,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)dieino/s": {
   "in_aristotle": 7,
@@ -19773,7 +19981,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "eu)ethri/a": {
   "in_aristotle": 9,
@@ -19877,7 +20086,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "eu)katafro/nhtos": {
   "in_aristotle": 7,
@@ -20029,7 +20239,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)ode/w": {
   "in_aristotle": 3,
@@ -20053,7 +20264,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)poihtiko/s": {
   "in_aristotle": 4,
@@ -20061,7 +20273,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)pore/w": {
   "in_aristotle": 52,
@@ -20117,7 +20330,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)qh/s": {
   "in_aristotle": 14,
@@ -20149,7 +20363,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)qu^/grammos": {
   "in_aristotle": 13,
@@ -20157,7 +20372,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 12,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)qu^/tri^xos": {
   "in_aristotle": 3,
@@ -20165,7 +20381,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)qu^e/nteros": {
   "in_aristotle": 6,
@@ -20173,7 +20390,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "eu)qu^o/neiros": {
   "in_aristotle": 3,
@@ -20181,7 +20399,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "eu)qu^oneiri/a": {
   "in_aristotle": 3,
@@ -20189,7 +20408,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "eu)qu^wri/a": {
   "in_aristotle": 15,
@@ -20765,7 +20985,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fi^/lhsis": {
   "in_aristotle": 12,
@@ -20797,7 +21018,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "fi^la/nqrwpos": {
   "in_aristotle": 8,
@@ -20837,7 +21059,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fi^lhto/s": {
   "in_aristotle": 18,
@@ -20853,7 +21076,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "fi^li^ko/s": {
   "in_aristotle": 32,
@@ -20877,7 +21101,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fi^lo/ka^los": {
   "in_aristotle": 6,
@@ -20965,7 +21190,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fi^losofe/w": {
   "in_aristotle": 26,
@@ -21005,7 +21231,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "fi^loxrh/ma^tos": {
   "in_aristotle": 13,
@@ -21053,7 +21280,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "flebw/dhs": {
   "in_aristotle": 7,
@@ -21165,7 +21393,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "foi/ths": {
   "in_aristotle": 3,
@@ -21213,7 +21442,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "foinikiou=s": {
   "in_aristotle": 5,
@@ -21245,7 +21475,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "foniko/s": {
   "in_aristotle": 6,
@@ -21309,7 +21540,8 @@
   "contemporary": 0,
   "school": 8,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fqarto/s": {
   "in_aristotle": 120,
@@ -21349,7 +21581,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "fqi/sis": {
   "in_aristotle": 57,
@@ -21525,7 +21758,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fronti/zw": {
   "in_aristotle": 38,
@@ -21717,7 +21951,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 8,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fu^siognw/mwn": {
   "in_aristotle": 6,
@@ -21725,7 +21960,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "fu^siognwmone/w": {
   "in_aristotle": 19,
@@ -21765,7 +22001,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fu^to/n": {
   "in_aristotle": 210,
@@ -21789,7 +22026,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "fu_ki/s": {
   "in_aristotle": 4,
@@ -21829,7 +22067,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "fu_sw/dhs": {
   "in_aristotle": 3,
@@ -21853,7 +22092,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "fw/kh": {
   "in_aristotle": 27,
@@ -21885,7 +22125,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "fwleu/w": {
   "in_aristotle": 8,
@@ -22149,7 +22390,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "geitnia/w": {
   "in_aristotle": 14,
@@ -22189,7 +22431,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 39,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "geniko/s": {
   "in_aristotle": 3,
@@ -22197,7 +22440,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 21,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "genna/w": {
   "in_aristotle": 255,
@@ -22253,7 +22497,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "geusto/s": {
   "in_aristotle": 15,
@@ -22261,7 +22506,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "gew/dhs": {
   "in_aristotle": 64,
@@ -22421,7 +22667,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "gleu=kos": {
   "in_aristotle": 4,
@@ -22501,7 +22748,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "gna/qos": {
   "in_aristotle": 8,
@@ -22581,7 +22829,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "gnwsto/s": {
   "in_aristotle": 18,
@@ -22661,7 +22910,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "gra/fos": {
   "in_aristotle": 10,
@@ -23269,7 +23519,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 32,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "h)re/ma^": {
   "in_aristotle": 42,
@@ -23285,7 +23536,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "h)re/mios": {
   "in_aristotle": 63,
@@ -23373,7 +23625,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "i(/sthmi": {
   "in_aristotle": 203,
@@ -23517,7 +23770,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "i(ppeu/s": {
   "in_aristotle": 8,
@@ -23733,7 +23987,8 @@
   "contemporary": 0,
   "school": 16,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "i)co/s": {
   "in_aristotle": 4,
@@ -23893,7 +24148,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "i)sqmo/s": {
   "in_aristotle": 5,
@@ -23981,7 +24237,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 7,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "i)xqu/a": {
   "in_aristotle": 3,
@@ -24461,7 +24718,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "ka_ri/s": {
   "in_aristotle": 15,
@@ -24613,7 +24871,8 @@
   "contemporary": 0,
   "school": 4,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kapri/a": {
   "in_aristotle": 4,
@@ -24621,7 +24880,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kaqa/ptw": {
   "in_aristotle": 26,
@@ -24725,7 +24985,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "kardi/a": {
   "in_aristotle": 217,
@@ -24749,7 +25010,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "karpe/w": {
   "in_aristotle": 38,
@@ -24845,7 +25107,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 8,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "kata/fhmi": {
   "in_aristotle": 12,
@@ -25013,7 +25276,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "katafanh/s": {
   "in_aristotle": 12,
@@ -25197,7 +25461,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "katana_li/skw": {
   "in_aristotle": 24,
@@ -25269,7 +25534,8 @@
   "contemporary": 0,
   "school": 8,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kataskeu/asma": {
   "in_aristotle": 4,
@@ -25293,7 +25559,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "kataskeuh/": {
   "in_aristotle": 7,
@@ -25517,7 +25784,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kau=ma": {
   "in_aristotle": 10,
@@ -25741,7 +26009,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "kenta/w": {
   "in_aristotle": 6,
@@ -25781,7 +26050,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kera_tw/dhs": {
   "in_aristotle": 4,
@@ -25805,7 +26075,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kerauno/s": {
   "in_aristotle": 14,
@@ -25845,7 +26116,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kh/dw": {
   "in_aristotle": 7,
@@ -25885,7 +26157,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kh=pos": {
   "in_aristotle": 3,
@@ -25941,7 +26214,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "khri/on": {
   "in_aristotle": 64,
@@ -25957,7 +26231,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "khro/omai": {
   "in_aristotle": 10,
@@ -25981,7 +26256,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ki/gklos": {
   "in_aristotle": 3,
@@ -25989,7 +26265,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 9,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "ki/mbic": {
   "in_aristotle": 3,
@@ -25997,7 +26274,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "ki/naidos": {
   "in_aristotle": 4,
@@ -26637,7 +26915,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "koli/as": {
   "in_aristotle": 5,
@@ -26645,7 +26924,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "kolla/w": {
   "in_aristotle": 3,
@@ -26669,7 +26949,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "koloia/w": {
   "in_aristotle": 6,
@@ -26741,7 +27022,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "koni_stiko/s": {
   "in_aristotle": 3,
@@ -26749,7 +27031,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "koraki=nos": {
   "in_aristotle": 6,
@@ -26757,7 +27040,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 10,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "kordu/los": {
   "in_aristotle": 5,
@@ -26765,7 +27049,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kori/skos": {
   "in_aristotle": 63,
@@ -26773,7 +27058,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "koru^do/s": {
   "in_aristotle": 7,
@@ -26821,7 +27107,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kotu/lh": {
   "in_aristotle": 4,
@@ -27253,7 +27540,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ku/lic": {
   "in_aristotle": 4,
@@ -27341,7 +27629,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "ku/w": {
   "in_aristotle": 106,
@@ -27533,7 +27822,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kukloterh/s": {
   "in_aristotle": 3,
@@ -27549,7 +27839,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "kurto/s": {
   "in_aristotle": 31,
@@ -27685,7 +27976,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "la/los": {
   "in_aristotle": 4,
@@ -28053,7 +28345,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "leu/kh": {
   "in_aristotle": 23,
@@ -28165,7 +28458,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "lh|striko/s": {
   "in_aristotle": 3,
@@ -28269,7 +28563,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "li^qw/dhs": {
   "in_aristotle": 3,
@@ -28309,7 +28604,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "limnai=on": {
   "in_aristotle": 7,
@@ -28325,7 +28621,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "lo/fos": {
   "in_aristotle": 10,
@@ -28709,7 +29006,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ma/rgos": {
   "in_aristotle": 4,
@@ -28845,7 +29143,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "ma^la^ko/s": {
   "in_aristotle": 181,
@@ -28861,7 +29160,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ma^la^ko/ths": {
   "in_aristotle": 19,
@@ -28877,7 +29177,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "ma^ni/a1": {
   "in_aristotle": 11,
@@ -28989,7 +29290,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "mano/s": {
   "in_aristotle": 44,
@@ -29173,7 +29475,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "me/leos": {
   "in_aristotle": 4,
@@ -29493,7 +29796,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "melagko/ru^fos": {
   "in_aristotle": 4,
@@ -29573,7 +29877,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "meqekto/s": {
   "in_aristotle": 3,
@@ -29581,7 +29886,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "meqi/sthmi": {
   "in_aristotle": 58,
@@ -29733,7 +30039,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "metaba/llw": {
   "in_aristotle": 717,
@@ -29869,7 +30176,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "metapei/qw": {
   "in_aristotle": 5,
@@ -29909,7 +30217,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "metasxhma^ti/zw": {
   "in_aristotle": 4,
@@ -29981,7 +30290,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "meto/pwron": {
   "in_aristotle": 36,
@@ -30021,7 +30331,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "metria/zw": {
   "in_aristotle": 7,
@@ -30213,7 +30524,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "mhxa^na/omai": {
   "in_aristotle": 17,
@@ -30245,7 +30557,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 14,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "mi=sos": {
   "in_aristotle": 12,
@@ -30325,7 +30638,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "mikro/s": {
   "in_aristotle": 943,
@@ -30365,7 +30679,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "mikropreph/s": {
   "in_aristotle": 5,
@@ -30373,7 +30688,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "mikroyu_xi/a": {
   "in_aristotle": 15,
@@ -30469,7 +30785,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "mnhmoniko/s": {
   "in_aristotle": 7,
@@ -30509,7 +30826,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "mo/narxos": {
   "in_aristotle": 15,
@@ -30613,7 +30931,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "mona^xh/": {
   "in_aristotle": 4,
@@ -30661,7 +30980,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "mono/w": {
   "in_aristotle": 7,
@@ -30677,7 +30997,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "monofu^h/s": {
   "in_aristotle": 4,
@@ -30693,7 +31014,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "monoko/tu^los": {
   "in_aristotle": 3,
@@ -30701,7 +31023,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "monokoi/lios": {
   "in_aristotle": 6,
@@ -30709,7 +31032,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "monopwli/a": {
   "in_aristotle": 3,
@@ -30717,7 +31041,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "monw/ths": {
   "in_aristotle": 3,
@@ -30725,7 +31050,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "morfa/zw": {
   "in_aristotle": 20,
@@ -30813,7 +31139,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "mu/raina": {
   "in_aristotle": 7,
@@ -30853,7 +31180,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "mu/w": {
   "in_aristotle": 27,
@@ -31061,7 +31389,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "na_o/s1": {
   "in_aristotle": 13,
@@ -31253,7 +31582,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "nei/": {
   "in_aristotle": 44,
@@ -31285,7 +31615,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "neo/ploutos": {
   "in_aristotle": 3,
@@ -31325,7 +31656,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "neossia/": {
   "in_aristotle": 43,
@@ -31365,7 +31697,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "neura/": {
   "in_aristotle": 3,
@@ -31645,7 +31978,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "nomeu/s": {
   "in_aristotle": 7,
@@ -31757,7 +32091,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "nose/w": {
   "in_aristotle": 45,
@@ -31781,7 +32116,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "noshma^tw/dhs": {
   "in_aristotle": 6,
@@ -31789,7 +32125,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "nosw/dhs": {
   "in_aristotle": 27,
@@ -31893,7 +32230,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "nusta/zw": {
   "in_aristotle": 3,
@@ -32117,7 +32455,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o(lo/xroos": {
   "in_aristotle": 3,
@@ -32125,7 +32464,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o(ma^leu/s": {
   "in_aristotle": 3,
@@ -32365,7 +32705,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o(mw/nu^mos": {
   "in_aristotle": 126,
@@ -32493,7 +32834,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o(ra_to/s": {
   "in_aristotle": 26,
@@ -32517,7 +32859,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "o(rismo/s": {
   "in_aristotle": 270,
@@ -32541,7 +32884,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "o(rma/w": {
   "in_aristotle": 43,
@@ -32565,7 +32909,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o(tiou=n": {
   "in_aristotle": 133,
@@ -32861,7 +33206,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)/xhsis": {
   "in_aristotle": 4,
@@ -32965,7 +33311,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o)donta/gra": {
   "in_aristotle": 4,
@@ -33021,7 +33368,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)fe/llw1": {
   "in_aristotle": 10,
@@ -33213,7 +33561,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)li^go/ths": {
   "in_aristotle": 36,
@@ -33229,7 +33578,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o)li^goxro/nios": {
   "in_aristotle": 8,
@@ -33269,7 +33619,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o)mma/tion": {
   "in_aristotle": 3,
@@ -33277,7 +33628,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)neidi/zw": {
   "in_aristotle": 8,
@@ -33325,7 +33677,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)ph/": {
   "in_aristotle": 5,
@@ -33357,7 +33710,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)pisqourhtiko/s": {
   "in_aristotle": 13,
@@ -33365,7 +33719,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o)po/s1": {
   "in_aristotle": 4,
@@ -33389,7 +33744,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)pw/ra": {
   "in_aristotle": 9,
@@ -33437,7 +33793,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)rekto/s": {
   "in_aristotle": 10,
@@ -33445,7 +33802,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)reu/s": {
   "in_aristotle": 22,
@@ -33477,7 +33835,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)rgh/": {
   "in_aristotle": 65,
@@ -33509,7 +33868,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)ri_/ga^non": {
   "in_aristotle": 7,
@@ -33533,7 +33893,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)ro/s": {
   "in_aristotle": 7,
@@ -33613,7 +33974,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)sfranto/s": {
   "in_aristotle": 22,
@@ -33621,7 +33983,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)sfu=s": {
   "in_aristotle": 24,
@@ -33661,7 +34024,8 @@
   "contemporary": 0,
   "school": 10,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)ste/on": {
   "in_aristotle": 222,
@@ -33677,7 +34041,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o)stra^ki/zw": {
   "in_aristotle": 3,
@@ -33693,7 +34058,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "o)stra^ko/dermos": {
   "in_aristotle": 84,
@@ -33749,7 +34115,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "o)xeto/s": {
   "in_aristotle": 6,
@@ -33773,7 +34140,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "o)xle/w": {
   "in_aristotle": 4,
@@ -34005,7 +34373,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "oi)kodomi/a": {
   "in_aristotle": 4,
@@ -34293,7 +34662,8 @@
   "contemporary": 0,
   "school": 5,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ou)ra/": {
   "in_aristotle": 23,
@@ -34381,7 +34751,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pa/mpa^n": {
   "in_aristotle": 133,
@@ -34461,7 +34832,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pa/reimi1": {
   "in_aristotle": 117,
@@ -34613,7 +34985,8 @@
   "contemporary": 0,
   "school": 6,
   "fragments": 18,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pa^ra/": {
   "in_aristotle": 1354,
@@ -34749,7 +35122,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "paidotri^/bhs": {
   "in_aristotle": 6,
@@ -35005,7 +35379,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "paradi/dwmi": {
   "in_aristotle": 33,
@@ -35141,7 +35516,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "paralu/w": {
   "in_aristotle": 4,
@@ -35181,7 +35557,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pararre/w": {
   "in_aristotle": 4,
@@ -35309,7 +35686,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 7,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "parekbai/nw": {
   "in_aristotle": 22,
@@ -35357,7 +35735,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pari/hmi": {
   "in_aristotle": 4,
@@ -35773,7 +36152,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pela^/gios": {
   "in_aristotle": 10,
@@ -35821,7 +36201,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "penta^ko/sioi": {
   "in_aristotle": 4,
@@ -35885,7 +36266,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "perai/nw": {
   "in_aristotle": 359,
@@ -35957,7 +36339,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "peri/neos": {
   "in_aristotle": 3,
@@ -36133,7 +36516,8 @@
   "contemporary": 0,
   "school": 40,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "perikla/w": {
   "in_aristotle": 7,
@@ -36189,7 +36573,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "peripe/tomai": {
   "in_aristotle": 3,
@@ -36229,7 +36614,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "perirre/w": {
   "in_aristotle": 6,
@@ -36285,7 +36671,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "peristre/fw": {
   "in_aristotle": 3,
@@ -36381,7 +36768,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ph/rwsis": {
   "in_aristotle": 14,
@@ -36429,7 +36817,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "phdhtiko/s": {
   "in_aristotle": 3,
@@ -36437,7 +36826,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "phga/s": {
   "in_aristotle": 9,
@@ -36645,7 +37035,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pi^na^ki/dion": {
   "in_aristotle": 3,
@@ -36829,7 +37220,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 58,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pla^/nh": {
   "in_aristotle": 5,
@@ -36853,7 +37245,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pla^na/w": {
   "in_aristotle": 20,
@@ -36869,7 +37262,8 @@
   "contemporary": 0,
   "school": 13,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pla^tu/glwssos": {
   "in_aristotle": 3,
@@ -36877,7 +37271,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pla^tu/nw": {
   "in_aristotle": 3,
@@ -36901,7 +37296,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "plasma^tw/dhs": {
   "in_aristotle": 8,
@@ -36909,7 +37305,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "platei=a": {
   "in_aristotle": 19,
@@ -37229,7 +37626,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "plwto/s": {
   "in_aristotle": 24,
@@ -37693,7 +38091,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "polio/w": {
   "in_aristotle": 6,
@@ -37701,7 +38100,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "polla/kis": {
   "in_aristotle": 430,
@@ -37749,7 +38149,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pollosto/s": {
   "in_aristotle": 3,
@@ -37789,7 +38190,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "polu/s": {
   "in_aristotle": 2522,
@@ -37813,7 +38215,8 @@
   "contemporary": 0,
   "school": 4,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "polu/sxistos": {
   "in_aristotle": 36,
@@ -37829,7 +38232,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "polu^/aimos": {
   "in_aristotle": 6,
@@ -37869,7 +38273,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "polu^/kleitos": {
   "in_aristotle": 11,
@@ -37901,7 +38306,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "polu^koi/lios": {
   "in_aristotle": 4,
@@ -37909,7 +38315,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "polueidh/s": {
   "in_aristotle": 4,
@@ -37925,7 +38332,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "polumerh/s": {
   "in_aristotle": 10,
@@ -37949,7 +38357,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "polutoke/w": {
   "in_aristotle": 17,
@@ -37957,7 +38366,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "polutoki/a": {
   "in_aristotle": 8,
@@ -37965,7 +38375,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "poluxro/nios": {
   "in_aristotle": 30,
@@ -38029,7 +38440,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "porfu/ra": {
   "in_aristotle": 39,
@@ -38085,7 +38497,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "posaxw=s": {
   "in_aristotle": 44,
@@ -38101,7 +38514,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 11,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pota/omai": {
   "in_aristotle": 4,
@@ -38165,7 +38579,8 @@
   "contemporary": 0,
   "school": 11,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "pra/kths": {
   "in_aristotle": 22,
@@ -38269,7 +38684,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "prakte/os": {
   "in_aristotle": 6,
@@ -38293,7 +38709,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pre/pw": {
   "in_aristotle": 66,
@@ -38469,7 +38886,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pro/logos": {
   "in_aristotle": 9,
@@ -38565,7 +38983,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "pro/sodos": {
   "in_aristotle": 28,
@@ -38661,7 +39080,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pro/xeiron": {
   "in_aristotle": 4,
@@ -38701,7 +39121,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "proaire/w": {
   "in_aristotle": 111,
@@ -38717,7 +39138,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "proaireto/s": {
   "in_aristotle": 15,
@@ -38725,7 +39147,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "proaisqa/nomai": {
   "in_aristotle": 6,
@@ -38765,7 +39188,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "probouleu/w": {
   "in_aristotle": 6,
@@ -38965,7 +39389,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "promh/khs": {
   "in_aristotle": 21,
@@ -38989,7 +39414,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "prooi/mion": {
   "in_aristotle": 20,
@@ -39117,7 +39543,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "prosarmo/zw": {
   "in_aristotle": 6,
@@ -39173,7 +39600,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "prosdiori/zw": {
   "in_aristotle": 12,
@@ -39189,7 +39617,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "prosdo/ki^mos": {
   "in_aristotle": 3,
@@ -39445,7 +39874,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "prosqe/w": {
   "in_aristotle": 4,
@@ -39741,7 +40171,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "pthno/s": {
   "in_aristotle": 56,
@@ -39757,7 +40188,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pto/rqos": {
   "in_aristotle": 4,
@@ -39901,7 +40333,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "pu_ra^mi/s": {
   "in_aristotle": 24,
@@ -40437,7 +40870,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "qermo/s1": {
   "in_aristotle": 595,
@@ -40581,7 +41015,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "qhlu^goni/a": {
   "in_aristotle": 5,
@@ -40669,7 +41104,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "qhsauro/s": {
   "in_aristotle": 8,
@@ -40685,7 +41121,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "qi/cis": {
   "in_aristotle": 7,
@@ -40717,7 +41154,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 10,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "qli^/bw": {
   "in_aristotle": 22,
@@ -40861,7 +41299,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "qreptiko/s": {
   "in_aristotle": 56,
@@ -40997,7 +41436,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "qu_mia/w": {
   "in_aristotle": 8,
@@ -41013,7 +41453,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "qu_miko/s": {
   "in_aristotle": 9,
@@ -41045,7 +41486,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 20,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "qw/rac": {
   "in_aristotle": 37,
@@ -41309,7 +41751,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "r(o/don": {
   "in_aristotle": 9,
@@ -41365,7 +41808,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "r(u^ti^do/w": {
   "in_aristotle": 3,
@@ -41413,7 +41857,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "sa/lph": {
   "in_aristotle": 8,
@@ -41477,7 +41922,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "sa^tra^/phs": {
   "in_aristotle": 5,
@@ -41541,7 +41987,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 8,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sarki/on": {
   "in_aristotle": 5,
@@ -41557,7 +42004,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sarkofa^ge/w": {
   "in_aristotle": 9,
@@ -41565,7 +42013,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sarkw/dhs": {
   "in_aristotle": 104,
@@ -41669,7 +42118,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "selh/nh": {
   "in_aristotle": 84,
@@ -41733,7 +42183,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sfai=ra^": {
   "in_aristotle": 106,
@@ -41797,7 +42248,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "sfo/dra^": {
   "in_aristotle": 184,
@@ -41965,7 +42417,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "si/dhron": {
   "in_aristotle": 19,
@@ -42053,7 +42506,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "si^wpa/w": {
   "in_aristotle": 4,
@@ -42093,7 +42547,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "si_te/w": {
   "in_aristotle": 9,
@@ -42117,7 +42572,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "ska^lhnh/s": {
   "in_aristotle": 4,
@@ -42253,7 +42709,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "sklhro/fqalmos": {
   "in_aristotle": 13,
@@ -42261,7 +42718,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sklhro/s": {
   "in_aristotle": 190,
@@ -42309,7 +42767,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "skopa/w": {
   "in_aristotle": 211,
@@ -42349,7 +42808,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "sku/mnos": {
   "in_aristotle": 5,
@@ -42365,7 +42825,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sku^/ta^lon": {
   "in_aristotle": 3,
@@ -42453,7 +42914,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "skwlhkoto/kos": {
   "in_aristotle": 4,
@@ -42461,7 +42923,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "skwlhkotoke/w": {
   "in_aristotle": 20,
@@ -42469,7 +42932,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "skwlhkw/dhs": {
   "in_aristotle": 3,
@@ -42477,7 +42941,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "smh/nh": {
   "in_aristotle": 16,
@@ -42581,7 +43046,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "somfo/s": {
   "in_aristotle": 28,
@@ -42677,7 +43143,8 @@
   "contemporary": 0,
   "school": 5,
   "fragments": 11,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "sph/laion": {
   "in_aristotle": 9,
@@ -42693,7 +43160,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "spi^qa^mh/": {
   "in_aristotle": 4,
@@ -42949,7 +43417,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "steri/skw": {
   "in_aristotle": 11,
@@ -43453,7 +43922,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "su/noros": {
   "in_aristotle": 3,
@@ -43461,7 +43931,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "su/nqesis": {
   "in_aristotle": 92,
@@ -43501,7 +43972,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "su/ntomos": {
   "in_aristotle": 16,
@@ -43525,7 +43997,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "su/ntrofos": {
   "in_aristotle": 4,
@@ -43629,7 +44102,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "su_kofa/nths": {
   "in_aristotle": 3,
@@ -43717,7 +44191,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sugka/mptw": {
   "in_aristotle": 4,
@@ -43765,7 +44240,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sugklei/w": {
   "in_aristotle": 8,
@@ -43877,7 +44353,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "sumba/llw": {
   "in_aristotle": 113,
@@ -44101,7 +44578,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 16,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sumpe/ssw": {
   "in_aristotle": 13,
@@ -44109,7 +44587,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sumpei/qw": {
   "in_aristotle": 7,
@@ -44245,7 +44724,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "suna^gwgh/": {
   "in_aristotle": 7,
@@ -44293,7 +44773,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 7,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sunakte/on": {
   "in_aristotle": 3,
@@ -44341,7 +44822,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sunaperga/zomai": {
   "in_aristotle": 3,
@@ -44437,7 +44919,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "sune/pomai": {
   "in_aristotle": 7,
@@ -44469,7 +44952,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sunece/rxomai": {
   "in_aristotle": 4,
@@ -44517,7 +45001,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "sunepife/rw": {
   "in_aristotle": 5,
@@ -44525,7 +45010,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sunepouri/zw": {
   "in_aristotle": 4,
@@ -44533,7 +45019,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "suneqi/zw": {
   "in_aristotle": 5,
@@ -44613,7 +45100,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sunhgore/w": {
   "in_aristotle": 3,
@@ -44701,7 +45189,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sunomologe/w": {
   "in_aristotle": 4,
@@ -44765,7 +45254,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "sunta/ssw": {
   "in_aristotle": 14,
@@ -44813,7 +45303,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sunti/qhmi": {
   "in_aristotle": 76,
@@ -44909,7 +45400,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 8,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "sustre/fw": {
   "in_aristotle": 13,
@@ -45013,7 +45505,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "swma^tw/dhs": {
   "in_aristotle": 23,
@@ -45021,7 +45514,8 @@
   "contemporary": 0,
   "school": 7,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "swro/s": {
   "in_aristotle": 7,
@@ -45101,7 +45595,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "sxoini/on": {
   "in_aristotle": 4,
@@ -45133,7 +45628,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "sxolh/": {
   "in_aristotle": 10,
@@ -45485,7 +45981,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "tei/nw": {
   "in_aristotle": 114,
@@ -45581,7 +46078,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "telestiko/s": {
   "in_aristotle": 6,
@@ -45669,7 +46167,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "tetra/s": {
   "in_aristotle": 10,
@@ -45733,7 +46232,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 15,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "tetra^ko/sioi": {
   "in_aristotle": 4,
@@ -45749,7 +46249,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "tetrai/nw": {
   "in_aristotle": 7,
@@ -45773,7 +46274,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "teuqi/s": {
   "in_aristotle": 28,
@@ -45797,7 +46299,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "texni_/ths": {
   "in_aristotle": 42,
@@ -45821,7 +46324,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "th/kw": {
   "in_aristotle": 37,
@@ -45837,7 +46341,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "th=cis": {
   "in_aristotle": 3,
@@ -45989,7 +46494,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ti_mwri/a": {
   "in_aristotle": 27,
@@ -46005,7 +46511,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "titrw/skw": {
   "in_aristotle": 7,
@@ -46165,7 +46672,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 7,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "tosautaxw=s": {
   "in_aristotle": 21,
@@ -46173,7 +46681,8 @@
   "contemporary": 0,
   "school": 4,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "toso/sde": {
   "in_aristotle": 28,
@@ -46413,7 +46922,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "tri/zw": {
   "in_aristotle": 5,
@@ -46501,7 +47011,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "tri^o/rxhs": {
   "in_aristotle": 5,
@@ -46541,7 +47052,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "tri^xo/w": {
   "in_aristotle": 20,
@@ -46565,7 +47077,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "tripla^/si^os": {
   "in_aristotle": 5,
@@ -46581,7 +47094,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "tro/fi^mos": {
   "in_aristotle": 6,
@@ -46725,7 +47239,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "trwglodu/ths": {
   "in_aristotle": 4,
@@ -46805,7 +47320,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "tu_ro/s": {
   "in_aristotle": 9,
@@ -47149,7 +47665,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(gi^a/zw": {
   "in_aristotle": 50,
@@ -47173,7 +47690,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "u(gieino/s": {
   "in_aristotle": 90,
@@ -47221,7 +47739,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "u(gro/s": {
   "in_aristotle": 553,
@@ -47253,7 +47772,8 @@
   "contemporary": 0,
   "school": 3,
   "fragments": 14,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(meno/w": {
   "in_aristotle": 7,
@@ -47421,7 +47941,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(peroxe/w": {
   "in_aristotle": 25,
@@ -47565,7 +48086,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 5,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(po/lhyis": {
   "in_aristotle": 92,
@@ -47597,7 +48119,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(po/qesis": {
   "in_aristotle": 144,
@@ -47741,7 +48264,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "u(polamba/nw": {
   "in_aristotle": 291,
@@ -47773,7 +48297,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(pome/nw": {
   "in_aristotle": 156,
@@ -47789,7 +48314,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "u(pomo/xlion": {
   "in_aristotle": 30,
@@ -47797,7 +48323,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(pomonh/": {
   "in_aristotle": 3,
@@ -47933,7 +48460,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "u(yhlo/s": {
   "in_aristotle": 22,
@@ -48205,7 +48733,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "w)|oeidh/s": {
   "in_aristotle": 7,
@@ -48221,7 +48750,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "w)|otoki/a": {
   "in_aristotle": 3,
@@ -48229,7 +48759,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "w)|w/dhs": {
   "in_aristotle": 3,
@@ -48237,7 +48768,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "xa/laza": {
   "in_aristotle": 29,
@@ -48557,7 +49089,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "xeiro/w": {
   "in_aristotle": 3,
@@ -48589,7 +49122,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "xelw/nh": {
   "in_aristotle": 41,
@@ -48685,7 +49219,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "xlwri/s": {
   "in_aristotle": 3,
@@ -48693,7 +49228,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 4,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "xlwro/s": {
   "in_aristotle": 12,
@@ -48765,7 +49301,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "xondrw/dhs": {
   "in_aristotle": 26,
@@ -48813,7 +49350,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "xoriko/s": {
   "in_aristotle": 3,
@@ -48973,7 +49511,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 2,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "xrhsto/s": {
   "in_aristotle": 33,
@@ -49029,7 +49568,8 @@
   "contemporary": 0,
   "school": 2,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "xru_si/on": {
   "in_aristotle": 12,
@@ -49181,7 +49721,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 9,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "only-aristotle"
  },
  "xwristo/s": {
   "in_aristotle": 99,
@@ -49189,7 +49730,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 10,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "ya^ka/s": {
   "in_aristotle": 9,
@@ -49269,7 +49811,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "yeudomartu^ri/a": {
   "in_aristotle": 4,
@@ -49357,7 +49900,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 3,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "yo/fos": {
   "in_aristotle": 144,
@@ -49389,7 +49933,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 0,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "yu/lla": {
   "in_aristotle": 7,
@@ -49453,7 +49998,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 11,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  },
  "yu_xro/s": {
   "in_aristotle": 287,
@@ -49485,7 +50031,8 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 8,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "za/w": {
   "in_aristotle": 483,
@@ -49693,7 +50240,8 @@
   "contemporary": 0,
   "school": 1,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": "coined by Aristotle",
+  "lsj": "corroborated"
  },
  "zwtiko/s": {
   "in_aristotle": 9,
@@ -49709,6 +50257,7 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 1,
-  "label": "coined by Aristotle"
+  "label": null,
+  "lsj": "earlier-attested"
  }
 }

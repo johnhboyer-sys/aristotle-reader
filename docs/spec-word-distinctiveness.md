@@ -17,6 +17,18 @@ page shows the fuller numbers; the popup shows only a derived label.
 **Ordinary words stay silent** (John's call): a line appears only for "coined
 by Aristotle" or "rare before Aristotle".
 
+## The two-source rule (John's ruling, 2026-08-19)
+
+**"Coined by Aristotle" ships only with independent scholarly support.** Our
+TLG counting proposes; LSJ's own citation record must not contradict. A
+coined label dies if the lemma's LSJ entry cites any pre/contemporary author
+(`PRE_ARISTOTLE_LSJ_AUTHORS` — watch "Ar." Aristophanes vs "Arist.", "Alex."
+the comic vs "Alex.Aphr."); later authors are reception and do not defeat.
+The verdict ships in the table (`lsj`: only-aristotle / corroborated /
+earlier-attested) so a killed label is visible, not vanished. First run:
+549 → 437 coined, 112 killed — including ἁλιάετος, which LSJ cites from
+Euripides and Aristophanes though the disc corpus missed it.
+
 ## Decisions
 
 1. **A standalone offline script, not a pipeline stage.** This is
