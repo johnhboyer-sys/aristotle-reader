@@ -419,9 +419,21 @@ def run(
     if not analyses_path.is_file():
         raise FileNotFoundError(analyses_path)
     universe, in_aristotle, cited_authors = load_lemma_inputs(BUILD_DIR / "dist")
+    overrides_path = REPO_ROOT / "pipeline" / "data" / "distinctiveness_overrides.json"
+    overrides = (
+        json.loads(overrides_path.read_text(encoding="utf-8"))
+        if overrides_path.is_file()
+        else {}
+    )
     with analyses_path.open(encoding="utf-8", errors="replace") as lines:
         totals = aggregate_lemma_counts(form_counts, capitalized, lines, universe)
     table = build_table(universe, in_aristotle, totals, cited_authors)
+    # Reviewed editorial kills (John's file, one reason per key): a killed
+    # label stays visible as lsj-independent "overridden", never vanishes.
+    for key, reason in overrides.items():
+        if key in table and table[key].get("label"):
+            table[key]["label"] = None
+            table[key]["overridden"] = reason
 
     destination = output_path or (SMOKE_OUTPUT_PATH if limit is not None else OUTPUT_PATH)
     destination.parent.mkdir(parents=True, exist_ok=True)

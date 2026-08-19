@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 from pathlib import Path
 from types import SimpleNamespace
@@ -282,3 +283,34 @@ def test_lsj_corroboration_rules_the_coined_label():
     assert table["a(lia/etos"]["lsj"] == "earlier-attested"
     assert table["e)ntele/xeia"]["label"] == "coined by Aristotle"
     assert table["e)ntele/xeia"]["lsj"] == "corroborated"
+
+
+def test_overrides_kill_visibly(tmp_path, monkeypatch):
+    from collections import Counter
+    from aristotle_pipeline.offline import word_distinctiveness as wd
+
+    canon = tmp_path / "canon.bin"
+    canon.write_bytes(b"")
+    analyses_dir = tmp_path / "dd"
+    analyses_dir.mkdir()
+    (analyses_dir / "greek-analyses.txt").write_text("", encoding="utf-8")
+    manifest = SimpleNamespace(diogenes_data=lambda: analyses_dir)
+    monkeypatch.setattr(wd, "parse_canon", lambda data: {})
+    monkeypatch.setattr(wd, "parse_work_xmt", lambda data: {})
+    monkeypatch.setattr(wd, "parse_work_titles", lambda data: {})
+    monkeypatch.setattr(
+        wd, "load_lemma_inputs",
+        lambda path: ({"kori/skos"}, {"kori/skos": 63}, {"kori/skos": ["Arist."]}),
+    )
+    ov = tmp_path / "overrides.json"
+    ov.write_text('{"kori/skos": "proper name"}', encoding="utf-8")
+    monkeypatch.setattr(wd, "REPO_ROOT", tmp_path)
+    (tmp_path / "pipeline" / "data").mkdir(parents=True)
+    (tmp_path / "pipeline" / "data" / "distinctiveness_overrides.json").write_text(
+        '{"kori/skos": "proper name"}', encoding="utf-8"
+    )
+    out = tmp_path / "out.json"
+    wd.run(canon, manifest, limit=1, output_path=out)
+    table = json.loads(out.read_text(encoding="utf-8"))
+    assert table["kori/skos"]["label"] is None
+    assert table["kori/skos"]["overridden"] == "proper name"

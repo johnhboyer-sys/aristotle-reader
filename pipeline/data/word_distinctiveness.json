@@ -27058,8 +27058,9 @@
   "contemporary": 0,
   "school": 0,
   "fragments": 6,
-  "label": "coined by Aristotle",
-  "lsj": "corroborated"
+  "label": null,
+  "lsj": "corroborated",
+  "overridden": "proper name — Coriscus of Scepsis, Aristotle's stock example; attested Plato Ep. VI (sibling-corpus sweep 2026-08-19); slipped the beta-* bar (lowercase key)"
  },
  "koru^do/s": {
   "in_aristotle": 7,
