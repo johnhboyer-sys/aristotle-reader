@@ -1,0 +1,65 @@
+[
+ {
+  "column": "1000b",
+  "lo": 6,
+  "hi": 9,
+  "cite": "Empedocles fr. 109 DK",
+  "author": "Empedocles",
+  "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:abo:tlg,1342,004:109",
+  "attestation": "DK"
+ },
+ {
+  "column": "984b",
+  "lo": 23,
+  "hi": 27,
+  "cite": "Parmenides fr. 13 DK",
+  "author": "Parmenides",
+  "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:abo:tlg,1562,002:13",
+  "attestation": "DK"
+ },
+ {
+  "column": "1089a",
+  "lo": 2,
+  "hi": 4,
+  "cite": "Parmenides fr. 7 DK",
+  "author": "Parmenides",
+  "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:abo:tlg,1562,002:7,8",
+  "attestation": "DK"
+ },
+ {
+  "column": "1000b",
+  "lo": 14,
+  "hi": 16,
+  "cite": "Empedocles fr. 30 DK",
+  "author": "Empedocles",
+  "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:abo:tlg,1342,004:30",
+  "attestation": "DK"
+ },
+ {
+  "column": "1009b",
+  "lo": 20,
+  "hi": 21,
+  "cite": "Empedocles fr. 108 DK",
+  "author": "Empedocles",
+  "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:abo:tlg,1342,004:108",
+  "attestation": "DK"
+ },
+ {
+  "column": "1000b",
+  "lo": 1,
+  "hi": 2,
+  "cite": "Empedocles fr. 36 DK",
+  "author": "Empedocles",
+  "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:abo:tlg,1342,004:36",
+  "attestation": "DK"
+ },
+ {
+  "column": "1009b",
+  "lo": 18,
+  "hi": 19,
+  "cite": "Empedocles fr. 106 DK",
+  "author": "Empedocles",
+  "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:abo:tlg,1342,004:106",
+  "attestation": "DK"
+ }
+]
