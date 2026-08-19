@@ -85,6 +85,7 @@ FUNCTION_FOLDS = {
     "oios", "toios", "toioutos",
     "osos", "tosos", "tosoutos",
     "os", "ostis",
+    "eite", "oute", "mhte", "htoi", "hde", "oude",
     "oudeis", "mhdeis",
 }
 
@@ -117,8 +118,31 @@ def surface_key(token: str) -> str:
     return to_beta_key(normalize_elision(token))
 
 
+# A lemma this frequent in Aristotle's own corpus is grammar, not evidence
+# of quotation: the ceiling admits the top ~40 lemmata (the copula, the light
+# verbs) that no hand list should have to enumerate. εἴτ᾽ εἰσὶν εἴτε μὴ εἰσί
+# at Meta 1076a26 scored as a "quotation" of Meno 90b because εἰμί and εἴτε
+# both counted as content. Deliberately conservative: ὕδωρ (1,003×) stays
+# content — it carries the real Empedocles B109 match.
+FREQUENCY_CEILING = 2000
+_ARISTOTLE_COUNTS: dict[str, int] | None = None
+
+
+def _aristotle_counts() -> dict[str, int]:
+    global _ARISTOTLE_COUNTS
+    if _ARISTOTLE_COUNTS is None:
+        path = BUILD_DIR / "dist" / "lemmata.json"
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        _ARISTOTLE_COUNTS = {key: row["count"] for key, row in data.items()}
+    return _ARISTOTLE_COUNTS
+
+
 def is_function_lemma(lemma: str) -> bool:
-    return fold_lemma(lemma) in FUNCTION_FOLDS
+    if fold_lemma(lemma) in FUNCTION_FOLDS:
+        return True
+    return _aristotle_counts().get(lemma, 0) >= FREQUENCY_CEILING
 
 
 def allowed_errors(length: int) -> int:
