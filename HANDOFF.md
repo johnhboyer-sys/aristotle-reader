@@ -24,8 +24,18 @@ Turn `docs/corpus-analysis-features.md` (the 2026-08-18 stylometry session's sur
 - **Reversed comma compounds are real** (Phys 226b `n="27,23"`, Ross's marginal renumbering) — do not add range-order validation to stage1.
 
 ## 5. Open Work
-- **Feature 1 (word distinctiveness):** spec merged (`docs/spec-word-distinctiveness.md`), needs a disc session: verify Diogenes canon dates (step 1), John reviews the author list and label thresholds.
-- **Feature 2 (quotation detection):** spec merged, Metaphysics pilot; the matcher's De Caelo material (Empedocles) just got restored. Review tool must follow the adjudication rules (no typing, no window switching).
+- **Features 1+2 offline halves BUILT (PR #88, late session):** TLG canon parser
+  (dates + work titles from DOCCAN2.TXT), 532-author counting run, committed
+  table `pipeline/data/word_distinctiveness.json` (251 coined / 1,149 rare),
+  quotation matcher + click-only curation page; Meta pilot = 87 candidates
+  (Empedocles B109 top, Λ-close Il. 2.204 kept). Codex built F1, Grok F2;
+  cross-family reviews both ways found 11 real defects, all fixed test-first —
+  headliners: first-analysis-only lemma resolution minted 24 false coinages
+  (ὅλος); DK Testimonia works quote Aristotle back and must never be quotation
+  sources; ante/post canon dates. **Waiting on John:** distinctiveness rulings
+  (xmt Q / Peripatetic school / proper nouns / Hesiod — packet delivered) and
+  the 87-row Meta curation clicks (page delivered). Reader wiring for both
+  features comes after; re-runs are minutes (exports cached, counts versioned).
 - Older open items unchanged: Ostwald ticks outside Book I (need photographs), Owen note 44 (needs page images), footnote paragraph structure, desktop v0.2.0 draft release, `/bonitz` XSS fix.
 
 ---
