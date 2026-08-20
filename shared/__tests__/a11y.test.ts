@@ -71,6 +71,7 @@ vi.mock('../lib/data', async (importOriginal) => {
     fetchLemmata: vi.fn(async () => ({
       logos: { slug: 'logos', head: 'λόγος', count: 2 },
     })),
+    fetchQuotations: vi.fn(async () => []),
     lookupWord: vi.fn(async () => ({
       analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nominative singular', lsj: ['logos'] }],
       lsj: [{ key: 'logos', head: 'λόγος', html: '<p>word, speech, account</p>' }],

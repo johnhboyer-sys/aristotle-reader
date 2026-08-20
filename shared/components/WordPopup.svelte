@@ -121,6 +121,9 @@
           <div class="gloss">{a.gloss}</div>
           <div class="parse">{a.parse}</div>
           {#if lemmaRef(a)}
+            {#if lemmaRef(a)!.distinctiveness_label}
+              <em class="distinct-label">{lemmaRef(a)!.distinctiveness_label}</em>
+            {/if}
             <a class="lemma-link" href={`${base}/lemma/${lemmaRef(a)!.slug}/`}>
               Appears {lemmaRef(a)!.count.toLocaleString()}× across Aristotle
               <span class="lemma-link-arr" aria-hidden="true">→</span>
