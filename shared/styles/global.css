@@ -1362,6 +1362,70 @@ body {
    is added to the dictionary's text. A citation quoted mid-sentence still
    reads, because its lead-in stays on the line above. */
 .lsj-entry .lsj-cit::before { content: "\A"; white-space: pre; }
+/* ── the block of forms, and the other named parts ──────────────────────────
+   The rows are built by renderLsjEntry: one form per row, each with the label
+   that introduces it. CRITICAL: the one-quotation-per-line rule must NOT fire
+   inside a row, or it re-opens the very break this fixes — between a label and
+   its form. */
+.lsj-entry .lsj-forms { margin: 0.5em 0 0.2em; }
+.lsj-entry .lsj-forms .lsj-cit::before { content: none; }
+.lsj-entry .lsj-form { display: block; margin: 0.15em 0; }
+.lsj-entry .lsj-form-label {
+  font-family: var(--font-ui);
+  font-size: 0.86em;
+  color: var(--text-mid);
+  margin-right: 0.5em;
+}
+/* Aligned only where the labels really are labels — see buildFormsBlock. */
+.lsj-entry .lsj-forms-aligned {
+  display: grid;
+  /* fit-content, not max-content: the column sizes to the labels but never
+     past 9em, so λέγω's one long "Med., fut. in pass. sense" wraps inside the
+     column instead of dragging every other row across the entry. */
+  grid-template-columns: fit-content(9em) 1fr;
+  gap: 0.15em 0.75em;
+}
+.lsj-entry .lsj-forms-aligned .lsj-form { display: contents; }
+.lsj-entry .lsj-forms-aligned .lsj-form-label { text-align: right; margin-right: 0; }
+
+/* Where the preamble stops being a table and goes back to prose. */
+.lsj-entry .lsj-forms-note { margin: 0.35em 0 0; }
+/* Still the preamble, not a sense: a form quoted here must not take a line of
+   its own either, or the label stranding comes back through the side door. */
+.lsj-entry .lsj-forms-note .lsj-cit::before,
+.lsj-entry .lsj-forms-note .lsj-quoted::before { content: none; }
+
+/* Ποσειδῶν is 99% morphology. Folded in the popup, never on the lemma page. */
+.lsj-entry .lsj-forms-fold { margin: 0.4em 0; }
+.lsj-entry .lsj-forms-fold > summary {
+  font-family: var(--font-ui);
+  font-size: 0.88em;
+  color: var(--text-mid);
+  cursor: pointer;
+  padding: 0.15em 0;
+}
+.lsj-entry .lsj-forms-fold > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The definition leads its sense: the one line the reader came for, given its
+   own line rather than run into the evidence behind it. Same size — this is
+   about position, not emphasis.
+
+   It needs no break of its own. LSJ italicises only PART of a definition —
+   "<i>account</i> of money handled" — so breaking after the italic split the
+   phrase in half, and put "(cf. λέγω (B) II)." on a line by itself. The first
+   quotation in the sense already starts a line, which leaves the definition
+   leading exactly as intended. The class stays because it names the part. */
+.lsj-entry .lsj-def { font-style: inherit; }
+
+/* A quotation is a Greek phrase with a source, whichever shape it arrived in.
+   Bare Greek with no source stays inline, as prose. */
+.lsj-entry .lsj-quoted::before { content: "\A"; white-space: pre; }
+.lsj-entry .lsj-sense > .lsj-quoted:first-child::before,
+.lsj-entry .lsj-sense-n + .lsj-quoted::before { content: none; }
+
 /* ...but not when the citation OPENS the sense: breaking there left the sense
    number stranded alone on its own line ("4." then the quotation beneath it)
    on 192 senses, and an empty first line on two more. */

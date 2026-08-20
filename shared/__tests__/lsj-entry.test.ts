@@ -5,6 +5,8 @@
 // match and entries rendered as one wall of prose. These lock the structure in.
 import { describe, expect, it } from 'vitest';
 import {
+  buildFormsBlock,
+  markEntryParts,
   outlineLsjSenses,
   stampSenseDepth,
   prefixLsjCitationHrefs,
@@ -394,5 +396,110 @@ describe('a list must be the entry\'s own division', () => {
     const html = sense(1, '\u0391') + sense(1, '\u0392') + sense(1, '\u0393');
     const { senses } = outlineLsjSenses(sanitizeHtml(html), 'lsj-sense', 3);
     expect(senses.map((x) => x.n)).toEqual(['\u0391', '\u0392', '\u0393']);
+  });
+});
+
+// The block of forms before the senses is NOT a run of quotations. LSJ writes
+// it label-then-form, so breaking before the form stranded every label at the
+// end of the line above — worst on the most looked-up words (εἰμί and τίθημι
+// carry 69 forms, οἶδα 39).
+describe('the block of forms', () => {
+  const LEGO =
+    '<b class="lsj-head">λέγω</b> (B), <i>pick up,</i> etc.: tenses for signf. I and II, ' +
+    '<span class="lsj-tns">fut.</span> <span class="lsj-cit"><span class="lsj-quote">λέξω</span> ' +
+    '<span class="lsj-bibl">Od. 24.224</span></span>: <span class="lsj-tns">aor.</span> ' +
+    '<span class="lsj-cit"><span class="lsj-quote">ἔλεξα</span> <span class="lsj-bibl">A. Pers. 292</span></span>' +
+    '; Ep. <span class="lsj-cit"><span class="lsj-quote">ἐλέγμην</span> <span class="lsj-bibl">Od. 9.335</span></span>';
+
+  const rowsOf = (html: string) =>
+    [...html.matchAll(/class="lsj-form-label">([^<]*)<\/span><span class="lsj-form-body">([\s\S]*?)<\/span><\/div>/g)]
+      .map((m) => [m[1], m[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()]);
+
+  it('keeps a label with the form it introduces', () => {
+    const { html, rows } = buildFormsBlock(sanitizeHtml(LEGO));
+    expect(rows).toBe(3);
+    expect(rowsOf(html)).toEqual([
+      ['fut.', 'λέξω Od. 24.224'],
+      ['aor.', 'ἔλεξα A. Pers. 292'],
+      // "Ep." is bare text in the source, not a tagged label — the rows are cut
+      // at the dictionary's own punctuation, which is why this one is caught.
+      ['Ep.', 'ἐλέγμην Od. 9.335'],
+    ]);
+  });
+
+  it('lifts the introducing sentence out of the first label', () => {
+    const { html } = buildFormsBlock(sanitizeHtml(LEGO));
+    expect(rowsOf(html)[0][0]).toBe('fut.');
+    expect(html).toContain('tenses for signf. I and II');
+  });
+
+  it('never splits an HTML entity', () => {
+    // LSJ marks an editorial supplement with angle brackets, which arrive as
+    // &lt;…&gt; — and "&lt;" ends in the same semicolon that separates forms.
+    const src = '<b class="lsj-head">φείδομαι</b>: fut. <span class="lsj-cit">' +
+      '<span class="lsj-quote">φ&lt;ε&gt;ισθήσομαι</span> <span class="lsj-bibl">PUniv.Giss. 21.6</span></span>';
+    const { html } = buildFormsBlock(sanitizeHtml(src));
+    expect(html).toContain('φ&lt;ε&gt;ισθήσομαι');
+    expect(html).not.toContain('&lt<');
+  });
+
+  it('aligns a column only when the labels are short enough to be one', () => {
+    const short = (n: string, form: string) =>
+      `<span class="lsj-tns">${n}</span> <span class="lsj-cit"><span class="lsj-quote">${form}</span>` +
+      ' <span class="lsj-bibl">Il. 1.1</span></span>: ';
+    const many = '<b class="lsj-head">x</b>: ' +
+      short('fut.', 'α') + short('aor.', 'β') + short('pf.', 'γ') + short('plpf.', 'δ');
+    expect(buildFormsBlock(sanitizeHtml(many)).html).toContain('lsj-forms-aligned');
+
+    // Alignment is refused only when MOST of the labels are long — one long
+    // label wraps inside the capped column and is not a reason to deny the
+    // others their alignment.
+    const long = '2 sg. εἶ, Ep. and Ion. εἰς, Aeol. ἔσσι';
+    const wordy = '<b class="lsj-head">x</b>: ' + short('fut.', 'α') +
+      short(long, 'β') + short(long, 'γ') + short(long, 'δ');
+    // εἰμί's "labels" run to half a line; a column built on them is worse than
+    // none, so those entries get rows without alignment.
+    expect(buildFormsBlock(sanitizeHtml(wordy)).html).not.toContain('lsj-forms-aligned');
+  });
+});
+
+describe('the definition, and quotations that were not tagged as quotations', () => {
+  it('gives a sense its opening gloss as its own part', () => {
+    const out = markEntryParts(sanitizeHtml(
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">I.</b> <i>gather, pick up,</i> rest'));
+    expect(out).toContain('<span class="lsj-def"><i>gather, pick up,</i></span>');
+  });
+
+  it('treats Greek WITH a source as a quotation', () => {
+    // 33,430 of these were rendered inline while the .lsj-cit form of the very
+    // same thing took its own line — 17,991 senses contain both shapes.
+    const out = markEntryParts(sanitizeHtml(
+      '<div class="lsj-sense" data-level="1"><span class="lsj-greek">μὴ φῦναι</span> excels the whole ' +
+      '<i>account,</i> <span class="lsj-bibl">S. OC 1225</span></div>'));
+    expect(out).toContain('class="lsj-greek lsj-quoted"');
+  });
+
+  it('leaves Greek with NO source inline, as prose', () => {
+    const out = markEntryParts(sanitizeHtml(
+      '<div class="lsj-sense" data-level="1">as in <span class="lsj-greek">λόγος</span> and elsewhere</div>'));
+    expect(out).not.toContain('lsj-quoted');
+  });
+});
+
+describe('folding a forms block that has become the entry', () => {
+  const bulk = (n: number) => '<b class="lsj-head">x</b>: ' + Array.from({ length: n }, (_, i) =>
+    `<span class="lsj-tns">t${i}</span> <span class="lsj-cit"><span class="lsj-quote">φ${i}</span>` +
+    ' <span class="lsj-bibl">Il. 1.1</span></span>: ').join('');
+
+  it('folds a long run in the popup', () => {
+    expect(renderLsjEntry(bulk(14), {})).toContain('lsj-forms-fold');
+  });
+
+  it('never folds on the lemma page, where the reader came for the whole entry', () => {
+    expect(renderLsjEntry(bulk(14), { scale: 'page' })).not.toContain('lsj-forms-fold');
+  });
+
+  it('leaves a short run unfolded', () => {
+    expect(renderLsjEntry(bulk(5), {})).not.toContain('lsj-forms-fold');
   });
 });
