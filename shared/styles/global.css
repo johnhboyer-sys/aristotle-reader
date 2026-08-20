@@ -1422,6 +1422,15 @@ body {
    most of them at phone width. It wraps instead. */
 .lsj-outline-text { overflow-wrap: anywhere; }
 
+/* A phone held sideways is WIDE and SHORT — 932x430 — and a ten-row jump list
+   is 372px of that: the whole screen before the first line of the definition.
+   Same rule as the reader's header block further down this file: on a short
+   screen cut the furniture, never the type. The list keeps its size and scrolls
+   inside itself, so every sense is still one tap away. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .lsj-outline-list { max-height: 8.5rem; overflow-y: auto; }
+}
+
 .popup-loading {
   font-family: var(--font-ui);
   font-size: 0.85rem;
