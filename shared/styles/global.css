@@ -1498,6 +1498,9 @@ body {
   gap: 0.25em;
   white-space: nowrap;
 }
+/* A Bekker number on the same line keeps its slot; the siglum slides left of
+   it, deeper into the margin. */
+.quotation-sigla.has-num { right: calc(100% - 0.75rem); }
 .quotation-marker {
   position: relative;
   display: inline-flex;
