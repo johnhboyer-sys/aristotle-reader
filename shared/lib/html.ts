@@ -406,17 +406,27 @@ const FORMS_MIN_FOLDED = 12;   // above this it buries the senses beneath it
 /** Split at ":" / ";" that sit between tags, never inside one. */
 function splitOnSeparators(html: string): string[] {
   const parts: string[] = [];
-  let depth = 0;
+  let depth = 0;   // inside a tag
+  let open = 0;    // inside an element
   let start = 0;
   for (let i = 0; i < html.length; i += 1) {
     const ch = html[i];
-    if (ch === '<') depth += 1;
-    else if (ch === '>') depth -= 1;
-    else if (depth <= 0 && (ch === ':' || ch === ';')) {
+    if (ch === '<') {
+      depth += 1;
+      // Track element nesting as well: a separator inside <span>…;…</span>
+      // would otherwise split the element across two segments and leave both
+      // halves unbalanced (ἀντιάω did exactly this).
+      const tag = /^<(\/?)([a-z][\w-]*)/i.exec(html.slice(i, i + 24));
+      if (tag) {
+        if (tag[1]) open = Math.max(0, open - 1);
+        else if (!VOID_TAGS.has(tag[2].toLowerCase())) open += 1;
+      }
+    } else if (ch === '>') depth -= 1;
+    else if (depth <= 0 && open <= 0 && (ch === ':' || ch === ';')) {
       // A ";" also ends an HTML entity, and LSJ marks an editorial supplement
       // with angle brackets — φ&lt;ε&gt;ισθήσομαι. Splitting there tore "&lt;"
       // in half and the reader saw a raw "&lt". Three entries do this.
-      if (ch === ';' && /&[a-zA-Z]{2,7}$|&#\d{1,5}$/.test(html.slice(Math.max(0, i - 8), i))) continue;
+      if (ch === ';' && /&[a-zA-Z]{2,8}$|&#x?[0-9a-fA-F]{1,6}$/i.test(html.slice(Math.max(0, i - 10), i))) continue;
       // ":—" is one separator, not two
       const end = html[i + 1] === '\u2014' ? i + 2 : i + 1;
       parts.push(html.slice(start, end));
@@ -445,7 +455,16 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
 
   // The head is everything up to the first segment that carries a citation:
   // the headword, its gender, and whatever prose introduces the forms.
-  let firstForm = segments.findIndex((seg) => seg.includes('class="lsj-cit"'));
+  // A form is a citation, OR a Greek phrase with a reference beside it — LSJ
+  // uses both shapes in the same block.
+  const formAt = (seg: string): number => {
+    const cit = seg.indexOf('<span class="lsj-cit">');
+    if (cit !== -1) return cit;
+    const greek = seg.indexOf('<span class="lsj-greek');
+    if (greek !== -1 && seg.indexOf('class="lsj-bibl"', greek) !== -1) return greek;
+    return -1;
+  };
+  const firstForm = segments.findIndex((seg) => formAt(seg) !== -1);
   if (firstForm === -1) return { html: preamble, rows: 0 };
 
   let head = segments.slice(0, firstForm).join('');
@@ -457,7 +476,29 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
   const firstAt = tail[0].indexOf('<span class="lsj-cit">');
   if (firstAt > 0) {
     const lead = tail[0].slice(0, firstAt);
-    const cut = lead.lastIndexOf(',');
+    // The comma has to be OUTSIDE every tag. ἄγω's lead ends
+    // `<span class="lsj-greek">ἦγον,</span>`, and cutting at that comma left
+    // the span unclosed with the whole forms grid injected through it — 90
+    // entries did this.
+    // ELEMENT depth, not tag depth. A comma inside `<span>ἦγον,</span>` sits
+    // between two tags, so counting angle brackets called it depth 0 and the
+    // cut still tore the span in half — 84 entries, ἄγω among them.
+    let cut = -1;
+    let open = 0;
+    const tagRe = /<(\/?)([a-z][\w-]*)[^>]*>/gi;
+    let mark: RegExpExecArray | null;
+    let at = 0;
+    const scan = (from: number, to: number) => {
+      if (open !== 0) return;
+      for (let i = from; i < to; i += 1) if (lead[i] === ',') cut = i;
+    };
+    while ((mark = tagRe.exec(lead))) {
+      scan(at, mark.index);
+      if (mark[1]) open = Math.max(0, open - 1);
+      else if (!VOID_TAGS.has(mark[2].toLowerCase())) open += 1;
+      at = mark.index + mark[0].length;
+    }
+    scan(at, lead.length);
     if (cut !== -1 && plainLabel(lead).length > 22) {
       head += lead.slice(0, cut + 1);
       tail[0] = lead.slice(cut + 1) + tail[0].slice(firstAt);
@@ -471,7 +512,7 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
   // the first segment with no form in it; the remainder stays prose.
   let note = '';
   for (const [i, seg] of tail.entries()) {
-    const at = seg.indexOf('<span class="lsj-cit">');
+    const at = formAt(seg);
     if (at === -1) {
       // A segment with no form in it is either an interruption or the end of
       // the table. τίθημι is interrupted after two forms by a 136-character
@@ -480,8 +521,11 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
       // later segment still holds a form, this is an aside — keep it with the
       // row above, INSIDE that row, never loose in the grid where it would
       // become its own cell.
-      const more = tail.slice(i + 1).some((rest) => rest.includes('<span class="lsj-cit">'));
+      const more = tail.slice(i + 1).some((rest) => formAt(rest) !== -1);
       if (!more) { note = tail.slice(i).join(''); break; }
+      // Before any row exists there is nothing to attach to — it belongs to the
+      // head, and must never simply vanish.
+      if (!rows.length) { head += seg; continue; }
       if (rows.length) {
         rows[rows.length - 1] = rows[rows.length - 1].replace(/<\/span><\/div>$/, `${seg}</span></div>`);
       }
@@ -534,6 +578,12 @@ const SENSE_OPEN_TAG = /(<div[^>]*class="lsj-sense"[^>]*>)(\s*<b class="lsj-sens
 const GREEK_SPAN = /<span class="lsj-greek">[\s\S]*?<\/span>/g;
 
 export function markEntryParts(html: string): string {
+  // Only the senses. The block before them is morphology, and a "[ᾰπ]" quantity
+  // mark beside a headword is not a quotation — marking it put a forced line
+  // break through ἀπατάω's own head line.
+  const senseAt = html.indexOf(SENSE_DIV);
+  if (senseAt > 0) return html.slice(0, senseAt) + markEntryParts(html.slice(senseAt));
+  if (senseAt === -1) return html;
   // A sense's opening gloss, so it can lead the sense instead of running into
   // the evidence behind it.
   let out = html.replace(SENSE_OPEN_TAG, (full, open, num, gap, gloss) =>
@@ -547,6 +597,9 @@ export function markEntryParts(html: string): string {
     const stop = after.search(/<span class="lsj-(greek|cit)"|<div[^>]*class="lsj-sense"/);
     const window = stop === -1 ? after : after.slice(0, stop);
     if (!/class="lsj-bibl"/.test(window)) return span;
+    // A quantity mark ("[ᾰπ", "ᾰ") is notation, not a quotation.
+    const text = plainText(span);
+    if (text.length <= 4 || /^[[(]/.test(text)) return span;
     return span.replace('<span class="lsj-greek">', '<span class="lsj-greek lsj-quoted">');
   });
   return out;
@@ -630,8 +683,14 @@ export function renderLsjEntry(
     // scrolls the whole way past it. Folded, but never on the page where the
     // reader came to read the whole entry.
     const foldable = forms.rows >= FORMS_MIN_FOLDED && scale !== 'page';
+    // Fold the forms, never the word. The headword, its gender and its
+    // etymology are the first thing the reader needs and were being shut
+    // inside the disclosure with everything else — 103 of the 116 folds.
+    const split = forms.html.indexOf('<div class="lsj-forms');
+    const wordPart = split === -1 ? '' : forms.html.slice(0, split);
+    const formsPart = split === -1 ? forms.html : forms.html.slice(split);
     assembled = foldable
-      ? `<details class="lsj-forms-fold"><summary>${forms.rows} forms</summary>${forms.html}</details>${body}`
+      ? `${wordPart}<details class="lsj-forms-fold"><summary>${forms.rows} forms</summary>${formsPart}</details>${body}`
       : forms.html + body;
   }
   const depthed = stampSenseDepth(assembled);

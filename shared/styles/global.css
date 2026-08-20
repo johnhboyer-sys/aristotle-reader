@@ -1368,11 +1368,11 @@ body {
    inside a row, or it re-opens the very break this fixes — between a label and
    its form. */
 .lsj-entry .lsj-forms { margin: 0.5em 0 0.2em; }
-.lsj-entry .lsj-forms .lsj-cit::before { content: none; }
+.lsj-entry .lsj-forms .lsj-cit::before,
+.lsj-entry .lsj-forms .lsj-quoted::before { content: none; }
 .lsj-entry .lsj-form { display: block; margin: 0.15em 0; }
 .lsj-entry .lsj-form-label {
   font-family: var(--font-ui);
-  font-size: 0.86em;
   color: var(--text-mid);
   margin-right: 0.5em;
 }
@@ -1399,7 +1399,6 @@ body {
 .lsj-entry .lsj-forms-fold { margin: 0.4em 0; }
 .lsj-entry .lsj-forms-fold > summary {
   font-family: var(--font-ui);
-  font-size: 0.88em;
   color: var(--text-mid);
   cursor: pointer;
   padding: 0.15em 0;
