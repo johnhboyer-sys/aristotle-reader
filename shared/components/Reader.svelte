@@ -1381,11 +1381,15 @@
                   </tbody></table>
                 {:else}
                   <div class="greek-line" id={item.line.cont ? `L${seg.column}-${item.line.n}-c` : `L${seg.column}-${item.line.n}`} class:target={!item.line.cont && targetId === `L${seg.column}-${item.line.n}`} class:cont={item.line.cont}>
-                    <span class="line-num">{item.line.cont ? '' : showLineNum(item.line.n)}</span>
-                    {#if !item.line.cont}
-                      {#each (quoteStarts.get(`${seg.column}:${item.line.n}`) ?? []) as q}
-                        <QuotationMarker quotation={q} />
-                      {/each}
+                    <!-- The siglum takes the gutter slot; a Bekker number due on the
+                         same line yields (its neighbors still carry the count). -->
+                    <span class="line-num">{item.line.cont || quoteStarts.has(`${seg.column}:${item.line.n}`) ? '' : showLineNum(item.line.n)}</span>
+                    {#if !item.line.cont && quoteStarts.has(`${seg.column}:${item.line.n}`)}
+                      <span class="quotation-sigla">
+                        {#each quoteStarts.get(`${seg.column}:${item.line.n}`) ?? [] as q}
+                          <QuotationMarker quotation={q} />
+                        {/each}
+                      </span>
                     {/if}
                     <span class="line-text" lang="grc">{@render greekToks(lineParts(item.line))}</span>
                   </div>

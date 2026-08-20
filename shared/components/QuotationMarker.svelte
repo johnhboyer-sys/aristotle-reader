@@ -4,6 +4,25 @@
 
   export let quotation: Quotation;
 
+  // Marginal siglum, edition-style (John's ruling, 2026-08-20): the author's
+  // conventional abbreviation in the gutter, never a symbol — the text already
+  // prints its own quotation marks. Unmapped authors fall back to the full
+  // name; curation controls which authors ship.
+  const SIGLA: Record<string, string> = {
+    Empedocles: 'Emp.',
+    Parmenides: 'Parm.',
+    Heraclitus: 'Heracl.',
+    Xenophanes: 'Xenoph.',
+    Homer: 'Hom.',
+    Hesiod: 'Hes.',
+    Plato: 'Pl.',
+    Pindar: 'Pind.',
+    Aeschylus: 'Aesch.',
+    Sophocles: 'Soph.',
+    Euripides: 'Eur.',
+  };
+  $: siglum = SIGLA[quotation.author] ?? quotation.author;
+
   let open = false;
   let dialogEl: HTMLDivElement;
   let btnEl: HTMLButtonElement;
@@ -89,7 +108,7 @@
   aria-haspopup="dialog"
   aria-expanded={open}
   on:click|stopPropagation={onToggle}
->❝</button>
+>{siglum}</button>
 
 {#if open}
   <div

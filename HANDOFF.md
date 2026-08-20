@@ -14,7 +14,7 @@ Working tree on `claude/reader-wiring`. All five success-criteria commands passe
 - Word popup shows that label when present; ordinary words stay silent.
 - Lemma page shows label + in-Aristotle / before-him / contemporaries counts when `distinctiveness` is present.
 - `stage7_emit.copy_quotations` copies `pipeline/data/quotations/<work>.json` to `<out>/quotations.json` if it exists.
-- Reader loads quotations per work, places `❝` at the start line, click opens a thin popup with a real `<a target="_blank" rel="noopener">`.
+- Reader loads quotations per work and marks each start line with a marginal siglum, edition-style — "Emp." in the gutter, Greek serif italic, accent (John rejected every symbol glyph: the Ross text prints its own quotation marks, so a quote-shaped mark doubles what's on the page). A Bekker number due on the same line yields the slot (real case: 1009b:20, fr. 108). Click opens a thin popup with a real `<a target="_blank" rel="noopener">`.
 - `check-links.mjs` validates per-work `quotations.json` shape. `Meta.json` was copied by hand into `build/dist/Meta/quotations.json` (pipeline not re-run).
 
 ## 3. Key Decisions (and why)

@@ -860,6 +860,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 0.35rem;
+  position: relative;  /* anchors the .quotation-sigla gutter overlay */
 }
 
 .line-num {
@@ -1485,8 +1486,18 @@ body {
 .fn-marker:hover { text-decoration: underline; }
 .fn-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
 
-/* Quotation citation glyph: muted, small, 40px tap target via ::after so the
-   visible mark does not grow. Same hit-area convention as .popup-close. */
+/* Quotation siglum, edition-style: the author's abbreviation in the gutter at
+   the quote's start line, right-aligned to the same edge as the Bekker line
+   numbers (which yield the slot on collision). 40px tap target via ::after so
+   the visible mark does not grow. Same hit-area convention as .popup-close. */
+.quotation-sigla {
+  position: absolute;
+  right: calc(100% - 1.8rem);
+  top: 0.3em;
+  display: flex;
+  gap: 0.25em;
+  white-space: nowrap;
+}
 .quotation-marker {
   position: relative;
   display: inline-flex;
@@ -1498,12 +1509,15 @@ body {
   appearance: none;
   padding: 0;
   margin: 0;
-  font-size: 0.72em;
+  font-family: var(--font-greek);
+  font-size: 0.72rem;
+  font-style: italic;
   line-height: 1;
-  color: var(--text-mid);
+  color: var(--accent);
+  opacity: 0.9;
   cursor: pointer;
 }
-.quotation-marker:hover { color: var(--accent); }
+.quotation-marker:hover { opacity: 1; text-decoration: underline; }
 .quotation-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
 .quotation-marker::after {
   content: "";
@@ -2547,7 +2561,7 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
      equivalent). */
   .tok { cursor: auto; border: 0; background: none; color: inherit; }
   .fn-marker,
-  .quotation-marker { display: none; }
+  .quotation-sigla { display: none; }
 
   /* Near-black ink on plain white stock (white background saves ink). */
   .greek-col, .english-col, .english-col .bk-seg,
