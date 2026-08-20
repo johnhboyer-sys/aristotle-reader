@@ -1,43 +1,45 @@
-# HANDOFF: spec day — LSJ citations shipped, the gate armed, 18 lines of Greek recovered
-Generated: 2026-08-18 evening · Session focus: speccing the corpus-analysis features, then implementing and deploying the first two
+# HANDOFF: the LSJ sense hierarchy, deployed
+
+Generated: 2026-08-19 night · Session focus: redeploy the site, which turned into fixing how every dictionary entry renders
 
 ## 1. Goal
-Turn `docs/corpus-analysis-features.md` (the 2026-08-18 stylometry session's survey) into implementation-ready specs, then build the near-term ones. Four specs written and merged (#80); two implemented, reviewed cross-model, merged, and deployed the same day (#81 LSJ citations, #82+#85 text-quality gate).
+
+John asked for a redeploy. Live turned out to be byte-identical to `gh-pages` `f1e0c735` with nothing deploy-relevant merged since — but an unmerged PR (#92) held a fix he had wanted since launch: LSJ entries rendered as one wall of prose because the sanitizer dropped every sense wrapper. Shipping that correctly took the rest of the session.
 
 ## 2. Current State
-- **DEPLOYED and LIVE:** gh-pages `5955ce62` → `f1e0c735`, from `origin/main` `e50527bb9`. Full record in `DEPLOY-STATUS.md` (read it before the next deploy — the recipe held: bonitz aside, full build, diff read by category, live-verified functionally including an in-browser popup click).
-- **Live LSJ citations (#81):** ~21k Aristotle citations in dictionary entries link into the reader. Base-prefix contract: shards carry base-less hrefs, renderers prefix `BASE_URL` (`prefixLsjCitationHrefs` in `shared/lib/html.ts`, idempotent). The citation map (`pipeline/aristotle_pipeline/lsj_citation_map.py`) is keyed by LSJ's OWN numbers, not manifest `tlg_work` — SE is 039 (manifest 040), Juv is 018 (manifest 918), 001 splits APr/APo by column.
-- **Text-quality gate armed (#82, #85):** stage3 fails a work's build on an unexpected breathing-position hit. Classifiers: lexical crasis (coronis U+0343 decomposes to U+0313 under NFD — mark detection impossible; prefix set incl. καλοκἀ-) and rho-breathing (spine writes medial ῤῥ). Manifest allowlist `illegal_breathing_allow` exists but no work needs one — corpus baseline is 7 flagged all classified, 0 unexpected.
-- **18 restored lines (#83, child session from this session's task chip):** hyphen-range Bekker numbers (`n="13-14"`) were dropped as headings across PA/Cael/DM, masked by `expected_line_gaps`. Both De Caelo Empedocles quotations are back; κόρση and ἄξων are new lemmata. The gate's single genuine catch (PA 689a12 ὑποὑγρὰ) was the thread that unravelled this.
-- **#86 (another session):** stage7 token pairing fixed for repeated unlettered line numbers; **#84:** bracketed-word rendering. Both rode this deploy.
+
+**DEPLOYED and LIVE:** gh-pages `f1e0c735` → `101aba86`, from `origin/main` `3a561b34f`. Full record in `DEPLOY-STATUS.md` — read it before the next deploy, especially the `data/reports` trap.
+
+- **#92** (merged) got the sense wrappers (`div`, `data-level`) past `sanitizeHtml` and put LSJ rendering behind one shared call, `renderLsjEntry`.
+- **#93** (merged) made the hierarchy correct for every entry, put each quotation on its own line, and fixed two accessibility breaches #92 had introduced.
 
 ## 3. Key Decisions (and why)
-- **Compute on the disc, publish an integer** governs everything TLG-adjacent (feature 1's licence rule; recorded in the specs).
-- **The gate mirrors the reader's contract, not exact ids:** `.lsj-bibl` links pass check-links if the COLUMN exists — LSJ cites its own editions' lineation (~48/21k differ) and the reader snaps to the nearest line. All other links stay strict.
-- **Every lane cross-model reviewed:** Codex implemented #81/#82 from the specs; Grok reviewed both (its corpus-level findings — the crasis set matching nothing real, orthodox ῤῥ flagged — became classifier fixes with tests on the exact tokens). #83 (Claude-implemented) got BOTH Sol and Grok; Sol found the comma-compound merge silently changing Phys 226b, resolved by declaring it (the merged line is the better text — Grok replayed Ross's edition to prove it).
-- **HARD_GATE flipped only after** the baseline ran clean corpus-wide AND the one genuine hit was root-caused and fixed — not allowlisted.
 
-## 4. Traps (new this session — older ones still in DEPLOY-STATUS/CLAUDE.md)
-- **Worktree builds:** `build:public` fails at stage1 in a fresh worktree (`tlg_dir_default` is relative; disc lives under `~/Documents/CLAUDE CODE ARISTOTLE PROJECT/`). rsync `build/export` from the main checkout. Pipeline tests run as `uv run --with pytest pytest` — pytest is deliberately not in the venv.
-- **A raw `/EN/...` href passes check-links but 404s live** (crawler resolves against dist root; site serves under `/aristotle-reader`). The base-prefix rewrite is tested against the SANITIZED serialization — sanitizeHtml preserves source attribute order today and the round-trip test locks it.
-- **`expected_line_gaps` can mask data loss** — the #83 drops sat behind declared gaps for weeks. An allowlist entry describes a gap; it never verifies the gap is legitimate.
-- **Reversed comma compounds are real** (Phys 226b `n="27,23"`, Ross's marginal renumbering) — do not add range-order validation to stage1.
+- **Depth is relative to the entry, not to the dictionary.** `data-level` is absolute and 759 entries never use level 1 (λόγος opens at 2). `renderLsjEntry` stamps `data-depth` — the ranks THAT entry uses, compressed onto 1..n — and the stylesheet reads depth. **`data-level` deliberately stays in the markup**, which is why `workbench/src/components/LexiconDrawer.svelte:376` and the older tests kept working with no change.
+- **Compression, not subtraction.** 1,836 entries skip a rank (1,621 run 1 → 3); subtracting the shallowest left those a step too deep.
+- **Level 0 is not a rank.** ὅς and ποιέω use it for a note above the entry; ranking it pushed their real A/B/C down a level.
+- **A jump list must be the entry's own division:** two numbered sections sharing one real parent, covering the entry rather than one branch, numbers never repeating. A populated depth that fails any of those ENDS the search — descending past it published one branch's sub-senses as the entry's main senses (εὔσημος).
+- **Space, never punctuation.** Quotations are separated by a rendered line break inserted before the citation. Printing a comma LSJ did not set would put a mark in the dictionary its editors never wrote.
+- **A wrong list is worse than no list.** 92 → 1,628 entries, and every one of the ~740 candidates dropped along the way was dropped because it misrepresented the entry.
+
+## 4. Traps (new this session)
+
+- **An app-only build DELETES `data/reports`.** The 82 quality reports are pipeline output, untracked, and only 12 survive locally; `rsync --delete` staged 76 live files for deletion. Restore with `git checkout HEAD -- data/reports` in the gh-pages clone before committing. This will recur on every app-only deploy.
+- **`grep --include=*.html` under zsh fails to glob and the command never runs** — it prints an error and your loop records a clean `0`. Every "nothing found" check needs a positive control. This nearly passed a dangling-reference check that had not looked at anything.
+- **The Agent tool pins a subagent's cwd**, so a brief saying "cd to the review worktree" is ignored and Codex reviews an EMPTY diff from a tree sitting on `main`. Drive `codex-companion.mjs` directly from the target directory, or pass `grok --cwd`. Both reviewers fell into this; both had to be relaunched.
+- **The minifier writes `:before` with one colon.** Grepping shipped CSS for `::before` finds nothing and looks like the rule failed to ship.
+- **The in-app browser pane can report a 0×0 viewport**, which makes every geometry measurement meaningless while looking like real overflow. Playwright (`mcp__plugin_playwright_playwright__*`) gave real numbers and real screenshots.
+- **Verify a test bites.** Restoring the old rule must fail the test that names it — two of the first tests written passed either way.
 
 ## 5. Open Work
-- **Features 1+2 offline halves BUILT (PR #88, late session):** TLG canon parser
-  (dates + work titles from DOCCAN2.TXT), 532-author counting run, committed
-  table `pipeline/data/word_distinctiveness.json` (251 coined / 1,149 rare),
-  quotation matcher + click-only curation page; Meta pilot = 87 candidates
-  (Empedocles B109 top, Λ-close Il. 2.204 kept). Codex built F1, Grok F2;
-  cross-family reviews both ways found 11 real defects, all fixed test-first —
-  headliners: first-analysis-only lemma resolution minted 24 false coinages
-  (ὅλος); DK Testimonia works quote Aristotle back and must never be quotation
-  sources; ante/post canon dates. **Waiting on John:** distinctiveness rulings
-  (xmt Q / Peripatetic school / proper nouns / Hesiod — packet delivered) and
-  the 87-row Meta curation clicks (page delivered). Reader wiring for both
-  features comes after; re-runs are minutes (exports cached, counts versioned).
-- Older open items unchanged: Ostwald ticks outside Book I (need photographs), Owen note 44 (needs page images), footnote paragraph structure, desktop v0.2.0 draft release, `/bonitz` XSS fix.
+
+- **Sense numbers stop at 4 levels of colour grading** but the corpus only reaches depth 4 (plus 2 entries at level 0), so depth 5 rules are unused forward-compat.
+- **`.lsj-bibl` is `0.82em` and was left alone** — it predates all of this and is how the printed dictionary sets a reference. Changing it is John's call, and it is the one remaining place in the LSJ block smaller than the entry text.
+- **404 entries have no sense divisions at all** (τεός is one gloss and a citation list). Verified NOT a pipeline loss: corpus-wide there are 0 entries carrying a sense number without a sense div.
+- **3 entries whose jump list sits under a single ancestor chain** (ἀνακάμπτω: 1:- 2:II 3:2 4:b/c/d) list b/c/d. Honest but arguably not worth a list.
+- Older items unchanged: Ostwald ticks outside Book I, Owen note 44, footnote paragraph structure, desktop v0.2.0 draft release, `/bonitz` XSS fix, and the two offline corpus features (#88–#91) still awaiting their reader wiring.
 
 ---
 ## Prompt for the Fresh Agent
-Read this file, then `DEPLOY-STATUS.md`. The site is live and current as of 2026-08-18 evening; nothing is held. The four specs in `docs/spec-*.md` are the roadmap; two are shipped, two await their sessions.
+
+Read this file, then `DEPLOY-STATUS.md`. The site is live and current as of 2026-08-19 night; nothing is held. If you deploy, the `data/reports` trap above will bite you unless you handle it.
