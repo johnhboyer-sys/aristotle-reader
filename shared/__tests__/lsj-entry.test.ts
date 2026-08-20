@@ -75,10 +75,12 @@ describe('outlineLsjSenses', () => {
   });
 
   it('truncates a long label on a word boundary', () => {
+    // Two sections, because one is not a division and gets no list at all.
     const long = sanitizeHtml(
       '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> ' +
       'the word or outward form by which the inward thought is expressed' +
-      '</div>',
+      '</div>' +
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">B.</b> second</div>',
     );
     const { senses } = outlineLsjSenses(long);
     expect(senses[0].label.length).toBeLessThanOrEqual(57);
@@ -252,5 +254,61 @@ describe('an entry that does not start at level 1', () => {
     const out = renderLsjEntry(deka, { outline: true });
     expect(out).not.toContain('lsj-outline');
     expect(out).not.toContain('main senses');
+  });
+});
+
+// Levels skip a rank in 1,836 deployed entries — 1,621 of them run 1 → 3.
+// Subtracting the shallowest level left those a step too deep, so this pins
+// compression specifically: reverting to subtraction must fail here.
+describe('an entry that skips a rank', () => {
+  const skipped = (a: number, b: number) =>
+    `<div class="lsj-sense" data-level="${a}"><b class="lsj-sense-n">A.</b> top</div>` +
+    `<div class="lsj-sense" data-level="${b}"><b class="lsj-sense-n">1.</b> under it</div>`;
+
+  it('gives the child the next depth, not the next level', () => {
+    const out = stampSenseDepth(sanitizeHtml(skipped(1, 3)));
+    expect(out).toContain('<div data-depth="1" class="lsj-sense" data-level="1">');
+    expect(out).toContain('<div data-depth="2" class="lsj-sense" data-level="3">');
+    expect(out).not.toContain('data-depth="3"');
+  });
+
+  it('compresses a run that starts deep AND skips', () => {
+    const out = stampSenseDepth(sanitizeHtml(skipped(3, 5)));
+    expect(out).toContain('<div data-depth="1" class="lsj-sense" data-level="3">');
+    expect(out).toContain('<div data-depth="2" class="lsj-sense" data-level="5">');
+  });
+
+  it('never lets prose suppress stamping for the whole entry', () => {
+    // The guard reads each sense tag, not the entry string, so a quotation
+    // mentioning the attribute cannot switch depth off.
+    const out = stampSenseDepth(sanitizeHtml(
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> data-depth="1" as prose</div>' +
+      '<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">I.</b> under</div>',
+    ));
+    expect(out).toContain('data-depth="1"');
+    expect(out).toContain('<div data-depth="2" class="lsj-sense" data-level="2">');
+  });
+});
+
+// A depth holding ONE numbered section is not a division. Listing the level
+// below it side by side would mix sub-senses from different parents and call
+// them the entry's main senses.
+describe('choosing which depth the jump list indexes', () => {
+  const numbered = (level: number, n: string) =>
+    `<div class="lsj-sense" data-level="${level}"><b class="lsj-sense-n">${n}.</b> text</div>`;
+
+  it('does not skip past a real division to list its children', () => {
+    const html = numbered(1, 'A') + numbered(2, '1') + numbered(2, '2') +
+      numbered(2, '3') + numbered(1, 'B') + numbered(2, '4') + numbered(2, '5');
+    const out = renderLsjEntry(html, { outline: true, outlineMin: 3 });
+    // A and B are a division but there are only two of them: no list, rather
+    // than a list of 1,2,3,4,5 drawn from under both of them.
+    expect(out).not.toContain('lsj-outline');
+  });
+
+  it('descends when the level above is a single section', () => {
+    const html = numbered(1, 'A') + numbered(2, 'I') + numbered(2, 'II') + numbered(2, 'III');
+    const { senses } = outlineLsjSenses(sanitizeHtml(html), 'lsj-sense', 3);
+    expect(senses.map((sense) => sense.n)).toEqual(['I', 'II', 'III']);
   });
 });

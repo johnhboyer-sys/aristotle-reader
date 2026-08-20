@@ -243,9 +243,11 @@ function scanSenses(html: string): SenseHit[] {
 // attribute never has to be allowlisted. Idempotent: already-stamped html is
 // returned untouched.
 export function stampSenseDepth(html: string): string {
-  if (DEPTH_OF.test(html)) return html;
   const hits = scanSenses(html);
   if (!hits.length) return html;
+  // Per TAG, not per string: an entry whose prose happens to quote the text
+  // data-depth="1" would otherwise suppress stamping for the whole entry.
+  if (hits.every((hit) => DEPTH_OF.test(hit.attrs))) return html;
   // The ranks THIS entry uses, compressed onto consecutive depths. Subtracting
   // the shallowest is not enough: 1,836 deployed entries skip a rank outright
   // (1,621 of them run level 1 → 3, LSJ going A. then straight to 1.), and
@@ -282,15 +284,23 @@ export function outlineLsjSenses(
     return found ? Number(found[1]) : 1;
   };
 
+  // The shallowest depth that is a real division — two numbered sections or
+  // more. Descending past one (because it held fewer than outlineMin) listed
+  // sub-senses belonging to different parents side by side and labelled them
+  // the entry's main senses. A depth with a single numbered section is not a
+  // division, so it is passed over: that is how an entry whose whole body sits
+  // under one unnumbered or solitary heading still gets a usable list.
   let chosen = 0;
   for (let depth = 1; depth <= 5; depth += 1) {
-    const numbered = hits.filter((hit) => depthOf(hit.attrs) === depth && hit.n);
-    if (numbered.length >= Math.max(1, outlineMin)) {
+    if (hits.filter((hit) => depthOf(hit.attrs) === depth && hit.n).length >= 2) {
       chosen = depth;
       break;
     }
   }
   if (!chosen) return { html: stamped, senses: [] };
+  // Found the division; it still has to be long enough to be worth listing.
+  const atChosen = hits.filter((hit) => depthOf(hit.attrs) === chosen && hit.n).length;
+  if (atChosen < Math.max(1, outlineMin)) return { html: stamped, senses: [] };
 
   const senses: LsjSenseRef[] = [];
   const used = new Set<string>();

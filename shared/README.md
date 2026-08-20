@@ -31,11 +31,18 @@ one wall of prose.
 `data-level` is absolute across the dictionary and an entry need not start at
 level 1: 759 of 14,047 entries have no level-1 sense, λόγος among them (it
 opens at level 2, so its I/II/III are its real sections). `renderLsjEntry`
-therefore stamps `data-depth`, the level made relative to the shallowest one
-that entry uses, and the stylesheet indents off that. The jump list follows
-the same rule — it indexes the shallowest depth carrying enough NUMBERED
-sections to be worth listing, so an unnumbered compound-holder never produces
-a blank row.
+therefore stamps `data-depth`: the ranks an entry actually uses, compressed
+onto 1..n in order, and the stylesheet indents off that. Compression rather
+than subtraction, because 1,836 entries skip a rank outright (1,621 run level
+1 -> 3) and subtraction left those a step deeper than their parent.
+
+The jump list indexes the shallowest depth that is a real division — two
+numbered sections or more — and only when that depth has at least `outlineMin`
+of them. A depth holding one numbered section is passed over, so an entry
+whose whole body sits under a single heading still gets a usable list; a depth
+holding none (unnumbered compound-holders, as in δέκα) never produces blank
+rows; and a genuine two-part division is never skipped in favour of listing
+its children from under both parts at once.
 
 Hosts do not reimplement any of that. One call renders an entry:
 
