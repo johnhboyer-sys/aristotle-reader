@@ -246,11 +246,17 @@ export function stampSenseDepth(html: string): string {
   if (DEPTH_OF.test(html)) return html;
   const hits = scanSenses(html);
   if (!hits.length) return html;
-  const shallowest = Math.min(...hits.map((hit) => hit.level));
+  // The ranks THIS entry uses, compressed onto consecutive depths. Subtracting
+  // the shallowest is not enough: 1,836 deployed entries skip a rank outright
+  // (1,621 of them run level 1 → 3, LSJ going A. then straight to 1.), and
+  // subtraction left those a step further in than their parent, wearing the
+  // grade of a rank that is not in the entry at all.
+  const ranks = [...new Set(hits.map((hit) => hit.level))].sort((a, b) => a - b);
+  const depthOfLevel = new Map(ranks.map((level, i) => [level, Math.min(5, i + 1)]));
   let out = '';
   let cursor = 0;
   for (const hit of hits) {
-    const depth = Math.min(5, Math.max(1, hit.level - shallowest + 1));
+    const depth = depthOfLevel.get(hit.level) ?? 1;
     out += html.slice(cursor, hit.start);
     out += `<div data-depth="${depth}"${hit.attrs}>`;
     cursor = hit.end;
