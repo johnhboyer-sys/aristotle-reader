@@ -1251,16 +1251,17 @@ body {
 /* ── LSJ entry rendering ──────────────────────────────────────────────
    stage5 emits an entry as a headword run followed by senses:
    <div class="lsj-sense" data-level="N"><b class="lsj-sense-n">A.</b> …,
-   sub-senses nested inside their parent. LSJ's own hierarchy is
+   one sense after another as siblings. LSJ's own hierarchy is
    A/B → I/II → 1/2 → a/b, up to five deep in the big verbs, and it carries
    the argument of the entry: without typographic expression of it the entry
    reads as one wall of prose (John's report, 2026-08-19).
 
-   Two indentation rules, because both markup shapes occur: NESTED senses
-   step in once per level of nesting; a FLAT run of siblings (level on the
-   attribute, no nesting) steps in by data-level. Only one ever matches — a
-   nested entry has just level-1 senses as direct children of .lsj-entry, and
-   a flat entry has no .lsj-sense inside a .lsj-sense.
+   The shards are a FLAT sibling run: depth lives on the attribute, never in
+   nesting (0 nested senses in 14,047 deployed entries). Indentation therefore
+   steps off data-DEPTH, which renderLsjEntry stamps as data-level made
+   relative to the shallowest level that entry uses — 759 entries, λόγος among
+   them, have no level-1 sense at all, and keying off the absolute level set
+   their real sections in sub-sense type.
 
    Consumers set the two custom properties to their own scale: the word popup
    is a narrow column, the lemma page is a wide reference view. */
@@ -1288,27 +1289,25 @@ body {
   text-indent: calc(-1 * var(--lsj-hang));
 }
 
-/* Depth — nested shape. */
-.lsj-entry .lsj-sense .lsj-sense { margin-left: var(--lsj-step); }
-/* Depth — flat shape (senses as siblings, depth only on the attribute). */
-.lsj-entry > .lsj-sense[data-level="2"] { margin-left: var(--lsj-step); }
-.lsj-entry > .lsj-sense[data-level="3"] { margin-left: calc(2 * var(--lsj-step)); }
-.lsj-entry > .lsj-sense[data-level="4"] { margin-left: calc(3 * var(--lsj-step)); }
-.lsj-entry > .lsj-sense[data-level="5"] { margin-left: calc(4 * var(--lsj-step)); }
+/* Depth. Senses are a flat sibling run; renderLsjEntry stamps data-depth. */
+.lsj-entry > .lsj-sense[data-depth="2"] { margin-left: var(--lsj-step); }
+.lsj-entry > .lsj-sense[data-depth="3"] { margin-left: calc(2 * var(--lsj-step)); }
+.lsj-entry > .lsj-sense[data-depth="4"] { margin-left: calc(3 * var(--lsj-step)); }
+.lsj-entry > .lsj-sense[data-depth="5"] { margin-left: calc(4 * var(--lsj-step)); }
 
 /* A hairline down the left of every sub-sense: it makes the extent of a
    top-level sense's subtree visible while scrolling, which indentation alone
    does not at this text size. Level 1 gets air above it instead — it is the
    entry's real section break. */
-.lsj-entry .lsj-sense[data-level="1"] { margin-top: 1em; }
-.lsj-entry .lsj-sense[data-level="2"],
-.lsj-entry .lsj-sense[data-level="3"],
-.lsj-entry .lsj-sense[data-level="4"],
-.lsj-entry .lsj-sense[data-level="5"] {
+.lsj-entry .lsj-sense[data-depth="1"] { margin-top: 1em; }
+.lsj-entry .lsj-sense[data-depth="2"],
+.lsj-entry .lsj-sense[data-depth="3"],
+.lsj-entry .lsj-sense[data-depth="4"],
+.lsj-entry .lsj-sense[data-depth="5"] {
   border-left: 1px solid var(--border);
   padding-left: calc(var(--lsj-hang) + 0.45em);
 }
-.lsj-entry .lsj-sense[data-level="2"] { margin-top: 0.6em; }
+.lsj-entry .lsj-sense[data-depth="2"] { margin-top: 0.6em; }
 
 /* The number is the structural signal, so it is set in the UI face against the
    serif prose and graded by depth: accent for the A/B sections, then down
@@ -1316,15 +1315,17 @@ body {
    sense's own number must not inherit its parent's grade. */
 .lsj-entry .lsj-sense-n {
   font-family: var(--font-ui);
-  font-size: 0.88em;
   font-weight: 700;
   margin-right: .4em;
   color: var(--text);
 }
-.lsj-entry .lsj-sense[data-level="1"] > .lsj-sense-n { color: var(--accent); font-size: 0.94em; letter-spacing: .03em; }
-.lsj-entry .lsj-sense[data-level="3"] > .lsj-sense-n { color: var(--text-mid); font-weight: 600; }
-.lsj-entry .lsj-sense[data-level="4"] > .lsj-sense-n,
-.lsj-entry .lsj-sense[data-level="5"] > .lsj-sense-n { color: var(--text-light); font-weight: 600; font-style: italic; }
+.lsj-entry .lsj-sense[data-depth="1"] > .lsj-sense-n { color: var(--accent); letter-spacing: .03em; }
+.lsj-entry .lsj-sense[data-depth="3"] > .lsj-sense-n { color: var(--text-mid); font-weight: 600; }
+/* --text-light is 4.40:1 on the dark popup ground (it was tuned against
+   --col-bg), so the leaves take --text-mid: 7.06:1 there, and italic still
+   separates them from the level above. */
+.lsj-entry .lsj-sense[data-depth="4"] > .lsj-sense-n,
+.lsj-entry .lsj-sense[data-depth="5"] > .lsj-sense-n { color: var(--text-mid); font-weight: 600; font-style: italic; }
 
 /* On a phone the deepest senses would otherwise be indented into a two-word
    column; tighten the step and the gutter rather than lose the hierarchy. */
@@ -1333,8 +1334,8 @@ body {
 }
 
 /* No stray gap at either end of the entry, whatever level it opens on. */
-.lsj-entry > .lsj-sense:first-child { margin-top: 0; }
-.lsj-entry > .lsj-sense:last-child  { margin-bottom: 0; }
+.lsj-entry > .lsj-sense:first-of-type { margin-top: 0; }
+.lsj-entry > .lsj-sense:last-of-type  { margin-bottom: 0; }
 
 /* Citations. The linked ones go into the reader, so they have to look
    clickable without turning a dense entry into a field of blue. */
@@ -1362,7 +1363,7 @@ body {
 }
 .lsj-entry-page .lsj-sense { scroll-margin-top: 1.5rem; }
 /* Jumped-to sense: the same tint the reader gives a jumped-to line. */
-.lsj-entry-page .lsj-sense[data-level="1"]:target {
+.lsj-entry-page .lsj-sense[data-depth="1"]:target {
   background: var(--target-bg);
   border-radius: 4px;
   box-shadow: 0 0 0 0.4rem var(--target-bg);

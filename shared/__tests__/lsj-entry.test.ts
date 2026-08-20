@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   outlineLsjSenses,
+  stampSenseDepth,
   prefixLsjCitationHrefs,
   renderLsjEntry,
   sanitizeHtml,
@@ -31,6 +32,7 @@ const ENTRY = [
 describe('sanitizeHtml on LSJ sense structure', () => {
   it('keeps the sense divs and their depth', () => {
     const out = sanitizeHtml(ENTRY);
+    // The sanitizer alone: data-depth is stamped later, by renderLsjEntry.
     expect(out).toContain('<div class="lsj-sense" data-level="1">');
     expect(out).toContain('<div class="lsj-sense" data-level="3">');
     // Nesting survives: three opens before the first close.
@@ -89,11 +91,13 @@ describe('outlineLsjSenses', () => {
     const { html, senses } = outlineLsjSenses(sanitized);
     expect(senses.map((s) => s.id)).toEqual(['lsj-sense-a', 'lsj-sense-b', 'lsj-sense-c']);
     for (const sense of senses) {
-      expect(html).toContain(`<div id="${sense.id}" class="lsj-sense" data-level="1">`);
+      expect(html).toContain(`<div id="${sense.id}" data-depth="1" class="lsj-sense" data-level="1">`);
     }
     expect(html.match(/ id="/g)).toHaveLength(3);
     // Everything else is byte-identical to the input.
-    expect(html.replace(/ id="lsj-sense-[a-z0-9-]+"/g, '')).toBe(sanitized);
+    expect(
+      html.replace(/ id="lsj-sense-[a-z0-9-]+"/g, '').replace(/ data-depth="\d"/g, ''),
+    ).toBe(sanitized);
   });
 
   it('never collides ids, even when LSJ repeats or omits a sense number', () => {
@@ -102,10 +106,11 @@ describe('outlineLsjSenses', () => {
       '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> two</div>' +
       '<div class="lsj-sense" data-level="1">unnumbered</div>',
     ));
-    expect(senses.map((s) => s.id)).toEqual(['lsj-sense-a', 'lsj-sense-a-2', 'lsj-sense-3']);
-    expect(senses[2].n).toBe('');
-    expect(senses[2].label).toBe('unnumbered');
-    expect(html.match(/ id="/g)).toHaveLength(3);
+    // The repeated "A." gets a suffix; the unnumbered div is not a section at
+    // all and is left out — δέκα otherwise published eleven blank rows.
+    expect(senses.map((s) => s.id)).toEqual(['lsj-sense-a', 'lsj-sense-a-2']);
+    expect(senses.every((sense) => sense.n !== '')).toBe(true);
+    expect(html.match(/ id="/g)).toHaveLength(2);
   });
 
   it('reads a flat sibling entry the same way as a nested one', () => {
@@ -138,7 +143,7 @@ describe('renderLsjEntry', () => {
     const out = renderLsjEntry(`${ENTRY}<script>alert(1)</script>`);
     expect(out.startsWith('<div class="lsj-entry">')).toBe(true);
     expect(out.endsWith('</div>')).toBe(true);
-    expect(out).toContain('<div class="lsj-sense" data-level="3">');
+    expect(out).toContain('<div data-depth="3" class="lsj-sense" data-level="3">');
     expect(out).not.toContain('alert(1)');
   });
 
@@ -192,5 +197,60 @@ describe('renderLsjEntry', () => {
     expect(a).toContain('id="e1-a"');
     expect(b).toContain('id="e2-a"');
     expect(a).not.toContain('id="e2-a"');
+  });
+});
+
+// The deployed shards are a FLAT sibling run and an entry does not have to
+// start at level 1: 759 of 14,047 entries do not, λόγος among them. Keying the
+// typography and the jump list off the absolute data-level set those entries'
+// real sections in sub-sense type and published no jump list for them at all.
+describe('an entry that does not start at level 1', () => {
+  // λόγος as the shard actually holds it: no level-1 sense, I/II at level 2.
+  const LOGOS = [
+    '<b class="lsj-head">λόγος</b>, <span class="lsj-gen">ὁ</span>, ',
+    '<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">I.</b> computation</div>',
+    '<div class="lsj-sense" data-level="3"><b class="lsj-sense-n">2.</b> a sub-sense</div>',
+    '<div class="lsj-sense" data-level="4"><b class="lsj-sense-n">b.</b> a leaf</div>',
+    '<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">II.</b> relation</div>',
+    '<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">III.</b> explanation</div>',
+  ].join('');
+
+  it('makes the entry\'s own shallowest level its top level', () => {
+    const html = stampSenseDepth(sanitizeHtml(LOGOS));
+    // level 2 → depth 1, so I/II/III take the section accent, not sub-sense grey
+    expect(html).toContain('<div data-depth="1" class="lsj-sense" data-level="2">');
+    expect(html).toContain('<div data-depth="2" class="lsj-sense" data-level="3">');
+    expect(html).toContain('<div data-depth="3" class="lsj-sense" data-level="4">');
+    expect(html).not.toContain('data-depth="4"');
+  });
+
+  it('lists those sections in the jump list', () => {
+    const { senses } = outlineLsjSenses(sanitizeHtml(LOGOS), 'lsj-sense', 3);
+    expect(senses.map((sense) => sense.n)).toEqual(['I', 'II', 'III']);
+  });
+
+  it('renders the jump list through renderLsjEntry', () => {
+    const out = renderLsjEntry(LOGOS, { outline: true, scale: 'page' });
+    expect(out).toContain('<nav class="lsj-outline"');
+    expect(out).toContain('3 main senses');
+    // every anchor the list emits is stamped in the same pass
+    for (const href of out.match(/href="#([^"]+)"/g) ?? []) {
+      expect(out).toContain(`id="${href.slice(7, -1)}"`);
+    }
+  });
+
+  it('stamps depth on the popup path too, which shows no jump list', () => {
+    const out = renderLsjEntry(LOGOS, {});
+    expect(out).toContain('data-depth="1"');
+    expect(out).not.toContain('<nav class="lsj-outline"');
+  });
+
+  it('publishes no blank rows for an entry of unnumbered holders', () => {
+    // δέκα: eleven level-1 divs, none of them numbered — eleven empty rows.
+    const deka = Array.from({ length: 11 }, (_, i) =>
+      `<div class="lsj-sense" data-level="1">compound ${i}</div>`).join('');
+    const out = renderLsjEntry(deka, { outline: true });
+    expect(out).not.toContain('lsj-outline');
+    expect(out).not.toContain('main senses');
   });
 });

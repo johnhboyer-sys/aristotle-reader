@@ -159,8 +159,11 @@ export interface LsjSenseRef {
   label: string;
 }
 
-const TOP_SENSE_OPEN =
-  /<div(?=[^>]*\bclass="lsj-sense")(?=[^>]*\bdata-level="1")([^>]*)>/g;
+// Every sense div at any depth. A lookahead for the class so attribute order
+// is free, and the attributes captured so a rewrite can put them back verbatim.
+const SENSE_OPEN = /<div(?=[^>]*\bclass="lsj-sense")([^>]*)>/g;
+const LEVEL_OF = /\bdata-level="(\d{1,2})"/;
+const DEPTH_OF = /\bdata-depth="(\d)"/;
 const SENSE_N = /^\s*<b class="lsj-sense-n">([\s\S]*?)<\/b>/;
 const LABEL_MAX = 56;
 
@@ -190,38 +193,115 @@ function truncateLabel(text: string): string {
   return `${(space > LABEL_MAX / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:]+$/, '')}…`;
 }
 
+interface SenseHit {
+  /** Offset of the opening `<div`. */
+  start: number;
+  /** Offset just past the opening tag — where the sense's own prose begins. */
+  end: number;
+  /** The opening tag's attributes, verbatim, to put back on a rewrite. */
+  attrs: string;
+  /** `data-level` as the pipeline wrote it. */
+  level: number;
+  /** The sense number as LSJ prints it, "" when the sense is unnumbered. */
+  n: string;
+  label: string;
+}
+
+function scanSenses(html: string): SenseHit[] {
+  const hits: SenseHit[] = [];
+  SENSE_OPEN.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = SENSE_OPEN.exec(html))) {
+    const level = LEVEL_OF.exec(match[1]);
+    hits.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      attrs: match[1],
+      level: level ? Number(level[1]) : 1,
+      n: '',
+      label: '',
+    });
+  }
+  // A sense's OWN prose stops where the next sense begins, whatever its depth.
+  for (let i = 0; i < hits.length; i += 1) {
+    const stop = i + 1 < hits.length ? hits[i + 1].start : html.length;
+    const body = html.slice(hits[i].end, stop);
+    const nMatch = SENSE_N.exec(body);
+    hits[i].n = nMatch ? plainText(nMatch[1]).replace(/\.$/, '') : '';
+    hits[i].label = truncateLabel(plainText(body.slice(nMatch ? nMatch[0].length : 0)));
+  }
+  return hits;
+}
+
+// `data-level` is absolute across the dictionary, but an entry does not have to
+// start at level 1 and most do not: of 14,047 deployed entries, 759 have no
+// level-1 sense at all — λόγος opens at level 2, so its I/II/III are the
+// entry's real sections. Styling straight off `data-level` indented them like
+// sub-senses and greyed their numbers. `data-depth` is that level made relative
+// to the shallowest one THIS entry uses, so every entry's own top sections read
+// as top sections. Stamped after sanitizing, like the outline ids, so the
+// attribute never has to be allowlisted. Idempotent: already-stamped html is
+// returned untouched.
+export function stampSenseDepth(html: string): string {
+  if (DEPTH_OF.test(html)) return html;
+  const hits = scanSenses(html);
+  if (!hits.length) return html;
+  const shallowest = Math.min(...hits.map((hit) => hit.level));
+  let out = '';
+  let cursor = 0;
+  for (const hit of hits) {
+    const depth = Math.min(5, Math.max(1, hit.level - shallowest + 1));
+    out += html.slice(cursor, hit.start);
+    out += `<div data-depth="${depth}"${hit.attrs}>`;
+    cursor = hit.end;
+  }
+  return out + html.slice(cursor);
+}
+
+// The jump list indexes ONE depth: the shallowest that actually carries enough
+// numbered sections to be worth listing. Hardcoding depth 1 published a list
+// for 92 entries and none for λόγος; it also emitted eleven blank rows for
+// δέκα, whose level-1 divs are unnumbered compound-holders. An unnumbered sense
+// is never a section, so it never counts toward the threshold and is never
+// listed.
 export function outlineLsjSenses(
   html: string,
   idPrefix = 'lsj-sense',
+  outlineMin = 1,
 ): { html: string; senses: LsjSenseRef[] } {
+  const stamped = stampSenseDepth(html);
+  const hits = scanSenses(stamped);
+  const depthOf = (attrs: string): number => {
+    const found = DEPTH_OF.exec(attrs);
+    return found ? Number(found[1]) : 1;
+  };
+
+  let chosen = 0;
+  for (let depth = 1; depth <= 5; depth += 1) {
+    const numbered = hits.filter((hit) => depthOf(hit.attrs) === depth && hit.n);
+    if (numbered.length >= Math.max(1, outlineMin)) {
+      chosen = depth;
+      break;
+    }
+  }
+  if (!chosen) return { html: stamped, senses: [] };
+
   const senses: LsjSenseRef[] = [];
   const used = new Set<string>();
   let out = '';
   let cursor = 0;
-  let match: RegExpExecArray | null;
-  TOP_SENSE_OPEN.lastIndex = 0;
-  while ((match = TOP_SENSE_OPEN.exec(html))) {
-    const bodyStart = match.index + match[0].length;
-    // The sense's OWN prose stops where its first sub-sense begins; a div is
-    // the only block LSJ markup emits, so the next `<div` is that boundary
-    // (or, in a flat entry, the next sibling sense — the same cut).
-    const nextDiv = html.indexOf('<div', bodyStart);
-    const body = html.slice(bodyStart, nextDiv === -1 ? undefined : nextDiv);
-    const nMatch = SENSE_N.exec(body);
-    const n = nMatch ? plainText(nMatch[1]).replace(/\.$/, '') : '';
-    const label = truncateLabel(plainText(body.slice(nMatch ? nMatch[0].length : 0)));
-
-    const slug = n.replace(/[^A-Za-z0-9]+/g, '').toLowerCase() || String(senses.length + 1);
+  for (const hit of hits) {
+    if (depthOf(hit.attrs) !== chosen || !hit.n) continue;
+    const slug = hit.n.replace(/[^A-Za-z0-9]+/g, '').toLowerCase() || String(senses.length + 1);
     let id = `${idPrefix}-${slug}`;
     for (let dup = 2; used.has(id); dup += 1) id = `${idPrefix}-${slug}-${dup}`;
     used.add(id);
-    senses.push({ n, id, label });
-
-    out += html.slice(cursor, match.index);
-    out += `<div id="${id}"${match[1]}>`;
-    cursor = bodyStart;
+    senses.push({ n: hit.n, id, label: hit.label });
+    out += stamped.slice(cursor, hit.start);
+    out += `<div id="${id}"${hit.attrs}>`;
+    cursor = hit.end;
   }
-  return { html: out + html.slice(cursor), senses };
+  return { html: out + stamped.slice(cursor), senses };
 }
 
 // ── one LSJ entry, rendered ─────────────────────────────────────────────────
@@ -286,9 +366,12 @@ export function renderLsjEntry(
   // An absent shard entry must render nothing at all, not an empty box: the
   // host's own `{#if}` keys off this string.
   if (!sanitized.trim()) return '';
+  // Depth is stamped whether or not an outline is wanted — the word popup shows
+  // no jump list but still has to indent λόγος correctly.
+  const depthed = stampSenseDepth(sanitized);
   const { html, senses } = outline
-    ? outlineLsjSenses(sanitized, idPrefix)
-    : { html: sanitized, senses: [] as LsjSenseRef[] };
+    ? outlineLsjSenses(depthed, idPrefix, outlineMin)
+    : { html: depthed, senses: [] as LsjSenseRef[] };
   const nav = senses.length >= outlineMin ? outlineHtml(senses) : '';
   const cls = scale === 'page' ? 'lsj-entry lsj-entry-page' : 'lsj-entry';
   return `<div class="${cls}">${nav}${html}</div>`;

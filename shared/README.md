@@ -21,11 +21,21 @@ deliberately independent and does not import from here.
 
 An LSJ entry is the one piece of corpus HTML with real STRUCTURE in it —
 LSJ divides a word's senses A → I → 1 → a, and that division is the argument
-of the entry. The pipeline emits it as nested
-`<div class="lsj-sense" data-level="N">` with the sense number in a leading
-`<b class="lsj-sense-n">`; `lib/html.ts` allows exactly those through the
-sanitizer and `styles/global.css` typesets them. Drop either half and the
-entry renders as one wall of prose.
+of the entry. The pipeline emits it as a FLAT run of sibling
+`<div class="lsj-sense" data-level="N">` — depth is carried on the attribute,
+not by nesting — with the sense number in a leading `<b class="lsj-sense-n">`;
+`lib/html.ts` allows exactly those through the sanitizer and
+`styles/global.css` typesets them. Drop either half and the entry renders as
+one wall of prose.
+
+`data-level` is absolute across the dictionary and an entry need not start at
+level 1: 759 of 14,047 entries have no level-1 sense, λόγος among them (it
+opens at level 2, so its I/II/III are its real sections). `renderLsjEntry`
+therefore stamps `data-depth`, the level made relative to the shallowest one
+that entry uses, and the stylesheet indents off that. The jump list follows
+the same rule — it indexes the shallowest depth carrying enough NUMBERED
+sections to be worth listing, so an unnumbered compound-holder never produces
+a blank row.
 
 Hosts do not reimplement any of that. One call renders an entry:
 
