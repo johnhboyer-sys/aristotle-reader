@@ -59,6 +59,13 @@ _CHAPTER_MARKERS = {
 }
 
 _ROMAN = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
+# A quotation opener dangling at the end of a prose line (`he says:- "`,
+# `he says, "`). Used when strip_quote_repeats is on: the next line's leading
+# `"` is the real opener, not a verse/paragraph repeat.
+_DANGLING_OPENER = re.compile(r'[,:;-]\s*"$')
+# Chapter-convention furniture close: a line-final `"` after sentence
+# punctuation (optional space). Genuine closes at odd parity keep this mark.
+_LINE_FINAL_CLOSE = re.compile(r'[.?!]\s*"$')
 
 
 def _join_para(buf: list) -> str:
@@ -147,11 +154,109 @@ def _strip_furniture(txt: str) -> str:
     return _PAGE_HEADER.sub("", txt)
 
 
-def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
+def _is_line_initial_quote(lines: list[str], j: int) -> bool:
+    """Non-blank line starting with `"`, len>1, immediately preceded by a blank."""
+    ln = lines[j]
+    if not ln or not ln.startswith('"') or len(ln) <= 1:
+        return False
+    return j == 0 or not lines[j - 1]
+
+
+def _closer_shaped(ln: str) -> bool:
+    """A lone `"` line, or the line's first `"` is line-final after [.?!]."""
+    if ln == '"':
+        return True
+    first = ln.find('"')
+    return first == len(ln) - 1 and bool(_LINE_FINAL_CLOSE.search(ln))
+
+
+def _lookahead_keep_opener(lines: list[str], i: int, pat: re.Pattern) -> bool:
+    """Even-parity line-initial `"`: True if a genuine verse opener.
+
+    Scan forward, skipping later line-initial-`"` candidates. A paragraph
+    boundary, chapter marker, or EOF means a convention repeat (strip). The
+    first other line that contains `"` decides: closer-shaped after skipping
+    at least one candidate → keep; anything else → strip.
+    """
+    skipped = 0
+    last_nonblank = lines[i]
+    for j in range(i + 1, len(lines)):
+        ln = lines[j]
+        if pat.fullmatch(ln):
+            return False
+        if not ln:
+            if last_nonblank and _ends_sentence(last_nonblank):
+                return False
+            continue
+        last_nonblank = ln
+        if _is_line_initial_quote(lines, j):
+            skipped += 1
+            continue
+        if '"' not in ln:
+            continue
+        return _closer_shaped(ln) and skipped >= 1
+    return False
+
+
+def _drop_final_furniture(ln: str, parity: int) -> str:
+    """Drop a line-final sentence-quote when it would close nothing (even parity)."""
+    if not _LINE_FINAL_CLOSE.search(ln):
+        return ln
+    body = ln[: ln.rfind('"')]
+    if (parity + body.count('"')) % 2 == 0:
+        return body.rstrip()
+    return ln
+
+
+def _apply_quote_repeats(ln: str, i: int, lines: list[str], buf: list,
+                         prev_blank: bool, parity: int,
+                         pat: re.Pattern) -> tuple[str | None, int]:
+    """Strip MIT-archive repeat quotes from one line. None = drop the line.
+
+    Returns (line or None, extra parity delta from mutating `buf`).
+    """
+    extra = 0
+    if ln == '"':
+        if not buf:
+            return None, 0  # chapter-opening furniture
+        if parity % 2 == 1:
+            return ln, 0  # genuine close
+        last = next((x for x in reversed(buf) if x is not None), None)
+        if last is not None and last.endswith((",", ":", ";", "-")):
+            return ln, 0  # detached dangling opener (`Parmenides:` + lone `"`)
+        return None, 0  # furniture close
+    if ln.startswith('"') and len(ln) > 1 and (prev_blank or not buf):
+        if parity % 2 == 1:
+            last = next((x for x in reversed(buf) if x is not None), None)
+            if last is not None and _DANGLING_OPENER.search(last):
+                for k in range(len(buf) - 1, -1, -1):
+                    if buf[k] is not None:
+                        buf[k] = buf[k][: buf[k].rfind('"')].rstrip()
+                        extra = -1
+                        break
+            else:
+                ln = ln[1:].lstrip()
+        elif '"' in ln[1:] or not _lookahead_keep_opener(lines, i, pat):
+            # A second `"` on the same line means the leading mark cannot be a
+            # verse opener whose close lies downstream — it is a convention
+            # repeat (`"And elsewhere he says that:- "`: the trailing dangler
+            # is the real opener). Strip the leading mark.
+            ln = ln[1:].lstrip()
+    ln = _drop_final_furniture(ln, parity + extra)
+    return ln, extra
+
+
+def parse_book(path: Path, marker: str = "number", *,
+               strip_quote_repeats: bool = False) -> dict[int, str]:
     """{chapter_number: prose} for one archive book file. Chapters start with a
     standalone marker line (bare number, or "Part N") in ascending sequence;
     stray numbers in the prose (years, counts) aren't alone on a line in
-    sequence and are ignored."""
+    sequence and are ignored.
+
+    `strip_quote_repeats` drops the MIT Internet Classics Archive's
+    verse/paragraph repeat quotation marks (a convention unique to Ross's
+    Metaphysics). Off, the parse is unchanged.
+    """
     pat = _CHAPTER_MARKERS[marker]
     txt = _book_text(path)
     i = txt.find("Translated by")
@@ -162,7 +267,10 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
     cur: int | None = None
     buf: list = []
     started = False
-    for ln in (l.strip() for l in txt.split("\n")):
+    prev_blank = True
+    parity = 0
+    lines = [l.strip() for l in txt.split("\n")]
+    for i, ln in enumerate(lines):
         m = pat.fullmatch(ln)
         if m:
             num = _marker_int(m.group(m.lastindex or 0))
@@ -170,9 +278,22 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
                 if cur is not None:
                     chapters[cur] = _join_para(buf)
                 cur, buf, started = num, [], True
+                prev_blank = True
+                parity = 0
                 continue
+        orig_empty = not ln
         if started:
             if ln:
+                if strip_quote_repeats:
+                    stripped, extra = _apply_quote_repeats(
+                        ln, i, lines, buf, prev_blank, parity, pat
+                    )
+                    if stripped is None:
+                        prev_blank = False
+                        continue
+                    parity += extra
+                    ln = stripped
+                    parity += ln.count('"')
                 buf.append(ln)
             elif buf and buf[-1] is not None and _ends_sentence(buf[-1]):
                 # A blank line is a paragraph break only when the preceding line
@@ -181,19 +302,23 @@ def parse_book(path: Path, marker: str = "number") -> dict[int, str]:
                 # which would otherwise make each ~70-char line its own paragraph;
                 # a mid-clause wrap (ends on a comma/word) is joined, not broken.
                 buf.append(None)  # paragraph break sentinel
+        prev_blank = orig_empty
     if cur is not None:
         chapters[cur] = _join_para(buf)
     return chapters
 
 
-def parse_translation(src_dir: Path, books: int, marker: str = "number") -> dict[tuple[int, int], str]:
+def parse_translation(src_dir: Path, books: int, marker: str = "number", *,
+                      strip_quote_repeats: bool = False) -> dict[tuple[int, int], str]:
     """{(book, chapter): prose} across an archive translation's book files."""
     out: dict[tuple[int, int], str] = {}
     for n in range(1, books + 1):
         path = src_dir / f"book-{n:02d}.html"
         if not path.exists():
             continue
-        for ch, text in parse_book(path, marker).items():
+        for ch, text in parse_book(
+            path, marker, strip_quote_repeats=strip_quote_repeats
+        ).items():
             out[(n, ch)] = text
     return out
 

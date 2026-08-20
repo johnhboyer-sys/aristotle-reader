@@ -35,7 +35,8 @@ def _load_prose(cfg: dict) -> dict[tuple[int, int], str]:
             cfg.get("book_subtype", "book"),
         )
     return parse_translation(
-        SOURCES_DIR / cfg["dir"], cfg["books"], cfg.get("chapter_marker", "number")
+        SOURCES_DIR / cfg["dir"], cfg["books"], cfg.get("chapter_marker", "number"),
+        strip_quote_repeats=cfg.get("strip_quote_repeats", False),
     )
 
 

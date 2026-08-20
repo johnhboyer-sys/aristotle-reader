@@ -44,6 +44,7 @@ english:
     dir: meta-ross
     books: 14
     marker: part
+    strip_quote_repeats: true
 
 books:
   - { n:  1, start: "980a21",  end: "993a29" }
