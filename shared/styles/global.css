@@ -1289,7 +1289,12 @@ body {
   text-indent: calc(-1 * var(--lsj-hang));
 }
 
-/* Depth. Senses are a flat sibling run; renderLsjEntry stamps data-depth. */
+/* Depth. The shards are a flat sibling run, so the direct-child rules below
+   carry every real entry. The nested rule is insurance: if stage5 ever emits
+   sub-senses inside their parent, they still step in. The two are disjoint —
+   a flat entry has no .lsj-sense inside a .lsj-sense, and a nested sense is
+   not a direct child of .lsj-entry — so neither doubles the other. */
+.lsj-entry .lsj-sense .lsj-sense { margin-left: var(--lsj-step); }
 .lsj-entry > .lsj-sense[data-depth="2"] { margin-left: var(--lsj-step); }
 .lsj-entry > .lsj-sense[data-depth="3"] { margin-left: calc(2 * var(--lsj-step)); }
 .lsj-entry > .lsj-sense[data-depth="4"] { margin-left: calc(3 * var(--lsj-step)); }
