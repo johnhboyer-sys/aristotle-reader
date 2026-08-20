@@ -1362,6 +1362,11 @@ body {
    is added to the dictionary's text. A citation quoted mid-sentence still
    reads, because its lead-in stays on the line above. */
 .lsj-entry .lsj-cit::before { content: "\A"; white-space: pre; }
+/* ...but not when the citation OPENS the sense: breaking there left the sense
+   number stranded alone on its own line ("4." then the quotation beneath it)
+   on 192 senses, and an empty first line on two more. */
+.lsj-entry .lsj-sense > .lsj-cit:first-child::before,
+.lsj-entry .lsj-sense-n + .lsj-cit::before { content: none; }
 
 .lsj-entry .lsj-tr   { font-style: italic; }
 .lsj-entry .lsj-title { font-style: italic; }

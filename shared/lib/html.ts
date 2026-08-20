@@ -299,7 +299,10 @@ export function outlineLsjSenses(
   // under one unnumbered or solitary heading still gets a usable list.
   // A section number has to be a number or a letter. LSJ sets a bare bullet on
   // an entry-opening note, and a list row reading "•" indexes nothing.
-  const numbered = (hit: SenseHit): boolean => /[A-Za-z0-9]/.test(hit.n);
+  // A letter or a digit in ANY script: LSJ numbers some sections with Greek
+  // capitals (Α in ἑαυτοῦ, ἐάω, ἔαρ), which an ASCII test threw away. A bare
+  // bullet is punctuation in every script and stays excluded.
+  const numbered = (hit: SenseHit): boolean => /[\p{L}\p{N}]/u.test(hit.n);
   // The sense each sense hangs under: the nearest one before it that sits
   // shallower. The markup is a flat run, so this is what nesting would have
   // said. Senses at the shallowest depth share the root.
@@ -319,15 +322,45 @@ export function outlineLsjSenses(
   let chosen = 0;
   for (let depth = 1; depth <= 5; depth += 1) {
     const at = hits.filter((hit) => depthOf(hit.attrs) === depth && numbered(hit));
+    // Fewer than two numbered sections is not a division. Look deeper — this
+    // is what gives an entry sitting under one heading a usable list.
     if (at.length < 2) continue;
+
+    // From here the depth IS populated, so it is this entry's division or the
+    // entry has none. A failure below must NOT send the search deeper: doing
+    // that took εὔσημος, whose depth 2 reads "II, II", and published one
+    // branch's "2, 3, 4, 5" as the entry's four main senses. 16 entries did
+    // that. Refuse the entry instead.
     const parents = new Set(at.map((hit) => parentOf.get(hit)));
-    if (parents.size !== 1) continue;
-    // A division numbers its sections once each. A repeat means these are not
-    // one run after all — whatever the shape of the markup says — and a list
-    // reading "I, II, II" is worse than no list, so the depth is refused
-    // rather than published. 11 entries in the dictionary land here.
+    if (parents.size !== 1) break;
+
+    // Sections below the top must hang under a REAL sense. In ἄγω the level-2
+    // run precedes the only level-1 section, so those senses have no parent
+    // and share the root with it; the list published "I–VII" and silently
+    // dropped B, a main section. 12 entries did that.
+    const parent = [...parents][0];
+    if (depth > 1 && parent === -1) break;
+
+    // And the division has to cover the ENTRY, not one branch of it. Descending
+    // past a depth that held a single numbered section skipped that section:
+    // ἆρα listed a level-3 run while II and B sat above it, unlisted. So every
+    // numbered sense shallower than the chosen depth must lie on the chosen
+    // parent's own ancestry — it may be a heading the list sits under, never a
+    // sibling section the list leaves out.
+    const ancestry = new Set<number>();
+    for (let a = parent; a !== -1 && a !== undefined; a = parentOf.get(hits[a]) ?? -1) {
+      ancestry.add(a);
+    }
+    const skipped = hits.some(
+      (hit, i) => depthOf(hit.attrs) < depth && numbered(hit) && !ancestry.has(i),
+    );
+    if (skipped) break;
+
+    // A division numbers its sections once each. A repeat means this is not
+    // one run, whatever the markup says, and "I, II, II" is worse than no list.
     const labels = at.map((hit) => hit.n);
-    if (new Set(labels).size !== labels.length) continue;
+    if (new Set(labels).size !== labels.length) break;
+
     chosen = depth;
     break;
   }

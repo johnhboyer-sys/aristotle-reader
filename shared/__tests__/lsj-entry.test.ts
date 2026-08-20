@@ -351,3 +351,48 @@ describe('choosing which depth the jump list indexes', () => {
     expect(senses.map((sense) => sense.n)).toEqual(['I', 'II', 'III']);
   });
 });
+
+// Four rules the deployed dictionary forced, each with the entry that forced it.
+describe('a list must be the entry\'s own division', () => {
+  const sense = (level: number, n: string | null, text = 'x') =>
+    `<div class="lsj-sense" data-level="${level}">` +
+    (n === null ? '' : `<b class="lsj-sense-n">${n}.</b> `) + text + '</div>';
+
+  it('refuses a deeper run that has no parent above it (ἄγω)', () => {
+    // The level-2 run PRECEDES the only level-1 section, so it shares the root
+    // with it. Listing it published I–VII and silently dropped B.
+    const html = sense(2, 'I') + sense(2, 'II') + sense(2, 'III') + sense(1, 'B');
+    const { senses } = outlineLsjSenses(sanitizeHtml(html), 'lsj-sense', 3);
+    expect(senses).toEqual([]);
+  });
+
+  it('stops rather than descending when a populated depth fails (εὔσημος)', () => {
+    // Depth 2 reads "II, II" — a repeat. Descending published one branch's
+    // "2, 3, 4, 5" as the entry's four main senses.
+    const html = sense(1, null, 'holder') + sense(2, 'II') +
+      sense(3, '2') + sense(3, '3') + sense(3, '4') + sense(3, '5') + sense(2, 'II');
+    const { senses } = outlineLsjSenses(sanitizeHtml(html), 'lsj-sense', 3);
+    expect(senses).toEqual([]);
+  });
+
+  it('refuses a branch that leaves a section above it unlisted (ἆρα)', () => {
+    // B is a real top section; a list drawn from under A alone is not the
+    // entry's division.
+    const html = sense(1, 'A') + sense(2, 'I') + sense(2, 'II') + sense(2, 'III') +
+      sense(1, 'B');
+    const { senses } = outlineLsjSenses(sanitizeHtml(html), 'lsj-sense', 3);
+    expect(senses).toEqual([]);
+  });
+
+  it('still lists under a single heading, which IS the whole entry', () => {
+    const html = sense(1, 'A') + sense(2, 'I') + sense(2, 'II') + sense(2, 'III');
+    const { senses } = outlineLsjSenses(sanitizeHtml(html), 'lsj-sense', 3);
+    expect(senses.map((x) => x.n)).toEqual(['I', 'II', 'III']);
+  });
+
+  it('counts a Greek capital as a section number (ἑαυτοῦ, ἐάω, ἔαρ)', () => {
+    const html = sense(1, '\u0391') + sense(1, '\u0392') + sense(1, '\u0393');
+    const { senses } = outlineLsjSenses(sanitizeHtml(html), 'lsj-sense', 3);
+    expect(senses.map((x) => x.n)).toEqual(['\u0391', '\u0392', '\u0393']);
+  });
+});
