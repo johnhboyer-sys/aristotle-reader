@@ -97,12 +97,14 @@ def default_target(work_id: str) -> tuple[str, dict[tuple[int, int], str]]:
     sec = eng.get("secondary")
     if sec:
         return sec.get("id", "sec"), parse_translation(
-            SOURCES_DIR / sec["dir"], sec["books"], sec.get("marker", "number"))
+            SOURCES_DIR / sec["dir"], sec["books"], sec.get("marker", "number"),
+            strip_quote_repeats=sec.get("strip_quote_repeats", False))
     prim = eng.get("primary")
     if prim and prim.get("dir"):
         marker = prim.get("chapter_marker", prim.get("marker", "number"))
         return prim.get("id", "prim"), parse_translation(
-            SOURCES_DIR / prim["dir"], prim["books"], marker)
+            SOURCES_DIR / prim["dir"], prim["books"], marker,
+            strip_quote_repeats=prim.get("strip_quote_repeats", False))
     return "ross", parse_translation(SOURCES_DIR / "ross", 10, "number")
 
 

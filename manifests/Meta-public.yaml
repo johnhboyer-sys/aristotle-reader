@@ -39,6 +39,7 @@ english:
     dir: meta-ross
     books: 14
     chapter_marker: part
+    strip_quote_repeats: true
 
 expected_line_gaps:
   - { column: "993a",  after: 27, next: 29 }
