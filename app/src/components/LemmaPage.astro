@@ -24,6 +24,12 @@ type Instance = [col: string, line: number, surface: string];
 interface ChapterInstances { chapter: string; bekker: string; instances: Instance[]; }
 interface BookInstances { book: number; chapters: ChapterInstances[]; }
 interface WorkInstances { work: string; title: string; count: number; shown: number; books: BookInstances[]; }
+interface Distinctiveness {
+  in_aristotle: number;
+  before_aristotle: number;
+  contemporary: number;
+  label: string | null;
+}
 interface LemmaData {
   slug: string; key: string; head: string; lemmaBeta: string;
   count: number; glosses: string[];
@@ -31,6 +37,7 @@ interface LemmaData {
   instancesByWork: WorkInstances[];
   truncated: boolean;
   bonitz: null;
+  distinctiveness?: Distinctiveness;
 }
 const data: LemmaData = JSON.parse(
   readFileSync(`public/data/lemmata/${slug}.json`, 'utf-8'),
@@ -154,6 +161,8 @@ const breadcrumb = Astro.site ? {
     .lx-gloss { font-size: 1.15rem; color: var(--text); margin: 0.7rem 0 0; }
     .lx-freq { font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-mid); margin: 1rem 0 0; }
     .lx-freq b { color: var(--accent); font-size: 1.1rem; }
+    .lx-distinct { font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-mid); margin: 0.45rem 0 0; }
+    .lx-distinct em { color: var(--accent); font-style: italic; }
     h2.lx-h { font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700; letter-spacing: .03em; color: var(--accent); margin: 2.4rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
     /* Frequency-by-work: a ranked list with proportional bars so relative
        counts are readable at a glance (pills hid the comparison). */
@@ -234,6 +243,15 @@ const breadcrumb = Astro.site ? {
     <p class="lx-translit">{data.slug}</p>
     {gloss && <p class="lx-gloss">{data.glosses.join('; ')}</p>}
     <p class="lx-freq">Appears <b>{data.count.toLocaleString()}</b> times across Aristotle's works.</p>
+    {data.distinctiveness && (
+      <p class="lx-distinct">
+        {data.distinctiveness.label && <em>{data.distinctiveness.label}</em>}
+        {data.distinctiveness.label ? ' — ' : ''}
+        in Aristotle {data.distinctiveness.in_aristotle.toLocaleString()}×
+        {' · '}before him {data.distinctiveness.before_aristotle.toLocaleString()}
+        {' · '}contemporaries {data.distinctiveness.contemporary.toLocaleString()}
+      </p>
+    )}
 
     <h2 class="lx-h">Frequency by work</h2>
     <p class="lx-note">Click a work to list every occurrence by Bekker number — each links into the reader.</p>

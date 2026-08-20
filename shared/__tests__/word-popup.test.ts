@@ -6,7 +6,7 @@ import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import WordPopup from '../components/WordPopup.svelte';
 import { prefixLsjCitationHrefs } from '../lib/html';
-import { lookupWord } from '../lib/data';
+import { fetchLemmata, lookupWord } from '../lib/data';
 
 vi.mock('../lib/data', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/data')>();
@@ -171,5 +171,33 @@ describe('WordPopup', () => {
     render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
     await screen.findByText('word, account');
     expect(document.querySelector('.popup-backdrop')).toBeNull();
+  });
+
+  it('renders distinctiveness_label when the lemma ref carries one', async () => {
+    vi.mocked(fetchLemmata).mockResolvedValue({
+      logos: { slug: 'logos', head: 'λόγος', count: 10, distinctiveness_label: 'coined by Aristotle' },
+    });
+    vi.mocked(lookupWord).mockResolvedValue({
+      analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nom sg', lsj: ['logos'] }],
+      lsj: [],
+    });
+    render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    expect(await screen.findByText('coined by Aristotle')).toBeInTheDocument();
+    expect(screen.getByText(/Appears 10/)).toBeInTheDocument();
+  });
+
+  it('renders no distinctiveness line when the lemma ref has none', async () => {
+    vi.mocked(fetchLemmata).mockResolvedValue({
+      logos: { slug: 'logos', head: 'λόγος', count: 10 },
+    });
+    vi.mocked(lookupWord).mockResolvedValue({
+      analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nom sg', lsj: ['logos'] }],
+      lsj: [],
+    });
+    render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText(/Appears 10/);
+    expect(screen.queryByText('coined by Aristotle')).toBeNull();
+    expect(screen.queryByText('rare before Aristotle')).toBeNull();
+    expect(document.querySelector('.distinct-label')).toBeNull();
   });
 });

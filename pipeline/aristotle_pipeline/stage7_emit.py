@@ -22,7 +22,7 @@ import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
-from .config import BUILD_DIR, SOURCES_DIR, Manifest
+from .config import BUILD_DIR, REPO_ROOT, SOURCES_DIR, Manifest
 from .parse_filter import filter_parses
 
 
@@ -444,6 +444,18 @@ def emit_third_titles(*, build_dir: Path, out_dir: Path, third: dict | None) -> 
         out_titles.unlink()
 
 
+def copy_quotations(*, work_id: str, out_dir: Path, data_dir: Path | None = None) -> None:
+    """Copy pipeline/data/quotations/<work_id>.json into the work output dir.
+
+    Quotations are curated, committed sidecar data — not a report. Missing
+    file is the normal case for every work but the Metaphysics pilot: no
+    copy, no warning.
+    """
+    src = (data_dir or (REPO_ROOT / "pipeline" / "data" / "quotations")) / f"{work_id}.json"
+    if src.exists():
+        shutil.copy(src, out_dir / "quotations.json")
+
+
 def emit_analyses(out_dir: Path) -> dict:
     analyses = _load("stage4/analyses.json")
     key_map = _load("stage4/key_map.json")
@@ -657,4 +669,8 @@ def run(manifest: Manifest) -> Path:
         ("stage3/quality_report.md", f"quality_{manifest.work_id}.md"),
     ]:
         shutil.copy(BUILD_DIR / rel, reports / dest_name)
+
+    # Curated quotation citations (Metaphysics pilot today). Separate from
+    # reports/: a missing file is silence, not an error.
+    copy_quotations(work_id=manifest.work_id, out_dir=out_dir)
     return out_dir

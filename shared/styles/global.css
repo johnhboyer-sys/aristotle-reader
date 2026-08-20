@@ -1225,6 +1225,20 @@ body {
   color: var(--text-mid);
 }
 
+/* Distinctiveness label ("coined by Aristotle") — its own line above the
+   lemma-page link. Lives here, not in WordPopup's <style>: reader pages load
+   only global.css, so component-scoped rules never reach the built site. */
+.analysis-card .distinct-label {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--text-mid);
+}
+.analysis-card .distinct-label + .lemma-link { margin-top: 0.25rem; }
+
 .lsj-section {
   border-top: 1px solid var(--border);
   padding-top: 0.6rem;
@@ -1470,6 +1484,45 @@ body {
 }
 .fn-marker:hover { text-decoration: underline; }
 .fn-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+
+/* Quotation citation glyph: muted, small, 40px tap target via ::after so the
+   visible mark does not grow. Same hit-area convention as .popup-close. */
+.quotation-marker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: none;
+  border: 0;
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.72em;
+  line-height: 1;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+.quotation-marker:hover { color: var(--accent); }
+.quotation-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+.quotation-marker::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+}
+.quotation-popup { width: min(360px, calc(100vw - 2rem)); }
+.quotation-cite {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.quotation-cite:hover { text-decoration: underline; }
 
 .footnote-popup { width: min(440px, calc(100vw - 2rem)); }
 .footnote-num {
@@ -2493,7 +2546,8 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
      Ostwald footnote superscripts (click-to-open popups on screen, no print
      equivalent). */
   .tok { cursor: auto; border: 0; background: none; color: inherit; }
-  .fn-marker { display: none; }
+  .fn-marker,
+  .quotation-marker { display: none; }
 
   /* Near-black ink on plain white stock (white background saves ink). */
   .greek-col, .english-col, .english-col .bk-seg,
