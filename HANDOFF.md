@@ -8,7 +8,7 @@ Make the committed distinctiveness table and Metaphysics quotation file visible 
 
 ## 2. Current State
 
-Working tree on `claude/reader-wiring`. All five success-criteria commands passed. No commit, no deploy.
+Committed on `claude/reader-wiring`, PR #94 open (wiring + siglum redesign + collision fix). All gates green on the final design: 225 pipeline / 231 shared tests, 6,610 pages, 0 broken links. No deploy.
 
 - Distinctiveness rows attach beside `bonitz` on per-lemma JSON; non-null `label` copies to `lemmata.json` as `distinctiveness_label`.
 - Word popup shows that label when present; ordinary words stay silent.
