@@ -1354,16 +1354,15 @@ body {
 .lsj-entry .lsj-greek { font-family: var(--font-greek); }
 .lsj-entry .lsj-quote { font-family: var(--font-greek); font-style: italic; }
 .lsj-entry .lsj-cit  { display: inline; }
-/* Quotations run one after another inside a sense — 85,710 consecutive pairs
-   across the dictionary. LSJ separates 82,030 of them with its own semicolon
-   or comma, but 3,680 pairs carry no separator at all and collide into one
-   another. The gap is added as SPACE, never as punctuation: printing a comma
-   LSJ did not set would put a mark in the dictionary that its editors did not
-   write. Adjacent-sibling, so a lone quotation is untouched. */
-.lsj-entry .lsj-cit + .lsj-cit { margin-left: 0.35em; }
-/* The reference belongs to the quotation before it, so it stays closer to that
-   quotation than the next quotation is to it. */
-.lsj-entry .lsj-quote + .lsj-bibl { margin-left: 0.15em; }
+/* One quotation, one line. A sense can carry dozens of quotations, each with
+   its own reference, and set as running prose they are a single unbroken block
+   that no eye can pick a citation out of. The break is inserted BEFORE the
+   citation rather than after it, so LSJ's own semicolon stays at the end of the
+   line it closes; and it is a rendered line break, not punctuation, so nothing
+   is added to the dictionary's text. A citation quoted mid-sentence still
+   reads, because its lead-in stays on the line above. */
+.lsj-entry .lsj-cit::before { content: "\A"; white-space: pre; }
+
 .lsj-entry .lsj-tr   { font-style: italic; }
 .lsj-entry .lsj-title { font-style: italic; }
 
@@ -1389,7 +1388,7 @@ body {
 .lsj-outline { margin: 0 0 1.2em; }
 .lsj-outline-label {
   font-family: var(--font-ui);
-  font-size: 0.82rem;
+  font-size: 0.98rem;
   font-weight: 600;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -1399,20 +1398,20 @@ body {
 .lsj-outline-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.15rem; }
 .lsj-outline-list a {
   display: grid;
-  grid-template-columns: 1.8rem 1fr;
+  grid-template-columns: 2.7rem 1fr;
   gap: 0.5rem;
   align-items: baseline;
   padding: 0.22rem 0.4rem;
   border-radius: 4px;
   text-decoration: none;
   color: var(--text-mid);
-  font-size: 0.95rem;
+  font-size: 0.98rem;
 }
 .lsj-outline-list a:hover { background: var(--col-bg); color: var(--text); }
 .lsj-outline-list a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .lsj-outline-n {
   font-family: var(--font-ui);
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: .03em;

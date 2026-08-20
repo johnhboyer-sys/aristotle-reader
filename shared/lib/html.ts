@@ -253,14 +253,21 @@ export function stampSenseDepth(html: string): string {
   // (1,621 of them run level 1 → 3, LSJ going A. then straight to 1.), and
   // subtraction left those a step further in than their parent, wearing the
   // grade of a rank that is not in the entry at all.
-  const ranks = [...new Set(hits.map((hit) => hit.level))].sort((a, b) => a - b);
+  // Level 0 is not a rank. Two entries use it (ὅς, ποιέω) and it holds a note
+  // above the entry proper — "USAGE of the Relat. Pron." — so counting it as a
+  // rank pushed their real A/B sections down a level and stripped the section
+  // accent off them. It is ranked with the top, not above it.
+  const ranks = [...new Set(hits.map((hit) => hit.level).filter((level) => level >= 1))]
+    .sort((a, b) => a - b);
   const depthOfLevel = new Map(ranks.map((level, i) => [level, Math.min(5, i + 1)]));
   let out = '';
   let cursor = 0;
   for (const hit of hits) {
-    const depth = depthOfLevel.get(hit.level) ?? 1;
+    const depth = hit.level < 1 ? 1 : depthOfLevel.get(hit.level) ?? 1;
     out += html.slice(cursor, hit.start);
-    out += `<div data-depth="${depth}"${hit.attrs}>`;
+    // Drop a stale depth rather than prepending a second one: a partially
+    // stamped tree would otherwise carry data-depth twice on the same tag.
+    out += `<div data-depth="${depth}"${hit.attrs.replace(/\s*data-depth="\d"/g, '')}>`;
     cursor = hit.end;
   }
   return out + html.slice(cursor);
@@ -290,16 +297,42 @@ export function outlineLsjSenses(
   // the entry's main senses. A depth with a single numbered section is not a
   // division, so it is passed over: that is how an entry whose whole body sits
   // under one unnumbered or solitary heading still gets a usable list.
+  // A section number has to be a number or a letter. LSJ sets a bare bullet on
+  // an entry-opening note, and a list row reading "•" indexes nothing.
+  const numbered = (hit: SenseHit): boolean => /[A-Za-z0-9]/.test(hit.n);
+  // The sense each sense hangs under: the nearest one before it that sits
+  // shallower. The markup is a flat run, so this is what nesting would have
+  // said. Senses at the shallowest depth share the root.
+  const parentOf = new Map<SenseHit, number>();
+  hits.forEach((hit, i) => {
+    let parent = -1;
+    for (let j = i - 1; j >= 0; j -= 1) {
+      if (depthOf(hits[j].attrs) < depthOf(hit.attrs)) { parent = j; break; }
+    }
+    parentOf.set(hit, parent);
+  });
+
+  // A division is ONE parent's own sections. Listing a depth whose numbered
+  // senses hang under different parents produced lists like ἀναιρέω's
+  // "II, III, II, III" — two parents' subdivisions concatenated, their numbers
+  // repeating, presented as the entry's main senses. 480 entries did that.
   let chosen = 0;
   for (let depth = 1; depth <= 5; depth += 1) {
-    if (hits.filter((hit) => depthOf(hit.attrs) === depth && hit.n).length >= 2) {
-      chosen = depth;
-      break;
-    }
+    const at = hits.filter((hit) => depthOf(hit.attrs) === depth && numbered(hit));
+    if (at.length < 2) continue;
+    const parents = new Set(at.map((hit) => parentOf.get(hit)));
+    if (parents.size !== 1) continue;
+    // A division numbers its sections once each. A repeat means these are not
+    // one run after all — whatever the shape of the markup says — and a list
+    // reading "I, II, II" is worse than no list, so the depth is refused
+    // rather than published. 11 entries in the dictionary land here.
+    const labels = at.map((hit) => hit.n);
+    if (new Set(labels).size !== labels.length) continue;
+    chosen = depth;
+    break;
   }
   if (!chosen) return { html: stamped, senses: [] };
-  // Found the division; it still has to be long enough to be worth listing.
-  const atChosen = hits.filter((hit) => depthOf(hit.attrs) === chosen && hit.n).length;
+  const atChosen = hits.filter((hit) => depthOf(hit.attrs) === chosen && numbered(hit)).length;
   if (atChosen < Math.max(1, outlineMin)) return { html: stamped, senses: [] };
 
   const senses: LsjSenseRef[] = [];
@@ -307,7 +340,7 @@ export function outlineLsjSenses(
   let out = '';
   let cursor = 0;
   for (const hit of hits) {
-    if (depthOf(hit.attrs) !== chosen || !hit.n) continue;
+    if (depthOf(hit.attrs) !== chosen || !numbered(hit)) continue;
     const slug = hit.n.replace(/[^A-Za-z0-9]+/g, '').toLowerCase() || String(senses.length + 1);
     let id = `${idPrefix}-${slug}`;
     for (let dup = 2; used.has(id); dup += 1) id = `${idPrefix}-${slug}-${dup}`;

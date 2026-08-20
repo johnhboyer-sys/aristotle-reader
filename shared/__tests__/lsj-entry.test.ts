@@ -102,17 +102,54 @@ describe('outlineLsjSenses', () => {
     ).toBe(sanitized);
   });
 
-  it('never collides ids, even when LSJ repeats or omits a sense number', () => {
+  it('never collides ids when two different numbers share an anchor', () => {
+    // "A." and "a." are different sections but reduce to the same slug; the
+    // second takes a suffix. (A REPEATED number is a different matter: that
+    // means the run is not one division, and the list is refused entirely.)
     const { html, senses } = outlineLsjSenses(sanitizeHtml(
       '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> one</div>' +
-      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> two</div>' +
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">a.</b> two</div>' +
       '<div class="lsj-sense" data-level="1">unnumbered</div>',
     ));
-    // The repeated "A." gets a suffix; the unnumbered div is not a section at
-    // all and is left out — δέκα otherwise published eleven blank rows.
     expect(senses.map((s) => s.id)).toEqual(['lsj-sense-a', 'lsj-sense-a-2']);
-    expect(senses.every((sense) => sense.n !== '')).toBe(true);
+    // The unnumbered div is not a section and is left out — δέκα otherwise
+    // published eleven blank rows.
+    expect(senses.every((sense) => /[A-Za-z0-9]/.test(sense.n))).toBe(true);
     expect(html.match(/ id="/g)).toHaveLength(2);
+  });
+
+  it('refuses a list whose numbers repeat', () => {
+    const { senses } = outlineLsjSenses(sanitizeHtml(
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">II.</b> one</div>' +
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">II.</b> two</div>' +
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">III.</b> three</div>',
+    ));
+    expect(senses).toEqual([]);
+  });
+
+  it('refuses a list drawn from more than one parent', () => {
+    // ἀναιρέω published "II, III, II, III" — two headings' subdivisions run
+    // together and labelled the entry's main senses.
+    const two = (n: string) =>
+      `<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">${n}.</b> t</div>`;
+    const { senses } = outlineLsjSenses(sanitizeHtml(
+      '<div class="lsj-sense" data-level="1">holder one</div>' + two('II') + two('III') +
+      '<div class="lsj-sense" data-level="1">holder two</div>' + two('IV') + two('V'),
+    ), 'lsj-sense', 3);
+    expect(senses).toEqual([]);
+  });
+
+  it('keeps level 0 from displacing the real sections', () => {
+    // ὅς and ποιέω open with a level-0 usage note; ranking it pushed their
+    // A/B/C down a level and out of the list.
+    const out = stampSenseDepth(sanitizeHtml(
+      '<div class="lsj-sense" data-level="0"><b class="lsj-sense-n">•</b> usage note</div>' +
+      '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> first</div>' +
+      '<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">I.</b> under A</div>',
+    ));
+    expect(out).toContain('<div data-depth="1" class="lsj-sense" data-level="0">');
+    expect(out).toContain('<div data-depth="1" class="lsj-sense" data-level="1">');
+    expect(out).toContain('<div data-depth="2" class="lsj-sense" data-level="2">');
   });
 
   it('reads a flat sibling entry the same way as a nested one', () => {
@@ -285,7 +322,9 @@ describe('an entry that skips a rank', () => {
       '<div class="lsj-sense" data-level="1"><b class="lsj-sense-n">A.</b> data-depth="1" as prose</div>' +
       '<div class="lsj-sense" data-level="2"><b class="lsj-sense-n">I.</b> under</div>',
     ));
-    expect(out).toContain('data-depth="1"');
+    // Assert the TAG carries it — the prose contains that text either way, so
+    // a bare substring check would pass even with the old whole-string guard.
+    expect(out).toContain('<div data-depth="1" class="lsj-sense" data-level="1">');
     expect(out).toContain('<div data-depth="2" class="lsj-sense" data-level="2">');
   });
 });
