@@ -412,6 +412,47 @@ class TestArchiveFurniture:
         assert "second half" in out, "the page break truncated the work"
         assert "Table of Contents" not in out
 
+    def test_strips_the_weak_trio_across_nbsp_and_blank_spacer_lines(self):
+        """In the archive's nav table each of Home/Search/Help is followed by an
+        &nbsp; cell (a "\\xa0" line once unescaped) plus the blank lines left
+        where the strong items were excised. Requiring the words on immediately
+        adjacent lines missed that block, and "Home Search Help" shipped at the
+        end of the last chapter of every Metaphysics book (visible in the built
+        Meta/book-14.json).
+        """
+        from aristotle_pipeline.stage1_ross import _strip_furniture
+
+        # The tail of meta-ross book-14 as _book_text renders it.
+        text = (
+            "Translated by W. D. Ross\n" + "x " * 150 + "\n"
+            "they are not the first principles.\n\n\n"
+            "THE END\n\n\n\n\xa0\xa0\xa0\n\n\nTable of Contents\n\n\n\xa0\xa0\xa0\n"
+            "\n\n\n\nHome\n\xa0\n\n\n\n\n\n\nBrowse and\nComment\n\n\n\n\n\n\n"
+            "Search\n\xa0\n\n\n\n\n\n\nBuy Books and\nCD-ROMs\n\n\n\n\n\n\n"
+            "Help\n\xa0\n\n\n\n© 1994-2009\n"
+        )
+        out = _strip_furniture(text)
+
+        for gone in ("Home", "Search", "Help"):
+            assert gone not in out, f"{gone!r} survived"
+        assert "they are not the first principles." in out
+
+    def test_keeps_a_lone_nav_word_inside_the_prose(self):
+        """The weak words are ordinary English — Ogle's PA 3:10 has a sentence
+        starting "Search was thereupon made". Only two or more standing together
+        on their own lines are furniture.
+        """
+        from aristotle_pipeline.stage1_ross import _strip_furniture
+
+        text = (
+            "Translated by William Ogle\n" + "x " * 150 + "\n"
+            "the words, 'Cercidas slew man on man.'\n"
+            "Search was thereupon made and a man of that name was found.\n"
+        )
+        out = _strip_furniture(text)
+
+        assert "Search was thereupon made" in out
+
     def test_leaves_a_circled_letter_used_as_a_geometry_label(self):
         """The Mechanica uses © to label a point. Matching the rest of the line
         after any © removed 2,845 words of Aristotle.

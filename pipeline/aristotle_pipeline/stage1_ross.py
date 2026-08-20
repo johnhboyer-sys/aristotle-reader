@@ -127,8 +127,18 @@ _NAV_STRONG = re.compile(
     r"|©\s*\d{4}(?:\s*-\s*\d{4})?)"
 )
 # Ordinary words, so only dropped where two or more stand together — which is
-# what is left once the strong items around them are gone.
-_NAV_WEAK = re.compile(r"(?:(?:^|\n)[ \t]*(?:Home|Search|Help)[ \t]*(?=\n|$)){2,}")
+# what is left once the strong items around them are gone. "Together" allows
+# whitespace-only lines between the items: in the archive's nav table each word
+# is followed by an &nbsp; cell (a "\xa0" line once unescaped) and the blank
+# lines left where _NAV_STRONG excised its items, so requiring the words on
+# immediately adjacent lines missed the block and leaked "Home Search Help"
+# into the last chapter of every book. [^\S\n] = any whitespace but newline,
+# which covers \xa0; [ \t] does not.
+_NAV_WEAK = re.compile(
+    r"(?:(?:^|\n)[^\S\n]*(?:Home|Search|Help)[^\S\n]*(?=\n|$)"
+    r"(?:\n[^\S\n]*(?=\n|$))*"  # skip \xa0/empty spacer lines after an item
+    r"){2,}"
+)
 # The page header repeats at every page break inside a long work. The FIRST one
 # is the landmark parse_book uses to skip the title page, so only later ones go.
 _PAGE_HEADER = re.compile(r"\n[ \t]*Translated\s+by[^\n]*")
