@@ -12,7 +12,7 @@ import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, workPath, workLanding, bookLabel, isBookless } from '@shared/lib/works';
-import { sanitizeHtml, prefixLsjCitationHrefs } from '../lib/html';
+import { renderLsjEntry } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
 
@@ -43,12 +43,18 @@ function lsjShardLetter(key: string): string {
   for (const ch of key) { if (ch === '*') continue; if (/[a-z]/.test(ch)) return ch; }
   return '_';
 }
+// Sanitized, base-prefixed, sense hierarchy intact, with the top-level senses
+// of a long entry lifted into a jump list above it — all of that lives in
+// shared/, so this page and the desktop lexicon and the sibling readers render
+// an LSJ entry identically. Empty string when the lemma has no shard entry.
 let lsjHtml = '';
 try {
   const shard = JSON.parse(
     readFileSync(`public/data/lsj/${lsjShardLetter(data.key)}.json`, 'utf-8'),
   );
-  lsjHtml = prefixLsjCitationHrefs(sanitizeHtml(shard[data.key]?.html ?? ''), base);
+  lsjHtml = renderLsjEntry(shard[data.key]?.html ?? '', {
+    base, scale: 'page', outline: true,
+  });
 } catch { /* no shard */ }
 
 // Deep-link an instance back into the reader: scroll to the Bekker line and
@@ -196,8 +202,8 @@ const breadcrumb = Astro.site ? {
     .fb-ch-head { display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 0.35rem; }
     .fb-ch-label { font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; color: var(--text-mid); }
     .fb-ch-bekker { font-family: var(--font-ui); font-size: 0.72rem; color: var(--text-mid); font-variant-numeric: tabular-nums; opacity: .8; }
-    .lsj { font-size: 0.95rem; line-height: 1.6; color: var(--text); }
-    .lsj :global(.lsj-head) { font-family: var(--font-greek); }
+    /* No LSJ rules here: the entry, its hierarchy and its sense outline are
+       styled once in shared/styles/global.css, which every reader copies. */
     .lx-bonitz { border: 1px dashed var(--border); border-radius: 8px; padding: 1rem 1.1rem; color: var(--text-mid); font-size: 0.9rem; line-height: 1.6; }
     .lx-bonitz b { color: var(--text); }
     .lx-note { font-size: 0.82rem; color: var(--text-mid); margin: 0.4rem 0 0; }
@@ -298,7 +304,7 @@ const breadcrumb = Astro.site ? {
       <>
         <h2 class="lx-h">Dictionary (LSJ)</h2>
         <!-- eslint-disable-next-line -->
-        <div class="lsj" set:html={lsjHtml} />
+        <Fragment set:html={lsjHtml} />
       </>
     )}
 

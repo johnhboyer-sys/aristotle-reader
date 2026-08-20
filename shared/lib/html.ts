@@ -21,10 +21,17 @@
 // figure can fetch or execute anything.
 const SVG_TAGS = new Set(['svg', 'g', 'path', 'text', 'figure', 'figcaption']);
 
+// `div` carries the ONLY structure LSJ entries have: stage5 emits every sense
+// as <div class="lsj-sense" data-level="N">, nesting sub-senses inside their
+// parent. Dropping the tag (as this allowlist did until 2026-08-19) collapsed
+// LSJ's A → I → 1 → a hierarchy into one undifferentiated paragraph — the
+// "wall of text" the stylesheet's .lsj-sense rules were written for and never
+// got to match. A div is inert: no URL, no script, no event surface.
 const ALLOWED_TAGS = new Set([
   'a',
   'b',
   'br',
+  'div',
   'em',
   'i',
   'li',
@@ -90,6 +97,10 @@ function sanitizeAttrs(raw: string, tag: string): string {
     } else if (name === 'href' && tag === 'a') {
       const href = safeHref(value);
       if (href) attrs.push(`href="${escapeAttr(href)}"`);
+    } else if (name === 'data-level' && /^\d{1,2}$/.test(value)) {
+      // Sense depth, the hook the hierarchy styling indents from. Digits only:
+      // the value reaches CSS as an attribute selector, never as markup.
+      attrs.push(`data-level="${value}"`);
     } else if (name === 'title' || name === 'aria-label') {
       attrs.push(`${name}="${escapeAttr(value)}"`);
     } else if (name === 'style' && tag === 'span' && /^\s*font-variant\s*:\s*small-caps\s*;?\s*$/i.test(value)) {
@@ -127,4 +138,158 @@ export function prefixLsjCitationHrefs(html: string, base: string): string {
     new RegExp(`(<a class="lsj-bibl" href=")(?!${escaped}/)/`, 'g'),
     `$1${base}/`,
   );
+}
+
+// ── LSJ sense outline ───────────────────────────────────────────────────────
+// A long LSJ entry (λόγος, ἔχω, γίγνομαι) runs to hundreds of lines of prose.
+// Indentation alone does not make it navigable: the reader still has to scroll
+// the whole thing to learn how many top-level senses there are. This lifts the
+// level-1 senses out as a jump list — number, a snippet of the sense's own
+// leading prose, and an anchor id stamped into the markup to jump to.
+//
+// It runs on ALREADY-SANITIZED html (the ids are minted here, so `id` never has
+// to be allowlisted in the sanitizer) and matches sanitizeHtml's serialization.
+// Both lookaheads, so it holds whichever order the attributes come in.
+export interface LsjSenseRef {
+  /** The sense number as LSJ prints it ("A", "B", …), without its full stop. */
+  n: string;
+  /** Anchor id stamped onto the sense div. */
+  id: string;
+  /** Truncated first words of the sense, for the jump list. */
+  label: string;
+}
+
+const TOP_SENSE_OPEN =
+  /<div(?=[^>]*\bclass="lsj-sense")(?=[^>]*\bdata-level="1")([^>]*)>/g;
+const SENSE_N = /^\s*<b class="lsj-sense-n">([\s\S]*?)<\/b>/;
+const LABEL_MAX = 56;
+
+function plainText(fragment: string): string {
+  return fragment
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // &amp; last, so "&amp;lt;" cannot be unescaped twice into a tag.
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    // Dropping a tag leaves a space where the markup was, and LSJ sets its
+    // punctuation OUTSIDE the italic run (<i>relation</i>, ) — without this the
+    // label reads "relation , correspondence , proportion".
+    .replace(/\s+([,;:.!?)\]])/g, '$1')
+    .replace(/([([])\s+/g, '$1')
+    .trim();
+}
+
+function truncateLabel(text: string): string {
+  const trimmed = text.replace(/^[\s,;:.·—–-]+/, '').replace(/[\s,;:.·—–-]+$/, '');
+  if (trimmed.length <= LABEL_MAX) return trimmed;
+  const cut = trimmed.slice(0, LABEL_MAX);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > LABEL_MAX / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:]+$/, '')}…`;
+}
+
+export function outlineLsjSenses(
+  html: string,
+  idPrefix = 'lsj-sense',
+): { html: string; senses: LsjSenseRef[] } {
+  const senses: LsjSenseRef[] = [];
+  const used = new Set<string>();
+  let out = '';
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  TOP_SENSE_OPEN.lastIndex = 0;
+  while ((match = TOP_SENSE_OPEN.exec(html))) {
+    const bodyStart = match.index + match[0].length;
+    // The sense's OWN prose stops where its first sub-sense begins; a div is
+    // the only block LSJ markup emits, so the next `<div` is that boundary
+    // (or, in a flat entry, the next sibling sense — the same cut).
+    const nextDiv = html.indexOf('<div', bodyStart);
+    const body = html.slice(bodyStart, nextDiv === -1 ? undefined : nextDiv);
+    const nMatch = SENSE_N.exec(body);
+    const n = nMatch ? plainText(nMatch[1]).replace(/\.$/, '') : '';
+    const label = truncateLabel(plainText(body.slice(nMatch ? nMatch[0].length : 0)));
+
+    const slug = n.replace(/[^A-Za-z0-9]+/g, '').toLowerCase() || String(senses.length + 1);
+    let id = `${idPrefix}-${slug}`;
+    for (let dup = 2; used.has(id); dup += 1) id = `${idPrefix}-${slug}-${dup}`;
+    used.add(id);
+    senses.push({ n, id, label });
+
+    out += html.slice(cursor, match.index);
+    out += `<div id="${id}"${match[1]}>`;
+    cursor = bodyStart;
+  }
+  return { html: out + html.slice(cursor), senses };
+}
+
+// ── one LSJ entry, rendered ─────────────────────────────────────────────────
+// The single entry point every host uses to put an LSJ entry on screen: the
+// site's lemma page and word popup, the desktop lexicon, and the sibling
+// readers (plato-reader, homer-reader, classical-philosophy-reader) that copy
+// this directory. Sanitize → base-prefix the citation links → optionally lift
+// the top-level senses into a jump list → wrap in the class the stylesheet
+// styles. Keeping all four steps here is what makes the presentation portable:
+// a host supplies shard HTML and a base, and gets identical typography for
+// free. Nothing in it is Aristotle-specific — see shared/README.md.
+export interface RenderLsjEntryOptions {
+  /** Deploy base for the shards' root-relative citation hrefs (site only). */
+  base?: string;
+  /** 'page' for a full-width reference view, 'popup' (default) for a sidebar. */
+  scale?: 'popup' | 'page';
+  /** Lift the top-level senses into a jump list above the entry. */
+  outline?: boolean;
+  /** Fewest top-level senses worth an outline — below it, none is rendered. */
+  outlineMin?: number;
+  /** Anchor-id prefix; give each entry its own when a page renders several. */
+  idPrefix?: string;
+}
+
+function escapeText(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function outlineHtml(senses: LsjSenseRef[]): string {
+  const items = senses
+    .map(
+      (sense) =>
+        `<li><a href="#${sense.id}">` +
+        `<span class="lsj-outline-n">${escapeText(sense.n)}</span>` +
+        `<span class="lsj-outline-text">${escapeText(sense.label)}</span>` +
+        '</a></li>',
+    )
+    .join('');
+  return (
+    '<nav class="lsj-outline" aria-label="Senses in this entry">' +
+    `<p class="lsj-outline-label">${senses.length} main senses</p>` +
+    `<ol class="lsj-outline-list">${items}</ol></nav>`
+  );
+}
+
+export function renderLsjEntry(
+  raw: string,
+  options: RenderLsjEntryOptions = {},
+): string {
+  const {
+    base = '',
+    scale = 'popup',
+    outline = false,
+    outlineMin = 3,
+    idPrefix = 'lsj-sense',
+  } = options;
+  const sanitized = prefixLsjCitationHrefs(sanitizeHtml(raw ?? ''), base);
+  // An absent shard entry must render nothing at all, not an empty box: the
+  // host's own `{#if}` keys off this string.
+  if (!sanitized.trim()) return '';
+  const { html, senses } = outline
+    ? outlineLsjSenses(sanitized, idPrefix)
+    : { html: sanitized, senses: [] as LsjSenseRef[] };
+  const nav = senses.length >= outlineMin ? outlineHtml(senses) : '';
+  const cls = scale === 'page' ? 'lsj-entry lsj-entry-page' : 'lsj-entry';
+  return `<div class="${cls}">${nav}${html}</div>`;
 }

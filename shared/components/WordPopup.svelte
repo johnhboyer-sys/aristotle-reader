@@ -3,7 +3,7 @@
   import { fly } from 'svelte/transition';
   import { lookupWord, fetchLemmata, type Analysis, type LsjEntry, type LemmaRef } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
-  import { sanitizeHtml, prefixLsjCitationHrefs } from '../lib/html';
+  import { renderLsjEntry } from '../lib/html';
 
   export let work: string = 'EN';
   export let token: { t: string; k: string };
@@ -132,10 +132,8 @@
         <div class="lsj-section">
           <div class="lsj-label">LSJ</div>
           {#each lsj as entry}
-            <div class="lsj-entry">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html prefixLsjCitationHrefs(sanitizeHtml(entry.html), base)}
-            </div>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html renderLsjEntry(entry.html, { base })}
           {/each}
         </div>
       {/if}
