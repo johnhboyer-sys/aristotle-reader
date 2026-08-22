@@ -99,6 +99,16 @@ export async function exportLibrary(): Promise<string | null> {
 
 const REPO_ISSUES = 'https://github.com/johnhboyer-sys/aristotle-reader/issues/new';
 
+/** Open a URL in the system browser (packaged) or a new tab (dev harness). */
+export async function openExternal(url: string): Promise<void> {
+  if (isTauri()) {
+    const { openUrl } = await import('@tauri-apps/plugin-opener');
+    await openUrl(url);
+  } else {
+    window.open(url, '_blank', 'noopener');
+  }
+}
+
 export async function reportProblem(appVersion: string): Promise<void> {
   const body = [
     '<!-- Describe the problem. What did you do, what happened, what did you expect? -->',
@@ -110,10 +120,5 @@ export async function reportProblem(appVersion: string): Promise<void> {
     `Webview: ${navigator.userAgent}`,
   ].join('\n');
   const url = `${REPO_ISSUES}?labels=desktop&body=${encodeURIComponent(body)}`;
-  if (isTauri()) {
-    const { openUrl } = await import('@tauri-apps/plugin-opener');
-    await openUrl(url);
-  } else {
-    window.open(url, '_blank', 'noopener');
-  }
+  await openExternal(url);
 }
