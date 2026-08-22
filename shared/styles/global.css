@@ -860,6 +860,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 0.35rem;
+  position: relative;  /* anchors the .quotation-sigla gutter overlay */
 }
 
 .line-num {
@@ -1225,6 +1226,20 @@ body {
   color: var(--text-mid);
 }
 
+/* Distinctiveness label ("coined by Aristotle") — its own line above the
+   lemma-page link. Lives here, not in WordPopup's <style>: reader pages load
+   only global.css, so component-scoped rules never reach the built site. */
+.analysis-card .distinct-label {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--text-mid);
+}
+.analysis-card .distinct-label + .lemma-link { margin-top: 0.25rem; }
+
 .lsj-section {
   border-top: 1px solid var(--border);
   padding-top: 0.6rem;
@@ -1470,6 +1485,61 @@ body {
 }
 .fn-marker:hover { text-decoration: underline; }
 .fn-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+
+/* Quotation siglum, edition-style: the author's abbreviation in the gutter at
+   the quote's start line, right-aligned to the same edge as the Bekker line
+   numbers (which yield the slot on collision). 40px tap target via ::after so
+   the visible mark does not grow. Same hit-area convention as .popup-close. */
+.quotation-sigla {
+  position: absolute;
+  right: calc(100% - 1.8rem);
+  top: 0.3em;
+  display: flex;
+  gap: 0.25em;
+  white-space: nowrap;
+}
+/* A Bekker number on the same line keeps its slot; the siglum slides left of
+   it, deeper into the margin. */
+.quotation-sigla.has-num { right: calc(100% - 0.75rem); }
+.quotation-marker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: none;
+  border: 0;
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-greek);
+  font-size: 0.72rem;
+  font-style: italic;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.9;
+  cursor: pointer;
+}
+.quotation-marker:hover { opacity: 1; text-decoration: underline; }
+.quotation-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+.quotation-marker::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+}
+.quotation-popup { width: min(360px, calc(100vw - 2rem)); }
+.quotation-cite {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.quotation-cite:hover { text-decoration: underline; }
 
 .footnote-popup { width: min(440px, calc(100vw - 2rem)); }
 .footnote-num {
@@ -2493,7 +2563,8 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
      Ostwald footnote superscripts (click-to-open popups on screen, no print
      equivalent). */
   .tok { cursor: auto; border: 0; background: none; color: inherit; }
-  .fn-marker { display: none; }
+  .fn-marker,
+  .quotation-sigla { display: none; }
 
   /* Near-black ink on plain white stock (white background saves ink). */
   .greek-col, .english-col, .english-col .bk-seg,

@@ -61,6 +61,7 @@ vi.mock('../lib/data', async (importOriginal) => {
     fetchChapters: vi.fn(async () => ({
       '1': [{ chapter: '1', column: '1094a', line: '1', bekker: '1094a' }],
     })),
+    fetchQuotations: vi.fn(async () => []),
   };
 });
 

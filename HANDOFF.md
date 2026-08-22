@@ -1,45 +1,46 @@
-# HANDOFF: the LSJ sense hierarchy, deployed
+# HANDOFF: reader wiring for word-distinctiveness + quotation citations
 
-Generated: 2026-08-19 night · Session focus: redeploy the site, which turned into fixing how every dictionary entry renders
+Generated: 2026-08-20 · Session focus: wire the two already-committed corpus features into the reader. Branch `claude/reader-wiring`; uncommitted working-tree changes, not pushed.
 
 ## 1. Goal
 
-John asked for a redeploy. Live turned out to be byte-identical to `gh-pages` `f1e0c735` with nothing deploy-relevant merged since — but an unmerged PR (#92) held a fix he had wanted since launch: LSJ entries rendered as one wall of prose because the sanitizer dropped every sense wrapper. Shipping that correctly took the rest of the session.
+Make the committed distinctiveness table and Metaphysics quotation file visible in the reader: popup label, lemma-page numbers, quotation glyph + popup, emit copy, and the link gate.
 
 ## 2. Current State
 
-**DEPLOYED and LIVE:** gh-pages `f1e0c735` → `101aba86`, from `origin/main` `3a561b34f`. Full record in `DEPLOY-STATUS.md` — read it before the next deploy, especially the `data/reports` trap.
+Committed on `claude/reader-wiring`, PR #94 open (wiring + siglum redesign + collision fix). All gates green on the final design: 225 pipeline / 231 shared tests, 6,610 pages, 0 broken links. No deploy.
 
-- **#92** (merged) got the sense wrappers (`div`, `data-level`) past `sanitizeHtml` and put LSJ rendering behind one shared call, `renderLsjEntry`.
-- **#93** (merged) made the hierarchy correct for every entry, put each quotation on its own line, and fixed two accessibility breaches #92 had introduced.
+- Distinctiveness rows attach beside `bonitz` on per-lemma JSON; non-null `label` copies to `lemmata.json` as `distinctiveness_label`.
+- Word popup shows that label when present; ordinary words stay silent.
+- Lemma page shows label + in-Aristotle / before-him / contemporaries counts when `distinctiveness` is present.
+- `stage7_emit.copy_quotations` copies `pipeline/data/quotations/<work>.json` to `<out>/quotations.json` if it exists.
+- Reader loads quotations per work and marks each start line with a marginal siglum, edition-style — "Emp." in the gutter, Greek serif italic, accent (John rejected every symbol glyph: the Ross text prints its own quotation marks, so a quote-shaped mark doubles what's on the page). A Bekker number on the same line keeps its slot (John's ruling); the siglum slides left of it (`.quotation-sigla.has-num`) — real cases 1000b:1 and 1009b:20. Watch item: on phone-landscape the shifted siglum sits ~1px from the viewport edge; a longer siglum (Parm.+) colliding with a number would clip there — no pilot case does. Click opens a thin popup with a real `<a target="_blank" rel="noopener">`.
+- `check-links.mjs` validates per-work `quotations.json` shape. `Meta.json` was copied by hand into `build/dist/Meta/quotations.json` (pipeline not re-run).
 
 ## 3. Key Decisions (and why)
 
-- **Depth is relative to the entry, not to the dictionary.** `data-level` is absolute and 759 entries never use level 1 (λόγος opens at 2). `renderLsjEntry` stamps `data-depth` — the ranks THAT entry uses, compressed onto 1..n — and the stylesheet reads depth. **`data-level` deliberately stays in the markup**, which is why `workbench/src/components/LexiconDrawer.svelte:376` and the older tests kept working with no change.
-- **Compression, not subtraction.** 1,836 entries skip a rank (1,621 run 1 → 3); subtracting the shallowest left those a step too deep.
-- **Level 0 is not a rank.** ὅς and ποιέω use it for a note above the entry; ranking it pushed their real A/B/C down a level.
-- **A jump list must be the entry's own division:** two numbered sections sharing one real parent, covering the entry rather than one branch, numbers never repeating. A populated depth that fails any of those ENDS the search — descending past it published one branch's sub-senses as the entry's main senses (εὔσημος).
-- **Space, never punctuation.** Quotations are separated by a rendered line break inserted before the citation. Printing a comma LSJ did not set would put a mark in the dictionary its editors never wrote.
-- **A wrong list is worse than no list.** 92 → 1,628 entries, and every one of the ~740 candidates dropped along the way was dropped because it misrepresented the entry.
+- Distinctiveness join is exact `b.key` lookup — the same LSJ / lemma-beta fallback the concordance already buckets on. No new normalization, no threshold logic in JS.
+- `copy_quotations` is a named helper (same style as `emit_third_titles`) so the present/absent cases can be tested without running full `run()`.
+- `fetchQuotations` follows `fetchLemmata` (`r.ok ? r.json() : []`, un-cache on failure). It never throws on a missing file.
+- Quotation popup lives inside `QuotationMarker.svelte` (glyph + ephemeral dialog). The cite is a Svelte-template anchor, not `sanitizeHtml`.
+- Lemma page renders numbers whenever the full row is present, even when `label` is null (οὐσία). The popup stays silent because the manifest omits `distinctiveness_label`. `lsj` / `overridden` are stored, not shown.
 
-## 4. Traps (new this session)
+## 4. Traps
 
-- **An app-only build DELETES `data/reports`.** The 82 quality reports are pipeline output, untracked, and only 12 survive locally; `rsync --delete` staged 76 live files for deletion. Restore with `git checkout HEAD -- data/reports` in the gh-pages clone before committing. This will recur on every app-only deploy.
-- **`grep --include=*.html` under zsh fails to glob and the command never runs** — it prints an error and your loop records a clean `0`. Every "nothing found" check needs a positive control. This nearly passed a dangling-reference check that had not looked at anything.
-- **The Agent tool pins a subagent's cwd**, so a brief saying "cd to the review worktree" is ignored and Codex reviews an EMPTY diff from a tree sitting on `main`. Drive `codex-companion.mjs` directly from the target directory, or pass `grok --cwd`. Both reviewers fell into this; both had to be relaunched.
-- **The minifier writes `:before` with one colon.** Grepping shipped CSS for `::before` finds nothing and looks like the rule failed to ship.
-- **The in-app browser pane can report a 0×0 viewport**, which makes every geometry measurement meaningless while looking like real overflow. Playwright (`mcp__plugin_playwright_playwright__*`) gave real numbers and real screenshots.
-- **Verify a test bites.** Restoring the old rule must fail the test that names it — two of the first tests written passed either way.
+- `cd pipeline && uv run --with pytest pytest` is required. From the worktree root, pytest collects `bonitz/` and misses the pipeline venv (`yaml` / `lxml`).
+- Shared tests: `cd shared && npm test`. Root `npm test` has no script. Do not use `vi.resetModules()` in Svelte 5 tests (`effect_orphan`).
+- App-only build does not emit `quotations.json`; copy `pipeline/data/quotations/Meta.json` to `build/dist/Meta/quotations.json` before `npm run build` in `app/`.
+- `/bonitz` still builds; keep it off live until the XSS fix. `data/reports` is still deleted by an app-only build.
+- **Svelte component `<style>` blocks are dead in the built site.** Reader pages load only `global.css`; WordPopup's scoped rules (`.lemma-link` included) never ship. Styles for shared Svelte components go in `shared/styles/global.css` — the label styles were moved there after a browser pass caught the unstyled line (Claude fix on top of Grok's implementation).
 
 ## 5. Open Work
 
-- **Sense numbers stop at 4 levels of colour grading** but the corpus only reaches depth 4 (plus 2 entries at level 0), so depth 5 rules are unused forward-compat.
-- **`.lsj-bibl` is `0.82em` and was left alone** — it predates all of this and is how the printed dictionary sets a reference. Changing it is John's call, and it is the one remaining place in the LSJ block smaller than the entry text.
-- **404 entries have no sense divisions at all** (τεός is one gloss and a citation list). Verified NOT a pipeline loss: corpus-wide there are 0 entries carrying a sense number without a sense div.
-- **3 entries whose jump list sits under a single ancestor chain** (ἀνακάμπτω: 1:- 2:II 3:2 4:b/c/d) list b/c/d. Honest but arguably not worth a list.
-- Older items unchanged: Ostwald ticks outside Book I, Owen note 44, footnote paragraph structure, desktop v0.2.0 draft release, `/bonitz` XSS fix, and the two offline corpus features (#88–#91) still awaiting their reader wiring.
+- Matcher, distinctiveness computation, and curated tables were already committed; this session is reader wiring only.
+- Full-corpus quotation curation is still later work. Only Meta ships a quotations file.
+- John still reviews label wording / thresholds / author list before deploy (spec step 7).
+- No deploys, no commits from this session.
 
 ---
 ## Prompt for the Fresh Agent
 
-Read this file, then `DEPLOY-STATUS.md`. The site is live and current as of 2026-08-19 night; nothing is held. If you deploy, the `data/reports` trap above will bite you unless you handle it.
+Read this file, then the uncommitted diff on `claude/reader-wiring`. The five gates already passed; next step is review/commit if John wants it, then a deploy only after the usual `DEPLOY-STATUS.md` recipe (and the `data/reports` trap).

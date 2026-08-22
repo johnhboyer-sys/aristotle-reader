@@ -314,7 +314,7 @@ export function fetchAnalyses(work: string): Promise<Record<string, Analysis[]>>
 // has a /lemma/<slug> reference page (produced by scripts/build-lemmata.mjs).
 // The word popup loads it once to decide whether to offer a "see all N
 // occurrences" link, and only for lemmata that actually have a page.
-export interface LemmaRef { slug: string; head: string; count: number; }
+export interface LemmaRef { slug: string; head: string; count: number; distinctiveness_label?: string; }
 let _lemmataCache: Promise<Record<string, LemmaRef>> | null = null;
 export function fetchLemmata(): Promise<Record<string, LemmaRef>> {
   if (_lemmataCache) return _lemmataCache;
@@ -322,6 +322,30 @@ export function fetchLemmata(): Promise<Record<string, LemmaRef>> {
   // A missing/failed manifest just means no lemma links — don't cache the failure.
   p.catch(() => { if (_lemmataCache === p) _lemmataCache = null; });
   _lemmataCache = p;
+  return p;
+}
+
+// Curated quotation citations for a work: [{ column, lo, hi, cite, author, url,
+// attestation }, …]. Present only for works that have a quotations.json (the
+// Metaphysics pilot today). Missing file → empty list, never a throw — works
+// without the feature ship nothing. Pattern matches fetchLemmata, not
+// fetchColumns/fetchFootnotes (those throw on a missing file).
+export interface Quotation {
+  column: string;
+  lo: number;
+  hi: number;
+  cite: string;
+  author: string;
+  url: string;
+  attestation: string;
+}
+const _quotationsCache = new Map<string, Promise<Quotation[]>>();
+export function fetchQuotations(work: string): Promise<Quotation[]> {
+  const cached = _quotationsCache.get(work);
+  if (cached) return cached;
+  const p = fetch(`${workBase(work)}/quotations.json`).then(r => (r.ok ? r.json() : []));
+  p.catch(() => { if (_quotationsCache.get(work) === p) _quotationsCache.delete(work); });
+  _quotationsCache.set(work, p);
   return p;
 }
 

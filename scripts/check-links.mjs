@@ -251,6 +251,51 @@ async function main() {
     else report(indexFile, '', 'cannot read lemma index');
   }
 
+  // Curated quotation citations: shape + column existence. A work with no
+  // quotations.json is the normal case. Dead sibling URLs are a curation-time
+  // responsibility — this gate only checks the row is well-formed.
+  const dataDir = path.join(dist, 'data');
+  let dataEntries = [];
+  try { dataEntries = await fs.readdir(dataDir, { withFileTypes: true }); } catch { dataEntries = []; }
+  for (const entry of dataEntries) {
+    if (!entry.isDirectory()) continue;
+    const workDir = path.join(dataDir, entry.name);
+    const qPath = path.join(workDir, 'quotations.json');
+    if (!await existsFile(qPath)) continue;
+    let rows;
+    try { rows = JSON.parse(await fs.readFile(qPath, 'utf8')); } catch {
+      report(qPath, '', 'cannot read quotations.json');
+      continue;
+    }
+    if (!Array.isArray(rows)) {
+      report(qPath, '', 'quotations.json is not an array');
+      continue;
+    }
+    let columns;
+    try { columns = JSON.parse(await fs.readFile(path.join(workDir, 'columns.json'), 'utf8')); } catch {
+      report(qPath, '', 'columns.json missing or unreadable');
+      continue;
+    }
+    rows.forEach((row, i) => {
+      const href = typeof row?.url === 'string' ? row.url : '';
+      if (typeof row?.column !== 'string' || !(row.column in columns)) {
+        report(qPath, href, `row ${i}: column not in columns.json`);
+      }
+      const lo = row?.lo;
+      const hi = row?.hi;
+      if (!(Number.isInteger(lo) && Number.isInteger(hi) && lo >= 1 && lo <= hi)) {
+        report(qPath, href, `row ${i}: expected 1 <= lo <= hi`);
+      }
+      let absoluteHttps = false;
+      if (typeof href === 'string' && /^https:\/\//i.test(href)) {
+        try { absoluteHttps = new URL(href).protocol === 'https:'; } catch { absoluteHttps = false; }
+      }
+      if (!absoluteHttps) {
+        report(qPath, href, `row ${i}: url is not an absolute https URL`);
+      }
+    });
+  }
+
   // A dist with no pages (or no homepage) is a failed build, not a clean one —
   // this gate must never bless an empty directory.
   if (pages === 0) usage(`No HTML pages found under ${dist} — not a built site.`);

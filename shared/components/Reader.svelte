@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece } from '../lib/data';
+  import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { highlightPrefixMatches } from '../lib/text';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
@@ -10,6 +10,7 @@
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
   import EndnoteSidebar from './EndnoteSidebar.svelte';
+  import QuotationMarker from './QuotationMarker.svelte';
 
   export let work: string = 'EN';
   export let bookNum: number = 1;
@@ -42,6 +43,19 @@
   // Diagrams ({N: html}) rendered inline at [[figN]] markers (Tree of Porphyry).
   let figuresData: Record<string, string> = {};
   if (busse) fetchFigures(work).then(d => { figuresData = d; }).catch(() => {});
+  // Curated quotation citations. Missing file → empty map, no markers, no DOM.
+  let quoteStarts: Map<string, Quotation[]> = new Map();
+  fetchQuotations(work).then((rows) => {
+    if (!Array.isArray(rows) || rows.length === 0) return;
+    const m = new Map<string, Quotation[]>();
+    for (const q of rows) {
+      const k = `${q.column}:${q.lo}`;
+      const list = m.get(k);
+      if (list) list.push(q);
+      else m.set(k, [q]);
+    }
+    quoteStarts = m;
+  }).catch(() => {});
   const translations = workMeta ? visibleTranslations(workMeta) : [];
   // The reader can render any number of translations. The primary parallel
   // chunk is the 'english' slot; every other translation is a chapter-anchored
@@ -1368,6 +1382,16 @@
                 {:else}
                   <div class="greek-line" id={item.line.cont ? `L${seg.column}-${item.line.n}-c` : `L${seg.column}-${item.line.n}`} class:target={!item.line.cont && targetId === `L${seg.column}-${item.line.n}`} class:cont={item.line.cont}>
                     <span class="line-num">{item.line.cont ? '' : showLineNum(item.line.n)}</span>
+                    <!-- The siglum sits in the margin at the gutter's edge; when the
+                         line also carries a Bekker number, it slides left of it —
+                         the number never yields its slot. -->
+                    {#if !item.line.cont && quoteStarts.has(`${seg.column}:${item.line.n}`)}
+                      <span class="quotation-sigla" class:has-num={showLineNum(item.line.n) !== ''}>
+                        {#each quoteStarts.get(`${seg.column}:${item.line.n}`) ?? [] as q}
+                          <QuotationMarker quotation={q} />
+                        {/each}
+                      </span>
+                    {/if}
                     <span class="line-text" lang="grc">{@render greekToks(lineParts(item.line))}</span>
                   </div>
                 {/if}

@@ -237,8 +237,16 @@ const top = ranked.filter((b) => b.count >= MIN_COUNT);
 if (existsSync(OUT)) rmSync(OUT, { recursive: true });
 mkdirSync(OUT, { recursive: true });
 
+// Integer-and-label table from the offline distinctiveness script. Keyed by
+// the same LSJ Beta-Code key this concordance already buckets on — lookup is
+// exact, no new normalization. Missing file → empty table (pages still emit).
+const DISTINCTIVENESS_PATH = join('..', 'pipeline', 'data', 'word_distinctiveness.json');
+const distinctiveness = existsSync(DISTINCTIVENESS_PATH)
+  ? JSON.parse(readFileSync(DISTINCTIVENESS_PATH, 'utf8'))
+  : {};
+
 const usedSlugs = new Set();
-const manifest = {};   // popup: lsjKey -> { slug, head, count }
+const manifest = {};   // popup: lsjKey -> { slug, head, count, distinctiveness_label? }
 const index = [];      // getStaticPaths: [{ slug, key }]
 
 for (const b of top) {
@@ -279,15 +287,22 @@ for (const b of top) {
     return { work: bw.work, title: bw.title, count: bw.count, shown: raw.length, books };
   });
 
-  writeFileSync(join(OUT, `${slug}.json`), JSON.stringify({
+  const page = {
     slug, key: b.key, head, lemmaBeta: b.lemmaBeta,
     count: b.count, byWork, glosses,
     instancesByWork,
     truncated: b.instN >= INSTANCE_CAP,
     bonitz: null,   // stub: lights up when the Index Aristotelicus entry is ready
-  }));
+  };
+  // Distinctiveness is keyed by the same LSJ (or lemma-beta fallback) key this
+  // script already buckets on. Copy the row through; no threshold logic here.
+  const distRow = distinctiveness[b.key];
+  if (distRow) page.distinctiveness = distRow;
+  writeFileSync(join(OUT, `${slug}.json`), JSON.stringify(page));
 
-  manifest[b.key] = { slug, head, count: b.count };
+  const entry = { slug, head, count: b.count };
+  if (distRow && distRow.label) entry.distinctiveness_label = distRow.label;
+  manifest[b.key] = entry;
   index.push({ slug, key: b.key });
 }
 
