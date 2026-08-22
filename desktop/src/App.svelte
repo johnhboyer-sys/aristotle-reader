@@ -16,9 +16,12 @@
   import LexiconEntry from './components/LexiconEntry.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import Search from '@shared/components/Search.svelte';
+  import CommandPalette from '@shared/components/CommandPalette.svelte';
+  import Phrases from '@shared/components/Phrases.svelte';
   import { getImportCitation, type ImportSummary } from './lib/imports';
   import AnnotationsPanel from './components/AnnotationsPanel.svelte';
-  import { exportLibrary, reportProblem } from './lib/export';
+  import { exportLibrary, openExternal, reportProblem } from './lib/export';
+  import { parseRouteHref, type RouteAction } from './lib/route-href';
   import {
     addAnnotation, captureSelection, listAnnotations, newId, paintAnnotations,
     paintPending, clearPending, greekRange, englishRange,
@@ -198,14 +201,19 @@
     nav(work, book, { loc: `${column}:${line}`, hlg: surface });
   }
   function onEsc(e: KeyboardEvent) {
+    // The palette binds Escape itself (bubble). Capture would close the
+    // overlay underneath it first; leave the event alone while it's open.
+    if (e.key === 'Escape' && document.querySelector('.cp-backdrop')) return;
     if (e.key === 'Escape' && ctxMenu) { e.stopPropagation(); closeCtx(); return; }
     if (e.key === 'Escape' && noteEditor) { e.stopPropagation(); cancelNote(); return; }
     if (e.key === 'Escape' && searchOpen) { e.stopPropagation(); searchOpen = false; return; }
+    if (e.key === 'Escape' && phrasesOpen) { e.stopPropagation(); phrasesOpen = false; return; }
     if (e.key === 'Escape' && lexicon) { e.stopPropagation(); closeLexicon(); }
-    if (e.key === 'Escape' && armed && !searchOpen && !lexicon) { setArmed(false); return; }
-    // ⌘K / Ctrl-K opens search from anywhere.
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    if (e.key === 'Escape' && armed && !searchOpen && !phrasesOpen && !lexicon) { setArmed(false); return; }
+    // Palette owns ⌘K. ⇧⌘K / Ctrl-Shift-K opens search from anywhere.
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'k') {
       e.preventDefault();
+      e.stopPropagation();
       searchOpen = true;
     }
   }
@@ -215,8 +223,14 @@
   // lemma/form, wildcards, works refine, CSV export), plus the desktop-only
   // accent-sensitivity toggle via its accentOption prop. Result links are
   // ordinary reader hrefs — the global click interceptor below turns them
-  // into in-app navigation.
+  // into in-app navigation. Prefill arrives via location.search (?g= / ?e=)
+  // on a fresh mount — the palette writes that query then opens this overlay.
   let searchOpen = false;
+
+  // ── Phrase browser overlay ────────────────────────────────────────────────
+  // The site's Phrases.svelte as a full-pane overlay (same chrome as Search).
+  // Result links are ordinary reader hrefs — the interceptor navigates in-app.
+  let phrasesOpen = false;
 
   // ── Import flow ───────────────────────────────────────────────────────────
   // Both entry points the plan requires: a button (native picker) and true
@@ -924,39 +938,60 @@
   }
 
   // ── Link interception ─────────────────────────────────────────────────────
-  // Reused site components emit real <a href> links (the word popup's lemma
-  // link). In a desktop window those would navigate the webview away; catch
-  // them until the Lexicon is ported.
+  // Reused site components emit real <a href> links (word popup, search hits,
+  // phrase citations, the command palette). parseRouteHref is the single
+  // decision; the click interceptor and the palette's onNavigate share it.
+  async function applyRoute(action: RouteAction) {
+    switch (action.kind) {
+      case 'passthrough':
+      case 'swallow':
+        return;
+      case 'lemma':
+        searchOpen = false;
+        phrasesOpen = false;
+        openLexicon(action.slug);
+        return;
+      case 'reader': {
+        if (!getWork(action.work)) return;
+        searchOpen = false;
+        phrasesOpen = false;
+        closeLexicon();
+        await nav(action.work, action.book, action.params);
+        return;
+      }
+      case 'search': {
+        phrasesOpen = false;
+        closeLexicon();
+        const qs = action.query ? `?${action.query}` : '';
+        try { history.replaceState(null, '', `/${qs}`); } catch { /* tauri origin quirks */ }
+        // Search reads window.location.search on mount — force a fresh mount
+        // so a palette hand-off prefills even if the overlay was already open.
+        if (searchOpen) {
+          searchOpen = false;
+          await tick();
+        }
+        searchOpen = true;
+        return;
+      }
+      case 'external':
+        openExternal(action.url).catch(() => showToast('Could not open the page'));
+        return;
+    }
+  }
+
+  function onPaletteNavigate(href: string) {
+    void applyRoute(parseRouteHref(href));
+  }
+
   function onGlobalClick(e: MouseEvent) {
     const a = (e.target as HTMLElement).closest?.('a[href]');
     if (!(a instanceof HTMLAnchorElement)) return;
     const href = a.getAttribute('href') ?? '';
-    if (href.startsWith('#')) return;           // in-page: fine
-    if (a.download || /^(blob|data):/.test(href)) return; // downloads: fine
-    const lemma = href.match(/\/lemma\/([^/#?]+)/);
-    const reader = href.match(/^\/([A-Za-z]+)\/book\/(\d+)(?:\?([^#]*))?(?:#(.*))?$/);
-    if (lemma) {
-      // The word popup's "Appears N× across Aristotle" link → the Lexicon entry.
-      e.preventDefault();
-      openLexicon(decodeURIComponent(lemma[1]));
-    } else if (reader && getWork(reader[1])) {
-      // A reader link (search results, future cross-references): navigate
-      // in-app, carrying the jump/highlight params through.
-      e.preventDefault();
-      const q = new URLSearchParams(reader[3] ?? '');
-      searchOpen = false;
-      closeLexicon();
-      nav(reader[1], Number(reader[2]), {
-        ...(q.get('loc') ? { loc: q.get('loc')! } : {}),
-        ...(q.get('hlg') ? { hlg: q.get('hlg')! } : {}),
-        ...(q.get('hle') ? { hle: q.get('hle')! } : {}),
-        ...(reader[4] ? { hash: reader[4] } : {}),
-      });
-    } else if (!/^https?:/.test(href)) {
-      // Any other relative site link (work paths from future reuse): swallow
-      // rather than let the webview leave the app.
-      e.preventDefault();
-    }
+    if (a.download) return;                     // CSV export, etc.
+    const action = parseRouteHref(href);
+    if (action.kind === 'passthrough') return;
+    e.preventDefault();
+    void applyRoute(action);
   }
 </script>
 
@@ -1005,8 +1040,11 @@
       {#if !busse}
         <BekkerJump work={workId} onJump={onBekkerJump} />
       {/if}
-      <button class="dt-cite" on:click={() => (searchOpen = true)} title="Search the corpus (⌘K)">
+      <button class="dt-cite" on:click={() => (searchOpen = true)} title="Search the corpus (⇧⌘K)">
         Search
+      </button>
+      <button class="dt-cite" on:click={() => (phrasesOpen = true)} title="Browse recurring phrases">
+        Phrases
       </button>
       <button class="dt-cite" on:click={copyCitation} title="Copy a citation for the current position">
         Copy citation
@@ -1166,6 +1204,21 @@
     </div>
   </div>
 {/if}
+
+{#if phrasesOpen}
+  <div class="dt-lexicon" role="dialog" aria-label="Phrases">
+    <header class="page-header dt-lexicon-bar">
+      <h1>Phrases</h1>
+      <span class="dt-spacer"></span>
+      <button class="dt-lexicon-close" on:click={() => (phrasesOpen = false)} aria-label="Close phrases">✕</button>
+    </header>
+    <div class="dt-lexicon-body">
+      <Phrases />
+    </div>
+  </div>
+{/if}
+
+<CommandPalette work={workId} onNavigate={onPaletteNavigate} />
 
 {#if importDlg}
   <ImportDialog file={importDlg.file} presetWork={workId} onClose={closeImport} />

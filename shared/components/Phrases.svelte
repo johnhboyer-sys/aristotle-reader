@@ -5,6 +5,7 @@
     fetchEnglishSegments,
     fetchNgramOccurrences,
     fetchNgramShard,
+    fetchSearchOffsets,
     type NgramRow,
     type NgramStream,
   } from '../lib/data';
@@ -497,10 +498,7 @@
   function fetchWorkOffsets(work: string): Promise<Offsets> {
     const cached = offsetsCache.get(work);
     if (cached) return cached;
-    const promise = fetch(`${BASE_URL}/data/${work}/search/offsets.json`).then((response) => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.json() as Promise<Offsets>;
-    });
+    const promise = fetchSearchOffsets(work) as Promise<Offsets>;
     promise.catch(() => {
       if (offsetsCache.get(work) === promise) offsetsCache.delete(work);
     });

@@ -442,6 +442,15 @@ export function fetchNgramOccurrences(
   return p;
 }
 
+// Per-work token-offset index used by the phrase browser to turn a global
+// occurrence offset into a Bekker citation. No module-level cache — Phrases
+// keeps its own per-work map so a failed fetch can be retried there.
+export async function fetchSearchOffsets(work: string): Promise<unknown> {
+  const r = await fetch(`${ROOT()}/${work}/search/offsets.json`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
 // Undo the delta encoding: [first, +d, +d, ...] -> absolute global offsets.
 export function decodeOffsets(deltas: number[]): number[] {
   const out: number[] = [];
