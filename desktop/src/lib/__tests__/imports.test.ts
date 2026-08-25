@@ -12,8 +12,25 @@
 //   and the star/dagger work-level glyphs — phase3-final-spec.md §B5).
 
 import { describe, expect, it } from 'vitest';
-import { resolveImportFootnote, resolveImportTitle } from '../imports';
+import { lastChapterPerBook, resolveImportFootnote, resolveImportTitle } from '../imports';
 import type { ImportRecord } from '../imports';
+import type { ChapterRef } from '@shared/lib/data';
+
+describe('lastChapterPerBook (R4 chapter bound, read off chapters.json)', () => {
+  const refs = (chapters: string[]): ChapterRef[] =>
+    chapters.map(chapter => ({ chapter, column: '639a', line: '1', bekker: '639a1' }));
+
+  it('gives each book its highest chapter number', () => {
+    expect([...lastChapterPerBook({ 1: refs(['1', '2', '3']), 2: refs(['1', '2']) })])
+      .toEqual([[1, 3], [2, 2]]);
+  });
+
+  it('gives no bound for a book with non-numeric divisions or no entries', () => {
+    const bounds = lastChapterPerBook({ 1: refs(['1', 'prologue']), 2: refs([]) });
+    expect(bounds.has(1)).toBe(false);
+    expect(bounds.has(2)).toBe(false);
+  });
+});
 
 describe('resolveImportTitle (§Phase-4B-revised: per-import, unaligned, chapter-opening title)', () => {
   const baseRecord = (titles: Record<string, string>): ImportRecord => ({

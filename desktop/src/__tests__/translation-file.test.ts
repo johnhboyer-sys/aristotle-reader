@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  auditChapterKeys,
   columnKey,
   parseTranslationFile,
   serializeFrontmatter,
@@ -76,5 +77,72 @@ year: not-a-year
       expect.objectContaining({ book: 1, chapter: 2, text: 'Gamma delta.' }),
     ]);
     expect(split.chapters[0].tags[0]).toMatchObject({ citation: '1094a1', offset: 6 });
+  });
+});
+
+describe('tagged-path chapter-key audit', () => {
+  const audit = (
+    raw: string,
+    books = 3,
+    options: Parameters<typeof auditChapterKeys>[2] = {},
+  ) => {
+    const parsed = parseTranslationFile(raw);
+    return () => auditChapterKeys(parsed.tags, books, options);
+  };
+
+  it('rejects a duplicate key and names it', () => {
+    expect(audit('{1.1} One.\n{1.2} Two.\n{1.2} Duplicate.'))
+      .toThrow('Duplicate chapter key {1.2}');
+  });
+
+  it('rejects a backward key and names it', () => {
+    expect(audit('{1.1} One.\n{1.3} Three.\n{1.2} Two.'))
+      .toThrow('Backward chapter key {1.2}');
+  });
+
+  it('rejects a restarted sequence and names the offending key', () => {
+    expect(audit('{1.1} One.\n{1.3} Three.\n{1.1} Restart.'))
+      .toThrow('Restarted chapter key {1.1}');
+    expect(audit('{2.1} Later book.\n{1.1} Restarted work.'))
+      .toThrow('Restarted chapter key {1.1}');
+  });
+
+  it('rejects a book beyond the selected work range and names it', () => {
+    expect(audit('{1.1} One.\n{4.1} Too far.', 3))
+      .toThrow('Chapter key {4.1} is out of range');
+  });
+
+  it('quotes the printed book labels, not just the storage indices', () => {
+    // The Eudemian Ethics stores five books printed I, II, III, VII, VIII —
+    // "books 1–5" alone would send the reader hunting for a missing book IV.
+    expect(audit('{6.1} Common book.', 5, { bookLabels: ['I', 'II', 'III', 'VII', 'VIII'] }))
+      .toThrow('books 1–5, printed I/II/III/VII/VIII');
+  });
+
+  it('rejects a chapter beyond that book’s chapter count and names the key', () => {
+    const chaptersPerBook = new Map([[1, 14], [2, 9]]);
+    expect(audit('{1.1} One.\n{1.99} Nowhere.', 3, { chaptersPerBook }))
+      .toThrow('Chapter key {1.99} is out of range: book 1 has 14 chapters.');
+    expect(audit('{1.1} One.\n{1.14} Last chapter.', 3, { chaptersPerBook })).not.toThrow();
+  });
+
+  it('names the printed book when a chapter runs past its end', () => {
+    expect(audit('{4.20} Past the end.', 5, {
+      bookLabels: ['I', 'II', 'III', 'VII', 'VIII'],
+      chaptersPerBook: new Map([[4, 12]]),
+    })).toThrow('book 4 (printed VII) has 12 chapters.');
+  });
+
+  it('refuses a book the chapter index does not cover rather than skipping the check', () => {
+    // Fail closed. The index is an authority over what it contains; its
+    // silence about book 3 is not a verdict that {3.40} is a real chapter.
+    expect(audit('{3.40} Uncharted book.', 3, { chaptersPerBook: new Map([[1, 14]]) }))
+      .toThrow('Chapter key {3.40} cannot be checked');
+    expect(audit('{1.99} Nowhere.', 3, { chaptersPerBook: new Map([[2, 9]]) }))
+      .toThrow('has no entry for book 1');
+  });
+
+  it('checks no chapter bound at all when no index was supplied', () => {
+    expect(audit('{1.99} Nowhere.', 3)).not.toThrow();
   });
 });

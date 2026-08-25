@@ -13,6 +13,23 @@
   import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';
   import { scanEmphasis, listEmphasisReviewItems, type EmphasisReviewItem } from '../lib/emphasis';
   import { convertLayoutExtraction, isLayoutExtraction, type ConvertOptions, type ConvertReport } from '../lib/pdf-import';
+  import {
+    applyDeletionProposals,
+    applyPageBreakJoins,
+    beginTaggedPreClean,
+    finishTaggedNormalization,
+    hasChapterTag,
+    lineModeMatters,
+    proposePageBreakJoins,
+    rebuildPreCleanSource,
+    scanDeletionProposals,
+    splitPreCleanSource,
+    type DeletionScan,
+    type PageJoinProposal,
+    type PreCleanLineMode,
+    type StripCounts,
+    type TaggedPreCleanStart,
+  } from '../lib/import-preclean';
   import { isTauri } from '../lib/runtime';
   import type { UnlistenFn } from '@tauri-apps/api/event';
 
@@ -21,7 +38,8 @@
   export let onClose: (imported: ImportSummary | null) => void;
 
   type Step =
-    | 'pick' | 'form' | 'review' | 'emph-review' | 'running' | 'collision' | 'done' | 'error'
+    | 'pick' | 'form' | 'review' | 'line-mode' | 'page-join-review' | 'deletion-review'
+    | 'emph-review' | 'running' | 'collision' | 'done' | 'error'
     // Phase 4B: the PDF-conversion pre-stage's own outcomes, ahead of the form.
     | 'convert-refused' | 'convert-choice';
   let step: Step = 'pick';
@@ -49,6 +67,25 @@
   let reviewPos = 0;
   let autoJoined = 0;
   let dehyphenatedText: string | null = null;
+  let dehyphenatedBody: string | null = null;
+
+  // Tagged-text pre-clean state. Layout imports already arrive reflowed from
+  // the converter and stay on their existing path.
+  let taggedTextPath = false;
+  let taggedPreClean: TaggedPreCleanStart | null = null;
+  let taggedBody = '';
+  // N2 activation is DECLARED, never detected — see import-preclean.ts.
+  let lineMode: PreCleanLineMode = 'paragraph-per-line';
+  let pageJoinItems: PageJoinProposal[] = [];
+  let pageJoinExclusions = new Set<number>();
+  // One entry per pre-clean review step left behind, holding the working text
+  // as it stood on entry to that step. N1's joins mutate `taggedBody`, so Back
+  // has to restore bytes, not just change `step`.
+  let preCleanHistory: { step: Step; body: string; exclusions: Set<number> }[] = [];
+  let deletionScan: DeletionScan | null = null;
+  let deletionChoices = new Map<number, boolean>();
+  let preCleanWarnings: string[] = [];
+  let stripCounts: StripCounts = { folioParagraphs: 0, strayHeadingNumerals: 0 };
 
   // Emphasis review queue: markdown emphasis spans the classifier couldn't
   // confidently place — same shape as the dehyphenation queue above, one
@@ -102,11 +139,8 @@
   // titles are shown at chapter openings inside its own column (not merged
   // into the reader's shared chapter headings — that's work-level chrome).
   let convertTitles: Record<string, string> = {};
-  // The pristine upload — kept ONLY when the converter ran, and passed to
-  // runImport as `original` so the `.original` safety-net file holds the
-  // actual pdftotext output rather than the tagged working text. null for a
-  // non-PDF import, where the uploaded text and the parse input are (as
-  // before) the same thing.
+  // The pristine upload, on every path. Working text may change during
+  // conversion and review, but `.original` must always receive these bytes.
   let originalRawText: string | null = null;
   // NOTICK citations peeled from a layout file's frontmatter header (seating
   // pass §2) — threaded to runImport so the aligner skips those estimate ticks.
@@ -118,25 +152,35 @@
   let pendingConvert: { name: string; text: string } | null = null;
 
   function acceptText(name: string, text: string, opts: ConvertOptions = {}) {
+    originalRawText = text;
     // Peel a frontmatter header first: a layout FINAL carries a `noTicks` line
     // the frozen converter would fold into body text. Read it here, convert the
     // body only. A non-layout import keeps its raw text (frontmatter intact) so
     // form pre-fill (fileMeta) and runImport's own parser still see it.
     const { meta: header, body } = splitFrontmatter(text);
+    const boundedBody = splitPreCleanSource(text).body;
     importNoTicks = header.noTicks;
-    if (!isLayoutExtraction(body)) {
+    if (!isLayoutExtraction(boundedBody)) {
+      if (!hasChapterTag(boundedBody)) {
+        refusalMsg =
+          'No {book.chapter} tags found. Add a chapter tag such as {1.7} before '
+          + 'the first word of each chapter. The importer will not guess chapter '
+          + 'boundaries; use the format help on the import screen for examples.';
+        step = 'convert-refused';
+        return;
+      }
+      taggedTextPath = true;
       file = { name, text };
-      originalRawText = null;
       convertReport = null;
       convertTitles = {};
       step = 'form';
       return;
     }
+    taggedTextPath = false;
     const result = convertLayoutExtraction(body, opts);
     if (result.ok) {
       convertReport = result.report;
       convertTitles = result.titles;
-      originalRawText = body;
       file = { name, text: result.tagged };
       step = 'form';
     } else if ('refused' in result) {
@@ -152,6 +196,36 @@
       pendingConvert = { name, text };
       step = 'convert-choice';
     }
+  }
+
+  // A refused file is usually the wrong file, or one missing its chapter tags
+  // — both fixed by picking again, so the refusal screen offers the drop zone
+  // back rather than only a Close button.
+  function backToPick() {
+    file = null;
+    refusalMsg = '';
+    errorMsg = '';
+    collapsedPages = [];
+    pendingConvert = null;
+    taggedTextPath = false;
+    taggedPreClean = null;
+    taggedBody = '';
+    dehyphenatedBody = null;
+    dehyphenatedText = null;
+    lineMode = 'paragraph-per-line';
+    preCleanHistory = [];
+    pageJoinItems = [];
+    pageJoinExclusions = new Set();
+    deletionScan = null;
+    deletionChoices = new Map();
+    preCleanWarnings = [];
+    stripCounts = { folioParagraphs: 0, strayHeadingNumerals: 0 };
+    convertReport = null;
+    convertTitles = {};
+    originalRawText = null;
+    importNoTicks = undefined;
+    dropError = '';
+    step = 'pick';
   }
 
   // "Import with page-level anchors only" (the convert-choice step) — re-run
@@ -284,6 +358,29 @@
     if (!file) return;
     step = 'running';
     progress = 'Checking for OCR line-break hyphens…';
+    if (taggedTextPath) {
+      try {
+        taggedPreClean = await beginTaggedPreClean(file.text);
+      } catch {
+        // Dictionary unavailable: keep every hyphen site unchanged, while
+        // still running N4 and N2 over the bounded body.
+        taggedPreClean = await beginTaggedPreClean(file.text, async text => ({
+          text, decisions: [], reviewCount: 0, ran: false,
+        }));
+      }
+      const d = taggedPreClean.dehyphenation;
+      autoJoined = d.decisions.filter(x => x.action === 'joined').length;
+      dehyphenatedBody = d.text;
+      if (d.reviewCount > 0) {
+        reviewItems = listReviewItems(d.text);
+        reviewChoices = new Map();
+        reviewPos = 0;
+        step = 'review';
+        return;
+      }
+      finishTaggedHyphenation();
+      return;
+    }
     try {
       const d = await dehyphenate(file.text);
       autoJoined = d.decisions.filter(x => x.action === 'joined').length;
@@ -308,9 +405,147 @@
     if (reviewPos + 1 < reviewItems.length) {
       reviewPos += 1;
     } else {
-      dehyphenatedText = resolveReviews(dehyphenatedText!, reviewChoices);
-      runEmphasisScan();
+      if (taggedTextPath) {
+        dehyphenatedBody = resolveReviews(dehyphenatedBody!, reviewChoices);
+        finishTaggedHyphenation();
+      } else {
+        dehyphenatedText = resolveReviews(dehyphenatedText!, reviewChoices);
+        runEmphasisScan();
+      }
     }
+  }
+
+  // A pre-clean stage that finds its own state missing must say so: returning
+  // quietly leaves the dialog on whatever step it was on, with no controls and
+  // no explanation.
+  function preCleanLost(stage: string) {
+    errorMsg = `The pre-clean lost its working text before ${stage}. `
+      + 'Nothing was written. Start the import again from the file.';
+    step = 'error';
+  }
+
+  function finishTaggedHyphenation() {
+    if (!taggedPreClean || dehyphenatedBody === null) {
+      preCleanLost('the page-break review');
+      return;
+    }
+    preCleanHistory = [];
+    // Ask only when the answer changes the bytes. A file with no joinable
+    // newline reads the same under either declaration.
+    if (!lineModeMatters(taggedPreClean, dehyphenatedBody)) {
+      applyLineMode('paragraph-per-line');
+      return;
+    }
+    lineMode = taggedPreClean.suggestedMode;
+    step = 'line-mode';
+  }
+
+  function applyLineMode(mode: PreCleanLineMode) {
+    if (!taggedPreClean || dehyphenatedBody === null) {
+      preCleanLost('the page-break review');
+      return;
+    }
+    lineMode = mode;
+    taggedBody = finishTaggedNormalization(taggedPreClean, dehyphenatedBody, mode);
+    pageJoinItems = proposePageBreakJoins(taggedBody);
+    pageJoinExclusions = new Set();
+    if (pageJoinItems.length > 0) {
+      if (step === 'line-mode') pushPreCleanStep();
+      step = 'page-join-review';
+      return;
+    }
+    findDeletionProposals();
+  }
+
+  // Remember the step being left, with the text as it stands BEFORE the step
+  // ahead mutates it.
+  function pushPreCleanStep() {
+    preCleanHistory = [...preCleanHistory, {
+      step, body: taggedBody, exclusions: new Set(pageJoinExclusions),
+    }];
+  }
+
+  function preCleanBack() {
+    const previous = preCleanHistory.at(-1);
+    if (!previous) return;
+    preCleanHistory = preCleanHistory.slice(0, -1);
+    taggedBody = previous.body;
+    pageJoinExclusions = previous.exclusions;
+    step = previous.step;
+  }
+
+  function togglePageJoin(index: number) {
+    const next = new Set(pageJoinExclusions);
+    if (next.has(index)) next.delete(index);
+    else next.add(index);
+    pageJoinExclusions = next;
+  }
+
+  function finishPageJoinReview(acceptAll = false) {
+    const accepted = new Set(
+      pageJoinItems
+        .filter(item => acceptAll || !pageJoinExclusions.has(item.index))
+        .map(item => item.index),
+    );
+    pushPreCleanStep();
+    taggedBody = applyPageBreakJoins(taggedBody, pageJoinItems, accepted);
+    findDeletionProposals();
+  }
+
+  function findDeletionProposals() {
+    deletionScan = scanDeletionProposals(taggedBody);
+    preCleanWarnings = [...deletionScan.warnings];
+    deletionChoices = new Map();
+    stripCounts = { folioParagraphs: 0, strayHeadingNumerals: 0 };
+    if (deletionScan.proposals.length > 0) {
+      if (step === 'line-mode') pushPreCleanStep();
+      step = 'deletion-review';
+      return;
+    }
+    finishTaggedPreClean();
+  }
+
+  function chooseDeletion(index: number, accept: boolean) {
+    deletionChoices = new Map(deletionChoices).set(index, accept);
+  }
+
+  // 'reviewed' applies the per-item choices; the two blanket verdicts exist
+  // because a long list with one right answer should not cost a click a row —
+  // and Keep-all is the one that must exist, since without it the only way to
+  // refuse every proposal was to abandon the import.
+  function finishDeletionReview(verdict: 'accept-all' | 'keep-all' | 'reviewed') {
+    if (!deletionScan) {
+      preCleanLost('the proposed deletions could be applied');
+      return;
+    }
+    // The "apply reviewed choices" button is disabled until every proposal has
+    // a decision; this only guards a stray call.
+    if (verdict === 'reviewed' && deletionChoices.size !== deletionScan.proposals.length) return;
+    const accepted = new Set(
+      deletionScan.proposals
+        .filter(item => verdict === 'accept-all'
+          || (verdict === 'reviewed' && deletionChoices.get(item.index) === true))
+        .map(item => item.index),
+    );
+    preCleanWarnings = [
+      ...preCleanWarnings,
+      ...deletionScan.proposals
+        .filter(item => !accepted.has(item.index))
+        .map(item => `Proposed deletion “${item.text}” was excluded during review.`),
+    ];
+    const applied = applyDeletionProposals(taggedBody, deletionScan.proposals, accepted);
+    taggedBody = applied.text;
+    stripCounts = applied.counts;
+    finishTaggedPreClean();
+  }
+
+  function finishTaggedPreClean() {
+    if (!taggedPreClean) {
+      preCleanLost('the cleaned text could be reassembled');
+      return;
+    }
+    dehyphenatedText = rebuildPreCleanSource(taggedPreClean.sections, taggedBody);
+    runEmphasisScan();
   }
 
   // Classify markdown emphasis in the dehyphenated text — a discovery pass
@@ -361,13 +596,13 @@
     try {
       summary = await runImport({
         raw: dehyphenatedText ?? file.text,
-        // The PDF converter's pristine upload — .original gets the actual
-        // pdftotext extraction instead of the tagged working text. Omitted
-        // (falls back to `raw`) for a non-PDF import, unchanged from before.
-        ...(originalRawText !== null ? { original: originalRawText } : {}),
+        original: originalRawText ?? file.text,
         ...(Object.keys(convertTitles).length ? { titles: convertTitles } : {}),
         ...(importNoTicks?.length ? { noTicks: importNoTicks } : {}),
         emphasisChoices: emphReviewChoices.size ? emphReviewChoices : undefined,
+        ...(taggedTextPath ? {
+          preClean: { warnings: preCleanWarnings, stripCounts },
+        } : {}),
         work,
         translator: translator.trim(),
         license,
@@ -478,6 +713,7 @@ found among ends…</pre>
     <h2>Couldn't read this file</h2>
     <p class="imp-note">{refusalMsg}</p>
     <div class="imp-actions">
+      <button class="imp-primary" on:click={backToPick}>Choose another file</button>
       <button class="imp-quiet" on:click={() => onClose(null)}>Close</button>
     </div>
 
@@ -564,6 +800,108 @@ found among ends…</pre>
     <div class="imp-actions">
       <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
     </div>
+
+  {:else if step === 'line-mode'}
+    <h2>How are this file's lines broken?</h2>
+    <p class="imp-note">
+      The importer will not guess this. Pick the one that describes the file —
+      the highlighted option is the likelier of the two, not a decision already made.
+    </p>
+    <div class="imp-actions imp-mode-actions">
+      <button
+        class:imp-primary={lineMode === 'paragraph-per-line'}
+        on:click={() => applyLineMode('paragraph-per-line')}
+      >Each paragraph is one line</button>
+      <button
+        class:imp-primary={lineMode === 'wrapped'}
+        on:click={() => applyLineMode('wrapped')}
+      >Lines wrapped as printed; blank lines separate paragraphs</button>
+    </div>
+    <p class="imp-note">
+      One line per paragraph: every line break is kept as written. Wrapped as
+      printed: line breaks inside a block are joined back into running prose,
+      and the blank lines stay as the paragraph breaks.
+    </p>
+    <div class="imp-actions">
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
+    </div>
+
+  {:else if step === 'page-join-review'}
+    <h2>Page-break sentence joins</h2>
+    <p class="imp-note">
+      These paragraph breaks may split a sentence. Review every proposal. Click
+      a row to exclude or restore it; no join applies until you confirm below.
+    </p>
+    <div class="imp-review-list">
+      {#each pageJoinItems as item (item.index)}
+        <button
+          class="imp-review-row"
+          class:imp-review-excluded={pageJoinExclusions.has(item.index)}
+          aria-pressed={pageJoinExclusions.has(item.index)}
+          on:click={() => togglePageJoin(item.index)}
+        >
+          <span>…{item.before}</span>
+          <b>{pageJoinExclusions.has(item.index) ? 'Keep paragraph break' : 'Join here'}</b>
+          <span>{item.after}…</span>
+        </button>
+      {/each}
+    </div>
+    <div class="imp-actions">
+      <button class="imp-primary" on:click={() => finishPageJoinReview(true)}>Accept all</button>
+      <button on:click={() => finishPageJoinReview(false)}>
+        Apply {pageJoinItems.length - pageJoinExclusions.size} selected join{pageJoinItems.length - pageJoinExclusions.size === 1 ? '' : 's'}
+      </button>
+      {#if preCleanHistory.length}
+        <button class="imp-quiet" on:click={preCleanBack}>Back</button>
+      {/if}
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
+    </div>
+
+  {:else if step === 'deletion-review'}
+    <h2>Proposed paragraph deletions</h2>
+    {#if deletionScan}
+      <p class="imp-note">
+        {deletionScan.proposals.length} of {deletionScan.paragraphCount} paragraphs flagged.
+        Nothing below has been removed. Accept or keep every item before the import can continue.
+      </p>
+      <div class="imp-review-list">
+        {#each deletionScan.proposals as item (item.index)}
+          <section class="imp-deletion-row">
+            {#if item.before}<p>…{item.before}</p>{/if}
+            <p class="imp-deletion-hit">{item.text}</p>
+            {#if item.after}<p>{item.after}…</p>{/if}
+            <p class="imp-note">
+              {item.reasons.includes('folio') ? 'Cadence-matched folio paragraph' : ''}
+              {item.reasons.length > 1 ? ' · ' : ''}
+              {item.reasons.includes('stray-heading') ? 'Heading numeral matching the adjacent chapter tag' : ''}
+            </p>
+            <div class="imp-actions imp-item-actions">
+              <button
+                class:imp-choice-active={deletionChoices.get(item.index) === true}
+                aria-pressed={deletionChoices.get(item.index) === true}
+                on:click={() => chooseDeletion(item.index, true)}
+              >Accept deletion</button>
+              <button
+                class:imp-choice-active={deletionChoices.get(item.index) === false}
+                aria-pressed={deletionChoices.get(item.index) === false}
+                on:click={() => chooseDeletion(item.index, false)}
+              >Keep paragraph</button>
+            </div>
+          </section>
+        {/each}
+      </div>
+      <div class="imp-actions">
+        <button class="imp-primary" on:click={() => finishDeletionReview('accept-all')}>Accept all proposed deletions</button>
+        <button on:click={() => finishDeletionReview('keep-all')}>Keep all — delete nothing</button>
+        <button disabled={deletionChoices.size !== deletionScan.proposals.length} on:click={() => finishDeletionReview('reviewed')}>
+          Apply reviewed choices
+        </button>
+        {#if preCleanHistory.length}
+          <button class="imp-quiet" on:click={preCleanBack}>Back</button>
+        {/if}
+        <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
+      </div>
+    {/if}
 
   {:else if step === 'emph-review'}
     <h2>Emphasis check</h2>
@@ -662,6 +1000,12 @@ found among ends…</pre>
       {#if summary.footnoteSummary}
         <p class="imp-summary">{summary.footnoteSummary}</p>
       {/if}
+      {#if summary.stripCounts}
+        <ul class="imp-stats">
+          <li><b>{summary.stripCounts.folioParagraphs}</b> folio paragraphs stripped</li>
+          <li><b>{summary.stripCounts.strayHeadingNumerals}</b> stray heading numerals stripped</li>
+        </ul>
+      {/if}
       {#if convertReport}
         <!-- Honesty report for a PDF-conversion import: everything the
              converter dropped, suppressed, or preserved verbatim, so the
@@ -710,7 +1054,10 @@ found among ends…</pre>
   {:else}
     <h2>Import failed</h2>
     <p class="imp-error">{errorMsg}</p>
+    <!-- A failed import is usually answered by a corrected file, so the
+         drop zone is offered back here exactly as it is on a refusal. -->
     <div class="imp-actions">
+      <button class="imp-primary" on:click={backToPick}>Choose another file</button>
       <button class="imp-quiet" on:click={() => onClose(null)}>Close</button>
     </div>
   {/if}
@@ -760,12 +1107,17 @@ found among ends…</pre>
   .imp-radio legend { font-weight: 600; font-size: 0.85rem; padding: 0 0.3rem; }
   .imp-radio label { display: block; margin: 0.35rem 0; font-size: 0.85rem; }
   .imp-actions { display: flex; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap; }
+  /* One declaration per row: the two answers are sentences, not chips, and
+     must never wrap into each other on a narrow dialog. */
+  .imp-mode-actions { flex-direction: column; align-items: stretch; }
+  .imp-mode-actions button { text-align: left; padding: 0.6rem 0.9rem; }
   .imp-actions button {
     font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
     border: 1px solid var(--border); border-radius: 6px;
     background: transparent; color: var(--text);
     padding: 0.45rem 0.9rem;
   }
+  .imp-actions button:disabled { opacity: 0.5; cursor: default; }
   .imp-primary { background: var(--accent) !important; color: var(--on-accent) !important; border-color: var(--accent) !important; }
   .imp-primary:disabled { opacity: 0.5; cursor: default; }
   .imp-quiet { color: var(--text-mid) !important; }
@@ -791,6 +1143,25 @@ found among ends…</pre>
     background: var(--page-bg); border: 1px solid var(--border); border-radius: 8px;
     padding: 0.7rem 0.9rem; margin: 0.8rem 0;
   }
+  .imp-review-list { display: grid; gap: 0.65rem; margin-top: 0.8rem; }
+  .imp-review-row {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.55rem; align-items: center;
+    width: 100%; text-align: left; font: inherit; color: var(--text);
+    background: var(--page-bg); border: 1px solid var(--accent); border-radius: 8px;
+    padding: 0.65rem 0.75rem; cursor: pointer;
+  }
+  .imp-review-row span { font-family: var(--font-english); line-height: 1.45; }
+  .imp-review-row b { font-size: 0.72rem; color: var(--accent); white-space: nowrap; }
+  .imp-review-excluded { border-color: var(--border); opacity: 0.72; }
+  .imp-review-excluded b { color: var(--text-mid); }
+  .imp-deletion-row {
+    background: var(--page-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.65rem 0.75rem;
+  }
+  .imp-deletion-row > p { margin: 0.2rem 0; font-family: var(--font-english); line-height: 1.45; }
+  .imp-deletion-hit { font-weight: 700; color: var(--error); }
+  .imp-item-actions { margin-top: 0.5rem; }
+  .imp-choice-active { border-color: var(--accent) !important; color: var(--accent) !important; }
   .imp-emph-hit {
     background: var(--accent-soft, rgba(139, 90, 43, 0.18));
     color: inherit; font-weight: 600;

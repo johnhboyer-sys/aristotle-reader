@@ -12,12 +12,12 @@
 // In the browser dev harness (no Tauri), the same records live in
 // localStorage so the whole flow is testable in a plain browser.
 
-import { fetchBook, fetchChapters, type BookData, type OverlayPiece } from '@shared/lib/data';
+import { fetchBook, fetchChapters, type BookData, type ChapterRef, type OverlayPiece } from '@shared/lib/data';
 import type { TranslationRef } from '@shared/lib/works';
 import { getWork } from '@shared/lib/works';
 import { isTauri } from './runtime';
 import {
-  parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation,
+  parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation, auditChapterKeys,
   type ParsedTranslation, type TranslationMeta, type FootnoteScope,
 } from './translation-file';
 import { buildChapterInputs } from './aligner/reference';
@@ -75,6 +75,8 @@ export interface ImportSummary {
   replaced: boolean;
   /** e.g. "Detected continuous work-level numbering — 222 footnotes." Undefined when the file has no footnotes block. */
   footnoteSummary?: string;
+  /** Tagged-path strip results. Present even when both rules found zero. */
+  stripCounts?: { folioParagraphs: number; strayHeadingNumerals: number };
 }
 
 // ── storage backends ─────────────────────────────────────────────────────────
@@ -375,16 +377,15 @@ export function getImportCitation(work: string, id: string): string | null {
 // ── the import operation ─────────────────────────────────────────────────────
 
 export interface ImportRequest {
-  raw: string;                 // file content as uploaded (dehyphenated, but still carrying
-                                // emphasis markers — parseTranslationFile classifies those)
+  raw: string;                 // reviewed working text, still carrying emphasis markers
+                                // that parseTranslationFile classifies
   /**
    * The pristine upload, when it differs from `raw` — e.g. ImportDialog's
    * PDF-conversion pre-stage sets `raw` to the CONVERTER'S tagged output
    * (what actually gets parsed/aligned/canonicalized) but wants the
-   * `.original` safety-net file to hold the real pdftotext extraction, not
-   * the tagged text. Falls back to `raw` when omitted — every pre-existing
-   * caller (a plain/hand-tagged import has no separate "original") keeps
-   * today's behavior unchanged.
+   * `.original` safety-net file to hold the exact upload, not cleaned or
+   * converted working text. Falls back to `raw` for callers outside the
+   * dialog that do not supply a separate original.
    */
   original?: string;
   work: string;                // corpus slug (from the dropdown — never free text)
@@ -421,6 +422,35 @@ export interface ImportRequest {
    * when omitted, so a plain hand-tagged import carrying the header still works.
    */
   noTicks?: string[];
+  /** Results from ImportDialog's tagged-body review, added to the Done report. */
+  preClean?: {
+    warnings: string[];
+    stripCounts: { folioParagraphs: number; strayHeadingNumerals: number };
+  };
+}
+
+/** Exact bytes supplied to the `.original` storage slot. */
+export function originalForStorage(req: Pick<ImportRequest, 'raw' | 'original'>): string {
+  return req.original ?? req.raw;
+}
+
+/**
+ * Book index → its last chapter number, read off `chapters.json`. Feeds the
+ * chapter-key audit: `{1.99}` on a fourteen-chapter book is as unimportable as
+ * a book number past the end of the work.
+ */
+export function lastChapterPerBook(
+  chaptersIndex: Record<string, ChapterRef[]>,
+): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const [book, refs] of Object.entries(chaptersIndex)) {
+    const bookNum = Number(book);
+    if (!Number.isInteger(bookNum) || !refs?.length) continue;
+    const numbered = refs.map(ref => Number(ref.chapter)).filter(n => Number.isInteger(n));
+    if (numbered.length !== refs.length) continue;   // non-numeric divisions: no bound to give
+    out.set(bookNum, Math.max(...numbered));
+  }
+  return out;
 }
 
 // §B3 import summary: "Detected continuous work-level numbering — 222
@@ -471,10 +501,6 @@ export async function runImport(
   // tagged import, the file's own frontmatter.
   const noTickSet = new Set(req.noTicks ?? parsed.meta.noTicks ?? []);
 
-  const s = await store();
-  const already = await s.exists(req.work, meta.id);
-  if (already && !req.replace) throw new ImportCollision(req.work, meta.id);
-
   if (parsed.density === 'none') {
     throw new Error(
       'No {book.chapter} tags found. The importer needs at least chapter tags '
@@ -486,8 +512,17 @@ export async function runImport(
   const { chapters } = splitChapters(parsed);
   if (!chapters.length) throw new Error('No chapters found after the tag scan.');
 
-  // Per-book alignment: fetch each involved book's data once.
+  // The per-book chapter index doubles as the audit's upper bound, so it is
+  // fetched before the audit rather than at alignment time.
   const chaptersIndex = await fetchChapters(req.work);
+  auditChapterKeys(parsed.tags, workMeta.books, {
+    bookLabels: workMeta.bookLabels,
+    chaptersPerBook: lastChapterPerBook(chaptersIndex),
+  });
+
+  const s = await store();
+  const already = await s.exists(req.work, meta.id);
+  if (already && !req.replace) throw new ImportCollision(req.work, meta.id);
   const books = [...new Set(chapters.map(c => c.book))].sort((a, b) => a - b);
   const aligned: ChapterAlignment[] = [];
   const alignment: Record<string, ChapterAlignment> = {};
@@ -517,7 +552,7 @@ export async function runImport(
   const record: ImportRecord = {
     meta,
     density: parsed.density,
-    warnings: parsed.warnings,
+    warnings: [...parsed.warnings, ...(req.preClean?.warnings ?? [])],
     stats: {
       tagged: aligned.reduce((n, c) => n + c.stats.tagged, 0),
       placed: aligned.reduce((n, c) => n + c.stats.placed, 0),
@@ -535,7 +570,7 @@ export async function runImport(
   const canonical = parsed.hasFrontmatter
     ? req.raw
     : serializeFrontmatter(meta) + req.raw;
-  await s.write(req.work, meta.id, canonical, req.original ?? req.raw, record);
+  await s.write(req.work, meta.id, canonical, originalForStorage(req), record);
   registered.set(`${req.work}/${meta.id}`, record);
   installHooks();
 
@@ -543,11 +578,12 @@ export async function runImport(
     meta,
     density: parsed.density,
     footnoteSummary: footnoteSummaryLine(parsed.footnoteScope, parsed.footnotes),
-    warnings: parsed.warnings,
+    warnings: record.warnings,
     chapters: record.stats.chapters,
     tagged: record.stats.tagged,
     placed: record.stats.placed,
     interpolated: record.stats.interpolated,
     replaced: already,
+    ...(req.preClean ? { stripCounts: req.preClean.stripCounts } : {}),
   };
 }

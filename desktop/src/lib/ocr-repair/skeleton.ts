@@ -203,6 +203,29 @@ function parseCleanRoman(token: string): number | null {
   return romanFromNumber(total) === upper ? total : null;
 }
 
+export type StrayNumeralStyle = 'roman' | 'arabic';
+
+/**
+ * Parse an isolated division numeral only when it agrees with the chapter
+ * tag beside it. Roman and OCR-shaped Arabic are separate branches: `I I`
+ * can mean strict Roman II or OCR-shaped decimal 11, and the expected chapter
+ * resolves that ambiguity. A style hint limits the accepted branch; without
+ * one, both branches are tried.
+ */
+export function parseStrayHeadingNumeral(
+  token: string,
+  expectedChapter: number,
+  styleHint?: StrayNumeralStyle,
+): number | null {
+  const compact = token.replace(/\s+/gu, '');
+  const branches = styleHint ? [styleHint] : ['roman', 'arabic'] as const;
+  for (const style of branches) {
+    const value = style === 'roman' ? parseCleanRoman(compact) : degarbleNumeral(compact);
+    if (value === expectedChapter) return value;
+  }
+  return null;
+}
+
 function parseOpeningChapter(token: string): number | null {
   const arabic = parseArabic(token);
   if (arabic !== null) return arabic;

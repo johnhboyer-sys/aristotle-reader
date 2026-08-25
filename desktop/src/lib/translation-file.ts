@@ -284,6 +284,15 @@ export function splitFootnoteBlock(body: string): {
   footnoteScope: FootnoteScope;
   noteRender?: 'endnote';
   warnings: string[];
+  /**
+   * Line index (input split on /\r?\n/) of the sentinel this split actually
+   * used, present only when a split happened. The pre-cleaner needs the
+   * boundary as a position in the ORIGINAL bytes and must not re-derive it
+   * from a second, differently-spelled sentinel regex: two spellings disagree
+   * on a line ending in a non-ASCII space, and the file then splits one way
+   * here and another way there, leaving note definitions in the body.
+   */
+  sentinelLine?: number;
 } {
   const lines = body.split(/\r?\n/);
   let sentinelIdx = -1;
@@ -317,6 +326,7 @@ export function splitFootnoteBlock(body: string): {
     footnoteScope: scope,
     noteRender,
     warnings: [],
+    sentinelLine: sentinelIdx,
   };
 }
 
@@ -671,4 +681,94 @@ export function splitChapters(p: ParsedTranslation): {
     };
   });
   return { preamble, chapters };
+}
+
+export interface ChapterKeyAuditOptions {
+  /**
+   * The work's printed book labels (`WORKS[].bookLabels`). Storage indices are
+   * contiguous, but the print numbering need not be — the Eudemian Ethics
+   * stores five books labelled I, II, III, VII, VIII — so a refusal quoting
+   * "books 1–5" would send the reader looking for a book IV that is not
+   * missing from the file at all.
+   */
+  bookLabels?: string[];
+  /**
+   * Book index → the last chapter that book has, from `chapters.json`.
+   * Supplying this map means "the chapter index was loaded": a book inside
+   * the work's registry range that is then MISSING from the map has not been
+   * audited, and the audit refuses rather than waving it through. A map is
+   * an authority only over what it contains; silence in it is not a pass.
+   * (Chapter *gaps* inside a book are R6's job, not this audit's.)
+   */
+  chaptersPerBook?: ReadonlyMap<number, number>;
+}
+
+function bookRange(maxBooks: number, bookLabels?: string[]): string {
+  const range = `books 1–${maxBooks}`;
+  return bookLabels && bookLabels.length === maxBooks
+    ? `${range}, printed ${bookLabels.join('/')}`
+    : range;
+}
+
+function bookName(book: number, bookLabels?: string[]): string {
+  const label = bookLabels?.[book - 1];
+  return label && label !== String(book) ? `book ${book} (printed ${label})` : `book ${book}`;
+}
+
+/**
+ * Reject chapter keys that cannot safely feed the importer's per-key prose
+ * map. The check uses tag order from the source and runs after the work is
+ * known, so book bounds come from that work's registry entry and chapter
+ * bounds from its `chapters.json`.
+ */
+export function auditChapterKeys(
+  tags: InlineTag[],
+  maxBooks: number,
+  options: ChapterKeyAuditOptions = {},
+): void {
+  const { bookLabels, chaptersPerBook } = options;
+  const chapters = tags.filter(tag => tag.kind === 'chapter');
+  const seen = new Set<string>();
+  let previous: InlineTag | null = null;
+  for (const tag of chapters) {
+    const key = `${tag.book}.${tag.chapter}`;
+    if (!tag.book || !tag.chapter || tag.book > maxBooks) {
+      throw new Error(
+        `Chapter key {${key}} is out of range for the selected work (${bookRange(maxBooks, bookLabels)}).`,
+      );
+    }
+    if (chaptersPerBook) {
+      const lastChapter = chaptersPerBook.get(tag.book);
+      if (lastChapter === undefined) {
+        throw new Error(
+          `Chapter key {${key}} cannot be checked: this work's chapter index has no `
+          + `entry for ${bookName(tag.book, bookLabels)}, so the importer cannot tell `
+          + 'a real chapter from a mis-read numeral. Nothing was imported.',
+        );
+      }
+      if (tag.chapter > lastChapter) {
+        throw new Error(
+          `Chapter key {${key}} is out of range: ${bookName(tag.book, bookLabels)} `
+          + `has ${lastChapter} chapter${lastChapter === 1 ? '' : 's'}.`,
+        );
+      }
+    }
+    if (previous) {
+      const bookRestart = tag.book < previous.book!;
+      const chapterRestart = tag.book === previous.book
+        && tag.chapter === 1
+        && previous.chapter! > 1;
+      if (bookRestart || chapterRestart) {
+        throw new Error(`Restarted chapter key {${key}} follows {${previous.book}.${previous.chapter}}.`);
+      }
+      if (tag.book === previous.book && tag.chapter! < previous.chapter!) {
+        throw new Error(`Backward chapter key {${key}} follows {${previous.book}.${previous.chapter}}.`);
+      }
+    }
+    if (seen.has(key)) {
+      throw new Error(`Duplicate chapter key {${key}} would replace earlier prose.`);
+    }
+    seen.add(key);
+    previous = tag;
+  }
 }
