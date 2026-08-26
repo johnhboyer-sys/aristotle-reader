@@ -322,6 +322,30 @@ export async function updateFreeWorkAuthor(
 }
 
 /**
+ * Update the original language of an existing free work. Empty text clears it;
+ * an unknown work id is a no-op.
+ *
+ * The language is not decoration: freeWorkManifest turns "Greek"/"Latin" into
+ * the manifest's originalLanguage, which is what decides the dictionary and
+ * parser a work gets, and the wording rides into the AI prompts and the
+ * bilingual export filename. Until now it could only be set when the document
+ * was created, so a work imported under the wrong language stayed there.
+ */
+export async function updateFreeWorkLanguage(
+  workId: string,
+  language: string,
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  const record = (await listFreeWorkRecords(storage)).find((w) => w.id === workId);
+  if (!record) return;
+  const next: FreeWorkRecord = { ...record };
+  const trimmed = language.trim();
+  if (trimmed) next.language = trimmed;
+  else delete next.language;
+  await registerFreeWork(next, storage);
+}
+
+/**
  * Persist the Book boundaries for an existing document work. The registry read
  * sanitizes first, and an empty or unusable result removes the key so old or
  * corrupt data cannot leave the rail in a half-structured state.

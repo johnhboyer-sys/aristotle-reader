@@ -12,6 +12,7 @@ import {
   updateFreeWorkAuthor,
   updateFreeWorkBookContainers,
   updateFreeWorkBooks,
+  updateFreeWorkLanguage,
   updateFreeWorkLevels,
   withAddedBook,
   withAddedChapter,
@@ -471,5 +472,42 @@ describe('removing a work', () => {
     await unregisterFreeWork('my-doc', storage);
     expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
     expect(await storage.list('my-doc')).toEqual(['b01c01.md', 'b01c02.md']);
+  });
+});
+
+describe('setting a work’s language after the fact', () => {
+  it('changes which dictionary the work will get', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, language: 'Greek' }, storage);
+    await updateFreeWorkLanguage('my-doc', 'Latin', storage);
+    const [work] = await listFreeWorks(storage);
+    expect(work.language).toBe('Latin');
+    expect(work.originalLanguage).toBe('latin');
+  });
+
+  it('keeps a language no dictionary knows, and claims none for it', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await updateFreeWorkLanguage('my-doc', '  German  ', storage);
+    const [work] = await listFreeWorks(storage);
+    expect(work.language).toBe('German');
+    expect(work.originalLanguage).toBeUndefined();
+  });
+
+  it('clears the language when the field is emptied', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, language: 'Greek' }, storage);
+    await updateFreeWorkLanguage('my-doc', '   ', storage);
+    const [record] = await listFreeWorkRecords(storage);
+    expect('language' in record).toBe(false);
+  });
+
+  it('leaves everything else on the record alone', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, author: 'Aquinas', language: 'Latin' }, storage);
+    await updateFreeWorkLanguage('my-doc', 'Greek', storage);
+    const [record] = await listFreeWorkRecords(storage);
+    expect(record.author).toBe('Aquinas');
+    expect(record.title).toBe('My Doc');
   });
 });

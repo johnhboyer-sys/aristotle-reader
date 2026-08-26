@@ -2,16 +2,20 @@
   let {
     title,
     initialAuthor,
+    initialLanguage,
     onClose,
     onSave,
   }: {
     title: string;
     initialAuthor: string;
+    /** The work's original language, as the user wrote it ('' when unset). */
+    initialLanguage: string;
     onClose: () => void;
-    onSave: (author: string) => Promise<void>;
+    onSave: (author: string, language: string) => Promise<void>;
   } = $props();
 
   let author = $state(initialAuthor);
+  let language = $state(initialLanguage);
   let errorMessage = $state<string | null>(null);
   let writing = $state(false);
 
@@ -20,7 +24,7 @@
     writing = true;
     errorMessage = null;
     try {
-      await onSave(author);
+      await onSave(author, language);
       onClose();
     } catch (err) {
       console.error('WorkDetailsDialog save', err);
@@ -58,6 +62,23 @@
       <label for="work-author">Author</label>
       <input id="work-author" type="text" bind:value={author} />
 
+      <!-- The language decides which dictionary and parser this work gets, so
+           it is offered as a list — but typed freely too, because a work in
+           German is a work in German and the app should not argue. -->
+      <label for="work-language">Original language</label>
+      <input
+        id="work-language"
+        type="text"
+        list="work-language-options"
+        placeholder="Greek, Latin, German…"
+        bind:value={language}
+      />
+      <datalist id="work-language-options">
+        <option value="Greek"></option>
+        <option value="Latin"></option>
+      </datalist>
+      <p class="field-note">Greek and Latin get word parsing and dictionary lookup.</p>
+
       <div class="form-actions">
         <button class="secondary-btn" type="button" onclick={onClose}>Cancel</button>
         <button class="primary-btn" type="submit" disabled={writing}>
@@ -69,6 +90,11 @@
 </div>
 
 <style>
+  .field-note {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: var(--text-light);
+  }
   .scrim {
     position: fixed;
     inset: 0;

@@ -32,6 +32,7 @@
     removeFreeWork,
     updateFreeWorkAuthor,
     updateFreeWorkBookContainers,
+    updateFreeWorkLanguage,
   } from './lib/works/freeWorks';
   import {
     withAddedBookContainer,
@@ -333,8 +334,9 @@
     workDetailsWork = work && isDocumentWork(work) ? work : null;
   }
 
-  async function saveWorkAuthor(workId: string, author: string) {
+  async function saveWorkDetails(workId: string, author: string, language: string) {
     await updateFreeWorkAuthor(workId, author);
+    await updateFreeWorkLanguage(workId, language);
     await reloadWorks();
   }
 
@@ -865,8 +867,9 @@
     <WorkDetailsDialog
       title={workDetailsWork.title}
       initialAuthor={workDetailsWork.author}
+      initialLanguage={workDetailsWork.language ?? ''}
       onClose={() => (workDetailsWork = null)}
-      onSave={(author) => saveWorkAuthor(workDetailsWork!.id, author)}
+      onSave={(author, language) => saveWorkDetails(workDetailsWork!.id, author, language)}
     />
   {/if}
 
