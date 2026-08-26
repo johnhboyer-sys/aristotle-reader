@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DehyphenationResult } from '../dehyphenate';
+import { getPublisherPreset } from '../import-presets';
 import { splitFootnoteBlock, splitFrontmatter } from '../translation-file';
 import {
   applyDeletionProposals,
@@ -466,6 +467,15 @@ describe('S2 and S3 proposed deletions', () => {
     expect(contradiction.warnings).toEqual([
       'Stray heading numeral “I I” contradicts chapter tag {1.4} and was kept.',
     ]);
+  });
+
+  it('threads Clarendon Roman and Peripatetic Arabic style hints into S3', () => {
+    const clarendon = getPublisherPreset('clarendon').strayNumeralStyle;
+    const peripatetic = getPublisherPreset('peripatetic').strayNumeralStyle;
+    expect(scanDeletionProposals('I I\n{1.2} Roman chapter.', clarendon).strayHeadingCandidates).toBe(1);
+    expect(scanDeletionProposals('I I\n{1.11} Arabic chapter.', clarendon).strayHeadingCandidates).toBe(0);
+    expect(scanDeletionProposals('I I\n{1.11} Arabic chapter.', peripatetic).strayHeadingCandidates).toBe(1);
+    expect(scanDeletionProposals('I I\n{1.2} Roman chapter.', peripatetic).strayHeadingCandidates).toBe(0);
   });
 
   it('does not report a proposed folio as a numeral it kept', () => {

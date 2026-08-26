@@ -5,6 +5,7 @@ const runImportMock = vi.hoisted(() => vi.fn());
 const dehyphenateMock = vi.hoisted(() => vi.fn());
 const listReviewItemsMock = vi.hoisted(() => vi.fn());
 const resolveReviewsMock = vi.hoisted(() => vi.fn());
+const fetchChaptersMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../lib/imports', () => {
   class ImportCollision extends Error {
@@ -12,8 +13,15 @@ vi.mock('../lib/imports', () => {
       super('collision');
     }
   }
-  return { runImport: runImportMock, ImportCollision };
+  class DivisionGapError extends Error {
+    constructor(public audit: unknown) {
+      super('division gaps');
+    }
+  }
+  return { runImport: runImportMock, ImportCollision, DivisionGapError };
 });
+
+vi.mock('@shared/lib/data', () => ({ fetchChapters: fetchChaptersMock }));
 
 vi.mock('../lib/dehyphenate', () => ({
   dehyphenate: dehyphenateMock,
@@ -22,12 +30,19 @@ vi.mock('../lib/dehyphenate', () => ({
 }));
 
 import ImportDialog from '../components/ImportDialog.svelte';
+import { clarendonFourPages } from '../lib/pdf-import/__tests__/fixtures/clarendon-geometry';
 
 type ImportReq = {
   raw: string;
   original: string;
   work: string;
   translator: string;
+  booksCovered: number[];
+  footnotePlacement?: 'page-bottom' | 'endnote';
+  footnotePlacementOverride?: 'page-bottom' | 'endnote';
+  waiveDivisionGaps?: boolean;
+  replace?: boolean;
+  idOverride?: string;
   preClean?: {
     warnings: string[];
     stripCounts: { folioParagraphs: number; strayHeadingNumerals: number };
@@ -41,6 +56,12 @@ beforeEach(() => {
   dehyphenateMock.mockReset();
   listReviewItemsMock.mockReset();
   resolveReviewsMock.mockReset();
+  fetchChaptersMock.mockReset();
+  fetchChaptersMock.mockResolvedValue(Object.fromEntries(
+    Array.from({ length: 10 }, (_, index) => [String(index + 1), [{
+      chapter: '1', column: `${1094 + index}a`, line: '1', bekker: `${1094 + index}a1–${1094 + index}b20`,
+    }]]),
+  ));
   dehyphenateMock.mockImplementation(async (text: string) => ({
     text: text.replace('exam-\nple', 'example'),
     decisions: text.includes('exam-\nple')
@@ -67,6 +88,16 @@ beforeEach(() => {
     placed: 0,
     interpolated: 0,
     replaced: false,
+    divisionAudit: {
+      booksCovered: req.booksCovered,
+      bookLabels: Array.from({ length: 10 }, (_, index) => String(index + 1)),
+      booksFound: req.booksCovered.length,
+      booksExpected: req.booksCovered.length,
+      chaptersFound: req.booksCovered.length,
+      chaptersExpected: req.booksCovered.length,
+      chapterKeysFound: Object.fromEntries(req.booksCovered.map(book => [book, [1]])),
+      gaps: [],
+    },
     stripCounts: req.preClean?.stripCounts,
   }));
 });
@@ -133,10 +164,112 @@ async function excludeEveryJoin() {
 }
 
 async function submitMetadata() {
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+  await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+  await fillAndImport();
+}
+
+async function fillAndImport() {
   await fireEvent.input(screen.getByPlaceholderText('e.g. Rackham'), { target: { value: 'Tester' } });
   await fireEvent.click(screen.getByLabelText('No'));
   await fireEvent.click(screen.getByRole('button', { name: 'Import' }));
 }
+
+async function selectValue(label: string, value: string) {
+  const select = screen.getByLabelText(label) as HTMLSelectElement;
+  select.value = value;
+  await fireEvent.change(select);
+}
+
+describe('ImportDialog Edition preflight', () => {
+  it('puts Edition before the tagged metadata and review flow, with Other and all books selected', async () => {
+    mount('{1.1} A synthetic chapter.');
+
+    expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Publisher')).toHaveValue('other');
+    expect(screen.queryByPlaceholderText('e.g. Rackham')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    const covered = screen.getAllByRole('checkbox');
+    expect(covered).toHaveLength(10);
+    expect(covered.every(input => (input as HTMLInputElement).checked)).toBe(true);
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByPlaceholderText('e.g. Rackham')).toBeInTheDocument();
+  });
+
+  it('puts Edition before layout conversion and the metadata form', async () => {
+    mount(clarendonFourPages);
+
+    expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('e.g. Rackham')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByPlaceholderText('e.g. Rackham')).toBeInTheDocument();
+  });
+
+  it('sends a partial books-covered declaration to R6', async () => {
+    mount('{1.1} A synthetic chapter.');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByLabelText('Book II'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await fillAndImport();
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(lastRequest().booksCovered).toEqual([1, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
+
+  it('applies Peripatetic endnotes unconditionally as the publisher default', async () => {
+    mount('{1.1} A synthetic chapter.');
+    await selectValue('Publisher', 'peripatetic');
+    await fireEvent.click(screen.getByText('Edition override'));
+    expect(screen.getByRole('option', { name: 'Publisher default (endnotes)' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Note display')).toHaveValue('');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await fillAndImport();
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(lastRequest().footnotePlacement).toBe('endnote');
+    expect(lastRequest().footnotePlacementOverride).toBeUndefined();
+  });
+
+  it('keeps the publisher selected when an Edition field is overridden', async () => {
+    mount('{1.1} A synthetic chapter.');
+    await selectValue('Publisher', 'peripatetic');
+    await fireEvent.click(screen.getByText('Edition override'));
+    await selectValue('Note display', 'page-bottom');
+    expect(screen.getByLabelText('Publisher')).toHaveValue('peripatetic');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await fillAndImport();
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(lastRequest().footnotePlacement).toBe('endnote');
+    expect(lastRequest().footnotePlacementOverride).toBe('page-bottom');
+  });
+
+  it('returns from the form to Edition, changes work, and moves forward again', async () => {
+    mount('{1.1} A synthetic chapter.');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByPlaceholderText('e.g. Rackham')).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+    fetchChaptersMock.mockResolvedValueOnce(Object.fromEntries(
+      Array.from({ length: 4 }, (_, index) => [String(index + 1), [{
+        chapter: '1', column: `${640 + index}a`, line: '1', bekker: `${640 + index}a1–${640 + index}b20`,
+      }]]),
+    ));
+    await selectValue('Work', 'PA');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    expect(screen.getAllByRole('checkbox')).toHaveLength(4);
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await fillAndImport();
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(lastRequest().work).toBe('PA');
+  });
+});
 
 describe('ImportDialog step 0 and tagged pre-clean gates', () => {
   it('passes the byte-identical upload as original when dehyphenation changes working text', async () => {
@@ -149,6 +282,7 @@ describe('ImportDialog step 0 and tagged pre-clean gates', () => {
     expect(lastRequest().original).toBe(raw);
     expect(screen.getByText(/folio paragraphs stripped/).closest('li')).toHaveTextContent('0 folio paragraphs stripped');
     expect(screen.getByText(/stray heading numerals stripped/).closest('li')).toHaveTextContent('0 stray heading numerals stripped');
+    expect(screen.getByText(/Division audit:/)).toHaveTextContent('0 missing chapters');
   });
 
   it('takes the tagged path through the hyphenation review queue', async () => {
@@ -278,6 +412,94 @@ describe('ImportDialog step 0 and tagged pre-clean gates', () => {
     }
     expect(lastRequest().preClean?.stripCounts).toEqual({ folioParagraphs: 0, strayHeadingNumerals: 0 });
     expect(lastRequest().preClean?.warnings).toHaveLength(3);
+  });
+
+  it('offers one R6 waiver click and threads it into the recorded import request', async () => {
+    const { DivisionGapError } = await import('../lib/imports');
+    const audit = {
+      booksCovered: [1],
+      bookLabels: ['I'],
+      booksFound: 1,
+      booksExpected: 1,
+      chaptersFound: 1,
+      chaptersExpected: 2,
+      chapterKeysFound: { 1: [1] },
+      gaps: [{ book: 1, chapter: 2 }],
+    };
+    runImportMock.mockRejectedValueOnce(new DivisionGapError(audit));
+    mount('{1.1} A synthetic incomplete copy.');
+    await submitMetadata();
+
+    expect(await screen.findByRole('heading', { name: 'Missing chapters in this copy' })).toBeInTheDocument();
+    expect(screen.getByText(/\{1\.2\}/)).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', {
+      name: 'Import anyway — this copy is known incomplete',
+    }));
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(2));
+    expect((runImportMock.mock.calls[1][0] as ImportReq).waiveDivisionGaps).toBe(true);
+  });
+
+  it('changes wrong coverage after R6 without rerunning reviews or recording a waiver', async () => {
+    const { DivisionGapError } = await import('../lib/imports');
+    runImportMock.mockRejectedValueOnce(new DivisionGapError({
+      booksCovered: Array.from({ length: 10 }, (_, index) => index + 1),
+      bookLabels: ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'],
+      booksFound: 1,
+      booksExpected: 10,
+      chaptersFound: 1,
+      chaptersExpected: 10,
+      chapterKeysFound: { 1: [1] },
+      gaps: Array.from({ length: 9 }, (_, index) => ({ book: index + 2, chapter: 1 })),
+    }));
+    mount('{1.1} A synthetic single-book copy.');
+    await submitMetadata();
+    expect(await screen.findByRole('heading', { name: 'Missing chapters in this copy' })).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Change books covered' }));
+    expect(screen.getByRole('heading', { name: 'Change books covered' })).toBeInTheDocument();
+    for (const checkbox of screen.getAllByRole('checkbox').slice(1)) {
+      await fireEvent.click(checkbox);
+    }
+    await fireEvent.click(screen.getByRole('button', { name: 'Retry import' }));
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(2));
+    const retry = runImportMock.mock.calls[1][0] as ImportReq;
+    expect(retry.booksCovered).toEqual([1]);
+    expect(retry.waiveDivisionGaps).toBeUndefined();
+    expect(dehyphenateMock).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/Incomplete-copy waiver recorded/)).not.toBeInTheDocument();
+  });
+
+  it('keeps Replace intent when a replacement needs the division waiver', async () => {
+    const { DivisionGapError, ImportCollision } = await import('../lib/imports');
+    const audit = {
+      booksCovered: [1],
+      bookLabels: ['I'],
+      booksFound: 1,
+      booksExpected: 1,
+      chaptersFound: 1,
+      chaptersExpected: 2,
+      chapterKeysFound: { 1: [1] },
+      gaps: [{ book: 1, chapter: 2 }],
+    };
+    runImportMock
+      .mockRejectedValueOnce(new ImportCollision('EN', 'test-en'))
+      .mockRejectedValueOnce(new DivisionGapError(audit));
+    mount('{1.1} A synthetic replacement.');
+    await submitMetadata();
+
+    expect(await screen.findByRole('heading', { name: 'Already in your library' })).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', { name: 'Replace it' }));
+    expect(await screen.findByRole('heading', { name: 'Missing chapters in this copy' })).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', {
+      name: 'Import anyway — this copy is known incomplete',
+    }));
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(3));
+    const waivedReplace = runImportMock.mock.calls[2][0] as ImportReq;
+    expect(waivedReplace.replace).toBe(true);
+    expect(waivedReplace.waiveDivisionGaps).toBe(true);
   });
 });
 

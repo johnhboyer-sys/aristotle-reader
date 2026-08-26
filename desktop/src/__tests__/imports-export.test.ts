@@ -15,7 +15,11 @@ vi.mock('@shared/lib/data', () => ({
 }));
 
 vi.mock('@shared/lib/works', () => ({
-  WORKS: [{ id: 'ethics' }, { id: 'politics' }],
+  WORKS: [
+    { id: 'ethics', title: 'Synthetic Ethics', books: 1, bookLabels: ['I'] },
+    { id: 'politics', title: 'Synthetic Politics', books: 1, bookLabels: ['I'] },
+    { id: 'partial', title: 'Synthetic Two-Book Work', books: 2, bookLabels: ['I', 'II'] },
+  ],
   getWork: mocks.getWork,
 }));
 
@@ -32,7 +36,7 @@ describe('imports', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
-    mocks.getWork.mockReturnValue({ id: 'ethics', books: 1 });
+    mocks.getWork.mockReturnValue({ id: 'ethics', title: 'Synthetic Ethics', books: 1, bookLabels: ['I'] });
     mocks.fetchChapters.mockResolvedValue({ '1': [{ chapter: 1, column: '1094a', line: '1' }] });
     mocks.fetchBook.mockResolvedValue({ book: 1, segments: [] });
     mocks.buildChapterInputs.mockReturnValue([
@@ -79,6 +83,7 @@ describe('imports', () => {
       language: 'en',
     });
     expect(progress).toEqual(['Scanning tags…', 'Aligning Book 1 of 1…', 'Writing library files…']);
+    expect(mocks.fetchChapters).toHaveBeenCalledTimes(1);
     expect(JSON.parse(localStorage.getItem('import-map:ethics/jane-doe-ethics')!)).toMatchObject({
       meta: { translator: 'Jane Doe' },
       overlaysByBook: { '1': { seg1: [{ text: 'Happiness.' }] } },
@@ -116,6 +121,101 @@ describe('imports', () => {
       translator: 'Jane Doe',
       license: 'user-supplied',
     })).rejects.toBeInstanceOf(ImportCollision);
+  });
+
+  it('rejects an R6 gap inside coverage, then records the exact one-click waiver', async () => {
+    const refs = [1, 2, 3].map(chapter => ({
+      chapter: String(chapter), column: `100${chapter}a`, line: '1', bekker: `100${chapter}a1–100${chapter}b20`,
+    }));
+    mocks.fetchChapters.mockResolvedValue({ '1': refs });
+    const { DivisionGapError, runImport } = await import('../lib/imports');
+    const request = {
+      raw: '{1.1} First.\n{1.3} Third.',
+      work: 'ethics',
+      translator: 'Incomplete Copy',
+      license: 'user-supplied' as const,
+      booksCovered: [1],
+    };
+
+    await expect(runImport(request)).rejects.toBeInstanceOf(DivisionGapError);
+    expect(localStorage.getItem('import-map:ethics/incomplete-copy-ethics')).toBeNull();
+
+    const summary = await runImport({ ...request, waiveDivisionGaps: true });
+    expect(summary.divisionAudit).toMatchObject({ chaptersFound: 2, chaptersExpected: 3 });
+    expect(summary.waivedDivisionGaps).toEqual([{ book: 1, chapter: 2 }]);
+    expect(JSON.parse(localStorage.getItem('import-map:ethics/incomplete-copy-ethics')!))
+      .toMatchObject({ waivedDivisionGaps: [{ book: 1, chapter: 2 }] });
+  });
+
+  it('does not expect books outside a partial declaration', async () => {
+    mocks.getWork.mockReturnValue({
+      id: 'partial', title: 'Synthetic Two-Book Work', books: 2, bookLabels: ['I', 'II'],
+    });
+    mocks.fetchChapters.mockResolvedValue({
+      '1': [{ chapter: '1', column: '100a', line: '1', bekker: '100a1–100b20' }],
+      '2': [
+        { chapter: '1', column: '101a', line: '1', bekker: '101a1–101a20' },
+        { chapter: '2', column: '101b', line: '1', bekker: '101b1–101b20' },
+      ],
+    });
+    const { runImport } = await import('../lib/imports');
+
+    const summary = await runImport({
+      raw: '{1.1} Covered.\n{2.2} Present but outside the declaration.',
+      work: 'partial',
+      translator: 'Partial Copy',
+      license: 'user-supplied',
+      booksCovered: [1],
+    });
+    expect(summary.divisionAudit).toMatchObject({
+      booksCovered: [1], chaptersFound: 1, chaptersExpected: 1, gaps: [],
+    });
+  });
+
+  it('never lets the R6 waiver bypass R4 duplicate rejection', async () => {
+    const { runImport } = await import('../lib/imports');
+    await expect(runImport({
+      raw: '{1.1} First.\n{1.1} Duplicate.',
+      work: 'ethics',
+      translator: 'Duplicate Copy',
+      license: 'user-supplied',
+      booksCovered: [1],
+      waiveDivisionGaps: true,
+    })).rejects.toThrow('Duplicate chapter key {1.1}');
+  });
+
+  it('applies note placement in override, explicit file, then preset-default order', async () => {
+    const { runImport } = await import('../lib/imports');
+    await runImport({
+      raw: '{1.1} Text.[^1]\n\n<!-- footnotes scope=continuous render=endnote -->\n[^1]: Note.',
+      work: 'ethics',
+      translator: 'Explicit End Notes',
+      license: 'user-supplied',
+      footnotePlacement: 'page-bottom',
+    });
+    const explicitRecord = JSON.parse(localStorage.getItem('import-map:ethics/explicit-end-notes-ethics')!);
+    expect(explicitRecord.noteRender).toBe('endnote');
+
+    await runImport({
+      raw: '{1.1} Text with no note-render sentinel.',
+      work: 'ethics',
+      translator: 'Preset End Notes',
+      license: 'user-supplied',
+      footnotePlacement: 'endnote',
+    });
+    const presetRecord = JSON.parse(localStorage.getItem('import-map:ethics/preset-end-notes-ethics')!);
+    expect(presetRecord.noteRender).toBe('endnote');
+
+    await runImport({
+      raw: '{1.1} Text.[^1]\n\n<!-- footnotes scope=continuous render=endnote -->\n[^1]: Note.',
+      work: 'ethics',
+      translator: 'Override Page Notes',
+      license: 'user-supplied',
+      footnotePlacement: 'endnote',
+      footnotePlacementOverride: 'page-bottom',
+    });
+    const overrideRecord = JSON.parse(localStorage.getItem('import-map:ethics/override-page-notes-ethics')!);
+    expect(overrideRecord.noteRender).toBeUndefined();
   });
 });
 

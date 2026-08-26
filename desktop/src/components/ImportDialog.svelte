@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The import flow, end to end: metadata form → tag scan + alignment →
+  // The import flow, end to end: Edition → metadata → tag scan + alignment →
   // completion summary. One modal, one screen per step, no scrolling forms.
   //
   // The completion summary is a first-class moment, not a log line — it is
@@ -8,7 +8,12 @@
   // (estimate) lines are reported separately and honestly.
   import { onMount, onDestroy } from 'svelte';
   import { WORKS } from '@shared/lib/works';
-  import { runImport, ImportCollision, type ImportSummary } from '../lib/imports';
+  import {
+    runImport,
+    DivisionGapError,
+    ImportCollision,
+    type ImportSummary,
+  } from '../lib/imports';
   import { parseTranslationFile, composeCitation, emphasisScanInput, splitFrontmatter } from '../lib/translation-file';
   import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';
   import { scanEmphasis, listEmphasisReviewItems, type EmphasisReviewItem } from '../lib/emphasis';
@@ -31,6 +36,16 @@
     type TaggedPreCleanStart,
   } from '../lib/import-preclean';
   import { isTauri } from '../lib/runtime';
+  import {
+    DEFAULT_PUBLISHER_PRESET_ID,
+    PUBLISHER_PRESETS,
+    getPublisherPreset,
+    resolveWorkStructure,
+    type FootnotePlacement,
+    type PublisherPresetId,
+    type ResolvedWorkStructure,
+  } from '../lib/import-presets';
+  import { divisionAuditLine, divisionGapLabel, type DivisionAuditResult } from '../lib/division-audit';
   import type { UnlistenFn } from '@tauri-apps/api/event';
 
   export let file: { name: string; text: string } | null = null;
@@ -38,14 +53,22 @@
   export let onClose: (imported: ImportSummary | null) => void;
 
   type Step =
-    | 'pick' | 'form' | 'review' | 'line-mode' | 'page-join-review' | 'deletion-review'
+    | 'pick' | 'edition' | 'form' | 'review' | 'line-mode' | 'page-join-review' | 'deletion-review'
     | 'emph-review' | 'running' | 'collision' | 'done' | 'error'
+    | 'division-waiver' | 'coverage'
     // Phase 4B: the PDF-conversion pre-stage's own outcomes, ahead of the form.
     | 'convert-refused' | 'convert-choice';
   let step: Step = 'pick';
 
   // form state
   let work = presetWork ?? 'EN';
+  let publisherId: PublisherPresetId = DEFAULT_PUBLISHER_PRESET_ID;
+  let workStructure: ResolvedWorkStructure | null = null;
+  let structureLoading = false;
+  let structureError = '';
+  let booksCovered = new Set<number>();
+  let footnotePlacementOverride: '' | FootnotePlacement = '';
+  let structureLoadToken = 0;
   let translator = '';
   let personalCopy: 'yes' | 'no' | null = null;
   let advLicense: 'public-domain' | 'cc-by' | 'cc-by-sa' | 'not-sure' = 'not-sure';
@@ -60,6 +83,10 @@
   let errorMsg = '';
   let summary: ImportSummary | null = null;
   let collision: ImportCollision | null = null;
+  let divisionGapAudit: DivisionAuditResult | null = null;
+  let divisionWaiverAccepted = false;
+  let currentReplace = false;
+  let currentIdOverride: string | undefined;
 
   // Dehyphenation review queue: sites the dictionary couldn't safely decide.
   let reviewItems: ReviewItem[] = [];
@@ -109,6 +136,9 @@
     ? 'user-supplied' as const
     : advLicense as 'public-domain' | 'cc-by' | 'cc-by-sa';
   $: formReady = !!file && translator.trim().length > 0 && personalCopy !== null;
+  $: selectedPreset = getPublisherPreset(publisherId);
+  $: editionReady = !!file && !!workStructure && !structureLoading
+    && !structureError && booksCovered.size > 0;
 
   // Frontmatter the file may already carry (a re-import of a previously
   // exported/tagged file, or one hand-authored by an advanced user) — read
@@ -147,11 +177,28 @@
   let importNoTicks: string[] | undefined;
   let refusalMsg = '';
   let collapsedPages: number[] = [];
-  // The exact upload that triggered a needsChoice — kept so "Import with
-  // page-level anchors only" can re-run conversion on the SAME bytes.
-  let pendingConvert: { name: string; text: string } | null = null;
+  let pendingEditionFile: { name: string; text: string; body: string; layout: boolean } | null = null;
 
-  function acceptText(name: string, text: string, opts: ConvertOptions = {}) {
+  async function loadEditionWork(workId: string) {
+    const token = ++structureLoadToken;
+    structureLoading = true;
+    structureError = '';
+    workStructure = null;
+    booksCovered = new Set();
+    try {
+      const resolved = await resolveWorkStructure(workId);
+      if (token !== structureLoadToken) return;
+      workStructure = resolved;
+      booksCovered = new Set(Array.from({ length: resolved.books }, (_, index) => index + 1));
+    } catch (error) {
+      if (token !== structureLoadToken) return;
+      structureError = error instanceof Error ? error.message : String(error);
+    } finally {
+      if (token === structureLoadToken) structureLoading = false;
+    }
+  }
+
+  function acceptText(name: string, text: string) {
     originalRawText = text;
     // Peel a frontmatter header first: a layout FINAL carries a `noTicks` line
     // the frozen converter would fold into body text. Read it here, convert the
@@ -159,8 +206,8 @@
     // form pre-fill (fileMeta) and runImport's own parser still see it.
     const { meta: header, body } = splitFrontmatter(text);
     const boundedBody = splitPreCleanSource(text).body;
-    importNoTicks = header.noTicks;
-    if (!isLayoutExtraction(boundedBody)) {
+    const layout = isLayoutExtraction(boundedBody);
+    if (!layout) {
       if (!hasChapterTag(boundedBody)) {
         refusalMsg =
           'No {book.chapter} tags found. Add a chapter tag such as {1.7} before '
@@ -169,19 +216,73 @@
         step = 'convert-refused';
         return;
       }
+    }
+    file = { name, text };
+    pendingEditionFile = { name, text, body, layout };
+    importNoTicks = header.noTicks;
+    convertReport = null;
+    convertTitles = {};
+    divisionGapAudit = null;
+    divisionWaiverAccepted = false;
+    step = 'edition';
+    void loadEditionWork(work);
+  }
+
+  function continueEdition() {
+    if (!editionReady || !pendingEditionFile) return;
+    if (!pendingEditionFile.layout) {
       taggedTextPath = true;
-      file = { name, text };
-      convertReport = null;
-      convertTitles = {};
+      file = { name: pendingEditionFile.name, text: pendingEditionFile.text };
       step = 'form';
       return;
     }
+    convertPendingLayout();
+  }
+
+  function changePublisher(event: Event) {
+    publisherId = (event.currentTarget as HTMLSelectElement).value as PublisherPresetId;
+  }
+
+  function changeWork(event: Event) {
+    work = (event.currentTarget as HTMLSelectElement).value;
+    void loadEditionWork(work);
+  }
+
+  function changeFootnotePlacement(event: Event) {
+    footnotePlacementOverride = (event.currentTarget as HTMLSelectElement).value as '' | FootnotePlacement;
+  }
+
+  function toggleCoveredBook(book: number) {
+    const next = new Set(booksCovered);
+    if (next.has(book)) next.delete(book);
+    else next.add(book);
+    booksCovered = next;
+  }
+
+  function backToEdition() {
+    step = 'edition';
+  }
+
+  function changeBooksCovered() {
+    divisionWaiverAccepted = false;
+    step = 'coverage';
+  }
+
+  function retryWithChangedCoverage() {
+    if (booksCovered.size === 0) return;
+    divisionGapAudit = null;
+    divisionWaiverAccepted = false;
+    start(currentReplace, currentIdOverride);
+  }
+
+  function convertPendingLayout(opts: ConvertOptions = {}) {
+    if (!pendingEditionFile) return;
     taggedTextPath = false;
-    const result = convertLayoutExtraction(body, opts);
+    const result = convertLayoutExtraction(pendingEditionFile.body, opts);
     if (result.ok) {
       convertReport = result.report;
       convertTitles = result.titles;
-      file = { name, text: result.tagged };
+      file = { name: pendingEditionFile.name, text: result.tagged };
       step = 'form';
     } else if ('refused' in result) {
       refusalMsg =
@@ -193,7 +294,6 @@
       step = 'convert-refused';
     } else {
       collapsedPages = result.collapsedPages;
-      pendingConvert = { name, text };
       step = 'convert-choice';
     }
   }
@@ -206,7 +306,7 @@
     refusalMsg = '';
     errorMsg = '';
     collapsedPages = [];
-    pendingConvert = null;
+    pendingEditionFile = null;
     taggedTextPath = false;
     taggedPreClean = null;
     taggedBody = '';
@@ -224,6 +324,15 @@
     convertTitles = {};
     originalRawText = null;
     importNoTicks = undefined;
+    workStructure = null;
+    structureError = '';
+    structureLoading = false;
+    booksCovered = new Set();
+    footnotePlacementOverride = '';
+    divisionGapAudit = null;
+    divisionWaiverAccepted = false;
+    currentReplace = false;
+    currentIdOverride = undefined;
     dropError = '';
     step = 'pick';
   }
@@ -231,8 +340,8 @@
   // "Import with page-level anchors only" (the convert-choice step) — re-run
   // the SAME upload with the collapsed-page fallback opted in (§3.6).
   function retryPageLevelOnly() {
-    if (!pendingConvert) return;
-    acceptText(pendingConvert.name, pendingConvert.text, { pageLevelOnly: true });
+    if (!pendingEditionFile) return;
+    convertPendingLayout({ pageLevelOnly: true });
   }
 
   // A file the caller already supplied (App.svelte's own drag-drop handling
@@ -493,7 +602,7 @@
   }
 
   function findDeletionProposals() {
-    deletionScan = scanDeletionProposals(taggedBody);
+    deletionScan = scanDeletionProposals(taggedBody, selectedPreset.strayNumeralStyle);
     preCleanWarnings = [...deletionScan.warnings];
     deletionChoices = new Map();
     stripCounts = { folioParagraphs: 0, strayHeadingNumerals: 0 };
@@ -591,6 +700,8 @@
 
   async function start(replace = false, idOverride?: string) {
     if (!file) return;
+    currentReplace = replace;
+    currentIdOverride = idOverride;
     step = 'running';
     progress = 'Starting…';
     try {
@@ -603,6 +714,14 @@
         ...(taggedTextPath ? {
           preClean: { warnings: preCleanWarnings, stripCounts },
         } : {}),
+        booksCovered: [...booksCovered].sort((a, b) => a - b),
+        ...(divisionWaiverAccepted ? { waiveDivisionGaps: true } : {}),
+        ...(selectedPreset.footnotePlacement
+          ? { footnotePlacement: selectedPreset.footnotePlacement }
+          : {}),
+        ...(footnotePlacementOverride
+          ? { footnotePlacementOverride }
+          : {}),
         work,
         translator: translator.trim(),
         license,
@@ -617,11 +736,19 @@
       if (e instanceof ImportCollision) {
         collision = e;
         step = 'collision';
+      } else if (e instanceof DivisionGapError) {
+        divisionGapAudit = e.audit;
+        step = 'division-waiver';
       } else {
         errorMsg = e instanceof Error ? e.message : String(e);
         step = 'error';
       }
     }
+  }
+
+  function importWithDivisionWaiver() {
+    divisionWaiverAccepted = true;
+    start(currentReplace, currentIdOverride);
   }
 
   function finish() {
@@ -709,6 +836,76 @@ found among ends…</pre>
       </div>
     </details>
 
+  {:else if step === 'edition'}
+    <h2>Edition</h2>
+    <p class="imp-note">Set the publisher and work before the importer reads or converts the file.</p>
+    <label class="imp-field">
+      <span>Publisher</span>
+      <select bind:value={publisherId} on:change={changePublisher}>
+        {#each PUBLISHER_PRESETS as option (option.id)}
+          <option value={option.id}>{option.label}</option>
+        {/each}
+      </select>
+    </label>
+    <label class="imp-field">
+      <span>Work</span>
+      <select bind:value={work} on:change={changeWork}>
+        {#each WORKS as w (w.id)}
+          <option value={w.id}>{w.title}</option>
+        {/each}
+      </select>
+    </label>
+    {#if structureLoading}
+      <p class="imp-note" aria-live="polite">Loading work structure…</p>
+    {:else if structureError}
+      <p class="imp-error">{structureError}</p>
+    {:else if workStructure}
+      <dl class="imp-edition-facts">
+        <div><dt>Title</dt><dd>{workStructure.workTitle}</dd></div>
+        <div><dt>Books</dt><dd>{workStructure.books}</dd></div>
+        <div><dt>Chapters per book</dt><dd>{workStructure.chaptersPerBook.join(', ')}</dd></div>
+        <div><dt>Bekker span</dt><dd>{workStructure.bekkerStart}–{workStructure.bekkerEnd}</dd></div>
+      </dl>
+      <fieldset class="imp-field imp-covered-books">
+        <legend>Books covered by this file</legend>
+        <div class="imp-book-choices">
+          {#each Array.from({ length: workStructure.books }, (_, index) => index + 1) as book}
+            <label>
+              <input
+                type="checkbox"
+                checked={booksCovered.has(book)}
+                on:change={() => toggleCoveredBook(book)}
+              />
+              Book {workStructure.bookLabels[book - 1] ?? book}
+            </label>
+          {/each}
+        </div>
+        {#if booksCovered.size === 0}<p class="imp-error">Choose at least one book.</p>{/if}
+      </fieldset>
+    {/if}
+    <details class="imp-help imp-edition-override">
+      <summary>Edition override</summary>
+      <div class="imp-help-body">
+        <label class="imp-field">
+          <span>Note display</span>
+          <select bind:value={footnotePlacementOverride} on:change={changeFootnotePlacement}>
+            <option value="">
+              Publisher default ({selectedPreset.footnotePlacement === 'endnote'
+                ? 'endnotes'
+                : selectedPreset.footnotePlacement === 'page-bottom' ? 'page-bottom notes' : 'use file setting'})
+            </option>
+            <option value="page-bottom">Page-bottom notes</option>
+            <option value="endnote">Endnotes</option>
+          </select>
+        </label>
+      </div>
+    </details>
+    <div class="imp-actions">
+      <button class="imp-primary" disabled={!editionReady} on:click={continueEdition}>Continue</button>
+      <button class="imp-quiet" on:click={backToPick}>Back</button>
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel</button>
+    </div>
+
   {:else if step === 'convert-refused'}
     <h2>Couldn't read this file</h2>
     <p class="imp-note">{refusalMsg}</p>
@@ -731,14 +928,6 @@ found among ends…</pre>
 
   {:else if step === 'form'}
     <h2>Import “{file?.name}”</h2>
-    <label class="imp-field">
-      <span>Work</span>
-      <select bind:value={work}>
-        {#each WORKS as w (w.id)}
-          <option value={w.id}>{w.title}</option>
-        {/each}
-      </select>
-    </label>
     <label class="imp-field">
       <span>Translator</span>
       <input type="text" bind:value={translator} placeholder="e.g. Rackham" spellcheck="false" />
@@ -777,6 +966,7 @@ found among ends…</pre>
     {/if}
     <div class="imp-actions">
       <button class="imp-primary" disabled={!formReady} on:click={prepare}>Import</button>
+      <button class="imp-quiet" on:click={backToEdition}>Back</button>
       <button class="imp-quiet" on:click={() => onClose(null)}>Cancel</button>
     </div>
 
@@ -956,6 +1146,56 @@ found among ends…</pre>
       <button class="imp-quiet" on:click={() => onClose(null)}>Cancel import</button>
     </div>
 
+  {:else if step === 'division-waiver'}
+    <h2>Missing chapters in this copy</h2>
+    {#if divisionGapAudit}
+      <p class="imp-note">{divisionAuditLine(divisionGapAudit)}</p>
+      <p class="imp-note">
+        Missing:
+        {divisionGapAudit.gaps.map(gap => divisionGapLabel(gap, divisionGapAudit!)).join(', ')}.
+        Check the source tags first. Use the waiver only when this copy is known to be incomplete.
+      </p>
+    {/if}
+    <div class="imp-actions">
+      <button class="imp-primary" on:click={importWithDivisionWaiver}>
+        Import anyway — this copy is known incomplete
+      </button>
+      <button on:click={changeBooksCovered}>Change books covered</button>
+      <button class="imp-quiet" on:click={backToPick}>Choose another file</button>
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel</button>
+    </div>
+
+  {:else if step === 'coverage'}
+    <h2>Change books covered</h2>
+    <p class="imp-note">
+      Change only the books this file contains. The importer will reuse your reviewed text and decisions.
+    </p>
+    {#if workStructure}
+      <fieldset class="imp-field imp-covered-books">
+        <legend>Books covered by this file</legend>
+        <div class="imp-book-choices">
+          {#each Array.from({ length: workStructure.books }, (_, index) => index + 1) as book}
+            <label>
+              <input
+                type="checkbox"
+                checked={booksCovered.has(book)}
+                on:change={() => toggleCoveredBook(book)}
+              />
+              Book {workStructure.bookLabels[book - 1] ?? book}
+            </label>
+          {/each}
+        </div>
+        {#if booksCovered.size === 0}<p class="imp-error">Choose at least one book.</p>{/if}
+      </fieldset>
+    {/if}
+    <div class="imp-actions">
+      <button class="imp-primary" disabled={booksCovered.size === 0} on:click={retryWithChangedCoverage}>
+        Retry import
+      </button>
+      <button class="imp-quiet" on:click={() => (step = 'division-waiver')}>Back</button>
+      <button class="imp-quiet" on:click={() => onClose(null)}>Cancel</button>
+    </div>
+
   {:else if step === 'running'}
     <h2>Importing…</h2>
     <p class="imp-progress" aria-live="polite">{progress}</p>
@@ -999,6 +1239,13 @@ found among ends…</pre>
       {/if}
       {#if summary.footnoteSummary}
         <p class="imp-summary">{summary.footnoteSummary}</p>
+      {/if}
+      <p class="imp-summary">{divisionAuditLine(summary.divisionAudit)}</p>
+      {#if summary.waivedDivisionGaps?.length}
+        <p class="imp-error">
+          Incomplete-copy waiver recorded for
+          {summary.waivedDivisionGaps.map(gap => divisionGapLabel(gap, summary!.divisionAudit)).join(', ')}.
+        </p>
       {/if}
       {#if summary.stripCounts}
         <ul class="imp-stats">
@@ -1102,6 +1349,15 @@ found among ends…</pre>
     padding: 0.45rem 0.6rem;
   }
   .imp-field input:focus, .imp-field select:focus, .imp-field textarea:focus { outline: none; border-color: var(--accent); }
+  .imp-edition-facts { margin: 0.3rem 0 0.8rem; font-size: 0.84rem; }
+  .imp-edition-facts div { display: grid; grid-template-columns: 8rem 1fr; gap: 0.5rem; padding: 0.2rem 0; }
+  .imp-edition-facts dt { color: var(--text-mid); }
+  .imp-edition-facts dd { margin: 0; font-weight: 600; }
+  .imp-covered-books { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; }
+  .imp-covered-books legend { font-weight: 600; padding: 0 0.3rem; }
+  .imp-book-choices { display: flex; flex-wrap: wrap; gap: 0.45rem 0.9rem; }
+  .imp-book-choices label { display: inline-flex; align-items: center; gap: 0.3rem; }
+  .imp-edition-override { margin-bottom: 0.8rem; }
   .imp-citation { resize: vertical; line-height: 1.4; font-size: 0.85rem; }
   .imp-radio { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; margin: 0 0 0.8rem; }
   .imp-radio legend { font-weight: 600; font-size: 0.85rem; padding: 0 0.3rem; }
