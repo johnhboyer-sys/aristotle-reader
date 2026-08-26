@@ -13,6 +13,7 @@ import {
   DEFAULT_PUBLISHER_PRESET_ID,
   PUBLISHER_PRESETS,
   getPublisherPreset,
+  resolveLayoutImportConfig,
   resolveWorkStructure,
 } from '../import-presets';
 
@@ -30,20 +31,98 @@ describe('publisher preset registry', () => {
     expect(getPublisherPreset('other')).toEqual({});
     expect(getPublisherPreset('clarendon')).toEqual({
       presetId: 'clarendon',
+      runningHeadPlaceholder: 'work-title',
       footnotePlacement: 'page-bottom',
       strayNumeralStyle: 'roman',
+      spacing: { enabled: true },
+      footnotes: { enabled: true },
+      editionDefaults: {
+        chapterTitles: false,
+        slice: {
+          bodyStart: '^\\s{5,}BOOK\\s+([A-Z]+|\\d{1,2})\\s*$',
+          bodyStartNextLine: '^\\s{2,}CHAPTER\\s+\\S{1,4}\\s*$',
+          trimBodyStartPreamble: true,
+          backMatterStart: '^\\s*COMMENTARY\\s*$',
+        },
+      },
     });
     expect(getPublisherPreset('peripatetic')).toEqual({
       presetId: 'peripatetic',
+      runningHeadPlaceholder: 'work-title',
       headingStyle: { bookOrdinal: 'greek-letter', chapterNumeral: 'bare' },
       side: 'verso',
       endnotes: { source: 'witness-commentary' },
       witnessStructure: { format: 'genie-markdown' },
       footnotePlacement: 'endnote',
       strayNumeralStyle: 'arabic',
+      spacing: { enabled: true },
+      footnotes: { enabled: true },
+      editionDefaults: {
+        chapterTitles: false,
+        slice: {
+          bodyStart: '^\\s{5,}BOOK\\s+\\S{1,2}\\s*$',
+          backMatterStart: '^\\s*COMMENTARIES(?:\\s+ON\\b.*)?\\s*$',
+        },
+      },
     });
     expect(getPublisherPreset('clarendon').interiorRunningHeads?.pattern).toBeUndefined();
     expect(getPublisherPreset('peripatetic').interiorRunningHeads?.pattern).toBeUndefined();
+    const peripateticSlice = getPublisherPreset('peripatetic').editionDefaults?.slice;
+    if (!peripateticSlice) throw new Error('Peripatetic slice default missing');
+    expect(new RegExp(peripateticSlice.bodyStart).test('     BOOK A')).toBe(true);
+  });
+});
+
+describe('layout import config resolver', () => {
+  const structure = {
+    workId: 'Synthetic',
+    workTitle: 'Synthetic Work',
+    runningHeadPlaceholder: 'Synthetic Work',
+    books: 2,
+    bookLabels: ['I', 'II'],
+    chaptersPerBook: [2, 1],
+    chapterKeysByBook: { 1: [1, 2], 2: [1] },
+    bekkerStart: '100a',
+    bekkerEnd: '101b',
+  };
+
+  it('leaves every stage-specific format field absent for Other', () => {
+    expect(resolveLayoutImportConfig(getPublisherPreset('other'), {}, structure)).toEqual({
+      workId: 'Synthetic',
+      workTitle: 'Synthetic Work',
+      books: 2,
+      chaptersPerBook: [2, 1],
+      bekkerStart: '100a',
+      bekkerEnd: '101b',
+    });
+  });
+
+  it('lets Edition values override preset defaults without changing the publisher', () => {
+    const resolved = resolveLayoutImportConfig(getPublisherPreset('clarendon'), {
+      chapterTitles: true,
+      runningHeadPlaceholder: 'SYNTHETIC HEAD',
+      slice: { bodyStart: '^START$', trimBodyStartPreamble: true },
+    }, structure);
+
+    expect(resolved).toMatchObject({
+      presetId: 'clarendon',
+      chapterTitles: true,
+      runningHeadPlaceholder: 'SYNTHETIC HEAD',
+      slice: { bodyStart: '^START$', trimBodyStartPreamble: true },
+      spacing: { enabled: true },
+      footnotes: { enabled: true },
+    });
+  });
+
+  it('lets Edition turn off a publisher slice default', () => {
+    const resolved = resolveLayoutImportConfig(
+      getPublisherPreset('clarendon'),
+      { slice: false },
+      structure,
+    );
+
+    expect(resolved.slice).toBeUndefined();
+    expect(resolved.presetId).toBe('clarendon');
   });
 });
 

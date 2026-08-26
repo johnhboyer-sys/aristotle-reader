@@ -144,6 +144,38 @@ const WRAP_SHAPED_WITH_FOLIOS = [
   'and a closing paragraph.',
 ].join('\n');
 
+const SYNTHETIC_LAYOUT = [
+  'FRONT HEAD\nNeutral contents page.',
+  [
+    'SYNTHETIC WORK',
+    '',
+    '                  BOOK ONE',
+    '             CHAPTER I',
+    '100a       A neutral term 1 appears in body with enough words.',
+    '5          Another synthetic sentence keeps the gutter cadence.',
+    '',
+    '1 Reading a synthetic variant.',
+    '    78',
+  ].join('\n'),
+  [
+    'SYNTHETIC WORK',
+    '100b       A second page contains neutral prose for conversion.',
+    '5          Its next line keeps the same made-up cadence.',
+  ].join('\n'),
+  'COMMENTARY\nNeutral back matter.',
+].join('\f');
+
+const SYNTHETIC_LAYOUT_NO_NOTES = SYNTHETIC_LAYOUT
+  .replace('A neutral term 1 appears in body with enough words.', 'A neutral term appears in body with enough words.')
+  .replace('\n\n1 Reading a synthetic variant.\n    78', '');
+
+const SYNTHETIC_SEAM_LAYOUT = SYNTHETIC_LAYOUT
+  .replace('BOOK ONE', 'BOOK TEN')
+  .replace(
+    'SYNTHETIC WORK\n100b',
+    'SYNTHETIC WORK\n\n                  BOOK ONE\n             CHAPTER I\n100b',
+  );
+
 function mount(raw: string) {
   return render(ImportDialog, {
     props: {
@@ -206,6 +238,144 @@ describe('ImportDialog Edition preflight', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByPlaceholderText('e.g. Rackham')).toBeInTheDocument();
+  });
+
+  it('runs configured stages and conversion only after Edition, then opens the form', async () => {
+    mount(SYNTHETIC_LAYOUT);
+
+    expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+    await selectValue('Publisher', 'clarendon');
+    await fireEvent.click(screen.getByText('Edition override'));
+    expect(screen.getByLabelText('Slice front and back matter before conversion')).toBeChecked();
+    expect(screen.getByLabelText('Body-start pattern')).toHaveValue(
+      '^\\s{5,}BOOK\\s+([A-Z]+|\\d{1,2})\\s*$',
+    );
+    expect(screen.getByLabelText('Trim preamble on the body-start page')).toBeChecked();
+    expect(screen.getByLabelText('Back-matter pattern')).toHaveValue('^\\s*COMMENTARY\\s*$');
+    expect(screen.getByLabelText('Normalize layout spacing')).toBeChecked();
+    expect(screen.getByLabelText('Normalize page-bottom footnotes')).toBeChecked();
+    expect(screen.queryByPlaceholderText('e.g. Rackham')).not.toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByPlaceholderText('e.g. Rackham')).toBeInTheDocument();
+  });
+
+  it('shows a stage/config error before conversion instead of importing unsliced text', async () => {
+    mount('HEAD\nNo declared body boundary.\fHEAD\n100a     Neutral line.');
+    await selectValue('Publisher', 'clarendon');
+    await fireEvent.click(screen.getByText('Edition override'));
+    await fireEvent.input(screen.getByLabelText('Body-start pattern'), {
+      target: { value: '^CUSTOM BODY$' },
+    });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByRole('heading', { name: 'Import failed' })).toBeInTheDocument();
+    expect(screen.getByText(/stage 1 \(slice\).*slice\.bodyStart/u)).toBeInTheDocument();
+    expect(screen.getByText(/Clarendon \/ OUP boundary pattern “\^CUSTOM BODY\$” was not found/u)).toBeInTheDocument();
+    expect(screen.queryByText(/corpus/u)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('e.g. Rackham')).not.toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Back to Edition' }));
+    expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Publisher')).toHaveValue('clarendon');
+    expect(screen.getByLabelText('Body-start pattern')).toHaveValue('^CUSTOM BODY$');
+  });
+
+  it('refuses a seamed layout at the named work boundary and returns to Edition', async () => {
+    mount(SYNTHETIC_SEAM_LAYOUT);
+    await selectValue('Publisher', 'clarendon');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByRole('heading', { name: 'Import failed' })).toBeInTheDocument();
+    expect(screen.getByText(/book sequence restarts at Book 1/u)).toBeInTheDocument();
+    expect(runImportMock).not.toHaveBeenCalled();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Back to Edition' }));
+    expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+  });
+
+  it('imports an unseamed layout through the same conversion boundary', async () => {
+    mount(SYNTHETIC_LAYOUT_NO_NOTES);
+    await selectValue('Publisher', 'clarendon');
+    await submitMetadata();
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('heading', { name: 'Imported Tester' })).toBeInTheDocument();
+  });
+
+  it('reports that configured layout stages did not run for default Other', async () => {
+    mount(SYNTHETIC_LAYOUT);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Import with page-level anchors only' }));
+    await fillAndImport();
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByText('Configured layout stages: not run')).toBeInTheDocument();
+    expect(screen.queryByText(/marker-glue site/u)).not.toBeInTheDocument();
+    expect(screen.queryByText(/slice changes/u)).not.toBeInTheDocument();
+    expect(screen.queryByText(/lines re-spaced/u)).not.toBeInTheDocument();
+  });
+
+  it('includes a legitimate zero marker-glue count after Clarendon stage 6 ran', async () => {
+    mount(SYNTHETIC_LAYOUT_NO_NOTES);
+    await selectValue('Publisher', 'clarendon');
+    await submitMetadata();
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByText(/marker-glue sites flagged, not fixed/u).closest('li'))
+      .toHaveTextContent('0 marker-glue sites flagged, not fixed — the app has no witness');
+  });
+
+  it('threads the witness-free marker flag count to Done without fixing the site', async () => {
+    mount(SYNTHETIC_LAYOUT);
+    await selectValue('Publisher', 'clarendon');
+    await submitMetadata();
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByText(/marker-glue site flagged, not fixed/u).closest('li'))
+      .toHaveTextContent('1 marker-glue site flagged, not fixed');
+    expect(screen.getByText('Configured layout stages: slice → skeleton → spacing → footnotes'))
+      .toBeInTheDocument();
+    expect(screen.getByText(/slice changes/u).closest('li')).toHaveTextContent(/\d+ slice changes/u);
+    expect(screen.getByText(/slice\.bodyStart:/u).closest('li')).toHaveTextContent('BOOK ONE');
+    expect(screen.getByText(/slice\.backMatterStart:/u).closest('li')).toHaveTextContent('COMMENTARY');
+    expect(screen.getByText(/running-head placeholders inserted/u).closest('li')).toHaveTextContent(/^\d+/u);
+    expect(screen.getByText(/folios repaired or stripped/u).closest('li')).toHaveTextContent(/^\d+/u);
+    expect(screen.getByText((_, element) => element?.tagName === 'LI'
+      && /^\d+ headings normalized$/u.test(element.textContent ?? ''))).toHaveTextContent(/^\d+/u);
+    expect(screen.getByText(/lines re-spaced; display lines kept by shape only/u).closest('li'))
+      .toHaveTextContent('the app has no per-copy preserve list');
+  });
+
+  it('keeps retained-publisher defaults in sync after choosing another file', async () => {
+    const view = mount(SYNTHETIC_LAYOUT);
+    await selectValue('Publisher', 'clarendon');
+    await fireEvent.click(screen.getByText('Edition override'));
+    await fireEvent.click(screen.getByLabelText('Slice front and back matter before conversion'));
+    expect(screen.getByLabelText('Slice front and back matter before conversion')).not.toBeChecked();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('heading', { name: 'Import a translation' })).toBeInTheDocument();
+    const input = view.container.querySelector('input[type="file"]') as HTMLInputElement;
+    await fireEvent.change(input, {
+      target: { files: [new File([SYNTHETIC_LAYOUT], 'second-layout.txt', { type: 'text/plain' })] },
+    });
+
+    expect(await screen.findByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Publisher')).toHaveValue('clarendon');
+    await fireEvent.click(screen.getByText('Edition override'));
+    expect(screen.getByLabelText('Slice front and back matter before conversion')).toBeChecked();
+    expect(screen.getByLabelText('Body-start pattern')).toHaveValue(
+      '^\\s{5,}BOOK\\s+([A-Z]+|\\d{1,2})\\s*$',
+    );
+    expect(screen.getByLabelText('Trim preamble on the body-start page')).toBeChecked();
+    expect(screen.getByLabelText('Normalize layout spacing')).toBeChecked();
+    expect(screen.getByLabelText('Normalize page-bottom footnotes')).toBeChecked();
   });
 
   it('sends a partial books-covered declaration to R6', async () => {

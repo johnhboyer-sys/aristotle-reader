@@ -4,9 +4,28 @@ import { WORKS } from '@shared/lib/works';
 export type PublisherPresetId = 'other' | 'clarendon' | 'peripatetic';
 export type FootnotePlacement = 'page-bottom' | 'endnote';
 
+export interface ImportSliceConfig {
+  bodyStart: string;
+  bodyStartNextLine?: string;
+  trimBodyStartPreamble?: boolean;
+  backMatterStart?: string;
+}
+
+/** Edition fields may replace publisher defaults without changing publisher. */
+export interface ImportEditionConfig {
+  chapterTitles?: boolean;
+  runningHeadPlaceholder?: string | false;
+  /** false is an explicit Edition override of a publisher slice default. */
+  slice?: ImportSliceConfig | false;
+  spacing?: boolean;
+  footnotes?: boolean;
+}
+
 /** App import defaults. This type stays separate from the CLI CorpusConfig. */
 export interface PublisherPreset {
   presetId?: Exclude<PublisherPresetId, 'other'>;
+  /** Derive the skeleton stage's placeholder from the selected work. */
+  runningHeadPlaceholder?: 'work-title';
   headingStyle?: {
     bookOrdinal?: 'greek-letter';
     chapterNumeral?: 'bare';
@@ -17,6 +36,9 @@ export interface PublisherPreset {
   footnotePlacement?: FootnotePlacement;
   strayNumeralStyle?: 'roman' | 'arabic';
   interiorRunningHeads?: { pattern?: string };
+  spacing?: { enabled: true };
+  footnotes?: { enabled: true };
+  editionDefaults?: ImportEditionConfig;
 }
 
 export interface PublisherPresetOption {
@@ -33,8 +55,20 @@ export const PUBLISHER_PRESETS: readonly PublisherPresetOption[] = [
     label: 'Clarendon / OUP',
     preset: {
       presetId: 'clarendon',
+      runningHeadPlaceholder: 'work-title',
       footnotePlacement: 'page-bottom',
       strayNumeralStyle: 'roman',
+      spacing: { enabled: true },
+      footnotes: { enabled: true },
+      editionDefaults: {
+        chapterTitles: false,
+        slice: {
+          bodyStart: '^\\s{5,}BOOK\\s+([A-Z]+|\\d{1,2})\\s*$',
+          bodyStartNextLine: '^\\s{2,}CHAPTER\\s+\\S{1,4}\\s*$',
+          trimBodyStartPreamble: true,
+          backMatterStart: '^\\s*COMMENTARY\\s*$',
+        },
+      },
     },
   },
   {
@@ -42,12 +76,24 @@ export const PUBLISHER_PRESETS: readonly PublisherPresetOption[] = [
     label: 'Peripatetic Press',
     preset: {
       presetId: 'peripatetic',
+      runningHeadPlaceholder: 'work-title',
       headingStyle: { bookOrdinal: 'greek-letter', chapterNumeral: 'bare' },
       side: 'verso',
       endnotes: { source: 'witness-commentary' },
       witnessStructure: { format: 'genie-markdown' },
       footnotePlacement: 'endnote',
       strayNumeralStyle: 'arabic',
+      spacing: { enabled: true },
+      footnotes: { enabled: true },
+      // Unvalidated against a corpus: the held-out Apostle backbone has not
+      // been sliced through the app. A wrong boundary fails on Edition.
+      editionDefaults: {
+        chapterTitles: false,
+        slice: {
+          bodyStart: '^\\s{5,}BOOK\\s+\\S{1,2}\\s*$',
+          backMatterStart: '^\\s*COMMENTARIES(?:\\s+ON\\b.*)?\\s*$',
+        },
+      },
     },
   },
 ] as const;
@@ -70,6 +116,87 @@ export interface ResolvedWorkStructure {
   chapterKeysByBook: Record<number, number[]>;
   bekkerStart: string;
   bekkerEnd: string;
+}
+
+/** Complete browser-safe config for the imported layout stages. */
+export interface ResolvedLayoutImportConfig extends Omit<
+  ImportEditionConfig,
+  'slice' | 'runningHeadPlaceholder' | 'spacing' | 'footnotes'
+> {
+  presetId?: Exclude<PublisherPresetId, 'other'>;
+  headingStyle?: PublisherPreset['headingStyle'];
+  side?: PublisherPreset['side'];
+  footnotePlacement?: FootnotePlacement;
+  workId: string;
+  workTitle: string;
+  runningHeadPlaceholder?: string;
+  books: number;
+  chaptersPerBook: number[];
+  bekkerStart: string;
+  bekkerEnd: string;
+  slice?: ImportSliceConfig;
+  spacing?: { enabled: true };
+  footnotes?: { enabled: true };
+}
+
+/** Merge publisher defaults, Edition values, and the work registry in that order. */
+export function resolveLayoutImportConfig(
+  preset: PublisherPreset,
+  edition: ImportEditionConfig,
+  work: ResolvedWorkStructure,
+): ResolvedLayoutImportConfig {
+  const defaults = preset.editionDefaults ?? {};
+  const defaultSlice = defaults.slice;
+  const editionSlice = edition.slice;
+  const slice = editionSlice
+    ? { ...editionSlice }
+    : editionSlice === false
+      ? undefined
+      : defaultSlice
+      ? { ...defaultSlice }
+      : undefined;
+  const runningHeadPlaceholder = edition.runningHeadPlaceholder === false
+    ? undefined
+    : typeof edition.runningHeadPlaceholder === 'string'
+      ? edition.runningHeadPlaceholder
+      : preset.runningHeadPlaceholder === 'work-title'
+        ? work.runningHeadPlaceholder
+        : undefined;
+  const spacing = edition.spacing === false
+    ? undefined
+    : edition.spacing === true || preset.spacing
+      ? { enabled: true as const }
+      : undefined;
+  const footnotes = edition.footnotes === false
+    ? undefined
+    : edition.footnotes === true || preset.footnotes
+      ? { enabled: true as const }
+      : undefined;
+  const {
+    slice: _editionSlice,
+    runningHeadPlaceholder: _editionRunningHead,
+    spacing: _editionSpacing,
+    footnotes: _editionFootnotes,
+    ...editionFields
+  } = edition;
+  return {
+    ...(preset.presetId ? { presetId: preset.presetId } : {}),
+    ...(preset.headingStyle ? { headingStyle: { ...preset.headingStyle } } : {}),
+    ...(preset.side ? { side: preset.side } : {}),
+    ...(preset.footnotePlacement ? { footnotePlacement: preset.footnotePlacement } : {}),
+    ...(defaults.chapterTitles !== undefined ? { chapterTitles: defaults.chapterTitles } : {}),
+    ...(slice ? { slice } : {}),
+    ...(runningHeadPlaceholder ? { runningHeadPlaceholder } : {}),
+    ...(spacing ? { spacing } : {}),
+    ...(footnotes ? { footnotes } : {}),
+    ...editionFields,
+    workId: work.workId,
+    workTitle: work.workTitle,
+    books: work.books,
+    chaptersPerBook: [...work.chaptersPerBook],
+    bekkerStart: work.bekkerStart,
+    bekkerEnd: work.bekkerEnd,
+  };
 }
 
 function fail(workId: string, detail: string): never {
