@@ -5,6 +5,7 @@
   import { buildOutlineTree, groupOutlineByBooks } from '../lib/editor/outline';
   import type { BookContainer } from '../lib/works/bookContainers';
   import type { NavRole } from '../lib/works/profile';
+  import { groupWorksByAuthor } from '../lib/works/authorGroups';
 
   export interface RailChapterStatus {
     /** Not yet downloaded to this Mac (iCloud "Optimize Mac Storage" stub). */
@@ -207,6 +208,20 @@
     ),
   );
 
+  // Works grouped under their author (#19). A library where nobody set an
+  // author is one unlabeled group, i.e. exactly the flat list it was.
+  const authorGroups = $derived(groupWorksByAuthor(railWorks.map((rw) => ({ ...rw, author: rw.work.author }))));
+
+  // Works the user has folded away (#18). Open by default: a library only
+  // needs collapsing once it has grown, and that is the user's call to make.
+  let collapsedWorks = $state<Set<string>>(new Set());
+
+  function toggleWork(workId: string) {
+    const next = new Set(collapsedWorks);
+    if (!next.delete(workId)) next.add(workId);
+    collapsedWorks = next;
+  }
+
   // Expanded books, keyed "workId:bookN". Start with the selected book open.
   let expanded = $state<Record<string, boolean>>(
     selected ? { [`${selected.workId}:${selected.book}`]: true } : {},
@@ -224,6 +239,17 @@
   // another book.
   $effect(() => {
     if (selected) expanded[`${selected.workId}:${selected.book}`] = true;
+  });
+
+  // A work that is opened unfolds itself — otherwise selecting a chapter (an
+  // import, say) would leave the rail looking as if nothing had happened.
+  $effect(() => {
+    const workId = selected?.workId;
+    if (workId && collapsedWorks.has(workId)) {
+      const next = new Set(collapsedWorks);
+      next.delete(workId);
+      collapsedWorks = next;
+    }
   });
 
   function isSelected(workId: string, book: number, chapter: number): boolean {
@@ -627,9 +653,36 @@
     <span class="library-title">Library</span>
   </div>
 
-  {#each railWorks as rw (rw.work.id)}
+  {#each authorGroups as group (group.author)}
+    {#if group.author}
+      <div class="author-head">{group.author}</div>
+    {/if}
+    {#each group.works as rw (rw.work.id)}
+    {@const folded = collapsedWorks.has(rw.work.id)}
     <div class="work">
       <div class="work-head">
+        <span class="work-name">
+        <button
+          class="work-toggle"
+          onclick={() => toggleWork(rw.work.id)}
+          aria-expanded={!folded}
+          aria-label={folded ? `Expand ${rw.work.title}` : `Collapse ${rw.work.title}`}
+        >
+          <svg
+            class="chevron"
+            class:open={!folded}
+            viewBox="0 0 24 24"
+            width="12"
+            height="12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <span
           class="work-title"
@@ -640,7 +693,8 @@
             ? (e) => openWorkMenu(e, rw.work.id, rw.work.title)
             : undefined}
         >{rw.work.title}</span>
-        {#if rw.status === 'ready' && (onImportChapter || onImportReference)}
+        </span>
+        {#if !folded && rw.status === 'ready' && (onImportChapter || onImportReference)}
           <span class="work-actions">
             {#if onImportChapter}
               <button
@@ -664,7 +718,9 @@
         {/if}
       </div>
 
-      {#if rw.status === 'ready' && rw.document}
+      {#if folded}
+        <!-- Folded: the work's own row stays, everything under it waits. -->
+      {:else if rw.status === 'ready' && rw.document}
         <!-- Corpus-free document (marker-driven, D8): the lines you mark in the
              text ARE the Books & Chapters. The rail mirrors the live outline —
              click a node to jump there; right-click to make it a Chapter,
@@ -814,6 +870,7 @@
         <p class="work-absent">Not on this Mac yet</p>
       {/if}
     </div>
+    {/each}
   {/each}
 
   {#if onAddWork || onNewDocument || onImportSource}
@@ -1130,6 +1187,35 @@
   }
   /* The one destructive question the rail asks: it wraps, unlike a menu item,
      because it is a sentence and not a label. */
+  /* An author's name over their works — a label for a run of the list, so it
+     reads like the "Library" head above it rather than like a work. */
+  .author-head {
+    padding: 10px 8px 2px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-light);
+  }
+  /* Fold control and title travel together, so the work's actions still sit
+     at the far edge of the row. */
+  .work-name {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    min-width: 0;
+  }
+  .work-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-light);
+    cursor: pointer;
+  }
   .rail-menu-warning {
     padding: 4px 8px 6px;
     max-width: 15rem;
