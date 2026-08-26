@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CorpusConfig } from '../corpus-config';
-import { degarbleNumeral, repairSkeleton } from '../skeleton';
+import { degarbleNumeral, parseStrayHeadingNumeral, repairSkeleton } from '../skeleton';
 import { buildReviewModel, parseDecisions } from '../review';
 
 function config(): CorpusConfig {
@@ -27,6 +27,19 @@ describe('degarbleNumeral', () => {
     expect(degarbleNumeral('rs')).toBe(15);
     expect(degarbleNumeral('')).toBeNull();
     expect(degarbleNumeral('1A')).toBeNull();
+  });
+});
+
+describe('parseStrayHeadingNumeral', () => {
+  it('keeps strict Roman and OCR-shaped Arabic as separate expectation-matched branches', () => {
+    expect(parseStrayHeadingNumeral('I I', 2)).toBe(2);
+    expect(parseStrayHeadingNumeral('I I', 11)).toBe(11);
+    expect(parseStrayHeadingNumeral('I I', 2, 'arabic')).toBeNull();
+    expect(parseStrayHeadingNumeral('I I', 11, 'roman')).toBeNull();
+  });
+
+  it('returns null when neither branch matches the expected chapter', () => {
+    expect(parseStrayHeadingNumeral('I I', 4)).toBeNull();
   });
 });
 

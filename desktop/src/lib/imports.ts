@@ -12,16 +12,23 @@
 // In the browser dev harness (no Tauri), the same records live in
 // localStorage so the whole flow is testable in a plain browser.
 
-import { fetchBook, fetchChapters, type BookData, type OverlayPiece } from '@shared/lib/data';
+import { fetchBook, fetchChapters, type BookData, type ChapterRef, type OverlayPiece } from '@shared/lib/data';
 import type { TranslationRef } from '@shared/lib/works';
 import { getWork } from '@shared/lib/works';
 import { isTauri } from './runtime';
 import {
-  parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation,
+  parseTranslationFile, serializeFrontmatter, splitChapters, slugId, composeCitation, auditChapterKeys,
   type ParsedTranslation, type TranslationMeta, type FootnoteScope,
 } from './translation-file';
 import { buildChapterInputs } from './aligner/reference';
 import { alignImportedChapter, emitOverlayPieces, type ChapterAlignment, type PieceEmphasis } from './aligner/import-align';
+import { resolveWorkStructure, type FootnotePlacement } from './import-presets';
+import {
+  auditDivisionCoverage,
+  divisionGapLabel,
+  type DivisionAuditResult,
+  type DivisionGap,
+} from './division-audit';
 
 export interface ImportRecord {
   meta: TranslationMeta;
@@ -53,6 +60,10 @@ export interface ImportRecord {
   /** 'endnote' opens notes in the slide-in sidebar instead of the popover
    * (from the sentinel's render= attribute — commentary-class editions). */
   noteRender?: 'endnote';
+  /** R6 result for the books this file declared that it covers. */
+  divisionAudit?: DivisionAuditResult;
+  /** Missing divisions accepted through R6's per-import incomplete-copy waiver. */
+  waivedDivisionGaps?: DivisionGap[];
   /**
    * 'b.c' -> chapter title, verbatim, from the PDF converter's title map
    * (Phase 4A's `ConvertResult.titles`; §Phase-4B task 2, rendering revised
@@ -75,6 +86,10 @@ export interface ImportSummary {
   replaced: boolean;
   /** e.g. "Detected continuous work-level numbering — 222 footnotes." Undefined when the file has no footnotes block. */
   footnoteSummary?: string;
+  /** Tagged-path strip results. Present even when both rules found zero. */
+  stripCounts?: { folioParagraphs: number; strayHeadingNumerals: number };
+  divisionAudit: DivisionAuditResult;
+  waivedDivisionGaps?: DivisionGap[];
 }
 
 // ── storage backends ─────────────────────────────────────────────────────────
@@ -375,16 +390,15 @@ export function getImportCitation(work: string, id: string): string | null {
 // ── the import operation ─────────────────────────────────────────────────────
 
 export interface ImportRequest {
-  raw: string;                 // file content as uploaded (dehyphenated, but still carrying
-                                // emphasis markers — parseTranslationFile classifies those)
+  raw: string;                 // reviewed working text, still carrying emphasis markers
+                                // that parseTranslationFile classifies
   /**
    * The pristine upload, when it differs from `raw` — e.g. ImportDialog's
    * PDF-conversion pre-stage sets `raw` to the CONVERTER'S tagged output
    * (what actually gets parsed/aligned/canonicalized) but wants the
-   * `.original` safety-net file to hold the real pdftotext extraction, not
-   * the tagged text. Falls back to `raw` when omitted — every pre-existing
-   * caller (a plain/hand-tagged import has no separate "original") keeps
-   * today's behavior unchanged.
+   * `.original` safety-net file to hold the exact upload, not cleaned or
+   * converted working text. Falls back to `raw` for callers outside the
+   * dialog that do not supply a separate original.
    */
   original?: string;
   work: string;                // corpus slug (from the dropdown — never free text)
@@ -421,6 +435,43 @@ export interface ImportRequest {
    * when omitted, so a plain hand-tagged import carrying the header still works.
    */
   noTicks?: string[];
+  /** Results from ImportDialog's tagged-body review, added to the Done report. */
+  preClean?: {
+    warnings: string[];
+    stripCounts: { folioParagraphs: number; strayHeadingNumerals: number };
+  };
+  /** Per-import declaration from the Edition step; defaults to every work book. */
+  booksCovered?: number[];
+  /** One-click R6 waiver. R4 runs first and cannot be waived. */
+  waiveDivisionGaps?: boolean;
+  /** Publisher preset default. A file's explicit render declaration wins over it. */
+  footnotePlacement?: FootnotePlacement;
+  /** Absolute per-import Edition override; wins over the file and preset. */
+  footnotePlacementOverride?: FootnotePlacement;
+}
+
+/** Exact bytes supplied to the `.original` storage slot. */
+export function originalForStorage(req: Pick<ImportRequest, 'raw' | 'original'>): string {
+  return req.original ?? req.raw;
+}
+
+/**
+ * Book index → its last chapter number, read off `chapters.json`. Feeds the
+ * chapter-key audit: `{1.99}` on a fourteen-chapter book is as unimportable as
+ * a book number past the end of the work.
+ */
+export function lastChapterPerBook(
+  chaptersIndex: Record<string, ChapterRef[]>,
+): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const [book, refs] of Object.entries(chaptersIndex)) {
+    const bookNum = Number(book);
+    if (!Number.isInteger(bookNum) || !refs?.length) continue;
+    const numbered = refs.map(ref => Number(ref.chapter)).filter(n => Number.isInteger(n));
+    if (numbered.length !== refs.length) continue;   // non-numeric divisions: no bound to give
+    out.set(bookNum, Math.max(...numbered));
+  }
+  return out;
 }
 
 // §B3 import summary: "Detected continuous work-level numbering — 222
@@ -442,6 +493,17 @@ function footnoteSummaryLine(scope: FootnoteScope, footnotes: Record<string, str
 export class ImportCollision extends Error {
   constructor(public work: string, public id: string) {
     super(`translation ${id} already exists for ${work}`);
+  }
+}
+
+export class DivisionGapError extends Error {
+  constructor(public audit: DivisionAuditResult) {
+    const keys = audit.gaps.map(gap => divisionGapLabel(gap, audit)).join(', ');
+    super(
+      `The division audit found ${audit.gaps.length} missing chapter`
+      + `${audit.gaps.length === 1 ? '' : 's'} inside the declared coverage: ${keys}. `
+      + 'Nothing was imported. Check the tags, or use the incomplete-copy waiver.',
+    );
   }
 }
 
@@ -471,10 +533,6 @@ export async function runImport(
   // tagged import, the file's own frontmatter.
   const noTickSet = new Set(req.noTicks ?? parsed.meta.noTicks ?? []);
 
-  const s = await store();
-  const already = await s.exists(req.work, meta.id);
-  if (already && !req.replace) throw new ImportCollision(req.work, meta.id);
-
   if (parsed.density === 'none') {
     throw new Error(
       'No {book.chapter} tags found. The importer needs at least chapter tags '
@@ -486,8 +544,32 @@ export async function runImport(
   const { chapters } = splitChapters(parsed);
   if (!chapters.length) throw new Error('No chapters found after the tag scan.');
 
-  // Per-book alignment: fetch each involved book's data once.
+  // Load chapters once. The resolver validates this same index and supplies
+  // both R4's bounds and R6's expected keys.
   const chaptersIndex = await fetchChapters(req.work);
+  const structure = await resolveWorkStructure(req.work, chaptersIndex);
+  auditChapterKeys(parsed.tags, workMeta.books, {
+    bookLabels: workMeta.bookLabels,
+    chaptersPerBook: new Map(
+      Object.entries(structure.chapterKeysByBook)
+        .map(([book, keys]) => [Number(book), keys.length]),
+    ),
+  });
+  const divisionAudit = auditDivisionCoverage(
+    parsed.tags,
+    structure,
+    req.booksCovered ?? Array.from({ length: structure.books }, (_, index) => index + 1),
+  );
+  if (divisionAudit.gaps.length > 0 && !req.waiveDivisionGaps) {
+    throw new DivisionGapError(divisionAudit);
+  }
+  const waivedDivisionGaps = req.waiveDivisionGaps && divisionAudit.gaps.length
+    ? divisionAudit.gaps
+    : undefined;
+
+  const s = await store();
+  const already = await s.exists(req.work, meta.id);
+  if (already && !req.replace) throw new ImportCollision(req.work, meta.id);
   const books = [...new Set(chapters.map(c => c.book))].sort((a, b) => a - b);
   const aligned: ChapterAlignment[] = [];
   const alignment: Record<string, ChapterAlignment> = {};
@@ -514,10 +596,13 @@ export async function runImport(
   }
 
   onProgress('Writing library files…');
+  const effectiveFootnotePlacement = req.footnotePlacementOverride
+    ?? (parsed.noteRender === 'endnote' ? 'endnote' : req.footnotePlacement);
+  const effectiveNoteRender = effectiveFootnotePlacement === 'endnote' ? 'endnote' : undefined;
   const record: ImportRecord = {
     meta,
     density: parsed.density,
-    warnings: parsed.warnings,
+    warnings: [...parsed.warnings, ...(req.preClean?.warnings ?? [])],
     stats: {
       tagged: aligned.reduce((n, c) => n + c.stats.tagged, 0),
       placed: aligned.reduce((n, c) => n + c.stats.placed, 0),
@@ -529,13 +614,15 @@ export async function runImport(
     alignment,
     footnotes: parsed.footnotes,
     footnoteScope: parsed.footnoteScope,
-    ...(parsed.noteRender ? { noteRender: parsed.noteRender } : {}),
+    ...(effectiveNoteRender ? { noteRender: effectiveNoteRender } : {}),
+    divisionAudit,
+    ...(waivedDivisionGaps ? { waivedDivisionGaps } : {}),
     ...(req.titles ? { titles: req.titles } : {}),
   };
   const canonical = parsed.hasFrontmatter
     ? req.raw
     : serializeFrontmatter(meta) + req.raw;
-  await s.write(req.work, meta.id, canonical, req.original ?? req.raw, record);
+  await s.write(req.work, meta.id, canonical, originalForStorage(req), record);
   registered.set(`${req.work}/${meta.id}`, record);
   installHooks();
 
@@ -543,11 +630,14 @@ export async function runImport(
     meta,
     density: parsed.density,
     footnoteSummary: footnoteSummaryLine(parsed.footnoteScope, parsed.footnotes),
-    warnings: parsed.warnings,
+    warnings: record.warnings,
     chapters: record.stats.chapters,
     tagged: record.stats.tagged,
     placed: record.stats.placed,
     interpolated: record.stats.interpolated,
     replaced: already,
+    divisionAudit,
+    ...(waivedDivisionGaps ? { waivedDivisionGaps } : {}),
+    ...(req.preClean ? { stripCounts: req.preClean.stripCounts } : {}),
   };
 }
