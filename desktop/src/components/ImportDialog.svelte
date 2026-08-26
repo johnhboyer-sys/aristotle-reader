@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The import flow, end to end: Edition → metadata → tag scan + alignment →
-  // completion summary. One modal, one screen per step, no scrolling forms.
+  // The import flow, end to end: Edition → configured layout stages →
+  // conversion → metadata → tag scan + alignment → completion summary.
   //
   // The completion summary is a first-class moment, not a log line — it is
   // where "estimates are always labelled" becomes visible to a first-time
@@ -17,7 +17,7 @@
   import { parseTranslationFile, composeCitation, emphasisScanInput, splitFrontmatter } from '../lib/translation-file';
   import { dehyphenate, listReviewItems, resolveReviews, type ReviewItem } from '../lib/dehyphenate';
   import { scanEmphasis, listEmphasisReviewItems, type EmphasisReviewItem } from '../lib/emphasis';
-  import { convertLayoutExtraction, isLayoutExtraction, type ConvertOptions, type ConvertReport } from '../lib/pdf-import';
+  import { isLayoutExtraction, type ConvertOptions, type ConvertReport } from '../lib/pdf-import';
   import {
     applyDeletionProposals,
     applyPageBreakJoins,
@@ -42,9 +42,15 @@
     getPublisherPreset,
     resolveWorkStructure,
     type FootnotePlacement,
+    type ImportEditionConfig,
     type PublisherPresetId,
     type ResolvedWorkStructure,
   } from '../lib/import-presets';
+  import {
+    prepareLayoutImport,
+    type LayoutStageReport,
+    type PreparedLayoutImport,
+  } from '../lib/import-layout-stages';
   import { divisionAuditLine, divisionGapLabel, type DivisionAuditResult } from '../lib/division-audit';
   import type { UnlistenFn } from '@tauri-apps/api/event';
 
@@ -68,6 +74,15 @@
   let structureError = '';
   let booksCovered = new Set<number>();
   let footnotePlacementOverride: '' | FootnotePlacement = '';
+  let editionChapterTitles: '' | 'yes' | 'no' = '';
+  let editionRunningHead = '';
+  let editionSpacingEnabled = false;
+  let editionFootnotesEnabled = false;
+  let editionSliceEnabled = false;
+  let editionBodyStart = '';
+  let editionBodyStartNextLine = '';
+  let editionTrimBodyStartPreamble = false;
+  let editionBackMatterStart = '';
   let structureLoadToken = 0;
   let translator = '';
   let personalCopy: 'yes' | 'no' | null = null;
@@ -138,7 +153,8 @@
   $: formReady = !!file && translator.trim().length > 0 && personalCopy !== null;
   $: selectedPreset = getPublisherPreset(publisherId);
   $: editionReady = !!file && !!workStructure && !structureLoading
-    && !structureError && booksCovered.size > 0;
+    && !structureError && booksCovered.size > 0
+    && (!pendingEditionFile?.layout || !editionSliceEnabled || editionBodyStart.trim().length > 0);
 
   // Frontmatter the file may already carry (a re-import of a previously
   // exported/tagged file, or one hand-authored by an advanced user) — read
@@ -159,12 +175,13 @@
 
   // ── PDF layout-extraction pre-stage ─────────────────────────────────────────
   // Detection rule lives in pdf-import/index.ts (isLayoutExtraction) so it's
-  // unit-testable without a DOM; those files route through
-  // convertLayoutExtraction BEFORE the metadata form step, every other file
-  // takes the pre-existing path unchanged.
+  // unit-testable without a DOM; those files route through the configured
+  // layout stages and conversion BEFORE the metadata form step. Every other
+  // file takes the pre-existing path unchanged.
   // Held for the Done step's honesty report (task 1); null for a non-PDF
   // import, which hides that whole report section.
   let convertReport: ConvertReport | null = null;
+  let layoutStageReport: LayoutStageReport | null = null;
   // 'b.c' -> title, threaded into runImport (task 2) so this import's chapter
   // titles are shown at chapter openings inside its own column (not merged
   // into the reader's shared chapter headings — that's work-level chrome).
@@ -221,6 +238,7 @@
     pendingEditionFile = { name, text, body, layout };
     importNoTicks = header.noTicks;
     convertReport = null;
+    layoutStageReport = null;
     convertTitles = {};
     divisionGapAudit = null;
     divisionWaiverAccepted = false;
@@ -241,6 +259,7 @@
 
   function changePublisher(event: Event) {
     publisherId = (event.currentTarget as HTMLSelectElement).value as PublisherPresetId;
+    loadEditionDefaults();
   }
 
   function changeWork(event: Event) {
@@ -250,6 +269,46 @@
 
   function changeFootnotePlacement(event: Event) {
     footnotePlacementOverride = (event.currentTarget as HTMLSelectElement).value as '' | FootnotePlacement;
+  }
+
+  function loadEditionDefaults() {
+    const preset = getPublisherPreset(publisherId);
+    const defaults = preset.editionDefaults;
+    const defaultSlice = defaults?.slice === false ? undefined : defaults?.slice;
+    editionChapterTitles = defaults?.chapterTitles === true
+      ? 'yes'
+      : defaults?.chapterTitles === false ? 'no' : '';
+    editionRunningHead = typeof defaults?.runningHeadPlaceholder === 'string'
+      ? defaults.runningHeadPlaceholder
+      : '';
+    editionSpacingEnabled = defaults?.spacing ?? !!preset.spacing;
+    editionFootnotesEnabled = defaults?.footnotes ?? !!preset.footnotes;
+    editionSliceEnabled = !!defaultSlice;
+    editionBodyStart = defaultSlice?.bodyStart ?? '';
+    editionBodyStartNextLine = defaultSlice?.bodyStartNextLine ?? '';
+    editionTrimBodyStartPreamble = defaultSlice?.trimBodyStartPreamble ?? false;
+    editionBackMatterStart = defaultSlice?.backMatterStart ?? '';
+  }
+
+  function currentEditionConfig(): ImportEditionConfig {
+    return {
+      ...(editionChapterTitles
+        ? { chapterTitles: editionChapterTitles === 'yes' }
+        : {}),
+      ...(editionRunningHead.trim()
+        ? { runningHeadPlaceholder: editionRunningHead.trim() }
+        : {}),
+      spacing: editionSpacingEnabled,
+      footnotes: editionFootnotesEnabled,
+      ...(editionSliceEnabled ? {
+        slice: {
+          bodyStart: editionBodyStart,
+          ...(editionBodyStartNextLine ? { bodyStartNextLine: editionBodyStartNextLine } : {}),
+          ...(editionTrimBodyStartPreamble ? { trimBodyStartPreamble: true } : {}),
+          ...(editionBackMatterStart ? { backMatterStart: editionBackMatterStart } : {}),
+        },
+      } : { slice: false }),
+    };
   }
 
   function toggleCoveredBook(book: number) {
@@ -276,9 +335,24 @@
   }
 
   function convertPendingLayout(opts: ConvertOptions = {}) {
-    if (!pendingEditionFile) return;
+    if (!pendingEditionFile || !workStructure) return;
     taggedTextPath = false;
-    const result = convertLayoutExtraction(pendingEditionFile.body, opts);
+    let prepared: PreparedLayoutImport;
+    try {
+      prepared = prepareLayoutImport(
+        pendingEditionFile.body,
+        selectedPreset,
+        currentEditionConfig(),
+        workStructure,
+        opts,
+      );
+    } catch (error) {
+      errorMsg = error instanceof Error ? error.message : String(error);
+      step = 'error';
+      return;
+    }
+    layoutStageReport = prepared.staged.report;
+    const result = prepared.conversion;
     if (result.ok) {
       convertReport = result.report;
       convertTitles = result.titles;
@@ -321,6 +395,7 @@
     preCleanWarnings = [];
     stripCounts = { folioParagraphs: 0, strayHeadingNumerals: 0 };
     convertReport = null;
+    layoutStageReport = null;
     convertTitles = {};
     originalRawText = null;
     importNoTicks = undefined;
@@ -329,6 +404,16 @@
     structureLoading = false;
     booksCovered = new Set();
     footnotePlacementOverride = '';
+    editionChapterTitles = '';
+    editionRunningHead = '';
+    editionSpacingEnabled = false;
+    editionFootnotesEnabled = false;
+    editionSliceEnabled = false;
+    editionBodyStart = '';
+    editionBodyStartNextLine = '';
+    editionTrimBodyStartPreamble = false;
+    editionBackMatterStart = '';
+    loadEditionDefaults();
     divisionGapAudit = null;
     divisionWaiverAccepted = false;
     currentReplace = false;
@@ -338,7 +423,7 @@
   }
 
   // "Import with page-level anchors only" (the convert-choice step) — re-run
-  // the SAME upload with the collapsed-page fallback opted in (§3.6).
+  // the SAME upload and pure stages with the collapsed-page fallback (§3.6).
   function retryPageLevelOnly() {
     if (!pendingEditionFile) return;
     convertPendingLayout({ pageLevelOnly: true });
@@ -898,6 +983,57 @@ found among ends…</pre>
             <option value="endnote">Endnotes</option>
           </select>
         </label>
+        {#if pendingEditionFile?.layout}
+          <label class="imp-field">
+            <span>Running head placeholder</span>
+            <input
+              type="text"
+              bind:value={editionRunningHead}
+              placeholder={workStructure?.runningHeadPlaceholder ?? 'Derived from work title'}
+            />
+          </label>
+          <label class="imp-field">
+            <span>Printed chapter titles</span>
+            <select bind:value={editionChapterTitles}>
+              <option value="">Unspecified</option>
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </label>
+          <label class="imp-check-row">
+            <input type="checkbox" bind:checked={editionSpacingEnabled} />
+            Normalize layout spacing
+          </label>
+          <label class="imp-check-row">
+            <input type="checkbox" bind:checked={editionFootnotesEnabled} />
+            Normalize page-bottom footnotes
+          </label>
+          <label class="imp-check-row">
+            <input type="checkbox" bind:checked={editionSliceEnabled} />
+            Slice front and back matter before conversion
+          </label>
+          {#if editionSliceEnabled}
+            <label class="imp-field">
+              <span>Body-start pattern</span>
+              <input type="text" bind:value={editionBodyStart} aria-invalid={!editionBodyStart.trim()} />
+            </label>
+            <label class="imp-field">
+              <span>Next-line pattern</span>
+              <input type="text" bind:value={editionBodyStartNextLine} placeholder="Optional" />
+            </label>
+            <label class="imp-check-row">
+              <input type="checkbox" bind:checked={editionTrimBodyStartPreamble} />
+              Trim preamble on the body-start page
+            </label>
+            <label class="imp-field">
+              <span>Back-matter pattern</span>
+              <input type="text" bind:value={editionBackMatterStart} placeholder="Optional" />
+            </label>
+            {#if !editionBodyStart.trim()}
+              <p class="imp-error">A body-start pattern is required while slicing is on.</p>
+            {/if}
+          {/if}
+        {/if}
       </div>
     </details>
     <div class="imp-actions">
@@ -1253,6 +1389,34 @@ found among ends…</pre>
           <li><b>{summary.stripCounts.strayHeadingNumerals}</b> stray heading numerals stripped</li>
         </ul>
       {/if}
+      {#if layoutStageReport}
+        {#if layoutStageReport.stagesRun.length === 0}
+          <p class="imp-summary">Configured layout stages: not run</p>
+        {:else}
+          <ul class="imp-stats">
+            <li>Configured layout stages: {layoutStageReport.stagesRun.join(' → ')}</li>
+            <li><b>{layoutStageReport.sliceChanges}</b> slice changes</li>
+            {#each layoutStageReport.sliceBoundaries as boundary}
+              <li>{boundary.field}: <b>{boundary.text}</b></li>
+            {/each}
+            <li><b>{layoutStageReport.headInsertions}</b> running-head placeholders inserted</li>
+            <li><b>{layoutStageReport.folioRepairs}</b> folios repaired or stripped</li>
+            <li><b>{layoutStageReport.headingNormalizations}</b> headings normalized</li>
+            <li>
+              <b>{layoutStageReport.spacingNormalizations}</b>
+              lines re-spaced; display lines kept by shape only — the app has no per-copy preserve list
+            </li>
+            {#if layoutStageReport.stagesRun.includes('footnotes')}
+              <li><b>{layoutStageReport.footnoteHeadRepairs}</b> footnote headings normalized</li>
+              <li><b>{layoutStageReport.detachedFootnoteMarkers}</b> detached footnote markers flagged</li>
+              <li>
+                <b>{layoutStageReport.unconfirmedFootnoteMarkers}</b>
+                marker-glue site{layoutStageReport.unconfirmedFootnoteMarkers === 1 ? '' : 's'} flagged, not fixed — the app has no witness; the FINAL cut repairs confirmed sites
+              </li>
+            {/if}
+          </ul>
+        {/if}
+      {/if}
       {#if convertReport}
         <!-- Honesty report for a PDF-conversion import: everything the
              converter dropped, suppressed, or preserved verbatim, so the
@@ -1304,7 +1468,12 @@ found among ends…</pre>
     <!-- A failed import is usually answered by a corrected file, so the
          drop zone is offered back here exactly as it is on a refusal. -->
     <div class="imp-actions">
-      <button class="imp-primary" on:click={backToPick}>Choose another file</button>
+      {#if pendingEditionFile}
+        <button class="imp-primary" on:click={backToEdition}>Back to Edition</button>
+        <button class="imp-quiet" on:click={backToPick}>Choose another file</button>
+      {:else}
+        <button class="imp-primary" on:click={backToPick}>Choose another file</button>
+      {/if}
       <button class="imp-quiet" on:click={() => onClose(null)}>Close</button>
     </div>
   {/if}
@@ -1349,6 +1518,7 @@ found among ends…</pre>
     padding: 0.45rem 0.6rem;
   }
   .imp-field input:focus, .imp-field select:focus, .imp-field textarea:focus { outline: none; border-color: var(--accent); }
+  .imp-check-row { display: flex; gap: 0.45rem; align-items: flex-start; margin: 0 0 0.8rem; font-size: 0.85rem; }
   .imp-edition-facts { margin: 0.3rem 0 0.8rem; font-size: 0.84rem; }
   .imp-edition-facts div { display: grid; grid-template-columns: 8rem 1fr; gap: 0.5rem; padding: 0.2rem 0; }
   .imp-edition-facts dt { color: var(--text-mid); }
