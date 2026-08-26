@@ -169,6 +169,13 @@ const SYNTHETIC_LAYOUT_NO_NOTES = SYNTHETIC_LAYOUT
   .replace('A neutral term 1 appears in body with enough words.', 'A neutral term appears in body with enough words.')
   .replace('\n\n1 Reading a synthetic variant.\n    78', '');
 
+const SYNTHETIC_SEAM_LAYOUT = SYNTHETIC_LAYOUT
+  .replace('BOOK ONE', 'BOOK TEN')
+  .replace(
+    'SYNTHETIC WORK\n100b',
+    'SYNTHETIC WORK\n\n                  BOOK ONE\n             CHAPTER I\n100b',
+  );
+
 function mount(raw: string) {
   return render(ImportDialog, {
     props: {
@@ -275,6 +282,29 @@ describe('ImportDialog Edition preflight', () => {
     expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
     expect(screen.getByLabelText('Publisher')).toHaveValue('clarendon');
     expect(screen.getByLabelText('Body-start pattern')).toHaveValue('^CUSTOM BODY$');
+  });
+
+  it('refuses a seamed layout at the named work boundary and returns to Edition', async () => {
+    mount(SYNTHETIC_SEAM_LAYOUT);
+    await selectValue('Publisher', 'clarendon');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByRole('heading', { name: 'Import failed' })).toBeInTheDocument();
+    expect(screen.getByText(/book sequence restarts at Book 1/u)).toBeInTheDocument();
+    expect(runImportMock).not.toHaveBeenCalled();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Back to Edition' }));
+    expect(screen.getByRole('heading', { name: 'Edition' })).toBeInTheDocument();
+  });
+
+  it('imports an unseamed layout through the same conversion boundary', async () => {
+    mount(SYNTHETIC_LAYOUT_NO_NOTES);
+    await selectValue('Publisher', 'clarendon');
+    await submitMetadata();
+
+    await waitFor(() => expect(runImportMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('heading', { name: 'Imported Tester' })).toBeInTheDocument();
   });
 
   it('reports that configured layout stages did not run for default Other', async () => {

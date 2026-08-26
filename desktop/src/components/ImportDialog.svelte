@@ -322,6 +322,11 @@
     step = 'edition';
   }
 
+  function layoutSeamLabel(seam: string): string {
+    const restart = /^book-sequence:restart:(.+)$/u.exec(seam);
+    return restart ? `Book ${restart[1]}` : seam;
+  }
+
   function changeBooksCovered() {
     divisionWaiverAccepted = false;
     step = 'coverage';
@@ -354,6 +359,14 @@
     layoutStageReport = prepared.staged.report;
     const result = prepared.conversion;
     if (result.ok) {
+      if (result.report.seams.length > 0) {
+        const boundaries = result.report.seams.map(layoutSeamLabel).join(', ');
+        errorMsg =
+          `This file contains more than one work. The book sequence restarts at ${boundaries}. `
+          + 'Slice the file at that boundary and import each work on its own.';
+        step = 'error';
+        return;
+      }
       convertReport = result.report;
       convertTitles = result.titles;
       file = { name: pendingEditionFile.name, text: result.tagged };
