@@ -6,7 +6,9 @@ import {
   listFreeWorkRecords,
   listFreeWorks,
   registerFreeWork,
+  removeFreeWork,
   sanitizeBooks,
+  unregisterFreeWork,
   updateFreeWorkAuthor,
   updateFreeWorkBookContainers,
   updateFreeWorkBooks,
@@ -424,5 +426,50 @@ describe('freeWorkManifest — verbatim language label (D8 Phase E2)', () => {
 
   it('no language recorded → no language field (assist treats it as unknown, never Greek)', () => {
     expect('language' in freeWorkManifest(RECORD)).toBe(false);
+  });
+});
+
+describe('removing a work', () => {
+  const OTHER: FreeWorkRecord = { id: 'keeper', title: 'Keeper', scheme: 'paragraph' };
+
+  async function library(): Promise<MemStorage> {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await registerFreeWork(OTHER, storage);
+    await storage.write('my-doc', 'b01c01.md', 'chapter one');
+    await storage.write('my-doc', 'b01c02.md', 'chapter two');
+    await storage.write('keeper', 'b01c01.md', 'not mine to delete');
+    return storage;
+  }
+
+  it('drops the registry entry and every file the work owns', async () => {
+    const storage = await library();
+    await removeFreeWork('my-doc', storage);
+    expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
+    expect(await storage.list('my-doc')).toEqual([]);
+  });
+
+  it('leaves every other work exactly as it was', async () => {
+    const storage = await library();
+    await removeFreeWork('my-doc', storage);
+    expect(await storage.read('keeper', 'b01c01.md')).toBe('not mine to delete');
+    expect((await listFreeWorks(storage)).map((w) => w.title)).toEqual(['Keeper']);
+  });
+
+  it('still clears the files of a work the registry never knew', async () => {
+    // A half-finished import: files written, registration never reached.
+    const storage = new MemStorage();
+    await registerFreeWork(OTHER, storage);
+    await storage.write('orphan', 'b01c01.md', 'nobody knows me');
+    await removeFreeWork('orphan', storage);
+    expect(await storage.list('orphan')).toEqual([]);
+    expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
+  });
+
+  it('unregisters without touching the files when asked only to unregister', async () => {
+    const storage = await library();
+    await unregisterFreeWork('my-doc', storage);
+    expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
+    expect(await storage.list('my-doc')).toEqual(['b01c01.md', 'b01c02.md']);
   });
 });

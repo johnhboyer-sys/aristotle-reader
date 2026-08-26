@@ -91,6 +91,7 @@
     onOutlineSetLevel,
     onManageLevels,
     onWorkDetails,
+    onWorkRemove,
     onDivide,
     onAddBookContainer,
     onAddBookContainerAfter,
@@ -130,6 +131,10 @@
     onManageLevels?: (workId: string) => void;
     /** Open the work-details editor for a document work. */
     onWorkDetails?: (workId: string) => void;
+    /** Remove a document work — its files and its registry entry. Offered
+     * only for works the app itself owns (documents and imports); a corpus
+     * work has no rail menu at all. */
+    onWorkRemove?: (workId: string) => void;
     /** "Divide into chapters…" — split the open single document at its
      * Book/Chapter markers into one file per chapter (bulk shortcut). */
     onDivide?: (workId: string) => void;
@@ -273,7 +278,15 @@
   const RAIL_MENU_W = 230;
   const RAIL_MENU_MARGIN = 8;
   let railMenu = $state<{ rowIndex: number; level: number; label: string; rootOrdinal: number; x: number; y: number; maxHeight: number } | null>(null);
-  let workMenu = $state<{ workId: string; title: string; x: number; y: number; maxHeight: number } | null>(null);
+  let workMenu = $state<{
+    workId: string;
+    title: string;
+    x: number;
+    y: number;
+    maxHeight: number;
+    /** Second step of "Remove work…": the menu asks before anything is deleted. */
+    confirmingRemove: boolean;
+  } | null>(null);
   /** Clamp a menu to the viewport (shared by the heading and Book menus). */
   function menuAt(e: MouseEvent): { x: number; y: number; maxHeight: number } {
     const vw = window.innerWidth;
@@ -324,7 +337,7 @@
     if (!onWorkDetails) return;
     railMenu = null;
     bookMenu = null;
-    workMenu = { workId, title, ...menuAt(e) };
+    workMenu = { workId, title, ...menuAt(e), confirmingRemove: false };
   }
 
   function workMenuDetails() {
@@ -332,6 +345,13 @@
     const { workId } = workMenu;
     workMenu = null;
     onWorkDetails?.(workId);
+  }
+
+  function workMenuRemove() {
+    if (!workMenu) return;
+    const { workId } = workMenu;
+    workMenu = null;
+    onWorkRemove?.(workId);
   }
 
   // ── Book containers: expand key, inline rename, right-click menu ───────────
@@ -496,9 +516,34 @@
     style={`left:${workMenu.x}px; top:${workMenu.y}px; max-height:${workMenu.maxHeight}px;`}
   >
     <div class="rail-menu-label">{workMenu.title}</div>
-    <button class="rail-menu-item" role="menuitem" onclick={workMenuDetails}>
-      <span class="rail-menu-check" aria-hidden="true"></span>Work details…
-    </button>
+    {#if workMenu.confirmingRemove}
+      <!-- The whole work goes: its text, its translation, and every chapter
+           file under it. Asked here rather than in a dialog so the answer is
+           one click away from the question. -->
+      <div class="rail-menu-warning">Remove this work and everything translated in it?</div>
+      <button class="rail-menu-item" role="menuitem" onclick={() => (workMenu = null)}>
+        <span class="rail-menu-check" aria-hidden="true"></span>Keep it
+      </button>
+      <button class="rail-menu-item" role="menuitem" onclick={workMenuRemove}>
+        <span class="rail-menu-check" aria-hidden="true"></span>Remove it
+      </button>
+    {:else}
+      <button class="rail-menu-item" role="menuitem" onclick={workMenuDetails}>
+        <span class="rail-menu-check" aria-hidden="true"></span>Work details…
+      </button>
+      {#if onWorkRemove}
+        <div class="rail-menu-sep" aria-hidden="true"></div>
+        <button
+          class="rail-menu-item"
+          role="menuitem"
+          onclick={() => {
+            if (workMenu) workMenu = { ...workMenu, confirmingRemove: true };
+          }}
+        >
+          <span class="rail-menu-check" aria-hidden="true"></span>Remove work…
+        </button>
+      {/if}
+    {/if}
   </div>
 {/if}
 
@@ -1082,6 +1127,15 @@
     border-radius: 8px;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
     font-family: var(--font-ui);
+  }
+  /* The one destructive question the rail asks: it wraps, unlike a menu item,
+     because it is a sentence and not a label. */
+  .rail-menu-warning {
+    padding: 4px 8px 6px;
+    max-width: 15rem;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--text-mid);
   }
   .rail-menu-label {
     padding: 4px 8px 2px;

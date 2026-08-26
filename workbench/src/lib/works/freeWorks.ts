@@ -234,6 +234,11 @@ export async function registerFreeWork(
   const existing = await listFreeWorkRecords(storage);
   const works = existing.filter((w) => w.id !== record.id);
   works.push(record);
+  await writeRegistry(works, storage);
+}
+
+/** The registry file's on-disk shape — one writer, so every caller agrees. */
+async function writeRegistry(works: FreeWorkRecord[], storage: LibraryStorage): Promise<void> {
   const payload = {
     version: REGISTRY_VERSION,
     works: works.map((w) => ({
@@ -248,6 +253,36 @@ export async function registerFreeWork(
     })),
   };
   await storage.write(FREE_WORKS_STORAGE_ID, REGISTRY_FILE, JSON.stringify(payload, null, 2) + '\n');
+}
+
+/**
+ * Remove a free work: its registry entry first, then every file it owns.
+ *
+ * That order is deliberate. Dropping the registry entry is what makes the work
+ * gone as far as the app is concerned, and if the file delete then fails the
+ * user is left with orphaned files rather than a work in the rail whose text
+ * has been deleted out from under it.
+ *
+ * A work id that isn't in the registry still has its files removed — the point
+ * is to leave nothing behind.
+ */
+export async function removeFreeWork(
+  workId: string,
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  await unregisterFreeWork(workId, storage);
+  await storage.remove(workId);
+}
+
+/** Drop one record from the registry. Unknown ids are a no-op. */
+export async function unregisterFreeWork(
+  workId: string,
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  const existing = await listFreeWorkRecords(storage);
+  const works = existing.filter((w) => w.id !== workId);
+  if (works.length === existing.length) return;
+  await writeRegistry(works, storage);
 }
 
 /**
