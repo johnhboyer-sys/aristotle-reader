@@ -36,7 +36,9 @@ import {
   assembleBilingual,
   chapterSegments,
   documentChapterSections,
+  documentHeadings,
   documentRowSourceLine,
+  profileOf,
   documentToPandocMarkdown,
   markupToPandoc,
   renderSegmentsGrouped,
@@ -400,6 +402,7 @@ export function compileWorkMarkdown(
         headingRow ?? undefined,
         resolved.bilingualLayout,
         resolved.bilingualOrder,
+        documentHeadings(namespaced, profileOf(work)),
       );
       if (paragraphs.length > 0) docSections.push(...paragraphs);
       // Footnote-definition blocks with the SAME namespacing as the corpus arm
