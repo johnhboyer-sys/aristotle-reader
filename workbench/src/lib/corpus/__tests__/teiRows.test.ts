@@ -193,22 +193,59 @@ describe('real Perseus structure', () => {
     expect(doc.levelNames).toEqual(['book', 'section']);
   });
 
-  it('keeps two milestone tiers when neither restates the other', () => {
-    // A Bekker page and a line are two tiers, and both survive alongside the
-    // enclosing division.
+  it('a page with a line under it IS the citation — the division drops away', () => {
+    // Replaces an earlier claim that this row is "5.12b.3". A page and its
+    // line are another authority's reference system laid over the edition, and
+    // an absolute one: Bekker 12b3 is found without knowing the book, and it
+    // is what a reader of Aristotle cites. The Perseus Nicomachean Ethics is
+    // the real case — `<milestone unit="page" resp="Bekker" n="1094a"/>` and
+    // lines beneath it, inside divisions numbered book and section.
     const doc = parseTeiRows(
       tei('<div type="book" n="5"><p><milestone unit="page" n="12b"/><milestone unit="line" n="3"/>Τῶν καλῶν</p></div>'),
     );
-    expect(doc.rows).toEqual([{ ref: '5.12b.3', text: 'Τῶν καλῶν' }]);
+    expect(doc.rows).toEqual([{ ref: '12b.3', text: 'Τῶν καλῶν' }]);
+    expect(doc.levelNames).toEqual(['page', 'line']);
+  });
+
+  it('a page with nothing finer under it does NOT take over the address', () => {
+    // Plato marks the Stephanus page as well as its section; if the page alone
+    // could stand as the address, every row of 327 would answer to "327".
+    const doc = parseTeiRows(
+      tei(
+        '<div type="textpart" subtype="book" n="1">' +
+          '<div type="textpart" subtype="section" n="327">' +
+          '<p><milestone unit="page" n="327"/><milestone unit="section" n="327a"/>κατέβην' +
+          '<milestone unit="section" n="327b"/>προσευξάμενοι</p>' +
+          '</div></div>',
+      ),
+    );
+    expect(doc.rows.map((r) => r.ref)).toEqual(['1.327a', '1.327b']);
+  });
+
+  it('carries an open milestone across a division boundary', () => {
+    // A milestone is a point in the text, not a property of the element it sits
+    // in: the page opened in section 1 is still the page in section 2. Scoping
+    // it per row is what made the Ethics read "1094a.1" for four rows and then
+    // "1.2", "1.20", "1.2.1094b".
+    const doc = parseTeiRows(
+      tei(
+        '<div type="textpart" subtype="book" n="1">' +
+          '<div type="textpart" subtype="section" n="1">' +
+          '<p><milestone unit="page" n="1094a"/><milestone unit="line" n="1"/>πᾶσα τέχνη' +
+          '<milestone unit="line" n="5"/>καὶ πᾶσα μέθοδος</p></div>' +
+          '<div type="textpart" subtype="section" n="2"><p>ἔργα τινά' +
+          '<milestone unit="line" n="10"/>ὧν δʼ εἰσὶ τέλη</p></div>' +
+          '</div>',
+      ),
+    );
+    expect(doc.rows.map((r) => r.ref)).toEqual(['1094a.1', '1094a.5', '1094a.5', '1094a.10']);
   });
 
   it('collapses on the written form, which can swallow a short outer number', () => {
-    // The limit of the rule, pinned so a change to it is deliberate: it reads
-    // characters, not meaning, so book 1 disappears under a page numbered
-    // "1a". Harmless on every file seen — no source both numbers a division
-    // and restates it in a milestone this way — and the alternative rules
-    // (match on tier name, or on the unit) all fail the Republic, which is the
-    // case that actually occurs.
+    // The limit of the collapse rule, pinned so a change to it is deliberate:
+    // it reads characters, not meaning. (This row now reaches "1a.1" by the
+    // page rule instead, but the collapse still governs every address a page
+    // does not root.)
     const doc = parseTeiRows(
       tei('<div type="book" n="1"><p><milestone unit="page" n="1a"/><milestone unit="line" n="1"/>Τῶν καλῶν</p></div>'),
     );
