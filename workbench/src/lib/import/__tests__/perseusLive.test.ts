@@ -48,6 +48,21 @@ when('Perseus, live', () => {
     expect(work.levels?.map((l) => l.name)).toEqual(['book', 'chapter']);
   }, 60_000);
 
+  it('imports the Nicomachean Ethics with its Bekker numbers', async () => {
+    // The edition Perseus serves prints Bekker as milestones over its own
+    // book/section divisions — `<milestone unit="page" resp="Bekker"
+    // n="1094a"/>` and a line every fifth. Those numbers are the citation for
+    // Aristotle, and this is the one Perseus route that carries them.
+    const xml = await fetchPerseusTei('urn:cts:greekLit:tlg0086.tlg010.perseus-grc2');
+    const { work, file } = importPerseusTei(xml, { language: 'Greek' });
+
+    expect(work.levels?.map((l) => l.name)).toEqual(['page', 'line']);
+    expect(file.meta.rowRefs?.slice(0, 4)).toEqual(['1094a.1', '1094a.5', '1094a.10', '1094a.15']);
+    expect(file.greekLines[0]).toMatch(/πᾶσα τέχνη/);
+    // The page survives the section boundary it is carried across.
+    expect(file.meta.rowRefs?.every((ref) => /^\d+[ab]\.\d+$/.test(ref))).toBe(true);
+  }, 60_000);
+
   it('imports a Latin text from the other repository', async () => {
     const xml = await fetchPerseusTei('urn:cts:latinLit:phi0474.phi013.perseus-lat2');
     const { work, file } = importPerseusTei(xml, { language: 'Latin' });

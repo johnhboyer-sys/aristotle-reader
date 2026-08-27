@@ -169,7 +169,7 @@ function parseColumnStarts(
         `${source}: ${at}column_starts pair ${i + 1} (${JSON.stringify(pairRaw)}) is not of the form <columnRef>@<rowIndex>`,
       );
     }
-    const ref = m[1];
+    const ref = decodeListRef(m[1]);
     const rowIndex = Number(m[2]);
     if (splitRawAddress(ref) === null) {
       throw new ChapterFileError(
@@ -207,6 +207,48 @@ function parseColumnStarts(
 }
 
 /**
+ * Addresses inside a comma-joined frontmatter list (row_refs, column_starts,
+ * line_splits).
+ *
+ * A source's own line number can itself contain a comma: the TLG prints
+ * "205a.25,29" for a line its edition numbers twice, and 78 of Aristotle's
+ * 122,429 lines are of that kind. Joined raw, such an address splits into two
+ * on the way back in — the list outnumbers the rows, the 1:1 check refuses the
+ * file, and a work that imported cleanly cannot be reopened. Percent-escaping
+ * is the smallest fix that keeps these fields one comma-separated list: no
+ * address any scheme accepts contains a '%', so decoding is a no-op for every
+ * file written before this.
+ */
+function encodeListRef(ref: string): string {
+  return ref.replace(/%/g, '%25').replace(/,/g, '%2C');
+}
+
+function decodeListRef(ref: string): string {
+  return ref.replace(/%2C/g, ',').replace(/%25/g, '%');
+}
+
+/**
+ * Repair for a file written before addresses were escaped (see encodeListRef).
+ *
+ * A raw "205a.25,29" came back in as "205a.25" and a stray "29", so the list
+ * runs longer than the chapter's rows by exactly the number of pieces that
+ * broke off, and every such file — every imported work whose edition numbers a
+ * line twice — refuses to open. Rejoining each bare-number entry onto the
+ * address before it is accepted ONLY when it lands the count exactly on the
+ * row count; any other total is a real mismatch and still refuses, so this
+ * cannot paper over a genuinely broken file.
+ */
+function rejoinLegacyPairRefs(refs: string[], rowCount: number): string[] | null {
+  if (refs.length <= rowCount) return null;
+  const out: string[] = [];
+  for (const ref of refs) {
+    if (out.length > 0 && /^\d+$/.test(ref)) out[out.length - 1] = `${out[out.length - 1]},${ref}`;
+    else out.push(ref);
+  }
+  return out.length === rowCount ? out : null;
+}
+
+/**
  * Structural validation of the frontmatter `row_refs` field: a comma-joined
  * list of one address per row, each parseable under the file's scheme. STRICT
  * like column_starts rather than lenient like paragraph_starts, because these
@@ -226,7 +268,7 @@ function parseRowRefs(
       `${source}: ${at}frontmatter field "row_refs", when present, must be a non-empty comma-separated list of addresses`,
     );
   }
-  const refs = val.split(',').map((r) => r.trim());
+  const refs = val.split(',').map((r) => decodeListRef(r.trim()));
   for (let i = 0; i < refs.length; i++) {
     try {
       scheme.parseAddress(refs[i]);
@@ -269,7 +311,7 @@ function parseLineSplits(
         `${source}: ${at}line_splits pair ${i + 1} (${JSON.stringify(pairRaw)}) is not of the form <address>@<offset>`,
       );
     }
-    const ref = m[1];
+    const ref = decodeListRef(m[1]);
     const offset = Number(m[2]);
     try {
       scheme.parseAddress(ref);
@@ -654,6 +696,11 @@ export function parseChapterFile(raw: string, source = '<chapterfile>'): Chapter
   }
 
   if (meta.rowRefs && meta.rowRefs.length !== greekLines.length) {
+    const rejoined = rejoinLegacyPairRefs(meta.rowRefs, greekLines.length);
+    if (rejoined) meta.rowRefs = rejoined;
+  }
+
+  if (meta.rowRefs && meta.rowRefs.length !== greekLines.length) {
     const at = rowRefsLine > 0 ? `line ${rowRefsLine}: ` : '';
     throw new ChapterFileError(
       `${source}: ${at}row_refs has ${meta.rowRefs.length} address(es) but the chapter has ${greekLines.length} row(s) — they must match 1:1`,
@@ -757,7 +804,7 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
       // "absent" — refuse loudly instead of writing a lossy file.
       throw new ChapterFileError('serializeChapterFile: column_starts, when present, must contain at least one <columnRef>@<rowIndex> pair');
     }
-    lines.push(`column_starts: "${meta.columnStarts.map((s) => `${s.ref}@${s.rowIndex}`).join(',')}"`);
+    lines.push(`column_starts: "${meta.columnStarts.map((s) => `${encodeListRef(s.ref)}@${s.rowIndex}`).join(',')}"`);
   }
   if (meta.rowRefs !== undefined) {
     if (meta.rowRefs.length === 0) {
@@ -765,7 +812,7 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
       // round-trip to "absent" — refuse loudly instead.
       throw new ChapterFileError('serializeChapterFile: row_refs, when present, must contain at least one address');
     }
-    lines.push(`row_refs: "${meta.rowRefs.join(',')}"`);
+    lines.push(`row_refs: "${meta.rowRefs.map(encodeListRef).join(',')}"`);
   }
   if (meta.lineSplits !== undefined) {
     if (meta.lineSplits.length === 0) {
@@ -773,7 +820,7 @@ function serializeFrontmatter(meta: ChapterFileMeta): string {
       // to "absent" — refuse loudly instead of writing a lossy file.
       throw new ChapterFileError('serializeChapterFile: line_splits, when present, must contain at least one <address>@<offset> pair');
     }
-    lines.push(`line_splits: "${meta.lineSplits.map((s) => `${s.ref}@${s.offset}`).join(',')}"`);
+    lines.push(`line_splits: "${meta.lineSplits.map((s) => `${encodeListRef(s.ref)}@${s.offset}`).join(',')}"`);
   }
   if (meta.paragraphStarts !== undefined) {
     if (meta.paragraphStarts.length === 0) {

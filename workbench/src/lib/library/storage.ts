@@ -27,6 +27,12 @@ export interface LibraryStorage {
   list(workId: string): Promise<string[]>;
   /** Last-modified epoch ms, or null if unknown/missing (used by Phase 2 sync safety). */
   mtime(workId: string, file: string): Promise<number | null>;
+  /**
+   * Delete every file a work owns, and the work's own folder. Removing a work
+   * that has no files is not an error — the caller has already dropped it from
+   * the registry, and a folder that was never written is nothing to mourn.
+   */
+  remove(workId: string): Promise<void>;
 }
 
 export function chapterFileName(book: number, chapter: number): string {
@@ -55,6 +61,15 @@ class BrowserStorage implements LibraryStorage {
   }
   async mtime(): Promise<number | null> {
     return null;
+  }
+  async remove(workId: string): Promise<void> {
+    const prefix = `${LS_PREFIX}${workId}/`;
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix)) keys.push(key);
+    }
+    for (const key of keys) localStorage.removeItem(key);
   }
 }
 
@@ -149,6 +164,12 @@ class TauriStorage implements LibraryStorage {
     } catch {
       return null;
     }
+  }
+  async remove(workId: string): Promise<void> {
+    const fs = await this.fs();
+    const dir = await this.resolveDir(workId);
+    if (!(await fs.exists(dir.path, { baseDir: dir.baseDir }))) return;
+    await fs.remove(dir.path, { baseDir: dir.baseDir, recursive: true });
   }
 }
 

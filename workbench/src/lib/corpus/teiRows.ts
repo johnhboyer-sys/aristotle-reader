@@ -68,6 +68,9 @@ const MILESTONE_TAG = 'milestone';
  * on the files seen, but naming them documents the intent. */
 const NON_CITATION_UNITS = new Set(['para', 'card']);
 
+/** The unit an absolute reference system is rooted at — see addressFor. */
+const PAGE_UNIT = 'page';
+
 export interface TeiDocument {
   /** From the TEI header, when it declares one. */
   title?: string;
@@ -96,6 +99,16 @@ export function parseTeiRows(xml: string): TeiDocument {
   const tree = parser.parse(xml) as XmlNode[];
 
   const rows: SourceRow[] = [];
+  /**
+   * Milestones open at this point in the document, keyed by unit.
+   *
+   * Document-level on purpose: a milestone is a point in the text, not a
+   * property of the element it happens to sit in, so a Bekker page opened in
+   * one section is still the page in the next. Scoping this per row is what
+   * made the Nicomachean Ethics come out as "1094a.1" for four rows and then
+   * "1.2", "1.20", "1.2.1094b" — the page forgotten at every section boundary.
+   */
+  const carried = new Map<string, string>();
   /** The tiers each row's address used, kept so the tier NAMES can be worked
    * out once every row is in — see levelNamesFor. */
   const rowParts: Tier[][] = [];
@@ -138,7 +151,7 @@ export function parseTeiRows(xml: string): TeiDocument {
         // unnumbered paragraph) still get an address from their enclosing
         // divisions — losing the row would be worse than a repeated address.
         const base = n === undefined ? open : [...open, { name: 'line', n }];
-        for (const segment of splitAtMilestones(children, base)) {
+        for (const segment of splitAtMilestones(children, base, carried)) {
           emit(segment.parts, segment.text);
         }
         continue;
@@ -205,19 +218,15 @@ interface Segment {
  * to rows that carry milestones, because an ordinary `<l n="1">` in book 1 is
  * genuinely 1.1 and must not lose its book.
  */
-function splitAtMilestones(children: XmlNode[], base: Tier[]): Segment[] {
-  /** Open milestone tiers, keyed by unit, in the order the units first appear. */
-  const open = new Map<string, string>();
+function splitAtMilestones(children: XmlNode[], base: Tier[], open: Map<string, string>): Segment[] {
   const segments: Segment[] = [];
   let buffer: string[] = [];
-  let sawMilestone = false;
 
   const flush = (): void => {
     const text = buffer.join('').replace(/\s+/g, ' ').trim();
     buffer = [];
     if (text.length === 0) return;
-    const parts = [...base, ...[...open].map(([name, n]) => ({ name, n }))];
-    segments.push({ parts: sawMilestone ? collapsePrefixes(parts) : parts, text });
+    segments.push({ parts: addressFor(base, open), text });
   };
 
   const visit = (nodes: XmlNode[]): void => {
@@ -234,7 +243,6 @@ function splitAtMilestones(children: XmlNode[], base: Tier[]): Segment[] {
         const n = a['n'];
         if (n === undefined || unit === undefined || NON_CITATION_UNITS.has(unit)) continue;
         flush();
-        sawMilestone = true;
         open.set(unit, n);
         continue;
       }
@@ -246,6 +254,31 @@ function splitAtMilestones(children: XmlNode[], base: Tier[]): Segment[] {
   visit(children);
   flush();
   return segments;
+}
+
+/**
+ * The address of one segment: the divisions it sits in, plus whatever
+ * milestones are open.
+ *
+ * A milestone whose unit NAMES one of those divisions refines it — Plato's
+ * `<milestone unit="section" n="327a"/>` inside a division numbered 327 is
+ * still the section, said more precisely — and the whole address stands.
+ *
+ * A PAGE with something finer under it is a different animal: another
+ * authority's reference system laid over this edition, and an absolute one. A
+ * Bekker page needs no book to be found, so where an edition prints
+ * `<milestone unit="page" resp="Bekker" n="1094a"/>` and lines beneath it, the
+ * page and its line ARE the citation — "1094a.1", the number every reader of
+ * Aristotle cites and the one this edition otherwise loses. A page on its own
+ * is not enough (Plato marks the Stephanus page as well as its section), since
+ * every row of that page would answer to the same address.
+ */
+function addressFor(base: Tier[], open: Map<string, string>): Tier[] {
+  if (open.size === 0) return base;
+  const milestones = [...open].map(([name, n]) => ({ name, n }));
+  const foreign = milestones.filter((tier) => !base.some((b) => b.name === tier.name));
+  if (foreign.length > 1 && foreign.some((tier) => tier.name === PAGE_UNIT)) return foreign;
+  return collapsePrefixes([...base, ...milestones]);
 }
 
 /**

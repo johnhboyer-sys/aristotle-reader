@@ -30,7 +30,16 @@ import { getScheme } from '../citation/registry';
 import type { ChapterFile, ChapterFileMeta, Footnote, HeaderMark } from '../chapterfile';
 import type { NavRole, WorkProfile } from '../works/profile';
 import { navRoleOf } from '../works/profile';
-import type { FreeBook } from '../works/freeWorks';
+/** One chapter of a document's derived structure — a label, nothing more. */
+export interface ChapterSlot {
+  label: string;
+}
+
+/** One Book of a document's derived structure: a label and its chapters. */
+export interface BookStructure {
+  label: string;
+  chapters: ChapterSlot[];
+}
 import { documentOrdinalAddress } from './autosave';
 
 export interface DocumentPart {
@@ -186,7 +195,7 @@ export function documentBookStructure(
   file: ChapterFile,
   profile: WorkProfile,
   labelOf: (rowIndex: number) => string,
-): FreeBook[] {
+): BookStructure[] {
   const levelByRow = new Map<number, number>();
   for (const h of file.meta.headers ?? []) levelByRow.set(h.row, h.level);
   const navAtRow = (row0: number): NavRole | null => {
@@ -194,7 +203,7 @@ export function documentBookStructure(
     return level === undefined ? null : navRoleOf(profile, level);
   };
 
-  const books: FreeBook[] = [];
+  const books: BookStructure[] = [];
   for (const seg of segment(file, profile)) {
     while (books.length < seg.book) books.push({ label: '', chapters: [] });
     const book = books[seg.book - 1];

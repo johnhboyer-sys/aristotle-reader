@@ -13,6 +13,10 @@
 import { describe, expect, it } from 'vitest';
 import { parseTeiRows } from '../../corpus/teiRows';
 import { createSourceImport } from '../createSourceImport';
+import { serializeChapterFile, parseChapterFile } from '../../chapterfile';
+import { hydrateFromFile } from '../../library/autosave';
+import { buildOutline } from '../../editor/outline';
+import { DEFAULT_PROFILE } from '../../works/profile';
 
 interface NodeFs {
   existsSync(path: string): boolean;
@@ -70,5 +74,87 @@ when('every cached disc export', () => {
     const doc = parseTeiRows(readFileSync(`${CACHE}/${files[0]}`, 'utf8'));
     expect(doc.levelNames.length).toBeGreaterThanOrEqual(2);
     expect(doc.rows.length).toBeGreaterThan(100);
+  });
+});
+
+/**
+ * The outline, end to end on real exports.
+ *
+ * createSourceImport's own tests prove it marks a title row as a header; they
+ * say nothing about whether the header survives into the text the app writes
+ * to disk. It is that serialized string, not the object, that the rail reads
+ * back — so this walks the whole cache and checks the file the app would have
+ * written.
+ */
+when('the outline an import writes', () => {
+  const files = available
+    ? readdirSync(CACHE).filter((f) => f.endsWith('.xml') && f !== 'authtab.xml').sort()
+    : [];
+
+  it('emits a headers line for every work whose edition prints titles', () => {
+    const missing: string[] = [];
+    let withTitles = 0;
+
+    for (const file of files) {
+      const doc = parseTeiRows(readFileSync(`${CACHE}/${file}`, 'utf8'));
+      if (doc.rows.length === 0) continue;
+      const titled = doc.rows.filter((r) => /^\d*t$/.test(r.ref.split('.').pop() ?? ''));
+      if (titled.length === 0) continue;
+      withTitles += 1;
+
+      const { file: chapterFile } = createSourceImport({
+        title: doc.title || file,
+        rows: doc.rows,
+        levelNames: doc.levelNames,
+      });
+      const text = serializeChapterFile(chapterFile);
+      if (!/^headers: /m.test(text)) missing.push(`${file}: ${titled.length} title rows, no headers line`);
+    }
+
+    expect(missing).toEqual([]);
+    expect(withTitles).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * And the rail's half of it: a written file, read back the way the app reads
+ * it, has to produce outline roots. The headers line surviving serialization
+ * proves nothing if hydration drops the marks or the imported work's profile
+ * leaves them un-navigable.
+ */
+when('the outline an import writes', () => {
+  const files = available
+    ? readdirSync(CACHE).filter((f) => f.endsWith('.xml') && f !== 'authtab.xml').sort()
+    : [];
+
+  it('reads back as outline roots, one per printed title', () => {
+    const wrong: string[] = [];
+    let checked = 0;
+
+    for (const file of files) {
+      const doc = parseTeiRows(readFileSync(`${CACHE}/${file}`, 'utf8'));
+      if (doc.rows.length === 0) continue;
+      const titled = doc.rows.filter((r) => /^\d*t$/.test(r.ref.split('.').pop() ?? ''));
+      if (titled.length === 0) continue;
+      checked += 1;
+
+      const { work, file: chapterFile } = createSourceImport({
+        title: doc.title || file,
+        rows: doc.rows,
+        levelNames: doc.levelNames,
+      });
+      const reread = parseChapterFile(serializeChapterFile(chapterFile));
+      const rows = hydrateFromFile(reread, [], work.scheme).rows;
+      const profile = work.levels ? { levels: work.levels } : DEFAULT_PROFILE;
+      const outline = buildOutline(rows, profile);
+      if (outline.length !== titled.length) {
+        wrong.push(`${file}: ${titled.length} titles, ${outline.length} outline items`);
+      } else if (outline.some((it) => it.label.trim().length === 0)) {
+        wrong.push(`${file}: an outline item has no label`);
+      }
+    }
+
+    expect(wrong).toEqual([]);
+    expect(checked).toBeGreaterThan(0);
   });
 });

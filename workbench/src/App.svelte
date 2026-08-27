@@ -4,7 +4,7 @@
   // with rows sliced from the Greek spine (src/lib/data). Works without a
   // corpus on this machine degrade to one quiet line. The footnote panel and
   // lexicon drawer are wired below.
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import LibraryRail from './components/LibraryRail.svelte';
   import type { RailSelection, RailWork } from './components/LibraryRail.svelte';
@@ -29,8 +29,10 @@
   import type { WorkManifest } from './lib/works/manifest';
   import {
     listFreeWorks,
+    removeFreeWork,
     updateFreeWorkAuthor,
     updateFreeWorkBookContainers,
+    updateFreeWorkLanguage,
   } from './lib/works/freeWorks';
   import {
     withAddedBookContainer,
@@ -45,7 +47,7 @@
   import type { WorkCorpus } from './lib/data/corpusStore';
   import { bookChapterNumbers, chapterForEditor } from './lib/data/chapterRows';
   import { documentChapterForEditor } from './lib/data/documentChapter';
-  import { loadChapterFile } from './lib/library/autosave';
+  import { loadChapterFile, awaitPendingWrites } from './lib/library/autosave';
   import { getScheme } from './lib/citation/registry';
   import type { FixtureChapter } from './dev/fixture-meta-z17';
   import { loadSettings, updateSettings } from './lib/settings';
@@ -332,9 +334,33 @@
     workDetailsWork = work && isDocumentWork(work) ? work : null;
   }
 
-  async function saveWorkAuthor(workId: string, author: string) {
+  async function saveWorkDetails(workId: string, author: string, language: string) {
     await updateFreeWorkAuthor(workId, author);
+    await updateFreeWorkLanguage(workId, language);
     await reloadWorks();
+  }
+
+  /**
+   * Remove a document work: its registry entry and every file under it. The
+   * rail asks before this runs.
+   *
+   * Closing it first is what makes the delete safe: the editor tears down, its
+   * autosave flushes, and awaitPendingWrites lets the save land BEFORE the
+   * folder goes — otherwise a write already on its way would recreate the file
+   * a moment after it was deleted.
+   */
+  async function removeWork(workId: string) {
+    if (selection?.workId === workId) {
+      selection = null;
+      docOutline = [];
+      await tick();
+    }
+    if (workDetailsWork?.id === workId) workDetailsWork = null;
+    if (manageLevelsWork?.id === workId) manageLevelsWork = null;
+    await awaitPendingWrites(workId);
+    await removeFreeWork(workId);
+    await reloadWorks();
+    await refreshLibraryStatus();
   }
 
   // ── Book containers (D8): organization WITHOUT touching the text ─────────
@@ -715,6 +741,7 @@
             onOutlineSetLevel={(rowIndex, level) => editorRef?.setRowLevelAt(rowIndex, level)}
             onManageLevels={(workId) => (manageLevelsWork = works.find((w) => w.id === workId) ?? null)}
             onWorkDetails={openWorkDetails}
+            onWorkRemove={removeWork}
             bookContainers={docBookContainers}
             onAddBookContainer={isTauri() || import.meta.env.DEV ? addBookContainer : undefined}
             onAddBookContainerAfter={addBookContainerAfter}
@@ -840,8 +867,9 @@
     <WorkDetailsDialog
       title={workDetailsWork.title}
       initialAuthor={workDetailsWork.author}
+      initialLanguage={workDetailsWork.language ?? ''}
       onClose={() => (workDetailsWork = null)}
-      onSave={(author) => saveWorkAuthor(workDetailsWork!.id, author)}
+      onSave={(author, language) => saveWorkDetails(workDetailsWork!.id, author, language)}
     />
   {/if}
 

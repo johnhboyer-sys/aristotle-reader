@@ -564,6 +564,19 @@ export async function awaitPendingWrite(workId: string, fileName: string): Promi
   if (pending) await pending.catch(() => undefined);
 }
 
+/**
+ * Await every in-flight write for a work, whatever the file. Removing a work
+ * calls this first, so a save already on its way to storage lands before the
+ * folder goes rather than after it.
+ */
+export async function awaitPendingWrites(workId: string): Promise<void> {
+  const prefix = `${workId}/`;
+  const inFlight = [...pendingWrites.entries()]
+    .filter(([key]) => key.startsWith(prefix))
+    .map(([, promise]) => promise.catch(() => undefined));
+  await Promise.all(inFlight);
+}
+
 // ── load ────────────────────────────────────────────────────────────────────
 
 export interface LoadResult {

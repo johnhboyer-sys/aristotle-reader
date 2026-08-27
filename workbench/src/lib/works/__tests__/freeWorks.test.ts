@@ -6,17 +6,14 @@ import {
   listFreeWorkRecords,
   listFreeWorks,
   registerFreeWork,
-  sanitizeBooks,
+  removeFreeWork,
+  unregisterFreeWork,
   updateFreeWorkAuthor,
   updateFreeWorkBookContainers,
-  updateFreeWorkBooks,
+  updateFreeWorkLanguage,
   updateFreeWorkLevels,
-  withAddedBook,
-  withAddedChapter,
-  withRenamedBook,
-  withRenamedChapter,
 } from '../freeWorks';
-import type { FreeBook, FreeWorkRecord } from '../freeWorks';
+import type { FreeWorkRecord } from '../freeWorks';
 import type { BookContainer } from '../bookContainers';
 import { DEFAULT_PROFILE } from '../profile';
 
@@ -249,99 +246,42 @@ describe('freeWorkManifest', () => {
   });
 });
 
-describe('explicit Book/Chapter structure (D8 structure tools)', () => {
-  const BOOKS: FreeBook[] = [
-    { label: 'Prima Pars', chapters: [{ label: 'Question 2' }, { label: 'Question 3' }] },
-    { label: 'Secunda Pars', chapters: [] },
-  ];
-
-  it('register → list round-trips the books structure', async () => {
+describe('the retired container-slot model', () => {
+  // `books` was a hand-made list of Book/Chapter SLOTS, from before Books
+  // became boundaries over the outline. Nothing has read it for a while; now
+  // nothing parses or writes it either, and a registry that still carries one
+  // sheds it on the next write.
+  it('ignores a stored books key, and drops it when the registry is next written', async () => {
     const storage = new MemStorage();
-    await registerFreeWork({ ...RECORD, books: BOOKS }, storage);
-    expect((await listFreeWorkRecords(storage))[0].books).toEqual(BOOKS);
-  });
+    await storage.write(
+      FREE_WORKS_STORAGE_ID,
+      'works.json',
+      JSON.stringify({
+        version: 1,
+        works: [
+          {
+            id: 'my-doc',
+            title: 'My Doc',
+            citation_scheme: 'paragraph',
+            books: [{ label: 'Prima Pars', chapters: [{ label: 'Question 2' }] }],
+          },
+        ],
+      }),
+    );
 
-  it('serializes books into works.json only when non-empty', async () => {
-    const storage = new MemStorage();
-    await registerFreeWork({ ...RECORD, books: BOOKS }, storage);
+    const [record] = await listFreeWorkRecords(storage);
+    expect(record).toEqual({ id: 'my-doc', title: 'My Doc', scheme: 'paragraph' });
+    expect(freeWorkManifest(record).documentBooks).toBeUndefined();
+
+    await updateFreeWorkAuthor('my-doc', 'Aquinas', storage);
     const parsed = JSON.parse(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)!);
-    expect(parsed.works[0].books).toEqual(BOOKS);
-    // An empty books array is treated as absent (single-document shape).
-    await registerFreeWork({ ...RECORD, books: [] }, storage);
-    expect('books' in JSON.parse(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)!).works[0]).toBe(false);
+    expect('books' in parsed.works[0]).toBe(false);
   });
 
-  it('sanitizeBooks COERCES bad labels (positions are load-bearing) and drops non-objects', () => {
-    expect(
-      sanitizeBooks([
-        { label: '  Prima Pars  ', chapters: [{ label: ' Q2 ' }, { label: 42 }] },
-        'not-an-object',
-        { chapters: [{}, 'nope'] },
-      ]),
-    ).toEqual([
-      { label: 'Prima Pars', chapters: [{ label: 'Q2' }, { label: '' }] },
-      { label: '', chapters: [{ label: '' }] },
-    ]);
-    expect(sanitizeBooks('junk')).toBeUndefined();
-    expect(sanitizeBooks([])).toBeUndefined();
-  });
-
-  it('freeWorkManifest emits documentBooks and mirrors them onto books', () => {
-    const m = freeWorkManifest({ ...RECORD, books: BOOKS });
-    expect(m.books).toEqual([
-      { n: 1, label: 'Prima Pars' },
-      { n: 2, label: 'Secunda Pars' },
-    ]);
-    expect(m.documentBooks).toEqual([
-      { n: 1, label: 'Prima Pars', chapters: [{ n: 1, label: 'Question 2' }, { n: 2, label: 'Question 3' }] },
-      { n: 2, label: 'Secunda Pars', chapters: [] },
-    ]);
-  });
-
-  it('freeWorkManifest keeps the legacy single-document shape when bookless', () => {
+  it('keeps the single-document manifest shape for every free work', () => {
     const m = freeWorkManifest(RECORD);
     expect(m.books).toEqual([{ n: 1, label: '' }]);
     expect(m.documentBooks).toBeUndefined();
-  });
-
-  it('updateFreeWorkBooks replaces the structure, keeping other fields', async () => {
-    const storage = new MemStorage();
-    await registerFreeWork({ ...RECORD, language: 'Latin' }, storage);
-    await updateFreeWorkBooks('my-doc', BOOKS, storage);
-    expect(await listFreeWorkRecords(storage)).toEqual([{ ...RECORD, language: 'Latin', books: BOOKS }]);
-  });
-
-  it('updateFreeWorkBooks with an empty array clears the structure', async () => {
-    const storage = new MemStorage();
-    await registerFreeWork({ ...RECORD, books: BOOKS }, storage);
-    await updateFreeWorkBooks('my-doc', [], storage);
-    expect((await listFreeWorkRecords(storage))[0].books).toBeUndefined();
-  });
-
-  it('updateFreeWorkBooks is a no-op for an unknown work id', async () => {
-    const storage = new MemStorage();
-    await registerFreeWork(RECORD, storage);
-    await updateFreeWorkBooks('nope', BOOKS, storage);
-    expect((await listFreeWorkRecords(storage))[0].books).toBeUndefined();
-  });
-
-  it('pure helpers append and rename without reordering positions', () => {
-    // withAddedBook: first book can absorb the existing document as chapter 1.
-    const first = withAddedBook(undefined, 'Prima Pars', 'Chapter 1');
-    expect(first).toEqual([{ label: 'Prima Pars', chapters: [{ label: 'Chapter 1' }] }]);
-    // A later book starts empty.
-    const two = withAddedBook(first, 'Secunda Pars');
-    expect(two[1]).toEqual({ label: 'Secunda Pars', chapters: [] });
-    // Add a chapter to book 1; book 2 untouched.
-    const added = withAddedChapter(two, 1, 'Question 3');
-    expect(added[0].chapters).toEqual([{ label: 'Chapter 1' }, { label: 'Question 3' }]);
-    expect(added[1].chapters).toEqual([]);
-    // Rename book 2 and chapter (1,2); out-of-range indices are no-ops.
-    expect(withRenamedBook(added, 2, 'Pars II')[1].label).toBe('Pars II');
-    expect(withRenamedChapter(added, 1, 2, 'Q. 3')[0].chapters[1].label).toBe('Q. 3');
-    expect(withAddedChapter(added, 9, 'x')).toEqual(added);
-    expect(withRenamedBook(added, 9, 'x')).toEqual(added);
-    expect(withRenamedChapter(added, 1, 9, 'x')).toEqual(added);
   });
 });
 
@@ -424,5 +364,87 @@ describe('freeWorkManifest — verbatim language label (D8 Phase E2)', () => {
 
   it('no language recorded → no language field (assist treats it as unknown, never Greek)', () => {
     expect('language' in freeWorkManifest(RECORD)).toBe(false);
+  });
+});
+
+describe('removing a work', () => {
+  const OTHER: FreeWorkRecord = { id: 'keeper', title: 'Keeper', scheme: 'paragraph' };
+
+  async function library(): Promise<MemStorage> {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await registerFreeWork(OTHER, storage);
+    await storage.write('my-doc', 'b01c01.md', 'chapter one');
+    await storage.write('my-doc', 'b01c02.md', 'chapter two');
+    await storage.write('keeper', 'b01c01.md', 'not mine to delete');
+    return storage;
+  }
+
+  it('drops the registry entry and every file the work owns', async () => {
+    const storage = await library();
+    await removeFreeWork('my-doc', storage);
+    expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
+    expect(await storage.list('my-doc')).toEqual([]);
+  });
+
+  it('leaves every other work exactly as it was', async () => {
+    const storage = await library();
+    await removeFreeWork('my-doc', storage);
+    expect(await storage.read('keeper', 'b01c01.md')).toBe('not mine to delete');
+    expect((await listFreeWorks(storage)).map((w) => w.title)).toEqual(['Keeper']);
+  });
+
+  it('still clears the files of a work the registry never knew', async () => {
+    // A half-finished import: files written, registration never reached.
+    const storage = new MemStorage();
+    await registerFreeWork(OTHER, storage);
+    await storage.write('orphan', 'b01c01.md', 'nobody knows me');
+    await removeFreeWork('orphan', storage);
+    expect(await storage.list('orphan')).toEqual([]);
+    expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
+  });
+
+  it('unregisters without touching the files when asked only to unregister', async () => {
+    const storage = await library();
+    await unregisterFreeWork('my-doc', storage);
+    expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
+    expect(await storage.list('my-doc')).toEqual(['b01c01.md', 'b01c02.md']);
+  });
+});
+
+describe('setting a work’s language after the fact', () => {
+  it('changes which dictionary the work will get', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, language: 'Greek' }, storage);
+    await updateFreeWorkLanguage('my-doc', 'Latin', storage);
+    const [work] = await listFreeWorks(storage);
+    expect(work.language).toBe('Latin');
+    expect(work.originalLanguage).toBe('latin');
+  });
+
+  it('keeps a language no dictionary knows, and claims none for it', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await updateFreeWorkLanguage('my-doc', '  German  ', storage);
+    const [work] = await listFreeWorks(storage);
+    expect(work.language).toBe('German');
+    expect(work.originalLanguage).toBeUndefined();
+  });
+
+  it('clears the language when the field is emptied', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, language: 'Greek' }, storage);
+    await updateFreeWorkLanguage('my-doc', '   ', storage);
+    const [record] = await listFreeWorkRecords(storage);
+    expect('language' in record).toBe(false);
+  });
+
+  it('leaves everything else on the record alone', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, author: 'Aquinas', language: 'Latin' }, storage);
+    await updateFreeWorkLanguage('my-doc', 'Greek', storage);
+    const [record] = await listFreeWorkRecords(storage);
+    expect(record.author).toBe('Aquinas');
+    expect(record.title).toBe('My Doc');
   });
 });

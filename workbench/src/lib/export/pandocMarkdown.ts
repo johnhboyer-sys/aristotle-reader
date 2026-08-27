@@ -27,6 +27,8 @@ import { getScheme } from '../citation/registry';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
 import { isValidSplitOffset, rowAddress } from '../chapterfile';
+import { navRoleOf, levelDepth, DEFAULT_PROFILE } from '../works/profile';
+import type { WorkProfile } from '../works/profile';
 
 export type StampMode = 'every-line' | 'every-5' | 'columns';
 
@@ -55,6 +57,20 @@ export type BilingualOrder = 'original-first' | 'translation-first';
 export interface BilingualPair {
   source: string[];
   translation: string[];
+  /**
+   * A marked heading row. It is a document-level block, never body text and
+   * never a table cell, so the assembler lays it out itself rather than
+   * pairing the two languages side by side — see documentHeadingBlocks.
+   */
+  heading?: HeadingPair;
+}
+
+/** The two languages of one marked heading row (english null = untranslated). */
+export interface HeadingPair {
+  /** How many '#' the heading takes; null = a 'subtitle' tier, an italic line. */
+  hashes: number | null;
+  english: string | null;
+  source: string;
 }
 
 export interface PandocMarkdownOptions {
@@ -622,11 +638,21 @@ export function assembleBilingual(
   const follow = (p: BilingualPair) => (order === 'translation-first' ? p.source : p.translation);
 
   if (layout === 'block') {
-    return [...pairs.flatMap(lead), ...pairs.flatMap(follow)];
+    // Each language runs as its own stream here, so a heading appears once in
+    // each, in that stream's language — English heading over the English
+    // block, source heading over the source block.
+    const englishSide = (h: HeadingPair) => headingLine(h.hashes, h.english ?? h.source);
+    const sourceSide = (h: HeadingPair) => headingLine(h.hashes, h.source.length > 0 ? h.source : (h.english ?? ''));
+    const stream = (pick: (p: BilingualPair) => string[], side: (h: HeadingPair) => string) =>
+      pairs.flatMap((p) => (p.heading ? [side(p.heading)] : pick(p)));
+    const leadSide = order === 'translation-first' ? englishSide : sourceSide;
+    const followSide = order === 'translation-first' ? sourceSide : englishSide;
+    return [...stream(lead, leadSide), ...stream(follow, followSide)];
   }
 
   if (layout === 'alternating') {
     return pairs.flatMap((p) => {
+      if (p.heading) return headingParagraphsBilingual(p.heading);
       const l = lead(p);
       const f = follow(p);
       // A group present on one side only still shows the gap, same intent as
@@ -636,19 +662,32 @@ export function assembleBilingual(
   }
 
   // table: one headerless two-column pipe table, one row per paired piece.
-  // Uneven sides pad with a blank cell rather than dropping content.
-  const rows: string[] = [];
+  // Uneven sides pad with a blank cell rather than dropping content. A heading
+  // is not a cell — it closes the table it interrupts and stands on the page,
+  // and the pairs after it open a new one.
+  const sections: string[] = [];
+  let rows: string[] = [];
+  const flushTable = () => {
+    if (rows.length === 0) return;
+    // An empty header row is Pandoc's headerless-table form: the docx writer
+    // emits a plain two-column table with no header styling.
+    sections.push(['|  |  |', '|:---|:---|', ...rows].join('\n'));
+    rows = [];
+  };
   for (const p of pairs) {
+    if (p.heading) {
+      flushTable();
+      sections.push(...headingParagraphsBilingual(p.heading));
+      continue;
+    }
     const l = cellPieces(lead(p));
     const f = cellPieces(follow(p));
     for (let i = 0; i < Math.max(l.length, f.length); i++) {
       rows.push(`| ${escapeTableCell(l[i] ?? '')} | ${escapeTableCell(f[i] ?? '')} |`);
     }
   }
-  if (rows.length === 0) return [];
-  // An empty header row is Pandoc's headerless-table form: the docx writer
-  // emits a plain two-column table with no header styling.
-  return [['|  |  |', '|:---|:---|', ...rows].join('\n')];
+  flushTable();
+  return sections;
 }
 
 function rowEnglishSegments(chapter: ChapterFile, rowIndex: number): string[] {
@@ -709,13 +748,131 @@ function renderDocumentRow(chapter: ChapterFile, rowIndex: number): { markdown: 
   return { markdown: null, footnoteIdsUsed: [] };
 }
 
-function renderDocumentParagraphRows(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
+// ── in-page heading marks ───────────────────────────────────────────────────
+//
+// The lines a translator MARKS — "Objection 1", "Sed contra", "Respondeo", an
+// Article's "Utrum…" title — are headings, not paragraphs. The export layer
+// read none of them until now, so a marked-up work compiled to a Word file
+// with no outline at all: every heading printed as ordinary body text.
+//
+// Depth follows the row's nav ROLE, sitting under the Book/Chapter headings
+// the compile arm already emits: book '##', chapter '###', an in-page heading
+// tier '####' plus its profile depth (Word styles Heading 1–6, so six is the
+// floor). A 'subtitle' tier is not a heading at all — it is the small italic
+// line under the one above it, which is what that role means in the rail.
+//
+// Bilingual follows John's rule, and it holds for every tier: the ENGLISH is
+// the heading, the source goes under it in italics. Only 'block' layout
+// differs, and for the reason that defines it — there the two languages run
+// as separate streams, so each stream carries the heading in its own tongue.
+
+/** rowIndex → the heading that row becomes (documentHeadings). */
+export type DocumentHeadings = Map<number, { heading: HeadingPair; footnoteIdsUsed: string[] }>;
+
+const MAX_HEADING_HASHES = 6;
+
+/**
+ * The shallowest heading tier a work declares. Depths are absolute in the
+ * profile (the Summa's Article sits at depth 2, under Part and Question), and
+ * what the export needs is the tier's depth RELATIVE to the shallowest one, so
+ * a work's first in-page heading tier is '####' whatever its absolute depth.
+ */
+function shallowestHeadingDepth(profile: WorkProfile): number {
+  const depths = profile.levels.filter((l) => l.navRole === 'heading').map((l) => l.depth ?? 0);
+  return depths.length > 0 ? Math.min(...depths) : 0;
+}
+
+function headingHashes(profile: WorkProfile, level: number, base: number): number | null {
+  switch (navRoleOf(profile, level)) {
+    case 'subtitle':
+      return null;
+    case 'book':
+      return 2;
+    case 'chapter':
+      return 3;
+    default:
+      return Math.min(4 + Math.max(levelDepth(profile, level) - base, 0), MAX_HEADING_HASHES);
+  }
+}
+
+/** One heading line: '#### Question 2', or the italic line a subtitle tier is. */
+function headingLine(hashes: number | null, text: string): string {
+  return hashes === null ? `*${text}*` : `${'#'.repeat(hashes)} ${text}`;
+}
+
+/**
+ * A heading's English: the user's title override if they set one (plain text,
+ * as the rail stores it), else the row's translation. Null when the heading is
+ * untranslated — the caller then prints the source, since a blank heading is
+ * worse than an untranslated one.
+ */
+function headingEnglish(
+  chapter: ChapterFile,
+  rowIndex: number,
+): { markdown: string | null; footnoteIdsUsed: string[] } {
+  const override = chapter.headingTitleLines?.[rowIndex]?.trim() ?? '';
+  if (override.length > 0) return { markdown: escapePandocText(override), footnoteIdsUsed: [] };
+  return renderDocumentRow(chapter, rowIndex);
+}
+
+/** The profile a work carries at runtime (WorkManifest under a WorkMeta type,
+ * as elsewhere in the export path); DEFAULT_PROFILE when it declares none. */
+export function profileOf(work: WorkMeta): WorkProfile {
+  return (work as { profile?: WorkProfile }).profile ?? DEFAULT_PROFILE;
+}
+
+/**
+ * Every marked row of a chapter, as the heading it becomes. Rows absent from
+ * the map are ordinary body text. Footnote ids used inside a heading ride
+ * along so the definition block still emits.
+ */
+export function documentHeadings(chapter: ChapterFile, profile: WorkProfile): DocumentHeadings {
+  const out: DocumentHeadings = new Map();
+  const base = shallowestHeadingDepth(profile);
+  for (const mark of chapter.meta.headers ?? []) {
+    const rowIndex = mark.row - 1;
+    if (rowIndex < 0 || rowIndex >= chapter.greekLines.length) continue;
+    const english = headingEnglish(chapter, rowIndex);
+    const source = renderSourceLine(chapter, rowIndex);
+    if (english.markdown === null && source.length === 0) continue; // an empty row prints nothing
+    out.set(rowIndex, {
+      heading: { hashes: headingHashes(profile, mark.level, base), english: english.markdown, source },
+      footnoteIdsUsed: english.footnoteIdsUsed,
+    });
+  }
+  return out;
+}
+
+/** English-only rendering of a heading: one line, the translation or the source. */
+function headingParagraphEnglish(h: HeadingPair): string {
+  return headingLine(h.hashes, h.english ?? h.source);
+}
+
+/** Bilingual rendering: the English heading, the source italic under it. */
+function headingParagraphsBilingual(h: HeadingPair): string[] {
+  const blocks = [headingLine(h.hashes, h.english ?? h.source)];
+  if (h.english !== null && h.source.length > 0) blocks.push(`*${h.source}*`);
+  return blocks;
+}
+
+function renderDocumentParagraphRows(
+  chapter: ChapterFile,
+  skipRow?: number,
+  headings?: DocumentHeadings,
+): RenderedParagraphs {
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
   let gap = false;
 
   for (let i = 0; i < chapter.englishLines.length; i++) {
     if (i === skipRow) continue; // already rendered as this part's heading
+    const marked = headings?.get(i);
+    if (marked) {
+      paragraphs.push(headingParagraphEnglish(marked.heading));
+      footnoteIdsUsed.push(...marked.footnoteIdsUsed);
+      gap = false; // a heading closes any untranslated run before it
+      continue;
+    }
     const rendered = renderDocumentRow(chapter, i);
     if (rendered.markdown === null) {
       gap = true;
@@ -731,7 +888,11 @@ function renderDocumentParagraphRows(chapter: ChapterFile, skipRow?: number): Re
   return { paragraphs, footnoteIdsUsed };
 }
 
-function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
+function renderDocumentPlainLineRows(
+  chapter: ChapterFile,
+  skipRow?: number,
+  headings?: DocumentHeadings,
+): RenderedParagraphs {
   const paragraphs: string[] = [];
   const footnoteIdsUsed: string[] = [];
   const paragraphStarts = new Set(chapter.meta.paragraphStarts ?? []);
@@ -750,6 +911,16 @@ function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): Re
   for (let i = 0; i < chapter.englishLines.length; i++) {
     if (i === 0 || paragraphStarts.has(i + 1)) flush();
     if (i === skipRow) continue; // already rendered as this part's heading
+
+    const marked = headings?.get(i);
+    if (marked) {
+      // A heading is its own block: the lines around it must not run into it.
+      flush();
+      paragraphs.push(headingParagraphEnglish(marked.heading));
+      footnoteIdsUsed.push(...marked.footnoteIdsUsed);
+      gap = false;
+      continue;
+    }
 
     const rendered = renderDocumentRow(chapter, i);
     if (rendered.markdown === null) {
@@ -772,13 +943,17 @@ function renderDocumentPlainLineRows(chapter: ChapterFile, skipRow?: number): Re
   return { paragraphs, footnoteIdsUsed };
 }
 
-export function renderDocumentSpineEnglish(chapter: ChapterFile, skipRow?: number): RenderedParagraphs {
+export function renderDocumentSpineEnglish(
+  chapter: ChapterFile,
+  skipRow?: number,
+  headings?: DocumentHeadings,
+): RenderedParagraphs {
   const scheme = getScheme(chapter.meta.citationScheme);
   switch (scheme.gutter.rowUnit) {
     case 'paragraph':
-      return renderDocumentParagraphRows(chapter, skipRow);
+      return renderDocumentParagraphRows(chapter, skipRow, headings);
     case 'plain-line':
-      return renderDocumentPlainLineRows(chapter, skipRow);
+      return renderDocumentPlainLineRows(chapter, skipRow, headings);
     default:
       return renderSegmentsGrouped(chapterSegments(chapter), (seg) => seg.englishMarkup, false, 'every-5');
   }
@@ -808,12 +983,22 @@ function renderSourceLine(chapter: ChapterFile, rowIndex: number): string {
   return markupToPandoc(raw).markdown;
 }
 
-function renderDocumentParagraphRowsBilingual(chapter: ChapterFile, skipRow?: number): DocumentBilingualPairs {
+function renderDocumentParagraphRowsBilingual(
+  chapter: ChapterFile,
+  skipRow?: number,
+  headings?: DocumentHeadings,
+): DocumentBilingualPairs {
   const pairs: BilingualPair[] = [];
   const footnoteIdsUsed: string[] = [];
 
   for (let i = 0; i < chapter.englishLines.length; i++) {
     if (i === skipRow) continue; // already rendered as this part's heading
+    const marked = headings?.get(i);
+    if (marked) {
+      pairs.push({ source: [], translation: [], heading: marked.heading });
+      footnoteIdsUsed.push(...marked.footnoteIdsUsed);
+      continue;
+    }
     const source = renderSourceLine(chapter, i);
     const english = renderDocumentRow(chapter, i);
     if (source.length === 0 && english.markdown === null) continue; // fully empty unit
@@ -831,7 +1016,11 @@ function renderDocumentParagraphRowsBilingual(chapter: ChapterFile, skipRow?: nu
   return { pairs, footnoteIdsUsed };
 }
 
-function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: number): DocumentBilingualPairs {
+function renderDocumentPlainLineRowsBilingual(
+  chapter: ChapterFile,
+  skipRow?: number,
+  headings?: DocumentHeadings,
+): DocumentBilingualPairs {
   const pairs: BilingualPair[] = [];
   const footnoteIdsUsed: string[] = [];
   const starts = new Set(chapter.meta.paragraphStarts ?? []);
@@ -842,14 +1031,29 @@ function renderDocumentPlainLineRowsBilingual(chapter: ChapterFile, skipRow?: nu
 
   // Row indexes grouped by paragraph_starts (row 1 implicitly opens group 1,
   // exactly like renderDocumentPlainLineRows / the editor's chunk view).
+  // A heading interrupts the grouping: it is its own block, and the lines on
+  // either side of it are separate groups, so `groups` holds heading rows as
+  // their own singleton entry rather than folding them into a neighbour.
   const groups: number[][] = [];
   for (let i = 0; i < chapter.englishLines.length; i++) {
     if (i === 0 || starts.has(i + 1)) groups.push([]);
     if (i === skipRow) continue; // already rendered as this part's heading
+    if (headings?.has(i)) {
+      groups.push([i], []);
+      continue;
+    }
+    if (groups.length === 0) groups.push([]);
     groups[groups.length - 1].push(i);
   }
 
   for (const group of groups) {
+    if (group.length === 0) continue;
+    const marked = headings?.get(group[0]);
+    if (marked) {
+      pairs.push({ source: [], translation: [], heading: marked.heading });
+      footnoteIdsUsed.push(...marked.footnoteIdsUsed);
+      continue;
+    }
     // Source block: the group's non-blank lines, hard-line-break joined.
     const sourceLines = group
       .map((i) => {
@@ -914,18 +1118,19 @@ export interface DocumentBilingualPairs {
 export function renderDocumentSpineBilingual(
   chapter: ChapterFile,
   skipRow?: number,
+  headings?: DocumentHeadings,
 ): DocumentBilingualPairs {
   const scheme = getScheme(chapter.meta.citationScheme);
   switch (scheme.gutter.rowUnit) {
     case 'paragraph':
-      return renderDocumentParagraphRowsBilingual(chapter, skipRow);
+      return renderDocumentParagraphRowsBilingual(chapter, skipRow, headings);
     case 'plain-line':
-      return renderDocumentPlainLineRowsBilingual(chapter, skipRow);
+      return renderDocumentPlainLineRowsBilingual(chapter, skipRow, headings);
     default: {
       // Unreachable for the shipped document-spine schemes (paragraph /
       // plain-line are the only two); degrade to the English-only rendering
       // rather than throw, mirroring renderDocumentSpineEnglish's default.
-      const english = renderDocumentSpineEnglish(chapter, skipRow);
+      const english = renderDocumentSpineEnglish(chapter, skipRow, headings);
       return {
         pairs: english.paragraphs.map((p) => ({ source: [], translation: [p] })),
         footnoteIdsUsed: english.footnoteIdsUsed,
@@ -1119,13 +1324,14 @@ export function documentChapterSections(
   skipRow?: number,
   layout?: BilingualLayout,
   order: BilingualOrder = 'original-first',
+  headings?: DocumentHeadings,
 ): { paragraphs: string[]; footnoteIdsUsed: string[] } {
-  if (mode !== 'bilingual') return renderDocumentSpineEnglish(chapter, skipRow);
+  if (mode !== 'bilingual') return renderDocumentSpineEnglish(chapter, skipRow, headings);
   // The bilingual renderer returns PAIRS; how they sit on the page is the
   // assembler's call, so a document work honours the same layout/order
   // settings as a corpus work. An unset layout keeps this path's historical
   // shape, alternating — see BilingualLayout.
-  const paired = renderDocumentSpineBilingual(chapter, skipRow);
+  const paired = renderDocumentSpineBilingual(chapter, skipRow, headings);
   return {
     paragraphs: assembleBilingual(paired.pairs, layout ?? 'alternating', order),
     footnoteIdsUsed: paired.footnoteIdsUsed,
@@ -1182,6 +1388,7 @@ export function documentToPandocMarkdown(
     undefined,
     layout,
     order,
+    documentHeadings(chapter, profileOf(work)),
   );
   const footnoteBlocks = buildFootnoteBlocks(chapter, footnoteIdsUsed);
   const sections = [`# ${work.title}`, ...(paragraphs.length > 0 ? paragraphs : [''])];

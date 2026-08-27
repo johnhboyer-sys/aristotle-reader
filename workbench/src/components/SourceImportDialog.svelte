@@ -168,7 +168,7 @@
       // Diogenes cannot export one work, so the first import of an author
       // exports all of them. Say so instead of looking frozen.
       busy = `Reading ${selectedAuthor?.name ?? 'the author'} from the disc — this can take a few minutes the first time…`;
-      return importFromDisc({ discDir: discDir!, author: selectedAuthor!, work: selectedWork!, lineMode });
+      return importFromDisc({ discDir: discDir!, author: selectedAuthor!, work: selectedWork!, lineMode, existingIds });
     }
     if (route === 'file') {
       busy = 'Reading the file…';

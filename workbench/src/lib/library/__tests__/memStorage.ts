@@ -23,6 +23,12 @@ export class MemStorage implements LibraryStorage {
   async mtime(): Promise<number | null> {
     return null;
   }
+  async remove(workId: string): Promise<void> {
+    const prefix = `${workId}/`;
+    for (const key of [...this.files.keys()]) {
+      if (key.startsWith(prefix)) this.files.delete(key);
+    }
+  }
 }
 
 /** Writes park until release() — for in-flight-write ordering tests. */

@@ -175,6 +175,12 @@ export interface DiscImportRequest {
   lineMode?: LineMode;
   /** Where exports are cached. Defaults to app data. Must be ABSOLUTE. */
   exportDir?: string;
+  /**
+   * Work ids already in the library, so a second import of the same title
+   * takes the next free id. Without them the two works share one id and the
+   * second silently overwrites the first — translation and all.
+   */
+  existingIds?: Iterable<string>;
 }
 
 /**
@@ -237,7 +243,7 @@ export async function importFromDisc(req: DiscImportRequest): Promise<SourceImpo
     // "Stephanus page" rather than "Stephanus-page".
     levelNames: req.work.levelNames.length > 0 ? req.work.levelNames : doc.levelNames,
     rows: doc.rows,
-  });
+  }, req.existingIds ?? []);
 }
 
 async function runExport(req: DiscImportRequest, corpus: Corpus, num: string, exportDir: string): Promise<void> {
