@@ -5,15 +5,16 @@ not the repo-wide `HANDOFF.md` at the root, and no other session's handoff
 should be written here. Rewrite it (don't append) when you hand off workbench
 work._
 
-_Last rewritten: 2026-08-28, morning._
+_Last rewritten: 2026-08-28, evening._
 
 ## Where things stand
 
 - **Branch:** `claude/workbench-autonomous-capabilities-e6fc26`, pushed.
 - **[PR #102](https://github.com/johnhboyer-sys/aristotle-reader/pull/102) — MERGED** into `main` (2026-08-27): eight backlog items.
-- **[PR #103](https://github.com/johnhboyer-sys/aristotle-reader/pull/103) — OPEN**: this morning's three commits (author names, rename a work, the smoke run).
-- **Suite:** 1,825 vitest green from `workbench/` (never a worktree root). `npx tsc --noEmit` clean. `npm run smoke` passes.
-- **Test app:** `~/Downloads/Translation Workbench.app`, rebuilt from the merged code plus the author fix. De-quarantined. **John has not finished QA of any of it.**
+- **[PR #103](https://github.com/johnhboyer-sys/aristotle-reader/pull/103) — MERGED** (2026-08-28 evening): author names, rename a work, the smoke run, and the divisions work below.
+- **Suite:** 1,840 vitest green from `workbench/` (never a worktree root). `npx tsc --noEmit` clean. `npm run smoke` passes.
+- **Test app:** `~/Downloads/Translation Workbench.app`, rebuilt from everything merged. De-quarantined.
+- **QA so far (John, 2026-08-28):** re-imported the Physics — the eight books came in with their outline, the 71 chapters with them, and he renamed the work and its author. The export pass and the older untested list below are still open.
 
 ## What shipped since the last handoff
 
@@ -29,6 +30,25 @@ PR #102, in the order it was asked for:
 8. **Perseus Bekker numbers import.** Milestone state carries across division boundaries, and a page with something finer under it IS the address; a page alone is not, so Plato stays `1.327a`.
 
 PR #103, from John's QA:
+
+- **An import now arrives divided.** A TLG disc has no chapter level, so the
+  Physics used to import as 8 title lines and 5,520 rows with none of its 71
+  chapters. `scripts/build-divisions.mjs` folds `manifests/<ID>.yaml` +
+  `build/dist/<ID>/chapters.json` into a 93KB table (46 works, 1,973 chapters,
+  citation data only) staged beside the corpus resources; the importer matches
+  each chapter's Bekker address to a row. Chapters are BOUNDARIES (label + row,
+  `works/chapterContainers.ts`), never marks — a marked row becomes a title and
+  drops out of the text, and chapter 1 starts at 184a10, mid-prose.
+  Measured on the real cache: 39 works, everything placed but 4 of the
+  Mirabilia's 178.
+- **Books are lettered from their own title lines** (`works/bookLetter.ts`):
+  Book Α–Θ, not Book 1–8, and the rail no longer prints the title line under
+  the Book named after it. Narrow rule — first node only, letters must agree —
+  so a hand-made "Prima Pars" hides nothing.
+- ⚠️ **Divisions apply at IMPORT only.** A work already in the library gets
+  them by re-importing (it lands as `<id>-2`), or not at all. If that becomes a
+  nuisance, the fix is to store the TLG ids on the record and add a rail
+  command that re-applies.
 
 - **The disc's alternate name joined the author's.** `TLG0086 …Corpus Aristotelicum&\x80Aristotle` — 0x80 introduces the English name (13 authors have one). The parser dropped the marker and kept reading. Fixed at the parser; **existing registry entries keep the fused name until edited.**
 - **Rename a work** — Work details… leads with Title. The id never changes: it is the folder name the chapter files live under.
