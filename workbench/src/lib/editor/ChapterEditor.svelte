@@ -160,11 +160,19 @@
   let {
     fixture,
     onOutline,
+    workTitle,
   }: {
     fixture: FixtureChapter;
     /** Emitted whenever the heading outline changes (roles toggled or a
      * heading's translation commits). Document-spine works only carry one. */
     onOutline?: (items: OutlineItem[]) => void;
+    /**
+     * The work's CURRENT title. The model keeps the name the chapter loaded
+     * with, and a document work's fixture is cached until the locus changes —
+     * so without this a rename in Work details… showed up everywhere but the
+     * one place the reader is looking.
+     */
+    workTitle?: string;
   } = $props();
 
   // ── model + non-reactive machinery ─────────────────────────────────────
@@ -3824,7 +3832,7 @@
   {#if ready}
     <header class="chapter-head">
       <h1>
-        {model.workTitle}
+        {workTitle ?? model.workTitle}
         <span class="chapter-head-ref">{model.bookLabel}.{model.chapter} · {model.bekkerRange}</span>
       </h1>
       {#if toggleModes.length > 1}

@@ -45,4 +45,11 @@ describe('a work folds away', () => {
   it('opening a work unfolds it, so a new selection is never hidden', () => {
     expect(railSource).toContain('if (workId && collapsedWorks.has(workId))');
   });
+
+  it('unfolds only when the selection changes — the open work folds like any other', () => {
+    // The effect reads collapsedWorks, so without this guard the user's own
+    // fold re-ran it and undid itself: the work you were reading was the one
+    // work in the rail that could not be folded.
+    expect(railSource).toContain('if (workId === lastOpened) return;');
+  });
 });

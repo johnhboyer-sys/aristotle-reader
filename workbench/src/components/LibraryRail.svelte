@@ -99,8 +99,6 @@
     onRenameBookContainer,
     onRemoveBookContainer,
     onSetBookStart,
-    onRenameBook,
-    onRenameChapter,
     onSelect,
     onAddWork,
     onNewDocument,
@@ -149,9 +147,6 @@
     onRemoveBookContainer?: (index: number) => void;
     /** Move a Book's boundary to a 1-based outline ROOT ordinal. */
     onSetBookStart?: (index: number, rootOrdinal: number) => void;
-    /** Rename a Book / chapter slot (double-click). */
-    onRenameBook?: (workId: string, bookN: number, label: string) => void;
-    onRenameChapter?: (workId: string, bookN: number, chapterN: number, label: string) => void;
     onSelect: (workId: string, book: number, chapter: number) => void;
     onAddWork?: () => void;
     /** "New document…" — create a corpus-free document (D8 §6). Gated like
@@ -243,8 +238,16 @@
 
   // A work that is opened unfolds itself — otherwise selecting a chapter (an
   // import, say) would leave the rail looking as if nothing had happened.
+  //
+  // Only when the SELECTION changes, which is what `lastOpened` is for: the
+  // effect reads collapsedWorks, so without the guard the user's own fold of
+  // the open work re-ran it and unfolded the work again — the work you are
+  // reading was the one work that could not be folded.
+  let lastOpened: string | null = null;
   $effect(() => {
-    const workId = selected?.workId;
+    const workId = selected?.workId ?? null;
+    if (workId === lastOpened) return;
+    lastOpened = workId;
     if (workId && collapsedWorks.has(workId)) {
       const next = new Set(collapsedWorks);
       next.delete(workId);

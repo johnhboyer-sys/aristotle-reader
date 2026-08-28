@@ -258,6 +258,28 @@ export async function updateFreeWorkAuthor(
 }
 
 /**
+ * Rename an existing free work.
+ *
+ * The work's ID is not touched, and must not be: it is the name of the folder
+ * the chapter files live in, so re-slugging a renamed title would strand every
+ * one of them. A title is a label; the id is an address.
+ *
+ * An empty title is ignored rather than stored — a work in the rail with no
+ * name is a row the user cannot identify or click.
+ */
+export async function updateFreeWorkTitle(
+  workId: string,
+  title: string,
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  const trimmed = title.trim();
+  if (trimmed.length === 0) return;
+  const record = (await listFreeWorkRecords(storage)).find((w) => w.id === workId);
+  if (!record) return;
+  await registerFreeWork({ ...record, title: trimmed }, storage);
+}
+
+/**
  * Update the original language of an existing free work. Empty text clears it;
  * an unknown work id is a no-op.
  *
