@@ -272,8 +272,12 @@ async function withKnownDivisions(
   if (!divisions) return imported;
 
   const refs = imported.file.meta.rowRefs ?? [];
-  const rootCount = (imported.file.meta.headers ?? []).length;
-  const applied = divisionsToContainers(divisions, refs, rootCount);
+  // The outline roots ARE the printed title lines; their text is what names
+  // the Books ("Book Α", not "Book 1").
+  const rootTexts = (imported.file.meta.headers ?? []).map(
+    (mark) => imported.file.greekLines[mark.row - 1] ?? '',
+  );
+  const applied = divisionsToContainers(divisions, refs, rootTexts);
   if (applied.chapters.length === 0) return imported;
 
   if (applied.unmatched.length > 0) {

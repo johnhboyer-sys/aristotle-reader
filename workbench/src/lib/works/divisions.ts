@@ -19,6 +19,7 @@ import { isTauri } from '../runtime';
 import type { BookContainer } from './bookContainers';
 import type { ChapterContainer } from './chapterContainers';
 import { normalizeChapterContainers } from './chapterContainers';
+import { bookLetterOf } from './bookLetter';
 
 /** One work's divisions, as the generated table stores them. */
 export interface WorkDivisions {
@@ -87,15 +88,24 @@ export interface AppliedDivisions {
 export function divisionsToContainers(
   divisions: WorkDivisions,
   rowRefs: string[],
-  outlineRootCount: number,
+  rootTexts: string[],
 ): AppliedDivisions {
+  const outlineRootCount = rootTexts.length;
   // Books can only be laid down when the edition prints one title line per
   // book, since a Book boundary is an outline ROOT ordinal. Several works come
   // off the disc with fewer title lines than books (the Ethics prints one for
   // ten), and a hierarchy built on that would be a coincidence.
   const booksFit = outlineRootCount === divisions.books.length && divisions.books.length > 0;
+  // A Book is named the way its edition names it: the title line the export
+  // prints for it reduces to a letter ("Β.", or the "Α" ending "ΦΥΣΙΚΗΣ
+  // ΑΚΡΟΑΣΕΩΣ Α"), and that letter is how the Greek tradition cites the book.
+  // A title that is not a letter — the Oeconomica's ΠΡΩΤΟΣ and ΔΕΥΤΕΡΟΣ — gets
+  // the number instead.
   const books: BookContainer[] = booksFit
-    ? divisions.books.map((book) => ({ label: `Book ${book.n}`, start: book.n }))
+    ? divisions.books.map((book, i) => ({
+        label: `Book ${bookLetterOf(rootTexts[i] ?? '') ?? book.n}`,
+        start: book.n,
+      }))
     : [];
 
   // With the Books above them, a chapter is "Chapter 3" — its book is the

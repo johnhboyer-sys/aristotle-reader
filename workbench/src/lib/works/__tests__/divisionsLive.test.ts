@@ -32,6 +32,11 @@ const CACHE =
 const PHYSICS = `${CACHE}/tlg0086031.xml`;
 const TABLE = new URL('../../../../.dev-corpus/divisions.json', import.meta.url).pathname;
 
+/** The text of each marked title row — what names the Books. */
+function rootTexts(file: { meta: { headers?: { row: number }[] }; greekLines: string[] }): string[] {
+  return (file.meta.headers ?? []).map((mark) => file.greekLines[mark.row - 1] ?? '');
+}
+
 const available = existsSync(PHYSICS) && existsSync(TABLE);
 const when = available ? describe : describe.skip;
 
@@ -54,12 +59,16 @@ when('the Physics, divided from the table', () => {
       levelNames: doc!.levelNames,
     });
     const refs = file.meta.rowRefs!;
-    const applied = divisionsToContainers(divisions, refs, (file.meta.headers ?? []).length);
+    const applied = divisionsToContainers(divisions, refs, rootTexts(file));
 
     expect(applied.unmatched).toEqual([]);
     expect(applied.chapters).toHaveLength(71);
-    // Eight title rows, eight books: the hierarchy is laid down.
+    // Eight title rows, eight books: the hierarchy is laid down, and each Book
+    // is named the way its own title line names it.
     expect(applied.books.map((b) => b.start)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(applied.books.map((b) => b.label)).toEqual([
+      'Book Α', 'Book Β', 'Book Γ', 'Book Δ', 'Book Ε', 'Book Ζ', 'Book Η', 'Book Θ',
+    ]);
 
     // Book 1 chapter 1 opens the work at 184a10, which IS the first text row —
     // the row a mark would have swallowed.
@@ -77,7 +86,7 @@ when('the Physics, divided from the table', () => {
   it('holds the boundaries in document order, one row apiece', () => {
     const divisions = divisionsForDiscWork(table, 'TLG0086', '031')!;
     const { file } = createSourceImport({ title: 'Physica', rows: doc!.rows, levelNames: doc!.levelNames });
-    const { chapters } = divisionsToContainers(divisions, file.meta.rowRefs!, 8);
+    const { chapters } = divisionsToContainers(divisions, file.meta.rowRefs!, rootTexts(file));
     const rows = chapters.map((c) => c.row);
     expect(rows).toEqual([...rows].sort((a, b) => a - b));
     expect(new Set(rows).size).toBe(rows.length);
@@ -90,7 +99,7 @@ when('the Physics, divided from the table', () => {
       { book: 1, n: 1, column: '184a', line: 10 },
       { book: 9, n: 1, column: '999b', line: 4 },
     ] };
-    const applied = divisionsToContainers(divisions, refs, 0);
+    const applied = divisionsToContainers(divisions, refs, []);
     expect(applied.chapters).toHaveLength(1);
     expect(applied.unmatched).toEqual([{ book: 9, n: 1, column: '999b', line: 4 }]);
   });
@@ -100,7 +109,7 @@ when('the Physics, divided from the table', () => {
     const { file } = createSourceImport({ title: 'Physica', rows: doc!.rows, levelNames: doc!.levelNames });
     // Three roots against eight books: a hierarchy built on that would be a
     // coincidence, so the chapters land and the Books do not.
-    const applied = divisionsToContainers(divisions, file.meta.rowRefs!, 3);
+    const applied = divisionsToContainers(divisions, file.meta.rowRefs!, ['Α', 'Β', 'Γ']);
     expect(applied.books).toEqual([]);
     expect(applied.chapters).toHaveLength(71);
   });
@@ -116,14 +125,14 @@ when('labels carry what the hierarchy cannot', () => {
     const divisions = divisionsForDiscWork(table, 'TLG0086', '010');
     if (!divisions) return; // that work isn't in this cache
     const refs = ['1094a.1', '1103a.14'];
-    const applied = divisionsToContainers(divisions, refs, 1);
+    const applied = divisionsToContainers(divisions, refs, ['ΗΘΙΚΩΝ ΝΙΚΟΜΑΧΕΙΩΝ Α']);
     expect(applied.books).toEqual([]);
     expect(applied.chapters.every((c) => /^\d+\.\d+$/.test(c.label))).toBe(true);
   });
 
   it('names it plainly when its Book is the container above it', () => {
     const divisions = divisionsForDiscWork(table, 'TLG0086', '031')!;
-    const applied = divisionsToContainers(divisions, ['184a.10'], 8);
+    const applied = divisionsToContainers(divisions, ['184a.10'], ['ΦΥΣΙΚΗΣ ΑΚΡΟΑΣΕΩΣ Α', 'Β.', 'Γ.', 'Δ.', 'Ε.', 'Ζ.', 'Η.', 'Θ.']);
     expect(applied.books).toHaveLength(8);
     expect(applied.chapters[0].label).toBe('Chapter 1');
   });

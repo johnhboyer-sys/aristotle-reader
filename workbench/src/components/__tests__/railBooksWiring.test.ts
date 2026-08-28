@@ -78,12 +78,17 @@ describe('the Book layer renders only when containers exist', () => {
     // outline still renders through the same snippet.
     expect(railSource).toContain('{:else if outlineTree.length > 0 || chapterContainers.length > 0}');
     expect(railSource).toContain('{@render outlineNodes(outlineTree)}');
-    // A Book's chapters go through the SAME snippet as the flat tree.
-    expect(railSource).toContain('{@render outlineNodes(bk.nodes)}');
+    // A Book's outline nodes go through the SAME snippet as the flat tree.
+    // (`bookNodes` is `bk.nodes` minus the printed title line the Book was
+    // named after — see nodesUnderBook.)
+    expect(railSource).toContain('{@render outlineNodes(bookNodes)}');
+    expect(railSource).toContain('const bookNodes = nodesUnderBook(bk)');
   });
 
   it('an empty Book renders a hint instead of a blank row', () => {
-    expect(railSource).toContain('{#if bk.nodes.length > 0}');
+    // Emptiness is judged on what the Book actually HOLDS — its own outline
+    // nodes and its chapter boundaries — not on what the rail chose to print.
+    expect(railSource).toContain('{#if bk.nodes.length === 0 && bookChapters.length === 0}');
     expect(railSource).toContain('No chapters yet');
   });
 

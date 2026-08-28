@@ -1,11 +1,12 @@
 <script module lang="ts">
   // The rail's input shapes (App builds these from manifests + corpus).
   import type { WorkManifest } from '../lib/works/manifest';
-  import type { OutlineItem } from '../lib/editor/outline';
+  import type { OutlineItem, OutlineNode } from '../lib/editor/outline';
   import { buildOutlineTree, groupOutlineByBooks } from '../lib/editor/outline';
   import type { BookContainer } from '../lib/works/bookContainers';
   import type { ChapterContainer } from '../lib/works/chapterContainers';
   import { chaptersInBook } from '../lib/works/chapterContainers';
+  import { labelsSameBook } from '../lib/works/bookLetter';
   import type { NavRole } from '../lib/works/profile';
   import { groupWorksByAuthor } from '../lib/works/authorGroups';
 
@@ -196,6 +197,22 @@
     }
     return rows;
   });
+
+  /**
+   * A Book's outline nodes, minus the printed title line the Book was named
+   * after. "Book Α" over "ΦΥΣΙΚΗΣ ΑΚΡΟΑΣΕΩΣ Α" says one thing twice; the Book
+   * row is the one that stays, because it is the one that groups.
+   *
+   * Only the FIRST node, and only when the letters agree — a Book called
+   * "Prima Pars" hides nothing, and a title line the user marked themselves
+   * inside a book keeps its place.
+   */
+  function nodesUnderBook(book: { label: string; nodes: OutlineNode[] }): OutlineNode[] {
+    const first = book.nodes[0];
+    return first && first.children.length === 0 && labelsSameBook(book.label, first.item.label)
+      ? book.nodes.slice(1)
+      : book.nodes;
+  }
 
   /** The chapters of the Book at `index`, by row span. */
   function chaptersOfBook(index: number): ChapterContainer[] {
@@ -825,9 +842,10 @@
                   {/if}
                   {#if bookOpen(bk.index)}
                     {@const bookChapters = chaptersOfBook(bk.index)}
+                    {@const bookNodes = nodesUnderBook(bk)}
                     <ul class="outline-children">
-                      {#if bk.nodes.length > 0}
-                        {@render outlineNodes(bk.nodes)}
+                      {#if bookNodes.length > 0}
+                        {@render outlineNodes(bookNodes)}
                       {/if}
                       {#if bookChapters.length > 0}
                         {@render chapterRows(bookChapters)}
