@@ -41,6 +41,17 @@ export type OriginalLanguage = 'greek' | 'latin' | 'hebrew' | 'coptic';
 
 const LANGUAGE_MARKER = 0x83;
 
+/**
+ * Start of an author's alternate name — the English one the disc carries
+ * beside its Latin: "Aristoteles Phil. et Corpus Aristotelicum&\x80Aristotle",
+ * "Homerus Epic.\x80Homer", "Novum Testamentum&\x80New Testament". Thirteen
+ * authors on the TLG have one. Dropping the marker as an unprintable byte and
+ * keeping what follows glued the two together, which is how a work imported
+ * from the disc came to be filed under "Aristoteles Phil. et Corpus
+ * Aristotelicum Aristotle".
+ */
+const ALIAS_MARKER = 0x80;
+
 const LANGUAGES: Record<string, OriginalLanguage> = {
   g: 'greek',
   l: 'latin',
@@ -81,8 +92,15 @@ function splitRecords(bytes: Uint8Array): Uint8Array[] {
 function parseRecord(record: Uint8Array): DiscAuthor | null {
   let language: OriginalLanguage | undefined;
   const printable: number[] = [];
+  // The name ends at the alias; the scan goes on, because the language marker
+  // can sit past it.
+  let named = true;
   for (let i = 0; i < record.length; i++) {
     const b = record[i];
+    if (b === ALIAS_MARKER) {
+      named = false;
+      continue;
+    }
     if (b === LANGUAGE_MARKER) {
       // The code byte belongs to the marker, not to the name.
       const code = record[i + 1];
@@ -93,7 +111,7 @@ function parseRecord(record: Uint8Array): DiscAuthor | null {
       continue;
     }
     // Everything outside printable ASCII is a control or format byte.
-    if (b >= 0x20 && b < 0x7f) printable.push(b);
+    if (named && b >= 0x20 && b < 0x7f) printable.push(b);
   }
 
   const text = String.fromCharCode(...printable).trim();

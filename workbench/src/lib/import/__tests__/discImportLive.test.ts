@@ -1,5 +1,10 @@
 // Every cached Diogenes export, run through the importer.
 //
+// Each test here parses the whole cache — 55 works, 122,429 citations — so they
+// carry an explicit timeout: the 5-second default is a coin flip on a busy
+// machine, and a green suite that fails when something else is compiling is
+// worse than no test at all.
+//
 // This is the test that would have caught the Physics failing to import. Hand
 // written TEI proves the rules I already believe; 122,429 real citations prove
 // the ones I don't. Of those, 78 join two line numbers — "205a.25,29",
@@ -66,7 +71,7 @@ when('every cached disc export', () => {
 
     expect(failures).toEqual([]);
     expect(imported).toBe(files.length);
-  });
+  }, 60_000);
 
   it('gives Bekker-style addresses, not one row per page', () => {
     // Verse mode is the default precisely so this holds; if the cache were
@@ -113,7 +118,7 @@ when('the outline an import writes', () => {
 
     expect(missing).toEqual([]);
     expect(withTitles).toBeGreaterThan(0);
-  });
+  }, 60_000);
 });
 
 /**
@@ -156,5 +161,5 @@ when('the outline an import writes', () => {
 
     expect(wrong).toEqual([]);
     expect(checked).toBeGreaterThan(0);
-  });
+  }, 60_000);
 });
