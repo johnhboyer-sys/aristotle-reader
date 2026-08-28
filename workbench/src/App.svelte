@@ -33,6 +33,7 @@
     updateFreeWorkAuthor,
     updateFreeWorkBookContainers,
     updateFreeWorkLanguage,
+    updateFreeWorkTitle,
   } from './lib/works/freeWorks';
   import {
     withAddedBookContainer,
@@ -133,6 +134,7 @@
           books: [],
           document: true,
           bookContainers: work.documentBookContainers ?? [],
+          chapterContainers: work.documentChapterContainers ?? [],
         };
       }
       const corpus = corpora[work.id] ?? null;
@@ -334,7 +336,8 @@
     workDetailsWork = work && isDocumentWork(work) ? work : null;
   }
 
-  async function saveWorkDetails(workId: string, author: string, language: string) {
+  async function saveWorkDetails(workId: string, title: string, author: string, language: string) {
+    await updateFreeWorkTitle(workId, title);
     await updateFreeWorkAuthor(workId, author);
     await updateFreeWorkLanguage(workId, language);
     await reloadWorks();
@@ -368,6 +371,11 @@
   // document — it is a saved boundary over the outline's root nodes. Every
   // handler below is the same shape: pure transform → persist → reload.
   // Chapters are still made by MARKING a line, in the text or in the rail.
+
+  /** The open document work's chapter boundaries (empty when it has none). */
+  const docChapterContainers = $derived(
+    railWorks.find((rw) => rw.work.id === selection?.workId)?.chapterContainers ?? [],
+  );
 
   /** The open document work's saved Books (empty when it has none). */
   const docBookContainers: BookContainer[] = $derived(
@@ -743,6 +751,7 @@
             onWorkDetails={openWorkDetails}
             onWorkRemove={removeWork}
             bookContainers={docBookContainers}
+            chapterContainers={docChapterContainers}
             onAddBookContainer={isTauri() || import.meta.env.DEV ? addBookContainer : undefined}
             onAddBookContainerAfter={addBookContainerAfter}
             onRenameBookContainer={renameBookContainer}
@@ -765,7 +774,12 @@
           <!-- corpus still loading; keep the viewport quiet -->
         {:else if currentChapter}
           {#key `${selection?.workId}:${selection?.book}.${selection?.chapter}`}
-            <ChapterEditor bind:this={editorRef} fixture={currentChapter} onOutline={(o) => (docOutline = o)} />
+            <ChapterEditor
+              bind:this={editorRef}
+              fixture={currentChapter}
+              workTitle={currentWork?.title}
+              onOutline={(o) => (docOutline = o)}
+            />
           {/key}
         {:else if selection}
           <div class="empty-state-wrap">
@@ -869,7 +883,7 @@
       initialAuthor={workDetailsWork.author}
       initialLanguage={workDetailsWork.language ?? ''}
       onClose={() => (workDetailsWork = null)}
-      onSave={(author, language) => saveWorkDetails(workDetailsWork!.id, author, language)}
+      onSave={(title, author, language) => saveWorkDetails(workDetailsWork!.id, title, author, language)}
     />
   {/if}
 

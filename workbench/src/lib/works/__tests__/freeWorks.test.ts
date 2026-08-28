@@ -12,6 +12,7 @@ import {
   updateFreeWorkBookContainers,
   updateFreeWorkLanguage,
   updateFreeWorkLevels,
+  updateFreeWorkTitle,
 } from '../freeWorks';
 import type { FreeWorkRecord } from '../freeWorks';
 import type { BookContainer } from '../bookContainers';
@@ -446,5 +447,43 @@ describe('setting a work’s language after the fact', () => {
     const [record] = await listFreeWorkRecords(storage);
     expect(record.author).toBe('Aquinas');
     expect(record.title).toBe('My Doc');
+  });
+});
+
+describe('renaming a work', () => {
+  it('changes the title and leaves the id — the files live under it', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await storage.write('my-doc', 'b01c01.md', 'chapter one');
+
+    await updateFreeWorkTitle('my-doc', 'Summa Theologiae, Prima Pars', storage);
+
+    const [record] = await listFreeWorkRecords(storage);
+    expect(record.title).toBe('Summa Theologiae, Prima Pars');
+    expect(record.id).toBe('my-doc');
+    expect(await storage.read('my-doc', 'b01c01.md')).toBe('chapter one');
+  });
+
+  it('trims what the user typed', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await updateFreeWorkTitle('my-doc', '  Physica  ', storage);
+    expect((await listFreeWorkRecords(storage))[0].title).toBe('Physica');
+  });
+
+  it('refuses to leave a work nameless', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await updateFreeWorkTitle('my-doc', '   ', storage);
+    expect((await listFreeWorkRecords(storage))[0].title).toBe('My Doc');
+  });
+
+  it('keeps the author and language it was not asked about', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ ...RECORD, author: 'Aquinas', language: 'Latin' }, storage);
+    await updateFreeWorkTitle('my-doc', 'Summa', storage);
+    const [record] = await listFreeWorkRecords(storage);
+    expect(record.author).toBe('Aquinas');
+    expect(record.language).toBe('Latin');
   });
 });

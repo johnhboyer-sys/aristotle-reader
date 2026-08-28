@@ -33,6 +33,7 @@ import {
 import type { Corpus, LineMode, Platform } from '../corpus/discExport';
 import { createSourceImport } from './createSourceImport';
 import type { SourceImport } from './createSourceImport';
+import { divisionsForDiscWork, divisionsToContainers, loadDivisions } from '../works/divisions';
 import { loadSettings } from '../settings';
 
 /** How long to let an export run. Whole-author exports are slow: Plato's 41
@@ -235,7 +236,7 @@ export async function importFromDisc(req: DiscImportRequest): Promise<SourceImpo
   const doc = parseTeiRows(await fs.readTextFile(xmlPath));
   if (doc.rows.length === 0) throw new Error('That work has no text on the disc.');
 
-  return createSourceImport({
+  const imported = createSourceImport({
     title: req.work.title || doc.title || 'Untitled',
     ...(req.author.name ? { author: req.author.name } : {}),
     ...(req.author.language ? { language: req.author.language } : {}),
@@ -244,6 +245,58 @@ export async function importFromDisc(req: DiscImportRequest): Promise<SourceImpo
     levelNames: req.work.levelNames.length > 0 ? req.work.levelNames : doc.levelNames,
     rows: doc.rows,
   }, req.existingIds ?? []);
+
+  return withKnownDivisions(imported, req);
+}
+
+/**
+ * Lay down the work's books and chapters when this project already knows them.
+ *
+ * The disc exports the citation scheme its edition prints and no more: for
+ * Aristotle that is the Bekker page and line, so the Physics arrives as eight
+ * title lines and 5,520 lines of Greek with none of its 71 chapters — the disc
+ * has no chapter level to give. The divisions table does (see works/divisions),
+ * addressed in the very coordinates the imported rows carry.
+ *
+ * Boundaries, not marks: a marked row becomes a title and drops out of the
+ * flowing text, and a chapter of the Physics starts mid-prose on a line the
+ * reader still needs. Nothing here touches a row.
+ *
+ * A work the table doesn't know imports exactly as it did before.
+ */
+async function withKnownDivisions(
+  imported: SourceImport,
+  req: DiscImportRequest,
+): Promise<SourceImport> {
+  const divisions = divisionsForDiscWork(await loadDivisions(), req.author.id, req.work.number);
+  if (!divisions) return imported;
+
+  const refs = imported.file.meta.rowRefs ?? [];
+  // The outline roots ARE the printed title lines; their text is what names
+  // the Books ("Book Α", not "Book 1").
+  const rootTexts = (imported.file.meta.headers ?? []).map(
+    (mark) => imported.file.greekLines[mark.row - 1] ?? '',
+  );
+  const applied = divisionsToContainers(divisions, refs, rootTexts);
+  if (applied.chapters.length === 0) return imported;
+
+  if (applied.unmatched.length > 0) {
+    // Loud in the log, quiet in the UI: the import is still good, and a
+    // chapter this could not place is a fact about the export, not a failure.
+    console.warn(
+      `[discImport] ${applied.unmatched.length} chapter(s) of ${divisions.id} matched no row`,
+      applied.unmatched,
+    );
+  }
+
+  return {
+    ...imported,
+    work: {
+      ...imported.work,
+      ...(applied.books.length > 0 ? { bookContainers: applied.books } : {}),
+      chapterContainers: applied.chapters,
+    },
+  };
 }
 
 async function runExport(req: DiscImportRequest, corpus: Corpus, num: string, exportDir: string): Promise<void> {

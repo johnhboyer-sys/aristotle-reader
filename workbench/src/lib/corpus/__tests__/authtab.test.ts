@@ -35,6 +35,37 @@ describe('parseAuthtab', () => {
     expect(parseAuthtab(disc(record('TLG0116 &1Abydenus &Hist.')))[0].name).toBe('Abydenus Hist.');
   });
 
+  it('stops the name at the alternate one the disc keeps beside it', () => {
+    // The real TLG record, byte for byte:
+    //   TLG0086 &1Aristoteles &Phil. et &1Corpus Aristotelicum&\x80Aristotle
+    // Thirteen authors carry an English name after 0x80 — Homer, the New
+    // Testament, John Chrysostom. Keeping it made one name of two, and a work
+    // imported from the disc was filed under the pair.
+    const authors = parseAuthtab(
+      disc([
+        ...[...'TLG0086 &1Aristoteles &Phil. et &1Corpus Aristotelicum&'].map((c) => c.charCodeAt(0)),
+        0x80,
+        ...[...'Aristotle'].map((c) => c.charCodeAt(0)),
+        0xff,
+      ]),
+    );
+    expect(authors).toEqual([{ id: 'TLG0086', name: 'Aristoteles Phil. et Corpus Aristotelicum' }]);
+  });
+
+  it('still reads the language when the marker sits past the alternate name', () => {
+    const authors = parseAuthtab(
+      disc([
+        ...[...'TLG0012 &1Homerus &Epic.'].map((c) => c.charCodeAt(0)),
+        0x80,
+        ...[...'Homer'].map((c) => c.charCodeAt(0)),
+        0x83,
+        'g'.charCodeAt(0),
+        0xff,
+      ]),
+    );
+    expect(authors).toEqual([{ id: 'TLG0012', name: 'Homerus Epic.', language: 'greek' }]);
+  });
+
   it('reads the language from the 0x83 marker and keeps it out of the name', () => {
     // The bug this pins: without consuming the code byte, every PHI author is
     // called "Aemilius Sural".

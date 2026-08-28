@@ -11,9 +11,10 @@
     /** The work's original language, as the user wrote it ('' when unset). */
     initialLanguage: string;
     onClose: () => void;
-    onSave: (author: string, language: string) => Promise<void>;
+    onSave: (title: string, author: string, language: string) => Promise<void>;
   } = $props();
 
+  let workTitle = $state(title);
   let author = $state(initialAuthor);
   let language = $state(initialLanguage);
   let errorMessage = $state<string | null>(null);
@@ -21,10 +22,15 @@
 
   async function save() {
     if (writing) return;
+    // A work with no name is a row in the rail nobody can identify.
+    if (workTitle.trim().length === 0) {
+      errorMessage = 'A work needs a title.';
+      return;
+    }
     writing = true;
     errorMessage = null;
     try {
-      await onSave(author, language);
+      await onSave(workTitle, author, language);
       onClose();
     } catch (err) {
       console.error('WorkDetailsDialog save', err);
@@ -55,10 +61,14 @@
     </header>
 
     <form class="dialog-body" onsubmit={submit}>
-      <p class="work-title">{title}</p>
       {#if errorMessage}
         <p class="error">{errorMessage}</p>
       {/if}
+      <label for="work-title">Title</label>
+      <!-- The work's own name, in the reading face the rail sets it in: a
+           Greek or Latin title should look like itself while it is edited. -->
+      <input id="work-title" class="work-title-input" type="text" bind:value={workTitle} />
+
       <label for="work-author">Author</label>
       <input id="work-author" type="text" bind:value={author} />
 
@@ -149,9 +159,9 @@
     padding: var(--space-4);
   }
   /* The work's own title, in the reading serif the library rail uses for work
-     names — a title, not a UI label, so Greek and Latin keep their case. */
-  .work-title {
-    margin-bottom: var(--space-3);
+     names — a title, not a UI label, so Greek and Latin keep their case while
+     they are being typed. */
+  .work-title-input {
     font-family: var(--font-english);
     font-size: 1.02rem;
     font-weight: 600;
