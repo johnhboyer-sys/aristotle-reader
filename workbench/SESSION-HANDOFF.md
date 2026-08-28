@@ -60,7 +60,7 @@ PR #103, from John's QA:
 
 ```
 source ~/.nvm/nvm.sh && nvm use v22.23.1 && source ~/.cargo/env
-npm --prefix workbench test            # vitest, 1,825
+npm --prefix workbench test            # vitest, 1,840
 npm --prefix workbench run smoke       # browser pass, fails on any console error
 cd workbench && npm run build && npm run stage:corpus && npm run app:build -- --bundles app
 cp -R "src-tauri/target/release/bundle/macos/Translation Workbench.app" ~/Downloads/
@@ -87,10 +87,10 @@ shared with other checkouts and can hold a different revision).
 
 ## Next, in the order I'd take it
 
-1. **John's QA of the real `.app`** — nothing below is worth much until this
-   happens. First: re-import Physics from the disc (it should arrive as
-   `physica-2` with eight books in the outline). Then export the Summa and check
-   Word's navigation pane. Then the rail: fold, author shelves, rename, remove.
+1. **The export pass** — the biggest thing still unproven by John. Compile the
+   Summa (English, then Bilingual, then the side-by-side table) and check Word's
+   navigation pane: the marked lines should be real headings, English over the
+   source in italics. The import side he has now tested himself.
 2. **Untested since long before this week**: export settings' Tauri halves
    (reference-doc picker, `run_program` pandoc override, the three bilingual
    layouts and especially the side-by-side table in Word), lexicon pack REMOVAL,
