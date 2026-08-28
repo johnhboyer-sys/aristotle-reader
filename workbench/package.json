@@ -16,7 +16,8 @@
     "stage:corpus": "node scripts/build-dev-corpus.mjs && node scripts/stage-corpus-resources.mjs",
     "app:package": "npm run stage:corpus && tauri build",
     "test": "vitest run",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@fontsource/cardo": "^5.2.5",
