@@ -134,6 +134,7 @@
           books: [],
           document: true,
           bookContainers: work.documentBookContainers ?? [],
+          chapterContainers: work.documentChapterContainers ?? [],
         };
       }
       const corpus = corpora[work.id] ?? null;
@@ -370,6 +371,11 @@
   // document — it is a saved boundary over the outline's root nodes. Every
   // handler below is the same shape: pure transform → persist → reload.
   // Chapters are still made by MARKING a line, in the text or in the rail.
+
+  /** The open document work's chapter boundaries (empty when it has none). */
+  const docChapterContainers = $derived(
+    railWorks.find((rw) => rw.work.id === selection?.workId)?.chapterContainers ?? [],
+  );
 
   /** The open document work's saved Books (empty when it has none). */
   const docBookContainers: BookContainer[] = $derived(
@@ -745,6 +751,7 @@
             onWorkDetails={openWorkDetails}
             onWorkRemove={removeWork}
             bookContainers={docBookContainers}
+            chapterContainers={docChapterContainers}
             onAddBookContainer={isTauri() || import.meta.env.DEV ? addBookContainer : undefined}
             onAddBookContainerAfter={addBookContainerAfter}
             onRenameBookContainer={renameBookContainer}

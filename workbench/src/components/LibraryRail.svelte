@@ -4,6 +4,8 @@
   import type { OutlineItem } from '../lib/editor/outline';
   import { buildOutlineTree, groupOutlineByBooks } from '../lib/editor/outline';
   import type { BookContainer } from '../lib/works/bookContainers';
+  import type { ChapterContainer } from '../lib/works/chapterContainers';
+  import { chaptersInBook } from '../lib/works/chapterContainers';
   import type { NavRole } from '../lib/works/profile';
   import { groupWorksByAuthor } from '../lib/works/authorGroups';
 
@@ -53,6 +55,8 @@
      */
     container?: boolean;
     containerBooks?: RailContainerBook[];
+    /** Chapter boundaries for a document work (works/chapterContainers). */
+    chapterContainers?: ChapterContainer[];
     /**
      * Corpus-free document (marker-driven, D8): the lines marked in the text
      * ARE the Books & Chapters. The rail renders the live heading outline as
@@ -87,6 +91,7 @@
     outline = [],
     levels = [],
     bookContainers = [],
+    chapterContainers = [],
     onOutlineSelect,
     onOutlineRename,
     onOutlineSetLevel,
@@ -120,6 +125,10 @@
     /** The open document work's saved Book containers, in document order.
      * Empty = no Books, and the outline renders flat (no visual change). */
     bookContainers?: BookContainer[];
+    /** Chapter boundaries at rows (works/chapterContainers) — an imported work
+     * gets these from the divisions table. Navigation only: clicking one jumps
+     * the editor to that row, and no row is marked. */
+    chapterContainers?: ChapterContainer[];
     /** Jump the editor to a heading row (rail outline click). */
     onOutlineSelect?: (rowIndex: number) => void;
     /** Set a heading's rail title override (double-click rename; '' clears). */
@@ -173,6 +182,29 @@
   // Book containers partition the ROOT nodes of that tree. With none saved the
   // grouping is empty and the flat tree renders exactly as it always has.
   const outlineBooks = $derived(groupOutlineByBooks(outlineTree, bookContainers));
+
+  /**
+   * The row each rendered Book begins at (1-based), so a chapter boundary can
+   * be placed in the Book that owns it. A Book's first outline root IS its
+   * first row; a Book with no roots inherits the boundary of the one before it.
+   */
+  const bookStartRows = $derived.by(() => {
+    const rows: number[] = [];
+    for (const book of outlineBooks) {
+      const first = book.nodes[0]?.item.rowIndex;
+      rows.push(first === undefined ? (rows[rows.length - 1] ?? 1) : first + 1);
+    }
+    return rows;
+  });
+
+  /** The chapters of the Book at `index`, by row span. */
+  function chaptersOfBook(index: number): ChapterContainer[] {
+    if (chapterContainers.length === 0) return [];
+    const start = bookStartRows[index] ?? 1;
+    const next = index + 1 < bookStartRows.length ? bookStartRows[index + 1] : null;
+    return chaptersInBook(chapterContainers, start, next);
+  }
+
 
   // The tiers a row can be MARKED as, keeping each tier's 1-based level. Book
   // tiers are withheld: a Book is a container the rail creates with "+ Book",
@@ -578,6 +610,20 @@
 
 <!-- Recursive nav-tree of the open document's headings (D8): Book › Chapter ›
      heading, each node a jump-to button; children nest in their own <ul>. -->
+<!-- Chapter boundaries: labels at rows, not marks. Clicking one jumps the
+     editor to that row; nothing in the text is a title because of it. -->
+{#snippet chapterRows(chapters: ChapterContainer[])}
+  {#each chapters as chapter (chapter.row)}
+    <li>
+      <button
+        class="chapter-row outline-row outline-chapter"
+        title={`${chapter.label} — jump to it`}
+        onclick={() => onOutlineSelect?.(chapter.row - 1)}
+      >{chapter.label}</button>
+    </li>
+  {/each}
+{/snippet}
+
 {#snippet outlineNodes(nodes: import('../lib/editor/outline').OutlineNode[])}
   {#each nodes as node (node.item.rowIndex)}
     {@const ri = node.item.rowIndex}
@@ -778,10 +824,15 @@
                     </button>
                   {/if}
                   {#if bookOpen(bk.index)}
+                    {@const bookChapters = chaptersOfBook(bk.index)}
                     <ul class="outline-children">
                       {#if bk.nodes.length > 0}
                         {@render outlineNodes(bk.nodes)}
-                      {:else}
+                      {/if}
+                      {#if bookChapters.length > 0}
+                        {@render chapterRows(bookChapters)}
+                      {/if}
+                      {#if bk.nodes.length === 0 && bookChapters.length === 0}
                         <li>
                           {#if bk.index === 0}
                             <!-- The first Book always begins at the top, so it can
@@ -797,8 +848,13 @@
                   {/if}
                 </li>
               {/each}
-            {:else if outlineTree.length > 0}
-              {@render outlineNodes(outlineTree)}
+            {:else if outlineTree.length > 0 || chapterContainers.length > 0}
+              {#if outlineTree.length > 0}
+                {@render outlineNodes(outlineTree)}
+              {/if}
+              {#if chapterContainers.length > 0}
+                {@render chapterRows(chapterContainers)}
+              {/if}
             {:else}
               <li>
                 <p class="doc-hint">No Chapter marks yet. Right-click a line in the text to mark one — it becomes a chapter here.</p>

@@ -15,6 +15,7 @@ import type { SchemeId, WorkMeta } from '../citation/types';
 import { isKnownScheme } from '../citation/registry';
 import type { WorkProfile } from './profile';
 import type { BookContainer } from './bookContainers';
+import type { ChapterContainer } from './chapterContainers';
 
 import metaphysicsYaml from './manifests/metaphysics.yaml?raw';
 import posteriorAnalyticsYaml from './manifests/posterior-analytics.yaml?raw';
@@ -61,6 +62,10 @@ export interface WorkManifest extends WorkMeta {
   /** Book boundaries over the document's marker-built root outline nodes.
    * Unlike legacy `documentBooks`, these containers never create text or files. */
   documentBookContainers?: BookContainer[];
+  /** Chapter boundaries inside the document, each at a ROW (works/chapterContainers).
+   * Navigation only, same contract as the Books: nothing is marked, so no line
+   * of text is turned into a title. */
+  documentChapterContainers?: ChapterContainer[];
 }
 
 interface RawManifestBook {

@@ -73,8 +73,10 @@ describe('"+ Book" creates a container, never a line of text', () => {
 describe('the Book layer renders only when containers exist', () => {
   it('the rail groups the outline and falls back to the flat tree', () => {
     expect(railSource).toContain('groupOutlineByBooks(outlineTree, bookContainers)');
-    // No containers → the pre-existing flat render, unchanged.
-    expect(railSource).toContain('{:else if outlineTree.length > 0}');
+    // No Book containers → the flat render. The condition widened when chapter
+    // boundaries arrived (a work can have those and no marks at all), but the
+    // outline still renders through the same snippet.
+    expect(railSource).toContain('{:else if outlineTree.length > 0 || chapterContainers.length > 0}');
     expect(railSource).toContain('{@render outlineNodes(outlineTree)}');
     // A Book's chapters go through the SAME snippet as the flat tree.
     expect(railSource).toContain('{@render outlineNodes(bk.nodes)}');

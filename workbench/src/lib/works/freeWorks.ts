@@ -32,6 +32,8 @@ import type { WorkLevel } from './profile';
 import { DEFAULT_PROFILE, sanitizeLevels } from './profile';
 import { sanitizeContainers } from './bookContainers';
 import type { BookContainer } from './bookContainers';
+import { sanitizeChapterContainers } from './chapterContainers';
+import type { ChapterContainer } from './chapterContainers';
 
 /** The reserved storage id whose "work dir" is the library root itself. */
 export const FREE_WORKS_STORAGE_ID = '.';
@@ -53,6 +55,9 @@ export interface FreeWorkRecord {
   /** Book boundaries over the document's root outline nodes. They organize the
    * rail without adding Book rows to the translated document. */
   bookContainers?: BookContainer[];
+  /** Chapter boundaries, each at a row. Same contract as the Books: navigation
+   * only, never a mark, so no line of text becomes a title. */
+  chapterContainers?: ChapterContainer[];
 }
 
 interface RawRegistryEntry {
@@ -63,6 +68,7 @@ interface RawRegistryEntry {
   citation_scheme?: unknown;
   levels?: unknown;
   bookContainers?: unknown;
+  chapterContainers?: unknown;
 }
 
 /** Validate one parsed registry entry; null (skip) when it isn't usable. */
@@ -85,6 +91,8 @@ function recordFromRaw(raw: unknown): FreeWorkRecord | null {
   if (levels) record.levels = levels;
   const bookContainers = sanitizeContainers(v.bookContainers);
   if (bookContainers) record.bookContainers = bookContainers;
+  const chapterContainers = sanitizeChapterContainers(v.chapterContainers);
+  if (chapterContainers) record.chapterContainers = chapterContainers;
   return record;
 }
 
@@ -140,6 +148,9 @@ export function freeWorkManifest(record: FreeWorkRecord): WorkManifest {
   if (record.bookContainers && record.bookContainers.length > 0) {
     manifest.documentBookContainers = record.bookContainers;
   }
+  if (record.chapterContainers && record.chapterContainers.length > 0) {
+    manifest.documentChapterContainers = record.chapterContainers;
+  }
   const lang = record.language?.toLowerCase();
   if (lang === 'greek' || lang === 'latin') {
     manifest.originalLanguage = lang as OriginalLanguage;
@@ -186,6 +197,7 @@ async function writeRegistry(works: FreeWorkRecord[], storage: LibraryStorage): 
       citation_scheme: w.scheme,
       ...(w.levels && w.levels.length > 0 ? { levels: w.levels } : {}),
       ...(w.bookContainers?.length ? { bookContainers: w.bookContainers } : {}),
+      ...(w.chapterContainers?.length ? { chapterContainers: w.chapterContainers } : {}),
     })),
   };
   await storage.write(FREE_WORKS_STORAGE_ID, REGISTRY_FILE, JSON.stringify(payload, null, 2) + '\n');
