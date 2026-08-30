@@ -1,143 +1,103 @@
-# HANDOFF: the LSJ entry, to be redesigned from first principles
+# HANDOFF: LSJ presentation
 
-Generated: 2026-08-20 midday · Read this before touching LSJ presentation.
+Rewritten: 2026-08-30 evening. This is the LSJ-track handoff for aristotle-reader.
+Rewrite it (don't append) when this track advances. Do not create a bare
+`HANDOFF.md` — see CLAUDE.md.
 
-**Status note, 2026-08-29.** This is the LSJ-track handoff for aristotle-reader.
-It was called `HANDOFF.md` until today; renamed so it cannot be overwritten by a
-handoff from another track. Question #1 is being answered in the **grammar-site**
-repo, not here — John has the entry design built there and is having a second
-session check it before it ports across. So §3's "Decision for John" is no longer
-live as posed: the forms-block repair on `claude/lsj-entry-parts` sits inside
-`renderLsjEntry`, the same function the port must land on, so the port either
-absorbs it or replaces it. That branch is unmerged and unshipped; its 237 tests
-pass (re-run 2026-08-29) and it is 21 commits behind main.
+## 1. What is live, as of 2026-08-30
 
-## 1. The frame John set (do not lose this)
+Deployed to gh-pages `b2f3f9df` from `origin/main cd86d7f34`. Full record in
+DEPLOY-STATUS.md; read that before any deploy.
 
-The work splits in two, and they must be solved in this order:
+**The word popup's dictionary is served by grammata, not rendered here.** The
+site fetches entries from `https://grammata.pages.dev/t8/lookup.js`. One
+grammata deploy updates every reader site — that is the architecture, decided
+2026-08-29. Do not vendor, proxy, pin or cache-bust the module URL; its deploys
+ARE the update mechanism.
 
-**#1 — What is the ideal digital presentation of an LSJ entry, on its own?**
-Applies to the lexicon/lemma pages of every reader AND to the separate
-grammar-site repo. No reader context available or assumed.
+**Cards are keyed by dictionary entry**, not by morphological analysis. 15,041
+cards → 9,847 corpus-wide; νοῦν 17 → 4. The entry opens under the card tapped.
 
-**#2 — What is the ideal presentation of an LSJ entry inside the reader's word
-popup?** Reader sites only. Adds context utility — the parse, the author, the
-work, the surrounding tokens. **#2 depends on #1 and must not be started until
-#1 is settled.**
+**The website fetches no LSJ shards.** `data/lsj-heads.json` (14,047 keys, 139
+KB gzipped, built by `app/scripts/build-lsj-heads.mjs`) supplies the headword
+and homograph letter. The desktop app still reads the shards.
 
-The failure of the 2026-08-19/20 session was doing neither: it reacted to one
-defect at a time, then reached for context utility (case chips, routing) to
-rescue a standalone presentation that was not yet right. Do not repeat that.
+**Two forms-block repairs are live**, both visible on `/lemma/<slug>` pages:
+the label-then-form line break, and quantity marks opening the forms table on
+the lemma.
 
-## 2. What the entry actually is (established, with numbers)
+## 2. The four rules the presentation follows (John's, ruled 2026-08-30)
 
-14,047 entries in the deployed shards. Parts, all already marked by the
-pipeline — none of this needs new data:
+1. **Aligned columns** — parse left, exception right, as the LSJ forms block sets it.
+2. **Attic is the default and never printed.** A form with NO Attic reading says
+   what it is limited to. The cut is on Attic's PRESENCE, not on how many
+   dialects are named: `(attic)` alone would otherwise flag, and `(epic ionic)`
+   would otherwise stay silent, which is backwards. 2,007 of 15,041 flag.
+3. **Homographs are not folded.** Each dictionary entry gets its own card,
+   carrying **LSJ's own letter** read from the entry text — never derived from
+   the key's trailing digit (`ka/r2` is LSJ's (A); 32% of numbered keys carry
+   no letter and must show none).
+4. **The entry opens under the card tapped**, never below the whole stack.
 
-| Part | Marked as | Count |
-|---|---|---|
-| Headword | `lsj-head`, `lsj-gen`, `lsj-itype`, `lsj-orth` | 14,047 |
-| Forms / morphology | `lsj-tns`, `lsj-gram`, `lsj-mood`, `lsj-per`, `lsj-number` | 25,517 labels |
-| Etymology | `lsj-etym` | 2,805 |
-| Sense taxonomy | `lsj-sense` + `data-level` | 47,826 |
-| Definition | a leading `<i>` opening a sense | 26,123 (56% of senses) |
-| Quotation | `lsj-cit` (87,758) **or** `lsj-greek` + a `lsj-bibl` (33,430) | 121,188 |
-| Cross-reference | bare `lsj-bibl` | ~136,000 |
+## 3. Where the code lives
 
-**The markup is FLAT.** Max nesting depth 1 — hierarchy lives entirely on
-`data-level` (values 0–4), never in nesting. 8,528 entries use multiple levels.
-
-**Composition by class** (verbs are 12% of the dictionary and drove 100% of the
-last session's design — that was the mistake):
-
-| Class | n | under 300 chars | signature |
-|---|---|---|---|
-| noun | 5,112 | 46% | gender |
-| particle/preposition | 2,932 | 56% | governed case |
-| adjective | 1,972 | **75%** | terminations |
-| adverb | 1,721 | 23% | comparison |
-| verb | 1,651 | 6% | principal parts |
-| proper name | 345 | 51% | identification |
-
-**Long entries come in three shapes, and only one is about forms:**
-
-- **Case-governed** — ἐπί 31,057 chars / 93 senses / 1 form. A/B/C are the
-  cases: ἐπί 19 gen, 27 dat, 17 acc, 24 other. Also παρά, πρός, ὑπό, κατά;
-  527 entries carry a case axis.
-- **Sense-forest** — λόγος 32,734 chars / 64 senses / **0 forms**. ὡς 75 senses.
-  ἐπί aside, this is the commonest long shape.
-- **Forms + senses** — τίθημι 24,098 chars / 51 senses / 69 forms. εἰμί, φέρω.
-
-**The scale problem, measured:** λόγος on a phone in landscape (932×430) is
-15,498px of entry — **36 screens**. That is the real problem; short entries
-never were one.
-
-## 3. What is LIVE, and the defect that is live with it
-
-Deployed 2026-08-19/20 to aristotle-reader, plato-reader, homer-reader (cpr is
-built and held — see `LSJ-PORT-HELD.md` there). Shipped: sense hierarchy by
-relative depth, one quotation per line, per-entry contents list, accessibility
-fixes. Full record in DEPLOY-STATUS.md.
-
-**⚠️ A DEFECT FROM THAT DEPLOY IS LIVE ON ALL THREE SITES.** The block of
-inflected forms that opens 65% of entries is written label-then-form ("fut.
-λέξω Od. 24.224"), and the one-quotation-per-line rule breaks before the FORM,
-stranding every label at the end of the line above. Worst on the most looked-up
-words: τίθημι 55 forms, εἰμί 37, δίδωμι 26, φημί 24, οἶδα 23. John reported it
-from a screenshot of λέγεται.
-
-**The fix is written, reviewed and NOT deployed:** branch
-`claude/lsj-entry-parts` in aristotle-reader (`fcea5a089`). It cuts the forms
-block into label+form rows at the dictionary's own ":" and ";", aligns them
-where the labels really are labels, marks the definition and the untagged
-quotations. Grok reviewed it — DO NOT DEPLOY, eight findings, all fixed. 237
-tests. Verified over all 14,047 entries: 0 unbalanced tags, 0 senses lost, and
-the only text change is punctuation the layout now carries (1,669 entries lose a
-row separator, 7 a label comma, 170 both — stated honestly this time; an earlier
-claim of "136 commas only" was false because the audit stripped `:;—` from both
-sides before comparing).
-
-**Decision for John:** ship that branch as a repair while #1 is designed, or
-leave the defect live until the redesign lands. It is a repair of a defect this
-project introduced, and its core move (structure rendered as structure) survives
-any redesign.
+- `shared/components/WordPopup.svelte` — the cards, the grouping, the widget call.
+- `shared/lib/data.ts` — `fetchLsjHeads`, and `lookupWord(work, key, { withLsj })`.
+  `withLsj` defaults **true**; only the website passes false.
+- `shared/lib/html.ts` — `renderLsjEntry` / `buildFormsBlock`. **Still live**:
+  the desktop app and the `/lemma/<slug>` pages both render through it.
+- `shared/styles/global.css` — ALL popup styles.
+- `app/scripts/build-lsj-heads.mjs` — the manifest, wired into `npm run build`.
 
 ## 4. Traps, all paid for
 
-- **A form is not always a citation.** ἀνέχω writes "impf. ἠνειχόμην A. Ag. 905"
-  as `lsj-greek` + `lsj-bibl`, not `lsj-cit`.
-- **A label is not always tagged.** λέγω's "Ep." before ἐλέγμην is bare text.
-  Rows can only be found from the dictionary's own punctuation.
-- **`&lt;` ends in a semicolon.** Splitting on ";" tears entities in half. LSJ
-  marks editorial supplements with angle brackets (φ&lt;ε&gt;ισθήσομαι).
-- **Tag depth is not element depth.** Cutting at a comma "outside a tag" still
-  splits `<span>ἦγον,</span>` — 90 entries had unclosed spans from this, twice,
-  at two different layers.
-- **A preamble is a table only as far as it stays one** (λέγω stops after 7
-  forms) **but an aside is not the end** (τίθημι breaks for a 136-char note then
-  runs for 50 more).
-- **Loose content in a CSS grid becomes its own cell** — that is how "(" ended
-  up opposite "κατ-, συν".
-- **Quantity marks are not quotations.** "[ᾰπ]" beside a headword was being
-  given a line break through the head.
-- **Never shrink type.** The reader is vision impaired; two separate rounds
-  introduced font-size cuts that had to be removed.
-- **Verify a claim before making it**, and make the audit able to see the thing
-  it is auditing.
+- **A component `<style>` block ships NOWHERE.** Reader pages load `global.css`
+  and nothing else. It works in `astro dev`, so every local check passes while
+  production gets unstyled markup. Verify against `app/dist/_astro`, not the
+  dev server. This is why `.lemma-link` had no styling in production for weeks.
+- **Never pass a surface form to grammata.** It re-analyses from scratch and
+  discards this reader's disambiguation: εἰσὶ returns ἵημι, εἰμί and εἶμι with
+  ἵημι FIRST. Pass `{ key: a.lsj[0] }` — their pack keys are Perseus betacode,
+  identical to ours. Their article order is arbitrary; never present it as ranked.
+- **An analysis can name several entries.** Its gloss then belongs to none of
+  them in particular. A non-empty exact gloss wins; an empty exact clears a
+  fanned-out gloss but never a real one; a fan-out only fills a hole. Verified
+  order-independent over all 122,540 tokens.
+- **Corpus frequency cannot rank the readings.** νόος appears 110× in
+  Aristotle, νέω 126×, so frequency puts the wrong lemma first for νοῦν. The
+  counts are per-lemma across all forms, not per-form. Group, don't guess.
+- **`lemmata.json` is the lemma-PAGE manifest**, not a headword table: 6,214 of
+  14,047 keys, missing ὁ, καί, δέ, γάρ, μέν. Use `lsj-heads.json`.
+- **A quantity mark is notation, not a form.** Known by its brackets, in both
+  shapes LSJ writes them. NOT by length (ὕβρις marks quantity in forty
+  characters; ἦν is a form in two), and square brackets only (a parenthesis
+  there opens an etymology).
+- **Never shrink reading type, and never truncate.** The reader is vision
+  impaired and reads on a phone in landscape. Control labels are not reading
+  text — the "Show LSJ definition" line is 0.9rem by John's own call.
+- **`shared/lib/html.ts` flows FROM here to plato and homer.** A fix left
+  unmade here is reverted in both on the next patch-forward.
 
-## 5. Where the analysis pointed, before John stopped it
+## 5. Open
 
-The one asset not yet used: **the section gloss.** "relation, correspondence,
-proportion" is how a reader recognises a sense, not "II." — 56% of senses carry
-one and it already feeds the contents list. Any navigation for a 64-sense entry
-will lean on it.
+- **Plato and homer have neither forms-block repair on main** (0 `.lsj-forms`
+  rules in both). Aristotle is upstream; port from `main`.
+- **Neither sibling has the grammata popup.** Porting instructions were sent to
+  their sessions 2026-08-30.
+- **3 quantity-mark survivors**, all `lsj-cit` spans. κάτειμι is CORRECT as it
+  stands (`[κάτε]ιτι` is an epigraphic restoration inside a real form) — do not
+  extend the rule to citation spans. κέρας and θνῄσκω are genuine misses.
+- **749 entries** (homer's count) whose first label still opens with the
+  headword — from the 22-character lead-cut threshold, not `formAt`. τίθημι is
+  one; its mark is tagged `lsj-pron`, which `formAt` never reads. Untouched.
+- **`buildFormsBlock` is NOT dead code.** It still runs on `/lemma/<slug>` and
+  in the desktop app. An earlier claim that it was is corrected in PR #104.
+- **Question #2 — the entry inside the popup — is now BUILT**, not merely
+  designed. What remains unbuilt is the sense-head skeleton for forest entries
+  (λόγος is 64 senses); see the memory note `lsj-entry-redesign`.
 
-For #2 only, and only after #1: the reader's context is known and currently
-discarded — the popup already parses the clicked token, and the LSJ entry's
-Aristotle citations link into this very corpus.
+## 6. Prompt for the next session
 
----
-## Prompt for the fresh session
-
-Read this file. Then answer #1 from first principles, for the whole range of
-entries (84 chars to 32,734), before writing any code. #2 comes after.
+Read this file, then DEPLOY-STATUS.md's latest entry. Verify every claim here
+against the code before relying on it — several statements in the version of
+this file that preceded it were true when written and false by evening.
