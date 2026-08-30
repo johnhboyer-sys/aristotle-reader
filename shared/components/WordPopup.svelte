@@ -88,7 +88,19 @@
   // two requests resolve independently and a slow earlier entry must not land
   // in the container after a newer click.
   let lexId = 0;
-  $: if (!useLocalLexicon && lexEl) renderLexicon(lexEl, token.t);
+  // Ask for the LEMMA our own Morpheus data already resolved, never the surface
+  // form. Handing grammata the surface makes it re-analyse from scratch and
+  // stack every homograph it finds: εἰσὶ returns ἵημι, εἰμί and εἶμι, with
+  // ἵημι sorted first, so the entry under a card reading "εἰμί" was a different
+  // verb. The LSJ headword is already Unicode; betaToGreek covers an analysis
+  // whose LSJ entry we did not fetch. Note this narrows but does not fully
+  // disambiguate — grammata folds accents, so εἰμί still also returns εἶμι.
+  $: lexQuery =
+    analyses.length > 0
+      ? (lsj.find(e => e.key === analyses[0].lsj[0])?.head
+         ?? betaToGreek(analyses[0].lemma))
+      : '';
+  $: if (!useLocalLexicon && lexEl && lexQuery) renderLexicon(lexEl, lexQuery);
   async function renderLexicon(el: HTMLElement, surface: string) {
     const my = ++lexId;
     try {
