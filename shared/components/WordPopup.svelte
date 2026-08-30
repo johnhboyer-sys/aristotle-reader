@@ -328,20 +328,16 @@
   }
   .parse-rows dt { color: var(--text-mid); }
   .parse-rows dd { margin: 0; color: var(--error); font-size: 0.9em; }
-  /* Reads as a control, not a caption: full width, bordered, and at the
-     popup's own type size. It was 0.8rem accent text with a thin chevron —
-     too quiet to look tappable, and shrunk type is the one thing this reader
-     cannot afford. */
+  /* Plain accent text, not a button — the whole card face is already the tap
+     target, so this only has to READ as the thing that opens the entry. Kept
+     at the popup's own size: it was 0.8rem, and shrunk type is the one thing
+     this reader cannot afford. */
   .card-open-hint {
-    display: flex; align-items: center; gap: 0.5em;
-    margin-top: 0.5rem; padding: 0.5rem 0.7rem; min-height: 44px;
-    border: 1px solid var(--accent); border-radius: 4px;
-    font-family: var(--font-ui); font-size: 1rem; font-weight: 600;
-    color: var(--accent); background: transparent;
+    display: inline-flex; align-items: baseline; gap: 0.4em; margin-top: 0.35rem;
+    font-family: var(--font-ui); font-size: 1rem; font-weight: 600; color: var(--accent);
   }
-  .card-face:hover .card-open-hint { background: var(--greek-hover); }
-  .card-open .card-open-hint { background: var(--greek-hover); }
-  .card-arrow { display: inline-block; font-size: 0.9em; transition: transform .15s ease; }
+  .card-face:hover .card-open-hint { text-decoration: underline; }
+  .card-arrow { display: inline-block; font-size: 0.75em; transition: transform .15s ease; }
   .card-open .card-arrow { transform: rotate(90deg); }
   @media (prefers-reduced-motion: reduce) { .card-arrow { transition: none; } }
   .card-entry { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
