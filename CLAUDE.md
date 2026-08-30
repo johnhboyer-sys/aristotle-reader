@@ -6,7 +6,10 @@ Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to Git
 
 - `app/` — the Astro site. `pipeline/` — Python corpus pipeline (Diogenes → per-work data). `build/dist` — built corpus data. `shared/` — reader core shared with sibling readers (plato-reader, homer). `workbench/` — Translation Workbench (Tauri, isolated from the site). `desktop/` — desktop reader app (Tauri). `bonitz/` — Index Aristotelicus OCR work, not deployed.
 - `ocr_translations/CLAUDE.md` is a self-contained OCR recipe, not project instructions.
-- `HANDOFF.md` carries the state of the most recent session — what is done, what was decided and why, what failed. Read it at the start of a session; rewrite it (don't append) when handing off.
+- **Handoffs are per track — never one shared `HANDOFF.md`.** Each carries the state of that track: what is done, what was decided and why, what failed. Read the one for the track you are working at the start of a session; rewrite it (don't append) when handing off. A new track starts a new `HANDOFF-<TRACK>.md` at the root.
+- There is deliberately no bare `HANDOFF.md`. On 2026-08-25 a Lyceum session wrote its handoff over the LSJ one through that filename, and the LSJ handoff survived only in git history. Do not recreate it.
+- Live handoffs, one per track: `HANDOFF-LSJ.md` (LSJ presentation) · `bonitz/BONITZ_HANDOFF.md` (Index Aristotelicus OCR) · `workbench/SESSION-HANDOFF.md` (Workbench doc-structure tools) · `workbench-design/HANDOFF.md` (Workbench design) · `docs/print-design-handoff.md` (print/PDF layout). The names are inconsistent for historical reasons — read the one for your track, and never start a second file for a track that already has one.
+- A track whose work has moved to another repo keeps its handoff there, not here.
 
 ## Build and deploy invariants
 

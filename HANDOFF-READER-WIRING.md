@@ -2,6 +2,11 @@
 
 Generated: 2026-08-20 · Session focus: wire the two already-committed corpus features into the reader. Branch `claude/reader-wiring`; uncommitted working-tree changes, not pushed.
 
+**Status note, 2026-08-29.** Renamed from `HANDOFF.md` when handoffs went
+per track (see CLAUDE.md). The work it describes is on main — `feat: reader
+wiring for word distinctiveness + quotation citations` and the two commits
+after it — so the "uncommitted, not pushed" line above is no longer true.
+
 ## 1. Goal
 
 Make the committed distinctiveness table and Metaphysics quotation file visible in the reader: popup label, lemma-page numbers, quotation glyph + popup, emit copy, and the link gate.
