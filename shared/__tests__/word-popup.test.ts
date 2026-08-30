@@ -313,6 +313,41 @@ describe('WordPopup', () => {
     expect(glosses).toEqual(['swim', 'spin', 'heap, pile up', 'mind']);
   });
 
+  it('prefers a real gloss over an empty one from the same entry', async () => {
+    // οἰκοδόμου: two analyses of oi)kodo/mos, the first glossed "". Marking the
+    // card exact on that first one froze it blank and ignored the real gloss
+    // behind it — 92 tokens in the corpus. Order must not decide this.
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'oi)ko/domos', gloss: '', parse: 'masc gen sg', lsj: ['oi)kodo/mos'] },
+        { lemma: 'oi)kodo/mos', gloss: 'builder, architect', parse: 'masc gen sg', lsj: ['oi)kodo/mos'] },
+      ],
+      lsj: [{ key: 'oi)kodo/mos', head: 'οἰκοδόμος', html: '<b class="lsj-head">οἰκοδόμος</b>' }],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('builder, architect');
+    expect(container.querySelectorAll('.analysis-card').length).toBe(1);
+  });
+
+  it('does not let a fanned-out gloss stand in for an entry with none', async () => {
+    // δύσει: du/w1 "two" fans out onto du/w2, whose own analysis has no gloss.
+    // Blank is honest; "two" is a different verb's meaning wearing this card.
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'du/w', gloss: 'two', parse: 'fut ind act 3rd sg', lsj: ['du/w1', 'du/w2'] },
+        { lemma: 'du/w2', gloss: '', parse: 'fut ind act 3rd sg', lsj: ['du/w2'] },
+      ],
+      lsj: [
+        { key: 'du/w1', head: 'δύω', html: '<b class="lsj-head">δύω</b> (A), two' },
+        { key: 'du/w2', head: 'δύω', html: '<b class="lsj-head">δύω</b> (B), plunge' },
+      ],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('two');
+    const glosses = [...container.querySelectorAll('.analysis-card .gloss')].map(e => e.textContent);
+    expect(glosses).toEqual(['two', '']);
+  });
+
   it('prints a dialect only where the form has no Attic reading', async () => {
     // Aristotle is Attic, so "(attic epic ionic)" says nothing a reader needs.
     // "(doric)" says the reading is not available in Aristotle's own dialect.

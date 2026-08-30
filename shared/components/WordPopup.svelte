@@ -173,11 +173,22 @@
           byId.set(id, card);
           out.push(card);
         }
-        // An exact gloss outranks a fanned-out one; failing that, any gloss
-        // outranks none — some analyses carry an empty one.
-        if (!card.glossExact && (exact || (!card.gloss && a.gloss))) {
-          if (exact || !card.gloss) card.gloss = a.gloss;
-          if (exact) card.glossExact = true;
+        // Precedence, in order:
+        //  - a non-empty exact gloss always wins, even over an earlier exact:
+        //    οἰκοδόμου has two analyses of oi)kodo/mos, the first glossed ""
+        //    and the second "builder, architect", and first-exact-wins left
+        //    the card blank on 92 tokens.
+        //  - an empty exact still marks the card exact, and CLEARS a gloss
+        //    that came from a fan-out: δύσει's du/w1 stamps "two" onto du/w2,
+        //    whose own analysis has no gloss, and blank is honest where "two"
+        //    is simply another verb's meaning.
+        //  - a fan-out gloss only ever fills a hole, and never overwrites.
+        if (exact) {
+          if (a.gloss) card.gloss = a.gloss;
+          else if (!card.glossExact) card.gloss = '';
+          card.glossExact = true;
+        } else if (!card.glossExact && !card.gloss && a.gloss) {
+          card.gloss = a.gloss;
         }
         const row = splitParse(a.parse);
         // Drop rows this card already carries: an analysis naming three
