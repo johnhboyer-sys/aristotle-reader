@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { fly } from 'svelte/transition';
-  import { lookupWord, fetchLemmata, type Analysis, type LsjEntry, type LemmaRef } from '../lib/data';
+  import { lookupWord, fetchLemmata, fetchLsjHeads, type Analysis, type LsjEntry,
+           type LemmaRef, type LsjHead } from '../lib/data';
   import { betaToGreek } from '../lib/betacode';
   import { renderLsjEntry } from '../lib/html';
 
@@ -38,7 +39,7 @@
     error = '';
     analyses = [];
     lsj = [];
-    lookupWord(w, k)
+    lookupWord(w, k, { withLsj: useLocalLexicon })
       .then(r => { if (my === reqId) { analyses = r.analyses; lsj = r.lsj; } })
       .catch(e => { if (my === reqId) error = String(e); })
       .finally(() => { if (my === reqId) loading = false; });
@@ -50,6 +51,11 @@
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   let lemmata: Record<string, LemmaRef> = {};
   fetchLemmata().then(m => { lemmata = m; }).catch(() => {});
+  // Headword + homograph letter for every LSJ key, so the website never
+  // downloads a letter shard just to spell a word. Absent manifest = the
+  // betaToGreek fallback below, which is why nothing here throws.
+  let heads: Record<string, LsjHead> = {};
+  fetchLsjHeads().then(m => { heads = m; }).catch(() => {});
   // A card's lemma page keys off its primary LSJ key (matching the concordance).
   const lemmaRef = (a: Analysis): LemmaRef | null =>
     (a.lsj[0] && lemmata[a.lsj[0]]) || null;
@@ -141,12 +147,15 @@
         const id = k || `lemma:${a.lemma}`;
         let card = byId.get(id);
         if (!card) {
+          // Manifest first (website: no shard fetched at all), then the shard
+          // (desktop, which has it in hand), then the lemma transliterated.
+          const meta = k ? heads[k] : undefined;
           const entry = k ? lsj.find(e => e.key === k) : undefined;
           card = {
             id,
             lsjKey: k,
-            head: entry?.head || betaToGreek(a.lemma),
-            hom: homograph(entry?.html),
+            head: meta?.head || entry?.head || betaToGreek(a.lemma),
+            hom: meta?.hom ?? homograph(entry?.html),
             gloss: a.gloss,
             rows: [],
             ref: (k && lemmata[k]) || null,

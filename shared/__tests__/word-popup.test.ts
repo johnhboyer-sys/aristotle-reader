@@ -148,7 +148,10 @@ describe('WordPopup', () => {
     await rerender({ token: { t: 'ἀρετή', k: 'areth' } });
     await screen.findByText('goodness, excellence');
     expect(lookupWord).toHaveBeenCalledTimes(2);
-    expect(lookupWord).toHaveBeenLastCalledWith('EN', 'areth');
+    // withLsj says whether to fetch the LSJ shard: true on the desktop, which
+    // renders entries locally, false on the website, where grammata serves
+    // them and a shard would be megabytes fetched to be thrown away.
+    expect(lookupWord).toHaveBeenLastCalledWith('EN', 'areth', { withLsj: true });
   });
 
   it('closes on click outside, but not on the panel or on a Greek token', async () => {
