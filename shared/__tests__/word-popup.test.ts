@@ -93,6 +93,13 @@ describe('WordPopup', () => {
     const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
     await screen.findByText('word, account');
 
+    // The entry now opens under the card it belongs to, so it starts closed —
+    // asserting on it without tapping would pass on markup no reader can see.
+    expect(container.querySelector('.card-entry')!.hasAttribute('hidden')).toBe(true);
+    (container.querySelector('.card-face') as HTMLButtonElement).click();
+    await tick();
+    expect(container.querySelector('.card-entry')!.hasAttribute('hidden')).toBe(false);
+
     const entry = container.querySelector('.lsj-entry')!;
     expect(entry).toBeTruthy();
     expect(entry.querySelector('.lsj-sense[data-level="1"]')).toBeTruthy();
@@ -122,6 +129,9 @@ describe('WordPopup', () => {
 
     // The mount point exists and the local entry does not — a regression here
     // would silently show BOTH dictionaries, or neither.
+    // Closed until tapped: nothing is fetched from grammata for a reader who
+    // only wanted the parse.
+    expect(container.querySelector('.card-entry')!.hasAttribute('hidden')).toBe(true);
     expect(container.querySelector('.grammata-mount')).toBeTruthy();
     expect(container.querySelector('.lsj-entry')).toBeNull();
     // The reader's own analysis card stays: grammata replaces the dictionary
@@ -234,5 +244,62 @@ describe('WordPopup', () => {
     expect(screen.queryByText('coined by Aristotle')).toBeNull();
     expect(screen.queryByText('rare before Aristotle')).toBeNull();
     expect(document.querySelector('.distinct-label')).toBeNull();
+  });
+  it('makes one card per dictionary entry, not one per analysis', async () => {
+    // δεῖ's real shape: nine analyses naming three entries. Two of them are
+    // LSJ homographs of δέω — "bind" and "lack" — which must stay apart, and
+    // each entry's repeated parses must collapse into one card.
+    const parses = [
+      'pres ind mp 2nd sg', 'pres imperat act 2nd sg',
+      'pres ind act 3rd sg', 'imperf ind act 3rd sg',
+    ];
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        ...parses.map(parse => ({ lemma: 'de/w1', gloss: 'bind', parse, lsj: ['de/w1'] })),
+        ...parses.map(parse => ({ lemma: 'de/w2', gloss: 'lack', parse, lsj: ['de/w2'] })),
+        { lemma: 'dei=', gloss: 'there is need', parse: 'imperf ind act 3rd sg', lsj: ['dei='] },
+      ],
+      lsj: [
+        { key: 'de/w1', head: 'δέω', html: '<b class="lsj-head">δέω</b> (A), bind' },
+        { key: 'de/w2', head: 'δέω', html: '<b class="lsj-head">δέω</b> (B), lack' },
+        { key: 'dei=', head: 'δεῖ', html: '<b class="lsj-head">δεῖ</b>, there is need' },
+      ],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('bind');
+
+    const cards = container.querySelectorAll('.analysis-card');
+    expect(cards.length).toBe(3);
+    // LSJ's own letter, read from the entry text — never derived from the key's
+    // trailing digit, which disagrees with LSJ on six entries.
+    expect(cards[0].querySelector('.lemma')!.textContent).toContain('(A)');
+    expect(cards[1].querySelector('.lemma')!.textContent).toContain('(B)');
+    expect(cards[2].querySelector('.lemma-hom')).toBeNull();
+    // Four parses on each δέω card, one on δεῖ — no repeats.
+    expect(cards[0].querySelectorAll('.parse-rows dt').length).toBe(4);
+    expect(cards[2].querySelectorAll('.parse-rows dt').length).toBe(1);
+  });
+
+  it('prints a dialect only where the form has no Attic reading', async () => {
+    // Aristotle is Attic, so "(attic epic ionic)" says nothing a reader needs.
+    // "(doric)" says the reading is not available in Aristotle's own dialect.
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'o(/moios', gloss: 'like', parse: 'masc acc pl (attic epic ionic)', lsj: ['o(/moios'] },
+        { lemma: 'o(/moios', gloss: 'like', parse: 'masc/fem acc pl (doric)', lsj: ['o(/moios'] },
+        { lemma: 'o(/moios', gloss: 'like', parse: 'fem dat sg (epic ionic)', lsj: ['o(/moios'] },
+      ],
+      lsj: [{ key: 'o(/moios', head: 'ὅμοιος', html: '<b class="lsj-head">ὅμοιος</b>, like' }],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('like');
+
+    expect(container.querySelectorAll('.analysis-card').length).toBe(1);
+    const dd = [...container.querySelectorAll('.parse-rows dd')].map(e => e.textContent);
+    expect(dd[0]).toBe('');            // has attic — silent
+    expect(dd[1]).toBe('doric only');  // one dialect, no attic
+    expect(dd[2]).toBe('epic ionic');  // two dialects, still no attic
+    // The dialect is stripped from the parse text itself, not left doubled.
+    expect(container.querySelector('.parse-rows dt')!.textContent).toBe('masc acc pl');
   });
 });

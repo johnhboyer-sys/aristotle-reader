@@ -88,22 +88,94 @@
   // two requests resolve independently and a slow earlier entry must not land
   // in the container after a newer click.
   let lexId = 0;
-  // Ask for the exact LSJ entry by key, never by string. A string cannot say
-  // which homograph you mean: εἰσὶ returned ἵημι, εἰμί and εἶμι with ἵημι
-  // first, so the entry under a card reading "εἰμί" was a different verb.
-  // grammata's pack key space IS Perseus betacode — the same keys this corpus
-  // already carries on every analysis — so a.lsj[0] goes across verbatim,
-  // homograph digits and all. With a key the widget skips its own analysis
-  // entirely, which also spares the analyses pack fetch.
-  // Fall back to the Unicode headword only when an analysis carries no key.
-  $: lexKey = analyses.length > 0 ? (analyses[0].lsj[0] ?? '') : '';
-  $: lexWord =
-    analyses.length > 0
-      ? (lsj.find(e => e.key === analyses[0].lsj[0])?.head
-         ?? betaToGreek(analyses[0].lemma))
-      : '';
-  $: if (!useLocalLexicon && lexEl && (lexKey || lexWord)) {
-    renderLexicon(lexEl, lexWord, lexKey);
+  // ── Cards are keyed by DICTIONARY ENTRY, not by Morpheus lemma ──────────
+  // An analysis can name several LSJ entries (νοῦν's unnumbered νέω points at
+  // all three of νέω A/B/C). Keying on the entry means its parses join each of
+  // those entries' cards, no card ever names more than one entry, and there is
+  // no unresolved-parent card that opens nothing. νοῦν: 17 cards -> 4.
+  const DIALECTS = ['attic', 'epic', 'doric', 'ionic', 'aeolic', 'homeric'];
+
+  // Aristotle is Attic, so Attic is the unmarked default and never printed.
+  // A form with NO Attic reading is worth doubting, so it says what it is
+  // limited to. Cuts on Attic's presence, not on how many dialects are named:
+  // "(attic)" alone would otherwise flag (meaningless here) and "(epic ionic)"
+  // would otherwise stay silent (exactly the case worth seeing). 2,007 of
+  // 15,041 analyses flag — 13%.
+  function splitParse(parse: string): { text: string; dialect: string } {
+    const m = /\(([^)]*)\)\s*$/.exec(parse ?? '');
+    if (!m) return { text: (parse ?? '').trim(), dialect: '' };
+    const named = m[1].split(/\s+/).filter(w => DIALECTS.includes(w));
+    if (named.length === 0) return { text: (parse ?? '').trim(), dialect: '' };
+    const text = parse.slice(0, m.index).trim();
+    if (named.includes('attic')) return { text, dialect: '' };
+    return { text, dialect: named.length === 1 ? `${named[0]} only` : named.join(' ') };
+  }
+
+  // LSJ marks its own homographs — νέω (A), νέω (B), νέω (C) — in the entry
+  // text itself. Read that, never derive it from the key's trailing digit:
+  // ka/r2 is LSJ's (A), not (B), and li^to/s2 is (A) too, so the digit lies in
+  // 6 cases. 32% of numbered keys carry no letter at all (a)/llos1), and those
+  // show nothing rather than being given a letter LSJ never printed.
+  function homograph(html: string | undefined): string {
+    if (!html) return '';
+    const m = /^\s*\S+\s*\(([A-Z])\)/.exec(html.replace(/<[^>]+>/g, ''));
+    return m ? m[1] : '';
+  }
+
+  interface EntryCard {
+    id: string;
+    lsjKey: string;          // '' when this analysis names no LSJ entry
+    head: string;
+    hom: string;             // LSJ's own homograph letter, '' when unmarked
+    gloss: string;
+    rows: { text: string; dialect: string }[];
+    ref: LemmaRef | null;
+  }
+
+  $: cards = (() => {
+    const out: EntryCard[] = [];
+    const byId = new Map<string, EntryCard>();
+    for (const a of analyses) {
+      const keys = a.lsj && a.lsj.length ? a.lsj : [''];
+      for (const k of keys) {
+        const id = k || `lemma:${a.lemma}`;
+        let card = byId.get(id);
+        if (!card) {
+          const entry = k ? lsj.find(e => e.key === k) : undefined;
+          card = {
+            id,
+            lsjKey: k,
+            head: entry?.head || betaToGreek(a.lemma),
+            hom: homograph(entry?.html),
+            gloss: a.gloss,
+            rows: [],
+            ref: (k && lemmata[k]) || null,
+          };
+          byId.set(id, card);
+          out.push(card);
+        }
+        const row = splitParse(a.parse);
+        // Drop rows this card already carries: an analysis naming three
+        // entries repeats its parse into all three, and the corpus holds 701
+        // byte-identical duplicates besides.
+        if (!card.rows.some(r => r.text === row.text && r.dialect === row.dialect)) {
+          card.rows.push(row);
+        }
+      }
+    }
+    return out;
+  })();
+
+  // Which card's entry is open. One at a time: the panel is narrow and the
+  // reader came for one definition, not a stack.
+  let openId = '';
+  // Reset when the sidebar switches word in place, or the previous word's
+  // entry would sit open under a new set of cards.
+  $: if (token) openId = '';
+
+  function toggleCard(card: EntryCard, el: HTMLElement | undefined) {
+    openId = openId === card.id ? '' : card.id;
+    if (openId && !useLocalLexicon && el) renderLexicon(el, card.head, card.lsjKey);
   }
 
   async function renderLexicon(el: HTMLElement, word: string, key: string) {
@@ -184,43 +256,95 @@
     {:else if analyses.length === 0}
       <div class="popup-loading">No analysis found for this form.</div>
     {:else}
-      {#each analyses as a}
-        <div class="analysis-card">
-          <div class="lemma" lang="grc">{a.lsj[0] ? lsj.find(e => e.key === a.lsj[0])?.head ?? betaToGreek(a.lemma) : betaToGreek(a.lemma)}</div>
-          <div class="gloss">{a.gloss}</div>
-          <div class="parse">{a.parse}</div>
-          {#if lemmaRef(a)}
-            {#if lemmaRef(a)!.distinctiveness_label}
-              <em class="distinct-label">{lemmaRef(a)!.distinctiveness_label}</em>
+      {#each cards as card (card.id)}
+        <div class="analysis-card" class:card-open={openId === card.id}>
+          <button
+            type="button"
+            class="card-face"
+            aria-expanded={openId === card.id}
+            on:click={(e) => toggleCard(card, (e.currentTarget as HTMLElement)
+              .parentElement?.querySelector('.grammata-mount') as HTMLElement)}
+          >
+            <span class="lemma" lang="grc">{card.head}{#if card.hom}<span class="lemma-hom" lang="en"> ({card.hom})</span>{/if}</span>
+            <span class="gloss">{card.gloss}</span>
+            <dl class="parse-rows">
+              {#each card.rows as row}
+                <dt>{row.text}</dt>
+                <dd>{row.dialect}</dd>
+              {/each}
+            </dl>
+            <span class="card-open-hint">
+              <span class="card-arrow" aria-hidden="true">▸</span>
+              {openId === card.id ? 'Hide LSJ definition' : 'Show LSJ definition'}
+            </span>
+          </button>
+
+          {#if card.ref}
+            {#if card.ref.distinctiveness_label}
+              <em class="distinct-label">{card.ref.distinctiveness_label}</em>
             {/if}
-            <a class="lemma-link" href={`${base}/lemma/${lemmaRef(a)!.slug}/`}>
-              Appears {lemmaRef(a)!.count.toLocaleString()}× across Aristotle
+            <a class="lemma-link" href={`${base}/lemma/${card.ref.slug}/`}>
+              Appears {card.ref.count.toLocaleString()}× across Aristotle
               <span class="lemma-link-arr" aria-hidden="true">→</span>
             </a>
           {/if}
+
+          <div class="card-entry" hidden={openId !== card.id}>
+            {#if useLocalLexicon}
+              {#if card.lsjKey && lsj.find(e => e.key === card.lsjKey)}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html renderLsjEntry(lsj.find(e => e.key === card.lsjKey)!.html, { base })}
+              {:else}
+                <div class="popup-loading">No dictionary entry for this form.</div>
+              {/if}
+            {:else}
+              <div class="grammata-mount"></div>
+            {/if}
+          </div>
         </div>
       {/each}
-      {#if useLocalLexicon}
-        {#if lsj.length > 0}
-          <div class="lsj-section">
-            <div class="lsj-label">LSJ</div>
-            {#each lsj as entry}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html renderLsjEntry(entry.html, { base })}
-            {/each}
-          </div>
-        {/if}
-      {:else}
-        <div class="lsj-section">
-          <div class="lsj-label">LSJ</div>
-          <div class="grammata-mount" bind:this={lexEl}></div>
-        </div>
-      {/if}
     {/if}
   </div>
 </div>
 
 <style>
+  /* A card is one dictionary entry: headword, gloss, its parses, and the entry
+     itself opening underneath. Whole face is the tap target — the reader is
+     vision impaired and reads on a phone, so nothing here shrinks and nothing
+     truncates. */
+  .card-face {
+    all: unset; box-sizing: border-box; cursor: pointer; display: flex;
+    flex-direction: column; gap: 0.35rem; width: 100%; min-height: 44px;
+    padding: 0.15rem 0; border-radius: 4px;
+  }
+  .card-face:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* LSJ's own homograph letter, in Latin type beside the Greek headword. */
+  .lemma-hom { font-family: var(--font-ui); font-size: 0.75em; color: var(--text-light); }
+  /* Parse left, dialect right — the same label-left logic as the LSJ forms
+     block. The right column stays empty unless a reading has no Attic form. */
+  .parse-rows {
+    display: grid; grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.25rem 0.75rem; margin: 0.1rem 0 0; align-items: baseline;
+  }
+  .parse-rows dt { color: var(--text-mid); }
+  .parse-rows dd { margin: 0; color: var(--error); font-size: 0.9em; }
+  /* Reads as a control, not a caption: full width, bordered, and at the
+     popup's own type size. It was 0.8rem accent text with a thin chevron —
+     too quiet to look tappable, and shrunk type is the one thing this reader
+     cannot afford. */
+  .card-open-hint {
+    display: flex; align-items: center; gap: 0.5em;
+    margin-top: 0.5rem; padding: 0.5rem 0.7rem; min-height: 44px;
+    border: 1px solid var(--accent); border-radius: 4px;
+    font-family: var(--font-ui); font-size: 1rem; font-weight: 600;
+    color: var(--accent); background: transparent;
+  }
+  .card-face:hover .card-open-hint { background: var(--greek-hover); }
+  .card-open .card-open-hint { background: var(--greek-hover); }
+  .card-arrow { display: inline-block; font-size: 0.9em; transition: transform .15s ease; }
+  .card-open .card-arrow { transform: rotate(90deg); }
+  @media (prefers-reduced-motion: reduce) { .card-arrow { transition: none; } }
+  .card-entry { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
   /* "See all occurrences" link into the lemma page — the popup's one bridge to
      the deeper reference view. Sits at the foot of each analysis card. */
   .lemma-link {
