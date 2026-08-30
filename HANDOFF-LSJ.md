@@ -2,6 +2,16 @@
 
 Generated: 2026-08-20 midday · Read this before touching LSJ presentation.
 
+**Status note, 2026-08-29.** This is the LSJ-track handoff for aristotle-reader.
+It was called `HANDOFF.md` until today; renamed so it cannot be overwritten by a
+handoff from another track. Question #1 is being answered in the **grammar-site**
+repo, not here — John has the entry design built there and is having a second
+session check it before it ports across. So §3's "Decision for John" is no longer
+live as posed: the forms-block repair on `claude/lsj-entry-parts` sits inside
+`renderLsjEntry`, the same function the port must land on, so the port either
+absorbs it or replaces it. That branch is unmerged and unshipped; its 237 tests
+pass (re-run 2026-08-29) and it is 21 commits behind main.
+
 ## 1. The frame John set (do not lose this)
 
 The work splits in two, and they must be solved in this order:
