@@ -69,7 +69,7 @@
   type LookupFn = (
     word: string,
     el: HTMLElement,
-    opts?: { lang?: string },
+    opts?: { lang?: string; key?: string },
   ) => Promise<void>;
 
   let lexEl: HTMLDivElement | undefined;
@@ -88,29 +88,33 @@
   // two requests resolve independently and a slow earlier entry must not land
   // in the container after a newer click.
   let lexId = 0;
-  // Ask for the LEMMA our own Morpheus data already resolved, never the surface
-  // form. Handing grammata the surface makes it re-analyse from scratch and
-  // stack every homograph it finds: εἰσὶ returns ἵημι, εἰμί and εἶμι, with
-  // ἵημι sorted first, so the entry under a card reading "εἰμί" was a different
-  // verb. The LSJ headword is already Unicode; betaToGreek covers an analysis
-  // whose LSJ entry we did not fetch. Note this narrows but does not fully
-  // disambiguate — grammata folds accents, so εἰμί still also returns εἶμι.
-  $: lexQuery =
+  // Ask for the exact LSJ entry by key, never by string. A string cannot say
+  // which homograph you mean: εἰσὶ returned ἵημι, εἰμί and εἶμι with ἵημι
+  // first, so the entry under a card reading "εἰμί" was a different verb.
+  // grammata's pack key space IS Perseus betacode — the same keys this corpus
+  // already carries on every analysis — so a.lsj[0] goes across verbatim,
+  // homograph digits and all. With a key the widget skips its own analysis
+  // entirely, which also spares the analyses pack fetch.
+  // Fall back to the Unicode headword only when an analysis carries no key.
+  $: lexKey = analyses.length > 0 ? (analyses[0].lsj[0] ?? '') : '';
+  $: lexWord =
     analyses.length > 0
       ? (lsj.find(e => e.key === analyses[0].lsj[0])?.head
          ?? betaToGreek(analyses[0].lemma))
       : '';
-  $: if (!useLocalLexicon && lexEl && lexQuery) renderLexicon(lexEl, lexQuery);
-  async function renderLexicon(el: HTMLElement, surface: string) {
+  $: if (!useLocalLexicon && lexEl && (lexKey || lexWord)) {
+    renderLexicon(lexEl, lexWord, lexKey);
+  }
+
+  async function renderLexicon(el: HTMLElement, word: string, key: string) {
     const my = ++lexId;
     try {
       const lookup = await loadLookup();
       if (my !== lexId) return;
-      // The surface form in Unicode — the widget resolves it through Morpheus
-      // and folds accents itself. It does NOT accept Beta Code, so never pass
-      // token.k or an analysis lemma, which are Beta Code in this corpus.
-      // lang:'grc' skips the Latin fetch outright on a Greek reader.
-      await lookup(surface, el, { lang: 'grc' });
+      // lang:'grc' skips the Latin fetch outright on a Greek reader. With a
+      // key the word argument is ignored, so it stays empty; without one the
+      // widget re-analyses the Unicode headword and may stack fold-siblings.
+      await lookup(key ? '' : word, el, key ? { lang: 'grc', key } : { lang: 'grc' });
     } catch (e) {
       // A failed module load is the only case the widget cannot report itself
       // (it renders its own not-found and network-failure states).
