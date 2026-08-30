@@ -535,7 +535,15 @@ export interface LsjHead { head: string; hom?: string; }
 let _lsjHeadsCache: Promise<Record<string, LsjHead>> | null = null;
 export function fetchLsjHeads(): Promise<Record<string, LsjHead>> {
   if (_lsjHeadsCache) return _lsjHeadsCache;
-  const p = fetch(`${ROOT()}/lsj-heads.json`).then(r => (r.ok ? r.json() : {}));
+  // Throw on a bad response rather than resolving to {}: resolving would make
+  // the failure look like an empty manifest, and the catch below would never
+  // fire, so one 404 pinned every card to betaToGreek for the whole session.
+  // `npm run dev` does not run build-lsj-heads.mjs, so a tree without a built
+  // manifest hits exactly that path on the first popup.
+  const p = fetch(`${ROOT()}/lsj-heads.json`).then(r => {
+    if (!r.ok) throw new Error(`lsj-heads.json: ${r.status}`);
+    return r.json();
+  });
   // A missing manifest costs headwords, not the popup — don't cache the failure.
   p.catch(() => { if (_lsjHeadsCache === p) _lsjHeadsCache = null; });
   _lsjHeadsCache = p;

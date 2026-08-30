@@ -283,6 +283,36 @@ describe('WordPopup', () => {
     expect(cards[2].querySelectorAll('.parse-rows dt').length).toBe(1);
   });
 
+  it('takes each card gloss from an analysis that names only that entry', async () => {
+    // νοῦν's real shape, and the case that breaks a first-wins gloss: the FIRST
+    // analysis is an unresolved νέω naming all three numbered entries at once,
+    // with the gloss of only one of them. Its gloss must not be stamped on the
+    // other two — a card reading "swim" that opens the entry for "spin" is
+    // worse than the seventeen cards this grouping replaced.
+    const p = 'imperf ind act 1st sg';
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'ne/w', gloss: 'swim', parse: p, lsj: ['ne/w1', 'ne/w2', 'ne/w3'] },
+        { lemma: 'ne/w1', gloss: 'swim', parse: p, lsj: ['ne/w1'] },
+        { lemma: 'ne/w2', gloss: 'spin', parse: p, lsj: ['ne/w2'] },
+        { lemma: 'ne/w3', gloss: 'heap, pile up', parse: p, lsj: ['ne/w3'] },
+        { lemma: 'no/os', gloss: 'mind', parse: 'masc acc sg (attic)', lsj: ['no/os'] },
+      ],
+      lsj: [
+        { key: 'ne/w1', head: 'νέω', html: '<b class="lsj-head">νέω</b> (A), swim' },
+        { key: 'ne/w2', head: 'νέω', html: '<b class="lsj-head">νέω</b> (B), spin' },
+        { key: 'ne/w3', head: 'νέω', html: '<b class="lsj-head">νέω</b> (C), heap' },
+        { key: 'no/os', head: 'νόος', html: '<b class="lsj-head">νόος</b>, mind' },
+      ],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('mind');
+
+    const glosses = [...container.querySelectorAll('.analysis-card .gloss')]
+      .map(e => e.textContent);
+    expect(glosses).toEqual(['swim', 'spin', 'heap, pile up', 'mind']);
+  });
+
   it('prints a dialect only where the form has no Attic reading', async () => {
     // Aristotle is Attic, so "(attic epic ionic)" says nothing a reader needs.
     // "(doric)" says the reading is not available in Aristotle's own dialect.

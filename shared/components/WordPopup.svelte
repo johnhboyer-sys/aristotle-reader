@@ -34,7 +34,10 @@
   let reqId = 0;
   $: loadWord(work, token.k);
   function loadWord(w: string, k: string) {
+    // Bump the lexicon generation too: a dictionary render still in flight
+    // belongs to the word being replaced.
     const my = ++reqId;
+    lexId++;
     loading = true;
     error = '';
     analyses = [];
@@ -56,10 +59,6 @@
   // betaToGreek fallback below, which is why nothing here throws.
   let heads: Record<string, LsjHead> = {};
   fetchLsjHeads().then(m => { heads = m; }).catch(() => {});
-  // A card's lemma page keys off its primary LSJ key (matching the concordance).
-  const lemmaRef = (a: Analysis): LemmaRef | null =>
-    (a.lsj[0] && lemmata[a.lsj[0]]) || null;
-
   // ── The dictionary entry ────────────────────────────────────────────────
   // Served by grammata (grammar-site's deploy), not rendered here: one grammata
   // deploy updates every reader site. Architecture decided 2026-08-29. Do not
@@ -78,7 +77,6 @@
     opts?: { lang?: string; key?: string },
   ) => Promise<void>;
 
-  let lexEl: HTMLDivElement | undefined;
   let lexLoader: Promise<LookupFn> | null = null;
   // Loaded on the first word click, then reused: the import is the only cost
   // paid before a lookup, and the browser caches the module after that.
@@ -134,6 +132,10 @@
     head: string;
     hom: string;             // LSJ's own homograph letter, '' when unmarked
     gloss: string;
+    // Whether `gloss` came from an analysis naming this entry ALONE. An
+    // analysis can fan out across several entries carrying the gloss of only
+    // one of them, and first-wins then mislabels the rest.
+    glossExact: boolean;
     rows: { text: string; dialect: string }[];
     ref: LemmaRef | null;
   }
@@ -143,6 +145,13 @@
     const byId = new Map<string, EntryCard>();
     for (const a of analyses) {
       const keys = a.lsj && a.lsj.length ? a.lsj : [''];
+      // An analysis naming exactly one entry describes THAT entry; one naming
+      // several is unresolved and its gloss belongs to none in particular.
+      // νοῦν opens with an unresolved νέω naming all three numbered entries
+      // and glossing them "swim", so νέω (B) "spin" and νέω (C) "heap" both
+      // read "swim" while opening the right entry underneath — a card lying
+      // about the definition it is about to show.
+      const exact = keys.length === 1;
       for (const k of keys) {
         const id = k || `lemma:${a.lemma}`;
         let card = byId.get(id);
@@ -157,11 +166,18 @@
             head: meta?.head || entry?.head || betaToGreek(a.lemma),
             hom: meta?.hom ?? homograph(entry?.html),
             gloss: a.gloss,
+            glossExact: exact,
             rows: [],
             ref: (k && lemmata[k]) || null,
           };
           byId.set(id, card);
           out.push(card);
+        }
+        // An exact gloss outranks a fanned-out one; failing that, any gloss
+        // outranks none — some analyses carry an empty one.
+        if (!card.glossExact && (exact || (!card.gloss && a.gloss))) {
+          if (exact || !card.gloss) card.gloss = a.gloss;
+          if (exact) card.glossExact = true;
         }
         const row = splitParse(a.parse);
         // Drop rows this card already carries: an analysis naming three
@@ -196,6 +212,8 @@
       // key the word argument is ignored, so it stays empty; without one the
       // widget re-analyses the Unicode headword and may stack fold-siblings.
       await lookup(key ? '' : word, el, key ? { lang: 'grc', key } : { lang: 'grc' });
+      // Re-checked after the await: the reader may have moved on mid-render.
+      if (my !== lexId) return;
     } catch (e) {
       // A failed module load is the only case the widget cannot report itself
       // (it renders its own not-found and network-failure states).

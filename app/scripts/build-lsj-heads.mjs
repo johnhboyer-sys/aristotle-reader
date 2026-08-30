@@ -68,6 +68,24 @@ for (const f of readdirSync(shardDir)) {
 }
 for (const k of wanted) if (!out[k]) missing++;
 
+// Refuse to write a manifest with holes. Printing the hole and exiting 0 is
+// how a silent gap ships: an app-only `npm run build` never runs
+// verify_shared_lsj, so anything checking only the exit status would call this
+// a success. A key with no shard entry means the popup falls back to
+// transliterating the lemma for that word, which looks like a headword bug
+// somewhere else entirely.
+if (works === 0) {
+  console.error('lsj-heads: no analyses.json found under ' + DATA + ' — refusing to write.');
+  process.exit(1);
+}
+if (missing > 0) {
+  console.error(
+    `lsj-heads: ${missing} of ${wanted.size} keys had no shard entry — refusing to ` +
+    'write an incomplete manifest. Rebuild the LSJ shards first.',
+  );
+  process.exit(1);
+}
+
 writeFileSync(OUT, JSON.stringify(out));
 const kb = (statSync(OUT).size / 1024).toFixed(0);
 const withHom = Object.values(out).filter(r => r.hom).length;
