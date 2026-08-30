@@ -1240,6 +1240,68 @@ body {
 }
 .analysis-card .distinct-label + .lemma-link { margin-top: 0.25rem; }
 
+/* ── Word-popup cards ──────────────────────────────────────────────────────
+   These live here, not in WordPopup.svelte's <style> block, because component
+   style blocks do not reach the built site — reader pages load global.css and
+   nothing else. Verified against app/dist/_astro: .analysis-card and
+   .word-sidebar are present, component-scoped rules are not. That is why
+   .lemma-link's base styling below had shipped nowhere until now; only the
+   margin tweak above it, which lives here, was ever taking effect.
+   A rule added to the component instead of here works in `astro dev` and is
+   silently absent in production. */
+  /* A card is one dictionary entry: headword, gloss, its parses, and the entry
+     itself opening underneath. Whole face is the tap target — the reader is
+     vision impaired and reads on a phone, so nothing here shrinks and nothing
+     truncates. */
+  .card-face {
+    all: unset; box-sizing: border-box; cursor: pointer; display: flex;
+    flex-direction: column; gap: 0.35rem; width: 100%; min-height: 44px;
+    padding: 0.15rem 0; border-radius: 4px;
+  }
+  .card-face:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* LSJ's own homograph letter, in Latin type beside the Greek headword. */
+  .lemma-hom { font-family: var(--font-ui); font-size: 0.75em; color: var(--text-light); }
+  /* Parse left, dialect right — the same label-left logic as the LSJ forms
+     block. The right column stays empty unless a reading has no Attic form. */
+  .parse-rows {
+    display: grid; grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.25rem 0.75rem; margin: 0.1rem 0 0; align-items: baseline;
+  }
+  .parse-rows dt { color: var(--text-mid); }
+  .parse-rows dd { margin: 0; color: var(--error); font-size: 0.9em; }
+  /* Plain accent text, not a button — the whole card face is already the tap
+     target, so this only has to READ as the thing that opens the entry.
+     0.9rem: John's call, between the 0.8rem that was too quiet to notice and
+     the 1rem that shouted. The no-shrinking rule guards reading text — the
+     entry, the gloss, the Greek — not a control label. */
+  .card-open-hint {
+    display: inline-flex; align-items: baseline; gap: 0.4em; margin-top: 0.35rem;
+    font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; color: var(--accent);
+  }
+  .card-face:hover .card-open-hint { text-decoration: underline; }
+  .card-arrow { display: inline-block; font-size: 0.75em; transition: transform .15s ease; }
+  .card-open .card-arrow { transform: rotate(90deg); }
+  @media (prefers-reduced-motion: reduce) { .card-arrow { transition: none; } }
+  .card-entry { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
+  /* The one sanctioned style knob into the grammata widget (its handoff:
+     everything else under .t8-* is theirs and changes with their design
+     system). Athena Lyceum is right on grammata's own pages but arrives as a
+     second Greek face a few lines below the reader's own, so hand it this
+     site's chain. Athena stays behind it per-glyph, so a mark Cardo cannot
+     shape falls back rather than showing tofu — and its woff2 now downloads
+     only if such a glyph actually appears. */
+  .grammata-mount { --grammata-greek: var(--font-greek); }
+  /* "See all occurrences" link into the lemma page — the popup's one bridge to
+     the deeper reference view. Sits at the foot of each analysis card. */
+  .lemma-link {
+    display: inline-flex; align-items: center; gap: 0.35em;
+    margin-top: 0.5rem; font-family: var(--font-ui); font-size: 0.8rem;
+    font-weight: 600; color: var(--accent); text-decoration: none;
+  }
+  .lemma-link:hover { text-decoration: underline; }
+  .lemma-link-arr { transition: transform .1s ease; }
+  .lemma-link:hover .lemma-link-arr { transform: translateX(2px); }
+
 .lsj-section {
   border-top: 1px solid var(--border);
   padding-top: 0.6rem;
