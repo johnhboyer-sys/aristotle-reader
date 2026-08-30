@@ -524,13 +524,46 @@ export async function fetchLsjShard(letter: string): Promise<Record<string, LsjE
   return shard;
 }
 
+// LSJ key -> { head, hom }: the two things a popup card needs about an entry
+// before anyone taps it — the Unicode headword, and LSJ's own homograph letter.
+// 14,047 keys, 139 KB gzipped, fetched once. It exists so the website can stop
+// pulling a whole letter shard per lookup (e.json is 1,144 KB gzipped) purely
+// to read a headword out of it. Built by app/scripts/build-lsj-heads.mjs.
+// Distinct from lemmata.json, which is the lemma-PAGE manifest and covers only
+// the 6,214 keys that have a page.
+export interface LsjHead { head: string; hom?: string; }
+let _lsjHeadsCache: Promise<Record<string, LsjHead>> | null = null;
+export function fetchLsjHeads(): Promise<Record<string, LsjHead>> {
+  if (_lsjHeadsCache) return _lsjHeadsCache;
+  // Throw on a bad response rather than resolving to {}: resolving would make
+  // the failure look like an empty manifest, and the catch below would never
+  // fire, so one 404 pinned every card to betaToGreek for the whole session.
+  // `npm run dev` does not run build-lsj-heads.mjs, so a tree without a built
+  // manifest hits exactly that path on the first popup.
+  const p = fetch(`${ROOT()}/lsj-heads.json`).then(r => {
+    if (!r.ok) throw new Error(`lsj-heads.json: ${r.status}`);
+    return r.json();
+  });
+  // A missing manifest costs headwords, not the popup — don't cache the failure.
+  p.catch(() => { if (_lsjHeadsCache === p) _lsjHeadsCache = null; });
+  _lsjHeadsCache = p;
+  return p;
+}
+
 export async function lookupWord(
   work: string,
-  key: string
+  key: string,
+  // The website renders no LSJ text of its own any more — grammata serves the
+  // entry, keyed, when the reader taps a card — so it asks for analyses only
+  // and never touches a shard. The desktop app bundles its corpus and renders
+  // entries locally, so it keeps the default.
+  opts: { withLsj?: boolean } = {}
 ): Promise<{ analyses: Analysis[]; lsj: LsjEntry[] }> {
+  const { withLsj = true } = opts;
   const allAnalyses = await fetchAnalyses(work);
   const entries = allAnalyses[key] ?? [];
   const lsjEntries: LsjEntry[] = [];
+  if (!withLsj) return { analyses: entries, lsj: lsjEntries };
   const seen = new Set<string>();
   for (const a of entries) {
     for (const lsjKey of a.lsj) {

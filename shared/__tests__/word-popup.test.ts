@@ -24,7 +24,18 @@ vi.mock('../lib/data', async (importOriginal) => {
   };
 });
 
+// The site popup defers the dictionary to grammata over the network; the
+// packaged desktop app renders the bundled LSJ shards locally. WordPopup picks
+// its path from __TAURI_INTERNALS__ at init, so tests must say which one they
+// mean. Default to the local path: it is the one whose markup these tests
+// assert, and it keeps the suite off the network. The site-path test below
+// deletes the flag before rendering.
+beforeEach(() => {
+  (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ = {};
+});
+
 afterEach(() => {
+  delete (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
   vi.clearAllMocks();
 });
 
@@ -67,7 +78,7 @@ describe('WordPopup', () => {
   // The popup renders LSJ through the shared renderLsjEntry, so the sense
   // hierarchy has to survive into its DOM — it was stripped there too until
   // the sanitizer allowed the sense divs (2026-08-19).
-  it('renders an LSJ entry with its sense hierarchy intact', async () => {
+  it('renders an LSJ entry with its sense hierarchy intact (desktop, local shards)', async () => {
     vi.mocked(lookupWord).mockResolvedValueOnce({
       analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nom sg', lsj: ['logos'] }],
       lsj: [{
@@ -82,6 +93,13 @@ describe('WordPopup', () => {
     const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
     await screen.findByText('word, account');
 
+    // The entry now opens under the card it belongs to, so it starts closed —
+    // asserting on it without tapping would pass on markup no reader can see.
+    expect(container.querySelector('.card-entry')!.hasAttribute('hidden')).toBe(true);
+    (container.querySelector('.card-face') as HTMLButtonElement).click();
+    await tick();
+    expect(container.querySelector('.card-entry')!.hasAttribute('hidden')).toBe(false);
+
     const entry = container.querySelector('.lsj-entry')!;
     expect(entry).toBeTruthy();
     expect(entry.querySelector('.lsj-sense[data-level="1"]')).toBeTruthy();
@@ -94,6 +112,33 @@ describe('WordPopup', () => {
     expect(entry.querySelector('[id]')).toBeNull();
   });
 
+  it('hands the dictionary to grammata on the site, rendering no local entry', async () => {
+    // The site path: no Tauri, so the popup mounts an empty container for the
+    // grammata widget to fill and renders none of the shard HTML itself.
+    delete (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nom sg', lsj: ['logos'] }],
+      lsj: [{
+        key: 'logos',
+        head: 'λόγος',
+        html: '<b class="lsj-head">λόγος</b>, computation',
+      }],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('word, account');
+
+    // The mount point exists and the local entry does not — a regression here
+    // would silently show BOTH dictionaries, or neither.
+    // Closed until tapped: nothing is fetched from grammata for a reader who
+    // only wanted the parse.
+    expect(container.querySelector('.card-entry')!.hasAttribute('hidden')).toBe(true);
+    expect(container.querySelector('.grammata-mount')).toBeTruthy();
+    expect(container.querySelector('.lsj-entry')).toBeNull();
+    // The reader's own analysis card stays: grammata replaces the dictionary
+    // entry, not the parse, gloss and corpus-frequency link around it.
+    expect(screen.getByText('noun nom sg')).toBeTruthy();
+  });
+
   it('re-runs the lookup when the token changes (word-to-word jump)', async () => {
     const { rerender } = render(WordPopup, {
       props: { ...baseProps, onClose: vi.fn() },
@@ -103,7 +148,10 @@ describe('WordPopup', () => {
     await rerender({ token: { t: 'ἀρετή', k: 'areth' } });
     await screen.findByText('goodness, excellence');
     expect(lookupWord).toHaveBeenCalledTimes(2);
-    expect(lookupWord).toHaveBeenLastCalledWith('EN', 'areth');
+    // withLsj says whether to fetch the LSJ shard: true on the desktop, which
+    // renders entries locally, false on the website, where grammata serves
+    // them and a shard would be megabytes fetched to be thrown away.
+    expect(lookupWord).toHaveBeenLastCalledWith('EN', 'areth', { withLsj: true });
   });
 
   it('closes on click outside, but not on the panel or on a Greek token', async () => {
@@ -199,5 +247,127 @@ describe('WordPopup', () => {
     expect(screen.queryByText('coined by Aristotle')).toBeNull();
     expect(screen.queryByText('rare before Aristotle')).toBeNull();
     expect(document.querySelector('.distinct-label')).toBeNull();
+  });
+  it('makes one card per dictionary entry, not one per analysis', async () => {
+    // δεῖ's real shape: nine analyses naming three entries. Two of them are
+    // LSJ homographs of δέω — "bind" and "lack" — which must stay apart, and
+    // each entry's repeated parses must collapse into one card.
+    const parses = [
+      'pres ind mp 2nd sg', 'pres imperat act 2nd sg',
+      'pres ind act 3rd sg', 'imperf ind act 3rd sg',
+    ];
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        ...parses.map(parse => ({ lemma: 'de/w1', gloss: 'bind', parse, lsj: ['de/w1'] })),
+        ...parses.map(parse => ({ lemma: 'de/w2', gloss: 'lack', parse, lsj: ['de/w2'] })),
+        { lemma: 'dei=', gloss: 'there is need', parse: 'imperf ind act 3rd sg', lsj: ['dei='] },
+      ],
+      lsj: [
+        { key: 'de/w1', head: 'δέω', html: '<b class="lsj-head">δέω</b> (A), bind' },
+        { key: 'de/w2', head: 'δέω', html: '<b class="lsj-head">δέω</b> (B), lack' },
+        { key: 'dei=', head: 'δεῖ', html: '<b class="lsj-head">δεῖ</b>, there is need' },
+      ],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('bind');
+
+    const cards = container.querySelectorAll('.analysis-card');
+    expect(cards.length).toBe(3);
+    // LSJ's own letter, read from the entry text — never derived from the key's
+    // trailing digit, which disagrees with LSJ on six entries.
+    expect(cards[0].querySelector('.lemma')!.textContent).toContain('(A)');
+    expect(cards[1].querySelector('.lemma')!.textContent).toContain('(B)');
+    expect(cards[2].querySelector('.lemma-hom')).toBeNull();
+    // Four parses on each δέω card, one on δεῖ — no repeats.
+    expect(cards[0].querySelectorAll('.parse-rows dt').length).toBe(4);
+    expect(cards[2].querySelectorAll('.parse-rows dt').length).toBe(1);
+  });
+
+  it('takes each card gloss from an analysis that names only that entry', async () => {
+    // νοῦν's real shape, and the case that breaks a first-wins gloss: the FIRST
+    // analysis is an unresolved νέω naming all three numbered entries at once,
+    // with the gloss of only one of them. Its gloss must not be stamped on the
+    // other two — a card reading "swim" that opens the entry for "spin" is
+    // worse than the seventeen cards this grouping replaced.
+    const p = 'imperf ind act 1st sg';
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'ne/w', gloss: 'swim', parse: p, lsj: ['ne/w1', 'ne/w2', 'ne/w3'] },
+        { lemma: 'ne/w1', gloss: 'swim', parse: p, lsj: ['ne/w1'] },
+        { lemma: 'ne/w2', gloss: 'spin', parse: p, lsj: ['ne/w2'] },
+        { lemma: 'ne/w3', gloss: 'heap, pile up', parse: p, lsj: ['ne/w3'] },
+        { lemma: 'no/os', gloss: 'mind', parse: 'masc acc sg (attic)', lsj: ['no/os'] },
+      ],
+      lsj: [
+        { key: 'ne/w1', head: 'νέω', html: '<b class="lsj-head">νέω</b> (A), swim' },
+        { key: 'ne/w2', head: 'νέω', html: '<b class="lsj-head">νέω</b> (B), spin' },
+        { key: 'ne/w3', head: 'νέω', html: '<b class="lsj-head">νέω</b> (C), heap' },
+        { key: 'no/os', head: 'νόος', html: '<b class="lsj-head">νόος</b>, mind' },
+      ],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('mind');
+
+    const glosses = [...container.querySelectorAll('.analysis-card .gloss')]
+      .map(e => e.textContent);
+    expect(glosses).toEqual(['swim', 'spin', 'heap, pile up', 'mind']);
+  });
+
+  it('prefers a real gloss over an empty one from the same entry', async () => {
+    // οἰκοδόμου: two analyses of oi)kodo/mos, the first glossed "". Marking the
+    // card exact on that first one froze it blank and ignored the real gloss
+    // behind it — 92 tokens in the corpus. Order must not decide this.
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'oi)ko/domos', gloss: '', parse: 'masc gen sg', lsj: ['oi)kodo/mos'] },
+        { lemma: 'oi)kodo/mos', gloss: 'builder, architect', parse: 'masc gen sg', lsj: ['oi)kodo/mos'] },
+      ],
+      lsj: [{ key: 'oi)kodo/mos', head: 'οἰκοδόμος', html: '<b class="lsj-head">οἰκοδόμος</b>' }],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('builder, architect');
+    expect(container.querySelectorAll('.analysis-card').length).toBe(1);
+  });
+
+  it('does not let a fanned-out gloss stand in for an entry with none', async () => {
+    // δύσει: du/w1 "two" fans out onto du/w2, whose own analysis has no gloss.
+    // Blank is honest; "two" is a different verb's meaning wearing this card.
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'du/w', gloss: 'two', parse: 'fut ind act 3rd sg', lsj: ['du/w1', 'du/w2'] },
+        { lemma: 'du/w2', gloss: '', parse: 'fut ind act 3rd sg', lsj: ['du/w2'] },
+      ],
+      lsj: [
+        { key: 'du/w1', head: 'δύω', html: '<b class="lsj-head">δύω</b> (A), two' },
+        { key: 'du/w2', head: 'δύω', html: '<b class="lsj-head">δύω</b> (B), plunge' },
+      ],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('two');
+    const glosses = [...container.querySelectorAll('.analysis-card .gloss')].map(e => e.textContent);
+    expect(glosses).toEqual(['two', '']);
+  });
+
+  it('prints a dialect only where the form has no Attic reading', async () => {
+    // Aristotle is Attic, so "(attic epic ionic)" says nothing a reader needs.
+    // "(doric)" says the reading is not available in Aristotle's own dialect.
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [
+        { lemma: 'o(/moios', gloss: 'like', parse: 'masc acc pl (attic epic ionic)', lsj: ['o(/moios'] },
+        { lemma: 'o(/moios', gloss: 'like', parse: 'masc/fem acc pl (doric)', lsj: ['o(/moios'] },
+        { lemma: 'o(/moios', gloss: 'like', parse: 'fem dat sg (epic ionic)', lsj: ['o(/moios'] },
+      ],
+      lsj: [{ key: 'o(/moios', head: 'ὅμοιος', html: '<b class="lsj-head">ὅμοιος</b>, like' }],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('like');
+
+    expect(container.querySelectorAll('.analysis-card').length).toBe(1);
+    const dd = [...container.querySelectorAll('.parse-rows dd')].map(e => e.textContent);
+    expect(dd[0]).toBe('');            // has attic — silent
+    expect(dd[1]).toBe('doric only');  // one dialect, no attic
+    expect(dd[2]).toBe('epic ionic');  // two dialects, still no attic
+    // The dialect is stripped from the parse text itself, not left doubled.
+    expect(container.querySelector('.parse-rows dt')!.textContent).toBe('masc acc pl');
   });
 });
