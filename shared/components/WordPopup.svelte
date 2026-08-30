@@ -54,6 +54,59 @@
   const lemmaRef = (a: Analysis): LemmaRef | null =>
     (a.lsj[0] && lemmata[a.lsj[0]]) || null;
 
+  // ── The dictionary entry ────────────────────────────────────────────────
+  // Served by grammata (grammar-site's deploy), not rendered here: one grammata
+  // deploy updates every reader site. Architecture decided 2026-08-29. Do not
+  // vendor, proxy, pin or cache-bust this URL — its deploys ARE the update
+  // mechanism — and do not style anything inside the container: the widget's
+  // CSS is generated from grammata's design system and changes with it.
+  const GRAMMATA_LOOKUP = 'https://grammata.pages.dev/t8/lookup.js';
+  // The packaged desktop app bundles its corpus and is offline-first, so it
+  // keeps rendering the local LSJ shards. Same check runtime.ts uses.
+  const useLocalLexicon =
+    typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+  type LookupFn = (
+    word: string,
+    el: HTMLElement,
+    opts?: { lang?: string },
+  ) => Promise<void>;
+
+  let lexEl: HTMLDivElement | undefined;
+  let lexLoader: Promise<LookupFn> | null = null;
+  // Loaded on the first word click, then reused: the import is the only cost
+  // paid before a lookup, and the browser caches the module after that.
+  function loadLookup(): Promise<LookupFn> {
+    // @vite-ignore keeps the remote specifier out of the bundle graph — Vite
+    // cannot resolve an https: import at build time and would fail the build.
+    if (!lexLoader) lexLoader = import(/* @vite-ignore */ GRAMMATA_LOOKUP).then(m => m.lookup);
+    return lexLoader;
+  }
+
+  // The sidebar switches word in place (see loadWord above), so this re-runs on
+  // a new token rather than remounting. Its own counter, not loadWord's: the
+  // two requests resolve independently and a slow earlier entry must not land
+  // in the container after a newer click.
+  let lexId = 0;
+  $: if (!useLocalLexicon && lexEl) renderLexicon(lexEl, token.t);
+  async function renderLexicon(el: HTMLElement, surface: string) {
+    const my = ++lexId;
+    try {
+      const lookup = await loadLookup();
+      if (my !== lexId) return;
+      // The surface form in Unicode — the widget resolves it through Morpheus
+      // and folds accents itself. It does NOT accept Beta Code, so never pass
+      // token.k or an analysis lemma, which are Beta Code in this corpus.
+      // lang:'grc' skips the Latin fetch outright on a Greek reader.
+      await lookup(surface, el, { lang: 'grc' });
+    } catch (e) {
+      // A failed module load is the only case the widget cannot report itself
+      // (it renders its own not-found and network-failure states).
+      if (my === lexId) el.textContent = 'Word data is not available here.';
+      console.error('[grammata] lookup failed', e);
+    }
+  }
+
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
   }
@@ -131,13 +184,20 @@
           {/if}
         </div>
       {/each}
-      {#if lsj.length > 0}
+      {#if useLocalLexicon}
+        {#if lsj.length > 0}
+          <div class="lsj-section">
+            <div class="lsj-label">LSJ</div>
+            {#each lsj as entry}
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html renderLsjEntry(entry.html, { base })}
+            {/each}
+          </div>
+        {/if}
+      {:else}
         <div class="lsj-section">
           <div class="lsj-label">LSJ</div>
-          {#each lsj as entry}
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html renderLsjEntry(entry.html, { base })}
-          {/each}
+          <div class="grammata-mount" bind:this={lexEl}></div>
         </div>
       {/if}
     {/if}

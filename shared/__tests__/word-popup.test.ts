@@ -24,7 +24,18 @@ vi.mock('../lib/data', async (importOriginal) => {
   };
 });
 
+// The site popup defers the dictionary to grammata over the network; the
+// packaged desktop app renders the bundled LSJ shards locally. WordPopup picks
+// its path from __TAURI_INTERNALS__ at init, so tests must say which one they
+// mean. Default to the local path: it is the one whose markup these tests
+// assert, and it keeps the suite off the network. The site-path test below
+// deletes the flag before rendering.
+beforeEach(() => {
+  (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ = {};
+});
+
 afterEach(() => {
+  delete (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
   vi.clearAllMocks();
 });
 
@@ -67,7 +78,7 @@ describe('WordPopup', () => {
   // The popup renders LSJ through the shared renderLsjEntry, so the sense
   // hierarchy has to survive into its DOM — it was stripped there too until
   // the sanitizer allowed the sense divs (2026-08-19).
-  it('renders an LSJ entry with its sense hierarchy intact', async () => {
+  it('renders an LSJ entry with its sense hierarchy intact (desktop, local shards)', async () => {
     vi.mocked(lookupWord).mockResolvedValueOnce({
       analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nom sg', lsj: ['logos'] }],
       lsj: [{
@@ -92,6 +103,30 @@ describe('WordPopup', () => {
     // the reader's own.
     expect(entry.querySelector('.lsj-outline')).toBeNull();
     expect(entry.querySelector('[id]')).toBeNull();
+  });
+
+  it('hands the dictionary to grammata on the site, rendering no local entry', async () => {
+    // The site path: no Tauri, so the popup mounts an empty container for the
+    // grammata widget to fill and renders none of the shard HTML itself.
+    delete (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
+    vi.mocked(lookupWord).mockResolvedValueOnce({
+      analyses: [{ lemma: 'logos', gloss: 'word, account', parse: 'noun nom sg', lsj: ['logos'] }],
+      lsj: [{
+        key: 'logos',
+        head: 'λόγος',
+        html: '<b class="lsj-head">λόγος</b>, computation',
+      }],
+    });
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
+    await screen.findByText('word, account');
+
+    // The mount point exists and the local entry does not — a regression here
+    // would silently show BOTH dictionaries, or neither.
+    expect(container.querySelector('.grammata-mount')).toBeTruthy();
+    expect(container.querySelector('.lsj-entry')).toBeNull();
+    // The reader's own analysis card stays: grammata replaces the dictionary
+    // entry, not the parse, gloss and corpus-frequency link around it.
+    expect(screen.getByText('noun nom sg')).toBeTruthy();
   });
 
   it('re-runs the lookup when the token changes (word-to-word jump)', async () => {
