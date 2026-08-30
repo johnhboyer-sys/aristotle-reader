@@ -329,12 +329,13 @@
   .parse-rows dt { color: var(--text-mid); }
   .parse-rows dd { margin: 0; color: var(--error); font-size: 0.9em; }
   /* Plain accent text, not a button — the whole card face is already the tap
-     target, so this only has to READ as the thing that opens the entry. Kept
-     at the popup's own size: it was 0.8rem, and shrunk type is the one thing
-     this reader cannot afford. */
+     target, so this only has to READ as the thing that opens the entry.
+     0.9rem: John's call, between the 0.8rem that was too quiet to notice and
+     the 1rem that shouted. The no-shrinking rule guards reading text — the
+     entry, the gloss, the Greek — not a control label. */
   .card-open-hint {
     display: inline-flex; align-items: baseline; gap: 0.4em; margin-top: 0.35rem;
-    font-family: var(--font-ui); font-size: 1rem; font-weight: 600; color: var(--accent);
+    font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; color: var(--accent);
   }
   .card-face:hover .card-open-hint { text-decoration: underline; }
   .card-arrow { display: inline-block; font-size: 0.75em; transition: transform .15s ease; }
