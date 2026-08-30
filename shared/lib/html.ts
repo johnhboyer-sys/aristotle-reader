@@ -457,11 +457,35 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
   // the headword, its gender, and whatever prose introduces the forms.
   // A form is a citation, OR a Greek phrase with a reference beside it — LSJ
   // uses both shapes in the same block.
+  // A headword's quantity mark is an .lsj-greek span with the entry's own
+  // references behind it, so it passed that test and opened the table on the
+  // lemma: ἀλήθεια put "ᾰλ], ἡ, Dor. ἀλάθεια" in a body, and ἀπατάω put "[ᾰπ]"
+  // where "impf. ἠπάτων" belonged. A quantity mark is notation, not a form,
+  // and its brackets say so in either of the two shapes LSJ writes them:
+  // inside the span ("[ᾰπ"), or around it ("[" + "ᾱγλᾰ-" + "]"). Length does
+  // NOT say so — ὕβρις marks quantity in forty characters, and ἦν is a form in
+  // two. Square brackets only: a parenthesis in the same position opens an
+  // etymology, and reading "(ἀ- priv., διδράσκω)" as notation costs entries
+  // like ἀδελφός their opening bracket. Both traps were measured in
+  // homer-reader before this was ported here.
+  const quantityMark = (seg: string, at: number): boolean => {
+    const open = seg.indexOf('>', at);
+    const close = open === -1 ? -1 : seg.indexOf('</span>', open);
+    if (close === -1) return false;
+    if (/^\[/.test(plainText(seg.slice(open + 1, close)).trim())) return true;
+    return /\[\s*$/.test(seg.slice(0, at).replace(/<[^>]*>/g, ''));
+  };
   const formAt = (seg: string): number => {
     const cit = seg.indexOf('<span class="lsj-cit">');
     if (cit !== -1) return cit;
-    const greek = seg.indexOf('<span class="lsj-greek');
-    if (greek !== -1 && seg.indexOf('class="lsj-bibl"', greek) !== -1) return greek;
+    for (
+      let greek = seg.indexOf('<span class="lsj-greek');
+      greek !== -1;
+      greek = seg.indexOf('<span class="lsj-greek', greek + 1)
+    ) {
+      if (quantityMark(seg, greek)) continue;
+      return seg.indexOf('class="lsj-bibl"', greek) !== -1 ? greek : -1;
+    }
     return -1;
   };
   const firstForm = segments.findIndex((seg) => formAt(seg) !== -1);

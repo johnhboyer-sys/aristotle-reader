@@ -503,3 +503,62 @@ describe('folding a forms block that has become the entry', () => {
     expect(renderLsjEntry(bulk(5), {})).not.toContain('lsj-forms-fold');
   });
 });
+
+describe('a headword quantity mark is not the first form', () => {
+  const rowsOf = (html: string) =>
+    [...html.matchAll(/class="lsj-form-label">([^<]*)<\/span><span class="lsj-form-body">([\s\S]*?)<\/span><\/div>/g)]
+      .map((m) => [m[1], m[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()]);
+
+  // LSJ writes the mark two ways and both used to open the table on the lemma.
+  // Ported from homer-reader 396e159f0; aristotle is upstream for this file, so
+  // leaving it unfixed here would revert the fix in homer and plato on the next
+  // patch-forward.
+  it('keeps the lemma out of the label when the bracket is outside the span', () => {
+    // ἀγλαός: "[" + <span class="lsj-greek">ᾱγλᾰ-</span> + "]". The row read
+    // label "ἀγλαός [" against body "ᾱγλᾰ-], ή, όν …" — the headword labelling
+    // its own quantity. There is no inflected form here at all.
+    const { html, rows } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">ἀγλαός</b> [<span class="lsj-greek">ᾱγλᾰ-</span>], ' +
+      '<span class="lsj-itype">ή</span>, <span class="lsj-itype">όν</span>, also ' +
+      '<span class="lsj-itype">ός</span>, <span class="lsj-itype">όν</span> ' +
+      '<span class="lsj-bibl"><span class="lsj-author">Thgn.</span> 985</span>:—'));
+    expect(rows).toBe(0);
+    expect(html).not.toContain('lsj-form-label');
+    // and the sense separator survives, instead of being eaten as label padding
+    expect(html).toContain(':—');
+  });
+
+  it('opens the table on the first real form when the bracket is inside the span', () => {
+    // ἀπατάω: <span class="lsj-greek">[ᾰπ</span>. The mark was the body of row
+    // one; the table should start at "impf. ἠπάτων".
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">ἀπατάω</b> <span class="lsj-greek">[ᾰπ</span>], late ' +
+      '<span class="lsj-gramGrp"><span class="lsj-gram">Ion.</span></span> ' +
+      '<b class="lsj-orth">ἀπατ-έω</b> <span class="lsj-bibl">Luc. Syr.D. 27</span>: ' +
+      '<span class="lsj-tns">impf.</span> <span class="lsj-cit"><span class="lsj-quote">ἠπάτων</span> ' +
+      '<span class="lsj-bibl">E. El. 938</span></span>'));
+    const rows = rowsOf(html);
+    expect(rows[0][0]).toBe('impf.');
+    expect(rows[0][1]).toContain('ἠπάτων');
+    expect(rows.some(([, body]) => body.startsWith('[ᾰπ'))).toBe(false);
+  });
+
+  it('still reads a parenthesis as the etymology it is', () => {
+    // Ἀδράστεια's "(ἀ- priv., διδράσκω)" sits exactly where a quantity mark
+    // sits, and skipping it cost entries like ἀδελφός their opening bracket.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">Ἀδράστεια</b>, <span class="lsj-gen">ἡ</span>, ' +
+      '(<span class="lsj-greek">ἀ-</span> priv., <span class="lsj-greek">διδράσκω</span>) ' +
+      'title of Nemesis, <span class="lsj-bibl">A. Pr. 936</span>'));
+    expect(html).toContain('(');
+  });
+
+  it('still treats a short Greek form with a source as a form', () => {
+    // The mark is known by its brackets, not by being short: ἦν is two letters
+    // and is a form. No length test — ὕβρις marks quantity in forty characters.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">εἰμί</b>, <span class="lsj-tns">impf.</span> ' +
+      '<span class="lsj-greek">ἦν</span> <span class="lsj-bibl">Il. 1.1</span>'));
+    expect(rowsOf(html)[0][1]).toContain('ἦν');
+  });
+});
