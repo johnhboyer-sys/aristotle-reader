@@ -3,6 +3,7 @@
   import { fade } from 'svelte/transition';
   import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
   import { greekFold } from '../lib/search';
+  import { measureGreekTrack as measureTrack } from '../lib/greek-track';
   import { highlightPrefixMatches } from '../lib/text';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -265,24 +266,16 @@
     return () => fonts.removeEventListener('loadingdone', again);
   });
 
-  // Returns whether it had anything to measure, so the caller knows if the
-  // key was earned. A pass with no body (loading placeholder) or no lines
-  // (view-english hides the column) is not a measurement.
+  // Thin wrapper: the measurement itself lives in lib/greek-track so the
+  // sequencing defect it exists to prevent — measuring before the lines are
+  // rendered — can be tested without mounting a reader.
   function measureGreekTrack(): boolean {
-    const body = document.querySelector<HTMLElement>('.reader-body');
-    if (!body) return false;
-    const lines = body.querySelectorAll<HTMLElement>('.greek-line');
-    if (!lines.length) { greekTrack = 0; return false; }
-    body.classList.add('measuring-greek');
-    let max = 0;
-    for (const line of lines) {
-      const w = line.getBoundingClientRect().width;
-      if (w > max) max = w;
-    }
-    body.classList.remove('measuring-greek');
-    // Round up: a fractional track leaves a sub-pixel wrap on the widest line.
-    greekTrack = max > 0 ? Math.ceil(max) : 0;
-    return greekTrack > 0;
+    const measured = measureTrack(document.querySelector<HTMLElement>('.reader-body'));
+    // 0 means nothing was measurable, not a width. Publish it anyway so the
+    // var is dropped rather than pinning the column to a stale number, and
+    // report false so the caller knows the key was not earned.
+    greekTrack = measured;
+    return measured > 0;
   }
   let colScale = 1.0;
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
