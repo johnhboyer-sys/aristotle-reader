@@ -200,6 +200,56 @@
   let lhScale = 1.0;
   // Column-width scale: multiplies the layout's width caps (reader measure,
   // mono-view column measure) via --colw-scale; 1.0 = the stock layout.
+
+  // ── The shared Greek track ──────────────────────────────────────────────
+  // Every .seg-row is its own grid, so `grid-template-columns: max-content …`
+  // sizes the Greek column to THAT block's longest line. Blocks differ, so the
+  // English column — and the marginal Bekker numbers with it — starts at a
+  // different x on every block: 73px of drift across the first ten blocks of
+  // NE I alone, which reads as the numbers wandering down the page.
+  //
+  // One width for the whole work fixes it, and it is the same number the
+  // greek-only view wants: the widest Greek line there is, shared by every
+  // section, centred, so nothing wraps that needn't.
+  //
+  // Measured, not computed: the width depends on the face, its size, and which
+  // glyphs the work actually uses. Measure by letting the column take its
+  // natural width for one synchronous pass, then read the widest line back.
+  let greekTrack = 0;
+  // Re-measure whenever the number changes: a new book brings different lines,
+  // and the type scale changes their width. NOT on window resize — the natural
+  // width of a line does not depend on the viewport, only on the type.
+  // document.fonts.ready matters more than it looks: Cardo arrives after first
+  // paint, and a track measured in the fallback face is measurably narrow.
+  let trackKey = '';
+  $: if (typeof document !== 'undefined' && enrichedSegments) {
+    // `view` belongs in the key: in view-english the Greek column is display:none
+    // and every line measures 0, so the track has to be taken again when Greek
+    // comes back, or it stays at zero and the per-block fallback returns.
+    const key = `${work}/${bookNum}/${view}/${fsGreek}/${colScale}/${fsScale}`;
+    if (key !== trackKey) {
+      trackKey = key;
+      tick()
+        .then(() => document.fonts?.ready ?? Promise.resolve())
+        .then(() => measureGreekTrack());
+    }
+  }
+
+  function measureGreekTrack() {
+    const body = document.querySelector<HTMLElement>('.reader-body');
+    if (!body) return;
+    const lines = body.querySelectorAll<HTMLElement>('.greek-line');
+    if (!lines.length) { greekTrack = 0; return; }
+    body.classList.add('measuring-greek');
+    let max = 0;
+    for (const line of lines) {
+      const w = line.getBoundingClientRect().width;
+      if (w > max) max = w;
+    }
+    body.classList.remove('measuring-greek');
+    // Round up: a fractional track leaves a sub-pixel wrap on the widest line.
+    greekTrack = max > 0 ? Math.ceil(max) : 0;
+  }
   let colScale = 1.0;
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
   $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
@@ -1260,7 +1310,7 @@
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
     class:word-open={!!popup}
-    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale};--fs-scale:{fsScale}"
+    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale};--fs-scale:{fsScale}{greekTrack ? `;--greek-track:${greekTrack}px` : ''}"
     on:copy={handleCopy}>
     <div class="reader-controls">
       {#if liveChapter}

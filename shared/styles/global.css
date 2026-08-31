@@ -753,7 +753,23 @@ body {
 .reader-body.view-english .seg-row,
 .reader-body.view-greek .seg-row { grid-template-columns: 1fr; }
 .reader-body.view-english .english-col,
-.reader-body.view-greek .greek-col { max-width: calc(42rem * var(--colw-scale, 1)); margin: 0 auto; }
+/* Greek-only: every section shares ONE width — the widest Greek line in the
+   work — so section edges line up down the page and no line wraps that need
+   not. Falls back to the old fixed measure until the track has been measured,
+   and to the container on a narrow screen, where wrapping is the right answer.
+   A CSS-only version of this is impossible: `max-content` is per-element, so
+   each section would size to its own longest line, which is the defect. */
+.reader-body.view-greek .greek-col {
+  width: var(--greek-track, calc(42rem * var(--colw-scale, 1)));
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* One synchronous pass where the column takes its natural width, so the widest
+   line can be read back. Never painted: the class is added and removed inside
+   one frame. */
+.reader-body.measuring-greek .greek-col { width: max-content; max-width: none; }
+.reader-body.measuring-greek .line-text { white-space: nowrap; }
 
 /* Compare both: Greek | Rackham | Ross (or Rackham | Ross in English-only).
    A third translation column joins the seg-row grid. */
@@ -2682,7 +2698,10 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   html, body { background: #fff; }
   .reader-body { padding: 0; margin: 0; }
   .reader-body.view-english .english-col,
-  .reader-body.view-greek .greek-col { max-width: none; margin: 0; }
+  /* width:auto is load-bearing — the screen rule now sets an explicit width
+     from --greek-track, and print must take the page measure instead. Resetting
+     only max-width would pin the printed Greek column to the screen's track. */
+  .reader-body.view-greek .greek-col { width: auto; max-width: none; margin: 0; }
 
   /* Words are inert in print — strip interactive affordances, and drop the
      Ostwald footnote superscripts (click-to-open popups on screen, no print
