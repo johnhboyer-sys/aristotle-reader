@@ -221,12 +221,28 @@
   // width of a line does not depend on the viewport, only on the type.
   // document.fonts.ready matters more than it looks: Cardo arrives after first
   // paint, and a track measured in the fallback face is measurably narrow.
+  // The key carries the SEGMENT COUNT, which is what makes a cold load work.
+  // The desktop app mounts with bookData=null, so the first pass renders a
+  // loading placeholder with no .reader-body at all and measures nothing;
+  // without the count the key was already spent and the real segments were
+  // never measured. Whether the fetch beat document.fonts.ready then decided
+  // whether the track was ever taken — it read as "fixed" on a warm cache and
+  // "still broken" on a cold one.
+  //
+  // A count rather than retry-until-success: retrying re-enters this reactive
+  // block on every failure, and anywhere a rect is always 0 (any non-layout
+  // test environment) that is an unbounded microtask loop — it killed a vitest
+  // worker. Asking again only when the data actually changed cannot spin.
+  //
+  // colScale is deliberately absent: the column-width slider scales the caps
+  // around the Greek, never the natural width of a line, so including it
+  // forced a full-book relayout for a number that cannot have changed.
   let trackKey = '';
   $: if (typeof document !== 'undefined' && enrichedSegments) {
-    // `view` belongs in the key: in view-english the Greek column is display:none
-    // and every line measures 0, so the track has to be taken again when Greek
-    // comes back, or it stays at zero and the per-block fallback returns.
-    const key = `${work}/${bookNum}/${view}/${fsGreek}/${colScale}/${fsScale}`;
+    // `view` belongs in the key too: in view-english the Greek column is
+    // display:none and every line measures 0, so the track has to be taken
+    // again when Greek comes back, or the per-block fallback returns.
+    const key = `${work}/${bookNum}/${view}/${fsGreek}/${fsScale}/${enrichedSegments.length}`;
     if (key !== trackKey) {
       trackKey = key;
       tick()
@@ -235,11 +251,28 @@
     }
   }
 
-  function measureGreekTrack() {
+  // A face that registers after fonts.ready — Google Fonts can deliver the
+  // Greek unicode-range subset late — never fires ready again, so a track
+  // measured in the fallback face would stay narrow until the reader happened
+  // to change view or type size.
+  onMount(() => {
+    const fonts = document.fonts;
+    if (!fonts?.addEventListener) return;
+    // Just re-measure. The key is not touched: it already reflects the data
+    // and the type scale, and neither changed — only the face did.
+    const again = () => { measureGreekTrack(); };
+    fonts.addEventListener('loadingdone', again);
+    return () => fonts.removeEventListener('loadingdone', again);
+  });
+
+  // Returns whether it had anything to measure, so the caller knows if the
+  // key was earned. A pass with no body (loading placeholder) or no lines
+  // (view-english hides the column) is not a measurement.
+  function measureGreekTrack(): boolean {
     const body = document.querySelector<HTMLElement>('.reader-body');
-    if (!body) return;
+    if (!body) return false;
     const lines = body.querySelectorAll<HTMLElement>('.greek-line');
-    if (!lines.length) { greekTrack = 0; return; }
+    if (!lines.length) { greekTrack = 0; return false; }
     body.classList.add('measuring-greek');
     let max = 0;
     for (const line of lines) {
@@ -249,6 +282,7 @@
     body.classList.remove('measuring-greek');
     // Round up: a fractional track leaves a sub-pixel wrap on the widest line.
     greekTrack = max > 0 ? Math.ceil(max) : 0;
+    return greekTrack > 0;
   }
   let colScale = 1.0;
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);

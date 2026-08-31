@@ -752,7 +752,14 @@ body {
 .reader-body.view-greek .english-col { display: none; }
 .reader-body.view-english .seg-row,
 .reader-body.view-greek .seg-row { grid-template-columns: 1fr; }
-.reader-body.view-english .english-col,
+/* English-only keeps the plain measure it always had. It was grouped with the
+   greek-only rule below; splitting them matters now that that rule sets an
+   explicit width, which the English column must not inherit. */
+.reader-body.view-english .english-col {
+  max-width: calc(42rem * var(--colw-scale, 1));
+  margin: 0 auto;
+}
+
 /* Greek-only: every section shares ONE width — the widest Greek line in the
    work — so section edges line up down the page and no line wraps that need
    not. Falls back to the old fixed measure until the track has been measured,
@@ -768,7 +775,19 @@ body {
 /* One synchronous pass where the column takes its natural width, so the widest
    line can be read back. Never painted: the class is added and removed inside
    one frame. */
-.reader-body.measuring-greek .greek-col { width: max-content; max-width: none; }
+/* !important is correct here, not laziness. This rule exists for one
+   synchronous pass in which the column MUST take its natural width, and it has
+   to outrank every capping rule anywhere — desktop.css caps it at (0,6,0) with
+   `.dt-shell.dt-no-rails .reader-body.view-greek:not(.word-open) .greek-col`.
+   Out-counting that by stacking classes is arithmetic that silently breaks the
+   next time a cap gains a selector, and it did: a doubled class reached only
+   (0,5,0), so the re-measure was clamped by the PREVIOUS track. The width could
+   then never grow, and raising the type size wrapped 542 lines instead of
+   widening the column. */
+.reader-body.measuring-greek .greek-col {
+  width: max-content !important;
+  max-width: none !important;
+}
 .reader-body.measuring-greek .line-text { white-space: nowrap; }
 
 /* Compare both: Greek | Rackham | Ross (or Rackham | Ross in English-only).
