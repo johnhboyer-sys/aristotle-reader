@@ -544,17 +544,13 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
     // between two tags, so counting angle brackets called it depth 0 and the
     // cut still tore the span in half — 84 entries, ἄγω among them.
     let cut = -1;
-    let firstCut = -1;
     let open = 0;
     const tagRe = /<(\/?)([a-z][\w-]*)[^>]*>/gi;
     let mark: RegExpExecArray | null;
     let at = 0;
     const scan = (from: number, to: number) => {
       if (open !== 0) return;
-      for (let i = from; i < to; i += 1) if (lead[i] === ',') {
-        cut = i;
-        if (firstCut === -1) firstCut = i;
-      }
+      for (let i = from; i < to; i += 1) if (lead[i] === ',') cut = i;
     };
     while ((mark = tagRe.exec(lead))) {
       scan(at, mark.index);
@@ -564,23 +560,24 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
     }
     scan(at, lead.length);
     // A headword is never a form's label. Where the lead opens with the
-    // headword and a real grammatical label follows it, the 22-character
-    // threshold below never fires — "αἱρέω, impf." is only twelve — so the row
-    // read "αἱρέω, impf." against ᾕρεον. 495 entries did this.
+    // headword and a grammatical label ends it, the 22-character threshold
+    // below never fires — "αἱρέω, impf." is only twelve — so the row read
+    // "αἱρέω, impf." against ᾕρεον. 495 entries did this.
     //
-    // Only where what follows the headword IS grammatical vocabulary, all of
-    // it. LSJ writes plenty of leads that are prose — ἀναγκαίη is "Ep. and
-    // Ion, for ἀνάγκη", a cross-reference with no inflected form in it — and
-    // inventing a label there would be worse than leaving the headword where
-    // it is. 463 leads are of that kind and are deliberately untouched.
+    // The LAST clause is the form's label; everything before the last comma
+    // describes the lemma and goes up with the head. That holds whatever
+    // stands in between: a vocabulary run ("προσερέσθαι, aor. 2 inf., fut."),
+    // or the article and gender ("δεσμός, ὁ, pl." — requiring the whole run
+    // to be vocabulary left the headword in the label there for the article's
+    // sake).
     //
-    // Then the cut is the LAST comma, as below. A run with a comma in it —
-    // "προσερέσθαι, aor. 2 inf., fut. -ερήσομαι", "συλλογίζομαι, Med., aor."
-    // — describes the lemma before the comma and labels the form after it.
-    // The first comma would put "Med.," on a form it does not belong to.
+    // And only where that last clause IS grammatical vocabulary. LSJ writes
+    // plenty of leads that are prose — ἀναγκαίη ends "for", Ἀθήναια ends
+    // "older name of the" — and inventing a label there would be worse than
+    // leaving the headword where it is.
     const headFirst = /^\s*<b class="lsj-head">/.test(lead);
-    const afterFirst = firstCut === -1 ? '' : plainLabel(lead.slice(firstCut + 1));
-    if (headFirst && firstCut !== -1 && LABELISH.test(afterFirst)) {
+    const afterLast = cut === -1 ? '' : plainLabel(lead.slice(cut + 1));
+    if (headFirst && cut !== -1 && LABELISH.test(afterLast)) {
       head += lead.slice(0, cut + 1);
       tail[0] = lead.slice(cut + 1) + tail[0].slice(firstAt);
     } else if (cut !== -1 && plainLabel(lead).length > 22) {
