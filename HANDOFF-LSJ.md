@@ -87,9 +87,22 @@ the lemma.
 - **3 quantity-mark survivors**, all `lsj-cit` spans. κάτειμι is CORRECT as it
   stands (`[κάτε]ιτι` is an epigraphic restoration inside a real form) — do not
   extend the rule to citation spans. κέρας and θνῄσκω are genuine misses.
-- **749 entries** (homer's count) whose first label still opens with the
-  headword — from the 22-character lead-cut threshold, not `formAt`. τίθημι is
-  one; its mark is tagged `lsj-pron`, which `formAt` never reads. Untouched.
+- **949 entries in THIS corpus** (measured 2026-08-31; homer counts 749 in
+  theirs) whose first form-label still opens with the headword — `αἱρέω, impf.`
+  where the label should be `impf.`, `ἀληθεύω, fut.`, `ἀνάγω, fut.`. The cause
+  is the 22-character lead-cut threshold in `buildFormsBlock`, not `formAt`:
+  when the lead before the first citation is short, no cut happens and the
+  headword stays in the label. Confirmed by the length distribution — 810 of
+  the 949 sit in the 10–20 character buckets, just under the threshold.
+  τίθημι looks like this family but is not: its mark is tagged `lsj-pron`,
+  which `formAt` never reads.
+  **Not attempted, deliberately.** The likely fix is to cut whenever the lead
+  begins with the headword rather than on length — but `buildFormsBlock` has
+  produced unclosed spans twice at two different layers (90 entries, then 84),
+  and both today's forms-block fixes needed a cross-family review round to
+  land. Do this one with a review in hand and a full-corpus audit (unbalanced
+  tags, senses lost, non-whitespace character count) the way the quantity-mark
+  fix was done, not as a quick change.
 - **`buildFormsBlock` is NOT dead code.** It still runs on `/lemma/<slug>` and
   in the desktop app. An earlier claim that it was is corrected in PR #104.
 - **Question #2 — the entry inside the popup — is now BUILT**, not merely
