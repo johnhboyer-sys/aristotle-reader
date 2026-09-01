@@ -438,6 +438,12 @@ function splitOnSeparators(html: string): string[] {
   return parts.filter((part) => part.trim());
 }
 
+/** What a grammatical label looks like: an abbreviation ending in a period
+ *  ("impf.", "fut.", "Ep. impf."), or a person-and-number ("3 pl."). Prose does
+ *  not match, which is the point — it is the guard that stops the headword cut
+ *  from firing on a cross-reference. */
+const LABELISH = /^(?:[A-Za-z1-3][A-Za-z.\s/-]{0,14}\.|[1-3]\s?(?:sg|pl|dual)\.?)$/;
+
 function plainLabel(fragment: string): string {
   return plainText(fragment)
     .replace(/^[\s:;\u2014,.]+/, '')
@@ -508,13 +514,17 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
     // between two tags, so counting angle brackets called it depth 0 and the
     // cut still tore the span in half — 84 entries, ἄγω among them.
     let cut = -1;
+    let firstCut = -1;
     let open = 0;
     const tagRe = /<(\/?)([a-z][\w-]*)[^>]*>/gi;
     let mark: RegExpExecArray | null;
     let at = 0;
     const scan = (from: number, to: number) => {
       if (open !== 0) return;
-      for (let i = from; i < to; i += 1) if (lead[i] === ',') cut = i;
+      for (let i = from; i < to; i += 1) if (lead[i] === ',') {
+        cut = i;
+        if (firstCut === -1) firstCut = i;
+      }
     };
     while ((mark = tagRe.exec(lead))) {
       scan(at, mark.index);
@@ -523,7 +533,26 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
       at = mark.index + mark[0].length;
     }
     scan(at, lead.length);
-    if (cut !== -1 && plainLabel(lead).length > 22) {
+    // A headword is never a form's label. Where the lead opens with the
+    // headword and a real grammatical label follows it, the 22-character
+    // threshold below never fires — "αἱρέω, impf." is only twelve — so the row
+    // read "αἱρέω, impf." against ᾕρεον. 476 entries did this.
+    //
+    // The cut is the FIRST comma here, not the last: the headword and nothing
+    // else goes up. Using the last comma would give ἀναγκαίη's
+    // "ἡ, Ep. and Ion, for" the label "for".
+    //
+    // Only where what follows actually looks like a label. LSJ writes plenty
+    // of leads that are prose — ἀναγκαίη is "Ep. and Ion, for ἀνάγκη", a
+    // cross-reference with no inflected form in it — and inventing a label
+    // there would be worse than leaving the headword where it is. 473 leads
+    // are of that kind and are deliberately untouched.
+    const headFirst = /^\s*<b class="lsj-head">/.test(lead);
+    const afterFirst = firstCut === -1 ? '' : plainLabel(lead.slice(firstCut + 1));
+    if (headFirst && firstCut !== -1 && LABELISH.test(afterFirst)) {
+      head += lead.slice(0, firstCut + 1);
+      tail[0] = lead.slice(firstCut + 1) + tail[0].slice(firstAt);
+    } else if (cut !== -1 && plainLabel(lead).length > 22) {
       head += lead.slice(0, cut + 1);
       tail[0] = lead.slice(cut + 1) + tail[0].slice(firstAt);
     }

@@ -562,3 +562,51 @@ describe('a headword quantity mark is not the first form', () => {
     expect(rowsOf(html)[0][1]).toContain('ἦν');
   });
 });
+
+describe('the headword does not belong in a form label', () => {
+  const rowsOf = (html: string) =>
+    [...html.matchAll(/class="lsj-form-label">([^<]*)<\/span><span class="lsj-form-body">([\s\S]*?)<\/span><\/div>/g)]
+      .map((m) => [m[1].trim(), m[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()]);
+
+  it('cuts the headword out of the first label when a real label follows it', () => {
+    // αἱρέω: the lead "αἱρέω, impf." is under the 22-character threshold that
+    // decides whether to cut at all, so the headword stayed in the label and
+    // the first row read "αἱρέω, impf." against ᾕρεον. 476 entries did this.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">αἱρέω</b>, <span class="lsj-tns">impf.</span> ' +
+      '<span class="lsj-cit"><span class="lsj-quote">ᾕρεον</span> ' +
+      '<span class="lsj-bibl">Il. 24.579</span></span>: ' +
+      '<span class="lsj-tns">fut.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">αἱρήσω</span> <span class="lsj-bibl">Hdt. 1.1</span></span>'));
+    const rows = rowsOf(html);
+    expect(rows[0][0]).toBe('impf.');
+    expect(rows[0][1]).toContain('ᾕρεον');
+    // and the headword is still in the entry, above the table
+    expect(html).toContain('αἱρέω');
+    expect(rows.some(([label]) => label.includes('αἱρέω'))).toBe(false);
+  });
+
+  it('leaves prose alone rather than labelling a cross-reference', () => {
+    // ἀναγκαίη is "Ep. and Ion, for ἀνάγκη" — a cross-reference with no
+    // inflected form in it at all. What follows the headword is not a
+    // grammatical label, so the cut must not fire and invent one.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">ἀναγκαίη</b>, <span class="lsj-gen">ἡ</span>, ' +
+      'Ep. and Ion, for <span class="lsj-greek">ἀνάγκη</span>, ' +
+      '<span class="lsj-bibl">Il. 6.85</span>'));
+    const rows = rowsOf(html);
+    // whatever it does here, it must not claim "ἡ, Ep. and Ion, for" is a
+    // grammatical label sitting beside a form
+    if (rows.length) expect(rows[0][0]).not.toBe('ἡ, Ep. and Ion, for');
+  });
+
+  it('still cuts a long lead at its last comma', () => {
+    // The pre-existing >22-character path: λέγω's "tenses for signf. I and II,
+    // fut." keeps its introduction above and labels the row "fut." only.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">λέγω</b> (B), pick up, etc.: tenses for signf. I and II, ' +
+      '<span class="lsj-tns">fut.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">λέξω</span> <span class="lsj-bibl">Od. 24.224</span></span>'));
+    expect(rowsOf(html)[0][0]).toBe('fut.');
+  });
+});
