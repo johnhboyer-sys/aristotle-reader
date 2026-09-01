@@ -586,18 +586,26 @@ describe('the headword does not belong in a form label', () => {
     expect(rows.some(([label]) => label.includes('αἱρέω'))).toBe(false);
   });
 
-  it('leaves prose alone rather than labelling a cross-reference', () => {
-    // ἀναγκαίη is "Ep. and Ion, for ἀνάγκη" — a cross-reference with no
-    // inflected form in it at all. What follows the headword is not a
-    // grammatical label, so the cut must not fire and invent one.
+  it('leaves prose alone rather than inventing a label for it', () => {
+    // Ἀθήναια: "τά, older name of the Παναθήναια". The headword is followed by
+    // PROSE, not a grammatical label, so the new cut must decline and leave the
+    // old threshold to handle it — label "older name of the", not "τά, older
+    // name of the", which is what cutting at the first comma would produce.
+    //
+    // This shape is deliberate. The obvious real-world case, ἀναγκαίη
+    // ("Ep. and Ion, for ἀνάγκη"), carries no lsj-cit at all — its form is
+    // lsj-greek + lsj-bibl — so `firstAt` is -1 and the whole lead-cut block
+    // is skipped. A test built on it passed with the fix disabled AND with
+    // LABELISH loosened to match anything: it never reached the code it
+    // claimed to guard. Codex caught that. This one enters the block.
     const { html } = buildFormsBlock(sanitizeHtml(
-      '<b class="lsj-head">ἀναγκαίη</b>, <span class="lsj-gen">ἡ</span>, ' +
-      'Ep. and Ion, for <span class="lsj-greek">ἀνάγκη</span>, ' +
-      '<span class="lsj-bibl">Il. 6.85</span>'));
+      '<b class="lsj-head">Ἀθήναια</b>, <span class="lsj-gen">τά</span>, older name of the ' +
+      '<span class="lsj-cit"><span class="lsj-quote">Παναθήναια</span> ' +
+      '<span class="lsj-bibl">Th. 2.15</span></span>'));
     const rows = rowsOf(html);
-    // whatever it does here, it must not claim "ἡ, Ep. and Ion, for" is a
-    // grammatical label sitting beside a form
-    if (rows.length) expect(rows[0][0]).not.toBe('ἡ, Ep. and Ion, for');
+    expect(rows.length).toBe(1);
+    expect(rows[0][0]).toBe('older name of the');
+    expect(rows[0][0]).not.toContain('τά');
   });
 
   it('still cuts a long lead at its last comma', () => {
