@@ -533,7 +533,16 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
   // The first form's segment usually carries the sentence that introduces the
   // whole block ("tenses for signf. I and II, fut."). Only the last clause is
   // that form's label; the rest belongs above, with the headword.
-  const firstAt = tail[0].indexOf('<span class="lsj-cit">');
+  //
+  // formAt, not indexOf: a first form of the lsj-greek + lsj-bibl shape
+  // ("ἀπολείπω, aor. -έλιπον Il. 12.169") skipped this whole block, and its
+  // headword stayed in the label — 99 entries, the largest class after the
+  // article fix. The citation shape is remembered because the >22 length
+  // path below is FORBIDDEN for Greek-shaped forms: ἀναγκαίη's "ἡ, Ep. and
+  // Ion, for" is 29 characters of prose, and the length path would hand the
+  // row the label "for". Greek-shaped leads cut on vocabulary evidence only.
+  const firstAt = formAt(tail[0]);
+  const citFirst = tail[0].startsWith('<span class="lsj-cit">', firstAt);
   if (firstAt > 0) {
     const lead = tail[0].slice(0, firstAt);
     // The comma has to be OUTSIDE every tag. ἄγω's lead ends
@@ -580,7 +589,7 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
     if (headFirst && cut !== -1 && LABELISH.test(afterLast)) {
       head += lead.slice(0, cut + 1);
       tail[0] = lead.slice(cut + 1) + tail[0].slice(firstAt);
-    } else if (cut !== -1 && plainLabel(lead).length > 22) {
+    } else if (citFirst && cut !== -1 && plainLabel(lead).length > 22) {
       head += lead.slice(0, cut + 1);
       tail[0] = lead.slice(cut + 1) + tail[0].slice(firstAt);
     }
