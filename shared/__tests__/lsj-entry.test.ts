@@ -633,6 +633,60 @@ describe('the headword does not belong in a form label', () => {
     expect(rowsOf(entry('<b class="lsj-head">ἄγνυμι</b>, 3 dual'))[0][0]).toBe('3 dual');
   });
 
+  it('sends an article or gender up with the head, not into the label', () => {
+    // δεσμός, ὁ, pl. δεσμά: the gender sits between the headword and the
+    // label, so requiring the WHOLE run after the first comma to be
+    // vocabulary left the headword in the label — "δεσμός, ὁ, pl." against
+    // δεσμά. Only the last clause is the form's label; everything before it
+    // describes the lemma. About nine entries; Grok found them.
+    expect(rowsOf(entry('<b class="lsj-head">δεσμός</b>, <span class="lsj-gen">ὁ</span>, pl.'))[0][0])
+      .toBe('pl.');
+    // ἀριστεύς, έως, ὁ, dual: ending, then gender, then the label
+    expect(rowsOf(entry('<b class="lsj-head">ἀριστεύς</b>, έως, <span class="lsj-gen">ὁ</span>, dual'))[0][0])
+      .toBe('dual');
+    // and prose still declines, wherever the run ends: ἀναγκαίη's last clause
+    // is "for", Ἀθήναια's is "older name of the" — neither is vocabulary.
+    // The lead here must stay under 22 characters: past that, the OLD
+    // last-comma path cuts regardless of vocabulary (it always has — that is
+    // the deferred 228-lead class), and this test is about the new branch.
+    const anank = rowsOf(entry('<b class="lsj-head">ἀναγκαίη</b>, for'));
+    expect(anank[0][0]).not.toBe('for');
+    expect(anank[0][0]).toContain('ἀναγκαίη');
+  });
+
+  it('cuts the lead when the first form is Greek-with-reference, too', () => {
+    // ἀπολείπω, aor. -έλιπον: the form is lsj-greek + lsj-bibl, no lsj-cit,
+    // and the lead cut only ran for citation-shaped forms — so the row read
+    // "ἀπολείπω, aor." against -έλιπον. 99 entries: the largest class left
+    // after the article fix.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">ἀπολείπω</b>, <span class="lsj-tns">aor.</span> ' +
+      '<span class="lsj-greek">-έλιπον</span> <span class="lsj-bibl">Il. 12.169</span>: ' +
+      '<span class="lsj-tns">fut.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">-λείψω</span> <span class="lsj-bibl">Od. 1.1</span></span>'));
+    const rows = rowsOf(html);
+    expect(rows[0][0]).toBe('aor.');
+    expect(rows[0][1]).toContain('-έλιπον');
+    expect(rows.some(([label]) => label.includes('ἀπολείπω'))).toBe(false);
+  });
+
+  it('never gives a Greek-shaped cross-reference a label by length', () => {
+    // ἀναγκαίη, ἡ, Ep. and Ion, for ἀνάγκη — the real entry, at last in a
+    // shape that REACHES the code (its form is lsj-greek + lsj-bibl, so the
+    // old firstAt was -1 and every earlier ἀναγκαίη test tested nothing;
+    // Codex caught that). The lead is 29 characters, past the >22 threshold,
+    // so the length path would cut at the last comma and label the row "for".
+    // For Greek-shaped forms ONLY the vocabulary branch may cut.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">ἀναγκαίη</b>, <span class="lsj-gen">ἡ</span>, Ep. and Ion, for ' +
+      '<span class="lsj-greek">ἀνάγκη,</span> <span class="lsj-bibl">Il. 6.85</span>'));
+    const rows = rowsOf(html);
+    if (rows.length) {
+      expect(rows[0][0]).not.toBe('for');
+      expect(rows[0][0]).toContain('ἀναγκαίη');
+    }
+  });
+
   it('gives the form only the last clause of a comma-separated run', () => {
     // προσερέσθαι, aor. 2 inf., fut. -ερήσομαι: "aor. 2 inf." describes the
     // lemma, "fut." labels the form. Cutting at the first comma would label
