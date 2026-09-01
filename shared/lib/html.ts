@@ -496,9 +496,24 @@ export function buildFormsBlock(preamble: string): { html: string; rows: number 
     if (/^\[/.test(plainText(seg.slice(open + 1, close)).trim())) return true;
     return /\[\s*$/.test(seg.slice(0, at).replace(/<[^>]*>/g, ''));
   };
+  // A clause LSJ opens with "cf." is a comparison, not a row of the paradigm:
+  // ἱδρόω's "[ῐ by nature, cf. ἀφῐδρωσον Com.Adesp. 3 D.]" sits inside the
+  // quantity aside, and taking that citation for the first form labelled the
+  // row "cf." and pushed the real first form, fut. -ώσω, to the second row.
+  // Six entries open their table that way, and in each the citation after
+  // "cf." is a compound (ἐπάμερος under ἡμέρα), a phrase (ξυμφορὴ γίνεται δ.
+  // under διδάσκαλος), or another verb's form (ἀμέλησον under ἀμέλει); eight
+  // more carry a "cf." row further down the table.
+  //
+  // The whole SEGMENT declines, not just the one citation. Skipping the
+  // citation alone let the same segment's spelling variant (βοηθέω) or the
+  // next compared item in the list (ἡμέρα's αὐθημερόν) be taken for the form
+  // instead, and opened two entries on an empty head.
+  const compared = (seg: string, at: number): boolean =>
+    /\bcf\.\s*$/.test(plainText(seg.slice(0, at)));
   const formAt = (seg: string): number => {
     const cit = seg.indexOf('<span class="lsj-cit">');
-    if (cit !== -1) return cit;
+    if (cit !== -1) return compared(seg, cit) ? -1 : cit;
     for (
       let greek = seg.indexOf('<span class="lsj-greek');
       greek !== -1;

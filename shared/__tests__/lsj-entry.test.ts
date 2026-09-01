@@ -646,19 +646,38 @@ describe('the headword does not belong in a form label', () => {
   });
 
   it('does not take a prose abbreviation for a label', () => {
-    // "cf." is short, ASCII and ends in a period, and it is not a grammatical
-    // label. The cut must decline and leave the headword where it was.
-    //
-    // This tests the GUARD, on a lead short enough that only the guard can
-    // cut. It is not the corpus entry: ἱδρόω's real lead is "[ῐ by nature,
-    // cf." — 23 characters, with the citation inside a quantity aside — so the
-    // older >22-character path cuts it at the last comma and still labels
-    // the row "cf.". That is the quantity-aside defect, not this one; Grok
-    // measured 228 of 386 old-path leads with a non-vocabulary last clause,
-    // so gating that path on the vocabulary is a separate, audited change.
-    const rows = rowsOf(entry('<b class="lsj-head">ἱδρόω</b>, cf.'));
-    expect(rows[0][0]).not.toBe('cf.');
-    expect(rows[0][0]).toContain('ἱδρόω');
+    // "esp." is short, ASCII and ends in a period, and it is not a grammatical
+    // label. The first LABELISH accepted any such shape — it took "cf." for a
+    // label — and this is the guard against that: a lead short enough that
+    // only the vocabulary branch can cut, so the cut must decline and leave
+    // the headword where it was. ("cf." itself no longer reaches here: a
+    // citation after "cf." is not a form at all, see the ἱδρόω test below.)
+    const rows = rowsOf(entry('<b class="lsj-head">ἄγαλμα</b>, esp.'));
+    expect(rows[0][0]).not.toBe('esp.');
+    expect(rows[0][0]).toContain('ἄγαλμα');
+  });
+
+  it('does not open the table on a citation LSJ introduces with "cf."', () => {
+    // ἱδρόω: "[ῐ by nature, cf. ἀφῐδρωσον Com.Adesp. 3 D.], v. sub fin.: fut.
+    // -ώσω". The first citation is a comparison inside the quantity aside, not
+    // a form of ἱδρόω at all; the first form is the future one segment later.
+    // Taking the comparison for a form labelled the row "cf." — Grok's finding
+    // on eca29f00b. A citation after "cf." is never a form: six entries in the
+    // corpus, and in each the citation is a compound, a phrase, or another
+    // verb's form.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">ἱδρόω</b> [<span class="lsj-pron">ῐ</span> by nature, cf. ' +
+      '<span class="lsj-cit"><span class="lsj-quote">ἀφῐδρωσον</span> ' +
+      '<i class="lsj-title">Com.Adesp.</i> 3</span> D.], v. sub fin.: ' +
+      '<span class="lsj-tns">fut.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">-ώσω</span> <span class="lsj-bibl">Il. 2.388</span></span>: ' +
+      '<span class="lsj-tns">aor.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">ἵδρωσα</span> <span class="lsj-bibl">4.27</span></span>'));
+    const rows = rowsOf(html);
+    expect(rows.map(([label]) => label)).toEqual(['fut.', 'aor.']);
+    expect(rows[0][1]).toContain('-ώσω');
+    // the comparison stays above the table, with the headword
+    expect(html.indexOf('ἀφῐδρωσον')).toBeLessThan(html.indexOf('lsj-form-label'));
   });
 
   it('still cuts a long lead at its last comma', () => {
