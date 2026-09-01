@@ -7,7 +7,18 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
-## Latest deploy — 2026-09-01 (one shared Greek track; the headword and "cf." out of form labels)
+## Latest deploy — 2026-09-01 evening (125 more LSJ labels freed of their headword)
+
+- **gh-pages:** `22e9578e` → `103ce1df`
+- **Source:** `origin/main` `e194646040` (PR #107, two commits)
+- **What shipped:** stages 1–2 of the headword-in-label repair, 463 → 338. The vocabulary guard tests only the LAST comma-clause of the lead — the part that becomes the label — so the article and gender go up with the head ("δεσμός, ὁ, pl." labels the row `pl.`, 26 entries). And `firstAt` is `formAt`'s answer, so leads whose first form is `lsj-greek + lsj-bibl` reach the cut at all ("ἀπολείπω, aor. -έλιπον", 99 entries) — with the >22 length path FORBIDDEN for that shape, or ἀναγκαίη's 29-character prose lead would be labelled "for". That trap now has a test that reaches the code.
+- **Build:** app-only, Node 22.23.1, `bonitz.astro` aside under a trap. 6,609 pages. Built from the branch tree after checking `origin/main` unmoved.
+- **Gates:** link integrity **0 broken** (6,612 / 570,808 / 449,187 — identical). Leak-check at baseline (Rackham 2 known-benign; positive control "Aristotle" 1,626). Tests: shared 268. Corpus audit: exactly 125 entries change, every new first label a suffix of the old and grammatical vocabulary; non-whitespace characters identical; 0 unbalanced tags.
+- **Deploy diff:** 216 files — 214 M (97 content = exactly the changed entries with a lemma page, set-compared both ways, 0 either side; 117 pages that load the Reader bundle, rehashed because `html.ts` is bundled into it), 1 A / 1 D (the bundle pair). `global.css` unchanged. Both restore-before-commit paths restored.
+- **Reviewed cross-family:** Grok 4.6, SHIP, **zero findings** — it recounted the corpus independently (125 / 463→338 / characters identical), spot-rendered 26 entries against the printed LSJ text, proved `citFirst` holds on all 95,688 citation tags, confirmed the five prose controls untouched, and confirmed both new tests fail on the parent.
+- **Live-verified:** `/lemma/desmos/` opens `pl.`, `/lemma/achilleus/` opens `gen.`, `/lemma/haireo/` still `impf.`; new `Reader.DEnkf2zT.js` 200, old `Reader.DZMUvdM2.js` and `/bonitz/` 404. 80 s after push.
+
+## Previous deploy — 2026-09-01 (one shared Greek track; the headword and "cf." out of form labels)
 
 - **gh-pages:** `b2f3f9df` → `22e9578e`
 - **Source:** `origin/main` `56d36c3d1` (PR #106, nine commits)

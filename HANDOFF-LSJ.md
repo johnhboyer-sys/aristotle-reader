@@ -1,13 +1,13 @@
 # HANDOFF: LSJ presentation
 
-Rewritten: 2026-09-01 midday. This is the LSJ-track handoff for aristotle-reader.
+Rewritten: 2026-09-01 midday; §1/§5 updated 2026-09-01 evening. This is the LSJ-track handoff for aristotle-reader.
 Rewrite it (don't append) when this track advances. Do not create a bare
 `HANDOFF.md` — see CLAUDE.md.
 
 ## 1. What is live, as of 2026-09-01
 
-Deployed to gh-pages `22e9578e` from `origin/main 56d36c3d1` (PR #106). Full
-record in DEPLOY-STATUS.md; read that before any deploy.
+Deployed to gh-pages `103ce1df` from `origin/main e194646040` (PR #107, on top
+of #106). Full record in DEPLOY-STATUS.md; read that before any deploy.
 
 **The word popup's dictionary is served by grammata, not rendered here.** The
 site fetches entries from `https://grammata.pages.dev/t8/lookup.js`. One
@@ -105,24 +105,28 @@ headline).
 
 - **Plato and homer have none of the four forms-block repairs on main** (0
   `.lsj-forms` rules in both) and neither has the grammata popup. Aristotle is
-  upstream; port from `main` 56d36c3d1.
-- **463 entries still open their first label with the headword.** Measured
-  2026-09-01, all deliberately left. Sub-classes, with the cut each wants:
-  - **A Greek article, gender or ending before the label** — "ἅλως [ᾰ], ἡ,
-    gen.", "δεσμός, ὁ, pl.", "ἐρῆμος, ον, fem.", "ἀριστεύς, έως, ὁ, dual". About
-    nine; Grok found them. Wants an optional Greek token in front of the
-    vocabulary run, and then the last-comma cut already does the right thing.
-    "ἡ, Ep. and Ion, for" (ἀναγκαίη) must still fail on "and"/"for".
-  - **A homograph letter or quantity mark between headword and label** —
-    "ἄνω (A), imper." already works (the letter goes up with the head), but
-    "ἀριθμός [ᾰ], (" and "διαινέω, (" open a parenthesis and want nothing cut.
-  - **Cross-references with no form in them** — ἀναγκαίη, "Ep. and Ion, for
-    ἀνάγκη". Not a table; `formAt` builds one because it sees Greek beside a
-    citation. Wants to render as prose.
-  - **κάτειμι, "Dor. 3 sg. ["** — the bracket is a lacuna inside a real form,
-    `[κάτε]ιτι`. Grok suggests stripping brackets before the vocabulary test;
-    that would label the row "Dor. 3 sg. [" with the bracket still in it.
-    Correct as it stands until the form's own bracket is handled.
+  upstream; port from `main` e194646040.
+- **338 entries still open their first label with the headword** (was 463;
+  stages 1–2 on PR #107 fixed 125: the article class, and Greek-shaped first
+  forms whose last clause is vocabulary). What remains, measured 2026-09-01
+  evening:
+  - **Other prose after the headword, ~172** — descriptive leads ("ἅτε,
+    properly acc. pl. neut. of", "ἀγοράομαι-like prose with no vocabulary last
+    clause"). Mostly want nothing; some are wrong labels of the deferred
+    >22-path kind.
+  - **Parenthesis openers, 83** — "ἀριθμός [ᾰ], (", "ἀντιτίθημι (pres. part.".
+    Probably want NO table opened on a parenthetical; John's design call.
+  - **Cross-references with no form, 38** — ἀναγκαίη, "Ep. and Ion, for
+    ἀνάγκη"; "διπλός, ή, όν, poet. for". Want to render as prose, no table;
+    John's design call.
+  - **Quantity/bracket before the label, 23** — "ἀμβλύνω [ῡ], fut." (some of
+    these DID fix in stage 2 where the last clause is vocabulary); κάτειμι's
+    lacuna bracket stays correct as it stands.
+  - **Bare declension rows, 22 — NOT a defect.** "ἀτμίς" against "ίδος, ἡ":
+    LSJ's own line is headword, genitive, gender; the headword is that row's
+    natural key. Cutting would leave the row unlabeled. Leave them.
+  - The ἀναγκαίη >22 trap is now guarded by a test that REACHES the code
+    (Greek-shaped forms take only the vocabulary cut, never the length cut).
 - **The >22-character last-comma path is not vocabulary-gated.** 228 of its 386
   leads end in a clause that is not grammatical vocabulary ("but", "also",
   "heterocl. pl.", "impf. ἦγον, Ep. and Ion."). Gating it would change 228
