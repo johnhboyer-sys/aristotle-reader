@@ -1,6 +1,6 @@
 # HANDOFF: LSJ presentation
 
-Rewritten: 2026-08-30 evening. This is the LSJ-track handoff for aristotle-reader.
+Rewritten: 2026-08-30 evening; §5 updated 2026-08-31 night. This is the LSJ-track handoff for aristotle-reader.
 Rewrite it (don't append) when this track advances. Do not create a bare
 `HANDOFF.md` — see CLAUDE.md.
 
@@ -24,7 +24,7 @@ and homograph letter. The desktop app still reads the shards.
 
 **Two forms-block repairs are live**, both visible on `/lemma/<slug>` pages:
 the label-then-form line break, and quantity marks opening the forms table on
-the lemma.
+the lemma. A THIRD — the headword cut, §5 — is on a branch and NOT deployed.
 
 ## 2. The four rules the presentation follows (John's, ruled 2026-08-30)
 
@@ -87,9 +87,30 @@ the lemma.
 - **3 quantity-mark survivors**, all `lsj-cit` spans. κάτειμι is CORRECT as it
   stands (`[κάτε]ιτι` is an epigraphic restoration inside a real form) — do not
   extend the rule to citation spans. κέρας and θνῄσκω are genuine misses.
-- **749 entries** (homer's count) whose first label still opens with the
-  headword — from the 22-character lead-cut threshold, not `formAt`. τίθημι is
-  one; its mark is tagged `lsj-pron`, which `formAt` never reads. Untouched.
+- **The headword-in-first-label family: 467 of 949 FIXED, 482 remain.** On
+  branch `claude/reader-shared-greek-width` (PR #106), not deployed. `αἱρέω,
+  impf.` now labels the row `impf.`. Audited over all 14,047 entries: 949 → 482,
+  0 unbalanced tags, non-whitespace characters byte-identical at 761,822.
+  The cause was the 22-character lead-cut threshold in `buildFormsBlock`: a
+  short lead meant no cut, so the headword stayed in the label.
+  **The 482 that remain are a different problem and are deliberately left.**
+  Splitting the 949 by what follows the headword: 476 have a real grammatical
+  label behind it, 473 do not. ἀναγκαίη is `Ep. and Ion, for ἀνάγκη` — a
+  cross-reference with no inflected form in it, where cutting would invent a
+  grammatical label for prose. Others have a homograph letter or quantity mark
+  between the headword and a real label (`ἄνω (A), imper.`, `ἀριθμός [ᾰ], (`)
+  and want a different cut than this one. Do not loosen `LABELISH` to catch
+  them — the Ἀθήναια test exists to fail if you do.
+  Note for anyone testing here: ἀναγκαίη carries no `lsj-cit` at all (its form
+  is `lsj-greek` + `lsj-bibl`), so `firstAt` is -1 and the lead-cut block is
+  skipped entirely. A test built on it passes with the fix disabled AND with
+  the guard loosened — it never reaches the code. Codex caught that.
+- **A second Codex finding on that commit was never recovered.** Its run was
+  cancelled after looping 41 minutes retrying `npx vitest run`, which its
+  sandbox cannot execute (Vite cannot write `.vite-temp`). It reported "two
+  review issues"; one was the test gap above, the other is unknown rather than
+  dismissed. Session `01a05aef-bcb7-7603-939e-b483781f16ee` if it is worth
+  resuming.
 - **`buildFormsBlock` is NOT dead code.** It still runs on `/lemma/<slug>` and
   in the desktop app. An earlier claim that it was is corrected in PR #104.
 - **Question #2 — the entry inside the popup — is now BUILT**, not merely

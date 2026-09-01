@@ -3,6 +3,7 @@
   import { fade } from 'svelte/transition';
   import { fetchBook, parseBekker, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
   import { greekFold } from '../lib/search';
+  import { measureGreekTrack as measureTrack } from '../lib/greek-track';
   import { highlightPrefixMatches } from '../lib/text';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -200,6 +201,82 @@
   let lhScale = 1.0;
   // Column-width scale: multiplies the layout's width caps (reader measure,
   // mono-view column measure) via --colw-scale; 1.0 = the stock layout.
+
+  // ── The shared Greek track ──────────────────────────────────────────────
+  // Every .seg-row is its own grid, so `grid-template-columns: max-content …`
+  // sizes the Greek column to THAT block's longest line. Blocks differ, so the
+  // English column — and the marginal Bekker numbers with it — starts at a
+  // different x on every block: 73px of drift across the first ten blocks of
+  // NE I alone, which reads as the numbers wandering down the page.
+  //
+  // One width for the whole work fixes it, and it is the same number the
+  // greek-only view wants: the widest Greek line there is, shared by every
+  // section, centred, so nothing wraps that needn't.
+  //
+  // Measured, not computed: the width depends on the face, its size, and which
+  // glyphs the work actually uses. Measure by letting the column take its
+  // natural width for one synchronous pass, then read the widest line back.
+  let greekTrack = 0;
+  // Re-measure whenever the number changes: a new book brings different lines,
+  // and the type scale changes their width. NOT on window resize — the natural
+  // width of a line does not depend on the viewport, only on the type.
+  // document.fonts.ready matters more than it looks: Cardo arrives after first
+  // paint, and a track measured in the fallback face is measurably narrow.
+  // The key carries the SEGMENT COUNT, which is what makes a cold load work.
+  // The desktop app mounts with bookData=null, so the first pass renders a
+  // loading placeholder with no .reader-body at all and measures nothing;
+  // without the count the key was already spent and the real segments were
+  // never measured. Whether the fetch beat document.fonts.ready then decided
+  // whether the track was ever taken — it read as "fixed" on a warm cache and
+  // "still broken" on a cold one.
+  //
+  // A count rather than retry-until-success: retrying re-enters this reactive
+  // block on every failure, and anywhere a rect is always 0 (any non-layout
+  // test environment) that is an unbounded microtask loop — it killed a vitest
+  // worker. Asking again only when the data actually changed cannot spin.
+  //
+  // colScale is deliberately absent: the column-width slider scales the caps
+  // around the Greek, never the natural width of a line, so including it
+  // forced a full-book relayout for a number that cannot have changed.
+  let trackKey = '';
+  $: if (typeof document !== 'undefined' && enrichedSegments) {
+    // `view` belongs in the key too: in view-english the Greek column is
+    // display:none and every line measures 0, so the track has to be taken
+    // again when Greek comes back, or the per-block fallback returns.
+    const key = `${work}/${bookNum}/${view}/${fsGreek}/${fsScale}/${enrichedSegments.length}`;
+    if (key !== trackKey) {
+      trackKey = key;
+      tick()
+        .then(() => document.fonts?.ready ?? Promise.resolve())
+        .then(() => measureGreekTrack());
+    }
+  }
+
+  // A face that registers after fonts.ready — Google Fonts can deliver the
+  // Greek unicode-range subset late — never fires ready again, so a track
+  // measured in the fallback face would stay narrow until the reader happened
+  // to change view or type size.
+  onMount(() => {
+    const fonts = document.fonts;
+    if (!fonts?.addEventListener) return;
+    // Just re-measure. The key is not touched: it already reflects the data
+    // and the type scale, and neither changed — only the face did.
+    const again = () => { measureGreekTrack(); };
+    fonts.addEventListener('loadingdone', again);
+    return () => fonts.removeEventListener('loadingdone', again);
+  });
+
+  // Thin wrapper: the measurement itself lives in lib/greek-track so the
+  // sequencing defect it exists to prevent — measuring before the lines are
+  // rendered — can be tested without mounting a reader.
+  function measureGreekTrack(): boolean {
+    const measured = measureTrack(document.querySelector<HTMLElement>('.reader-body'));
+    // 0 means nothing was measurable, not a width. Publish it anyway so the
+    // var is dropped rather than pinning the column to a stale number, and
+    // report false so the caller knows the key was not earned.
+    greekTrack = measured;
+    return measured > 0;
+  }
   let colScale = 1.0;
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
   $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
@@ -1260,7 +1337,7 @@
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
     class:word-open={!!popup}
-    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale};--fs-scale:{fsScale}"
+    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale};--fs-scale:{fsScale}{greekTrack ? `;--greek-track:${greekTrack}px` : ''}"
     on:copy={handleCopy}>
     <div class="reader-controls">
       {#if liveChapter}

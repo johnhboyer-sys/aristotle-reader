@@ -562,3 +562,131 @@ describe('a headword quantity mark is not the first form', () => {
     expect(rowsOf(html)[0][1]).toContain('ἦν');
   });
 });
+
+describe('the headword does not belong in a form label', () => {
+  const rowsOf = (html: string) =>
+    [...html.matchAll(/class="lsj-form-label">([^<]*)<\/span><span class="lsj-form-body">([\s\S]*?)<\/span><\/div>/g)]
+      .map((m) => [m[1].trim(), m[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()]);
+
+  it('cuts the headword out of the first label when a real label follows it', () => {
+    // αἱρέω: the lead "αἱρέω, impf." is under the 22-character threshold that
+    // decides whether to cut at all, so the headword stayed in the label and
+    // the first row read "αἱρέω, impf." against ᾕρεον. 476 entries did this.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">αἱρέω</b>, <span class="lsj-tns">impf.</span> ' +
+      '<span class="lsj-cit"><span class="lsj-quote">ᾕρεον</span> ' +
+      '<span class="lsj-bibl">Il. 24.579</span></span>: ' +
+      '<span class="lsj-tns">fut.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">αἱρήσω</span> <span class="lsj-bibl">Hdt. 1.1</span></span>'));
+    const rows = rowsOf(html);
+    expect(rows[0][0]).toBe('impf.');
+    expect(rows[0][1]).toContain('ᾕρεον');
+    // and the headword is still in the entry, above the table
+    expect(html).toContain('αἱρέω');
+    expect(rows.some(([label]) => label.includes('αἱρέω'))).toBe(false);
+  });
+
+  it('leaves prose alone rather than inventing a label for it', () => {
+    // Ἀθήναια: "τά, older name of the Παναθήναια". The headword is followed by
+    // PROSE, not a grammatical label, so the new cut must decline and leave the
+    // old threshold to handle it — label "older name of the", not "τά, older
+    // name of the", which is what cutting at the first comma would produce.
+    //
+    // This shape is deliberate. The obvious real-world case, ἀναγκαίη
+    // ("Ep. and Ion, for ἀνάγκη"), carries no lsj-cit at all — its form is
+    // lsj-greek + lsj-bibl — so `firstAt` is -1 and the whole lead-cut block
+    // is skipped. A test built on it passed with the fix disabled AND with
+    // LABELISH loosened to match anything: it never reached the code it
+    // claimed to guard. Codex caught that. This one enters the block.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">Ἀθήναια</b>, <span class="lsj-gen">τά</span>, older name of the ' +
+      '<span class="lsj-cit"><span class="lsj-quote">Παναθήναια</span> ' +
+      '<span class="lsj-bibl">Th. 2.15</span></span>'));
+    const rows = rowsOf(html);
+    expect(rows.length).toBe(1);
+    expect(rows[0][0]).toBe('older name of the');
+    expect(rows[0][0]).not.toContain('τά');
+  });
+
+  // Codex's second finding on c0ed62325, recovered from its session log after
+  // the run was cancelled: LABELISH tested the SHAPE of a label — short ASCII
+  // ending in a period — not its vocabulary. So it accepted "cf.", which is
+  // prose, and rejected "aor. 1", "impf. 3 sg." and "Pass., fut.", which are
+  // labels. 19 entries in the corpus carried the second fault.
+  const entry = (lead: string) => buildFormsBlock(sanitizeHtml(
+    lead + ' <span class="lsj-cit"><span class="lsj-quote">ἔτυχον</span> ' +
+    '<span class="lsj-bibl">Il. 1.1</span></span>: <span class="lsj-tns">fut.</span> ' +
+    '<span class="lsj-cit"><span class="lsj-quote">τεύξομαι</span> ' +
+    '<span class="lsj-bibl">Od. 1.1</span></span>')).html;
+
+  it('knows a label by its vocabulary, not its shape', () => {
+    // ἐκνήχομαι, aor. 1 — the aorist class number is part of the label
+    expect(rowsOf(entry('<b class="lsj-head">ἐκνήχομαι</b>, <span class="lsj-tns">aor.</span> 1'))[0][0])
+      .toBe('aor. 1');
+    // ἀρκέω, impf. 3 sg. — tense then person-and-number
+    expect(rowsOf(entry('<b class="lsj-head">ἀρκέω</b>, <span class="lsj-tns">impf.</span> 3 sg.'))[0][0])
+      .toBe('impf. 3 sg.');
+    // δράω (A), Aeol. 3 pl. — homograph letter stays with the head
+    const rows = rowsOf(entry('<b class="lsj-head">δράω</b> (A), <span class="lsj-gram">Aeol.</span> 3 pl.'));
+    expect(rows[0][0]).toBe('Aeol. 3 pl.');
+    // ἄγνυμι, 3 dual — no abbreviation at all, and still a label
+    expect(rowsOf(entry('<b class="lsj-head">ἄγνυμι</b>, 3 dual'))[0][0]).toBe('3 dual');
+  });
+
+  it('gives the form only the last clause of a comma-separated run', () => {
+    // προσερέσθαι, aor. 2 inf., fut. -ερήσομαι: "aor. 2 inf." describes the
+    // lemma, "fut." labels the form. Cutting at the first comma would label
+    // the future "aor. 2 inf., fut."; the old >22-character path already got
+    // this right by cutting at the last, and the vocabulary guard must not
+    // undo it. συλλογίζομαι's "Med., aor." is the same shape.
+    const html = entry('<b class="lsj-head">προσερέσθαι</b>, <span class="lsj-tns">aor.</span> 2 ' +
+      '<span class="lsj-mood">inf.</span>, <span class="lsj-tns">fut.</span>');
+    expect(rowsOf(html)[0][0]).toBe('fut.');
+    expect(html.indexOf('inf.')).toBeLessThan(html.indexOf('lsj-form-label'));
+  });
+
+  it('does not take a prose abbreviation for a label', () => {
+    // "esp." is short, ASCII and ends in a period, and it is not a grammatical
+    // label. The first LABELISH accepted any such shape — it took "cf." for a
+    // label — and this is the guard against that: a lead short enough that
+    // only the vocabulary branch can cut, so the cut must decline and leave
+    // the headword where it was. ("cf." itself no longer reaches here: a
+    // citation after "cf." is not a form at all, see the ἱδρόω test below.)
+    const rows = rowsOf(entry('<b class="lsj-head">ἄγαλμα</b>, esp.'));
+    expect(rows[0][0]).not.toBe('esp.');
+    expect(rows[0][0]).toContain('ἄγαλμα');
+  });
+
+  it('does not open the table on a citation LSJ introduces with "cf."', () => {
+    // ἱδρόω: "[ῐ by nature, cf. ἀφῐδρωσον Com.Adesp. 3 D.], v. sub fin.: fut.
+    // -ώσω". The first citation is a comparison inside the quantity aside, not
+    // a form of ἱδρόω at all; the first form is the future one segment later.
+    // Taking the comparison for a form labelled the row "cf." — Grok's finding
+    // on eca29f00b. A citation after "cf." is never a form: six entries in the
+    // corpus, and in each the citation is a compound, a phrase, or another
+    // verb's form.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">ἱδρόω</b> [<span class="lsj-pron">ῐ</span> by nature, cf. ' +
+      '<span class="lsj-cit"><span class="lsj-quote">ἀφῐδρωσον</span> ' +
+      '<i class="lsj-title">Com.Adesp.</i> 3</span> D.], v. sub fin.: ' +
+      '<span class="lsj-tns">fut.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">-ώσω</span> <span class="lsj-bibl">Il. 2.388</span></span>: ' +
+      '<span class="lsj-tns">aor.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">ἵδρωσα</span> <span class="lsj-bibl">4.27</span></span>'));
+    const rows = rowsOf(html);
+    expect(rows.map(([label]) => label)).toEqual(['fut.', 'aor.']);
+    expect(rows[0][1]).toContain('-ώσω');
+    // the comparison stays above the table, with the headword
+    expect(html.indexOf('ἀφῐδρωσον')).toBeLessThan(html.indexOf('lsj-form-label'));
+  });
+
+  it('still cuts a long lead at its last comma', () => {
+    // The pre-existing >22-character path: λέγω's "tenses for signf. I and II,
+    // fut." keeps its introduction above and labels the row "fut." only.
+    const { html } = buildFormsBlock(sanitizeHtml(
+      '<b class="lsj-head">λέγω</b> (B), pick up, etc.: tenses for signf. I and II, ' +
+      '<span class="lsj-tns">fut.</span> <span class="lsj-cit">' +
+      '<span class="lsj-quote">λέξω</span> <span class="lsj-bibl">Od. 24.224</span></span>'));
+    expect(rowsOf(html)[0][0]).toBe('fut.');
+  });
+});

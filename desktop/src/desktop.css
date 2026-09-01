@@ -37,8 +37,14 @@ html, body { margin: 0; }
   .dt-shell.dt-no-rails .reader-body:not(.word-open) {
     max-width: min(calc(1200px * var(--colw-scale, 1) * var(--fs-scale, 1)), calc(100% - 1rem));
   }
+  /* One shared track, not per-block max-content. Each .seg-row is its own
+     grid, so max-content sized the Greek column to THAT block's longest line
+     and the English column started at a different x on every block — 73px of
+     drift across the first ten blocks of NE I, which reads as the marginal
+     Bekker numbers wandering. --greek-track is measured once per work and type
+     scale in Reader.svelte; max-content is the fallback until it lands. */
   .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare):not(.word-open) .seg-row {
-    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-columns: var(--greek-track, max-content) minmax(0, 1fr);
   }
   /* English matches the Greek column's width (the unwrapped Bekker lines
      run ~35rem at default type size) — the two columns read as equal
@@ -53,8 +59,12 @@ html, body { margin: 0; }
   .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare):not(.word-open) .english-col {
     max-width: calc(35rem * var(--colw-scale, 1) * var(--fs-scale, 1));
   }
+  /* max-content here sized each section to its OWN longest line, which is the
+     same per-block defect as the seg-row track and undid the shared width
+     global.css sets. The shared track already is the widest line in the work,
+     so this rule only has to stop capping it. */
   .dt-shell.dt-no-rails .reader-body.view-greek:not(.word-open) .greek-col {
-    max-width: max-content;
+    max-width: var(--greek-track, max-content);
   }
 
   /* The word sidebar (global.css .word-sidebar) is position:fixed — unlike
