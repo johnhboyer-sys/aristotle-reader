@@ -12,7 +12,6 @@ import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, workPath, workLanding, bookLabel, isBookless } from '@shared/lib/works';
-import { renderLsjEntry } from '../lib/html';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
 
@@ -43,26 +42,13 @@ const data: LemmaData = JSON.parse(
   readFileSync(`public/data/lemmata/${slug}.json`, 'utf-8'),
 );
 
-// The LSJ entry HTML (shared shards, keyed by the same LSJ key the concordance
-// attributed the lemma to). Read at build; absent for the rare lemma with no
-// dictionary entry.
-function lsjShardLetter(key: string): string {
-  for (const ch of key) { if (ch === '*') continue; if (/[a-z]/.test(ch)) return ch; }
-  return '_';
-}
-// Sanitized, base-prefixed, sense hierarchy intact, with the top-level senses
-// of a long entry lifted into a jump list above it — all of that lives in
-// shared/, so this page and the desktop lexicon and the sibling readers render
-// an LSJ entry identically. Empty string when the lemma has no shard entry.
-let lsjHtml = '';
-try {
-  const shard = JSON.parse(
-    readFileSync(`public/data/lsj/${lsjShardLetter(data.key)}.json`, 'utf-8'),
-  );
-  lsjHtml = renderLsjEntry(shard[data.key]?.html ?? '', {
-    base, scale: 'page', outline: true,
-  });
-} catch { /* no shard */ }
+// The LSJ entry is served by grammata's T8 lookup at runtime (John,
+// 2026-09-03: "replace those lsj entries on index with the lsj t8 from
+// grammata"), the same widget the reading pages' popup mounts. Until then this
+// page rendered the local shards through shared/lib/html.ts at build time, and
+// three classes of forms-block defect (HANDOFF-LSJ.md §5) lived only here. The
+// desktop app is offline-first and still renders the local shards. The LSJ key
+// is the same beta-code key the concordance attributed the lemma to.
 
 // Deep-link an instance back into the reader: scroll to the Bekker line and
 // highlight the Greek word (the same ?hlg=&loc= mechanism search uses).
@@ -318,11 +304,10 @@ const breadcrumb = Astro.site ? {
       ))}
     </ul>
 
-    {lsjHtml && (
+    {data.key && (
       <>
         <h2 class="lx-h">Dictionary (LSJ)</h2>
-        <!-- eslint-disable-next-line -->
-        <Fragment set:html={lsjHtml} />
+        <div class="grammata-mount" data-key={data.key} lang="grc">Loading the dictionary entry…</div>
       </>
     )}
 
@@ -339,3 +324,24 @@ const breadcrumb = Astro.site ? {
   </main>
 </body>
 </html>
+
+<script>
+  // Served by grammata (grammar-site's deploy), not rendered here — the same
+  // contract as shared/components/WordPopup.svelte: do not vendor, proxy, pin
+  // or cache-bust this URL (its deploys ARE the update mechanism) and do not
+  // style anything inside the container. With a key the word argument is
+  // ignored; lang:'grc' skips the Latin fetch.
+  const GRAMMATA_LOOKUP = 'https://grammata.pages.dev/t8/lookup.js';
+  const mount = document.querySelector<HTMLElement>('.grammata-mount');
+  const key = mount?.dataset.key;
+  if (mount && key) {
+    // @vite-ignore keeps the remote specifier out of the bundle graph.
+    import(/* @vite-ignore */ GRAMMATA_LOOKUP)
+      .then((m) => m.lookup('', mount, { lang: 'grc', key }))
+      .catch((e) => {
+        // A failed module load is the one case the widget cannot report itself.
+        mount.textContent = 'The dictionary entry is not available here.';
+        console.error('[grammata] lookup failed', e);
+      });
+  }
+</script>
