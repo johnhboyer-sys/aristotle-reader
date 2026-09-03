@@ -16,7 +16,6 @@ Live at **[johnhboyer-sys.github.io/aristotle-reader/](https://johnhboyer-sys.gi
 | Navigation | Books and chapters; deep-link to any Bekker location from search results; URL tracks scroll position |
 | Translation picker | Multiple public-domain English translations available for most works (e.g. Ross, Rackham, Jowett, Fyfe, Owen) |
 | Print / PDF | Browser print saves a clean bilingual PDF (landscape) or English-only portrait layout |
-| Bekker Index | Index Aristotelicus (Bonitz) reader (in progress) |
 
 ### Works covered (26 total)
 
@@ -177,7 +176,6 @@ aristotle-reader/
 │           ├── works.ts         # work registry + corpus categories
 │           ├── data.ts          # data-fetch helpers
 │           └── search.ts        # search engine (inverted index + phrase)
-├── bonitz/                      # Index Aristotelicus (Bonitz) pipeline (in progress)
 └── build/                       # generated, gitignored
     └── dist/{work}/             # ready-to-serve frontend data per work
 ```

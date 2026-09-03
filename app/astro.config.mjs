@@ -16,9 +16,7 @@ export default defineConfig({
   base: '/aristotle-reader',
   integrations: [
     svelte(),
-    // Exclude the work-in-progress Bonitz Index Aristotelicus page from the
-    // sitemap so it isn't advertised to search engines until it ships.
-    sitemap({ filter: (page) => !page.includes('/bonitz') }),
+    sitemap(),
   ],
   vite: {
     server: {
