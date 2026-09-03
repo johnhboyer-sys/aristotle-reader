@@ -77,9 +77,9 @@ headline).
 - `shared/components/WordPopup.svelte` — the cards, the grouping, the widget call.
 - `shared/lib/data.ts` — `fetchLsjHeads`, and `lookupWord(work, key, { withLsj })`.
   `withLsj` defaults **true**; only the website passes false.
-- `shared/lib/html.ts` — `renderLsjEntry` / `buildFormsBlock`. **Still live**:
-  the desktop app and the `/lemma/<slug>` pages (`LemmaPage.astro`, at build
-  time, through the re-export in `app/src/lib/html.ts`) both render through it.
+- `shared/lib/html.ts` — `renderLsjEntry` / `buildFormsBlock`. **Live only in
+  the desktop app** since 2026-09-03 (§0): the `/lemma/<slug>` pages mount
+  grammata's T8 entry and `app/src/lib/html.ts` re-exports the sanitizer alone.
   `LABELISH` (~L440) is the vocabulary guard; `formAt` / `compared` (~L480) is
   the "cf." rule; the lead cut is ~L555.
 - `shared/styles/global.css` — ALL popup styles.
