@@ -32,10 +32,10 @@ Committed on `claude/reader-wiring`, PR #94 open (wiring + siglum redesign + col
 
 ## 4. Traps
 
-- `cd pipeline && uv run --with pytest pytest` is required. From the worktree root, pytest collects `bonitz/` and misses the pipeline venv (`yaml` / `lxml`).
+- `cd pipeline && uv run --with pytest pytest` is required. From the worktree root, pytest misses the pipeline venv (`yaml` / `lxml`).
 - Shared tests: `cd shared && npm test`. Root `npm test` has no script. Do not use `vi.resetModules()` in Svelte 5 tests (`effect_orphan`).
 - App-only build does not emit `quotations.json`; copy `pipeline/data/quotations/Meta.json` to `build/dist/Meta/quotations.json` before `npm run build` in `app/`.
-- `/bonitz` still builds; keep it off live until the XSS fix. `data/reports` is still deleted by an app-only build.
+- `data/reports` is still deleted by an app-only build.
 - **Svelte component `<style>` blocks are dead in the built site.** Reader pages load only `global.css`; WordPopup's scoped rules (`.lemma-link` included) never ship. Styles for shared Svelte components go in `shared/styles/global.css` — the label styles were moved there after a browser pass caught the unstyled line (Claude fix on top of Grok's implementation).
 
 ## 5. Open Work

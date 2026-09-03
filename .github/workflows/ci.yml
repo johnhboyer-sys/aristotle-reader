@@ -98,8 +98,6 @@ jobs:
             exit "$code"
           fi
 
-      - name: Run Bonitz tests
-        run: cd bonitz && uv run --with pytest pytest tests
 
   workbench:
     name: workbench
