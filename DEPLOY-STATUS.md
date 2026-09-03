@@ -7,7 +7,18 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
-## Latest deploy — 2026-09-01 evening (125 more LSJ labels freed of their headword)
+## Latest deploy — 2026-09-03 (the /lemma pages mount grammata's T8 entry)
+
+- **gh-pages:** `103ce1df` → `5f358186`
+- **Source:** `origin/main` `52fad397b5` (PR #109, two commits; PR #108 — Bonitz out of this repo — merged earlier the same day and needed no deploy)
+- **What shipped:** `LemmaPage.astro` no longer renders the LSJ shards at build time. Each `/lemma/<slug>/` page carries `<div class="grammata-mount" data-key=…>` and a page script that imports `https://grammata.pages.dev/t8/lookup.js` and calls `lookup('', el, { lang: 'grc', key })` — the popup's contract (PR #105). John, shown the three residual forms-block classes on the live pages: "let's replace those lsj entries on index with the lsj t8 from grammata." The website renders no LSJ entry locally now; `shared/lib/html.ts` is live only in the desktop app.
+- **Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22.23.1), from `main` after the merge, `main == origin/main` checked. 6,609 pages in 18 s — the shard rendering was the two minutes. No `bonitz.astro` to move aside any more (PR #108).
+- **Gates:** link integrity **0 broken** (6,612 pages / 563,473 links / 437,237 anchors — down from 570,808 / 449,187 because the lemma pages no longer carry LSJ citation links and sense anchors; that is the change). Leak-check at baseline with the glob quoted: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/manifest.json`, `EN/footnotes.json`); positive control "Aristotle" 1,626. Tests: app security 5; the six PR checks green.
+- **Deploy diff:** 6,441 files, all `lemma/*/index.html` — every lemma with an LSJ key, and the one without is untouched. 0 A / 0 D after the two restore paths (`data/reports` 88 files, `data/Meta/quotations.json`) were restored; the dry-run staged exactly those and nothing else. One stray `data/.DS_Store` dropped before commit. No bundle or stylesheet changed (the page script is per-page, not in the Reader bundle). Spot diff `lemma/arithmos`: 2 lines out, 2 in.
+- **Reviewed cross-family:** Grok 4.6, SHIP, one minor (HANDOFF-LSJ §3 still described the build-time path; fixed on the branch before merge). It verified from the built HTML that Astro emitted one module script with the TypeScript stripped, that both failure paths reach the fallback text, that no CSP exists to block the import, and that title/JSON-LD never depended on the removed HTML.
+- **Live-verified (≈90 s after push):** `/lemma/arithmos/` `/lemma/zoion/` `/lemma/holos/` `/EN/book/1/` `/data/reports/quality_EN.json` `/data/Meta/quotations.json` all 200, `/bonitz/` 404. The live arithmos page carries the mount and the lookup URL and no `lsj-forms`; ζώϊον's "poet. for" label is gone. In a browser the live page renders the T8 entry (2,750 characters: headword, senses I–XIII, Logeion link), 0 local forms blocks.
+
+## Previous deploy — 2026-09-01 evening (125 more LSJ labels freed of their headword)
 
 - **gh-pages:** `22e9578e` → `103ce1df`
 - **Source:** `origin/main` `e194646040` (PR #107, two commits)

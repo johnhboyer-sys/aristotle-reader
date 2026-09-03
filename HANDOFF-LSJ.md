@@ -8,7 +8,8 @@ Rewrite it (don't append) when this track advances. Do not create a bare
 
 John, shown the three residual forms-block classes on the live `/lemma`
 pages: "let's replace those lsj entries on index with the lsj t8 from
-grammata." Done on branch `claude/lemma-pages-t8`: `LemmaPage.astro` no
+grammata." Merged as PR #109 (`main` `52fad397b5`) and deployed to gh-pages
+`5f358186` the same day (DEPLOY-STATUS.md). `LemmaPage.astro` no
 longer reads the LSJ shards at build time; it renders
 `<div class="grammata-mount" data-key=…>` and a page script imports
 `https://grammata.pages.dev/t8/lookup.js` and calls
