@@ -1,0 +1,106 @@
+{
+ "entries": [
+  {
+   "page": 110,
+   "col": "R",
+   "line": 19,
+   "word_off": 849,
+   "char_at": 44,
+   "readers": {
+    "opus": "διαιρέσεσιν-"
+   },
+   "kind": "punct",
+   "reason": "the line ends in a HYPHEN but the next line starts a new clause, τὸ γὰρ μέσον — nothing is being continued. LlamaParse reads an ano teleia: \"ἐν ταῖς διαιρέσεσιν· τὸ γὰρ μέσον μῖγμα ποιεῖ\". Across 107-117 this is the only hyphen followed by a new word that is not a Bekker span",
+   "forms": [
+    "διαιρέσεσιν·",
+    "διαιρέσεσιν-"
+   ],
+   "form_set": [
+    "διαιρέσεσιν·",
+    "διαιρέσεσιν-"
+   ],
+   "becomes": "διαιρέσεσιν·",
+   "proposal": {
+    "form": "διαιρέσεσιν·"
+   },
+   "card_sid": "punct:page-110-R:19:διαιρέσ"
+  },
+  {
+   "page": 115,
+   "col": "R",
+   "line": 52,
+   "word_off": 2431,
+   "char_at": 47,
+   "readers": {
+    "opus": "— Po--"
+   },
+   "kind": "punct",
+   "reason": "a DOUBLED hyphen at the measure. The whole settled corpus, 15-106, holds not one; this is the only one anywhere. LlamaParse reads \"— Politica citantur\", so the word divides normally",
+   "forms": [
+    "— Po-",
+    "— Po--"
+   ],
+   "form_set": [
+    "— Po-",
+    "— Po--"
+   ],
+   "becomes": "— Po-",
+   "proposal": {
+    "form": "— Po-"
+   },
+   "card_sid": "punct:page-115-R:52:— Po--"
+  },
+  {
+   "page": 117,
+   "col": "R",
+   "line": 9,
+   "word_off": 354,
+   "char_at": 0,
+   "readers": {
+    "opus": "τοϛ"
+   },
+   "kind": "smyth",
+   "reason": "STIGMA ϛ closing a word — it is the numeral 6 and has no place at the end of κατοικίσαντος. Line 8 ends \"κατοικίσαν-\", so the word is the genitive absolute Δρύοπος … κατοικίσαντος. The only other stigma-final words in the corpus are πκϛ twice, which are Problemata κ problem 6 and correct",
+   "forms": [
+    "τος",
+    "τοϛ"
+   ],
+   "form_set": [
+    "τος",
+    "τοϛ"
+   ],
+   "becomes": "τος",
+   "proposal": {
+    "form": "τος"
+   },
+   "card_sid": "smyth:page-117-R:9:τοϛ"
+  },
+  {
+   "page": 117,
+   "col": "R",
+   "line": 9,
+   "word_off": 357,
+   "char_at": 4,
+   "readers": {
+    "opus": "f 441 1550b1"
+   },
+   "kind": "corrigendum",
+   "reason": "no stop after the fragment number, where the SAME LINE prints \"f 442.\" with one and line 8 prints \"f 549.\" with one. But LlamaParse reads it without the stop too, so if the ink agrees this is Bonitz's own and KEEP AS PRINTED banks it as a corrigendum",
+   "forms": [
+    "f 441. 1550b1",
+    "f 441 1550b1"
+   ],
+   "form_set": [
+    "f 441. 1550b1",
+    "f 441 1550b1"
+   ],
+   "becomes": "f 441. 1550b1",
+   "proposal": {
+    "form": "f 441. 1550b1"
+   },
+   "card_sid": "corrigendum:page-117-R:9:f 441 1"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 4
+}

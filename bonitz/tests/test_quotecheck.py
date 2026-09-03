@@ -24,13 +24,17 @@ def index():
 
 def test_a_correct_citation_with_lemma_forms_scores(index):
     """μβ8. 367a21 — ἀμαυρός/ἀχλυώδης against ἀμαυρότερον/ἀχλυώδη."""
-    hits = [r for r in scan(49, 'R', index) if r['cite'].endswith('367a21')]
+    hits = [r for r in scan(49, 'R', index)
+            if 'skipped' not in r and r['cite'].endswith('367a21')]
     assert hits, 'the ἀμαυρός citation should be checkable'
     assert hits[0]['overlap'] > 0.0, 'lemma vs inflected form must still match'
 
 
 def test_verbatim_quotations_score_high(index):
-    best = max(scan(51, 'R', index), key=lambda r: r['overlap'])
+    # Latin-commentary spans come back marked 'skipped' and carry no
+    # 'overlap' on purpose — judged rows only here.
+    best = max((r for r in scan(51, 'R', index) if 'skipped' not in r),
+               key=lambda r: r['overlap'])
     assert best['overlap'] >= 0.9
 
 
@@ -42,7 +46,8 @@ def test_double_recension_columns_are_excluded(index):
 
 def test_signal_is_strong_across_the_reviewed_pages(index):
     """If this drops, the checker or the corpus has regressed."""
-    rows = [r for p in range(15, 52) for c in ('L', 'R') for r in scan(p, c, index)]
+    rows = [r for p in range(15, 52) for c in ('L', 'R') for r in scan(p, c, index)
+            if 'skipped' not in r]
     assert len(rows) > 1000
     strong = sum(1 for r in rows if r['overlap'] >= 0.5) / len(rows)
     zero = sum(1 for r in rows if r['overlap'] == 0) / len(rows)

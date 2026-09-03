@@ -1,0 +1,23 @@
+{
+ "latin2:page-110-R:22": {
+  "verdict": "accept",
+  "detail": "cf Zeller II, 1, 320",
+  "sites": [
+   "page-110-R:22:981"
+  ]
+ },
+ "latin2:page-110-R:57": {
+  "verdict": "accept",
+  "detail": "Zeller II, 2, 62",
+  "sites": [
+   "page-110-R:57:2550"
+  ]
+ },
+ "latin2:page-107-R:43": {
+  "verdict": "accept",
+  "detail": "Pseudo-Aristotelicos",
+  "sites": [
+   "page-107-R:43:1897"
+  ]
+ }
+}

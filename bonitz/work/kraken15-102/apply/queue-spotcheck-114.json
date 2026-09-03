@@ -1,0 +1,81 @@
+{
+ "entries": [
+  {
+   "page": 114,
+   "col": "L",
+   "line": 21,
+   "word_off": 901,
+   "char_at": 0,
+   "readers": {
+    "opus": "Zeller iudicat I,"
+   },
+   "kind": "spotcheck",
+   "reason": "a Roman numeral lost a stroke. Opus read the page cold and the ink shows II plainly. Nothing could have caught this: I and II are both valid, the citation resolves either way, and no rule we own knows which Zeller volume Bonitz meant",
+   "forms": [
+    "Zeller iudicat II,",
+    "Zeller iudicat I,"
+   ],
+   "form_set": [
+    "Zeller iudicat II,",
+    "Zeller iudicat I,"
+   ],
+   "becomes": "Zeller iudicat II,",
+   "proposal": {
+    "form": "Zeller iudicat II,"
+   },
+   "card_sid": "spotcheck:page-114-L:21"
+  },
+  {
+   "page": 114,
+   "col": "L",
+   "line": 23,
+   "word_off": 1019,
+   "char_at": 28,
+   "readers": {
+    "opus": "mentio ft."
+   },
+   "kind": "spotcheck",
+   "reason": "the fi LIGATURE read as ft, so the word lost its i. `ft` is not a Latin word, but it is all-Latin so script_mix cannot see it, and at two letters it falls under the hapax floor. Same class as θικȣ̀ς and (σπερ)",
+   "forms": [
+    "mentio fit.",
+    "mentio ft."
+   ],
+   "form_set": [
+    "mentio fit.",
+    "mentio ft."
+   ],
+   "becomes": "mentio fit.",
+   "proposal": {
+    "form": "mentio fit."
+   },
+   "card_sid": "spotcheck:page-114-L:23"
+  },
+  {
+   "page": 114,
+   "col": "L",
+   "line": 52,
+   "word_off": 2326,
+   "char_at": 27,
+   "readers": {
+    "opus": "Wz I, 528"
+   },
+   "kind": "spotcheck",
+   "reason": "the same lost stroke as line 21 — and the SAME LINE prints \"cf Zeller II, 2, 54\" with both strokes intact, which is why no consistency check fired",
+   "forms": [
+    "Wz II, 528",
+    "Wz I, 528"
+   ],
+   "form_set": [
+    "Wz II, 528",
+    "Wz I, 528"
+   ],
+   "becomes": "Wz II, 528",
+   "proposal": {
+    "form": "Wz II, 528"
+   },
+   "card_sid": "spotcheck:page-114-L:52"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 3
+}

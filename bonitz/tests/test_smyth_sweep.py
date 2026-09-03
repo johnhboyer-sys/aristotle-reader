@@ -128,11 +128,24 @@ def test_a_breathing_set_as_its_own_sort_still_counts():
     assert 'C1' not in ids('᾽Αμνέα')
 
 
-@pytest.mark.parametrize('word', ['ȣ̓δεὶς', 'ȣ́τω', 'ȣ̔́τω', 'τȣ͂', 'ϗ̀'])
-def test_the_ligatures_are_left_alone(word):
-    """`ȣ` carries an accent with no breathing as a matter of course, and
-    `syllables()` cannot count it, so the accent rules abstain."""
-    assert ids(word) == set()
+@pytest.mark.parametrize('word', ['ȣ̓δεὶς', 'ȣ̔́τω', 'τȣ͂', 'ϗ̀', 'ϗ'])
+def test_a_breathed_or_consonantal_ligature_word_is_clean(word):
+    """A breathed ȣ-word satisfies §9; ϗ abbreviates καί, consonant-initial,
+    so §9 is silent about it with or without its grave. The old form of this
+    test also blessed `ȣ́τω` — accent, no breathing — under the claim that the
+    book prints such forms as a matter of course. The corpus refuted that
+    28:1, John ruled all 192 bare sites on 2026-08-11, and the exemption this
+    test was protecting hid 167 reader-lost breathings. Tests are claims;
+    that one was wrong and is replaced, not appeased."""
+    assert 'C1' not in ids(word)
+
+
+@pytest.mark.parametrize('word', ['ȣ́τω', 'ȣ͂ς'])
+def test_an_accented_unbreathed_ligature_word_is_a_finding(word):
+    """The ten accent-without-breathing words are the last open ligature
+    class. C1 must SAY so — a rule that abstains on them is the fourth layer
+    of absence-rendered-as-clean, relaid."""
+    assert 'C1' in ids(word)
 
 
 @pytest.mark.parametrize('word', ['τε', 'γε', 'τις', 'τινες', 'ἐν', 'εἰς',

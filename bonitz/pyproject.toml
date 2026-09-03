@@ -8,6 +8,11 @@ dependencies = [
     # split_columns.py imports these at module top level (batch.py drives it).
     "Pillow>=10.0",
     "numpy>=1.24",
+    # kraken_corpus `verify` opens the compiled train.arrow and proves it holds
+    # the lines the column list names. It is ketos's own output format, so
+    # reading it is the only way to check the file training actually consumes
+    # rather than a record of what was meant to go into it.
+    "pyarrow>=14.0",
 ]
 
 [build-system]

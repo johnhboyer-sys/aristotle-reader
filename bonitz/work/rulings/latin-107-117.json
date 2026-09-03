@@ -1,0 +1,121 @@
+{
+ "line:page-109-L:61": {
+  "verdict": "accept",
+  "detail": "missus suo significatur nomine, addita littera n distinguemus.",
+  "sites": [
+   "page-109-L:61:2755"
+  ]
+ },
+ "line:page-109-R:54": {
+  "verdict": "accept",
+  "detail": "addita est psychologiae mentio; fortasse scriptor intelligi",
+  "sites": [
+   "page-109-R:54:2474"
+  ]
+ },
+ "line:page-109-R:61": {
+  "verdict": "accept",
+  "detail": "spici certum est; ipsa hermeniae verba quomodo vel inter-",
+  "sites": [
+   "page-109-R:61:2802"
+  ]
+ },
+ "line:page-111-R:34": {
+  "verdict": "accept",
+  "detail": "tionis genus ac rationem apparet coll",
+  "sites": [
+   "page-111-R:34:1491"
+  ]
+ },
+ "latin:page-109-R:34": {
+  "verdict": "accept",
+  "detail": "loco",
+  "sites": [
+   "page-109-R:34:1546"
+  ]
+ },
+ "latin:page-109-R:37": {
+  "verdict": "accept",
+  "detail": "fuisse; possunt",
+  "sites": [
+   "page-109-R:37:1687"
+  ]
+ },
+ "latin:page-109-R:44": {
+  "verdict": "accept",
+  "detail": "re in",
+  "sites": [
+   "page-109-R:44:2047"
+  ]
+ },
+ "latin:page-109-R:45": {
+  "verdict": "accept",
+  "detail": "alio libro",
+  "sites": [
+   "page-109-R:45:2051"
+  ]
+ },
+ "latin:page-110-R:21": {
+  "verdict": "accept",
+  "detail": "significari",
+  "sites": [
+   "page-110-R:21:924"
+  ]
+ },
+ "latin:page-112-L:1": {
+  "verdict": "accept",
+  "detail": "ratione",
+  "sites": [
+   "page-112-L:1:0"
+  ]
+ },
+ "latin:page-112-R:57": {
+  "verdict": "accept",
+  "detail": "intelligitur; sed",
+  "sites": [
+   "page-112-R:57:2541"
+  ]
+ },
+ "latin:page-115-L:52": {
+  "verdict": "accept",
+  "detail": "significato",
+  "sites": [
+   "page-115-L:52:2343"
+  ]
+ },
+ "latin:page-115-R:3": {
+  "verdict": "accept",
+  "detail": "De incessu",
+  "sites": [
+   "page-115-R:3:108"
+  ]
+ },
+ "latin:page-115-R:56": {
+  "verdict": "accept",
+  "detail": "rhetorica",
+  "sites": [
+   "page-115-R:56:2573"
+  ]
+ },
+ "latin:page-116-R:28": {
+  "verdict": "accept",
+  "detail": "significetur",
+  "sites": [
+   "page-116-R:28:1298"
+  ]
+ },
+ "latin:page-116-R:58": {
+  "verdict": "accept",
+  "detail": "rationesque’,",
+  "sites": [
+   "page-116-R:58:2717"
+  ]
+ },
+ "latin:page-117-L:1": {
+  "verdict": "accept",
+  "detail": "libros",
+  "sites": [
+   "page-117-L:1:8"
+  ]
+ }
+}

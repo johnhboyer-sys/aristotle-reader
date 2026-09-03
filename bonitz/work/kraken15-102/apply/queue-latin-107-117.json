@@ -1,0 +1,380 @@
+{
+ "entries": [
+  {
+   "page": 109,
+   "col": "L",
+   "line": 61,
+   "word_off": 2755,
+   "char_at": 0,
+   "readers": {
+    "opus": "at-us aud signifcatur nonine, addita littera a distinguemus."
+   },
+   "kind": "line",
+   "reason": "line 60 ends \"liber pro-\"; LlamaParse reads \"liber promissus suo significatur nomine, addita littera n distinguemus\" — and note the letter Bonitz names here is n, the same nota marker as on 109-R:15",
+   "forms": [
+    "missus suo significatur nomine, addita littera n distinguemus.",
+    "at-us aud signifcatur nonine, addita littera a distinguemus."
+   ],
+   "form_set": [
+    "missus suo significatur nomine, addita littera n distinguemus.",
+    "at-us aud signifcatur nonine, addita littera a distinguemus."
+   ],
+   "becomes": "missus suo significatur nomine, addita littera n distinguemus.",
+   "card_sid": "line:page-109-L:61"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 54,
+   "word_off": 2474,
+   "char_at": 0,
+   "readers": {
+    "opus": "addita est psychologiae mentioi iortasse scriptor intellig"
+   },
+   "kind": "line",
+   "reason": "LlamaParse reads \"quibus addita est psychologiae mentio; fortasse scriptor intelligi voluit\" and line 55 begins \"voluit\"",
+   "forms": [
+    "addita est psychologiae mentio; fortasse scriptor intelligi",
+    "addita est psychologiae mentioi iortasse scriptor intellig"
+   ],
+   "form_set": [
+    "addita est psychologiae mentio; fortasse scriptor intelligi",
+    "addita est psychologiae mentioi iortasse scriptor intellig"
+   ],
+   "becomes": "addita est psychologiae mentio; fortasse scriptor intelligi",
+   "card_sid": "line:page-109-R:54"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 61,
+   "word_off": 2802,
+   "char_at": 0,
+   "readers": {
+    "opus": "spici csrtmn esti; iFsu berba quonodo vel inter-"
+   },
+   "kind": "line",
+   "reason": "LlamaParse reads \"certum est; ipsa hermeniae verba quomodo vel inter-\" — the corpus is also a word short; 110-L:1 begins \"pretanda\"",
+   "forms": [
+    "spici certum est; ipsa hermeniae verba quomodo vel inter-",
+    "spici csrtmn esti; iFsu berba quonodo vel inter-"
+   ],
+   "form_set": [
+    "spici certum est; ipsa hermeniae verba quomodo vel inter-",
+    "spici csrtmn esti; iFsu berba quonodo vel inter-"
+   ],
+   "becomes": "spici certum est; ipsa hermeniae verba quomodo vel inter-",
+   "card_sid": "line:page-109-R:61"
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 34,
+   "word_off": 1491,
+   "char_at": 0,
+   "readers": {
+    "opus": "tions eus ac ratsonem apparet coll"
+   },
+   "kind": "line",
+   "reason": "line 33 ends \"sed disputa-\"; LlamaParse reads \"sed disputationis genus ac rationem apparet coll\"",
+   "forms": [
+    "tionis genus ac rationem apparet coll",
+    "tions eus ac ratsonem apparet coll"
+   ],
+   "form_set": [
+    "tionis genus ac rationem apparet coll",
+    "tions eus ac ratsonem apparet coll"
+   ],
+   "becomes": "tionis genus ac rationem apparet coll",
+   "card_sid": "line:page-111-R:34"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 34,
+   "word_off": 1546,
+   "char_at": 13,
+   "readers": {
+    "opus": "locd"
+   },
+   "kind": "latin",
+   "reason": "LlamaParse — the only other reader that covers these pages — reads it this way, and the corpus word occurs nowhere else in 206 columns",
+   "forms": [
+    "loco",
+    "locd"
+   ],
+   "form_set": [
+    "loco",
+    "locd"
+   ],
+   "becomes": "loco",
+   "card_sid": "latin:page-109-R:34"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 37,
+   "word_off": 1687,
+   "char_at": 8,
+   "readers": {
+    "opus": "fuissei possunt"
+   },
+   "kind": "latin",
+   "reason": "the semicolon was read as an i; LlamaParse and the Latin both want \"expositurum fuisse; possunt eae etiam\"",
+   "forms": [
+    "fuisse; possunt",
+    "fuissei possunt"
+   ],
+   "form_set": [
+    "fuisse; possunt",
+    "fuissei possunt"
+   ],
+   "becomes": "fuisse; possunt",
+   "card_sid": "latin:page-109-R:37"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 44,
+   "word_off": 2047,
+   "char_at": 50,
+   "readers": {
+    "opus": "re 1n"
+   },
+   "kind": "latin",
+   "reason": "the digit 1 for i; LlamaParse reads \"sed de eadem re in alio libro\"",
+   "forms": [
+    "re in",
+    "re 1n"
+   ],
+   "form_set": [
+    "re in",
+    "re 1n"
+   ],
+   "becomes": "re in",
+   "card_sid": "latin:page-109-R:44"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 45,
+   "word_off": 2051,
+   "char_at": 0,
+   "readers": {
+    "opus": "alo lbro"
+   },
+   "kind": "latin",
+   "reason": "LlamaParse reads \"in alio libro se expositurum promittit\"",
+   "forms": [
+    "alio libro",
+    "alo lbro"
+   ],
+   "form_set": [
+    "alio libro",
+    "alo lbro"
+   ],
+   "becomes": "alio libro",
+   "card_sid": "latin:page-109-R:45"
+  },
+  {
+   "page": 110,
+   "col": "R",
+   "line": 21,
+   "word_off": 924,
+   "char_at": 22,
+   "readers": {
+    "opus": "signifcari"
+   },
+   "kind": "latin",
+   "reason": "LlamaParse — the only other reader that covers these pages — reads it this way, and the corpus word occurs nowhere else in 206 columns",
+   "forms": [
+    "significari",
+    "signifcari"
+   ],
+   "form_set": [
+    "significari",
+    "signifcari"
+   ],
+   "becomes": "significari",
+   "card_sid": "latin:page-110-R:21"
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 1,
+   "word_off": 0,
+   "char_at": 0,
+   "readers": {
+    "opus": "ratone"
+   },
+   "kind": "latin",
+   "reason": "111-R:61 ends \"nec libri de gene-\", so the word is generatione",
+   "forms": [
+    "ratione",
+    "ratone"
+   ],
+   "form_set": [
+    "ratione",
+    "ratone"
+   ],
+   "becomes": "ratione",
+   "card_sid": "latin:page-112-L:1"
+  },
+  {
+   "page": 112,
+   "col": "R",
+   "line": 57,
+   "word_off": 2541,
+   "char_at": 39,
+   "readers": {
+    "opus": "intelligitur, seq"
+   },
+   "kind": "latin",
+   "reason": "LlamaParse reads \"coll ζ5. 470a18 intelligitur; sed cum problema λ1\"",
+   "forms": [
+    "intelligitur; sed",
+    "intelligitur, seq"
+   ],
+   "form_set": [
+    "intelligitur; sed",
+    "intelligitur, seq"
+   ],
+   "becomes": "intelligitur; sed",
+   "card_sid": "latin:page-112-R:57"
+  },
+  {
+   "page": 115,
+   "col": "L",
+   "line": 52,
+   "word_off": 2343,
+   "char_at": 29,
+   "readers": {
+    "opus": "signiicato"
+   },
+   "kind": "latin",
+   "reason": "LlamaParse — the only other reader that covers these pages — reads it this way, and the corpus word occurs nowhere else in 206 columns",
+   "forms": [
+    "significato",
+    "signiicato"
+   ],
+   "form_set": [
+    "significato",
+    "signiicato"
+   ],
+   "becomes": "significato",
+   "card_sid": "latin:page-115-L:52"
+  },
+  {
+   "page": 115,
+   "col": "R",
+   "line": 3,
+   "word_off": 108,
+   "char_at": 24,
+   "readers": {
+    "opus": "Deincessu"
+   },
+   "kind": "latin",
+   "reason": "the space is gone in a book heading; LlamaParse reads \"— De incessu animalium liber citatur\"",
+   "forms": [
+    "De incessu",
+    "Deincessu"
+   ],
+   "form_set": [
+    "De incessu",
+    "Deincessu"
+   ],
+   "becomes": "De incessu",
+   "card_sid": "latin:page-115-R:3"
+  },
+  {
+   "page": 115,
+   "col": "R",
+   "line": 56,
+   "word_off": 2573,
+   "char_at": 0,
+   "readers": {
+    "opus": "rh etorica"
+   },
+   "kind": "latin",
+   "reason": "a space inside the word; line 55 ends \"— Ars\" and LlamaParse reads \"— Ars rhetorica videtur citari\"",
+   "forms": [
+    "rhetorica",
+    "rh etorica"
+   ],
+   "form_set": [
+    "rhetorica",
+    "rh etorica"
+   ],
+   "becomes": "rhetorica",
+   "card_sid": "latin:page-115-R:56"
+  },
+  {
+   "page": 116,
+   "col": "R",
+   "line": 28,
+   "word_off": 1298,
+   "char_at": 0,
+   "readers": {
+    "opus": "signifcetur"
+   },
+   "kind": "latin",
+   "reason": "LlamaParse — the only other reader that covers these pages — reads it this way, and the corpus word occurs nowhere else in 206 columns",
+   "forms": [
+    "significetur",
+    "signifcetur"
+   ],
+   "form_set": [
+    "significetur",
+    "signifcetur"
+   ],
+   "becomes": "significetur",
+   "card_sid": "latin:page-116-R:28"
+  },
+  {
+   "page": 116,
+   "col": "R",
+   "line": 58,
+   "word_off": 2717,
+   "char_at": 23,
+   "readers": {
+    "opus": "rationesque,"
+   },
+   "kind": "latin",
+   "reason": "the closing quote is gone — 116-R:57 opens ‘communes and nothing shuts it; LlamaParse reads \"sermones rationesque', vulgatas\"",
+   "forms": [
+    "rationesque’,",
+    "rationesque,"
+   ],
+   "form_set": [
+    "rationesque’,",
+    "rationesque,"
+   ],
+   "becomes": "rationesque’,",
+   "card_sid": "latin:page-116-R:58"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 1,
+   "word_off": 8,
+   "char_at": 9,
+   "readers": {
+    "opus": "lbros"
+   },
+   "kind": "latin",
+   "reason": "LlamaParse — the only other reader that covers these pages — reads it this way, and the corpus word occurs nowhere else in 206 columns",
+   "forms": [
+    "libros",
+    "lbros"
+   ],
+   "form_set": [
+    "libros",
+    "lbros"
+   ],
+   "becomes": "libros",
+   "card_sid": "latin:page-117-L:1"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 17
+}

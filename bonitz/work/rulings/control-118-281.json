@@ -1,0 +1,150 @@
+{
+ "forms:ηγ|πγ|τγ": {
+  "verdict": "preserve",
+  "detail": "τγ",
+  "sites": [
+   "page-265-L:38:1545"
+  ]
+ },
+ "forms:ἄχρηστȣ͂ν|ἄχρηστόν|ἄχρηστὸν": {
+  "verdict": "preserve",
+  "detail": "ἄχρηστόν",
+  "sites": [
+   "page-143-L:49:2070"
+  ]
+ },
+ "forms:μόδοκος|μόκοκος": {
+  "verdict": "preserve",
+  "detail": "μόδοκος",
+  "sites": [
+   "page-129-R:42:1668"
+  ]
+ },
+ "forms:ȣ̓δεμία|οὐδεμία|ἐδεμία": {
+  "verdict": "preserve",
+  "detail": "ȣ̓δεμία",
+  "sites": [
+   "page-220-L:8:348"
+  ]
+ },
+ "forms:ἀλλοιȣμένȣ|ἀλλοιωμένον": {
+  "verdict": "preserve",
+  "detail": "ἀλλοιȣμένȣ",
+  "sites": [
+   "page-224-R:15:580"
+  ]
+ },
+ "forms:Ζικ|Ζκ": {
+  "verdict": "preserve",
+  "detail": "Ζικ",
+  "sites": [
+   "page-243-L:7:249"
+  ]
+ },
+ "forms:φυκία|ψυχία": {
+  "verdict": "preserve",
+  "detail": "φυκία",
+  "sites": [
+   "page-255-L:17:723"
+  ]
+ },
+ "forms:μεγάλα|μεγάλας": {
+  "verdict": "preserve",
+  "detail": "μεγάλας",
+  "sites": [
+   "page-180-L:27:1131"
+  ]
+ },
+ "forms:ȣ̓δ|οὐδ|ἔθ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓δ",
+  "sites": [
+   "page-133-R:3:118"
+  ]
+ },
+ "forms:ἐθισμȣ|ἐθισμȣ͂|ἐθισμῶ": {
+  "verdict": "preserve",
+  "detail": "ἐθισμȣ͂",
+  "sites": [
+   "page-228-R:44:1924"
+  ]
+ },
+ "forms:ἑτέρȣ|ἑτέρω": {
+  "verdict": "preserve",
+  "detail": "ἑτέρȣ",
+  "sites": [
+   "page-173-R:56:2334"
+  ]
+ },
+ "forms:πωλȣμένων|πωμένων": {
+  "verdict": "preserve",
+  "detail": "πωλȣμένων",
+  "sites": [
+   "page-223-L:20:792"
+  ]
+ },
+ "forms:ἐξεταζομένȣ|ἐξεταζομένῳ": {
+  "verdict": "preserve",
+  "detail": "ἐξεταζομένȣ",
+  "sites": [
+   "page-260-L:48:2147"
+  ]
+ },
+ "forms:συνδέσμȣ|συνδέσμῳ": {
+  "verdict": "preserve",
+  "detail": "συνδέσμȣ",
+  "sites": [
+   "page-129-R:38:1551",
+   "page-195-R:43:1851"
+  ]
+ },
+ "forms:σκέλȣς|σκέλης": {
+  "verdict": "preserve",
+  "detail": "σκέλȣς",
+  "sites": [
+   "page-243-R:11:380"
+  ]
+ },
+ "forms:ἔμψυχα|ἔμψυχον": {
+  "verdict": "preserve",
+  "detail": "ἔμψυχον",
+  "sites": [
+   "page-257-L:43:1821"
+  ]
+ },
+ "forms:ὁμολογȣ́μενον|ὁμολογύμενον": {
+  "verdict": "preserve",
+  "detail": "ὁμολογȣ́μενον",
+  "sites": [
+   "page-202-R:32:1390"
+  ]
+ },
+ "forms:σεμνοθέȣς|σεμνοθέας": {
+  "verdict": "preserve",
+  "detail": "σεμνοθέȣς",
+  "sites": [
+   "page-217-R:39:1547"
+  ]
+ },
+ "forms:καυλȣ|καυλȣ͂|καυλῷ": {
+  "verdict": "preserve",
+  "detail": "καυλȣ͂",
+  "sites": [
+   "page-243-L:6:205"
+  ]
+ },
+ "forms:χρόνȣ|χρόνῳ": {
+  "verdict": "preserve",
+  "detail": "χρόνȣ",
+  "sites": [
+   "page-180-L:35:1468"
+  ]
+ },
+ "forms:δίυγρος|δίυργος|διύργȣς": {
+  "verdict": "preserve",
+  "detail": "δίυργος",
+  "sites": [
+   "page-206-R:52:2086"
+  ]
+ }
+}

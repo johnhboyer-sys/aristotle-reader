@@ -1,0 +1,13 @@
+[
+  {
+    "page": 74,
+    "col": "R",
+    "line": 11,
+    "wrote": "ἀνόρυσε",
+    "llamaparse": "ἀνόρȣσε",
+    "proposed": "ἀνόρουσε",
+    "lexical_verdict": "ligature",
+    "why": "ανορουσε is a corpus form; ανορυσε is not",
+    "context": "ἀνορύειν. ἀνόρυσε (Emped 178) Μβ4. 1000b15."
+  }
+]

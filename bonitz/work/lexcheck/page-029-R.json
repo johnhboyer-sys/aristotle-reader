@@ -1,0 +1,13 @@
+[
+  {
+    "page": 29,
+    "col": "R",
+    "line": 12,
+    "wrote": "ὀξὺ",
+    "llamaparse": "ὀξȣ̀",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "οξυ is a corpus form; οξου is not",
+    "context": "αἱμωδιᾶν. αἱμωδιῶμεν τȣ̀ς ὀξὺ ὁρῶντες ἐσθίοντας πζ5. 886b12."
+  }
+]

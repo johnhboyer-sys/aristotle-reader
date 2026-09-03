@@ -1,0 +1,82 @@
+{
+ "forms:ȣτως": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣ": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣχ": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣδὲν": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "site:page-015-R:43:51": {
+  "verdict": "accept",
+  "detail": "ȣ̓́",
+  "excluded": []
+ },
+ "site:page-017-R:40:47": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-020-R:47:33": {
+  "verdict": "accept",
+  "detail": "ȣ̓́",
+  "excluded": []
+ },
+ "site:page-020-R:57:48": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-021-L:32:52": {
+  "verdict": "accept",
+  "detail": "οὐχ",
+  "ruled_via": "chat 2026-08-11 17:07 — John: 'p 21-L 32 LITERALLY prints ούχ without ligature.' The page spells the word out; no card button could express the absent ligature. Smooth only, per his card choice."
+ },
+ "site:page-021-R:45:34": {
+  "verdict": "accept",
+  "detail": "ȣ̔́τως",
+  "excluded": []
+ },
+ "site:page-021-R:55:48": {
+  "verdict": "accept",
+  "detail": "ȣ̓δὲν",
+  "excluded": []
+ },
+ "site:page-022-R:39:48": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-023-L:46:33": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-028-R:11:10": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-029-R:60:39": {
+  "verdict": "accept",
+  "detail": "ȣ̓́",
+  "excluded": []
+ },
+ "site:page-041-R:6:28": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ }
+}

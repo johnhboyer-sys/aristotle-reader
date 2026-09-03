@@ -1,0 +1,14 @@
+{
+ "column": "page-215-L",
+ "gaps": [
+  {
+   "before_line": 60,
+   "text": "δολοφονία Ηε5. 1131a7.",
+   "between": ["δολοφονηθέντος Διομήδȣς θ79. 836a16.", "Δόλων (Hom Κ 316) πο25. 1461a12."],
+   "why": "kraken's baselines jump 109px here against a 55px lead — one whole line slot with no baseline in it. The line is clean, unbroken ink on the scan; the segmenter simply did not draw a box round it.",
+   "read_by": "Opus, 2026-08-28, off work/scan400/page-215.jpg",
+   "authorised_by": "John, 2026-08-28: \"Add the 215L line to the corpus, but not to Kraken.\"",
+   "note": "⚠ OPUS HAS NOW SEEN THIS LINE. The cold-tranche protocol reads 118-281 with the non-Opus engines first and lets Opus read it blind afterwards. For page-215-L that is no longer true of this one line, and an Opus reading here agrees with itself rather than confirming anything."
+  }
+ ]
+}

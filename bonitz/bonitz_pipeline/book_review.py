@@ -29,6 +29,7 @@ still cannot be ruled on, that is a bug to fix here.
 from __future__ import annotations
 import argparse
 import base64
+import functools
 import io
 import json
 import sys
@@ -36,7 +37,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from bonitz_pipeline.book_spans import OUT as SPANS, check, book_number, series
-from bonitz_pipeline.mark_review import crop_word
 from bonitz_pipeline.siglum_check import inventory, read, resolve
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -86,22 +86,50 @@ def page_candidates(page: int, lo: int, hi: int) -> list[int]:
 
 
 def _b64(im) -> str:
-    """PNG, at full resolution, in sixteen greys.
+    """PNG, at full resolution, exactly as the scan holds it.
 
-    Every pixel is kept — John is reading letterforms, and a downscaled crop
-    costs exactly the stroke under question.  What is thrown away is colour
-    depth the scan never had: these are grey line images, and sixteen levels
-    hold them at under half the bytes.  The page carries 27 sites twice over,
-    so this is the difference between 20 MB and 7.
+    ⚠ EVERY ATTEMPT TO IMPROVE THIS CROP HAS DAMAGED IT. The history is one
+    shape repeated: a colour reduction that saved file size, a repair for what
+    it broke, a repair for what THAT broke.
+
+      `im.convert('L')` mapped the tint to a grey a shade off the paper, and
+      the pointer vanished. John, 2026-08-30: "the greyscale with wash does
+      nothing."
+
+      A fixed palette of greys plus washed greys blotched the paper yellow.
+
+      An adaptive palette lost the wash: median-cut spends slots by
+      POPULATION, and the tint covers a twentieth of the crop.
+
+      Fourteen greys with the wash carried by index fixed all three, and hid
+      two more assumptions. The mask was `r - b > 10`, on the reasoning that
+      only the wash is off-neutral — but these columns are RGB with CREAM
+      paper, (243, 236, 208), r-b = 35, so 94% of every crop was called tinted
+      and pushed through the un-blend. And median-cut starved the INK on a
+      sparse crop: the running head at 127-R:1 is 1.19% ink against the body's
+      9.38%, and came back at grey 123 where the scan holds 30.
+
+    John saw that card on 2026-09-01: "the actual fuck? ... is that bleed
+    through???" It was not. The scan is crisp; this function destroyed it. He
+    then ruled the whole class out: "just give the crop with no highlight or
+    enhancement."
+
+    So nothing is matched, reduced, tinted or recovered. The crop is the ink.
+    A page costs more bytes and shows John what is on the page, which is the
+    only thing it was ever for.
     """
     if im is None:
         return ''
     buf = io.BytesIO()
-    im.convert('L').quantize(colors=16).save(buf, format='PNG', optimize=True)
+    im.save(buf, format='PNG', optimize=True)
     return base64.b64encode(buf.getvalue()).decode()
 
 
 def findings() -> list[Finding]:
+    # Imported here, not at module scope: settle_review pulls CSS from
+    # this module, so a top-level import is circular.
+    from bonitz_pipeline.settle_review import crop_at_offset
+
     table = json.loads(SPANS.read_text(encoding='utf-8'))
     cites = read()
     resolve(cites, inventory())
@@ -113,9 +141,21 @@ def findings() -> list[Finding]:
         # The citation anchored on its token, opened wide enough to carry the
         # page digits too — both are on trial and a crop that shows only the
         # letter cannot settle a digit.
-        im, _, how = crop_word(c.col, c.line, c.token, scale=3.0, spread=8)
+        #
+        # ⚠ `crop_word` REACHES ONLY PAGES 15-52. It is hard-wired to
+        # work/reconciled + work/kraken400/cols; pages 53+ are in
+        # reconciled-auto with their columns under kraken400/read/cols. While
+        # siglum_check globbed a single stage this never showed, because those
+        # pages yielded no findings at all — the moment it read every stage,
+        # four sites on 53-62 arrived here with no ink to rule on.
+        # `crop_at_offset` picks the layout from what exists and delegates to
+        # crop_word for the legacy one.
+        page, col = int(c.col.split('-')[1]), c.col.split('-')[2]
+        im, _, how = crop_at_offset(page, col, c.line, c.token, c.at,
+                                    scale=3.0, spread=8)
         f.crop, f.how = _b64(im), how
-        f.whole = _b64(crop_word(c.col, c.line, c.token, scale=1.6, whole=True)[0])
+        f.whole = _b64(crop_at_offset(page, col, c.line, c.token, c.at,
+                                      scale=1.6, whole=True)[0])
         f.pages = page_candidates(c.page, lo, hi)
         out.append(f)
     return out
@@ -270,7 +310,9 @@ def lan_address() -> str:
 
 def serve(fs, port: int = 8791, host: str = '127.0.0.1',
           page: Path = None, store: Path = None, verdicts: tuple = (
-              'preserve', 'fix-letter', 'fix-page')) -> None:
+              'preserve', 'fix-letter', 'fix-page'),
+          crops: Path = None, sites: set = None,
+          card_sites: dict = None) -> None:
     """⚠ `--wifi` BINDS TO EVERY INTERFACE, so anything on the network can read
     the page and post rulings. There is no authentication and none is wanted —
     it is a scan of a book printed in 1870 and a JSON file of letter choices —
@@ -297,11 +339,29 @@ def serve(fs, port: int = 8791, host: str = '127.0.0.1',
             # time; nothing ever handed them back to the page.
             if self.path.rstrip('/') == '/rulings':
                 return self.do_GET_rulings()
+            # ⚠ CROPS ARE SERVED AS FILES, NEVER INLINED. 56 base64 crops once
+            # made a 17 MB page the browser would not render, and a bundled
+            # card can hold sixty.
+            if crops is not None and self.path.startswith('/crops/'):
+                return self.do_GET_crop(self.path[len('/crops/'):])
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.send_header('Content-Length', str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+        def do_GET_crop(self, name: str):
+            # `Path(...).name` and nothing else: the request must not be able
+            # to name a path, only a crop this build cut.
+            f = crops / Path(name).name
+            if f.suffix != '.png' or not f.is_file():
+                self.send_response(404); self.end_headers(); return
+            data = f.read_bytes()
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/png')
+            self.send_header('Content-Length', str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
 
         def do_GET_rulings(self):
             have = (store.read_bytes() if store and store.exists() else b'{}')
@@ -317,15 +377,67 @@ def serve(fs, port: int = 8791, host: str = '127.0.0.1',
                 d = json.loads(self.rfile.read(n) or b'{}')
             except json.JSONDecodeError:
                 self.send_response(400); self.end_headers(); return
-            sid, verdict = d.get('id'), d.get('verdict')
+            sid = d.get('id')
             valid = {s.sid for s in fs}
+            # ⚠ AN EXCLUDE IS NOT A RULING AND MUST NOT BE STORED AS ONE. It
+            # pulls ONE site out of a group ruling — the thing that makes a
+            # group ruling safe — so it is recorded beside the verdict, and a
+            # card can carry excludes before it is answered at all.
+            if self.path.rstrip('/') == '/exclude':
+                site = d.get('site')
+                if sid not in valid or (sites is not None
+                                        and site not in sites):
+                    self.send_response(400); self.end_headers(); return
+                have = (json.loads(store.read_text(encoding='utf-8'))
+                        if store.exists() else {})
+                entry = have.setdefault(sid, {})
+                out = set(entry.get('excluded') or ())
+                out.add(site) if d.get('excluded') else out.discard(site)
+                entry['excluded'] = sorted(out)
+                store.parent.mkdir(parents=True, exist_ok=True)
+                store.write_text(json.dumps(have, ensure_ascii=False, indent=1),
+                                 encoding='utf-8')
+                self.send_response(204); self.end_headers(); return
+
+            verdict = d.get('verdict')
             if sid not in valid or verdict not in verdicts:
                 # A malformed id used to be written straight to the store, so a
                 # typo in the page silently produced a ruling on nothing.
                 self.send_response(400); self.end_headers(); return
             have = (json.loads(store.read_text(encoding='utf-8'))
                     if store.exists() else {})
-            have[sid] = {'verdict': verdict, 'detail': d.get('detail', '')}
+            # Keep any excludes already recorded on this card: they are what
+            # the ruling is scoped BY, and dropping them would silently widen
+            # it back over the sites he pulled out.
+            entry = have.get(sid) or {}
+            detail = d.get('detail', '')
+            # ⚠ A TYPED READING IS RECORDED AS TYPED. The buttons are built
+            # from what a reader actually read, so a button ruling is always
+            # traceable to a reading; a typed one is John's own, and the store
+            # must be able to say which is which — a later sweep asking "where
+            # did this form come from" gets a different answer for each. It is
+            # not distrust: he is the authority on the ink. It is that an
+            # unmarked typed form is indistinguishable from a hand-edited store
+            # or a stale carried ruling, which is what `illegal_accept` exists
+            # to catch elsewhere.
+            typed = bool(d.get('typed'))
+            if typed:
+                if not detail.strip() or len(detail) > 120 or any(
+                        ord(c) < 32 for c in detail):
+                    self.send_response(400); self.end_headers(); return
+            have[sid] = {'verdict': verdict, 'detail': detail}
+            if typed:
+                have[sid]['typed'] = True
+            if entry.get('excluded'):
+                have[sid]['excluded'] = entry['excluded']
+            # ⚠ RECORD WHAT THE RULING COVERED. A card binding many sites keeps
+            # its key across rebuilds while its MEMBERS can change — a filter
+            # added, a site regrouped — and the answer then silently applies to
+            # sites he never saw. That is the same fault as restripping a
+            # decided card, one level up, and without this list nothing can
+            # even detect it.
+            if card_sites and sid in card_sites:
+                have[sid]['sites'] = list(card_sites[sid])
             store.parent.mkdir(parents=True, exist_ok=True)
             store.write_text(json.dumps(have, ensure_ascii=False, indent=1),
                              encoding='utf-8')

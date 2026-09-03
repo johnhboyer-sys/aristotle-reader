@@ -32,6 +32,12 @@ def cases(section, key):
                             + cases('breathing', 'applied')
                             + cases('family', 'applied'))
 def test_approved_corrections_are_still_in_the_text(r):
+    # ⚠ A REVERSED RULING IS KEPT AND STOPS BEING CHECKED — the same contract
+    # `john_rulings.check()` uses, and for the same reason: deleting the old
+    # entry would erase that he once ruled the other way, and why. Only a
+    # hand-added field does this; nothing in any pass can set it.
+    if r.get('reversed_by'):
+        pytest.skip(f"reversed by {r['reversed_by']}: {r.get('reversed_why','')}")
     line = line_of(r['page'], r['col'], r['line'])
     assert r['now'] in line, f"{r['now']} missing from {line!r}"
     assert line.count(r['now']) >= r.get('count', 1)
@@ -42,6 +48,12 @@ def test_approved_corrections_are_still_in_the_text(r):
 @pytest.mark.parametrize('r', cases('breathing', 'declined')
                             + cases('family', 'held'))
 def test_declined_corrections_were_not_applied(r):
+    # Same contract as the applied case above: a ruling John has since
+    # superseded is kept and stops being checked. See the `reversed_why` on
+    # each entry for which later ruling replaced it and why the two are not
+    # in conflict.
+    if r.get('reversed_by'):
+        pytest.skip(f"reversed by {r['reversed_by']}: {r.get('reversed_why','')}")
     """Recording the printer's error is a decision, not an oversight."""
     line = line_of(r['page'], r['col'], r['line'])
     assert r['keep'] in line, f"{r['keep']} was changed despite being ruled kept"

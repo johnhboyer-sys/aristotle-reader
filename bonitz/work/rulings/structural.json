@@ -1,0 +1,31 @@
+{
+ "punct:page-110-R:19:διαιρέσ": {
+  "verdict": "accept",
+  "detail": "διαιρέσεσιν·",
+  "sites": [
+   "page-110-R:19:849"
+  ]
+ },
+ "punct:page-115-R:52:— Po--": {
+  "verdict": "accept",
+  "detail": "— Po-",
+  "sites": [
+   "page-115-R:52:2431"
+  ]
+ },
+ "corrigendum:page-117-R:9:f 441 1": {
+  "verdict": "preserve",
+  "detail": "f 441 1550b1",
+  "sites": [
+   "page-117-R:9:357"
+  ]
+ },
+ "smyth:page-117-R:9:τοϛ": {
+  "verdict": "accept",
+  "detail": "τος",
+  "typed": true,
+  "sites": [
+   "page-117-R:9:354"
+  ]
+ }
+}

@@ -1,0 +1,191 @@
+[
+ {
+  "ctx": "άf625.1583b8.596.1575b11.Ἄρηςπ",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Compound mark before A: breathing blob at left plus a stroke rising to the upper right (acute). Smooth+acute = the same glyph used at lines 4 and 5."
+ },
+ {
+  "ctx": "13a6.πο21.1457b22,32.(accἌρην1",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Same compound smooth-breathing+acute glyph as line 2; not a bare smooth breathing."
+ },
+ {
+  "ctx": "Ἄρην1457b21).ὃνκτάνενὠκὺςἌρηςf",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Same compound smooth-breathing+acute glyph; llama dropped the acute."
+ },
+ {
+  "ctx": "άνενὠκὺςἌρηςf596.1575b9.—Ἄρηςs",
+  "verdict": "Ἄ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Same compound smooth-breathing+acute glyph; llama dropped the acute."
+ },
+ {
+  "ctx": "5b9.—ἌρηςsidusΟβ12.292a5.κ2.39",
+  "verdict": "κ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic Greek kappa (x-shape with lower-right tail), matching kappa elsewhere in the column; 392a26 = De mundo, siglum kappa."
+ },
+ {
+  "ctx": "ris.τὸἄρθρονἀεὶδυοῖνὅροςατ972b",
+  "verdict": "τ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic tau: full crossbar plus centred stem, unlike the digit 7 in 972 two characters later. at = De lineis insecabilibus, 968-972."
+ },
+ {
+  "ctx": "ειςποιȣ͂σινπε40.885b2.—χειρὸςθ",
+  "verdict": "ιρὸ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Line 15 ends chi-epsilon-iota with hyphen (no circumflex over ei), line 16 opens rho with grave over omicron. llama's reading is not on the page."
+ },
+ {
+  "ctx": "ἄρθροις(lineis,incisuris)·Ζια1",
+  "verdict": "·",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "A well-formed dot after the closing paren sitting at the top of the x-height band (y325-331) while the baseline is y346 - a raised point, not a period or a speck."
+ },
+ {
+  "ctx": "iqαἰδοῖον.ὁδελφὶςἔχειμαστȣ̀ςπλ",
+  "verdict": "ȣ̀",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "The ou-ligature (loop with right-hand arm) carrying a grave; not omicron. Word is mastous."
+ },
+ {
+  "ctx": "ὸςτοῖςἄρθροιςΖγα11.719a4.διικν",
+  "verdict": "διικ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Delta with its forked ascender (identical to the delta of dialekton on line 29), then two separate iotas, then italic kappa."
+ },
+ {
+  "ctx": "ςἀπὸτῶνἄρθρωνΖγβ7.747a21.ȣ̓δὲτ",
+  "verdict": "ȣ̓δὲ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ou-ligature with smooth breathing, then delta, then epsilon with grave."
+ },
+ {
+  "ctx": "ρθρονφωνῆς.ὁδελφὶςγλῶττανȣ[?]κ",
+  "verdict": "ȣ̓",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "The mark is a compact hook, 13px tall by 7 wide, matching pixel-for-pixel the smooth breathing over the ou-ligature of oude on line 26; not a grave (no rightward descent) and not an acute. Word is ouk."
+ },
+ {
+  "ctx": "SteinthalGeschp257sqq,Schömann",
+  "verdict": "ö",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clear diaeresis over o in the roman-type Schoemann."
+ },
+ {
+  "ctx": "chömannRedetheilep115sqq,JJahr",
+  "verdict": "J",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Roman capital J stands separately before Jahrb."
+ },
+ {
+  "ctx": "ρθρωμένοςa16).τὰἠρθρωμένα,οppτ",
+  "verdict": ",",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "The mark has a body on the baseline plus a tail descending below it - a comma, matching the commas in the roman text on lines 32-33; a period here would be a plain square dot."
+ },
+ {
+  "ctx": "τὰἠρθρωμένα,οppτὰἄναρθραπι49.8",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic iota with its bottom hook after pi, distinct from the upright roman digits 49 that follow."
+ },
+ {
+  "ctx": "ἔχȣσιμέγαϗ̀εὔσαρκονϗ̀ἀρθριῶδες",
+  "verdict": "ι",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "A clean iota-shaped stroke, with the usual bottom hook and iota height, stands between rho and the circumflexed omega. The control - arthrodes later in the same line 39 - has no such stroke. Printed as arthriodes; a printer's error, recorded as printed."
+ },
+ {
+  "ctx": "γυνὴἀνδρὸςἀρίδακρυμᾶλλονΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Two separate iota strokes after Zeta-iota, then an upright roman 1. 608b9 = HA book 9, so the book letter is iota: Zi + i."
+ },
+ {
+  "ctx": "ι1.608b9.ἀριθμεῖντίἐστινατ968b",
+  "verdict": "τ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic tau identical to the tau of estin immediately before it; at = De lineis insecabilibus, 968b2."
+ },
+ {
+  "ctx": ".ȣ̓δὲνἄλλοπέφυκενἀριθμεῖνἡφυχή",
+  "verdict": "ἢφ",
+  "agrees_with": "kraken",
+  "confidence": "high",
+  "note": "Eta carries a breathing blob at left plus a stroke that descends to the right (x291 at y205 to x298 at y219) - a grave, not an acute and not a rough breathing. The next word is printed with a closed bowl on a through-stem = phi: phuche, a misprint for psuche, recorded as printed."
+ },
+ {
+  "ctx": "ζ5.142b26.πλ6.956a12.ἀριθμεῖτα",
+  "verdict": "μ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Mu is present and fully inked in arithmeitai."
+ },
+ {
+  "ctx": "ναριθμȣμένȣWζ)τȣ̀ἐξἀρχῆςτι6.16",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic iota after tau, with bottom hook; the roman 1 of 168 on the same line has a top flag and foot serifs and looks nothing like it."
+ },
+ {
+  "ctx": "ῖσιπολλοῖςἠριθμημένῳστρατȣ͂(Εu",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "The ou-ligature (same glyph as in mastous, line 17) under a circumflex: stratou, not a dative omega-iota."
+ },
+ {
+  "ctx": "πγ20.874b6cf872a19ΒζΑrStΙV404)",
+  "verdict": "V",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Roman numeral IV is clear in 'Bz Ar St IV'."
+ },
+ {
+  "ctx": "302a7.ἀριθμητικὴἀναλογίαΗβ5.11",
+  "verdict": "β",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "The book letter has a descender below the baseline and no ascender - beta, not delta (compare the delta of d11.219 on line 53, which has the forked ascender). EN B5.1106a35 fits."
+ },
+ {
+  "ctx": "ἀριθμητικὴγεωμετρίαςΜΑ2.982a28",
+  "verdict": "8",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Two stacked closed loops: 982, not 932."
+ },
+ {
+  "ctx": "τικὴγεωμετρίαςΜΑ2.982a28Βζ.Αγ2",
+  "verdict": "ζ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Printed as roman 'Bz.' (= Bonitz), lowercase z; the pipeline's canonical form for this abbreviation on this page is Bzeta, as in the ctx of the line-52 flag. kraken's 'a' is not on the page."
+ }
+]

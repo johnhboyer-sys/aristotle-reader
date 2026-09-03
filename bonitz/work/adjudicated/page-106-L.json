@@ -1,0 +1,142 @@
+[
+ {
+  "ctx": "μόνΖμγ7.670b30.βȣ́λεταιἡφύσιςτ",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φύσις prints a plain open u-shape with acute; the ȣ ligature in βȣ́λεται on the same line has a closed bottom loop, absent here."
+ },
+ {
+  "ctx": "πλῆθοςμέτρων,μονάδων,ἀδιαιρέτω",
+  "verdict": "ιρέτω",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ink reads ἀδιαιρέτων: acute sits on ε, ω unaccented; genie's ιρετῶ and llama's ίρετο both misplace the accent."
+ },
+ {
+  "ctx": "ων,μονάδων,ἀδιαιρέτωνsimΚ6.4b2",
+  "verdict": "6",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Upright roman digit 6, matching the 6 in 'K6.' at line 13; not an italic δ. Cat. 4b23 is ch. 6."
+ },
+ {
+  "ctx": "ωρισμένωνἐστί,οppσυνεχέςΚ6.4b2",
+  "verdict": "6",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Same upright roman 6 after K, followed by '4 b23, 31'; not italic δ."
+ },
+ {
+  "ctx": "f11.219b4).ψγ1.425a19.cfπιζ1.9",
+  "verdict": "ιζ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "π, a short ι, then a descending ζ are all distinct at high zoom; Probl. 916a9 falls in book ιζ (17)."
+ },
+ {
+  "ctx": "li,ἀριθμὸςπροβάτωνκυνῶν,πύρινο",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πύρινος shows an open u with acute, no bottom loop — plain upsilon."
+ },
+ {
+  "ctx": "ός,ἀριθμητικός,μοναδικόςΗε6.11",
+  "verdict": "ε",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic ε clearly formed after H; EN 1131a39 is book ε (5). Not an x-shaped α."
+ },
+ {
+  "ctx": ".5.1092b19,24.οἱπερὶἀριθμȣ́ςτη",
+  "verdict": "ȣ́ςτη3",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἀριθμȣ́ς carries the closed-loop ȣ ligature with acute; then italic τ, η and an upright roman 3 (Top. 153a10 = VII.3)."
+ },
+ {
+  "ctx": "53a10.ἀριθμὸςεἰδητικόςvinfra.—",
+  "verdict": "f",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "'v infra.' — roman f with crossbar; no descender-with-loop of a g."
+ },
+ {
+  "ctx": "ἀριθμὸςεἰδητικόςvinfra.—τὸἓνἀρ",
+  "verdict": "ὸἓ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "τὸ has the broken open-c omicron sort with a grave; ἓν carries rough breathing plus grave over ε."
+ },
+ {
+  "ctx": "ἰδητικόςvinfra.—τὸἓνἀριθμȣ͂ἀρχ",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Final glyph is the ȣ ligature (u over closed loop) under a circumflex — compare the true ῷ of line 41, which is a different, tailed omega with subscript. Reads ἀριθμοῦ, as Met. Δ15 1021a13 requires."
+ },
+ {
+  "ctx": "(cf6.1057a4).ν1.1087b33.ατ969a",
+  "verdict": "τ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic τ with bar and descending stem after α; not a figure 7. ατ = ἄτομοι γραμμαί, 969a15."
+ },
+ {
+  "ctx": "ς,ἑτερομήκης,τετράγωνος,κύβος,",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "κύβος shows the open u-shape with acute; no closed loop."
+ },
+ {
+  "ctx": "26.ν1.1087b12.Φα7.190a15.η1.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "The glyph's right stroke descends below the baseline — italic η, not ν. Phys. 242a33 is book η (7)."
+ },
+ {
+  "ctx": "'εἶδοςΑγ5.74a31).τὸἀριθμῷἓνiqτ",
+  "verdict": "ἓνi",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Rough breathing plus grave over ε, then an upright dotted roman i of 'i q'; not an italic ἰ."
+ },
+ {
+  "ctx": "eexplicaturὕστερονγενέσειἡἐνέρ",
+  "verdict": "ἡ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Both instances on the line are eta with rough breathing; nothing resembling the ϗ ligature."
+ },
+ {
+  "ctx": "63b13.Γα5.320b14.8.326b6.ψγ2.4",
+  "verdict": "ψ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "x-height bowl with stem rising and descending — the lowercase ψ sort used for De anima throughout this column, not a capital Ψ."
+ },
+ {
+  "ctx": "ἀριθμοῖς,synἐνὅλοιςὅροιςπιθ35.",
+  "verdict": "ιθ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "π, short ι, then a tall barred θ; Probl. 920a32 is book ιθ (19). Not ε, and the ι is present."
+ },
+ {
+  "ctx": "sedetiamἀριθμόςsignificatiqλόγ",
+  "verdict": "i",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "'significat i q' — upright seriffed roman i with dot."
+ },
+ {
+  "ctx": "ονϗ̀τῷἀριθμῷὃνἔχειπρὸςἑκά-τερο",
+  "verdict": "-",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "A clear hyphen sits at the right edge after ἑκά, breaking ἑκάτερον across the line."
+ }
+]

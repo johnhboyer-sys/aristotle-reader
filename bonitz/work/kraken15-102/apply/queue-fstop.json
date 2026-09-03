@@ -1,0 +1,56 @@
+{
+ "entries": [
+  {
+   "page": 51,
+   "col": "L",
+   "line": 28,
+   "word_off": 994,
+   "char_at": 0,
+   "readers": {
+    "opus": "f 554 1569"
+   },
+   "kind": "corrigendum",
+   "reason": "no stop after the fragment number. Across the whole corpus `f` takes one 372 times and goes without it 3 — this site, and the two on 107-117 and 51-L you have already seen. `p` is the opposite and normally takes none, so the convention is real. If the ink agrees, KEEP AS PRINTED banks it",
+   "forms": [
+    "f 554. 1569",
+    "f 554 1569"
+   ],
+   "form_set": [
+    "f 554. 1569",
+    "f 554 1569"
+   ],
+   "becomes": "f 554. 1569",
+   "proposal": {
+    "form": "f 554. 1569"
+   },
+   "card_sid": "corrigendum:page-051-L:28:f"
+  },
+  {
+   "page": 52,
+   "col": "L",
+   "line": 54,
+   "word_off": 2298,
+   "char_at": 24,
+   "readers": {
+    "opus": "f 480 1556"
+   },
+   "kind": "corrigendum",
+   "reason": "no stop after the fragment number. Across the whole corpus `f` takes one 372 times and goes without it 3 — this site, and the two on 107-117 and 51-L you have already seen. `p` is the opposite and normally takes none, so the convention is real. If the ink agrees, KEEP AS PRINTED banks it",
+   "forms": [
+    "f 480. 1556",
+    "f 480 1556"
+   ],
+   "form_set": [
+    "f 480. 1556",
+    "f 480 1556"
+   ],
+   "becomes": "f 480. 1556",
+   "proposal": {
+    "form": "f 480. 1556"
+   },
+   "card_sid": "corrigendum:page-052-L:54:f"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 2
+}

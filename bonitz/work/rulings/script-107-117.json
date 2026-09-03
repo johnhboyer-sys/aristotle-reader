@@ -1,0 +1,154 @@
+{
+ "line:page-111-R:18": {
+  "verdict": "accept",
+  "detail": "commentatio libri Aristotelici mentionem non habet. — Περὶ",
+  "sites": [
+   "page-111-R:18:768"
+  ]
+ },
+ "line:page-112-L:37": {
+  "verdict": "accept",
+  "detail": "narum partium, de quibus conferri possunt αν11. 13. 16.",
+  "sites": [
+   "page-112-L:37:1640"
+  ]
+ },
+ "script:page-111-R:17": {
+  "verdict": "accept",
+  "detail": "Περὶ πνεύματος",
+  "sites": [
+   "page-111-R:17:755"
+  ]
+ },
+ "script:page-110-L:34": {
+  "verdict": "accept",
+  "detail": "Hz",
+  "sites": [
+   "page-110-L:34:1508"
+  ]
+ },
+ "script:page-110-R:52": {
+  "verdict": "accept",
+  "detail": "Hz",
+  "sites": [
+   "page-110-R:52:2353"
+  ]
+ },
+ "script:page-114-L:49": {
+  "verdict": "accept",
+  "detail": "So-",
+  "sites": [
+   "page-114-L:49:2203"
+  ]
+ },
+ "script:page-114-R:49": {
+  "verdict": "accept",
+  "detail": "Meteorologica",
+  "sites": [
+   "page-114-R:49:2213"
+  ]
+ },
+ "script:page-115-L:43": {
+  "verdict": "accept",
+  "detail": "Historia",
+  "sites": [
+   "page-115-L:43:1931"
+  ]
+ },
+ "script:page-117-L:57": {
+  "verdict": "accept",
+  "detail": "Ξάνθιππος",
+  "sites": [
+   "page-117-L:57:2576"
+  ]
+ },
+ "script:page-112-L:23": {
+  "verdict": "accept",
+  "detail": "δ10.",
+  "sites": [
+   "page-112-L:23:1056"
+  ]
+ },
+ "digit:page-114-L:48": {
+  "verdict": "accept",
+  "detail": "10. — Sophistici",
+  "sites": [
+   "page-114-L:48:2123"
+  ]
+ },
+ "digit:page-114-R:30": {
+  "verdict": "accept",
+  "detail": "De coelo",
+  "sites": [
+   "page-114-R:30:1374"
+  ]
+ },
+ "digit:page-115-L:23": {
+  "verdict": "accept",
+  "detail": "De lon-",
+  "sites": [
+   "page-115-L:23:1037"
+  ]
+ },
+ "line:page-116-R:61": {
+  "verdict": "accept",
+  "detail": "tractetur, quaestionis ac doctrinae, sed certos quosdam Ari-",
+  "sites": [
+   "page-116-R:61:2844"
+  ]
+ },
+ "script:page-113-L:7": {
+  "verdict": "accept",
+  "detail": "Τὰ",
+  "sites": [
+   "page-113-L:7:307"
+  ]
+ },
+ "script:page-113-L:37": {
+  "verdict": "accept",
+  "detail": "Νικομάχεια",
+  "sites": [
+   "page-113-L:37:1682"
+  ]
+ },
+ "nota:page-109-R:15:a": {
+  "verdict": "accept",
+  "detail": "bundle:a>n",
+  "sites": [
+   "page-109-R:15:666",
+   "page-109-R:15:689"
+  ]
+ },
+ "nota:page-109-R:15:eta": {
+  "verdict": "accept",
+  "detail": "bundle:η>n",
+  "sites": [
+   "page-109-R:15:677"
+  ]
+ },
+ "space:p-siglum-110-112": {
+  "verdict": "accept",
+  "detail": "bundle:> ",
+  "sites": [
+   "page-110-L:32:1415",
+   "page-110-L:36:1617",
+   "page-110-L:37:1682",
+   "page-110-R:5:208",
+   "page-111-R:24:1070"
+  ]
+ },
+ "space:page-110-L:14": {
+  "verdict": "accept",
+  "detail": "Φε sqq)",
+  "sites": [
+   "page-110-L:14:634"
+  ]
+ },
+ "space:page-112-L:2": {
+  "verdict": "accept",
+  "detail": "(cf ad β3.",
+  "sites": [
+   "page-112-L:2:94"
+  ]
+ }
+}

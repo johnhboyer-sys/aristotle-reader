@@ -1,0 +1,121 @@
+[
+ {
+  "ctx": "gelenarumspeciesquaedamΑΖιΙ161",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Small italic iota after AZ (Aubert-Wimmer vol.); a letter with serif, not a period."
+ },
+ {
+  "ctx": "θαιτὰκηρίαϗ̀ἀραχνιȣ͂σθαιΖιι40.",
+  "verdict": "ιι40.",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Two fused iotas (u-shape) after Zeta = HA bk 9, matching 625a; period after 40 is printed."
+ },
+ {
+  "ctx": "a30.κύνεςἀργȣ͂ντες,οppπονήσαντ",
+  "verdict": "ή",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clear eta with acute in πονήσαντες; no ligature loops."
+ },
+ {
+  "ctx": "ντεςΖιζ20.574b29.ἀργέστης,synὈ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Mark after -ης has a tail dropping below baseline; the periods on this page are square dots."
+ },
+ {
+  "ctx": "λλεινεἰςἐνέργειανἐξἀργίαςψβ4.4",
+  "verdict": "ψ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Psi plainly printed before β4. (De An. 416b3)."
+ },
+ {
+  "ctx": "γειανἐξἀργίαςψβ4.416b3.δι'ἀργί",
+  "verdict": "'",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Elision apostrophe printed after δι."
+ },
+ {
+  "ctx": "εωνϗ̀ἀδυναμίαντȣ͂ἐνεργεῖνεν3.4",
+  "verdict": "εν",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Roman-italic 'ev' siglum before 3. (461a4, de insomniis)."
+ },
+ {
+  "ctx": "ύγειντὴνἀργίαντῶνσωμάτωνΠη17.1",
+  "verdict": "η17.",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πη with printed period after 17; 1336a27 = Pol. bk η."
+ },
+ {
+  "ctx": "πȣδαίαϗ̀φαύληΗα13.1102b7.ηεβ1.",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Eta, n-shape with right descender, not zeta; ηεβ1. = EE bk β at 1219b19."
+ },
+ {
+  "ctx": ".ἀργίατῶνμελιττῶν,νόσημαΖιι40.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Fused double iota after Zeta; 626b19 = HA bk 9."
+ },
+ {
+  "ctx": "μάδεςεἰσίν,ἀργοὶχίλιοιθρέψοντα",
+  "verdict": "ψ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Stem through an open cup = psi, not the closed bowl of phi; θρέψονται."
+ },
+ {
+  "ctx": "684a6.ὁἀστερίαςἀργότατοςΖιι18.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Fused double iota after Zeta; 617a7 = HA bk 9."
+ },
+ {
+  "ctx": "ιι18.617a7.γυναῖκεςἀργαίΖιι40.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Fused double iota after Zeta; 627a15 = HA bk 9."
+ },
+ {
+  "ctx": "κριβολογȣμένȣςἀργόνἐστινΠη12.1",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Πη clearly printed; 1331b19 = Pol. bk η."
+ },
+ {
+  "ctx": "449.1551b38.596.1576b19.Ἄργȣςχ",
+  "verdict": "ργȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ligature after ργ shows the double-loop ou form; contrast Ἄργος with round omicron on the line above."
+ },
+ {
+  "ctx": "ρίοντικαλȣ́μενονΚύθνιονf480.15",
+  "verdict": "8",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "f 480 — digit is a two-loop 8, not 5."
+ },
+ {
+  "ctx": "ȣ́μενονΚύθνιονf480.1556b38.ὁτȣ",
+  "verdict": "8.ὁτȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "b38. then ὁ with rough breathing and τ + ou-ligature carrying a circumflex at line end."
+ }
+]

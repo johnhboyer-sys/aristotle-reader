@@ -1,0 +1,159 @@
+column	line	token	count	neighbour	neighbour_count	substitution	tier	authority
+page-016-L	60	Pind	1	Pina	0	d->a	other	Diogenes attests Pina and not Pind (1 of 5 attested neighbours)
+page-016-R	10	Nauck	2	Nauca	0	k->a	other	Diogenes attests Nauca and not Nauck (1 of 3 attested neighbours)
+page-016-R	19	Prol	1	Proh	0	l->h	other	Diogenes attests Proh and not Prol (1 of 4 attested neighbours)
+page-018-L	30	intcllexit	1	intellexit	0	c->e	ce	Diogenes attests intellexit and not intcllexit
+page-020-R	34	Soph	2	Sopi	0	h->i	other	Diogenes attests Sopi and not Soph
+page-023-L	42	enunciatis	1	enuntiatis	0	c->t	other	Diogenes attests enuntiatis and not enunciatis
+page-023-R	1	petits	1	petita	0	s->a	other	Diogenes attests petita and not petits (1 of 5 attested neighbours)
+page-023-R	2	Ducs	1	Duas	0	c->a	other	Diogenes attests Duas and not Ducs (1 of 6 attested neighbours)
+page-023-R	6	Simonid	2	Simonis	0	d->s	other	Diogenes attests Simonis and not Simonid
+page-023-R	58	sylvia	2	salvia	0	y->a	other	Diogenes attests salvia and not sylvia
+page-023-R	58	lusc	2	luse	0	c->e	ce	Diogenes attests luse and not lusc (1 of 4 attested neighbours)
+page-023-R	58	lusc	2	luse	0	c->e	ce	Diogenes attests luse and not lusc (1 of 4 attested neighbours)
+page-024-R	14	ather	1	athei	0	r->i	other	Diogenes attests athei and not ather (1 of 3 attested neighbours)
+page-025-R	32	affcrtur	1	affertur	2	c->e	ce	Diogenes attests affertur and not affcrtur
+page-026-L	3	rubra	1	rubea	0	r->e	other	Diogenes attests rubea and not rubra (1 of 6 attested neighbours)
+page-026-L	4	sylvia	2	salvia	0	y->a	other	Diogenes attests salvia and not sylvia
+page-026-L	15	europaeus	1	europaeis	0	u->i	other	Diogenes attests europaeis and not europaeus (1 of 2 attested neighbours)
+page-026-L	15	CrSu	1	ArSu	0	C->A	other	Diogenes attests ArSu and not CrSu (1 of 3 attested neighbours)
+page-026-L	17	barge	1	barbe	0	g->b	other	Diogenes attests barbe and not barge (1 of 4 attested neighbours)
+page-026-L	44	astronomicae	1	astronomicam	0	e->m	other	Diogenes attests astronomicam and not astronomicae (1 of 2 attested neighbours)
+page-027-L	49	Aubert	1	Aufert	0	b->f	other	Diogenes attests Aufert and not Aubert
+page-027-L	51	sciences	1	scientes	0	c->t	other	Diogenes attests scientes and not sciences
+page-027-L	52	Arch	1	Arca	0	h->a	other	Diogenes attests Arca and not Arch (1 of 4 attested neighbours)
+page-027-L	52	Naturg	1	Natura	0	g->a	other	Diogenes attests Natura and not Naturg
+page-027-R	45	parasiticus	1	parasiticas	0	u->a	other	Diogenes attests parasiticas and not parasiticus (1 of 3 attested neighbours)
+page-027-R	45	argentatus	1	argentatas	0	u->a	other	Diogenes attests argentatas and not argentatus (1 of 2 attested neighbours)
+page-027-R	55	chat	1	chai	0	t->i	other	Diogenes attests chai and not chat (1 of 3 attested neighbours)
+page-028-L	4	über	1	uber	0	ü->u	other	Diogenes attests uber and not über
+page-029-R	10	depilans	1	depalans	0	i->a	other	Diogenes attests depalans and not depilans
+page-029-R	13	Antig	1	Antia	0	g->a	other	Diogenes attests Antia and not Antig (1 of 5 attested neighbours)
+page-029-R	36	anatom	2	anatem	0	o->e	other	Diogenes attests anatem and not anatom
+page-030-L	12	aegocerus	1	aegoceros	0	u->o	other	Diogenes attests aegoceros and not aegocerus
+page-030-L	14	hircus	1	circus	0	h->c	other	Diogenes attests circus and not hircus (1 of 3 attested neighbours)
+page-030-L	23	vanellus	1	vafellus	0	n->f	other	Diogenes attests vafellus and not vanellus
+page-030-L	24	Belon	1	Belin	0	o->i	other	Diogenes attests Belin and not Belon (1 of 8 attested neighbours)
+page-030-R	53	Schn	1	Scin	0	h->i	other	Diogenes attests Scin and not Schn
+page-030-R	56	merlin	1	meroin	0	l->o	other	Diogenes attests meroin and not merlin
+page-030-R	57	falconum	1	falconem	0	u->e	other	Diogenes attests falconem and not falconum
+page-031-L	37	Aphr	2	Apar	0	h->a	other	Diogenes attests Apar and not Aphr (1 of 2 attested neighbours)
+page-033-L	33	Dial	2	Diae	0	l->e	other	Diogenes attests Diae and not Dial (1 of 4 attested neighbours)
+page-034-R	33	motricem	1	matricem	0	o->a	other	Diogenes attests matricem and not motricem
+page-034-R	53	motrix	1	matrix	0	o->a	other	Diogenes attests matrix and not motrix (1 of 2 attested neighbours)
+page-035-R	38	ortie	1	ortae	1	i->a	other	Diogenes attests ortae and not ortie (1 of 2 attested neighbours)
+page-036-L	18	cnicus	1	caicus	0	n->a	other	Diogenes attests caicus and not cnicus (1 of 2 attested neighbours)
+page-036-L	19	quorundam	1	quorumdam	0	n->m	other	Diogenes attests quorumdam and not quorundam
+page-036-L	24	spinax	1	spinae	2	x->e	other	Diogenes attests spinae and not spinax (1 of 3 attested neighbours)
+page-036-L	35	disquisitionum	1	disquisitionem	0	u->e	other	Diogenes attests disquisitionem and not disquisitionum
+page-036-L	45	parorum	1	carorum	0	p->c	other	Diogenes attests carorum and not parorum (1 of 7 attested neighbours)
+page-036-L	46	caudatus	1	causatus	0	d->s	other	Diogenes attests causatus and not caudatus (1 of 2 attested neighbours)
+page-036-R	5	acarus	2	acatus	0	r->t	other	Diogenes attests acatus and not acarus (1 of 6 attested neighbours)
+page-036-R	6	acarus	2	acatus	0	r->t	other	Diogenes attests acatus and not acarus (1 of 6 attested neighbours)
+page-040-R	9	insectum	2	infectum	0	s->f	other	Diogenes attests infectum and not insectum (1 of 6 attested neighbours)
+page-040-R	26	Fabr	1	Faba	0	r->a	other	Diogenes attests Faba and not Fabr (1 of 3 attested neighbours)
+page-040-R	29	saltatoria	1	saltatorie	0	a->e	other	Diogenes attests saltatorie and not saltatoria (1 of 2 attested neighbours)
+page-040-R	30	spex	1	apex	0	s->a	other	Diogenes attests apex and not spex (1 of 5 attested neighbours)
+page-041-R	57	glans	1	flans	0	g->f	other	Diogenes attests flans and not glans (1 of 3 attested neighbours)
+page-042-R	43	poule	1	paule	0	o->a	other	Diogenes attests paule and not poule (1 of 2 attested neighbours)
+page-044-R	7	aigle	1	aegle	0	i->e	other	Diogenes attests aegle and not aigle
+page-044-R	9	haliaetus	2	haliartus	0	e->r	other	Diogenes attests haliartus and not haliaetus
+page-044-R	10	haliaetus	2	haliartus	0	e->r	other	Diogenes attests haliartus and not haliaetus
+page-044-R	25	collective	1	collectiva	0	e->a	other	Diogenes attests collectiva and not collective (1 of 3 attested neighbours)
+page-045-L	34	Simonid	2	Simonis	0	d->s	other	Diogenes attests Simonis and not Simonid
+page-045-L	43	conditionalem	2	condicionalem	0	t->c	other	Diogenes attests condicionalem and not conditionalem
+page-045-L	43	exorsam	1	exorsum	1	a->u	other	Diogenes attests exorsum and not exorsam (1 of 4 attested neighbours)
+page-045-L	57	enunciationem	2	enuntiationem	0	c->t	other	Diogenes attests enuntiationem and not enunciationem
+page-045-R	10	enunciatio	1	enuntiatio	0	c->t	other	Diogenes attests enuntiatio and not enunciatio
+page-045-R	35	conditionalis	1	condicionalis	0	t->c	other	Diogenes attests condicionalis and not conditionalis
+page-047-R	24	alcyonii	1	alcyonei	0	i->e	other	Diogenes attests alcyonei and not alcyonii (1 of 2 attested neighbours)
+page-047-R	24	halcyoneum	1	halcyoneus	0	m->s	other	Diogenes attests halcyoneus and not halcyoneum
+page-047-R	24	cotoneum	1	coloneum	0	t->l	other	Diogenes attests coloneum and not cotoneum (1 of 4 attested neighbours)
+page-047-R	25	alcyonium	1	alcyoneum	0	i->e	other	Diogenes attests alcyoneum and not alcyonium
+page-047-R	25	bursa	1	burra	0	s->r	other	Diogenes attests burra and not bursa (1 of 4 attested neighbours)
+page-047-R	26	alcyonia	1	alcyonea	0	i->e	other	Diogenes attests alcyonea and not alcyonia (1 of 2 attested neighbours)
+page-047-R	60	sing	1	sine	9	g->e	other	Diogenes attests sine and not sing (1 of 7 attested neighbours)
+page-048-R	11	squalorum	1	squalorem	0	u->e	other	Diogenes attests squalorem and not squalorum
+page-048-R	28	renard	2	renari	0	d->i	other	Diogenes attests renari and not renard
+page-048-R	30	niloticus	1	niloticis	0	u->i	other	Diogenes attests niloticis and not niloticus (1 of 2 attested neighbours)
+page-048-R	33	renard	2	renari	0	d->i	other	Diogenes attests renari and not renard
+page-048-R	34	Alopex	1	Alopes	0	x->s	other	Diogenes attests Alopes and not Alopex
+page-048-R	34	Argent	1	Aegent	0	r->e	other	Diogenes attests Aegent and not Argent (1 of 7 attested neighbours)
+page-048-R	35	lemuris	1	lemures	0	i->e	other	Diogenes attests lemures and not lemuris (1 of 2 attested neighbours)
+page-048-R	43	alopias	1	alogias	0	p->g	other	Diogenes attests alogias and not alopias
+page-048-R	43	vulp	1	vult	0	p->t	other	Diogenes attests vult and not vulp
+page-048-R	44	Acad	1	Acae	0	d->e	other	Diogenes attests Acae and not Acad (1 of 2 attested neighbours)
+page-050-R	9	amia	2	alia	4	m->l	other	Diogenes attests alia and not amia (1 of 10 attested neighbours)
+page-050-R	9	amia	2	alia	4	m->l	other	Diogenes attests alia and not amia (1 of 10 attested neighbours)
+page-050-R	10	bonite	1	bonine	0	t->n	other	Diogenes attests bonine and not bonite (1 of 3 attested neighbours)
+page-051-L	28	vinifera	1	pinifera	0	v->p	other	Diogenes attests pinifera and not vinifera (1 of 2 attested neighbours)
+page-051-L	38	Amygdalus	1	Amygdalas	0	u->a	other	Diogenes attests Amygdalas and not Amygdalus (1 of 3 attested neighbours)
+page-051-R	12	defenses	1	defendes	0	s->d	other	Diogenes attests defendes and not defenses (1 of 5 attested neighbours)
+page-053-L	5	Buttm	1	Butam	0	t->a	other	Diogenes attests Butam and not Buttm
+page-053-L	52	conditionali	1	condicionali	0	t->c	other	Diogenes attests condicionali and not conditionali
+page-053-L	53	incl	1	inci	0	l->i	other	Diogenes attests inci and not incl
+page-053-R	13	conditionale	1	condicionale	0	t->c	other	Diogenes attests condicionale and not conditionale
+page-054-L	31	praep	2	praei	0	p->i	other	Diogenes attests praei and not praep (1 of 3 attested neighbours)
+page-054-L	46	Soph	2	Sopi	0	h->i	other	Diogenes attests Sopi and not Soph
+page-056-L	1	bendum	1	iendum	0	b->i	other	Diogenes attests iendum and not bendum (1 of 3 attested neighbours)
+page-058-R	41	enunciati	2	enuntiati	0	c->t	other	Diogenes attests enuntiati and not enunciati
+page-059-L	4	conditionalem	2	condicionalem	0	t->c	other	Diogenes attests condicionalem and not conditionalem
+page-059-L	8	enunciata	1	enuntiata	0	c->t	other	Diogenes attests enuntiata and not enunciata
+page-059-R	18	Meliss	2	Melias	0	s->a	other	Diogenes attests Melias and not Meliss (1 of 3 attested neighbours)
+page-060-R	20	praep	2	praei	0	p->i	other	Diogenes attests praei and not praep (1 of 3 attested neighbours)
+page-061-R	2	Phil	1	Phin	0	l->n	other	Diogenes attests Phin and not Phil (1 of 2 attested neighbours)
+page-062-L	34	Aphr	2	Apar	0	h->a	other	Diogenes attests Apar and not Aphr (1 of 2 attested neighbours)
+page-066-R	42	oleracea	1	oleraceo	0	a->o	other	Diogenes attests oleraceo and not oleracea
+page-067-L	42	Nasamonas	1	Nasamones	0	a->e	other	Diogenes attests Nasamones and not Nasamonas
+page-068-R	35	anatom	2	anatem	0	o->e	other	Diogenes attests anatem and not anatom
+page-069-L	38	Valenc	1	Valens	0	c->s	other	Diogenes attests Valens and not Valenc (1 of 2 attested neighbours)
+page-069-R	14	insectum	2	infectum	0	s->f	other	Diogenes attests infectum and not insectum (1 of 6 attested neighbours)
+page-072-L	12	Prot	2	Proh	0	t->h	other	Diogenes attests Proh and not Prot (1 of 4 attested neighbours)
+page-072-R	25	Protag	1	Protae	0	g->e	other	Diogenes attests Protae and not Protag
+page-074-L	8	Thes	1	Then	0	s->n	other	Diogenes attests Then and not Thes (1 of 4 attested neighbours)
+page-074-L	50	femin	1	aemin	0	f->a	other	Diogenes attests aemin and not femin (1 of 4 attested neighbours)
+page-078-R	14	affinia	1	adfinia	0	f->d	other	Diogenes attests adfinia and not affinia (1 of 2 attested neighbours)
+page-079-R	8	coniicias	1	conficias	0	i->f	other	Diogenes attests conficias and not coniicias
+page-080-L	19	Auber	1	Aufer	0	b->f	other	Diogenes attests Aufer and not Auber (1 of 4 attested neighbours)
+page-080-L	43	Prot	2	Proh	0	t->h	other	Diogenes attests Proh and not Prot (1 of 4 attested neighbours)
+page-080-R	50	notionum	1	notionem	1	u->e	other	Diogenes attests notionem and not notionum (1 of 4 attested neighbours)
+page-081-L	3	Meliss	2	Melias	0	s->a	other	Diogenes attests Melias and not Meliss (1 of 3 attested neighbours)
+page-081-R	18	systemate	1	systemata	0	e->a	other	Diogenes attests systemata and not systemate
+page-082-L	44	Zell	1	Zela	0	l->a	other	Diogenes attests Zela and not Zell (1 of 3 attested neighbours)
+page-082-R	26	Vict	1	Viet	0	c->e	ce	Diogenes attests Viet and not Vict (1 of 5 attested neighbours)
+page-083-L	19	aorta	1	aorsa	0	t->s	other	Diogenes attests aorsa and not aorta (1 of 5 attested neighbours)
+page-083-L	35	aortae	1	portae	0	a->p	other	Diogenes attests portae and not aortae (1 of 2 attested neighbours)
+page-083-L	39	aortam	1	mortam	0	a->m	other	Diogenes attests mortam and not aortam (1 of 4 attested neighbours)
+page-083-L	45	hepaticam	1	hepaticum	0	a->u	other	Diogenes attests hepaticum and not hepaticam
+page-083-L	55	fissio	1	fissis	0	o->s	other	Diogenes attests fissis and not fissio (1 of 3 attested neighbours)
+page-083-L	58	renales	1	recales	0	n->c	other	Diogenes attests recales and not renales (1 of 5 attested neighbours)
+page-083-R	9	spermaticas	1	spermaticos	0	a->o	other	Diogenes attests spermaticos and not spermaticas (1 of 2 attested neighbours)
+page-083-R	25	nuncii	1	nuncia	0	i->a	other	Diogenes attests nuncia and not nuncii (1 of 2 attested neighbours)
+page-083-R	34	renunciare	1	renuntiare	0	c->t	other	Diogenes attests renuntiare and not renunciare
+page-084-R	14	Ctes	1	Cies	0	t->i	other	Diogenes attests Cies and not Ctes (1 of 5 attested neighbours)
+page-085-L	42	Capp	1	Cape	0	p->e	other	Diogenes attests Cape and not Capp (1 of 4 attested neighbours)
+page-089-L	54	accuratiori	1	accuratiore	0	i->e	other	Diogenes attests accuratiore and not accuratiori
+page-089-L	60	Dial	2	Diae	0	l->e	other	Diogenes attests Diae and not Dial (1 of 4 attested neighbours)
+page-089-R	30	adriat	1	adfiat	0	r->f	other	Diogenes attests adfiat and not adriat
+page-089-R	30	Meeres	1	Maeres	0	e->a	other	Diogenes attests Maeres and not Meeres
+page-090-L	42	eiicere	2	edicere	0	i->d	other	Diogenes attests edicere and not eiicere (1 of 4 attested neighbours)
+page-091-L	34	Herod	1	Heroa	0	d->a	other	Diogenes attests Heroa and not Herod (1 of 6 attested neighbours)
+page-093-R	37	eiicere	2	edicere	0	i->d	other	Diogenes attests edicere and not eiicere (1 of 4 attested neighbours)
+page-093-R	57	enunciationem	2	enuntiationem	0	c->t	other	Diogenes attests enuntiationem and not enunciationem
+page-094-L	11	secernendis	2	decernendis	0	s->d	other	Diogenes attests decernendis and not secernendis
+page-094-R	5	secernendis	2	decernendis	0	s->d	other	Diogenes attests decernendis and not secernendis
+page-096-R	43	vocaculum	1	vocabulum	3	c->b	other	Diogenes attests vocabulum and not vocaculum
+page-096-R	55	Nauck	2	Nauca	0	k->a	other	Diogenes attests Nauca and not Nauck (1 of 3 attested neighbours)
+page-097-L	51	ordiendas	1	ordiendae	0	s->e	other	Diogenes attests ordiendae and not ordiendas (1 of 4 attested neighbours)
+page-098-R	9	medic	1	medie	0	c->e	ce	Diogenes attests medie and not medic (1 of 7 attested neighbours)
+page-098-R	45	brachiales	1	brachialem	0	s->m	other	Diogenes attests brachialem and not brachiales
+page-098-R	48	phrenica	1	phoenica	0	r->o	other	Diogenes attests phoenica and not phrenica
+page-100-L	56	allatos	1	ablatos	0	l->b	other	Diogenes attests ablatos and not allatos (1 of 6 attested neighbours)
+page-100-R	50	coecum	1	coccum	0	e->c	ce	Diogenes attests coccum and not coecum (1 of 7 attested neighbours)
+page-100-R	51	appendix	1	appendis	0	x->s	other	Diogenes attests appendis and not appendix (1 of 2 attested neighbours)
+page-100-R	51	vermiformis	1	versiformis	0	m->s	other	Diogenes attests versiformis and not vermiformis
+page-101-L	37	reiicere	1	reficere	0	i->f	other	Diogenes attests reficere and not reiicere (1 of 2 attested neighbours)
+page-101-L	55	Eurip	1	Euris	0	p->s	other	Diogenes attests Euris and not Eurip
+page-102-R	8	enunciato	1	enuntiato	0	c->t	other	Diogenes attests enuntiato and not enunciato
+page-102-R	8	hypothetico	1	hypothetici	0	o->i	other	Diogenes attests hypothetici and not hypothetico
+page-102-R	39	enunciati	2	enuntiati	0	c->t	other	Diogenes attests enuntiati and not enunciati

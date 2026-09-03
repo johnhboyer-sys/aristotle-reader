@@ -1,0 +1,72 @@
+[
+ {
+  "page": 91,
+  "col": "L",
+  "spine_off": 145489,
+  "ctx": "14.ἐλεγκτικῶςΜγ4.1006a11,15.νομίζομενἱκανῶςἀποδεδεῖχθ",
+  "opus": "15.",
+  "genie": "ἀποδεικτικόςἀποδέχεσθαι",
+  "llama": "15.",
+  "kraken": "15.",
+  "cls": "majority-spine",
+  "vote": "15.",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 91,
+  "col": "L",
+  "spine_off": 145562,
+  "ctx": "νύασιπο6.1450a7.ἀποδεικνύȣσιπο6.1450b11.Με1.1025b13",
+  "opus": "ȣ",
+  "genie": "ω",
+  "llama": "ȣ",
+  "kraken": "ȣ",
+  "cls": "majority-spine",
+  "vote": "ȣ",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 91,
+  "col": "L",
+  "spine_off": 146872,
+  "ctx": "οδεθῇΖιη10.587a14,15.ἀποδȣ́μενοιτὸνἕτερονὄρχινΖγδ1.7",
+  "opus": "ȣ́",
+  "genie": "εό",
+  "llama": "ού",
+  "kraken": "ȣ́",
+  "cls": "majority-spine",
+  "vote": "ȣ́",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 91,
+  "col": "L",
+  "spine_off": 147186,
+  "ctx": "όθεσιςΡγ13.1414a36.περὶἀπόδειξινἡσκέψιςinΑnalyticisΑα1.2",
+  "opus": "όδειξι",
+  "genie": "οδείξεω",
+  "llama": "οδείξεω",
+  "kraken": "όδειξι",
+  "cls": "2-2-split",
+  "vote": null,
+  "flag": true,
+  "citation": false
+ },
+ {
+  "page": 91,
+  "col": "L",
+  "spine_off": 148015,
+  "ctx": ".1418a4.ἀπόδειξιςφαίνεταιȣ͂σαπολλῶντῶνἀιδίωνΖγβ6.742",
+  "opus": "ȣ͂",
+  "genie": "ὅ",
+  "llama": "ὅ",
+  "kraken": "ȣ̓͂",
+  "cls": "2-2-split",
+  "vote": null,
+  "flag": true,
+  "citation": false
+ }
+]

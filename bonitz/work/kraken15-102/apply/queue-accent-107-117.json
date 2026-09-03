@@ -1,0 +1,698 @@
+{
+ "entries": [
+  {
+   "page": 109,
+   "col": "R",
+   "line": 49,
+   "word_off": 2288,
+   "char_at": 52,
+   "readers": {
+    "opus": "τοις"
+   },
+   "kind": "accent",
+   "reason": "no accent at all — LlamaParse spells it τοῖς at many sites in this corpus",
+   "forms": [
+    "τοῖς",
+    "τοις"
+   ],
+   "form_set": [
+    "τοῖς",
+    "τοις"
+   ],
+   "becomes": "τοῖς",
+   "card_sid": "accent:page-109-R:49:τοις"
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 6,
+   "word_off": 254,
+   "char_at": 44,
+   "readers": {
+    "opus": "Προβληματα"
+   },
+   "kind": "accent",
+   "reason": "no accent at all; the same heading is spelled Προβλήματα elsewhere in the corpus",
+   "forms": [
+    "Προβλήματα",
+    "Προβληματα"
+   ],
+   "form_set": [
+    "Προβλήματα",
+    "Προβληματα"
+   ],
+   "becomes": "Προβλήματα",
+   "card_sid": "accent:page-111-R:6:Προβλη"
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 50,
+   "word_off": 2249,
+   "char_at": 38,
+   "readers": {
+    "opus": "κινει"
+   },
+   "kind": "accent",
+   "reason": "no accent at all",
+   "forms": [
+    "κινεῖ",
+    "κινει"
+   ],
+   "form_set": [
+    "κινεῖ",
+    "κινει"
+   ],
+   "becomes": "κινεῖ",
+   "card_sid": "accent:page-112-L:50:κινει"
+  },
+  {
+   "page": 112,
+   "col": "R",
+   "line": 56,
+   "word_off": 2460,
+   "char_at": 0,
+   "readers": {
+    "opus": "πυρος"
+   },
+   "kind": "accent",
+   "reason": "no accent at all — LlamaParse spells it πυρός at 15 sites in this corpus",
+   "forms": [
+    "πυρός",
+    "πυρος"
+   ],
+   "form_set": [
+    "πυρός",
+    "πυρος"
+   ],
+   "becomes": "πυρός",
+   "card_sid": "accent:page-112-R:56:πυρος"
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 30,
+   "word_off": 1349,
+   "char_at": 30,
+   "readers": {
+    "opus": "περι"
+   },
+   "kind": "accent",
+   "reason": "no accent at all — LlamaParse spells it περὶ at 697 sites in this corpus",
+   "forms": [
+    "περὶ",
+    "περι"
+   ],
+   "form_set": [
+    "περὶ",
+    "περι"
+   ],
+   "becomes": "περὶ",
+   "card_sid": "accent:page-112-L:30:περι"
+  },
+  {
+   "page": 116,
+   "col": "L",
+   "line": 61,
+   "word_off": 2834,
+   "char_at": 45,
+   "readers": {
+    "opus": "δεί"
+   },
+   "kind": "accent",
+   "reason": "acute for circumflex; LlamaParse spells δεῖ at 93 sites",
+   "forms": [
+    "δεῖ",
+    "δεί"
+   ],
+   "form_set": [
+    "δεῖ",
+    "δεί"
+   ],
+   "becomes": "δεῖ",
+   "card_sid": "accent:page-116-L:61:δεί"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 27,
+   "word_off": 1216,
+   "char_at": 9,
+   "readers": {
+    "opus": "εἶη"
+   },
+   "kind": "accent",
+   "reason": "circumflex for acute — accent_law §166 also flags it, and LlamaParse spells εἴη at 16 sites",
+   "forms": [
+    "εἴη",
+    "εἶη"
+   ],
+   "form_set": [
+    "εἴη",
+    "εἶη"
+   ],
+   "becomes": "εἴη",
+   "card_sid": "accent:page-109-R:27:εἶη"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 4,
+   "word_off": 187,
+   "char_at": 52,
+   "readers": {
+    "opus": "ἢν"
+   },
+   "kind": "accent",
+   "reason": "grave for circumflex; LlamaParse spells ἦν at 29 sites",
+   "forms": [
+    "ἦν",
+    "ἢν"
+   ],
+   "form_set": [
+    "ἦν",
+    "ἢν"
+   ],
+   "becomes": "ἦν",
+   "card_sid": "accent:page-113-L:4:ἢν"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 13,
+   "word_off": 578,
+   "char_at": 0,
+   "readers": {
+    "opus": "ψυχῆ"
+   },
+   "kind": "accent",
+   "reason": "circumflex for grave; the very next words print ἐν τῇ ψυχῇ, and LlamaParse spells ψυχὴ at 18 sites",
+   "forms": [
+    "ψυχὴ",
+    "ψυχῆ"
+   ],
+   "form_set": [
+    "ψυχὴ",
+    "ψυχῆ"
+   ],
+   "becomes": "ψυχὴ",
+   "card_sid": "accent:page-117-L:13:ψυχῆ"
+  },
+  {
+   "page": 107,
+   "col": "R",
+   "line": 24,
+   "word_off": 985,
+   "char_at": 22,
+   "readers": {
+    "opus": "εὐ"
+   },
+   "kind": "accent",
+   "reason": "LlamaParse spells εὖ at 30 sites; εὖ πράττειν",
+   "forms": [
+    "εὖ",
+    "εὐ"
+   ],
+   "form_set": [
+    "εὖ",
+    "εὐ"
+   ],
+   "becomes": "εὖ",
+   "card_sid": "accent:page-107-R:24:εὐ"
+  },
+  {
+   "page": 108,
+   "col": "R",
+   "line": 55,
+   "word_off": 2443,
+   "char_at": 22,
+   "readers": {
+    "opus": "ἑκ"
+   },
+   "kind": "accent",
+   "reason": "ROUGH breathing on ἐκ; LlamaParse spells ἐκ at 369 sites",
+   "forms": [
+    "ἐκ",
+    "ἑκ"
+   ],
+   "form_set": [
+    "ἐκ",
+    "ἑκ"
+   ],
+   "becomes": "ἐκ",
+   "card_sid": "accent:page-108-R:55:ἑκ"
+  },
+  {
+   "page": 107,
+   "col": "L",
+   "line": 19,
+   "word_off": 780,
+   "char_at": 11,
+   "readers": {
+    "opus": "αἰρεῖσθαι"
+   },
+   "kind": "breath",
+   "reason": "αἱρέω takes the rough breathing",
+   "forms": [
+    "αἱρεῖσθαι",
+    "αἰρεῖσθαι"
+   ],
+   "form_set": [
+    "αἱρεῖσθαι",
+    "αἰρεῖσθαι"
+   ],
+   "becomes": "αἱρεῖσθαι",
+   "card_sid": "breath:page-107-L:19:αἰρεῖσ"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 6,
+   "word_off": 246,
+   "char_at": 17,
+   "readers": {
+    "opus": "ύστερον"
+   },
+   "kind": "breath",
+   "reason": "no breathing at all",
+   "forms": [
+    "ὕστερον",
+    "ύστερον"
+   ],
+   "form_set": [
+    "ὕστερον",
+    "ύστερον"
+   ],
+   "becomes": "ὕστερον",
+   "card_sid": "breath:page-109-R:6:ύστερο"
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 52,
+   "word_off": 2342,
+   "char_at": 8,
+   "readers": {
+    "opus": "Ἑγκύκλια"
+   },
+   "kind": "breath",
+   "reason": "rough for smooth — ἐγκύκλιος",
+   "forms": [
+    "Ἐγκύκλια",
+    "Ἑγκύκλια"
+   ],
+   "form_set": [
+    "Ἐγκύκλια",
+    "Ἑγκύκλια"
+   ],
+   "becomes": "Ἐγκύκλια",
+   "card_sid": "breath:page-110-L:52:Ἑγκύκλ"
+  },
+  {
+   "page": 112,
+   "col": "R",
+   "line": 53,
+   "word_off": 2345,
+   "char_at": 28,
+   "readers": {
+    "opus": "Ὅπτικά"
+   },
+   "kind": "breath",
+   "reason": "rough for smooth — ὀπτικός",
+   "forms": [
+    "Ὀπτικά",
+    "Ὅπτικά"
+   ],
+   "form_set": [
+    "Ὀπτικά",
+    "Ὅπτικά"
+   ],
+   "becomes": "Ὀπτικά",
+   "card_sid": "breath:page-112-R:53:Ὅπτικά"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 8,
+   "word_off": 336,
+   "char_at": 12,
+   "readers": {
+    "opus": "Ἡθικοῖς"
+   },
+   "kind": "breath",
+   "reason": "rough for smooth — ἠθικός from ἦθος",
+   "forms": [
+    "Ἠθικοῖς",
+    "Ἡθικοῖς"
+   ],
+   "form_set": [
+    "Ἠθικοῖς",
+    "Ἡθικοῖς"
+   ],
+   "becomes": "Ἠθικοῖς",
+   "card_sid": "breath:page-113-L:8:Ἡθικοῖ"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 37,
+   "word_off": 1677,
+   "char_at": 23,
+   "readers": {
+    "opus": "Ἡθικὰ"
+   },
+   "kind": "breath",
+   "reason": "rough for smooth — ἠθικός from ἦθος; the word beside it, Nικομάχεια, is a separate card on the script sweep",
+   "forms": [
+    "Ἠθικὰ",
+    "Ἡθικὰ"
+   ],
+   "form_set": [
+    "Ἠθικὰ",
+    "Ἡθικὰ"
+   ],
+   "becomes": "Ἠθικὰ",
+   "card_sid": "breath:page-113-L:37:Ἡθικὰ"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 55,
+   "word_off": 2531,
+   "char_at": 13,
+   "readers": {
+    "opus": "Ηθικὰ"
+   },
+   "kind": "breath",
+   "reason": "no breathing at all",
+   "forms": [
+    "Ἠθικὰ",
+    "Ηθικὰ"
+   ],
+   "form_set": [
+    "Ἠθικὰ",
+    "Ηθικὰ"
+   ],
+   "becomes": "Ἠθικὰ",
+   "card_sid": "breath:page-113-L:55:Ηθικὰ"
+  },
+  {
+   "page": 116,
+   "col": "L",
+   "line": 61,
+   "word_off": 2795,
+   "char_at": 0,
+   "readers": {
+    "opus": "Οπτικά"
+   },
+   "kind": "breath",
+   "reason": "no breathing at all",
+   "forms": [
+    "Ὀπτικά",
+    "Οπτικά"
+   ],
+   "form_set": [
+    "Ὀπτικά",
+    "Οπτικά"
+   ],
+   "becomes": "Ὀπτικά",
+   "card_sid": "breath:page-116-L:61:Οπτικά"
+  },
+  {
+   "page": 117,
+   "col": "R",
+   "line": 6,
+   "word_off": 256,
+   "char_at": 38,
+   "readers": {
+    "opus": "ᾧκησαν"
+   },
+   "kind": "breath",
+   "reason": "rough for smooth — οἰκέω gives ᾤκησαν",
+   "forms": [
+    "ᾤκησαν",
+    "ᾧκησαν"
+   ],
+   "form_set": [
+    "ᾤκησαν",
+    "ᾧκησαν"
+   ],
+   "becomes": "ᾤκησαν",
+   "card_sid": "breath:page-117-R:6:ᾧκησαν"
+  },
+  {
+   "page": 113,
+   "col": "R",
+   "line": 25,
+   "word_off": 1159,
+   "char_at": 11,
+   "readers": {
+    "opus": "ὑστερον"
+   },
+   "kind": "breath",
+   "reason": "breathing but no accent",
+   "forms": [
+    "ὕστερον",
+    "ὑστερον"
+   ],
+   "form_set": [
+    "ὕστερον",
+    "ὑστερον"
+   ],
+   "becomes": "ὕστερον",
+   "card_sid": "breath:page-113-R:25:ὑστερο"
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 22,
+   "word_off": 945,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ανατ"
+   },
+   "kind": "breath",
+   "reason": "no breathing; the same abbreviation is spelled Ἀνατ seven times on these two pages",
+   "forms": [
+    "Ἀνατ",
+    "Ανατ"
+   ],
+   "form_set": [
+    "Ἀνατ",
+    "Ανατ"
+   ],
+   "becomes": "Ἀνατ",
+   "card_sid": "breath:page-111-R:22:Ανατ"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 9,
+   "word_off": 418,
+   "char_at": 42,
+   "readers": {
+    "opus": "ἐξωτερικȣ̀ϛ"
+   },
+   "kind": "smyth",
+   "reason": "STIGMA ϛ for final sigma; τȣ̀ς two words earlier on the same line is spelled right",
+   "forms": [
+    "ἐξωτερικȣ̀ς",
+    "ἐξωτερικȣ̀ϛ"
+   ],
+   "form_set": [
+    "ἐξωτερικȣ̀ς",
+    "ἐξωτερικȣ̀ϛ"
+   ],
+   "becomes": "ἐξωτερικȣ̀ς",
+   "card_sid": "smyth:page-117-L:9:ἐξωτερ"
+  },
+  {
+   "page": 113,
+   "col": "R",
+   "line": 19,
+   "word_off": 867,
+   "char_at": 2,
+   "readers": {
+    "opus": "Πολιτικάβ2."
+   },
+   "kind": "smyth",
+   "reason": "the space is gone and the accent went acute before it",
+   "forms": [
+    "Πολιτικὰ β2.",
+    "Πολιτικάβ2."
+   ],
+   "form_set": [
+    "Πολιτικὰ β2.",
+    "Πολιτικάβ2."
+   ],
+   "becomes": "Πολιτικὰ β2.",
+   "card_sid": "smyth:page-113-R:19:Πολιτι"
+  },
+  {
+   "page": 113,
+   "col": "R",
+   "line": 36,
+   "word_off": 1665,
+   "char_at": 0,
+   "readers": {
+    "opus": "1εχνη ῥητορικ7 α1. 1355a28 ἐν τοις τοπικοις"
+   },
+   "kind": "smyth",
+   "reason": "four on one line: the DIGIT 1 for τ, the DIGIT 7 for ή, and neither τοῖς nor τοπικοῖς has its accent",
+   "forms": [
+    "τέχνη ῥητορικὴ α1. 1355a28 ἐν τοῖς τοπικοῖς",
+    "1εχνη ῥητορικ7 α1. 1355a28 ἐν τοις τοπικοις"
+   ],
+   "form_set": [
+    "τέχνη ῥητορικὴ α1. 1355a28 ἐν τοῖς τοπικοῖς",
+    "1εχνη ῥητορικ7 α1. 1355a28 ἐν τοις τοπικοις"
+   ],
+   "becomes": "τέχνη ῥητορικὴ α1. 1355a28 ἐν τοῖς τοπικοῖς",
+   "card_sid": "smyth:page-113-R:36:1εχνη "
+  },
+  {
+   "page": 112,
+   "col": "R",
+   "line": 47,
+   "word_off": 2061,
+   "char_at": 20,
+   "readers": {
+    "opus": "Περὶ φυ7 ῶν"
+   },
+   "kind": "smyth",
+   "reason": "the DIGIT 7 for τ, and a space opened inside the word — the heading is Περὶ φυτῶν",
+   "forms": [
+    "Περὶ φυτῶν",
+    "Περὶ φυ7 ῶν"
+   ],
+   "form_set": [
+    "Περὶ φυτῶν",
+    "Περὶ φυ7 ῶν"
+   ],
+   "becomes": "Περὶ φυτῶν",
+   "card_sid": "smyth:page-112-R:47:Περὶ φ"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 16,
+   "word_off": 682,
+   "char_at": 4,
+   "readers": {
+    "opus": "εἶρηται"
+   },
+   "kind": "accent",
+   "reason": "circumflex for acute on the perfect εἴρηται; LlamaParse spells it εἴρηται at 73 sites — and line 24 of 109-L, one line below the third of these, already prints εἴρηται correctly",
+   "forms": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "form_set": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "becomes": "εἴρηται",
+   "card_sid": "accent:eirhtai",
+   "bundle": {
+    "subs": [
+     [
+      "εἶ",
+      "εἴ"
+     ]
+    ]
+   }
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 23,
+   "word_off": 1003,
+   "char_at": 5,
+   "readers": {
+    "opus": "εἶρηται"
+   },
+   "kind": "accent",
+   "reason": "circumflex for acute on the perfect εἴρηται; LlamaParse spells it εἴρηται at 73 sites — and line 24 of 109-L, one line below the third of these, already prints εἴρηται correctly",
+   "forms": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "form_set": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "becomes": "εἴρηται",
+   "card_sid": "accent:eirhtai",
+   "bundle": {
+    "subs": [
+     [
+      "εἶ",
+      "εἴ"
+     ]
+    ]
+   }
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 40,
+   "word_off": 1780,
+   "char_at": 8,
+   "readers": {
+    "opus": "εἶρηται"
+   },
+   "kind": "accent",
+   "reason": "circumflex for acute on the perfect εἴρηται; LlamaParse spells it εἴρηται at 73 sites — and line 24 of 109-L, one line below the third of these, already prints εἴρηται correctly",
+   "forms": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "form_set": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "becomes": "εἴρηται",
+   "card_sid": "accent:eirhtai",
+   "bundle": {
+    "subs": [
+     [
+      "εἶ",
+      "εἴ"
+     ]
+    ]
+   }
+  },
+  {
+   "page": 112,
+   "col": "R",
+   "line": 55,
+   "word_off": 2433,
+   "char_at": 25,
+   "readers": {
+    "opus": "εἶρηται"
+   },
+   "kind": "accent",
+   "reason": "circumflex for acute on the perfect εἴρηται; LlamaParse spells it εἴρηται at 73 sites — and line 24 of 109-L, one line below the third of these, already prints εἴρηται correctly",
+   "forms": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "form_set": [
+    "εἴρηται",
+    "εἶρηται"
+   ],
+   "becomes": "εἴρηται",
+   "card_sid": "accent:eirhtai",
+   "bundle": {
+    "subs": [
+     [
+      "εἶ",
+      "εἴ"
+     ]
+    ]
+   }
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 30
+}

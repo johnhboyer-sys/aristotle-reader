@@ -1,0 +1,13 @@
+[
+  {
+    "page": 85,
+    "col": "R",
+    "line": 16,
+    "wrote": "νεοττεύειν",
+    "llamaparse": "νεοττεȣειν",
+    "proposed": null,
+    "lexical_verdict": "unknown",
+    "why": "neither νεοττευειν nor νεοττεουειν is a corpus form",
+    "context": "ἄπαστος ὁ ἀετὸς ἐν τῷ χρόνῳ τȣ͂ νεοττεύειν Ζιζ6. 563a23."
+  }
+]

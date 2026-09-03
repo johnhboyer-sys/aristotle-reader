@@ -1,0 +1,23 @@
+{
+ "spotcheck:page-114-L:21": {
+  "verdict": "accept",
+  "detail": "Zeller iudicat II,",
+  "sites": [
+   "page-114-L:21:901"
+  ]
+ },
+ "spotcheck:page-114-L:23": {
+  "verdict": "accept",
+  "detail": "mentio fit.",
+  "sites": [
+   "page-114-L:23:1019"
+  ]
+ },
+ "spotcheck:page-114-L:52": {
+  "verdict": "accept",
+  "detail": "Wz II, 528",
+  "sites": [
+   "page-114-L:52:2326"
+  ]
+ }
+}

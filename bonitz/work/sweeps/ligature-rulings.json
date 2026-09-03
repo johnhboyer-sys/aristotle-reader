@@ -1,0 +1,143 @@
+{
+ "forms:ȣκ": {
+  "verdict": "accept",
+  "detail": "ȣ̓κ",
+  "excluded": []
+ },
+ "forms:ȣ": {
+  "verdict": "accept",
+  "detail": "ȣ̓",
+  "excluded": [
+   "page-015-R:43:51",
+   "page-017-R:40:47",
+   "page-020-R:47:33",
+   "page-020-R:57:48",
+   "page-022-R:39:48",
+   "page-023-L:46:33",
+   "page-028-R:11:10",
+   "page-029-R:60:39",
+   "page-041-R:6:28"
+  ]
+ },
+ "forms:ϗ": {
+  "verdict": "accept",
+  "detail": "ϗ̀",
+  "excluded": []
+ },
+ "forms:ȣχ": {
+  "verdict": "accept",
+  "detail": "ȣ̓χ",
+  "excluded": [
+   "page-021-L:32:52"
+  ]
+ },
+ "forms:ȣδὲν": {
+  "verdict": "accept",
+  "detail": "ȣ̓δὲν",
+  "excluded": [
+   "page-021-R:55:48"
+  ]
+ },
+ "forms:ȣδὲ": {
+  "verdict": "accept",
+  "detail": "ȣ̓δὲ",
+  "excluded": []
+ },
+ "forms:ȣσίαν": {
+  "verdict": "accept",
+  "detail": "ȣ̓σίαν",
+  "excluded": []
+ },
+ "forms:ȣδέν": {
+  "verdict": "accept",
+  "detail": "ȣ̓δέν",
+  "excluded": []
+ },
+ "forms:ȣδεὶς": {
+  "verdict": "accept",
+  "detail": "ȣ̓δεὶς",
+  "excluded": []
+ },
+ "forms:ȣν": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣσία": {
+  "verdict": "accept",
+  "detail": "ȣ̓σία",
+  "excluded": []
+ },
+ "forms:ȣτ'": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣτε": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣδ'": {
+  "verdict": "accept",
+  "detail": "ȣ̓δ'",
+  "excluded": []
+ },
+ "forms:ȣτως": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": [
+   "page-021-R:45:34"
+  ]
+ },
+ "forms:ȣδεμιᾷ": {
+  "verdict": "accept",
+  "detail": "ȣ̓δεμιᾷ",
+  "excluded": []
+ },
+ "forms:ȣδ’": {
+  "verdict": "accept",
+  "detail": "ȣ̓δ’",
+  "excluded": []
+ },
+ "forms:ȣθ'": {
+  "verdict": "accept",
+  "detail": "ȣ̓θ'",
+  "excluded": []
+ },
+ "forms:ȣθὲν": {
+  "verdict": "accept",
+  "detail": "ȣ̓θὲν",
+  "excluded": []
+ },
+ "forms:ȣκέτι": {
+  "verdict": "accept",
+  "detail": "ȣ̓κέτι",
+  "excluded": []
+ },
+ "forms:ȣρανȣ": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣρανὸν": {
+  "verdict": "accept",
+  "detail": "ȣ̓ρανὸν",
+  "excluded": []
+ },
+ "forms:ȣσίας": {
+  "verdict": "accept",
+  "detail": "ȣ̓σίας",
+  "excluded": []
+ },
+ "forms:ȣτος": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ },
+ "forms:ȣτω": {
+  "verdict": "none",
+  "detail": "",
+  "excluded": []
+ }
+}

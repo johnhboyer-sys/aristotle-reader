@@ -1,0 +1,10 @@
+OUT-OF-FOLD PREDICTION REPORT
+Resolved training input directory: /teamspace/studios/this_studio/bonitz-data/calamari-export/train
+Holdout read: NO
+Models retrained, converted, or overwritten: NO
+OOF rows: 4693
+Vote rows: 4693
+OOF missing predictions: 0
+Vote missing predictions: 0
+OOF missing indices: []
+Vote missing indices: []

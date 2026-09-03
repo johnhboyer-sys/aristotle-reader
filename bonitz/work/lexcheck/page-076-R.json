@@ -1,0 +1,24 @@
+[
+  {
+    "page": 76,
+    "col": "R",
+    "line": 41,
+    "wrote": "ἀντικρύ",
+    "llamaparse": "ἀντικρȣ̀",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "αντικρυ is a corpus form; αντικρου is not",
+    "context": "ἀντικρύ. κατ’ ἀντικρὺ ϗ̀ εἰς τὸ πρόσθεν Ζμδ13. 696b24."
+  },
+  {
+    "page": 76,
+    "col": "R",
+    "line": 41,
+    "wrote": "ἀντικρύ",
+    "llamaparse": "ἀντικρȣ́",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "αντικρυ is a corpus form; αντικρου is not",
+    "context": "ἀντικρύ. κατ’ ἀντικρὺ ϗ̀ εἰς τὸ πρόσθεν Ζμδ13. 696b24."
+  }
+]

@@ -113,11 +113,14 @@ def main(argv: list[str] | None = None) -> int:
                  f'vote is not evidence there. Use --allow-trained to proceed.')
 
     columns = []
+    sources = {}
     for pg in pages:
         for col in ('L', 'R'):
             f = ROOT / f'raw/opus/page-{pg:03d}-{col}.txt'
-            stream, _ = canonical(clean_opus(f.read_text(encoding='utf-8')))
+            cleaned = clean_opus(f.read_text(encoding='utf-8'))
+            stream, offsets = canonical(cleaned)
             columns.append((pg, col, stream))
+            sources[(pg, col)] = (cleaned, offsets)
     spine, segs = compare3.build_spine(columns)
 
     genie = locate_genie_slice(spine, genie400_stream(pages))
@@ -134,6 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         len(spine), ' '.join(f'{k}={len(v)}' for k, v in readers.items())))
 
     results = compare4.compare(spine, segs, readers)
+    compare4.add_locations(results, segs, sources)
 
     n = len(readers) + 1
     tag = f'{pages[0]:03d}-{pages[-1]:03d}'

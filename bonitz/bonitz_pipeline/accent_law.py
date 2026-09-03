@@ -172,14 +172,26 @@ def check(word: str) -> str | None:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
-    p.add_argument('--source', default='work/reconciled',
+    p.add_argument('--source', default='corpus',
                    help='directory of text to check (default the corpus)')
     p.add_argument('--out', type=Path,
                    default=ROOT / 'work/sweeps/accent-law-violations.tsv')
     args = p.parse_args(argv)
 
-    pat = str(ROOT / args.source / '*')
-    files = sorted(f for f in glob.glob(pat) if f.endswith(('.txt', '.md')))
+    # ⚠ THE DEFAULT MUST MEAN THE WHOLE CORPUS, NOT ONE STAGE OF IT.
+    # `work/reconciled` holds 15-52; 53-62 are settled but not promoted
+    # and live in reconciled-auto. With a single-directory default this
+    # swept 15-52 and reported nothing about the rest — and pointing it
+    # at the other stage by hand then OVERWROTE the first run's report.
+    # `corpus` spans every stage; an explicit --source still works, for
+    # checking a reader's raw output against the same rules.
+    if args.source == 'corpus':
+        from .normalize import corpus_columns
+        files = [str(f) for f in corpus_columns()]
+    else:
+        pat = str(ROOT / args.source / '*')
+        files = sorted(f for f in glob.glob(pat)
+                       if f.endswith(('.txt', '.md')))
     if not files:
         sys.exit(f'no text found under {args.source}')
 

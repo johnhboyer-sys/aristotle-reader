@@ -34,7 +34,13 @@ from pathlib import Path
 from .normalize import canonical, clean_opus
 
 ROOT = Path(__file__).resolve().parent.parent
-READERS = ('opus', 'genie', 'llama', 'kraken', 'codex')
+READERS = ('opus', 'genie', 'llama', 'kraken', 'codex', 'calamari',
+           'paddle')
+# ⚠ A READER MISSING FROM THIS TUPLE IS DROPPED FROM THE CARD SILENTLY.
+# `frags` below is built by filtering `rec` through it, so a voice that
+# voted in `compare4` but is not named here shows John a four-reader
+# card for a five-reader dispute — the panel disagreeing with itself,
+# with nothing on screen to say why.
 # compare3/compare4 default; ctx is spine[s-context:e+context].
 CONTEXT = 25
 
@@ -43,8 +49,17 @@ ROUGH, SMOOTH = '̔', '̓'
 
 # --- character classes ------------------------------------------------------
 
-def is_word_char(c: str) -> bool:
-    """A character that belongs inside a Greek word in Bonitz's text."""
+def is_word_char(c: str, latin: bool = False) -> bool:
+    """A character that belongs inside a word in Bonitz's text.
+
+    ⚠ `latin` WIDENS THE CLASS; IT DOES NOT DEFAULT ON. Every arbitrator
+    downstream — breathing_oracle, morpheus, siglum_check — takes a Greek word,
+    and handing one `posuimus` is the wrong question, not a hard question. The
+    flag is for the cold card queue, where there are no arbitrators and every
+    dispute goes to John: a fifth of Bonitz's ink is Latin, the readers'
+    remaining damage is almost all in it, and a Greek-only class excluded all
+    of it as `not_greek_word` before a card could be built.
+    """
     if not c or c.isspace():
         return False
     if unicodedata.combining(c):
@@ -53,7 +68,14 @@ def is_word_char(c: str) -> bool:
     if c in "ȣȢϗ'᾽᾿ʼ":
         return True
     o = ord(c)
-    return (0x0370 <= o <= 0x03FF) or (0x1F00 <= o <= 0x1FFF)
+    if (0x0370 <= o <= 0x03FF) or (0x1F00 <= o <= 0x1FFF):
+        return True
+    # ⚠ STOPS SHORT OF U+0223. `ȣ` is LATIN SMALL LETTER OU by name and is
+    # Bonitz's GREEK ou-ligature — it is admitted above as Greek, and a range
+    # running only to U+017F cannot swallow it. `latin_check.LATIN_RE` draws
+    # the same line for the same reason.
+    return latin and ((0x0041 <= o <= 0x005A) or (0x0061 <= o <= 0x007A)
+                      or (0x00C0 <= o <= 0x017F and o not in (0x00D7, 0x00F7)))
 
 
 def skeleton(w: str) -> str:
@@ -129,9 +151,18 @@ class _Column:
 
 
 def _load_columns(pages: list[int],
-                  opus_dir: Path | None = None) -> dict[tuple[int, str], _Column]:
-    """Build the same batch spine batch4/compare4 uses, per column."""
+                  opus_dir: Path | None = None,
+                  cleaner=None) -> dict[tuple[int, str], _Column]:
+    """Build the same batch spine batch4/compare4 uses, per column.
+
+    ⚠ THE CLEANER MUST MATCH THE SPINE THAT MADE THE FLAGS.  `clean_opus`
+    drops lines it judges junk; on kraken's filtered column text — which is
+    already exactly the printed body lines — a dropped line would shift every
+    offset after it, and `batch_cold` builds its spine with no cleaner at all.
+    Pass `cleaner=lambda t: t` for a kraken-spined tranche.
+    """
     opus_dir = opus_dir or (ROOT / 'raw' / 'opus')
+    cleaner = cleaner or clean_opus
     out: dict[tuple[int, str], _Column] = {}
     pos = 0
     for p in pages:
@@ -139,7 +170,7 @@ def _load_columns(pages: list[int],
             path = opus_dir / f'page-{p:03d}-{c}.txt'
             if not path.exists():
                 continue
-            cleaned = clean_opus(path.read_text(encoding='utf-8'))
+            cleaned = cleaner(path.read_text(encoding='utf-8'))
             stream, offs = canonical(cleaned)
             base = unicodedata.normalize('NFC', cleaned)
             out[(p, c)] = _Column(p, c, pos, stream, offs, base)
@@ -200,7 +231,8 @@ def _stream_range_for_orig(col: _Column, a: int, b: int) -> tuple[int, int] | No
     return idxs[0], idxs[-1] + 1
 
 
-def _words_overlapping(col: _Column, local: int, frag_len: int
+def _words_overlapping(col: _Column, local: int, frag_len: int,
+                       latin: bool = False
                        ) -> list[tuple[int, int, int, int]] | None:
     """Word spans that touch the dispute.
 
@@ -229,11 +261,11 @@ def _words_overlapping(col: _Column, local: int, frag_len: int
     spans: list[tuple[int, int]] = []
     i = 0
     while i < len(base):
-        if not is_word_char(base[i]):
+        if not is_word_char(base[i], latin):
             i += 1
             continue
         j = i
-        while j < len(base) and is_word_char(base[j]):
+        while j < len(base) and is_word_char(base[j], latin):
             j += 1
         if frag_len == 0:
             if i <= i0 <= j:
@@ -262,14 +294,15 @@ def _usable_word(cand: str) -> bool:
     return bool(cand) and len(cand) >= 2 and len(skeleton(cand)) >= 2
 
 
-def _splice_word(opus_word: str, d0: int, d1: int, frag: str) -> str | None:
+def _splice_word(opus_word: str, d0: int, d1: int, frag: str,
+                 latin: bool = False) -> str | None:
     """Replace opus_word[d0:d1] with frag. Refuse non-word results."""
     if d0 < 0 or d1 > len(opus_word) or d0 > d1:
         return None
-    if frag and not all(is_word_char(c) for c in frag):
+    if frag and not all(is_word_char(c, latin) for c in frag):
         return None
     cand = opus_word[:d0] + frag + opus_word[d1:]
-    if not cand or not all(is_word_char(c) for c in cand):
+    if not cand or not all(is_word_char(c, latin) for c in cand):
         return None
     if not _usable_word(cand):
         return None
@@ -291,8 +324,8 @@ def _classify(forms: list[str]) -> str:
 
 # --- per-site reconstruction ------------------------------------------------
 
-def _site_words(rec: dict, cols: dict[tuple[int, str], _Column]
-                ) -> tuple[list[dict], Exclusion | None]:
+def _site_words(rec: dict, cols: dict[tuple[int, str], _Column],
+                latin: bool = False) -> tuple[list[dict], Exclusion | None]:
     """Expand one flag record into zero or more per-word reconstructions.
 
     Each success dict: page, col, word_off (column-local), spine_off (batch),
@@ -313,13 +346,18 @@ def _site_words(rec: dict, cols: dict[tuple[int, str], _Column]
         return [], Exclusion(page, col_name, rec['spine_off'],
                              'opus_mismatch', opus_frag)
 
-    spans = _words_overlapping(col, local, len(opus_frag))
+    spans = _words_overlapping(col, local, len(opus_frag), latin)
     if spans is None:
         return [], Exclusion(page, col_name, rec['spine_off'],
                              'bad_geometry', opus_frag)
     if not spans:
+        # The reason has to say which class was applied. Under `latin` the
+        # site is not in a word of EITHER alphabet — digits, punctuation, a
+        # bare siglum — and reporting that as `not_greek_word` would read as
+        # "Latin was never looked at", which is the opposite of the truth.
         return [], Exclusion(page, col_name, rec['spine_off'],
-                             'not_greek_word', opus_frag)
+                             'not_a_word' if latin else 'not_greek_word',
+                             opus_frag)
 
     # Reader fragments for the full dispute region.
     frags = {name: rec[name] for name in READERS if name in rec}
@@ -331,7 +369,7 @@ def _site_words(rec: dict, cols: dict[tuple[int, str], _Column]
         opus_word = col.stream[ws:we]
         if not _usable_word(opus_word):
             continue
-        if not all(is_word_char(c) for c in opus_word):
+        if not all(is_word_char(c, latin) for c in opus_word):
             continue
 
         # Overlap of the dispute with this word, in column-local stream coords.
@@ -361,7 +399,7 @@ def _site_words(rec: dict, cols: dict[tuple[int, str], _Column]
                 piece = _aligned_slice(opus_frag, frag, rel_s, rel_e)
             if piece is None:
                 continue
-            got = _splice_word(opus_word, d0, d1, piece)
+            got = _splice_word(opus_word, d0, d1, piece, latin)
             if got is not None:
                 readers[name] = got
 
@@ -404,8 +442,16 @@ def _piece_from_solo(opus_w: str, d0: int, d1: int, solo: str) -> str | None:
     return solo[len(left):]
 
 
-def _merge_word_sites(sites: list[dict]) -> WordFlag | Exclusion:
-    """Combine character-level reconstructions that share (page, col, word_off)."""
+def _merge_word_sites(sites: list[dict],
+                      latin: bool = False) -> WordFlag | Exclusion:
+    """Combine character-level reconstructions that share (page, col, word_off).
+
+    ⚠ `latin` MUST MATCH `_site_words`. This function re-checks the merged word
+    against the character class, and a Greek-only check here throws away every
+    Latin reconstruction that `_site_words` just built — leaving `opus` alone,
+    which then falls out as `merge_no_dispute`. It cost 99 sites on 107-117 and
+    made carding the Latin look like it had gained five cards.
+    """
     base = max(sites, key=lambda s: len(s['readers']['opus']))
     opus_w = base['readers']['opus']
     page, col = base['page'], base['col']
@@ -452,7 +498,8 @@ def _merge_word_sites(sites: list[dict]) -> WordFlag | Exclusion:
             touched = True
         if not ok or not touched:
             continue
-        if working and all(is_word_char(c) for c in working) and _usable_word(working):
+        if (working and all(is_word_char(c, latin) for c in working)
+                and _usable_word(working)):
             merged[name] = unicodedata.normalize('NFC', working)
 
     if len(merged) < 2 or len(set(merged.values())) < 2:
@@ -473,17 +520,19 @@ def _merge_word_sites(sites: list[dict]) -> WordFlag | Exclusion:
 # --- public API -------------------------------------------------------------
 
 def report(path: Path | str,
-           opus_dir: Path | None = None) -> Report:
+           opus_dir: Path | None = None,
+           cleaner=None,
+           latin: bool = False) -> Report:
     """Full join of a flags JSONL file: word disputes + exclusions."""
     records = _read_jsonl(path)
     pages = _pages_of(records)
-    cols = _load_columns(pages, opus_dir=opus_dir)
+    cols = _load_columns(pages, opus_dir=opus_dir, cleaner=cleaner)
 
     per_word: dict[tuple[int, str, int], list[dict]] = defaultdict(list)
     excluded: list[Exclusion] = []
 
     for rec in records:
-        parts, ex = _site_words(rec, cols)
+        parts, ex = _site_words(rec, cols, latin)
         if ex is not None and not parts:
             excluded.append(ex)
             continue
@@ -493,7 +542,7 @@ def report(path: Path | str,
 
     words: list[WordFlag] = []
     for sites in per_word.values():
-        got = _merge_word_sites(sites)
+        got = _merge_word_sites(sites, latin)
         if isinstance(got, Exclusion):
             excluded.append(got)
         else:
@@ -504,9 +553,11 @@ def report(path: Path | str,
 
 
 def words(path: Path | str,
-          opus_dir: Path | None = None) -> list[WordFlag]:
+          opus_dir: Path | None = None,
+          cleaner=None,
+          latin: bool = False) -> list[WordFlag]:
     """Word-level disputes from a flags JSONL file. Exclusions are dropped."""
-    return report(path, opus_dir=opus_dir).words
+    return report(path, opus_dir=opus_dir, cleaner=cleaner, latin=latin).words
 
 
 def classify_site_readers(readers: dict[str, str]) -> str:

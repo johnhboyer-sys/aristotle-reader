@@ -1,0 +1,102 @@
+{
+ "site:page-109-R:60:2753": {
+  "verdict": "accept",
+  "detail": "(Αα46.",
+  "sites": [
+   "page-109-R:60:2753"
+  ],
+  "token": "ζΑα46.",
+  "becomes": "(Αα46.",
+  "char": "ζ",
+  "char_becomes": "(",
+  "source": "john:read-from-the-ink 2026-08-26",
+  "why": "card defect: offered ζ vs z; the ink is a parenthesis"
+ },
+ "site:page-115-R:22:952": {
+  "verdict": "accept",
+  "detail": "Heitz p",
+  "sites": [
+   "page-115-R:22:952"
+  ],
+  "token": "Ηeitzp",
+  "becomes": "Heitz p",
+  "source": "john:read-from-the-ink 2026-08-26",
+  "why": "Greek capital Eta for Latin H, AND a lost space. The spine spells Heitz p correctly at ten other sites in this tranche; LlamaParse read Heitz p 112 at this one."
+ },
+ "site:page-115-R:30:1376": {
+  "verdict": "accept",
+  "detail": "Metaphysica",
+  "sites": [
+   "page-115-R:30:1376"
+  ],
+  "token": "Μe6aphysica",
+  "becomes": "Metaphysica",
+  "source": "john:read-from-the-ink 2026-08-26",
+  "why": "Greek capital Mu for Latin M, and the 6 is a t. Two errors in one token, and the card only knew about the first."
+ },
+ "site:page-115-R:55:2570": {
+  "verdict": "accept",
+  "detail": "Ars",
+  "sites": [
+   "page-115-R:55:2570"
+  ]
+ },
+ "site:page-116-L:3:88": {
+  "verdict": "accept",
+  "detail": "Aristotelis,",
+  "sites": [
+   "page-116-L:3:88"
+  ]
+ },
+ "site:page-115-R:52:2432": {
+  "verdict": "accept",
+  "detail": "Po-",
+  "sites": [
+   "page-115-R:52:2432"
+  ],
+  "token": "Ρ0o-",
+  "becomes": "Po-",
+  "source": "john:read-from-the-ink 2026-08-26",
+  "why": "Greek capital Rho for Latin P, plus a 0 that is not on the page. A word-break Po- at the line end."
+ },
+ "site:page-109-R:34:1548": {
+  "verdict": "accept",
+  "detail": "posuimus,",
+  "sites": [
+   "page-109-R:34:1548"
+  ],
+  "token": "pgulmuS)",
+  "becomes": "posuimus,",
+  "source": "john:read-from-the-ink 2026-08-26",
+  "replaces": "none",
+  "why": "The closing parenthesis is an INVENTED COMMA, not a lost opener. The paren-balance detector found a real error here and named the wrong one. Calamari read posuimus at this site."
+ },
+ "site:page-110-L:1:24": {
+  "verdict": "preserve",
+  "detail": "incertum).",
+  "sites": [
+   "page-110-L:1:24"
+  ]
+ },
+ "site:page-111-R:20:883": {
+  "verdict": "preserve",
+  "detail": "747a17-27).",
+  "sites": [
+   "page-111-R:20:883"
+  ]
+ },
+ "site:page-113-L:30:1364": {
+  "verdict": "preserve",
+  "detail": "(Φθ10.",
+  "sites": [
+   "page-113-L:30:1364"
+  ]
+ },
+ "site:page-113-R:40:1843": {
+  "verdict": "preserve",
+  "detail": "(referri",
+  "sites": [
+   "page-113-R:40:1843"
+  ]
+ }
+}

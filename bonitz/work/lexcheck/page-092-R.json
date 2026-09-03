@@ -1,0 +1,13 @@
+[
+  {
+    "page": 92,
+    "col": "R",
+    "line": 21,
+    "wrote": "λῦσαι",
+    "llamaparse": "λȣ͂σαι",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "λυσαι is a corpus form; λουσαι is not",
+    "context": "Φα6. 189a16. δ9. 217a5. μβ7. 365a34. ἀποδȣ͂ναι ϗ̀ λῦσαι"
+  }
+]

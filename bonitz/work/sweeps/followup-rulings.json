@@ -1,0 +1,126 @@
+{
+ "forms:ἀλκυόνα|ἁλκυόνα": {
+  "verdict": "preserve",
+  "detail": "ἁλκυόνα"
+ },
+ "forms:ἀλκυόνων|ἁλκυόνων": {
+  "verdict": "preserve",
+  "detail": "ἁλκυόνων"
+ },
+ "forms:ἀλκυόνος|ἁλκυόνος": {
+  "verdict": "preserve",
+  "detail": "ἁλκυόνος"
+ },
+ "forms:ἀδρότερον|ἁδρότερον": {
+  "verdict": "preserve",
+  "detail": "ἁδρότερον"
+ },
+ "forms:ἀλίζοντες|ἁλίζοντες": {
+  "verdict": "preserve",
+  "detail": "ἁλίζοντες"
+ },
+ "forms:ἀλίζειν|ἁλίζειν": {
+  "verdict": "preserve",
+  "detail": "ἁλίζειν"
+ },
+ "forms:ȣ̔͂τοι|ȣ͂τοι|ȣτοι": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂τοι"
+ },
+ "forms:ȣ̓|ȣ̔͂|ȣ͂": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂"
+ },
+ "forms:ἐπορεύετ’": {
+  "verdict": "preserve",
+  "detail": "ἐπορεύετ’"
+ },
+ "forms:αὐτὴ|αὕτη|αὕτὴ": {
+  "verdict": "accept",
+  "detail": "αὕτη"
+ },
+ "forms:ὅθεν|ὅθὲν": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:'Αλκίνȣ|Ἀλκίνȣ": {
+  "verdict": "accept",
+  "detail": "Ἀλκίνȣ"
+ },
+ "forms:ζῶόν|ζῷόν": {
+  "verdict": "accept",
+  "detail": "ζῷόν"
+ },
+ "forms:ἀκρίβεια|ἀκριβεία|ἀκριβείᾳ": {
+  "verdict": "preserve",
+  "detail": "ἀκριβεία"
+ },
+ "forms:ἀπε͞ικά-|ἀπεικά-": {
+  "verdict": "accept",
+  "detail": "ἀπεικά-"
+ },
+ "forms:(?|⟨?": {
+  "verdict": "preserve",
+  "detail": "⟨?"
+ },
+ "forms:661,a10|661.a10": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:πις13|πιϛ13": {
+  "verdict": "preserve",
+  "detail": "πιϛ13"
+ },
+ "forms:ἀκρωτή-|ἀκρώτή-": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:ἀλυτόν|ἄλυτον": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:ἀλεύρα|ἄλευρα": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:ἀδρύνειν|ἁδρύνειν": {
+  "verdict": "accept",
+  "detail": "ἁδρύνειν"
+ },
+ "forms:ἀδρός|ἁδρός": {
+  "verdict": "accept",
+  "detail": "ἁδρός"
+ },
+ "forms:ἀδρά|ἁδρά": {
+  "verdict": "accept",
+  "detail": "ἁδρά"
+ },
+ "forms:ἀδρότεραι|ἁδρότεραι": {
+  "verdict": "accept",
+  "detail": "ἁδρότεραι"
+ },
+ "forms:ἀλκυόνειοι|ἁλκυόνειοι": {
+  "verdict": "accept",
+  "detail": "ἁλκυόνειοι"
+ },
+ "forms:ἀλκυονίδες|ἁλκυονίδες": {
+  "verdict": "accept",
+  "detail": "ἁλκυονίδες"
+ },
+ "forms:ἄλυσις|ἅλυσις": {
+  "verdict": "preserve",
+  "detail": "ἅλυσις"
+ },
+ "forms:ἀπαλλοτριȣ͂ν|ἁπαλλοτριȣ͂ν": {
+  "verdict": "preserve",
+  "detail": "ἀπαλλοτριȣ͂ν"
+ },
+ "forms:1024,a26|1024a26": {
+  "verdict": "preserve",
+  "detail": "1024,a26"
+ },
+ "forms:886.b13|886b13": {
+  "verdict": "preserve",
+  "detail": "886.b13"
+ }
+}

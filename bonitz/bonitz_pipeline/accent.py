@@ -40,6 +40,7 @@ from .lexcheck import CORPUS, bare, nfc
 ACUTE, GRAVE, CIRC = '́', '̀', '͂'
 ACCENTS = (ACUTE, GRAVE, CIRC)
 from .lexcheck import WORD_RE  # combining marks are word chars
+from .normalize import corpus_column, corpus_columns
 
 
 def accent_key(w: str) -> str:
@@ -104,8 +105,12 @@ def check(word: str, index=None) -> dict | None:
 
 
 def scan(page: int, col: str, index=None) -> list[dict]:
-    path = ROOT / f'work/reconciled/page-{page:03d}-{col}.txt'
-    if not path.exists():
+    # ⚠ EVERY CORPUS STAGE. Reading work/reconciled alone makes this
+    # silently skip pages 53-62, which are settled but not yet promoted
+    # and live in reconciled-auto — and a sweep that skips a page reports
+    # it clean.
+    path = corpus_column(page, col, required=False)
+    if path is None:
         return []
     lines = nfc(path.read_text(encoding='utf-8')).splitlines()
     out = []

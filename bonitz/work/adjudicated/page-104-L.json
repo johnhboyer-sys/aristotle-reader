@@ -1,0 +1,114 @@
+[
+ {
+  "ctx": "τȣ͂Μίτυος(Βίτυος)ἀνδριάςπο9.14",
+  "verdict": "ο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Narrow oval with no crossbar; Poetics siglum 'πο' 9, 1452a8."
+ },
+ {
+  "ctx": "352a10.ΝαυπλίατῆςἈργείαςΖιθ19.",
+  "verdict": "ιθ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Z with small subscript iota then theta with clear crossbar; 602a8 = HA book 8 (θ)."
+ },
+ {
+  "ctx": "ρωνὁἈργεῖοςf99.1494a10,14,19.ἀ",
+  "verdict": ",",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Plain comma, no dot above it; '14, 19.'"
+ },
+ {
+  "ctx": "19.ἀργύριον.εὐπορῶνἀργυρίȣοβ13",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣ ligature (closed loop under the u-arms), acute sits on the iota."
+ },
+ {
+  "ctx": "ὸἀργύριονζέονἐκπαφλάζειπκδ9.93",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πκδ9 — delta with its looped ascender clearly printed."
+ },
+ {
+  "ctx": "15.1375b5.ἀργυροκοπεῖονπκδ9.93",
+  "verdict": "δ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "πκδ9 — delta clearly printed after πκ."
+ },
+ {
+  "ctx": "εῖονπκδ9.936b26.ἄργυρος.τȣ͂χαλ",
+  "verdict": "ȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣ ligature with circumflex above; τȣ͂ χαλκὸν ... γενέσθαι, not τὸ."
+ },
+ {
+  "ctx": "εὸνμῖξαίτισινἄργυρον(ΡlatRepΙΙ",
+  "verdict": "R",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Roman capital R in '(Plat Rep III 415 A)'."
+ },
+ {
+  "ctx": "Πβ5.1264b14.—ἄργυροςχυτόςψα3.4",
+  "verdict": "ψ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "psi with central descender; ψα3. 406b9."
+ },
+ {
+  "ctx": "υρȣ͂νὄροςμα13.350b14.ἀργυφέοιο",
+  "verdict": "φέο",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἀργυφέοιο — phi, acute epsilon, omicron, iota, omicron."
+ },
+ {
+  "ctx": "εωργοὶπειρῶνταιμίξαντες(γῇ)·ἄρ",
+  "verdict": "ῇ)·",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Extra ink descending at the eta's left foot = iota subscript, and a clear raised dot after the paren."
+ },
+ {
+  "ctx": "924b15.λάχαναἀρδευόμεναΖιθ19.6",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Ζιθ19 — theta with crossbar; 601b13 = HA book 8 (θ)."
+ },
+ {
+  "ctx": "ηνΡβ23.1398b26,ἀποφυγεῖνημα16.",
+  "verdict": "μ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ημα16 — mu clearly printed between eta and alpha."
+ },
+ {
+  "ctx": "fι10.1171a17,18).ηεγ7.1233b37.",
+  "verdict": "3",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Open-left 3, unlike the closed double-loop 8 earlier on the same line."
+ },
+ {
+  "ctx": "σεως,σώματος,ὀφθαλμȣ͂,ἵππȣ,θύν",
+  "verdict": "ȣ,θύννωνΠα",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ἵππȣ ends in the ȣ ligature; next line reads θύννων Πα13 with a clear capital Pi."
+ },
+ {
+  "ctx": "3.1259b20.Ρα5.1361b3-35.Φη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Eta (arch with right descender), not gamma; Φη3 = Phys. VII.3, 246b."
+ }
+]

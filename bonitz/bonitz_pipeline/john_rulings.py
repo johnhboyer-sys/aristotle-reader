@@ -46,7 +46,10 @@ the same failure in a quieter form.
 from __future__ import annotations
 import argparse
 import json
+import re
+import os
 import sys
+import tempfile
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
@@ -58,14 +61,50 @@ CHECKABLE = {'text', 'keep', 'declined', 'damage'}
 
 
 def canon(s: str) -> str:
-    """NFC with the two encodings of the printed circumflex unified.
+    """NFC with the two encodings of the printed circumflex unified, and the
+    elision mark spelt one way.
 
     The corpus writes a perispomeni where some readers write a combining
     tilde; they are the same printed mark.  `verdict_drift` learned this the
     expensive way — comparing them raw reported every ligature ruling as lost,
     82 of them, none real.
+
+    ⚠ AND THE SAME GOES FOR THE ELISION MARK, which the ledger holds in
+    whichever codepoint the store it came from happened to use. The corpus now
+    spells it U+2019 everywhere (`bonitz_pipeline.elision`); compared raw, that
+    fold reported 43 of John's rulings as lost, and again not one of them was.
+
+    ⚠ AND OF A BREATHING PRINTED BEFORE ITS CAPITAL. Bonitz sets a lemma's
+    breathing in front of the letter and OCR leaves it loose; put on the
+    capital it is the same printed mark, so a form recorded either way must
+    read as the same ruling. John's `pattern:Α-Ἀ` of 2026-08-14 breathed the
+    capitals at page-045-L:1 and :4 and the loose marks stayed behind; when
+    `capital_breathing` swept them up, the two entries read as lost.
+
+    ⚠ AND OF THE SPACE INSIDE A BEKKER CITATION. `1573 a25` and `1573a25` are
+    one token set two ways, and which one the ledger holds is an accident of
+    which transcription regime was running when John ruled — the corpus wrote
+    the citation spaced 4532 times and closed 8300, split by OUR process and
+    not by Bonitz. His policy of 2026-08-26 is that the page and its column
+    are ONE TOKEN; `space_policy.close_bekker` makes the corpus say so, and
+    without this fold that edit reports 240 of his 935 live rulings as lost.
+    Not one of them would be.
+
+    ⚠ THE FOLD IS ONLY INSIDE A LINE — a newline must never close up, or a
+    citation split across two printed lines reads as one that is not.
+
+    ⚠ AND IT DOES NOT REQUIRE A DIGIT AFTER THE COLUMN LETTER. 18 ledger forms
+    are truncated mid-citation (`1835 b`, `946 b`, `1391 b`), so a fold keyed
+    on `[ab]\\d` fires on the corpus line and not on the recorded form, and the
+    two stop matching. Over-folding is safe HERE and only here: this is a
+    comparison key, both sides get it, and under John's policy the two
+    spellings are one token anyway.
     """
-    return unicodedata.normalize('NFC', (s or '').replace('̃', '͂'))
+    from bonitz_pipeline.capital_breathing import fix
+    from bonitz_pipeline.elision import fold
+    got = fold(unicodedata.normalize('NFC', (s or '').replace('̃', '͂')))
+    got = re.sub(r'(\d)[ \t]+([ab])', r'\1\2', got)
+    return fix(got, {})[0]
 
 
 def load() -> dict:
@@ -75,9 +114,27 @@ def load() -> dict:
 
 
 def save(d: dict) -> None:
+    """Atomic: tempfile in the ledger's own directory, then os.replace.
+
+    A plain write_text truncates before it writes, so a crash mid-write
+    destroys the ledger — the one store every ruling now depends on.  With
+    the replace, a crash at any instant leaves either the old ledger or the
+    new one, never a torn file."""
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
-    LEDGER.write_text(json.dumps(d, ensure_ascii=False, indent=1),
-                      encoding='utf-8')
+    fd, tmp = tempfile.mkstemp(dir=LEDGER.parent, prefix=LEDGER.name + '.',
+                               suffix='.tmp')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            json.dump(d, f, ensure_ascii=False, indent=1)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, LEDGER)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def add(kind: str, *, col: str = '', line: int = 0, form: str = '',
@@ -118,6 +175,17 @@ def check(r: dict) -> tuple[bool, str]:
         # ruling that replaced it.  ⚠ Only a hand-added field does this: a
         # reversal cannot happen as a side effect of any pass over the text.
         return True, f'reversed by {r["reversed_by"]}'
+    if r.get('contested'):
+        # ⚠ TWO OF JOHN'S OWN OBSERVATIONS DISAGREE AND NOBODY HAS PICKED.
+        # Not a reversal — he has not changed his mind, he has not been asked.
+        # page-044-R:27 on 2026-08-14: a class ruling (pattern:ἀ-ἁ, 16 sites,
+        # none excluded) rewrote a site the corrigenda register had recorded
+        # from a 400 dpi look, with reasoning, a week earlier. The corpus keeps
+        # what the register saw, because a site examined outranks an
+        # unexamined member of a sweep ([[carry-rulings-by-site]]) — and the
+        # ruling stays here, unchecked and NAMED, until he settles it. Only a
+        # hand-added field does this.
+        return True, f'CONTESTED, awaiting John: {r["contested"]}'
     if kind not in CHECKABLE:
         return True, f'not checkable ({kind})'
     if kind == 'damage':
@@ -135,6 +203,33 @@ def check(r: dict) -> tuple[bool, str]:
         return True, 'no form recorded to check'
     if canon(want) in canon(text):
         return True, ''
+
+    # ⚠ A WHOLE-LINE FORM CANNOT SURVIVE A SECOND RULING ON ITS LINE, AND 345
+    # OF THESE KEY ON A WHOLE LINE. The migration stored the printed line as
+    # `form` for the audit rulings, so the check asks "does the line still
+    # read exactly this?" — which fails the moment John rules a DIFFERENT word
+    # on the same line, even though both rulings agree and both were applied.
+    # It happened on 2026-08-18 at page-022-L:42: he ruled `ἀδρά -> ἁδρά` on
+    # 2026-08-13, ruled `ἀδρότερον -> ἁδρότερον` today, and the first entry
+    # then reported itself broken by the second.
+    #
+    # `quote` holds the line BEFORE the ruling and `form` holds it after, so
+    # the tokens that differ between them are the ones he actually ruled. Fall
+    # back to checking those, and say so — a narrower claim honestly labelled
+    # beats a wide one that cries wolf. If no quote was recorded there is
+    # nothing to narrow to, and the failure stands.
+    if r.get('quote'):
+        before, after = canon(r['quote']).split(), canon(want).split()
+        ruled_tokens = [t for t in after if t not in before]
+        if ruled_tokens:
+            here = canon(text).split()
+            missing = [t for t in ruled_tokens if t not in here]
+            if not missing:
+                return True, (f'line changed since, but the ruled token(s) '
+                              f'{" ".join(ruled_tokens)} still stand')
+            return False, (f'the ruled token(s) {" ".join(missing)} are no '
+                           f'longer in {r["col"]}:{r["line"]} — the line '
+                           f'reads: {text.strip()[:70]}')
     return False, f'{r["form"]!r} is no longer in {r["col"]}:{r["line"]} — ' \
                   f'the line reads: {text.strip()[:70]}'
 
@@ -147,6 +242,26 @@ def verify() -> list[tuple[dict, str]]:
 # --------------------------------------------------------------------------
 # migration — build the ledger from the five stores it replaces
 # --------------------------------------------------------------------------
+
+class MigrateWouldLoseRulings(Exception):
+    """--migrate would drop rulings the ledger already holds — or overwrite
+    their content, which is the same loss one field at a time. Never a
+    warning."""
+
+
+def _canon_entry(r: dict) -> dict:
+    """The entry with every string field passed through canon, so a
+    re-encoded circumflex never reads as a changed ruling."""
+    return {k: canon(v) if isinstance(v, str) else v for k, v in r.items()}
+
+
+def _changed_fields(old: dict, new: dict) -> list[str]:
+    """Fields on which the two entries disagree, compared through canon.
+    A field only one of them carries (e.g. a hand-added reversed_by) counts:
+    dropping it would lose it."""
+    a, b = _canon_entry(old), _canon_entry(new)
+    return sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
+
 
 def migrate() -> dict:
     d = {'_': [
@@ -268,6 +383,76 @@ def migrate() -> dict:
         put(kind='policy', ruled=ruled, note=note, source='work/kraken/NOTES.md',
             date=date, applied=None)
 
+    # ⚠ REFUSES RATHER THAN OVERWRITING.  On 2026-08-12 a --migrate rebuilt
+    # this ledger from the stores above and silently dropped 66 of 198
+    # rulings — everything `add()` had appended since the stores were last
+    # written existed nowhere else, so the rebuild simply did not know it.
+    # The run printed a success line.  So: any entry the ledger on disk holds
+    # that the rebuild does not reproduce stops the whole migrate, and
+    # NOTHING is written.  Ids are compared through `canon` for the reason
+    # `verdict_drift` learned — a re-encoded circumflex is not a lost ruling.
+    # There is deliberately NO --force flag, on the same ground the holdout
+    # guards in kraken_corpus.py give none: the remedy for a lossy migrate is
+    # to fix the source stores, and that is John's call to make at the
+    # stores, not a switch to flip here.
+    existing = load()['rulings']
+    rebuilt = {}
+    for r in out:
+        rebuilt.setdefault(canon(r['id']), r)
+    lost = [r for r in existing if canon(r['id']) not in rebuilt]
+    if lost:
+        raise MigrateWouldLoseRulings(
+            f'--migrate would LOSE {len(lost)} of {len(existing)} rulings '
+            f'already in {LEDGER}:\n'
+            + '\n'.join(f'  {r["id"]}  ({r["kind"]}, {r["source"]}, '
+                        f'{r["date"]})' for r in lost)
+            + '\nnothing was written. Fix the source stores so the rebuild '
+              'covers every ruling; there is no override flag.')
+
+    # Matching the ids is not enough — the same Grok review found two quieter
+    # ways to lose a ruling with every id "found":
+    #
+    # (1) CANON COLLAPSE.  Two ledger entries whose ids canon to one rebuilt
+    #     id both count as covered while only one row gets written.  If they
+    #     say the same thing that is deduplication; if they differ, one of
+    #     John's rulings dies, so it refuses and names both.
+    groups: dict[str, list[dict]] = {}
+    for r in existing:
+        groups.setdefault(canon(r['id']), []).append(r)
+    collapsed = [rs for rs in groups.values() if len(rs) > 1
+                 and any(_changed_fields(rs[0], r) for r in rs[1:])]
+    if collapsed:
+        raise MigrateWouldLoseRulings(
+            f'--migrate would COLLAPSE {sum(map(len, collapsed))} rulings '
+            f'already in {LEDGER} into {len(collapsed)} whose content '
+            'differs:\n'
+            + '\n'.join('  ' + '  =  '.join(f'{r["id"]}  ({r["kind"]}, '
+                                            f'{r["source"]}, {r["date"]})'
+                                            for r in rs) for rs in collapsed)
+            + '\nnothing was written. These entries disagree with each other; '
+              'reconciling them is a human call — there is no override flag.')
+
+    # (2) BODY CLOBBER.  Same id, different content: the ledger holds a later
+    #     ruling (a keep from add(), a note, a reversed_by) and a source store
+    #     still holds the older row; an id-only guard writes the store's row
+    #     over John's.  Any field of any existing entry that the rebuild
+    #     would change stops the migrate — content drift means the ledger and
+    #     a source store disagree, and reconciling them is John's call at the
+    #     stores, not this module's to guess.  Fields compare through canon
+    #     for the verdict_drift reason: a re-encoded circumflex is not drift.
+    clobbered = [(r, diff) for r in existing
+                 if (diff := _changed_fields(r, rebuilt[canon(r['id'])]))]
+    if clobbered:
+        raise MigrateWouldLoseRulings(
+            f'--migrate would OVERWRITE {len(clobbered)} of {len(existing)} '
+            f'rulings already in {LEDGER} with different content:\n'
+            + '\n'.join(f'  {r["id"]}  ({r["kind"]}, {r["source"]}, '
+                        f'{r["date"]})  fields that would change: '
+                        f'{", ".join(diff)}' for r, diff in clobbered)
+            + '\nnothing was written. The ledger and a source store disagree '
+              'about these rulings; fix that at the stores — there is no '
+              'override flag.')
+
     save(d)
     return d
 
@@ -281,7 +466,11 @@ def main(argv: list[str] | None = None) -> int:
     a = p.parse_args(argv)
 
     if a.migrate:
-        d = migrate()
+        try:
+            d = migrate()
+        except MigrateWouldLoseRulings as e:
+            print(e, file=sys.stderr)
+            return 1
         print(f'{len(d["rulings"])} rulings -> {LEDGER}')
     d = load()
     if a.list:

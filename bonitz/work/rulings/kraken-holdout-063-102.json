@@ -1,0 +1,78 @@
+{
+ "_": "Columns held out of the COLD-READ training corpus (pages 63-102). John ruled these 2026-08-18 with 'fine' to the proposal below, before any model was trained on this split — which is the only moment a holdout can honestly be chosen. Eight follow the cadence of the 15-62 ruling (every 5 pages, alternating column); four more hold the same ~13% of lines. THIS FILE IS THE RULING. The 15-62 holdout in kraken-holdout.json governs a different corpus and does not apply here; neither file may be used to partition the other's tree.",
+ "purpose": "Measure the cold-read model. The PRODUCT is its reading of pages 15-52, which is clean regardless of this split because the model sees no line of 15-52 either way.",
+ "columns": [
+  {
+   "column": "page-067-L",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-072-R",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-077-L",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-082-R",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-087-L",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-092-R",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-097-L",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-102-R",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-065-R",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-080-L",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-090-R",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  },
+  {
+   "column": "page-099-L",
+   "ruled_by": "John Boyer",
+   "date": "2026-08-18",
+   "why": "cold-read holdout, 63-102 corpus"
+  }
+ ]
+}

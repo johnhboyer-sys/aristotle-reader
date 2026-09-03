@@ -1,0 +1,751 @@
+{
+ "page-063-R::0": {
+  "verdict": "corpus",
+  "column": "page-063-R",
+  "corpus": "ν.",
+  "engines": "ν",
+  "corpus_line": "τί ἀναπνέȣσιν.) καταψύξεως χάριν Ζιθ2. 589b15. Ζμγ6.",
+  "ledger_id": "page-063-R:0:ν."
+ },
+ "page-063-R::2": {
+  "verdict": "corpus",
+  "column": "page-063-R",
+  "corpus": "a",
+  "engines": "α",
+  "corpus_line": "— a. (τῆς ἀναπνοῆς ὄργανα.) δεῖ εἶναί τινα κοινὸν οἷον αὐ-",
+  "ledger_id": "page-063-R:0:a"
+ },
+ "page-064-L::3": {
+  "verdict": "corpus",
+  "column": "page-064-L",
+  "corpus": "ῇ",
+  "engines": "ῆ",
+  "corpus_line": "ἀναπνοῇ ἐπὶ δύο, ὡς ἔργῳ μὲν ἐπὶ τὴν εἰς τὸν θώρακα βοή-",
+  "ledger_id": "page-064-L:0:ῇ"
+ },
+ "page-064-L::4": {
+  "verdict": "corpus",
+  "column": "page-064-L",
+  "corpus": "ᾧ ",
+  "engines": "",
+  "corpus_line": "ᾧ ἡ ἀρχὴ ἡ θρεπτική αν21. 480a16. ἐνίοις τῶν ζῴων (cf",
+  "ledger_id": "page-064-L:0:ᾧ "
+ },
+ "page-064-L::5": {
+  "verdict": "corpus",
+  "column": "page-064-L",
+  "corpus": "ῃ",
+  "engines": "η",
+  "corpus_line": "ἐὰν ἡ τȣ͂ θερμȣ͂ ἄθροισις ἐπὶ τὰς ἀρχὰς τῆς ἀναπνοῆς ἔλθῃ,",
+  "ledger_id": "page-064-L:0:ῃ"
+ },
+ "page-065-L::6": {
+  "verdict": "corpus",
+  "column": "page-065-L",
+  "corpus": "̔",
+  "engines": "̓",
+  "corpus_line": "Ρβ6. 1385a8. ȣ̔τωσὶ ἀναστρέφεσθαι Ηβ1. 1103b20. — τὴν",
+  "ledger_id": "page-065-L:0:̔"
+ },
+ "page-066-L::7": {
+  "verdict": "corpus",
+  "column": "page-066-L",
+  "corpus": "ᾗ",
+  "engines": "ἢ",
+  "corpus_line": "intrans τὸ πῦρ ᾗ ἀναφέρει πλη8. 967b4.",
+  "ledger_id": "page-066-L:0:ᾗ"
+ },
+ "page-066-R::8": {
+  "verdict": "corpus",
+  "column": "page-066-R",
+  "corpus": "ὢ",
+  "engines": "ὧ",
+  "corpus_line": "b24. μὴ παντελῶς ὢν ἀνδράποδον ηεα5. 1215b34.",
+  "ledger_id": "page-066-R:0:ὢ"
+ },
+ "page-066-R::9": {
+  "verdict": "engines",
+  "column": "page-066-R",
+  "corpus": "ᾤ",
+  "engines": "ᾠή",
+  "corpus_line": "a11-31. ημα20. 1190b22-1191a17. τί Σωκράτης ᾤθη"
+ },
+ "page-066-R::10": {
+  "verdict": "corpus",
+  "column": "page-066-R",
+  "corpus": "Z",
+  "engines": "Ζ",
+  "corpus_line": "τοῖς ἀγριωτάτοις ἤθεσιν Πθ4. 1338b18, 13. cf Zeller II 2,",
+  "ledger_id": "page-066-R:0:Z"
+ },
+ "page-067-R::11": {
+  "verdict": "corpus",
+  "column": "page-067-R",
+  "corpus": "ἄνεμος,",
+  "engines": "s ἄνεμος,",
+  "corpus_line": "ἄνεμος, κίνησις ἀέρος μα13. 349a20, 12. ἄνεμος πλῆθός τι",
+  "ledger_id": "page-067-R:0:ἄνεμος,"
+ },
+ "page-068-L::12": {
+  "verdict": "engines",
+  "column": "page-068-L",
+  "corpus": "ς.",
+  "engines": "ς,",
+  "corpus_line": "8. — ἄνευ i q χωρίς. εἰ μή: ἄνευ τῶν κατὰ μέρος ἀδικη-"
+ },
+ "page-068-R::13": {
+  "verdict": "corpus",
+  "column": "page-068-R",
+  "corpus": "αι",
+  "engines": "α",
+  "corpus_line": "sententia, ἐν τῷ ἄρρενι ϗ̀ τῷ θήλει οἷον σύμβολον ἐνεῖναι",
+  "ledger_id": "page-068-R:0:αι"
+ },
+ "page-068-R::14": {
+  "verdict": "engines",
+  "column": "page-068-R",
+  "corpus": "ό",
+  "engines": "ὸ",
+  "corpus_line": "b29. δέχεσθαι παρὰ τȣ͂ ἀνδρός ϗ̀ ἀφιέναι Ζικ4. 636b5."
+ },
+ "page-069-L::15": {
+  "verdict": "corpus",
+  "column": "page-069-L",
+  "corpus": "θȣ͂",
+  "engines": "θῦ",
+  "corpus_line": "γεῖς καλȣ͂σιν ἱερȣ̀ς ἰχθȣ͂ς τȣ́τȣς Ζιι37. 620b33 (piscis non",
+  "ledger_id": "page-069-L:0:θȣ͂"
+ },
+ "page-069-R::16": {
+  "verdict": "corpus",
+  "column": "page-069-R",
+  "corpus": "ἓ",
+  "engines": "ἐ",
+  "corpus_line": "μελίτταις ϗ̀ ταῖς σφηξίν, inter γένη ἓξ ἀγελαῖα τῶν με-",
+  "ledger_id": "page-069-R:0:ἓ"
+ },
+ "page-069-R::17": {
+  "verdict": "engines",
+  "column": "page-069-R",
+  "corpus": "ὡ",
+  "engines": "ὥ",
+  "corpus_line": "ἀνθρωπίνην φύσιν Πγ15. 1286b27. ὡς γε πρὸς ἀνθρωπίνην"
+ },
+ "page-069-R::18": {
+  "verdict": "corpus",
+  "column": "page-069-R",
+  "corpus": "ει",
+  "engines": "ε",
+  "corpus_line": "ἄνθρωπον ὄντα Ηκ7. 1177b32. τοῖς ἀνθρωπίνοις συγγινώσκειν",
+  "ledger_id": "page-069-R:0:ει"
+ },
+ "page-070-R::19": {
+  "verdict": "corpus",
+  "column": "page-070-R",
+  "corpus": "ὀ",
+  "engines": "ο",
+  "corpus_line": "δίων Ζγβ6. 744a25. τὸ ὑπὸ τὸ κρανίον ὀνομάζεται πρόσωπον",
+  "ledger_id": "page-070-R:0:ὀ"
+ },
+ "page-070-R::20": {
+  "verdict": "engines",
+  "column": "page-070-R",
+  "corpus": "̀",
+  "engines": "́",
+  "corpus_line": "Ζμδ10. 628a12. Ζιβ1. 497b33. πῶς ἔχει μαστȣ̀ς Ζιβ1."
+ },
+ "page-071-L::21": {
+  "verdict": "corpus",
+  "column": "page-071-L",
+  "corpus": " a",
+  "engines": " α",
+  "corpus_line": "5. (τὰ ὁμοιομερῆ μόρια corporis humani). a. τὰ ὑγρά.",
+  "ledger_id": "page-071-L:0: a"
+ },
+ "page-071-L::22": {
+  "verdict": "engines",
+  "column": "page-071-L",
+  "corpus": "ὐ",
+  "engines": "ὑ",
+  "corpus_line": "ἔχει πι25. 893b17. τὰ τριχώματα διαφέρȣσι ϗ̀ πρὸς αὐτὰ"
+ },
+ "page-071-R::23": {
+  "verdict": "corpus",
+  "column": "page-071-R",
+  "corpus": "ῳ",
+  "engines": "ω",
+  "corpus_line": "657b2. τῷ ἀνθρώπῳ ἐστὶ τὸ δέρμα καθάπερ πάθος σαρκός",
+  "ledger_id": "page-071-R:0:ῳ"
+ },
+ "page-072-R::24": {
+  "verdict": "corpus",
+  "column": "page-072-R",
+  "corpus": "Ἄ",
+  "engines": "Ἀ",
+  "corpus_line": "Ἄνθρωπος Ηη6. 1147b35.",
+  "ledger_id": "page-072-R:0:Ἄ"
+ },
+ "page-075-L::25": {
+  "verdict": "corpus",
+  "column": "page-075-L",
+  "corpus": "ᾴ",
+  "engines": "ά",
+  "corpus_line": "ῥᾴδιον ἀντειπεῖν ϗ̀ λῦσαι ημβ7. 1206b8. παραπεπεῖσθαι τῷ",
+  "ledger_id": "page-075-L:0:ᾴ"
+ },
+ "page-075-L::26": {
+  "verdict": "corpus",
+  "column": "page-075-L",
+  "corpus": "ᾑ",
+  "engines": "ἡ",
+  "corpus_line": "ἀντί. τὸ μένειν ἀντὶ τȣ͂ μάχεσθαι ᾑρȣ͂ντο Ρβ23. 1399b17.",
+  "ledger_id": "page-075-L:0:ᾑ"
+ },
+ "page-075-R::27": {
+  "verdict": "corpus",
+  "column": "page-075-R",
+  "corpus": "ῃ",
+  "engines": "η",
+  "corpus_line": "ἀντιδιαιρεῖσθαι. ἀντιδιῃρῆσθαι λέγεται ἀλλήλοις τὰ κατὰ",
+  "ledger_id": "page-075-R:0:ῃ"
+ },
+ "page-075-R::28": {
+  "verdict": "corpus",
+  "column": "page-075-R",
+  "corpus": "ᾗ",
+  "engines": "ἢ",
+  "corpus_line": "τινί τζ6. 143a34, b10. τοιαύτη κατάφασις ᾗ ἀπόφασιν",
+  "ledger_id": "page-075-R:0:ᾗ"
+ },
+ "page-076-R::30": {
+  "verdict": "corpus",
+  "column": "page-076-R",
+  "corpus": "ἓ",
+  "engines": "ἐ",
+  "corpus_line": "τὸ γένος ἓν διαφέρον ταῖς ἀντικειμέναις διαφοραῖς Μδ6.",
+  "ledger_id": "page-076-R:0:ἓ"
+ },
+ "page-077-L::32": {
+  "verdict": "corpus",
+  "column": "page-077-L",
+  "corpus": "ῃ",
+  "engines": "η",
+  "corpus_line": "ἀντιπάσχειν. εὖ ποιεῖν μὴ ἵνα ἀντιπάθῃ Ηη15. 1163a1.",
+  "ledger_id": "page-077-L:0:ῃ"
+ },
+ "page-077-L::33": {
+  "verdict": "engines",
+  "column": "page-077-L",
+  "corpus": "ῴ",
+  "engines": "ώ",
+  "corpus_line": "πεπονθὸς ἄλλῳ Ηε8. 1132b23. τὸ ἀντιπεπονθὸς σῴζει τὰς"
+ },
+ "page-077-L::34": {
+  "verdict": "engines",
+  "column": "page-077-L",
+  "corpus": "ρι",
+  "engines": "ριι",
+  "corpus_line": "θίστασθαι μδ4. 382a12, 25. μηθὲν εἶναι κενὸν ἀντιπεριστα-"
+ },
+ "page-077-R::35": {
+  "verdict": "engines",
+  "column": "page-077-R",
+  "corpus": "ἰ",
+  "engines": "ἱ",
+  "corpus_line": "ἰδρȣ͂σι διὰ τὴν ἀντιπερίστασιν πβ16. 867b32. ἀντιπερίστασις"
+ },
+ "page-078-R::37": {
+  "verdict": "corpus",
+  "column": "page-078-R",
+  "corpus": "́",
+  "engines": "",
+  "corpus_line": "ἀκολȣ́θησις τι15. 167b1. ἀντιστρέφει τὸ β τῷ α (dativo",
+  "ledger_id": "page-078-R:0:́"
+ },
+ "page-078-R::38": {
+  "verdict": "corpus",
+  "column": "page-078-R",
+  "corpus": "‘",
+  "engines": "'",
+  "corpus_line": "(Schol 166b13), i e transitive ‘affirmantem propositionem",
+  "ledger_id": "page-078-R:0:‘"
+ },
+ "page-079-L::39": {
+  "verdict": "corpus",
+  "column": "page-079-L",
+  "corpus": "ῳ",
+  "engines": "ω",
+  "corpus_line": "μεναι ε6. 17a33 Wz. ἡ ἀντίφασις ἀντίθεσις ἧς ὁτῳȣ͂ν θά-",
+  "ledger_id": "page-079-L:0:ῳ"
+ },
+ "page-080-L::40": {
+  "verdict": "corpus",
+  "column": "page-080-L",
+  "corpus": "ἀνυτικό",
+  "engines": "ἀνύτικό",
+  "corpus_line": "ἀνυτικός. ἡ πολυποδία ἀνυτικωτέραν ποιεῖ τὴν κίνησιν Ζμδ6.",
+  "ledger_id": "page-080-L:0:ἀνυτικό"
+ },
+ "page-081-L::41": {
+  "verdict": "corpus",
+  "column": "page-081-L",
+  "corpus": "ἓ",
+  "engines": "ἐ",
+  "corpus_line": "a35. τὸ ἓν ἀνώδυνον ϗ̀ ἀνάλγητον (Meliss) ξ1. 974a19.",
+  "ledger_id": "page-081-L:0:ἓ"
+ },
+ "page-081-R::42": {
+  "verdict": "corpus",
+  "column": "page-081-R",
+  "corpus": "ὠ",
+  "engines": "ἀ",
+  "corpus_line": "ὁμοειδῶν μεταφέρειν τὰ ἀνώνυμα ὠνομασμένως Ργ2. 1405",
+  "ledger_id": "page-081-R:0:ὠ"
+ },
+ "page-081-R::43": {
+  "verdict": "corpus",
+  "column": "page-081-R",
+  "corpus": "ὢ",
+  "engines": "ὧ",
+  "corpus_line": "ȣ̓κ ὢν ἀξιόπιστος Ζιθ28. 606a8. ἀκȣ́ειν ἀξιοπίστȣ τινός",
+  "ledger_id": "page-081-R:0:ὢ"
+ },
+ "page-083-R::44": {
+  "verdict": "engines",
+  "column": "page-083-R",
+  "corpus": "ἢ",
+  "engines": "ἡ",
+  "corpus_line": "μενόν ἐστι καταφανές) Αβ25. 69a20 sqq Wz. ἢ εἰς τὸ ἀδύ-"
+ },
+ "page-084-L::45": {
+  "verdict": "corpus",
+  "column": "page-084-L",
+  "corpus": "ᾴ",
+  "engines": "ά",
+  "corpus_line": "εἴπερ ἀκμὴν μᾶλλον ὁ σίδηρος λαμβάνει, ῥᾴων ϗ̀ ἀπαθε-",
+  "ledger_id": "page-084-L:0:ᾴ"
+ },
+ "page-084-R::46": {
+  "verdict": "corpus",
+  "column": "page-084-R",
+  "corpus": "Β",
+  "engines": "B",
+  "corpus_line": "ἀπάνευθε μάχης (Hom Β 391) Ηγ11. 1116a35. Πγ14.",
+  "ledger_id": "page-084-R:0:Β"
+ },
+ "page-085-L::47": {
+  "verdict": "corpus",
+  "column": "page-085-L",
+  "corpus": "ῆ",
+  "engines": "ῇ",
+  "corpus_line": "opp συμπεφυκέναι, συνεχῆ εἶναι, συμπίπτειν Ζιβ17. 507a14.",
+  "ledger_id": "page-085-L:0:ῆ"
+ },
+ "page-085-R::48": {
+  "verdict": "corpus",
+  "column": "page-085-R",
+  "corpus": "ὑ",
+  "engines": "ὐ",
+  "corpus_line": "αὑτȣ͂ Φε5. 229b4. τὸ ἀπατᾶσθαι λέγεται τριχῶς Αβ21.",
+  "ledger_id": "page-085-R:0:ὑ"
+ },
+ "page-086-R::49": {
+  "verdict": "corpus",
+  "column": "page-086-R",
+  "corpus": "ᾗ",
+  "engines": "ἢ",
+  "corpus_line": "999a27. α2. 994b22. Αγ24. 86a6. τὸ ἄπειρον ᾗ ἄπειρον",
+  "ledger_id": "page-086-R:0:ᾗ"
+ },
+ "page-087-R::50": {
+  "verdict": "engines",
+  "column": "page-087-R",
+  "corpus": "η",
+  "engines": "ȣ",
+  "corpus_line": "πρὸς τȣ̀ς πλησίȣς ἀπέχθεια Πε5. 1305a23. πολλήν, διπλῆν"
+ },
+ "page-078-L::36::d0": {
+  "verdict": "engines",
+  "column": "page-078-L",
+  "corpus": "y",
+  "engines": "v",
+  "note": "John in chat: 'vel' — Latin v, not y"
+ },
+ "page-078-L::36::d1": {
+  "verdict": "corpus",
+  "column": "page-078-L",
+  "corpus": "́",
+  "engines": "",
+  "note": "John in chat: the acute stands on ἀκολȣ́θησις"
+ },
+ "page-088-L::51": {
+  "verdict": "corpus",
+  "column": "page-088-L",
+  "corpus": "-",
+  "engines": "",
+  "corpus_line": "ἀπίεστος. περὶ ἀπιέστȣ μδ8. 385a15. 9. 386a29-b11.",
+  "ledger_id": "page-088-L:0:-"
+ },
+ "page-063-R::1::d0": {
+  "verdict": "engines",
+  "column": "page-063-R",
+  "corpus": "σ",
+  "engines": "ο",
+  "corpus_line": "Ζμγ6. 669a5. ȣ̓θὲν ζωστοκεῖ ἐν αὑτῷ μὴ ἀναπνέον Ζγβ1."
+ },
+ "page-063-R::1::d1": {
+  "verdict": "corpus",
+  "column": "page-063-R",
+  "corpus": "ὑ",
+  "engines": "ὐ",
+  "corpus_line": "Ζμγ6. 669a5. ȣ̓θὲν ζωστοκεῖ ἐν αὑτῷ μὴ ἀναπνέον Ζγβ1.",
+  "ledger_id": "page-063-R:0:ὑ"
+ },
+ "page-076-L::29::d0": {
+  "verdict": "engines",
+  "column": "page-076-L",
+  "corpus": "ἕ",
+  "engines": "ἑ",
+  "corpus_line": "β4. 415a10. — 2. ἀντικεῖσθαι ἕτερον ἑτέρῳ λέγεται τετρα-"
+ },
+ "page-076-L::29::d1": {
+  "verdict": "engines",
+  "column": "page-076-L",
+  "corpus": "ἑ",
+  "engines": "ἕ",
+  "corpus_line": "β4. 415a10. — 2. ἀντικεῖσθαι ἕτερον ἑτέρῳ λέγεται τετρα-"
+ },
+ "page-088-L::52::d0": {
+  "verdict": "engines",
+  "column": "page-088-L",
+  "corpus": "ί",
+  "engines": "ι",
+  "corpus_line": "ἀνθρώπων ἄπληστον Πβ7. 1267b1. λαίμαργος ὁ κεστρεὺς"
+ },
+ "page-088-L::52::d1": {
+  "verdict": "engines",
+  "column": "page-088-L",
+  "corpus": "γο",
+  "engines": "γὸ",
+  "corpus_line": "ἀνθρώπων ἄπληστον Πβ7. 1267b1. λαίμαργος ὁ κεστρεὺς"
+ },
+ "page-088-R::53::d0": {
+  "verdict": "corpus",
+  "column": "page-088-R",
+  "corpus": "́",
+  "engines": "",
+  "corpus_line": "λόγος ἁπλȣ́στερος, opp ποικίλος Ργ15. 1416b24. cf 11.",
+  "ledger_id": "page-088-R:0:́"
+ },
+ "page-088-R::53::d1": {
+  "verdict": "corpus",
+  "column": "page-088-R",
+  "corpus": "Ργ",
+  "engines": "Ργ ",
+  "corpus_line": "λόγος ἁπλȣ́στερος, opp ποικίλος Ργ15. 1416b24. cf 11.",
+  "ledger_id": "page-088-R:0:Ργ"
+ },
+ "page-088-R::54": {
+  "verdict": "corpus",
+  "column": "page-088-R",
+  "corpus": "ᾗ",
+  "engines": "ἢ",
+  "corpus_line": "1300a29, 31, ἀεί Φβ5. 197a34, 31. ἁπλῶς ὄν, ὂν ᾗ ὄν",
+  "ledger_id": "page-088-R:0:ᾗ"
+ },
+ "page-089-R::55": {
+  "verdict": "corpus",
+  "column": "page-089-R",
+  "corpus": "’",
+  "engines": "",
+  "corpus_line": "b26. 9. 1387a14. 18. 1393b13. ρ1. 1420a26. ἁπλῶς δ’",
+  "ledger_id": "page-089-R:0:’"
+ },
+ "page-090-L::56": {
+  "verdict": "corpus",
+  "column": "page-090-L",
+  "corpus": "⟩",
+  "engines": ")",
+  "corpus_line": "ὑπὸ⟩ τȣ͂ μέσȣ Φγ5. 205b11). ἐγκαλȣ͂σι δὴ αὐτῷ ὅτι ȣ̓δὲν",
+  "ledger_id": "page-090-L:0:⟩"
+ },
+ "page-090-R::57": {
+  "verdict": "engines",
+  "column": "page-090-R",
+  "corpus": ".",
+  "engines": ",",
+  "corpus_line": "ἀπογίγνεσθαι. ἀπογεγονέναι, opp προσγίγνεσθαι, προσγε-"
+ },
+ "page-091-L::58": {
+  "verdict": "engines",
+  "column": "page-091-L",
+  "corpus": "ὴ",
+  "engines": "ή",
+  "corpus_line": "dist ὁρισμός Αγ3. δ3. 4. ἡ ἐπιστήμη ἐστὶν ἕξις ἀποδεικτικὴ"
+ },
+ "page-091-L::59": {
+  "verdict": "corpus",
+  "column": "page-091-L",
+  "corpus": "15.",
+  "engines": "15. ἀ",
+  "corpus_line": "δειξις τῶν ἀναγκαίων, ἐξ ἀναγκαίων Μδ5. 1015b7. ζ15.",
+  "ledger_id": "page-091-L:0:15."
+ },
+ "page-091-R::60": {
+  "verdict": "engines",
+  "column": "page-091-R",
+  "corpus": "τί",
+  "engines": "τι",
+  "corpus_line": "2. ἀποδείξεως genera. ἡ καθόλȣ ἀπόδειξις βελτίων τῆς"
+ },
+ "page-091-R::61": {
+  "verdict": "engines",
+  "column": "page-091-R",
+  "corpus": "γȣ",
+  "engines": "γȣ́",
+  "corpus_line": "ἡ δεικνύȣσα (κατηγορικὴ) βελτίων τῆς εἰς τὸ ἀδύνατον ἀγȣ-"
+ },
+ "page-091-R::62": {
+  "verdict": "corpus",
+  "column": "page-091-R",
+  "corpus": "ῃ",
+  "engines": "η",
+  "corpus_line": "ἐν ἀποδείξει ϗ̀ ἐπιστήμῃ ἀρχὴ ὁ νȣ͂ς Αγ23. 85a1. δ19.",
+  "ledger_id": "page-091-R:0:ῃ"
+ },
+ "page-092-L::63": {
+  "verdict": "corpus",
+  "column": "page-092-L",
+  "corpus": "γȣ͂",
+  "engines": "γȣ",
+  "corpus_line": "b18, 35, 24. — ἀποδέχεσθαι μαθηματικȣ͂ πιθανολογȣ͂ντος",
+  "ledger_id": "page-092-L:0:γȣ͂"
+ },
+ "page-092-L::64::d0": {
+  "verdict": "corpus",
+  "column": "page-092-L",
+  "corpus": "‘",
+  "engines": "'",
+  "corpus_line": "a1. (ἀποδιδόναι non addito obiecto ‘debitum solvere’ Ηθ15.",
+  "ledger_id": "page-092-L:0:‘"
+ },
+ "page-092-L::64::d1": {
+  "verdict": "corpus",
+  "column": "page-092-L",
+  "corpus": "’",
+  "engines": "'",
+  "corpus_line": "a1. (ἀποδιδόναι non addito obiecto ‘debitum solvere’ Ηθ15.",
+  "ledger_id": "page-092-L:0:’"
+ },
+ "page-093-L::65": {
+  "verdict": "corpus",
+  "column": "page-093-L",
+  "corpus": "κνω",
+  "engines": "κνῶ",
+  "corpus_line": "ἀπόθραυσις νεφῶν πεπυκνωμένων κ4. 394a33.",
+  "ledger_id": "page-093-L:0:κνω"
+ },
+ "page-093-L::66": {
+  "verdict": "corpus",
+  "column": "page-093-L",
+  "corpus": "ὗ",
+  "engines": "ὖ",
+  "corpus_line": "f 66. 1486b40. ἐστάλησαν αἱ ἀποικίαι αὗται f 560. 1570",
+  "ledger_id": "page-093-L:0:ὗ"
+ },
+ "page-094-L::67": {
+  "verdict": "corpus",
+  "column": "page-094-L",
+  "corpus": "ᾗ",
+  "engines": "ἢ",
+  "corpus_line": "excrementis: τὸ τȣ͂ σώματος πέρας, ᾗ τὰ περιττώματα",
+  "ledger_id": "page-094-L:0:ᾗ"
+ },
+ "page-094-R::69": {
+  "verdict": "engines",
+  "column": "page-094-R",
+  "corpus": "ωματικὴ",
+  "engines": "ωματική",
+  "corpus_line": "716a12. ἡ ἀπόκρισις ἢ ἡ σπερματικὴ ἢ ἡ περιττωματικὴ"
+ },
+ "page-094-R::70": {
+  "verdict": "corpus",
+  "column": "page-094-R",
+  "corpus": "ἓ",
+  "engines": "ἐ",
+  "corpus_line": "μησόμεθα ρ2. 1421b15. ἓν μέρος ἀπολαβών πο23. 1459",
+  "ledger_id": "page-094-R:0:ἓ"
+ },
+ "page-095-L::71": {
+  "verdict": "corpus",
+  "column": "page-095-L",
+  "corpus": "ὢ",
+  "engines": "ὧ",
+  "corpus_line": "1361a17. ἡδὺς ὢν ἰδεῖν πρὸς ἀπόλαυσιν Ρα5. 1361b9 (cf",
+  "ledger_id": "page-095-L:0:ὢ"
+ },
+ "page-095-R::72": {
+  "verdict": "corpus",
+  "column": "page-095-R",
+  "corpus": "ἀ",
+  "engines": ". ἀ",
+  "corpus_line": "ἀπολογία, opp κατηγορία Ρα3. 1358b11. περὶ κατηγορίας",
+  "ledger_id": "page-095-R:0:ἀ"
+ },
+ "page-096-R::73": {
+  "verdict": "engines",
+  "column": "page-096-R",
+  "corpus": "̓",
+  "engines": "̔",
+  "corpus_line": "ἀποπέμπειν. ȣ̓́τω τὴν ἡδονὴν ἀποπεμπόμενοι Ηβ9. 1109b11."
+ },
+ "page-097-R::74": {
+  "verdict": "corpus",
+  "column": "page-097-R",
+  "corpus": "ει",
+  "engines": "ε",
+  "corpus_line": "ραίνειν om obiecto Ζιε5. 541a24. 18. 550a18, b11. τὸ",
+  "ledger_id": "page-097-R:0:ει"
+ },
+ "page-098-L::75": {
+  "verdict": "corpus",
+  "column": "page-098-L",
+  "corpus": "ῇ",
+  "engines": "ῆ",
+  "corpus_line": "cf ε16. 548b11. ὅταν ἀποσπασθῇ τὰ ζῷα, ἃ ἐν ἑαυτῷ",
+  "ledger_id": "page-098-L:0:ῇ"
+ },
+ "page-098-L::76": {
+  "verdict": "corpus",
+  "column": "page-098-L",
+  "corpus": "ῃ",
+  "engines": "η",
+  "corpus_line": "πλείστῃ κ6. 397b30. ὑποθέμενοι τὰς ταχυτῆτας ἐκ τῶν",
+  "ledger_id": "page-098-L:0:ῃ"
+ },
+ "page-098-L::77": {
+  "verdict": "corpus",
+  "column": "page-098-L",
+  "corpus": "ῃ",
+  "engines": "η",
+  "corpus_line": "ἀποστεγάζειν. ἀποστεγάσῃ (Emped 356) αν7. 473b22.",
+  "ledger_id": "page-098-L:0:ῃ"
+ },
+ "page-098-R::78": {
+  "verdict": "corpus",
+  "column": "page-098-R",
+  "corpus": "ἃ",
+  "engines": "ἂ",
+  "corpus_line": "ἀποσχᾶν. φλέβες ἃς ἀποσχῶσιν Ζιγ2. 512a30.",
+  "ledger_id": "page-098-R:0:ἃ"
+ },
+ "page-099-L::79": {
+  "verdict": "engines",
+  "column": "page-099-L",
+  "corpus": "μὴ",
+  "engines": "μή",
+  "corpus_line": "ἐκλείψεις ἀεὶ κυρτὴν ἔχει τὴν ὁρίζȣσαν γραμμὴν b27). cf"
+ },
+ "page-099-R::80": {
+  "verdict": "corpus",
+  "column": "page-099-R",
+  "corpus": " πο",
+  "engines": " πδ",
+  "corpus_line": "a35. μήπω ἀποτετυχηκέναι πολλά Ρβ12. 1389a21, cf 6.",
+  "ledger_id": "page-099-R:0: πο"
+ },
+ "page-099-R::81": {
+  "verdict": "corpus",
+  "column": "page-099-R",
+  "corpus": "ἓ",
+  "engines": "ἐ",
+  "corpus_line": "ἐναίμων ζῴων ᾠοτόκων ἓν μόνον γένος ἄπȣν (ἄπȣν φύσει",
+  "ledger_id": "page-099-R:0:ἓ"
+ },
+ "page-100-L::82": {
+  "verdict": "corpus",
+  "column": "page-100-L",
+  "corpus": "͂",
+  "engines": "",
+  "corpus_line": "b22. — καλῶς ἀπεφήναντο (i e διωρίσαντο) τἀγαθόν, ȣ̔͂",
+  "ledger_id": "page-100-L:0:͂"
+ },
+ "page-101-L::83": {
+  "verdict": "corpus",
+  "column": "page-101-L",
+  "corpus": "Β",
+  "engines": "B",
+  "corpus_line": "ψοφεῖν Ζιι49 Β. 633b7.",
+  "ledger_id": "page-101-L:0:Β"
+ },
+ "page-101-R::84": {
+  "verdict": "corpus",
+  "column": "page-101-R",
+  "corpus": "ἁ",
+  "engines": "ἀ",
+  "corpus_line": "734b14-16. ἀστέρες ἁψάμενοι, syn συνελθόντες μα6. 343",
+  "ledger_id": "page-101-R:0:ἁ"
+ },
+ "page-102-L::85": {
+  "verdict": "corpus",
+  "column": "page-102-L",
+  "corpus": "ῇ",
+  "engines": "ῆ",
+  "corpus_line": "ὅταν ὁ ἀὴρ ἀπωσθῇ ὥσπερ σφαῖρα ψβ8. 419b27. ὅταν",
+  "ledger_id": "page-102-L:0:ῇ"
+ },
+ "page-102-L::86": {
+  "verdict": "engines",
+  "column": "page-102-L",
+  "corpus": "ὐ",
+  "engines": "ὑ",
+  "corpus_line": "ἀπώλειά τις αὐτȣ͂ ἡ τῆς ȣ̓σίας φθορά Ηδ1. 1120a2. ὅλων"
+ },
+ "page-102-L::87": {
+  "verdict": "corpus",
+  "column": "page-102-L",
+  "corpus": ",",
+  "engines": "",
+  "corpus_line": "1401a3) veluti δῆλον ἄρα Πδ11. 1295b33. η2. 1325a5,",
+  "ledger_id": "page-102-L:0:,"
+ },
+ "page-102-R::88": {
+  "verdict": "corpus",
+  "column": "page-102-R",
+  "corpus": "R",
+  "engines": "B",
+  "corpus_line": "R. Eucken, de Ar dic ratione I p 50.) inter articulum et",
+  "ledger_id": "page-102-R:0:R"
+ },
+ "page-102-R::89": {
+  "verdict": "engines",
+  "column": "page-102-R",
+  "corpus": "έ",
+  "engines": "ὲ",
+  "corpus_line": "St I 73). Μζ7. 1033a1 (ac deinde a2 γε pro δέ). πν2."
+ },
+ "page-094-L::68": {
+  "verdict": "corpus",
+  "column": "page-094-L",
+  "corpus": "ῷ",
+  "engines": "ῶ",
+  "corpus_line": "ζῷον ἀποκρίνεται ἐκ μέρȣς τȣ͂ ᾠȣ͂ sim Ζιζ3. 561a17. Ζγγ1.",
+  "ledger_id": "page-094-L:0:ῷ"
+ },
+ "page-102-R::90": {
+  "verdict": "corpus",
+  "column": "page-102-R",
+  "corpus": "Β",
+  "engines": "B",
+  "corpus_line": "τελοι φτα4. 819b21. — Ἀράβιαι κάμηλοι (dist Βακ-",
+  "ledger_id": "page-102-R:0:Β"
+ },
+ "page-076-R::31": {
+  "verdict": "corpus",
+  "column": "page-076-R",
+  "corpus": "ῇ",
+  "engines": "ῆ",
+  "corpus_line": "βάνει εὐθύς (ἀέρα, de ἀναπνοῇ) πν1. 481a21. — med ἵππον",
+  "ledger_id": "page-076-R:0:ῇ"
+ }
+}

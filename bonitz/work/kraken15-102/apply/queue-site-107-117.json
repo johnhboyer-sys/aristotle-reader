@@ -1,0 +1,75 @@
+{
+ "spine_dir": "work/reconciled-auto",
+ "n_sites": 3,
+ "entries": [
+  {
+   "page": 110,
+   "col": "L",
+   "line": 36,
+   "word_off": 1619,
+   "char_at": 15,
+   "readers": {
+    "opus": "(ρΜζ6-8;"
+   },
+   "kind": "site",
+   "reason": "unflagged: every reader read Greek rho; the ink is a Latin p",
+   "forms": [
+    "(pΜζ6-8;",
+    "(ρΜζ6-8;"
+   ],
+   "form_set": [
+    "(pΜζ6-8;",
+    "(ρΜζ6-8;"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-110-L:36:1619",
+   "becomes": "(pΜζ6-8;"
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 24,
+   "word_off": 1071,
+   "char_at": 46,
+   "readers": {
+    "opus": "(ρΖγα21."
+   },
+   "kind": "site",
+   "reason": "unflagged: every reader read Greek rho; the ink is a Latin p",
+   "forms": [
+    "(pΖγα21.",
+    "(ρΖγα21."
+   ],
+   "form_set": [
+    "(pΖγα21.",
+    "(ρΖγα21."
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-111-R:24:1071",
+   "becomes": "(pΖγα21."
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 52,
+   "word_off": 2437,
+   "char_at": 21,
+   "readers": {
+    "opus": "cfa"
+   },
+   "kind": "site",
+   "reason": "the ink reads `cf ᵃ16` — a SPACE between cf and the Bekker column letter. Neither button could say so: the card offered cfa against cfα, and canonical() strips whitespace so the panel cannot see a space at all. kraken read `cf a16` correctly and the mixed spine took calamari's line, which had lost it — the one space the Latin spine cost across 1342 lines",
+   "forms": [
+    "cf a",
+    "cfa"
+   ],
+   "form_set": [
+    "cf a",
+    "cfa"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-117-L:52:2437",
+   "becomes": "cf a"
+  }
+ ]
+}

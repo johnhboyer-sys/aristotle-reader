@@ -1,0 +1,1623 @@
+{
+ "entries": [
+  {
+   "page": 45,
+   "col": "L",
+   "line": 27,
+   "word_off": 1019,
+   "char_at": 21,
+   "readers": {
+    "opus": "ἁλκυόνων"
+   },
+   "form_set": [
+    "ἀλκυόνων",
+    "ἁλκυόνων"
+   ],
+   "printed_token": "ἁλκυόνων",
+   "pieces": [
+    {
+     "line": 27,
+     "start": 21,
+     "text": "ἁλκυόνων"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "headword `ἀλκυών` on this line is SMOOTH; the halcyon has no tie to ἅλς and LSJ has smooth",
+   "context": "ἀλκυών, avis, τὸ τῶν ἁλκυόνων γένος πάρυδρον descr, eius",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 27,
+   "anchor_char": 21,
+   "lines_reported": [
+    27
+   ],
+   "src_form": "ἁλκυόνων",
+   "forms": [
+    "ἀλκυόνων",
+    "ἁλκυόνων"
+   ],
+   "char_at_corpus": 21,
+   "opus_aligned": true,
+   "dispute_off": 1019,
+   "join": ""
+  },
+  {
+   "page": 45,
+   "col": "L",
+   "line": 28,
+   "word_off": 1067,
+   "char_at": 41,
+   "readers": {
+    "opus": "ἁλκυόνα"
+   },
+   "form_set": [
+    "ἀλκυόνα",
+    "ἁλκυόνα"
+   ],
+   "printed_token": "ἁλκυόνα",
+   "pieces": [
+    {
+     "line": 28,
+     "start": 41,
+     "text": "ἁλκυόνα"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "same entry, same split",
+   "context": "εἴδη δύο Ζιθ3. 593 b8. σπανιώτατον ἰδεῖν ἁλκυόνα Ζιε9. 541",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 28,
+   "anchor_char": 41,
+   "lines_reported": [
+    28
+   ],
+   "src_form": "ἁλκυόνα",
+   "forms": [
+    "ἀλκυόνα",
+    "ἁλκυόνα"
+   ],
+   "char_at_corpus": 41,
+   "opus_aligned": true,
+   "dispute_off": 1067,
+   "join": ""
+  },
+  {
+   "page": 45,
+   "col": "L",
+   "line": 34,
+   "word_off": 1355,
+   "char_at": 13,
+   "readers": {
+    "opus": "ἁλκυόνος"
+   },
+   "form_set": [
+    "ἀλκυόνος",
+    "ἁλκυόνος"
+   ],
+   "printed_token": "ἁλκυόνος",
+   "pieces": [
+    {
+     "line": 34,
+     "start": 13,
+     "text": "ἁλκυόνος"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "same entry, same split",
+   "context": "φον ποικίλας ἁλκυόνος (Simonid fr 12) Ζιε8. 542 b10. (? C II",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 34,
+   "anchor_char": 13,
+   "lines_reported": [
+    34
+   ],
+   "src_form": "ἁλκυόνος",
+   "forms": [
+    "ἀλκυόνος",
+    "ἁλκυόνος"
+   ],
+   "char_at_corpus": 13,
+   "opus_aligned": true,
+   "dispute_off": 1355,
+   "join": ""
+  },
+  {
+   "page": 45,
+   "col": "L",
+   "line": 36,
+   "word_off": 1452,
+   "char_at": 21,
+   "readers": {
+    "opus": "ἁλκυόνων"
+   },
+   "form_set": [
+    "ἀλκυόνων",
+    "ἁλκυόνων"
+   ],
+   "printed_token": "ἁλκυόνων",
+   "pieces": [
+    {
+     "line": 36,
+     "start": 21,
+     "text": "ἁλκυόνων"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "same entry, same split",
+   "context": "sed Ζιθ3 ἀηδόνων pro ἁλκυόνων legit K, alcedo vel fort tur-",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 36,
+   "anchor_char": 21,
+   "lines_reported": [
+    36
+   ],
+   "src_form": "ἁλκυόνων",
+   "forms": [
+    "ἀλκυόνων",
+    "ἁλκυόνων"
+   ],
+   "char_at_corpus": 21,
+   "opus_aligned": true,
+   "dispute_off": 1452,
+   "join": ""
+  },
+  {
+   "page": 22,
+   "col": "L",
+   "line": 42,
+   "word_off": 1688,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἁδρότερον"
+   },
+   "form_set": [
+    "ἀδρότερον",
+    "ἁδρότερον"
+   ],
+   "printed_token": "ἁδρότερον",
+   "pieces": [
+    {
+     "line": 42,
+     "start": 0,
+     "text": "ἁδρότερον"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "you ruled the headword `ἀδρός` (l.41) PRESERVE smooth and this ACCEPT rough",
+   "context": "ἁδρότερον τὸ ᾠόν Ζιζ2. 559 b11. ἄλφιτα ἁδρά πκα26. 929",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 42,
+   "anchor_char": 0,
+   "lines_reported": [
+    42
+   ],
+   "src_form": "ἁδρότερον",
+   "forms": [
+    "ἀδρότερον",
+    "ἁδρότερον"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 1688,
+   "join": ""
+  },
+  {
+   "page": 44,
+   "col": "R",
+   "line": 29,
+   "word_off": 1187,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἁλίζοντες"
+   },
+   "form_set": [
+    "ἀλίζοντες",
+    "ἁλίζοντες"
+   ],
+   "printed_token": "ἁλίζοντες",
+   "pieces": [
+    {
+     "line": 29,
+     "start": 0,
+     "text": "ἁλίζοντες"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "headword `ἀλίζειν` (l.27) is smooth by the corrigenda register, examined at 400dpi",
+   "context": "ἁλίζοντες προσφέρȣσιν Ζιθ10. 596 a19. — ἁλίζειν τὰ πρό-",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 29,
+   "anchor_char": 0,
+   "lines_reported": [
+    29
+   ],
+   "src_form": "ἁλίζοντες",
+   "forms": [
+    "ἀλίζοντες",
+    "ἁλίζοντες"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 1187,
+   "join": ""
+  },
+  {
+   "page": 44,
+   "col": "R",
+   "line": 29,
+   "word_off": 1187,
+   "char_at": 40,
+   "readers": {
+    "opus": "ἁλίζειν"
+   },
+   "form_set": [
+    "ἀλίζειν",
+    "ἁλίζειν"
+   ],
+   "printed_token": "ἁλίζειν",
+   "pieces": [
+    {
+     "line": 29,
+     "start": 40,
+     "text": "ἁλίζειν"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "same line, same split against the register",
+   "context": "ἁλίζοντες προσφέρȣσιν Ζιθ10. 596 a19. — ἁλίζειν τὰ πρό-",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 29,
+   "anchor_char": 40,
+   "lines_reported": [
+    29
+   ],
+   "src_form": "ἁλίζειν",
+   "forms": [
+    "ἀλίζειν",
+    "ἁλίζειν"
+   ],
+   "char_at_corpus": 40,
+   "opus_aligned": true,
+   "dispute_off": 1187,
+   "join": ""
+  },
+  {
+   "page": 43,
+   "col": "L",
+   "line": 35,
+   "word_off": 1326,
+   "char_at": 20,
+   "readers": {
+    "opus": "ἀλεύρα"
+   },
+   "form_set": [
+    "ἀλεύρα",
+    "ἄλευρα"
+   ],
+   "printed_token": "ἀλεύρα",
+   "pieces": [
+    {
+     "line": 35,
+     "start": 20,
+     "text": "ἀλεύρα"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "`ἡ περὶ τὸ σῶμα ἀλεύρα` — a feminine article does not fit ἄλευρα (neuter plural)",
+   "context": "ωρή. ἡ περὶ τὸ σῶμα ἀλεύρα Ζμδ10. 687a29. τῆς περὶ",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 35,
+   "anchor_char": 20,
+   "lines_reported": [
+    35
+   ],
+   "src_form": "ἀλεύρα",
+   "forms": [
+    "ἀλεύρα",
+    "ἄλευρα"
+   ],
+   "char_at_corpus": 20,
+   "opus_aligned": true,
+   "dispute_off": 1326,
+   "join": ""
+  },
+  {
+   "page": 48,
+   "col": "L",
+   "line": 49,
+   "word_off": 1951,
+   "char_at": 50,
+   "readers": {
+    "opus": "ἀλυτόν"
+   },
+   "form_set": [
+    "ἀλυτόν",
+    "ἄλυτον"
+   ],
+   "printed_token": "ἀλυτόν",
+   "pieces": [
+    {
+     "line": 49,
+     "start": 50,
+     "text": "ἀλυτόν"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "both accentuations are possible Greek; ἄλυτον is standard",
+   "context": "b7. — 2. logice. μόνον τὸ ἀναγκαῖον, ἂν ἀληθὲς ᾖ, ἀλυτόν",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 49,
+   "anchor_char": 50,
+   "lines_reported": [
+    49
+   ],
+   "src_form": "ἀλυτόν",
+   "forms": [
+    "ἀλυτόν",
+    "ἄλυτον"
+   ],
+   "char_at_corpus": 50,
+   "opus_aligned": true,
+   "dispute_off": 1951,
+   "join": ""
+  },
+  {
+   "page": 71,
+   "col": "R",
+   "line": 33,
+   "word_off": 1438,
+   "char_at": 9,
+   "readers": {
+    "opus": "ȣ͂τοι"
+   },
+   "form_set": [
+    "ȣ̔͂τοι",
+    "ȣ͂τοι",
+    "ȣτοι"
+   ],
+   "printed_token": "ȣ͂τοι",
+   "pieces": [
+    {
+     "line": 33,
+     "start": 9,
+     "text": "ȣ͂τοι"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "open since this morning — perispomeni with no breathing",
+   "context": "θρώπȣ ϗ̀ ȣ͂τοι δὲ ὀψέ πια1. 899a2. 57. 905a30. διὰ τί",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 33,
+   "anchor_char": 9,
+   "lines_reported": [
+    33
+   ],
+   "src_form": "ȣ͂τοι",
+   "forms": [
+    "ȣ̔͂τοι",
+    "ȣ͂τοι",
+    "ȣτοι"
+   ],
+   "char_at_corpus": 9,
+   "opus_aligned": true,
+   "dispute_off": 1438,
+   "join": ""
+  },
+  {
+   "page": 100,
+   "col": "L",
+   "line": 48,
+   "word_off": 2186,
+   "char_at": 50,
+   "readers": {
+    "opus": "ȣ͂"
+   },
+   "form_set": [
+    "ȣ̓",
+    "ȣ̔͂",
+    "ȣ͂"
+   ],
+   "printed_token": "ȣ͂",
+   "pieces": [
+    {
+     "line": 48,
+     "start": 50,
+     "text": "ȣ͂"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "bare, at the line end after `τἀγαθόν,`",
+   "context": "b22. — καλῶς ἀπεφήναντο (i e διωρίσαντο) τἀγαθόν, ȣ͂",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 48,
+   "anchor_char": 50,
+   "lines_reported": [
+    48
+   ],
+   "src_form": "ȣ͂",
+   "forms": [
+    "ȣ̓",
+    "ȣ̔͂",
+    "ȣ͂"
+   ],
+   "char_at_corpus": 50,
+   "opus_aligned": true,
+   "dispute_off": 2186,
+   "join": ""
+  },
+  {
+   "page": 86,
+   "col": "R",
+   "line": 52,
+   "word_off": 2375,
+   "char_at": 37,
+   "readers": {
+    "opus": "ἐπορεύετ’"
+   },
+   "form_set": [
+    "ἐπορεύετ’"
+   ],
+   "printed_token": "ἐπορεύετ’",
+   "pieces": [
+    {
+     "line": 52,
+     "start": 37,
+     "text": "ἐπορεύετ’"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "I read this as a SWEEP MISFIRE: §167c objects to the accent but the ultima is elided",
+   "context": "b4. κ12. 1068a33. Φε2. 225b34. τȣ͂τ’ ἐπορεύετ’ ἂν εἰς",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 52,
+   "anchor_char": 37,
+   "lines_reported": [
+    52
+   ],
+   "src_form": "ἐπορεύετ’",
+   "forms": [
+    "ἐπορεύετ’"
+   ],
+   "char_at_corpus": 37,
+   "opus_aligned": true,
+   "dispute_off": 2375,
+   "join": ""
+  },
+  {
+   "page": 38,
+   "col": "L",
+   "line": 28,
+   "word_off": 1238,
+   "char_at": 44,
+   "readers": {
+    "opus": "αὕτὴ"
+   },
+   "form_set": [
+    "αὐτὴ",
+    "αὕτη",
+    "αὕτὴ"
+   ],
+   "printed_token": "αὕτὴ",
+   "pieces": [
+    {
+     "line": 28,
+     "start": 44,
+     "text": "αὕτὴ"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "TWO ACCENTS — impossible. Context is demonstrative",
+   "context": "γένεσις ἀκολȣθεῖ ϗ̀ ταύτης ἕνεκά ἐστιν, ȣ̓χ αὕτὴ τῇ γενέσει",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 28,
+   "anchor_char": 44,
+   "lines_reported": [
+    28
+   ],
+   "src_form": "αὕτὴ",
+   "forms": [
+    "αὐτὴ",
+    "αὕτη",
+    "αὕτὴ"
+   ],
+   "char_at_corpus": 44,
+   "opus_aligned": true,
+   "dispute_off": 1238,
+   "join": ""
+  },
+  {
+   "page": 48,
+   "col": "L",
+   "line": 28,
+   "word_off": 1101,
+   "char_at": 9,
+   "readers": {
+    "opus": "αὕτὴ"
+   },
+   "form_set": [
+    "αὐτὴ",
+    "αὕτη",
+    "αὕτὴ"
+   ],
+   "printed_token": "αὕτὴ",
+   "pieces": [
+    {
+     "line": 28,
+     "start": 9,
+     "text": "αὕτὴ"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "TWO ACCENTS — `αὕτὴ ἡ δειλία`",
+   "context": "1126b14. αὕτὴ ἡ δειλία ἄλυπος Ηγ15. 1119a29. ἄλυπος",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 28,
+   "anchor_char": 9,
+   "lines_reported": [
+    28
+   ],
+   "src_form": "αὕτὴ",
+   "forms": [
+    "αὐτὴ",
+    "αὕτη",
+    "αὕτὴ"
+   ],
+   "char_at_corpus": 9,
+   "opus_aligned": true,
+   "dispute_off": 1101,
+   "join": ""
+  },
+  {
+   "page": 48,
+   "col": "R",
+   "line": 55,
+   "word_off": 2362,
+   "char_at": 4,
+   "readers": {
+    "opus": "ὅθὲν"
+   },
+   "form_set": [
+    "ὅθεν",
+    "ὅθὲν"
+   ],
+   "printed_token": "ὅθὲν",
+   "pieces": [
+    {
+     "line": 55,
+     "start": 4,
+     "text": "ὅθὲν"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "TWO ACCENTS — `ὅθεν` ×16 elsewhere",
+   "context": "a4 (ὅθὲν αὐτῶν μεταξύ ἐστιν). ἅμα κατὰ χρόνον def Φδ10.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 55,
+   "anchor_char": 4,
+   "lines_reported": [
+    55
+   ],
+   "src_form": "ὅθὲν",
+   "forms": [
+    "ὅθεν",
+    "ὅθὲν"
+   ],
+   "char_at_corpus": 4,
+   "opus_aligned": true,
+   "dispute_off": 2362,
+   "join": ""
+  },
+  {
+   "page": 45,
+   "col": "L",
+   "line": 9,
+   "word_off": 312,
+   "char_at": 0,
+   "readers": {
+    "opus": "'Αλκίνȣ"
+   },
+   "form_set": [
+    "'Αλκίνȣ",
+    "Ἀλκίνȣ"
+   ],
+   "printed_token": "'Αλκίνȣ",
+   "pieces": [
+    {
+     "line": 9,
+     "start": 0,
+     "text": "'Αλκίνȣ"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "ASCII apostrophe where the breathing belongs; same line prints `Ἀλκινόȣ`",
+   "context": "'Αλκίνȣ ἀπόλογος Ργ16. 1417 a13. πο16. 1455 a2. Ἀλκινόȣ",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 9,
+   "anchor_char": 0,
+   "lines_reported": [
+    9
+   ],
+   "src_form": "'Αλκίνȣ",
+   "forms": [
+    "'Αλκίνȣ",
+    "Ἀλκίνȣ"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 312,
+   "join": ""
+  },
+  {
+   "page": 72,
+   "col": "L",
+   "line": 27,
+   "word_off": 1218,
+   "char_at": 46,
+   "readers": {
+    "opus": "ζῶόν"
+   },
+   "form_set": [
+    "ζῶόν",
+    "ζῷόν"
+   ],
+   "printed_token": "ζῶόν",
+   "pieces": [
+    {
+     "line": 27,
+     "start": 46,
+     "text": "ζῶόν"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "missing iota subscript — ζῷον ×20, ζῶον ×0. The 2nd accent is CORRECT (τι follows)",
+   "context": "775a4. προϊὸν ȣ̔́τως τέλος ȣ̓δὲ ἄνθρωπος ἀλλὰ ζῶόν τι μόνον",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 27,
+   "anchor_char": 46,
+   "lines_reported": [
+    27
+   ],
+   "src_form": "ζῶόν",
+   "forms": [
+    "ζῶόν",
+    "ζῷόν"
+   ],
+   "char_at_corpus": 46,
+   "opus_aligned": true,
+   "dispute_off": 1218,
+   "join": ""
+  },
+  {
+   "page": 39,
+   "col": "R",
+   "line": 54,
+   "word_off": 2335,
+   "char_at": 44,
+   "readers": {
+    "opus": "ἀκριβεία"
+   },
+   "form_set": [
+    "ἀκρίβεια",
+    "ἀκριβεία",
+    "ἀκριβείᾳ"
+   ],
+   "printed_token": "ἀκριβεία",
+   "pieces": [
+    {
+     "line": 54,
+     "start": 44,
+     "text": "ἀκριβεία"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "`τῇ ἀκριβεία` is dative — the subscript is what is missing",
+   "context": "αν16. 478b1. εἰς ἀκρίβειαν Πη11. 1331a2. τῇ ἀκριβεία",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 54,
+   "anchor_char": 44,
+   "lines_reported": [
+    54
+   ],
+   "src_form": "ἀκριβεία",
+   "forms": [
+    "ἀκρίβεια",
+    "ἀκριβεία",
+    "ἀκριβείᾳ"
+   ],
+   "char_at_corpus": 44,
+   "opus_aligned": true,
+   "dispute_off": 2335,
+   "join": ""
+  },
+  {
+   "page": 41,
+   "col": "R",
+   "line": 32,
+   "word_off": 1330,
+   "char_at": 48,
+   "readers": {
+    "opus": "ἀκρώτή-"
+   },
+   "form_set": [
+    "ἀκρωτή-",
+    "ἀκρώτή-"
+   ],
+   "printed_token": "ἀκρώτή-",
+   "pieces": [
+    {
+     "line": 32,
+     "start": 48,
+     "text": "ἀκρώτή-"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "THREE accents across the broken word `ἀκρώτή-ριόν`",
+   "context": "extremae, ἡ κύλιξ κολοβός, ἂν τρυπηθῇ τὸ ȣ̓͂ς ἢ ἀκρώτή-",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 32,
+   "anchor_char": 48,
+   "lines_reported": [
+    32
+   ],
+   "src_form": "ἀκρώτή-",
+   "forms": [
+    "ἀκρωτή-",
+    "ἀκρώτή-"
+   ],
+   "char_at_corpus": 48,
+   "opus_aligned": true,
+   "dispute_off": 1330,
+   "join": ""
+  },
+  {
+   "page": 85,
+   "col": "R",
+   "line": 56,
+   "word_off": 2348,
+   "char_at": 48,
+   "readers": {
+    "opus": "ἀπε͞ικά-"
+   },
+   "form_set": [
+    "ἀπε͞ικά-",
+    "ἀπεικά-"
+   ],
+   "printed_token": "ἀπε͞ικά-",
+   "pieces": [
+    {
+     "line": 56,
+     "start": 48,
+     "text": "ἀπε͞ικά-"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "CODEC: the only overbar in the corpus. Keeping it adds U+035E to the alphabet",
+   "context": "ἀπεικάζειν. μιμȣ͂νται πολλὰ χρώμασι ϗ̀ σχήμασιν ἀπε͞ικά-",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 56,
+   "anchor_char": 48,
+   "lines_reported": [
+    56
+   ],
+   "src_form": "ἀπε͞ικά-",
+   "forms": [
+    "ἀπε͞ικά-",
+    "ἀπεικά-"
+   ],
+   "char_at_corpus": 48,
+   "opus_aligned": true,
+   "dispute_off": 2348,
+   "join": ""
+  },
+  {
+   "page": 90,
+   "col": "L",
+   "line": 15,
+   "word_off": 671,
+   "char_at": 47,
+   "readers": {
+    "opus": "⟨?"
+   },
+   "form_set": [
+    "(?",
+    "⟨?"
+   ],
+   "printed_token": "⟨?",
+   "pieces": [
+    {
+     "line": 15,
+     "start": 47,
+     "text": "⟨?"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "CODEC: angle brackets ⟨ ⟩ — two new characters, U+27E8/U+27E9",
+   "context": "1262b40. (ἡ γῆ ȣ̓ φέρεται, εἰργμένη μέντοι ἀπὸ ⟨? Simpl",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 15,
+   "anchor_char": 47,
+   "lines_reported": [
+    15
+   ],
+   "src_form": "⟨?",
+   "forms": [
+    "(?",
+    "⟨?"
+   ],
+   "char_at_corpus": 47,
+   "opus_aligned": true,
+   "dispute_off": 671,
+   "join": ""
+  },
+  {
+   "page": 96,
+   "col": "L",
+   "line": 22,
+   "word_off": 969,
+   "char_at": 12,
+   "readers": {
+    "opus": "661,a10"
+   },
+   "form_set": [
+    "661,a10",
+    "661.a10"
+   ],
+   "printed_token": "661,a10",
+   "pieces": [
+    {
+     "line": 22,
+     "start": 12,
+     "text": "661,a10"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "comma-shaped mark with a descender where a period belongs",
+   "context": "660a17, 24, 661,a10. Ζπ4. 706a18, 23. ὁ κίθαρος τὴν",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 22,
+   "anchor_char": 12,
+   "lines_reported": [
+    22
+   ],
+   "src_form": "661,a10",
+   "forms": [
+    "661,a10",
+    "661.a10"
+   ],
+   "char_at_corpus": 12,
+   "opus_aligned": true,
+   "dispute_off": 969,
+   "join": ""
+  },
+  {
+   "page": 96,
+   "col": "R",
+   "line": 34,
+   "word_off": 1310,
+   "char_at": 36,
+   "readers": {
+    "opus": "πιϛ13"
+   },
+   "form_set": [
+    "πιϛ13",
+    "πις13"
+   ],
+   "printed_token": "πιϛ13",
+   "pieces": [
+    {
+     "line": 34,
+     "start": 36,
+     "text": "πιϛ13"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "CODEC: stigma or final sigma. ⚠ THE READER CHANGED THIS ONE \"for consistency\", which is not evidence — the corpus now prints ϛ. Sense favours stigma (ϛ=6 has numeral value, ς has none); the ink is ambiguous and the glyph closely matches the ς ending ὁμοίας and γωνίας on this same line.",
+   "context": "802b33. ἀποπηδᾶν πρὸς ὁμοίας γωνίας πιϛ13. 915b26.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 34,
+   "anchor_char": 36,
+   "lines_reported": [
+    34
+   ],
+   "src_form": "πιϛ13",
+   "forms": [
+    "πιϛ13",
+    "πις13"
+   ],
+   "char_at_corpus": 36,
+   "opus_aligned": true,
+   "dispute_off": 1310,
+   "join": ""
+  },
+  {
+   "page": 22,
+   "col": "L",
+   "line": 45,
+   "word_off": 1786,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἀδρύνειν"
+   },
+   "form_set": [
+    "ἀδρύνειν",
+    "ἁδρύνειν"
+   ],
+   "printed_token": "ἀδρύνειν",
+   "pieces": [
+    {
+     "line": 45,
+     "start": 0,
+     "text": "ἀδρύνειν"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "headword SMOOTH against 3 rough inflections below it (ἁδρυνόμενοι/-α)",
+   "context": "ἀδρύνειν. σῖτοι οἱ ταχὺ ἁδρυνόμενοι Φε6. 230 b2. ἔμβρυα",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 45,
+   "anchor_char": 0,
+   "lines_reported": [
+    45
+   ],
+   "src_form": "ἀδρύνειν",
+   "forms": [
+    "ἀδρύνειν",
+    "ἁδρύνειν"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 1786,
+   "join": ""
+  },
+  {
+   "page": 22,
+   "col": "L",
+   "line": 41,
+   "word_off": 1658,
+   "char_at": 18,
+   "readers": {
+    "opus": "ἀδρός"
+   },
+   "form_set": [
+    "ἀδρός",
+    "ἁδρός"
+   ],
+   "printed_token": "ἀδρός",
+   "pieces": [
+    {
+     "line": 41,
+     "start": 18,
+     "text": "ἀδρός"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "the SECOND ἀδρός on the headword line — you ruled the first one rough",
+   "context": "ἁδρός. σῖτος μήπω ἀδρός Μδ7. 1017 b8. ὅταν ἤδη γίγνηται",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 41,
+   "anchor_char": 18,
+   "lines_reported": [
+    41
+   ],
+   "src_form": "ἀδρός",
+   "forms": [
+    "ἀδρός",
+    "ἁδρός"
+   ],
+   "char_at_corpus": 18,
+   "opus_aligned": true,
+   "dispute_off": 1658,
+   "join": ""
+  },
+  {
+   "page": 22,
+   "col": "L",
+   "line": 43,
+   "word_off": 1745,
+   "char_at": 13,
+   "readers": {
+    "opus": "ἀδρά"
+   },
+   "form_set": [
+    "ἀδρά",
+    "ἁδρά"
+   ],
+   "printed_token": "ἀδρά",
+   "pieces": [
+    {
+     "line": 43,
+     "start": 13,
+     "text": "ἀδρά"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "still smooth; ἁδρά on l.42 is rough",
+   "context": "b38. ῥεύματα ἀδρά πκη1. 949 b5. ψακάδες ἀδρότεραι κ4.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 43,
+   "anchor_char": 13,
+   "lines_reported": [
+    43
+   ],
+   "src_form": "ἀδρά",
+   "forms": [
+    "ἀδρά",
+    "ἁδρά"
+   ],
+   "char_at_corpus": 13,
+   "opus_aligned": true,
+   "dispute_off": 1745,
+   "join": ""
+  },
+  {
+   "page": 22,
+   "col": "L",
+   "line": 43,
+   "word_off": 1767,
+   "char_at": 40,
+   "readers": {
+    "opus": "ἀδρότεραι"
+   },
+   "form_set": [
+    "ἀδρότεραι",
+    "ἁδρότεραι"
+   ],
+   "printed_token": "ἀδρότεραι",
+   "pieces": [
+    {
+     "line": 43,
+     "start": 40,
+     "text": "ἀδρότεραι"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "still smooth; ἁδρότερον on l.42 is rough",
+   "context": "b38. ῥεύματα ἀδρά πκη1. 949 b5. ψακάδες ἀδρότεραι κ4.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 43,
+   "anchor_char": 40,
+   "lines_reported": [
+    43
+   ],
+   "src_form": "ἀδρότεραι",
+   "forms": [
+    "ἀδρότεραι",
+    "ἁδρότεραι"
+   ],
+   "char_at_corpus": 40,
+   "opus_aligned": true,
+   "dispute_off": 1767,
+   "join": ""
+  },
+  {
+   "page": 44,
+   "col": "R",
+   "line": 26,
+   "word_off": 1051,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἁλίζειν"
+   },
+   "form_set": [
+    "ἀλίζειν",
+    "ἁλίζειν"
+   ],
+   "printed_token": "ἁλίζειν",
+   "pieces": [
+    {
+     "line": 26,
+     "start": 0,
+     "text": "ἁλίζειν"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "⚠ TWO HEADWORDS, ADJACENT LINES, OPPOSITE BREATHINGS. This one is ROUGH; l.27 is SMOOTH because the corrigenda register examined it at 400dpi. One of the two must be wrong.",
+   "context": "ἁλίζειν, syn ἀθροίζειν πκδ9. 936 b32. β28. 869 a17.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 26,
+   "anchor_char": 0,
+   "lines_reported": [
+    26
+   ],
+   "src_form": "ἁλίζειν",
+   "forms": [
+    "ἀλίζειν",
+    "ἁλίζειν"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 1051,
+   "join": ""
+  },
+  {
+   "page": 45,
+   "col": "L",
+   "line": 33,
+   "word_off": 1333,
+   "char_at": 33,
+   "readers": {
+    "opus": "ἀλκυονίδες"
+   },
+   "form_set": [
+    "ἀλκυονίδες",
+    "ἁλκυονίδες"
+   ],
+   "printed_token": "ἀλκυονίδες",
+   "pieces": [
+    {
+     "line": 33,
+     "start": 33,
+     "text": "ἀλκυονίδες"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "same line, same question",
+   "context": "ἡμέραι ἀλκυόνειοι cf ἀλκυόνειοι, ἀλκυονίδες. ὥραν παιδοτρό-",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 33,
+   "anchor_char": 33,
+   "lines_reported": [
+    33
+   ],
+   "src_form": "ἀλκυονίδες",
+   "forms": [
+    "ἀλκυονίδες",
+    "ἁλκυονίδες"
+   ],
+   "char_at_corpus": 33,
+   "opus_aligned": true,
+   "dispute_off": 1333,
+   "join": ""
+  },
+  {
+   "page": 48,
+   "col": "L",
+   "line": 43,
+   "word_off": 1687,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἅλυσις"
+   },
+   "form_set": [
+    "ἄλυσις",
+    "ἅλυσις"
+   ],
+   "printed_token": "ἅλυσις",
+   "pieces": [
+    {
+     "line": 43,
+     "start": 0,
+     "text": "ἅλυσις"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "headword ROUGH against 2 smooth inflections",
+   "context": "ἅλυσις. ὅσα ὥσπερ αἱ ἁλύσεις σύγκειται τῶν σωμάτων μδ9.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 43,
+   "anchor_char": 0,
+   "lines_reported": [
+    43
+   ],
+   "src_form": "ἅλυσις",
+   "forms": [
+    "ἄλυσις",
+    "ἅλυσις"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 1687,
+   "join": ""
+  },
+  {
+   "page": 84,
+   "col": "R",
+   "line": 39,
+   "word_off": 1618,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἀπαλλοτριȣ͂ν"
+   },
+   "form_set": [
+    "ἀπαλλοτριȣ͂ν",
+    "ἁπαλλοτριȣ͂ν"
+   ],
+   "printed_token": "ἀπαλλοτριȣ͂ν",
+   "pieces": [
+    {
+     "line": 39,
+     "start": 0,
+     "text": "ἀπαλλοτριȣ͂ν"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "headword SMOOTH against 4 of 5 rough inflections",
+   "context": "ἀπαλλοτριȣ͂ν. οἰκεῖά ἐστιν ἃ ἐφ’ αὐτῷ ἐστὶν ἀπαλλοτριῶσαι",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 39,
+   "anchor_char": 0,
+   "lines_reported": [
+    39
+   ],
+   "src_form": "ἀπαλλοτριȣ͂ν",
+   "forms": [
+    "ἀπαλλοτριȣ͂ν",
+    "ἁπαλλοτριȣ͂ν"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 1618,
+   "join": ""
+  },
+  {
+   "page": 41,
+   "col": "R",
+   "line": 35,
+   "word_off": 1460,
+   "char_at": 31,
+   "readers": {
+    "opus": "1024,a26"
+   },
+   "form_set": [
+    "1024a26",
+    "1024,a26"
+   ],
+   "printed_token": "1024,a26",
+   "pieces": [
+    {
+     "line": 35,
+     "start": 31,
+     "text": "1024,a26"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "the same class John ruled at page-096-L:22 — a mark between the Bekker page and its column letter. The corpus writes this shape 5,904 times unpunctuated and only 3 times with a mark, and these are two of the three.",
+   "context": "772b17, 36. πη5. 887b26. Μδ27. 1024,a26, ἀκρωτήρια",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 35,
+   "anchor_char": 31,
+   "lines_reported": [
+    35
+   ],
+   "src_form": "1024,a26",
+   "forms": [
+    "1024a26",
+    "1024,a26"
+   ],
+   "char_at_corpus": 31,
+   "opus_aligned": true,
+   "dispute_off": 1460,
+   "join": ""
+  },
+  {
+   "page": 83,
+   "col": "R",
+   "line": 51,
+   "word_off": 2227,
+   "char_at": 16,
+   "readers": {
+    "opus": "886.b13"
+   },
+   "form_set": [
+    "886b13",
+    "886.b13"
+   ],
+   "printed_token": "886.b13",
+   "pieces": [
+    {
+     "line": 51,
+     "start": 16,
+     "text": "886.b13"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "the same class John ruled at page-096-L:22 — a mark between the Bekker page and its column letter. The corpus writes this shape 5,904 times unpunctuated and only 3 times with a mark, and these are two of the three.",
+   "context": "ἀπάγχεσθαι πζ5. 886.b13. λ1. 955a8, 9. ἀπάγχεο (Archil",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 51,
+   "anchor_char": 16,
+   "lines_reported": [
+    51
+   ],
+   "src_form": "886.b13",
+   "forms": [
+    "886b13",
+    "886.b13"
+   ],
+   "char_at_corpus": 16,
+   "opus_aligned": true,
+   "dispute_off": 2227,
+   "join": ""
+  },
+  {
+   "page": 45,
+   "col": "L",
+   "line": 24,
+   "word_off": 916,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἀλκυόνειοι"
+   },
+   "form_set": [
+    "ἀλκυόνειοι",
+    "ἁλκυόνειοι"
+   ],
+   "printed_token": "ἀλκυόνειοι",
+   "pieces": [
+    {
+     "line": 24,
+     "start": 0,
+     "text": "ἀλκυόνειοι"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "ENTRY HEADWORD, still smooth. You ruled the form rough at l.33, but that card bound only the site I put in the queue.",
+   "context": "ἀλκυόνειοι ἡμέραι διὰ τί καλȣ͂νται Ζιε8. 542 b15.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 24,
+   "anchor_char": 0,
+   "lines_reported": [
+    24
+   ],
+   "src_form": "ἀλκυόνειοι",
+   "forms": [
+    "ἀλκυόνειοι",
+    "ἁλκυόνειοι"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 916,
+   "join": ""
+  },
+  {
+   "page": 45,
+   "col": "L",
+   "line": 26,
+   "word_off": 993,
+   "char_at": 0,
+   "readers": {
+    "opus": "ἀλκυονίδες"
+   },
+   "form_set": [
+    "ἀλκυονίδες",
+    "ἁλκυονίδες"
+   ],
+   "printed_token": "ἀλκυονίδες",
+   "pieces": [
+    {
+     "line": 26,
+     "start": 0,
+     "text": "ἀλκυονίδες"
+    }
+   ],
+   "broken": false,
+   "kind": "sweep",
+   "sweeps": [
+    "followup"
+   ],
+   "reason": "ENTRY HEADWORD, still smooth. Same — your ruling reached l.33 and not this one.",
+   "context": "ἀλκυονίδες ἡμέραι Ζιε8. 542 b6.",
+   "ambiguous": false,
+   "dropped_forms": [],
+   "n_same_form_set": 1,
+   "anchor_line": 26,
+   "anchor_char": 0,
+   "lines_reported": [
+    26
+   ],
+   "src_form": "ἀλκυονίδες",
+   "forms": [
+    "ἀλκυονίδες",
+    "ἁλκυονίδες"
+   ],
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "dispute_off": 993,
+   "join": ""
+  }
+ ],
+ "n_sites": 35
+}

@@ -22,7 +22,7 @@ import json
 import unicodedata
 from pathlib import Path
 
-from .normalize import canonical, clean_opus
+from .normalize import canonical, clean_opus, fold
 from .compare3 import build_spine
 
 
@@ -108,11 +108,19 @@ def reconcile(root: Path, pages: list[int]) -> tuple[int, list[dict]]:
     cleaned_by_col = {}
     for p in pages:
         for col in ('L', 'R'):
-            cleaned = clean_opus(
-                (root / f'raw/opus/page-{p:03d}-{col}.txt').read_text(encoding='utf-8'))
+            raw = (root / f'raw/opus/page-{p:03d}-{col}.txt').read_text(
+                encoding='utf-8')
+            cleaned = clean_opus(raw)
             stream, offs = canonical(cleaned)
             columns.append((p, col, stream))
-            cleaned_by_col[(p, col)] = (cleaned, stream, offs)
+            # clean_opus applies reader folds such as ² -> 2. Those are useful
+            # for alignment but are not edits to the diplomatic text. When
+            # cleaning kept the same shape, retain the raw characters in the
+            # buffer that verdicts edit.
+            editable = unicodedata.normalize('NFC', raw.rstrip('\n'))
+            if len(editable) != len(unicodedata.normalize('NFC', cleaned)):
+                editable = cleaned
+            cleaned_by_col[(p, col)] = (editable, stream, offs)
     _, segs = build_spine(columns)
     seg_by_col = {(s.page, s.col): s for s in segs}
 
@@ -124,7 +132,7 @@ def reconcile(root: Path, pages: list[int]) -> tuple[int, list[dict]]:
     for (p, col), (cleaned, stream, offs) in cleaned_by_col.items():
         fpath = root / f'work/flags-by-col/page-{p:03d}-{col}.json'
         apath = root / f'work/adjudicated/page-{p:03d}-{col}.json'
-        # canonical()'s offsets index into NFC(cleaned) — edit that text
+        # canonical()'s offsets index into text with the same shape as cleaned
         text = unicodedata.normalize('NFC', cleaned)
         if fpath.exists() and apath.exists():
             # A verdict file older than its flags predates the last comparator
@@ -165,17 +173,47 @@ def reconcile(root: Path, pages: list[int]) -> tuple[int, list[dict]]:
                                   'opus': fl['opus'], 'genie': fl['genie'],
                                   'llama': fl['llama']})
                     continue
+                if fl.get('spans_line'):
+                    queue.append({'page': p, 'col': col, **vd,
+                                  'confidence': 'spans-boundary',
+                                  'opus': fl['opus'], 'genie': fl['genie'],
+                                  'llama': fl['llama']})
+                    continue
                 if vd['confidence'] != 'high':
                     queue.append({'page': p, 'col': col, **vd,
                                   'opus': fl['opus'], 'genie': fl['genie'],
                                   'llama': fl['llama']})
                 verdict = vd['verdict']
-                if verdict == fl['opus']:
-                    continue
                 if le > ls:
                     a, b = offs[ls], offs[le - 1] + 1
                 else:                      # pure insertion into the spine
                     a = b = offs[ls] if ls < len(offs) else len(text)
+                word = unicodedata.normalize('NFC', fl.get('word', ''))
+                if word and fold(verdict) == fold(word):
+                    word_start = a
+                    while word_start > 0 and not text[word_start - 1].isspace():
+                        word_start -= 1
+                    word_end = a
+                    while word_end < len(text) and not text[word_end].isspace():
+                        word_end += 1
+                    if text[word_start:word_end] != word:
+                        queue.append({'page': p, 'col': col, **vd,
+                                      'confidence': 'word-mismatch',
+                                      'opus': fl['opus'], 'genie': fl['genie'],
+                                      'llama': fl['llama']})
+                        continue
+                    if verdict != word:
+                        text = text[:word_start] + verdict + text[word_end:]
+                        edits += 1
+                    continue
+                if fl.get('spans_word'):
+                    queue.append({'page': p, 'col': col, **vd,
+                                  'confidence': 'spans-boundary',
+                                  'opus': fl['opus'], 'genie': fl['genie'],
+                                  'llama': fl['llama']})
+                    continue
+                if verdict == fl['opus']:
+                    continue
                 text = text[:a] + _splice(text[a:b], verdict) + text[b:]
                 edits += 1
         (outdir / f'page-{p:03d}-{col}.txt').write_text(

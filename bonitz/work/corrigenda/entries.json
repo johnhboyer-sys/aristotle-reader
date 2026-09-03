@@ -2,59 +2,27 @@
  "_": "Bonitz's own errors: preserved in work/reconciled, corrected in the revised edition. See README.md.",
  "entries": [
   {
-   "page": 17,
-   "col": "L",
-   "line": 37,
-   "printed": "τεχνήν",
-   "correct": "τέχνην",
-   "rule": "diacritic_sweep class C",
-   "authority": "τέχνη is barytone — the nominative accents the penult — and a noun's accent is persistent, staying where the nominative puts it unless a long ultima forces it forward. The accusative singular is therefore τέχνην. LSJ s.v. τέχνη.",
-   "checked": "400dpi 2026-08-08",
-   "note": "The acute stands plainly over the η of -νήν, well clear of the χ, and the line's other accents (μαθήσεις, πρὸς, τὰς) are set normally. LlamaParse read τέχνην, i.e. it silently corrected the print. Preserved as printed per the diplomatic rule. ⚠ The authority field first cited Smyth §163 for this, which is wrong and was caught in adversarial review (Grok, 2026-08-08): §163 limits how far back the accent may stand, and says nothing against a first-declension oxytone — τιμή, τιμήν are perfectly legal. The objection to τεχνήν is not that the ultima cannot be accented in the declension, but that THIS noun does not accent it. The classification was right; the citation was not."
-  },
-  {
-   "page": 35,
-   "col": "L",
-   "line": 39,
-   "printed": "κακȣ͂ν",
-   "correct": "κακῶν",
-   "rule": "verdict_drift",
-   "authority": "Genitive plural of κακόν requires omega; the ou-ligature spells ου, which gives no word here. Sense: εἴ τις αἰτίαν ἔχει κακῶν τοὺς γονέας.",
-   "checked": "400dpi 2026-08-08",
-   "note": "The printed glyph is IDENTICAL to the ligature in `τȣ̀ς` on the same line and unlike the ω of `ἀνωλέθρον` on 017-R — so the compositor set the ligature where an omega belongs. John ruled `κακῶν (omega)` in July against the 300 dpi 1955 reprint; at 400 dpi the ink does not support it. Preserved as printed per the diplomatic rule; banked for the revised edition."
-  },
-  {
-   "page": 39,
+   "page": 15,
    "col": "R",
-   "line": 54,
-   "printed": "ἀκριβεία",
-   "correct": "ἀκριβείᾳ",
-   "rule": "diacritic_sweep class C",
-   "authority": "The article τῇ is dative singular, so the noun must be ἀκριβείᾳ with the iota subscript. Smyth §216.",
-   "checked": "400dpi 2026-08-08",
-   "note": "The accent placement our reader has is right — the acute is on the -εί- of ἀκριβεία, not on the first ι as LlamaParse read it — but the final α carries no subscript in the ink, while the τῇ two words earlier plainly does. Bonitz's own omission; preserved."
+   "line": 7,
+   "printed": "κ1. 1050",
+   "correct": "θ1. 1050",
+   "rule": "book_spans: the book letter excludes the Bekker page",
+   "authority": "Μκ is book 'κ' of that work, which Bekker sets at 1059-1069; the page printed beside it is 1050, which falls in book 'θ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "checked": "400dpi 2026-08-09",
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'κ1. 1050' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1059, 1060 fall inside Μκ (1059-1069), against the printed 1050. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
-   "page": 44,
+   "page": 15,
    "col": "R",
-   "line": 27,
-   "printed": "ἀλίζειν",
-   "correct": "ἁλίζειν",
-   "rule": "family.py revert",
-   "authority": "ἁλίζω 'to salt', from ἅλς, takes the rough breathing. The entry is about salted bread (ἠλισμένοι, opp ἄναλοι).",
-   "checked": "400dpi 2026-08-08",
-   "note": "The ink has the SMOOTH — identical in shape to `ἄρτοι` beside it, and unlike the rough on `ὑπὸ` at l.42. Bonitz prints it smooth; preserved. family.py had 'corrected' it to rough by propagation from the ruled headword ἁλιεύς, and that was reverted."
-  },
-  {
-   "page": 44,
-   "col": "R",
-   "line": 42,
-   "printed": "ἀλίσκεσθαι",
-   "correct": "ἁλίσκεσθαι",
-   "rule": "family.py revert",
-   "authority": "ἁλίσκομαι takes the rough breathing.",
-   "checked": "400dpi 2026-08-08",
-   "note": "Same line carries `ὑπὸ` with a plain rough (reversed comma, opening left) against this word's smooth (comma, opening right) — the two glyphs are distinct at 400 dpi. John ruled the same lemma smooth at l.15 in July. Occurrences at ll.38, 40, 41, 43, 44 are the same word and the same ruling."
+   "line": 8,
+   "printed": "Φα9. 191a17",
+   "correct": "Φα9. 192a17",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Bonitz quotes θείȣ ϗ̀ ἀγαθȣ͂ ϗ̀ ἐφετȣ͂. Physics 192a17 reads \"θειου και αγαθου και εφετου\" — the same three words, in order, at the same Bekker line. 191a17 reads \"υποκεισθαι και ειναι τρια\", unrelated.",
+   "checked": "400dpi scale 5, 2026-08-20",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck`, never read until 2026-08-20. Against 523 well-matched citations a quote sits on its cited line 68% of the time and within +/-2 lines 98%, so a whole page off is far outside the index's drift."
   },
   {
    "page": 15,
@@ -69,16 +37,16 @@
    "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1021 fall inside Μδ (1012-1025), against the printed 1031. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
-   "page": 15,
-   "col": "R",
-   "line": 7,
-   "printed": "κ1. 1050",
-   "correct": "θ1. 1050",
+   "page": 16,
+   "col": "L",
+   "line": 8,
+   "printed": "ηεδ4.1231",
+   "correct": "ηεγ4.1231",
    "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Μκ is book 'κ' of that work, which Bekker sets at 1059-1069; the page printed beside it is 1050, which falls in book 'θ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "authority": "ηεδ is book 'δ' of that work, which Bekker sets at 1234-1246; the page printed beside it is 1231, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'κ1. 1050' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1059, 1060 fall inside Μκ (1059-1069), against the printed 1050. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'ηεδ4.1231' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1234, 1235, 1236, 1237, 1238 fall inside ηεδ (1234-1246), against the printed 1231. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 16,
@@ -104,16 +72,81 @@
    "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'η4. 1276' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
   },
   {
-   "page": 16,
+   "page": 17,
    "col": "L",
-   "line": 8,
-   "printed": "ηεδ4.1231",
-   "correct": "ηεγ4.1231",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "ηεδ is book 'δ' of that work, which Bekker sets at 1234-1246; the page printed beside it is 1231, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'ηεδ4.1231' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1234, 1235, 1236, 1237, 1238 fall inside ηεδ (1234-1246), against the printed 1231. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+   "line": 25,
+   "printed": "πκ34. 726b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'πκ34. 726b'. 'πκ' disagrees with the Bekker page 726 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 17,
+   "col": "L",
+   "line": 37,
+   "printed": "τεχνήν",
+   "correct": "τέχνην",
+   "rule": "diacritic_sweep class C",
+   "authority": "τέχνη is barytone — the nominative accents the penult — and a noun's accent is persistent, staying where the nominative puts it unless a long ultima forces it forward. The accusative singular is therefore τέχνην. LSJ s.v. τέχνη.",
+   "checked": "400dpi 2026-08-08",
+   "note": "The acute stands plainly over the η of -νήν, well clear of the χ, and the line's other accents (μαθήσεις, πρὸς, τὰς) are set normally. LlamaParse read τέχνην, i.e. it silently corrected the print. Preserved as printed per the diplomatic rule. ⚠ The authority field first cited Smyth §163 for this, which is wrong and was caught in adversarial review (Grok, 2026-08-08): §163 limits how far back the accent may stand, and says nothing against a first-declension oxytone — τιμή, τιμήν are perfectly legal. The objection to τεχνήν is not that the ultima cannot be accented in the declension, but that THIS noun does not accent it. The classification was right; the citation was not."
+  },
+  {
+   "page": 17,
+   "col": "R",
+   "line": 13,
+   "printed": "ζῳοκοκȣ́ντων",
+   "correct": "ζῳοτοκȣ́ντων",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "The passage is Ζιθ7 on four-footed viviparous animals: ζῳοτοκȣ́ντων. The printed second consonant is the same sort as the κ beside it and unlike the τ of τετραπόδων on the same line.",
+   "checked": "400dpi 2026-08-13",
+   "note": "John ruled the audit card for this line and then read the crop again against the corpus reading (2026-08-13, \"bank those five as errata\"). The corpus records the printed sort; this register carries the correction to the edition we publish."
+  },
+  {
+   "page": 17,
+   "col": "R",
+   "line": 29,
+   "printed": "Φα9. 191 a28",
+   "correct": "Φα9. 192 a28",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Bonitz quotes ἄφθαρτον ϗ̀ ἀγένητον. Physics 192a28 reads \"αφθαρτον και αγενητον\" — every quoted word at the same line. The same slip twice: 191 for 192, both in Physics I.9, at 015-R:8 and here.",
+   "checked": "400dpi scale 5, 2026-08-20",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck`, never read until 2026-08-20. Against 523 well-matched citations a quote sits on its cited line 68% of the time and within +/-2 lines 98%, so a whole page off is far outside the index's drift."
+  },
+  {
+   "page": 17,
+   "col": "R",
+   "line": 51,
+   "printed": "Ἀγησίλαος. Κινάδωνος ἐπίθεσις Πε7. 1306 35.",
+   "correct": "",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "John ruled this line against the 400 dpi ink in the audit queue and marked it a printer's error: the reading is print-accurate, and the print is wrong.",
+   "checked": "400dpi 2026-08-15",
+   "note": "audit ruling page-017-R:_7aa39c6f-3099-47c2-b792-de7b1598921e · 2026-08-15 · registered automatically; the correct reading is not yet ruled"
+  },
+  {
+   "page": 18,
+   "col": "L",
+   "line": 30,
+   "printed": "(i e non intcllexit) Γα1. 314 a13. ὅσα εἰρημένα ἀγνοȣμενά",
+   "correct": "",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "John ruled this line against the 400 dpi ink in the audit queue and marked it a printer's error: the reading is print-accurate, and the print is wrong.",
+   "checked": "400dpi 2026-08-13",
+   "note": "audit ruling page-018-L:_75d2bf40-45c7-4566-8160-10ff13c5ce46 · 2026-08-13 · registered automatically; the correct reading is not yet ruled"
+  },
+  {
+   "page": 20,
+   "col": "L",
+   "line": 7,
+   "printed": "Πβ18. 1391 b",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Πβ18. 1391 b'. 'Πβ' disagrees with the Bekker page 1391 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
   },
   {
    "page": 20,
@@ -128,6 +161,17 @@
    "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1289, 1299 fall inside Πδ (1288-1301), against the printed 1279. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
+   "page": 24,
+   "col": "R",
+   "line": 28,
+   "printed": "οβ1374 a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'οβ1374 a'. 'οβ' disagrees with the Bekker page 1374 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
    "page": 25,
    "col": "R",
    "line": 24,
@@ -139,40 +183,98 @@
    "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιδ29. 607' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
   },
   {
+   "page": 25,
+   "col": "R",
+   "line": 32,
+   "printed": "affcrtur",
+   "correct": "affertur",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "Latin `affertur` (Hom versus affertur) is the only reading the sentence allows; the printed `c` is an `e` sort whose crossbar has failed. Diogenes attests affertur and not affcrtur.",
+   "checked": "400dpi 2026-08-13",
+   "note": "John, 2026-08-13: \"for affcrtur, mark it as erratum. we fix when we publish our own version.\" Recorded by hand: no card in the audit queue ever carried this site."
+  },
+  {
+   "page": 27,
+   "col": "L",
+   "line": 5,
+   "printed": "Ζιβ1. 449 a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Ζιβ1. 449 a'. 'Ζιβ' disagrees with the Bekker page 449 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 27,
+   "col": "L",
+   "line": 44,
+   "printed": "τωθεν Ζγδ4. 773 a21. — 6. ζῷα περιττὰ ἐν θαλάτττῃ ὅμοια",
+   "correct": "",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "John ruled this line against the 400 dpi ink in the audit queue and marked it a printer's error: the reading is print-accurate, and the print is wrong.",
+   "checked": "400dpi 2026-08-13",
+   "note": "audit ruling page-027-L:_daf096a3-5c1a-43e6-aeb3-691f167d9c0f · 2026-08-13 · registered automatically; the correct reading is not yet ruled"
+  },
+  {
+   "page": 27,
+   "col": "L",
+   "line": 44,
+   "printed": "θαλάτττῃ",
+   "correct": "θαλάττῃ",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "θάλαττα has two taus; the page sets three. Attic θαλάττῃ, dative after ἐν.",
+   "checked": "400dpi 2026-08-13",
+   "note": "John ruled the audit card for this line and then read the crop again against the corpus reading (2026-08-13, \"bank those five as errata\"). The corpus records the printed sort; this register carries the correction to the edition we publish."
+  },
+  {
    "page": 27,
    "col": "L",
    "line": 57,
    "printed": "Ηγ11. 1126",
-   "correct": "Ηδ11. 1126",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Ηγ is book 'γ' of that work, which Bekker sets at 1109-1119; the page printed beside it is 1126, which falls in book 'δ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ηγ11. 1126' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1116 fall inside Ηγ (1109-1119), against the printed 1126. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+   "correct": "Ηγ11. 1116",
+   "rule": "book_spans: the book letter excludes the Bekker page (re-settled by quotecheck 2026-08-20)",
+   "authority": "Bonitz quotes δι’ αἰδῶ ϗ̀ τὴν τȣ͂ καλȣ͂ ὄρεξιν, opp διὰ φόβον. EN 1116a28 reads \"αρετην γινεται δι αιδω γαρ και δια καλου ορεξιν τιμης\" — shame, the desire for the noble, the courage context, at the same Bekker line. 1126a is IV.8 on ready wit and gives none of it. 1116 falls inside book γ (1109-1119), so the siglum Ηγ is RIGHT and only the page digit is wrong.",
+   "checked": "400dpi 2026-08-09, re-settled 400dpi scale 5 2026-08-20",
+   "note": "⚠ THIS ENTRY CORRECTED THE WRONG MEMBER, AND SO DID ITS TWIN. `book_spans` saw the siglum disagree with the page beside it and moved the LETTER, \"because the page is what a reader navigates by\" — a policy for choosing between two members with no evidence about which is corrupt. The quotation is that evidence and it points the other way both times: at 027-L:57 and at 039-R:53 the words sit at a page inside the span the PRINTED letter names, so the letter was right and one digit of the page was wrong. One digit beats one letter. The printed reading is unchanged and John's earlier ruling on it stands; only the correction moves.\n\n⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck`, never read until 2026-08-20. Against 523 well-matched citations a quote sits on its cited line 68% of the time and within +/-2 lines 98%, so a whole page off is far outside the index's drift.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1116 fall inside Ηγ (1109-1119), against the printed 1126. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication.",
+   "settled_by_quotation": "EN 1116a28 reads \"ἀρετὴν γίνεται· δι’ αἰδῶ γὰρ καὶ διὰ καλοῦ ὄρεξιν\" and 1116a31 \"οὐ δι’ αἰδῶ ἀλλὰ διὰ φόβον\" — BOTH printed line numbers, a28 and a31. 1126a is EN IV on irascibility and carries neither. The corrected page falls inside Ηγ11. 1109-1119, the span of the siglum AS PRINTED, so the letter Bonitz set was right and one page digit was wrong. One digit beats one letter, and this is evidence rather than a default. Confirmed independently by two Grok 4.6 passes: 0.00 overlap at the printed line, 1.00 across the window at the corrected one, the discriminating phrase unique in the work. Greek from the TLG; the match is self-confirming, since Bonitz was quoting Bekker and a line reading his exact words in his order shows the editions coincide there. The `contested` flag below is KEPT as the record of what was believed between 2026-08-09 and today."
   },
   {
    "page": 28,
    "col": "L",
    "line": 12,
    "printed": "Ζμγ5. 688",
-   "correct": "Ζμδ5. 688",
-   "rule": "book_spans: the book letter excludes the Bekker page",
+   "correct": "Ζμγ5. 668",
+   "rule": "book_spans: the book letter excludes the Bekker page (re-settled by quotecheck 2026-08-20)",
    "authority": "Ζμγ is book 'γ' of that work, which Bekker sets at 661-676; the page printed beside it is 688, which falls in book 'δ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
    "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζμγ5. 688' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 668 fall inside Ζμγ (661-676), against the printed 688. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 668 fall inside Ζμγ (661-676), against the printed 688. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication.",
+   "settled_by_quotation": "PA 668b9-10 reads \"κοινὸν γῆς καὶ ὕδατος παχύνεται πεσσόμενον, ἡ δὲ τροφὴ καὶ / τὸ αἷμα μικτὸν ἐξ ἀμφοῖν\" — Bonitz compressed the clause. 688b11 is about piglets. The LINE also moves, 11 -> 10. The corrected page falls inside Ζμγ 661-676, the span of the siglum AS PRINTED, so the letter Bonitz set was right and one page digit was wrong. One digit beats one letter, and this is evidence rather than a default. Confirmed independently by two Grok 4.6 passes: 0.00 overlap at the printed line, 1.00 across the window at the corrected one, the discriminating phrase unique in the work. Greek from the TLG; the match is self-confirming, since Bonitz was quoting Bekker and a line reading his exact words in his order shows the editions coincide there. The `contested` flag below is KEPT as the record of what was believed between 2026-08-09 and today."
+  },
+  {
+   "page": 28,
+   "col": "L",
+   "line": 28,
+   "printed": "υ3. 485 a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'υ3. 485 a'. 'υ' disagrees with the Bekker page 485 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
   },
   {
    "page": 29,
    "col": "R",
    "line": 3,
    "printed": "Ζιγ19. 529",
-   "correct": "Ζιδ19. 529",
-   "rule": "book_spans: the book letter excludes the Bekker page",
+   "correct": "Ζιγ19. 521",
+   "rule": "book_spans: the book letter excludes the Bekker page (re-settled by quotecheck 2026-08-20)",
    "authority": "Ζιγ is book 'γ' of that work, which Bekker sets at 509-523; the page printed beside it is 529, which falls in book 'δ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
    "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιγ19. 529' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 509, 519, 520, 521, 522 fall inside Ζιγ (509-523), against the printed 529. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 509, 519, 520, 521, 522 fall inside Ζιγ (509-523), against the printed 529. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication.",
+   "settled_by_quotation": "HA 521a18-20 reads \"νενοσηκότος / δ’ αἵματος αἱμορροῒς ἥ τ’ ἐν ταῖς ῥισὶ καὶ ἡ περὶ τὴν / ἕδραν, καὶ ἰξία.\" 529a is HA IV on shellfish. Bonitz corroborates himself: the next line of this same entry reads Ζιγ19. 521 a29 for the continuation. The corrected page falls inside Ζιγ 509-523, the span of the siglum AS PRINTED, so the letter Bonitz set was right and one page digit was wrong. One digit beats one letter, and this is evidence rather than a default. Confirmed independently by two Grok 4.6 passes: 0.00 overlap at the printed line, 1.00 across the window at the corrected one, the discriminating phrase unique in the work. Greek from the TLG; the match is self-confirming, since Bonitz was quoting Bekker and a line reading his exact words in his order shows the editions coincide there. The `contested` flag below is KEPT as the record of what was believed between 2026-08-09 and today."
   },
   {
    "page": 31,
@@ -186,6 +288,28 @@
    "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μθ7. 1084' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
   },
   {
+   "page": 32,
+   "col": "L",
+   "line": 1,
+   "printed": "ἐνεργȣ́σης Ηκ4. 1174 b14. ȣ̓ μόνον πασχει αλλα ϗ̀ ἀντι-",
+   "correct": "",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "John ruled this line against the 400 dpi ink in the audit queue and marked it a printer's error: the reading is print-accurate, and the print is wrong.",
+   "checked": "400dpi 2026-08-14",
+   "note": "audit ruling pattern:ά-α · 2026-08-14 · registered automatically; the correct reading is not yet ruled"
+  },
+  {
+   "page": 33,
+   "col": "L",
+   "line": 28,
+   "printed": "αἰσθάνενθαι",
+   "correct": "αἰσθάνεσθαι",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "The middle infinitive of αἰσθάνομαι is αἰσθάνεσθαι. The printed letter has the diagonal of ν where αἴσθησις two lines above shows a clean σ.",
+   "checked": "400dpi 2026-08-13",
+   "note": "John ruled the audit card for this line and then read the crop again against the corpus reading (2026-08-13, \"bank those five as errata\"). The corpus records the printed sort; this register carries the correction to the edition we publish."
+  },
+  {
    "page": 35,
    "col": "L",
    "line": 12,
@@ -195,6 +319,39 @@
    "authority": "Μν is book 'ν' of that work, which Bekker sets at 1087-1093; the page printed beside it is 1065, which falls in book 'κ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
    "checked": "400dpi 2026-08-09",
    "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μν8.' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+  },
+  {
+   "page": 35,
+   "col": "L",
+   "line": 22,
+   "printed": "Οβ13. 259a",
+   "correct": "(unsettled — see authority)",
+   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
+   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Οβ13. 259a'. 'Οβ' disagrees with the Bekker page 259 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
+   "checked": "400dpi 2026-08-10",
+   "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 35,
+   "col": "L",
+   "line": 39,
+   "printed": "κακȣ͂ν",
+   "correct": "κακῶν",
+   "rule": "verdict_drift",
+   "authority": "Genitive plural of κακόν requires omega; the ou-ligature spells ου, which gives no word here. Sense: εἴ τις αἰτίαν ἔχει κακῶν τοὺς γονέας.",
+   "checked": "400dpi 2026-08-08",
+   "note": "The printed glyph is IDENTICAL to the ligature in `τȣ̀ς` on the same line and unlike the ω of `ἀνωλέθρον` on 017-R — so the compositor set the ligature where an omega belongs. John ruled `κακῶν (omega)` in July against the 300 dpi 1955 reprint; at 400 dpi the ink does not support it. Preserved as printed per the diplomatic rule; banked for the revised edition."
+  },
+  {
+   "page": 36,
+   "col": "L",
+   "line": 49,
+   "printed": "ἀκανδώδης",
+   "correct": "ἀκανθώδης",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "From ἄκανθα: ἀκανθώδης. The line above prints ἀκανθώδης with a crossed θ, and this one a triangular δ — the same word, two sorts.",
+   "checked": "400dpi 2026-08-13",
+   "note": "John ruled the audit card for this line and then read the crop again against the corpus reading (2026-08-13, \"bank those five as errata\"). The corpus records the printed sort; this register carries the correction to the edition we publish."
   },
   {
    "page": 36,
@@ -221,153 +378,15 @@
    "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1169 fall inside Ηι (1163-1172), against the printed 1129. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
-   "page": 39,
-   "col": "R",
-   "line": 53,
-   "printed": "Πη7. 1318",
-   "correct": "Πζ7. 1318",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Πη is book 'η' of that work, which Bekker sets at 1323-1337; the page printed beside it is 1318, which falls in book 'ζ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Πη7. 1318' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1328 fall inside Πη (1323-1337), against the printed 1318. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
-  },
-  {
-   "page": 40,
+   "page": 38,
    "col": "L",
-   "line": 14,
-   "printed": "Μα1. 1053",
-   "correct": "Μι1. 1053",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Μα is book 'α' of that work, which Bekker sets at 993-995; the page printed beside it is 1053, which falls in book 'ι'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μα1. 1053' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
-  },
-  {
-   "page": 41,
-   "col": "L",
-   "line": 23,
-   "printed": "Ζγα5. 785",
-   "correct": "Ζγε5. 785",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Ζγα is book 'α' of that work, which Bekker sets at 715-731; the page printed beside it is 785, which falls in book 'ε'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζγα5. 785' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 715, 725 fall inside Ζγα (715-731), against the printed 785. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
-  },
-  {
-   "page": 46,
-   "col": "R",
-   "line": 42,
-   "printed": "Μγ4. 1044",
-   "correct": "Μη4. 1044",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Μγ is book 'γ' of that work, which Bekker sets at 1003-1012; the page printed beside it is 1044, which falls in book 'η'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μγ4. 1044' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1004 fall inside Μγ (1003-1012), against the printed 1044. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
-  },
-  {
-   "page": 49,
-   "col": "L",
-   "line": 24,
-   "printed": "Ζιθ21. 575",
-   "correct": "Ζιζ21. 575",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Ζιθ is book 'θ' of that work, which Bekker sets at 588-608; the page printed beside it is 575, which falls in book 'ζ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιθ21. 575' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 595 fall inside Ζιθ (588-608), against the printed 575. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
-  },
-  {
-   "page": 49,
-   "col": "L",
-   "line": 8,
-   "printed": "Μβ4. 1008",
-   "correct": "Μγ4. 1008",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Μβ is book 'β' of that work, which Bekker sets at 995-1003; the page printed beside it is 1008, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μβ4. 1008' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1000, 1001, 1002, 1003 fall inside Μβ (995-1003), against the printed 1008. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
-  },
-  {
-   "page": 52,
-   "col": "R",
-   "line": 16,
-   "printed": "Ρβ5. 1407",
-   "correct": "Ργ5. 1407",
-   "rule": "book_spans: the book letter excludes the Bekker page",
-   "authority": "Ρβ is book 'β' of that work, which Bekker sets at 1378-1404; the page printed beside it is 1407, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
-   "checked": "400dpi 2026-08-09",
-   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ρβ5. 1407' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
-   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1400, 1401, 1402, 1403, 1404 fall inside Ρβ (1378-1404), against the printed 1407. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
-  },
-  {
-   "page": 17,
-   "col": "L",
-   "line": 25,
-   "printed": "πκ34. 726b",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'πκ34. 726b'. 'πκ' disagrees with the Bekker page 726 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
-  },
-  {
-   "page": 20,
-   "col": "L",
-   "line": 7,
-   "printed": "Πβ18. 1391 b",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Πβ18. 1391 b'. 'Πβ' disagrees with the Bekker page 1391 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
-  },
-  {
-   "page": 24,
-   "col": "R",
-   "line": 28,
-   "printed": "οβ1374 a",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'οβ1374 a'. 'οβ' disagrees with the Bekker page 1374 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
-  },
-  {
-   "page": 27,
-   "col": "L",
-   "line": 5,
-   "printed": "Ζιβ1. 449 a",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Ζιβ1. 449 a'. 'Ζιβ' disagrees with the Bekker page 449 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
-  },
-  {
-   "page": 28,
-   "col": "L",
-   "line": 28,
-   "printed": "υ3. 485 a",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'υ3. 485 a'. 'υ' disagrees with the Bekker page 485 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
-  },
-  {
-   "page": 35,
-   "col": "L",
-   "line": 22,
-   "printed": "Οβ13. 259a",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Οβ13. 259a'. 'Οβ' disagrees with the Bekker page 259 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
+   "line": 40,
+   "printed": "γέθει ἡ κίνησις· διὰ γὰρ τὸ τὸ μέγεθος εἶναι συνεχὲς ϗ̀ ἡ",
+   "correct": "",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "John ruled this line against the 400 dpi ink in the audit queue and marked it a printer's error: the reading is print-accurate, and the print is wrong.",
+   "checked": "400dpi 2026-08-13",
+   "note": "audit ruling page-038-L:_f0f130a7-7e18-40fd-bcc8-a86da769f770 · 2026-08-13 · registered automatically; the correct reading is not yet ruled"
   },
   {
    "page": 38,
@@ -392,6 +411,41 @@
    "note": "work-level finding; the corpus is unchanged."
   },
   {
+   "page": 39,
+   "col": "R",
+   "line": 53,
+   "printed": "Πη7. 1318",
+   "correct": "Πη7. 1328",
+   "rule": "book_spans: the book letter excludes the Bekker page (re-settled by quotecheck 2026-08-20)",
+   "authority": "Bonitz quotes πρὸς αὐτὴν ἀκρίβειαν ζητεῖν. Politics 1328a20 reads \"αυτην ακριβειαν δει ζητειν επι τε των λογων και των\" — the phrase and the λογων/αισθησεως contrast this entry turns on. 1328 falls inside book η (1323-1337), so the siglum Πη is RIGHT and only the page digit is wrong.",
+   "checked": "400dpi 2026-08-09, re-settled 400dpi scale 5 2026-08-20",
+   "note": "⚠ THIS ENTRY CORRECTED THE WRONG MEMBER, AND SO DID ITS TWIN. `book_spans` saw the siglum disagree with the page beside it and moved the LETTER, \"because the page is what a reader navigates by\" — a policy for choosing between two members with no evidence about which is corrupt. The quotation is that evidence and it points the other way both times: at 027-L:57 and at 039-R:53 the words sit at a page inside the span the PRINTED letter names, so the letter was right and one digit of the page was wrong. One digit beats one letter. The printed reading is unchanged and John's earlier ruling on it stands; only the correction moves.\n\n⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck`, never read until 2026-08-20. Against 523 well-matched citations a quote sits on its cited line 68% of the time and within +/-2 lines 98%, so a whole page off is far outside the index's drift.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1328 fall inside Πη (1323-1337), against the printed 1318. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication.",
+   "settled_by_quotation": "Politics 1328a20 reads \"αὐτὴν ἀκρίβειαν δεῖ ζητεῖν ἐπί τε τῶν λόγων καὶ τῶν\", with αἰσθήσεως on a21. 1318a20 is about oligarchs and property. The corrected page falls inside Πη 1323-1337, the span of the siglum AS PRINTED, so the letter Bonitz set was right and one page digit was wrong. One digit beats one letter, and this is evidence rather than a default. Confirmed independently by two Grok 4.6 passes: 0.00 overlap at the printed line, 1.00 across the window at the corrected one, the discriminating phrase unique in the work. Greek from the TLG; the match is self-confirming, since Bonitz was quoting Bekker and a line reading his exact words in his order shows the editions coincide there. The `contested` flag below is KEPT as the record of what was believed between 2026-08-09 and today."
+  },
+  {
+   "page": 39,
+   "col": "R",
+   "line": 54,
+   "printed": "ἀκριβεία",
+   "correct": "ἀκριβείᾳ",
+   "rule": "diacritic_sweep class C",
+   "authority": "The article τῇ is dative singular, so the noun must be ἀκριβείᾳ with the iota subscript. Smyth §216.",
+   "checked": "400dpi 2026-08-08",
+   "note": "The accent placement our reader has is right — the acute is on the -εί- of ἀκριβεία, not on the first ι as LlamaParse read it — but the final α carries no subscript in the ink, while the τῇ two words earlier plainly does. Bonitz's own omission; preserved."
+  },
+  {
+   "page": 40,
+   "col": "L",
+   "line": 14,
+   "printed": "Μα1. 1053",
+   "correct": "Μι1. 1053",
+   "rule": "book_spans: the book letter excludes the Bekker page",
+   "authority": "Μα is book 'α' of that work, which Bekker sets at 993-995; the page printed beside it is 1053, which falls in book 'ι'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "checked": "400dpi 2026-08-09",
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μα1. 1053' as printed. Book spans are derived from build/dist, not transcribed from Bonitz."
+  },
+  {
    "page": 40,
    "col": "L",
    "line": 44,
@@ -401,6 +455,18 @@
    "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'πο8. 1408 b'. 'πο' disagrees with the Bekker page 1408 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
    "checked": "400dpi 2026-08-10",
    "note": "work-level finding; the corpus is unchanged."
+  },
+  {
+   "page": 41,
+   "col": "L",
+   "line": 23,
+   "printed": "Ζγα5. 785",
+   "correct": "Ζγε5. 785",
+   "rule": "book_spans: the book letter excludes the Bekker page",
+   "authority": "Ζγα is book 'α' of that work, which Bekker sets at 715-731; the page printed beside it is 785, which falls in book 'ε'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "checked": "400dpi 2026-08-09",
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζγα5. 785' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 715, 725 fall inside Ζγα (715-731), against the printed 785. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
   },
   {
    "page": 41,
@@ -414,26 +480,118 @@
    "note": "work-level finding; the corpus is unchanged."
   },
   {
+   "page": 46,
+   "col": "R",
+   "line": 42,
+   "printed": "Μγ4. 1044",
+   "correct": "Μη4. 1044",
+   "rule": "book_spans: the book letter excludes the Bekker page",
+   "authority": "Μγ is book 'γ' of that work, which Bekker sets at 1003-1012; the page printed beside it is 1044, which falls in book 'η'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "checked": "400dpi 2026-08-09",
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μγ4. 1044' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1004 fall inside Μγ (1003-1012), against the printed 1044. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+  },
+  {
+   "page": 49,
+   "col": "L",
+   "line": 8,
+   "printed": "Μβ4. 1008",
+   "correct": "Μγ4. 1008",
+   "rule": "book_spans: the book letter excludes the Bekker page",
+   "authority": "Μβ is book 'β' of that work, which Bekker sets at 995-1003; the page printed beside it is 1008, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "checked": "400dpi 2026-08-09",
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Μβ4. 1008' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1000, 1001, 1002, 1003 fall inside Μβ (995-1003), against the printed 1008. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+  },
+  {
+   "page": 49,
+   "col": "L",
+   "line": 24,
+   "printed": "Ζιθ21. 575",
+   "correct": "Ζιζ21. 575",
+   "rule": "book_spans: the book letter excludes the Bekker page",
+   "authority": "Ζιθ is book 'θ' of that work, which Bekker sets at 588-608; the page printed beside it is 575, which falls in book 'ζ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "checked": "400dpi 2026-08-09",
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ζιθ21. 575' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 595 fall inside Ζιθ (588-608), against the printed 575. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+  },
+  {
    "page": 49,
    "col": "L",
    "line": 51,
-   "printed": "Ηε10. 1835 b",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Ηε10. 1835 b'. 'Ηε' disagrees with the Bekker page 1835 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
+   "printed": "Ηε10. 1835 b12-1136 a3",
+   "correct": "Ηε10. 1135 b12-1136 a3",
+   "rule": "siglum_check + bekker impossible page",
+   "authority": "Η (Ethica Nicomachea) spans Bekker 1094-1181, so 1835 lies outside it. As printed the citation is a RANGE running backwards by 700 pages while its partner, 1136 a3, is sound — one number of the pair is corrupt and the other is not. 1135b12-1136a3 is contiguous and inside the work.",
+   "checked": "400dpi 2026-08-10, settled 2026-08-19",
+   "note": "Raised by siglum_check on 2026-08-10 and left unsettled for nine days. John read 1835 in the ink on 2026-08-19: Bonitz misprinted it, so the corpus keeps 1835 and the revised edition takes 1135. One digit, hundreds place — the same position fails at 050-R:31, which is worth watching and is not yet a pattern in the type."
+  },
+  {
+   "page": 49,
+   "col": "R",
+   "line": 19,
+   "printed": "ἀμȣρȣ͂ται",
+   "correct": "ἀμαυρȣ͂ται",
+   "rule": "ground-truth audit: John ruled the 400 dpi ink",
+   "authority": "The headword on this very line is ἀμαυρȣ͂ν, spelt with αυ; the verb beside it is set with the ou-ligature. ἀμαυροῦται is the only form the entry allows.",
+   "checked": "400dpi 2026-08-13",
+   "note": "John ruled the audit card for this line and then read the crop again against the corpus reading (2026-08-13, \"bank those five as errata\"). The corpus records the printed sort; this register carries the correction to the edition we publish."
   },
   {
    "page": 50,
    "col": "R",
    "line": 31,
-   "printed": "Πζ5. 1820a",
-   "correct": "(unsettled — see authority)",
-   "rule": "siglum_check: the siglum disagrees with the Bekker page beside it",
-   "authority": "John ruled against the 400 dpi ink on 2026-08-10: the page really does read 'Πζ5. 1820a'. 'Πζ' disagrees with the Bekker page 1820 beside it, so the citation cannot be followed as printed. WHICH of the two Bonitz got wrong — the siglum or the page — was not put to him and is not settled here; the revised edition must decide it.",
-   "checked": "400dpi 2026-08-10",
-   "note": "work-level finding; the corpus is unchanged."
+   "printed": "Πζ5. 1820a18",
+   "correct": "Πζ5. 1320a18",
+   "rule": "siglum_check + bekker impossible page",
+   "authority": "Π (Politica) spans 1252-1342. Politics VI.5 at 1320a18 is exactly where Aristotle discusses paying men to attend the assembly, which is what this entry says: ἐκκλησιάζειν ἀμίσθȣς.",
+   "checked": "400dpi 2026-08-10, settled 2026-08-19",
+   "note": "Raised by siglum_check on 2026-08-10 and left unsettled for nine days. John read 1820 in the ink on 2026-08-19: his misprint. One digit, hundreds place, as at 049-L:51."
+  },
+  {
+   "page": 52,
+   "col": "R",
+   "line": 16,
+   "printed": "Ρβ5. 1407",
+   "correct": "Ργ5. 1407",
+   "rule": "book_spans: the book letter excludes the Bekker page",
+   "authority": "Ρβ is book 'β' of that work, which Bekker sets at 1378-1404; the page printed beside it is 1407, which falls in book 'γ'. The page is taken as the sound member because it is what a reader navigates by and what every later edition keys to, so the correction moves the letter. That is the revised edition's call and not a transcription decision — nothing here changes work/reconciled.",
+   "checked": "400dpi 2026-08-09",
+   "note": "John ruled against the 400 dpi crop on 2026-08-09: the ink reads 'Ρβ5. 1407' as printed. Book spans are derived from build/dist, not transcribed from Bonitz.",
+   "contested": "⚠ CONTESTABLE. This moves the LETTER, but one digit would validate the letter as printed: 1400, 1401, 1402, 1403, 1404 fall inside Ρβ (1378-1404), against the printed 1407. John ruled WHAT IS PRINTED, not which of the two Bonitz got wrong. Settle before the revised edition; `correct` here is a default, not an adjudication."
+  },
+  {
+   "page": 54,
+   "col": "R",
+   "line": 18,
+   "printed": "Ζμδ9. 685 a18.",
+   "correct": "Ζμδ9. 685 b14.",
+   "rule": "quotecheck",
+   "authority": "the quoted clause ἀλλ' ὡς ἀναγκαῖον διὰ τὸν ἴδιον λόγον τῆς οὐσίας is verbatim at PA 685b14-15 and absent from 685a; John read the ink 2026-08-11: the page prints the raised a",
+   "checked": "400dpi 2026-08-11",
+   "note": "printed citation error, kept as printed (diplomatic)"
+  },
+  {
+   "page": 54,
+   "col": "R",
+   "line": 29,
+   "printed": "1332 b32, a36.",
+   "correct": "1333 a32, a36.",
+   "rule": "quotecheck",
+   "authority": "both quoted halves verbatim at Pol. 1333a32-33 and 1333a36, line numbers preserved; 1332 had just been set twice in the same entry; John read the ink 2026-08-11: the page prints 1332 b32, a36",
+   "checked": "400dpi 2026-08-11",
+   "note": "printed citation error, kept as printed (diplomatic); the citation spans the measure — line 28 ends Πη14. and this line prints the numbers"
+  },
+  {
+   "page": 57,
+   "col": "R",
+   "line": 23,
+   "printed": "Αα14. 33a12.",
+   "correct": "Αα14. 33b12.",
+   "rule": "quotecheck",
+   "authority": "ὁ μὲν γὰρ καταφατικὸς ἀναιρεῖται τῷ στερητικῷ is verbatim at An.Pr. 33b12, absent at 33a12; John read the ink 2026-08-11: the page prints the raised a",
+   "checked": "400dpi 2026-08-11",
+   "note": "printed citation error, kept as printed (diplomatic); a single raised letter"
   },
   {
    "page": 60,
@@ -445,6 +603,320 @@
    "authority": "John read the 400dpi crop and confirmed an accent on the initial alpha AND on the omega. Aristotle has ἀνθρώπου, single accent, at HA 497b32 — the very passage Bonitz cites two lines later (Ζιβ1. 497 b33). An enclitic would add an acute to the ULTIMA (Smyth §183, ἄνθρωπός τις); this second accent is on the penult, adjacent to the first, which no rule permits. So the compositor doubled it. PRESERVED as printed, recorded here.",
    "checked": "400dpi crop, text-placed match 0.96",
    "note": "⚠ I argued from the grammar that the form was impossible and therefore a reader corruption, and was wrong: grammar says what SHOULD have been set, never what WAS. Only kraken read it correctly, and its reading looked like the corrupt one."
+  },
+  {
+   "page": 63,
+   "col": "L",
+   "line": 33,
+   "printed": "ἡ τȣ̀ λέγειν πιθανότης",
+   "correct": "ἡ τȣ͂ λέγειν πιθανότης",
+   "rule": "accent internal-consistency (Bonitz against himself)",
+   "authority": "An articular infinitive takes the genitive article τοῦ, which carries the circumflex — ἡ τοῦ λέγειν πιθανότης, \"the persuasiveness of speaking\". τοὺ with a grave is not a Greek word at all. Bonitz himself sets τȣ͂ 467 times in this corpus and τȣ̀ exactly once, here. The accusative plural τȣ̀ς is a real word and appears 178 times, including on line 32 immediately above; the two are not being confused.",
+   "checked": "400dpi scale 6, 2026-08-20",
+   "note": "⚠ FOUND BY THE ONE INSTRUMENT THAT COULD REACH IT. page-063-L is in both cold models' TRAINING set, so they reproduce this line from memory and can never disagree with it — the two-engine method is structurally blind to 63-102, which is 45% of the corpus. LSJ cannot arbitrate acute against grave either, since that is positional (Smyth §154) and not lexical. What found it was the corpus disagreeing with itself, the same test that settled the ἁλ- family and fragment 596."
+  },
+  {
+   "page": 77,
+   "col": "L",
+   "line": 13,
+   "printed": "f. 596. 1595b25",
+   "correct": "f. 596. 1575b25",
+   "rule": "bekker impossible page (fragment)",
+   "authority": "Bonitz's own index settles this. He cites fragment 596 FOURTEEN times across the corpus; thirteen of them fall on Bekker 1575, 1576 or 1577 — f596.1575 a29, f 596. 1575 a31, f 596. 1575b14, f 596. 1576a23, f 596. 1577 a4 among them. 1575b25 sits between his own 1575b14 and 1576a23. Rose's Fragmenta end near 1589, so 1595 is past the volume.",
+   "checked": "400dpi 2026-08-19",
+   "note": "⚠ THIS ONE WAS INVISIBLE TO THE SWEEP. bekker's CITE pattern requires a Greek siglum, so Latin `f` never matched and the >1590 bound never ran on ANY of the 321 fragment citations — while the module's docstring claimed it covered every citation, fragment pages included. John found the gap from the outside, asking why so few impossible numbers had turned up. Fixed 2026-08-19."
+  },
+  {
+   "page": 63,
+   "col": "L",
+   "line": 57,
+   "printed": "476a17",
+   "correct": "471a17",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Bonitz quotes ἀνάγκη τὰ ἀναπνέοντα ἐκπνεῖν ϗ̀ εἰσπνεῖν. De resp. 471a17-18 reads \"ωστ ει αναγκη τα αναπνεοντα / εκπνειν και εισπνειν\" — verbatim in order; chapter αν2 (470b28-471a19) contains 471a and not 476a. 476a17 reads σωτηρία/κατάψυξις, unrelated.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "The citation wraps the measure: line 56 ends \"αν2.\" and this line prints the number. ⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 68,
+   "col": "L",
+   "line": 60,
+   "printed": "1070a2",
+   "correct": "1071a2",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "The entry is ἄνευ postposed: τῶν ȣ̓σιῶν ἄνευ. Met. 1071a1-2 reads \"…οτι των ουσιων / ανευ ουκ εστι τα παθη…\" — the postposed order itself, ἄνευ opening a2. Λ5 = 1070b36-1071b2 contains 1071a2; printed 1070a2 is Λ3.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 73,
+   "col": "R",
+   "line": 60,
+   "printed": "Ζγα20. 728b20",
+   "correct": "Ζγα20. 728b28",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Bonitz quotes οἱ (περὶ τȣ̀ς μαστȣ̀ς) τόποι ἀνοιδȣ͂σιν ὑπὸ τȣ͂ πνεύματος. GA 728b28: \"οι τοποι ανοιδουσιν υπο του πνευματος\" — verbatim, ἀνοιδοῦσιν unique in the corpus; the parenthesis is his gloss from b29-30 (ὄρχεις … μαστούς). At b20: hair growth, unrelated.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 77,
+   "col": "L",
+   "line": 60,
+   "printed": "αν5. 472b26",
+   "correct": "αν5. 472b16",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: μηθὲν εἶναι κενὸν ἀντιπεριστα-μένων ἀλλήλοις. De resp. 472b16: \"δια το μηδεν ειναι κενον αντιπεριισταμενων αλληλοις\" — verbatim (μηθέν/μηδέν editorial). At b26: unrelated.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 80,
+   "col": "R",
+   "line": 18,
+   "printed": "Ζιι50. 632a25",
+   "correct": "Ζιι50. 632a29",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: ἔνιοι τῶν ἄνω (Bonitz glossing τῶν τὴν ἀνωτέρω Ἀσίαν οἰκȣ́ντων). HA 632a29: \"κεκτηνται δ ενιοι των ανω καμηλους και τρισχιλιας\" — unique in 631b-632b; camels-for-war matches the gloss. At a25: sow castration.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ The corrected line is only +4 from the printed one — outside the measured ±2 drift but not by a page. Grok declined to sign misprint over window-edge drift; John ruled misprint on the sitting card, 2026-08-21. Recorded with that dissent noted. ⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 81,
+   "col": "R",
+   "line": 9,
+   "printed": "Πγ1. 1275a3.",
+   "correct": "Πγ1. 1275a30",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: ἀνώνυμον τὸ κοινὸν ἐπὶ δικαστȣ͂ ϗ̀ ἐκκλησιαστȣ͂. Pol. 1275a30-31: \"ανωνυμον γαρ το κοινον επι δικαστου και / εκκλησιαστου\" — unique in the corpus. At a3: τὸν αὐτὸν ὁμολογοῦσι πάντες. A lost final digit.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 82,
+   "col": "L",
+   "line": 4,
+   "printed": "Πβ7. 1267a10",
+   "correct": "Πβ7. 1267a40",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: ȣ̓κ ἴσων ὄντες ἄξιοι. Pol. 1267a40: \"χαριεντες αγανακτοιεν αν ως ουκ ισων οντες αξιοι\" — unique. The span's second phrase belongs to the next citation ε6. 1306b13, which is sound (1306b12-13). At a10: σωφροσύνη, unrelated.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 82,
+   "col": "R",
+   "line": 53,
+   "printed": "Πγ1. 1275b4,",
+   "correct": "Πγ1. 1275b14",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: ἀόριστος ἄρχων, opp ὁ κατὰ τὴν ἀρχὴν ὡρισμένος. Pol. 1275b14-15: \"ουχ ο αοριστος αρχων εκκλησιαστης / εστι και δικαστης αλλα ο κατα την αρχην ωρισμενος\" — both halves verbatim. The printed \", a26\" member is sound (1275a26). At b4: unrelated. A lost digit (b14 set as b4); the printed member is recorded with its trailing comma as set.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 88,
+   "col": "L",
+   "line": 55,
+   "printed": "αρ5. 1250b11",
+   "correct": "αρ5. 1250b41",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: ἁπλότης ϗ̀ ἀλήθεια τῇ μεγαλοψυχίᾳ ἀκολȣθεῖ. VV 1250b41-42: \"ακολουθει δε τη μεγαλοψυχια απλοτης / και αληθεια\" — verbatim. At b11 the same formula for σωφροσύνη (παρέπεται δὲ τῇ σωφροσύνῃ…) — a compositor's eye-slip between twin constructions.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ CONTESTABLE CHAPTER MEMBER. Per the corpus chapter table 1250b41 falls in VV ch. 6 (1250b19-1251a18), so the printed αρ5 may be a second corrupt member — or Bonitz's chapter division differs. The LINE correction stands on the quotation; the chapter member is recorded undecided, not corrected. ⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 89,
+   "col": "L",
+   "line": 27,
+   "printed": "μδ9. 386a32",
+   "correct": "μδ9. 386b32",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: ἁπλῶς μαλακά … opp πρὸς ἄλληλα (the κȣ͂φα, βαρέα belong to the following citation Οδ4. 311). Meteor. 386b32: \"των απλως μαλακων και μη προς αλληλα\" — both terms of the contrast at one line, line number preserved. Raised column letter a→b, the 685a→685b class.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 93,
+   "col": "R",
+   "line": 23,
+   "printed": "Φα9. 191b1",
+   "correct": "Φα9. 192b1",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: εἰς ἐκεῖνον τὸν καιρὸν ἀποκείσθω. ἀποκείσθω occurs exactly once in the whole corpus — the first word of Phys. 192b1; the quotation straddles 192a36-b1. At 191b1: the ἰατρός passage of I.8.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "THE THIRD 191→192 SLIP IN PHYSICS I.9 — after 015-R:8 (191a17→192a17) and 017-R:29 (191 a28→192a28). Three occurrences of the same page digit error in one chapter's citations is a fact about the setting of that entry cluster. ⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 95,
+   "col": "R",
+   "line": 25,
+   "printed": "Ηδ1. 1120a1.",
+   "correct": "Ρβ8. 1385b19",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Line 24 cites Ηδ1. 1120a1 correctly (ὁ δι᾽ αὑτὸν ἀπολλύμενος IS at 1120a1); this line repeats the SAME citation under a different quote — οἱ παντελῶς ἀπολωλότες, opp οἱ ὑπερευδαιμονεῖν οἰόμενοι — which sits verbatim and uniquely at Rhet. 1385b19-21 (ὑπερευδαιμονεῖν occurs nowhere else in the corpus).",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "A citation DITTOGRAPHY, not a digit slip: the compositor repeated the previous line's citation entire. The quoted words span 1385b19-21; the correction records the first line of the span. A new class for the register. ⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 96,
+   "col": "L",
+   "line": 46,
+   "printed": "Ηι12. 1177a12",
+   "correct": "Ηι12. 1172a12",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: [ἀπο]μάττονται παρ᾽ ἀλλήλων οἷς ἀρέσκονται. EN 1172a12-13: \"αποματτονται / γαρ παρ αλληλων οις αρεσκονται\" — verbatim; ἀπομάττονται unique in the corpus. Ηι12 (EN IX.12 = 1171b29-1172a15) contains 1172a12; printed 1177a12 is X.7. One digit, line preserved.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 97,
+   "col": "R",
+   "line": 31,
+   "printed": "Ζιθ2. 591a3",
+   "correct": "Ζιθ2. 592a3",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: ὕδωρ ἀπορρέον ϗ̀ ἐπιρρέον. HA 592a3-4 (the eel-keepers): \"απορρεον αει / και επιρρεον\" — ἐπιρρέον unique in 590a-592b. At 591a3: octopus lairs. One digit, line preserved.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 99,
+   "col": "R",
+   "line": 53,
+   "printed": "Ζμδ11. 690a13",
+   "correct": "Ζμδ11. 690b13",
+   "rule": "quotecheck: the quotation is not at the line cited",
+   "authority": "Quote: τῶν ἐναίμων ζῴων ᾠοτόκων ἓν μόνον γένος ἄπȣν … τὸ τῶν ὄφεων. PA 690b13-15 nearly verbatim, inside Ζμδ11 = PA IV.11 (690b11-692b2); the parenthesis (ἄπȣν φύσει ἐστὶν ἔναιμον πεζόν) is his gloss from the HA I.6 parallel at 490b23. Raised column letter a→b, line preserved.",
+   "checked": "400dpi scale 5, 2026-08-21",
+   "note": "⚠ A CLASS NO EXISTING SWEEP COULD SEE. Every printed reading here falls INSIDE its work's Bekker span, so `bekker` finds nothing — it knows only IMPOSSIBLE pages. Only comparing the quoted words against the text at the cited line exposes them: `quotecheck` on 63-102, read 2026-08-21. Verified three ways before the ruling: quotation verbatim-in-order and unique at the corrected address, the cold kraken model (trained 15-62, never saw these pages) reading the citation line character-identical to the transcription, and an adversarial Grok 4.6 pass. John ruled each ink crop in the citation sitting of 2026-08-21; rulings in work/rulings/john.json and work/sweeps/citation-rulings-63-102.json."
+  },
+  {
+   "page": 76,
+   "col": "L",
+   "line": 20,
+   "printed": "ἕτέρῳ",
+   "correct": "ἑτέρῳ",
+   "rule": "hand (surfaced by the impossible-word guard)",
+   "authority": "No Greek word carries two accents. The ink sets rough+acute over the first epsilon and acute over the second; the dative ἑτέρῳ is properly accented on the second syllable alone, with the first carrying its rough breathing only. Aristotle, Cat. 10, 11b17, from which the entry quotes ἀντικεῖσθαι ἕτερον ἑτέρῳ λέγεται τετραχῶς.",
+   "checked": "400dpi 2026-08-22",
+   "note": "One misprint, recorded as two entries because the register keys on a FORM and this error spans two words: the acute of ἕτερον is set over the first epsilon of ἑτέρῳ instead. John read the 400 dpi crop on 2026-08-22: 'it's clearly rough on ἑτερον and rough+acute on first ε of the next word.' The corpus is faithful; nothing in work/reconciled changes."
+  },
+  {
+   "page": 76,
+   "col": "L",
+   "line": 20,
+   "printed": "ἑτερον",
+   "correct": "ἕτερον",
+   "rule": "hand (the other half of the same displaced accent)",
+   "authority": "The ink sets a plain rough breathing here and no accent, but ἕτερον is a paroxytone-stem adjective accented on its first syllable and cannot stand unaccented. Its acute is the one that appears a word later over ἕτέρῳ, so the two errors are one compositor's slip and correcting either alone would leave the line wrong.",
+   "checked": "400dpi 2026-08-22",
+   "note": "One misprint, recorded as two entries because the register keys on a FORM and this error spans two words: the acute of ἕτερον is set over the first epsilon of ἑτέρῳ instead. John read the 400 dpi crop on 2026-08-22: 'it's clearly rough on ἑτερον and rough+acute on first ε of the next word.' The corpus is faithful; nothing in work/reconciled changes."
+  },
+  {
+   "page": 32,
+   "col": "R",
+   "line": 51,
+   "printed": "Ζιι6. 700 b20",
+   "correct": "Ζκ6. 700 b20",
+   "rule": "settle queue: John ruled the ink on the refused form-set",
+   "authority": "John ruled the settle-queue crop: the ink reads the printed form. Any authority that disagrees yields to the page.",
+   "checked": "400dpi 2026-08-10",
+   "note": "settle form-set siglum:page-032-R:51 · 2026-08-10 · registered automatically"
+  },
+  {
+   "page": 40,
+   "col": "L",
+   "line": 44,
+   "printed": "πο8. 1408 b31",
+   "correct": "Ργ8. 1408 b31",
+   "rule": "settle queue: John ruled the ink on the refused form-set",
+   "authority": "John ruled the settle-queue crop: the ink reads the printed form. Any authority that disagrees yields to the page.",
+   "checked": "400dpi 2026-08-10",
+   "note": "settle form-set siglum:page-040-L:44 · 2026-08-10 · registered automatically"
+  },
+  {
+   "page": 102,
+   "col": "R",
+   "line": 12,
+   "printed": "Ηκ10. 1081b11",
+   "correct": "Ηκ10. 1181b11",
+   "rule": "settle queue: John ruled the ink on the refused form-set",
+   "authority": "John ruled the settle-queue crop: the ink reads the printed form. Any authority that disagrees yields to the page.",
+   "checked": "400dpi 2026-08-10",
+   "note": "settle form-set siglum:page-102-R:12 · 2026-08-10 · registered automatically"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 49,
+   "printed": "῾Ρόδιος",
+   "correct": "Ῥόδιος",
+   "rule": "settle queue: John ruled the ink on the refused form-set",
+   "authority": "John ruled the settle-queue crop: the ink reads the printed form. Any authority that disagrees yields to the page.",
+   "checked": "400dpi 2026-08-10",
+   "note": "settle form-set recut:page-117-L:49 · 2026-08-10 · registered automatically"
+  },
+  {
+   "page": 117,
+   "col": "R",
+   "line": 9,
+   "printed": "f 441 1550b1",
+   "correct": "f 441. 1550b1",
+   "rule": "settle queue: John ruled the ink on the refused form-set",
+   "authority": "John ruled the settle-queue crop: the ink reads the printed form. Any authority that disagrees yields to the page.",
+   "checked": "400dpi 2026-08-10",
+   "note": "settle form-set corrigendum:page-117-R:9:f 441 1 · 2026-08-10 · registered automatically"
+  },
+  {
+   "page": 51,
+   "col": "L",
+   "line": 28,
+   "printed": "f 554 1569",
+   "correct": "f 554. 1569",
+   "rule": "settle queue: John ruled the ink on the refused form-set",
+   "authority": "John ruled the settle-queue crop: the ink reads the printed form. Any authority that disagrees yields to the page.",
+   "checked": "400dpi 2026-08-10",
+   "note": "settle form-set corrigendum:page-051-L:28:f · 2026-08-10 · registered automatically"
+  },
+  {
+   "page": 52,
+   "col": "L",
+   "line": 54,
+   "printed": "f 480 1556",
+   "correct": "f 480. 1556",
+   "rule": "settle queue: John ruled the ink on the refused form-set",
+   "authority": "John ruled the settle-queue crop: the ink reads the printed form. Any authority that disagrees yields to the page.",
+   "checked": "400dpi 2026-08-10",
+   "note": "settle form-set corrigendum:page-052-L:54:f · 2026-08-10 · registered automatically"
+  }
+ ],
+ "retracted": [
+  {
+   "page": 44,
+   "col": "R",
+   "line": 27,
+   "printed": "ἀλίζειν",
+   "correct": "ἁλίζειν",
+   "rule": "family.py revert",
+   "authority": "ἁλίζω 'to salt', from ἅλς, takes the rough breathing. The entry is about salted bread (ἠλισμένοι, opp ἄναλοι).",
+   "checked": "400dpi 2026-08-08",
+   "note": "The ink has the SMOOTH — identical in shape to `ἄρτοι` beside it, and unlike the rough on `ὑπὸ` at l.42. Bonitz prints it smooth; preserved. family.py had 'corrected' it to rough by propagation from the ruled headword ἁλιεύς, and that was reverted.",
+   "retracted": "2026-08-19",
+   "retracted_why": "The 400dpi reading of 2026-08-08 recorded here was WRONG. It held that Bonitz printed the smooth, on the ground that aλίζειν is \"identical in shape to ἄρτοι beside it\" and that l.42 carries a comma opening right against ὑπὸ opening left. John re-examined both at 400 dpi, scale 6, on 2026-08-19: \"ἁλίζειν is CLEARLY a different shape from ἄρτοι.\" Both are rough, as are ll. 38 and 41. Bonitz set rough and rough is right, so nothing here needs correcting in the revised edition. Retracted rather than deleted: this register is also the record of what we believed and when, and these two entries blocked a correct class ruling twice — 2026-08-13 and 2026-08-18 — on an authority that did not hold."
+  },
+  {
+   "page": 44,
+   "col": "R",
+   "line": 42,
+   "printed": "ἀλίσκεσθαι",
+   "correct": "ἁλίσκεσθαι",
+   "rule": "family.py revert",
+   "authority": "ἁλίσκομαι takes the rough breathing.",
+   "checked": "400dpi 2026-08-08",
+   "note": "Same line carries `ὑπὸ` with a plain rough (reversed comma, opening left) against this word's smooth (comma, opening right) — the two glyphs are distinct at 400 dpi. John ruled the same lemma smooth at l.15 in July. Occurrences at ll.38, 40, 41, 43, 44 are the same word and the same ruling.",
+   "retracted": "2026-08-19",
+   "retracted_why": "The 400dpi reading of 2026-08-08 recorded here was WRONG. It held that Bonitz printed the smooth, on the ground that aλίζειν is \"identical in shape to ἄρτοι beside it\" and that l.42 carries a comma opening right against ὑπὸ opening left. John re-examined both at 400 dpi, scale 6, on 2026-08-19: \"ἁλίζειν is CLEARLY a different shape from ἄρτοι.\" Both are rough, as are ll. 38 and 41. Bonitz set rough and rough is right, so nothing here needs correcting in the revised edition. Retracted rather than deleted: this register is also the record of what we believed and when, and these two entries blocked a correct class ruling twice — 2026-08-13 and 2026-08-18 — on an authority that did not hold."
   }
  ]
 }

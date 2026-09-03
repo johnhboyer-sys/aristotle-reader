@@ -43,6 +43,7 @@ work/*
 !work/adjudicated/
 !work/verdicts/
 !work/damage/
+!work/segmenter-gaps/
 !work/corrigenda/
 !work/sigla/
 !work/rulings/
@@ -54,6 +55,43 @@ work/*
 !work/flags4-by-col/
 !work/flags5-by-col/
 !work/aristotle-forms.json
+
+# ⚠ THE EXPORT SPLIT AND ITS PAIRING, BECAUSE LOSING THEM COST A REAL THING.
+# On 2026-08-20 the kraken400 arrow was recompiled and the out-of-fold read
+# died with it: `train-oof.tsv` is indexed positionally against an export
+# ordering that existed only inside that arrow, and the fold maps address the
+# same vanished positions. Nothing under work/kraken400 had ever been in git,
+# so there was no earlier state to recover it from.
+#
+# The arrows stay ignored — 200 MB, and recompilable. What is versioned is the
+# SPLIT and the SEGMENTATION: seg/*.xml never changes, work/reconciled is
+# already tracked, and `kraken_corpus pair` is deterministic over the two. So
+# any past commit can regenerate its own gt/ and its own export ordering, and
+# an index like the OOF's stops being a thing that can only be lost.
+#
+# holdout.txt is the one that must never drift unnoticed: it is which columns
+# John held out, and a model's honesty rests on it.
+!work/kraken400/
+work/kraken400/*
+!work/kraken400/seg/
+!work/kraken400/train.txt
+!work/kraken400/holdout.txt
+!work/kraken400/pairing.json
+!work/kraken-cold/
+work/kraken-cold/*
+!work/kraken-cold/seg/
+!work/kraken-cold/train.txt
+!work/kraken-cold/holdout.txt
+!work/kraken-cold/pairing.json
+# The ground-truth audit: candidate queues and JOHN'S RULINGS. The crops and
+# the built page are regenerable from the corpus and stay ignored; the
+# rulings are not regenerable from anything and must never live only in an
+# ignored path (an allowlist fails silently — check with
+# `git status --short --ignored` after editing this block).
+!work/audit/
+work/audit/crops/
+work/audit/*.html
+work/audit/server.log
 
 # The adversarial reviews, persisted deliberately: two finished ones were lost
 # to a reboot on 2026-08-09 because they lived only in a temp directory, and a
@@ -69,6 +107,9 @@ work/*
 !work/reconciled-auto/
 !work/reconciled-auto-checks/
 !work/queue-053-062.json
+!work/queue-review-53-62.json
+!work/queue-review-15-102.json
+!work/queue-followup-2026-08-18.json
 !work/flags5-gt-015-052.jsonl
 !work/flags5-gt-by-col/
 !work/settle-gt-report.txt
@@ -84,7 +125,8 @@ work/kraken/*
 !work/queue-053-062.json
 !work/flags5-gt-015-052.jsonl
 !work/flags5-gt-by-col/
-!work/settle-gt-report.txtNOTES.md
+!work/settle-gt-report.txt
+!NOTES.md
 
 # Review pages are build artifacts and they are not small — book-review.html is
 # 6.7 MB of base64 crops on its own. Every one regenerates from its module:
@@ -92,6 +134,42 @@ work/kraken/*
 #   python3 -m bonitz_pipeline.book_review
 #   python3 -m bonitz_pipeline.siglum_review
 work/sweeps/*.html
+
+# The five-model calamari ensemble: its EVIDENCE, never its models. 71 MB of
+# SavedModels lives in ~/Developer/bonitz-models/ and is reproducible; the
+# evaluation log, the fold configs and the digests are neither, and a claim of
+# 0.82% CER with nothing behind it is not a claim.
+!work/calamari/
+work/calamari/*
+!work/calamari/*.tsv
+!work/calamari/ensemble5/
+# calamari's out-of-fold read of the training set: the predictions and the
+# fold maps, which are the evidence the out-of-fold claim can be checked
+# against. The 4,693 raw per-line files and the runner log live beside the
+# models in ~/Developer/bonitz-models/oof-2026-08-14/.
+!work/calamari/oof/
+!work/calamari/oof-vs-corpus.tsv
+
+# The one holdout both engines were scored on, and the three files a reader
+# needs to recompute 0.3303% and 0.4582% without a GPU. The 11 MB of ALTO
+# under eval-e11/ stays out — the text is the evidence, the glyph coordinates
+# are not. [[an-authority-claims-more-than-its-evidence]]
+#   holdout.txt        the 12 columns, in the order everything scores them
+#   holdout-gt.tsv     the ground truth AS TRAINED — see kraken_corpus's
+#                      BEKKER_SPACE; it is NOT work/reconciled/
+#   e11-holdout-pred.tsv   kraken round 6, epoch 11
+!work/kraken15-102/
+work/kraken15-102/*
+!work/kraken15-102/holdout.txt
+!work/kraken15-102/holdout-gt.tsv
+!work/kraken15-102/e11-holdout-pred.tsv
+
+# The queues the 107-117 apply actually ran through. Two of them are BUILT —
+# `site_queue` re-anchors John's ink readings and the homoglyph sweep onto the
+# current spine — so without them there is no record of which offsets his 257
+# rulings were applied at, and the run cannot be repeated or checked.
+!work/kraken15-102/apply/
+!work/kraken15-102/apply/*.json
 
 # The rulings themselves are the point, and they are tiny. Keep them.
 !work/sweeps/*.json
@@ -102,3 +180,25 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
+
+# Ink crops cut for a review page. `!work/sweeps/` re-includes that directory
+# and NOTHING below it was ignoring these — `ligature_review` says in a comment
+# that `work/sweeps/crops/` is "already gitignored" and it never was, so 192
+# PNGs of an 1870 scan have been sitting untracked-but-addable, with a bundled
+# sitting about to add 471 more. `git add -f` has put three leaves of this book
+# in a public repo once already (tests/test_no_scans_in_git.py). Every crop
+# regenerates from its module.
+work/sweeps/crops/
+# ⚠ AND EVERY SIBLING. The literal path above ignored exactly one directory,
+# and each new sitting cuts its own — `crops-cold5`, `crops-alphacheck-15-62`,
+# `crops-qc-63-102` were all untracked-but-addable the moment they appeared.
+# A named path is not a rule; the glob is.
+work/sweeps/crops-*/
+work/sweeps/*/crops/
+
+# genie_split output — regenerable from raw/genie400/*.docx in one command,
+# and 10MB. The ARCHIVES are the original and are tracked; this is not.
+raw/genie-pages/
+work/paddle-export/
+work/paddle-dataset/
+work/tesstrain/

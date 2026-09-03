@@ -1,0 +1,398 @@
+{
+ "spine_dir": "work/reconciled",
+ "n_sites": 17,
+ "spine_reader": "work/reconciled",
+ "entries": [
+  {
+   "page": 109,
+   "col": "L",
+   "line": 5,
+   "word_off": 218,
+   "char_at": 54,
+   "readers": {
+    "opus": "non 5"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 5 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '5'",
+   "forms": [
+    "non",
+    "non 5"
+   ],
+   "form_set": [
+    "non",
+    "non 5"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:5",
+   "becomes": "non"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 10,
+   "word_off": 441,
+   "char_at": 44,
+   "readers": {
+    "opus": "Ζμδ5. 6821"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 10 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '1 of 10'",
+   "forms": [
+    "Ζμδ5. 682",
+    "Ζμδ5. 6821"
+   ],
+   "form_set": [
+    "Ζμδ5. 682",
+    "Ζμδ5. 6821"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:10",
+   "becomes": "Ζμδ5. 682"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 15,
+   "word_off": 673,
+   "char_at": 43,
+   "readers": {
+    "opus": "Ζκ11. 70415"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '15'",
+   "forms": [
+    "Ζκ11. 704",
+    "Ζκ11. 70415"
+   ],
+   "form_set": [
+    "Ζκ11. 704",
+    "Ζκ11. 70415"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:15",
+   "becomes": "Ζκ11. 704"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 25,
+   "word_off": 1143,
+   "char_at": 52,
+   "readers": {
+    "opus": "Φα8. 2"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '2 of 25'",
+   "forms": [
+    "Φα8.",
+    "Φα8. 2"
+   ],
+   "form_set": [
+    "Φα8.",
+    "Φα8. 2"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:25",
+   "becomes": "Φα8."
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 30,
+   "word_off": 1371,
+   "char_at": 51,
+   "readers": {
+    "opus": "ἐπέ- 80"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 30 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '80 for 30'",
+   "forms": [
+    "ἐπέ-",
+    "ἐπέ- 80"
+   ],
+   "form_set": [
+    "ἐπέ-",
+    "ἐπέ- 80"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:30",
+   "becomes": "ἐπέ-"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 35,
+   "word_off": 1599,
+   "char_at": 51,
+   "readers": {
+    "opus": "est: 3"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '3 of 35'",
+   "forms": [
+    "est:",
+    "est: 3"
+   ],
+   "form_set": [
+    "est:",
+    "est: 3"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:35",
+   "becomes": "est:"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 45,
+   "word_off": 2049,
+   "char_at": 46,
+   "readers": {
+    "opus": "Γα6. 3235"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '5 of 45'",
+   "forms": [
+    "Γα6. 323",
+    "Γα6. 3235"
+   ],
+   "form_set": [
+    "Γα6. 323",
+    "Γα6. 3235"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:45",
+   "becomes": "Γα6. 323"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 55,
+   "word_off": 2511,
+   "char_at": 45,
+   "readers": {
+    "opus": "quaestionem 55"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '55'",
+   "forms": [
+    "quaestionem",
+    "quaestionem 55"
+   ],
+   "form_set": [
+    "quaestionem",
+    "quaestionem 55"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-109-L:55",
+   "becomes": "quaestionem"
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 35,
+   "word_off": 1598,
+   "char_at": 50,
+   "readers": {
+    "opus": "πρώτης as"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as 'as for 35'",
+   "forms": [
+    "πρώτης",
+    "πρώτης as"
+   ],
+   "form_set": [
+    "πρώτης",
+    "πρώτης as"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-110-L:35",
+   "becomes": "πρώτης"
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 55,
+   "word_off": 2521,
+   "char_at": 51,
+   "readers": {
+    "opus": "ὕστερον ς"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as 'ς for 55'",
+   "forms": [
+    "ὕστερον",
+    "ὕστερον ς"
+   ],
+   "form_set": [
+    "ὕστερον",
+    "ὕστερον ς"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-110-L:55",
+   "becomes": "ὕστερον"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 15,
+   "word_off": 677,
+   "char_at": 46,
+   "readers": {
+    "opus": "τρόπον ἐν ιd"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as 'ιd for 15'",
+   "forms": [
+    "τρόπον ἐν",
+    "τρόπον ἐν ιd"
+   ],
+   "form_set": [
+    "τρόπον ἐν",
+    "τρόπον ἐν ιd"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-113-L:15",
+   "becomes": "τρόπον ἐν"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 35,
+   "word_off": 1611,
+   "char_at": 46,
+   "readers": {
+    "opus": "η1. 1042a"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as 'a for 35'",
+   "forms": [
+    "η1. 1042",
+    "η1. 1042a"
+   ],
+   "form_set": [
+    "η1. 1042",
+    "η1. 1042a"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-113-L:35",
+   "becomes": "η1. 1042"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 55,
+   "word_off": 2558,
+   "char_at": 42,
+   "readers": {
+    "opus": "quibus εs"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as 'εs for 55'",
+   "forms": [
+    "quibus",
+    "quibus εs"
+   ],
+   "form_set": [
+    "quibus",
+    "quibus εs"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-113-L:55",
+   "becomes": "quibus"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 5,
+   "word_off": 229,
+   "char_at": 52,
+   "readers": {
+    "opus": "forma s"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 5 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as 's for 5'",
+   "forms": [
+    "forma",
+    "forma s"
+   ],
+   "form_set": [
+    "forma",
+    "forma s"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-117-L:5",
+   "becomes": "forma"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 25,
+   "word_off": 1190,
+   "char_at": 51,
+   "readers": {
+    "opus": "Ar libr 2"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '2 of 25'",
+   "forms": [
+    "Ar libr",
+    "Ar libr 2"
+   ],
+   "form_set": [
+    "Ar libr",
+    "Ar libr 2"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-117-L:25",
+   "becomes": "Ar libr"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 45,
+   "word_off": 2144,
+   "char_at": 56,
+   "readers": {
+    "opus": "pri- 4ὸ"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as '4ὸ for 45'",
+   "forms": [
+    "pri-",
+    "pri- 4ὸ"
+   ],
+   "form_set": [
+    "pri-",
+    "pri- 4ὸ"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-117-L:45",
+   "becomes": "pri-"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 55,
+   "word_off": 2558,
+   "char_at": 43,
+   "readers": {
+    "opus": "(Ἀρειφρά-ὖ"
+   },
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the margin here; the segmenter drew the line box wide enough to swallow it and both engines read it, as 'ὖ for 55'",
+   "forms": [
+    "(Ἀρειφρά-",
+    "(Ἀρειφρά-ὖ"
+   ],
+   "form_set": [
+    "(Ἀρειφρά-",
+    "(Ἀρειφρά-ὖ"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "margin:page-117-L:55",
+   "becomes": "(Ἀρειφρά-"
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+[
+  {
+    "page": 42,
+    "col": "L",
+    "line": 41,
+    "wrote": "ψῦχος",
+    "llamaparse": "ψȣ͂χος",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "ψυχος is a corpus form; ψουχος is not",
+    "context": "ψῦχος μα10. 347 a20. Ζιθ13. 598 a1. Ηη6. 1148 a8. ἀλέα"
+  }
+]

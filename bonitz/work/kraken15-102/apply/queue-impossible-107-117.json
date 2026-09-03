@@ -1,0 +1,53 @@
+{
+ "spine_dir": "work/reconciled-auto",
+ "n_sites": 2,
+ "spine_reader": "mixed:kraken-r6+calamari-r2",
+ "entries": [
+  {
+   "page": 109,
+   "col": "L",
+   "line": 15,
+   "word_off": 664,
+   "char_at": 33,
+   "readers": {
+    "opus": "είρήκαμεν"
+   },
+   "kind": "impossible",
+   "reason": "the ink sets a SMOOTH BREATHING over the iota — εἰρήκαμεν, perfect of λέγω. The spine read it as an acute, which puts two accents in one word and spells nothing.",
+   "forms": [
+    "είρήκαμεν",
+    "εἰρήκαμεν"
+   ],
+   "form_set": [
+    "είρήκαμεν",
+    "εἰρήκαμεν"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-109-L:15:664",
+   "becomes": "εἰρήκαμεν"
+  },
+  {
+   "page": 117,
+   "col": "R",
+   "line": 8,
+   "word_off": 333,
+   "char_at": 30,
+   "readers": {
+    "opus": "τȣ̀ςἈρκάδας"
+   },
+   "kind": "impossible",
+   "reason": "the ink sets a clear word-space before Ἀρκάδας. The spine ran the two words together; nothing in the ink joins them.",
+   "forms": [
+    "τȣ̀ςἈρκάδας",
+    "τȣ̀ς Ἀρκάδας"
+   ],
+   "form_set": [
+    "τȣ̀ςἈρκάδας",
+    "τȣ̀ς Ἀρκάδας"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-117-R:8:333",
+   "becomes": "τȣ̀ς Ἀρκάδας"
+  }
+ ]
+}

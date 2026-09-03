@@ -1,0 +1,72 @@
+[
+ {
+  "ctx": "τὸκατὰφύσινΜδ16.1021b20.Φη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clear left stem + arch + descender = η; γ lacks the left vertical. Bekker 246a = Physics VII."
+ },
+ {
+  "ctx": "νἀλλοιȣ͂σθαιπέφυκετὸἔχονΦη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φη3 plainly printed; η shape confirmed at 5x. 246b18 = Physics VII."
+ },
+ {
+  "ctx": "ἀρεταὶἐντῷπρόςτιπῶςἔχεινΦη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "η with left stem and arch; contrast with true γ elsewhere on page. 246b3 = Physics VII."
+ },
+ {
+  "ctx": "Ρα9.1366a36.Πγ4.1276b39.Φη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Same line prints Πγ4 (true γ, no left stem) and Φη3 (η); shapes clearly distinct."
+ },
+ {
+  "ctx": "ἀρετῆςΗβ-ε.ηεγ.ημα20-34.—α.add",
+  "verdict": "α",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Line-initial italic single-storey glyph matches the α of Ηα13 on the same line; the Roman 'a' of 'ad' beside it is double-storey."
+ },
+ {
+  "ctx": "29a13(cfη3.1145b21sqq).ηεη13.1",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ηεη13: third glyph has the same left-stem-plus-arch-plus-descender form as the leading η."
+ },
+ {
+  "ctx": "11.1.1103b22.ε1.1129a14.Φη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φη3 clear at 6x; η not γ. 246a11 = Physics VII."
+ },
+ {
+  "ctx": "ονὃτὸνἔχονταποιεῖσπȣδαῖοντε3.1",
+  "verdict": "τ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Plain crossbar with short central stem sitting on the x-height — τ, the Topica siglum; no arch or descender, so not η."
+ },
+ {
+  "ctx": "1178a15.ημα6.β7.1204a29.Φη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φη3 legible; η with descender. 247a8 = Physics VII."
+ },
+ {
+  "ctx": "Ηβ2.1104b24.ηεβ4.1222a4.Φη3.24",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Φη3 clear; η not γ. 246b19/247a22 = Physics VII."
+ }
+]

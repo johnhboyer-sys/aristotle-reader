@@ -1,0 +1,201 @@
+{
+ "accent:page-109-R:49:τοις": {
+  "verdict": "accept",
+  "detail": "τοῖς",
+  "sites": [
+   "page-109-R:49:2288"
+  ]
+ },
+ "accent:page-111-R:6:Προβλη": {
+  "verdict": "accept",
+  "detail": "Προβλήματα",
+  "sites": [
+   "page-111-R:6:254"
+  ]
+ },
+ "accent:page-112-L:50:κινει": {
+  "verdict": "accept",
+  "detail": "κινεῖ",
+  "sites": [
+   "page-112-L:50:2249"
+  ]
+ },
+ "accent:page-112-R:56:πυρος": {
+  "verdict": "accept",
+  "detail": "πυρός",
+  "sites": [
+   "page-112-R:56:2460"
+  ]
+ },
+ "accent:page-112-L:30:περι": {
+  "verdict": "accept",
+  "detail": "περὶ",
+  "sites": [
+   "page-112-L:30:1349"
+  ]
+ },
+ "accent:page-116-L:61:δεί": {
+  "verdict": "preserve",
+  "detail": "δεί",
+  "sites": [
+   "page-116-L:61:2834"
+  ]
+ },
+ "accent:page-109-R:27:εἶη": {
+  "verdict": "accept",
+  "detail": "εἴη",
+  "sites": [
+   "page-109-R:27:1216"
+  ]
+ },
+ "accent:page-113-L:4:ἢν": {
+  "verdict": "none",
+  "detail": "",
+  "sites": [
+   "page-113-L:4:187"
+  ]
+ },
+ "accent:page-117-L:13:ψυχῆ": {
+  "verdict": "preserve",
+  "detail": "ψυχῆ",
+  "sites": [
+   "page-117-L:13:578"
+  ]
+ },
+ "accent:page-107-R:24:εὐ": {
+  "verdict": "accept",
+  "detail": "εὖ",
+  "sites": [
+   "page-107-R:24:985"
+  ]
+ },
+ "accent:page-108-R:55:ἑκ": {
+  "verdict": "accept",
+  "detail": "ἐκ",
+  "sites": [
+   "page-108-R:55:2443"
+  ]
+ },
+ "breath:page-107-L:19:αἰρεῖσ": {
+  "verdict": "preserve",
+  "detail": "αἰρεῖσθαι",
+  "sites": [
+   "page-107-L:19:780"
+  ]
+ },
+ "breath:page-109-R:6:ύστερο": {
+  "verdict": "accept",
+  "detail": "ὕστερον",
+  "sites": [
+   "page-109-R:6:246"
+  ]
+ },
+ "breath:page-110-L:52:Ἑγκύκλ": {
+  "verdict": "accept",
+  "detail": "Ἐγκύκλια",
+  "sites": [
+   "page-110-L:52:2342"
+  ]
+ },
+ "breath:page-112-R:53:Ὅπτικά": {
+  "verdict": "accept",
+  "detail": "Ὀπτικά",
+  "sites": [
+   "page-112-R:53:2345"
+  ]
+ },
+ "breath:page-113-L:8:Ἡθικοῖ": {
+  "verdict": "accept",
+  "detail": "Ἠθικοῖς",
+  "sites": [
+   "page-113-L:8:336"
+  ]
+ },
+ "breath:page-113-L:37:Ἡθικὰ": {
+  "verdict": "accept",
+  "detail": "Ἠθικὰ",
+  "sites": [
+   "page-113-L:37:1677"
+  ]
+ },
+ "breath:page-113-L:55:Ηθικὰ": {
+  "verdict": "accept",
+  "detail": "Ἠθικὰ",
+  "sites": [
+   "page-113-L:55:2531"
+  ]
+ },
+ "breath:page-116-L:61:Οπτικά": {
+  "verdict": "accept",
+  "detail": "Ὀπτικά",
+  "sites": [
+   "page-116-L:61:2795"
+  ]
+ },
+ "breath:page-117-L:49:Ρόδιος": {
+  "verdict": "none",
+  "detail": "",
+  "sites": [
+   "page-117-L:49:2297"
+  ]
+ },
+ "breath:page-117-R:6:ᾧκησαν": {
+  "verdict": "accept",
+  "detail": "ᾤκησαν",
+  "sites": [
+   "page-117-R:6:256"
+  ]
+ },
+ "breath:page-113-R:25:ὑστερο": {
+  "verdict": "accept",
+  "detail": "ὕστερον",
+  "sites": [
+   "page-113-R:25:1159"
+  ]
+ },
+ "breath:page-111-R:22:Ανατ": {
+  "verdict": "accept",
+  "detail": "Ἀνατ",
+  "sites": [
+   "page-111-R:22:945"
+  ]
+ },
+ "smyth:page-117-L:9:ἐξωτερ": {
+  "verdict": "accept",
+  "detail": "ἐξωτερικȣ̀ς",
+  "sites": [
+   "page-117-L:9:418"
+  ]
+ },
+ "smyth:page-113-R:19:Πολιτι": {
+  "verdict": "none",
+  "detail": "",
+  "sites": [
+   "page-113-R:19:867"
+  ]
+ },
+ "smyth:page-113-R:36:1εχνη ": {
+  "verdict": "none",
+  "detail": "",
+  "sites": [
+   "page-113-R:36:1665"
+  ]
+ },
+ "smyth:page-112-R:47:Περὶ φ": {
+  "verdict": "accept",
+  "detail": "Περὶ φυτῶν",
+  "sites": [
+   "page-112-R:47:2061"
+  ]
+ },
+ "accent:eirhtai": {
+  "verdict": "accept",
+  "detail": "bundle:εἶ>εἴ",
+  "sites": [
+   "page-109-L:16:682",
+   "page-109-L:23:1003",
+   "page-109-L:40:1780",
+   "page-112-R:55:2433"
+  ]
+ }
+}

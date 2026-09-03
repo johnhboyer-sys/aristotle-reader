@@ -199,6 +199,60 @@ class Hit:
     context: str
 
 
+
+# --- what counts as a label -------------------------------------------------
+
+_LIGATURES = 'ȣȢϗ'
+
+
+def _is_label(text: str, d: str) -> bool:
+    """True when this token is a siglum, not a word the accent rules govern.
+
+    ⚠ THE OLD TEST WAS CIRCULAR. It called any run of four or fewer Greek
+    letters carrying neither accent nor breathing a label — which is exactly
+    what a WORD that has lost its marks looks like. So it could not tell `Ζμ`
+    (never had marks) from a `ϗ` whose grave fell off, and it silenced 1,147
+    tokens including 25 bare kai and 57 bare `ȣκ`. On 060-L:25 the same
+    printed line carries `ϗ` and `ϗ̀` twelve words apart and no rule ever saw
+    either.
+
+    Two changes, both John's, 2026-08-11:
+
+    1. A LIGATURE IS NEVER A LABEL. `ϗ` abbreviates καί and `ȣ` is the ou
+       vowel-ligature; neither is a work siglum, and they are the two sorts
+       this edition turns on.
+    2. A LABEL MUST BE A SIGLUM WE CAN NAME. Checked against Bonitz's own key
+       via `siglum_check.inventory()`, and a citation siglum is WORK + BOOK
+       NUMERAL — `Ζιι` is Ζι plus book ι, `πκγ` is π plus book κγ = 23 — so
+       the composition is what gets tested, not the bare shape.
+    """
+    if any(c in _LIGATURES for c in text):
+        return False
+    # TERM LETTERS. Bonitz uses runs of capitals as logical variables —
+    # `ΑΒΓ signa terminorum in prima syllogismi figura` at 015-L:5. They are
+    # not words and never carry marks. Nothing else in this text is set as a
+    # run of bare capitals, so the shape is safe to name.
+    if len(text) >= 2 and all('Α' <= c <= 'Ω' for c in text):
+        return True
+    from .siglum_check import book_ok, split
+    works = _inventory()
+    for head, tail in split(text, works):
+        if book_ok(head, tail):
+            return True
+    return False
+
+
+_INV = None
+
+
+def _inventory():
+    global _INV
+    if _INV is None:
+        from .siglum_check import inventory
+        _INV = inventory()
+    return _INV
+
+
 def _parts(tok: str) -> list[tuple[str, bool, bool]]:
     """Split a token at apostrophes -> [(text, elided, apostrophe_before)].
 
@@ -268,8 +322,7 @@ def line_parts(line: str, prev: str = '') -> list[Part]:
             # AND no accent, a printer's error, recording as printed"
             # (tests/fixtures/john-rulings.json, breathing/declined).  The
             # guard is protecting a ruling.  `_labels.tsv` lists the rest.
-            p.label = (len(p.cl) <= 4
-                       and not any(m in ACCENTS + BREATHINGS for m in p.d))
+            p.label = _is_label(p.text, p.d)
             here.append(p)
     if here:
         if line.rstrip().endswith('-'):
@@ -312,9 +365,20 @@ def numbered_lines(text: str) -> list[tuple[int, str]]:
 def read_parts(source: str) -> list[tuple[str, int, Part]]:
     """Every word in the corpus, with the context the rules need."""
     out = []
-    files = sorted(glob.glob(str(ROOT / source / 'page-*.txt')))
-    if not files:
-        files = sorted(glob.glob(str(ROOT / source / 'page-*.md')))
+    # ⚠ THE DEFAULT MUST MEAN THE WHOLE CORPUS, NOT ONE STAGE OF IT.
+    # `work/reconciled` holds 15-52; 53-62 are settled but not promoted
+    # and live in reconciled-auto. With a single-directory default this
+    # swept 15-52 and reported nothing about the rest — and pointing it
+    # at the other stage by hand then OVERWROTE the first run's report.
+    # `corpus` spans every stage; an explicit --source still works, for
+    # checking a reader's raw output against the same rules.
+    if source == 'corpus':
+        from .normalize import corpus_columns
+        files = [str(f) for f in corpus_columns()]
+    else:
+        files = sorted(glob.glob(str(ROOT / source / 'page-*.txt')))
+        if not files:
+            files = sorted(glob.glob(str(ROOT / source / 'page-*.md')))
     carry = ''            # last line of the previous column, in reading order
     for f in files:
         col = Path(f).stem
@@ -545,9 +609,14 @@ def b7(p: Part) -> str | None:
 def c1(p: Part) -> str | None:
     if p.siglum or p.label or p.continues or p.apos or len(p.text) < 2:
         return None
-    if p.cl and p.cl[0][0] in LIGATURES:
-        # The ou-ligature routinely carries an accent and no breathing; this
-        # book prints ȣ́, ȣ̀, ȣ͂ as a matter of course (cf. breathing.py).
+    # ϗ abbreviates καί, which begins with a consonant — no breathing belongs
+    # on it, so §9 is silent about it. The OU-LIGATURE GETS NO SUCH EXEMPTION:
+    # the blanket one that stood here claimed "the ou-ligature routinely
+    # carries an accent and no breathing", the corpus refuted it 28:1, and it
+    # hid 167 reader-lost breathings for a month — the fourth layer of the
+    # absence-rendered-as-clean defect. John ruled all 192 bare sites on
+    # 2026-08-11; from here a word-initial bare ȣ is a FINDING.
+    if p.cl and p.cl[0][0] in 'ϗϏ':
         return None
     grp = initial_group(p.cl)
     if not grp:
@@ -626,6 +695,39 @@ ENCLITICS = {'με', 'μου', 'μοι', 'σε', 'σου', 'σοι', 'ε', 'ου
              'φημι', 'φησι', 'φησιν', 'φαμεν', 'φατε', 'φασι', 'φασιν'}
 
 
+# Bonitz cites an adjective the way a lexicon does — `ἄκρος, α, ον` — where the
+# bare endings after the comma are ENDINGS, not words. They carry no accent
+# because there is nothing there to accent: the accent belongs to the headword
+# that precedes them. John, 2026-08-18: "this is correct as it reads
+# unaccented. we need the unaccented sweep to have an exception for adjective
+# headword endings like this."
+#
+# ⚠ NARROW ON PURPOSE. The token must be a bare unaccented Greek run sitting in
+# a comma-separated list that a nominative headword opens on the same line. A
+# plain "the token has a comma before it" test would silence real defects —
+# `αλλα` on page-032-L:1 follows a comma nowhere, but plenty of accentless
+# misprints do sit after one.
+_ADJ_CITATION = re.compile(
+    r'[^\s,]*(?:ος|ης|υς|ων|ας|ος)\s*,'      # the headword, nominative
+    r'(?:\s*[α-ωϊϋ]{1,4}\s*,)*'              # any endings already listed
+    r'\s*[α-ωϊϋ]{1,4}\s*[,.]')               # and the one under test
+
+
+def adjective_ending(p: 'Part') -> bool:
+    """True when this bare run is an ending in a dictionary headword citation."""
+    if not p.text or any(unicodedata.combining(c) for c in p.d):
+        return False
+    if not all('α' <= c <= 'ω' or c in 'ϊϋ' for c in p.text):
+        return False
+    for m in _ADJ_CITATION.finditer(p.line):
+        span = m.group()
+        # the token must be one of the comma-separated endings, not the head
+        tail = span[span.index(',') + 1:]
+        if p.text in [t.strip(' ,.') for t in tail.split(',')]:
+            return True
+    return False
+
+
 @rule('E1', '§170', 'advisory',
       'every word carries an accent, save the proclitics and enclitics')
 def e1(p: Part) -> str | None:
@@ -643,6 +745,8 @@ def e1(p: Part) -> str | None:
     bare = ''.join(lower(b) for b, _ in p.cl if is_vowel(b) or b.isalpha())
     bare = ''.join(c for c in bare if not unicodedata.combining(c))
     if bare in PROCLITICS or bare in ENCLITICS:
+        return None
+    if adjective_ending(p):
         return None
     return 'no accent'
 
@@ -680,7 +784,7 @@ def run(rules: list[Rule], source: str) -> dict[str, list[Hit]]:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
-    p.add_argument('--source', default='work/reconciled')
+    p.add_argument('--source', default='corpus')
     p.add_argument('--rule', action='append', help='run only these rule ids')
     p.add_argument('--all', action='store_true', help='advisory rules too')
     p.add_argument('--list', action='store_true')

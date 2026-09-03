@@ -1,0 +1,261 @@
+[
+ {
+  "ctx": "7.φῶςἀραιόν,ἀκτῖνεςἀραιαίχ1.79",
+  "verdict": "χ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "descender below baseline; chi, not kappa (cf kappa in aktines same line)"
+ },
+ {
+  "ctx": "θησινἀσημότεραγίγνεταιακ802a13",
+  "verdict": "0",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "full-height digit zero inside the number 802"
+ },
+ {
+  "ctx": "ημότεραγίγνεταιακ802a13.τȣ̀ςπό",
+  "verdict": "ȣ̀",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ou-ligature with grave, clear loop-and-bar shape; not alpha, not omicron+upsilon"
+ },
+ {
+  "ctx": "ᾶλλονϗ̀ἀραιὰτὰσώματαεἶναιπβ8.8",
+  "verdict": "π",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "pi clearly printed before beta-8; llama dropped it"
+ },
+ {
+  "ctx": "29,36.ἀραιῶντῶνπόρωνὄντωνπβ42.",
+  "verdict": "π",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "pi clearly printed before beta-42; llama dropped it"
+ },
+ {
+  "ctx": ".φωναὶἀραιαί,οppπυκναίακ803b28",
+  "verdict": "0",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "full-height digit zero inside the number 803"
+ },
+ {
+  "ctx": ".ἀραιότητες,οppπυκνότητεςΦθ7.2",
+  "verdict": "Φ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "capital Phi clearly printed before theta-7"
+ },
+ {
+  "ctx": "ηταϗ̀ἀραιότητατῶνπόρωνακ802a24",
+  "verdict": "0",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "full-height digit zero inside the number 802"
+ },
+ {
+  "ctx": "τητατῶνπόρωνακ802a24.ἀραιȣ͂ν.τ",
+  "verdict": "ȣ͂ν",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ou-ligature carrying a circumflex, then nu; loops counted at 14x"
+ },
+ {
+  "ctx": "2a24.ἀραιȣ͂ν.τὸθερμὸνἀραιοῖτὰπ",
+  "verdict": "οῖ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two separate glyphs omicron then iota with circumflex; not the ligature (compare the ligature earlier in the same line)"
+ },
+ {
+  "ctx": "884a27.λζ3.966a14,24.ἀραιȣμένω",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "bare ou-ligature, no mark; not omega"
+ },
+ {
+  "ctx": "νπλησίονΖγα20.728b26.ἀραιȣμένω",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "bare ou-ligature, no mark; not omega"
+ },
+ {
+  "ctx": "φθαλμȣ͂πόρωνπε37.884b34.τȣ͂ὑγρ",
+  "verdict": "ȣ͂ὑγρȣ͂ȣ̓́π",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "line-end tou with circumflex; then hygrou with circumflex and ou-ligature carrying smooth breathing + acute (oupo) - breathing and acute both visible at 16x"
+ },
+ {
+  "ctx": "ȣ̓́πωχυθέντοςȣ̓δὲἠραιωμένȣκ4.3",
+  "verdict": "ȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "final glyph is the ou-ligature, not eta"
+ },
+ {
+  "ctx": "δὲἠραιωμένȣκ4.394a36.ἀραιώδȣς.",
+  "verdict": "ώδȣ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "omega+acute, delta, then ou-ligature; not eta"
+ },
+ {
+  "ctx": "νȣκ4.394a36.ἀραιώδȣς.οἱἀρκιώδο",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "third glyph has a closed bowl plus right stem with foot = alpha; the printer's kappa is an open x with no counter (compared side by side with kappa/alpha of karkinion). Reads araiodontes"
+ },
+ {
+  "ctx": "ὶὀδόντεςcοdd,scrvideturἀρκιόδο",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "same glyph test as the previous line: closed bowl = alpha, so araiodontes; opus's kappa is the italic alpha/kappa confusion"
+ },
+ {
+  "ctx": "3.350a24.ἀράχνηςὁ,ἀράχνηἡ.inse",
+  "verdict": ".",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "solid square dot on the baseline with a 4-row white gap before a faint speck (a diacritic top from the line below); the printer's comma has a continuous attached tail"
+ },
+ {
+  "ctx": "χναιἔξωἐκχυμίζȣσιτὸζῷονΖιθ4.59",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "upright theta with crossbar; HA 8 matches 594a14"
+ },
+ {
+  "ctx": "ȣσιτὸζῷονΖιθ4.594a14.πότεϗ̀πῶς",
+  "verdict": "ϗ̀",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "kai-ligature with a grave clearly printed above it"
+ },
+ {
+  "ctx": "εϗ̀πῶςἀφίενταιτὸἀράχνιονΖιι39.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two italic iotas fused into the u-shape; HA 9 matches 623a30"
+ },
+ {
+  "ctx": "αιὁἀράχνηςἐνταῖςεὐδίαιςπκϛ61.9",
+  "verdict": "ϛ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "stigma (top bar + descending hook), not zeta; Problemata 26 matches 947a"
+ },
+ {
+  "ctx": "τὸπλῆθοςΖιε27.555b7-17.cf19.55",
+  "verdict": "1",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "upright roman digit 1 with flag serif and foot, same as the 1 in 17 earlier on the line"
+ },
+ {
+  "ctx": "όλεμοςἀσκαλαβώτῃϗ̀ἀράχνῃΖιι1.6",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused iota-iota u-shape; HA 9 matches 609a29"
+ },
+ {
+  "ctx": ".(αἱλειμώνιαιἀράχναιaraneοrums",
+  "verdict": "οrum",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "roman text reads araneorum; the omicron in the span is the pipeline's Latin-o normalisation, not a Greek letter"
+ },
+ {
+  "ctx": "rumspeciesSup233n50b.1.ΑΖιΙ161",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "small italic iota after AZ clearly printed"
+ },
+ {
+  "ctx": "eciesSup233n50b.1.ΑΖιΙ161ΙΙ1.—",
+  "verdict": "Ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "two capital roman I's set tight so their serifs merge; roman numeral II, not Pi"
+ },
+ {
+  "ctx": "ὸἀράχνιον,πῶςχρῶνταιαὐτῷΖιι39.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused iota-iota u-shape; HA 9 matches 623a15-30"
+ },
+ {
+  "ctx": "ηταιπνεύματόςἐστισημεῖαπκϛ61.9",
+  "verdict": "ϛ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "stigma (top bar + descending hook), not zeta; Problemata 26 matches 947a"
+ },
+ {
+  "ctx": "ντῶνσπόγγωνΖιε16.548a29.('memb",
+  "verdict": "'",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "opening single quote (turned comma) after the paren; genie's entity is an escaping bug"
+ },
+ {
+  "ctx": "uis,similistelaearanearum'SΙ32",
+  "verdict": "'",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "closing single quote after aranearum; genie's entity is an escaping bug"
+ },
+ {
+  "ctx": "Ι328,inincertοrelinquitΑΖιΙ493",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "small italic iota after AZ clearly printed"
+ },
+ {
+  "ctx": "χνιακατίσχειὅλοντὸσμῆνοςΖιι40.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused iota-iota u-shape; HA 9 matches 626b18"
+ },
+ {
+  "ctx": "νιονscribendumexistimatΑΖιΙ528",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "small italic iota after AZ clearly printed"
+ },
+ {
+  "ctx": "̀τεχνικώτεροιπερὶτὸνβίονΖιι38.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused iota-iota u-shape; HA 9 matches 622b22"
+ },
+ {
+  "ctx": "ῶνφαλαγγίωνεἰσὶπολλὰγένηΖιι39.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused iota-iota u-shape; HA 9 matches 622b27"
+ },
+ {
+  "ctx": "νπυκνὸνδύοἐστὶγένη,descrΖιι39.",
+  "verdict": "ιι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "fused iota-iota u-shape; HA 9 matches 623a25-b2"
+ }
+]

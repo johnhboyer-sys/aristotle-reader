@@ -1,0 +1,13 @@
+[
+  {
+    "page": 45,
+    "col": "L",
+    "line": 27,
+    "wrote": "πάρυδρον",
+    "llamaparse": "πάρȣδρον",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "παρυδρον is a corpus form; παρουδρον is not",
+    "context": "ἁλκυών, avis, τὸ τῶν ἁλκυόνων γένος πάρυδρον descr, eius"
+  }
+]

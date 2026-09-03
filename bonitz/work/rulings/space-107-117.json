@@ -1,0 +1,41 @@
+{
+ "space:column_letter_after_word": {
+  "verdict": "accept",
+  "detail": "bundle:> ",
+  "sites": [
+   "page-117-L:52:2437"
+  ],
+  "carried_from": [
+   "work/rulings/cold-107-117-ink.json :: site:page-117-L:52:2437"
+  ],
+  "source": "john:read-from-the-ink 2026-08-26",
+  "why": "the ink reads `cf ᵃ16` — he said so before this page existed · John, 2026-08-26: the space is THERE even where the crop shows none — what looks like contact is kerning, forced by setting the whole Index into under 900 pages. So this is not a reading of the ink's gap but a judgement about the text: an abbreviation is separated from its number, and tight measure is not a printer's error to preserve. ⚠ A LATER SITE MUST NOT BE RULED `preserve` BECAUSE ITS CROP LOOKS GLUED — that is the appearance this ruling already accounts for.",
+  "rationale": "kerning-not-absence"
+ },
+ "space:sq_after_number": {
+  "verdict": "accept",
+  "detail": "bundle:> ",
+  "sites": [
+   "page-109-R:60:2773",
+   "page-110-L:33:1502",
+   "page-110-L:34:1511",
+   "page-110-L:54:2444",
+   "page-110-R:56:2508",
+   "page-111-R:39:1714",
+   "page-111-R:39:1726",
+   "page-112-L:31:1369",
+   "page-112-L:38:1695",
+   "page-113-R:32:1477",
+   "page-114-R:58:2606",
+   "page-116-L:37:1677",
+   "page-116-L:47:2137",
+   "page-116-R:28:1329",
+   "page-116-R:32:1484",
+   "page-116-R:33:1548",
+   "page-117-L:2:48",
+   "page-117-L:26:1228"
+  ],
+  "why": "John, 2026-08-26: the space is THERE even where the crop shows none — what looks like contact is kerning, forced by setting the whole Index into under 900 pages. So this is not a reading of the ink's gap but a judgement about the text: an abbreviation is separated from its number, and tight measure is not a printer's error to preserve. ⚠ A LATER SITE MUST NOT BE RULED `preserve` BECAUSE ITS CROP LOOKS GLUED — that is the appearance this ruling already accounts for.",
+  "rationale": "kerning-not-absence"
+ }
+}

@@ -116,9 +116,29 @@ def test_a_correction_never_invents_a_character_the_page_does_not_carry():
     # printed without being asked WHICH of siglum or page Bonitz got wrong.
     # That is the honest entry, and it must not be measured as if it were a
     # proposed reading.
+    # ⚠ MEASURE WITH THE LIGATURE EXPANDED, OR THE PROXY CATCHES THE WRONG
+    # THING. `ȣ` is one sort standing for two letters, so a correction that
+    # only replaces it grows by a character while inventing nothing:
+    # page-049-R:19 prints `ἀμȣρȣ͂ται` where the entry's own headword on that
+    # line (`ἀμαυρȣ͂ν`) requires `ἀμαυρȣ͂ται`. Length is the proxy; an
+    # invented work siglum is the thing, and it still grows after expansion.
+    def expanded(s: str) -> int:
+        return len(s.replace('ȣ', 'ου'))
+
+    # ⚠ LENGTH IS THE PROXY; AN INVENTED WORK SIGLUM IS THE THING. A
+    # correction that adds only PUNCTUATION invents no reading — `f 441
+    # 1550b1` wants the stop the same line prints in `f 442.`, and the letters
+    # and digits are identical either side of it. An invented siglum is not:
+    # `κ1. 1050` against `Μθ1. 1050` differs in its letters once the marks are
+    # stripped, and still trips this test. So compare the letters, and let the
+    # marks through.
+    def letters(s: str) -> str:
+        return ''.join(c for c in s.replace('ȣ', 'ου') if c.isalnum())
+
     grown = [(e['printed'], e['correct']) for e in ENTRIES
              if not e['correct'].startswith('(')
-             and len(e['correct']) > len(e['printed'])]
+             and expanded(e['correct']) > expanded(e['printed'])
+             and letters(e['correct']) != letters(e['printed'])]
     assert not grown, f'corrections longer than what was printed: {grown}'
 
 

@@ -1,0 +1,2216 @@
+{
+ "spine_dir": "work/kraken15-102/txt118-281",
+ "spine_reader": "kraken-r6",
+ "alto_dirs": [
+  "work/kraken15-102/alto118-281"
+ ],
+ "n_sites": 76,
+ "n_unresolved": 0,
+ "entries": [
+  {
+   "page": 120,
+   "col": "L",
+   "line": 15,
+   "word_off": 702,
+   "char_at": 51,
+   "readers": {
+    "opus": "ἀπὸ 15"
+   },
+   "calamari": "ἀπὸ 1",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the right-hand (inner) margin here, and it was read into the text as '15'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "ἀπὸ",
+    "ἀπὸ 15"
+   ],
+   "form_set": [
+    "ἀπὸ",
+    "ἀπὸ 15"
+   ],
+   "line_becomes": "741a32, b1. γ5. 755b5, 756a27. 7. 757a19, b20. ὅσα ἀπὸ",
+   "line_was": "741a32, b1. γ5. 755b5, 756a27. 7. 757a19, b20. ὅσα ἀπὸ 15",
+   "card_sid": "margin:page-120-L:15",
+   "becomes": "741a32, b1. γ5. 755b5, 756a27. 7. 757a19, b20. ὅσα ἀπὸ"
+  },
+  {
+   "page": 120,
+   "col": "L",
+   "line": 25,
+   "word_off": 1154,
+   "char_at": 47,
+   "readers": {
+    "opus": "Ζγα18. 2"
+   },
+   "calamari": "Ζγα18. 2",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Ζγα18.",
+    "Ζγα18. 2"
+   ],
+   "form_set": [
+    "Ζγα18.",
+    "Ζγα18. 2"
+   ],
+   "line_becomes": "αὐτὸ σπέρμα ϗ̀ θῆλυ ϗ̀ ἄρρεν δύναται γίγνεσθαι Ζγα18.",
+   "line_was": "αὐτὸ σπέρμα ϗ̀ θῆλυ ϗ̀ ἄρρεν δύναται γίγνεσθαι Ζγα18. 2",
+   "card_sid": "margin:page-120-L:25",
+   "becomes": "αὐτὸ σπέρμα ϗ̀ θῆλυ ϗ̀ ἄρρεν δύναται γίγνεσθαι Ζγα18."
+  },
+  {
+   "page": 123,
+   "col": "L",
+   "line": 40,
+   "word_off": 1721,
+   "char_at": 41,
+   "readers": {
+    "opus": "Ζιε14. 54540"
+   },
+   "calamari": "Ζιε14. 5450",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 40 in the right-hand (inner) margin here, and it was read into the text as '40'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "40",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "Ζιε14. 545",
+    "Ζιε14. 54540"
+   ],
+   "form_set": [
+    "Ζιε14. 545",
+    "Ζιε14. 54540"
+   ],
+   "line_becomes": "Ηε12. 1136b28. 10. 1135b19. Φζ5. 236a14. Ζιε14. 545",
+   "line_was": "Ηε12. 1136b28. 10. 1135b19. Φζ5. 236a14. Ζιε14. 54540",
+   "card_sid": "margin:page-123-L:40",
+   "becomes": "Ηε12. 1136b28. 10. 1135b19. Φζ5. 236a14. Ζιε14. 545"
+  },
+  {
+   "page": 123,
+   "col": "L",
+   "line": 50,
+   "word_off": 2179,
+   "char_at": 51,
+   "readers": {
+    "opus": "25, 6"
+   },
+   "calamari": "25, εd",
+   "kind": "margin",
+   "reason": "⚠ THE DIGITS ARE NOT THIS LINE NUMBER — read '6' where the margin would print 50. One digit of a pair misread would look like this, and so would a real reading. The ink decides. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "6",
+   "at": "end",
+   "digits_match": "unmatched",
+   "uncertain": true,
+   "forms": [
+    "25,",
+    "25, 6"
+   ],
+   "form_set": [
+    "25,",
+    "25, 6"
+   ],
+   "line_becomes": "ἐπιχειρȣ͂σιν Πη11. 1331a17. κατ’ ἀρχάς χ6. 798b11, 25,",
+   "line_was": "ἐπιχειρȣ͂σιν Πη11. 1331a17. κατ’ ἀρχάς χ6. 798b11, 25, 6",
+   "card_sid": "margin:page-123-L:50",
+   "becomes": "ἐπιχειρȣ͂σιν Πη11. 1331a17. κατ’ ἀρχάς χ6. 798b11, 25,"
+  },
+  {
+   "page": 126,
+   "col": "L",
+   "line": 25,
+   "word_off": 969,
+   "char_at": 37,
+   "readers": {
+    "opus": "φτα6. 820b27.2"
+   },
+   "calamari": "φτα6. 820b27.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "φτα6. 820b27.",
+    "φτα6. 820b27.2"
+   ],
+   "form_set": [
+    "φτα6. 820b27.",
+    "φτα6. 820b27.2"
+   ],
+   "line_becomes": "ἀρωματικὴ ἡ ῥίζα δένδρων τινῶν ἐστίν φτα6. 820b27.",
+   "line_was": "ἀρωματικὴ ἡ ῥίζα δένδρων τινῶν ἐστίν φτα6. 820b27.2",
+   "card_sid": "margin:page-126-L:25",
+   "becomes": "ἀρωματικὴ ἡ ῥίζα δένδρων τινῶν ἐστίν φτα6. 820b27."
+  },
+  {
+   "page": 128,
+   "col": "L",
+   "line": 55,
+   "word_off": 2260,
+   "char_at": 44,
+   "readers": {
+    "opus": "ἀστήρ. ζῷον5"
+   },
+   "calamari": "ζῷον s",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the right-hand (inner) margin here, and it was read into the text as '5'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "5",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἀστήρ. ζῷον",
+    "ἀστήρ. ζῷον5"
+   ],
+   "form_set": [
+    "ἀστήρ. ζῷον",
+    "ἀστήρ. ζῷον5"
+   ],
+   "line_becomes": "b10 (usus vocabuli non Aristotelicus). — 2. ἀστήρ. ζῷον",
+   "line_was": "b10 (usus vocabuli non Aristotelicus). — 2. ἀστήρ. ζῷον5",
+   "card_sid": "margin:page-128-L:55",
+   "becomes": "b10 (usus vocabuli non Aristotelicus). — 2. ἀστήρ. ζῷον"
+  },
+  {
+   "page": 130,
+   "col": "R",
+   "line": 5,
+   "word_off": 133,
+   "char_at": 0,
+   "readers": {
+    "opus": "5 Ἀσωπȣ͂"
+   },
+   "calamari": "Ἀσωπȣ͂ ἡ",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 5 in the left-hand (inner) margin here, and it was read into the text as '5'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "5",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "Ἀσωπȣ͂",
+    "5 Ἀσωπȣ͂"
+   ],
+   "form_set": [
+    "Ἀσωπȣ͂",
+    "5 Ἀσωπȣ͂"
+   ],
+   "line_becomes": "Ἀσωπȣ͂ ἡ Σινώπη f 540. 1567b23.",
+   "line_was": "5 Ἀσωπȣ͂ ἡ Σινώπη f 540. 1567b23.",
+   "card_sid": "margin:page-130-R:5",
+   "becomes": "Ἀσωπȣ͂ ἡ Σινώπη f 540. 1567b23."
+  },
+  {
+   "page": 130,
+   "col": "R",
+   "line": 15,
+   "word_off": 522,
+   "char_at": 0,
+   "readers": {
+    "opus": "151507b23."
+   },
+   "calamari": "l51507b23.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "1507b23.",
+    "151507b23."
+   ],
+   "form_set": [
+    "1507b23.",
+    "151507b23."
+   ],
+   "line_becomes": "1507b23.",
+   "line_was": "151507b23.",
+   "card_sid": "margin:page-130-R:15",
+   "becomes": "1507b23."
+  },
+  {
+   "page": 130,
+   "col": "R",
+   "line": 25,
+   "word_off": 931,
+   "char_at": 0,
+   "readers": {
+    "opus": "25πη14. 888b13."
+   },
+   "calamari": "25πη14. 888b13.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '25'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "25",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "πη14. 888b13.",
+    "25πη14. 888b13."
+   ],
+   "form_set": [
+    "πη14. 888b13.",
+    "25πη14. 888b13."
+   ],
+   "line_becomes": "πη14. 888b13. ἡ πυρώδης ϗ̀ ἄτακτος λεγομένη φύσις κ2",
+   "line_was": "25πη14. 888b13. ἡ πυρώδης ϗ̀ ἄτακτος λεγομένη φύσις κ2",
+   "card_sid": "margin:page-130-R:25",
+   "becomes": "πη14. 888b13. ἡ πυρώδης ϗ̀ ἄτακτος λεγομένη φύσις κ2"
+  },
+  {
+   "page": 131,
+   "col": "R",
+   "line": 25,
+   "word_off": 965,
+   "char_at": 0,
+   "readers": {
+    "opus": "2 ἀτίμητον"
+   },
+   "calamari": "a ἀτίμητον",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '2'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἀτίμητον",
+    "2 ἀτίμητον"
+   ],
+   "form_set": [
+    "ἀτίμητον",
+    "2 ἀτίμητον"
+   ],
+   "line_becomes": "ἀτίμητον μετανάστην (Hom I 644) Πγ5. 1278a37. Ρβ2.",
+   "line_was": "2 ἀτίμητον μετανάστην (Hom I 644) Πγ5. 1278a37. Ρβ2.",
+   "card_sid": "margin:page-131-R:25",
+   "becomes": "ἀτίμητον μετανάστην (Hom I 644) Πγ5. 1278a37. Ρβ2."
+  },
+  {
+   "page": 136,
+   "col": "L",
+   "line": 25,
+   "word_off": 998,
+   "char_at": 50,
+   "readers": {
+    "opus": "13. 2"
+   },
+   "calamari": "13. 2",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "13.",
+    "13. 2"
+   ],
+   "form_set": [
+    "13.",
+    "13. 2"
+   ],
+   "line_becomes": "μάτως v infra p 124b30. συμβαίνειν ἐκ ταὐτομάτȣ f 13.",
+   "line_was": "μάτως v infra p 124b30. συμβαίνειν ἐκ ταὐτομάτȣ f 13. 2",
+   "card_sid": "margin:page-136-L:25",
+   "becomes": "μάτως v infra p 124b30. συμβαίνειν ἐκ ταὐτομάτȣ f 13."
+  },
+  {
+   "page": 137,
+   "col": "R",
+   "line": 50,
+   "word_off": 1931,
+   "char_at": 0,
+   "readers": {
+    "opus": "50a33."
+   },
+   "calamari": "0a33.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 50 in the left-hand (inner) margin here, and it was read into the text as '50'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "50",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "a33.",
+    "50a33."
+   ],
+   "form_set": [
+    "a33.",
+    "50a33."
+   ],
+   "line_becomes": "a33.",
+   "line_was": "50a33.",
+   "card_sid": "margin:page-137-R:50",
+   "becomes": "a33."
+  },
+  {
+   "page": 139,
+   "col": "R",
+   "line": 25,
+   "word_off": 1048,
+   "char_at": 0,
+   "readers": {
+    "opus": "2θ10. 831a22."
+   },
+   "calamari": "2 θ10.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '2'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "θ10. 831a22.",
+    "2θ10. 831a22."
+   ],
+   "form_set": [
+    "θ10. 831a22.",
+    "2θ10. 831a22."
+   ],
+   "line_becomes": "θ10. 831a22.",
+   "line_was": "2θ10. 831a22.",
+   "card_sid": "margin:page-139-R:25",
+   "becomes": "θ10. 831a22."
+  },
+  {
+   "page": 142,
+   "col": "R",
+   "line": 45,
+   "word_off": 1810,
+   "char_at": 0,
+   "readers": {
+    "opus": "α5 Ἀχελῷος"
+   },
+   "calamari": "45 Ἀχελῷος",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the left-hand (inner) margin here, and it was read into the text as 'α5'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "α5",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Ἀχελῷος",
+    "α5 Ἀχελῷος"
+   ],
+   "form_set": [
+    "Ἀχελῷος",
+    "α5 Ἀχελῷος"
+   ],
+   "line_becomes": "Ἀχελῷος μα13. 350b15. 14. 352a35. μεταξὺ τȣ͂ Ἀχελῴȣ",
+   "line_was": "α5 Ἀχελῷος μα13. 350b15. 14. 352a35. μεταξὺ τȣ͂ Ἀχελῴȣ",
+   "card_sid": "margin:page-142-R:45",
+   "becomes": "Ἀχελῷος μα13. 350b15. 14. 352a35. μεταξὺ τȣ͂ Ἀχελῴȣ"
+  },
+  {
+   "page": 142,
+   "col": "R",
+   "line": 60,
+   "word_off": 2403,
+   "char_at": 0,
+   "readers": {
+    "opus": "6Ἀχίλλειοι σπόγγοι"
+   },
+   "calamari": "60Ἀχίλλειοι σπόγγοι",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 60 in the left-hand (inner) margin here, and it was read into the text as '6'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "6",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Ἀχίλλειοι σπόγγοι",
+    "6Ἀχίλλειοι σπόγγοι"
+   ],
+   "form_set": [
+    "Ἀχίλλειοι σπόγγοι",
+    "6Ἀχίλλειοι σπόγγοι"
+   ],
+   "line_becomes": "Ἀχίλλειοι σπόγγοι Ζιε16. 548b1, 20.",
+   "line_was": "6Ἀχίλλειοι σπόγγοι Ζιε16. 548b1, 20.",
+   "card_sid": "margin:page-142-R:60",
+   "becomes": "Ἀχίλλειοι σπόγγοι Ζιε16. 548b1, 20."
+  },
+  {
+   "page": 146,
+   "col": "L",
+   "line": 45,
+   "word_off": 2037,
+   "char_at": 44,
+   "readers": {
+    "opus": "ἔργον μᾶλ-45"
+   },
+   "calamari": "ἔργον μᾶλ-4",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the right-hand (inner) margin here, and it was read into the text as '-45'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-45",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "ἔργον μᾶλ-",
+    "ἔργον μᾶλ-45"
+   ],
+   "form_set": [
+    "ἔργον μᾶλ-",
+    "ἔργον μᾶλ-45"
+   ],
+   "line_becomes": "γον πιθ7. 918a16. 8. 918a19. cf 12. 918a40. ἔργον μᾶλ-",
+   "line_was": "γον πιθ7. 918a16. 8. 918a19. cf 12. 918a40. ἔργον μᾶλ-45",
+   "card_sid": "margin:page-146-L:45",
+   "becomes": "γον πιθ7. 918a16. 8. 918a19. cf 12. 918a40. ἔργον μᾶλ-"
+  },
+  {
+   "page": 147,
+   "col": "L",
+   "line": 20,
+   "word_off": 891,
+   "char_at": 38,
+   "readers": {
+    "opus": "Πε4. 1304b13.2"
+   },
+   "calamari": "Πε4. 1304b13.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 20 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Πε4. 1304b13.",
+    "Πε4. 1304b13.2"
+   ],
+   "form_set": [
+    "Πε4. 1304b13.",
+    "Πε4. 1304b13.2"
+   ],
+   "line_becomes": "Πγ13. 1284b1, idem ὁ βασιλεύς vocatur Πε4. 1304b13.",
+   "line_was": "Πγ13. 1284b1, idem ὁ βασιλεύς vocatur Πε4. 1304b13.2",
+   "card_sid": "margin:page-147-L:20",
+   "becomes": "Πγ13. 1284b1, idem ὁ βασιλεύς vocatur Πε4. 1304b13."
+  },
+  {
+   "page": 147,
+   "col": "L",
+   "line": 25,
+   "word_off": 1088,
+   "char_at": 40,
+   "readers": {
+    "opus": "615a19. (Tro-2"
+   },
+   "calamari": "(Tro- 5",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '-2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "615a19. (Tro-",
+    "615a19. (Tro-2"
+   ],
+   "form_set": [
+    "615a19. (Tro-",
+    "615a19. (Tro-2"
+   ],
+   "line_becomes": "2. βασιλεύς, avis. Ζιθ3. 592b27. Ζιι11. 615a19. (Tro-",
+   "line_was": "2. βασιλεύς, avis. Ζιθ3. 592b27. Ζιι11. 615a19. (Tro-2",
+   "card_sid": "margin:page-147-L:25",
+   "becomes": "2. βασιλεύς, avis. Ζιθ3. 592b27. Ζιι11. 615a19. (Tro-"
+  },
+  {
+   "page": 148,
+   "col": "R",
+   "line": 15,
+   "word_off": 504,
+   "char_at": 0,
+   "readers": {
+    "opus": "15πνιγμȣ̀ς ϗ̀"
+   },
+   "calamari": "15 πνιγμȣ̀ς",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "πνιγμȣ̀ς ϗ̀",
+    "15πνιγμȣ̀ς ϗ̀"
+   ],
+   "form_set": [
+    "πνιγμȣ̀ς ϗ̀",
+    "15πνιγμȣ̀ς ϗ̀"
+   ],
+   "line_becomes": "πνιγμȣ̀ς ϗ̀ βῆχας Ζμγ3. 664b6, 31.",
+   "line_was": "15πνιγμȣ̀ς ϗ̀ βῆχας Ζμγ3. 664b6, 31.",
+   "card_sid": "margin:page-148-R:15",
+   "becomes": "πνιγμȣ̀ς ϗ̀ βῆχας Ζμγ3. 664b6, 31."
+  },
+  {
+   "page": 158,
+   "col": "R",
+   "line": 25,
+   "word_off": 1056,
+   "char_at": 0,
+   "readers": {
+    "opus": "2λίζει πλε6."
+   },
+   "calamari": "a5 λίζει",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '2'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "λίζει πλε6.",
+    "2λίζει πλε6."
+   ],
+   "form_set": [
+    "λίζει πλε6.",
+    "2λίζει πλε6."
+   ],
+   "line_becomes": "λίζει πλε6. 965a11.",
+   "line_was": "2λίζει πλε6. 965a11.",
+   "card_sid": "margin:page-158-R:25",
+   "becomes": "λίζει πλε6. 965a11."
+  },
+  {
+   "page": 162,
+   "col": "L",
+   "line": 10,
+   "word_off": 425,
+   "char_at": 44,
+   "readers": {
+    "opus": "β7. 33410"
+   },
+   "calamari": "β7. 33410",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 10 in the right-hand (inner) margin here, and it was read into the text as '10'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "10",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "β7. 334",
+    "β7. 33410"
+   ],
+   "form_set": [
+    "β7. 334",
+    "β7. 33410"
+   ],
+   "line_becomes": "13. 295a14. Γα1. 314a9. 2. 316a4. 6. 322b6. β7. 334",
+   "line_was": "13. 295a14. Γα1. 314a9. 2. 316a4. 6. 322b6. β7. 33410",
+   "card_sid": "margin:page-162-L:10",
+   "becomes": "13. 295a14. Γα1. 314a9. 2. 316a4. 6. 322b6. β7. 334"
+  },
+  {
+   "page": 163,
+   "col": "L",
+   "line": 5,
+   "word_off": 221,
+   "char_at": 44,
+   "readers": {
+    "opus": "μᾶλλον, ἐπὶ5"
+   },
+   "calamari": "ἐπὶ 5",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 5 in the right-hand (inner) margin here, and it was read into the text as '5'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "5",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "μᾶλλον, ἐπὶ",
+    "μᾶλλον, ἐπὶ5"
+   ],
+   "form_set": [
+    "μᾶλλον, ἐπὶ",
+    "μᾶλλον, ἐπὶ5"
+   ],
+   "line_becomes": "διαφορά dist τζ6. 144a9-19. τὸ γένος καθόλȣ μᾶλλον, ἐπὶ",
+   "line_was": "διαφορά dist τζ6. 144a9-19. τὸ γένος καθόλȣ μᾶλλον, ἐπὶ5",
+   "card_sid": "margin:page-163-L:5",
+   "becomes": "διαφορά dist τζ6. 144a9-19. τὸ γένος καθόλȣ μᾶλλον, ἐπὶ"
+  },
+  {
+   "page": 163,
+   "col": "L",
+   "line": 10,
+   "word_off": 448,
+   "char_at": 41,
+   "readers": {
+    "opus": "γένος γνω-1"
+   },
+   "calamari": "γένος γνω-0",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 10 in the right-hand (inner) margin here, and it was read into the text as '-1'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-1",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "γένος γνω-",
+    "γένος γνω-1"
+   ],
+   "form_set": [
+    "γένος γνω-",
+    "γένος γνω-1"
+   ],
+   "line_becomes": "144a32. Μδ3. 1014b13. cf κ1. 1059b33. τὸ γένος γνω-",
+   "line_was": "144a32. Μδ3. 1014b13. cf κ1. 1059b33. τὸ γένος γνω-1",
+   "card_sid": "margin:page-163-L:10",
+   "becomes": "144a32. Μδ3. 1014b13. cf κ1. 1059b33. τὸ γένος γνω-"
+  },
+  {
+   "page": 163,
+   "col": "L",
+   "line": 50,
+   "word_off": 2277,
+   "char_at": 41,
+   "readers": {
+    "opus": "β1. 995b29.0"
+   },
+   "calamari": "995b29. 50",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 50 in the right-hand (inner) margin here, and it was read into the text as '0'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "0",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "β1. 995b29.",
+    "β1. 995b29.0"
+   ],
+   "form_set": [
+    "β1. 995b29.",
+    "β1. 995b29.0"
+   ],
+   "line_becomes": "b13, 14. η1. 152a16, 19. ΜΑ9. 992a17 Bz. β1. 995b29.",
+   "line_was": "b13, 14. η1. 152a16, 19. ΜΑ9. 992a17 Bz. β1. 995b29.0",
+   "card_sid": "margin:page-163-L:50",
+   "becomes": "b13, 14. η1. 152a16, 19. ΜΑ9. 992a17 Bz. β1. 995b29."
+  },
+  {
+   "page": 170,
+   "col": "R",
+   "line": 15,
+   "word_off": 644,
+   "char_at": 0,
+   "readers": {
+    "opus": "15ρ15. 1431a35."
+   },
+   "calamari": "l5 ρ15.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "ρ15. 1431a35.",
+    "15ρ15. 1431a35."
+   ],
+   "form_set": [
+    "ρ15. 1431a35.",
+    "15ρ15. 1431a35."
+   ],
+   "line_becomes": "ρ15. 1431a35. dist σημεῖα ρ15. 1431a39. τεθρυλημέναι ϗ̀",
+   "line_was": "15ρ15. 1431a35. dist σημεῖα ρ15. 1431a39. τεθρυλημέναι ϗ̀",
+   "card_sid": "margin:page-170-R:15",
+   "becomes": "ρ15. 1431a35. dist σημεῖα ρ15. 1431a39. τεθρυλημέναι ϗ̀"
+  },
+  {
+   "page": 173,
+   "col": "R",
+   "line": 60,
+   "word_off": 2464,
+   "char_at": 0,
+   "readers": {
+    "opus": "60γράμμα. —"
+   },
+   "calamari": "99 γράμμα.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 60 in the left-hand (inner) margin here, and it was read into the text as '60'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "60",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "γράμμα. —",
+    "60γράμμα. —"
+   ],
+   "form_set": [
+    "γράμμα. —",
+    "60γράμμα. —"
+   ],
+   "line_becomes": "γράμμα. — γραμματικῶς Ηβ3. 1105a25.",
+   "line_was": "60γράμμα. — γραμματικῶς Ηβ3. 1105a25.",
+   "card_sid": "margin:page-173-R:60",
+   "becomes": "γράμμα. — γραμματικῶς Ηβ3. 1105a25."
+  },
+  {
+   "page": 174,
+   "col": "R",
+   "line": 35,
+   "word_off": 1474,
+   "char_at": 0,
+   "readers": {
+    "opus": "35. τὸ"
+   },
+   "calamari": "a. τὸ",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the left-hand (inner) margin here, and it was read into the text as '35.'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "35.",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "τὸ",
+    "35. τὸ"
+   ],
+   "form_set": [
+    "τὸ",
+    "35. τὸ"
+   ],
+   "line_becomes": "τὸ δὲ τῷ πλησίον ακ801a33.",
+   "line_was": "35. τὸ δὲ τῷ πλησίον ακ801a33.",
+   "card_sid": "margin:page-174-R:35",
+   "becomes": "τὸ δὲ τῷ πλησίον ακ801a33."
+  },
+  {
+   "page": 179,
+   "col": "L",
+   "line": 35,
+   "word_off": 1618,
+   "char_at": 41,
+   "readers": {
+    "opus": "scriptoribus alie-3"
+   },
+   "calamari": "scriptoribus alie-a",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the right-hand (inner) margin here, and it was read into the text as '-3'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-3",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "scriptoribus alie-",
+    "scriptoribus alie-3"
+   ],
+   "form_set": [
+    "scriptoribus alie-",
+    "scriptoribus alie-3"
+   ],
+   "line_becomes": "tibuunt peculiarem et a reliquis graecis scriptoribus alie-",
+   "line_was": "tibuunt peculiarem et a reliquis graecis scriptoribus alie-3",
+   "card_sid": "margin:page-179-L:35",
+   "becomes": "tibuunt peculiarem et a reliquis graecis scriptoribus alie-"
+  },
+  {
+   "page": 185,
+   "col": "L",
+   "line": 25,
+   "word_off": 1092,
+   "char_at": 48,
+   "readers": {
+    "opus": "22. 11912"
+   },
+   "calamari": "22. 1191.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "22. 1191",
+    "22. 11912"
+   ],
+   "form_set": [
+    "22. 1191",
+    "22. 11912"
+   ],
+   "line_becomes": "(non interposito alio vocabulo) ημα11. 1187b24. 22. 1191",
+   "line_was": "(non interposito alio vocabulo) ημα11. 1187b24. 22. 11912",
+   "card_sid": "margin:page-185-L:25",
+   "becomes": "(non interposito alio vocabulo) ημα11. 1187b24. 22. 1191"
+  },
+  {
+   "page": 186,
+   "col": "R",
+   "line": 50,
+   "word_off": 2062,
+   "char_at": 0,
+   "readers": {
+    "opus": "50 Δημοδόκȣ"
+   },
+   "calamari": "50 Δημοδόκȣ",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 50 in the left-hand (inner) margin here, and it was read into the text as '50'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "50",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "Δημοδόκȣ",
+    "50 Δημοδόκȣ"
+   ],
+   "form_set": [
+    "Δημοδόκȣ",
+    "50 Δημοδόκȣ"
+   ],
+   "line_becomes": "Δημοδόκȣ τὸ εἰς Μιλησίȣς Ηη9. 1151a8.",
+   "line_was": "50 Δημοδόκȣ τὸ εἰς Μιλησίȣς Ηη9. 1151a8.",
+   "card_sid": "margin:page-186-R:50",
+   "becomes": "Δημοδόκȣ τὸ εἰς Μιλησίȣς Ηη9. 1151a8."
+  },
+  {
+   "page": 188,
+   "col": "L",
+   "line": 15,
+   "word_off": 671,
+   "char_at": 46,
+   "readers": {
+    "opus": "ἔχοντα 15"
+   },
+   "calamari": "ἔχοντα 1",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the right-hand (inner) margin here, and it was read into the text as '15'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "ἔχοντα",
+    "ἔχοντα 15"
+   ],
+   "form_set": [
+    "ἔχοντα",
+    "ἔχοντα 15"
+   ],
+   "line_becomes": "σμοι resp Φθ1. 250b18 (Schol 424b44). Οα8. τὰ ἔχοντα",
+   "line_was": "σμοι resp Φθ1. 250b18 (Schol 424b44). Οα8. τὰ ἔχοντα 15",
+   "card_sid": "margin:page-188-L:15",
+   "becomes": "σμοι resp Φθ1. 250b18 (Schol 424b44). Οα8. τὰ ἔχοντα"
+  },
+  {
+   "page": 188,
+   "col": "L",
+   "line": 20,
+   "word_off": 902,
+   "char_at": 47,
+   "readers": {
+    "opus": "b1. —2"
+   },
+   "calamari": "— ο0",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 20 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "b1. —",
+    "b1. —2"
+   ],
+   "form_set": [
+    "b1. —",
+    "b1. —2"
+   ],
+   "line_becomes": "λείψειν μβ3. 356b10. περὶ σεισμῶν μβ7. 365a18, b1. —",
+   "line_was": "λείψειν μβ3. 356b10. περὶ σεισμῶν μβ7. 365a18, b1. —2",
+   "card_sid": "margin:page-188-L:20",
+   "becomes": "λείψειν μβ3. 356b10. περὶ σεισμῶν μβ7. 365a18, b1. —"
+  },
+  {
+   "page": 188,
+   "col": "L",
+   "line": 25,
+   "word_off": 1121,
+   "char_at": 45,
+   "readers": {
+    "opus": "πῶς γίνε-2"
+   },
+   "calamari": "πῶς γίνε-",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '-2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "πῶς γίνε-",
+    "πῶς γίνε-2"
+   ],
+   "form_set": [
+    "πῶς γίνε-",
+    "πῶς γίνε-2"
+   ],
+   "line_becomes": "μένει τὸ ζῷον ἐν ταῖς ὑστέραις Ζγβ4. 740a36. πῶς γίνε-",
+   "line_was": "μένει τὸ ζῷον ἐν ταῖς ὑστέραις Ζγβ4. 740a36. πῶς γίνε-2",
+   "card_sid": "margin:page-188-L:25",
+   "becomes": "μένει τὸ ζῷον ἐν ταῖς ὑστέραις Ζγβ4. 740a36. πῶς γίνε-"
+  },
+  {
+   "page": 194,
+   "col": "R",
+   "line": 60,
+   "word_off": 2663,
+   "char_at": 0,
+   "readers": {
+    "opus": "0a18. Αα43."
+   },
+   "calamari": "a18. Αα43.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 60 in the left-hand (inner) margin here, and it was read into the text as '0'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "0",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "a18. Αα43.",
+    "0a18. Αα43."
+   ],
+   "form_set": [
+    "a18. Αα43.",
+    "0a18. Αα43."
+   ],
+   "line_becomes": "a18. Αα43. 50a12.",
+   "line_was": "0a18. Αα43. 50a12.",
+   "card_sid": "margin:page-194-R:60",
+   "becomes": "a18. Αα43. 50a12."
+  },
+  {
+   "page": 196,
+   "col": "L",
+   "line": 25,
+   "word_off": 1079,
+   "char_at": 47,
+   "readers": {
+    "opus": "(cf συν-2"
+   },
+   "calamari": "(cf συν-",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '-2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "(cf συν-",
+    "(cf συν-2"
+   ],
+   "form_set": [
+    "(cf συν-",
+    "(cf συν-2"
+   ],
+   "line_becomes": "b14. τὸ θερμὸν διαλύει τὰ σώματα πια56. 905a29 (cf συν-",
+   "line_was": "b14. τὸ θερμὸν διαλύει τὰ σώματα πια56. 905a29 (cf συν-2",
+   "card_sid": "margin:page-196-L:25",
+   "becomes": "b14. τὸ θερμὸν διαλύει τὰ σώματα πια56. 905a29 (cf συν-"
+  },
+  {
+   "page": 200,
+   "col": "R",
+   "line": 10,
+   "word_off": 387,
+   "char_at": 0,
+   "readers": {
+    "opus": "1 διασαφηνίζω."
+   },
+   "calamari": "10διασαφηνίζω. ενοφάνης",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 10 in the left-hand (inner) margin here, and it was read into the text as '1'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "1",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "διασαφηνίζω.",
+    "1 διασαφηνίζω."
+   ],
+   "form_set": [
+    "διασαφηνίζω.",
+    "1 διασαφηνίζω."
+   ],
+   "line_becomes": "διασαφηνίζω. Sενοφάνης ȣ̓δὲν διεσαφήνισεν (v l διεσάφησεν)",
+   "line_was": "1 διασαφηνίζω. Sενοφάνης ȣ̓δὲν διεσαφήνισεν (v l διεσάφησεν)",
+   "card_sid": "margin:page-200-R:10",
+   "becomes": "διασαφηνίζω. Sενοφάνης ȣ̓δὲν διεσαφήνισεν (v l διεσάφησεν)"
+  },
+  {
+   "page": 202,
+   "col": "R",
+   "line": 15,
+   "word_off": 622,
+   "char_at": 0,
+   "readers": {
+    "opus": "15 διατμίζειν."
+   },
+   "calamari": "l5 διατμίζειν.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "διατμίζειν.",
+    "15 διατμίζειν."
+   ],
+   "form_set": [
+    "διατμίζειν.",
+    "15 διατμίζειν."
+   ],
+   "line_becomes": "διατμίζειν. trans διατμιζομένȣ ϗ̀ πνευματȣμένȣ τȣ͂ ὑγρȣ͂",
+   "line_was": "15 διατμίζειν. trans διατμιζομένȣ ϗ̀ πνευματȣμένȣ τȣ͂ ὑγρȣ͂",
+   "card_sid": "margin:page-202-R:15",
+   "becomes": "διατμίζειν. trans διατμιζομένȣ ϗ̀ πνευματȣμένȣ τȣ͂ ὑγρȣ͂"
+  },
+  {
+   "page": 203,
+   "col": "L",
+   "line": 15,
+   "word_off": 570,
+   "char_at": 43,
+   "readers": {
+    "opus": "Ζγε1. 7801"
+   },
+   "calamari": "Ζγε1. 7801",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the right-hand (inner) margin here, and it was read into the text as '1'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "1",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Ζγε1. 780",
+    "Ζγε1. 7801"
+   ],
+   "form_set": [
+    "Ζγε1. 780",
+    "Ζγε1. 7801"
+   ],
+   "line_becomes": "μενον χ3. 793b2. μέλαν τὸ μὴ διαφαινόμενον Ζγε1. 780",
+   "line_was": "μενον χ3. 793b2. μέλαν τὸ μὴ διαφαινόμενον Ζγε1. 7801",
+   "card_sid": "margin:page-203-L:15",
+   "becomes": "μενον χ3. 793b2. μέλαν τὸ μὴ διαφαινόμενον Ζγε1. 780"
+  },
+  {
+   "page": 203,
+   "col": "L",
+   "line": 45,
+   "word_off": 1915,
+   "char_at": 50,
+   "readers": {
+    "opus": "298b14. 4f"
+   },
+   "calamari": "Ογ1. 298b14.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the right-hand (inner) margin here, and it was read into the text as '4f'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "4f",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "298b14.",
+    "298b14. 4f"
+   ],
+   "form_set": [
+    "298b14.",
+    "298b14. 4f"
+   ],
+   "line_becomes": "sensu, πρὸς ἀλλήλȣς, περί τινος, ἔν τινι, τὶ Ογ1. 298b14.",
+   "line_was": "sensu, πρὸς ἀλλήλȣς, περί τινος, ἔν τινι, τὶ Ογ1. 298b14. 4f",
+   "card_sid": "margin:page-203-L:45",
+   "becomes": "sensu, πρὸς ἀλλήλȣς, περί τινος, ἔν τινι, τὶ Ογ1. 298b14."
+  },
+  {
+   "page": 203,
+   "col": "L",
+   "line": 55,
+   "word_off": 2377,
+   "char_at": 49,
+   "readers": {
+    "opus": "Ζιδ2. 52756"
+   },
+   "calamari": "Ζιδ2. 52755",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the right-hand (inner) margin here, and it was read into the text as '56'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "56",
+   "at": "end",
+   "digits_match": "off-by-one",
+   "uncertain": false,
+   "forms": [
+    "Ζιδ2. 527",
+    "Ζιδ2. 52756"
+   ],
+   "form_set": [
+    "Ζιδ2. 527",
+    "Ζιδ2. 52756"
+   ],
+   "line_becomes": "διαφέρει ȣ̓δὲν ὁ πόρος τȣ͂ ἄρρενος ἢ τῆς θηλείας Ζιδ2. 527",
+   "line_was": "διαφέρει ȣ̓δὲν ὁ πόρος τȣ͂ ἄρρενος ἢ τῆς θηλείας Ζιδ2. 52756",
+   "card_sid": "margin:page-203-L:55",
+   "becomes": "διαφέρει ȣ̓δὲν ὁ πόρος τȣ͂ ἄρρενος ἢ τῆς θηλείας Ζιδ2. 527"
+  },
+  {
+   "page": 206,
+   "col": "R",
+   "line": 15,
+   "word_off": 499,
+   "char_at": 0,
+   "readers": {
+    "opus": "15 διεξἄττοντ"
+   },
+   "calamari": "l5 διεξάττοντες",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "διεξἄττοντ",
+    "15 διεξἄττοντ"
+   ],
+   "form_set": [
+    "διεξἄττοντ",
+    "15 διεξἄττοντ"
+   ],
+   "line_becomes": "διεξἄττοντ ες ἄνεμοι κ4. 394b15. 5. 397a31.",
+   "line_was": "15 διεξἄττοντ ες ἄνεμοι κ4. 394b15. 5. 397a31.",
+   "card_sid": "margin:page-206-R:15",
+   "becomes": "διεξἄττοντ ες ἄνεμοι κ4. 394b15. 5. 397a31."
+  },
+  {
+   "page": 206,
+   "col": "R",
+   "line": 55,
+   "word_off": 2197,
+   "char_at": 0,
+   "readers": {
+    "opus": "56 διέρχεσθαι"
+   },
+   "calamari": "a5 διέρχεσθαι",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the left-hand (inner) margin here, and it was read into the text as '56'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "56",
+   "at": "start",
+   "digits_match": "off-by-one",
+   "uncertain": false,
+   "forms": [
+    "διέρχεσθαι",
+    "56 διέρχεσθαι"
+   ],
+   "form_set": [
+    "διέρχεσθαι",
+    "56 διέρχεσθαι"
+   ],
+   "line_becomes": "διέρχεσθαι ἀνίσȣς γραμμάς πιϛ3. 913b5. διελθεῖν τὴν ἄπει",
+   "line_was": "56 διέρχεσθαι ἀνίσȣς γραμμάς πιϛ3. 913b5. διελθεῖν τὴν ἄπει",
+   "card_sid": "margin:page-206-R:55",
+   "becomes": "διέρχεσθαι ἀνίσȣς γραμμάς πιϛ3. 913b5. διελθεῖν τὴν ἄπει"
+  },
+  {
+   "page": 207,
+   "col": "R",
+   "line": 10,
+   "word_off": 408,
+   "char_at": 0,
+   "readers": {
+    "opus": "1ἕτερον αἰῶνα"
+   },
+   "calamari": "0ἕτερον αἰῶνα",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 10 in the left-hand (inner) margin here, and it was read into the text as '1'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "1",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἕτερον αἰῶνα",
+    "1ἕτερον αἰῶνα"
+   ],
+   "form_set": [
+    "ἕτερον αἰῶνα",
+    "1ἕτερον αἰῶνα"
+   ],
+   "line_becomes": "ἕτερον αἰῶνα κ7. 401a16.",
+   "line_was": "1ἕτερον αἰῶνα κ7. 401a16.",
+   "card_sid": "margin:page-207-R:10",
+   "becomes": "ἕτερον αἰῶνα κ7. 401a16."
+  },
+  {
+   "page": 208,
+   "col": "L",
+   "line": 25,
+   "word_off": 1113,
+   "char_at": 43,
+   "readers": {
+    "opus": "Πα6. 12552"
+   },
+   "calamari": "Πα6. 1255a",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Πα6. 1255",
+    "Πα6. 12552"
+   ],
+   "form_set": [
+    "Πα6. 1255",
+    "Πα6. 12552"
+   ],
+   "line_becomes": "1321a15. διαστάντων χωρὶς τȣ́των τῶν λόγων Πα6. 1255",
+   "line_was": "1321a15. διαστάντων χωρὶς τȣ́των τῶν λόγων Πα6. 12552",
+   "card_sid": "margin:page-208-L:25",
+   "becomes": "1321a15. διαστάντων χωρὶς τȣ́των τῶν λόγων Πα6. 1255"
+  },
+  {
+   "page": 208,
+   "col": "L",
+   "line": 30,
+   "word_off": 1352,
+   "char_at": 44,
+   "readers": {
+    "opus": "μα2. 3398"
+   },
+   "calamari": "μα2. 339s",
+   "kind": "margin",
+   "reason": "⚠ THE DIGITS ARE NOT THIS LINE NUMBER — read '8' where the margin would print 30. One digit of a pair misread would look like this, and so would a real reading. The ink decides. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "8",
+   "at": "end",
+   "digits_match": "unmatched",
+   "uncertain": true,
+   "forms": [
+    "μα2. 339",
+    "μα2. 3398"
+   ],
+   "form_set": [
+    "μα2. 339",
+    "μα2. 3398"
+   ],
+   "line_becomes": "b23. πεπερασμένȣς τόπȣς διεστηκέναι ἀλλήλων μα2. 339",
+   "line_was": "b23. πεπερασμένȣς τόπȣς διεστηκέναι ἀλλήλων μα2. 3398",
+   "card_sid": "margin:page-208-L:30",
+   "becomes": "b23. πεπερασμένȣς τόπȣς διεστηκέναι ἀλλήλων μα2. 339"
+  },
+  {
+   "page": 208,
+   "col": "L",
+   "line": 35,
+   "word_off": 1583,
+   "char_at": 49,
+   "readers": {
+    "opus": "Πα5. 3"
+   },
+   "calamari": "sim Πα5.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the right-hand (inner) margin here, and it was read into the text as '3'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "3",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Πα5.",
+    "Πα5. 3"
+   ],
+   "form_set": [
+    "Πα5.",
+    "Πα5. 3"
+   ],
+   "line_becomes": "608a22. τοσȣ͂τον διεστᾶσιν ὅσον ψυχὴ σώματος sim Πα5.",
+   "line_was": "608a22. τοσȣ͂τον διεστᾶσιν ὅσον ψυχὴ σώματος sim Πα5. 3",
+   "card_sid": "margin:page-208-L:35",
+   "becomes": "608a22. τοσȣ͂τον διεστᾶσιν ὅσον ψυχὴ σώματος sim Πα5."
+  },
+  {
+   "page": 208,
+   "col": "L",
+   "line": 40,
+   "word_off": 1806,
+   "char_at": 50,
+   "readers": {
+    "opus": "τῆς 4"
+   },
+   "calamari": "πολὺ τῆς",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 40 in the right-hand (inner) margin here, and it was read into the text as '4'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "4",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "τῆς",
+    "τῆς 4"
+   ],
+   "form_set": [
+    "τῆς",
+    "τῆς 4"
+   ],
+   "line_becomes": "1256a29. ἡ ἀριστοκρατία διέστηκεν ἀπὸ ταύτης πολὺ τῆς",
+   "line_was": "1256a29. ἡ ἀριστοκρατία διέστηκεν ἀπὸ ταύτης πολὺ τῆς 4",
+   "card_sid": "margin:page-208-L:40",
+   "becomes": "1256a29. ἡ ἀριστοκρατία διέστηκεν ἀπὸ ταύτης πολὺ τῆς"
+  },
+  {
+   "page": 209,
+   "col": "L",
+   "line": 45,
+   "word_off": 1982,
+   "char_at": 49,
+   "readers": {
+    "opus": "ἀμ- 4ς"
+   },
+   "calamari": "τῶν ἀμ-",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the right-hand (inner) margin here, and it was read into the text as '-4ς'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-4ς",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἀμ-",
+    "ἀμ- 4ς"
+   ],
+   "form_set": [
+    "ἀμ-",
+    "ἀμ- 4ς"
+   ],
+   "line_becomes": "b1. δικαιωμάτων εἴδη Ρα13. — προακηκοέναι τὰ τῶν ἀμ-",
+   "line_was": "b1. δικαιωμάτων εἴδη Ρα13. — προακηκοέναι τὰ τῶν ἀμ- 4ς",
+   "card_sid": "margin:page-209-L:45",
+   "becomes": "b1. δικαιωμάτων εἴδη Ρα13. — προακηκοέναι τὰ τῶν ἀμ-"
+  },
+  {
+   "page": 210,
+   "col": "R",
+   "line": 25,
+   "word_off": 1036,
+   "char_at": 0,
+   "readers": {
+    "opus": "2354b33, 355a22."
+   },
+   "calamari": "25354b33, 355a22.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '2'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "354b33, 355a22.",
+    "2354b33, 355a22."
+   ],
+   "form_set": [
+    "354b33, 355a22.",
+    "2354b33, 355a22."
+   ],
+   "line_becomes": "354b33, 355a22. 1. 353b6. cf Alex.",
+   "line_was": "2354b33, 355a22. 1. 353b6. cf Alex.",
+   "card_sid": "margin:page-210-R:25",
+   "becomes": "354b33, 355a22. 1. 353b6. cf Alex."
+  },
+  {
+   "page": 220,
+   "col": "R",
+   "line": 15,
+   "word_off": 635,
+   "char_at": 0,
+   "readers": {
+    "opus": "ι5 δυναστευτικὴ"
+   },
+   "calamari": "l5 δυναστευτικὴ",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as 'ι5'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "ι5",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "δυναστευτικὴ",
+    "ι5 δυναστευτικὴ"
+   ],
+   "form_set": [
+    "δυναστευτικὴ",
+    "ι5 δυναστευτικὴ"
+   ],
+   "line_becomes": "δυναστευτικὴ ὀλιγαρχία Πδ14. 1298a32, αἵρεσις Πε6. 1306",
+   "line_was": "ι5 δυναστευτικὴ ὀλιγαρχία Πδ14. 1298a32, αἵρεσις Πε6. 1306",
+   "card_sid": "margin:page-220-R:15",
+   "becomes": "δυναστευτικὴ ὀλιγαρχία Πδ14. 1298a32, αἵρεσις Πε6. 1306"
+  },
+  {
+   "page": 221,
+   "col": "R",
+   "line": 35,
+   "word_off": 1164,
+   "char_at": 0,
+   "readers": {
+    "opus": "35 δυσθυμίαι"
+   },
+   "calamari": "a5 δυσθυμίαι",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the left-hand (inner) margin here, and it was read into the text as '35'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "35",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "δυσθυμίαι",
+    "35 δυσθυμίαι"
+   ],
+   "form_set": [
+    "δυσθυμίαι",
+    "35 δυσθυμίαι"
+   ],
+   "line_becomes": "δυσθυμίαι ἄλογοι πλ1. 954b35.",
+   "line_was": "35 δυσθυμίαι ἄλογοι πλ1. 954b35.",
+   "card_sid": "margin:page-221-R:35",
+   "becomes": "δυσθυμίαι ἄλογοι πλ1. 954b35."
+  },
+  {
+   "page": 224,
+   "col": "R",
+   "line": 45,
+   "word_off": 1916,
+   "char_at": 0,
+   "readers": {
+    "opus": "45 superl"
+   },
+   "calamari": "a5 superl",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the left-hand (inner) margin here, and it was read into the text as '45'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "45",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "superl",
+    "45 superl"
+   ],
+   "form_set": [
+    "superl",
+    "45 superl"
+   ],
+   "line_becomes": "superl ἐγγύτατα, ἐγγυτάτω v supra.",
+   "line_was": "45 superl ἐγγύτατα, ἐγγυτάτω v supra.",
+   "card_sid": "margin:page-224-R:45",
+   "becomes": "superl ἐγγύτατα, ἐγγυτάτω v supra."
+  },
+  {
+   "page": 226,
+   "col": "R",
+   "line": 25,
+   "word_off": 1044,
+   "char_at": 0,
+   "readers": {
+    "opus": "2 Ηη10."
+   },
+   "calamari": "a Ηη10.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '2'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Ηη10.",
+    "2 Ηη10."
+   ],
+   "form_set": [
+    "Ηη10.",
+    "2 Ηη10."
+   ],
+   "line_becomes": "Ηη10. 1151b7 sqq.",
+   "line_was": "2 Ηη10. 1151b7 sqq.",
+   "card_sid": "margin:page-226-R:25",
+   "becomes": "Ηη10. 1151b7 sqq."
+  },
+  {
+   "page": 226,
+   "col": "R",
+   "line": 30,
+   "word_off": 1197,
+   "char_at": 0,
+   "readers": {
+    "opus": "1 ἐγκύκλημα."
+   },
+   "calamari": "a ἐγκύκλημα.",
+   "kind": "margin",
+   "reason": "⚠ THE DIGITS ARE NOT THIS LINE NUMBER — read '1' where the margin would print 30. One digit of a pair misread would look like this, and so would a real reading. The ink decides. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "1",
+   "at": "start",
+   "digits_match": "unmatched",
+   "uncertain": true,
+   "forms": [
+    "ἐγκύκλημα.",
+    "1 ἐγκύκλημα."
+   ],
+   "form_set": [
+    "ἐγκύκλημα.",
+    "1 ἐγκύκλημα."
+   ],
+   "line_becomes": "ἐγκύκλημα. πρόσοδος ἀπὸ γῆς, ἀπὸ τῶν ἄλλων ἐγκυκλη-",
+   "line_was": "1 ἐγκύκλημα. πρόσοδος ἀπὸ γῆς, ἀπὸ τῶν ἄλλων ἐγκυκλη-",
+   "card_sid": "margin:page-226-R:30",
+   "becomes": "ἐγκύκλημα. πρόσοδος ἀπὸ γῆς, ἀπὸ τῶν ἄλλων ἐγκυκλη-"
+  },
+  {
+   "page": 236,
+   "col": "L",
+   "line": 20,
+   "word_off": 880,
+   "char_at": 42,
+   "readers": {
+    "opus": "ἂν κινήσειε2"
+   },
+   "calamari": "κινήσειε 20",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 20 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἂν κινήσειε",
+    "ἂν κινήσειε2"
+   ],
+   "form_set": [
+    "ἂν κινήσειε",
+    "ἂν κινήσειε2"
+   ],
+   "line_becomes": "1096a13. τȣ͂λάχιστον εἰσαγαγὼν τὰ μέγιστ’ ἂν κινήσειε",
+   "line_was": "1096a13. τȣ͂λάχιστον εἰσαγαγὼν τὰ μέγιστ’ ἂν κινήσειε2",
+   "card_sid": "margin:page-236-L:20",
+   "becomes": "1096a13. τȣ͂λάχιστον εἰσαγαγὼν τὰ μέγιστ’ ἂν κινήσειε"
+  },
+  {
+   "page": 237,
+   "col": "L",
+   "line": 25,
+   "word_off": 1049,
+   "char_at": 46,
+   "readers": {
+    "opus": "639b4. 2"
+   },
+   "calamari": "639b4. 25",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '2'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "639b4.",
+    "639b4. 2"
+   ],
+   "form_set": [
+    "639b4.",
+    "639b4. 2"
+   ],
+   "line_becomes": "b11. πρῶτον, εἶθ’ ὕστερον Πε4. 1304b11. Ζμα1. 639b4.",
+   "line_was": "b11. πρῶτον, εἶθ’ ὕστερον Πε4. 1304b11. Ζμα1. 639b4. 2",
+   "card_sid": "margin:page-237-L:25",
+   "becomes": "b11. πρῶτον, εἶθ’ ὕστερον Πε4. 1304b11. Ζμα1. 639b4."
+  },
+  {
+   "page": 237,
+   "col": "L",
+   "line": 35,
+   "word_off": 1447,
+   "char_at": 51,
+   "readers": {
+    "opus": "Πγ3. 3"
+   },
+   "calamari": "Πγ3. 3",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 35 in the right-hand (inner) margin here, and it was read into the text as '3'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "3",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Πγ3.",
+    "Πγ3. 3"
+   ],
+   "form_set": [
+    "Πγ3.",
+    "Πγ3. 3"
+   ],
+   "line_becomes": "εἰώθαμεν λέγειν, εἰώθασι προφέρειν sim τα7. 103a8. Πγ3.",
+   "line_was": "εἰώθαμεν λέγειν, εἰώθασι προφέρειν sim τα7. 103a8. Πγ3. 3",
+   "card_sid": "margin:page-237-L:35",
+   "becomes": "εἰώθαμεν λέγειν, εἰώθασι προφέρειν sim τα7. 103a8. Πγ3."
+  },
+  {
+   "page": 241,
+   "col": "L",
+   "line": 45,
+   "word_off": 2043,
+   "char_at": 51,
+   "readers": {
+    "opus": "Bz. 4"
+   },
+   "calamari": "Bz. a",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 45 in the right-hand (inner) margin here, and it was read into the text as '4'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "4",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "Bz.",
+    "Bz. 4"
+   ],
+   "form_set": [
+    "Bz.",
+    "Bz. 4"
+   ],
+   "line_becomes": "finitionis, quae causam contineat Μη4. 1044b10, 14 Bz.",
+   "line_was": "finitionis, quae causam contineat Μη4. 1044b10, 14 Bz. 4",
+   "card_sid": "margin:page-241-L:45",
+   "becomes": "finitionis, quae causam contineat Μη4. 1044b10, 14 Bz."
+  },
+  {
+   "page": 242,
+   "col": "R",
+   "line": 15,
+   "word_off": 557,
+   "char_at": 0,
+   "readers": {
+    "opus": "15 ἐκπλύνω."
+   },
+   "calamari": "i5 ἐκπλύνω.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "ἐκπλύνω.",
+    "15 ἐκπλύνω."
+   ],
+   "form_set": [
+    "ἐκπλύνω.",
+    "15 ἐκπλύνω."
+   ],
+   "line_becomes": "ἐκπλύνω. ὅταν τὸ ἔριον ἐκπλυθῇ Ζιγ20. 522b3. πολλάκις",
+   "line_was": "15 ἐκπλύνω. ὅταν τὸ ἔριον ἐκπλυθῇ Ζιγ20. 522b3. πολλάκις",
+   "card_sid": "margin:page-242-R:15",
+   "becomes": "ἐκπλύνω. ὅταν τὸ ἔριον ἐκπλυθῇ Ζιγ20. 522b3. πολλάκις"
+  },
+  {
+   "page": 251,
+   "col": "L",
+   "line": 40,
+   "word_off": 1779,
+   "char_at": 45,
+   "readers": {
+    "opus": "notio suppe-0"
+   },
+   "calamari": "suppe- o",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 40 in the right-hand (inner) margin here, and it was read into the text as '-0'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "-0",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "notio suppe-",
+    "notio suppe-0"
+   ],
+   "form_set": [
+    "notio suppe-",
+    "notio suppe-0"
+   ],
+   "line_becomes": "antecedentibus vel ex ipsa rei natura facile notio suppe-",
+   "line_was": "antecedentibus vel ex ipsa rei natura facile notio suppe-0",
+   "card_sid": "margin:page-251-L:40",
+   "becomes": "antecedentibus vel ex ipsa rei natura facile notio suppe-"
+  },
+  {
+   "page": 252,
+   "col": "L",
+   "line": 5,
+   "word_off": 206,
+   "char_at": 42,
+   "readers": {
+    "opus": "πτηνῶν ἔλυτρον5"
+   },
+   "calamari": "πτηνῶν ἔλυτρον",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 5 in the right-hand (inner) margin here, and it was read into the text as '5'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "5",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "πτηνῶν ἔλυτρον",
+    "πτηνῶν ἔλυτρον5"
+   ],
+   "form_set": [
+    "πτηνῶν ἔλυτρον",
+    "πτηνῶν ἔλυτρον5"
+   ],
+   "line_becomes": "2. elytra Eleutheratorum. τὰ μὲν ἔχει τῶν πτηνῶν ἔλυτρον",
+   "line_was": "2. elytra Eleutheratorum. τὰ μὲν ἔχει τῶν πτηνῶν ἔλυτρον5",
+   "card_sid": "margin:page-252-L:5",
+   "becomes": "2. elytra Eleutheratorum. τὰ μὲν ἔχει τῶν πτηνῶν ἔλυτρον"
+  },
+  {
+   "page": 252,
+   "col": "L",
+   "line": 15,
+   "word_off": 632,
+   "char_at": 42,
+   "readers": {
+    "opus": "εἱλώδεσι 15"
+   },
+   "calamari": "εἱλώδεσι 15",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the right-hand (inner) margin here, and it was read into the text as '15'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "εἱλώδεσι",
+    "εἱλώδεσι 15"
+   ],
+   "form_set": [
+    "εἱλώδεσι",
+    "εἱλώδεσι 15"
+   ],
+   "line_becomes": "659a2. — ἐν προσηνέμοις ϗ̀ ἑλώδεσι (corr, εἱλώδεσι",
+   "line_was": "659a2. — ἐν προσηνέμοις ϗ̀ ἑλώδεσι (corr, εἱλώδεσι 15",
+   "card_sid": "margin:page-252-L:15",
+   "becomes": "659a2. — ἐν προσηνέμοις ϗ̀ ἑλώδεσι (corr, εἱλώδεσι"
+  },
+  {
+   "page": 252,
+   "col": "L",
+   "line": 25,
+   "word_off": 1057,
+   "char_at": 51,
+   "readers": {
+    "opus": "32. 25"
+   },
+   "calamari": "32. 25",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the right-hand (inner) margin here, and it was read into the text as '25'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "25",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "32.",
+    "32. 25"
+   ],
+   "form_set": [
+    "32.",
+    "32. 25"
+   ],
+   "line_becomes": "b22. ἐμβάλλειν ὅρον, μέσον Αγ22. 84a36. 25. 86b18. 32.",
+   "line_was": "b22. ἐμβάλλειν ὅρον, μέσον Αγ22. 84a36. 25. 86b18. 32. 25",
+   "card_sid": "margin:page-252-L:25",
+   "becomes": "b22. ἐμβάλλειν ὅρον, μέσον Αγ22. 84a36. 25. 86b18. 32."
+  },
+  {
+   "page": 255,
+   "col": "R",
+   "line": 25,
+   "word_off": 1047,
+   "char_at": 0,
+   "readers": {
+    "opus": "2 ἐμπορίᾳ"
+   },
+   "calamari": "a ἐμπορίᾳ",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '2'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἐμπορίᾳ",
+    "2 ἐμπορίᾳ"
+   ],
+   "form_set": [
+    "ἐμπορίᾳ",
+    "2 ἐμπορίᾳ"
+   ],
+   "line_becomes": "ἐμπορίᾳ χρῆσθαι f 508. 1561a38.",
+   "line_was": "2 ἐμπορίᾳ χρῆσθαι f 508. 1561a38.",
+   "card_sid": "margin:page-255-R:25",
+   "becomes": "ἐμπορίᾳ χρῆσθαι f 508. 1561a38."
+  },
+  {
+   "page": 261,
+   "col": "R",
+   "line": 30,
+   "word_off": 1336,
+   "char_at": 0,
+   "readers": {
+    "opus": "3 et"
+   },
+   "calamari": "a0 et",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 30 in the left-hand (inner) margin here, and it was read into the text as '3'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "3",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "et",
+    "3 et"
+   ],
+   "form_set": [
+    "et",
+    "3 et"
+   ],
+   "line_becomes": "et explicat Vhl Poet III 342.)",
+   "line_was": "3 et explicat Vhl Poet III 342.)",
+   "card_sid": "margin:page-261-R:30",
+   "becomes": "et explicat Vhl Poet III 342.)"
+  },
+  {
+   "page": 264,
+   "col": "R",
+   "line": 15,
+   "word_off": 590,
+   "char_at": 0,
+   "readers": {
+    "opus": "151026a5."
+   },
+   "calamari": "151026a5.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "1026a5.",
+    "151026a5."
+   ],
+   "form_set": [
+    "1026a5.",
+    "151026a5."
+   ],
+   "line_becomes": "1026a5.",
+   "line_was": "151026a5.",
+   "card_sid": "margin:page-264-R:15",
+   "becomes": "1026a5."
+  },
+  {
+   "page": 265,
+   "col": "R",
+   "line": 10,
+   "word_off": 407,
+   "char_at": 0,
+   "readers": {
+    "opus": "1 ἐνστατικός."
+   },
+   "calamari": "10 ἐνστατικός.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 10 in the left-hand (inner) margin here, and it was read into the text as '1'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "1",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἐνστατικός.",
+    "1 ἐνστατικός."
+   ],
+   "form_set": [
+    "ἐνστατικός.",
+    "1 ἐνστατικός."
+   ],
+   "line_becomes": "ἐνστατικός. πρᾶα ϗ̀ δύσθυμα ϗ̀ ȣ̓κ ἐνστατικὰ ζῷα, opp",
+   "line_was": "1 ἐνστατικός. πρᾶα ϗ̀ δύσθυμα ϗ̀ ȣ̓κ ἐνστατικὰ ζῷα, opp",
+   "card_sid": "margin:page-265-R:10",
+   "becomes": "ἐνστατικός. πρᾶα ϗ̀ δύσθυμα ϗ̀ ȣ̓κ ἐνστατικὰ ζῷα, opp"
+  },
+  {
+   "page": 265,
+   "col": "R",
+   "line": 15,
+   "word_off": 611,
+   "char_at": 0,
+   "readers": {
+    "opus": "1 ἐνταράσσειν."
+   },
+   "calamari": "1s ἐνταράσσειν.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '1'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "1",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἐνταράσσειν.",
+    "1 ἐνταράσσειν."
+   ],
+   "form_set": [
+    "ἐνταράσσειν.",
+    "1 ἐνταράσσειν."
+   ],
+   "line_becomes": "ἐνταράσσειν. οἱ ὠχρόμματοι ἐντεταραγμένȣς ἔχοντες τȣ̀ς",
+   "line_was": "1 ἐνταράσσειν. οἱ ὠχρόμματοι ἐντεταραγμένȣς ἔχοντες τȣ̀ς",
+   "card_sid": "margin:page-265-R:15",
+   "becomes": "ἐνταράσσειν. οἱ ὠχρόμματοι ἐντεταραγμένȣς ἔχοντες τȣ̀ς"
+  },
+  {
+   "page": 270,
+   "col": "R",
+   "line": 55,
+   "word_off": 2234,
+   "char_at": 0,
+   "readers": {
+    "opus": "55 ἐξαμελεῖν."
+   },
+   "calamari": "55 ἐξαμελεῖν.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 55 in the left-hand (inner) margin here, and it was read into the text as '55'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "55",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "ἐξαμελεῖν.",
+    "55 ἐξαμελεῖν."
+   ],
+   "form_set": [
+    "ἐξαμελεῖν.",
+    "55 ἐξαμελεῖν."
+   ],
+   "line_becomes": "ἐξαμελεῖν. ἐπὶ τῶν γυναικῶν ἐξημέληκεν Πβ9. 1269b22.",
+   "line_was": "55 ἐξαμελεῖν. ἐπὶ τῶν γυναικῶν ἐξημέληκεν Πβ9. 1269b22.",
+   "card_sid": "margin:page-270-R:55",
+   "becomes": "ἐξαμελεῖν. ἐπὶ τῶν γυναικῶν ἐξημέληκεν Πβ9. 1269b22."
+  },
+  {
+   "page": 271,
+   "col": "R",
+   "line": 50,
+   "word_off": 1948,
+   "char_at": 0,
+   "readers": {
+    "opus": "5 ἐξεπιπολῆς"
+   },
+   "calamari": "5o ἐξεπιπολῆς",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 50 in the left-hand (inner) margin here, and it was read into the text as '5'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "5",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "ἐξεπιπολῆς",
+    "5 ἐξεπιπολῆς"
+   ],
+   "form_set": [
+    "ἐξεπιπολῆς",
+    "5 ἐξεπιπολῆς"
+   ],
+   "line_becomes": "ἐξεπιπολῆς (Bsm, ἐξ ἐπιπολῆς Bk) πθ9. 890b13.",
+   "line_was": "5 ἐξεπιπολῆς (Bsm, ἐξ ἐπιπολῆς Bk) πθ9. 890b13.",
+   "card_sid": "margin:page-271-R:50",
+   "becomes": "ἐξεπιπολῆς (Bsm, ἐξ ἐπιπολῆς Bk) πθ9. 890b13."
+  },
+  {
+   "page": 276,
+   "col": "R",
+   "line": 5,
+   "word_off": 158,
+   "char_at": 0,
+   "readers": {
+    "opus": "6 ἐπαίρειν."
+   },
+   "calamari": "ἐπαίρειν. ὁ",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 5 in the left-hand (inner) margin here, and it was read into the text as '6'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "6",
+   "at": "start",
+   "digits_match": "off-by-one",
+   "uncertain": false,
+   "forms": [
+    "ἐπαίρειν.",
+    "6 ἐπαίρειν."
+   ],
+   "form_set": [
+    "ἐπαίρειν.",
+    "6 ἐπαίρειν."
+   ],
+   "line_becomes": "ἐπαίρειν. ὁ βάτραχος ἐπαίρει τὰ τριχώδη Ζιι37. 620b17. —",
+   "line_was": "6 ἐπαίρειν. ὁ βάτραχος ἐπαίρει τὰ τριχώδη Ζιι37. 620b17. —",
+   "card_sid": "margin:page-276-R:5",
+   "becomes": "ἐπαίρειν. ὁ βάτραχος ἐπαίρει τὰ τριχώδη Ζιι37. 620b17. —"
+  },
+  {
+   "page": 278,
+   "col": "L",
+   "line": 15,
+   "word_off": 668,
+   "char_at": 54,
+   "readers": {
+    "opus": "ἐπάνω, 15"
+   },
+   "calamari": "ἐπάνω, 1",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the right-hand (inner) margin here, and it was read into the text as '15'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "end",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "ἐπάνω,",
+    "ἐπάνω, 15"
+   ],
+   "form_set": [
+    "ἐπάνω,",
+    "ἐπάνω, 15"
+   ],
+   "line_becomes": "a8. huc videtur referendum esse ἐλέχθη ἐν τοῖς ἐπάνω, ἐπάνω,",
+   "line_was": "a8. huc videtur referendum esse ἐλέχθη ἐν τοῖς ἐπάνω, ἐπάνω, 15",
+   "card_sid": "margin:page-278-L:15",
+   "becomes": "a8. huc videtur referendum esse ἐλέχθη ἐν τοῖς ἐπάνω, ἐπάνω,"
+  },
+  {
+   "page": 278,
+   "col": "L",
+   "line": 35,
+   "word_off": 1502,
+   "char_at": 40,
+   "readers": {
+    "opus": "ξ2. 975b11.8"
+   },
+   "calamari": "ξ2. 975b11.",
+   "kind": "margin",
+   "reason": "⚠ THE DIGITS ARE NOT THIS LINE NUMBER — read '8' where the margin would print 35. One digit of a pair misread would look like this, and so would a real reading. The ink decides. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "8",
+   "at": "end",
+   "digits_match": "unmatched",
+   "uncertain": true,
+   "forms": [
+    "ξ2. 975b11.",
+    "ξ2. 975b11.8"
+   ],
+   "form_set": [
+    "ξ2. 975b11.",
+    "ξ2. 975b11.8"
+   ],
+   "line_becomes": "ἔπαρξις ἵετο (scribendum ἐπαυξήσειε τὸ) ξ2. 975b11.",
+   "line_was": "ἔπαρξις ἵετο (scribendum ἐπαυξήσειε τὸ) ξ2. 975b11.8",
+   "card_sid": "margin:page-278-L:35",
+   "becomes": "ἔπαρξις ἵετο (scribendum ἐπαυξήσειε τὸ) ξ2. 975b11."
+  },
+  {
+   "page": 279,
+   "col": "R",
+   "line": 15,
+   "word_off": 629,
+   "char_at": 0,
+   "readers": {
+    "opus": "15πρώτως Μζ4."
+   },
+   "calamari": "5 πρώτως",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 15 in the left-hand (inner) margin here, and it was read into the text as '15'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "15",
+   "at": "start",
+   "digits_match": "exact",
+   "uncertain": false,
+   "forms": [
+    "πρώτως Μζ4.",
+    "15πρώτως Μζ4."
+   ],
+   "form_set": [
+    "πρώτως Μζ4.",
+    "15πρώτως Μζ4."
+   ],
+   "line_becomes": "πρώτως Μζ4. 1030a22. — ἑπομένως τȣ́τοις ϗ̀ τὴν ψυχὴν",
+   "line_was": "15πρώτως Μζ4. 1030a22. — ἑπομένως τȣ́τοις ϗ̀ τὴν ψυχὴν",
+   "card_sid": "margin:page-279-R:15",
+   "becomes": "πρώτως Μζ4. 1030a22. — ἑπομένως τȣ́τοις ϗ̀ τὴν ψυχὴν"
+  },
+  {
+   "page": 279,
+   "col": "R",
+   "line": 25,
+   "word_off": 1079,
+   "char_at": 0,
+   "readers": {
+    "opus": "2923a33."
+   },
+   "calamari": "923a33.",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 25 in the left-hand (inner) margin here, and it was read into the text as '2'. It sits at the start of the line, which is the margin side for the right column. genie and LlamaParse read nothing there.",
+   "run": "2",
+   "at": "start",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "923a33.",
+    "2923a33."
+   ],
+   "form_set": [
+    "923a33.",
+    "2923a33."
+   ],
+   "line_becomes": "923a33.",
+   "line_was": "2923a33.",
+   "card_sid": "margin:page-279-R:25",
+   "becomes": "923a33."
+  },
+  {
+   "page": 281,
+   "col": "L",
+   "line": 50,
+   "word_off": 2283,
+   "char_at": 46,
+   "readers": {
+    "opus": "19. 550a0"
+   },
+   "calamari": "19. 550ε",
+   "kind": "margin",
+   "reason": "Bonitz prints the line number 50 in the right-hand (inner) margin here, and it was read into the text as 'a0'. It sits at the end of the line, which is the margin side for the left column. genie and LlamaParse read nothing there.",
+   "run": "a0",
+   "at": "end",
+   "digits_match": "partial",
+   "uncertain": false,
+   "forms": [
+    "19. 550",
+    "19. 550a0"
+   ],
+   "form_set": [
+    "19. 550",
+    "19. 550a0"
+   ],
+   "line_becomes": "βαίνει τὸ ἔλαττον ἐπὶ τὸ μεῖζον Ζιε8. 541b34. 19. 550",
+   "line_was": "βαίνει τὸ ἔλαττον ἐπὶ τὸ μεῖζον Ζιε8. 541b34. 19. 550a0",
+   "card_sid": "margin:page-281-L:50",
+   "becomes": "βαίνει τὸ ἔλαττον ἐπὶ τὸ μεῖζον Ζιε8. 541b34. 19. 550"
+  }
+ ],
+ "unresolved": []
+}

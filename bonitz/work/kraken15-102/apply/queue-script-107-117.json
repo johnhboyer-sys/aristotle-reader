@@ -1,0 +1,643 @@
+{
+ "entries": [
+  {
+   "page": 111,
+   "col": "R",
+   "line": 18,
+   "word_off": 768,
+   "char_at": 0,
+   "readers": {
+    "opus": "coHIenettt o br; AristoteliC1 eetlonee Ion labet. —θερ"
+   },
+   "kind": "line",
+   "reason": "the whole line collapsed in the spine reader; LlamaParse reads it clean, and every garbage word maps to it in place",
+   "forms": [
+    "commentatio libri Aristotelici mentionem non habet. — Περὶ",
+    "coHIenettt o br; AristoteliC1 eetlonee Ion labet. —θερ"
+   ],
+   "form_set": [
+    "commentatio libri Aristotelici mentionem non habet. — Περὶ",
+    "coHIenettt o br; AristoteliC1 eetlonee Ion labet. —θερ"
+   ],
+   "card_sid": "line:page-111-R:18",
+   "becomes": "commentatio libri Aristotelici mentionem non habet. — Περὶ"
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 37,
+   "word_off": 1640,
+   "char_at": 0,
+   "readers": {
+    "opus": "narum partlu1, le iu8 coHrp pssut ανΓ1. 13 1."
+   },
+   "kind": "line",
+   "reason": "the whole line collapsed in the spine reader; LlamaParse reads \"internarum partium, de quibus conferri possunt αν11. 13. 16.\"",
+   "forms": [
+    "narum partium, de quibus conferri possunt αν11. 13. 16.",
+    "narum partlu1, le iu8 coHrp pssut ανΓ1. 13 1."
+   ],
+   "form_set": [
+    "narum partium, de quibus conferri possunt αν11. 13. 16.",
+    "narum partlu1, le iu8 coHrp pssut ανΓ1. 13 1."
+   ],
+   "card_sid": "line:page-112-L:37",
+   "becomes": "narum partium, de quibus conferri possunt αν11. 13. 16."
+  },
+  {
+   "page": 116,
+   "col": "R",
+   "line": 61,
+   "word_off": 2844,
+   "char_at": 0,
+   "readers": {
+    "opus": "uactetur, dtueslioiu ac dοcti-"
+   },
+   "kind": "line",
+   "reason": "THE CORPUS LINE IS SHORT. The ink runs on to \"doctrinae, sed certos quosdam Ari-\" and 117-L:1 begins \"stotelis\", so everything after \"ac\" is missing outright — this is the only truncated line on 107-117. ⚠ You ruled none here before, on a word-level card with no whole-line crop; the crop below is that evidence, and overruling yourself is your call",
+   "forms": [
+    "tractetur, quaestionis ac doctrinae, sed certos quosdam Ari-",
+    "uactetur, dtueslioiu ac dοcti-"
+   ],
+   "form_set": [
+    "tractetur, quaestionis ac doctrinae, sed certos quosdam Ari-",
+    "uactetur, dtueslioiu ac dοcti-"
+   ],
+   "card_sid": "line:page-116-R:61",
+   "becomes": "tractetur, quaestionis ac doctrinae, sed certos quosdam Ari-",
+   "ack_ruled": "the line is truncated — the corpus stops at dοcti- where the ink runs on; the first card was word-level with no line crop"
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 17,
+   "word_off": 755,
+   "char_at": 40,
+   "readers": {
+    "opus": "I ερὶ πνεύματος"
+   },
+   "kind": "script",
+   "reason": "the capital Π split into I + ε; LlamaParse reads \"— Περὶ πνεύματος\"",
+   "forms": [
+    "Περὶ πνεύματος",
+    "I ερὶ πνεύματος"
+   ],
+   "form_set": [
+    "Περὶ πνεύματος",
+    "I ερὶ πνεύματος"
+   ],
+   "card_sid": "script:page-111-R:17",
+   "becomes": "Περὶ πνεύματος"
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 34,
+   "word_off": 1508,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ηz"
+   },
+   "kind": "script",
+   "reason": "GREEK capital eta for Latin H — Heitz, spelled out at 115-R:22 and 117-L:41; LlamaParse reads \"Hz\"",
+   "forms": [
+    "Hz",
+    "Ηz"
+   ],
+   "form_set": [
+    "Hz",
+    "Ηz"
+   ],
+   "card_sid": "script:page-110-L:34",
+   "becomes": "Hz"
+  },
+  {
+   "page": 110,
+   "col": "R",
+   "line": 52,
+   "word_off": 2353,
+   "char_at": 47,
+   "readers": {
+    "opus": "Ηz"
+   },
+   "kind": "script",
+   "reason": "GREEK capital eta for Latin H — Heitz; LlamaParse reads \"Hz p 60\"",
+   "forms": [
+    "Hz",
+    "Ηz"
+   ],
+   "form_set": [
+    "Hz",
+    "Ηz"
+   ],
+   "card_sid": "script:page-110-R:52",
+   "becomes": "Hz"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 7,
+   "word_off": 307,
+   "char_at": 25,
+   "readers": {
+    "opus": "Tὰ"
+   },
+   "kind": "script",
+   "reason": "LATIN T opening a Greek title; LlamaParse reads \"Τὰ μετὰ τὰ φυσικά\"",
+   "forms": [
+    "Τὰ",
+    "Tὰ"
+   ],
+   "form_set": [
+    "Τὰ",
+    "Tὰ"
+   ],
+   "card_sid": "script:page-113-L:7",
+   "becomes": "Τὰ"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 37,
+   "word_off": 1682,
+   "char_at": 29,
+   "readers": {
+    "opus": "Nικομάχεια"
+   },
+   "kind": "script",
+   "reason": "LATIN N opening a Greek title; LlamaParse reads \"Ἠθικὰ Νικομάχεια\"",
+   "forms": [
+    "Νικομάχεια",
+    "Nικομάχεια"
+   ],
+   "form_set": [
+    "Νικομάχεια",
+    "Nικομάχεια"
+   ],
+   "card_sid": "script:page-113-L:37",
+   "becomes": "Νικομάχεια"
+  },
+  {
+   "page": 114,
+   "col": "L",
+   "line": 49,
+   "word_off": 2203,
+   "char_at": 46,
+   "readers": {
+    "opus": "Sο-"
+   },
+   "kind": "script",
+   "reason": "GREEK omicron inside a Latin word; line 50 continues \"phisticos elenchos\"",
+   "forms": [
+    "So-",
+    "Sο-"
+   ],
+   "form_set": [
+    "So-",
+    "Sο-"
+   ],
+   "card_sid": "script:page-114-L:49",
+   "becomes": "So-"
+  },
+  {
+   "page": 114,
+   "col": "R",
+   "line": 49,
+   "word_off": 2213,
+   "char_at": 29,
+   "readers": {
+    "opus": "Μeteoro1ogica"
+   },
+   "kind": "script",
+   "reason": "two substitutions in one word: GREEK capital mu for M, and the DIGIT 1 for l; LlamaParse reads \"— Meteorologica citantur\"",
+   "forms": [
+    "Meteorologica",
+    "Μeteoro1ogica"
+   ],
+   "form_set": [
+    "Meteorologica",
+    "Μeteoro1ogica"
+   ],
+   "card_sid": "script:page-114-R:49",
+   "becomes": "Meteorologica"
+  },
+  {
+   "page": 115,
+   "col": "L",
+   "line": 43,
+   "word_off": 1931,
+   "char_at": 10,
+   "readers": {
+    "opus": "Ηistoria"
+   },
+   "kind": "script",
+   "reason": "GREEK capital eta for Latin H; LlamaParse reads \"— Historia animalium citatur\"",
+   "forms": [
+    "Historia",
+    "Ηistoria"
+   ],
+   "form_set": [
+    "Historia",
+    "Ηistoria"
+   ],
+   "card_sid": "script:page-115-L:43",
+   "becomes": "Historia"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 57,
+   "word_off": 2576,
+   "char_at": 9,
+   "readers": {
+    "opus": "Sάνθιππος"
+   },
+   "kind": "script",
+   "reason": "LATIN S where Bonitz set Ξ — Xanthippus son of Ariphron; LlamaParse reads \"Ξάνθιππος ὁ Ἀρίφρονος\"",
+   "forms": [
+    "Ξάνθιππος",
+    "Sάνθιππος"
+   ],
+   "form_set": [
+    "Ξάνθιππος",
+    "Sάνθιππος"
+   ],
+   "card_sid": "script:page-117-L:57",
+   "becomes": "Ξάνθιππος"
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 23,
+   "word_off": 1056,
+   "char_at": 52,
+   "readers": {
+    "opus": "δb0."
+   },
+   "kind": "script",
+   "reason": "LATIN b and a zero for the numeral 10; LlamaParse reads \"δ10. 689a10, 12\". You held this site OUT of the b>t bundle — that declined one change and did not rule the site right, so this is a different question",
+   "forms": [
+    "δ10.",
+    "δb0."
+   ],
+   "form_set": [
+    "δ10.",
+    "δb0."
+   ],
+   "card_sid": "script:page-112-L:23",
+   "becomes": "δ10."
+  },
+  {
+   "page": 114,
+   "col": "L",
+   "line": 48,
+   "word_off": 2123,
+   "char_at": 0,
+   "readers": {
+    "opus": "10. 8ophistici"
+   },
+   "kind": "digit",
+   "reason": "the DIGIT 8 for capital S, and the em dash before the heading is gone; LlamaParse reads \"165 b6, 10. — Sophistici elenchi citantur\"",
+   "forms": [
+    "10. — Sophistici",
+    "10. 8ophistici"
+   ],
+   "form_set": [
+    "10. — Sophistici",
+    "10. 8ophistici"
+   ],
+   "card_sid": "digit:page-114-L:48",
+   "becomes": "10. — Sophistici"
+  },
+  {
+   "page": 114,
+   "col": "R",
+   "line": 30,
+   "word_off": 1374,
+   "char_at": 49,
+   "readers": {
+    "opus": "D e coe1"
+   },
+   "kind": "digit",
+   "reason": "the DIGIT 1 for l, and a space inside De; line 31 continues \"libri citantur\"",
+   "forms": [
+    "De coelo",
+    "D e coe1"
+   ],
+   "form_set": [
+    "De coelo",
+    "D e coe1"
+   ],
+   "card_sid": "digit:page-114-R:30",
+   "becomes": "De coelo"
+  },
+  {
+   "page": 115,
+   "col": "L",
+   "line": 23,
+   "word_off": 1037,
+   "char_at": 47,
+   "readers": {
+    "opus": "De1on-"
+   },
+   "kind": "digit",
+   "reason": "the DIGIT 1 for l and the space is gone; line 24 continues \"gitudine et brevitate vitae\". You already settled De against Πe here; that stands and only the 1on- is in question",
+   "forms": [
+    "De lon-",
+    "De1on-"
+   ],
+   "form_set": [
+    "De lon-",
+    "De1on-"
+   ],
+   "card_sid": "digit:page-115-L:23",
+   "becomes": "De lon-"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 15,
+   "word_off": 666,
+   "char_at": 13,
+   "readers": {
+    "opus": "692a16a."
+   },
+   "kind": "nota",
+   "reason": "the nota marker n misread; lines 14-16 print 489b17n, 678a19n and 104a33n in the same list, and LlamaParse reads n here too — read as a",
+   "forms": [
+    "692a16n.",
+    "692a16a."
+   ],
+   "form_set": [
+    "692a16n.",
+    "692a16a."
+   ],
+   "card_sid": "nota:page-109-R:15:a",
+   "becomes": "692a16n.",
+   "bundle": {
+    "subs": [
+     [
+      "a",
+      "n"
+     ]
+    ]
+   }
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 15,
+   "word_off": 689,
+   "char_at": 40,
+   "readers": {
+    "opus": "467b4a."
+   },
+   "kind": "nota",
+   "reason": "the nota marker n misread; lines 14-16 print 489b17n, 678a19n and 104a33n in the same list, and LlamaParse reads n here too — read as a",
+   "forms": [
+    "467b4n.",
+    "467b4a."
+   ],
+   "form_set": [
+    "467b4n.",
+    "467b4a."
+   ],
+   "card_sid": "nota:page-109-R:15:a",
+   "becomes": "467b4n.",
+   "bundle": {
+    "subs": [
+     [
+      "a",
+      "n"
+     ]
+    ]
+   }
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 15,
+   "word_off": 677,
+   "char_at": 26,
+   "readers": {
+    "opus": "695a27η."
+   },
+   "kind": "nota",
+   "reason": "the nota marker n misread; lines 14-16 print 489b17n, 678a19n and 104a33n in the same list, and LlamaParse reads n here too — read as η",
+   "forms": [
+    "695a27n.",
+    "695a27η."
+   ],
+   "form_set": [
+    "695a27n.",
+    "695a27η."
+   ],
+   "card_sid": "nota:page-109-R:15:eta",
+   "becomes": "695a27n.",
+   "bundle": {
+    "subs": [
+     [
+      "η",
+      "n"
+     ]
+    ]
+   }
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 32,
+   "word_off": 1415,
+   "char_at": 0,
+   "readers": {
+    "opus": "(pΓα3)"
+   },
+   "kind": "space",
+   "reason": "the space after the apparatus p is gone; the same pages print \"(p Ζμγ3. 665b21)\", \"(p ψα5)\", \"(p Ζγ)\" with it",
+   "forms": [
+    "(p Γα3)",
+    "(pΓα3)"
+   ],
+   "form_set": [
+    "(p Γα3)",
+    "(pΓα3)"
+   ],
+   "card_sid": "space:p-siglum-110-112",
+   "becomes": "(p Γα3)",
+   "bundle": {
+    "subs": [
+     [
+      "",
+      " "
+     ]
+    ]
+   }
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 36,
+   "word_off": 1617,
+   "char_at": 15,
+   "readers": {
+    "opus": "(pΜζ6-8"
+   },
+   "kind": "space",
+   "reason": "the space after the apparatus p is gone; the same pages print \"(p Ζμγ3. 665b21)\", \"(p ψα5)\", \"(p Ζγ)\" with it",
+   "forms": [
+    "(p Μζ6-8",
+    "(pΜζ6-8"
+   ],
+   "form_set": [
+    "(p Μζ6-8",
+    "(pΜζ6-8"
+   ],
+   "card_sid": "space:p-siglum-110-112",
+   "becomes": "(p Μζ6-8",
+   "bundle": {
+    "subs": [
+     [
+      "",
+      " "
+     ]
+    ]
+   }
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 37,
+   "word_off": 1682,
+   "char_at": 32,
+   "readers": {
+    "opus": "(pΦθ5"
+   },
+   "kind": "space",
+   "reason": "the space after the apparatus p is gone; the same pages print \"(p Ζμγ3. 665b21)\", \"(p ψα5)\", \"(p Ζγ)\" with it",
+   "forms": [
+    "(p Φθ5",
+    "(pΦθ5"
+   ],
+   "form_set": [
+    "(p Φθ5",
+    "(pΦθ5"
+   ],
+   "card_sid": "space:p-siglum-110-112",
+   "becomes": "(p Φθ5",
+   "bundle": {
+    "subs": [
+     [
+      "",
+      " "
+     ]
+    ]
+   }
+  },
+  {
+   "page": 110,
+   "col": "R",
+   "line": 5,
+   "word_off": 208,
+   "char_at": 28,
+   "readers": {
+    "opus": "(pΓβ2)"
+   },
+   "kind": "space",
+   "reason": "the space after the apparatus p is gone; the same pages print \"(p Ζμγ3. 665b21)\", \"(p ψα5)\", \"(p Ζγ)\" with it",
+   "forms": [
+    "(p Γβ2)",
+    "(pΓβ2)"
+   ],
+   "form_set": [
+    "(p Γβ2)",
+    "(pΓβ2)"
+   ],
+   "card_sid": "space:p-siglum-110-112",
+   "becomes": "(p Γβ2)",
+   "bundle": {
+    "subs": [
+     [
+      "",
+      " "
+     ]
+    ]
+   }
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 24,
+   "word_off": 1070,
+   "char_at": 46,
+   "readers": {
+    "opus": "(pΖγα21."
+   },
+   "kind": "space",
+   "reason": "the space after the apparatus p is gone; the same pages print \"(p Ζμγ3. 665b21)\", \"(p ψα5)\", \"(p Ζγ)\" with it",
+   "forms": [
+    "(p Ζγα21.",
+    "(pΖγα21."
+   ],
+   "form_set": [
+    "(p Ζγα21.",
+    "(pΖγα21."
+   ],
+   "card_sid": "space:p-siglum-110-112",
+   "becomes": "(p Ζγα21.",
+   "bundle": {
+    "subs": [
+     [
+      "",
+      " "
+     ]
+    ]
+   }
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 2,
+   "word_off": 94,
+   "char_at": 54,
+   "readers": {
+    "opus": "(cfadβ3."
+   },
+   "kind": "space",
+   "reason": "two spaces gone at once; LlamaParse reads \"(cf ad β3. 650b10)\"",
+   "forms": [
+    "(cf ad β3.",
+    "(cfadβ3."
+   ],
+   "form_set": [
+    "(cf ad β3.",
+    "(cfadβ3."
+   ],
+   "card_sid": "space:page-112-L:2",
+   "becomes": "(cf ad β3."
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 14,
+   "word_off": 634,
+   "char_at": 45,
+   "readers": {
+    "opus": "Φεsqq)"
+   },
+   "kind": "space",
+   "reason": "the space before sqq is gone; the same page prints \"180 sqq\" with it",
+   "forms": [
+    "Φε sqq)",
+    "Φεsqq)"
+   ],
+   "form_set": [
+    "Φε sqq)",
+    "Φεsqq)"
+   ],
+   "card_sid": "space:page-110-L:14",
+   "becomes": "Φε sqq)"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 26
+}

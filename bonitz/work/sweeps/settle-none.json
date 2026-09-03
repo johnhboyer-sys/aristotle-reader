@@ -1,30 +1,42 @@
 [
  {
-  "sid": "forms:οἱ|οἷ",
-  "member": "page-062-L:29:1264",
-  "page": 62,
+  "sid": "accent:page-113-L:4:ἢν",
+  "member": "page-113-L:4:187",
+  "page": 113,
   "col": "L",
-  "line": 29,
+  "line": 4,
   "readers": {
-   "opus": "οἱ",
-   "genie": "οἳ",
-   "codex": "οἱ",
-   "kraken": "οἷ",
-   "llama": "οἳ"
+   "opus": "ἢν"
   }
  },
  {
-  "sid": "forms:ἐκι|ἑκι",
-  "member": "page-058-R:2:87",
-  "page": 58,
-  "col": "R",
-  "line": 2,
+  "sid": "breath:page-117-L:49:Ρόδιος",
+  "member": "page-117-L:49:2297",
+  "page": 117,
+  "col": "L",
+  "line": 49,
   "readers": {
-   "opus": "ἐκι",
-   "genie": "ἐκι",
-   "codex": "ἐκι",
-   "kraken": "ἑκι",
-   "llama": "ἐκι"
+   "opus": "Ρόδιος"
+  }
+ },
+ {
+  "sid": "smyth:page-113-R:19:Πολιτι",
+  "member": "page-113-R:19:867",
+  "page": 113,
+  "col": "R",
+  "line": 19,
+  "readers": {
+   "opus": "Πολιτικάβ2."
+  }
+ },
+ {
+  "sid": "smyth:page-113-R:36:1εχνη ",
+  "member": "page-113-R:36:1665",
+  "page": 113,
+  "col": "R",
+  "line": 36,
+  "readers": {
+   "opus": "1εχνη ῥητορικ7 α1. 1355a28 ἐν τοις τοπικοις"
   }
  }
 ]

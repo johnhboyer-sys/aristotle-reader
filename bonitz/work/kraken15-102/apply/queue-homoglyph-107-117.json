@@ -1,0 +1,188 @@
+{
+ "spine_reader": "kraken-r6",
+ "spine_dir": "work/reconciled-auto",
+ "alto_dirs": [
+  "work/calamari/read107-112/alto",
+  "work/calamari/read113-117/alto"
+ ],
+ "n_distinct_decisions": 10,
+ "entries": [
+  {
+   "page": 115,
+   "col": "R",
+   "line": 22,
+   "word_off": 952,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ηeitζp"
+   },
+   "kind": "homoglyph",
+   "reason": "unflagged:Greek capital Eta inside a Latin proper name",
+   "forms": [
+    "Ηeitzp",
+    "Heitzp"
+   ],
+   "form_set": [
+    "Ηeitzp",
+    "Heitzp"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-115-R:22:952",
+   "note": "Greek capital Eta inside a Latin proper name · NO READER DISAGREED, so no card ever asked — it is here because a scan found the shape, not because the panel flagged it"
+  },
+  {
+   "page": 115,
+   "col": "R",
+   "line": 52,
+   "word_off": 2432,
+   "char_at": 49,
+   "readers": {
+    "opus": "Ρ0ο"
+   },
+   "kind": "homoglyph",
+   "reason": "unflagged:Greek capital Rho in a Latin fragment",
+   "forms": [
+    "Ρ0o-",
+    "P0o-"
+   ],
+   "form_set": [
+    "Ρ0o-",
+    "P0o-"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-115-R:52:2432",
+   "note": "Greek capital Rho in a Latin fragment · NO READER DISAGREED, so no card ever asked — it is here because a scan found the shape, not because the panel flagged it"
+  },
+  {
+   "page": 115,
+   "col": "R",
+   "line": 55,
+   "word_off": 2570,
+   "char_at": 48,
+   "readers": {
+    "opus": "Αrs"
+   },
+   "kind": "homoglyph",
+   "reason": "unflagged:Greek capital Alpha inside the Latin word Ars",
+   "forms": [
+    "Αrs",
+    "Ars"
+   ],
+   "form_set": [
+    "Αrs",
+    "Ars"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-115-R:55:2570",
+   "note": "Greek capital Alpha inside the Latin word Ars · NO READER DISAGREED, so no card ever asked — it is here because a scan found the shape, not because the panel flagged it"
+  },
+  {
+   "page": 116,
+   "col": "L",
+   "line": 3,
+   "word_off": 88,
+   "char_at": 16,
+   "readers": {
+    "opus": "Αristοtelis,"
+   },
+   "kind": "homoglyph",
+   "reason": "unflagged:Greek capital Alpha inside the Latin Aristotelis",
+   "forms": [
+    "Αristotelis,",
+    "Aristotelis,"
+   ],
+   "form_set": [
+    "Αristotelis,",
+    "Aristotelis,"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-116-L:3:88",
+   "note": "Greek capital Alpha inside the Latin Aristotelis · NO READER DISAGREED, so no card ever asked — it is here because a scan found the shape, not because the panel flagged it"
+  },
+  {
+   "page": 110,
+   "col": "L",
+   "line": 1,
+   "word_off": 24,
+   "char_at": 28,
+   "readers": {
+    "opus": "incertum)."
+   },
+   "kind": "parenthesis",
+   "reason": "unflagged:paren-balance",
+   "forms": [
+    "incertum)."
+   ],
+   "form_set": [
+    "incertum)."
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-110-L:1:24",
+   "note": "closing parenthesis with no opener anywhere before it in the tranche · NO READER DISAGREED — found by counting parentheses across the tranche, not by the panel. If the line is wrong, click none and I will build the real question from what you read"
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 20,
+   "word_off": 886,
+   "char_at": 34,
+   "readers": {
+    "opus": "747a17-27)."
+   },
+   "kind": "parenthesis",
+   "reason": "unflagged:paren-balance",
+   "forms": [
+    "747a17-27)."
+   ],
+   "form_set": [
+    "747a17-27)."
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-111-R:20:886",
+   "note": "closing parenthesis with no opener · NO READER DISAGREED — found by counting parentheses across the tranche, not by the panel. If the line is wrong, click none and I will build the real question from what you read"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 30,
+   "word_off": 1364,
+   "char_at": 13,
+   "readers": {
+    "opus": "(Φθ10."
+   },
+   "kind": "parenthesis",
+   "reason": "unflagged:paren-balance",
+   "forms": [
+    "(Φθ10."
+   ],
+   "form_set": [
+    "(Φθ10."
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-113-L:30:1364",
+   "note": "an opener that is never closed · NO READER DISAGREED — found by counting parentheses across the tranche, not by the panel. If the line is wrong, click none and I will build the real question from what you read"
+  },
+  {
+   "page": 113,
+   "col": "R",
+   "line": 40,
+   "word_off": 1842,
+   "char_at": 0,
+   "readers": {
+    "opus": "(referri"
+   },
+   "kind": "parenthesis",
+   "reason": "unflagged:paren-balance",
+   "forms": [
+    "(referri"
+   ],
+   "form_set": [
+    "(referri"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "site:page-113-R:40:1842",
+   "note": "an opener that is never closed · NO READER DISAGREED — found by counting parentheses across the tranche, not by the panel. If the line is wrong, click none and I will build the real question from what you read"
+  }
+ ],
+ "n_sites": 8
+}

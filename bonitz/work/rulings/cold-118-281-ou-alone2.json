@@ -1,0 +1,275 @@
+{
+ "forms:ȣ̔̀͂ς|ȣ̔͂ς|ὃς": {
+  "verdict": "accept",
+  "detail": "ȣ̔̀ς",
+  "sites": [
+   "page-151-R:40:1603"
+  ]
+ },
+ "forms:εἰλȣ́μενον|εἰλύμενον|εἱλȣ́μενον|εἷλȣ́μενον": {
+  "verdict": "accept",
+  "detail": "εἱλȣ́μενον",
+  "sites": [
+   "page-232-L:1:16"
+  ]
+ },
+ "forms:εἰσακȣ́ειν|εἰσακȣύειν|εἰσακούειν": {
+  "verdict": "preserve",
+  "detail": "εἰσακȣ́ειν",
+  "sites": [
+   "page-236-L:32:1290"
+  ]
+ },
+ "forms:τȣ͂δε|τȣδε|τήδε|τῆδε": {
+  "verdict": "preserve",
+  "detail": "τȣ͂δε",
+  "sites": [
+   "page-238-L:28:1205"
+  ]
+ },
+ "forms:τȣ͂λάχιστον|τȣλάχιστον|τἀλάχιστον": {
+  "verdict": "preserve",
+  "detail": "τȣ͂λάχιστον",
+  "sites": [
+   "page-236-L:20:851"
+  ]
+ },
+ "forms:ἐκκρȣ́εται|ἐκκρȣεται|ἐκκρίνεται|ἐκκρύεται": {
+  "verdict": "preserve",
+  "detail": "ἐκκρȣ́εται",
+  "sites": [
+   "page-239-R:7:280"
+  ]
+ },
+ "forms:ȣ̓͂ς|ȣ̔̀ς|ȣ̔͂ς|ὃς": {
+  "verdict": "accept",
+  "detail": "ȣ̔̀ς",
+  "sites": [
+   "page-244-L:16:678"
+  ]
+ },
+ "forms:ȣ̓͂ς|ȣ̔͂ς|ἦς|ὖς": {
+  "verdict": "accept",
+  "detail": "ȣ̓͂ς",
+  "sites": [
+   "page-243-L:21:827"
+  ]
+ },
+ "forms:ȣ̓περ|ȣ̔͂περ|ὅπερ|ὧπερ": {
+  "verdict": "preserve",
+  "detail": "ȣ̔͂περ",
+  "sites": [
+   "page-243-L:23:866"
+  ]
+ },
+ "forms:ἐκκρȣ́εται|ἐκκρȣεται|ἐκκρούεται|ἐκκρύεται": {
+  "verdict": "preserve",
+  "detail": "ἐκκρȣ́εται",
+  "sites": [
+   "page-240-R:42:1862"
+  ]
+ },
+ "forms:ἐκπνευματȣ͂ν|ἐκπνευματȣν|ἐκπνευματᾶν": {
+  "verdict": "preserve",
+  "detail": "ἐκπνευματȣ͂ν",
+  "sites": [
+   "page-242-R:36:1480"
+  ]
+ },
+ "forms:ἐξαγριȣ́μενοι|ἐξαγριȣμενοι|ἐξαγριόμενοι": {
+  "verdict": "preserve",
+  "detail": "ἐξαγριȣ́μενοι",
+  "sites": [
+   "page-249-L:9:370"
+  ]
+ },
+ "forms:ἐχθρȣ́ς|ἐχθρȣς|ἐχθράς|ἐχθρούς": {
+  "verdict": "preserve",
+  "detail": "ἐχθρȣ́ς",
+  "sites": [
+   "page-242-L:4:110"
+  ]
+ },
+ "forms:ἠθȣ|ἠθου|ἡθȣ|ἡθω": {
+  "verdict": "accept",
+  "detail": "ἠθȣ",
+  "sites": [
+   "page-240-L:48:2026"
+  ]
+ },
+ "forms:ȣ̓́σης|ȣ̓σης|οὔσης|ὅσης": {
+  "verdict": "preserve",
+  "detail": "ȣ̓́σης",
+  "sites": [
+   "page-251-L:41:1808"
+  ]
+ },
+ "forms:ȣ̓́τω|ȣ̔́τω|ὕτω": {
+  "verdict": "accept",
+  "detail": "ȣ̔́τω",
+  "sites": [
+   "page-256-R:45:1937"
+  ]
+ },
+ "forms:πȣ̀ς|πȣ͂|πȣς|πῦρ": {
+  "verdict": "preserve",
+  "detail": "πȣ̀ς",
+  "sites": [
+   "page-253-L:25:978"
+  ]
+ },
+ "forms:ἀποτελεȣται|ἀποτελεῖται|ἀποτελῖȣται": {
+  "verdict": "none",
+  "detail": "",
+  "sites": [
+   "page-255-R:61:2612"
+  ]
+ },
+ "forms:ȣ̔|ȣ̔͂|ȣὗ|οὗ": {
+  "verdict": "preserve",
+  "detail": "ȣ̔͂",
+  "sites": [
+   "page-262-R:41:1778"
+  ]
+ },
+ "forms:ȣλος|ἴȣλος|ἴσλος|ἴυλος": {
+  "verdict": "preserve",
+  "detail": "ἴȣλος",
+  "sites": [
+   "page-268-L:15:679"
+  ]
+ },
+ "forms:αὐτȣ͂|αὑτȣ͂|αὑτὰ|αὑτὸ": {
+  "verdict": "preserve",
+  "detail": "αὑτȣ͂",
+  "sites": [
+   "page-260-L:5:181"
+  ]
+ },
+ "forms:τȣ́νομα|τȣ̓νομα|τοὔνομα|τὔνομα": {
+  "verdict": "accept",
+  "detail": "τȣ̓́νομα",
+  "sites": [
+   "page-267-R:20:843"
+  ]
+ },
+ "forms:τȣ́νομα|τȣ͂νομα|τȣνομα|τὔνομα": {
+  "verdict": "accept",
+  "detail": "τȣ̓́νομα",
+  "sites": [
+   "page-265-R:35:1425"
+  ]
+ },
+ "forms:τȣ̓́νομα|τȣ͂νομα|τȣνομα|τὔνομα": {
+  "verdict": "preserve",
+  "detail": "τȣ̓́νομα",
+  "sites": [
+   "page-265-R:37:1509"
+  ]
+ },
+ "forms:ἐξακ|ἐξακȣ|ἐξακȣ́": {
+  "verdict": "preserve",
+  "detail": "ἐξακȣ́",
+  "sites": [
+   "page-260-R:15:620"
+  ]
+ },
+ "forms:ȣ̓́θ|ȣ̓δ|ȣ̓θ|ἔθ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓́θ",
+  "sites": [
+   "page-273-L:28:1275"
+  ]
+ },
+ "forms:ȣ̓́τ|ȣ̓τ|οὔτ|ὔτ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓́τ",
+  "sites": [
+   "page-278-R:38:1435"
+  ]
+ },
+ "forms:ȣ̓͂σα|ȣ̔͂σα|οὖσα|ὔσα": {
+  "verdict": "accept",
+  "detail": "ȣ̓͂σα",
+  "sites": [
+   "page-278-R:40:1503"
+  ]
+ },
+ "forms:άκτου|ακτο|ἄκτȣ|ἅκτȣ": {
+  "verdict": "accept",
+  "detail": "άκτȣ",
+  "sites": [
+   "page-278-R:22:787"
+  ]
+ },
+ "forms:νȣ͂ν|νν|νοῦν|νῦν": {
+  "verdict": "preserve",
+  "detail": "νȣ͂ν",
+  "sites": [
+   "page-278-R:27:961"
+  ]
+ },
+ "forms:ξαπλȣ͂ν|ἐξαπλȣ͂ν|ἐξαπλᾶν": {
+  "verdict": "preserve",
+  "detail": "ἐξαπλȣ͂ν",
+  "sites": [
+   "page-271-L:34:1280"
+  ]
+ },
+ "forms:σχȣȣσί|σχȣσί|σχουσι": {
+  "verdict": "accept",
+  "detail": "σχȣσί",
+  "sites": [
+   "page-271-L:11:382"
+  ]
+ },
+ "forms:τȣ́τȣ|τȣτȣ|τύπῳ|τῆς": {
+  "verdict": "preserve",
+  "detail": "τȣ́τȣ",
+  "sites": [
+   "page-276-L:37:1559"
+  ]
+ },
+ "forms:ȣ̀ς|ȣ̓ς|ȣὓς|ἧς": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂ς",
+  "sites": [
+   "page-217-L:54:2355"
+  ]
+ },
+ "forms:ȣ̓͂|ȣ̔͂|ȣὗ|οὗ": {
+  "verdict": "preserve",
+  "detail": "ȣ̔͂",
+  "sites": [
+   "page-262-R:16:665"
+  ]
+ },
+ "forms:ἐξυβρίȣσιν|ἐξυβρίζȣσιν|ἐξυβρίζουσιν|ἐξυβρζȣσν": {
+  "verdict": "preserve",
+  "detail": "ἐξυβρίȣσιν",
+  "sites": [
+   "page-274-R:34:1320"
+  ]
+ },
+ "forms:ὀδȣ̀ς|ὀδȣς|ὀδοὺς|ὀδὺς": {
+  "verdict": "preserve",
+  "detail": "ὀδȣ̀ς",
+  "sites": [
+   "page-274-L:45:2026"
+  ]
+ },
+ "forms:ὁκονοȣ͂σιν|ὁμονοȣ͂σιν|ὁμονοȣσιν|ὁμονοῦσιν": {
+  "verdict": "accept",
+  "detail": "ὁμονοȣ͂σιν",
+  "sites": [
+   "page-279-R:61:2563"
+  ]
+ },
+ "forms:ἐξίȣσα|ἐξίθσα|ἐξιȣ͂σα|ἐξισα": {
+  "verdict": "preserve",
+  "detail": "ἐξιȣ͂σα",
+  "sites": [
+   "page-281-R:51:2199"
+  ]
+ }
+}

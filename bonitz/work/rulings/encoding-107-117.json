@@ -1,0 +1,79 @@
+{
+ "encoding:Οα": {
+  "verdict": "accept",
+  "detail": "Οα",
+  "sites": [
+   "page-113-L:36:1648"
+  ]
+ },
+ "encoding:Ζeller": {
+  "verdict": "accept",
+  "detail": "Zeller",
+  "sites": [
+   "page-110-R:22:981",
+   "page-110-R:57:2548",
+   "page-114-L:21:901",
+   "page-114-L:52:2335"
+  ]
+ },
+ "encoding:Rοse": {
+  "verdict": "accept",
+  "detail": "Rose",
+  "sites": [
+   "page-112-R:54:2396",
+   "page-113-R:26:1232"
+  ]
+ },
+ "encoding:Μeyer": {
+  "verdict": "accept",
+  "detail": "Meyer",
+  "sites": [
+   "page-111-L:19:855"
+  ]
+ },
+ "encoding:Αnalytica": {
+  "verdict": "accept",
+  "detail": "Analytica",
+  "sites": [
+   "page-114-L:30:1353"
+  ]
+ },
+ "encoding:Μetaphysicis": {
+  "verdict": "accept",
+  "detail": "Metaphysicis",
+  "sites": [
+   "page-112-L:51:2287"
+  ]
+ },
+ "encoding:cοrum": {
+  "verdict": "preserve",
+  "detail": "corum",
+  "sites": [
+   "page-116-L:41:1842",
+   "page-114-R:57:2553"
+  ]
+ },
+ "encoding:eοsdem": {
+  "verdict": "preserve",
+  "detail": "eosdem",
+  "sites": [
+   "page-117-L:28:1324",
+   "page-117-L:45:2096"
+  ]
+ },
+ "encoding:Βran": {
+  "verdict": "preserve",
+  "detail": "Bran",
+  "sites": [
+   "page-110-R:4:183",
+   "page-111-R:49:2211"
+  ]
+ },
+ "encoding:Βα": {
+  "verdict": "accept",
+  "detail": "Βα",
+  "sites": [
+   "page-109-L:58:2628"
+  ]
+ }
+}

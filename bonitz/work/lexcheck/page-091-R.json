@@ -1,0 +1,13 @@
+[
+  {
+    "page": 91,
+    "col": "R",
+    "line": 57,
+    "wrote": "πεπαιδεῦσθαι",
+    "llamaparse": "πεπαιδεȣσθαι",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "πεπαιδευσθαι is a corpus form; πεπαιδεουσθαι is not",
+    "context": "ρόδȣ τȣ̀ς λόγȣς Ογ8. 306b28. πεπαιδεῦσθαι πῶς ἕκαστα"
+  }
+]

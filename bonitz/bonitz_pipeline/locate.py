@@ -34,6 +34,8 @@ import unicodedata
 from functools import lru_cache
 from pathlib import Path
 
+from .normalize import corpus_column, corpus_columns
+
 from bonitz_pipeline.siglum_check import CITE, inventory, read, resolve
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -118,7 +120,8 @@ def main(argv: list[str] | None = None) -> int:
     checked = right = moved = unplaceable = unverified = 0
     near, far = [], []
     for c in cites:
-        lines = (ROOT / f'work/reconciled/{c.col}.txt').read_text(
+        _pg, _cl = int(c.col.split('-')[1]), c.col.split('-')[2]
+        lines = corpus_column(_pg, _cl).read_text(
             encoding='utf-8').splitlines()
         # ⚠ A QUOTATION WRAPS THE COLUMN. Codex, 2026-08-10: `quoted()` was
         # handed one physical line, so a quotation beginning on the previous

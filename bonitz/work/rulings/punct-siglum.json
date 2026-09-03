@@ -1,0 +1,65 @@
+{
+ "punct:page-107-R:49": {
+  "verdict": "accept",
+  "detail": "I. A. formularum",
+  "sites": [
+   "page-107-R:49:2170"
+  ]
+ },
+ "punct:page-108-L:32": {
+  "verdict": "accept",
+  "detail": "ἐκ ...",
+  "sites": [
+   "page-108-L:32:1475"
+  ]
+ },
+ "punct:page-112-L:7": {
+  "verdict": "accept",
+  "detail": "468a25, b2. αν17. 479a3. Ζιδ7. 531b30-",
+  "sites": [
+   "page-112-L:7:300"
+  ]
+ },
+ "punct:page-113-L:30": {
+  "verdict": "accept",
+  "detail": "(Φθ10. 276b17). λ8.",
+  "sites": [
+   "page-113-L:30:1362"
+  ]
+ },
+ "siglum:page-032-R:51": {
+  "verdict": "preserve",
+  "detail": "Ζιι6. 700 b20",
+  "sites": [
+   "page-032-R:51:2272"
+  ]
+ },
+ "siglum:page-102-R:12": {
+  "verdict": "preserve",
+  "detail": "Ηκ10. 1081b11",
+  "sites": [
+   "page-102-R:12:535"
+  ]
+ },
+ "siglum:page-049-L:51": {
+  "verdict": "preserve",
+  "detail": "Ηε10. 1835 b12-1136 a3",
+  "sites": [
+   "page-049-L:51:2087"
+  ]
+ },
+ "siglum:page-040-L:44": {
+  "verdict": "preserve",
+  "detail": "πο8. 1408 b31",
+  "sites": [
+   "page-040-L:44:1993"
+  ]
+ },
+ "punct:page-109-L:30": {
+  "verdict": "accept",
+  "detail": "ἔσκεπται, ἐπέ-",
+  "sites": [
+   "page-109-L:30:1356"
+  ]
+ }
+}

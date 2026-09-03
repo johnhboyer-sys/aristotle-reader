@@ -1,0 +1,231 @@
+{
+ "entries": [
+  {
+   "page": 107,
+   "col": "R",
+   "line": 49,
+   "word_off": 2170,
+   "char_at": 0,
+   "readers": {
+    "opus": "I. . formularum"
+   },
+   "kind": "punct",
+   "reason": "a section heading: LlamaParse reads \"I. A. formularum discrimen primum in eo est conspicuum\", so the A was read as a second full stop",
+   "forms": [
+    "I. A. formularum",
+    "I. . formularum"
+   ],
+   "form_set": [
+    "I. A. formularum",
+    "I. . formularum"
+   ],
+   "becomes": "I. A. formularum",
+   "proposal": {
+    "form": "I. A. formularum"
+   },
+   "card_sid": "punct:page-107-R:49"
+  },
+  {
+   "page": 108,
+   "col": "L",
+   "line": 32,
+   "word_off": 1475,
+   "char_at": 54,
+   "readers": {
+    "opus": "ἐκ.."
+   },
+   "kind": "punct",
+   "reason": "Bonitz's elision dots — the same line already prints \"ἐν ...\" correctly; LlamaParse reads \"δῆλον δ’ ἡμῖν τȣ͂το ἐκ ... αν8. 474b9\"",
+   "forms": [
+    "ἐκ ...",
+    "ἐκ.."
+   ],
+   "form_set": [
+    "ἐκ ...",
+    "ἐκ.."
+   ],
+   "becomes": "ἐκ ...",
+   "proposal": {
+    "form": "ἐκ ..."
+   },
+   "card_sid": "punct:page-108-L:32"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 30,
+   "word_off": 1356,
+   "char_at": 40,
+   "readers": {
+    "opus": "ἔσκεπται., ἐπέ-"
+   },
+   "kind": "punct",
+   "reason": "a stop AND a comma together, and the STOP is the intruder. This is the simple verb beside its own compound, sharing one citation list — the same construction as \"διοριζόμεθα, προσδιοριζόμεθα ἐν\" at 108-R:46 and \"ἐξαρκȣ́ντως, ἱκανῶς ἐν\" at 108-R:48, comma in both. Across 107-117 that shape takes a comma 57 times; the 9 stops are all lemma heads on 107 and 117 or ends of sentences. LlamaParse reads a stop, and is outvoted by the construction",
+   "forms": [
+    "ἔσκεπται, ἐπέ-",
+    "ἔσκεπται., ἐπέ-"
+   ],
+   "form_set": [
+    "ἔσκεπται, ἐπέ-",
+    "ἔσκεπται., ἐπέ-"
+   ],
+   "becomes": "ἔσκεπται, ἐπέ-",
+   "proposal": {
+    "form": "ἔσκεπται, ἐπέ-"
+   },
+   "card_sid": "punct:page-109-L:30"
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 7,
+   "word_off": 300,
+   "char_at": 12,
+   "readers": {
+    "opus": "468a25 b2. αν17. 479a3. Ζιδ7., 531b30-"
+   },
+   "kind": "punct",
+   "reason": "two lost marks on one line: the comma inside 468a25, b2 is gone and a stray one sits after Ζιδ7; LlamaParse reads \"468a25, b2 … Ζιδ7. 531b30-532a5\"",
+   "forms": [
+    "468a25, b2. αν17. 479a3. Ζιδ7. 531b30-",
+    "468a25 b2. αν17. 479a3. Ζιδ7., 531b30-"
+   ],
+   "form_set": [
+    "468a25, b2. αν17. 479a3. Ζιδ7. 531b30-",
+    "468a25 b2. αν17. 479a3. Ζιδ7., 531b30-"
+   ],
+   "becomes": "468a25, b2. αν17. 479a3. Ζιδ7. 531b30-",
+   "proposal": {
+    "form": "468a25, b2. αν17. 479a3. Ζιδ7. 531b30-"
+   },
+   "card_sid": "punct:page-112-L:7"
+  },
+  {
+   "page": 113,
+   "col": "L",
+   "line": 30,
+   "word_off": 1362,
+   "char_at": 13,
+   "readers": {
+    "opus": "(Φθ10. 276b17. λ8."
+   },
+   "kind": "punct",
+   "reason": "the parenthesis opened here never closes; LlamaParse reads \"(Φθ10. 276b17).\"",
+   "forms": [
+    "(Φθ10. 276b17). λ8.",
+    "(Φθ10. 276b17. λ8."
+   ],
+   "form_set": [
+    "(Φθ10. 276b17). λ8.",
+    "(Φθ10. 276b17. λ8."
+   ],
+   "becomes": "(Φθ10. 276b17). λ8.",
+   "proposal": {
+    "form": "(Φθ10. 276b17). λ8."
+   },
+   "card_sid": "punct:page-113-L:30"
+  },
+  {
+   "page": 32,
+   "col": "R",
+   "line": 51,
+   "word_off": 2272,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ζιι6. 700 b20"
+   },
+   "kind": "siglum",
+   "reason": "THREE readers, three different sigla — the corpus Ζιι, LlamaParse Ζμ, Opus Ζυ — so this is ours, not Bonitz's. 700b is περὶ Ζῴων κινήσεως (698-704), which is Ζκ, and the words beside it are that book at 700b20",
+   "forms": [
+    "Ζκ6. 700 b20",
+    "Ζιι6. 700 b20"
+   ],
+   "form_set": [
+    "Ζκ6. 700 b20",
+    "Ζιι6. 700 b20"
+   ],
+   "becomes": "Ζκ6. 700 b20",
+   "proposal": {
+    "form": "Ζκ6. 700 b20"
+   },
+   "card_sid": "siglum:page-032-R:51"
+  },
+  {
+   "page": 102,
+   "col": "R",
+   "line": 12,
+   "word_off": 535,
+   "char_at": 30,
+   "readers": {
+    "opus": "Ηκ10. 1081b11"
+   },
+   "kind": "siglum",
+   "reason": "Ethics κ10 is 1179-1181, so the page and not the siglum is wrong; 113-L prints the same reference correctly as \"κ10. 1181b\". A 1 read as 0",
+   "forms": [
+    "Ηκ10. 1181b11",
+    "Ηκ10. 1081b11"
+   ],
+   "form_set": [
+    "Ηκ10. 1181b11",
+    "Ηκ10. 1081b11"
+   ],
+   "becomes": "Ηκ10. 1181b11",
+   "proposal": {
+    "form": "Ηκ10. 1181b11"
+   },
+   "card_sid": "siglum:page-102-R:12"
+  },
+  {
+   "page": 49,
+   "col": "L",
+   "line": 51,
+   "word_off": 2087,
+   "char_at": 5,
+   "readers": {
+    "opus": "Ηε10. 1835 b12-1136 a3"
+   },
+   "kind": "siglum",
+   "reason": "the span runs BACKWARD and 1835 is past the end of Bekker; Ethics ε10 is 1134-1138. But all three readers — corpus, Opus, LlamaParse — read 1835, so if the ink says 1835 this is Bonitz's own slip and wants preserving",
+   "forms": [
+    "Ηε10. 1135 b12-1136 a3",
+    "Ηε10. 1835 b12-1136 a3"
+   ],
+   "form_set": [
+    "Ηε10. 1135 b12-1136 a3",
+    "Ηε10. 1835 b12-1136 a3"
+   ],
+   "becomes": "Ηε10. 1135 b12-1136 a3",
+   "proposal": {
+    "form": "Ηε10. 1135 b12-1136 a3"
+   },
+   "card_sid": "siglum:page-049-L:51"
+  },
+  {
+   "page": 40,
+   "col": "L",
+   "line": 44,
+   "word_off": 1993,
+   "char_at": 9,
+   "readers": {
+    "opus": "πο8. 1408 b31"
+   },
+   "kind": "siglum",
+   "reason": "1408b is τέχνη Ῥητορική γ, not περὶ Ποιητικῆς (1447-1462), and the same page prints \"Ργ7. 1408b5\". But corpus and Opus both read πο, so if the ink says πο this is Bonitz's own slip and wants preserving",
+   "forms": [
+    "Ργ8. 1408 b31",
+    "πο8. 1408 b31"
+   ],
+   "form_set": [
+    "Ργ8. 1408 b31",
+    "πο8. 1408 b31"
+   ],
+   "becomes": "Ργ8. 1408 b31",
+   "proposal": {
+    "form": "Ργ8. 1408 b31"
+   },
+   "card_sid": "siglum:page-040-L:44"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 9
+}

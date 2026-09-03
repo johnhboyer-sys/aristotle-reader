@@ -1,0 +1,606 @@
+{
+ "entries": [
+  {
+   "page": 17,
+   "col": "L",
+   "line": 25,
+   "word_off": 1024,
+   "char_at": 8,
+   "readers": {
+    "opus": "πκ34. 726b"
+   },
+   "kind": "corrigendum",
+   "reason": "π is Προβλήματα at 859-967, and the page beside it is 726. 726 falls in περὶ Ζῴων γενέσεως (siglum Ζγ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "πκ34. 726b"
+   ],
+   "form_set": [
+    "πκ34. 726b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-017-L:25:πκ34. 72"
+  },
+  {
+   "page": 20,
+   "col": "L",
+   "line": 7,
+   "word_off": 296,
+   "char_at": 22,
+   "readers": {
+    "opus": "Πβ18. 1391 b"
+   },
+   "kind": "corrigendum",
+   "reason": "Π is Πολιτικά at 1252-1342, and the page beside it is 1391. 1391 falls in τέχνη Ῥητορική (siglum Ρ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Πβ18. 1391 b"
+   ],
+   "form_set": [
+    "Πβ18. 1391 b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-020-L:7:Πβ18. 13"
+  },
+  {
+   "page": 24,
+   "col": "R",
+   "line": 28,
+   "word_off": 1157,
+   "char_at": 9,
+   "readers": {
+    "opus": "οβ1374 a"
+   },
+   "kind": "corrigendum",
+   "reason": "ο is Οἰκονομικά at 1343-1353, and the page beside it is 1374. 1374 falls in τέχνη Ῥητορική (siglum Ρ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "οβ1374 a"
+   ],
+   "form_set": [
+    "οβ1374 a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-024-R:28:οβ1374 a"
+  },
+  {
+   "page": 27,
+   "col": "L",
+   "line": 5,
+   "word_off": 198,
+   "char_at": 6,
+   "readers": {
+    "opus": "Ζιβ1. 449 a"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζι is περὶ τὰ Ζῷα ἱστορίαι at 486-638, and the page beside it is 449. 449 falls in περὶ Αἰσθήσεως ϗ̀ αἰσθητῶν — sigla μν, αι. the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζιβ1. 449 a"
+   ],
+   "form_set": [
+    "Ζιβ1. 449 a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-027-L:5:Ζιβ1. 44"
+  },
+  {
+   "page": 28,
+   "col": "L",
+   "line": 28,
+   "word_off": 1262,
+   "char_at": 11,
+   "readers": {
+    "opus": "υ3. 485 a"
+   },
+   "kind": "corrigendum",
+   "reason": "υ is περὶ Ὕπνȣ ϗ̀ ἐγρηγόρσεως at 453-458, and the page beside it is 485. 485 falls in περὶ Πνεύματος (siglum πν). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "υ3. 485 a"
+   ],
+   "form_set": [
+    "υ3. 485 a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-028-L:28:υ3. 485 "
+  },
+  {
+   "page": 35,
+   "col": "L",
+   "line": 22,
+   "word_off": 951,
+   "char_at": 0,
+   "readers": {
+    "opus": "Οβ13. 259a"
+   },
+   "kind": "corrigendum",
+   "reason": "Ο is περὶ Οὐρανȣ͂ at 268-313, and the page beside it is 259. 259 falls in Φυσικὴ ἀκρόασις (siglum Φ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Οβ13. 259a"
+   ],
+   "form_set": [
+    "Οβ13. 259a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-035-L:22:Οβ13. 25"
+  },
+  {
+   "page": 38,
+   "col": "R",
+   "line": 52,
+   "word_off": 2148,
+   "char_at": 28,
+   "readers": {
+    "opus": "Πγ7. 1408 b"
+   },
+   "kind": "corrigendum",
+   "reason": "Π is Πολιτικά at 1252-1342, and the page beside it is 1408. 1408 falls in τέχνη Ῥητορική (siglum Ρ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Πγ7. 1408 b"
+   ],
+   "form_set": [
+    "Πγ7. 1408 b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-038-R:52:Πγ7. 140"
+  },
+  {
+   "page": 39,
+   "col": "L",
+   "line": 14,
+   "word_off": 615,
+   "char_at": 22,
+   "readers": {
+    "opus": "Ππ14. 1285 a"
+   },
+   "kind": "corrigendum",
+   "reason": "1285 is inside Π (Πολιτικά), but 'π' reads as book 80 and no work of Aristotle has that many. 1285 falls in Πολιτικά (siglum Π). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ππ14. 1285 a"
+   ],
+   "form_set": [
+    "Ππ14. 1285 a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-039-L:14:Ππ14. 12"
+  },
+  {
+   "page": 41,
+   "col": "R",
+   "line": 10,
+   "word_off": 436,
+   "char_at": 17,
+   "readers": {
+    "opus": "Ζκ7. 638b"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζκ is περὶ Ζῴων κινήσεως at 698-704, and the page beside it is 638. 638 falls in περὶ τὰ Ζῷα ἱστορίαι (siglum Ζι). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζκ7. 638b"
+   ],
+   "form_set": [
+    "Ζκ7. 638b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-041-R:10:Ζκ7. 638"
+  },
+  {
+   "page": 50,
+   "col": "R",
+   "line": 31,
+   "word_off": 1245,
+   "char_at": 30,
+   "readers": {
+    "opus": "Πζ5. 1820a"
+   },
+   "kind": "corrigendum",
+   "reason": "Π is Πολιτικά at 1252-1342, and the page beside it is 1820. 1820 falls outside every Bekker range in Bonitz's key. the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Πζ5. 1820a"
+   ],
+   "form_set": [
+    "Πζ5. 1820a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-050-R:31:Πζ5. 182"
+  },
+  {
+   "page": 56,
+   "col": "R",
+   "line": 40,
+   "word_off": 1815,
+   "char_at": 42,
+   "readers": {
+    "opus": "Ζγε3. 482 b"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζγ is περὶ Ζῴων γενέσεως at 715-789, and the page beside it is 482. 482 falls in περὶ Πνεύματος (siglum πν). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζγε3. 482 b"
+   ],
+   "form_set": [
+    "Ζγε3. 482 b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-056-R:40:Ζγε3. 48"
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 26,
+   "word_off": 1050,
+   "char_at": 37,
+   "readers": {
+    "opus": "Λγ13. 78b"
+   },
+   "kind": "corrigendum",
+   "reason": "'Λγ' is not one of Bonitz's sigla. 78 falls in Ἀναλυτικὰ ὕστερα — sigla Αγ, Αδ. the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Λγ13. 78b"
+   ],
+   "form_set": [
+    "Λγ13. 78b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-058-L:26:Λγ13. 78"
+  },
+  {
+   "page": 59,
+   "col": "L",
+   "line": 17,
+   "word_off": 788,
+   "char_at": 19,
+   "readers": {
+    "opus": "κτλ 1379a"
+   },
+   "kind": "corrigendum",
+   "reason": "κ is περὶ Κόσμȣ at 391-401, and the page beside it is 1379. 1379 falls in τέχνη Ῥητορική (siglum Ρ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "κτλ 1379a"
+   ],
+   "form_set": [
+    "κτλ 1379a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-059-L:17:κτλ 1379"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 6,
+   "word_off": 260,
+   "char_at": 33,
+   "readers": {
+    "opus": "υ3. 465 b"
+   },
+   "kind": "corrigendum",
+   "reason": "υ is περὶ Ὕπνȣ ϗ̀ ἐγρηγόρσεως at 453-458, and the page beside it is 465. 465 falls in περὶ Μακροβιότητος ϗ̀ βραχυβιότητος (siglum μκ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "υ3. 465 b"
+   ],
+   "form_set": [
+    "υ3. 465 b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-059-R:6:υ3. 465 "
+  },
+  {
+   "page": 60,
+   "col": "L",
+   "line": 1,
+   "word_off": 11,
+   "char_at": 12,
+   "readers": {
+    "opus": "τι8. 138 b"
+   },
+   "kind": "corrigendum",
+   "reason": "τι is Σοφιστικοὶ ἔλεγχοι at 164-184, and the page beside it is 138. 138 falls in Τοπικά — sigla τθ, τγ, τδ, τζ. the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "τι8. 138 b"
+   ],
+   "form_set": [
+    "τι8. 138 b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-060-L:1:τι8. 138"
+  },
+  {
+   "page": 63,
+   "col": "L",
+   "line": 9,
+   "word_off": 319,
+   "char_at": 28,
+   "readers": {
+    "opus": "Ζδ4. 773a"
+   },
+   "kind": "corrigendum",
+   "reason": "'Ζδ' is not one of Bonitz's sigla. 773 falls in περὶ Ζῴων γενέσεως (siglum Ζγ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζδ4. 773a"
+   ],
+   "form_set": [
+    "Ζδ4. 773a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-063-L:9:Ζδ4. 773"
+  },
+  {
+   "page": 65,
+   "col": "R",
+   "line": 46,
+   "word_off": 1970,
+   "char_at": 43,
+   "readers": {
+    "opus": "Ζμβ4. 501b"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζμ is περὶ Ζῴων μορίων at 639-697, and the page beside it is 501. 501 falls in περὶ τὰ Ζῷα ἱστορίαι (siglum Ζι). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζμβ4. 501b"
+   ],
+   "form_set": [
+    "Ζμβ4. 501b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-065-R:46:Ζμβ4. 50"
+  },
+  {
+   "page": 67,
+   "col": "L",
+   "line": 44,
+   "word_off": 1715,
+   "char_at": 19,
+   "readers": {
+    "opus": "Ρβ12. 1274b"
+   },
+   "kind": "corrigendum",
+   "reason": "Ρ is τέχνη Ῥητορική at 1354-1420, and the page beside it is 1274. 1274 falls in Πολιτικά (siglum Π). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ρβ12. 1274b"
+   ],
+   "form_set": [
+    "Ρβ12. 1274b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-067-L:44:Ρβ12. 12"
+  },
+  {
+   "page": 67,
+   "col": "R",
+   "line": 18,
+   "word_off": 678,
+   "char_at": 38,
+   "readers": {
+    "opus": "Πβ6. 1383b"
+   },
+   "kind": "corrigendum",
+   "reason": "Π is Πολιτικά at 1252-1342, and the page beside it is 1383. 1383 falls in τέχνη Ῥητορική (siglum Ρ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Πβ6. 1383b"
+   ],
+   "form_set": [
+    "Πβ6. 1383b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-067-R:18:Πβ6. 138"
+  },
+  {
+   "page": 70,
+   "col": "R",
+   "line": 13,
+   "word_off": 524,
+   "char_at": 7,
+   "readers": {
+    "opus": "Ζμγ7. 516a"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζμ is περὶ Ζῴων μορίων at 639-697, and the page beside it is 516. 516 falls in περὶ τὰ Ζῷα ἱστορίαι (siglum Ζι). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζμγ7. 516a"
+   ],
+   "form_set": [
+    "Ζμγ7. 516a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-070-R:13:Ζμγ7. 51"
+  },
+  {
+   "page": 70,
+   "col": "R",
+   "line": 22,
+   "word_off": 925,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ζμδ10. 628a"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζμ is περὶ Ζῴων μορίων at 639-697, and the page beside it is 628. 628 falls in περὶ τὰ Ζῷα ἱστορίαι (siglum Ζι). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζμδ10. 628a"
+   ],
+   "form_set": [
+    "Ζμδ10. 628a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-070-R:22:Ζμδ10. 6"
+  },
+  {
+   "page": 70,
+   "col": "R",
+   "line": 59,
+   "word_off": 2605,
+   "char_at": 8,
+   "readers": {
+    "opus": "Ζμα16. 494b"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζμ is περὶ Ζῴων μορίων at 639-697, and the page beside it is 494. 494 falls in περὶ τὰ Ζῷα ἱστορίαι (siglum Ζι). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζμα16. 494b"
+   ],
+   "form_set": [
+    "Ζμα16. 494b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-070-R:59:Ζμα16. 4"
+  },
+  {
+   "page": 76,
+   "col": "R",
+   "line": 6,
+   "word_off": 236,
+   "char_at": 8,
+   "readers": {
+    "opus": "Ζμδ3. 768a"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζμ is περὶ Ζῴων μορίων at 639-697, and the page beside it is 768. 768 falls in περὶ Ζῴων γενέσεως (siglum Ζγ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζμδ3. 768a"
+   ],
+   "form_set": [
+    "Ζμδ3. 768a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-076-R:6:Ζμδ3. 76"
+  },
+  {
+   "page": 81,
+   "col": "L",
+   "line": 11,
+   "word_off": 470,
+   "char_at": 15,
+   "readers": {
+    "opus": "Φθ8. 363a"
+   },
+   "kind": "corrigendum",
+   "reason": "Φ is Φυσικὴ ἀκρόασις at 184-267, and the page beside it is 363. 363 falls in Μετεωρολογικά (siglum μ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Φθ8. 363a"
+   ],
+   "form_set": [
+    "Φθ8. 363a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-081-L:11:Φθ8. 363"
+  },
+  {
+   "page": 86,
+   "col": "L",
+   "line": 24,
+   "word_off": 995,
+   "char_at": 6,
+   "readers": {
+    "opus": "χ3. 729b"
+   },
+   "kind": "corrigendum",
+   "reason": "χ is περὶ Χρωμάτων at 791-799, and the page beside it is 729. 729 falls in περὶ Ζῴων γενέσεως (siglum Ζγ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "χ3. 729b"
+   ],
+   "form_set": [
+    "χ3. 729b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-086-L:24:χ3. 729b"
+  },
+  {
+   "page": 96,
+   "col": "R",
+   "line": 9,
+   "word_off": 318,
+   "char_at": 36,
+   "readers": {
+    "opus": "Ζδ6. 775a"
+   },
+   "kind": "corrigendum",
+   "reason": "'Ζδ' is not one of Bonitz's sigla. 775 falls in περὶ Ζῴων γενέσεως (siglum Ζγ). the corpus, LlamaParse and Opus all read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζδ6. 775a"
+   ],
+   "form_set": [
+    "Ζδ6. 775a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-096-R:9:Ζδ6. 775"
+  },
+  {
+   "page": 107,
+   "col": "R",
+   "line": 6,
+   "word_off": 252,
+   "char_at": 38,
+   "readers": {
+    "opus": "Ηβ11. 1273b"
+   },
+   "kind": "corrigendum",
+   "reason": "Η is Ἠθικὰ Νικομάχεια at 1094-1181, and the page beside it is 1273. 1273 falls in Πολιτικά (siglum Π). the corpus and LlamaParse read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ηβ11. 1273b"
+   ],
+   "form_set": [
+    "Ηβ11. 1273b"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-107-R:6:Ηβ11. 12"
+  },
+  {
+   "page": 107,
+   "col": "R",
+   "line": 59,
+   "word_off": 2661,
+   "char_at": 15,
+   "readers": {
+    "opus": "Φβ10. 336a"
+   },
+   "kind": "corrigendum",
+   "reason": "Φ is Φυσικὴ ἀκρόασις at 184-267, and the page beside it is 336. 336 falls in περὶ Γενέσεως ϗ̀ φθορᾶς (siglum Γ). the corpus and LlamaParse read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Φβ10. 336a"
+   ],
+   "form_set": [
+    "Φβ10. 336a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-107-R:59:Φβ10. 33"
+  },
+  {
+   "page": 109,
+   "col": "R",
+   "line": 4,
+   "word_off": 173,
+   "char_at": 41,
+   "readers": {
+    "opus": "Ζμδ10. 698a"
+   },
+   "kind": "corrigendum",
+   "reason": "Ζμ is περὶ Ζῴων μορίων at 639-697, and the page beside it is 698. 698 falls in περὶ Ζῴων κινήσεως (siglum Ζκ). the corpus and LlamaParse read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "Ζμδ10. 698a"
+   ],
+   "form_set": [
+    "Ζμδ10. 698a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-109-R:4:Ζμδ10. 6"
+  },
+  {
+   "page": 117,
+   "col": "R",
+   "line": 1,
+   "word_off": 28,
+   "char_at": 31,
+   "readers": {
+    "opus": "μα3. 1351a"
+   },
+   "kind": "corrigendum",
+   "reason": "μ is Μετεωρολογικά at 338-390, and the page beside it is 1351. 1351 falls in Οἰκονομικά (siglum ο). the corpus and LlamaParse read this the same, so it is not a misreading of ours — if the ink says this, it is Bonitz's own slip and KEEP AS PRINTED banks a corrigendum without touching the text",
+   "forms": [
+    "μα3. 1351a"
+   ],
+   "form_set": [
+    "μα3. 1351a"
+   ],
+   "becomes": "",
+   "card_sid": "corrigendum:page-117-R:1:μα3. 135"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 30
+}

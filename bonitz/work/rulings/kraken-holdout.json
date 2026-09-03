@@ -1,0 +1,90 @@
+{
+ "_": "Columns held out of kraken training. THIS FILE IS THE RULING; kraken_corpus reads it and holds no list of its own. It lived as a constant in kraken_corpus.HOLDOUT until 2026-08-11, and that constant would have undone John's round-4 ruling in silence: stage_split() REWRITES work/kraken400/holdout.txt from it on every run, so pages 55 and 61 — appended to that file by hand when he ruled them — would have gone back into the training set the next time the corpus was rebuilt, with nothing raised. A ruling kept as code is a ruling one rerun away from being lost. Provenance for each entry is in `source`; the round-4 dossier is work/kraken400/HOLDOUT-53-62.md.",
+ "why_whole_columns": "Adjacent lines in this index share an entry, so a line-level split leaks: the same lemma, the same citation and often the same rare glyph stand on both sides of it. Whole columns, alternating sides, keep both the clean left columns and the gutter-side right columns in the evaluation.",
+ "columns": [
+  {
+   "column": "page-017-L",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating."
+  },
+  {
+   "column": "page-022-R",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating."
+  },
+  {
+   "column": "page-027-L",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating."
+  },
+  {
+   "column": "page-032-R",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating."
+  },
+  {
+   "column": "page-037-L",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating."
+  },
+  {
+   "column": "page-042-R",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating. The column John audited against the ink, and the one whose line 48 damage ruling he reversed."
+  },
+  {
+   "column": "page-047-L",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating."
+  },
+  {
+   "column": "page-052-R",
+   "round": 3,
+   "ruled": "2026-08-06",
+   "source": "work/kraken/NOTES.md",
+   "why": "Spread across 15-52 at every fifth page, sides alternating."
+  },
+  {
+   "column": "page-055-L",
+   "round": 4,
+   "ruled": "2026-08-11",
+   "source": "work/kraken400/HOLDOUT-53-62.md",
+   "why": "John's ruling, 19:17: pages 55 and 61 entire. Mid-range and typographically typical, no singular sites — and the mark-dense pages stay IN training deliberately, because restored breathings over the ou-ligature are what round 4 exists to teach."
+  },
+  {
+   "column": "page-055-R",
+   "round": 4,
+   "ruled": "2026-08-11",
+   "source": "work/kraken400/HOLDOUT-53-62.md",
+   "why": "John's ruling, 19:17: pages 55 and 61 entire."
+  },
+  {
+   "column": "page-061-L",
+   "round": 4,
+   "ruled": "2026-08-11",
+   "source": "work/kraken400/HOLDOUT-53-62.md",
+   "why": "John's ruling, 19:17: pages 55 and 61 entire."
+  },
+  {
+   "column": "page-061-R",
+   "round": 4,
+   "ruled": "2026-08-11",
+   "source": "work/kraken400/HOLDOUT-53-62.md",
+   "why": "John's ruling, 19:17: pages 55 and 61 entire."
+  }
+ ]
+}

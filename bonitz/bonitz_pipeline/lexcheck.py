@@ -24,7 +24,7 @@ import json
 import re
 import unicodedata
 from pathlib import Path
-from .normalize import corpus_column
+from .normalize import corpus_column, corpus_columns
 
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS = ROOT.parent / 'app/dist/data'
@@ -209,6 +209,15 @@ def main() -> None:
                     help='find ligatures ALL readers missed, ignoring LlamaParse')
     args = ap.parse_args()
 
+    pages = parse_pages(args.pages)
+    # ⚠ A PAGE IN NO CORPUS STAGE IS NOT A CLEAN PAGE. `scan` looks up
+    # its column with required=False and answers [] when there is none,
+    # so asking for a page that was never transcribed printed a zero and
+    # looked exactly like a page with no defects. This is the residue of
+    # the 2026-08-10 five-gate fix: they can SEE reconciled-auto now, but
+    # total absence still read as cleanliness. Validate the REQUEST here,
+    # once, where the user says which pages they mean.
+    corpus_columns(pages)
     forms = load_forms()
     outdir = ROOT / args.out
     outdir.mkdir(parents=True, exist_ok=True)

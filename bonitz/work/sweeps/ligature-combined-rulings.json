@@ -1,0 +1,37 @@
+{
+ "forms:ȣν": {
+  "verdict": "accept",
+  "detail": "ȣ̓͂ν",
+  "excluded": []
+ },
+ "forms:ȣτ'": {
+  "verdict": "accept",
+  "detail": "ȣ̓́τ'",
+  "excluded": []
+ },
+ "forms:ȣτε": {
+  "verdict": "accept",
+  "detail": "ȣ̓́τε",
+  "excluded": []
+ },
+ "forms:ȣρανȣ": {
+  "verdict": "accept",
+  "detail": "ȣ̓ρανȣ͂",
+  "excluded": []
+ },
+ "forms:ȣτος": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂τος",
+  "excluded": []
+ },
+ "forms:ȣτω": {
+  "verdict": "accept",
+  "detail": "ȣ̔́τω",
+  "excluded": []
+ },
+ "forms:ȣτως": {
+  "verdict": "accept",
+  "detail": "ȣ̔́τως",
+  "excluded": []
+ }
+}

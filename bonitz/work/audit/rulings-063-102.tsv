@@ -1,0 +1,86 @@
+# John's rulings on the 63-102 diacritic cards. Complete set, 2026-08-17.
+# The browser is not the record; this file is.
+# Card 77 corrected 2026-08-17: the UI button value `ή` did not record the
+# whole-word ruling `μεταβλητική` that was applied to the corpus.
+# card	opus	ruling	sites	excluded
+# resolved 2026-08-17 from the ink, in chat: cards 23, 61, 70, 71
+1	ȣ͂	ȣ͂	page-069-L:56 page-082-L:13 page-082-L:21 page-082-L:22 page-082-L:24 page-082-L:33 page-082-L:35 page-082-L:36 page-082-L:47 page-086-L:41 page-087-R:29	
+2	ȣ̀	ȣ̀	page-064-R:5 page-064-R:51 page-065-R:7 page-073-L:12 page-082-L:29 page-086-L:24 page-098-L:59	
+3	ȣ͂	ȣ͂	page-082-L:34 page-082-R:60 page-085-L:30 page-085-R:6 page-085-R:29 page-085-R:33	page-085-R:29
+4	ȣ̓	ȣ̓	page-085-L:55 page-085-R:41 page-085-R:48 page-101-R:8	
+5	ȣ̓	ȣ̓	page-090-R:58 page-092-L:15 page-092-R:2 page-102-R:23	
+6	ȣ͂	ȣ͂	page-067-R:45 page-086-L:39	
+7	αι	αι	page-069-L:48 page-069-R:7 page-069-R:12	
+8	ȣ͂	ȣ͂	page-064-L:26 page-086-L:35	
+9	ȣ͂	ȣ͂	page-102-L:26	
+10	ȣ͂ν	ȣ͂ν	page-082-L:13 page-082-L:57	
+11	'ȣ̓͂	'ȣ̓͂	page-102-R:42	
+12	'αὐ	'αὐ	page-090-L:25	
+13	'ἓ	'ἓ	page-094-R:57	
+14	-ἤ	-ἤ	page-097-L:34	
+15	.12.(ὑ	.12.(ὑ	page-072-L:41	
+16	9.τȣ̓	9.τȣ̓	page-090-L:31	
+17	ȣ̀	ȣ́	page-073-L:19	
+18	ȣ̀ςδȣ́λȣςο	ȣ̀ςδȣ́λȣςο	page-073-L:43	
+19	ȣ́	ȣ́	page-097-L:38	
+20	ȣ́ω	ȣ́ω	page-068-R:13	
+21	ȣ̓	ȣ̓	page-090-L:15	
+22	ȣ̓	ȣ̓	page-092-R:53	
+23	ȣ̓	ȣ̓́	page-102-R:31		smooth + acute on the ligature; calamari had this exactly
+24	ȣ̓δὲ	ȣ̓δὲ	page-100-L:9	
+25	ȣ̔τωσὶ	ȣ̔τωσὶ	page-065-L:54	
+26	ȣ͂	ȣ͂	page-069-L:53	
+27	ȣ͂	ȣ͂	page-071-L:46	
+28	ȣ͂	ȣ͂	page-081-L:36	
+29	ȣ͂	ȣ͂	page-086-L:41	
+30	ȣ͂	ȣ͂	page-086-R:52	
+31	ȣ͂	ȣ̓͂	page-091-L:56	
+32	ȣ͂	ȣ͂	page-097-L:19	
+33	ȣ͂Ζιι	ȣ͂Ζιι	page-097-L:38	
+34	ȣ͂αὐλȣ͂	ȣ͂αὐλȣ͂	page-063-L:60	
+35	ȣ͂ζυγȣ͂	ȣ͂ζυγȣ͂	page-065-L:24	
+36	ȣ͂θέρȣ	ȣ͂θέρȣ	page-069-L:36	
+37	ȣ͂μεγέθȣ	ȣ͂μεγέθȣ	page-081-R:38	
+38	ȣ͂ν	ȣ͂ν	page-102-R:61	
+39	ȣ͂νέφȣ	ȣ͂νέφȣ	page-096-L:6	
+40	ȣ͂πάθȣ	ȣ͂πάθȣ	page-089-R:24	
+41	ȣ͂ςϗ̀	ȣ͂ςϗ̀	page-088-R:12	
+42	ȣ͂τ	ȣ͂τ	page-086-L:26	
+43	ȣ͂φυτȣ͂	ȣ͂φυτȣ͂	page-098-L:27	
+44	ȣ͂ἀρχȣ͂	ȣ͂ἀρχȣ͂	page-065-R:26	
+45	ȣ͂ἴσȣἀξιȣ͂	ȣ͂ἴσȣἀξιȣ͂	page-082-L:13	
+46	ȣ͂ὄνȣ	ȣ͂ὄνȣ	page-094-R:13	
+47	ȣτȣ̀	ȣτȣ̀	page-082-L:26	
+48	άνη	άνη	page-066-R:9	
+49	ήντ	ήντ	page-095-L:15	
+50	ήρπκ	ήρπκ	page-081-L:5	
+51	ίνΖγδ3	ίνΖγδ3	page-063-L:4	
+52	δηλȣ͂	δηλȣ͂	page-092-L:12	
+53	η	η	page-102-L:60	
+54	ηνπιθ	ηνπιθ	page-085-L:9	
+55	ι	ι	page-068-R:48	
+56	ιȣ͂	ιȣ͂	page-088-L:27	
+57	ιἢ	ιἢ	page-084-R:39	
+58	λη	λη	page-090-L:46	
+59	ςὢ	ςὢ	page-095-L:13	
+60	όνπο	όνπο	page-088-L:11	
+61	όπκα	αὑτὸ	page-078-L:6		ἀντισπᾶν εἰς αὑτὸ — rough breathing AND grave; Opus had acute, calamari had smooth
+62	ύη	ύη	page-066-L:8	
+63	ύχȣ	ύχȣ	page-096-L:53	
+64	ϗ̀	ϗ̀	page-082-L:8	
+65	ϗ̀	ϗ̀	page-091-R:19	
+66	ϗ̀ἁ	ϗ̀ἁ	page-089-L:8	
+67	ϗ̀ἐπίβȣ	ϗ̀ἐπίβȣ	page-067-R:23	
+68	ϗ̀ὁκανώνΗ	ϗ̀ὁκανώνΗ	page-082-R:61	
+69	ϗ̀Ὑπέρȣ	ϗ̀Ὑπέρȣ	page-069-R:3	
+70	ἀνισȣ͂	ἀνισȣ͂	page-073-R:22		Opus correct; this card existed only because the ligature crop was off
+71	ἀντικρυς.	ἄντικρυς.	page-076-R:42		ἄντικρυς. — Opus dropped the acute
+72	ἁ	ἁ	page-085-R:42	
+73	Ἄ	Ἄ	page-072-R:56	
+74	ἡΛιβύηπι	ἡΛιβύηπι	page-073-L:55	
+75	ἤ	ἢ	page-102-R:29	
+76	ὑτȣ͂	ὑτȣ͂	page-085-R:22	
+77	ὴΠ	μεταβλητική	page-063-L:44		whole-word ruling; the old `ή` was only the UI button value
+78	ᾑρȣ͂ντο	ᾑρȣ͂ντο	page-075-L:51	
+79	ᾖ	ᾖ	page-077-L:2	
+80	ῆπκγ	ῆπκγ	page-067-R:6	

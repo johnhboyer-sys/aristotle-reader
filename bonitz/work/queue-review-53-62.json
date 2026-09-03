@@ -1,0 +1,1266 @@
+{
+ "_": [
+  "Every sweep's findings for this range, merged by site. Serve with settle_review --queue this --rulings work/sweeps/review-rulings.json --only-unruled."
+ ],
+ "pages": "53-62",
+ "n_sites": 39,
+ "by_sweep": {
+  "smyth:C1": 1,
+  "smyth:D1": 4,
+  "accent": 9,
+  "diacritic": 21,
+  "siglum": 5,
+  "breathing": 3,
+  "smyth:E1": 1,
+  "smyth:A6": 1,
+  "smyth:B7": 1
+ },
+ "entries": [
+  {
+   "page": 54,
+   "col": "L",
+   "line": 8,
+   "char_at": 11,
+   "char_at_corpus": 11,
+   "opus_aligned": true,
+   "word_off": 279,
+   "readers": {
+    "opus": "ηκ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ηκ"
+   ],
+   "form_set": [
+    "ηκ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "smyth:C1",
+    "smyth:D1"
+   ],
+   "context": "αἱ ἀπὸ τȣ͂ ηκ ἀναγόμεναι γραμμαί μγ5. 376a1. εἰ ἀνῆκτο",
+   "lines_reported": [
+    8
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "smyth:C1: no breathing; smyth:D1: ends in κ"
+  },
+  {
+   "page": 54,
+   "col": "L",
+   "line": 32,
+   "char_at": 52,
+   "char_at_corpus": 52,
+   "opus_aligned": true,
+   "word_off": 1414,
+   "readers": {
+    "opus": "ἀγνοιαν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ἀγνοιαν",
+    "άγνοιαν"
+   ],
+   "form_set": [
+    "άγνοιαν",
+    "ἀγνοιαν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent"
+   ],
+   "context": "Αα35. 48a31. ἀνακτέον τȣ̀ς λόγȣς εἰς τὴν τȣ͂ ἐλέγχȣ ἀ-",
+   "lines_reported": [
+    32
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "accent: accent contradicts the corpus"
+  },
+  {
+   "page": 54,
+   "col": "R",
+   "line": 54,
+   "char_at": 27,
+   "char_at_corpus": 27,
+   "opus_aligned": true,
+   "word_off": 2423,
+   "readers": {
+    "opus": "ἀγορά"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ἀγορά",
+    "αγορᾶ"
+   ],
+   "form_set": [
+    "αγορᾶ",
+    "ἀγορά"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent"
+   ],
+   "context": "Πη12. 1331 b13. ἡ ἀναγκαία ἀγορά Πη12. 1331 b11. εἶναι",
+   "lines_reported": [
+    54
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "accent: accent contradicts the corpus"
+  },
+  {
+   "page": 56,
+   "col": "L",
+   "line": 6,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 203,
+   "readers": {
+    "opus": "γνωσις"
+   },
+   "kind": "sweep",
+   "forms": [
+    "γνωσις",
+    "γνῶσις"
+   ],
+   "form_set": [
+    "γνωσις",
+    "γνῶσις"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "γνωσις Ργ12. 1414a18.",
+   "lines_reported": [
+    6
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads γνῶσις (+circumflex)"
+  },
+  {
+   "page": 56,
+   "col": "L",
+   "line": 22,
+   "char_at": 19,
+   "char_at_corpus": 19,
+   "opus_aligned": true,
+   "word_off": 888,
+   "readers": {
+    "opus": "ἀπόπλ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ἀπόπλ"
+   ],
+   "form_set": [
+    "ἀπόπλ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "smyth:D1"
+   ],
+   "context": "ακ800b15. — 2. i q ἀπόπλ[?]ς θ108. 840a33. — 3. logice",
+   "lines_reported": [
+    22
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "smyth:D1: ends in λ"
+  },
+  {
+   "page": 56,
+   "col": "R",
+   "line": 40,
+   "char_at": 42,
+   "char_at_corpus": 42,
+   "opus_aligned": true,
+   "word_off": 1815,
+   "readers": {
+    "opus": "Ζγε"
+   },
+   "kind": "sweep",
+   "forms": [
+    "Ζγε"
+   ],
+   "form_set": [
+    "Ζγε"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "siglum"
+   ],
+   "context": "Ζγε3. 482 b",
+   "lines_reported": [
+    40
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "siglum: Ζγ is περὶ Ζῴων γενέσεως at 715-789, and the page beside it is 482"
+  },
+  {
+   "page": 56,
+   "col": "R",
+   "line": 51,
+   "char_at": 48,
+   "char_at_corpus": 48,
+   "opus_aligned": true,
+   "word_off": 2274,
+   "readers": {
+    "opus": "πάν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "πάν",
+    "πᾶν"
+   ],
+   "form_set": [
+    "πάν",
+    "πᾶν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "κέφαλος, ἀναιμότατον τῶν ὑγρῶν τῶν ἐν τῷ σώματι πάν-",
+   "lines_reported": [
+    51
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads πᾶν (-acute,+circumflex)"
+  },
+  {
+   "page": 57,
+   "col": "L",
+   "line": 44,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 1935,
+   "readers": {
+    "opus": "θειαν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "θειαν",
+    "θείαν"
+   ],
+   "form_set": [
+    "θείαν",
+    "θειαν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "θειαν. ὥσπερ τὰ μαλακόστρακα ϗ̀ τὰ ὀστρακόδερμα Ζμβ8.",
+   "lines_reported": [
+    44
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads θείαν (+acute)"
+  },
+  {
+   "page": 57,
+   "col": "R",
+   "line": 7,
+   "char_at": 53,
+   "char_at_corpus": 53,
+   "opus_aligned": true,
+   "word_off": 294,
+   "readers": {
+    "opus": "ὑπερ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ὑπερ",
+    "υπέρ",
+    "ὑπὲρ"
+   ],
+   "form_set": [
+    "υπέρ",
+    "ὑπερ",
+    "ὑπὲρ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent",
+    "diacritic"
+   ],
+   "context": "sim, syn κτείνειν Ρα15. 1376a6. β21. 1395a16, 17. ἀναι-",
+   "lines_reported": [
+    6,
+    7
+   ],
+   "ambiguous": false,
+   "line_moved": true,
+   "reason": "accent: accent contradicts the corpus; diacritic: LlamaParse reads ὑπὲρ (+grave)"
+  },
+  {
+   "page": 57,
+   "col": "R",
+   "line": 7,
+   "char_at": 53,
+   "char_at_corpus": 53,
+   "opus_aligned": true,
+   "word_off": 294,
+   "readers": {
+    "opus": "ὑπερἔχοντας"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ὑπερἔχοντας",
+    "ὑπερεχοντας"
+   ],
+   "form_set": [
+    "ὑπερεχοντας",
+    "ὑπερἔχοντας"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "breathing"
+   ],
+   "context": "ρεῖσθαι, opp ὑγιάζεσθαι Ζγα18. 726a14. ἀναιρεῖν τȣ̀ς ὑπερ-",
+   "lines_reported": [
+    7
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "breathing: breathing contradicts the corpus (weak)"
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 13,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 541,
+   "readers": {
+    "opus": "τον"
+   },
+   "kind": "sweep",
+   "forms": [
+    "τον",
+    "τὸν"
+   ],
+   "form_set": [
+    "τον",
+    "τὸν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "τον Πβ4. 1262b18. ἀναίσθητος μεταβολή, ἀπόλυσις τῆς",
+   "lines_reported": [
+    13
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads τὸν (+grave)"
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 26,
+   "char_at": 37,
+   "char_at_corpus": 37,
+   "opus_aligned": true,
+   "word_off": 1049,
+   "readers": {
+    "opus": "Λγ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "Λγ"
+   ],
+   "form_set": [
+    "Λγ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "siglum"
+   ],
+   "context": "Λγ13. 78b",
+   "lines_reported": [
+    26
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "siglum: 'Λγ' is not one of Bonitz's sigla"
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 35,
+   "char_at": 48,
+   "char_at_corpus": 48,
+   "opus_aligned": true,
+   "word_off": 1423,
+   "readers": {
+    "opus": "περι"
+   },
+   "kind": "sweep",
+   "forms": [
+    "περι",
+    "περὶ"
+   ],
+   "form_set": [
+    "περι",
+    "περὶ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "μενον κάμπτεται μδ9. 385b33. — intr, de motu: ἡ περι-",
+   "lines_reported": [
+    35
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads περὶ (+grave)"
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 38,
+   "char_at": 50,
+   "char_at_corpus": 50,
+   "opus_aligned": true,
+   "word_off": 1558,
+   "readers": {
+    "opus": "εὐ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "εὐ",
+    "εὖ"
+   ],
+   "form_set": [
+    "εὐ",
+    "εὖ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "ἀνακάμπτοντες Ζιγ1. 510a33, 18. τὸ ἀνακάμπτον τὴν εὐ-",
+   "lines_reported": [
+    38
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads εὖ (+circumflex)"
+  },
+  {
+   "page": 58,
+   "col": "L",
+   "line": 39,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 1560,
+   "readers": {
+    "opus": "θεῖαν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "θεῖαν",
+    "θείαν"
+   ],
+   "form_set": [
+    "θείαν",
+    "θεῖαν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "θεῖαν τὰς ἐναντίας κινεῖται κινήσεις, τὸ ἀνακάμπτον ἀνάγκη",
+   "lines_reported": [
+    39
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads θείαν (-circumflex,+acute)"
+  },
+  {
+   "page": 58,
+   "col": "R",
+   "line": 53,
+   "char_at": 7,
+   "char_at_corpus": 7,
+   "opus_aligned": true,
+   "word_off": 2332,
+   "readers": {
+    "opus": "Ῥα"
+   },
+   "kind": "sweep",
+   "forms": [
+    "Ῥα",
+    "Ρα"
+   ],
+   "form_set": [
+    "Ρα",
+    "Ῥα"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic",
+    "smyth:E1"
+   ],
+   "context": "ζητεῖν Ῥα4. 1359b2-5. ἐν τοῖς ἐνύδροις, καλȣμένοις δὲ",
+   "lines_reported": [
+    53
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "smyth:E1: no accent; diacritic: LlamaParse reads Ρα (-rough)"
+  },
+  {
+   "page": 59,
+   "col": "L",
+   "line": 17,
+   "char_at": 19,
+   "char_at_corpus": 19,
+   "opus_aligned": true,
+   "word_off": 788,
+   "readers": {
+    "opus": "κτλ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "κτλ"
+   ],
+   "form_set": [
+    "κτλ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "siglum"
+   ],
+   "context": "κτλ 1379a",
+   "lines_reported": [
+    17
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "siglum: κ is περὶ Κόσμȣ at 391-401, and the page beside it is 1379"
+  },
+  {
+   "page": 59,
+   "col": "L",
+   "line": 45,
+   "char_at": 4,
+   "char_at_corpus": 4,
+   "opus_aligned": true,
+   "word_off": 1870,
+   "readers": {
+    "opus": "ὀσμάς"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ὀσμάς",
+    "ὀσμὰς"
+   ],
+   "form_set": [
+    "ὀσμάς",
+    "ὀσμὰς"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "τὰς ὀσμάς εν2. 460a32. εἰς αὑτὸ ἀναλαμβάνειν τὸ ὑγρὸν",
+   "lines_reported": [
+    45
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads ὀσμὰς (-acute,+grave)"
+  },
+  {
+   "page": 59,
+   "col": "L",
+   "line": 47,
+   "char_at": 17,
+   "char_at_corpus": 17,
+   "opus_aligned": true,
+   "word_off": 1968,
+   "readers": {
+    "opus": "Μαίων"
+   },
+   "kind": "sweep",
+   "forms": [
+    "Μαίων",
+    "μαιῶν"
+   ],
+   "form_set": [
+    "Μαίων",
+    "μαιῶν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent"
+   ],
+   "context": "μδ3. 380b19. ἀναλαβόντες τὰ ὅπλα f 517. 1562b26. Ὅ-",
+   "lines_reported": [
+    46,
+    47
+   ],
+   "ambiguous": false,
+   "line_moved": true,
+   "reason": "accent: accent contradicts the corpus; accent: accent contradicts the corpus"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 6,
+   "char_at": 33,
+   "char_at_corpus": 33,
+   "opus_aligned": true,
+   "word_off": 260,
+   "readers": {
+    "opus": "υ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "υ"
+   ],
+   "form_set": [
+    "υ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "siglum"
+   ],
+   "context": "υ3. 465 b",
+   "lines_reported": [
+    6
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "siglum: υ is περὶ Ὕπνȣ ϗ̀ ἐγρηγόρσεως at 453-458, and the page beside it is 465"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 23,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 875,
+   "readers": {
+    "opus": "ληψις"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ληψις",
+    "λῆψις"
+   ],
+   "form_set": [
+    "ληψις",
+    "λῆψις"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "ληψις μνήμης, dist λῆψις μν2. 451 a30.",
+   "lines_reported": [
+    23
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads λῆψις (+circumflex)"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 30,
+   "char_at": 31,
+   "char_at_corpus": 31,
+   "opus_aligned": true,
+   "word_off": 1203,
+   "readers": {
+    "opus": "πιμέλην"
+   },
+   "kind": "sweep",
+   "forms": [
+    "πιμέλην",
+    "πιμελήν"
+   ],
+   "form_set": [
+    "πιμέλην",
+    "πιμελήν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent"
+   ],
+   "context": "ἀναλίσκεται (ἀνήλωται) εἰς τὴν πιμέλην sim Ζγα19. 727 b1.",
+   "lines_reported": [
+    30
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "accent: accent contradicts the corpus"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 43,
+   "char_at": 18,
+   "char_at_corpus": 18,
+   "opus_aligned": true,
+   "word_off": 1727,
+   "readers": {
+    "opus": "γεωμετρική"
+   },
+   "kind": "sweep",
+   "forms": [
+    "γεωμετρική",
+    "γεωμετρικῆ"
+   ],
+   "form_set": [
+    "γεωμετρική",
+    "γεωμετρικῆ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent"
+   ],
+   "context": "Φδ8. 215 b29, 6. ἀναλογία ἰσότης λόγων, διῃρημένη συ-",
+   "lines_reported": [
+    42,
+    43
+   ],
+   "ambiguous": false,
+   "line_moved": true,
+   "reason": "accent: accent contradicts the corpus; accent: accent contradicts the corpus"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 46,
+   "char_at": 51,
+   "char_at_corpus": 51,
+   "opus_aligned": true,
+   "word_off": 1894,
+   "readers": {
+    "opus": "ὑπερ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ὑπερ",
+    "υπέρ",
+    "ὑπὲρ"
+   ],
+   "form_set": [
+    "υπέρ",
+    "ὑπερ",
+    "ὑπὲρ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent",
+    "diacritic"
+   ],
+   "context": "ταρες κυβικοὶ ἀριθμοὶ ἀποτελȣ͂νται πιε3. 910 b36. ὑπερβάλ-",
+   "lines_reported": [
+    45,
+    46
+   ],
+   "ambiguous": false,
+   "line_moved": true,
+   "reason": "accent: accent contradicts the corpus; diacritic: LlamaParse reads ὑπὲρ (+grave)"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 46,
+   "char_at": 51,
+   "char_at_corpus": 51,
+   "opus_aligned": true,
+   "word_off": 1894,
+   "readers": {
+    "opus": "ὑπερἔχειν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ὑπερἔχειν",
+    "ὑπερεχειν"
+   ],
+   "form_set": [
+    "ὑπερεχειν",
+    "ὑπερἔχειν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "breathing"
+   ],
+   "context": "λειν τὴν ἰσότητα τῆς κοινῆς ἀναλογίας μα3. 340 a4. ὑπερ-",
+   "lines_reported": [
+    46
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "breathing: breathing contradicts the corpus (weak)"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 60,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 2489,
+   "readers": {
+    "opus": "κατ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "κατ"
+   ],
+   "form_set": [
+    "κατ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "smyth:D1"
+   ],
+   "context": "κατ᾽ ἀναλογίαν λέγεσθαι Ζγα1. 715 b20. μεταφοραὶ κατ",
+   "lines_reported": [
+    60
+   ],
+   "ambiguous": true,
+   "line_moved": false,
+   "reason": "smyth:D1: ends in τ"
+  },
+  {
+   "page": 59,
+   "col": "R",
+   "line": 60,
+   "char_at": 49,
+   "char_at_corpus": 49,
+   "opus_aligned": true,
+   "word_off": 2531,
+   "readers": {
+    "opus": "κατ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "κατ"
+   ],
+   "form_set": [
+    "κατ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "smyth:D1"
+   ],
+   "context": "κατ᾽ ἀναλογίαν λέγεσθαι Ζγα1. 715 b20. μεταφοραὶ κατ",
+   "lines_reported": [
+    60
+   ],
+   "ambiguous": true,
+   "line_moved": false,
+   "reason": "smyth:D1: ends in τ"
+  },
+  {
+   "page": 60,
+   "col": "L",
+   "line": 1,
+   "char_at": 12,
+   "char_at_corpus": 12,
+   "opus_aligned": true,
+   "word_off": 11,
+   "readers": {
+    "opus": "τι"
+   },
+   "kind": "sweep",
+   "forms": [
+    "τι"
+   ],
+   "form_set": [
+    "τι"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "siglum"
+   ],
+   "context": "τι8. 138 b",
+   "lines_reported": [
+    1
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "siglum: τι is Σοφιστικοὶ ἔλεγχοι at 164-184, and the page beside it is 138"
+  },
+  {
+   "page": 60,
+   "col": "L",
+   "line": 46,
+   "char_at": 36,
+   "char_at_corpus": 36,
+   "opus_aligned": false,
+   "word_off": 2047,
+   "readers": {
+    "opus": "ἄνθρώπȣ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ἄνθρώπȣ",
+    "ἀνθρώπȣ"
+   ],
+   "form_set": [
+    "ἀνθρώπȣ",
+    "ἄνθρώπȣ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic",
+    "smyth:A6",
+    "smyth:B7"
+   ],
+   "context": "Ζμα4. 644 b11). dist ὅμοιον: τῷ τȣ͂ ἄνθρώπȣ στήθει ἀνά-",
+   "lines_reported": [
+    46
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "smyth:A6: two accents outside the enclitic pattern; smyth:B7: §166 acute on antepenult with long ultima; diacritic: LlamaParse reads ἀνθρώπȣ (-acute)"
+  },
+  {
+   "page": 60,
+   "col": "R",
+   "line": 35,
+   "char_at": 27,
+   "char_at_corpus": 27,
+   "opus_aligned": true,
+   "word_off": 1503,
+   "readers": {
+    "opus": "ταῦτο"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ταῦτο",
+    "ταυτό"
+   ],
+   "form_set": [
+    "ταυτό",
+    "ταῦτο"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent",
+    "diacritic"
+   ],
+   "context": "ἀπαιδευσίαν τῶν ἀναλυτικῶν ταῦτο δρῶσιν Μγ3. 1005 b4.",
+   "lines_reported": [
+    35
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "accent: accent contradicts the corpus; diacritic: LlamaParse reads ταὐτό (-circumflex,+acute,+smooth)"
+  },
+  {
+   "page": 60,
+   "col": "R",
+   "line": 56,
+   "char_at": 36,
+   "char_at_corpus": 36,
+   "opus_aligned": true,
+   "word_off": 2389,
+   "readers": {
+    "opus": "τον"
+   },
+   "kind": "sweep",
+   "forms": [
+    "τον",
+    "τὸν"
+   ],
+   "form_set": [
+    "τον",
+    "τὸν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "ἀναμηρυκᾶσθαι. φασὶν αὐτὸν (τὸν υ[?]τον) τὴν τροφὴν ἀνα-",
+   "lines_reported": [
+    56
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads τὸν (+grave)"
+  },
+  {
+   "page": 61,
+   "col": "L",
+   "line": 52,
+   "char_at": 11,
+   "char_at_corpus": 11,
+   "opus_aligned": true,
+   "word_off": 2096,
+   "readers": {
+    "opus": "ἀλλοιȣ͂σθαι"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ἀλλοιȣ͂σθαι",
+    "ἀλλοῖȣσθαι"
+   ],
+   "form_set": [
+    "ἀλλοιȣ͂σθαι",
+    "ἀλλοῖȣσθαι"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "καθέστηκεν ἀλλοιȣ͂σθαι (sed Anaxagorea verba paullum ab",
+   "lines_reported": [
+    52
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads ἀλλοῖȣσθαι (order)"
+  },
+  {
+   "page": 61,
+   "col": "R",
+   "line": 32,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 1412,
+   "readers": {
+    "opus": "ιέναι"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ιέναι",
+    "ἰέναι"
+   ],
+   "form_set": [
+    "ιέναι",
+    "ἰέναι"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "ιέναι ταῖς σαρξίν Ζγα18. 723a11 (fort resp β4. 740b16.",
+   "lines_reported": [
+    32
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads ἰέναι (+smooth)"
+  },
+  {
+   "page": 61,
+   "col": "R",
+   "line": 53,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 2358,
+   "readers": {
+    "opus": "πόδων"
+   },
+   "kind": "sweep",
+   "forms": [
+    "πόδων",
+    "ποδῶν"
+   ],
+   "form_set": [
+    "ποδῶν",
+    "πόδων"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "πόδων τινὰ τίκτειν κατὰ τὸ στόμα Ζγγ6. 756b17. τὴν χολὴν",
+   "lines_reported": [
+    53
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads ποδῶν (-acute,+circumflex)"
+  },
+  {
+   "page": 62,
+   "col": "L",
+   "line": 60,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 2582,
+   "readers": {
+    "opus": "παλιν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "παλιν",
+    "πάλιν"
+   ],
+   "form_set": [
+    "πάλιν",
+    "παλιν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "παλιν Ηα2. 1095b1. ἀνάπαλιν στραφῆναι Οβ2. 285a8, b30.",
+   "lines_reported": [
+    60
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads πάλιν (+acute)"
+  },
+  {
+   "page": 62,
+   "col": "R",
+   "line": 2,
+   "char_at": 19,
+   "char_at_corpus": 19,
+   "opus_aligned": true,
+   "word_off": 66,
+   "readers": {
+    "opus": "ἔξȣσιν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "ἔξȣσιν",
+    "ἑξουσιν"
+   ],
+   "form_set": [
+    "ἑξουσιν",
+    "ἔξȣσιν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "breathing"
+   ],
+   "context": "οἱ χρόνοι ἀνάπαλιν ἔξȣσιν Οα6. 273b32. huc fere referri",
+   "lines_reported": [
+    2
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "breathing: breathing contradicts the corpus (weak)"
+  },
+  {
+   "page": 62,
+   "col": "R",
+   "line": 16,
+   "char_at": 0,
+   "char_at_corpus": 0,
+   "opus_aligned": true,
+   "word_off": 693,
+   "readers": {
+    "opus": "παλιν"
+   },
+   "kind": "sweep",
+   "forms": [
+    "παλιν",
+    "πάλιν"
+   ],
+   "form_set": [
+    "πάλιν",
+    "παλιν"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "παλιν τῇ κατηγορίᾳ τὴν πρότασιν λαβεῖν (i e μεταλλαγὴ",
+   "lines_reported": [
+    16
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads πάλιν (+acute)"
+  },
+  {
+   "page": 62,
+   "col": "R",
+   "line": 16,
+   "char_at": 44,
+   "char_at_corpus": 44,
+   "opus_aligned": true,
+   "word_off": 729,
+   "readers": {
+    "opus": "μεταλλαγὴ"
+   },
+   "kind": "sweep",
+   "forms": [
+    "μεταλλαγὴ",
+    "μεταλλαγῆ"
+   ],
+   "form_set": [
+    "μεταλλαγὴ",
+    "μεταλλαγῆ"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "accent"
+   ],
+   "context": "tare) Αγ13. 78b7. ἀνάπαλιν λαμβάνειν τὴν πρότασιν, ἀνά-",
+   "lines_reported": [
+    15,
+    16
+   ],
+   "ambiguous": false,
+   "line_moved": true,
+   "reason": "accent: accent contradicts the corpus; accent: accent contradicts the corpus"
+  },
+  {
+   "page": 62,
+   "col": "R",
+   "line": 43,
+   "char_at": 51,
+   "char_at_corpus": 51,
+   "opus_aligned": true,
+   "word_off": 1849,
+   "readers": {
+    "opus": "θεȣ́ς"
+   },
+   "kind": "sweep",
+   "forms": [
+    "θεȣ́ς",
+    "θεȣς"
+   ],
+   "form_set": [
+    "θεȣ́ς",
+    "θεȣς"
+   ],
+   "n_same_form_set": 1,
+   "sweeps": [
+    "diacritic"
+   ],
+   "context": "λειαι Ρα11. 1370a15. τὴν ἀνάπαυσιν ἔχειν περὶ τȣ̀ς θεȣ́ς",
+   "lines_reported": [
+    43
+   ],
+   "ambiguous": false,
+   "line_moved": false,
+   "reason": "diacritic: LlamaParse reads θεȣς (-acute)"
+  }
+ ]
+}

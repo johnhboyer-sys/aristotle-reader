@@ -1,0 +1,179 @@
+{
+ "cite:page-063-L:57:476a17": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints αν2. 476a17 — Bonitz's misprint",
+  "ledger_id": "page-063-L:57:476a17"
+ },
+ "cite:page-068-L:60:1070a2": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Μλ5. 1070a2 — Bonitz's misprint",
+  "ledger_id": "page-068-L:60:1070a2"
+ },
+ "cite:page-073-R:60:728b20": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Ζγα20. 728b20 — Bonitz's misprint",
+  "ledger_id": "page-073-R:60:728b20"
+ },
+ "cite:page-077-L:60:472b26": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints αν5. 472b26 — Bonitz's misprint",
+  "ledger_id": "page-077-L:60:472b26"
+ },
+ "cite:page-081-R:9:1275a3": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Πγ1. 1275a3 — Bonitz's misprint",
+  "ledger_id": "page-081-R:9:1275a3"
+ },
+ "cite:page-082-L:4:1267a10": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Πβ7. 1267a10 — Bonitz's misprint",
+  "ledger_id": "page-082-L:4:1267a10"
+ },
+ "cite:page-082-R:53:1275b4": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Πγ1. 1275b4, a26 — Bonitz's misprint",
+  "ledger_id": "page-082-R:53:1275b4"
+ },
+ "cite:page-088-L:55:1250b11": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints αρ5. 1250b11 — Bonitz's misprint",
+  "ledger_id": "page-088-L:55:1250b11"
+ },
+ "cite:page-089-L:27:386a32": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints μδ9. 386a32 — Bonitz's misprint",
+  "ledger_id": "page-089-L:27:386a32"
+ },
+ "cite:page-093-R:23:191b1": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Φα9. 191b1 — Bonitz's misprint",
+  "ledger_id": "page-093-R:23:191b1"
+ },
+ "cite:page-096-L:46:1177a12": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Ηι12. 1177a12 — Bonitz's misprint",
+  "ledger_id": "page-096-L:46:1177a12"
+ },
+ "cite:page-097-R:31:591a3": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Ζιθ2. 591a3 — Bonitz's misprint",
+  "ledger_id": "page-097-R:31:591a3"
+ },
+ "cite:page-099-R:53:690a13": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Ζμδ11. 690a13 — Bonitz's misprint",
+  "ledger_id": "page-099-R:53:690a13"
+ },
+ "cite:page-095-R:25:1120a1": {
+  "verdict": "misprint-keep",
+  "label": "Ink prints Ηδ1. 1120a1 on BOTH lines — dittography",
+  "ledger_id": "page-095-R:25:1120a1"
+ },
+ "cite:page-080-R:18:632a25": {
+  "verdict": "misprint-keep",
+  "label": "Misprint — one digit (5→9)",
+  "ledger_id": "page-080-R:18:632a25"
+ },
+ "trans:page-074-R:11": {
+  "verdict": "corpus-fix",
+  "label": "Ink is the ligature ȣ (both words)",
+  "ledger_id": "page-074-R:11:ἀνόρȣσε"
+ },
+ "trans:page-096-R:14": {
+  "verdict": "corpus-fix",
+  "label": "Ink is ROUGH (ȣ̔́τω) — transcription error",
+  "ledger_id": "page-096-R:14:ȣ̔́τω"
+ },
+ "trans:page-096-R:28": {
+  "verdict": "corpus-fix",
+  "label": "Ink is ROUGH (ȣ̔́τω) — transcription error",
+  "ledger_id": "page-096-R:28:ȣ̔́τω"
+ },
+ "trans:page-071-R:33": {
+  "verdict": "benign",
+  "label": "Acute printed; phrase-final convention — benign"
+ },
+ "benign:page-066-R:51": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-069-R:16": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-070-R:11": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-071-L:32": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-077-R:18": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-078-L:52": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-078-R:21": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-083-R:56": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "benign:page-089-L:30": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "batch:alphacheck-63-102": {
+  "verdict": "individual",
+  "label": "Open them as individual cards"
+ },
+ "batch:lexcheck-63-102": {
+  "verdict": "individual",
+  "label": "Open them as individual cards"
+ },
+ "benign:page-070-L:49": {
+  "verdict": "benign",
+  "label": "Benign — retire"
+ },
+ "lex:page-075-L:18": {
+  "verdict": "transcription-right",
+  "label": "Ink prints υ — λῦσαι as transcribed",
+  "ledger_id": "page-075-L:18:λῦσαι"
+ },
+ "lex:page-092-R:21": {
+  "verdict": "transcription-right",
+  "label": "Ink prints υ — λῦσαι as transcribed",
+  "ledger_id": "page-092-R:21:λῦσαι"
+ },
+ "lex:page-076-R:41": {
+  "verdict": "transcription-right",
+  "label": "Ink prints υ — ἀντικρύ as transcribed",
+  "ledger_id": "page-076-R:41:ἀντικρύ"
+ },
+ "lex:page-085-L:21": {
+  "verdict": "transcription-right",
+  "label": "Ink prints υ — περιττεῦον as transcribed",
+  "ledger_id": "page-085-L:21:περιττεῦον"
+ },
+ "lex:page-086-R:15": {
+  "verdict": "transcription-right",
+  "label": "Ink prints υ — ταὐτὸν as transcribed",
+  "ledger_id": "page-086-R:15:ταὐτὸν"
+ },
+ "lex:page-091-R:57": {
+  "verdict": "transcription-right",
+  "label": "Ink prints υ — πεπαιδεῦσθαι as transcribed",
+  "ledger_id": "page-091-R:57:πεπαιδεῦσθαι"
+ },
+ "lex:page-085-R:16": {
+  "verdict": "transcription-right",
+  "label": "Ink prints υ — νεοττεύειν as transcribed",
+  "ledger_id": "page-085-R:16:νεοττεύειν"
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "excluded:page-174-L:1:20": {
+  "verdict": "preserve",
+  "detail": "τȣ͂",
+  "sites": [
+   "page-174-L:1:20"
+  ]
+ },
+ "excluded:page-197-R:8:338": {
+  "verdict": "preserve",
+  "detail": "νȣ͂ν",
+  "sites": [
+   "page-197-R:8:338"
+  ]
+ },
+ "excluded:page-234-R:34:1529": {
+  "verdict": "preserve",
+  "detail": "τȣ͂",
+  "sites": [
+   "page-234-R:34:1529"
+  ]
+ }
+}

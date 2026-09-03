@@ -1,0 +1,398 @@
+{
+ "spine_dir": "work/reconciled",
+ "n_sites": 17,
+ "spine_reader": "work/reconciled",
+ "entries": [
+  {
+   "page": 113,
+   "col": "L",
+   "line": 36,
+   "word_off": 1648,
+   "char_at": 35,
+   "readers": {
+    "opus": "Oα"
+   },
+   "kind": "encoding",
+   "reason": "'Oα' here (1) against 'Οα' (124) elsewhere",
+   "forms": [
+    "Oα",
+    "Οα"
+   ],
+   "form_set": [
+    "Oα",
+    "Οα"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Οα",
+   "becomes": "Οα"
+  },
+  {
+   "page": 110,
+   "col": "R",
+   "line": 22,
+   "word_off": 981,
+   "char_at": 36,
+   "readers": {
+    "opus": "Ζeller"
+   },
+   "kind": "encoding",
+   "reason": "'Ζeller' here (4) against 'Zeller' (10) elsewhere",
+   "forms": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "form_set": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Ζeller",
+   "becomes": "Zeller"
+  },
+  {
+   "page": 110,
+   "col": "R",
+   "line": 57,
+   "word_off": 2548,
+   "char_at": 7,
+   "readers": {
+    "opus": "Ζeller"
+   },
+   "kind": "encoding",
+   "reason": "'Ζeller' here (4) against 'Zeller' (10) elsewhere",
+   "forms": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "form_set": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Ζeller",
+   "becomes": "Zeller"
+  },
+  {
+   "page": 114,
+   "col": "L",
+   "line": 21,
+   "word_off": 901,
+   "char_at": 0,
+   "readers": {
+    "opus": "Ζeller"
+   },
+   "kind": "encoding",
+   "reason": "'Ζeller' here (4) against 'Zeller' (10) elsewhere",
+   "forms": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "form_set": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Ζeller",
+   "becomes": "Zeller"
+  },
+  {
+   "page": 114,
+   "col": "L",
+   "line": 52,
+   "word_off": 2335,
+   "char_at": 41,
+   "readers": {
+    "opus": "Ζeller"
+   },
+   "kind": "encoding",
+   "reason": "'Ζeller' here (4) against 'Zeller' (10) elsewhere",
+   "forms": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "form_set": [
+    "Zeller",
+    "Ζeller"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Ζeller",
+   "becomes": "Zeller"
+  },
+  {
+   "page": 112,
+   "col": "R",
+   "line": 54,
+   "word_off": 2396,
+   "char_at": 33,
+   "readers": {
+    "opus": "Rοse"
+   },
+   "kind": "encoding",
+   "reason": "'Rοse' here (2) against 'Rose' (9) elsewhere · ο = Οἰκονομικά",
+   "forms": [
+    "Rose",
+    "Rοse"
+   ],
+   "form_set": [
+    "Rose",
+    "Rοse"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Rοse",
+   "becomes": "Rose"
+  },
+  {
+   "page": 113,
+   "col": "R",
+   "line": 26,
+   "word_off": 1232,
+   "char_at": 38,
+   "readers": {
+    "opus": "Rοse"
+   },
+   "kind": "encoding",
+   "reason": "'Rοse' here (2) against 'Rose' (9) elsewhere · ο = Οἰκονομικά",
+   "forms": [
+    "Rose",
+    "Rοse"
+   ],
+   "form_set": [
+    "Rose",
+    "Rοse"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Rοse",
+   "becomes": "Rose"
+  },
+  {
+   "page": 111,
+   "col": "L",
+   "line": 19,
+   "word_off": 855,
+   "char_at": 16,
+   "readers": {
+    "opus": "Μeyer"
+   },
+   "kind": "encoding",
+   "reason": "'Μeyer' here (1) against 'Meyer' (6) elsewhere · Μ = τὰ Μετὰ τὰ φυσικά",
+   "forms": [
+    "Meyer",
+    "Μeyer"
+   ],
+   "form_set": [
+    "Meyer",
+    "Μeyer"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Μeyer",
+   "becomes": "Meyer"
+  },
+  {
+   "page": 114,
+   "col": "L",
+   "line": 30,
+   "word_off": 1353,
+   "char_at": 38,
+   "readers": {
+    "opus": "Αnalytica"
+   },
+   "kind": "encoding",
+   "reason": "'Αnalytica' here (1) against 'Analytica' (3) elsewhere",
+   "forms": [
+    "Analytica",
+    "Αnalytica"
+   ],
+   "form_set": [
+    "Analytica",
+    "Αnalytica"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Αnalytica",
+   "becomes": "Analytica"
+  },
+  {
+   "page": 112,
+   "col": "L",
+   "line": 51,
+   "word_off": 2287,
+   "char_at": 31,
+   "readers": {
+    "opus": "Μetaphysicis"
+   },
+   "kind": "encoding",
+   "reason": "'Μetaphysicis' here (1) against 'Metaphysicis' (2) elsewhere · Μ = τὰ Μετὰ τὰ φυσικά",
+   "forms": [
+    "Metaphysicis",
+    "Μetaphysicis"
+   ],
+   "form_set": [
+    "Metaphysicis",
+    "Μetaphysicis"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Μetaphysicis",
+   "becomes": "Metaphysicis"
+  },
+  {
+   "page": 116,
+   "col": "L",
+   "line": 41,
+   "word_off": 1842,
+   "char_at": 0,
+   "readers": {
+    "opus": "corum"
+   },
+   "kind": "encoding",
+   "reason": "'corum' here (1) against 'cοrum' (1) elsewhere",
+   "forms": [
+    "corum",
+    "cοrum"
+   ],
+   "form_set": [
+    "corum",
+    "cοrum"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:cοrum",
+   "becomes": "cοrum"
+  },
+  {
+   "page": 114,
+   "col": "R",
+   "line": 57,
+   "word_off": 2553,
+   "char_at": 0,
+   "readers": {
+    "opus": "cοrum"
+   },
+   "kind": "encoding",
+   "reason": "'cοrum' here (1) against 'corum' (1) elsewhere · ο = Οἰκονομικά",
+   "forms": [
+    "corum",
+    "cοrum"
+   ],
+   "form_set": [
+    "corum",
+    "cοrum"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:cοrum",
+   "becomes": "corum"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 28,
+   "word_off": 1324,
+   "char_at": 49,
+   "readers": {
+    "opus": "eosdem"
+   },
+   "kind": "encoding",
+   "reason": "'eosdem' here (1) against 'eοsdem' (1) elsewhere",
+   "forms": [
+    "eosdem",
+    "eοsdem"
+   ],
+   "form_set": [
+    "eosdem",
+    "eοsdem"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:eοsdem",
+   "becomes": "eοsdem"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 45,
+   "word_off": 2096,
+   "char_at": 0,
+   "readers": {
+    "opus": "eοsdem"
+   },
+   "kind": "encoding",
+   "reason": "'eοsdem' here (1) against 'eosdem' (1) elsewhere · ο = Οἰκονομικά",
+   "forms": [
+    "eosdem",
+    "eοsdem"
+   ],
+   "form_set": [
+    "eosdem",
+    "eοsdem"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:eοsdem",
+   "becomes": "eosdem"
+  },
+  {
+   "page": 110,
+   "col": "R",
+   "line": 4,
+   "word_off": 183,
+   "char_at": 51,
+   "readers": {
+    "opus": "Bran"
+   },
+   "kind": "encoding",
+   "reason": "'Bran' here (1) against 'Βran' (1) elsewhere",
+   "forms": [
+    "Bran",
+    "Βran"
+   ],
+   "form_set": [
+    "Bran",
+    "Βran"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Βran",
+   "becomes": "Βran"
+  },
+  {
+   "page": 111,
+   "col": "R",
+   "line": 49,
+   "word_off": 2211,
+   "char_at": 54,
+   "readers": {
+    "opus": "Βran"
+   },
+   "kind": "encoding",
+   "reason": "'Βran' here (1) against 'Bran' (1) elsewhere",
+   "forms": [
+    "Bran",
+    "Βran"
+   ],
+   "form_set": [
+    "Bran",
+    "Βran"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Βran",
+   "becomes": "Bran"
+  },
+  {
+   "page": 109,
+   "col": "L",
+   "line": 58,
+   "word_off": 2628,
+   "char_at": 4,
+   "readers": {
+    "opus": "Bα"
+   },
+   "kind": "encoding",
+   "reason": "'Bα' here (1) against 'Βα' (1) elsewhere",
+   "forms": [
+    "Bα",
+    "Βα"
+   ],
+   "form_set": [
+    "Bα",
+    "Βα"
+   ],
+   "n_same_form_set": 1,
+   "card_sid": "encoding:Βα",
+   "becomes": "Βα"
+  }
+ ]
+}

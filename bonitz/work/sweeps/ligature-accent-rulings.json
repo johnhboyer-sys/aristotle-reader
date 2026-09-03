@@ -1,0 +1,52 @@
+{
+ "site:page-015-R:1:46": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-015-R:2:47": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-021-L:42:10": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-027-R:32:34": {
+  "verdict": "accept",
+  "detail": "ȣ̓́σης",
+  "excluded": []
+ },
+ "site:page-029-R:56:11": {
+  "verdict": "accept",
+  "detail": "ȣ̓́θατα",
+  "excluded": []
+ },
+ "site:page-036-R:25:44": {
+  "verdict": "accept",
+  "detail": "ȣ̓͂σαν",
+  "ruled_via": "chat 2026-08-11 18:05 — John read the full-width line crop (the card's gap crop had slid to the line's start) and ruled: smooth + circumflex. οὖσαν."
+ },
+ "site:page-038-L:6:28": {
+  "verdict": "accept",
+  "detail": "ȣ̓́τ'",
+  "excluded": []
+ },
+ "site:page-038-L:56:32": {
+  "verdict": "accept",
+  "detail": "ȣ̔͂",
+  "excluded": []
+ },
+ "site:page-039-L:5:0": {
+  "verdict": "accept",
+  "detail": "ȣ̓́",
+  "excluded": []
+ },
+ "site:page-041-R:32:41": {
+  "verdict": "accept",
+  "detail": "ȣ̓͂ς",
+  "excluded": []
+ }
+}

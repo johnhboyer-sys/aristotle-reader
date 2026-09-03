@@ -1,0 +1,142 @@
+{
+ "forms:ηκ": {
+  "verdict": "preserve",
+  "detail": "ηκ"
+ },
+ "forms:άγνοιαν|ἀγνοιαν": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:αγορᾶ|ἀγορά": {
+  "verdict": "preserve",
+  "detail": "ἀγορά"
+ },
+ "forms:γνωσις|γνῶσις": {
+  "verdict": "accept",
+  "detail": "γνωσιϛ"
+ },
+ "forms:Ζγε": {
+  "verdict": "preserve",
+  "detail": "Ζγε"
+ },
+ "forms:πάν|πᾶν": {
+  "verdict": "preserve",
+  "detail": "πάν"
+ },
+ "forms:θείαν|θειαν": {
+  "verdict": "preserve",
+  "detail": "θειαν"
+ },
+ "forms:υπέρ|ὑπερ|ὑπὲρ": {
+  "verdict": "preserve",
+  "detail": "ὑπερ"
+ },
+ "forms:ὑπερεχοντας|ὑπερἔχοντας": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:τον|τὸν": {
+  "verdict": "preserve",
+  "detail": "τον"
+ },
+ "forms:Λγ": {
+  "verdict": "preserve",
+  "detail": "Λγ"
+ },
+ "forms:περι|περὶ": {
+  "verdict": "preserve",
+  "detail": "περι"
+ },
+ "forms:εὐ|εὖ": {
+  "verdict": "preserve",
+  "detail": "εὐ"
+ },
+ "forms:θείαν|θεῖαν": {
+  "verdict": "preserve",
+  "detail": "θεῖαν"
+ },
+ "forms:Ρα|Ῥα": {
+  "verdict": "accept",
+  "detail": "Ρα"
+ },
+ "forms:κτλ": {
+  "verdict": "preserve",
+  "detail": "κτλ"
+ },
+ "forms:ὀσμάς|ὀσμὰς": {
+  "verdict": "preserve",
+  "detail": "ὀσμάς"
+ },
+ "forms:Μαίων|μαιῶν": {
+  "verdict": "preserve",
+  "detail": "Μαίων"
+ },
+ "forms:υ": {
+  "verdict": "preserve",
+  "detail": "υ"
+ },
+ "forms:ληψις|λῆψις": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:πιμέλην|πιμελήν": {
+  "verdict": "preserve",
+  "detail": "πιμέλην"
+ },
+ "forms:γεωμετρική|γεωμετρικῆ": {
+  "verdict": "preserve",
+  "detail": "γεωμετρική"
+ },
+ "forms:τι": {
+  "verdict": "preserve",
+  "detail": "τι"
+ },
+ "forms:ἀνθρώπȣ|ἄνθρώπȣ": {
+  "verdict": "preserve",
+  "detail": "ἄνθρώπȣ"
+ },
+ "forms:ταυτό|ταῦτο": {
+  "verdict": "preserve",
+  "detail": "ταῦτο"
+ },
+ "forms:ἀλλοιȣ͂σθαι|ἀλλοῖȣσθαι": {
+  "verdict": "preserve",
+  "detail": "ἀλλοιȣ͂σθαι"
+ },
+ "forms:ιέναι|ἰέναι": {
+  "verdict": "preserve",
+  "detail": "ιέναι"
+ },
+ "forms:ποδῶν|πόδων": {
+  "verdict": "preserve",
+  "detail": "πόδων"
+ },
+ "forms:πάλιν|παλιν": {
+  "verdict": "preserve",
+  "detail": "παλιν"
+ },
+ "forms:ἑξουσιν|ἔξȣσιν": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:μεταλλαγὴ|μεταλλαγῆ": {
+  "verdict": "preserve",
+  "detail": "μεταλλαγὴ"
+ },
+ "forms:θεȣ́ς|θεȣς": {
+  "verdict": "preserve",
+  "detail": "θεȣ́ς"
+ },
+ "forms:ἀπόπλ": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:ὑπερεχειν|ὑπερἔχειν": {
+  "verdict": "none",
+  "detail": ""
+ },
+ "forms:κατ": {
+  "verdict": "none",
+  "detail": ""
+ }
+}

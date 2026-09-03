@@ -1,0 +1,31 @@
+# Cards written by hand, for a reading no engine proposed — the follow-up a
+# `none` verdict owes. See bonitz_pipeline/hand_cards.py.
+#
+# Five TAB-separated fields. Blank lines and `#` lines are ignored, and
+# `becomes` may be empty (a deletion). `token` must be unique on its line,
+# and `source` becomes the button's name, so it must say who read the ink.
+#
+# ⚠ CHANGING `site` OR `token` AFTER A RULING RENAMES THE CARD and orphans
+# the answer. Fix the `why`, never the key.
+site	token	becomes	source	why
+page-029-R:23	φυλάξαι	φύλαξαι	Opus at 9×	you ruled this line whole on 2026-08-13 and the acute went to the α; ruling its parts on 08-14 you put it over the υ. At 9× the mark is a straight tick over the υ and the α is bare — not the curl a breathing makes in this font (compare ἀνδρῶν on this line)
+page-032-L:1	πασχει	πάσχει	Opus at 9×	the line is otherwise fully accented and both engines read it bare; at 9× there is a faint tick over the α, far lighter than the acute on μόνον beside it. Doubtful ink — if the print really is bare, keep it and mark the erratum
+page-032-L:1	αλλα	αλλὰ	Opus at 9×	nothing over the first α, and a short stroke over the last that leans the way the grave on ϗ̀ beside it leans. Bare of breathing as printed, so the diplomatic reading is αλλὰ and not ἀλλὰ
+page-045-L:9	'Αλκίνȣ	Ἀλκίνȣ	smooth	this very line ends Ἀλκινόȣ, the same name breathed smooth
+page-045-L:9	'Αλκίνȣ	Ἁλκίνȣ	rough	offered because the loose mark carries no direction and no engine resolved this one
+page-045-L:12	'Αστυδά	Ἀστυδά	smooth	Ἀστυδάμας; the corpus has no other word sharing six letters, so nothing corroborates it
+page-045-L:12	'Αστυδά	Ἁστυδά	rough	the other way the same ink could read
+page-045-L:23	'Αλκμὰν	Ἀλκμὰν	smooth (calamari)	calamari read this line out-of-fold and resolved the mark onto the capital as smooth
+page-045-L:23	'Αλκμὰν	Ἁλκμὰν	rough (kraken)	kraken e26 read Ἅλκμὰν, rough — the two engines disagree here and nowhere else in this sweep
+page-045-L:25	'Αλκυόνη	Ἀλκυόνη	smooth	ἀλκυών the bird is smooth throughout, but that is a common noun and not this name
+page-045-L:25	'Αλκυόνη	Ἁλκυόνη	rough	the other way the same ink could read
+page-050-R:28	᾽Αμιναῖος	Ἀμιναῖος	smooth (calamari)	calamari resolved the mark onto the capital as smooth reading this line out-of-fold
+page-050-R:28	᾽Αμιναῖος	Ἁμιναῖος	rough	the other way the same ink could read
+page-050-R:55	᾽Αμνέα	Ἀμνέα	smooth	no engine read this line and the corpus has no stem for it — the ink is the only evidence
+page-050-R:55	᾽Αμνέα	Ἁμνέα	rough	the other way the same ink could read
+page-060-R:56	υ[?]τον	ὦτον	John, at the ink	John, 2026-08-15, reading the crop: "should be (τὸν ὦτον)". `[?]` is a transcription placeholder, not ink; calamari read ὦτον out-of-fold and kraken read υὦτον
+page-061-R:14	[?]ὁμȣ͂	ὁμȣ͂	John, at the ink	John, 2026-08-15: "there is nothing before the ὁ". Both engines read nothing there, and the quotation has no closing mark either, so no opening quote is missing
+page-023-R:43	ad 1l cf	ad l l cf	John, at the ink	John, 2026-08-15: "it's 'ad l l cf C).'" — two Latin ells with a space, not eleven. calamari read `ad l 1 cf` out-of-fold and had the space but only one of the ells; no card could offer both
+page-028-R:47	υἷς	ὡς	John, at the ink	John, 2026-08-15: "it's 'αἷμα ὡς φασὶν'". The engines read υὧς — they kept the υ nobody prints — and the sense wants it: "the dark one, as they say, sheds blood from the eyes"
+page-056-R:44	[?]λ 598	λ 598	Opus at 9×	the mark is the IOTA SUBSCRIPT of τῇ on the line above, hanging into this one — it aligns under the ῇ of ἀκολȣθεῖ τῇ and belongs to that line, not this. calamari read (Hom λ 598) out-of-fold with nothing there; kraken picked the descender up as an apostrophe
+page-025-L:12	κληρȣ͂ ντȣς	κληρȣ͂ν τȣ̀ς	John, at the ink	John, 2026-08-15: "two errors. 'κληρȣ͂ν τȣς' but 'τȣς' should have a grave over the ligature". The space moves one place right AND the ligature takes its grave — the division sweep could only propose the first, and no card could offer both

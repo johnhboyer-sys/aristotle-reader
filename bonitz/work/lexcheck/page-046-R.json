@@ -1,0 +1,24 @@
+[
+  {
+    "page": 46,
+    "col": "R",
+    "line": 40,
+    "wrote": "τοιαῦτα",
+    "llamaparse": "τοιαȣ͂τα",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "τοιαυτα is a corpus form; τοιαουτα is not",
+    "context": "πάθος μα8. 345 a18. ϗ̀ τἆλλα τὰ τοιαῦτα, ϗ̀ ὅσα ἄλλα"
+  },
+  {
+    "page": 46,
+    "col": "R",
+    "line": 41,
+    "wrote": "τοιαῦτα",
+    "llamaparse": "τοιαȣ͂τα",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "τοιαυτα is a corpus form; τοιαουτα is not",
+    "context": "τοιαῦτα μδ12. 390 b22. 8. 384 b33, 385 a6. ἄλλο τι; (nonne)"
+  }
+]

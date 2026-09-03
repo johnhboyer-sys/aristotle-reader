@@ -1,0 +1,13 @@
+{
+ "site:page-117-L:52:2437": {
+  "verdict": "accept",
+  "detail": "cf a",
+  "sites": [
+   "page-117-L:52:2437"
+  ],
+  "token": "cfa",
+  "becomes": "cf a",
+  "source": "john:read-from-the-ink 2026-08-26",
+  "why": "the ink reads `cf ᵃ16` — a SPACE between cf and the Bekker column letter. Neither button could say so: the card offered cfa against cfα, and canonical() strips whitespace so the panel cannot see a space at all. kraken read `cf a16` correctly and the mixed spine took calamari's line, which had lost it — the one space the Latin spine cost across 1342 lines"
+ }
+}

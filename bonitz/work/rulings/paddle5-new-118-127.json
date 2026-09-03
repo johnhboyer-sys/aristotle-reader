@@ -1,0 +1,648 @@
+{
+ "forms:ȣ̓|ȣ̓κ|ȣκ|οὐκ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓κ",
+  "sites": [
+   "page-127-R:29:1105"
+  ]
+ },
+ "forms:ȣ̓δεμιᾷ|ȣ̓δεμᾷ|οὐδεμιᾷ": {
+  "verdict": "preserve",
+  "detail": "ȣ̓δεμιᾷ",
+  "sites": [
+   "page-122-R:60:2704"
+  ]
+ },
+ "forms:Ζα|Ζι|Ζιι": {
+  "verdict": "accept",
+  "detail": "Ζιι",
+  "sites": [
+   "page-119-L:1:0"
+  ]
+ },
+ "forms:Ηβ|Πβ": {
+  "verdict": "preserve",
+  "detail": "Πβ",
+  "sites": [
+   "page-122-R:34:1540"
+  ]
+ },
+ "forms:Πλιὰς|Ἰλιὰς|Ἴλιὰς": {
+  "verdict": "preserve",
+  "detail": "Ἰλιὰς",
+  "sites": [
+   "page-121-R:55:2427"
+  ]
+ },
+ "forms:Φῆς|τῆς": {
+  "verdict": "preserve",
+  "detail": "τῆς",
+  "sites": [
+   "page-126-L:12:491"
+  ]
+ },
+ "forms:αἱ|κί": {
+  "verdict": "preserve",
+  "detail": "αἱ",
+  "sites": [
+   "page-124-L:35:1572"
+  ]
+ },
+ "forms:γεννᾶν|γενᾶν": {
+  "verdict": "preserve",
+  "detail": "γεννᾶν",
+  "sites": [
+   "page-119-R:1:26"
+  ]
+ },
+ "forms:δέτης|θέτης": {
+  "verdict": "preserve",
+  "detail": "θέτης",
+  "sites": [
+   "page-122-L:42:1740"
+  ]
+ },
+ "forms:δήγματα|δύγματα": {
+  "verdict": "preserve",
+  "detail": "δήγματα",
+  "sites": [
+   "page-127-L:25:954"
+  ]
+ },
+ "forms:δήλεος|θήλεος": {
+  "verdict": "preserve",
+  "detail": "θήλεος",
+  "sites": [
+   "page-119-R:58:2603"
+  ]
+ },
+ "forms:δεσποζειν|δεσπόζειν|δεσπόζειὴ": {
+  "verdict": "preserve",
+  "detail": "δεσπόζειὴ",
+  "sites": [
+   "page-122-R:23:1040"
+  ]
+ },
+ "forms:διήρθρωται|διήρόρωται": {
+  "verdict": "preserve",
+  "detail": "διήρθρωται",
+  "sites": [
+   "page-122-L:37:1535"
+  ]
+ },
+ "forms:διαφόροις|δικφόροις": {
+  "verdict": "preserve",
+  "detail": "διαφόροις",
+  "sites": [
+   "page-119-R:39:1748"
+  ]
+ },
+ "forms:δό|δὲ": {
+  "verdict": "preserve",
+  "detail": "δὲ",
+  "sites": [
+   "page-124-L:15:635"
+  ]
+ },
+ "forms:δόσων|ὅσων": {
+  "verdict": "preserve",
+  "detail": "ὅσων",
+  "sites": [
+   "page-125-L:12:506"
+  ]
+ },
+ "forms:δἀρχεσθαι|ἄρχεσθαι": {
+  "verdict": "preserve",
+  "detail": "ἄρχεσθαι",
+  "sites": [
+   "page-122-R:60:2696"
+  ]
+ },
+ "forms:θρεπτικὴ|ὁρεπτικὴ": {
+  "verdict": "preserve",
+  "detail": "θρεπτικὴ",
+  "sites": [
+   "page-125-L:8:304"
+  ]
+ },
+ "forms:θῆλȣ|θῆλυ": {
+  "verdict": "preserve",
+  "detail": "θῆλυ",
+  "sites": [
+   "page-119-R:4:160"
+  ]
+ },
+ "forms:καλα|κῶλα": {
+  "verdict": "preserve",
+  "detail": "κῶλα",
+  "sites": [
+   "page-118-L:57:2372"
+  ]
+ },
+ "forms:κινήσεις|κινήτεις": {
+  "verdict": "preserve",
+  "detail": "κινήσεις",
+  "sites": [
+   "page-121-R:23:1026"
+  ]
+ },
+ "forms:λέγω|λέγῳ": {
+  "verdict": "preserve",
+  "detail": "λέγω",
+  "sites": [
+   "page-118-R:17:780"
+  ]
+ },
+ "forms:λίθον|λθον": {
+  "verdict": "preserve",
+  "detail": "λίθον",
+  "sites": [
+   "page-127-R:10:348"
+  ]
+ },
+ "forms:λαβόντες|λκβόντες": {
+  "verdict": "preserve",
+  "detail": "λαβόντες",
+  "sites": [
+   "page-123-R:39:1741"
+  ]
+ },
+ "forms:λείοις|λείρις": {
+  "verdict": "preserve",
+  "detail": "λείοις",
+  "sites": [
+   "page-127-R:63:2463"
+  ]
+ },
+ "forms:μȣ͂θος|μῦθος": {
+  "verdict": "preserve",
+  "detail": "μῦθος",
+  "sites": [
+   "page-123-R:54:2434"
+  ]
+ },
+ "forms:μȣσικὴ|μȣτικὴ|μυσικὴ": {
+  "verdict": "preserve",
+  "detail": "μȣσικὴ",
+  "sites": [
+   "page-118-L:59:2493"
+  ]
+ },
+ "forms:μαρίοις|μορίοις": {
+  "verdict": "preserve",
+  "detail": "μορίοις",
+  "sites": [
+   "page-119-L:61:2388"
+  ]
+ },
+ "forms:μαστȣ̀ς|μαστȣ́ς|μαστῦς": {
+  "verdict": "preserve",
+  "detail": "μαστȣ́ς",
+  "sites": [
+   "page-120-R:3:97"
+  ]
+ },
+ "forms:μεταξή|μεταξύ": {
+  "verdict": "preserve",
+  "detail": "μεταξύ",
+  "sites": [
+   "page-120-R:41:1844"
+  ]
+ },
+ "forms:μονίαν|μονίων": {
+  "verdict": "preserve",
+  "detail": "μονίαν",
+  "sites": [
+   "page-118-L:61:2545"
+  ]
+ },
+ "forms:ξηρᾶς|ἀηρᾶς": {
+  "verdict": "preserve",
+  "detail": "ξηρᾶς",
+  "sites": [
+   "page-126-L:13:494"
+  ]
+ },
+ "forms:οίȣς|οἵȣς|οὕτως|οὗτος": {
+  "verdict": "preserve",
+  "detail": "οἵȣς",
+  "sites": [
+   "page-126-L:17:654"
+  ]
+ },
+ "forms:οβ|ὅβ": {
+  "verdict": "preserve",
+  "detail": "οβ",
+  "sites": [
+   "page-122-L:54:2300"
+  ]
+ },
+ "forms:πεπαῦσθαε|πεπαῦσθαι": {
+  "verdict": "preserve",
+  "detail": "πεπαῦσθαι",
+  "sites": [
+   "page-122-R:4:166"
+  ]
+ },
+ "forms:πζ|πις|πιϛ|πς": {
+  "verdict": "preserve",
+  "detail": "πιϛ",
+  "sites": [
+   "page-126-L:18:725"
+  ]
+ },
+ "forms:πνοά|πνοή": {
+  "verdict": "preserve",
+  "detail": "πνοή",
+  "sites": [
+   "page-121-R:24:1061"
+  ]
+ },
+ "forms:πον|πῖον": {
+  "verdict": "preserve",
+  "detail": "πῖον",
+  "sites": [
+   "page-126-R:16:595"
+  ]
+ },
+ "forms:πρείεται|προΐεται|προίεται": {
+  "verdict": "preserve",
+  "detail": "προΐεται",
+  "sites": [
+   "page-120-R:30:1375"
+  ]
+ },
+ "forms:πρεσβέσαντες|πρεσβεύσαντες|πρεσρεύσαντες": {
+  "verdict": "preserve",
+  "detail": "πρεσβεύσαντες",
+  "sites": [
+   "page-122-R:61:2730"
+  ]
+ },
+ "forms:σȣμφέρει|συμφέρει": {
+  "verdict": "preserve",
+  "detail": "συμφέρει",
+  "sites": [
+   "page-127-R:5:100"
+  ]
+ },
+ "forms:σθλλογισμȣ͂|συλλογισμȣ͂": {
+  "verdict": "preserve",
+  "detail": "συλλογισμȣ͂",
+  "sites": [
+   "page-124-L:10:423"
+  ]
+ },
+ "forms:σκωλήκων|σκωληκίαν|σκωληκίων": {
+  "verdict": "preserve",
+  "detail": "σκωληκίων",
+  "sites": [
+   "page-123-L:45:1932"
+  ]
+ },
+ "forms:τεταριχευμένα|τεταριχευμενα": {
+  "verdict": "preserve",
+  "detail": "τεταριχευμένα",
+  "sites": [
+   "page-126-R:17:662"
+  ]
+ },
+ "forms:τοιαυτης|τοιαύτης|τοιαὐτης": {
+  "verdict": "accept",
+  "detail": "τοιαύτης",
+  "sites": [
+   "page-125-R:29:1309"
+  ]
+ },
+ "forms:τυρανάδες|τυραννίδες": {
+  "verdict": "preserve",
+  "detail": "τυραννίδες",
+  "sites": [
+   "page-125-L:41:1786"
+  ]
+ },
+ "forms:ψοτοκύντων|ᾠοτοκȣ́ντων|ᾠοτοκȣντων|ᾠοτοκούντων": {
+  "verdict": "preserve",
+  "detail": "ᾠοτοκȣ́ντων",
+  "sites": [
+   "page-121-R:19:862"
+  ]
+ },
+ "forms:ἀαφῶς|ἀσαφῶς": {
+  "verdict": "preserve",
+  "detail": "ἀσαφῶς",
+  "sites": [
+   "page-126-L:54:2157"
+  ]
+ },
+ "forms:ἀδιδοσαν|ἐδίδοσαν": {
+  "verdict": "preserve",
+  "detail": "ἐδίδοσαν",
+  "sites": [
+   "page-122-R:61:2761"
+  ]
+ },
+ "forms:ἀλλ|ἁλλ": {
+  "verdict": "preserve",
+  "detail": "ἀλλ",
+  "sites": [
+   "page-119-L:49:1868"
+  ]
+ },
+ "forms:ἀούειν|ἀρύειν": {
+  "verdict": "preserve",
+  "detail": "ἀρύειν",
+  "sites": [
+   "page-122-L:26:1071"
+  ]
+ },
+ "forms:ἀριδμȣ̀ς|ἀριθμȣ̀ς|ἀριθμοὺς": {
+  "verdict": "preserve",
+  "detail": "ἀριθμȣ̀ς",
+  "sites": [
+   "page-118-R:44:2006"
+  ]
+ },
+ "forms:ἀριθμȣ|ἀριθμȣ͂|ἀριθμῶ|ἀριθμῷ": {
+  "verdict": "preserve",
+  "detail": "ἀριθμȣ͂",
+  "sites": [
+   "page-122-L:5:195"
+  ]
+ },
+ "forms:ἀρκαῖος|ἀρχαῖος": {
+  "verdict": "preserve",
+  "detail": "ἀρχαῖος",
+  "sites": [
+   "page-122-L:31:1235"
+  ]
+ },
+ "forms:ἀρκοειδής|ἀρχοειδής": {
+  "verdict": "preserve",
+  "detail": "ἀρχοειδής",
+  "sites": [
+   "page-126-L:5:149"
+  ]
+ },
+ "forms:ἀρλός|ἀρχός": {
+  "verdict": "preserve",
+  "detail": "ἀρχός",
+  "sites": [
+   "page-126-L:10:348"
+  ]
+ },
+ "forms:ἀρρην|ἄρρηα|ἄρρην": {
+  "verdict": "accept",
+  "detail": "ἄρρην",
+  "sites": [
+   "page-119-L:47:1735"
+  ]
+ },
+ "forms:ἀρρωστήμασι|ἀρρώστματι|ἀρωστήμασι": {
+  "verdict": "preserve",
+  "detail": "ἀρρωστήμασι",
+  "sites": [
+   "page-121-L:9:353"
+  ]
+ },
+ "forms:ἀρτηρία|ἀρτρία": {
+  "verdict": "preserve",
+  "detail": "ἀρτηρία",
+  "sites": [
+   "page-121-R:26:1157"
+  ]
+ },
+ "forms:ἀρτηρία|ἀρτχρία": {
+  "verdict": "preserve",
+  "detail": "ἀρτηρία",
+  "sites": [
+   "page-121-L:56:2265"
+  ]
+ },
+ "forms:ἀρχȣν|ἀρχήν|ἀρχιν|ἀρχνν": {
+  "verdict": "accept",
+  "detail": "ἀρχήν",
+  "sites": [
+   "page-125-R:22:991"
+  ]
+ },
+ "forms:ἀρχήν|ἄρλήν": {
+  "verdict": "preserve",
+  "detail": "ἀρχήν",
+  "sites": [
+   "page-122-R:54:2408"
+  ]
+ },
+ "forms:ἀρχατκῶς|ἀρχαϊκῶς": {
+  "verdict": "preserve",
+  "detail": "ἀρχαϊκῶς",
+  "sites": [
+   "page-122-L:28:1136"
+  ]
+ },
+ "forms:ἀρχετεκτονική|ἀρχιτεκτονική": {
+  "verdict": "preserve",
+  "detail": "ἀρχιτεκτονική",
+  "sites": [
+   "page-125-R:53:2149"
+  ]
+ },
+ "forms:ἀρχιτεκτȣ|ἀρχιτεκτο": {
+  "verdict": "preserve",
+  "detail": "ἀρχιτεκτο",
+  "sites": [
+   "page-125-R:58:2411"
+  ]
+ },
+ "forms:ἀρχιτεκτονικήν|ἀρχιτεκτονικὴν|ἀρχιτεκτονικῆςΠθ|ἀρχιτεκτονκὴν": {
+  "verdict": "preserve",
+  "detail": "ἀρχιτεκτονικήν",
+  "sites": [
+   "page-125-R:57:2362"
+  ]
+ },
+ "forms:ἀσέβεια|ἀσθβεια": {
+  "verdict": "preserve",
+  "detail": "ἀσέβεια",
+  "sites": [
+   "page-126-L:59:2279"
+  ]
+ },
+ "forms:ἀσκαλαβωτης|ἀσκαλαβώτης": {
+  "verdict": "preserve",
+  "detail": "ἀσκαλαβώτης",
+  "sites": [
+   "page-127-L:20:714"
+  ]
+ },
+ "forms:ἀστακίς|ἀστακός": {
+  "verdict": "none",
+  "detail": "",
+  "sites": [
+   "page-127-R:1:0"
+  ],
+  "void": "page furniture, not index text — 127-R:1 is the running head, and filter_kraken_lines now drops it as `running_head`. The card should never have been built. Previous answer, given before that was known: preserve ἀστακός."
+ },
+ "forms:ἄκραν|ἄρȣραν|ἄρουραν|ἆρȣραν": {
+  "verdict": "preserve",
+  "detail": "ἄρȣραν",
+  "sites": [
+   "page-119-L:7:233"
+  ]
+ },
+ "forms:ἄξτος|ἄρτος": {
+  "verdict": "preserve",
+  "detail": "ἄρτος",
+  "sites": [
+   "page-122-L:20:821"
+  ]
+ },
+ "forms:ἄροεσιν|ἄρρεσιν": {
+  "verdict": "preserve",
+  "detail": "ἄρρεσιν",
+  "sites": [
+   "page-120-L:35:1614"
+  ]
+ },
+ "forms:ἄρρεν|ἄρρενι": {
+  "verdict": "preserve",
+  "detail": "ἄρρενι",
+  "sites": [
+   "page-120-R:37:1698"
+  ]
+ },
+ "forms:ἄρτ|ἄρτι": {
+  "verdict": "preserve",
+  "detail": "ἄρτι",
+  "sites": [
+   "page-121-R:31:1414"
+  ]
+ },
+ "forms:ἄρχειν|ἄρχεν": {
+  "verdict": "preserve",
+  "detail": "ἄρχειν",
+  "sites": [
+   "page-122-L:61:2604"
+  ]
+ },
+ "forms:ἄσκȣσίν|ἄσκησίν": {
+  "verdict": "preserve",
+  "detail": "ἄσκησίν",
+  "sites": [
+   "page-127-R:5:120"
+  ]
+ },
+ "forms:ἄχοντες|ἔχοντες": {
+  "verdict": "preserve",
+  "detail": "ἔχοντες",
+  "sites": [
+   "page-124-L:5:180"
+  ]
+ },
+ "forms:Ἀεσύριοι|Ἀσσύριοι": {
+  "verdict": "preserve",
+  "detail": "Ἀσσύριοι",
+  "sites": [
+   "page-127-R:54:2101"
+  ]
+ },
+ "forms:Ἀσία|Ἀτία": {
+  "verdict": "preserve",
+  "detail": "Ἀσία",
+  "sites": [
+   "page-126-R:61:2536"
+  ]
+ },
+ "forms:ἐγγύς|ἰγγὺς": {
+  "verdict": "preserve",
+  "detail": "ἐγγύς",
+  "sites": [
+   "page-122-L:52:2220"
+  ]
+ },
+ "forms:ἐκκλησιάζειν|ἐκλησιάζειν": {
+  "verdict": "preserve",
+  "detail": "ἐκκλησιάζειν",
+  "sites": [
+   "page-122-R:34:1507"
+  ]
+ },
+ "forms:ἐριστικȣ̀ς|ἐριστικȣς|ἐριστικῶς": {
+  "verdict": "preserve",
+  "detail": "ἐριστικȣ̀ς",
+  "sites": [
+   "page-122-L:10:424"
+  ]
+ },
+ "forms:ἐὰν|ἐὲν": {
+  "verdict": "preserve",
+  "detail": "ἐὰν",
+  "sites": [
+   "page-120-L:9:404"
+  ]
+ },
+ "forms:Ἐλ|Ἐλτ|Ἐλἀστ": {
+  "verdict": "accept",
+  "detail": "Ἑλ-",
+  "typed": true,
+  "sites": [
+   "page-127-R:63:2472"
+  ]
+ },
+ "forms:ἧτα|ὦτα": {
+  "verdict": "preserve",
+  "detail": "ὦτα",
+  "sites": [
+   "page-121-R:10:412"
+  ]
+ },
+ "forms:ἰλύϊ|ἰλύῖ|ἱλύξ": {
+  "verdict": "preserve",
+  "detail": "ἰλύϊ",
+  "sites": [
+   "page-127-L:47:1914"
+  ]
+ },
+ "forms:ἱερά|ἱερα": {
+  "verdict": "preserve",
+  "detail": "ἱερά",
+  "sites": [
+   "page-121-L:43:1668"
+  ]
+ },
+ "forms:ὀλγάκις|ὀλιγάκις": {
+  "verdict": "preserve",
+  "detail": "ὀλιγάκις",
+  "sites": [
+   "page-118-R:26:1186"
+  ]
+ },
+ "forms:ὀξύς|ὅξȣς": {
+  "verdict": "preserve",
+  "detail": "ὀξύς",
+  "sites": [
+   "page-120-L:35:1621"
+  ]
+ },
+ "forms:ὄρȣς|ὅρȣς|ὅρυς": {
+  "verdict": "preserve",
+  "detail": "ὅρȣς",
+  "sites": [
+   "page-126-L:17:667"
+  ]
+ },
+ "forms:ὤτων|ὥτων|ὦὥτων": {
+  "verdict": "preserve",
+  "detail": "ὤτων",
+  "sites": [
+   "page-119-L:56:2161"
+  ]
+ },
+ "forms:ῥυθμῷ|ῥυόμῷ": {
+  "verdict": "preserve",
+  "detail": "ῥυθμῷ",
+  "sites": [
+   "page-118-R:22:988"
+  ]
+ }
+}

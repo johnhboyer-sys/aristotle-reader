@@ -1,0 +1,1320 @@
+[
+ {
+  "column": "page-015-L",
+  "found": 49,
+  "dropped": 3,
+  "kept": 46,
+  "gt": 46,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   20,
+   30,
+   35,
+   40,
+   45
+  ],
+  "digits": 2
+ },
+ {
+  "column": "page-015-R",
+  "found": 47,
+  "dropped": 1,
+  "kept": 46,
+  "gt": 46,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-016-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-016-R",
+  "found": 69,
+  "dropped": 8,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   15,
+   25,
+   35
+  ],
+  "digits": 8
+ },
+ {
+  "column": "page-017-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-017-R",
+  "found": 68,
+  "dropped": 7,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   20,
+   40,
+   50,
+   55
+  ],
+  "digits": 7
+ },
+ {
+  "column": "page-018-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-018-R",
+  "found": 71,
+  "dropped": 10,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   15,
+   55
+  ],
+  "digits": 10
+ },
+ {
+  "column": "page-019-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-019-R",
+  "found": 71,
+  "dropped": 10,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   25,
+   30,
+   35,
+   40,
+   45,
+   55
+  ],
+  "digits": 10
+ },
+ {
+  "column": "page-020-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-020-R",
+  "found": 73,
+  "dropped": 12,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   15,
+   30,
+   35
+  ],
+  "digits": 12
+ },
+ {
+  "column": "page-021-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 0
+ },
+ {
+  "column": "page-021-R",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 0
+ },
+ {
+  "column": "page-022-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-022-R",
+  "found": 72,
+  "dropped": 11,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-023-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-023-R",
+  "found": 70,
+  "dropped": 9,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   45
+  ],
+  "digits": 8
+ },
+ {
+  "column": "page-024-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-024-R",
+  "found": 72,
+  "dropped": 11,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   15,
+   20
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-025-L",
+  "found": 63,
+  "dropped": 2,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   50,
+   55,
+   60
+  ],
+  "digits": 2
+ },
+ {
+  "column": "page-025-R",
+  "found": 63,
+  "dropped": 2,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 2
+ },
+ {
+  "column": "page-026-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-026-R",
+  "found": 69,
+  "dropped": 8,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   25,
+   45
+  ],
+  "digits": 8
+ },
+ {
+  "column": "page-027-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-027-R",
+  "found": 72,
+  "dropped": 11,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   35,
+   50
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-028-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-028-R",
+  "found": 73,
+  "dropped": 12,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   45
+  ],
+  "digits": 12
+ },
+ {
+  "column": "page-029-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-029-R",
+  "found": 70,
+  "dropped": 9,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   15,
+   20,
+   25
+  ],
+  "digits": 8
+ },
+ {
+  "column": "page-030-L",
+  "found": 63,
+  "dropped": 1,
+  "kept": 62,
+  "gt": 62,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 1
+ },
+ {
+  "column": "page-030-R",
+  "found": 73,
+  "dropped": 11,
+  "kept": 62,
+  "gt": 62,
+  "match": true,
+  "excluded": [
+   55
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-031-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 0
+ },
+ {
+  "column": "page-031-R",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 0
+ },
+ {
+  "column": "page-032-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-032-R",
+  "found": 74,
+  "dropped": 13,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 13
+ },
+ {
+  "column": "page-033-L",
+  "found": 64,
+  "dropped": 2,
+  "kept": 62,
+  "gt": 62,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 2
+ },
+ {
+  "column": "page-033-R",
+  "found": 64,
+  "dropped": 2,
+  "kept": 62,
+  "gt": 62,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 1
+ },
+ {
+  "column": "page-034-L",
+  "found": 66,
+  "dropped": 5,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 5
+ },
+ {
+  "column": "page-034-R",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-035-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 0
+ },
+ {
+  "column": "page-035-R",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 0
+ },
+ {
+  "column": "page-036-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-036-R",
+  "found": 65,
+  "dropped": 4,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   60
+  ],
+  "digits": 3
+ },
+ {
+  "column": "page-037-L",
+  "found": 63,
+  "dropped": 2,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-037-R",
+  "found": 69,
+  "dropped": 8,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   20,
+   50,
+   55
+  ],
+  "digits": 7
+ },
+ {
+  "column": "page-038-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-038-R",
+  "found": 69,
+  "dropped": 8,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   35,
+   40,
+   50
+  ],
+  "digits": 8
+ },
+ {
+  "column": "page-039-L",
+  "found": 66,
+  "dropped": 5,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   25,
+   30,
+   40,
+   50,
+   55
+  ],
+  "digits": 5
+ },
+ {
+  "column": "page-039-R",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-040-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-040-R",
+  "found": 72,
+  "dropped": 11,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   20
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-041-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-041-R",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 1
+ },
+ {
+  "column": "page-042-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-042-R",
+  "found": 73,
+  "dropped": 12,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   7,
+   10,
+   30
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-043-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-043-R",
+  "found": 70,
+  "dropped": 9,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   20,
+   45
+  ],
+  "digits": 9
+ },
+ {
+  "column": "page-044-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-044-R",
+  "found": 72,
+  "dropped": 11,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   15
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-045-L",
+  "found": 63,
+  "dropped": 2,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-045-R",
+  "found": 73,
+  "dropped": 12,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-046-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-046-R",
+  "found": 71,
+  "dropped": 10,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   30,
+   55
+  ],
+  "digits": 10
+ },
+ {
+  "column": "page-047-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-047-R",
+  "found": 72,
+  "dropped": 11,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   20
+  ],
+  "digits": 10
+ },
+ {
+  "column": "page-048-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-048-R",
+  "found": 73,
+  "dropped": 12,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   45
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-049-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-049-R",
+  "found": 73,
+  "dropped": 12,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   40,
+   45,
+   55,
+   60
+  ],
+  "digits": 12
+ },
+ {
+  "column": "page-050-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-050-R",
+  "found": 70,
+  "dropped": 9,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   20,
+   30,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 9
+ },
+ {
+  "column": "page-051-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-051-R",
+  "found": 68,
+  "dropped": 7,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   15,
+   25,
+   40,
+   45,
+   60
+  ],
+  "digits": 7
+ },
+ {
+  "column": "page-052-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-052-R",
+  "found": 71,
+  "dropped": 10,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   60
+  ],
+  "digits": 10
+ },
+ {
+  "column": "page-053-L",
+  "found": 63,
+  "dropped": 2,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-053-R",
+  "found": 64,
+  "dropped": 3,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50
+  ],
+  "digits": 2
+ },
+ {
+  "column": "page-054-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-054-R",
+  "found": 74,
+  "dropped": 13,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 13
+ },
+ {
+  "column": "page-055-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-055-R",
+  "found": 72,
+  "dropped": 11,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   45
+  ],
+  "digits": 10
+ },
+ {
+  "column": "page-056-L",
+  "found": 70,
+  "dropped": 9,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   35,
+   45,
+   55
+  ],
+  "digits": 9
+ },
+ {
+  "column": "page-056-R",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-057-L",
+  "found": 63,
+  "dropped": 1,
+  "kept": 62,
+  "gt": 61,
+  "match": false,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-057-R",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   15,
+   20,
+   25,
+   30,
+   35,
+   40,
+   45,
+   50,
+   55,
+   60
+  ],
+  "digits": 0
+ },
+ {
+  "column": "page-058-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-058-R",
+  "found": 74,
+  "dropped": 13,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   10,
+   15,
+   40
+  ],
+  "digits": 13
+ },
+ {
+  "column": "page-059-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-059-R",
+  "found": 69,
+  "dropped": 8,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   10,
+   20,
+   35
+  ],
+  "digits": 8
+ },
+ {
+  "column": "page-060-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-060-R",
+  "found": 74,
+  "dropped": 13,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5,
+   40,
+   50
+  ],
+  "digits": 13
+ },
+ {
+  "column": "page-061-L",
+  "found": 62,
+  "dropped": 1,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-061-R",
+  "found": 73,
+  "dropped": 12,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   5
+  ],
+  "digits": 11
+ },
+ {
+  "column": "page-062-L",
+  "found": 61,
+  "dropped": 0,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [],
+  "digits": 0
+ },
+ {
+  "column": "page-062-R",
+  "found": 67,
+  "dropped": 6,
+  "kept": 61,
+  "gt": 61,
+  "match": true,
+  "excluded": [
+   30,
+   35,
+   40,
+   45,
+   50,
+   60
+  ],
+  "digits": 6
+ }
+]

@@ -41,6 +41,8 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
+from .normalize import corpus_columns
+
 ROOT = Path(__file__).resolve().parent.parent
 SIGLA = ROOT / 'work/sigla/work-sigla.json'
 
@@ -393,10 +395,13 @@ def read(pages: range | None = None) -> list[Cite]:
     already; iterating by line was the whole of the bug.
     """
     out = []
-    for f in sorted((ROOT / 'work/reconciled').glob('*.txt')):
-        n = int(f.stem.split('-')[1])
-        if pages is not None and n not in pages:
-            continue
+    # ⚠ EVERY CORPUS STAGE, NOT ONE. Globbing work/reconciled alone made this
+    # report "55 sigla, 0 citations" across pages 53-62 — ten columns of a
+    # citation index — because those pages are settled but not yet promoted and
+    # live in reconciled-auto. An empty result prints exactly like a clean one.
+    # `corpus_columns` searches every stage and RAISES for a requested page
+    # that is in none of them.
+    for f in corpus_columns(pages):
         text = f.read_text(encoding='utf-8')
         # offset of each line start, so a citation can still be filed under the
         # line it BEGINS on — John rules on these against the scan
@@ -417,14 +422,21 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
     p.add_argument('--show', type=int, default=25)
     p.add_argument('--pages', default='')
-    p.add_argument('--out', type=Path,
-                   default=ROOT / 'work/sweeps/siglum-check.tsv')
+    p.add_argument('--out', type=Path, default=None)
     args = p.parse_args(argv)
 
     rng = None
     if args.pages:
         a, _, b = args.pages.partition('-')
         rng = range(int(a), int(b or a) + 1)
+
+    # ⚠ A SUBSET RUN MUST NOT OVERWRITE THE WHOLE-CORPUS REPORT. `--pages 53-62`
+    # wrote its findings to the default path and silently destroyed 13 real
+    # findings from pages 15-52 that nothing else held. The report is named for
+    # what it covers, so a partial run cannot be mistaken for a full one.
+    if args.out is None:
+        stem = f'siglum-check-{args.pages}' if args.pages else 'siglum-check'
+        args.out = ROOT / 'work/sweeps' / f'{stem}.tsv'
 
     works = inventory()
     cites = read(rng)

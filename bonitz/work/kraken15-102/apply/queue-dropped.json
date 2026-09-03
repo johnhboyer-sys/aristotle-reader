@@ -1,0 +1,56 @@
+{
+ "entries": [
+  {
+   "page": 113,
+   "col": "R",
+   "line": 29,
+   "word_off": 1360,
+   "char_at": 25,
+   "readers": {
+    "opus": "τȣ̀ς θικȣ̀ς"
+   },
+   "kind": "dropped",
+   "reason": "the initial ἠ is gone. The line ABOVE prints \"ἐν τοῖς ἠθικοῖς\" correctly, LlamaParse reads \"κατὰ τȣ̀ς ἠθικȣ̀ς λόγȣς\", and 115-R:50 prints the same phrase in full. Found by quotecheck: the quotation matched nothing at Πθ7. 1341b40 because the word was not a word",
+   "forms": [
+    "τȣ̀ς ἠθικȣ̀ς",
+    "τȣ̀ς θικȣ̀ς"
+   ],
+   "form_set": [
+    "τȣ̀ς ἠθικȣ̀ς",
+    "τȣ̀ς θικȣ̀ς"
+   ],
+   "becomes": "τȣ̀ς ἠθικȣ̀ς",
+   "proposal": {
+    "form": "τȣ̀ς ἠθικȣ̀ς"
+   },
+   "card_sid": "dropped:page-113-R:29"
+  },
+  {
+   "page": 108,
+   "col": "R",
+   "line": 22,
+   "word_off": 981,
+   "char_at": 40,
+   "readers": {
+    "opus": "(σπερ)"
+   },
+   "kind": "dropped",
+   "reason": "the initial ὥ is gone. `καθάπερ (ὥσπερ) εἴρηται` gives the alternate formula in the parenthesis, as Bonitz does throughout; ὥσπερ occurs 93 times in the corpus and a bare σπερ once, here",
+   "forms": [
+    "(ὥσπερ)",
+    "(σπερ)"
+   ],
+   "form_set": [
+    "(ὥσπερ)",
+    "(σπερ)"
+   ],
+   "becomes": "(ὥσπερ)",
+   "proposal": {
+    "form": "(ὥσπερ)"
+   },
+   "card_sid": "dropped:page-108-R:22"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 2
+}

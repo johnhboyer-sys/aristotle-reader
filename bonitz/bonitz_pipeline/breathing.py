@@ -39,6 +39,7 @@ from .lexcheck import CORPUS, LSJ, ROOT, bare, nfc, parse_pages
 
 SMOOTH, ROUGH = '̓', '̔'
 from .lexcheck import WORD_RE  # combining marks are word chars
+from .normalize import corpus_column, corpus_columns
 # a breathing sits on an initial vowel or rho; the ou-ligature is excluded
 # deliberately — in this font it routinely takes an accent with no breathing
 # at all, so its bare form proves nothing about what the printer intended
@@ -122,8 +123,12 @@ def check(word: str, index=None) -> dict | None:
 
 
 def scan(page: int, col: str, index=None) -> list[dict]:
-    path = ROOT / f'work/reconciled/page-{page:03d}-{col}.txt'
-    if not path.exists():
+    # ⚠ EVERY CORPUS STAGE. Reading work/reconciled alone makes this
+    # silently skip pages 53-62, which are settled but not yet promoted
+    # and live in reconciled-auto — and a sweep that skips a page reports
+    # it clean.
+    path = corpus_column(page, col, required=False)
+    if path is None:
         return []
     lines = nfc(path.read_text(encoding='utf-8')).splitlines()
     out = []

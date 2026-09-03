@@ -1,0 +1,13 @@
+[
+  {
+    "page": 52,
+    "col": "L",
+    "line": 49,
+    "wrote": "ἱερεῦσιν",
+    "llamaparse": "ἱερεȣσιν",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "ιερευσιν is a corpus form; ιερεουσιν is not",
+    "context": "ἱερῶν τοῖς ἱερεῦσιν ἀμφισβητήσεις, ἀμφισβήτησις ἱερωσύνης"
+  }
+]

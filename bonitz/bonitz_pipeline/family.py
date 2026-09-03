@@ -22,7 +22,7 @@ import unicodedata
 
 from .alphacheck import reconciled_headwords
 from .batch3 import ROOT, parse_pages
-from .normalize import corpus_column
+from .normalize import corpus_column, corpus_columns
 from .lexcheck import bare, nfc
 
 SMOOTH, ROUGH = '̓', '̔'
@@ -97,8 +97,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument('--pages', required=True)
     args = ap.parse_args()
+    pages = parse_pages(args.pages)
+    # ⚠ A PAGE IN NO CORPUS STAGE IS NOT A CLEAN PAGE. `scan` looks up
+    # its column with required=False and answers [] when there is none,
+    # so asking for a page that was never transcribed printed a zero and
+    # looked exactly like a page with no defects. This is the residue of
+    # the 2026-08-10 five-gate fix: they can SEE reconciled-auto now, but
+    # total absence still read as cleanliness. Validate the REQUEST here,
+    # once, where the user says which pages they mean.
+    corpus_columns(pages)
     n = 0
-    for p in parse_pages(args.pages):
+    for p in pages:
         for col in ('L', 'R'):
             for r in scan(p, col):
                 n += 1

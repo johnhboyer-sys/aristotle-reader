@@ -41,11 +41,27 @@ def test_there_is_a_site_for_every_finding():
         'the page and the check disagree about how many findings there are')
 
 
+# ⚠ THE RULE IS ABOUT BEING ON THE RIGHT LINE, NOT ABOUT ONE MECHANISM.
+# `text` matches an ALTO box against the line by similarity. `line` is the
+# printed line's OWN image, cut from the arrow the recogniser read — pages 107+
+# have no column image at all, so there is nothing to match a box against, and
+# equally nothing for the crop to be wrong about. Admitting it keeps the rule
+# rather than relaxing it.
+PLACED = {'text', 'line'}
+
+
 def test_every_crop_is_placed_by_matching_the_line_text():
     """A crop placed by geometry can be the wrong line entirely, and a reader
     cannot tell. Those are the sites that produced 'unsure' clicks before."""
-    weak = [(f.col, f.line, f.how) for f in FS if f.how != 'text']
-    assert not weak, f'crops not text-matched: {weak}'
+    weak = [(f.col, f.line, f.how) for f in FS if f.how not in PLACED]
+    assert not weak, f'crops not placed on a known line: {weak}'
+
+
+def test_a_geometric_guess_is_still_refused():
+    """The exemption is for the arrow's own line image and nothing else. An
+    equal-slice crop is arithmetic over a column and can show the line above,
+    which is the placement that produced 'unsure' clicks."""
+    assert 'slices' not in PLACED and 'none' not in PLACED
 
 
 def test_every_site_carries_ink_to_rule_on():

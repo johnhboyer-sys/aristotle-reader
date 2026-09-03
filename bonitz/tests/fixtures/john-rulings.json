@@ -8,98 +8,337 @@
     "verdict: applied = the correction was approved and is in the text;",
     "declined = deliberately NOT applied, the print is recorded as it stands."
   ],
-
   "ligature": {
     "_": "ou-ligature read as plain upsilon. All 19 approved 2026-07-25.",
     "applied": [
-      {"page": 24, "col": "L", "line": 20, "wrote": "κυφότητα",   "now": "κȣφότητα"},
-      {"page": 24, "col": "L", "line": 22, "wrote": "κυφότερον",  "now": "κȣφότερον"},
-      {"page": 41, "col": "R", "line": 50, "wrote": "ποιῦσι",     "now": "ποιȣ͂σι",
-       "note": "circumflex moves onto the ligature, not dropped"},
-      {"page": 47, "col": "R", "line": 22, "wrote": "καλυμέναις", "now": "καλȣμέναις"},
-      {"page": 50, "col": "L", "line": 13, "wrote": "ἐλάττυς",    "now": "ἐλάττȣς"},
-      {"page": 51, "col": "L", "line": 17, "wrote": "ἀμυσία",     "now": "ἀμȣσία"},
-      {"page": 51, "col": "L", "line": 17, "wrote": "μυσική",     "now": "μȣσική"},
-      {"page": 51, "col": "L", "line": 18, "wrote": "μυσικῷ",     "now": "μȣσικȣ͂",
-       "note": "two ligatures in one word: μουσικοῦ, genitive after ἐκ"}
+      {
+        "page": 24,
+        "col": "L",
+        "line": 20,
+        "wrote": "κυφότητα",
+        "now": "κȣφότητα"
+      },
+      {
+        "page": 24,
+        "col": "L",
+        "line": 22,
+        "wrote": "κυφότερον",
+        "now": "κȣφότερον"
+      },
+      {
+        "page": 41,
+        "col": "R",
+        "line": 50,
+        "wrote": "ποιῦσι",
+        "now": "ποιȣ͂σι",
+        "note": "circumflex moves onto the ligature, not dropped"
+      },
+      {
+        "page": 47,
+        "col": "R",
+        "line": 22,
+        "wrote": "καλυμέναις",
+        "now": "καλȣμέναις"
+      },
+      {
+        "page": 50,
+        "col": "L",
+        "line": 13,
+        "wrote": "ἐλάττυς",
+        "now": "ἐλάττȣς"
+      },
+      {
+        "page": 51,
+        "col": "L",
+        "line": 17,
+        "wrote": "ἀμυσία",
+        "now": "ἀμȣσία"
+      },
+      {
+        "page": 51,
+        "col": "L",
+        "line": 17,
+        "wrote": "μυσική",
+        "now": "μȣσική"
+      },
+      {
+        "page": 51,
+        "col": "L",
+        "line": 18,
+        "wrote": "μυσικῷ",
+        "now": "μȣσικȣ͂",
+        "note": "two ligatures in one word: μουσικοῦ, genitive after ἐκ"
+      }
     ]
   },
-
   "breathing": {
     "_": "Rough printed as smooth. 34 of 35 approved; one declined.",
     "applied": [
-      {"page": 17, "col": "R", "line": 54, "wrote": "ἄγιος",     "now": "ἅγιος"},
-      {"page": 19, "col": "R", "line": 2,  "wrote": "ἄπαξ",      "now": "ἅπαξ"},
-      {"page": 22, "col": "L", "line": 48, "wrote": "ἀδρυνσις",  "now": "ἅδρυνσις",
-       "note": "John: needs the acute as well as the breathing"},
-      {"page": 23, "col": "L", "line": 51, "wrote": "αεῖ",       "now": "ἀεῖ"},
-      {"page": 23, "col": "R", "line": 15, "wrote": "ἐξῆς",      "now": "ἑξῆς"},
-      {"page": 42, "col": "L", "line": 24, "wrote": "ἄλας",      "now": "ἅλας"},
-      {"page": 44, "col": "R", "line": 17, "wrote": "ἀλιεύς",    "now": "ἁλιεύς"},
-      {"page": 47, "col": "L", "line": 26, "wrote": "ἄλμη",      "now": "ἅλμη"},
-      {"page": 47, "col": "R", "line": 22, "wrote": "ἀλοσάχνη",  "now": "ἁλοσάχνη"},
-      {"page": 47, "col": "R", "line": 22, "wrote": "ἀλκυόνος",  "now": "ἁλκυόνος",
-       "note": "John caught this one; the check had missed it"},
-      {"page": 48, "col": "R", "line": 7,  "wrote": "ἄλων",      "now": "ἅλων"},
-      {"page": 48, "col": "R", "line": 52, "wrote": "ἅλ.ωσις",   "now": "ἅλωσις",
-       "note": "badly printed lambda read as a period; not a breathing error"},
-      {"page": 49, "col": "L", "line": 2,  "wrote": "ἄμα",       "now": "ἅμα", "count": 2},
-      {"page": 49, "col": "L", "line": 18, "wrote": "ἀμαξιαῖος", "now": "ἁμαξιαῖος"},
-      {"page": 49, "col": "R", "line": 1,  "wrote": "ἀμαρτία",   "now": "ἁμαρτία"},
-      {"page": 50, "col": "R", "line": 19, "wrote": "ἄμιλλα",    "now": "ἅμιλλα", "count": 2},
-      {"page": 50, "col": "R", "line": 36, "wrote": "ἄμμα",      "now": "ἅμμα",   "count": 2}
+      {
+        "page": 17,
+        "col": "R",
+        "line": 54,
+        "wrote": "ἄγιος",
+        "now": "ἅγιος"
+      },
+      {
+        "page": 19,
+        "col": "R",
+        "line": 2,
+        "wrote": "ἄπαξ",
+        "now": "ἅπαξ"
+      },
+      {
+        "page": 22,
+        "col": "L",
+        "line": 48,
+        "wrote": "ἀδρυνσις",
+        "now": "ἅδρυνσις",
+        "note": "John: needs the acute as well as the breathing"
+      },
+      {
+        "page": 23,
+        "col": "L",
+        "line": 51,
+        "wrote": "αεῖ",
+        "now": "ἀεῖ",
+        "reversed_by": "page-023-L:51:δεῖ (2026-08-18)",
+        "reversed_why": "Superseded, not changed-his-mind. The breathing sweep asked whether this alpha carries a smooth breathing and he said yes. There is no alpha: on 2026-08-18, with the crop in front of him, he read the ink as δεῖ. The earlier card asked about a letter the page does not print, so its answer cannot bind the site. Kept here because the ledger keeps both rulings — see john_rulings.check(), same field, same meaning."
+      },
+      {
+        "page": 23,
+        "col": "R",
+        "line": 15,
+        "wrote": "ἐξῆς",
+        "now": "ἑξῆς"
+      },
+      {
+        "page": 42,
+        "col": "L",
+        "line": 24,
+        "wrote": "ἄλας",
+        "now": "ἅλας"
+      },
+      {
+        "page": 44,
+        "col": "R",
+        "line": 17,
+        "wrote": "ἀλιεύς",
+        "now": "ἁλιεύς"
+      },
+      {
+        "page": 47,
+        "col": "L",
+        "line": 26,
+        "wrote": "ἄλμη",
+        "now": "ἅλμη"
+      },
+      {
+        "page": 47,
+        "col": "R",
+        "line": 22,
+        "wrote": "ἀλοσάχνη",
+        "now": "ἁλοσάχνη"
+      },
+      {
+        "page": 47,
+        "col": "R",
+        "line": 22,
+        "wrote": "ἀλκυόνος",
+        "now": "ἁλκυόνος",
+        "note": "John caught this one; the check had missed it"
+      },
+      {
+        "page": 48,
+        "col": "R",
+        "line": 7,
+        "wrote": "ἄλων",
+        "now": "ἅλων"
+      },
+      {
+        "page": 48,
+        "col": "R",
+        "line": 52,
+        "wrote": "ἅλ.ωσις",
+        "now": "ἅλωσις",
+        "note": "badly printed lambda read as a period; not a breathing error"
+      },
+      {
+        "page": 49,
+        "col": "L",
+        "line": 2,
+        "wrote": "ἄμα",
+        "now": "ἅμα",
+        "count": 2
+      },
+      {
+        "page": 49,
+        "col": "L",
+        "line": 18,
+        "wrote": "ἀμαξιαῖος",
+        "now": "ἁμαξιαῖος"
+      },
+      {
+        "page": 49,
+        "col": "R",
+        "line": 1,
+        "wrote": "ἀμαρτία",
+        "now": "ἁμαρτία"
+      },
+      {
+        "page": 50,
+        "col": "R",
+        "line": 19,
+        "wrote": "ἄμιλλα",
+        "now": "ἅμιλλα",
+        "count": 2
+      },
+      {
+        "page": 50,
+        "col": "R",
+        "line": 36,
+        "wrote": "ἄμμα",
+        "now": "ἅμμα",
+        "count": 2
+      }
     ],
     "declined": [
-      {"page": 32, "col": "L", "line": 1, "keep": "αλλα",
-       "proposed": "ἀλλὰ",
-       "why": "The print has no breathing AND no accent — a printer's error. Recording it, not repairing it. πασχει on the same line likewise."}
+      {
+        "page": 32,
+        "col": "L",
+        "line": 1,
+        "keep": "αλλα",
+        "proposed": "ἀλλὰ",
+        "why": "The print has no breathing AND no accent — a printer's error. Recording it, not repairing it. πασχει on the same line likewise."
+      }
     ]
   },
-
   "family": {
     "_": "Inflections inherit from a ruled headword: same root, same breathing.",
     "applied": [
-      {"page": 44, "col": "R", "line": 3,  "wrote": "ἀλιάετοι",   "now": "ἁλιάετοι"},
-      {"page": 44, "col": "R", "line": 12, "wrote": "ἀλιάς",      "now": "ἁλιάς"},
-      {"page": 44, "col": "R", "line": 13, "wrote": "ἀλιεία",     "now": "ἁλιεία"},
-      {"page": 44, "col": "R", "line": 17, "wrote": "ἀλιεῖς",     "now": "ἁλιεῖς"},
-      {"page": 44, "col": "R", "line": 25, "wrote": "ἀλιευτικόν", "now": "ἁλιευτικόν"}
+      {
+        "page": 44,
+        "col": "R",
+        "line": 3,
+        "wrote": "ἀλιάετοι",
+        "now": "ἁλιάετοι"
+      },
+      {
+        "page": 44,
+        "col": "R",
+        "line": 12,
+        "wrote": "ἀλιάς",
+        "now": "ἁλιάς"
+      },
+      {
+        "page": 44,
+        "col": "R",
+        "line": 13,
+        "wrote": "ἀλιεία",
+        "now": "ἁλιεία"
+      },
+      {
+        "page": 44,
+        "col": "R",
+        "line": 17,
+        "wrote": "ἀλιεῖς",
+        "now": "ἁλιεῖς"
+      },
+      {
+        "page": 44,
+        "col": "R",
+        "line": 25,
+        "wrote": "ἀλιευτικόν",
+        "now": "ἁλιευτικόν"
+      }
     ],
     "held": [
-      {"page": 44, "col": "R", "line": 26, "keep": "ἀλίζειν",
-       "why": "different lemma, not an inflection of ἁλιεύς"},
-      {"page": 44, "col": "R", "line": 15, "keep": "ἀλίσκεται",
-       "why": "ἁλίσκομαι — different root that merely sits in this entry"}
+      {
+        "page": 44,
+        "col": "R",
+        "line": 26,
+        "keep": "ἀλίζειν",
+        "why": "different lemma, not an inflection of ἁλιεύς",
+        "reversed_by": "settle sitting 2026-08-18 — the ἁλ- breathing",
+        "reversed_why": "This ruling was about LEMMA MEMBERSHIP — \"different lemma, not an inflection of ἁλιεύς\" — and said nothing about the breathing. On 2026-08-18 John ruled the ἁλ- family rough from crops, and the word recorded in `keep` moved with it. The family judgment stands: these are still not inflections of ἁλιεύς."
+      },
+      {
+        "page": 44,
+        "col": "R",
+        "line": 15,
+        "keep": "ἀλίσκεται",
+        "why": "ἁλίσκομαι — different root that merely sits in this entry",
+        "reversed_by": "settle sitting 2026-08-18 — the ἁλ- breathing",
+        "reversed_why": "This ruling was about LEMMA MEMBERSHIP — \"ἁλίσκομαι — different root that merely sits in this entry\" — and said nothing about the breathing. On 2026-08-18 John ruled the ἁλ- family rough from crops, and the word recorded in `keep` moved with it. The family judgment stands: these are still not inflections of ἁλιεύς."
+      }
     ]
   },
-
   "print_errors_recorded_as_printed": {
     "_": "Bonitz's own mistakes. The transcription is diplomatic; see the rule.",
     "items": [
-      {"page": 47, "col": "L", "line": 14, "text": "ἀλλοτριώτερα",
-       "note": "printed with chi; John ruled it a print issue and gave the correct alpha"},
-      {"page": 47, "col": "L", "line": 59, "text": "Ηα13",
-       "note": "printed Ηκ13; Bekker requires book α"},
-      {"page": 49, "col": "L", "line": 51, "text": "1835 b",
-       "note": "compositor error for 1135; confirmed against the scan"},
-      {"page": 50, "col": "R", "line": 31, "text": "1820a",
-       "note": "compositor error for 1320; confirmed against the scan"}
+      {
+        "page": 47,
+        "col": "L",
+        "line": 14,
+        "text": "ἀλλοτριώτερα",
+        "note": "printed with chi; John ruled it a print issue and gave the correct alpha"
+      },
+      {
+        "page": 47,
+        "col": "L",
+        "line": 59,
+        "text": "Ηα13",
+        "note": "printed Ηκ13; Bekker requires book α"
+      },
+      {
+        "page": 49,
+        "col": "L",
+        "line": 51,
+        "text": "1835 b",
+        "note": "compositor error for 1135; confirmed against the scan"
+      },
+      {
+        "page": 50,
+        "col": "R",
+        "line": 31,
+        "text": "1820a",
+        "note": "compositor error for 1320; confirmed against the scan"
+      }
     ]
   },
-
   "not_errors": {
     "_": "Flagged by a check, ruled CORRECT AS PRINTED. Regression guards.",
     "items": [
-      {"page": 15, "col": "L", "text": "ἀβελτηρίας",
-       "why": "Bonitz records the variant: '(ἀβελτερίας Bk2)' in the same line"},
-      {"page": 26, "col": "L", "text": "αἰτώλιος",
-       "why": "Bekker's reading, which Bonitz registers against αἰγώλιος"},
-      {"page": 45, "col": "L", "text": "πάρυδρον",
-       "why": "real word; LlamaParse over-fired the ligature"},
-      {"page": 42, "col": "R", "text": "δίδυμα",
-       "why": "real word; LlamaParse over-fired the ligature"},
-      {"page": 29, "col": "R", "text": "ὀξὺ",
-       "why": "real word; LlamaParse over-fired the ligature"}
+      {
+        "page": 15,
+        "col": "L",
+        "text": "ἀβελτηρίας",
+        "why": "Bonitz records the variant: '(ἀβελτερίας Bk2)' in the same line"
+      },
+      {
+        "page": 26,
+        "col": "L",
+        "text": "αἰτώλιος",
+        "why": "Bekker's reading, which Bonitz registers against αἰγώλιος"
+      },
+      {
+        "page": 45,
+        "col": "L",
+        "text": "πάρυδρον",
+        "why": "real word; LlamaParse over-fired the ligature"
+      },
+      {
+        "page": 42,
+        "col": "R",
+        "text": "δίδυμα",
+        "why": "real word; LlamaParse over-fired the ligature"
+      },
+      {
+        "page": 29,
+        "col": "R",
+        "text": "ὀξὺ",
+        "why": "real word; LlamaParse over-fired the ligature"
+      }
     ]
   }
 }

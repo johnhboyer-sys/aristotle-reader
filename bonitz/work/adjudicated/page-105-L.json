@@ -1,0 +1,65 @@
+[
+ {
+  "ctx": "ρισμένη(fοrtὡρισμένη)λόγῳϗ̀υἱς",
+  "verdict": "ϗ̀υἱ",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "Ligature carries a clear grave (ϗ̀). Next glyph is a narrow two-stroke u, matching the upsilon of λυπηροῖς and unlike the three-lobed omega of ὡρισμένη; then iota with a rough breathing whose shape matches the rough over ὁ on the same line. Printed as υἱς, recorded diplomatically."
+ },
+ {
+  "ctx": "φρόνιμοςὁρίσειενΗβ6.1106b36.ἕξ",
+  "verdict": "3",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Line opens 'b36.' — the 3 is fully inked; llama's empty span is a drop."
+ },
+ {
+  "ctx": "206b19.Ζια1.488b12sqq.θ1.ι1.φυ",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Short x-height italic iota with bottom-right hook, next to the tall roman 1 with flag and base serif: 'ι1.' after 'θ1.' (HA book ι)."
+ },
+ {
+  "ctx": ",19,24.ημα35.1197b38sqq.Πη13.1",
+  "verdict": "η",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Two verticals with a descending right leg = η, not γ; Πη13/1332a40 is Politics book VII."
+ },
+ {
+  "ctx": "ημβ3.1200a4.7.1206b10sqq.α35.1",
+  "verdict": "α",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Italic Greek alpha (bowl with crossing tail), matching α elsewhere; not roman a."
+ },
+ {
+  "ctx": "ςεἴδηenumeranturΗβ7.ηεβ3.Ρα9.1",
+  "verdict": "Ρ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Capital with a closed bowl on one stem = Ρ, not Π; Ρα9/1366b1 is Rhetoric I.9."
+ },
+ {
+  "ctx": "busadnumeranturημα33.1193a36-3",
+  "verdict": "a",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Superscript column letter is a compact x-height 'a' with no ascender; a 'b' would show a tall stem."
+ },
+ {
+  "ctx": "13.1259b21,1260a15,31,33.ȣ̓χοἷ",
+  "verdict": "ȣ̓χ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Single ȣ ligature (not ου) with a smooth breathing opening left, then chi with descender: ȣ̓χ, not ȣ̓κ."
+ },
+ {
+  "ctx": "2.ἀρεταὶὀργανικαὶϗ̀διακονικαίΠ",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Second glyph of νικαί is a thin serifed vertical (iota), not a round omicron."
+ }
+]

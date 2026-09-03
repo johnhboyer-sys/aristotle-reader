@@ -1,0 +1,72 @@
+[
+ {
+  "page": 88,
+  "col": "L",
+  "spine_off": 129942,
+  "ctx": "ροσιέναιΓβ10.336b4,18.ὑγρȣ͂μὲνἀπιόντος,τȣ͂ξηρȣ͂δὲσυν",
+  "opus": "ȣ͂",
+  "genie": "ᾷ",
+  "llama": "ȣ͂",
+  "kraken": "ȣ͂",
+  "cls": "majority-spine",
+  "vote": "ȣ͂",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 88,
+  "col": "L",
+  "spine_off": 130125,
+  "ctx": "πιέστȣμδ8.385a15.9.386a29-b11.ἀπίθανοςΡγ3.1406b14.λόγ",
+  "opus": "-b1",
+  "genie": "-3",
+  "llama": "-b1",
+  "kraken": "b1",
+  "cls": "majority-spine",
+  "vote": "-b1",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 88,
+  "col": "L",
+  "spine_off": 130396,
+  "ctx": "νἀδύνατονἢἀπίθανονϗ̀δυνατόνπο25.1461b12.24.1460a27.ἄπι",
+  "opus": "όνπο",
+  "genie": "όνπ",
+  "llama": "ὸνπο",
+  "kraken": "όνπο",
+  "cls": "majority-spine",
+  "vote": "όνπο",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 88,
+  "col": "L",
+  "spine_off": 131044,
+  "ctx": "οrifides)Ρβ23.1398a10.ζημιȣ͂νεἰςδόξανϗ̀ἀπιστίανρ16.14",
+  "opus": "ιȣ͂",
+  "genie": "ία",
+  "llama": "ίȣ",
+  "kraken": "ιȣ͂",
+  "cls": "majority-spine",
+  "vote": "ιȣ͂",
+  "flag": true,
+  "citation": true
+ },
+ {
+  "page": 88,
+  "col": "L",
+  "spine_off": 132123,
+  "ctx": "ίᾳἀκολȣθεῖαρ5.1250b11.ἁπλȣ͂ς.ἁπλȣ͂ν,distἕνΜλ7.1072a33.τὸπρῶ",
+  "opus": "ȣ͂ς.ἁπλȣ͂",
+  "genie": "ῶς,ἁπλοῦ",
+  "llama": "ȣ͂ς.ἁπλȣ͂",
+  "kraken": "ȣ͂ς.ἁπλȣ͂",
+  "cls": "majority-spine",
+  "vote": "ȣ͂ς.ἁπλȣ͂",
+  "flag": true,
+  "citation": true
+ }
+]

@@ -319,6 +319,16 @@ def crop_word(col: str, lineno: int, word: str, scale: float = 3.0,
         if boxes:
             x0, y0, x1, y1 = boxes[lineno - 1]
             how = 'ink'
+            # ⚠ AND THE TEXT RATIO IS DISCARDED WITH THE TEXT BOX. `score`
+            # describes the box being RETURNED, and this box came from the ink
+            # profile, so a ratio measured against a line we just rejected is
+            # not a fact about it. Leaving it set is the 2026-08-08 defect
+            # wearing a smaller number: page-033-R was quarantined when that
+            # fix landed, so no fixture could reach this line, and it kept the
+            # failed match's 0.46 until the column paired on 2026-08-18. The
+            # `mismatch` branch below is the deliberate exception — there the
+            # returned box IS the text box, so its real score belongs to it.
+            score = 0.0
         elif box_ is None:
             h = im.height / max(1, len(lines))
             x0, x1 = 0, im.width

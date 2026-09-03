@@ -1,0 +1,110 @@
+{
+ "entries": [
+  {
+   "page": 113,
+   "col": "L",
+   "line": 4,
+   "word_off": 184,
+   "char_at": 48,
+   "readers": {
+    "opus": "δι’ ἢν"
+   },
+   "kind": "breath",
+   "reason": "I proposed ἦν and you refused it. The defect is the BREATHING, not the accent: this is the relative ἣν αἰτίαν, \"for which reason\". LlamaParse reads \"κ7. 923b3 δι’ ἣν αἰτίαν\", and 113-L already prints δι’ ἣν once",
+   "forms": [
+    "δι’ ἣν",
+    "δι’ ἢν"
+   ],
+   "form_set": [
+    "δι’ ἣν",
+    "δι’ ἢν"
+   ],
+   "becomes": "δι’ ἣν",
+   "proposal": {
+    "form": "δι’ ἣν"
+   },
+   "ack_ruled": "the form you refused is not the form proposed here — my accent was wrong and LlamaParse agrees with you",
+   "card_sid": "recut:page-113-L:4"
+  },
+  {
+   "page": 117,
+   "col": "L",
+   "line": 49,
+   "word_off": 2296,
+   "char_at": 12,
+   "readers": {
+    "opus": "῾Ρόδιος"
+   },
+   "kind": "breath",
+   "reason": "my last card left the spacing breathing ῾ out of the printed form, so accepting it would have written ῾Ῥόδιος with the mark twice. The fix is to combine, not to add: LlamaParse reads \"Ἀριστοτέλης Ῥόδιος\" and the corpus spells it Ῥόδιος precomposed elsewhere",
+   "forms": [
+    "Ῥόδιος",
+    "῾Ρόδιος"
+   ],
+   "form_set": [
+    "Ῥόδιος",
+    "῾Ρόδιος"
+   ],
+   "becomes": "Ῥόδιος",
+   "proposal": {
+    "form": "Ῥόδιος"
+   },
+   "ack_ruled": "the form you refused is not the form proposed here — my accent was wrong and LlamaParse agrees with you",
+   "card_sid": "recut:page-117-L:49"
+  },
+  {
+   "page": 113,
+   "col": "R",
+   "line": 19,
+   "word_off": 867,
+   "char_at": 2,
+   "readers": {
+    "opus": "Πολιτικάβ2."
+   },
+   "kind": "space",
+   "reason": "I moved the accent to a grave and you refused it. The ACUTE is right — the corpus spells Πολιτικά twice and Πολιτικὰ never — and only the space is missing. LlamaParse reads \"— Πολιτικά β2. 1261a31\"",
+   "forms": [
+    "Πολιτικά β2.",
+    "Πολιτικάβ2."
+   ],
+   "form_set": [
+    "Πολιτικά β2.",
+    "Πολιτικάβ2."
+   ],
+   "becomes": "Πολιτικά β2.",
+   "proposal": {
+    "form": "Πολιτικά β2."
+   },
+   "ack_ruled": "the form you refused is not the form proposed here — my accent was wrong and LlamaParse agrees with you",
+   "card_sid": "recut:page-113-R:19"
+  },
+  {
+   "page": 113,
+   "col": "R",
+   "line": 36,
+   "word_off": 1665,
+   "char_at": 0,
+   "readers": {
+    "opus": "1εχνη ῥητορικ7 α1. 1355a28 ἐν τοις τοπικοις"
+   },
+   "kind": "smyth",
+   "reason": "same mistake: I put a grave on ῥητορικὴ. Bonitz's own key names the work \"τέχνη Ῥητορική\" with the acute, and LlamaParse reads \"— Τέχνη ῥητορική α1. 1355a28 ἐν τοῖς τοπικοῖς\". The DIGIT 1 is a capital Τ, the DIGIT 7 is ή, and τοῖς τοπικοῖς want their circumflexes",
+   "forms": [
+    "Τέχνη ῥητορική α1. 1355a28 ἐν τοῖς τοπικοῖς",
+    "1εχνη ῥητορικ7 α1. 1355a28 ἐν τοις τοπικοις"
+   ],
+   "form_set": [
+    "Τέχνη ῥητορική α1. 1355a28 ἐν τοῖς τοπικοῖς",
+    "1εχνη ῥητορικ7 α1. 1355a28 ἐν τοις τοπικοις"
+   ],
+   "becomes": "Τέχνη ῥητορική α1. 1355a28 ἐν τοῖς τοπικοῖς",
+   "proposal": {
+    "form": "Τέχνη ῥητορική α1. 1355a28 ἐν τοῖς τοπικοῖς"
+   },
+   "ack_ruled": "the form you refused is not the form proposed here — my accent was wrong and LlamaParse agrees with you",
+   "card_sid": "recut:page-113-R:36"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 4
+}

@@ -1,0 +1,36 @@
+{
+ "site:page-109-R:27:1229": {
+  "verdict": "accept",
+  "detail": "οἰκειότερον",
+  "sites": [
+   "page-109-R:27:1229"
+  ]
+ },
+ "site:page-111-R:23:1026": {
+  "verdict": "accept",
+  "detail": "τῶν",
+  "sites": [
+   "page-111-R:23:1026"
+  ],
+  "was": "bundle:ι>",
+  "note": "card offered the group substitution; resolved to the word"
+ },
+ "site:page-109-R:28:1290": {
+  "verdict": "preserve",
+  "detail": "φιλοσοφίας",
+  "sites": [
+   "page-109-R:28:1290"
+  ],
+  "was": "bundle:keep",
+  "note": "card offered the group substitution; resolved to the word"
+ },
+ "site:page-110-L:14:599": {
+  "verdict": "preserve",
+  "detail": "τοῖς",
+  "sites": [
+   "page-110-L:14:599"
+  ],
+  "was": "bundle:keep",
+  "note": "card offered the group substitution; resolved to the word"
+ }
+}

@@ -36,6 +36,8 @@ import unicodedata
 from functools import lru_cache
 from pathlib import Path
 
+from .normalize import corpus_column, corpus_columns
+
 ROOT = Path(__file__).resolve().parent.parent
 DIST = Path('/Users/johnboyer/Developer/aristotle-reader/build/dist')
 
@@ -295,21 +297,25 @@ def arbitrate(readings: dict[str, str]) -> tuple[str, str] | None:
     return None
 
 
-def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
-    p.add_argument('--check', action='store_true',
-                   help='test every word in the corpus against the lexicon')
-    a = p.parse_args(argv)
+def disagreements(lo: int | None = None, hi: int | None = None):
+    """(column, line, word, breathing the lexicon wants, why) for every word
+    the lexicon contradicts, optionally narrowed to a page range.
 
-    hw = headwords()
-    print(f'{sum(len(v) for v in hw.values()):,} LSJ headwords, '
-          f'{len(hw):,} distinct skeletons, {len(lemmas()):,} form->lemma entries')
-    if not a.check:
-        return 0
-
+    Extracted from `main` so the dashboard can count these without parsing
+    printed output — a counter that reads stdout breaks the first time a line
+    is reworded, and breaks silently, reporting a sweep as having found nothing.
+    """
     agree = differ = unknown = 0
     rows = []
-    for f in sorted((ROOT / 'work/reconciled').glob('*.txt')):
+    # ⚠ EVERY CORPUS STAGE. Reading work/reconciled alone makes this
+    # silently skip pages 53-62, which are settled but not yet promoted
+    # and live in reconciled-auto — and a sweep that skips a page reports
+    # it clean.
+    for f in corpus_columns():
+        if lo is not None:
+            m = re.match(r'page-(\d+)', f.stem)
+            if not m or not (lo <= int(m.group(1)) <= hi):
+                continue
         for n, line in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
             for m in WORD.finditer(line):
                 w = m.group(0)
@@ -324,7 +330,8 @@ def main(argv: list[str] | None = None) -> int:
                 # matched the fragment to ὅδε, so the oracle proposed ROUGH for
                 # a smooth word; `ἡμαρ-` (ἡμαρτημένοι) drew ἦμαρ out of LSJ the
                 # same way. A fragment always looks like some shorter word.
-                if line[m.end():m.end() + 1] in ('.', '-', '‐', '‑', '–'):
+                if line[m.end():m.end() + 1] in ('.', '-', '\u2010', '\u2011',
+                                                 '\u2013'):
                     continue
                 d = decide(w)
                 if d is None:
@@ -334,6 +341,23 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     differ += 1
                     rows.append((f.stem, n, w, d[0], d[1]))
+    return rows, agree, unknown
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description=__doc__.split('\n')[1])
+    p.add_argument('--check', action='store_true',
+                   help='test every word in the corpus against the lexicon')
+    a = p.parse_args(argv)
+
+    hw = headwords()
+    print(f'{sum(len(v) for v in hw.values()):,} LSJ headwords, '
+          f'{len(hw):,} distinct skeletons, {len(lemmas()):,} form->lemma entries')
+    if not a.check:
+        return 0
+
+    rows, agree, unknown = disagreements()
+    differ = len(rows)
     print(f'\n{agree + differ + unknown:,} words carry a breathing:')
     print(f'  {agree:>6,} confirmed by the lexicon')
     print(f'  {differ:>6,} DISAGREE — candidates for the ink')

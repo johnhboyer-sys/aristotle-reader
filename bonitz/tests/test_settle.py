@@ -356,6 +356,7 @@ def test_report_counts_refusals_nothing_vanishes():
 def test_select_readings_filters_to_reader_set():
     w = _wf('letters', {
         'opus': 'a', 'genie': 'b', 'llama': 'c', 'kraken': 'a', 'codex': 'a',
+        'calamari': 'a', 'paddle': 'b',
     })
     assert select_readings(w, STRONG_READERS) == {
         'opus': 'a', 'kraken': 'a', 'codex': 'a',
@@ -414,10 +415,10 @@ def test_weak_readers_poison_breathing_settlement():
     from bonitz_pipeline.word_flags import words as load_words
     word_list = load_words(FLAGS5)
     strong = settle_words(word_list, STRONG_READERS)
-    all5 = settle_words(word_list, ALL_READERS)
+    all_readers = settle_words(word_list, ALL_READERS)
     s_b = sum(1 for s in strong.settled
               if s.kind == 'breathing-only' and s.authority != AUTH_AGREE)
-    a_b = sum(1 for s in all5.settled
+    a_b = sum(1 for s in all_readers.settled
               if s.kind == 'breathing-only' and s.authority != AUTH_AGREE)
     # The poison measurement: weak readers must not *increase* breathing
     # settlement by inventing consensus. They typically decrease it.

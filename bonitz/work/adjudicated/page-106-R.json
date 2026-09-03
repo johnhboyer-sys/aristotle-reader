@@ -1,0 +1,121 @@
+[
+ {
+  "ctx": "ὸςτεταγμένονἀριθμὸνἔχειπιθ38.9",
+  "verdict": "θ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Tall italic ascender with crossbar and closed bowl = theta; epsilon has no ascender. 920b33 = Problemata bk 19 (ιθ)."
+ },
+ {
+  "ctx": "5,16.πάνταἀνάγεινεἰςἀριθμȣ́ςΜζ",
+  "verdict": "ȣ́",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Closed bowl plus right stem = ȣ ligature with acute; contrast the open u-curve of υ in ψυχὴ on line 10."
+ },
+ {
+  "ctx": "υχὴἀριθμὸςαὐτὸςαὑτὸνκινῶντζ3.1",
+  "verdict": "τ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Clear T-form with crossbar before ζ: τζ3 (Topics ζ)."
+ },
+ {
+  "ctx": "πέδȣἀριθμὸςδόξα,ὁτȣ͂στερεȣ͂αἴσ",
+  "verdict": "ȣ͂αἴσθησιςψ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Line 12 ends τȣ͂ στερεȣ͂, both ȣ ligatures under circumflex; line 13 opens αἴσθησις with lowercase ψ. No alpha, no iota subscript."
+ },
+ {
+  "ctx": ".3.1090b33,35.5.1092b19.τȣ̀ςἀρ",
+  "verdict": "ȣ̀",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣ ligature (bowl + right stem) under a grave; not alpha."
+ },
+ {
+  "ctx": "τῆςδεκάδοςΜμ8.1084a12,32.ȣ̓θὲν",
+  "verdict": "ȣ̓θὲ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣ ligature with smooth breathing, then upright θ, then ὲ: ȣ̓θὲν. Not ὅθεν."
+ },
+ {
+  "ctx": "ύμβλητοιΜμ6-9.1086a21Βζ.—ȣ̓κἐπ",
+  "verdict": "ȣ̓",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "ȣ ligature with smooth breathing followed by x-shaped κ: ȣ̓κ. Not epsilon."
+ },
+ {
+  "ctx": "̓δὲτῶνἀριθμῶνἰδέανκατεσκεύαζον",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Open u-curve with acute, no bowl: plain υ in κατεσκεύαζον."
+ },
+ {
+  "ctx": "ur,ΒζadΜetp153,251.ΖellerΙΙ1p4",
+  "verdict": "II",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Two separate serifed Roman I's with no connecting top bar; Latin II in the Zeller citation, not Π."
+ },
+ {
+  "ctx": "αντὴντȣ͂ἐλαίȣἐργασίανf468.1555",
+  "verdict": ".",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Baseline dot after 468, clearly a full stop; the hyphen elsewhere on the page sits at mid-height and is a bar."
+ },
+ {
+  "ctx": "b11,18.ἀριστερός.τόπȣεἴδη·ϗ̀δι",
+  "verdict": "·ϗ̀",
+  "agrees_with": "opus",
+  "confidence": "high",
+  "note": "A discrete printed mark sits at x-height top before the ϗ (raised dot, lightly inked but well formed), and the ϗ carries a backslanted grave."
+ },
+ {
+  "ctx": "ξιὸνϗ̀ἀριστερὸνπρὸςἡμᾶς,οppφύσ",
+  "verdict": "ppφύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Upright Roman p's in the Latin abbreviation opp; φύσει has a plain open υ with acute."
+ },
+ {
+  "ctx": "ὶτῶνἄστρωνδεξιόν,ȣ̔͂δ'αἱδύσεις",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "δύσεις has the open u-curve with acute, no closed bowl."
+ },
+ {
+  "ctx": "ινεἶναιδεξιὸνϗ̀ἀριστερὸντȣ͂ȣ̓ρ",
+  "verdict": "ȣ͂ȣ̓ρανȣ͂",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Three ȣ ligatures in a row: τȣ͂ (circumflex), ȣ̓ρανȣ͂ (smooth breathing, then circumflex). None is a plain omega."
+ },
+ {
+  "ctx": "21,31,33,706a1,6.6.706b25-707a",
+  "verdict": "-",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "Short thick hyphen between b25 and 707; compare the much longer em dash on line 27."
+ },
+ {
+  "ctx": "6a1,6.6.706b25-707a13.cfΖιβ1.4",
+  "verdict": "ι",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "A distinct small iota stands between Ζ and β: Ζιβ1, and 498b10 is HA book 2."
+ },
+ {
+  "ctx": "μάλισταἄνθρωποιδιὰτὸκατὰφύσινμ",
+  "verdict": "ύ",
+  "agrees_with": "multiple",
+  "confidence": "high",
+  "note": "φύσιν has a plain open υ with acute, no ȣ bowl."
+ }
+]

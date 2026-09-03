@@ -1,0 +1,13 @@
+[
+  {
+    "page": 85,
+    "col": "L",
+    "line": 21,
+    "wrote": "περιττεῦον",
+    "llamaparse": "περιττεȣον",
+    "proposed": null,
+    "lexical_verdict": "upsilon",
+    "why": "περιττευον is a corpus form; περιττεουον is not",
+    "context": "ἀπαντλεῖν πβ21. 868a33. οἱ πόνοι ἀπαντλȣ͂σι τὸ περιττεῦον"
+  }
+]

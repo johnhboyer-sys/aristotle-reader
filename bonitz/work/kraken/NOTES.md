@@ -2131,3 +2131,202 @@ Latin that should be Greek, and 3 apparatus sigla written Greek that should be
 Latin. The two-test rule refused to touch these three when it fixed the 63 —
 `ΑΖι` is not a work siglum, so it failed confirmation and was left alone. That
 is the rule doing its job, and it is why the 63 could be applied unattended.
+
+## Round 4 — pages 53-62 in the corpus, and the breathing finally learned
+
+Trained 2026-08-11 20:47 → 2026-08-12 18:25 on the MacBook's CPU: 37 epochs at
+~32 min each, early stopping at epoch 36, ten after the epoch-26 best. **John's
+ruling, 2026-08-12: `checkpoint_26-0.9930` is the model of record.**
+
+    work/kraken400/keep-round4/r4-best-epoch26.safetensors   sha256 5dc1654c8fd3…
+    (identical to model96-round4/best_0.9930.safetensors, which ketos promoted)
+
+### The corpus, which is what changed
+
+    94 columns paired of 96   (033-R and 057-L quarantined; 057-L is new)
+    4,693 train lines / 722 holdout — round 3 had 3,823 / 481
+    415 word-initial ou-ligatures, every one breathed, ZERO bare
+      (round 3's corpus: ~126 marked against 200 bare)
+    combining tilde 0, Bekker references spaced 0
+
+Pages 15-52 came through the rebuild geometrically identical — same matches,
+same exclusions, 4,304 lines — so the whole delta is the twenty new columns and
+the 205 ligature marks restored on 2026-08-11.
+
+### Result, scored against the same twelve columns and the same ground truth
+
+The round-3 numbers here are RE-SCORED, not the published ones: those were
+measured on eight columns against an older corpus. e10 and e22 were converted
+from `keep/` and run through `kraken_eval` on this holdout.
+
+| | e10 | e22 | **round 4 e26** |
+|---|---|---|---|
+| overall CER | 0.933% | 0.887% | **0.698%** |
+| ignoring spacing | 0.837% | 0.720% | **0.610%** |
+| `ȣ` ou-ligature | 98.69% | 99.67% | 99.34% |
+| **`ȣ̓` ligature + smooth** | 20.4% | 66.7% | **98.1%** |
+| `ϗ` / `ϗ̀` | 100 / 100 | 100 / 97.2 | 100 / 100 |
+| `Ζιι` fused double iota | — | — | **12/12** |
+| Bekker digits | 99.66% | 99.78% | 99.74% |
+
+**The e10/e22 tie is closed by supersession.** Round 4 beats both, and the
+rescore also settles which of the two was better on its own terms: e22, by 13
+points on the ligature breathing — the profile difference of 2026-08-10,
+measured at last.
+
+### ⚠ EVERY COMBINING MARK IN THIS CORPUS IS ON THE OU-LIGATURE
+
+The misnaming caught for `combining smooth` in round 2 is general, and it
+matters for reading any of these tables. In NFC a mark over an ordinary vowel
+composes to one codepoint — `ῆ`, `ἀ`, `ῴ` — so the only marks that stay
+COMBINING are the ones over `ȣ`, which has no precomposed form. Measured on
+this holdout: 91 of 92 perispomeni, 22 of 22 acutes, all 54 smooths and all 7
+roughs sit on the ligature. So `kraken_eval`'s per-class recall for combining
+marks is not a diacritic measure at all — it is a measure of one character.
+
+Read that way, the whole story is one number:
+
+| marks over `ȣ` | smooth | rough | acute | grave | perisp. | all |
+|---|---|---|---|---|---|---|
+| e10 | 11/54 | 4/7 | 17/22 | 17/17 | 85/91 | **70.2%** |
+| e22 | 36/54 | 4/7 | 17/22 | 15/17 | 87/91 | **83.2%** |
+| r4 e7 | 54/54 | 6/7 | 21/22 | 17/17 | 72/91 | 89.0% |
+| r4 e19 | 54/54 | 5/7 | 17/22 | 17/17 | 82/91 | **91.6%** |
+| **r4 e26** | 53/54 | 5/7 | 14/22 | 17/17 | 84/91 | **90.6%** |
+
+### The circumflex trade, and why it was undertraining rather than the corpus
+
+At epoch 7 the circumflex over the ligature had fallen to 79% while the
+breathing hit 100% — a redistribution inside one character, and the obvious
+suspect was the corpus rebalancing (bare word-initial ligatures went from 200
+to zero, so "a mark over `ȣ`" now skews to breathings). It recovered with
+training: 79% → 89% at e19 → 92% at e26, breathing holding. Undertraining, not
+balance. It is still ~4 points behind e22 there, and that is the one class
+where round 4 is not simply better.
+
+⚠ e19 scores 175/191 on ligature marks against e26's 173, while e26 wins CER
+and validation. Two marks in 191 is noise, and John took the promoted model.
+
+### A defect class nothing in this pipeline could see: a mark on a SPACE
+
+Four sites carried a combining mark sitting on a space — `τȣ ͂λόγȣ` for
+`τȣ͂ λόγȣ` — so the circumflex was divorced from the ligature it was set over.
+**Every sweep here tokenises first, and a mark on a space belongs to no token**,
+so all sixteen Smyth rules, the diacritic sweep and the five-reader panel were
+structurally blind to the class. They surfaced only because three of the four
+were in training columns, teaching the model that a mark can follow a space.
+
+John ruled all four against the 400 dpi ink and they are applied;
+`tests/test_no_orphan_marks.py` is the check that did not exist. The general
+lesson is the familiar one wearing new clothes: a check that begins by
+tokenising has already decided what can be found.
+
+### Practical notes for the next round
+
+- **Training moves to Colab** (John, 2026-08-12). 32 min/epoch on CPU is the
+  floor here — torch still has no `aten::_ctc_loss` for MPS. ⚠ Every guard
+  lives in `kraken_corpus.py` on this machine, so only a gated export may be
+  uploaded: `calamari_export.py` shows the pattern, running `verify` first and
+  refusing to write if it fails, and `work/rulings/kraken-holdout.json` must
+  travel with the data.
+- A laptop sleeping mid-run costs only wall clock — the process suspends and
+  resumes intact. `caffeinate -i -m -s -w <pid>` holds it, but does NOT prevent
+  a lid close or a flat battery.
+- Do NOT retrain on the same corpus for a handful of character fixes: the
+  plateau here spanned nine ten-thousandths over twenty epochs, and a few dozen
+  characters cannot be seen through that. The next run wants the next tranche
+  of pages.
+
+---
+
+## 2026-08-26 — round 6 against calamari round 2, on ONE holdout
+
+The tables above stop at round 4, and the two engines had never been scored on
+the same lines: kraken's published 0.3769% was measured on pages 63+ and
+calamari's on the 15-102 holdout. Both below are the **same 12 columns, the
+same 37,538 characters, and the same `kraken_eval` harness** — `align`,
+`CLASSES` and `PROBES` — so a row means the same thing in both columns and the
+only difference is the engine.
+
+| | **kraken r6 (e11)** | calamari r2 (5-fold ens.) |
+|---|---|---|
+| overall CER | **0.3303%** (124 edits) | 0.4582% (172 edits) |
+| **ignoring spacing** | **0.2637%** | 0.3703% |
+| whitespace-only edits | 25 | 33 |
+| `ȣ` ou-ligature | **305/305 100%** | 304/305 99.67% |
+| `ϗ` kai | 108/108 100% | 108/108 100% |
+| `ȣ̓` ligature + smooth | 53/54 98.15% | 53/54 98.15% |
+| `ϗ̀` kai + grave | **108/108 100%** | 107/108 99.07% |
+| `Ζιι` fused double iota | **12/12 100%** | 10/12 83.33% |
+| combining grave | **128/128 100%** | 127/128 99.22% |
+| combining acute | **20/22 90.91%** | 16/22 72.73% |
+| combining perispomeni | **97/99 97.98%** | 96/99 96.97% |
+| combining smooth | 53/54 98.15% | **54/54 100%** |
+| combining rough | 6/7 85.71% | 6/7 85.71% |
+| Bekker digits | **99.92%** | 99.81% |
+| Bekker column letter | 888/891 99.66% | **890/891 99.89%** |
+
+⚠ **e11 IS THE CHECKPOINT, AND IT IS NOT THE ONE THAT WAS BEING QUOTED.**
+Scored on this holdout: e11 **0.3303%**, e17 0.3756%, e13 0.3809%. The val
+accuracy in the filename ranks them differently (e11 0.9967, e17/e13 0.9963)
+and it happens to agree here — but the eval directories for e13/e17 were the
+ones sitting around, and a number read off the wrong one is 14% high.
+
+⚠ **THE HOLDOUT'S OWN NOISE IS THE FLOOR.** Ground truth here is
+consensus-plus-spot-review and its noise is ~0.32%, so kraken at 0.2637%
+ex-spacing is at or below it. That figure states agreement with our consensus
+text, not accuracy against the ink, and it cannot be driven lower by a better
+model.
+
+⚠ **AND SPACING IS INSIDE THE MEASUREMENT.** 25 of kraken's 124 edits and 33
+of calamari's 172 are whitespace alone — the Bekker slot, which line 374 above
+already records as nearly the whole of the 400 dpi round's apparent CER
+halving. Compare on the ex-spacing row; the overall row moves with a
+transcription convention rather than with the engine.
+
+**Where each engine is actually better.** kraken wins the marks — acute
+90.91% against 72.73%, and the fused `Ζιι` 12/12 against 10/12, which is the
+class this project has lost four separate ways. calamari wins the Bekker
+column letter (890/891 against 888/891) and ties or leads on smooth. That
+split is the argument for keeping both on the panel: the errors are not the
+same errors.
+
+### where the three numbers come from
+
+⚠ **THE MEASUREMENT IS IN THE REPO NOW, AND IT NEEDS NO GPU.** Until 2026-08-26
+both figures rested on prediction directories on one laptop, and 11 MB of that
+was ALTO coordinates. Four text files are tracked instead — the text is the
+evidence, the glyph boxes are not:
+
+| | |
+|---|---|
+| `work/kraken15-102/holdout.txt` | the 12 columns, in scoring order |
+| `work/kraken15-102/holdout-gt.tsv` | the ground truth, 722 lines / 37,538 chars |
+| `work/kraken15-102/e11-holdout-pred.tsv` | kraken round 6, epoch 11 |
+| `work/calamari/ens15102-holdout-pred.tsv` | calamari round 2, 5-fold ensemble |
+
+`tests/test_holdout_cer.py` recomputes every published figure above from those
+four files with `kraken_eval.align`. Change a prediction and the number moves,
+loudly. The eval directories (`eval-e11/`, `eval-e13-*/`, `eval-e17-*/`) stay
+untracked and stay reproducible from the model.
+
+⚠ **THE GROUND TRUTH IS NOT `work/reconciled`, AND SCORING AGAINST IT WOULD BE
+WRONG.** `kraken_corpus.BEKKER_SPACE` closes `1130 a3` up to `1130a3` on the
+way into training — John's ruling of **2026-08-06**, applied at the training
+layer and deliberately not to the diplomatic corpus. Across all 173 training
+columns that is **11,445 Bekker citations, zero of them spaced**. Both engines
+therefore *learned* the closed form, and the 25 and 33 whitespace edits above
+are some other class entirely.
+
+`work/reconciled` still spaces **422 of the 861** citations on this same
+holdout. Score a model against it and roughly 400 edits appear that are
+editorial policy rather than misreads — the CER would go from 0.3303% to about
+1.4%, quadrupling on a difference no model can fix.
+
+⚠ And note what that ruling's own comment says about where it belongs:
+*"Applied here rather than to work/reconciled/, which stays the diplomatic
+record."* That is the same layering John restated on 2026-08-26 as **"for our
+revised edition"**, and it means `space_policy.close_bekker` is not a new
+policy needing a decision — it is the 2026-08-06 ruling reaching one more
+output layer, twenty days later.
+

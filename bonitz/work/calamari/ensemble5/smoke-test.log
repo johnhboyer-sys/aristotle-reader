@@ -1,0 +1,38 @@
+2026-08-14 14:39:50.476852: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-08-14 14:39:50.479609: I external/local_tsl/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+2026-08-14 14:39:50.516069: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-08-14 14:39:50.516138: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-08-14 14:39:50.517271: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-08-14 14:39:50.523085: I external/local_tsl/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+2026-08-14 14:39:50.523396: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-08-14 14:39:51.412628: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+/teamspace/studios/this_studio/calamari311/lib/python3.11/site-packages/tensorflow_addons/utils/tfa_eol_msg.py:23: UserWarning: 
+
+TensorFlow Addons (TFA) has ended development and introduction of new features.
+TFA has entered a minimal maintenance and release mode until a planned end of life in May 2024.
+Please modify downstream libraries to take dependencies from other repositories in our TensorFlow community (e.g. Keras, Keras-CV, and Keras-NLP). 
+
+For more information see: https://github.com/tensorflow/addons/issues/2807 
+
+  warnings.warn(
+INFO     2026-08-14 14:39:52,541     tfaip.device.device_config: Setting up device config DeviceConfigParams(gpus=None, gpu_auto_tune=False, gpu_memory=None, soft_device_placement=True, dist_strategy=<DistributionStrategy.DEFAULT: 'default'>)
+INFO     2026-08-14 14:39:52,542 calamari_ocr.ocr.savedmodel.sa: Checkpoint version 6 is up-to-date.
+INFO     2026-08-14 14:39:52,558 calamari_ocr.ocr.savedmodel.sa: Checkpoint version 6 is up-to-date.
+INFO     2026-08-14 14:39:52,564 calamari_ocr.ocr.savedmodel.sa: Checkpoint version 6 is up-to-date.
+INFO     2026-08-14 14:39:52,570 calamari_ocr.ocr.savedmodel.sa: Checkpoint version 6 is up-to-date.
+INFO     2026-08-14 14:39:52,577 calamari_ocr.ocr.savedmodel.sa: Checkpoint version 6 is up-to-date.
+INFO     2026-08-14 14:39:52,605     tfaip.device.device_config: Setting up device config DeviceConfigParams(gpus=None, gpu_auto_tune=False, gpu_memory=None, soft_device_placement=True, dist_strategy=<DistributionStrategy.DEFAULT: 'default'>)
+INFO     2026-08-14 14:40:06,057 calamari_ocr.ocr.dataset.datar: Resolving input files
+Prediction:   0%|          | 0/1 [00:00<?, ?it/s]Prediction: 100%|██████████| 1/1 [00:03<00:00,  3.98s/it]Prediction: 100%|██████████| 1/1 [00:04<00:00,  4.05s/it]
+INFO     2026-08-14 14:40:10,175 calamari_ocr.ocr.dataset.datar: Resolving input files
+Loading GT:   0%|          | 0/1 [00:00<?, ?it/s]Loading GT: 100%|██████████| 1/1 [00:00<00:00,  2.87it/s]Loading GT: 100%|██████████| 1/1 [00:00<00:00,  1.58it/s]
+INFO     2026-08-14 14:40:10,807     calamari_ocr.ocr.evaluator: 0/1 lines could not be matched during the evaluation.
+Evaluation:   0%|          | 0/1 [00:00<?, ?it/s]Evaluation: 100%|██████████| 1/1 [00:00<00:00, 4112.06it/s]
+=================
+Evaluation result of voted
+=================
+
+Got mean normalized label error rate of 0.00% (0 errs, 14 total chars, 0 sync errs)
+
+

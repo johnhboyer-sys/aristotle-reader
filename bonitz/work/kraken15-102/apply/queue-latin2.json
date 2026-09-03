@@ -1,0 +1,81 @@
+{
+ "entries": [
+  {
+   "page": 110,
+   "col": "R",
+   "line": 22,
+   "word_off": 981,
+   "char_at": 33,
+   "readers": {
+    "opus": "cf Zeller I, 1, 320"
+   },
+   "kind": "latin",
+   "reason": "a Roman numeral may have lost a stroke, the same class as 114-L:21 and :52. Both Zeller I and Zeller II are real citations — his Philosophie der Griechen has both volumes — so nothing but the page can settle it. genie AND LlamaParse both read it this way against the corpus, and both are the strong readers on Latin — but neither has been right about an abbreviation today, so the ink decides",
+   "forms": [
+    "cf Zeller II, 1, 320",
+    "cf Zeller I, 1, 320"
+   ],
+   "form_set": [
+    "cf Zeller II, 1, 320",
+    "cf Zeller I, 1, 320"
+   ],
+   "becomes": "cf Zeller II, 1, 320",
+   "proposal": {
+    "form": "cf Zeller II, 1, 320"
+   },
+   "card_sid": "latin2:page-110-R:22"
+  },
+  {
+   "page": 110,
+   "col": "R",
+   "line": 57,
+   "word_off": 2550,
+   "char_at": 7,
+   "readers": {
+    "opus": "Zeller I, 2, 62"
+   },
+   "kind": "latin",
+   "reason": "the same question at a second site on the same column. genie AND LlamaParse both read it this way against the corpus, and both are the strong readers on Latin — but neither has been right about an abbreviation today, so the ink decides",
+   "forms": [
+    "Zeller II, 2, 62",
+    "Zeller I, 2, 62"
+   ],
+   "form_set": [
+    "Zeller II, 2, 62",
+    "Zeller I, 2, 62"
+   ],
+   "becomes": "Zeller II, 2, 62",
+   "proposal": {
+    "form": "Zeller II, 2, 62"
+   },
+   "card_sid": "latin2:page-110-R:57"
+  },
+  {
+   "page": 107,
+   "col": "R",
+   "line": 43,
+   "word_off": 1897,
+   "char_at": 11,
+   "readers": {
+    "opus": "Pseudo Aristotelicos"
+   },
+   "kind": "latin",
+   "reason": "a hyphen, not a space. genie AND LlamaParse both read it this way against the corpus, and both are the strong readers on Latin — but neither has been right about an abbreviation today, so the ink decides",
+   "forms": [
+    "Pseudo-Aristotelicos",
+    "Pseudo Aristotelicos"
+   ],
+   "form_set": [
+    "Pseudo-Aristotelicos",
+    "Pseudo Aristotelicos"
+   ],
+   "becomes": "Pseudo-Aristotelicos",
+   "proposal": {
+    "form": "Pseudo-Aristotelicos"
+   },
+   "card_sid": "latin2:page-107-R:43"
+  }
+ ],
+ "spine_dir": "work/reconciled",
+ "n_entries": 3
+}

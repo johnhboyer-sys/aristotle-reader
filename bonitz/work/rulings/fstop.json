@@ -1,0 +1,16 @@
+{
+ "corrigendum:page-051-L:28:f": {
+  "verdict": "preserve",
+  "detail": "f 554 1569",
+  "sites": [
+   "page-051-L:28:994"
+  ]
+ },
+ "corrigendum:page-052-L:54:f": {
+  "verdict": "preserve",
+  "detail": "f 480 1556",
+  "sites": [
+   "page-052-L:54:2298"
+  ]
+ }
+}

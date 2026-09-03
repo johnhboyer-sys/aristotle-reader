@@ -44,8 +44,17 @@ def _key(s: str) -> str:
 
 def lines_of(col: str) -> list[tuple[int, int, str]]:
     """(y_top, y_bottom, text) per segmented line, from the paired PageXML."""
-    f = ROOT / f'work/kraken400/gt/{col}.xml'
-    if not f.exists():
+    # ⚠ EVERY SEGMENTATION TREE, NOT ONE. `kraken400` covers 15-62; the columns
+    # of 63-102 were segmented for the cold export and live in `kraken-cold`.
+    # Reading one tree meant crop_site returned [] for pages 63+ — and it
+    # returns [] for a column that was never segmented too, so a missing crop
+    # for page-077-L looked exactly like a column we have no ink for. That is
+    # the absence-rendered-as-clean defect, in the tool the rulings are made on.
+    for tree in ('kraken400', 'kraken-cold', 'kraken'):
+        f = ROOT / f'work/{tree}/gt/{col}.xml'
+        if f.exists():
+            break
+    else:
         return []
     out = []
     for tl in ET.parse(f).getroot().iter(f'{NS}TextLine'):
@@ -60,9 +69,14 @@ def lines_of(col: str) -> list[tuple[int, int, str]]:
 
 def crop(col: str, lineno: int, out: Path, scale: float = 2.0,
          pad: float = 0.45) -> tuple[Path | None, float]:
-    src = ROOT / f'work/kraken400/cols/{col}.png'
+    # The image has to come from the SAME tree as the segmentation, or the
+    # coordinates address a different scan. `lines_of` picks the tree; the
+    # column PNG must follow it rather than being pinned to kraken400.
+    src = next((q for t in ('kraken400', 'kraken-cold', 'kraken')
+                if (q := ROOT / f'work/{t}/cols/{col}.png').exists()
+                and (ROOT / f'work/{t}/gt/{col}.xml').exists()), None)
     txt = ROOT / f'work/reconciled/{col}.txt'
-    if not src.exists() or not txt.exists():
+    if src is None or not txt.exists():
         return None, 0.0
     want = txt.read_text(encoding='utf-8').splitlines()[lineno - 1]
     cand = lines_of(col)

@@ -65,7 +65,8 @@ from bonitz_pipeline.word_flags import WordFlag, is_word_char, skeleton, words
 ROOT = Path(__file__).resolve().parent.parent
 
 STRONG_READERS = ('opus', 'kraken', 'codex')
-ALL_READERS = ('opus', 'genie', 'llama', 'kraken', 'codex')
+ALL_READERS = ('opus', 'genie', 'llama', 'kraken', 'codex',
+               'calamari', 'paddle')
 
 ACUTE, GRAVE, CIRC = '́', '̀', '͂'
 # Stop punctuation: final acute stays acute (Smyth §154a.4: colon/period;
@@ -1016,7 +1017,7 @@ def measure_authorities(
 def _print_report(
         path: Path,
         strong: SettleReport,
-        all5: SettleReport,
+        all_readers: SettleReport,
         word_list: list[WordFlag],
         sample_n: int,
 ) -> None:
@@ -1028,7 +1029,7 @@ def _print_report(
     print()
 
     for label, rep in (('STRONG (opus/kraken/codex)', strong),
-                      ('ALL FIVE (opus/genie/llama/kraken/codex)', all5)):
+                      (f'ALL ({"/".join(ALL_READERS)})', all_readers)):
         # Collapsed = readers.agree (dispute vanishes under this reader set)
         n_agree = sum(1 for s in rep.settlements if s.authority == AUTH_AGREE)
         n_auto = sum(1 for s in rep.settled if s.authority != AUTH_AGREE)
@@ -1058,29 +1059,31 @@ def _print_report(
         print(f'  morpheus.membership blocks:   {dict(block)}')
     print()
 
-    print('=== Per-authority hits (ALL FIVE, independent) ===')
-    hits5 = measure_authorities(word_list, ALL_READERS)
-    hits5.pop('_membership_block', None)
-    for auth, ctr in hits5.items():
+    print('=== Per-authority hits (ALL READERS, independent) ===')
+    hits_all = measure_authorities(word_list, ALL_READERS)
+    hits_all.pop('_membership_block', None)
+    for auth, ctr in hits_all.items():
         if sum(ctr.values()):
             print(f'  {auth:<32} {dict(ctr)}  total={sum(ctr.values())}')
     print()
 
     # Recommendation
     s_auto = sum(1 for s in strong.settled if s.authority != AUTH_AGREE)
-    a_auto = sum(1 for s in all5.settled if s.authority != AUTH_AGREE)
+    a_auto = sum(1 for s in all_readers.settled
+                 if s.authority != AUTH_AGREE)
     s_breath = sum(1 for s in strong.settled
                    if s.kind == 'breathing-only' and s.authority != AUTH_AGREE)
-    a_breath = sum(1 for s in all5.settled
+    a_breath = sum(1 for s in all_readers.settled
                    if s.kind == 'breathing-only' and s.authority != AUTH_AGREE)
     print('=== Recommendation ===')
     print(f'  Strong auto-settles {s_auto} (breathing-only {s_breath}); '
-          f'all-five auto-settles {a_auto} (breathing-only {a_breath}).')
+          f'all-readers auto-settles {a_auto} (breathing-only {a_breath}).')
     if s_breath >= a_breath:
         print('  Use STRONG readers (opus/kraken/codex) for arbitration. '
               'Weak readers add noise that makes both breathings look attested.')
     else:
-        print('  All-five settles more here; re-check quality before adopting.')
+        print('  All readers settle more here; '
+              're-check quality before adopting.')
     print()
 
     # Sample of settled LETTER disputes
@@ -1143,9 +1146,9 @@ def main(argv: list[str] | None = None) -> int:
     word_list = words(path)
     strong = settle_words(word_list, STRONG_READERS,
                           allow_accent_positional=allow)
-    all5 = settle_words(word_list, ALL_READERS,
-                        allow_accent_positional=allow)
-    _print_report(path, strong, all5, word_list, a.sample)
+    all_readers = settle_words(word_list, ALL_READERS,
+                               allow_accent_positional=allow)
+    _print_report(path, strong, all_readers, word_list, a.sample)
     return 0
 
 

@@ -26,8 +26,17 @@ def test_a_single_misplaced_word_is_reported_alone():
     """The LIS formulation must not indict every headword after the bad one."""
     v = scan(list(range(15, 52)))
     words = [x['word'] for x in v]
-    # the known misread headword is flagged...
-    assert 'ἀμυργοὶ' in words
+    # ⚠ `ἀμυργοὶ` WAS THE KNOWN MISREAD HEADWORD, AND ITS ABSENCE IS A
+    # CORRECTION. It filed under ἀμυ- where ἀμο- belongs. John ruled the audit
+    # card at page-051-L:16 on 2026-08-13 — `ἀμυργοὶ` → `ἀμȣργοὶ`, the
+    # ou-ligature, i.e. ἀμοργοὶ — and `audit_apply` wrote it, so the headword
+    # now sorts where it should. Nothing about alphabetical order was on that
+    # card, which makes this sweep an independent witness that he read it
+    # right.
+    assert 'ἀμυργοὶ' not in words and 'ἀμȣργοὶ' not in words
+    # the sweep is still looking AND still finding: an empty result would
+    # satisfy every assertion below while proving nothing
+    assert v
     # ...and the run does not cascade: neighbours stay clean
     assert 'ἀμορφος' not in words and 'ἀμπελίνα' not in words
     # signal stays sparse enough to be reviewable by hand

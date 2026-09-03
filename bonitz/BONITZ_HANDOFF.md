@@ -1,541 +1,488 @@
-# Bonitz *Index Aristotelicus* — OCR Handoff Instructions
-
-Hand this whole file to your Claude Code session. It is self-contained: it explains
-the project, the exact transcription rules, the file formats, and the step-by-step
-workflow. Read it top to bottom before starting.
-
----
-
-## 0. TL;DR for the human
-
-You're digitizing pages of Hermann Bonitz's ***Index Aristotelicus*** (Berlin, 1870) —
-a 19th-century Greek/Latin scholarly index to Aristotle's works. A teammate (John) has
-already done printed pages **15–60**; **your job is the entire remainder — printed pages
-61 through 890** (see §13). It's a big corpus (~825 pages); work in page order, a few at a
-time, sending batches as you go.
-
-**The transcription is done in TWO explicit passes, producing three files per column:**
-
-1. **Pass 1 — Diplomatic transcription** (`diplomatic/page-NNN-L.txt`): a *verbatim,
-   character-for-character* record of exactly what is printed — including the raw `ϗ` and
-   `ȣ` ligatures with their printed marks, exact line breaks, exact hyphenation. No
-   expansion, no tagging. This is the **archival base layer**: a faithful record we can
-   fall back on if the tagged version has an error, and a ready source for a
-   character-accurate reprint.
-2. **Pass 2 — Tagged, normalized XML** (`output/page-NNN-L.xml`): built *from* the Pass-1
-   text plus the image. Here you expand/accent the ligatures and tag the structure
-   (lemma, senses, Bekker citations, Latin prose) per our schema.
-3. **JSON** (`json/page-NNN-L.json`): produced from the XML by a script — the web format.
-
-**Critical point about your Max plan:** both transcription passes are done by **Claude
-Code itself using its vision** (the `Read` tool opens PNG images), *not* by calling the
-Anthropic API. Do **not** run any script that imports the `anthropic` SDK
-(`transcribe.py`, `batch.py`) — those bill per-token against an API key. Everything here
-uses your subscription.
-
-The only scripts you run are pure-Python helpers (no API): `split_columns.py` (cuts a
-page into two column images) and `xml_to_json.py` (converts your XML to the web JSON).
-
----
-
-## 1. What Bonitz looks like
-
-- Two columns per page, dense.
-- Each **entry** starts at the hard left margin with a **lemma** (a Greek headword, often
-  bold), followed by a run of Greek text interspersed with **Bekker citations** (e.g.
-  `1094a1`, `1456b27`) and Latin scholarly abbreviations (`opp`, `cf`, `sim`, …).
-- Big entries (e.g. ἀγαθόν, αἴσθησις, λόγος) are subdivided into numbered/lettered
-  **senses** and can run across multiple columns and even multiple pages.
-- Bekker citations are the single most important data to get right — they are the
-  references into Aristotle's text. **Transcribe them exactly; never "correct" them.**
-
----
-
-## 2. What you've been given
-
-```
-book.pdf                       ← the clean scan (the source of truth)
-bonitz_pipeline/               ← run scripts from the PARENT dir as `python3 -m bonitz_pipeline.X`
-  __init__.py                  ← makes it an importable package (must be present)
-  split_columns.py             ← page PNG → two column images (pure PIL/numpy, no API)
-  xml_to_json.py               ← your XML → web JSON (pure Python, no API)
-  expand_abbrevs.py            ← helper imported by xml_to_json.py (no API)
-BONITZ_HANDOFF.md              ← this file
-```
-
-These four files are all you need from `bonitz_pipeline/`. You will **not** receive (and
-must **not** use) `transcribe.py` or `batch.py` — those call the paid API. If a script is
-missing, you (Claude Code) can recreate the helpers from §5/§8, but ask John first.
-
----
-
-## 3. How transcription works on a Max plan (read this carefully)
-
-**You (Claude Code) are the OCR engine.** You open each column image with the `Read` tool
-and transcribe it yourself — twice, in two distinct passes. Opus is strong at reading
-polytonic Greek and 19th-century print; that's why this works. The two passes have
-*different goals* and must not be collapsed into one:
-
-- **Pass 1 is faithful, not smart.** Reproduce exactly what the page shows — including the
-  raw ligatures and the original line breaks. Do **not** expand, normalize, or tag.
-- **Pass 2 is editorial.** Now you expand/accent the ligatures and add the structural tags,
-  working from your Pass-1 text and the image.
-
-Workflow per page, which you can drive in a loop with Bash + Read + Write:
-
-1. Render the page to a PNG (Bash: `pdftoppm`).
-2. Split into left/right column PNGs (Bash: `split_columns.py`).
-3. **Pass 1 (diplomatic):** `Read` the left column PNG, transcribe verbatim per the §6A
-   prompt, `Write` `diplomatic/page-NNN-L.txt`. Repeat for the right column.
-4. **Pass 2 (tagged):** `Read` your `diplomatic/page-NNN-L.txt` *and* the column PNG,
-   produce the schema XML per the §6B prompt, `Write` `output/page-NNN-L.xml`. Repeat -R.
-5. Convert both XMLs to JSON (Bash: `xml_to_json.py`).
-6. Delete the page/column PNGs (they're large; the `.txt`, `.xml`, `.json` are the keepers).
-
-Do a few pages at a time and **spot-check** both passes against the image before moving on
-(see §10). Accuracy matters far more than speed.
-
-> **Why two passes?** The diplomatic `.txt` is an archival base layer. If the tagged XML
-> has an error, the verbatim original is right there to re-derive from — and it doubles as
-> a character-for-character source for a faithful reprint. Pass 2 is built *from* Pass 1,
-> so the two stay consistent.
-
----
-
-## 4. Setup / prerequisites
-
-```bash
-# Poppler provides pdftoppm (PDF → image). On macOS:
-brew install poppler
-# Python deps for the two helper scripts (NO anthropic SDK needed):
-python3 -m pip install pillow numpy
-```
-
-Put `book.pdf` somewhere stable (e.g. `~/bonitz/book.pdf`). Create working dirs:
-
-```bash
-mkdir -p diplomatic             # Pass 1 verbatim .txt   (keep permanently — archival)
-mkdir -p output                 # Pass 2 tagged .xml     (keep permanently)
-mkdir -p json                   # generated .json        (this is what John imports)
-mkdir -p /tmp/bonitz/cols       # scratch images (deleted after each page)
-```
-
-> **Page numbering:** `-f N -l N` in `pdftoppm` is the **PDF page index**, which may differ
-> from the printed Bonitz page number. John's range refers to **printed Bonitz pages**;
-> the α section ran printed pages 15–60. Confirm the offset on your PDF by rendering one
-> page and checking the running head against the printed number, then apply that offset
-> consistently. Name your output files by the **printed** page number.
-
----
-
-## 5. Per-page workflow (exact commands)
-
-Let `PAGE=061` (zero-padded, printed page number; adjust for PDF offset in `-f/-l`).
-
-```bash
-# 5a. Render the page at 600 PPI to PNG (PNG, not TIFF — Read opens PNG directly)
-pdftoppm -png -r 600 -f $PAGE -l $PAGE book.pdf /tmp/bonitz/pg
-#   produces /tmp/bonitz/pg-<something>.png ; rename to a clean name:
-mv /tmp/bonitz/pg-*.png /tmp/bonitz/page-$PAGE.png
-
-# 5b. Split into two columns (outputs page-$PAGE-L.png and page-$PAGE-R.png)
-python3 -m bonitz_pipeline.split_columns /tmp/bonitz/page-$PAGE.png --out /tmp/bonitz/cols/
-```
-
-`split_columns.py` grayscales the page, finds the lowest-ink vertical strip in the
-center 30–70 % (the gutter), crops left/right, and trims running heads (top 4 %, bottom
-3 %) and outer margins (~2.5 % each side). It preserves DPI. If a particular page splits
-badly (skew, a figure, a wide table), open the full page image yourself and crop by eye,
-or transcribe the full page in reading order (left column fully, then right).
-
-```bash
-# 5c. PASS 1 — DIPLOMATIC transcription (this is YOU, not a script).
-#   Read /tmp/bonitz/cols/page-$PAGE-L.png, transcribe VERBATIM per the §6A prompt,
-#   Write to:  diplomatic/page-$PAGE-L.txt
-#   Then the same for -R → diplomatic/page-$PAGE-R.txt
-
-# 5d. PASS 2 — TAGGED XML (this is YOU, not a script).
-#   Read BOTH diplomatic/page-$PAGE-L.txt AND /tmp/bonitz/cols/page-$PAGE-L.png,
-#   produce the schema XML per the §6B prompt, Write to:  output/page-$PAGE-L.xml
-#   Then the same for -R → output/page-$PAGE-R.xml
-
-# 5e. Convert each XML to JSON
-python3 -m bonitz_pipeline.xml_to_json output/page-$PAGE-L.xml --out json/page-$PAGE-L.json
-python3 -m bonitz_pipeline.xml_to_json output/page-$PAGE-R.xml --out json/page-$PAGE-R.json
-
-# 5f. Clean up scratch images
-rm -f /tmp/bonitz/page-$PAGE.png /tmp/bonitz/cols/page-$PAGE-*.png
-```
-
-> **A note on reading the column image:** transcribe the column **top to bottom in a single
-> reading order**. Don't skip lines. In Pass 1, render an unreadable character as your best
-> guess; in Pass 2, wrap a genuinely uncertain passage in `<unclear>…</unclear>`.
-
----
-
-## 6A. PASS 1 PROMPT — Diplomatic (verbatim) transcription
-
-> Use this as your spec for Pass 1. Produce **only** the transcribed text — no commentary,
-> no tags, no XML. Write it to `diplomatic/page-NNN-L.txt`.
-
-```
-You are making a DIPLOMATIC transcription of one column from a scan of Bonitz's
-*Index Aristotelicus* (Berlin 1870). "Diplomatic" means: reproduce exactly what is
-printed, character for character. Do NOT normalize, expand, correct, or tag anything.
-
-Rules:
-1.  Transcribe every character exactly as printed, reading top to bottom, left to right.
-2.  PRESERVE THE LIGATURES VERBATIM. Bonitz uses two special letters — do NOT expand them:
-      - ϗ  (the kai symbol, a stylized κ) — type it as the literal character ϗ (U+03D7),
-        with whatever accent/breathing mark sits on it.
-      - ȣ  (the ou digraph, a joined ο+υ) — type it as the literal character ȣ (U+0223),
-        with whatever mark (macron/overline, acute, grave, breathing…) sits on it.
-    Reproduce the marks you actually see on these glyphs; do not add or remove any.
-3.  Preserve ALL polytonic diacritics exactly as printed (acute, grave, circumflex,
-    smooth/rough breathing, iota subscript, diaeresis). Unicode NFC.
-4.  Preserve the line structure: one line of output per printed line in the column.
-5.  Preserve end-of-line hyphenation exactly. If a word is broken across two printed lines
-    with a hyphen, keep the hyphen and the break exactly as printed — do NOT rejoin the word.
-6.  Type Bekker citations, Latin words, and abbreviations exactly as printed. No tags.
-7.  If a character is genuinely illegible, give your best single-character guess and mark
-    it by enclosing just that character in ⟨angle brackets⟩, e.g. ⟨α⟩. Do not omit text.
-8.  Output PLAIN TEXT only. No XML, no markup, no headers, no commentary.
-
-The column image has already had the running head and outer margins cropped, so transcribe
-everything you see in the image.
-```
-
----
-
-## 6B. PASS 2 PROMPT — Tagged, normalized XML (use this verbatim as your spec)
-
-> For Pass 2 you are given your **Pass-1 diplomatic `.txt`** (your authoritative character
-> source) **and the column image** (for layout cues: lemma boundaries, sense divisions,
-> bold, continuation). Produce **only** the XML. No prose before or after. Start with
-> `<column`. This is where you EXPAND and ACCENT the ligatures and add the tags.
-
-```
-You are producing a TAGGED, NORMALIZED XML edition of one column from Bonitz's
-*Index Aristotelicus* (Berlin 1870). You have two inputs: the diplomatic (verbatim)
-transcription of this column, and the column image. Use the diplomatic text as your
-character source; use the image to resolve structure (lemma boundaries, sense divisions,
-bold headwords, where an entry is cut off). Unlike the diplomatic pass, here you DO expand
-and accent the ligatures (Rule 13) and add the tags.
-
-Produce an XML transcription following this schema:
-
-  <column page="N" col="left|right" section="LETTER">
-    <section_head>Α</section_head>
-
-    <!-- Simple entry (single sense): -->
-    <entry>
-      <lemma>ἀάζειν</lemma>
-      <text>θερμόν μβ8.<cit>367b2</cit>. opp φυσᾶν πλδ7.<cit>964a11</cit>.</text>
-    </entry>
-
-    <!-- Entry with multiple senses (use <sense> children directly under <entry>): -->
-    <entry>
-      <lemma>ἀγαθός</lemma>
-      <sense n="1"><text>primary sense… <cit>1094a1</cit>.</text></sense>
-      <sense n="2">
-        <text>second sense…</text>
-        <sense n="2a"><text>sub-sense a… <cit>1097a15</cit>.</text></sense>
-        <sense n="2b"><text>sub-sense b…</text></sense>
-      </sense>
-    </entry>
-
-    <!-- Entry cut off at column boundary: -->
-    <entry continues="next">
-      <lemma>ἀγαθός</lemma>
-      <text>…text that continues in next column…</text>
-    </entry>
-  </column>
-
-If the column BEGINS mid-entry (continuation from the previous column):
-  <column page="N" col="right" section="LETTER">
-    <entry type="continuation">
-      <text>…continuation text, no lemma…</text>
-    </entry>
-    <!-- remaining entries follow normally -->
-  </column>
-
-Rules:
-1.  Each <cit> tag wraps a Bekker citation verbatim as it appears in the scan (e.g.
-    1456b27, 964a11, 1022b32). Do NOT resolve or standardize them.
-2.  Use <unclear>TEXT</unclear> for any passage you cannot confidently read.
-3.  Preserve the Greek text exactly, including polytonic diacritics (acute, grave,
-    circumflex, smooth/rough breathings, iota subscript, diaeresis). Use Unicode NFC form.
-4.  Latin abbreviations (e.g. opp, cf, ie, sim, dist, act, pass) appear as-is.
-5.  The first entry in a column that begins with no lemma (opening line is a section
-    header gloss, not a continuation) uses <entry type="header_gloss"> with a <text> child.
-6.  For the section header line (the big Greek capital letter at the top of a new
-    section), use <section_head>Α</section_head>.
-7.  Do NOT include running heads (page number / section letter printed at the top margin).
-8.  Entries are separated by a hard left margin. Continuation lines are indented.
-9.  Entry text may contain cross-references (Xref_abbrev N. CITATION) — transcribe as
-    plain text; only the Bekker number+column+line gets a <cit> tag.
-10. Sense divisions: Use <sense n="1">, <sense n="2"> etc. when an entry has clearly
-    distinct senses or usage clusters, signalled by:
-      - Em-dashes (—) introducing a new sub-topic or contrast
-      - Arabic numerals (1. 2. 3.) Bonitz has printed in the entry
-      - act / pass marking distinct active/passive sense clusters
-      - Nested sub-senses use n="1a", n="1b" etc.
-    Simple entries with no internal divisions use <text> directly (no <sense> wrapper).
-    *** Place <sense> elements as DIRECT children of <entry>. Do NOT wrap them inside a
-        <text> element. (A <text>…</text> holds running text; <sense> is a sibling of
-        <lemma>, not nested in <text>.) This is true for continuation entries too:
-        <entry type="continuation"><sense n="1">…</sense><sense n="2">…</sense></entry>. ***
-11. Cross-column continuation: If the last entry of the column is cut off (continues into
-    the next column), add continues="next" to that <entry> tag. If the column opens
-    mid-entry, use <entry type="continuation"> with no <lemma>.
-12. Latin prose: Bonitz writes descriptive Latin phrases inline (e.g. "signa terminorum
-    in prima syllogismorum figura", "de vi atque usu huius vocis", "quaeritur an", "pro
-    eo quod"). Wrap any Latin phrase longer than a single scholarly abbreviation in
-    <lat gloss="English translation">Latin text</lat>. Short fixed abbreviations (opp, cf,
-    ie, sim, dist, act, pass, al, veluti, hoc loco, cum codd, e cod, scripsit) do NOT need
-    <lat> tags — they are handled automatically. Everything else that is Latin prose gets a
-    <lat> tag with your best English rendering as the gloss attribute.
-13. 19th-century printing ligatures: Bonitz uses two special characters not in standard
-    Greek Unicode. Recognise them in any diacritical form and expand to standard
-    polytonic Greek:
-      - ϗ (the kai symbol, looks like a stylized κ) — always the word καί ("and"). Apply
-        the oxytone grave rule: write καὶ (grave) before a following word, καί (acute)
-        before punctuation or a pause.
-      - ȣ (the ou digraph, looks like a joined ο+υ) — the vowel cluster -ου-. Expand to ου.
-        Never render ȣ as υ or ῦ.
-      - CRITICAL — fully accent the expanded word. Bonitz often prints the ȣ ligature BARE
-        (no visible accent) even when the ου-syllable carries the accent. Never reproduce a
-        bare unaccented ου: supply the correct polytonic accent/breathing the word needs in
-        context. Examples: bare τȣ → τοῦ (gen. article, circumflex); ȣκ → οὐκ, ȣ → οὐ,
-        ȣχ → οὐχ (negative, smooth breathing); ȣτω → οὕτω (rough breathing); νȣς → νοῦς;
-        τȣτο → τοῦτο but τȣτων → τούτων (accent shifts by case); αὐτȣ → αὐτοῦ; contract
-        endings → -οῦσι / -οῦνται / -οῦν (circumflex); contract participles where ου is the
-        antepenult → -ούμεν- (acute, e.g. καλούμενον); genitives of oxytone stems → -οῦ
-        (e.g. ἀγαθοῦ, ξηροῦ). When a mark IS printed on the ligature (overline = circumflex
-        οῦ, acute = ού, breathing…), honour it. The result must always be a correctly
-        accented Greek word — never bare ου.
-
-Output ONLY the XML, starting with <column. No prose before or after.
-```
-
-> **Why rule 10 has the extra `***` note:** an earlier batch occasionally nested `<sense>`
-> inside `<text>`, which silently dropped the content during JSON conversion. The converter
-> has since been hardened to recover both shapes, but please still emit `<sense>` as a
-> direct child of `<entry>` — it's the canonical form.
-
----
-
-## 7. The XML format — every tag explained
-
-| Tag | Meaning |
-|---|---|
-| `<column page="N" col="left\|right" section="X">` | Root. `page` = printed page #, `col` = which column, `section` = the alphabet letter this column falls under (e.g. `Α`, `Β`). |
-| `<section_head>Α</section_head>` | The big capital letter that opens a new alphabetic section. Only on the page/column where a new letter begins. |
-| `<entry>` | One Bonitz entry. |
-| `<entry type="header_gloss">` | Opening gloss line under a section head, with no lemma. |
-| `<entry type="continuation">` | Column opens mid-entry (continued from previous column); no `<lemma>`. |
-| `<entry continues="next">` | Entry is cut off at the bottom of this column and continues in the next. |
-| `<lemma>…</lemma>` | The Greek headword. |
-| `<text>…</text>` | Running entry text. Holds plain Greek plus inline `<cit>`, `<unclear>`, `<lat>`. |
-| `<sense n="1">…</sense>` | A distinct sense/usage cluster. Direct child of `<entry>`. May nest further `<sense n="1a">`. Contains a `<text>` child. |
-| `<cit>1094a1</cit>` | A Bekker citation, verbatim. **Most important data.** |
-| `<unclear>…</unclear>` | Best-guess reading of an illegible passage. |
-| `<lat gloss="English">Latin</lat>` | A Latin prose phrase, with your English translation in `gloss`. |
-
-Encoding: **UTF-8, Unicode NFC**. Polytonic Greek must keep all diacritics.
-
----
-
-## 8. The JSON format — what `xml_to_json.py` produces
-
-Run `xml_to_json.py` on each XML; it emits one JSON object per column:
-
-```json
-{
-  "page": "61",
-  "col": "left",
-  "section": "Α",
-  "entries": [ /* array of entry objects, in column order */ ]
-}
-```
-
-Each **entry object** is one of these shapes:
-
-```jsonc
-// Section head
-{ "type": "section_head", "content": "Α" }
-
-// Simple entry (single block of text)
-{ "type": "entry", "lemma": "ἀάζειν", "segments": [ /* segment list */ ] }
-
-// Multi-sense entry
-{ "type": "entry", "lemma": "ἀγαθός",
-  "senses": [
-    { "n": "1", "segments": [ … ] },
-    { "n": "2", "segments": [ … ], "children": [ { "n": "2a", "segments": [ … ] } ] }
-  ] }
-
-// Continuation entry (column opened mid-entry; no lemma). May carry "segments" or "senses".
-{ "type": "continuation", "senses": [ … ] }
-
-// Cut-off entry (continues into next column)
-{ "type": "entry", "lemma": "ἀγαθός", "continues": true, "segments": [ … ] }
-
-// Header gloss
-{ "type": "header_gloss", "segments": [ … ] }
-```
-
-A **segment** is one token of rendered content. `xml_to_json.py` (via `expand_abbrevs.py`)
-auto-expands work-reference abbreviations and Latin abbreviations into structured segments
-so the website can show Greek / Latin / English. The kinds:
-
-```jsonc
-{ "kind": "text",       "content": "θερμόν " }                 // plain Greek/text
-{ "kind": "cit",        "content": "367b2" }                   // Bekker citation
-{ "kind": "unclear",    "content": "…" }                       // illegible best-guess
-{ "kind": "wref",       "abbr": "Μδ", "book": "δ", "chap": "22",
-  "latin": "Metaphysica", "english": "Metaphysics" }           // work reference, auto-expanded
-{ "kind": "latin_abbr", "abbr": "opp", "english": "opposite of" } // auto-expanded abbreviation
-{ "kind": "lat",        "latin": "signa terminorum…",
-  "english": "symbols for the terms…" }                        // from your <lat> tag
-```
-
-You don't author the JSON by hand — it's generated. But understanding the shape helps you
-sanity-check: if a column's JSON has an entry with `"segments": []` and no `"senses"`, you
-probably mis-nested something in the XML (see §7/§10).
-
----
-
-## 9. File naming & layout (must match exactly)
-
-```
-diplomatic/page-061-L.txt  diplomatic/page-061-R.txt  ← Pass 1, keep (archival base layer)
-output/page-061-L.xml      output/page-061-R.xml      ← Pass 2, keep
-json/page-061-L.json       json/page-061-R.json       ← generated, this is what John imports
-```
-
-- Page number is the **printed Bonitz page**, zero-padded to 3 digits.
-- Column suffix is `-L` or `-R`.
-- **Three files per column** (`.txt`, `.xml`, `.json`). Send John the `diplomatic/`,
-  `output/`, and `json/` directories.
-
----
-
-## 10. Quality checks before you call a page done
-
-**Pass 1 (diplomatic `.txt`):**
-
-1. **Ligatures PRESENT.** The raw `ϗ` and `ȣ` characters *should* still be there — Pass 1
-   is verbatim. If they're missing, you normalized too early (that's Pass 2's job).
-2. **Line count matches.** Roughly one `.txt` line per printed line; hyphenation at line
-   ends preserved.
-
-**Pass 2 (tagged `.xml`) and JSON:**
-
-3. **No empty entries.** Scan the JSON: any entry with `"segments": []` and no `"senses"`
-   is a red flag — re-open the image and check you didn't nest `<sense>` inside `<text>`
-   or drop the text.
-4. **Citation count sanity.** Glance at the column image; count roughly how many Bekker
-   numbers there are; make sure your `<cit>` count is in the same ballpark.
-5. **Ligatures gone AND accented.** Search your XML for the raw ligature characters `ϗ`
-   and `ȣ` — they should **not** appear here (this is the opposite of Pass 1). Then check no
-   **bare unaccented `ου`** slipped through: every expanded word must carry a real accent
-   (acute/grave/circumflex), e.g. `τοῦ` not `του`, `οὐκ` not `ουκ`, `καλοῦσι` not
-   `καλουσι`. A bare unaccented `ου` means you expanded the glyph but forgot to accent the
-   word (see Rule 13).
-6. **XML matches the diplomatic text.** The tagged text should be the same words as your
-   `.txt` (modulo expanded ligatures + rejoined line-end hyphens + tags). If they diverge,
-   one of the two passes misread something.
-7. **Greek diacritics intact.** Spot-check a few words against the image.
-8. **Valid XML.** `python3 -c "import xml.etree.ElementTree as ET; ET.parse('output/page-061-L.xml')"`
-   should not error.
-
-Quick empty-entry scan across everything you've produced:
-
-```bash
-python3 - <<'PY'
-import json, glob, os
-for f in sorted(glob.glob('json/page-*.json')):
-    d = json.load(open(f, encoding='utf-8'))
-    for i, e in enumerate(d.get('entries', [])):
-        if not e.get('senses') and not e.get('segments'):
-            print(f"{os.path.basename(f)} entry#{i} EMPTY ({e.get('type')})")
-PY
-```
-
-(An empty `continues`/`continuation` marker at a column edge can be legitimate, but an
-empty entry that *should* have a lemma or text is a bug — re-transcribe it.)
-
----
-
-## 11. The two ligatures (the easiest thing to get wrong)
-
-> **This section is about PASS 2 only.** In Pass 1 (diplomatic) you keep `ϗ` and `ȣ`
-> exactly as printed. The expansion/accenting below happens when you build the tagged XML.
-
-19th-century German Greek typesetting uses two glyphs that are NOT modern Unicode Greek:
-
-- **ϗ** — the **kai symbol** (a stylized κ). It is the word **καί** ("and"). Write **καὶ**
-  (grave) before a following word, **καί** (acute) before a pause/punctuation.
-- **ȣ** — the **ou digraph** (joined ο+υ), the **-ου-** vowel cluster. Expand to **ου** and
-  never write `υ` or `ῦ`.
-
-**The trap: accent the word, even when the ligature is printed bare.** Bonitz often prints
-`ȣ` with no visible accent on words whose ου-syllable *should* be accented. Supply the
-accent the word needs — do not leave a bare `ου`:
-
-| Bonitz prints | wrong (bare) | correct |
-|---|---|---|
-| τȣ | του | **τοῦ** (gen. article) |
-| ȣκ / ȣ / ȣχ | ουκ / ου / ουχ | **οὐκ / οὐ / οὐχ** (negative) |
-| ȣτω | ουτω | **οὕτω** |
-| νȣς | νους | **νοῦς** |
-| τȣτο / τȣτων | τουτο / τουτων | **τοῦτο / τούτων** (accent shifts by case) |
-| αὐτȣ | αυτου | **αὐτοῦ** |
-| καλȣσι (contract) | καλουσι | **καλοῦσι** |
-| καλȣμενον (participle) | καλουμενον | **καλούμενον** |
-| ἀγαθȣ (oxytone gen.) | αγαθου | **ἀγαθοῦ** |
-
-When a mark *is* printed on the ligature, honour it: `τȣ̄` → `τοῦ`, `ἀθρόȣ` → `ἀθρόου`,
-`τȣ̀ς` → `τοὺς`, `λόγȣ` → `λόγου`.
-
----
-
-## 12. What to send back to John
-
-- All three directories: **`diplomatic/`** (Pass 1 `.txt`), **`output/`** (Pass 2 `.xml`),
-  and **`json/`** (generated). The `diplomatic/` files are the archival base layer — don't
-  skip them.
-- A note of **which printed pages** you covered and **any pages you flagged** (bad split,
-  unreadable patches, anything you marked `⟨…⟩` in Pass 1 or `<unclear>` in Pass 2).
-- Do **not** send the rendered PNG/TIFF images (huge; John has the PDF).
-
----
-
-## 13. Your assignment — all remaining pages
-
-**You're processing the entire rest of the index.** John has done the α section through
-printed page 60; you take it from there to the end.
-
-- **Already done — do NOT redo:** printed pages **15–60** (α through ἀναμιγνύναι).
-- **Your range — everything else:** printed pages **61 through 885** (the rest of the index
-  body, α continues mid-word at page 61 and runs through Ω), **plus the *Addenda et
-  Corrigenda* on pages 886–890.** That's ~825 printed pages, ~1,650 columns.
-- Front matter (pages 1–13) and the abbreviation table (page 14) are **not** your job —
-  skip them.
-
-**How to manage a job this size:**
-- Work **in printed-page order**, a handful of pages at a time, completing both passes and
-  the JSON for each before moving on. Don't batch hundreds blind — spot-check as you go
-  (§10), because a systematic misread caught at page 65 saves you 800 pages of it.
-- The work is resumable: name files by printed page (§9), and you can always tell where you
-  stopped by the highest page number in `output/`.
-- Send John batches as you finish them (e.g. every ~50 pages) rather than holding the whole
-  corpus to the end — that lets him catch any issue early.
-- Flag, don't agonize: if a page is badly skewed, has a table/figure, or a stretch you
-  can't read, mark it (`⟨…⟩` / `<unclear>`), note the page, and keep going.
-
----
-
-*Questions to John, not guesses:* the printed-page↔PDF-page offset for your copy. The page
-range is the whole remainder (61–890); everything else is specified above.
+# Bonitz handoff — 2026-09-01
+
+Rewritten each session. Read this first.
+
+## State
+
+**118–281 is adjudicated where adjudication pays, and the paying class is
+finished.** 620 answers, **251 sites corrected**. Sitting 6 is live, unfinished.
+
+    margin (gutter numbers)   76 cards    76 sites
+    kai ligature ϗ            62 cards   769 sites
+    stigma ϛ                  37 cards    61 sites
+    ou ligature ȣ            190 cards  1013 sites
+    spine-alone (rest)       151 cards   135 sites   ← where the corrections are
+    spine-alone (ou)         115 cards    31 sites
+    Δ/ν letter shapes         76 cards     0 sites   ← the sitting that taught us
+    2-2 split                 76 cards   in progress
+
+## THE FIFTH READER IS A SORTER, NOT A VOTER — settled 2026-09-01
+
+Paddle read all 328 columns of 118-281 (19,978 lines; ȣ 8113 · ϗ 3039 · ϛ 99).
+Trained to 98.95% char / 68.4% exact lines, `best_epoch 182/200` — still
+improving when the schedule ended, so DATA is its ceiling, not the model.
+
+It PASSED the rule registered at f8ada13 before any result was seen: false
+alarms 7% against calamari's 7%, backs a wrong spine 2% against calamari's 3%.
+And it should still NOT be seated. Measured greek-only on both sides, so
+paddle is the only variable:
+
+    disputed sites   8561 -> 7755    -806
+    cards to rule    3681 -> 4204    +523
+
+A fifth reading fragments the form-sets that bundle many sites onto one card.
+John rules cards. Removing 806 disputes while adding 523 cards is a trade he
+takes explicitly or not at all. The built panel is parked, carried and
+unadopted, in `work/kraken15-102/paddle-panel/` (and `latin/` inside it for the
+wider-scope variant, which is NOT comparable to the greek-only queues).
+
+⚠ **THE RANKING WAS TESTED ON 2026-09-02 AND IT FAILED. DO NOT REUSE IT.**
+150 dissent cards served in predicted-yield order came back INVERTED:
+
+    band              predicted   actual
+    different-word      77.5%     17.1%   (41 ruled ·  7 accepts)
+    dropped-letter      52.0%      7.7%   (78 ruled ·  6 accepts)
+    backs-a-form        28.0%     39.3%   (28 ruled · 11 accepts)
+    overall                       16.3%
+
+The band served FIRST did worst; the band served LAST did best, so the
+order was inverted. Cause: the figures below were
+measured over cards John had ALREADY ruled, and those were selected by
+earlier sittings that took the spine-alone and bloc-split classes first.
+Paddle's dissent scored high there because it CO-OCCURRED with a lone
+spine; in the unruled remainder that company is gone. See
+`holdout-spent-by-selection` and the calamari note further down — a
+feature is not a predictor, a feature in a configuration is.
+
+⚠ **AND DO NOT CALL 16.3% BAD — THERE IS NO CONTROL.** John, 2026-09-02:
+"wait, you calculated paddle against what i just ruled?" The out-of-sample
+test is sound; the comparison I drew from it was not. I read 16.3%
+against the ~35% base rate of his EARLIER rulings, but those cards were
+hand-picked by earlier sittings for the richest classes. Whether ranking
+beats no ranking cannot be answered without an UNRANKED random sample of
+the same unruled pile, and nobody has ruled one. What is established is
+only that these three bands came out in the opposite order to the
+prediction.
+
+Everything below is retained as the ORIGINAL measurement, not as advice:
+
+⚠ **WHAT IT WAS THOUGHT TO BE FOR.** Over John's own 591 rulings paddle
+measured as the strongest predictor this project had seen:
+
+    paddle DISSENTS from the spine   160 ruled · 132 accepts · 82.5%
+    paddle agrees on LETTERS only     72 ruled ·  29 accepts · 40.3%
+    paddle AGREES with the spine     346 ruled ·  11 accepts ·  3.2%
+
+Against calamari's 58.1% / 0.8%. On the unruled pile that isolates 150 dissent
+cards holding ~124 corrections and 289 letters-only cards holding ~116 — 14% of
+the pile carrying ~73% of what is left. Serve sittings from
+`work/kraken15-102/queue-118-281-ranked.json`, which is the existing four-reader
+pile in that order. **The tail is not empty**: 2,750 agree-cards still hold an
+estimated 88 corrections, so this orders the work and does not licence stopping.
+
+⚠ **AND IT MUST NEVER ARBITRATE A BREATHING.** 24% of John's corrections paddle
+had right in LETTERS and wrong in marks (`δεσποζειν` for `δεσπόζειν`). Strong
+letter witness, weak mark witness.
+
+⚠ **THE BLOC SCARE IS CLOSED — do not re-raise it.** kraken and calamari are
+Greek-trained, genie and LlamaParse the Latin pair; on 664 sites the blocs
+disagree, a 2-2 that always flags, and paddle joins the Greek bloc on 414 of
+them. That looked like losing 414 cards. Of the 88 such splits John has ruled,
+the Greek bloc was right 80 times and the Latin pair ZERO. Those cards are the
+noise the fifth reader was hired to remove.
+
+## THE LEXICON ORDERS THE QUEUE — measured 2026-09-02, and it TRANSFERRED
+
+The one signal tested this session that survived out-of-sample. `lexcheck`
+already holds 56,053 Aristotle wordforms; `bare()` matches accent-blind. For
+each card, count how many of its form-set members are attested:
+
+    band                     ruled  accepts   rate     on 150 fresh cards
+    CONTRADICTS the spine      382     190   49.7%  ->  54.5%
+    several attested           240      86   35.8%  ->   6.2%  (n=16)
+    no form attested           348      86   24.7%  ->  14.5%
+    BACKS the spine            165       3    1.8%  ->   2.5%
+
+The two extremes held within a few points on cards ruled after the bands were
+fitted. That is the opposite of what happened to the paddle ranking the same
+day, and the difference is that the lexicon is EVIDENCE ABOUT THE WORD rather
+than a fifth opinion about the pixels.
+
+⚠ **IT CAN NEVER DECIDE A CARD, AND JOHN NAMED WHY.** 2026-09-02: "that of
+course doesn't help with misprints." A lexicon disagreement is ambiguous
+between the reader misreading and Bonitz misprinting, and only the ink
+separates those. Asking the lexicon which form is RIGHT scores 59% — a coin
+flip — because it answers what SHOULD be printed while John rules what IS.
+Compare on the ligature-EXPANDED form or the number is 48%: the lexicon knows
+`ἀκολουθεῖ`, the page prints `ἀκολȣθεῖ`, and the ruling keeps the ligature.
+
+The unruled pile, 3,035 cards:
+
+    CONTRADICTS the spine      577 cards   ~300 corrections
+    no form attested         1,410 cards   ~268   (largely Latin, sigla,
+    several attested           451 cards   ~ 90    citation fragments — the
+    BACKS the spine            597 cards   ~ 12    lexicon is simply mute)
+
+Serve CONTRADICTS first: a fifth of the pile holding nearly half of what is
+left. Do NOT drop the tail — see the recompile section above for why those
+597 cards are worth 601 gold lines.
+
+## FOUR SECTION HEADERS ARE WRONG — found 2026-09-01, not yet carded
+
+The index's own skeleton. Each is proved by the alphabet of the entries around
+it, and three of the four are misread by EVERY reader:
+
+    144-R:7   spine `̀`   calamari B   paddle B    ἄψυχα -> βάθος       = Β
+    156-R:38  spine `4`   calamari —   paddle 1.   βῶξ -> γάλα          = Γ
+    176-R:17  spine `Λ`   calamari Ζ   paddle Α.   γωνιοειδής -> δαίνυσθαι = Δ
+    223-L:28  spine `X)`  calamari I   paddle ?.   δωδεκάεδρον -> ἐάν   = Ε
+
+They are the four NARROWEST crops in the tranche (33-51px against a model
+trained on 1024px), which is why every engine failed them. Propose, do not
+apply: rough in the ink is a transcription error, but Bonitz misprinting banks
+as a corrigendum.
+
+## What predicts a correction — measured over 538 ruled cards
+
+⚠ **THIS IS THE FINDING OF THE WEEK AND IT SHOULD DRIVE EVERY FUTURE SITTING.**
+
+    calamari DISSENTS from the spine   260 ruled · 151 accepts · 58.1%
+    calamari is SILENT                  18 ruled ·  14 accepts · 77.8%
+    calamari AGREES with the spine     260 ruled ·   2 accepts ·  0.8%
+
+    genie+llama agree against spine    160 ruled · 123 accepts · 76.9%
+    the spine stands alone             270 ruled · 165 accepts · 61.1%
+
+John, 2026-08-31, before any of this was measured: "the cases where the spine
+was wrong were typically cases where both genie and llama agreed... or cases
+where calamari and kraken disagreed." Both halves hold.
+
+⚠ **BUT THE SAME FEATURE MEANS OPPOSITE THINGS IN DIFFERENT COMPANY.**
+"calamari differs" scored 58% because there it coincided with the spine
+standing alone. In the UNRULED remainder the configuration is inverted —
+kraken, genie and llama agree and calamari is the lone outlier (`Ἰλιὰς /
+Ἰλιὰς / Πλιὰς / Ἰλιὰς`). Those 172 cards predict PRESERVE. A feature is not a
+predictor; a feature in a configuration is.
+
+## What is left, and why it is probably not worth clicking
+
+**3,261 cards · 4,667 sites unruled**, and NO spine-alone card among them.
+
+    calamari agrees with the spine   3,063 cards   ~24 corrections projected
+    calamari is the lone outlier       172 cards   predicts preserve
+    calamari silent                      1 card
+
+Sitting 6 tests the one live question: 265 cards where genie and llama agree
+against the spine AND calamari backs it — John's strongest signal against the
+strongest exoneration. **At 25 answers it was 25 preserves.** If that holds the
+exoneration wins, and the remaining ~3,000 can be left with the spine standing,
+which is what a `preserve` writes anyway.
+
+## ⚠ THE PANEL CANNOT REACH ZERO ERRORS, AND THIS IS WHY
+
+The panel questioned **6,887 of 166,440 words — 4.1%.** The other **159,553
+were unanimous across all four readers and never became a card.** Every sitting
+ever run operates inside that 4.1%. At one error per thousand unanimous words
+that is ~160 errors this process is structurally blind to — six times the ~24
+left in the flagged population.
+
+John, 2026-08-31: "i want zero errors if possible in corpus" and "i also don't
+want this to take years." Both are answerable, but not by more sittings.
+
+## Next: the fifth reader — DECIDED, not started
+
+John, 2026-08-31: "basically, we do gpu training", Paddle first then Tesseract.
+
+⚠ **THE TRAINING SET WAS NEVER LOST.** `work/kraken400/train.arrow` (204 MB)
+and `holdout.arrow` (32 MB) hold the cropped line PNGs WITH their ground truth
+and do not depend on the deleted `alto-r5`. Verified 2026-08-31:
+
+    train.arrow    4741 lines from 83 columns ✓
+    holdout.arrow   722 lines from 12 columns ✓
+    no held-out line image or text in train ✓
+
+    uv run --with pyarrow --with pillow python3 -m bonitz_pipeline.calamari_export \
+        --work work/kraken400 --out work/calamari-export
+
+One export feeds both engines; the charset (with `ȣ ϗ ϛ`) comes from the GT and
+is shared. `bonitz_pipeline/pylaia_export.py` ALREADY implements the
+tokenisation experiment that matters here — `ȣ̓` as one CTC class against a base
+glyph plus a combining-mark frame — and is gated on John's holdout ruling.
+
+⚠ **QWEN — TESTED 2026-09-02 FOR A DOLLAR, AND THE FAILURE IS A THIRD SHAPE.**
+Tested on chat.qwen.ai (Qwen3-Max, the hosted flagship) against
+`page-278-L_060`, whose printed line is
+
+    ȣ̓́τε τȣ̀ς ὄγκȣς ἐχόντων ἴσȣς ȣ̓́τε τοιȣ́τῳ τάχει φερομένων
+
+    cold prompt    ligature recall 0/6
+    primed prompt  ligature recall 1/6, and that one with the wrong accent
+                   (`τοιȣ̀τῳ` for `τοιȣ́τῳ`)
+    exact words    3/9 — every one of the three ligature-free
+
+⚠ **IT DOES NOT EXPAND `ȣ` TO ου. IT READS IT AS α.** `τȣ̀ς -> τὰς`,
+`ὄγκȣς -> ὄγκας`, `ἴσȣς -> ἴσας`. That is WORSE than DeepSeek's failure,
+because ου is recoverable by rule and `τὰς` is a perfectly good Greek
+article — the error passes any check that asks "is this a word". It kept the
+GRAVE while changing the base letter, so it resolves diacritics and
+misidentifies the glyph under them.
+
+⚠ **BUT IT IS NOT TESSERACT-SHAPED EITHER, AND THAT IS THE POINT OF THIS
+ENTRY.** Its own reasoning said: "I suspect the apparent 'α' may be a
+ligature resembling ȣ". It CAN resolve the glyph and overrides itself five
+times in six. That is a PRIOR problem, which fine-tuning fixes, not a
+structurally unreachable class like Tesseract's recoder. So Qwen is
+"unproven and expensive to prove", not "impossible".
+
+Two things settle it anyway. The fine-tune would teach a model to do the one
+thing kraken already does at 100% recall — the ligature is the EASY part of
+this book for a CTC recogniser. And the accents were worse than paddle's: it
+reasoned its way OUT of the correct acute ("though the acute accent might
+seem plausible...") and flipped smooth to rough twice.
+
+⚠ **AND WATCH THE REASONING, NOT ONLY THE OUTPUT.** Mid-run it began
+"mentally cross-referencing Aristotle's works". A reader that reconstructs
+from the canonical corpus is disqualified even when it is RIGHT: it is
+accurate in proportion to fame rather than legibility, it silently repairs
+Bonitz so the corrigenda register goes empty and looks clean, and it breaks
+no unanimity in the 4.1% blind spot because it fails the same way genie and
+llama already do. That is the DeepSeek rejection restated.
+
+⚠ **THE TEST COST NOTHING AND SHOULD BE THE FIRST STEP FOR ANY VLM.** Four
+ligature-rich line crops with known spine text, hardest first
+(`page-278-L_060`, `page-168-R_057`, `page-249-R_031`, `page-138-R_007`),
+run COLD then PRIMED. The gap between the two runs is the diagnosis: cold
+fail + primed pass means a fixable prior; both fail means blindness. Score
+by machine against the spine, never by impression. A hosted flagship is a
+DISQUALIFIER only — passing there says little about the small open weights
+you could actually fine-tune on a T4.
+
+⚠ **TESSERACT IS A DEAD END AND ITS FILES ARE DELETED (2026-08-31).** The
+fine-tune from `grc` trained fine — BCER 100% -> 11.97%, many holdout lines
+character-perfect — and **cannot emit `ȣ`, `ϗ` or `ϛ` AT ALL**: 0/40, 0/12, 0/1
+on holdout, and it fails on lines it TRAINED ON. The substitutions are scattered
+(`b`, `θ`, `a`, `ς`, `ἕ`), which is a class with no stable representation, not a
+learned confusion. Ruled out in order: the charset HAS all three (305 entries in
+the packed model), the box files DO carry them, there are 1,770 `ȣ` instances,
+and two learning rates (1e-4, 2e-3) and two sampling regimes (flat, and
+oversampled x3/x4/x12) all give exactly zero. That points at Tesseract's
+RECODER, inherited from `grc` when fine-tuning with `--continue_from`:
+extending the unicharset does not make the new classes reachable.
+
+That makes it worse than a weak reader — it would agree with everyone on easy
+words and produce noise on exactly the hard ones. Real routes if ever wanted:
+train from scratch with `--net_spec` against our unicharset (needs far more
+than 4,741 lines), or start from a base whose recoder already covers these
+sorts. Both are bigger than a tuning tweak.
+
+**Why these two, in this order.** Paddle's SVTR is a different architecture
+family from kraken and calamari, so it fails differently — that is what can see
+an error the two of them made together. Tesseract is LSTM+CTC like both, so it
+fails similarly, and that is the control: if Paddle flags a site and Tesseract
+sides with kraken, Paddle is noisy there; if Tesseract also breaks ranks the
+site is genuinely suspect. Tesseract fine-tunes on CPU and can train while
+Paddle has the GPU.
+
+⚠ **OFF THE SHELF, NONE OF THEM CAN READ THIS BOOK.** No stock model has `ȣ`,
+`ϗ` or `ϛ` in its charset; it will read `ȣ` as ου and disagree systematically on
+the commonest token class in the index. That is why DeepSeek was rejected. Any
+fifth reader must be fine-tuned with the ligature charset.
+
+⚠ **NEITHER ENGINE BECOMES A FIFTH VOTE.** A model fine-tuned on 4,741 lines
+will not beat kraken r6's 0.33% CER, so as a voter it only adds noise — which
+is the complaint that started this: "llama and genie are too error prone such
+that they are surfacing too many cards that aren't wrong." Two jobs only: break
+the 2-2 splits, and flag sites where all four agreed and it does not.
+
+⚠ **THE HOLDOUT MUST NOT CHOOSE BETWEEN THE ENGINES.** Scoring both on the 722
+lines and keeping the winner spends it. Ask the structural question instead:
+does the model emit the ligatures at all, or has it silently learned to spell
+`ȣ` as ου?
+
+## The Paddle run — set up, not yet successful (2026-08-31)
+
+Dataset `johnhboyer/bonitz-paddle-rec` is uploaded and ready; kernel
+`johnhboyer/bonitz-paddle-train`; notebook committed at `kaggle/`.
+
+⚠ **THE RUN MUST BE STARTED FROM THE KAGGLE UI** with Accelerator = GPU T4 x2.
+A CLI push resets it to P100 and the `accelerator` metadata field is ignored.
+
+Five faults found by running it, in order, each fixed in the committed
+notebook:
+
+    eval_batch_step [0, 500]   ran a full eval at step ZERO: GPU memory
+                               allocated, GPU 0%, nothing printed for 22 min
+    capture_output=True        caught the exit code and buffered every byte,
+                               so the hang was invisible. Popen + `python -u`
+                               streams AND checks the return code
+    the reader, not the GPU    decoding a 1307px PNG per step: reader was 0.85s
+                               of a 0.96s batch. Pre-resize once -> 210 samples/s
+    image_shape [3, 48, 320]   ~40 CTC timesteps against lines averaging 50.5
+                               characters — the right answer was unreachable
+                               for 89% of the training set. Now 1024
+    NO pretrained_model        training from RANDOM WEIGHTS on 4,266 lines.
+                               Loss 546 -> 214 by step 400, then 214 -> 185 over
+                               1,700 more, eval edit distance flat at 0.09,
+                               accuracy zero. Now fine-tunes from PP-OCRv3 en.
+
+⚠ **THE LAST ONE IS THE LESSON.** Calamari was never trained from scratch — it
+started from a model that already knew letterforms and only had to learn this
+book. Asking a recogniser to learn what letters ARE from 4,266 lines is not a
+tuning problem, it is the wrong experiment.
+
+## RECOMPILE THE ARROWS WITH 107–117 — a fifth, and the fifth is real
+
+⚠ **A ~4x FIGURE STOOD HERE FOR THREE HOURS ON 2026-09-02 AND IT WAS WRONG.**
+I counted the 16,332 lines of 118–281 that no unruled card touches and called
+them usable ground truth. They are not. A line with no card means only that
+the FOUR-READER PANEL RAISED NO QUESTION THERE — and this same file records
+that the panel questioned 4.1% of words and left 159,553 unanimous and never
+examined, holding an estimated ~160 errors it is structurally blind to. Those
+lines are UNEXAMINED, not verified.
+
+John, 2026-09-02: "we are nowhere near being ground truth for 118-281 are we?
+We have a bunch of cards left unruled and we haven't done sweeps yet." Both
+true. Checked after he said it: every sweep artifact on disk is for 15–62,
+63–102 or 107–117. **NOTHING has been swept on 118–281** — not smyth, ngram,
+bekker, quotecheck, alphacheck, siglum, accent or diacritic. One panel pass
+and nothing else.
+
+⚠ **THE FLOOR ARGUMENT CUTS THE SAME WAY AT SCALE.** kraken r6 is 0.33% CER.
+Unswept lines carrying errors near 1 per 1,000 words would pull the next model
+TOWARD its own mistakes. Training on unexamined text is not a bigger training
+set, it is a worse one.
+
+**What is ready is 107–117, and the old "roughly a fifth" was right.**
+
+    15–102     4,741 lines   already in train.arrow
+    107–117    ~1,342 lines  adjudicated AND swept — NOT in the arrows
+    118–281    ~16,332       panel pass only, 3,035 cards open, no sweeps
+
+107–117 has 22 columns of corrected text in `work/reconciled/` and 726 rulings
+across THIRTEEN stores — cold, carried, followup, ink, homoglyph, accent,
+script, latin, margin, space, encoding, impossible, applied. That thirteen is
+what ground truth looks like here, and it is the standard 118–281 has not been
+held to.
+
+So the recompile is **+28%**, needs no clicks from John, and the corrected text
+already exists. Whether 28% moves 0.33% CER is unknown; it is cheap, and it is
+the only honest version available.
+
+⚠ **THE HOLDOUT IS STILL JOHN'S CALL.** `stage_split` reads `holdout_columns()`
+and RAISES rather than proceed — deliberately, with no override. 107–117 is 22
+columns, so holding one or two out is a modest ask. See
+`holdout-spent-by-selection`: whatever is named becomes the only honest measure
+of whether the bigger model beat the smaller one.
+
+⚠ **PADDLE'S CEILING IS A SCHEDULE QUESTION, NOT A DATA ONE.** `best_epoch
+182/200` under a Cosine LR that anneals to ~0 is normal convergence, not
+truncation. `bonitz-paddle-long` (500 epochs, same data) tests it for one GPU
+session and no adjudication.
+
+**Not yet written:** the Paddle label-file exporter, the tesstrain adapter, and
+the Kaggle notebook. Everything upstream of them is on disk and verified.
+
+## The review tool — six defects fixed 2026-08-30/31, all found by John clicking
+
+Each shipped because a check verified the thing being built, not the thing
+being broken.
+
+⚠ **A WORD THAT SPELLS A NUMERAL IS NOT ONE.** `νυχος` is ν 50, υ 400, χ 600,
+ο 70 + final sigma, so the only `keep as printed` read `νυχοϛ · stigma = 6` —
+but 158-L:46 ends `γαμψώ-`. `numeral_card_is_a_word_tail` knew, and was not
+consulted.
+
+⚠ **A LINE BOX IS NOT A LINE.** On 231-L the pitch is 56px and the ALTO line
+boxes are 82–109px, so consecutive boxes OVERLAP by thirty to fifty pixels.
+Every pointer drawn to a line box landed on its neighbour. The tint takes the
+WORD's box, inset at each end.
+
+⚠ **SIXTEEN GREYS THREW THE POINTER AWAY.** `_b64` ran `im.convert('L')`.
+A fixed grey+washed palette then blotched the paper; an adaptive one lost the
+wash entirely. Now: mask from the tint's hue, grey recovered by inverting the
+blend, washed pixels moved onto a duplicate half of the palette BY INDEX.
+
+⚠ **EVERY BUTTON ON THIS PAGE IS `width:100%`.** The palette keys inherited it,
+so eleven sorts rendered as eleven stacked plates — twice, because
+`display:inline-flex` does not help a box that is still 100% wide.
+
+⚠ **ONE BAD ESCAPE KILLS EVERY BUTTON.** A `\'` collapsed to `''`, the script
+threw `SyntaxError`, nothing on the page responded. A test now runs
+`node --check` on the emitted script; a missing node FAILS rather than skips.
+
+⚠ **THE PAGE TRUSTED ITSELF.** A typed reading for 217-L:54 showed `✓ ruled`
+with no entry in the store. The banner was `position:sticky` on a body child of
+a 22 MB document. Now fixed to the viewport, and the page re-reads the store on
+focus, on waking, and every 30s, turning any card it cannot find red again.
+
+**Two additions John asked for.** A tap-to-insert palette of sorts (`ȣ ϗ ϛ` +
+breathings, accents, iota sub, diaeresis, elision), because polytonic Greek is
+on no phone keyboard — with a live spell-out beneath it, since two combining
+marks over `ȣ` DO NOT RENDER. And the spine's sort offered with another
+reader's marks: 151-R:40 and 217-L:54 were both set aside because `ȣ̔̀ς` — οὓς,
+what both halves of the panel pointed at — was on no button. Both were answered
+with that option the next day.
+
+## The suite
+
+2,400 pass, **15 fail**, 6 skip. The 15 are the fixtures deleted on 2026-08-28
+and they FAIL rather than skip on purpose. Diff the failure list before and
+after a change rather than counting it.
+
+## ⚠ MANDATORY: never push a Kaggle kernel by hand
+
+    python3 -m bonitz_pipeline.kaggle_preflight work/paddle-kernel --push
+
+On 2026-08-31 nine kernel versions failed in a row and EVERY ONE broke a rule
+already written in this file — including one I had rewritten into it that same
+morning, hours before breaking it. John: "sounds like you didn't read the
+notes. that needs to be part of mandatory process whenever running kaggle from
+cli." A note is advice; advice is forgettable. The checks are the notes made
+executable, and `--push` refuses on any failure:
+
+    cells compile · no swallowed exit status (`!cmd | tail`) · no hardcoded
+    /kaggle/input path · numpy pinned LAST · every pinned wheel exists on PyPI
+    · dataset sources ready and no slug collision
+
+Do not delete a check because it has stopped firing. That is what working looks
+like.
+
+⚠ **AND THE CLI CANNOT CHOOSE THE CARD.** Kaggle hands out a P100 (compute 6.0)
+by default; `paddlepaddle-gpu` 2.6.x is built for arch 61+ and NO cp312 wheel
+exists that covers 6.0 — PyPI and Paddle's own cu118 index carry the same three
+builds. John set GPU T4 x2 in the UI and v10 ran on a T4; the next CLI push put
+it back on a P100, and an `accelerator` field in kernel-metadata.json is
+accepted and then ignored. **The paddle run must be STARTED from the Kaggle UI.**
+Preflight refuses `--push` on any notebook that needs more than compute 6.0.
+
+## PENDING: page-127-R's spine still carries its running head
+
+`filter_kraken_lines` now drops it (`running_head`, fires once in 328), but
+`work/kraken15-102/txt118-281/page-127-R.txt` was NOT regenerated. It still
+holds two furniture lines at the top:
+
+    ἀστακός      the guide word
+    115          the printed page number
+
+Regenerating is verified to give exactly the old text minus those two, a shift
+of 10 canonical characters and 2 line numbers. It is not done because
+`word_off` is an offset INTO THE SPINE: the shift strands 22 sites on that
+column, 8 of them on cards John has ruled, and moves the line numbering of all
+four reader files for it. Spine and readers have to move together, so this
+belongs to the next tranche rebuild — do it there, and re-key the 22 sites by
+line rather than by offset.
+
+Until then page-127-R is two lines long in the corpus and its line numbers run
+two ahead of every other column's.
+
+## Standing constraints
+
+⚠ **No Opus reads of 107+ without John saying so in session.**
+⚠ **`space_policy --close-bekker` MUST NOT BE RUN.**
+⚠ **`1573a25` is ONE TOKEN.**
+⚠ Run tests as `uv run --with pytest pytest tests/ -q`, never piped through
+`tail` before a `&&`.
+⚠ Reader files are testimony. Corrections go to a queue and reach the text when
+the corpus column is built — never into the reader.
+⚠ Commits go ONLY to `GIT_DIR=~/Developer/bonitz-text.git`.
+⚠ The queues are gitignored. The RULINGS are what is kept.

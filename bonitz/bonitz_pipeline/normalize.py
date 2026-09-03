@@ -263,6 +263,47 @@ def fold(s: str) -> str:
 CORPUS_STAGES = ('reconciled', 'reconciled-auto')
 
 
+def corpus_columns(pages=None) -> list:
+    """Every transcribed column, newest stage winning, sorted by page.
+
+    The companion to `corpus_column` for checks that sweep rather than look up.
+    A check that globs ONE stage sees only the pages that stage happens to hold
+    — which is how `siglum_check` reported "0 citations" over ten columns of a
+    citation index, and how five other gates certified 53-62 without opening a
+    file.
+
+    `pages` is an iterable of page numbers, or None for all of them. RAISES if
+    a requested page is in no stage: a sweep that silently skips what it was
+    asked for is indistinguishable from a sweep that found nothing.
+    """
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    want = set(pages) if pages is not None else None
+    found: dict[tuple, object] = {}
+    for stage in CORPUS_STAGES:                 # first stage wins
+        for p in sorted((root / 'work' / stage).glob('page-*.txt')):
+            try:
+                n = int(p.stem.split('-')[1])
+            except (IndexError, ValueError):
+                continue
+            if want is not None and n not in want:
+                continue
+            found.setdefault((n, p.stem.split('-')[2]), p)
+    if want is not None:
+        # ⚠ A PAGE IS TWO COLUMNS. Checking page numbers alone certified a page
+        # whose L existed and whose R did not: the sweep then asked for R, got
+        # [] from a required=False lookup, and reported it clean. Half a page
+        # unexamined is the same lie as a whole one.
+        missing = sorted(f'{n:03d}-{c}' for n in want for c in ('L', 'R')
+                         if (n, c) not in found)
+        if missing:
+            raise FileNotFoundError(
+                f'no corpus column for {", ".join(missing)} in any stage '
+                f'({", ".join(CORPUS_STAGES)}) — not transcribed, so no check '
+                f'can report them clean')
+    return [found[k] for k in sorted(found)]
+
+
 def corpus_column(page: int, col: str, *, required: bool = True):
     """The transcribed column, from whichever stage currently holds it.
 

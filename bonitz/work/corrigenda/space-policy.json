@@ -1,0 +1,15 @@
+[
+ {
+  "date": "2026-08-26",
+  "ruling": "john 2026-08-26: a uniform word-space where the printer's page budget closed one up — the abbreviation slot (`cf a16`) and `sq`/`sqq`. NOT the Bekker citation: `1573a25` is ONE TOKEN, his policy for the revised edition.",
+  "directory": "work/reconciled",
+  "pages": "all",
+  "by_rule": {
+   "bekker_after_word": 1,
+   "sq_after_number": 29
+  },
+  "n": 30,
+  "files": 19,
+  "not_touched": "the Bekker citation `1573a25` (8300 sites, one token); general spacing — not decidable, see space_slot"
+ }
+]

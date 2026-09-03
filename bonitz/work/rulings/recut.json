@@ -1,0 +1,30 @@
+{
+ "recut:page-113-L:4": {
+  "verdict": "accept",
+  "detail": "δι’ ἣν",
+  "sites": [
+   "page-113-L:4:184"
+  ]
+ },
+ "recut:page-117-L:49": {
+  "verdict": "preserve",
+  "detail": "῾Ρόδιος",
+  "sites": [
+   "page-117-L:49:2296"
+  ]
+ },
+ "recut:page-113-R:19": {
+  "verdict": "accept",
+  "detail": "Πολιτικά β2.",
+  "sites": [
+   "page-113-R:19:867"
+  ]
+ },
+ "recut:page-113-R:36": {
+  "verdict": "accept",
+  "detail": "Τέχνη ῥητορική α1. 1355a28 ἐν τοῖς τοπικοῖς",
+  "sites": [
+   "page-113-R:36:1665"
+  ]
+ }
+}
