@@ -4,7 +4,38 @@ Rewritten: 2026-09-01 midday; §1/§5 updated 2026-09-01 evening. This is the LS
 Rewrite it (don't append) when this track advances. Do not create a bare
 `HANDOFF.md` — see CLAUDE.md.
 
-## 1. What is live, as of 2026-09-01
+## 0. 2026-09-03 — the `/lemma` pages mount grammata's T8 entry too
+
+John, shown the three residual forms-block classes on the live `/lemma`
+pages: "let's replace those lsj entries on index with the lsj t8 from
+grammata." Done on branch `claude/lemma-pages-t8`: `LemmaPage.astro` no
+longer reads the LSJ shards at build time; it renders
+`<div class="grammata-mount" data-key=…>` and a page script imports
+`https://grammata.pages.dev/t8/lookup.js` and calls
+`lookup('', el, { lang: 'grc', key })` — the same contract as the popup (do
+not vendor, pin, cache-bust or style). Verified on the dev server: ἀριθμός
+renders the T8 entry, no `.lsj-forms` on the page.
+
+Consequences:
+- **The website now renders no LSJ entry locally.** `shared/lib/html.ts`
+  (`renderLsjEntry` / `buildFormsBlock`) is live only in the desktop app,
+  which is offline-first and keeps the shards. `app/src/lib/html.ts`
+  re-exports the sanitizer alone.
+- **§5's residual classes** (parenthesis openers 83, cross-references 38,
+  the two empty-label rows, the >22 path) are desktop-only concerns now. A
+  `proposed` variant implementing the first three was built for the
+  illustration and NOT kept; the illustration lived at
+  `app/src/pages/dev/lsj-compare.astro`, deleted. If the desktop ever wants
+  them, the rules are: a form inside an unclosed "(" is not a row; a lead
+  ending in "for" is a cross-reference, prose; one row with an empty label
+  is prose.
+- The `.lsj-entry-page` styles and `outlineLsjSenses` have no site consumer;
+  left in place for the desktop and the sibling readers.
+- The porting item in §5 (plato/homer forms-block repairs) stands only if
+  those readers keep rendering locally; the popup architecture says they
+  should mount T8 too.
+
+## 1. What was live before that, as of 2026-09-01
 
 Deployed to gh-pages `103ce1df` from `origin/main e194646040` (PR #107, on top
 of #106). Full record in DEPLOY-STATUS.md; read that before any deploy.
@@ -46,9 +77,9 @@ headline).
 - `shared/components/WordPopup.svelte` — the cards, the grouping, the widget call.
 - `shared/lib/data.ts` — `fetchLsjHeads`, and `lookupWord(work, key, { withLsj })`.
   `withLsj` defaults **true**; only the website passes false.
-- `shared/lib/html.ts` — `renderLsjEntry` / `buildFormsBlock`. **Still live**:
-  the desktop app and the `/lemma/<slug>` pages (`LemmaPage.astro`, at build
-  time, through the re-export in `app/src/lib/html.ts`) both render through it.
+- `shared/lib/html.ts` — `renderLsjEntry` / `buildFormsBlock`. **Live only in
+  the desktop app** since 2026-09-03 (§0): the `/lemma/<slug>` pages mount
+  grammata's T8 entry and `app/src/lib/html.ts` re-exports the sanitizer alone.
   `LABELISH` (~L440) is the vocabulary guard; `formAt` / `compared` (~L480) is
   the "cf." rule; the lead cut is ~L555.
 - `shared/styles/global.css` — ALL popup styles.
