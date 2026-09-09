@@ -182,3 +182,65 @@ describe('sanitizeHtml on malformed markup', () => {
     expect(host.parentElement).toBeNull();
   });
 });
+
+// ── issue #112 ──────────────────────────────────────────────────────────────
+// Two defects found by an adversarial review of the sibling port (Codex,
+// 2026-09-09). Neither is a security hole; both silently corrupt valid content,
+// and both were present in all three readers.
+
+describe('unquoted attribute values (#112)', () => {
+  // The HTML tokenizer's "attribute value (unquoted) state" consumes until
+  // whitespace or '>'. An embedded '=' is a parse error but the character IS
+  // kept, so the browser sees /search?q=greek while the sanitizer saw
+  // /search?q — a different link from the one on the page.
+  it('keeps an embedded "=" the way the tokenizer does', () => {
+    expect(sanitizeHtml('<a href=/search?q=greek>x</a>'))
+      .toBe('<a href="/search?q=greek">x</a>');
+  });
+
+  it('still ends an unquoted value at whitespace, so the next attribute parses', () => {
+    // Source order is preserved; the sanitizer does not sort attributes.
+    expect(sanitizeHtml('<a href=/x class=lsj-bibl>y</a>'))
+      .toBe('<a href="/x" class="lsj-bibl">y</a>');
+  });
+
+  it('does not let an unquoted value swallow the tag', () => {
+    expect(sanitizeHtml('<a href=/x>y</a>')).toBe('<a href="/x">y</a>');
+  });
+
+  // The scheme check must still see an unquoted dangerous value.
+  it('refuses a dangerous scheme written unquoted', () => {
+    expect(sanitizeHtml('<a href=javascript:alert(1)>x</a>')).toBe('<a>x</a>');
+  });
+});
+
+describe('numeric character references (#112)', () => {
+  // HTML maps the C1 range 0x80-0x9F through a replacement table rather than
+  // to the code point itself: &#128; is the euro sign, not U+0080. Escaping
+  // afterwards cannot repair the wrong character.
+  it('maps a C1 reference through the HTML replacement table', () => {
+    expect(sanitizeHtml('<span title="&#128;">x</span>')).toBe('<span title="€">x</span>');
+    expect(sanitizeHtml('<span title="&#151;">x</span>')).toBe('<span title="—">x</span>');
+  });
+
+  // A lone surrogate is not well-formed text; HTML says U+FFFD.
+  it('replaces a surrogate with U+FFFD', () => {
+    expect(sanitizeHtml('<span title="&#xD800;">x</span>')).toBe('<span title="�">x</span>');
+  });
+
+  it('replaces null and out-of-range with U+FFFD', () => {
+    expect(sanitizeHtml('<span title="&#0;">x</span>')).toBe('<span title="�">x</span>');
+    expect(sanitizeHtml('<span title="&#x110000;">x</span>')).toBe('<span title="�">x</span>');
+  });
+
+  it('leaves an ordinary reference alone', () => {
+    expect(sanitizeHtml('<span title="&#945;">x</span>')).toBe('<span title="α">x</span>');
+    expect(sanitizeHtml('<span title="&#x3B1;">x</span>')).toBe('<span title="α">x</span>');
+  });
+
+  // The scheme check reads the decoded value, so a C1 mapping must not create
+  // a way through it.
+  it('still refuses a scheme hidden behind a numeric reference', () => {
+    expect(sanitizeHtml('<a href="&#106;avascript:alert(1)">x</a>')).toBe('<a>x</a>');
+  });
+});
