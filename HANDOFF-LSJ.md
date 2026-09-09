@@ -31,8 +31,11 @@ Consequences:
   which fail on the parent. **The corpus audit has NOT run**: that branch was
   built in a container without `build/dist`. Before the desktop picks it up:
   `node shared/scripts/audit-forms-block.mjs origin/main build/dist/lsj` —
-  the §3 audit, recreated as a script. Expect `tables lost` around 83 + 38 +
-  2 and `lost characters 0`; anything else is a finding. Two calls the
+  the §3 audit, recreated as a script. **It ran on 2026-09-09 — see §5 for the
+  result and John's ruling (leave it; T8 is going on the desktop eventually).**
+  Note the ref: compare against `8e55062`, since the rules are on main now.
+  It expected `tables lost` around 83 + 38 + 2 and `lost characters 0`; it got
+  208 and 5, and §5 explains both. Two calls the
   audit should confirm: parenthesis depth counts from the start of the
   preamble (an aside spanning LSJ's ";" stays one aside), and a parenthesized
   citation declines its whole segment while a parenthesized Greek span is
@@ -141,6 +144,59 @@ headline).
   noticed.
 
 ## 5. Open
+
+### The forms-block audit RAN, 2026-09-09 — and John's ruling on it
+
+The corpus audit §0 said was pending is done: `audit-forms-block.mjs 8e55062
+build/dist/lsj` (compare against `8e55062`, not `origin/main` — the rules are on
+main since PR #110, so main against main shows nothing).
+
+**John's ruling, 2026-09-09: leave it.** He intends to move the desktop app to
+grammata's T8 entry eventually, the way the site already did on 2026-09-03. That
+would make `renderLsjEntry` and `buildFormsBlock` dead code and every number
+below moot, so nothing here is worth fixing first. **Do not invest in the
+forms-block rules without checking that intent still stands.**
+
+What the audit found, recorded so the decision can be revisited rather than
+re-derived:
+
+- `tables lost 208` against the ~123 §0 predicted, and 5 entries flagged as
+  losing characters. Both look worse than they are.
+- **The 5 lost-character entries are benign.** The only absent text is the
+  renderer's own `${forms.rows} forms` disclosure label (html.ts, the
+  `lsj-forms-fold` summary), which those entries no longer get because they are
+  prose now. Their dictionary text is identical — checked character by character
+  on τέρας: the only chars missing are `12fmors`, i.e. "12 forms". The audit
+  counts non-whitespace characters of the RENDERED output, so it counts a
+  generated UI label as content, and any entry that stops being a foldable table
+  must trip it. That is a flaw in the audit's measure, not in buildFormsBlock.
+- **195 of the 208 lost tables held exactly ONE row** — a lone form that had
+  wrongly opened a paradigm, which is what the three rules exist to stop. Only
+  13 entries lost a genuinely multi-row table; 229 rows in total.
+- Attribution of the 208 (heuristic, from the old first-row label — not the
+  code's own accounting): ~158 parenthesis, ~23 empty-label, ~19 cross-
+  reference, 8 unclear. Against the predicted 83 / 2 / 38, so the parenthesis
+  rule fires about twice as often as expected and the "for" rule about half.
+
+**The one real casualty is χείρ, which lost a 9-row paradigm** (χερσί, χειροῖν,
+χειρῶν, χείρεσι(ν), χείρεσσι, χέρεσσι(ν), χερέεσσιν, χηρός, χῆρας). Its first
+row reads `dat. pl. regularly χερσί ( χειρσί occurs in cod.Vat. of LXX … CIG
+2811 b.10 ( Aphrodisias ), 2942c ( Tralles ): but Poets used…`. That opening
+`(` never closes; the inner ones do, so depth stays at 1 for the rest of the
+block, and since the rule counts depth from the start of the preamble every
+later form reads as inside the aside and declines. The rule did exactly what §0
+specifies — LSJ's own source text is unbalanced there. μύκης loses 3 rows the
+same way, and 11 entries lose 2.
+
+**If the desktop ever keeps this renderer, the fix is a floor on the parenthesis
+rule**: an aside that never closes before the block ends is a defect in the
+printed source, not an editorial signal, and should stop suppressing rather than
+swallow the paradigm.
+
+Not looked at: the audit's total row delta is 481, of which 229 come from tables
+that vanished. The other ~252 rows were dropped from tables that SURVIVED —
+a separate question nobody has opened.
+
 
 - **Plato and homer have none of the four forms-block repairs on main** (0
   `.lsj-forms` rules in both) and neither has the grammata popup. Aristotle is
