@@ -1031,6 +1031,14 @@ body {
 .overlay-chapter-title-gap {
   visibility: hidden;
 }
+/* Both counterweights are space, not text: a drag or click must not land in
+   the hidden copy of a neighbour's title. */
+.overlay-chapter-title-spacer,
+.overlay-chapter-title-gap {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
 .bk-num {
   position: absolute;
   left: 0;
@@ -2055,6 +2063,10 @@ body {
     padding-top: 0.6rem;
     margin-top: 0.6rem;
   }
+  /* Stacked, no column stands beside another, so there is no line to hold
+     level: the counterweights would only leave a blank band under the label. */
+  .reader-body.trans-compare .overlay-chapter-title-spacer,
+  .reader-body.trans-compare .overlay-chapter-title-gap { display: none; }
 
   .popup {
     width: calc(100vw - 1rem);

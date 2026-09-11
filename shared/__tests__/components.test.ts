@@ -339,6 +339,38 @@ describe('Reader.svelte', () => {
     expect(right.querySelector('.overlay-chapter-title-gap')!.getAttribute('aria-hidden')).toBe('true');
   });
 
+  it('pushes the Greek and left columns down when only the right column is titled', async () => {
+    // The mirror case: Ross on the left, Ostwald on the right. The Greek spacer
+    // used to answer to the left column alone, so here it rode a line high.
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].secondary = [
+      { chapter: '1', cont: false, text: 'Ross on the left.', bekker: [{ n: 1, offset: 0, real: true }] },
+    ];
+    localStorage.setItem('reader-view', 'both');
+    localStorage.setItem('reader-trans-EN', 'compare');
+    localStorage.setItem('reader-cmpl-EN', 'ross');
+    localStorage.setItem('reader-cmpr-EN', 'ostwald');
+    window.history.replaceState(null, '', '/EN/book/1');
+
+    const { container } = render(Reader, {
+      props: {
+        work: 'EN',
+        bookNum: 1,
+        bookData: book,
+        transTitles: { ostwald: { '1': 'The Good as the Aim of Action' } },
+      },
+    });
+    await screen.findByText(/Ross on the left/);
+
+    const row = container.querySelector('.seg-row')!;
+    const left = row.querySelector('.english-col')!;
+    const right = row.querySelector('.overlay-col')!;
+    expect(row.querySelectorAll('.greek-col .overlay-chapter-title-spacer').length).toBe(1);
+    expect(left.querySelectorAll('.overlay-chapter-title-gap').length).toBe(1);
+    expect(right.querySelectorAll('.overlay-chapter-title-gap').length).toBe(0);
+    expect(right.querySelectorAll('.overlay-chapter-title').length).toBe(1);
+  });
+
   it('leaves every column flush when no translation heads the chapter', async () => {
     // The paired negative: without it the assertions above would also pass on
     // a build that spaced every row unconditionally.
@@ -358,5 +390,7 @@ describe('Reader.svelte', () => {
     await screen.findByText(/Ross alone/);
 
     expect(container.querySelectorAll('.overlay-chapter-title').length).toBe(0);
+    expect(container.querySelectorAll('.overlay-chapter-title-gap').length).toBe(0);
+    expect(container.querySelectorAll('.overlay-chapter-title-spacer').length).toBe(0);
   });
 });
