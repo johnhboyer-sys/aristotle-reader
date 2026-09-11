@@ -13,6 +13,42 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-09-11 — DEPLOYED: every compare column level under a chapter title (PR #115)
+
+`gh-pages 5a112c42 → 8b932dfb`, source `origin/main` `481cbfcd39` (the #115 merge). Plain
+`npm run deploy -- --verify` — no `--allow-data-deletions`; the 09-09 ngram flag was not needed.
+
+**What shipped:** in compare view a translation's chapter title heads its own column only, so at
+EN 1094a1 Ross's first line sat level with Ostwald's HEADING, not his prose. Each prose column
+with prose in the block and no title of its own now carries a hidden copy of its neighbour's
+(`.overlay-chapter-title-gap`), and the Greek spacer answers to either column's title, not only
+the left's. Grok 4.6 reviewed it DO NOT SHIP on three MEDIUMs, fixed in `56cb9b9` and re-reviewed
+SHIP: below 680px compare stacks, so the gap and the Greek spacer left a blank band under the
+column label (the spacer did so on main already) — both `display:none` there now; the
+right-titled case had no test (added, fails on main's Reader.svelte); the negative test counts
+both classes by name. Both counterweights take `pointer-events:none; user-select:none`. Left
+alone: the hidden copy is `titleText()` where the visible title is `renderThird()`, and two
+titles of different lengths are not equalised.
+
+**Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22.23.1), 6,609 pages. No
+pipeline change since `a2b15077f8`, so `build/dist` was current. Built from the PR branch, which
+contained `origin/main`; the merged tree was checked identical before deploying.
+
+**Gates:** link integrity **0 broken** (6,612 pages / 572,285 links / 446,166 anchors). Leak check
+at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`),
+positive control 1,626. Tests: shared 489; the seven PR checks green.
+
+**Deploy diff:** 6,613 files — 2 A / 6,609 M / 2 D. The pairs are the `Reader` and `global.css`
+rehashes; every page picks up the new stylesheet hash. 0 data files; nothing to restore;
+dangling references 0 (positive control 2/2).
+
+**Live-verified** (~90 s after push): the script's URL set as expected — new
+`Reader.1PHDm2pn.js` / `global.D0hUXNW8.css` 200, old `Reader.CPccYIWj.js` / `global.jhbSq3zm.css`
+and `/bonitz/` 404. Live `/EN/book/1/` at 1280×800 in compare Ostwald | Ross: Greek line 1,
+Ostwald's prose and Ross's prose all at the same top (y=26), Ostwald's title above in his column,
+the gap present in Ross's. At 375px (dev server) gap and spacer are `display:none`; Ross's prose
+starts 5px under his label.
+
 ## 2026-09-09 — DEPLOYED: the catch-up branch, corpus rebuild and the lettered-line repair
 
 `gh-pages 5f358186 → 5a112c42`, source `a2b15077f8` on `claude/weekly-usage-catchup-h8go43`
