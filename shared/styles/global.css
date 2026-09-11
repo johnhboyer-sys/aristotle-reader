@@ -1022,6 +1022,15 @@ body {
   white-space: nowrap;
   padding-left: 0;
 }
+/* The same counterweight in a PROSE column — the compare pair, where one
+   translation heads the chapter and the other does not (Ostwald does, Ross
+   does not), so without this the untitled column's first line sat level with
+   the other's heading instead of its prose. Here the column has a settled
+   width, so the hidden copy keeps it (no width:0/nowrap) and wraps exactly as
+   the visible title does: same height, however many lines that takes. */
+.overlay-chapter-title-gap {
+  visibility: hidden;
+}
 .bk-num {
   position: absolute;
   left: 0;
