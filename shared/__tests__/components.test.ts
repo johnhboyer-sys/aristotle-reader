@@ -285,4 +285,112 @@ describe('Reader.svelte', () => {
     expect(container.textContent).not.toContain('[[s1]]');
     expect(container.textContent).not.toContain('[[fig2]]');
   });
+
+  // A translation's chapter title heads its own column only. John caught the
+  // consequence at EN 1094a1: Ostwald heads chapter 1, Ross heads nothing, so
+  // in compare view Ross's line 1 sat level with Ostwald's HEADING rather than
+  // his first line of prose. Every column without a title of its own owes the
+  // titled column an invisible counterweight of the same height.
+  it('pushes every untitled column down by a neighbour\'s chapter title', async () => {
+    const book: BookData = structuredClone(fixtureBook);
+    // Ross (the 'secondary' slot) reads the same chapter beside Ostwald.
+    book.segments[0].secondary = [
+      {
+        chapter: '1',
+        cont: false,
+        text: 'Ross says virtue beside the same Greek.',
+        bekker: [{ n: 1, offset: 0, real: true }],
+      },
+    ];
+    localStorage.setItem('reader-view', 'both');
+    localStorage.setItem('reader-trans-EN', 'compare');
+    localStorage.setItem('reader-cmpl-EN', 'ostwald');
+    localStorage.setItem('reader-cmpr-EN', 'ross');
+    window.history.replaceState(null, '', '/EN/book/1');
+
+    const { container } = render(Reader, {
+      props: {
+        work: 'EN',
+        bookNum: 1,
+        bookData: book,
+        // Only Ostwald heads his chapters; Ross carries no titles at all.
+        transTitles: { ostwald: { '1': 'The Good as the Aim of Action' } },
+      },
+    });
+    await screen.findByText(/Ross says virtue/);
+
+    const row = container.querySelector('.seg-row')!;
+    const greek = row.querySelector('.greek-col')!;
+    const left = row.querySelector('.english-col')!;
+    const right = row.querySelector('.overlay-col')!;
+
+    // Ostwald's column shows the real title; his neighbours each carry one
+    // hidden copy, so all three columns start their text at the same height.
+    expect(left.querySelectorAll('.overlay-chapter-title').length).toBe(1);
+    expect(left.querySelector('.overlay-chapter-title')!.className)
+      .not.toContain('overlay-chapter-title-gap');
+    expect(right.querySelectorAll('.overlay-chapter-title-gap').length).toBe(1);
+    expect(right.querySelector('.overlay-chapter-title-gap')!.textContent)
+      .toContain('The Good as the Aim of Action');
+    expect(greek.querySelectorAll('.overlay-chapter-title-spacer').length).toBe(1);
+
+    // The counterweights are spacing, not text: hidden from the accessibility
+    // tree and (via .overlay-chapter-title) skipped by clean-copy.
+    expect(right.querySelector('.overlay-chapter-title-gap')!.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('pushes the Greek and left columns down when only the right column is titled', async () => {
+    // The mirror case: Ross on the left, Ostwald on the right. The Greek spacer
+    // used to answer to the left column alone, so here it rode a line high.
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].secondary = [
+      { chapter: '1', cont: false, text: 'Ross on the left.', bekker: [{ n: 1, offset: 0, real: true }] },
+    ];
+    localStorage.setItem('reader-view', 'both');
+    localStorage.setItem('reader-trans-EN', 'compare');
+    localStorage.setItem('reader-cmpl-EN', 'ross');
+    localStorage.setItem('reader-cmpr-EN', 'ostwald');
+    window.history.replaceState(null, '', '/EN/book/1');
+
+    const { container } = render(Reader, {
+      props: {
+        work: 'EN',
+        bookNum: 1,
+        bookData: book,
+        transTitles: { ostwald: { '1': 'The Good as the Aim of Action' } },
+      },
+    });
+    await screen.findByText(/Ross on the left/);
+
+    const row = container.querySelector('.seg-row')!;
+    const left = row.querySelector('.english-col')!;
+    const right = row.querySelector('.overlay-col')!;
+    expect(row.querySelectorAll('.greek-col .overlay-chapter-title-spacer').length).toBe(1);
+    expect(left.querySelectorAll('.overlay-chapter-title-gap').length).toBe(1);
+    expect(right.querySelectorAll('.overlay-chapter-title-gap').length).toBe(0);
+    expect(right.querySelectorAll('.overlay-chapter-title').length).toBe(1);
+  });
+
+  it('leaves every column flush when no translation heads the chapter', async () => {
+    // The paired negative: without it the assertions above would also pass on
+    // a build that spaced every row unconditionally.
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].secondary = [
+      { chapter: '1', cont: false, text: 'Ross alone.', bekker: [{ n: 1, offset: 0, real: true }] },
+    ];
+    localStorage.setItem('reader-view', 'both');
+    localStorage.setItem('reader-trans-EN', 'compare');
+    localStorage.setItem('reader-cmpl-EN', 'ostwald');
+    localStorage.setItem('reader-cmpr-EN', 'ross');
+    window.history.replaceState(null, '', '/EN/book/1');
+
+    const { container } = render(Reader, {
+      props: { work: 'EN', bookNum: 1, bookData: book, transTitles: {} },
+    });
+    await screen.findByText(/Ross alone/);
+
+    expect(container.querySelectorAll('.overlay-chapter-title').length).toBe(0);
+    expect(container.querySelectorAll('.overlay-chapter-title-gap').length).toBe(0);
+    expect(container.querySelectorAll('.overlay-chapter-title-spacer').length).toBe(0);
+  });
 });

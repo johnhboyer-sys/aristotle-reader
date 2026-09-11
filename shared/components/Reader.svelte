@@ -1428,26 +1428,31 @@
         {/if}
 
         {#each blocks as block, bi}
-          <!-- If the on-screen primary translation (English cell of this row)
-               opens this chapter with an imported title, the Greek column gets
-               an invisible spacer of the same one-line height (see
-               .overlay-chapter-title-spacer in global.css) so both columns are
-               pushed down equally: title above, Greek line 1 flush with
-               English prose line 1. Same gates as the visible title in
-               transFlow (chapter start + that import's flow present here);
-               skipped in greek-only view (no title shown → no gap). Compare
-               mode aligns Greek to the LEFT column; the right column's own
-               title still renders in its cell via transFlow. -->
-          {@const spacerTransId = trans === 'compare' ? compareLeft : trans}
-          {@const spacerFlow = spacerTransId === engSlot?.id ? block.flow : (block.oflows[spacerTransId] ?? [])}
-          {@const spacerTitle = view !== 'greek' && spacerFlow.length ? importChapterTitle(spacerTransId, block.chapter) : ''}
+          <!-- A translation's own chapter title heads ONE column (its own), so
+               every other column in the row must be pushed down by the same
+               height or its first line rides up beside the title instead of
+               beside the prose — what John caught at 1094a1, where Ross's
+               line 1 sat level with Ostwald's chapter heading. Each column
+               without a title of its own here therefore gets an invisible
+               copy of a neighbour's (the `.overlay-chapter-title-*` classes in
+               global.css). Same gates as the visible title in transFlow
+               (chapter start + that translation's flow present here); skipped
+               in greek-only view (no title shown → no gap). -->
+          {@const leftTransId = trans === 'compare' ? compareLeft : trans}
+          {@const leftFlow = leftTransId === engSlot?.id ? block.flow : (block.oflows[leftTransId] ?? [])}
+          {@const leftTitle = view !== 'greek' && leftFlow.length ? importChapterTitle(leftTransId, block.chapter) : ''}
+          {@const rightFlow = trans === 'compare' ? (compareRight === engSlot?.id ? block.flow : (block.oflows[compareRight] ?? [])) : []}
+          {@const rightTitle = trans === 'compare' && view !== 'greek' && rightFlow.length ? importChapterTitle(compareRight, block.chapter) : ''}
+          <!-- The Greek column answers to whichever column has a title; either
+               is one line high there (width:0 + nowrap — see the class). -->
+          {@const greekSpacerTitle = leftTitle || rightTitle}
           {#if block.chapter && !(bi === 0 && leadChapter)}
             {@render chapterHead(block)}
           {/if}
           <div class="seg-row" data-chapter={block.currentChapter}>
             <!-- Greek column -->
             <div class="greek-col" lang="grc">
-              {#if spacerTitle}<div class="overlay-chapter-title overlay-chapter-title-spacer" aria-hidden="true">{titleText(spacerTitle)}</div>{/if}
+              {#if greekSpacerTitle}<div class="overlay-chapter-title overlay-chapter-title-spacer" aria-hidden="true">{titleText(greekSpacerTitle)}</div>{/if}
               {#each greekItems(block.lines) as item}
                 {#if item.table}
                   <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->
@@ -1489,6 +1494,12 @@
                  gutter — real anchors full weight, estimates lighter/italic. -->
             <div class="english-col" data-trans={trans === 'compare' ? compareLeft : trans}>
               {#if trans === 'compare'}<div class="col-label">{transById(compareLeft)?.short ?? 'English'}</div>{/if}
+              <!-- No title of its own, but the right column has one: take the
+                   gap at this column's own width so it wraps to the same
+                   height the visible title does. A column with no prose in
+                   this block gets nothing: there is no first line to hold
+                   level, and a gap would only stretch an empty cell. -->
+              {#if leftFlow.length && !leftTitle && rightTitle}<div class="overlay-chapter-title overlay-chapter-title-gap" aria-hidden="true">{titleText(rightTitle)}</div>{/if}
               {@render transFlow(block, trans === 'compare' ? compareLeft : trans)}
               <!-- Inline diagrams ([[figN]] markers), e.g. the Tree of Porphyry.
                    Corpus HTML like a footnote, so it takes the same sanitizer
@@ -1505,6 +1516,10 @@
             {#if trans === 'compare' && view !== 'greek'}
               <div class="overlay-col" data-trans={compareRight}>
                 <div class="col-label">{transById(compareRight)?.short ?? ''}</div>
+                <!-- Same counterweight the other way: Ross carries no titles,
+                     so Ostwald's heading would otherwise leave Ross's line 1
+                     riding a line high. -->
+                {#if rightFlow.length && !rightTitle && leftTitle}<div class="overlay-chapter-title overlay-chapter-title-gap" aria-hidden="true">{titleText(leftTitle)}</div>{/if}
                 {@render transFlow(block, compareRight)}
               </div>
             {/if}
