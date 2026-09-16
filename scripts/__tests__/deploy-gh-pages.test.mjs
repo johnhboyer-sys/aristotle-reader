@@ -288,6 +288,19 @@ test('bundles alone cannot satisfy the control: some page must name a bundle', (
   assert.match(refs.problems[0], /no page names an _astro bundle/);
 });
 
+test('a page control needs an HTML page that names a bundle', () => {
+  // A script naming the _astro/ prefix is not a page, and a page naming no
+  // bundle (offline.html) proves nothing about the pages that do.
+  const tree = [
+    ...TREE_120.filter((f) => f.path.startsWith('_astro/')),
+    { path: 'sw.js', text: "if (url.pathname.includes('/_astro/')) cacheFirst();" },
+    { path: 'offline.html', text: '<p>You are offline.</p>' },
+  ];
+  const { refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(tree));
+  assert.equal(refs.pagesNamingBundles, 0);
+  assert.equal(refs.ok, false);
+});
+
 test('with nothing removed there is nothing to check', () => {
   const { removed, refs } = checkBundleReferences(parseNameStatus('M\tindex.html\n'), () => { throw new Error('read'); });
   assert.deepEqual(removed, []);
