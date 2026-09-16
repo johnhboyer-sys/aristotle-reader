@@ -18,11 +18,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.3",
-    "astro": "^6.4.6"
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.2"
   },
   "devDependencies": {
-    "@astrojs/svelte": "^8.1.2",
+    "@astrojs/svelte": "^9.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/svelte": "^5.2.9",
     "axe-core": "^4.10.3",

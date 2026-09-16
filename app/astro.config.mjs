@@ -14,6 +14,9 @@ export default defineConfig({
   // not Astro.site, so this changes no existing links.
   site: 'https://johnhboyer-sys.github.io',
   base: '/aristotle-reader',
+  // Astro 7 changed the default to 'jsx', which drops the whitespace between
+  // inline elements on separate lines and runs words together. Keep v6's.
+  compressHTML: true,
   integrations: [
     svelte(),
     sitemap(),
