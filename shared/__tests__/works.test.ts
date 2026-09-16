@@ -25,7 +25,7 @@ describe('works registry helpers', () => {
     // The reader asks for quotations.json only when the flag is set, so a
     // curated file without it would never show, and a flag without a file
     // would bring the 404 back.
-    const dir = resolve(process.cwd(), '../pipeline/data/quotations');  // vitest runs from shared/
+    const dir = resolve(__dirname, '../../pipeline/data/quotations');
     const curated = readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort();
     expect(curated.length).toBeGreaterThan(0);
     expect(WORKS.filter((w) => w.quotations).map((w) => w.id).sort()).toEqual(curated);
