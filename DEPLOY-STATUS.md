@@ -13,6 +13,43 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-09-16 — DEPLOYED: no quotations request for works without them (PR #120), under the fixed bundle gate (PR #121)
+
+`gh-pages 7e66d263 → e3c745f3`, source `origin/main` `f84e3edb24` (the #121 merge; #120 is
+`0846f853a3`). Plain `npm run deploy -- --verify`.
+
+**What shipped:** every reader page asked for `data/<work>/quotations.json` and logged a 404 in the
+console for every work but the Metaphysics. The registry now flags Meta (`quotations: true` in
+`shared/lib/works.ts`) and the reader asks only for a flagged work; a test keeps the flags equal to
+`pipeline/data/quotations/*.json`. Grok 4.6 reviewed it: no findings beyond two notes.
+
+**The first attempt was refused, wrongly, and the refusal exposed a gate that had been skipping.**
+The change touched one shared module, so `works.*.js` and the six bundles importing it took new
+hashes. git staged the six as renames. The dangling-reference gate read only D/A entries and only
+HTML: it never looked for the six old names, and the one "added" bundle (`works.*`) is named only by
+other bundles, so its positive control failed. A manual grep of the build found 0 references to the
+7 old names and every new name referenced. No override was used; #121 fixed the gate instead:
+renames count as removed + added, `.html`/`.js`/`.css` are scanned, and a second control requires a
+page naming an `_astro` bundle. The Astro 7 deploy above had one rename the old gate never checked.
+Grok reviewed #121 twice (three should-fix, all fixed; notes in
+`.claude/reviews/2026-09-16-deploy-check-grok.md`, git-ignored). Script tests 61/61.
+
+**Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22.23.1), 6,609 pages, from
+`f84e3edb24`. No pipeline change since `a2b15077f8`.
+
+**Gates:** link integrity **0 broken** (6,612 pages / 578,726 links / 446,166 anchors). Leak check at
+baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`),
+positive control 1,626. Bundle gate: 6,642 html/js/css files scanned; 7 removed bundles, 0
+referenced; controls 7/7 added bundles referenced, 6,609 pages naming a bundle.
+
+**Deploy diff:** 169 files — 1 A / 161 M / 1 D / 6 R, all `_astro` except 161 reader pages (the
+`Reader` bundle hash). 0 data files; nothing to restore.
+
+**Live-verified:** the script's URL set — new `Reader.LxAeDsrc.js` / `global.D4AlQbbO.css` 200; all 7
+old bundles (`works.DM2Cvq5d.js` and the six renamed) and `/bonitz/` 404. In Chrome: `/EN/book/1/`
+and `/Phys/book/1/` make no quotations request and log no console error; `/Meta/book/1/` shows 1
+marker (Parmenides fr. 13 DK) and `/Meta/book/3/` 3 (Empedocles fr. 36 DK first), popups open.
+
 ## 2026-09-16 — DEPLOYED: Astro 7 (PR #117), with the CI compile step (PR #118)
 
 `gh-pages 8b932dfb → 7e66d263`, source `origin/main` `dedd7833cd` (the #118 merge; #117 is
