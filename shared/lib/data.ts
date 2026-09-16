@@ -378,7 +378,8 @@ export function fetchLemmata(): Promise<Record<string, LemmaRef>> {
 
 // Curated quotation citations for a work: [{ column, lo, hi, cite, author, url,
 // attestation }, …]. Present only for works that have a quotations.json (the
-// Metaphysics pilot today). Missing file → empty list, never a throw — works
+// Metaphysics pilot today). The reader calls this only for a work whose registry
+// entry sets `quotations`. Missing file → empty list, never a throw — works
 // without the feature ship nothing. Pattern matches fetchLemmata, not
 // fetchColumns/fetchFootnotes (those throw on a missing file).
 export interface Quotation {

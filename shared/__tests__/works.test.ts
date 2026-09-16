@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { WORKS, bookLabel, furtherReading, getWork, inPrintHref, isBookless, visibleTranslations, workLanding, workPath } from '../lib/works';
 
@@ -17,6 +19,16 @@ describe('works registry helpers', () => {
     expect(cat && isBookless(cat)).toBe(true);
     expect(cat && visibleTranslations(cat).every((t) => !t.private)).toBe(true);
     expect(WORKS.length).toBeGreaterThan(10);
+  });
+
+  it('flags exactly the works that have curated quotations', () => {
+    // The reader asks for quotations.json only when the flag is set, so a
+    // curated file without it would never show, and a flag without a file
+    // would bring the 404 back.
+    const dir = resolve(__dirname, '../../pipeline/data/quotations');
+    const curated = readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort();
+    expect(curated.length).toBeGreaterThan(0);
+    expect(WORKS.filter((w) => w.quotations).map((w) => w.id).sort()).toEqual(curated);
   });
 
   it('adds runtime extra translations without mutating the registry entry', () => {

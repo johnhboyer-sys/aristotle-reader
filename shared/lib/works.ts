@@ -69,6 +69,10 @@ export interface Work {
   // reference and the per-line Greek numbers; its section headings come from
   // chapter-titles.json. Default (omitted) = bekker.
   citation?: { scheme: 'bekker' | 'busse'; hideLineNumbers?: boolean };
+  // Has curated quotation citations (pipeline/data/quotations/<id>.json). The
+  // reader asks for quotations.json only when this is set; works.test.ts keeps
+  // it in step with the files.
+  quotations?: boolean;
   // Cross-links to closely related works (e.g. the Isagoge ↔ the Categories it
   // introduces), shown on the landing page. Each `id` must be a built work.
   related?: { id: string; label: string }[];
@@ -521,6 +525,7 @@ export const WORKS: Work[] = [
       { id: 'ross', name: 'W. D. Ross (Oxford, 1924)', short: 'Ross', slot: 'english' },
     ],
     blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
+    quotations: true,
   },
   {
     id: 'APr',
