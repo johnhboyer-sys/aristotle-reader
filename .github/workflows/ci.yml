@@ -45,7 +45,8 @@ jobs:
         run: |
           mkdir -p build/dist
           cd app
-          pages=$(find src/pages -name '*.astro' ! -name '_*' | sort)
+          # Astro routes no file or directory whose name starts with _.
+          pages=$(find src/pages -name '*.astro' ! -path '*/_*' | sort)
           if [ -z "$pages" ]; then
             echo "::error::no pages under app/src/pages; nothing to compile"
             exit 1
