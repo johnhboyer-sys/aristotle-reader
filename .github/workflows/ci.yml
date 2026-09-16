@@ -34,6 +34,47 @@ jobs:
       - name: Run tests
         run: cd app && npm test
 
+      # CI has no corpus: app/public/data links to the git-ignored build/dist.
+      # So this runs `astro build` (not `npm run build`, whose data scripts
+      # need the corpus) against an empty data directory. It passes only if
+      # Vite compiled and bundled every page under src/pages, and rendering
+      # then stopped at a missing public/data file. Compile errors, bad
+      # imports and Svelte errors fail it. The data scripts, and anything that
+      # breaks while rendering a page, are not covered.
+      - name: Compile site (no corpus data)
+        run: |
+          mkdir -p build/dist
+          cd app
+          # Astro routes no file or directory whose name starts with _.
+          pages=$(find src/pages -name '*.astro' ! -path '*/_*' | sort)
+          if [ -z "$pages" ]; then
+            echo "::error::no pages under app/src/pages; nothing to compile"
+            exit 1
+          fi
+          rm -rf dist
+          log=$(mktemp)
+          status=0
+          PUBLIC_SHOW_PRIVATE=0 npx astro build > "$log" 2>&1 || status=$?
+          cat "$log"
+          if [ "$status" -eq 0 ]; then
+            echo "::error::astro build succeeded with no corpus data; this step expects it to stop at the first data read, so revisit the step"
+            exit 1
+          fi
+          if ! grep -q "generating static routes" "$log" \
+            || ! grep -q "ENOENT: no such file or directory, open 'public/data/" "$log"; then
+            echo "::error::astro build failed before or apart from the missing corpus data"
+            exit 1
+          fi
+          missing=0
+          while IFS= read -r p; do
+            if ! grep -rqF "$p" dist/.prerender 2>/dev/null; then
+              echo "::error::not in the bundle: app/$p"
+              missing=1
+            fi
+          done <<< "$pages"
+          [ "$missing" -eq 0 ] || exit 1
+          echo "compiled and bundled $(echo "$pages" | wc -l | tr -d ' ') pages"
+
       - name: Verify @shared imports resolve
         run: node scripts/verify-shared-imports.mjs
 
