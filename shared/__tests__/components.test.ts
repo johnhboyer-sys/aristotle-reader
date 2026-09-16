@@ -113,6 +113,16 @@ describe('Reader.svelte', () => {
     expect(within(main).getAllByText(/virtue/i).length).toBeGreaterThan(0);
   });
 
+  it('asks for quotations only for a work that has them', async () => {
+    // Every other work used to ask too, and the browser logged each missing
+    // file as a 404 on the live site even though the reader shrugged it off.
+    const { fetchQuotations } = await import('../lib/data');
+    render(Reader, { props: { work: 'EN', bookNum: 1, bookData: fixtureBook } });
+    expect(fetchQuotations).not.toHaveBeenCalled();
+    render(Reader, { props: { work: 'Meta', bookNum: 1, bookData: fixtureBook } });
+    expect(fetchQuotations).toHaveBeenCalledWith('Meta');
+  });
+
   it('gives a lettered line its own anchor and prints its number', async () => {
     // Bekker's 244b carries a line 5 and then a line 5a. Sharing one id made
     // getElementById return whichever came first, so a citation of the second

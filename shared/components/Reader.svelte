@@ -45,9 +45,10 @@
   // Diagrams ({N: html}) rendered inline at [[figN]] markers (Tree of Porphyry).
   let figuresData: Record<string, string> = {};
   if (busse) fetchFigures(work).then(d => { figuresData = d; }).catch(() => {});
-  // Curated quotation citations. Missing file → empty map, no markers, no DOM.
+  // Curated quotation citations, asked for only by a work flagged as having
+  // them. Missing file → empty map, no markers, no DOM.
   let quoteStarts: Map<string, Quotation[]> = new Map();
-  fetchQuotations(work).then((rows) => {
+  if (workMeta?.quotations) fetchQuotations(work).then((rows) => {
     if (!Array.isArray(rows) || rows.length === 0) return;
     const m = new Map<string, Quotation[]>();
     for (const q of rows) {
