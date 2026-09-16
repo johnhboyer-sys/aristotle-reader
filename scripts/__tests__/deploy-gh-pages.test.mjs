@@ -10,6 +10,7 @@ import {
   auditDataDeletions,
   bundleChanges,
   categorize,
+  checkBundleReferences,
   commitMessage,
   findDanglingReferences,
   formatCategoryReport,
@@ -252,24 +253,45 @@ test('isReferenceSource reads pages and scripts and stylesheets, not data', () =
   for (const name of ['book-01.json', 'favicon.svg', 'icon-192.png']) assert.equal(isReferenceSource(name), false, name);
 });
 
-test('a bundle named only by another bundle is checked, and counts as the control', () => {
-  const tree = [
-    { path: 'EN/book/1/index.html', text: '<astro-island component-url="/aristotle-reader/_astro/Reader.LxAeDsrc.js">' },
-    { path: '_astro/Reader.LxAeDsrc.js', text: 'import{w}from"./works.CleK98BJ.js";' },
-    { path: '_astro/BekkerJump.GEYlpXIi.js', text: 'import{w}from"./works.CleK98BJ.js";' },
-    { path: 'data/EN/book-01.json', text: '{"note":"Reader.B7FlwZsq.js"}' },
-  ];
-  const files = tree.filter((f) => isReferenceSource(f.path.split('/').pop()));
-  const { removed, added } = bundleChanges(parseNameStatus(RENAME_DIFF));
-  const good = findDanglingReferences(files, removed, added);
-  assert.equal(good.ok, true, good.problems.join('\n'));
-  assert.equal(good.pagesScanned, 3);
+// The tree the gate walks, as main() hands it over: every file in the clone,
+// filtered by whatever predicate the gate asks for.
+const readTree = (tree) => (filter) => tree.filter((f) => filter(f.path.split('/').pop()));
 
-  // A chunk still importing the removed module is a broken import on live.
-  files[2] = { path: '_astro/BekkerJump.GEYlpXIi.js', text: 'import{w}from"./works.DM2Cvq5d.js";' };
-  const stale = findDanglingReferences(files, removed, added);
-  assert.equal(stale.ok, false);
-  assert.match(stale.problems.join('\n'), /works\.DM2Cvq5d\.js is still referenced by 1 file \(e\.g\. _astro\/BekkerJump\.GEYlpXIi\.js\)/);
+const TREE_120 = [
+  { path: 'EN/book/1/index.html', text: '<astro-island component-url="/aristotle-reader/_astro/Reader.LxAeDsrc.js">' },
+  { path: '_astro/Reader.LxAeDsrc.js', text: 'import{w}from"./works.CleK98BJ.js";' },
+  { path: '_astro/BekkerJump.GEYlpXIi.js', text: 'import{w}from"./works.CleK98BJ.js";' },
+  { path: 'data/EN/book-01.json', text: '{"note":"Reader.B7FlwZsq.js"}' },
+];
+
+test('the #120 deploy passes: a module named only by bundles counts as the control', () => {
+  const { removed, refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(TREE_120));
+  assert.equal(removed.length, 3);
+  assert.equal(refs.ok, true, refs.problems.join('\n'));
+  assert.ok(refs.controlSeen.includes('works.CleK98BJ.js'), refs.controlSeen.join());
+  assert.equal(refs.pagesScanned, 3);  // the data file is not read
+});
+
+test('a bundle still importing a removed module is caught', () => {
+  const tree = TREE_120.map((f) => f.path === '_astro/BekkerJump.GEYlpXIi.js'
+    ? { ...f, text: 'import{w}from"./works.DM2Cvq5d.js";' }
+    : f);
+  const { refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(tree));
+  assert.equal(refs.ok, false);
+  assert.match(refs.problems.join('\n'), /works\.DM2Cvq5d\.js is still referenced by 1 file \(e\.g\. _astro\/BekkerJump\.GEYlpXIi\.js\)/);
+});
+
+test('bundles alone cannot satisfy the control: some page must name a bundle', () => {
+  const bundlesOnly = TREE_120.filter((f) => f.path.startsWith('_astro/'));
+  const { refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(bundlesOnly));
+  assert.equal(refs.ok, false);
+  assert.match(refs.problems[0], /no page names an _astro bundle/);
+});
+
+test('with nothing removed there is nothing to check', () => {
+  const { removed, refs } = checkBundleReferences(parseNameStatus('M\tindex.html\n'), () => { throw new Error('read'); });
+  assert.deepEqual(removed, []);
+  assert.equal(refs, null);
 });
 
 // -- verification targets, commit message, arguments -------------------------
