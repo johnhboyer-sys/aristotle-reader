@@ -13,6 +13,47 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-09-16 — DEPLOYED: Astro 7 (PR #117), with the CI compile step (PR #118)
+
+`gh-pages 8b932dfb → 7e66d263`, source `origin/main` `dedd7833cd` (the #118 merge; #117 is
+`2bf8498493`). Plain `npm run deploy -- --verify` — no `--allow-data-deletions`.
+
+**What shipped:** the site is built with Astro 7.3.2 (was 6.4.6), `@astrojs/svelte` 9, Vite 8.
+Readers should see no change. Two source changes the upgrade needed: `compressHTML: true` in
+`app/astro.config.mjs` (Astro 7's default `'jsx'` ran words together on 6,609 of 6,612 pages
+in a control build), and `LemmaPage.astro`'s `<script>` moved inside `<body>` (it sat after
+`</html>`; the Go compiler moved it silently, the Rust compiler does not). #118 changes CI only.
+
+**Checked before merge** (Node 22 builds of #117 against main `919299db97`): visible words
+identical on all 6,612 pages; markup identical once hashes, scoped-style ids, island uids,
+comments, entities and whitespace runs are normalized; inline scripts compared per page — five
+distinct bodies differ, four re-minified by Vite 8 (read by hand, same logic) and Astro's island
+runtime, whose import retry now uses `?astro-retry=` not `#astro-retry=`; computed style and box
+of 157,734 elements on 14 pages at 844×390 and 1440×900 identical; word popup and `/lemma/logos/`
+render the same grammata entry, and the same fallback text with grammata blocked. Grok 4.6
+reviewed it: no defects, two gaps in the checks, both closed. Review and dispositions:
+`.claude/reviews/2026-09-16-astro7-grok.md` (git-ignored). The lemma page script is now an
+external module wrapped in Vite's preload helper, so if that chunk itself fails to load the
+"not available" fallback does not appear either — accepted.
+
+**Build:** app-only `PUBLIC_SHOW_PRIVATE=0 npm run build` (Node 22.23.1, after `npm ci`), 6,609
+pages, byte-identical (html/css/js) to the build verified on the PR branch. No pipeline change
+since `a2b15077f8`, so `build/dist` was current.
+
+**Gates:** link integrity **0 broken** (6,612 pages / 578,726 links / 446,166 anchors). Leak check
+at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`),
+positive control 1,626. Dangling references to removed bundles 0 (positive control 18/26).
+
+**Deploy diff:** 6,669 files — 26 A / 6,609 M / 33 D / 1 R, all `_astro` except the modified pages
+(every page picks up new asset hashes; `lemma` 6,442). 0 data files; nothing to restore.
+
+**Live-verified:** the script's URL set as expected — new `Reader.B7FlwZsq.js` /
+`global.D4AlQbbO.css` 200, all 33 removed bundles and `/bonitz/` 404. In Chrome at 844×390:
+live `/lemma/logos/` ends `</main><script type="module" src=".../LemmaPage.astro_...js"></script></body> </html>`
+and renders the λόγος entry (523 chars); `/EN/book/1/` word popup on Πᾶσα renders LSJ πᾶς (737 chars).
+The one console error there, a 404 on `data/EN/quotations.json`, is older than this deploy
+(present in the Astro 6 build too); only Meta has a quotations file.
+
 ## 2026-09-11 — DEPLOYED: every compare column level under a chapter title (PR #115)
 
 `gh-pages 5a112c42 → 8b932dfb`, source `origin/main` `481cbfcd39` (the #115 merge). Plain
