@@ -8,11 +8,13 @@ import {
   KNOWN_BENIGN,
   LEAK_NAMES,
   auditDataDeletions,
+  bundleChanges,
   categorize,
   commitMessage,
   findDanglingReferences,
   formatCategoryReport,
   groupByCategory,
+  isReferenceSource,
   parseArgs,
   parseDataPrefixes,
   parseNameStatus,
@@ -220,8 +222,54 @@ test('findDanglingReferences reports a page still loading a removed hash, and a 
   const pages = [{ path: 'index.html', text: '<link href="/aristotle-reader/_astro/global.CzLKCRk8.css">' }];
   const stale = findDanglingReferences(pages, ['_astro/global.CzLKCRk8.css'], ['_astro/global.jhbSq3zm.css']);
   assert.equal(stale.ok, false);
-  assert.match(stale.problems.at(-1), /global\.CzLKCRk8\.css is still referenced by 1 page/);
+  assert.match(stale.problems.at(-1), /global\.CzLKCRk8\.css is still referenced by 1 file/);
   assert.match(stale.problems[0], /positive control failed/);
+});
+
+// The 2026-09-16 deploy of PR #120, as git staged it: one shared module
+// (works.*.js) changed, so the six bundles importing it took new hashes and git
+// paired each old and new name as a rename. The check read D and A only, so it
+// never looked for the six old names, and it scanned HTML only, where nothing
+// names works.*.js — its positive control failed and it refused a good deploy.
+const RENAME_DIFF = [
+  'R096\t_astro/BekkerJump.CPrTArjb.js\t_astro/BekkerJump.GEYlpXIi.js',
+  'R099\t_astro/Reader.B7FlwZsq.js\t_astro/Reader.LxAeDsrc.js',
+  'A\t_astro/works.CleK98BJ.js',
+  'D\t_astro/works.DM2Cvq5d.js',
+  'M\tEN/book/1/index.html',
+  'R100\tsearch/a.html\tsearch/b.html',
+  '',
+].join('\n');
+
+test('bundleChanges counts both halves of a renamed bundle', () => {
+  const { removed, added } = bundleChanges(parseNameStatus(RENAME_DIFF));
+  assert.deepEqual(removed.sort(), ['_astro/BekkerJump.CPrTArjb.js', '_astro/Reader.B7FlwZsq.js', '_astro/works.DM2Cvq5d.js']);
+  assert.deepEqual(added.sort(), ['_astro/BekkerJump.GEYlpXIi.js', '_astro/Reader.LxAeDsrc.js', '_astro/works.CleK98BJ.js']);
+});
+
+test('isReferenceSource reads pages and scripts and stylesheets, not data', () => {
+  for (const name of ['index.html', 'Reader.LxAeDsrc.js', 'global.D4AlQbbO.css']) assert.equal(isReferenceSource(name), true, name);
+  for (const name of ['book-01.json', 'favicon.svg', 'icon-192.png']) assert.equal(isReferenceSource(name), false, name);
+});
+
+test('a bundle named only by another bundle is checked, and counts as the control', () => {
+  const tree = [
+    { path: 'EN/book/1/index.html', text: '<astro-island component-url="/aristotle-reader/_astro/Reader.LxAeDsrc.js">' },
+    { path: '_astro/Reader.LxAeDsrc.js', text: 'import{w}from"./works.CleK98BJ.js";' },
+    { path: '_astro/BekkerJump.GEYlpXIi.js', text: 'import{w}from"./works.CleK98BJ.js";' },
+    { path: 'data/EN/book-01.json', text: '{"note":"Reader.B7FlwZsq.js"}' },
+  ];
+  const files = tree.filter((f) => isReferenceSource(f.path.split('/').pop()));
+  const { removed, added } = bundleChanges(parseNameStatus(RENAME_DIFF));
+  const good = findDanglingReferences(files, removed, added);
+  assert.equal(good.ok, true, good.problems.join('\n'));
+  assert.equal(good.pagesScanned, 3);
+
+  // A chunk still importing the removed module is a broken import on live.
+  files[2] = { path: '_astro/BekkerJump.GEYlpXIi.js', text: 'import{w}from"./works.DM2Cvq5d.js";' };
+  const stale = findDanglingReferences(files, removed, added);
+  assert.equal(stale.ok, false);
+  assert.match(stale.problems.join('\n'), /works\.DM2Cvq5d\.js is still referenced by 1 file \(e\.g\. _astro\/BekkerJump\.GEYlpXIi\.js\)/);
 });
 
 // -- verification targets, commit message, arguments -------------------------
