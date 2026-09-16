@@ -314,17 +314,40 @@ export function scanForLeaks(files, {
   return report;
 }
 
-// Removed _astro bundles must be referenced by no page (a dangling reference is
-// a page that loads a 404). The added bundles serve as the positive control:
-// if none of them is referenced either, the scan is not reading the pages.
+// The files that can name an _astro bundle: pages, and the scripts and
+// stylesheets that import one another (a shared module such as works.*.js is
+// named only by the bundles that import it). Takes a file's basename.
+export function isReferenceSource(name) {
+  return /\.(html|js|css)$/i.test(name);
+}
+
+// The _astro bundles a deploy removes and adds. A bundle whose hash changed is a
+// removal and an addition, but git's rename detection pairs the two names into
+// one R entry; count both halves, or the old name is never checked.
+export function bundleChanges(diff) {
+  const astro = (p) => p.startsWith('_astro/');
+  const renames = diff.R.map((line) => line.split(' -> '));
+  return {
+    removed: [...diff.D, ...renames.map(([from]) => from)].filter(astro),
+    added: [...diff.A, ...renames.map(([, to]) => to)].filter(astro),
+  };
+}
+
+// Removed _astro bundles must be referenced by no file (a dangling reference is
+// a page or bundle that loads a 404). Two positive controls: some added bundle
+// is referenced, or the scan is not reading files; and some page names an
+// _astro bundle, because a bundle named only by other bundles would satisfy the
+// first while the pages went unread.
 export function findDanglingReferences(pages, removedAssets, addedAssets = []) {
   const removed = removedAssets.map((a) => path.posix.basename(a)).filter(Boolean);
   const added = addedAssets.map((a) => path.posix.basename(a)).filter(Boolean);
   const dangling = new Map();
   const controlSeen = new Set();
   let pagesScanned = 0;
+  let pagesNamingBundles = 0;
   for (const { path: pagePath, text } of pages) {
     pagesScanned++;
+    if (pagePath.toLowerCase().endsWith('.html') && text.includes('_astro/')) pagesNamingBundles++;
     for (const name of removed) {
       if (!text.includes(name)) continue;
       if (!dangling.has(name)) dangling.set(name, []);
@@ -334,12 +357,24 @@ export function findDanglingReferences(pages, removedAssets, addedAssets = []) {
   }
   const problems = [];
   for (const [name, refs] of dangling) {
-    problems.push(`removed bundle ${name} is still referenced by ${refs.length} page${refs.length === 1 ? '' : 's'} (e.g. ${refs[0]})`);
+    problems.push(`removed bundle ${name} is still referenced by ${refs.length} file${refs.length === 1 ? '' : 's'} (e.g. ${refs[0]})`);
+  }
+  if (removed.length && pagesNamingBundles === 0) {
+    problems.unshift(`positive control failed: no page names an _astro bundle among ${pagesScanned} files — the reference scan is not reading the pages`);
   }
   if (added.length && controlSeen.size === 0 && pagesScanned) {
-    problems.unshift(`positive control failed: none of the ${added.length} added bundles is referenced by any of ${pagesScanned} pages — the reference scan is not reading the pages`);
+    problems.unshift(`positive control failed: none of the ${added.length} added bundles is referenced by any of ${pagesScanned} files — the reference scan is not reading them`);
   }
-  return { ok: problems.length === 0, pagesScanned, dangling, controlSeen: [...controlSeen], problems };
+  return { ok: problems.length === 0, pagesScanned, pagesNamingBundles, dangling, controlSeen: [...controlSeen], problems };
+}
+
+// The dangling-reference gate as main() runs it. `readFiles(filter)` yields
+// { path, text } for every clone file whose basename passes `filter`. `refs` is
+// null when the deploy removes no bundle.
+export function checkBundleReferences(diff, readFiles) {
+  const { removed, added } = bundleChanges(diff);
+  const refs = removed.length ? findDanglingReferences(readFiles(isReferenceSource), removed, added) : null;
+  return { removed, added, refs };
 }
 
 // The post-deploy checks every entry in DEPLOY-STATUS.md records.
@@ -654,13 +689,11 @@ async function main() {
       for (const [category, paths] of groupByCategory(diff.M)) console.log(`      ${category}: ${paths.length}`);
     }
 
-    const removedAssets = diff.D.filter((p) => p.startsWith('_astro/'));
-    const addedAssets = diff.A.filter((p) => p.startsWith('_astro/'));
-    if (removedAssets.length) {
+    const { removed: removedAssets, added: addedAssets, refs } =
+      checkBundleReferences(diff, (filter) => readAll(walk(clone, filter, clone)));
+    if (refs) {
       heading('Dangling references to removed bundles (must be 0)');
-      const pages = readAll(walk(clone, (name) => name.toLowerCase().endsWith('.html'), clone));
-      const refs = findDanglingReferences(pages, removedAssets, addedAssets);
-      console.log(`  pages scanned: ${refs.pagesScanned}; removed bundles: ${removedAssets.length}; positive control: ${refs.controlSeen.length}/${addedAssets.length} added bundles referenced`);
+      console.log(`  files scanned (html, js, css): ${refs.pagesScanned}; removed bundles: ${removedAssets.length}; positive controls: ${refs.controlSeen.length}/${addedAssets.length} added bundles referenced, ${refs.pagesNamingBundles} pages naming a bundle`);
       if (!refs.ok) {
         for (const problem of refs.problems) console.log(`  !! ${problem}`);
         fail('removed bundles are still referenced.');

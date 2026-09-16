@@ -8,11 +8,14 @@ import {
   KNOWN_BENIGN,
   LEAK_NAMES,
   auditDataDeletions,
+  bundleChanges,
   categorize,
+  checkBundleReferences,
   commitMessage,
   findDanglingReferences,
   formatCategoryReport,
   groupByCategory,
+  isReferenceSource,
   parseArgs,
   parseDataPrefixes,
   parseNameStatus,
@@ -220,8 +223,88 @@ test('findDanglingReferences reports a page still loading a removed hash, and a 
   const pages = [{ path: 'index.html', text: '<link href="/aristotle-reader/_astro/global.CzLKCRk8.css">' }];
   const stale = findDanglingReferences(pages, ['_astro/global.CzLKCRk8.css'], ['_astro/global.jhbSq3zm.css']);
   assert.equal(stale.ok, false);
-  assert.match(stale.problems.at(-1), /global\.CzLKCRk8\.css is still referenced by 1 page/);
+  assert.match(stale.problems.at(-1), /global\.CzLKCRk8\.css is still referenced by 1 file/);
   assert.match(stale.problems[0], /positive control failed/);
+});
+
+// The 2026-09-16 deploy of PR #120, as git staged it: one shared module
+// (works.*.js) changed, so the six bundles importing it took new hashes and git
+// paired each old and new name as a rename. The check read D and A only, so it
+// never looked for the six old names, and it scanned HTML only, where nothing
+// names works.*.js — its positive control failed and it refused a good deploy.
+const RENAME_DIFF = [
+  'R096\t_astro/BekkerJump.CPrTArjb.js\t_astro/BekkerJump.GEYlpXIi.js',
+  'R099\t_astro/Reader.B7FlwZsq.js\t_astro/Reader.LxAeDsrc.js',
+  'A\t_astro/works.CleK98BJ.js',
+  'D\t_astro/works.DM2Cvq5d.js',
+  'M\tEN/book/1/index.html',
+  'R100\tsearch/a.html\tsearch/b.html',
+  '',
+].join('\n');
+
+test('bundleChanges counts both halves of a renamed bundle', () => {
+  const { removed, added } = bundleChanges(parseNameStatus(RENAME_DIFF));
+  assert.deepEqual(removed.sort(), ['_astro/BekkerJump.CPrTArjb.js', '_astro/Reader.B7FlwZsq.js', '_astro/works.DM2Cvq5d.js']);
+  assert.deepEqual(added.sort(), ['_astro/BekkerJump.GEYlpXIi.js', '_astro/Reader.LxAeDsrc.js', '_astro/works.CleK98BJ.js']);
+});
+
+test('isReferenceSource reads pages and scripts and stylesheets, not data', () => {
+  for (const name of ['index.html', 'Reader.LxAeDsrc.js', 'global.D4AlQbbO.css']) assert.equal(isReferenceSource(name), true, name);
+  for (const name of ['book-01.json', 'favicon.svg', 'icon-192.png']) assert.equal(isReferenceSource(name), false, name);
+});
+
+// The tree the gate walks, as main() hands it over: every file in the clone,
+// filtered by whatever predicate the gate asks for.
+const readTree = (tree) => (filter) => tree.filter((f) => filter(f.path.split('/').pop()));
+
+const TREE_120 = [
+  { path: 'EN/book/1/index.html', text: '<astro-island component-url="/aristotle-reader/_astro/Reader.LxAeDsrc.js">' },
+  { path: '_astro/Reader.LxAeDsrc.js', text: 'import{w}from"./works.CleK98BJ.js";' },
+  { path: '_astro/BekkerJump.GEYlpXIi.js', text: 'import{w}from"./works.CleK98BJ.js";' },
+  { path: 'data/EN/book-01.json', text: '{"note":"Reader.B7FlwZsq.js"}' },
+];
+
+test('the #120 deploy passes: a module named only by bundles counts as the control', () => {
+  const { removed, refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(TREE_120));
+  assert.equal(removed.length, 3);
+  assert.equal(refs.ok, true, refs.problems.join('\n'));
+  assert.ok(refs.controlSeen.includes('works.CleK98BJ.js'), refs.controlSeen.join());
+  assert.equal(refs.pagesScanned, 3);  // the data file is not read
+});
+
+test('a bundle still importing a removed module is caught', () => {
+  const tree = TREE_120.map((f) => f.path === '_astro/BekkerJump.GEYlpXIi.js'
+    ? { ...f, text: 'import{w}from"./works.DM2Cvq5d.js";' }
+    : f);
+  const { refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(tree));
+  assert.equal(refs.ok, false);
+  assert.match(refs.problems.join('\n'), /works\.DM2Cvq5d\.js is still referenced by 1 file \(e\.g\. _astro\/BekkerJump\.GEYlpXIi\.js\)/);
+});
+
+test('bundles alone cannot satisfy the control: some page must name a bundle', () => {
+  const bundlesOnly = TREE_120.filter((f) => f.path.startsWith('_astro/'));
+  const { refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(bundlesOnly));
+  assert.equal(refs.ok, false);
+  assert.match(refs.problems[0], /no page names an _astro bundle/);
+});
+
+test('a page control needs an HTML page that names a bundle', () => {
+  // A script naming the _astro/ prefix is not a page, and a page naming no
+  // bundle (offline.html) proves nothing about the pages that do.
+  const tree = [
+    ...TREE_120.filter((f) => f.path.startsWith('_astro/')),
+    { path: 'sw.js', text: "if (url.pathname.includes('/_astro/')) cacheFirst();" },
+    { path: 'offline.html', text: '<p>You are offline.</p>' },
+  ];
+  const { refs } = checkBundleReferences(parseNameStatus(RENAME_DIFF), readTree(tree));
+  assert.equal(refs.pagesNamingBundles, 0);
+  assert.equal(refs.ok, false);
+});
+
+test('with nothing removed there is nothing to check', () => {
+  const { removed, refs } = checkBundleReferences(parseNameStatus('M\tindex.html\n'), () => { throw new Error('read'); });
+  assert.deepEqual(removed, []);
+  assert.equal(refs, null);
 });
 
 // -- verification targets, commit message, arguments -------------------------
