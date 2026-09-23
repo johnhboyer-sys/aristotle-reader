@@ -287,6 +287,31 @@ export function lineAnchor(column: string, n: number, sub?: string): string {
   return `L${column}-${lineRef(n, sub)}`;
 }
 
+// Inverse of lineAnchor, plus the wrapped continuation the reader appends
+// (`L1094a-3-c`, `L775a-11a-c`). The column is everything before the line
+// hyphen, so a Busse page ("1a", the Isagoge's columns) cites the same way a
+// Bekker column does: L1a-3 → 1a3. Anything else is not a line anchor.
+const LINE_ANCHOR_ID = /^L(.+)-(\d+)([a-z])?(?:-c)?$/;
+
+export function anchorCite(id: string): string | null {
+  const m = LINE_ANCHOR_ID.exec(id);
+  if (!m) return null;
+  return m[1] + lineRef(Number(m[2]), m[3]);
+}
+
+// What the scroll spy may write into the URL. A continuation line is not a
+// scroll target (the spy used to reject any id that did not end in digits,
+// which also dropped lettered lines — those are cited, continuations are not).
+// A segment id `col-<column>` cites as the bare column.
+export function citeOfId(id: string): string | null {
+  if (id.startsWith('L')) {
+    if (id.endsWith('-c')) return null;
+    return anchorCite(id);
+  }
+  const cm = /^col-(.+)$/.exec(id);
+  return cm ? cm[1] : null;
+}
+
 // The line a token index falls on, letter and all. Search used to read `line.n`
 // here and drop the suffix, so a hit on GA 775a11a was printed and linked as
 // "775a11" — a line that column does not have.

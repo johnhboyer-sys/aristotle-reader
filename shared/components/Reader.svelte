@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
+  import { fetchBook, parseBekker, anchorCite, citeOfId, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
   import { greekFold } from '../lib/search';
   import { measureGreekTrack as measureTrack } from '../lib/greek-track';
   import { highlightPrefixMatches } from '../lib/text';
@@ -436,10 +436,7 @@
   let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   function citeOf(el: Element): string | null {
-    const lm = el.id.match(/^L(.+)-(\d+)$/);   // greek line: L{col}-{n} → {col}{n}
-    if (lm) return `${lm[1]}${lm[2]}`;
-    const cm = el.id.match(/^col-(.+)$/);       // segment: col-{column} → {column}
-    return cm ? cm[1] : null;
+    return citeOfId(el.id);
   }
 
   function updateHash(cite: string | null) {
@@ -1142,15 +1139,12 @@
     }
     return null;
   }
-  // L1094a-3 → 1094a3; L1094a-3-c → 1094a3
-  const idToBekker = (id: string) => id.slice(1).replace(/-(\d+)(-c)?$/, '$1');
-
   function greekCiteForRange(range: Range): string | null {
     const startLine = nearestGreekLine(range.startContainer);
     const endLine   = nearestGreekLine(range.endContainer);
     if (!startLine && !endLine) return null;
-    const s = startLine ? idToBekker(startLine.id) : null;
-    const f = endLine   ? idToBekker(endLine.id)   : null;
+    const s = startLine ? anchorCite(startLine.id) : null;
+    const f = endLine   ? anchorCite(endLine.id)   : null;
     const abbr = workMeta?.abbr ?? '';
     return (s && f && s !== f) ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
   }
