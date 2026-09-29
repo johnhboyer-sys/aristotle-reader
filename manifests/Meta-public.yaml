@@ -1,7 +1,7 @@
 # Metaphysics — PUBLIC build (public-domain translation only)
 #
 # Same work as Meta.yaml, but for the live/public deploy: the copyrighted
-# Tredennick (Loeb 1933) primary is dropped entirely. W. D. Ross (1924, US public
+# Tredennick (Loeb 1933) primary is dropped entirely. W. D. Ross (1928, US public
 # domain) becomes the sole English, via the chapter-anchored archive path (like
 # De Anima) — so the Tredennick text never enters the published data OR the
 # search index. Tradeoff vs Meta.yaml: Ross is chapter-anchored (interpolated
@@ -16,8 +16,8 @@ work:
   author: "Aristotle"
   tlg_author: "0086"
   tlg_work: "025"
-  greek_edition: "Ross, Aristotle's Metaphysics (OCT, 1924)"
-  english_translation: "W. D. Ross (Oxford, 1924)"
+  greek_edition: "Ross, Aristotle's Metaphysics (Oxford, 1924)"
+  english_translation: "W. D. Ross (Oxford, 1928)"
 
 bekker_range:
   first_column: "980a"
@@ -34,7 +34,7 @@ chapters:
 english:
   primary:
     id: ross
-    name: "W. D. Ross (Oxford, 1924)"
+    name: "W. D. Ross (Oxford, 1928)"
     model: archive
     dir: meta-ross
     books: 14

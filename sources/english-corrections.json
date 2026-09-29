@@ -1,0 +1,534 @@
+{
+ "about": "Print-checked corrections already made in sources/<dir>/book-NN.html. Each find/replace is whitespace-collapsed text of that work's public primary English (book, column as built). find must be absent from the parsed book and replace present: pipeline/tests/test_english_corrections.py. Ported 2026-09-29 from classical-philosophy-reader sources/aristotle-english/corrections.json (commit 85c876b); source names the scan each was checked against.",
+ "corrections": [
+  {
+   "work": "Cael",
+   "book": 2,
+   "column": "294a",
+   "find": "rest upon but not upon air",
+   "replace": "rest upon water but not upon air",
+   "source": "decaelo00aris / decaeloleofric00arisuoft (Stocks, Oxford 1922), Cael. 294a32"
+  },
+  {
+   "work": "DA",
+   "book": 1,
+   "column": "405a",
+   "find": "mind alone of all that is simple, unmixed, and pure",
+   "replace": "mind alone of all that is is simple, unmixed, and pure",
+   "source": "worksofaristotle vol III (J. A. Smith, De Anima, Oxford 1931) p. 405a, img/v3_205.jpg"
+  },
+  {
+   "work": "GC",
+   "book": 1,
+   "column": "316a",
+   "find": "Since, therefore, the be dy is divisible through and through",
+   "replace": "Since, therefore, the body is divisible through and through",
+   "source": "oncomingtobepass00arisuoft (Joachim, De Generatione et Corruptione, Oxford 1922) p. 316a, img/gc_167.jpg"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "quanta Ὁ}",
+   "replace": "quanta?",
+   "source": "delineisinsecabi00arisrich p.15 (968a1-2)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "indivisible?",
+   "replace": "indivisible.",
+   "source": "delineisinsecabi00arisrich p.16 (968a10-11)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "the . Ideal Triangle",
+   "replace": "the Ideal Triangle",
+   "source": "delineisinsecabi00arisrich p.16 (968a12)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "elements,*",
+   "replace": "elements,",
+   "source": "delineisinsecabi00arisrich p.16 (968a14)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "thought.*",
+   "replace": "thought.",
+   "source": "delineisinsecabi00arisrich p.16 (968a17)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "magnitudes.'_",
+   "replace": "magnitudes.",
+   "source": "delineisinsecabi00arisrich p.17 (968a18-19)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "impossible.?",
+   "replace": "impossible.",
+   "source": "delineisinsecabi00arisrich p.17 (968a22)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "small’).?",
+   "replace": "small’).",
+   "source": "delineisinsecabi00arisrich p.15 (968a4-5)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "divisions.2",
+   "replace": "divisions.",
+   "source": "delineisinsecabi00arisrich p.15 (968a6-7)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "name’:—",
+   "replace": "name:—",
+   "source": "delineisinsecabi00arisrich p.16 (968a9-10)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "line’.*",
+   "replace": "line’.",
+   "source": "delineisinsecabi00arisrich p.17 (968b1, printed as 968a runover)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "measured,’",
+   "replace": "measured,",
+   "source": "delineisinsecabi00arisrich p.18 (968b5-6)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968a",
+   "find": "measured.*",
+   "replace": "measured.",
+   "source": "delineisinsecabi00arisrich p.18 (968b6-7)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968b",
+   "find": "irrational.’",
+   "replace": "irrational.",
+   "source": "delineisinsecabi00arisrich p.20 (968b10, sect. def.4 area)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "968b",
+   "find": "measurement.?",
+   "replace": "measurement.",
+   "source": "delineisinsecabi00arisrich p.19 (968b12-13)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969a",
+   "find": "lines.2",
+   "replace": "lines.",
+   "source": "delineisinsecabi00arisrich p.23 (969a2-3)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969a",
+   "find": "number.*",
+   "replace": "number.",
+   "source": "delineisinsecabi00arisrich p.23 (969a4)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969a",
+   "find": "infinite.*",
+   "replace": "infinite.",
+   "source": "delineisinsecabi00arisrich p.24 (969a6)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969a",
+   "find": "Ideas.?",
+   "replace": "Ideas.",
+   "source": "delineisinsecabi00arisrich p.24 (969a18)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969a",
+   "find": "elements,*",
+   "replace": "elements,",
+   "source": "delineisinsecabi00arisrich p.24 (969a21)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969a",
+   "find": "inquiry * is a petitio",
+   "replace": "inquiry is a petitio",
+   "source": "delineisinsecabi00arisrich p.24 l.786 (969a22-23)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969a",
+   "find": "writer - { should",
+   "replace": "writer should",
+   "source": "delineisinsecabi00arisrich p.22 l.673-674"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969b",
+   "find": "assumptions?",
+   "replace": "assumptions",
+   "source": "delineisinsecabi00arisrich p.28 l.1014 (969b29-30)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969b",
+   "find": "place,’",
+   "replace": "place,",
+   "source": "delineisinsecabi00arisrich p.28 l.1012 (969b29)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "969b",
+   "find": "Zeno.’",
+   "replace": "Zeno.",
+   "source": "delineisinsecabi00arisrich p.27 l.969 (969b16-17)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970a",
+   "find": "line.’ are all",
+   "replace": "line. are all",
+   "source": "delineisinsecabi00arisrich p.24 l.499 (969a12-970a2 runover)",
+   "note": "The Lyceum's edit also joins this paragraph to the next; that paragraph is Joachim's commentary run into the translation, so the break is kept and only the note mark goes."
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970a",
+   "find": "equal’:",
+   "replace": "equal:",
+   "source": "delineisinsecabi00arisrich p.24 l.1148 (970a2)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970a",
+   "find": "rational.*",
+   "replace": "rational.",
+   "source": "delineisinsecabi00arisrich p.29 l.1088 (970a8-9)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970b",
+   "find": "divisible.’",
+   "replace": "divisible.",
+   "source": "delineisinsecabi00arisrich p.34 l.1411 (970b25-26)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970b",
+   "find": "under26",
+   "replace": "under 26",
+   "source": "delineisinsecabi00arisrich p.33-34 l.1412/1416 (page-break hyphenation, 970b26)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970b",
+   "find": "line.*",
+   "replace": "line.",
+   "source": "delineisinsecabi00arisrich p.33 l.1286 (970b19-20)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970b",
+   "find": "points.*",
+   "replace": "points.",
+   "source": "delineisinsecabi00arisrich p.33 l.1361 (970b22)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970b",
+   "find": "magnitude.*",
+   "replace": "magnitude.",
+   "source": "delineisinsecabi00arisrich p.33 l.1365 (970b23, marker literally '*' in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "970b",
+   "find": "line.?",
+   "replace": "line.",
+   "source": "delineisinsecabi00arisrich p.35 l.1546 (970b33-971a1)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "Again,?",
+   "replace": "Again,",
+   "source": "delineisinsecabi00arisrich p.35 l.1539 (970b33)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "time.*",
+   "replace": "time.",
+   "source": "delineisinsecabi00arisrich p.35 l.1544 (971a2, marker literally '*' in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "if* the stretch",
+   "replace": "if the stretch",
+   "source": "delineisinsecabi00arisrich p.35 l.1544 (971a2, marker literally '*' in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "Simples.?",
+   "replace": "Simples.",
+   "source": "delineisinsecabi00arisrich p.36 (971a9-10)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "infinite?",
+   "replace": "infinite.",
+   "source": "delineisinsecabi00arisrich p.38 l.1607 (971a13)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "constructed.?",
+   "replace": "constructed.",
+   "source": "delineisinsecabi00arisrich p.39 l.1664 (971a21)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "ultimate.*",
+   "replace": "ultimate.",
+   "source": "delineisinsecabi00arisrich p.39 l.1668 (971a24, marker literally '*' in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "too,*",
+   "replace": "too,",
+   "source": "delineisinsecabi00arisrich p.40 l.1729 (971a29-30)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "line.2",
+   "replace": "line.",
+   "source": "delineisinsecabi00arisrich p.40 l.1732-1733 (971a31-32)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971a",
+   "find": "parts.?",
+   "replace": "parts.",
+   "source": "delineisinsecabi00arisrich leaf 40 (archive.org full-text match; 971b8)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971b",
+   "find": "another.?",
+   "replace": "another.",
+   "source": "delineisinsecabi00arisrich p.41 l.1912 (971b20)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971b",
+   "find": "line* is a magnitude",
+   "replace": "line is a magnitude",
+   "source": "delineisinsecabi00arisrich p.41 l.1915 (971b21, marker literally '*' in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "971b",
+   "find": "coincides * with",
+   "replace": "coincides with",
+   "source": "delineisinsecabi00arisrich p.41 l.1918 (971b23, marker rendered '^ mid-sentence in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "972a",
+   "find": "points.*",
+   "replace": "points.",
+   "source": "delineisinsecabi00arisrich p.46 (leaf 46; 971b end / 972a1, marker '*' in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "972a",
+   "find": "impossible.}",
+   "replace": "impossible.",
+   "source": "delineisinsecabi00arisrich leaf 48 (archive.org full-text match; 972a17)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "972b",
+   "find": "Neither?",
+   "replace": "Neither",
+   "source": "delineisinsecabi00arisrich p.55 l.2424 (972b30)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "972b",
+   "find": "line.2»",
+   "replace": "line.",
+   "source": "delineisinsecabi00arisrich p.56 l.2428 (972b1-2)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "972b",
+   "find": "comparison,*",
+   "replace": "comparison,",
+   "source": "delineisinsecabi00arisrich p.56 l.2436 (972b4, marker literally '*' in print)"
+  },
+  {
+   "work": "Lin",
+   "book": 1,
+   "column": "972b",
+   "find": "lines.?",
+   "replace": "lines.",
+   "source": "delineisinsecabi00arisrich p.56 l.2472 (972b11-12)"
+  },
+  {
+   "work": "Meta",
+   "book": 12,
+   "column": "1071b",
+   "find": "But why and what this movement is they do say, nor, if the world moves in this way or that, do they tell us the cause of its doing so.",
+   "replace": "But why and what this movement is they do not say, nor, if the world moves in this way or that, do they tell us the cause of its doing so.",
+   "source": "worksofaristotle0008wdro (1928 2nd ed., archive.org) p. 268; confirmed also in worksofaristotle0008unse (1908 1st ed., archive.org) -- both printings read 'they do not say'"
+  },
+  {
+   "work": "Mete",
+   "book": 1,
+   "column": "345a",
+   "find": "obscured by the of the sun",
+   "replace": "obscured by the rays of the sun",
+   "source": "meteorologica00aris (Webster, Oxford 1931), Mete. 345a29"
+  },
+  {
+   "work": "Phys",
+   "book": 1,
+   "column": "188a",
+   "find": "both of which exist, be says, the one as being",
+   "replace": "both of which exist, he says, the one as being",
+   "source": "worksofaristotle vol II (Hardie & Gaye, Physica, Oxford 1930) p. 188a, img/v2_33.jpg"
+  },
+  {
+   "work": "Phys",
+   "book": 4,
+   "column": "213a",
+   "find": "everything which is in body is body",
+   "replace": "everything which is is body",
+   "source": "worksofaristotle vol II (Hardie & Gaye, Physica, Oxford 1930) p. 213a, txt/v2.flat"
+  },
+  {
+   "work": "Phys",
+   "book": 4,
+   "column": "213b",
+   "find": "is thought to take always by means of void",
+   "replace": "is thought to take place always by means of void",
+   "source": "worksofaristotle vol II (Hardie & Gaye, Physica, Oxford 1930) p. 213b, txt/v2.flat"
+  },
+  {
+   "work": "SE",
+   "book": 1,
+   "column": "168b",
+   "find": "Those that depend upon the assumption of the original point and upon stating as the cause what is not the cause, are clearly shown to be cases of ignoratio elenchi through the definition thereof. For the conclusion ought to come about 'because these things are so', and this does not happen where the premisses are not causes of it: and again it should come about without taking into account the original point, and this is not the case with those arguments which depend upon begging the original point. Those that depend upon the assumption of the original point and upon stating as the cause what is not the cause, are clearly shown to be cases of ignoratio elenchi through the definition thereof. For the conclusion ought to come about 'because these things are so', and this does not happen where the premisses are not causes of it: and again it should come about without taking into account the original point, and this is not the case with those arguments which depend upon begging the original point.",
+   "replace": "Those that depend upon the assumption of the original point and upon stating as the cause what is not the cause, are clearly shown to be cases of ignoratio elenchi through the definition thereof. For the conclusion ought to come about 'because these things are so', and this does not happen where the premisses are not causes of it: and again it should come about without taking into account the original point, and this is not the case with those arguments which depend upon begging the original point.",
+   "source": "worksofaristotle0001unse_w4d6 (Oxford Works of Aristotle vol I, De Sophisticis Elenchis; duplicated paragraph appears once in print at 168b21-27, immediately before 'Those that depend upon the consequent are a branch of Accident')"
+  },
+  {
+   "work": "Cael",
+   "book": 1,
+   "column": "279b",
+   "find": "Others again, with Empedliocles of Acragas",
+   "replace": "Others again, with Empedocles of Acragas",
+   "source": "decaelo00aris / decaeloleofric00arisuoft (Stocks, Oxford 1922), Cael. 279b15"
+  },
+  {
+   "work": "PA",
+   "book": 1,
+   "column": "642a",
+   "find": "to speak of the ratio (olugos) as constituting",
+   "replace": "to speak of the ratio (ὁ λόγος) as constituting",
+   "source": "b29012284 (Ogle, Oxford 1911), PA 642a19-20"
+  },
+  {
+   "work": "PA",
+   "book": 1,
+   "column": "642a",
+   "find": "but states the ratio (olugos) of their combination",
+   "replace": "but states the ratio (ὁ λόγος) of their combination",
+   "source": "b29012284 (Ogle, Oxford 1911), PA 642a23"
+  },
+  {
+   "work": "Sens",
+   "book": 1,
+   "column": "440b",
+   "find": "the least perfect of Man's sense of Touch",
+   "replace": "the least perfect of all. Man's sense of Touch",
+   "source": "worksofaristotle03arisuoft (Beare, Oxford 1908), Sens. 441a3"
+  }
+ ]
+}

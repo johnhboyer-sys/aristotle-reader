@@ -230,10 +230,10 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 2,
     bookLabels: ROMAN.slice(0, 2),
-    greekEdition: 'Joachim, Aristotelis De Generatione et Corruptione (Oxford, 1922)',
+    greekEdition: 'Mugler, Aristote. De la génération et de la corruption (Les Belles Lettres, 1966)',
     greekSource: {
-      short: 'Joachim (Oxford, 1922)',
-      full: 'H. H. Joachim, ed. Aristotle on Coming-to-be and Passing-away (De Generatione et Corruptione). Oxford: Clarendon Press, 1922.',
+      short: 'Mugler (Les Belles Lettres, 1966)',
+      full: 'C. Mugler, ed. Aristote. De la génération et de la corruption. Paris: Les Belles Lettres, 1966.',
     },
     translations: [
       { id: 'joachim', name: 'H. H. Joachim (Oxford, 1922)', short: 'Joachim', slot: 'english' },
@@ -266,10 +266,10 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 3,
     bookLabels: ['I', 'II', 'III'],
-    greekEdition: 'Ross, Aristotelis De Anima (OCT, 1956)',
+    greekEdition: 'Ross, Aristotle: De Anima (Oxford, 1961)',
     greekSource: {
-      short: 'Ross (OCT, 1956)',
-      full: 'W. D. Ross, ed. Aristotle, De Anima. Oxford: Clarendon Press (Oxford Classical Texts), 1956.',
+      short: 'Ross (Oxford, 1961)',
+      full: 'W. D. Ross, ed. Aristotle: De Anima. Oxford: Clarendon Press, 1961.',
     },
     // Wallace (Cambridge, 1882) is public domain and a Tier 0 secondary: chapter
     // divisions match the Greek spine exactly (5/12/13), no anchors file.
@@ -292,9 +292,9 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
-      short: 'Ross (OCT, 1955)',
+      short: 'Ross (Oxford, 1955)',
       full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
@@ -310,9 +310,9 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
-      short: 'Ross (OCT, 1955)',
+      short: 'Ross (Oxford, 1955)',
       full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
@@ -328,9 +328,9 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
-      short: 'Ross (OCT, 1955)',
+      short: 'Ross (Oxford, 1955)',
       full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
@@ -346,9 +346,9 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
-      short: 'Ross (OCT, 1955)',
+      short: 'Ross (Oxford, 1955)',
       full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
@@ -364,9 +364,9 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
-      short: 'Ross (OCT, 1955)',
+      short: 'Ross (Oxford, 1955)',
       full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
@@ -382,9 +382,9 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
-      short: 'Ross (OCT, 1955)',
+      short: 'Ross (Oxford, 1955)',
       full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
@@ -400,9 +400,9 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Ross, Aristotle: Parva Naturalia (OCT, 1955)',
+    greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
-      short: 'Ross (OCT, 1955)',
+      short: 'Ross (Oxford, 1955)',
       full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
@@ -513,16 +513,16 @@ export const WORKS: Work[] = [
     // Scholarly convention labels the books by Greek letter; Book 2 is the
     // "lesser alpha" (α elatton), distinct from Book 1 (Α).
     bookLabels: ['Α','α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν'],
-    greekEdition: 'Ross, Aristotle’s Metaphysics (OCT, 1924)',
+    greekEdition: 'Ross, Aristotle’s Metaphysics (Oxford, 1924)',
     greekSource: {
-      short: 'Ross (OCT, 1953)',
-      full: 'W. D. Ross, ed. Aristotle’s Metaphysics. 2 vols. Oxford: Clarendon Press, 1953.',
+      short: 'Ross (1924)',
+      full: 'W. D. Ross, ed. Aristotle’s Metaphysics. 2 vols. Oxford: Clarendon Press, 1924 (corr. repr. 1953).',
     },
-    // Public build ships the public-domain Ross (1924) only. The copyrighted
+    // Public build ships the public-domain Ross (1928) only. The copyrighted
     // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
     // for the local/private build and are NOT deployed (see publish-plan).
     translations: [
-      { id: 'ross', name: 'W. D. Ross (Oxford, 1924)', short: 'Ross', slot: 'english' },
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1928)', short: 'Ross', slot: 'english' },
     ],
     blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
     quotations: true,
@@ -701,10 +701,10 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 2,
     bookLabels: ROMAN.slice(0, 2),
-    greekEdition: 'Susemihl, Aristotelis quae feruntur Oeconomica (Teubner, 1887)',
+    greekEdition: 'van Groningen and Wartelle, Aristote. Économique (Les Belles Lettres, 1968)',
     greekSource: {
-      short: 'Susemihl (Teubner, 1887)',
-      full: 'F. Susemihl, ed. Aristotelis quae feruntur Oeconomica. Leipzig: Teubner, 1887.',
+      short: 'van Groningen and Wartelle (Les Belles Lettres, 1968)',
+      full: 'B. A. van Groningen and A. Wartelle, eds. Aristote. Économique. Paris: Les Belles Lettres, 1968.',
     },
     authenticity: 'spurious',
     // Spurious/post-Aristotelian: Book I is possibly by a pupil, Book II by a
@@ -743,10 +743,10 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
+    greekEdition: 'Lorimer, Aristotelis qui fertur libellus De mundo (Les Belles Lettres, 1933)',
     greekSource: {
-      short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      short: 'Lorimer (Les Belles Lettres, 1933)',
+      full: 'W. L. Lorimer, ed. Aristotelis qui fertur libellus De mundo. Paris: Les Belles Lettres, 1933.',
     },
     authenticity: 'spurious',
     translations: [
