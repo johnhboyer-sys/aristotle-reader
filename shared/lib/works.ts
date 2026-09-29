@@ -513,10 +513,10 @@ export const WORKS: Work[] = [
     // Scholarly convention labels the books by Greek letter; Book 2 is the
     // "lesser alpha" (α elatton), distinct from Book 1 (Α).
     bookLabels: ['Α','α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν'],
-    greekEdition: 'Ross, Aristotle’s Metaphysics (Oxford, 1924)',
+    greekEdition: 'Ross, Aristotle’s Metaphysics (Oxford, 1953)',
     greekSource: {
-      short: 'Ross (1924)',
-      full: 'W. D. Ross, ed. Aristotle’s Metaphysics. 2 vols. Oxford: Clarendon Press, 1924 (corr. repr. 1953).',
+      short: 'Ross (Oxford, 1953)',
+      full: 'W. D. Ross, ed. Aristotle’s Metaphysics. 2 vols. Oxford: Clarendon Press, 1924; repr. 1970 [of 1953 corr. edn.].',
     },
     // Public build ships the public-domain Ross (1928) only. The copyrighted
     // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
@@ -936,7 +936,7 @@ export const WORKS: Work[] = [
     author: 'Aristotle',
     books: 1,
     bookLabels: ['1'],
-    greekEdition: 'Kassel, Aristotelis De Arte Poetica (OCT, 1965)',
+    greekEdition: 'Kassel, Aristotelis De Arte Poetica (OCT, 1966)',
     greekSource: {
       short: 'Kassel (OCT, 1966)',
       full: 'R. Kassel, ed. Aristotelis de arte poetica liber. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
