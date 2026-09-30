@@ -48,6 +48,10 @@ def test_every_margin_anchor_is_found_once():
     assert len(entries) == 80
     for e in entries:
         assert text.count(e["at"]) == 1, e["bekker"]
+    # In the text they run in citation order (a swapped bekker value breaks it).
+    key = lambda ref: (int(ref[:3]), ref[3], int(ref[4:]))
+    by_text = sorted(entries, key=lambda e: text.index(e["at"]))
+    assert [e["bekker"] for e in by_text] == sorted((e["bekker"] for e in entries), key=key)
 
 
 def test_no_note_marks_or_margin_numbers():
