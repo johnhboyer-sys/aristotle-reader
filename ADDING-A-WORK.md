@@ -18,6 +18,11 @@ using *De Anima* (slug `DA`) as the worked example.
   `sources/<slug>-<translator>/book-0N.html`, e.g. `sources/da-smith/book-01.html`
   from the MIT Internet Classics Archive (the `TheMITTech/classics` GitHub mirror
   is the reliable source). Chapter markers are bare numbers (`1`) or `Part N`.
+  Misprints are fixed in the HTML itself, checked against a scan of the printed
+  translation, and each fix is listed in `sources/english-corrections.json`;
+  `pipeline/tests/test_english_corrections.py` fails if a re-fetch undoes one.
+  A fix that changes a chapter's length shifts that chapter's offsets in
+  `alignment-results/<id>/<WORK>_<id>_gloss_map.json`: remap them.
 
 ## 2. Write the manifest (`manifests/<SLUG>.yaml`)
 
