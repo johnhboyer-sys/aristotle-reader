@@ -13,6 +13,50 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-09-30 — DEPLOYED: Lyceum corrections (PR #124); Lin and Mech English cleaned, Lin's real Bekker breaks (PR #125)
+
+`gh-pages e3c745f3 → 821abd67`, source `origin/main` `a667a32202` (the #125 merge; #124 is
+`e891918020`). Plain `npm run deploy -- --verify` — no `--allow-data-deletions`.
+
+**What shipped:** #124 — 62 print-checked corrections to the English of Cael, DA, GC, Lin, Meta,
+Mete, Phys, SE, PA and Sens (`sources/english-corrections.json`), and 37 edition labels. #125 —
+De Lineis Insecabilibus: Joachim's commentary out of his translation (25 spans, ~4,500 of 9,400
+words), the lost page 969a26–b3 restored, his 80 margin numbers as real Bekker ticks, and column
+breaks at the real columns (`anchor_cuts`, Lin only). Mechanica: Joachim's 1908 imprint and Lin
+preface off the end, a dozen run-in footnotes out, seven dropped lines restored, Part 4's opening
+made whole, ~150 junk spots and ~50 figure letters fixed from the Greek. Reviewed by Grok 4.6
+(text) and GPT-6-Sol (the anchor-cut code); dispositions in the PR and commit messages.
+
+**Build:** full `build:public` in the vibrant-wiles worktree (Node 22.23.1) from a tree identical
+to `a667a32202`: 41 works, stage2 PASS throughout, preflight ok, shared LSJ 63,261 keys resolve,
+6,609 pages. The first run died in the Astro step on a full disk (ENOSPC) after the corpus stages
+had finished; the app build and link gate were rerun once space was freed. **A full rebuild plus
+the deploy clone needs ~3 GB free.**
+
+**Gates:** link integrity **0 broken** (6,612 pages / 578,726 links / 446,166 anchors). Leak check
+at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`),
+positive control 1,623. Bundle gate: 6,642 files scanned; 9 removed bundles, 0 referenced; controls
+9/9 added bundles referenced, 6,609 pages naming a bundle.
+
+**Deploy diff:** 501 files — 5 A / 487 M / 5 D / 4 R. `_astro` 9 (the `works` registry and the
+bundles importing it), one page per book of every work (the `Reader` hash), `data/ngrams` 130 (the
+English phrase index), and per-work data. 0 data deletions; nothing to restore. Four
+`search/*.json` files per work show as modified by file mode only (755 → 644, content identical):
+a worktree build writes them 644.
+
+**CI note:** `claude-review` failed on both PRs in 2 s with no model usage — the action did not run
+(auth or quota), not a finding. The six real checks passed; it is not a required check.
+
+**Live-verified:** the script's URL set as expected (new `Reader.BcucvPPJ.js` 200; the 9 old
+bundles and `/bonitz/` 404). From the live data: `Lin/book-01.json` has no Apelt/MSS, carries
+"counting is movement combined with pausing" (969b2–3), 80 real ticks, and 968b opens "in a finite
+time. And since"; `Mech/book-01.json` has no Frowde/Hayduck/Capelle and ends "all objects must
+necessarily collect there."; `Cael/book-02.json` reads "rest upon water but not upon air".
+`/Lin/book/1/` and `/Mech/book/1/` 200. Not checked in a browser.
+
+**Left for later:** Joachim's notes as real footnotes (needs a fresh read of all ~166 from the
+scan; the source held a third of them). PR #123 (desktop) is still open, awaiting John's QA.
+
 ## 2026-09-16 — DEPLOYED: no quotations request for works without them (PR #120), under the fixed bundle gate (PR #121)
 
 `gh-pages 7e66d263 → e3c745f3`, source `origin/main` `f84e3edb24` (the #121 merge; #120 is
