@@ -1,5 +1,5 @@
 {
- "about": "Print-checked corrections already made in sources/<dir>/book-NN.html. Each find/replace is whitespace-collapsed text of that work's public primary English (book, column as built). find must be absent from the parsed book and replace present: pipeline/tests/test_english_corrections.py. Ported 2026-09-29 from classical-philosophy-reader sources/aristotle-english/corrections.json (commit 85c876b); source names the scan each was checked against.",
+ "about": "Print-checked corrections already made in sources/<dir>/book-NN.html. Each find/replace is whitespace-collapsed text of that work's public primary English (book, column as built). find must be absent from the parsed book and replace present: pipeline/tests/test_english_corrections.py. Ported 2026-09-29 from classical-philosophy-reader sources/aristotle-english/corrections.json (commit 85c876b); source names the scan each was checked against. Four Lin entries were retired 2026-09-29: they had corrected Joachim's commentary, which the OCR had run into his translation and which was then removed (pipeline/tests/test_lin_joachim_clean.py).",
  "corrections": [
   {
    "work": "Cael",
@@ -196,14 +196,6 @@
   {
    "work": "Lin",
    "book": 1,
-   "column": "969a",
-   "find": "writer - { should",
-   "replace": "writer should",
-   "source": "delineisinsecabi00arisrich p.22 l.673-674"
-  },
-  {
-   "work": "Lin",
-   "book": 1,
    "column": "969b",
    "find": "assumptions?",
    "replace": "assumptions",
@@ -229,23 +221,6 @@
    "work": "Lin",
    "book": 1,
    "column": "970a",
-   "find": "line.’ are all",
-   "replace": "line. are all",
-   "source": "delineisinsecabi00arisrich p.24 l.499 (969a12-970a2 runover)",
-   "note": "The Lyceum's edit also joins this paragraph to the next; that paragraph is Joachim's commentary run into the translation, so the break is kept and only the note mark goes."
-  },
-  {
-   "work": "Lin",
-   "book": 1,
-   "column": "970a",
-   "find": "equal’:",
-   "replace": "equal:",
-   "source": "delineisinsecabi00arisrich p.24 l.1148 (970a2)"
-  },
-  {
-   "work": "Lin",
-   "book": 1,
-   "column": "970a",
    "find": "rational.*",
    "replace": "rational.",
    "source": "delineisinsecabi00arisrich p.29 l.1088 (970a8-9)"
@@ -257,14 +232,6 @@
    "find": "divisible.’",
    "replace": "divisible.",
    "source": "delineisinsecabi00arisrich p.34 l.1411 (970b25-26)"
-  },
-  {
-   "work": "Lin",
-   "book": 1,
-   "column": "970b",
-   "find": "under26",
-   "replace": "under 26",
-   "source": "delineisinsecabi00arisrich p.33-34 l.1412/1416 (page-break hyphenation, 970b26)"
   },
   {
    "work": "Lin",

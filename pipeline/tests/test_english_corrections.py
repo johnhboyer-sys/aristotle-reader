@@ -49,7 +49,7 @@ def _book_text(work: str, book: int) -> str:
 
 def test_the_list_is_read():
     # An empty or misread list would pass every parametrized case below.
-    assert len(CORRECTIONS) == 66
+    assert len(CORRECTIONS) == 62
     assert {c["work"] for c in CORRECTIONS} == {
         "Cael", "DA", "GC", "Lin", "Meta", "Mete", "Phys", "SE", "PA", "Sens"}
 
