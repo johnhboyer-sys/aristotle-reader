@@ -211,11 +211,40 @@ def build_overlay(spine: dict, chapters: list[dict], cfg: dict,
     return chunks
 
 
+def _column_starts(rel: str, prose: dict[tuple[int, int], str]) -> dict:
+    """The `{column}1` entries of an anchors file as the align-map build_chunks
+    cuts on ({"book:chapter": {"anchors": [...]}}): each phrase is located in the
+    chapter prose, so a column's English begins where its first Bekker line does
+    instead of at a proportional estimate. Unresolved phrases are reported and
+    that column falls back to the proportional cut."""
+    entries = yaml.safe_load((SOURCES_DIR / rel).read_text(encoding="utf-8")) or []
+    amap: dict[str, dict] = {}
+    missing = []
+    for e in entries:
+        m = _BEKKER.match(str(e["bekker"]).strip())
+        if not m or m.group(2) != "1":
+            continue
+        hits = [(key, off) for key, text in prose.items()
+                if (off := _find_phrase(text, e["at"].strip())) >= 0]
+        if len(hits) != 1:
+            missing.append(m.group(0))
+            continue
+        (book, chap), off = hits[0]
+        amap.setdefault(f"{book}:{chap}", {"anchors": []})["anchors"].append(
+            {"citation": m.group(0), "offset": off, "confidence": "certain"})
+    if missing:
+        print(f"  anchor cuts: {len(missing)} unresolved: {missing[:8]}")
+    return amap
+
+
 def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
                   cfg: dict) -> dict:
     """Primary English chunks (EnglishChunk shape) from an archive translation."""
     prose = _load_prose(cfg)
-    pieces = build_chunks(spine, chapters, prose)
+    # `anchor_cuts: true` (Lin): column breaks come from the anchors file's
+    # line-1 entries rather than from the proportional estimate.
+    amap = _column_starts(cfg["anchors"], prose) if cfg.get("anchor_cuts") else None
+    pieces = build_chunks(spine, chapters, prose, amap)
 
     chunks: list[dict] = []
     for seg in spine["segments"]:

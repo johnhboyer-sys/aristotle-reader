@@ -38,6 +38,18 @@ def test_no_commentary():
         assert word not in text, word
 
 
+def test_every_margin_anchor_is_found_once():
+    # anchors.yaml is Joachim's margin numbers, read from the scan; a phrase that
+    # stops matching after an edit to the source silently loses its real tick
+    # (or, for a {column}1 entry, its column break).
+    text = re.sub(r"\s+", " ", _text())
+    entries = yaml.safe_load(
+        (ROOT / "sources" / "lin-joachim" / "anchors.yaml").read_text(encoding="utf-8"))
+    assert len(entries) == 80
+    for e in entries:
+        assert text.count(e["at"]) == 1, e["bekker"]
+
+
 def test_no_note_marks_or_margin_numbers():
     text = _text()
     # (Joachim's own "!" at 969b16 is real; these never are.)
