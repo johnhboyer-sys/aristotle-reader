@@ -3907,12 +3907,22 @@
     // so wait that out first. A failed write rejects, and App asks before
     // quitting.
     const offQuit = onQuitFlush(async () => {
+      // An unreadable chapter file turns autosave off so it is never
+      // overwritten; nothing typed here can be saved, so quit must ask.
+      if (saveBlocked) throw new Error(`autosave is off for ${fileName}`);
       if (structuralRemount) await tick();
       for (let i = 0; i < model.rows.length; i++) commitRowNow(i);
       await autosave?.flush();
       if (autosave?.state === 'error') {
         autosave.markDirty(); // "Keep Open" must leave a retry scheduled
         throw new Error(`could not save ${fileName}`);
+      }
+      // onSaved updates the footnote index without waiting; quit must wait,
+      // or later chapters' numbering is stale on the next launch.
+      try {
+        await updateFootnoteCount(storage, model.workId, model.book, model.chapter, anchoredFootnoteCount(model));
+      } catch (err) {
+        console.error('footnote index update before quit failed', err); // regenerable cache
       }
     });
 
