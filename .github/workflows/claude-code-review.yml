@@ -38,7 +38,9 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          # --comment: without it the plugin posts nothing (since its 2026-02-11
+          # change) and its findings stay in the hidden action output.
+          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }} --comment'
           # The review agent runs sandboxed with no interactive approver, so every
           # tool it needs must be pre-granted here. Without this the review "passes"
           # while unable to inspect anything (permission_denials > 0, zero output).
@@ -48,8 +50,10 @@ jobs:
           # (`gh pr diff > file; wc -l`), which never prefix-match narrow
           # Bash(cmd:*) rules (first live run: 13 denials). The runner is
           # ephemeral with contents:read, so the blast radius is the runner.
+          # The inline-comment tool is how --comment posts each finding on its
+          # line; a denied call would fail the hamstrung check below.
           claude_args: |
-            --allowedTools "Skill,Bash,Grep,Glob,Read,WebFetch"
+            --allowedTools "Skill,Bash,Grep,Glob,Read,WebFetch,mcp__github_inline_comment__create_inline_comment"
 
       - name: Fail if the review ran hamstrung
         if: always()
