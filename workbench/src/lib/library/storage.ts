@@ -13,7 +13,8 @@
 // default; existing callers are unaffected (the interface didn't change).
 //
 // Chapter files are named  b<book2>c<chapter2>.md  (zero-padded, e.g. b07c17.md);
-// regenerable caches are dot-prefixed (e.g. .footnote-index.json).
+// regenerable caches sit beside them (e.g. footnote-index.json). No library file may
+// start with a dot: the Tauri fs scope refuses dotfiles on Unix.
 
 import { isTauri } from '../runtime';
 import { loadSettings } from '../settings';

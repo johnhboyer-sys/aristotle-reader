@@ -158,3 +158,28 @@ describe('updateFootnoteCount (the autosave ride-along)', () => {
     expect(await loadFootnoteIndex(storage, 'meta')).toEqual(index({ b07c17: 3 }));
   });
 });
+
+// tauri-plugin-fs matches its scopes with glob's require_literal_leading_dot,
+// which defaults to true on Unix unless tauri.conf.json sets
+// plugins.fs.requireLiteralLeadingDot. Under that default `/**` and
+// `$APPDATA/**` never match a dot-prefixed name, so the app refuses to read
+// or write it — and the index, read and written fire-and-forget, failed
+// silently in the real .app. The in-memory storage above cannot see this.
+describe('index file name vs the Tauri fs scope', () => {
+  it('is not dot-prefixed while the scope refuses dotfiles', async () => {
+    const fs = (await import(/* @vite-ignore */ 'node' + ':fs')) as unknown as {
+      readFileSync(path: string, encoding: 'utf-8'): string;
+    };
+    const nodeUrl = (await import(/* @vite-ignore */ 'node' + ':url')) as unknown as {
+      fileURLToPath(url: URL): string;
+    };
+    const conf = JSON.parse(
+      fs.readFileSync(nodeUrl.fileURLToPath(new URL('../../../../src-tauri/tauri.conf.json', import.meta.url)), 'utf-8'),
+    );
+    const dotfilesAllowed = conf.plugins?.fs?.requireLiteralLeadingDot === false;
+    // Setting the flag false would also open ~/.ssh and the like to the `/**`
+    // read scope; this fails so that choice is made on purpose.
+    expect(dotfilesAllowed).toBe(false);
+    expect(FOOTNOTE_INDEX_FILE.startsWith('.')).toBe(false);
+  });
+});
