@@ -37,6 +37,8 @@ export interface FootnoteContext {
    * Optional so existing call sites/tests need no change.
    */
   showAllAnchors?(): boolean;
+  /** Open the footnotes panel with the cursor in this note's body. */
+  openInPanel?(id: string): void;
 }
 
 function buildDecorations(doc: PMNode, ctx: FootnoteContext): DecorationSet {
@@ -86,8 +88,12 @@ export function footnotePlugin(ctx: FootnoteContext): Plugin<DecorationSet> {
       handleClickOn(view, _pos, node) {
         if (node.type.name !== 'footnoteMarker') return false;
         const id = String(node.attrs.id);
-        // Temporary panel stand-in: click toggles the active highlight.
-        ctx.setActiveFootnote(ctx.activeFootnoteId() === id ? null : id);
+        // Click opens the footnote panel at this note's body. A second click
+        // on the active marker, with the panel already open, turns the
+        // highlight off.
+        const activate = ctx.activeFootnoteId() !== id || !ctx.showAllAnchors?.();
+        ctx.setActiveFootnote(activate ? id : null);
+        if (activate) ctx.openInPanel?.(id);
         view.dispatch(view.state.tr.setMeta(FN_REFRESH, true));
         return true;
       },

@@ -3691,6 +3691,7 @@
             activeFootnoteId: () => activeFn,
             setActiveFootnote,
             showAllAnchors: () => session.fnPanelOpen,
+            openInPanel: (id) => (session.fnFocusRequest = { id, ts: Date.now() }),
           }),
         ],
       });
@@ -3902,9 +3903,17 @@
     void initChapter();
 
     // ⌘Q: commit every row and wait for the write, as a chapter switch does.
+    // Right after a split or merge commits are skipped until the next tick,
+    // so wait that out first. A failed write rejects, and App asks before
+    // quitting.
     const offQuit = onQuitFlush(async () => {
+      if (structuralRemount) await tick();
       for (let i = 0; i < model.rows.length; i++) commitRowNow(i);
       await autosave?.flush();
+      if (autosave?.state === 'error') {
+        autosave.markDirty(); // "Keep Open" must leave a retry scheduled
+        throw new Error(`could not save ${fileName}`);
+      }
     });
 
     return () => {

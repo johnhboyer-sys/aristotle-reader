@@ -260,19 +260,43 @@
     if (document.visibilityState === 'visible') onWindowFocus();
   }
 
-  // ⌘Q (src-tauri/src/lib.rs) asks first; quit once every open editor has saved.
+  // ⌘Q (src-tauri/src/lib.rs) and the window's close button both save first.
+  // If a save fails the app stays open and asks, so the edit is not lost.
   onMount(() => {
     if (!isTauri()) return;
-    let unlisten: (() => void) | undefined;
+    const unlisteners: (() => void)[] = [];
     void (async () => {
       const { listen } = await import('@tauri-apps/api/event');
       const { invoke } = await import('@tauri-apps/api/core');
-      unlisten = await listen('quit-requested', async () => {
-        await flushForQuit();
-        await invoke('quit_now');
-      });
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      const { ask } = await import('@tauri-apps/plugin-dialog');
+      // Never strands the user: a hung save times out inside flushForQuit,
+      // and a dialog that fails to open lets the quit go ahead.
+      const savedOrConfirmed = async () => {
+        if (await flushForQuit()) return true;
+        try {
+          return await ask('Your latest changes could not be saved. Quit anyway and lose them?', {
+            title: 'Could not save',
+            kind: 'warning',
+            okLabel: 'Quit Anyway',
+            cancelLabel: 'Keep Open',
+          });
+        } catch (err) {
+          console.error('quit: the warning dialog failed to open', err);
+          return true;
+        }
+      };
+      unlisteners.push(
+        await listen('quit-requested', async () => {
+          await invoke('quit_ack'); // the frontend owns the quit from here
+          if (await savedOrConfirmed()) await invoke('quit_now');
+        }),
+        await getCurrentWindow().onCloseRequested(async (event) => {
+          if (!(await savedOrConfirmed())) event.preventDefault();
+        }),
+      );
     })();
-    return () => unlisten?.();
+    return () => unlisteners.forEach((off) => off());
   });
 
   onMount(() => {
@@ -489,6 +513,11 @@
   // Footnotes and Reference share the right rail and are mutually exclusive
   // (design doc D5 §4, John-confirmed 2026-07-03): opening one closes the
   // other.
+  // Inserting a footnote, or clicking its marker, asks for its body field.
+  $effect(() => {
+    if (session.fnFocusRequest && !footnotesOpen) toggleFootnotes();
+  });
+
   function toggleFootnotes() {
     footnotesOpen = !footnotesOpen;
     if (footnotesOpen) referenceOpen = false;

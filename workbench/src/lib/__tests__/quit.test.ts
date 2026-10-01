@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { flushForQuit, onQuitFlush } from '../quit';
+import { flushForQuit, onQuitCommit, onQuitFlush } from '../quit';
 
 // ⌘Q used to end the app with an edit still inside the autosave debounce, so
 // the last thing typed was lost. Quit now waits on every open editor's save.
@@ -21,7 +21,7 @@ describe('flushForQuit', () => {
       throw new Error('disk full');
     });
     const off2 = onQuitFlush(async () => void done.push('b'));
-    await expect(flushForQuit()).resolves.toBeUndefined();
+    expect(await flushForQuit()).toBe(false);
     expect(done).toEqual(['b']);
     off1();
     off2();
@@ -33,5 +33,31 @@ describe('flushForQuit', () => {
     off();
     await flushForQuit();
     expect(calls).toBe(0);
+  });
+
+  it('reports success when every save landed', async () => {
+    const off = onQuitFlush(async () => {});
+    expect(await flushForQuit()).toBe(true);
+    off();
+  });
+
+  // A footnote body commits on its own timer; its commit must reach the model
+  // before any editor writes the file, or the file is written without it.
+  it('runs every pending commit before any save starts', async () => {
+    const order: string[] = [];
+    const offSave = onQuitFlush(async () => void order.push('save'));
+    const offCommit = onQuitCommit(() => void order.push('commit'));
+    await flushForQuit();
+    expect(order).toEqual(['commit', 'save']);
+    offSave();
+    offCommit();
+  });
+
+  // A hung save must not make the app impossible to quit: it counts as a
+  // failure, and the user is asked.
+  it('a save that never finishes counts as failed after the timeout', async () => {
+    const off = onQuitFlush(() => new Promise(() => {}));
+    expect(await flushForQuit(20)).toBe(false);
+    off();
   });
 });

@@ -17,7 +17,8 @@
   // While mounted, the panel sets session.fnPanelOpen so every anchored
   // phrase in the text gets the subtle always-on highlight. All state flows
   // through the session bridge — the panel never touches the editor directly.
-  import { onMount } from 'svelte';
+  import { onQuitCommit } from '../lib/quit';
+  import { onMount, untrack } from 'svelte';
   import { EditorState, Plugin } from '@tiptap/pm/state';
   import { EditorView } from '@tiptap/pm/view';
   import { keymap } from '@tiptap/pm/keymap';
@@ -63,6 +64,10 @@
         clearTimeout(commitTimer);
         commitTimer = null;
       }
+      // Ingest the tail of a typing burst ProseMirror has not observed yet
+      // (~20ms), as ChapterEditor's commitRowNow does — else ⌘Q right after
+      // typing reads a stale doc.
+      (view as unknown as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
       const markup = serializeRow(view.state.doc);
       if (markup === lastKnown) return;
       lastKnown = markup;
@@ -135,6 +140,13 @@
       },
     });
     bodyViews.set(id, view);
+    const offQuit = onQuitCommit(commitNow);
+    // The panel may have opened BECAUSE of this request, after the effect
+    // below had already looked for a field that did not exist yet.
+    if (untrack(() => session.fnFocusRequest?.id) === id) {
+      session.fnFocusRequest = null;
+      queueMicrotask(() => view.focus());
+    }
 
     return {
       update(next: FootnoteListEntry) {
@@ -146,6 +158,7 @@
         }
       },
       destroy() {
+        offQuit();
         commitNow();
         if (bodyViews.get(id) === view) bodyViews.delete(id);
         view.destroy();
