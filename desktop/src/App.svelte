@@ -860,7 +860,7 @@
 
   function annJump(a: Annotation) {
     if (a.target.kind === 'greek') {
-      nav(workId, a.target.book, { loc: `${a.target.start.column}:${a.target.start.line}` });
+      nav(workId, a.target.book, { loc: `${a.target.start.column}:${lineRef(a.target.start.line, a.target.start.sub)}` });
     } else {
       const col = a.target.column;
       nav(workId, a.target.book).then(() => {

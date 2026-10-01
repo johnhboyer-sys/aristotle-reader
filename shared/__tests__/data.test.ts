@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchAnalyses, fetchBekkerIndex, fetchBook, fetchColumns, fetchFootnotes, fetchLemmata, fetchLsjShard, invalidateBookCache, lineAnchor, lineRef, lookupWord, lsjShard, parseBekker, resolveBekker } from '../lib/data';
+import { anchorCite, citeOfId, fetchAnalyses, fetchBekkerIndex, fetchBook, fetchColumns, fetchFootnotes, fetchLemmata, fetchLsjShard, invalidateBookCache, lineAnchor, lineRef, lookupWord, lsjShard, parseBekker, resolveBekker } from '../lib/data';
 
 function mockFetch(map: Record<string, unknown>) {
   vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
@@ -174,5 +174,49 @@ describe("a lettered line's identity", () => {
   it('round-trips through parseBekker', () => {
     const ref = parseBekker('244b5a')!;
     expect(lineAnchor(ref.column, ref.line, ref.sub)).toBe('L244b-5a');
+  });
+});
+
+describe('anchorCite', () => {
+  it('turns a Greek line anchor into its citation, continuation included', () => {
+    expect(anchorCite('L1094a-3')).toBe('1094a3');
+    expect(anchorCite('L1094a-3-c')).toBe('1094a3');
+    expect(anchorCite('L775a-11a')).toBe('775a11a');
+    expect(anchorCite('L775a-11a-c')).toBe('775a11a');
+  });
+
+  it('returns null for anything that is not a line anchor', () => {
+    expect(anchorCite('col-1094a')).toBeNull();
+    expect(anchorCite('1094a3')).toBeNull();
+    expect(anchorCite('L1094a-3-c-x')).toBeNull();
+    expect(anchorCite('')).toBeNull();
+  });
+
+  it('is the inverse of lineAnchor, for a Bekker column and an Isagoge Busse page', () => {
+    // Isagoge columns are Busse pages ("1a".."22a"). lineAnchor builds the same
+    // id shape as a Bekker line, and the citation stays "1a3".
+    const cases: [string, number, string | undefined][] = [
+      ['1094a', 3, undefined],
+      ['775a', 11, 'a'],
+      ['1a', 3, undefined],
+      ['22a', 15, undefined],
+    ];
+    for (const [column, n, sub] of cases) {
+      expect(anchorCite(lineAnchor(column, n, sub))).toBe(column + lineRef(n, sub));
+    }
+    expect(anchorCite('L1a-3')).toBe('1a3');
+    expect(anchorCite('L1a-3-c')).toBe('1a3');
+  });
+});
+
+describe('citeOfId', () => {
+  it('cites a line anchor but not a continuation, and keeps a column id', () => {
+    expect(citeOfId('L1094a-3')).toBe('1094a3');
+    expect(citeOfId('L775a-11a')).toBe('775a11a');
+    expect(citeOfId('L1a-3')).toBe('1a3');
+    expect(citeOfId('L1094a-3-c')).toBeNull();
+    expect(citeOfId('L775a-11a-c')).toBeNull();
+    expect(citeOfId('col-1094a')).toBe('1094a');
+    expect(citeOfId('col-1a')).toBe('1a');
   });
 });
