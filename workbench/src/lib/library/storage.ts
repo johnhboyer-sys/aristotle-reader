@@ -102,6 +102,8 @@ interface ResolvedPath {
   baseDir?: import('@tauri-apps/plugin-fs').BaseDirectory;
 }
 
+let tmpSerial = 0;
+
 class TauriStorage implements LibraryStorage {
   private async fs() {
     return import('@tauri-apps/plugin-fs');
@@ -139,8 +141,13 @@ class TauriStorage implements LibraryStorage {
     const fs = await this.fs();
     const dir = await this.resolveDir(workId);
     await fs.mkdir(dir.path, { baseDir: dir.baseDir, recursive: true });
+    // Write-then-rename: a crash mid-write leaves a stray temp file (which
+    // list() hides) and the old file whole, never a truncated chapter. The
+    // temp name must not start with a dot: the fs scope's globs skip dotfiles.
     const { path, baseDir } = await this.resolve(workId, file);
-    await fs.writeTextFile(path, content, { baseDir });
+    const tmp = `${path}.${++tmpSerial}.tmp`;
+    await fs.writeTextFile(tmp, content, { baseDir });
+    await fs.rename(tmp, path, { oldPathBaseDir: baseDir, newPathBaseDir: baseDir });
   }
   async list(workId: string): Promise<string[]> {
     const fs = await this.fs();
@@ -148,7 +155,7 @@ class TauriStorage implements LibraryStorage {
     try {
       const entries = await fs.readDir(dir.path, { baseDir: dir.baseDir });
       return entries
-        .filter((e) => e.isFile)
+        .filter((e) => e.isFile && !e.name.endsWith('.tmp'))
         .map((e) => e.name)
         .sort();
     } catch {
