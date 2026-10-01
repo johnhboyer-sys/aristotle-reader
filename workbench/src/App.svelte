@@ -4,7 +4,7 @@
   // with rows sliced from the Greek spine (src/lib/data). Works without a
   // corpus on this machine degrade to one quiet line. The footnote panel and
   // lexicon drawer are wired below.
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import LibraryRail from './components/LibraryRail.svelte';
   import type { RailSelection, RailWork } from './components/LibraryRail.svelte';
@@ -514,8 +514,20 @@
   // (design doc D5 §4, John-confirmed 2026-07-03): opening one closes the
   // other.
   // Inserting a footnote, or clicking its marker, asks for its body field.
+  // Each request is handled once. While the AI output or Ask panel holds the
+  // right slot the footnotes panel cannot show, so the request is dropped
+  // rather than left pending (it would re-open footnotes on every toggle and
+  // steal focus whenever that panel later closed).
+  let handledFnRequest = 0;
   $effect(() => {
-    if (session.fnFocusRequest && !footnotesOpen) toggleFootnotes();
+    const req = session.fnFocusRequest;
+    if (!req || req.ts === handledFnRequest) return;
+    handledFnRequest = req.ts;
+    if (session.aiPanel || session.askPanelOpen) {
+      session.fnFocusRequest = null;
+      return;
+    }
+    if (!untrack(() => footnotesOpen)) toggleFootnotes();
   });
 
   function toggleFootnotes() {

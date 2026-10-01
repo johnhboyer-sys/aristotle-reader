@@ -138,6 +138,18 @@ await run('insert a footnote and click its marker', async () => {
   );
 });
 
+await run('click a marker while the Ask panel holds the side slot', async () => {
+  // The footnotes panel cannot show while Ask is open, so the click must not
+  // leave the footnotes toggle stuck on or grab focus when Ask closes.
+  await page.getByRole('button', { name: 'Close footnotes' }).click();
+  await page.getByRole('button', { name: 'Toggle Ask AI panel' }).click();
+  await page.locator('.en-cell[data-row-en="2"] .fn-marker').first().click();
+  const toggle = page.getByRole('button', { name: 'Toggle footnotes panel' });
+  check('the footnotes toggle stays off', (await toggle.getAttribute('aria-pressed')) === 'false');
+  await page.getByRole('button', { name: 'Toggle Ask AI panel' }).click();
+  check('closing Ask does not open footnotes', (await page.locator('.fn-body').count()) === 0);
+});
+
 await run('create a document', async () => {
   await page.locator('.add-work', { hasText: 'New document…' }).click();
   const dialog = page.locator('.dialog', { has: page.locator('text=New document') });
