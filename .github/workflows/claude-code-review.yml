@@ -73,6 +73,10 @@ jobs:
           errored=$(jq '[.. | objects | select(.type? == "result") | .is_error] | any' "$EXECUTION_FILE")
           if [ "$errored" = "true" ]; then
             echo "::error::Claude Code reported an error result"
+            # The action hides its output, and with it the one line that says
+            # why (e.g. "Credit balance is too low"). Print only that line.
+            reason=$(jq -r '[.. | objects | select(.type? == "result" and .is_error == true) | .result? // empty | tostring] | first // "(no reason given)" | gsub("\n"; " ") | .[0:500]' "$EXECUTION_FILE")
+            echo "::error title=Why the review failed::$reason"
             exit 1
           fi
 
