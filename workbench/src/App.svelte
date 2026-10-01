@@ -53,6 +53,7 @@
   import type { FixtureChapter } from './dev/fixture-meta-z17';
   import { loadSettings, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
+  import { flushForQuit } from './lib/quit';
   import { wordAt, latinWordAt } from './lib/lexicon/wordAt';
   import { libraryStorage, chapterFileName } from './lib/library/storage';
   import { chapterLibraryStatuses } from './lib/library/sync';
@@ -258,6 +259,21 @@
   function onVisibilityVisible() {
     if (document.visibilityState === 'visible') onWindowFocus();
   }
+
+  // ⌘Q (src-tauri/src/lib.rs) asks first; quit once every open editor has saved.
+  onMount(() => {
+    if (!isTauri()) return;
+    let unlisten: (() => void) | undefined;
+    void (async () => {
+      const { listen } = await import('@tauri-apps/api/event');
+      const { invoke } = await import('@tauri-apps/api/core');
+      unlisten = await listen('quit-requested', async () => {
+        await flushForQuit();
+        await invoke('quit_now');
+      });
+    })();
+    return () => unlisten?.();
+  });
 
   onMount(() => {
     // Startup: load every work's corpus, then land on the last-opened chapter

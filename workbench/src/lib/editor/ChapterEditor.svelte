@@ -215,6 +215,7 @@
   import InterpolatedUnit from './InterpolatedUnit.svelte';
   import { DEFAULT_PROFILE, levelName, navRoleOf } from '../works/profile';
   import type { NavRole } from '../works/profile';
+  import { onQuitFlush } from '../quit';
   import './editor.css';
 
   let {
@@ -3900,7 +3901,14 @@
 
     void initChapter();
 
+    // ⌘Q: commit every row and wait for the write, as a chapter switch does.
+    const offQuit = onQuitFlush(async () => {
+      for (let i = 0; i < model.rows.length; i++) commitRowNow(i);
+      await autosave?.flush();
+    });
+
     return () => {
+      offQuit();
       destroyed = true;
       assistCtl.cancel(); // in-flight suggestion can never land in a gone chapter
       askAbort?.abort(); // in-flight ask can never answer in a gone chapter
