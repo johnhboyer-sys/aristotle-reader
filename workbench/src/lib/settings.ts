@@ -296,12 +296,19 @@ async function readRaw(): Promise<string | null> {
   return localStorage.getItem(LS_KEY);
 }
 
+let tmpSerial = 0;
+
 async function writeRaw(text: string): Promise<void> {
   if (isTauri()) {
     const fs = await import('@tauri-apps/plugin-fs');
     try {
       await fs.mkdir('', { baseDir: fs.BaseDirectory.AppData, recursive: true });
-      await fs.writeTextFile(FILE, text, { baseDir: fs.BaseDirectory.AppData });
+      // Write-then-rename: a truncated settings file would lose libraryRoot,
+      // and the library would open empty.
+      const baseDir = fs.BaseDirectory.AppData;
+      const tmp = `${FILE}.${++tmpSerial}.tmp`;
+      await fs.writeTextFile(tmp, text, { baseDir });
+      await fs.rename(tmp, FILE, { oldPathBaseDir: baseDir, newPathBaseDir: baseDir });
     } catch (err) {
       console.warn('settings: write failed', err);
     }

@@ -13,7 +13,8 @@
 // default; existing callers are unaffected (the interface didn't change).
 //
 // Chapter files are named  b<book2>c<chapter2>.md  (zero-padded, e.g. b07c17.md);
-// regenerable caches are dot-prefixed (e.g. .footnote-index.json).
+// regenerable caches sit beside them (e.g. footnote-index.json). No library file may
+// start with a dot: the Tauri fs scope refuses dotfiles on Unix.
 
 import { isTauri } from '../runtime';
 import { loadSettings } from '../settings';
@@ -102,6 +103,8 @@ interface ResolvedPath {
   baseDir?: import('@tauri-apps/plugin-fs').BaseDirectory;
 }
 
+let tmpSerial = 0;
+
 class TauriStorage implements LibraryStorage {
   private async fs() {
     return import('@tauri-apps/plugin-fs');
@@ -139,8 +142,13 @@ class TauriStorage implements LibraryStorage {
     const fs = await this.fs();
     const dir = await this.resolveDir(workId);
     await fs.mkdir(dir.path, { baseDir: dir.baseDir, recursive: true });
+    // Write-then-rename: a crash mid-write leaves a stray temp file (which
+    // list() hides) and the old file whole, never a truncated chapter. The
+    // temp name must not start with a dot: the fs scope's globs skip dotfiles.
     const { path, baseDir } = await this.resolve(workId, file);
-    await fs.writeTextFile(path, content, { baseDir });
+    const tmp = `${path}.${++tmpSerial}.tmp`;
+    await fs.writeTextFile(tmp, content, { baseDir });
+    await fs.rename(tmp, path, { oldPathBaseDir: baseDir, newPathBaseDir: baseDir });
   }
   async list(workId: string): Promise<string[]> {
     const fs = await this.fs();
@@ -148,7 +156,7 @@ class TauriStorage implements LibraryStorage {
     try {
       const entries = await fs.readDir(dir.path, { baseDir: dir.baseDir });
       return entries
-        .filter((e) => e.isFile)
+        .filter((e) => e.isFile && !e.name.endsWith('.tmp'))
         .map((e) => e.name)
         .sort();
     } catch {

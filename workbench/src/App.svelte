@@ -4,7 +4,7 @@
   // with rows sliced from the Greek spine (src/lib/data). Works without a
   // corpus on this machine degrade to one quiet line. The footnote panel and
   // lexicon drawer are wired below.
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import LibraryRail from './components/LibraryRail.svelte';
   import type { RailSelection, RailWork } from './components/LibraryRail.svelte';
@@ -53,6 +53,7 @@
   import type { FixtureChapter } from './dev/fixture-meta-z17';
   import { loadSettings, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
+  import { flushForQuit } from './lib/quit';
   import { wordAt, latinWordAt } from './lib/lexicon/wordAt';
   import { libraryStorage, chapterFileName } from './lib/library/storage';
   import { chapterLibraryStatuses } from './lib/library/sync';
@@ -258,6 +259,45 @@
   function onVisibilityVisible() {
     if (document.visibilityState === 'visible') onWindowFocus();
   }
+
+  // ⌘Q (src-tauri/src/lib.rs) and the window's close button both save first.
+  // If a save fails the app stays open and asks, so the edit is not lost.
+  onMount(() => {
+    if (!isTauri()) return;
+    const unlisteners: (() => void)[] = [];
+    void (async () => {
+      const { listen } = await import('@tauri-apps/api/event');
+      const { invoke } = await import('@tauri-apps/api/core');
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      const { ask } = await import('@tauri-apps/plugin-dialog');
+      // Never strands the user: a hung save times out inside flushForQuit,
+      // and a dialog that fails to open lets the quit go ahead.
+      const savedOrConfirmed = async () => {
+        if (await flushForQuit()) return true;
+        try {
+          return await ask('Your latest changes could not be saved. Quit anyway and lose them?', {
+            title: 'Could not save',
+            kind: 'warning',
+            okLabel: 'Quit Anyway',
+            cancelLabel: 'Keep Open',
+          });
+        } catch (err) {
+          console.error('quit: the warning dialog failed to open', err);
+          return true;
+        }
+      };
+      unlisteners.push(
+        await listen('quit-requested', async () => {
+          await invoke('quit_ack'); // the frontend owns the quit from here
+          if (await savedOrConfirmed()) await invoke('quit_now');
+        }),
+        await getCurrentWindow().onCloseRequested(async (event) => {
+          if (!(await savedOrConfirmed())) event.preventDefault();
+        }),
+      );
+    })();
+    return () => unlisteners.forEach((off) => off());
+  });
 
   onMount(() => {
     // Startup: load every work's corpus, then land on the last-opened chapter
@@ -473,6 +513,23 @@
   // Footnotes and Reference share the right rail and are mutually exclusive
   // (design doc D5 §4, John-confirmed 2026-07-03): opening one closes the
   // other.
+  // Inserting a footnote, or clicking its marker, asks for its body field.
+  // Each request is handled once. While the AI output or Ask panel holds the
+  // right slot the footnotes panel cannot show, so the request is dropped
+  // rather than left pending (it would re-open footnotes on every toggle and
+  // steal focus whenever that panel later closed).
+  let handledFnRequest = 0;
+  $effect(() => {
+    const req = session.fnFocusRequest;
+    if (!req || req.ts === handledFnRequest) return;
+    handledFnRequest = req.ts;
+    if (session.aiPanel || session.askPanelOpen) {
+      session.fnFocusRequest = null;
+      return;
+    }
+    if (!untrack(() => footnotesOpen)) toggleFootnotes();
+  });
+
   function toggleFootnotes() {
     footnotesOpen = !footnotesOpen;
     if (footnotesOpen) referenceOpen = false;

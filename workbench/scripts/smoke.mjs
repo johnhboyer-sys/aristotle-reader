@@ -116,6 +116,40 @@ await run('open a corpus chapter', async () => {
   check('the chapter opens with its work title', heading.startsWith('Metaphysics'), heading);
 });
 
+await run('insert a footnote and click its marker', async () => {
+  // The footnote body is typed in the side panel. Inserting a footnote, or
+  // clicking its marker, opens that panel with the cursor in the note's body.
+  const cell = page.locator('.en-cell[data-row-en="2"] .ProseMirror');
+  await cell.click();
+  await page.keyboard.type('smoke note');
+  await page.keyboard.press('Shift+Home');
+  await page.getByRole('button', { name: 'Insert footnote' }).click();
+  await page.waitForSelector('.fn-body .ProseMirror');
+  check(
+    'inserting a footnote opens the panel at its body',
+    await page.evaluate(() => !!document.activeElement?.closest('.fn-body')),
+  );
+  await page.getByRole('button', { name: 'Close footnotes' }).click();
+  await page.locator('.en-cell[data-row-en="2"] .fn-marker').first().click();
+  await page.waitForSelector('.fn-body .ProseMirror');
+  check(
+    'clicking a marker opens the panel at its body',
+    await page.evaluate(() => !!document.activeElement?.closest('.fn-body')),
+  );
+});
+
+await run('click a marker while the Ask panel holds the side slot', async () => {
+  // The footnotes panel cannot show while Ask is open, so the click must not
+  // leave the footnotes toggle stuck on or grab focus when Ask closes.
+  await page.getByRole('button', { name: 'Close footnotes' }).click();
+  await page.getByRole('button', { name: 'Toggle Ask AI panel' }).click();
+  await page.locator('.en-cell[data-row-en="2"] .fn-marker').first().click();
+  const toggle = page.getByRole('button', { name: 'Toggle footnotes panel' });
+  check('the footnotes toggle stays off', (await toggle.getAttribute('aria-pressed')) === 'false');
+  await page.getByRole('button', { name: 'Toggle Ask AI panel' }).click();
+  check('closing Ask does not open footnotes', (await page.locator('.fn-body').count()) === 0);
+});
+
 await run('create a document', async () => {
   await page.locator('.add-work', { hasText: 'New document…' }).click();
   const dialog = page.locator('.dialog', { has: page.locator('text=New document') });

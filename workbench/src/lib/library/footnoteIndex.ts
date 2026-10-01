@@ -10,7 +10,7 @@
 // So that this never requires re-reading every chapter file, each work keeps
 // a lightweight regenerable index in library storage:
 //
-//   .footnote-index.json   { "schema_version": 1, "counts": { "b07c17": 3 } }
+//   footnote-index.json    { "schema_version": 1, "counts": { "b07c17": 3 } }
 //
 // Keys are the chapter-file stem (chapterFileName minus ".md"); values are the
 // chapter's ANCHORED footnote count (markers present in the text — unanchored
@@ -27,7 +27,7 @@
 import { chapterFileName } from './storage';
 import type { LibraryStorage } from './storage';
 
-export const FOOTNOTE_INDEX_FILE = '.footnote-index.json';
+export const FOOTNOTE_INDEX_FILE = 'footnote-index.json';
 
 export interface FootnoteIndexData {
   schemaVersion: 1;
