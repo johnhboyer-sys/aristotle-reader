@@ -13,19 +13,14 @@
  * the console only (the export deliverable's degraded-state rule).
  */
 
-import { pandocDocxArgs, PANDOC_UNAVAILABLE_MESSAGE, resolvePandocProgramByRun } from './pandoc';
+import { PANDOC_UNAVAILABLE_MESSAGE } from './pandoc';
 import type { PandocDocxJob, RunResult } from './pandoc';
 import { loadSettings } from '../settings';
 import type { ExportSettings } from '../settings';
 
-/** Plain-language message when the user's OWN configured pandoc won't run. */
+/** Plain-language message when the pandoc the user picked won't run. */
 export const PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE =
-  "The Pandoc you chose in Settings couldn't be run — check the path in Settings › Export, or clear it to use the one installed on this computer.";
-
-/** How long a conversion may take before the child is killed. */
-const CONVERT_TIMEOUT_MS = 120_000;
-/** How long the `--version` probe of a configured binary may take. */
-const PROBE_TIMEOUT_MS = 10_000;
+  "The Pandoc you chose in Settings couldn't be run — choose it again in Settings › Export, or clear it to use the one installed on this computer.";
 
 /** Runs one pandoc job. */
 export type PandocRun = (job: PandocDocxJob) => Promise<RunResult>;
@@ -33,7 +28,13 @@ export type PandocRun = (job: PandocDocxJob) => Promise<RunResult>;
 /** Either a usable runner, or the plain sentence explaining why there isn't one. */
 export type PandocResolution = { run: PandocRun } | { message: string };
 
-/** The `run_program` command's result (src-tauri/src/assist.rs). */
+/** `pandoc_version`'s answer (src-tauri/src/commands.rs). */
+interface PandocProbe {
+  picked: string | null;
+  version: string | null;
+}
+
+/** `export_docx`'s answer. */
 interface RunOutcome {
   code: number | null;
   stdout: string;
@@ -43,59 +44,45 @@ interface RunOutcome {
 }
 
 /**
- * Resolve how to run pandoc.
+ * Resolve how to run pandoc. Rust chooses the program — the one the user
+ * picked in Settings, else one it finds — and builds the arguments; the
+ * window names the files (workbench-design/sandboxing-plan.md).
  *
- * A configured `pandocPath` runs through the app-owned `run_program` command
- * rather than the shell plugin, because the shell capability pins three FIXED
- * pandoc locations by scope name (src-tauri/capabilities/default.json) and
- * cannot spawn an arbitrary path. `run_program` takes the same trust boundary
- * as the AI-assist runner: an absolute executable the user picked themselves,
- * under execve with an argv array, no shell.
- *
- * A configured path that won't run is NOT silently replaced by the probed one —
- * that would export through a pandoc the user didn't choose and never say so.
- * It fails with its own sentence instead.
+ * A picked pandoc that won't run is NOT silently replaced by another: that
+ * would export through a pandoc the user didn't choose and never say so.
  */
-export async function resolveExportPandoc(configuredPath?: string): Promise<PandocResolution> {
+export async function resolveExportPandoc(): Promise<PandocResolution> {
   const { invoke } = await import('@tauri-apps/api/core');
-
-  if (configuredPath) {
-    const probe = (await invoke('run_program', {
-      binPath: configuredPath,
-      args: ['--version'],
-      timeoutMs: PROBE_TIMEOUT_MS,
-    })) as RunOutcome;
-    if (!probe.spawned || probe.code !== 0) {
-      console.error('[export] configured pandoc failed its --version probe:', configuredPath, probe);
-      return { message: PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE };
-    }
-    return {
-      run: async (job) => {
-        const out = (await invoke('run_program', {
-          binPath: configuredPath,
-          args: pandocDocxArgs(job),
-          timeoutMs: CONVERT_TIMEOUT_MS,
-        })) as RunOutcome;
-        return { code: out.spawned ? out.code : null, stdout: out.stdout, stderr: out.stderr };
-      },
-    };
+  const probe = (await invoke('pandoc_version')) as PandocProbe;
+  if (!probe.version) {
+    console.error('[export] no pandoc runs; picked:', probe.picked);
+    return { message: probe.picked ? PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE : PANDOC_UNAVAILABLE_MESSAGE };
   }
-
-  // No configured path — the existing GUI-PATH probe: run each scope name's
-  // `--version` and take the first that exits cleanly. Running IS the probe.
-  const shell = await import('@tauri-apps/plugin-shell');
-  const program = await resolvePandocProgramByRun(async (candidate) => {
-    const r = await shell.Command.create(candidate, ['--version']).execute().catch(() => null);
-    return !!r && r.code === 0;
-  });
-  if (!program) return { message: PANDOC_UNAVAILABLE_MESSAGE };
-
   return {
     run: async (job) => {
-      const { runPandocTauri } = await import('./pandoc');
-      return runPandocTauri(job, shell, program);
+      const out = (await invoke('export_docx', {
+        md: job.markdownPath,
+        docx: job.docxPath,
+        referenceDoc: job.referenceDocPath ?? null,
+      })) as RunOutcome;
+      // A run with no exit code gets a sentence in place of stderr, so the
+      // compile dialog never shows "pandoc exited null".
+      if (out.timed_out) return { code: null, stdout: out.stdout, stderr: 'Pandoc took too long and was stopped.' };
+      if (!out.spawned) return { code: null, stdout: '', stderr: "Pandoc couldn't be started." };
+      return { code: out.code, stdout: out.stdout, stderr: out.stderr };
     },
   };
+}
+
+/**
+ * Ask where to save a Word document. Rust opens the save dialog itself and
+ * remembers the answer: `export_docx` writes only to a file chosen this way,
+ * so pandoc can never overwrite a file the window merely has access to.
+ * Null when the user cancels.
+ */
+export async function chooseDocxTarget(defaultPath: string): Promise<string | null> {
+  const { invoke } = await import('@tauri-apps/api/core');
+  return (await invoke('choose_docx_target', { defaultPath })) as string | null;
 }
 
 /**

@@ -11,6 +11,12 @@
   import type { BilingualLayout, BilingualOrder, CompileMode, ExportSettings, StampMode } from '../lib/settings';
   import { isTauri } from '../lib/runtime';
 
+  /** `pandoc_version` / `pick_pandoc`'s answer (src-tauri/src/commands.rs). */
+  interface PandocProbe {
+    picked: string | null;
+    version: string | null;
+  }
+
   let loaded = $state(false);
   let stampMode = $state<StampMode>('every-5');
   let mode = $state<CompileMode>('english');
@@ -23,8 +29,9 @@
   let bilingualOrder = $state<BilingualOrder>('original-first');
   let referenceDocPath = $state<string | null>(null);
   let outputDir = $state<string | null>(null);
+  /** The pandoc the user picked, as Rust recorded it; null = found automatically. */
   let pandocPath = $state<string | null>(null);
-  /** Result of the last pandoc-path check, shown next to the row. */
+  /** Result of the last pandoc pick, shown next to the row. */
   let pandocNote = $state<string | null>(null);
   let checking = $state(false);
 
@@ -38,8 +45,15 @@
       bilingualOrder = e.bilingualOrder ?? 'original-first';
       referenceDocPath = e.referenceDocPath ?? null;
       outputDir = e.outputDir ?? null;
-      pandocPath = e.pandocPath ?? null;
       loaded = true;
+      if (isTauri()) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          pandocPath = ((await invoke('pandoc_version')) as PandocProbe).picked;
+        } catch (err) {
+          console.error('[export settings] pandoc check failed', err);
+        }
+      }
     })();
   });
 
@@ -52,7 +66,6 @@
     if (bilingualLayout !== 'auto') patch.bilingualLayout = bilingualLayout;
     if (referenceDocPath) patch.referenceDocPath = referenceDocPath;
     if (outputDir) patch.outputDir = outputDir;
-    if (pandocPath) patch.pandocPath = pandocPath;
     await updateSettings({ export: patch });
   }
 
@@ -81,37 +94,28 @@
   }
 
   /**
-   * Pick a pandoc binary and check it on the spot by running `--version`, so a
-   * wrong pick is caught here rather than at the end of an export. The check
-   * goes through the app-owned run_program command for the same reason the
-   * export does — the shell capability pins fixed pandoc paths and cannot
-   * spawn an arbitrary one.
+   * Pick a pandoc and check it on the spot by running `--version`, so a wrong
+   * pick is caught here rather than at the end of an export. Rust opens the
+   * file dialog and records the pick itself: the window can ask for a pick
+   * but cannot make one (workbench-design/sandboxing-plan.md).
    */
   async function choosePandoc() {
-    const dialog = await import('@tauri-apps/plugin-dialog');
-    const picked = await dialog.open({ multiple: false, title: 'Choose the Pandoc program' });
-    if (typeof picked !== 'string') return; // cancelled
-
     checking = true;
     pandocNote = null;
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      const probe = (await invoke('run_program', {
-        binPath: picked,
-        args: ['--version'],
-        timeoutMs: 10_000,
-      })) as { code: number | null; stdout: string; spawned: boolean };
-      if (!probe.spawned || probe.code !== 0) {
+      const probe = (await invoke('pick_pandoc')) as PandocProbe | null;
+      if (!probe) return; // cancelled
+      if (!probe.version) {
         pandocNote = "That program didn't run — nothing was changed.";
         return;
       }
-      // First line of `pandoc --version` is "pandoc 3.x.y" — echoing it back is
-      // the plainest possible confirmation that the right binary was picked.
-      pandocNote = probe.stdout.split('\n')[0]?.trim() || 'Ready.';
-      pandocPath = picked;
-      await persist();
+      pandocPath = probe.picked;
+      // First line of `pandoc --version` is "pandoc 3.x.y" — echoing it back
+      // is the plainest confirmation that the right program was picked.
+      pandocNote = probe.version || 'Ready.';
     } catch (err) {
-      console.error('[export settings] pandoc check failed', err);
+      console.error('[export settings] pandoc pick failed', err);
       pandocNote = "That program couldn't be checked — nothing was changed.";
     } finally {
       checking = false;
@@ -127,9 +131,15 @@
     await persist();
   }
   async function clearPandocPath() {
-    pandocPath = null;
-    pandocNote = null;
-    await persist();
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('forget_pandoc');
+      pandocPath = null;
+      pandocNote = null;
+    } catch (err) {
+      console.error('[export settings] could not forget the pandoc pick', err);
+      pandocNote = "That couldn't be changed.";
+    }
   }
 </script>
 

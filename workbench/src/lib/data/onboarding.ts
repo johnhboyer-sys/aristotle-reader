@@ -19,16 +19,10 @@
  */
 
 import { parseSpine } from '../corpus/spine';
-import { buildDiogenesExportCommand } from '../corpus/diogenes';
+import { exportedWorkPath } from '../corpus/discExport';
 import type { WorkManifest } from '../works/manifest';
-import { loadSettings } from '../settings';
 import { invalidateCorpus } from './corpusStore';
 import { SPINE_CONFIG } from './spineConfig';
-
-export const DEFAULT_DIOGENES_SERVER = '/Applications/Diogenes.app/Contents/server';
-
-/** Matches the capability scope entry in src-tauri/capabilities/default.json. */
-const SHELL_SCOPE_NAME = 'diogenes-export';
 
 async function fsPlugin() {
   return import('@tauri-apps/plugin-fs');
@@ -97,22 +91,45 @@ export async function copySharedLsjIfMissing(fs: FsModule): Promise<void> {
   await copySharedShardsIfMissing(fs, 'ls');
 }
 
-/** The Diogenes server directory to run the exporter from (settings override
- * or the standard install location). */
-export async function diogenesServerDir(): Promise<string> {
-  const settings = await loadSettings();
-  return settings.diogenesPath ?? DEFAULT_DIOGENES_SERVER;
-}
-
-/** True when Diogenes' xml-export.pl is where the pipeline expects it. */
+/** True when Rust finds Diogenes installed. */
 export async function diogenesAvailable(): Promise<boolean> {
   try {
-    const fs = await fsPlugin();
-    return await fs.exists(`${await diogenesServerDir()}/xml-export.pl`);
+    const { invoke } = await import('@tauri-apps/api/core');
+    return (await invoke('diogenes_status')) !== null;
   } catch (err) {
     console.warn('onboarding: Diogenes check failed', err);
     return false;
   }
+}
+
+/**
+ * Export one work's author in verse (lines) mode through Rust's
+ * `diogenes_export`, the job the disc importer uses, sharing its cache.
+ * Returns the work's XML path, or null when the export failed.
+ */
+export async function exportWorkXml(tlgAuthor: string, tlgWork: string, tlgDir: string): Promise<string | null> {
+  const fs = await fsPlugin();
+  const { appDataDir } = await import('@tauri-apps/api/path');
+  const cached = exportedWorkPath(
+    `${(await appDataDir()).replace(/[\\/]+$/, '')}/corpus/disc-export/lines`,
+    'tlg',
+    tlgAuthor,
+    tlgWork,
+  );
+  if (await fs.exists(cached)) return cached;
+
+  const { invoke } = await import('@tauri-apps/api/core');
+  const outcome = (await invoke('diogenes_export', {
+    corpus: 'tlg',
+    author: tlgAuthor,
+    lineMode: 'lines',
+    discDir: tlgDir,
+  })) as { out_dir: string; run: { code: number | null; stderr: string; spawned: boolean } };
+  if (!outcome.run.spawned || outcome.run.code !== 0) {
+    console.error(`onboarding: Diogenes export exited ${outcome.run.code}\n${outcome.run.stderr}`);
+    return null;
+  }
+  return exportedWorkPath(outcome.out_dir, 'tlg', tlgAuthor, tlgWork);
 }
 
 /** True when `dir` looks like the TLG texts folder (AUTHTAB.DIR present). */
@@ -159,48 +176,17 @@ export async function onboardWork(work: WorkManifest, tlgDir: string): Promise<O
 
   try {
     const fs = await fsPlugin();
-    const { appDataDir, join } = await import('@tauri-apps/api/path');
-    const { Command } = await import('@tauri-apps/plugin-shell');
 
-    // 1. Run the Diogenes verse-mode export into $APPDATA/export.
-    await fs.mkdir('export', { baseDir: fs.BaseDirectory.AppData, recursive: true });
-    const exportDir = await join(await appDataDir(), 'export');
-    const cmd = buildDiogenesExportCommand(
-      {
-        work: { tlg_author: work.tlgAuthor },
-        sources: {
-          diogenes_server: await diogenesServerDir(),
-          tlg_dir_env: 'TLG_DIR',
-          tlg_dir_default: tlgDir, // absolute → used as-is
-        },
-      },
-      exportDir,
-      '/',
-      () => undefined,
-    );
-
-    const xmlRelPath = `export/Diogenes-Resources/xml/tlg/tlg${work.tlgAuthor}${work.tlgWork}.xml`;
-    const alreadyExported = await fs.exists(xmlRelPath, { baseDir: fs.BaseDirectory.AppData });
-    if (!alreadyExported) {
-      // cmd.cmd[0] is "perl"; the scope entry supplies the program, we pass args.
-      const child = await Command.create(SHELL_SCOPE_NAME, cmd.cmd.slice(1), {
-        cwd: cmd.cwd,
-        env: cmd.env,
-      }).execute();
-      if (child.code !== 0) {
-        console.error(
-          `onboarding: Diogenes export exited ${child.code}\n${child.stderr}`,
-        );
-        return 'export-failed';
-      }
-    }
+    // 1. Run the Diogenes verse-mode export (Rust's diogenes_export job).
+    const xmlPath = await exportWorkXml(work.tlgAuthor, work.tlgWork, tlgDir);
+    if (xmlPath === null) return 'export-failed';
 
     // 2. Parse the exported XML into the work's spine.
-    if (!(await fs.exists(xmlRelPath, { baseDir: fs.BaseDirectory.AppData }))) {
-      console.error(`onboarding: export ran but ${xmlRelPath} is missing`);
+    if (!(await fs.exists(xmlPath))) {
+      console.error(`onboarding: export ran but ${xmlPath} is missing`);
       return 'export-failed';
     }
-    const xml = await fs.readTextFile(xmlRelPath, { baseDir: fs.BaseDirectory.AppData });
+    const xml = await fs.readTextFile(xmlPath);
     const spine = parseSpine(xml, spineConfig);
     if (spine.segments.length === 0) {
       console.error(`onboarding: parsed spine for ${work.id} has no segments`);

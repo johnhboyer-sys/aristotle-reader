@@ -4,57 +4,58 @@ _This file is the **Translation Workbench** handoff only — `workbench/`. No
 other session's handoff belongs here. Rewrite it (don't append) when you hand
 off workbench work._
 
-_Last rewritten: 2026-10-01._
+_Last rewritten: 2026-10-01 (sandbox phase 2)._
 
 ## Where things stand
 
-**John is using the app.** He tested the build from this branch in the real
-`.app` on 2026-10-01 and every item passed: typed text survives quit and
-reopen; a Physics re-import keeps its eight books after an edit; ⌘Q and the
-close button save the last keystroke; footnote text saves; the footnote panel
-opens on insert and on a marker click; Summa export to Word looks right; fold,
-rename and remove work in the rail.
+**Sandboxing, phase 2 done, on `claude/workbench-sandbox`** (pushed, no PR,
+not merged — John's say-so needed). Plan and "phase 2 as built":
+`workbench-design/sandboxing-plan.md`.
 
-- **Branch:** `claude/workbench-atomic-save`, five commits on `origin/main`
-  (0bebd082cc). **Not pushed, no PR** as of this writing.
-- **Test app:** `~/Downloads/Translation Workbench.app`, built from c49f0facee.
-  The Aug 28 build sits beside it as `Translation Workbench (Aug 28).app`.
-- **Suite:** 1,910 vitest green, `tsc` clean, `npm run smoke` 11 checks.
-  `svelte-check` reports 8 errors, all already on main (`CtxMenuItem` in
-  ChapterEditor, AssistPopover, LibraryRail) — not ours, not fixed.
-
-## The five commits
-
-1. `45eb0d6179` **Saves write a temp file and rename it into place** (chapter
-   files, `works.json`, `settings.json`). `fs:allow-rename` granted.
-2. `528d02921a` **The footnote index lost its leading dot** (from a separate
-   session). tauri-plugin-fs defaults `requireLiteralLeadingDot` to true on
-   Unix, so `/**` scopes refuse any path component starting with a dot — the
-   index had never been writable, and a dot-prefixed temp file would have
-   broken every save.
-3. `37adda7373` **⌘Q saves before quitting.** macOS's built-in Quit ended the
-   app inside the 400ms row commit + 1s autosave debounce. ⌘Q is now our own
-   menu item (`src-tauri/src/lib.rs`) → `quit-requested` → `lib/quit.ts`
-   flushes every open editor → `quit_now`.
-4. `0c5a961696` **The close button saves too; quit cannot strand the app; the
-   footnote panel opens itself.** Footnote bodies commit before any save; a
-   save that fails or takes 10s+ keeps the app open and asks; each ⌘Q is
-   numbered so the Rust 5s fallback cannot fire mid-save.
-5. `c49f0facee` **A footnote focus request the panel cannot show is dropped**
-   (while the Ask or AI panel holds the right slot).
-
-Every commit had a Grok 4.6 static review; each defect it named was fixed and,
-where it could be, pinned by a test or smoke step.
+- The window names a job and supplies data; Rust picks the program and
+  builds the arguments (`src-tauri/src/commands.rs`). `run_program`,
+  `assist_which`, the argv `assist_run` and the shell plugin are gone.
+- Commits: `f2ec0360f5` (phase 2), `518037fcbd` (Codex + Grok review fixes),
+  then a follow-up from Codex's verification (separators and invisible
+  characters refused in the custom-command alert).
+- **John tested phase 2 in the built app on 2026-10-02 and every test
+  passed** (test page with his ticks and notes:
+  https://claude.ai/artifact/GncAkTbQXTsKZHzRpR3nc8, read with ArtifactData
+  `steps` / `notes`). Watch-out: three copies sit in `~/Downloads` with one
+  bundle id, and reopening from the Dock brought back the old one mid-pass;
+  tell John to open `Translation Workbench.app` from Finder.
+- The pass found **Translate with AI showing nothing** — a pre-phase-2 bug:
+  AssistPopover's `state` prop made Svelte read the `$state` rune as a store
+  (`efc8a19e02`, smoke step added; svelte-check 8 → 6 errors).
+- **Claude Code's own sign-in** expired mid-test; the app's "needs a
+  sign-in" message was right. `claude auth login` fixed it.
+- **John's requests from the pass** (not done): the whole-work export window
+  should close after "Exported."; single-chapter export should offer the same
+  choices (translation only / bilingual…); Import a text should remember the
+  TLG folder; clicking the AI spark icon should open assist without a
+  right-click; a model picker in the AI sidebar. Citation parsing for
+  imports (Theophrastus `40*.1`, `4.61(59).1`; auto books/chapters from
+  citation levels) is **another session's track** — John, 2026-10-02.
+- **Suite:** Rust 59, vitest 1,864 (+1 live test, `discImportLive`, that
+  now fails on John's real Theophrastus cache — the citation track's, not
+  ours), `tsc` clean, `npm run smoke` 12 checks, `svelte-check` 6 errors (all
+  already on main).
+- **Gemini is disabled** (John, 2026-10-02) until its tools can be switched
+  off and that is tested. **Grok was not added** (John asked): grok 1.0.46
+  ran commands, read and wrote files with every tools-off flag it has. See
+  the plan.
 
 ## Known, not fixed
 
+- **Phase 3 is required before sharing:** the window can still write `/**`,
+  so it could overwrite a program Rust runs. Reference-doc and disc-folder
+  "was it picked" checks also wait for phase 3 (persisted-scope).
 - **Dock Quit, logout, shutdown** go through macOS `terminate:`, which tao
-  0.35.3 cannot intercept (no `applicationShouldTerminate:`). An edit made in
-  the last ~1.5s before those can be lost.
+  0.35.3 cannot intercept. An edit made in the last ~1.5s before those can be
+  lost.
 - **A write that never resolves** (a Drive hang) keeps the autosave loop
-  waiting; after "Keep Open", later edits join the hung write and are not
-  saved. Fixing it means cancelling a write in flight.
-- **Windows/Linux** keep the built-in Quit (the swap is macOS-only).
+  waiting.
+- **Windows/Linux**: built-in Quit kept; Diogenes/perl locations untested.
 
 ## Run it
 
@@ -82,13 +83,10 @@ xattr -dr com.apple.quarantine ~/Downloads/"Translation Workbench.app"
 
 ## Next
 
-1. Push and open the PR (John's call: one PR or several).
-2. Open decision for John (security review 2026-09-07,
-   `workbench-design/security-review-2026-09-07.md`): `run_program` and
-   `assist_run` run any absolute executable. Have Rust hold the picker-approved
-   paths, or state plainly that the CSP is the control.
-3. Untested since long before this session: export settings' Tauri halves
-   (reference-doc picker, pandoc override, the side-by-side bilingual table in
-   Word), lexicon pack removal, a true first-run empty state.
-4. Parked on John's taste: heading style (big titles vs small labels);
-   drag-a-chapter-into-a-Book.
+1. John's say-so on merging phase 2 (or carrying on to phase 3 on this
+   branch).
+2. Phase 3 (fs scopes + persisted-scope), phase 4
+   (graceful re-pick), phase 5 (reviews, test pass).
+3. Untested since long before: lexicon pack removal, a true first-run empty
+   state.
+4. Parked on John's taste: heading style; drag-a-chapter-into-a-Book.

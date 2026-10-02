@@ -108,6 +108,19 @@ describe('parsePlainText', () => {
 });
 
 describe('parseCodexJsonl', () => {
+  it('reads the answer when Codex runs with its tools off (codex-cli 0.159.2, 2026-10-01)', () => {
+    // Recorded from a real run with the flags in src-tauri/src/jobs.rs: with
+    // code_mode_host off, Codex reports an error item before it answers.
+    const stdout = [
+      '{"type":"thread.started","thread_id":"t"}',
+      '{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`."}}',
+      '{"type":"turn.started"}',
+      '{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"All people by nature desire to know."}}',
+      '{"type":"turn.completed","usage":{"input_tokens":1,"output_tokens":1}}',
+    ].join('\n');
+    expect(parseCodexJsonl(stdout)).toEqual({ text: 'All people by nature desire to know.' });
+  });
+
   it('extracts the last agent_message text from a realistic noisy JSONL stream', () => {
     const stdout = [
       '{"type":"reasoning","text":"thinking about the line"}',

@@ -4,9 +4,9 @@
  *   Tauri:    $APPDATA/settings.json (plugin-fs)
  *   Browser:  localStorage["workbench:settings"] (dev harness)
  *
- * Holds only what onboarding + startup need: the TLG directory, an optional
- * Diogenes server-dir override, and the last-opened chapter. No settings UI
- * beyond that. All failures degrade to defaults quietly (console-logged).
+ * Holds what onboarding, startup and the settings panes need. Never a
+ * program for Rust to run: settings.json is written by the window, so Rust
+ * keeps those itself (src-tauri/src/sandbox.rs). All failures degrade to defaults quietly (console-logged).
  */
 
 import { isTauri } from './runtime';
@@ -33,7 +33,11 @@ export type AssistApiProviderId = 'openai' | 'anthropic' | 'google';
 /** Every value `AssistSettings.provider` may take. */
 export type AssistProviderChoice = AssistCliToolId | 'custom' | AssistApiProviderId;
 
-/** User-supplied custom command config (D7 §"Provider registry", `specForCustom`). */
+/**
+ * The custom command, mirrored from Rust's record for display. Rust runs only
+ * the command the user approved in its native confirmation
+ * (src-tauri/src/sandbox.rs); nothing here is run.
+ */
 export interface AssistCustomConfig {
   /** Absolute path to the custom binary. */
   binPath?: string;
@@ -53,7 +57,8 @@ export interface AssistCustomConfig {
 export interface AssistSettings {
   /** The user's explicit provider choice. Unset → detect (prefer claude). */
   provider?: AssistProviderChoice;
-  /** Cached resolved absolute paths for the built-in CLI tools. */
+  /** Paths an older build cached for the built-in CLIs. No longer read or
+   * written: Rust finds each CLI itself. Kept so old settings still parse. */
   cliPaths?: Partial<Record<AssistCliToolId, string>>;
   /** Custom-command config (used when `provider === 'custom'`). */
   custom?: AssistCustomConfig;
@@ -83,8 +88,9 @@ export interface ExportSettings {
   referenceDocPath?: string;
   /** Folder the save dialog opens in. Unset → the system default. */
   outputDir?: string;
-  /** Absolute path to pandoc, tried BEFORE the PATH-scope probe. Unset → probe only. */
-  pandocPath?: string;
+  // No pandoc path: the window may not choose a program. A pandoc the user
+  // picks is recorded by Rust (src-tauri/src/sandbox.rs), and an old
+  // `pandocPath` is dropped by sanitizeExport.
 }
 
 export interface WorkbenchSettings {
@@ -94,15 +100,7 @@ export interface WorkbenchSettings {
    * separate field because the two discs are separate folders, and Diogenes
    * reads each through its own environment variable. */
   phiDir?: string;
-  /** Override for the Diogenes server directory (the one holding xml-export.pl). */
-  diogenesPath?: string;
-  /**
-   * Absolute path to a perl interpreter, tried before the platform guesses.
-   * Exists mainly for Windows: macOS and Linux have a system perl at a known
-   * place, but the Windows Diogenes build ships its own and we cannot yet say
-   * where. Unset → try the platform candidates in order.
-   */
-  perlPath?: string;
+  // No Diogenes or perl path: Rust finds both itself (src-tauri/src/jobs.rs).
   lastOpened?: LastOpened;
   /**
    * User-chosen folder holding the library (chapter files), e.g. a synced
@@ -243,7 +241,7 @@ export function sanitizeExport(raw: unknown): ExportSettings | undefined {
   ) {
     out.bilingualOrder = e.bilingualOrder as BilingualOrder;
   }
-  for (const key of ['referenceDocPath', 'outputDir', 'pandocPath'] as const) {
+  for (const key of ['referenceDocPath', 'outputDir'] as const) {
     const value = e[key];
     // An empty string is "cleared", not "set to nothing" — dropping it here
     // keeps a blanked-out text field from persisting as a path that resolves
@@ -261,8 +259,6 @@ export function sanitize(value: unknown): WorkbenchSettings {
   const out: WorkbenchSettings = {};
   if (typeof v.tlgDir === 'string') out.tlgDir = v.tlgDir;
   if (typeof v.phiDir === 'string') out.phiDir = v.phiDir;
-  if (typeof v.diogenesPath === 'string') out.diogenesPath = v.diogenesPath;
-  if (typeof v.perlPath === 'string') out.perlPath = v.perlPath;
   if (typeof v.libraryRoot === 'string') out.libraryRoot = v.libraryRoot;
   if (typeof v.referenceRoot === 'string') out.referenceRoot = v.referenceRoot;
   const assist = sanitizeAssist(v.assist);
@@ -344,8 +340,6 @@ export async function updateSettings(
   for (const key of [
     'tlgDir',
     'phiDir',
-    'diogenesPath',
-    'perlPath',
     'lastOpened',
     'libraryRoot',
     'referenceRoot',
