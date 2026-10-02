@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildGapReport,
+  chapterRef,
   compileWorkMarkdown,
   sortChaptersManifestOrder,
 } from '../compile';
@@ -173,6 +174,52 @@ describe('buildGapReport', () => {
     expect(report.hasGaps).toBe(false);
     expect(report.lines).toEqual([]);
     expect(report.summary).toBe('Book Α complete');
+  });
+});
+
+describe('buildGapReport — a chapter counts only if it holds English', () => {
+  const oneBookWork = { ...META, books: [{ n: 1, label: 'Α' }] };
+
+  it('chapterRef marks a chapter with only blank English lines as blank', () => {
+    expect(chapterRef(metaChapter(1, 1, { englishLines: ['', '  ', ''] })).blank).toBe(true);
+    expect(chapterRef(metaChapter(1, 1)).blank).toBeFalsy();
+  });
+
+  it('lists an opened-but-blank chapter inside the range as missing', () => {
+    const present = [{ book: 1, chapter: 1 }, { book: 1, chapter: 2, blank: true }, { book: 1, chapter: 3 }];
+    const report = buildGapReport(present, oneBookWork);
+    expect(report.lines).toEqual(['Α missing chapter 2']);
+    expect(report.summary).not.toContain('complete');
+  });
+
+  it('lists a blank chapter at the start or the end of the opened range', () => {
+    const present = [{ book: 1, chapter: 1, blank: true }, { book: 1, chapter: 2 }, { book: 1, chapter: 3, blank: true }];
+    expect(buildGapReport(present, oneBookWork).lines).toEqual(['Α missing chapters 1, 3']);
+  });
+
+  it('reads a book whose every opened chapter is blank as missing entirely', () => {
+    const present = [{ book: 1, chapter: 1, blank: true }, { book: 1, chapter: 2, blank: true }];
+    expect(buildGapReport(present, oneBookWork).lines).toEqual(['Α missing entirely']);
+  });
+
+  it('still reads complete when every opened chapter holds English', () => {
+    const present = [{ book: 1, chapter: 1 }, { book: 1, chapter: 2 }];
+    expect(buildGapReport(present, oneBookWork).summary).toBe('Book Α complete');
+  });
+
+  it('a blank document-spine file reads as missing', () => {
+    const doc = buildGapReport([{ book: 1, chapter: 1, blank: true }], FREE_WORK);
+    expect(doc.hasGaps).toBe(true);
+    expect(doc.summary).toBe('Document missing.');
+  });
+
+  it('compileWorkMarkdown reports a blank chapter it still includes as missing', () => {
+    const oneBook = { ...META, books: [{ n: 1, label: 'Α' }] };
+    const result = compileWorkMarkdown(
+      [metaChapter(1, 1), metaChapter(1, 2, { englishLines: ['', '', '', '', ''] })],
+      oneBook,
+    );
+    expect(result.gapReport.lines).toEqual(['Α missing chapter 2']);
   });
 });
 

@@ -41,8 +41,7 @@ import {
   profileOf,
   documentToPandocMarkdown,
   markupToPandoc,
-  renderSegmentsGrouped,
-  renderSegmentsPaired,
+  renderCorpusChapterBody,
 } from './pandocMarkdown';
 import type { DocumentBook } from '../works/manifest';
 
@@ -67,6 +66,14 @@ export interface CompileOptions {
 export interface CompiledChapterRef {
   book: number;
   chapter: number;
+  /** True for a chapter whose file exists but holds no English. Opening a chapter writes its file, so a file alone is not a translation. */
+  blank?: boolean;
+}
+
+/** The gap report's view of a chapter: where it sits, and whether it holds any English yet. */
+export function chapterRef(chapter: ChapterFile): CompiledChapterRef {
+  const blank = !chapter.englishLines.some((l) => l.trim().length > 0);
+  return { book: chapter.meta.book, chapter: chapter.meta.chapter, ...(blank ? { blank } : {}) };
 }
 
 export interface CompileGapReport {
@@ -115,7 +122,8 @@ export function sortChaptersManifestOrder<T>(
 
 /**
  * Build the gap notice from the set of (book, chapter) pairs actually saved,
- * given the manifest's book list. Gap detection is scoped to what's
+ * given the manifest's book list. A pair flagged `blank` (opened, no English)
+ * marks where the book's range extends but does not count as present. Gap detection is scoped to what's
  * DERIVABLE from saved files alone (this module has no ground-truth
  * chapter-count source per book): within a book that has at least one saved
  * chapter, any chapter number strictly between the min and max saved chapter
@@ -129,16 +137,18 @@ export function sortChaptersManifestOrder<T>(
 export function buildGapReport(present: CompiledChapterRef[], work: WorkMeta): CompileGapReport {
   const workScheme = getScheme(work.scheme);
   if (workScheme.spineSource === 'document') {
-    return present.length > 0
+    return present.some((p) => !p.blank)
       ? { hasGaps: false, lines: [], summary: 'Document present.' }
       : { hasGaps: true, lines: ['Document missing.'], summary: 'Document missing.' };
   }
 
   const byBook = new Map<number, number[]>();
+  const translated = new Set<string>();
   for (const p of present) {
     const list = byBook.get(p.book) ?? [];
     list.push(p.chapter);
     byBook.set(p.book, list);
+    if (!p.blank) translated.add(`${p.book}:${p.chapter}`);
   }
 
   const scheme = getScheme(work.scheme);
@@ -148,16 +158,15 @@ export function buildGapReport(present: CompiledChapterRef[], work: WorkMeta): C
     const label = scheme.bookLabel(b.n, work);
     const chapters = (byBook.get(b.n) ?? []).slice().sort((x, y) => x - y);
 
-    if (chapters.length === 0) {
+    if (!chapters.some((c) => translated.has(`${b.n}:${c}`))) {
       return { label, complete: false, note: `${label} missing entirely` };
     }
 
     const min = chapters[0];
     const max = chapters[chapters.length - 1];
-    const have = new Set(chapters);
     const missing: number[] = [];
     for (let c = min; c <= max; c++) {
-      if (!have.has(c)) missing.push(c);
+      if (!translated.has(`${b.n}:${c}`)) missing.push(c);
     }
 
     if (missing.length === 0) {
@@ -331,10 +340,7 @@ export function compileWorkMarkdown(
   };
 
   const ordered = sortChaptersManifestOrder(chapters, work, (c) => ({ book: c.meta.book, chapter: c.meta.chapter }));
-  const gapReport = buildGapReport(
-    ordered.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter })),
-    work,
-  );
+  const gapReport = buildGapReport(ordered.map(chapterRef), work);
   const workScheme = getScheme(work.scheme);
 
   if (workScheme.spineSource === 'document') {
@@ -440,9 +446,6 @@ export function compileWorkMarkdown(
     }
     sections.push(chapterHeading(chapter, work));
 
-    const scheme = getScheme(chapter.meta.citationScheme);
-    const useStamps = scheme.gutter.rowUnit === 'bekker-line';
-
     // Footnote ids are namespaced BEFORE segment derivation (a textual
     // rewrite of `{^id:` tokens — untouched by, and unaffected by, any `¶`
     // segment delimiters already in the row), so chapterSegments sees the
@@ -454,49 +457,8 @@ export function compileWorkMarkdown(
       ...chapter,
       englishLines: chapter.englishLines.map((l) => namespaceFootnoteRefs(l, prefix)),
     };
-    const segments = chapterSegments(namespacedChapter);
-
-    // Footnote ids collected from whichever rendering path ran below.
-    let footnoteIdsUsed: string[];
-
-    const layout = resolved.bilingualLayout ?? 'block';
-    if (resolved.mode === 'bilingual' && layout !== 'block') {
-      // Alternating and table need matched pairs, so both sides render in one
-      // walk — see renderSegmentsPaired for why zipping two independent passes
-      // would mis-pair.
-      const paired = renderSegmentsPaired(segments, useStamps, resolved.stampMode);
-      footnoteIdsUsed = paired.footnoteIdsUsed;
-      const assembled = assembleBilingual(paired.pairs, layout, resolved.bilingualOrder);
-      if (assembled.length > 0) sections.push(assembled.join('\n\n'));
-    } else {
-      // English mode, and bilingual 'block' — the original two-independent-
-      // passes path, kept verbatim so the default export is unchanged.
-      const english = renderSegmentsGrouped(
-        segments,
-        (seg) => seg.englishMarkup,
-        useStamps,
-        resolved.stampMode,
-      );
-      footnoteIdsUsed = english.footnoteIdsUsed;
-
-      if (resolved.mode === 'bilingual') {
-        const { paragraphs: greekParagraphs } = renderSegmentsGrouped(
-          segments,
-          (seg) => seg.greekSlice,
-          useStamps,
-          resolved.stampMode,
-        );
-        const blocks =
-          resolved.bilingualOrder === 'translation-first'
-            ? [english.paragraphs, greekParagraphs]
-            : [greekParagraphs, english.paragraphs];
-        for (const block of blocks) {
-          if (block.length > 0) sections.push(block.join('\n\n'));
-        }
-      } else if (english.paragraphs.length > 0) {
-        sections.push(english.paragraphs.join('\n\n'));
-      }
-    }
+    const { paragraphs, footnoteIdsUsed } = renderCorpusChapterBody(namespacedChapter, resolved);
+    if (paragraphs.length > 0) sections.push(paragraphs.join('\n\n'));
 
     const used = new Set(footnoteIdsUsed);
     const footnoteBlocks: string[] = [];

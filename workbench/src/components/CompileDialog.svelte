@@ -13,6 +13,7 @@
   import {
     exportWorkToDocx,
     buildGapReport,
+    chapterRef,
     compileDefaultFilename,
     PANDOC_UNAVAILABLE_MESSAGE,
   } from '../lib/export';
@@ -26,6 +27,8 @@
     resolveReferenceDoc,
   } from '../lib/export/tauriExport';
   import { chooseAgainLabel } from '../lib/picks';
+  import { exportFinish, seedChoices } from '../lib/export/choices';
+  import ExportChoices from './ExportChoices.svelte';
   import type { WorkManifest } from '../lib/works/manifest';
 
   let {
@@ -59,15 +62,11 @@
     phase = 'loading';
     try {
       const prefs = await exportSettings();
-      mode = prefs.mode ?? 'english';
-      // With no configured layout, seed the one THIS work's rendering path has
-      // always used, so an unset setting exports exactly as it did before —
-      // block for a corpus (Bekker) work, alternating for a document spine.
-      bilingualLayout =
-        prefs.bilingualLayout ??
-        (getScheme(work.scheme).spineSource === 'document' ? 'alternating' : 'block');
-      bilingualOrder = prefs.bilingualOrder ?? 'original-first';
-      stampMode = prefs.stampMode;
+      const seeded = seedChoices(prefs, getScheme(work.scheme).spineSource === 'document' ? 'document' : 'corpus');
+      mode = seeded.mode;
+      bilingualLayout = seeded.bilingualLayout;
+      bilingualOrder = seeded.bilingualOrder;
+      stampMode = seeded.stampMode;
 
       const storage = libraryStorage();
       // A document-spine work is ONE file (its in-text marks become the
@@ -108,10 +107,7 @@
         phase = 'empty';
         return;
       }
-      gapSummary = buildGapReport(
-        loaded.map((c) => ({ book: c.meta.book, chapter: c.meta.chapter })),
-        work,
-      ).summary;
+      gapSummary = buildGapReport(loaded.map(chapterRef), work).summary;
       phase = 'ready';
     } catch (err) {
       console.error('[compile] failed to read the library', err);
@@ -237,9 +233,12 @@
       }
 
       phase = 'done';
-      note = referenceNote ? `Exported. ${referenceNote}` : 'Exported.';
+      const finish = exportFinish(referenceNote);
+      note = finish.note;
       const opener = await import('@tauri-apps/plugin-opener');
       void opener.revealItemInDir(savePath).catch(() => {});
+      // The reveal has started. Close unless there is a note to read.
+      if (finish.close) onClose();
     } catch (err) {
       console.error('[compile]', err);
       const what = asMarkdown ? "The Markdown file couldn't be created." : "The Word document couldn't be created.";
@@ -287,19 +286,13 @@
         {:else}
           <p class="line">{gapSummary}</p>
 
-          <fieldset class="mode-choice">
-            <legend>Format</legend>
-            <label class="mode-option">
-              <input type="radio" name="compile-mode" value="english" disabled={phase === 'exporting'} bind:group={mode} />
-              English only
-            </label>
-            <label class="mode-option">
-              <input type="radio" name="compile-mode" value="bilingual" disabled={phase === 'exporting'} bind:group={mode} />
-              <!-- Not "Greek and English": a document work's source may be
-                   Latin, German, or anything the user imported. -->
-              Bilingual
-            </label>
-          </fieldset>
+          <ExportChoices
+            name="compile"
+            bind:mode
+            bind:bilingualLayout
+            bind:bilingualOrder
+            disabled={phase === 'exporting'}
+          />
 
           <fieldset class="mode-choice">
             <legend>File type</legend>
@@ -312,36 +305,6 @@
               Markdown (.md)
             </label>
           </fieldset>
-
-          {#if mode === 'bilingual'}
-            <fieldset class="mode-choice">
-              <legend>Layout</legend>
-              <label class="mode-option">
-                <input type="radio" name="compile-layout" value="block" bind:group={bilingualLayout} />
-                One language after the other
-              </label>
-              <label class="mode-option">
-                <input type="radio" name="compile-layout" value="alternating" bind:group={bilingualLayout} />
-                Alternating paragraphs
-              </label>
-              <label class="mode-option">
-                <input type="radio" name="compile-layout" value="table" bind:group={bilingualLayout} />
-                Side by side (two-column table)
-              </label>
-            </fieldset>
-
-            <fieldset class="mode-choice">
-              <legend>Order</legend>
-              <label class="mode-option">
-                <input type="radio" name="compile-order" value="original-first" bind:group={bilingualOrder} />
-                Original first
-              </label>
-              <label class="mode-option">
-                <input type="radio" name="compile-order" value="translation-first" bind:group={bilingualOrder} />
-                Translation first
-              </label>
-            </fieldset>
-          {/if}
 
           {#if note}
             <p class="line note">{note}</p>
