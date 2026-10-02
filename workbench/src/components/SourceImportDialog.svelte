@@ -12,7 +12,7 @@
   import type { DiscWork } from '../lib/corpus/idtWorks';
   import type { Corpus, LineMode } from '../lib/corpus/discExport';
   import { filterAuthors } from '../lib/corpus/authtab';
-  import { fetchPerseusTei, importPerseusTei, parseCtsUrn, languageFor } from '../lib/import/perseusSource';
+  import { fetchPerseusTei, importPerseusTei, parseCtsUrn, languageFor, sourceNameFor } from '../lib/import/perseusSource';
   import type { SourceImport } from '../lib/import/createSourceImport';
   import { serializeChapterFile } from '../lib/chapterfile';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
@@ -175,9 +175,9 @@
             ? 'Choose a TEI file first.'
             : null
           : link.trim().length === 0
-            ? 'Paste a Scaife address or CTS urn.'
+            ? 'Paste a Scaife address, a FREED file address or a CTS urn.'
             : linkUrn === null
-              ? 'That doesn’t look like a Perseus address.'
+              ? 'That doesn’t look like a Perseus or FREED address.'
               : null,
   );
 
@@ -192,7 +192,7 @@
       busy = 'Reading the file…';
       return importPerseusTei(fileXml!, { existingIds });
     }
-    busy = 'Fetching from Perseus…';
+    busy = `Fetching from ${linkUrn ? sourceNameFor(linkUrn) : 'Perseus'}…`;
     const xml = await fetchPerseusTei(link);
     return importPerseusTei(xml, {
       ...(linkUrn ? { language: languageFor(linkUrn) } : {}),
@@ -238,7 +238,7 @@
           A file
         </button>
         <button role="tab" aria-selected={route === 'link'} class:active={route === 'link'} onclick={() => (route = 'link')}>
-          Perseus
+          Perseus · FREED
         </button>
       </div>
 
@@ -319,8 +319,9 @@
         </div>
       {:else}
         <p class="note">
-          Paste an address from Scaife, or a CTS urn. The whole work is imported, so a passage
-          reference on the end is ignored.
+          Paste an address from Scaife, the address of a file in the CLLG FREED corpus
+          (gitlab.inria.fr/almanach/cllg/freed-corpus), or a CTS urn. The whole work is imported,
+          so a passage reference on the end is ignored.
         </p>
         <label class="field">
           <span>Address</span>

@@ -73,12 +73,23 @@ when('every cached disc export', () => {
     expect(imported).toBe(files.length);
   }, 60_000);
 
-  it('gives Bekker-style addresses, not one row per page', () => {
+  // An Aristotle file by name, not files[0]: once another author is exported
+  // (Aristophanes, tlg0019, sorts first) the first file is a play cited by
+  // line alone, which says nothing about Bekker addresses. With no Aristotle
+  // in the cache the test reports itself skipped rather than passing.
+  const aristotle = files.find((f) => f.startsWith('tlg0086'));
+
+  it.runIf(aristotle !== undefined)('gives Bekker-style addresses, not one row per page', () => {
     // Verse mode is the default precisely so this holds; if the cache were
     // built in prose mode the addresses would lose their line numbers.
-    const doc = parseTeiRows(readFileSync(`${CACHE}/${files[0]}`, 'utf8'));
+    const doc = parseTeiRows(readFileSync(`${CACHE}/${aristotle}`, 'utf8'));
     expect(doc.levelNames.length).toBeGreaterThanOrEqual(2);
     expect(doc.rows.length).toBeGreaterThan(100);
+    // The addresses themselves, not just their count: Bekker page, column and
+    // line ("402a.7"), and more of them than there are pages.
+    const lines = doc.rows.filter((r) => /^\d+[ab]\.\d+$/.test(r.ref));
+    expect(lines.length).toBeGreaterThan(100);
+    expect(new Set(lines.map((r) => r.ref.split('.')[0])).size).toBeLessThan(lines.length);
   });
 });
 

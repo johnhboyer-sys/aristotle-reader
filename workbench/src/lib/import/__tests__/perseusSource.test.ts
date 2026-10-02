@@ -11,9 +11,14 @@ import {
   NOT_A_URN_MESSAGE,
   NOT_FOUND_MESSAGE,
   FETCH_FAILED_MESSAGE,
+  FREED_NOT_FOUND_MESSAGE,
+  FREED_FETCH_FAILED_MESSAGE,
+  teiUrlCandidates,
+  sourceNameFor,
 } from '../perseusSource';
 
 const REPUBLIC = 'urn:cts:greekLit:tlg0059.tlg030.perseus-grc2';
+const FREED_ILIAD = 'urn:cts:greekLit:tlg0012.tlg001.cllg-grc1';
 
 describe('parseCtsUrn', () => {
   it('reads a bare urn', () => {
@@ -54,6 +59,25 @@ describe('parseCtsUrn', () => {
     expect(parseCtsUrn('https://example.com/something')).toBeNull();
     expect(parseCtsUrn('')).toBeNull();
   });
+
+  it('reads a FREED urn', () => {
+    expect(parseCtsUrn(FREED_ILIAD)).toEqual({
+      namespace: 'greekLit',
+      group: 'tlg0012',
+      work: 'tlg001',
+      version: 'cllg-grc1',
+    });
+  });
+
+  it('reads the address of a FREED file on GitLab — FREED shows no urn to copy', () => {
+    const page =
+      'https://gitlab.inria.fr/almanach/cllg/freed-corpus/-/blob/main/data/tlg0012/tlg001/tlg0012.tlg001.cllg-grc1.xml?ref_type=heads';
+    expect(parseCtsUrn(page)).toEqual({ namespace: 'greekLit', group: 'tlg0012', work: 'tlg001', version: 'cllg-grc1' });
+  });
+
+  it('does not read a file name as a urn unless it is a FREED one', () => {
+    expect(parseCtsUrn('https://example.com/tlg0059.tlg030.perseus-grc2.xml')).toBeNull();
+  });
 });
 
 describe('teiUrlFor', () => {
@@ -70,6 +94,14 @@ describe('teiUrlFor', () => {
 
   it('cannot name a file for a urn with no edition', () => {
     expect(teiUrlFor(parseCtsUrn('urn:cts:greekLit:tlg0059.tlg030')!)).toBeNull();
+  });
+
+  it('sends a FREED urn to the GitLab API, and only there', () => {
+    // The API, not GitLab's /-/raw/ page: the API answers a cross-site fetch
+    // (Access-Control-Allow-Origin: *) and the page does not.
+    expect(teiUrlCandidates(parseCtsUrn(FREED_ILIAD)!)).toEqual([
+      'https://gitlab.inria.fr/api/v4/projects/almanach%2Fcllg%2Ffreed-corpus/repository/files/data%2Ftlg0012%2Ftlg001%2Ftlg0012.tlg001.cllg-grc1.xml/raw?ref=main',
+    ]);
   });
 });
 
@@ -104,6 +136,22 @@ describe('fetchPerseusTei', () => {
 
   it('asks for an edition when the urn names only a work', async () => {
     await expect(fetchPerseusTei('urn:cts:greekLit:tlg0059.tlg030', ok(''))).rejects.toThrow(/which edition/);
+  });
+
+  it('names FREED, not Perseus, when a FREED text is missing or unreachable', async () => {
+    const missing = async () => ({ ok: false, status: 404, text: async () => '' });
+    const offline = async () => {
+      throw new Error('getaddrinfo ENOTFOUND');
+    };
+    await expect(fetchPerseusTei(FREED_ILIAD, missing)).rejects.toThrow(FREED_NOT_FOUND_MESSAGE);
+    await expect(fetchPerseusTei(FREED_ILIAD, offline)).rejects.toThrow(FREED_FETCH_FAILED_MESSAGE);
+  });
+});
+
+describe('sourceNameFor', () => {
+  it('tells FREED from Perseus by the edition', () => {
+    expect(sourceNameFor(parseCtsUrn(FREED_ILIAD)!)).toBe('FREED');
+    expect(sourceNameFor(parseCtsUrn(REPUBLIC)!)).toBe('Perseus');
   });
 });
 

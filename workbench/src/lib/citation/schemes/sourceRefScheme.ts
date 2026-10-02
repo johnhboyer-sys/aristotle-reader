@@ -50,17 +50,38 @@ const RUN_RE = /\d+|\D+/g;
  * it happened to be non-empty — a stray "urn:cts:greekLit:tlg0059" must still
  * be refused. Letters are matched by Unicode class, so a Greek book letter (Ζ)
  * is a legitimate component.
+ *
+ * A single space may join two runs as well: Diogenes' export of Aristophanes'
+ * fragments cites "t,ante 471.1" and "Dram Ab.t.1", and refusing the space
+ * refused the work. Only one, only between letters or digits — see
+ * SPACE_BETWEEN_RUNS; any other whitespace is still refused.
+ *
+ * A line number may also carry one trailing mark — see MARKED_LINE_COMPONENT.
  */
-const COMPONENT_RE = /^[\p{L}\p{N}]+(?:[,\-/][\p{L}\p{N}]+)*$/u;
+const COMPONENT_RE = /^[\p{L}\p{N}]+(?:[,\-/ ][\p{L}\p{N}]+)*$/u;
+
+/** The one space a component may hold: a single ASCII space with a letter or
+ * digit on each side. Everything else that is whitespace refuses the address. */
+const SPACE_BETWEEN_RUNS = /(?<=[\p{L}\p{N}]) (?=[\p{L}\p{N}])/gu;
+
+/**
+ * A line number with the one trailing mark the TLG prints on it: "605*"
+ * (Iliad 18.605), "542/45*", "26(?)", "61(59)". Refusing one lost the whole
+ * work. A survey of 205,227 citations found these four shapes and no others,
+ * every one on a number or a printed pair, so that is all this admits — a mark
+ * on a word ("note(1)", "praef*") is still parser junk. Exported because the
+ * Markdown stamper must recognise exactly the same set as a line number.
+ */
+export const MARKED_LINE_COMPONENT = /^\d+(?:[,\-/]\d+)*(?:\*|\(\?\)|\(\d+\))$/;
 
 function parseComponents(raw: string): string[] {
   if (typeof raw !== 'string' || raw.length === 0) {
     throw new Error(`source-ref address must be a non-empty string: ${JSON.stringify(raw)}`);
   }
-  if (/\s/.test(raw)) {
-    throw new Error(`source-ref address must not contain whitespace: ${JSON.stringify(raw)}`);
-  }
   const parts = raw.split('.');
+  if (/\s/.test(raw.replace(SPACE_BETWEEN_RUNS, '')) || parts.some((p) => p.split(' ').length > 2)) {
+    throw new Error(`source-ref address must not contain whitespace beyond one space inside a component: ${JSON.stringify(raw)}`);
+  }
   if (parts.length > MAX_COMPONENTS) {
     throw new Error(`source-ref address has too many components (max ${MAX_COMPONENTS}): ${JSON.stringify(raw)}`);
   }
@@ -71,10 +92,10 @@ function parseComponents(raw: string): string[] {
   if (parts.some((p) => p.length === 0)) {
     throw new Error(`source-ref address has an empty component: ${JSON.stringify(raw)}`);
   }
-  const bad = parts.find((p) => !COMPONENT_RE.test(p));
+  const bad = parts.find((p) => !COMPONENT_RE.test(p) && !MARKED_LINE_COMPONENT.test(p));
   if (bad !== undefined) {
     throw new Error(
-      `source-ref address component must be letters and digits, optionally joined by , - or /, got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
+      `source-ref address component must be letters and digits, optionally joined by , - / or one space, or a line number with one trailing * or (…), got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
     );
   }
   return parts;

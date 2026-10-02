@@ -81,6 +81,62 @@ describe('sourceRefStamps', () => {
     expect([...sourceRefStamps(deAnima).values()]).toEqual(['[402a]', '[402b]']);
   });
 
+  it('treats a marked line number as a line number', () => {
+    // The TLG prints Iliad 18.605 as "605*". It is still a line: stamping it
+    // would print [605*] mid-book and then [18] again on the next row.
+    const iliad = chapterOf({
+      title: 'Ilias',
+      rows: [
+        { ref: '18.604', text: 'τερπόμενοι·' },
+        { ref: '18.605*', text: 'δοιὼ δὲ κυβιστητῆρε' },
+        { ref: '18.606', text: 'μολπῆς ἐξάρχοντες' },
+        { ref: '19.1', text: 'Ἠὼς μὲν' },
+      ],
+    });
+    expect([...sourceRefStamps(iliad).entries()]).toEqual([
+      [0, '[18]'],
+      [3, '[19]'],
+    ]);
+    const theocritus = chapterOf({
+      title: 'Idyllia',
+      rows: [
+        { ref: '25.26(?)', text: 'a' },
+        { ref: '25.27(?)', text: 'b' },
+        { ref: '25.61(59)', text: 'c' },
+        { ref: '25.542/45*', text: 'd' },
+      ],
+    });
+    expect([...sourceRefStamps(theocritus).values()]).toEqual(['[25]']);
+  });
+
+  it('treats a printed pair of line numbers as a line number', () => {
+    // Physics 205a.25,29: the edition sets two lines as one. Stamping the pair
+    // printed [25,29] between two [205a] stamps.
+    const physics = chapterOf({
+      title: 'Physica',
+      rows: [
+        { ref: '205a.24', text: 'a' },
+        { ref: '205a.25,29', text: 'b' },
+        { ref: '205a.26', text: 'c' },
+        { ref: '205b.1', text: 'd' },
+      ],
+    });
+    expect([...sourceRefStamps(physics).entries()]).toEqual([
+      [0, '[205a]'],
+      [3, '[205b]'],
+    ]);
+    // A fragment number set as a pair sits ABOVE its lines, so it still stamps.
+    const fragments = chapterOf({
+      title: 'Fragmenta',
+      rows: [
+        { ref: '318,319.1', text: 'a' },
+        { ref: '318,319.2', text: 'b' },
+        { ref: '320.1', text: 'c' },
+      ],
+    });
+    expect([...sourceRefStamps(fragments).values()]).toEqual(['[318,319]', '[320]']);
+  });
+
   it('gives nothing for a file that is not an import', () => {
     expect(sourceRefStamps({ meta: {} } as never).size).toBe(0);
   });

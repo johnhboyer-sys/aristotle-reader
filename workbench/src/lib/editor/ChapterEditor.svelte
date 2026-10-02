@@ -420,11 +420,13 @@
    * leading page number, keep column+line (1041a6 → a6, 1041b33 → b33). Pure
    * abbreviation of the tick label — the full opaque address is untouched in
    * the model and still shown in the Lines-view gutter. Falls back to the raw
-   * address if it carries no leading page digits (nothing to trim).
+   * address if it carries no leading page digits (nothing to trim), or if
+   * trimming would leave only the TLG's trailing mark — "40*" must not show
+   * as "*", nor "26(?)" as "(?)".
    */
   function shortTick(raw: string): string {
     const short = raw.replace(/^\d+/, '');
-    return short.length > 0 ? short : raw;
+    return short.length > 0 && !/^[*(]/.test(short) ? short : raw;
   }
   /** The tick label for a flowing-view line: the FIRST line of the chapter
    * keeps its full Bekker citation (page anchors the reader); every line after
