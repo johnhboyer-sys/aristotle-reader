@@ -24,7 +24,9 @@ not merged — John's say-so needed). Plan and "phase 2 as built":
 - **Suite:** Rust 59, vitest 1,864, `tsc` clean, `npm run smoke` 11 checks.
   `svelte-check` still reports the 8 errors already on main.
 - **Gemini is disabled** (John, 2026-10-02) until its tools can be switched
-  off and that is tested.
+  off and that is tested. **Grok was not added** (John asked): grok 1.0.46
+  ran commands, read and wrote files with every tools-off flag it has. See
+  the plan.
 
 ## Known, not fixed
 

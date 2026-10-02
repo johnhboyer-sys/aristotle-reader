@@ -141,6 +141,16 @@ off and that is tested: Rust no longer knows it, Settings no longer offers
 it, and a saved Gemini choice falls to the clipboard (labelled "Gemini
 (disabled)"). Its untested invocation is noted on `AssistTool` in jobs.rs.
 
+**Grok not added (2026-10-02).** John asked for it as an option. grok 1.0.46
+cannot be stopped from using its tools in `-p` mode: with `--tools ""`, with
+every built-in tool named in `--disallowed-tools`, and with a `--deny` rule
+per tool plus `--permission-mode dontAsk`, it still ran `touch`, read a file
+outside its folder, wrote a file and fetched a page. It also loads the user's
+MCP servers and skills, and an unknown `--sandbox` profile only warns and
+runs anyway. Re-test a newer grok before adding it; until then the custom
+command (with its native confirmation) is the way to use it, at the user's
+own risk.
+
 **Handed to phase 3:**
 - Reference-doc and disc-folder paths are checked for "is a file / folder"
   only. Checking that they were picked needs picks to survive a restart
