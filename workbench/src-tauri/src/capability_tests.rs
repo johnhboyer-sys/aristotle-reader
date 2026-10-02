@@ -200,6 +200,14 @@ fn a_pick_cannot_open_rusts_records() {
     // A folder of Rust's own, picked whole, stays closed too.
     t.app.fs_scope().allow_directory(&t.appdata, true).unwrap();
     assert!(t.write_text(&t.appdata.join(crate::sandbox::APPROVED_PROGRAMS_FILE)).is_err());
+    // Nor can the pick remove or move $APPDATA itself, records and all
+    // (Codex's verification) — not even with its parent picked as well.
+    let parent = t.appdata.parent().unwrap().to_path_buf();
+    t.app.fs_scope().allow_directory(&parent, true).unwrap();
+    let elsewhere = parent.join(format!("wb-moved-{}", std::process::id()));
+    assert!(t.call("remove", serde_json::json!({ "path": p(&t.appdata), "options": { "recursive": true } })).is_err());
+    assert!(t.call("rename", serde_json::json!({ "oldPath": p(&t.appdata), "newPath": p(&elsewhere) })).is_err());
+    assert!(t.appdata.join(crate::sandbox::APPROVED_PROGRAMS_FILE).is_file() && !elsewhere.exists());
     // The positive control: the same pick still opens an ordinary file.
     t.write_text(&t.appdata.join("settings.json")).expect("ordinary app data");
 }

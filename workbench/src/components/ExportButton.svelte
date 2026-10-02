@@ -77,7 +77,6 @@
       const pathApi = await import('@tauri-apps/api/path');
       const fs = await import('@tauri-apps/plugin-fs');
       const appData = await pathApi.appDataDir();
-      await fs.mkdir(appData, { recursive: true }).catch(() => {});
       const mdPath = await pathApi.join(appData, 'export-intermediate.md');
       await fs.writeTextFile(mdPath, markdown);
 

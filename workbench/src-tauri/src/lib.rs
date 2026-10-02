@@ -33,9 +33,19 @@ fn quit_now(app: AppHandle) {
 
 /// The fs plugin, and the plugin that brings the user's dialog picks back
 /// after a restart (it must come after fs). Shared with the capability tests
-/// (capability_tests.rs), so they test the app's own wiring.
+/// (capability_tests.rs), so they test the app's own wiring. $APPDATA is
+/// created here because the window may not name it — not even to mkdir it
+/// (capabilities/default.json).
 fn with_fs_plugins<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
-    builder.plugin(tauri_plugin_fs::init()).plugin(tauri_plugin_persisted_scope::init())
+    builder
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_persisted_scope::init())
+        .setup(|app| {
+            use tauri::Manager;
+            let dir = app.path().app_data_dir()?;
+            std::fs::create_dir_all(&dir)?;
+            Ok(())
+        })
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

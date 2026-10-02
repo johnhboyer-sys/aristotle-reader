@@ -298,7 +298,8 @@ async function writeRaw(text: string): Promise<void> {
   if (isTauri()) {
     const fs = await import('@tauri-apps/plugin-fs');
     try {
-      await fs.mkdir('', { baseDir: fs.BaseDirectory.AppData, recursive: true });
+      // No mkdir of $APPDATA: Rust creates it at startup, and the window may
+      // not name it (src-tauri/capabilities/default.json).
       // Write-then-rename: a truncated settings file would lose libraryRoot,
       // and the library would open empty.
       const baseDir = fs.BaseDirectory.AppData;

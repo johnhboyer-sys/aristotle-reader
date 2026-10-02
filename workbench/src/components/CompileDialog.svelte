@@ -217,7 +217,6 @@
       } else {
         const pathApi = await import('@tauri-apps/api/path');
         const appData = await pathApi.appDataDir();
-        await fs.mkdir(appData, { recursive: true }).catch(() => {});
         const mdPath = await pathApi.join(appData, 'export-compile-intermediate.md');
 
 
