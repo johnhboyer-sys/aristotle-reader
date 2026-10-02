@@ -7,8 +7,10 @@
 // true unless the config overrides it), so `$APPDATA/**` never matches a
 // dotfile. Rust keeps its trusted state in dotfiles — the persisted-scope
 // plugin's `.persisted-scope`, and the approved-programs list — and the window
-// cannot touch them. The tests below pin both halves: Tauri's default, and
-// that our config does not override it.
+// cannot write them. It CAN delete them, by removing `$APPDATA` itself
+// recursively (the scope allows the directory), so every trusted record must
+// fail closed: missing or unreadable means nothing approved. The tests below
+// pin the write half: Tauri's default, and that our config keeps it.
 
 /// Rust's record of programs it found or the user picked. A dotfile so the
 /// window's `$APPDATA/**` scope can never write it (see above).

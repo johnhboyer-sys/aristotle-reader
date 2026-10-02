@@ -71,6 +71,31 @@ Each phase lands with its tests, and the app stays usable between phases.
 5. **Review and test.** Codex reviews the Rust and the capability file; Grok
    reviews the frontend. John tests in the built `.app` (list below).
 
+## Codex review of phase 1 (2026-10-01) — what it changes
+
+1. **Write scope must be built per command, not by deleting `/**`.** The
+   `fs:allow-appdata-*-recursive` sets add `$RESOURCE` and other app folders to
+   a scope the write commands share, so `$RESOURCE` (inside the installed app)
+   stays writable after the `/**` entries go. Phase 3 grants write commands
+   (`write*`, `create`, `mkdir`, `rename`, `copy_file`, `remove`, `truncate`)
+   scoped to `$APPDATA/**` only, and read commands to `$APPDATA`, `$RESOURCE`,
+   and picks — and adds a test that reads the effective capability.
+2. **The window can delete Rust's dotfiles** by removing `$APPDATA` itself,
+   recursively; the scope allows the directory. It still cannot *write* them.
+   So every trusted record must **fail closed**: missing, empty or unparsable
+   means nothing approved. Phase 2 tests that. (The same remove destroys the
+   user's data in `$APPDATA` — that is a data risk the window already holds over
+   the library; this plan is about running things, not about deleting.)
+3. **`is_inside` must see through symlinks.** Phase 2 canonicalizes the path
+   (or, for a file not yet created, its parent) before checking, and refuses a
+   path whose real location falls outside the root.
+4. **The AI CLIs can run commands of their own** if a prompt asks and the
+   user's own CLI settings allow it (Codex's read-only sandbox still runs
+   read-only commands; Gemini as invoked has no sandbox). Phase 2 launches each
+   with its tools switched off — flags verified against the installed Claude
+   and Codex, not assumed — and treats Gemini as unverified until it is
+   tested on a machine that has it.
+
 ## Things the survey found along the way (fixed in passing, each small)
 
 - `revealItemInDir` after export has never worked: `opener:allow-reveal-item-in-dir`
