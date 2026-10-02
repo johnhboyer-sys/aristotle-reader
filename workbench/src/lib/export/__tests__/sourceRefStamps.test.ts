@@ -109,6 +109,34 @@ describe('sourceRefStamps', () => {
     expect([...sourceRefStamps(theocritus).values()]).toEqual(['[25]']);
   });
 
+  it('treats a printed pair of line numbers as a line number', () => {
+    // Physics 205a.25,29: the edition sets two lines as one. Stamping the pair
+    // printed [25,29] between two [205a] stamps.
+    const physics = chapterOf({
+      title: 'Physica',
+      rows: [
+        { ref: '205a.24', text: 'a' },
+        { ref: '205a.25,29', text: 'b' },
+        { ref: '205a.26', text: 'c' },
+        { ref: '205b.1', text: 'd' },
+      ],
+    });
+    expect([...sourceRefStamps(physics).entries()]).toEqual([
+      [0, '[205a]'],
+      [3, '[205b]'],
+    ]);
+    // A fragment number set as a pair sits ABOVE its lines, so it still stamps.
+    const fragments = chapterOf({
+      title: 'Fragmenta',
+      rows: [
+        { ref: '318,319.1', text: 'a' },
+        { ref: '318,319.2', text: 'b' },
+        { ref: '320.1', text: 'c' },
+      ],
+    });
+    expect([...sourceRefStamps(fragments).values()]).toEqual(['[318,319]', '[320]']);
+  });
+
   it('gives nothing for a file that is not an import', () => {
     expect(sourceRefStamps({ meta: {} } as never).size).toBe(0);
   });
