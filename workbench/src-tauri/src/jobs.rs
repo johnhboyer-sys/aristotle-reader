@@ -528,6 +528,12 @@ mod tests {
                 "sonnet\n",
                 "SONNET",
                 "no-such-model",
+                // Substrings and extensions of listed names: only an exact
+                // match may pass.
+                "son",
+                "opus-",
+                "gpt-6",
+                "gpt-6-luna-x",
             ] {
                 assert!(tool.invocation("p", Some(bad)).is_err(), "{tool:?} accepted {bad:?}");
             }

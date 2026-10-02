@@ -761,7 +761,7 @@ mod tests {
     }
 
     #[test]
-    fn a_built_in_tool_refuses_a_model_before_looking_for_the_program() {
+    fn a_built_in_tool_refuses_a_model_off_its_list() {
         let err = assist_command("claude", &ApprovedPrograms::default(), "p", Some("--yolo")).unwrap_err();
         assert!(err.contains("model"), "{err}");
     }
