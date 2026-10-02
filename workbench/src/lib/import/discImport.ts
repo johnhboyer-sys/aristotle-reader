@@ -224,10 +224,14 @@ async function withKnownDivisions(
     );
   }
 
+  // The table speaks for the whole work: Books the citation tiers gave
+  // (works/citationDivisions) must not stay over the table's chapters.
+  const work = { ...imported.work };
+  delete work.bookContainers;
   return {
     ...imported,
     work: {
-      ...imported.work,
+      ...work,
       ...(applied.books.length > 0 ? { bookContainers: applied.books } : {}),
       chapterContainers: applied.chapters,
     },

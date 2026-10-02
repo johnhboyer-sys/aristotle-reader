@@ -8,6 +8,7 @@ import type { SourceRow } from '../createSourceImport';
 import { parseChapterFile, serializeChapterFile } from '../../chapterfile';
 import { rowAddressSource } from '../../library/autosave';
 import { getScheme } from '../../citation/registry';
+import { freeWorkManifest } from '../../works/freeWorks';
 
 const rows: SourceRow[] = [
   { ref: '1.1', text: 'Ἀρετῆς πέρι λέγομεν' },
@@ -167,5 +168,44 @@ describe('title rows become the outline', () => {
     // "25a" is a real line; only "t" (optionally after a number) is a title.
     const { file } = createSourceImport({ title: 'D', rows: rowsOf(['403a.25a', '403a.1n', '403a.26']) });
     expect(file.meta.headers).toBeUndefined();
+  });
+});
+
+describe('books and chapters from the citation tiers', () => {
+  const refRows = (refs: string[]) => refs.map((ref, i) => ({ ref, text: `line ${i}` }));
+  // Historia plantarum's shape, cut down: each book opens with a title
+  // "chapter" t of three lines.
+  const hp = refRows(['1.t.1.1', '1.t.1.2', '1.1.1.1', '1.2.1.1', '2.t.1.1', '2.1.1.1']);
+  const tiers = ['Book', 'chapter', 'section', 'line'];
+
+  it('gives the work Books and chapters, and marks each book’s first title row', () => {
+    const { work, file } = createSourceImport({ title: 'HP', rows: hp, levelNames: tiers });
+    expect(work.bookContainers).toEqual([
+      { label: 'Book 1', start: 1 },
+      { label: 'Book 2', start: 2 },
+    ]);
+    expect(work.chapterContainers).toEqual([
+      { label: 'Chapter 1', row: 3 },
+      { label: 'Chapter 2', row: 4 },
+      { label: 'Chapter 1', row: 6 },
+    ]);
+    expect(file.meta.headers).toEqual([
+      { row: 1, level: 1 },
+      { row: 5, level: 1 },
+    ]);
+  });
+
+  it('keeps the Books and chapters through the registry and the chapter file', () => {
+    const { work, file } = createSourceImport({ title: 'HP', rows: hp, levelNames: tiers });
+    expect(parseChapterFile(serializeChapterFile(file)).meta.headers).toEqual(file.meta.headers);
+    const manifest = freeWorkManifest(work);
+    expect(manifest.documentBookContainers).toEqual(work.bookContainers);
+    expect(manifest.documentChapterContainers).toEqual(work.chapterContainers);
+  });
+
+  it('leaves a work cited by line alone as it was', () => {
+    const { work } = createSourceImport({ title: 'Ach', rows: refRows(['1', '2', '3']), levelNames: ['line'] });
+    expect(work.bookContainers).toBeUndefined();
+    expect(work.chapterContainers).toBeUndefined();
   });
 });

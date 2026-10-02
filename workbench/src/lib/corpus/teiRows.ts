@@ -82,6 +82,10 @@ const NON_CITATION_UNITS = new Set(['para', 'card']);
  */
 const MARGINALIA_REND = 'Marginalia';
 
+/** A title the edition prints, and the line number Diogenes gives one. */
+const HEAD_TAG = 'head';
+const TITLE_N = 't';
+
 /** The unit an absolute reference system is rooted at — see addressFor. */
 const PAGE_UNIT = 'page';
 
@@ -127,9 +131,11 @@ export function parseTeiRows(xml: string): TeiDocument {
    * out once every row is in — see levelNamesFor. */
   const rowParts: Tier[][] = [];
 
-  const emit = (parts: Tier[], text: string): void => {
+  /** `shapes` false for a title row: "1.t" can be as long as a line ("1.1")
+   * and, coming first, named the Odyssey's line tier "title". */
+  const emit = (parts: Tier[], text: string, shapes = true): void => {
     if (text.length === 0) return;
-    rowParts.push(parts);
+    if (shapes) rowParts.push(parts);
     rows.push({ ref: parts.map((p) => p.n).join('.'), text });
   };
 
@@ -161,6 +167,16 @@ export function parseTeiRows(xml: string): TeiDocument {
             ? (a['subtype'] ?? type ?? tag)
             : type;
         walk(children, [...open, { name, n }]);
+        continue;
+      }
+
+      // A printed title inside a citation tier (Perseus titles each book of the
+      // Anabasis in a <head>) is a row of its own, cited "t" as Diogenes cites
+      // a title line. Dropped, the book had no title for a Book to hang on (see
+      // works/citationDivisions). A <head> outside every tier — FREED's, which
+      // sits in <body> — stays out: it has no citation to take.
+      if (tag === HEAD_TAG && open.length > 0) {
+        emit([...open, { name: 'title', n: TITLE_N }], flattenText(children), false);
         continue;
       }
 

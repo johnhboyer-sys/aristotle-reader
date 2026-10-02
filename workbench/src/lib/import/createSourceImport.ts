@@ -22,6 +22,7 @@ import { emptyRowDocJSON } from '../editor/schema';
 import { serializeRowSegments } from '../editor/serialize';
 import type { FreeWorkRecord } from '../works/freeWorks';
 import type { WorkLevel } from '../works/profile';
+import { citationDivisions } from '../works/citationDivisions';
 import { slugForTitle } from './createFreeDocument';
 
 /** The scheme every source import uses: addresses are the source's own. */
@@ -160,8 +161,10 @@ export function createSourceImport(
     rowRefs: refs,
   };
 
-  const headers = titleRowHeaders(refs);
-  if (headers.length > 0) meta.headers = headers;
+  // The source's own tiers give the Books and chapters where they can (works/
+  // citationDivisions); a book's first title row joins the outline as its root.
+  const divisions = citationDivisions(refs, spec.levelNames ?? [], titleRowHeaders(refs));
+  if (divisions.headers.length > 0) meta.headers = divisions.headers;
 
   const file: ChapterFile = {
     meta,
@@ -180,6 +183,8 @@ export function createSourceImport(
     ...(language ? { language } : {}),
     scheme: SCHEME,
     ...(levels ? { levels } : {}),
+    ...(divisions.books.length > 0 ? { bookContainers: divisions.books } : {}),
+    ...(divisions.chapters.length > 0 ? { chapterContainers: divisions.chapters } : {}),
   };
 
   return { work, file };

@@ -40,8 +40,12 @@ when('Perseus, live', () => {
     const { work, file } = importPerseusTei(xml, { language: 'Greek' });
     expect(work.title).toBe('De anima');
     expect(file.greekLines.length).toBeGreaterThan(40);
-    // Not "urn:cts:greekLit:tlg0086.1.1" — the CTS wrapper is not a tier.
-    expect(file.meta.rowRefs?.[0]).toBe('1.1');
+    // Not "urn:cts:greekLit:tlg0086.1.1" — the CTS wrapper is not a tier. The
+    // first row is Book 1's printed title, which the edition sets inside its
+    // first chapter, and the Book hangs on it.
+    expect(file.meta.rowRefs?.slice(0, 2)).toEqual(['1.1.t', '1.1']);
+    expect(file.greekLines[0]).toBe('ΠΕΡΙ ΨΥΧΗΣ Α.');
+    expect(work.bookContainers?.map((b) => b.label)).toEqual(['Book 1', 'Book 2', 'Book 3']);
     // This edition divides only to the chapter and carries no milestones, so
     // the rows are chapters. That is the source's limit, not the importer's —
     // the disc route gives Bekker lines for the same work.
@@ -90,9 +94,11 @@ when('Perseus, live', () => {
     const xml = await fetchPerseusTei('urn:cts:greekLit:tlg0012.tlg002.cllg-grc1');
     const { work, file } = importPerseusTei(xml, { language: 'Greek' });
     expect(work.levels?.map((l) => l.name)).toEqual(['book', 'line']);
-    expect(file.meta.rowRefs?.[0]).toBe('1.1');
+    // Each book's printed title is its first row, and its Book hangs on it.
+    expect(file.meta.rowRefs?.slice(0, 2)).toEqual(['1.t', '1.1']);
     expect(file.meta.rowRefs?.at(-1)).toBe('24.548');
-    expect(file.greekLines[0]).toMatch(/Ἄνδρα μοι ἔννεπε/);
+    expect(file.greekLines[1]).toMatch(/Ἄνδρα μοι ἔννεπε/);
+    expect(work.bookContainers).toHaveLength(24);
   }, 60_000);
 
   it('imports Plotinus from FREED with its ennead/treatise/section divisions', async () => {
@@ -102,6 +108,17 @@ when('Perseus, live', () => {
     // Lettered sections are the edition's own (4.7.8a–8e).
     expect(file.meta.rowRefs?.every((ref) => /^\d+\.\d+\.\d+[a-z]?$/.test(ref))).toBe(true);
     expect(file.meta.rowRefs).toContain('4.7.8a');
+  }, 60_000);
+
+  it('gives the Anabasis its seven books and their chapters, from the citation tiers', async () => {
+    const xml = await fetchPerseusTei('urn:cts:greekLit:tlg0032.tlg006.perseus-grc2');
+    const { work, file } = importPerseusTei(xml, { language: 'Greek' });
+    // Each book's <head> is its title row, and the Book hangs on it.
+    expect(work.bookContainers?.map((b) => b.label)).toEqual([1, 2, 3, 4, 5, 6, 7].map((n) => `Book ${n}`));
+    expect(file.meta.rowRefs?.[0]).toBe('1.t');
+    expect(file.greekLines[0]).toMatch(/Ἀναβάσεως/);
+    const firstBook = work.chapterContainers?.filter((c) => file.meta.rowRefs?.[c.row - 1]?.startsWith('1.'));
+    expect(firstBook?.map((c) => c.label)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => `Chapter ${n}`));
   }, 60_000);
 
   it('reports a missing FREED text as FREED’s, not Perseus’s', async () => {
