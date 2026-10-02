@@ -2529,7 +2529,7 @@
   }
 
   /** Provider for THIS request: dev fake (browser harness) → Tauri flow
-   * (cached cliPath / resolution ladder / clipboard floor, see
+   * (the CLI Rust finds or the approved custom command / clipboard floor, see
    * assistController.resolveTauriAssistProvider) → plain browser clipboard. */
   async function getAssistProvider(): Promise<AssistProvider> {
     const fake = await devFakeAssistProvider();

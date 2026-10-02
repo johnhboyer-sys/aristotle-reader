@@ -35,6 +35,9 @@
   let customArgs = $state(''); // space-separated in the UI, split on approval
   let customPromptVia = $state<'stdin' | 'arg'>('stdin');
   let approved = $state<AssistDetection['custom']>(null);
+  /** False until Rust has said which command it holds; until then a save
+   * keeps the mirror already in settings rather than erasing it. */
+  let approvedKnown = $state(false);
   let customNote = $state<string | null>(null);
 
   // api keys
@@ -72,7 +75,10 @@
   async function persist() {
     const patch: AssistSettings = {};
     if (provider) patch.provider = provider;
-    if (approved) {
+    const prev = (await loadSettings()).assist ?? {};
+    if (!approvedKnown) {
+      if (prev.custom) patch.custom = prev.custom;
+    } else if (approved) {
       patch.custom = { binPath: approved.program, args: approved.args, promptVia: approved.prompt_via };
     }
     const keys: Partial<Record<'openai' | 'anthropic' | 'google', string>> = {};
@@ -81,7 +87,6 @@
     if (apiKeys.google) keys.google = apiKeys.google;
     if (Object.keys(keys).length > 0) patch.apiKeys = keys;
     patch.includeDraft = includeDraft;
-    const prev = (await loadSettings()).assist ?? {};
     if (prev.models) patch.models = prev.models;
     await updateSettings({ assist: patch });
   }
@@ -103,6 +108,7 @@
         detect[id] = path ? { state: 'found', path } : { state: 'not-found' };
       }
       approved = found.custom;
+      approvedKnown = true;
     } catch (err) {
       console.error('[assist] detect failed', err);
       for (const id of CLI_TOOL_IDS) detect[id] = { state: 'not-found' };
@@ -119,10 +125,12 @@
       const result = (await invoke('assist_set_custom', { args, promptVia: customPromptVia })) as AssistDetection['custom'];
       if (!result) return; // cancelled at the picker or the confirmation
       approved = result;
+      approvedKnown = true;
       await persist();
     } catch (err) {
       console.error('[assist] could not set the custom command', err);
-      customNote = "That file isn't a program — nothing was changed.";
+      // Rust says why: not a program, or arguments the confirmation can't show.
+      customNote = `Nothing was changed: ${String(err)}.`;
     }
   }
 
@@ -131,9 +139,11 @@
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('assist_forget_custom');
       approved = null;
+      approvedKnown = true;
       await persist();
     } catch (err) {
       console.error('[assist] could not remove the custom command', err);
+      customNote = "The command couldn't be removed.";
     }
   }
 </script>

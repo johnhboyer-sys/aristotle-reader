@@ -13,10 +13,10 @@ use crate::sandbox::{load_approved, update_approved, ApprovedPrograms, CustomAss
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
-use tauri_plugin_fs::FsExt;
 
 const PROBE_TIMEOUT: Duration = Duration::from_secs(10);
 const CONVERT_TIMEOUT: Duration = Duration::from_secs(120);
@@ -141,10 +141,61 @@ pub async fn forget_pandoc(app: AppHandle) -> Result<(), String> {
     blocking(move || update_approved(&dir, |r| r.pandoc = None).map(|_| ()).map_err(|e| e.to_string())).await?
 }
 
+/// Word targets the user chose in the save dialog Rust opened, each good for
+/// one export. Only Rust's own save dialog adds to it: the fs plugin's runtime
+/// scope also holds open-dialog picks, such as a reference doc or a whole
+/// library folder, which pandoc must not be able to overwrite.
+#[derive(Default)]
+pub struct SaveTargets(Mutex<Vec<PathBuf>>);
+
+impl SaveTargets {
+    const fn new() -> Self {
+        SaveTargets(Mutex::new(Vec::new()))
+    }
+    fn add(&self, path: PathBuf) {
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).push(path);
+    }
+    /// True, once, for a target the user chose.
+    fn take(&self, path: &Path) -> bool {
+        let mut targets = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        match targets.iter().position(|t| t == path) {
+            Some(i) => {
+                targets.remove(i);
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+static SAVE_TARGETS: SaveTargets = SaveTargets::new();
+
+/// Ask the user where to save a Word document, in a save dialog Rust opens.
+/// `default_path` is a file name, or a folder and a file name, to start from.
+/// None when the user cancelled.
+#[tauri::command]
+pub async fn choose_docx_target(app: AppHandle, default_path: Option<String>) -> Result<Option<String>, String> {
+    blocking(move || {
+        let mut dialog = app.dialog().file().add_filter("Word document", &["docx"]);
+        if let Some(p) = default_path.map(PathBuf::from) {
+            if let Some(name) = p.file_name() {
+                dialog = dialog.set_file_name(name.to_string_lossy());
+            }
+            if let Some(dir) = p.parent().filter(|d| d.is_absolute()) {
+                dialog = dialog.set_directory(dir);
+            }
+        }
+        let path = dialog.blocking_save_file()?.into_path().ok()?;
+        SAVE_TARGETS.add(path.clone());
+        Some(path.display().to_string())
+    })
+    .await
+}
+
 /// The checks on an export's paths. `md` is the intermediate Markdown the
-/// window wrote under app data; `docx` must be a file the user chose in the
-/// save dialog this session (`docx_picked`); `reference_doc` must be an
-/// existing file. Every path is absolute, so none can reach pandoc as a flag.
+/// window wrote under app data; `docx` must be a target the user chose in
+/// Rust's save dialog (`docx_picked`); `reference_doc` must be an existing
+/// file. Every path is absolute, so none can reach pandoc as a flag.
 fn check_export_paths(appdata: &Path, md: &Path, docx: &Path, docx_picked: bool, reference_doc: Option<&Path>) -> Result<(), String> {
     if !is_really_inside(md, appdata) || !md.is_file() {
         return Err(format!("export source is not a file in app data: {}", md.display()));
@@ -171,9 +222,7 @@ fn check_export_paths(appdata: &Path, md: &Path, docx: &Path, docx_picked: bool,
 pub async fn export_docx(app: AppHandle, md: String, docx: String, reference_doc: Option<String>) -> Result<RunOutcome, String> {
     let dir = app_data(&app)?;
     let docx = PathBuf::from(docx);
-    // The save dialog adds its pick to the fs plugin's runtime scope, which
-    // the capability file's static grants do not touch.
-    let docx_picked = app.try_fs_scope().is_some_and(|s| s.is_allowed(&docx));
+    let docx_picked = SAVE_TARGETS.take(&docx);
     blocking(move || {
         let md = PathBuf::from(md);
         let reference_doc = reference_doc.map(PathBuf::from);
@@ -349,12 +398,32 @@ pub async fn assist_run(app: AppHandle, tool: String, prompt: String, timeout_ms
     })
 }
 
-/// How the confirmation shows a command: each argument that is empty or holds
-/// whitespace or a quote is single-quoted, so what the user reads is what runs.
+const MAX_CUSTOM_ARGS: usize = 32;
+const MAX_CUSTOM_ARGS_LEN: usize = 1000;
+
+/// Arguments the confirmation can show faithfully: no control characters
+/// (a newline would push a flag out of sight), no direction marks (which
+/// reorder what is shown), and few and short enough to fit the alert.
+fn check_custom_args(args: &[String]) -> Result<(), String> {
+    if args.len() > MAX_CUSTOM_ARGS || args.iter().map(String::len).sum::<usize>() > MAX_CUSTOM_ARGS_LEN {
+        return Err("the command has too many arguments to confirm".into());
+    }
+    let hidden = |c: char| {
+        c.is_control() || matches!(c, '\u{200E}' | '\u{200F}' | '\u{061C}' | '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}')
+    };
+    if args.iter().any(|a| a.chars().any(hidden)) {
+        return Err("an argument holds a character the confirmation cannot show".into());
+    }
+    Ok(())
+}
+
+/// How the confirmation shows a command: the program, then each argument on
+/// its own numbered line, single-quoted when it is empty or holds whitespace
+/// or a quote, so what the user reads is what runs.
 fn display_command(program: &Path, args: &[String]) -> String {
     let mut out = program.display().to_string();
-    for a in args {
-        out.push(' ');
+    for (i, a) in args.iter().enumerate() {
+        out.push_str(&format!("\n  {}. ", i + 1));
         if a.is_empty() || a.chars().any(|c| c.is_whitespace() || c == '\'' || c == '"') {
             out.push('\'');
             out.push_str(&a.replace('\'', r"'\''"));
@@ -377,6 +446,7 @@ pub async fn assist_set_custom(app: AppHandle, args: Vec<String>, prompt_via: St
         "arg" => PromptVia::Arg,
         other => return Err(format!("unknown prompt channel {other:?}")),
     };
+    check_custom_args(&args)?;
     blocking(move || {
         let Some(program) = pick_program(&app, "Choose the AI command") else { return Ok(None) };
         if !is_executable_file(&program) {
@@ -466,20 +536,6 @@ mod tests {
         assert!(check_export_paths(&appdata, &md, Path::new("/u/Out.docx"), true, Some(Path::new("/no/such.docx"))).is_err());
     }
 
-    /// The scope `export_docx` asks: a save-dialog pick is in it, and nothing
-    /// else is — the capability file's `/**` grants are not part of it.
-    #[test]
-    fn only_a_save_dialog_pick_is_in_the_runtime_scope() {
-        let app = tauri::test::mock_builder().plugin(tauri_plugin_fs::init()).build(tauri::test::mock_context(tauri::test::noop_assets())).unwrap();
-        let dir = temp_dir("scope");
-        let picked = dir.join("Out.docx"); // not yet created, as from a save dialog
-        let scope = app.fs_scope();
-        assert!(!scope.is_allowed(&picked));
-        scope.allow_file(&picked).unwrap();
-        assert!(scope.is_allowed(&picked));
-        assert!(!scope.is_allowed(dir.join("Other.docx")));
-    }
-
     // ── pandoc ──
 
     #[test]
@@ -545,6 +601,33 @@ mod tests {
     #[test]
     fn the_confirmation_shows_each_argument_unambiguously() {
         let args = ["-m".to_string(), "two words".into(), "".into(), "it's".into()];
-        assert_eq!(display_command(Path::new("/bin/llm"), &args), r"/bin/llm -m 'two words' '' 'it'\''s'");
+        assert_eq!(
+            display_command(Path::new("/bin/llm"), &args),
+            "/bin/llm\n  1. -m\n  2. 'two words'\n  3. ''\n  4. 'it'\\''s'"
+        );
+    }
+
+    #[test]
+    fn custom_arguments_that_could_hide_from_the_confirmation_are_refused() {
+        assert!(check_custom_args(&["-m".into(), "gpt".into()]).is_ok());
+        assert!(check_custom_args(&[]).is_ok());
+        for bad in ["a\nb", "a\rb", "x\u{202E}y", "x\u{2066}y", "x\u{200F}y", "x\u{061C}y", "\u{0}"] {
+            assert!(check_custom_args(&[bad.to_string()]).is_err(), "{bad:?} accepted");
+        }
+        assert!(check_custom_args(&["x".repeat(MAX_CUSTOM_ARGS_LEN + 1)]).is_err());
+        assert!(check_custom_args(&vec!["a".to_string(); MAX_CUSTOM_ARGS + 1]).is_err());
+    }
+
+    // ── the Word target ──
+
+    #[test]
+    fn only_a_target_rust_chose_in_its_save_dialog_is_accepted_and_only_once() {
+        let targets = SaveTargets::default();
+        let chosen = PathBuf::from("/Users/u/Out.docx");
+        assert!(!targets.take(&chosen));
+        targets.add(chosen.clone());
+        assert!(!targets.take(Path::new("/Users/u/Other.docx")));
+        assert!(targets.take(&chosen));
+        assert!(!targets.take(&chosen), "a target is good for one export");
     }
 }

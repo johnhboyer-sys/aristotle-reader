@@ -1,13 +1,14 @@
 <script lang="ts">
   // Single-chapter → Word export (build spec §8). Tauri-only: the whole
-  // control is invisible in the browser harness — export needs the shell
-  // plugin for pandoc and a native save dialog. Every failure is one plain
+  // control is invisible in the browser harness — export needs Rust's
+  // export_docx job for pandoc and a native save dialog. Every failure is one plain
   // sentence; stderr goes to the console only.
   import { isTauri } from '../lib/runtime';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
   import { parseChapterFile } from '../lib/chapterfile';
   import { chapterToPandocMarkdown } from '../lib/export';
   import {
+    chooseDocxTarget,
     defaultSavePath,
     exportSettings,
     resolveExportPandoc,
@@ -54,12 +55,10 @@
         return;
       }
 
-      const dialog = await import('@tauri-apps/plugin-dialog');
       const label = work.books[book - 1]?.label ?? String(book);
-      const docxPath = await dialog.save({
-        defaultPath: await defaultSavePath(`${work.title} ${label}.${chapter}.docx`, prefs.outputDir),
-        filters: [{ name: 'Word document', extensions: ['docx'] }],
-      });
+      const docxPath = await chooseDocxTarget(
+        await defaultSavePath(`${work.title} ${label}.${chapter}.docx`, prefs.outputDir),
+      );
       if (!docxPath) return; // user cancelled — not a failure
 
       const markdown = chapterToPandocMarkdown(parsed, work, { stampMode: prefs.stampMode ?? 'every-5' });

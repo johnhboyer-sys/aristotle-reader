@@ -250,8 +250,10 @@ impl AssistTool {
     /// a page, with and without these flags (2026-10-01):
     ///
     /// - claude 2.1.286: with `-p` alone it ran `touch`; with `--tools ""` it
-    ///   has no tools and did nothing. The MCP flags keep the user's MCP
-    ///   servers from starting.
+    ///   has no tools and did nothing. `--setting-sources ""` loads no user,
+    ///   project or local settings, so their hooks and plugins stay off (the
+    ///   user's SessionEnd hook ran without it, not with it; sign-in still
+    ///   works). The MCP flags keep the user's MCP servers from starting.
     /// - codex-cli 0.159.2: `--sandbox read-only` alone still ran a shell
     ///   command. With `code_mode_host` off every remaining tool, apply_patch
     ///   and web included, fails closed; the other switches remove the tools
@@ -268,6 +270,7 @@ impl AssistTool {
                 args: fixed(&[
                     "-p", "--output-format", "json",
                     "--tools", "",
+                    "--setting-sources", "",
                     "--strict-mcp-config", "--mcp-config", r#"{"mcpServers":{}}"#,
                 ]),
                 stdin: Some(prompt.into()),
@@ -367,6 +370,9 @@ mod tests {
         let i = args.iter().position(|a| a == "--tools").expect("--tools");
         assert_eq!(args[i + 1], "", "--tools must be followed by an empty list");
         assert!(args.iter().any(|a| a == "--strict-mcp-config"));
+        // No user, project or local settings: their hooks and plugins stay off.
+        let i = args.iter().position(|a| a == "--setting-sources").expect("--setting-sources");
+        assert_eq!(args[i + 1], "", "--setting-sources must be followed by an empty list");
     }
 
     #[test]

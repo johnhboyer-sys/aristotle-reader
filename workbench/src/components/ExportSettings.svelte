@@ -138,6 +138,7 @@
       pandocNote = null;
     } catch (err) {
       console.error('[export settings] could not forget the pandoc pick', err);
+      pandocNote = "That couldn't be changed.";
     }
   }
 </script>

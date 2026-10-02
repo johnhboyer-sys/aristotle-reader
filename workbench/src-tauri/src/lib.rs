@@ -80,6 +80,7 @@ pub fn run() {
             commands::pandoc_version,
             commands::pick_pandoc,
             commands::forget_pandoc,
+            commands::choose_docx_target,
             commands::export_docx,
             commands::diogenes_status,
             commands::diogenes_export,

@@ -18,6 +18,7 @@
   } from '../lib/export';
   import type { BilingualLayout, BilingualOrder, CompileMode, StampMode } from '../lib/export';
   import {
+    chooseDocxTarget,
     defaultSavePath,
     exportSettings,
     resolveExportPandoc,
@@ -150,12 +151,11 @@
           : compileDefaultFilename(work, mode),
         prefs.outputDir,
       );
-      const savePath = await dialog.save({
-        defaultPath,
-        filters: asMarkdown
-          ? [{ name: 'Markdown', extensions: ['md'] }]
-          : [{ name: 'Word document', extensions: ['docx'] }],
-      });
+      // A Word target comes from Rust's own save dialog: export_docx writes
+      // only there. The Markdown file the window writes itself.
+      const savePath = asMarkdown
+        ? await dialog.save({ defaultPath, filters: [{ name: 'Markdown', extensions: ['md'] }] })
+        : await chooseDocxTarget(defaultPath);
       if (!savePath) {
         phase = 'ready';
         return; // user cancelled — not a failure

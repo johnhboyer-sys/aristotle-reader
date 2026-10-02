@@ -65,9 +65,9 @@ export interface ExportChapterToDocxResult {
  * The single entry point the UI wires up: parsed chapter + work metadata in,
  * a .docx with native Word footnotes out. Pure orchestration — the actual
  * transform is chapterToPandocMarkdown, the actual subprocess is
- * runPandocNode/runPandocTauri (this function uses the Node runner; a
- * Tauri-hosted caller can instead call chapterToPandocMarkdown +
- * runPandocTauri directly if it needs plugin-fs instead of node:fs).
+ * runPandocNode (the Node runner; the app instead calls
+ * chapterToPandocMarkdown and runs pandoc through Rust's export_docx job —
+ * see tauriExport.ts).
  */
 export async function exportChapterToDocx(
   chapter: ChapterFile,

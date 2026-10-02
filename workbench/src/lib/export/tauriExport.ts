@@ -65,9 +65,24 @@ export async function resolveExportPandoc(): Promise<PandocResolution> {
         docx: job.docxPath,
         referenceDoc: job.referenceDocPath ?? null,
       })) as RunOutcome;
-      return { code: out.spawned ? out.code : null, stdout: out.stdout, stderr: out.stderr };
+      // A run with no exit code gets a sentence in place of stderr, so the
+      // compile dialog never shows "pandoc exited null".
+      if (out.timed_out) return { code: null, stdout: out.stdout, stderr: 'Pandoc took too long and was stopped.' };
+      if (!out.spawned) return { code: null, stdout: '', stderr: "Pandoc couldn't be started." };
+      return { code: out.code, stdout: out.stdout, stderr: out.stderr };
     },
   };
+}
+
+/**
+ * Ask where to save a Word document. Rust opens the save dialog itself and
+ * remembers the answer: `export_docx` writes only to a file chosen this way,
+ * so pandoc can never overwrite a file the window merely has access to.
+ * Null when the user cancels.
+ */
+export async function chooseDocxTarget(defaultPath: string): Promise<string | null> {
+  const { invoke } = await import('@tauri-apps/api/core');
+  return (await invoke('choose_docx_target', { defaultPath })) as string | null;
 }
 
 /**

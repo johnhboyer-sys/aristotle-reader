@@ -3,8 +3,9 @@
  *
  * Port of the subprocess.run(...) call built in run_export()
  * (pipeline/aristotle_pipeline/stage1_greek.py). This module builds the
- * argv/cwd/env as plain data; actual invocation is out of scope here (wired
- * later via Tauri's shell plugin).
+ * argv/cwd/env as plain data for the Node parity tooling (parity-entry.ts).
+ * The app does not use it: Rust builds and runs the export itself
+ * (`diogenes_export` in src-tauri/src/commands.rs).
  */
 
 /** The minimal manifest shape this module reads. Mirrors Manifest.data in

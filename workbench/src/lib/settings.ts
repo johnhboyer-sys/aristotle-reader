@@ -4,9 +4,9 @@
  *   Tauri:    $APPDATA/settings.json (plugin-fs)
  *   Browser:  localStorage["workbench:settings"] (dev harness)
  *
- * Holds only what onboarding + startup need: the TLG directory, an optional
- * Diogenes server-dir override, and the last-opened chapter. No settings UI
- * beyond that. All failures degrade to defaults quietly (console-logged).
+ * Holds what onboarding, startup and the settings panes need. Never a
+ * program for Rust to run: settings.json is written by the window, so Rust
+ * keeps those itself (src-tauri/src/sandbox.rs). All failures degrade to defaults quietly (console-logged).
  */
 
 import { isTauri } from './runtime';
