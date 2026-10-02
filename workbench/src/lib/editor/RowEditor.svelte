@@ -10,9 +10,8 @@
   // shifts (a split above never remounts this editor).
   //
   // AI-assist (design doc D4): this component also hosts the row's suggest
-  // affordance — a quiet glyph that is invisible at rest (§12: the
-  // collaborator should never notice it; CSS shows it only while the focused
-  // row is hovered) — and the popover anchored under the row. The editor
+  // affordance — a quiet glyph that CSS shows only on the line holding the
+  // cursor — and the popover anchored under the row. The editor
   // itself is touched by assist through exactly ONE command:
   // `insertSuggestion` below.
   import { onMount } from 'svelte';
