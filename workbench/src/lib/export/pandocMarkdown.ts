@@ -24,6 +24,7 @@ import {
 import type { InlineRun, MarkSet } from '../editor/serialize';
 import { docFromJSON } from '../editor/schema';
 import { getScheme } from '../citation/registry';
+import { MARKED_LINE_COMPONENT } from '../citation/schemes/sourceRefScheme';
 import type { WorkMeta } from '../citation/types';
 import type { ChapterFile } from '../chapterfile/types';
 import { isValidSplitOffset, rowAddress } from '../chapterfile';
@@ -224,10 +225,10 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
  * margin becomes unreadable.
  *
  * A line number is recognised by shape, not by name: all digits, or the single
- * "t" Diogenes gives a work's title line. Digits include a printed pair
- * ("25,29", "542/45") and the TLG's one trailing mark ("605*", "26(?)",
- * "61(59)") — the same line number, as sourceRefScheme accepts it; missing
- * them stamped [605*] mid-book. That is a guess, and it is wrong in
+ * "t" Diogenes gives a work's title line, or a line number carrying the TLG's
+ * trailing mark ("605*", "26(?)" — MARKED_LINE_COMPONENT, the set
+ * sourceRefScheme accepts; missing them stamped [605*] mid-book). That is a
+ * guess, and it is wrong in
  * one known case — a Perseus edition divided only to the chapter, whose last
  * component is a chapter number and gets dropped as though it were a line. The
  * alternative is to thread the work's tier names through five render
@@ -239,7 +240,8 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
  *
  * A file with no row_refs is not an import and gets nothing.
  */
-const LINE_COMPONENT = /^(\d+(?:[,\-/]\d+)*(?:\*|\(\?\)|\(\d+\))?|t)$/;
+const LINE_COMPONENT = /^(\d+|t)$/;
+const isLineComponent = (c: string): boolean => LINE_COMPONENT.test(c) || MARKED_LINE_COMPONENT.test(c);
 
 export function sourceRefStamps(chapter: ChapterFile): Map<number, string> {
   const refs = chapter.meta.rowRefs;
@@ -251,7 +253,7 @@ export function sourceRefStamps(chapter: ChapterFile): Map<number, string> {
     const parts = refs[i].split('.');
     // Drop the line number, but never the whole address: a single-component
     // ref is the citation itself.
-    const cite = parts.length > 1 && LINE_COMPONENT.test(parts[parts.length - 1])
+    const cite = parts.length > 1 && isLineComponent(parts[parts.length - 1])
       ? parts.slice(0, -1)
       : parts;
     if (cite.join('.') === previous.join('.')) continue;

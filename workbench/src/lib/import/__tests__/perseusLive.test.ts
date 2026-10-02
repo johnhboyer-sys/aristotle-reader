@@ -77,9 +77,16 @@ when('Perseus, live', () => {
     await expect(fetchPerseusTei(urn)).rejects.toThrow('Perseus has no text at that address.');
   }, 60_000);
 
+  it('imports the Iliad from FREED, marked line 18.605* included', async () => {
+    // The TLG prints 18.605 as "605*"; until the grammar took the mark, the
+    // whole Iliad was refused over that one line.
+    const xml = await fetchPerseusTei('urn:cts:greekLit:tlg0012.tlg001.cllg-grc1');
+    const { file } = importPerseusTei(xml, { language: 'Greek' });
+    expect(file.meta.rowRefs).toContain('18.605*');
+    expect(file.meta.rowRefs?.at(-1)).toBe('24.804');
+  }, 60_000);
+
   it('imports the Odyssey from FREED with book and line', async () => {
-    // Not the Iliad: the TLG numbers Iliad 18.605 as "605*", which the
-    // source-ref grammar refuses, and the importer then refuses the work.
     const xml = await fetchPerseusTei('urn:cts:greekLit:tlg0012.tlg002.cllg-grc1');
     const { work, file } = importPerseusTei(xml, { language: 'Greek' });
     expect(work.levels?.map((l) => l.name)).toEqual(['book', 'line']);

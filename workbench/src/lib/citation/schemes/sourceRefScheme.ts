@@ -51,13 +51,19 @@ const RUN_RE = /\d+|\D+/g;
  * be refused. Letters are matched by Unicode class, so a Greek book letter (Ζ)
  * is a legitimate component.
  *
- * One trailing mark is allowed too, because the TLG prints them on line
- * numbers and refusing one lost the whole work: "605*" (Iliad 18.605),
- * "542/45*", "26(?)", "61(59)". A survey of 205,227 citations found these four
- * shapes and no others, so the mark is exactly a star, "(?)", or a
- * parenthesised run — once, at the end.
+ * A line number may also carry one trailing mark — see MARKED_LINE_COMPONENT.
  */
-const COMPONENT_RE = /^[\p{L}\p{N}]+(?:[,\-/][\p{L}\p{N}]+)*(?:\*|\(\?\)|\([\p{L}\p{N}]+\))?$/u;
+const COMPONENT_RE = /^[\p{L}\p{N}]+(?:[,\-/][\p{L}\p{N}]+)*$/u;
+
+/**
+ * A line number with the one trailing mark the TLG prints on it: "605*"
+ * (Iliad 18.605), "542/45*", "26(?)", "61(59)". Refusing one lost the whole
+ * work. A survey of 205,227 citations found these four shapes and no others,
+ * every one on a number or a printed pair, so that is all this admits — a mark
+ * on a word ("note(1)", "praef*") is still parser junk. Exported because the
+ * Markdown stamper must recognise exactly the same set as a line number.
+ */
+export const MARKED_LINE_COMPONENT = /^\d+(?:[,\-/]\d+)*(?:\*|\(\?\)|\(\d+\))$/;
 
 function parseComponents(raw: string): string[] {
   if (typeof raw !== 'string' || raw.length === 0) {
@@ -77,10 +83,10 @@ function parseComponents(raw: string): string[] {
   if (parts.some((p) => p.length === 0)) {
     throw new Error(`source-ref address has an empty component: ${JSON.stringify(raw)}`);
   }
-  const bad = parts.find((p) => !COMPONENT_RE.test(p));
+  const bad = parts.find((p) => !COMPONENT_RE.test(p) && !MARKED_LINE_COMPONENT.test(p));
   if (bad !== undefined) {
     throw new Error(
-      `source-ref address component must be letters and digits, optionally joined by , - or / and ending in one * or (…), got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
+      `source-ref address component must be letters and digits, optionally joined by , - or /, or a line number with one trailing * or (…), got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
     );
   }
   return parts;

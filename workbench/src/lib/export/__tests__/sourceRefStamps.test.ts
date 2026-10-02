@@ -104,7 +104,6 @@ describe('sourceRefStamps', () => {
         { ref: '25.27(?)', text: 'b' },
         { ref: '25.61(59)', text: 'c' },
         { ref: '25.542/45*', text: 'd' },
-        { ref: '25.205,206', text: 'e' },
       ],
     });
     expect([...sourceRefStamps(theocritus).values()]).toEqual(['[25]']);

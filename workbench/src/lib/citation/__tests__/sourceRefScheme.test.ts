@@ -184,7 +184,15 @@ describe('a line number carrying the TLG’s trailing mark', () => {
   });
 
   it('refuses a mark anywhere but the end, or more than one', () => {
-    for (const raw of ['*', '*605', '6*05', '605**', '605*(?)', '(59)', '61()', '61(59', '61(!)', '61(?)a']) {
+    for (const raw of ['*', '*605', '6*05', '605**', '605*(?)', '(59)', '61()', '61(59', '61(!)', '61(?)a', '25,*']) {
+      expect(() => at(raw), raw).toThrow(/letters and digits/);
+    }
+  });
+
+  it('refuses a mark on anything but a line number', () => {
+    // Every surveyed mark sits on a number or a printed pair. A mark on a word
+    // or a lettered address is parser junk ("note(1)"), not a citation.
+    for (const raw of ['praef*', 'note(1)', 'a(?)', '61(ab)', '61(5a)', '379d*', 'a/b*']) {
       expect(() => at(raw), raw).toThrow(/letters and digits/);
     }
   });
