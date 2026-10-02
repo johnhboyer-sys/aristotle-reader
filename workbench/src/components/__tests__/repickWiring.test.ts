@@ -120,6 +120,10 @@ describe('the reference doc', () => {
     expect(src['CompileDialog.svelte']).toContain('reference.note');
   });
 
+  it('the whole-work note wraps a long path instead of running out of the dialog (Grok)', () => {
+    expect(src['CompileDialog.svelte']).toMatch(/\.note \{[^}]*overflow-wrap: anywhere;/);
+  });
+
   it('the whole-work export says what to do after choosing the reference doc again', () => {
     expect(src['CompileDialog.svelte']).toContain("note = 'Reference document chosen. Click Export… to export.'");
   });

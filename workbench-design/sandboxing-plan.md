@@ -228,6 +228,19 @@ Branch `claude/workbench-sandbox-p3`.
 5. *Two refusal tests could pass for the wrong reason* — fixed (`write_file`
    now sends its path header; `copy_file` copies a file that exists).
 
+Codex's verification passes: the record deny holds and the tests are sound,
+but a pick of `$APPDATA` itself let the window remove or move it — fixed, the
+deny now names `$APPDATA` too, and Rust creates the folder at startup (the
+window may no longer `mkdir` it). Its second pass found the general case: a
+pick of any folder that *contains* `$APPDATA` (the home folder, picked as a
+library) lets a recursive remove of that folder delete `$APPDATA` with it.
+**Accepted, 2026-10-02:** deleting the records fails closed (nothing
+approved, picks asked for again), so it cannot run a program; the loss of the
+user's own files in a picked folder is the data risk this plan already
+accepts (a pick is writable, as a library must be); and planting a record
+instead would take a chain of crafted dialogs including saving a file whose
+name starts with a dot, which the macOS save panel warns against.
+
 ## Things the survey found along the way (fixed in passing, each small)
 
 - `revealItemInDir` after export has never worked: `opener:allow-reveal-item-in-dir`

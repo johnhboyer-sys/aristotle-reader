@@ -427,6 +427,7 @@
   .line.note {
     margin-top: var(--space-3);
     color: var(--text);
+    overflow-wrap: anywhere; /* a reference doc's path can be one long word */
   }
 
   .mode-choice {
