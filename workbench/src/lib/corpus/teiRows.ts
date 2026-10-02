@@ -61,12 +61,26 @@ const SKIPPED_TAGS = new Set(['note', 'teiHeader', 'front', 'back', 'bibl', 'ref
  *
  * Diogenes exports carry no milestones (its divisions and `<l n="…">` already
  * reach line level), so nothing here changes the disc route.
+ *
+ * A milestone can also stand OUTSIDE any row. The CLLG FREED corpus cites its
+ * prose by `<milestone unit="column">` alone and puts the first one directly in
+ * <body>, before the book's <head>; ignored there, the Metaphysics opened with
+ * the address "" and the whole import was refused. So the walk records those
+ * too — see citationMilestone.
  */
 const MILESTONE_TAG = 'milestone';
 
 /** Milestone units that mark layout, not citation — they carry no `@n` anyway
  * on the files seen, but naming them documents the intent. */
 const NON_CITATION_UNITS = new Set(['para', 'card']);
+
+/**
+ * `<seg rend="Marginalia">` is how Diogenes writes the TLG's marginal signs —
+ * the diple, obelus and asterisk beside a line of Homer. They are the
+ * scholia's marks on the text, not the text: kept, Iliad 1.2 read
+ * "> οὐλομένην". Only this rend; a plain `<seg>` may hold reading text.
+ */
+const MARGINALIA_REND = 'Marginalia';
 
 /** The unit an absolute reference system is rooted at — see addressFor. */
 const PAGE_UNIT = 'page';
@@ -123,6 +137,11 @@ export function parseTeiRows(xml: string): TeiDocument {
     for (const node of nodes) {
       if (isTextNode(node)) continue;
       const tag = tagName(node);
+      if (tag === MILESTONE_TAG) {
+        const milestone = citationMilestone(node);
+        if (milestone !== null) carried.set(milestone.unit, milestone.n);
+        continue;
+      }
       if (tag === null || SKIPPED_TAGS.has(tag)) continue;
       const children = (node as Record<string, XmlNode[]>)[tag] ?? [];
       const a = attrs(node);
@@ -238,15 +257,14 @@ function splitAtMilestones(children: XmlNode[], base: Tier[], open: Map<string, 
       const tag = tagName(node);
       if (tag === null) continue;
       if (tag === MILESTONE_TAG) {
-        const a = attrs(node);
-        const unit = a['unit'];
-        const n = a['n'];
-        if (n === undefined || unit === undefined || NON_CITATION_UNITS.has(unit)) continue;
+        const milestone = citationMilestone(node);
+        if (milestone === null) continue;
         flush();
-        open.set(unit, n);
+        open.set(milestone.unit, milestone.n);
         continue;
       }
       if (SKIPPED_TAGS.has(tag)) continue;
+      if (tag === 'seg' && attrs(node)['rend'] === MARGINALIA_REND) continue;
       visit((node as Record<string, XmlNode[]>)[tag] ?? []);
     }
   };
@@ -254,6 +272,16 @@ function splitAtMilestones(children: XmlNode[], base: Tier[], open: Map<string, 
   visit(children);
   flush();
   return segments;
+}
+
+/** A milestone's unit and number, or null for one that marks layout (or has
+ * no number) and so is no citation point. */
+function citationMilestone(node: XmlNode): { unit: string; n: string } | null {
+  const a = attrs(node);
+  const unit = a['unit'];
+  const n = a['n'];
+  if (n === undefined || unit === undefined || NON_CITATION_UNITS.has(unit)) return null;
+  return { unit, n };
 }
 
 /**
@@ -278,18 +306,22 @@ function addressFor(base: Tier[], open: Map<string, string>): Tier[] {
   const milestones = [...open].map(([name, n]) => ({ name, n }));
   const foreign = milestones.filter((tier) => !base.some((b) => b.name === tier.name));
   if (foreign.length > 1 && foreign.some((tier) => tier.name === PAGE_UNIT)) return foreign;
-  return collapsePrefixes([...base, ...milestones]);
+  return collapsePrefixes([...base, ...milestones], base.length);
 }
 
 /**
  * Drop each component that the following one already spells out — "327" before
  * "327a", or a plain repeat. Leaves anything else alone: "1a" before "1" is two
  * real tiers (Bekker page, then line) and both stay.
+ *
+ * Only a milestone (index `firstMilestone` on) can spell out what precedes it.
+ * Two divisions are two tiers even when they read alike: book 1 line 1 is not
+ * "1" said twice, and collapsing it lost the book of every such line.
  */
-function collapsePrefixes(parts: Tier[]): Tier[] {
+function collapsePrefixes(parts: Tier[], firstMilestone: number): Tier[] {
   return parts.filter((part, i) => {
     const next = parts[i + 1];
-    return next === undefined || !next.n.startsWith(part.n);
+    return next === undefined || i + 1 < firstMilestone || !next.n.startsWith(part.n);
   });
 }
 

@@ -18,6 +18,7 @@
   } from '../lib/export';
   import type { BilingualLayout, BilingualOrder, CompileMode, StampMode } from '../lib/export';
   import {
+    chooseDocxTarget,
     defaultSavePath,
     exportSettings,
     resolveExportPandoc,
@@ -131,8 +132,8 @@
       let pandoc: Awaited<ReturnType<typeof resolveExportPandoc>> | null = null;
       if (!asMarkdown) {
         // resolveExportPandoc honours a pandoc chosen in Settings › Export and
-        // otherwise runs the same GUI-PATH probe this used to run inline.
-        const resolved = await resolveExportPandoc(prefs.pandocPath);
+        // otherwise uses the one Rust finds.
+        const resolved = await resolveExportPandoc();
         if ('message' in resolved) {
           note = resolved.message;
           phase = 'ready';
@@ -150,12 +151,11 @@
           : compileDefaultFilename(work, mode),
         prefs.outputDir,
       );
-      const savePath = await dialog.save({
-        defaultPath,
-        filters: asMarkdown
-          ? [{ name: 'Markdown', extensions: ['md'] }]
-          : [{ name: 'Word document', extensions: ['docx'] }],
-      });
+      // A Word target comes from Rust's own save dialog: export_docx writes
+      // only there. The Markdown file the window writes itself.
+      const savePath = asMarkdown
+        ? await dialog.save({ defaultPath, filters: [{ name: 'Markdown', extensions: ['md'] }] })
+        : await chooseDocxTarget(defaultPath);
       if (!savePath) {
         phase = 'ready';
         return; // user cancelled — not a failure
@@ -164,7 +164,7 @@
       // exportWorkToDocx (index.ts) runs pandoc via node:child_process,
       // which doesn't exist under Tauri's webview — so the compile step
       // here mirrors ExportButton's split: build markdown via the same
-      // compile module, run pandoc via the Tauri shell runner.
+      // compile module, run pandoc through Rust's export_docx job.
       const { compileWorkMarkdown } = await import('../lib/export/compile');
       // A marker-driven document work is one file — split it at its in-text
       // Book/Chapter marks so the export carries those headings (the marks ARE

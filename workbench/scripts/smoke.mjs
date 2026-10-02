@@ -150,6 +150,25 @@ await run('click a marker while the Ask panel holds the side slot', async () => 
   check('closing Ask does not open footnotes', (await page.locator('.fn-body').count()) === 0);
 });
 
+await run('translate a line with AI', async () => {
+  // The popover that shows a suggestion crashed on render ("state is not a
+  // store"), so Translate with AI did nothing at all. The browser harness
+  // answers with the dev fake provider.
+  await page.evaluate(() => {
+    window.__assistFake = 'smoke suggestion';
+    window.__assistFakeDelayMs = 100;
+  });
+  await page.locator('.en-cell[data-row-en="4"] .ProseMirror').click({ button: 'right' });
+  await page.locator('[role="menu"]').getByText('Translate with AI').click();
+  await page.waitForSelector('.assist-popover .assist-text');
+  check(
+    'the suggestion appears in the popover',
+    (await page.locator('.assist-popover .assist-text').innerText()).includes('smoke suggestion'),
+  );
+  await page.getByRole('button', { name: 'Dismiss' }).click();
+  await page.evaluate(() => { window.__assistFake = undefined; });
+});
+
 await run('create a document', async () => {
   await page.locator('.add-work', { hasText: 'New document…' }).click();
   const dialog = page.locator('.dialog', { has: page.locator('text=New document') });

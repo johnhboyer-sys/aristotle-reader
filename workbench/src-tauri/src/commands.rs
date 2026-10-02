@@ -1,0 +1,646 @@
+// The job commands the window may call (workbench-design/sandboxing-plan.md,
+// phase 2). The window names a job and supplies data; it never supplies a
+// program or argv. Programs come from Rust's own search or from a native
+// dialog Rust opens itself, recorded in $APPDATA/.approved-programs.json
+// (sandbox.rs), which the window cannot write.
+
+use crate::assist::{augmented_path, is_executable_file, run_blocking, run_with_timeout, which_blocking, AssistOutcome};
+use crate::jobs::{
+    diogenes_export_args, diogenes_server_candidates, is_really_inside, pandoc_docx_args, perl_candidates, AssistTool,
+    Corpus, Invocation, LineMode,
+};
+use crate::sandbox::{load_approved, update_approved, ApprovedPrograms, CustomAssist, PromptVia};
+use serde::Serialize;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::sync::Mutex;
+use std::time::Duration;
+use tauri::{AppHandle, Manager};
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+
+const PROBE_TIMEOUT: Duration = Duration::from_secs(10);
+const CONVERT_TIMEOUT: Duration = Duration::from_secs(120);
+/// Whole-author exports are slow: Plato's 41 works take minutes.
+const EXPORT_TIMEOUT: Duration = Duration::from_secs(15 * 60);
+const ASSIST_MAX_TIMEOUT_MS: u64 = 10 * 60 * 1000;
+
+/// A finished (or failed-to-start) program run, for the window's console.
+#[derive(Serialize, Debug)]
+pub struct RunOutcome {
+    /// Exit code; None when the process was killed (timeout) or never spawned.
+    code: Option<i32>,
+    stdout: String,
+    stderr: String,
+    timed_out: bool,
+    spawned: bool,
+}
+
+impl RunOutcome {
+    fn not_spawned() -> Self {
+        RunOutcome { code: None, stdout: String::new(), stderr: String::new(), timed_out: false, spawned: false }
+    }
+}
+
+fn run(cmd: Command, timeout: Duration) -> RunOutcome {
+    match run_with_timeout(cmd, None, timeout) {
+        Ok(out) => RunOutcome { code: out.status, stdout: out.stdout, stderr: out.stderr, timed_out: out.timed_out, spawned: true },
+        Err(err) => {
+            eprintln!("[jobs] failed to spawn: {err}");
+            RunOutcome::not_spawned()
+        }
+    }
+}
+
+fn app_data(app: &AppHandle) -> Result<PathBuf, String> {
+    app.path().app_data_dir().map_err(|e| format!("no app data folder: {e}"))
+}
+
+async fn blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(f).await.map_err(|e| format!("job panicked: {e}"))
+}
+
+/// A program the user picks in a native file dialog Rust opens, so the window
+/// can ask for a pick but cannot make one.
+/// None when the user cancelled. The pick may not be a program at all; the
+/// caller checks that before recording it.
+fn pick_program(app: &AppHandle, title: &str) -> Option<PathBuf> {
+    app.dialog().file().set_title(title).blocking_pick_file()?.into_path().ok()
+}
+
+// ── pandoc ──────────────────────────────────────────────────────────────────
+
+/// Where Homebrew puts pandoc. A Finder-launched app's PATH has neither.
+const PANDOC_CANDIDATES: [&str; 2] = ["/opt/homebrew/bin/pandoc", "/usr/local/bin/pandoc"];
+
+/// The pandoc to run: the user's pick when there is one — and then only that;
+/// a pick that will not run is not quietly swapped for another — else one
+/// Rust finds.
+fn pandoc_program(approved: &ApprovedPrograms) -> (bool, Option<PathBuf>) {
+    if let Some(p) = &approved.pandoc {
+        return (true, is_executable_file(p).then(|| p.clone()));
+    }
+    let found = which_blocking(PANDOC_CANDIDATES.map(String::from).to_vec(), Some("pandoc".into()));
+    (false, found.map(PathBuf::from))
+}
+
+/// The first line of `<program> --version`, when it runs cleanly.
+fn version_line(program: &Path) -> Option<String> {
+    let mut cmd = Command::new(program);
+    cmd.arg("--version").env("PATH", augmented_path()).current_dir(std::env::temp_dir());
+    let out = run(cmd, PROBE_TIMEOUT);
+    (out.code == Some(0)).then(|| out.stdout.lines().next().unwrap_or("").trim().to_string())
+}
+
+#[derive(Serialize, Debug)]
+pub struct PandocProbe {
+    /// The program the user picked, if any — shown in Settings.
+    picked: Option<String>,
+    /// `pandoc 3.x`, or None when no pandoc runs.
+    version: Option<String>,
+}
+
+/// Which pandoc export would use, and whether it runs.
+#[tauri::command]
+pub async fn pandoc_version(app: AppHandle) -> Result<PandocProbe, String> {
+    let dir = app_data(&app)?;
+    blocking(move || {
+        let approved = load_approved(&dir);
+        let (_, program) = pandoc_program(&approved);
+        PandocProbe {
+            picked: approved.pandoc.map(|p| p.display().to_string()),
+            version: program.as_deref().and_then(version_line),
+        }
+    })
+    .await
+}
+
+/// Ask the user for a pandoc in a native dialog, check it runs, and record it.
+/// None when the user cancelled; `version: None` when the pick does not run,
+/// in which case nothing changed.
+#[tauri::command]
+pub async fn pick_pandoc(app: AppHandle) -> Result<Option<PandocProbe>, String> {
+    let dir = app_data(&app)?;
+    blocking(move || {
+        let Some(path) = pick_program(&app, "Choose the Pandoc program") else {
+            return Ok(None);
+        };
+        let Some(version) = version_line(&path) else {
+            eprintln!("[jobs] picked pandoc failed --version: {}", path.display());
+            return Ok(Some(PandocProbe { picked: load_approved(&dir).pandoc.map(|p| p.display().to_string()), version: None }));
+        };
+        update_approved(&dir, |r| r.pandoc = Some(path.clone())).map_err(|e| e.to_string())?;
+        Ok(Some(PandocProbe { picked: Some(path.display().to_string()), version: Some(version) }))
+    })
+    .await?
+}
+
+/// Forget the user's pandoc; export goes back to the one Rust finds.
+#[tauri::command]
+pub async fn forget_pandoc(app: AppHandle) -> Result<(), String> {
+    let dir = app_data(&app)?;
+    blocking(move || update_approved(&dir, |r| r.pandoc = None).map(|_| ()).map_err(|e| e.to_string())).await?
+}
+
+/// Word targets the user chose in the save dialog Rust opened, each good for
+/// one export. Only Rust's own save dialog adds to it: the fs plugin's runtime
+/// scope also holds open-dialog picks, such as a reference doc or a whole
+/// library folder, which pandoc must not be able to overwrite.
+#[derive(Default)]
+pub struct SaveTargets(Mutex<Vec<PathBuf>>);
+
+impl SaveTargets {
+    const fn new() -> Self {
+        SaveTargets(Mutex::new(Vec::new()))
+    }
+    fn add(&self, path: PathBuf) {
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).push(path);
+    }
+    /// True, once, for a target the user chose.
+    fn take(&self, path: &Path) -> bool {
+        let mut targets = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        match targets.iter().position(|t| t == path) {
+            Some(i) => {
+                targets.remove(i);
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+static SAVE_TARGETS: SaveTargets = SaveTargets::new();
+
+/// Ask the user where to save a Word document, in a save dialog Rust opens.
+/// `default_path` is a file name, or a folder and a file name, to start from.
+/// None when the user cancelled.
+#[tauri::command]
+pub async fn choose_docx_target(app: AppHandle, default_path: Option<String>) -> Result<Option<String>, String> {
+    blocking(move || {
+        let mut dialog = app.dialog().file().add_filter("Word document", &["docx"]);
+        if let Some(p) = default_path.map(PathBuf::from) {
+            if let Some(name) = p.file_name() {
+                dialog = dialog.set_file_name(name.to_string_lossy());
+            }
+            if let Some(dir) = p.parent().filter(|d| d.is_absolute()) {
+                dialog = dialog.set_directory(dir);
+            }
+        }
+        let path = dialog.blocking_save_file()?.into_path().ok()?;
+        SAVE_TARGETS.add(path.clone());
+        Some(path.display().to_string())
+    })
+    .await
+}
+
+/// The checks on an export's paths. `md` is the intermediate Markdown the
+/// window wrote under app data; `docx` must be a target the user chose in
+/// Rust's save dialog (`docx_picked`); `reference_doc` must be an existing
+/// file. Every path is absolute, so none can reach pandoc as a flag.
+fn check_export_paths(appdata: &Path, md: &Path, docx: &Path, docx_picked: bool, reference_doc: Option<&Path>) -> Result<(), String> {
+    if !is_really_inside(md, appdata) || !md.is_file() {
+        return Err(format!("export source is not a file in app data: {}", md.display()));
+    }
+    let is_docx = docx.extension().is_some_and(|e| e.eq_ignore_ascii_case("docx"));
+    if !docx.is_absolute() || !is_docx || !docx_picked {
+        return Err(format!("export target was not chosen in the save dialog: {}", docx.display()));
+    }
+    // TODO(phase 3): a reference doc must also be the bundled one or a pick,
+    // once picks persist across restarts (tauri-plugin-persisted-scope).
+    // Checked against the scope now, a reference doc picked in an earlier
+    // session would fail every export until it was picked again.
+    if let Some(r) = reference_doc {
+        if !r.is_absolute() || !r.is_file() {
+            return Err(format!("reference doc is not a file: {}", r.display()));
+        }
+    }
+    Ok(())
+}
+
+/// Convert the intermediate Markdown to Word with pandoc. pandoc prints
+/// nothing on success, so the caller reads the exit code.
+#[tauri::command]
+pub async fn export_docx(app: AppHandle, md: String, docx: String, reference_doc: Option<String>) -> Result<RunOutcome, String> {
+    let dir = app_data(&app)?;
+    let docx = PathBuf::from(docx);
+    let docx_picked = SAVE_TARGETS.take(&docx);
+    blocking(move || {
+        let md = PathBuf::from(md);
+        let reference_doc = reference_doc.map(PathBuf::from);
+        check_export_paths(&dir, &md, &docx, docx_picked, reference_doc.as_deref())?;
+        let (_, Some(program)) = pandoc_program(&load_approved(&dir)) else {
+            return Ok(RunOutcome::not_spawned());
+        };
+        let mut cmd = Command::new(program);
+        cmd.args(pandoc_docx_args(&md, &docx, reference_doc.as_deref()))
+            .env("PATH", augmented_path())
+            .current_dir(std::env::temp_dir());
+        Ok(run(cmd, CONVERT_TIMEOUT))
+    })
+    .await?
+}
+
+// ── Diogenes ────────────────────────────────────────────────────────────────
+
+/// The first Diogenes server folder that holds xml-export.pl.
+fn diogenes_server() -> Option<PathBuf> {
+    diogenes_server_candidates().into_iter().find(|d| d.join("xml-export.pl").is_file())
+}
+
+/// Where Diogenes is installed, or None — onboarding and the disc importer
+/// ask before offering an export.
+#[tauri::command]
+pub async fn diogenes_status() -> Result<Option<String>, String> {
+    blocking(|| diogenes_server().map(|p| p.display().to_string())).await
+}
+
+#[derive(Serialize, Debug)]
+pub struct DiogenesOutcome {
+    /// Where the export landed; the exporter appends Diogenes-Resources/xml/<corpus>/.
+    out_dir: String,
+    run: RunOutcome,
+}
+
+/// Run xml-export.pl from its own folder (it loads its modules by relative
+/// path), with the disc folder in the one environment variable Diogenes reads.
+fn run_diogenes(perl: &Path, server: &Path, corpus: Corpus, disc_dir: &Path, args: Vec<String>, timeout: Duration) -> RunOutcome {
+    let mut cmd = Command::new(perl);
+    cmd.args(args)
+        .current_dir(server)
+        .env("PATH", augmented_path())
+        .env(corpus.disc_env_var(), disc_dir);
+    run(cmd, timeout)
+}
+
+/// Export one author from the user's TLG or PHI disc into
+/// $APPDATA/corpus/disc-export/<line mode>.
+#[tauri::command]
+pub async fn diogenes_export(
+    app: AppHandle,
+    corpus: String,
+    author: String,
+    line_mode: String,
+    disc_dir: String,
+) -> Result<DiogenesOutcome, String> {
+    let dir = app_data(&app)?;
+    blocking(move || {
+        let corpus = Corpus::parse(&corpus)?;
+        let line_mode = LineMode::parse(&line_mode)?;
+        let disc_dir = PathBuf::from(disc_dir);
+        // TODO(phase 3): the disc folder must also be a pick, once picks
+        // persist across restarts — settings keep it between sessions.
+        if !disc_dir.is_absolute() || !disc_dir.is_dir() {
+            return Err(format!("disc folder is not a folder: {}", disc_dir.display()));
+        }
+        let out_dir = dir.join("corpus").join("disc-export").join(line_mode.name());
+        std::fs::create_dir_all(&out_dir).map_err(|e| format!("cannot create {}: {e}", out_dir.display()))?;
+        if !is_really_inside(&out_dir, &dir) {
+            return Err(format!("export folder resolves outside app data: {}", out_dir.display()));
+        }
+        let args = diogenes_export_args(corpus, &author, &out_dir, line_mode)?;
+        let out_dir_text = out_dir.display().to_string();
+        let Some(server) = diogenes_server() else {
+            return Ok(DiogenesOutcome { out_dir: out_dir_text, run: RunOutcome::not_spawned() });
+        };
+        let Some(perl) = perl_candidates(&server).into_iter().find(|p| is_executable_file(p)) else {
+            eprintln!("[jobs] no perl for Diogenes at {}", server.display());
+            return Ok(DiogenesOutcome { out_dir: out_dir_text, run: RunOutcome::not_spawned() });
+        };
+        Ok(DiogenesOutcome { out_dir: out_dir_text, run: run_diogenes(&perl, &server, corpus, &disc_dir, args, EXPORT_TIMEOUT) })
+    })
+    .await?
+}
+
+// ── AI assist ───────────────────────────────────────────────────────────────
+
+fn home() -> PathBuf {
+    std::env::var_os("HOME").map(PathBuf::from).unwrap_or_default()
+}
+
+/// Where a built-in AI CLI is, found by Rust alone.
+fn find_tool(tool: AssistTool) -> Option<PathBuf> {
+    let candidates = tool.candidate_paths(&home()).iter().map(|p| p.display().to_string()).collect();
+    which_blocking(candidates, Some(tool.bin_name().into())).map(PathBuf::from)
+}
+
+/// The program and invocation for `tool` ("claude", "codex" or "custom"), or why there is none.
+fn assist_command(tool: &str, approved: &ApprovedPrograms, prompt: &str) -> Result<(PathBuf, Invocation), String> {
+    if tool == "custom" {
+        let c = approved.custom_assist.as_ref().ok_or("no custom command approved")?;
+        let mut args = c.args.clone();
+        let stdin = match c.prompt_via {
+            PromptVia::Stdin => Some(prompt.to_string()),
+            PromptVia::Arg => {
+                args.push(prompt.to_string());
+                None
+            }
+        };
+        return Ok((c.program.clone(), Invocation { args, stdin }));
+    }
+    let t = AssistTool::parse(tool)?;
+    let program = find_tool(t).ok_or_else(|| format!("{tool} is not installed"))?;
+    Ok((program, t.invocation(prompt)))
+}
+
+#[derive(Serialize, Debug)]
+pub struct CustomAssistView {
+    program: String,
+    args: Vec<String>,
+    prompt_via: PromptVia,
+}
+
+impl From<&CustomAssist> for CustomAssistView {
+    fn from(c: &CustomAssist) -> Self {
+        CustomAssistView { program: c.program.display().to_string(), args: c.args.clone(), prompt_via: c.prompt_via }
+    }
+}
+
+#[derive(Serialize, Debug)]
+pub struct AssistDetection {
+    claude: Option<String>,
+    codex: Option<String>,
+    custom: Option<CustomAssistView>,
+}
+
+/// Which AI CLIs Rust can find, and the approved custom command.
+#[tauri::command]
+pub async fn assist_detect(app: AppHandle) -> Result<AssistDetection, String> {
+    let dir = app_data(&app)?;
+    blocking(move || {
+        let found = |t| find_tool(t).map(|p| p.display().to_string());
+        AssistDetection {
+            claude: found(AssistTool::Claude),
+            codex: found(AssistTool::Codex),
+            custom: load_approved(&dir).custom_assist.as_ref().map(CustomAssistView::from),
+        }
+    })
+    .await
+}
+
+/// Ask an AI CLI about `prompt`. Returns `{ ok: true, text }` (raw stdout) or
+/// `{ ok: false, kind: "unauth" | "timeout" | "error" }`.
+#[tauri::command]
+pub async fn assist_run(app: AppHandle, tool: String, prompt: String, timeout_ms: u64) -> AssistOutcome {
+    let Ok(dir) = app_data(&app) else { return AssistOutcome::failure("error") };
+    blocking(move || match assist_command(&tool, &load_approved(&dir), &prompt) {
+        Ok((program, inv)) => run_blocking(&program.display().to_string(), &inv.args, inv.stdin, timeout_ms.clamp(1000, ASSIST_MAX_TIMEOUT_MS)),
+        Err(e) => {
+            eprintln!("[assist] {e}");
+            AssistOutcome::failure("error")
+        }
+    })
+    .await
+    .unwrap_or_else(|e| {
+        eprintln!("[assist] {e}");
+        AssistOutcome::failure("error")
+    })
+}
+
+const MAX_CUSTOM_ARGS: usize = 32;
+const MAX_CUSTOM_ARGS_LEN: usize = 1000;
+
+/// True when the alert shows `text` as it is: no control characters or line
+/// separators (which push what follows out of sight), no direction marks
+/// (which reorder it), no invisible characters.
+fn shows_faithfully(text: &str) -> bool {
+    !text.chars().any(|c| {
+        c.is_control()
+            || matches!(c,
+                '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{2028}'..='\u{202E}'
+                | '\u{2060}'..='\u{2069}' | '\u{FEFF}')
+    })
+}
+
+/// Arguments the confirmation can show faithfully, few and short enough to
+/// fit the alert.
+fn check_custom_args(args: &[String]) -> Result<(), String> {
+    if args.len() > MAX_CUSTOM_ARGS || args.iter().map(String::len).sum::<usize>() > MAX_CUSTOM_ARGS_LEN {
+        return Err("the command has too many arguments to confirm".into());
+    }
+    if !args.iter().all(|a| shows_faithfully(a)) {
+        return Err("an argument holds a character the confirmation cannot show".into());
+    }
+    Ok(())
+}
+
+/// How the confirmation shows a command: the program, then each argument on
+/// its own numbered line, single-quoted when it is empty or holds whitespace
+/// or a quote, so what the user reads is what runs.
+fn display_command(program: &Path, args: &[String]) -> String {
+    let mut out = program.display().to_string();
+    for (i, a) in args.iter().enumerate() {
+        out.push_str(&format!("\n  {}. ", i + 1));
+        if a.is_empty() || a.chars().any(|c| c.is_whitespace() || c == '\'' || c == '"') {
+            out.push('\'');
+            out.push_str(&a.replace('\'', r"'\''"));
+            out.push('\'');
+        } else {
+            out.push_str(a);
+        }
+    }
+    out
+}
+
+/// Set the custom AI command: the user picks the program in a native dialog,
+/// then confirms the whole command in a native alert. Returns the approved
+/// command, or None when either was cancelled.
+#[tauri::command]
+pub async fn assist_set_custom(app: AppHandle, args: Vec<String>, prompt_via: String) -> Result<Option<CustomAssistView>, String> {
+    let dir = app_data(&app)?;
+    let prompt_via = match prompt_via.as_str() {
+        "stdin" => PromptVia::Stdin,
+        "arg" => PromptVia::Arg,
+        other => return Err(format!("unknown prompt channel {other:?}")),
+    };
+    check_custom_args(&args)?;
+    blocking(move || {
+        let Some(program) = pick_program(&app, "Choose the AI command") else { return Ok(None) };
+        if !is_executable_file(&program) {
+            return Err(format!("{} is not a program", program.display()));
+        }
+        if !shows_faithfully(&program.display().to_string()) {
+            return Err("the program's name holds a character the confirmation cannot show".into());
+        }
+        let channel = match prompt_via {
+            PromptVia::Stdin => "on standard input",
+            PromptVia::Arg => "as its last argument",
+        };
+        let allowed = app
+            .dialog()
+            .message(format!(
+                "Allow Translation Workbench to run this command?\n\n{}\n\nIt will receive the text you ask about {channel}. Allow it only if you trust this program.",
+                display_command(&program, &args)
+            ))
+            .title("Run a custom AI command?")
+            .kind(MessageDialogKind::Warning)
+            .buttons(MessageDialogButtons::OkCancelCustom("Allow".into(), "Cancel".into()))
+            .blocking_show();
+        if !allowed {
+            return Ok(None);
+        }
+        let custom = CustomAssist { program, args, prompt_via };
+        update_approved(&dir, |r| r.custom_assist = Some(custom.clone())).map_err(|e| e.to_string())?;
+        Ok(Some(CustomAssistView::from(&custom)))
+    })
+    .await?
+}
+
+/// Forget the custom AI command.
+#[tauri::command]
+pub async fn assist_forget_custom(app: AppHandle) -> Result<(), String> {
+    let dir = app_data(&app)?;
+    blocking(move || update_approved(&dir, |r| r.custom_assist = None).map(|_| ()).map_err(|e| e.to_string())).await?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("wb-commands-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d.canonicalize().unwrap()
+    }
+
+    // ── export paths ──
+
+    #[test]
+    fn export_accepts_app_data_markdown_and_a_picked_docx() {
+        let appdata = temp_dir("export-ok");
+        let md = appdata.join("export-intermediate.md");
+        std::fs::write(&md, "# x").unwrap();
+        assert_eq!(check_export_paths(&appdata, &md, Path::new("/Users/u/Out.docx"), true, None), Ok(()));
+        assert_eq!(check_export_paths(&appdata, &md, Path::new("/Users/u/Out.DOCX"), true, Some(&md)), Ok(()));
+    }
+
+    #[test]
+    fn export_refuses_markdown_outside_app_data() {
+        let appdata = temp_dir("export-md");
+        let elsewhere = temp_dir("export-md-elsewhere").join("x.md");
+        std::fs::write(&elsewhere, "x").unwrap();
+        assert!(check_export_paths(&appdata, &elsewhere, Path::new("/u/Out.docx"), true, None).is_err());
+        // Missing file under app data.
+        assert!(check_export_paths(&appdata, &appdata.join("nope.md"), Path::new("/u/Out.docx"), true, None).is_err());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn export_refuses_markdown_reached_through_a_symlink_out_of_app_data() {
+        let appdata = temp_dir("export-link");
+        let elsewhere = temp_dir("export-link-elsewhere");
+        std::fs::write(elsewhere.join("x.md"), "x").unwrap();
+        std::os::unix::fs::symlink(&elsewhere, appdata.join("link")).unwrap();
+        assert!(check_export_paths(&appdata, &appdata.join("link/x.md"), Path::new("/u/Out.docx"), true, None).is_err());
+    }
+
+    #[test]
+    fn export_refuses_a_target_not_picked_or_not_docx() {
+        let appdata = temp_dir("export-target");
+        let md = appdata.join("e.md");
+        std::fs::write(&md, "x").unwrap();
+        assert!(check_export_paths(&appdata, &md, Path::new("/u/Out.docx"), false, None).is_err());
+        assert!(check_export_paths(&appdata, &md, Path::new("/u/.zshrc"), true, None).is_err());
+        assert!(check_export_paths(&appdata, &md, Path::new("Out.docx"), true, None).is_err());
+        assert!(check_export_paths(&appdata, &md, Path::new("/u/Out.docx"), true, Some(Path::new("/no/such.docx"))).is_err());
+    }
+
+    // ── pandoc ──
+
+    #[test]
+    fn a_picked_pandoc_that_will_not_run_is_not_replaced() {
+        let approved = ApprovedPrograms { pandoc: Some("/no/such/pandoc".into()), ..Default::default() };
+        assert_eq!(pandoc_program(&approved), (true, None));
+    }
+
+    #[test]
+    fn version_line_reads_the_first_line() {
+        // /bin/echo prints its argument: "--version".
+        assert_eq!(version_line(Path::new("/bin/echo")).as_deref(), Some("--version"));
+        assert_eq!(version_line(Path::new("/usr/bin/false")), None);
+    }
+
+    // ── Diogenes ──
+
+    #[test]
+    #[cfg(unix)]
+    fn diogenes_runs_from_its_folder_with_only_the_disc_variable_added() {
+        // A stand-in xml-export.pl run by the real system perl: it reports
+        // its folder, the disc variable, and its arguments.
+        let server = temp_dir("diogenes-server");
+        std::fs::write(
+            server.join("xml-export.pl"),
+            "use Cwd; print getcwd(), \"|\", ($ENV{TLG_DIR} // ''), \"|\", ($ENV{PHI_DIR} // ''), \"|\", join(',', @ARGV);",
+        )
+        .unwrap();
+        let out_dir = temp_dir("diogenes-out");
+        let args = diogenes_export_args(Corpus::Tlg, "0086", &out_dir, LineMode::Lines).unwrap();
+        let out = run_diogenes(Path::new("/usr/bin/perl"), &server, Corpus::Tlg, Path::new("/discs/TLG"), args, Duration::from_secs(20));
+        assert_eq!(out.code, Some(0), "{out:?}");
+        assert_eq!(out.stdout, format!("{}|/discs/TLG||-c,tlg,-n,0086,-o,{},-y", server.display(), out_dir.display()));
+    }
+
+    // ── AI assist ──
+
+    #[test]
+    fn the_custom_command_comes_only_from_the_record() {
+        assert!(assist_command("custom", &ApprovedPrograms::default(), "p").is_err());
+        let approved = ApprovedPrograms {
+            custom_assist: Some(CustomAssist { program: "/usr/local/bin/llm".into(), args: vec!["-m".into(), "m".into()], prompt_via: PromptVia::Arg }),
+            ..Default::default()
+        };
+        let (program, inv) = assist_command("custom", &approved, "--yolo").unwrap();
+        assert_eq!(program, Path::new("/usr/local/bin/llm"));
+        assert_eq!(inv.args, ["-m", "m", "--yolo"]);
+        assert_eq!(inv.stdin, None);
+        let stdin = ApprovedPrograms {
+            custom_assist: Some(CustomAssist { program: "/x".into(), args: vec![], prompt_via: PromptVia::Stdin }),
+            ..Default::default()
+        };
+        let (_, inv) = assist_command("custom", &stdin, "p").unwrap();
+        assert_eq!((inv.args.len(), inv.stdin.as_deref()), (0, Some("p")));
+    }
+
+    #[test]
+    fn assist_refuses_a_program_path_for_a_tool() {
+        assert!(assist_command("/bin/sh", &ApprovedPrograms::default(), "p").is_err());
+        assert!(assist_command("", &ApprovedPrograms::default(), "p").is_err());
+    }
+
+    #[test]
+    fn the_confirmation_shows_each_argument_unambiguously() {
+        let args = ["-m".to_string(), "two words".into(), "".into(), "it's".into()];
+        assert_eq!(
+            display_command(Path::new("/bin/llm"), &args),
+            "/bin/llm\n  1. -m\n  2. 'two words'\n  3. ''\n  4. 'it'\\''s'"
+        );
+    }
+
+    #[test]
+    fn custom_arguments_that_could_hide_from_the_confirmation_are_refused() {
+        assert!(check_custom_args(&["-m".into(), "gpt".into()]).is_ok());
+        assert!(check_custom_args(&[]).is_ok());
+        for bad in [
+            "a\nb", "a\rb", "x\u{202E}y", "x\u{2066}y", "x\u{200F}y", "x\u{061C}y", "\u{0}",
+            "a\u{2028}b", "a\u{2029}b", "a\u{200B}b", "a\u{200D}b", "a\u{FEFF}b", "a\u{2060}b", "a\u{00AD}b",
+        ] {
+            assert!(check_custom_args(&[bad.to_string()]).is_err(), "{bad:?} accepted");
+        }
+        assert!(check_custom_args(&["x".repeat(MAX_CUSTOM_ARGS_LEN + 1)]).is_err());
+        assert!(check_custom_args(&vec!["a".to_string(); MAX_CUSTOM_ARGS + 1]).is_err());
+        assert!(shows_faithfully("/usr/local/bin/llm"));
+        assert!(!shows_faithfully("/usr/local/bin/ll\u{2028}m"));
+    }
+
+    // ── the Word target ──
+
+    #[test]
+    fn only_a_target_rust_chose_in_its_save_dialog_is_accepted_and_only_once() {
+        let targets = SaveTargets::default();
+        let chosen = PathBuf::from("/Users/u/Out.docx");
+        assert!(!targets.take(&chosen));
+        targets.add(chosen.clone());
+        assert!(!targets.take(Path::new("/Users/u/Other.docx")));
+        assert!(targets.take(&chosen));
+        assert!(!targets.take(&chosen), "a target is good for one export");
+    }
+}

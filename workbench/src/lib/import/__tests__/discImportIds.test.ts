@@ -16,10 +16,12 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   readTextFile: async (path: string) => files.get(path) ?? '',
   readFile: async (path: string) => new TextEncoder().encode(files.get(path) ?? ''),
 }));
+vi.mock('@tauri-apps/api/path', () => ({ appDataDir: async () => '/appdata' }));
 
 const { importFromDisc } = await import('../discImport');
 
-const EXPORT_DIR = '/cache/lines';
+// Where Rust caches a lines-mode export, so these imports find it there.
+const EXPORT_DIR = '/appdata/corpus/disc-export/lines';
 const XML_PATH = `${EXPORT_DIR}/Diogenes-Resources/xml/tlg/tlg0086031.xml`;
 const XML = `<TEI.2><text><body>
   <div1 type="Bekker page" n="184a">
@@ -33,7 +35,6 @@ const REQUEST = {
   discDir: '/disc',
   author: { id: 'TLG0086', name: 'Aristoteles Phil.' },
   work: { number: '031', title: 'Physica', levelNames: ['Bekker page', 'line'] },
-  exportDir: EXPORT_DIR,
 };
 
 describe('importing the same work from the disc twice', () => {

@@ -59,7 +59,7 @@ too, so this is a known limit rather than a regression.
    A crash mid-save leaves a file the parser refuses. The desktop's stores were
    converted to write-then-rename on the catch-up branch and its capability
    grant added; the Workbench was not, and needs `fs:allow-rename` in its
-   capabilities. The Workbench half belongs to `workbench/SESSION-HANDOFF.md`
+   capabilities. The Workbench half belongs to `workbench/phase-3-session-handoff.md`
    item 0, which owns it; noted here because the two stores are the same code.
 
 6. **Concurrent annotation changes can overwrite one another.**
@@ -81,7 +81,7 @@ from that branch's own handoff, which was deleted on 2026-09-09 once the branch
 merged and its remaining items were moved to the files that own them — the
 Workbench's Rust trust boundary and the four unfixed Rust findings to
 `workbench-design/security-review-2026-09-07.md` and
-`workbench/SESSION-HANDOFF.md` item 0a, the commentary layer's open questions to
+`workbench/phase-3-session-handoff.md` item 0a, the commentary layer's open questions to
 `docs/commentary-layer-decisions.md` §7, and these six here.
 
 Every item is CONFIRMED by source trace and UNVERIFIED at runtime — reproduce

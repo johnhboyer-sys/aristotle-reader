@@ -273,3 +273,90 @@ describe('real Perseus structure', () => {
     expect(doc.rows).toEqual([{ ref: '1', text: 'onetwo' }]);
   });
 });
+
+// The CLLG FREED corpus (TLG E via Diogenes, re-encoded by CLLG). Its prose is
+// cited by `<milestone unit="column">` alone — `<refsDecl><citeStructure
+// match="/TEI/text/body//milestone[@unit='column'][@ed='Ross']"/>` — and the
+// first of them sits in <body> itself, before the book's <head>, outside any row.
+describe('CLLG FREED', () => {
+  // Exactly the opening of tlg0086.tlg025.cllg-grc1.xml (Metaphysics).
+  const metaphysics = tei(`
+      <pb ed="Ross" n="980"/><milestone ed="Ross" unit="column" n="980a"/>
+        
+<head rend="indent(5)">
+            <hi rend="small">ΑΡΙΣΤΟΤΕΛΟΥΣ 
+<space quantity="3" />ΤΩΝ ΜΕΤΑ ΤΑ ΦΥΣΙΚΑ Α</hi>
+          </head>
+
+        <p rend=" indent(1)">Πάντες ἄνθρωποι τοῦ εἰδέναι ὀρέγονται φύσει. 
+τοῖς μὲν αὐτῶν οὐκ ἐγγίγνεται μνήμη, τοῖς δ' ἐγγίγνεται. <milestone ed="Ross" unit="column" n="980b"/>καὶ διὰ τοῦτο ταῦτα 
+ μιᾶς ἐμπειρίας δύναμιν ἀποτελοῦσιν. <pb ed="Ross" n="981"/><milestone ed="Ross" unit="column" n="981a"/>καὶ δοκεῖ σχεδὸν</p>`);
+
+  it('takes the first citation from a milestone that sits in <body>, outside any row', () => {
+    const doc = parseTeiRows(metaphysics);
+    expect(doc.rows.map((r) => r.ref)).toEqual(['980a', '980b', '981a']);
+    expect(doc.rows[0].text).toBe(
+      "Πάντες ἄνθρωποι τοῦ εἰδέναι ὀρέγονται φύσει. τοῖς μὲν αὐτῶν οὐκ ἐγγίγνεται μνήμη, τοῖς δ' ἐγγίγνεται.",
+    );
+    expect(doc.levelNames).toEqual(['column']);
+  });
+
+  it('takes a milestone that sits in an unnumbered div, before its first row', () => {
+    // Later books open `<div type="subsection">` with no @n; a column that
+    // starts there, ahead of the <p>, must still number that <p>.
+    const doc = parseTeiRows(
+      tei(
+        '<milestone ed="Ross" unit="column" n="993a"/><p>τέλος Α</p>' +
+          '<div type="subsection"><head>Α ΕΛΑΤΤΟΝ</head>' +
+          '<milestone ed="Ross" unit="column" n="993b"/><p>Ἡ περὶ τῆς ἀληθείας</p></div>',
+      ),
+    );
+    expect(doc.rows).toEqual([
+      { ref: '993a', text: 'τέλος Α' },
+      { ref: '993b', text: 'Ἡ περὶ τῆς ἀληθείας' },
+    ]);
+  });
+
+  it('keeps the book when a column is open over numbered lines', () => {
+    // Collapse is for a milestone restating a division ("327" before "327a").
+    // Run between two divisions it read book 1 line 1 as "1" before "1" and
+    // dropped the book: "1.980a", and line 10 "10.980a".
+    const doc = parseTeiRows(
+      tei('<div type="Book" n="1"><milestone ed="Ross" unit="column" n="980a"/><l n="1">μῆνιν</l><l n="10">ἄειδε</l></div>'),
+    );
+    expect(doc.rows.map((r) => r.ref)).toEqual(['1.1.980a', '1.10.980a']);
+  });
+
+  it('still ignores a layout milestone outside a row', () => {
+    const doc = parseTeiRows(
+      tei('<div type="s" n="1"><milestone ed="P" unit="para" n="9"/><p>one</p></div>'),
+    );
+    expect(doc.rows).toEqual([{ ref: '1', text: 'one' }]);
+  });
+
+  // Exactly the shape of tlg0012.tlg001.cllg-grc1.xml (Iliad): Diogenes wraps
+  // the TLG's marginal signs (diple, obelus, asterisk) in seg/@rend="Marginalia".
+  it('drops a marginal sign from the line it stands beside', () => {
+    const doc = parseTeiRows(
+      tei(`<div type="book" n="1">
+        <l n="1">Μῆνιν ἄειδε θεὰ Πηληϊάδεω Ἀχιλῆος </l>
+        <l n="2">
+          <seg rend="Marginalia">&gt;</seg> οὐλομένην, ἣ μυρί' Ἀχαιοῖς ἄλγε' ἔθηκε, </l>
+        <l n="5">
+          <seg rend="Marginalia">⸖</seg> οἰωνοῖσί τε πᾶσι, Διὸς δ' ἐτελείετο βουλή, </l>
+        <l n="9"><seg rend="Marginalia">&gt; corr.</seg> Λητοῦς καὶ Διὸς υἱός· </l>
+      </div>`),
+    );
+    expect(doc.rows).toEqual([
+      { ref: '1.1', text: 'Μῆνιν ἄειδε θεὰ Πηληϊάδεω Ἀχιλῆος' },
+      { ref: '1.2', text: "οὐλομένην, ἣ μυρί' Ἀχαιοῖς ἄλγε' ἔθηκε," },
+      { ref: '1.5', text: "οἰωνοῖσί τε πᾶσι, Διὸς δ' ἐτελείετο βουλή," },
+      { ref: '1.9', text: 'Λητοῦς καὶ Διὸς υἱός·' },
+    ]);
+  });
+
+  it('keeps the text of any other seg', () => {
+    const doc = parseTeiRows(tei('<div type="book" n="1"><l n="1"><seg>μῆνιν</seg> ἄειδε</l></div>'));
+    expect(doc.rows).toEqual([{ ref: '1.1', text: 'μῆνιν ἄειδε' }]);
+  });
+});

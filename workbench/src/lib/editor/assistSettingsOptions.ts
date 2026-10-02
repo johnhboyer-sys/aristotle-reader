@@ -8,7 +8,7 @@
  */
 
 import { CLI_TOOLS } from '../assist/tools';
-import type { AssistCliToolId, AssistApiProviderId, AssistProviderChoice } from '../settings';
+import type { AssistApiProviderId, AssistProviderChoice } from '../settings';
 
 export interface ProviderOption {
   id: AssistProviderChoice;
@@ -25,13 +25,13 @@ const API_LABELS: Record<AssistApiProviderId, string> = {
 };
 
 /**
- * The full ordered option list for the provider picker: the three built-in
- * CLIs (labels from the tool registry), the custom command, then the three
+ * The full ordered option list for the provider picker: the built-in CLIs
+ * (labels from the tool registry), the custom command, then the three
  * API providers. Built from the registry so a new built-in tool shows up
  * automatically.
  */
 export function providerOptions(): ProviderOption[] {
-  const cli: ProviderOption[] = (Object.keys(CLI_TOOLS) as AssistCliToolId[]).map((id) => ({
+  const cli: ProviderOption[] = (Object.keys(CLI_TOOLS) as (keyof typeof CLI_TOOLS)[]).map((id) => ({
     id,
     label: CLI_TOOLS[id].label,
     group: 'cli',
@@ -63,4 +63,4 @@ export function detectLabel(state: DetectState, path?: string): string {
 }
 
 /** The CLI built-in tool ids (for detect iteration). */
-export const CLI_TOOL_IDS: readonly AssistCliToolId[] = Object.keys(CLI_TOOLS) as AssistCliToolId[];
+export const CLI_TOOL_IDS: readonly (keyof typeof CLI_TOOLS)[] = Object.keys(CLI_TOOLS) as (keyof typeof CLI_TOOLS)[];

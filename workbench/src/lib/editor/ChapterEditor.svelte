@@ -193,7 +193,7 @@
   } from '../library/footnoteIndex';
   import type { BookOrder } from '../library/footnoteIndex';
   import { getWork } from '../works/manifest';
-  import { loadSettings, updateSettings } from '../settings';
+  import { loadSettings } from '../settings';
   import {
     AssistController,
     buildAssistContext,
@@ -202,6 +202,7 @@
     plainRowText,
     resolveTauriAssistProvider,
   } from './assistController';
+  import type { AssistDetection } from './assistController';
   import { buildCtxMenu } from './ctxMenu';
   import type { CtxMenuItemId, CtxMenuModel } from './ctxMenu';
   import { buildClipboardPayload } from '../assist/clipboardPayload';
@@ -2530,7 +2531,7 @@
   }
 
   /** Provider for THIS request: dev fake (browser harness) → Tauri flow
-   * (cached cliPath / resolution ladder / clipboard floor, see
+   * (the CLI Rust finds or the approved custom command / clipboard floor, see
    * assistController.resolveTauriAssistProvider) → plain browser clipboard. */
   async function getAssistProvider(): Promise<AssistProvider> {
     const fake = await devFakeAssistProvider();
@@ -2538,19 +2539,11 @@
     if (!isTauri()) {
       return new ClipboardProvider({ writeText: writeClipboardText });
     }
-    const [{ invoke }, fs, path] = await Promise.all([
-      import('@tauri-apps/api/core'),
-      import('@tauri-apps/plugin-fs'),
-      import('@tauri-apps/api/path'),
-    ]);
+    const { invoke } = await import('@tauri-apps/api/core');
     return resolveTauriAssistProvider({
       loadSettings,
-      updateSettings,
-      exists: (p) => fs.exists(p),
-      home: () => path.homeDir(),
+      invokeDetect: () => invoke<AssistDetection>('assist_detect'),
       invokeRun: ((cmd, args) => invoke(cmd, args)) as RunInvokeFn,
-      invokeWhich: (candidates, binName) =>
-        invoke<string | null>('assist_which', { candidates, binName }),
       writeClipboard: writeClipboardText,
     });
   }

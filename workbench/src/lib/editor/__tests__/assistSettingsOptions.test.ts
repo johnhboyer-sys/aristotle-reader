@@ -7,12 +7,13 @@ import {
 } from '../assistSettingsOptions';
 
 describe('providerOptions', () => {
-  it('lists the three built-in CLIs, custom, then the three API providers', () => {
+  it('lists the built-in CLIs, custom, then the three API providers', () => {
     const opts = providerOptions();
+    // No Gemini: disabled until its own tools can be switched off and that is
+    // tested (workbench-design/sandboxing-plan.md).
     expect(opts.map((o) => o.id)).toEqual([
       'claude',
       'codex',
-      'gemini',
       'custom',
       'openai',
       'anthropic',
@@ -25,7 +26,6 @@ describe('providerOptions', () => {
     const byId = Object.fromEntries(opts.map((o) => [o.id, o.group]));
     expect(byId.claude).toBe('cli');
     expect(byId.codex).toBe('cli');
-    expect(byId.gemini).toBe('cli');
     expect(byId.custom).toBe('custom');
     expect(byId.openai).toBe('api');
     expect(byId.anthropic).toBe('api');
@@ -37,14 +37,13 @@ describe('providerOptions', () => {
     const label = (id: string) => opts.find((o) => o.id === id)?.label;
     expect(label('claude')).toBe('Claude Code');
     expect(label('codex')).toBe('Codex (OpenAI)');
-    expect(label('gemini')).toBe('Gemini');
     expect(label('custom')).toBe('Custom command');
   });
 });
 
 describe('CLI_TOOL_IDS', () => {
-  it('is exactly the three built-in tool ids', () => {
-    expect([...CLI_TOOL_IDS].sort()).toEqual(['claude', 'codex', 'gemini']);
+  it('is exactly the built-in tool ids', () => {
+    expect([...CLI_TOOL_IDS].sort()).toEqual(['claude', 'codex']);
   });
 });
 

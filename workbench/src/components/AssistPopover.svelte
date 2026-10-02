@@ -11,8 +11,11 @@
   // while the caret stays in the row.
   import type { AssistUiState } from '../lib/editor/assistController';
 
+  // The prop is `state`, but it is read here as `ui`: a local binding named
+  // `state` makes Svelte parse the `$state` rune below as a store
+  // subscription to it, and the popover crashed on every render.
   let {
-    state,
+    state: ui,
     onInsert,
     onDismiss,
     anchor = null,
@@ -38,7 +41,7 @@
   // (and thus size) changes — thinking → suggestion.
   let el = $state<HTMLDivElement>();
   $effect(() => {
-    void state;
+    void ui;
     void anchor;
     const node = el;
     if (!node || typeof window === 'undefined') return;
@@ -65,17 +68,17 @@
   aria-label="Translation suggestion"
   bind:this={el}
   style={anchorStyle}>
-  {#if state.kind === 'thinking'}
+  {#if ui.kind === 'thinking'}
     <span class="assist-note">Thinking…</span>
     <button class="assist-btn" type="button" onclick={onDismiss}>Cancel</button>
-  {:else if state.kind === 'suggestion'}
-    <p class="assist-text">{state.text}</p>
+  {:else if ui.kind === 'suggestion'}
+    <p class="assist-text">{ui.text}</p>
     <div class="assist-actions">
       <button class="assist-btn assist-btn-primary" type="button" onclick={onInsert}>Insert</button>
       <button class="assist-btn" type="button" onclick={onDismiss}>Dismiss</button>
     </div>
   {:else}
-    <span class="assist-note">{state.text}</span>
+    <span class="assist-note">{ui.text}</span>
     <button class="assist-btn" type="button" onclick={onDismiss}>OK</button>
   {/if}
 </div>
