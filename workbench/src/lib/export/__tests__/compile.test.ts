@@ -185,6 +185,12 @@ describe('buildGapReport — a chapter counts only if it holds English', () => {
     expect(chapterRef(metaChapter(1, 1)).blank).toBeFalsy();
   });
 
+  it('counts English that lives only in the paragraph layer', () => {
+    const para = metaChapter(1, 1, { englishLines: ['', ''], englishParaLines: ['A translated paragraph.'] });
+    expect(chapterRef(para).blank).toBeFalsy();
+    expect(chapterRef(metaChapter(1, 1, { englishLines: [''], englishParaLines: ['  '] })).blank).toBe(true);
+  });
+
   it('lists an opened-but-blank chapter inside the range as missing', () => {
     const present = [{ book: 1, chapter: 1 }, { book: 1, chapter: 2, blank: true }, { book: 1, chapter: 3 }];
     const report = buildGapReport(present, oneBookWork);

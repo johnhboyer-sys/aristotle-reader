@@ -72,7 +72,8 @@ export interface CompiledChapterRef {
 
 /** The gap report's view of a chapter: where it sits, and whether it holds any English yet. */
 export function chapterRef(chapter: ChapterFile): CompiledChapterRef {
-  const blank = !chapter.englishLines.some((l) => l.trim().length > 0);
+  const holdsEnglish = (lines: string[] | undefined) => (lines ?? []).some((l) => l.trim().length > 0);
+  const blank = !holdsEnglish(chapter.englishLines) && !holdsEnglish(chapter.englishParaLines);
   return { book: chapter.meta.book, chapter: chapter.meta.chapter, ...(blank ? { blank } : {}) };
 }
 
@@ -123,7 +124,8 @@ export function sortChaptersManifestOrder<T>(
 /**
  * Build the gap notice from the set of (book, chapter) pairs actually saved,
  * given the manifest's book list. A pair flagged `blank` (opened, no English)
- * marks where the book's range extends but does not count as present. Gap detection is scoped to what's
+ * marks where the book's range extends but does not count as present.
+ * Gap detection is scoped to what's
  * DERIVABLE from saved files alone (this module has no ground-truth
  * chapter-count source per book): within a book that has at least one saved
  * chapter, any chapter number strictly between the min and max saved chapter
