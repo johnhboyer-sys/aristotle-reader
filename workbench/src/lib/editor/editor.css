@@ -666,8 +666,17 @@
 .en-cell .assist-glyph:hover {
   opacity: 1;
 }
-/* In the flowing views the English cells are small/inline: lift the glyph
-   above neighbouring cells so nothing overlaps its hit area. */
+/* Keep the English clear of the glyph's corner, on every line so text never
+   reflows as the cursor moves. */
+.en-cell > .row-editor {
+  padding-right: 1.25rem;
+}
+/* In the flowing views the English cells are small/inline: no reserved
+   corner (it would gap the flow), and lift the glyph above neighbouring
+   cells so nothing overlaps its hit area. */
+.interp-flow .en-cell > .row-editor {
+  padding-right: 0;
+}
 .interp-flow .en-cell:focus-within .assist-glyph {
   z-index: 5;
 }

@@ -197,6 +197,17 @@ await run('the spark shows on the active line and opens assist', async () => {
   );
   await page.getByRole('button', { name: 'Dismiss' }).click();
   await page.evaluate(() => { window.__assistFake = undefined; });
+
+  // Now that the ✦ shows on the active line, English must never run
+  // underneath it. Where a line wraps depends on its words, so check the room
+  // the text may use: the editor's content box must end before the ✦ begins.
+  const clear = await cell.evaluate((c) => {
+    const g = c.querySelector('.assist-glyph').getBoundingClientRect();
+    const ed = c.querySelector('.row-editor');
+    const right = ed.getBoundingClientRect().right - parseFloat(getComputedStyle(ed).paddingRight);
+    return { ok: right <= g.left + 0.5, detail: `text may reach ${right.toFixed(1)}, ✦ starts at ${g.left.toFixed(1)}` };
+  });
+  check('English stays clear of the ✦', clear.ok, clear.detail);
 });
 
 await run('pick a model in the Ask AI panel, and keep it', async () => {
