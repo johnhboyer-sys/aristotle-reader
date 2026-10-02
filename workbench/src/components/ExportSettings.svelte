@@ -154,7 +154,7 @@
 </script>
 
 <fieldset class="settings-group">
-  <legend>Bekker line numbers</legend>
+  <legend>Line numbers</legend>
   <label class="settings-radio">
     <input type="radio" name="export-stamp" value="every-line" bind:group={stampMode} onchange={persist} />
     On every line
@@ -165,7 +165,7 @@
   </label>
   <label class="settings-radio">
     <input type="radio" name="export-stamp" value="columns" bind:group={stampMode} onchange={persist} />
-    At each column start only
+    At each page or column start only
   </label>
 </fieldset>
 
