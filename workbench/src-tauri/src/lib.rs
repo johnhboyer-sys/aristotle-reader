@@ -1,4 +1,6 @@
 mod assist;
+#[cfg(test)]
+mod capability_tests;
 mod commands;
 mod jobs;
 mod packs;
@@ -29,10 +31,16 @@ fn quit_now(app: AppHandle) {
     app.exit(0);
 }
 
+/// The fs plugin, and the plugin that brings the user's dialog picks back
+/// after a restart (it must come after fs). Shared with the capability tests
+/// (capability_tests.rs), so they test the app's own wiring.
+fn with_fs_plugins<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
+    builder.plugin(tauri_plugin_fs::init()).plugin(tauri_plugin_persisted_scope::init())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_fs::init())
+    with_fs_plugins(tauri::Builder::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
@@ -88,6 +96,7 @@ pub fn run() {
             commands::assist_run,
             commands::assist_set_custom,
             commands::assist_forget_custom,
+            commands::pick_status,
             packs::install_lexicon_pack,
             packs::list_lexicon_packs,
             packs::remove_lexicon_pack

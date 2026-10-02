@@ -7,10 +7,12 @@
 // true unless the config overrides it), so `$APPDATA/**` never matches a
 // dotfile. Rust keeps its trusted state in dotfiles — the persisted-scope
 // plugin's `.persisted-scope`, and the approved-programs list — and the window
-// cannot write them. It CAN delete them, by removing `$APPDATA` itself
-// recursively (the scope allows the directory), so every trusted record must
-// fail closed: missing or unreadable means nothing approved. The tests below
-// pin the write half: Tauri's default, and that our config keeps it.
+// cannot write them. Since phase 3 it cannot remove them either: remove and
+// rename are granted on `$APPDATA/**` only, never `$APPDATA` itself
+// (capabilities/default.json; capability_tests.rs proves both through the
+// IPC). Every trusted record still fails closed — missing or unreadable means
+// nothing approved — in case a later grant reopens that. The tests below pin
+// the leading-dot rule itself: Tauri's default, and that our config keeps it.
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -158,9 +160,9 @@ mod tests {
     use tauri::utils::config::FsScope;
     use tauri::Manager;
 
-    /// The scope the window gets for app data — the same `$APPDATA/**` glob the
-    /// `fs:allow-appdata-*-recursive` permissions grant, with the config left at
-    /// its default for the leading-dot rule, as ours is.
+    /// A `$APPDATA/**` scope — the glob the capability's write grants use —
+    /// with the config left at its default for the leading-dot rule, as ours
+    /// is. The capability itself is tested in capability_tests.rs.
     fn appdata_scope() -> (tauri::fs::Scope, std::path::PathBuf) {
         let app = tauri::test::mock_app();
         let scope = FsScope::Scope {

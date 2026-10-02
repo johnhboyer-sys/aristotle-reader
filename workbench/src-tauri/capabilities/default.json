@@ -1,64 +1,55 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: read/write the app-data workspace; native dialogs for import/export; clipboard for copy actions. Programs (pandoc, Diogenes' perl exporter, the AI CLIs) run only through the app's own job commands in src-tauri/src/commands.rs, which take no program path or argv from the window — the window names a job and supplies data (workbench-design/sandboxing-plan.md); app commands need no capability entry beyond core:default. The fs:allow-exists scope covers onboarding's existence checks only (Diogenes install location and the user-picked TLG folder). The broader read/write/mkdir/read-dir/stat '/**' scopes support a user-picked library folder (shared-folder sync, build spec §11) — the folder is chosen explicitly via the native picker, same trust model as the TLG folder. fs:allow-remove is what \"Remove work\" needs (src/lib/library/storage.ts): it deletes one work's own folder under the library root, recursively, after the work has been dropped from works.json. Its scope matches the write-text-file and mkdir grants already present — the library root is a folder the user picks through the native picker, and an app that may overwrite any file in it could already destroy the same content. core:window:allow-destroy is what the close button needs (src/App.svelte): the close handler saves every open editor first, then the window destroys itself. fs:allow-rename is what saves need (src/lib/library/storage.ts, settings.ts): every chapter file, works.json and settings.json is written to a temp file beside it and renamed into place, so a crash mid-write cannot truncate a translation. Its scope matches the write-text-file grant. fs:allow-read-file is what the TLG/PHI importer needs and is NOT implied by fs:allow-read: 'read' is the byte-range command on an open handle, 'read_file' slurps a whole file, and AUTHTAB.DIR and the .IDT indexes are binary, so read-text-file cannot serve them. Its scope matches the read-text-file grant already present. The open/read/seek entries exist for Latin lookup: Diogenes' latin-analyses.txt is ~43MB and must be read by byte range through its companion index rather than slurped whole (src/lib/lexicon/latinAnalyses.ts), and the existing read-text-file/stat scopes are whole-file only. Their '/**' scope matches the read-text-file grant already present — the file being read is the user's own Diogenes install, whose location the user sets. opener:allow-reveal-item-in-dir is what 'Reveal in Finder' after an export needs; it was never granted, so the reveal failed silently.",
+  "description": "Main window. Files (workbench-design/sandboxing-plan.md, phase 3): the window reads $APPDATA and $RESOURCE, writes $APPDATA only, and reaches anything else only through a native dialog pick — the dialog plugin adds each pick to the fs plugin's runtime scope, which tauri-plugin-persisted-scope keeps across restarts in $APPDATA/.persisted-scope. A pick is readable and writable (a library folder must be both); a folder that is read deeply is picked with recursive: true. Each fs command is granted on its own, with its own scope, and no fs permission SET is used: fs:default and fs:allow-appdata-*-recursive bring in $RESOURCE and the other app folders, which would leave the installed app writable. src-tauri/src/capability_tests.rs sends real fs calls through the IPC against this file to prove it. Write commands (write-text-file, rename, remove, open — open takes write options from the window) reach $APPDATA/** only; on Unix that glob never matches a dotfile, so Rust's own records (.approved-programs.json, .persisted-scope) can be neither written nor removed, and mkdir alone may name $APPDATA itself, to create it. read and seek act on a file the window has already opened, so they carry no scope. Programs (pandoc, Diogenes' perl exporter, the AI CLIs) run only through the app's own job commands in src-tauri/src/commands.rs, which take no program path or argv from the window; app commands need no capability entry beyond core:default. core:window:allow-destroy is what the close button needs (src/App.svelte: save every editor, then destroy). opener:allow-reveal-item-in-dir is 'Reveal in Finder' after an export.",
   "windows": ["main"],
   "permissions": [
     "core:default",
     "core:window:allow-destroy",
     "dialog:default",
-    "fs:default",
-    "fs:allow-appdata-read-recursive",
-    "fs:allow-appdata-write-recursive",
-    "fs:allow-resource-read-recursive",
+    "fs:deny-default",
     {
       "identifier": "fs:allow-exists",
-      "allow": [{ "path": "/Applications/Diogenes.app/**" }, { "path": "/**" }]
+      "allow": [{ "path": "$APPDATA" }, { "path": "$APPDATA/**" }, { "path": "$RESOURCE" }, { "path": "$RESOURCE/**" }]
     },
     {
       "identifier": "fs:allow-read-text-file",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-write-text-file",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-rename",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-remove",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-mkdir",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-read-dir",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-stat",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-open",
-      "allow": [{ "path": "/**" }]
-    },
-    {
-      "identifier": "fs:allow-read",
-      "allow": [{ "path": "/**" }]
+      "allow": [{ "path": "$APPDATA/**" }, { "path": "$RESOURCE/**" }]
     },
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "/**" }]
+      "allow": [{ "path": "$APPDATA/**" }, { "path": "$RESOURCE/**" }]
     },
     {
-      "identifier": "fs:allow-seek",
-      "allow": [{ "path": "/**" }]
+      "identifier": "fs:allow-read-dir",
+      "allow": [{ "path": "$APPDATA" }, { "path": "$APPDATA/**" }, { "path": "$RESOURCE" }, { "path": "$RESOURCE/**" }]
     },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "$APPDATA" }, { "path": "$APPDATA/**" }, { "path": "$RESOURCE" }, { "path": "$RESOURCE/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "fs:allow-rename",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "$APPDATA" }, { "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "fs:allow-open",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    "fs:allow-read",
+    "fs:allow-seek",
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
     "dialog:allow-open",

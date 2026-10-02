@@ -10,6 +10,7 @@
   import { loadSettings, updateSettings } from '../lib/settings';
   import type { BilingualLayout, BilingualOrder, CompileMode, ExportSettings, StampMode } from '../lib/settings';
   import { isTauri } from '../lib/runtime';
+  import { chooseAgainLabel, pickStatus, repickReason } from '../lib/picks';
 
   /** `pandoc_version` / `pick_pandoc`'s answer (src-tauri/src/commands.rs). */
   interface PandocProbe {
@@ -28,6 +29,8 @@
   let bilingualLayout = $state<BilingualLayout | 'auto'>('auto');
   let bilingualOrder = $state<BilingualOrder>('original-first');
   let referenceDocPath = $state<string | null>(null);
+  /** Why the reference doc must be chosen again, or null (sandboxing plan, phase 4). */
+  let referenceProblem = $state<string | null>(null);
   let outputDir = $state<string | null>(null);
   /** The pandoc the user picked, as Rust recorded it; null = found automatically. */
   let pandocPath = $state<string | null>(null);
@@ -47,6 +50,10 @@
       outputDir = e.outputDir ?? null;
       loaded = true;
       if (isTauri()) {
+        if (referenceDocPath) {
+          const status = await pickStatus(referenceDocPath);
+          if (status !== 'ok') referenceProblem = repickReason('reference', status, referenceDocPath);
+        }
         try {
           const { invoke } = await import('@tauri-apps/api/core');
           pandocPath = ((await invoke('pandoc_version')) as PandocProbe).picked;
@@ -75,9 +82,11 @@
       multiple: false,
       title: 'Choose a Word document to take styles from',
       filters: [{ name: 'Word document', extensions: ['docx'] }],
+      ...(referenceProblem && referenceDocPath ? { defaultPath: referenceDocPath } : {}),
     });
     if (typeof picked !== 'string') return; // cancelled
     referenceDocPath = picked;
+    referenceProblem = null;
     await persist();
   }
 
@@ -124,6 +133,7 @@
 
   async function clearReferenceDoc() {
     referenceDocPath = null;
+    referenceProblem = null;
     await persist();
   }
   async function clearOutputDir() {
@@ -221,8 +231,13 @@
     {:else}
       <p class="settings-line muted">The app's own reference document.</p>
     {/if}
+    {#if referenceProblem}
+      <p class="settings-line">{referenceProblem}</p>
+    {/if}
     <div class="settings-actions">
-      <button class="settings-secondary" onclick={chooseReferenceDoc}>Choose document…</button>
+      <button class="settings-secondary" onclick={chooseReferenceDoc}>
+        {referenceProblem ? chooseAgainLabel('reference') : 'Choose document…'}
+      </button>
       {#if referenceDocPath}
         <button class="settings-text-btn" onclick={clearReferenceDoc}>Use the app's styles</button>
       {/if}

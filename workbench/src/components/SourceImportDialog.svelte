@@ -18,6 +18,7 @@
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
   import { registerFreeWork } from '../lib/works/freeWorks';
   import { loadSettings, updateSettings } from '../lib/settings';
+  import { chooseAgainLabel, pickStatus, repickReason } from '../lib/picks';
 
   let {
     existingIds,
@@ -38,6 +39,9 @@
 
   // ── disc route ────────────────────────────────────────────────────────────
   let discDir = $state<string | null>(null);
+  /** The saved disc folder, when it must be chosen again (sandboxing plan,
+   * phase 4): which disc, where it was, and why. */
+  let repick = $state<{ corpus: Corpus; dir: string; reason: string } | null>(null);
   let authors = $state<DiscAuthor[]>([]);
   let authorQuery = $state('');
   let selectedAuthor = $state<DiscAuthor | null>(null);
@@ -64,7 +68,14 @@
     void (async () => {
       const settings = await loadSettings();
       const saved = settings.tlgDir ?? settings.phiDir;
-      if (saved && discDir === null) await useDisc(saved, null);
+      if (!saved || discDir !== null) return;
+      const status = await pickStatus(saved, true);
+      if (status === 'ok') {
+        await useDisc(saved, null);
+      } else {
+        const corpus: Corpus = settings.tlgDir ? 'tlg' : 'phi';
+        repick = { corpus, dir: saved, reason: repickReason(corpus, status, saved) };
+      }
     })();
   });
 
@@ -90,7 +101,7 @@
   async function chooseDisc(corpus: Corpus) {
     let picked: string | null;
     try {
-      picked = await pickDiscDir(corpus);
+      picked = await pickDiscDir(corpus, repick?.corpus === corpus ? repick.dir : undefined);
     } catch (err) {
       // The native folder picker can refuse (no permission, plugin missing).
       // Unhandled, the button simply did nothing and said nothing.
@@ -99,6 +110,7 @@
       return;
     }
     if (picked === null) return;
+    if (repick?.corpus === corpus) repick = null;
     await useDisc(picked, corpus);
   }
 
@@ -249,9 +261,16 @@
         </p>
 
         <div class="row">
-          <button class="secondary-btn" onclick={() => chooseDisc('tlg')}>Choose your TLG folder…</button>
-          <button class="secondary-btn" onclick={() => chooseDisc('phi')}>Choose your PHI folder…</button>
+          <button class="secondary-btn" onclick={() => chooseDisc('tlg')}>
+            {repick?.corpus === 'tlg' ? chooseAgainLabel('tlg') : 'Choose your TLG folder…'}
+          </button>
+          <button class="secondary-btn" onclick={() => chooseDisc('phi')}>
+            {repick?.corpus === 'phi' ? chooseAgainLabel('phi') : 'Choose your PHI folder…'}
+          </button>
         </div>
+        {#if repick}
+          <p class="note">{repick.reason}</p>
+        {/if}
         {#if discDir}
           <p class="path">Reading {discDir}</p>
         {/if}

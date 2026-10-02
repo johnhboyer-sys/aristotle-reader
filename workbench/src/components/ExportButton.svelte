@@ -28,10 +28,10 @@
   let compileOpen = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  function note(msg: string) {
+  function note(msg: string, ms = 5000) {
     status = msg;
     clearTimeout(timer);
-    timer = setTimeout(() => (status = null), 5000);
+    timer = setTimeout(() => (status = null), ms);
   }
 
   async function exportChapter() {
@@ -55,6 +55,15 @@
         return;
       }
 
+      // No bundled fallback here: single-chapter export has never applied the
+      // house reference doc, and an unset setting must not start doing so.
+      // Checked before the save dialog: a reference doc that must be chosen
+      // again stops the export, and the user should not pick a target first.
+      const reference = await resolveReferenceDoc(prefs.referenceDocPath, false);
+      if ('problem' in reference) {
+        note(reference.problem, 15000); // two sentences: time to read them
+        return;
+      }
       const label = work.books[book - 1]?.label ?? String(book);
       const docxPath = await chooseDocxTarget(
         await defaultSavePath(`${work.title} ${label}.${chapter}.docx`, prefs.outputDir),
@@ -69,10 +78,7 @@
       const mdPath = await pathApi.join(appData, 'export-intermediate.md');
       await fs.writeTextFile(mdPath, markdown);
 
-      // No bundled fallback here: single-chapter export has never applied the
-      // house reference doc, and an unset setting must not start doing so.
-      const referenceDocPath = await resolveReferenceDoc(prefs.referenceDocPath, false);
-      const run = await pandoc.run({ markdownPath: mdPath, docxPath, referenceDocPath });
+      const run = await pandoc.run({ markdownPath: mdPath, docxPath, referenceDocPath: reference.path });
       if (run.code !== 0) {
         console.error('[export] pandoc failed:', run.stderr);
         note("The Word document couldn't be created.");

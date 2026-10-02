@@ -9,7 +9,7 @@
   // same chapters. Plain files only — no service API, no OAuth. Every failure
   // mode is one plain sentence; stderr never reaches the UI.
   import { loadSettings, updateSettings } from '../lib/settings';
-  import { copyLibraryToRoot, invalidateLibraryRootCache } from '../lib/library/storage';
+  import { copyLibraryToRoot, invalidateLibraryRootCache, pickLibraryFolder } from '../lib/library/storage';
   import { FREE_WORKS_STORAGE_ID } from '../lib/works/freeWorks';
   import type { WorkManifest } from '../lib/works/manifest';
 
@@ -31,13 +31,10 @@
   });
 
   async function chooseFolder() {
-    const dialog = await import('@tauri-apps/plugin-dialog');
-    const picked = await dialog.open({
-      directory: true,
-      multiple: false,
-      title: 'Choose the shared folder for the library',
-    });
-    if (typeof picked !== 'string') return; // cancelled
+    // The whole folder, two levels deep: the window may read and write a
+    // folder outside app data only because the user picked it here.
+    const picked = await pickLibraryFolder('Choose the shared folder for the library');
+    if (picked === null) return; // cancelled
     if (picked === currentRoot) return;
 
     // Always offer the copy step, even when currentRoot is the default

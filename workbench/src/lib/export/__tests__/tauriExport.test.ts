@@ -15,12 +15,21 @@ vi.mock('@tauri-apps/api/core', () => ({
   },
 }));
 
-const { chooseDocxTarget, resolveExportPandoc, PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE } = await import('../tauriExport');
+vi.mock('../../runtime', () => ({ isTauri: () => true }));
+const existing = new Set<string>();
+vi.mock('@tauri-apps/plugin-fs', () => ({ exists: async (path: string) => existing.has(path) }));
+vi.mock('@tauri-apps/api/path', () => ({
+  resolveResource: async (rel: string) => `/App.app/Contents/Resources/${rel}`,
+}));
+const BUNDLED = '/App.app/Contents/Resources/resources/reference.docx';
+
+const { chooseDocxTarget, resolveExportPandoc, resolveReferenceDoc, PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE } = await import('../tauriExport');
 const { PANDOC_UNAVAILABLE_MESSAGE } = await import('../pandoc');
 
 beforeEach(() => {
   calls.length = 0;
   answers = {};
+  existing.clear();
 });
 
 describe('resolveExportPandoc', () => {
@@ -78,5 +87,41 @@ describe('chooseDocxTarget', () => {
   it('is null when the user cancels', async () => {
     answers.choose_docx_target = null;
     expect(await chooseDocxTarget('Out.docx')).toBeNull();
+  });
+});
+
+describe('resolveReferenceDoc', () => {
+  it('uses the reference doc the user picked', async () => {
+    answers.pick_status = 'ok';
+    expect(await resolveReferenceDoc('/Users/u/House.docx')).toEqual({ path: '/Users/u/House.docx' });
+    expect(calls).toEqual([{ cmd: 'pick_status', args: { path: '/Users/u/House.docx', deep: false } }]);
+  });
+
+  it('asks for it again when it was not picked, instead of quietly exporting without it', async () => {
+    answers.pick_status = 'not-picked';
+    existing.add(BUNDLED);
+    for (const fallback of [true, false]) {
+      const choice = await resolveReferenceDoc('/Users/u/House.docx', fallback);
+      expect(choice).toHaveProperty('problem');
+      if (!('problem' in choice)) throw new Error('expected a problem');
+      expect(choice.problem).toContain('reference document');
+      expect(choice.problem).toContain('Settings › Export');
+    }
+  });
+
+  it('still falls back when a picked one has since gone, as it always has', async () => {
+    answers.pick_status = 'missing';
+    existing.add(BUNDLED);
+    expect(await resolveReferenceDoc('/Users/u/Gone.docx')).toEqual({ path: BUNDLED });
+    expect(await resolveReferenceDoc('/Users/u/Gone.docx', false)).toEqual({ path: undefined });
+  });
+
+  it('uses the bundled one, or none, when nothing is set', async () => {
+    existing.add(BUNDLED);
+    expect(await resolveReferenceDoc(undefined)).toEqual({ path: BUNDLED });
+    expect(await resolveReferenceDoc(undefined, false)).toEqual({ path: undefined });
+    existing.clear();
+    expect(await resolveReferenceDoc(undefined)).toEqual({ path: undefined });
+    expect(calls).toEqual([]);
   });
 });

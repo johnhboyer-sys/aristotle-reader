@@ -21,9 +21,11 @@
     chooseDocxTarget,
     defaultSavePath,
     exportSettings,
+    pickReferenceDoc,
     resolveExportPandoc,
     resolveReferenceDoc,
   } from '../lib/export/tauriExport';
+  import { chooseAgainLabel } from '../lib/picks';
   import type { WorkManifest } from '../lib/works/manifest';
 
   let {
@@ -38,6 +40,8 @@
   type FileType = 'docx' | 'markdown';
   let phase = $state<Phase>('loading');
   let note = $state<string | null>(null);
+  /** The reference doc in Settings › Export, when it must be chosen again. */
+  let repickReference = $state<string | null>(null);
   let mode = $state<CompileMode>('english');
   let fileType = $state<FileType>('docx');
   let chapters = $state<ChapterFile[]>([]);
@@ -142,6 +146,21 @@
         pandoc = resolved;
       }
 
+      // The user's own template if they set one, else the bundled resource
+      // (see resolveReferenceDoc). Checked before the save dialog: one that
+      // must be chosen again stops the export before a target is chosen.
+      let referenceDocPath: string | undefined;
+      if (!asMarkdown) {
+        const reference = await resolveReferenceDoc(prefs.referenceDocPath);
+        if ('problem' in reference) {
+          note = reference.problem;
+          repickReference = prefs.referenceDocPath ?? null;
+          phase = 'ready';
+          return;
+        }
+        referenceDocPath = reference.path;
+      }
+
       const dialog = await import('@tauri-apps/plugin-dialog');
       // compileDefaultFilename always returns .docx; swap extension for markdown
       // here so other export paths that share that helper stay unchanged.
@@ -199,18 +218,6 @@
         await fs.mkdir(appData, { recursive: true }).catch(() => {});
         const mdPath = await pathApi.join(appData, 'export-compile-intermediate.md');
 
-        // The bundler keeps a resource's declared RELATIVE PATH, so
-        // "resources/reference.docx" in tauri.conf.json lands at
-        // Contents/Resources/resources/reference.docx. Resolving the bare
-        // filename produced a path that does not exist, and pandoc — which
-        // does not treat a missing --reference-doc as optional — failed every
-        // whole-work export. Verify the file is really there and fall back to
-        // pandoc's own styling if it is not: a missing template is a worse
-        // look, not a reason to refuse the export.
-        // The user's own template if they set one, else the bundled resource
-        // (whose declared relative path this helper carries — see
-        // resolveReferenceDoc).
-        const referenceDocPath = await resolveReferenceDoc(prefs.referenceDocPath);
 
         await fs.writeTextFile(mdPath, compiled.markdown);
 
@@ -237,6 +244,18 @@
       const what = asMarkdown ? "The Markdown file couldn't be created." : "The Word document couldn't be created.";
       note = `${what} ${firstLine(err instanceof Error ? err.message : String(err))}`.trim();
       phase = 'ready';
+    }
+  }
+
+  /** Choose the reference doc again from here, then export as before. */
+  async function chooseReferenceAgain() {
+    try {
+      if ((await pickReferenceDoc(repickReference ?? undefined)) === null) return;
+      repickReference = null;
+      note = 'Reference document chosen.';
+    } catch (err) {
+      console.error('[compile] choosing the reference doc failed', err);
+      note = 'That file couldn’t be opened.';
     }
   }
 
@@ -325,6 +344,9 @@
 
           {#if note}
             <p class="line note">{note}</p>
+          {/if}
+          {#if repickReference !== null}
+            <button class="repick-btn" onclick={chooseReferenceAgain}>{chooseAgainLabel('reference')}</button>
           {/if}
 
           <button class="export-btn" onclick={runExport} disabled={phase === 'exporting'}>
@@ -442,6 +464,16 @@
     border: 1px solid var(--accent);
     border-radius: 6px;
     padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+  }
+  .repick-btn {
+    margin-top: var(--space-2);
+    padding: 0;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--accent);
+    background: none;
+    border: none;
     cursor: pointer;
   }
   .export-btn:hover:not(:disabled) {

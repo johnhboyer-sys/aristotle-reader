@@ -47,16 +47,10 @@ function makeFakeFs(opts: {
       const names = o.baseDir === BaseDirectory.Resource ? resourceDirs.get(path) ?? [] : [];
       return names.map((name) => ({ name, isFile: true, isDirectory: false, isSymlink: false }));
     },
-    async copyFile(
-      from: string,
-      to: string,
-      o: { fromPathBaseDir: string; toPathBaseDir: string },
-    ) {
-      const src = o.fromPathBaseDir === BaseDirectory.Resource ? resourceFiles : appDataFiles;
-      const dst = o.toPathBaseDir === BaseDirectory.Resource ? resourceFiles : appDataFiles;
-      const v = src.get(from);
-      if (v === undefined) throw new Error(`copyFile: source not found: ${from}`);
-      dst.set(to, v);
+    // The window has no copy_file grant: granted on $RESOURCE as a source, it
+    // would also allow $RESOURCE as a destination (capabilities/default.json).
+    async copyFile() {
+      throw new Error('copyFile is not granted to the window');
     },
   };
 

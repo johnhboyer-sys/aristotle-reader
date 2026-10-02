@@ -2,7 +2,8 @@
 // phase 2). The window names a job and supplies data; it never supplies a
 // program or argv. Programs come from Rust's own search or from a native
 // dialog Rust opens itself, recorded in $APPDATA/.approved-programs.json
-// (sandbox.rs), which the window cannot write.
+// (sandbox.rs), which the window cannot write. A file or folder the window
+// names for a job must be one the user picked in a native dialog (phase 3).
 
 use crate::assist::{augmented_path, is_executable_file, run_blocking, run_with_timeout, which_blocking, AssistOutcome};
 use crate::jobs::{
@@ -15,8 +16,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Mutex;
 use std::time::Duration;
-use tauri::{AppHandle, Manager};
+use tauri::path::BaseDirectory;
+use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_fs::FsExt;
 
 const PROBE_TIMEOUT: Duration = Duration::from_secs(10);
 const CONVERT_TIMEOUT: Duration = Duration::from_secs(120);
@@ -57,6 +60,48 @@ fn app_data(app: &AppHandle) -> Result<PathBuf, String> {
 
 async fn blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> Result<T, String> {
     tauri::async_runtime::spawn_blocking(f).await.map_err(|e| format!("job panicked: {e}"))
+}
+
+// ── picks ───────────────────────────────────────────────────────────────────
+
+/// True when the user picked `path` in a native dialog — this session, or an
+/// earlier one restored by tauri-plugin-persisted-scope. The fs plugin's
+/// runtime scope holds exactly those picks (and files dropped on the window);
+/// the capability's own grants are not in it. `deep`: a folder must have been
+/// picked with `recursive: true`, so what lies two levels down is open too.
+pub fn is_picked<R: Runtime>(app: &AppHandle<R>, path: &Path, deep: bool) -> bool {
+    let scope = app.fs_scope();
+    path.is_absolute() && scope.is_allowed(path) && (!deep || scope.is_allowed(path.join("a").join("b")))
+}
+
+/// Why a stored path can or cannot be used — phase 4's "choose it again".
+#[derive(Serialize, Debug, PartialEq, Eq, Clone, Copy)]
+#[serde(rename_all = "kebab-case")]
+pub enum PickStatus {
+    Ok,
+    /// Picked, but nothing is there now (moved, renamed, a drive unplugged).
+    Missing,
+    /// Never picked, or picked by a build that did not keep picks.
+    NotPicked,
+}
+
+fn pick_status_of(path: &Path, picked: bool) -> PickStatus {
+    if !path.is_absolute() || !picked {
+        PickStatus::NotPicked
+    } else if !path.exists() {
+        PickStatus::Missing
+    } else {
+        PickStatus::Ok
+    }
+}
+
+/// Whether a folder or file the window stored (library, TLG/PHI folder,
+/// reference doc) can still be used. `deep` for a folder read below its top.
+#[tauri::command]
+pub fn pick_status(app: AppHandle, path: String, deep: Option<bool>) -> PickStatus {
+    let path = PathBuf::from(path);
+    let picked = is_picked(&app, &path, deep.unwrap_or(false));
+    pick_status_of(&path, picked)
 }
 
 /// A program the user picks in a native file dialog Rust opens, so the window
@@ -194,9 +239,9 @@ pub async fn choose_docx_target(app: AppHandle, default_path: Option<String>) ->
 
 /// The checks on an export's paths. `md` is the intermediate Markdown the
 /// window wrote under app data; `docx` must be a target the user chose in
-/// Rust's save dialog (`docx_picked`); `reference_doc` must be an existing
-/// file. Every path is absolute, so none can reach pandoc as a flag.
-fn check_export_paths(appdata: &Path, md: &Path, docx: &Path, docx_picked: bool, reference_doc: Option<&Path>) -> Result<(), String> {
+/// Rust's save dialog (`docx_picked`). Every path is absolute, so none can
+/// reach pandoc as a flag.
+fn check_export_paths(appdata: &Path, md: &Path, docx: &Path, docx_picked: bool) -> Result<(), String> {
     if !is_really_inside(md, appdata) || !md.is_file() {
         return Err(format!("export source is not a file in app data: {}", md.display()));
     }
@@ -204,16 +249,27 @@ fn check_export_paths(appdata: &Path, md: &Path, docx: &Path, docx_picked: bool,
     if !docx.is_absolute() || !is_docx || !docx_picked {
         return Err(format!("export target was not chosen in the save dialog: {}", docx.display()));
     }
-    // TODO(phase 3): a reference doc must also be the bundled one or a pick,
-    // once picks persist across restarts (tauri-plugin-persisted-scope).
-    // Checked against the scope now, a reference doc picked in an earlier
-    // session would fail every export until it was picked again.
-    if let Some(r) = reference_doc {
-        if !r.is_absolute() || !r.is_file() {
-            return Err(format!("reference doc is not a file: {}", r.display()));
-        }
+    Ok(())
+}
+
+/// A reference doc pandoc may read: the one bundled with the app, compared by
+/// real path, or one the user picked.
+fn check_reference_doc(r: &Path, bundled: Option<&Path>, picked: bool) -> Result<(), String> {
+    if !r.is_absolute() || !r.is_file() {
+        return Err(format!("reference doc is not a file: {}", r.display()));
+    }
+    let real = |p: &Path| p.canonicalize().ok();
+    let is_bundled = bundled.and_then(real).is_some_and(|b| real(r) == Some(b));
+    if !is_bundled && !picked {
+        return Err(format!("reference doc was not chosen in a dialog: {}", r.display()));
     }
     Ok(())
+}
+
+/// Where the bundled reference.docx sits — the path declared in
+/// tauri.conf.json's bundle.resources, which the bundler keeps.
+fn bundled_reference_doc(app: &AppHandle) -> Option<PathBuf> {
+    app.path().resolve("resources/reference.docx", BaseDirectory::Resource).ok()
 }
 
 /// Convert the intermediate Markdown to Word with pandoc. pandoc prints
@@ -223,10 +279,15 @@ pub async fn export_docx(app: AppHandle, md: String, docx: String, reference_doc
     let dir = app_data(&app)?;
     let docx = PathBuf::from(docx);
     let docx_picked = SAVE_TARGETS.take(&docx);
+    let reference_doc = reference_doc.map(PathBuf::from);
+    let reference_picked = reference_doc.as_deref().is_some_and(|r| is_picked(&app, r, false));
+    let bundled = bundled_reference_doc(&app);
     blocking(move || {
         let md = PathBuf::from(md);
-        let reference_doc = reference_doc.map(PathBuf::from);
-        check_export_paths(&dir, &md, &docx, docx_picked, reference_doc.as_deref())?;
+        check_export_paths(&dir, &md, &docx, docx_picked)?;
+        if let Some(r) = &reference_doc {
+            check_reference_doc(r, bundled.as_deref(), reference_picked)?;
+        }
         let (_, Some(program)) = pandoc_program(&load_approved(&dir)) else {
             return Ok(RunOutcome::not_spawned());
         };
@@ -260,6 +321,17 @@ pub struct DiogenesOutcome {
     run: RunOutcome,
 }
 
+/// A disc folder Diogenes may read: an existing folder the user picked.
+fn check_disc_dir(dir: &Path, picked: bool) -> Result<(), String> {
+    if !dir.is_absolute() || !dir.is_dir() {
+        return Err(format!("disc folder is not a folder: {}", dir.display()));
+    }
+    if !picked {
+        return Err(format!("disc folder was not chosen in a dialog: {}", dir.display()));
+    }
+    Ok(())
+}
+
 /// Run xml-export.pl from its own folder (it loads its modules by relative
 /// path), with the disc folder in the one environment variable Diogenes reads.
 fn run_diogenes(perl: &Path, server: &Path, corpus: Corpus, disc_dir: &Path, args: Vec<String>, timeout: Duration) -> RunOutcome {
@@ -282,15 +354,12 @@ pub async fn diogenes_export(
     disc_dir: String,
 ) -> Result<DiogenesOutcome, String> {
     let dir = app_data(&app)?;
+    let disc_dir = PathBuf::from(disc_dir);
+    let disc_picked = is_picked(&app, &disc_dir, false);
     blocking(move || {
         let corpus = Corpus::parse(&corpus)?;
         let line_mode = LineMode::parse(&line_mode)?;
-        let disc_dir = PathBuf::from(disc_dir);
-        // TODO(phase 3): the disc folder must also be a pick, once picks
-        // persist across restarts — settings keep it between sessions.
-        if !disc_dir.is_absolute() || !disc_dir.is_dir() {
-            return Err(format!("disc folder is not a folder: {}", disc_dir.display()));
-        }
+        check_disc_dir(&disc_dir, disc_picked)?;
         let out_dir = dir.join("corpus").join("disc-export").join(line_mode.name());
         std::fs::create_dir_all(&out_dir).map_err(|e| format!("cannot create {}: {e}", out_dir.display()))?;
         if !is_really_inside(&out_dir, &dir) {
@@ -509,8 +578,8 @@ mod tests {
         let appdata = temp_dir("export-ok");
         let md = appdata.join("export-intermediate.md");
         std::fs::write(&md, "# x").unwrap();
-        assert_eq!(check_export_paths(&appdata, &md, Path::new("/Users/u/Out.docx"), true, None), Ok(()));
-        assert_eq!(check_export_paths(&appdata, &md, Path::new("/Users/u/Out.DOCX"), true, Some(&md)), Ok(()));
+        assert_eq!(check_export_paths(&appdata, &md, Path::new("/Users/u/Out.docx"), true), Ok(()));
+        assert_eq!(check_export_paths(&appdata, &md, Path::new("/Users/u/Out.DOCX"), true), Ok(()));
     }
 
     #[test]
@@ -518,9 +587,9 @@ mod tests {
         let appdata = temp_dir("export-md");
         let elsewhere = temp_dir("export-md-elsewhere").join("x.md");
         std::fs::write(&elsewhere, "x").unwrap();
-        assert!(check_export_paths(&appdata, &elsewhere, Path::new("/u/Out.docx"), true, None).is_err());
+        assert!(check_export_paths(&appdata, &elsewhere, Path::new("/u/Out.docx"), true).is_err());
         // Missing file under app data.
-        assert!(check_export_paths(&appdata, &appdata.join("nope.md"), Path::new("/u/Out.docx"), true, None).is_err());
+        assert!(check_export_paths(&appdata, &appdata.join("nope.md"), Path::new("/u/Out.docx"), true).is_err());
     }
 
     #[test]
@@ -530,7 +599,7 @@ mod tests {
         let elsewhere = temp_dir("export-link-elsewhere");
         std::fs::write(elsewhere.join("x.md"), "x").unwrap();
         std::os::unix::fs::symlink(&elsewhere, appdata.join("link")).unwrap();
-        assert!(check_export_paths(&appdata, &appdata.join("link/x.md"), Path::new("/u/Out.docx"), true, None).is_err());
+        assert!(check_export_paths(&appdata, &appdata.join("link/x.md"), Path::new("/u/Out.docx"), true).is_err());
     }
 
     #[test]
@@ -538,10 +607,82 @@ mod tests {
         let appdata = temp_dir("export-target");
         let md = appdata.join("e.md");
         std::fs::write(&md, "x").unwrap();
-        assert!(check_export_paths(&appdata, &md, Path::new("/u/Out.docx"), false, None).is_err());
-        assert!(check_export_paths(&appdata, &md, Path::new("/u/.zshrc"), true, None).is_err());
-        assert!(check_export_paths(&appdata, &md, Path::new("Out.docx"), true, None).is_err());
-        assert!(check_export_paths(&appdata, &md, Path::new("/u/Out.docx"), true, Some(Path::new("/no/such.docx"))).is_err());
+        assert!(check_export_paths(&appdata, &md, Path::new("/u/Out.docx"), false).is_err());
+        assert!(check_export_paths(&appdata, &md, Path::new("/u/.zshrc"), true).is_err());
+        assert!(check_export_paths(&appdata, &md, Path::new("Out.docx"), true).is_err());
+    }
+
+    #[test]
+    fn a_reference_doc_must_be_the_bundled_one_or_a_pick() {
+        let dir = temp_dir("reference");
+        let bundled = dir.join("bundled.docx");
+        let mine = dir.join("mine.docx");
+        std::fs::write(&bundled, "b").unwrap();
+        std::fs::write(&mine, "m").unwrap();
+        assert_eq!(check_reference_doc(&mine, Some(&bundled), true), Ok(()));
+        assert_eq!(check_reference_doc(&bundled, Some(&bundled), false), Ok(()));
+        // The bundled file however it is spelled.
+        std::fs::create_dir(dir.join("x")).unwrap();
+        assert_eq!(check_reference_doc(&dir.join("x/../bundled.docx"), Some(&bundled), false), Ok(()));
+        assert!(check_reference_doc(&mine, Some(&bundled), false).is_err(), "not picked");
+        assert!(check_reference_doc(&mine, None, false).is_err(), "not picked, nothing bundled");
+        assert!(check_reference_doc(&dir.join("gone.docx"), Some(&bundled), true).is_err(), "missing");
+        assert!(check_reference_doc(Path::new("mine.docx"), Some(&bundled), true).is_err(), "relative");
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_link_to_the_bundled_reference_doc_is_not_the_bundled_one() {
+        // Comparing real paths, a link to the bundled file is the bundled file
+        // — harmless; the point is that a link elsewhere is not.
+        let dir = temp_dir("reference-link");
+        let bundled = dir.join("bundled.docx");
+        let elsewhere = dir.join("elsewhere.docx");
+        std::fs::write(&bundled, "b").unwrap();
+        std::fs::write(&elsewhere, "e").unwrap();
+        std::os::unix::fs::symlink(&elsewhere, dir.join("bundled-look.docx")).unwrap();
+        assert!(check_reference_doc(&dir.join("bundled-look.docx"), Some(&bundled), false).is_err());
+    }
+
+    #[test]
+    fn a_disc_folder_must_be_a_picked_folder() {
+        let dir = temp_dir("disc");
+        assert_eq!(check_disc_dir(&dir, true), Ok(()));
+        assert!(check_disc_dir(&dir, false).is_err(), "not picked");
+        assert!(check_disc_dir(&dir.join("gone"), true).is_err(), "missing");
+        std::fs::write(dir.join("f"), "x").unwrap();
+        assert!(check_disc_dir(&dir.join("f"), true).is_err(), "a file");
+        assert!(check_disc_dir(Path::new("TLG"), true).is_err(), "relative");
+    }
+
+    // ── picks ──
+
+    #[test]
+    fn pick_status_says_why_a_stored_path_cannot_be_used() {
+        let dir = temp_dir("pick-status");
+        assert_eq!(pick_status_of(&dir, true), PickStatus::Ok);
+        assert_eq!(pick_status_of(&dir.join("gone"), true), PickStatus::Missing);
+        assert_eq!(pick_status_of(&dir, false), PickStatus::NotPicked);
+        // Not picked wins over missing: the window learns nothing about a
+        // path it was never given.
+        assert_eq!(pick_status_of(&dir.join("gone"), false), PickStatus::NotPicked);
+        assert_eq!(pick_status_of(Path::new("relative"), true), PickStatus::NotPicked);
+        assert_eq!(serde_json::to_value(PickStatus::NotPicked).unwrap(), "not-picked");
+    }
+
+    #[test]
+    fn a_folder_picked_shallow_is_not_picked_for_deep_use() {
+        // A library or disc folder is read two levels down; a pick made
+        // without recursive: true would open the folder and fail every chapter.
+        let app = tauri::test::mock_builder().plugin(tauri_plugin_fs::init()).build(tauri::test::mock_context(tauri::test::noop_assets())).unwrap();
+        let shallow = temp_dir("pick-shallow");
+        let deep = temp_dir("pick-deep");
+        app.fs_scope().allow_directory(&shallow, false).unwrap();
+        app.fs_scope().allow_directory(&deep, true).unwrap();
+        assert!(is_picked(app.handle(), &shallow, false));
+        assert!(!is_picked(app.handle(), &shallow, true));
+        assert!(is_picked(app.handle(), &deep, true));
+        assert!(!is_picked(app.handle(), &temp_dir("pick-never"), false));
     }
 
     // ── pandoc ──

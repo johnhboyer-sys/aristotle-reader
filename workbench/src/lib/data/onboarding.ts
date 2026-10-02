@@ -72,10 +72,12 @@ export async function copySharedShardsIfMissing(fs: FsModule, dir: string): Prom
     await fs.mkdir(path, { baseDir: fs.BaseDirectory.AppData, recursive: true });
     for (const entry of entries) {
       if (!entry.isFile) continue;
-      await fs.copyFile(`${path}/${entry.name}`, `${path}/${entry.name}`, {
-        fromPathBaseDir: fs.BaseDirectory.Resource,
-        toPathBaseDir: fs.BaseDirectory.AppData,
-      });
+      // Read and write rather than copyFile: the window has no copy_file
+      // grant, which on $RESOURCE would also let it copy INTO the installed
+      // app (capabilities/default.json). The shards are JSON text.
+      const file = `${path}/${entry.name}`;
+      const text = await fs.readTextFile(file, { baseDir: fs.BaseDirectory.Resource });
+      await fs.writeTextFile(file, text, { baseDir: fs.BaseDirectory.AppData });
     }
   } catch (err) {
     console.warn(`onboarding: failed copying shared ${dir}/ resources`, err);
@@ -145,13 +147,19 @@ export async function looksLikeTlgDir(dir: string): Promise<boolean> {
   }
 }
 
-/** Native folder picker for the TLG directory; null when cancelled. */
-export async function pickTlgDir(): Promise<string | null> {
+/**
+ * Native folder picker for the TLG directory; null when cancelled. The whole
+ * folder (`recursive`), since Diogenes reads it; `defaultPath` opens the
+ * dialog at a folder chosen before, for choosing it again.
+ */
+export async function pickTlgDir(defaultPath?: string): Promise<string | null> {
   const dialog = await import('@tauri-apps/plugin-dialog');
   const picked = await dialog.open({
     directory: true,
+    recursive: true,
     multiple: false,
     title: 'Choose the folder that holds the TLG texts',
+    ...(defaultPath ? { defaultPath } : {}),
   });
   return typeof picked === 'string' ? picked : null;
 }
