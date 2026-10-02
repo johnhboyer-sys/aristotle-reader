@@ -5,12 +5,18 @@
   // with a Detect action, a custom command, and the API providers), a
   // custom-command form, API-key fields (each labeled pay-per-use, off by
   // default), and the includeDraft toggle. Every field persists through
-  // updateSettings; the picker + custom form are exercisable in the browser
-  // dev harness (localhost:1421) — only Detect needs Tauri.
+  // updateSettings; the picker is exercisable in the browser dev harness
+  // (localhost:1421) — Detect and the custom command need Tauri.
+  //
+  // The window never names a program for Rust to run. Detect asks Rust which
+  // CLIs it finds; the custom command is set by Rust, which opens the file
+  // picker and a native confirmation itself (workbench-design/
+  // sandboxing-plan.md). settings.custom mirrors the approved command for
+  // display only.
   import { loadSettings, updateSettings } from '../lib/settings';
   import type { AssistSettings, AssistProviderChoice } from '../lib/settings';
   import { isTauri } from '../lib/runtime';
-  import { CLI_TOOLS } from '../lib/assist/tools';
+  import type { AssistDetection } from '../lib/editor/assistController';
   import {
     providerOptions,
     detectLabel,
@@ -24,10 +30,12 @@
   let provider = $state<AssistProviderChoice | ''>('');
   let includeDraft = $state(true);
 
-  // custom command
-  let customBinPath = $state('');
-  let customArgs = $state(''); // space-separated in the UI, split on save
+  // custom command: the arguments and prompt channel to approve next, and
+  // the command Rust holds approved (null = none)
+  let customArgs = $state(''); // space-separated in the UI, split on approval
   let customPromptVia = $state<'stdin' | 'arg'>('stdin');
+  let approved = $state<AssistDetection['custom']>(null);
+  let customNote = $state<string | null>(null);
 
   // api keys
   let apiKeys = $state<{ openai: string; anthropic: string; google: string }>({
@@ -48,7 +56,6 @@
       const s = (await loadSettings()).assist ?? {};
       provider = s.provider ?? '';
       includeDraft = s.includeDraft ?? true;
-      customBinPath = s.custom?.binPath ?? '';
       customArgs = (s.custom?.args ?? []).join(' ');
       customPromptVia = s.custom?.promptVia ?? 'stdin';
       apiKeys = {
@@ -56,12 +63,8 @@
         anthropic: s.apiKeys?.anthropic ?? '',
         google: s.apiKeys?.google ?? '',
       };
-      // seed cached detection paths so a previously-found tool shows Found
-      for (const id of CLI_TOOL_IDS) {
-        const cached = s.cliPaths?.[id];
-        if (cached) detect[id] = { state: 'found', path: cached };
-      }
       loaded = true;
+      if (isTauri()) void runDetect();
     })();
   });
 
@@ -69,12 +72,8 @@
   async function persist() {
     const patch: AssistSettings = {};
     if (provider) patch.provider = provider;
-    if (customBinPath || customArgs || customPromptVia !== 'stdin') {
-      patch.custom = {
-        ...(customBinPath ? { binPath: customBinPath } : {}),
-        ...(customArgs.trim() ? { args: customArgs.trim().split(/\s+/) } : {}),
-        promptVia: customPromptVia,
-      };
+    if (approved) {
+      patch.custom = { binPath: approved.program, args: approved.args, promptVia: approved.prompt_via };
     }
     const keys: Partial<Record<'openai' | 'anthropic' | 'google', string>> = {};
     if (apiKeys.openai) keys.openai = apiKeys.openai;
@@ -82,9 +81,7 @@
     if (apiKeys.google) keys.google = apiKeys.google;
     if (Object.keys(keys).length > 0) patch.apiKeys = keys;
     patch.includeDraft = includeDraft;
-    // preserve cached cliPaths from whatever the last load/detect produced
     const prev = (await loadSettings()).assist ?? {};
-    if (prev.cliPaths) patch.cliPaths = prev.cliPaths;
     if (prev.models) patch.models = prev.models;
     await updateSettings({ assist: patch });
   }
@@ -94,38 +91,49 @@
     void persist();
   }
 
-  /** Run assist_which per built-in spec; cache any resolved path (Tauri only). */
+  /** Ask Rust which CLIs it finds, and which custom command it holds (Tauri only). */
   async function runDetect() {
     if (!isTauri()) return;
-    const [{ invoke }, path] = await Promise.all([
-      import('@tauri-apps/api/core'),
-      import('@tauri-apps/api/path'),
-    ]);
-    const home = (await path.homeDir()).replace(/\/+$/, '');
-    const found: Partial<Record<string, string>> = {};
-    for (const id of CLI_TOOL_IDS) {
-      detect[id] = { state: 'checking' };
-      const spec = CLI_TOOLS[id];
-      try {
-        const resolved = await invoke<string | null>('assist_which', {
-          candidates: spec.candidatePaths(home),
-          binName: spec.binName,
-        });
-        if (resolved) {
-          detect[id] = { state: 'found', path: resolved };
-          found[id] = resolved;
-        } else {
-          detect[id] = { state: 'not-found' };
-        }
-      } catch (err) {
-        console.error('[assist] detect failed for', id, err);
-        detect[id] = { state: 'not-found' };
+    for (const id of CLI_TOOL_IDS) detect[id] = { state: 'checking' };
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const found = (await invoke('assist_detect')) as AssistDetection;
+      for (const id of CLI_TOOL_IDS) {
+        const path = found[id];
+        detect[id] = path ? { state: 'found', path } : { state: 'not-found' };
       }
+      approved = found.custom;
+    } catch (err) {
+      console.error('[assist] detect failed', err);
+      for (const id of CLI_TOOL_IDS) detect[id] = { state: 'not-found' };
     }
-    // cache resolved paths so resolveTauriAssistProvider reuses them
-    if (Object.keys(found).length > 0) {
-      const prev = (await loadSettings()).assist ?? {};
-      await updateSettings({ assist: { ...prev, cliPaths: { ...prev.cliPaths, ...found } } });
+  }
+
+  /** Rust opens the file picker, then a native "Allow …?" confirmation
+   * showing the whole command; only an allowed command is recorded. */
+  async function setCustom() {
+    customNote = null;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const args = customArgs.trim() ? customArgs.trim().split(/\s+/) : [];
+      const result = (await invoke('assist_set_custom', { args, promptVia: customPromptVia })) as AssistDetection['custom'];
+      if (!result) return; // cancelled at the picker or the confirmation
+      approved = result;
+      await persist();
+    } catch (err) {
+      console.error('[assist] could not set the custom command', err);
+      customNote = "That file isn't a program — nothing was changed.";
+    }
+  }
+
+  async function forgetCustom() {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('assist_forget_custom');
+      approved = null;
+      await persist();
+    } catch (err) {
+      console.error('[assist] could not remove the custom command', err);
     }
   }
 </script>
@@ -179,16 +187,14 @@
       </label>
       {#if provider === 'custom'}
         <div class="custom-form">
-          <label class="field">
-            <span class="field-label">Path to the command</span>
-            <input
-              class="text-input"
-              type="text"
-              placeholder="/usr/local/bin/my-ai"
-              bind:value={customBinPath}
-              onblur={persist}
-            />
-          </label>
+          {#if approved}
+            <p class="line path">{[approved.program, ...approved.args].join(' ')}</p>
+            <p class="line muted small">
+              Prompt sent {approved.prompt_via === 'arg' ? 'as the last argument' : 'on stdin'}.
+            </p>
+          {:else}
+            <p class="line muted">No command chosen yet.</p>
+          {/if}
           <label class="field">
             <span class="field-label">Arguments (space-separated)</span>
             <input
@@ -196,22 +202,35 @@
               type="text"
               placeholder="--flag value"
               bind:value={customArgs}
-              onblur={persist}
             />
           </label>
           <fieldset class="field">
             <span class="field-label">Send the prompt via</span>
             <div class="seg">
               <label class="seg-opt" class:on={customPromptVia === 'stdin'}>
-                <input type="radio" name="promptVia" value="stdin" bind:group={customPromptVia} onchange={persist} />
+                <input type="radio" name="promptVia" value="stdin" bind:group={customPromptVia} />
                 stdin
               </label>
               <label class="seg-opt" class:on={customPromptVia === 'arg'}>
-                <input type="radio" name="promptVia" value="arg" bind:group={customPromptVia} onchange={persist} />
+                <input type="radio" name="promptVia" value="arg" bind:group={customPromptVia} />
                 argument
               </label>
             </div>
           </fieldset>
+          {#if isTauri()}
+            <div class="actions">
+              <button class="text-btn" onclick={setCustom}>Choose program…</button>
+              {#if approved}
+                <button class="text-btn" onclick={forgetCustom}>Remove</button>
+              {/if}
+            </div>
+            <p class="line muted small">
+              You'll be asked to allow the command, with these arguments, before it is saved.
+            </p>
+          {/if}
+          {#if customNote}
+            <p class="line">{customNote}</p>
+          {/if}
         </div>
       {/if}
     </div>
@@ -304,6 +323,15 @@
   }
   .line.small {
     font-size: 0.8rem;
+  }
+  .line.path {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+  .actions {
+    display: flex;
+    gap: var(--space-2);
   }
 
   /* Radio option rows — concentric: outer 8px, matches inner controls */

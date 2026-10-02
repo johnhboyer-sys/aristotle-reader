@@ -153,7 +153,6 @@ describe('sanitizeExport', () => {
         bilingualOrder: 'translation-first',
         referenceDocPath: '/refs/house.docx',
         outputDir: '/Users/john/Exports',
-        pandocPath: '/opt/homebrew/bin/pandoc',
       }),
     ).toEqual({
       stampMode: 'columns',
@@ -162,8 +161,11 @@ describe('sanitizeExport', () => {
       bilingualOrder: 'translation-first',
       referenceDocPath: '/refs/house.docx',
       outputDir: '/Users/john/Exports',
-      pandocPath: '/opt/homebrew/bin/pandoc',
     });
+  });
+
+  it('drops a pandoc path: the window may not choose a program (Rust records the pick)', () => {
+    expect(sanitizeExport({ pandocPath: '/bin/sh', outputDir: '/out' })).toEqual({ outputDir: '/out' });
   });
 
   it('drops unrecognized enum values rather than carrying them', () => {
@@ -175,7 +177,7 @@ describe('sanitizeExport', () => {
   });
 
   it('treats an empty path string as cleared, not set', () => {
-    expect(sanitizeExport({ referenceDocPath: '', outputDir: '', pandocPath: '' })).toBeUndefined();
+    expect(sanitizeExport({ referenceDocPath: '', outputDir: '' })).toBeUndefined();
     expect(sanitizeExport({ outputDir: '/out', referenceDocPath: '' })).toEqual({ outputDir: '/out' });
   });
 
@@ -189,5 +191,14 @@ describe('sanitizeExport', () => {
     const loaded = sanitize({ tlgDir: '/tlg', export: { mode: 'bilingual', bogus: 1 } });
     expect(loaded.export).toEqual({ mode: 'bilingual' });
     expect(sanitize({ tlgDir: '/tlg' })).not.toHaveProperty('export');
+  });
+});
+
+describe('sanitize — no program paths from the window', () => {
+  // settings.json is written by the window, so a program named there would be
+  // a program the window chose. Rust finds Diogenes and perl itself
+  // (workbench-design/sandboxing-plan.md); old files lose these keys.
+  it('drops a Diogenes or perl path and keeps the disc folders', () => {
+    expect(sanitize({ tlgDir: '/TLG', diogenesPath: '/evil', perlPath: '/bin/sh' })).toEqual({ tlgDir: '/TLG' });
   });
 });

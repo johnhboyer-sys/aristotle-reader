@@ -48,7 +48,7 @@
       // literal this component used before those settings existed.
       const prefs = await exportSettings();
 
-      const pandoc = await resolveExportPandoc(prefs.pandocPath);
+      const pandoc = await resolveExportPandoc();
       if ('message' in pandoc) {
         note(pandoc.message);
         return;

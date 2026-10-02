@@ -10,9 +10,9 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # Custom Rust stays minimal by design: Tauri core + official plugins only,
-# plus serde for the assist command's serialized outcome (src/assist.rs).
-# tauri-plugin-shell is here because the editor will later shell out to
-# Diogenes' perl exporter and to pandoc as subprocesses.
+# plus serde for the job commands' serialized outcomes (src/commands.rs).
+# There is no shell plugin: Rust runs pandoc, Diogenes and the AI CLIs itself,
+# building every command line (workbench-design/sandboxing-plan.md).
 serde = { version = "1", features = ["derive"] }
 # serde_json is a REAL dependency now (it was dev-only): the pack installer
 # reads and validates each pack's pack.json manifest before extracting it.
@@ -27,7 +27,6 @@ tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-opener = "2"
-tauri-plugin-shell = "2"
 
 [dev-dependencies]
 serde_json = "1"

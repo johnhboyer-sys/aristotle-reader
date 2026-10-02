@@ -1,4 +1,5 @@
 mod assist;
+mod commands;
 mod jobs;
 mod packs;
 mod sandbox;
@@ -35,7 +36,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_shell::init())
         // macOS's built-in Quit ends the app with no chance to save, so the
         // last edit — still inside the autosave debounce — was lost. Our own
         // ⌘Q item asks the frontend to save, then quits; if the frontend
@@ -77,9 +77,16 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             quit_now,
             quit_ack,
-            assist::assist_which,
-            assist::assist_run,
-            assist::run_program,
+            commands::pandoc_version,
+            commands::pick_pandoc,
+            commands::forget_pandoc,
+            commands::export_docx,
+            commands::diogenes_status,
+            commands::diogenes_export,
+            commands::assist_detect,
+            commands::assist_run,
+            commands::assist_set_custom,
+            commands::assist_forget_custom,
             packs::install_lexicon_pack,
             packs::list_lexicon_packs,
             packs::remove_lexicon_pack

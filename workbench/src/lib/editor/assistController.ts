@@ -15,15 +15,13 @@ import type { Node as PMNode } from '@tiptap/pm/model';
 
 import type { AssistContext, AssistProvider, AssistResult, AssistUnit } from '../assist/provider';
 import { COPY_FAILED_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
-import { CliProvider, buildCliInvocation } from '../assist/cliProvider';
+import { CliProvider } from '../assist/cliProvider';
 import type { RunInvokeFn } from '../assist/cliProvider';
 import { ClipboardProvider } from '../assist/clipboardProvider';
 import { ApiProvider } from '../assist/apiProvider';
 import type { FetchFn } from '../assist/apiProvider';
 import type { ApiProviderId } from '../assist/resolveProvider';
-import { resolveToolBinary } from '../assist/detect';
-import { CLI_TOOLS, specForCustom } from '../assist/tools';
-import type { CliToolSpec } from '../assist/tools';
+import { CLI_TOOLS, CUSTOM_TOOL } from '../assist/tools';
 import { resolveAssistProvider } from '../assist/resolveProvider';
 import type { CliProviderId, DetectionMap } from '../assist/resolveProvider';
 import type { WorkbenchSettings } from '../settings';
@@ -262,39 +260,36 @@ export class AssistController {
 
 // ── Tauri provider resolution (D7 §Slice C; lazy, first-use only) ──────────
 
+/** `assist_detect`'s answer (src-tauri/src/commands.rs): where Rust finds
+ * each built-in CLI, and the custom command the user approved. */
+export interface AssistDetection {
+  claude: string | null;
+  codex: string | null;
+  gemini: string | null;
+  custom: { program: string; args: string[]; prompt_via: 'stdin' | 'arg' } | null;
+}
+
 export interface TauriAssistDeps {
   loadSettings(): Promise<WorkbenchSettings>;
-  updateSettings(patch: Partial<WorkbenchSettings>): Promise<unknown>;
-  /** plugin-fs exists() on an absolute path; a throw counts as "not there". */
-  exists(path: string): Promise<boolean>;
-  /** $HOME (@tauri-apps/api path.homeDir — may carry a trailing slash). */
-  home(): Promise<string>;
-  /** invoke('assist_run', …) — the generalized Rust exec command (Slice B). */
+  /** invoke('assist_detect') — which CLIs Rust can run. */
+  invokeDetect(): Promise<AssistDetection>;
+  /** invoke('assist_run', { tool, prompt, timeoutMs }). */
   invokeRun: RunInvokeFn;
-  /** invoke('assist_which', { candidates, binName }) — the Rust login-shell rung (Slice B). */
-  invokeWhich(candidates: string[], binName: string): Promise<string | null>;
   /** Clipboard write for the fallback provider. */
   writeClipboard(text: string): Promise<void>;
 }
 
-/** The built-in CLI tools we auto-detect, in preference order (claude first). */
-const DETECT_ORDER: readonly ('claude' | 'codex' | 'gemini')[] = ['claude', 'codex', 'gemini'];
-
 /**
  * The Tauri-side provider flow (D7 multi-provider).
  *
- *   1. Determine the chosen provider from settings.assist.provider:
- *      - a CLI tool ('claude'|'codex'|'gemini'|'custom') → use it directly.
- *      - unset → DETECT: resolve each built-in tool's binary (via the fixed
- *        candidate ladder + the Rust `assist_which` login-shell rung), prefer
- *        claude, else the first detected. resolveAssistProvider makes the call.
- *      - an API provider ('openai'|'anthropic'|'google') → Slice D: if a
- *        non-empty api key is stored for it, build an ApiProvider over the
- *        webview's own `fetch` (direct pay-per-use call, billed to the user);
- *        with no key, fall through to the clipboard floor.
- *   2. For a resolved CLI tool: resolve its binPath (cached path that still
- *      exists is reused; otherwise resolve via the ladder and cache it), then
- *      build a per-request run-mode CliProvider against `assist_run`.
+ *   1. settings.assist.provider names an API provider ('openai'|'anthropic'|
+ *      'google') → an ApiProvider over the webview's own `fetch` when a
+ *      non-empty key is stored for it, else the clipboard floor.
+ *   2. Otherwise ask Rust which CLIs it can run (`assist_detect`): the chosen
+ *      tool ('claude'|'codex'|'gemini'|'custom'), or Claude when none is
+ *      chosen. A custom command counts only when Rust holds the user's
+ *      approval of it — a command named in settings.json, which the window
+ *      writes, is never run (workbench-design/sandboxing-plan.md).
  *   3. Nothing usable → ClipboardProvider (§12 invisibility; never throws).
  *
  * No startup probe, no model-call probe — the first real suggestion doubles as
@@ -303,14 +298,10 @@ const DETECT_ORDER: readonly ('claude' | 'codex' | 'gemini')[] = ['claude', 'cod
 export async function resolveTauriAssistProvider(deps: TauriAssistDeps): Promise<AssistProvider> {
   const clipboard = () => new ClipboardProvider({ writeText: deps.writeClipboard });
   try {
-    const safeExists = (p: string) => deps.exists(p).catch(() => false);
-    const home = (await deps.home()).replace(/\/+$/, '');
     const settings = await deps.loadSettings();
     const prev = settings.assist ?? {};
     const chosen = prev.provider;
 
-    // API providers (Slice D): build an ApiProvider only when a non-empty key
-    // is stored for the chosen service; otherwise the clipboard floor.
     if (chosen === 'openai' || chosen === 'anthropic' || chosen === 'google') {
       const apiKey = prev.apiKeys?.[chosen];
       if (apiKey && apiKey.trim()) {
@@ -324,89 +315,21 @@ export async function resolveTauriAssistProvider(deps: TauriAssistDeps): Promise
       return clipboard();
     }
 
-    // The tool spec for the chosen (or to-be-detected) CLI tool.
-    const specFor = (tool: CliProviderId): CliToolSpec =>
-      tool === 'custom' ? specForCustom(prev.custom) : CLI_TOOLS[tool];
-
-    // Resolve a tool's absolute binary path, reusing a still-valid cached path
-    // (built-in tools only; custom's path comes straight from its spec). The
-    // cached-path short-circuit uses plugin-fs `exists`, which fails for the
-    // SYMLINKED CLIs that matter (~/.local/bin/claude, /opt/homebrew/bin/codex)
-    // on a Finder-launched .app — but that only means the short-circuit is
-    // skipped and we re-resolve via resolveToolBinary (whose Rust
-    // `assist_which` rung IS symlink-safe), so it still resolves correctly.
-    // The re-cache write is gated on an ACTUAL change so a symlink tool that
-    // re-resolves to the same path every request doesn't churn settings.
-    const resolveBin = async (tool: CliProviderId): Promise<string | null> => {
-      const cached = tool !== 'custom' ? prev.cliPaths?.[tool] : undefined;
-      if (cached && (await safeExists(cached))) return cached;
-      const path = await resolveToolBinary(specFor(tool), {
-        exists: safeExists,
-        home,
-        invokeWhich: (candidates, binName) =>
-          deps.invokeWhich(candidates, binName).catch(() => null),
-      });
-      // Cache newly-resolved built-in paths (custom has no cache slot); skip
-      // the write when the resolved path is unchanged from the cache.
-      if (path && tool !== 'custom' && path !== cached) {
-        await deps.updateSettings({
-          assist: { ...prev, cliPaths: { ...prev.cliPaths, [tool]: path } },
-        });
-      }
-      return path;
+    const found = await deps.invokeDetect();
+    const paths: DetectionMap['paths'] = {
+      claude: found.claude,
+      codex: found.codex,
+      gemini: found.gemini,
+      custom: found.custom?.program ?? null,
     };
-
-    // Build the detection map: the chosen tool if explicit, else every built-in
-    // (so resolveAssistProvider can prefer claude / pick the first detected).
-    const paths: DetectionMap['paths'] = {};
-    if (chosen === 'claude' || chosen === 'codex' || chosen === 'gemini' || chosen === 'custom') {
-      paths[chosen] = await resolveBin(chosen);
-    } else {
-      for (const tool of DETECT_ORDER) {
-        const p = await resolveBin(tool);
-        if (p) {
-          paths[tool] = p;
-          break; // prefer the first in DETECT_ORDER (claude first)
-        }
-      }
-    }
-
     const choice = resolveAssistProvider(prev, { paths });
     if (choice.kind === 'cli') {
-      return makeRequestCliProvider(specFor(choice.tool), choice.binPath, deps.invokeRun);
+      const spec = choice.tool === 'custom' ? CUSTOM_TOOL : CLI_TOOLS[choice.tool];
+      return new CliProvider({ tool: choice.tool, parseOutput: spec.parseOutput, invoke: deps.invokeRun });
     }
-    // API providers were handled above (key → ApiProvider, else floor); any
-    // remaining non-cli choice is 'clipboard' → the floor.
     return clipboard();
   } catch (err) {
     console.error('[assist] provider resolution failed', err);
     return clipboard();
   }
-}
-
-/**
- * A CliProvider whose argv/stdin are recomposed from the tool spec on EVERY
- * suggest call (the composition depends on the per-request AssistContext). The
- * run-mode CliProvider takes a fixed {args, stdin}, so we wrap it in a tiny
- * AssistProvider that builds a fresh CliProvider per request.
- */
-function makeRequestCliProvider(
-  spec: CliToolSpec,
-  binPath: string,
-  invokeRun: RunInvokeFn,
-): AssistProvider {
-  return {
-    id: 'cli',
-    async suggest(ctx: AssistContext, signal: AbortSignal): Promise<AssistResult> {
-      const { args, stdin } = buildCliInvocation(spec, ctx);
-      const provider = new CliProvider({
-        binPath,
-        args,
-        stdin,
-        parseOutput: spec.parseOutput,
-        invoke: invokeRun,
-      });
-      return provider.suggest(ctx, signal);
-    },
-  };
 }

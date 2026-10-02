@@ -4,11 +4,8 @@
 // permission flags all run arbitrary code — so the window names a job and
 // supplies data; it never supplies argv.
 //
-// Phase 1: the builders and checks, pure and tested. Nothing calls them yet;
-// phase 2 replaces `run_program` and the free-form `assist_run` with commands
-// built on these.
-
-#![allow(dead_code)] // wired in phase 2
+// The builders and checks here are pure and tested; the commands that use
+// them live in commands.rs.
 
 use std::path::{Component, Path, PathBuf};
 
@@ -21,6 +18,32 @@ pub fn is_inside(path: &Path, root: &Path) -> bool {
         && path.components().all(|c| matches!(c, Component::RootDir | Component::Normal(_) | Component::Prefix(_)))
         && path.starts_with(root)
         && path != root
+}
+
+/// Where `path` really is: symlinks resolved. A file not yet created is
+/// resolved through its parent, which must exist. None when neither resolves.
+pub fn real_path(path: &Path) -> Option<PathBuf> {
+    if let Ok(p) = path.canonicalize() {
+        return Some(p);
+    }
+    let name = match path.components().next_back()? {
+        Component::Normal(n) => n.to_owned(),
+        _ => return None,
+    };
+    Some(path.parent()?.canonicalize().ok()?.join(name))
+}
+
+/// `is_inside` on the real locations of both: a symlink under `root` that
+/// points out of it is outside. Lexical `..` is still refused first, before
+/// anything touches the disk.
+pub fn is_really_inside(path: &Path, root: &Path) -> bool {
+    if !is_inside(path, root) {
+        return false;
+    }
+    match (real_path(path), root.canonicalize()) {
+        (Some(p), Ok(r)) => is_inside(&p, &r),
+        _ => false,
+    }
 }
 
 // ── pandoc ──────────────────────────────────────────────────────────────────
@@ -88,6 +111,45 @@ impl LineMode {
             _ => Err(format!("unknown line mode {s:?}")),
         }
     }
+    /// The folder each mode's exports are cached in: the same work exported
+    /// as lines and as prose are different texts.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Auto => "auto",
+            Self::Lines => "lines",
+            Self::Prose => "prose",
+        }
+    }
+}
+
+/// Where Diogenes' server folder (the one holding xml-export.pl) is installed,
+/// best first. Moved from `diogenesServerCandidates` (src/lib/corpus/
+/// discExport.ts). macOS is verified; the others are the documented install
+/// paths, untested.
+pub fn diogenes_server_candidates() -> Vec<PathBuf> {
+    let c: &[&str] = if cfg!(target_os = "macos") {
+        &["/Applications/Diogenes.app/Contents/server"]
+    } else if cfg!(windows) {
+        &["C:/Program Files/Diogenes/resources/app/server", "C:/Program Files (x86)/Diogenes/resources/app/server"]
+    } else {
+        &["/usr/share/diogenes/server", "/opt/diogenes/server"]
+    };
+    c.iter().map(PathBuf::from).collect()
+}
+
+/// perl interpreters to try, best first. macOS and Linux: the system perl,
+/// which Diogenes itself uses there. Windows: UNVERIFIED guesses at where
+/// Diogenes for Windows ships its own perl, relative to its server folder.
+pub fn perl_candidates(server: &Path) -> Vec<PathBuf> {
+    if !cfg!(windows) {
+        return vec!["/usr/bin/perl".into()];
+    }
+    let parent = server.parent().unwrap_or(server);
+    vec![
+        parent.join("perl/perl/bin/perl.exe"),
+        parent.join("strawberry/perl/bin/perl.exe"),
+        server.join("perl/bin/perl.exe"),
+    ]
 }
 
 /// `xml-export.pl -c <corpus> -n <author> -o <out> [-y|-Y]` — the argv
@@ -176,18 +238,51 @@ impl AssistTool {
         }
     }
 
-    /// The fixed flags from src/lib/assist/tools.ts, with the prompt placed as
-    /// each tool reads it. Claude and Codex read it on stdin; Gemini takes it
-    /// as the value of `-p`, a single argv element, so no shell ever parses it.
+    /// Each tool's flags, with its own tools switched off, and the prompt
+    /// placed as the tool reads it. Claude and Codex read it on stdin; Gemini
+    /// takes it as the value of `-p`, a single argv element, so no shell ever
+    /// parses it.
+    ///
+    /// Tools off, because a prompt carries text from the page — a hostile
+    /// source document could ask the CLI to run something, and the user's own
+    /// CLI settings may allow it. Each set was checked by asking the CLI to
+    /// run a command, read a file outside its folder, write a file and fetch
+    /// a page, with and without these flags (2026-10-01):
+    ///
+    /// - claude 2.1.286: with `-p` alone it ran `touch`; with `--tools ""` it
+    ///   has no tools and did nothing. The MCP flags keep the user's MCP
+    ///   servers from starting.
+    /// - codex-cli 0.159.2: `--sandbox read-only` alone still ran a shell
+    ///   command. With `code_mode_host` off every remaining tool, apply_patch
+    ///   and web included, fails closed; the other switches remove the tools
+    ///   that act outside the sandbox. `--ignore-user-config` drops the user's
+    ///   config.toml (its MCP servers, hooks, profiles); auth still works. A
+    ///   Codex that does not know one of these names refuses to start, which
+    ///   fails closed to the clipboard.
+    /// - Gemini: UNVERIFIED — no gemini on the machine these were checked on.
+    ///   It runs with its defaults, tools included.
     pub fn invocation(self, prompt: &str) -> Invocation {
         let fixed = |a: &[&str]| a.iter().map(|s| s.to_string()).collect::<Vec<_>>();
         match self {
             Self::Claude => Invocation {
-                args: fixed(&["-p", "--output-format", "json", "--strict-mcp-config", "--mcp-config", r#"{"mcpServers":{}}"#]),
+                args: fixed(&[
+                    "-p", "--output-format", "json",
+                    "--tools", "",
+                    "--strict-mcp-config", "--mcp-config", r#"{"mcpServers":{}}"#,
+                ]),
                 stdin: Some(prompt.into()),
             },
             Self::Codex => Invocation {
-                args: fixed(&["exec", "--json", "--skip-git-repo-check", "--sandbox", "read-only", "-c", "mcp_servers={}", "-"]),
+                args: fixed(&[
+                    "exec", "--json", "--skip-git-repo-check", "--sandbox", "read-only",
+                    "--ignore-user-config", "-c", "mcp_servers={}", "-c", r#"web_search="disabled""#,
+                    "--disable", "shell_tool", "--disable", "unified_exec", "--disable", "code_mode_host",
+                    "--disable", "apps", "--disable", "plugins", "--disable", "browser_use",
+                    "--disable", "computer_use", "--disable", "in_app_browser", "--disable", "image_generation",
+                    "--disable", "multi_agent", "--disable", "goals", "--disable", "view_image",
+                    "--disable", "sleep_tool",
+                    "-",
+                ]),
                 stdin: Some(prompt.into()),
             },
             Self::Gemini => Invocation {
@@ -219,6 +314,76 @@ mod tests {
         assert!(!is_inside(Path::new("data/x.md"), root)); // relative
         assert!(!is_inside(Path::new("/a/data"), root)); // the root itself is not a file in it
         assert!(!is_inside(Path::new("/b/x.md"), root));
+    }
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("wb-jobs-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_symlink_out_of_the_root_is_outside() {
+        let base = temp_dir("symlink");
+        let root = base.join("appdata");
+        let outside = base.join("elsewhere");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::create_dir_all(&outside).unwrap();
+        std::fs::write(outside.join("secret.md"), "x").unwrap();
+        std::os::unix::fs::symlink(&outside, root.join("link")).unwrap();
+        std::os::unix::fs::symlink(outside.join("secret.md"), root.join("file-link.md")).unwrap();
+        // Lexically inside, really outside.
+        assert!(is_inside(&root.join("link/secret.md"), &root));
+        assert!(!is_really_inside(&root.join("link/secret.md"), &root));
+        assert!(!is_really_inside(&root.join("file-link.md"), &root));
+        // A file not yet created, under a symlinked folder.
+        assert!(!is_really_inside(&root.join("link/new.docx"), &root));
+    }
+
+    #[test]
+    fn a_real_file_and_a_file_not_yet_created_are_inside() {
+        // The positive control, through macOS's /var -> /private/var symlink
+        // on the temp dir itself: the root resolves the same way as the path.
+        let root = temp_dir("inside");
+        std::fs::write(root.join("export.md"), "x").unwrap();
+        assert!(is_really_inside(&root.join("export.md"), &root));
+        assert!(is_really_inside(&root.join("not-yet.md"), &root));
+        std::fs::create_dir_all(root.join("corpus")).unwrap();
+        assert!(is_really_inside(&root.join("corpus/new.xml"), &root));
+    }
+
+    #[test]
+    fn a_path_whose_parent_is_missing_is_outside() {
+        let root = temp_dir("noparent");
+        assert!(!is_really_inside(&root.join("no/such/dir/x.md"), &root));
+        assert!(!is_really_inside(&root.join("../x.md"), &root));
+    }
+
+    #[test]
+    fn claude_runs_with_no_tools() {
+        let args = AssistTool::Claude.invocation("x").args;
+        let i = args.iter().position(|a| a == "--tools").expect("--tools");
+        assert_eq!(args[i + 1], "", "--tools must be followed by an empty list");
+        assert!(args.iter().any(|a| a == "--strict-mcp-config"));
+    }
+
+    #[test]
+    fn codex_runs_with_its_tools_switched_off() {
+        let args = AssistTool::Codex.invocation("x").args;
+        let disabled: Vec<&str> = args
+            .windows(2)
+            .filter(|w| w[0] == "--disable")
+            .map(|w| w[1].as_str())
+            .collect();
+        for feature in ["shell_tool", "unified_exec", "code_mode_host", "apps", "plugins", "browser_use", "computer_use"] {
+            assert!(disabled.contains(&feature), "{feature} not disabled");
+        }
+        assert!(args.windows(2).any(|w| w == ["--sandbox", "read-only"]));
+        assert!(args.windows(2).any(|w| w == ["-c", r#"web_search="disabled""#]));
+        assert!(args.iter().any(|a| a == "--ignore-user-config"));
+        assert!(!args.iter().any(|a| a.contains("dangerously") || a == "--enable"));
     }
 
     #[test]

@@ -24,7 +24,7 @@ export type {
 } from './pandocMarkdown';
 export { assembleBilingual, renderSegmentsPaired, sourceRefStamps } from './pandocMarkdown';
 export { chapterToPandocMarkdown, documentToPandocMarkdown, markupToPandoc, deriveRowAddresses, stripLanguageSpans } from './pandocMarkdown';
-export { pandocAvailable, pandocDocxArgs, runPandocNode, runPandocTauri, resolvePandocProgram, resolvePandocProgramByRun, PANDOC_SCOPE_CANDIDATES, PANDOC_UNAVAILABLE_MESSAGE, NATIVE_FOOTNOTES_NOTES } from './pandoc';
+export { pandocAvailable, pandocDocxArgs, runPandocNode, PANDOC_UNAVAILABLE_MESSAGE, NATIVE_FOOTNOTES_NOTES } from './pandoc';
 export type { PandocDocxJob, RunResult } from './pandoc';
 export {
   compileWorkMarkdown,

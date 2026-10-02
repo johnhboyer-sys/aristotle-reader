@@ -23,39 +23,26 @@ import type { DiscAuthor } from '../corpus/authtab';
 import { parseIdtWorks } from '../corpus/idtWorks';
 import type { DiscWork } from '../corpus/idtWorks';
 import { parseTeiRows } from '../corpus/teiRows';
-import {
-  buildDiscExportCommand,
-  exportedWorkPath,
-  perlCandidates,
-  diogenesServerCandidates,
-  platformFrom,
-} from '../corpus/discExport';
-import type { Corpus, LineMode, Platform } from '../corpus/discExport';
+import { exportedWorkPath } from '../corpus/discExport';
+import type { Corpus, LineMode } from '../corpus/discExport';
 import { createSourceImport } from './createSourceImport';
 import type { SourceImport } from './createSourceImport';
 import { divisionsForDiscWork, divisionsToContainers, loadDivisions } from '../works/divisions';
-import { loadSettings } from '../settings';
-
-/** How long to let an export run. Whole-author exports are slow: Plato's 41
- * works took minutes against a real disc, so this is generous on purpose. */
-const EXPORT_TIMEOUT_MS = 15 * 60 * 1000;
-const PROBE_TIMEOUT_MS = 5000;
 
 export const NO_DISC_MESSAGE = 'That folder isn’t a TLG or PHI disc — look for the one containing AUTHTAB.DIR.';
 export const NO_DIOGENES_MESSAGE =
-  'Importing from a TLG or PHI disc needs Diogenes installed, because it does the work of reading the disc. Install Diogenes, then set its location in Settings.';
+  'Importing from a TLG or PHI disc needs Diogenes installed, because it does the work of reading the disc. Install Diogenes in Applications, then try again.';
 export const EXPORT_FAILED_MESSAGE = 'Diogenes couldn’t read that work from the disc.';
 
 async function fsPlugin() {
   return import('@tauri-apps/plugin-fs');
 }
 
-interface RunOutcome {
-  code: number | null;
-  stdout: string;
-  stderr: string;
-  timed_out: boolean;
-  spawned: boolean;
+/** `diogenes_export`'s answer (src-tauri/src/commands.rs). */
+interface DiogenesOutcome {
+  /** Where Rust wrote the export. */
+  out_dir: string;
+  run: { code: number | null; stdout: string; stderr: string; timed_out: boolean; spawned: boolean };
 }
 
 /** Native folder picker for a disc; null when cancelled. The corpus only names
@@ -113,60 +100,10 @@ export async function readAuthorWorks(dir: string, author: DiscAuthor): Promise<
   throw new Error(`The disc lists ${author.name} but has no index file for them.`);
 }
 
-/**
- * The platform the app is running on, from the webview's user agent.
- *
- * Tauri has an OS plugin that would answer this directly, but adding a
- * permanent dependency for one string is a poor trade when the user agent
- * already carries it — and this only chooses which paths to TRY. Every
- * candidate is probed by running it, so a wrong guess costs a failed probe,
- * not a wrong result.
- */
-function currentPlatform(): Platform {
-  return platformFrom(navigator.userAgent);
-}
-
-/** First path that exists, or null. */
-async function firstExisting(paths: string[]): Promise<string | null> {
-  const fs = await fsPlugin();
-  for (const path of paths) {
-    try {
-      if (await fs.exists(path)) return path;
-    } catch {
-      // An unreadable candidate is just a miss.
-    }
-  }
-  return null;
-}
-
-/** Where Diogenes is: the configured path, else a platform default that exists. */
-export async function resolveDiogenesServer(platform: Platform): Promise<string | null> {
-  const settings = await loadSettings();
-  if (settings.diogenesPath) return settings.diogenesPath;
-  return firstExisting(diogenesServerCandidates(platform));
-}
-
-/**
- * A perl that actually runs. Tries each candidate with `-v` — on Windows the
- * bundled interpreter's location is a guess, so "does it run" is the only
- * honest test.
- */
-async function resolvePerl(platform: Platform, diogenesServer: string, configured?: string): Promise<string | null> {
+/** Where Diogenes is installed, as Rust finds it; null when it isn't. */
+export async function resolveDiogenesServer(): Promise<string | null> {
   const { invoke } = await import('@tauri-apps/api/core');
-  const candidates = configured ? [configured] : perlCandidates(platform, diogenesServer);
-  for (const bin of candidates) {
-    try {
-      const probe = (await invoke('run_program', {
-        binPath: bin,
-        args: ['-v'],
-        timeoutMs: PROBE_TIMEOUT_MS,
-      })) as RunOutcome;
-      if (probe.spawned && probe.code === 0) return bin;
-    } catch (err) {
-      console.warn('discImport: perl candidate failed', bin, err);
-    }
-  }
-  return null;
+  return (await invoke('diogenes_status')) as string | null;
 }
 
 export interface DiscImportRequest {
@@ -174,8 +111,6 @@ export interface DiscImportRequest {
   author: DiscAuthor;
   work: DiscWork;
   lineMode?: LineMode;
-  /** Where exports are cached. Defaults to app data. Must be ABSOLUTE. */
-  exportDir?: string;
   /**
    * Work ids already in the library, so a second import of the same title
    * takes the next free id. Without them the two works share one id and the
@@ -185,17 +120,13 @@ export interface DiscImportRequest {
 }
 
 /**
- * Where cached exports live: <app data>/corpus/disc-export.
- *
- * Absolute, and it has to be. A relative path fails twice over — plugin-fs
- * refuses it (relative paths are resolved against a BaseDirectory, so a bare
- * "corpus/…" matches no scope and comes back "forbidden path"), and Diogenes
- * is a perl subprocess that has never heard of app data and would resolve the
- * same string against its own directory inside /Applications.
+ * Where Rust caches exports: <app data>/corpus/disc-export/<line mode>
+ * (`diogenes_export` in src-tauri/src/commands.rs). Used only to find an
+ * earlier export; after a run, the path Rust returns is the one read.
  */
-async function defaultExportDir(): Promise<string> {
+async function cachedExportDir(lineMode: LineMode): Promise<string> {
   const { appDataDir } = await import('@tauri-apps/api/path');
-  return `${(await appDataDir()).replace(/[\\/]+$/, '')}/corpus/disc-export`;
+  return `${(await appDataDir()).replace(/[\\/]+$/, '')}/corpus/disc-export/${lineMode}`;
 }
 
 /**
@@ -220,11 +151,11 @@ export async function importFromDisc(req: DiscImportRequest): Promise<SourceImpo
 
   // The mode is part of the cache path: the same work exported as lines and as
   // prose are different texts, and a cached one must not answer for the other.
-  const exportDir = req.exportDir ?? `${await defaultExportDir()}/${lineMode}`;
-  const xmlPath = exportedWorkPath(exportDir, corpus, num, req.work.number);
+  let xmlPath = exportedWorkPath(await cachedExportDir(lineMode), corpus, num, req.work.number);
 
   if (!(await fs.exists(xmlPath))) {
-    await runExport({ ...req, lineMode }, corpus, num, exportDir);
+    const outDir = await runExport(req.discDir, corpus, num, lineMode);
+    xmlPath = exportedWorkPath(outDir, corpus, num, req.work.number);
   }
   if (!(await fs.exists(xmlPath))) {
     // The export ran but produced nothing for this work — a real thing when a
@@ -299,46 +230,16 @@ async function withKnownDivisions(
   };
 }
 
-async function runExport(req: DiscImportRequest, corpus: Corpus, num: string, exportDir: string): Promise<void> {
-  const platform = currentPlatform();
-  const server = await resolveDiogenesServer(platform);
-  if (server === null) throw new Error(NO_DIOGENES_MESSAGE);
-
-  const settings = await loadSettings();
-  const perl = await resolvePerl(platform, server, settings.perlPath);
-  if (perl === null) {
-    console.error('[discImport] no usable perl among', perlCandidates(platform, server));
-    throw new Error(NO_DIOGENES_MESSAGE);
-  }
-
-  // xml-export.pl writes into the -o directory but does not create it, and it
-  // runs with its cwd set to Diogenes' own folder, so a missing one fails there
-  // rather than here.
-  const fs = await fsPlugin();
-  await fs.mkdir(exportDir, { recursive: true });
-
-  const cmd = buildDiscExportCommand({
-    corpus,
-    authorNumber: num,
-    discDir: req.discDir,
-    diogenesServer: server,
-    exportDir,
-    ...(req.lineMode ? { lineMode: req.lineMode } : {}),
-    perlPath: perl,
-    platform,
-  });
+/** Run Diogenes' exporter for one author; returns the folder it wrote. */
+async function runExport(discDir: string, corpus: Corpus, num: string, lineMode: LineMode): Promise<string> {
+  if ((await resolveDiogenesServer()) === null) throw new Error(NO_DIOGENES_MESSAGE);
 
   const { invoke } = await import('@tauri-apps/api/core');
-  const outcome = (await invoke('run_program', {
-    binPath: cmd.program,
-    args: cmd.args,
-    cwd: cmd.cwd,
-    env: cmd.env,
-    timeoutMs: EXPORT_TIMEOUT_MS,
-  })) as RunOutcome;
+  const outcome = (await invoke('diogenes_export', { corpus, author: num, lineMode, discDir })) as DiogenesOutcome;
 
-  if (!outcome.spawned || outcome.code !== 0) {
+  if (!outcome.run.spawned || outcome.run.code !== 0) {
     console.error('[discImport] export failed', outcome);
-    throw new Error(outcome.timed_out ? 'Reading that author from the disc took too long.' : EXPORT_FAILED_MESSAGE);
+    throw new Error(outcome.run.timed_out ? 'Reading that author from the disc took too long.' : EXPORT_FAILED_MESSAGE);
   }
+  return outcome.out_dir;
 }

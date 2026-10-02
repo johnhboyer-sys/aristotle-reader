@@ -1,35 +1,13 @@
-//! AI-assist commands (design d4-ai-assist.md → generalized in
-//! d7-multi-provider-assist.md §B, divergence A: Rust command, not
-//! plugin-shell). Two GENERIC commands drive ANY resolved AI CLI (Claude Code,
-//! Codex, Gemini, or a user-supplied custom command). The frontend (Slice A)
-//! owns the per-tool registry (binary ladder, argv, stdin-vs-arg prompt
-//! delivery, output parsing); Rust owns only the trust boundary and the
-//! subprocess plumbing:
+//! Subprocess plumbing for the jobs in commands.rs: finding a CLI binary,
+//! running a program under execve with a timeout, and the AI-assist outcome
+//! the window receives. No command here takes a program or argv from the
+//! window (workbench-design/sandboxing-plan.md).
 //!
-//! - `assist_which` — resolve an ABSOLUTE path to a CLI binary, or None. A
-//!   Finder-launched .app inherits launchd's minimal PATH
-//!   (`/usr/bin:/bin:/usr/sbin:/sbin`), so bare names never resolve; we probe
-//!   the frontend-supplied `candidates` ladder, then (optionally) fall back to
-//!   a login shell (`/bin/zsh -lc "command -v <bin_name>"`). `bin_name` is the
-//!   ONE token interpolated into that shell string, so it is validated against
-//!   `^[A-Za-z0-9_-]+$` FIRST — any shell metacharacter → None, shell never
-//!   runs.
-//!
-//! - `assist_run` — run a resolved ABSOLUTE executable with a fixed `args`
-//!   array via `Command` (execve — NO shell parses argv), optionally writing
-//!   `stdin` to the child. The prompt is now EITHER a positional arg (arg-mode
-//!   tools) OR stdin (stdin-mode) — both are safe under execve, so neither is
-//!   special-cased. Rust owns the timeout (kill on expiry) and stderr
-//!   redaction: full stderr is logged to the Rust console only, never returned
-//!   to the frontend; on failure stderr+stdout are sniffed for auth signatures.
-//!
-//! The frontend contract (src/lib/assist/ codes against exactly this):
-//!   invoke('assist_run', { binPath, args, stdin, timeoutMs })
-//!     => { ok: true, text: string }
-//!      | { ok: false, kind: "unauth" | "timeout" | "error" }
-//!     where `text` is the RAW stdout of the CLI (the TS side parses whatever
-//!     envelope the tool emits; Rust only checks exit status + non-emptiness).
-//!   invoke('assist_which', { candidates, binName }) => string | null
+//! The assist outcome contract (src/lib/assist/ codes against exactly this):
+//!     { ok: true, text: string }        — the CLI's raw stdout
+//!   | { ok: false, kind: "unauth" | "timeout" | "error" }
+//! Full stderr goes to the Rust console only, never to the window; on failure
+//! stderr+stdout are sniffed for auth signatures.
 
 use serde::Serialize;
 use std::io::{Read, Write};
@@ -52,15 +30,15 @@ pub enum AssistOutcome {
 }
 
 impl AssistOutcome {
-    fn success(text: String) -> Self {
+    pub(crate) fn success(text: String) -> Self {
         AssistOutcome::Success { ok: true, text }
     }
-    fn failure(kind: &'static str) -> Self {
+    pub(crate) fn failure(kind: &'static str) -> Self {
         AssistOutcome::Failure { ok: false, kind }
     }
 }
 
-// ── binary resolution (assist_which) ─────────────────────────────────────────
+// ── binary resolution ─────────────────────────────────────────
 
 const LOGIN_SHELL: &str = "/bin/zsh";
 const RESOLVE_TIMEOUT: Duration = Duration::from_secs(5);
@@ -70,7 +48,7 @@ fn home_dir() -> Option<PathBuf> {
 }
 
 #[cfg(unix)]
-fn is_executable_file(path: &Path) -> bool {
+pub(crate) fn is_executable_file(path: &Path) -> bool {
     use std::os::unix::fs::PermissionsExt;
     match std::fs::metadata(path) {
         Ok(meta) => meta.is_file() && meta.permissions().mode() & 0o111 != 0,
@@ -79,7 +57,7 @@ fn is_executable_file(path: &Path) -> bool {
 }
 
 #[cfg(not(unix))]
-fn is_executable_file(path: &Path) -> bool {
+pub(crate) fn is_executable_file(path: &Path) -> bool {
     path.is_file()
 }
 
@@ -93,7 +71,7 @@ fn is_safe_bin_name(name: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
 }
 
-fn which_blocking(candidates: Vec<String>, bin_name: Option<String>) -> Option<String> {
+pub(crate) fn which_blocking(candidates: Vec<String>, bin_name: Option<String>) -> Option<String> {
     // 1. Frontend-supplied absolute ladder: first existing executable wins.
     for candidate in &candidates {
         let path = Path::new(candidate);
@@ -130,18 +108,7 @@ fn which_blocking(candidates: Vec<String>, bin_name: Option<String>) -> Option<S
     }
 }
 
-/// Resolve an absolute path to a CLI binary from the supplied `candidates`
-/// ladder, falling back to a `command -v <bin_name>` login-shell rung when
-/// `bin_name` is a validated plain identifier. Returns None if nothing exists.
-#[tauri::command]
-pub async fn assist_which(candidates: Vec<String>, bin_name: Option<String>) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || which_blocking(candidates, bin_name))
-        .await
-        .ok()
-        .flatten()
-}
-
-// ── run (assist_run) ─────────────────────────────────────────────────────────
+// ── running an AI CLI ─────────────────────────────────────────────────────────
 
 /// Auth-failure signatures sniffed (case-insensitively) from stderr+stdout of
 /// a failed run. Matching any → kind "unauth".
@@ -151,7 +118,7 @@ const UNAUTH_SIGNATURES: [&str; 4] = ["not logged in", "authenticate", "login", 
 /// user-level bin dirs; if the CLI shells out to helpers, give it the usual
 /// suspects. Appended (never prepended), so a terminal-launched dev app is
 /// unchanged.
-fn augmented_path() -> String {
+pub(crate) fn augmented_path() -> String {
     let base = std::env::var("PATH").unwrap_or_default();
     let mut parts: Vec<String> = if base.is_empty() {
         Vec::new()
@@ -174,7 +141,7 @@ fn augmented_path() -> String {
     parts.join(":")
 }
 
-fn run_blocking(
+pub(crate) fn run_blocking(
     bin_path: &str,
     args: &[String],
     stdin: Option<String>,
@@ -233,40 +200,20 @@ fn run_blocking(
     }
 }
 
-/// Run a resolved AI CLI (absolute executable) with a fixed `args` array,
-/// optionally writing `stdin` to the child. Returns `{ ok: true, text }` (raw
-/// stdout) or `{ ok: false, kind: "unauth" | "timeout" | "error" }`.
-#[tauri::command]
-pub async fn assist_run(
-    bin_path: String,
-    args: Vec<String>,
-    stdin: Option<String>,
-    timeout_ms: u64,
-) -> AssistOutcome {
-    tauri::async_runtime::spawn_blocking(move || {
-        run_blocking(&bin_path, &args, stdin, timeout_ms)
-    })
-    .await
-    .unwrap_or_else(|err| {
-        eprintln!("[assist] run task panicked: {err}");
-        AssistOutcome::failure("error")
-    })
-}
-
 // ── subprocess plumbing ─────────────────────────────────────────────────────
 
-struct RunOutput {
+pub(crate) struct RunOutput {
     /// Exit code; None when the process was killed (timeout) or died to a signal.
-    status: Option<i32>,
-    stdout: String,
-    stderr: String,
-    timed_out: bool,
+    pub status: Option<i32>,
+    pub stdout: String,
+    pub stderr: String,
+    pub timed_out: bool,
 }
 
 /// Spawn `cmd` with piped stdio, optionally write `stdin_data` to the child
 /// (from a helper thread, so a full pipe buffer can't deadlock us), read
 /// stdout/stderr concurrently, and enforce `timeout` with a kill.
-fn run_with_timeout(
+pub(crate) fn run_with_timeout(
     mut cmd: Command,
     stdin_data: Option<String>,
     timeout: Duration,
@@ -334,120 +281,6 @@ fn spawn_pipe_reader<R: Read + Send + 'static>(
     })
 }
 
-// ── run_program (export's user-chosen pandoc) ───────────────────────────────
-//
-// Same trust boundary as assist_run: an ABSOLUTE executable the user picked
-// themselves (here, via the Export settings' native file picker), run under
-// execve with a frontend-supplied argv array — no shell ever parses it. The
-// one difference is the success test. assist_run treats "exit 0 with EMPTY
-// stdout" as a failure, because an AI CLI that prints nothing has told us
-// nothing; pandoc on success prints nothing at all, so that heuristic would
-// report every successful export as a failure. This command therefore reports
-// the exit code plainly and leaves the verdict to the caller.
-//
-// stderr comes back to the frontend here (assist_run deliberately withholds
-// it) because pandoc's stderr IS the diagnosis for a failed conversion, and
-// the export UI already has a "console only, one plain sentence to the user"
-// discipline for it — see ExportButton.svelte / CompileDialog.svelte.
-
-#[derive(Serialize)]
-pub struct RunOutcome {
-    /// Exit code; None when the process was killed (timeout) or never spawned.
-    code: Option<i32>,
-    stdout: String,
-    stderr: String,
-    timed_out: bool,
-    /// False when the binary isn't an absolute executable, or wouldn't spawn.
-    spawned: bool,
-}
-
-/// Run an absolute executable with a fixed argv array and capture its result.
-#[tauri::command]
-pub async fn run_program(
-    bin_path: String,
-    args: Vec<String>,
-    timeout_ms: u64,
-    cwd: Option<String>,
-    env: Option<std::collections::HashMap<String, String>>,
-) -> RunOutcome {
-    tauri::async_runtime::spawn_blocking(move || {
-        run_program_blocking(&bin_path, &args, timeout_ms, cwd.as_deref(), env.as_ref())
-    })
-    .await
-        .unwrap_or_else(|err| {
-            eprintln!("[run_program] task panicked: {err}");
-            RunOutcome {
-                code: None,
-                stdout: String::new(),
-                stderr: String::new(),
-                timed_out: false,
-                spawned: false,
-            }
-        })
-}
-
-/// Environment variables a caller may set. Deliberately a FIXED list rather
-/// than "whatever the frontend passes": the corpus importer needs exactly
-/// these three, they name a folder the user picked through the native picker,
-/// and an open-ended env map on a subprocess is a much wider door than this
-/// feature needs (PATH, DYLD_*, PERL5LIB all change what code runs).
-const ALLOWED_ENV: &[&str] = &["TLG_DIR", "PHI_DIR", "DDP_DIR"];
-
-fn run_program_blocking(
-    bin_path: &str,
-    args: &[String],
-    timeout_ms: u64,
-    cwd: Option<&str>,
-    env: Option<&std::collections::HashMap<String, String>>,
-) -> RunOutcome {
-    let not_spawned = || RunOutcome {
-        code: None,
-        stdout: String::new(),
-        stderr: String::new(),
-        timed_out: false,
-        spawned: false,
-    };
-
-    let path = Path::new(bin_path);
-    if !path.is_absolute() || !is_executable_file(path) {
-        eprintln!("[run_program] bin_path is not an absolute executable: {bin_path}");
-        return not_spawned();
-    }
-
-    let mut cmd = Command::new(bin_path);
-    cmd.args(args);
-    cmd.env("PATH", augmented_path());
-    for (key, value) in env.into_iter().flatten() {
-        if ALLOWED_ENV.contains(&key.as_str()) {
-            cmd.env(key, value);
-        } else {
-            eprintln!("[run_program] ignoring environment variable outside the allow-list: {key}");
-        }
-    }
-    // Neutral cwd by default, same reasoning as run_blocking: a subprocess's
-    // file access is attributed to the parent app under macOS TCC. Diogenes'
-    // exporter is the exception — it loads its own modules by relative path,
-    // so it only runs from its own directory.
-    match cwd {
-        Some(dir) if Path::new(dir).is_dir() => cmd.current_dir(dir),
-        _ => cmd.current_dir(std::env::temp_dir()),
-    };
-
-    match run_with_timeout(cmd, None, Duration::from_millis(timeout_ms)) {
-        Ok(out) => RunOutcome {
-            code: out.status,
-            stdout: out.stdout,
-            stderr: out.stderr,
-            timed_out: out.timed_out,
-            spawned: true,
-        },
-        Err(err) => {
-            eprintln!("[run_program] failed to spawn {bin_path}: {err}");
-            not_spawned()
-        }
-    }
-}
-
 // ── tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -503,65 +336,7 @@ mod tests {
         assert_eq!(out.stdout, "σύνθεσις\n\nline");
     }
 
-    // ── run_program: cwd and environment ─────────────────────────────────────
-
-    #[test]
-    fn run_program_sets_an_allowed_environment_variable() {
-        // Diogenes finds the user's disc through exactly this.
-        let out = run_program_blocking(
-            "/bin/sh",
-            &["-c".into(), "printf %s \"$TLG_DIR\"".into()],
-            5000,
-            None,
-            Some(&std::collections::HashMap::from([(
-                "TLG_DIR".to_string(),
-                "/discs/TLG".to_string(),
-            )])),
-        );
-        assert!(out.spawned);
-        assert_eq!(out.stdout, "/discs/TLG");
-    }
-
-    #[test]
-    fn run_program_refuses_an_environment_variable_outside_the_allow_list() {
-        // The one that matters: PERL5LIB (or PATH, or DYLD_*) would change
-        // which code the interpreter loads.
-        let out = run_program_blocking(
-            "/bin/sh",
-            &["-c".into(), "printf %s \"$PERL5LIB\"".into()],
-            5000,
-            None,
-            Some(&std::collections::HashMap::from([(
-                "PERL5LIB".to_string(),
-                "/tmp/evil".to_string(),
-            )])),
-        );
-        assert!(out.spawned);
-        assert_eq!(out.stdout, "");
-    }
-
-    #[test]
-    fn run_program_runs_in_a_given_directory() {
-        // The exporter loads its modules by relative path, so this is load-bearing.
-        let out = run_program_blocking("/bin/sh", &["-c".into(), "pwd".into()], 5000, Some("/bin"), None);
-        assert!(out.spawned);
-        assert_eq!(out.stdout.trim(), "/bin");
-    }
-
-    #[test]
-    fn run_program_falls_back_to_a_neutral_directory_when_cwd_is_missing() {
-        let out = run_program_blocking(
-            "/bin/sh",
-            &["-c".into(), "pwd".into()],
-            5000,
-            Some("/no/such/directory"),
-            None,
-        );
-        assert!(out.spawned);
-        assert_ne!(out.stdout.trim(), "/no/such/directory");
-    }
-
-    // ── assist_run: bin_path validation ──────────────────────────────────────
+    // ── run_blocking: bin_path validation ──────────────────────────────────────
 
     #[test]
     fn run_rejects_non_absolute_bin_path() {
@@ -617,7 +392,7 @@ mod tests {
         ));
     }
 
-    // ── assist_which: bin_name validation ────────────────────────────────────
+    // ── which_blocking: bin_name validation ────────────────────────────────────
 
     #[test]
     fn which_returns_first_existing_candidate() {
