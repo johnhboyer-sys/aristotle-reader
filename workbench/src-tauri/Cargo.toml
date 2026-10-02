@@ -31,6 +31,9 @@ tauri-plugin-shell = "2"
 
 [dev-dependencies]
 serde_json = "1"
+# The `test` feature gives the sandbox tests a mock app to build a real fs
+# scope from (src/sandbox.rs). Dev-only: it never reaches the shipped app.
+tauri = { version = "2", features = ["protocol-asset", "test"] }
 
 [lib]
 name = "translation_workbench_lib"
