@@ -6,13 +6,15 @@ handoff cannot be written over it. No other session's handoff belongs here.
 Rewrite it (don't append) when you hand off workbench work. The name still
 says phase 3 so links keep working._
 
-_Last rewritten: 2026-10-02 (sandbox phases 3–4: John's test pass passed; merge awaits his say-so)._
+_Last rewritten: 2026-10-02 (sandbox phases 3–4 merged, PR #134; the sandboxing plan is done)._
 
 ## Where things stand
 
-**Phases 3 and 4 done on `claude/workbench-sandbox-p3`** (from main after PR
-#130). Not merged — John's say-so needed. Full account: "Phases 3–4 as built"
-in `workbench-design/sandboxing-plan.md`, with each Codex finding and what was
+**Phases 3 and 4 merged 2026-10-02 (PR #134, `a9995dcf1f`)**, after John's
+test pass. The sandboxing plan is complete: the app may be shared once a
+build from main is made (the copy in `~/Downloads` is the tested build, which
+lacks only the "Line numbers" wording). Full account: "Phases 3–4 as built" in
+`workbench-design/sandboxing-plan.md`, with each Codex finding and what was
 done about it.
 
 - The window reads `$APPDATA` and `$RESOURCE`, writes `$APPDATA/**` only, and
@@ -85,6 +87,7 @@ node workbench/scripts/build-dev-corpus.mjs   # once per checkout; smoke 404s wi
 npm --prefix workbench run smoke              # npx playwright install chromium if it says so
 (cd workbench/src-tauri && CARGO_INCREMENTAL=0 cargo test)
 cd workbench && npm run build && npm run stage:corpus && npm run app:build -- --bundles app
+mv ~/Downloads/"Translation Workbench.app" ~/.Trash/"Translation Workbench (old).app"   # if one is there
 cp -R "src-tauri/target/release/bundle/macos/Translation Workbench.app" ~/Downloads/
 xattr -dr com.apple.quarantine ~/Downloads/"Translation Workbench.app"
 ```
@@ -99,14 +102,17 @@ xattr -dr com.apple.quarantine ~/Downloads/"Translation Workbench.app"
 - **`open` is a write command**: it takes write/create options from the window.
 - **Re-pick screenshots**: `workbench/shots/repick.html` + `repick-shots.mjs`
   mount each dialog with a fake Tauri bridge (gitignored).
-- **Three app copies in `~/Downloads` share one bundle id.** John opens
-  `Translation Workbench.app` from Finder; check `ps` before trusting a test.
+- **Keep one app copy in `~/Downloads`.** Copies share a bundle id and the
+  Dock reopens the wrong one; the two old ones went to the Trash on
+  2026-10-02. Replace `Translation Workbench.app` in place: move the old one to
+  the Trash first (`cp -R` onto an existing `.app` nests it inside). Check
+  `ps` before trusting a test.
 - **A green suite does not mean the app starts**; smoke does not cover the
   native shell. Never install a build no one can vouch for.
 
 ## Next
 
-1. John's say-so on pushing and merging `claude/workbench-sandbox-p3`. After
-   it, the app may be shared.
-2. His requests above.
+1. John's requests above — the gap report first if he agrees (it misreports
+   finished work).
+2. A fresh build from main before sharing the app.
 3. Parked on John's taste: heading style; drag-a-chapter-into-a-Book.
