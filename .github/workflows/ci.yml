@@ -175,7 +175,7 @@ jobs:
 
       # A green suite does not mean the app starts: a prop added to a
       # component's type but not to its destructuring threw at render with
-      # every test passing (workbench/SESSION-HANDOFF.md).
+      # every test passing (workbench/phase-3-session-handoff.md).
       - name: Typecheck
         run: cd workbench && npx tsc --noEmit
 
