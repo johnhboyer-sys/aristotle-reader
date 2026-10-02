@@ -401,17 +401,25 @@ pub async fn assist_run(app: AppHandle, tool: String, prompt: String, timeout_ms
 const MAX_CUSTOM_ARGS: usize = 32;
 const MAX_CUSTOM_ARGS_LEN: usize = 1000;
 
-/// Arguments the confirmation can show faithfully: no control characters
-/// (a newline would push a flag out of sight), no direction marks (which
-/// reorder what is shown), and few and short enough to fit the alert.
+/// True when the alert shows `text` as it is: no control characters or line
+/// separators (which push what follows out of sight), no direction marks
+/// (which reorder it), no invisible characters.
+fn shows_faithfully(text: &str) -> bool {
+    !text.chars().any(|c| {
+        c.is_control()
+            || matches!(c,
+                '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{2028}'..='\u{202E}'
+                | '\u{2060}'..='\u{2069}' | '\u{FEFF}')
+    })
+}
+
+/// Arguments the confirmation can show faithfully, few and short enough to
+/// fit the alert.
 fn check_custom_args(args: &[String]) -> Result<(), String> {
     if args.len() > MAX_CUSTOM_ARGS || args.iter().map(String::len).sum::<usize>() > MAX_CUSTOM_ARGS_LEN {
         return Err("the command has too many arguments to confirm".into());
     }
-    let hidden = |c: char| {
-        c.is_control() || matches!(c, '\u{200E}' | '\u{200F}' | '\u{061C}' | '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}')
-    };
-    if args.iter().any(|a| a.chars().any(hidden)) {
+    if !args.iter().all(|a| shows_faithfully(a)) {
         return Err("an argument holds a character the confirmation cannot show".into());
     }
     Ok(())
@@ -451,6 +459,9 @@ pub async fn assist_set_custom(app: AppHandle, args: Vec<String>, prompt_via: St
         let Some(program) = pick_program(&app, "Choose the AI command") else { return Ok(None) };
         if !is_executable_file(&program) {
             return Err(format!("{} is not a program", program.display()));
+        }
+        if !shows_faithfully(&program.display().to_string()) {
+            return Err("the program's name holds a character the confirmation cannot show".into());
         }
         let channel = match prompt_via {
             PromptVia::Stdin => "on standard input",
@@ -611,11 +622,16 @@ mod tests {
     fn custom_arguments_that_could_hide_from_the_confirmation_are_refused() {
         assert!(check_custom_args(&["-m".into(), "gpt".into()]).is_ok());
         assert!(check_custom_args(&[]).is_ok());
-        for bad in ["a\nb", "a\rb", "x\u{202E}y", "x\u{2066}y", "x\u{200F}y", "x\u{061C}y", "\u{0}"] {
+        for bad in [
+            "a\nb", "a\rb", "x\u{202E}y", "x\u{2066}y", "x\u{200F}y", "x\u{061C}y", "\u{0}",
+            "a\u{2028}b", "a\u{2029}b", "a\u{200B}b", "a\u{200D}b", "a\u{FEFF}b", "a\u{2060}b", "a\u{00AD}b",
+        ] {
             assert!(check_custom_args(&[bad.to_string()]).is_err(), "{bad:?} accepted");
         }
         assert!(check_custom_args(&["x".repeat(MAX_CUSTOM_ARGS_LEN + 1)]).is_err());
         assert!(check_custom_args(&vec!["a".to_string(); MAX_CUSTOM_ARGS + 1]).is_err());
+        assert!(shows_faithfully("/usr/local/bin/llm"));
+        assert!(!shows_faithfully("/usr/local/bin/ll\u{2028}m"));
     }
 
     // ── the Word target ──

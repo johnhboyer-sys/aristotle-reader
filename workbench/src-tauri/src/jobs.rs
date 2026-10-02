@@ -253,7 +253,9 @@ impl AssistTool {
     ///   has no tools and did nothing. `--setting-sources ""` loads no user,
     ///   project or local settings, so their hooks and plugins stay off (the
     ///   user's SessionEnd hook ran without it, not with it; sign-in still
-    ///   works). The MCP flags keep the user's MCP servers from starting.
+    ///   works). Managed (admin-installed) settings still load, by Claude's
+    ///   design; no flag skips them, and nothing in a prompt triggers them.
+    ///   The MCP flags keep the user's MCP servers from starting.
     /// - codex-cli 0.159.2: `--sandbox read-only` alone still ran a shell
     ///   command. With `code_mode_host` off every remaining tool, apply_patch
     ///   and web included, fails closed; the other switches remove the tools

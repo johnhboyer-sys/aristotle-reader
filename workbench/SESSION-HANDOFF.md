@@ -4,57 +4,39 @@ _This file is the **Translation Workbench** handoff only — `workbench/`. No
 other session's handoff belongs here. Rewrite it (don't append) when you hand
 off workbench work._
 
-_Last rewritten: 2026-10-01._
+_Last rewritten: 2026-10-01 (sandbox phase 2)._
 
 ## Where things stand
 
-**John is using the app.** He tested the build from this branch in the real
-`.app` on 2026-10-01 and every item passed: typed text survives quit and
-reopen; a Physics re-import keeps its eight books after an edit; ⌘Q and the
-close button save the last keystroke; footnote text saves; the footnote panel
-opens on insert and on a marker click; Summa export to Word looks right; fold,
-rename and remove work in the rail.
+**Sandboxing, phase 2 done, on `claude/workbench-sandbox`** (pushed, no PR,
+not merged — John's say-so needed). Plan and "phase 2 as built":
+`workbench-design/sandboxing-plan.md`.
 
-- **Branch:** `claude/workbench-atomic-save`, five commits on `origin/main`
-  (0bebd082cc). **Not pushed, no PR** as of this writing.
-- **Test app:** `~/Downloads/Translation Workbench.app`, built from c49f0facee.
-  The Aug 28 build sits beside it as `Translation Workbench (Aug 28).app`.
-- **Suite:** 1,910 vitest green, `tsc` clean, `npm run smoke` 11 checks.
-  `svelte-check` reports 8 errors, all already on main (`CtxMenuItem` in
-  ChapterEditor, AssistPopover, LibraryRail) — not ours, not fixed.
-
-## The five commits
-
-1. `45eb0d6179` **Saves write a temp file and rename it into place** (chapter
-   files, `works.json`, `settings.json`). `fs:allow-rename` granted.
-2. `528d02921a` **The footnote index lost its leading dot** (from a separate
-   session). tauri-plugin-fs defaults `requireLiteralLeadingDot` to true on
-   Unix, so `/**` scopes refuse any path component starting with a dot — the
-   index had never been writable, and a dot-prefixed temp file would have
-   broken every save.
-3. `37adda7373` **⌘Q saves before quitting.** macOS's built-in Quit ended the
-   app inside the 400ms row commit + 1s autosave debounce. ⌘Q is now our own
-   menu item (`src-tauri/src/lib.rs`) → `quit-requested` → `lib/quit.ts`
-   flushes every open editor → `quit_now`.
-4. `0c5a961696` **The close button saves too; quit cannot strand the app; the
-   footnote panel opens itself.** Footnote bodies commit before any save; a
-   save that fails or takes 10s+ keeps the app open and asks; each ⌘Q is
-   numbered so the Rust 5s fallback cannot fire mid-save.
-5. `c49f0facee` **A footnote focus request the panel cannot show is dropped**
-   (while the Ask or AI panel holds the right slot).
-
-Every commit had a Grok 4.6 static review; each defect it named was fixed and,
-where it could be, pinned by a test or smoke step.
+- The window names a job and supplies data; Rust picks the program and
+  builds the arguments (`src-tauri/src/commands.rs`). `run_program`,
+  `assist_which`, the argv `assist_run` and the shell plugin are gone.
+- Commits: `f2ec0360f5` (phase 2), `518037fcbd` (Codex + Grok review fixes),
+  then a follow-up from Codex's verification (separators and invisible
+  characters refused in the custom-command alert).
+- **Test app:** `~/Downloads/Translation Workbench.app`, built from this
+  branch for John's test list (plan, last section) — export, TLG import, AI.
+  The previous build is beside it as `Translation Workbench (atomic-save).app`.
+- **Suite:** Rust 59, vitest 1,864, `tsc` clean, `npm run smoke` 11 checks.
+  `svelte-check` still reports the 8 errors already on main.
+- **Open for John:** Gemini runs with its own tools on (unverified, no gemini
+  here). Codex wants it disabled until tested.
 
 ## Known, not fixed
 
+- **Phase 3 is required before sharing:** the window can still write `/**`,
+  so it could overwrite a program Rust runs. Reference-doc and disc-folder
+  "was it picked" checks also wait for phase 3 (persisted-scope).
 - **Dock Quit, logout, shutdown** go through macOS `terminate:`, which tao
-  0.35.3 cannot intercept (no `applicationShouldTerminate:`). An edit made in
-  the last ~1.5s before those can be lost.
+  0.35.3 cannot intercept. An edit made in the last ~1.5s before those can be
+  lost.
 - **A write that never resolves** (a Drive hang) keeps the autosave loop
-  waiting; after "Keep Open", later edits join the hung write and are not
-  saved. Fixing it means cancelling a write in flight.
-- **Windows/Linux** keep the built-in Quit (the swap is macOS-only).
+  waiting.
+- **Windows/Linux**: built-in Quit kept; Diogenes/perl locations untested.
 
 ## Run it
 
@@ -82,19 +64,11 @@ xattr -dr com.apple.quarantine ~/Downloads/"Translation Workbench.app"
 
 ## Next
 
-1. **Sandboxing, in progress on `claude/workbench-sandbox`** (pushed, no PR).
-   John chose the real fix on 2026-10-01 because he will share the app. Plan:
-   `workbench-design/sandboxing-plan.md` — read it, including the Codex review
-   section, before touching anything. Phase 1 is done (`sandbox.rs`,
-   `jobs.rs`: the dotfile rule pinned, every job's argv built in Rust, 41 Rust
-   tests). **Next: phase 2** — job commands replace `run_program` and the
-   free-form `assist_run`; trusted records fail closed; paths resolved through
-   symlinks; each AI CLI launched with its own tools off, flags verified
-   against the installed Claude and Codex.
-2. PR #127 merged 2026-10-01; claude-review fixed (#128, #129: new token, the
-   failure reason is printed, findings are posted with `--comment`).
-3. Untested since long before this session: export settings' Tauri halves
-   (reference-doc picker, pandoc override, the side-by-side bilingual table in
-   Word), lexicon pack removal, a true first-run empty state.
-4. Parked on John's taste: heading style (big titles vs small labels);
-   drag-a-chapter-into-a-Book.
+1. John tests the built `.app` (plan's test list; phase 2 touches export,
+   Reveal in Finder, Add work from TLG, disc import, AI with Claude/Codex,
+   Settings › Export pandoc pick, Settings › AI custom command).
+2. John decides Gemini. Then phase 3 (fs scopes + persisted-scope), phase 4
+   (graceful re-pick), phase 5 (reviews, test pass).
+3. Untested since long before: lexicon pack removal, a true first-run empty
+   state.
+4. Parked on John's taste: heading style; drag-a-chapter-into-a-Book.

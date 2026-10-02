@@ -96,6 +96,60 @@ Each phase lands with its tests, and the app stays usable between phases.
    and Codex, not assumed — and treats Gemini as unverified until it is
    tested on a machine that has it.
 
+## Phase 2 as built (2026-10-01)
+
+Commits `f2ec0360f5` and `518037fcbd` on `claude/workbench-sandbox`.
+
+- **Job commands** (`src-tauri/src/commands.rs`): `pandoc_version`,
+  `pick_pandoc`, `forget_pandoc`, `choose_docx_target`, `export_docx`,
+  `diogenes_status`, `diogenes_export`, `assist_detect`, `assist_run(tool,
+  prompt)`, `assist_set_custom`, `assist_forget_custom`. `run_program`,
+  `assist_which` and the argv `assist_run` are gone, and so is the shell
+  plugin (Cargo, npm, capability; a test pins that no `shell:` grant returns).
+- **Picks** are made in dialogs Rust opens: a pandoc, the custom AI command
+  (file picker, then a native "Allow …?" alert listing each argument on its
+  own line), and the Word target of every export. The first two are recorded
+  in `.approved-programs.json`; a missing or unparsable record approves
+  nothing. A save target is held in memory for one export. The fs plugin's
+  runtime scope is not used for this: it also holds open-dialog picks (a
+  reference doc, a library folder), which pandoc must not overwrite.
+- **Symlinks**: `is_really_inside` resolves both paths (a file not yet
+  created through its parent) — used for export's intermediate Markdown and
+  Diogenes' output folder.
+- **AI CLIs**: Claude with `--tools "" --setting-sources ""` plus the empty
+  MCP config; Codex with `code_mode_host`, `shell_tool`, `unified_exec` and the
+  features that act outside its sandbox off, web search disabled, user config
+  ignored. Both checked against the installed CLIs (claude 2.1.286, codex-cli
+  0.159.2): with the old flags each ran a shell command; with these neither
+  could run, read, write or fetch, and a translation still came back.
+- **Diogenes and perl** are found by Rust only (`/Applications/Diogenes.app`
+  on macOS; Linux and Windows candidates untested). No picker was added:
+  nothing in the UI ever set `diogenesPath`/`perlPath`; settings now drop them.
+- **settings.json** no longer carries `pandocPath`, `diogenesPath`, `perlPath`;
+  `cliPaths` and `custom` stay parseable but nothing runs from them.
+- Fixed in passing: Reveal in Finder (permission granted); `cliProvider.ts`'s
+  dead `assist_suggest` path removed.
+
+Codex's verification of the fixes: the Word target fix is correct. Claude
+still loads *managed* (admin-installed) settings and their hooks — no flag
+skips those, by Claude's design, and a prompt cannot trigger them; accepted.
+Line separators and invisible characters are now refused in a custom
+command's arguments and program name.
+
+**Open — John's call:** Gemini runs with its own defaults, tools included
+(no gemini on this machine to test flags against). Codex rates this
+critical and would disable Gemini until tested.
+
+**Handed to phase 3:**
+- Reference-doc and disc-folder paths are checked for "is a file / folder"
+  only. Checking that they were picked needs picks to survive a restart
+  (persisted-scope); checked now, every export with a saved reference doc
+  would fail after a restart.
+- Codex: while the window may write `/**`, it can overwrite a program Rust
+  later runs (a user-writable pandoc, AI CLI, or Diogenes' `xml-export.pl`).
+  Phase 3's write scope (`$APPDATA/**` only) closes this — **phase 3 must
+  land before the app is shared.**
+
 ## Things the survey found along the way (fixed in passing, each small)
 
 - `revealItemInDir` after export has never worked: `opener:allow-reveal-item-in-dir`
@@ -107,7 +161,8 @@ Each phase lands with its tests, and the app stays usable between phases.
 ## What John will notice
 
 - Once after updating: re-pick the library folder (if custom), the TLG folder,
-  and the reference doc (if set). Each picker says why.
+  and the reference doc (if set). Each picker says why. (Phase 2: a pandoc
+  chosen in Settings, if any, must be chosen again.)
 - Setting a custom AI command shows a macOS confirmation.
 - Nothing else.
 
