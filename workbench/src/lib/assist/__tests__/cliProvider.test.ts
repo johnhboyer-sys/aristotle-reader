@@ -35,6 +35,24 @@ describe('CliProvider', () => {
     expect(result).toEqual({ kind: 'suggestion', text: 'the suggestion' });
   });
 
+  it('sends the model when one is set, and no model key otherwise', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const invoke: RunInvokeFn = async (_cmd, args) => {
+      seen.push({ ...args });
+      return { ok: true, text: 'x' };
+    };
+    await new CliProvider({ tool: 'codex', parseOutput: okParser, invoke, model: 'gpt-6-luna' }).suggest(
+      GOLDEN_CONTEXT,
+      new AbortController().signal,
+    );
+    await new CliProvider({ tool: 'codex', parseOutput: okParser, invoke }).suggest(
+      GOLDEN_CONTEXT,
+      new AbortController().signal,
+    );
+    expect(seen[0].model).toBe('gpt-6-luna');
+    expect('model' in seen[1]).toBe(false);
+  });
+
   it('honors a custom timeoutMs', async () => {
     let seenTimeout: number | undefined;
     const invoke: RunInvokeFn = async (_cmd, args) => {

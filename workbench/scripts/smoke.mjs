@@ -169,6 +169,25 @@ await run('translate a line with AI', async () => {
   await page.evaluate(() => { window.__assistFake = undefined; });
 });
 
+await run('pick a model in the Ask AI panel, and keep it', async () => {
+  // The pick is remembered per provider in settings.assist.models; the
+  // harness has no provider chosen, so the panel shows Claude Code's models.
+  const toggle = page.getByRole('button', { name: 'Toggle Ask AI panel' });
+  await toggle.click();
+  const picker = page.getByLabel('AI model');
+  check('the picker offers Claude Code’s models', (await picker.locator('option').allInnerTexts()).includes('Opus'));
+  await picker.selectOption('opus');
+  await page.waitForFunction(() => (localStorage.getItem('workbench:settings') ?? '').includes('"opus"'));
+  await page.reload();
+  await page.waitForSelector('.library');
+  if ((await page.locator('.chapter-grid').count()) === 0) await page.locator('.chapter-row').first().click();
+  await page.waitForSelector('.chapter-grid');
+  if ((await page.locator('.ask-panel').count()) === 0) await toggle.click();
+  check('the pick survives a reload', (await page.getByLabel('AI model').inputValue()) === 'opus');
+  await page.getByLabel('AI model').selectOption('');
+  await toggle.click();
+});
+
 await run('create a document', async () => {
   await page.locator('.add-work', { hasText: 'New document…' }).click();
   const dialog = page.locator('.dialog', { has: page.locator('text=New document') });

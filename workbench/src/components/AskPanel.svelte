@@ -10,12 +10,17 @@
   //
   // The transcript clears when the target line changes — a one-shot "ask about
   // THIS line" panel shouldn't carry another line's Q&A. The header shows which
-  // model is answering (a reminder), read from the assist settings.
+  // model is answering (a reminder), read from the assist settings, and, for a
+  // provider with a known model list, a picker. The pick is remembered per
+  // provider in settings.assist.models and applies to every AI request
+  // (Translate, Check, Ask) — see lib/assist/models.ts.
   import { tick } from 'svelte';
   import { session, assistCommands } from '../lib/editor/session.svelte';
   import { renderMarkdown } from '../lib/assist/markdown';
   import { assistProviderLabel } from '../lib/assist/providerLabel';
-  import { loadSettings } from '../lib/settings';
+  import { loadSettings, updateSettings } from '../lib/settings';
+  import type { AssistProviderChoice, AssistSettings } from '../lib/settings';
+  import { PROVIDER_MODELS, pickerProvider, pickerValue, withModel } from '../lib/assist/models';
   import '../lib/assist/ai-prose.css';
 
   let { onClose }: { onClose: () => void } = $props();
@@ -30,6 +35,9 @@
   let draft = $state('');
   let sending = $state(false);
   let providerLabel = $state('');
+  let pickerFor = $state<AssistProviderChoice>('claude');
+  let modelValue = $state('');
+  const modelOptions = $derived(PROVIDER_MODELS[pickerFor]);
 
   let inputEl = $state<HTMLTextAreaElement>();
   let transcriptEl = $state<HTMLDivElement>();
@@ -39,8 +47,28 @@
   // Refresh the provider label whenever the panel (re)opens — the user may have
   // changed the assist provider in Settings between opens.
   $effect(() => {
-    if (session.askPanelOpen) void loadSettings().then((s) => (providerLabel = assistProviderLabel(s.assist)));
+    if (session.askPanelOpen) void loadSettings().then((s) => showProvider(s.assist));
   });
+
+  function showProvider(assist: AssistSettings | undefined) {
+    pickerFor = pickerProvider(assist);
+    modelValue = pickerValue(assist);
+    // With a picker, the label names the provider only; the picker names the model.
+    providerLabel = assistProviderLabel(PROVIDER_MODELS[pickerFor] ? { ...assist, models: undefined } : assist);
+  }
+
+  async function chooseModel(id: string) {
+    const assist = (await loadSettings()).assist ?? {};
+    // Settings may have switched provider since the panel opened: then show
+    // the new provider's list rather than file this pick under it.
+    if (pickerProvider(assist) !== pickerFor) {
+      showProvider(assist);
+      return;
+    }
+    const next = withModel(assist, pickerFor, id);
+    await updateSettings({ assist: next });
+    showProvider(next);
+  }
 
   // Clear the transcript when the target line changes — a one-shot "ask about
   // THIS line" panel shouldn't carry over another line's Q&A. Keyed on the
@@ -115,7 +143,23 @@
           <span class="ask-locus">{locus}</span>
         {/if}
       </div>
-      {#if providerLabel}
+      {#if modelOptions}
+        <span class="ask-model">
+          via {providerLabel}
+          <select
+            class="ask-model-pick"
+            aria-label="AI model"
+            title="The model for Translate, Check and Ask"
+            value={modelValue}
+            onchange={(e) => void chooseModel(e.currentTarget.value)}
+          >
+            <option value="">Default</option>
+            {#each modelOptions as m (m.id)}
+              <option value={m.id}>{m.label}</option>
+            {/each}
+          </select>
+        </span>
+      {:else if providerLabel}
         <span class="ask-model" title="The AI model answering your questions">via {providerLabel}</span>
       {/if}
     </div>
@@ -216,6 +260,19 @@
     font-size: 0.72rem;
     color: var(--text-light);
     letter-spacing: 0.01em;
+  }
+  .ask-model-pick {
+    margin-left: 0.2rem;
+    padding: 0.05rem 0.2rem;
+    font: inherit;
+    color: var(--text-mid);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .ask-model-pick:hover {
+    background: var(--ui-hover);
   }
   .ask-close {
     display: inline-flex;
