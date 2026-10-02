@@ -1,8 +1,10 @@
-# WORKBENCH Session Handoff
+# WORKBENCH Session Handoff — sandboxing phase 3
 
-_This file is the **Translation Workbench** handoff only — `workbench/`. No
-other session's handoff belongs here. Rewrite it (don't append) when you hand
-off workbench work._
+_This file is the **Translation Workbench** handoff — `workbench/`, picking up
+at sandboxing phase 3. It was `SESSION-HANDOFF.md` until 2026-10-02; John
+renamed it so another session's handoff cannot be written over it. No other
+session's handoff belongs here. Rewrite it (don't append) when you hand off
+workbench work._
 
 _Last rewritten: 2026-10-01 (sandbox phase 2)._
 
