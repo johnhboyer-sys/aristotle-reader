@@ -81,6 +81,35 @@ describe('sourceRefStamps', () => {
     expect([...sourceRefStamps(deAnima).values()]).toEqual(['[402a]', '[402b]']);
   });
 
+  it('treats a marked line number as a line number', () => {
+    // The TLG prints Iliad 18.605 as "605*". It is still a line: stamping it
+    // would print [605*] mid-book and then [18] again on the next row.
+    const iliad = chapterOf({
+      title: 'Ilias',
+      rows: [
+        { ref: '18.604', text: 'τερπόμενοι·' },
+        { ref: '18.605*', text: 'δοιὼ δὲ κυβιστητῆρε' },
+        { ref: '18.606', text: 'μολπῆς ἐξάρχοντες' },
+        { ref: '19.1', text: 'Ἠὼς μὲν' },
+      ],
+    });
+    expect([...sourceRefStamps(iliad).entries()]).toEqual([
+      [0, '[18]'],
+      [3, '[19]'],
+    ]);
+    const theocritus = chapterOf({
+      title: 'Idyllia',
+      rows: [
+        { ref: '25.26(?)', text: 'a' },
+        { ref: '25.27(?)', text: 'b' },
+        { ref: '25.61(59)', text: 'c' },
+        { ref: '25.542/45*', text: 'd' },
+        { ref: '25.205,206', text: 'e' },
+      ],
+    });
+    expect([...sourceRefStamps(theocritus).values()]).toEqual(['[25]']);
+  });
+
   it('gives nothing for a file that is not an import', () => {
     expect(sourceRefStamps({ meta: {} } as never).size).toBe(0);
   });

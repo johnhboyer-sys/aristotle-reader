@@ -224,7 +224,10 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
  * margin becomes unreadable.
  *
  * A line number is recognised by shape, not by name: all digits, or the single
- * "t" Diogenes gives a work's title line. That is a guess, and it is wrong in
+ * "t" Diogenes gives a work's title line. Digits include a printed pair
+ * ("25,29", "542/45") and the TLG's one trailing mark ("605*", "26(?)",
+ * "61(59)") — the same line number, as sourceRefScheme accepts it; missing
+ * them stamped [605*] mid-book. That is a guess, and it is wrong in
  * one known case — a Perseus edition divided only to the chapter, whose last
  * component is a chapter number and gets dropped as though it were a line. The
  * alternative is to thread the work's tier names through five render
@@ -236,7 +239,7 @@ export function stampFor(addr: BekkerLineAddr, rowIndex: number, mode: StampMode
  *
  * A file with no row_refs is not an import and gets nothing.
  */
-const LINE_COMPONENT = /^(\d+|t)$/;
+const LINE_COMPONENT = /^(\d+(?:[,\-/]\d+)*(?:\*|\(\?\)|\(\d+\))?|t)$/;
 
 export function sourceRefStamps(chapter: ChapterFile): Map<number, string> {
   const refs = chapter.meta.rowRefs;

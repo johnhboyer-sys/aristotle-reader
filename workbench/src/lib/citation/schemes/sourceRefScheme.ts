@@ -50,8 +50,14 @@ const RUN_RE = /\d+|\D+/g;
  * it happened to be non-empty — a stray "urn:cts:greekLit:tlg0059" must still
  * be refused. Letters are matched by Unicode class, so a Greek book letter (Ζ)
  * is a legitimate component.
+ *
+ * One trailing mark is allowed too, because the TLG prints them on line
+ * numbers and refusing one lost the whole work: "605*" (Iliad 18.605),
+ * "542/45*", "26(?)", "61(59)". A survey of 205,227 citations found these four
+ * shapes and no others, so the mark is exactly a star, "(?)", or a
+ * parenthesised run — once, at the end.
  */
-const COMPONENT_RE = /^[\p{L}\p{N}]+(?:[,\-/][\p{L}\p{N}]+)*$/u;
+const COMPONENT_RE = /^[\p{L}\p{N}]+(?:[,\-/][\p{L}\p{N}]+)*(?:\*|\(\?\)|\([\p{L}\p{N}]+\))?$/u;
 
 function parseComponents(raw: string): string[] {
   if (typeof raw !== 'string' || raw.length === 0) {
@@ -74,7 +80,7 @@ function parseComponents(raw: string): string[] {
   const bad = parts.find((p) => !COMPONENT_RE.test(p));
   if (bad !== undefined) {
     throw new Error(
-      `source-ref address component must be letters and digits, optionally joined by , - or /, got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
+      `source-ref address component must be letters and digits, optionally joined by , - or / and ending in one * or (…), got ${JSON.stringify(bad)} in ${JSON.stringify(raw)}`,
     );
   }
   return parts;

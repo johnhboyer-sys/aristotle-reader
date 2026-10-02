@@ -161,3 +161,31 @@ describe('line numbers the edition printed as a pair', () => {
     expect(() => sourceRefScheme.parseAddress('urn:cts:greekLit:tlg0059')).toThrow();
   });
 });
+
+// From a survey of 205,227 citations (85 disc exports + a FREED sample,
+// 2026-10-02): the TLG marks a line with one trailing sign, and refusing it
+// lost the whole work — the Iliad on 18.605*, the Argonautica on 1250* and
+// 542/45*, Theocritus on 26(?), Theophrastus on 40* and 61(59). Those four
+// shapes, and only those, are accepted.
+describe('a line number carrying the TLG’s trailing mark', () => {
+  const at = (raw: string) => sourceRefScheme.parseAddress(raw);
+
+  it('accepts a star, a query and a parenthesised number at the end', () => {
+    for (const raw of ['18.605*', '542/45*', '26(?)', '4.61(59).1', '40*.1']) {
+      expect(at(raw)).toEqual({ scheme: 'source-ref', raw });
+    }
+  });
+
+  it('sorts a marked line after the plain line and before the next', () => {
+    expect(sourceRefScheme.compareAddress(at('18.605'), at('18.605*'))).toBeLessThan(0);
+    expect(sourceRefScheme.compareAddress(at('18.605*'), at('18.606'))).toBeLessThan(0);
+    expect(sourceRefScheme.compareAddress(at('4.61'), at('4.61(59)'))).toBeLessThan(0);
+    expect(sourceRefScheme.compareAddress(at('4.61(59)'), at('4.62'))).toBeLessThan(0);
+  });
+
+  it('refuses a mark anywhere but the end, or more than one', () => {
+    for (const raw of ['*', '*605', '6*05', '605**', '605*(?)', '(59)', '61()', '61(59', '61(!)', '61(?)a']) {
+      expect(() => at(raw), raw).toThrow(/letters and digits/);
+    }
+  });
+});
