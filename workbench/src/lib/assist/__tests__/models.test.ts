@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { PROVIDER_MODELS, cliModel, pickerProvider, pickerValue, withModel } from '../models';
+import { PROVIDER_MODELS, cliModel, pickerOptions, pickerProvider, pickerValue, withModel } from '../models';
 
 let jobsRs = '';
 
@@ -65,6 +65,17 @@ describe('the picker', () => {
     expect(pickerValue({ provider: 'codex', models: { codex: '--yolo' } })).toBe('');
     expect(pickerValue({ models: { claude: 'haiku' } })).toBe('haiku');
     expect(pickerValue({})).toBe('');
+  });
+
+  it('shows an API model it does not list, since the API provider uses it', () => {
+    // ApiProvider sends any saved id, so the picker must not claim Default.
+    const assist = { provider: 'anthropic' as const, models: { anthropic: 'claude-3' } };
+    expect(pickerValue(assist)).toBe('claude-3');
+    const options = pickerOptions(assist)!;
+    expect(options.map((o) => o.id)).toEqual([...PROVIDER_MODELS.anthropic!.map((m) => m.id), 'claude-3']);
+    // A CLI never runs an unlisted model (Rust refuses it), so no extra entry.
+    expect(pickerOptions({ provider: 'codex', models: { codex: '--yolo' } })).toEqual(PROVIDER_MODELS.codex);
+    expect(pickerOptions({ provider: 'openai' })).toBeUndefined();
   });
 
   it('remembers a pick per provider and keeps everything else', () => {

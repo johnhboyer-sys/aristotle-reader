@@ -226,7 +226,29 @@ await run('pick a model in the Ask AI panel, and keep it', async () => {
   if ((await page.locator('.ask-panel').count()) === 0) await toggle.click();
   check('the pick survives a reload', (await page.getByLabel('AI model').inputValue()) === 'opus');
   await page.getByLabel('AI model').selectOption('');
-  await toggle.click();
+
+  // Switching provider in Settings while the panel is open: the panel must
+  // show the new provider's models once you come back to it.
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('tab', { name: 'AI assist' }).click();
+  await page.getByText('Codex (OpenAI)', { exact: true }).click();
+  await page.locator('.dialog[aria-label="Settings"]').getByRole('button', { name: 'Close' }).click();
+  await page.locator('.ask-panel').hover();
+  await page.waitForFunction(() => document.querySelector('.ask-model')?.textContent?.includes('Codex'));
+  check(
+    'the panel follows a provider change made in Settings',
+    (await page.getByLabel('AI model').locator('option').allInnerTexts()).includes('GPT-6-Luna'),
+  );
+  await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('workbench:settings') || '{}');
+    delete s.assist;
+    localStorage.setItem('workbench:settings', JSON.stringify(s));
+  });
+  await page.reload();
+  await page.waitForSelector('.library');
+  if ((await page.locator('.chapter-grid').count()) === 0) await page.locator('.chapter-row').first().click();
+  await page.waitForSelector('.chapter-grid');
+  if ((await page.locator('.ask-panel').count()) > 0) await toggle.click();
 });
 
 await run('create a document', async () => {

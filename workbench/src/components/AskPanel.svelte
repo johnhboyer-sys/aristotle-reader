@@ -20,7 +20,7 @@
   import { assistProviderLabel } from '../lib/assist/providerLabel';
   import { loadSettings, updateSettings } from '../lib/settings';
   import type { AssistProviderChoice, AssistSettings } from '../lib/settings';
-  import { PROVIDER_MODELS, pickerProvider, pickerValue, withModel } from '../lib/assist/models';
+  import { PROVIDER_MODELS, pickerOptions, pickerProvider, pickerValue, withModel } from '../lib/assist/models';
   import '../lib/assist/ai-prose.css';
 
   let { onClose }: { onClose: () => void } = $props();
@@ -37,7 +37,7 @@
   let providerLabel = $state('');
   let pickerFor = $state<AssistProviderChoice>('claude');
   let modelValue = $state('');
-  const modelOptions = $derived(PROVIDER_MODELS[pickerFor]);
+  let modelOptions = $state<ReturnType<typeof pickerOptions>>(undefined);
 
   let inputEl = $state<HTMLTextAreaElement>();
   let transcriptEl = $state<HTMLDivElement>();
@@ -47,12 +47,20 @@
   // Refresh the provider label whenever the panel (re)opens — the user may have
   // changed the assist provider in Settings between opens.
   $effect(() => {
-    if (session.askPanelOpen) void loadSettings().then((s) => showProvider(s.assist));
+    if (session.askPanelOpen) refreshProvider();
   });
+
+  // Settings can change the provider while this panel stays open, and nothing
+  // tells the panel. Re-read when the mouse or focus comes back to it, which is
+  // before anyone can use the picker or read the header in earnest.
+  function refreshProvider() {
+    void loadSettings().then((s) => showProvider(s.assist));
+  }
 
   function showProvider(assist: AssistSettings | undefined) {
     pickerFor = pickerProvider(assist);
     modelValue = pickerValue(assist);
+    modelOptions = pickerOptions(assist);
     // With a picker, the label names the provider only; the picker names the model.
     providerLabel = assistProviderLabel(PROVIDER_MODELS[pickerFor] ? { ...assist, models: undefined } : assist);
   }
@@ -134,7 +142,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<aside class="ask-panel" aria-label="Ask AI" onkeydown={onKeydown}>
+<aside class="ask-panel" aria-label="Ask AI" onkeydown={onKeydown} onpointerenter={refreshProvider} onfocusin={refreshProvider}>
   <header class="ask-head">
     <div class="ask-head-titles">
       <div class="ask-title-row">

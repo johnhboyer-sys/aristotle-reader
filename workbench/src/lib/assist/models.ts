@@ -49,6 +49,12 @@ function listed(provider: AssistProviderChoice, id: string | undefined): id is s
   return !!id && (PROVIDER_MODELS[provider] ?? []).some((m) => m.id === id);
 }
 
+/** True for the providers whose request carries whatever model is saved (the
+ * API providers); a CLI runs only a listed one. */
+function usesAnySaved(provider: AssistProviderChoice): boolean {
+  return provider === 'openai' || provider === 'anthropic' || provider === 'google';
+}
+
 /** The model to send `assist_run` for `tool`: the saved one when it is on the
  * list, else none (the CLI's default) — Rust would refuse anything else. */
 export function cliModel(tool: CliToolId, models: Record<string, string> | undefined): string | undefined {
@@ -62,11 +68,24 @@ export function pickerProvider(assist: AssistSettings | undefined): AssistProvid
   return assist?.provider ?? 'claude';
 }
 
-/** The picker's selection: the saved model when listed, '' for the default. */
+/** The picker's selection: the model the next request will use, '' for the
+ * default. An API provider uses any saved id, listed or not. */
 export function pickerValue(assist: AssistSettings | undefined): string {
   const provider = pickerProvider(assist);
-  const id = assist?.models?.[provider];
-  return listed(provider, id) ? id : '';
+  const id = assist?.models?.[provider]?.trim();
+  if (!id) return '';
+  return listed(provider, id) || usesAnySaved(provider) ? id : '';
+}
+
+/** The picker's entries (besides Default) for the chosen provider, with an
+ * API provider's unlisted saved model added so the picker shows what runs;
+ * undefined when the provider has no picker. */
+export function pickerOptions(assist: AssistSettings | undefined): readonly ModelOption[] | undefined {
+  const provider = pickerProvider(assist);
+  const list = PROVIDER_MODELS[provider];
+  if (!list) return undefined;
+  const value = pickerValue(assist);
+  return value && !listed(provider, value) ? [...list, { id: value, label: value }] : list;
 }
 
 /** `assist` with `provider`'s model set to `id` ('' forgets it). */
