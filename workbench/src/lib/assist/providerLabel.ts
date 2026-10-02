@@ -14,7 +14,9 @@ export function assistProviderLabel(assist: AssistSettings | undefined): string 
     case 'codex':
       return CLI_TOOLS.codex.label;
     case 'gemini':
-      return CLI_TOOLS.gemini.label;
+      // Disabled until its own tools can be switched off and that is tested;
+      // a request falls to the clipboard.
+      return 'Gemini (disabled)';
     case 'custom': {
       const bin = assist?.custom?.binPath?.split('/').pop()?.trim();
       return bin ? `Custom · ${bin}` : 'Custom command';

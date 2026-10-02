@@ -14,7 +14,7 @@
 import type { ParseResult } from './parse';
 import { parseClaudeJson, parseCodexJsonl, parsePlainText } from './parse';
 
-export type CliToolId = 'claude' | 'codex' | 'gemini' | 'custom';
+export type CliToolId = 'claude' | 'codex' | 'custom';
 
 export interface CliToolSpec {
   id: CliToolId;
@@ -25,12 +25,11 @@ export interface CliToolSpec {
 }
 
 /** The built-in registry, keyed by id. Claude prints a JSON envelope, Codex a
- * JSONL event stream (`--json`); Gemini's plain text is UNVERIFIED — no
- * gemini was installed where the flags were checked. */
-export const CLI_TOOLS: Record<'claude' | 'codex' | 'gemini', CliToolSpec> = {
+ * JSONL event stream (`--json`). No Gemini: disabled until its own tools can
+ * be switched off and that is tested (src-tauri/src/jobs.rs). */
+export const CLI_TOOLS: Record<'claude' | 'codex', CliToolSpec> = {
   claude: { id: 'claude', label: 'Claude Code', parseOutput: parseClaudeJson },
   codex: { id: 'codex', label: 'Codex (OpenAI)', parseOutput: parseCodexJsonl },
-  gemini: { id: 'gemini', label: 'Gemini', parseOutput: parsePlainText },
 };
 
 /** The user's own command, approved in a native confirmation; plain stdout. */

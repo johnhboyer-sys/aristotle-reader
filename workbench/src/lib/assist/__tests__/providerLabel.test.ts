@@ -10,7 +10,8 @@ describe('assistProviderLabel', () => {
 
   it('labels the built-in CLIs', () => {
     expect(assistProviderLabel({ provider: 'codex' })).toBe('Codex (OpenAI)');
-    expect(assistProviderLabel({ provider: 'gemini' })).toBe('Gemini');
+    // A saved Gemini choice runs nothing (disabled until tested); say so.
+    expect(assistProviderLabel({ provider: 'gemini' })).toBe('Gemini (disabled)');
   });
 
   it('labels a custom command by its binary name', () => {

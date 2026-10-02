@@ -23,8 +23,8 @@ not merged — John's say-so needed). Plan and "phase 2 as built":
   The previous build is beside it as `Translation Workbench (atomic-save).app`.
 - **Suite:** Rust 59, vitest 1,864, `tsc` clean, `npm run smoke` 11 checks.
   `svelte-check` still reports the 8 errors already on main.
-- **Open for John:** Gemini runs with its own tools on (unverified, no gemini
-  here). Codex wants it disabled until tested.
+- **Gemini is disabled** (John, 2026-10-02) until its tools can be switched
+  off and that is tested.
 
 ## Known, not fixed
 
@@ -67,7 +67,7 @@ xattr -dr com.apple.quarantine ~/Downloads/"Translation Workbench.app"
 1. John tests the built `.app` (plan's test list; phase 2 touches export,
    Reveal in Finder, Add work from TLG, disc import, AI with Claude/Codex,
    Settings › Export pandoc pick, Settings › AI custom command).
-2. John decides Gemini. Then phase 3 (fs scopes + persisted-scope), phase 4
+2. Phase 3 (fs scopes + persisted-scope), phase 4
    (graceful re-pick), phase 5 (reviews, test pass).
 3. Untested since long before: lexicon pack removal, a true first-run empty
    state.

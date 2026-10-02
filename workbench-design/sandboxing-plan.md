@@ -136,9 +136,10 @@ skips those, by Claude's design, and a prompt cannot trigger them; accepted.
 Line separators and invisible characters are now refused in a custom
 command's arguments and program name.
 
-**Open — John's call:** Gemini runs with its own defaults, tools included
-(no gemini on this machine to test flags against). Codex rates this
-critical and would disable Gemini until tested.
+**Gemini disabled (John, 2026-10-02)** until its own tools can be switched
+off and that is tested: Rust no longer knows it, Settings no longer offers
+it, and a saved Gemini choice falls to the clipboard (labelled "Gemini
+(disabled)"). Its untested invocation is noted on `AssistTool` in jobs.rs.
 
 **Handed to phase 3:**
 - Reference-doc and disc-folder paths are checked for "is a file / folder"

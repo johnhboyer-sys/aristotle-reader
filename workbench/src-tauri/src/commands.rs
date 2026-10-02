@@ -322,8 +322,7 @@ fn find_tool(tool: AssistTool) -> Option<PathBuf> {
     which_blocking(candidates, Some(tool.bin_name().into())).map(PathBuf::from)
 }
 
-/// The program and invocation for `tool` ("claude", "codex", "gemini" or
-/// "custom"), or why there is none.
+/// The program and invocation for `tool` ("claude", "codex" or "custom"), or why there is none.
 fn assist_command(tool: &str, approved: &ApprovedPrograms, prompt: &str) -> Result<(PathBuf, Invocation), String> {
     if tool == "custom" {
         let c = approved.custom_assist.as_ref().ok_or("no custom command approved")?;
@@ -359,7 +358,6 @@ impl From<&CustomAssist> for CustomAssistView {
 pub struct AssistDetection {
     claude: Option<String>,
     codex: Option<String>,
-    gemini: Option<String>,
     custom: Option<CustomAssistView>,
 }
 
@@ -372,7 +370,6 @@ pub async fn assist_detect(app: AppHandle) -> Result<AssistDetection, String> {
         AssistDetection {
             claude: found(AssistTool::Claude),
             codex: found(AssistTool::Codex),
-            gemini: found(AssistTool::Gemini),
             custom: load_approved(&dir).custom_assist.as_ref().map(CustomAssistView::from),
         }
     })

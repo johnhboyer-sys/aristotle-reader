@@ -399,7 +399,7 @@ describe('AssistController', () => {
 // ── resolveTauriAssistProvider (D7 multi-provider) ──────────────────────────
 
 describe('resolveTauriAssistProvider', () => {
-  const NONE: AssistDetection = { claude: null, codex: null, gemini: null, custom: null };
+  const NONE: AssistDetection = { claude: null, codex: null, custom: null };
 
   function tauriDeps(overrides: Partial<TauriAssistDeps> = {}) {
     const calls = {
@@ -518,6 +518,13 @@ describe('resolveTauriAssistProvider', () => {
     expect(result).toEqual({ kind: 'clipboard', message: NOT_FOUND_MESSAGE });
     expect(calls.clipboard).toHaveLength(1);
     expect(calls.clipboard[0]).toContain('γραμμή 10'); // the target line rode along
+  });
+
+  it('a saved Gemini choice falls to the clipboard (Gemini disabled until tested)', async () => {
+    const { deps, calls } = tauriDeps({ loadSettings: async () => ({ assist: { provider: 'gemini' } }) });
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('clipboard');
+    expect(calls.runs).toEqual([]);
   });
 
   it('detection that throws still yields the clipboard floor (never throws)', async () => {

@@ -51,7 +51,6 @@
   let detect = $state<Record<string, { state: DetectState; path?: string }>>({
     claude: { state: 'unknown' },
     codex: { state: 'unknown' },
-    gemini: { state: 'unknown' },
   });
 
   $effect(() => {

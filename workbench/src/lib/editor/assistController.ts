@@ -265,7 +265,6 @@ export class AssistController {
 export interface AssistDetection {
   claude: string | null;
   codex: string | null;
-  gemini: string | null;
   custom: { program: string; args: string[]; prompt_via: 'stdin' | 'arg' } | null;
 }
 
@@ -286,7 +285,7 @@ export interface TauriAssistDeps {
  *      'google') → an ApiProvider over the webview's own `fetch` when a
  *      non-empty key is stored for it, else the clipboard floor.
  *   2. Otherwise ask Rust which CLIs it can run (`assist_detect`): the chosen
- *      tool ('claude'|'codex'|'gemini'|'custom'), or Claude when none is
+ *      tool ('claude'|'codex'|'custom'), or Claude when none is
  *      chosen. A custom command counts only when Rust holds the user's
  *      approval of it — a command named in settings.json, which the window
  *      writes, is never run (workbench-design/sandboxing-plan.md).
@@ -319,11 +318,12 @@ export async function resolveTauriAssistProvider(deps: TauriAssistDeps): Promise
     const paths: DetectionMap['paths'] = {
       claude: found.claude,
       codex: found.codex,
-      gemini: found.gemini,
       custom: found.custom?.program ?? null,
     };
     const choice = resolveAssistProvider(prev, { paths });
-    if (choice.kind === 'cli') {
+    // A saved Gemini choice finds no path (Rust no longer runs Gemini), so it
+    // lands on the clipboard; the check keeps the types honest.
+    if (choice.kind === 'cli' && choice.tool !== 'gemini') {
       const spec = choice.tool === 'custom' ? CUSTOM_TOOL : CLI_TOOLS[choice.tool];
       return new CliProvider({ tool: choice.tool, parseOutput: spec.parseOutput, invoke: deps.invokeRun });
     }

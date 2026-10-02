@@ -180,10 +180,13 @@ pub fn diogenes_export_args(corpus: Corpus, author: &str, out_dir: &Path, line_m
 // ── AI assist CLIs ──────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// No Gemini: John disabled it on 2026-10-02 until its own tools can be
+/// switched off and that is tested — no gemini was installed where the other
+/// CLIs were checked. Its untested invocation was `gemini -p <prompt>`, with
+/// candidates ~/.gemini/bin, ~/.local/bin, /opt/homebrew/bin, /usr/local/bin.
 pub enum AssistTool {
     Claude,
     Codex,
-    Gemini,
 }
 
 /// What to run: the argv after the program, and what (if anything) goes on stdin.
@@ -198,7 +201,6 @@ impl AssistTool {
         match s {
             "claude" => Ok(Self::Claude),
             "codex" => Ok(Self::Codex),
-            "gemini" => Ok(Self::Gemini),
             _ => Err(format!("unknown assist tool {s:?}")),
         }
     }
@@ -208,7 +210,6 @@ impl AssistTool {
         match self {
             Self::Claude => "claude",
             Self::Codex => "codex",
-            Self::Gemini => "gemini",
         }
     }
 
@@ -229,18 +230,11 @@ impl AssistTool {
                 "/usr/local/bin/codex".into(),
                 h(".codex/bin/codex"),
             ],
-            Self::Gemini => vec![
-                h(".gemini/bin/gemini"),
-                h(".local/bin/gemini"),
-                "/opt/homebrew/bin/gemini".into(),
-                "/usr/local/bin/gemini".into(),
-            ],
         }
     }
 
     /// Each tool's flags, with its own tools switched off, and the prompt
-    /// placed as the tool reads it. Claude and Codex read it on stdin; Gemini
-    /// takes it as the value of `-p`, a single argv element, so no shell ever
+    /// placed as the tool reads it: both read it on stdin, so no shell ever
     /// parses it.
     ///
     /// Tools off, because a prompt carries text from the page — a hostile
@@ -263,8 +257,6 @@ impl AssistTool {
     ///   config.toml (its MCP servers, hooks, profiles); auth still works. A
     ///   Codex that does not know one of these names refuses to start, which
     ///   fails closed to the clipboard.
-    /// - Gemini: UNVERIFIED — no gemini on the machine these were checked on.
-    ///   It runs with its defaults, tools included.
     pub fn invocation(self, prompt: &str) -> Invocation {
         let fixed = |a: &[&str]| a.iter().map(|s| s.to_string()).collect::<Vec<_>>();
         match self {
@@ -289,10 +281,6 @@ impl AssistTool {
                     "-",
                 ]),
                 stdin: Some(prompt.into()),
-            },
-            Self::Gemini => Invocation {
-                args: vec!["-p".into(), prompt.into()],
-                stdin: None,
             },
         }
     }
@@ -446,10 +434,6 @@ mod tests {
         let x = AssistTool::Codex.invocation("Translate");
         assert_eq!(x.args.last().unwrap(), "-");
         assert_eq!(x.args[..2], ["exec", "--json"]);
-        let g = AssistTool::Gemini.invocation("--yolo");
-        // The prompt is -p's value, never a flag of its own.
-        assert_eq!(g.args, ["-p", "--yolo"]);
-        assert_eq!(g.stdin, None);
     }
 
     #[test]
@@ -465,12 +449,14 @@ mod tests {
         assert_eq!(AssistTool::parse("codex").unwrap().bin_name(), "codex");
         assert!(AssistTool::parse("/bin/sh").is_err());
         assert!(AssistTool::parse("custom").is_err());
+        // Disabled until its own tools can be switched off and that is tested.
+        assert!(AssistTool::parse("gemini").is_err());
     }
 
     #[test]
     fn candidate_paths_are_absolute() {
         let home = Path::new("/Users/someone");
-        for tool in [AssistTool::Claude, AssistTool::Codex, AssistTool::Gemini] {
+        for tool in [AssistTool::Claude, AssistTool::Codex] {
             assert!(tool.candidate_paths(home).iter().all(|p| p.is_absolute()), "{tool:?}");
         }
         assert_eq!(AssistTool::Claude.candidate_paths(home)[0], Path::new("/Users/someone/.claude/local/claude"));
