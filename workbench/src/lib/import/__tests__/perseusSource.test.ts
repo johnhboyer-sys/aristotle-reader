@@ -72,7 +72,7 @@ describe('parseCtsUrn', () => {
   it('reads the address of a FREED file on GitLab — FREED shows no urn to copy', () => {
     const page =
       'https://gitlab.inria.fr/almanach/cllg/freed-corpus/-/blob/main/data/tlg0012/tlg001/tlg0012.tlg001.cllg-grc1.xml?ref_type=heads';
-    expect(parseCtsUrn(page)).toEqual(parseCtsUrn(FREED_ILIAD));
+    expect(parseCtsUrn(page)).toEqual({ namespace: 'greekLit', group: 'tlg0012', work: 'tlg001', version: 'cllg-grc1' });
   });
 
   it('does not read a file name as a urn unless it is a FREED one', () => {

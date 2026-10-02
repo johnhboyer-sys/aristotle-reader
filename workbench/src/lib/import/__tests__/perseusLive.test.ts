@@ -72,8 +72,9 @@ when('Perseus, live', () => {
 
   it('reports a missing text plainly rather than importing nothing', async () => {
     const urn = 'urn:cts:greekLit:tlg9999.tlg999.perseus-grc9';
+    expect(teiUrlFor(parseCtsUrn(urn)!)).toContain('raw.githubusercontent.com');
     expect(teiUrlFor(parseCtsUrn(urn)!)).toContain('tlg9999');
-    await expect(fetchPerseusTei(urn)).rejects.toThrow(/no text at that address/i);
+    await expect(fetchPerseusTei(urn)).rejects.toThrow('Perseus has no text at that address.');
   }, 60_000);
 
   it('imports the Odyssey from FREED with book and line', async () => {
