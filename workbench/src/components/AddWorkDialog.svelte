@@ -13,6 +13,7 @@
   } from '../lib/data/onboarding';
   import { SPINE_CONFIG } from '../lib/data/spineConfig';
   import { loadSettings, updateSettings } from '../lib/settings';
+  import { chooseAgainLabel, pickStatus, repickReason } from '../lib/picks';
 
   let {
     works,
@@ -38,6 +39,8 @@
   let phase = $state<Phase>('checking');
   let note = $state<string | null>(null);
   let chosen = $state<WorkManifest | null>(null);
+  /** The saved TLG folder, when it must be chosen again (sandboxing plan, phase 4). */
+  let repickDir = $state<string | null>(null);
 
   onMount(() => {
     void (async () => {
@@ -60,15 +63,29 @@
     chosen = work;
     note = null;
     const settings = await loadSettings();
-    if (settings.tlgDir && (await looksLikeTlgDir(settings.tlgDir))) {
-      await run(settings.tlgDir);
-    } else {
-      phase = 'need-tlg';
+    if (settings.tlgDir) {
+      const status = await pickStatus(settings.tlgDir, true);
+      if (status !== 'ok') {
+        repickDir = settings.tlgDir;
+        note = repickReason('tlg', status, settings.tlgDir);
+      } else if (await looksLikeTlgDir(settings.tlgDir)) {
+        await run(settings.tlgDir);
+        return;
+      }
     }
+    phase = 'need-tlg';
   }
 
   async function chooseTlgFolder() {
-    const dir = await pickTlgDir();
+    let dir: string | null;
+    try {
+      dir = await pickTlgDir(repickDir ?? undefined);
+    } catch (err) {
+      // The native picker can refuse; unhandled, the button looked dead.
+      console.error('[add work] choosing the TLG folder failed', err);
+      note = 'That folder could not be opened.';
+      return;
+    }
     if (dir === null) return; // cancelled — stay put
     if (!(await looksLikeTlgDir(dir))) {
       note = "That folder doesn't contain the TLG texts.";
@@ -138,7 +155,7 @@
         {#if note}
           <p class="line">{note}</p>
         {/if}
-        <button class="folder-btn" onclick={chooseTlgFolder}>Choose folder…</button>
+        <button class="folder-btn" onclick={chooseTlgFolder}>{repickDir ? chooseAgainLabel('tlg') : 'Choose folder…'}</button>
       {/if}
     </div>
   </div>

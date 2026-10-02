@@ -18,6 +18,7 @@
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
   import { registerFreeWork } from '../lib/works/freeWorks';
   import { loadSettings, updateSettings } from '../lib/settings';
+  import { chooseAgainLabel, pickStatus, repickReason } from '../lib/picks';
 
   let {
     existingIds,
@@ -38,6 +39,9 @@
 
   // ── disc route ────────────────────────────────────────────────────────────
   let discDir = $state<string | null>(null);
+  /** Each saved disc folder that must be chosen again (sandboxing plan,
+   * phase 4): where it was, and why. */
+  let repick = $state<Partial<Record<Corpus, { dir: string; reason: string }>>>({});
   let authors = $state<DiscAuthor[]>([]);
   let authorQuery = $state('');
   let selectedAuthor = $state<DiscAuthor | null>(null);
@@ -63,8 +67,19 @@
   $effect(() => {
     void (async () => {
       const settings = await loadSettings();
-      const saved = settings.tlgDir ?? settings.phiDir;
-      if (saved && discDir === null) await useDisc(saved, null);
+      // Check both discs: either may need choosing again, and the first
+      // usable one opens (TLG first, as before).
+      let usable: string | null = null;
+      const found: typeof repick = {};
+      for (const corpus of ['tlg', 'phi'] as const) {
+        const dir = corpus === 'tlg' ? settings.tlgDir : settings.phiDir;
+        if (!dir) continue;
+        const status = await pickStatus(dir, true);
+        if (status === 'ok') usable ??= dir;
+        else found[corpus] = { dir, reason: repickReason(corpus, status, dir) };
+      }
+      repick = found;
+      if (usable !== null && discDir === null) await useDisc(usable, null);
     })();
   });
 
@@ -90,7 +105,7 @@
   async function chooseDisc(corpus: Corpus) {
     let picked: string | null;
     try {
-      picked = await pickDiscDir(corpus);
+      picked = await pickDiscDir(corpus, repick[corpus]?.dir);
     } catch (err) {
       // The native folder picker can refuse (no permission, plugin missing).
       // Unhandled, the button simply did nothing and said nothing.
@@ -99,6 +114,7 @@
       return;
     }
     if (picked === null) return;
+    repick = { ...repick, [corpus]: undefined };
     await useDisc(picked, corpus);
   }
 
@@ -249,9 +265,16 @@
         </p>
 
         <div class="row">
-          <button class="secondary-btn" onclick={() => chooseDisc('tlg')}>Choose your TLG folder…</button>
-          <button class="secondary-btn" onclick={() => chooseDisc('phi')}>Choose your PHI folder…</button>
+          <button class="secondary-btn" onclick={() => chooseDisc('tlg')}>
+            {repick.tlg ? chooseAgainLabel('tlg') : 'Choose your TLG folder…'}
+          </button>
+          <button class="secondary-btn" onclick={() => chooseDisc('phi')}>
+            {repick.phi ? chooseAgainLabel('phi') : 'Choose your PHI folder…'}
+          </button>
         </div>
+        {#each [repick.tlg, repick.phi] as r}
+          {#if r}<p class="note">{r.reason}</p>{/if}
+        {/each}
         {#if discDir}
           <p class="path">Reading {discDir}</p>
         {/if}

@@ -13,6 +13,8 @@
     exportSettings,
     resolveExportPandoc,
     resolveReferenceDoc,
+    REFERENCE_MOVED_SHORT,
+    REFERENCE_REPICK_SHORT,
   } from '../lib/export/tauriExport';
   import type { WorkManifest } from '../lib/works/manifest';
   import CompileDialog from './CompileDialog.svelte';
@@ -28,10 +30,10 @@
   let compileOpen = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  function note(msg: string) {
+  function note(msg: string, ms = 5000) {
     status = msg;
     clearTimeout(timer);
-    timer = setTimeout(() => (status = null), 5000);
+    timer = setTimeout(() => (status = null), ms);
   }
 
   async function exportChapter() {
@@ -55,6 +57,16 @@
         return;
       }
 
+      // No bundled fallback here: single-chapter export has never applied the
+      // house reference doc, and an unset setting must not start doing so.
+      // Checked before the save dialog: a reference doc that must be chosen
+      // again stops the export, and the user should not pick a target first.
+      const reference = await resolveReferenceDoc(prefs.referenceDocPath, false);
+      if ('problem' in reference) {
+        console.warn('[export]', reference.problem);
+        note(REFERENCE_REPICK_SHORT, 10000);
+        return;
+      }
       const label = work.books[book - 1]?.label ?? String(book);
       const docxPath = await chooseDocxTarget(
         await defaultSavePath(`${work.title} ${label}.${chapter}.docx`, prefs.outputDir),
@@ -65,21 +77,18 @@
       const pathApi = await import('@tauri-apps/api/path');
       const fs = await import('@tauri-apps/plugin-fs');
       const appData = await pathApi.appDataDir();
-      await fs.mkdir(appData, { recursive: true }).catch(() => {});
       const mdPath = await pathApi.join(appData, 'export-intermediate.md');
       await fs.writeTextFile(mdPath, markdown);
 
-      // No bundled fallback here: single-chapter export has never applied the
-      // house reference doc, and an unset setting must not start doing so.
-      const referenceDocPath = await resolveReferenceDoc(prefs.referenceDocPath, false);
-      const run = await pandoc.run({ markdownPath: mdPath, docxPath, referenceDocPath });
+      const run = await pandoc.run({ markdownPath: mdPath, docxPath, referenceDocPath: reference.path });
       if (run.code !== 0) {
         console.error('[export] pandoc failed:', run.stderr);
         note("The Word document couldn't be created.");
         return;
       }
 
-      note('Exported.');
+      if (reference.note) console.warn('[export]', reference.note);
+      note(reference.note ? REFERENCE_MOVED_SHORT : 'Exported.', reference.note ? 10000 : 5000);
       const opener = await import('@tauri-apps/plugin-opener');
       void opener.revealItemInDir(docxPath).catch(() => {});
     } catch (err) {

@@ -260,6 +260,11 @@ fn extract_all(zip_path: &Path, dest: &Path) -> Result<(), String> {
 /// the same language.
 #[tauri::command]
 pub async fn install_lexicon_pack(app: AppHandle, zip_path: String) -> InstallOutcome {
+    // Only a file the user chose in the picker: the window may not name one.
+    if !crate::commands::is_picked(&app, Path::new(&zip_path), false) {
+        eprintln!("[packs] {zip_path} was not chosen in a dialog");
+        return InstallOutcome::failure("Choose the pack file again.");
+    }
     let handle = app.clone();
     tauri::async_runtime::spawn_blocking(move || install_blocking(&handle, &zip_path))
         .await

@@ -46,13 +46,17 @@ interface DiogenesOutcome {
 }
 
 /** Native folder picker for a disc; null when cancelled. The corpus only names
- * the picker's title — the user is choosing a folder, not a format. */
-export async function pickDiscDir(corpus?: Corpus): Promise<string | null> {
+ * the picker's title — the user is choosing a folder, not a format. The whole
+ * folder (`recursive`), since Diogenes reads it; `defaultPath` opens the
+ * dialog at a folder chosen before, for choosing it again. */
+export async function pickDiscDir(corpus?: Corpus, defaultPath?: string): Promise<string | null> {
   const dialog = await import('@tauri-apps/plugin-dialog');
   const picked = await dialog.open({
     directory: true,
+    recursive: true,
     multiple: false,
     title: corpus ? `Choose your ${corpus.toUpperCase()} folder` : 'Choose your TLG or PHI folder',
+    ...(defaultPath ? { defaultPath } : {}),
   });
   return typeof picked === 'string' ? picked : null;
 }

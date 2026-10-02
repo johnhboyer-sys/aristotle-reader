@@ -55,7 +55,9 @@
   import { isTauri } from './lib/runtime';
   import { flushForQuit } from './lib/quit';
   import { wordAt, latinWordAt } from './lib/lexicon/wordAt';
-  import { libraryStorage, chapterFileName } from './lib/library/storage';
+  import { libraryStorage, chapterFileName, libraryRootProblem } from './lib/library/storage';
+  import LibraryRepickDialog from './components/LibraryRepickDialog.svelte';
+  import type { PickStatus } from './lib/picks';
   import { chapterLibraryStatuses } from './lib/library/sync';
   import type { ChapterLibraryStatus } from './lib/library/sync';
   import { session, syncCommands } from './lib/editor/session.svelte';
@@ -98,6 +100,11 @@
   // refreshed per work after onboarding.
   let corpora = $state<Record<string, WorkCorpus | null>>({});
   let booted = $state(false);
+  // A library folder the window may not use (never picked in this build, or
+  // moved): startup waits on LibraryRepickDialog rather than showing an empty
+  // library (sandboxing plan, phase 4).
+  let libraryRepick = $state<{ path: string; status: Exclude<PickStatus, 'ok'> } | null>(null);
+  let libraryRepickDone: (() => void) | null = null;
   let selection = $state<RailSelection | null>(null);
   // Heading outline of the OPEN document-spine work (D8 heading tools), emitted
   // by the editor; drives the rail's table-of-contents. Reset on every
@@ -253,6 +260,8 @@
   // visibilitychange still fires on tab-switch-back, which is close enough
   // for manual testing there.
   function onWindowFocus() {
+    // Before boot the library folder may still be waiting to be chosen again.
+    if (!booted) return;
     void refreshLibraryStatus();
     void syncCommands.checkExternalChange();
   }
@@ -304,6 +313,14 @@
     // (or book Α chapter 1 of the Metaphysics on first run).
     void (async () => {
       const settings = await loadSettings();
+      const problem = await libraryRootProblem();
+      if (problem) {
+        await new Promise<void>((resolve) => {
+          libraryRepickDone = resolve;
+          libraryRepick = problem;
+        });
+        libraryRepick = null;
+      }
       await reloadWorks();
       const loaded: Record<string, WorkCorpus | null> = {};
       await Promise.all(
@@ -667,7 +684,9 @@
   }
 </script>
 
-<div class="shell">
+<!-- inert while the library folder waits to be chosen again: Settings and
+     every other control stay out of reach until LibraryRepickDialog answers. -->
+<div class="shell" inert={libraryRepick !== null}>
   <header class="topbar">
     <button
       class="icon-btn"
@@ -995,6 +1014,14 @@
     </div>
   {/if}
 </div>
+
+{#if libraryRepick}
+  <LibraryRepickDialog
+    path={libraryRepick.path}
+    status={libraryRepick.status}
+    onDone={() => libraryRepickDone?.()}
+  />
+{/if}
 
 <style>
   .shell {

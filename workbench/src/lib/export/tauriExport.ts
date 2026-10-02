@@ -15,8 +15,9 @@
 
 import { PANDOC_UNAVAILABLE_MESSAGE } from './pandoc';
 import type { PandocDocxJob, RunResult } from './pandoc';
-import { loadSettings } from '../settings';
+import { loadSettings, updateSettings } from '../settings';
 import type { ExportSettings } from '../settings';
+import { chooseAgainLabel, pickStatus, repickReason } from '../picks';
 
 /** Plain-language message when the pandoc the user picked won't run. */
 export const PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE =
@@ -85,12 +86,29 @@ export async function chooseDocxTarget(defaultPath: string): Promise<string | nu
   return (await invoke('choose_docx_target', { defaultPath })) as string | null;
 }
 
+/** The reference doc to export with — a path, or none (pandoc's own
+ * styling), with a `note` when the user's own has gone and other styles are
+ * used instead — or why the user's own cannot be used. */
+export type ReferenceDocChoice = { path: string | undefined; note?: string } | { problem: string };
+
+/** The problem in one sentence, for the chapter export's one-line note. */
+export const REFERENCE_REPICK_SHORT = 'Choose your reference document again in Settings › Export.';
+
+/** A moved reference doc's `note`, short enough for that same line. */
+export const REFERENCE_MOVED_SHORT = 'Exported with other styles: your reference document has moved.';
+
 /**
  * The reference .docx to style the output with: the user's own if they set one
  * AND it is still there, else the bundled resource when `fallbackToBundled`,
  * else none (pandoc's own defaults). A configured file that has since been
  * moved or deleted degrades rather than failing the export — the styling is a
  * preference, not the content.
+ *
+ * A configured file the window may no longer open — never picked in a dialog,
+ * as with every reference doc set before picks were kept — is a `problem`:
+ * the export stops and says to choose it again, rather than quietly coming
+ * out in other styles (sandboxing plan, phase 4). Callers check this before
+ * the save dialog, so the user is not asked where to save first.
  *
  * `fallbackToBundled` exists because the two callers differ on what "nothing
  * configured" has always meant: the whole-work compile has always applied the
@@ -100,17 +118,19 @@ export async function chooseDocxTarget(defaultPath: string): Promise<string | nu
 export async function resolveReferenceDoc(
   configuredPath?: string,
   fallbackToBundled = true,
-): Promise<string | undefined> {
-  const fs = await import('@tauri-apps/plugin-fs');
+): Promise<ReferenceDocChoice> {
   if (configuredPath) {
-    try {
-      if (await fs.exists(configuredPath)) return configuredPath;
-      console.warn('[export] configured reference doc is missing — falling back', configuredPath);
-    } catch (err) {
-      console.warn('[export] could not check the configured reference doc', err);
+    const status = await pickStatus(configuredPath);
+    if (status === 'ok') return { path: configuredPath };
+    if (status === 'not-picked') {
+      return { problem: `${REFERENCE_REPICK_SHORT} ${repickReason('reference', status, configuredPath)}` };
     }
+    console.warn('[export] configured reference doc is missing — falling back', configuredPath);
   }
-  if (!fallbackToBundled) return undefined;
+  const note = configuredPath
+    ? `Your reference document isn’t where it was (${configuredPath}), so other styles were used.`
+    : undefined;
+  if (!fallbackToBundled) return { path: undefined, ...(note ? { note } : {}) };
   try {
     // The bundler keeps a resource's declared RELATIVE PATH, so
     // "resources/reference.docx" in tauri.conf.json lands at
@@ -119,13 +139,32 @@ export async function resolveReferenceDoc(
     // missing --reference-doc as optional — failed every whole-work export.
     // Verify the file is really there and fall back to pandoc's own styling if
     // it is not: a missing template is a worse look, not a reason to refuse.
+    const fs = await import('@tauri-apps/plugin-fs');
     const pathApi = await import('@tauri-apps/api/path');
     const candidate = await pathApi.resolveResource('resources/reference.docx');
-    return (await fs.exists(candidate)) ? candidate : undefined;
+    return { path: (await fs.exists(candidate)) ? candidate : undefined, ...(note ? { note } : {}) };
   } catch (err) {
     console.warn('[export] reference.docx resource not found — using pandoc defaults', err);
-    return undefined;
+    return { path: undefined, ...(note ? { note } : {}) };
   }
+}
+
+/**
+ * Choose the reference doc again (or for the first time), the dialog opening
+ * at `stored`. Saves the answer to the export settings; null when cancelled.
+ */
+export async function pickReferenceDoc(stored?: string): Promise<string | null> {
+  const dialog = await import('@tauri-apps/plugin-dialog');
+  const picked = await dialog.open({
+    multiple: false,
+    title: 'Choose a Word document to take styles from',
+    filters: [{ name: 'Word document', extensions: ['docx'] }],
+    ...(stored ? { defaultPath: stored } : {}),
+  });
+  if (typeof picked !== 'string') return null;
+  const settings = await loadSettings();
+  await updateSettings({ export: { ...(settings.export ?? {}), referenceDocPath: picked } });
+  return picked;
 }
 
 /**

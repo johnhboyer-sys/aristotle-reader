@@ -17,7 +17,9 @@
 // start with a dot: the Tauri fs scope refuses dotfiles on Unix.
 
 import { isTauri } from '../runtime';
-import { loadSettings } from '../settings';
+import { loadSettings, updateSettings } from '../settings';
+import { pickStatus } from '../picks';
+import type { PickStatus } from '../picks';
 
 export interface LibraryStorage {
   /** Returns file content, or null if it doesn't exist. */
@@ -76,8 +78,8 @@ class BrowserStorage implements LibraryStorage {
 
 /**
  * Resolves to either an absolute path under the user's chosen library root
- * (with baseDir omitted — the fs:allow-* '/**' scopes in
- * src-tauri/capabilities/default.json cover it), or a relative
+ * (with baseDir omitted — the window may use it because the user picked it,
+ * see libraryRootProblem), or a relative
  * `library/<workId>` path under $APPDATA (the Phase-1 default, baseDir
  * required). Cached per-process; call invalidateLibraryRootCache() after
  * changing settings.libraryRoot.
@@ -95,6 +97,44 @@ async function resolveRoot(): Promise<string | null> {
 export function invalidateLibraryRootCache(): void {
   cachedRoot = undefined;
   instance = null;
+}
+
+/**
+ * Why the user's own library folder cannot be used, or null when it can (or
+ * the library is in app data). Checked at startup: a folder the window may
+ * not read would otherwise open as an empty library (sandboxing plan, phase 4).
+ */
+export async function libraryRootProblem(): Promise<{ path: string; status: Exclude<PickStatus, 'ok'> } | null> {
+  const root = (await loadSettings()).libraryRoot;
+  if (!root) return null;
+  const status = await pickStatus(root, true);
+  return status === 'ok' ? null : { path: root, status };
+}
+
+/** The picker for a library folder: the whole folder, two levels deep. */
+export async function pickLibraryFolder(title: string, defaultPath?: string): Promise<string | null> {
+  const dialog = await import('@tauri-apps/plugin-dialog');
+  const picked = await dialog.open({
+    directory: true,
+    recursive: true,
+    multiple: false,
+    title,
+    ...(defaultPath ? { defaultPath } : {}),
+  });
+  return typeof picked === 'string' ? picked : null;
+}
+
+/**
+ * Choose the library folder again, the dialog opening at `stored`. The answer
+ * becomes the library folder, whether or not it is the same one — the user
+ * knows where their library is now. False when cancelled.
+ */
+export async function repickLibraryRoot(stored: string): Promise<boolean> {
+  const picked = await pickLibraryFolder('Choose your library folder', stored);
+  if (picked === null) return false;
+  await updateSettings({ libraryRoot: picked });
+  invalidateLibraryRootCache();
+  return true;
 }
 
 interface ResolvedPath {
