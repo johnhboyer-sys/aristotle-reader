@@ -39,9 +39,9 @@
 
   // ── disc route ────────────────────────────────────────────────────────────
   let discDir = $state<string | null>(null);
-  /** The saved disc folder, when it must be chosen again (sandboxing plan,
-   * phase 4): which disc, where it was, and why. */
-  let repick = $state<{ corpus: Corpus; dir: string; reason: string } | null>(null);
+  /** Each saved disc folder that must be chosen again (sandboxing plan,
+   * phase 4): where it was, and why. */
+  let repick = $state<Partial<Record<Corpus, { dir: string; reason: string }>>>({});
   let authors = $state<DiscAuthor[]>([]);
   let authorQuery = $state('');
   let selectedAuthor = $state<DiscAuthor | null>(null);
@@ -67,15 +67,19 @@
   $effect(() => {
     void (async () => {
       const settings = await loadSettings();
-      const saved = settings.tlgDir ?? settings.phiDir;
-      if (!saved || discDir !== null) return;
-      const status = await pickStatus(saved, true);
-      if (status === 'ok') {
-        await useDisc(saved, null);
-      } else {
-        const corpus: Corpus = settings.tlgDir ? 'tlg' : 'phi';
-        repick = { corpus, dir: saved, reason: repickReason(corpus, status, saved) };
+      // Check both discs: either may need choosing again, and the first
+      // usable one opens (TLG first, as before).
+      let usable: string | null = null;
+      const found: typeof repick = {};
+      for (const corpus of ['tlg', 'phi'] as const) {
+        const dir = corpus === 'tlg' ? settings.tlgDir : settings.phiDir;
+        if (!dir) continue;
+        const status = await pickStatus(dir, true);
+        if (status === 'ok') usable ??= dir;
+        else found[corpus] = { dir, reason: repickReason(corpus, status, dir) };
       }
+      repick = found;
+      if (usable !== null && discDir === null) await useDisc(usable, null);
     })();
   });
 
@@ -101,7 +105,7 @@
   async function chooseDisc(corpus: Corpus) {
     let picked: string | null;
     try {
-      picked = await pickDiscDir(corpus, repick?.corpus === corpus ? repick.dir : undefined);
+      picked = await pickDiscDir(corpus, repick[corpus]?.dir);
     } catch (err) {
       // The native folder picker can refuse (no permission, plugin missing).
       // Unhandled, the button simply did nothing and said nothing.
@@ -110,7 +114,7 @@
       return;
     }
     if (picked === null) return;
-    if (repick?.corpus === corpus) repick = null;
+    repick = { ...repick, [corpus]: undefined };
     await useDisc(picked, corpus);
   }
 
@@ -262,15 +266,15 @@
 
         <div class="row">
           <button class="secondary-btn" onclick={() => chooseDisc('tlg')}>
-            {repick?.corpus === 'tlg' ? chooseAgainLabel('tlg') : 'Choose your TLG folder…'}
+            {repick.tlg ? chooseAgainLabel('tlg') : 'Choose your TLG folder…'}
           </button>
           <button class="secondary-btn" onclick={() => chooseDisc('phi')}>
-            {repick?.corpus === 'phi' ? chooseAgainLabel('phi') : 'Choose your PHI folder…'}
+            {repick.phi ? chooseAgainLabel('phi') : 'Choose your PHI folder…'}
           </button>
         </div>
-        {#if repick}
-          <p class="note">{repick.reason}</p>
-        {/if}
+        {#each [repick.tlg, repick.phi] as r}
+          {#if r}<p class="note">{r.reason}</p>{/if}
+        {/each}
         {#if discDir}
           <p class="path">Reading {discDir}</p>
         {/if}

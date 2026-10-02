@@ -62,10 +62,15 @@ impl TestApp {
 
     /// writeTextFile as the JS API sends it: the path in a header, the bytes as the body.
     fn write_text(&self, path: &Path) -> Result<(), String> {
+        self.write_raw("write_text_file", path)
+    }
+
+    /// write_text_file or write_file, which share one wire format.
+    fn write_raw(&self, cmd: &str, path: &Path) -> Result<(), String> {
         let mut headers = tauri::http::HeaderMap::new();
         let encoded = path.display().to_string().replace('%', "%25").replace(' ', "%20");
         headers.insert("path", encoded.parse().unwrap());
-        get_ipc_response(&self.window, request("plugin:fs|write_text_file", InvokeBody::Raw(b"probe".to_vec()), headers))
+        get_ipc_response(&self.window, request(&format!("plugin:fs|{cmd}"), InvokeBody::Raw(b"probe".to_vec()), headers))
             .map(|_| ())
             .map_err(|e| e.to_string())
     }
@@ -111,17 +116,21 @@ fn the_window_cannot_write_outside_app_data() {
         let r = t.call(cmd, args.clone());
         assert!(r.is_err(), "{cmd} {args} was allowed: {r:?}");
     };
-    refused("write_file", serde_json::json!({ "path": p(&victim) }));
+    assert!(t.write_raw("write_file", &victim).is_err(), "write_file outside app data");
     refused("mkdir", serde_json::json!({ "path": p(&out.join("d")) }));
     refused("create", serde_json::json!({ "path": p(&out.join("c.txt")) }));
     refused("remove", serde_json::json!({ "path": p(&victim) }));
     refused("truncate", serde_json::json!({ "path": p(&victim), "len": 0 }));
     refused("rename", serde_json::json!({ "oldPath": p(&victim), "newPath": p(&out.join("moved.txt")) }));
-    refused("copy_file", serde_json::json!({ "fromPath": p(&t.appdata.join("x")), "toPath": p(&out.join("copy.txt")) }));
+    let source = t.appdata.join("source.txt");
+    std::fs::write(&source, "from app data").unwrap();
+    refused("copy_file", serde_json::json!({ "fromPath": p(&source), "toPath": p(&out.join("copy.txt")) }));
     // open can take write options from the window, so it is a write command.
     refused("open", serde_json::json!({ "path": p(&victim), "options": { "write": true } }));
     assert_eq!(std::fs::read_to_string(&victim).unwrap(), "untouched");
-    assert!(!out.join("new.txt").exists() && !out.join("d").exists() && !out.join("c.txt").exists());
+    for made in ["new.txt", "d", "c.txt", "copy.txt", "moved.txt"] {
+        assert!(!out.join(made).exists(), "{made} was created");
+    }
 }
 
 #[test]
@@ -167,6 +176,32 @@ fn the_window_cannot_write_rusts_dotfiles() {
     assert!(t.call("remove", serde_json::json!({ "path": p(&t.appdata), "options": { "recursive": true } })).is_err());
     assert!(t.call("rename", serde_json::json!({ "oldPath": p(&t.appdata), "newPath": p(&t.appdata.join("moved")) })).is_err());
     assert!(record.is_file());
+}
+
+#[test]
+fn a_pick_cannot_open_rusts_records() {
+    // A hijacked window can open a save dialog aimed at a record; one click
+    // on Save would add it to the runtime scope, which the leading-dot rule
+    // does not cover. The capability's deny rule must still refuse it.
+    let t = app("pick-record");
+    for name in [crate::sandbox::APPROVED_PROGRAMS_FILE, ".approved-programs.json.tmp", ".persisted-scope"] {
+        let record = t.appdata.join(name);
+        std::fs::write(&record, "{}").unwrap();
+        t.app.fs_scope().allow_file(&record).unwrap();
+        assert!(t.write_text(&record).is_err(), "write {name} after a pick");
+        assert!(t.call("remove", serde_json::json!({ "path": p(&record) })).is_err(), "remove {name} after a pick");
+        // .persisted-scope is rewritten by its plugin (Rust) on every pick;
+        // the window's refusals above are what count for it.
+        if name != ".persisted-scope" {
+            assert_eq!(std::fs::read_to_string(&record).unwrap(), "{}", "{name} changed");
+        }
+        assert!(record.is_file(), "{name} removed");
+    }
+    // A folder of Rust's own, picked whole, stays closed too.
+    t.app.fs_scope().allow_directory(&t.appdata, true).unwrap();
+    assert!(t.write_text(&t.appdata.join(crate::sandbox::APPROVED_PROGRAMS_FILE)).is_err());
+    // The positive control: the same pick still opens an ordinary file.
+    t.write_text(&t.appdata.join("settings.json")).expect("ordinary app data");
 }
 
 #[test]

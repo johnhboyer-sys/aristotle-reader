@@ -87,8 +87,15 @@ export async function chooseDocxTarget(defaultPath: string): Promise<string | nu
 }
 
 /** The reference doc to export with — a path, or none (pandoc's own
- * styling) — or why the user's own cannot be used. */
-export type ReferenceDocChoice = { path: string | undefined } | { problem: string };
+ * styling), with a `note` when the user's own has gone and other styles are
+ * used instead — or why the user's own cannot be used. */
+export type ReferenceDocChoice = { path: string | undefined; note?: string } | { problem: string };
+
+/** The problem in one sentence, for the chapter export's one-line note. */
+export const REFERENCE_REPICK_SHORT = 'Choose your reference document again in Settings › Export.';
+
+/** A moved reference doc's `note`, short enough for that same line. */
+export const REFERENCE_MOVED_SHORT = 'Exported with other styles: your reference document has moved.';
 
 /**
  * The reference .docx to style the output with: the user's own if they set one
@@ -116,13 +123,14 @@ export async function resolveReferenceDoc(
     const status = await pickStatus(configuredPath);
     if (status === 'ok') return { path: configuredPath };
     if (status === 'not-picked') {
-      return {
-        problem: `${chooseAgainLabel('reference').replace(/…$/, '')} in Settings › Export. ${repickReason('reference', status, configuredPath)}`,
-      };
+      return { problem: `${REFERENCE_REPICK_SHORT} ${repickReason('reference', status, configuredPath)}` };
     }
     console.warn('[export] configured reference doc is missing — falling back', configuredPath);
   }
-  if (!fallbackToBundled) return { path: undefined };
+  const note = configuredPath
+    ? `Your reference document isn’t where it was (${configuredPath}), so other styles were used.`
+    : undefined;
+  if (!fallbackToBundled) return { path: undefined, ...(note ? { note } : {}) };
   try {
     // The bundler keeps a resource's declared RELATIVE PATH, so
     // "resources/reference.docx" in tauri.conf.json lands at
@@ -134,10 +142,10 @@ export async function resolveReferenceDoc(
     const fs = await import('@tauri-apps/plugin-fs');
     const pathApi = await import('@tauri-apps/api/path');
     const candidate = await pathApi.resolveResource('resources/reference.docx');
-    return { path: (await fs.exists(candidate)) ? candidate : undefined };
+    return { path: (await fs.exists(candidate)) ? candidate : undefined, ...(note ? { note } : {}) };
   } catch (err) {
     console.warn('[export] reference.docx resource not found — using pandoc defaults', err);
-    return { path: undefined };
+    return { path: undefined, ...(note ? { note } : {}) };
   }
 }
 

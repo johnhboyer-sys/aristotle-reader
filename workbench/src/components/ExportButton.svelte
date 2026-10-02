@@ -13,6 +13,8 @@
     exportSettings,
     resolveExportPandoc,
     resolveReferenceDoc,
+    REFERENCE_MOVED_SHORT,
+    REFERENCE_REPICK_SHORT,
   } from '../lib/export/tauriExport';
   import type { WorkManifest } from '../lib/works/manifest';
   import CompileDialog from './CompileDialog.svelte';
@@ -61,7 +63,8 @@
       // again stops the export, and the user should not pick a target first.
       const reference = await resolveReferenceDoc(prefs.referenceDocPath, false);
       if ('problem' in reference) {
-        note(reference.problem, 15000); // two sentences: time to read them
+        console.warn('[export]', reference.problem);
+        note(REFERENCE_REPICK_SHORT, 10000);
         return;
       }
       const label = work.books[book - 1]?.label ?? String(book);
@@ -85,7 +88,8 @@
         return;
       }
 
-      note('Exported.');
+      if (reference.note) console.warn('[export]', reference.note);
+      note(reference.note ? REFERENCE_MOVED_SHORT : 'Exported.', reference.note ? 10000 : 5000);
       const opener = await import('@tauri-apps/plugin-opener');
       void opener.revealItemInDir(docxPath).catch(() => {});
     } catch (err) {

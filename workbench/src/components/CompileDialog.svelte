@@ -150,6 +150,7 @@
       // (see resolveReferenceDoc). Checked before the save dialog: one that
       // must be chosen again stops the export before a target is chosen.
       let referenceDocPath: string | undefined;
+      let referenceNote: string | undefined;
       if (!asMarkdown) {
         const reference = await resolveReferenceDoc(prefs.referenceDocPath);
         if ('problem' in reference) {
@@ -159,6 +160,7 @@
           return;
         }
         referenceDocPath = reference.path;
+        referenceNote = reference.note;
       }
 
       const dialog = await import('@tauri-apps/plugin-dialog');
@@ -236,7 +238,7 @@
       }
 
       phase = 'done';
-      note = 'Exported.';
+      note = referenceNote ? `Exported. ${referenceNote}` : 'Exported.';
       const opener = await import('@tauri-apps/plugin-opener');
       void opener.revealItemInDir(savePath).catch(() => {});
     } catch (err) {
@@ -252,7 +254,7 @@
     try {
       if ((await pickReferenceDoc(repickReference ?? undefined)) === null) return;
       repickReference = null;
-      note = 'Reference document chosen.';
+      note = 'Reference document chosen. Click Export… to export.';
     } catch (err) {
       console.error('[compile] choosing the reference doc failed', err);
       note = 'That file couldn’t be opened.';

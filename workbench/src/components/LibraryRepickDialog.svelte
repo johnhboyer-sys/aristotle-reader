@@ -59,7 +59,10 @@
       {/if}
       <button class="folder-btn" onclick={chooseAgain} disabled={busy}>{chooseAgainLabel('library')}</button>
       <button class="text-btn" onclick={useDefault} disabled={busy}>Use the default location instead</button>
-      <p class="line hint">The default keeps the library on this Mac. Nothing in your folder is changed or deleted.</p>
+      <p class="line hint">
+        The default is a separate library on this Mac, so the works in your folder won’t appear there. They
+        stay in the folder, untouched, and come back when you choose it in Settings › General.
+      </p>
     </div>
   </div>
 </div>

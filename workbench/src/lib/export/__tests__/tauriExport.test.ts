@@ -23,7 +23,7 @@ vi.mock('@tauri-apps/api/path', () => ({
 }));
 const BUNDLED = '/App.app/Contents/Resources/resources/reference.docx';
 
-const { chooseDocxTarget, resolveExportPandoc, resolveReferenceDoc, PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE } = await import('../tauriExport');
+const { chooseDocxTarget, resolveExportPandoc, resolveReferenceDoc, PANDOC_CONFIGURED_UNAVAILABLE_MESSAGE, REFERENCE_REPICK_SHORT } = await import('../tauriExport');
 const { PANDOC_UNAVAILABLE_MESSAGE } = await import('../pandoc');
 
 beforeEach(() => {
@@ -109,11 +109,21 @@ describe('resolveReferenceDoc', () => {
     }
   });
 
-  it('still falls back when a picked one has since gone, as it always has', async () => {
+  it('still falls back when a picked one has since gone, as it always has, but says so', async () => {
     answers.pick_status = 'missing';
     existing.add(BUNDLED);
-    expect(await resolveReferenceDoc('/Users/u/Gone.docx')).toEqual({ path: BUNDLED });
-    expect(await resolveReferenceDoc('/Users/u/Gone.docx', false)).toEqual({ path: undefined });
+    const withBundled = await resolveReferenceDoc('/Users/u/Gone.docx');
+    expect(withBundled).toMatchObject({ path: BUNDLED });
+    const without = await resolveReferenceDoc('/Users/u/Gone.docx', false);
+    expect(without).toMatchObject({ path: undefined });
+    for (const choice of [withBundled, without]) {
+      if (!('note' in choice) || !choice.note) throw new Error('expected a note');
+      expect(choice.note).toContain('/Users/u/Gone.docx');
+    }
+  });
+
+  it('has a one-sentence form of the problem for the chapter export', () => {
+    expect(REFERENCE_REPICK_SHORT).toBe('Choose your reference document again in Settings › Export.');
   });
 
   it('uses the bundled one, or none, when nothing is set', async () => {

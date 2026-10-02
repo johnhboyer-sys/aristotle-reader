@@ -161,6 +161,73 @@ own risk.
   Phase 3's write scope (`$APPDATA/**` only) closes this — **phase 3 must
   land before the app is shared.**
 
+## Phases 3–4 as built (2026-10-02)
+
+Branch `claude/workbench-sandbox-p3`.
+
+- **Capability** (`src-tauri/capabilities/default.json`): no `/**`, and no fs
+  permission *set* at all — `fs:default` also brings in a global scope over
+  every app folder, and `fs:allow-appdata-*` brings in `$RESOURCE`. Each fs
+  command is granted alone with its own scope: `exists`, `read-text-file`,
+  `read-file`, `read-dir`, `stat` on `$APPDATA` and `$RESOURCE`;
+  `write-text-file`, `rename`, `remove`, `open` on `$APPDATA/**` only (`open`
+  counts as a write: it takes write options from the window); `mkdir` also on
+  `$APPDATA` itself; `read`/`seek` act on an open handle and carry no scope.
+  `copy_file`, `write_file`, `create`, `truncate` are not granted (nothing
+  used them once onboarding's shard copy became read + write).
+- **Rust's dotfiles can no longer be removed** either: `remove`/`rename` reach
+  `$APPDATA/**` only, which never matches a dotfile and never `$APPDATA`
+  itself. Codex's phase-1 point 2 is closed; the records still fail closed.
+- **Picks are read and write.** The dialog plugin adds a pick to the fs
+  plugin's runtime scope, which every fs command consults — write commands
+  included. That is what lets a library folder be saved to; it also means a
+  picked TLG folder or reference doc is writable by the window. Folders read
+  deeply (library, TLG/PHI) are picked with `recursive: true`; the export
+  folder is not (it is only where the save dialog opens). Files dropped on the
+  window are added by the fs plugin too.
+- **tauri-plugin-persisted-scope 2.3.7** (2.4 needs a newer tauri) restores
+  picks at launch from `$APPDATA/.persisted-scope`; a missing or garbled
+  record restores nothing.
+- **Tests that read the effective capability** (`src-tauri/src/capability_tests.rs`):
+  fs calls sent through Tauri's IPC to a mock app built from the real
+  `generate_context!` and the real plugin wiring (`with_fs_plugins` in
+  lib.rs), each test under its own app identifier so `$APPDATA` is a fresh
+  folder. Written against the old capability first: 6 of 8 failed.
+- **Pick checks in Rust**: `is_picked` asks the fs plugin's runtime scope
+  (picks only, not the capability). `export_docx`'s reference doc must be the
+  bundled one (by real path) or a pick; `diogenes_export`'s disc folder must
+  be a pick; `install_lexicon_pack`'s zip must be a pick.
+- **Phase 4**: `pick_status(path, deep)` → `ok` / `missing` / `not-picked`
+  (not-picked wins, so the window learns nothing about a path it was never
+  given). The library folder is checked at startup before anything loads
+  (`LibraryRepickDialog`: choose again, or use the default location); Add
+  work and Import a text check the saved TLG/PHI folder; both exports check
+  the reference doc before the save dialog, and Settings › Export shows the
+  reason. A *missing* reference doc still falls back to the bundled one, as
+  before; a *not-picked* one stops the export.
+- No existence probe of a fixed path outside the scope was left in the
+  frontend: phase 2 had already moved Diogenes and the AI CLIs into Rust.
+- Not handled: `referenceRoot` (where imported reference translations live)
+  is still read from settings, but nothing in the UI sets it.
+
+**Codex's review (GPT-6-Sol, 2026-10-02)** found five things:
+1. *A symlink inside `$APPDATA` would let a write land outside it* (the scope
+   checks a new file's path before the OS follows a parent link). Not
+   reachable: the fs plugin has no command that makes a symlink, and nothing
+   Rust writes into `$APPDATA` makes one. Recorded, not fixed.
+2. *A pick can name Rust's record* — fixed. A hijacked window could aim a save
+   dialog at `.approved-programs.json`; one click on Save put it in the
+   runtime scope, which the leading-dot rule does not cover. The capability
+   now denies `$APPDATA/.*` in the fs plugin's global scope, which every
+   command checks before any allow (`a_pick_cannot_open_rusts_records`).
+3. *`is_picked` accepts any pick* (a save target, a file inside a picked
+   folder), not only one made for that purpose. Accepted: it gives Rust's jobs
+   nothing the window could not already read itself.
+4. *The persisted-scope plugin rewrites its record non-atomically.* Accepted:
+   a torn record restores nothing, so the user is asked again.
+5. *Two refusal tests could pass for the wrong reason* — fixed (`write_file`
+   now sends its path header; `copy_file` copies a file that exists).
+
 ## Things the survey found along the way (fixed in passing, each small)
 
 - `revealItemInDir` after export has never worked: `opener:allow-reveal-item-in-dir`

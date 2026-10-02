@@ -77,7 +77,15 @@
   }
 
   async function chooseTlgFolder() {
-    const dir = await pickTlgDir(repickDir ?? undefined);
+    let dir: string | null;
+    try {
+      dir = await pickTlgDir(repickDir ?? undefined);
+    } catch (err) {
+      // The native picker can refuse; unhandled, the button looked dead.
+      console.error('[add work] choosing the TLG folder failed', err);
+      note = 'That folder could not be opened.';
+      return;
+    }
     if (dir === null) return; // cancelled — stay put
     if (!(await looksLikeTlgDir(dir))) {
       note = "That folder doesn't contain the TLG texts.";

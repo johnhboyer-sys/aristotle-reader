@@ -684,7 +684,9 @@
   }
 </script>
 
-<div class="shell">
+<!-- inert while the library folder waits to be chosen again: Settings and
+     every other control stay out of reach until LibraryRepickDialog answers. -->
+<div class="shell" inert={libraryRepick !== null}>
   <header class="topbar">
     <button
       class="icon-btn"
@@ -926,14 +928,6 @@
     {/if}
   </div>
 
-  {#if libraryRepick}
-    <LibraryRepickDialog
-      path={libraryRepick.path}
-      status={libraryRepick.status}
-      onDone={() => libraryRepickDone?.()}
-    />
-  {/if}
-
   {#if addWorkOpen}
     <AddWorkDialog
       works={works.filter((w) => !isDocumentWork(w) && !corpora[w.id])}
@@ -1020,6 +1014,14 @@
     </div>
   {/if}
 </div>
+
+{#if libraryRepick}
+  <LibraryRepickDialog
+    path={libraryRepick.path}
+    status={libraryRepick.status}
+    onDone={() => libraryRepickDone?.()}
+  />
+{/if}
 
 <style>
   .shell {
