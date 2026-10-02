@@ -375,10 +375,15 @@ export function compileWorkMarkdown(
     const docByline = authorByline(work);
     if (docByline) docSections.push(docByline);
     let docBook: number | null = null;
+    // A work with chapters and no Books (an import divided only by fragment or
+    // section) is one unheaded Book: no Book heading over it.
+    const unheaded = containerBooks.length === 1 && containerBooks[0].unheaded === true;
     ordered.forEach((chapter, index) => {
       if (chapter.meta.book !== docBook) {
         docBook = chapter.meta.book;
-        docSections.push(`## ${workScheme.bookLabel(chapter.meta.book, work) || `Book ${chapter.meta.book}`}`);
+        if (!unheaded) {
+          docSections.push(`## ${workScheme.bookLabel(chapter.meta.book, work) || `Book ${chapter.meta.book}`}`);
+        }
       }
       docSections.push(`### ${documentChapterLabel(work, chapter.meta.book, chapter.meta.chapter)}`);
       const prefix = `c${index + 1}-`;

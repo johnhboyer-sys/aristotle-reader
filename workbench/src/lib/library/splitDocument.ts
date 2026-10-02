@@ -237,6 +237,22 @@ export function splitDocument(file: ChapterFile, profile: WorkProfile): Document
 }
 
 /**
+ * Split at the given 0-based rows instead of at marks: the parts an imported
+ * work's Book and chapter BOUNDARIES imply (an import has those, and no marks).
+ * Row 0 always begins the first part; the parts are numbered book 1, chapter
+ * 1…n, and the caller assigns the real book and chapter.
+ */
+export function splitDocumentAt(file: ChapterFile, starts: number[]): DocumentPart[] {
+  const scheme = getScheme(file.meta.citationScheme);
+  const rowCount = file.greekLines.length;
+  const cuts = [...new Set([0, ...starts])].filter((s) => s >= 0 && s < Math.max(rowCount, 1)).sort((a, b) => a - b);
+  return cuts.map((start, i) => {
+    const seg = { book: 1, chapter: i + 1, start, end: cuts[i + 1] ?? rowCount };
+    return { book: seg.book, chapter: seg.chapter, file: rebase(file, scheme, seg) };
+  });
+}
+
+/**
  * The explicit Book/Chapter container structure a document's markers imply —
  * the registry counterpart of splitDocument (the SAME segment() boundary walk,
  * so the labels line up 1:1 with the files it produces). `labelOf(rowIndex)`

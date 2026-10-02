@@ -38,6 +38,10 @@ export interface DocumentBook {
   n: number;
   label: string;
   chapters: DocumentChapterSlot[];
+  /** Export only: a Book that exists to hold the chapters of a work with no
+   * Books (an import divided by fragment or section). Compile prints no Book
+   * heading over it. */
+  unheaded?: boolean;
 }
 
 /** WorkMeta plus the extra fields carried in the manifest YAML. */
