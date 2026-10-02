@@ -317,6 +317,16 @@ describe('CLLG FREED', () => {
     ]);
   });
 
+  it('keeps the book when a column is open over numbered lines', () => {
+    // Collapse is for a milestone restating a division ("327" before "327a").
+    // Run between two divisions it read book 1 line 1 as "1" before "1" and
+    // dropped the book: "1.980a", and line 10 "10.980a".
+    const doc = parseTeiRows(
+      tei('<div type="Book" n="1"><milestone ed="Ross" unit="column" n="980a"/><l n="1">μῆνιν</l><l n="10">ἄειδε</l></div>'),
+    );
+    expect(doc.rows.map((r) => r.ref)).toEqual(['1.1.980a', '1.10.980a']);
+  });
+
   it('still ignores a layout milestone outside a row', () => {
     const doc = parseTeiRows(
       tei('<div type="s" n="1"><milestone ed="P" unit="para" n="9"/><p>one</p></div>'),

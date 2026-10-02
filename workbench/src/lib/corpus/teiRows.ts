@@ -306,18 +306,22 @@ function addressFor(base: Tier[], open: Map<string, string>): Tier[] {
   const milestones = [...open].map(([name, n]) => ({ name, n }));
   const foreign = milestones.filter((tier) => !base.some((b) => b.name === tier.name));
   if (foreign.length > 1 && foreign.some((tier) => tier.name === PAGE_UNIT)) return foreign;
-  return collapsePrefixes([...base, ...milestones]);
+  return collapsePrefixes([...base, ...milestones], base.length);
 }
 
 /**
  * Drop each component that the following one already spells out — "327" before
  * "327a", or a plain repeat. Leaves anything else alone: "1a" before "1" is two
  * real tiers (Bekker page, then line) and both stay.
+ *
+ * Only a milestone (index `firstMilestone` on) can spell out what precedes it.
+ * Two divisions are two tiers even when they read alike: book 1 line 1 is not
+ * "1" said twice, and collapsing it lost the book of every such line.
  */
-function collapsePrefixes(parts: Tier[]): Tier[] {
+function collapsePrefixes(parts: Tier[], firstMilestone: number): Tier[] {
   return parts.filter((part, i) => {
     const next = parts[i + 1];
-    return next === undefined || !next.n.startsWith(part.n);
+    return next === undefined || i + 1 < firstMilestone || !next.n.startsWith(part.n);
   });
 }
 
