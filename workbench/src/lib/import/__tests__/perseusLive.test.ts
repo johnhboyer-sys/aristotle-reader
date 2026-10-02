@@ -75,4 +75,30 @@ when('Perseus, live', () => {
     expect(teiUrlFor(parseCtsUrn(urn)!)).toContain('tlg9999');
     await expect(fetchPerseusTei(urn)).rejects.toThrow(/no text at that address/i);
   }, 60_000);
+
+  it('imports the Odyssey from FREED with book and line', async () => {
+    // Not the Iliad: the TLG numbers Iliad 18.605 as "605*", which the
+    // source-ref grammar refuses, and the importer then refuses the work.
+    const xml = await fetchPerseusTei('urn:cts:greekLit:tlg0012.tlg002.cllg-grc1');
+    const { work, file } = importPerseusTei(xml, { language: 'Greek' });
+    expect(work.levels?.map((l) => l.name)).toEqual(['book', 'line']);
+    expect(file.meta.rowRefs?.[0]).toBe('1.1');
+    expect(file.meta.rowRefs?.at(-1)).toBe('24.548');
+    expect(file.greekLines[0]).toMatch(/Ἄνδρα μοι ἔννεπε/);
+  }, 60_000);
+
+  it('imports Plotinus from FREED with its ennead/treatise/section divisions', async () => {
+    const xml = await fetchPerseusTei('urn:cts:greekLit:tlg2000.tlg001.cllg-grc1');
+    const { work, file } = importPerseusTei(xml, { language: 'Greek' });
+    expect(work.levels?.map((l) => l.name)).toEqual(['ennead', 'chapter', 'section']);
+    // Lettered sections are the edition's own (4.7.8a–8e).
+    expect(file.meta.rowRefs?.every((ref) => /^\d+\.\d+\.\d+[a-z]?$/.test(ref))).toBe(true);
+    expect(file.meta.rowRefs).toContain('4.7.8a');
+  }, 60_000);
+
+  it('reports a missing FREED text as FREED’s, not Perseus’s', async () => {
+    await expect(fetchPerseusTei('urn:cts:greekLit:tlg0012.tlg009.cllg-grc1')).rejects.toThrow(
+      'FREED has no text at that address.',
+    );
+  }, 60_000);
 });

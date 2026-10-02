@@ -42,10 +42,28 @@ const FIRST1K_MARKER = '1st1K';
 const RAW_HOST = 'https://raw.githubusercontent.com';
 const BRANCH = 'master';
 
+/**
+ * The CLLG FREED corpus (Inria): the TLG E disc run through Diogenes and
+ * published as TEI, so a user with no disc gets the same texts. Same urns and
+ * the same data/<group>/<work>/ layout as Perseus, under its own version ids
+ * (`tlg0086.tlg025.cllg-grc1`), on GitLab rather than GitHub.
+ *
+ * Fetched through the GitLab API, not the /-/raw/ page: the API answers a
+ * cross-site fetch and the page does not (checked 2026-10-02).
+ */
+const FREED_MARKER = 'cllg-';
+const FREED_FILES = 'https://gitlab.inria.fr/api/v4/projects/almanach%2Fcllg%2Ffreed-corpus/repository/files';
+const FREED_BRANCH = 'main';
+
+/** A FREED file name inside a pasted GitLab address — FREED's pages show no urn. */
+const FREED_FILE_RE = /(tlg\d{4})\.(tlg\d{3})\.(cllg-[A-Za-z]+\d+)\.xml/;
+
 export const NOT_A_URN_MESSAGE =
-  'That doesn’t look like a Perseus text. Paste a Scaife address (scaife.perseus.org/reader/…) or a CTS urn (urn:cts:greekLit:…).';
+  'That doesn’t look like a Perseus or FREED text. Paste a Scaife address (scaife.perseus.org/reader/…), the address of a FREED file, or a CTS urn (urn:cts:greekLit:…).';
 export const FETCH_FAILED_MESSAGE = 'Couldn’t reach Perseus. Check the connection and try again.';
 export const NOT_FOUND_MESSAGE = 'Perseus has no text at that address.';
+export const FREED_FETCH_FAILED_MESSAGE = 'Couldn’t reach FREED. Check the connection and try again.';
+export const FREED_NOT_FOUND_MESSAGE = 'FREED has no text at that address.';
 
 /** A CTS urn broken into the parts that locate its file. */
 export interface CtsUrn {
@@ -71,7 +89,10 @@ export function parseCtsUrn(input: string): CtsUrn | null {
   if (text.length === 0) return null;
 
   const match = /urn:cts:([A-Za-z]+):([^:/\s]+)/.exec(text);
-  if (!match) return null;
+  if (!match) {
+    const file = FREED_FILE_RE.exec(text);
+    return file ? { namespace: 'greekLit', group: file[1], work: file[2], version: file[3] } : null;
+  }
 
   const namespace = match[1];
   if (!(namespace in REPOSITORIES)) return null;
@@ -95,10 +116,23 @@ export function teiUrlCandidates(urn: CtsUrn): string[] {
   const repos = REPOSITORIES[urn.namespace];
   if (!repos || !urn.version) return [];
   const file = `${urn.group}.${urn.work}.${urn.version}.xml`;
+  if (isFreed(urn)) {
+    const path = encodeURIComponent(`data/${urn.group}/${urn.work}/${file}`);
+    return [`${FREED_FILES}/${path}/raw?ref=${FREED_BRANCH}`];
+  }
   const ordered = urn.version.includes(FIRST1K_MARKER)
     ? [...repos].sort((a, b) => Number(b.includes('First1KGreek')) - Number(a.includes('First1KGreek')))
     : repos;
   return ordered.map((repo) => `${RAW_HOST}/${repo}/${BRANCH}/data/${urn.group}/${urn.work}/${file}`);
+}
+
+function isFreed(urn: CtsUrn): boolean {
+  return urn.version?.startsWith(FREED_MARKER) ?? false;
+}
+
+/** The project a urn's text comes from, for the dialog to name. */
+export function sourceNameFor(urn: CtsUrn): 'FREED' | 'Perseus' {
+  return isFreed(urn) ? 'FREED' : 'Perseus';
 }
 
 /** The first URL worth trying, or null when the urn names no edition. */
@@ -146,6 +180,7 @@ export async function fetchPerseusTei(input: string, fetcher: Fetcher = globalTh
     return response.text();
   }
 
+  if (isFreed(urn)) throw new Error(unreachable ? FREED_FETCH_FAILED_MESSAGE : FREED_NOT_FOUND_MESSAGE);
   throw new Error(unreachable ? FETCH_FAILED_MESSAGE : NOT_FOUND_MESSAGE);
 }
 
