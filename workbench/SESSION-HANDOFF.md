@@ -82,11 +82,17 @@ xattr -dr com.apple.quarantine ~/Downloads/"Translation Workbench.app"
 
 ## Next
 
-1. Push and open the PR (John's call: one PR or several).
-2. Open decision for John (security review 2026-09-07,
-   `workbench-design/security-review-2026-09-07.md`): `run_program` and
-   `assist_run` run any absolute executable. Have Rust hold the picker-approved
-   paths, or state plainly that the CSP is the control.
+1. **Sandboxing, in progress on `claude/workbench-sandbox`** (pushed, no PR).
+   John chose the real fix on 2026-10-01 because he will share the app. Plan:
+   `workbench-design/sandboxing-plan.md` — read it, including the Codex review
+   section, before touching anything. Phase 1 is done (`sandbox.rs`,
+   `jobs.rs`: the dotfile rule pinned, every job's argv built in Rust, 41 Rust
+   tests). **Next: phase 2** — job commands replace `run_program` and the
+   free-form `assist_run`; trusted records fail closed; paths resolved through
+   symlinks; each AI CLI launched with its own tools off, flags verified
+   against the installed Claude and Codex.
+2. PR #127 merged 2026-10-01; claude-review fixed (#128, #129: new token, the
+   failure reason is printed, findings are posted with `--comment`).
 3. Untested since long before this session: export settings' Tauri halves
    (reference-doc picker, pandoc override, the side-by-side bilingual table in
    Word), lexicon pack removal, a true first-run empty state.
