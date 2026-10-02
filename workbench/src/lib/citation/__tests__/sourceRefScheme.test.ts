@@ -50,13 +50,15 @@ describe('parseAddress', () => {
   });
 
   it('still refuses a space at either end of a component, two spaces, or any other whitespace', () => {
-    for (const raw of [' 1', '1 ', '1. 5', '1 .5', 'Dram  Ab', 'Dram\tAb', 'Dram Ab', 'Dram\nAb']) {
+    for (const raw of [' 1', '1 ', '1. 5', '1 .5', 'Dram  Ab', 'a b c', 'Dram Ab Extra.1', 'Dram\tAb', 'Dram Ab', 'Dram\nAb']) {
       expect(() => addr(raw), JSON.stringify(raw)).toThrow(/whitespace/);
     }
   });
 
   it('sorts a spaced component by its runs like any other', () => {
     expect(cmp('t,ante 471.1', 't,ante 471.2')).toBeLessThan(0);
+    // Number order, not text order: as text "471" would sort before "53".
+    expect(cmp('t,ante 53.1', 't,ante 471.1')).toBeLessThan(0);
     expect(cmp('Dram Ab.t.1', 'Dram Ken.t.1')).toBeLessThan(0);
   });
 

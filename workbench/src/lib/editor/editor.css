@@ -374,6 +374,9 @@
   color: var(--text-light);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
+  /* One tick, never two lines: an imported citation can hold a space
+     ("Dram Ab.t.1", "t,ante 471.1"). */
+  white-space: nowrap;
   user-select: none;
   vertical-align: super;
   margin-right: 0.25em;

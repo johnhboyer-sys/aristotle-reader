@@ -78,10 +78,10 @@ function parseComponents(raw: string): string[] {
   if (typeof raw !== 'string' || raw.length === 0) {
     throw new Error(`source-ref address must be a non-empty string: ${JSON.stringify(raw)}`);
   }
-  if (/\s/.test(raw.replace(SPACE_BETWEEN_RUNS, ''))) {
-    throw new Error(`source-ref address must not contain whitespace: ${JSON.stringify(raw)}`);
-  }
   const parts = raw.split('.');
+  if (/\s/.test(raw.replace(SPACE_BETWEEN_RUNS, '')) || parts.some((p) => p.split(' ').length > 2)) {
+    throw new Error(`source-ref address must not contain whitespace beyond one space inside a component: ${JSON.stringify(raw)}`);
+  }
   if (parts.length > MAX_COMPONENTS) {
     throw new Error(`source-ref address has too many components (max ${MAX_COMPONENTS}): ${JSON.stringify(raw)}`);
   }

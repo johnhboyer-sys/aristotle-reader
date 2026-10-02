@@ -85,6 +85,11 @@ when('every cached disc export', () => {
     const doc = parseTeiRows(readFileSync(`${CACHE}/${aristotle}`, 'utf8'));
     expect(doc.levelNames.length).toBeGreaterThanOrEqual(2);
     expect(doc.rows.length).toBeGreaterThan(100);
+    // The addresses themselves, not just their count: Bekker page, column and
+    // line ("402a.7"), and more of them than there are pages.
+    const lines = doc.rows.filter((r) => /^\d+[ab]\.\d+/.test(r.ref));
+    expect(lines.length).toBeGreaterThan(100);
+    expect(new Set(lines.map((r) => r.ref.split('.')[0])).size).toBeLessThan(lines.length);
   });
 });
 
