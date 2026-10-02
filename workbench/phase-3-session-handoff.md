@@ -6,7 +6,7 @@ handoff cannot be written over it. No other session's handoff belongs here.
 Rewrite it (don't append) when you hand off workbench work. The name still
 says phase 3 so links keep working._
 
-_Last rewritten: 2026-10-02 (sandbox phases 3–4, built, awaiting John's test pass)._
+_Last rewritten: 2026-10-02 (sandbox phases 3–4: John's test pass passed; merge awaits his say-so)._
 
 ## Where things stand
 
@@ -38,9 +38,13 @@ done about it.
 - **Suite:** Rust 73, vitest 1,900 (+2 `discImportLive` failures on John's
   real Theophrastus cache — the citation track's, same as on main), `tsc`
   clean, `npm run smoke` 12 checks, `svelte-check` 6 errors (all on main).
-- **Built** `.app` at `src-tauri/target/release/bundle/macos/`; John's test
-  page: https://claude.ai/artifact/9ZQmRgzcun1uU9oFYMfwRM (ticks in
-  ArtifactData `steps`, notes in `notes`).
+- **John's test pass passed, 2026-10-02**: all 11 tests worked in the built
+  `.app` (page: https://claude.ai/artifact/9ZQmRgzcun1uU9oFYMfwRM; ticks in
+  ArtifactData `steps`, notes in `notes`). Test 1's re-pick steps did not
+  apply: his library is in the default place.
+- After the pass: Settings › Export says "Line numbers" (was "Bekker line
+  numbers") and "At each page or column start only" (`70faab3682`, John's
+  request; not in the build he tested).
 
 ## Known, not fixed
 
@@ -61,7 +65,12 @@ done about it.
 
 ## John's requests (not started)
 
-Whole-work export window should close after "Exported."; single-chapter
+**The whole-work export's gap report counts opened chapters as done**
+(found in the pass): opening a chapter writes its file at once
+(`ChapterEditor.svelte:1202`, since phase 1) and `buildGapReport`
+(`lib/export/compile.ts`) counts files, so "missing" means "never opened" and
+a book can read complete with blank chapters. Count a chapter only if it
+holds English; list opened-but-blank ones as missing. Whole-work export window should close after "Exported."; single-chapter
 export should offer the same choices; Import a text should remember the TLG
 folder (it does try — check after this pass); clicking the AI spark icon
 should open assist; a model picker in the AI sidebar. Citation parsing for
@@ -97,6 +106,7 @@ xattr -dr com.apple.quarantine ~/Downloads/"Translation Workbench.app"
 
 ## Next
 
-1. John's test pass on the built app (page above), then his say-so on merging.
-2. Phase 5 is this pass; after it, the app may be shared.
+1. John's say-so on pushing and merging `claude/workbench-sandbox-p3`. After
+   it, the app may be shared.
+2. His requests above.
 3. Parked on John's taste: heading style; drag-a-chapter-into-a-Book.
