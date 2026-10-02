@@ -114,6 +114,24 @@ describe('chapter-file format pins (parse ∘ serialize = id)', () => {
     expect(roundTrip(d)).toEqual(d);
   });
 
+  it('a TLG address with a space ("t,ante 471", "Dram Ab") or a mark ("605*") round-trips', () => {
+    // Aristophanes' fragments (Diogenes' export of tlg0019) cite with a space,
+    // and the Iliad with a trailing star; reopening must give back each row's
+    // own address, splits included.
+    const refs = ['t,ante 471.1', 'Dram Ab.t.1', '18.605*', '25.26(?)'];
+    const d = doc(
+      { greekLines: ['αβ γδ', 'ε', 'ζ', 'η'], englishLines: ['a¶b', '', '', ''] },
+      {
+        citationScheme: 'source-ref',
+        spanStart: refs[0],
+        spanEnd: refs[3],
+        rowRefs: refs,
+        lineSplits: [{ ref: 't,ante 471.1', offset: 3 }],
+      },
+    );
+    expect(roundTrip(d)).toEqual(d);
+  });
+
   it('[ENGLISH.PARA] carrying the structural ⏎ token and an escaped literal one', () => {
     const d = doc({ englishParaLines: ['first⏎second', 'a literal \\⏎ mark', ''] });
     expect(roundTrip(d)).toEqual(d);
