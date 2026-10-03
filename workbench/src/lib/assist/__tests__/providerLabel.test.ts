@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { assistProviderLabel } from '../providerLabel';
 
 describe('assistProviderLabel', () => {
-  it('defaults to Claude Code when unset (auto-detect prefers Claude)', () => {
-    expect(assistProviderLabel(undefined)).toBe('Claude Code');
-    expect(assistProviderLabel({})).toBe('Claude Code');
+  it('says clipboard when unset: with no choice nothing is sent', () => {
+    expect(assistProviderLabel(undefined)).toBe('the clipboard (no AI chosen)');
+    expect(assistProviderLabel({})).toBe('the clipboard (no AI chosen)');
     expect(assistProviderLabel({ provider: 'claude' })).toBe('Claude Code');
   });
 

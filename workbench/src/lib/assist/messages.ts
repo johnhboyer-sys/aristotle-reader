@@ -10,12 +10,18 @@
 export const NOT_FOUND_MESSAGE =
   'Copied this line and its context — paste it into Claude or another tool.';
 
-/** CLI found but not signed in / auth expired (John-approved specific sentence). */
-export const UNAUTH_MESSAGE = 'Claude Code needs a sign-in — copied to clipboard instead.';
+/** CLI found but not signed in / auth expired (John-approved specific sentence).
+ * Nothing is copied on an error; the popover offers "Copy prompt" instead. */
+export const UNAUTH_MESSAGE = 'Claude Code needs a sign-in.';
 
 /** CLI ran but errored (non-auth), timed out, or returned malformed/empty output. */
-export const GENERIC_ERROR_MESSAGE =
-  "Couldn't get a suggestion just now — copied this line to the clipboard instead.";
+export const GENERIC_ERROR_MESSAGE = "Couldn't get a suggestion just now.";
+
+/** The user chose Cancel at the consent prompt: nothing left the machine. */
+export const NOT_SENT_MESSAGE = 'Nothing was sent.';
+
+/** The popover's "Copy prompt" button put the prompt on the clipboard. */
+export const COPY_DONE_MESSAGE = 'Copied — paste it into Claude or another tool.';
 
 /** Assist invoked on a row with no source-language line to translate yet. */
 export const NO_LINE_MESSAGE = "There's no line here to translate yet.";
@@ -37,12 +43,8 @@ export const API_BAD_KEY_MESSAGE =
 /** Plain sentence shown by the (deferred) API-key path on 429 / overloaded. */
 export const API_BUSY_MESSAGE = 'Claude is busy right now — copied this line to the clipboard instead.';
 
-/**
- * Shown when an API provider was chosen but no API key is stored for it. The
- * controller still runs the clipboard fallback, so the "copied…" clause holds.
- */
-export const API_NO_KEY_MESSAGE =
-  'Add an API key in Settings to use this AI — copied this line to the clipboard instead.';
+/** Shown when an API provider was chosen but no API key is stored for it. */
+export const API_NO_KEY_MESSAGE = 'Add an API key in Settings to use this AI.';
 
 // ── service-neutral API-adapter sentences (ApiProvider, any of openai/anthropic/
 // google). The three above are Claude-worded from the deferred Slice-C stub;
