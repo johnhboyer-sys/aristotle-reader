@@ -78,6 +78,15 @@ describe('the picker', () => {
     expect(pickerOptions({ provider: 'openai' })).toBeUndefined();
   });
 
+  it('shows exactly what runs when a saved id has stray spaces', () => {
+    // cliModel matches exactly, so 'opus ' runs the default: show Default.
+    expect(cliModel('claude', { claude: 'opus ' })).toBeUndefined();
+    expect(pickerValue({ models: { claude: 'opus ' } })).toBe('');
+    // ApiProvider sends the id as saved: show it as saved.
+    expect(pickerValue({ provider: 'anthropic', models: { anthropic: ' claude-3 ' } })).toBe(' claude-3 ');
+    expect(pickerValue({ provider: 'anthropic', models: { anthropic: '   ' } })).toBe('');
+  });
+
   it('remembers a pick per provider and keeps everything else', () => {
     const before = { provider: 'codex' as const, includeDraft: false, models: { claude: 'opus' } };
     const after = withModel(before, 'codex', 'gpt-6-luna');

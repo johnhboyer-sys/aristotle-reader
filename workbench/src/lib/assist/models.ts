@@ -69,11 +69,12 @@ export function pickerProvider(assist: AssistSettings | undefined): AssistProvid
 }
 
 /** The picker's selection: the model the next request will use, '' for the
- * default. An API provider uses any saved id, listed or not. */
+ * default. Read as the requests read it, untrimmed: a CLI runs only an exact
+ * listed id (cliModel), an API provider sends any non-blank id as saved. */
 export function pickerValue(assist: AssistSettings | undefined): string {
   const provider = pickerProvider(assist);
-  const id = assist?.models?.[provider]?.trim();
-  if (!id) return '';
+  const id = assist?.models?.[provider];
+  if (!id?.trim()) return '';
   return listed(provider, id) || usesAnySaved(provider) ? id : '';
 }
 
