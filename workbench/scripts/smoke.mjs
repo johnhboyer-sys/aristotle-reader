@@ -262,6 +262,34 @@ await run('create a document', async () => {
   check('the new document opens', heading.startsWith('Smoke Draft'), heading);
 });
 
+await run('a heading keeps English clear of the ✦ in Lane and Weave', async () => {
+  // Headings and subtitles break out of the flowing Interpolated line, so
+  // they keep the ✦'s corner like any line in the Lines view.
+  await page.locator('.grc-cell').first().click({ button: 'right' });
+  await page.locator('.ctx-menu-item', { hasText: 'Mark as' }).hover();
+  await page.locator('.ctx-submenu .ctx-menu-item', { hasText: 'Heading' }).click();
+  await page.waitForSelector('.en-cell[data-heading-level]');
+  await page.locator('.view-toggle-btn', { hasText: 'Interpolated' }).click();
+  for (const layout of ['Lane', 'Weave']) {
+    const btn = page.locator('.view-toggle-btn', { hasText: layout });
+    if ((await btn.count()) > 0) await btn.click();
+    const cell = page.locator('.en-cell[data-heading-level]').first();
+    await cell.locator('.ProseMirror').click();
+    const clear = await cell.evaluate((c) => {
+      const g = c.querySelector('.assist-glyph').getBoundingClientRect();
+      const ed = c.querySelector('.row-editor');
+      const right = ed.getBoundingClientRect().right - parseFloat(getComputedStyle(ed).paddingRight);
+      return { ok: right <= g.left + 0.5, detail: `text may reach ${right.toFixed(1)}, ✦ starts at ${g.left.toFixed(1)}` };
+    });
+    check(`${layout}: a heading's English stays clear of the ✦`, clear.ok, clear.detail);
+    // Leave the editor before switching view: switching with the cursor in an
+    // English cell trips a separate, known Svelte error in ChapterEditor's
+    // blur handler (state_unsafe_mutation), which is not what this tests.
+    await page.evaluate(() => document.activeElement?.blur());
+  }
+  await page.locator('.view-toggle-btn', { hasText: 'Lines' }).click();
+});
+
 await run('fold the work you are reading', async () => {
   // The regression this catches: the effect that unfolds the OPEN work used to
   // undo the user's own fold, so the work being read was the one that could

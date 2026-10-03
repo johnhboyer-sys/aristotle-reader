@@ -673,8 +673,9 @@
 }
 /* In the flowing views the English cells are small/inline: no reserved
    corner (it would gap the flow), and lift the glyph above neighbouring
-   cells so nothing overlaps its hit area. */
-.interp-flow .en-cell > .row-editor {
+   cells so nothing overlaps its hit area. Headings and subtitles break out of
+   the flow, so they keep the corner. */
+.interp-flow .en-cell:not([data-heading-level]):not(.row-subtitle) > .row-editor {
   padding-right: 0;
 }
 .interp-flow .en-cell:focus-within .assist-glyph {
