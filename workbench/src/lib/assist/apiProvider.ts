@@ -188,11 +188,12 @@ export class ApiProvider implements AssistProvider {
         };
       case 'google':
         return {
-          // The key is a query param on the Generative Language API.
+          // The key goes in a header, not the `?key=` query the API also
+          // accepts: a URL ends up in logs and error messages.
           url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
             this.model,
-          )}:generateContent?key=${encodeURIComponent(this.apiKey)}`,
-          headers: { 'Content-Type': 'application/json' },
+          )}:generateContent`,
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey },
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: 'user', parts: [{ text: user }] }],

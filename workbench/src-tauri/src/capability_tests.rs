@@ -292,3 +292,27 @@ fn the_window_opens_no_url_but_the_about_links() {
         assert!(err.contains("Not allowed to open url"), "{url}: refused for the wrong reason: {err}");
     }
 }
+
+#[test]
+fn the_window_cannot_read_the_clipboard() {
+    // Assist writes to the clipboard and nothing reads it, so a hostile page
+    // in the window must not be able to. The plugin is registered, so a
+    // refusal is the capability's, not a missing command's.
+    let mut ctx = tauri::generate_context!(test = true);
+    ctx.config_mut().identifier = format!("org.aristotlereader.workbench.test-clipboard-{}", std::process::id());
+    let app = mock_builder().plugin(tauri_plugin_clipboard_manager::init()).build(ctx).expect("app builds");
+    let window = tauri::WebviewWindowBuilder::new(&app, "main", Default::default()).build().expect("window");
+    let call = |cmd: &str| {
+        get_ipc_response(&window, request(cmd, InvokeBody::Json(serde_json::json!({})), Default::default()))
+            .map(|_| ())
+            .map_err(|e| e.to_string())
+    };
+    let err = call("plugin:clipboard-manager|read_text").expect_err("reading the clipboard must be refused");
+    assert!(err.contains("not allowed"), "refused for the wrong reason: {err}");
+    // The control: write_text is still granted. Sent with no text it gets past
+    // the permission and fails on the missing argument, so nothing is written
+    // to the real clipboard, and "not allowed" above was the capability's word.
+    let granted = call("plugin:clipboard-manager|write_text").expect_err("no text to write");
+    assert!(!granted.contains("not allowed"), "write_text was refused too: {granted}");
+    let _ = app;
+}

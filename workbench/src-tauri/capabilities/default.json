@@ -55,7 +55,6 @@
     "fs:allow-read",
     "fs:allow-seek",
     "clipboard-manager:allow-write-text",
-    "clipboard-manager:allow-read-text",
     "dialog:allow-open",
     "dialog:allow-save",
     {

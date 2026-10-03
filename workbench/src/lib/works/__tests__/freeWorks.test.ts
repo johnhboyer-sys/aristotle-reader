@@ -3,6 +3,7 @@ import { MemStorage } from '../../library/__tests__/memStorage';
 import {
   FREE_WORKS_STORAGE_ID,
   freeWorkManifest,
+  isFreeWorkId,
   listFreeWorkRecords,
   listFreeWorks,
   makeRoomForFreeWork,
@@ -422,6 +423,41 @@ describe('removing a work', () => {
     await unregisterFreeWork('my-doc', storage);
     expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['keeper']);
     expect(await storage.list('my-doc')).toEqual(['b01c01.md', 'b01c02.md']);
+  });
+});
+
+describe('a work id is a slug, never a path or a built-in work', () => {
+  // The id names the folder `remove` deletes recursively: "." is the library
+  // root itself, and works.json may come from a damaged or shared library.
+  const BAD = ['.', '..', '', 'a/b', '../x', 'My Doc', '-x', 'metaphysics'];
+
+  it('accepts what slugForTitle makes, and nothing else', () => {
+    expect(['my-doc', 'document', 'de-anima-2', '1984'].every(isFreeWorkId)).toBe(true);
+    expect(BAD.filter(isFreeWorkId)).toEqual([]);
+    expect(isFreeWorkId(7)).toBe(false);
+  });
+
+  it('skips a registry entry with a bad id', async () => {
+    const storage = new MemStorage();
+    await storage.write(
+      FREE_WORKS_STORAGE_ID,
+      'works.json',
+      JSON.stringify({
+        version: 1,
+        works: [...BAD.map((id) => ({ id, title: 'Bad', citation_scheme: 'paragraph' })), { id: 'my-doc', title: 'My Doc', citation_scheme: 'paragraph' }],
+      }),
+    );
+    expect((await listFreeWorkRecords(storage)).map((w) => w.id)).toEqual(['my-doc']);
+  });
+
+  it.each(BAD)('refuses to remove %j and deletes nothing', async (id) => {
+    const storage = new MemStorage();
+    await registerFreeWork(RECORD, storage);
+    await storage.write('my-doc', 'b01c01.md', 'chapter one');
+    await storage.write('metaphysics', 'b01c01.md', 'built-in work');
+    const before = new Map(storage.files);
+    await expect(removeFreeWork(id, storage)).rejects.toThrow();
+    expect(storage.files).toEqual(before);
   });
 });
 

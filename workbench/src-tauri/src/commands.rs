@@ -7,15 +7,15 @@
 
 use crate::assist::{augmented_path, is_executable_file, run_blocking, run_with_timeout, which_blocking, AssistOutcome};
 use crate::jobs::{
-    diogenes_export_args, diogenes_server_candidates, is_really_inside, pandoc_docx_args, perl_candidates, AssistTool,
-    Corpus, Invocation, LineMode,
+    diogenes_export_args, diogenes_server_candidates, is_really_inside, is_tested_codex, pandoc_docx_args,
+    perl_candidates, AssistTool, Corpus, Invocation, LineMode,
 };
 use crate::sandbox::{load_approved, update_approved, ApprovedPrograms, CustomAssist, PromptVia};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
@@ -451,14 +451,72 @@ pub async fn assist_detect(app: AppHandle) -> Result<AssistDetection, String> {
     .await
 }
 
+/// What identifies one build of a binary on disk: its modification time, and
+/// on Unix its inode and change time too, because npm extracts every package
+/// file with one fixed mtime, so an npm upgrade can leave the mtime as it was.
+/// Replacing or rewriting the file always moves the change time.
+fn binary_fingerprint(path: &Path) -> Option<(SystemTime, u64, i64, i64)> {
+    let m = std::fs::metadata(path).ok()?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        Some((m.modified().ok()?, m.ino(), m.ctime(), m.ctime_nsec()))
+    }
+    #[cfg(not(unix))]
+    {
+        Some((m.modified().ok()?, 0, 0, 0))
+    }
+}
+
+/// Whether the Codex at `program` is a version its tools-off switches were
+/// checked against (jobs.rs `TESTED_CODEX_VERSIONS`). `codex --version` runs
+/// once per build of the binary: the answer is kept against its real path and
+/// fingerprint, so an upgrade in place is asked again. A `--version` that
+/// fails is not kept, and counts as untested.
+fn codex_is_tested(program: &Path) -> bool {
+    type Checked = std::collections::HashMap<PathBuf, ((SystemTime, u64, i64, i64), bool)>;
+    static CHECKED: Mutex<Option<Checked>> = Mutex::new(None);
+    let real = program.canonicalize().unwrap_or_else(|_| program.to_path_buf());
+    let print = binary_fingerprint(&real);
+    if let (Some(print), Ok(checked)) = (print, CHECKED.lock()) {
+        if let Some((p, tested)) = checked.as_ref().and_then(|c| c.get(&real)) {
+            if *p == print {
+                return *tested;
+            }
+        }
+    }
+    let AssistOutcome::Success { text, .. } = run_blocking(&program.display().to_string(), &["--version".into()], None, 10_000)
+    else {
+        eprintln!("[assist] codex --version failed; treating {} as untested", program.display());
+        return false;
+    };
+    let tested = is_tested_codex(&text);
+    if !tested {
+        eprintln!("[assist] refusing untested Codex at {}: {}", program.display(), text.trim());
+    }
+    if let (Some(print), Ok(mut checked)) = (print, CHECKED.lock()) {
+        checked.get_or_insert_with(Default::default).insert(real, (print, tested));
+    }
+    tested
+}
+
+/// Run an assist invocation, refusing an untested Codex before it is sent
+/// anything.
+fn run_assist(tool: &str, program: &Path, inv: Invocation, timeout_ms: u64) -> AssistOutcome {
+    if tool == "codex" && !codex_is_tested(program) {
+        return AssistOutcome::failure("untested");
+    }
+    run_blocking(&program.display().to_string(), &inv.args, inv.stdin, timeout_ms.clamp(1000, ASSIST_MAX_TIMEOUT_MS))
+}
+
 /// Ask an AI CLI about `prompt`. Returns `{ ok: true, text }` (raw stdout) or
-/// `{ ok: false, kind: "unauth" | "timeout" | "error" }`. `model` names one of
+/// `{ ok: false, kind: "unauth" | "untested" | "timeout" | "error" }`. `model` names one of
 /// the tool's listed models; Rust builds the flag (see `AssistTool::invocation`).
 #[tauri::command]
 pub async fn assist_run(app: AppHandle, tool: String, prompt: String, timeout_ms: u64, model: Option<String>) -> AssistOutcome {
     let Ok(dir) = app_data(&app) else { return AssistOutcome::failure("error") };
     blocking(move || match assist_command(&tool, &load_approved(&dir), &prompt, model.as_deref()) {
-        Ok((program, inv)) => run_blocking(&program.display().to_string(), &inv.args, inv.stdin, timeout_ms.clamp(1000, ASSIST_MAX_TIMEOUT_MS)),
+        Ok((program, inv)) => run_assist(&tool, &program, inv, timeout_ms),
         Err(e) => {
             eprintln!("[assist] {e}");
             AssistOutcome::failure("error")
@@ -808,5 +866,75 @@ mod tests {
         assert!(!targets.take(Path::new("/Users/u/Other.docx")));
         assert!(targets.take(&chosen));
         assert!(!targets.take(&chosen), "a target is good for one export");
+    }
+
+    // ── Codex version gate ──
+
+    /// A stand-in `codex` that prints `codex-cli <version>` for --version,
+    /// echoes anything else, and logs every call to `calls`.
+    #[cfg(unix)]
+    fn fake_codex(bin: &Path, calls: &Path, version: &str) {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::write(
+            bin,
+            format!(
+                "#!/bin/sh\necho \"$*\" >> '{}'\nif [ \"$1\" = --version ]; then echo 'codex-cli {version}'; else cat; fi\n",
+                calls.display()
+            ),
+        )
+        .unwrap();
+        std::fs::set_permissions(bin, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn codex_version_is_asked_once_per_binary_and_again_after_an_upgrade() {
+        let d = temp_dir("codex-version");
+        let (bin, calls) = (d.join("codex"), d.join("calls"));
+        fake_codex(&bin, &calls, "0.159.2");
+        assert!(codex_is_tested(&bin));
+        assert!(codex_is_tested(&bin));
+        assert_eq!(std::fs::read_to_string(&calls).unwrap().lines().count(), 1, "--version ran once");
+        // Upgraded in place: new contents, new modification time.
+        std::thread::sleep(Duration::from_millis(20));
+        fake_codex(&bin, &calls, "0.160.0");
+        assert!(!codex_is_tested(&bin));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_codex_upgrade_that_keeps_the_old_mtime_is_asked_again() {
+        // npm extracts every package file with one fixed mtime, so an npm
+        // upgrade of Codex can leave the binary's mtime exactly as it was.
+        let d = temp_dir("codex-npm");
+        let (bin, calls) = (d.join("codex"), d.join("calls"));
+        fake_codex(&bin, &calls, "0.159.2");
+        let mtime = std::fs::metadata(&bin).unwrap().modified().unwrap();
+        assert!(codex_is_tested(&bin));
+        std::thread::sleep(Duration::from_millis(20));
+        let _ = std::fs::remove_file(&bin);
+        fake_codex(&bin, &calls, "0.160.0");
+        std::fs::File::options().write(true).open(&bin).unwrap().set_modified(mtime).unwrap();
+        assert_eq!(std::fs::metadata(&bin).unwrap().modified().unwrap(), mtime);
+        assert!(!codex_is_tested(&bin));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn an_untested_codex_is_never_sent_the_prompt() {
+        let d = temp_dir("codex-untested");
+        let (bin, calls) = (d.join("codex"), d.join("calls"));
+        fake_codex(&bin, &calls, "0.999.0");
+        let inv = AssistTool::Codex.invocation("secret text", None).unwrap();
+        let out = serde_json::to_value(run_assist("codex", &bin, inv, 5_000)).unwrap();
+        assert_eq!(out, serde_json::json!({ "ok": false, "kind": "untested" }));
+        assert_eq!(std::fs::read_to_string(&calls).unwrap(), "--version\n", "only --version ran");
+
+        let d = temp_dir("codex-tested");
+        let (bin, calls) = (d.join("codex"), d.join("calls"));
+        fake_codex(&bin, &calls, "0.159.2");
+        let inv = AssistTool::Codex.invocation("hello", None).unwrap();
+        let out = serde_json::to_value(run_assist("codex", &bin, inv, 5_000)).unwrap();
+        assert_eq!(out, serde_json::json!({ "ok": true, "text": "hello" }));
     }
 }

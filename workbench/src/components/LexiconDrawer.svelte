@@ -193,7 +193,7 @@
           {#each result.lsjEntries as entry, i (entry.key + i)}
             {#if i > 0}<hr class="lex-lsj-sep" />{/if}
             <div class="lex-lsj-entry">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags — pipeline-produced LSJ HTML, same trusted source as the reader app -->
+              <!-- eslint-disable-next-line svelte/no-at-html-tags — pack HTML, allowlisted by the provider (lib/lexicon/sanitize.ts) -->
               {@html entry.html}
             </div>
           {/each}

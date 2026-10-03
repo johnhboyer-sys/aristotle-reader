@@ -35,12 +35,22 @@ describe('renderMarkdown — inline', () => {
 
   it('renders safe links and drops javascript: schemes', () => {
     expect(renderMarkdown('[site](https://x.com)')).toBe(
-      '<p><a href="https://x.com" target="_blank" rel="noreferrer">site</a></p>',
+      '<p><a href="https://x.com" rel="noreferrer">site</a></p>',
     );
     const danger = renderMarkdown('[x](javascript:alert(1))');
     expect(danger).not.toContain('href'); // scheme rejected → no anchor emitted
     expect(danger).not.toContain('javascript');
     expect(renderMarkdown('[x](vbscript:foo)')).toBe('<p>x</p>');
+  });
+
+  it('opens no window and never points into the app', () => {
+    // A click on a link is a navigation, which Rust sends to the system
+    // browser (src-tauri/src/nav.rs). A new-window request has no handler and
+    // is dropped, and a relative link would navigate the app window itself.
+    expect(renderMarkdown('[a](https://x.com)')).not.toContain('target');
+    expect(renderMarkdown('[a](/index.html)')).toBe('<p>a</p>');
+    expect(renderMarkdown('[a](#top)')).toBe('<p>a</p>');
+    expect(renderMarkdown('[a](mailto:a@b.c)')).toBe('<p><a href="mailto:a@b.c" rel="noreferrer">a</a></p>');
   });
 });
 
