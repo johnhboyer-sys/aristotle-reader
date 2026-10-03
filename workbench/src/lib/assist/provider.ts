@@ -30,7 +30,7 @@ export interface AssistContextRow {
  *  - `check`      — a linguist's diagnosis of the translator's existing English
  *                   against the Greek; the target's own English IS sent.
  *  - `ask`        — a free-form question the translator poses about the TARGET
- *                   line; the AI answers as a helpful classicist assistant,
+ *                   line; the AI answers as a helpful linguist assistant,
  *                   grounded in the Greek and surrounding context. The
  *                   question rides in `AssistContext.question`; the target's
  *                   own English IS sent (like `check`), so the translator may
