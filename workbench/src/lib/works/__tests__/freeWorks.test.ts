@@ -501,10 +501,21 @@ describe('renaming a work', () => {
 });
 
 describe('makeRoomForFreeWork (before a new document writes its file)', () => {
-  it('refuses while the registry cannot be read: the rail may be missing a work with this id', async () => {
-    const storage = new MemStorage();
-    await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', '{not json');
-    await expect(makeRoomForFreeWork('my-doc', storage)).rejects.toThrow(/works\.json/);
+  it('refuses while the registry cannot be read or parsed: the rail may be missing a work with this id', async () => {
+    const damaged = new MemStorage();
+    await damaged.write(FREE_WORKS_STORAGE_ID, 'works.json', '{not json');
+    await expect(makeRoomForFreeWork('my-doc', damaged)).rejects.toThrow(/works\.json/);
+
+    const unreadable = new MemStorage();
+    unreadable.read = async () => {
+      throw new Error('Operation not permitted (os error 1)');
+    };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await expect(makeRoomForFreeWork('my-doc', unreadable)).rejects.toThrow(/works\.json/);
+    } finally {
+      error.mockRestore();
+    }
   });
 
   it('refuses when a chapter file already sits under the id', async () => {
