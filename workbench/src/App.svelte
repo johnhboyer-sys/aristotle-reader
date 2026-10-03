@@ -83,6 +83,9 @@
   let settingsNotice = $state<string | null>(null);
 
   async function reloadWorks() {
+    // The registry is read last, so a reload that started earlier can't put
+    // back an older document list after a newer one landed.
+    const builtIns = await shownBuiltInWorks();
     let free: WorkManifest[];
     try {
       free = await listFreeWorks();
@@ -92,7 +95,7 @@
       // Keep the documents already in the rail; nothing on disk changed.
       free = works.filter(isDocumentWork);
     }
-    works = [...(await shownBuiltInWorks()), ...free];
+    works = [...builtIns, ...free];
   }
 
   // Ids a new document may not take: every listed work, plus the built-in works
@@ -397,6 +400,18 @@
     corpora = { ...corpora, [workId]: await loadCorpus(workId) };
     // An added work has no files yet; its corpus is what lists it.
     await reloadWorks();
+    // Open it, unless the user is already working on something.
+    const corpus = corpora[workId];
+    const work = works.find((w) => w.id === workId);
+    if (!selection && corpus && work) {
+      for (const book of work.books) {
+        const chapters = bookChapterNumbers(corpus, book.n);
+        if (chapters.length > 0) {
+          select(workId, book.n, chapters[0]);
+          break;
+        }
+      }
+    }
   }
 
   function openSourceImport(route: 'link' | 'disc') {
@@ -914,7 +929,7 @@
               </p>
             </div>
           </div>
-        {:else if works.length === 0}
+        {:else if works.length === 0 && registryNotice === null}
           <div class="empty-state-wrap">
             <StartScreen
               onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
@@ -1025,7 +1040,8 @@
   {/if}
 
   {#if settingsOpen}
-    <SettingsDialog {works} onClose={() => (settingsOpen = false)} />
+    <!-- Every built-in id, shown or not: moving the library copies their folders. -->
+    <SettingsDialog works={[...listWorks(), ...works.filter(isDocumentWork)]} onClose={() => (settingsOpen = false)} />
   {/if}
 
   {#if importOpen}

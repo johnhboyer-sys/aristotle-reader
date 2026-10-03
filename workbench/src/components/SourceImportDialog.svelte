@@ -69,7 +69,12 @@
   let link = $state('');
   const linkUrn = $derived(link.trim().length === 0 ? null : parseCtsUrn(link));
 
+  // The saved disc is read when its tab is first shown, not at open: reading
+  // it keeps Import busy, which would block the Perseus · FREED tab.
+  let discChecked = false;
   $effect(() => {
+    if (route !== 'disc' || discChecked) return;
+    discChecked = true;
     void (async () => {
       const settings = await loadSettings();
       // Check both discs: either may need choosing again, and the first
