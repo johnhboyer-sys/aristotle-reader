@@ -5,6 +5,7 @@ import {
   freeWorkManifest,
   listFreeWorkRecords,
   listFreeWorks,
+  makeRoomForFreeWork,
   registerFreeWork,
   removeFreeWork,
   unregisterFreeWork,
@@ -182,17 +183,28 @@ describe('free-work registry (works.json in the library root)', () => {
     }
   });
 
-  it('treats unreadable JSON as an empty registry, never a hard failure', async () => {
-    const storage = new MemStorage();
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', '{not json');
-      expect(await listFreeWorkRecords(storage)).toEqual([]);
-      await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', JSON.stringify({ version: 1 }));
-      expect(await listFreeWorkRecords(storage)).toEqual([]);
-    } finally {
-      warn.mockRestore();
+  it('refuses to rewrite a registry it could not parse', async () => {
+    for (const body of ['{not json', JSON.stringify({ version: 1 })]) {
+      const storage = new MemStorage();
+      await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', body);
+      await expect(listFreeWorkRecords(storage)).rejects.toThrow(/works\.json/);
+      await expect(registerFreeWork(RECORD, storage)).rejects.toThrow(/works\.json/);
+      expect(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)).toBe(body);
+      expect(storage.writes).toBe(1);
     }
+  });
+
+  it('refuses to rewrite a registry it could not read', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ id: 'other', title: 'Other', scheme: 'paragraph' }, storage);
+    const before = storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`);
+    storage.read = async () => {
+      throw new Error('Operation not permitted (os error 1)');
+    };
+    await expect(registerFreeWork(RECORD, storage)).rejects.toThrow(/works\.json/);
+    await expect(unregisterFreeWork('other', storage)).rejects.toThrow(/works\.json/);
+    expect(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)).toBe(before);
+    expect(storage.writes).toBe(1);
   });
 
   it('first entry wins on a duplicated id', async () => {
@@ -485,5 +497,34 @@ describe('renaming a work', () => {
     const [record] = await listFreeWorkRecords(storage);
     expect(record.author).toBe('Aquinas');
     expect(record.language).toBe('Latin');
+  });
+});
+
+describe('makeRoomForFreeWork (before a new document writes its file)', () => {
+  it('refuses while the registry cannot be read or parsed: the rail may be missing a work with this id', async () => {
+    const damaged = new MemStorage();
+    await damaged.write(FREE_WORKS_STORAGE_ID, 'works.json', '{not json');
+    await expect(makeRoomForFreeWork('my-doc', damaged)).rejects.toThrow(/works\.json/);
+
+    const unreadable = new MemStorage();
+    unreadable.read = async () => {
+      throw new Error('Operation not permitted (os error 1)');
+    };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await expect(makeRoomForFreeWork('my-doc', unreadable)).rejects.toThrow(/works\.json/);
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it('refuses when a chapter file already sits under the id', async () => {
+    const storage = new MemStorage();
+    await storage.write('my-doc', 'b01c01.md', 'an unlisted document');
+    await expect(makeRoomForFreeWork('my-doc', storage)).rejects.toThrow(/already/);
+  });
+
+  it('allows a new id', async () => {
+    await expect(makeRoomForFreeWork('my-doc', new MemStorage())).resolves.toBeUndefined();
   });
 });
