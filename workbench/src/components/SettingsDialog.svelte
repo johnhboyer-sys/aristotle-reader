@@ -8,24 +8,37 @@
   // Tab strip semantics follow the WAI-ARIA tabs pattern: roving tabindex,
   // arrow keys move between tabs, only the selected panel is in the tree.
   import type { WorkManifest } from '../lib/works/manifest';
+  import { onMount, untrack } from 'svelte';
   import { isTauri } from '../lib/runtime';
   import AssistSettings from './AssistSettings.svelte';
   import LibraryFolderSettings from './LibraryFolderSettings.svelte';
   import ExportSettings from './ExportSettings.svelte';
   import LexiconSettings from './LexiconSettings.svelte';
+  import AboutSettings from './AboutSettings.svelte';
 
-  let { works, onClose }: { works: WorkManifest[]; onClose: () => void } = $props();
+  type TabId = 'general' | 'assist' | 'export' | 'lexicon' | 'about';
 
-  type TabId = 'general' | 'assist' | 'export' | 'lexicon';
+  // initialTab: the app menu's About item opens the dialog on About (App.svelte).
+  let {
+    works,
+    onClose,
+    initialTab = 'general',
+  }: { works: WorkManifest[]; onClose: () => void; initialTab?: TabId } = $props();
+
   const TABS: { id: TabId; label: string }[] = [
     { id: 'general', label: 'General' },
     { id: 'assist', label: 'AI assist' },
     { id: 'export', label: 'Export' },
     { id: 'lexicon', label: 'Lexicon' },
+    { id: 'about', label: 'About' },
   ];
 
-  let active = $state<TabId>('general');
+  let active = $state<TabId>(untrack(() => initialTab));
   let tabButtons: HTMLButtonElement[] = [];
+
+  // Focus starts on the selected tab, so the keyboard is inside the dialog
+  // whether it opened from the toolbar or from the app menu's About item.
+  onMount(() => tabButtons[TABS.findIndex((t) => t.id === active)]?.focus());
 
   function selectAt(index: number) {
     const next = TABS[(index + TABS.length) % TABS.length];
@@ -106,8 +119,10 @@
         <AssistSettings />
       {:else if active === 'export'}
         <ExportSettings />
-      {:else}
+      {:else if active === 'lexicon'}
         <LexiconSettings />
+      {:else}
+        <AboutSettings />
       {/if}
     </div>
   </div>

@@ -18,7 +18,8 @@
     "app:package": "npm run stage:corpus && tauri build",
     "test": "vitest run",
     "shots": "node scripts/shots.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "notices": "node scripts/gen-notices.mjs"
   },
   "dependencies": {
     "@fontsource/cardo": "^5.2.5",
