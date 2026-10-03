@@ -22,6 +22,7 @@ import { emptyRowDocJSON } from '../editor/schema';
 import { serializeRowSegments } from '../editor/serialize';
 import type { FreeWorkRecord } from '../works/freeWorks';
 import type { WorkLevel } from '../works/profile';
+import { citationDivisions } from '../works/citationDivisions';
 import { slugForTitle } from './createFreeDocument';
 
 /** The scheme every source import uses: addresses are the source's own. */
@@ -104,6 +105,9 @@ function titleRowHeaders(refs: string[]): HeaderMark[] {
   const out: HeaderMark[] = [];
   for (let i = 0; i < refs.length; i++) {
     const parts = refs[i].split('.');
+    // Two printed titles that share a citation (two <head>s in one Perseus
+    // book, both "1.t"): the first is the heading, the rest stay in the text.
+    if (i > 0 && refs[i] === refs[i - 1]) continue;
     if (TITLE_LINE_RE.test(parts[parts.length - 1])) out.push({ row: i + 1, level: 1 });
   }
   return out;
@@ -160,8 +164,10 @@ export function createSourceImport(
     rowRefs: refs,
   };
 
-  const headers = titleRowHeaders(refs);
-  if (headers.length > 0) meta.headers = headers;
+  // The source's own tiers give the Books and chapters where they can (works/
+  // citationDivisions); a book's first title row joins the outline as its root.
+  const divisions = citationDivisions(refs, spec.levelNames ?? [], titleRowHeaders(refs));
+  if (divisions.headers.length > 0) meta.headers = divisions.headers;
 
   const file: ChapterFile = {
     meta,
@@ -180,6 +186,8 @@ export function createSourceImport(
     ...(language ? { language } : {}),
     scheme: SCHEME,
     ...(levels ? { levels } : {}),
+    ...(divisions.books.length > 0 ? { bookContainers: divisions.books } : {}),
+    ...(divisions.chapters.length > 0 ? { chapterContainers: divisions.chapters } : {}),
   };
 
   return { work, file };

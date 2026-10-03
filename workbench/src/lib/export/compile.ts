@@ -383,10 +383,15 @@ export function compileWorkMarkdown(
     const docByline = authorByline(work);
     if (docByline) docSections.push(docByline);
     let docBook: number | null = null;
+    // A work with chapters and no Books (an import divided only by fragment or
+    // section) is one unheaded Book: no Book heading over it.
+    const unheaded = containerBooks.length === 1 && containerBooks[0].unheaded === true;
     ordered.forEach((chapter, index) => {
       if (chapter.meta.book !== docBook) {
         docBook = chapter.meta.book;
-        docSections.push(`## ${workScheme.bookLabel(chapter.meta.book, work) || `Book ${chapter.meta.book}`}`);
+        if (!unheaded) {
+          docSections.push(`## ${workScheme.bookLabel(chapter.meta.book, work) || `Book ${chapter.meta.book}`}`);
+        }
       }
       docSections.push(`### ${documentChapterLabel(work, chapter.meta.book, chapter.meta.chapter)}`);
       const prefix = `c${index + 1}-`;
@@ -399,7 +404,10 @@ export function compileWorkMarkdown(
       // (three times bilingual: heading, Latin, English). In bilingual the
       // source half of that line still belongs on the page, as an italic line
       // under the English heading, or the Latin would simply vanish.
-      const headingRow = documentHeadingRow(chapter);
+      // An import's chapter is labelled by its boundary, not by its first row,
+      // so a title opening it (a book's printed title) stays in the body.
+      const slot = containerBooks[chapter.meta.book - 1]?.chapters[chapter.meta.chapter - 1];
+      const headingRow = slot?.keepsFirstRow ? null : documentHeadingRow(chapter);
       if (headingRow !== null && resolved.mode === 'bilingual') {
         const sourceLine = documentRowSourceLine(namespaced, headingRow);
         if (sourceLine) docSections.push(sourceLine);

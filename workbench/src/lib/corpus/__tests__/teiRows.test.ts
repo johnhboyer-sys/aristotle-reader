@@ -166,6 +166,53 @@ describe('real Perseus structure', () => {
     expect(doc.rows).toEqual([{ ref: '1.1', text: 'μῆνιν ἄειδε' }]);
   });
 
+  it('keeps a book’s printed title as a title row, cited "t" as Diogenes cites one', () => {
+    // The Anabasis titles each book in a <head>. Dropped, the books had no
+    // title row for a Book to hang on in the rail (works/citationDivisions).
+    const doc = parseTeiRows(
+      tei(
+        '<div type="edition" n="urn:cts:greekLit:tlg0032.tlg006.perseus-grc2">' +
+          '<div type="textpart" subtype="book" n="1"><head>Κύρου Ἀναβάσεως Α</head>' +
+          '<div type="textpart" subtype="chapter" n="1">' +
+          '<div type="textpart" subtype="section" n="1"><p>Δαρείου καὶ Παρυσάτιδος</p></div>' +
+          '<div type="textpart" subtype="section" n="2"><p>ἐπεὶ δὲ ἠσθένει</p></div>' +
+          '</div></div></div>',
+      ),
+    );
+    expect(doc.rows).toEqual([
+      { ref: '1.t', text: 'Κύρου Ἀναβάσεως Α' },
+      { ref: '1.1.1', text: 'Δαρείου καὶ Παρυσάτιδος' },
+      { ref: '1.1.2', text: 'ἐπεὶ δὲ ἠσθένει' },
+    ]);
+    // The short title row does not change what the tiers are called.
+    expect(doc.levelNames).toEqual(['book', 'chapter', 'section']);
+  });
+
+  it('never names a tier after a title row, which can be as long as a line', () => {
+    // FREED's Odyssey: "1.t" is as long as "1.1", came first, and called the
+    // line tier "title".
+    const doc = parseTeiRows(
+      tei('<div type="textpart" subtype="book" n="1"><head>Ὀδυσσείας α</head><l n="1">Ἄνδρα μοι</l><l n="2">πλάγχθη</l></div>'),
+    );
+    expect(doc.levelNames).toEqual(['book', 'line']);
+  });
+
+  it('cites a title under a tier numbered with a trailing dot so it still parses', () => {
+    // "praef." is a real tier number; "praef..t" refused the whole import.
+    const doc = parseTeiRows(tei('<div type="textpart" subtype="section" n="praef."><head>Praefatio</head><p>text</p></div>'));
+    expect(doc.rows.map((r) => r.ref)).toEqual(['praef.t', 'praef.']);
+  });
+
+  it('leaves a <head> outside any citation tier out, as before', () => {
+    const doc = parseTeiRows(
+      tei(
+        '<div type="edition" n="urn:cts:greekLit:tlg0032.tlg006.perseus-grc2"><head>Ἀνάβασις</head>' +
+          '<div type="textpart" subtype="book" n="1"><p n="1">x</p></div></div>',
+      ),
+    );
+    expect(doc.rows).toEqual([{ ref: '1.1', text: 'x' }]);
+  });
+
   it('names a tier from its subtype, since every modern div is "textpart"', () => {
     const doc = parseTeiRows(
       tei('<div type="textpart" subtype="Book" n="1"><l n="1">x</l></div>'),

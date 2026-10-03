@@ -56,7 +56,10 @@ const FREED_FILES = 'https://gitlab.inria.fr/api/v4/projects/almanach%2Fcllg%2Ff
 const FREED_BRANCH = 'main';
 
 /** A FREED file name inside a pasted GitLab address — FREED's pages show no urn. */
-const FREED_FILE_RE = /(tlg\d{4})\.(tlg\d{3})\.(cllg-[A-Za-z]+\d+)\.xml/;
+const FREED_FILE_RE = /(tlg\d{4})\.(tlg\d{3})\.(cllg-[A-Za-z]+\d+)\.xml/i;
+
+/** Perseus's own version ids ("perseus-grc2"). */
+const PERSEUS_MARKER = 'perseus-';
 
 export const NOT_A_URN_MESSAGE =
   'That doesn’t look like a Perseus or FREED text. Paste a Scaife address (scaife.perseus.org/reader/…), the address of a FREED file, or a CTS urn (urn:cts:greekLit:…).';
@@ -88,14 +91,14 @@ export function parseCtsUrn(input: string): CtsUrn | null {
   const text = input.trim();
   if (text.length === 0) return null;
 
-  const match = /urn:cts:([A-Za-z]+):([^:/\s]+)/.exec(text);
+  const match = /urn:cts:([A-Za-z]+):([^:/\s]+)/i.exec(text);
   if (!match) {
     const file = FREED_FILE_RE.exec(text);
-    return file ? { namespace: 'greekLit', group: file[1], work: file[2], version: file[3] } : null;
+    return file ? normalised({ namespace: 'greekLit', group: file[1], work: file[2], version: file[3] }) : null;
   }
 
-  const namespace = match[1];
-  if (!(namespace in REPOSITORIES)) return null;
+  const namespace = Object.keys(REPOSITORIES).find((key) => key.toLowerCase() === match[1].toLowerCase());
+  if (namespace === undefined) return null;
 
   // group.work.version — the passage reference, if any, was already excluded
   // by the pattern above (it sits after a further colon).
@@ -104,7 +107,24 @@ export function parseCtsUrn(input: string): CtsUrn | null {
 
   const [group, work, version] = parts;
   if (!group || !work) return null;
-  return { namespace, group, work, ...(version ? { version } : {}) };
+  return normalised({ namespace, group, work, ...(version ? { version } : {}) });
+}
+
+/**
+ * The repositories' paths are case-sensitive, so a urn typed with odd capitals
+ * ("CLLG-grc1", "TLG0012") names no file. Text groups and works are lower case
+ * in every one of them. A version is put right only when its family is known —
+ * FREED's and Perseus's are lower case, First1KGreek's carry a capital K — and
+ * anything else is left as given rather than guessed at.
+ */
+function normalised(urn: CtsUrn): CtsUrn {
+  const out: CtsUrn = { namespace: urn.namespace, group: urn.group.toLowerCase(), work: urn.work.toLowerCase() };
+  if (urn.version === undefined) return out;
+  const lower = urn.version.toLowerCase();
+  if (lower.startsWith(FREED_MARKER) || lower.startsWith(PERSEUS_MARKER)) out.version = lower;
+  else if (lower.startsWith(FIRST1K_MARKER.toLowerCase())) out.version = FIRST1K_MARKER + lower.slice(FIRST1K_MARKER.length);
+  else out.version = urn.version;
+  return out;
 }
 
 /**

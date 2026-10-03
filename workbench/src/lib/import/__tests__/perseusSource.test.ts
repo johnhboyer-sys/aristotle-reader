@@ -78,6 +78,40 @@ describe('parseCtsUrn', () => {
   it('does not read a file name as a urn unless it is a FREED one', () => {
     expect(parseCtsUrn('https://example.com/tlg0059.tlg030.perseus-grc2.xml')).toBeNull();
   });
+
+  // Typed or pasted from a paper, a urn comes back with odd capitals. The
+  // repositories' paths are case-sensitive, so "CLLG-grc1" fetched nothing and
+  // was not even recognised as FREED's.
+  it('normalises odd capitals to the ids the repositories use', () => {
+    expect(parseCtsUrn('urn:cts:greekLit:tlg0012.tlg001.CLLG-grc1')).toEqual({
+      namespace: 'greekLit',
+      group: 'tlg0012',
+      work: 'tlg001',
+      version: 'cllg-grc1',
+    });
+    expect(parseCtsUrn('URN:CTS:GREEKLIT:TLG0059.TLG030.Perseus-GRC2')).toEqual({
+      namespace: 'greekLit',
+      group: 'tlg0059',
+      work: 'tlg030',
+      version: 'perseus-grc2',
+    });
+    expect(parseCtsUrn('urn:cts:latinlit:PHI0474.phi013.perseus-lat1')?.namespace).toBe('latinLit');
+  });
+
+  it('keeps First1KGreek’s capital K, which its file names really have', () => {
+    expect(parseCtsUrn('urn:cts:greekLit:tlg0086.tlg010.1st1k-grc1')?.version).toBe('1st1K-grc1');
+    expect(parseCtsUrn('urn:cts:greekLit:tlg0086.tlg010.1st1K-grc1')?.version).toBe('1st1K-grc1');
+  });
+
+  it('sends a capitalised FREED urn to FREED', () => {
+    expect(sourceNameFor(parseCtsUrn('urn:cts:greekLit:tlg0086.tlg025.CLLG-GRC1')!)).toBe('FREED');
+    const page = 'https://gitlab.inria.fr/x/data/tlg0012/tlg001/TLG0012.TLG001.CLLG-grc1.xml';
+    expect(parseCtsUrn(page)).toEqual({ namespace: 'greekLit', group: 'tlg0012', work: 'tlg001', version: 'cllg-grc1' });
+  });
+
+  it('leaves a version it does not know as it was given', () => {
+    expect(parseCtsUrn('urn:cts:greekLit:tlg0059.tlg030.Opp-Grc1')?.version).toBe('Opp-Grc1');
+  });
 });
 
 describe('teiUrlFor', () => {

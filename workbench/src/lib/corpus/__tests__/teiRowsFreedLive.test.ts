@@ -37,7 +37,9 @@ when('CLLG FREED, live', () => {
   it('reads the Iliad without its marginal signs', async () => {
     const doc = parseTeiRows(await freed('data/tlg0012/tlg001/tlg0012.tlg001.cllg-grc1.xml'));
     expect(doc.rows.length).toBeGreaterThan(15_000);
-    expect(doc.rows[1]).toEqual({ ref: '1.2', text: "οὐλομένην, ἣ μυρί' Ἀχαιοῖς ἄλγε' ἔθηκε," });
+    // Row 0 is Book 1's printed title ("1.t"), kept as a title row.
+    expect(doc.rows[0].ref).toBe('1.t');
+    expect(doc.rows.find((r) => r.ref === '1.2')).toEqual({ ref: '1.2', text: "οὐλομένην, ἣ μυρί' Ἀχαιοῖς ἄλγε' ἔθηκε," });
     // Every sign the file's Marginalia segs hold; none belongs to the text.
     const signs = ['>', '—', '⸖', '※', 'Ͻ'];
     expect(doc.rows.filter((r) => signs.some((s) => r.text.includes(s)))).toEqual([]);

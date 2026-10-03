@@ -20,7 +20,8 @@ import { parseTeiRows } from '../../corpus/teiRows';
 import { createSourceImport } from '../createSourceImport';
 import { serializeChapterFile, parseChapterFile } from '../../chapterfile';
 import { hydrateFromFile } from '../../library/autosave';
-import { buildOutline } from '../../editor/outline';
+import { buildOutline, buildOutlineTree, groupOutlineByBooks } from '../../editor/outline';
+import { chaptersInBook } from '../../works/chapterContainers';
 import { DEFAULT_PROFILE } from '../../works/profile';
 
 interface NodeFs {
@@ -173,4 +174,71 @@ when('the outline an import writes', () => {
     expect(wrong).toEqual([]);
     expect(checked).toBeGreaterThan(0);
   }, 60_000);
+});
+
+/**
+ * Books and chapters from the citation tiers (works/citationDivisions), over
+ * every cached export. The check is the rail's, not the rule's: each chapter
+ * is filed under a Book by the rail's own grouping (outline roots, then row
+ * spans), and must then CITE that book. A rule that agreed with itself would
+ * pass a Book laid on the wrong root; this would not.
+ */
+when('Books and chapters an import gets from its citation tiers', () => {
+  const files = available
+    ? readdirSync(CACHE).filter((f) => f.endsWith('.xml') && f !== 'authtab.xml').sort()
+    : [];
+
+  it('files every chapter under the Book its citation names', () => {
+    const wrong: string[] = [];
+    let withBooks = 0;
+    let chaptersChecked = 0;
+
+    for (const file of files) {
+      const doc = parseTeiRows(readFileSync(`${CACHE}/${file}`, 'utf8'));
+      if (doc.rows.length === 0) continue;
+      const { work, file: chapterFile } = createSourceImport({
+        title: doc.title || file,
+        rows: doc.rows,
+        levelNames: doc.levelNames,
+      });
+      const books = work.bookContainers ?? [];
+      if (books.length === 0) continue;
+      withBooks += 1;
+
+      const reread = parseChapterFile(serializeChapterFile(chapterFile));
+      const rows = hydrateFromFile(reread, [], work.scheme).rows;
+      const refs = reread.meta.rowRefs ?? [];
+      const tree = buildOutlineTree(buildOutline(rows, work.levels ? { levels: work.levels } : DEFAULT_PROFILE));
+      const grouped = groupOutlineByBooks(tree, books);
+      const startRows = grouped.map((b) => (b.nodes[0]?.item.rowIndex ?? -1) + 1);
+      grouped.forEach((book, k) => {
+        const value = book.label.split(' ').slice(1).join(' ');
+        for (const chapter of chaptersInBook(work.chapterContainers ?? [], startRows[k], startRows[k + 1] ?? null)) {
+          chaptersChecked += 1;
+          if (refs[chapter.row - 1]?.split('.')[0] !== value) {
+            wrong.push(`${file}: ${chapter.label} at ${refs[chapter.row - 1]} filed under ${book.label}`);
+          }
+        }
+      });
+    }
+
+    expect(wrong).toEqual([]);
+    // Says so when it examined nothing: the cache holds Theophrastus' Historia
+    // plantarum (9 books) whenever it holds tlg0093.
+    expect(withBooks).toBeGreaterThan(0);
+    expect(chaptersChecked).toBeGreaterThan(0);
+  }, 60_000);
+
+  const hp = files.find((f) => f === 'tlg0093001.xml');
+
+  it.runIf(hp !== undefined)('gives the Historia plantarum its nine books and their chapters', () => {
+    const doc = parseTeiRows(readFileSync(`${CACHE}/${hp}`, 'utf8'));
+    const { work, file } = createSourceImport({ title: 'HP', rows: doc.rows, levelNames: doc.levelNames });
+    expect(work.bookContainers?.map((b) => b.label)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `Book ${n}`));
+    // 128 chapter divisions, nine of them the books' titles.
+    expect(work.chapterContainers).toHaveLength(119);
+    // Only the first of each book's title rows leaves the text.
+    expect(file.meta.headers).toHaveLength(9);
+    expect(file.greekLines[(file.meta.headers ?? [])[0].row - 1]).toContain('ΘΕΟΦΡΑΣΤΟΥ');
+  });
 });
