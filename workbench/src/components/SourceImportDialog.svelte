@@ -19,20 +19,25 @@
   import { makeRoomForFreeWork, registerFreeWork } from '../lib/works/freeWorks';
   import { loadSettings, updateSettings } from '../lib/settings';
   import { chooseAgainLabel, pickStatus, repickReason } from '../lib/picks';
+  import { untrack } from 'svelte';
+
+  type Route = 'disc' | 'file' | 'link';
 
   let {
     existingIds,
     onClose,
     onCreated,
+    initialRoute = 'link',
   }: {
     existingIds: string[];
     onClose: () => void;
     onCreated: (workId: string) => void;
+    /** The tab it opens on. Perseus · FREED by default: it needs nothing
+     * installed, so it works for everyone. */
+    initialRoute?: Route;
   } = $props();
 
-  type Route = 'disc' | 'file' | 'link';
-
-  let route = $state<Route>('disc');
+  let route = $state<Route>(untrack(() => initialRoute));
   let errorMessage = $state<string | null>(null);
   /** Set while a slow step runs; also the text shown on the button. */
   let busy = $state<string | null>(null);
@@ -64,7 +69,12 @@
   let link = $state('');
   const linkUrn = $derived(link.trim().length === 0 ? null : parseCtsUrn(link));
 
+  // The saved disc is read when its tab is first shown, not at open: reading
+  // it keeps Import busy, which would block the Perseus · FREED tab.
+  let discChecked = false;
   $effect(() => {
+    if (route !== 'disc' || discChecked) return;
+    discChecked = true;
     void (async () => {
       const settings = await loadSettings();
       // Check both discs: either may need choosing again, and the first
@@ -248,14 +258,14 @@
 
     <div class="dialog-body">
       <div class="routes" role="tablist" aria-label="Where the text comes from">
-        <button role="tab" aria-selected={route === 'disc'} class:active={route === 'disc'} onclick={() => (route = 'disc')}>
-          TLG or PHI disc
+        <button role="tab" aria-selected={route === 'link'} class:active={route === 'link'} onclick={() => (route = 'link')}>
+          Perseus · FREED
         </button>
         <button role="tab" aria-selected={route === 'file'} class:active={route === 'file'} onclick={() => (route = 'file')}>
           A file
         </button>
-        <button role="tab" aria-selected={route === 'link'} class:active={route === 'link'} onclick={() => (route = 'link')}>
-          Perseus · FREED
+        <button role="tab" aria-selected={route === 'disc'} class:active={route === 'disc'} onclick={() => (route = 'disc')}>
+          TLG or PHI disc
         </button>
       </div>
 
