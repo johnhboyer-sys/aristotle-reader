@@ -1143,9 +1143,11 @@
   /** Run `fn` now — or, inside Svelte's teardown of a cell, just after it. A
    * view switch unmounts the focused editor, and the browser fires its blur
    * there; writing $state during the teardown throws state_unsafe_mutation.
-   * The model writes above are plain data, so only the $state writes wait. */
+   * The model writes above are plain data, so only the $state writes wait.
+   * A teardown that unmounts the whole editor (chapter switch) has cleared the
+   * session by then, so nothing runs once the editor is gone. */
   function outsideTeardown(fn: () => void) {
-    if ($effect.tracking()) queueMicrotask(fn);
+    if ($effect.tracking()) queueMicrotask(() => !destroyed && fn());
     else fn();
   }
 
@@ -1442,7 +1444,8 @@
         else afterDocChange(row, segment, oldState, tr);
         scheduleCommit(row);
       }
-      if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) syncToolbar(view.state);
+      // commitRowNow's DOM flush can dispatch from a teardown (see outsideTeardown).
+      if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) outsideTeardown(() => syncToolbar(view.state));
     };
   }
 
