@@ -9,7 +9,7 @@
   // same chapters. Plain files only — no service API, no OAuth. Every failure
   // mode is one plain sentence; stderr never reaches the UI.
   import { loadSettings, updateSettings } from '../lib/settings';
-  import { copyLibraryToRoot, invalidateLibraryRootCache, pickLibraryFolder } from '../lib/library/storage';
+  import { CopyStoppedError, copyLibraryToRoot, invalidateLibraryRootCache, pickLibraryFolder } from '../lib/library/storage';
   import { FREE_WORKS_STORAGE_ID } from '../lib/works/freeWorks';
   import type { WorkManifest } from '../lib/works/manifest';
 
@@ -20,6 +20,8 @@
   let currentRoot = $state<string | null>(null);
   let pendingRoot = $state<string | null>(null);
   let note = $state<string | null>(null);
+  // Files the new folder already held, kept as they were (never overwritten).
+  let kept = $state<string[]>([]);
   let helpOpen = $state(false);
 
   $effect(() => {
@@ -47,6 +49,7 @@
   async function confirmMove(copy: boolean) {
     if (!pendingRoot) return;
     const newRoot = pendingRoot;
+    kept = [];
     if (copy) {
       phase = 'moving';
       note = 'Copying your chapters to the new folder…';
@@ -54,11 +57,21 @@
         // The free-work registry (works.json in the library root) moves with
         // the chapters — its reserved storage id addresses the root itself.
         const workIds = [...works.map((w) => w.id), FREE_WORKS_STORAGE_ID];
-        const count = await copyLibraryToRoot(workIds, newRoot);
-        note = count > 0 ? `Copied ${count} chapter file${count === 1 ? '' : 's'} to the new folder.` : 'Nothing to copy yet.';
+        const { copied, skipped } = await copyLibraryToRoot(workIds, newRoot);
+        note =
+          copied > 0
+            ? `Copied ${copied} file${copied === 1 ? '' : 's'} to the new folder.`
+            : skipped.length > 0
+              ? 'Nothing new to copy.'
+              : 'Nothing to copy yet.';
+        kept = skipped;
       } catch (err) {
         console.error('library settings: copy failed', err);
-        note = "Couldn't copy your chapters to the new folder — nothing was moved or deleted.";
+        // Some files may already be in the new folder: never say otherwise.
+        note =
+          err instanceof CopyStoppedError
+            ? err.message
+            : "Couldn't finish copying to the new folder. The library folder was not changed and nothing was deleted, but some files may already have been copied there.";
         phase = 'done';
         return;
       }
@@ -73,6 +86,7 @@
 
   function cancelMove() {
     pendingRoot = null;
+    kept = [];
     phase = 'idle';
     note = null;
   }
@@ -80,6 +94,7 @@
   async function useDefault() {
     if (currentRoot === null) return;
     pendingRoot = null; // clearing, not moving TO anywhere
+    kept = [];
     await updateSettings({ libraryRoot: undefined });
     invalidateLibraryRootCache();
     currentRoot = null;
@@ -122,6 +137,14 @@
     {#if note}
       <p class="settings-line">{note}</p>
     {/if}
+    {#if kept.length > 0}
+      <p class="settings-line">Already in the new folder, so kept as they were and not copied over:</p>
+      <ul class="kept">
+        {#each kept as item}
+          <li>{item}</li>
+        {/each}
+      </ul>
+    {/if}
 
     <button class="help-toggle" onclick={() => (helpOpen = !helpOpen)} aria-expanded={helpOpen}>
       Sharing this library
@@ -152,6 +175,15 @@
 </div>
 
 <style>
+  .kept {
+    margin: 0 0 var(--space-2);
+    padding-left: var(--space-4);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    max-height: 10rem;
+    overflow-y: auto;
+  }
   .help-toggle {
     display: inline-flex;
     align-items: center;

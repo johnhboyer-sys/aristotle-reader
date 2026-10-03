@@ -82,19 +82,30 @@
   let registryNotice = $state<string | null>(null);
   let settingsNotice = $state<string | null>(null);
 
+  // Reloads overlap (window focus and visibilitychange fire together), and one
+  // that started earlier can finish later: an answer older than the one shown
+  // is dropped.
+  let reloadsStarted = 0;
+  let reloadShown = 0;
+
   async function reloadWorks() {
-    // The registry is read last, so a reload that started earlier can't put
-    // back an older document list after a newer one landed.
+    const reload = ++reloadsStarted;
     const builtIns = await shownBuiltInWorks();
     let free: WorkManifest[];
     try {
       free = await listFreeWorks();
-      registryNotice = null;
     } catch (err) {
+      if (reload < reloadShown) return;
       registryNotice = err instanceof Error ? err.message : String(err);
-      // Keep the documents already in the rail; nothing on disk changed.
-      free = works.filter(isDocumentWork);
+      // Keep the documents in the rail as they are now; nothing on disk
+      // changed. Not the newest answer either: an earlier reload that did
+      // read the list may still land.
+      works = [...builtIns, ...works.filter(isDocumentWork)];
+      return;
     }
+    if (reload < reloadShown) return;
+    reloadShown = reload;
+    registryNotice = null;
     works = [...builtIns, ...free];
   }
 
@@ -152,12 +163,18 @@
   // not shown as having no files.
   let unlistedNotice = $state<string | null>(null);
 
+  let statusesStarted = 0;
+  let statusShown = 0;
+
   async function refreshLibraryStatus() {
     if (!isTauri()) return;
+    const refresh = ++statusesStarted;
     const { statuses, unreadable } = await libraryStatusesFor(
       works.map((work) => work.id),
       libraryStorage(),
     );
+    if (refresh < statusShown) return; // an older answer than the one shown
+    statusShown = refresh;
     libraryStatus = statuses;
     const titles = unreadable.map((id) => works.find((work) => work.id === id)?.title ?? id);
     unlistedNotice =
@@ -300,7 +317,11 @@
   function onWindowFocus() {
     // Before boot the library folder may still be waiting to be chosen again.
     if (!booted) return;
-    void refreshLibraryStatus();
+    // reloadWorks first: a built-in work whose files arrived by sync since
+    // boot is listed now, not after a relaunch.
+    void reloadWorks()
+      .catch(() => {})
+      .then(refreshLibraryStatus);
     // A chapter file that could not be read is skipped; the next focus retries.
     void syncCommands.checkExternalChange().catch(() => {});
   }
