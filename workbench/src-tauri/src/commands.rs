@@ -451,18 +451,36 @@ pub async fn assist_detect(app: AppHandle) -> Result<AssistDetection, String> {
     .await
 }
 
+/// What identifies one build of a binary on disk: its modification time, and
+/// on Unix its inode and change time too, because npm extracts every package
+/// file with one fixed mtime, so an npm upgrade can leave the mtime as it was.
+/// Replacing or rewriting the file always moves the change time.
+fn binary_fingerprint(path: &Path) -> Option<(SystemTime, u64, i64, i64)> {
+    let m = std::fs::metadata(path).ok()?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        Some((m.modified().ok()?, m.ino(), m.ctime(), m.ctime_nsec()))
+    }
+    #[cfg(not(unix))]
+    {
+        Some((m.modified().ok()?, 0, 0, 0))
+    }
+}
+
 /// Whether the Codex at `program` is a version its tools-off switches were
 /// checked against (jobs.rs `TESTED_CODEX_VERSIONS`). `codex --version` runs
-/// once per binary: the answer is kept against the binary's real path and
-/// modification time, so an upgrade in place is asked again. A `--version`
-/// that fails is not kept, and counts as untested.
+/// once per build of the binary: the answer is kept against its real path and
+/// fingerprint, so an upgrade in place is asked again. A `--version` that
+/// fails is not kept, and counts as untested.
 fn codex_is_tested(program: &Path) -> bool {
-    static CHECKED: Mutex<Option<(PathBuf, SystemTime, bool)>> = Mutex::new(None);
+    type Checked = std::collections::HashMap<PathBuf, ((SystemTime, u64, i64, i64), bool)>;
+    static CHECKED: Mutex<Option<Checked>> = Mutex::new(None);
     let real = program.canonicalize().unwrap_or_else(|_| program.to_path_buf());
-    let mtime = std::fs::metadata(&real).and_then(|m| m.modified()).ok();
-    if let (Some(mtime), Ok(checked)) = (mtime, CHECKED.lock()) {
-        if let Some((p, t, tested)) = checked.as_ref() {
-            if *p == real && *t == mtime {
+    let print = binary_fingerprint(&real);
+    if let (Some(print), Ok(checked)) = (print, CHECKED.lock()) {
+        if let Some((p, tested)) = checked.as_ref().and_then(|c| c.get(&real)) {
+            if *p == print {
                 return *tested;
             }
         }
@@ -476,8 +494,8 @@ fn codex_is_tested(program: &Path) -> bool {
     if !tested {
         eprintln!("[assist] refusing untested Codex at {}: {}", program.display(), text.trim());
     }
-    if let (Some(mtime), Ok(mut checked)) = (mtime, CHECKED.lock()) {
-        *checked = Some((real, mtime, tested));
+    if let (Some(print), Ok(mut checked)) = (print, CHECKED.lock()) {
+        checked.get_or_insert_with(Default::default).insert(real, (print, tested));
     }
     tested
 }
@@ -880,6 +898,24 @@ mod tests {
         // Upgraded in place: new contents, new modification time.
         std::thread::sleep(Duration::from_millis(20));
         fake_codex(&bin, &calls, "0.160.0");
+        assert!(!codex_is_tested(&bin));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_codex_upgrade_that_keeps_the_old_mtime_is_asked_again() {
+        // npm extracts every package file with one fixed mtime, so an npm
+        // upgrade of Codex can leave the binary's mtime exactly as it was.
+        let d = temp_dir("codex-npm");
+        let (bin, calls) = (d.join("codex"), d.join("calls"));
+        fake_codex(&bin, &calls, "0.159.2");
+        let mtime = std::fs::metadata(&bin).unwrap().modified().unwrap();
+        assert!(codex_is_tested(&bin));
+        std::thread::sleep(Duration::from_millis(20));
+        let _ = std::fs::remove_file(&bin);
+        fake_codex(&bin, &calls, "0.160.0");
+        std::fs::File::options().write(true).open(&bin).unwrap().set_modified(mtime).unwrap();
+        assert_eq!(std::fs::metadata(&bin).unwrap().modified().unwrap(), mtime);
         assert!(!codex_is_tested(&bin));
     }
 
