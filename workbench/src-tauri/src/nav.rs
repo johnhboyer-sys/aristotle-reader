@@ -30,8 +30,10 @@ pub fn decide(url: &Url, dev_url: Option<&Url>) -> Nav {
     match url.scheme() {
         // The built app: tauri://localhost on macOS and Linux,
         // http(s)://tauri.localhost on Windows.
-        "tauri" if url.host_str() == Some("localhost") => Nav::Stay,
-        "http" | "https" if url.host_str() == Some("tauri.localhost") => Nav::Stay,
+        "tauri" if url.host_str() == Some("localhost") && url.port().is_none() => Nav::Stay,
+        "http" | "https" if cfg!(windows) && url.host_str() == Some("tauri.localhost") && url.port().is_none() => {
+            Nav::Stay
+        }
         "http" | "https" if dev_url.is_some_and(|d| d.origin() == url.origin()) => Nav::Stay,
         "http" | "https" | "mailto" => Nav::Browser,
         _ if url.as_str() == "about:blank" => Nav::Stay,
@@ -74,7 +76,9 @@ mod tests {
     fn the_app_itself_loads() {
         assert_eq!(d("tauri://localhost/", None), Nav::Stay);
         assert_eq!(d("tauri://localhost/index.html#x", None), Nav::Stay);
-        assert_eq!(d("http://tauri.localhost/", None), Nav::Stay);
+        // The Windows origin; on macOS and Linux the app is never served there.
+        let windows_origin = if cfg!(windows) { Nav::Stay } else { Nav::Browser };
+        assert_eq!(d("http://tauri.localhost/", None), windows_origin);
         assert_eq!(d("http://localhost:1421/", Some("http://localhost:1421")), Nav::Stay);
         assert_eq!(d("about:blank", None), Nav::Stay);
     }
@@ -88,6 +92,8 @@ mod tests {
         assert_eq!(d("http://localhost:1421/", None), Nav::Browser);
         assert_eq!(d("http://localhost:9999/", Some("http://localhost:1421")), Nav::Browser);
         assert_eq!(d("https://tauri.localhost.evil.com/", None), Nav::Browser);
+        // Never another port, which a local server could answer on.
+        assert_eq!(d("http://tauri.localhost:8080/", None), Nav::Browser);
     }
 
     #[test]
@@ -97,6 +103,7 @@ mod tests {
             "javascript:alert(1)",
             "data:text/html,<script>alert(1)</script>",
             "tauri://evil.com/",
+            "tauri://localhost:8080/",
             "asset://localhost/x",
             "blob:tauri://localhost/123",
             "ftp://example.com/",

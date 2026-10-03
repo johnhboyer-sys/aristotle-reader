@@ -54,6 +54,10 @@ const MAX_PACK_ENTRIES: usize = 1_000;
 /// pack (the Greek one, 240 MB unpacked, 2026-07-31).
 const MAX_PACK_BYTES: u64 = 1 << 30;
 
+/// At most this many bytes read from pack.json, which is read before the
+/// caps above apply. A real one is under 300 bytes.
+const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
+
 /// The languages a pack may claim. Anything else is refused: the language id
 /// becomes a directory name, and an unvetted one is a path-injection seam.
 const KNOWN_LANGUAGES: [&str; 2] = ["grc", "lat"];
@@ -210,10 +214,14 @@ fn read_manifest_from_zip(zip_path: &Path) -> Result<Manifest, String> {
         .by_name("pack.json")
         .map_err(|_| "That file isn't a lexicon pack.".to_string())?;
     let mut text = String::new();
-    io::Read::read_to_string(&mut entry, &mut text).map_err(|err| {
+    io::Read::read_to_string(&mut io::Read::take(&mut entry, MAX_MANIFEST_BYTES + 1), &mut text).map_err(|err| {
         eprintln!("[packs] cannot read pack.json: {err}");
         "That pack couldn't be read.".to_string()
     })?;
+    if text.len() as u64 > MAX_MANIFEST_BYTES {
+        eprintln!("[packs] pack.json is over {MAX_MANIFEST_BYTES} bytes");
+        return Err("That file isn't a lexicon pack.".into());
+    }
     parse_manifest(&text)
 }
 
@@ -538,6 +546,24 @@ mod tests {
         let m = read_manifest_from_zip(&zip).expect("should read");
         assert_eq!(m.language, "grc");
         assert_eq!(m.entries, 116728);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn refuses_a_manifest_that_unpacks_past_its_cap() {
+        // pack.json is read before extraction and its caps: a deflated
+        // manifest of zeros must not be read whole into memory.
+        let dir = temp_dir("manifest-bomb");
+        let good = r#"{"format":1,"language":"lat","name":"Latin","dictionary":"Lewis & Short",
+            "entries":51674,"shardDir":"ls","analysesFile":"latin-analyses.txt",
+            "indexFile":"latin-analyses.idt","source":"Perseus"}"#;
+        // The control: the manifest itself is fine, and fine at the cap.
+        let at_cap = format!("{good}{}", " ".repeat(MAX_MANIFEST_BYTES as usize - good.len()));
+        let zip = write_zip(&dir, "ok.zip", &[("pack.json", &at_cap)]);
+        assert!(read_manifest_from_zip(&zip).is_ok());
+        let past = format!("{at_cap} ");
+        let zip = write_zip(&dir, "bomb.zip", &[("pack.json", &past)]);
+        assert!(read_manifest_from_zip(&zip).is_err(), "one byte past the cap");
         let _ = fs::remove_dir_all(&dir);
     }
 

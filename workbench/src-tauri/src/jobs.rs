@@ -48,16 +48,18 @@ pub fn is_really_inside(path: &Path, root: &Path) -> bool {
 
 // ── pandoc ──────────────────────────────────────────────────────────────────
 
-/// `pandoc --sandbox -f markdown -t docx -o <docx> [--reference-doc <ref>] <md>`
-/// — the same argv `pandocDocxArgs` (src/lib/export/pandoc.ts) builds.
+/// `pandoc -f markdown -t docx -o <docx> [--reference-doc <ref>] <md>` — the
+/// same argv `pandocDocxArgs` (src/lib/export/pandoc.ts) builds.
 ///
-/// `--sandbox` (pandoc 2.15+) lets pandoc read only the files named here, so
-/// an image or include in the markdown (from imported text) cannot pull
-/// another file into the .docx. Checked with pandoc 3.10 and the bundled
-/// reference.docx (2026-10-03): the output is the same but for the document's
-/// created/modified dates, which the sandbox hides, so they read 1970-01-01.
+/// No `--sandbox`, on purpose. It works (pandoc 3.10 with the bundled
+/// reference.docx, 2026-10-03), but the export's escaping already keeps image,
+/// link and raw-file constructs out of the markdown, so it would only be a
+/// second guard, and it costs two things: every exported Word file's
+/// created/modified dates read 1970-01-01 (the sandbox hides the clock, and
+/// SOURCE_DATE_EPOCH does not help), and pandoc older than 2.15 refuses the
+/// flag, so export would fail there.
 pub fn pandoc_docx_args(md: &Path, docx: &Path, reference_doc: Option<&Path>) -> Vec<String> {
-    let mut args: Vec<String> = ["--sandbox", "-f", "markdown", "-t", "docx", "-o"].map(String::from).to_vec();
+    let mut args: Vec<String> = ["-f", "markdown", "-t", "docx", "-o"].map(String::from).to_vec();
     args.push(docx.display().to_string());
     if let Some(r) = reference_doc {
         args.push("--reference-doc".into());
@@ -450,11 +452,11 @@ mod tests {
         let docx = Path::new("/u/Out.docx");
         assert_eq!(
             pandoc_docx_args(md, docx, None),
-            ["--sandbox", "-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "/d/export-intermediate.md"]
+            ["-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "/d/export-intermediate.md"]
         );
         assert_eq!(
             pandoc_docx_args(md, docx, Some(Path::new("/u/ref.docx"))),
-            ["--sandbox", "-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "--reference-doc", "/u/ref.docx", "/d/export-intermediate.md"]
+            ["-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "--reference-doc", "/u/ref.docx", "/d/export-intermediate.md"]
         );
     }
 

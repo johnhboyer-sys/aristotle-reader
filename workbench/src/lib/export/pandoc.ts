@@ -29,8 +29,7 @@ export interface PandocDocxJob {
  * change the footnote mechanism; see NATIVE_FOOTNOTES_NOTES.
  */
 export function pandocDocxArgs(job: PandocDocxJob): string[] {
-  // --sandbox: pandoc reads only the files named here (src-tauri/src/jobs.rs).
-  const args = ['--sandbox', '-f', 'markdown', '-t', 'docx', '-o', job.docxPath];
+  const args = ['-f', 'markdown', '-t', 'docx', '-o', job.docxPath];
   if (job.referenceDocPath) args.push('--reference-doc', job.referenceDocPath);
   args.push(job.markdownPath);
   return args;
