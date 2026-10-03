@@ -1,7 +1,8 @@
 // sync.ts — pure-logic tests (build spec §11): mtime/hash change detection
 // incl. the touched-timestamp-same-content case, conflict/placeholder
 // filename patterns, and the reload decision matrix.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { MemStorage } from './memStorage';
 import {
   contentHash,
   snapshotOf,
@@ -14,6 +15,7 @@ import {
   classifyLibraryFile,
   classifyLibraryFiles,
   chapterLibraryStatuses,
+  libraryStatusesFor,
 } from '../sync';
 
 describe('contentHash', () => {
@@ -186,5 +188,27 @@ describe('chapterLibraryStatuses', () => {
       isPlaceholder: false,
       conflicts: ['b01c03 (conflicted copy 2026-07-02).md'],
     });
+  });
+});
+
+describe('libraryStatusesFor (runs at boot)', () => {
+  it('finishes when one work cannot be listed, and names that work', async () => {
+    const storage = new MemStorage();
+    await storage.write('good', 'b01c01.md', 'one');
+    await storage.write('good', 'b01c01 (1).md', 'two');
+    const list = storage.list.bind(storage);
+    storage.list = async (workId) => {
+      if (workId === 'bad') throw new Error('Operation not permitted (os error 1)');
+      return list(workId);
+    };
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { statuses, unreadable } = await libraryStatusesFor(['bad', 'good', 'empty'], storage);
+      expect(unreadable).toEqual(['bad']);
+      expect(Object.keys(statuses).sort()).toEqual(['empty', 'good']);
+      expect(statuses.good.get('b01c01.md')?.conflicts).toEqual(['b01c01 (1).md']);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
