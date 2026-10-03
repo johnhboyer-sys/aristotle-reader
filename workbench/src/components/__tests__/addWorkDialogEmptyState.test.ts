@@ -48,10 +48,10 @@ describe('Add work… with nothing left to add', () => {
   });
 
   it('App hands the dialog the same opener the rail button gets', () => {
-    expect(appSource).toContain('onImportSource={isTauri() ? () => (sourceImportOpen = true) : undefined}');
+    expect(appSource).toContain("onImportSource={isTauri() ? () => openSourceImport('link') : undefined}");
     const dialogMount = appSource.slice(appSource.indexOf('<AddWorkDialog'));
     expect(dialogMount.slice(0, dialogMount.indexOf('/>'))).toContain(
-      'onImportSource={() => (sourceImportOpen = true)}',
+      "onImportSource={() => openSourceImport('link')}",
     );
   });
 });
