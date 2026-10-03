@@ -21,7 +21,11 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const BASE = 'http://localhost:1421';
+// SMOKE_PORT runs it on its own port, with its own server: a server already
+// answering there may be another checkout's, so it refuses. On the default
+// :1421 a running server is reused, which can test another checkout's code.
+const PORT = process.env.SMOKE_PORT ?? '1421';
+const BASE = `http://localhost:${PORT}`;
 
 async function serverUp() {
   try {
@@ -32,12 +36,29 @@ async function serverUp() {
   }
 }
 
+/** Anything answering at all, a 404 included. */
+async function portAnswers() {
+  try {
+    await fetch(BASE, { signal: AbortSignal.timeout(1500) });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 let devProc = null;
+if (process.env.SMOKE_PORT && (await portAnswers())) {
+  console.error(`:${PORT} is already in use, perhaps by another checkout. Pick a free SMOKE_PORT.`);
+  process.exit(1);
+}
 if (!(await serverUp())) {
   console.log('starting dev server…');
-  devProc = spawn('npx', ['vite'], { cwd: ROOT, stdio: 'ignore' });
+  devProc = spawn('npx', ['vite', '--port', PORT], { cwd: ROOT, stdio: 'ignore' });
   for (let i = 0; i < 60 && !(await serverUp()); i++) await new Promise((r) => setTimeout(r, 500));
-  if (!(await serverUp())) throw new Error('dev server did not come up on :1421');
+  if (!(await serverUp())) {
+    devProc.kill();
+    throw new Error(`dev server did not come up on :${PORT}`);
+  }
 }
 
 // Playwright pins its browser to this package's exact revision, so a machine
@@ -282,11 +303,37 @@ await run('a heading keeps English clear of the ✦ in Lane and Weave', async ()
       return { ok: right <= g.left + 0.5, detail: `text may reach ${right.toFixed(1)}, ✦ starts at ${g.left.toFixed(1)}` };
     });
     check(`${layout}: a heading's English stays clear of the ✦`, clear.ok, clear.detail);
-    // Leave the editor before switching view: switching with the cursor in an
-    // English cell trips a separate, known Svelte error in ChapterEditor's
-    // blur handler (state_unsafe_mutation), which is not what this tests.
-    await page.evaluate(() => document.activeElement?.blur());
   }
+  await page.locator('.view-toggle-btn', { hasText: 'Lines' }).click();
+});
+
+await run('switch view with the cursor in an English cell', async () => {
+  // Switching view unmounts the focused editor, and its blur handler wrote
+  // $state while Svelte was tearing the old view down: an uncaught
+  // state_unsafe_mutation on every switch made from inside a cell. Typing
+  // first leaves a commit pending, which the blur then runs in the teardown;
+  // on a heading that commit refreshes the outline, more $state.
+  const before = complaints.length;
+  const en = page.locator('.en-cell .ProseMirror').first();
+  for (const [target, typed] of [['Interpolated', 'x'], ['Lane', ''], ['Weave', ''], ['Lines', 'y']]) {
+    await en.click();
+    if (typed) await page.keyboard.type(typed);
+    await page.locator('.view-toggle-btn', { hasText: target }).click();
+    await page.waitForTimeout(100); // let a deferred error surface in this step
+  }
+  check('switching view from inside a cell raises no error', complaints.length === before);
+  const kept = await en.innerText();
+  check('text typed just before a switch is kept', kept.includes('x') && kept.includes('y'), kept);
+
+  // The focused line's Greek is lit while its English has the cursor, and
+  // goes dark when the editor loses focus the ordinary way.
+  await page.locator('.view-toggle-btn', { hasText: 'Interpolated' }).click();
+  await page.locator('.view-toggle-btn', { hasText: 'Lane' }).click();
+  await en.click();
+  check('the focused line is lit', (await page.locator('.flow-grc.lit').count()) === 1);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(50);
+  check('the light goes out on blur', (await page.locator('.flow-grc.lit').count()) === 0);
   await page.locator('.view-toggle-btn', { hasText: 'Lines' }).click();
 });
 

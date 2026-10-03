@@ -1132,10 +1132,23 @@
     history.breakCoalescing();
     if (changed) {
       markModelDirty();
-      publishFootnotes(); // anchored-phrase snippets follow the text
-      // A heading's translation just changed → refresh its rail-outline label.
-      if (row.headingLevel) refreshOutline();
+      outsideTeardown(() => {
+        publishFootnotes(); // anchored-phrase snippets follow the text
+        // A heading's translation just changed → refresh its rail-outline label.
+        if (row.headingLevel) refreshOutline();
+      });
     }
+  }
+
+  /** Run `fn` now — or, inside Svelte's teardown of a cell, just after it. A
+   * view switch unmounts the focused editor, and the browser fires its blur
+   * there; writing $state during the teardown throws state_unsafe_mutation.
+   * The model writes above are plain data, so only the $state writes wait.
+   * A teardown that unmounts the whole editor (chapter switch) has cleared the
+   * session by then, so nothing runs once the editor is gone. */
+  function outsideTeardown(fn: () => void) {
+    if ($effect.tracking()) queueMicrotask(() => !destroyed && fn());
+    else fn();
   }
 
   function scheduleCommit(i: number) {
@@ -1431,7 +1444,13 @@
         else afterDocChange(row, segment, oldState, tr);
         scheduleCommit(row);
       }
-      if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) syncToolbar(view.state);
+      // commitRowNow's DOM flush can dispatch from a teardown (see
+      // outsideTeardown); by the time a deferred sync runs, the cell may be
+      // gone or no longer the toolbar's target.
+      outsideTeardown(() => {
+        if (view.isDestroyed) return;
+        if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) syncToolbar(view.state);
+      });
     };
   }
 
@@ -1490,10 +1509,13 @@
       for (const id of removed) {
         const fn = model.footnotes.find((f) => f.id === id);
         if (fn) fn.anchored = false;
-        if (activeFn === id) setActiveFootnote(null);
       }
       fnAfter = cloneFootnotes(model.footnotes);
-      setStatus(removed.length === 1 ? 'Footnote unanchored — body kept in the footnote table' : `${removed.length} footnotes unanchored — bodies kept`);
+      // commitRowNow's DOM flush can land here from a teardown (see outsideTeardown).
+      outsideTeardown(() => {
+        if (activeFn !== null && removed.includes(activeFn)) setActiveFootnote(null);
+        setStatus(removed.length === 1 ? 'Footnote unanchored — body kept in the footnote table' : `${removed.length} footnotes unanchored — bodies kept`);
+      });
     }
 
     const orphans = orphanFnRefIds(view.state.doc);
@@ -1544,7 +1566,7 @@
       { coalesceKey },
     );
 
-    if (removed.length > 0 || markerIdsIn(afterDoc).length !== beforeIds.length) refreshFnDisplay();
+    if (removed.length > 0 || markerIdsIn(afterDoc).length !== beforeIds.length) outsideTeardown(refreshFnDisplay);
   }
 
   // ── undo/redo ──────────────────────────────────────────────────────────
@@ -3709,10 +3731,12 @@
             commitRowNow(row);
             // Drop the Greek/gutter whisper when THIS cell loses focus (a newer
             // focus event re-sets it first, so cell-to-cell moves don't flicker).
-            if (focusRow === row && focusSeg === segment) {
-              focusRow = -1;
-              focusSeg = -1;
-            }
+            outsideTeardown(() => {
+              if (focusRow === row && focusSeg === segment) {
+                focusRow = -1;
+                focusSeg = -1;
+              }
+            });
             return false;
           },
         },
