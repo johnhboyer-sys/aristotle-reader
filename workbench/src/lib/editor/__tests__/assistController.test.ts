@@ -727,6 +727,30 @@ describe('resolveTauriAssistProvider — consent per provider', () => {
     expect(t.asked).toHaveLength(1);
   });
 
+  it('consent taken back while detection runs: the send is asked about again (Grok review)', async () => {
+    const t = setup({ provider: 'claude', consented: ['claude'] }, false);
+    t.deps.invokeDetect = async () => {
+      t.setAssist({ provider: 'claude' }); // "Take back" while Rust looks for the CLIs
+      return FOUND;
+    };
+    const provider = await resolveTauriAssistProvider(t.deps);
+    expect(t.asked).toHaveLength(1);
+    await provider.suggest(smallCtx(), signal());
+    expect(t.runs).toEqual([]);
+  });
+
+  it('"Copy to clipboard only" chosen while detection runs: nothing is sent, nothing asked', async () => {
+    const t = setup({ provider: 'claude', consented: ['claude'] }, true);
+    t.deps.invokeDetect = async () => {
+      t.setAssist({ consented: ['claude'] });
+      return FOUND;
+    };
+    const provider = await resolveTauriAssistProvider(t.deps);
+    expect(await provider.suggest(smallCtx(), signal())).toEqual({ kind: 'error', message: NOT_SENT_MESSAGE });
+    expect(t.asked).toEqual([]);
+    expect(t.runs).toEqual([]);
+  });
+
   it('the prompt follows "include draft": off drops the draft clause', async () => {
     const t = setup({ provider: 'claude', includeDraft: false }, false);
     await resolveTauriAssistProvider(t.deps);

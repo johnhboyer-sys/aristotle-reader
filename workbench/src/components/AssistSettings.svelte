@@ -323,10 +323,11 @@
       <p class="line small">
         The app sends text only when you ask the AI (⌘↩, Translate, Check, Reference or Ask), and only
         to the AI you picked here. It asks you once for each AI before the first send. It sends the
-        source line, up to {ASSIST_CONTEXT_WINDOW} rows on either side, and your draft English for those
-        rows. Check and Ask also send your English for the line and the draft around it, even with the
-        box above off, and Ask sends your question. Nothing else leaves this Mac: the app goes online
-        only to fetch a text from Perseus or FREED when you import one, and it sends no usage data.
+        work's title, where the line falls, the source line, up to {ASSIST_CONTEXT_WINDOW} rows on either
+        side, and, if the box above is on, your draft English for those rows. Check and Ask also send
+        the author, your English for the line and the draft around it, even with the box off, and Ask
+        sends your question. Nothing else leaves this Mac: the app goes online only to fetch a text from
+        Perseus or FREED when you import one, and it sends no usage data.
       </p>
       {#if consented.length > 0}
         <span class="field-label">Allowed to receive text</span>

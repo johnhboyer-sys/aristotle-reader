@@ -347,13 +347,17 @@ async function withConsent(
   provider: AssistProvider,
   customName?: string,
 ): Promise<AssistProvider> {
-  if (hasConsent(assist, id)) return provider;
+  // Detection can take seconds: read the settings again, so a "Take back" or
+  // a new choice made meanwhile counts for this request.
+  const now = (await deps.loadSettings()).assist ?? {};
+  if (now.provider !== assist.provider) return notSent();
+  if (hasConsent(now, id)) return provider;
   let answer = pendingConsent.get(id);
   if (!answer) {
     const req: ConsentRequest = {
       provider: id,
       ...consentPrompt(id, {
-        includeDraft: assist.includeDraft ?? true,
+        includeDraft: now.includeDraft ?? true,
         window: ASSIST_CONTEXT_WINDOW,
         customName,
       }),
