@@ -1132,10 +1132,21 @@
     history.breakCoalescing();
     if (changed) {
       markModelDirty();
-      publishFootnotes(); // anchored-phrase snippets follow the text
-      // A heading's translation just changed → refresh its rail-outline label.
-      if (row.headingLevel) refreshOutline();
+      outsideTeardown(() => {
+        publishFootnotes(); // anchored-phrase snippets follow the text
+        // A heading's translation just changed → refresh its rail-outline label.
+        if (row.headingLevel) refreshOutline();
+      });
     }
+  }
+
+  /** Run `fn` now — or, inside Svelte's teardown of a cell, just after it. A
+   * view switch unmounts the focused editor, and the browser fires its blur
+   * there; writing $state during the teardown throws state_unsafe_mutation.
+   * The model writes above are plain data, so only the $state writes wait. */
+  function outsideTeardown(fn: () => void) {
+    if ($effect.tracking()) queueMicrotask(fn);
+    else fn();
   }
 
   function scheduleCommit(i: number) {
@@ -3709,10 +3720,12 @@
             commitRowNow(row);
             // Drop the Greek/gutter whisper when THIS cell loses focus (a newer
             // focus event re-sets it first, so cell-to-cell moves don't flicker).
-            if (focusRow === row && focusSeg === segment) {
-              focusRow = -1;
-              focusSeg = -1;
-            }
+            outsideTeardown(() => {
+              if (focusRow === row && focusSeg === segment) {
+                focusRow = -1;
+                focusSeg = -1;
+              }
+            });
             return false;
           },
         },
