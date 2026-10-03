@@ -1444,8 +1444,13 @@
         else afterDocChange(row, segment, oldState, tr);
         scheduleCommit(row);
       }
-      // commitRowNow's DOM flush can dispatch from a teardown (see outsideTeardown).
-      if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) outsideTeardown(() => syncToolbar(view.state));
+      // commitRowNow's DOM flush can dispatch from a teardown (see
+      // outsideTeardown); by the time a deferred sync runs, the cell may be
+      // gone or no longer the toolbar's target.
+      outsideTeardown(() => {
+        if (view.isDestroyed) return;
+        if (view.hasFocus() || (focusedRow === row && focusedSegment === segment)) syncToolbar(view.state);
+      });
     };
   }
 
@@ -1504,10 +1509,13 @@
       for (const id of removed) {
         const fn = model.footnotes.find((f) => f.id === id);
         if (fn) fn.anchored = false;
-        if (activeFn === id) setActiveFootnote(null);
       }
       fnAfter = cloneFootnotes(model.footnotes);
-      setStatus(removed.length === 1 ? 'Footnote unanchored — body kept in the footnote table' : `${removed.length} footnotes unanchored — bodies kept`);
+      // commitRowNow's DOM flush can land here from a teardown (see outsideTeardown).
+      outsideTeardown(() => {
+        if (activeFn !== null && removed.includes(activeFn)) setActiveFootnote(null);
+        setStatus(removed.length === 1 ? 'Footnote unanchored — body kept in the footnote table' : `${removed.length} footnotes unanchored — bodies kept`);
+      });
     }
 
     const orphans = orphanFnRefIds(view.state.doc);
@@ -1558,7 +1566,7 @@
       { coalesceKey },
     );
 
-    if (removed.length > 0 || markerIdsIn(afterDoc).length !== beforeIds.length) refreshFnDisplay();
+    if (removed.length > 0 || markerIdsIn(afterDoc).length !== beforeIds.length) outsideTeardown(refreshFnDisplay);
   }
 
   // ── undo/redo ──────────────────────────────────────────────────────────

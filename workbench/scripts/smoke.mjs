@@ -21,8 +21,9 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-// SMOKE_PORT runs it on its own port. A server already answering on the port
-// is reused, so on the default :1421 a pass can test another checkout's code.
+// SMOKE_PORT runs it on its own port, with its own server: a server already
+// answering there may be another checkout's, so it refuses. On the default
+// :1421 a running server is reused, which can test another checkout's code.
 const PORT = process.env.SMOKE_PORT ?? '1421';
 const BASE = `http://localhost:${PORT}`;
 
@@ -36,6 +37,10 @@ async function serverUp() {
 }
 
 let devProc = null;
+if (process.env.SMOKE_PORT && (await serverUp())) {
+  console.error(`:${PORT} is already in use, perhaps by another checkout. Pick a free SMOKE_PORT.`);
+  process.exit(1);
+}
 if (!(await serverUp())) {
   console.log('starting dev server…');
   devProc = spawn('npx', ['vite', '--port', PORT], { cwd: ROOT, stdio: 'ignore' });
