@@ -197,6 +197,12 @@ describe('real Perseus structure', () => {
     expect(doc.levelNames).toEqual(['book', 'line']);
   });
 
+  it('cites a title under a tier numbered with a trailing dot so it still parses', () => {
+    // "praef." is a real tier number; "praef..t" refused the whole import.
+    const doc = parseTeiRows(tei('<div type="textpart" subtype="section" n="praef."><head>Praefatio</head><p>text</p></div>'));
+    expect(doc.rows.map((r) => r.ref)).toEqual(['praef.t', 'praef.']);
+  });
+
   it('leaves a <head> outside any citation tier out, as before', () => {
     const doc = parseTeiRows(
       tei(

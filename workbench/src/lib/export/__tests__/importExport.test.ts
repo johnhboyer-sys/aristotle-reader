@@ -32,14 +32,17 @@ const hp = () =>
   });
 
 describe('whole-work export of an import with Books and chapters', () => {
+  // Each book's printed title is the small heading opening its first chapter.
   it('heads every Book and every chapter, in order', () => {
     expect(headingsOf(exported(hp()))).toEqual([
       '# HP',
       '## Book 1',
       '### Chapter 1',
+      '#### en 1.t.1.1',
       '### Chapter 2',
       '## Book 2',
       '### Chapter 1',
+      '#### en 2.t.1.1',
       '### Chapter 2',
     ]);
   });
@@ -60,14 +63,26 @@ describe('whole-work export of an import with Books and chapters', () => {
     expect(md.indexOf('en 1.t.1.2')).toBeLessThan(md.indexOf('en 1.1.1.1'));
   });
 
+  it('prints a book’s title in its first chapter rather than dropping it', () => {
+    // From the cross-family review (Grok 4.6): a part cut at a book's title
+    // row was read as though that row had become the "###" heading, so the
+    // title — and the English the translator wrote for it — vanished.
+    const md = exported(hp());
+    for (const ref of ['1.t.1.1', '2.t.1.1']) expect(md.split(`en ${ref}`)).toHaveLength(2);
+    expect(md.indexOf('en 2.t.1.1')).toBeGreaterThan(md.indexOf('## Book 2'));
+    expect(md.indexOf('en 2.t.1.1')).toBeLessThan(md.indexOf('en 2.1.1.1'));
+  });
+
   it('heads the Books and chapters in a bilingual export too', () => {
     expect(headingsOf(exported(hp(), 'bilingual'))).toEqual([
       '# HP',
       '## Book 1',
       '### Chapter 1',
+      '#### en 1.t.1.1',
       '### Chapter 2',
       '## Book 2',
       '### Chapter 1',
+      '#### en 2.t.1.1',
       '### Chapter 2',
     ]);
   });
@@ -93,9 +108,11 @@ describe('whole-work export of an import with Books and chapters', () => {
       '# Physics',
       '## Book Α',
       '### Chapter 1',
+      '#### en 184a.t',
       '### Chapter 2',
       '## Book Β',
       '### Chapter 1',
+      '#### en 192b.8t',
     ]);
   });
 });

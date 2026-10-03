@@ -176,7 +176,11 @@ export function parseTeiRows(xml: string): TeiDocument {
       // works/citationDivisions). A <head> outside every tier — FREED's, which
       // sits in <body> — stays out: it has no citation to take.
       if (tag === HEAD_TAG && open.length > 0) {
-        emit([...open, { name: 'title', n: TITLE_N }], flattenText(children), false);
+        // A tier numbered "praef." would give "praef..t", which no citation
+        // parses: the title row is "praef.t".
+        const last = open[open.length - 1];
+        const tiers = [...open.slice(0, -1), { ...last, n: last.n.replace(/\.$/, '') }];
+        emit([...tiers, { name: 'title', n: TITLE_N }], flattenText(children), false);
         continue;
       }
 

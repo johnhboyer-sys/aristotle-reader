@@ -174,7 +174,7 @@ function compileWithBoundaries(
     const label = labelAt.get(partStarts[i]) || `Chapter ${bookParts[bi].length + 1}`;
     bookParts[bi].push({ file: p.file, label });
   });
-  return assembleBooks(work, containers, bookParts, rawBooks.length === 0);
+  return assembleBooks(work, containers, bookParts, rawBooks.length === 0, true);
 }
 
 /** The compile input for parts already grouped into Books. */
@@ -183,11 +183,12 @@ function assembleBooks(
   containers: BookContainer[],
   bookParts: { file: ChapterFile; label: string }[][],
   unheaded = false,
+  keepsFirstRow = false,
 ): { chapters: ChapterFile[]; work: WorkMeta } {
   const documentBooks: DocumentBook[] = containers.map((c, bi) => ({
     n: bi + 1,
     label: c.label,
-    chapters: bookParts[bi].map((ch, ci) => ({ n: ci + 1, label: ch.label })),
+    chapters: bookParts[bi].map((ch, ci) => ({ n: ci + 1, label: ch.label, ...(keepsFirstRow ? { keepsFirstRow } : {}) })),
     ...(unheaded ? { unheaded } : {}),
   }));
   const chapters: ChapterFile[] = [];

@@ -29,6 +29,9 @@ export type OriginalLanguage = 'greek' | 'latin';
 export interface DocumentChapterSlot {
   n: number;
   label: string;
+  /** Export only: the chapter's label did not come from its first row (an
+   * import's chapter cut at a boundary), so that row stays in the body. */
+  keepsFirstRow?: boolean;
 }
 
 /** A free work's explicit Book container (D8 structure tools). `n` is

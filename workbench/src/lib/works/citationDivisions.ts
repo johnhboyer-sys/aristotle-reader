@@ -75,10 +75,12 @@ export function citationDivisions(
   parts.forEach((p, i) => {
     const row = i + 1;
     const bookValue = book ? p[book.index] : undefined;
-    const newBook = book !== undefined && bookValue !== undefined && bookValue !== lastBook;
+    // A title is never a book: a <head> on a work-level div cites "1.t".
+    const newBook =
+      book !== undefined && bookValue !== undefined && !TITLE.test(bookValue) && bookValue !== lastBook;
     if (newBook) {
       lastBook = bookValue;
-      bookStarts.push({ value: bookValue, row });
+      bookStarts.push({ value: bookValue as string, row });
     }
     if (chapter === undefined) return;
     const value = p[chapter.index];
@@ -86,10 +88,14 @@ export function citationDivisions(
     if (TITLE.test(value)) {
       // The book's printed title. Only its first row is the heading.
       if (newBook) titleRoots.push({ row, level: 1 });
-      lastChapter = undefined;
       return;
     }
-    const key = p.slice(0, chapter.index + 1).join('.');
+    // The chapter is named by its division tiers only: a page tier above it
+    // turns mid-chapter and must not start the chapter again.
+    const key = tiers
+      .filter((tier) => tier.index <= chapter.index)
+      .map((tier) => p[tier.index])
+      .join('.');
     if (key === lastChapter) return;
     lastChapter = key;
     found.push({ book: bookValue, value, row });

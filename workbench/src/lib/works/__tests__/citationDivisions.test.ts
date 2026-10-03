@@ -128,6 +128,33 @@ describe('citationDivisions', () => {
     expect(d.chapters.map((c) => c.label)).toEqual(['Fragment 2', 'Fragment 3', 'Fragment 1']);
   });
 
+  // From the cross-family review (Grok 4.6), 2026-10-02.
+  it('keeps one chapter across a page turn when a page tier sits above it', () => {
+    const d = citationDivisions(
+      ['1.1094a.1.1', '1.1094a.1.2', '1.1094b.1.3', '1.1094b.2.1'],
+      ['book', 'Bekker-page', 'chapter', 'line'],
+      [],
+    );
+    expect(d.chapters.map((c) => c.row)).toEqual([1, 4]);
+  });
+
+  it('does not start a chapter over again after a title row inside it', () => {
+    const d = citationDivisions(['1.1.1', '1.1.2', '1.t.1', '1.1.3'], ['Fragment', 'section', 'line'], []);
+    expect(d.chapters).toEqual([{ label: 'Fragment 1', row: 1 }]);
+    const books = citationDivisions(['1.1.1.1', '1.t.1.1', '1.1.1.2', '2.t.1.1', '2.1.1.1'], HP_TIERS, []);
+    expect(books.chapters.map((c) => c.row)).toEqual([1, 5]);
+  });
+
+  it('never takes a title for a book', () => {
+    // A <head> on a work-level div: "1.t" under work › book › chapter › line.
+    const d = citationDivisions(
+      ['1.t', '1.1.t', '1.1.1.1', '1.2.t', '1.2.1.1'],
+      ['work', 'book', 'chapter', 'line'],
+      [{ row: 1, level: 1 }, { row: 2, level: 1 }, { row: 4, level: 1 }],
+    );
+    expect(d.books.map((b) => b.label)).toEqual(['Book 1', 'Book 2']);
+  });
+
   it('does nothing when the tiers are unknown', () => {
     expect(citationDivisions(['1.1', '1.2'], [], [])).toEqual({ headers: [], books: [], chapters: [] });
   });

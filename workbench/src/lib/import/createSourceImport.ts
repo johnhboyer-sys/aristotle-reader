@@ -105,6 +105,9 @@ function titleRowHeaders(refs: string[]): HeaderMark[] {
   const out: HeaderMark[] = [];
   for (let i = 0; i < refs.length; i++) {
     const parts = refs[i].split('.');
+    // Two printed titles that share a citation (two <head>s in one Perseus
+    // book, both "1.t"): the first is the heading, the rest stay in the text.
+    if (i > 0 && refs[i] === refs[i - 1]) continue;
     if (TITLE_LINE_RE.test(parts[parts.length - 1])) out.push({ row: i + 1, level: 1 });
   }
   return out;

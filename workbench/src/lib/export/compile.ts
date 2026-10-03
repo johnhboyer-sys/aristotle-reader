@@ -396,7 +396,10 @@ export function compileWorkMarkdown(
       // (three times bilingual: heading, Latin, English). In bilingual the
       // source half of that line still belongs on the page, as an italic line
       // under the English heading, or the Latin would simply vanish.
-      const headingRow = documentHeadingRow(chapter);
+      // An import's chapter is labelled by its boundary, not by its first row,
+      // so a title opening it (a book's printed title) stays in the body.
+      const slot = containerBooks[chapter.meta.book - 1]?.chapters[chapter.meta.chapter - 1];
+      const headingRow = slot?.keepsFirstRow ? null : documentHeadingRow(chapter);
       if (headingRow !== null && resolved.mode === 'bilingual') {
         const sourceLine = documentRowSourceLine(namespaced, headingRow);
         if (sourceLine) docSections.push(sourceLine);

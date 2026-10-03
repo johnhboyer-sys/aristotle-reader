@@ -203,6 +203,17 @@ describe('books and chapters from the citation tiers', () => {
     expect(manifest.documentChapterContainers).toEqual(work.chapterContainers);
   });
 
+  it('marks only the first of two printed titles that share a citation', () => {
+    // Two <head>s in one Perseus book both cite "1.t"; John's rule is that a
+    // book's first title is the heading and the rest stay in the text.
+    const { file } = createSourceImport({
+      title: 'T',
+      rows: refRows(['1.t', '1.t', '1.1.1', '2.t', '2.1.1']),
+      levelNames: ['book', 'chapter', 'section'],
+    });
+    expect(file.meta.headers?.map((h) => h.row)).toEqual([1, 4]);
+  });
+
   it('leaves a work cited by line alone as it was', () => {
     const { work } = createSourceImport({ title: 'Ach', rows: refRows(['1', '2', '3']), levelNames: ['line'] });
     expect(work.bookContainers).toBeUndefined();
