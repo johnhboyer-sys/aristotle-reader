@@ -23,6 +23,7 @@ import type { FetchFn } from '../assist/apiProvider';
 import type { ApiProviderId } from '../assist/resolveProvider';
 import { CLI_TOOLS, CUSTOM_TOOL } from '../assist/tools';
 import { resolveAssistProvider } from '../assist/resolveProvider';
+import { cliModel } from '../assist/models';
 import type { CliProviderId, DetectionMap } from '../assist/resolveProvider';
 import type { WorkbenchSettings } from '../settings';
 
@@ -272,7 +273,7 @@ export interface TauriAssistDeps {
   loadSettings(): Promise<WorkbenchSettings>;
   /** invoke('assist_detect') — which CLIs Rust can run. */
   invokeDetect(): Promise<AssistDetection>;
-  /** invoke('assist_run', { tool, prompt, timeoutMs }). */
+  /** invoke('assist_run', { tool, prompt, timeoutMs, model? }). */
   invokeRun: RunInvokeFn;
   /** Clipboard write for the fallback provider. */
   writeClipboard(text: string): Promise<void>;
@@ -325,7 +326,12 @@ export async function resolveTauriAssistProvider(deps: TauriAssistDeps): Promise
     // lands on the clipboard; the check keeps the types honest.
     if (choice.kind === 'cli' && choice.tool !== 'gemini') {
       const spec = choice.tool === 'custom' ? CUSTOM_TOOL : CLI_TOOLS[choice.tool];
-      return new CliProvider({ tool: choice.tool, parseOutput: spec.parseOutput, invoke: deps.invokeRun });
+      return new CliProvider({
+        tool: choice.tool,
+        parseOutput: spec.parseOutput,
+        invoke: deps.invokeRun,
+        model: cliModel(choice.tool, prev.models),
+      });
     }
     return clipboard();
   } catch (err) {

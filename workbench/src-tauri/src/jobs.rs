@@ -257,9 +257,18 @@ impl AssistTool {
     ///   config.toml (its MCP servers, hooks, profiles); auth still works. A
     ///   Codex that does not know one of these names refuses to start, which
     ///   fails closed to the clipboard.
-    pub fn invocation(self, prompt: &str) -> Invocation {
+    ///
+    /// `model` must be one of [`Self::models`] (None or empty: the CLI's own
+    /// default). Rust adds the `--model` flag itself; anything off the list is
+    /// refused, so a value that looks like a flag never reaches argv.
+    pub fn invocation(self, prompt: &str, model: Option<&str>) -> Result<Invocation, String> {
+        let model = match model {
+            None | Some("") => None,
+            Some(m) if self.models().contains(&m) => Some(m),
+            Some(m) => return Err(format!("{m:?} is not a {} model this app offers", self.bin_name())),
+        };
         let fixed = |a: &[&str]| a.iter().map(|s| s.to_string()).collect::<Vec<_>>();
-        match self {
+        let mut inv = match self {
             Self::Claude => Invocation {
                 args: fixed(&[
                     "-p", "--output-format", "json",
@@ -282,6 +291,29 @@ impl AssistTool {
                 ]),
                 stdin: Some(prompt.into()),
             },
+        };
+        if let Some(m) = model {
+            // Before Codex's trailing `-` (read the prompt from stdin); Claude
+            // takes flags in any order.
+            let at = if self == Self::Codex { inv.args.len() - 1 } else { inv.args.len() };
+            inv.args.splice(at..at, ["--model".to_string(), m.to_string()]);
+        }
+        Ok(inv)
+    }
+
+    /// The models the window may name, each checked against the installed CLI
+    /// (claude 2.1.287, codex-cli 0.159.2, 2026-10-02) with the flags above:
+    /// Claude's aliases resolve to the current model of each family; Codex's
+    /// are the models its own model cache lists. An unknown name fails in
+    /// both CLIs. The window's copy (src/lib/assist/models.ts) is pinned to
+    /// this list by a test.
+    pub fn models(self) -> &'static [&'static str] {
+        match self {
+            Self::Claude => &["fable", "opus", "sonnet", "haiku"],
+            Self::Codex => &[
+                "gpt-6.1-sol", "gpt-6-sol", "gpt-6-astra", "gpt-6-luna",
+                "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5",
+            ],
         }
     }
 }
@@ -356,7 +388,7 @@ mod tests {
 
     #[test]
     fn claude_runs_with_no_tools() {
-        let args = AssistTool::Claude.invocation("x").args;
+        let args = AssistTool::Claude.invocation("x", None).unwrap().args;
         let i = args.iter().position(|a| a == "--tools").expect("--tools");
         assert_eq!(args[i + 1], "", "--tools must be followed by an empty list");
         assert!(args.iter().any(|a| a == "--strict-mcp-config"));
@@ -367,7 +399,7 @@ mod tests {
 
     #[test]
     fn codex_runs_with_its_tools_switched_off() {
-        let args = AssistTool::Codex.invocation("x").args;
+        let args = AssistTool::Codex.invocation("x", None).unwrap().args;
         let disabled: Vec<&str> = args
             .windows(2)
             .filter(|w| w[0] == "--disable")
@@ -428,10 +460,10 @@ mod tests {
 
     #[test]
     fn assist_invocations_match_the_window_specs() {
-        let c = AssistTool::Claude.invocation("Translate");
+        let c = AssistTool::Claude.invocation("Translate", None).unwrap();
         assert_eq!(c.args[0], "-p");
         assert_eq!(c.stdin.as_deref(), Some("Translate"));
-        let x = AssistTool::Codex.invocation("Translate");
+        let x = AssistTool::Codex.invocation("Translate", None).unwrap();
         assert_eq!(x.args.last().unwrap(), "-");
         assert_eq!(x.args[..2], ["exec", "--json"]);
     }
@@ -439,7 +471,7 @@ mod tests {
     #[test]
     fn the_prompt_never_reaches_argv_for_stdin_tools() {
         for tool in [AssistTool::Claude, AssistTool::Codex] {
-            let inv = tool.invocation("--dangerously-skip-permissions");
+            let inv = tool.invocation("--dangerously-skip-permissions", None).unwrap();
             assert!(!inv.args.iter().any(|a| a.contains("dangerously")), "{tool:?}");
         }
     }
@@ -460,5 +492,65 @@ mod tests {
             assert!(tool.candidate_paths(home).iter().all(|p| p.is_absolute()), "{tool:?}");
         }
         assert_eq!(AssistTool::Claude.candidate_paths(home)[0], Path::new("/Users/someone/.claude/local/claude"));
+    }
+
+    // ── the model the window names ──
+
+    #[test]
+    fn a_listed_model_becomes_rusts_own_flag() {
+        let c = AssistTool::Claude.invocation("p", Some("sonnet")).unwrap();
+        assert!(c.args.windows(2).any(|w| w == ["--model", "sonnet"]), "{:?}", c.args);
+        let x = AssistTool::Codex.invocation("p", Some("gpt-6-luna")).unwrap();
+        assert!(x.args.windows(2).any(|w| w == ["--model", "gpt-6-luna"]), "{:?}", x.args);
+        // Codex still reads the prompt from stdin: `-` stays last.
+        assert_eq!(x.args.last().unwrap(), "-");
+    }
+
+    #[test]
+    fn no_model_means_no_flag() {
+        for tool in [AssistTool::Claude, AssistTool::Codex] {
+            for model in [None, Some("")] {
+                let inv = tool.invocation("p", model).unwrap();
+                assert!(!inv.args.iter().any(|a| a == "--model"), "{tool:?} {model:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_model_off_the_list_is_refused() {
+        for tool in [AssistTool::Claude, AssistTool::Codex] {
+            for bad in [
+                "--yolo",
+                "--dangerously-skip-permissions",
+                "-p",
+                "sonnet --tools Bash",
+                " sonnet",
+                "sonnet\n",
+                "SONNET",
+                "no-such-model",
+                // Substrings and extensions of listed names: only an exact
+                // match may pass.
+                "son",
+                "opus-",
+                "gpt-6",
+                "gpt-6-luna-x",
+            ] {
+                assert!(tool.invocation("p", Some(bad)).is_err(), "{tool:?} accepted {bad:?}");
+            }
+        }
+        // Each tool's list is its own.
+        assert!(AssistTool::Claude.invocation("p", Some("gpt-6-luna")).is_err());
+        assert!(AssistTool::Codex.invocation("p", Some("sonnet")).is_err());
+    }
+
+    #[test]
+    fn every_listed_model_is_a_plain_name() {
+        for tool in [AssistTool::Claude, AssistTool::Codex] {
+            assert!(!tool.models().is_empty(), "{tool:?}");
+            for m in tool.models() {
+                assert!(!m.starts_with('-'), "{m}");
+                assert!(m.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '.'), "{m}");
+            }
+        }
     }
 }

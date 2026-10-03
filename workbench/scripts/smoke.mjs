@@ -169,6 +169,88 @@ await run('translate a line with AI', async () => {
   await page.evaluate(() => { window.__assistFake = undefined; });
 });
 
+await run('the spark shows on the active line and opens assist', async () => {
+  // John could not find the ✦: it showed only while the mouse was over the
+  // active line, at the far right of the English column. It now shows
+  // whenever the cursor is in a line, and only there.
+  await page.evaluate(() => {
+    window.__assistFake = 'spark suggestion';
+    window.__assistFakeDelayMs = 50;
+  });
+  const cell = page.locator('.en-cell[data-row-en="5"]');
+  await cell.locator('.ProseMirror').click();
+  await page.mouse.move(5, 5); // off the line
+  await page.waitForTimeout(300); // the fade-in
+  const shown = (row) =>
+    page.locator(`.en-cell[data-row-en="${row}"] .assist-glyph`).evaluate((g) => {
+      const s = getComputedStyle(g);
+      return Number(s.opacity) > 0.3 && s.pointerEvents === 'auto';
+    });
+  check('the ✦ shows on the active line without hovering', await shown(5));
+  check('other lines show no ✦', !(await shown(6)));
+  const box = await cell.locator('.assist-glyph').boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await page.waitForSelector('.en-cell[data-row-en="5"] .assist-popover .assist-text');
+  check(
+    'clicking it brings a suggestion for that line',
+    (await cell.locator('.assist-popover .assist-text').innerText()).includes('spark suggestion'),
+  );
+  await page.getByRole('button', { name: 'Dismiss' }).click();
+  await page.evaluate(() => { window.__assistFake = undefined; });
+
+  // Now that the ✦ shows on the active line, English must never run
+  // underneath it. Where a line wraps depends on its words, so check the room
+  // the text may use: the editor's content box must end before the ✦ begins.
+  const clear = await cell.evaluate((c) => {
+    const g = c.querySelector('.assist-glyph').getBoundingClientRect();
+    const ed = c.querySelector('.row-editor');
+    const right = ed.getBoundingClientRect().right - parseFloat(getComputedStyle(ed).paddingRight);
+    return { ok: right <= g.left + 0.5, detail: `text may reach ${right.toFixed(1)}, ✦ starts at ${g.left.toFixed(1)}` };
+  });
+  check('English stays clear of the ✦', clear.ok, clear.detail);
+});
+
+await run('pick a model in the Ask AI panel, and keep it', async () => {
+  // The pick is remembered per provider in settings.assist.models; the
+  // harness has no provider chosen, so the panel shows Claude Code's models.
+  const toggle = page.getByRole('button', { name: 'Toggle Ask AI panel' });
+  await toggle.click();
+  const picker = page.getByLabel('AI model');
+  check('the picker offers Claude Code’s models', (await picker.locator('option').allInnerTexts()).includes('Opus'));
+  await picker.selectOption('opus');
+  await page.waitForFunction(() => (localStorage.getItem('workbench:settings') ?? '').includes('"opus"'));
+  await page.reload();
+  await page.waitForSelector('.library');
+  if ((await page.locator('.chapter-grid').count()) === 0) await page.locator('.chapter-row').first().click();
+  await page.waitForSelector('.chapter-grid');
+  if ((await page.locator('.ask-panel').count()) === 0) await toggle.click();
+  check('the pick survives a reload', (await page.getByLabel('AI model').inputValue()) === 'opus');
+  await page.getByLabel('AI model').selectOption('');
+
+  // Switching provider in Settings while the panel is open: the panel must
+  // show the new provider's models once you come back to it.
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('tab', { name: 'AI assist' }).click();
+  await page.getByText('Codex (OpenAI)', { exact: true }).click();
+  await page.locator('.dialog[aria-label="Settings"]').getByRole('button', { name: 'Close' }).click();
+  await page.locator('.ask-panel').hover();
+  await page.waitForFunction(() => document.querySelector('.ask-model')?.textContent?.includes('Codex'));
+  check(
+    'the panel follows a provider change made in Settings',
+    (await page.getByLabel('AI model').locator('option').allInnerTexts()).includes('GPT-6-Luna'),
+  );
+  await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('workbench:settings') || '{}');
+    delete s.assist;
+    localStorage.setItem('workbench:settings', JSON.stringify(s));
+  });
+  await page.reload();
+  await page.waitForSelector('.library');
+  if ((await page.locator('.chapter-grid').count()) === 0) await page.locator('.chapter-row').first().click();
+  await page.waitForSelector('.chapter-grid');
+  if ((await page.locator('.ask-panel').count()) > 0) await toggle.click();
+});
+
 await run('create a document', async () => {
   await page.locator('.add-work', { hasText: 'New document…' }).click();
   const dialog = page.locator('.dialog', { has: page.locator('text=New document') });
@@ -178,6 +260,34 @@ await run('create a document', async () => {
   await page.waitForSelector('.chapter-head h1');
   const heading = (await page.locator('.chapter-head h1').first().innerText()).trim();
   check('the new document opens', heading.startsWith('Smoke Draft'), heading);
+});
+
+await run('a heading keeps English clear of the ✦ in Lane and Weave', async () => {
+  // Headings and subtitles break out of the flowing Interpolated line, so
+  // they keep the ✦'s corner like any line in the Lines view.
+  await page.locator('.grc-cell').first().click({ button: 'right' });
+  await page.locator('.ctx-menu-item', { hasText: 'Mark as' }).hover();
+  await page.locator('.ctx-submenu .ctx-menu-item', { hasText: 'Heading' }).click();
+  await page.waitForSelector('.en-cell[data-heading-level]');
+  await page.locator('.view-toggle-btn', { hasText: 'Interpolated' }).click();
+  for (const layout of ['Lane', 'Weave']) {
+    const btn = page.locator('.view-toggle-btn', { hasText: layout });
+    if ((await btn.count()) > 0) await btn.click();
+    const cell = page.locator('.en-cell[data-heading-level]').first();
+    await cell.locator('.ProseMirror').click();
+    const clear = await cell.evaluate((c) => {
+      const g = c.querySelector('.assist-glyph').getBoundingClientRect();
+      const ed = c.querySelector('.row-editor');
+      const right = ed.getBoundingClientRect().right - parseFloat(getComputedStyle(ed).paddingRight);
+      return { ok: right <= g.left + 0.5, detail: `text may reach ${right.toFixed(1)}, ✦ starts at ${g.left.toFixed(1)}` };
+    });
+    check(`${layout}: a heading's English stays clear of the ✦`, clear.ok, clear.detail);
+    // Leave the editor before switching view: switching with the cursor in an
+    // English cell trips a separate, known Svelte error in ChapterEditor's
+    // blur handler (state_unsafe_mutation), which is not what this tests.
+    await page.evaluate(() => document.activeElement?.blur());
+  }
+  await page.locator('.view-toggle-btn', { hasText: 'Lines' }).click();
 });
 
 await run('fold the work you are reading', async () => {

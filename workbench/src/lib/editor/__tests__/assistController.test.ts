@@ -29,6 +29,7 @@ import {
   UNAUTH_MESSAGE,
 } from '../../assist/messages';
 import type { AssistContext } from '../../assist/provider';
+import type { AssistSettings } from '../../settings';
 import type { AssistRunResponse, RunInvokeFn } from '../../assist/cliProvider';
 
 // ── shared fixtures ─────────────────────────────────────────────────────────
@@ -445,6 +446,25 @@ describe('resolveTauriAssistProvider', () => {
     expect(calls.runs).toHaveLength(1);
     expect(calls.runs[0].tool).toBe('claude');
     expect(calls.runs[0].prompt).toContain('γραμμή 10'); // the composed prompt carries the target
+  });
+
+  it('sends the saved model for the tool that runs, and only a listed one', async () => {
+    const models: (string | undefined)[] = [];
+    const run = (async (_cmd, args) => {
+      models.push(args.model);
+      return { ok: true, text: JSON.stringify({ result: 'ok' }) } as AssistRunResponse;
+    }) as RunInvokeFn;
+    const found = async () => ({ ...NONE, claude: '/c', codex: '/x' });
+    const cases: AssistSettings[] = [
+      { provider: 'codex', models: { codex: 'gpt-6-luna', claude: 'opus' } },
+      { models: { claude: 'opus' } }, // no explicit provider: Claude
+      { provider: 'claude', models: { claude: '--yolo' } }, // off the list: the default
+    ];
+    for (const assist of cases) {
+      const { deps } = tauriDeps({ loadSettings: async () => ({ assist }), invokeDetect: found, invokeRun: run });
+      await (await resolveTauriAssistProvider(deps)).suggest(smallCtx(), signal());
+    }
+    expect(models).toEqual(['gpt-6-luna', 'opus', undefined]);
   });
 
   it('explicit codex provider: runs codex and reads its JSONL', async () => {

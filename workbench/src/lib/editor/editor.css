@@ -639,9 +639,10 @@
 }
 
 /* ── AI-assist (design doc D4) ────────────────────────────────────────────
-   Suggest glyph: invisible at rest (§12 invisibility — the collaborator
-   should never notice it). It appears only while the FOCUSED row is hovered,
-   at the right edge of the English cell; ⌘⏎ is the keyboard path. */
+   Suggest glyph: invisible on every line but the one holding the cursor,
+   where it shows faintly at the right edge of the English cell. It used to
+   need the mouse over that line as well, and John could not find it
+   (2026-10-02). ⌘⏎ is the keyboard path. */
 .assist-glyph {
   position: absolute;
   top: 0;
@@ -658,24 +659,27 @@
   pointer-events: none;
   transition: opacity 0.12s ease;
 }
-.en-cell:focus-within:hover .assist-glyph {
+.en-cell:focus-within .assist-glyph {
   opacity: 0.55;
   pointer-events: auto;
 }
 .en-cell .assist-glyph:hover {
   opacity: 1;
 }
-/* In the flowing views the English cells are small/inline, so requiring the
-   cell to be hovered AS WELL AS focused made the glyph's hit target fiddly
-   (clicks fell through). Make it clickable as soon as the cell holds focus, and
-   lift it above neighbouring cells so nothing overlaps its hit area. */
-.interp-flow .en-cell:focus-within .assist-glyph {
-  opacity: 0.55;
-  pointer-events: auto;
-  z-index: 5;
+/* Keep the English clear of the glyph's corner, on every line so text never
+   reflows as the cursor moves. */
+.en-cell > .row-editor {
+  padding-right: 1.25rem;
 }
-.interp-flow .en-cell:focus-within .assist-glyph:hover {
-  opacity: 1;
+/* In the flowing views the English cells are small/inline: no reserved
+   corner (it would gap the flow), and lift the glyph above neighbouring
+   cells so nothing overlaps its hit area. Headings and subtitles break out of
+   the flow, so they keep the corner. */
+.interp-flow .en-cell:not([data-heading-level]):not(.row-subtitle) > .row-editor {
+  padding-right: 0;
+}
+.interp-flow .en-cell:focus-within .assist-glyph {
+  z-index: 5;
 }
 
 /* Non-modal suggestion popover anchored under the row (same quiet chrome as

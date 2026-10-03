@@ -4,7 +4,7 @@
  * composed prompt; Rust finds the program, builds its arguments (each AI CLI
  * with its own tools switched off), owns the timeout and keeps stderr:
  *
- *   invoke('assist_run', { tool, prompt, timeoutMs })
+ *   invoke('assist_run', { tool, prompt, timeoutMs, model? })
  *     => { ok: true; text: string }      — the CLI's raw stdout
  *      | { ok: false; kind: 'unauth' | 'timeout' | 'error' }
  *
@@ -39,7 +39,7 @@ export type AssistRunResponse = AssistRunOk | AssistRunFail;
 /** The `assist_run` invoke, structurally typed (no import-time Tauri dependency). */
 export type RunInvokeFn = (
   cmd: 'assist_run',
-  args: { tool: CliToolId; prompt: string; timeoutMs: number },
+  args: { tool: CliToolId; prompt: string; timeoutMs: number; model?: string },
 ) => Promise<AssistRunResponse>;
 
 export interface CliProviderOptions {
@@ -47,6 +47,8 @@ export interface CliProviderOptions {
   parseOutput(stdout: string): ParseResult;
   invoke: RunInvokeFn;
   timeoutMs?: number;
+  /** One of the tool's listed models (models.ts); Rust checks it again. */
+  model?: string;
 }
 
 /** The one prompt string a CLI receives: system framing, a blank line, then
@@ -71,6 +73,7 @@ export class CliProvider implements AssistProvider {
       tool: this.options.tool,
       prompt: composeCliPrompt(ctx),
       timeoutMs: this.timeoutMs,
+      ...(this.options.model ? { model: this.options.model } : {}),
     });
 
     // Respect the AbortSignal: ignore late results entirely.

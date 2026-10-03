@@ -392,8 +392,13 @@ fn find_tool(tool: AssistTool) -> Option<PathBuf> {
 }
 
 /// The program and invocation for `tool` ("claude", "codex" or "custom"), or why there is none.
-fn assist_command(tool: &str, approved: &ApprovedPrograms, prompt: &str) -> Result<(PathBuf, Invocation), String> {
+/// `model` is the window's pick from the tool's fixed list (None or empty: the
+/// CLI's default); the custom command takes none.
+fn assist_command(tool: &str, approved: &ApprovedPrograms, prompt: &str, model: Option<&str>) -> Result<(PathBuf, Invocation), String> {
     if tool == "custom" {
+        if model.is_some_and(|m| !m.is_empty()) {
+            return Err("the custom command takes no model".into());
+        }
         let c = approved.custom_assist.as_ref().ok_or("no custom command approved")?;
         let mut args = c.args.clone();
         let stdin = match c.prompt_via {
@@ -406,8 +411,9 @@ fn assist_command(tool: &str, approved: &ApprovedPrograms, prompt: &str) -> Resu
         return Ok((c.program.clone(), Invocation { args, stdin }));
     }
     let t = AssistTool::parse(tool)?;
+    let inv = t.invocation(prompt, model)?;
     let program = find_tool(t).ok_or_else(|| format!("{tool} is not installed"))?;
-    Ok((program, t.invocation(prompt)))
+    Ok((program, inv))
 }
 
 #[derive(Serialize, Debug)]
@@ -446,11 +452,12 @@ pub async fn assist_detect(app: AppHandle) -> Result<AssistDetection, String> {
 }
 
 /// Ask an AI CLI about `prompt`. Returns `{ ok: true, text }` (raw stdout) or
-/// `{ ok: false, kind: "unauth" | "timeout" | "error" }`.
+/// `{ ok: false, kind: "unauth" | "timeout" | "error" }`. `model` names one of
+/// the tool's listed models; Rust builds the flag (see `AssistTool::invocation`).
 #[tauri::command]
-pub async fn assist_run(app: AppHandle, tool: String, prompt: String, timeout_ms: u64) -> AssistOutcome {
+pub async fn assist_run(app: AppHandle, tool: String, prompt: String, timeout_ms: u64, model: Option<String>) -> AssistOutcome {
     let Ok(dir) = app_data(&app) else { return AssistOutcome::failure("error") };
-    blocking(move || match assist_command(&tool, &load_approved(&dir), &prompt) {
+    blocking(move || match assist_command(&tool, &load_approved(&dir), &prompt, model.as_deref()) {
         Ok((program, inv)) => run_blocking(&program.display().to_string(), &inv.args, inv.stdin, timeout_ms.clamp(1000, ASSIST_MAX_TIMEOUT_MS)),
         Err(e) => {
             eprintln!("[assist] {e}");
@@ -724,12 +731,12 @@ mod tests {
 
     #[test]
     fn the_custom_command_comes_only_from_the_record() {
-        assert!(assist_command("custom", &ApprovedPrograms::default(), "p").is_err());
+        assert!(assist_command("custom", &ApprovedPrograms::default(), "p", None).is_err());
         let approved = ApprovedPrograms {
             custom_assist: Some(CustomAssist { program: "/usr/local/bin/llm".into(), args: vec!["-m".into(), "m".into()], prompt_via: PromptVia::Arg }),
             ..Default::default()
         };
-        let (program, inv) = assist_command("custom", &approved, "--yolo").unwrap();
+        let (program, inv) = assist_command("custom", &approved, "--yolo", None).unwrap();
         assert_eq!(program, Path::new("/usr/local/bin/llm"));
         assert_eq!(inv.args, ["-m", "m", "--yolo"]);
         assert_eq!(inv.stdin, None);
@@ -737,14 +744,32 @@ mod tests {
             custom_assist: Some(CustomAssist { program: "/x".into(), args: vec![], prompt_via: PromptVia::Stdin }),
             ..Default::default()
         };
-        let (_, inv) = assist_command("custom", &stdin, "p").unwrap();
+        let (_, inv) = assist_command("custom", &stdin, "p", None).unwrap();
         assert_eq!((inv.args.len(), inv.stdin.as_deref()), (0, Some("p")));
     }
 
     #[test]
+    fn a_custom_command_takes_no_model() {
+        let approved = ApprovedPrograms {
+            custom_assist: Some(CustomAssist { program: "/x".into(), args: vec![], prompt_via: PromptVia::Stdin }),
+            ..Default::default()
+        };
+        assert!(assist_command("custom", &approved, "p", None).is_ok());
+        assert!(assist_command("custom", &approved, "p", Some("")).is_ok());
+        let err = assist_command("custom", &approved, "p", Some("--yolo")).unwrap_err();
+        assert!(err.contains("model"), "{err}");
+    }
+
+    #[test]
+    fn a_built_in_tool_refuses_a_model_off_its_list() {
+        let err = assist_command("claude", &ApprovedPrograms::default(), "p", Some("--yolo")).unwrap_err();
+        assert!(err.contains("model"), "{err}");
+    }
+
+    #[test]
     fn assist_refuses_a_program_path_for_a_tool() {
-        assert!(assist_command("/bin/sh", &ApprovedPrograms::default(), "p").is_err());
-        assert!(assist_command("", &ApprovedPrograms::default(), "p").is_err());
+        assert!(assist_command("/bin/sh", &ApprovedPrograms::default(), "p", None).is_err());
+        assert!(assist_command("", &ApprovedPrograms::default(), "p", None).is_err());
     }
 
     #[test]
