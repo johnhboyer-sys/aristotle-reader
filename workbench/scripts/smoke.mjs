@@ -398,6 +398,53 @@ await run('remove it', async () => {
   check('the work and its files are gone', left === 0, `${left} storage keys left`);
 });
 
+await run('undo a structural edit and switch chapter at once', async () => {
+  // A structural undo refreshes the footnote list on the next tick. When the
+  // same flush unmounts the editor (a chapter switch), that refresh used to
+  // run anyway and show the old chapter's notes in the new chapter's panel.
+  await page.locator('.add-work', { hasText: 'New document…' }).click();
+  const dialog = page.locator('.dialog', { has: page.locator('text=New document') });
+  await dialog.locator('input[type="text"]').first().fill('Smoke Race');
+  await dialog.locator('textarea').fill('Prima pars.\n\nSecunda pars.');
+  await dialog.locator('input[value="paragraphs"]').check(); // structural edits need paragraph rows
+  await dialog.locator('.primary-btn').click();
+  await page.waitForFunction(() => document.querySelector('.chapter-head h1')?.textContent?.includes('Smoke Race'));
+  // Footnotes live in the sentence layer, so the note goes in from there.
+  await page.locator('.view-toggle-btn', { hasText: 'Interpolated' }).click();
+  await page.getByRole('button', { name: 'By sentence' }).click();
+  await page.locator('.en-cell .ProseMirror').first().click();
+  await page.keyboard.type('racephrase');
+  await page.keyboard.press('Shift+Home');
+  await page.getByRole('button', { name: 'Insert footnote' }).click();
+  await page.waitForSelector('.fn-panel .fn-snippet:has-text("racephrase")');
+  await page.locator('.view-toggle-btn', { hasText: 'Paragraphs' }).click();
+  await page.locator('.grc-cell').first().click({ button: 'right' });
+  await page.locator('.ctx-menu-item', { hasText: 'Insert heading line here' }).hover();
+  await page.locator('.ctx-submenu .ctx-menu-item').first().click();
+  await page.waitForSelector('.en-cell[data-heading-level]');
+  const stale = await page.evaluate(async () => {
+    const target = [...document.querySelectorAll('.work')]
+      .find((w) => w.querySelector('.work-title')?.textContent?.includes('Metaphysics'))
+      ?.querySelector('.chapter-row');
+    if (!target) throw new Error('no Metaphysics chapter row in the rail');
+    let switched = false;
+    let seen = false;
+    const panelShowsOld = () => !!document.querySelector('.fn-panel')?.textContent?.includes('racephrase');
+    const obs = new MutationObserver(() => {
+      if (switched && panelShowsOld()) seen = true;
+    });
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true }));
+    target.click();
+    switched = true;
+    for (let i = 0; i < 20; i++) await new Promise((r) => requestAnimationFrame(r));
+    obs.disconnect();
+    return seen || panelShowsOld();
+  });
+  await page.waitForFunction(() => document.querySelector('.chapter-head h1')?.textContent?.includes('Metaphysics'));
+  check("the new chapter's footnotes never show the old chapter's", !stale);
+});
+
 // ── verdict ────────────────────────────────────────────────────────────────
 
 await browser.close();
