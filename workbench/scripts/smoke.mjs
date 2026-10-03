@@ -36,8 +36,18 @@ async function serverUp() {
   }
 }
 
+/** Anything answering at all, a 404 included. */
+async function portAnswers() {
+  try {
+    await fetch(BASE, { signal: AbortSignal.timeout(1500) });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 let devProc = null;
-if (process.env.SMOKE_PORT && (await serverUp())) {
+if (process.env.SMOKE_PORT && (await portAnswers())) {
   console.error(`:${PORT} is already in use, perhaps by another checkout. Pick a free SMOKE_PORT.`);
   process.exit(1);
 }
@@ -45,7 +55,10 @@ if (!(await serverUp())) {
   console.log('starting dev server…');
   devProc = spawn('npx', ['vite', '--port', PORT], { cwd: ROOT, stdio: 'ignore' });
   for (let i = 0; i < 60 && !(await serverUp()); i++) await new Promise((r) => setTimeout(r, 500));
-  if (!(await serverUp())) throw new Error(`dev server did not come up on :${PORT}`);
+  if (!(await serverUp())) {
+    devProc.kill();
+    throw new Error(`dev server did not come up on :${PORT}`);
+  }
 }
 
 // Playwright pins its browser to this package's exact revision, so a machine
