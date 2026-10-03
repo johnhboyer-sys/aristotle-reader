@@ -749,3 +749,47 @@ describe('stripLanguageSpans (markdown deliverable)', () => {
     expect(stripLanguageSpans(md)).toBe(md);
   });
 });
+
+describe('chapterToPandocMarkdown — the whole-work export\'s choices', () => {
+  it('unset options leave the translation-only output unchanged', () => {
+    const base = chapterToPandocMarkdown(chapter(), META);
+    expect(chapterToPandocMarkdown(chapter(), META, { mode: 'english' })).toBe(base);
+    expect(base).not.toContain('g1');
+  });
+
+  it('bilingual puts the original block before the translation block by default', () => {
+    const md = chapterToPandocMarkdown(chapter(), META, { mode: 'bilingual' });
+    expect(md).toContain('g1');
+    expect(md.indexOf('g1')).toBeLessThan(md.indexOf('one'));
+  });
+
+  it('bilingual, translation first, reverses the blocks', () => {
+    const md = chapterToPandocMarkdown(chapter(), META, { mode: 'bilingual', bilingualOrder: 'translation-first' });
+    expect(md.indexOf('one')).toBeLessThan(md.indexOf('g1'));
+  });
+
+  it('bilingual table layout makes a two-column table', () => {
+    const md = chapterToPandocMarkdown(chapter(), META, { mode: 'bilingual', bilingualLayout: 'table' });
+    expect(md).toMatch(/\|/);
+  });
+
+  it('matches the whole-work body for the same choices', () => {
+    const whole = compileWorkMarkdown([chapter()], META, { mode: 'bilingual', bilingualLayout: 'alternating' }).markdown;
+    const single = chapterToPandocMarkdown(chapter(), META, { mode: 'bilingual', bilingualLayout: 'alternating' });
+    // The whole-work file has a book heading and a chapter heading; this one has a single heading.
+    const body = (md: string, headings: number) => md.split('\n\n').slice(headings).join('\n\n');
+    expect(body(single, 1)).toBe(body(whole, 2));
+  });
+
+  it('a document-spine work honours bilingual mode in a single chapter too', () => {
+    const doc: ChapterFile = {
+      meta: { schemaVersion: 1, work: 'free-paragraph', book: 1, chapter: 1, citationScheme: 'paragraph', spanStart: '1', spanEnd: '1' },
+      greekLines: ['source text'],
+      englishLines: ['english text'],
+      footnotes: [],
+    };
+    const md = chapterToPandocMarkdown(doc, FREE_PARAGRAPH_META, { mode: 'bilingual' });
+    expect(md).toContain('source text');
+    expect(md).toContain('english text');
+  });
+});

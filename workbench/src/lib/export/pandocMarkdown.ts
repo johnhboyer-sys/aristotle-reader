@@ -77,6 +77,12 @@ export interface HeadingPair {
 export interface PandocMarkdownOptions {
   /** Bekker-ref stamping density. Default 'every-5'. */
   stampMode?: StampMode;
+  /** 'english' = translation only (default); 'bilingual' = original and translation together. */
+  mode?: 'english' | 'bilingual';
+  /** Bilingual layout. Unset keeps each path's historical shape (see BilingualLayout). */
+  bilingualLayout?: BilingualLayout;
+  /** Which language leads in bilingual mode. Default 'original-first'. */
+  bilingualOrder?: BilingualOrder;
 }
 
 // ── Bekker ref arithmetic, scoped to export stamping ────────────────────────
@@ -1255,12 +1261,43 @@ function buildHeading(chapter: ChapterFile, work: WorkMeta): string {
  * split point, in both single-chapter and (via compile.ts, which shares
  * `chapterSegments`/`renderSegmentsGrouped`) whole-work exports.
  */
-function buildBody(chapter: ChapterFile, options: Required<PandocMarkdownOptions>): { paragraphs: string[]; footnoteIdsUsed: string[] } {
+function buildBody(chapter: ChapterFile, options: PandocMarkdownOptions & { stampMode: StampMode }): { paragraphs: string[]; footnoteIdsUsed: string[] } {
   const scheme = getScheme(chapter.meta.citationScheme);
   if (usesDocumentRowRenderer(scheme)) return renderDocumentSpineEnglish(chapter);
+  return renderCorpusChapterBody(chapter, options);
+}
+
+/**
+ * A corpus chapter's body paragraphs and the footnote ids they use, for
+ * english mode and for each bilingual layout. Shared by single-chapter export
+ * and the whole-work compile, so the two cannot drift apart. The caller
+ * namespaces footnote ids first if it needs to.
+ */
+export function renderCorpusChapterBody(
+  chapter: ChapterFile,
+  options: PandocMarkdownOptions & { stampMode: StampMode },
+): { paragraphs: string[]; footnoteIdsUsed: string[] } {
+  const scheme = getScheme(chapter.meta.citationScheme);
   const useStamps = scheme.gutter.rowUnit === 'bekker-line';
   const segments = chapterSegments(chapter);
-  return renderSegmentsGrouped(segments, (seg) => seg.englishMarkup, useStamps, options.stampMode);
+  const bilingual = options.mode === 'bilingual';
+  const order = options.bilingualOrder ?? 'original-first';
+  const layout = options.bilingualLayout ?? 'block';
+  if (bilingual && layout !== 'block') {
+    // Alternating and table need matched pairs, so both sides render in one
+    // walk — see renderSegmentsPaired for why zipping two independent passes
+    // would mis-pair.
+    const paired = renderSegmentsPaired(segments, useStamps, options.stampMode);
+    return { paragraphs: assembleBilingual(paired.pairs, layout, order), footnoteIdsUsed: paired.footnoteIdsUsed };
+  }
+  // English mode, and bilingual 'block' — the original two-independent-passes
+  // path, kept verbatim so the default export is unchanged.
+  const english = renderSegmentsGrouped(segments, (seg) => seg.englishMarkup, useStamps, options.stampMode);
+  if (!bilingual) return english;
+  const { paragraphs: greek } = renderSegmentsGrouped(segments, (seg) => seg.greekSlice, useStamps, options.stampMode);
+  const blocks = order === 'translation-first' ? [english.paragraphs, greek] : [greek, english.paragraphs];
+  const paragraphs = blocks.filter((b) => b.length > 0).map((b) => b.join('\n\n'));
+  return { paragraphs, footnoteIdsUsed: english.footnoteIdsUsed };
 }
 
 // ── footnote blocks ──────────────────────────────────────────────────────
@@ -1290,9 +1327,11 @@ function buildFootnoteBlocks(chapter: ChapterFile, idsUsed: string[]): string[] 
  * `pandoc -f markdown -t docx`. Pure — no I/O.
  */
 export function chapterToPandocMarkdown(chapter: ChapterFile, work: WorkMeta, options: PandocMarkdownOptions = {}): string {
-  const resolved: Required<PandocMarkdownOptions> = { stampMode: options.stampMode ?? 'every-5' };
+  const resolved = { ...options, stampMode: options.stampMode ?? 'every-5' };
   const scheme = getScheme(chapter.meta.citationScheme);
-  if (scheme.spineSource === 'document') return documentToPandocMarkdown(chapter, work);
+  if (scheme.spineSource === 'document') {
+    return documentToPandocMarkdown(chapter, work, options.mode ?? 'english', options.bilingualLayout, options.bilingualOrder);
+  }
 
   const heading = buildHeading(chapter, work);
   const { paragraphs, footnoteIdsUsed } = buildBody(chapter, resolved);

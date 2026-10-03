@@ -30,6 +30,7 @@ export {
   compileWorkMarkdown,
   sortChaptersManifestOrder,
   buildGapReport,
+  chapterRef,
 } from './compile';
 export type {
   CompileMode,

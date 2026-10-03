@@ -18,6 +18,8 @@
   } from '../lib/export/tauriExport';
   import type { WorkManifest } from '../lib/works/manifest';
   import CompileDialog from './CompileDialog.svelte';
+  import ChapterExportDialog from './ChapterExportDialog.svelte';
+  import type { ExportChoices } from '../lib/export/choices';
 
   let {
     work,
@@ -28,6 +30,7 @@
   let status = $state<string | null>(null);
   let busy = $state(false);
   let compileOpen = $state(false);
+  let chapterOpen = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   function note(msg: string, ms = 5000) {
@@ -36,7 +39,7 @@
     timer = setTimeout(() => (status = null), ms);
   }
 
-  async function exportChapter() {
+  async function exportChapter(choices: ExportChoices) {
     if (!work || book < 1 || chapter < 1 || busy) return;
     busy = true;
     try {
@@ -69,11 +72,20 @@
       }
       const label = work.books[book - 1]?.label ?? String(book);
       const docxPath = await chooseDocxTarget(
-        await defaultSavePath(`${work.title} ${label}.${chapter}.docx`, prefs.outputDir),
+        await defaultSavePath(
+          `${work.title} ${label}.${chapter}${choices.mode === 'bilingual' ? ' (bilingual)' : ''}.docx`,
+          prefs.outputDir,
+        ),
       );
       if (!docxPath) return; // user cancelled — not a failure
 
-      const markdown = chapterToPandocMarkdown(parsed, work, { stampMode: prefs.stampMode ?? 'every-5' });
+      const markdown = chapterToPandocMarkdown(parsed, work, {
+        // The dialog seeded these from Settings › Export; its stamp mode is that setting.
+        stampMode: choices.stampMode ?? prefs.stampMode ?? 'every-5',
+        mode: choices.mode,
+        bilingualLayout: choices.bilingualLayout,
+        bilingualOrder: choices.bilingualOrder,
+      });
       const pathApi = await import('@tauri-apps/api/path');
       const fs = await import('@tauri-apps/plugin-fs');
       const appData = await pathApi.appDataDir();
@@ -105,7 +117,7 @@
   <span class="export-wrap">
     <button
       class="icon-btn"
-      onclick={exportChapter}
+      onclick={() => (chapterOpen = true)}
       disabled={busy || !work}
       title="Export chapter as Word document…"
       aria-label="Export chapter as Word document"
@@ -132,6 +144,9 @@
       <span class="export-status" role="status">{status}</span>
     {/if}
   </span>
+  {#if chapterOpen && work}
+    <ChapterExportDialog {work} onExport={exportChapter} onClose={() => (chapterOpen = false)} />
+  {/if}
   {#if compileOpen && work}
     <CompileDialog {work} onClose={() => (compileOpen = false)} />
   {/if}
