@@ -18,6 +18,8 @@
 //      never auto-merged) and iCloud's not-yet-downloaded placeholder stubs
 //      (surfaced, greyed out, excluded from opening/compiling).
 
+import type { LibraryStorage } from './storage';
+
 /** FNV-1a — small, synchronous, dependency-free; good enough to distinguish
  * "same bytes" from "different bytes" for false-positive-mtime confirmation.
  * Not a cryptographic hash and not meant to be one. */
@@ -224,4 +226,28 @@ export function chapterLibraryStatuses(files: string[]): Map<string, ChapterLibr
     }
   }
   return statuses;
+}
+
+/**
+ * Every work's chapter statuses, for the rail. A work whose folder could not
+ * be listed is named in `unreadable`, not shown as having no files, and does
+ * not stop the others: this runs at boot.
+ */
+export async function libraryStatusesFor(
+  workIds: string[],
+  storage: LibraryStorage,
+): Promise<{ statuses: Record<string, Map<string, ChapterLibraryStatus>>; unreadable: string[] }> {
+  const statuses: Record<string, Map<string, ChapterLibraryStatus>> = {};
+  const failed = new Set<string>();
+  await Promise.all(
+    workIds.map(async (workId) => {
+      try {
+        statuses[workId] = chapterLibraryStatuses(await storage.list(workId));
+      } catch (err) {
+        console.warn(`library: ${workId} could not be listed`, err);
+        failed.add(workId);
+      }
+    }),
+  );
+  return { statuses, unreadable: workIds.filter((id) => failed.has(id)) };
 }

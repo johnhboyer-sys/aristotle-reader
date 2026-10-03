@@ -80,12 +80,12 @@
       const loaded: ChapterFile[] = [];
       const skipped: string[] = [];
       for (const file of files) {
-        const raw = await storage.read(work.id, file);
-        if (!raw) continue;
         try {
+          const raw = await storage.read(work.id, file);
+          if (!raw) continue;
           loaded.push(parseChapterFile(raw, file));
         } catch (err) {
-          // A corrupt chapter file shouldn't block compiling every other
+          // A chapter file that can't be read or parsed shouldn't block compiling every other
           // chapter — skip it and note it plainly, same "degrade, don't
           // block" spirit as onboarding's chapters.json handling.
           console.error(`[compile] skipping unreadable chapter file ${file}`, err);
