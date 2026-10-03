@@ -20,14 +20,18 @@
 //! and this streams it entry by entry to disk instead of materializing it in
 //! the webview's memory.
 //!
-//! Two safety properties this file is responsible for:
+//! Three safety properties this file is responsible for:
 //!
 //!   1. NO PATH ESCAPE. A zip entry can name `../../../etc/passwd`; every
 //!      entry here goes through `enclosed_name()`, which refuses anything that
 //!      climbs out of the destination, and is then re-checked against the
 //!      destination root. A pack is a file the user picked, but "the user
 //!      picked it" is not evidence it was built by us.
-//!   2. NO HALF-INSTALLED PACK. Extraction goes to a staging directory beside
+//!   2. NO UNBOUNDED UNZIP. A pack may hold at most [`MAX_PACK_ENTRIES`]
+//!      entries and unpack to at most [`MAX_PACK_BYTES`], counted as bytes
+//!      are written, not as the zip declares them, so a zip bomb fills
+//!      neither the disk nor the staging folder past the cap.
+//!   3. NO HALF-INSTALLED PACK. Extraction goes to a staging directory beside
 //!      the target; the previous install is only replaced once extraction has
 //!      fully succeeded. An interrupted install leaves the old pack working
 //!      rather than a broken new one.
@@ -42,6 +46,17 @@ use tauri::{AppHandle, Manager};
 /// is refused whole — reading an unknown layout half-way is worse than
 /// declining it.
 const SUPPORTED_FORMAT: u64 = 1;
+
+/// At most this many zip entries in a pack. A real pack has about 30.
+const MAX_PACK_ENTRIES: usize = 1_000;
+
+/// At most this many bytes unpacked from a pack: four times the largest real
+/// pack (the Greek one, 240 MB unpacked, 2026-07-31).
+const MAX_PACK_BYTES: u64 = 1 << 30;
+
+/// At most this many bytes read from pack.json, which is read before the
+/// caps above apply. A real one is under 300 bytes.
+const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
 
 /// The languages a pack may claim. Anything else is refused: the language id
 /// becomes a directory name, and an unvetted one is a path-injection seam.
@@ -199,17 +214,30 @@ fn read_manifest_from_zip(zip_path: &Path) -> Result<Manifest, String> {
         .by_name("pack.json")
         .map_err(|_| "That file isn't a lexicon pack.".to_string())?;
     let mut text = String::new();
-    io::Read::read_to_string(&mut entry, &mut text).map_err(|err| {
+    io::Read::read_to_string(&mut io::Read::take(&mut entry, MAX_MANIFEST_BYTES + 1), &mut text).map_err(|err| {
         eprintln!("[packs] cannot read pack.json: {err}");
         "That pack couldn't be read.".to_string()
     })?;
+    if text.len() as u64 > MAX_MANIFEST_BYTES {
+        eprintln!("[packs] pack.json is over {MAX_MANIFEST_BYTES} bytes");
+        return Err("That file isn't a lexicon pack.".into());
+    }
     parse_manifest(&text)
 }
 
 fn extract_all(zip_path: &Path, dest: &Path) -> Result<(), String> {
+    extract_capped(zip_path, dest, MAX_PACK_ENTRIES, MAX_PACK_BYTES)
+}
+
+fn extract_capped(zip_path: &Path, dest: &Path, max_entries: usize, max_bytes: u64) -> Result<(), String> {
     let file = fs::File::open(zip_path).map_err(|_| "That file couldn't be opened.".to_string())?;
     let mut archive =
         zip::ZipArchive::new(file).map_err(|_| "That file isn't a lexicon pack.".to_string())?;
+    if archive.len() > max_entries {
+        eprintln!("[packs] {} entries, more than {max_entries}", archive.len());
+        return Err("That pack is far larger than a lexicon pack — nothing was installed.".into());
+    }
+    let mut remaining = max_bytes;
 
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i).map_err(|err| {
@@ -248,10 +276,16 @@ fn extract_all(zip_path: &Path, dest: &Path) -> Result<(), String> {
             eprintln!("[packs] create {} failed: {err}", target.display());
             "Couldn't write the pack to disk.".to_string()
         })?;
-        io::copy(&mut entry, &mut out).map_err(|err| {
+        // One byte past what is left, so going over the cap is seen.
+        let written = io::copy(&mut io::Read::take(&mut entry, remaining + 1), &mut out).map_err(|err| {
             eprintln!("[packs] write {} failed: {err}", target.display());
             "Couldn't write the pack to disk — is there enough free space?".to_string()
         })?;
+        if written > remaining {
+            eprintln!("[packs] unpacks to more than {max_bytes} bytes");
+            return Err("That pack is far larger than a lexicon pack — nothing was installed.".into());
+        }
+        remaining -= written;
     }
     Ok(())
 }
@@ -434,6 +468,47 @@ mod tests {
     }
 
     #[test]
+    fn refuses_a_pack_with_too_many_entries() {
+        let dir = temp_dir("many");
+        let names: Vec<String> = (0..5).map(|i| format!("ls/{i}.json")).collect();
+        let entries: Vec<(&str, &str)> = names.iter().map(|n| (n.as_str(), "{}")).collect();
+        let zip = write_zip(&dir, "many.zip", &entries);
+        let dest = dir.join("out");
+        fs::create_dir_all(&dest).unwrap();
+        assert!(extract_capped(&zip, &dest, 5, 1_000).is_ok());
+        let dest = dir.join("out2");
+        fs::create_dir_all(&dest).unwrap();
+        assert!(extract_capped(&zip, &dest, 4, 1_000).is_err(), "five entries past a cap of four");
+        assert_eq!(fs::read_dir(&dest).unwrap().count(), 0, "refused before anything was written");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn refuses_a_pack_that_unpacks_past_the_size_cap() {
+        // A zip bomb: a megabyte of zeros deflates to about a kilobyte. The cap
+        // counts the bytes actually written, not the size the zip declares.
+        let dir = temp_dir("bomb");
+        let zeros = "0".repeat(1 << 20);
+        let zip = write_zip(&dir, "bomb.zip", &[("pack.json", "{}"), ("ls/a.json", &zeros)]);
+        assert!(fs::metadata(&zip).unwrap().len() < 10_000);
+        let dest = dir.join("out");
+        fs::create_dir_all(&dest).unwrap();
+        assert!(extract_capped(&zip, &dest, 10, (1 << 20) + 2).is_ok(), "exactly at the cap is fine");
+        let dest = dir.join("out2");
+        fs::create_dir_all(&dest).unwrap();
+        assert!(extract_capped(&zip, &dest, 10, 1 << 20).is_err(), "one byte past the cap");
+        assert!(fs::metadata(dest.join("ls/a.json")).map_or(true, |m| m.len() <= 1 << 20));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_caps_leave_room_for_real_packs() {
+        // The largest real pack (Greek, 2026-07-31) is 30 entries, 240 MB.
+        assert!(MAX_PACK_ENTRIES >= 30 * 10);
+        assert!(MAX_PACK_BYTES >= 240_000_000 * 4);
+    }
+
+    #[test]
     fn refuses_an_entry_that_would_escape_the_destination() {
         // The zip-slip case: an entry naming its way out of the extraction
         // root. It must be refused whole, and nothing outside the destination
@@ -471,6 +546,24 @@ mod tests {
         let m = read_manifest_from_zip(&zip).expect("should read");
         assert_eq!(m.language, "grc");
         assert_eq!(m.entries, 116728);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn refuses_a_manifest_that_unpacks_past_its_cap() {
+        // pack.json is read before extraction and its caps: a deflated
+        // manifest of zeros must not be read whole into memory.
+        let dir = temp_dir("manifest-bomb");
+        let good = r#"{"format":1,"language":"lat","name":"Latin","dictionary":"Lewis & Short",
+            "entries":51674,"shardDir":"ls","analysesFile":"latin-analyses.txt",
+            "indexFile":"latin-analyses.idt","source":"Perseus"}"#;
+        // The control: the manifest itself is fine, and fine at the cap.
+        let at_cap = format!("{good}{}", " ".repeat(MAX_MANIFEST_BYTES as usize - good.len()));
+        let zip = write_zip(&dir, "ok.zip", &[("pack.json", &at_cap)]);
+        assert!(read_manifest_from_zip(&zip).is_ok());
+        let past = format!("{at_cap} ");
+        let zip = write_zip(&dir, "bomb.zip", &[("pack.json", &past)]);
+        assert!(read_manifest_from_zip(&zip).is_err(), "one byte past the cap");
         let _ = fs::remove_dir_all(&dir);
     }
 

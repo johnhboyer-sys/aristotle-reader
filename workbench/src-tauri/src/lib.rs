@@ -3,6 +3,7 @@ mod assist;
 mod capability_tests;
 mod commands;
 mod jobs;
+mod nav;
 mod packs;
 mod sandbox;
 
@@ -54,6 +55,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(nav::init())
         // macOS's built-in Quit ends the app with no chance to save, so the
         // last edit — still inside the autosave debounce — was lost. Our own
         // ⌘Q item asks the frontend to save, then quits; if the frontend
@@ -62,6 +64,19 @@ pub fn run() {
             let menu = Menu::default(handle)?;
             #[cfg(target_os = "macos")]
             if let Some(app_menu) = menu.items()?.first().and_then(|k| k.as_submenu().cloned()) {
+                // The built-in About shows only the name and version. Ours opens
+                // Settings › About, which carries the licence and credits.
+                if let Some(builtin_about) = app_menu.items()?.first().cloned() {
+                    app_menu.remove(&builtin_about)?;
+                }
+                let about = MenuItem::with_id(
+                    handle,
+                    "about",
+                    format!("About {}", handle.package_info().name),
+                    true,
+                    None::<&str>,
+                )?;
+                app_menu.insert(&about, 0)?;
                 if let Some(builtin_quit) = app_menu.items()?.last().cloned() {
                     app_menu.remove(&builtin_quit)?;
                 }
@@ -77,6 +92,9 @@ pub fn run() {
             Ok(menu)
         })
         .on_menu_event(|app, event| {
+            if event.id() == "about" {
+                let _ = app.emit("about-requested", ());
+            }
             if event.id() == "quit" {
                 let request = QUIT_REQUESTED.fetch_add(1, Ordering::SeqCst) + 1;
                 if app.emit("quit-requested", ()).is_err() {

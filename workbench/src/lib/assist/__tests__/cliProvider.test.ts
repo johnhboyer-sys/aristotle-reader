@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CliProvider, DEFAULT_TIMEOUT_MS, composeCliPrompt, type RunInvokeFn } from '../cliProvider';
-import { GENERIC_ERROR_MESSAGE, UNAUTH_MESSAGE } from '../messages';
+import { CODEX_UNTESTED_MESSAGE, GENERIC_ERROR_MESSAGE, TESTED_CODEX_VERSIONS, UNAUTH_MESSAGE } from '../messages';
 import { buildAssistPrompt } from '../prompt';
 import type { ParseResult } from '../parse';
 import { GOLDEN_CONTEXT } from './fixtures';
@@ -88,6 +88,37 @@ describe('CliProvider', () => {
       }).suggest(GOLDEN_CONTEXT, new AbortController().signal);
       expect(result).toEqual({ kind: 'error', message });
     }
+  });
+
+  it('!ok kind "untested" -> says nothing was sent and why (parseOutput never runs)', async () => {
+    let parserCalled = false;
+    const invoke: RunInvokeFn = async () => ({ ok: false, kind: 'untested' });
+    const result = await new CliProvider({
+      tool: 'codex',
+      parseOutput: (): ParseResult => {
+        parserCalled = true;
+        return { text: 'never' };
+      },
+      invoke,
+    }).suggest(GOLDEN_CONTEXT, new AbortController().signal);
+    expect(result).toEqual({ kind: 'error', message: CODEX_UNTESTED_MESSAGE });
+    expect(CODEX_UNTESTED_MESSAGE).toMatch(/^Nothing was sent/);
+    expect(parserCalled).toBe(false);
+  });
+
+  it('names the same tested Codex versions Rust checks', async () => {
+    const fs = (await import(/* @vite-ignore */ 'node' + ':fs')) as unknown as {
+      readFileSync(path: string, encoding: 'utf-8'): string;
+    };
+    const nodeUrl = (await import(/* @vite-ignore */ 'node' + ':url')) as unknown as {
+      fileURLToPath(url: URL): string;
+    };
+    const jobsRs = fs.readFileSync(nodeUrl.fileURLToPath(new URL('../../../../src-tauri/src/jobs.rs', import.meta.url)), 'utf-8');
+    const m = jobsRs.match(/pub const TESTED_CODEX_VERSIONS: &\[&str\] = &\[([^\]]*)\]/);
+    const rust = [...(m?.[1] ?? '').matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+    expect(rust.length).toBeGreaterThan(0);
+    expect(TESTED_CODEX_VERSIONS).toEqual(rust);
+    for (const v of rust) expect(CODEX_UNTESTED_MESSAGE).toContain(v);
   });
 
   it('!ok kind "unauth" -> the sign-in sentence (parseOutput never runs)', async () => {

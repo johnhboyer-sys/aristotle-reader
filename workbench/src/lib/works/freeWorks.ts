@@ -28,6 +28,7 @@ import type { SchemeId } from '../citation/types';
 import { getScheme, isKnownScheme } from '../citation/registry';
 import { chapterFileName, libraryStorage } from '../library/storage';
 import type { LibraryStorage } from '../library/storage';
+import { listWorks } from './manifest';
 import type { WorkManifest, OriginalLanguage } from './manifest';
 import type { WorkLevel } from './profile';
 import { DEFAULT_PROFILE, sanitizeLevels } from './profile';
@@ -72,11 +73,21 @@ interface RawRegistryEntry {
   chapterContainers?: unknown;
 }
 
+/**
+ * True for an id a free work may have: a slug, as slugForTitle makes one, and
+ * not a built-in work's. The id names the folder "Remove work" deletes
+ * recursively, and works.json can come from a damaged or shared library, so
+ * "." (the library root), ".." or "a/b" must never get that far.
+ */
+export function isFreeWorkId(id: unknown): id is string {
+  return typeof id === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(id) && !listWorks().some((w) => w.id === id);
+}
+
 /** Validate one parsed registry entry; null (skip) when it isn't usable. */
 function recordFromRaw(raw: unknown): FreeWorkRecord | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const v = raw as RawRegistryEntry;
-  if (typeof v.id !== 'string' || v.id.length === 0 || v.id === FREE_WORKS_STORAGE_ID) return null;
+  if (!isFreeWorkId(v.id)) return null;
   if (typeof v.title !== 'string' || v.title.length === 0) return null;
   if (typeof v.citation_scheme !== 'string' || !isKnownScheme(v.citation_scheme)) return null;
   // Only document-spine schemes belong here (capability gate, not scheme id).
@@ -242,12 +253,14 @@ async function writeRegistry(works: FreeWorkRecord[], storage: LibraryStorage): 
  * has been deleted out from under it.
  *
  * A work id that isn't in the registry still has its files removed — the point
- * is to leave nothing behind.
+ * is to leave nothing behind. An id that isn't a free work's (isFreeWorkId) is
+ * refused before anything is touched.
  */
 export async function removeFreeWork(
   workId: string,
   storage: LibraryStorage = libraryStorage(),
 ): Promise<void> {
+  if (!isFreeWorkId(workId)) throw new Error(`Not a document id: ${JSON.stringify(workId)}. Nothing was removed.`);
   await unregisterFreeWork(workId, storage);
   await storage.remove(workId);
 }

@@ -17,7 +17,8 @@
         "width": 1440,
         "height": 900,
         "minWidth": 1000,
-        "minHeight": 640
+        "minHeight": 640,
+        "dragDropEnabled": false
       }
     ],
     "security": {
@@ -33,6 +34,6 @@
     "targets": ["app", "dmg"],
     "category": "Education",
     "icon": ["icons/icon.icns", "icons/icon.png"],
-    "resources": ["resources/reference.docx", "resources/corpus/"]
+    "resources": ["resources/reference.docx", "resources/THIRD-PARTY-NOTICES", "resources/corpus/"]
   }
 }

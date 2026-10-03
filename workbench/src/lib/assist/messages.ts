@@ -17,6 +17,17 @@ export const UNAUTH_MESSAGE = 'Claude Code needs a sign-in.';
 /** CLI ran but errored (non-auth), timed out, or returned malformed/empty output. */
 export const GENERIC_ERROR_MESSAGE = "Couldn't get a suggestion just now.";
 
+/** The codex-cli versions whose tools-off switches were checked. Rust's
+ * TESTED_CODEX_VERSIONS (src-tauri/src/jobs.rs) decides; this copy only words
+ * the refusal, and a test pins the two together. */
+export const TESTED_CODEX_VERSIONS = ['0.159.2'];
+
+/** Rust refused to run Codex: its version is not one the switches that keep a
+ * pasted text from running commands or reading files were checked against. */
+export const CODEX_UNTESTED_MESSAGE =
+  "Nothing was sent. This app hasn't checked this version of Codex, so it can't be sure Codex's tools are off. " +
+  `It has checked codex-cli ${TESTED_CODEX_VERSIONS.join(', ')}. To use AI help now, choose Claude Code in Settings.`;
+
 /** The user chose Cancel at the consent prompt: nothing left the machine. */
 export const NOT_SENT_MESSAGE = 'Nothing was sent.';
 

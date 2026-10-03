@@ -28,7 +28,13 @@ const LSJ_A: Record<string, unknown> = {
   '*)anacago/ras': { key: '*)anacago/ras', head: 'Ἀναξαγόρας', html: '<span class="lsj-head">Ἀναξαγόρας</span> Anaxagoras' },
 };
 const LSJ_E: Record<string, unknown> = {
-  'e(/kastos': { key: 'e(/kastos', head: 'ἕκαστος', html: '<span class="lsj-head">ἕκαστος</span> each' },
+  // Hostile markup, as a doctored pack could carry it: the provider must hand
+  // the drawer only the allowlisted part.
+  'e(/kastos': {
+    key: 'e(/kastos',
+    head: 'ἕκαστος',
+    html: '<span class="lsj-head" onclick="alert(1)">ἕκαστος</span> each<img src=x onerror=alert(1)><a href="javascript:alert(1)">!</a>',
+  },
 };
 
 function jsonResponse(body: unknown): Response {
@@ -95,6 +101,11 @@ describe('greekProvider(workId).lookup', () => {
     const result = await greekProvider('meta').lookup('ἕκαστόν');
     expect(result.analyses).toHaveLength(1);
     expect(result.analyses[0].gloss).toBe('each');
+  });
+
+  it("hands the drawer an entry's HTML only after the allowlist", async () => {
+    const result = await greekProvider('meta').lookup('ἕκαστον');
+    expect(result.lsjEntries.map((e) => e.html)).toEqual(['<span class="lsj-head">ἕκαστος</span> each!']);
   });
 
   it('returns an empty result for a word with no analysis entry, never throws', async () => {

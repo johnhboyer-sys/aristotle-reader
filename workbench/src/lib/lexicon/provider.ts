@@ -31,6 +31,7 @@ import { betaToGreek } from '../betacode';
 import { isCapitalizedSurface, latinLookupVariants, toLatinKey } from './latinKey';
 import { lookupAnalyses } from './morphology';
 import { packFor } from './packs';
+import { sanitizeEntryHtml } from './sanitize';
 import type { LexiconLanguage, LexiconPack } from './packs';
 
 export interface LexiconAnalysis {
@@ -73,6 +74,14 @@ interface RawLsjEntry {
 }
 
 const EMPTY_RESULT: LexiconResult = { analyses: [], lsjEntries: [] };
+
+/** An entry as the drawer gets it. Its HTML comes from a pack the user picked
+ * and is rendered with {@html}, so it passes the allowlist here, the one way
+ * out of this module (sanitize.ts). Per entry rather than per shard: a shard
+ * holds up to 14 MB of HTML and a lookup shows a handful of entries. */
+function entryView(entry: RawLsjEntry): LsjEntryView {
+  return { key: entry.key, head: entry.head, html: sanitizeEntryHtml(entry.html) };
+}
 
 // ── file access: Tauri $APPDATA/corpus vs dev /corpus middleware ───────────
 
@@ -330,7 +339,7 @@ async function greekResultFromWorkTable(
       seenLsj.add(lsjKey);
       const shard = await loadDictShard('grc', lsjShardLetter(lsjKey));
       const entry = shard[lsjKey];
-      if (entry) lsjEntries.push({ key: entry.key, head: entry.head, html: entry.html });
+      if (entry) lsjEntries.push(entryView(entry));
     }
   }
   return {
@@ -422,13 +431,13 @@ async function dictEntriesForLemma(
 
   // An exact hit is possible for a headword carrying no quantity marks.
   const exact = shard[lemma] ?? shard[base];
-  if (exact) return [{ key: exact.key, head: exact.head, html: exact.html }];
+  if (exact) return [entryView(exact)];
 
   const index = await dictBaseIndex(language, letter);
   const out: LsjEntryView[] = [];
   for (const key of index.get(base) ?? []) {
     const entry = shard[key];
-    if (entry) out.push({ key: entry.key, head: entry.head, html: entry.html });
+    if (entry) out.push(entryView(entry));
   }
   return out;
 }
