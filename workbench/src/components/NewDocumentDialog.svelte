@@ -12,7 +12,7 @@
   import type { FreeDocumentUnit } from '../lib/import/createFreeDocument';
   import { serializeChapterFile } from '../lib/chapterfile';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
-  import { registerFreeWork } from '../lib/works/freeWorks';
+  import { makeRoomForFreeWork, registerFreeWork } from '../lib/works/freeWorks';
 
   let {
     existingIds,
@@ -77,6 +77,7 @@
         existingIds,
       );
       const content = serializeChapterFile(file);
+      await makeRoomForFreeWork(work.id);
       await libraryStorage().write(work.id, chapterFileName(1, 1), content);
       await registerFreeWork(work);
       onCreated(work.id);

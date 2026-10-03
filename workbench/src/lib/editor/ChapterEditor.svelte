@@ -1377,8 +1377,12 @@
     return local === undefined ? undefined : fnBase + local;
   }
 
-  /** Publish the panel's view of this chapter's footnotes (document order). */
+  /** Publish the panel's view of this chapter's footnotes (document order).
+   * Callers run on a tick or after an await, which can land after a chapter
+   * switch unmounted this editor and cleared the list: a gone editor must
+   * not put its chapter's footnotes back. */
   function publishFootnotes() {
+    if (destroyed) return;
     const phrases = new Map<string, string>();
     const markerRow = new Map<string, number>();
     const order: string[] = [];

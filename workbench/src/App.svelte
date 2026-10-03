@@ -51,7 +51,7 @@
   import { loadChapterFile, awaitPendingWrites } from './lib/library/autosave';
   import { getScheme } from './lib/citation/registry';
   import type { FixtureChapter } from './dev/fixture-meta-z17';
-  import { loadSettings, updateSettings } from './lib/settings';
+  import { loadSettings, settingsProblem, updateSettings } from './lib/settings';
   import { isTauri } from './lib/runtime';
   import { flushForQuit } from './lib/quit';
   import { wordAt, latinWordAt } from './lib/lexicon/wordAt';
@@ -74,8 +74,22 @@
     return getScheme(work.scheme).spineSource === 'document';
   }
 
+  // A works registry or settings file the app could not read or parse. Neither
+  // is written while its notice stands (the read-error fix).
+  let registryNotice = $state<string | null>(null);
+  let settingsNotice = $state<string | null>(null);
+
   async function reloadWorks() {
-    works = [...listWorks(), ...(await listFreeWorks())];
+    let free: WorkManifest[];
+    try {
+      free = await listFreeWorks();
+      registryNotice = null;
+    } catch (err) {
+      registryNotice = err instanceof Error ? err.message : String(err);
+      // Keep the documents already in the rail; nothing on disk changed.
+      free = works.filter(isDocumentWork);
+    }
+    works = [...listWorks(), ...free];
   }
 
   let railOpen = $state(true);
@@ -177,6 +191,7 @@
   // selection.
   let docFixture = $state<FixtureChapter | null>(null);
   let docFixtureKey = $state('');
+  let docLoadError = $state(false);
   const selectionKey = $derived(
     selection ? `${selection.workId}:${selection.book}.${selection.chapter}` : '',
   );
@@ -195,6 +210,7 @@
       );
       if (cancelled) return;
       docFixture = res.file ? documentChapterForEditor(work, res.file) : null;
+      docLoadError = res.error !== null;
       docFixtureKey = key;
     })();
     return () => {
@@ -263,7 +279,8 @@
     // Before boot the library folder may still be waiting to be chosen again.
     if (!booted) return;
     void refreshLibraryStatus();
-    void syncCommands.checkExternalChange();
+    // A chapter file that could not be read is skipped; the next focus retries.
+    void syncCommands.checkExternalChange().catch(() => {});
   }
   function onVisibilityVisible() {
     if (document.visibilityState === 'visible') onWindowFocus();
@@ -313,6 +330,7 @@
     // (or book Α chapter 1 of the Metaphysics on first run).
     void (async () => {
       const settings = await loadSettings();
+      settingsNotice = settingsProblem();
       const problem = await libraryRootProblem();
       if (problem) {
         await new Promise<void>((resolve) => {
@@ -521,7 +539,7 @@
     // it reloads the editor from disk, or asks first when there are unsaved
     // edits. A no-op for any other chapter.
     await tick();
-    await syncCommands.checkExternalChange();
+    await syncCommands.checkExternalChange().catch(() => {});
   }
 
   function toggleRail() {
@@ -853,6 +871,9 @@
     {/if}
 
     <div class="center-col">
+      {#each [settingsNotice, registryNotice].filter(Boolean) as notice}
+        <p class="app-notice" role="status">{notice}</p>
+      {/each}
       <main class="editor-viewport" onclick={onEditorClick}>
         {#if !booted}
           <!-- corpus still loading; keep the viewport quiet -->
@@ -868,7 +889,11 @@
         {:else if selection}
           <div class="empty-state-wrap">
             <div class="empty-state">
-              <p>This chapter isn't available.</p>
+              <p>
+                {docLoadError && docFixtureKey === selectionKey
+                  ? 'This document’s file could not be read, so it was left untouched.'
+                  : "This chapter isn't available."}
+              </p>
             </div>
           </div>
         {:else}
@@ -1170,6 +1195,15 @@
     /* The ChapterEditor owns its own scroll container (scroll anchoring +
        settle guard need direct scrollTop control). */
     overflow: hidden;
+  }
+
+  .app-notice {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
   }
 
   .empty-state-wrap {

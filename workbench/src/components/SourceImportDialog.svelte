@@ -16,7 +16,7 @@
   import type { SourceImport } from '../lib/import/createSourceImport';
   import { serializeChapterFile } from '../lib/chapterfile';
   import { libraryStorage, chapterFileName } from '../lib/library/storage';
-  import { registerFreeWork } from '../lib/works/freeWorks';
+  import { makeRoomForFreeWork, registerFreeWork } from '../lib/works/freeWorks';
   import { loadSettings, updateSettings } from '../lib/settings';
   import { chooseAgainLabel, pickStatus, repickReason } from '../lib/picks';
 
@@ -222,6 +222,7 @@
     try {
       const { work, file } = await build();
       busy = 'Saving…';
+      await makeRoomForFreeWork(work.id);
       await libraryStorage().write(work.id, chapterFileName(1, 1), serializeChapterFile(file));
       await registerFreeWork(work);
       onCreated(work.id);

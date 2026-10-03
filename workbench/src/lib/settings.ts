@@ -289,13 +289,9 @@ export function sanitize(value: unknown): WorkbenchSettings {
 async function readRaw(): Promise<string | null> {
   if (isTauri()) {
     const fs = await import('@tauri-apps/plugin-fs');
-    try {
-      if (!(await fs.exists(FILE, { baseDir: fs.BaseDirectory.AppData }))) return null;
-      return await fs.readTextFile(FILE, { baseDir: fs.BaseDirectory.AppData });
-    } catch (err) {
-      console.warn('settings: read failed', err);
-      return null;
-    }
+    // Throws on a read failure: only a file that isn't there is "no settings".
+    if (!(await fs.exists(FILE, { baseDir: fs.BaseDirectory.AppData }))) return null;
+    return await fs.readTextFile(FILE, { baseDir: fs.BaseDirectory.AppData });
   }
   return localStorage.getItem(LS_KEY);
 }
@@ -323,10 +319,27 @@ async function writeRaw(text: string): Promise<void> {
 }
 
 let cached: WorkbenchSettings | null = null;
+// Set when settings.json exists but could not be read or parsed. Writing then
+// would replace it with defaults and drop libraryRoot, so the app runs on
+// in-memory settings and leaves the file alone until the next launch.
+let problem: string | null = null;
+
+/** Why settings are not being saved this session, or null when they are. */
+export function settingsProblem(): string | null {
+  return problem;
+}
 
 export async function loadSettings(): Promise<WorkbenchSettings> {
   if (cached) return cached;
-  const raw = await readRaw();
+  let raw: string | null;
+  try {
+    raw = await readRaw();
+  } catch (err) {
+    console.warn('settings: read failed', err);
+    problem = 'Your settings file could not be read, so until the app is restarted it is using default settings, including its own library folder rather than the one you chose, and won’t save changes to them.';
+    cached = {};
+    return cached;
+  }
   if (raw === null) {
     cached = {};
     return cached;
@@ -334,7 +347,8 @@ export async function loadSettings(): Promise<WorkbenchSettings> {
   try {
     cached = sanitize(JSON.parse(raw));
   } catch (err) {
-    console.warn('settings: unparsable settings file — starting fresh', err);
+    console.warn('settings: unparsable settings file', err);
+    problem = 'Your settings file is damaged, so the app is using default settings, including its own library folder rather than the one you chose, and won’t save changes to them.';
     cached = {};
   }
   return cached;
@@ -362,6 +376,6 @@ export async function updateSettings(
     }
   }
   cached = next;
-  await writeRaw(JSON.stringify(next, null, 1));
+  if (problem === null) await writeRaw(JSON.stringify(next, null, 1));
   return next;
 }

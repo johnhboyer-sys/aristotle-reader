@@ -177,7 +177,15 @@ export async function updateFootnoteCount(
   count: number,
 ): Promise<boolean> {
   return chained(workId, async () => {
-    const index = await loadFootnoteIndex(storage, workId);
+    let index: FootnoteIndexData;
+    try {
+      index = await loadFootnoteIndex(storage, workId);
+    } catch (err) {
+      // Not rebuilt from this one chapter's count: that would drop every other
+      // chapter's. The next save tries again.
+      console.warn(`footnote index: ${workId} could not be read`, err);
+      return false;
+    }
     const key = chapterKey(book, chapter);
     const existing = index.counts[key] ?? 0;
     if (existing === count) return false;

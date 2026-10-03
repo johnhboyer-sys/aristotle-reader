@@ -18,14 +18,15 @@
  * from the retired container-SLOT model (Books that were hand-made lists of
  * chapter slots, before Books became boundaries over the outline); nothing has
  * read it since, so it is neither parsed nor written now, and the next write
- * of the registry drops it from every record. Unreadable files and invalid entries
- * are SKIPPED with a console warning, never a hard failure — a registry
- * defect must not take down the whole library rail.
+ * of the registry drops it from every record. Invalid entries are SKIPPED with
+ * a console warning. A registry that could not be read or parsed is an error
+ * (RegistryReadError), never an empty list: every writer reads first, and
+ * writing over it would drop every document it lists.
  */
 
 import type { SchemeId } from '../citation/types';
 import { getScheme, isKnownScheme } from '../citation/registry';
-import { libraryStorage } from '../library/storage';
+import { chapterFileName, libraryStorage } from '../library/storage';
 import type { LibraryStorage } from '../library/storage';
 import type { WorkManifest, OriginalLanguage } from './manifest';
 import type { WorkLevel } from './profile';
@@ -96,24 +97,37 @@ function recordFromRaw(raw: unknown): FreeWorkRecord | null {
   return record;
 }
 
-/** All valid registry records (empty when no registry exists yet). */
+/** The registry exists but could not be read or parsed; it was left as it is. */
+export class RegistryReadError extends Error {
+  constructor(reason: string) {
+    super(`Your list of documents (works.json) ${reason}, so it was left untouched. Your documents' files are safe.`);
+    this.name = 'RegistryReadError';
+  }
+}
+
+/**
+ * All valid registry records (empty when no registry exists yet). Throws
+ * RegistryReadError when the registry exists but could not be read or parsed.
+ */
 export async function listFreeWorkRecords(
   storage: LibraryStorage = libraryStorage(),
 ): Promise<FreeWorkRecord[]> {
-  const raw = await storage.read(FREE_WORKS_STORAGE_ID, REGISTRY_FILE);
+  let raw: string | null;
+  try {
+    raw = await storage.read(FREE_WORKS_STORAGE_ID, REGISTRY_FILE);
+  } catch (err) {
+    console.error('freeWorks: works.json could not be read', err);
+    throw new RegistryReadError('could not be read');
+  }
   if (raw === null) return [];
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
-  } catch (err) {
-    console.warn('freeWorks: works.json is not valid JSON — treating as empty', err);
-    return [];
+  } catch {
+    throw new RegistryReadError('is damaged');
   }
   const works = (parsed as { works?: unknown })?.works;
-  if (!Array.isArray(works)) {
-    console.warn('freeWorks: works.json has no "works" list — treating as empty');
-    return [];
-  }
+  if (!Array.isArray(works)) throw new RegistryReadError('is damaged');
   const out: FreeWorkRecord[] = [];
   const seen = new Set<string>();
   for (const entry of works) {
@@ -183,6 +197,22 @@ export async function registerFreeWork(
   const works = existing.filter((w) => w.id !== record.id);
   works.push(record);
   await writeRegistry(works, storage);
+}
+
+/**
+ * Check before a new document writes its first file. The new id was chosen
+ * against the works the rail lists, so it must not be trusted while the
+ * registry is unreadable (its works are missing from the rail), nor where a
+ * chapter file already sits under the id. Throws with a sentence for the user.
+ */
+export async function makeRoomForFreeWork(
+  workId: string,
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  await listFreeWorkRecords(storage);
+  if ((await storage.read(workId, chapterFileName(1, 1))) !== null) {
+    throw new Error('A document is already stored under this name in your library folder. Choose another title.');
+  }
 }
 
 /** The registry file's on-disk shape — one writer, so every caller agrees. */

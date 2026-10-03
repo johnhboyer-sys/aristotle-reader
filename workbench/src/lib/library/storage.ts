@@ -21,8 +21,23 @@ import { loadSettings, updateSettings } from '../settings';
 import { pickStatus } from '../picks';
 import type { PickStatus } from '../picks';
 
+/**
+ * A file that may exist but could not be read (permission denied, I/O error,
+ * a cloud drive that stalled). Never treat it as absent: a caller that writes
+ * a fresh file in its place destroys the one it failed to read.
+ */
+export class StorageReadError extends Error {
+  constructor(file: string, cause: unknown) {
+    super(`${file} could not be read: ${cause instanceof Error ? cause.message : String(cause)}`);
+    this.name = 'StorageReadError';
+  }
+}
+
 export interface LibraryStorage {
-  /** Returns file content, or null if it doesn't exist. */
+  /**
+   * Returns file content, or null if it doesn't exist. Throws
+   * StorageReadError when it may exist but could not be read.
+   */
   read(workId: string, file: string): Promise<string | null>;
   /** Writes atomically enough for our needs; creates directories as required. */
   write(workId: string, file: string, content: string): Promise<void>;
@@ -174,8 +189,8 @@ class TauriStorage implements LibraryStorage {
     try {
       if (!(await fs.exists(path, { baseDir }))) return null;
       return await fs.readTextFile(path, { baseDir });
-    } catch {
-      return null;
+    } catch (err) {
+      throw new StorageReadError(file, err);
     }
   }
   async write(workId: string, file: string, content: string): Promise<void> {
