@@ -16,6 +16,8 @@ const unreadable = new Set<string>();
 const writes: string[] = [];
 const failWrite = new Set<string>();
 const onWrite = new Map<string, () => void>();
+const failRemove = new Set<string>();
+let readHook: ((path: string) => void) | null = null;
 
 const opened = (path: string, e: string) => `failed to open file at path: ${path} with error: ${e}`;
 
@@ -30,6 +32,7 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   async mkdir() {},
   async readTextFile(path: string) {
     guard(path);
+    readHook?.(path);
     if (unreadable.has(path)) throw opened(path, 'Permission denied (os error 13)');
     const body = files.get(path);
     if (body === undefined) throw opened(path, 'No such file or directory (os error 2)');
@@ -48,6 +51,7 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   },
   async remove(path: string) {
     guard(path);
+    if (failRemove.has(path)) throw `failed to remove path: ${path} with error: Resource busy (os error 16)`;
     files.delete(path);
   },
   async rename(from: string, to: string) {
@@ -78,6 +82,8 @@ beforeEach(() => {
   writes.length = 0;
   failWrite.clear();
   onWrite.clear();
+  failRemove.clear();
+  readHook = null;
 });
 
 describe('Copy and switch into a folder that already holds files', () => {
@@ -168,7 +174,7 @@ describe('Copy and switch into a folder that already holds files', () => {
     for (let n = 1; n <= 100; n++) expect(files.get(`/new/./works.json.${n}.tmp`)).toBe(`another Mac, save ${n}`);
   });
 
-  it('adds each new id once, and leaves out entries with no id', async () => {
+  it('adds our entries in order, duplicates too (the app reads the first usable one), and leaves out entries with no id', async () => {
     files.set(
       '/lib/./works.json',
       JSON.stringify({ version: 1, works: [{ title: 'No id' }, { id: 'a', title: 'A' }, { id: 'a', title: 'A again' }] }),
@@ -176,7 +182,30 @@ describe('Copy and switch into a folder that already holds files', () => {
     files.set('/new/./works.json', JSON.stringify({ version: 1, works: [{ title: 'Theirs, no id' }, { id: 'b', title: 'B' }] }));
     const result = await copyLibraryToRoot([FREE_WORKS_STORAGE_ID], '/new');
     const works = JSON.parse(files.get('/new/./works.json')!).works;
-    expect(works.map((w: { id?: string; title: string }) => w.id ?? w.title)).toEqual(['Theirs, no id', 'b', 'a']);
+    expect(works.map((w: { id?: string; title: string }) => w.title)).toEqual(['Theirs, no id', 'B', 'A', 'A again']);
     expect(result.skipped).toEqual([]);
+  });
+
+  it('stops and names a short file it could not remove', async () => {
+    files.set('/lib/w/b01c01.md', 'the whole chapter');
+    failWrite.add('/new/w/b01c01.md');
+    failRemove.add('/new/w/b01c01.md');
+    await expect(copyLibraryToRoot(['w'], '/new')).rejects.toThrow(/w\/b01c01\.md.*half-written/);
+  });
+
+  it('does not claim other files were copied when none were', async () => {
+    files.set('/lib/./works.json', registry([{ id: 'mine', title: 'Mine' }]));
+    files.set('/new/./works.json', registry([{ id: 'theirs', title: 'Theirs' }]));
+    files.set('/lib/w/b01c01.md', 'ours');
+    files.set('/new/w/b01c01.md', 'theirs');
+    onWrite.clear();
+    // Damaged by sync after the check, before the merge.
+    let reads = 0;
+    readHook = (path) => {
+      if (path === '/new/./works.json' && ++reads === 2) files.set(path, '{not json');
+    };
+    const err = await copyLibraryToRoot(['w', FREE_WORKS_STORAGE_ID], '/new').catch((e: Error) => e);
+    expect(String(err)).toMatch(/damaged/);
+    expect(String(err)).not.toMatch(/were copied/);
   });
 });

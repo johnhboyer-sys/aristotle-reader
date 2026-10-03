@@ -92,17 +92,20 @@
     const reload = ++reloadsStarted;
     const builtIns = await shownBuiltInWorks();
     let free: WorkManifest[];
-    let notice: string | null = null;
     try {
       free = await listFreeWorks();
     } catch (err) {
-      notice = err instanceof Error ? err.message : String(err);
-      // Keep the documents already in the rail; nothing on disk changed.
-      free = works.filter(isDocumentWork);
+      if (reload < reloadShown) return;
+      registryNotice = err instanceof Error ? err.message : String(err);
+      // Keep the documents in the rail as they are now; nothing on disk
+      // changed. Not the newest answer either: an earlier reload that did
+      // read the list may still land.
+      works = [...builtIns, ...works.filter(isDocumentWork)];
+      return;
     }
     if (reload < reloadShown) return;
     reloadShown = reload;
-    registryNotice = notice;
+    registryNotice = null;
     works = [...builtIns, ...free];
   }
 
