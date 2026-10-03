@@ -3,6 +3,7 @@ mod assist;
 mod capability_tests;
 mod commands;
 mod jobs;
+mod nav;
 mod packs;
 mod sandbox;
 
@@ -54,6 +55,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(nav::init())
         // macOS's built-in Quit ends the app with no chance to save, so the
         // last edit — still inside the autosave debounce — was lost. Our own
         // ⌘Q item asks the frontend to save, then quits; if the frontend

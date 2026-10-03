@@ -25,7 +25,7 @@ pub enum AssistOutcome {
     },
     Failure {
         ok: bool, // always false
-        kind: &'static str, // "unauth" | "timeout" | "error"
+        kind: &'static str, // "unauth" | "untested" | "timeout" | "error"
     },
 }
 

@@ -110,17 +110,18 @@ describe('ApiProvider — Anthropic happy path', () => {
 });
 
 describe('ApiProvider — Google happy path', () => {
-  it('POSTs to generateContent with the key query param and systemInstruction/contents; extracts candidates[0].content.parts[0].text', async () => {
+  it('POSTs to generateContent with the key in a header and systemInstruction/contents; extracts candidates[0].content.parts[0].text', async () => {
     const { fetch, calls } = okFetch(GOOGLE_OK);
     const provider = new ApiProvider({ service: 'google', apiKey: 'g-key', fetch });
     const result = await provider.suggest(GOLDEN_CONTEXT, signal());
 
     expect(result).toEqual({ kind: 'suggestion', text: 'This is what it was to be.' });
     const { url, init } = calls[0];
-    expect(url).toContain(
-      `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODELS.google}:generateContent`,
-    );
-    expect(url).toContain('key=g-key');
+    // The key travels in a header, never the URL: a URL lands in logs,
+    // proxies and error messages.
+    expect(url).toBe(`https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODELS.google}:generateContent`);
+    expect(url).not.toContain('g-key');
+    expect(init.headers['x-goog-api-key']).toBe('g-key');
     const body = JSON.parse(init.body);
     expect(body.systemInstruction.parts[0].text.length).toBeGreaterThan(0);
     expect(body.contents[0].role).toBe('user');

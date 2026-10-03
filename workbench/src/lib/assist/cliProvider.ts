@@ -6,7 +6,7 @@
  *
  *   invoke('assist_run', { tool, prompt, timeoutMs, model? })
  *     => { ok: true; text: string }      — the CLI's raw stdout
- *      | { ok: false; kind: 'unauth' | 'timeout' | 'error' }
+ *      | { ok: false; kind: 'unauth' | 'untested' | 'timeout' | 'error' }
  *
  * On `ok`, the tool's `parseOutput(text)` maps `{ text }` to a suggestion and
  * `{ error, authLike }` to an error sentence (UNAUTH_MESSAGE when authLike,
@@ -22,7 +22,7 @@ import type { AssistContext, AssistProvider, AssistResult } from './provider';
 import type { CliToolId } from './tools';
 import type { ParseResult } from './parse';
 import { buildAssistPrompt } from './prompt';
-import { GENERIC_ERROR_MESSAGE, UNAUTH_MESSAGE } from './messages';
+import { CODEX_UNTESTED_MESSAGE, GENERIC_ERROR_MESSAGE, UNAUTH_MESSAGE } from './messages';
 
 export const DEFAULT_TIMEOUT_MS = 60_000;
 
@@ -32,7 +32,9 @@ export interface AssistRunOk {
 }
 export interface AssistRunFail {
   ok: false;
-  kind: 'unauth' | 'timeout' | 'error';
+  /** 'untested': a Codex version the tools-off switches weren't checked
+   * against; Rust refused to run it (jobs.rs TESTED_CODEX_VERSIONS). */
+  kind: 'unauth' | 'untested' | 'timeout' | 'error';
 }
 export type AssistRunResponse = AssistRunOk | AssistRunFail;
 
@@ -84,7 +86,12 @@ export class CliProvider implements AssistProvider {
     if (!response.ok) {
       return {
         kind: 'error',
-        message: response.kind === 'unauth' ? UNAUTH_MESSAGE : GENERIC_ERROR_MESSAGE,
+        message:
+          response.kind === 'unauth'
+            ? UNAUTH_MESSAGE
+            : response.kind === 'untested'
+              ? CODEX_UNTESTED_MESSAGE
+              : GENERIC_ERROR_MESSAGE,
       };
     }
 

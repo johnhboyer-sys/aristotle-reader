@@ -48,10 +48,16 @@ pub fn is_really_inside(path: &Path, root: &Path) -> bool {
 
 // ── pandoc ──────────────────────────────────────────────────────────────────
 
-/// `pandoc -f markdown -t docx -o <docx> [--reference-doc <ref>] <md>` — the
-/// same argv `pandocDocxArgs` (src/lib/export/pandoc.ts) built in the window.
+/// `pandoc --sandbox -f markdown -t docx -o <docx> [--reference-doc <ref>] <md>`
+/// — the same argv `pandocDocxArgs` (src/lib/export/pandoc.ts) builds.
+///
+/// `--sandbox` (pandoc 2.15+) lets pandoc read only the files named here, so
+/// an image or include in the markdown (from imported text) cannot pull
+/// another file into the .docx. Checked with pandoc 3.10 and the bundled
+/// reference.docx (2026-10-03): the output is the same but for the document's
+/// created/modified dates, which the sandbox hides, so they read 1970-01-01.
 pub fn pandoc_docx_args(md: &Path, docx: &Path, reference_doc: Option<&Path>) -> Vec<String> {
-    let mut args: Vec<String> = ["-f", "markdown", "-t", "docx", "-o"].map(String::from).to_vec();
+    let mut args: Vec<String> = ["--sandbox", "-f", "markdown", "-t", "docx", "-o"].map(String::from).to_vec();
     args.push(docx.display().to_string());
     if let Some(r) = reference_doc {
         args.push("--reference-doc".into());
@@ -59,6 +65,20 @@ pub fn pandoc_docx_args(md: &Path, docx: &Path, reference_doc: Option<&Path>) ->
     }
     args.push(md.display().to_string());
     args
+}
+
+// ── Codex version ───────────────────────────────────────────────────────────
+
+/// The codex-cli versions the `--disable` list in [`AssistTool::invocation`]
+/// was checked against, by the test its doc comment describes. Add a version
+/// only after repeating that test on it. The window's copy
+/// (src/lib/assist/messages.ts) is pinned to this list by a test.
+pub const TESTED_CODEX_VERSIONS: &[&str] = &["0.159.2"];
+
+/// True when `stdout` of `codex --version` is exactly `codex-cli <v>` for a
+/// tested `v`. Anything else, an unreadable answer included, is untested.
+pub fn is_tested_codex(stdout: &str) -> bool {
+    stdout.trim().strip_prefix("codex-cli ").is_some_and(|v| TESTED_CODEX_VERSIONS.contains(&v))
 }
 
 // ── Diogenes' xml-export.pl ─────────────────────────────────────────────────
@@ -256,7 +276,9 @@ impl AssistTool {
     ///   that act outside the sandbox. `--ignore-user-config` drops the user's
     ///   config.toml (its MCP servers, hooks, profiles); auth still works. A
     ///   Codex that does not know one of these names refuses to start, which
-    ///   fails closed to the clipboard.
+    ///   fails closed to the clipboard. But `--disable` is a denylist: a later
+    ///   Codex with a new tool on by default would pass it, so only the
+    ///   versions in [`TESTED_CODEX_VERSIONS`] are run at all (commands.rs).
     ///
     /// `model` must be one of [`Self::models`] (None or empty: the CLI's own
     /// default). Rust adds the `--model` flag itself; anything off the list is
@@ -415,16 +437,24 @@ mod tests {
     }
 
     #[test]
+    fn only_a_tested_codex_version_passes() {
+        assert!(is_tested_codex("codex-cli 0.159.2\n"));
+        for out in ["codex-cli 0.160.0\n", "codex-cli 0.159.20", "codex-cli 0.159", "0.159.2", "", "codex-cli 0.159.2\ncodex-cli 9"] {
+            assert!(!is_tested_codex(out), "{out:?} passed");
+        }
+    }
+
+    #[test]
     fn pandoc_argv_matches_the_window_builder() {
         let md = Path::new("/d/export-intermediate.md");
         let docx = Path::new("/u/Out.docx");
         assert_eq!(
             pandoc_docx_args(md, docx, None),
-            ["-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "/d/export-intermediate.md"]
+            ["--sandbox", "-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "/d/export-intermediate.md"]
         );
         assert_eq!(
             pandoc_docx_args(md, docx, Some(Path::new("/u/ref.docx"))),
-            ["-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "--reference-doc", "/u/ref.docx", "/d/export-intermediate.md"]
+            ["--sandbox", "-f", "markdown", "-t", "docx", "-o", "/u/Out.docx", "--reference-doc", "/u/ref.docx", "/d/export-intermediate.md"]
         );
     }
 

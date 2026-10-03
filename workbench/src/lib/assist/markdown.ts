@@ -9,8 +9,8 @@
  * SECURITY: the input is HTML-escaped FIRST, so nothing in the model's text
  * can inject markup — the only tags in the output are the ones this file adds.
  * The result is safe to drop into `{@html …}`. Link hrefs are additionally
- * scheme-checked (http/https/mailto/relative only) so a `javascript:` URL can't
- * ride in.
+ * scheme-checked (http/https/mailto only) so a `javascript:` URL can't ride
+ * in.
  */
 
 /** Escape the HTML-significant characters. Run on ALL model text first. */
@@ -23,18 +23,14 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-/** Only these schemes are allowed in a rendered link href. */
+/** Only these schemes are allowed in a rendered link href. A relative link
+ * is not: it would navigate the app window itself, where every other link is
+ * sent to the system browser (src-tauri/src/nav.rs). */
 function safeHref(rawEscaped: string): string | null {
   // rawEscaped is already HTML-escaped; decode &amp; for the scheme probe but
   // keep the escaped form for output.
   const probe = rawEscaped.replace(/&amp;/g, '&').trim().toLowerCase();
-  if (
-    probe.startsWith('http://') ||
-    probe.startsWith('https://') ||
-    probe.startsWith('mailto:') ||
-    probe.startsWith('/') ||
-    probe.startsWith('#')
-  ) {
+  if (probe.startsWith('http://') || probe.startsWith('https://') || probe.startsWith('mailto:')) {
     return rawEscaped.trim();
   }
   return null;
@@ -63,7 +59,9 @@ function renderInline(escaped: string): string {
   text = text.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label: string, href: string) => {
     const safe = safeHref(href);
     const inner = emphasis(label);
-    return safe ? `<a href="${safe}" target="_blank" rel="noreferrer">${inner}</a>` : `${inner}`;
+    // No target="_blank": a new-window request has no handler and is dropped,
+    // while a plain click is a navigation Rust opens in the system browser.
+    return safe ? `<a href="${safe}" rel="noreferrer">${inner}</a>` : `${inner}`;
   });
 
   text = emphasis(text);
