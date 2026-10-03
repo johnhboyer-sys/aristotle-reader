@@ -14,7 +14,12 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   BaseDirectory: { AppData: 'AppData' },
   async mkdir() {},
   async exists(path: string) {
-    return files.has(path);
+    return files.has(path) || [...files.keys()].some((p) => p.startsWith(`${path}/`));
+  },
+  async stat(path: string) {
+    if (unreadable.has(path)) throw new Error('Operation not permitted (os error 1)');
+    if (!files.has(path)) throw new Error(`no such file: ${path}`);
+    return { mtime: new Date(1_700_000_000_000) };
   },
   async readTextFile(path: string) {
     if (unreadable.has(path)) throw new Error('Operation not permitted (os error 1)');
@@ -27,6 +32,8 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
     files.set(path, content);
   },
   async readDir(dir: string) {
+    if (unreadable.has(dir)) throw new Error('Operation not permitted (os error 1)');
+    if (![...files.keys()].some((p) => p.startsWith(`${dir}/`))) throw new Error(`no such directory: ${dir}`);
     return [...files.keys()]
       .filter((p) => p.startsWith(`${dir}/`) && !p.slice(dir.length + 1).includes('/'))
       .map((p) => ({ name: p.slice(dir.length + 1), isFile: true }));
@@ -106,5 +113,36 @@ describe('the other writers that read first', () => {
     unreadable.add('/lib/w/b01c01.md');
     await expect(chapterFileExists('w', 1, 1)).rejects.toThrow(/could not be read/);
     expect(await chapterFileExists('w', 1, 2)).toBe(false);
+  });
+});
+
+describe('listing a folder or stating a file that cannot be read', () => {
+  it('list fails instead of answering "no files"', async () => {
+    files.set('/lib/w/b01c01.md', 'one');
+    unreadable.add('/lib/w');
+    await expect(libraryStorage().list('w')).rejects.toThrow(/could not be read/);
+  });
+
+  it('list still answers [] for a work with no folder yet', async () => {
+    expect(await libraryStorage().list('new-work')).toEqual([]);
+  });
+
+  it('copyLibraryToRoot stops rather than skip a work it could not list', async () => {
+    files.set('/lib/w/b01c01.md', 'one');
+    unreadable.add('/lib/w');
+    await expect(copyLibraryToRoot(['w'], '/new')).rejects.toThrow(/could not be read/);
+    expect(writes).toEqual([]);
+  });
+
+  it('mtime fails instead of answering "unknown"', async () => {
+    files.set('/lib/w/b01c01.md', 'one');
+    unreadable.add('/lib/w/b01c01.md');
+    await expect(libraryStorage().mtime('w', 'b01c01.md')).rejects.toThrow(/could not be read/);
+  });
+
+  it('mtime still answers null for a missing file, and the time for a present one', async () => {
+    files.set('/lib/w/b01c01.md', 'one');
+    expect(await libraryStorage().mtime('w', 'b01c02.md')).toBeNull();
+    expect(await libraryStorage().mtime('w', 'b01c01.md')).toBe(1_700_000_000_000);
   });
 });

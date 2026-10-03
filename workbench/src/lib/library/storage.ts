@@ -41,9 +41,15 @@ export interface LibraryStorage {
   read(workId: string, file: string): Promise<string | null>;
   /** Writes atomically enough for our needs; creates directories as required. */
   write(workId: string, file: string, content: string): Promise<void>;
-  /** Filenames (not paths) present for a work; empty list if none. */
+  /**
+   * Filenames (not paths) present for a work; empty list if it has no folder.
+   * Throws StorageReadError when the folder may exist but could not be read.
+   */
   list(workId: string): Promise<string[]>;
-  /** Last-modified epoch ms, or null if unknown/missing (used by Phase 2 sync safety). */
+  /**
+   * Last-modified epoch ms, or null if unknown/missing (used by Phase 2 sync
+   * safety). Throws StorageReadError when the file may exist but could not be read.
+   */
   mtime(workId: string, file: string): Promise<number | null>;
   /**
    * Delete every file a work owns, and the work's own folder. Removing a work
@@ -209,23 +215,25 @@ class TauriStorage implements LibraryStorage {
     const fs = await this.fs();
     const dir = await this.resolveDir(workId);
     try {
+      if (!(await fs.exists(dir.path, { baseDir: dir.baseDir }))) return [];
       const entries = await fs.readDir(dir.path, { baseDir: dir.baseDir });
       return entries
         .filter((e) => e.isFile && !e.name.endsWith('.tmp'))
         .map((e) => e.name)
         .sort();
-    } catch {
-      return [];
+    } catch (err) {
+      throw new StorageReadError(`${workId}/`, err);
     }
   }
   async mtime(workId: string, file: string): Promise<number | null> {
     const fs = await this.fs();
     const { path, baseDir } = await this.resolve(workId, file);
     try {
+      if (!(await fs.exists(path, { baseDir }))) return null;
       const st = await fs.stat(path, { baseDir });
       return st.mtime ? new Date(st.mtime).getTime() : null;
-    } catch {
-      return null;
+    } catch (err) {
+      throw new StorageReadError(file, err);
     }
   }
   async remove(workId: string): Promise<void> {

@@ -58,7 +58,7 @@
   import { libraryStorage, chapterFileName, libraryRootProblem } from './lib/library/storage';
   import LibraryRepickDialog from './components/LibraryRepickDialog.svelte';
   import type { PickStatus } from './lib/picks';
-  import { chapterLibraryStatuses } from './lib/library/sync';
+  import { libraryStatusesFor } from './lib/library/sync';
   import type { ChapterLibraryStatus } from './lib/library/sync';
   import { session, syncCommands } from './lib/editor/session.svelte';
   import { zoomIn, zoomOut, zoomReset, zoomAtMin, zoomAtMax, zoomPercent } from './lib/editor/zoom.svelte';
@@ -132,16 +132,22 @@
   // focus so a collaborator's new/downloaded files show up promptly.
   let libraryStatus = $state<Record<string, Map<string, ChapterLibraryStatus>>>({});
 
+  // Works whose library folder could not be listed: said on the notice line,
+  // not shown as having no files.
+  let unlistedNotice = $state<string | null>(null);
+
   async function refreshLibraryStatus() {
     if (!isTauri()) return;
-    const storage = libraryStorage();
-    const entries = await Promise.all(
-      works.map(async (work) => {
-        const files = await storage.list(work.id);
-        return [work.id, chapterLibraryStatuses(files)] as const;
-      }),
+    const { statuses, unreadable } = await libraryStatusesFor(
+      works.map((work) => work.id),
+      libraryStorage(),
     );
-    libraryStatus = Object.fromEntries(entries);
+    libraryStatus = statuses;
+    const titles = unreadable.map((id) => works.find((work) => work.id === id)?.title ?? id);
+    unlistedNotice =
+      titles.length === 0
+        ? null
+        : `The library folder for ${titles.join(', ')} could not be read, so the list can’t show which chapters are still downloading or in conflict.`;
   }
 
   const railWorks: RailWork[] = $derived(
@@ -871,7 +877,7 @@
     {/if}
 
     <div class="center-col">
-      {#each [settingsNotice, registryNotice].filter(Boolean) as notice}
+      {#each [settingsNotice, registryNotice, unlistedNotice].filter(Boolean) as notice}
         <p class="app-notice" role="status">{notice}</p>
       {/each}
       <main class="editor-viewport" onclick={onEditorClick}>
