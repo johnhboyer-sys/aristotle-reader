@@ -10,6 +10,7 @@
  */
 
 import { isTauri } from './runtime';
+import { isNotFound } from './fsNotFound';
 // Type-only imports: erased at compile time, so this module stays free of any
 // runtime dependency on the export pipeline (settings.ts is imported almost
 // everywhere; lib/export is heavy and Tauri-shaped).
@@ -282,8 +283,12 @@ async function readRaw(): Promise<string | null> {
   if (isTauri()) {
     const fs = await import('@tauri-apps/plugin-fs');
     // Throws on a read failure: only a file that isn't there is "no settings".
-    if (!(await fs.exists(FILE, { baseDir: fs.BaseDirectory.AppData }))) return null;
-    return await fs.readTextFile(FILE, { baseDir: fs.BaseDirectory.AppData });
+    try {
+      return await fs.readTextFile(FILE, { baseDir: fs.BaseDirectory.AppData });
+    } catch (err) {
+      if (isNotFound(err)) return null;
+      throw err;
+    }
   }
   return localStorage.getItem(LS_KEY);
 }

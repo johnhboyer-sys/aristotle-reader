@@ -3,10 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // A library file that exists but cannot be read (permission denied, I/O error,
 // a cloud drive that stalls) must not look absent: each caller below writes a
 // fresh file where it finds none, over the one it failed to read.
+//
+// The fs double behaves as tauri-plugin-fs 2.5.1 does. Its `exists` is Rust's
+// Path::exists, which answers false when the path could not be checked at all,
+// so an unreadable path "does not exist" there. Errors carry the OS's text:
+// only "(os error 2)" means the path is absent.
 
 const files = new Map<string, string>();
 const unreadable = new Set<string>();
 const writes: string[] = [];
+
+const notFound = (path: string) => new Error(`failed at path: ${path} with error: No such file or directory (os error 2)`);
+const denied = (path: string) => new Error(`failed at path: ${path} with error: Permission denied (os error 13)`);
 
 vi.mock('../../runtime', () => ({ isTauri: () => true }));
 vi.mock('../../settings', () => ({ loadSettings: async () => ({ libraryRoot: '/lib' }) }));
@@ -14,17 +22,18 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   BaseDirectory: { AppData: 'AppData' },
   async mkdir() {},
   async exists(path: string) {
+    if (unreadable.has(path)) return false;
     return files.has(path) || [...files.keys()].some((p) => p.startsWith(`${path}/`));
   },
   async stat(path: string) {
-    if (unreadable.has(path)) throw new Error('Operation not permitted (os error 1)');
-    if (!files.has(path)) throw new Error(`no such file: ${path}`);
+    if (unreadable.has(path)) throw denied(path);
+    if (!files.has(path)) throw notFound(path);
     return { mtime: new Date(1_700_000_000_000) };
   },
   async readTextFile(path: string) {
-    if (unreadable.has(path)) throw new Error('Operation not permitted (os error 1)');
+    if (unreadable.has(path)) throw denied(path);
     const body = files.get(path);
-    if (body === undefined) throw new Error(`no such file: ${path}`);
+    if (body === undefined) throw notFound(path);
     return body;
   },
   async writeTextFile(path: string, content: string) {
@@ -32,8 +41,8 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
     files.set(path, content);
   },
   async readDir(dir: string) {
-    if (unreadable.has(dir)) throw new Error('Operation not permitted (os error 1)');
-    if (![...files.keys()].some((p) => p.startsWith(`${dir}/`))) throw new Error(`no such directory: ${dir}`);
+    if (unreadable.has(dir)) throw denied(dir);
+    if (![...files.keys()].some((p) => p.startsWith(`${dir}/`))) throw notFound(dir);
     return [...files.keys()]
       .filter((p) => p.startsWith(`${dir}/`) && !p.slice(dir.length + 1).includes('/'))
       .map((p) => ({ name: p.slice(dir.length + 1), isFile: true }));

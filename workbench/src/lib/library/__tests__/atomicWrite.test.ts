@@ -12,9 +12,6 @@ vi.mock('../../settings', () => ({ loadSettings: async () => ({ libraryRoot: '/l
 vi.mock('@tauri-apps/plugin-fs', () => ({
   BaseDirectory: { AppData: 'AppData' },
   async mkdir() {},
-  async exists(path: string) {
-    return files.has(path) || [...files.keys()].some((p) => p.startsWith(`${path}/`));
-  },
   async writeTextFile(path: string, content: string) {
     calls.push(`write ${path}`);
     files.set(path, content);

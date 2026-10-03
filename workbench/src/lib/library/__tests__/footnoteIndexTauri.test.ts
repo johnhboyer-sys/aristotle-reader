@@ -26,7 +26,8 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   async readTextFile(path: string) {
     guard(path);
     const body = files.get(path);
-    if (body === undefined) throw new Error(`no such file: ${path}`);
+    // tauri-plugin-fs's wording: the OS error text is what says "absent".
+    if (body === undefined) throw new Error(`failed to read file as text at path: ${path} with error: No such file or directory (os error 2)`);
     return body;
   },
   async writeTextFile(path: string, content: string) {

@@ -17,6 +17,7 @@
 // start with a dot: the Tauri fs scope refuses dotfiles on Unix.
 
 import { isTauri } from '../runtime';
+import { isNotFound } from '../fsNotFound';
 import { loadSettings, updateSettings } from '../settings';
 import { pickStatus } from '../picks';
 import type { PickStatus } from '../picks';
@@ -193,9 +194,9 @@ class TauriStorage implements LibraryStorage {
     const fs = await this.fs();
     const { path, baseDir } = await this.resolve(workId, file);
     try {
-      if (!(await fs.exists(path, { baseDir }))) return null;
       return await fs.readTextFile(path, { baseDir });
     } catch (err) {
+      if (isNotFound(err)) return null;
       throw new StorageReadError(file, err);
     }
   }
@@ -215,13 +216,13 @@ class TauriStorage implements LibraryStorage {
     const fs = await this.fs();
     const dir = await this.resolveDir(workId);
     try {
-      if (!(await fs.exists(dir.path, { baseDir: dir.baseDir }))) return [];
       const entries = await fs.readDir(dir.path, { baseDir: dir.baseDir });
       return entries
         .filter((e) => e.isFile && !e.name.endsWith('.tmp'))
         .map((e) => e.name)
         .sort();
     } catch (err) {
+      if (isNotFound(err)) return [];
       throw new StorageReadError(`${workId}/`, err);
     }
   }
@@ -229,10 +230,10 @@ class TauriStorage implements LibraryStorage {
     const fs = await this.fs();
     const { path, baseDir } = await this.resolve(workId, file);
     try {
-      if (!(await fs.exists(path, { baseDir }))) return null;
       const st = await fs.stat(path, { baseDir });
       return st.mtime ? new Date(st.mtime).getTime() : null;
     } catch (err) {
+      if (isNotFound(err)) return null;
       throw new StorageReadError(file, err);
     }
   }
