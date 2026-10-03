@@ -13,8 +13,9 @@ const files = new Map<string, string>();
 const unreadable = new Set<string>();
 const writes: string[] = [];
 
-const notFound = (path: string) => new Error(`failed at path: ${path} with error: No such file or directory (os error 2)`);
-const denied = (path: string) => new Error(`failed at path: ${path} with error: Permission denied (os error 13)`);
+// Shapes from tauri-plugin-fs 2.5.1 (pinned in lib/__tests__/fsNotFound.test.ts).
+const notFound = (path: string) => `failed to open file at path: ${path} with error: No such file or directory (os error 2)`;
+const denied = (path: string) => `failed to open file at path: ${path} with error: Permission denied (os error 13)`;
 
 vi.mock('../../runtime', () => ({ isTauri: () => true }));
 vi.mock('../../settings', () => ({ loadSettings: async () => ({ libraryRoot: '/lib' }) }));

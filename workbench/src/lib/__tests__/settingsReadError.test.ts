@@ -15,7 +15,7 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
     return false;
   },
   async readTextFile() {
-    throw new Error('failed to read file as text at path: settings.json with error: Permission denied (os error 13)');
+    throw 'failed to open file at path: settings.json with error: Permission denied (os error 13)';
   },
   async writeTextFile(path: string) {
     writes.push(path);
