@@ -356,6 +356,12 @@ describe('buildAssistPrompt — source-language wording (golden)', () => {
     expect(t.system).toContain('professional translator');
   });
 
+  it('golden: reference and ask system prompts, word for word', () => {
+    // Pinned whole so a bad join around the period sentence fails (Grok review).
+    expect(buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'reference' }).system).toMatchInlineSnapshot(`"You are helping a professional translator by providing a reference translation. The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them. Produce a natural, faithful, complete English translation of the single TARGET line, rendering its full sense in fluent English. This is for the translator’s reference only and is NOT inserted into the manuscript, so it is not line-locked: you need not preserve 1:1 line correspondence. Use the surrounding lines only as context for meaning. Output ONLY the English translation for the TARGET line. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context lines."`);
+    expect(buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'q' }).system).toMatchInlineSnapshot(`"You are a knowledgeable linguist assisting a translator with a question about a single TARGET line of the source text. The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them. Answer the translator’s question directly, grounding your answer in the Greek of the TARGET line and using the surrounding lines as context for meaning and reference. You may discuss grammar, morphology, syntax, lexicon, and meaning as the question requires, and you may comment on the translator’s own English when they ask about it. Be concise and specific; cite the relevant Greek word(s) where it helps. Answer only what is asked — no unsolicited full translation unless the question calls for one, and no preamble."`);
+  });
+
   it('no mode frames any language as classics, and every mode reads the source in its own period', () => {
     // John, 2026-10-03: the Workbench serves medieval and later texts too, so
     // a Latin work (Aquinas as much as Cicero) gets no classicist persona.
