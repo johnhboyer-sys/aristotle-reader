@@ -328,7 +328,7 @@ export async function loadSettings(): Promise<WorkbenchSettings> {
     raw = await readRaw();
   } catch (err) {
     console.warn('settings: read failed', err);
-    problem = 'Your settings file could not be read, so the app is using default settings and won’t save changes to them until it is restarted.';
+    problem = 'Your settings file could not be read, so until the app is restarted it is using default settings, including its own library folder rather than the one you chose, and won’t save changes to them.';
     cached = {};
     return cached;
   }
@@ -340,7 +340,7 @@ export async function loadSettings(): Promise<WorkbenchSettings> {
     cached = sanitize(JSON.parse(raw));
   } catch (err) {
     console.warn('settings: unparsable settings file', err);
-    problem = 'Your settings file is damaged, so the app is using default settings and won’t save changes to them.';
+    problem = 'Your settings file is damaged, so the app is using default settings, including its own library folder rather than the one you chose, and won’t save changes to them.';
     cached = {};
   }
   return cached;

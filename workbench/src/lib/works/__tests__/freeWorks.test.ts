@@ -5,6 +5,7 @@ import {
   freeWorkManifest,
   listFreeWorkRecords,
   listFreeWorks,
+  makeRoomForFreeWork,
   registerFreeWork,
   removeFreeWork,
   unregisterFreeWork,
@@ -496,5 +497,23 @@ describe('renaming a work', () => {
     const [record] = await listFreeWorkRecords(storage);
     expect(record.author).toBe('Aquinas');
     expect(record.language).toBe('Latin');
+  });
+});
+
+describe('makeRoomForFreeWork (before a new document writes its file)', () => {
+  it('refuses while the registry cannot be read: the rail may be missing a work with this id', async () => {
+    const storage = new MemStorage();
+    await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', '{not json');
+    await expect(makeRoomForFreeWork('my-doc', storage)).rejects.toThrow(/works\.json/);
+  });
+
+  it('refuses when a chapter file already sits under the id', async () => {
+    const storage = new MemStorage();
+    await storage.write('my-doc', 'b01c01.md', 'an unlisted document');
+    await expect(makeRoomForFreeWork('my-doc', storage)).rejects.toThrow(/already/);
+  });
+
+  it('allows a new id', async () => {
+    await expect(makeRoomForFreeWork('my-doc', new MemStorage())).resolves.toBeUndefined();
   });
 });

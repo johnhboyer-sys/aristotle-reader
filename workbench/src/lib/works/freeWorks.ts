@@ -26,7 +26,7 @@
 
 import type { SchemeId } from '../citation/types';
 import { getScheme, isKnownScheme } from '../citation/registry';
-import { libraryStorage } from '../library/storage';
+import { chapterFileName, libraryStorage } from '../library/storage';
 import type { LibraryStorage } from '../library/storage';
 import type { WorkManifest, OriginalLanguage } from './manifest';
 import type { WorkLevel } from './profile';
@@ -197,6 +197,22 @@ export async function registerFreeWork(
   const works = existing.filter((w) => w.id !== record.id);
   works.push(record);
   await writeRegistry(works, storage);
+}
+
+/**
+ * Check before a new document writes its first file. The new id was chosen
+ * against the works the rail lists, so it must not be trusted while the
+ * registry is unreadable (its works are missing from the rail), nor where a
+ * chapter file already sits under the id. Throws with a sentence for the user.
+ */
+export async function makeRoomForFreeWork(
+  workId: string,
+  storage: LibraryStorage = libraryStorage(),
+): Promise<void> {
+  await listFreeWorkRecords(storage);
+  if ((await storage.read(workId, chapterFileName(1, 1))) !== null) {
+    throw new Error('A document is already stored under this name in your library folder. Choose another title.');
+  }
 }
 
 /** The registry file's on-disk shape — one writer, so every caller agrees. */
