@@ -9,6 +9,7 @@
   import LibraryRail from './components/LibraryRail.svelte';
   import type { RailSelection, RailWork } from './components/LibraryRail.svelte';
   import AddWorkDialog from './components/AddWorkDialog.svelte';
+  import StartScreen from './components/StartScreen.svelte';
   import ImportDialog from './components/ImportDialog.svelte';
   import NewDocumentDialog from './components/NewDocumentDialog.svelte';
   import SourceImportDialog from './components/SourceImportDialog.svelte';
@@ -26,6 +27,7 @@
   import { buildOutlineTree } from './lib/editor/outline';
   import EditorToolbar from './lib/editor/EditorToolbar.svelte';
   import { listWorks } from './lib/works/manifest';
+  import { shownBuiltInWorks } from './lib/works/shownWorks';
   import type { WorkManifest } from './lib/works/manifest';
   import {
     listFreeWorks,
@@ -64,9 +66,10 @@
   import { zoomIn, zoomOut, zoomReset, zoomAtMin, zoomAtMax, zoomPercent } from './lib/editor/zoom.svelte';
   import SettingsDialog from './components/SettingsDialog.svelte';
 
-  // Built-in works from the static manifests, plus corpus-free documents
-  // from the library's free-work registry (loaded at boot / after creation).
-  let works = $state<WorkManifest[]>(listWorks());
+  // The built-in works this user has (lib/works/shownWorks — none ship
+  // preinstalled), plus corpus-free documents from the library's free-work
+  // registry. Loaded at boot / after creation.
+  let works = $state<WorkManifest[]>([]);
 
   /** Document-spine work (D8): the chapter file is the spine — no corpus is
    * ever loaded for it. Capability gate, never a scheme-id comparison. */
@@ -80,6 +83,9 @@
   let settingsNotice = $state<string | null>(null);
 
   async function reloadWorks() {
+    // The registry is read last, so a reload that started earlier can't put
+    // back an older document list after a newer one landed.
+    const builtIns = await shownBuiltInWorks();
     let free: WorkManifest[];
     try {
       free = await listFreeWorks();
@@ -89,8 +95,13 @@
       // Keep the documents already in the rail; nothing on disk changed.
       free = works.filter(isDocumentWork);
     }
-    works = [...listWorks(), ...free];
+    works = [...builtIns, ...free];
   }
+
+  // Ids a new document may not take: every listed work, plus the built-in works
+  // even while hidden, so a document titled "Metaphysics" never shares that
+  // work's library folder.
+  const takenIds = $derived([...listWorks(), ...works].map((w) => w.id));
 
   let railOpen = $state(true);
   let footnotesOpen = $state(false);
@@ -99,6 +110,9 @@
   let addWorkOpen = $state(false);
   let newDocumentOpen = $state(false);
   let sourceImportOpen = $state(false);
+  // The tab Import a text opens on: Perseus · FREED, or the disc tab from the
+  // start screen's "local TLG or PHI files" button.
+  let sourceImportRoute = $state<'link' | 'disc'>('link');
   let settingsOpen = $state(false);
   // The document work whose organization profile the "Manage levels…" dialog
   // is editing (null = closed).
@@ -390,6 +404,25 @@
   async function handleOnboarded(workId: string) {
     invalidateCorpus(workId);
     corpora = { ...corpora, [workId]: await loadCorpus(workId) };
+    // An added work has no files yet; its corpus is what lists it.
+    await reloadWorks();
+    // Open it, unless the user is already working on something.
+    const corpus = corpora[workId];
+    const work = works.find((w) => w.id === workId);
+    if (!selection && corpus && work) {
+      for (const book of work.books) {
+        const chapters = bookChapterNumbers(corpus, book.n);
+        if (chapters.length > 0) {
+          select(workId, book.n, chapters[0]);
+          break;
+        }
+      }
+    }
+  }
+
+  function openSourceImport(route: 'link' | 'disc') {
+    sourceImportRoute = route;
+    sourceImportOpen = true;
   }
 
   function openImportDialog(workId: string) {
@@ -868,7 +901,7 @@
             onSelect={select}
             onAddWork={isTauri() ? () => (addWorkOpen = true) : undefined}
             onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
-            onImportSource={isTauri() ? () => (sourceImportOpen = true) : undefined}
+            onImportSource={isTauri() ? () => openSourceImport('link') : undefined}
             onImportChapter={isTauri() || import.meta.env.DEV ? openImportDialog : undefined}
             onImportReference={isTauri() || import.meta.env.DEV ? openReferenceImport : undefined}
           />
@@ -901,6 +934,14 @@
                   : "This chapter isn't available."}
               </p>
             </div>
+          </div>
+        {:else if works.length === 0 && registryNotice === null}
+          <div class="empty-state-wrap">
+            <StartScreen
+              onNewDocument={isTauri() || import.meta.env.DEV ? () => (newDocumentOpen = true) : undefined}
+              onImportSource={isTauri() ? () => openSourceImport('link') : undefined}
+              onImportDisc={isTauri() ? () => openSourceImport('disc') : undefined}
+            />
           </div>
         {:else}
           <div class="empty-state-wrap">
@@ -961,16 +1002,16 @@
 
   {#if addWorkOpen}
     <AddWorkDialog
-      works={works.filter((w) => !isDocumentWork(w) && !corpora[w.id])}
+      works={listWorks().filter((w) => !corpora[w.id])}
       onClose={() => (addWorkOpen = false)}
       onOnboarded={handleOnboarded}
-      onImportSource={() => (sourceImportOpen = true)}
+      onImportSource={() => openSourceImport('link')}
     />
   {/if}
 
   {#if newDocumentOpen}
     <NewDocumentDialog
-      existingIds={works.map((w) => w.id)}
+      existingIds={takenIds}
       onClose={() => (newDocumentOpen = false)}
       onCreated={handleDocumentCreated}
     />
@@ -978,7 +1019,8 @@
 
   {#if sourceImportOpen}
     <SourceImportDialog
-      existingIds={works.map((w) => w.id)}
+      existingIds={takenIds}
+      initialRoute={sourceImportRoute}
       onClose={() => (sourceImportOpen = false)}
       onCreated={handleSourceImported}
     />
@@ -1004,7 +1046,8 @@
   {/if}
 
   {#if settingsOpen}
-    <SettingsDialog {works} onClose={() => (settingsOpen = false)} />
+    <!-- Every built-in id, shown or not: moving the library copies their folders. -->
+    <SettingsDialog works={[...listWorks(), ...works.filter(isDocumentWork)]} onClose={() => (settingsOpen = false)} />
   {/if}
 
   {#if importOpen}
