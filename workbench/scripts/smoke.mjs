@@ -422,27 +422,42 @@ await run('undo a structural edit and switch chapter at once', async () => {
   await page.locator('.ctx-menu-item', { hasText: 'Insert heading line here' }).hover();
   await page.locator('.ctx-submenu .ctx-menu-item').first().click();
   await page.waitForSelector('.en-cell[data-heading-level]');
-  const stale = await page.evaluate(async () => {
+  // The check below passes on silence, so the step proves it looked: the
+  // panel is open before and after, the keydown reached the undo handler, and
+  // reopening the document shows the heading line undone.
+  const race = await page.evaluate(async () => {
     const target = [...document.querySelectorAll('.work')]
       .find((w) => w.querySelector('.work-title')?.textContent?.includes('Metaphysics'))
       ?.querySelector('.chapter-row');
     if (!target) throw new Error('no Metaphysics chapter row in the rail');
+    const panelShowsOld = () => !!document.querySelector('.fn-panel')?.textContent?.includes('racephrase');
+    if (!panelShowsOld()) throw new Error('the footnote panel is not showing the note before the switch');
     let switched = false;
     let seen = false;
-    const panelShowsOld = () => !!document.querySelector('.fn-panel')?.textContent?.includes('racephrase');
     const obs = new MutationObserver(() => {
       if (switched && panelShowsOld()) seen = true;
     });
     obs.observe(document.body, { childList: true, subtree: true, characterData: true });
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true }));
+    const handled = !window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true, cancelable: true }),
+    );
     target.click();
     switched = true;
     for (let i = 0; i < 20; i++) await new Promise((r) => requestAnimationFrame(r));
     obs.disconnect();
-    return seen || panelShowsOld();
+    return { handled, panelOpen: !!document.querySelector('.fn-panel'), stale: seen || panelShowsOld() };
   });
   await page.waitForFunction(() => document.querySelector('.chapter-head h1')?.textContent?.includes('Metaphysics'));
-  check("the new chapter's footnotes never show the old chapter's", !stale);
+  check('the undo keystroke reached the editor', race.handled);
+  check('the footnote panel stayed open across the switch', race.panelOpen);
+  check("the new chapter's footnotes never show the old chapter's", !race.stale);
+  await page
+    .locator('.work', { has: page.locator('.work-title', { hasText: 'Smoke Race' }) })
+    .locator('.chapter-row')
+    .first()
+    .click();
+  await page.waitForFunction(() => document.querySelector('.chapter-head h1')?.textContent?.includes('Smoke Race'));
+  check('the undo ran: the heading line is gone', (await page.locator('.en-cell[data-heading-level]').count()) === 0);
 });
 
 // ── verdict ────────────────────────────────────────────────────────────────
