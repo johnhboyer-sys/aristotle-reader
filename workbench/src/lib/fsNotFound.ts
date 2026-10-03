@@ -13,3 +13,14 @@
 export function isNotFound(err: unknown): boolean {
   return /\(os error [23]\)$/.test(String(err));
 }
+
+/**
+ * Whether a writeTextFile with `createNew: true` was refused because the file
+ * is already there: EEXIST (17), or Windows' ERROR_FILE_EXISTS (80). The
+ * refusal is OpenOptions::create_new's, made in the same system call that
+ * would have created the file, so nothing can slip in between a check and
+ * the write.
+ */
+export function isAlreadyExists(err: unknown): boolean {
+  return /\(os error (17|80)\)$/.test(String(err));
+}

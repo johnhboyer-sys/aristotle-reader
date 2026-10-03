@@ -298,7 +298,11 @@
   function onWindowFocus() {
     // Before boot the library folder may still be waiting to be chosen again.
     if (!booted) return;
-    void refreshLibraryStatus();
+    // reloadWorks first: a built-in work whose files arrived by sync since
+    // boot is listed now, not after a relaunch.
+    void reloadWorks()
+      .catch(() => {})
+      .then(refreshLibraryStatus);
     // A chapter file that could not be read is skipped; the next focus retries.
     void syncCommands.checkExternalChange().catch(() => {});
   }

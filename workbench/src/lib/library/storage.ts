@@ -17,7 +17,7 @@
 // start with a dot: the Tauri fs scope refuses dotfiles on Unix.
 
 import { isTauri } from '../runtime';
-import { isNotFound } from '../fsNotFound';
+import { isAlreadyExists, isNotFound } from '../fsNotFound';
 import { loadSettings, updateSettings } from '../settings';
 import { pickStatus } from '../picks';
 import type { PickStatus } from '../picks';
@@ -254,30 +254,129 @@ export function libraryStorage(): LibraryStorage {
 
 // ── moving an existing library to a new root (Settings: "Store my library in…") ──
 
+// The free-work registry: freeWorks.ts's FREE_WORKS_STORAGE_ID and its file.
+// Named here, not imported, because freeWorks.ts imports this module.
+const REGISTRY_WORK_ID = '.';
+const REGISTRY_FILE = 'works.json';
+
+export interface CopyResult {
+  /** Files written into the new folder (a merged works.json counts as one). */
+  copied: number;
+  /** What the new folder already held, kept as it was with ours left out:
+   * "<workId>/<file>", or a works.json entry by its title. */
+  skipped: string[];
+}
+
+function parseRegistry(raw: string, which: string): { object: Record<string, unknown>; works: unknown[] } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = null;
+  }
+  const works = (parsed as { works?: unknown } | null)?.works;
+  if (typeof parsed !== 'object' || parsed === null || !Array.isArray(works)) {
+    throw new Error(`${which} is damaged, so nothing was copied.`);
+  }
+  return { object: parsed as Record<string, unknown>, works };
+}
+
+function entryField(entry: unknown, key: 'id' | 'title'): string | null {
+  const value = typeof entry === 'object' && entry !== null ? (entry as Record<string, unknown>)[key] : undefined;
+  return typeof value === 'string' ? value : null;
+}
+
 /**
  * Copies every work's files from the CURRENT root to `newRoot` (plain files,
  * additive — never deletes anything from the old location). Call BEFORE
  * updateSettings({ libraryRoot: newRoot }) + invalidateLibraryRootCache(), so
- * this still reads from the old root while writing to the new one. Returns
- * the number of files copied. Tauri only; throws in the browser harness.
+ * this still reads from the old root while writing to the new one. Tauri only;
+ * throws in the browser harness.
+ *
+ * The new folder may already hold a library (a collaborator's, or this user's
+ * from another Mac), and nothing in it is ever overwritten (John, 2026-10-03):
+ * a file already there is kept and ours is reported in `skipped`. works.json
+ * is merged instead: every entry already there is kept as it is, and ours are
+ * added where their id is new. Both registries are read before anything is
+ * copied, so one that can't be read or parsed stops the copy with nothing
+ * written. Dotfiles (.DS_Store) stay behind: no library file starts with a
+ * dot, and the fs scope refuses to read one.
  */
-export async function copyLibraryToRoot(workIds: string[], newRoot: string): Promise<number> {
+export async function copyLibraryToRoot(workIds: string[], newRoot: string): Promise<CopyResult> {
   if (!isTauri()) throw new Error('copyLibraryToRoot: Tauri only');
   const fs = await import('@tauri-apps/plugin-fs');
   const from = libraryStorage();
-  let copied = 0;
+  const result: CopyResult = { copied: 0, skipped: [] };
   const sep = newRoot.endsWith('/') ? '' : '/';
+
+  /** Write only if nothing is there; false when something already was. */
+  async function writeNew(path: string, content: string): Promise<boolean> {
+    try {
+      await fs.writeTextFile(path, content, { createNew: true });
+      return true;
+    } catch (err) {
+      if (isAlreadyExists(err)) return false;
+      throw err;
+    }
+  }
+
+  // Settle works.json first: a registry that can't be read stops everything.
+  let writeRegistry: (() => Promise<void>) | null = null;
+  const ours = workIds.includes(REGISTRY_WORK_ID) ? await from.read(REGISTRY_WORK_ID, REGISTRY_FILE) : null;
+  if (ours !== null) {
+    const dest = `${newRoot}${sep}${REGISTRY_WORK_ID}/${REGISTRY_FILE}`;
+    let theirs: string | null;
+    try {
+      theirs = await fs.readTextFile(dest);
+    } catch (err) {
+      if (!isNotFound(err)) {
+        console.error('copyLibraryToRoot: the new folder’s works.json could not be read', err);
+        throw new Error('The documents list (works.json) already in the new folder could not be read, so nothing was copied.');
+      }
+      theirs = null;
+    }
+    if (theirs === null) {
+      writeRegistry = async () => {
+        if (await writeNew(dest, ours)) result.copied++;
+        else result.skipped.push(`${REGISTRY_WORK_ID}/${REGISTRY_FILE}`);
+      };
+    } else {
+      const mine = parseRegistry(ours, 'Your documents list (works.json)');
+      const target = parseRegistry(theirs, 'The documents list (works.json) already in the new folder');
+      const taken = new Set(target.works.map((entry) => entryField(entry, 'id')));
+      const added: unknown[] = [];
+      for (const entry of mine.works) {
+        if (!taken.has(entryField(entry, 'id'))) added.push(entry);
+        else result.skipped.push(`“${entryField(entry, 'title') ?? entryField(entry, 'id')}” in the documents list (works.json)`);
+      }
+      if (added.length > 0) {
+        const merged = { ...target.object, works: [...target.works, ...added] };
+        writeRegistry = async () => {
+          // The merge itself replaces works.json, through a temp file: it
+          // holds every entry the old one did.
+          const tmp = `${dest}.${++tmpSerial}.tmp`;
+          await fs.writeTextFile(tmp, JSON.stringify(merged, null, 2) + '\n');
+          await fs.rename(tmp, dest);
+          result.copied++;
+        };
+      }
+    }
+  }
+
   for (const workId of workIds) {
-    const files = await from.list(workId);
+    const files = (await from.list(workId)).filter(
+      (file) => !file.startsWith('.') && !(workId === REGISTRY_WORK_ID && file === REGISTRY_FILE),
+    );
     if (files.length === 0) continue;
     const destDir = `${newRoot}${sep}${workId}`;
     await fs.mkdir(destDir, { recursive: true });
     for (const file of files) {
       const content = await from.read(workId, file);
       if (content === null) continue;
-      await fs.writeTextFile(`${destDir}/${file}`, content);
-      copied++;
+      if (await writeNew(`${destDir}/${file}`, content)) result.copied++;
+      else result.skipped.push(`${workId}/${file}`);
     }
   }
-  return copied;
+  if (writeRegistry) await writeRegistry();
+  return result;
 }
