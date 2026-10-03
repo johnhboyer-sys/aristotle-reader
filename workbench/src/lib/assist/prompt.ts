@@ -1,7 +1,9 @@
 /**
  * buildAssistPrompt — pure prompt construction (D4 §3c). No IO, no Tauri.
  *
- * The system prompt frames the task for a professional classicist context:
+ * The system prompt frames the task for a professional translator, in any
+ * period (ancient, medieval or later — no classicist persona, John
+ * 2026-10-03):
  * strict row-locked 1:1 unit discipline, match the surrounding draft's
  * register/terminology, output ONLY the target unit's English (no quotes,
  * no commentary, no source text), never translate the context rows.
@@ -61,12 +63,10 @@ export function languageLabelOf(work: AssistContext['work']): string | null {
   return label.length > 0 ? label : null;
 }
 
-/** "classicist" only when the source language IS classical (or unknown-but-
- * corpus never reaches here with anything else); other/unknown languages get
- * the neutral persona so a German document isn't framed as classics. */
-function isClassical(label: string | null): boolean {
-  return label !== null && ['greek', 'latin'].includes(label.toLowerCase());
-}
+/** Every mode's reminder that the source need not be classical: a Latin text
+ * may be Aquinas as easily as Cicero (John, 2026-10-03). */
+const PERIOD =
+  'The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them.';
 
 /**
  * Shared context-rendering helper — the one source of truth for what
@@ -114,14 +114,15 @@ export interface AssistPrompt {
  */
 function translateSystemPrompt(unit: AssistUnit, lang: string | null): string {
   const c = contextNounOf(unit);
-  const persona = isClassical(lang) ? 'classicist' : 'translator';
   // The mid-clause-break concession is a LINE fact (1:1 line lock forces
   // breaks mid-clause); paragraph/sentence locks don't.
   const lockTail =
     unit === 'line' ? ' even when English word order forces an awkward mid-clause break' : '';
   return [
-    `You are helping a professional ${persona} translate a work from its`,
-    `original language into English. The translation is strictly ${unit}-locked:`,
+    'You are helping a professional translator translate a work from its',
+    'original language into English.',
+    PERIOD,
+    `The translation is strictly ${unit}-locked:`,
     `each source ${unit} gets exactly one English ${unit}, kept in 1:1`,
     `correspondence${lockTail}. Match the register, terminology, and style of the surrounding`,
     'English shown below. Output ONLY the English translation for the single',
@@ -141,10 +142,11 @@ function translateSystemPrompt(unit: AssistUnit, lang: string | null): string {
  */
 function referenceSystemPrompt(unit: AssistUnit, lang: string | null): string {
   const c = contextNounOf(unit);
-  const persona = isClassical(lang) ? 'classicist' : 'translator';
   return [
-    `You are helping a professional ${persona} by providing a reference`,
-    'translation. Produce a natural, faithful, complete English translation of',
+    'You are helping a professional translator by providing a reference',
+    'translation.',
+    PERIOD,
+    'Produce a natural, faithful, complete English translation of',
     `the single TARGET ${unit}, rendering its full sense in fluent English. This`,
     'is for the translator’s reference only and is NOT inserted into the',
     `manuscript, so it is not ${unit}-locked: you need not preserve 1:1 ${unit}`,
@@ -170,7 +172,9 @@ function checkSystemPrompt(unit: AssistUnit, lang: string | null): string {
   const langWord = lang ?? 'source';
   return [
     'You are a linguist checking a translation for fidelity to its source',
-    `text. Examine ONLY the TARGET ${unit}: judge whether the translator’s`,
+    'text.',
+    PERIOD,
+    `Examine ONLY the TARGET ${unit}: judge whether the translator’s`,
     `English accurately and completely renders the ${langText} — morphology, case,`,
     'tense, voice, mood, agreement, syntax, word order, lexical choice, and any',
     `omissions or additions. Cite the specific ${langWord} word(s) at issue. Use the`,
@@ -193,12 +197,13 @@ function checkSystemPrompt(unit: AssistUnit, lang: string | null): string {
  */
 function askSystemPrompt(unit: AssistUnit, lang: string | null): string {
   const c = contextNounOf(unit);
-  const persona = isClassical(lang) ? 'classicist' : 'linguist';
   const langText = lang ?? 'source text';
   const langWord = lang ?? 'source';
   return [
-    `You are a knowledgeable ${persona} assisting a translator with a question`,
-    `about a single TARGET ${unit} of the source text. Answer the translator’s`,
+    'You are a knowledgeable linguist assisting a translator with a question',
+    `about a single TARGET ${unit} of the source text.`,
+    PERIOD,
+    'Answer the translator’s',
     `question directly, grounding your answer in the ${langText} of the TARGET ${unit}`,
     `and using the surrounding ${c}s as context for meaning and reference. You`,
     'may discuss grammar, morphology, syntax, lexicon, and meaning as the',

@@ -6,7 +6,7 @@ describe('buildAssistPrompt', () => {
   it('golden: system prompt states the row-locked 1:1 discipline and output-only-English rule', () => {
     const { system } = buildAssistPrompt(GOLDEN_CONTEXT);
     expect(system).toMatchInlineSnapshot(
-      `"You are helping a professional classicist translate a work from its original language into English. The translation is strictly line-locked: each source line gets exactly one English line, kept in 1:1 correspondence even when English word order forces an awkward mid-clause break. Match the register, terminology, and style of the surrounding English shown below. Output ONLY the English translation for the single TARGET line. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context lines."`,
+      `"You are helping a professional translator translate a work from its original language into English. The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them. The translation is strictly line-locked: each source line gets exactly one English line, kept in 1:1 correspondence even when English word order forces an awkward mid-clause break. Match the register, terminology, and style of the surrounding English shown below. Output ONLY the English translation for the single TARGET line. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context lines."`,
     );
   });
 
@@ -157,9 +157,9 @@ describe('buildAssistPrompt — modes', () => {
     expect(user).toContain('Translator’s English under review: (no English yet)');
   });
 
-  it("'ask' mode: a general classicist-assistant system prompt, NOT the strict 'check' linguist", () => {
+  it("'ask' mode: a general assistant system prompt, NOT the strict 'check' linguist", () => {
     const { system } = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'What case is τοῦτό?' });
-    expect(system).toContain('classicist');
+    expect(system).toContain('You are a knowledgeable linguist assisting a translator');
     // The open assistant answers the question; it is NOT the fidelity-only
     // linguist and does NOT forbid interpretation.
     expect(system).not.toContain('strictly line-locked');
@@ -238,10 +238,10 @@ const SENTENCE_CONTEXT = {
 };
 
 describe('buildAssistPrompt — unit wordings (golden)', () => {
-  it("golden: 'paragraph' translate system prompt is paragraph-locked, translator persona for a non-classical language", () => {
+  it("golden: 'paragraph' translate system prompt is paragraph-locked, translator persona", () => {
     const { system } = buildAssistPrompt(PARAGRAPH_CONTEXT);
     expect(system).toBe(
-      'You are helping a professional translator translate a work from its original language into English. The translation is strictly paragraph-locked: each source paragraph gets exactly one English paragraph, kept in 1:1 correspondence. Match the register, terminology, and style of the surrounding English shown below. Output ONLY the English translation for the single TARGET paragraph. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context paragraphs.',
+      'You are helping a professional translator translate a work from its original language into English. The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them. The translation is strictly paragraph-locked: each source paragraph gets exactly one English paragraph, kept in 1:1 correspondence. Match the register, terminology, and style of the surrounding English shown below. Output ONLY the English translation for the single TARGET paragraph. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context paragraphs.',
     );
   });
 
@@ -315,7 +315,7 @@ describe('buildAssistPrompt — source-language wording (golden)', () => {
   it("golden: 'check' names the free work's verbatim language (German), not Greek", () => {
     const { system, user } = buildAssistPrompt({ ...PARAGRAPH_CONTEXT, mode: 'check' });
     expect(system).toBe(
-      'You are a linguist checking a translation for fidelity to its source text. Examine ONLY the TARGET paragraph: judge whether the translator’s English accurately and completely renders the German — morphology, case, tense, voice, mood, agreement, syntax, word order, lexical choice, and any omissions or additions. Cite the specific German word(s) at issue. Use the surrounding paragraphs only as grammatical and referential context; do not assess them. Report ONLY concrete linguistic observations, concisely. Do NOT offer interpretation, philosophical or literary judgement, stylistic preference, paraphrase, or your own translation. If the English faithfully renders the German, say so briefly.',
+      'You are a linguist checking a translation for fidelity to its source text. The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them. Examine ONLY the TARGET paragraph: judge whether the translator’s English accurately and completely renders the German — morphology, case, tense, voice, mood, agreement, syntax, word order, lexical choice, and any omissions or additions. Cite the specific German word(s) at issue. Use the surrounding paragraphs only as grammatical and referential context; do not assess them. Report ONLY concrete linguistic observations, concisely. Do NOT offer interpretation, philosophical or literary judgement, stylistic preference, paraphrase, or your own translation. If the English faithfully renders the German, say so briefly.',
     );
     expect(user).toContain('>>> TARGET paragraph to check:');
     expect(user.trimEnd()).toMatch(/diagnose the TARGET paragraph’s English against its German\./);
@@ -339,21 +339,41 @@ describe('buildAssistPrompt — source-language wording (golden)', () => {
     expect(system).not.toContain('Greek');
   });
 
-  it("'ask' persona: classicist for Greek/Latin, linguist otherwise; language named where known", () => {
+  it("'ask' persona: a linguist for every language; language named where known", () => {
     const german = buildAssistPrompt({ ...PARAGRAPH_CONTEXT, mode: 'ask', question: 'Case of Politik?' });
     expect(german.system).toContain('You are a knowledgeable linguist');
     expect(german.system).toContain('grounding your answer in the German of the TARGET paragraph');
     expect(german.system).toContain('cite the relevant German word(s)');
     const greek = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'Case?' });
-    expect(greek.system).toContain('You are a knowledgeable classicist');
+    expect(greek.system).toContain('You are a knowledgeable linguist');
   });
 
-  it("a free work whose language IS 'Greek' keeps the classicist wording (verbatim label)", () => {
+  it("a free work whose language IS 'Greek' names the Greek (verbatim label)", () => {
     const ctx = { ...GOLDEN_CONTEXT, work: { ...GOLDEN_CONTEXT.work, author: '', language: 'Greek' } };
     const { system } = buildAssistPrompt({ ...ctx, mode: 'check' });
     expect(system).toContain('renders the Greek');
     const t = buildAssistPrompt(ctx);
-    expect(t.system).toContain('professional classicist');
+    expect(t.system).toContain('professional translator');
+  });
+
+  it('golden: reference and ask system prompts, word for word', () => {
+    // Pinned whole so a bad join around the period sentence fails (Grok review).
+    expect(buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'reference' }).system).toMatchInlineSnapshot(`"You are helping a professional translator by providing a reference translation. The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them. Produce a natural, faithful, complete English translation of the single TARGET line, rendering its full sense in fluent English. This is for the translator’s reference only and is NOT inserted into the manuscript, so it is not line-locked: you need not preserve 1:1 line correspondence. Use the surrounding lines only as context for meaning. Output ONLY the English translation for the TARGET line. Do not add quotation marks, commentary, notes, alternatives, or the original-language text. Do not translate the context lines."`);
+    expect(buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'q' }).system).toMatchInlineSnapshot(`"You are a knowledgeable linguist assisting a translator with a question about a single TARGET line of the source text. The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them. Answer the translator’s question directly, grounding your answer in the Greek of the TARGET line and using the surrounding lines as context for meaning and reference. You may discuss grammar, morphology, syntax, lexicon, and meaning as the question requires, and you may comment on the translator’s own English when they ask about it. Be concise and specific; cite the relevant Greek word(s) where it helps. Answer only what is asked — no unsolicited full translation unless the question calls for one, and no preamble."`);
+  });
+
+  it('no mode frames any language as classics, and every mode reads the source in its own period', () => {
+    // John, 2026-10-03: the Workbench serves medieval and later texts too, so
+    // a Latin work (Aquinas as much as Cicero) gets no classicist persona.
+    const PERIOD = 'The source may be ancient, medieval, or later: read its words in the sense its own author and period gave them.';
+    for (const language of [undefined, 'Greek', 'Latin', 'German', '']) {
+      const work = language === undefined ? GOLDEN_CONTEXT.work : { ...GOLDEN_CONTEXT.work, language };
+      for (const mode of ['translate', 'reference', 'check', 'ask'] as const) {
+        const { system } = buildAssistPrompt({ ...GOLDEN_CONTEXT, work, mode, question: 'q' });
+        expect(system, `${mode} / ${language}`).not.toMatch(/classic/i);
+        expect(system, `${mode} / ${language}`).toContain(PERIOD);
+      }
+    }
   });
 
   it('corpus works (no language field) are BYTE-IDENTICAL to the shipped wording in every mode', () => {
@@ -363,7 +383,7 @@ describe('buildAssistPrompt — source-language wording (golden)', () => {
     expect(check.system).toContain('renders the Greek — morphology');
     expect(check.system).toContain('Cite the specific Greek word(s) at issue');
     const ask = buildAssistPrompt({ ...GOLDEN_CONTEXT, mode: 'ask', question: 'q' });
-    expect(ask.system).toContain('knowledgeable classicist');
+    expect(ask.system).toContain('knowledgeable linguist');
     expect(ask.system).toContain('in the Greek of the TARGET line');
   });
 });

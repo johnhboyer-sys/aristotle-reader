@@ -2,7 +2,7 @@
   // Ask-AI panel: a full-height RIGHT sidebar (John: chat reads best tall, not
   // wide). Sits in App.svelte's right-panel slot alongside the other side
   // panels. The translator types a free-form question about the current line;
-  // the AI answers as a helpful classicist. ONE-SHOT: each question is sent
+  // the AI answers as a helpful linguist. ONE-SHOT: each question is sent
   // independently (with the passage context, but NOT prior turns) — the
   // transcript below accumulates only so it reads like a conversation. Where
   // multi-turn would slot in: thread the transcript into the prompt in
