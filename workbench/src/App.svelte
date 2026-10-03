@@ -100,6 +100,8 @@
   let newDocumentOpen = $state(false);
   let sourceImportOpen = $state(false);
   let settingsOpen = $state(false);
+  // The tab Settings opens on: the app menu's About item asks for 'about'.
+  let settingsTab = $state<'general' | 'about'>('general');
   // The document work whose organization profile the "Manage levels…" dialog
   // is editing (null = closed).
   let manageLevelsWork = $state<WorkManifest | null>(null);
@@ -316,6 +318,16 @@
         await listen('quit-requested', async () => {
           await invoke('quit_ack'); // the frontend owns the quit from here
           if (await savedOrConfirmed()) await invoke('quit_now');
+        }),
+        // The app menu's About item (src-tauri/src/lib.rs). Reopens Settings on
+        // About even when it is open on another tab. Settings is out of reach
+        // while the library folder waits to be chosen again, so About is too.
+        await listen('about-requested', async () => {
+          if (libraryRepick !== null) return;
+          settingsOpen = false;
+          settingsTab = 'about';
+          await tick();
+          settingsOpen = true;
         }),
         await getCurrentWindow().onCloseRequested(async (event) => {
           if (!(await savedOrConfirmed())) event.preventDefault();
@@ -998,7 +1010,14 @@
   {/if}
 
   {#if settingsOpen}
-    <SettingsDialog {works} onClose={() => (settingsOpen = false)} />
+    <SettingsDialog
+      {works}
+      initialTab={settingsTab}
+      onClose={() => {
+        settingsOpen = false;
+        settingsTab = 'general';
+      }}
+    />
   {/if}
 
   {#if importOpen}
