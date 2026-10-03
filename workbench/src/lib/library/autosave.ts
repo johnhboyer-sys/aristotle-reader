@@ -623,7 +623,7 @@ export interface LoadResult {
   /** Parsed file, or null when none exists (fresh chapter). */
   file: ChapterFile | null;
   /**
-   * Non-null when a file EXISTS but could not be parsed. The caller must not
+   * Non-null when a file EXISTS but could not be read or parsed. The caller must not
    * autosave over it — overwriting an unreadable file could destroy the very
    * data that made it unreadable.
    */
@@ -636,7 +636,13 @@ export async function loadChapterFile(
   fileName: string,
 ): Promise<LoadResult> {
   await awaitPendingWrite(workId, fileName);
-  const raw = await storage.read(workId, fileName);
+  let raw: string | null;
+  try {
+    raw = await storage.read(workId, fileName);
+  } catch (err) {
+    // The file may exist: never report it as a fresh chapter.
+    return { file: null, error: err instanceof Error ? err.message : String(err) };
+  }
   if (raw === null) return { file: null, error: null };
   try {
     return { file: parseChapterFile(raw, fileName), error: null };

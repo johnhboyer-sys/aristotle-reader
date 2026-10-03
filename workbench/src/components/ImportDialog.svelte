@@ -338,7 +338,16 @@
 
   async function confirmImport() {
     if (!plan || !preview) return;
-    const exists = await chapterFileExists(plan.work.id, plan.book, plan.chapter);
+    let exists: boolean;
+    try {
+      exists = await chapterFileExists(plan.work.id, plan.book, plan.chapter);
+    } catch (err) {
+      // A saved chapter that could not be read may still be there: never
+      // import over it.
+      console.error('[import] duplicate check failed', err);
+      errorMessage = 'The saved chapter could not be read, so nothing was imported.';
+      return;
+    }
     if (exists) {
       phase = 'duplicate';
       return;

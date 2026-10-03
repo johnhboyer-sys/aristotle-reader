@@ -182,17 +182,28 @@ describe('free-work registry (works.json in the library root)', () => {
     }
   });
 
-  it('treats unreadable JSON as an empty registry, never a hard failure', async () => {
-    const storage = new MemStorage();
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', '{not json');
-      expect(await listFreeWorkRecords(storage)).toEqual([]);
-      await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', JSON.stringify({ version: 1 }));
-      expect(await listFreeWorkRecords(storage)).toEqual([]);
-    } finally {
-      warn.mockRestore();
+  it('refuses to rewrite a registry it could not parse', async () => {
+    for (const body of ['{not json', JSON.stringify({ version: 1 })]) {
+      const storage = new MemStorage();
+      await storage.write(FREE_WORKS_STORAGE_ID, 'works.json', body);
+      await expect(listFreeWorkRecords(storage)).rejects.toThrow(/works\.json/);
+      await expect(registerFreeWork(RECORD, storage)).rejects.toThrow(/works\.json/);
+      expect(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)).toBe(body);
+      expect(storage.writes).toBe(1);
     }
+  });
+
+  it('refuses to rewrite a registry it could not read', async () => {
+    const storage = new MemStorage();
+    await registerFreeWork({ id: 'other', title: 'Other', scheme: 'paragraph' }, storage);
+    const before = storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`);
+    storage.read = async () => {
+      throw new Error('Operation not permitted (os error 1)');
+    };
+    await expect(registerFreeWork(RECORD, storage)).rejects.toThrow(/works\.json/);
+    await expect(unregisterFreeWork('other', storage)).rejects.toThrow(/works\.json/);
+    expect(storage.files.get(`${FREE_WORKS_STORAGE_ID}/works.json`)).toBe(before);
+    expect(storage.writes).toBe(1);
   });
 
   it('first entry wins on a duplicated id', async () => {
