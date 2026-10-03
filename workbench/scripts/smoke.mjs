@@ -337,6 +337,22 @@ await run('switch view with the cursor in an English cell', async () => {
   await page.locator('.view-toggle-btn', { hasText: 'Lines' }).click();
 });
 
+await run('type into an empty Lane cell after clicking it', async () => {
+  // An empty cell shows a dotted placeholder (a ::before box) that focus
+  // removes. A click landed on that box, and Chromium, finding it gone once
+  // the press had focused the cell, left the old selection where it was:
+  // the cell had focus but no caret, and typing went nowhere. It needs a
+  // selection already on the page — here, where blur left it. Row 1 flows
+  // (row 0 is the heading made above).
+  await page.locator('.view-toggle-btn', { hasText: 'Interpolated' }).click();
+  await page.locator('.view-toggle-btn', { hasText: 'Lane' }).click();
+  const en = page.locator('.en-cell[data-row-en="1"] .ProseMirror');
+  await en.click();
+  await page.keyboard.type('xq');
+  check('typing into an empty Lane cell lands', (await en.innerText()).trim() === 'xq', JSON.stringify(await en.innerText()));
+  await page.locator('.view-toggle-btn', { hasText: 'Lines' }).click();
+});
+
 await run('fold the work you are reading', async () => {
   // The regression this catches: the effect that unfolds the OPEN work used to
   // undo the user's own fold, so the work being read was the one that could

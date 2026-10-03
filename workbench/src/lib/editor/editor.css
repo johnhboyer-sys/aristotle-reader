@@ -529,6 +529,9 @@
   width: 2.5rem;
   height: 0.62em;
   border-bottom: 1px dotted color-mix(in srgb, var(--text-light) 60%, transparent);
+  /* A click must hit the editor, not this box: focus removes it mid-press,
+     and Chromium then placed no caret in a Lane cell (typing went nowhere). */
+  pointer-events: none;
 }
 
 /* Row flash: boundary-swallow feedback (Backspace at start etc.). */
