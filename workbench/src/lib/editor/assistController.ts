@@ -14,7 +14,12 @@ import type { EditorState, Transaction } from '@tiptap/pm/state';
 import type { Node as PMNode } from '@tiptap/pm/model';
 
 import type { AssistContext, AssistProvider, AssistResult, AssistUnit } from '../assist/provider';
-import { COPY_FAILED_MESSAGE, GENERIC_ERROR_MESSAGE } from '../assist/messages';
+import {
+  COPY_DONE_MESSAGE,
+  COPY_FAILED_MESSAGE,
+  GENERIC_ERROR_MESSAGE,
+  NOT_SENT_MESSAGE,
+} from '../assist/messages';
 import { CliProvider } from '../assist/cliProvider';
 import type { RunInvokeFn } from '../assist/cliProvider';
 import { ClipboardProvider } from '../assist/clipboardProvider';
@@ -25,7 +30,10 @@ import { CLI_TOOLS, CUSTOM_TOOL } from '../assist/tools';
 import { resolveAssistProvider } from '../assist/resolveProvider';
 import { cliModel } from '../assist/models';
 import type { CliProviderId, DetectionMap } from '../assist/resolveProvider';
-import type { WorkbenchSettings } from '../settings';
+import { consentPrompt, grantConsent, hasConsent } from '../assist/consent';
+import type { ConsentProviderId } from '../assist/consent';
+import { updateSettings } from '../settings';
+import type { AssistSettings, WorkbenchSettings } from '../settings';
 
 const PARAGRAPH_ASSIST_UNIT: AssistUnit = 'paragraph';
 
@@ -183,15 +191,17 @@ export function buildInsertTransaction(
 export type AssistUiState =
   | { kind: 'thinking' }
   | { kind: 'suggestion'; text: string }
-  | { kind: 'message'; text: string };
+  /** `copy`, when present, backs the popover's "Copy prompt" button: it copies
+   * the payload and resolves to the sentence to show next. */
+  | { kind: 'message'; text: string; copy?: () => Promise<string> };
 
 export interface AssistControllerDeps {
   /** Resolve the provider for this request (settings/detection flow). */
   getProvider(): Promise<AssistProvider>;
   /**
    * Copy the flat clipboard payload for `ctx`; resolves true on success.
-   * Run when the CLI path errors — D4's rule that the worst case always
-   * leaves the payload on the clipboard.
+   * Run only when the user clicks "Copy prompt" after a CLI error — never on
+   * its own, since Universal Clipboard can carry it to other devices.
    */
   copyPayload(ctx: AssistContext): Promise<boolean>;
   /** UI sink. Never called for a canceled or superseded request. */
@@ -222,6 +232,8 @@ export class AssistController {
     this.deps.onState({ kind: 'thinking' });
 
     let result: AssistResult;
+    // A CLI error (or a failure before any provider) offers "Copy prompt".
+    let copyable = false;
     try {
       const provider = await this.deps.getProvider();
       if (!live()) return;
@@ -235,27 +247,28 @@ export class AssistController {
           : { kind: 'error', message: GENERIC_ERROR_MESSAGE }; // empty output → error path
       }
 
-      // The CLI path never writes the clipboard itself (see cliProvider.ts):
-      // on ANY of its errors the caller runs the clipboard fallback so the
-      // vetted "copied…" sentences stay true.
-      if (result.kind === 'error' && provider.id === 'cli') {
-        const copied = await this.deps.copyPayload(ctx);
-        if (!live()) return;
-        if (!copied) result = { kind: 'error', message: COPY_FAILED_MESSAGE };
-      }
+      // The CLI path never writes the clipboard itself (see cliProvider.ts),
+      // and neither does this: on its errors the user may copy the prompt.
+      copyable = result.kind === 'error' && provider.id === 'cli';
     } catch (err) {
       if (!live()) return; // cancellation surfaces as AbortError — never rendered
       console.error('[assist] request failed', err);
-      const copied = await this.deps.copyPayload(ctx).catch(() => false);
-      if (!live()) return;
-      result = { kind: 'error', message: copied ? GENERIC_ERROR_MESSAGE : COPY_FAILED_MESSAGE };
+      result = { kind: 'error', message: GENERIC_ERROR_MESSAGE };
+      copyable = true;
     }
 
     if (result.kind === 'suggestion') {
       this.deps.onState({ kind: 'suggestion', text: result.text });
+    } else if (copyable) {
+      this.deps.onState({ kind: 'message', text: result.message, copy: () => this.copyPrompt(ctx) });
     } else {
       this.deps.onState({ kind: 'message', text: result.message });
     }
+  }
+
+  private async copyPrompt(ctx: AssistContext): Promise<string> {
+    const copied = await this.deps.copyPayload(ctx).catch(() => false);
+    return copied ? COPY_DONE_MESSAGE : COPY_FAILED_MESSAGE;
   }
 }
 
@@ -277,6 +290,90 @@ export interface TauriAssistDeps {
   invokeRun: RunInvokeFn;
   /** Clipboard write for the fallback provider. */
   writeClipboard(text: string): Promise<void>;
+  /** Ask the user before a provider's first send; true = Allow. Default: the
+   * ConsentDialog, mounted on the page. */
+  askConsent?(req: ConsentRequest): Promise<boolean>;
+  /** Persist a settings patch (the granted consent). Default: updateSettings. */
+  saveSettings?(patch: Partial<WorkbenchSettings>): Promise<unknown>;
+}
+
+/** What the consent prompt shows: the provider asked about and the text. */
+export interface ConsentRequest {
+  provider: ConsentProviderId;
+  title: string;
+  body: string;
+}
+
+/** Mount the consent dialog and resolve with the answer (DOM only). */
+async function showConsentDialog(req: ConsentRequest): Promise<boolean> {
+  const [{ mount, unmount }, { default: ConsentDialog }] = await Promise.all([
+    import('svelte'),
+    import('../../components/ConsentDialog.svelte'),
+  ]);
+  return new Promise((resolve) => {
+    const dialog = mount(ConsentDialog, {
+      target: document.body,
+      props: {
+        title: req.title,
+        body: req.body,
+        onAnswer: (allow: boolean) => {
+          void unmount(dialog);
+          resolve(allow);
+        },
+      },
+    });
+  });
+}
+
+/** One open prompt per provider: a second request while it is up waits on
+ * the same answer instead of stacking a second dialog. */
+const pendingConsent = new Map<ConsentProviderId, Promise<boolean>>();
+
+/** A provider that sends nothing: the user chose Cancel. */
+const notSent = (): AssistProvider => ({
+  id: 'clipboard',
+  suggest: async () => ({ kind: 'error', message: NOT_SENT_MESSAGE }),
+});
+
+/**
+ * Return `provider` only if the user has allowed `id` to receive text; ask
+ * first if not (John 2026-10-03). Allow is stored per provider; Cancel
+ * yields a provider that sends nothing.
+ */
+async function withConsent(
+  deps: TauriAssistDeps,
+  assist: AssistSettings,
+  id: ConsentProviderId,
+  provider: AssistProvider,
+  customName?: string,
+): Promise<AssistProvider> {
+  if (hasConsent(assist, id)) return provider;
+  let answer = pendingConsent.get(id);
+  if (!answer) {
+    const req: ConsentRequest = {
+      provider: id,
+      ...consentPrompt(id, {
+        includeDraft: assist.includeDraft ?? true,
+        window: ASSIST_CONTEXT_WINDOW,
+        customName,
+      }),
+    };
+    answer = (async () => {
+      const allow = await (deps.askConsent ?? showConsentDialog)(req);
+      if (allow) {
+        try {
+          const fresh = (await deps.loadSettings()).assist;
+          await (deps.saveSettings ?? updateSettings)({ assist: grantConsent(fresh, id) });
+        } catch (err) {
+          // This request still goes; the next one asks again.
+          console.error('[assist] could not save consent', err);
+        }
+      }
+      return allow;
+    })().finally(() => pendingConsent.delete(id));
+    pendingConsent.set(id, answer);
+  }
+  return (await answer) ? provider : notSent();
 }
 
 /**
@@ -286,11 +383,13 @@ export interface TauriAssistDeps {
  *      'google') → an ApiProvider over the webview's own `fetch` when a
  *      non-empty key is stored for it, else the clipboard floor.
  *   2. Otherwise ask Rust which CLIs it can run (`assist_detect`): the chosen
- *      tool ('claude'|'codex'|'custom'), or Claude when none is
- *      chosen. A custom command counts only when Rust holds the user's
+ *      tool ('claude'|'codex'|'custom'). A custom command counts only when Rust holds the user's
  *      approval of it — a command named in settings.json, which the window
  *      writes, is never run (workbench-design/sandboxing-plan.md).
  *   3. Nothing usable → ClipboardProvider (§12 invisibility; never throws).
+ *
+ * No provider chosen → the clipboard, whatever is installed. A provider that
+ * would send is returned only once the user has allowed it (withConsent).
  *
  * No startup probe, no model-call probe — the first real suggestion doubles as
  * the auth test (D4 divergence D).
@@ -305,12 +404,17 @@ export async function resolveTauriAssistProvider(deps: TauriAssistDeps): Promise
     if (chosen === 'openai' || chosen === 'anthropic' || chosen === 'google') {
       const apiKey = prev.apiKeys?.[chosen];
       if (apiKey && apiKey.trim()) {
-        return new ApiProvider({
-          service: chosen as ApiProviderId,
-          apiKey,
-          model: prev.models?.[chosen],
-          fetch: globalThis.fetch.bind(globalThis) as FetchFn,
-        });
+        return withConsent(
+          deps,
+          prev,
+          chosen,
+          new ApiProvider({
+            service: chosen as ApiProviderId,
+            apiKey,
+            model: prev.models?.[chosen],
+            fetch: globalThis.fetch.bind(globalThis) as FetchFn,
+          }),
+        );
       }
       return clipboard();
     }
@@ -326,12 +430,13 @@ export async function resolveTauriAssistProvider(deps: TauriAssistDeps): Promise
     // lands on the clipboard; the check keeps the types honest.
     if (choice.kind === 'cli' && choice.tool !== 'gemini') {
       const spec = choice.tool === 'custom' ? CUSTOM_TOOL : CLI_TOOLS[choice.tool];
-      return new CliProvider({
+      const cli = new CliProvider({
         tool: choice.tool,
         parseOutput: spec.parseOutput,
         invoke: deps.invokeRun,
         model: cliModel(choice.tool, prev.models),
       });
+      return withConsent(deps, prev, choice.tool, cli, found.custom?.program.split('/').pop());
     }
     return clipboard();
   } catch (err) {

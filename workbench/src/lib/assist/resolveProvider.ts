@@ -2,7 +2,7 @@
  * resolveProvider — pure selection policy over (assist settings, detection).
  * D7 §Slice A generalization of the d4 policy.
  *
- * Provider ids fall into three buckets:
+ * Provider ids fall into three buckets (no choice at all → 'clipboard'):
  *   - CLI tools: 'claude' | 'codex' | 'gemini' | 'custom' → a CLI provider,
  *     which needs a resolved binary path (from the detection map). If the
  *     chosen tool has no usable resolved path, we fall back to clipboard.
@@ -78,21 +78,22 @@ function readProviderId(settings: AssistSettings | undefined): AssistProviderId 
 /**
  * Generalized policy (D7). Given the user's explicit provider choice (if any)
  * and a detection map of resolved CLI paths, return a controller-actionable
- * choice. No explicit choice → try 'claude' from the detection map, else
- * clipboard.
+ * choice. No explicit choice → clipboard, whatever is installed: Settings
+ * promises that with no choice nothing is sent.
  */
 export function resolveAssistProvider(
   settings: AssistSettings | undefined,
   detection: DetectionMap,
 ): ProviderChoice {
   const chosen = readProviderId(settings);
+  if (!chosen) return { kind: 'clipboard' };
 
-  if (chosen && isApiId(chosen)) {
+  if (isApiId(chosen)) {
     // Slice D turns this into an ApiProvider; here we only report the choice.
     return { kind: 'api', apiProvider: chosen };
   }
 
-  const tool: CliProviderId = chosen && isCliId(chosen) ? chosen : 'claude';
+  const tool: CliProviderId = chosen;
   const path = detection.paths[tool] ?? null;
   if (path) {
     return { kind: 'cli', tool, binPath: path };
@@ -103,13 +104,14 @@ export function resolveAssistProvider(
 /**
  * Legacy policy (d4). Kept for existing callers/tests: given the single-claude
  * detection state, choose 'cli' | 'api' | 'clipboard' as a bare string.
- * CLI ok (resolved path + 'ok' state) → 'cli'; anything else → 'clipboard'.
+ * Claude chosen and CLI ok (resolved path + 'ok' state) → 'cli'; anything
+ * else → 'clipboard'.
  */
 export function resolveProvider(
-  _settings: AssistSettings | undefined,
+  settings: AssistSettings | undefined,
   detection: DetectionResult,
 ): ProviderChoiceKind {
-  if (detection.cliState === 'ok' && detection.cliPath) {
+  if (readProviderId(settings) === 'claude' && detection.cliState === 'ok' && detection.cliPath) {
     return 'cli';
   }
   return 'clipboard';

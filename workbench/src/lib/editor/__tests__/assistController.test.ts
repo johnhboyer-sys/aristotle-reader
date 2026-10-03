@@ -6,7 +6,7 @@
 // FakeProvider. DOM-only behavior (glyph visibility, popover anchoring,
 // Esc) is pinned by source-scan tests at the bottom (copyCitation.test.ts
 // precedent) and verified live in the browser harness.
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from '@tiptap/pm/state';
 
 import {
@@ -18,18 +18,27 @@ import {
   resolveTauriAssistProvider,
   sanitizeSuggestion,
 } from '../assistController';
-import type { AssistContextArgs, AssistDetection, AssistUiState, TauriAssistDeps } from '../assistController';
+import type {
+  AssistContextArgs,
+  AssistDetection,
+  AssistUiState,
+  ConsentRequest,
+  TauriAssistDeps,
+} from '../assistController';
 import { parseRow } from '../serialize';
 import { rowSchema } from '../schema';
 import { FakeProvider, fakeClipboard, fakeSuggestion } from '../../assist/fakeProvider';
 import {
   COPY_FAILED_MESSAGE,
   GENERIC_ERROR_MESSAGE,
+  COPY_DONE_MESSAGE,
   NOT_FOUND_MESSAGE,
+  NOT_SENT_MESSAGE,
   UNAUTH_MESSAGE,
 } from '../../assist/messages';
+import { revokeConsent } from '../../assist/consent';
 import type { AssistContext } from '../../assist/provider';
-import type { AssistSettings } from '../../settings';
+import type { AssistSettings, WorkbenchSettings } from '../../settings';
 import type { AssistRunResponse, RunInvokeFn } from '../../assist/cliProvider';
 
 // ── shared fixtures ─────────────────────────────────────────────────────────
@@ -323,28 +332,40 @@ describe('AssistController', () => {
     ]);
   });
 
-  it('CLI error → ALSO copies the payload, shows the vetted CLI sentence', async () => {
+  /** The last state, which must be a message offering "Copy prompt". */
+  function copyable(states: AssistUiState[]) {
+    const last = states.at(-1);
+    if (last?.kind !== 'message' || !last.copy) throw new Error('expected a message with a copy action');
+    return last as { kind: 'message'; text: string; copy: () => Promise<string> };
+  }
+
+  it('CLI error → copies NOTHING on its own; "Copy prompt" copies the payload', async () => {
     const provider = new FakeProvider({ id: 'cli', result: { kind: 'error', message: UNAUTH_MESSAGE } });
     const { ctl, states, copies } = harness({ providers: [provider] });
     const ctx = smallCtx();
     await ctl.request(ctx);
-    expect(copies).toEqual([ctx]); // the d4 rule: worst case leaves the payload on the clipboard
-    expect(states.at(-1)).toEqual({ kind: 'message', text: UNAUTH_MESSAGE });
+    const msg = copyable(states);
+    expect(msg.text).toBe(UNAUTH_MESSAGE);
+    expect(copies).toEqual([]); // nothing reaches the clipboard (or Universal Clipboard) unasked
+    expect(await msg.copy()).toBe(COPY_DONE_MESSAGE);
+    expect(copies).toEqual([ctx]);
   });
 
-  it('CLI error whose fallback copy ALSO fails → COPY_FAILED sentence', async () => {
+  it('"Copy prompt" whose copy fails → COPY_FAILED sentence', async () => {
     const provider = new FakeProvider({ id: 'cli', result: { kind: 'error', message: GENERIC_ERROR_MESSAGE } });
     const { ctl, states } = harness({ providers: [provider], copyOk: false });
     await ctl.request(smallCtx());
-    expect(states.at(-1)).toEqual({ kind: 'message', text: COPY_FAILED_MESSAGE });
+    const msg = copyable(states);
+    expect(msg.text).toBe(GENERIC_ERROR_MESSAGE);
+    expect(await msg.copy()).toBe(COPY_FAILED_MESSAGE);
   });
 
-  it('CLI returning empty text is the error path (copy fallback + generic sentence)', async () => {
+  it('CLI returning empty text is the error path (generic sentence, nothing copied)', async () => {
     const provider = new FakeProvider({ id: 'cli', result: { kind: 'suggestion', text: '  \n ' } });
     const { ctl, states, copies } = harness({ providers: [provider] });
     await ctl.request(smallCtx());
-    expect(copies).toHaveLength(1);
-    expect(states.at(-1)).toEqual({ kind: 'message', text: GENERIC_ERROR_MESSAGE });
+    expect(copies).toHaveLength(0);
+    expect(copyable(states).text).toBe(GENERIC_ERROR_MESSAGE);
   });
 
   it('clipboard provider result: message only, no second copy', async () => {
@@ -387,13 +408,16 @@ describe('AssistController', () => {
     expect(states).toEqual([{ kind: 'thinking' }]); // dismissal itself is the caller's UI state
   });
 
-  it('getProvider throwing still leaves the payload on the clipboard (generic sentence)', async () => {
+  it('getProvider throwing: generic sentence, nothing copied until "Copy prompt"', async () => {
     const { ctl, states, copies } = harness({
       providers: [() => Promise.reject(new Error('resolver exploded'))],
     });
     await ctl.request(smallCtx());
+    const msg = copyable(states);
+    expect(msg.text).toBe(GENERIC_ERROR_MESSAGE);
+    expect(copies).toHaveLength(0);
+    await msg.copy();
     expect(copies).toHaveLength(1);
-    expect(states.at(-1)).toEqual({ kind: 'message', text: GENERIC_ERROR_MESSAGE });
   });
 });
 
@@ -421,6 +445,9 @@ describe('resolveTauriAssistProvider', () => {
       writeClipboard: async (t) => {
         calls.clipboard.push(t);
       },
+      // Consent is its own describe block below; here every send is allowed.
+      askConsent: async () => true,
+      saveSettings: async () => {},
       ...overrides,
     };
     return { deps, calls };
@@ -436,8 +463,25 @@ describe('resolveTauriAssistProvider', () => {
 
   const signal = () => new AbortController().signal;
 
-  it('no explicit provider: Claude when Rust finds it, run by naming the tool', async () => {
+  it('no explicit provider, Claude found: the clipboard, never a send (Settings promises so)', async () => {
+    let asked = 0;
     const { deps, calls } = tauriDeps({
+      invokeDetect: async () => ({ ...NONE, claude: '/Users/j/.local/bin/claude', codex: '/x' }),
+      askConsent: async () => {
+        asked += 1;
+        return true;
+      },
+    });
+    const provider = await resolveTauriAssistProvider(deps);
+    expect(provider.id).toBe('clipboard');
+    expect(await provider.suggest(smallCtx(), signal())).toEqual({ kind: 'clipboard', message: NOT_FOUND_MESSAGE });
+    expect(calls.runs).toEqual([]);
+    expect(asked).toBe(0); // nothing leaves the machine, so there is nothing to ask
+  });
+
+  it('explicit Claude: run by naming the tool', async () => {
+    const { deps, calls } = tauriDeps({
+      loadSettings: async () => ({ assist: { provider: 'claude' } }),
       invokeDetect: async () => ({ ...NONE, claude: '/Users/j/.local/bin/claude' }),
     });
     const provider = await resolveTauriAssistProvider(deps);
@@ -457,7 +501,7 @@ describe('resolveTauriAssistProvider', () => {
     const found = async () => ({ ...NONE, claude: '/c', codex: '/x' });
     const cases: AssistSettings[] = [
       { provider: 'codex', models: { codex: 'gpt-6-luna', claude: 'opus' } },
-      { models: { claude: 'opus' } }, // no explicit provider: Claude
+      { provider: 'claude', models: { claude: 'opus' } },
       { provider: 'claude', models: { claude: '--yolo' } }, // off the list: the default
     ];
     for (const assist of cases) {
@@ -558,6 +602,165 @@ describe('resolveTauriAssistProvider', () => {
   });
 });
 
+// ── consent before the first send (John 2026-10-03) ─────────────────────────
+
+describe('resolveTauriAssistProvider — consent per provider', () => {
+  const NONE: AssistDetection = { claude: null, codex: null, custom: null };
+  const FOUND: AssistDetection = {
+    claude: '/c',
+    codex: '/x',
+    custom: { program: '/usr/local/bin/mytool', args: [], prompt_via: 'stdin' },
+  };
+  const signal = () => new AbortController().signal;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  /** An in-memory settings file, a consent prompt answered `answer`, and a
+   * recording CLI runner. */
+  function setup(assist: AssistSettings, answer: boolean | (() => Promise<boolean>)) {
+    let file: WorkbenchSettings = { assist };
+    const asked: ConsentRequest[] = [];
+    const runs: string[] = [];
+    const clipboard: string[] = [];
+    const deps: TauriAssistDeps = {
+      loadSettings: async () => file,
+      invokeDetect: async () => FOUND,
+      invokeRun: (async (_cmd, args) => {
+        runs.push(args.tool);
+        return { ok: true, text: JSON.stringify({ result: 'ok' }) } as AssistRunResponse;
+      }) as RunInvokeFn,
+      writeClipboard: async (t) => {
+        clipboard.push(t);
+      },
+      askConsent: async (req) => {
+        asked.push(req);
+        return typeof answer === 'function' ? answer() : answer;
+      },
+      saveSettings: async (patch) => {
+        file = { ...file, ...patch };
+      },
+    };
+    return { deps, asked, runs, clipboard, file: () => file, setAssist: (a: AssistSettings) => (file = { assist: a }) };
+  }
+
+  it('a chosen CLI asks before any send, naming who gets the text', async () => {
+    const t = setup({ provider: 'claude' }, true);
+    const provider = await resolveTauriAssistProvider(t.deps);
+    expect(t.asked).toHaveLength(1);
+    expect(t.asked[0].provider).toBe('claude');
+    expect(t.asked[0].title).toBe('Send this to Anthropic?');
+    expect(t.asked[0].body).toContain('Anthropic, through your Claude Code login');
+    expect(t.runs).toEqual([]); // asking sent nothing
+    await provider.suggest(smallCtx(), signal());
+    expect(t.runs).toEqual(['claude']);
+  });
+
+  it('Cancel sends nothing, copies nothing, and stores nothing', async () => {
+    const t = setup({ provider: 'claude' }, false);
+    const provider = await resolveTauriAssistProvider(t.deps);
+    expect(provider.id).not.toBe('cli');
+    expect(await provider.suggest(smallCtx(), signal())).toEqual({ kind: 'error', message: NOT_SENT_MESSAGE });
+    expect(t.runs).toEqual([]);
+    expect(t.clipboard).toEqual([]);
+    expect(t.file().assist?.consented).toBeUndefined();
+  });
+
+  it('Cancel through the controller: "Nothing was sent", and no Copy prompt offer', async () => {
+    const t = setup({ provider: 'claude' }, false);
+    const states: AssistUiState[] = [];
+    const copies: AssistContext[] = [];
+    const ctl = new AssistController({
+      getProvider: () => resolveTauriAssistProvider(t.deps),
+      copyPayload: async (ctx) => {
+        copies.push(ctx);
+        return true;
+      },
+      onState: (s) => states.push(s),
+    });
+    await ctl.request(smallCtx());
+    expect(states.at(-1)).toEqual({ kind: 'message', text: NOT_SENT_MESSAGE });
+    expect(t.runs).toEqual([]);
+    expect(copies).toEqual([]);
+  });
+
+  it('Allow is stored, and the next request does not ask again', async () => {
+    const t = setup({ provider: 'claude', includeDraft: true }, true);
+    await resolveTauriAssistProvider(t.deps);
+    expect(t.file().assist).toEqual({ provider: 'claude', includeDraft: true, consented: ['claude'] });
+    const again = await resolveTauriAssistProvider(t.deps);
+    expect(t.asked).toHaveLength(1);
+    expect(again.id).toBe('cli');
+  });
+
+  it("consent is per provider: Claude's does not cover Codex", async () => {
+    const t = setup({ provider: 'codex', consented: ['claude'] }, false);
+    const provider = await resolveTauriAssistProvider(t.deps);
+    expect(t.asked.map((r) => r.title)).toEqual(['Send this to OpenAI?']);
+    await provider.suggest(smallCtx(), signal());
+    expect(t.runs).toEqual([]);
+  });
+
+  it('an API provider asks too, and Cancel never reaches fetch', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const t = setup({ provider: 'anthropic', apiKeys: { anthropic: 'sk-x' } }, false);
+    const provider = await resolveTauriAssistProvider(t.deps);
+    expect(t.asked.map((r) => r.body)).toEqual([expect.stringContaining('Anthropic, with your API key')]);
+    expect(await provider.suggest(smallCtx(), signal())).toEqual({ kind: 'error', message: NOT_SENT_MESSAGE });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('an API provider with consent is returned as before', async () => {
+    const t = setup({ provider: 'openai', apiKeys: { openai: 'sk-x' }, consented: ['openai'] }, false);
+    expect((await resolveTauriAssistProvider(t.deps)).id).toBe('api');
+    expect(t.asked).toEqual([]);
+  });
+
+  it('revoking consent brings the prompt back', async () => {
+    const t = setup({ provider: 'claude', consented: ['claude'] }, true);
+    await resolveTauriAssistProvider(t.deps);
+    expect(t.asked).toHaveLength(0);
+    t.setAssist(revokeConsent(t.file().assist, 'claude'));
+    await resolveTauriAssistProvider(t.deps);
+    expect(t.asked).toHaveLength(1);
+  });
+
+  it('the prompt follows "include draft": off drops the draft clause', async () => {
+    const t = setup({ provider: 'claude', includeDraft: false }, false);
+    await resolveTauriAssistProvider(t.deps);
+    expect(t.asked[0].body).not.toContain('your draft English for those rows');
+    expect(t.asked[0].body).toContain('up to 6 rows on either side');
+  });
+
+  it("a custom command's prompt names its program", async () => {
+    const t = setup({ provider: 'custom' }, false);
+    await resolveTauriAssistProvider(t.deps);
+    expect(t.asked[0].title).toBe('Send this to mytool?');
+  });
+
+  it('a provider that cannot run asks nothing (the clipboard floor needs no consent)', async () => {
+    const t = setup({ provider: 'codex' }, true);
+    t.deps.invokeDetect = async () => NONE;
+    expect((await resolveTauriAssistProvider(t.deps)).id).toBe('clipboard');
+    expect(t.asked).toEqual([]);
+  });
+
+  it('two requests while the prompt is open share one prompt', async () => {
+    let allow!: (v: boolean) => void;
+    const pending = new Promise<boolean>((r) => (allow = r));
+    const t = setup({ provider: 'claude' }, () => pending);
+    const a = resolveTauriAssistProvider(t.deps);
+    const b = resolveTauriAssistProvider(t.deps);
+    await new Promise((r) => setTimeout(r, 0));
+    allow(true);
+    const [pa, pb] = await Promise.all([a, b]);
+    expect(t.asked).toHaveLength(1);
+    expect([pa.id, pb.id]).toEqual(['cli', 'cli']);
+  });
+});
+
 // ── wiring source scans (copyCitation.test.ts precedent) ───────────────────
 // DOM behavior (glyph visibility, popover anchoring, Esc, focus handling)
 // can't run headless; these pin the load-bearing wiring so it can't silently
@@ -645,6 +848,23 @@ describe('assist wiring stays intact (source scan)', () => {
     expect(rowSource).toContain('host.requestAssist(row, segment)');
     expect(rowSource).toContain('AssistPopover');
     expect(rowSource).toContain('assist-glyph');
+  });
+
+  it('every AI request in ChapterEditor gets its provider through the consent gate', () => {
+    // resolveTauriAssistProvider asks before the first send; a provider built
+    // anywhere else would skip it.
+    expect(chapterSource).not.toMatch(/new (Cli|Api)Provider\(/);
+    const gets = chapterSource.match(/provider = await getAssistProvider\(\)/g) ?? [];
+    expect(gets.length).toBeGreaterThanOrEqual(3); // batch, Check/Reference, Ask
+    expect(chapterSource).toContain('getProvider: getAssistProvider'); // ⌘↩
+    const start = chapterSource.indexOf('async function getAssistProvider(');
+    const body = chapterSource.slice(start, chapterSource.indexOf('\n  }', start));
+    expect(body).toContain('return resolveTauriAssistProvider(');
+  });
+
+  it('AssistPopover offers "Copy prompt" only when the state carries a copy action', () => {
+    expect(popoverSource).toContain('>Copy prompt<');
+    expect(popoverSource).toContain('ui.copy');
   });
 
   it('AssistPopover renders exactly the three states with Insert/Dismiss/Cancel', () => {

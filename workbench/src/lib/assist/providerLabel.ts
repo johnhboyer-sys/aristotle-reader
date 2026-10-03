@@ -1,8 +1,8 @@
 /**
  * A human label for the currently-configured AI-assist provider, shown in the
  * Ask panel so the translator always knows which model is answering. Derived
- * from the user's explicit settings choice; an unset provider means auto-detect
- * (which prefers Claude Code), so that is the default label.
+ * from the user's explicit settings choice; an unset provider sends nothing
+ * and copies to the clipboard, so that is the default label.
  */
 import type { AssistSettings } from '../settings';
 import { CLI_TOOLS } from './tools';
@@ -34,8 +34,8 @@ export function assistProviderLabel(assist: AssistSettings | undefined): string 
       return m ? `Google · ${m}` : 'Google';
     }
     case 'claude':
-    default:
-      // Explicit Claude, or unset (auto-detect prefers Claude Code).
       return CLI_TOOLS.claude.label;
+    default:
+      return 'the clipboard (no AI chosen)';
   }
 }

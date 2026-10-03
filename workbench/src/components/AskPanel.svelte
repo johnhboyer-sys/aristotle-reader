@@ -60,7 +60,8 @@
   function showProvider(assist: AssistSettings | undefined) {
     pickerFor = pickerProvider(assist);
     modelValue = pickerValue(assist);
-    modelOptions = pickerOptions(assist);
+    // No provider chosen: nothing is sent, so there is no model to pick.
+    modelOptions = assist?.provider ? pickerOptions(assist) : undefined;
     // With a picker, the label names the provider only; the picker names the model.
     providerLabel = assistProviderLabel(PROVIDER_MODELS[pickerFor] ? { ...assist, models: undefined } : assist);
   }

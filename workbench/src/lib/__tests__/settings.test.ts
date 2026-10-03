@@ -202,3 +202,16 @@ describe('sanitize — no program paths from the window', () => {
     expect(sanitize({ tlgDir: '/TLG', diogenesPath: '/evil', perlPath: '/bin/sh' })).toEqual({ tlgDir: '/TLG' });
   });
 });
+
+describe('sanitizeAssist — consented providers', () => {
+  it('keeps valid provider ids, once each, and drops anything else', () => {
+    expect(sanitizeAssist({ consented: ['claude', 'bogus', 7, 'anthropic', 'claude'] })).toEqual({
+      consented: ['claude', 'anthropic'],
+    });
+  });
+
+  it('a non-array or an all-garbage list is dropped', () => {
+    expect(sanitizeAssist({ consented: 'claude' })).toBeUndefined();
+    expect(sanitizeAssist({ consented: ['nope'] })).toBeUndefined();
+  });
+});

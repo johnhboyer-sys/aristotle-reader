@@ -15,6 +15,8 @@ export interface ProviderOption {
   label: string;
   /** 'cli' built-in, 'custom' command, or 'api' key provider — groups the picker. */
   group: 'cli' | 'custom' | 'api';
+  /** Not yet tried for real (John 2026-10-03: the API-key providers). */
+  experimental?: boolean;
 }
 
 /** The API providers, in display order, with human labels. */
@@ -41,6 +43,7 @@ export function providerOptions(): ProviderOption[] {
     id,
     label: API_LABELS[id],
     group: 'api',
+    experimental: true,
   }));
   return [...cli, custom, ...api];
 }
