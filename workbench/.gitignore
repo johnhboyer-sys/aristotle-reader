@@ -17,8 +17,8 @@ src-tauri/resources/corpus/
 # copyrighted translations. Belt-and-suspenders guard — the real location is
 # outside the repo entirely (referenceRoot, default $APPDATA/references), but
 # this stops an accidental symlink/copy into the tree from being committed.
-references/
-src-tauri/resources/references/
+references
+src-tauri/resources/references
 
 # Product screenshots (npm run shots) and local launch config.
 shots/
