@@ -1053,8 +1053,7 @@
 
   {#if settingsOpen}
     <!-- Every built-in id, shown or not: moving the library copies their folders. -->
-    <SettingsDialog
-      works={[...listWorks(), ...works.filter(isDocumentWork)]}
+    <SettingsDialog works={[...listWorks(), ...works.filter(isDocumentWork)]}
       initialTab={settingsTab}
       onClose={() => {
         settingsOpen = false;
