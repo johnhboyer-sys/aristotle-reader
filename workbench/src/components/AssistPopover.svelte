@@ -6,7 +6,9 @@
   //   thinking   — "Thinking…" with Cancel (dismiss = abort the request)
   //   suggestion — the text + Insert / Dismiss
   //   message    — ONE vetted plain sentence from src/lib/assist/messages.ts
-  //                (this component never composes its own error text)
+  //                (this component never composes its own error text), plus
+  //                "Copy prompt" when the state carries a copy action (a CLI
+  //                error: the copy waits for the user's click)
   // Esc dismisses too — handled by ChapterEditor's root keydown so it works
   // while the caret stays in the row.
   import type { AssistUiState } from '../lib/editor/assistController';
@@ -27,6 +29,17 @@
      * default placement: absolute, under the target English cell. */
     anchor?: { x: number; y: number } | null;
   } = $props();
+
+  // The sentence "Copy prompt" answered with; cleared when the state changes.
+  let copyNote = $state<string | null>(null);
+  $effect(() => {
+    void ui;
+    copyNote = null;
+  });
+
+  async function copyPrompt(copy: () => Promise<string>) {
+    copyNote = await copy();
+  }
 
   // When anchored to a click point, pin the popover there (fixed) just below the
   // cursor; otherwise it stays absolute under the cell (editor.css).
@@ -78,7 +91,11 @@
       <button class="assist-btn" type="button" onclick={onDismiss}>Dismiss</button>
     </div>
   {:else}
-    <span class="assist-note">{ui.text}</span>
+    <span class="assist-note">{copyNote ?? ui.text}</span>
+    {#if ui.copy && copyNote === null}
+      {@const copy = ui.copy}
+      <button class="assist-btn" type="button" onclick={() => copyPrompt(copy)}>Copy prompt</button>
+    {/if}
     <button class="assist-btn" type="button" onclick={onDismiss}>OK</button>
   {/if}
 </div>

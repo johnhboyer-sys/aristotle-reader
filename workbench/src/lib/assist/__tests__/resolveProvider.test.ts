@@ -9,9 +9,14 @@ function settingsWith(provider: string): AssistSettings {
 }
 
 describe('resolveProvider', () => {
-  it('CLI ok with a resolved path -> "cli"', () => {
-    const choice = resolveProvider(undefined, { cliPath: '/Users/john/.claude/local/claude', cliState: 'ok' });
+  it('CLI ok with a resolved path, Claude chosen -> "cli"', () => {
+    const choice = resolveProvider({ provider: 'claude' }, { cliPath: '/Users/john/.claude/local/claude', cliState: 'ok' });
     expect(choice).toBe('cli');
+  });
+
+  it('CLI ok but no provider chosen -> "clipboard" (Settings promises nothing is sent)', () => {
+    const choice = resolveProvider(undefined, { cliPath: '/Users/john/.claude/local/claude', cliState: 'ok' });
+    expect(choice).toBe('clipboard');
   });
 
   it('cliState "not-found" -> "clipboard"', () => {
@@ -29,9 +34,9 @@ describe('resolveProvider', () => {
     expect(choice).toBe('clipboard');
   });
 
-  it('settings are accepted but do not currently change the legacy outcome', () => {
+  it('only an explicit Claude choice runs the CLI', () => {
     const detection = { cliPath: '/Users/john/.claude/local/claude', cliState: 'ok' } as const;
-    expect(resolveProvider({}, detection)).toBe('cli');
+    expect(resolveProvider({}, detection)).toBe('clipboard');
     expect(resolveProvider({ provider: 'claude' }, detection)).toBe('cli');
   });
 });
@@ -47,12 +52,9 @@ describe('resolveAssistProvider (generalized D7 policy)', () => {
   };
   const noPaths: DetectionMap = { paths: {} };
 
-  it('no explicit provider -> defaults to claude when its path is resolved', () => {
-    expect(resolveAssistProvider(undefined, allCliPaths)).toEqual({
-      kind: 'cli',
-      tool: 'claude',
-      binPath: '/Users/john/.claude/local/claude',
-    });
+  it('no explicit provider -> clipboard, even with every CLI found (never a direct send)', () => {
+    expect(resolveAssistProvider(undefined, allCliPaths)).toEqual({ kind: 'clipboard' });
+    expect(resolveAssistProvider({}, allCliPaths)).toEqual({ kind: 'clipboard' });
   });
 
   it('no explicit provider and no resolved claude path -> clipboard', () => {
@@ -79,12 +81,8 @@ describe('resolveAssistProvider (generalized D7 policy)', () => {
     },
   );
 
-  it('an unknown/garbage provider value -> treated as no explicit choice (defaults to claude/clipboard)', () => {
-    expect(resolveAssistProvider(settingsWith('nonsense'), allCliPaths)).toEqual({
-      kind: 'cli',
-      tool: 'claude',
-      binPath: allCliPaths.paths.claude,
-    });
+  it('an unknown/garbage provider value -> treated as no explicit choice (clipboard)', () => {
+    expect(resolveAssistProvider(settingsWith('nonsense'), allCliPaths)).toEqual({ kind: 'clipboard' });
     expect(resolveAssistProvider(settingsWith('nonsense'), noPaths)).toEqual({ kind: 'clipboard' });
   });
 });

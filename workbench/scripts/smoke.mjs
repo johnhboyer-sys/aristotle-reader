@@ -232,11 +232,20 @@ await run('the spark shows on the active line and opens assist', async () => {
 });
 
 await run('pick a model in the Ask AI panel, and keep it', async () => {
-  // The pick is remembered per provider in settings.assist.models; the
-  // harness has no provider chosen, so the panel shows Claude Code's models.
+  // The pick is remembered per provider in settings.assist.models. The
+  // harness starts with no provider chosen: nothing is sent then, so the
+  // panel names the clipboard and offers no models. Choose Claude Code first.
   const toggle = page.getByRole('button', { name: 'Toggle Ask AI panel' });
   await toggle.click();
+  await page.waitForFunction(() => document.querySelector('.ask-model')?.textContent?.includes('clipboard'));
+  check('with no AI chosen, the panel offers no models', (await page.getByLabel('AI model').count()) === 0);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('tab', { name: 'AI assist' }).click();
+  await page.getByText('Claude Code', { exact: true }).click();
+  await page.locator('.dialog[aria-label="Settings"]').getByRole('button', { name: 'Close' }).click();
+  await page.locator('.ask-panel').hover();
   const picker = page.getByLabel('AI model');
+  await picker.waitFor();
   check('the picker offers Claude Code’s models', (await picker.locator('option').allInnerTexts()).includes('Opus'));
   await picker.selectOption('opus');
   await page.waitForFunction(() => (localStorage.getItem('workbench:settings') ?? '').includes('"opus"'));

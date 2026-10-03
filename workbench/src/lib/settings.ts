@@ -69,6 +69,9 @@ export interface AssistSettings {
   models?: Record<string, string>;
   /** Send the surrounding draft English as prompt context (John: default ON). */
   includeDraft?: boolean;
+  /** Providers the user has allowed to receive text (asked once each before
+   * the first send; taken back in Settings › AI). See lib/assist/consent.ts. */
+  consented?: AssistProviderChoice[];
 }
 
 /**
@@ -194,6 +197,11 @@ export function sanitizeAssist(raw: unknown): AssistSettings | undefined {
   }
 
   if (typeof a.includeDraft === 'boolean') out.includeDraft = a.includeDraft;
+
+  if (Array.isArray(a.consented)) {
+    const ids = PROVIDER_CHOICES.filter((id) => (a.consented as unknown[]).includes(id));
+    if (ids.length > 0) out.consented = ids;
+  }
 
   // ── migration from the old { cliPath, cliState, checkedAt } shape ──
   if (typeof a.cliPath === 'string' && a.cliPath.length > 0) {

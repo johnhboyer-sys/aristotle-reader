@@ -16,7 +16,9 @@
   import { loadSettings, updateSettings } from '../lib/settings';
   import type { AssistSettings, AssistProviderChoice } from '../lib/settings';
   import { isTauri } from '../lib/runtime';
+  import { ASSIST_CONTEXT_WINDOW } from '../lib/editor/assistController';
   import type { AssistDetection } from '../lib/editor/assistController';
+  import { CONSENT_LABELS, revokeConsent, type ConsentProviderId } from '../lib/assist/consent';
   import {
     providerOptions,
     detectLabel,
@@ -29,6 +31,8 @@
   let loaded = $state(false);
   let provider = $state<AssistProviderChoice | ''>('');
   let includeDraft = $state(true);
+  // Providers the user has allowed to receive text (asked before the first send).
+  let consented = $state<ConsentProviderId[]>([]);
 
   // custom command: the arguments and prompt channel to approve next, and
   // the command Rust holds approved (null = none)
@@ -58,6 +62,7 @@
       const s = (await loadSettings()).assist ?? {};
       provider = s.provider ?? '';
       includeDraft = s.includeDraft ?? true;
+      consented = (s.consented ?? []).filter((id): id is ConsentProviderId => id !== 'gemini');
       customArgs = (s.custom?.args ?? []).join(' ');
       customPromptVia = s.custom?.promptVia ?? 'stdin';
       apiKeys = {
@@ -87,12 +92,22 @@
     if (Object.keys(keys).length > 0) patch.apiKeys = keys;
     patch.includeDraft = includeDraft;
     if (prev.models) patch.models = prev.models;
+    // Consent is written by the prompt, so the file is newer than this pane.
+    if (prev.consented) patch.consented = prev.consented;
     await updateSettings({ assist: patch });
   }
 
-  function choose(id: AssistProviderChoice) {
+  function choose(id: AssistProviderChoice | '') {
     provider = id;
     void persist();
+  }
+
+  /** Take back one provider's consent: its next send asks again. */
+  async function takeBack(id: ConsentProviderId) {
+    const cur = (await loadSettings()).assist;
+    const next = revokeConsent(cur, id);
+    await updateSettings({ assist: next });
+    consented = (next.consented ?? []).filter((c): c is ConsentProviderId => c !== 'gemini');
   }
 
   /** Ask Rust which CLIs it finds, and which custom command it holds (Tauri only). */
@@ -125,6 +140,7 @@
       if (!result) return; // cancelled at the picker or the confirmation
       approved = result;
       approvedKnown = true;
+      await takeBack('custom'); // a new program is a new recipient: ask again
       await persist();
     } catch (err) {
       console.error('[assist] could not set the custom command', err);
@@ -139,6 +155,7 @@
       await invoke('assist_forget_custom');
       approved = null;
       approvedKnown = true;
+      await takeBack('custom');
       await persist();
     } catch (err) {
       console.error('[assist] could not remove the custom command', err);
@@ -155,6 +172,18 @@
       Pick the AI you already have. Nothing here is required — with no choice, the app just copies the
       line and its context to your clipboard.
     </p>
+
+    <label class="opt" class:selected={provider === ''}>
+      <input
+        type="radio"
+        name="assist-provider"
+        value=""
+        checked={provider === ''}
+        onchange={() => choose('')}
+      />
+      <span class="opt-label">Copy to clipboard only</span>
+      <span class="opt-status">Sends nothing</span>
+    </label>
 
     <!-- Built-in CLIs -->
     <div class="group">
@@ -248,6 +277,10 @@
     <div class="group">
       <span class="group-title">Use an API key</span>
       <p class="line muted small">Pay-per-use — billed to your key. Off unless you fill one in.</p>
+      <p class="line muted small">
+        Experimental: these haven't been tried with a real key yet, and keys are stored unencrypted in
+        the app's settings file.
+      </p>
       {#each options.filter((o) => o.group === 'api') as opt (opt.id)}
         <label class="opt" class:selected={provider === opt.id}>
           <input
@@ -258,6 +291,9 @@
             onchange={() => choose(opt.id)}
           />
           <span class="opt-label">{opt.label}</span>
+          {#if opt.experimental}
+            <span class="tag">Experimental</span>
+          {/if}
         </label>
         <label class="field key-field">
           <span class="field-label">{opt.label} key <em>— pay-per-use, billed to your key</em></span>
@@ -279,6 +315,29 @@
         <input type="checkbox" bind:checked={includeDraft} onchange={persist} />
         <span>Include my surrounding draft translation as context</span>
       </label>
+    </div>
+
+    <!-- What leaves the machine, and who has been allowed to receive it -->
+    <div class="group">
+      <span class="group-title">What leaves this Mac</span>
+      <p class="line small">
+        The app sends text only when you ask the AI (⌘↩, Translate, Check, Reference or Ask), and only
+        to the AI you picked here. It asks you once for each AI before the first send. It sends the
+        work's title, where the line falls, the source line, up to {ASSIST_CONTEXT_WINDOW} rows on either
+        side, and, if the box above is on, your draft English for those rows. Check and Ask also send
+        the author, your English for the line and the draft around it, even with the box off, and Ask
+        sends your question. Nothing else leaves this Mac: the app goes online only to fetch a text from
+        Perseus or FREED when you import one, and it sends no usage data.
+      </p>
+      {#if consented.length > 0}
+        <span class="field-label">Allowed to receive text</span>
+        {#each consented as id (id)}
+          <div class="allowed">
+            <span class="line small">{CONSENT_LABELS[id]}</span>
+            <button class="text-btn" onclick={() => takeBack(id)}>Take back</button>
+          </div>
+        {/each}
+      {/if}
     </div>
   {/if}
 </section>
@@ -389,6 +448,22 @@
   }
   .opt-status.found {
     color: var(--accent);
+  }
+  .tag {
+    font-family: var(--font-ui);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--text-mid);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 var(--space-1);
+  }
+
+  .allowed {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .custom-form,
