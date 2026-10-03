@@ -150,35 +150,6 @@ jobs:
       - name: Run pipeline tests
         run: cd pipeline && uv run --with pytest pytest
 
-  workbench:
-    name: workbench
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: workbench/package-lock.json
-
-      - name: Install dependencies
-        run: cd workbench && npm ci
-
-      - name: Build frontend
-        run: cd workbench && npm run build
-
-      - name: Run tests
-        run: cd workbench && npm test
-
-      # A green suite does not mean the app starts: a prop added to a
-      # component's type but not to its destructuring threw at render with
-      # every test passing (workbench/phase-3-session-handoff.md).
-      - name: Typecheck
-        run: cd workbench && npx tsc --noEmit
-
   desktop:
     name: desktop
     runs-on: ubuntu-latest

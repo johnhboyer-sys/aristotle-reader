@@ -4,11 +4,11 @@ Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to Git
 
 ## Layout
 
-- `app/` — the Astro site. `pipeline/` — Python corpus pipeline (Diogenes → per-work data). `build/dist` — built corpus data. `shared/` — reader core shared with sibling readers (plato-reader, homer). `workbench/` — Translation Workbench (Tauri, isolated from the site). `desktop/` — desktop reader app (Tauri). Bonitz (Index Aristotelicus OCR) lives in its own repo, `~/Developer/bonitz-text` (`johnhboyer-sys/bonitz-text`); it reads this repo's `build/dist` and nothing here reads it.
+- `app/` — the Astro site. `pipeline/` — Python corpus pipeline (Diogenes → per-work data). `build/dist` — built corpus data. `shared/` — reader core shared with sibling readers (plato-reader, homer). `desktop/` — desktop reader app (Tauri). Bonitz (Index Aristotelicus OCR) lives in its own repo, `~/Developer/bonitz-text` (`johnhboyer-sys/bonitz-text`); it reads this repo's `build/dist` and nothing here reads it. The Translation Workbench (now Moerbeke) moved to its own repo on 2026-10-03, `~/Developer/moerbeke` (`johnhboyer-sys/moerbeke`, private); its corpus scripts read this repo's `build/dist`, `build/export`, `manifests/` and `sources/`, and nothing here reads it.
 - `ocr_translations/CLAUDE.md` is a self-contained OCR recipe, not project instructions.
 - **Handoffs are per track — never one shared `HANDOFF.md`.** Each carries the state of that track: what is done, what was decided and why, what failed. Read the one for the track you are working at the start of a session; rewrite it (don't append) when handing off. A new track starts a new `HANDOFF-<TRACK>.md` at the root.
 - There is deliberately no bare `HANDOFF.md`. On 2026-08-25 a Lyceum session wrote its handoff over the LSJ one through that filename, and the LSJ handoff survived only in git history. Do not recreate it.
-- Live handoffs, one per track: `HANDOFF-LSJ.md` (LSJ presentation) · `workbench/phase-3-session-handoff.md` (Translation Workbench: sandboxing phase 3 next, plus the app's open issues; was `SESSION-HANDOFF.md`) · `workbench-design/HANDOFF.md` (Workbench design) · `docs/print-design-handoff.md` (print/PDF layout). The names are inconsistent for historical reasons — read the one for your track, and never start a second file for a track that already has one.
+- Live handoffs, one per track: `HANDOFF-LSJ.md` (LSJ presentation) · `docs/print-design-handoff.md` (print/PDF layout). The names are inconsistent for historical reasons — read the one for your track, and never start a second file for a track that already has one.
 - A track whose work has moved to another repo keeps its handoff there, not here.
 
 ## Build and deploy invariants
@@ -30,5 +30,4 @@ Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to Git
   first, and make sure the check says so when it examined nothing.
 
 - `serde_json` must stay in `desktop/src-tauri/Cargo.toml` — signed/updater builds need it even though nothing imports it directly.
-- Run workbench vitest from `workbench/`, never from a worktree root.
 - Svelte 5 tests: `vi.resetModules()` creates a second Svelte runtime (`effect_orphan`); mock `lib/data` to isolate shard caches instead.

@@ -1,29 +1,10 @@
-# Translation Workbench
+# Moved: the Translation Workbench is now Moerbeke
 
-A Tauri (Rust shell + WebKit webview) desktop app for editing translations of
-the Aristotle corpus — a sibling to `../desktop` (the reader), but a
-different product: an editor rather than a reading experience. It will
-eventually drive Diogenes' Perl exporter and pandoc as subprocesses (via
-`tauri-plugin-shell`) to pull source text and convert manuscript formats, with
-a TipTap-based editor pane for producing aligned translations.
+The workbench (this folder) and its design notes (`workbench-design/`) moved
+to their own repository on 2026-10-03, with their history:
+[johnhboyer-sys/moerbeke](https://github.com/johnhboyer-sys/moerbeke)
+(private until the first release). Local checkout: `~/Developer/moerbeke`.
+`workbench/` is the root there, `workbench-design/` is `docs/design/`.
 
-## Running
-
-```sh
-cd workbench
-npm install
-npm run dev          # frontend only, in a browser at :1421 (no Tauri needed)
-npm run app:dev       # the actual Tauri window (needs Rust: rustup toolchain)
-
-npm run build         # frontend bundle check (vite build)
-npm run app:build     # package .app/.dmg (unsigned)
-
-npm test              # vitest run
-```
-
-## Status
-
-Chrome-only scaffold: top bar (breadcrumb + toolbar slot + panel toggles),
-collapsible library rail, center editor viewport, right footnotes panel and
-bottom lexicon drawer are all wired up with placeholder content. No editor,
-data layer, or subprocess integration yet.
+Its corpus scripts still read this repo's build output (`build/dist`,
+`build/export`, `manifests/`, `sources/`); nothing here reads it.
