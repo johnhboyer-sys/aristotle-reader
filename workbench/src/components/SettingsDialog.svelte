@@ -8,7 +8,7 @@
   // Tab strip semantics follow the WAI-ARIA tabs pattern: roving tabindex,
   // arrow keys move between tabs, only the selected panel is in the tree.
   import type { WorkManifest } from '../lib/works/manifest';
-  import { untrack } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { isTauri } from '../lib/runtime';
   import AssistSettings from './AssistSettings.svelte';
   import LibraryFolderSettings from './LibraryFolderSettings.svelte';
@@ -35,6 +35,10 @@
 
   let active = $state<TabId>(untrack(() => initialTab));
   let tabButtons: HTMLButtonElement[] = [];
+
+  // Focus starts on the selected tab, so the keyboard is inside the dialog
+  // whether it opened from the toolbar or from the app menu's About item.
+  onMount(() => tabButtons[TABS.findIndex((t) => t.id === active)]?.focus());
 
   function selectAt(index: number) {
     const next = TABS[(index + TABS.length) % TABS.length];

@@ -111,4 +111,22 @@ describe('THIRD-PARTY-NOTICES (the real file)', () => {
     expect(notices).toContain('EB Garamond');
     expect(notices).toMatch(/Mozilla Public License[\s\S]*source code for cssparser/);
   });
+
+  it('carries the GPL text for the pandoc reference document', () => {
+    const notices = readText('../../../src-tauri/resources/THIRD-PARTY-NOTICES');
+    expect(notices).toContain('GNU GENERAL PUBLIC LICENSE\nVersion 2, June 1991');
+  });
+
+  it('fills every standard text with a copyright holder (Grok review)', () => {
+    const notices = readText('../../../src-tauri/resources/THIRD-PARTY-NOTICES');
+    expect(notices).not.toMatch(/^Copyright \(c\) </m);
+    // objc2-foundation names no authors and ships no licence file.
+    expect(notices).toContain('Copyright (c) the objc2-foundation authors');
+  });
+
+  it('finds licence files below a package root (Grok review)', () => {
+    const notices = readText('../../../src-tauri/resources/THIRD-PARTY-NOTICES');
+    expect(notices).toMatch(/=== crate: regex-syntax [^\n]*\n(?:[^=\n][^\n]*\n)*Licence texts: [^\n]*src\/unicode_tables\/LICENSE-UNICODE/);
+    expect(notices).not.toMatch(/Licence texts: [^\n]*\.rs\b/);
+  });
 });

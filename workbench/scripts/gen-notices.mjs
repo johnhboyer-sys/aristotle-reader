@@ -28,6 +28,9 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'src-tauri/resources/THIRD-PARTY-NOTICES');
 const LICENCE_FILE = /^(licen[cs]e|copying|unlicense|notice|copyright)/i;
+// Below the package root, a name like that may be source code (notice.rs).
+const CODE_FILE = /\.(rs|[cm]?[jt]s|json|py|c|h|toml|map)$/i;
+const SKIP_DIRS = new Set(['node_modules', '.git', 'target']);
 // Which standard text to use when a package ships none and offers a choice.
 const PREFERRED = ['MIT', 'Apache-2.0', 'Zlib', 'BSD-3-Clause', 'BSL-1.0', 'MPL-2.0'];
 
@@ -41,7 +44,11 @@ function readText(file) {
   return fs.readFileSync(file, 'utf-8').replace(/\r\n?/g, '\n').replace(/\s+$/, '') + '\n';
 }
 
-/** The licence files a package ships, as [file name, text number]. */
+/**
+ * The licence files a package ships, as [file name, text number]: at its root,
+ * and anywhere below it (regex-syntax keeps the Unicode data licence in
+ * src/unicode_tables/).
+ */
 function ownLicenceFiles(dir, extra) {
   const found = [];
   const add = (file) => {
@@ -52,15 +59,31 @@ function ownLicenceFiles(dir, extra) {
       found.push([path.relative(dir, file), textId(readText(file))]);
     }
   };
-  for (const f of fs.readdirSync(dir).sort()) if (LICENCE_FILE.test(f)) add(path.join(dir, f));
+  const walk = (at) => {
+    for (const ent of fs.readdirSync(at, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const file = path.join(at, ent.name);
+      // A licence folder at the root (LICENSES/) is taken whole; deeper down, a
+      // folder is only searched (windows has a LicenseProtection/ module).
+      if (ent.isDirectory() && (at !== dir || !LICENCE_FILE.test(ent.name))) {
+        if (!SKIP_DIRS.has(ent.name)) walk(file);
+      } else if (LICENCE_FILE.test(ent.name) && (at === dir || !CODE_FILE.test(ent.name))) {
+        add(file);
+      }
+    }
+  };
+  walk(dir);
   if (extra && !found.some(([f]) => path.join(dir, f) === path.resolve(dir, extra))) {
     add(path.resolve(dir, extra));
   }
   return found;
 }
 
-/** Standard texts for a package that ships no licence file. */
-function standardLicences(expr, who) {
+/**
+ * Standard texts for a package that ships no licence file. The SPDX templates
+ * for MIT and BSD carry a placeholder copyright line; it is filled with the
+ * package's authors, so the notice those licences require is there.
+ */
+function standardLicences(expr, who, holders) {
   if (!expr) throw new Error(`${who}: no licence file and no licence field`);
   const ids = expr
     .replace(/\s+WITH\s+\S+/g, '')
@@ -72,8 +95,10 @@ function standardLicences(expr, who) {
     throw new Error(`${who}: ships no licence file, and scripts/licenses/ has no text for "${expr}"`);
   }
   return chosen.map((id) => {
-    // The SPDX templates carry a placeholder copyright line; the entry names the authors instead.
-    const text = readText(path.join(ROOT, 'scripts/licenses', id)).replace(/^Copyright \(c\) <.*\n\n?/m, '');
+    const text = readText(path.join(ROOT, 'scripts/licenses', id)).replace(
+      /^Copyright \(c\) <.*$/m,
+      `Copyright (c) ${holders}`,
+    );
     return [`standard ${id} text`, textId(text)];
   });
 }
@@ -97,7 +122,8 @@ const crates = meta.packages
     const pkg = { kind: 'crate', name: p.name, version: p.version };
     const who = `${p.name} ${p.version}`;
     const own = ownLicenceFiles(path.dirname(p.manifest_path), p.license_file);
-    const files = own.length ? own : standardLicences(p.license, who);
+    const holders = p.authors?.length ? p.authors.join(', ') : `the ${p.name} authors`;
+    const files = own.length ? own : standardLicences(p.license, who, holders);
     const mpl = /MPL-2\.0/.test(p.license ?? '')
       ? `This crate is under the Mozilla Public License 2.0. The source code for ${p.name} ${p.version} ` +
         `is available at https://crates.io/crates/${p.name}/${p.version}` +
@@ -127,13 +153,14 @@ const npm = [...new Set(npmDirs)]
     const pkg = { kind: 'npm', name: pj.name, version: pj.version };
     const licence = typeof pj.license === 'string' ? pj.license : pj.license?.type;
     const own = ownLicenceFiles(dir);
-    const files = own.length ? own : standardLicences(licence, `${pj.name} ${pj.version}`);
     const author = typeof pj.author === 'string' ? pj.author : pj.author?.name;
+    const files = own.length ? own : standardLicences(licence, `${pj.name} ${pj.version}`, author ?? `the ${pj.name} authors`);
     const repo = typeof pj.repository === 'string' ? pj.repository : pj.repository?.url;
     return entry(pkg, [`Licence: ${licence ?? 'see licence text'}`, author && `Authors: ${author}`, repo && `Source: ${repo}`], files);
   });
 
 // ---- the file ----
+const gpl = textId(readText(path.join(ROOT, 'scripts/licenses/GPL-2.0')));
 const rule = '-'.repeat(72);
 const out = `THIRD-PARTY NOTICES
 
@@ -173,8 +200,9 @@ Word export template
   resources/reference.docx is pandoc's default reference document, with the
   font and page size changed by scripts/make-reference-docx.mjs.
   Pandoc is Copyright (C) 2006-2024 John MacFarlane, under the GNU General
-  Public License, version 2 or later (https://www.gnu.org/licenses/). Its
-  source is at https://github.com/jgm/pandoc.
+  Public License, version 2 or later; its text is [${gpl}] in part 4. Pandoc's
+  source is at https://github.com/jgm/pandoc. Our changed file is itself in
+  the form one edits, and the script that changes it is in this app's source.
 
 Fonts
   Cardo, by David J. Perry, and EB Garamond, by the EB Garamond Project

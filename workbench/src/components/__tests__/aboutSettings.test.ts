@@ -84,4 +84,11 @@ describe('Settings › About', () => {
     const general = render(SettingsDialog, { props: { works: [], onClose: () => {} } }).body;
     expect(text(general)).not.toContain('Show third-party notices');
   });
+
+  it('Settings puts focus on its selected tab when it opens (Grok review)', () => {
+    // Source scan: the server renderer runs no onMount.
+    expect(readText('../SettingsDialog.svelte')).toContain(
+      'onMount(() => tabButtons[TABS.findIndex((t) => t.id === active)]?.focus());',
+    );
+  });
 });
