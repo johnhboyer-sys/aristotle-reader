@@ -9,11 +9,13 @@ const writes: string[] = [];
 vi.mock('../runtime', () => ({ isTauri: () => true }));
 vi.mock('@tauri-apps/plugin-fs', () => ({
   BaseDirectory: { AppData: 'AppData' },
+  // tauri-plugin-fs's exists is Rust's Path::exists: false when the path could
+  // not be checked, so it cannot tell this file from a missing one.
   async exists() {
-    return true;
+    return false;
   },
   async readTextFile() {
-    throw new Error('Operation not permitted (os error 1)');
+    throw 'failed to open file at path: settings.json with error: Permission denied (os error 13)';
   },
   async writeTextFile(path: string) {
     writes.push(path);
