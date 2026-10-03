@@ -4,8 +4,8 @@ The reading experience used by BOTH frontends: the static site (`app/`,
 Astro) and the desktop app (`desktop/`, Tauri). One copy, imported by each
 host via the `@shared` alias (configured in `app/astro.config.mjs`,
 `app/tsconfig.json`, `desktop/vite.config.ts`, `desktop/vitest.config.ts`,
-`desktop/tsconfig.json`). The translation workbench (`workbench/`) is
-deliberately independent and does not import from here.
+`desktop/tsconfig.json`). The translation workbench (now its own repo,
+`johnhboyer-sys/moerbeke`) never imported from here.
 
 - `components/` — Reader, WordPopup, FootnotePopup, Search, BekkerJump
   (BekkerJump takes an optional `onJump` callback: the site navigates the
