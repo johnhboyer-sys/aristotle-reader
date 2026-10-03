@@ -17,7 +17,7 @@
 // start with a dot: the Tauri fs scope refuses dotfiles on Unix.
 
 import { isTauri } from '../runtime';
-import { isAlreadyExists, isNotFound } from '../fsNotFound';
+import { isAlreadyExists, isNotFound, isWriteAfterCreate } from '../fsNotFound';
 import { loadSettings, updateSettings } from '../settings';
 import { pickStatus } from '../picks';
 import type { PickStatus } from '../picks';
@@ -267,7 +267,19 @@ export interface CopyResult {
   skipped: string[];
 }
 
-function parseRegistry(raw: string, which: string): { object: Record<string, unknown>; works: unknown[] } {
+/** The copy stopped; the message is a sentence for the user. */
+export class CopyStoppedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CopyStoppedError';
+  }
+}
+
+const STOPPED_BEFORE = 'so nothing was copied and the library folder was not changed.';
+const STOPPED_AFTER =
+  'so it was left as it was and the library folder was not changed. Your other files were copied into the new folder.';
+
+function parseRegistry(raw: string, which: string, stopped: string): { object: Record<string, unknown>; works: unknown[] } {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -276,7 +288,7 @@ function parseRegistry(raw: string, which: string): { object: Record<string, unk
   }
   const works = (parsed as { works?: unknown } | null)?.works;
   if (typeof parsed !== 'object' || parsed === null || !Array.isArray(works)) {
-    throw new Error(`${which} is damaged, so nothing was copied.`);
+    throw new CopyStoppedError(`${which} is damaged, ${stopped}`);
   }
   return { object: parsed as Record<string, unknown>, works };
 }
@@ -297,10 +309,13 @@ function entryField(entry: unknown, key: 'id' | 'title'): string | null {
  * from another Mac), and nothing in it is ever overwritten (John, 2026-10-03):
  * a file already there is kept and ours is reported in `skipped`. works.json
  * is merged instead: every entry already there is kept as it is, and ours are
- * added where their id is new. Both registries are read before anything is
+ * added where their id is new. Both registries are checked before anything is
  * copied, so one that can't be read or parsed stops the copy with nothing
- * written. Dotfiles (.DS_Store) stay behind: no library file starts with a
- * dot, and the fs scope refuses to read one.
+ * written; the merge itself is made last, against the new folder's works.json
+ * as it is then, so an entry synced in while the chapters copied is kept.
+ * Dotfiles (.DS_Store) stay behind: no library file starts with a dot, and
+ * the fs scope refuses to read one. A process killed mid-file can still leave
+ * a short file, which a later copy would keep.
  */
 export async function copyLibraryToRoot(workIds: string[], newRoot: string): Promise<CopyResult> {
   if (!isTauri()) throw new Error('copyLibraryToRoot: Tauri only');
@@ -308,6 +323,7 @@ export async function copyLibraryToRoot(workIds: string[], newRoot: string): Pro
   const from = libraryStorage();
   const result: CopyResult = { copied: 0, skipped: [] };
   const sep = newRoot.endsWith('/') ? '' : '/';
+  const registryDest = `${newRoot}${sep}${REGISTRY_WORK_ID}/${REGISTRY_FILE}`;
 
   /** Write only if nothing is there; false when something already was. */
   async function writeNew(path: string, content: string): Promise<boolean> {
@@ -316,50 +332,30 @@ export async function copyLibraryToRoot(workIds: string[], newRoot: string): Pro
       return true;
     } catch (err) {
       if (isAlreadyExists(err)) return false;
+      // Created, then the bytes failed: remove the short file, or the next
+      // copy would find it already there and keep it.
+      if (isWriteAfterCreate(err)) await fs.remove(path).catch(() => {});
       throw err;
     }
   }
 
-  // Settle works.json first: a registry that can't be read stops everything.
-  let writeRegistry: (() => Promise<void>) | null = null;
+  async function readTheirs(stopped: string): Promise<string | null> {
+    try {
+      return await fs.readTextFile(registryDest);
+    } catch (err) {
+      if (isNotFound(err)) return null;
+      console.error('copyLibraryToRoot: the new folder’s works.json could not be read', err);
+      throw new CopyStoppedError(`The documents list (works.json) in the new folder could not be read, ${stopped}`);
+    }
+  }
+
+  // Check both registries before anything is copied.
   const ours = workIds.includes(REGISTRY_WORK_ID) ? await from.read(REGISTRY_WORK_ID, REGISTRY_FILE) : null;
   if (ours !== null) {
-    const dest = `${newRoot}${sep}${REGISTRY_WORK_ID}/${REGISTRY_FILE}`;
-    let theirs: string | null;
-    try {
-      theirs = await fs.readTextFile(dest);
-    } catch (err) {
-      if (!isNotFound(err)) {
-        console.error('copyLibraryToRoot: the new folder’s works.json could not be read', err);
-        throw new Error('The documents list (works.json) already in the new folder could not be read, so nothing was copied.');
-      }
-      theirs = null;
-    }
-    if (theirs === null) {
-      writeRegistry = async () => {
-        if (await writeNew(dest, ours)) result.copied++;
-        else result.skipped.push(`${REGISTRY_WORK_ID}/${REGISTRY_FILE}`);
-      };
-    } else {
-      const mine = parseRegistry(ours, 'Your documents list (works.json)');
-      const target = parseRegistry(theirs, 'The documents list (works.json) already in the new folder');
-      const taken = new Set(target.works.map((entry) => entryField(entry, 'id')));
-      const added: unknown[] = [];
-      for (const entry of mine.works) {
-        if (!taken.has(entryField(entry, 'id'))) added.push(entry);
-        else result.skipped.push(`“${entryField(entry, 'title') ?? entryField(entry, 'id')}” in the documents list (works.json)`);
-      }
-      if (added.length > 0) {
-        const merged = { ...target.object, works: [...target.works, ...added] };
-        writeRegistry = async () => {
-          // The merge itself replaces works.json, through a temp file: it
-          // holds every entry the old one did.
-          const tmp = `${dest}.${++tmpSerial}.tmp`;
-          await fs.writeTextFile(tmp, JSON.stringify(merged, null, 2) + '\n');
-          await fs.rename(tmp, dest);
-          result.copied++;
-        };
-      }
+    const theirs = await readTheirs(STOPPED_BEFORE);
+    if (theirs !== null) {
+      parseRegistry(ours, 'Your documents list (works.json)', STOPPED_BEFORE);
+      parseRegistry(theirs, 'The documents list (works.json) in the new folder', STOPPED_BEFORE);
     }
   }
 
@@ -377,6 +373,51 @@ export async function copyLibraryToRoot(workIds: string[], newRoot: string): Pro
       else result.skipped.push(`${workId}/${file}`);
     }
   }
-  if (writeRegistry) await writeRegistry();
+
+  if (ours !== null) await mergeRegistry(ours);
   return result;
+
+  /** works.json last, against the new folder's copy as it is now. */
+  async function mergeRegistry(ours: string): Promise<void> {
+    // Twice at most: a works.json that appears between our read and our
+    // createNew is merged on the second pass rather than replaced.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const theirs = await readTheirs(STOPPED_AFTER);
+      if (theirs === null) {
+        if (await writeNew(registryDest, ours)) {
+          result.copied++;
+          return;
+        }
+        continue;
+      }
+      const mine = parseRegistry(ours, 'Your documents list (works.json)', STOPPED_AFTER);
+      const target = parseRegistry(theirs, 'The documents list (works.json) in the new folder', STOPPED_AFTER);
+      const theirIds = new Set(target.works.map((entry) => entryField(entry, 'id')).filter((id) => id !== null));
+      const added: unknown[] = [];
+      const addedIds = new Set<string>();
+      for (const entry of mine.works) {
+        const id = entryField(entry, 'id');
+        // An entry with no id is unusable: the app skips it when it reads the list.
+        if (id === null || addedIds.has(id)) continue;
+        if (theirIds.has(id)) {
+          result.skipped.push(`“${entryField(entry, 'title') ?? id}” in the documents list (works.json)`);
+          continue;
+        }
+        addedIds.add(id);
+        added.push(entry);
+      }
+      if (added.length === 0) return;
+      // The merge replaces works.json, holding every entry it held. Its temp
+      // name is new and made with createNew: a temp file already there may be
+      // another Mac's save in progress.
+      const tmp = `${registryDest}.${Date.now()}-${Math.random().toString(36).slice(2, 10)}.tmp`;
+      if (!(await writeNew(tmp, JSON.stringify({ ...target.object, works: [...target.works, ...added] }, null, 2) + '\n'))) {
+        throw new CopyStoppedError(`The documents list (works.json) could not be merged, ${STOPPED_AFTER}`);
+      }
+      await fs.rename(tmp, registryDest);
+      result.copied++;
+      return;
+    }
+    throw new CopyStoppedError(`The documents list (works.json) in the new folder kept changing, ${STOPPED_AFTER}`);
+  }
 }

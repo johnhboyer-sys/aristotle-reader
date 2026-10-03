@@ -9,7 +9,7 @@
   // same chapters. Plain files only — no service API, no OAuth. Every failure
   // mode is one plain sentence; stderr never reaches the UI.
   import { loadSettings, updateSettings } from '../lib/settings';
-  import { copyLibraryToRoot, invalidateLibraryRootCache, pickLibraryFolder } from '../lib/library/storage';
+  import { CopyStoppedError, copyLibraryToRoot, invalidateLibraryRootCache, pickLibraryFolder } from '../lib/library/storage';
   import { FREE_WORKS_STORAGE_ID } from '../lib/works/freeWorks';
   import type { WorkManifest } from '../lib/works/manifest';
 
@@ -67,9 +67,11 @@
         kept = skipped;
       } catch (err) {
         console.error('library settings: copy failed', err);
-        note = `Couldn't copy your chapters to the new folder — nothing was moved or deleted.${
-          err instanceof Error && err.message.includes('works.json') ? ` ${err.message}` : ''
-        }`;
+        // Some files may already be in the new folder: never say otherwise.
+        note =
+          err instanceof CopyStoppedError
+            ? err.message
+            : "Couldn't finish copying to the new folder. The library folder was not changed and nothing was deleted, but some files may already have been copied there.";
         phase = 'done';
         return;
       }

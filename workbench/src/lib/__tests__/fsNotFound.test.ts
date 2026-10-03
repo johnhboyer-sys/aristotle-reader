@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAlreadyExists, isNotFound } from '../fsNotFound';
+import { isAlreadyExists, isNotFound, isWriteAfterCreate } from '../fsNotFound';
 
 // Message shapes copied from tauri-plugin-fs 2.5.1's src/commands.rs, each
 // ending in Rust's io::Error text, "<description> (os error <code>)":
@@ -63,6 +63,8 @@ describe('isAlreadyExists (writeTextFile with createNew)', () => {
   it('is true for the OS already-exists error', () => {
     expect(isAlreadyExists(open('File exists (os error 17)'))).toBe(true);
     expect(isAlreadyExists(open('The file exists. (os error 80)'))).toBe(true);
+    // Some Windows shares answer ERROR_ALREADY_EXISTS instead.
+    expect(isAlreadyExists(open('Cannot create a file when that file already exists. (os error 183)'))).toBe(true);
   });
 
   it('is false for every other failure, not-found included', () => {
@@ -71,5 +73,18 @@ describe('isAlreadyExists (writeTextFile with createNew)', () => {
     expect(isAlreadyExists(open('No space left on device (os error 28)'))).toBe(false);
     expect(isAlreadyExists('forbidden path: /new/w/b01c01.md')).toBe(false);
     expect(isNotFound(open('File exists (os error 17)'))).toBe(false);
+  });
+});
+
+describe('isWriteAfterCreate (the file was created, then its bytes failed)', () => {
+  // write_file_inner opens (creating the file), then write_all fails with
+  // "failed to write bytes to file at path" (commands.rs:1160).
+  it('is true only for a failure after the open', () => {
+    expect(
+      isWriteAfterCreate('failed to write bytes to file at path: /new/w/b01c01.md with error: No space left on device (os error 28)'),
+    ).toBe(true);
+    expect(isWriteAfterCreate(open('File exists (os error 17)'))).toBe(false);
+    expect(isWriteAfterCreate(open('Permission denied (os error 13)'))).toBe(false);
+    expect(isWriteAfterCreate('forbidden path: /new/w/b01c01.md')).toBe(false);
   });
 });

@@ -82,19 +82,27 @@
   let registryNotice = $state<string | null>(null);
   let settingsNotice = $state<string | null>(null);
 
+  // Reloads overlap (window focus and visibilitychange fire together), and one
+  // that started earlier can finish later: an answer older than the one shown
+  // is dropped.
+  let reloadsStarted = 0;
+  let reloadShown = 0;
+
   async function reloadWorks() {
-    // The registry is read last, so a reload that started earlier can't put
-    // back an older document list after a newer one landed.
+    const reload = ++reloadsStarted;
     const builtIns = await shownBuiltInWorks();
     let free: WorkManifest[];
+    let notice: string | null = null;
     try {
       free = await listFreeWorks();
-      registryNotice = null;
     } catch (err) {
-      registryNotice = err instanceof Error ? err.message : String(err);
+      notice = err instanceof Error ? err.message : String(err);
       // Keep the documents already in the rail; nothing on disk changed.
       free = works.filter(isDocumentWork);
     }
+    if (reload < reloadShown) return;
+    reloadShown = reload;
+    registryNotice = notice;
     works = [...builtIns, ...free];
   }
 
@@ -150,12 +158,18 @@
   // not shown as having no files.
   let unlistedNotice = $state<string | null>(null);
 
+  let statusesStarted = 0;
+  let statusShown = 0;
+
   async function refreshLibraryStatus() {
     if (!isTauri()) return;
+    const refresh = ++statusesStarted;
     const { statuses, unreadable } = await libraryStatusesFor(
       works.map((work) => work.id),
       libraryStorage(),
     );
+    if (refresh < statusShown) return; // an older answer than the one shown
+    statusShown = refresh;
     libraryStatus = statuses;
     const titles = unreadable.map((id) => works.find((work) => work.id === id)?.title ?? id);
     unlistedNotice =

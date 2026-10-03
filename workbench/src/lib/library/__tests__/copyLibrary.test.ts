@@ -8,11 +8,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // The fs double behaves as tauri-plugin-fs 2.5.1 does (shapes pinned in
 // lib/__tests__/fsNotFound.test.ts): createNew refuses an existing file with
 // "File exists (os error 17)", a missing file is "(os error 2)", and the scope
-// refuses any dotfile.
+// refuses any dotfile. A createNew write creates the file before writing its
+// bytes, so a write that fails afterwards leaves a short file behind.
 
 const files = new Map<string, string>();
 const unreadable = new Set<string>();
 const writes: string[] = [];
+const failWrite = new Set<string>();
+const onWrite = new Map<string, () => void>();
 
 const opened = (path: string, e: string) => `failed to open file at path: ${path} with error: ${e}`;
 
@@ -36,7 +39,16 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
     guard(path);
     if (options?.createNew && files.has(path)) throw opened(path, 'File exists (os error 17)');
     writes.push(path);
+    if (failWrite.has(path)) {
+      files.set(path, content.slice(0, 2));
+      throw `failed to write bytes to file at path: ${path} with error: No space left on device (os error 28)`;
+    }
     files.set(path, content);
+    onWrite.get(path)?.();
+  },
+  async remove(path: string) {
+    guard(path);
+    files.delete(path);
   },
   async rename(from: string, to: string) {
     guard(from);
@@ -64,6 +76,8 @@ beforeEach(() => {
   files.clear();
   unreadable.clear();
   writes.length = 0;
+  failWrite.clear();
+  onWrite.clear();
 });
 
 describe('Copy and switch into a folder that already holds files', () => {
@@ -124,5 +138,45 @@ describe('Copy and switch into a folder that already holds files', () => {
     files.set('/lib/w/.DS_Store', '\u0000\u0001');
     expect(await copyLibraryToRoot(['w'], '/new')).toEqual({ copied: 1, skipped: [] });
     expect(files.has('/new/w/.DS_Store')).toBe(false);
+  });
+
+  it('removes the short file a failed write leaves, so a retry copies it whole', async () => {
+    files.set('/lib/w/b01c01.md', 'the whole chapter');
+    failWrite.add('/new/w/b01c01.md');
+    await expect(copyLibraryToRoot(['w'], '/new')).rejects.toMatch(/No space left on device/);
+    expect(files.has('/new/w/b01c01.md')).toBe(false);
+  });
+
+  it('keeps a works.json entry synced into the new folder while the chapters copied', async () => {
+    files.set('/lib/w/b01c01.md', 'ours');
+    files.set('/lib/./works.json', registry([{ id: 'mine', title: 'Mine' }]));
+    files.set('/new/./works.json', registry([{ id: 'theirs', title: 'Theirs' }]));
+    onWrite.set('/new/w/b01c01.md', () =>
+      files.set('/new/./works.json', registry([{ id: 'theirs', title: 'Theirs' }, { id: 'late', title: 'Late' }])),
+    );
+    await copyLibraryToRoot(['w', FREE_WORKS_STORAGE_ID], '/new');
+    const ids = JSON.parse(files.get('/new/./works.json')!).works.map((w: { id: string }) => w.id);
+    expect(ids).toEqual(['theirs', 'late', 'mine']);
+  });
+
+  it('never touches a temp file already in the new folder', async () => {
+    files.set('/lib/./works.json', registry([{ id: 'mine', title: 'Mine' }]));
+    files.set('/new/./works.json', registry([{ id: 'theirs', title: 'Theirs' }]));
+    // Another Mac's saves use the same numbered temp names this app does.
+    for (let n = 1; n <= 100; n++) files.set(`/new/./works.json.${n}.tmp`, `another Mac, save ${n}`);
+    await copyLibraryToRoot([FREE_WORKS_STORAGE_ID], '/new');
+    for (let n = 1; n <= 100; n++) expect(files.get(`/new/./works.json.${n}.tmp`)).toBe(`another Mac, save ${n}`);
+  });
+
+  it('adds each new id once, and leaves out entries with no id', async () => {
+    files.set(
+      '/lib/./works.json',
+      JSON.stringify({ version: 1, works: [{ title: 'No id' }, { id: 'a', title: 'A' }, { id: 'a', title: 'A again' }] }),
+    );
+    files.set('/new/./works.json', JSON.stringify({ version: 1, works: [{ title: 'Theirs, no id' }, { id: 'b', title: 'B' }] }));
+    const result = await copyLibraryToRoot([FREE_WORKS_STORAGE_ID], '/new');
+    const works = JSON.parse(files.get('/new/./works.json')!).works;
+    expect(works.map((w: { id?: string; title: string }) => w.id ?? w.title)).toEqual(['Theirs, no id', 'b', 'a']);
+    expect(result.skipped).toEqual([]);
   });
 });

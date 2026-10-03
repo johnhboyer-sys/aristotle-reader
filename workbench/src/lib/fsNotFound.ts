@@ -16,11 +16,19 @@ export function isNotFound(err: unknown): boolean {
 
 /**
  * Whether a writeTextFile with `createNew: true` was refused because the file
- * is already there: EEXIST (17), or Windows' ERROR_FILE_EXISTS (80). The
- * refusal is OpenOptions::create_new's, made in the same system call that
- * would have created the file, so nothing can slip in between a check and
- * the write.
+ * is already there: EEXIST (17), or Windows' ERROR_FILE_EXISTS (80) or, from
+ * some shares, ERROR_ALREADY_EXISTS (183). The refusal is
+ * OpenOptions::create_new's, made in the same system call that would have
+ * created the file, so nothing can slip in between a check and the write.
  */
 export function isAlreadyExists(err: unknown): boolean {
-  return /\(os error (17|80)\)$/.test(String(err));
+  return /\(os error (17|80|183)\)$/.test(String(err));
+}
+
+/**
+ * Whether a writeTextFile failed after it had opened, and so created, the
+ * file: its bytes failed (commands.rs:1160), leaving a short file behind.
+ */
+export function isWriteAfterCreate(err: unknown): boolean {
+  return String(err).includes('failed to write bytes to file at path:');
 }
