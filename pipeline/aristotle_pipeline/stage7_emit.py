@@ -24,7 +24,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .config import BUILD_DIR, REPO_ROOT, SOURCES_DIR, Manifest
-from .parse_filter import filter_parses
+from .parse_filter import apply_morphology_override, filter_parses
 
 
 def _load(rel: str):
@@ -78,8 +78,16 @@ def merge_short_def(
     return gloss
 
 
-def resolve_parses(parses: list[dict], short_defs: dict[str, str]) -> list[dict]:
-    """Drop spurious readings, then extend the survivors' truncated glosses.
+def resolve_parses(
+    parses: list[dict],
+    short_defs: dict[str, str],
+    table_key: str | None = None,
+) -> list[dict]:
+    """Drop spurious readings, extend the survivors' truncated glosses, then
+    apply the curated overrides for `table_key`, the greek-analyses.txt key the
+    readings were read under (parse_filter). That is the key the override
+    table is written in and Moerbeke applies it by; a token whose own key is
+    a diaeresis or unstarred variant resolves to it in stage 4 (key_map).
 
     The order matters: filter_parses recognizes a spurious reading by its gloss
     exactly duplicating a resolved sibling's, and those are Morpheus glosses.
@@ -92,7 +100,7 @@ def resolve_parses(parses: list[dict], short_defs: dict[str, str]) -> list[dict]
         parse["gloss"] = merge_short_def(
             parse["gloss"], parse["lemma"], parse["lsj"], short_defs
         )
-    return kept
+    return apply_morphology_override(kept, table_key)
 
 
 def _greek_cells(text: str, tokens: list[dict]):
@@ -489,7 +497,7 @@ def emit_analyses(out_dir: Path) -> dict:
             }
             for g in analyses[stored_key]
         ]
-        kept = resolve_parses(parses, short_defs)
+        kept = resolve_parses(parses, short_defs, stored_key)
         dropped += len(parses) - len(kept)
         merged[token_key] = kept
     (out_dir / "analyses.json").write_text(
