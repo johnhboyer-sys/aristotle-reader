@@ -1,1 +1,747 @@
-[]
+[
+  {
+    "surface": "ou)",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὐ, the negative particle; Morpheus glosses it 'u', which is not a word."
+  },
+  {
+    "surface": "ou)/",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὔ, the negative particle accented before an enclitic or at a pause; Morpheus glosses it 'u'."
+  },
+  {
+    "surface": "ou)k",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὐκ, the negative before a smooth breathing; Morpheus glosses it 'u'."
+  },
+  {
+    "surface": "ou)/k",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὔκ, the negative before an enclitic (Top. 122b31 οὔκ ἐστι); Morpheus glosses it 'u'."
+  },
+  {
+    "surface": "ou)x",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὐχ, the negative before a rough breathing; Morpheus glosses it 'u'."
+  },
+  {
+    "surface": "ou)x'",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὐχ' (EE 1221b25), the negative; Morpheus glosses it 'u'."
+  },
+  {
+    "surface": "ou)xi/",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὐχί, the emphatic negative; Morpheus glosses it 'u'."
+  },
+  {
+    "surface": "kou)k",
+    "lemma": "ou)",
+    "gloss": "and not",
+    "justification": "κοὐκ, crasis of καὶ οὐκ (EN 1162b28); Morpheus reads only the οὐ and glosses it 'u'."
+  },
+  {
+    "surface": "mh/",
+    "lemma": "mh/",
+    "gloss": "not",
+    "justification": "μή, the negative of will, condition and prohibition; Morpheus glosses it 'will', which is not its meaning."
+  },
+  {
+    "surface": "a)/n",
+    "lemma": "a)/n1",
+    "gloss": "modal particle",
+    "justification": "ἄν, the modal particle; Morpheus glosses it 'he came', which is not its meaning."
+  },
+  {
+    "surface": "ke",
+    "lemma": "a)/n1",
+    "gloss": "modal particle",
+    "justification": "κε(ν), the epic modal particle (= ἄν), in quoted verse; Morpheus glosses it 'he came'."
+  },
+  {
+    "surface": "ke/",
+    "lemma": "a)/n1",
+    "gloss": "modal particle",
+    "justification": "κε(ν), the epic modal particle (= ἄν), in quoted verse; Morpheus glosses it 'he came'."
+  },
+  {
+    "surface": "ken",
+    "lemma": "a)/n1",
+    "gloss": "modal particle",
+    "justification": "κε(ν), the epic modal particle (= ἄν), in quoted verse (Pol. 1338a27, Rhet. 1362b36); Morpheus glosses it 'he came'."
+  },
+  {
+    "surface": "ke/n",
+    "lemma": "a)/n1",
+    "gloss": "modal particle",
+    "justification": "κε(ν), the epic modal particle (= ἄν), in quoted verse; Morpheus glosses it 'he came'."
+  },
+  {
+    "surface": "k'",
+    "lemma": "a)/n1",
+    "gloss": "modal particle",
+    "justification": "κε(ν), the epic modal particle (= ἄν), elided, in quoted verse (EN 1116a34, Pol. 1285a13); Morpheus glosses it 'he came'."
+  },
+  {
+    "surface": "o(",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "ὁ, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "h(",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "ἡ, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "to/",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τό, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "tou=",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τοῦ, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "th=s",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τῆς, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "tw=|",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τῷ, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "th=|",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τῇ, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "to/n",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τόν, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "th/n",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τήν, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "ai(",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "αἱ, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "ta/",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τά, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "tw=n",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τῶν, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "toi=s",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τοῖς, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "tai=s",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "ταῖς, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "tou/s",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τούς, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "ta/s",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τάς, the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "toi=n",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τοῖν (dual), the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "tw/",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τώ (dual, DA 410a5), the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "toi=si",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τοῖσι (epic, in quoted verse), the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "tw=",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τῶ (Doric, Rhet. 1367a15), the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "ta=s",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "τᾶς (Doric, Pol. 1285a39), the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
+  },
+  {
+    "surface": "oi(",
+    "lemma": "o(",
+    "gloss": "the",
+    "justification": "οἱ, the article; Morpheus ranks the epic pronoun ἑ 'to him' (no gloss) first and glosses the article 'the following'."
+  },
+  {
+    "surface": "toi/",
+    "lemma": "toi",
+    "justification": "τοί is the particle τοι before γε (μή τοί γε, Pol. 1308b15); Morpheus ranks an epic article 'the following' first."
+  },
+  {
+    "surface": "tw/s",
+    "lemma": "tw/s",
+    "justification": "τώς 'thus' in quoted verse (Meta. 1009b23); Morpheus ranks a Doric article 'the following' first."
+  },
+  {
+    "surface": "o(/",
+    "lemma": "o(/s",
+    "justification": "ὅ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+  },
+  {
+    "surface": "h(/",
+    "lemma": "o(/s",
+    "justification": "ἥ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+  },
+  {
+    "surface": "a(/",
+    "lemma": "o(/s",
+    "justification": "ἅ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+  },
+  {
+    "surface": "ai(/",
+    "lemma": "o(/s",
+    "justification": "αἵ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+  },
+  {
+    "surface": "a(/per",
+    "lemma": "o(/s",
+    "justification": "ἅπερ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+  },
+  {
+    "surface": "h(/per",
+    "lemma": "o(/s",
+    "justification": "ἥπερ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+  },
+  {
+    "surface": "ai(/per",
+    "lemma": "o(/s",
+    "justification": "αἵπερ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+  },
+  {
+    "surface": "oi(/",
+    "lemma": "o(/s",
+    "justification": "οἵ, accented, is the relative pronoun; Morpheus ranks the epic pronoun ἑ (no gloss) first."
+  },
+  {
+    "surface": "oi(/per",
+    "lemma": "o(/s",
+    "justification": "οἵπερ is the relative pronoun; Morpheus ranks the epic pronoun ἑ (no gloss) first."
+  },
+  {
+    "surface": "ou(=",
+    "lemma": "o(/s",
+    "justification": "οὗ is the relative 'of which, whose' (οὗ ἕνεκα); Morpheus ranks the epic pronoun ἑ (no gloss) first."
+  },
+  {
+    "surface": "ei)",
+    "lemma": "ei)",
+    "gloss": "if",
+    "justification": "εἰ, the conditional 'if'; Morpheus gives it no gloss."
+  },
+  {
+    "surface": "ei)/",
+    "lemma": "ei)",
+    "gloss": "if",
+    "justification": "εἴ, 'if' accented before an enclitic; Morpheus gives it no gloss."
+  },
+  {
+    "surface": "ei)/ge",
+    "lemma": "ei)",
+    "gloss": "if indeed",
+    "justification": "εἴγε, 'if indeed'; Morpheus reads it as εἰ and gives no gloss."
+  },
+  {
+    "surface": "ei)=",
+    "lemma": "ei)mi/",
+    "justification": "εἶ is 'you are' (Meta. 1029b15, Rhet. 1400b21); Morpheus ranks the conjunction εἰ, with no gloss, first."
+  },
+  {
+    "surface": "dia/",
+    "lemma": "dia/",
+    "gloss": "through; because of",
+    "justification": "διά, the preposition 'through' (with the accusative 'because of'); Morpheus's 'in a line' is not its meaning."
+  },
+  {
+    "surface": "di'",
+    "lemma": "dia/",
+    "gloss": "through; because of",
+    "justification": "δι', elided διά 'through, because of'; Morpheus's 'in a line' is not its meaning."
+  },
+  {
+    "surface": "ma=llon",
+    "lemma": "ma=llon",
+    "gloss": "more, rather",
+    "justification": "μᾶλλον is the comparative 'more, rather'; Morpheus's 'very, exceedingly' is the gloss of μάλα."
+  },
+  {
+    "surface": "w(s",
+    "lemma": "w(s",
+    "gloss": "as, that, so that",
+    "justification": "ὡς, unaccented, is 'as, that'; Morpheus's 'so, thus' is the gloss of accented ὥς."
+  },
+  {
+    "surface": "w(/ste",
+    "lemma": "w(/ste",
+    "gloss": "so that; therefore",
+    "justification": "ὥστε is 'so that, therefore' throughout Aristotle; Morpheus's 'as being, inasmuch as' is a minor use with a participle."
+  },
+  {
+    "surface": "w(/st'",
+    "lemma": "w(/ste",
+    "gloss": "so that; therefore",
+    "justification": "ὥστ' is 'so that, therefore' throughout Aristotle; Morpheus's 'as being, inasmuch as' is a minor use with a participle."
+  },
+  {
+    "surface": "w(/sq'",
+    "lemma": "w(/ste",
+    "gloss": "so that; therefore",
+    "justification": "ὥσθ' is 'so that, therefore' throughout Aristotle; Morpheus's 'as being, inasmuch as' is a minor use with a participle."
+  },
+  {
+    "surface": "o(/ti",
+    "lemma": "o(/ti2",
+    "gloss": "that, because",
+    "justification": "ὅτι is the conjunction 'that, because'; Morpheus ranks ὅστις first and glosses the conjunction 'for what, wherefore'."
+  },
+  {
+    "surface": "mh/n",
+    "lemma": "mh/n",
+    "gloss": "truly, indeed",
+    "justification": "μήν is the particle 'truly' (ἀλλὰ μήν, οὐ μήν; all 566 occurrences); Morpheus ranks μείς 'month' first and glosses the particle 'month' too."
+  },
+  {
+    "surface": "a)/nw",
+    "lemma": "a)/nw2",
+    "justification": "ἄνω is the adverb 'upwards, above'; Morpheus ranks a dual of ἄνοος 'silly' first."
+  },
+  {
+    "surface": "ta)/nw",
+    "lemma": "a)/nw2",
+    "justification": "τἄνω is crasis of τὰ ἄνω 'the parts above' (Phys. 205b32); Morpheus ranks a dual of ἄνοος 'silly' first."
+  },
+  {
+    "surface": "ei)/h",
+    "lemma": "ei)mi/",
+    "justification": "εἴη is the optative of εἰμί; Morpheus ranks a Doric/epic imperfect of ἐάω 'permit' first."
+  },
+  {
+    "surface": "t'",
+    "lemma": "te",
+    "justification": "τ', elided τε; Morpheus ranks a Doric accusative of σύ 'thou' first."
+  },
+  {
+    "surface": "q'",
+    "lemma": "te",
+    "justification": "θ', elided τε before a rough breathing; Morpheus ranks a Doric accusative of σύ 'thou' first."
+  },
+  {
+    "surface": "te/",
+    "lemma": "te",
+    "justification": "τέ, the particle τε accented before an enclitic; Morpheus ranks a Doric accusative of σύ 'thou' first."
+  },
+  {
+    "surface": "o(/te",
+    "lemma": "o(/te",
+    "justification": "ὅτε, 'when'; Morpheus ranks an Attic neuter of ὅστε 'who, which' first."
+  },
+  {
+    "surface": "o(/t'",
+    "lemma": "o(/te",
+    "justification": "ὅτ', elided ὅτε 'when'; Morpheus ranks ὅστε 'who, which' first."
+  },
+  {
+    "surface": "o(/teper",
+    "lemma": "o(/te",
+    "justification": "ὅτεπερ, 'just when'; Morpheus ranks ὅστε 'who, which' first."
+  },
+  {
+    "surface": "e)/peit'",
+    "lemma": "e)/peita",
+    "justification": "ἔπειτ', elided ἔπειτα 'then'; Morpheus ranks a Doric form of ἔπειμι 'come upon' first."
+  },
+  {
+    "surface": "e)/peiq'",
+    "lemma": "e)/peita",
+    "justification": "ἔπειθ', elided ἔπειτα 'then'; Morpheus ranks a Doric form of ἔπειμι 'come upon' first."
+  },
+  {
+    "surface": "e)/t'",
+    "lemma": "e)/ti",
+    "justification": "ἔτ', elided ἔτι 'yet, still'; Morpheus ranks ἔτης 'clansmen' first."
+  },
+  {
+    "surface": "kaq'",
+    "lemma": "kata/",
+    "justification": "καθ', elided κατά before a rough breathing (καθ' αὑτό, καθ' ἕκαστον); Morpheus ranks καθά 'according as' first."
+  },
+  {
+    "surface": "ka/ta",
+    "lemma": "kata/",
+    "justification": "κάτα, κατά in anastrophe in quoted verse (Juv. 473b24); Morpheus ranks κάτος first."
+  },
+  {
+    "surface": "u(f'",
+    "lemma": "u(po/",
+    "justification": "ὑφ', elided ὑπό before a rough breathing; Morpheus ranks ὑφή 'web' first."
+  },
+  {
+    "surface": "w(/s",
+    "lemma": "w(s",
+    "justification": "ὥς is the adverb 'thus' or ὡς before an enclitic; Morpheus ranks a Doric accusative of ὅς first."
+  },
+  {
+    "surface": "w)=",
+    "lemma": "w)=",
+    "justification": "ὦ, the interjection before a vocative (ὦ ἄνδρες, Rhet. 1414b32; all 5 occurrences); Morpheus ranks a subjunctive of εἰμί first."
+  },
+  {
+    "surface": "e)/xei",
+    "lemma": "e)/xw",
+    "justification": "ἔχει, 'has'; Morpheus ranks ἔχις 'viper' first."
+  },
+  {
+    "surface": "e)/xh|",
+    "lemma": "e)/xw",
+    "justification": "ἔχῃ, 'has' (subjunctive); Morpheus ranks ἔχις 'viper' first."
+  },
+  {
+    "surface": "e)/xeis",
+    "lemma": "e)/xw",
+    "justification": "ἔχεις, 'you have'; Morpheus ranks ἔχις 'viper' first."
+  },
+  {
+    "surface": "qeou=",
+    "lemma": "qeo/s",
+    "justification": "θεοῦ, from θεός 'god'; Morpheus ranks θέα 'seeing' or θεάομαι 'gaze at' first."
+  },
+  {
+    "surface": "qew=n",
+    "lemma": "qeo/s",
+    "justification": "θεῶν, from θεός 'god'; Morpheus ranks θέα 'seeing' or θεάομαι 'gaze at' first."
+  },
+  {
+    "surface": "qew=|",
+    "lemma": "qeo/s",
+    "justification": "θεῷ, from θεός 'god'; Morpheus ranks θέα 'seeing' or θεάομαι 'gaze at' first."
+  },
+  {
+    "surface": "qeoi=s",
+    "lemma": "qeo/s",
+    "justification": "θεοῖς, from θεός 'god'; Morpheus ranks θέα 'seeing' or θεάομαι 'gaze at' first."
+  },
+  {
+    "surface": "qeoi=o",
+    "lemma": "qeo/s",
+    "justification": "θεοῖο (epic, EN 1145a22), from θεός 'god'; Morpheus ranks θέα 'seeing' or θεάομαι 'gaze at' first."
+  },
+  {
+    "surface": "pa=sai",
+    "lemma": "pa=s",
+    "justification": "πᾶσαι, from πᾶς 'all'; Morpheus ranks a Doric form of πάομαι 'acquire' first."
+  },
+  {
+    "surface": "pa/sh|",
+    "lemma": "pa=s",
+    "justification": "πάσῃ, from πᾶς 'all'; Morpheus ranks a Doric form of πάομαι 'acquire' first."
+  },
+  {
+    "surface": "pa=s'",
+    "lemma": "pa=s",
+    "justification": "πᾶσ' (EN 1129b30), from πᾶς 'all'; Morpheus ranks a Doric form of πάομαι 'acquire' first."
+  },
+  {
+    "surface": "kei=tai",
+    "lemma": "kei=mai",
+    "justification": "κεῖται, from κεῖμαι 'lie, be laid down'; Morpheus ranks κέω, a Hesychian stub, first."
+  },
+  {
+    "surface": "kei=sqai",
+    "lemma": "kei=mai",
+    "justification": "κεῖσθαι, from κεῖμαι 'lie, be laid down'; Morpheus ranks κέω, a Hesychian stub, first."
+  },
+  {
+    "surface": "kei/sqw",
+    "lemma": "kei=mai",
+    "justification": "κείσθω, from κεῖμαι 'lie, be laid down'; Morpheus ranks κέω, a Hesychian stub, first."
+  },
+  {
+    "surface": "kei=t'",
+    "lemma": "kei=mai",
+    "justification": "κεῖτ' (DA 404a30), from κεῖμαι 'lie, be laid down'; Morpheus ranks κέω, a Hesychian stub, first."
+  },
+  {
+    "surface": "kei/menai",
+    "lemma": "kei=mai",
+    "justification": "κείμεναι (DM 393b14), from κεῖμαι 'lie, be laid down'; Morpheus ranks κέω, a Hesychian stub, first."
+  },
+  {
+    "surface": "ei)dw/s",
+    "lemma": "oi)=da",
+    "gloss": "knowing",
+    "justification": "εἰδώς, perfect participle of οἶδα 'knowing'; Morpheus ranks εἰδοί, the Roman Ides, first and glosses οἶδα 'behold!'."
+  },
+  {
+    "surface": "a)lkh=s",
+    "lemma": "a)lkh/",
+    "justification": "ἀλκῆς, from ἀλκή 'strength, defence' (PA 661b2, ἀλκῆς χάριν); Morpheus ranks ἀλκάζω first."
+  },
+  {
+    "surface": "koni/h|sin",
+    "lemma": "koni/a",
+    "justification": "κονίῃσιν, from κονία 'dust', in quoted verse (PA 673a16); Morpheus ranks κόνιος 'dusty' first."
+  },
+  {
+    "surface": "a)ndri/",
+    "lemma": "a)nh/r",
+    "justification": "ἀνδρί, dative of ἀνήρ 'man'; Morpheus ranks ἀνδρίς 'woman' first."
+  },
+  {
+    "surface": "bow=n",
+    "lemma": "bou=s",
+    "justification": "βοῶν, genitive plural of βοῦς 'ox' (GA 786b16, HA 500a10); Morpheus ranks βόα, a fish, first."
+  },
+  {
+    "surface": "new=n",
+    "lemma": "nau=s",
+    "justification": "νεῶν, genitive plural of ναῦς 'ship' (Oec. 1347b11, Poet. 1459a36; all 4 occurrences); Morpheus ranks ναός 'temple' first."
+  },
+  {
+    "surface": "i(/ppos",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "i(/ppou",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "i(/ppw|",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "i(/ppon",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "i(/ppoi",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "i(/ppwn",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "i(/ppois",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "i(/ppous",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος, 'horse'; Morpheus glosses it 'a riding-dress'."
+  },
+  {
+    "surface": "pisto/n",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pista/",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisto/s",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistoi/",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisth/",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisth/n",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pista/s",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistou/s",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistai/",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistw=n",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisto/teron",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisto/tera",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisto/teroi",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistote/ra",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistote/ras",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistote/rois",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistote/rwn",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisto/tatos",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pisto/tatoi",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "pistota/thn",
+    "lemma": "pisto/s2",
+    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+  },
+  {
+    "surface": "oi)=nos",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  },
+  {
+    "surface": "oi)=non",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  },
+  {
+    "surface": "oi)/nou",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  },
+  {
+    "surface": "oi)/nw|",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  },
+  {
+    "surface": "oi)=noi",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  },
+  {
+    "surface": "oi)/nous",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  },
+  {
+    "surface": "oi)/nois",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  }
+]
