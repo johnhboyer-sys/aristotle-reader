@@ -395,6 +395,13 @@ def test_homer_junk_fixes_hold_for_forms_aristotle_lacks():
     assert top["gloss"] == "not"
 
 
+def test_scope_marks_aristotle_picks_and_not_junk_fixes():
+    assert MORPHOLOGY_OVERRIDES["a)/peiroi"].get("scope") == "aristotle"
+    assert MORPHOLOGY_OVERRIDES["h(/"].get("scope") == "aristotle"
+    assert "scope" not in MORPHOLOGY_OVERRIDES["ou)"]
+    assert "scope" not in MORPHOLOGY_OVERRIDES["dh=lon"]
+
+
 def _raw_morpheus_readings(surfaces):
     """Each surface's readings as greek-analyses.txt holds them (stage 4's own
     parser, so <foreign> tags are already stripped), before any filter,

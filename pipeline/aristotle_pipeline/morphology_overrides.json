@@ -237,6 +237,7 @@
     "surface": "oi(",
     "lemma": "o(",
     "gloss": "the",
+    "scope": "aristotle",
     "justification": "οἱ, the article; Morpheus ranks the epic pronoun ἑ 'to him' (no gloss) first and glosses the article 'the following'."
   },
   {
@@ -245,6 +246,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "τοί is the particle τοι before γε (μή τοί γε, Pol. 1308b15); Morpheus ranks an epic article 'the following' first."
   },
   {
@@ -253,6 +255,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "τώς 'thus' in quoted verse (Meta. 1009b23); Morpheus ranks a Doric article 'the following' first."
   },
   {
@@ -261,6 +264,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "ὅ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
   },
   {
@@ -269,6 +273,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "ἥ, accented, is mostly the relative pronoun (ἥ τε; ἐπιστήμη τις ἣ θεωρεῖ τὸ ὄν, Meta. 1003a21); Morpheus ranks the article 'the following' first. Exception: about 57 of 304 are the demonstrative 'the one … the other', ἣ μὲν … ἣ δέ (31 with μέν, 26 with δέ; EN 1151a27–28, 1119a22; EE 1219a37)."
   },
   {
@@ -277,6 +282,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "ἅ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
   },
   {
@@ -285,6 +291,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "αἵ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
   },
   {
@@ -293,6 +300,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "ἅπερ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
   },
   {
@@ -301,6 +309,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "ἥπερ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
   },
   {
@@ -309,6 +318,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "αἵπερ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
   },
   {
@@ -317,6 +327,7 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "οἵ, accented, is the relative pronoun; Morpheus ranks the epic pronoun ἑ (no gloss) first."
   },
   {
@@ -325,11 +336,13 @@
     "other_glosses": {
       "o(": "the"
     },
+    "scope": "aristotle",
     "justification": "οἵπερ is the relative pronoun; Morpheus ranks the epic pronoun ἑ (no gloss) first."
   },
   {
     "surface": "ou(=",
     "lemma": "o(/s",
+    "scope": "aristotle",
     "justification": "οὗ is the relative 'of which, whose' (οὗ ἕνεκα); Morpheus ranks the epic pronoun ἑ (no gloss) first."
   },
   {
@@ -356,6 +369,7 @@
     "other_glosses": {
       "ei)": "if"
     },
+    "scope": "aristotle",
     "justification": "εἶ is 'you are' (Meta. 1029b15, Rhet. 1400b21); Morpheus ranks the conjunction εἰ, with no gloss, first."
   },
   {
@@ -407,12 +421,14 @@
     "surface": "o(/ti",
     "lemma": "o(/ti2",
     "gloss": "that, because",
+    "scope": "aristotle",
     "justification": "ὅτι is the conjunction 'that, because'; Morpheus ranks ὅστις first and glosses the conjunction 'for what, wherefore'."
   },
   {
     "surface": "mh/n",
     "lemma": "mh/n",
     "gloss": "truly, indeed",
+    "scope": "aristotle",
     "justification": "μήν is the particle 'truly' (ἀλλὰ μήν, οὐ μήν; all 566 occurrences); Morpheus ranks μείς 'month' first and glosses the particle 'month' too."
   },
   {
@@ -507,6 +523,7 @@
   {
     "surface": "w)=",
     "lemma": "w)=",
+    "scope": "aristotle",
     "justification": "ὦ, the interjection before a vocative (ὦ ἄνδρες, Rhet. 1414b32; all 5 occurrences); Morpheus ranks a subjunctive of εἰμί first."
   },
   {
@@ -534,6 +551,7 @@
   {
     "surface": "qew=n",
     "lemma": "qeo/s",
+    "scope": "aristotle",
     "justification": "θεῶν, from θεός 'god'; Morpheus ranks θέα 'seeing' or θεάομαι 'gaze at' first."
   },
   {
@@ -622,6 +640,7 @@
   {
     "surface": "new=n",
     "lemma": "nau=s",
+    "scope": "aristotle",
     "justification": "νεῶν, genitive plural of ναῦς 'ship' (Oec. 1347b11, Poet. 1459a36; all 4 occurrences); Morpheus ranks ναός 'temple' first."
   },
   {
@@ -949,157 +968,187 @@
     "surface": "dei=",
     "lemma": "de/w2",
     "parse": "pres ind act 3rd sg (attic epic doric ionic)",
+    "scope": "aristotle",
     "justification": "δεῖ, impersonal 'it is necessary, one must', third singular of δέω (B); Morpheus ranks δέω (A) 'bind' first, and its first δέω (B) slot is a second-person middle."
   },
   {
     "surface": "dei=n",
     "lemma": "de/w2",
     "parse": "pres inf act (attic epic doric)",
+    "scope": "aristotle",
     "justification": "δεῖν, infinitive of impersonal δεῖ 'one must'; Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "e)/dei",
     "lemma": "de/w2",
     "parse": "imperf ind act 3rd sg (attic epic)",
+    "scope": "aristotle",
     "justification": "ἔδει, imperfect of impersonal δεῖ 'it was necessary'; Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/oi",
     "lemma": "de/w2",
     "parse": "pres opt act 3rd sg",
+    "scope": "aristotle",
     "justification": "δέοι, optative of impersonal δεῖ; Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/h|",
     "lemma": "de/w2",
     "parse": "pres subj act 3rd sg",
+    "scope": "aristotle",
     "justification": "δέῃ, subjunctive of impersonal δεῖ (ἐὰν δέῃ δεῖξαι, APo 77a11); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deou/shs",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δεούσης, 'lacking' (μιᾶς δεούσης εἴκοσιν, 'twenty less one', HA 522a31); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "dei=tai",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/ontai",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "dei=sqai",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menos",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nwn",
     "lemma": "de/w2",
     "parse": "pres part mp masc/neut gen pl",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nois",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menon",
     "lemma": "de/w2",
     "parse": "pres part mp neut nom/voc/acc sg",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menoi",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nw|",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/meqa",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/omai",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "e)dei=to",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/htai",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nhn",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nh",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menai",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/mena",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "e)deo/mhn",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nou",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nhs",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deoi/meq'",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/wntai",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/oito",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/ointo",
     "lemma": "de/w2",
+    "scope": "aristotle",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
@@ -1884,97 +1933,115 @@
   {
     "surface": "ei)rome/nh",
     "lemma": "ei)/rw",
+    "scope": "aristotle",
     "justification": "ἡ εἰρομένη λέξις, the 'strung-on' style (Rhet. 1409a27), from εἴρω 'fasten together in rows'; Morpheus ranks ἔρομαι 'ask' first."
   },
   {
     "surface": "ei)rome/nhn",
     "lemma": "ei)/rw",
+    "scope": "aristotle",
     "justification": "εἰρομένην λέξιν, the 'strung-on' style (Rhet. 1409a24), from εἴρω 'fasten together in rows'; Morpheus ranks ἔρομαι 'ask' first."
   },
   {
     "surface": "ei)ro/mena",
     "lemma": "ei)/rw",
+    "scope": "aristotle",
     "justification": "εἰρόμενα τὰ ἐνύπνια, dreams 'strung together' (Insomn. 461a22), from εἴρω 'fasten together in rows'; Morpheus ranks ἔρομαι 'ask' first."
   },
   {
     "surface": "a)nagkai=on",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc sg",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/wn",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut gen pl",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai=a",
     "lemma": "a)nagkai=os",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/ou",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut gen sg",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "ta)nagkai=a",
     "lemma": "a)nagkai=os",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/ois",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut dat pl",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/w|",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut dat sg",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)/peiron",
     "lemma": "a)/peiros2",
     "parse": "neut nom/voc/acc sg",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
   },
   {
     "surface": "a)/peira",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
   },
   {
     "surface": "a)/peiros",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. Two of 87 are 'inexperienced' (EN 1095a3, Rhet. 1395a5)."
   },
   {
     "surface": "a)pei/rou",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
   },
   {
     "surface": "a)pei/rw|",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
   },
   {
     "surface": "a)pei/rwn",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
   },
   {
     "surface": "a)pei/rous",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. One of 23 is 'inexperienced' (Juv. 471b24)."
   },
   {
     "surface": "a)pei/rois",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. One of 7 is 'inexperienced' (EN 1181a21)."
   },
   {
@@ -2284,12 +2351,14 @@
     "surface": "ei)/setai",
     "lemma": "oi)=da",
     "gloss": "know",
+    "scope": "aristotle",
     "justification": "εἴσεται/εἰσόμεθα, future of οἶδα 'will know' (Cat. 8a37, EN 1097a2); Morpheus ranks an epic future of εἶμι 'go' first and glosses οἶδα 'behold!'."
   },
   {
     "surface": "ei)so/meqa",
     "lemma": "oi)=da",
     "gloss": "know",
+    "scope": "aristotle",
     "justification": "εἴσεται/εἰσόμεθα, future of οἶδα 'will know' (Cat. 8a37, EN 1097a2); Morpheus ranks an epic future of εἶμι 'go' first and glosses οἶδα 'behold!'."
   },
   {
@@ -2493,18 +2562,21 @@
     "surface": "e)rw=",
     "lemma": "e)rw=",
     "parse": "fut ind act 1st sg (attic epic doric)",
+    "scope": "aristotle",
     "justification": "ἐρῶ 'I will say' (Phgn. 806a27, Rhet. 1415b14), the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "deh/sei",
     "lemma": "de/w2",
     "parse": "fut ind act 3rd sg",
+    "scope": "aristotle",
     "justification": "δεήσει 'it will be necessary', future of impersonal δεῖ, in 35 of 36; Rhet. 1385a32 (ἐν λύπῃ καὶ δεήσει) is the noun δέησις. Morpheus ranks δέησις first."
   },
   {
     "surface": "deh/sh|",
     "lemma": "de/w2",
     "parse": "aor subj act 3rd sg",
+    "scope": "aristotle",
     "justification": "δεήσῃ, aorist subjunctive of impersonal δεῖ (ὅταν δεήσῃ γεννᾶν, GA 731a11); Morpheus ranks δέησις first."
   },
   {
@@ -2533,6 +2605,7 @@
     "other_glosses": {
       "a)nagkai/h": "necessary"
     },
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος 'necessary' (τῆς ἀναγκαίας τροφῆς, Pol. 1257b14); Morpheus ranks ἀνάγκη first and glosses the adjective 'of, with, or by force'."
   },
   {
@@ -2554,47 +2627,55 @@
     "surface": "a)nagkaio/teron",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc comp sg",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "a)nagkaio/tata",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc superl pl",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "a)nagkaio/taton",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc superl sg",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "a)nagkaiote/ra",
     "lemma": "a)nagkai=os",
     "parse": "fem nom/voc comp sg (attic doric aeolic)",
+    "scope": "aristotle",
     "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "fu/sei",
     "lemma": "fu/sis",
     "parse": "fem dat sg (attic ionic)",
+    "scope": "aristotle",
     "justification": "φύσει, dative of φύσις (φύσει, 'by nature'); Morpheus ranks a dual slot first."
   },
   {
     "surface": "fu/sis",
     "lemma": "fu/sis",
     "parse": "fem nom sg",
+    "scope": "aristotle",
     "justification": "φύσις, nominative singular; Morpheus ranks an accusative plural slot first."
   },
   {
     "surface": "a)/peiroi",
     "lemma": "a)/peiros2",
+    "scope": "aristotle",
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. Five of 31 are 'inexperienced' (EN 1120b12, Rhet. 1383a30, 1389a31, SE 164b27, 165a16); that reading stays second."
   },
   {
     "surface": "deh/setai",
     "lemma": "de/w2",
     "parse": "fut ind mid 3rd sg",
+    "scope": "aristotle",
     "justification": "δεήσεται 'will need', future middle of δέω (B), in all 7 (οὐδὲ φίλου δεήσεται, EE 1244b9; EN 1169b3, 1178b6); Morpheus's first δέω (B) reading is an epic aorist subjunctive."
   },
   {
@@ -2607,6 +2688,7 @@
     "surface": "e)rw=n",
     "lemma": "e)ra/w1",
     "parse": "pres part act masc nom sg (attic epic ionic)",
+    "scope": "aristotle",
     "justification": "ἐρῶν 'loving, the lover' (ὁ ἐρῶν, EE 1238b37; Top. 146a10; all 7), present participle of ἐράω; Morpheus ranks ἔρα 'earth' first."
   },
   {
