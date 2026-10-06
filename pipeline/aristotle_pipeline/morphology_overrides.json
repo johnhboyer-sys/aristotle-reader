@@ -743,5 +743,55 @@
     "lemma": "oi)=nos",
     "gloss": "wine",
     "justification": "οἶνος, 'wine'; Morpheus glosses οἶνος 'the ace' and ranks the glossless οἶνον, τό first on some forms."
+  },
+  {
+    "surface": "gunaikw=n",
+    "lemma": "gunh/",
+    "justification": "γυναικῶν, genitive plural of γυνή 'woman'; Morpheus ranks the verb γυναικόω 'make effeminate' first."
+  },
+  {
+    "surface": "podw=n",
+    "lemma": "pou/s",
+    "justification": "ποδῶν, genitive plural of πούς 'foot'; Morpheus ranks the verb ποδόω 'tighten' first."
+  },
+  {
+    "surface": "a)ndrw=n",
+    "lemma": "a)nh/r",
+    "justification": "ἀνδρῶν, genitive plural of ἀνήρ 'man'; Morpheus ranks the verb ἀνδρόω 'change into a man' first."
+  },
+  {
+    "surface": "a)ste/rwn",
+    "lemma": "a)sth/r",
+    "justification": "ἀστέρων, genitive plural of ἀστήρ 'star'; Morpheus ranks the verb ἀστερόω 'turn into stars' first."
+  },
+  {
+    "surface": "u(me/nwn",
+    "lemma": "u(mh/n1",
+    "justification": "ὑμένων, genitive plural of ὑμήν 'membrane'; Morpheus ranks the verb ὑμενόω 'cover with a film' first."
+  },
+  {
+    "surface": "frenw=n",
+    "lemma": "frh/n",
+    "justification": "φρενῶν, genitive plural of φρήν 'midriff'; Morpheus ranks the verb φρενόω 'make wise' first."
+  },
+  {
+    "surface": "h)pei/rou",
+    "lemma": "h)/peiros",
+    "justification": "ἠπείρου, genitive of ἤπειρος 'mainland'; Morpheus ranks the verb ἀπειρόω 'multiply to infinity' first."
+  },
+  {
+    "surface": "h)pei/rous",
+    "lemma": "h)/peiros",
+    "justification": "ἠπείρους, accusative plural of ἤπειρος 'mainland' (DM 392b21); Morpheus ranks the verb ἀπειρόω 'multiply to infinity' first."
+  },
+  {
+    "surface": "monw/thn",
+    "lemma": "monw/ths",
+    "justification": "μονώτην, accusative of μονώτης 'solitary' (EN 1097b9); Morpheus ranks the verb μονόω 'make single' first."
+  },
+  {
+    "surface": "h)=ros",
+    "lemma": "e)/ar",
+    "justification": "ἦρος, genitive of ἔαρ 'spring' (Mirab. 844b12); Morpheus ranks the verb ἀρόω 'plough' first."
   }
 ]
