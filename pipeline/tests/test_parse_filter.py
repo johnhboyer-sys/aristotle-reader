@@ -239,7 +239,8 @@ def test_an_reads_as_the_modal_particle_first():
     assert out[0]["lemma"] == "a)/n1"
     assert out[0]["parse"] == "indeclform (particle)"
     assert out[0]["gloss"] == "modal particle"
-    assert out[1:] == AN[1:], "the other readings are kept, in order"
+    assert [(p["lemma"], p["parse"]) for p in out[1:]] == [
+        (p["lemma"], p["parse"]) for p in AN[1:]], "the other readings are kept, in order"
 
 
 def test_mh_does_not_read_will():
@@ -264,6 +265,28 @@ def test_theon_reads_god_and_men_the_particle():
     assert theon[0] == THEON[2]
     assert (men[0]["lemma"], men[0]["parse"]) == ("mh/n", "indeclform (particle)")
     assert men[0]["gloss"] != "month"
+
+
+def test_echei_shows_the_third_person_of_echo():
+    out = resolve_parses([dict(p) for p in ECHEI], {}, "e)/xei")
+
+    assert (out[0]["lemma"], out[0]["parse"]) == ("e)/xw", "pres ind act 3rd sg")
+
+
+def test_an_second_card_no_longer_reads_he_came():
+    out = resolve_parses([dict(p) for p in AN], {}, "a)/n")
+
+    assert out[1]["lemma"] == "a)/n2"
+    assert "he came" not in [p["gloss"] for p in out]
+
+
+def test_prepositions_read_their_common_senses():
+    kata = [{"lemma": "kata/", "gloss": "downwards", "parse": "indeclform (prep)",
+             "lsj": ["kata/1", "kata/2"]}]
+
+    for surface in ("kata/", "kat'"):
+        [top] = resolve_parses([dict(p) for p in kata], {}, surface)
+        assert top["gloss"].startswith("according to"), surface
 
 
 def test_every_override_moves_or_reglosses_a_reading_morpheus_offers():

@@ -57,7 +57,10 @@
     "surface": "a)/n",
     "lemma": "a)/n1",
     "gloss": "modal particle",
-    "justification": "ἄν, the modal particle; Morpheus glosses it 'he came', which is not its meaning."
+    "other_glosses": {
+      "a)/n2": "if (= ἐάν)"
+    },
+    "justification": "ἄν, the modal particle; Morpheus glosses it 'he came', and also its second reading, ἄν = ἐάν 'if'."
   },
   {
     "surface": "ke",
@@ -421,17 +424,20 @@
   {
     "surface": "kaq'",
     "lemma": "kata/",
-    "justification": "καθ', elided κατά before a rough breathing (καθ' αὑτό, καθ' ἕκαστον); Morpheus ranks καθά 'according as' first."
+    "gloss": "according to, with respect to; down; against",
+    "justification": "καθ', elided κατά before a rough breathing (καθ' αὑτό, καθ' ἕκαστον); Morpheus ranks καθά 'according as' first and glosses κατά 'downwards'."
   },
   {
     "surface": "ka/ta",
     "lemma": "kata/",
-    "justification": "κάτα, κατά in anastrophe in quoted verse (Juv. 473b24); Morpheus ranks κάτος first."
+    "gloss": "according to, with respect to; down; against",
+    "justification": "κάτα, κατά in anastrophe in quoted verse (Juv. 473b24); Morpheus ranks κάτος first and glosses κατά 'downwards'."
   },
   {
     "surface": "u(f'",
     "lemma": "u(po/",
-    "justification": "ὑφ', elided ὑπό before a rough breathing; Morpheus ranks ὑφή 'web' first."
+    "gloss": "by (of the agent); under",
+    "justification": "ὑφ', elided ὑπό before a rough breathing, mostly 'by' of the agent; Morpheus ranks ὑφή 'web' first and glosses ὑπό 'from under'."
   },
   {
     "surface": "w(/s",
@@ -446,12 +452,14 @@
   {
     "surface": "e)/xei",
     "lemma": "e)/xw",
-    "justification": "ἔχει, 'has'; Morpheus ranks ἔχις 'viper' first."
+    "parse": "pres ind act 3rd sg",
+    "justification": "ἔχει, 'has', present active third singular; Morpheus ranks ἔχις 'viper' first, and its first ἔχω slot is a second-person middle."
   },
   {
     "surface": "e)/xh|",
     "lemma": "e)/xw",
-    "justification": "ἔχῃ, 'has' (subjunctive); Morpheus ranks ἔχις 'viper' first."
+    "parse": "pres subj act 3rd sg",
+    "justification": "ἔχῃ, 'has' (subjunctive, third singular, after ἐάν/ὅταν); Morpheus ranks ἔχις 'viper' first, then a second-person middle."
   },
   {
     "surface": "e)/xeis",
@@ -516,12 +524,14 @@
   {
     "surface": "kei=t'",
     "lemma": "kei=mai",
-    "justification": "κεῖτ' (DA 404a30), from κεῖμαι 'lie, be laid down'; Morpheus ranks κέω, a Hesychian stub, first."
+    "parse": "imperf ind mp 3rd sg (homeric ionic)",
+    "justification": "κεῖτ' is elided κεῖτο 'lay', the imperfect, in Homer's line on Hector (DA 404a30); Morpheus ranks κέω, a Hesychian stub, first."
   },
   {
     "surface": "kei/menai",
     "lemma": "kei=mai",
-    "justification": "κείμεναι (DM 393b14), from κεῖμαι 'lie, be laid down'; Morpheus ranks κέω, a Hesychian stub, first."
+    "parse": "pres part mp fem nom/voc pl",
+    "justification": "κείμεναι, present participle of κεῖμαι, islands 'lying' beyond (DM 393b14); Morpheus ranks κέω first, then a perfect slot."
   },
   {
     "surface": "ei)dw/s",
@@ -605,7 +615,8 @@
   {
     "surface": "pisto/n",
     "lemma": "pisto/s2",
-    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+    "parse": "neut nom/voc/acc sg",
+    "justification": "πιστόν is neuter in all 11 occurrences (τὸ πιστόν, πιστὸν εἶναι); LSJ πιστός B. Morpheus ranks the glossless stub πιστόν first."
   },
   {
     "surface": "pista/",
@@ -650,12 +661,14 @@
   {
     "surface": "pistw=n",
     "lemma": "pisto/s2",
-    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+    "parse": "masc/neut gen pl",
+    "justification": "πιστῶν, neuter genitive plural of πιστός B 'credible' (Top. 159a9, 161b31); Morpheus ranks the glossless stub πιστόν first."
   },
   {
     "surface": "pisto/teron",
     "lemma": "pisto/s2",
-    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+    "parse": "neut nom/voc/acc comp sg",
+    "justification": "πιστότερον, neuter comparative of πιστός B 'more credible' (APo 72b1, 86b5); Morpheus ranks πιστός A 'liquid' first."
   },
   {
     "surface": "pisto/tera",
@@ -670,12 +683,14 @@
   {
     "surface": "pistote/ra",
     "lemma": "pisto/s2",
-    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+    "parse": "fem nom/voc comp sg (attic doric aeolic)",
+    "justification": "πιστοτέρα, feminine nominative singular, 'more credible' (APo 86b30); Morpheus ranks πιστός A 'liquid' first."
   },
   {
     "surface": "pistote/ras",
     "lemma": "pisto/s2",
-    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+    "parse": "fem gen comp sg (attic doric aeolic)",
+    "justification": "πιστοτέρας, feminine genitive singular after ἐκ (Meta. 1062a3); Morpheus ranks πιστός A 'liquid' first."
   },
   {
     "surface": "pistote/rois",
@@ -685,7 +700,8 @@
   {
     "surface": "pistote/rwn",
     "lemma": "pisto/s2",
-    "justification": "πιστός 'trustworthy, credible' (LSJ πιστός B); Morpheus ranks πιστός A 'liquid' (A. Pr. 480 only) or the glossless stub πιστόν first."
+    "parse": "masc/neut gen comp pl",
+    "justification": "πιστοτέρων, neuter genitive plural after ἐκ (APr 64b32); Morpheus ranks πιστός A 'liquid' first."
   },
   {
     "surface": "pisto/tatos",
@@ -793,5 +809,77 @@
     "surface": "h)=ros",
     "lemma": "e)/ar",
     "justification": "ἦρος, genitive of ἔαρ 'spring' (Mirab. 844b12); Morpheus ranks the verb ἀρόω 'plough' first."
+  },
+  {
+    "surface": "kata/",
+    "lemma": "kata/",
+    "gloss": "according to, with respect to; down; against",
+    "justification": "κατά: Aristotle's κατά is mostly 'according to, with respect to' (with the accusative); Morpheus gives only LSJ's first literal sense, 'downwards'."
+  },
+  {
+    "surface": "kat'",
+    "lemma": "kata/",
+    "gloss": "according to, with respect to; down; against",
+    "justification": "κατ', elided κατά: Aristotle's κατά is mostly 'according to, with respect to' (with the accusative); Morpheus gives only LSJ's first literal sense, 'downwards'."
+  },
+  {
+    "surface": "ka/d",
+    "lemma": "kata/",
+    "gloss": "according to, with respect to; down; against",
+    "justification": "κάδ, epic κατά in quoted verse (Rhet. 1363a6); Morpheus glosses κατά 'downwards'."
+  },
+  {
+    "surface": "peri/",
+    "lemma": "peri/",
+    "gloss": "about, concerning; around",
+    "justification": "περί: in Aristotle mostly 'about, concerning' (περὶ ψυχῆς); Morpheus gives only LSJ's literal 'round about, all round'."
+  },
+  {
+    "surface": "pe/ri",
+    "lemma": "peri/",
+    "gloss": "about, concerning; around",
+    "justification": "πέρι, περί after its noun (πήξεως πέρι, Mete. 382a27); Morpheus gives only 'round about, all round'."
+  },
+  {
+    "surface": "e)pi/",
+    "lemma": "e)pi/",
+    "gloss": "on, upon; in the case of; to, toward",
+    "justification": "ἐπί: in Aristotle often 'in the case of' (ἐπὶ τῶν ζῴων) as well as 'on' and 'toward'; Morpheus's 'being upon or supported upon a surface' is LSJ's first literal sense only."
+  },
+  {
+    "surface": "e)p'",
+    "lemma": "e)pi/",
+    "gloss": "on, upon; in the case of; to, toward",
+    "justification": "ἐπ', elided ἐπί: in Aristotle often 'in the case of' (ἐπὶ τῶν ζῴων) as well as 'on' and 'toward'; Morpheus's 'being upon or supported upon a surface' is LSJ's first literal sense only."
+  },
+  {
+    "surface": "e)f'",
+    "lemma": "e)pi/",
+    "gloss": "on, upon; in the case of; to, toward",
+    "justification": "ἐφ', elided ἐπί before a rough breathing (ἐφ' ἑαυτοῦ); Morpheus's 'being upon or supported upon a surface' is LSJ's first literal sense only."
+  },
+  {
+    "surface": "ka)pi/",
+    "lemma": "e)pi/",
+    "gloss": "and on; and in the case of",
+    "justification": "κἀπί, crasis of καὶ ἐπί (ὁμοίως δὲ κἀπὶ τῶν ..., APr 29a26); Morpheus ranks Ἆπις first."
+  },
+  {
+    "surface": "u(po/",
+    "lemma": "u(po/",
+    "gloss": "by (of the agent); under",
+    "justification": "ὑπό: in Aristotle mostly 'by' of the agent with a passive; Morpheus gives only LSJ's literal 'from under'."
+  },
+  {
+    "surface": "u(p'",
+    "lemma": "u(po/",
+    "gloss": "by (of the agent); under",
+    "justification": "ὑπ', elided ὑπό: in Aristotle mostly 'by' of the agent with a passive; Morpheus gives only LSJ's literal 'from under'."
+  },
+  {
+    "surface": "u(/po",
+    "lemma": "u(po/",
+    "gloss": "by (of the agent); under",
+    "justification": "ὕπο, ὑπό after its noun in quoted verse (σπουδῆς ὕπο, Rhet. 1415b20); Morpheus gives only 'from under'."
   }
 ]
