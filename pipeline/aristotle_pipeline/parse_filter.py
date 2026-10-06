@@ -42,11 +42,21 @@ def load_morphology_overrides(path: Path = _OVERRIDE_PATH) -> dict[str, dict]:
                      notes included. Only with lemma.
       gloss          the gloss the front reading shows.
       other_glosses  {lemma: gloss}: glosses for readings behind the front one.
+      scope          optional; the only value is "aristotle". It marks an entry
+                     whose choice rests on Aristotle's usage between two
+                     legitimate readings (a majority or context pick, or a
+                     parse chosen for his contexts). The pipeline ignores it:
+                     every entry applies in aristotle-reader. A consumer that
+                     applies the table to other authors (Moerbeke) leaves
+                     these entries out. Junk-gloss fixes and promotions over a
+                     wrong word carry no scope: they hold in any author.
       justification  why, in a line an editor can check. Required.
 
     An entry needs at least one of lemma, gloss and other_glosses, no other
     field, and non-empty strings throughout (other_glosses a non-empty object
-    of them).
+    of them). An override fixes a wrong word or a junk gloss (one that is not a
+    meaning of the word); it does not rewrite a gloss that names one sense of
+    the right word.
 
     The rules apply in this order to the surface's readings, which are in
     Morpheus's order (the display order; the first is what the card shows):
@@ -74,7 +84,7 @@ def load_morphology_overrides(path: Path = _OVERRIDE_PATH) -> dict[str, dict]:
     overrides = {}
     required = {"surface", "justification"}
     actions = {"lemma", "gloss", "other_glosses"}
-    allowed = required | actions | {"parse"}
+    allowed = required | actions | {"parse", "scope"}
 
     def text(value) -> bool:
         return isinstance(value, str) and bool(value)
@@ -85,6 +95,8 @@ def load_morphology_overrides(path: Path = _OVERRIDE_PATH) -> dict[str, dict]:
         surface = entry.get("surface")
         if set(entry) - allowed or not (actions & entry.keys()):
             raise ValueError(f"{path}: invalid override fields for {surface}")
+        if entry.get("scope", "aristotle") != "aristotle":
+            raise ValueError(f"{path}: scope must be \"aristotle\" for {surface}")
         if "parse" in entry and "lemma" not in entry:
             raise ValueError(f"{path}: parse without lemma for {surface}")
         others = entry.get("other_glosses", {"-": "-"})

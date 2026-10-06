@@ -184,6 +184,18 @@ def test_other_glosses_alone_leaves_the_front_reading_and_order_alone():
     assert out == [parses[0], {**parses[1], "gloss": "know"}]
 
 
+def test_scope_aristotle_is_accepted_and_the_pipeline_still_applies_it(tmp_path):
+    path = tmp_path / "overrides.json"
+    path.write_text(json.dumps([{"surface": "ou)", "lemma": "ou)", "gloss": "not",
+                                 "scope": "aristotle", "justification": "j"}]))
+    table = load_morphology_overrides(path)
+    parses = [{"lemma": "ou)", "gloss": "u", "parse": "p", "lsj": ["ou)"]}]
+
+    [top] = apply_morphology_override([dict(p) for p in parses], "ou)", table)
+
+    assert top["gloss"] == "not"
+
+
 @pytest.mark.parametrize(
     "entries",
     [
@@ -194,6 +206,8 @@ def test_other_glosses_alone_leaves_the_front_reading_and_order_alone():
         [{"surface": "x", "other_glosses": ["l", "g"], "justification": "j"}],
         [{"surface": "x", "other_glosses": {"l": ""}, "justification": "j"}],
         [{"surface": "x", "other_glosses": {"l": 1}, "justification": "j"}],
+        [{"surface": "x", "gloss": "g", "scope": "homer", "justification": "j"}],
+        [{"surface": "x", "gloss": "g", "scope": "", "justification": "j"}],
         [{"surface": "x", "gloss": "g", "justification": "j", "rank": 1}],
         [{"surface": "x", "gloss": "", "justification": "j"}],
         [{"surface": "x", "gloss": "g", "justification": "j"},
