@@ -881,5 +881,1444 @@
     "lemma": "u(po/",
     "gloss": "by (of the agent); under",
     "justification": "ὕπο, ὑπό after its noun in quoted verse (σπουδῆς ὕπο, Rhet. 1415b20); Morpheus gives only 'from under'."
+  },
+  {
+    "surface": "dei=",
+    "lemma": "de/w2",
+    "parse": "pres ind act 3rd sg (attic epic doric ionic)",
+    "gloss": "it is necessary, one must",
+    "justification": "δεῖ, impersonal 'it is necessary, one must', third singular of δέω (B); Morpheus ranks δέω (A) 'bind' first, and its first δέω (B) slot is a second-person middle."
+  },
+  {
+    "surface": "dei=n",
+    "lemma": "de/w2",
+    "parse": "pres inf act (attic epic doric)",
+    "gloss": "be necessary, one must",
+    "justification": "δεῖν, infinitive of impersonal δεῖ 'one must'; Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "e)/dei",
+    "lemma": "de/w2",
+    "parse": "imperf ind act 3rd sg (attic epic)",
+    "gloss": "be necessary, one must",
+    "justification": "ἔδει, imperfect of impersonal δεῖ 'it was necessary'; Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/oi",
+    "lemma": "de/w2",
+    "parse": "pres opt act 3rd sg",
+    "gloss": "be necessary, one must",
+    "justification": "δέοι, optative of impersonal δεῖ; Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/h|",
+    "lemma": "de/w2",
+    "parse": "pres subj act 3rd sg",
+    "gloss": "be necessary, one must",
+    "justification": "δέῃ, subjunctive of impersonal δεῖ (ἐὰν δέῃ δεῖξαι, APo 77a11); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deou/shs",
+    "lemma": "de/w2",
+    "justification": "δεούσης, 'lacking' (μιᾶς δεούσης εἴκοσιν, 'twenty less one', HA 522a31); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "dei=tai",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/ontai",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "dei=sqai",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deo/menos",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deome/nwn",
+    "lemma": "de/w2",
+    "parse": "pres part mp masc/neut gen pl",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deome/nois",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deo/menon",
+    "lemma": "de/w2",
+    "parse": "pres part mp neut nom/voc/acc sg",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deo/menoi",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deome/nw|",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deo/meqa",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/omai",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "e)dei=to",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/htai",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deome/nhn",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deome/nh",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deo/menai",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deo/mena",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "e)deo/mhn",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deome/nou",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deome/nhs",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "deoi/meq'",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/wntai",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/oito",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "de/ointo",
+    "lemma": "de/w2",
+    "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
+  },
+  {
+    "surface": "dh=lon",
+    "lemma": "dh=los",
+    "parse": "neut nom/voc/acc sg",
+    "gloss": "clear, evident",
+    "other_glosses": {
+      "dh=los": "clear, evident"
+    },
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name. One of 1,299 is the island (εἰς Δῆλον, HA 580a18)."
+  },
+  {
+    "surface": "dh=la",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "other_glosses": {
+      "dh=los": "clear, evident"
+    },
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh=los",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "other_glosses": {
+      "dh=los": "clear, evident"
+    },
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh=lai",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh/lh",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh=loi",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "other_glosses": {
+      "dh=los": "clear, evident"
+    },
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh/lhn",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh/lwn",
+    "lemma": "dh=los",
+    "parse": "masc/neut gen pl",
+    "gloss": "clear, evident",
+    "other_glosses": {
+      "dh=los": "clear, evident"
+    },
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh/las",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "other_glosses": {
+      "dh=los": "clear, evident"
+    },
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "dh/lous",
+    "lemma": "dh=los",
+    "gloss": "clear, evident",
+    "other_glosses": {
+      "dh=los": "clear, evident"
+    },
+    "justification": "δῆλος 'clear, evident' (δῆλον ὅτι); Morpheus glosses the adjective 'Delos', the island's name."
+  },
+  {
+    "surface": "e)/lece",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)/legen",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)/leges",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)le/get'",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)le/geto",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)le/gomen",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)le/gonto",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)le/xqh",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "e)le/xqhsan",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gei",
+    "lemma": "le/gw3",
+    "parse": "pres ind act 3rd sg",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gein",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/geis",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gesqai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/getai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/ghtai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/goien",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/goimen",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/goint'",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/goit'",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/goito",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gomen",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gonta",
+    "lemma": "le/gw3",
+    "parse": "pres part act masc acc sg",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gontai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gontas",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gontes",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gonti",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gontos",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gousa",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gousi",
+    "lemma": "le/gw3",
+    "parse": "pres ind act 3rd pl (attic epic doric ionic)",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gousin",
+    "lemma": "le/gw3",
+    "parse": "pres ind act 3rd pl (attic epic doric ionic)",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gwmen",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gwntai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gwsi",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/gwsin",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "le/lektai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lege/sqw",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lege/sqwsan",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lego/mena",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lego/menai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lego/menoi",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lego/menon",
+    "lemma": "le/gw3",
+    "parse": "pres part mp neut nom/voc/acc sg",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lego/menos",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lego/meqa",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lego/ntwn",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nais",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nas",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nh",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nhn",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nhs",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nh|",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nois",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nou",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nous",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nwn",
+    "lemma": "le/gw3",
+    "parse": "pres part mp masc/neut gen pl",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legome/nw|",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "legou/shs",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "other_glosses": {
+      "le/gw1": "lay, lay to sleep"
+    },
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqe/n",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqe/nta",
+    "lemma": "le/gw3",
+    "parse": "aor part pass neut nom/voc/acc pl",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqe/ntas",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqe/ntes",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqe/nti",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqe/ntos",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqe/ntwn",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei/hsan",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei/s",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei/sais",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei/sas",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei/shs",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei/sh|",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei=sa",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei=sai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei=san",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei=si",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqei=sin",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqeisw=n",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqh/sesqai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqh/setai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqh=nai",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqh=|",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqhso/mena",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqhsome/nas",
+    "lemma": "le/gw3",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "lexqhsome/nwn",
+    "lemma": "le/gw3",
+    "parse": "fut part pass masc/neut gen pl",
+    "gloss": "say, speak; call, mean",
+    "justification": "λέγω 'say' (LSJ λέγω C, the homonym with the perfect λέλεκται); Morpheus glosses all three homonyms 'gather, pick up' and ranks λέγω (A) 'lay' first."
+  },
+  {
+    "surface": "ei)/rhtai",
+    "lemma": "e)rw=",
+    "parse": "perf ind mp 3rd sg (epic ionic)",
+    "gloss": "say, speak",
+    "justification": "εἴρηται 'it has been said', perfect passive of the verb of saying (ἐρῶ); Morpheus ranks ἔρομαι 'ask' first."
+  },
+  {
+    "surface": "ei)rh/setai",
+    "lemma": "e)rw=",
+    "parse": "fut ind mid 3rd sg",
+    "gloss": "say, speak",
+    "justification": "εἰρήσεται 'will be said' (DA 420b22); Morpheus ranks an Ionic future of ἔρομαι 'ask' first."
+  },
+  {
+    "surface": "ei)rome/nh",
+    "lemma": "ei)/rw",
+    "justification": "ἡ εἰρομένη λέξις, the 'strung-on' style (Rhet. 1409a27), from εἴρω 'fasten together in rows'; Morpheus ranks ἔρομαι 'ask' first."
+  },
+  {
+    "surface": "ei)rome/nhn",
+    "lemma": "ei)/rw",
+    "justification": "εἰρομένην λέξιν, the 'strung-on' style (Rhet. 1409a24), from εἴρω 'fasten together in rows'; Morpheus ranks ἔρομαι 'ask' first."
+  },
+  {
+    "surface": "ei)ro/mena",
+    "lemma": "ei)/rw",
+    "justification": "εἰρόμενα τὰ ἐνύπνια, dreams 'strung together' (Insomn. 461a22), from εἴρω 'fasten together in rows'; Morpheus ranks ἔρομαι 'ask' first."
+  },
+  {
+    "surface": "a)nagkai=on",
+    "lemma": "a)nagkai=os",
+    "parse": "neut nom/voc/acc sg",
+    "gloss": "necessary",
+    "other_glosses": {
+      "a)nagkai=os": "necessary"
+    },
+    "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
+  },
+  {
+    "surface": "a)nagkai/wn",
+    "lemma": "a)nagkai=os",
+    "parse": "masc/neut gen pl",
+    "gloss": "necessary",
+    "other_glosses": {
+      "a)nagkai=os": "necessary"
+    },
+    "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
+  },
+  {
+    "surface": "a)nagkai=a",
+    "lemma": "a)nagkai=os",
+    "gloss": "necessary",
+    "other_glosses": {
+      "a)nagkai=os": "necessary"
+    },
+    "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
+  },
+  {
+    "surface": "a)nagkai/ou",
+    "lemma": "a)nagkai=os",
+    "parse": "masc/neut gen sg",
+    "gloss": "necessary",
+    "other_glosses": {
+      "a)nagkai=os": "necessary"
+    },
+    "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
+  },
+  {
+    "surface": "ta)nagkai=a",
+    "lemma": "a)nagkai=os",
+    "gloss": "necessary",
+    "other_glosses": {
+      "a)nagkai=os": "necessary"
+    },
+    "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
+  },
+  {
+    "surface": "a)nagkai/ois",
+    "lemma": "a)nagkai=os",
+    "parse": "masc/neut dat pl",
+    "gloss": "necessary",
+    "other_glosses": {
+      "a)nagkai=os": "necessary"
+    },
+    "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
+  },
+  {
+    "surface": "a)nagkai/w|",
+    "lemma": "a)nagkai=os",
+    "parse": "masc/neut dat sg",
+    "gloss": "necessary",
+    "other_glosses": {
+      "a)nagkai=os": "necessary"
+    },
+    "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
+  },
+  {
+    "surface": "a)/peiron",
+    "lemma": "a)/peiros2",
+    "parse": "neut nom/voc/acc sg",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
+  },
+  {
+    "surface": "a)/peira",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
+  },
+  {
+    "surface": "a)/peiros",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. Two of 87 are 'inexperienced' (EN 1095a3, Rhet. 1395a5)."
+  },
+  {
+    "surface": "a)pei/rou",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
+  },
+  {
+    "surface": "a)pei/rw|",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
+  },
+  {
+    "surface": "a)pei/rwn",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first."
+  },
+  {
+    "surface": "a)pei/rous",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. One of 23 is 'inexperienced' (Juv. 471b24)."
+  },
+  {
+    "surface": "a)pei/rois",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. One of 7 is 'inexperienced' (EN 1181a21)."
+  },
+  {
+    "surface": "prw=ton",
+    "lemma": "prw=tos",
+    "parse": "neut nom/voc/acc sg",
+    "gloss": "first",
+    "other_glosses": {
+      "prw=tos": "first"
+    },
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/th",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/tou",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/tw|",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/thn",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/twn",
+    "lemma": "prw=tos",
+    "parse": "masc/neut gen pl",
+    "gloss": "first",
+    "other_glosses": {
+      "prw=tos": "first"
+    },
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw=ta",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/ths",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw=tos",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/tois",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw=tai",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/tas",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "other_glosses": {
+      "prw=tos": "first"
+    },
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw=toi",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/tous",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/th|",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/tais",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw=t'",
+    "lemma": "prw=tos",
+    "gloss": "first",
+    "other_glosses": {
+      "prw=tos": "first"
+    },
+    "justification": "πρῶτος 'first'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "prw/tws",
+    "lemma": "prw=tos",
+    "gloss": "primarily, in the first place",
+    "other_glosses": {
+      "prw=tos": "primarily, in the first place"
+    },
+    "justification": "πρώτως 'primarily, in the first place'; Morpheus ranks πρότερος first and glosses both 'before, in front'."
+  },
+  {
+    "surface": "ei)de/nai",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dei/h",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dei/hmen",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dei/hs",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dh=|",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/si",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/sin",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/ta",
+    "lemma": "oi)=da",
+    "parse": "perf part act masc acc sg",
+    "gloss": "know",
+    "other_glosses": {
+      "oi)=da": "know"
+    },
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/tas",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/tes",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/ti",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/tos",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)do/twn",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dui=ai",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dw=men",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dw=si",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)dw=sin",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "h)/|dei",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "h)/|deimen",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "i)/sasi",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "other_glosses": {
+      "oi)=da": "know"
+    },
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "i)/sasin",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "other_glosses": {
+      "oi)=da": "know"
+    },
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "i)/smen",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "oi)/damen",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "oi)/dasin",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "oi)=da",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "oi)=das",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "oi)=de",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "oi)=den",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "οἶδα 'know'; Morpheus glosses it 'behold!'."
+  },
+  {
+    "surface": "ei)/setai",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "εἴσεται/εἰσόμεθα, future of οἶδα 'will know' (Cat. 8a37, EN 1097a2); Morpheus ranks an epic future of εἶμι 'go' first and glosses οἶδα 'behold!'."
+  },
+  {
+    "surface": "ei)so/meqa",
+    "lemma": "oi)=da",
+    "gloss": "know",
+    "justification": "εἴσεται/εἰσόμεθα, future of οἶδα 'will know' (Cat. 8a37, EN 1097a2); Morpheus ranks an epic future of εἶμι 'go' first and glosses οἶδα 'behold!'."
+  },
+  {
+    "surface": "i)/sas",
+    "other_glosses": {
+      "oi)=da": "know"
+    },
+    "justification": "ἴσας is mostly ἴσος 'equal' and stays first; its οἶδα reading is glossed 'behold!'."
+  },
+  {
+    "surface": "ei)/domen",
+    "other_glosses": {
+      "oi)=da": "know"
+    },
+    "justification": "εἴδομεν stays εἶδον 'saw' first; its οἶδα reading is glossed 'behold!'."
+  },
+  {
+    "surface": "fu/sin",
+    "lemma": "fu/sis",
+    "justification": "φύσιν, accusative of φύσις; Morpheus ranks a glossless participle of φύω first."
+  },
+  {
+    "surface": "zw/|wn",
+    "lemma": "zw=|on",
+    "justification": "ζῷον 'animal, living being'; Morpheus ranks the glossless Ionic ζώϊον first."
+  },
+  {
+    "surface": "zw=|on",
+    "lemma": "zw=|on",
+    "justification": "ζῷον 'animal, living being'; Morpheus ranks the glossless Ionic ζώϊον first."
+  },
+  {
+    "surface": "zw/|ois",
+    "lemma": "zw=|on",
+    "justification": "ζῷον 'animal, living being'; Morpheus ranks the glossless Ionic ζώϊον first."
+  },
+  {
+    "surface": "zw=|a",
+    "lemma": "zw=|on",
+    "justification": "ζῷον 'animal, living being'; Morpheus ranks the glossless Ionic ζώϊον first."
+  },
+  {
+    "surface": "zw/|ou",
+    "lemma": "zw=|on",
+    "justification": "ζῷον 'animal, living being'; Morpheus ranks the glossless Ionic ζώϊον first."
+  },
+  {
+    "surface": "zw/|w|",
+    "lemma": "zw=|on",
+    "justification": "ζῷον 'animal, living being'; Morpheus ranks the glossless Ionic ζώϊον first."
+  },
+  {
+    "surface": "a(plw=s",
+    "lemma": "a(plw=s",
+    "gloss": "simply, without qualification",
+    "justification": "ἁπλῶς, Aristotle's 'simply, without qualification'; Morpheus ranks a glossless adverbial of ἁπλόος first and glosses ἁπλῶς 'singly, in one way'."
+  },
+  {
+    "surface": "koni/a",
+    "lemma": "koni/a",
+    "parse": "fem nom/voc sg (attic epic doric ionic aeolic)",
+    "gloss": "lye; dust",
+    "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
+  },
+  {
+    "surface": "koni/as",
+    "lemma": "koni/a",
+    "parse": "fem gen sg (attic epic doric ionic aeolic)",
+    "gloss": "lye; dust",
+    "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
+  },
+  {
+    "surface": "koni/an",
+    "lemma": "koni/a",
+    "gloss": "lye; dust",
+    "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
+  },
+  {
+    "surface": "koni/a|",
+    "lemma": "koni/a",
+    "parse": "fem dat sg (attic epic doric ionic aeolic)",
+    "gloss": "lye; dust",
+    "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
   }
 ]
