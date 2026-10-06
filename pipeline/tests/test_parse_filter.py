@@ -344,47 +344,71 @@ def test_eron_reads_loving_not_earth():
     assert (out[0]["lemma"], out[0]["parse"]) == ("e)ra/w1", "pres part act masc nom sg (attic epic ionic)")
 
 
-def test_every_override_moves_or_reglosses_a_reading_morpheus_offers():
-    """Over the built corpus: for every token whose surface has an override,
-    the front reading afterwards is one Morpheus offered for that surface (same
-    lemma, parse and LSJ keys) and carries what the entry asks for: its lemma,
-    parse and gloss in front, its other_glosses behind. So an entry never
-    invents a reading, never changes which LSJ entry a reading opens, and never
-    names a lemma or parse the surface does not have. It holds on a build made
-    before the overrides or after them.
+def _raw_morpheus_readings(surfaces):
+    """Each surface's readings as greek-analyses.txt holds them (stage 4's own
+    parser, so <foreign> tags are already stripped), before any filter,
+    short-def extension or override: what Moerbeke applies the table to."""
+    from aristotle_pipeline.config import Manifest
+    from aristotle_pipeline.stage4_morphology import parse_analysis_line
+
+    path = Manifest.for_work("EN").diogenes_data() / "greek-analyses.txt"
+    if not path.exists():
+        pytest.skip("requires Diogenes' greek-analyses.txt")
+    found = {}
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            key, _, value = line.partition("\t")
+            if key in surfaces:
+                found[key] = [
+                    {"lemma": a["lemma"], "gloss": a["gloss"].strip(), "parse": a["parse"]}
+                    for a in parse_analysis_line(value)
+                ]
+    return found
+
+
+def test_every_override_does_what_it_promises_on_the_raw_morpheus_readings():
+    """Apply each entry to its surface's raw Morpheus readings and check the
+    promise: the front reading has the entry's lemma, parse and gloss; every
+    other_glosses lemma names a reading behind the front one, and those carry
+    the gloss; nothing is invented; and the entry changes something, so an
+    apply that returned its input would fail here. The surface must be a key
+    of the table itself (entries for forms absent from Aristotle are allowed).
     """
-    dist = ROOT / "build" / "dist"
-    works = sorted(p.parent.name for p in dist.glob("*/analyses.json"))
-    if not works:
-        pytest.skip("requires a local build/dist")
+    raw = _raw_morpheus_readings(set(MORPHOLOGY_OVERRIDES))
+    assert raw, "examined no override surface at all"
 
-    seen, invented, unsatisfied = set(), [], []
-    for work in works:
-        analyses = json.loads(
-            (dist / work / "analyses.json").read_text(encoding="utf-8"))
-        for surface, entry in MORPHOLOGY_OVERRIDES.items():
-            parses = analyses.get(surface)
-            if not parses:
-                continue
-            seen.add(surface)
-            top = apply_morphology_override([dict(p) for p in parses], surface)[0]
-            if not any(
-                p["lemma"] == top["lemma"] and p["parse"] == top["parse"]
-                and p["lsj"] == top["lsj"] for p in parses
-            ):
-                invented.append((work, surface))
-            out = apply_morphology_override([dict(p) for p in parses], surface)
-            others = entry.get("other_glosses", {})
-            if not (
-                top["lemma"] == entry.get("lemma", top["lemma"])
-                and top["parse"] == entry.get("parse", top["parse"])
-                and top["gloss"] == entry.get("gloss", top["gloss"])
-                and all(p["gloss"] == others[p["lemma"]]
-                        for p in out[1:] if p["lemma"] in others)
-            ):
-                unsatisfied.append((work, surface))
+    problems = []
+    for surface, entry in MORPHOLOGY_OVERRIDES.items():
+        readings = raw.get(surface)
+        if not readings:
+            problems.append((surface, "not a key of greek-analyses.txt"))
+            continue
+        out = apply_morphology_override([dict(p) for p in readings], surface)
+        top = out[0]
+        if out == readings:
+            problems.append((surface, "changes nothing"))
+        if (top["lemma"], top["parse"]) not in {(p["lemma"], p["parse"]) for p in readings}:
+            problems.append((surface, "invented a reading"))
+        if top["lemma"] != entry.get("lemma", top["lemma"]):
+            problems.append((surface, "lemma not first"))
+        if top["parse"] != entry.get("parse", top["parse"]):
+            problems.append((surface, "parse not first"))
+        if top["gloss"] != entry.get("gloss", top["gloss"]):
+            problems.append((surface, "gloss not applied"))
+        for lemma, gloss in entry.get("other_glosses", {}).items():
+            behind = [p for p in out[1:] if p["lemma"] == lemma]
+            if not behind:
+                problems.append((surface, f"other_glosses {lemma} matches no reading"))
+            elif any(p["gloss"] != gloss for p in behind):
+                problems.append((surface, f"other_glosses {lemma} not applied"))
 
-    assert seen, "examined no override surface at all"
-    assert invented == [], f"override invented a reading: {invented[:5]}"
-    assert unsatisfied == [], f"override not carried out: {unsatisfied[:5]}"
-    assert sorted(set(MORPHOLOGY_OVERRIDES) - seen) == [], "overrides that never fire"
+    assert problems == [], f"{len(problems)} problems: {problems[:8]}"
+
+
+def test_the_raw_check_fails_when_apply_does_nothing(monkeypatch):
+    """The check above must not pass on an identity apply."""
+    monkeypatch.setattr(
+        sys.modules[__name__], "apply_morphology_override",
+        lambda parses, surface, overrides=None: parses)
+    with pytest.raises(AssertionError):
+        test_every_override_does_what_it_promises_on_the_raw_morpheus_readings()
