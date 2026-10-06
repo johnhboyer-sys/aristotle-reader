@@ -13,6 +13,37 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-10-06 — DEPLOYED: word cards read common words correctly (PR #155)
+
+`gh-pages 821abd67 → 3c5e21be`, source `origin/main` `5c4dbabaa8` (the #155 merge).
+`npm run deploy -- --verify --allow-data-deletions=data/lemmata` (John asked for the deploy).
+
+**What shipped:** #155 — a reviewed table of 430 Morpheus overrides
+(`pipeline/aristotle_pipeline/morphology_overrides.json`) applied in stage 7: οὐ "not" (was "u"),
+μή "not" ("will"), ἄν "modal particle" ("he came"), the article "the" ("the following"), δῆλον
+"clear" ("Delos"), λέγω "say" (λέγος "lewd" first), οἶδα "know" ("behold!"), ἔχει "have" 3rd sg;
+LSJ's `<foreign>` tags stripped from every gloss (1,189 before). Rule (John): an override fixes a
+wrong word or a junk gloss only. Reviewed by Grok (mechanism + 70 sampled entries).
+
+**Build:** full `build:public` in the main checkout (Node 22.23.1): 41 works, stage2 PASS
+throughout, preflight ok, shared LSJ verified, 6,586 pages (6,609 last time: see deletions).
+
+**Gates:** link integrity **0 broken** (6,589 pages / 565,831 links / 434,070 anchors). Leak check
+at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`).
+Dangling-reference gate: 5 removed bundles, 0 referenced; 5/5 added bundles referenced.
+
+**Deploy diff:** 604 files — 14 A / 529 M / 60 D / 1 R. **Deletions, all intended:** 28 lemma
+pages and their `data/lemmata/*.json` for readings the overrides moved off the front, which no
+token now resolves to (legos, era, boa, eidoi, hyphe, anoos, elegos, apis, the invented -όω verbs
+androo/gynaikoo/podoo/asteroo/hymenoo/apeiroo, the blank stubs oinon/piston/zoion/phys, …) —
+hence `--allow-data-deletions=data/lemmata`; 4 rehashed `_astro` bundles. Added: 5 lemma pages
+for the words now shown first (apeiros-2, konia, o, protos, zoon).
+
+**Live-verified:** the script's URL set as expected (old bundles and `/bonitz/` 404). From the live
+`data/Meta/analyses.json`: `ou)` → "not", `mh/` → "not", `a)/n` → a)/n1 "modal particle",
+`e)/xei` → e)/xw "have, hold"; 0 `<foreign>` tags. `/lemma/legos/` and `/lemma/era/` 404;
+`/lemma/protos/` and `/lemma/zoon/` 200. Not checked in a browser.
+
 ## 2026-09-30 — DEPLOYED: Lyceum corrections (PR #124); Lin and Mech English cleaned, Lin's real Bekker breaks (PR #125)
 
 `gh-pages e3c745f3 → 821abd67`, source `origin/main` `a667a32202` (the #125 merge; #124 is
