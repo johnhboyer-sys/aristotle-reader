@@ -269,7 +269,7 @@
     "other_glosses": {
       "o(": "the"
     },
-    "justification": "ἥ, accented, is the relative pronoun; Morpheus ranks the article 'the following' first."
+    "justification": "ἥ, accented, is mostly the relative pronoun (ἥ τε; ἐπιστήμη τις ἣ θεωρεῖ τὸ ὄν, Meta. 1003a21); Morpheus ranks the article 'the following' first. Exception: about 57 of 304 are the demonstrative 'the one … the other', ἣ μὲν … ἣ δέ (31 with μέν, 26 with δέ; EN 1151a27–28, 1119a22; EE 1219a37)."
   },
   {
     "surface": "a(/",
@@ -407,9 +407,6 @@
     "surface": "o(/ti",
     "lemma": "o(/ti2",
     "gloss": "that, because",
-    "other_glosses": {
-      "o(/ti1": "(with a superlative) as … as possible"
-    },
     "justification": "ὅτι is the conjunction 'that, because'; Morpheus ranks ὅστις first and glosses the conjunction 'for what, wherefore'."
   },
   {
@@ -457,7 +454,6 @@
     "surface": "o(/t'",
     "lemma": "o(/te",
     "other_glosses": {
-      "o(/ti1": "(with a superlative) as … as possible",
       "o(/ti2": "that, because"
     },
     "justification": "ὅτ', elided ὅτε 'when'; Morpheus ranks ὅστε 'who, which' first."
@@ -506,10 +502,6 @@
   {
     "surface": "w(/s",
     "lemma": "w(s",
-    "gloss": "as, that, so that",
-    "other_glosses": {
-      "w(s": "as, that, so that"
-    },
     "justification": "ὥς is the adverb 'thus' or ὡς before an enclitic; Morpheus ranks a Doric accusative of ὅς first."
   },
   {
@@ -615,8 +607,7 @@
   {
     "surface": "koni/h|sin",
     "lemma": "koni/a",
-    "gloss": "lye; dust",
-    "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first. Here in quoted verse (PA 673a16), 'dust'."
+    "justification": "κονίῃσιν, from κονία 'dust', in quoted verse (PA 673a16); Morpheus ranks κόνιος 'dusty' first."
   },
   {
     "surface": "a)ndri/",
@@ -958,256 +949,157 @@
     "surface": "dei=",
     "lemma": "de/w2",
     "parse": "pres ind act 3rd sg (attic epic doric ionic)",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δεῖ, impersonal 'it is necessary, one must', third singular of δέω (B); Morpheus ranks δέω (A) 'bind' first, and its first δέω (B) slot is a second-person middle."
   },
   {
     "surface": "dei=n",
     "lemma": "de/w2",
     "parse": "pres inf act (attic epic doric)",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δεῖν, infinitive of impersonal δεῖ 'one must'; Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "e)/dei",
     "lemma": "de/w2",
     "parse": "imperf ind act 3rd sg (attic epic)",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "ἔδει, imperfect of impersonal δεῖ 'it was necessary'; Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/oi",
     "lemma": "de/w2",
     "parse": "pres opt act 3rd sg",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέοι, optative of impersonal δεῖ; Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/h|",
     "lemma": "de/w2",
     "parse": "pres subj act 3rd sg",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέῃ, subjunctive of impersonal δεῖ (ἐὰν δέῃ δεῖξαι, APo 77a11); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deou/shs",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δεούσης, 'lacking' (μιᾶς δεούσης εἴκοσιν, 'twenty less one', HA 522a31); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "dei=tai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/ontai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "dei=sqai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menos",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nwn",
     "lemma": "de/w2",
     "parse": "pres part mp masc/neut gen pl",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nois",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menon",
     "lemma": "de/w2",
     "parse": "pres part mp neut nom/voc/acc sg",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menoi",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nw|",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/meqa",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/omai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "e)dei=to",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/htai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nhn",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nh",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/menai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deo/mena",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "e)deo/mhn",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nou",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deome/nhs",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "deoi/meq'",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/wntai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/oito",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
     "surface": "de/ointo",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
     "justification": "δέομαι 'need, ask' (middle of δέω B), as in δεῖται τῆς ἀναπνοῆς (DA 420b25); Morpheus ranks δέω (A) 'bind' first."
   },
   {
@@ -1981,14 +1873,12 @@
     "surface": "ei)/rhtai",
     "lemma": "e)rw=",
     "parse": "perf ind mp 3rd sg (epic ionic)",
-    "gloss": "say, speak",
     "justification": "εἴρηται 'it has been said', perfect passive of the verb of saying (ἐρῶ); Morpheus ranks ἔρομαι 'ask' first."
   },
   {
     "surface": "ei)rh/setai",
     "lemma": "e)rw=",
     "parse": "fut ind mid 3rd sg",
-    "gloss": "say, speak",
     "justification": "εἰρήσεται 'will be said' (DA 420b22); Morpheus ranks an Ionic future of ἔρομαι 'ask' first."
   },
   {
@@ -2010,68 +1900,40 @@
     "surface": "a)nagkai=on",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc sg",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/wn",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut gen pl",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai=a",
     "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/ou",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut gen sg",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "ta)nagkai=a",
     "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/ois",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut dat pl",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkai/w|",
     "lemma": "a)nagkai=os",
     "parse": "masc/neut dat sg",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
     "justification": "ἀναγκαῖος 'necessary'; Morpheus ranks ἀναγκαῖον, τό 'place of constraint, prison' first and glosses the adjective 'of, with, or by force'."
   },
   {
@@ -2447,7 +2309,6 @@
   {
     "surface": "fu/sin",
     "lemma": "fu/sis",
-    "gloss": "nature",
     "justification": "φύσιν, accusative of φύσις; Morpheus ranks a glossless participle of φύω first."
   },
   {
@@ -2483,43 +2344,29 @@
   {
     "surface": "a(plw=s",
     "lemma": "a(plw=s",
-    "gloss": "simply, without qualification",
-    "justification": "ἁπλῶς, Aristotle's 'simply, without qualification'; Morpheus ranks a glossless adverbial of ἁπλόος first and glosses ἁπλῶς 'singly, in one way'."
+    "justification": "ἁπλῶς 'simply, without qualification'; Morpheus ranks a glossless adverbial of ἁπλόος first."
   },
   {
     "surface": "koni/a",
     "lemma": "koni/a",
     "parse": "fem nom/voc sg (attic epic doric ionic aeolic)",
-    "gloss": "lye; dust",
-    "other_glosses": {
-      "koni/a": "lye; dust"
-    },
     "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
   },
   {
     "surface": "koni/as",
     "lemma": "koni/a",
     "parse": "fem gen sg (attic epic doric ionic aeolic)",
-    "gloss": "lye; dust",
-    "other_glosses": {
-      "koni/a": "lye; dust"
-    },
     "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
   },
   {
     "surface": "koni/an",
     "lemma": "koni/a",
-    "gloss": "lye; dust",
     "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
   },
   {
     "surface": "koni/a|",
     "lemma": "koni/a",
     "parse": "fem dat sg (attic epic doric ionic aeolic)",
-    "gloss": "lye; dust",
-    "other_glosses": {
-      "koni/a": "lye; dust"
-    },
     "justification": "κονία 'lye' among liquids and residues (Mete. 384a13, 389a10) or 'dust'; Morpheus ranks κόνιος 'dusty' first."
   },
   {
@@ -2610,80 +2457,54 @@
     "surface": "e)rou=men",
     "lemma": "e)rw=",
     "parse": "fut ind act 1st pl (attic epic doric)",
-    "gloss": "say, speak",
     "justification": "ἐροῦμεν 'we shall say', the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "e)rei=",
     "lemma": "e)rw=",
     "parse": "fut ind act 3rd sg (attic epic doric ionic)",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
     "justification": "ἐρεῖ 'will say' (Cat. 6a10, Poet. 1457b18), the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "e)rei=s",
     "lemma": "e)rw=",
     "parse": "fut ind act 2nd sg (attic epic doric ionic)",
-    "gloss": "say, speak",
     "justification": "ἐρεῖς 'you will say' (Cat. 3a4), the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "e)rei=n",
     "lemma": "e)rw=",
     "parse": "fut inf act (attic epic doric)",
-    "gloss": "say, speak",
     "justification": "ἐρεῖν 'to say' (Rhet. 1412a32), the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "e)rou=si",
     "lemma": "e)rw=",
     "parse": "fut ind act 3rd pl (attic epic doric)",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
     "justification": "ἐροῦσι 'they will say' (EN 1141a30), the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "e)rou=sin",
     "lemma": "e)rw=",
     "parse": "fut ind act 3rd pl (attic epic doric)",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
     "justification": "ἐροῦσιν 'they will say' (SE 173a6), the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "e)rw=",
     "lemma": "e)rw=",
     "parse": "fut ind act 1st sg (attic epic doric)",
-    "gloss": "say, speak",
     "justification": "ἐρῶ 'I will say' (Phgn. 806a27, Rhet. 1415b14), the future of the verb of saying, ἐρῶ 'will say'; Morpheus ranks ἐρέω/ἐράω 'love' first."
   },
   {
     "surface": "deh/sei",
     "lemma": "de/w2",
     "parse": "fut ind act 3rd sg",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δεήσει 'it will be necessary', future of impersonal δεῖ, in 35 of 36; Rhet. 1385a32 (ἐν λύπῃ καὶ δεήσει) is the noun δέησις. Morpheus ranks δέησις first."
   },
   {
     "surface": "deh/sh|",
     "lemma": "de/w2",
     "parse": "aor subj act 3rd sg",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
     "justification": "δεήσῃ, aorist subjunctive of impersonal δεῖ (ὅταν δεήσῃ γεννᾶν, GA 731a11); Morpheus ranks δέησις first."
   },
   {
@@ -2700,10 +2521,8 @@
     "surface": "a)nagkai/a",
     "lemma": "a)nagkai=os",
     "parse": "fem nom/voc sg (attic doric aeolic)",
-    "gloss": "necessary",
     "other_glosses": {
-      "a)nagkai/h": "necessary",
-      "a)nagkai=os": "necessary"
+      "a)nagkai/h": "necessary"
     },
     "justification": "ἀναγκαῖος 'necessary' (τῆς ἀναγκαίας τροφῆς, Pol. 1257b14); Morpheus ranks ἀνάγκη first and glosses the adjective 'of, with, or by force'."
   },
@@ -2711,10 +2530,8 @@
     "surface": "a)nagkai/as",
     "lemma": "a)nagkai=os",
     "parse": "fem gen sg (attic doric aeolic)",
-    "gloss": "necessary",
     "other_glosses": {
-      "a)nagkai/h": "necessary",
-      "a)nagkai=os": "necessary"
+      "a)nagkai/h": "necessary"
     },
     "justification": "ἀναγκαῖος 'necessary' (τῆς ἀναγκαίας τροφῆς, Pol. 1257b14); Morpheus ranks ἀνάγκη first and glosses the adjective 'of, with, or by force'."
   },
@@ -2722,7 +2539,6 @@
     "surface": "a)nagkai/an",
     "lemma": "a)nagkai=os",
     "parse": "fem acc sg (attic doric aeolic)",
-    "gloss": "necessary",
     "other_glosses": {
       "a)nagkai/h": "necessary"
     },
@@ -2732,68 +2548,43 @@
     "surface": "a)nagkai=ai",
     "lemma": "a)nagkai=os",
     "parse": "fem nom/voc pl",
-    "gloss": "necessary",
     "justification": "ἀναγκαῖος 'necessary' (τῆς ἀναγκαίας τροφῆς, Pol. 1257b14); Morpheus ranks ἀνάγκη first and glosses the adjective 'of, with, or by force'."
   },
   {
     "surface": "a)nagkaio/teron",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc comp sg",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
+    "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "a)nagkaio/tata",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc superl pl",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
+    "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "a)nagkaio/taton",
     "lemma": "a)nagkai=os",
     "parse": "neut nom/voc/acc superl sg",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
+    "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "a)nagkaiote/ra",
     "lemma": "a)nagkai=os",
     "parse": "fem nom/voc comp sg (attic doric aeolic)",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
+    "justification": "ἀναγκαῖος, the neuter or feminine reading the context needs (ἀναγκαιότερον εἶναι, EN 1162a18); Morpheus ranks an adverbial or masculine slot first."
   },
   {
     "surface": "fu/sei",
     "lemma": "fu/sis",
     "parse": "fem dat sg (attic ionic)",
-    "gloss": "nature",
-    "other_glosses": {
-      "fu/sis": "nature"
-    },
-    "justification": "φύσει, dative of φύσις 'nature' (φύσει, 'by nature'); Morpheus glosses φύσις 'origin' and ranks a dual slot first."
+    "justification": "φύσει, dative of φύσις (φύσει, 'by nature'); Morpheus ranks a dual slot first."
   },
   {
     "surface": "fu/sis",
     "lemma": "fu/sis",
     "parse": "fem nom sg",
-    "gloss": "nature",
-    "other_glosses": {
-      "fu/sis": "nature"
-    },
-    "justification": "φύσις 'nature'; Morpheus glosses it 'origin' and ranks an accusative plural slot first."
+    "justification": "φύσις, nominative singular; Morpheus ranks an accusative plural slot first."
   },
   {
     "surface": "a)/peiroi",
@@ -2801,227 +2592,10 @@
     "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. Five of 31 are 'inexperienced' (EN 1120b12, Rhet. 1383a30, 1389a31, SE 164b27, 165a16); that reading stays second."
   },
   {
-    "surface": "a)nagkai/ous",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkai/ws",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessarily",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkai=os",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkaio/tera",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkaio/terai",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkaiota/tas",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkaiota/th",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkaiota/thn",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "a)nagkaiota/twn",
-    "lemma": "a)nagkai=os",
-    "gloss": "necessary",
-    "other_glosses": {
-      "a)nagkai=os": "necessary"
-    },
-    "justification": "ἀναγκαῖος 'necessary'; Morpheus glosses it 'of, with, or by force' and ranks an adverbial or masculine slot first."
-  },
-  {
-    "surface": "de/on",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "de/onta",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "de/ontos",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "de/ousi",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "de/wn",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "deh/seis",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "deh/sesqai",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
     "surface": "deh/setai",
     "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "deh/soito",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "deh/sontai",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqe/ntas",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqe/ntes",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqe/ntos",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqe/ntwn",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqei/s",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqei/shs",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqei=en",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqh=|",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "dehqw=sin",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "deo/ntwn",
-    "other_glosses": {
-      "de/w2": "lack, need; impers. δεῖ: it is necessary, one must",
-      "dei=": "lack, need; impers. δεῖ: it is necessary, one must"
-    },
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
-  },
-  {
-    "surface": "deu/etai",
-    "lemma": "de/w2",
-    "gloss": "lack, need; impers. δεῖ: it is necessary, one must",
-    "justification": "δέω (B) 'lack, need', impersonal δεῖ 'one must'; one gloss on every form."
+    "parse": "fut ind mid 3rd sg",
+    "justification": "δεήσεται 'will need', future middle of δέω (B), in all 7 (οὐδὲ φίλου δεήσεται, EE 1244b9; EN 1169b3, 1178b6); Morpheus's first δέω (B) reading is an epic aorist subjunctive."
   },
   {
     "surface": "e)/pi",
@@ -3030,292 +2604,10 @@
     "justification": "ἐπί: in Aristotle often 'in the case of' (ἐπὶ τῶν ζῴων) as well as 'on' and 'toward'; Morpheus's 'being upon or supported upon a surface' is LSJ's first literal sense only."
   },
   {
-    "surface": "e)ri/ois",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "e)ri/wn",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "e)roi/meq'",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
     "surface": "e)rw=n",
     "lemma": "e)ra/w1",
     "parse": "pres part act masc nom sg (attic epic ionic)",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
     "justification": "ἐρῶν 'loving, the lover' (ὁ ἐρῶν, EE 1238b37; Top. 146a10; all 7), present participle of ἐράω; Morpheus ranks ἔρα 'earth' first."
-  },
-  {
-    "surface": "ei)/rhka",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)/rhke",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)/rhken",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)/rhntai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rh/kamen",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rh/kasi",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rh/kasin",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rh/sqw",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rh/sqwsan",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rh=sqai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhke/nai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhko/sin",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhko/ta",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhko/tas",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhko/tes",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhko/tos",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhko/twn",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhkw/s",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/na",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nais",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nas",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nh",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nhn",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nhs",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nh|",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/noi",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nois",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/non",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nos",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nou",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nous",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nwn",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "ei)rhme/nw|",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "fu/seis",
-    "lemma": "fu/sis",
-    "gloss": "nature",
-    "other_glosses": {
-      "fu/sis": "nature"
-    },
-    "justification": "φύσις 'nature'; Morpheus glosses it 'origin'."
-  },
-  {
-    "surface": "fu/sesin",
-    "lemma": "fu/sis",
-    "gloss": "nature",
-    "justification": "φύσις 'nature'; Morpheus glosses it 'origin'."
-  },
-  {
-    "surface": "fu/sewn",
-    "lemma": "fu/sis",
-    "gloss": "nature",
-    "justification": "φύσις 'nature'; Morpheus glosses it 'origin'."
-  },
-  {
-    "surface": "fu/sews",
-    "lemma": "fu/sis",
-    "gloss": "nature",
-    "justification": "φύσις 'nature'; Morpheus glosses it 'origin'."
   },
   {
     "surface": "le/cei",
@@ -3328,7 +2620,6 @@
   {
     "surface": "o(/q'",
     "other_glosses": {
-      "o(/ti1": "(with a superlative) as … as possible",
       "o(/ti2": "that, because"
     },
     "justification": "one gloss for the word on every card (o(/ti1)."
@@ -3339,138 +2630,6 @@
       "o(": "the"
     },
     "justification": "the article; Morpheus glosses ὁ, ἡ, τό 'the following', a demonstrative use that is not what the article means in Aristotle's prose."
-  },
-  {
-    "surface": "r(hqe/n",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqe/nta",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqe/nti",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqe/ntos",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqe/ntwn",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei/h",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei/s",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei/sais",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei/sas",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei/shs",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei/sh|",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei=sa",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei=sai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqei=si",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqh/setai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqh/sontai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqh=nai",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqhso/menon",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqhsome/nois",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
-  },
-  {
-    "surface": "r(hqhsome/nwn",
-    "lemma": "e)rw=",
-    "gloss": "say, speak",
-    "other_glosses": {
-      "e)rw=": "say, speak"
-    },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
   },
   {
     "surface": "e)ra=n",

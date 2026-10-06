@@ -289,7 +289,7 @@ def test_prepositions_read_their_common_senses():
         assert top["gloss"].startswith("according to"), surface
 
 
-def test_physei_reads_nature_on_its_dative_reading():
+def test_physei_opens_on_its_dative_reading():
     parses = [
         {"lemma": "fu/sis", "gloss": "origin", "parse": "fem nom/voc/acc dual (attic epic)",
          "lsj": ["fu/sis"]},
@@ -299,8 +299,7 @@ def test_physei_reads_nature_on_its_dative_reading():
 
     out = resolve_parses([dict(p) for p in parses], {}, "fu/sei")
 
-    assert (out[0]["parse"], out[0]["gloss"]) == ("fem dat sg (attic ionic)", "nature")
-    assert {p["gloss"] for p in out} == {"nature"}, "every φύσις card reads the same"
+    assert out[0] == parses[2], "the dative, with Morpheus's own gloss"
 
 
 def test_legw_first_person_reads_say_not_lewd():
@@ -342,6 +341,34 @@ def test_eron_reads_loving_not_earth():
     out = resolve_parses([dict(p) for p in parses], {}, "e)rw=n")
 
     assert (out[0]["lemma"], out[0]["parse"]) == ("e)ra/w1", "pres part act masc nom sg (attic epic ionic)")
+
+
+def test_dehsetai_opens_on_the_future_with_morpheus_gloss():
+    parses = [
+        {"lemma": "de/w2", "gloss": "lack, miss, stand in need of",
+         "parse": "aor subj mid 3rd sg (epic)", "lsj": ["de/w2"]},
+        {"lemma": "de/w2", "gloss": "lack, miss, stand in need of",
+         "parse": "fut ind mid 3rd sg", "lsj": ["de/w2"]},
+    ]
+
+    out = resolve_parses([dict(p) for p in parses], {}, "deh/setai")
+
+    assert out[0] == parses[1], "the future, with Morpheus's own gloss"
+
+
+def test_a_partial_but_real_gloss_is_left_alone():
+    """John's rule: an override fixes a wrong word or a junk gloss, not a gloss
+    that names one sense of the right word (ἀναγκαῖος 'of, with, or by force')."""
+    parses = [
+        {"lemma": "a)nagkai=on", "gloss": "place of constraint, prison",
+         "parse": "neut nom/voc/acc sg", "lsj": ["a)nagkai=on"]},
+        {"lemma": "a)nagkai=os", "gloss": "of, with, or by force",
+         "parse": "neut nom/voc/acc sg", "lsj": ["a)nagkai=os"]},
+    ]
+
+    out = resolve_parses([dict(p) for p in parses], {}, "a)nagkai=on")
+
+    assert out[0] == parses[1]
 
 
 def _raw_morpheus_readings(surfaces):
