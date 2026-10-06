@@ -3052,10 +3052,12 @@
   },
   {
     "surface": "e)rw=n",
+    "lemma": "e)ra/w1",
+    "parse": "pres part act masc nom sg (attic epic ionic)",
     "other_glosses": {
       "e)rw=": "say, speak"
     },
-    "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
+    "justification": "ἐρῶν 'loving, the lover' (ὁ ἐρῶν, EE 1238b37; Top. 146a10; all 7), present participle of ἐράω; Morpheus ranks ἔρα 'earth' first."
   },
   {
     "surface": "ei)/rhka",
@@ -3469,5 +3471,11 @@
       "e)rw=": "say, speak"
     },
     "justification": "the verb of saying (ἐρῶ, εἴρηκα, εἴρηται, ἐρρήθη): Morpheus glosses it 'will say or speak'; the table reads 'say, speak' on every form."
+  },
+  {
+    "surface": "e)ra=n",
+    "lemma": "e)ra/w1",
+    "parse": "pres inf act (attic doric)",
+    "justification": "ἐρᾶν 'to love' (τοῦ ἐρᾶν, EN 1167a4; Pol. 1262a34; all 8), present infinitive of ἐράω; Morpheus ranks a Doric genitive of ἔρα 'earth' first."
   }
 ]

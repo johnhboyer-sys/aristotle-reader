@@ -331,6 +331,19 @@ def test_apeiroi_reads_infinite_first_and_keeps_inexperienced_second():
     assert [p["lemma"] for p in out] == ["a)/peiros2", "a)/peiros1"]
 
 
+def test_eron_reads_loving_not_earth():
+    parses = [
+        {"lemma": "e)/ra", "gloss": "earth", "parse": "fem gen pl", "lsj": ["e)/ra"]},
+        {"lemma": "e)ra/w1", "gloss": "love", "parse": "pres part act masc voc sg", "lsj": ["e)ra/w1"]},
+        {"lemma": "e)ra/w1", "gloss": "love", "parse": "pres part act masc nom sg (attic epic ionic)",
+         "lsj": ["e)ra/w1"]},
+    ]
+
+    out = resolve_parses([dict(p) for p in parses], {}, "e)rw=n")
+
+    assert (out[0]["lemma"], out[0]["parse"]) == ("e)ra/w1", "pres part act masc nom sg (attic epic ionic)")
+
+
 def test_every_override_moves_or_reglosses_a_reading_morpheus_offers():
     """Over the built corpus: for every token whose surface has an override,
     the front reading afterwards is one Morpheus offered for that surface (same
