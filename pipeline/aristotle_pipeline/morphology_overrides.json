@@ -2636,5 +2636,174 @@
     "lemma": "e)ra/w1",
     "parse": "pres inf act (attic doric)",
     "justification": "ἐρᾶν 'to love' (τοῦ ἐρᾶν, EN 1167a4; Pol. 1262a34; all 8), present infinitive of ἐράω; Morpheus ranks a Doric genitive of ἔρα 'earth' first."
+  },
+  {
+    "surface": "ou)ki/",
+    "lemma": "ou)",
+    "gloss": "not",
+    "justification": "οὐκί, epic emphatic negative; Morpheus glosses it 'u'. (From homer-reader; not in Aristotle.)"
+  },
+  {
+    "surface": "x'",
+    "lemma": "a)/n1",
+    "gloss": "modal particle",
+    "justification": "χ', elided epic κε (the modal particle) before a rough breathing; Morpheus glosses it 'he came'. (From homer-reader.)"
+  },
+  {
+    "surface": "i(/ppoisi",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος 'horse' (epic forms); Morpheus glosses it 'a riding-dress'. (From homer-reader.)"
+  },
+  {
+    "surface": "i(/ppoisin",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος 'horse' (epic forms); Morpheus glosses it 'a riding-dress'. (From homer-reader.)"
+  },
+  {
+    "surface": "i(/ppoiin",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος 'horse' (epic forms); Morpheus glosses it 'a riding-dress'. (From homer-reader.)"
+  },
+  {
+    "surface": "i(/ppoio",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος 'horse' (epic forms); Morpheus glosses it 'a riding-dress'. (From homer-reader.)"
+  },
+  {
+    "surface": "i(/ppw",
+    "lemma": "i(/ppos",
+    "gloss": "horse",
+    "justification": "ἵππος 'horse' (epic forms); Morpheus glosses it 'a riding-dress'. (From homer-reader.)"
+  },
+  {
+    "surface": "xwo/menos",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "xwo/menon",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "xwo/menoi",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "xwome/nh",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "xwome/noio",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "xwome/nou",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "xwome/nhs",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "xwome/nw|",
+    "lemma": "xw/omai",
+    "justification": "present participle of χώομαι 'be angry'; Morpheus ranks a glossless χάω and a future participle of χάζομαι first. (From homer-reader.)"
+  },
+  {
+    "surface": "oi)/noio",
+    "lemma": "oi)=nos",
+    "gloss": "wine",
+    "justification": "οἴνοιο, epic genitive of οἶνος 'wine'; Morpheus ranks the glossless οἶνον first and glosses οἶνος 'the ace'. (From homer-reader.)"
+  },
+  {
+    "surface": "*danaw=n",
+    "lemma": "*danaoi/",
+    "justification": "Δαναῶν, genitive of Δαναοί 'the Danaans'; Morpheus ranks a glossless Δανάη first. Table key starred, as greek-analyses.txt files proper names. (From homer-reader.)"
+  },
+  {
+    "surface": "sa/kos",
+    "lemma": "sa/kos",
+    "gloss": "shield",
+    "justification": "σάκος 'shield'; Morpheus ranks σάκκος 'coarse cloth of hair' first and gives σάκος the same gloss. (From homer-reader.)"
+  },
+  {
+    "surface": "a)lkh=|",
+    "lemma": "a)lkh/",
+    "justification": "ἀλκῇ, dative of ἀλκή 'strength'; Morpheus ranks ἀλκάζω first. (From homer-reader.)"
+  },
+  {
+    "surface": "koni/h|si",
+    "lemma": "koni/a",
+    "justification": "Ionic κονίη 'dust' (LSJ κονία); Morpheus ranks κόνιος 'dusty' first. (From homer-reader.)"
+  },
+  {
+    "surface": "koni/hs",
+    "lemma": "koni/a",
+    "justification": "Ionic κονίη 'dust' (LSJ κονία); Morpheus ranks κόνιος 'dusty' first. (From homer-reader.)"
+  },
+  {
+    "surface": "koni/h|",
+    "lemma": "koni/a",
+    "justification": "Ionic κονίη 'dust' (LSJ κονία); Morpheus ranks κόνιος 'dusty' first. (From homer-reader.)"
+  },
+  {
+    "surface": "koni/hn",
+    "lemma": "koni/a",
+    "justification": "Ionic κονίη 'dust' (LSJ κονία); Morpheus ranks κόνιος 'dusty' first. (From homer-reader.)"
+  },
+  {
+    "surface": "koni/h",
+    "lemma": "koni/a",
+    "justification": "Ionic κονίη 'dust' (LSJ κονία); Morpheus ranks κόνιος 'dusty' first. (From homer-reader.)"
+  },
+  {
+    "surface": "koni/h|s",
+    "lemma": "koni/a",
+    "justification": "Ionic κονίη 'dust' (LSJ κονία); Morpheus ranks κόνιος 'dusty' first. (From homer-reader.)"
+  },
+  {
+    "surface": "kei=to",
+    "lemma": "kei=mai",
+    "justification": "a form of κεῖμαι 'lie, be laid'; Morpheus ranks κέω, a Hesychian stub, first. (From homer-reader.)"
+  },
+  {
+    "surface": "kei/mhn",
+    "lemma": "kei=mai",
+    "justification": "a form of κεῖμαι 'lie, be laid'; Morpheus ranks κέω, a Hesychian stub, first. (From homer-reader.)"
+  },
+  {
+    "surface": "ke/ontai",
+    "lemma": "kei=mai",
+    "justification": "a form of κεῖμαι 'lie, be laid'; Morpheus ranks κέω, a Hesychian stub, first. (From homer-reader.)"
+  },
+  {
+    "surface": "kei/meq'",
+    "lemma": "kei=mai",
+    "justification": "a form of κεῖμαι 'lie, be laid'; Morpheus ranks κέω, a Hesychian stub, first. (From homer-reader.)"
+  },
+  {
+    "surface": "kei=nto",
+    "lemma": "kei=mai",
+    "justification": "a form of κεῖμαι 'lie, be laid'; Morpheus ranks κέω, a Hesychian stub, first. (From homer-reader.)"
+  },
+  {
+    "surface": "kei/meqa",
+    "lemma": "kei=mai",
+    "justification": "a form of κεῖμαι 'lie, be laid'; Morpheus ranks κέω, a Hesychian stub, first. (From homer-reader.)"
+  },
+  {
+    "surface": "ke/sket'",
+    "lemma": "kei=mai",
+    "justification": "a form of κεῖμαι 'lie, be laid'; Morpheus ranks κέω, a Hesychian stub, first. (From homer-reader.)"
   }
 ]

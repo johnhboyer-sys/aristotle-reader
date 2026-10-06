@@ -385,6 +385,16 @@ def test_a_partial_but_real_gloss_is_left_alone():
     assert out[0] == parses[1]
 
 
+def test_homer_junk_fixes_hold_for_forms_aristotle_lacks():
+    """Moerbeke applies the table to any Greek text: οὐκί is not 'u' anywhere."""
+    parses = [{"lemma": "ou)", "gloss": "u",
+               "parse": "epic ionic (proclitic indeclform adverb)", "lsj": ["ou)"]}]
+
+    [top] = resolve_parses(parses, {}, "ou)ki/")
+
+    assert top["gloss"] == "not"
+
+
 def _raw_morpheus_readings(surfaces):
     """Each surface's readings as greek-analyses.txt holds them (stage 4's own
     parser, so <foreign> tags are already stripped), before any filter,
