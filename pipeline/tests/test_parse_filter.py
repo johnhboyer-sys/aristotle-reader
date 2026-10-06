@@ -289,6 +289,35 @@ def test_prepositions_read_their_common_senses():
         assert top["gloss"].startswith("according to"), surface
 
 
+def test_physei_reads_nature_on_its_dative_reading():
+    parses = [
+        {"lemma": "fu/sis", "gloss": "origin", "parse": "fem nom/voc/acc dual (attic epic)",
+         "lsj": ["fu/sis"]},
+        {"lemma": "fu/sis", "gloss": "origin", "parse": "fem dat sg (epic)", "lsj": ["fu/sis"]},
+        {"lemma": "fu/sis", "gloss": "origin", "parse": "fem dat sg (attic ionic)", "lsj": ["fu/sis"]},
+    ]
+
+    out = resolve_parses([dict(p) for p in parses], {}, "fu/sei")
+
+    assert (out[0]["parse"], out[0]["gloss"]) == ("fem dat sg (attic ionic)", "nature")
+    assert {p["gloss"] for p in out} == {"nature"}, "every φύσις card reads the same"
+
+
+def test_legw_first_person_reads_say_not_lewd():
+    parses = [
+        {"lemma": "le/gos", "gloss": "lewd", "parse": "masc/neut nom/voc/acc dual", "lsj": ["le/gos"]},
+        {"lemma": "le/gw1", "gloss": "gather, pick up", "parse": "pres ind act 1st sg", "lsj": ["le/gw"]},
+        {"lemma": "le/gw3", "gloss": "gather, pick up", "parse": "pres subj act 1st sg", "lsj": ["le/gw"]},
+        {"lemma": "le/gw3", "gloss": "gather, pick up", "parse": "pres ind act 1st sg", "lsj": ["le/gw"]},
+    ]
+
+    out = resolve_parses([dict(p) for p in parses], {}, "le/gw")
+
+    assert (out[0]["lemma"], out[0]["parse"]) == ("le/gw3", "pres ind act 1st sg")
+    assert out[0]["gloss"].startswith("say")
+    assert "gather, pick up" not in [p["gloss"] for p in out if p["lemma"] != "le/gw2"]
+
+
 def test_every_override_moves_or_reglosses_a_reading_morpheus_offers():
     """Over the built corpus: for every token whose surface has an override,
     the front reading afterwards is one Morpheus offered for that surface (same
