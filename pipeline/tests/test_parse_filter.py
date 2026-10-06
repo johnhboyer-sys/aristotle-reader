@@ -125,11 +125,75 @@ def test_resolve_parses_applies_the_override_for_its_token_key(monkeypatch):
     assert untouched == THEON
 
 
+ECHEI = [  # Morpheus's order for ἔχει
+    {"lemma": "e)/xis", "gloss": "viper", "parse": "masc nom/voc/acc dual (attic epic)",
+     "lsj": ["e)/xi^s"]},
+    {"lemma": "e)/xw", "gloss": "have, hold", "parse": "pres ind mp 2nd sg",
+     "lsj": ["e)/xw1", "e)/xw2"]},
+    {"lemma": "e)/xw", "gloss": "have, hold", "parse": "pres ind act 3rd sg",
+     "lsj": ["e)/xw1", "e)/xw2"]},
+]
+
+
+def test_a_parse_picks_which_reading_of_the_lemma_is_promoted():
+    table = _table(**{"e)/xei": {"lemma": "e)/xw", "parse": "pres ind act 3rd sg"}})
+
+    out = apply_morphology_override([dict(p) for p in ECHEI], "e)/xei", table)
+
+    assert out == [ECHEI[2], ECHEI[0], ECHEI[1]]
+
+
+def test_a_parse_must_match_exactly_or_the_entry_does_nothing():
+    for parse in ("pres ind act 3rd sg (attic)", "Pres ind act 3rd sg", "pres ind act"):
+        table = _table(**{"e)/xei": {"lemma": "e)/xw", "parse": parse, "gloss": "x"}})
+
+        out = apply_morphology_override([dict(p) for p in ECHEI], "e)/xei", table)
+
+        assert out == ECHEI, parse
+
+
+def test_other_glosses_reglosses_readings_behind_the_front_one():
+    parses = [
+        {"lemma": "a)/n1", "gloss": "he came", "parse": "indeclform (particle)",
+         "lsj": ["a)/n"]},
+        {"lemma": "a)/n2", "gloss": "he came", "parse": "attic (indeclform conj)",
+         "lsj": ["a)/n"]},
+        {"lemma": "a)na/", "gloss": "on board", "parse": "poetic indeclform (prep)",
+         "lsj": ["a)na/"]},
+    ]
+    table = _table(**{"a)/n": {"lemma": "a)/n1", "gloss": "modal particle",
+                               "other_glosses": {"a)/n2": "if", "a)/n1": "never"}}})
+
+    out = apply_morphology_override([dict(p) for p in parses], "a)/n", table)
+
+    assert [p["gloss"] for p in out] == ["modal particle", "if", "on board"]
+    assert [(p["lemma"], p["parse"], p["lsj"]) for p in out] == [
+        (p["lemma"], p["parse"], p["lsj"]) for p in parses]
+
+
+def test_other_glosses_alone_leaves_the_front_reading_and_order_alone():
+    parses = [
+        {"lemma": "i)/sos", "gloss": "equal", "parse": "fem acc pl", "lsj": ["i)/sos"]},
+        {"lemma": "oi)=da", "gloss": "behold!", "parse": "pres ind act 2nd sg",
+         "lsj": ["oi)=da"]},
+    ]
+    table = _table(**{"i)/sas": {"other_glosses": {"oi)=da": "know"}}})
+
+    out = apply_morphology_override([dict(p) for p in parses], "i)/sas", table)
+
+    assert out == [parses[0], {**parses[1], "gloss": "know"}]
+
+
 @pytest.mark.parametrize(
     "entries",
     [
         [{"surface": "x", "gloss": "g"}],  # no justification
-        [{"surface": "x", "justification": "j"}],  # neither lemma nor gloss
+        [{"surface": "x", "justification": "j"}],  # no lemma, gloss or other_glosses
+        [{"surface": "x", "parse": "p", "gloss": "g", "justification": "j"}],  # parse without lemma
+        [{"surface": "x", "other_glosses": {}, "justification": "j"}],
+        [{"surface": "x", "other_glosses": ["l", "g"], "justification": "j"}],
+        [{"surface": "x", "other_glosses": {"l": ""}, "justification": "j"}],
+        [{"surface": "x", "other_glosses": {"l": 1}, "justification": "j"}],
         [{"surface": "x", "gloss": "g", "justification": "j", "rank": 1}],
         [{"surface": "x", "gloss": "", "justification": "j"}],
         [{"surface": "x", "gloss": "g", "justification": "j"},
@@ -205,20 +269,18 @@ def test_theon_reads_god_and_men_the_particle():
 def test_every_override_moves_or_reglosses_a_reading_morpheus_offers():
     """Over the built corpus: for every token whose surface has an override,
     the front reading afterwards is one Morpheus offered for that surface (same
-    lemma, parse and LSJ keys), carries the entry's lemma, and differs from the
-    reading that was first. So an entry never invents a reading, never changes
-    which LSJ entry a reading opens, and is never dead weight.
-
-    It holds on a build made before the overrides or after them: on the latter
-    the front reading already carries the entry's lemma and gloss, which counts
-    as applied, not inert.
+    lemma, parse and LSJ keys) and carries what the entry asks for: its lemma,
+    parse and gloss in front, its other_glosses behind. So an entry never
+    invents a reading, never changes which LSJ entry a reading opens, and never
+    names a lemma or parse the surface does not have. It holds on a build made
+    before the overrides or after them.
     """
     dist = ROOT / "build" / "dist"
     works = sorted(p.parent.name for p in dist.glob("*/analyses.json"))
     if not works:
         pytest.skip("requires a local build/dist")
 
-    seen, invented, wrong_lemma, inert = set(), [], [], []
+    seen, invented, unsatisfied = set(), [], []
     for work in works:
         analyses = json.loads(
             (dist / work / "analyses.json").read_text(encoding="utf-8"))
@@ -233,16 +295,18 @@ def test_every_override_moves_or_reglosses_a_reading_morpheus_offers():
                 and p["lsj"] == top["lsj"] for p in parses
             ):
                 invented.append((work, surface))
-            if "lemma" in entry and top["lemma"] != entry["lemma"]:
-                wrong_lemma.append((work, surface))
-            if top == parses[0] and not (
-                parses[0]["lemma"] == entry.get("lemma", parses[0]["lemma"])
-                and parses[0]["gloss"] == entry.get("gloss", parses[0]["gloss"])
+            out = apply_morphology_override([dict(p) for p in parses], surface)
+            others = entry.get("other_glosses", {})
+            if not (
+                top["lemma"] == entry.get("lemma", top["lemma"])
+                and top["parse"] == entry.get("parse", top["parse"])
+                and top["gloss"] == entry.get("gloss", top["gloss"])
+                and all(p["gloss"] == others[p["lemma"]]
+                        for p in out[1:] if p["lemma"] in others)
             ):
-                inert.append((work, surface))
+                unsatisfied.append((work, surface))
 
     assert seen, "examined no override surface at all"
     assert invented == [], f"override invented a reading: {invented[:5]}"
-    assert wrong_lemma == [], f"override did not bring its lemma first: {wrong_lemma[:5]}"
-    assert inert == [], f"override changed nothing: {inert[:5]}"
+    assert unsatisfied == [], f"override not carried out: {unsatisfied[:5]}"
     assert sorted(set(MORPHOLOGY_OVERRIDES) - seen) == [], "overrides that never fire"

@@ -30,26 +30,42 @@ def load_morphology_overrides(path: Path = _OVERRIDE_PATH) -> dict[str, dict]:
     """Load and validate the curated surface-form overrides.
 
     morphology_overrides.json is a plain JSON list, reviewed by hand. Each
-    entry is an object:
+    entry is an object with these fields; all strings are Perseus Beta Code
+    or English, matched exactly (case-sensitive, no normalisation):
 
       surface        the token as the Morpheus table (Diogenes'
-                     greek-analyses.txt) spells its key, in Perseus Beta Code:
-                     "ou)k", "a)/n", "qew=n". Required; unique.
-      lemma          a Morpheus lemma, spelled as the table spells it ("a)/n1",
-                     "qeo/s"). If a reading with this lemma is among the
-                     surface's analyses, the first such reading moves to the
-                     front, whole: its parse and its LSJ keys come with it, and
-                     the others keep their order. If the front reading already
-                     has it, nothing moves. If no reading has it, the entry
-                     does nothing (its gloss is not applied either).
-      gloss          the gloss the front reading shows once the lemma rule has
-                     run.
+                     greek-analyses.txt) spells its key: "ou)k", "a)/n",
+                     "qew=n". Required; unique in the file.
+      lemma          a Morpheus lemma as the table spells it ("a)/n1", "qeo/s").
+      parse          a Morpheus parse string exactly as the table spells it
+                     ("pres ind act 3rd sg", "neut nom/voc/acc sg"), dialect
+                     notes included. Only with lemma.
+      gloss          the gloss the front reading shows.
+      other_glosses  {lemma: gloss}: glosses for readings behind the front one.
       justification  why, in a line an editor can check. Required.
 
-    An entry needs lemma, gloss or both, all values non-empty strings, and no
-    other field. Nothing here changes a reading's parse or LSJ keys, so an
-    override never changes which dictionary entry a reading opens. Moerbeke
-    reads this same file to apply the overrides over the raw Morpheus table.
+    An entry needs at least one of lemma, gloss and other_glosses, no other
+    field, and non-empty strings throughout (other_glosses a non-empty object
+    of them).
+
+    The rules apply in this order to the surface's readings, which are in
+    Morpheus's order (the display order; the first is what the card shows):
+
+      1. lemma (and parse): the target is the first reading whose lemma equals
+         `lemma` and, when `parse` is given, whose parse equals `parse`. It
+         moves to the front whole, with its own parse and LSJ keys; the others
+         keep their order. If it is already first, nothing moves. If no
+         reading matches, the whole entry does nothing: its gloss and
+         other_glosses are not applied either.
+      2. gloss: the front reading's gloss becomes `gloss`. This holds whether
+         the front reading was promoted in rule 1 or was already first.
+      3. other_glosses: every reading after the front one whose lemma is a key
+         gets that key's gloss. The front reading is never touched by this
+         rule, even if its lemma is a key.
+
+    No rule rewrites a reading's lemma, parse or LSJ keys, so an override
+    never changes which dictionary entry a reading opens. Moerbeke applies the
+    same file, by these rules, over the raw Morpheus table.
     """
     entries = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(entries, list):
@@ -57,15 +73,26 @@ def load_morphology_overrides(path: Path = _OVERRIDE_PATH) -> dict[str, dict]:
 
     overrides = {}
     required = {"surface", "justification"}
-    allowed = required | {"lemma", "gloss"}
+    actions = {"lemma", "gloss", "other_glosses"}
+    allowed = required | actions | {"parse"}
+
+    def text(value) -> bool:
+        return isinstance(value, str) and bool(value)
+
     for entry in entries:
         if not isinstance(entry, dict) or not required <= entry.keys():
             raise ValueError(f"{path}: every override needs surface and justification")
-        if set(entry) - allowed or not ({"lemma", "gloss"} & entry.keys()):
-            raise ValueError(f"{path}: invalid override fields for {entry.get('surface')}")
-        if not all(isinstance(value, str) and value for value in entry.values()):
+        surface = entry.get("surface")
+        if set(entry) - allowed or not (actions & entry.keys()):
+            raise ValueError(f"{path}: invalid override fields for {surface}")
+        if "parse" in entry and "lemma" not in entry:
+            raise ValueError(f"{path}: parse without lemma for {surface}")
+        others = entry.get("other_glosses", {"-": "-"})
+        if not (isinstance(others, dict) and others
+                and all(text(k) and text(v) for k, v in others.items())):
+            raise ValueError(f"{path}: other_glosses must map lemmas to glosses for {surface}")
+        if not all(text(v) for k, v in entry.items() if k != "other_glosses"):
             raise ValueError(f"{path}: override values must be non-empty strings")
-        surface = entry["surface"]
         if surface in overrides:
             raise ValueError(f"{path}: duplicate surface {surface}")
         overrides[surface] = entry
@@ -85,15 +112,11 @@ def apply_morphology_override(
     surface: str | None,
     overrides: dict[str, dict] = MORPHOLOGY_OVERRIDES,
 ) -> list[dict]:
-    """Apply a curated lemma/gloss repair after automatic resolution.
-
-    Morpheus's order is the display order, and its first reading is what the
-    word card shows. Where the right reading is in the list but not first (θεῶν
-    under θέα "seeing"), it is promoted whole, keeping its own parse and LSJ
-    keys. Where the right reading is first but its gloss is junk (οὐ "u"), the
-    gloss is replaced. The lemma of a reading is never rewritten: if the entry
-    names a lemma the list does not offer, nothing changes at all, since its
-    gloss was written for a reading that is not there.
+    """Apply the surface's curated override, by the rules in
+    load_morphology_overrides: promote (lemma, parse), then gloss the front
+    reading, then gloss the readings behind it (other_glosses). Returns the
+    input unchanged when the surface has no entry or no reading matches the
+    entry's lemma and parse; never mutates it.
     """
     override = overrides.get(surface) if surface is not None else None
     if override is None or not parses:
@@ -101,8 +124,11 @@ def apply_morphology_override(
 
     corrected = list(parses)
     if lemma := override.get("lemma"):
+        parse = override.get("parse")
         index = next(
-            (i for i, parse in enumerate(corrected) if parse["lemma"] == lemma),
+            (i for i, reading in enumerate(corrected)
+             if reading["lemma"] == lemma
+             and (parse is None or reading["parse"] == parse)),
             None,
         )
         if index is None:
@@ -110,6 +136,12 @@ def apply_morphology_override(
         corrected = _promote(corrected, index)
     if gloss := override.get("gloss"):
         corrected[0] = {**corrected[0], "gloss": gloss}
+    others = override.get("other_glosses", {})
+    corrected[1:] = [
+        {**reading, "gloss": others[reading["lemma"]]}
+        if reading["lemma"] in others else reading
+        for reading in corrected[1:]
+    ]
     return corrected
 
 
