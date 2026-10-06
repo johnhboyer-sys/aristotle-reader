@@ -318,6 +318,19 @@ def test_legw_first_person_reads_say_not_lewd():
     assert "gather, pick up" not in [p["gloss"] for p in out if p["lemma"] != "le/gw2"]
 
 
+def test_apeiroi_reads_infinite_first_and_keeps_inexperienced_second():
+    parses = [
+        {"lemma": "a)/peiros1", "gloss": "without trial or experience of",
+         "parse": "masc/fem nom/voc pl", "lsj": ["a)/peiros1"]},
+        {"lemma": "a)/peiros2", "gloss": "boundless, infinite", "parse": "masc/fem nom/voc pl",
+         "lsj": ["a)/peiros2"]},
+    ]
+
+    out = resolve_parses([dict(p) for p in parses], {}, "a)/peiroi")
+
+    assert [p["lemma"] for p in out] == ["a)/peiros2", "a)/peiros1"]
+
+
 def test_every_override_moves_or_reglosses_a_reading_morpheus_offers():
     """Over the built corpus: for every token whose surface has an override,
     the front reading afterwards is one Morpheus offered for that surface (same

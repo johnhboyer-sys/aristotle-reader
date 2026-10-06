@@ -2796,6 +2796,11 @@
     "justification": "φύσις 'nature'; Morpheus glosses it 'origin' and ranks an accusative plural slot first."
   },
   {
+    "surface": "a)/peiroi",
+    "lemma": "a)/peiros2",
+    "justification": "ἄπειρος (B) 'boundless, infinite' (τὸ ἄπειρον, εἰς ἄπειρον); Morpheus ranks ἄπειρος (A) 'without experience' first. Five of 31 are 'inexperienced' (EN 1120b12, Rhet. 1383a30, 1389a31, SE 164b27, 165a16); that reading stays second."
+  },
+  {
     "surface": "a)nagkai/ous",
     "lemma": "a)nagkai=os",
     "gloss": "necessary",
