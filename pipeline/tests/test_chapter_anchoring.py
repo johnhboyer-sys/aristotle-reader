@@ -259,3 +259,24 @@ def test_the_page_bound_stops_at_the_book_break(tmp_path):
     # Without the bound the window matched book 2's line 3 and stepped back
     # into it under book 1's number.
     assert chapters[1]["book"] == 1 and chapters[1]["line"] in ("1", "2"), chapters
+
+
+def test_a_rejected_step_back_tries_the_window_again_further_on(tmp_path):
+    """Chapter 3's `cc dd ee` first matches inside chapter 2's opening, where
+    stepping back lands above chapter 2; the same window's next occurrence is
+    chapter 3's own text, and the chapter must not vanish for want of it."""
+    spine = {"work": "TST", "segments": [{"id": "1:1a", "book": 1, "column": "1a", "lines": [
+        {"n": 1, "text": "alpha beta gamma delta"},
+        {"n": 2, "text": "aa bb"},
+        {"n": 3, "text": "cc dd ee ff"},
+        {"n": 4, "text": "yq zq cc dd ee"},
+    ]}]}
+    tei = """<TEI><text><body><div subtype="book" n="1">
+<milestone unit="page" n="1a"/>
+<div subtype="chapter" n="1"><p>alpha beta gamma delta</p></div>
+<div subtype="chapter" n="2"><p>xq cc dd ee ff</p></div>
+<div subtype="chapter" n="3"><p>yq zz cc dd ee</p></div>
+</div></body></text></TEI>"""
+    chapters = _chapters(tmp_path, spine, tei)
+    assert [(c["chapter"], c["line"], c["wordIndex"]) for c in chapters] == [
+        ("1", "1", 0), ("2", "2", 1), ("3", "4", 0)]

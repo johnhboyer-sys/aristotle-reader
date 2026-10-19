@@ -122,19 +122,23 @@ def _step_back_match(joined: str, spine_words: list[str], ow: list[str],
         for start in (0, 1, 2, 3):
             if len(ow) < start + kk:
                 continue
-            p = _find_word_run(joined, " ".join(ow[start:start + kk]), after)
-            if p < 0:
-                continue
-            w = joined[:p].count(" ")
-            widx = max(0, w - start)
-            if widx < first or (last is not None and widx > last):
-                continue
-            # The suffix match proves the stepped-back position only when the
-            # skipped normalized words are really present there. Keep the
-            # historical position either way, but never label an inference as
-            # word-exact.
-            anchor = w >= start and spine_words[w - start:w] == ow[:start]
-            return widx, p, anchor
+            needle = " ".join(ow[start:start + kk])
+            p = _find_word_run(joined, needle, after)
+            while p >= 0:
+                w = joined[:p].count(" ")
+                widx = max(0, w - start)
+                if last is not None and widx > last:
+                    break  # every later occurrence is further past
+                if widx >= first:
+                    # The suffix match proves the stepped-back position only
+                    # when the skipped normalized words are really present
+                    # there. Keep the historical position either way, but
+                    # never label an inference as word-exact.
+                    anchor = w >= start and spine_words[w - start:w] == ow[:start]
+                    return widx, p, anchor
+                # Stepping back from this occurrence lands above the previous
+                # chapter; the window's next occurrence may be this chapter's.
+                p = _find_word_run(joined, needle, p + 1)
     return None
 
 
