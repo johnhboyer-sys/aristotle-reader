@@ -6,6 +6,10 @@
 // what the command palette hands off, so they keep their meaning here.
 //
 //   g, e     Greek and English queries
+//   q        read only, never written: the search box of search.astro's
+//            JSON-LD SearchAction. Greek script goes to g, anything else
+//            to e (Beta Code reads the same as English, so it goes to e);
+//            ignored when g or e is present, even empty
 //   gm, em   Greek and English match: any | phrase (default all)
 //   ef       0 = English words only as typed (default: any form of each)
 //   m        form (default lemma: any form of the word)
@@ -76,6 +80,9 @@ const KIND_LETTER: Record<SlotKind, string> = { phrase: 'p', form: 'f', lemma: '
 const RELATION_LETTER: Record<SlotRelation, string> = { near: '', before: 'b', after: 'a' };
 const KINDS = Object.fromEntries(Object.entries(KIND_LETTER).map(([k, v]) => [v, k as SlotKind]));
 const RELATIONS = Object.fromEntries(Object.entries(RELATION_LETTER).map(([k, v]) => [v, k as SlotRelation]));
+
+// A Greek letter: not Greek punctuation (U+037E, U+0387), and not Coptic.
+const GREEK_LETTER = /(?=\p{L})\p{Script=Greek}/u;
 
 const list = (s: string | null) => (s ?? '').split(',').map(x => x.trim()).filter(Boolean);
 
@@ -162,6 +169,11 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
 
   s.grk = (p.get('g') ?? '').trim();
   s.eng = (p.get('e') ?? '').trim();
+  const q = (p.get('q') ?? '').trim();
+  if (q && !p.has('g') && !p.has('e')) {
+    if (GREEK_LETTER.test(q)) s.grk = q;
+    else s.eng = q;
+  }
   s.grkMode = pick(p.get('gm'), MODES, 'all');
   s.engMode = pick(p.get('em'), MODES, 'all');
   s.matchMode = p.get('m') === 'form' ? 'form' : 'lemma';

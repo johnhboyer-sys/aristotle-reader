@@ -1055,8 +1055,10 @@
   function writeUrl(s: UrlSearch, how: 'push' | 'replace') {
     const qs = encodeSearchUrl(s, WORK_IDS);
     const search = qs ? `?${qs}` : '';
-    // Searching again for the same thing adds no history entry.
+    // Searching again for the same thing adds no history entry. The address
+    // may spell it differently (a ?q= arrival, say): rewrite that in place.
     if (how === 'push' && search === window.location.search) return;
+    if (how === 'push' && encodeSearchUrl(decodeSearchUrl(window.location.search, WORK_IDS), WORK_IDS) === qs) how = 'replace';
     const url = `${window.location.pathname}${search}${window.location.hash}`;
     if (how === 'push') window.history.pushState(null, '', url);
     else window.history.replaceState(null, '', url);
