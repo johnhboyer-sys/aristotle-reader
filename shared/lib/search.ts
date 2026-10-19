@@ -338,6 +338,10 @@ const EN_NOT_PLURAL = new Set([
   'news', 'means', 'politics', 'ethics', 'physics', 'mathematics', 'economics', 'species', 'series',
 ]);
 
+// Words that are no noun, though a rule would make one of a plural: "theses"
+// less its s is "these". No rule makes one of these, and none is expanded.
+const EN_NOT_NOUN = new Set(['these', 'those']);
+
 // The singulars a word may be a plural of, itself included. Man/men,
 // woman/women and every -man compound (statesman, craftsman) go by rule.
 function englishSingulars(w: string): string[] {
@@ -350,14 +354,16 @@ function englishSingulars(w: string): string[] {
   if (w.endsWith('men')) out.push(`${w.slice(0, -3)}man`);
   const irregular = EN_IRREGULAR.get(w);
   if (irregular) out.push(irregular);
-  return out.filter(s => s.length >= 3 || EN_IRREGULAR.has(s));
+  return out.filter(s => (s.length >= 3 || EN_IRREGULAR.has(s)) && !EN_NOT_NOUN.has(s));
 }
 
 // A singular's own forms: itself and its possessive, its plurals, and the
 // possessive of each plural that does not end in s (men's).
 function englishPlurals(w: string): string[] {
   const out: string[] = [];
-  if (/(?:s|x|z|ch|sh)$/.test(w)) out.push(`${w}es`);
+  if (/(?:s|x|z|sh)$/.test(w)) out.push(`${w}es`);
+  // -ch takes either: churches, but stomachs and epochs.
+  else if (w.endsWith('ch')) out.push(`${w}es`, `${w}s`);
   else {
     out.push(`${w}s`);
     if (w.endsWith('o')) out.push(`${w}es`);
@@ -376,7 +382,7 @@ function englishPlurals(w: string): string[] {
 export function englishForms(word: string): string[] {
   if (/[*?]/.test(word)) return [word];
   const bare = word.endsWith("'s") ? word.slice(0, -2) : word;
-  if (bare.length < 3 && !EN_IRREGULAR.has(bare)) return [word];
+  if ((bare.length < 3 && !EN_IRREGULAR.has(bare)) || EN_NOT_NOUN.has(bare)) return [word];
   const forms = new Set([word]);
   for (const one of englishSingulars(bare)) for (const f of englishPlurals(one)) forms.add(f);
   return [...forms];
@@ -433,11 +439,17 @@ function englishSources(work: string): Pick<TranslationRef, 'id' | 'slot'>[] {
 
 // -- Posting-list helpers -------------------------------------------------
 
+// A word's postings, if the index holds it. A per-work index is plain JSON and
+// inherits Object.prototype, so idx['constructor'] is a function, not absent.
+function ownPostings<T>(idx: Record<string, T>, key: string): T | undefined {
+  return Object.hasOwn(idx, key) ? idx[key] : undefined;
+}
+
 function grkPosting(idx: GrkIndex, term: string): Set<number> {
   const pattern = compilePattern(term, greekFold);
   if (!pattern) return new Set();
   if ('exact' in pattern) {
-    return new Set((idx[pattern.exact] ?? []).map(([si]) => si));
+    return new Set((ownPostings(idx, pattern.exact) ?? []).map(([si]) => si));
   }
   const result = new Set<number>();
   for (const key of Object.keys(idx)) {
@@ -571,7 +583,7 @@ function termPositions(
   const pattern = compilePattern(term, fold);
   if (!pattern) return m;
   if ('exact' in pattern) {
-    add(idx[pattern.exact] ?? []);
+    add(ownPostings(idx, pattern.exact) ?? []);
   } else {
     for (const key of Object.keys(idx)) if (pattern.test(key)) add(idx[key]);
   }
@@ -620,7 +632,7 @@ function unitMatch(
   // The bare *: every word matches it, so no word is the hit.
   if (unit.length === 1 && unit[0] === '*') return { segs: engEverySegment(idx), positions };
   const alts = unit.map(t => (forms
-    ? englishForms(englishTerm(t)).filter((f, i) => i === 0 || f in idx)
+    ? englishForms(englishTerm(t)).filter((f, i) => i === 0 || Object.hasOwn(idx, f))
     : [englishTerm(t)]));
   for (const [si, starts] of phraseStarts(idx, alts, englishFold)) {
     positions.set(si, starts.flatMap(start => unit.map((_, j) => start + j)));
@@ -1022,7 +1034,7 @@ export async function lemmaOptions(folds: string[]): Promise<string[][] | null> 
     const letter = /^[a-z]/.test(fold) ? fold[0] : '_';
     try {
       const shard = await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
-      perTerm.push(shard[fold] ?? []);
+      perTerm.push(Object.hasOwn(shard, fold) ? shard[fold] : []);
     } catch {
       return null;
     }

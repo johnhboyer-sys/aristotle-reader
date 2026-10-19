@@ -228,7 +228,7 @@ def test_english_index_keeps_a_curly_possessive_as_one_word(tmp_path, monkeypatc
 
 
 def test_english_words_matches_the_readers_fold():
-    """Mirror of englishFold()/engPhraseMatches() in shared/lib/search.ts:
+    """Mirror of englishFold()/englishWords() in shared/lib/search.ts:
     lowercase, U+2019 and U+02BC become ', anything outside [a-z'] splits."""
     from aristotle_pipeline.stage6_search import english_words
 

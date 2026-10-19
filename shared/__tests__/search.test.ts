@@ -665,6 +665,18 @@ describe('English any form', () => {
     expect(englishForms('mean')).toContain("mean's");
   });
 
+  it('does not take a determiner for the singular of a plural', () => {
+    expect(englishForms('theses')).not.toContain('these');
+    expect(englishForms('theses')).toContain('thesis');
+    expect(englishForms('these')).toEqual(['these']);
+  });
+
+  it('gives a word in -ch both plurals', () => {
+    expect(englishForms('stomach')).toEqual(expect.arrayContaining(['stomachs', 'stomaches']));
+    expect(englishForms('church')).toContain('churches');
+    expect(englishForms('epochs')).toContain('epoch');
+  });
+
   it('matches a word by any form only when asked', () => {
     expect(['virtue', 'virtues', "virtue's", 'virtuous'].map(englishTermMatcher(['virtue'], true)))
       .toEqual([true, true, true, false]);
@@ -713,6 +725,17 @@ describe('English any form', () => {
       expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([
         ['f1', [3]], ['f2', [1]], ['f3', [1]],
       ]);
+    });
+
+    // A plain JSON index inherits Object.prototype, so "constructor" is a key
+    // of every one unless the lookup asks for its own keys only.
+    it('finds no word the index does not hold, even one an object inherits', async () => {
+      for (const [q, forms, work] of [
+        ['constructors', true, 'TFormsProtoA'], ['constructor', false, 'TFormsProtoB'],
+      ] as const) {
+        const out = await search('', q, 'all', 'all', 'and', [work], 'lemma', forms);
+        expect(out).toEqual({ results: [], failedWorks: [] });
+      }
     });
   });
 });
