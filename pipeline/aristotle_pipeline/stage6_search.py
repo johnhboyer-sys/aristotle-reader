@@ -422,12 +422,18 @@ def run(manifest: Manifest) -> Path:
         spine_seg = spine_lines_by_id.get(segments[si]["id"], [])
         base = seg_base_offset[si]
         candidates: list[tuple[int, dict, str]] = []
+        next_line_base = None
         for j, l in enumerate(segments[si]["lines"]):
             if l["n"] == want:
                 text = spine_seg[j]["text"] if j < len(spine_seg) else ""
                 candidates.append((base, l, text))
+            elif l["n"] > want and next_line_base is None:
+                next_line_base = base
             base += len(l["tokens"])
-        if not candidates:
+        # A start on a line with no Greek (Busse's Isagoge prints each section
+        # heading on a line of its own) snaps to the next line in the column,
+        # where the section's text begins.
+        if not candidates and next_line_base is None:
             continue
         # Only the grc-TEI path matches chapter starts against the Greek text
         # (stage1_chapters sets wordAnchor there); the explicit and extra paths
@@ -437,7 +443,8 @@ def run(manifest: Manifest) -> Path:
         # its line by number alone: if exactly one same-numbered line can hold
         # the count it is exact there; if more than one can, the count cannot
         # be attributed and the bound snaps rather than guess a half.
-        start, idx = candidates[0][0], None
+        start = candidates[0][0] if candidates else next_line_base
+        idx = None
         if ch.get("wordAnchor"):
             aligned = [
                 (line_base, i)

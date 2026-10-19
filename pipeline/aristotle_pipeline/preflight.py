@@ -33,6 +33,7 @@ def validate(data_dir: Path, manifests_dir: Path) -> list[Problem]:
         _validate_manifest_schema(manifest, problems)
         _validate_work_data(data_dir, manifest, problems)
     _validate_search_shards(data_dir, manifests, problems)
+    _validate_chapter_bounds(data_dir, manifests, problems)
     return problems
 
 
@@ -407,6 +408,45 @@ def _validate_search_shards(data_dir: Path, manifests: list[WorkManifest],
     if examined == 0:
         problems.append(("-", SHARD_DIR,
                          "examined no postings: the shards are empty, so this check is not running"))
+    return examined
+
+
+def _validate_chapter_bounds(data_dir: Path, manifests: list[WorkManifest],
+                             problems: list[Problem]) -> int:
+    """Every chapter in chapters.json has a bound in search/offsets.json.
+
+    The search pager breaks result pages only between chapters, using
+    chapter_bounds, so a chapter stage6 could not place merges into its
+    neighbour without a word (the Isagoge once kept 1 bound of its 17).
+    Returns the number of works compared; none is itself a problem.
+    """
+    examined = 0
+    for manifest in manifests:
+        work_dir = data_dir / manifest.work_id
+        try:
+            chapters = json.loads((work_dir / "chapters.json").read_text(encoding="utf-8"))
+            want = [(int(book), str(ref["chapter"])) for book, refs in chapters.items() for ref in refs]
+        except Exception:
+            continue  # _validate_work_data reports a missing or malformed chapters.json
+        try:
+            offsets = json.loads((work_dir / "search" / "offsets.json").read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            problems.append((manifest.work_id, "search/offsets.json", "missing: no chapter_bounds to check"))
+            continue
+        except Exception as exc:
+            problems.append((manifest.work_id, "search/offsets.json", f"unreadable: {exc}"))
+            continue
+        examined += 1
+        have = {(b.get("book"), str(b.get("chapter"))) for b in offsets.get("chapter_bounds") or []}
+        missing = [key for key in want if key not in have]
+        if len(have) != len(want) or missing:
+            first = f"; first missing: book {missing[0][0]} chapter {missing[0][1]!r}" if missing else ""
+            problems.append((manifest.work_id, "search/offsets.json",
+                             f"chapter_bounds has {len(have)} chapter(s) but chapters.json has "
+                             f"{len(want)}{first}"))
+    if examined == 0:
+        problems.append(("-", "search/offsets.json",
+                         "examined no work: no chapter_bounds were compared, so this check is not running"))
     return examined
 
 

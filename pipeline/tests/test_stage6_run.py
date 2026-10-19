@@ -207,6 +207,25 @@ def test_chapter_bound_without_a_word_anchor_snaps_to_the_line_and_says_so(
         "book": 1, "chapter": "2", "start": 7, "accuracy": "line-snapped"}
 
 
+def test_chapter_bound_on_a_line_with_no_greek_snaps_to_the_next_line(
+        tmp_path, monkeypatch):
+    """Busse prints each Isagoge section heading on a line of its own, and the
+    TLG text has no Greek on it, so the manifest's chapter start (1a17, 8a7,
+    ...) names a line the spine lacks. stage6 used to drop such a chapter
+    without a word: the Isagoge kept 1 bound of its 17. The section's text
+    begins on the next line, so the bound snaps there and says so."""
+    chapters = [
+        {"book": 1, "chapter": "1", "column": "244b", "line": "4",
+         "wordIndex": 0, "bookstart": True},
+        {"book": 1, "chapter": "2", "column": "245a", "line": "19",
+         "wordIndex": 0, "bookstart": False},
+    ]
+    offsets = _build(tmp_path, monkeypatch, chapters)["offsets"]
+    by_chapter = {c["chapter"]: c for c in offsets["chapter_bounds"]}
+    assert by_chapter["2"] == {
+        "book": 1, "chapter": "2", "start": 9, "accuracy": "line-snapped"}
+
+
 # -- English index and heads -------------------------------------------------
 
 def test_english_index_keeps_a_curly_possessive_as_one_word(tmp_path, monkeypatch):

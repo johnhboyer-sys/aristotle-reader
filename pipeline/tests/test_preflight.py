@@ -116,3 +116,56 @@ def test_preflight_rejects_data_emitted_from_a_different_manifest(tmp_path):
     assert result.returncode != 0
     assert "emitted from a different manifest" in result.stdout
     assert "Hugh Tredennick (Loeb, 1933)" in result.stdout
+
+
+def _bounds_case(tmp_path, chapter_bounds):
+    """The valid fixture with a search/offsets.json carrying `chapter_bounds`
+    (None: no offsets.json at all), checked by the chapter-bounds gate alone."""
+    import json
+    import shutil
+
+    from aristotle_pipeline import preflight
+
+    case = tmp_path / "case"
+    shutil.copytree(FIXTURES / "valid", case)
+    offsets = case / "data" / "VAL" / "search" / "offsets.json"
+    if chapter_bounds is None:
+        offsets.unlink()
+    else:
+        offsets.write_text(json.dumps({"chapter_bounds": chapter_bounds}), encoding="utf-8")
+    manifests = [preflight.WorkManifest(work_id="VAL", path=Path("VAL.yaml"), data={})]
+    problems = []
+    examined = preflight._validate_chapter_bounds(case / "data", manifests, problems)
+    return examined, problems
+
+
+def test_chapter_bounds_agreeing_with_chapters_json_pass(tmp_path):
+    examined, problems = _bounds_case(
+        tmp_path, [{"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"}])
+    assert (examined, problems) == (1, [])
+
+
+def test_chapter_bounds_missing_a_chapter_are_reported(tmp_path):
+    """The search pager lays results out by chapter_bounds: a work whose
+    offsets.json lost chapters (the Isagoge kept 1 of 17) pages as one unit."""
+    examined, problems = _bounds_case(tmp_path, [])
+    assert examined == 1
+    assert problems == [("VAL", "search/offsets.json",
+                         "chapter_bounds has 0 chapter(s) but chapters.json has 1; "
+                         "first missing: book 1 chapter '1'")]
+
+
+def test_chapter_bounds_without_offsets_json_are_reported(tmp_path):
+    examined, problems = _bounds_case(tmp_path, None)
+    assert examined == 0
+    assert ("VAL", "search/offsets.json", "missing: no chapter_bounds to check") in problems
+
+
+def test_chapter_bounds_gate_says_when_it_examined_no_work(tmp_path):
+    from aristotle_pipeline import preflight
+
+    problems = []
+    assert preflight._validate_chapter_bounds(tmp_path, [], problems) == 0
+    assert problems == [("-", "search/offsets.json",
+                         "examined no work: no chapter_bounds were compared, "
+                         "so this check is not running")]
