@@ -618,9 +618,11 @@
       // emphasis. The capture stops at tag brackets and entities, so it can
       // neither span a marker's markup nor unbalance highlightEng's own; a span
       // split across a Bekker gutter boundary (each flow part renders on its
-      // own) just stays literal rather than emitting an unclosed tag.
-      /\*(?!\s)([^*<>&]+?)\*/g,
-      '<em>$1</em>',
+      // own) just stays literal rather than emitting an unclosed tag. A whole
+      // tag is matched first and passed through, so the stars INSIDE a
+      // marker's tag (data-fn="*" … aria-label="Footnote *") never pair up.
+      /(<[^>]*>)|\*(?!\s)([^*<>&]+?)\*/g,
+      (_m, tag: string | undefined, inner: string) => tag ?? `<em>${inner}</em>`,
     );
   }
 
