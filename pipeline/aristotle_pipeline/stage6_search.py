@@ -72,8 +72,9 @@ _EN_APOSTROPHE = re.compile("[\u2019\u02bc]")
 _EN_FOOTNOTE = re.compile(r"\[\^[0-9A-Za-z_.*\u2020]+\]")
 _EN_SIDENOTE = re.compile(r"\[\[(?:s|fig)[0-9]+\]\]")
 # One pass, so a marker counts only as written: "[[s[^1]12]]" loses its
-# footnote and keeps "[[s12]]" as text, never a sidenote, as the reader (which
-# finds neither marker inside the other) shows it. englishWords scans the same.
+# footnote and keeps "[[s12]]" as text, never a sidenote, as the reader shows
+# it: the footnote becomes a button and the rest stays prose. englishWords
+# scans the same.
 _EN_MARKER = re.compile(f"(?P<fn>{_EN_FOOTNOTE.pattern})|{_EN_SIDENOTE.pattern}")
 # Older translations print Latin letters the fold would otherwise split on:
 # "Lacedæmonians" was indexed as "laced" + "monians", "versâ" as "vers". The
