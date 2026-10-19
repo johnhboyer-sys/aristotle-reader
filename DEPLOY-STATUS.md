@@ -13,6 +13,42 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-10-19 (night) — DEPLOYED: review follow-ups (PRs #160–#166)
+
+`gh-pages d73941fb → ca588f1f`, source `origin/main` `4b63c9fab8` (the #166 merge).
+`npm run deploy:dry`, then `npm run deploy -- --verify` (John said go).
+
+**What shipped:** the seven follow-ups to the reviews of #159, each Codex-reviewed with its
+findings fixed. #160 `english_words` drops footnote and sidenote markers in one pass, as the
+browser does. #161 the search page reads the `?q=` its SearchAction advertises (Greek script to
+the Greek box, else English; an explicit `g`/`e` wins). #162 the Isagoge's 16 chapter starts on
+Busse heading lines snap to the next line, so it gets all 17 chapter bounds; preflight now checks
+every work's bounds against `chapters.json`. #163 the reader never cuts a footnote or sidenote
+marker in two, and glued footnotes each get a button. #164 a star footnote label stays out of the
+emphasis pass. #165 the text glued to a footnote takes an entity whole. #166 Mirabilia chapters no
+longer share a start; preflight refuses a shared start. #164–#166 were stacked on #162/#163 and
+retargeted to main after those merged (the repo does not delete merged branches, so GitHub does
+not retarget). Main after all seven: shared 641, pipeline 649, scripts 83, app 89.
+
+**Build:** full `build:public` from main (Node 22.23.1), about 4 minutes: 41 works, stage2 PASS
+throughout, stage 9 shards, preflight ok (with the new chapter-bounds gate), shared LSJ verified,
+6,586 pages. Isa `chapter_bounds` 17 (was 1); Mirab 178.
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham
+2, `EN/footnotes.json`, `EN/manifest.json`; positive control 1,621; gated shards public slots only).
+Shard gate: 139 indexes, 3,838,862 postings. Dangling-reference gate: 6 removed, 0 referenced.
+
+**Deploy diff:** 1,059 files — 3 A / 1,050 M / 3 D / 3 R. Traced before pushing: every content
+change is the Isagoge's `offsets.json` or the Mirabilia — 520 `Mirab/english` shard postings and
+263 `data/lemmata` pages whose Mirabilia hits moved chapter (e.g. ablabes: ch. 155 846a6–21 → ch.
+154 846a9–16), plus Mirabilia ngrams. Every other work's four `search/` files changed bytes only
+(identical as JSON). 0 deletions under `data/`.
+
+**Live-verified:** the script's URL set (new `Reader.C2ANQaQ-.js` 200; old bundles and `/bonitz/`
+404). In a browser: `/search/?q=happiness` fills the English box and gives 484 hits; Greek
+`logos` in the Isagoge shows hits under chapters 2, 3, 6 and 7 instead of one block; English
+"water" in the Mirabilia gives 38 hits in 27 chapters, none repeated; no console errors.
+
 ## 2026-10-19 (evening) — DEPLOYED: word forms, search shards, chapter pages, searches in the address (PR #159)
 
 `gh-pages 84ddf0b8 → d73941fb`, source `origin/main` `5197f6fb3f` (the #159 merge). John ran
