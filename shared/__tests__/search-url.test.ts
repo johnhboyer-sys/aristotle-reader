@@ -25,6 +25,23 @@ describe('search URL', () => {
       .toEqual(base({ eng: 'practical wisdom' }));
   });
 
+  it('reads the SearchAction ?q= as Greek when it is Greek script, else English', () => {
+    // search.astro's JSON-LD advertises /search/?q={search_term_string}.
+    expect(decodeSearchUrl('?q=happiness', ALL)).toEqual(base({ eng: 'happiness' }));
+    expect(decodeSearchUrl(`?q=${encodeURIComponent('εὐδαιμονία')}`, ALL))
+      .toEqual(base({ grk: 'εὐδαιμονία' }));
+    // Beta Code reads the same as English, so Latin letters go to English.
+    expect(decodeSearchUrl('?q=logos', ALL)).toEqual(base({ eng: 'logos' }));
+    expect(hasSearch(decodeSearchUrl('?q=happiness', ALL))).toBe(true);
+  });
+
+  it('lets ?g= and ?e= outrank ?q=', () => {
+    expect(decodeSearchUrl('?q=happiness&e=virtue', ALL)).toEqual(base({ eng: 'virtue' }));
+    expect(decodeSearchUrl(`?q=happiness&g=${encodeURIComponent('λόγος')}`, ALL))
+      .toEqual(base({ grk: 'λόγος' }));
+    expect(hasSearch(decodeSearchUrl('?q=%20', ALL))).toBe(false);
+  });
+
   it('round-trips every option of a plain search', () => {
     const s = base({
       grk: 'fron*', eng: 'virtue of character', grkMode: 'phrase', engMode: 'any',
