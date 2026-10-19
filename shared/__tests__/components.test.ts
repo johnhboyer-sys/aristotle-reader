@@ -53,6 +53,8 @@ vi.mock('../lib/search', async (importOriginal) => {
     })),
     searchCombo: vi.fn(async () => ({ results: [], failedWorks: [] })),
     searchPhraseVariants: vi.fn(),
+    // No work's chapter edges load in a test: pages fall back to whole books.
+    loadOffsets: vi.fn(async () => { throw new Error('no offsets.json'); }),
   };
 });
 
@@ -251,6 +253,82 @@ describe('Search.svelte in the address bar', () => {
     } as Awaited<ReturnType<typeof searchPhraseVariants>>);
     await new Promise(r => setTimeout(r, 20));
     expect(screen.queryByText(/instances?/)).toBeNull();
+    expect(screen.queryByText(/Showing every place/)).toBeNull();
+  });
+
+  // A promise and the function that settles it, for holding one load open.
+  function held<T>() {
+    let settle!: (v: T) => void;
+    let fail!: (e: Error) => void;
+    const promise = new Promise<T>((r, j) => { settle = r; fail = j; });
+    return { promise, settle, fail };
+  }
+  // A work whose chapter edges do not load is paged by whole books.
+  const noOffsets = new Error('no offsets.json');
+  const workNames = () => [...document.querySelectorAll('.work-name')].map(n => n.textContent);
+
+  it("drops an older search's page that finishes loading after a newer search", async () => {
+    const { search, loadOffsets } = await import('../lib/search');
+    const { fetchBook } = await import('../lib/data');
+    const hit = (work: string) => ({
+      results: [{ work, meta: { id: 'seg1', book: 1, column: '1094a' }, grkMatch: true, engMatch: false, grkPositions: [0] }],
+      failedWorks: [],
+    });
+    vi.mocked(search).mockResolvedValueOnce(hit('EN')).mockResolvedValueOnce(hit('Meta'));
+    const bookA = held<typeof fixtureBook>();
+    vi.mocked(fetchBook).mockReturnValueOnce(bookA.promise);
+    const offsetsB = held<Awaited<ReturnType<typeof loadOffsets>>>();
+    vi.mocked(loadOffsets).mockRejectedValueOnce(noOffsets).mockReturnValueOnce(offsetsB.promise);
+    // Only history can start a search while one is loading: the button waits.
+    at(`/search?g=${encodeURIComponent('λόγος')}`);
+    render(Search);
+    await vi.waitFor(() => expect(fetchBook).toHaveBeenCalledTimes(1));
+    at(`/search?g=${encodeURIComponent('ἀρετή')}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(loadOffsets).toHaveBeenCalledTimes(2));
+
+    bookA.settle(fixtureBook);
+    await new Promise(r => setTimeout(r, 20));
+    expect(workNames()).not.toContain(getWork('EN')!.title);
+    offsetsB.fail(noOffsets);
+    await vi.waitFor(() => expect(workNames()).toEqual([getWork('Meta')!.title]));
+  });
+
+  it('frees the inflection lookup when a new search retires it', async () => {
+    const { search, searchPhraseVariants } = await import('../lib/search');
+    vi.mocked(searchPhraseVariants).mockReturnValue(new Promise(() => {}));
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
+    await screen.findByRole('button', { name: 'Looking…' });
+
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'λόγος τέχνη' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(2));
+    const find = await screen.findByRole('button', { name: 'Find this phrase in any inflection' });
+    expect(find).toBeEnabled();
+  });
+
+  it("keeps a retired inflection lookup's note off a newer search", async () => {
+    const { search, searchPhraseVariants, loadOffsets } = await import('../lib/search');
+    vi.mocked(searchPhraseVariants).mockResolvedValue({
+      results: [{ work: 'EN', meta: { id: 'seg1', book: 1, column: '1094a' }, grkMatch: true, engMatch: false, grkPositions: [0] }],
+      readings: [['logos', 'areth']], productive: [['logos', 'areth']], cappedFrom: 0, failedWorks: [],
+    } as Awaited<ReturnType<typeof searchPhraseVariants>>);
+    const offsetsV = held<Awaited<ReturnType<typeof loadOffsets>>>();
+    vi.mocked(loadOffsets).mockRejectedValueOnce(noOffsets).mockReturnValueOnce(offsetsV.promise);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
+    await vi.waitFor(() => expect(loadOffsets).toHaveBeenCalledTimes(2));
+
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'λόγος τέχνη' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await vi.waitFor(() => expect(loadOffsets).toHaveBeenCalledTimes(3));
+    offsetsV.fail(noOffsets);
+    await new Promise(r => setTimeout(r, 20));
     expect(screen.queryByText(/Showing every place/)).toBeNull();
   });
 

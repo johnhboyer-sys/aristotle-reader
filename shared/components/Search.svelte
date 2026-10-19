@@ -157,6 +157,7 @@
       searched = true;
       variantsShown = true;
       await showResults(outcome.results);
+      if (run !== searchRun) return;
       // Say what was actually searched. Two readings of one word routinely land
       // on the same tokens — one passage under two parses — so the places are
       // unioned, not added up, and the count below is places, not readings.
@@ -318,7 +319,8 @@
     pages = laid.pages;
     pageOf = laid.pageOf;
     if (pages.length) await renderPage(0);
-    else { groups = []; pageIdx = 0; }
+    // A retired page leaves pageLoading to the layout that retired it.
+    else { groups = []; pageIdx = 0; pageLoading = false; }
   }
 
   function setTransFilter(id: string | null) {
@@ -994,11 +996,15 @@
     pageError = '';
     // A newer search (the back button can start one mid-load) replaces
     // `pages`; this page's books must not then overwrite its results.
+    // A newer search or filter starts a new layout before its pages exist, so
+    // the layout is checked as well as the pages.
     const set = pages;
+    const layout = layoutRun;
+    const stale = () => set !== pages || layout !== layoutRun;
     try {
       const owner = pageOf;
       const { groups: g, failed } = await buildGroups(set[i] ?? [], searchCtx, (r, chapter) => owner(r, chapter) === i);
-      if (set !== pages) return;
+      if (stale()) return;
       groups = g;
       // Single-hit chapters open by default; merged (multi-hit) start collapsed.
       expanded = new Set(groups.filter(x => x.instances.length === 1).map(x => x.key));
@@ -1006,11 +1012,11 @@
         pageError = `${failed.length} passage source${failed.length === 1 ? '' : 's'} on this page didn’t load — some hits may be missing.`;
       }
     } catch (err) {
-      if (set !== pages) return;
+      if (stale()) return;
       pageError = String(err);
       groups = [];
     } finally {
-      if (set === pages) pageLoading = false;
+      if (!stale()) pageLoading = false;
     }
   }
 
@@ -1131,6 +1137,8 @@
     approximateChapters = [];
     variantNote = '';
     variantsShown = false;
+    // It retires any inflection lookup still running, so frees its button.
+    variantBusy = false;
     pageError = '';
     csvNote = '';
     searched = false;
