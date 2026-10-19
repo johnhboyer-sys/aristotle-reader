@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Segment } from '../lib/data';
-import { englishPlace, markEnglishHtml, overlayPieces } from '../lib/english-hit';
+import { englishPlace, markEnglishHtml, overlayPieces, positionsByChapter } from '../lib/english-hit';
 import { englishQueryUnits, englishWords } from '../lib/search';
 
 const rackham = { id: 'rackham', slot: 'english' as const };
@@ -162,5 +162,32 @@ describe('markEnglishHtml', () => {
   it('marks nothing for no query, or the bare *', () => {
     expect(mark('', 'a < b')).toBe('a &lt; b');
     expect(mark('*', 'a < b')).toBe('a &lt; b');
+  });
+});
+
+describe('positionsByChapter', () => {
+  // Every word position of "the" (or "a") in a translation's text here.
+  const at = (t: typeof ross | typeof rackham, word: string) => {
+    const texts = overlayPieces(seg, t).map(p => p.text);
+    const words = (t.slot === 'english' ? [seg.english!.text] : texts).flatMap(x => englishWords(x));
+    return words.flatMap((w, i) => (w.word === word ? [i] : []));
+  };
+
+  it('splits a slice-carrying translation at its slices', () => {
+    // "a" twice in chapter 3's slice, "the" twice in chapter 4's.
+    const hits = [...at(ross, 'a'), ...at(ross, 'the')].sort((x, y) => x - y);
+    expect(positionsByChapter(seg, ross, hits)).toEqual([at(ross, 'a'), at(ross, 'the')]);
+  });
+
+  it('splits the primary at its chapter starts', () => {
+    // "to" before the chapter 4 start, "at" after it.
+    const before = at(rackham, 'to');
+    const after = at(rackham, 'at');
+    expect(positionsByChapter(seg, rackham, [...before, ...after])).toEqual([before, after]);
+  });
+
+  it('leaves positions together when they do not fit the text', () => {
+    expect(positionsByChapter(seg, ross, [1, 999])).toEqual([[1, 999]]);
+    expect(positionsByChapter(seg, ross, [])).toEqual([[]]);
   });
 });

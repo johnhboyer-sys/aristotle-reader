@@ -92,6 +92,29 @@ export function englishPlace(
   };
 }
 
+/** A translation's matched word positions in a segment, split by the chapter
+ * each word stands in, in text order, so each chapter is credited with its
+ * own hits. Positions that do not fit the text (an index from another build)
+ * stay together, for englishPlace to place as it can. */
+export function positionsByChapter(
+  seg: Segment,
+  t: Pick<TranslationRef, 'id' | 'slot'>,
+  positions: number[],
+): number[][] {
+  const pieces = piecesOf(seg, t);
+  const words: { piece: number; start: number }[] = [];
+  pieces.forEach((p, i) => { for (const w of englishWords(p.text)) words.push({ piece: i, start: w.start }); });
+  if (!positions.length || !positions.every(p => p < words.length)) return [positions];
+  const by = new Map<string, number[]>();
+  for (const p of [...positions].sort((a, b) => a - b)) {
+    const { piece, start } = words[p];
+    // '' is the chapter the column opened in, as englishPlace's null is.
+    const chapter = pieces[piece].chapter ?? primaryChapter(seg, start) ?? '';
+    (by.get(chapter) ?? by.set(chapter, []).get(chapter)!).push(p);
+  }
+  return [...by.values()];
+}
+
 function matchedWords(
   words: { word: string; piece: number }[],
   positions: number[],

@@ -110,6 +110,11 @@ function loadIndex<T>(work: string, file: string): Promise<T> {
   return _index(`${work}/${file}`) as Promise<T>;
 }
 
+// The results page reads chapter edges from here to lay out its pages.
+export function loadOffsets(work: string): Promise<Offsets> {
+  return loadIndex<Offsets>(work, 'offsets.json');
+}
+
 // Corpus-level indexes live beside the per-work ones rather than inside them,
 // so they are fetched from the root and memoised on their own path.
 const _shared = memoAsyncBy<string, unknown>(path =>

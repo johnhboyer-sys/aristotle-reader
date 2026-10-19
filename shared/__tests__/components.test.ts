@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import Reader from '../components/Reader.svelte';
 import Search from '../components/Search.svelte';
 import type { BookData } from '../lib/data';
+import { getWork, searchableTranslations } from '../lib/works';
 
 const { fixtureBook } = vi.hoisted(() => ({
   fixtureBook: {
@@ -91,6 +92,38 @@ describe('Search.svelte', () => {
     // The form is still mounted (no crash / unhandled render error): the Greek
     // searchbox persists after the search runs.
     expect(screen.getByLabelText('Greek')).toBeInTheDocument();
+  });
+
+  it('counts every English word, shows hits by work, and says so in a live region', async () => {
+    const { search } = await import('../lib/search');
+    const primary = searchableTranslations(getWork('EN')!)[0].id;
+    const meta = { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', english_head: 'Virtue (test)' };
+    vi.mocked(search).mockResolvedValueOnce({
+      results: [
+        // One Greek word and two English ones: three hits.
+        { work: 'EN', meta, grkMatch: true, engMatch: true, grkPositions: [0], engHits: [{ translation: primary, positions: [0, 1] }] },
+        { work: 'Meta', meta, grkMatch: true, engMatch: false, grkPositions: [0, 1] },
+      ],
+      failedWorks: [],
+    });
+    render(Search);
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'λόγος' } });
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue test' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+    await vi.waitFor(() => expect(status).toHaveTextContent('5 instances'));
+    const works = screen.getByRole('group', { name: 'Show hits from' });
+    const en = within(works).getByRole('button', { name: /^EN/ });
+    expect(en).toHaveTextContent('EN3');
+    expect(within(works).getByRole('button', { name: /^Met\./ })).toHaveTextContent('Met.2');
+    await vi.waitFor(() => expect(screen.getByText('3 instances')).toBeInTheDocument());
+
+    await fireEvent.click(en);
+    await vi.waitFor(() => expect(status).toHaveTextContent('3 instances'));
+    expect(en).toHaveAttribute('aria-pressed', 'true');
   });
 });
 
