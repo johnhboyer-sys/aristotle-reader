@@ -13,17 +13,44 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
-## PENDING — not deployed: English search across every translation
+## 2026-10-19 — DEPLOYED: English search across every translation (PRs #156, #157)
 
-Branch `claude/search-all-translations`. Search now asks an English query of every translation a
-work carries (11 works, 16 translations beyond the primary), so the data needs new files:
-`data/<Work>/search/english-<slot>.json`, written by stage 7. **Before the next deploy, rebuild
-(`npm run build:public`) or, to keep the current corpus, run `uv run python -m aristotle_pipeline
-translations` in `pipeline/` (about 2 s; it re-indexes every work in `build/dist`).** Three gates
-hold this: preflight checks every index against the book text; the deploy script refuses data that
-serves a translation without its index (otherwise every English search on live would say "not
-searched"); and the gated-slot check now covers the indexes too, since an index carries a
-translation's words in order. Expect ~8 MB of new files under `data/*/search/` in the deploy diff.
+`gh-pages 3c5e21be → 84ddf0b8`, source `origin/main` `ee2489c9be` (the #157 merge; #156 is
+`d1588fe894`). `npm run deploy:dry`, then `npm run deploy -- --verify` (John asked for the deploy).
+
+**What shipped:** #156 — an English query asks every translation a work carries, not only the
+primary (16 more translations in 11 works), and says whose words each hit is in. #157 — hyphenated
+words are found ("coming-to-be" is three words to the index), `*ness` works in English, the reader
+marks exactly the words search found, and English marks appear in the default translation without
+switching. Data: `data/<Work>/search/english-<slot>.json` (secondary, third, overlay-<id>), written
+by stage 7.
+
+**Build:** full `build:public` in the main checkout (Node 22.23.1), not the 2-second `translations`
+re-index: #156 also changed `english_words()` (inline footnote and sidenote markers are no longer
+words), which the primary `english.json` and stage 8's English n-grams share, so the quick path
+would have left those stale. 41 works, stage2 PASS throughout, preflight ok (it now checks every
+translation index against the book text), shared LSJ verified (14,047 entries / 63,261 keys),
+6,586 pages.
+
+**Gates:** link integrity **0 broken** (6,589 pages / 565,831 links / 434,070 anchors — unchanged).
+Leak check at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`,
+`EN/manifest.json`); positive control "Aristotle" 1,623. Gated-slot check now covers the indexes:
+Cat and Int (overlay-owen, secondary), Pol (secondary) all public. Search-index gate: 117 book files,
+16 translations beyond the primary, each with its index. Dangling-reference gate: 11 removed
+bundles, 0 referenced; 11/11 added bundles referenced.
+
+**Deploy diff:** 306 files — 20 A / 275 M / 4 D / 7 R. Added: the 16 indexes (8.1 MB: APo 2, APr,
+Cat 2, DA, EN 3, Int 2, Poet, Pol, Rhet, SE, Top) and 4 `_astro` bundles. Changed data: 112
+`data/ngrams` files and `data/Isa/search/english.json` — the new word splitter; no other work's
+primary index changed. 0 deletions under `data/`, nothing to restore; the 11 retired `_astro`
+bundles are the 4 D + 7 R. The rest is pages carrying the new bundle names.
+
+**Live-verified:** the script's URL set as expected after about 2½ minutes (new `Reader.BJ8nmCKa.js`
+200; old bundles and `/bonitz/` 404). In a browser on live: "happiness" restricted to the NE gives
+104 hits with Rackham 29 / Ostwald 26 / Peters 25 / Ross 24 side by side; "coming-to-be" across all
+works gives 100 hits; the APo result link (`?hle=coming-to-be&trans=mure&loc=85b:28`) opens the
+reader with 9 `<mark>`s, three runs of coming/to/be; `/EN/book/1?hle=happiness` with no `trans=`
+marks 52 words, all "happiness", in the default translation.
 
 ## 2026-10-06 — DEPLOYED: word cards read common words correctly (PR #155)
 
