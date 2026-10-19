@@ -10,7 +10,12 @@ host via the `@shared` alias (configured in `app/astro.config.mjs`,
 - `components/` — Reader, WordPopup, FootnotePopup, Search, BekkerJump
   (BekkerJump takes an optional `onJump` callback: the site navigates the
   tab, the desktop shell passes a handler).
-- `lib/` — data, works, search, glossary, betacode, text.
+- `lib/` — data, works, search, english-hit, glossary, betacode, text.
+  An English query is asked of every translation a work carries, each against
+  its own index (`search/english.json` for the primary,
+  `search/english-<slot>.json` for the rest, built by stage 7); `english-hit`
+  turns a hit's word positions back into a snippet, a Bekker line and a
+  chapter in that translation's text.
 - `styles/global.css` — the whole reader stylesheet. `desktop/src/desktop.css`
   layers overrides on top of it BY CLASS NAME; renaming classes here breaks
   desktop silently, so grep desktop.css before restructuring.

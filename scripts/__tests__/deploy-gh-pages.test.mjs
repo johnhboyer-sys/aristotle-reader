@@ -22,6 +22,7 @@ import {
   parseRsyncItemized,
   scanForLeaks,
   scanGatedSlots,
+  scanTranslationIndexes,
   auditDistScale,
   verificationTargets,
   verifyLive,
@@ -402,6 +403,43 @@ test('scanGatedSlots catches a leak with no translator name anywhere in it', () 
   assert.equal(r.ok, false);
 });
 
+// A search index holds a translation's words with their positions, which is
+// the prose in another order: gated exactly as the slot it indexes.
+test('scanGatedSlots fails on a search index for a slot the baseline does not list', () => {
+  const book = { path: 'data/Cat/book-01.json', text: JSON.stringify({ segments: [{ ross: 'x' }] }) };
+  const r = scanGatedSlots(
+    [book, { path: 'data/Cat/search/english-third.json', text: '{"every":[[0,0]]}' }],
+    { gated: new Set(['Cat']), baseline: { Cat: ['ross'] } },
+  );
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /Cat.*english-third\.json/);
+});
+
+test('scanGatedSlots passes the search indexes of the slots a gated work serves', () => {
+  const r = scanGatedSlots(
+    [
+      { path: 'data/Cat/book-01.json', text: JSON.stringify({ segments: [{ ross: 'x', overlays: { owen: [] } }] }) },
+      { path: 'data/Cat/search/english-secondary.json', text: '{}' },
+      { path: 'data/Cat/search/english-overlay-owen.json', text: '{}' },
+      { path: 'data/Cat/search/english.json', text: '{}' },
+    ],
+    { gated: new Set(['Cat']), baseline: { Cat: ['overlays', 'ross'] } },
+  );
+  assert.equal(r.ok, true, r.problems.join('; '));
+  assert.deepEqual(r.indexes, { Cat: ['overlay-owen', 'secondary'] });
+});
+
+test('scanGatedSlots fails on a search index it cannot map to a slot', () => {
+  const r = scanGatedSlots(
+    [
+      { path: 'data/Cat/book-01.json', text: JSON.stringify({ segments: [{ ross: 'x' }] }) },
+      { path: 'data/Cat/search/english-ackrill.json', text: '{}' },
+    ],
+    { gated: new Set(['Cat']), baseline: { Cat: ['ross'] } },
+  );
+  assert.equal(r.ok, false);
+});
+
 test('scanGatedSlots ignores works that are not gated', () => {
   // EN is not gated and legitimately serves `third`; Cat is here so the check
   // is actually running (an empty scan is its own failure, below).
@@ -451,4 +489,32 @@ test('auditDistScale is a no-op against an empty live branch (first deploy)', ()
 
 test('auditDistScale can be overridden deliberately', () => {
   assert.equal(auditDistScale(1, 6609, 0).ok, true);
+});
+
+// ── Every served translation has its search index ───────────────────────────
+test('scanTranslationIndexes passes when each translation beyond the primary is indexed', () => {
+  const r = scanTranslationIndexes([
+    { path: 'data/EN/book-01.json', text: JSON.stringify({ segments: [{ ross: [{ text: 'x' }], third: [{ text: 'y' }], overlays: { peters: [{ text: 'z' }] } }] }) },
+    { path: 'data/EN/search/english-secondary.json', text: '{}' },
+    { path: 'data/EN/search/english-third.json', text: '{}' },
+    { path: 'data/EN/search/english-overlay-peters.json', text: '{}' },
+    { path: 'data/Phys/book-01.json', text: JSON.stringify({ segments: [{ english: { text: 'x' } }] }) },
+  ]);
+  assert.equal(r.ok, true, r.problems.join('; '));
+  assert.equal(r.indexed, 3);
+});
+
+test('scanTranslationIndexes refuses a translation served without its index', () => {
+  const r = scanTranslationIndexes([
+    { path: 'data/EN/book-01.json', text: JSON.stringify({ segments: [{ ross: [{ text: 'x' }], overlays: { peters: [{ text: 'z' }] } }] }) },
+    { path: 'data/EN/search/english-secondary.json', text: '{}' },
+  ]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /EN.*english-overlay-peters\.json/);
+});
+
+test('scanTranslationIndexes refuses to pass when it saw no book at all', () => {
+  const r = scanTranslationIndexes([{ path: 'data/EN/search/english.json', text: '{}' }]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems[0], /not running/);
 });

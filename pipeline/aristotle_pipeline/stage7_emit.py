@@ -25,6 +25,7 @@ from pathlib import Path
 
 from .config import BUILD_DIR, REPO_ROOT, SOURCES_DIR, Manifest
 from .parse_filter import apply_morphology_override, filter_parses
+from .stage6_search import emit_translation_indexes
 
 
 def _load(rel: str):
@@ -655,6 +656,10 @@ def run(manifest: Manifest) -> Path:
         "grammar-col.bin",
     ]:
         shutil.copy(BUILD_DIR / "stage6" / f, out_dir / "search" / f)
+    # The other translations are indexed from the books just written, which
+    # are the only place their slices sit beside the segment ids meta.json
+    # numbers.
+    emit_translation_indexes(out_dir)
 
     work = manifest.data["work"]
     (out_dir / "manifest.json").write_text(

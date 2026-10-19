@@ -38,6 +38,14 @@ Emits these files under build/stage6/:
                  remap_word_index below.
 
 All of these are copied to build/dist/{work}/search/ by stage7.
+
+  english-<slot>.json — one more English index per translation beyond the
+                 primary, same shape as english.json: english-secondary.json,
+                 english-third.json, english-overlay-<id>.json. Built by
+                 emit_translation_indexes() from the emitted book JSON, so it
+                 indexes exactly the text the reader shows — a translation the
+                 public manifest drops is in neither. A segment's word_pos runs
+                 through its slices in order, as the reader lays them out.
 """
 
 from __future__ import annotations
@@ -59,6 +67,14 @@ _EN_WORD = re.compile(r"[a-z']+")
 # check, folds the text's curly one to straight (engPhraseMatches) — so the
 # index must key "aristotle's" as one word or neither path can find it.
 _EN_APOSTROPHE = re.compile("[\u2019\u02bc]")
+# Apparatus a translation's prose carries inline, which the reader renders as
+# controls and not as words: a footnote marker [^1.9] is glued to the word
+# before it and is simply dropped; a sidenote or figure marker [[s3]] / [[fig1]]
+# stands between words and leaves a space. Indexed as text, [[s3]] was the word
+# "s" and broke every phrase that ran across it. Mirrored by EN_FOOTNOTE /
+# EN_SIDENOTE in shared/lib/search.ts.
+_EN_FOOTNOTE = re.compile(r"\[\^[0-9A-Za-z_.*\u2020]+\]")
+_EN_SIDENOTE = re.compile(r"\[\[(?:s|fig)[0-9]+\]\]")
 
 
 def fold_lemma(beta_key: str) -> str:
@@ -71,7 +87,10 @@ def english_words(text: str) -> list[str]:
     apostrophes made straight, split on anything outside [a-z']. An apostrophe
     at a word's edge is a quotation mark (‘change’ closes with the same U+2019
     that Aristotle’s elides with) and is not part of the word. Shared with
-    stage8 so english.json and english-segments.json count the same words."""
+    stage8 so english.json and english-segments.json count the same words.
+    Inline footnote, sidenote and figure markers are not words (see
+    _EN_FOOTNOTE)."""
+    text = _EN_SIDENOTE.sub(" ", _EN_FOOTNOTE.sub("", text))
     words = _EN_WORD.findall(_EN_APOSTROPHE.sub("'", text).lower())
     return [w for w in (raw.strip("'") for raw in words) if w]
 
@@ -177,6 +196,92 @@ def remap_word_index(line_text: str, tokens: list[dict], word_index: int) -> int
     if not 0 <= word_index < len(normed):
         return None
     return normed[word_index][0]
+
+
+# -- Indexes for the translations beyond the primary --------------------------
+#
+# The primary translation is one chunk per segment and is indexed in run()
+# from stage1. Every other translation is chapter-anchored: a segment holds a
+# list of slices, one per chapter block, and the book JSON is the one place
+# all of them meet. Each gets an index of its own rather than a share of
+# english.json, so a query asking for every word to be present asks it of one
+# translator's prose, not of two translations pooled.
+
+_OVERLAY_ID = re.compile(r"[a-z0-9_]+")
+
+
+def segment_translations(seg: dict) -> dict[str, list[str]]:
+    """The non-primary translation slices of one emitted segment, by slot.
+
+    The slot is the index file's name: 'secondary' (emitted as `ross` until the
+    corpus is rebuilt under the new name, so both are read), 'third', and
+    'overlay-<id>' for the fourth translation onward.
+    """
+    out: dict[str, list[str]] = {}
+    secondary = seg.get("secondary") or seg.get("ross")
+    if secondary:
+        out["secondary"] = [p.get("text") or "" for p in secondary]
+    if seg.get("third"):
+        out["third"] = [p.get("text") or "" for p in seg["third"]]
+    for tid, pieces in (seg.get("overlays") or {}).items():
+        if not _OVERLAY_ID.fullmatch(tid):
+            raise ValueError(f"overlay id {tid!r} cannot name an index file")
+        if pieces:
+            out[f"overlay-{tid}"] = [p.get("text") or "" for p in pieces]
+    return out
+
+
+def translation_index_name(slot: str) -> str:
+    return f"english-{slot}.json"
+
+
+def emit_translation_indexes(work_dir: Path) -> dict[str, dict[str, int]]:
+    """Write search/english-<slot>.json for every non-primary translation.
+
+    Reads the work's emitted book-NN.json and search/meta.json, which must
+    already be in place; seg_idx is a segment's position in meta.json, exactly
+    as in english.json. Any english-*.json left from an earlier build is removed
+    first, so an index can never outlive its translation. Returns, per slot, the
+    number of distinct words and of segments indexed.
+    """
+    search_dir = work_dir / "search"
+    meta = json.loads((search_dir / "meta.json").read_text(encoding="utf-8"))
+    seg_idx = {m["id"]: i for i, m in enumerate(meta)}
+
+    posts: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    segments: dict[str, set[int]] = defaultdict(set)
+    books = sorted(work_dir.glob("book-*.json"))
+    for book_path in books:
+        doc = json.loads(book_path.read_text(encoding="utf-8"))
+        for seg in doc["segments"]:
+            slots = segment_translations(seg)
+            if not slots:
+                continue
+            si = seg_idx.get(seg["id"])
+            if si is None:
+                raise ValueError(
+                    f"{book_path.name}: segment {seg['id']} is not in search/meta.json"
+                )
+            for slot, texts in slots.items():
+                pos = 0
+                for text in texts:
+                    for word in english_words(text):
+                        posts[slot][word].append([si, pos])
+                        pos += 1
+                if pos:
+                    segments[slot].add(si)
+
+    for stale in search_dir.glob("english-*.json"):
+        stale.unlink()
+    summary: dict[str, dict[str, int]] = {}
+    for slot in sorted(posts):
+        # In document order, as english.json is.
+        index = {word: sorted(plist) for word, plist in posts[slot].items()}
+        (search_dir / translation_index_name(slot)).write_text(
+            json.dumps(index, ensure_ascii=False), encoding="utf-8"
+        )
+        summary[slot] = {"words": len(posts[slot]), "segments": len(segments[slot])}
+    return summary
 
 
 def run(manifest: Manifest) -> Path:

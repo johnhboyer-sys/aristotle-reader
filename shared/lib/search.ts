@@ -5,10 +5,13 @@
 //   Beta Code letters already ARE the fold form (θ→q, φ→f, χ→x, ψ→y, ξ→c,
 //   η→h, ω→w, …), so Latin input passes straight through; accents/breathings
 //   (the ) ( / \ = | + markers) are stripped, matching the index's fold form.
-// English search: whitespace-tokenized, lowercase.
+// English search: whitespace-tokenized, lowercase, asked of every translation
+//   a work carries — each against its own index, so "all words" means all in
+//   one translator's prose — and reported per translation.
 // Phrase search: after intersection, verify token adjacency in segment data.
 // Cross-language: AND (intersection) or OR (union) the two result sets.
 import { memoAsyncBy } from './memo';
+import { getWork, searchableTranslations, type TranslationRef } from './works';
 
 // Honour Astro's base path. BASE_URL may lack a trailing slash, so strip + join.
 // Same host override as data.ts: the desktop app points the whole data layer
@@ -234,6 +237,85 @@ function englishTerm(term: string): string {
   return term.replace(ENGLISH_QUOTES, "'").replace(/^'+|'+$/g, '');
 }
 
+// Apparatus a translation's prose carries inline: a footnote marker [^1.9] is
+// glued to the word before it and drops out; a sidenote or figure marker
+// [[s3]] / [[fig1]] stands between words. Neither is a word. Mirror of stage6's
+// _EN_FOOTNOTE / _EN_SIDENOTE.
+const EN_FOOTNOTE = /\[\^[0-9A-Za-z_.*\u2020]+\]/y;
+const EN_SIDENOTE = /\[\[(?:s|fig)[0-9]+\]\]/y;
+
+// Only the elision marks become apostrophes on the index side; an opening
+// quote U+2018 is punctuation there, so it splits a word here too.
+const INDEX_APOSTROPHE = /[\u2019\u02bc]/g;
+
+export interface EnglishWord { word: string; start: number; end: number }
+
+/** The words of a stretch of English as the index counts them, each with the
+ * span it occupies in `text` as given (markers included), so a posting's
+ * word_pos can be turned back into a place on the page. stage6's
+ * english_words() is the same split; a shared fixture pins the two. */
+export function englishWords(text: string): EnglishWord[] {
+  const out: EnglishWord[] = [];
+  let word = '';
+  let offsets: number[] = [];
+  const close = () => {
+    let a = 0;
+    let b = word.length;
+    while (a < b && word[a] === "'") a++;
+    while (b > a && word[b - 1] === "'") b--;
+    if (a < b) out.push({ word: word.slice(a, b), start: offsets[a], end: offsets[b - 1] + 1 });
+    word = '';
+    offsets = [];
+  };
+  for (let i = 0; i < text.length;) {
+    if (text[i] === '[') {
+      EN_FOOTNOTE.lastIndex = i;
+      if (EN_FOOTNOTE.test(text)) { i = EN_FOOTNOTE.lastIndex; continue; }
+      EN_SIDENOTE.lastIndex = i;
+      if (EN_SIDENOTE.test(text)) { close(); i = EN_SIDENOTE.lastIndex; continue; }
+    }
+    // Lowercased a character at a time, as Python lowercases the whole string:
+    // the result of one character is never more than one [a-z] letter here.
+    for (const ch of text[i].replace(INDEX_APOSTROPHE, "'").toLowerCase()) {
+      if ((ch >= 'a' && ch <= 'z') || ch === "'") { word += ch; offsets.push(i); }
+      else close();
+    }
+    i++;
+  }
+  close();
+  return out;
+}
+
+/** True for a word (as englishWords() gives it) that the typed term matches,
+ * by the same rule the index lookup uses. */
+export function englishTermMatcher(terms: string[]): (word: string) => boolean {
+  const tests = terms.map(t => {
+    if (t === '*') return () => true;
+    const pattern = compilePattern(englishTerm(t), englishFold);
+    if (!pattern) return () => false;
+    return 'exact' in pattern ? (w: string) => w === pattern.exact : pattern.test;
+  });
+  return word => tests.some(test => test(word));
+}
+
+// Which index holds a translation's words: english.json for the primary, and
+// one english-<slot>.json for each translation beyond it (stage6
+// emit_translation_indexes names them the same way).
+export function englishIndexFile(t: Pick<TranslationRef, 'id' | 'slot'>): string {
+  if (t.slot === 'english') return 'english.json';
+  if (t.slot === 'overlay') return `english-overlay-${t.id}.json`;
+  return `english-${t.slot}.json`;
+}
+
+// The translations an English query is asked of in one work. A work the
+// registry does not know (or that names no translation) still has its
+// primary index.
+function englishSources(work: string): Pick<TranslationRef, 'id' | 'slot'>[] {
+  const w = getWork(work);
+  const ts = w ? searchableTranslations(w) : [];
+  return ts.length ? ts : [{ id: 'english', slot: 'english' }];
+}
+
 // -- Posting-list helpers -------------------------------------------------
 
 function grkPosting(idx: GrkIndex, term: string): Set<number> {
@@ -408,11 +490,21 @@ function englishPhraseHits(
 export type SearchMode = 'all' | 'any' | 'phrase';
 export type LangOp = 'and' | 'or';
 
+// One translation's English match in a segment: which translation (a
+// TranslationRef id) and the word positions the query matched there, counted
+// as englishWords() counts them through that translation's text for the
+// segment. Positions are empty only for an index built before word positions
+// were stored.
+export interface EngHit { translation: string; positions: number[] }
+
 export interface SearchResult {
   work: string;           // which work this hit belongs to
   meta: SegMeta;
   grkMatch: boolean;
-  engMatch: boolean;
+  engMatch: boolean;      // true iff engHits is non-empty
+  // Every translation the English query matched in this segment, in registry
+  // order. Absent on a Greek-only search.
+  engHits?: EngHit[];
   grkPositions: number[]; // token positions in the segment where a Greek term matched
   // Grammatical hits only, parallel to grkPositions: the values each position's
   // readings license for the queried categories, and whether every reading
@@ -426,6 +518,10 @@ export interface SearchResult {
 export interface SearchOutcome {
   results: SearchResult[];
   failedWorks: string[];  // work ids that could not be searched this run
+  // Translations whose index did not load, so the English query was not asked
+  // of them: a corpus emitted before those indexes existed, or a dropped
+  // fetch. The primary translation's index failing fails the work instead.
+  unsearchedTranslations?: { work: string; translation: string }[];
   // Works whose chapter starts are known only to the Bekker line, reported ONLY
   // when the query actually leans on chapter geometry. The pipeline stamps each
   // bound exact or line-snapped; saying nothing here would let a chapter-scoped
@@ -488,6 +584,54 @@ function greekPositions(
   return out;
 }
 
+// The segments one English index matches, by the mode's rule.
+function englishHits(
+  idx: EngIndex,
+  meta: SegMeta[],
+  engTerms: string[],
+  engMode: SearchMode,
+): Set<number> {
+  const postings = engTerms.map(t => engPosting(idx, t));
+  if (engMode === 'any') return postings.reduce(union);
+  const hits = postings.reduce(intersect);
+  return engMode === 'phrase' && engTerms.length > 1
+    ? englishPhraseHits(idx, meta, hits, engTerms)
+    : hits;
+}
+
+// Where in each hit segment the query matched: the words of every phrase run,
+// or every word a term matched. Nothing for an index without positions, nor
+// for the bare `*` (every word matches it, so no word is the hit).
+function englishPositions(
+  idx: EngIndex,
+  engTerms: string[],
+  engMode: SearchMode,
+  hits: Set<number>,
+): Map<number, number[]> {
+  const out = new Map<number, number[]>();
+  if (!engHasPositions(idx)) return out;
+  if (engMode === 'phrase' && engTerms.length > 1) {
+    for (const [si, starts] of phraseStarts(idx, engTerms.map(t => [englishTerm(t)]), englishFold)) {
+      if (!hits.has(si)) continue;
+      out.set(si, starts.flatMap(s => engTerms.map((_, j) => s + j)));
+    }
+    return out;
+  }
+  for (const t of engTerms) {
+    if (t === '*') continue;
+    for (const [si, ps] of termPositions(idx, englishTerm(t), englishFold)) {
+      if (!hits.has(si)) continue;
+      const arr = out.get(si);
+      if (arr) arr.push(...ps);
+      else out.set(si, [...ps]);
+    }
+  }
+  for (const [si, ps] of out) out.set(si, [...new Set(ps)].sort((a, b) => a - b));
+  return out;
+}
+
+interface WorkOutcome { results: SearchResult[]; unsearched: string[] }
+
 // Search one work, returning hits tagged with that work.
 async function searchWork(
   work: string,
@@ -497,20 +641,30 @@ async function searchWork(
   engMode: SearchMode,
   langOp: LangOp,
   matchMode: MatchMode,
-): Promise<SearchResult[]> {
+): Promise<WorkOutcome> {
   // Fetch only what this query needs: meta always; the lemma OR form Greek
-  // index iff there are Greek terms; the English index iff there are English
-  // terms. Kick them off together, then await.
+  // index iff there are Greek terms; an English index per translation iff
+  // there are English terms. Kick them off together, then await.
   const metaP = loadIndex<SegMeta[]>(work, 'meta.json');
   const grkP: Promise<GrkIndex | null> = grkTerms.length
     ? loadIndex<GrkIndex>(work, matchMode === 'form' ? 'greek_form.json' : 'greek_lemma.json')
     : Promise.resolve(null);
-  const engP: Promise<EngIndex | null> = engTerms.length
-    ? loadIndex<EngIndex>(work, 'english.json')
-    : Promise.resolve(null);
+  const sources = engTerms.length ? englishSources(work) : [];
+  // The primary index failing fails the work, as it always has; any other
+  // translation's only drops that translation, and says so.
+  const unsearched: string[] = [];
+  const engP = sources.map(t => {
+    const p = loadIndex<EngIndex>(work, englishIndexFile(t));
+    if (t.slot === 'english') return p;
+    return p.catch(err => {
+      console.warn(`search: ${work} ${t.id} not searched —`, err);
+      unsearched.push(t.id);
+      return null;
+    });
+  });
   const meta = await metaP;
   const grkIdx = await grkP;
-  const engIdx = await engP;
+  const engIdxs = await Promise.all(engP);
 
   let grkHits: Set<number> | null = null;
   let engHits: Set<number> | null = null;
@@ -533,16 +687,23 @@ async function searchWork(
     }
   }
 
-  if (engTerms.length > 0 && engIdx) {
-    const postings = engTerms.map(t => engPosting(engIdx, t));
-    if (engMode === 'any') {
-      engHits = postings.reduce(union);
-    } else {
-      engHits = postings.reduce(intersect);
-      if (engMode === 'phrase' && engTerms.length > 1) {
-        engHits = englishPhraseHits(engIdx, meta, engHits, engTerms);
+  // seg_idx -> each translation's hit there, in registry order.
+  const engBySeg = new Map<number, EngHit[]>();
+  if (engTerms.length > 0) {
+    engHits = new Set();
+    sources.forEach((t, i) => {
+      const idx = engIdxs[i];
+      if (!idx) return;
+      const hits = englishHits(idx, meta, engTerms, engMode);
+      const positions = englishPositions(idx, engTerms, engMode, hits);
+      for (const si of hits) {
+        engHits!.add(si);
+        const hit = { translation: t.id, positions: positions.get(si) ?? [] };
+        const arr = engBySeg.get(si);
+        if (arr) arr.push(hit);
+        else engBySeg.set(si, [hit]);
       }
-    }
+    });
   }
 
   let combined: Set<number>;
@@ -556,15 +717,17 @@ async function searchWork(
     ? greekPositions(grkIdx, grkTerms, grkMode, grkHits)
     : new Map<number, number[]>();
 
-  return [...combined]
+  const results = [...combined]
     .sort((a, b) => a - b)
     .map(si => ({
       work,
       meta: meta[si],
       grkMatch: grkHits?.has(si) ?? false,
       engMatch: engHits?.has(si) ?? false,
+      ...(engHits ? { engHits: engBySeg.get(si) ?? [] } : {}),
       grkPositions: grkPos.get(si) ?? [],
     }));
+  return { results, unsearched };
 }
 
 // Turn a global offset into a citable position, using only offsets.json — the
@@ -1303,9 +1466,13 @@ export async function search(
   // load drop just that work (logged + reported) instead of rejecting the whole
   // search.
   const failedWorks: string[] = [];
+  const unsearchedTranslations: { work: string; translation: string }[] = [];
   const perWork = await pool(works, 8, async w => {
     try {
-      return await searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode);
+      const { results, unsearched } =
+        await searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode);
+      for (const translation of unsearched) unsearchedTranslations.push({ work: w, translation });
+      return results;
     } catch (err) {
       console.warn(`search: skipping ${w} —`, err);
       failedWorks.push(w);
@@ -1321,5 +1488,9 @@ export async function search(
   if (failedWorks.length === works.length) {
     throw new Error('Could not load the search index — check your connection and try again.');
   }
-  return { results: perWork.flat(), failedWorks };
+  return {
+    results: perWork.flat(),
+    failedWorks,
+    ...(unsearchedTranslations.length ? { unsearchedTranslations } : {}),
+  };
 }

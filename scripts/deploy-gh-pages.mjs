@@ -213,6 +213,15 @@ export const GATED_SLOT_BASELINE = {
   Pol: ['ross'],
 };
 const TRANSLATION_SLOTS = ['ross', 'secondary', 'third', 'overlays'];
+// A translation's English search index (search/english-<slot>.json) is that
+// translation in another shape — each word with its position is enough to set
+// the prose out again — so it is gated as the book slot it indexes.
+function indexedSlots(name) {
+  if (name === 'secondary') return ['ross', 'secondary'];
+  if (name === 'third') return ['third'];
+  if (/^overlay-[a-z0-9_]+$/.test(name)) return ['overlays'];
+  return null;
+}
 
 // The structural half of the leak check. scanForLeaks matches the translators'
 // SURNAMES, so gated prose that never names its translator passes it clean —
@@ -223,8 +232,14 @@ const TRANSLATION_SLOTS = ['ross', 'secondary', 'third', 'overlays'];
 export function scanGatedSlots(files, { gated, baseline = GATED_SLOT_BASELINE } = {}) {
   const problems = [];
   const seen = new Map();          // work -> Set of slots found
+  const indexes = new Map();       // work -> Set of english-<slot> index names
   let gatedFilesScanned = 0;
   for (const { path: filePath, text } of files) {
+    const ix = /^data\/([^/]+)\/search\/english-([^/]+)\.json$/.exec(filePath);
+    if (ix) {
+      if (gated.has(ix[1])) (indexes.get(ix[1]) ?? indexes.set(ix[1], new Set()).get(ix[1])).add(ix[2]);
+      continue;
+    }
     const m = /^data\/([^/]+)\/book-\d+\.json$/.exec(filePath);
     if (!m || !gated.has(m[1])) continue;
     gatedFilesScanned++;
@@ -246,12 +261,73 @@ export function scanGatedSlots(files, { gated, baseline = GATED_SLOT_BASELINE } 
       }
     }
   }
+  for (const [work, names] of indexes) {
+    const allowed = new Set(baseline[work] ?? []);
+    for (const name of [...names].sort()) {
+      const slots = indexedSlots(name);
+      if (!slots) {
+        problems.push(`${work} serves search/english-${name}.json, an index of no translation slot this check knows — read it before deploying.`);
+      } else if (!slots.some((slot) => allowed.has(slot))) {
+        problems.push(`${work} serves search/english-${name}.json, the search index of a "${slots[0]}" translation GATED_SLOT_BASELINE does not list — an index carries the translation's words in order, so it leaks the prose as surely as the slot.`);
+      }
+    }
+  }
   // A check that examined nothing must not report clean — the lesson the
   // "Aristotle" control was added for on 2026-09-01.
   if (gatedFilesScanned === 0) {
     problems.unshift(`no gated work was scanned: none of ${[...gated].join(', ') || '(none known)'} had a data/<Work>/book-*.json in the clone — this check is not running.`);
   }
-  return { ok: problems.length === 0, gatedFilesScanned, seen: Object.fromEntries([...seen].map(([w, s]) => [w, [...s].sort()])), problems };
+  return {
+    ok: problems.length === 0,
+    gatedFilesScanned,
+    seen: Object.fromEntries([...seen].map(([w, s]) => [w, [...s].sort()])),
+    indexes: Object.fromEntries([...indexes].map(([w, s]) => [w, [...s].sort()])),
+    problems,
+  };
+}
+
+// Every translation a work serves must be searchable: search asks each one
+// for an English query and, finding no index, tells every reader the results
+// are incomplete. An app built against a corpus emitted before the per-
+// translation indexes (stage7, or `python -m aristotle_pipeline translations`)
+// is refused here rather than shipped with that notice on every search.
+export function scanTranslationIndexes(files) {
+  const served = new Map();        // work -> Set of index names its books need
+  const present = new Map();       // work -> Set of index names on disk
+  let booksScanned = 0;
+  const add = (map, work, name) => (map.get(work) ?? map.set(work, new Set()).get(work)).add(name);
+  for (const { path: filePath, text } of files) {
+    const ix = /^data\/([^/]+)\/search\/english-([^/]+)\.json$/.exec(filePath);
+    if (ix) { add(present, ix[1], ix[2]); continue; }
+    const m = /^data\/([^/]+)\/book-\d+\.json$/.exec(filePath);
+    if (!m) continue;
+    booksScanned++;
+    let doc;
+    try { doc = JSON.parse(text); } catch { continue; }   // the slot scan reports unreadable books
+    for (const segment of doc?.segments ?? []) {
+      if (!segment || typeof segment !== 'object') continue;
+      if (segment.secondary?.length || segment.ross?.length) add(served, m[1], 'secondary');
+      if (segment.third?.length) add(served, m[1], 'third');
+      for (const [id, pieces] of Object.entries(segment.overlays ?? {})) {
+        if (pieces?.length) add(served, m[1], `overlay-${id}`);
+      }
+    }
+  }
+  const problems = [];
+  for (const [work, names] of served) {
+    for (const name of [...names].sort()) {
+      if (!present.get(work)?.has(name)) {
+        problems.push(`${work} serves a translation with no search/english-${name}.json — run \`uv run python -m aristotle_pipeline translations\` in pipeline/ (or rebuild), then build the app again.`);
+      }
+    }
+  }
+  if (booksScanned === 0) problems.unshift('no data/<Work>/book-*.json was scanned — this check is not running.');
+  return {
+    ok: problems.length === 0,
+    booksScanned,
+    indexed: [...served.values()].reduce((n, s) => n + s.size, 0),
+    problems,
+  };
 }
 
 // A dist holding one empty index.html passed every default gate, and the rsync
@@ -667,10 +743,23 @@ async function main() {
     );
     console.log(`  gated works (a -public.yaml exists): ${[...gatedWorks].join(', ') || '(none)'}`);
     console.log(`  gated book files scanned: ${slots.gatedFilesScanned}`);
-    for (const [work, found] of Object.entries(slots.seen)) console.log(`    ${work}: ${found.join(', ')}`);
+    for (const [work, found] of Object.entries(slots.seen)) {
+      const idx = slots.indexes[work] ?? [];
+      console.log(`    ${work}: ${found.join(', ')}${idx.length ? ` · search indexes: ${idx.join(', ')}` : ''}`);
+    }
     if (!slots.ok) {
       for (const problem of slots.problems) console.log(`  !! ${problem}`);
       fail('gated translation slots did not pass.');
+    }
+
+    heading('Search indexes: every served translation can be searched');
+    const indexes = scanTranslationIndexes(
+      readAll(walk(dataDir, (name) => name.toLowerCase().endsWith('.json'), clone)),
+    );
+    console.log(`  book files scanned: ${indexes.booksScanned}; translations beyond the primary: ${indexes.indexed}`);
+    if (!indexes.ok) {
+      for (const problem of indexes.problems) console.log(`  !! ${problem}`);
+      fail('a served translation has no search index.');
     }
 
     // 6. Stage and read the deploy diff by category ------------------------

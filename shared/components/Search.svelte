@@ -17,8 +17,10 @@
     type SlotRelation,
     type ComboOptions,
     type WindowUnit,
+    type EngHit,
     pool,
   } from '../lib/search';
+  import { englishPlace } from '../lib/english-hit';
   import {
     fetchBook,
     fetchChapters,
@@ -30,8 +32,7 @@
     type ChapterRef,
     type LemmaCandidate,
   } from '../lib/data';
-  import { escapeRe, highlightPrefixMatches, searchTermPrefix } from '../lib/text';
-  import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
+  import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
 
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -46,6 +47,20 @@
     // Grammatical hits only: the reading is stated as one-of-N when the parse
     // does not settle it. Absent when the parse is unambiguous.
     oneOf?: string;
+    // English only: one row per translation the query matched in this passage
+    // (one column, one chapter), in the work's own order, so where two
+    // translators render the same lines their words sit together. An English
+    // instance's html/jumpUrl are its first row's.
+    rows?: TransRow[];
+  }
+  interface TransRow {
+    translation: string;   // TranslationRef id
+    // The translator's short name, shown only where the work carries more
+    // than one translation — elsewhere there is no choice to name.
+    label: string;
+    title: string;         // full citation
+    html: string;
+    jumpUrl: string;
   }
   // All instances within one chapter, merged into a single (collapsible) card.
   interface ChapterGroup {
@@ -114,6 +129,9 @@
         return;
       }
       failedWorks = outcome.failedWorks;
+      unsearched = [];
+      allResults = outcome.results;
+      transFilter = null;
       totalInstances = outcome.results.reduce((n, r) => n + instCount(r), 0);
       pages = paginate(outcome.results);
       // The widened results are other inflections by definition, so the typed
@@ -121,7 +139,7 @@
       // drop τῷ and τοῦ from a search typed as τὸ, the very forms this finds.
       // Built whole, as runSearch builds it, so the ctx describes the search
       // that produced these results rather than patching the previous one.
-      searchCtx = { grkQuery: query, engQuery: '', engTerms: [], grkAccentTerms: [] };
+      searchCtx = { ...emptyCtx(), grkQuery: query };
       searched = true;
       variantsShown = true;
       if (pages.length) await renderPage(0);
@@ -162,8 +180,80 @@
   // and jump-links after the search completes, so they must use the query that
   // produced the results — not whatever is currently typed in the boxes (a user
   // can edit the inputs without re-submitting, then page/retry/export).
-  interface SearchCtx { grkQuery: string; engQuery: string; engTerms: string[]; grkAccentTerms: string[]; }
-  let searchCtx: SearchCtx = { grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [] };
+  interface SearchCtx {
+    grkQuery: string; engQuery: string; engTerms: string[]; grkAccentTerms: string[];
+    engPhrase: boolean;   // the English terms are a phrase: mark the run, not each word
+    langOp: LangOp;       // how the two queries were joined, for the translation filter
+  }
+  const emptyCtx = (): SearchCtx => ({
+    grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [], engPhrase: false, langOp: 'and',
+  });
+  let searchCtx: SearchCtx = emptyCtx();
+
+  // ── Translations ───────────────────────────────────────────────────────────
+  // An English query is asked of every translation a work carries, and each
+  // hit says whose prose it is in. The full result set is kept so the reader
+  // can narrow it to one translator and back without searching again.
+  let allResults: SearchResult[] = [];
+  let transFilter: string | null = null;   // a TranslationRef id, or every translation
+  let transListOpen = false;
+  // Translations the English query could not be asked of (their index did
+  // not load), as "Ross (Nicomachean Ethics)".
+  let unsearched: string[] = [];
+  const TRANS_CHIPS = 8;                    // shown before "more"
+
+  function translationsOf(work: string): TranslationRef[] {
+    const w = getWork(work);
+    return w ? searchableTranslations(w) : [];
+  }
+  function translationRef(work: string, id: string): TranslationRef | undefined {
+    return translationsOf(work).find(t => t.id === id);
+  }
+
+  // Hits per translator across the whole set, most first — the breakdown is
+  // itself an answer (which translators use this word, and how often).
+  $: transCounts = (() => {
+    const by = new Map<string, { id: string; short: string; n: number }>();
+    for (const r of allResults) {
+      for (const h of r.engHits ?? []) {
+        const entry = by.get(h.translation)
+          ?? by.set(h.translation, { id: h.translation, short: translationRef(r.work, h.translation)?.short ?? h.translation, n: 0 }).get(h.translation)!;
+        entry.n++;
+      }
+    }
+    return [...by.values()].sort((a, b) => b.n - a.n || a.short.localeCompare(b.short));
+  })();
+  // A filter is offered only where some work answered in two translations or
+  // more; across single-translation works it would only restate the work list.
+  $: transChoice =
+    new Set(allResults.flatMap(r => (r.engHits ?? []).map(h => `${r.work}:${h.translation}`))).size
+    > new Set(allResults.filter(r => r.engHits?.length).map(r => r.work)).size;
+
+  // One translation's hits, or all of them. A passage that matched only in
+  // the translations set aside drops out — unless its Greek matched and the
+  // two queries were joined by "either", when the Greek hit still stands.
+  function narrow(results: SearchResult[], id: string | null, ctx: SearchCtx): SearchResult[] {
+    if (!id) return results;
+    return results.flatMap(r => {
+      if (!r.engHits) return [r];
+      const engHits = r.engHits.filter(h => h.translation === id);
+      if (engHits.length) return [{ ...r, engHits, engMatch: true }];
+      return r.grkMatch && ctx.langOp === 'or' ? [{ ...r, engHits: [], engMatch: false }] : [];
+    });
+  }
+
+  async function showResults(results: SearchResult[]) {
+    const shown = narrow(results, transFilter, searchCtx);
+    totalInstances = shown.reduce((n, r) => n + instCount(r), 0);
+    pages = paginate(shown);
+    if (pages.length) await renderPage(0);
+    else { groups = []; pageIdx = 0; }
+  }
+
+  function setTransFilter(id: string | null) {
+    transFilter = transFilter === id ? null : id;
+    showResults(allResults);
+  }
 
   // ── Accent-sensitive Greek matching ────────────────────────────────────────
   // The indexes are accent-folded (λόγος and λογός share a key), which is the
@@ -650,7 +740,7 @@
     const chs = chapters
       .map((c, i) => ({ ...c, ci: colIdx.get(c.column) ?? 0, ln: parseInt(c.line), order: i }))
       .sort((a, b) => a.ci - b.ci || a.ln - b.ln);
-    return (column: string, line: number): { chapter: string; bekker: string; order: number } => {
+    const at = (column: string, line: number): { chapter: string; bekker: string; order: number } => {
       // Defensive: never return undefined (callers deref .chapter). If the
       // chapter list is empty, group the hit under a placeholder rather than
       // throwing and collapsing the whole page.
@@ -663,6 +753,9 @@
       }
       return found;
     };
+    // A chapter the text names outright (an overlay slice carries its own).
+    const named = (chapter: string) => chs.find(c => c.chapter === chapter);
+    return { at, named };
   }
 
   // Bekker line of the token at index `pos` — see lineAtPosition in lib/data.
@@ -670,31 +763,16 @@
   // a hit on GA 775a11a was printed and linked as "775a11", a line that column
   // does not have.
 
-  // Approximate Bekker line of the earliest English match (for chapter
-  // grouping). Approximate in WHICH line it picks — but the line it picks is
-  // named in full, suffix included, or the jump URL cites a line that is not
-  // in the column.
-  function englishLine(seg: Segment, terms: string[]): { n: number; sub?: string } {
-    const text = seg.english?.text ?? '';
-    let earliest = -1;
-    for (const t of terms) {
-      const clean = searchTermPrefix(t);
-      if (!clean) continue;
-      const m = new RegExp(`(^|[^\\p{L}\\p{M}\\p{N}_])${escapeRe(clean)}`, 'iu').exec(text);
-      if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
-    }
-    const lines = seg.greek;
-    if (earliest < 0 || !lines.length) return { n: lines[0]?.n ?? 1, sub: lines[0]?.sub };
-    const idx = Math.min(lines.length - 1, Math.floor(earliest / Math.max(1, text.length) * lines.length));
-    return { n: lines[idx].n, sub: lines[idx].sub };
-  }
-
   // Instances a result contributes (mirrors how `buildGroups` adds them): one
-  // per Greek match position, plus one for an English match. Lets us count the
-  // total and lay out pages from the index alone, before any book is fetched.
+  // per Greek match position, plus one per translation the English matched in.
+  // Lets us count the total and lay out pages from the index alone, before any
+  // book is fetched.
   function instCount(r: SearchResult): number {
-    return (r.grkMatch ? r.grkPositions.length : 0) + (r.engMatch ? 1 : 0);
+    return (r.grkMatch ? r.grkPositions.length : 0) + (r.engMatch ? (r.engHits?.length ?? 1) : 0);
   }
+  // What an instance counts for: each translation row is a hit of its own.
+  const hitsIn = (inst: Instance) => inst.rows?.length ?? 1;
+  const groupHits = (g: ChapterGroup) => g.instances.reduce((n, inst) => n + hitsIn(inst), 0);
 
   // Build the chapter groups for a slice of results: load the books + chapters
   // they touch (bounded concurrency), then assemble and sort. A failed book or
@@ -742,8 +820,11 @@
     if (ctx.grkQuery) qs.set('hlg', ctx.grkQuery);
     if (ctx.engQuery) qs.set('hle', ctx.engQuery);
     const base = qs.toString();
-    const jumpFor = (work: string, book: number, column: string, line: number, sub?: string) =>
-      `${BASE_URL}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${lineRef(line, sub)}`;
+    // A translation hit opens the reader in that translation, where the
+    // highlighted words are; a Greek one leaves the reader's choice alone.
+    const jumpFor = (work: string, book: number, column: string, line: number, sub?: string, trans?: string) =>
+      `${BASE_URL}${workPath(work, book)}?${base}${base ? '&' : ''}`
+      + `${trans ? `trans=${encodeURIComponent(trans)}&` : ''}loc=${column}:${lineRef(line, sub)}`;
 
     for (const r of results) {
       const seg = segMap.get(`${r.work}:${r.meta.id}`);
@@ -761,7 +842,7 @@
           if (ctx.grkAccentTerms.length
             && !accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms)) continue;
           const { n: line, sub } = lineAtPosition(seg, pos);
-          const ch = lookup(seg.column, line);
+          const ch = lookup.at(seg.column, line);
           // r.grammar runs parallel to grkPositions on a grammatical search.
           // Where the parse doesn't settle the reading, say so on the hit
           // rather than letting the match imply a certainty it doesn't have.
@@ -775,9 +856,35 @@
         }
       }
       if (r.engMatch) {
-        const { n: line, sub } = englishLine(seg, ctx.engTerms);
-        const ch = lookup(seg.column, line);
-        add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, ctx.engTerms), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub) });
+        const ts = translationsOf(r.work);
+        const several = ts.length > 1;
+        // A work the registry does not list still has its one translation.
+        const hits: EngHit[] = r.engHits ?? [{ translation: ts[0]?.id ?? 'english', positions: [] }];
+        // Rows sharing a chapter share an instance; a column that holds the
+        // end of one chapter and the start of the next can place two
+        // translations' hits on either side of the break.
+        const byChapter = new Map<string, { ch: { chapter: string; bekker: string; order: number }; line: number; rows: TransRow[] }>();
+        for (const hit of hits) {
+          const t = ts.find(x => x.id === hit.translation)
+            ?? { id: hit.translation, slot: 'english' as const, short: hit.translation, name: hit.translation };
+          const place = englishPlace(seg, t, hit.positions, ctx.engTerms, ctx.engPhrase);
+          if (!place) continue;
+          const ch = (place.chapter !== null ? lookup.named(place.chapter) : undefined)
+            ?? lookup.at(seg.column, place.chapter !== null ? place.line : seg.greek[0]?.n ?? place.line);
+          const slot = byChapter.get(ch.chapter)
+            ?? byChapter.set(ch.chapter, { ch, line: place.line, rows: [] }).get(ch.chapter)!;
+          slot.line = Math.min(slot.line, place.line);
+          slot.rows.push({
+            translation: t.id,
+            label: several ? t.short : '',
+            title: t.name,
+            html: place.html,
+            jumpUrl: jumpFor(r.work, r.meta.book, seg.column, place.line, place.sub, several ? t.id : undefined),
+          });
+        }
+        for (const { ch, line, rows } of byChapter.values()) {
+          add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: rows[0].html, jumpUrl: rows[0].jumpUrl, rows });
+        }
       }
     }
 
@@ -857,6 +964,7 @@
     loading = true;
     error = '';
     failedWorks = [];
+    unsearched = [];
     approximateChapters = [];
     variantNote = '';
     variantsShown = false;
@@ -878,8 +986,10 @@
         grkAccentTerms: !comboActive && !soloLemmaActive && accentSensitive
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
+        engPhrase: engMode === 'phrase',
+        langOp,
       };
-      const { results, failedWorks: failed, approximateChapters: approximate } = comboActive
+      const { results, failedWorks: failed, approximateChapters: approximate, unsearchedTranslations } = comboActive
         ? await searchCombo(comboSearchSlots, comboOptions, works)
         // Picked headwords are OR-ed: choosing two spellings of one word, or two
         // homonyms, asks for either, never for both in the same passage.
@@ -892,11 +1002,13 @@
           : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
       failedWorks = failed;
       approximateChapters = approximate ?? [];
-      totalInstances = results.reduce((n, r) => n + instCount(r), 0);
-      pages = paginate(results);
+      unsearched = (unsearchedTranslations ?? []).map(({ work, translation }) =>
+        `${translationRef(work, translation)?.short ?? translation} (${getWork(work)?.title ?? work})`);
+      allResults = results;
+      transFilter = null;
+      transListOpen = false;
       searched = true;
-      if (pages.length) await renderPage(0);
-      else { groups = []; pageIdx = 0; }
+      await showResults(results);
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -927,43 +1039,6 @@
     if (start > 0) html = '… ' + html;
     if (end < toks.length) html = html + ' …';
     return html;
-  }
-
-  // English keyword-in-context: a character window around the first matched
-  // word in the full chunk text, with all query terms highlighted.
-  const ENG_WINDOW = 140;
-  function englishKwic(seg: Segment, terms: string[]): string {
-    const text = seg.english?.text ?? '';
-    if (!text) return '';
-    let earliest = -1;
-    for (const t of terms) {
-      const clean = searchTermPrefix(t);
-      if (!clean) continue;
-      const m = new RegExp(`(^|[^\\p{L}\\p{M}\\p{N}_])${escapeRe(clean)}`, 'iu').exec(text);
-      if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
-    }
-    if (earliest < 0) {
-      const head = text.slice(0, 300);
-      return esc(head) + (text.length > head.length ? ' …' : '');
-    }
-    let start = Math.max(0, earliest - ENG_WINDOW);
-    let end = Math.min(text.length, earliest + ENG_WINDOW);
-    if (start > 0) {
-      const sp = text.indexOf(' ', start);
-      if (sp >= 0 && sp < earliest) start = sp + 1;
-    }
-    if (end < text.length) {
-      const sp = text.lastIndexOf(' ', end);
-      if (sp > earliest) end = sp;
-    }
-    let html = highlightEnglish(text.slice(start, end), terms);
-    if (start > 0) html = '… ' + html;
-    if (end < text.length) html = html + ' …';
-    return html;
-  }
-
-  function highlightEnglish(text: string, terms: string[]): string {
-    return highlightPrefixMatches(text, terms);
   }
 
   function esc(s: string): string {
@@ -1003,15 +1078,26 @@
       // we say so rather than silently shipping a short file.
       const { groups: allGroups, failed } = await buildGroups(pages.flat(), searchCtx);
       const origin = typeof location !== 'undefined' ? location.origin : '';
-      const rows: string[][] = [['Work', 'Book', 'Chapter', 'Bekker', 'Language', 'Snippet', 'URL']];
+      const rows: string[][] = [['Work', 'Book', 'Chapter', 'Bekker', 'Language', 'Translation', 'Snippet', 'URL']];
       for (const g of allGroups) {
         const w = getWork(g.work);
         const workTitle = w?.title ?? g.work;
         const book = w?.bookLabels[g.book - 1] ?? String(g.book);
         for (const inst of g.instances) {
+          if (inst.rows) {
+            // One row per translation: each is its own hit, in its own words.
+            for (const row of inst.rows) {
+              const t = translationRef(g.work, row.translation);
+              rows.push([
+                workTitle, String(book), g.chapter, inst.ref, 'English',
+                t?.short ?? row.translation, stripHtml(row.html), origin + row.jumpUrl,
+              ]);
+            }
+            continue;
+          }
           rows.push([
             workTitle, String(book), g.chapter, inst.ref,
-            inst.lang === 'grk' ? 'Greek' : 'English',
+            inst.lang === 'grk' ? 'Greek' : 'English', '',
             stripHtml(inst.html),
             origin + inst.jumpUrl,
           ]);
@@ -1533,6 +1619,12 @@
         <button type="button" class="retry-btn" on:click={doSearch}>Retry</button>
       </p>
     {/if}
+    {#if unsearched.length}
+      <p class="search-incomplete" role="alert">
+        ⚠ English not searched in {unsearched.join(', ')} — {unsearched.length === 1 ? 'its index' : 'their indexes'} didn't load.
+        <button type="button" class="retry-btn" on:click={doSearch}>Retry</button>
+      </p>
+    {/if}
     {#if approximateChapters.length}
       <p class="search-approximate">
         Chapter starts in {approximateChapters.map((w) => getWork(w)?.title ?? w).join(', ')}
@@ -1561,6 +1653,26 @@
         </button>
       {/if}
     </div>
+    {#if transChoice}
+      <div class="trans-filter" role="group" aria-label="Show English hits from">
+        <span class="trans-filter-label">Translations</span>
+        <button type="button" class="auth-btn" class:on={transFilter === null} aria-pressed={transFilter === null}
+          on:click={() => setTransFilter(null)}>All</button>
+        {#each transCounts as tc, i}
+          {#if i < TRANS_CHIPS || transListOpen || tc.id === transFilter}
+            <button type="button" class="auth-btn" class:on={transFilter === tc.id} aria-pressed={transFilter === tc.id}
+              title={`Show only hits in ${tc.short}’s translation${transFilter === tc.id ? ' (click again for all)' : ''}`}
+              on:click={() => setTransFilter(tc.id)}>{tc.short}<span class="auth-count">{tc.n}</span></button>
+          {/if}
+        {/each}
+        {#if transCounts.length > TRANS_CHIPS}
+          <button type="button" class="scope-btn" aria-expanded={transListOpen}
+            on:click={() => (transListOpen = !transListOpen)}>
+            {transListOpen ? 'fewer' : `+${transCounts.length - TRANS_CHIPS} more`}
+          </button>
+        {/if}
+      </div>
+    {/if}
     {#if lemmaDeadEnd}
       <p class="search-approximate">
         These words occur, but not together in one passage. Searching for the
@@ -1604,7 +1716,7 @@
               <span class="caret">{expanded.has(g.key) ? '▾' : '▸'}</span>
               <span class="group-label">Chapter {g.chapter}</span>
               <span class="group-bekker">{g.bekker}</span>
-              <span class="group-count">{g.instances.length} {g.instances.length === 1 ? 'instance' : 'instances'}</span>
+              <span class="group-count">{groupHits(g)} {groupHits(g) === 1 ? 'instance' : 'instances'}</span>
             </button>
 
             {#if expanded.has(g.key)}
@@ -1612,10 +1724,27 @@
                 {#each g.instances as inst}
                   <li class="instance">
                     <a class="inst-ref" href={inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{inst.ref}</a>
-                    <span class="inst-snippet" class:greek={inst.lang === 'grk'} lang={inst.lang === 'grk' ? 'grc' : 'en'}>
-                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                      {@html inst.html}
-                    </span>
+                    {#if inst.rows}
+                      <!-- One passage in each translation that has the words. -->
+                      <div class="inst-rows">
+                        {#each inst.rows as row}
+                          <div class="inst-row">
+                            {#if row.label}
+                              <a class="inst-trans" href={row.jumpUrl} target="_blank" rel="noopener" title={`Open in ${row.title} (new tab)`}>{row.label}</a>
+                            {/if}
+                            <span class="inst-snippet" lang="en">
+                              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                              {@html row.html}
+                            </span>
+                          </div>
+                        {/each}
+                      </div>
+                    {:else}
+                      <span class="inst-snippet" class:greek={inst.lang === 'grk'} lang={inst.lang === 'grk' ? 'grc' : 'en'}>
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        {@html inst.html}
+                      </span>
+                    {/if}
                     {#if inst.oneOf}
                       <span class="inst-oneof" title="The morphological analysis allows more than one reading of this form">{inst.oneOf}</span>
                     {/if}
@@ -2576,6 +2705,45 @@
     font-family: var(--font-greek);
     font-size: 0.95rem;
     color: var(--text);
+  }
+  /* The same passage in each translation that matched, stacked. */
+  .inst-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+  .inst-row { min-width: 0; }
+  .inst-trans {
+    display: inline-block;
+    margin-right: 0.45rem;
+    font-family: var(--font-ui);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--text-mid);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0 0.45rem;
+    white-space: nowrap;
+    vertical-align: 0.08em;
+  }
+  .inst-trans:hover { color: var(--accent); border-color: var(--accent-light); }
+
+  .trans-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.75rem;
+  }
+  .trans-filter-label {
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    margin-right: 0.15rem;
   }
 
   :global(mark) {

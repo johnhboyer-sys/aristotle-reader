@@ -3,6 +3,7 @@
   import { fade } from 'svelte/transition';
   import { fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
   import { greekFold } from '../lib/search';
+  import { overlayPieces } from '../lib/english-hit';
   import { measureGreekTrack as measureTrack } from '../lib/greek-track';
   import { highlightPrefixMatches } from '../lib/text';
   import { sanitizeHtml } from '../lib/html';
@@ -84,16 +85,9 @@
   ]);
   const secondaries = translations.filter(t => t.slot !== 'english');
   const canCompare = translations.length >= 2;
-  // Overlay pieces for a translation in a segment, selected by its slot.
-  const piecesFor = (seg: Segment, t: TranslationRef | undefined | null): OverlayPiece[] => {
-    if (!t) return [];
-    // `seg.ross` is the pre-rename emitted field name; stage7_emit still writes
-    // it, so read the new name first and fall back until the corpus is rebuilt.
-    if (t.slot === 'secondary') return seg.secondary ?? seg.ross ?? [];
-    if (t.slot === 'third') return seg.third ?? [];
-    if (t.slot === 'overlay') return seg.overlays?.[t.id] ?? [];
-    return [];
-  };
+  // Overlay pieces for a translation in a segment, selected by its slot (shared
+  // with search, which places a hit in the same slices).
+  const piecesFor = overlayPieces;
   const transById = (id: string | null | undefined): TranslationRef | null =>
     id ? (translations.find(t => t.id === id) ?? null) : null;
 
