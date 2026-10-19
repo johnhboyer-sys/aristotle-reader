@@ -218,7 +218,87 @@ def _validate_work_data(data_dir: Path, manifest: WorkManifest, problems: list[P
     _validate_columns(manifest, loaded.get("columns.json"), segments, problems)
     _validate_analyses(manifest, data_dir, loaded.get("analyses.json"), token_keys, problems)
     _validate_footnotes(manifest, work_dir, loaded, problems)
+    _validate_translation_indexes(manifest, work_dir, loaded, problems)
     _validate_public_gating(manifest, loaded, problems)
+
+
+def _validate_translation_indexes(manifest: WorkManifest, work_dir: Path, loaded: dict[str, Any],
+                                  problems: list[Problem]) -> None:
+    """Every translation the books carry can be searched, and nothing else can.
+
+    The words each segment should contribute are counted here from the book
+    text and compared with the postings read back from search/english-*.json:
+    a missing index (a corpus emitted before these indexes, or an interrupted
+    stage7), a stale one, or one whose seg_idx no longer lines up with
+    meta.json is reported. An index for a translation the books do not carry is
+    reported too, since in a public build that would be a private translation's
+    vocabulary.
+    """
+    from .stage6_search import english_words, segment_translations, translation_index_name
+
+    expected: dict[str, dict[str, int]] = {}   # slot -> segment id -> word count
+    for file_name in sorted(loaded):
+        doc = loaded[file_name]
+        if not file_name.startswith("book-") or not isinstance(doc, dict):
+            continue
+        for segment in doc.get("segments", []) or []:
+            if not isinstance(segment, dict):
+                continue
+            try:
+                slots = segment_translations(segment)
+            except (ValueError, AttributeError, TypeError) as exc:
+                problems.append((manifest.work_id, file_name, f"segment {segment.get('id')}: {exc}"))
+                continue
+            for slot, texts in slots.items():
+                counts = expected.setdefault(slot, {})
+                n = sum(len(english_words(t)) for t in texts)
+                if n:
+                    counts[str(segment.get("id"))] = n
+
+    search_dir = work_dir / "search"
+    present = {p.name for p in search_dir.glob("english-*.json")} if search_dir.is_dir() else set()
+    wanted = {translation_index_name(slot): slot for slot in expected}
+    for name in sorted(present - set(wanted)):
+        problems.append((manifest.work_id, f"search/{name}",
+                         "search index for a translation the books do not carry"))
+    if not expected:
+        return
+
+    try:
+        meta = json.loads((search_dir / "meta.json").read_text(encoding="utf-8"))
+        ids = [str(m["id"]) for m in meta]
+    except Exception as exc:
+        problems.append((manifest.work_id, "search/meta.json", f"cannot read segment order: {exc}"))
+        return
+
+    for name, slot in sorted(wanted.items()):
+        counts = expected[slot]
+        if not counts:
+            problems.append((manifest.work_id, name,
+                             f"the {slot} translation is in the books but has no words to index"))
+            continue
+        if name not in present:
+            problems.append((manifest.work_id, f"search/{name}",
+                             f"missing: the {slot} translation cannot be searched "
+                             "(run `python -m aristotle_pipeline translations`)"))
+            continue
+        try:
+            index = json.loads((search_dir / name).read_text(encoding="utf-8"))
+            got: dict[str, set[int]] = {}
+            for postings in index.values():
+                for si, pos in postings:
+                    got.setdefault(ids[si], set()).add(pos)
+        except Exception as exc:
+            problems.append((manifest.work_id, f"search/{name}", f"unreadable index: {exc}"))
+            continue
+        wrong = sorted(
+            seg for seg in set(counts) | set(got)
+            if got.get(seg, set()) != set(range(counts.get(seg, 0)))
+        )
+        if wrong:
+            problems.append((manifest.work_id, f"search/{name}",
+                             f"stale: {len(wrong)} segment(s) disagree with the book text, "
+                             f"first {wrong[0]}"))
 
 
 _FN_REF = re.compile(r"\[\^([\w.*†]+)\]")

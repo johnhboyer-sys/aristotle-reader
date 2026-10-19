@@ -996,6 +996,13 @@ export function workLanding(workId: string): string {
 // translations — user imports, loaded from local files — via
 // globalThis.__ARISTOTLE_EXTRA_TRANSLATIONS__ ({workId: TranslationRef[]});
 // the site never sets it, so the static registry is unchanged there.
+// The translations the corpus build indexes for search: the registry's, gated
+// as visibleTranslations gates them, but without the desktop app's imports —
+// those live outside the build and have no index to search.
+export function searchableTranslations(work: Work): TranslationRef[] {
+  return work.translations.filter(t => !t.private || SHOW_PRIVATE);
+}
+
 export function visibleTranslations(work: Work): TranslationRef[] {
   const extra = (globalThis as {
     __ARISTOTLE_EXTRA_TRANSLATIONS__?: Record<string, TranslationRef[]>;

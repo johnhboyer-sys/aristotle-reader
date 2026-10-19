@@ -1,0 +1,13 @@
+{
+  "_comment": "How a translation's prose splits into indexed words. Read by pipeline/tests/test_translation_index.py (stage6 english_words) and shared/__tests__/search.test.ts (englishWords), so the index and the reader that maps a posting back to its place in the text cannot drift apart.",
+  "cases": [
+    {"text": "Aristotle’s ‘good’ isnʼt—well", "words": ["aristotle's", "good", "isn't", "well"]},
+    {"text": "since he follows his emotions,[^1.9] his study", "words": ["since", "he", "follows", "his", "emotions", "his", "study"]},
+    {"text": "the genus[[s3]]and the species [[fig1]] of man", "words": ["the", "genus", "and", "the", "species", "of", "man"]},
+    {"text": "vir[^*]tue and [^†]happiness", "words": ["virtue", "and", "happiness"]},
+    {"text": "1094a 2 Every art\nand every inquiry", "words": ["a", "every", "art", "and", "every", "inquiry"]},
+    {"text": "'Tis the ‘end’''", "words": ["tis", "the", "end"]},
+    {"text": "[[s12]]", "words": []},
+    {"text": "", "words": []}
+  ]
+}

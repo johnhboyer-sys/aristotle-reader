@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ENGLISH_HEAD_LIMIT, engPhraseMatches, greekFold, offsetRef, search, searchGrammar } from '../lib/search';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import {
+  ENGLISH_HEAD_LIMIT, engPhraseMatches, englishIndexFile, englishTermMatcher, englishWords,
+  greekFold, offsetRef, search, searchGrammar,
+} from '../lib/search';
 
 const meta = [
   { id: 's1', book: 1, column: '1094a', greek_head: 'λόγος ἀρετή', english_head: 'virtue is a habit of choice' },
@@ -469,5 +474,124 @@ describe('offsetRef names the line a token stands on', () => {
     const older = { ...offsets, segments: [{ ...offsets.segments[0], line_runs: [[4, 2], [5, 2], [5, 2], [6, 2]] as [number, number][] }] };
     expect(offsetRef(older, 4)).toMatchObject({ line: 5 });
     expect(offsetRef(older, 4)!.sub).toBeUndefined();
+  });
+});
+
+// Every translation a work carries is searched, each against its own index.
+// EN carries four in the public registry: Rackham (english), Ross (secondary),
+// Ostwald (third) and Peters (overlay). One dataset serves the whole block —
+// the index memo is keyed by work and file, so it must not change under it.
+describe('English search across a work’s translations', () => {
+  const enMeta = [
+    { id: '1:1094a', book: 1, column: '1094a', greek_head: '', english_head: '' },
+    { id: '1:1094b', book: 1, column: '1094b', greek_head: '', english_head: '' },
+    { id: '1:1095a', book: 1, column: '1095a', greek_head: '', english_head: '' },
+  ];
+  const files: Record<string, unknown> = {
+    'meta.json': enMeta,
+    // Rackham: "virtue" in 1094a only.
+    'english.json': { virtue: [[0, 3]], the: [[0, 2], [1, 0]], good: [[1, 1]] },
+    // Ross: "mean" in 1094a, the phrase "the good" in 1094b.
+    'english-secondary.json': { mean: [[0, 5]], the: [[1, 4]], good: [[1, 5]] },
+    // Ostwald: "virtue" and "mean" together in 1095a.
+    'english-third.json': { virtue: [[2, 1]], is: [[2, 2]], a: [[2, 3]], mean: [[2, 4]] },
+    'greek_form.json': { areth: [[0, 0], [2, 0]] },
+  };
+  let requested: string[] = [];
+  beforeEach(() => {
+    requested = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      const path = String(url);
+      const m = path.match(/\/EN\/search\/(.+)$/);
+      if (m) requested.push(m[1]);
+      if (m && m[1] in files) return json(files[m[1]]);
+      // Peters' index is absent, as on a corpus emitted before it existed.
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
+    });
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it('names each index by its slot, as stage6 writes them', () => {
+    expect(englishIndexFile({ id: 'rackham', slot: 'english' })).toBe('english.json');
+    expect(englishIndexFile({ id: 'ross', slot: 'secondary' })).toBe('english-secondary.json');
+    expect(englishIndexFile({ id: 'ostwald', slot: 'third' })).toBe('english-third.json');
+    expect(englishIndexFile({ id: 'peters', slot: 'overlay' })).toBe('english-overlay-peters.json');
+  });
+
+  it('reports every translation a word stands in, with its positions', async () => {
+    const { results } = await search('', 'virtue', 'all', 'all', 'and', ['EN']);
+    expect(results.map((r) => [r.meta.id, r.engHits])).toEqual([
+      ['1:1094a', [{ translation: 'rackham', positions: [3] }]],
+      ['1:1095a', [{ translation: 'ostwald', positions: [1] }]],
+    ]);
+    expect(results.every((r) => r.engMatch)).toBe(true);
+  });
+
+  it('asks "all words" of one translation at a time, never of two pooled', async () => {
+    // 1094a has "virtue" in Rackham and "mean" in Ross: not a hit.
+    const { results } = await search('', 'virtue mean', 'all', 'all', 'and', ['EN']);
+    expect(results.map((r) => r.meta.id)).toEqual(['1:1095a']);
+    expect(results[0].engHits).toEqual([{ translation: 'ostwald', positions: [1, 4] }]);
+  });
+
+  it('marks the run of a phrase in the translation that has it', async () => {
+    const { results } = await search('', 'the good', 'all', 'phrase', 'and', ['EN']);
+    expect(results.map((r) => [r.meta.id, r.engHits])).toEqual([
+      ['1:1094b', [
+        { translation: 'rackham', positions: [0, 1] },
+        { translation: 'ross', positions: [4, 5] },
+      ]],
+    ]);
+  });
+
+  it('says which translation it could not search, and searches the rest', async () => {
+    const outcome = await search('', 'mean', 'any', 'any', 'and', ['EN']);
+    expect(outcome.failedWorks).toEqual([]);
+    expect(outcome.unsearchedTranslations).toEqual([{ work: 'EN', translation: 'peters' }]);
+    expect(outcome.results.flatMap((r) => r.engHits!.map((h) => h.translation))).toEqual(['ross', 'ostwald']);
+  });
+
+  it('joins Greek to the English of any translation', async () => {
+    const both = await search('areth', 'mean', 'all', 'all', 'and', ['EN'], 'form');
+    expect(both.results.map((r) => r.meta.id)).toEqual(['1:1094a', '1:1095a']);
+    const either = await search('areth', 'good', 'all', 'all', 'or', ['EN'], 'form');
+    expect(either.results.map((r) => [r.meta.id, r.grkMatch, r.engHits?.map((h) => h.translation)])).toEqual([
+      ['1:1094a', true, []],
+      ['1:1094b', false, ['rackham', 'ross']],
+      ['1:1095a', true, []],
+    ]);
+  });
+
+  it('loads no English index for a Greek-only query', async () => {
+    const { results } = await search('areth', '', 'all', 'all', 'and', ['EN'], 'form');
+    expect(results[0].engHits).toBeUndefined();
+    expect(requested.filter((f) => f.startsWith('english'))).toEqual([]);
+  });
+});
+
+// The same split stage6's english_words() makes, read from the fixture its
+// pipeline test reads, so a posting's word_pos lands on the word it counted.
+describe('englishWords', () => {
+  const fixture = JSON.parse(readFileSync(
+    resolve(__dirname, '../../pipeline/tests/fixtures/english_words.json'), 'utf-8',
+  )) as { cases: { text: string; words: string[] }[] };
+
+  it.each(fixture.cases)('splits $text as the index does', ({ text, words }) => {
+    const got = englishWords(text);
+    expect(got.map((w) => w.word)).toEqual(words);
+    // Each span covers its word on the page, markers inside it aside.
+    for (const w of got) {
+      const span = text.slice(w.start, w.end).replace(/\[\^[^\]]*\]/g, '')
+        .replace(/[’ʼ]/g, "'").toLowerCase();
+      expect(span).toBe(w.word);
+    }
+  });
+});
+
+describe('englishTermMatcher', () => {
+  it('matches a word as the index lookup does', () => {
+    const m = englishTermMatcher(['virtue', 'hap*ness', "aristotle’s"]);
+    expect(['virtue', 'virtues', 'happiness', 'hapness', "aristotle's", 'aristotle'].map(m))
+      .toEqual([true, false, true, true, true, false]);
   });
 });

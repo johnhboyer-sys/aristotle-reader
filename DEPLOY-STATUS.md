@@ -13,6 +13,18 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## PENDING — not deployed: English search across every translation
+
+Branch `claude/search-all-translations`. Search now asks an English query of every translation a
+work carries (11 works, 16 translations beyond the primary), so the data needs new files:
+`data/<Work>/search/english-<slot>.json`, written by stage 7. **Before the next deploy, rebuild
+(`npm run build:public`) or, to keep the current corpus, run `uv run python -m aristotle_pipeline
+translations` in `pipeline/` (about 2 s; it re-indexes every work in `build/dist`).** Three gates
+hold this: preflight checks every index against the book text; the deploy script refuses data that
+serves a translation without its index (otherwise every English search on live would say "not
+searched"); and the gated-slot check now covers the indexes too, since an index carries a
+translation's words in order. Expect ~8 MB of new files under `data/*/search/` in the deploy diff.
+
 ## 2026-10-06 — DEPLOYED: word cards read common words correctly (PR #155)
 
 `gh-pages 821abd67 → 3c5e21be`, source `origin/main` `5c4dbabaa8` (the #155 merge).

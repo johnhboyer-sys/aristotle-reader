@@ -239,7 +239,22 @@ def _stage8():
               f"{s['occurrences']:,} occurrences, {s['shards']} shards  ({by_n})")
 
 
-_CORPUS_STAGES = {"stage8": _stage8}
+# Re-index the translations beyond the primary across an existing build/dist,
+# without rebuilding the works. stage7 does this for each work it emits; this
+# brings a corpus emitted before those indexes existed up to date.
+def _translations():
+    from .stage6_search import emit_translation_indexes
+
+    dist = BUILD_DIR / "dist"
+    for work_dir in sorted(p.parent.parent for p in dist.glob("*/search/meta.json")):
+        summary = emit_translation_indexes(work_dir)
+        slots = " ".join(
+            f"{slot}={s['words']:,}w/{s['segments']}seg" for slot, s in summary.items()
+        )
+        print(f"translations: {work_dir.name} {slots or '(primary only)'}")
+
+
+_CORPUS_STAGES = {"stage8": _stage8, "translations": _translations}
 
 _STAGES = {
     "stage1": _stage1,
