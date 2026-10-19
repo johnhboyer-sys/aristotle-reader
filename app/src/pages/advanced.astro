@@ -156,10 +156,12 @@ const corpus = { works: 41, tokens: '848,592', formPhrases: '173,884', lemmaPhra
         a total, not with 348.
       </p>
       <p class="guide-note">
-        One exception. A <code>*</code> at the <em>start</em> of a word is not a
-        wildcard: in Beta Code it marks a capital, so <code>*a)nqrwpos</code>
-        means <span lang="grc">Ἄνθρωπος</span> and the search reads it as that
-        exact word. You cannot search by word ending alone.
+        One exception, in Greek only. A <code>*</code> at the <em>start</em> of a
+        Greek word is not a wildcard: in Beta Code it marks a capital, so
+        <code>*a)nqrwpos</code> means <span lang="grc">Ἄνθρωπος</span> and the
+        search reads it as that exact word. In English it is a wildcard there
+        too: <code>*ness</code> finds "happiness", "goodness" and every other
+        word ending in -ness.
       </p>
     </section>
 

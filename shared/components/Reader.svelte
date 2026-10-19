@@ -1,11 +1,10 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
-  import { greekFold } from '../lib/search';
-  import { overlayPieces } from '../lib/english-hit';
+  import { hitTokens, fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
+  import { englishQueryUnits, greekFold } from '../lib/search';
+  import { markEnglishHtml, overlayPieces } from '../lib/english-hit';
   import { measureGreekTrack as measureTrack } from '../lib/greek-track';
-  import { highlightPrefixMatches } from '../lib/text';
   import { sanitizeHtml } from '../lib/html';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -136,7 +135,22 @@
 
   // Search jump-in: highlight query terms + scroll to a line (?hlg=&hle=&loc=).
   let hlGrkFolds: string[] = [];
-  let hlEngTerms: string[] = [];
+  let hlEngUnits: string[][] = [];
+  let hlEngPhrase = false;
+  // A search hit's exact Greek tokens (?hlt=<column>:<pos>,…), whatever kind
+  // of search found them — a lemma, a grammatical form, words near each other.
+  // Without it (an older link) the typed words are matched as before.
+  let hitCol = '';
+  let hitPos: number[] = [];
+  $: hitSet = hitCol ? hitTokens(segments, hitCol, hitPos) : null;
+  // The English query to mark. Passed into every template call that marks
+  // words, not read from scope inside them: the page is rendered on the
+  // server before onMount reads the query, and a legacy-mode template re-runs
+  // a call only when something named in it changes. Read from scope, the
+  // marks appeared only when some other change (a new translation) happened
+  // to re-render the column — never for a hit in the default translation.
+  type EngMarks = { units: string[][]; phrase: boolean };
+  $: engMarks = { units: hlEngUnits, phrase: hlEngPhrase } as EngMarks;
   let targetId: string | null = null;
 
   // Which translation fills the English column: a translation id from the
@@ -535,20 +549,20 @@
     }
   });
 
-  function isHit(surface: string): boolean {
-    if (!hlGrkFolds.length) return false;
-    const f = greekFold(surface);
-    return f.length > 0 && hlGrkFolds.some(q => f.startsWith(q));
+  function isHit(tok: Token, hits: Set<Token> | null, folds: string[]): boolean {
+    if (hits) return hits.has(tok);
+    if (!folds.length) return false;
+    const f = greekFold(tok.t);
+    return f.length > 0 && folds.some(q => f.startsWith(q));
   }
   function esc(s: string): string {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
-  function highlightEng(text: string): string {
+  function highlightEng(text: string, marks: EngMarks): string {
     // Sidenote [[sN]] and figure [[figN]] markers are rendered elsewhere (the
     // right rail / an inline figure), so strip them from the prose flow.
     text = text.replace(/\s*\[\[(?:s|fig)\d+\]\]\s*/g, ' ');
-    if (!hlEngTerms.length) return esc(text);
-    return highlightPrefixMatches(text, hlEngTerms);
+    return markEnglishHtml(text, marks.units, marks.phrase);
   }
   // §Phase-3 B5: the printed number is stored as `display`; identity is the
   // (scope, number) pair encoded in the label — continuous scope's label IS
@@ -571,7 +585,7 @@
   // to resolve against (§B4.3/4.4) — needed once more than one translation on
   // the page can carry footnotes. A delegated click handler on the column
   // reads both data attributes and opens the footnote popup.
-  function renderThird(text: string, transId: string): string {
+  function renderThird(text: string, transId: string, marks: EngMarks): string {
     // The marker <button> is an atomic inline box, and engines may take a
     // line-break opportunity at its edge even with no space — WKWebView
     // orphans the superscript onto the next line ("pair, | ¹ one thing").
@@ -580,7 +594,7 @@
     // never swallow a fragment of highlightEng's own markup; if a tag abuts
     // the marker the wrapper just holds the marker alone (no worse than
     // before).
-    return highlightEng(text).replace(
+    return highlightEng(text, marks).replace(
       /([^\s<>&]*)\[\^([\w.*†]+)\]/g,
       (_m, lead: string, label: string) => {
         const display = fnDisplay(label);
@@ -952,7 +966,14 @@
     const params = new URLSearchParams(window.location.search);
     hlGrkFolds = (params.get('hlg') ?? '').trim().split(/\s+/).filter(Boolean)
       .map(t => greekFold(t.replace(/\*/g, ''))).filter(Boolean);
-    hlEngTerms = (params.get('hle') ?? '').trim().split(/\s+/).filter(Boolean);
+    hlEngUnits = englishQueryUnits(params.get('hle') ?? '');
+    hlEngPhrase = params.get('hlm') === 'phrase';
+    const hlt = params.get('hlt');
+    if (hlt) {
+      const at = hlt.lastIndexOf(':');
+      hitCol = hlt.slice(0, at);
+      hitPos = hlt.slice(at + 1).split(',').map(Number).filter(Number.isInteger);
+    }
     const loc = params.get('loc');
     let locCol = '';
     let locLine = NaN;
@@ -966,7 +987,7 @@
     }
     // Restore saved view, but a jump-in (loc/highlight) forces bilingual so the
     // target Greek line is on screen.
-    if (loc || hlGrkFolds.length) {
+    if (loc || hlGrkFolds.length || hitCol) {
       view = 'both';
     } else {
       const saved = (() => { try { return localStorage.getItem('reader-view'); } catch { return null; } })();
@@ -1248,7 +1269,7 @@
   {#snippet greekToks(parts: LinePart[])}{#each parts as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
         class="tok"
         class:active={popup?.token === part.tok}
-        class:hit={isHit(part.tok.t)}
+        class:hit={isHit(part.tok, hitSet, hlGrkFolds)}
         on:click={(e) => handleTokenClick(e, part.tok)}
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
@@ -1279,7 +1300,7 @@
            .overlay-prose would leak into captured offsets — as a sibling they
            never see it, keeping the render-only/no-offset-shift guarantee
            structural. -->
-      {#if chTitle}<div class="overlay-chapter-title">{#if fnTransIds.has(transId)}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(chTitle, transId)}{:else}{chTitle}{/if}</div>{/if}
+      {#if chTitle}<div class="overlay-chapter-title">{#if fnTransIds.has(transId)}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(chTitle, transId, engMarks)}{:else}{chTitle}{/if}</div>{/if}
       {#if fnTransIds.has(transId)}
         <div
           class="overlay-prose"
@@ -1299,7 +1320,7 @@
             {:else if part.text !== null}
               <span class="bk-seg"
                 >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
-                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId)}</span>
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId, engMarks)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}
@@ -1322,7 +1343,7 @@
             {:else if part.text !== null}
               <span class="bk-seg"
                 >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
-                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text)}</span>
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text, engMarks)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}

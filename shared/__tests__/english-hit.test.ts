@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Segment } from '../lib/data';
-import { englishPlace, overlayPieces } from '../lib/english-hit';
-import { englishWords } from '../lib/search';
+import { englishPlace, markEnglishHtml, overlayPieces } from '../lib/english-hit';
+import { englishQueryUnits, englishWords } from '../lib/search';
 
 const rackham = { id: 'rackham', slot: 'english' as const };
 const ross = { id: 'ross', slot: 'secondary' as const };
@@ -109,5 +109,37 @@ describe('overlayPieces', () => {
     expect(overlayPieces(seg, ostwald)).toBe(seg.third);
     expect(overlayPieces({ ...seg, overlays: { peters: seg.third! } }, peters)).toBe(seg.third);
     expect(overlayPieces(seg, rackham)).toEqual([]);
+  });
+});
+
+// The reader's highlight, by the search's own rule.
+describe('markEnglishHtml', () => {
+  const mark = (query: string, text: string, phrase = false) =>
+    markEnglishHtml(text, englishQueryUnits(query), phrase);
+
+  it('marks whole words, not every word a term begins', () => {
+    expect(mark('end', 'the end, not the ending we endure'))
+      .toBe('the <mark>end</mark>, not the ending we endure');
+    expect(mark('end*', 'the end and the ending')).toBe('the <mark>end</mark> and the <mark>ending</mark>');
+  });
+
+  it('in an exact phrase marks only the run', () => {
+    expect(mark('the good', 'they say the good is there, and the end is good', true))
+      .toBe('they say <mark>the</mark> <mark>good</mark> is there, and the end is good');
+  });
+
+  it('marks a hyphenated term where its words stand together', () => {
+    expect(mark('coming-to-be', 'coming-to-be, or coming slowly to be'))
+      .toBe('<mark>coming</mark>-<mark>to</mark>-<mark>be</mark>, or coming slowly to be');
+  });
+
+  it('marks a word with an apostrophe or across a footnote marker, and leaves the marker as text', () => {
+    expect(mark('aristotle’s emotions', 'Aristotle’s emotions,[^1.9] his'))
+      .toBe('<mark>Aristotle’s</mark> <mark>emotions</mark>,[^1.9] his');
+  });
+
+  it('marks nothing for no query, or the bare *', () => {
+    expect(mark('', 'a < b')).toBe('a &lt; b');
+    expect(mark('*', 'a < b')).toBe('a &lt; b');
   });
 });
