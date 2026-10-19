@@ -64,20 +64,22 @@ const plain = (s: string) => s.replace(SIDENOTE, ' ').replace(FOOTNOTE, '');
  * positions; when they are missing (an index built before positions) or do
  * not land on a matching word (an index from a different build than the
  * books), the first matching words are found in the text instead, by the same
- * rule the index used. Null when the translation has no text here. */
+ * rule the index used — with `forms`, any form of each term, as an "any form"
+ * search found it. Null when the translation has no text here. */
 export function englishPlace(
   seg: Segment,
   t: Pick<TranslationRef, 'id' | 'slot'>,
   positions: number[],
   terms: string[],
   phrase: boolean,
+  forms = false,
 ): EnglishPlace | null {
   const pieces = piecesOf(seg, t);
   if (!pieces.some(p => p.text)) return null;
   const words: (EnglishWord & { piece: number })[] = [];
   pieces.forEach((p, i) => { for (const w of englishWords(p.text)) words.push({ ...w, piece: i }); });
 
-  const marked = matchedWords(words, positions, terms, phrase);
+  const marked = matchedWords(words, positions, terms, phrase, forms);
   const center = marked.length ? marked[0] : -1;
   const pieceIdx = center >= 0 ? words[center].piece : pieces.findIndex(p => p.text);
   const piece = pieces[pieceIdx];
@@ -95,13 +97,14 @@ function matchedWords(
   positions: number[],
   terms: string[],
   phrase: boolean,
+  forms: boolean,
 ): number[] {
-  const any = englishTermMatcher(terms);
+  const any = englishTermMatcher(terms, forms);
   if (positions.length && positions.every(p => p < words.length) && any(words[positions[0]].word)) {
     return [...positions].sort((a, b) => a - b);
   }
   if (phrase && terms.length > 1) {
-    const each = terms.map(t => englishTermMatcher([t]));
+    const each = terms.map(t => englishTermMatcher([t], forms));
     for (let i = 0; i + terms.length <= words.length; i++) {
       const run = terms.map((_, j) => i + j);
       if (run.every((k, j) => words[k].piece === words[i].piece && each[j](words[k].word))) return run;
@@ -187,15 +190,16 @@ function primaryChapter(seg: Segment, offset: number): string | null {
  * words only where they stand in a row, and in an exact phrase only the run.
  * The reader used to mark every word that merely began with a term, so "end"
  * lit up "endure" and the phrase "the good" every "they" and "there".
+ * With `forms`, any form of a word, as an "any form" search found it.
  * Footnote and sidenote markers pass through as text, escaped. */
-export function markEnglishHtml(text: string, units: string[][], phrase: boolean): string {
+export function markEnglishHtml(text: string, units: string[][], phrase: boolean, forms = false): string {
   const runs = (phrase ? [units.flat()] : units)
     .filter(run => run.length && !(run.length === 1 && run[0] === '*'));
   if (!runs.length) return esc(text);
   const words = englishWords(text);
   const hit = new Set<number>();
   for (const run of runs) {
-    const each = run.map(t => englishTermMatcher([t]));
+    const each = run.map(t => englishTermMatcher([t], forms));
     for (let i = 0; i + run.length <= words.length; i++) {
       if (run.every((_, j) => each[j](words[i + j].word))) {
         for (let j = 0; j < run.length; j++) hit.add(i + j);

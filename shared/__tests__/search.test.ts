@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
-  ENGLISH_HEAD_LIMIT, engPhraseMatches, englishIndexFile, englishQueryUnits, englishTermMatcher, englishWords,
+  ENGLISH_HEAD_LIMIT, engPhraseMatches, englishForms, englishIndexFile, englishQueryUnits, englishTermMatcher,
+  englishWords,
   greekFold, offsetRef, search, searchGrammar,
 } from '../lib/search';
 
@@ -582,7 +583,8 @@ describe('englishWords', () => {
     // Each span covers its word on the page, markers inside it aside.
     for (const w of got) {
       const span = text.slice(w.start, w.end).replace(/\[\^[^\]]*\]/g, '')
-        .replace(/[’ʼ]/g, "'").toLowerCase();
+        .replace(/[’ʼ]/g, "'").toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/æ/g, 'ae').replace(/œ/g, 'oe');
       expect(span).toBe(w.word);
     }
   });
@@ -646,5 +648,127 @@ describe('English query terms as the index reads them', () => {
     ]);
     expect(englishTermMatcher(['*ness'])('happiness')).toBe(true);
     expect(englishTermMatcher(['*ness'])('nest')).toBe(false);
+  });
+});
+
+// English "any form": a typed word also finds its plurals and possessives, and
+// a plural its singular, but only as words the index holds.
+describe('English any form', () => {
+  it('reaches plural and possessive forms, and back', () => {
+    expect(englishForms('virtue')).toEqual(expect.arrayContaining(['virtue', 'virtues', "virtue's"]));
+    expect(englishForms('virtues')).toEqual(expect.arrayContaining(['virtue', "virtue's"]));
+    expect(englishForms("aristotle's")).toEqual(expect.arrayContaining(['aristotle', "aristotle's"]));
+    expect(englishForms('body')).toEqual(expect.arrayContaining(['bodies', "body's"]));
+    expect(englishForms('bodies')).toContain('body');
+    expect(englishForms('class')).toContain('classes');
+    expect(englishForms('causes')).toContain('cause');
+    expect(englishForms('hero')).toContain('heroes');
+  });
+
+  it('knows the irregulars, and every -man compound', () => {
+    expect(englishForms('man')).toEqual(expect.arrayContaining(['men', "man's", "men's"]));
+    expect(englishForms('men')).toContain('man');
+    expect(englishForms('woman')).toContain('women');
+    expect(englishForms('statesmen')).toContain('statesman');
+    expect(englishForms('child')).toEqual(expect.arrayContaining(['children', "children's"]));
+    expect(englishForms('phenomena')).toContain('phenomenon');
+    expect(englishForms('ox')).toContain('oxen');
+  });
+
+  it('leaves short words and wildcards alone, and keeps a singular in -s whole', () => {
+    expect(englishForms('a')).toEqual(['a']);
+    expect(englishForms('is')).toEqual(['is']);
+    expect(englishForms('us')).toEqual(['us']);
+    expect(englishForms('virtue*')).toEqual(['virtue*']);
+    expect(englishForms('his')).not.toContain('hi');
+    expect(englishForms('his')).not.toContain('hiss');
+    expect(englishForms('genus')).not.toContain('genu');
+    expect(englishForms('this')).not.toContain('thi');
+  });
+
+  it('gives a singular in -s its possessive', () => {
+    expect(englishForms('class')).toContain("class's");
+    expect(englishForms('basis')).toContain("basis's");
+  });
+
+  it('does not take an -s word that is no plural for one', () => {
+    expect(englishForms('news')).not.toContain('new');
+    expect(englishForms('politics')).not.toContain('politic');
+    expect(englishForms('means')).not.toContain('mean');
+    expect(englishForms('mean')).not.toContain('means');
+    expect(englishForms('mean')).toContain("mean's");
+  });
+
+  it('matches a word by any form only when asked', () => {
+    expect(['virtue', 'virtues', "virtue's", 'virtuous'].map(englishTermMatcher(['virtue'], true)))
+      .toEqual([true, true, true, false]);
+    expect(englishTermMatcher(['virtue'])('virtues')).toBe(false);
+  });
+
+  describe('search', () => {
+    const formMeta = [
+      { id: 'f1', book: 1, column: '1a', greek_head: '', english_head: '' },
+      { id: 'f2', book: 1, column: '1b', greek_head: '', english_head: '' },
+      { id: 'f3', book: 1, column: '1c', greek_head: '', english_head: '' },
+    ];
+    // f1: "the virtues of men"; f2: "a man's virtue"; f3: "virtuous man".
+    const formIndex = {
+      the: [[0, 0]], virtues: [[0, 1]], of: [[0, 2]], men: [[0, 3]],
+      a: [[1, 0]], "man's": [[1, 1]], virtue: [[1, 2]],
+      virtuous: [[2, 0]], man: [[2, 1]],
+    };
+    beforeEach(() => {
+      vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+        const path = String(url);
+        if (path.endsWith('/meta.json')) return json(formMeta);
+        if (path.endsWith('/english.json')) return json(formIndex);
+        return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
+      });
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    it('finds every form of a word, and marks where each stands', async () => {
+      const { results } = await search('', 'virtue', 'all', 'all', 'and', ['TFormsOne'], 'lemma', true);
+      expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([['f1', [1]], ['f2', [2]]]);
+    });
+
+    it('finds exactly what was typed without it', async () => {
+      const { results } = await search('', 'virtue', 'all', 'all', 'and', ['TFormsOff'], 'lemma');
+      expect(results.map((r) => r.meta.id)).toEqual(['f2']);
+    });
+
+    it('lets each word of a phrase stand in any of its forms', async () => {
+      const { results } = await search('', 'virtue of man', 'all', 'phrase', 'and', ['TFormsPhrase'], 'lemma', true);
+      expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([['f1', [1, 2, 3]]]);
+    });
+
+    it('finds man as men and man\'s, and never a word that only begins the same way', async () => {
+      const { results } = await search('', 'man', 'all', 'all', 'and', ['TFormsMan'], 'lemma', true);
+      expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([
+        ['f1', [3]], ['f2', [1]], ['f3', [1]],
+      ]);
+    });
+  });
+});
+
+// The index folds ligatures and accents (stage6 _latin_fold), so a query must
+// too, whether typed plain or pasted with the page's letters.
+describe('English accented Latin', () => {
+  it('folds a query as the index folds the text', () => {
+    expect(englishQueryUnits('Lacedæmonians versâ Œdipus')).toEqual([['lacedaemonians'], ['versa'], ['oedipus']]);
+    expect(englishTermMatcher(['Lacedæmonians'])('lacedaemonians')).toBe(true);
+    expect(englishTermMatcher(['lacedaemonians'])(englishWords('the Lacedæmonians')[1].word)).toBe(true);
+  });
+
+  it('gives a folded word the span of its letters on the page', () => {
+    const text = 'the Lacedæmonians';
+    const [, w] = englishWords(text);
+    expect(text.slice(w.start, w.end)).toBe('Lacedæmonians');
+  });
+
+  it('keeps a combining accent at the end of a word inside its span', () => {
+    const text = 'a cafe\u0301, then';
+    const [, w] = englishWords(text);
+    expect([w.word, text.slice(w.start, w.end)]).toEqual(['cafe', 'cafe\u0301']);
   });
 });

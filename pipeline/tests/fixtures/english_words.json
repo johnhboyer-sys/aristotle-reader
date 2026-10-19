@@ -7,6 +7,10 @@
     {"text": "vir[^*]tue and [^†]happiness", "words": ["virtue", "and", "happiness"]},
     {"text": "1094a 2 Every art\nand every inquiry", "words": ["a", "every", "art", "and", "every", "inquiry"]},
     {"text": "'Tis the ‘end’''", "words": ["tis", "the", "end"]},
+    {"text": "the Lacedæmonians and Œdipus, Æsop’s", "words": ["the", "lacedaemonians", "and", "oedipus", "aesop's"]},
+    {"text": "vice versâ: tekmērion, sōphrosynē", "words": ["vice", "versa", "tekmerion", "sophrosyne"]},
+    {"text": "a re\u0301sume\u0301 of na\u0308ive views", "words": ["a", "resume", "of", "naive", "views"]},
+    {"text": "B÷ and Cæ[^1]neus", "words": ["b", "and", "caeneus"]},
     {"text": "[[s12]]", "words": []},
     {"text": "", "words": []}
   ]
