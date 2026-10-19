@@ -250,13 +250,13 @@
    "chapter": "42",
    "column": "833a",
    "line": "28",
-   "bekker": "833a28–31"
+   "bekker": "833a28–29"
   },
   {
    "chapter": "43",
-   "column": "833b",
-   "line": "1",
-   "bekker": "833b1–2"
+   "column": "833a",
+   "line": "30",
+   "bekker": "833a30–833b2"
   },
   {
    "chapter": "44",
@@ -712,13 +712,13 @@
    "chapter": "119",
    "column": "841b",
    "line": "28",
-   "bekker": "841b28–33"
+   "bekker": "841b28–842a4"
   },
   {
    "chapter": "120",
    "column": "842a",
-   "line": "1",
-   "bekker": "842a1–10"
+   "line": "5",
+   "bekker": "842a5–10"
   },
   {
    "chapter": "121",
@@ -730,19 +730,19 @@
    "chapter": "122",
    "column": "842a",
    "line": "15",
-   "bekker": "842a15–35"
+   "bekker": "842a15–24"
   },
   {
    "chapter": "123",
-   "column": "842b",
-   "line": "1",
-   "bekker": "842b1"
+   "column": "842a",
+   "line": "25",
+   "bekker": "842a25–842b2"
   },
   {
    "chapter": "124",
    "column": "842b",
-   "line": "1",
-   "bekker": "842b1–5"
+   "line": "3",
+   "bekker": "842b3–5"
   },
   {
    "chapter": "125",
@@ -820,13 +820,13 @@
    "chapter": "137",
    "column": "844a",
    "line": "35",
-   "bekker": "844a35–35"
+   "bekker": "844a35–844b8"
   },
   {
    "chapter": "138",
    "column": "844b",
-   "line": "1",
-   "bekker": "844b1–22"
+   "line": "9",
+   "bekker": "844b9–22"
   },
   {
    "chapter": "139",
@@ -886,13 +886,13 @@
    "chapter": "148",
    "column": "845b",
    "line": "4",
-   "bekker": "845b4"
+   "bekker": "845b4–6"
   },
   {
    "chapter": "149",
    "column": "845b",
-   "line": "4",
-   "bekker": "845b4–9"
+   "line": "7",
+   "bekker": "845b7–9"
   },
   {
    "chapter": "150",
@@ -916,19 +916,19 @@
    "chapter": "153",
    "column": "846a",
    "line": "6",
-   "bekker": "846a6"
+   "bekker": "846a6–8"
   },
   {
    "chapter": "154",
    "column": "846a",
-   "line": "6",
-   "bekker": "846a6"
+   "line": "9",
+   "bekker": "846a9–16"
   },
   {
    "chapter": "155",
    "column": "846a",
-   "line": "6",
-   "bekker": "846a6–21"
+   "line": "17",
+   "bekker": "846a17–21"
   },
   {
    "chapter": "156",
