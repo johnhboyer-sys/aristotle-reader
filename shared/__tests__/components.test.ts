@@ -556,6 +556,28 @@ describe('Reader.svelte', () => {
     expect(container.querySelectorAll('.fn-marker')).toHaveLength(2);
   });
 
+  // The test above passed while a star label was broken: the emphasis pass
+  // matched from the * in data-fn="*" to the * in aria-label, inside the
+  // button's tag, so data-fn read "<em>" and the popup looked up that label.
+  it('keeps a star or dagger label intact in the marker\'s attributes', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'one[^*] two[^†] three.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/three/);
+    const markers = [...container.querySelectorAll('.fn-marker')];
+    expect(markers.map(b => b.getAttribute('data-fn'))).toEqual(['*', '†']);
+    expect(markers.map(b => b.getAttribute('aria-label'))).toEqual(['Footnote *', 'Footnote †']);
+    expect(markers.map(b => b.textContent)).toEqual(['*', '†']);
+  });
+
   // The lead before a footnote used to take any run of non-space characters,
   // brackets included, so a word with two notes swallowed the first marker
   // into the lead and printed it as text.
