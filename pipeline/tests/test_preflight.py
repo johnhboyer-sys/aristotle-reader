@@ -250,3 +250,18 @@ def test_chapter_starts_gate_says_when_it_examined_no_work(tmp_path):
     assert problems == [("-", "search/offsets.json",
                          "examined no work: no chapter starts were compared, "
                          "so this check is not running")]
+
+
+def test_chapter_bounds_with_no_integer_start_are_reported(tmp_path):
+    """`0` and `"0"` are one position to the pager but two keys to a dict, and
+    a bound with no start at all shares nothing; neither may pass unread."""
+    examined, problems = _starts_case(tmp_path, [
+        {"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"},
+        {"book": 1, "chapter": "2", "start": "0", "accuracy": "exact"},
+        {"book": 1, "chapter": "3", "accuracy": "exact"},
+    ])
+    assert examined == 1
+    assert problems == [
+        ("VAL", "search/offsets.json", "chapter '2' has start '0', not a non-negative integer"),
+        ("VAL", "search/offsets.json", "chapter '3' has start None, not a non-negative integer"),
+    ]

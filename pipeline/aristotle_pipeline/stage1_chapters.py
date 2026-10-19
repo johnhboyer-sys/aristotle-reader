@@ -106,7 +106,7 @@ def _find_word_run(joined: str, needle: str, after: int) -> int:
 
 
 def _step_back_match(joined: str, spine_words: list[str], ow: list[str],
-                     after: int, last: int | None = None):
+                     after: int, first: int = 0, last: int | None = None):
     """(word index, new cursor, word_anchor) for an opening found past its
     leading words, or None. A single orthographic divergence in the opening
     words otherwise drops the chapter, and it bites at different offsets: APr
@@ -115,7 +115,9 @@ def _step_back_match(joined: str, spine_words: list[str], ow: list[str],
     skip leading particles and match a later window, then step back to the
     inferred opening. Longer windows are tried first (more specific), and the
     monotonic `after` pointer keeps a short window from matching before the
-    previous chapter. A stepped-back start past word `last` is not taken."""
+    previous chapter. The cursor bounds the window, not the start stepped back
+    from it, so a start before word `first` (the previous chapter's, plus one)
+    or past word `last` is not taken."""
     for kk in (4, 3):
         for start in (0, 1, 2, 3):
             if len(ow) < start + kk:
@@ -125,7 +127,7 @@ def _step_back_match(joined: str, spine_words: list[str], ow: list[str],
                 continue
             w = joined[:p].count(" ")
             widx = max(0, w - start)
-            if last is not None and widx > last:
+            if widx < first or (last is not None and widx > last):
                 continue
             # The suffix match proves the stepped-back position only when the
             # skipped normalized words are really present there. Keep the
@@ -337,6 +339,7 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
         openings = [o for o in openings if str(o[1]) not in drop]
     chapters: list[dict] = []
     after = 0
+    prev_widx = -1
     for book, chap, opening, mcol, mline in openings:
         word_anchor = False
         if not chapters:
@@ -368,9 +371,14 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                     # INSIDE it. So a misspelled opening (Mirab 123's `Ἤλδι`)
                     # is first sought past its typo, as below; the page bounds
                     # that search, since the chapter starts on or before it.
-                    page_end = max((i for i, (col, _, _) in enumerate(owner)
+                    # A column can hold the end of one book and the start of
+                    # the next, so the page ends at this book's last word.
+                    book_end = min((i for i in book_start.values()
+                                    if i > book_start.get(book, 0)), default=len(owner))
+                    page_end = max((i for i, (col, _, _) in enumerate(owner[:book_end])
                                     if col == mcol), default=None)
-                    hit = (_step_back_match(joined, spine_words, ow, after, page_end)
+                    hit = (_step_back_match(joined, spine_words, ow, after,
+                                            prev_widx + 1, page_end)
                            if page_end is not None else None)
                     if hit:
                         widx, after, word_anchor = hit
@@ -394,7 +402,7 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
             if widx is None and mcol is None:
                 # Last resort for grc TEIs with no Bekker milestones (no fallback
                 # above).
-                hit = _step_back_match(joined, spine_words, ow, after)
+                hit = _step_back_match(joined, spine_words, ow, after, prev_widx + 1)
                 if hit:
                     widx, after, word_anchor = hit
             if widx is None:
@@ -425,6 +433,7 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
             chapter["wordAnchor"] = True
         chapter["bookstart"] = bookstart
         chapters.append(chapter)
+        prev_widx = widx
 
     if extra:
         from .refs import line_key

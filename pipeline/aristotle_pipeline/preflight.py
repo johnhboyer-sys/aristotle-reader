@@ -483,9 +483,17 @@ def _validate_shared_chapter_starts(data_dir: Path, manifests: list[WorkManifest
         if not isinstance(bounds, list):
             continue
         examined += 1
-        by_start: dict[Any, list[str]] = {}
+        by_start: dict[int, list[str]] = {}
         for b in bounds:
-            by_start.setdefault(b.get("start"), []).append(str(b.get("chapter")))
+            start = b.get("start") if isinstance(b, dict) else None
+            chapter = str(b.get("chapter")) if isinstance(b, dict) else repr(b)
+            # `0` and `"0"` are one position to the pager but two keys here.
+            if not isinstance(start, int) or isinstance(start, bool) or start < 0:
+                problems.append((manifest.work_id, "search/offsets.json",
+                                 f"chapter {chapter!r} has start {start!r}, "
+                                 "not a non-negative integer"))
+                continue
+            by_start.setdefault(start, []).append(chapter)
         for start, chapters in by_start.items():
             if len(chapters) > 1:
                 problems.append((manifest.work_id, "search/offsets.json",

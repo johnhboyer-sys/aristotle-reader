@@ -216,3 +216,46 @@ def test_a_step_back_match_past_the_milestone_page_is_refused(tmp_path):
     # `tes boiwtias legetai` sits on 1b; the page is 1a, so the page fallback
     # stands: the first word on 1a after chapter 1's start.
     assert (chapters[1]["column"], chapters[1]["line"]) == ("1a", "1")
+
+
+def test_a_step_back_never_lands_before_the_previous_chapter(tmp_path):
+    """The cursor bounds where the window matches, not where the stepped-back
+    start lands: skipping two words back from chapter 3's window would file it
+    on chapter 2's line, above chapter 2's start."""
+    spine = {"work": "TST", "segments": [{"id": "1:1a", "book": 1, "column": "1a", "lines": [
+        {"n": 1, "text": "alpha beta gamma delta"},
+        {"n": 2, "text": "aa bb"},
+        {"n": 3, "text": "cc dd ee ff"},
+    ]}]}
+    tei = """<TEI><text><body><div subtype="book" n="1">
+<milestone unit="page" n="1a"/>
+<div subtype="chapter" n="1"><p>alpha beta gamma delta</p></div>
+<div subtype="chapter" n="2"><p>xq cc dd ee ff</p></div>
+<div subtype="chapter" n="3"><p>yq zq cc dd ee</p></div>
+</div></body></text></TEI>"""
+    chapters = _chapters(tmp_path, spine, tei)
+    positions = [(int(c["line"]), c["wordIndex"]) for c in chapters]
+    assert positions == sorted(positions) and len(set(positions)) == len(positions), chapters
+
+
+def test_the_page_bound_stops_at_the_book_break(tmp_path):
+    """A Bekker column can hold the end of one book and the start of the next;
+    a book-1 chapter must not be found in book 2's half of it."""
+    spine = {"work": "TST", "segments": [
+        {"id": "1:1a", "book": 1, "column": "1a", "lines": [
+            {"n": 1, "text": "alpha beta gamma delta"},
+            {"n": 2, "text": "epsilon zeta eta theta"},
+        ]},
+        {"id": "2:1a", "book": 2, "column": "1a", "lines": [
+            {"n": 3, "text": "kappa lambda mu nu"},
+        ]},
+    ]}
+    tei = """<TEI><text><body><div subtype="book" n="1">
+<milestone unit="page" n="1a"/>
+<div subtype="chapter" n="1"><p>alpha beta gamma delta</p></div>
+<div subtype="chapter" n="2"><p>xq lambda mu nu</p></div>
+</div></body></text></TEI>"""
+    chapters = _chapters(tmp_path, spine, tei)
+    # Without the bound the window matched book 2's line 3 and stepped back
+    # into it under book 1's number.
+    assert chapters[1]["book"] == 1 and chapters[1]["line"] in ("1", "2"), chapters
