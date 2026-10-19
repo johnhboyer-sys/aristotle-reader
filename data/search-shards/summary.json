@@ -1,0 +1,23 @@
+{
+ "works": 41,
+ "streams": {
+  "lemma": {
+   "sources": 41,
+   "shards": 302,
+   "words": 14916,
+   "postings": 1039680
+  },
+  "form": {
+   "sources": 41,
+   "shards": 378,
+   "words": 47094,
+   "postings": 848745
+  },
+  "english": {
+   "sources": 57,
+   "shards": 366,
+   "words": 22954,
+   "postings": 1950437
+  }
+ }
+}

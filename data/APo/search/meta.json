@@ -2,428 +2,306 @@
  {
   "id": "1:71a",
   "book": 1,
-  "column": "71a",
-  "greek_head": "Πᾶσα διδασκαλία καὶ πᾶσα μάθησις διανοητικὴ ἐκ προϋπαρχούσης γίνεται γνώσεως φανερὸν δὲ τοῦτο θεωροῦσιν ἐπὶ",
-  "english_head": "All instruction given or received by way of argument proceeds from pre-existent knowledge. This becomes evident upon a survey of all the species of such instruction. The mathematical sciences and all other speculative disciplines are acquired in this way, and so are the two forms of dialectical reasoning, syllogistic and inductive; for each of these latter make use of old knowledge to impart new, the syllogism assuming an audience that accepts its premisses, induction exhibiting the universal as"
+  "column": "71a"
  },
  {
   "id": "1:71b",
   "book": 1,
-  "column": "71b",
-  "greek_head": "ἴσασι μὲν οὗπερ τὴν ἀπόδειξιν ἔχουσι καὶ οὗ ἔλαβον ἔλαβον δ' οὐχὶ παντὸς οὗ ἂν εἰδῶσιν ὅτι τρίγωνον ἢ ὅτι ἀριθμός",
-  "english_head": "what they made the subject of their premiss, viz. not merely every triangle or number which they know to be such, but any and every number or triangle without reservation. For no premiss is ever couched in the form 'every number which you know to be such', or 'every rectilinear figure which you know to be such': the predicate is always construed as applicable to any and every instance of the thing. On the other hand, I imagine there is nothing to prevent a man in one sense knowing what he is lea"
+  "column": "71b"
  },
  {
   "id": "1:72a",
   "book": 1,
-  "column": "72a",
-  "greek_head": "οὐδὲ γνωριμώτερον καὶ ἡμῖν γνωριμώτερον λέγω δὲ πρὸς ἡμᾶς μὲν πρότερα καὶ γνωριμώτερα τὰ ἐγγύτερον τῆς αἰσθήσεως",
-  "english_head": "Now 'prior' and 'better known' are ambiguous terms, for there is a difference between what is prior and better known in the order of being and what is prior and better known to man. I mean that objects nearer to sense are prior and better known to man; objects without qualification prior and better known are those further from sense. Now the most universal causes are furthest from sense and particular causes are nearest to sense, and they are thus exactly opposed to one another. In saying that t"
+  "column": "72a"
  },
  {
   "id": "1:72b",
   "book": 1,
-  "column": "72b",
-  "greek_head": "ἀλλὰ μηδ' ἄλλο αὐτῷ πιστότερον εἶναι μηδὲ γνωριμώτερον τῶν ἀντικειμένων ταῖς ἀρχαῖς ἐξ ὧν ἔσται συλλογισμὸς ὁ",
-  "english_head": "Moreover, if a man sets out to acquire the scientific knowledge that comes through demonstration, he must not only have a better knowledge of the basic truths and a firmer conviction of them than of the connexion which is being demonstrated: more than this, nothing must be more certain or better known to him than these basic truths in their character as contradicting the fundamental premisses which lead to the opposed and erroneous conclusion. For indeed the conviction of pure science must be un"
+  "column": "72b"
  },
  {
   "id": "1:73a",
   "book": 1,
-  "column": "73a",
-  "greek_head": "ὄντος τὸ Α τοῦτο γὰρ ἦν τὸ κύκλῳ κείσθω τὸ Α ἐφ' οὗ τὸ Γ τὸ οὖν τοῦ Β ὄντος τὸ Α εἶναι λέγειν ἐστὶ τὸ Γ εἶναι λέγειν",
-  "english_head": "Thus by direct proof, if A is, B must be; if B is, C must be; therefore if A is, C must be. Since then-by the circular proof-if A is, B must be, and if B is, A must be, A may be substituted for C above. Then 'if B is, A must be'='if B is, C must be', which above gave the conclusion 'if A is, C must be': but C and A have been identified. Consequently the upholders of circular demonstration are in the position of saying that if A is, A must be-a simple way of proving anything. Moreover, even such "
+  "column": "73a"
  },
  {
   "id": "1:73b",
   "book": 1,
-  "column": "73b",
-  "greek_head": "καὶ ἑτερόμηκες καὶ πᾶσι τούτοις ἐνυπάρχουσιν ἐν τῷ λόγῳ τῷ τί ἐστι λέγοντι ἔνθα μὲν γραμμὴ ἔνθα δ' ἀριθμός",
-  "english_head": "Extending this classification to all other attributes, I distinguish those that answer the above description as belonging essentially to their respective subjects; whereas attributes related in neither of these two ways to their subjects I call accidents or 'coincidents'; e.g. musical or white is a 'coincident' of animal.\nFurther (a) that is essential which is not predicated of a subject other than itself: e.g. 'the walking [thing]' walks and is white in virtue of being something else besides; w"
+  "column": "73b"
  },
  {
   "id": "1:74a",
   "book": 1,
-  "column": "74a",
-  "greek_head": "ὑπάρχει καθόλου καὶ ἡ ἀπόδειξις καθ' αὑτὸ τούτου καθόλου ἐστί τῶν δ' ἄλλων τρόπον τινὰ οὐ καθ' αὑτό οὐδὲ τοῦ ἰσοσκελοῦς",
-  "english_head": "Nor again (2) is equality to two right angles a commensurately universal attribute of isosceles; it is of wider application. We must not fail to observe that we often fall into error because our conclusion is not in fact primary and commensurately universal in the sense in which we think we prove it so. We make this mistake (1) when the subject is an individual or individuals above which there is no universal to be found: (2) when the subjects belong to different species and there is a higher un"
+  "column": "74a"
  },
  {
   "id": "1:74b",
   "book": 1,
-  "column": "74b",
-  "greek_head": "καὶ τοῦ ἰσοσκελές ἀλλ' οὐ τοῦ σχήματος ἢ πέρατος ἀλλ' οὐ πρώτων τίνος οὖν πρώτου εἰ δὴ τριγώνου κατὰ τοῦτο",
-  "english_head": "'But'-you may say-'eliminate figure or limit, and the attribute vanishes.' True, but figure and limit are not the first differentiae whose elimination destroys the attribute. 'Then what is the first?' If it is triangle, it will be in virtue of triangle that the attribute belongs to all the other subjects of which it is predicable, and triangle is the subject to which it can be demonstrated as belonging commensurately and universally. Demonstrative knowledge must rest on necessary basic truths; f"
+  "column": "74b"
  },
  {
   "id": "1:75a",
   "book": 1,
-  "column": "75a",
-  "greek_head": "Ὅταν μὲν οὖν τὸ συμπέρασμα ἐξ ἀνάγκης ᾖ οὐδὲν κωλύει τὸ μέσον μὴ ἀναγκαῖον εἶναι δι' οὗ ἐδείχθη ἔστι γὰρ",
-  "english_head": "Even if the link has not actually perished but is liable to perish, this situation is possible and might occur. But such a condition cannot be knowledge.\nWhen the conclusion is necessary, the middle through which it was proved may yet quite easily be non-necessary. You can in fact infer the necessary even from a non-necessary premiss, just as you can infer the true from the not true. On the other hand, when the middle is necessary the conclusion must be necessary; just as true premisses always g"
+  "column": "75a"
  },
  {
   "id": "1:75b",
   "book": 1,
-  "column": "75b",
-  "greek_head": "οὗ τὰ πάθη καὶ τὰ καθ' αὑτὰ συμβεβηκότα δηλοῖ ἡ ἀπόδειξις ἐξ ὧν μὲν οὖν ἡ ἀπόδειξις ἐνδέχεται τὰ αὐτὰ",
-  "english_head": "essential properties, are revealed by the demonstration. The axioms which are premisses of demonstration may be identical in two or more sciences: but in the case of two different genera such as arithmetic and geometry you cannot apply arithmetical demonstration to the properties of magnitudes unless the magnitudes in question are numbers. How in certain cases transference is possible I will explain later.\nArithmetical demonstration and the other sciences likewise possess, each of them, their ow"
+  "column": "75b"
  },
  {
   "id": "1:76a",
   "book": 1,
-  "column": "76a",
-  "greek_head": "οἱ λόγοι οὐ συγγενῶν οὐκοῦν οὐχ ᾗ ἐκεῖνο ἐπίσταται ἀλλὰ κατὰ συμβεβηκός οὐ γὰρ ἂν ἐφήρμοττεν ἡ ἀπόδειξις",
-  "english_head": "They therefore afford knowledge of an attribute only as inhering accidentally, not as belonging to its subject as such: otherwise they would not have been applicable to another genus.\nOur knowledge of any attribute's connexion with a subject is accidental unless we know that connexion through the middle term in virtue of which it inheres, and as an inference from basic premisses essential and 'appropriate' to the subject-unless we know, e.g. the property of possessing angles equal to two right a"
+  "column": "76a"
  },
  {
   "id": "1:76b",
   "book": 1,
-  "column": "76b",
-  "greek_head": "κἂν μὴ κατὰ πάντων λάβῃ ἀλλ' ἐπὶ μεγεθῶν μόνον τῷ δ' ἀριθμητικῷ ἐπ' ἀριθμῶν",
-  "english_head": "Only so much of these common truths is required as falls within the genus in question: for a truth of this kind will have the same force even if not used generally but applied by the geometer only to magnitudes, or by the arithmetician only to numbers. Also peculiar to a science are the subjects the existence as well as the meaning of which it assumes, and the essential attributes of which it investigates, e.g. in arithmetic units, in geometry points and lines. Both the existence and the meaning"
+  "column": "76b"
  },
  {
   "id": "1:77a",
   "book": 1,
-  "column": "77a",
-  "greek_head": "οὖσαν ὁ δὲ γεωμέτρης οὐδὲν συμπεραίνεται τῷ τήνδε εἶναι γραμμὴν ἣν αὐτὸς ἔφθεγκται ἀλλὰ τὰ διὰ τούτων δηλούμενα",
-  "english_head": "The truth is that the geometer does not draw any conclusion from the being of the particular line of which he speaks, but from what his diagrams symbolize. A further distinction is that all hypotheses and illegitimate postulates are either universal or particular, whereas a definition is neither. So demonstration does not necessarily imply the being of Forms nor a One beside a Many, but it does necessarily imply the possibility of truly predicating one of many; since without this possibility we "
+  "column": "77a"
  },
  {
   "id": "1:77b",
   "book": 1,
-  "column": "77b",
-  "greek_head": "ὧν δείκνυταί τι περὶ ὧν ἡ γεωμετρία ἐστίν ἢ ἃ ἐκ τῶν αὐτῶν δείκνυται τῇ γεωμετρίᾳ ὥσπερ τὰ ὀπτικά ὁμοίως",
-  "english_head": "Hence it is clear that not every question will be relevant to geometry, nor to medicine, nor to any other science: only those questions will be geometrical which form premisses for the proof of the theorems of geometry or of any other science, such as optics, which uses the same basic truths as geometry. Of the other sciences the like is true. Of these questions the geometer is bound to give his account, using the basic truths of geometry in conjunction with his previous conclusions; of the basi"
+  "column": "77b"
  },
  {
   "id": "1:78a",
   "book": 1,
-  "column": "78a",
-  "greek_head": "ὅτι τὸ πῦρ ἐν τῇ πολλαπλασίᾳ ἀναλογίᾳ καὶ γὰρ τὸ πῦρ ταχὺ γεννᾶται ὥς φησι καὶ αὕτη ἡ ἀναλογία οὕτω δ'",
-  "english_head": "On the other hand, arguments formally illogical do sometimes occur through taking as middles mere attributes of the major and minor terms. An instance of this is Caeneus' proof that fire increases in geometrical proportion: 'Fire', he argues, 'increases rapidly, and so does geometrical proportion'. There is no syllogism so, but there is a syllogism if the most rapidly increasing proportion is geometrical and the most rapidly increasing proportion is attributable to fire in its motion. Sometimes,"
+  "column": "78a"
  },
  {
   "id": "1:78b",
   "book": 1,
-  "column": "78b",
-  "greek_head": "τὸ ἐγγὺς εἶναι τὸ Α τὸ μὴ στίλβειν ὑπάρχει δὴ καὶ τὸ Β τῷ Γ καὶ τὸ Α τῷ Β ὥστε καὶ τῷ Γ τὸ Α τὸ μὴ στίλβειν",
-  "english_head": "Then B is an attribute of C, and A-not twinkling-of B. Consequently A is predicable of C, and the syllogism proves the reasoned fact, since its middle term is the proximate cause. Another example is the inference that the moon is spherical from its manner of waxing. Thus: since that which so waxes is spherical, and since the moon so waxes, clearly the moon is spherical. Put in this form, the syllogism turns out to be proof of the fact, but if the middle and major be reversed it is proof of the r"
+  "column": "78b"
  },
  {
   "id": "1:79a",
   "book": 1,
-  "column": "79a",
-  "greek_head": "καὶ ἡ ναυτική καὶ ἁρμονικὴ ἥ τε μαθηματικὴ καὶ ἡ κατὰ τὴν ἀκοήν ἐνταῦθα γὰρ τὸ μὲν ὅτι τῶν αἰσθητικῶν",
-  "english_head": "Here it is the business of the empirical observers to know the fact, of the mathematicians to know the reasoned fact; for the latter are in possession of the demonstrations giving the causes, and are often ignorant of the fact: just as we have often a clear insight into a universal, but through lack of observation are ignorant of some of its particular instances. These connexions have a perceptible existence though they are manifestations of forms. For the mathematical sciences concern forms: th"
+  "column": "79a"
  },
  {
   "id": "1:79b",
   "book": 1,
-  "column": "79b",
-  "greek_head": "Α παντὶ τὸ Γ τῷ δὲ Β μηδενί οὐδενὶ τῷ Β τὸ Α ὁμοίως δὲ καὶ εἰ τὸ Β ἐν ὅλῳ τινί ἐστιν οἷον ἐν τῷ Δ τὸ μὲν",
-  "english_head": "Or if it is B which has a genus D, we have all B is D, no D is A, therefore no B is A, by syllogism; and the proof will be similar if both A and B have a genus. That the genus of A need not be the genus of B and vice versa, is shown by the existence of mutually exclusive coordinate series of predication. If no term in the series ACD...is predicable of any term in the series BEF...,and if G-a term in the former series-is the genus of A, clearly G will not be the genus of B; since, if it were, the"
+  "column": "79b"
  },
  {
   "id": "1:80a",
   "book": 1,
-  "column": "80a",
-  "greek_head": "Α Γ ἡ γὰρ Γ Β πρότασις ἀεὶ ψευδὴς ἔσται διὰ τὸ ἐν μηδενὶ εἶναι τὸ Β τὴν δὲ Α Γ ἐγχωρεῖ οἷον εἰ τὸ Α καὶ τῷ",
-  "english_head": "On the other hand, (b) one of the premisses may be true, though not either indifferently but only the major A-C since, B having no genus, the premiss C-B will always be false, while A-C may be true. This is the case if, for example, A is related atomically to both C and B; because when the same term is related atomically to more terms than one, neither of those terms will belong to the other. It is, of course, equally the case if A-C is not atomic.\nError of attribution, then, occurs through thes"
+  "column": "80a"
  },
  {
   "id": "1:80b",
   "book": 1,
-  "column": "80b",
-  "greek_head": "τὸ Γ τῷ δὲ Β ὅλῳ μὴ ὑπάρχειν ἡ μὲν Γ Α ἀληθὴς ἔσται ἡ δὲ Γ Β ψευδής πάλιν ὃ τῷ Β μηδενὶ ὑπάρχει οὐδὲ τῷ",
-  "english_head": "Again, actually that which is an attribute of no B will not be an attribute of all A either; for if it be an attribute of all A, it will also be an attribute of all B, which is contrary to supposition; but if C be nevertheless assumed to be a universal attribute of A, but an attribute of no B, then the premiss C-B is true but the major is false. The case is similar if the major is made the negative premiss. For in fact what is an attribute of no A will not be an attribute of any B either; and if"
+  "column": "80b"
  },
  {
   "id": "1:81a",
   "book": 1,
-  "column": "81a",
-  "greek_head": "μὲν Α Δ ἀληθὴς ἔσται ἡ δὲ Δ Β ψευδής ἡ μὲν γὰρ Α Δ ἀληθής ὅτι οὐκ ἦν ἐν τῷ Α τὸ Δ ἡ δὲ Δ Β ψευδής ὅτι",
-  "english_head": "When, however, (ii) the middle D is not subordinate to A, A-D will be true, D-B false-A-D true because A was not subordinate to D, D-B false because if it had been true, the conclusion too would have been true; but it is ex hypothesi false.\nWhen the erroneous inference is in the second figure, both premisses cannot be entirely false; since if B is subordinate to A, there can be no middle predicable of all of one extreme and of none of the other, as was stated before. One premiss, however, may be"
+  "column": "81a"
  },
  {
   "id": "1:81b",
   "book": 1,
-  "column": "81b",
-  "greek_head": "ἐκ τῶν καθόλου ἡ δ' ἐπαγωγὴ ἐκ τῶν κατὰ μέρος ἀδύνατον δὲ τὰ καθόλου θεωρῆσαι μὴ δι' ἐπαγωγῆς ἐπεὶ",
-  "english_head": "Thus demonstration develops from universals, induction from particulars; but since it is possible to familiarize the pupil with even the so-called mathematical abstractions only through induction-i.e. only because each subject genus possesses, in virtue of a determinate mathematical character, certain properties which can be treated as separate even though they do not exist in isolation-it is consequently impossible to come to grasp universals except through induction. But induction is impossibl"
+  "column": "81b"
  },
  {
   "id": "1:82a",
   "book": 1,
-  "column": "82a",
-  "greek_head": "ὃ αὐτὸ μὲν ἄλλου ἐκείνου δὲ μηδὲν κατηγορεῖται ἐπὶ τὸ κάτω σκοπεῖν εἰ ἐνδέχεται εἰς ἄπειρον ἰέναι Ἔτι τὰ μεταξὺ",
-  "english_head": "A third question is, if the extreme terms are fixed, can there be an infinity of middles? I mean this: suppose for example that A inheres in C and B is intermediate between them, but between B and A there are other middles, and between these again fresh middles; can these proceed to infinity or can they not? This is the equivalent of inquiring, do demonstrations proceed to infinity, i.e. is everything demonstrable? Or do ultimate subject and primary attribute limit one another?\nI hold that the s"
+  "column": "82a"
  },
  {
   "id": "1:82b",
   "book": 1,
-  "column": "82b",
-  "greek_head": "μηδενὶ ὑπάρχει ἐκείνῳ δὲ ἄλλο οἷον τὸ Ζ μήτε ἀπὸ τοῦ πρώτου ἐπὶ τὸ ὕστατον λέγω δὲ πρῶτον ὃ αὐτὸ μὲν κατ'",
-  "english_head": "Let us assume that we cannot proceed to infinity either by ascending from the ultimate term (by 'ultimate term' I mean a term such as was, not itself attributable to a subject but itself the subject of attributes), or by descending towards an ultimate from the primary term (by 'primary term' I mean a term predicable of a subject but not itself a subject). If this assumption is justified, the series will also terminate in the case of negation. For a negative conclusion can be proved in all three "
+  "column": "82b"
  },
  {
   "id": "1:83a",
   "book": 1,
-  "column": "83a",
-  "greek_head": "ἐστι κατηγορούμενα καθόλου δὲ ὧδε λέγομεν ἔστι γὰρ εἰπεῖν ἀληθῶς τὸ λευκὸν βαδίζειν καὶ τὸ μέγα ἐκεῖνο ξύλον",
-  "english_head": "But as regards predicates generally we have the following prefatory remarks to make. (1) We can affirm without falsehood 'the white (thing) is walking', and that big (thing) is a log'; or again, 'the log is big', and 'the man walks'. But the affirmation differs in the two cases. When I affirm 'the white is a log', I mean that something which happens to be white is a log-not that white is the substratum in which log inheres, for it was not qua white or qua a species of white that the white (thing"
+  "column": "83a"
  },
  {
   "id": "1:83b",
   "book": 1,
-  "column": "83b",
-  "greek_head": "οἷον ἢ γένος ὂν ἢ διαφορὰ τοῦ κατηγορουμένου ταῦτα δὲ δέδεικται ὅτι οὐκ ἔσται ἄπειρα οὔτ' ἐπὶ τὸ κάτω οὔτ' ἐπὶ",
-  "english_head": "subject as an element of its essential nature, is infinite. For all such substance is definable, and an infinite series cannot be traversed in thought: consequently neither the ascent nor the descent is infinite, since a substance whose predicates were infinite would not be definable. Hence they will not be predicated each as the genus of the other; for this would equate a genus with one of its own species. Nor (the other alternative) can a quale be reciprocally predicated of a quale, nor any te"
+  "column": "83b"
  },
  {
   "id": "1:84a",
   "book": 1,
-  "column": "84a",
-  "greek_head": "κατηγορίας τὰς μεταξύ εἰ γὰρ μὴ ἵστανται ἀλλ' ἔστιν ἀεὶ τοῦ ληφθέντος ἐπάνω ἁπάντων ἔσται ἀπόδειξις ὥστ' εἰ τὰ",
-  "english_head": "Therefore, if it is possible through demonstration to know anything without qualification and not merely as dependent on the acceptance of certain premisses-i.e. hypothetically-the series of intermediate predications must terminate. If it does not terminate, and beyond any predicate taken as higher than another there remains another still higher, then every predicate is demonstrable. Consequently, since these demonstrable predicates are infinite in number and therefore cannot be traversed, we sh"
+  "column": "84a"
  },
  {
   "id": "1:84b",
   "book": 1,
-  "column": "84b",
-  "greek_head": "ἐπὶ τὸ ἄνω καὶ τὸ κάτω ὅτι δὲ ἵστανται δέδεικται λογικῶς μὲν πρότερον ἀναλυτικῶς δὲ νῦν",
-  "english_head": "If such interposition could continue to infinity there might be an infinite number of terms between any two terms; but this is impossible if both the ascending and descending series of predication terminate; and of this fact, which before was shown dialectically, analytic proof has now been given. It is an evident corollary of these conclusions that if the same attribute A inheres in two terms C and D predicable either not at all, or not of all instances, of one another, it does not always belon"
+  "column": "84b"
  },
  {
   "id": "1:85a",
   "book": 1,
-  "column": "85a",
-  "greek_head": "πρότασις ἄμεσος ἐν δ' ἀποδείξει καὶ ἐπιστήμῃ ὁ νοῦς ἐν μὲν οὖν τοῖς δεικτικοῖς συλλογισμοῖς τοῦ ὑπάρχοντος οὐδὲν ἔξω",
-  "english_head": "And as in other spheres the basic element is simple but not identical in all-in a system of weight it is the mina, in music the quarter-tone, and so on--so in syllogism the unit is an immediate premiss, and in the knowledge that demonstration gives it is an intuition. In syllogisms, then, which prove the inherence of an attribute, nothing falls outside the major term. In the case of negative syllogisms on the other hand, (1) in the first figure nothing falls outside the major term whose inherenc"
+  "column": "85a"
  },
  {
   "id": "1:85b",
   "book": 1,
-  "column": "85b",
-  "greek_head": "ἀλλὰ παρὰ ταῦτά τι εἰ οὖν καθόλου μὲν μᾶλλον αὕτη περὶ ὄντος δ' ἧττον τῆς κατὰ μέρος καὶ ἐμποιεῖ δόξαν",
-  "english_head": "We may retort thus. (1) The first argument applies no more to commensurate and universal than to particular demonstration. If equality to two right angles is attributable to its subject not qua isosceles but qua triangle, he who knows that isosceles possesses that attribute knows the subject as qua itself possessing the attribute, to a less degree than he who knows that triangle has that attribute. To sum up the whole matter: if a subject is proved to possess qua triangle an attribute which it d"
+  "column": "85b"
  },
  {
   "id": "1:86a",
   "book": 1,
-  "column": "86a",
-  "greek_head": "τί τὸ ἰσοσκελές ὅτι τρίγωνον καὶ τοῦτο ὅτι σχῆμα εὐθύγραμμον εἰ δὲ τοῦτο μηκέτι διότι ἄλλο τότε μάλιστα",
-  "english_head": "If rectilinear figure possesses the property for no further reason, at this point we have full knowledge-but at this point our knowledge has become commensurately universal, and so we conclude that commensurately universal demonstration is superior.\n(6) The more demonstration becomes particular the more it sinks into an indeterminate manifold, while universal demonstration tends to the simple and determinate. But objects so far as they are an indeterminate manifold are unintelligible, so far as "
+  "column": "86a"
  },
  {
   "id": "1:86b",
   "book": 1,
-  "column": "86b",
-  "greek_head": "Β Γ Δ ὅτι τὸ Α τῷ Ε ὑπάρχει ἡ δὲ διὰ τῶν Ζ Η ὅτι τὸ Α τῷ Ε ὁμοίως δὴ ἔχει τὸ ὅτι τὸ Α τῷ Δ ὑπάρχει",
-  "english_head": "Assuming that in both cases alike the middle terms are known, and that middles which are prior are better known than such as are posterior, we may suppose two demonstrations of the inherence of A in E, the one proving it through the middles B, C and D, the other through F and G. Then A-D is known to the same degree as A-E (in the second proof), but A-D is better known than and prior to A-E (in the first proof); since A-E is proved through A-D, and the ground is more certain than the conclusion.\n"
+  "column": "86b"
  },
  {
   "id": "1:87a",
   "book": 1,
-  "column": "87a",
-  "greek_head": "Ἐπεὶ δ' ἡ κατηγορικὴ τῆς στερητικῆς βελτίων δῆλον ὅτι καὶ τῆς εἰς τὸ ἀδύνατον ἀγούσης δεῖ δ' εἰδέναι τίς ἡ",
-  "english_head": "Since affirmative demonstration is superior to negative, it is clearly superior also to reductio ad impossibile. We must first make certain what is the difference between negative demonstration and reductio ad impossibile. Let us suppose that no B is A, and that all C is B: the conclusion necessarily follows that no C is A. If these premisses are assumed, therefore, the negative demonstration that no C is A is direct. Reductio ad impossibile, on the other hand, proceeds as follows. Supposing we "
+  "column": "87a"
  },
  {
   "id": "1:87b",
   "book": 1,
-  "column": "87b",
-  "greek_head": "μήθ' ἅτεραι ἐκ τῶν ἑτέρων τούτου δὲ σημεῖον ὅταν εἰς τὰ ἀναπόδεικτα ἔλθῃ δεῖ γὰρ αὐτὰ ἐν τῷ αὐτῷ γένει εἶναι",
-  "english_head": "One science differs from another when their basic truths have neither a common source nor are derived those of the one science from those the other. This is verified when we reach the indemonstrable premisses of a science, for they must be within one genus with its conclusions: and this again is verified if the conclusions proved by means of them fall within one genus-i.e. are homogeneous. One can have several demonstrations of the same connexion not only by taking from the same series of predic"
+  "column": "87b"
  },
  {
   "id": "1:88a",
   "book": 1,
-  "column": "88a",
-  "greek_head": "τῆς ἐκλείψεως ᾐσθανόμεθα γὰρ ἂν ὅτι νῦν ἐκλείπει καὶ οὐ διότι ὅλως οὐ γὰρ ἦν τοῦ καθόλου αἴσθησις οὐ μὴν ἀλλ'",
-  "english_head": "So if we were on the moon, and saw the earth shutting out the sun's light, we should not know the cause of the eclipse: we should perceive the present fact of the eclipse, but not the reasoned fact at all, since the act of perception is not of the commensurate universal. I do not, of course, deny that by watching the frequent recurrence of this event we might, after tracking the commensurate universal, possess a demonstration, for the commensurate universal is elicited from the several groups of"
+  "column": "88a"
  },
  {
   "id": "1:88b",
   "book": 1,
-  "column": "88b",
-  "greek_head": "οἷον τὸ πᾶν φάναι ἢ ἀποφάναι τὰ γὰρ γένη τῶν ὄντων ἕτερα καὶ τὰ μὲν τοῖς ποσοῖς τὰ δὲ τοῖς ποιοῖς ὑπάρχει",
-  "english_head": "For the kinds of being are different, and some attributes attach to quanta and some to qualia only; and proof is achieved by means of the common axioms taken in conjunction with these several kinds and their attributes.\nAgain, it is not true that the basic truths are much fewer than the conclusions, for the basic truths are the premisses, and the premisses are formed by the apposition of a fresh extreme term or the interposition of a fresh middle. Moreover, the number of conclusions is indefinit"
+  "column": "88b"
  },
  {
   "id": "1:89a",
   "book": 1,
-  "column": "89a",
-  "greek_head": "ἐστὶ νοῦς καὶ ἐπιστήμη καὶ δόξα καὶ τὸ διὰ τούτων λεγόμενον ὥστε λείπεται δόξαν εἶναι περὶ τὸ ἀληθὲς μὲν ἢ ψεῦδος",
-  "english_head": "Since then rational intuition, science, and opinion, and what is revealed by these terms, are the only things that can be 'true', it follows that it is opinion that is concerned with that which may be true or false, and can be otherwise: opinion in fact is the grasp of a premiss which is immediate but not necessary. This view also fits the observed facts, for opinion is unstable, and so is the kind of being we have described as its object. Besides, when a man thinks a truth incapable of being ot"
+  "column": "89a"
  },
  {
   "id": "1:89b",
   "book": 1,
-  "column": "89b",
-  "greek_head": "ἄλλως ἔχειν καὶ μὴ ἄλλως τὸ αὐτό ὅπερ οὐκ ἐνδέχεται ἐν ἄλλῳ μὲν γὰρ ἑκάτερον εἶναι ἐνδέχεται τοῦ αὐτοῦ ὡς εἴρηται",
-  "english_head": "This also shows that one cannot opine and know the same thing simultaneously; for then one would apprehend the same thing as both capable and incapable of being otherwise-an impossibility. Knowledge and opinion of the same thing can co-exist in two different people in the sense we have explained, but not simultaneously in the same person. That would involve a man's simultaneously apprehending, e.g. (1) that man is essentially animal-i.e. cannot be other than animal-and (2) that man is not essent"
+  "column": "89b"
  },
  {
   "id": "2:89b",
   "book": 2,
-  "column": "89b",
-  "greek_head": "Τὰ ζητούμενά ἐστιν ἴσα τὸν ἀριθμὸν ὅσαπερ ἐπιστάμεθα ζητοῦμεν δὲ τέτταρα τὸ ὅτι τὸ διότι εἰ ἔστι τί",
-  "english_head": "The kinds of question we ask are as many as the kinds of things which we know. They are in fact four:-(1) whether the connexion of an attribute with a thing is a fact, (2) what is the reason of the connexion, (3) whether a thing exists, (4) What is the nature of the thing. Thus, when our question concerns a complex of thing and attribute and we ask whether the thing is thus or otherwise qualified-whether, e.g. the sun suffers eclipse or not-then we are asking as to the fact of a connexion. That "
+  "column": "89b"
  },
  {
   "id": "2:90a",
   "book": 2,
-  "column": "90a",
-  "greek_head": "τὸ διὰ τί ζητῶμεν ἢ τὸ τί ἐστι τότε ζητοῦμεν τί τὸ μέσον λέγω δὲ τὸ ὅτι ἔστιν ἐπὶ μέρους καὶ ἁπλῶς ἐπὶ μέρους",
-  "english_head": "ascertained either the partial or the unqualified being of the thing-and are proceeding to ask the reason of the connexion or the nature of the thing, then we are asking what the 'middle' is.\n(By distinguishing the fact of the connexion and the existence of the thing as respectively the partial and the unqualified being of the thing, I mean that if we ask 'does the moon suffer eclipse?', or 'does the moon wax?', the question concerns a part of the thing's being; for what we are asking in such qu"
+  "column": "90a"
  },
  {
   "id": "2:90b",
   "book": 2,
-  "column": "90b",
-  "greek_head": "ἥπερ ἐστὶν οἰκειοτάτη τῶν ἐχομένων λόγων ἀπορήσειε γὰρ ἄν τις ἆρ' ἔστι τὸ αὐτὸ καὶ κατὰ τὸ αὐτὸ ὁρισμῷ εἰδέναι",
-  "english_head": "And let us first discuss certain difficulties which these questions raise, beginning what we have to say with a point most intimately connected with our immediately preceding remarks, namely the doubt that might be felt as to whether or not it is possible to know the same thing in the same relation, both by definition and by demonstration. It might, I mean, be urged that definition is held to concern essential nature and is in every case universal and affirmative; whereas, on the other hand, som"
+  "column": "90b"
  },
  {
   "id": "2:91a",
   "book": 2,
-  "column": "91a",
-  "greek_head": "ὁ μὲν οὖν ὁρισμὸς τί ἐστι δηλοῖ ἡ δὲ ἀπόδειξις ὅτι ἔστι τόδε κατὰ τοῦδε ἢ οὐκ ἔστιν ἑτέρου δὲ ἑτέρα ἀπόδειξις ἐὰν",
-  "english_head": "I add this because if all triangles have been proved to possess angles equal to two right angles, then this attribute has been proved to attach to isosceles; for isosceles is a part of which all triangles constitute the whole. But in the case before us the fact and the essential nature are not so related to one another, since the one is not a part of the other.\nSo it emerges that not all the definable is demonstrable nor all the demonstrable definable; and we may draw the general conclusion that"
+  "column": "91a"
  },
  {
   "id": "2:91b",
   "book": 2,
-  "column": "91b",
-  "greek_head": "οὕτως ὡς τὸ αὐτὸ ὄν οὐ γὰρ εἰ ἀκολουθεῖ τὸ Α τῷ Β καὶ τοῦτο τῷ Γ ἔσται τῷ Γ τὸ Α τὸ τί ἦν εἶναι",
-  "english_head": "For if A is predicable as a mere consequent of B and B of C, A will not on that account be the definable form of C: A will merely be what it was true to say of C. Even if A is predicated of all B inasmuch as B is identical with a species of A, still it will not follow: being an animal is predicated of being a man-since it is true that in all instances to be human is to be animal, just as it is also true that every man is an animal-but not as identical with being man.\nWe conclude, then, that unle"
+  "column": "91b"
  },
  {
   "id": "2:92a",
   "book": 2,
-  "column": "92a",
-  "greek_head": "ἄνθρωπος ζῷον θνητόν ὑπόπουν δίπουν ἄπτερον διὰ τί παρ' ἑκάστην πρόσθεσιν ἐρεῖ γάρ καὶ δείξει τῇ διαιρέσει",
-  "english_head": "Thus to the question 'What is the essential nature of man?' the divider replies 'Animal, mortal, footed, biped, wingless'; and when at each step he is asked 'Why?', he will say, and, as he thinks, proves by division, that all animal is mortal or immortal: but such a formula taken in its entirety is not definition; so that even if division does demonstrate its formula, definition at any rate does not turn out to be a conclusion of inference. Can we nevertheless actually demonstrate what a thing e"
+  "column": "92a"
  },
  {
   "id": "2:92b",
   "book": 2,
-  "column": "92b",
-  "greek_head": "ἐστι δείκνυσιν ἀλλ' ὅτι ἢ ἔστιν ἢ οὐκ ἔστιν τίς οὖν ἄλλος τρόπος λοιπός οὐ γὰρ δὴ δείξει γε τῇ αἰσθήσει ἢ τῷ δακτύλῳ",
-  "english_head": "Therefore, since presumably one cannot prove essential nature by an appeal to sense perception or by pointing with the finger, what other method remains?\nTo put it another way: how shall we by definition prove essential nature? He who knows what human-or any other-nature is, must know also that man exists; for no one knows the nature of what does not exist-one can know the meaning of the phrase or name 'goat-stag' but not what the essential nature of a goat-stag is. But further, if definition ca"
+  "column": "92b"
  },
  {
   "id": "2:93a",
   "book": 2,
-  "column": "93a",
-  "greek_head": "Πάλιν δὲ σκεπτέον τί τούτων λέγεται καλῶς καὶ τί οὐ καλῶς καὶ τί ἐστιν ὁ ὁρισμός καὶ τοῦ τί ἐστιν ἆρά πως ἔστιν",
-  "english_head": "We must now start afresh and consider which of these conclusions are sound and which are not, and what is the nature of definition, and whether essential nature is in any sense demonstrable and definable or in none.\nNow to know its essential nature is, as we said, the same as to know the cause of a thing's existence, and the proof of this depends on the fact that a thing must have a cause. Moreover, this cause is either identical with the essential nature of the thing or distinct from it; and if"
+  "column": "93a"
  },
  {
   "id": "2:93b",
   "book": 2,
-  "column": "93b",
-  "greek_head": "σκιὰν μηδενὸς μεταξὺ ἡμῶν ὄντος τούτῳ δὲ τὸ Α τὸ ἐκλελοιπέναι ὅτι μὲν ἐκλείπει δῆλον διότι δ' οὔπω καὶ ὅτι",
-  "english_head": "Then if B, failure to produce shadows in spite of the absence of an intervening body, is attributable A to C, and eclipse, is attributable to B, it is clear that the moon is eclipsed, but the reason why is not yet clear, and we know that eclipse exists, but we do not know what its essential nature is. But when it is clear that A is attributable to C and we proceed to ask the reason of this fact, we are inquiring what is the nature of B: is it the earth's acting as a screen, or the moon's rotatio"
+  "column": "93b"
  },
  {
   "id": "2:94a",
   "book": 2,
-  "column": "94a",
-  "greek_head": "μέν δείκνυσι δ' οὔ ὁ δ' ὕστερος φανερὸν ὅτι ἔσται οἷον ἀπόδειξις τοῦ τί ἐστι τῇ θέσει διαφέρων τῆς ἀποδείξεως",
-  "english_head": "Thus the former signifies without proving, but the latter will clearly be a quasi-demonstration of essential nature, differing from demonstration in the arrangement of its terms. For there is a difference between stating why it thunders, and stating what is the essential nature of thunder; since the first statement will be 'Because fire is quenched in the clouds', while the statement of what the nature of thunder is will be 'The noise of fire being quenched in the clouds'. Thus the same statemen"
+  "column": "94a"
  },
  {
   "id": "2:94b",
   "book": 2,
-  "column": "94b",
-  "greek_head": "εἰς Σάρδεις μετ' Ἐρετριέων ἐνέβαλον τοῦτο γὰρ ἐκίνησε πρῶτον πόλεμος ἐφ' οὗ Α προτέρους εἰσβαλεῖν Β Ἀθηναῖοι",
-  "english_head": "(c) 'Why did the Athenians become involved in the Persian war?' means 'What cause originated the waging of war against the Athenians?' and the answer is, 'Because they raided Sardis with the Eretrians', since this originated the war. Let A be war, B unprovoked raiding, C the Athenians. Then B, unprovoked raiding, is true of C, the Athenians, and A is true of B, since men make war on the unjust aggressor. So A, having war waged upon them, is true of B, the initial aggressors, and B is true of C, "
+  "column": "94b"
  },
  {
   "id": "2:95a",
   "book": 2,
-  "column": "95a",
-  "greek_head": "καὶ τὴν ὁρμήν ἡ δὲ βίᾳ ἡ παρὰ τὴν ὁρμήν ὥσπερ λίθος ἐξ ἀνάγκης καὶ ἄνω καὶ κάτω φέρεται ἀλλ' οὐ διὰ",
-  "english_head": "It may work in accordance with a thing's natural tendency, or by constraint and in opposition to it; as, for instance, by necessity a stone is borne both upwards and downwards, but not by the same necessity.\nOf the products of man's intelligence some are never due to chance or necessity but always to an end, as for example a house or a statue; others, such as health or safety, may result from chance as well.\nIt is mostly in cases where the issue is indeterminate (though only where the production"
+  "column": "95a"
  },
  {
   "id": "2:95b",
   "book": 2,
-  "column": "95b",
-  "greek_head": "ψεῦδος γὰρ ἔσται τὸ εἰπεῖν ἐν τῷ μεταξύ ἐπισκεπτέον δὲ τί τὸ συνέχον ὥστε μετὰ τὸ γεγονέναι τὸ γίνεσθαι",
-  "english_head": "The reason of this is that the middle must be homogeneous, past when the extremes are past, future when they are future, coming to be when they are coming-to-be, actually existent when they are actually existent; and there cannot be a middle term homogeneous with extremes respectively past and future. And it is a further difficulty in this theory that the time interval can be neither indefinite nor definite, since during it the inference will be false. We have also to inquire what it is that hol"
+  "column": "95b"
  },
  {
   "id": "2:96a",
   "book": 2,
-  "column": "96a",
-  "greek_head": "δὲ τοῦτο ἐν τοῖς πρώτοις ὅτι ἀντιστρέφει τὰ συμπεράσματα τὸ δὲ κύκλῳ τοῦτό ἐστιν ἐπὶ δὲ τῶν ἔργων",
-  "english_head": "Now we observe in Nature a certain kind of circular process of coming-to-be; and this is possible only if the middle and extreme terms are reciprocal, since conversion is conditioned by reciprocity in the terms of the proof. This-the convertibility of conclusions and premisses-has been proved in our early chapters, and the circular process is an instance of this. In actual fact it is exemplified thus: when the earth had been moistened an exhalation was bound to rise, and when an exhalation had r"
+  "column": "96a"
  },
  {
   "id": "2:96b",
   "book": 2,
-  "column": "96b",
-  "greek_head": "τὸ δὲ τελευταῖον καὶ τῇ δυάδι πάντα δὲ οὐδενί ἐπεὶ δὲ δεδήλωται ἡμῖν ἐν τοῖς ἄνω ὅτι καθόλου μέν ἐστι τὰ ἐν",
-  "english_head": "Now since we have shown above' that attributes predicated as belonging to the essential nature are necessary and that universals are necessary, and since the attributes which we select as inhering in triad, or in any other subject whose attributes we select in this way, are predicated as belonging to its essential nature, triad will thus possess these attributes necessarily. Further, that the synthesis of them constitutes the substance of triad is shown by the following argument. If it is not id"
+  "column": "96b"
  },
  {
   "id": "2:97a",
   "book": 2,
-  "column": "97a",
-  "greek_head": "γὰρ διαφορὰ αὕτη πρώτη δὲ διαφορά ἐστι ζῴου εἰς ἣν ἅπαν ζῷον ἐμπίπτει ὁμοίως δὲ καὶ τῶν ἄλλων ἑκάστου",
-  "english_head": "The like is true of every other genus, whether outside animal or a subaltern genus of animal; e.g. the primary differentiation of bird is that within which falls every bird, of fish that within which falls every fish. So, if we proceed in this way, we can be sure that nothing has been omitted: by any other method one is bound to omit something without knowing it.\nTo define and divide one need not know the whole of existence. Yet some hold it impossible to know the differentiae distinguishing eac"
+  "column": "97a"
  },
  {
   "id": "2:97b",
   "book": 2,
-  "column": "97b",
-  "greek_head": "δῆλον γὰρ ὅτι οὔτε πλεῖον πρόσκειται πάντα γὰρ ἐν τῷ τί ἐστιν εἴληπται τούτων οὔτε ἀπολείπει οὐδέν ἢ γὰρ γένος ἢ",
-  "english_head": "For it is clear that there is no superfluous addition, since all these terms we have selected are elements in the definable form; and nothing lacking, since any omission would have to be a genus or a differentia. Now the primary term is a genus, and this term taken in conjunction with its differentiae is a genus: moreover the differentiae are all included, because there is now no further differentia; if there were, the final concrete would admit of division into species, which, we said, is not t"
+  "column": "97b"
  },
  {
   "id": "2:98a",
   "book": 2,
-  "column": "98a",
-  "greek_head": "Πρὸς δὲ τὸ ἔχειν τὰ προβλήματα ἐκλέγειν δεῖ τάς τε ἀνατομὰς καὶ τὰς διαιρέσεις οὕτω δὲ ἐκλέγειν ὑποθέμενον",
-  "english_head": "In order to formulate the connexions we wish to prove we have to select our analyses and divisions. The method of selection consists in laying down the common genus of all our subjects of investigation-if e.g. they are animals, we lay down what the properties are which inhere in every animal. These established, we next lay down the properties essentially connected with the first of the remaining classes-e.g. if this first subgenus is bird, the essential properties of every bird-and so on, always"
+  "column": "98a"
  },
  {
   "id": "2:98b",
   "book": 2,
-  "column": "98b",
-  "greek_head": "φύλλα τοῦ δ' ἐκλείπειν τὸ τὴν γῆν ἐν μέσῳ εἶναι εἰ γὰρ μὴ ὑπάρχει ἄλλο τι ἔσται τὸ αἴτιον αὐτῶν εἴ τε τὸ αἴτιον",
-  "english_head": "For, one might argue, if this cause is not present, these phenomena will have some other cause: if it is present, its effect will be at once implied by it-the eclipse by the earth's interposition, the fall of the leaves by the possession of broad leaves; but if so, they will be logically coincident and each capable of proof through the other. Let me illustrate: Let A be deciduous character, B the possession of broad leaves, C vine. Now if A inheres in B (for every broad-leaved plant is deciduous"
+  "column": "98b"
  },
  {
   "id": "2:99a",
   "book": 2,
-  "column": "99a",
-  "greek_head": "Πότερον δ' ἐνδέχεται μὴ τὸ αὐτὸ αἴτιον εἶναι τοῦ αὐτοῦ πᾶσιν ἀλλ' ἕτερον ἢ οὔ ἢ εἰ μὲν καθ' αὑτὸ ἀποδέδεικται",
-  "english_head": "Can the cause of an identical effect be not identical in every instance of the effect but different? Or is that impossible? Perhaps it is impossible if the effect is demonstrated as essential and not as inhering in virtue of a symptom or an accident-because the middle is then the definition of the major term-though possible if the demonstration is not essential. Now it is possible to consider the effect and its subject as an accidental conjunction, though such conjunctions would not be regarded "
+  "column": "99a"
  },
  {
   "id": "2:99b",
   "book": 2,
-  "column": "99b",
-  "greek_head": "Α παντί ᾧ δὲ τὸ Α οὐ παντὶ τὸ Ε διὰ τί γὰρ οὐκ ἔσται τι αἴτιον οἷον τὸ Α ὑπάρχει πᾶσι τοῖς Δ ἀλλ' ἆρα καὶ",
-  "english_head": "Now if A is an attribute of all the species of E, all the species of E will be united by possessing some common cause other than B: otherwise how shall we be able to say that A is predicable of all of which E is predicable, while E is not predicable of all of which A can be predicated? I mean how can there fail to be some special cause of A's inherence in E, as there was of A's inherence in all the species of D? Then are the species of E, too, united by possessing some common cause? This cause w"
+  "column": "99b"
  },
  {
   "id": "2:100a",
   "book": 2,
-  "column": "100a",
-  "greek_head": "ἔτι ἐν τῇ ψυχῇ πολλῶν δὲ τοιούτων γινομένων ἤδη διαφορά τις γίνεται ὥστε τοῖς μὲν γίνεσθαι λόγον ἐκ τῆς τῶν τοιούτων",
-  "english_head": "So out of sense-perception comes to be what we call memory, and out of frequently repeated memories of the same thing develops experience; for a number of memories constitute a single experience. From experience again-i.e. from the universal now stabilized in its entirety within the soul, the one beside the many which is a single identity within them all-originate the skill of the craftsman and the knowledge of the man of science, skill in the sphere of coming to be and science in the sphere of "
+  "column": "100a"
  },
  {
   "id": "2:100b",
   "book": 2,
-  "column": "100b",
-  "greek_head": "ἐστίν οἷον ἀνθρώπου ἀλλ' οὐ Καλλίου ἀνθρώπου πάλιν ἐν τούτοις ἵσταται ἕως ἂν τὰ ἀμερῆ στῇ καὶ τὰ καθόλου οἷον τοιονδὶ",
-  "english_head": "A fresh stand is made among these rudimentary universals, and the process does not cease until the indivisible concepts, the true universals, are established: e.g. such and such a species of animal is a step towards the genus animal, which by the same process is a step towards a further generalization.\nThus it is clear that we must get to know the primary premisses by induction; for the method by which even sense-perception implants the universal is inductive. Now of the thinking states by which"
+  "column": "100b"
  }
 ]

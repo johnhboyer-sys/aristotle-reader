@@ -2,666 +2,476 @@
  {
   "id": "1:268a",
   "book": 1,
-  "column": "268a",
-  "greek_head": "Ἡ περὶ φύσεως ἐπιστήμη σχεδὸν ἡ πλείστη φαίνεται περί τε σώματα καὶ μεγέθη καὶ τὰ τούτων οὖσα πάθη καὶ",
-  "english_head": "The science which has to do with nature clearly concerns itself for the most part with bodies and magnitudes and their properties and movements, but also with the principles of this sort of substance, as many as they may be. For of things constituted by nature some are bodies and magnitudes, some possess body and magnitude, and some are principles of things which possess these. Now a continuum is that which is divisible into parts always capable of subdivision, and a body is that which is every "
+  "column": "268a"
  },
  {
   "id": "1:268b",
   "book": 1,
-  "column": "268b",
-  "greek_head": "ἔστιν εἰς ἄλλο γένος μετάβασις ὥσπερ ἐκ μήκους εἰς ἐπιφάνειαν εἰς δὲ σῶμα ἐξ ἐπιφανείας οὐ γὰρ ἂν ἔτι τὸ τοιοῦτον",
-  "english_head": "We cannot pass beyond body to a further kind, as we passed from length to surface, and from surface to body. For if we could, it would cease to be true that body is complete magnitude. We could pass beyond it only in virtue of a defect in it; and that which is complete cannot be defective, since it has being in every respect. Now bodies which are classed as parts of the whole are each complete according to our formula, since each possesses every dimension. But each is determined relatively to th"
+  "column": "268b"
  },
  {
   "id": "1:269a",
   "book": 1,
-  "column": "269a",
-  "greek_head": "καὶ τῶν μὲν ἁπλῶν ἁπλᾶς μικτὰς δὲ τῶν συνθέτων κινεῖσθαι δὲ κατὰ τὸ ἐπικρατοῦν Εἴπερ οὖν ἐστιν ἁπλῆ κίνησις",
-  "english_head": "Supposing, then, that there is such a thing as simple movement, and that circular movement is an instance of it, and that both movement of a simple body is simple and simple movement is of a simple body (for if it is movement of a compound it will be in virtue of a prevailing simple element), then there must necessarily be some simple body which revolves naturally and in virtue of its own nature with a circular movement. By constraint, of course, it may be brought to move with the motion of some"
+  "column": "269a"
  },
  {
   "id": "1:269b",
   "book": 1,
-  "column": "269b",
-  "greek_head": "ὥστ' ἀναγκαῖον καὶ τὴν κύκλῳ κίνησιν ἐπειδὴ τούτοις παρὰ φύσιν ἑτέρου τινὸς εἶναι κατὰ φύσιν Πρὸς δὲ τούτοις",
-  "english_head": "We may take it that all movement is either natural or unnatural, and that the movement which is unnatural to one body is natural to another-as, for instance, is the case with the upward and downward movements, which are natural and unnatural to fire and earth respectively. It necessarily follows that circular movement, being unnatural to these bodies, is the natural movement of some other. Further, if, on the one hand, circular movement is natural to something, it must surely be some simple and "
+  "column": "269b"
  },
  {
   "id": "1:270a",
   "book": 1,
-  "column": "270a",
-  "greek_head": "παρὰ φύσιν ἡ ἄνω ἔσται κατὰ φύσιν εἰ δ' ἡ ἄνω παρὰ φύσιν ἡ κάτω κατὰ φύσιν ἔθεμεν γὰρ τῶν ἐναντίων ᾧ",
-  "english_head": "Movement in a straight line certainly does not belong to it naturally, since one sort of movement is, as we saw, appropriate to each simple body, and so we should be compelled to identify it with one of the bodies which move in this way. Suppose, then, that the movement is unnatural. In that case, if it is the downward movement which is unnatural, the upward movement will be natural; and if it is the upward which is unnatural, the downward will be natural. For we decided that of contrary movemen"
+  "column": "270a"
  },
  {
   "id": "1:270b",
   "book": 1,
-  "column": "270b",
-  "greek_head": "Διότι μὲν οὖν ἀΐδιον καὶ οὔτ' αὔξησιν ἔχον οὔτε φθίσιν ἀλλ' ἀγήρατον καὶ ἀναλλοίωτον καὶ ἀπαθές ἐστι τὸ πρῶτον",
-  "english_head": "This is the case, for instance, with the bodies of animals and their parts and with vegetable bodies, and similarly also with those of the elements. And so, if the body which moves with a circular motion cannot admit of increase or diminution, it is reasonable to suppose that it is also unalterable.\nThe reasons why the primary body is eternal and not subject to increase or diminution, but unaging and unalterable and unmodified, will be clear from what has been said to any one who believes in our"
+  "column": "270b"
  },
  {
   "id": "1:271a",
   "book": 1,
-  "column": "271a",
-  "greek_head": "ἀλλὰ καὶ τῷ εὐθεῖ συνδυαζόμενα καὶ λαβόντα σύνθεσιν ὥστ' εἴπερ ἐναντία τίς ἐστι τὴν ἐπὶ τῆς εὐθείας μάλιστα",
-  "english_head": "And so, if there is a contrary to circular motion, motion in a straight line must be recognized as having the best claim to that name. But the two forms of rectilinear motion are opposed to one another by reason of their places; for up and down is a difference and a contrary opposition in place. Secondly, it may be thought that the same reasoning which holds good of the rectilinear path applies also the circular, movement from A to B being opposed as contrary to movement from B to A. But what is"
+  "column": "271a"
  },
  {
   "id": "1:271b",
   "book": 1,
-  "column": "271b",
-  "greek_head": "Ἀλλ' ἐπεὶ δῆλον περὶ τούτων περὶ τῶν λοιπῶν σκεπτέον καὶ πρῶτον πότερον ἔστι τι σῶμα ἄπειρον ὥςπερ",
-  "english_head": "This being clear, we must go on to consider the questions which remain. First, is there an infinite body, as the majority of the ancient philosophers thought, or is this an impossibility? The decision of this question, either way, is not unimportant, but rather all-important, to our search for the truth. It is this problem which has practically always been the source of the differences of those who have written about nature as a whole. So it has been and so it must be; since the least initial de"
+  "column": "271b"
  },
  {
   "id": "1:272a",
   "book": 1,
-  "column": "272a",
-  "greek_head": "δοθέντος μεῖζον λαβεῖν ὥστε καθάπερ ἀριθμὸν λέγομεν ἄπειρον ὅτι μέγιστος οὐκ ἔστιν ὁ αὐτὸς λόγος καὶ περὶ",
-  "english_head": "This, I say, will be infinite: first, because in the case of finite radii it is always finite; and secondly, because in it one can always go on to a width greater than any given width; thus the reasoning which forces us to believe in infinite number, because there is no maximum, applies also to the space between the radii. Now the infinite cannot be traversed, and if the body is infinite the interval between the radii is necessarily infinite: circular motion therefore is an impossibility. Yet ou"
+  "column": "272a"
  },
  {
   "id": "1:272b",
   "book": 1,
-  "column": "272b",
-  "greek_head": "ἐκείνη παρ' ἐκείνην κἀκείνη παραλλάττει ἐκείνην ὁμοίως κινουμένη καὶ ἀκίνητος πλὴν θᾶττον ἐὰν κινῶνται ἀμφότεραι",
-  "english_head": "For when A is passing B, then B overlaps A and it makes no difference whether B is moved or unmoved, except that, if both move, they pass clear of one another more quickly. It is, however, quite possible that a moving line should in certain cases pass one which is stationary quicker than it passes one moving in an opposite direction. One has only to imagine the movement to be slow where both move and much faster where one is stationary. To suppose one line stationary, then, makes no difficulty f"
+  "column": "272b"
  },
  {
   "id": "1:273a",
   "book": 1,
-  "column": "273a",
-  "greek_head": "χρόνῳ Ἀλλὰ τοῦτ' ἦν ἀδύνατον Ἔστι δὲ καὶ ἀντεστραμμένως εἰπεῖν ὅτι εἰ πεπερασμένος ὁ χρόνος ἐν ᾧ περιεστράφη",
-  "english_head": "It results that when the infinite body has completed its revolution, it has traversed an infinite equal to itself in a finite time. But that we know to be impossible.\n(7) It can also be shown, conversely, that if the time of revolution is finite, the area traversed must also be finite; but the area traversed was equal to itself; therefore, it is itself finite.\nWe have now shown that the body which moves in a circle is not endless or infinite, but has its limit. Further, neither that which moves "
+  "column": "273a"
  },
  {
   "id": "1:273b",
   "book": 1,
-  "column": "273b",
-  "greek_head": "καὶ ὡς τὸ βάρος τοὔλαττον πρὸς τὸ μεῖζον τὸ ΒΔ πρὸς τὸ ΒΖ γεγενήσθω ἐνδέχεται γὰρ ἀφελεῖν τοῦ ἀπείρου",
-  "english_head": "For you may subtract as much as you please from an infinite. If now the masses are proportionate to the weights, and the lesser weight is that of the lesser mass, the greater must be that of the greater. The weights, therefore, of the finite and of the infinite body are equal. Again, if the weight of a greater body is greater than that of a less, the weight of GB will be greater than that of FB; and thus the weight of the finite body is greater than that of the infinite. And, further, the weight"
+  "column": "273b"
  },
  {
   "id": "1:274a",
   "book": 1,
-  "column": "274a",
-  "greek_head": "οἷον εἰ τὸ ἥμισυ βάρος ἐν τῷδε τὸ διπλάσιον ἐν ἡμίσει τούτου Ἔτι τὸ πεπερασμένον βάρος ἅπασαν πεπερασμένην",
-  "english_head": "Further, a finite weight traverses any finite distance in a finite time. It necessarily follows from this that infinite weight, if there is such a thing, being, on the one hand, as great and more than as great as the finite, will move accordingly, but being, on the other hand, compelled to move in a time inversely proportionate to its greatness, cannot move at all. The time should be less in proportion as the weight is greater. But there is no proportion between the infinite and the finite: prop"
+  "column": "274a"
  },
  {
   "id": "1:274b",
   "book": 1,
-  "column": "274b",
-  "greek_head": "γὰρ τῶν πρώτων κινήσεων οὐσῶν ἀνάγκη καὶ τὰς ἰδέας τῶν ἁπλῶν σωμάτων εἶναι πεπερασμένας Ἁπλῆ",
-  "english_head": "For the primary movements being finite in number, the kinds of simple body are necessarily also finite, since the movement of a simple body is simple, and the simple movements are finite, and every natural body must always have its proper motion. Now if the infinite body is to be composed of a finite number of kinds, then each of its parts must necessarily be infinite in quantity, that is to say, the water, fire, &c., which compose it. But this is impossible, because, as we have already shown, i"
+  "column": "274b"
  },
  {
   "id": "1:275a",
   "book": 1,
-  "column": "275a",
-  "greek_head": "γὰρ ἄπειρον ἐφ' οὗ Α πεπερασμένον ἐφ' οὗ Β χρόνος ἐν ᾧ ἐκίνησέ τι ἢ ἐκινήθη Γ Εἰ δὴ ὑπὸ τοῦ Β τὸ Α ἐθερμάνθη",
-  "english_head": "The infinite cannot be acted upon by the finite.) Let A be an infinite, B a finite, C the time of a given movement produced by one in the other. Suppose, then, that A was heated, or impelled, or modified in any way, or caused to undergo any sort of movement whatever, by in the time C. Let D be less than B; and, assuming that a lesser agent moves a lesser patient in an equal time, call the quantity thus modified by D, E. Then, as D is to B, so is E to some finite quantum. We assume that the alter"
+  "column": "275a"
  },
  {
   "id": "1:275b",
   "book": 1,
-  "column": "275b",
-  "greek_head": "χρόνῳ τὸ μεῖζον καὶ τὸ ἔλαττον πάσχειν ὅσα ἀνάλογον τῷ χρόνῳ διῄρηται Ἐν οὐδενὶ ἄρα χρόνῳ δυνατὸν πεπερασμένῳ",
-  "english_head": "For we suppose that the same agent produces a given effect on a greater and a smaller mass in longer and shorter times, the times and masses varying proportionately. There is thus no finite time in which infinites can move one another. Is their time then infinite? No, for infinite time has no end, but the movement communicated has.\nIf therefore every perceptible body possesses the power of acting or of being acted upon, or both of these, it is impossible that an infinite body should be perceptib"
+  "column": "275b"
  },
  {
   "id": "1:276a",
   "book": 1,
-  "column": "276a",
-  "greek_head": "ἂν εἰ χρυσὸς ἕκαστον εἴη κεχωρισμένος Τούτων δέ καθάπερ λέγομεν ἀναγκαῖον εἶναι τὴν αὐτὴν κίνησιν ὅπου γὰρ",
-  "english_head": "They are distinguished, we are told, from one another by their figures; but their nature is one, like many pieces of gold separated from one another. But each piece must, as we assert, have the same motion. For a single clod moves to the same place as the whole mass of earth, and a spark to the same place as the whole mass of fire. So that if it be weight that all possess, no body is, strictly speaking, light: and if lightness be universal, none is heavy. Moreover, whatever possesses weight or l"
+  "column": "276a"
  },
  {
   "id": "1:276b",
   "book": 1,
-  "column": "276b",
-  "greek_head": "ἔχειν δύναμιν οἷον λέγω πῦρ καὶ γῆν καὶ τὰ μεταξὺ τούτων εἰ γὰρ ὁμώνυμα ταῦτα καὶ μὴ κατὰ τὴν αὐτὴν ἰδέαν",
-  "english_head": "Moreover each of the bodies, fire, I mean, and earth and their intermediates, must have the same power as in our world. For if these names are used equivocally, if the identity of name does not rest upon an identity of form in these elements and ours, then the whole to which they belong can only be called a world by equivocation. Clearly, then, one of the bodies will move naturally away from the centre and another towards the centre, since fire must be identical with fire, earth with earth, and "
+  "column": "276b"
  },
  {
   "id": "1:277a",
   "book": 1,
-  "column": "277a",
-  "greek_head": "πλείω δέ διότι καὶ τὰ καθ' ἕκαστα πλείω μέν εἴδει δ' ἕκαστον ἀδιάφορον οὐ τῷ μὲν τῷ δ' οὐ τοιοῦτον ἔσται τῶν μορίων",
-  "english_head": "For all are equally undifferentiated in form, but any one is different numerically from any other. What I mean is this: if the portions in this world behave similarly both to one another and to those in another world, then the portion which is taken hence will not behave differently either from the portions in another world or from those in the same world, but similarly to them, since in form no portion differs from another. The result is that we must either abandon our present assumption or ass"
+  "column": "277a"
  },
  {
   "id": "1:277b",
   "book": 1,
-  "column": "277b",
-  "greek_head": "μὴν οὐδ' ὑπ' ἄλλου φέρεται αὐτῶν τὸ μὲν ἄνω τὸ δὲ κάτω οὐδὲ βίᾳ ὥσπερ τινές φασι τῇ ἐκθλίψει Βραδύτερον γὰρ",
-  "english_head": "For in that case the larger the mass of fire or earth the slower would be the upward or downward movement; but the fact is the reverse: the greater the mass of fire or earth the quicker always is its movement towards its own place. Again, the speed of the movement would not increase towards the end if it were due to constraint or extrusion; for a constrained movement always diminishes in speed as the source of constraint becomes more distant, and a body moves without constraint to the place when"
+  "column": "277b"
  },
  {
   "id": "1:278a",
   "book": 1,
-  "column": "278a",
-  "greek_head": "καὶ ἡ χρυσῆ καὶ ἡ χαλκῆ σφαῖρα καὶ πάλιν τοῦ κύκλου ἑτέρα ἡ μορφὴ καὶ ὁ χαλκοῦς καὶ ὁ ξύλινος κύκλος τὸ",
-  "english_head": "For instance the form of the sphere is one thing and the gold or bronze sphere another; the shape of the circle again is one thing, the bronze or wooden circle another. For when we state the essential nature of the sphere or circle we do not include in the formula gold or bronze, because they do not belong to the essence, but if we are speaking of the copper or gold sphere we do include them. We still make the distinction even if we cannot conceive or apprehend any other example beside the parti"
+  "column": "278a"
  },
  {
   "id": "1:278b",
   "book": 1,
-  "column": "278b",
-  "greek_head": "δὲ καὶ ἐπὶ τῶν ἄλλων ὅλως γὰρ ὅσων ἐστὶν ἡ οὐσία ἐν ὑποκειμένῃ τινὶ ὕλῃ τούτων οὐδὲν ἐνδέχεται γίγνεσθαι μὴ",
-  "english_head": "Similarly, suppose flesh and bones to be the matter of man, and suppose a man to be created of all flesh and all bones in indissoluble union. The possibility of another man would be removed. Whatever case you took it would be the same. The general rule is this: a thing whose essence resides in a substratum of matter can never come into being in the absence of all matter. Now the universe is certainly a particular and a material thing: if however, it is composed not of a part but of the whole of "
+  "column": "278b"
  },
  {
   "id": "1:279a",
   "book": 1,
-  "column": "279a",
-  "greek_head": "οὐρανοῦ σῶμα Εἰ δὲ μὴ τῶν ἁπλῶν οὐδὲ τῶν μικτῶν ἀνάγκη γὰρ εἶναι καὶ τὰ ἁπλᾶ τοῦ μικτοῦ ὄντος Ἀλλὰ μὴν οὐδὲ",
-  "english_head": "But, if no simple body, neither can any mixed body be there: for the presence of the simple body is involved in the presence of the mixture. Further neither can any body come into that place: for it will do so either naturally or unnaturally, and will be either simple or composite; so that the same argument will apply, since it makes no difference whether the question is 'does A exist?' or 'could A come to exist?' From our arguments then it is evident not only that there is not, but also that th"
+  "column": "279a"
  },
  {
   "id": "1:279b",
   "book": 1,
-  "column": "279b",
-  "greek_head": "Καὶ ἄπαυστον δὴ κίνησιν κινεῖται εὐλόγως πάντα γὰρ παύεται κινούμενα ὅταν ἔλθῃ εἰς τὸν οἰκεῖον τόπον τοῦ δὲ κύκλῳ",
-  "english_head": "Its unceasing movement, then, is also reasonable, since everything ceases to move when it comes to its proper place, but the body whose path is the circle has one and the same place for starting-point and goal. Having established these distinctions, we may now proceed to the question whether the heaven is ungenerated or generated, indestructible or destructible. Let us start with a review of the theories of other thinkers; for the proofs of a theory are difficulties for the contrary theory. Besi"
+  "column": "279b"
  },
  {
   "id": "1:280a",
   "book": 1,
-  "column": "280a",
-  "greek_head": "διδασκαλίας χάριν ὡς μᾶλλον γνωριζόντων ὥσπερ τὸ διάγραμμα γιγνόμενον θεασαμένους Τοῦτο δ' ἐστίν ὥσπερ",
-  "english_head": "They say that in their statements about its generation they are doing what geometricians do when they construct their figures, not implying that the universe really had a beginning, but for didactic reasons facilitating understanding by exhibiting the object, like the figure, as in course of formation. The two cases, as we said, are not parallel; for, in the construction of the figure, when the various steps are completed the required figure forthwith results; but in these other demonstrations w"
+  "column": "280a"
  },
  {
   "id": "1:280b",
   "book": 1,
-  "column": "280b",
-  "greek_head": "Πρῶτον δὲ διαιρετέον πῶς ἀγένητα καὶ γενητά φαμεν καὶ φθαρτὰ καὶ ἄφθαρτα πολλαχῶς γὰρ λεγομένων κἂν",
-  "english_head": "We must first distinguish the senses in which we use the words 'ungenerated' and 'generated', 'destructible' and 'indestructible'. These have many meanings, and though it may make no difference to the argument, yet some confusion of mind must result from treating as uniform in its use a word which has several distinct applications. The character which is the ground of the predication will always remain obscure.\nThe word 'ungenerated' then is used (a) in one sense whenever something now is which "
+  "column": "280b"
  },
  {
   "id": "1:281a",
   "book": 1,
-  "column": "281a",
-  "greek_head": "ἄφθαρτον καὶ τὸ μὴ ῥᾳδίως φθειρόμενον Εἰ δὴ ταῦθ' οὕτως ἔχει σκεπτέον πῶς λέγομεν τὸ δυνατὸν καὶ ἀδύνατον",
-  "english_head": "Thirdly (c) in its most proper use, it is that which is, but is incapable of any destruction such that the thing which now is later ceases to be or might cease to be; or again, that which has not yet been destroyed, but in the future may cease to be. For indestructible is also used of that which is destroyed with difficulty.\nThis being so, we must ask what we mean by 'possible' and 'impossible'. For in its most proper use the predicate 'indestructible' is given because it is impossible that the "
+  "column": "281a"
  },
  {
   "id": "1:281b",
   "book": 1,
-  "column": "281b",
-  "greek_head": "ἔσται χρόνον δυνατὸν εἶναι καὶ μὴ εἶναι ἄλλον ἄπειρον ἀλλὰ τοῦτ' ἀδύνατον Ἀρχὴ δ' ἔστω ἐντεῦθεν τὸ",
-  "english_head": "And this is true in every category, whether the thing is, for example, 'man', or 'white', or 'three cubits long', or whatever it may be. For if the time is not definite in quantity, but longer than any that can be suggested and shorter than none, then it will be possible for one and the same thing to exist for infinite time and not to exist for another infinity. This, however, is impossible.\nLet us take our start from this point. The impossible and the false have not the same significance. One u"
+  "column": "281b"
  },
  {
   "id": "1:282a",
   "book": 1,
-  "column": "282a",
-  "greek_head": "δ' εἶναι Ὁμοίως δ' οὐδὲ γενητόν δυοῖν γὰρ ὅροιν εἰ ἀδύνατον τὸ ὕστερον ἄνευ τοῦ προτέρου ὑπάρξαι ἐκεῖνο δ' ἀδύνατον",
-  "english_head": "But if a thing has for infinite time more than one capacity, another time is impossible and the times must coincide. Thus if a thing which exists for infinite time is destructible, it will have the capacity of not being. Now if it exists for infinite time let this capacity be actualized; and it will be in actuality at once existent and non-existent. Thus a false conclusion would follow because a false assumption was made, but if what was assumed had not been impossible its consequence would not "
+  "column": "282a"
  },
  {
   "id": "1:282b",
   "book": 1,
-  "column": "282b",
-  "greek_head": "ἀΐδιον εἴτε ἄφθαρτον ἀΐδιον Δῆλον δὲ καὶ ἐκ τοῦ ὁρισμοῦ αὐτῶν καὶ γὰρ ἀνάγκη εἰ φθαρτόν γενητόν Ἢ γὰρ",
-  "english_head": "But since the contradictory of 'that which is always capable of being' 'that which is not always capable of being'; while 'that which is always capable of not being' is the contrary, whose contradictory in turn is 'that which is not always capable of not being', it is necessary that the contradictories of both terms should be predicable of one and the same thing, and thus that, intermediate between what always is and what always is not, there should be that to which being and not-being are both "
+  "column": "282b"
  },
  {
   "id": "1:283a",
   "book": 1,
-  "column": "283a",
-  "greek_head": "εἶναι Ὁ δ' αὐτὸς λόγος καὶ ὅτι τὸ Η τῷ Ε Ἀλλὰ μὴν οὕτως ἔχει τὸ ἀγένητον ἐφ' ᾧ Ε πρὸς τὸ γενητόν ἐφ' ᾧ",
-  "english_head": "If it were, it would be at once capable of always being and capable of not always being, but it has already been shown that this is impossible. Surely then whatever is ungenerated and in being must be eternal, and whatever is indestructible and in being must equally be so. (I use the words 'ungenerated' and 'indestructible' in their proper sense, 'ungenerated' for that which now is and could not at any previous time have been truly said not to be; 'indestructible' for that which now is and canno"
+  "column": "283a"
  },
  {
   "id": "1:283b",
   "book": 1,
-  "column": "283b",
-  "greek_head": "τὸ πολὺ ἢ ὂν ἢ γινόμενον τὸ δ' ἄπειρον χρόνον ἢ ἁπλῶς ἢ ἀπό τινος ἢ ἀεὶ ἢ ὡς ἐπὶ τὸ πολὺ ὑπάρχει ὄν",
-  "english_head": "For whatever is either of these is capable both of being and of not being for a definite time: in either case, I mean, there is a certain period of time during which the thing is and another during which it is not. Anything therefore which is generated or destructible must be intermediate. Now let A be that which always is and B that which always is not, C the generated, and D the destructible. Then C must be intermediate between A and B. For in their case there is no time in the direction of ei"
+  "column": "283b"
  },
  {
   "id": "2:283b",
   "book": 2,
-  "column": "283b",
-  "greek_head": "Ὅτι μὲν οὖν οὔτε γέγονεν ὁ πᾶς οὐρανὸς οὔτ' ἐνδέχεται φθαρῆναι καθάπερ τινές φασιν αὐτόν ἀλλ' ἔστιν εἷς καὶ",
-  "english_head": "That the heaven as a whole neither came into being nor admits of destruction, as some assert, but is one and eternal, with no end or beginning of its total duration, containing and embracing in itself the infinity of time, we may convince ourselves not only by the arguments already set forth but also by a consideration of the views of those who differ from us in providing for its generation. If our view is a possible one, and the manner of generation which they assert is impossible, this fact wi"
+  "column": "283b"
  },
  {
   "id": "2:284a",
   "book": 2,
-  "column": "284a",
-  "greek_head": "ῥοπὴν εἰς πίστιν περὶ τῆς ἀθανασίας αὐτοῦ καὶ τῆς ἀϊδιότητος Διόπερ καλῶς ἔχει συμπείθειν ἑαυτὸν τοὺς ἀρχαίους",
-  "english_head": "Hence it is well to persuade oneself of the truth of the ancient and truly traditional theories, that there is some immortal and divine thing which possesses movement, but movement such as has no limit and is rather itself the limit of all other movement. A limit is a thing which contains; and this motion, being perfect, contains those imperfect motions which have a limit and a goal, having itself no beginning or end, but unceasing through the infinity of time, and of other movements, to some th"
+  "column": "284a"
  },
  {
   "id": "2:284b",
   "book": 2,
-  "column": "284b",
-  "greek_head": "ἐνδέχεται τὸν εἰρημένον ἔχειν τρόπον περὶ τῆς πρώτης φορᾶς οὐ μόνον αὐτοῦ περὶ τῆς ἀϊδιότητος οὕτως ὑπολαβεῖν",
-  "english_head": "If then, as we said, the view already stated of the first motion is a possible one, it is not only more appropriate so to conceive of its eternity, but also on this hypothesis alone are we able to advance a theory consistent with popular divinations of the divine nature. But of this enough for the present. Since there are some who say that there is a right and a left in the heaven, with those who are known as Pythagoreans-to whom indeed the view really belongs-we must consider whether, if we are"
+  "column": "284b"
  },
  {
   "id": "2:285a",
   "book": 2,
-  "column": "285a",
-  "greek_head": "καὶ ἡ γῆ ἐπὶ τὸ μέσον Ἀλλ' ἐν μὲν τούτοις λέγομεν τὸ ἄνω καὶ τὸ κάτω καὶ τὸ δεξιὸν καὶ τὸ ἀριστερὸν πρὸς ἡμᾶς ἐπαναφέροντες",
-  "english_head": "The reference may be to our own right hands, as with the diviner, or to some similarity to our own members, such as the parts of a statue possess; or we may take the contrary spatial order, calling right that which is to our left, and left that which is to our right. We observe, however, in the things themselves none of these distinctions; indeed if they are turned round we proceed to speak of the opposite parts as right and left, a boy land below, front and back. Hence it is remarkable that the"
+  "column": "285a"
  },
  {
   "id": "2:285b",
   "book": 2,
-  "column": "285b",
-  "greek_head": "ἁπάντων καὶ κινουμένων τὸν ἅπαντα χρόνον ἀλλὰ νοεῖν ὥσπερ ἂν εἴ τις ἐν οἷς ἔχει τὸ δεξιὸν πρὸς τὸ ἀριστερὸν διαφορὰν",
-  "english_head": "We must think of the world as of something in which right differs from left in shape as well as in other respects, which subsequently is included in a sphere. The difference of function will persist, but will appear not to by reason of the regularity of shape. In the same fashion must we conceive of the beginning of its movement. For even if it never began to move, yet it must possess a principle from which it would have begun to move if it had begun, and from which it would begin again if it ca"
+  "column": "285b"
  },
  {
   "id": "2:286a",
   "book": 2,
-  "column": "286a",
-  "greek_head": "τῶν μορίων καὶ τῶν κατὰ τόπον ὡρισμένων τοσαῦτα εἰρήσθω",
-  "english_head": "Here we may end our discussion of the distinctions of parts created by the three dimensions and of the consequent differences of position. Since circular motion is not the contrary of the reverse circular motion, we must consider why there is more than one motion, though we have to pursue our inquiries at a distance-a distance created not so much by our spatial position as by the fact that our senses enable us to perceive very few of the attributes of the heavenly bodies. But let not that deter "
+  "column": "286a"
  },
  {
   "id": "2:286b",
   "book": 2,
-  "column": "286b",
-  "greek_head": "τούτων δ' ἔστι κίνησις Ὅτι μὲν τοίνυν ἀναγκαῖον εἶναι γένεσιν ἐκ τούτων δῆλον Εἰ δὲ γένεσιν ἀναγκαῖον καὶ ἄλλην",
-  "english_head": "Thus we see that generation is necessarily involved. But if so, there must be at least one other circular motion: for a single movement of the whole heaven would necessitate an identical relation of the elements of bodies to one another. This matter also shall be cleared up in what follows: but for the present so much is clear, that the reason why there is more than one circular body is the necessity of generation, which follows on the presence of fire, which, with that of the other bodies, foll"
+  "column": "286b"
  },
  {
   "id": "2:287a",
   "book": 2,
-  "column": "287a",
-  "greek_head": "κατὰ τὴν δυάδα ἐπειδὴ ὀρθαὶ δύο Ἐὰν δὲ τὸ ἓν κατὰ τὸ τρίγωνον ὁ κύκλος οὐκέτι ἔσται σχῆμα Ἐπεὶ δὲ τὸ μὲν πρῶτον",
-  "english_head": "Now the first figure belongs to the first body, and the first body is that at the farthest circumference. It follows that the body which revolves with a circular movement must be spherical. The same then will be true of the body continuous with it: for that which is continuous with the spherical is spherical. The same again holds of the bodies between these and the centre. Bodies which are bounded by the spherical and in contact with it must be, as wholes, spherical; and the bodies below the sph"
+  "column": "287a"
  },
  {
   "id": "2:287b",
   "book": 2,
-  "column": "287b",
-  "greek_head": "ἡ δὲ τοῦ ὕδατος ἐπιφάνεια σφαιροειδής ἐστιν τὸ δὲ τῷ σφαιροειδεῖ συνεχὲς ἢ κείμενον περὶ τὸ σφαιροειδὲς καὶ αὐτὸ",
-  "english_head": "If earth is enclosed by water, water by air, air by fire, and these similarly by the upper bodies-which while not continuous are yet contiguous with them-and if the surface of water is spherical, and that which is continuous with or embraces the spherical must itself be spherical, then on these grounds also it is clear that the heavens are spherical. But the surface of water is seen to be spherical if we take as our starting-point the fact that water naturally tends to collect in a hollow place-"
+  "column": "287b"
  },
  {
   "id": "2:288a",
   "book": 2,
-  "column": "288a",
-  "greek_head": "τις ἐπιτύχῃ τότε χάριν ἔχειν δεῖ τοῖς εὑρίσκουσι νῦν δὲ τὸ φαινόμενον ῥητέον Εἰ γὰρ ἡ φύσις ἀεὶ ποιεῖ τῶν ἐνδεχομένων",
-  "english_head": "When any one shall succeed in finding proofs of greater precision, gratitude will be due to him for the discovery, but at present we must be content with a probable solution. If nature always follows the best course possible, and, just as upward movement is the superior form of rectilinear movement, since the upper region is more divine than the lower, so forward movement is superior to backward, then front and back exhibits, like right and left, as we said before and as the difficulty just stat"
+  "column": "288a"
  },
  {
   "id": "2:288b",
   "book": 2,
-  "column": "288b",
-  "greek_head": "ἀγένητον καὶ ἄφθαρτον καὶ ὅλως ἀμετάβλητον τὸ δὲ κινοῦν πολὺ μᾶλλον εὔλογον εἶναι τοιοῦτον τὸ γὰρ πρῶτον τοῦ",
-  "english_head": "It is the primary that moves the primary, the simple the simple, the indestructible and ungenerated that which is indestructible and ungenerated. Since then that which is moved, being a body, is nevertheless unchanging, how should the mover, which is incorporeal, be changed?\nIt follows then, further, that the motion cannot be irregular. For if irregularity occurs, there must be change either in the movement as a whole, from fast to slow and slow to fast, or in its parts. That there is no irregul"
+  "column": "288b"
  },
  {
   "id": "2:289a",
   "book": 2,
-  "column": "289a",
-  "greek_head": "ἐν ὁτῳοῦν χρόνῳ δυνατόν εἰ οὖν τοῦτ' ἀληθές οὐκ ἂν εἴη ἀεὶ ἐπίτασις τῆς φορᾶς εἰ δὲ μὴ ἐπίτασις οὐδ' ἄνεσις",
-  "english_head": "But in that case perpetual acceleration is impossible (and, equally, perpetual retardation: for the argument holds of both and each), if we may take acceleration to proceed by identical or increasing additions of speed and for an infinite time. The remaining alternative is to say that the movement exhibits an alternation of slower and faster: but this is a mere fiction and quite inconceivable. Further, irregularity of this kind would be particularly unlikely to pass unobserved, since contrast ma"
+  "column": "289a"
  },
  {
   "id": "2:289b",
   "book": 2,
-  "column": "289b",
-  "greek_head": "Ἐπεὶ δὲ φαίνεται καὶ τὰ ἄστρα μεθιστάμενα καὶ ὅλος ὁ οὐρανός ἀναγκαῖον ἤτοι ἠρεμούντων ἀμφοτέρων γίγνεσθαι",
-  "english_head": "Since changes evidently occur not only in the position of the stars but also in that of the whole heaven, there are three possibilities. Either (1) both are at rest, or (2) both are in motion, or (3) the one is at rest and the other in motion.\n(1) That both should be at rest is impossible; for, if the earth is at rest, the hypothesis does not account for the observations; and we take it as granted that the earth is at rest. It remains either that both are moved, or that the one is moved and the "
+  "column": "289b"
  },
  {
   "id": "2:290a",
   "book": 2,
-  "column": "290a",
-  "greek_head": "ὥσπερ γὰρ ἐν τοῖς ἄλλοις τὸ μεῖζον σῶμα θᾶττον φέρεται τὴν οἰκείαν φοράν οὕτως καὶ ἐν τοῖς ἐγκυκλίοις μεῖζον",
-  "english_head": "For, in the first place, the quicker movement of the larger circle is natural when all the circles are attached to the same centre. Whenever bodies are moving with their proper motion, the larger moves quicker. It is the same here with the revolving bodies: for the are intercepted by two radii will be larger in the larger circle, and hence it is not surprising that the revolution of the larger circle should take the same time as that of the smaller. And secondly, the fact that the heavens do not"
+  "column": "290a"
  },
  {
   "id": "2:290b",
   "book": 2,
-  "column": "290b",
-  "greek_head": "ὅλος οὐρανὸς σφαιροειδὴς εἶναι καὶ ἕκαστον τῶν ἄστρων Πρὸς μὲν γὰρ τὴν ἐν ἑαυτῷ κίνησιν ἡ σφαῖρα τῶν σχημάτων",
-  "english_head": "This is just why it seems proper that the whole heaven and every star should be spherical. For while of all shapes the sphere is the most convenient for movement in one place, making possible, as it does, the swiftest and most selfcontained motion, for forward movement it is the most unsuitable, least of all resembling shapes which are self-moved, in that it has no dependent or projecting part, as a rectilinear figure has, and is in fact as far as possible removed in shape from ambulatory bodies"
+  "column": "290b"
  },
  {
   "id": "2:291a",
   "book": 2,
-  "column": "291a",
-  "greek_head": "τὰ καρτερώτατα τῶν σωμάτων Τοσούτων δὲ φερομένων καὶ τοῦ ψόφου διιόντος πρὸς τὸ φερόμενον μέγεθος πολλαπλάσιον",
-  "english_head": "But if the moving bodies are so great, and the sound which penetrates to us is proportionate to their size, that sound must needs reach us in an intensity many times that of thunder, and the force of its action must be immense. Indeed the reason why we do not hear, and show in our bodies none of the effects of violent force, is easily given: it is that there is no noise. But not only is the explanation evident; it is also a corroboration of the truth of the views we have advanced. For the very d"
+  "column": "291a"
  },
  {
   "id": "2:291b",
   "book": 2,
-  "column": "291b",
-  "greek_head": "καὶ ταχίστην τὰς δὲ τῶν ἄλλων βραδυτέρας τε καὶ πλείους ἕκαστον γὰρ ἀντιφέρεται τῷ οὐρανῷ κατὰ τὸν αὑτοῦ κύκλον",
-  "english_head": "It is established that the outermost revolution of the heavens is a simple movement and the swiftest of all, and that the movement of all other bodies is composite and relatively slow, for the reason that each is moving on its own circle with the reverse motion to that of the heavens. This at once leads us to expect that the body which is nearest to that first simple revolution should take the longest time to complete its circle, and that which is farthest from it the shortest, the others taking"
+  "column": "291b"
  },
  {
   "id": "2:292a",
   "book": 2,
-  "column": "292a",
-  "greek_head": "κινήσεις ἢ τῶν πλανωμένων ἄστρων ἔνια καίτοι πορρώτερον τοῦ μέσου καὶ πλησιαίτερον τοῦ πρώτου σώματός εἰσιν αὐτῶν",
-  "english_head": "The movements of the sun and moon are fewer than those of some of the planets. Yet these planets are farther from the centre and thus nearer to the primary body than they, as observation has itself revealed. For we have seen the moon, half-full, pass beneath the planet Mars, which vanished on its shadow side and came forth by the bright and shining part. Similar accounts of other stars are given by the Egyptians and Babylonians, whose observations have been kept for very many years past, and fro"
+  "column": "292a"
  },
  {
   "id": "2:292b",
   "book": 2,
-  "column": "292b",
-  "greek_head": "Διὸ δεῖ νομίζειν καὶ τὴν τῶν ἄστρων πρᾶξιν εἶναι τοιαύτην οἵα περ ἡ τῶν ζῴων καὶ φυτῶν Καὶ γὰρ ἐνταῦθα",
-  "english_head": "We must, then, think of the action of the lower stars as similar to that of animals and plants. For on our earth it is man that has the greatest variety of actions-for there are many goods that man can secure; hence his actions are various and directed to ends beyond them-while the perfectly conditioned has no need of action, since it is itself the end, and action always requires two terms, end and means. The lower animals have less variety of action than man; and plants perhaps have little acti"
+  "column": "292b"
  },
  {
   "id": "2:293a",
   "book": 2,
-  "column": "293a",
-  "greek_head": "ἑκάστη τῶν γὰρ πλανωμένων ἓν ὁτιοῦν πλείους φέρεται φοράς Ταύτῃ τε οὖν ἀνισάζει ἡ φύσις καὶ ποιεῖ τινὰ τάξιν",
-  "english_head": "For this single first motion has to move many of the divine bodies, while the numerous other motions move only one each, since each single planet moves with a variety of motions. Thus, then, nature makes matters equal and establishes a certain order, giving to the single motion many bodies and to the single body many motions. And there is a second reason why the other motions have each only one body, in that each of them except the last, i.e. that which contains the one star, is really moving ma"
+  "column": "293a"
  },
  {
   "id": "2:293b",
   "book": 2,
-  "column": "293b",
-  "greek_head": "τὸ πῦρ Ἔτι δ' οἵ γε Πυθαγόρειοι καὶ διὰ τὸ μάλιστα προςήκειν φυλάττεσθαι τὸ κυριώτατον τοῦ παντός τὸ δὲ μέσον",
-  "english_head": "They hold that the most important part of the world, which is the centre, should be most strictly guarded, and name it, or rather the fire which occupies that place, the 'Guardhouse of Zeus', as if the word 'centre' were quite unequivocal, and the centre of the mathematical figure were always the same with that of the thing or the natural centre. But it is better to conceive of the case of the whole heaven as analogous to that of animals, in which the centre of the animal and that of the body ar"
+  "column": "293b"
  },
  {
   "id": "2:294a",
   "book": 2,
-  "column": "294a",
-  "greek_head": "ποιοῦνται δὲ τεκμήριον ὅτι δύνων καὶ ἀνατέλλων ὁ ἥλιος εὐθεῖαν ἀλλ' οὐ περιφερῆ τὴν ἀπόκρυψιν φαίνεται ποιούμενος",
-  "english_head": "For evidence they bring the fact that, as the sun rises and sets, the part concealed by the earth shows a straight and not a curved edge, whereas if the earth were spherical the line of section would have to be circular. In this they leave out of account the great distance of the sun from the earth and the great size of the circumference, which, seen from a distance on these apparently small circles appears straight. Such an appearance ought not to make them doubt the circular shape of the earth"
+  "column": "294a"
  },
  {
   "id": "2:294b",
   "book": 2,
-  "column": "294b",
-  "greek_head": "ἐστιν Ἔτι δ' ὥσπερ ἀὴρ ὕδατος κουφότερον καὶ γῆς ὕδωρ ὥστε πῶς οἷόν τε τὸ κουφότερον κατωτέρω κεῖσθαι τοῦ βαρυτέρου",
-  "english_head": "Again, if the earth as a whole is capable of floating upon water, that must obviously be the case with any part of it. But observation shows that this is not the case. Any piece of earth goes to the bottom, the quicker the larger it is. These thinkers seem to push their inquiries some way into the problem, but not so far as they might. It is what we are all inclined to do, to direct our inquiry not by the matter itself, but by the views of our opponents: and even when interrogating oneself one p"
+  "column": "294b"
  },
  {
   "id": "2:295a",
   "book": 2,
-  "column": "295a",
-  "greek_head": "περὶ τούτων διώρισται πρότερον ὅσα κατὰ τὴν παροῦσαν δύναμιν εἴχομεν χρηστέον ὡς ὑπάρχουσιν Εἰ γὰρ μηδεμία φύσει",
-  "english_head": "Seeing, however, that we have already decided this matter to the best of our ability, we are entitled to treat our results as representing fact. Bodies, we say, which have no natural movement, have no constrained movement; and where there is no natural and no constrained movement there will be no movement at all. This is a conclusion, the necessity of which we have already decided, and we have seen further that rest also will be inconceivable, since rest, like movement, is either natural or cons"
+  "column": "295a"
  },
  {
   "id": "2:295b",
   "book": 2,
-  "column": "295b",
-  "greek_head": "πρὸς ἡμᾶς Ἔτι δὲ καὶ τὸ πῦρ ἄνω φέρεται διὰ τίν' αἰτίαν Οὐ γὰρ διά γε τὴν δίνην Εἰ δὲ τοῦτο φέρεσθαί που πέφυκεν",
-  "english_head": "For the whirl surely does not come near us. Why, again, does fire move upward? Not, surely, because of the whirl. But if fire is naturally such as to move in a certain direction, clearly the same may be supposed to hold of earth. Again, it cannot be the whirl which determines the heavy and the light. Rather that movement caused the pre-existent heavy and light things to go to the middle and stay on the surface respectively. Thus, before ever the whirl began, heavy and light existed; and what can"
+  "column": "295b"
  },
  {
   "id": "2:296a",
   "book": 2,
-  "column": "296a",
-  "greek_head": "Θαυμαστὸν δὲ καὶ τὸ περὶ μὲν τῆς μονῆς ζητεῖν περὶ δὲ τῆς φορᾶς αὐτῶν μὴ ζητεῖν διὰ τίν' αἰτίαν τὸ μὲν ἄνω φέρεται",
-  "english_head": "It is strange, too, to ask about things staying still but not about their motion,-why, I mean, one thing, if nothing stops it, moves up, and another thing to the centre. Again, their statements are not true. It happens, indeed, to be the case that a thing to which movement this way and that is equally inappropriate is obliged to remain at the centre. But so far as their argument goes, instead of remaining there, it will move, only not as a mass but in fragments. For the argument applies equally "
+  "column": "296a"
  },
  {
   "id": "2:296b",
   "book": 2,
-  "column": "296b",
-  "greek_head": "μιᾶς φορὰς ἔξω τῆς πρώτης ὥστε καὶ τὴν γῆν ἀναγκαῖον εἴτε περὶ τὸ μέσον εἴτ' ἐπὶ τοῦ μέσου κειμένη",
-  "english_head": "The earth, then, also, whether it move about the centre or as stationary at it, must necessarily move with two motions. But if this were so, there would have to be passings and turnings of the fixed stars. Yet no such thing is observed. The same stars always rise and set in the same parts of the earth.\nFurther, the natural movement of the earth, part and whole alike, is the centre of the whole-whence the fact that it is now actually situated at the centre-but it might be questioned since both ce"
+  "column": "296b"
  },
  {
   "id": "2:297a",
   "book": 2,
-  "column": "297a",
-  "greek_head": "εἴπερ ἀδύνατον κινηθῆναι μὴ ὑπὸ κρείττονος ἰσχύος ἀναγκαῖον ἂν εἴη μένειν αὐτὴν ἐπὶ τοῦ μέσου Μαρτυρεῖ δὲ τούτοις",
-  "english_head": "Since, then, it would require a force greater than itself to move it, it must needs stay at the centre. This view is further supported by the contributions of mathematicians to astronomy, since the observations made as the shapes change by which the order of the stars is determined, are fully accounted for on the hypothesis that the earth lies at the centre. Of the position of the earth and of the manner of its rest or movement, our discussion may here end.\nIts shape must necessarily be spherica"
+  "column": "297a"
  },
  {
   "id": "2:297b",
   "book": 2,
-  "column": "297b",
-  "greek_head": "μὴ τὸ μέσον ἔχουσα ᾗ πέφυκε κινεῖσθαι καὶ νῦν Τὸ μὲν οὖν ἀπορούμενον τοῦτ' ἔστιν ἰδεῖν δ' οὐ χαλεπὸν μικρὸν ἐπιτείναντας",
-  "english_head": "So that either the earth will not stay still at the centre, or if it does, it will be at rest without having its centre at the place to which it is still its nature to move. Such is the difficulty. A short consideration will give us an easy answer, if we first give precision to our postulate that any body endowed with weight, of whatever size, moves towards the centre. Clearly it will not stop when its edge touches the centre. The greater quantity must prevail until the body's centre occupies th"
+  "column": "297b"
  },
  {
   "id": "2:298a",
   "book": 2,
-  "column": "298a",
-  "greek_head": "ὑπὲρ κεφαλῆς ἄστρα μεγάλην ἔχειν τὴν μεταβολήν καὶ μὴ ταὐτὰ φαίνεσθαι πρὸς ἄρκτον τε καὶ μεσημβρίαν μεταβαίνουσιν",
-  "english_head": "For quite a small change of position to south or north causes a manifest alteration of the horizon. There is much change, I mean, in the stars which are overhead, and the stars seen are different, as one moves northward or southward. Indeed there are some stars seen in Egypt and in the neighbourhood of Cyprus which are not seen in the northerly regions; and stars, which in the north are never beyond the range of observation, in those regions rise and set. All of which goes to show not only that "
+  "column": "298a"
  },
  {
   "id": "3:298a",
   "book": 3,
-  "column": "298a",
-  "greek_head": "Περὶ μὲν οὖν τοῦ πρώτου οὐρανοῦ καὶ τῶν μερῶν ἔτι δὲ περὶ τῶν ἐν αὐτῷ φερομένων ἄστρων ἐκ τίνων τε συνεστᾶσι",
-  "english_head": "We have already discussed the first heaven and its parts, the moving stars within it, the matter of which these are composed and their bodily constitution, and we have also shown that they are ungenerated and indestructible. Now things that we call natural are either substances or functions and attributes of substances. As substances I class the simple bodies-fire, earth, and the other terms of the series-and all things composed of them; for example, the heaven as a whole and its parts, animals,"
+  "column": "298a"
  },
  {
   "id": "3:298b",
   "book": 3,
-  "column": "298b",
-  "greek_head": "καὶ τὰς εἰς ἄλληλα μεταβάσεις φανερὸν ὅτι τὴν πλείστην συμβαίνει τῆς περὶ φύσεως ἱστορίας περὶ σωμάτων",
-  "english_head": "It is obvious, then, that the greater part of the inquiry into nature concerns bodies: for a natural substance is either a body or a thing which cannot come into existence without body and magnitude. This appears plainly from an analysis of the character of natural things, and equally from an inspection of the instances of inquiry into nature. Since, then, we have spoken of the primary element, of its bodily constitution, and of its freedom from destruction and generation, it remains to speak of"
+  "column": "298b"
  },
  {
   "id": "3:299a",
   "book": 3,
-  "column": "299a",
-  "greek_head": "ἐπίπεδα καὶ ἐξ ἐπιπέδων Περὶ μὲν οὖν τῶν ἄλλων ἕτερος ἔστω λόγος τοῖς δὲ τοῦτον τὸν τρόπον λέγουσι καὶ πάντα",
-  "english_head": "Discussion of the other views may be postponed. But this last theory which composes every body of planes is, as the most superficial observation shows, in many respects in plain contradiction with mathematics. It is, however, wrong to remove the foundations of a science unless you can replace them with others more convincing. And, secondly, the same theory which composes solids of planes clearly composes planes of lines and lines of points, so that a part of a line need not be a line. This matte"
+  "column": "299a"
  },
  {
   "id": "3:299b",
   "book": 3,
-  "column": "299b",
-  "greek_head": "τινος εἶναι Τὸ δὲ βαρύτερον ἢ κουφότερον ἴσως οὐκ ἀνάγκη βαρὺ ἢ κοῦφον εἶναι ὥσπερ καὶ τὸ μὲν μέγα μεῖζον",
-  "english_head": "A thing which, judged absolutely, is small may none the less be larger than other things. Whatever, then, is heavy and also heavier than something else, must exceed this by something which is heavy. A heavy thing therefore is always divisible. But it is common ground that a point is indivisible. Again, suppose that what is heavy or weight is a dense body, and what is light rare. Dense differs from rare in containing more matter in the same cubic area. A point, then, if it may be heavy or light, "
+  "column": "299b"
  },
  {
   "id": "3:300a",
   "book": 3,
-  "column": "300a",
-  "greek_head": "Τιμαίῳ διώρισται δῆλον ὡς ἕξει καὶ ἡ γραμμὴ καὶ ἡ στιγμὴ βάρος ἀνάλογον γὰρ πρὸς ἄλληλα ἔχουσιν ὥσπερ",
-  "english_head": "Again, if it is the number of planes in a body that makes one heavier than another, as the Timaeus explains, clearly the line and the point will have weight. For the three cases are, as we said before, analogous. But if the reason of differences of weight is not this, but rather the heaviness of earth and the lightness of fire, then some of the planes will be light and others heavy (which involves a similar distinction in the lines and the points); the earthplane, I mean, will be heavier than th"
+  "column": "300a"
  },
  {
   "id": "3:300b",
   "book": 3,
-  "column": "300b",
-  "greek_head": "πρῶτον ἠρεμοῦν ἢ εἰς ἄπειρον ἰέναι ὅπερ ἀδύνατον εἰ δὲ κινούμενον τὸ κωλῦον φέρεσθαι καθάπερ φησὶν Ἐμπεδοκλῆς",
-  "english_head": "The hindrance to its movement, then, we will suppose, is a moving thing-as Empedocles says that it is the vortex which keeps the earth still-: but in that case we ask, where would it have moved to but for the vortex? It could not move infinitely; for to traverse an infinite is impossible, and impossibilities do not happen. So the moving thing must stop somewhere, and there rest not by constraint but naturally. But a natural rest proves a natural movement to the place of rest. Hence Leucippus and"
+  "column": "300b"
  },
  {
   "id": "3:301a",
   "book": 3,
-  "column": "301a",
-  "greek_head": "καὶ τὰς φορὰς ἀναγκαῖον ἀπείρους εἶναι εἰ γὰρ πεπερασμέναι τάξις τις ἔσται οὐ γὰρ τῷ μὴ φέρεσθαι εἰς",
-  "english_head": "For a finite number of causes would produce a kind of order, since absence of order is not proved by diversity of direction in motions: indeed, in the world we know, not all bodies, but only bodies of the same kind, have a common goal of movement. Again, disorderly movement means in reality unnatural movement, since the order proper to perceptible things is their nature. And there is also absurdity and impossibility in the notion that the disorderly movement is infinitely continued. For the natu"
+  "column": "301a"
  },
  {
   "id": "3:301b",
   "book": 3,
-  "column": "301b",
-  "greek_head": "Ὁ δ' αὐτὸς λόγος καὶ ἐπὶ κουφότητος Ἔτι δ' εἰ ἔσται τι σῶμα κινούμενον μήτε κουφότητα μήτε βάρος ἔχον ἀνάγκη",
-  "english_head": "A weightless body, therefore, and one which has weight will move the same distance, which is impossible. And the same argument would fit the case of lightness. Again, a body which is in motion but has neither weight nor lightness, must be moved by constraint, and must continue its constrained movement infinitely. For there will be a force which moves it, and the smaller and lighter a body is the further will a given force move it. Now let A, the weightless body, be moved the distance Ce, and B, "
+  "column": "301b"
  },
  {
   "id": "3:302a",
   "book": 3,
-  "column": "302a",
-  "greek_head": "εἰ μὴ καὶ κενὸν εἶναί τι δυνατὸν κεχωρισμένον ἐν ᾧ γὰρ ἔσται τόπῳ τὸ νῦν γιγνόμενον εἰ ἐγίγνετο ἐν τούτῳ πρότερον",
-  "english_head": "It is impossible that everything should be generated, unless an extra-corporeal void is possible. For, assuming generation, the place which is to be occupied by that which is coming to be, must have been previously occupied by void in which no body was. Now it is quite possible for one body to be generated out of another, air for instance out of fire, but in the absence of any pre-existing mass generation is impossible. That which is potentially a certain kind of body may, it is true, become suc"
+  "column": "302a"
  },
  {
   "id": "3:302b",
   "book": 3,
-  "column": "302b",
-  "greek_head": "ἕκαστον ἀέρα δὲ καὶ πῦρ μίγματα τούτων καὶ τῶν ἄλλων σπερμάτων πάντων εἶναι γὰρ ἑκάτερον αὐτῶν ἐξ ἀοράτων",
-  "english_head": "flesh, bone, and the like. Earth and fire are mixtures, composed of them and all the other seeds, each consisting of a collection of all the homoeomerous bodies, separately invisible; and that explains why from these two bodies all others are generated. (To him fire and aither are the same thing.) But since every natural body has it proper movement, and movements are either simple or mixed, mixed in mixed bodies and simple in simple, there must obviously be simple bodies; for there are simple mo"
+  "column": "302b"
  },
  {
   "id": "3:303a",
   "book": 3,
-  "column": "303a",
-  "greek_head": "γὰρ τοῖς αἰσθητοῖς ταῦτα δὲ πεπέρανται δεῖ δὲ τοῦτο δειχθῆναι φανερὸν ὅτι καὶ τὰ στοιχεῖα ἀνάγκη πεπερασμένα",
-  "english_head": "Again, if body is distinguished from body by the appropriate qualitative difference, and there is a limit to the number of differences (for the difference lies in qualities apprehended by sense, which are in fact finite in number, though this requires proof), then manifestly there is necessarily a limit to the number of elements.\nThere is, further, another view-that of Leucippus and Democritus of Abdera-the implications of which are also unacceptable. The primary masses, according to them, are i"
+  "column": "303a"
  },
  {
   "id": "3:303b",
   "book": 3,
-  "column": "303b",
-  "greek_head": "ἡ δὲ σφαῖρα ἐξ ὀκτὼ μορίων Ἀνάγκη γὰρ εἶναί τινας ἀρχὰς τῶν σχημάτων Ὥστε εἴτε μία εἴτε δύο εἴτε",
-  "english_head": "The atoms differ in figure, and all figures are composed of pyramids, rectilinear the case of rectilinear figures, while the sphere has eight pyramidal parts. The figures must have their principles, and, whether these are one or two or more, the simple bodies must be the same in number as they. Again, if every element has its proper movement, and a simple body has a simple movement, and the number of simple movements is not infinite, because the simple motions are only two and the number of plac"
+  "column": "303b"
  },
  {
   "id": "3:304a",
   "book": 3,
-  "column": "304a",
-  "greek_head": "πῦρ πρὸς δέ τι ἄλλο ἀήρ ὅπερ συμβαίνει καὶ τοῖς πλείω μὲν τὰ στοιχεῖα λέγουσι μεγέθει δὲ καὶ μικρότητι διαφέρειν",
-  "english_head": "There will be no absolute distinction between fire, water, and air, but one and the same body will be relatively to this fire, relatively to something else air. The same difficulty is involved equally in the view elements and distinguishes them by their greatness and smallness. The principle of distinction between bodies being quantity, the various sizes will be in a definite ratio, and whatever bodies are in this ratio to one another must be air, fire, earth, and water respectively. For the rat"
+  "column": "304a"
  },
  {
   "id": "3:304b",
   "book": 3,
-  "column": "304b",
-  "greek_head": "στοιχεῖον Ὡσαύτως δὲ καὶ τὸ τοῦ πυρὸς καὶ ὅλως τῶν λεπτομερεστέρων Εἰ δὲ διαιρετόν τοῖς μὲν σχηματίζουσι τὸ",
-  "english_head": "(2) If, on the other hand, the primary body is divisible, then (a) those who give fire a special shape will have to say that a part of fire is not fire, because a pyramid is not composed of pyramids, and also that not every body is either an element or composed of elements, since a part of fire will be neither fire nor any other element. And (b) those whose ground of distinction is size will have to recognize an element prior to the element, a regress which continues infinitely, since every body"
+  "column": "304b"
  },
  {
   "id": "3:305a",
   "book": 3,
-  "column": "305a",
-  "greek_head": "ὅπερ ἀδύνατον Εἰ δὲ στήσεταί που ἡ διάλυσις ἤτοι ἄτομον ἔσται τὸ σῶμα ἐν ᾧ ἵσταται ἢ διαιρετὸν μὲν οὐ μέντοι",
-  "english_head": "(2) Suppose, on the other hand, that the analysis stops somewhere. Then the body at which it stops will be either atomic or, as Empedocles seems to have intended, a divisible body which will yet never be divided. The foregoing arguments show that it cannot be an atom; but neither can it be a divisible body which analysis will never reach. For a smaller body is more easily destroyed than a larger; and a destructive process which succeeds in destroying, that is, in resolving into smaller bodies, a"
+  "column": "305a"
  },
  {
   "id": "3:305b",
   "book": 3,
-  "column": "305b",
-  "greek_head": "παρὰ τούτους Οἱ μὲν οὖν περὶ Ἐμπεδοκλέα καὶ Δημόκριτον λανθάνουσιν αὐτοὶ αὑτοὺς οὐ γένεσιν ἐξ ἀλλήλων ποιοῦντες",
-  "english_head": "(1) What the followers of Empedocles do, though without observing it themselves, is to reduce the generation of elements out of one another to an illusion. They make it a process of excretion from a body of what was in it all the time-as though generation required a vessel rather than a material-so that it involves no change of anything. And even if this were accepted, there are other implications equally unsatisfactory. We do not expect a mass of matter to be made heavier by compression. But th"
+  "column": "305b"
  },
  {
   "id": "3:306a",
   "book": 3,
-  "column": "306a",
-  "greek_head": "κύβον Εἰ δὲ τῇ τῶν ἐπιπέδων διαλύσει πρῶτον μὲν ἄτοπον τὸ μὴ πάντα γεννᾶν ἐξ ἀλλήλων ὅπερ ἀνάγκη λέγειν αὐτοῖς",
-  "english_head": "This they are obliged to assert, and do assert. It is absurd, because it is unreasonable that one element alone should have no part in the transformations, and also contrary to the observed data of sense, according to which all alike change into one another. In fact their explanation of the observations is not consistent with the observations. And the reason is that their ultimate principles are wrongly assumed: they had certain predetermined views, and were resolved to bring everything into lin"
+  "column": "306a"
  },
  {
   "id": "3:306b",
   "book": 3,
-  "column": "306b",
-  "greek_head": "στοιχείου διὰ τὸ πᾶν εἶναι ἢ στοιχεῖον ἢ ἐκστοιχείων ἢ οὐχ ἅπαν σῶμα διαιρετόν",
-  "english_head": "Either, then, a part of fire is not fire, so that there is a body prior to the element-for every body is either an element or composed of elements-or not every body is divisible. In general, the attempt to give a shape to each of the simple bodies is unsound, for the reason, first, that they will not succeed in filling the whole. It is agreed that there are only three plane figures which can fill a space, the triangle, the square, and the hexagon, and only two solids, the pyramid and the cube. B"
+  "column": "306b"
  },
  {
   "id": "3:307a",
   "book": 3,
-  "column": "307a",
-  "greek_head": "βεβηκέναι θερμαντικώτατα δὲ καὶ καυστικώτατα διότι τὸ μὲν ὅλον ἐστὶ γωνία τὸ δὲ ὀξυγωνιώτατον καίει",
-  "english_head": "Now, in the first place, with regard to movement both are in error. These may be the figures best adapted to movement; they are not, however, well adapted to the movement of fire, which is an upward and rectilinear movement, but rather to that form of circular movement which we call rolling. Earth, again, they call a cube because it is stable and at rest. But it rests only in its own place, not anywhere; from any other it moves if nothing hinders, and fire and the other bodies do the same. The o"
+  "column": "307a"
  },
  {
   "id": "3:307b",
   "book": 3,
-  "column": "307b",
-  "greek_head": "ὁμόφυλα συγκρίνει δὲ τὰ ὁμόφυλα καὶ ἡ μὲν σύγκρισις καθ' αὑτό ἐστι τὸ γὰρ συνορίζειν καὶ ἑνοῦν τοῦ πυρός",
-  "english_head": "For though it separates bodies different in kind, it combines those which are the same; and the combining is essential to it, the functions of connecting and uniting being a mark of fire, while the separating is incidental. For the expulsion of the foreign body is an incident in the compacting of the homogeneous. In choosing the shape, then, they should have thought either of both functions or preferably of the combining function. In addition, since hot and cold are contrary powers, it is imposs"
+  "column": "307b"
  },
  {
   "id": "4:307b",
   "book": 4,
-  "column": "307b",
-  "greek_head": "Περὶ δὲ βαρέος καὶ κούφου τί τ' ἐστὶν ἑκάτερον καὶ τίς ἡ φύσις αὐτῶν σκεπτέον καὶ διὰ τίν' αἰτίαν ἔχουσι τὰς",
-  "english_head": "We have now to consider the terms 'heavy' and 'light'. We must ask what the bodies so called are, how they are constituted, and what is the reason of their possessing these powers. The consideration of these questions is a proper part of the theory of movement, since we call things heavy and light because they have the power of being moved naturally in a certain way. The activities corresponding to these powers have not been given any name, unless it is thought that 'impetus' is such a name."
+  "column": "307b"
  },
  {
   "id": "4:308a",
   "book": 4,
-  "column": "308a",
-  "greek_head": "Διὰ δὲ τὸ τὴν φυσικὴν μὲν εἶναι πραγματείαν περὶ κίνησιν ταῦτα δ' ἔχειν ἐν ἑαυτοῖς οἷον ζώπυρ' ἄττα κινήσεως",
-  "english_head": "But because the inquiry into nature is concerned with movement, and these things have in themselves some spark (as it were) of movement, all inquirers avail themselves of these powers, though in all but a few cases without exact discrimination. We must then first look at whatever others have said, and formulate the questions which require settlement in the interests of this inquiry, before we go on to state our own view of the matter.\nLanguage recognizes (a) an absolute, (b) a relative heavy and"
+  "column": "308a"
  },
  {
   "id": "4:308b",
   "book": 4,
-  "column": "308b",
-  "greek_head": "κουφότερον οὕτω δὲ διελθόντες οἴονται διωρίσθαι καὶ περὶ τοῦ ἁπλῶς κούφου καὶ βαρέος ὁ δὲ λόγος αὐτοῖς οὐκ ἐφαρμόττει",
-  "english_head": "And this treatment they consider a sufficient analysis also of the notions of absolute heaviness, to which their account does not apply. This, however, will become clearer as we advance. One use of the terms 'lighter' and 'heavier' is that which is set forth in writing in the Timaeus, that the body which is composed of the greater number of identical parts is relatively heavy, while that which is composed of a smaller number is relatively light. As a larger quantity of lead or of bronze is heavi"
+  "column": "308b"
  },
  {
   "id": "4:309a",
   "book": 4,
-  "column": "309a",
-  "greek_head": "τῶν σωμάτων ἄτοπον τὸ φάναι τοῖς δὲ στερεὰ μᾶλλον ἐνδέχεται λέγειν τὸ μεῖζον εἶναι βαρύτερον αὐτῶν Τῶν δὲ",
-  "english_head": "Those who maintain that the primary or atomic parts, of which bodies endowed with weight are composed, are planes, cannot so speak without absurdity; but those who regard them as solids are in a better position to assert that of such bodies the larger is the heavier. But since in composite bodies the weight obviously does not correspond in this way to the bulk, the lesser bulk being often superior in weight (as, for instance, if one be wool and the other bronze), there are some who think and say"
+  "column": "309a"
  },
  {
   "id": "4:309b",
   "book": 4,
-  "column": "309b",
-  "greek_head": "φήσουσιν ἔσται τι πλῆθος γῆς οὕτως ὀλίγον ἐν ᾧ στερεὸν ἔσται ἔλαττον ἢ ἐν πολλῷ πλήθει πυρός Ὁμοίως δὲ κἂν τῷ κενῷ",
-  "english_head": "But the question is, how will they discriminate the absolutely heavy? Presumably, either by its excess of solid or by its defect of void. On the former view there could be an amount of earth so small as to contain less solid than a large mass of fire. And similarly, if the distinction rests on the amount of void, there will be a body, lighter than the absolutely light, which nevertheless moves downward as constantly as the other moves upward. But that cannot be so, since the absolutely light is "
+  "column": "309b"
  },
  {
   "id": "4:310a",
   "book": 4,
-  "column": "310a",
-  "greek_head": "καθάπερ οἱ τὸ κενὸν καὶ πλῆρες οὐκ ἔσται τὰ μεταξὺ τῶν ἁπλῶς βαρέων καὶ κούφων διὰ τίν' αἰτίαν βαρύτερα καὶ",
-  "english_head": "If there is a single matter, as with those who compose things of triangles, nothing can be absolutely heavy or light: and if there is one matter and its contrary-the void, for instance, and the plenum-no reason can be given for the relative lightness and heaviness of the bodies intermediate between the absolutely light and heavy when compared either with one another or with these themselves. The view which bases the distinction upon differences of size is more like a mere fiction than those prev"
+  "column": "310a"
  },
  {
   "id": "4:310b",
   "book": 4,
-  "column": "310b",
-  "greek_head": "καὶ ταύτῃ μᾶλλον ἄν τις ὑπολάβοι ὃ ἔλεγον οἱ ἀρχαῖοι ὅτι τὸ ὅμοιον φέροιτο πρὸς τὸ ὅμοιον Τοῦτο γὰρ οὐ",
-  "english_head": "(It is best to interpret in this sense the common statement of the older writers that 'like moves to like'. For the words are not in every sense true to fact. If one were to remove the earth to where the moon now is, the various fragments of earth would each move not towards it but to the place in which it now is. In general, when a number of similar and undifferentiated bodies are moved with the same motion this result is necessarily produced, viz. that the place which is the natural goal of th"
+  "column": "310b"
  },
  {
   "id": "4:311a",
   "book": 4,
-  "column": "311a",
-  "greek_head": "ἂν εἴη κατὰ τὴν οὐσίαν αὕτη ἡ κίνησις Ὅταν μὲν οὖν γίγνηται ἐξ ὕδατος ἀὴρ καὶ ἐκ βαρέος κοῦφον ἔρχεται εἰς τὸ ἄνω",
-  "english_head": "Now whenever air comes into being out of water, light out of heavy, it goes to the upper place. It is forthwith light: becoming is at an end, and in that place it has being. Obviously, then, it is a potentiality, which, in its passage to actuality, comes into that place and quantity and quality which belong to its actuality. And the same fact explains why what is already actually fire or earth moves, when nothing obstructs it, towards its own place. For motion is equally immediate in the case of"
+  "column": "311a"
  },
  {
   "id": "4:311b",
   "book": 4,
-  "column": "311b",
-  "greek_head": "καὶ διὰ τὸ κενὸν τὸ κοῦφον Συμβαίνει δὴ μὴ πανταχοῦ ταὐτὰ βαρέα δοκεῖν εἶναι καὶ κοῦφα διὰ τὴν τῶν πρώτων διαφοράν",
-  "english_head": "Therefore we need only speak of these parts, since they are primary and all else consequential: and in so doing we shall be following the advice which we gave to those whose attribute heaviness to the presence of plenum and lightness to that of void. It is due to the properties of the elementary bodies that a body which is regarded as light in one place is regarded as heavy in another, and vice versa. In air, for instance, a talent's weight of wood is heavier than a mina of lead, but in water th"
+  "column": "311b"
  },
  {
   "id": "4:312a",
   "book": 4,
-  "column": "312a",
-  "greek_head": "πρὸς τὸ μέσον Τοῦτο δὲ πότερον συμβαίνει πρὸς τὸ τῆς γῆς μέσον ἢ πρὸς τὸ τοῦ παντός ἐπεὶ ταὐτὸν αὐτῶν ἐστιν ἄλλος",
-  "english_head": "Whether it is really the centre of the earth and not rather that of the whole to which it moves, may be left to another inquiry, since these are coincident. But since that which sinks to the bottom of all things moves to the centre, necessarily that which rises to the surface moves to the extremity of the region in which the movement of these bodies takes place. For the centre is opposed as contrary to the extremity, as that which sinks is opposed to that which rises to the surface. This also gi"
+  "column": "312a"
  },
  {
   "id": "4:312b",
   "book": 4,
-  "column": "312b",
-  "greek_head": "εἶναι μεταξὺ καὶ ἓν καὶ πλείω ὥσπερ ἐν χρώμασιν πολλαχῶς γὰρ λέγεται τὸ μεταξὺ καὶ τὸ μέσον Ἐν μὲν",
-  "english_head": "There is no reason why there should not be one or more intermediates between the contraries, as in the case of colour; for 'intermediate' and 'mean' are capable of more than one application.\nNow in its own place every body endowed with both weight and lightness has weightwhereas earth has weight everywhere-but they only have lightness among bodies to whose surface they rise. Hence when a support is withdrawn such a body moves downward until it reaches the body next below it, air to the place of "
+  "column": "312b"
  },
  {
   "id": "4:313a",
   "book": 4,
-  "column": "313a",
-  "greek_head": "φαίη εἶναι τὸ κενὸν καὶ πλῆρες τὸ μὲν οὖν πῦρ κενόν διὸ ἄνω τὴν δὲ γῆν πλῆρες διὸ κάτω ἀέρα δὲ πλεῖον",
-  "english_head": "But if, secondly, the kinds of matter are two, it will be difficult to make the intermediate bodies behave as air and water behave. Suppose, for example, that the two asserted are void and plenum. Fire, then, as moving upward, will be void, earth, as moving downward, plenum; and in air, it will be said, fire preponderates, in water, earth. There will then be a quantity of water containing more fire than a little air, and a large amount of air will contain more earth than a little water: conseque"
+  "column": "313a"
  },
  {
   "id": "4:313b",
   "book": 4,
-  "column": "313b",
-  "greek_head": "τὰ πλατέα τῶν ἐχόντων βάρος τὰ δὲ στενὰ διαπίπτειν ὀλίγα γὰρ εἶναι τὰ ἀντικρούοντα αὐτοῖς Ἔδει δ' ἐν τῷ ἀέρι",
-  "english_head": "He says that the warm bodies moving up out of the water hold up heavy bodies which are broad, while the narrow ones fall through, because the bodies which offer this resistance are not numerous. But this would be even more likely to happen in air-an objection which he himself raises. His reply to the objection is feeble. In the air, he says, the 'drive' (meaning by drive the movement of the upward moving bodies) is not uniform in direction. But since some continua are easily divided and others l"
+  "column": "313b"
  }
 ]

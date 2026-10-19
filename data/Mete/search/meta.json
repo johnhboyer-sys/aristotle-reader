@@ -2,757 +2,541 @@
  {
   "id": "1:338a",
   "book": 1,
-  "column": "338a",
-  "greek_head": "Περὶ μὲν οὖν τῶν πρώτων αἰτίων τῆς φύσεως καὶ περὶ πάσης κινήσεως φυσικῆς ἔτι δὲ περὶ τῶν κατὰ τὴν ἄνω φορὰν",
-  "english_head": "We have already discussed the first causes of nature, and all natural motion, also the stars ordered in the motion of the heavens, and the physical element-enumerating and specifying them and showing how they change into one another-and becoming and perishing in general. There remains for consideration a part of this inquiry which all our predecessors called meteorology. It is concerned with events that are natural, though their order is less perfect than that of the first of the elements of bod"
+  "column": "338a"
  },
  {
   "id": "1:338b",
   "book": 1,
-  "column": "338b",
-  "greek_head": "δ' ἐστὶν ὅσα συμβαίνει κατὰ φύσιν μέν ἀτακτοτέραν μέντοι τῆς τοῦ πρώτου στοιχείου τῶν σωμάτων περὶ τὸν γειτνιῶντα",
-  "english_head": "They take place in the region nearest to the motion of the stars. Such are the milky way, and comets, and the movements of meteors. It studies also all the affections we may call common to air and water, and the kinds and parts of the earth and the affections of its parts. These throw light on the causes of winds and earthquakes and all the consequences the motions of these kinds and parts involve."
+  "column": "338b"
  },
  {
   "id": "1:339a",
   "book": 1,
-  "column": "339a",
-  "greek_head": "καὶ περὶ πάντων τῶν γιγνομένων κατὰ τὰς κινήσεις τὰς τούτων ἐν οἷς τὰ μὲν ἀποροῦμεν τῶν δὲ ἐφαπτόμεθά τινα",
-  "english_head": "Of these things some puzzle us, while others admit of explanation in some degree. Further, the inquiry is concerned with the falling of thunderbolts and with whirlwinds and fire-winds, and further, the recurrent affections produced in these same bodies by concretion. When the inquiry into these matters is concluded let us consider what account we can give, in accordance with the method we have followed, of animals and plants, both generally and in detail. When that has been done we may say that "
+  "column": "339a"
  },
  {
   "id": "1:339b",
   "book": 1,
-  "column": "339b",
-  "greek_head": "τούτων δυνάμει ὥσπερ καὶ τῶν ἄλλων οἷς ἕν τι καὶ ταὐτὸν ὑπόκειται εἰς ὃ δὴ ἀναλύονται ἔσχατον πρῶτον μὲν",
-  "english_head": "The first difficulty is raised by what is called the air. What are we to take its nature to be in the world surrounding the earth? And what is its position relatively to the other physical elements. (For there is no question as to the relation of the bulk of the earth to the size of the bodies which exist around it, since astronomical demonstrations have by this time proved to us that it is actually far smaller than some individual stars. As for the water, it is not observed to exist collectivel"
+  "column": "339b"
  },
  {
   "id": "1:340a",
   "book": 1,
-  "column": "340a",
-  "greek_head": "εἰ γὰρ τά τε διαστήματα πλήρη πυρὸς καὶ τὰ σώματα συνέστηκεν ἐκ πυρός πάλαι φροῦδον ἂν ἦν ἕκαστον τῶν ἄλλων",
-  "english_head": "If the intervals were full of fire and the bodies consisted of fire every one of the other elements would long ago have vanished.\nHowever, they cannot simply be said to be full of air either; for even if there were two elements to fill the space between the earth and the heavens, the air would far exceed the quantitu required to maintain its proper proportion to the other elements. For the bulk of the earth (which includes the whole volume of water) is infinitesimal in comparison with the whole "
+  "column": "340a"
  },
  {
   "id": "1:340b",
   "book": 1,
-  "column": "340b",
-  "greek_head": "σώματός τινος καὶ πυρὸς μὲν ἀδύνατον διὰ τὸ κατεξηράνθαι ἂν τἆλλα πάντα λείπεται δ' ἀέρος καὶ τοῦ περὶ τὴν",
-  "english_head": "For the spaces left by the heavenly bodies must be filled by some element. This cannot be fire, for then all the rest would have been dried up. Consequently, what fills it must be air and the water that surrounds the whole earth-vapour being water dissolved.\nAfter this exposition of the difficulties involved, let us go on to lay down the truth, with a view at once to what follows and to what has already been said. The upper region as far as the moon we affirm to consist of a body distinct both f"
+  "column": "340b"
  },
  {
   "id": "1:341a",
   "book": 1,
-  "column": "341a",
-  "greek_head": "ὑπερβάλλειν τὰ πνεύματα τῶν ὑψηλῶν ὀρῶν ῥεῖ δὲ κύκλῳ διὰ τὸ συνεφέλκεσθαι τῇ τοῦ ὅλου περιφορᾷ τὸ μὲν",
-  "english_head": "It is the revolution of the heaven which carries the air with it and causes its circular motion, fire being continuous with the upper element and air with fire. Thus its motion is a second reason why that air is not condensed into water.\nBut whenever a particle of air grows heavy, the warmth in it is squeezed out into the upper region and it sinks, and other particles in turn are carried up together with the fiery exhalation. Thus the one region is always full of air and the other of fire, and e"
+  "column": "341a"
  },
  {
   "id": "1:341b",
   "book": 1,
-  "column": "341b",
-  "greek_head": "τούτων δὲ διωρισμένων λέγωμεν διὰ τίν' αἰτίαν αἵ τε φλόγες αἱ καιόμεναι φαίνονται περὶ τὸν οὐρανὸν καὶ οἱ διαθέοντες",
-  "english_head": "Having determined these principles let us explain the cause of the appearance in the sky of burning flames and of shooting-stars, and of 'torches', and 'goats', as some people call them. All these phenomena are one and the same thing, and are due to the same cause, the difference between them being one of degree.\nThe explanation of these and many other phenomena is this. When the sun warms the earth the evaporation which takes place is necessarily of two kinds, not of one only as some think. One"
+  "column": "341b"
  },
  {
   "id": "1:342a",
   "book": 1,
-  "column": "342a",
-  "greek_head": "συνισταμένου ἀέρος ἐκθλίβεται καὶ ἐκκρίνεται τὸ θερμόν διὸ καὶ ἔοικεν ἡ φορὰ ῥίψει μᾶλλον αὐτῶν ἀλλ' οὐκ ἐκκαύσει",
-  "english_head": "At other times the air is condensed by cold and squeezes out and ejects the hot element; making their motion look more like that of a thing thrown than like a running fire. For the question might be raised whether the 'shooting' of a 'star' is the same thing as when you put an exhalation below a lamp and it lights the lower lamp from the flame above. For here too the flame passes wonderfully quickly and looks like a thing thrown, and not as if one thing after another caught fire. Or is a 'star' "
+  "column": "342a"
  },
  {
   "id": "1:342b",
   "book": 1,
-  "column": "342b",
-  "greek_head": "αὐτό ἐπεὶ γὰρ φανερός ἐστι συνιστάμενος ὁ ἄνω ἀὴρ ὥστ' ἐκπυροῦσθαι καὶ τὴν ἐκπύρωσιν ὁτὲ μὲν τοιαύτην γίγνεσθαι",
-  "english_head": "For we have seen that the upper air condenses into an inflammable condition and that the combustion sometimes takes on the appearance of a burning flame, sometimes that of moving torches and stars. So it is not surprising that this same air when condensing should assume a variety of colours. For a weak light shining through a dense air, and the air when it acts as a mirror, will cause all kinds of colours to appear, but especially crimson and purple. For these colours generally appear when fire-"
+  "column": "342b"
  },
  {
   "id": "1:343a",
   "book": 1,
-  "column": "343a",
-  "greek_head": "ἀπεφήναντο πλὴν τήν γε κόμην οὐκ ἐξ αὑτοῦ φασιν ἔχειν ἀλλὰ πλανώμενον διὰ τὸν τόπον ἐνίοτε λαμβάνειν",
-  "english_head": "Only they say that the tail does not belong to the comet iself, but is occasionally assumed by it on its course in certain situations, when our sight is reflected to the sun from the moisture attracted by the comet. It appears at greater intervals than the other stars because it is slowest to get clear of the sun and has been left behind by the sun to the extent of the whole of its circle before it reappears at the same point. It gets clear of the sun both towards the north and towards the south"
+  "column": "343a"
  },
  {
   "id": "1:343b",
   "book": 1,
-  "column": "343b",
-  "greek_head": "ὄντος περὶ θερινὰς τροπάς ὅ τε γὰρ μέγας κομήτης ὁ γενόμενος περὶ τὸν ἐν Ἀχαΐᾳ σεισμὸν καὶ τὴν τοῦ κύματος",
-  "english_head": "The great comet which appeared at the time of the earthquake in Achaea and the tidal wave rose due west; and many have been known to appear in the south. Again in the archonship of Euclees, son of Molon, at Athens there appeared a comet in the north in the month Gamelion, the sun being about the winter solstice. Yet they themselves admit that reflection over so great a space is an impossibility.\nAn objection that tells equally against those who hold this theory and those who say that comets are "
+  "column": "343b"
  },
  {
   "id": "1:344a",
   "book": 1,
-  "column": "344a",
-  "greek_head": "ἀδιαίρετοι καὶ συνελθόντες οὐδὲν φανοῦνται μείζους τὸ μέγεθος ὄντες ὅτι μὲν οὖν αἱ λεγόμεναι περὶ αὐτῶν αἰτίαι",
-  "english_head": "Consequently, just as, if they really had been indivisible, their conjunction could not have created any greater magnitude, so now that they are not in fact indivisible but look as if they were, their conjunction will not make them look any bigger.\nEnough has been said, without further argument, to show that the causes brought forward to explain comets are false. We consider a satisfactory explanation of phenomena inaccessible to observation to have been given when our account of them is free fr"
+  "column": "344a"
  },
  {
   "id": "1:344b",
   "book": 1,
-  "column": "344b",
-  "greek_head": "ἀναθυμίασις τότε κομήτης γίγνεται τούτων τις οὐ γὰρ πρὸς αὐτοῖς ἡ κόμη γίγνεται τοῖς ἄστροις ἀλλ' ὥσπερ αἱ ἅλῳ",
-  "english_head": "But when the exhalation is constituted by one of the fixed stars or the planets, owing to their motion, one of them becomes a comet. The fringe is not close to the stars themselves. Just as haloes appear to follow the sun and the moon as they move, and encircle them, when the air is dense enough for them to form along under the sun's course, so too the fringe. It stands in the relation of a halo to the stars, except that the colour of the halo is due to reflection, whereas in the case of comets "
+  "column": "344b"
  },
  {
   "id": "1:345a",
   "book": 1,
-  "column": "345a",
-  "greek_head": "βορέας κατεῖχεν ἔξω δὲ νότος ἔπνευσε μέγας ἔτι δ' ἐπ' ἄρχοντος Νικομάχου ἐγένετο ὀλίγας ἡμέρας κομήτης",
-  "english_head": "For in the gulf a north wind blew and outside it a violent south wind. Again in the archonship of Nicomachus a comet appeared for a few days about the equinoctial circle (this one had not risen in the west), and simultaneously with it there happened the storm at Corinth.\nThat there are few comets and that they appear rarely and outside the tropic circles more than within them is due to the motion of the sun and the stars. For this motion does not only cause the hot principle to be secreted but a"
+  "column": "345a"
  },
  {
   "id": "1:345b",
   "book": 1,
-  "column": "345b",
-  "greek_head": "δὲ τούτοις εἰ καθάπερ δείκνυται νῦν ἐν τοῖς περὶ ἀστρολογίαν θεωρήμασιν τὸ τοῦ ἡλίου μέγεθος μεῖζόν ἐστιν",
-  "english_head": "Besides, if astronomical demonstrations are correct and the size of the sun is greater than that of the earth and the distance of the stars from the earth many times greater than that of the sun (just as the sun is further from the earth than the moon), then the cone made by the rays of the sun would terminate at no great distance from the earth, and the shadow of the earth (what we call night) would not reach the stars. On the contrary, the sun shines on all the stars and the earth screens none"
+  "column": "345b"
  },
  {
   "id": "1:346a",
   "book": 1,
-  "column": "346a",
-  "greek_head": "καθ' αὑτὴν γένηται ἡ τοιαύτη ἔκκρισις ἀλλ' ὑπό τινος τῶν ἄστρων ἢ τῶν ἐνδεδεμένων ἢ τῶν πλανωμένων τότε γὰρ οὗτοι",
-  "english_head": "We must suppose that what happens is the same as in the case of the comets when the matter does not form independently but is formed by one of the fixed stars or the planets. Then these stars appear to be fringed, because matter of this kind follows their course. In the same way, a certain kind of matter follows the sun, and we explain the halo as a reflection from it when the air is of the right constitution. Now we must assume that what happens in the case of the stars severally happens in the"
+  "column": "346a"
  },
  {
   "id": "1:346b",
   "book": 1,
-  "column": "346b",
-  "greek_head": "φανερῶς ὥστ' εἴπερ καὶ περὶ τοῦ φαίνεσθαι κομήτας ἀποδεχόμεθα τὴν αἰτίαν ὡς εἰρημένην μετρίως καὶ περὶ τοῦ γάλακτος",
-  "english_head": "Hence if we accept the cause assigned for the appearance of comets as plausible we must assume that the same kind of thing holds good of the milky way. For the fringe which in the former case is an affection of a single star here forms in the same way in relation to a whole circle. So if we are to define the milky way we may call it 'a fringe attaching to the greatest circle, and due to the matter secreted'. This, as we said before, explains why there are few comets and why they appear rarely; i"
+  "column": "346b"
  },
  {
   "id": "1:347a",
   "book": 1,
-  "column": "347a",
-  "greek_head": "ἐκεῖνος εἰς τὰ πλάγια μεταβάλλει καὶ οὗτος ἄνω καὶ κάτω δεῖ δὲ νοῆσαι τοῦτον ὥσπερ ποταμὸν ῥέοντα κύκλῳ ἄνω καὶ",
-  "english_head": "For according as the sun moves to this side or that, the moisture in this process rises or falls. We must think of it as a river flowing up and down in a circle and made up partly of air, partly of water. When the sun is near, the stream of vapour flows upwards; when it recedes, the stream of water flows down: and the order of sequence, at all events, in this process always remains the same. So if 'Oceanus' had some secret meaning in early writers, perhaps they may have meant this river that flo"
+  "column": "347a"
  },
  {
   "id": "1:347b",
   "book": 1,
-  "column": "347b",
-  "greek_head": "γίγνεται αἴτιον δ' ὁμοίως ὥσπερ ὅτι εὐδίας μὲν γίγνεται χειμῶνος δ' οὔ ὁ μὲν γὰρ νότος εὐδίαν ποιεῖ ὁ δὲ βορέας",
-  "english_head": "For the south wind brings warm, and the north, wintry weather. For the north wind is cold and so quenches the heat of the evaporation. But in Pontus the south wind does not bring warmth enough to cause evaporation, whereas the coldness of the north wind concentrates the heat by a sort of recoil, so that there is more evaporation and not less. This is a thing which we can often observe in other places too. Wells, for instance, give off more vapour in a north than in a south wind. Only the north w"
+  "column": "347b"
  },
  {
   "id": "1:348a",
   "book": 1,
-  "column": "348a",
-  "greek_head": "καὶ μετοπώρου μάλιστα εἶτα δὲ καὶ τῆς ὀπώρας χειμῶνος δ' ὀλιγάκις καὶ ὅταν ἧττον ᾖ ψῦχος καὶ ὅλως δὲ γίγνονται",
-  "english_head": "And in general hailstorms occur in warmer, and snow in colder places. Again, there is a difficulty about water freezing in the upper region. It cannot have frozen before becoming water: and water cannot remain suspended in the air for any space of time. Nor can we say that the case is like that of particles of moisture which are carried up owing to their small size and rest on the iar (the water swimming on the air just as small particles of earth and gold often swim on water). In that case larg"
+  "column": "348a"
  },
  {
   "id": "1:348b",
   "book": 1,
-  "column": "348b",
-  "greek_head": "οὖν οὐ τῷ ἀπωθεῖσθαι εἰς τὸν ἄνω τόπον τὸν ψυχρὸν ἡ πῆξις συμβαίνει δῆλον ἀλλ' ἐπειδὴ ὁρῶμεν ὅτι γίγνεται ἀντιπερίστασις",
-  "english_head": "It clearly follows that the congelation does not take place because the cloud is thrust up into the cold upper region.\nNow we see that warm and cold react upon one another by recoil. Hence in warm weather the lower parts of the earth are cold and in a frost they are warm. The same thing, we must suppose, happens in the air, so that in the warmer seasons the cold is concentrated by the surrounding heat and causes the cloud to go over into water suddenly. (For this reason rain-drops are much large"
+  "column": "348b"
  },
  {
   "id": "1:349a",
   "book": 1,
-  "column": "349a",
-  "greek_head": "τοῖς καλάμοις διὰ τὸ θᾶττον πήγνυσθαι χρῶνται γὰρ τῷ κρυστάλλῳ ὥσπερ τῷ μολύβδῳ ἵν' ἠρεμῶσιν οἱ",
-  "english_head": "So the inhabitants of Pontus when they encamp on the ice to fish (they cut a hole in the ice and then fish) pour warm water round their reeds that it may freeze the quicker, for they use the ice like lead to fix the reeds. Now it is in hot countries and seasons that the water which forms soon grows warm.\nIt is for the same reason that rain falls in summer and not in winter in Arabia and Ethiopia too, and that in torrents and repeatedly on the same day. For the concentration or recoil due to the "
+  "column": "349a"
  },
  {
   "id": "1:349b",
   "book": 1,
-  "column": "349b",
-  "greek_head": "ἢ καθάπερ καὶ οἱ γραφεῖς γράφουσιν ἐξ αὑτῶν τὴν ἀρχὴν ἀφιέντας ὁμοίως δὲ καὶ περὶ τῆς τῶν ποταμῶν γενέσεως",
-  "english_head": "We find analogous views about the origin of rivers. It is thought that the water is raised by the sun and descends in rain and gathers below the earth and so flows from a great reservoir, all the rivers from one, or each from a different one. No water at all is generated, but the volume of the rivers consists of the water that is gathered into such reservoirs in winter. Hence rivers are always fuller in winter than in summer, and some are perennial, others not. Rivers are perennial where the res"
+  "column": "349b"
  },
  {
   "id": "1:350a",
   "book": 1,
-  "column": "350a",
-  "greek_head": "ὑπονόμοις καὶ διώρυξι συνάγουσιν ὥσπερ ἂν ἰδιούσης τῆς γῆς ἀπὸ τῶν ὑψηλῶν διὸ καὶ τὰ ῥεύματα τῶν ποταμῶν",
-  "english_head": "Hence, too, the head-waters of rivers are found to flow from mountains, and from the greatest mountains there flow the most numerous and greatest rivers. Again, most springs are in the neighbourhood of mountains and of high ground, whereas if we except rivers, water rarely appears in the plains. For mountains and high ground, suspended over the country like a saturated sponge, make the water ooze out and trickle together in minute quantities but in many places. They receive a great deal of water"
+  "column": "350a"
  },
  {
   "id": "1:350b",
   "book": 1,
-  "column": "350b",
-  "greek_head": "τῆς Πυρήνης τοῦτο δ' ἐστὶν ὄρος πρὸς δυσμὴν ἰσημερινὴν ἐν τῇ Κελτικῇ ῥέουσιν ὅ τε Ἴστρος καὶ ὁ Ταρτησσός οὗτος μὲν οὖν",
-  "english_head": "The latter flows outside the pillars, while the Istrus flows through all Europe into the Euxine. Most of the remaining rivers flow northwards from the Hercynian mountains, which are the greatest in height and extent about that region. In the extreme north, beyond furthest Scythia, are the mountains called Rhipae. The stories about their size are altogether too fabulous: however, they say that the most and (after the Istrus) the greatest rivers flow from them. So, too, in Libya there flow from th"
+  "column": "350b"
  },
  {
   "id": "1:351a",
   "book": 1,
-  "column": "351a",
-  "greek_head": "δηλοῦσιν οἱ καταπινόμενοι τῶν ποταμῶν συμβαίνει δὲ τοῦτο πολλαχοῦ τῆς γῆς οἷον τῆς μὲν Πελοποννήσου πλεῖστα τοιαῦτα",
-  "english_head": "That there exist such chasms and cavities in the earth we are taught by the rivers that are swallowed up. They are found in many parts of the earth: in the Peloponnesus, for instance, there are many such rivers in Arcadia. The reason is that Arcadia is mountainous and there are no channels from its valleys to the sea. So these places get full of water, and this, having no outlet, under the pressure of the water that is added above, finds a way out for itself underground. In Greece this kind of t"
+  "column": "351a"
  },
  {
   "id": "1:351b",
   "book": 1,
-  "column": "351b",
-  "greek_head": "τὰς πηγὰς ἀφανίζεσθαι τούτων δὲ συμβαινόντων τοὺς ποταμοὺς πρῶτον μὲν ἐκ μεγάλων μικρούς εἶτα τέλος",
-  "english_head": "Now when places become drier the springs necessarily give out, and when this happens the rivers first decrease in size and then finally become dry; and when rivers change and disappear in one part and come into existence correspondingly in another, the sea must needs be affected.\nIf the sea was once pushed out by rivers and encroached upon the land anywhere, it necessarily leaves that place dry when it recedes; again, if the dry land has encroached on the sea at all by a process of silting set u"
+  "column": "351b"
  },
  {
   "id": "1:352a",
   "book": 1,
-  "column": "352a",
-  "greek_head": "ποιεῖται μνείαν ὡς οὔπω Μέμφιος οὔσης ἢ ὅλως ἢ οὐ τηλικαύτης τοῦτο δ' εἰκὸς οὕτω συμβαίνειν οἱ γὰρ κάτωθεν τόποι",
-  "english_head": "That this should be so is natural, since the lower land came to be inhabited later than that which lay higher. For the parts that lie nearer to the place where the river is depositing the silt are necessarily marshy for a longer time since the water always lies most in the newly formed land. But in time this land changes its character, and in its turn enjoys a period of prosperity. For these places dry up and come to be in good condition while the places that were formerly well-tempered some day"
+  "column": "352a"
  },
  {
   "id": "1:352b",
   "book": 1,
-  "column": "352b",
-  "greek_head": "οὗτος γὰρ πολλαχοῦ τὸ ῥεῦμα μεταβέβληκεν ᾤκουν γὰρ οἱ Σελλοὶ ἐνταῦθα καὶ οἱ καλούμενοι τότε μὲν Γραικοὶ νῦν δ'",
-  "english_head": "The deluge in the time of Deucalion, for instance, took place chiefly in the Greek world and in it especially about ancient Hellas, the country about Dodona and the Achelous, a river which has often changed its course. Here the Selli dwelt and those who were formerly called Graeci and now Hellenes. When, therefore, such an excess of rain occurs we must suppose that it suffices for a long time. We have seen that some say that the size of the subterranean cavities is what makes some rivers perenni"
+  "column": "352b"
  },
  {
   "id": "1:353a",
   "book": 1,
-  "column": "353a",
-  "greek_head": "ἐστιν ἤδη φροῦδον ἀλλὰ μὴν καὶ τὰ περὶ τὴν Μαιῶτιν λίμνην ἐπιδέδωκε τῇ προσχώσει τῶν ποταμῶν τοσοῦτον",
-  "english_head": "For it is clear that a barrier of silt was formed and after it lakes and dry land, but in course of time the water that was left behind in the lakes dried up and is now all gone. Again the silting up of the lake Maeotis by the rivers has advanced so much that the limit to the size of the ships which can now sail into it to trade is much lower than it was sixty years ago. Hence it is easy to infer that it, too, like most lakes, was originally produced by the rivers and that it must end by drying "
+  "column": "353a"
  },
  {
   "id": "2:353a",
   "book": 2,
-  "column": "353a",
-  "greek_head": "Περὶ δὲ θαλάττης καὶ τίς ἡ φύσις αὐτῆς καὶ διὰ τίν' αἰτίαν ἁλμυρὸν τοσοῦτόν ἐστιν ὕδατος πλῆθος ἔτι δὲ περὶ",
-  "english_head": "Let us explain the nature of the sea and the reason why such a large mass of water is salt and the way in which it originally came to be.\nThe old writers who invented theogonies say that the sea has springs, for they want earth and sea to have foundations and roots of their own."
+  "column": "353a"
  },
  {
   "id": "2:353b",
   "book": 2,
-  "column": "353b",
-  "greek_head": "αὐτοῖς ὦσιν ἀρχαὶ καὶ ῥίζαι γῆς καὶ θαλάττης τραγικώτερον γὰρ οὕτω καὶ σεμνότερον ὑπέλαβον ἴσως εἶναι τὸ λεγόμενον",
-  "english_head": "Presumably they thought that this view was grander and more impressive as implying that our earth was an important part of the universe. For they believed that the whole world had been built up round our earth and for its sake, and that the earth was the most important and primary part of it. Others, wiser in human knowledge, give an account of its origin. At first, they say, the earth was surrounded by moisture. Then the sun began to dry it up, part of it evaporated and is the cause of winds an"
+  "column": "353b"
  },
  {
   "id": "2:354a",
   "book": 2,
-  "column": "354a",
-  "greek_head": "πρὸς ἀλλήλας οὐ συμμειγνύουσαι κατ' οὐδένα τόπον ὧν ἡ μὲν ἐρυθρὰ φαίνεται κατὰ μικρὸν κοινωνοῦσα πρὸς τὴν ἔξω",
-  "english_head": "Again, there are several seas that have no communication with one another at all. The Red Sea, for instance, communicates but slightly with the ocean outside the straits, and the Hyrcanian and Caspian seas are distinct from this ocean and people dwell all round them. Hence, if these seas had had any springs anywhere they must have been discovered.\nIt is true that in straits, where the land on either side contracts an open sea into a small space, the sea appears to flow. But this is because it is"
+  "column": "354a"
  },
  {
   "id": "2:354b",
   "book": 2,
-  "column": "354b",
-  "greek_head": "περὶ δὲ τῆς γενέσεως αὐτῆς εἰ γέγονε καὶ τοῦ χυμοῦ τίς ἡ αἰτία τῆς ἁλμυρότητος καὶ πικρότητος λεκτέον ἡ",
-  "english_head": "We must now discuss the origin of the sea, if it has an origin, and the cause of its salt and bitter taste.\nWhat made earlier writers consider the sea to be the original and main body of water is this. It seems reasonable to suppose that to be the case on the analogy of the other elements. Each of them has a main bulk which by reason of its mass is the origin of that element, and any parts which change and mix with the other elements come from it. Thus the main body of fire is in the upper regio"
+  "column": "354b"
  },
  {
   "id": "2:355a",
   "book": 2,
-  "column": "355a",
-  "greek_head": "φασιν καὶ ποιεῖσθαι τὰς τροπὰς αὐτόν οὐ γὰρ αἰεὶ τοὺς αὐτοὺς δύνασθαι τόπους παρασκευάζειν αὐτῷ τὴν τροφήν ἀναγκαῖον",
-  "english_head": "For the fire we are familiar with lives as long as it is fed, and the only food for fire is moisture. As if the moisture that is raised could reach the sun! or this ascent were really like that performed by flame as it comes into being, and to which they supposed the case of the sun to be analogous! Really there is no similarity. A flame is a process of becoming, involving a constant interchange of moist and dry. It cannot be said to be nourished since it scarcely persists as one and the same fo"
+  "column": "355a"
  },
  {
   "id": "2:355b",
   "book": 2,
-  "column": "355b",
-  "greek_head": "τίς ἐστιν τόπος ὕδατος ὥσπερ καὶ τῶν ἄλλων στοιχείων καὶ ταύτην εἶναι λύσιν ὃν γὰρ ὁρῶμεν κατέχουσαν τόπον τὴν θάλατταν",
-  "english_head": "The place which we see the sea filling is not its natural place but that of water. It seems to belong to the sea because the weight of the salt water makes it remain there, while the sweet, drinkable water which is light is carried up. The same thing happens in animal bodies. Here, too, the food when it enters the body is sweet, yet the residuum and dregs of liquid food are found to be bitter and salt. This is because the sweet and drinkable part of it has been drawn away by the natural animal h"
+  "column": "355b"
  },
  {
   "id": "2:356a",
   "book": 2,
-  "column": "356a",
-  "greek_head": "ὁ καλούμενος Τάρταρος περὶ τὸ μέσον ὕδατός τι πλῆθος ἐξ οὗ καὶ τὰ ῥέοντα καὶ τὰ μὴ ῥέοντα ἀναδίδωσιν πάντα",
-  "english_head": "This primary and original water is always surging to and fro, and so it causes the rivers to flow on this side of the earth's centre and on that; for it has no fixed seat but is always oscillating about the centre. Its motion up and down is what fills rivers. Many of these form lakes in various places (our sea is an instance of one of these), but all of them come round again in a circle to the original source of their flow, many at the same point, but some at a point opposite to that from which "
+  "column": "356a"
  },
  {
   "id": "2:356b",
   "book": 2,
-  "column": "356b",
-  "greek_head": "μᾶλλον ὕδατος ἢ ἀρχή ἐστιν ἡ θάλαττα καθάπερ τὸ ἐν τοῖς σώμασιν περίττωμα τῆς τροφῆς πάσης καὶ μάλιστα",
-  "english_head": "Enough has been said to prove that this is the natural place of water and not of the sea, and to explain why sweet water is only found in rivers, while salt water is stationary, and to show that the sea is the end rather than the source of water, analogous to the residual matter of all food, and especially liquid food, in animal bodies. We must now explain why the sea is salt, and ask whether it eternally exists as identically the same body, or whether it did not exist at all once and some day w"
+  "column": "356b"
  },
  {
   "id": "2:357a",
   "book": 2,
-  "column": "357a",
-  "greek_head": "ὅταν γένηται ξηρανεῖται πάλιν καὶ τοῦθ' οὕτως κατὰ κύκλον ἀναγκαῖον ἀεὶ βαδίζειν μᾶλλον γὰρ οὕτως εὔλογον ὑπολαβεῖν",
-  "english_head": "Some day the opposite will take place and after that the earth will grow dry once again. We must recognize that this process always goes on thus in a cycle, for that is more satisfactory than to suppose a change in the whole world in order to explain these facts. But we have dwelt longer on this point than it deserves.\nTo return to the saltness of the sea: those who create the sea once for all, or indeed generate it at all, cannot account for its saltness. It makes no difference whether the sea "
+  "column": "357a"
  },
  {
   "id": "2:357b",
   "book": 2,
-  "column": "357b",
-  "greek_head": "γλυκέος ὄντος εἰ δὴ ὥσπερ τὸ διὰ τῆς κονίας ἠθούμενον ὕδωρ γίγνεται πικρόν καὶ ταῦτα τῷ μὲν οὔρῳ συγκαταφερομένης",
-  "english_head": "Actually the saltness seems to be due to the same cause as in the case of the residual liquid that gathers in the bladder. That, too, becomes bitter and salt though the liquid we drink and that contained in our food is sweet. If then the bitterness is due in these cases (as with the water strained through lye) to the presence of a certain sort of stuff that is carried along by the urine (as indeed we actually find a salt deposit settling in chamber-pots) and is secreted from the flesh in sweat ("
+  "column": "357b"
  },
  {
   "id": "2:358a",
   "book": 2,
-  "column": "358a",
-  "greek_head": "τῆς μεταβολῆς ἐπὶ πάντων τε φθορὰν εἶναι καὶ γένεσιν ταύτην μέντοι τεταγμένως συμβαίνειν πᾶσιν αὐτοῖς",
-  "english_head": "All of these are in a constant state of change, but the form and the quantity of each of them are fixed, just as they are in the case of a flowing river or a burning flame. The answer is clear, and there is no doubt that the same account holds good of all these things alike. They differ in that some of them change more rapidly or more slowly than others; and they all are involved in a process of perishing and becoming which yet affects them all in a regular course.\nThis being so we must go on to"
+  "column": "358a"
  },
  {
   "id": "2:358b",
   "book": 2,
-  "column": "358b",
-  "greek_head": "τῷ δ' ἀπωθεῖν αἴθριος ἐνταῦθα ἐν δὲ τοῖς ἐναντίοις ὑδατώδης ὁμοίως δὲ καὶ ὁ νότος αἴθριος τοῖς περὶ τὴν",
-  "english_head": "Hence it carries little moist vapour and that is why it is hot. (It makes no difference even if this is not its true character and it is originally a cold wind, for it becomes warm on its way by incorporating with itself a great quantity of dry evaporation from the places it passes over.) The north wind, on the other hand, comb ing from moist regions, is full of vapour and therefore cold. It is dry in our part of the world because it drives the clouds away before it, but in the south it is rainy"
+  "column": "358b"
  },
  {
   "id": "2:359a",
   "book": 2,
-  "column": "359a",
-  "greek_head": "πλάσας θῇ κήρινον εἰς τὴν θάλατταν περιδήσας τὸ στόμα τοιούτοις ὥστε μὴ παρεγχεῖσθαι τῆς θαλάττης τὸ γὰρ εἰςιὸν",
-  "english_head": "On the other hand the parts neither of the earth nor of the sea remain constant but only their whole bulk. For the same thing is true of the earth as of the sea: some of it is carried up and some comes down with the rain, and both that which remains on the surface and that which comes down again change their situations.\nThere is more evidence to prove that saltness is due to the admixture of some substance, besides that which we have adduced. Make a vessel of wax and put it in the sea, fastening"
+  "column": "359a"
  },
  {
   "id": "2:359b",
   "book": 2,
-  "column": "359b",
-  "greek_head": "ἔστι γάρ τις τόπος ἐν ᾧ πεφύκασι κάλαμοι καὶ σχοῖνος τούτων κατακάουσι καὶ τὴν τέφραν ἐμβάλλοντες εἰς",
-  "english_head": "It is weaker than ordinary salt and added freely gives a sweet taste, and it is not as white as salt generally is. Another instance of this is found in Umbria. There is a place there where reeds and rushes grow. They burn some of these, put the ashes into water and boil it off. When a little water is left and has cooled it gives a quantity of salt.\nMost salt rivers and springs must once have been hot. Then the original fire in them was extinguished but the earth through which they percolate pres"
+  "column": "359b"
  },
  {
   "id": "2:360a",
   "book": 2,
-  "column": "360a",
-  "greek_head": "δὲ γιγνομένου διὰ τὴν ψύξιν συνισταμένης πάλιν τῆς ἀναχθείσης ἀτμίδος εἰς ὕδωρ διὸ χειμῶνός τε μᾶλλον γίγνεται",
-  "english_head": "Now when the sun in its circular course approaches, it draws up by its heat the moist evaporation: when it recedes the cold makes the vapour that had been raised condense back into water which falls and is distributed through the earth. (This explains why there is more rain in winter and more by night than by day: though the fact is not recognized because rain by night is more apt to escape observation than by day.) But there is a great quantity of fire and heat in the earth, and the sun not onl"
+  "column": "360a"
  },
  {
   "id": "2:360b",
   "book": 2,
-  "column": "360b",
-  "greek_head": "ἀναθυμίασιν ἀεὶ νέφη τε καὶ πνεύματα γίγνεται κατὰ τὴν ὥραν ἑκάστην ὡς πέφυκεν διὰ δὲ τὸ ἐνίοτε μὲν τὴν ἀτμιδώδη",
-  "english_head": "It is because the evaporation takes place uninterruptedly but differs in degree and quantity that clouds and winds appear in their natural proportion according to the season; and it is because there is now a great excess of the vaporous, now of the dry and smoky exhalation, that some years are rainy and wet, others windy and dry. Sometimes there is much drought or rain, and it prevails over a great and continuous stretch of country. At other times it is local; the surrounding country often getti"
+  "column": "360b"
  },
  {
   "id": "2:361a",
   "book": 2,
-  "column": "361a",
-  "greek_head": "καὶ ὅταν εἰς ταὐτὸν συνωσθῶσι τὰ νέφη καὶ ἀντιπεριστῇ εἰς αὐτὰ ἡ ψύξις ὕδωρ γίγνεται καὶ καταψύχει τὴν ξηρὰν",
-  "english_head": "Water also forms and cools the dry evaporation when the clouds are driven together and the cold concentrated in them. These are the causes that make wind cease on the advent of rain, and rain fall on the cessation of wind.\nThe cause of the predominance of winds from the north and from the south is the same. (Most winds, as a matter of fact, are north winds or south winds.) These are the only regions which the sun does not visit: it approaches them and recedes from them, but its course is always "
+  "column": "361a"
  },
  {
   "id": "2:361b",
   "book": 2,
-  "column": "361b",
-  "greek_head": "γῆς ἐστιν ὅτι δ' ἐκ πολλῶν ἀναθυμιάσεων συνιουσῶν κατὰ μικρόν ὥσπερ αἱ τῶν ποταμῶν ἀρχαὶ γίγνονται νοτιζούσης",
-  "english_head": "The facts bear out the view that winds are formed by the gradual union of many evaporations just as rivers derive their sources from the water that oozes from the earth. Every wind is weakest in the spot from which it blows; as they proceed and leave their source at a distance they gather strength. Thus the winter in the north is windless and calm: that is, in the north itself; but, the breeze that blows from there so gently as to escape observation becomes a great wind as it passes on.\nWe have "
+  "column": "361b"
  },
  {
   "id": "2:362a",
   "book": 2,
-  "column": "362a",
-  "greek_head": "οὔτε ὅτε πόρρω καὶ τὰς μὲν ἡμέρας πνέουσι τὰς δὲ νύκτας παύονται αἴτιον δ' ὅτι πλησίον μὲν ὢν φθάνει ξηραίνων",
-  "english_head": "The reason is that when the sun is near it dries up the earth before evaporation has taken place, but when it has receded a little its heat and the evaporation are present in the right proportion; so the ice melts and the earth, dried by its own heat and that of the sun, smokes and vapours. They abate at night because the cold pf the nights checks the melting of the ice. What is frozen gives off no evaporation, nor does that which contains no dryness at all: it is only where something dry contai"
+  "column": "362a"
  },
  {
   "id": "2:362b",
   "book": 2,
-  "column": "362b",
-  "greek_head": "αἱ ἐκ τοῦ κέντρου αὐτῆς ἀγόμεναι καὶ ποιοῦσι δύο κώνους τὸν μὲν ἔχοντα βάσιν τὸν τροπικόν τὸν",
-  "english_head": "If you draw lines from the centre of the earth they cut out a drum-shaped figure. The lines form two cones; the base of the one is the tropic, of the other the ever visible circle, their vertex is at the centre of the earth. Two other cones towards the south pole give corresponding segments of the earth. These sections alone are habitable. Beyond the tropics no one can live: for there the shade would not fall to the north, whereas the earth is known to be uninhabitable before the sun is in the z"
+  "column": "362b"
  },
  {
   "id": "2:363a",
   "book": 2,
-  "column": "363a",
-  "greek_head": "οἰκουμένην πᾶσάν ἐστιν ἔστιν γὰρ ὥσπερ ἀπόγειον τὸ πνεῦμα τὸ βόρειον ἕως ὁ βορέας οὗτος εἰς τὴν ἐνταῦθα οἰκουμένην",
-  "english_head": "So just as we have a north wind here, they must have a corresponding wind from the antarctic. This wind cannot reach us since our own north wind is like a land breeze and does not even reach the limits of the region we live in. The prevalence of north winds here is due to our lying near the north. Yet even here they give out and fail to penetrate far: in the southern sea beyond Libya east and west winds are always blowing alternately, like north and south winds with us. So it is clear that the s"
+  "column": "363a"
  },
  {
   "id": "2:363b",
   "book": 2,
-  "column": "363b",
-  "greek_head": "δὲ τούτῳ τόπος ἐφ' οὗ τὸ Β ἀνατολὴ ἰσημερινή ἄλλη δὲ διάμετρος ταύτην πρὸς ὀρθὴν τέμνουσα ἧς τὸ ἐφ' οὗ Η",
-  "english_head": "Let there be another diameter cutting this at right angles, and let the point H on it be the north and its diametrical opposite O the south. Let Z be the rising of the sun at the summer solstice and E its setting at the summer solstice; D its rising at the winter solstice, and G its setting at the winter solstice. Draw a diameter from Z to G from D to E. Then since those things are locally contrary which are most distant from one another in space, and points diametrically opposite are most dista"
+  "column": "363b"
  },
  {
   "id": "2:364a",
   "book": 2,
-  "column": "364a",
-  "greek_head": "οὔτε τῷ Ι τῷ θρασκίᾳ ἔπνει γὰρ ἂν ἀπὸ τοῦ Ν τοῦτο γὰρ κατὰ διάμετρον τὸ σημεῖον εἰ μὴ ἀπ' αὐτοῦ",
-  "english_head": "Meses has not, or else there would be a wind blowing from the point M which is diametrically opposite. Thrascias corresponding to the point I has not, for then there would be a wind blowing from N, the point which is diametrically opposite. (But perhaps a local wind which the inhabitants of those parts call Phoenicias blows from that point.)\nThese are the most important and definite winds and these their places.\nThere are more winds from the north than from the south. The reason for this is that"
+  "column": "364a"
  },
  {
   "id": "2:364b",
   "book": 2,
-  "column": "364b",
-  "greek_head": "ἰσημερίαν τὴν μὲν ἐαρινὴν καικίας καὶ ὅλως τὰ ἐπέκεινα τροπῆς θερινῆς περὶ δὲ τὴν μετοπωρινὴν λίβες περὶ δὲ τροπὰς",
-  "english_head": "Hence it sometimes happens that both of them, though different winds and blowing from different quarters, are favourable to sailors making for the same point.\nContrary winds commonly blow at opposite seasons. Thus Caecias and in general the winds north of the summer solstice blow about the time of the spring equinox, but about the autumn equinox Lips; and Zephyrus about the summer solstice, but about the winter solstice Eurus.\nAparctias, Thrascias, and Argestes are the winds that fall on others "
+  "column": "364b"
  },
  {
   "id": "2:365a",
   "book": 2,
-  "column": "365a",
-  "greek_head": "χαλαζώδεις εἰσίν ταχὺ γὰρ πηγνύουσιν ἐκνεφίαι δὲ γίγνονται μετοπώρου μὲν μάλιστα εἶτα ἔαρος καὶ μάλιστα ἀπαρκτίας",
-  "english_head": "They are cold because they blow from the north, and lightning is due to cold, being ejected when the clouds contract. Some of these same bring hail with them for the same reason; namely, that they cause a sudden condensation.\nHurricanes are commonest in autumn, and next in spring: Aparctias, Thrascias, and Argestes give rise to them most. This is because hurricanes are generally formed when some winds are blowing and others fall on them; and these are the winds which are most apt to fall on othe"
+  "column": "365a"
  },
  {
   "id": "2:365b",
   "book": 2,
-  "column": "365b",
-  "greek_head": "Δημόκριτος δέ φησι πλήρη τὴν γῆν ὕδατος οὖσαν καὶ πολὺ δεχομένην ἕτερον ὄμβριον ὕδωρ ὑπὸ τούτου κινεῖσθαι πλείονός",
-  "english_head": "Democritus says that the earth is full of water and that when a quantity of rain-water is added to this an earthquake is the result. The hollows in the earth being unable to admit the excess of water it forces its way in and so causes an earthquake. Or again, the earth as it dries draws the water from the fuller to the emptier parts, and the inrush of the water as it changes its place causes the earthquake.\nAnaximenes says that the earth breaks up when it grows wet or dry, and earthquakes are du"
+  "column": "365b"
  },
  {
   "id": "2:366a",
   "book": 2,
-  "column": "366a",
-  "greek_head": "φύσις τοιαύτη μάλιστα τῶν σωμάτων τὸ πνεῦμα κινητικόν καὶ γὰρ τὸ πῦρ ὅταν μετὰ πνεύματος ᾖ γίγνεται",
-  "english_head": "Wind satisfies these conditions in the highest degree (fire only becomes flame and moves rapidly when wind accompanies it): so that not water nor earth is the cause of earthquakes but wind-that is, the inrush of the external evaporation into the earth.\nHence, since the evaporation generally follows in a continuous body in the direction in which it first started, and either all of it flows inwards or all outwards, most earthquakes and the greatest are accompanied by calm. It is true that some tak"
+  "column": "366a"
  },
  {
   "id": "2:366b",
   "book": 2,
-  "column": "366b",
-  "greek_head": "ἔχουσι τοὺς κάτω τόπους πολὺ δεχόμεναι πνεῦμα σείονται μᾶλλον καὶ ἔαρος δὲ καὶ μετοπώρου μάλιστα καὶ ἐν",
-  "english_head": "For the same reason earthquakes usually take place in spring and autumn and in times of wet and of drought-because these are the windiest seasons. Summer with its heat and winter with its frost cause calm: winter is too cold, summer too dry for winds to form. In time of drought the air is full of wind; drought is just the predominance of the dry over the moist evaporation. Again, excessive rain causes more of the evaporation to form in the earth. Then this secretion is shut up in a narrow compas"
+  "column": "366b"
  },
  {
   "id": "2:367a",
   "book": 2,
-  "column": "367a",
-  "greek_head": "οἷον καὶ περὶ Ἡράκλειαν ἐγένετο τὴν ἐν τῷ Πόντῳ νεωστί καὶ πρότερον περὶ τὴν Ἱερὰν νῆσον αὕτη δ' ἐστὶν μία τῶν",
-  "english_head": "Here a portion of the earth swelled up and a lump like a mound rose with a noise: finally it burst, and a great wind came out of it and threw up live cinders and ashes which buried the neighbouring town of Lipara and reached some of the towns in Italy. The spot where this eruption occurred is still to be seen.\nIndeed, this must be recognized as the cause of the fire that is generated in the earth: the air is first broken up in small particles and then the wind is beaten about and so catches fire"
+  "column": "367a"
  },
  {
   "id": "2:367b",
   "book": 2,
-  "column": "367b",
-  "greek_head": "ὥσπερ τὸ πνεῦμα τὸ διὰ τοῦ στόματος φυσώμενον καὶ γὰρ τοῦτο ἐγγύθεν μέν ἐστι θερμόν ὥσπερ καὶ ὅταν ἀάζωμεν",
-  "english_head": "Well, when this evaporation disappears into the earth the vaporous exhalation concentrates and causes cold in any place in which this disappearance occurs.\nA sign which sometimes precedes earthquakes can be explained in the same way. Either by day or a little after sunset, in fine weather, a little, light, long-drawn cloud is seen, like a long very straight line. This is because the wind is leaving the air and dying down. Something analogous to this happens on the sea-shore. When the sea breaks "
+  "column": "367b"
  },
  {
   "id": "2:368a",
   "book": 2,
-  "column": "368a",
-  "greek_head": "ἓν καὶ ἐπὶ δύο ἔτη ἐπισημαίνει κατὰ τοὺς αὐτοὺς τόπους αἴτιον δὲ τοῦ μὲν μεγέθους τὸ πλῆθος τοῦ πνεύματος καὶ τῶν",
-  "english_head": "Any throbbing in the body does not cease suddenly or quickly, but by degrees according as the affection passes off. So here the agency which created the evaporation and gave it an impulse to motion clearly does not at once exhaust the whole of the material from which it forms the wind which we call an earthquake. So until the rest of this is exhausted the shocks must continue, though more gently, and they must go on until there is too little of the evaporation left to have any perceptible effect"
+  "column": "368a"
  },
  {
   "id": "2:368b",
   "book": 2,
-  "column": "368b",
-  "greek_head": "σεῖον τὴν γῆν πνεῦμα φερομένην ὑπ' ἄλλου πνεύματος τὴν θάλατταν ἀπῶσαι μὲν ὅλως μὴ δύνηται προωθοῦν δὲ καὶ",
-  "english_head": "This is what happened in Achaea. There a south wind was blowing, but outside a north wind; then there was a calm and the wind entered the earth, and then the tidal wave came on and simultaneously there was an earthquake. This was the more violent as the sea allowed no exit to the wind that had entered the earth, but shut it in. So in their struggle with one another the wind caused the earthquake, and the wave by its settling down the inundation.\nEarthquakes are local and often affect a small dis"
+  "column": "368b"
  },
  {
   "id": "2:369a",
   "book": 2,
-  "column": "369a",
-  "greek_head": "κρατουμένη ὑπὸ τῶν πνευμάτων καὶ διὰ τὸ πολὺν ἐπέχειν τόπον οὐκ εἰς ταύτην ἀλλ' ἐκ ταύτης αἱ ἀναθυμιάσεις γίγνονται",
-  "english_head": "Then, currents and not shocks are produced in the sea by the action of the winds. Again, it is so extensive that evaporations do not collect in it but issue from it, and these draw the evaporations from the earth after them. Islands near the continent really form part of it: the intervening sea is not enough to make any difference; but those in the open sea can only be shaken if the whole of the sea that surrounds them is shaken too.\nWe have now explained earthquakes, their nature and cause, and"
+  "column": "369a"
  },
  {
   "id": "2:369b",
   "book": 2,
-  "column": "369b",
-  "greek_head": "ποιεῖ τὴν βροντήν παντοδαποὶ δὲ ψόφοι διὰ τὴν ἀνωμαλίαν τε γίγνονται τῶν νεφῶν καὶ διὰ τὰς μεταξὺ κοιλίας ᾗ",
-  "english_head": "It usually happens that the exhalation that is ejected is inflamed and burns with a thin and faint fire: this is what we call lightning, where we see as it were the exhalation coloured in the act of its ejection. It comes into existence after the collision and the thunder, though we see it earlier because sight is quicker than hearing. The rowing of triremes illustrates this: the oars are going back again before the sound of their striking the water reaches us.\nHowever, there are some who mainta"
+  "column": "369b"
  },
  {
   "id": "2:370a",
   "book": 2,
-  "column": "370a",
-  "greek_head": "λόγος τήν τ' ἐναπόληψιν τί ἂν ἀλλοιότερον λέγοι τις ἢ καθάπερ ἐν τοῖς πυκνοτέροις καὶ γὰρ τὸ ὕδωρ ὑπὸ τοῦ",
-  "english_head": "Water, too, is heated by the sun and by fire: yet when it contracts again and grows cold and freezes no such ejection as they describe occurs, though it ought on their the. to take place on a proportionate scale. Boiling is due to the exhalation generated by fire: but it is impossible for it to exist in the water beforehand; and besides they call the noise 'hissing', not 'boiling'. But hissing is really boiling on a small scale: for when that which is brought into contact with moisture and is in"
+  "column": "370a"
  },
  {
   "id": "3:370b",
   "book": 3,
-  "column": "370b",
-  "greek_head": "Περὶ δὲ τῶν ὑπολοίπων εἴπωμεν ἔργων τῆς ἐκκρίσεως ταύτης τὸν ὑφηγημένον ἤδη τρόπον λέγοντες τὸ γὰρ πνεῦμα",
-  "english_head": "Let us explain the remaining operations of this secretion in the same way as we have treated the rest. When this exhalation is secreted in small and scattered quantities and frequently, and is transitory, and its constitution rare, it gives rise to thunder and lightning. But if it is secreted in a body and is denser, that is, less rare, we get a hurricane. The fact that it issues in body explains its violence: it is due to the rapidity of the secretion. Now when this secretion issues in a great "
+  "column": "370b"
  },
  {
   "id": "3:371a",
   "book": 3,
-  "column": "371a",
-  "greek_head": "τὸ ἀεὶ τὰ νέφη πυκνοῦσθαι ᾗ ἐκπίπτει τὸ θερμόν καλεῖται δ' ἂν ἀχρωμάτιστον ᾖ τοῦτο τὸ πάθος τυφῶν ἄνεμος",
-  "english_head": "This phenomenon is called a whirlwind when it is colourless; and it is a sort of undigested hurricane. There is never a whirlwind when the weather is northerly, nor a hurricane when there is snow. The reason is that all these phenomena are 'wind', and wind is a dry and warm evaporation. Now frost and cold prevail over this principle and quench it at its birth: that they do prevail is clear or there could be no snow or northerly rain, since these occur when the cold does prevail.\nSo the whirlwind"
+  "column": "371a"
  },
  {
   "id": "3:371b",
   "book": 3,
-  "column": "371b",
-  "greek_head": "καὶ εἴρηται ἐν ἑτέροις πρότερον ὅταν δ' ἀθρόον χωρῇ τότε φανερῶς δοκεῖ πνεῦμα εἶναι ὅπερ οὖν ἐν ταῖς μικραῖς",
-  "english_head": "Now that smoke is exhalation and that smoke burns is certain, and has been stated in another place before; but when the flame moves bodily, then we have ocular proof that smoke is exhalation. On this occasion what is seen in small fires appeared on a much larger scale because of the quantity of matter that was burning. The beams which were the source of the exhalation split, and a quantity of it rushed in a body from the place from which it issued forth and went up in a blaze: so that the flame "
+  "column": "371b"
  },
  {
   "id": "3:372a",
   "book": 3,
-  "column": "372a",
-  "greek_head": "χρώματα ταὐτὰ καὶ ἴσα τὸν ἀριθμὸν ἔχουσιν ἀλλήλαις ἀμυδρότερα δ' ἐν τῇ ἐκτὸς καὶ ἐξ ἐναντίας κείμενα κατὰ",
-  "english_head": "In the inner rainbow the first and largest band is red; in the outer rainbow the band that is nearest to this one and smallest is of the same colour: the other bands correspond on the same principle. These are almost the only colours which painters cannot manufacture: for there are colours which they create by mixing, but no mixing will give red, green, or purple. These are the colours of the rainbow, though between the red and the green an orange colour is often seen.\nMock suns and rods are alw"
+  "column": "372a"
  },
  {
   "id": "3:372b",
   "book": 3,
-  "column": "372b",
-  "greek_head": "τῶν ἐνόπτρων καὶ μηδεμίαν αἰσθητὴν ἔχει διαίρεσιν ἐν γὰρ τούτοις τὸ μὲν σχῆμα ἀδύνατον ἐμφαίνεσθαι δόξει",
-  "english_head": "It is impossible that the figure of a thing should be reflected in them, for if it is the mirror will be sensibly divisible since divisibility is involved in the notion of figure. But since something must be reflected in them and figure cannot be, it remains that colour alone should be reflected. The colour of a bright object sometimes appears bright in the reflection, but it sometimes, either owing to the admixture of the colour of the mirror or to weakness of sight, gives rise to the appearanc"
+  "column": "372b"
  },
  {
   "id": "3:373a",
   "book": 3,
-  "column": "373a",
-  "greek_head": "δ' ἀπὸ τῆς συνισταμένης ἀχλύος περὶ τὸν ἥλιον ἢ τὴν σελήνην ἡ ὄψις διὸ οὐκ ἐξ ἐναντίας ὥσπερ ἶρις φαίνεται",
-  "english_head": "The reflection is from the mist that forms round the sun or the moon, and that is why the halo is not seen opposite the sun like the rainbow.\nSince the reflection takes place in the same way from every point the result is necessarily a circle or a segment of a circle: for if the lines start from the same point and end at the same point and are equal, the points where they form an angle will always lie on a circle.\nLet AGB and AZB and ADB be lines each of which goes from the point A to the point "
+  "column": "373a"
  },
  {
   "id": "3:373b",
   "book": 3,
-  "column": "373b",
-  "greek_head": "τούτων δ' ἐστὶν καὶ ἀὴρ καὶ ὕδωρ γίγνεται δὲ ἀπὸ μὲν ἀέρος ὅταν τύχῃ συνιστάμενος διὰ δὲ τὴν τῆς ὄψεως",
-  "english_head": "Air must be condensed if it is to act as a mirror, though it often gives a reflection even uncondensed when the sight is weak. Such was the case of a man whose sight was faint and indistinct. He always saw an image in front of him and facing him as he walked. This was because his sight was reflected back to him. Its morbid condition made it so weak and delicate that the air close by acted as a mirror, just as distant and condensed air normally does, and his sight could not push it back. So promo"
+  "column": "373b"
  },
  {
   "id": "3:374a",
   "book": 3,
-  "column": "374a",
-  "greek_head": "διαφέρει ἡ μὲν γὰρ ἀφ' ὕδατος καὶ μέλανος γίγνεται ἀνάκλασις καὶ πόρρωθεν ἡ δ' ἐγγύθεν καὶ ἀπὸ ἀέρος",
-  "english_head": "They are both reflections, but the rainbow is distinguished by the variety of its colours. The reflection in the one case is from water which is dark and from a distance; in the other from air which is nearer and lighter in colour. White light through a dark medium or on a dark surface (it makes no difference) looks red. We know how red the flame of green wood is: this is because so much smoke is mixed with the bright white firelight: so, too, the sun appears red through smoke and mist. That is "
+  "column": "374a"
  },
  {
   "id": "3:374b",
   "book": 3,
-  "column": "374b",
-  "greek_head": "τις λεπταῖς ῥαίνῃ ῥανίσιν εἴς τι τοιοῦτον χωρίον ὃ τὴν θέσιν πρὸς τὸν ἥλιον ἐστραμμένον ἐστὶ καὶ τῇ μὲν ὁ ἥλιος ἀνέχῃ",
-  "english_head": "We get a rainbow, too, if a man sprinkles fine drops in a room turned to the sun so that the sun is shining in part of the room and throwing a shadow in the rest. Then if one man sprinkles in the room, another, standing outside, sees a rainbow where the sun's rays cease and make the shadow. Its nature and colour is like that from the oars and its cause is the same, for the sprinkling hand corresponds to the oar.\nThat the colours of the rainbow are those we described and how the other colours com"
+  "column": "374b"
  },
  {
   "id": "3:375a",
   "book": 3,
-  "column": "375a",
-  "greek_head": "ἶρις τρίχρως φαίνεται ἑκατέρα μέν ἐναντίως δέ ἡ μὲν οὖν πρώτη τὴν ἔξω φοινικῆν ἔχει ἀπὸ μεγίστης γὰρ περιφερείας",
-  "english_head": "No further change is visible, but three completes the series of colours (as we find three does in most other things), and the change into the rest is imperceptible to sense. Hence also the rainbow appears with three colours; this is true of each of the two, but in a contrary way. The outer band of the primary rainbow is red: for the largest band reflects most sight to the sun, and the outer band is largest. The middle band and the third go on the same principle. So if the principles we laid down"
+  "column": "375a"
  },
  {
   "id": "3:375b",
   "book": 3,
-  "column": "375b",
-  "greek_head": "ἀνάκλασις γίγνεται διὰ τὸ πορρώτερον ποιεῖσθαι τὴν ἀνάκλασιν ὥστ' ἐλάττων προσπίπτουσα τὰ χρώματα ποιεῖ",
-  "english_head": "So the reflection from the outer rainbow is weaker because it takes place from a greater distance and less of it reaches the sun, and so the colours seen are fainter. Their order is reversed because more reflection reaches the sun from the smaller, inner band. For that reflection is nearer to our sight which is reflected from the band which is nearest to the primary rainbow. Now the smallest band in the outer rainbow is that which is nearest, and so it will be red; and the second and the third w"
+  "column": "375b"
  },
  {
   "id": "3:376a",
   "book": 3,
-  "column": "376a",
-  "greek_head": "ΚΜΗ ἐκβληθῇ τὸ ἐπίπεδον αἱ οὖν ἀπὸ τῶν Η Κ ἀναγόμεναι γραμμαὶ ἐν τούτῳ τῷ λόγῳ οὐ συσταθήσονται τοῦ ἐφ'",
-  "english_head": "Let it be A (for it makes no difference which of the planes passing through the line HK and determined by the triangle KMH is produced). Now the lines drawn from H and K to a point on the semicircle A are in a certain ratio to one another, and no lines drawn from the same points to another point on that semicircle can have the same ratio. For since both the points H and K and the line KH are given, the line MH will be given too; consequently the ratio of the line MH to the line MK will be given "
+  "column": "376a"
  },
  {
   "id": "3:376b",
   "book": 3,
-  "column": "376b",
-  "greek_head": "ἡ τὸ Δ πρὸς τὴν Β ἀμφότεραι ὥστε ἀπὸ τῶν Η Κ σημείων οὐ μόνον πρὸς τὴν ΜΝ περιφέρειαν συσταθήσονται τὸν αὐτὸν",
-  "english_head": "But this is also the ratio of MH to MK, for the ratio both of HI to IP and of Mh to MK is the same as that of D to B. Therefore, from the points H, K there will have been drawn lines with the same ratio to one another, not only to the circumference MN but to another point as well, which is impossible. Since then D cannot bear that ratio to any line either lesser or greater than IM (the proof being in either case the same), it follows that it must stand in that ratio to MI itself. Therefore as MI"
+  "column": "376b"
  },
  {
   "id": "3:377a",
   "book": 3,
-  "column": "377a",
-  "greek_head": "τοῦ ἐφ' ᾧ τὸ Η σημείου ἐπὶ δὲ τῆς αὐτῆς ὅ τε πόλος καὶ τὸ κέντρον τοῦ κύκλου καὶ τὸ τοῦ ὁρίζοντος νῦν τὴν",
-  "english_head": "But since KH lies above the diameter AG, the centre will be at O on the line KI below the plane of the circle AG determined the position of the sun before. So the segment YX which is above the horizon will be less than a semicircle. For YXM was a semicircle and it has now been cut off by the horizon AG. So part of it, YM, will be invisible when the sun has risen above the horizon, and the segment visible will be smallest when the sun is on the meridian; for the higher H is the lower the pole and"
+  "column": "377a"
  },
  {
   "id": "3:377b",
   "book": 3,
-  "column": "377b",
-  "greek_head": "ἀχρωμάτιστα τὰ νέφη κατ' εὐθυωρίαν εἰσβλέπουσιν ἐν δὲ τῷ ὕδατι ῥάβδων μεστὸν τὸ νέφος πλὴν τότε μὲν ἐν τῷ",
-  "english_head": "The only difference is that in this latter case the colour of the cloud seems to reside in the water, but in the case of rods on the cloud itself. Rods appear when the composition of the cloud is uneven, dense in part and in part rare, and more and less watery in different parts. Then the sight is reflected to the sun: the mirrors are too small for the shape of the sun to appear, but, the bright white light of the sun, to which the sight is reflected, being seen on the uneven mirror, its colour "
+  "column": "377b"
  },
  {
   "id": "3:378a",
   "book": 3,
-  "column": "378a",
-  "greek_head": "μὲν οὖν ἐὰν γίγνηται καὶ ἐγγύς διαλύσει ὁ ἥλιος ἐὰν δὲ πόρρω ἐλάττων ἡ ὄψις οὖσα ἢ ὥστε ποιεῖν ἀνάκλασιν οὐ",
-  "english_head": "If the cloud is above the sun and close to it the sun will dissolve it; if it is above the sun but at a distance the sight is too weak for the reflection to take place, and so it will not reach the sun. But at the side of the sun, it is possible for the mirror to be at such an interval that the sun does not dissolve the cloud, and yet sight reaches it undiminished because it moves close to the earth and is not dissipated in the immensity of space. It cannot subsist below the sun because close to"
+  "column": "378a"
  },
  {
   "id": "3:378b",
   "book": 3,
-  "column": "378b",
-  "greek_head": "οἱ χυμοί οὐδὲ γὰρ οὕτω γίγνεται τὸ μὲν χαλκὸς τὸ δὲ χρυσός ἀλλὰ πρὶν γενέσθαι παγείσης τῆς ἀναθυμιάσεως ἕκαστα",
-  "english_head": "Copper and gold are not formed like that, but in every case the evaporation congealed before water was formed. Hence, they all (except gold) are affected by fire, and they possess an admixture of earth; for they still contain the dry exhalation.\nThis is the general theory of all these bodies, but we must take up each kind of them and discuss it separately."
+  "column": "378b"
  },
  {
   "id": "4:378b",
   "book": 4,
-  "column": "378b",
-  "greek_head": "Ἐπεὶ δὲ τέτταρα αἴτια διώρισται τῶν στοιχείων τούτων δὲ κατὰ συζυγίας καὶ τὰ στοιχεῖα τέτταρα συμβέβηκεν",
-  "english_head": "We have explained that the qualities that constitute the elements are four, and that their combinations determine the number of the elements to be four.\nTwo of the qualities, the hot and the cold, are active; two, the dry and the moist, passive. We can satisfy ourselves of this by looking at instances. In every case heat and cold determine, conjoin, and change things of the same kind and things of different kinds, moistening, drying, hardening, and softening them. Things dry and moist, on the ot"
+  "column": "378b"
  },
  {
   "id": "4:379a",
   "book": 4,
-  "column": "379a",
-  "greek_head": "γεννῶσι δὲ τὸ θερμὸν καὶ ψυχρὸν κρατοῦντα τῆς ὕλης ὅταν δὲ μὴ κρατῇ κατὰ μέρος μὲν μόλυνσις καὶ ἀπεψία",
-  "english_head": "But the strictest general opposite of true becoming is putrefaction. All natural destruction is on the way to it, as are, for instance, growing old or growing dry. Putrescence is the end of all these things, that is of all natural objects, except such as are destroyed by violence: you can burn, for instance, flesh, bone, or anything else, but the natural course of their destruction ends in putrefaction. Hence things that putrefy begin by being moist and end by being dry. For the moist and the dr"
+  "column": "379a"
  },
  {
   "id": "4:379b",
   "book": 4,
-  "column": "379b",
-  "greek_head": "πράγματι προϋπαρχούσης ὥστε οὐδὲν ποιεῖ μεταβάλλειν ἡ δ' αὐτὴ αἰτία καὶ τοῦ τὸ πολὺ ἧττον τοῦ ὀλίγου σήπεσθαι",
-  "english_head": "For the same reason a great quantity of a thing putrefies less readily than a little, for the greater quantity contains too much proper fire and cold for the corresponding qualities in the environment to get the better of. Hence, the sea putrefies quickly when broken up into parts, but not as a whole; and all other waters likewise. Animals too are generated in putrefying bodies, because the heat that has been secreted, being natural, organizes the particles secreted with it.\nSo much for the natu"
+  "column": "379b"
  },
  {
   "id": "4:380a",
   "book": 4,
-  "column": "380a",
-  "greek_head": "διὸ καὶ ὑγιείας σημεῖα τὰ τοιαῦτα καὶ οὖρα καὶ ὑποχωρήσεις καὶ ὅλως τὰ περιττώματα καὶ λέγεται πεπέφθαι ὅτι δηλοῖ",
-  "english_head": "Hence things like the liquid and solid excreta and ejecta in general are signs of health, and concoction is said to have taken place in them, for they show that the proper heat has got the better of the indeterminate matter.\nThings that undergo a process of concoction necessarily become thicker and hotter, for the action of heat is to make things more compact, thicker, and drier.\nThis then is the nature of concoction: but inconcoction is an imperfect state due to lack of proper heat, that is, to"
+  "column": "380a"
  },
  {
   "id": "4:380b",
   "book": 4,
-  "column": "380b",
-  "greek_head": "δὲ τοῦτο ἢ τῷ τὸ θερμὸν ὀλίγον εἶναι ἢ τῷ τὸ ὁριζόμενον πολύ διὸ καὶ λεπτοὶ οἱ χυμοὶ τῶν ὠμῶν καὶ ψυχροὶ",
-  "english_head": "This disproportion may be due either to defect of heat or to excess of the matter to be determined: hence the juice of raw things is thin, cold rather than hot, and unfit for food or drink. Rawness, like ripening, is used to denote a variety of states. Thus the liquid and solid excreta and catarrhs are called raw for the same reason, for in every case the word is applied to things because their heat has not got the mastery in them and compacted them. If we go further, brick is called raw and so "
+  "column": "380b"
  },
  {
   "id": "4:381a",
   "book": 4,
-  "column": "381a",
-  "greek_head": "ποιεῖ τέλος δὲ οὐ ταὐτὸ πᾶσιν οὔτε ἑψομένοις οὔτε πεττομένοις ἀλλὰ τοῖς μὲν πρὸς ἐδωδήν τοῖς δὲ πρὸς ῥόφησιν",
-  "english_head": "The end of the things that undergo boiling, or indeed any form of concoction, is not always the same: some are meant to be eaten, some drunk, and some are intended for other uses; for instance dyes, too, are said to be 'boiled'.\nAll those things then admit of 'boiling' which can grow denser, smaller, or heavier; also those which do that with a part of themselves and with a part do the opposite, dividing in such a way that one portion thickens while the other grows thinner, like milk when it divi"
+  "column": "381a"
  },
  {
   "id": "4:381b",
   "book": 4,
-  "column": "381b",
-  "greek_head": "θᾶττον ὥστε καὶ μᾶλλον συνιόντων οὖν τῶν ἔξω πόρων οὐ δύναται ἐκκρίνεσθαι τὸ ἐνυπάρχον ὑγρόν ἀλλ' ἐγκατακλείεται",
-  "english_head": "Where the process is artificial, broiling is more difficult than boiling, for it is difficult to heat the inside and the outside uniformly, since the parts nearer to the fire are the first to get dry and consequently get more intensely dry. In this way the outer pores contract and the moisture in the thing cannot be secreted but is shut in by the closing of the pores. Now broiling and boiling are artificial processes, but the same general kind of thing, as we said, is found in nature too. The af"
+  "column": "381b"
  },
  {
   "id": "4:382a",
   "book": 4,
-  "column": "382a",
-  "greek_head": "ἐποίησεν ἐν τοῖς φυσικοῖς ἄλφιτον ὕδατι κολλήσας καὶ διὰ τοῦτο ἐξ ἀμφοῖν ἐστιν τὸ ὡρισμένον σῶμα",
-  "english_head": "The moist is what makes the dry determinable, and each serves as a sort of glue to the other-as Empedocles said in his poem on Nature, 'glueing meal together by means of water.' Thus the determined body involves them both. Of the elements earth is especially representative of the dry, water of the moist, and therefore all determinate bodies in our world involve earth and water. Every body shows the quality of that element which predominates in it. It is because earth and water are the material e"
+  "column": "382a"
  },
  {
   "id": "4:382b",
   "book": 4,
-  "column": "382b",
-  "greek_head": "ψυχροῦ ἐπεὶ δὲ τὸ πήγνυσθαι ξηραίνεσθαί πώς ἐστιν περὶ τούτου εἴπωμεν πρῶτον τὸ δὴ πάσχον ἢ ὑγρὸν ἢ ξηρὸν ἢ ἐκ",
-  "english_head": "Water is the element characterized by the moist, earth that characterized by the dry, for these among the elements that admit the qualities moist and dry are passive. Therefore cold, too, being found in water and earth (both of which we recognize to be cold), must be reckoned rather as a passive quality. It is active only as contributing to destruction or incidentally in the manner described before; for cold is sometimes actually said to burn and to warm, but not in the same way as heat does, bu"
+  "column": "382b"
  },
  {
   "id": "4:383a",
   "book": 4,
-  "column": "383a",
-  "greek_head": "λύεται τῶν ὑπὸ θερμοῦ παγέντων ἢ ὑπὸ ψυχροῦ τὰ μὲν γὰρ ὑπὸ ξηροῦ θερμοῦ παγέντα ὑπὸ ὕδατος λύεται ὅ ἐστιν",
-  "english_head": "Bodies solidified by the dry-hot are dissolved by water, which is the moist-cold, while bodies solidified by cold are dissolved by fire, which is hot. Some things seem to be solidified by water, e.g. boiled honey, but really it is not the water but the cold in the water which effects the solidification. Aqueous bodies are not solidified by fire: for it is fire that dissolves them, and the same cause in the same relation cannot have opposite effects upon the same thing. Again, water solidifies ow"
+  "column": "383a"
  },
  {
   "id": "4:383b",
   "book": 4,
-  "column": "383b",
-  "greek_head": "ἡ σκωρία ὅταν δὲ πολλάκις πάθῃ καὶ καθαρὸς γένηται τοῦτο στόμωμα γίγνεται οὐ ποιοῦσι δὲ πολλάκις αὐτὸ διὰ τὸ",
-  "english_head": "This is how steel is made. The dross sinks to the bottom and is purged away: when this has been done often and the metal is pure we have steel. The process is not repeated often because the purification of the metal involves great waste and loss of weight. But the iron that has less dross is the better iron. The stone pyrimachus, too, melts and forms into drops and becomes fluid; after having been in a fluid state it solidifies and becomes hard again. Millstones, too, melt and become fluid: when"
+  "column": "383b"
  },
  {
   "id": "4:384a",
   "book": 4,
-  "column": "384a",
-  "greek_head": "ἀλλὰ καὶ διότι ἀέρος ἐστίν οὐ ξηραίνεται δὲ τὸ ὕδωρ οὐδ' ἕψεται ὑπὸ πυρός ὅτι οὐκ ἀτμίζει διὰ γλισχρότητα",
-  "english_head": "Those bodies which are made up of earth and water may be classified according to the preponderance of either. There is a kind of wine, for instance, which both solidifies and thickens by boiling-I mean, must. All bodies of this kind lose their water as they That it is their water may be seen from the fact that the vapour from them condenses into water when collected. So wherever some sediment is left this is of the nature of earth. Some of these bodies, as we have said, are also thickened and dr"
+  "column": "384a"
  },
  {
   "id": "4:384b",
   "book": 4,
-  "column": "384b",
-  "greek_head": "καὶ τούτων τὰ μὲν μαλακτά οἷον κέρας τὰ δὲ ἀμάλακτα οἷον κέραμος καὶ λίθος αἴτιον δ' ὅτι τἀναντία",
-  "english_head": "The reason is that opposite causes have opposite effects: consequently, if solidification is due to two causes, the cold and the dry, solution must be due to the hot and the moist, that is, to fire and to water (these being opposites): water dissolving what was solidified by fire alone, fire what was solidified by cold alone. Consequently, if any things happen to be solidified by the action of both, these are least apt to be soluble. Such a case we find where things have been heated and are then"
+  "column": "384b"
  },
  {
   "id": "4:385a",
   "book": 4,
-  "column": "385a",
-  "greek_head": "δὲ διαφέρει ἀλλήλων τοῖς τε πρὸς τὰς αἰσθήσεις ἰδίοις ἅπαντα τῷ ποιεῖν τι δύνασθαι λευκὸν γὰρ καὶ εὐῶδες",
-  "english_head": "(For a thing is white, fragrant, sonant, sweet, hot, cold in virtue of a power of acting on sense). Secondly by other more characteristic affections which express their aptitude to be affected: I mean, for instance, the aptitude to melt or solidify or bend and so forth, all these qualities, like moist and dry, being passive. These are the qualities that differentiate bone, flesh, sinew, wood, bark, stone and all other homogeneous natural bodies. Let us begin by enumerating these qualities expres"
+  "column": "385a"
  },
  {
   "id": "4:385b",
   "book": 4,
-  "column": "385b",
-  "greek_head": "ἄτηκτα ἄπηκτα δὲ ὅσα μὴ ἔχει ὑγρότητα ὑδατώδη μηδὲ ὕδατός ἐστιν ἀλλὰ πλέον θερμοῦ καὶ γῆς οἷον μέλι",
-  "english_head": "The bodies which do not admit of solidification are those which contain no aqueous moisture and are not watery, but in which heat and earth preponderate, like honey and must (for these are in a sort of state of effervescence), and those which do possess some water but have a preponderance of air, like oil and quicksilver, and all viscous substances such as pitch and birdlime. Those bodies admit of softening which are not (like ice) made up of water, but in which earth predominates. All their moi"
+  "column": "385b"
  },
  {
   "id": "4:386a",
   "book": 4,
-  "column": "386a",
-  "greek_head": "κατακαμπτόμενον κάμπτεται ἡ μὲν οὖν εἰς κυρτότητα ἢ κοιλότητα κίνησις τοῦ μήκους σῳζομένου κάμψις ἐστίν εἰ",
-  "english_head": "So bending is defined as motion to the convex or the concave without a change of length. For if we added 'or to the straight', we should have a thing bent and straight at once, and it is impossible for that which is straight to be bent. And if all bending is a bending back or a bending down, the former being a change to the convex, the latter to the concave, a motion that leads to the straight cannot be called bending, but bending and straightening are two different things. These, then, are the "
+  "column": "386a"
  },
  {
   "id": "4:386b",
   "book": 4,
-  "column": "386b",
-  "greek_head": "ἀπὸ τῆς ἅψεως πληγὴ δέ ὅταν ἀπὸ τῆς φορᾶς πιέζεται δὲ ὅσα πόρους ἔχει κενοὺς συγγενοῦς σώματος καὶ",
-  "english_head": "(We speak of pressure when there is movement and the motor remains in contact with the thing moved, of impact when the movement is due to the local movement of the motor.) Those bodies are subject to squeezing which have empty pores-empty, that is, of the stuff of which the body itself consists-and that can sink upon the void spaces within them, or rather upon their pores. For sometimes the pores upon which a body sinks in are not empty (a wet sponge, for instance, has its pores full). But the p"
+  "column": "386b"
  },
  {
   "id": "4:387a",
   "book": 4,
-  "column": "387a",
-  "greek_head": "ἀλλ' ὅσα μήτε ὑγρά ἐστιν μήτε θλαστὰ μήτε θραυστά τοιαῦτα δ' ἐστὶν ὅσα κατὰ μῆκος ἔχει τοὺς πόρους καθ' οὓς",
-  "english_head": "Such are the bodies that have the pores along which they cohere lengthwise and not crosswise.\nThose hard or soft solids are apt to be cut which do not necessarily either split in advance of the instrument or break into minute fragments when they are being divided. Those that necessarily do so and liquids cannot be cut. Some things can be both split and cut, like wood, though generally it is lengthwise that a thing can be split and crosswise that it can be cut. For, a body being divided into many"
+  "column": "387a"
  },
  {
   "id": "4:387b",
   "book": 4,
-  "column": "387b",
-  "greek_head": "καπνός λέγω γὰρ καὶ ὀστᾶ καὶ τρίχας καὶ πᾶν τὸ τοιοῦτον ἐν ταὐτῷ οὐ γὰρ κεῖται ὄνομα κοινόν ἀλλὰ",
-  "english_head": "For there is no name common to all the objects that I mean, but, for all that, these things are all in the same class by analogy. Compare what Empedocles says: They are one and the same, hair and leaves and the thick wings of birds and scales that grow on stout limbs.) The fumes of fat are a sooty smoke and those of oily substances a greasy steam. Oil does not boil away or thicken by evaporation because it does not give off vapour but fumes. Water on the other hand does not give off fumes, but v"
+  "column": "387b"
  },
  {
   "id": "4:388a",
   "book": 4,
-  "column": "388a",
-  "greek_head": "πυρί τοῦτ' οὖν θερμὸν ἂν γένηται τὸ ξηρόν πῦρ γίγνεται διὰ τοῦτο ἡ φλὸξ πνεῦμα ἢ καπνὸς καόμενός ἐστιν ξύλων",
-  "english_head": "This is why flame is burning smoke or dry exhalation. The fumes of wood are smoke, those of wax and frankincense and such-like, and pitch and whatever contains pitch or such-like are sooty smoke, while the fumes of oil and oily substances are a greasy steam; so are those of all substances which are not at all combustible by themselves because there is too little of the dry in them (the dry being the means by which the transition to fire is effected), but burn very readily in conjunction with som"
+  "column": "388a"
  },
  {
   "id": "4:388b",
   "book": 4,
-  "column": "388b",
-  "greek_head": "γὰρ καὶ ἐξατμισθείη ἄν καὶ παχύνεται ὥσπερ ὁ νέος αἴτιον δ' ὅτι οὔτε ἐν ἑνὶ εἴδει λέγεται ὁ οἶνος καὶ ὅτι ἄλλος",
-  "english_head": "New wine is more earthy than old, and for this reason it is more apt to be thickened by heat and less apt to be congealed by cold. For it contains much heat and a great proportion of earth, as in Arcadia, where it is so dried up in its skins by the smoke that you scrape it to drink. If all wine has some sediment in it then it will belong to earth or to water according to the quantity of the sediment it possesses.) The liquids that are thickened by cold are of the nature of earth; those that are "
+  "column": "388b"
  },
  {
   "id": "4:389a",
   "book": 4,
-  "column": "389a",
-  "greek_head": "δὲ καὶ κοινά οἷον κηρός ὅσα δὲ ὑπὸ ὕδατος ταῦτα δὲ γῆς ὅσα δὲ μηδ' ὑφ' ἑτέρου ταῦτα ἢ γῆς ἢ ἀμφοῖν εἰ",
-  "english_head": "But those that are melted by water are of earth. Those that are not melted either by fire or water are of earth, or of earth and water.\nSince, then, all bodies are either liquid or solid, and since the things that display the affections we have enumerated belong to these two classes and there is nothing intermediate, it follows that we have given a complete account of the criteria for distinguishing whether a body consists of earth or of water or of more elements than one, and whether fire was t"
+  "column": "389a"
  },
  {
   "id": "4:389b",
   "book": 4,
-  "column": "389b",
-  "greek_head": "τοῦ στοιχείου ψυχρὰ μᾶλλόν ἐστιν ἐὰν μὴ ἔχῃ ἀλλοτρίαν θερμότητα οἷον τὸ ζέον ὕδωρ ἢ τὸ διὰ τέφρας ἠθημένον",
-  "english_head": "Consequently cold must predominate in every body that consists of one or other of the elements simply, unless such a body contains foreign heat as water does when it boils or when it has been strained through ashes. This latter, too, has acquired heat from the ashes, for everything that has been burnt contains more or less heat. This explains the generation of animals in putrefying bodies: the putrefying body contains the heat which destroyed its proper heat.\nBodies made up of earth and water ar"
+  "column": "389b"
  },
  {
   "id": "4:390a",
   "book": 4,
-  "column": "390a",
-  "greek_head": "λίθινοι λεχθείησαν οἷον γὰρ καὶ ταῦτα ὄργανα ἄττα ἔοικεν εἶναι ἧττον δ' ἐπὶ σαρκὸς καὶ ὀστοῦ τὰ τοιαῦτα δῆλα",
-  "english_head": "And so the hand of a dead man, too, will in the same way be a hand in name only, just as stone flutes might still be called flutes: for these members, too, are instruments of a kind. But in the case of flesh and bone the fact is not so clear to see, and in that of fire and water even less. For the end is least obvious there where matter predominates most. If you take the extremes, matter is pure matter and the essence is pure definition; but the bodies intermediate between the two are matter or "
+  "column": "390a"
  },
  {
   "id": "4:390b",
   "book": 4,
-  "column": "390b",
-  "greek_head": "τὴν δ' αἴσθησιν οὐ φαίνονται παλαιούμενοι σφόδρα καὶ τὰ ἐκ τοῦ γάλακτος πηγνύμενα τὰ μὲν οὖν τοιαῦτα",
-  "english_head": "So ancient corpses suddenly become ashes in the grave and very old fruit preserves its shape only but not its taste: so, too, with the solids that form from milk.\nNow heat and cold and the motions they set up as the bodies are solidified by the hot and the cold are sufficient to form all such parts as are the homogeneous bodies, flesh, bone, hair, sinew, and the rest. For they are all of them differentiated by the various qualities enumerated above, tension, tractility, comminuibility, hardness,"
+  "column": "390b"
  }
 ]

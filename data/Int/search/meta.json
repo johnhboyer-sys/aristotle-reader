@@ -2,127 +2,91 @@
  {
   "id": "1:16a",
   "book": 1,
-  "column": "16a",
-  "greek_head": "Πρῶτον δεῖ θέσθαι τί ὄνομα καὶ τί ῥῆμα ἔπειτα τί ἐστιν ἀπόφασις καὶ κατάφασις καὶ ἀπόφανσις καὶ λόγος",
-  "english_head": "First we must define the terms 'noun' and 'verb', then the terms 'denial' and 'affirmation', then 'proposition' and 'sentence.' Spoken words are the symbols of mental experience and written words are the symbols of spoken words. Just as all men have not the same writing, so all men have not the same speech sounds, but the mental experiences, which these directly symbolize, are the same for all, as also are those things of which our experiences are the images. This matter has, however, been discu"
+  "column": "16a"
  },
  {
   "id": "1:16b",
   "book": 1,
-  "column": "16b",
-  "greek_head": "τοιαῦτα οὐκ ὀνόματα ἀλλὰ πτώσεις ὀνόματος λόγος δέ ἐστιν αὐτοῦ τὰ μὲν ἄλλα κατὰ τὰ αὐτά ὅτι δὲ μετὰ τοῦ",
-  "english_head": "The definition of these cases of a noun is in other respects the same as that of the noun proper, but, when coupled with 'is', 'was', or will be', they do not, as they are, form a proposition either true or false, and this the noun proper always does, under these conditions. Take the words 'of Philo is' or 'of or 'of Philo is not'; these words do not, as they stand, form either a true or a false proposition. A verb is that which, in addition to its proper meaning, carries with it the notion of t"
+  "column": "16b"
  },
  {
   "id": "1:17a",
   "book": 1,
-  "column": "17a",
-  "greek_head": "σημαντικός οὐχ ὡς ὄργανον δέ ἀλλ' ὥσπερ εἴρηται κατὰ συνθήκην ἀποφαντικὸς δὲ οὐ πᾶς ἀλλ' ἐν ᾧ τὸ ἀληθεύειν",
-  "english_head": "Every sentence has meaning, not as being the natural means by which a physical faculty is realized, but, as we have said, by convention. Yet every sentence is not a proposition; only such are propositions as have in them either truth or falsity. Thus a prayer is a sentence, but is neither true nor false. Let us therefore dismiss all other types of sentence but the proposition, for this last concerns our present inquiry, whereas the investigation of the others belongs rather to the study of rheto"
+  "column": "17a"
  },
  {
   "id": "1:17b",
   "book": 1,
-  "column": "17b",
-  "greek_head": "τῶν καθόλου Καλλίας δὲ τῶν καθ' ἕκαστον ἀνάγκη δ' ἀποφαίνεσθαι ὡς ὑπάρχει τι ἢ μή ὁτὲ μὲν τῶν καθόλου",
-  "english_head": "Our propositions necessarily sometimes concern a universal subject, sometimes an individual. If, then, a man states a positive and a negative proposition of universal character with regard to a universal, these two propositions are 'contrary'. By the expression 'a proposition of universal character with regard to a universal', such propositions as 'every man is white', 'no man is white' are meant. When, on the other hand, the positive and negative propositions, though they have regard to a unive"
+  "column": "17b"
  },
  {
   "id": "1:18a",
   "book": 1,
-  "column": "18a",
-  "greek_head": "τινος ἢ ἀπὸ τῶν καθόλου τινός ἢ ὡς καθόλου ἢ ὡς μὴ καθόλου λέγω δὲ οἷον ἔστι Σωκράτης λευκός οὐκ ἔστι Σωκράτης λευκός",
-  "english_head": "If anything else be negatively predicated of the subject or if anything else be the subject though the predicate remain the same, the denial will not be the denial proper to that affirmation, but on that is distinct. The denial proper to the affirmation 'every man is white' is 'not every man is white'; that proper to the affirmation 'some men are white' is 'no man is white', while that proper to the affirmation 'man is white' is 'man is not white'. We have shown further that a single denial is c"
+  "column": "18a"
  },
  {
   "id": "1:18b",
   "book": 1,
-  "column": "18b",
-  "greek_head": "λευκόν ἐστιν ἀνάγκη εἶναι λευκὸν ἢ οὐ λευκόν καὶ εἰ ἔστι λευκὸν ἢ οὐ λευκόν ἀληθὲς ἦν φάναι ἢ ἀποφάναι καὶ",
-  "english_head": "Thus, if it is true to say that a thing is white, it must necessarily be white; if the reverse proposition is true, it will of necessity not be white. Again, if it is white, the proposition stating that it is white was true; if it is not white, the proposition to the opposite effect was true. And if it is not white, the man who states that it is making a false statement; and if the man who states that it is white is making a false statement, it follows that it is not white. It may therefore be a"
+  "column": "18b"
  },
  {
   "id": "1:19a",
   "book": 1,
-  "column": "19a",
-  "greek_head": "μυριοστὸν ἔτος μᾶλλον ἢ ἐν ὁποσῳοῦν χρόνῳ ὥστ' εἰ ἐν ἅπαντι τῷ χρόνῳ οὕτως εἶχεν ὥστε τὸ ἕτερον ἀληθεύεσθαι ἀναγκαῖον",
-  "english_head": "Further, it makes no difference whether people have or have not actually made the contradictory statements. For it is manifest that the circumstances are not influenced by the fact of an affirmation or denial on the part of anyone. For events will not take place or fail to take place because it was stated that they would or would not take place, nor is this any more the case if the prediction dates back ten thousand years or any other space of time. Wherefore, if through all time the nature of t"
+  "column": "19a"
  },
  {
   "id": "1:19b",
   "book": 1,
-  "column": "19b",
-  "greek_head": "ὅτι οὐκ ἀνάγκη πάσης καταφάσεως καὶ ἀποφάσεως τῶν ἀντικειμένων τὴν μὲν ἀληθῆ τὴν δὲ ψευδῆ εἶναι οὐ γὰρ ὥσπερ",
-  "english_head": "It is therefore plain that it is not necessary that of an affirmation and a denial one should be true and the other false. For in the case of that which exists potentially, but not actually, the rule which applies to that which exists actually does not hold good. The case is rather as we have indicated. An affirmation is the statement of a fact with regard to a subject, and this subject is either a noun or that which has no name; the subject and predicate in an affirmation must each denote a sin"
+  "column": "19b"
  },
  {
   "id": "1:20a",
   "book": 1,
-  "column": "20a",
-  "greek_head": "οὐκ ἄνθρωπος πλείους δὲ τούτων οὐκ ἔσονται ἀντιθέσεις αὗται δὲ χωρὶς ἐκείνων αὐταὶ καθ' αὑτάς εἰσιν ὡς ὀνόματι τῷ",
-  "english_head": "Not-man is not not-just Not-man is not-just This is an exhaustive enumeration of all the pairs of opposite propositions that can possibly be framed. This last group should remain distinct from those which preceded it, since it employs as its subject the expression 'not-man'. When the verb 'is' does not fit the structure of the sentence (for instance, when the verbs 'walks', 'enjoys health' are used), that scheme applies, which applied when the word 'is' was added. Thus we have the propositions: "
+  "column": "20a"
  },
  {
   "id": "1:20b",
   "book": 1,
-  "column": "20b",
-  "greek_head": "Μετατιθέμενα δὲ τὰ ὀνόματα καὶ τὰ ῥήματα ταὐτὸν σημαίνει οἷον ἔστι λευκὸς ἄνθρωπος ἔστιν ἄνθρωπος λευκός",
-  "english_head": "Thus we say 'man is white' and 'white is man'. If these were not equivalent, there would be more than one contradictory to the same proposition, whereas it has been demonstrated' that each proposition has one proper contradictory and one only. For of the proposition 'man is white' the appropriate contradictory is 'man is not white', and of the proposition 'white is man', if its meaning be different, the contradictory will either be 'white is not not-man' or 'white is not man'. Now the former of "
+  "column": "20b"
  },
  {
   "id": "1:21a",
   "book": 1,
-  "column": "21a",
-  "greek_head": "μουσικὸς λευκὸς βαδίζων καὶ ταῦτα πολλάκις πεπλεγμένα ἔτι εἰ ὁ Σωκράτης Σωκράτης καὶ ἄνθρωπος καὶ Σωκράτης",
-  "english_head": "Similarly we may say that Socrates is Socrates and a man, and that therefore he is the man Socrates, or that Socrates is a man and a biped, and that therefore he is a two-footed man. Thus it is manifest that if man states unconditionally that predicates can always be combined, many absurd consequences ensue. We will now explain what ought to be laid down. Those predicates, and terms forming the subject of predication, which are accidental either to the same subject or to one another, do not comb"
+  "column": "21a"
  },
  {
   "id": "1:21b",
   "book": 1,
-  "column": "21b",
-  "greek_head": "τοῦ εἶναι ἄνθρωπον ἀπόφασις τὸ μὴ εἶναι ἄνθρωπον οὐ τὸ εἶναι μὴ ἄνθρωπον καὶ τοῦ εἶναι λευκὸν ἄνθρωπον τὸ μὴ εἶναι λευκὸν",
-  "english_head": "For otherwise, since either the positive or the negative proposition is true of any subject, it will turn out true to say that a piece of wood is a man that is not white. Now if this is the case, in those propositions which do not contain the verb 'to be' the verb which takes its place will exercise the same function. Thus the contradictory of 'man walks' is 'man does not walk', not 'not-man walks'; for to say 'man walks' merely equivalent to saying 'man is walking'. If then this rule is univers"
+  "column": "21b"
  },
  {
   "id": "1:22a",
   "book": 1,
-  "column": "22a",
-  "greek_head": "μὴ δυνατὸν εἶναι οὐδέποτε ἅμα ἀντίκεινται γάρ οὐδέ γε τὸ δυνατὸν μὴ εἶναι καὶ οὐ δυνατὸν μὴ εἶναι οὐδέποτε ἅμα",
-  "english_head": "The contradictory of 'it is necessary that it should be', is not 'it is necessary that it should not be,' but 'it is not necessary that it should be', and the contradictory of 'it is necessary that it should not be' is 'it is not necessary that it should not be'. Again, the contradictory of 'it is impossible that it should be' is not 'it is impossible that it should not be' but 'it is not impossible that it should be', and the contradictory of 'it is impossible that it should not be' is 'it is n"
+  "column": "22a"
  },
  {
   "id": "1:22b",
   "book": 1,
-  "column": "22b",
-  "greek_head": "ἀπόφασις τοῦ ἀνάγκη μὴ εἶναι τὸ οὐκ ἀνάγκη εἶναι ἐνδέχεται γὰρ ἀληθεύεσθαι ἐπὶ τοῦ αὐτοῦ ἀμφοτέρας τὸ γὰρ ἀναγκαῖον",
-  "english_head": "The reason why the propositions predicating necessity do not follow in the same kind of sequence as the rest, lies in the fact that the proposition 'it is impossible' is equivalent, when used with a contrary subject, to the proposition 'it is necessary'. For when it is impossible that a thing should be, it is necessary, not that it should be, but that it should not be, and when it is impossible that a thing should not be, it is necessary that it should be. Thus, if the propositions predicating i"
+  "column": "22b"
  },
  {
   "id": "1:23a",
   "book": 1,
-  "column": "23a",
-  "greek_head": "δυνάμεις αἱ αὐταὶ πλειόνων καὶ τῶν ἐναντίων αἱ δ' ἄλογοι οὐ πᾶσαι ἀλλ' ὥσπερ εἴρηται τὸ πῦρ οὐ δυνατὸν θερμαίνειν",
-  "english_head": "Those potentialities which involve a rational principle are potentialities of more than one result, that is, of contrary results; those that are irrational are not always thus constituted. As I have said, fire cannot both heat and not heat, neither has anything that is always actual any twofold potentiality. Yet some even of those potentialities which are irrational admit of opposite results. However, thus much has been said to emphasize the truth that it is not every potentiality which admits o"
+  "column": "23a"
  },
  {
   "id": "1:23b",
   "book": 1,
-  "column": "23b",
-  "greek_head": "ὅτι οὐκ ἀγαθὸν ψευδής ἑτέρα δὲ ὅτι κακόν ποτέρα δὴ τούτων ἐναντία τῇ ἀληθεῖ καὶ εἰ ἔστι μία κατὰ ποτέραν ἐναντία",
-  "english_head": "Which of these two is contrary to the true? And if they are one and the same, which mode of expression forms the contrary? It is an error to suppose that judgements are to be defined as contrary in virtue of the fact that they have contrary subjects; for the judgement concerning a good thing, that it is good, and that concerning a bad thing, that it is bad, may be one and the same, and whether they are so or not, they both represent the truth. Yet the subjects here are contrary. But judgements a"
+  "column": "23b"
  },
  {
   "id": "1:24a",
   "book": 1,
-  "column": "24a",
-  "greek_head": "ὅτι οὐκ ἀγαθὸν ἐναντία ἡ τοῦ μὴ ἀγαθοῦ ὅτι ἀγαθόν ψευδής ἀληθὴς γὰρ αὕτη ὥστε καὶ ἡ τοῦ ἀγαθοῦ ὅτι οὐκ ἀγαθὸν τῇ",
-  "english_head": "It remains, therefore, that of the judgement concerning that which is not good, that it is not good, the contrary judgement is that it is good; for this is false. In the same way, moreover, the judgement concerning that which is good, that it is not good, is the contrary of the judgement that it is good. It is evident that it will make no difference if we universalize the positive judgement, for the universal negative judgement will form the contrary. For instance, the contrary of the judgement "
+  "column": "24a"
  },
  {
   "id": "1:24b",
   "book": 1,
-  "column": "24b",
-  "greek_head": "ἀγαθοῦ Ὥστ' εἴπερ ἐπὶ δόξης οὕτως ἔχει εἰσὶ δὲ αἱ ἐν τῇ φωνῇ καταφάσεις καὶ ἀποφάσεις σύμβολα τῶν ἐν τῇ ψυχῇ δῆλον",
-  "english_head": "If therefore this is the rule with judgements, and if spoken affirmations and denials are judgements expressed in words, it is plain that the universal denial is the contrary of the affirmation about the same subject. Thus the propositions 'everything good is good', 'every man is good', have for their contraries the propositions 'nothing good is good', 'no man is good'. The contradictory propositions, on the other hand, are 'not everything good is good', 'not every man is good'. It is evident, a"
+  "column": "24b"
  }
 ]

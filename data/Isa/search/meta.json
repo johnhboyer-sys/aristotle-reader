@@ -2,155 +2,111 @@
  {
   "id": "1:1a",
   "book": 1,
-  "column": "1a",
-  "greek_head": "Ὄντος ἀναγκαίου Χρυσαόριε καὶ εἰς τὴν τῶν παρὰ Ἀριστοτέλει κατηγοριῶν διδασκαλίαν τοῦ γνῶναι τί γένος καὶ τί διαφορὰ τί τε εἶδος καὶ τί",
-  "english_head": "[[s1]] [^1]Since it is necessary, Chrysaorius, both to the doctrine of Aristotle's Categories, to know what genus, difference, species, property, and accident are, and also to the assignments of definitions, in short, since the investigation of these is useful for those things which belong to division and demonstration,[^2] I will endeavour by a summary briefly to discuss to you, as in the form of introduction, what on this subject has been delivered by the ancients, abstaining, indeed, from mor"
+  "column": "1a"
  },
  {
   "id": "1:2a",
   "book": 1,
-  "column": "2a",
-  "greek_head": "ἀρχὴ εἴτε ἀπὸ τοῦ τεκόντος εἴτε ἀπὸ τοῦ τόπου ἐν ᾧ τις γέγονεν οὕτως γὰρ Ὀρέστην μὲν ἀπὸ Ταντάλου φαμὲν ἔχειν τὸ γένος Ὕλλον δὲ",
-  "english_head": "[[s4]] Again, after another manner also, the principle of the generation of every one is called genus, whether from the generator or from the place in which a person is generated, [[s5]] for thus we say that Orestes had his genus from Tantalus, Hyllus from Hercules, and again, that Pindar was by genus a Theban, but Plato an Athenian, for country is a certain principle of each man's generation, in the same manner as a father. Still, this signification appears to be most ready,[^7] for they are ca"
+  "column": "2a"
  },
  {
   "id": "1:3a",
   "book": 1,
-  "column": "3a",
-  "greek_head": "καὶ τῷ εἴδει ἀλλήλων ἀλλ' οὐχὶ τῷ ἀριθμῷ μόνον τοῦ δ' αὖ ἰδίου διαφέρει τὸ γένος ὅτι τὸ μὲν ἴδιον καθ' ἑνὸς μόνου εἴδους οὗ ἐστιν ἴδιον",
-  "english_head": "[[s10]] From property, moreover, genus differs because property is predicated of one species alone of which it is the property, and of the individuals under the species, as \"risible\" of man alone, and of men particularly, for genus is not predicated of one species, but of many things, which are also different in species. [[s11]] Besides, genus differs from difference and from accidents in common, because though differences and accidents in common are predicated of many things, different also in "
+  "column": "3a"
  },
  {
   "id": "1:4a",
   "book": 1,
-  "column": "4a",
-  "greek_head": "πρῶτον μὲν εἶδος ἄξιον τυραννίδος λέγεται δὲ εἶδος καὶ τὸ ὑπὸ τὸ ἀποδοθὲν γένος καθὸ εἰώθαμεν λέγειν τὸν",
-  "english_head": "Moreover, because it is predicated in reply to what a thing is, it is distinguished from differences and from accidents commonly, which are severally predicated of what they are predicated, not in reply to what a thing is, but what kind of a thing it is, or in what manner it subsists: the description therefore of the conception of genus, which has been enunciated, contains nothing superfluous, nothing deficient.[^9] [[s13]] Species indeed is predicated of every form, according to which it is sai"
+  "column": "4a"
  },
  {
   "id": "1:5a",
   "book": 1,
-  "column": "5a",
-  "greek_head": "ἂν εἴη μόνον οὐκέτι δὲ καὶ γένος ὥσπερ οὖν ἡ οὐσία ἀνωτάτω οὖσα τῷ μηδὲν εἶναι πρὸ αὐτῆς γένος ἦν τὸ γενικώτατον οὕτως καὶ ὁ ἄνθρωπος",
-  "english_head": "As then, substance being in the highest place, is most generic, from there being no genus prior to it, so also man being a species, after which there is no other species, nor any thing capable of division into species, but individuals, (for Socrates, Plato, Alcibiades, and this white thing, I call individual,) will be species alone, and the last species, and as we say the most specific. [[s16]] Yet the media will be the species of such as are before them, but the genera of things after them, so "
+  "column": "5a"
  },
  {
   "id": "1:6a",
   "book": 1,
-  "column": "6a",
-  "greek_head": "τοῦ γενικωτάτου ἀνιόντα γένη τε λέγεται καὶ εἴδη καὶ ὑπάλληλα γένη ὡς ὁ Ἀγαμέμνων Ἀτρείδης καὶ Πελοπίδης καὶ Τανταλίδης καὶ τὸ τελευταῖον",
-  "english_head": "Thus, Agamemnon is Atrides, Pelopides, Tantalides, and lastly, (the son) of Jupiter, yet in genealogies they refer generally to one origin, for instance, to Jupiter; but this is not the case in genera and species, since being is not the common genus of all things, nor, as Aristotle says, are all things of the same genus with respect to one summum genus. Still, let the first ten genera be arranged, as in the Categories, as ten first principles, and even if a person should call all things beings, "
+  "column": "6a"
  },
  {
   "id": "1:7a",
   "book": 1,
-  "column": "7a",
-  "greek_head": "καὶ τοῦ μὲν γένους ἑνὸς ὄντος τῶν δὲ εἰδῶν πλειόνων ἀεὶ γὰρ εἰς πλείω εἴδη ἡ τομὴ τοῦ γένους τὸ μὲν γένος ἀεὶ τοῦ εἴδους κατηγορεῖται καὶ",
-  "english_head": "[[s21]] In descending then, to the most specific, it is necessary to proceed by division through multitude, but in ascending to the most generic, we must collect multitude into one, for species is collective of the many into one nature, and genus yet more so; but particulars and singulars, on the contrary, always divide the one into multitude, for by the participation of species, many men become one man; but in particulars and singulars, the one, and what is common, becomes many; for the singula"
+  "column": "7a"
  },
  {
   "id": "1:8a",
   "book": 1,
-  "column": "8a",
-  "greek_head": "γένους ὅλον γάρ τι τὸ γένος τὸ δὲ ἄτομον μέρος τὸ δὲ εἶδος καὶ ὅλον καὶ μέρος ἀλλὰ μέρος μὲν ἄλλου ὅλον δὲ οὐκ ἄλλου ἀλλ' ἐν ἄλλοις ἐν",
-  "english_head": "[[s23]] Wherefore the individual is comprehended in the species, but the species by the genus, for genus is a certain whole, but the individual is a part, and species both a whole and a part; part indeed of something else, but a whole not of another, but in other things, for the whole is in its parts.[^17] Concerning genus then, and species, we have shown what is the most generic, and the most specific, also what the same things are genera and species, what also are individuals, and in how many "
+  "column": "8a"
  },
  {
   "id": "1:9a",
   "book": 1,
-  "column": "9a",
-  "greek_head": "ἄλλο ἐποίησεν ἡ δὲ τοῦ κινεῖσθαι ἀλλοῖον μόνον παρὰ τὸ ἠρεμοῦν ἐποίησεν ὥστε ἡ μὲν ἄλλο ἡ δὲ ἀλλοῖον μόνον ἐποίησεν κατὰ μὲν",
-  "english_head": "Hence, those which render it another thing are called specific, but those, which make it different in quality, are simply(called) differences, for the difference of rational being added to animal, makes it another thing, (and makes a species of animal, ) but difference of being moved makes it different in quality only from what is at rest, so that the one renders it another thing, but the other only of another quality.[^19] [[s26]] According then, to the differences which produce another thing d"
+  "column": "9a"
  },
  {
   "id": "1:10a",
   "book": 1,
-  "column": "10a",
-  "greek_head": "αὑτὰς τῶν δὲ κατὰ συμβεβηκός πάλιν τῶν καθ' αὑτὰς διαφορῶν αἱ μέν εἰσι καθ' ἃς διαιρούμεθα τὰ γένη εἰς τὰ εἴδη αἱ δὲ καθ' ἃς τὰ διαιρεθέντα",
-  "english_head": "Since then, there are three species of difference considered, [[s29]] some indeed separable, but others inseparable, again, of the inseparable, some are per se, but others accidental, moreover of differences per se, some are those according to which we divide genera into species, but others according to which the things divided become specific:—thus of all such differences per se of animal as these, animated and sensitive, rational and irrational, mortal and immortal, the difference of animated "
+  "column": "10a"
  },
  {
   "id": "1:11a",
   "book": 1,
-  "column": "11a",
-  "greek_head": "γένους ὁ γὰρ ἄνθρωπος τοῦ ζῴου πλέον ἔχει τὸ λογικὸν καὶ τὸ θνητόν τὸ γὰρ ζῷον οὔτε οὐδὲν τούτων ἐστίν ἐπεὶ πόθεν ἂν τὰ εἴδη σχοῖεν διαφοράς",
-  "english_head": "g. man exceeds animal in being rational and mortal, for animal is neither any one of these, (since whence would species have differences?) nor has it all the opposite differences, (since otherwise the same thing would at the same time have opposites,) but (as they allege) it contains all the differences which are under it in capacity, but not one of them in energy, and so neither is any thing produced from non-entities, nor will opposites at the same time subsist about the same thing.\n[[s32]] Ag"
+  "column": "11a"
  },
  {
   "id": "1:12a",
   "book": 1,
-  "column": "12a",
-  "greek_head": "διέστησεν ἡμᾶς ἀπ' ἐκείνων προσεξεργαζόμενοι δὲ τὰ περὶ τῆς διαφορᾶς μὴ τὸ τυχόν φασι τῶν χωριζόντων τὰ ὑπὸ τὸ αὐτὸ γένος εἶναι τὴν",
-  "english_head": "[[s35]] They however who more nicely discuss what pertains to difference, say that it is not any casual thing dividing those under the same genus, but such as contributes to the essence, and to the definition of the essence of a thing, and which is part of the thing. For to be naturally adapted to sail is not the difference, though it is the property of man, since we may say that of animals, some are naturally adapted to sail, but others not, separating man from other animals; yet a natural abil"
+  "column": "12a"
  },
  {
   "id": "1:13a",
   "book": 1,
-  "column": "13a",
-  "greek_head": "εἶναι ἀχωρίστως τῷ κόρακι καὶ τῷ Αἰθίοπι συμβέβηκεν δύναται δὲ ἐπινοηθῆναι καὶ κόραξ λευκὸς καὶ Αἰθίοψ ἀποβαλὼν τὴν χροιὰν χωρὶς φθορᾶς",
-  "english_head": "g. to sleep is a separable accident, but to be black happens inseparably to a crow and an Ethiopian; we may possibly indeed conceive a white crow, and an Ethiopian casting his colour, without destruction of the subject.[^26] [[s38]] They also define it thus; accident is that which may be present and not present to the same thing; also that which is neither genus, nor difference, nor species, nor property, yet is always inherent in a subject. [[s39]] Having discussed all that were proposed, I mea"
+  "column": "13a"
  },
  {
   "id": "1:14a",
   "book": 1,
-  "column": "14a",
-  "greek_head": "ἡ διαφορὰ εἴδη εἰ καὶ μὴ πάντα ὅσα τὰ γένη τὸ γὰρ λογικὸν εἰ καὶ μὴ περιέχει τὰ ἄλογα ὥσπερ τὸ ζῷον ἀλλὰ περιέχει ἄνθρωπον καὶ θεόν",
-  "english_head": "Whatever things also are predicated of genus as genus, are predicated of the species under it. and whatever are predicated of difference as difference, will be also of the species formed from it. For animal being a genus, substance is predicated of it as of a genus, also animated, and sensible, but these are predicated of all the species under animal, as far as to individuals. As moreover, rational is difference, the use of reason is predicated of it, as of difference, yet the use of reason will"
+  "column": "14a"
  },
  {
   "id": "1:15a",
   "book": 1,
-  "column": "15a",
-  "greek_head": "τὸ ἄλογον αἱ δὲ διαφοραὶ οὐκέτι συναναιροῦσι τὸ γένος κἂν γὰρ πᾶσαι ἀναιρεθῶσιν οὐσία ἔμψυχος αἰσθητικὴ ἐπινοεῖται ἥτις ἦν τὸ ζῷον ἔτι τὸ",
-  "english_head": "For animal being subverted, rational and irrational are co-subverted, but differences no longer co-subvert genus, for even if all of them should be subverted, yet we may form a conception of animated, sensible substance, which is animal. Yet more, genus is predicated in reference to what a thing is, but difference in reference to what kind of a thing it is, as was observed before; besides there is one genus according to every species; e. g. of man, animal (is the genus), but there are many diffe"
+  "column": "15a"
  },
  {
   "id": "1:16a",
   "book": 1,
-  "column": "16a",
-  "greek_head": "Γένους δὲ καὶ ἰδίου κοινὸν μὲν τὸ ἕπεσθαι τοῖς εἴδεσιν εἰ γὰρ ἄνθρωπος ζῷον καὶ εἰ ἄνθρωπος γελαστικόν καὶ τὸ ἐπίσης κατηγορεῖσθαι",
-  "english_head": "[[s43]] Both to genus and to property it is common to follow species, for if any thing be man, it is animal, and if any thing be man, it is risible. Likewise to genus, to be equally predicated of species, and to property, (to be equally predicated) of the individuals which participate it; thus man and ox are equally animal, and Anytus and Melitus risible.[^33] It is also common that genus should be univocally predicated of its proper species, and property of the things of which it is the propert"
+  "column": "16a"
  },
  {
   "id": "1:17a",
   "book": 1,
-  "column": "17a",
-  "greek_head": "κινεῖσθαι κατὰ πλειόνων καὶ τὸ μέλαν κατὰ κοράκων καὶ Αἰθιόπων καί τινων ἀψύχων",
-  "english_head": "Genus however differs from accident, in that genus is prior, but accident posterior to species, for though an inseparable accident be assumed, yet that of which it is the accident is prior to the accident. Also the participants of genus participate it equally, but those of accident do not equally; for the participation of accidents accepts intension and remission, but not that of genera. Besides, accidents primarily subsist about individuals, but genera and species are by nature prior to individ"
+  "column": "17a"
  },
  {
   "id": "1:18a",
   "book": 1,
-  "column": "18a",
-  "greek_head": "τοῦ γένους ἐρρέθη ὅτε πῇ διαφέρει τὸ γένος τοῦ εἴδους ἐλέγετο λοιπὸν οὖν πῇ διαφέρει τοῦ ἰδίου καὶ τοῦ συμβεβηκότος ῥηθήσεται δύο οὖν καὶ",
-  "english_head": "Moreover, genera are predicated of the things under them, in respect to what a thing is, but accidents in respect to what kind of a thing it is, or how each thing subsists; for being asked, what kind of man an Ethiopian is, you say that he is black; or how Socrates is, you reply that he is sick or well. [[s45]] We have shown then, wherein genus differs from the other four, but each of the other four happens also to differ from the rest, so that as there are five, and each one of the four differs"
+  "column": "18a"
  },
  {
   "id": "1:19a",
   "book": 1,
-  "column": "19a",
-  "greek_head": "εἰς ὑπόστασιν ἀνθρώπου εἶδος δὲ εἴδει οὐ συντίθεται ὥστε ἀπογεννῆσαι ἄλλο τι εἶδος τὶς μὲν γὰρ ἵππος τινὶ ὄνῳ σύνεισιν εἰς ἡμιόνου γένεσιν",
-  "english_head": "Further, difference is joined with another difference, (for rational and mortal are joined for the subsistence of man,) but species is not joined with species, so as to produce some other species; for indeed a certain horse is joined with a certain ass, for the production of a mule, but horse simply joined with ass will not produce a mule. [[s48]] [^38]Difference also and property have it in common to be equally shared by their participants, for rational are equally rational, and risible (equall"
+  "column": "19a"
  },
  {
   "id": "1:20a",
   "book": 1,
-  "column": "20a",
-  "greek_head": "περιέχει γὰρ τὸ λογικὸν τὸν ἄνθρωπον τὰ δὲ συμβεβηκότα τρόπον μέν τινα περιέχει τῷ ἐν πλείοσιν εἶναι τρόπον δέ τινα περιέχεται τῷ μὴ ἑνὸς συμβεβηκότος",
-  "english_head": "Still they differ in that difference indeed comprehends but is not comprehended by species; for rational comprehends divinity and man, but accidents after a certain manner comprehend from their being in many things, yet in a certain manner are comprehended from the subjects not being the recipients of one accident, but of many. Besides, difference indeed does not admit of intension and remission, but accidents accept the more and less; moreover contrary differences cannot be mingled, but contrar"
+  "column": "20a"
  },
  {
   "id": "1:21a",
   "book": 1,
-  "column": "21a",
-  "greek_head": "ὑπὸ τὸ γένος εἶναι καὶ τὸ κατὰ πλειόνων καὶ διαφερόντων τῷ ἀριθμῷ ἐν τῷ τί ἐστιν κατηγορούμενον εἶναι καὶ ὅσα τοιαῦτα ἰδίου δὲ τὸ μόνῳ καὶ",
-  "english_head": "Again, species subsists prior to property, but property accedes to species, for man must exist, in order that risible may: besides, species is always present in energy with its subject, but property sometimes also in capacity, for Socrates is a man always in energy, but he does not always laugh, though he is always naturally adapted to be risible.[^40] Once more, things of which the definitions are different, are themselves also different, but it is (the definition) of species to be under genus,"
+  "column": "21a"
  },
  {
   "id": "1:22a",
   "book": 1,
-  "column": "22a",
-  "greek_head": "ὑφίσταται ἄνθρωπος οὕτως οὐδὲ ἄνευ τοῦ μέλανος ὑποσταίη ἂν Αἰθίοψ καὶ ὥσπερ παντὶ καὶ ἀεὶ πάρεστι τὸ ἴδιον οὕτως καὶ τὸ ἀχώριστον συμβεβηκός",
-  "english_head": "It is common then to property and inseparable accident not to subsist without those things in which they are beheld, for as man does not subsist without risible,[^45] so neither can Ethiopian subsist without blackness, and as property is present to every, and always, so also is inseparable accident. Nevertheless, they differ, in that property is present to one species alone, as the being risible to man, but inseparable accident, as black, is present not only to an Ethiopian, but also to a crow, "
+  "column": "22a"
  }
 ]

@@ -2,946 +2,676 @@
  {
   "id": "1:100a",
   "book": 1,
-  "column": "100a",
-  "greek_head": "Ἡ μὲν πρόθεσις τῆς πραγματείας μέθοδον εὑρεῖν ἀφ' ἧς δυνησόμεθα συλλογίζεσθαι περὶ παντὸς τοῦ προτεθέντος προβλήματος",
-  "english_head": "Our treatise proposes to find a line of inquiry whereby we shall be able to reason from opinions that are generally accepted about every problem propounded to us, and also shall ourselves, when standing up to an argument, avoid saying anything that will obstruct us. First, then, we must say what reasoning is, and what its varieties are, in order to grasp dialectical reasoning: for this is the object of our search in the treatise before us.\nNow reasoning is an argument in which, certain things be"
+  "column": "100a"
  },
  {
   "id": "1:100b",
   "book": 1,
-  "column": "100b",
-  "greek_head": "δὲ ἀληθῆ μὲν καὶ πρῶτα τὰ μὴ δι' ἑτέρων ἀλλὰ δι' αὑτῶν ἔχοντα τὴν πίστιν οὐ δεῖ γὰρ ἐν ταῖς ἐπιστημονικαῖς",
-  "english_head": "Things are 'true' and 'primary' which are believed on the strength not of anything else but of themselves: for in regard to the first principles of science it is improper to ask any further for the why and wherefore of them; each of the first principles should command belief in and by itself. On the other hand, those opinions are 'generally accepted' which are accepted by every one or by the majority or by the philosophers-i.e. by all, or by the majority, or by the most notable and illustrious o"
+  "column": "100b"
  },
  {
   "id": "1:101a",
   "book": 1,
-  "column": "101a",
-  "greek_head": "ψεύδους ἐστὶ φύσις ὁ μὲν οὖν πρότερος τῶν ῥηθέντων ἐριστικῶν συλλογισμῶν καὶ συλλογισμὸς λεγέσθω ὁ δὲ λοιπὸς",
-  "english_head": "So then, of the contentious reasonings mentioned, the former really deserves to be called 'reasoning' as well, but the other should be called 'contentious reasoning', but not 'reasoning', since it appears to reason, but does not really do so. Further (d), besides all the reasonings we have mentioned there are the mis-reasonings that start from the premisses peculiar to the special sciences, as happens (for example) in the case of geometry and her sister sciences. For this form of reasoning appea"
+  "column": "101a"
  },
  {
   "id": "1:101b",
   "book": 1,
-  "column": "101b",
-  "greek_head": "εἰσί διὰ δὲ τῶν περὶ ἕκαστα ἐνδόξων ἀνάγκη περὶ αὐτῶν διελθεῖν τοῦτο δ' ἴδιον ἢ μάλιστα οἰκεῖον τῆς διαλεκτικῆς",
-  "english_head": "For it is impossible to discuss them at all from the principles proper to the particular science in hand, seeing that the principles are the prius of everything else: it is through the opinions generally held on the particular points that these have to be discussed, and this task belongs properly, or most appropriately, to dialectic: for dialectic is a process of criticism wherein lies the path to the principles of all inquiries. We shall be in perfect possession of the way to proceed when we ar"
+  "column": "101b"
  },
  {
   "id": "1:102a",
   "book": 1,
-  "column": "102a",
-  "greek_head": "δὲ ἢ λόγος ἀντ' ὀνόματος ἢ λόγος ἀντὶ λόγου δυνατὸν γὰρ καὶ τῶν ὑπὸ λόγου τινὰ σημαινομένων ὁρίσασθαι ὅσοι",
-  "english_head": "It is rendered in the form either of a phrase in lieu of a term, or of a phrase in lieu of another phrase; for it is sometimes possible to define the meaning of a phrase as well. People whose rendering consists of a term only, try it as they may, clearly do not render the definition of the thing in question, because a definition is always a phrase of a certain kind. One may, however, use the word 'definitory' also of such a remark as 'The \"becoming\" is \"beautiful\"', and likewise also of the ques"
+  "column": "102a"
  },
  {
   "id": "1:102b",
   "book": 1,
-  "column": "102b",
-  "greek_head": "γένει ἐὰν δὲ τοῦ μὲν ἑτέρου δείξωμεν ὅτι γένος ἐστί τοῦ δὲ ἑτέρου ὅτι οὐκ ἔστι διειλεγμένοι ἐσόμεθα ὅτι οὐκ ἐν τῷ",
-  "english_head": "is also a 'generic' question; for a question of that kind as well falls under the same branch of inquiry as the genus: for having argued that 'animal' is the genus of man, and likewise also of ox, we shall have argued that they are in the same genus; whereas if we show that it is the genus of the one but not of the other, we shall have argued that these things are not in the same genus.\nAn 'accident' is (i) something which, though it is none of the foregoing-i.e. neither a definition nor a prope"
+  "column": "102b"
  },
  {
   "id": "1:103a",
   "book": 1,
-  "column": "103a",
-  "greek_head": "οἰκείων ἡ διέξοδος τοῦ προκειμένου γίνοιτ' ἄν ὥστε τύπῳ μέν καθάπερ εἴρηται πρότερον διαιρετέον τῶν δὲ λοιπῶν τὰ",
-  "english_head": "So then, as was said before,' we must outline a division of our subject, and other questions we must relegate each to the particular branch to which it most naturally belongs, speaking of them as 'definitory' and 'generic' questions. The questions I mean have practically been already assigned to their several branches. First of all we must define the number of senses borne by the term 'Sameness'. Sameness would be generally regarded as falling, roughly speaking, into three divisions. We generall"
+  "column": "103a"
  },
  {
   "id": "1:103b",
   "book": 1,
-  "column": "103b",
-  "greek_head": "Τὸ μὲν οὖν ταὐτόν καθάπερ εἴρηται τριχῇ διῃρήσθω ὅτι δ' ἐκ τῶν πρότερον εἰρημένων οἱ λόγοι καὶ διὰ τούτων",
-  "english_head": "Of 'sameness' then, as has been said,' three senses are to be distinguished. Now one way to confirm that the elements mentioned above are those out of which and through which and to which arguments proceed, is by induction: for if any one were to survey propositions and problems one by one, it would be seen that each was formed either from the definition of something or from its property or from its genus or from its accident. Another way to confirm it is through reasoning. For every predicate o"
+  "column": "103b"
  },
  {
   "id": "1:104a",
   "book": 1,
-  "column": "104a",
-  "greek_head": "ταῦτα καὶ τοσαῦτά ἐστι πῶς δὲ ληψόμεθα καὶ δι' ὧν εὐπορήσομεν μετὰ ταῦτα λεκτέον",
-  "english_head": "How we are to acquire them, and by what means we are to become well supplied with them, falls next to be told. First, then, a definition must be given of a 'dialectical proposition' and a 'dialectical problem'. For it is not every proposition nor yet every problem that is to be set down as dialectical: for no one in his senses would make a proposition of what no one holds, nor yet make a problem of what is obvious to everybody or to most people: for the latter admits of no doubt, while to the fo"
+  "column": "104a"
  },
  {
   "id": "1:104b",
   "book": 1,
-  "column": "104b",
-  "greek_head": "Πρόβλημα δ' ἐστὶ διαλεκτικὸν θεώρημα τὸ συντεῖνον ἢ πρὸς αἵρεσιν καὶ φυγὴν ἢ πρὸς ἀλήθειαν καὶ γνῶσιν ἢ",
-  "english_head": "A dialectical problem is a subject of inquiry that contributes either to choice and avoidance, or to truth and knowledge, and that either by itself, or as a help to the solution of some other such problem. It must, moreover, be something on which either people hold no opinion either way, or the masses hold a contrary opinion to the philosophers, or the philosophers to the masses, or each of them among themselves. For some problems it is useful to know with a view to choice or avoidance, e.g. whe"
+  "column": "104b"
  },
  {
   "id": "1:105a",
   "book": 1,
-  "column": "105a",
-  "greek_head": "μὴ λανθάνωσιν ἡμᾶς τίνες αὐτῶν τυγχάνουσιν οὖσαι διαφοραί ",
-  "english_head": "But it should make no difference whichever description is used; for our object in thus distinguishing them has not been to create a terminology, but to recognize what differences happen to be found between them.\nNot every problem, nor every thesis, should be examined, but only one which might puzzle one of those who need argument, not punishment or perception. For people who are puzzled to know whether one ought to honour the gods and love one's parents or not need punishment, while those who ar"
+  "column": "105a"
  },
  {
   "id": "1:105b",
   "book": 1,
-  "column": "105b",
-  "greek_head": "φαινομέναις καὶ ὅσαι δόξαι κατὰ τέχνας εἰσίν δεῖ δὲ προτείνειν καὶ τὰς ἐναντίας ταῖς φαινομέναις ἐνδόξοις κατ' ἀντίφασιν",
-  "english_head": "by all, or most, or the most notable of them; or opinions contrary to those that seem to be generally held; and, again, all opinions that are in accordance with the arts. We must make propositions also of the contradictories of opinions contrary to those that seem to be generally held, as was laid down before. It is useful also to make them by selecting not only those opinions that actually are accepted, but also those that are like these, e.g. 'The perception of contraries is the same'-the know"
+  "column": "105b"
  },
  {
   "id": "1:106a",
   "book": 1,
-  "column": "106a",
-  "greek_head": "Περὶ μὲν οὖν προτάσεως ἱκανὰ τὰ προειρημένα τὸ δὲ ποσαχῶς πραγματευτέον μὴ μόνον ὅσα λέγεται καθ'",
-  "english_head": "On the formation, then, of propositions, the above remarks are enough. As regards the number of senses a term bears, we must not only treat of those terms which bear different senses, but we must also try to render their definitions; e.g. we must not merely say that justice and courage are called 'good' in one sense, and that what conduces to vigour and what conduces to health are called so in another, but also that the former are so called because of a certain intrinsic quality they themselves "
+  "column": "106a"
  },
  {
   "id": "1:106b",
   "book": 1,
-  "column": "106b",
-  "greek_head": "ἀσύμμετρος οὐδέν ὥστε πλεοναχῶς ἡ ἡδονὴ λέγεται καὶ τῷ μὲν κατὰ τὴν διάνοιαν φιλεῖν τὸ μισεῖν ἐναντίον τῷ δὲ",
-  "english_head": "the pleasure of drinking has a contrary in the pain of thirst, whereas the pleasure of seeing that the diagonal is incommensurate with the side has none, so that 'pleasure' is used in more than one sense. To 'love' also, used of the frame of mind, has to 'hate' as its contrary, while as used of the physical activity (kissing) it has none: clearly, therefore, to 'love' is an ambiguous term. Further, see in regard to their intermediates, if some meanings and their contraries have an intermediate, "
+  "column": "106b"
  },
  {
   "id": "1:107a",
   "book": 1,
-  "column": "107a",
-  "greek_head": "ἡ πτῶσις ἡ ἀπ' αὐτοῦ πλεοναχῶς ῥηθήσεται καὶ εἰ ἡ πτῶσις καὶ αὐτό",
-  "english_head": "if 'healthy' describes both what produces health and what preserves health and what betokens health, then 'healthily' also will be used to mean 'in such a way as to produce' or 'preserve' or 'betoken' health. Likewise also in other cases, whenever the original term bears more than one meaning, the inflexion also that is formed from it will be used with more than one meaning, and vice versa.\nLook also at the classes of the predicates signified by the term, and see if they are the same in all case"
+  "column": "107a"
  },
  {
   "id": "1:107b",
   "book": 1,
-  "column": "107b",
-  "greek_head": "ἐπὶ τῶν νῦν εἰρημένων τὸ μὲν γὰρ ἔσται σῶμα τοιόνδε χρῶμα ἔχον τὸ δὲ φωνὴ εὐήκοος ἀφαιρεθέντος οὖν τοῦ",
-  "english_head": "For then if what is peculiar in each case be abstracted, the same expression ought to remain over. This does not happen in the case of ambiguous terms, e.g. in the cases just mentioned. For the former will be body possessing such and such a colour', while the latter will be 'a note easy to hear'. Abstract, then, 'a body 'and' a note', and the remainder in each case is not the same. It should, however, have been had the meaning of 'clear' in each case been synonymous.\nOften in the actual definiti"
+  "column": "107b"
  },
  {
   "id": "1:108a",
   "book": 1,
-  "column": "108a",
-  "greek_head": "πρὸς ἄλληλα θεωρητέον οἷον τίνι διαφέρει δικαιοσύνη ἀνδρείας καὶ φρόνησις σωφροσύνης ταῦτα γὰρ ἅπαντα ἐκ",
-  "english_head": "The differences which things present to each other should be examined within the same genera, e.g. 'Wherein does justice differ from courage, and wisdom from temperance?'-for all these belong to the same genus; and also from one genus to another, provided they be not very much too far apart, e.g. 'Wherein does sensation differ from knowledge?: for in the case of genera that are very far apart, the differences are entirely obvious. Likeness should be studied, first, in the case of things belongin"
+  "column": "108a"
  },
  {
   "id": "1:108b",
   "book": 1,
-  "column": "108b",
-  "greek_head": "τί ἕκαστόν ἐστιν ὅτι μὲν οὖν πρὸς τοὺς συλλογισμοὺς τοὺς περὶ ταὐτοῦ καὶ ἑτέρου χρήσιμον δῆλον εὑρόντες γὰρ διαφορὰν",
-  "english_head": "That it helps us in reasoning about sameness and difference is clear: for when we have discovered a difference of any kind whatever between the objects before us, we shall already have shown that they are not the same: while it helps us in recognizing what a thing is, because we usually distinguish the expression that is proper to the essence of each particular thing by means of the differentiae that are proper to it.\nThe examination of likeness is useful with a view both to inductive arguments "
+  "column": "108b"
  },
  {
   "id": "2:108b",
   "book": 2,
-  "column": "108b",
-  "greek_head": "Ἔστι δὲ τῶν προβλημάτων τὰ μὲν καθόλου τὰ δ' ἐπὶ μέρους καθόλου μὲν οὖν οἷον ὅτι πᾶσα ἡδονὴ ἀγαθὸν καὶ ὅτι",
-  "english_head": "Of problems some are universal, others particular. Universal problems are such as 'Every pleasure is good' and 'No pleasure is good'; particular problems are such as 'Some pleasure is good' and 'Some pleasure is not good'."
+  "column": "108b"
  },
  {
   "id": "2:109a",
   "book": 2,
-  "column": "109a",
-  "greek_head": "ἀγαθὸν καὶ ὅτι ἔστι τις ἡδονὴ οὐκ ἀγαθόν ἔστι δὲ πρὸς ἀμφότερα τὰ γένη τῶν προβλημάτων κοινὰ τὰ καθόλου",
-  "english_head": "The methods of establishing and overthrowing a view universally are common to both kinds of problems; for when we have shown that a predicate belongs in every case, we shall also have shown that it belongs in some cases. Likewise, also, if we show that it does not belong in any case, we shall also have shown that it does not belong in every case. First, then, we must speak of the methods of overthrowing a view universally, because such are common to both universal and particular problems, and be"
+  "column": "109a"
  },
  {
   "id": "2:109b",
   "book": 2,
-  "column": "109b",
-  "greek_head": "οἷον ὅτι συμβέβηκε τῇ δικαιοσύνῃ ἀρετῇ εἶναι πολλάκις δὲ καὶ μὴ διορίσαντος κατάδηλον ὅτι τὸ γένος ὡς",
-  "english_head": "that 'Justice happens (accidit) to be a virtue'; but often even without such definition it is obvious that he has rendered the genus as an accident; e.g. suppose that one were to say that whiteness is coloured or that walking is in motion. For a predicate drawn from the genus is never ascribed to the species in an inflected form, but always the genera are predicated of their species literally; for the species take on both the name and the definition of their genera. A man therefore who says that"
+  "column": "109b"
  },
  {
   "id": "2:110a",
   "book": 2,
-  "column": "110a",
-  "greek_head": "ἔσται πότερον ἀληθὲς ἢ ψεῦδος τὸ ῥηθέν οἷον εἰ φθονερὸς μὲν ὁ λυπούμενος ἐπὶ ταῖς τῶν ἀγαθῶν εὐπραγίαις νεμεσητικὸς",
-  "english_head": "Again, to see if the indignant man is jealous, ask who each of them is: for then it will be obvious whether the statement is true or false; e.g. if he is 'jealous' who grieves at the successes of the good, and he is 'indignant' who grieves at the successes of the evil, then clearly the indignant man would not be jealous. A man should substitute definitions also for the terms contained in his definitions, and not stop until he comes to a familiar term: for often if the definition be rendered whol"
+  "column": "110a"
  },
  {
   "id": "2:110b",
   "book": 2,
-  "column": "110b",
-  "greek_head": "ἀπόχρη πρὸς τὸ δεῖξαι ὅτι παντὶ ὑπάρχει τὸ ἐφ' ἑνὸς διαλεχθῆναι οἷον εἰ ἡ τοῦ ἀνθρώπου ψυχὴ ἀθάνατος ὅτι",
-  "english_head": "For it is not enough to discuss a single instance in order to show that an attribute belongs universally; e.g. to argue that if the soul of man be immortal, then every soul is immortal, so that a previous admission must be secured that if any soul whatever be immortal, then every soul is immortal. This is not to be done in every case, but only whenever we are not easily able to quote any single argument applying to all cases in common, as (e.g.) the geometrician can argue that the triangle has i"
+  "column": "110b"
  },
  {
   "id": "2:111a",
   "book": 2,
-  "column": "111a",
-  "greek_head": "ἐπιθυμία τούτου ἢ ὡς τέλους οἷον ὑγιείας ἢ ὡς τῶν πρὸς τὸ τέλος οἷον τοῦ φαρμακευθῆναι ἢ ὡς τοῦ κατὰ συμβεβηκός",
-  "english_head": "For the 'desire of X' may mean the desire of it as an end (e.g. the desire of health) or as a means to an end (e.g. the desire of being doctored), or as a thing desired accidentally, as, in the case of wine, the sweet-toothed person desires it not because it is wine but because it is sweet. For essentially he desires the sweet, and only accidentally the wine: for if it be dry, he no longer desires it. His desire for it is therefore accidental. This rule is useful in dealing with relative terms: "
+  "column": "111a"
  },
  {
   "id": "2:111b",
   "book": 2,
-  "column": "111b",
-  "greek_head": "ἐπιστήμην ἢ παρωνύμως ἀπὸ τῆς ἐπιστήμης λέγεται καὶ γραμματικὴν ἕξει ἢ μουσικὴν ἤ τινα τῶν ἄλλων ἐπιστημῶν",
-  "english_head": "if to anything the term 'scientific knowledge' be applied, then also there will be applied to it the term 'grammatical' or 'musical' knowledge, or knowledge of one of the other sciences; and if any one possesses scientific knowledge or is described by a term derived from 'science', then he will also possess grammatical or musical knowledge or knowledge of one of the other sciences, or will be described by a term derived from one of them, e.g. as a 'grammarian' or a 'musician')-therefore if any e"
+  "column": "111b"
  },
  {
   "id": "2:112a",
   "book": 2,
-  "column": "112a",
-  "greek_head": "πρός τι διὰ τοῦ κειμένου ποιησαμένου ἀναιρεῖν ἐπιχειρῇ τούτου γὰρ ἀναιρεθέντος καὶ τὸ προκείμενον ἀναιρεῖται φαινόμενον",
-  "english_head": "Likewise, also, it is really necessary whenever he (the questioner) first, by an induction made by means of the view laid down, arrives at a certain statement and then tries to demolish that statement: for when once this has been demolished, the view originally laid down is demolished as well. It is an apparent necessity, when the point to which the discussion comes to be directed appears to be useful, and relevant to the thesis, without being really so; whether it be that the man who is standin"
+  "column": "112a"
  },
  {
   "id": "2:112b",
   "book": 2,
-  "column": "112b",
-  "greek_head": "Ἐπεὶ δὲ τῶν πραγμάτων τὰ μὲν ἐξ ἀνάγκης ἐστί τὰ δ' ὡς ἐπὶ τὸ πολύ τὰ δ' ὁπότερ' ἔτυχεν ἐὰν τὸ ἐξ ἀνάγκης",
-  "english_head": "For a man's star is his soul.\nSome things occur of necessity, others usually, others however it may chance; if therefore a necessary event has been asserted to occur usually, or if a usual event (or, failing such an event itself, its contrary) has been stated to occur of necessity, it always gives an opportunity for attack. For if a necessary event has been asserted to occur usually, clearly the speaker has denied an attribute to be universal which is universal, and so has made a mistake: and so"
+  "column": "112b"
  },
  {
   "id": "2:113a",
   "book": 2,
-  "column": "113a",
-  "greek_head": "Αἱ μὲν οὖν πρῶται δύο ῥηθεῖσαι συμπλοκαὶ οὐ ποιοῦσιν ἐναντίωσιν τὸ γὰρ τοὺς φίλους εὖ ποιεῖν τῷ τοὺς ἐχθροὺς κακῶς",
-  "english_head": "The first two then of the aforesaid conjunctions do not constitute any contrariety; for the doing of good to friends is not contrary to the doing of evil to enemies: for both courses are desirable and belong to the same disposition. Nor is the doing of evil to friends contrary to the doing of good to enemies: for both of these are objectionable and belong to the same disposition: and one objectionable thing is not generally thought to be the contrary of another, unless the one be an expression d"
+  "column": "113a"
  },
  {
   "id": "2:113b",
   "book": 2,
-  "column": "113b",
-  "greek_head": "ἡ ὀργή σκεπτέον οὖν εἰ καὶ τὸ ἐναντίον ἐν τῷ θυμοειδεῖ εἰ γὰρ μή ἀλλ' ἐν τῷ ἐπιθυμητικῷ ἐστιν ἡ φιλία",
-  "english_head": "You should therefore look and see if its contrary, to wit, friendship, be also in the 'spirited faculty': for if not-if friendship is in the faculty of desire-then hatred could not follow anger. Likewise also if he has asserted that the faculty of desire is ignorant. For if it were capable of ignorance, it would be capable of knowledge as well: and this is not generally held-I mean that the faculty of desire is capable of knowledge. For purposes, then, of overthrowing a view, as has been said, t"
+  "column": "113b"
  },
  {
   "id": "2:114a",
   "book": 2,
-  "column": "114a",
-  "greek_head": "ἀνάπαλιν ἐπὶ τούτων ἡ ἀκολούθησις σπάνιον δὲ τὸ ἀνάπαλιν ἐπὶ τῶν ἐναντίων συμβαίνει ἀλλὰ τοῖς πλείστοις ἐπὶ ταὐτὰ",
-  "english_head": "The sequence is, on the other hand, converse in such a case as this: Health follows upon vigour, but disease does not follow upon debility; rather debility follows upon disease. In this case, then, clearly the sequence is converse. Converse sequence is, however, rare in the case of contraries; usually the sequence is direct. If, therefore, the contrary of the one term does not follow upon the contrary of the other either directly or conversely, clearly neither does the one term follow upon the o"
+  "column": "114a"
  },
  {
   "id": "2:114b",
   "book": 2,
-  "column": "114b",
-  "greek_head": "ἐπαινετοῦ καὶ τὰ λοιπὰ πάντα δεδειγμένα γίνεται οἷον εἰ ἡ δικαιοσύνη τῶν ἐπαινετῶν καὶ ὁ δίκαιος καὶ τὸ δίκαιον καὶ",
-  "english_head": "Clearly, then, when any one member, whatever its kind, of the same kindred series is shown to be good or praiseworthy, then all the rest as well come to be shown to be so: e.g. if 'justice' be something praiseworthy, then so will 'just', of a man or thing, and 'justly' connote something praiseworthy. Then 'justly' will be rendered also 'praiseworthily', derived will by the same inflexion from 'the praiseworthy' whereby 'justly' is derived from 'justice'.\nLook not only in the case of the subject "
+  "column": "114b"
  },
  {
   "id": "2:115a",
   "book": 2,
-  "column": "115a",
-  "greek_head": "ἀγαθόν καὶ εἰ τὸ ἀδικεῖν κακόν καὶ τὸ μᾶλλον ἀδικεῖν μᾶλλον κακόν χρήσιμος δὲ πρὸς ἄμφω ὁ τόπος",
-  "english_head": "Now this rule is of use for both purposes: for if an increase of the accident follows an increase of the subject, as we have said, clearly the accident belongs; while if it does not follow, the accident does not belong. You should establish this by induction. Another rule is: If one predicate be attributed to two subjects; then supposing it does not belong to the subject to which it is the more likely to belong, neither does it belong where it is less likely to belong; while if it does belong wh"
+  "column": "115a"
  },
  {
   "id": "2:115b",
   "book": 2,
-  "column": "115b",
-  "greek_head": "ἀγαθὸν κακῷ προστιθέμενον οὐκ ἐξ ἀνάγκης ἀγαθὸν τὸ ὅλον ποιεῖ οὐδὲ λευκὸν τὸ λευκὸν μέλανι",
-  "english_head": "For if the thing added does not make the other good, it is not thereby made clear whether in itself it may not be good: for the addition of good to evil does not necessarily make the whole good, any more than the addition of white to black makes the whole white.\nAgain, any predicate of which we can speak of greater or less degrees belongs also absolutely: for greater or less degrees of good or of white will not be attributed to what is not good or white: for a bad thing will never be said to hav"
+  "column": "115b"
  },
  {
   "id": "3:116a",
   "book": 3,
-  "column": "116a",
-  "greek_head": "Πότερον δ' αἱρετώτερον ἢ βέλτιον δυεῖν ἢ πλειόνων ἐκ τῶνδε σκεπτέον πρῶτον δὲ διωρίσθω ὅτι τὴν σκέψιν ποιούμεθα",
-  "english_head": "The question which is the more desirable, or the better, of two or more things, should be examined upon the following lines: only first of all it must be clearly laid down that the inquiry we are making concerns not things that are widely divergent and that exhibit great differences from one another (for nobody raises any doubt whether happiness or wealth is more desirable), but things that are nearly related and about which we commonly discuss for which of the two we ought rather to vote, becau"
+  "column": "116a"
  },
  {
   "id": "3:116b",
   "book": 3,
-  "column": "116b",
-  "greek_head": "Καὶ τὸ αἴτιον ἀγαθοῦ καθ' αὑτὸ τοῦ κατὰ συμβεβηκὸς αἰτίου καθάπερ ἡ ἀρετὴ τῆς τύχης ἡ μὲν γὰρ καθ' αὑτήν",
-  "english_head": "Also, that which is in itself the cause of good is more desirable than what is so per accidens, e.g. virtue than luck (for the former in itself, and the latter per accidens, the cause of good things), and so in other cases of the same kind. Likewise also in the case of the contrary; for what is in itself the cause of evil is more objectionable than what is so per accidens, e.g. vice and chance: for the one is bad in itself, whereas chance is so per accidens.\nAlso, what is good absolutely is more"
+  "column": "116b"
  },
  {
   "id": "3:117a",
   "book": 3,
-  "column": "117a",
-  "greek_head": "οὐ καθ' αὑτὰ ἀλλὰ δι' ἕτερον οὐδεὶς γὰρ τιμᾷ τὸν πλοῦτον δι' ἑαυτόν ἀλλὰ δι' ἕτερον τὴν δὲ φιλίαν καθ'",
-  "english_head": "For the former belong in themselves to the class of things precious and praiseworthy, while the latter do so not in themselves but for something else: for no one prizes wealth for itself but always for something else, whereas we prize friendship for itself, even though nothing else is likely to come to us from it. Moreover, whenever two things are very much like one another, and we cannot see any superiority in the one over the other of them, we should look at them from the standpoint of their c"
+  "column": "117a"
  },
  {
   "id": "3:117b",
   "book": 3,
-  "column": "117b",
-  "greek_head": "ὄντων οὐδὲν χρήσιμος ἡ ἀνδρεία ἀνδρείων δὲ πάντων ὄντων χρήσιμος ἡ δικαιοσύνη",
-  "english_head": "Take the case of justice and courage; if everybody were just, there would be no use for courage, whereas all might be courageous, and still justice would be of use.\nMoreover, judge by the destructions and losses and generations and acquisitions and contraries of things: for things whose destruction is more objectionable are themselves more desirable. Likewise also with the losses and contraries of things; for a thing whose loss or whose contrary is more objectionable is itself more desirable. Wi"
+  "column": "117b"
  },
  {
   "id": "3:118a",
   "book": 3,
-  "column": "118a",
-  "greek_head": "Ἔτι ὧν ἔστι τοὺς φίλους μετασχεῖν αἱρετώτερα ἢ ὧν μή καὶ ἃ πρὸς τὸν φίλον πρᾶξαι μᾶλλον βουλόμεθα ἢ ἃ",
-  "english_head": "if the best man be better than the best horse, then also Man is better than Horse without qualification.\nMoreover, things which our friends can share are more desirable than those they cannot. Also, things which we like rather to do to our friend are more desirable than those we like to do to the man in the street, e.g. just dealing and the doing of good rather than the semblance of them: for we would rather really do good to our friends than seem to do so, whereas towards the man in the street "
+  "column": "118a"
  },
  {
   "id": "3:118b",
   "book": 3,
-  "column": "118b",
-  "greek_head": "Ἔτι εἴ τινος τοῦ αὐτοῦ τὸ μὲν μεῖζον ἀγαθόν ἐστι τὸ δὲ ἔλαττον αἱρετώτερον τὸ μεῖζον ἢ εἰ μείζονος μεῖζον θάτερον",
-  "english_head": "Moreover, if one thing exceeds while the other falls short of the same standard of good, the one which exceeds is the more desirable; or if the one exceeds an even higher standard. Nay more, if there be two things both preferable to something, the one which is more highly preferable to it is more desirable than the less highly preferable. Moreover, when the excess of a thing is more desirable than the excess of something else, that thing is itself also more desirable than the other, as (e.g.) fr"
+  "column": "118b"
  },
  {
   "id": "3:119a",
   "book": 3,
-  "column": "119a",
-  "greek_head": "Τὰς μὲν οὖν πρὸς ἄλληλα συγκρίσεις καθάπερ εἴρηται ποιητέον οἱ αὐτοὶ δὲ τόποι χρήσιμοι καὶ πρὸς τὸ δεικνύναι",
-  "english_head": "Comparisons of things together should therefore be conducted in the manner prescribed. The same commonplace rules are useful also for showing that anything is simply desirable or objectionable: for we have only to subtract the excess of one thing over another. For if what is more precious be more desirable, then also what is precious is desirable; and if what is more useful be more desirable, then also what is useful is desirable. Likewise, also, in the case of other things which admit of compar"
+  "column": "119a"
  },
  {
   "id": "3:119b",
   "book": 3,
-  "column": "119b",
-  "greek_head": "τῷ εἴ τις ἡδονὴ ἀγαθόν καὶ λύπην εἶναί τινα κακόν ἔτι εἴ τις αἴσθησις μὴ ἔστι δύναμις καὶ ἀναισθησία τις οὐκ ἔστιν",
-  "english_head": "Moreover, if some form of sensation be not a capacity, then also some form of failure of sensation is not a failure of capacity. Also, if the object of conception is in some cases an object of knowledge, then also some form of conceiving is knowledge. Again, if what is unjust be in some cases good, then also what is just is in some cases evil; and if what happens justly is in some cases evil, then also what happens unjustly is in some cases good. Also, if what is pleasant is in some cases object"
+  "column": "119b"
  },
  {
   "id": "3:120a",
   "book": 3,
-  "column": "120a",
-  "greek_head": "τινὶ μὴ ὑπάρχειν κεῖται δεικτέον ὅτι ὑπάρχει τινί καὶ γὰρ οὕτως ἀκολουθήσει τὸ πᾶσιν ὑπάρχειν δῆλον δ' ἐστὶν ὅτι ὁ",
-  "english_head": "If, then, it be maintained that in some instance the attribute belongs, you must show that in some instance it does not belong: for then it will follow, by reason of the hypothesis, that it does not belong to any instance at all. If, on the other hand, it be maintained that it does not belong in some instance, you must show that it does belong in some instance, for in this way it will follow that it belongs to all instances. It is clear that the maker of the hypothesis universalizes the question"
+  "column": "120a"
  },
  {
   "id": "3:120b",
   "book": 3,
-  "column": "120b",
-  "greek_head": "οὐ κινεῖται οὐδ' ἐστὶ κίνησις καταριθμησάμενον πόσα εἴδη κινήσεως εἰ γὰρ μηδὲν τούτων ὑπάρχει τῷ χρόνῳ δῆλον",
-  "english_head": "Moreover, in cases where it is possible to make the accident definite either specifically or numerically, you should look and see whether perhaps none of them belongs, showing e.g. that time is not moved, nor yet a movement, by enumerating how many species there are of movement: for if none of these belong to time, clearly it does not move, nor yet is a movement. Likewise, also, you can show that the soul is not a number, by dividing all numbers into either odd or even: for then, if the soul be "
+  "column": "120b"
  },
  {
   "id": "4:120b",
   "book": 4,
-  "column": "120b",
-  "greek_head": "Μετὰ δὲ ταῦτα περὶ τῶν πρὸς τὸ γένος καὶ τὸ ἴδιον ἐπισκεπτέον ἔστι δὲ ταῦτα στοιχεῖα τῶν πρὸς τοὺς ὅρους περὶ",
-  "english_head": "Next we must go on to examine questions relating to Genus and Property. These are elements in the questions that relate to definitions, but dialecticians seldom address their inquiries to these by themselves. If, then, a genus be suggested for something that is, first take a look at all objects which belong to the same genus as the thing mentioned, and see whether the genus suggested is not predicated of one of them, as happens in the case of an accident: e.g. if 'good' be laid down to be the ge"
+  "column": "120b"
  },
  {
   "id": "4:121a",
   "book": 4,
-  "column": "121a",
-  "greek_head": "πάλιν ἡ μὲν ἐπιστήμη τῶν πρός τι τὸ δ' ἀγαθὸν καὶ τὸ καλὸν ποιόν ὥστ' οὐ γένος τὸ ἀγαθὸν ἢ τὸ καλὸν τῆς ἐπιστήμης",
-  "english_head": "Again, knowledge' is a relative, while 'good' and 'noble' are each a quality, so that good, or noble, is not the genus of knowledge. For the genera of relatives ought themselves also to be relatives, as is the case with 'double': for multiple', which is the genus of 'double', is itself also a relative. To speak generally, the genus ought to fall under the same division as the species: for if the species be a substance, so too should be the genus, and if the species be a quality, so too the genus"
+  "column": "121a"
  },
  {
   "id": "4:121b",
   "book": 4,
-  "column": "121b",
-  "greek_head": "Ἔτι εἰ ἐπὶ πλέον λέγεται τοῦ γένους τὸ ἐν τῷ γένει τεθέν οἷον τὸ δοξαστὸν τοῦ ὄντος καὶ γὰρ τὸ ὂν καὶ τὸ μὴ ὂν",
-  "english_head": "'object of opinion' has, as compared with 'being': for both what is and what is not are objects of opinion, so that 'object of opinion' could not be a species of being: for the genus is always of wider denotation than the species. Again, see if the species and its genus have an equal denotation; suppose, for instance, that of the attributes which go with everything, one were to be stated as a species and the other as its genus, as for example Being and Unity: for everything has being and unity, "
+  "column": "121b"
  },
  {
   "id": "4:122a",
   "book": 4,
-  "column": "122a",
-  "greek_head": "γὰρ μήθ' ὑπ' ἄλληλά ἐστι τὰ γένη μήθ' ὑπὸ ταὐτὸν ἄμφω οὐκ ἂν εἴη τὸ ἀποδοθὲν γένος",
-  "english_head": "Look, also, at the genus of the genus rendered, and so continually at the next higher genus, and see whether all are predicated of the species, and predicated in the category of essence: for all the higher genera should be predicated of the species in the category of essence. If, then, there be anywhere a discrepancy, clearly what is rendered is not the true genus. [Again, see whether either the genus itself, or one of its higher genera, partakes of the species: for the higher genus does not par"
+  "column": "122a"
  },
  {
   "id": "4:122b",
   "book": 4,
-  "column": "122b",
-  "greek_head": "κατηγορεῖται ἐν τῷ τί ἐστι χρήσιμον συμβήσεται γὰρ τὸ γένος καὶ τὸ εἶδος τοῦ αὐτοῦ ἐν τῷ τί ἐστι κατηγορεῖσθαι",
-  "english_head": "If establishing a view, it is useful to see whether it is predicated in the category of essence: for if so, the result will be that the genus and the species will be predicated of the same object in the category of essence, so that the same object falls under two genera: the genera must therefore of necessity be subordinate one to the other, and therefore if it be shown that the one we wish to establish as genus is not subordinate to the species, clearly the species would be subordinate to it, s"
+  "column": "122b"
  },
  {
   "id": "4:123a",
   "book": 4,
-  "column": "123a",
-  "greek_head": "πλεῖον τοῦ εἴδους λέγεται ἔτι εἰ τὸ γένος εἰς τὴν διαφοράν οἷον τὸ χρῶμα ὅπερ συγκριτικὸν ἢ τὸν ἀριθμὸν ὅπερ περιττόν",
-  "english_head": "Moreover, see whether he has placed the genus inside the differentia, by making 'colour' (e.g.) to be a thing that 'pierces', or 'number' a thing that is 'odd'. Also, see if he has mentioned the genus as differentia: for it is possible for a man to bring forward a statement of this kind as well, e.g. that 'mixture' is the differentia of 'fusion', or that change of place' is the differentia of 'carriage'. All such cases should be examined by means of the same principles: for they depend upon comm"
+  "column": "123a"
  },
  {
   "id": "4:123b",
   "book": 4,
-  "column": "123b",
-  "greek_head": "Ἔτι ἂν ᾖ ἐναντίον τι τῷ εἴδει σκοπεῖν ἔστι δὲ πλεοναχῶς ἡ σκέψις πρῶτον μὲν εἰ ἐν τῷ αὐτῷ γένει καὶ τὸ",
-  "english_head": "The examination may take different forms; first of all see if the contrary as well be found in the same genus as the species, supposing the genus to have no contrary; for contraries ought to be found in the same genus, if there be no contrary to the genus. Supposing, on the other hand, that there is a contrary to the genus, see if the contrary of the species be found in the contrary genus: for of necessity the contrary species must be in the contrary genus, if there be any contrary to the genus."
+  "column": "123b"
  },
  {
   "id": "4:124a",
   "book": 4,
-  "column": "124a",
-  "greek_head": "Ἀναιροῦντι μὲν οὖν τοσαυταχῶς ἐπισκεπτέον εἰ γὰρ μὴ ὑπάρχει τὰ εἰρημένα δῆλον ὅτι οὐ γένος τὸ ἀποδοθέν",
-  "english_head": "If, on the other hand, you are establishing a view, there are three ways: in the first place, see whether the contrary of the species be found in the genus stated, suppose the genus have no contrary: for if the contrary be found in it, clearly the species in question is found in it as well. Moreover, see if the intermediate species is found in the genus stated: for whatever genus contains the intermediate contains the extremes as well. Again, if the genus have a contrary, look and see whether al"
+  "column": "124a"
  },
  {
   "id": "4:124b",
   "book": 4,
-  "column": "124b",
-  "greek_head": "καὶ τῷ εἴδει ἀντίκειται στέρησις μὴ ἔστι δὲ τὸ ἀντικείμενον ἐν τῷ ἀντικειμένῳ οὐδ' ἂν τὸ ἀποδοθὲν ἐν τῷ ἀποδοθέντι",
-  "english_head": "Secondly, if there be a privation opposed to both genus and species, but the opposite of the species be not found in the opposite of the genus, then neither could the species rendered be in the genus rendered. If, then, you are demolishing a view, you should follow the rule as stated; but if establishing one there is but one way: for if the opposite species be found in the opposite genus, then also the species in question would be found in the genus in question: e.g. if 'blindness' be a form of "
+  "column": "124b"
  },
  {
   "id": "4:125a",
   "book": 4,
-  "column": "125a",
-  "greek_head": "καὶ αὐτὴ καὶ τὰ γένη οἷον ἥ τε διάθεσις καὶ ἡ ἕξις ἔνστασις ὅτι ἐνιαχοῦ οὐχ οὕτως τὸ μὲν γὰρ διάφορον καὶ τὸ",
-  "english_head": "Likewise, also, in the case of 'knowledge': for both knowledge' itself and its genera, e.g. 'disposition' and 'state', are said to be 'of' something. An objection may be raised that in some cases it is not so: for we say 'superior to' and 'contrary to' so and so, whereas 'other', which is the genus of these terms, demands not 'to' but 'than': for the expression is 'other than' so and so.\nAgain, see whether terms used in like case relationships fail to yield a like construction when converted, as"
+  "column": "125a"
  },
  {
   "id": "4:125b",
   "book": 4,
-  "column": "125b",
-  "greek_head": "ὑπάρχειν τὴν αὐτὴν ταύτην τὰ δ' ἁπλῶς οὐκ ἐνδέχεται ἐν ἐκείνοις ὑπάρχειν πρὸς ἅ ποτε τυγχάνει λεγόμενα οἷον",
-  "english_head": "if the term 'object of knowledge' be applied to the soul: for it is quite possible that the knowledge of itself should be possessed by the soul itself, but it is not necessary, for it is possible for this same knowledge to be found in some one else), while for others, again, it is absolutely impossible that they should be found in the things in relation to which they happen at any time to be used (as e.g. that the contrary should be found in the contrary or knowledge in the object of knowledge, "
+  "column": "125b"
  },
  {
   "id": "4:126a",
   "book": 4,
-  "column": "126a",
-  "greek_head": "ἐπ' ἴσον ἡ ὑπόληψις καὶ ἡ πίστις ῥηθήσεται ὥστ' οὐδ' ἂν οὕτως εἴη γένος ἐπὶ πλέον γὰρ δεῖ λέγεσθαι τὸ γένος",
-  "english_head": "If, on the other hand, any one says that a man who has a conception must of necessity be also convinced of it, then 'conception' and 'conviction' will be used with an equal denotation, so that not even so could the former be the genus of the latter: for the denotation of the genus should be wider.\nSee, also, whether both naturally come to be anywhere in the same thing: for what contains the species contains the genus as well: e.g. what contains 'white' contains 'colour' as well, and what contain"
+  "column": "126a"
  },
  {
   "id": "4:126b",
   "book": 4,
-  "column": "126b",
-  "greek_head": "τὰ φαῦλα πράσσειν ὥστ' οὐδενὸς ἂν εἴη ψεκτοῦ γένος ἡ δύναμις εἰ δὲ μή συμβήσεται τῶν ψεκτῶν τι αἱρετὸν εἶναι",
-  "english_head": "For none of the aforesaid characters is so called because he is 'capable' in one of these respects: for even God and the good man are capable of doing bad things, but that is not their character: for it is always in respect of their choice that bad men are so called. Moreover, a capacity is always a desirable thing: for even the capacities for doing bad things are desirable, and therefore it is we say that even God and the good man possess them; for they are capable (we say) of doing evil. So th"
+  "column": "126b"
  },
  {
   "id": "4:127a",
   "book": 4,
-  "column": "127a",
-  "greek_head": "ἢ πάθος αὐτῇ ταύτῃ παραγίνεσθαι ὥστ' οὐ γένος ἡ ζωὴ τῆς ἀθανασίας",
-  "english_head": "That this saying is true would appear clear if any one were to admit that a man can pass from being mortal and become immortal: for no one will assert that he takes another life, but that a certain accidental feature or affection enters into this one as it is. So then 'life' is not the genus of immortality.\nAgain, see if to an affection he has ascribed as genus the object of which it is an affection, by defining (e.g.) wind as 'air in motion'. Rather, wind is 'a movement of air': for the same ai"
+  "column": "127a"
  },
  {
   "id": "4:127b",
   "book": 4,
-  "column": "127b",
-  "greek_head": "Ἔτι εἰ ἐν ὑποκειμένῳ τῷ εἴδει τὸ ἀποδοθὲν γένος λέγεται καθάπερ τὸ λευκὸν ἐπὶ τῆς χιόνος ὥστε δῆλον ὅτι",
-  "english_head": "Moreover, see if the description 'inherent in S' be used of the genus rendered in relation to its species, as it is used of 'white' in the case of snow, thus showing clearly that it could not be the genus: for 'true of S' is the only description used of the genus in relation to its species. Look and see also if the genus fails to be synonymous with its species. For the genus is always predicated of its species synonymously.\nMoreover, beware, whenever both species and genus have a contrary, and h"
+  "column": "127b"
  },
  {
   "id": "4:128a",
   "book": 4,
-  "column": "128a",
-  "greek_head": "γένος καὶ τὸ εἶδος οὐ χρήσιμος ὁ τόπος οὐδὲν γὰρ κωλύει ἀμφοτέρων ἐπιδεχομένων μὴ εἶναι θάτερον θατέρου",
-  "english_head": "For both 'beautiful' and 'white' admit of a greater degree, and neither is the genus of the other. On the other hand, the comparison of the genera and of the species one with another is of use: e.g. supposing A and B to have a like claim to be genus, then if one be a genus, so also is the other. Likewise, also, if what has less claim be a genus, so also is what has more claim: e.g. if 'capacity' have more claim than 'virtue' to be the genus of self-control, and virtue be the genus, so also is ca"
+  "column": "128a"
  },
  {
   "id": "4:128b",
   "book": 4,
-  "column": "128b",
-  "greek_head": "παντί τόδε δὲ τῷδε μὴ παντί οἷον τῇ νηνεμίᾳ ἡ ἠρεμία καὶ τῷ ἀριθμῷ τὸ διαιρετόν ἀνάπαλιν δ' οὔ τὸ γὰρ",
-  "english_head": "'rest' always follows a 'calm' and 'divisibility' follows 'number', but not conversely (for the divisible is not always a number, nor rest a calm)-you may yourself assume in your treatment of them that the one which always follows is the genus, whenever the other is not convertible with it: if, on the other hand, some one else puts forward the proposition, do not accept it universally. An objection to it is that 'not-being' always follows what is 'coming to be' (for what is coming to be is not) "
+  "column": "128b"
  },
  {
   "id": "5:128b",
   "book": 5,
-  "column": "128b",
-  "greek_head": "Πότερον δ' ἴδιον ἢ οὐκ ἴδιόν ἐστι τὸ εἰρημένον διὰ τῶνδε σκεπτέον",
-  "english_head": "The question whether the attribute stated is or is not a property, should be examined by the following methods:\nAny 'property' rendered is always either essential and permanent or relative and temporary: e.g. it is an 'essential property' of man to be 'by nature a civilized animal': a 'relative property' is one like that of the soul in relation to the body, viz. that the one is fitted to command, and the other to obey: a 'permanent property' is one like the property which belongs to God, of bein"
+  "column": "128b"
  },
  {
   "id": "5:129a",
   "book": 5,
-  "column": "129a",
-  "greek_head": "κατὰ πάντα χρόνον ἀληθεύεται καὶ μηδέποτ' ἀπολείπεται καθάπερ τοῦ ζῴου τὸ ἐκ ψυχῆς καὶ σώματος συγκείμενον",
-  "english_head": "that the former is naturally produced in more than one faculty, whereas the latter is produced in that of reason alone, and in those who have a reasoning faculty. A 'permanent' property is one which is true at every time, and never fails, like being' compounded of soul and body', in the case of a living creature. A 'temporary' property is one which is true at some particular time, and does not of necessity always follow; as, of some particular man, that he walks in the market-place.\nTo render a "
+  "column": "129a"
  },
  {
   "id": "5:129b",
   "book": 5,
-  "column": "129b",
-  "greek_head": "Πρῶτον μὲν εἰ μὴ καλῶς ἀποδέδοται τὸ ἴδιον ἢ καλῶς τοῦ δὲ μὴ καλῶς ἢ καλῶς ἐστιν ἓν μέν εἰ μὴ διὰ",
-  "english_head": "First, see whether the property has or has not been rendered correctly. Of a rendering being incorrect or correct, one test is to see whether the terms in which the property is stated are not or are more intelligible-for destructive purposes, whether they are not so, and for constructive purposes, whether they are so. Of the terms not being more intelligible, one test is to see whether the property which he renders is altogether more unintelligible than the subject whose property he has stated: "
+  "column": "129b"
  },
  {
   "id": "5:130a",
   "book": 5,
-  "column": "130a",
-  "greek_head": "δ' οὐ χρηστέον ἐστὶν οὔτ' ὀνόματι πλεοναχῶς λεγομένῳ οὔτε λόγῳ τῷ τὸ ἴδιον σημαίνοντι διότι τὸ πλεοναχῶς λεγόμενον",
-  "english_head": "Thus (e.g.) seeing that to 'being natural sentient' signifies more than one thing, viz. (1) to possess sensation, (2) to use one's sensation, being naturally sentient' could not be a correct statement of a property of 'animal'. The reason why the term you use, or the whole expression signifying the property, should not bear more than one meaning is this, that an expression bearing more than one meaning makes the object described obscure, because the man who is about to attempt an argument is in "
+  "column": "130a"
  },
  {
   "id": "5:130b",
   "book": 5,
-  "column": "130b",
-  "greek_head": "τις ἀποδοίη γῆς ἴδιον οὐσία ἡ μάλιστα κατὰ φύσιν φερομένη τῶν σωμάτων εἰς τὸν κάτω τόπον ἔπειτα μεταλάβοι",
-  "english_head": "For he will have repeated the word 'substance', and accordingly neither of the properties would be correctly stated. For constructive purposes, on the other hand, see whether he avoids ever repeating the same term; for then the property will in this respect have been correctly rendered. Thus (e.g.) seeing that he who has stated 'animal capable of acquiring knowledge' as a property of man has avoided repeating the same term several times, the property would in this respect have been correctly ren"
+  "column": "130b"
  },
  {
   "id": "5:131a",
   "book": 5,
-  "column": "131a",
-  "greek_head": "κείμενον τὸ ἴδιον τοῦ γὰρ μαθεῖν χάριν ἀποδίδοται τὸ ἴδιον αὐτὸ μὲν οὖν αὑτῷ ὁμοίως ἄγνωστόν ἐστι τὸ δέ τι τῶν αὐτοῦ",
-  "english_head": "For the object of rendering the property is that people may understand: now the subject itself is just as unintelligible as it was to start with, while any one of its species is posterior to it, and so is no more intelligible. Accordingly it is impossible to understand anything further by the use of these terms. Thus (e.g.) any one who has said that it is property of 'animal' to be 'the substance to which \"man\" belongs as a species' has employed one of its species, and therefore the property cou"
+  "column": "131a"
  },
  {
   "id": "5:131b",
   "book": 5,
-  "column": "131b",
-  "greek_head": "καλῶς κείμενον κατὰ τοῦτο τὸ ἴδιον οἷον ἐπεὶ ὁ θεὶς ἀρετῆς ἴδιον ὃ τὸν ἔχοντα ποιεῖ σπουδαῖον τὸ ἀεὶ παρεπόμενον ἴδιον",
-  "english_head": "a man who has stated that it is a property of virtue to be 'what makes its possessor good' has rendered as property something that always follows, and so the property of virtue would in this respect have been correctly rendered.\nNext, for destructive purposes, see whether in rendering the property of the present time he has omitted to make a definite proviso that it is the property of the present time which he is rendering: for else the property will not have been correctly stated. For in the fi"
+  "column": "131b"
  },
  {
   "id": "5:132a",
   "book": 5,
-  "column": "132a",
-  "greek_head": "δηλοῦν τὸ τί ἦν εἶναι τὸ ἴδιον οἷον ἐπεὶ ὁ εἴπας ἀνθρώπου ἴδιον ζῷον πεζὸν δίπουν τὸ τί ἦν εἶναι σημαῖνον ἀποδέδωκε",
-  "english_head": "a man who has said that it is the property of man to be 'a walking, biped animal' has rendered a property of man so as to signify his essence, and so the property of man could not have been correctly rendered. For constructive purposes, on the other hand, see whether the property which he has rendered forms a predicate convertible with its subject, without, however, signifying its essence: for then the property will in this respect have been correctly rendered. Thus (e.g.) he who has stated that"
+  "column": "132a"
  },
  {
   "id": "5:132b",
   "book": 5,
-  "column": "132b",
-  "greek_head": "ζῷον ἐπιστήμης δεκτικὸν κατὰ παντὸς ἀνθρώπου ἀληθεύεται καὶ ᾗ ἄνθρωπος εἴη ἂν ἀνθρώπου ἴδιον τὸ ζῷον ἐπιστήμης",
-  "english_head": "Thus, for example, in as much as the description 'an animal capable of receiving knowledge' is true of every man, and true of him qua man, it would be a property of man to be 'an animal capable of receiving knowledge'. commonplace rule means-for destructive purposes, see if the description fails to be true of that of which the name is true; and if the name fails to be true of that of which the description is true: for constructive purposes, on the other hand, see if the description too is predic"
+  "column": "132b"
  },
  {
   "id": "5:133a",
   "book": 5,
-  "column": "133a",
-  "greek_head": "κατὰ μέθεξιν ὑπάρχον εἰς τὸ τί ἦν εἶναι συμβάλλεται εἴη δ' ἂν τὸ τοιοῦτο διαφορά τις κατά τινος ἑνὸς εἴδους λεγομένη",
-  "english_head": "Next, for destructive purposes, see if he has rendered the property as partaken of: for then what is stated to be a property will not be a property. For an attribute of which the subject partakes is a constituent part of its essence: and an attribute of that kind would be a differentia applying to some one species. E.g. inasmuch as he who has said that 'walking on two feet' is property of man has rendered the property as partaken of, 'walking on two feet' could not be a property of 'man'. For co"
+  "column": "133a"
  },
  {
   "id": "5:133b",
   "book": 5,
-  "column": "133b",
-  "greek_head": "ἴδιον τὸ κείμενον εἶναι ἴδιον οἷον ἐπεὶ ταὐτόν ἐστι τῷ εἴδει ἄνθρωπος καὶ ἵππος οὐκ ἀεὶ δὲ τοῦ ἵππου ἐστὶν ἴδιον τὸ ἑστάναι",
-  "english_head": "This commonplace rule is useful also in dealing with Accident: for the same attributes ought either to belong or not belong to the same things, in so far as they are the same.\nNext, for destructive purposes, see if the property of things that are the same in kind as the subject fails to be always the same in kind as the alleged property: for then neither will what is stated to be the property of the subject in question. Thus (e.g.) inasmuch as a man and a horse are the same in kind, and it is no"
+  "column": "133b"
  },
  {
   "id": "5:134a",
   "book": 5,
-  "column": "134a",
-  "greek_head": "οὔθ' ὁ ἐπιστήμων ἐστὶ τὸ ἀμετάπειστον ὑπὸ λόγου ἀλλ' ὁ ἀμετάπειστος ὑπὸ λόγου οὔθ' ἡ ἐπιστήμη τὸ ἀμετάπειστον",
-  "english_head": "Moreover, you should take a look along at the inflections, and say that the description of the man of science is wrong: one should say not 'it' but 'he is incontrovertible by argument'; while the description of Science is wrong too: one should say not 'it' but 'she is incontrovertible by argument'. For against an objector who sticks at nothing the defence should stick at nothing. Next, for destructive purposes, see if, while intending to render an attribute that naturally belongs, he states it i"
+  "column": "134a"
  },
  {
   "id": "5:134b",
   "book": 5,
-  "column": "134b",
-  "greek_head": "καθάπερ ἐπιστήμης τὸ ἀμετάπειστον ὑπὸ λόγου ἢ τῷ μετέχεσθαι καθάπερ ζῴου τὸ αἰσθάνεσθαι αἰσθάνεται μὲν γὰρ",
-  "english_head": "man, but they have it because they already partake of 'animal'), or because it partakes of something else, as 'life' belongs to a particular kind of 'living being'. Accordingly he makes a mistake if he has failed to add the word 'naturally', because what belongs naturally may fail to belong to the thing to which it naturally belongs, as (e.g.) it belongs to a man to have two feet: so too he errs if he does not make a definite proviso that he is rendering what actually belongs, because one day th"
+  "column": "134b"
  },
  {
   "id": "5:135a",
   "book": 5,
-  "column": "135a",
-  "greek_head": "τοὔνομα μᾶλλον ἔτι δὲ πρὸς τούτοις ταὐτὸν εἶναι συμβήσεται τὸ ἴδιον τοῦ τε ἁπλῶς καὶ τοῦ μάλιστα ὄντος ἐν τῷ",
-  "english_head": "And this should not happen unless the name too be predicated in a greater degree of that of which the description is truer; otherwise the rule that where the description is truer the name too should be truer is not fulfilled. Moreover, in addition to this, the same attribute will be the property both of the term which has it absolutely and of that element therein which has it in the highest degree, as is the condition of the property 'consisting of most rarefied particles' in the case of 'fire':"
+  "column": "135a"
  },
  {
   "id": "5:135b",
   "book": 5,
-  "column": "135b",
-  "greek_head": "κατασκευάζοντα δὲ εἰ ἀληθεύεται μὲν καθ' ἑκάστου τῶν ὁμοιομερῶν ἔστι δ' ἴδιον αὐτῶν κατὰ τὸ σύμπαν ἔσται",
-  "english_head": "For constructive purposes, on the other hand, see whether, while it is true of each of the things with similar parts, it is on the other hand a property of them taken as a collective whole: for then what has been stated not to be a property will be a property. Thus (e.g.) while it is true of earth everywhere that it naturally falls downwards, it is a property of the various particular pieces of earth taken as 'the Earth', so that it would be a property of 'earth' 'naturally to fall downwards'. N"
+  "column": "135b"
  },
  {
   "id": "5:136a",
   "book": 5,
-  "column": "136a",
-  "greek_head": "τὸ καθ' ἕξιν λεγόμενον ἔσται ἴδιον οἷον ἐπεὶ τῆς ὄψεώς ἐστιν ἴδιον τὸ βλέπειν καθὸ ἔχομεν ὄψιν εἴη ἂν τῆς τυφλότητος",
-  "english_head": "This common-place rule is useful only for a destructive purpose. Thus (e.g.) see if the positive term or the attribute described in terms of it is a property of the subject: for then the negative term or the attribute described in terms of it will not be a property of the subject. Also if, on the other hand, the negative term or the attribute described in terms of it is a property of the subject, then the positive term or the attribute described in terms of it will not be a property of the subje"
+  "column": "136a"
  },
  {
   "id": "5:136b",
   "book": 5,
-  "column": "136b",
-  "greek_head": "ἀπόφασις δὲ φάσει ὑπάρχει μέν οὐχ ὡς ἴδιον δὲ ὑπάρχει",
-  "english_head": "Thus (e.g.) inasmuch as 'beautifully' is not a property of 'justly', neither could 'beautiful' be a property of 'just'. For constructive purposes, on the other hand, see if the inflexion of the property rendered is a property of the inflexion of the subject: for then also the other inflexion will be a property of the other inflexion. Thus (e.g.) inasmuch as 'walking biped' is a property of man, it would also be any one's property 'as a man' to be described 'as a walking biped'. Not only in the c"
+  "column": "136b"
  },
  {
   "id": "5:137a",
   "book": 5,
-  "column": "137a",
-  "greek_head": "οὐκ ἂν εἴη οἰκοδόμου ἴδιον τὸ ποιεῖν οἰκίαν κατασκευάζοντα δὲ εἰ τὸ ὁμοίως ἔχον τοῦ ὁμοίως ἔχοντός ἐστιν ἴδιον καὶ γὰρ",
-  "english_head": "If, on the other hand, the predicate which is identically related to two subjects is the property of the subject which is identically related to it as the subject in question, then it will not be a property of that of which it has been stated to be a property. (e.g.) inasmuch as prudence is identically related to both the noble and the base, since it is knowledge of each of them, and it is not a property of prudence to be knowledge of the noble, it could not be a property of prudence to be knowl"
+  "column": "137a"
  },
  {
   "id": "5:137b",
   "book": 5,
-  "column": "137b",
-  "greek_head": "ἐστὶ καὶ ἐκ τοῦ γίνεσθαι καὶ φθείρεσθαι πρὸς τὸ εἶναι καὶ πρὸς τὰ ἐξ αὐτῶν καθάπερ καὶ ἀνασκευάζοντι εἴρηται",
-  "english_head": "Next take a look at the 'idea' of the subject stated, and see, for destructive purposes, if the suggested property fails to belong to the 'idea' in question, or fails to belong to it in virtue of that character which causes it to bear the description of which the property was rendered: for then what has been stated to be a property will not be a property. Thus (e.g.) inasmuch as 'being motionless' does not belong to 'man-himself' qua 'man', but qua 'idea', it could not be a property of 'man' to "
+  "column": "137b"
  },
  {
   "id": "5:138a",
   "book": 5,
-  "column": "138a",
-  "greek_head": "πυρὸς εἴη ἂν ἴδιον τὸ μᾶλλον ἄνω φέρεσθαι κατὰ φύσιν τὸν αὐτὸν δὲ τρόπον σκεπτέον ἐστὶ καὶ ἐκ τῶν ἄλλων",
-  "english_head": "Secondly (b) for destructive purposes, see if the more likely property fails to be a property of the more likely subject: for then neither will the less likely property be a property of the less likely subject. Thus (e.g.) inasmuch as 'perceiving' is more likely to be a property of 'animal' than 'knowing' of 'man', and 'perceiving' is not a property of 'animal', 'knowing' could not be a property of 'man'. For constructive purposes, on the other hand, see if the less likely property is a property"
+  "column": "138a"
  },
  {
   "id": "5:138b",
   "book": 5,
-  "column": "138b",
-  "greek_head": "ἴδιον τούτου ἴδιον οὗ ὁμοίως ἐστὶν ἴδιον οἷον ἐπεὶ ὁμοίως ἐστὶν ἴδιον λογιστικοῦ τὸ πρῶτον φρόνιμον καὶ ἐπιθυμητικοῦ τὸ",
-  "english_head": "Thus (e.g.) inasmuch as it is as much a property of 'the faculty of reason' to be 'the primary seat of wisdom' as it is of 'the faculty of desire' to be 'the primary seat of temperance', and it is a property of the faculty of reason to be the primary seat of wisdom, it would be a property of the faculty of desire to be the primary seat of temperance.\nSecondly (b) for destructive purposes, see if what is as much a property of anything fails to be a property of it: for then neither will what is as"
+  "column": "138b"
  },
  {
   "id": "5:139a",
   "book": 5,
-  "column": "139a",
-  "greek_head": "κατασκευάζοντα δὲ εἰ τῇ δυνάμει ἀποδιδοὺς τὸ ἴδιον ἢ πρὸς ὂν ἀποδίδωσι τὸ ἴδιον ἢ πρὸς μὴ ὄν ἐνδεχομένης τῆς",
-  "english_head": "For constructive purposes, see if in rendering the property potentially he renders the property either relatively to something that exists, or to something that does not exist, when the potentiality in question can belong to what does not exist: for then what has been stated not to be a property will be a property. Thus e.g.) he who renders it as a property of 'being' to be 'capable of being acted upon or of acting', in rendering the property potentially, has rendered the property relatively to "
+  "column": "139a"
  },
  {
   "id": "6:139a",
   "book": 6,
-  "column": "139a",
-  "greek_head": "Τῆς δὲ περὶ τοὺς ὅρους πραγματείας μέρη πέντε ἔστιν ἢ γὰρ ὅτι ὅλως οὐκ ἀληθὲς εἰπεῖν καθ' οὗ τοὔνομα καὶ",
-  "english_head": "The discussion of Definitions falls into five parts. For you have to show either (1) that it is not true at all to apply the expression as well to that to which the term is applied (for the definition of Man ought to be true of every man); or (2) that though the object has a genus, he has failed to put the object defined into the genus, or to put it into the appropriate genus (for the framer of a definition should first place the object in its genus, and then append its differences: for of all t"
+  "column": "139a"
  },
  {
   "id": "6:139b",
   "book": 6,
-  "column": "139b",
-  "greek_head": "γίνεται ὅταν μὲν γὰρ ὅτι ὑπάρχει τὸ συμβεβηκὸς διαλεγώμεθα ὅτι ἀληθὲς λέγομεν ὅταν δ' ὅτι οὐχ ὑπάρχει",
-  "english_head": "For there too the question is always 'Is so and so true or untrue?': for whenever we argue that an accident belongs, we declare it to be true, while whenever we argue that it does not belong, we declare it to be untrue. If, again, he has failed to place the object in the appropriate genus, or if the expression be not peculiar to the object, we must go on to examine the case according to the commonplace rules that relate to genus and property.\nIt remains, then, to prescribe how to investigate whe"
+  "column": "139b"
  },
  {
   "id": "6:140a",
   "book": 6,
-  "column": "140a",
-  "greek_head": "ἔσται ταὐτὸν οὐ περιέχουσιν ἄλληλα οὔτε γὰρ ἡ συμφωνία τὴν ἀρετὴν οὔθ' ἡ ἀρετὴ τὴν συμφωνίαν περιέχει",
-  "english_head": "in the case of temperance: for harmony is always found between notes. Moreover, if harmony be the genus of temperance, then the same object will occur in two genera of which neither contains the other: for harmony does not contain virtue, nor virtue harmony. Again, see if he uses terms that are unfamiliar, as when Plato describes the eye as 'brow-shaded', or a certain spider as poison-fanged', or the marrow as 'boneformed'. For an unusual phrase is always obscure.\nSometimes a phrase is used neit"
+  "column": "140a"
  },
  {
   "id": "6:140b",
   "book": 6,
-  "column": "140b",
-  "greek_head": "περίεργον οὗ ἀφαιρεθέντος τὸ λοιπὸν δῆλον ποιεῖ τὸ ὁριζόμενον τοιοῦτος δὲ καὶ ὁ τῆς ψυχῆς ὅρος εἴπερ ἀριθμὸς αὐτὸς",
-  "english_head": "Speaking generally, everything is superfluous upon whose removal the remainder still makes the term that is being defined clear. Such, for instance, would also be the definition of the soul, assuming it to be stated as a 'self-moving number'; for the soul is just 'the self-moving', as Plato defined it. Or perhaps the expression used, though appropriate, yet does not declare the essence, if the word 'number' be eliminated. Which of the two is the real state of the case it is difficult to determin"
+  "column": "140b"
  },
  {
   "id": "6:141a",
   "book": 6,
-  "column": "141a",
-  "greek_head": "τὸ δίπουν λέγεται ὥστε ἅπαξ μόνον τὸ δίπουν κατηγορεῖται ὁμοίως δὲ καὶ ἐπὶ τῆς ἐπιθυμίας οὐ γὰρ κατὰ τῆς",
-  "english_head": "For 'biped' is not a predicate of 'walking animal': if it were, then we should certainly have 'biped' predicated twice of the same thing; but as a matter of fact the subject said to be a biped is'a walking biped animal', so that the word 'biped' is only used as a predicate once. Likewise also in the case of 'desire' as well: for it is not 'conation' that is said to be 'for the pleasant', but rather the whole idea, so that there too the predication is only made once. Absurdity results, not when t"
+  "column": "141a"
  },
  {
   "id": "6:141b",
   "book": 6,
-  "column": "141b",
-  "greek_head": "οὐ ταὐτά ἐστιν ἐπειδὴ οἱ ὁρισμοὶ ἕτεροι δῆλον οὖν ὅτι οὐχ ὥρισται ὁ μὴ διὰ προτέρων καὶ γνωριμωτέρων ὁρισάμενος",
-  "english_head": "Clearly, then, any one who has not defined a thing through terms that are prior and more intelligible has not defined it at all.\nThe statement that a definition has not been made through more intelligible terms may be understood in two senses, either supposing that its terms are absolutely less intelligible, or supposing that they are less intelligible to us: for either sense is possible. Thus absolutely the prior is more intelligible than the posterior, a point, for instance, than a line, a lin"
+  "column": "141b"
  },
  {
   "id": "6:142a",
   "book": 6,
-  "column": "142a",
-  "greek_head": "ἕτερος ἂν εἴη ὁρισμὸς ἀποδοτέος εἴπερ ἐκ τῶν ἑκάστῳ γνωριμωτέρων τὸν ὁρισμὸν ποιεῖσθαι χρή ἔτι τοῖς αὐτοῖς ἄλλοτ'",
-  "english_head": "For, as it happens, different things are more intelligible to different people, not the same things to all; and so a different definition would have to be rendered to each several person, if the definition is to be constructed from what is more intelligible to particular individuals. Moreover, to the same people different things are more intelligible at different times; first of all the objects of sense; then, as they become more sharpwitted, the converse; so that those who hold that a definitio"
+  "column": "142a"
  },
  {
   "id": "6:142b",
   "book": 6,
-  "column": "142b",
-  "greek_head": "τὸν ἥλιον ἄστρον ἡμεροφανὲς ὡρίσατο ὁ γὰρ ἡμέρᾳ χρώμενος ἡλίῳ χρῆται δεῖ δ' ὅπως φωραθῇ τὰ τοιαῦτα μεταλαμβάνειν",
-  "english_head": "This passes unobserved when the actual name of the object is not used, e.g. supposing any one had defined the sun as a star that appears by day'. For in bringing in 'day' he brings in the sun. To detect errors of this sort, exchange the word for its definition, e.g. the definition of 'day' as the 'passage of the sun over the earth'. Clearly, whoever has said 'the passage of the sun over the earth' has said 'the sun', so that in bringing in the 'day' he has brought in the sun.\n(3) Again, see if h"
+  "column": "142b"
  },
  {
   "id": "6:143a",
   "book": 6,
-  "column": "143a",
-  "greek_head": "μὲν οὖν κατ' ἀλήθειαν ἔχει καθάπερ εἴρηται ἐπ' ἐνίων δ' οὔ οἷον ἐφ' ὅσων μὴ καθ' αὑτὸ πρὸς ἄμφω λέγεται καθάπερ ἡ",
-  "english_head": "It is only, however, in some cases that what has been said corresponds to the actual state of things: in some it does not, e.g. all those terms which are not used essentially in relation to both things: as medicine is said to deal with the production of disease and health; for it is said essentially to do the latter, but the former only by accident: for it is absolutely alien to medicine to produce disease. Here, then, the man who renders medicine as relative to both of these things has not defi"
+  "column": "143a"
  },
  {
   "id": "6:143b",
   "book": 6,
-  "column": "143b",
-  "greek_head": "διαιρεῖται καθάπερ τὸ ζῷον τῷ πεζῷ καὶ τῷ πτηνῷ καὶ τῷ ἐνύδρῳ καὶ τῷ δίποδι ἢ εἰ ἔστι μὲν ἀντιδιῃρημένη",
-  "english_head": "For a genus is always divided by differentiae that are co-ordinate members of a division, as, for instance, by the terms 'walking', 'flying', 'aquatic', and 'biped'. Or see if, though the contrasted differentia exists, it yet is not true of the genus, for then, clearly, neither of them could be a differentia of the genus; for differentiae that are co-ordinates in a division with the differentia of a thing are all true of the genus to which the thing belongs. Likewise, also, see if, though it be "
+  "column": "143b"
  },
  {
   "id": "6:144a",
   "book": 6,
-  "column": "144a",
-  "greek_head": "ἀναγκαῖον ἀντιδιαιρεῖσθαι οἷον εἰ μῆκος πλάτος ἔχον ὥρισται τῷ γὰρ πλάτος ἔχοντι τὸ μὴ ἔχον πλάτος ἀντιδιῄρηται",
-  "english_head": "There is no difference between dividing the genus by a negation, and dividing it by such an affirmation as is bound to have a negation as its co-ordinate in a division, e.g. supposing he had defined something as 'length possessed of breadth'; for co-ordinate in the division with that which is possessed of breadth is that which possesses no breadth and that only, so that again the genus is divided by a negation.\nAgain, see if he rendered the species as a differentia, as do those who define 'contu"
+  "column": "144a"
  },
  {
   "id": "6:144b",
   "book": 6,
-  "column": "144b",
-  "greek_head": "γὰρ διαφοραὶ τοῦ εἴδους κατηγοροῦνται ἔτι αἱ διαφοραὶ πᾶσαι ἢ εἴδη ἢ ἄτομα ἔσονται εἴπερ ζῷα ἕκαστον γὰρ τῶν ζῴων",
-  "english_head": "Likewise you must inquire also if the species or any of the objects that come under it is predicated of the differentia: for this is impossible, seeing that the differentia is a term with a wider range than the various species. Moreover, if any of the species be predicated of it, the result will be that the differentia is a species: if, for instance, 'man' be predicated, the differentia is clearly the human race. Again, see if the differentia fails to be prior to the species: for the differentia"
+  "column": "144b"
  },
  {
   "id": "6:145a",
   "book": 6,
-  "column": "145a",
-  "greek_head": "ἀλλ' οὐκ ἔνυδρον ἔσται ἀλλ' ὅμως ἐάν ποτε σημαίνῃ τὸ ἔν τινι ἡ διαφορά δῆλον ὅτι διημαρτηκὼς ἔσται",
-  "english_head": "Again, see if he has rendered an affection as the differentia: for every affection, if intensified, subverts the essence of the thing, while the differentia is not of that kind: for the differentia is generally considered rather to preserve that which it differentiates; and it is absolutely impossible for a thing to exist without its own special differentia: for if there be no 'walking', there will be no 'man'. In fact, we may lay down absolutely that a thing cannot have as its differentia anyth"
+  "column": "145a"
  },
  {
   "id": "6:145b",
   "book": 6,
-  "column": "145b",
-  "greek_head": "λέγουσιν ὅτι ὁ ὕπνος ἐστὶν ἀδυναμία αἰσθήσεως καὶ ἡ ἀπορία ἰσότης ἐναντίων λογισμῶν καὶ ἡ ἀλγηδὼν διάστασις τῶν",
-  "english_head": "For sleep is not an attribute of sensation, whereas it ought to be, if it is a failure of sensation. Likewise, perplexity is not an attribute of opposite reasonings, nor pain of parts naturally conjoined: for then inanimate things will be in pain, since pain will be present in them. Similar in character, too, is the definition of 'health', say, as a 'balance of hot and cold elements': for then health will be necessarily exhibited by the hot and cold elements: for balance of anything is an attrib"
+  "column": "145b"
  },
  {
   "id": "6:146a",
   "book": 6,
-  "column": "146a",
-  "greek_head": "ἡ δικαιοσύνη δύναμις τοῦ ἴσου διανεμητική καὶ γὰρ δίκαιος εἴη ἂν μάλιστα ὁ δυνάμενος μάλιστα τὸ ἴσον διανεῖμαι",
-  "english_head": "This would not be right, for 'just' describes rather the man who chooses, than the man who is able to distribute what is equal: so that justice could not be an ability to distribute what is equal: for then also the most just man would be the man with the most ability to distribute what is equal.\nMoreover, see if the thing admits of degrees, whereas what is rendered according to the definition does not, or, vice versa, what is rendered according to the definition admits of degrees while the thing"
+  "column": "146a"
  },
  {
   "id": "6:146b",
   "book": 6,
-  "column": "146b",
-  "greek_head": "ἢ αὐτὸ ἢ κατὰ τὸ γένος οἷον εἰ τὴν ἐπιστήμην ὡρίσατο ὑπόληψιν ἀμετάπειστον ἢ τὴν βούλησιν ὄρεξιν ἄλυπον",
-  "english_head": "if he has defined 'knowledge' as an 'incontrovertible conception' or 'wishing' as 'painless conation'. For of everything relative the essence is relative to something else, seeing that the being of every relative term is identical with being in a certain relation to something. He ought, therefore, to have said that knowledge is 'conception of a knowable' and that wishing is 'conation for a good'. Likewise, also, if he has defined 'grammar' as 'knowledge of letters': whereas in the definition the"
+  "column": "146b"
  },
  {
   "id": "6:147a",
   "book": 6,
-  "column": "147a",
-  "greek_head": "ὄρεξις ἀγαθοῦ ἡ δ' ἐπιθυμία ὄρεξις ἡδέος ἀλλὰ μὴ φαινομένου ἀγαθοῦ ἢ ἡδέος πολλάκις γὰρ λανθάνει τοὺς ὀρεγομένους",
-  "english_head": "'wishing is a conation after the good', or 'desire is a conation after the pleasant'-instead of saying 'the apparently good', or 'pleasant'. For often those who exhibit the conation do not perceive what is good or pleasant, so that their aim need not be really good or pleasant, but only apparently so. They ought, therefore, to have rendered the definition also accordingly. On the other hand, any one who maintains the existence of Ideas ought to be brought face to face with his Ideas, even though"
+  "column": "147a"
  },
  {
   "id": "6:147b",
   "book": 6,
-  "column": "147b",
-  "greek_head": "εἶναι τῷ ἐξ ἀρχῆς ῥηθέντι εἰ οὖν μηδέτερον ἐναντίον τῷ ἐξ ἀρχῆς ῥηθέντι δῆλον ὅτι οὐδέτερος ἂν εἴη τῶν ὕστερον",
-  "english_head": "Suppose, then, neither of these things to be the contrary of the term originally used, then clearly neither of the definitions rendered later could be the definition of the contrary of the term originally defined: and therefore the definition originally rendered of the original term has not been rightly rendered either. Seeing, moreover, that of contraries, the one is sometimes a word forced to denote the privation of the other, as (e.g.) inequality is generally held to be the privation of equal"
+  "column": "147b"
  },
  {
   "id": "6:148a",
   "book": 6,
-  "column": "148a",
-  "greek_head": "τί ἐστι καὶ τίνος ἐστὶν ἡ στέρησις ἀποδιδόναι καὶ τί ἐστι τὸ ἐστερημένον",
-  "english_head": "Likewise, also, if he has failed to say that 'blindness' is the 'privation of sight in an eye': for a proper rendering of its essence must state both of what it is the privation and what it is that is deprived.\nExamine further whether he has defined by the expression 'a privation' a term that is not used to denote a privation: thus a mistake of this sort also would be generally thought to be incurred in the case of 'error' by any one who is not using it as a merely negative term. For what is gen"
+  "column": "148a"
  },
  {
   "id": "6:148b",
   "book": 6,
-  "column": "148b",
-  "greek_head": "μὲν ὡς συνωνύμοις χρηστέον οὐ γὰρ ἐφαρμόσει ὁ θατέρου ὅρος ἐπὶ θάτερον ὥστε δόξει οὐχ ὡρίσθαι κατὰ τρόπον",
-  "english_head": "Since ambiguous terms sometimes pass unobserved, it is best in questioning to treat such terms as though they were synonymous (for the definition of the one sense will not apply to the other, so that the answerer will be generally thought not to have defined it correctly, for to a synonymous term the definition should apply in its full range), whereas in answering you should yourself distinguish between the senses. Further, as some answerers call 'ambiguous' what is really synonymous, whenever t"
+  "column": "148b"
  },
  {
   "id": "6:149a",
   "book": 6,
-  "column": "149a",
-  "greek_head": "οὐδὲν πλείω νῦν ἢ πρότερον ὀνόματα εἴρηται δεῖ δὲ τὸν ὁριζόμενον λόγον ἀντὶ τῶν ὀνομάτων ἀποδοῦναι μάλιστα μὲν πάντων",
-  "english_head": "For at that rate, simple objects too could be defined by merely calling them by a different name, e.g. 'cloak' instead of 'doublet'.\nThe mistake is even worse, if actually a less well known term be substituted, e.g. 'pellucid mortal' for 'white man': for it is no definition, and moreover is less intelligible when put in that form.\nLook and see also whether, in the exchange of words, the sense fails still to be the same. Take, for instance, the explanation of 'speculative knowledge' as 'speculati"
+  "column": "149a"
  },
  {
   "id": "6:149b",
   "book": 6,
-  "column": "149b",
-  "greek_head": "χρῶμα πυρὶ μεμειγμένον ἀδύνατον γὰρ τὸ ἀσώματον σώματι μεμεῖχθαι ὥστ' οὐκ ἂν εἴη χρῶμα πυρὶ μεμειγμένον",
-  "english_head": "For if medicine be not a science of anything that is real, the definition is clearly altogether false; while if it be a science of some real thing, but not of another, it is partly false; for it ought to hold of all reality, if it is said to be of Reality essentially and not accidentally: as is the case with other relative terms: for every object of knowledge is a term relative to knowledge: likewise, also, with other relative terms, inasmuch as all such are convertible. Moreover, if the right w"
+  "column": "149b"
  },
  {
   "id": "6:150a",
   "book": 6,
-  "column": "150a",
-  "greek_head": "Σκοπεῖν δὲ καὶ εἴ τινος ὁρισμὸν ἀποδιδοὺς τάδε ἢ τὸ ἐκ τούτων ἢ τόδε μετὰ τοῦδε ὡρίσατο εἰ μὲν γὰρ τάδε",
-  "english_head": "See also whether in defining anything a man has defined it as an 'A and B', or as a 'product of A and B' or as an 'A+B'. If he defines it as and B', the definition will be true of both and yet of neither of them; suppose, e.g. justice to be defined as 'temperance and courage.' For if of two persons each has one of the two only, both and yet neither will be just: for both together have justice, and yet each singly fails to have it. Even if the situation here described does not so far appear very "
+  "column": "150a"
  },
  {
   "id": "6:150b",
   "book": 6,
-  "column": "150b",
-  "greek_head": "γενέσθαι οὔτ' ἐκ κακῶν ἢ ἀγαθῶν μηδέτερον ἢ εἰ μᾶλλον μὲν θάτερον ἀγαθὸν ἢ θάτερον κακόν τὸ δ' ἐκ τούτων μὴ",
-  "english_head": "For it is impossible either for a neutral thing to produce something good or bad, or for things good or bad to produce a neutral thing. Or again, see if the one thing is more distinctly good than the other is evil, and yet the product be no more good than evil, e.g. suppose shamelessness be defined as 'the product of courage and false opinion': here the goodness of courage exceeds the evil of false opinion; accordingly the product of these ought to have corresponded to this excess, and to be eit"
+  "column": "150b"
  },
  {
   "id": "6:151a",
   "book": 6,
-  "column": "151a",
-  "greek_head": "τοῦδέ ἐστιν εἰ δὲ τῶν διαιρεθέντων ἀληθὲς τὸ ἐν ταὐτῷ χρόνῳ ἑκάτερον ὑπάρχειν σκοπεῖν εἰ ἐνδέχεται μὴ πρὸς ταὐτὸν",
-  "english_head": "If, however, among the various senses above distinguished, it be true that A and B are each found in the same time as the other, look and see if possibly the two are not used in the same relation. Thus e.g. suppose courage to have been defined as 'daring with right reasoning': here it is possible that the person exhibits daring in robbery, and right reasoning in regard to the means of health: but he may have 'the former quality+the latter' at the same time, and not as yet be courageous! Moreover"
+  "column": "151a"
  },
  {
   "id": "6:151b",
   "book": 6,
-  "column": "151b",
-  "greek_head": "τῆς ψυχῆς ὅρος εἰ ἔστιν οὐσία ἐπιστήμης δεκτική ὁμοίως γὰρ καὶ ἀγνοίας ἐστὶ δεκτική",
-  "english_head": "Such is the definition of the soul, if defined as a substance capable of receiving knowledge: for it has a like capacity for receiving ignorance.\nAlso, even when one cannot attack the definition as a whole for lack of acquaintance with the whole, one should attack some part of it, if one knows that part and sees it to be incorrectly rendered: for if the part be demolished, so too is the whole definition. Where, again, a definition is obscure, one should first of all correct and reshape it in ord"
+  "column": "151b"
  },
  {
   "id": "7:151b",
   "book": 7,
-  "column": "151b",
-  "greek_head": "Πότερον δὲ ταὐτὸν ἢ ἕτερον κατὰ τὸν κυριώτατον τῶν ῥηθέντων περὶ ταὐτοῦ τρόπων ἐλέγετο δὲ κυριώτατα ταὐτὸν",
-  "english_head": "Whether two things are 'the same' or 'different', in the most literal of the meanings ascribed to 'sameness' (and we said' that 'the same' applies in the most literal sense to what is numerically one), may be examined in the light of their inflexions and coordinates and opposites. For if justice be the same as courage, then too the just man is the same as the brave man, and 'justly' is the same as 'bravely'. Likewise, too, in the case of their opposites: for if two things be the same, their oppo"
+  "column": "151b"
  },
  {
   "id": "7:152a",
   "book": 7,
-  "column": "152a",
-  "greek_head": "καὶ φθαρτικῶν καὶ γενέσεων καὶ φθορῶν καὶ ὅλως τῶν ὁμοίως ἐχόντων πρὸς ἑκάτερον ὅσα γὰρ ἁπλῶς ταὐτά καὶ",
-  "english_head": "Again it may be examined in the light of those things which tend to produce or to destroy the things in question of their formation and destruction, and in general of any thing that is related in like manner to each. For where things are absolutely the same, their formations and destructions also are the same, and so are the things that tend to produce or to destroy them. Look and see also, in a case where one of two things is said to be something or other in a superlative degree, if the other o"
+  "column": "152a"
  },
  {
   "id": "7:152b",
   "book": 7,
-  "column": "152b",
-  "greek_head": "τὸ γένος ἑκατέρου μὴ ταὐτόν ἀλλὰ τὸ μὲν ἀγαθὸν τὸ δὲ κακόν ἢ τὸ μὲν ἀρετὴ τὸ δ' ἐπιστήμη ἢ εἰ τὸ μὲν γένος",
-  "english_head": "Again, see if the genus of each be not the same, the one being 'good' and the other evil', or the one being 'virtue' and the other 'knowledge': or see if, though the genus is the same, the differentiae predicted of either be not the same, the one (e.g.) being distinguished as a 'speculative' science, the other as a 'practical' science. Likewise also in other cases.\nMoreover, from the point of view of 'degrees', see if the one admits an increase of degree but not the other, or if though both admi"
+  "column": "152b"
  },
  {
   "id": "7:153a",
   "book": 7,
-  "column": "153a",
-  "greek_head": "δῆλον ὅτι οὐκ ἂν εἴη ὁρισμὸς ὁ ἀποδοθεὶς λόγος τῶν δὲ κατασκευαστικῶν τόπων οὐδεὶς χρήσιμος πρὸς ὅρον οὐ γὰρ",
-  "english_head": "None of the constructive commonplaces, on the other hand, helps in the matter of definition; for it is not enough to show the sameness of content between the expression and the term, in order to establish that the former is a definition, but a definition must have also all the other characters already announced. This then is the way, and these the arguments, whereby the attempt to demolish a definition should always be made. If, on the other hand, we desire to establish one, the first thing to o"
+  "column": "153a"
  },
  {
   "id": "7:153b",
   "book": 7,
-  "column": "153b",
-  "greek_head": "δὲ συγκριτικὸν ὄψεως ὥστ' εἰ τοῦ ἐναντίου αἱ ἐναντίαι κατηγοροῦνται τοῦ προκειμένου αἱ ἀποδοθεῖσαι κατηγοροῖντ' ἄν",
-  "english_head": "those of white and black, for the one tends to pierce the vision, while the other tends to compress it. So that if contrary differentiae to those in the definition are predicated of the contrary term, then those rendered in the definition would be predicated of the term before us. Seeing, then, that both the genus and the differentiae have been rightly rendered, clearly the expression given must be the right definition. It might be replied that there is no necessity why contrary differentiae sho"
+  "column": "153b"
  },
  {
   "id": "7:154a",
   "book": 7,
-  "column": "154a",
-  "greek_head": "γὰρ ἕκαστον τῶν εἰρημένων πρὸς τὸ οἰκεῖον τέλος ἔχει ὥστ' εἰ ἑνὸς αὐτῶν ὁρισμός ἐστι τὸ ποιητικὸν εἶναι τοῦ τέλους",
-  "english_head": "For if 'healthy' means 'productive of health', 'vigorous' too will mean 'productive of vigour', and 'useful' will mean 'productive of good.' For each of these things is related in like manner to its own peculiar end, so that if one of them is defined as 'productive of' that end, this will also be the definition of each of the rest as well.\nMoreover, look at it from the point of and like degrees, in all the ways in which it is possible to establish a result by comparing two and two together. Thus"
+  "column": "154a"
  },
  {
   "id": "7:154b",
   "book": 7,
-  "column": "154b",
-  "greek_head": "παντὸς οὗ τοὔνομα κατηγορεῖται κατηγορεῖσθαι τὸν ὅρον καὶ ἔτι πρὸς τούτοις ἀντιστρέφειν εἰ μέλλει ἴδιος εἶναι ὁ ἀποδοθεὶς",
-  "english_head": "Moreover, in establishing a case, the reasoning brought forward must be universal: for the definition put forward must be predicated of everything of which the term is predicated, and must moreover be convertible, if the definition rendered is to be peculiar to the subject. In overthrowing a view, on the other hand, there is no longer any necessity to show one's point universally: for it is enough to show that the formula is untrue of any one of the things embraced under the term.\nFurther, even "
+  "column": "154b"
  },
  {
   "id": "7:155a",
   "book": 7,
-  "column": "155a",
-  "greek_head": "τινὶ ὑπάρχον ἀνασκευάζοντι δὲ δεικτέον ὅτι οὐδενὶ ὑπάρχει",
-  "english_head": "It is clear also that the easiest thing of all is to overthrow a definition. For on account of the number of statements involved we are presented in the definition with the greatest number of points for attack, and the more plentiful the material, the quicker an argument comes: for there is more likelihood of a mistake occurring in a large than in a small number of things. Moreover, the other rules too may be used as means for attacking a definition: for if either the formula be not peculiar, or"
+  "column": "155a"
  },
  {
   "id": "8:155b",
   "book": 8,
-  "column": "155b",
-  "greek_head": "Μετὰ δὲ ταῦτα περὶ τάξεως καὶ πῶς δεῖ ἐρωτᾶν λεκτέον δεῖ δὲ πρῶτον μὲν ἐρωτηματίζειν μέλλοντα τὸν τόπον",
-  "english_head": "Next there fall to be discussed the problems of arrangement and method in pitting questions. Any one who intends to frame questions must, first of all, select the ground from which he should make his attack; secondly, he must frame them and arrange them one by one to himself; thirdly and lastly, he must proceed actually to put them to the other party. Now so far as the selection of his ground is concerned the problem is one alike for the philosopher and the dialectician; but how to go on to arra"
+  "column": "155b"
  },
  {
   "id": "8:156a",
   "book": 8,
-  "column": "156a",
-  "greek_head": "καὶ τῇ ἐπαγωγῇ τὸ συμβησόμενον καὶ ἅμα τὸ αὐτὰς τὰς χρησίμους προτεῖναι μὴ δυνάμενον ἐκείνως",
-  "english_head": "This is because the coming conclusion is less easily discerned at the greater distance and in the process of induction, while at the same time, even if one cannot reach the required premisses in this way, it is still open to one to formulate them in so many words. The premisses, other than these, that were mentioned above, must be secured with a view to the latter. The way to employ them respectively is as follows: Induction should proceed from individual cases to the universal and from the know"
+  "column": "156a"
  },
  {
   "id": "8:156b",
   "book": 8,
-  "column": "156b",
-  "greek_head": "ποιῆσαι μεταμέλεσθαι οὐ μὴν ἀλλ' ἔχει τι πιθανὸν πρὸς τὸ μὴ δοκεῖν ἀλόγως ἀρνεῖσθαι τὸ προτεινόμενον ἐπὶ δὲ τοῦ",
-  "english_head": "Very likely the objection is not valid; for upon some people it is vengeance enough to cause them pain and make them sorry; but still it gives a certain plausibility and air of reasonableness to the denial of the proposition. In the case, however, of the definition of 'anger' it is not so easy to find an objection.\nMoreover, formulate your proposition as though you did so not for its own sake, but in order to get at something else: for people are shy of granting what an opponent's case really re"
+  "column": "156b"
  },
  {
   "id": "8:157a",
   "book": 8,
-  "column": "157a",
-  "greek_head": "οὐδὲν πείσεσθαι ἔτι τὸ μηκύνειν καὶ παρεμβάλλειν τὰ μηδὲν χρήσιμα πρὸς τὸν λόγον καθάπερ οἱ ψευδογραφοῦντες",
-  "english_head": "Likewise also with those who consider themselves smart at answering: for when they have admitted most of what you want they finally talk clap-trap to the effect that the conclusion does not follow from their admissions: yet they say 'Yes' readily, confident in their own character, and imagining that they cannot suffer any reverse. Moreover, it is well to expand the argument and insert things that it does not require at all, as do those who draw false geometrical figures: for in the multitude of "
+  "column": "157a"
  },
  {
   "id": "8:157b",
   "book": 8,
-  "column": "157b",
-  "greek_head": "ἀριθμὸς πρῶτος δεῖ γὰρ τὸν ἐνιστάμενον ἐφ' ἑτέρου τὴν ἔνστασιν φέρειν ἢ λέγειν ὅτι τοῦτο μόνον τοιοῦτο πρὸς δὲ τοὺς",
-  "english_head": "One ought, moreover, to claim that the objections should not be brought in reference to the actual subject of the proposition, unless that subject happen to be the one and only thing of the kind, as for instance two is the one prime number among the even numbers: for, unless he can say that this subject is unique of its kind, the objector ought to make his objection in regard to some other. People sometimes object to a universal proposition, and bring their objection not in regard to the thing i"
+  "column": "157b"
  },
  {
   "id": "8:158a",
   "book": 8,
-  "column": "158a",
-  "greek_head": "ἂν μὴ λίαν ᾖ περιφανὲς ψεῦδος ὄν οὐκ ἀδύνατόν φασιν εἶναι ὥστ' οὐ γίνεται τοῖς ἐρωτῶσιν ὃ βούλονται",
-  "english_head": "For where one has reasoned without the reduction per impossibile, no dispute can arise; if, on the other hand, one does reason to an impossible conclusion, unless its falsehood is too plainly manifest, people deny that it is impossible, so that the questioners do not get what they want.\nOne should put forward all propositions that hold true of several cases, and to which either no objection whatever appears or at least not any on the surface: for when people cannot see any case in which it is no"
+  "column": "158a"
  },
  {
   "id": "8:158b",
   "book": 8,
-  "column": "158b",
-  "greek_head": "προκείμενον οὐ ῥᾴδιον ἐπιχειρεῖν μάλιστα δὲ τὸ τοιοῦτον περὶ τὰς ἀρχὰς συμβαίνει τὰ μὲν γὰρ ἄλλα διὰ τούτων δείκνυται",
-  "english_head": "This sort of thing happens particularly in the case of the first principles: for while the other propositions are shown through these, these cannot be shown through anything else: we are obliged to understand every item of that sort by a definition. The inferences, too, that lie too close to the first principle are hard to treat in argument: for it is not possible to bring many arguments in regard to them, because of the small number of those steps, between the conclusion and the principle, wher"
+  "column": "158b"
  },
  {
   "id": "8:159a",
   "book": 8,
-  "column": "159a",
-  "greek_head": "ἀδύνατον ὁμοίως δὲ τούτοις καὶ ἐπὶ τῶν κατὰ τοὺς λόγους ἔχει",
-  "english_head": "One may be sure then, whenever a position is hard to discuss, that one or other of the aforesaid things has happened to it. Whenever, on the other hand, it is a harder task to argue to the point claimed, i.e. the premiss, than to the resulting position, a doubt may arise whether such claims should be admitted or not: for if a man is going to refuse to admit it and claim that you shall argue to it as well, he will be giving the signal for a harder undertaking than was originally proposed: if, on "
+  "column": "159a"
  },
  {
   "id": "8:159b",
   "book": 8,
-  "column": "159b",
-  "greek_head": "ἔνδοξον ἢ ἄδοξον ἢ ὡρισμένως οἷον τῳδί τινι ἢ αὐτῷ ἢ ἄλλῳ διαφέρει δ' οὐδὲν ὁπωσοῦν ἐνδόξου ἢ ἀδόξου οὔσης ὁ γὰρ αὐτὸς",
-  "english_head": "to admit or to refuse to admit what has been asked, will be the same in either case. If, then, the statement laid down by the answerer be generally rejected, the conclusion aimed at by the questioner is bound to be one generally accepted, whereas if the former be generally accepted, the latter is generally rejected: for the conclusion which the questioner tries to draw is always the opposite of the statement laid down. If, on the other hand, what is laid down is generally neither rejected nor ac"
+  "column": "159b"
  },
  {
   "id": "8:160a",
   "book": 8,
-  "column": "160a",
-  "greek_head": "ἐὰν μὲν ᾖ δοκοῦν καὶ μὴ πρὸς τὸν λόγον δοτέον φήσαντα δοκεῖν ἐὰν δὲ μὴ δοκοῦν καὶ μὴ πρὸς τὸν λόγον δοτέον μέν",
-  "english_head": "Now every question asked is bound to involve some view that is either generally held or generally rejected or neither, and is also bound to be either relevant to the argument or irrelevant: if then it be a view generally accepted and irrelevant, the answerer should grant it and remark that it is the accepted view: if it be a view not generally accepted and irrelevant, he should grant it but add a comment that it is not generally accepted, in order to avoid the appearance of being a simpleton. If"
+  "column": "160a"
  },
  {
   "id": "8:160b",
   "book": 8,
-  "column": "160b",
-  "greek_head": "ᾖ ἀληθῆ καὶ ἔνδοξα πρὸς δὲ τὸ καθόλου πειρατέον ἔνστασιν φέρειν τὸ γὰρ ἄνευ ἐνστάσεως ἢ οὔσης ἢ δοκούσης κωλύειν",
-  "english_head": "On the other hand, against the universal one should try to bring some negative instance; for to bring the argument to a standstill without a negative instance, either real or apparent, shows ill-temper. If, then, a man refuses to grant the universal when supported by many instances, although he has no negative instance to show, he obviously shows ill-temper. If, moreover, he cannot even attempt a counter-proof that it is not true, far more likely is he to be thought ill-tempered-although even co"
+  "column": "160b"
  },
  {
   "id": "8:161a",
   "book": 8,
-  "column": "161a",
-  "greek_head": "Ἔστι δὲ λόγον κωλῦσαι συμπεράνασθαι τετραχῶς ἢ γὰρ ἀνελόντα παρ' ὃ γίνεται τὸ ψεῦδος ἢ πρὸς τὸν ἐρωτῶντα",
-  "english_head": "There are four possible ways of preventing a man from working his argument to a conclusion. It can be done either by demolishing the point on which the falsehood that comes about depends, or by stating an objection directed against the questioner: for often when a solution has not as a matter of fact been brought, yet the questioner is rendered thereby unable to pursue the argument any farther. Thirdly, one may object to the questions asked: for it may happen that what the questioner wants does "
+  "column": "161a"
  },
  {
   "id": "8:161b",
   "book": 8,
-  "column": "161b",
-  "greek_head": "νικᾶν διαφέρει δ' οὐδέν ἄν τε διὰ τοῦ ἀποκρίνεσθαι ἄν τε διὰ τοῦ ἐρωτᾶν ποιῇ τοῦτο ὅ τε γὰρ ἐριστικῶς ἐρωτῶν",
-  "english_head": "It makes no difference whether he effects this as answerer or as questioner: for both he who asks contentious questions is a bad dialectician, and also he who in answering fails to grant the obvious answer or to understand the point of the questioner's inquiry. What has been said, then, makes it clear that adverse criticism is not to be passed in a like strain upon the argument on its own merits, and upon the questioner: for it may very well be that the argument is bad, but that the questioner h"
+  "column": "161b"
  },
  {
   "id": "8:162a",
   "book": 8,
-  "column": "162a",
-  "greek_head": "πρόβλημα ἐπαινετόν καὶ πάλιν ἀντεστραμμένως καθ' αὑτὸν μὲν ἐπαινετόν πρὸς δὲ τὸ πρόβλημα ψεκτόν ὅταν ἐκ",
-  "english_head": "It is possible also that an argument, even though brought to a conclusion, may sometimes be worse than one which is not so concluded, whenever the premisses of the former are silly, while its conclusion is not so; whereas the latter, though requiring certain additions, requires only such as are generally held and true, and moreover does not rest as an argument on these additions. With those which bring about a true conclusion by means of false premisses, it is not fair to find fault: for a false"
+  "column": "162a"
  },
  {
   "id": "8:162b",
   "book": 8,
-  "column": "162b",
-  "greek_head": "μὲν ᾖ ἐξ ὧν ἀναγκαῖον εἶναι ᾖ δὲ διὰ συμπερασμάτων συμπεραινόμενος ἔτι εἰ ἐλλείπει τι σφόδρα ἔνδοξον",
-  "english_head": "An argument is called fallacious in four senses: (1) when it appears to be brought to a conclusion, and is not really so-what is called 'contentious' reasoning: (2) when it comes to a conclusion but not to the conclusion proposed-which happens principally in the case of reductiones ad impossibile: (3) when it comes to the proposed conclusion but not according to the mode of inquiry appropriate to the case, as happens when a non-medical argument is taken to be a medical one, or one which is not g"
+  "column": "162b"
  },
  {
   "id": "8:163a",
   "book": 8,
-  "column": "163a",
-  "greek_head": "σημαίνει μᾶλλον δεύτερον δέ ὅταν κατὰ μέρος δέον ἀποδεῖξαι καθόλου τις αἰτήσῃ οἷον εἰ ἐπιχειρῶν ὅτι τῶν ἐναντίων",
-  "english_head": "he were trying to prove that the knowledge of contraries is one and were to claim that the knowledge of opposites in general is one: for then he is generally thought to be begging, along with a number of other things, that which he ought to have shown by itself. A third way is if any one were to beg in particular cases what he undertakes to show universally: e.g. if he undertook to show that the knowledge of contraries is always one, and begged it of certain pairs of contraries: for he also is g"
+  "column": "163a"
  },
  {
   "id": "8:163b",
   "book": 8,
-  "column": "163b",
-  "greek_head": "σκεπτέον καὶ εὑρόντα τὴν λύσιν εὐθὺς ζητητέον οὕτω γὰρ ἅμα συμβήσεται πρός τε τὸ ἐρωτᾶν καὶ πρὸς τὸ",
-  "english_head": "Always, in dealing with any proposition, be on the look-out for a line of argument both pro and con: and on discovering it at once set about looking for the solution of it: for in this way you will soon find that you have trained yourself at the same time in both asking questions and answering them. If we cannot find any one else to argue with, we should argue with ourselves. Select, moreover, arguments relating to the same thesis and range them side by side: for this produces a plentiful supply"
+  "column": "163b"
  },
  {
   "id": "8:164a",
   "book": 8,
-  "column": "164a",
-  "greek_head": "οὐκ ἔστι μία πλειόνων ἐπιστήμη οὕτω γὰρ καὶ ἐπὶ τῶν πρός τι καὶ ἐπὶ τῶν ἐναντίων καὶ συστοίχων ἐστίν",
-  "english_head": "This can be done with arguments that are entirely universal, e.g. the statement that 'there cannot be one knowledge of more than one thing': for that is the case with both relative terms and contraries and co-ordinates.\nRecords of discussions should be made in a universal form, even though one has argued only some particular case: for this will enable one to turn a single rule into several. A like rule applies in Rhetoric as well to enthymemes. For yourself, however, you should as far as possibl"
+  "column": "164a"
  },
  {
   "id": "8:164b",
   "book": 8,
-  "column": "164b",
-  "greek_head": "ἐκ τούτων γὰρ ἡ δύναμις τὸ δὲ γυμνάζεσθαι δυνάμεως χάριν καὶ μάλιστα περὶ τὰς προτάσεις καὶ ἐνστάσεις ἔστι",
-  "english_head": "For this is what gives one ability, and the whole object of training is to acquire ability, especially in regard to propositions and objections. For it is the skilled propounder and objector who is, speaking generally, a dialectician. To formulate a proposition is to form a number of things into one-for the conclusion to which the argument leads must be taken generally, as a single thing-whereas to formulate an objection is to make one thing into many; for the objector either distinguishes or de"
+  "column": "164b"
  }
 ]

@@ -2,295 +2,211 @@
  {
   "id": "1:164a",
   "book": 1,
-  "column": "164a",
-  "greek_head": "Περὶ δὲ τῶν σοφιστικῶν ἐλέγχων καὶ τῶν φαινομένων μὲν ἐλέγχων ὄντων δὲ παραλογισμῶν ἀλλ' οὐκ ἐλέγχων λέγωμεν",
-  "english_head": "Let us now discuss sophistic refutations, i.e. what appear to be refutations but are really fallacies instead. We will begin in the natural order with the first.\nThat some reasonings are genuine, while others seem to be so but are not, is evident. This happens with arguments, as also elsewhere, through a certain likeness between the genuine and the sham. For physically some people are in a vigorous condition, while others merely seem to be so by blowing and rigging themselves out as the tribesme"
+  "column": "164a"
  },
  {
   "id": "1:164b",
   "book": 1,
-  "column": "164b",
-  "greek_head": "καλοὶ οἱ μὲν διὰ κάλλος οἱ δὲ φαίνονται κομμώσαντες αὑτούς ἐπί τε τῶν ἀψύχων ὡσαύτως καὶ γὰρ τούτων τὰ",
-  "english_head": "So it is, too, with inanimate things; for of these, too, some are really silver and others gold, while others are not and merely seem to be such to our sense; e.g. things made of litharge and tin seem to be of silver, while those made of yellow metal look golden. In the same way both reasoning and refutation are sometimes genuine, sometimes not, though inexperience may make them appear so: for inexperienced people obtain only, as it were, a distant view of these things."
+  "column": "164b"
  },
  {
   "id": "1:165a",
   "book": 1,
-  "column": "165a",
-  "greek_head": "γὰρ συλλογισμὸς ἐκ τινῶν ἐστι τεθέντων ὥστε λέγειν ἕτερον ἐξ ἀνάγκης τι τῶν κειμένων διὰ τῶν κειμένων ἔλεγχος δὲ",
-  "english_head": "For reasoning rests on certain statements such that they involve necessarily the assertion of something other than what has been stated, through what has been stated: refutation is reasoning involving the contradictory of the given conclusion. Now some of them do not really achieve this, though they seem to do so for a number of reasons; and of these the most prolific and usual domain is the argument that turns upon names only. It is impossible in a discussion to bring in the actual things discu"
+  "column": "165a"
  },
  {
   "id": "1:165b",
   "book": 1,
-  "column": "165b",
-  "greek_head": "διδασκαλικοὶ μὲν οἱ ἐκ τῶν οἰκείων ἀρχῶν ἑκάστου μαθήματος καὶ οὐκ ἐκ τῶν τοῦ ἀποκρινομένου δοξῶν συλλογιζόμενοι",
-  "english_head": "Didactic arguments are those that reason from the principles appropriate to each subject and not from the opinions held by the answerer (for the learner should take things on trust): dialectical arguments are those that reason from premisses generally accepted, to the contradictory of a given thesis: examination-arguments are those that reason from premisses which are accepted by the answerer and which any one who pretends to possess knowledge of the subject is bound to know-in what manner, has "
+  "column": "165b"
  },
  {
   "id": "1:166a",
   "book": 1,
-  "column": "166a",
-  "greek_head": "ὑγιάζετο ὑγιαίνει ἀνίστατο δ' ὁ καθήμενος καὶ ὑγιάζετο ὁ κάμνων τὸ γὰρ τὸν κάμνοντα ὁτιοῦν ποιεῖν ἢ πάσχειν οὐχ ἓν",
-  "english_head": "For 'The sick man does so and so', or 'has so and so done to him' is not single in meaning: sometimes it means 'the man who is sick or is seated now', sometimes 'the man who was sick formerly'. Of course, the man who was recovering was the sick man, who really was sick at the time: but the man who is in health is not sick at the same time: he is 'the sick man' in the sense not that he is sick now, but that he was sick formerly. Examples such as the following depend upon amphiboly: 'I wish that y"
+  "column": "166a"
  },
  {
   "id": "1:166b",
   "book": 1,
-  "column": "166b",
-  "greek_head": "Παρὰ δὲ τὴν προσῳδίαν ἐν μὲν τοῖς ἄνευ γραφῆς διαλεκτικοῖς οὐ ῥᾴδιον ποιῆσαι λόγον ἐν δὲ τοῖς γεγραμμένοις",
-  "english_head": "An argument depending upon accent it is not easy to construct in unwritten discussion; in written discussions and in poetry it is easier. Thus (e.g.) some people emend Homer against those who criticize as unnatural his expression to men ou kataputhetai ombro. For they solve the difficulty by a change of accent, pronouncing the ou with an acuter accent. Also, in the passage about Agamemnon's dream, they say that Zeus did not himself say 'We grant him the fulfilment of his prayer', but that he bad"
+  "column": "166b"
  },
  {
   "id": "1:167a",
   "book": 1,
-  "column": "167a",
-  "greek_head": "ληφθῇ οἷον εἰ τὸ μὴ ὄν ἐστι δοξαστόν ὅτι τὸ μὴ ὂν ἔστιν οὐ γὰρ ταὐτὸ τὸ εἶναί τέ τι καὶ εἶναι ἁπλῶς ἢ πάλιν ὅτι τὸ",
-  "english_head": "in the argument 'If what is not is the object of an opinion, then what is not is': for it is not the same thing 'to be x' and 'to be' absolutely. Or again, 'What is, is not, if it is not a particular kind of being, e.g. if it is not a man.' For it is not the same thing 'not to be x' and 'not to be' at all: it looks as if it were, because of the closeness of the expression, i.e. because 'to be x' is but little different from 'to be', and 'not to be x' from 'not to be'. Likewise also with any argu"
+  "column": "167a"
  },
  {
   "id": "1:167b",
   "book": 1,
-  "column": "167b",
-  "greek_head": "Ὁ δὲ παρὰ τὸ ἑπόμενον ἔλεγχος διὰ τὸ οἴεσθαι ἀντιστρέφειν τὴν ἀκολούθησιν ὅταν γὰρ τοῦδε ὄντος ἐξ ἀνάγκης",
-  "english_head": "The refutation which depends upon the consequent arises because people suppose that the relation of consequence is convertible. For whenever, suppose A is, B necessarily is, they then suppose also that if B is, A necessarily is. This is also the source of the deceptions that attend opinions based on sense-perception. For people often suppose bile to be honey because honey is attended by a yellow colour: also, since after rain the ground is wet in consequence, we suppose that if the ground is wet"
+  "column": "167b"
  },
  {
   "id": "1:168a",
   "book": 1,
-  "column": "168a",
-  "greek_head": "ἀπόκρισις μία ἐπ' ἐνίων μὲν οὖν ῥᾴδιον ἰδεῖν ὅτι πλείω καὶ ὅτι οὐ δοτέον μίαν ἀπόκρισιν οἷον πότερον ἡ γῆ θάλαττά ἐστιν ἢ",
-  "english_head": "Now, in some cases, it is easy to see that there is more than one, and that an answer is not to be given, e.g. 'Does the earth consist of sea, or the sky?' But in some cases it is less easy, and then people treat the question as one, and either confess their defeat by failing to answer the question, or are exposed to an apparent refutation. Thus 'Is A and is B a man?' 'Yes.' 'Then if any one hits A and B, he will strike a man' (singular),'not men' (plural). Or again, where part is good and part "
+  "column": "168a"
  },
  {
   "id": "1:168b",
   "book": 1,
-  "column": "168b",
-  "greek_head": "δυοῖν ὀρθαῖν ἴσας ἔχει συμβέβηκε δ' αὐτῷ σχήματι εἶναι ἢ πρώτῳ ἢ ἀρχῇ ὅτι σχῆμα ἢ ἀρχὴ ἢ πρῶτον τοῦτό ἐστιν οὐ",
-  "english_head": "So, if the triangle has its angles equal to two right-angles, and it happens to be a figure, or the simplest element or starting point, it is not because it is a figure or a starting point or simplest element that it has this character. For the demonstration proves the point about it not qua figure or qua simplest element, but qua triangle. Likewise also in other cases. If, then, refutation is a proof, an argument which argued per accidens could not be a refutation. It is, however, just in this "
+  "column": "168b"
  },
  {
   "id": "1:169a",
   "book": 1,
-  "column": "169a",
-  "greek_head": "εἰ τὰ τὸ αὐτὸ μέγεθος καὶ ἓν λαμβάνοντα ἴσα γίνεται καὶ τὰ ἴσα γινόμενα ἓν μέγεθος λαμβάνειν ὥστε τὸ ἑπόμενον",
-  "english_head": "Likewise also in the case of things that are made equal he assumes that if things that assume one and the same magnitude become equal, then also things that become equal assume one magnitude: i.e. he assumes the consequent. Inasmuch, then, as a refutation depending on accident consists in ignorance of what a refutation is, clearly so also does a refutation depending on the consequent. We shall have further to examine this in another way as well.\nThose fallacies that depend upon the making of sev"
+  "column": "169a"
  },
  {
   "id": "1:169b",
   "book": 1,
-  "column": "169b",
-  "greek_head": "ὅταν ἐπὶ τοῦ λόγου ποιῆται τὴν σκέψιν ἔτι ἡ μὲν ἀπάτη ἐκ τῆς ὁμοιότητος ἡ δ' ὁμοιότης ἐκ τῆς λέξεως",
-  "english_head": "With those fallacies that depend upon Accident, deception comes about because we cannot distinguish the sameness and otherness of terms, i.e. their unity and multiplicity, or what kinds of predicate have all the same accidents as their subject. Likewise also with those that depend on the Consequent: for the consequent is a branch of Accident. Moreover, in many cases appearances point to this-and the claim is made that if is inseparable from B, so also is B from With those that depend upon an imp"
+  "column": "169b"
  },
  {
   "id": "1:170a",
   "book": 1,
-  "column": "170a",
-  "greek_head": "ἑκάστου γὰρ ἐκλείποντος φανείη ἂν ἔλεγχος οἷον ὁ παρὰ τὸ μὴ συμβαῖνον διὰ τὸν λόγον ὁ εἰς τὸ ἀδύνατον",
-  "english_head": "that which depends on the failure of the conclusion to follow from the argument (the argument ad impossible) and that which treats two questions as one and so depends upon a flaw in the premiss, and that which depends on the substitution of an accident for an essential attribute, and-a branch of the last-that which depends upon the consequent: more over, the conclusion may follow not in fact but only verbally: then, instead of proving the contradictory universally and in the same respect and rel"
+  "column": "170a"
  },
  {
   "id": "1:170b",
   "book": 1,
-  "column": "170b",
-  "greek_head": "ἐξ ὧν οἱ ἔλεγχοι ὁ γὰρ ἔλεγχός ἐστιν ἀντιφάσεως συλλογισμός ὥστ' ἢ εἷς ἢ δύο συλλογισμοὶ ἀντιφάσεως ἔλεγχός",
-  "english_head": "For if we grasp the startingpoints of the accepted proofs on any subject whatever we grasp those of the refutations current on that subject. For a refutation is the proof of the contradictory of a given thesis, so that either one or two proofs of the contradictory constitute a refutation. We grasp, then, the number of considerations on which all such depend: if, however, we grasp this, we also grasp their solutions as well; for the objections to these are the solutions of them. We also grasp the"
+  "column": "170b"
  },
  {
   "id": "1:171a",
   "book": 1,
-  "column": "171a",
-  "greek_head": "Ὅλως τε ἄτοπον τὸ περὶ ἐλέγχου διαλέγεσθαι ἀλλὰ μὴ πρότερον περὶ συλλογισμοῦ ὁ γὰρ ἔλεγχος συλλογισμός",
-  "english_head": "For the absurd statement has actually been made that the description 'dependent on mere expression' describes all the arguments that depend on language: whereas some of these are fallacies not because the answerer adopts a particular attitude towards them, but because the argument itself involves the asking of a question such as bears more than one meaning.\nIt is, too, altogether absurd to discuss Refutation without first discussing Proof: for a refutation is a proof, so that one ought to discus"
+  "column": "171a"
  },
  {
   "id": "1:171b",
   "book": 1,
-  "column": "171b",
-  "greek_head": "τὸ διδάσκειν τοῦ διαλέγεσθαι καὶ ὅτι δεῖ τὸν μὲν διδάσκοντα μὴ ἐρωτᾶν ἀλλ' αὐτὸν δῆλα ποιεῖν τὸν δ' ἐρωτᾶν",
-  "english_head": "---------------------------------------------------------------------- SECTION 2 Moreover, to claim a 'Yes' or 'No' answer is the business not of a man who is showing something, but of one who is holding an examination. For the art of examining is a branch of dialectic and has in view not the man who has knowledge, but the ignorant pretender. He, then, is a dialectician who regards the common principles with their application to the particular matter in hand, while he who only appears to do this"
+  "column": "171b"
  },
  {
   "id": "1:172a",
   "book": 1,
-  "column": "172a",
-  "greek_head": "τῶν ὑπὸ τὴν τέχνην ψευδογραφεῖ ὁ δ' ὑπὸ τὴν διαλεκτικὴν περὶ τἆλλα ὅτι ἐριστικὸς ἔσται δῆλον οἷον ὁ",
-  "english_head": "though the squaring of the circle by means of the lunules is not contentious, Bryson's solution is contentious: and the former argument cannot be adapted to any subject except geometry, because it proceeds from principles that are peculiar to geometry, whereas the latter can be adapted as an argument against all the number of people who do not know what is or is not possible in each particular context: for it will apply to them all. Or there is the method whereby Antiphon squared the circle. Or "
+  "column": "172a"
  },
  {
   "id": "1:172b",
   "book": 1,
-  "column": "172b",
-  "greek_head": "τέχνην τινά καὶ μὴ τοιαύτην εἶναι οἷαι αἱ δεικνύουσαι διόπερ ὁ ἐριστικὸς οὐκ ἔστιν οὕτως ἔχων πάντῃ ὡς ὁ ψευδογράφος",
-  "english_head": "a particular kind of being, but are like negative terms, while other principles are not of this kind but are special to particular subjects; accordingly it is possible from these general principles to hold an examination on everything, and that there should be a definite art of so doing, and, moreover, an art which is not of the same kind as those which demonstrate. This is why the contentious reasoner does not stand in the same condition in all respects as the drawer of a false diagram: for the"
+  "column": "172b"
  },
  {
   "id": "1:173a",
   "book": 1,
-  "column": "173a",
-  "greek_head": "δεῖν καὶ πένεσθαι δικαίως μᾶλλον ἢ πλουτεῖν αἰσχρῶς βούλονται δὲ τἀναντία τὸν μὲν οὖν λέγοντα κατὰ τὰς βουλήσεις",
-  "english_head": "they say that a man ought to die nobly rather than to live in pleasure, and to live in honest poverty rather than in dishonourable riches; but they wish the opposite. Accordingly, a man who speaks according to his wishes must be led into stating the professed opinions of people, while he who speaks according to these must be led into admitting those that people keep hidden away: for in either case they are bound to introduce a paradox; for they will speak contrary either to men's professed or to"
+  "column": "173a"
  },
  {
   "id": "1:173b",
   "book": 1,
-  "column": "173b",
-  "greek_head": "Εἰσὶ δὲ πάντες οἱ τοιοῦτοι τῶν λόγων ἔν τε τοῖς πρός τι ὅσα μὴ μόνον τὰ γένη ἀλλὰ καὶ αὐτὰ πρός τι λέγεται",
-  "english_head": "All arguments of this kind occur in dealing (1) with any relative terms which not only have relative genera, but are also themselves relative, and are rendered in relation to one and the same thing, as e.g. conation is conation for something, and desire is desire of something, and double is double of something, i.e. double of half: also in dealing (2) with any terms which, though they be not relative terms at all, yet have their substance, viz. the things of which they are the states or affectio"
+  "column": "173b"
  },
  {
   "id": "1:174a",
   "book": 1,
-  "column": "174a",
-  "greek_head": "εἰς τὸ ο καὶ τὸ ν τελευτᾷ ταῦτα μόνα σκεύους ἔχει κλῆσιν οἷον ξύλον σχοινίον τὰ δὲ μὴ οὕτως ἄρρενος ἢ θήλεος",
-  "english_head": "For only those names which end in o and n, have the designation proper to a chattel, e.g. xulon ('log'), schoinion ('rope'); those which do not end so have that of a masculine or feminine object, though some of them we apply to chattels: e.g. askos ('wineskin') is a masculine noun, and kline ('bed') a feminine. For this reason in cases of this kind as well there will be a difference of the same sort between a construction with 'is' (esti) or with 'being' (to einai). Also, Solecism resembles in a"
+  "column": "174a"
  },
  {
   "id": "1:174b",
   "book": 1,
-  "column": "174b",
-  "greek_head": "χρὴ πυνθάνεσθαι οἷον εἰ δέοι λαβεῖν ὅτι δεῖ πάντα τῷ πατρὶ πείθεσθαι πότερον ἅπαντα δεῖ πείθεσθαι",
-  "english_head": "E.g. if it were necessary to secure the admission that 'A man should obey his father in everything', ask 'Should a man obey his parents in everything, or disobey them in everything?'; and to secure that 'A number multiplied by a large number is a large number', ask 'Should one agree that it is a large number or a small one?' For then, if compelled to choose, one will be more inclined to think it a large one: for the placing of their contraries close beside them makes things look big to men, both"
+  "column": "174b"
  },
  {
   "id": "1:175a",
   "book": 1,
-  "column": "175a",
-  "greek_head": "Ἐξ ὧν μὲν οὖν αἱ ἐρωτήσεις καὶ πῶς ἐρωτητέον ἐν ταῖς ἀγωνιστικαῖς διατριβαῖς εἴρηται περὶ δὲ ἀποκρίσεως",
-  "english_head": "We have now therefore dealt with the sources of questions, and the methods of questioning in contentious disputations: next we have to speak of answering, and of how solutions should be made, and of what requires them, and of what use is served by arguments of this kind.\nThe use of them, then, is, for philosophy, twofold. For in the first place, since for the most part they depend upon the expression, they put us in a better condition for seeing in how many senses any term is used, and what kind"
+  "column": "175a"
  },
  {
   "id": "1:175b",
   "book": 1,
-  "column": "175b",
-  "greek_head": "παρὰ τὴν ὁμωνυμίαν ὅσαι τ' ἄλλαι τοιαῦται παρακρούσεις καὶ τὸν ἀληθινὸν ἔλεγχον ἀφανίζει καὶ τὸν ἐλεγχόμενον",
-  "english_head": "What, then, we have to beware of, is not being refuted, but seeming to be, because of course the asking of amphibolies and of questions that turn upon ambiguity, and all the other tricks of that kind, conceal even a genuine refutation, and make it uncertain who is refuted and who is not. For since one has the right at the end, when the conclusion is drawn, to say that the only denial made of One's statement is ambiguous, no matter how precisely he may have addressed his argument to the very same"
+  "column": "175b"
  },
  {
   "id": "1:176a",
   "book": 1,
-  "column": "176a",
-  "greek_head": "εἰ Καλλίας καὶ Θεμιστοκλῆς μουσικοί εἰσιν ἢ εἰ ἀμφοτέροις ἓν ὄνομα ἦν ἑτέροις οὖσιν εἰ γὰρ πλείω δηλοῖ ἑνός",
-  "english_head": "and what one might have asked if they, being different, had had one name? For if the term applied means more than one thing, he has asked more than one question. If then it be not right to demand simply to be given a single answer to two questions, it is evident that it is not proper to give a simple answer to any ambiguous question, not even if the predicate be true of all the subjects, as some claim that one should. For this is exactly as though he had asked 'Are Coriscus and Callias at home o"
+  "column": "176a"
  },
  {
   "id": "1:176b",
   "book": 1,
-  "column": "176b",
-  "greek_head": "παρὰ τοῦτο συμβαίνει ὁ ἔλεγχος οἷον ἆρ' ὃ ἂν ᾖ Ἀθηναίων κτῆμά ἐστιν Ἀθηναίων ναί ὁμοίως δὲ καὶ ἐπὶ τῶν ἄλλων",
-  "english_head": "For example, 'Is what belongs to Athenians the property of Athenians?' Yes. 'And so it is likewise in other cases. But observe; man belongs to the animal kingdom, doesn't he?' Yes. 'Then man is the property of the animal kingdom.' But this is a fallacy: for we say that man 'belongs to' the animal kingdom because he is an animal, just as we say that Lysander 'belongs to' the Spartans, because he is a Spartan. It is evident, then, that where the premiss put forward is not clear, one must not grant"
+  "column": "176b"
  },
  {
   "id": "1:177a",
   "book": 1,
-  "column": "177a",
-  "greek_head": "τοὺς δὲ κατὰ τὰς προτάσεις τῷ ἀνελεῖν τι μόνον τὸ γὰρ συμπέρασμα ἀληθές ὥστε τοῖς βουλομένοις λύειν λόγον",
-  "english_head": "So that those who wish to solve an argument should in the first place look and see if it is properly reasoned, or is unreasoned; and next, whether the conclusion be true or false, in order that we may effect the solution either by drawing some distinction or by demolishing something, and demolishing it either in this way or in that, as was laid down before. There is a very great deal of difference between solving an argument when being subjected to questions and when not: for to foresee traps is"
+  "column": "177a"
  },
  {
   "id": "1:177b",
   "book": 1,
-  "column": "177b",
-  "greek_head": "ἐρωτημάτων ἀλλ' ἔστι παρὰ σύνθεσιν οὐ γάρ ἐστι διττὸν τὸ παρὰ τὴν διαίρεσιν οὐ γὰρ ὁ αὐτὸς λόγος γίνεται",
-  "english_head": "This fallacy has also in it an element of amphiboly in the questions, but it really depends upon combination. For the meaning that depends upon the division of the words is not really a double meaning (for the expression when divided is not the same), unless also the word that is pronounced, according to its breathing, as eros and eros is a case of double meaning. (In writing, indeed, a word is the same whenever it is written of the same letters and in the same manner- and even there people nowa"
+  "column": "177b"
  },
  {
   "id": "1:178a",
   "book": 1,
-  "column": "178a",
-  "greek_head": "ναί ἔφησας δ' εἶναι τὸ οὗ καταλύεις οἰκίαν ἡ οἰκία ἄρα ἀπόφασις ὡς δὴ λυτέον δῆλον οὐ γὰρ τὸ αὐτὸ σημαίνει",
-  "english_head": "'But you said that ou katalueis is a house: therefore the house is a negation.' How one should solve this, is clear: for the word does not mean the same when spoken with an acuter and when spoken with a graver accent. It is clear also how one must meet those fallacies that depend on the identical expressions of things that are not identical, seeing that we are in possession of the kinds of predications. For the one man, say, has granted, when asked, that a term denoting a substance does not belo"
+  "column": "178a"
  },
  {
   "id": "1:178b",
   "book": 1,
-  "column": "178b",
-  "greek_head": "ὡς ἔχει πρός τι οἷον ὅτι οὐ μετ' ἄλλου ὥσπερ ἂν εἰ ἤρετο ἆρ' ὃ μή τις ἔχει δοίη ἄν μὴ φάντος δὲ ἔροιτο εἰ δοίη ἄν",
-  "english_head": "that it is not coupled with any other. It is therefore just as if he had asked 'Could a man give what he has not got?' and, on being given the answer 'No', were to ask if a man could give a thing quickly when he had not got it quickly, and, on this being granted, were to conclude that 'a man could give what he had not got'. It is quite evident that he has not proved his point: for to 'give quickly' is not to give a thing, but to give in a certain manner; and a man could certainly give a thing in"
+  "column": "178b"
  },
  {
   "id": "1:179a",
   "book": 1,
-  "column": "179a",
-  "greek_head": "καὶ Κορίσκος μουσικός πότερον ταὐτὸν ἢ ἕτερον τὸ μὲν γὰρ τόδε τι τὸ δὲ τοιόνδε σημαίνει ὥστ' οὐκ ἔστιν αὐτὸ",
-  "english_head": "Likewise also in the case of 'Coriscus' and 'Coriscus the musician' there is the problem, Are they the same or different?' For the one denotes an individual substance and the other a quality, so that it cannot be isolated; though it is not the isolation which creates the 'third man', but the admission that it is an individual substance. For 'Man' cannot be an individual substance, as Callias is. Nor is the case improved one whit even if one were to call the clement he has isolated not an individ"
+  "column": "179a"
  },
  {
   "id": "1:179b",
   "book": 1,
-  "column": "179b",
-  "greek_head": "τ' εἶναι καὶ μέλλοντι ἐρωτᾶσθαι οὐδὲ τῷ προσιόντι ἢ ἐγκεκαλυμμένῳ προσιόντι τε εἶναι καὶ Κορίσκῳ ὥστ' οὐκ εἰ",
-  "english_head": "For only to things that are indistinguishable and one in essence is it generally agreed that all the same attributes belong; whereas in the case of a good thing, to be good is not the same as to be going to be the subject of a question; nor in the case of a man approaching, or wearing a mask, is 'to be approaching' the same thing as 'to be Coriscus', so that suppose I know Coriscus, but do not know the man who is approaching, it still isn't the case that I both know and do not know the same man;"
+  "column": "179b"
  },
  {
   "id": "1:180a",
   "book": 1,
-  "column": "180a",
-  "greek_head": "παρὰ τὸ πολλαχῶς λέγεσθαι φαίνεται ὁ ἔλεγχος δεῖ τοὔνομα ἢ τὸν λόγον κυρίως εἶναι πλειόνων τὸ δὲ τόνδ'",
-  "english_head": "the proof that 'X is your father', or 'son', or 'slave'. Yet it is evident that if the appearance a proof depends upon a plurality of meanings, the term, or the expression in question, ought to bear a number of literal senses, whereas no one speaks of A as being 'B's child' in the literal sense, if B is the child's master, but the combination depends upon Accident. 'Is A yours?' 'Yes.' 'And is A a child?' 'Yes.' 'Then the child A is yours,' because he happens to be both yours and a child; but he"
+  "column": "180a"
  },
  {
   "id": "1:180b",
   "book": 1,
-  "column": "180b",
-  "greek_head": "μόνον εὐορκεῖ δὲ οὔ οὐδ' ὁ ἀπειθῶν πείθεται ἀλλὰ τὶ πείθεται ὅμοιος δ' ὁ λόγος καὶ περὶ τοῦ ψεύδεσθαι τὸν",
-  "english_head": "Nor if a man keeps his oath in this particular instance or in this particular respect, is he bound also to be a keeper of oaths absolutely, but he who swears that he will break his oath, and then breaks it, keeps this particular oath only; he is not a keeper of his oath: nor is the disobedient man 'obedient', though he obeys one particular command. The argument is similar, also, as regards the problem whether the same man can at the same time say what is both false and true: but it appears to be"
+  "column": "180b"
  },
  {
   "id": "1:181a",
   "book": 1,
-  "column": "181a",
-  "greek_head": "Τοῖς δὲ παρὰ τὸν ὁρισμὸν γινομένοις τοῦ ἐλέγχου καθάπερ ὑπεγράφη πρότερον ἀπαντητέον σκοποῦσι τὸ συμπέρασμα",
-  "english_head": "Refutations that depend on the definition of a refutation must, according to the plan sketched above, be met by comparing together the conclusion with its contradictory, and seeing that it shall involve the same attribute in the same respect and relation and manner and time. If this additional question be put at the start, you should not admit that it is impossible for the same thing to be both double and not double, but grant that it is possible, only not in such a way as was agreed to constitu"
+  "column": "181a"
  },
  {
   "id": "1:181b",
   "book": 1,
-  "column": "181b",
-  "greek_head": "ὁμωνύμων ὁτὲ μὲν ἀμφοῖν ὁτὲ δ' οὐδετέρῳ ὑπάρχει ὥστε μὴ ἁπλοῦ ὄντος τοῦ ἐρωτήματος ἁπλῶς ἀποκρινομένοις",
-  "english_head": "But just as in the case of ambiguous terms, an attribute belongs to a term sometimes in both its senses, and sometimes in neither, so that a simple answer does one, as it happens, no harm despite the fact that the question is not simple, so it is in these cases of double questions too. Whenever, then, the several attributes belong to the one subject, or the one to the many, the man who gives a simple answer encounters no obstacle even though he has committed this mistake: but whenever an attribu"
+  "column": "181b"
  },
  {
   "id": "1:182a",
   "book": 1,
-  "column": "182a",
-  "greek_head": "δὲ τῷ σκέλει σημαίνειν ἔνθα μὲν γὰρ τὸ σιμόν ἔνθα δὲ τὸ ῥοικὸν σημαίνει καὶ οὐδὲν διαφέρει εἰπεῖν ῥὶς σιμὴ ἢ ῥὶς",
-  "english_head": "it makes no difference whether you say 'a snub nose' or 'a concave nose'. Moreover, the expression must not be granted in the nominative case: for it is a falsehood. For snubness is not a concave nose but something (e.g. an affection) belonging to a nose: hence, there is no absurdity in supposing that the snub nose is a nose possessing the concavity that belongs to a nose. With regard to solecisms, we have previously said what it is that appears to bring them about; the method of their solution "
+  "column": "182a"
  },
  {
   "id": "1:182b",
   "book": 1,
-  "column": "182b",
-  "greek_head": "τὸ δὲ τοῦτο λίθον ἐδόθη δ' οὗ ἐπιστήμην ἔχεις ἐπίστασθαι οὐ τούτου ἀλλὰ τοῦτο ὥστ' οὐ τοῦ λίθου ἀλλὰ τὸν λίθον",
-  "english_head": "No: the one phrase is in the genitive, 'of a stone', while the other is in the accusative, 'a stone': and what was granted was that 'you understand that, not of that, of which you have understanding', so that you understand not 'of a stone', but 'the stone'.\nThus that arguments of this kind do not prove solecism but merely appear to do so, and both why they so appear and how you should meet them, is clear from what has been said. We must also observe that of all the arguments aforesaid it is eas"
+  "column": "182b"
  },
  {
   "id": "1:183a",
   "book": 1,
-  "column": "183a",
-  "greek_head": "ἕξει τοὺς συλλογισμούς ἀεὶ γὰρ ἐξ ἐνδόξων ὁμοίως ἔνδοξον ἀναιρήσει ἢ κατασκευάσει διόπερ ἀπορεῖν ἀναγκαῖον",
-  "english_head": "An argument, then, of this kind is the most incisive, viz. the one that puts its conclusion on all fours with the propositions asked; and second comes the one that argues from premisses, all of which are equally convincing: for this will produce an equal perplexity as to what kind of premiss, of those asked, one should demolish. Herein is a difficulty: for one must demolish something, but what one must demolish is uncertain. Of contentious arguments, on the other hand, the most incisive is the o"
+  "column": "183a"
  },
  {
   "id": "1:183b",
   "book": 1,
-  "column": "183b",
-  "greek_head": "πειραστικῆς ἐπεὶ δὲ προκατασκευαστέον πρὸς αὐτὴν διὰ τὴν τῆς σοφιστικῆς γειτνίασιν ὥστ' οὐ μόνον πεῖραν δύνασθαι",
-  "english_head": "Inasmuch, however, as it is annexed to it, on account of the near presence of the art of sophistry (sophistic), not only to be able to conduct an examination dialectically but also with a show of knowledge, we therefore proposed for our treatise not only the aforesaid aim of being able to exact an account of any view, but also the aim of ensuring that in standing up to an argument we shall defend our thesis in the same manner by means of views as generally held as possible. The reason of this we"
+  "column": "183b"
  },
  {
   "id": "1:184a",
   "book": 1,
-  "column": "184a",
-  "greek_head": "ἑκάτεροι τοὺς ἀλλήλων λόγους διόπερ ταχεῖα μὲν ἄτεχνος δ' ἦν ἡ διδασκαλία τοῖς μανθάνουσι παρ' αὐτῶν οὐ γὰρ",
-  "english_head": "For they used to hand out speeches to be learned by heart, some rhetorical, others in the form of question and answer, each side supposing that their arguments on either side generally fall among them. And therefore the teaching they gave their pupils was ready but rough. For they used to suppose that they trained people by imparting to them not the art but its products, as though any one professing that he would impart a form of knowledge to obviate any pain in the feet, were then not to teach "
+  "column": "184a"
  },
  {
   "id": "1:184b",
   "book": 1,
-  "column": "184b",
-  "greek_head": "λεγόμενα περὶ δὲ τοῦ συλλογίζεσθαι παντελῶς οὐδὲν εἴχομεν πρότερον λέγειν ἢ τριβῇ ζητοῦντες πολὺν χρόνον",
-  "english_head": "Moreover, on the subject of Rhetoric there exists much that has been said long ago, whereas on the subject of reasoning we had nothing else of an earlier date to speak of at all, but were kept at work for a long time in experimental researches. If, then, it seems to you after inspection that, such being the situation as it existed at the start, our investigation is in a satisfactory condition compared with the other inquiries that have been developed by tradition, there must remain for all of yo"
+  "column": "184b"
  }
 ]

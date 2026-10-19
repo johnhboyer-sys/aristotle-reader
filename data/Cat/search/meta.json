@@ -2,211 +2,151 @@
  {
   "id": "1:1a",
   "book": 1,
-  "column": "1a",
-  "greek_head": "Ὁμώνυμα λέγεται ὧν ὄνομα μόνον κοινόν ὁ δὲ κατὰ τοὔνομα λόγος τῆς οὐσίας ἕτερος οἷον ζῷον ὅ τε ἄνθρωπος",
-  "english_head": "Things are said to be named 'equivocally' when, though they have a common name, the definition corresponding with the name differs for each. Thus, a real man and a figure in a picture can both lay claim to the name 'animal'; yet these are equivocally so named, for, though they have a common name, the definition corresponding with the name differs for each. For should any one define in what sense each is an animal, his definition in the one case will be appropriate to that case only. On the other"
+  "column": "1a"
  },
  {
   "id": "1:1b",
   "book": 1,
-  "column": "1b",
-  "greek_head": "λέγεται καὶ ἐν ὑποκειμένῳ ἐστίν οἷον ἡ ἐπιστήμη ἐν ὑποκειμένῳ μέν ἐστι τῇ ψυχῇ καθ' ὑποκειμένου δὲ λέγεται",
-  "english_head": "Other things, again, are both predicable of a subject and present in a subject. Thus while knowledge is present in the human mind, it is predicable of grammar. There is, lastly, a class of things which are neither present in a subject nor predicable of a subject, such as the individual man or the individual horse. But, to speak more generally, that which is individual and has the character of a unit is never predicable of a subject. Yet in some cases there is nothing to prevent such being presen"
+  "column": "1b"
  },
  {
   "id": "1:2a",
   "book": 1,
-  "column": "2a",
-  "greek_head": "οἷον διπλάσιον ἥμισυ μεῖζον ποὺ δὲ οἷον ἐν Λυκείῳ ἐν ἀγορᾷ ποτὲ δὲ οἷον χθές πέρυσιν κεῖσθαι δὲ οἷον ἀνάκειται",
-  "english_head": "'Double', 'half', 'greater', fall under the category of relation; 'in a the market place', 'in the Lyceum', under that of place; 'yesterday', 'last year', under that of time. 'Lying', 'sitting', are terms indicating position, 'shod', 'armed', state; 'to lance', 'to cauterize', action; 'to be lanced', 'to be cauterized', affection. No one of these terms, in and by itself, involves an affirmation; it is by the combination of such terms that positive or negative statements arise. For every assertio"
+  "column": "2a"
  },
  {
   "id": "1:2b",
   "book": 1,
-  "column": "2b",
-  "greek_head": "ἀνθρώπων οὐδὲ κατὰ ἀνθρώπου ὅλως πάλιν τὸ χρῶμα ἐν σώματι οὐκοῦν καὶ ἐν τινὶ σώματι εἰ γὰρ μὴ ἐν",
-  "english_head": "Again, colour is present in body, therefore in individual bodies, for if there were no individual body in which it was present, it could not be present in body at all. Thus everything except primary substances is either predicated of primary substances, or is present in them, and if these last did not exist, it would be impossible for anything else to exist. Of secondary substances, the species is more truly substance than the genus, being more nearly related to primary substance. For if any one"
+  "column": "2b"
  },
  {
   "id": "1:3a",
   "book": 1,
-  "column": "3a",
-  "greek_head": "λέγονται ὡς δέ γε αἱ πρῶται οὐσίαι πρὸς τὰ ἄλλα πάντα ἔχουσιν οὕτω τὰ εἴδη καὶ τὰ γένη τῶν πρώτων οὐσιῶν πρὸς",
-  "english_head": "Now the same relation that subsists between primary substance and everything else subsists also between the species and the genus to which the primary substance belongs, on the one hand, and every attribute which is not included within these, on the other. For these are the subjects of all such. If we call an individual man 'skilled in grammar', the predicate is applicable also to the species and to the genus to which he belongs. This law holds good in all cases. It is a common characteristic of"
+  "column": "3a"
  },
  {
   "id": "1:3b",
   "book": 1,
-  "column": "3b",
-  "greek_head": "ὡσαύτως δὲ καὶ αἱ διαφοραὶ καὶ κατὰ τῶν εἰδῶν καὶ κατὰ τῶν ἀτόμων κατηγοροῦνται καὶ τὸν λόγον δὲ ἐπιδέχονται",
-  "english_head": "Moreover, the definition of the species and that of the genus are applicable to the primary substance, and that of the genus to the species. For all that is predicated of the predicate will be predicated also of the subject. Similarly, the definition of the differentiae will be applicable to the species and to the individuals. But it was stated above that the word 'univocal' was applied to those things which had both name and definition in common. It is, therefore, established that in every prop"
+  "column": "3b"
  },
  {
   "id": "1:4a",
   "book": 1,
-  "column": "4a",
-  "greek_head": "τὸ λευκόν ἐστιν ἕτερον ἑτέρου μᾶλλον λευκόν καὶ καλὸν ἕτερον ἑτέρου μᾶλλον καὶ αὐτὸ δὲ αὑτοῦ μᾶλλον",
-  "english_head": "The same quality, moreover, is said to subsist in a thing in varying degrees at different times. A body, being white, is said to be whiter at one time than it was before, or, being warm, is said to be warmer or less warm than at some other time. But substance is not said to be more or less that which it is: a man is not more truly a man at one time than he was before, nor is anything, if it is substance, more or less what it is. Substance, then, does not admit of variation of degree. The most di"
+  "column": "4a"
  },
  {
   "id": "1:4b",
   "book": 1,
-  "column": "4b",
-  "greek_head": "κινηθέντος ὁτὲ μὲν ἀληθὴς ὁτὲ δὲ ψευδὴς γίγνεται ὡσαύτως δὲ καὶ ἐπὶ τῆς δόξης ὥστε τῷ τρόπῳ γε ἴδιον",
-  "english_head": "Thus, in respect of the manner in which the thing takes place, it is the peculiar mark of substance that it should be capable of admitting contrary qualities; for it is by itself changing that it does so. If, then, a man should make this exception and contend that statements and opinions are capable of admitting contrary qualities, his contention is unsound. For statements and opinions are said to have this capacity, not because they themselves undergo modification, but because this modification"
+  "column": "4b"
  },
  {
   "id": "1:5a",
   "book": 1,
-  "column": "5a",
-  "greek_head": "ἡ δὲ γραμμὴ συνεχές ἐστιν ἔστι γὰρ λαβεῖν κοινὸν ὅρον πρὸς ὃν τὰ μόρια αὐτῆς συνάπτει στιγμήν καὶ τῆς ἐπιφανείας",
-  "english_head": "In the case of the line, this common boundary is the point; in the case of the plane, it is the line: for the parts of the plane have also a common boundary. Similarly you can find a common boundary in the case of the parts of a solid, namely either a line or a plane. Space and time also belong to this class of quantities. Time, past, present, and future, forms a continuous whole. Space, likewise, is a continuous quantity; for the parts of a solid occupy a certain space, and these have a common "
+  "column": "5a"
  },
  {
   "id": "1:5b",
   "book": 1,
-  "column": "5b",
-  "greek_head": "βλέποντες καὶ τἆλλα ποσὰ λέγομεν οἷον πολὺ τὸ λευκὸν λέγεται τῷ τὴν ἐπιφάνειαν πολλὴν εἶναι καὶ ἡ πρᾶξις μακρὰ",
-  "english_head": "For instance, should any one explain how long an action was, his statement would be made in terms of the time taken, to the effect that it lasted a year, or something of that sort. In the same way, he would explain the size of a white object in terms of surface, for he would state the area which it covered. Thus the things already mentioned, and these alone, are in their intrinsic nature quantities; nothing else can claim the name in its own right, but, if at all, only in a secondary sense. Quan"
+  "column": "5b"
  },
  {
   "id": "1:6a",
   "book": 1,
-  "column": "6a",
-  "greek_head": "ἅμα τὰ ἐναντία ἐπιδέχεσθαι οἷον ἐπὶ τῆς οὐσίας δεκτικὴ μὲν τῶν ἐναντίων δοκεῖ εἶναι ἀλλ' οὔτι γε ἅμα νοσεῖ",
-  "english_head": "Nor is there anything which is qualified in contrary ways at one and the same time. Moreover, if these were contraries, they would themselves be contrary to themselves. For if 'great' is the contrary of 'small', and the same thing is both great and small at the same time, then 'small' or 'great' is the contrary of itself. But this is impossible. The term 'great', therefore, is not the contrary of the term 'small', nor 'much' of 'little'. And even though a man should call these terms not relative"
+  "column": "6a"
  },
  {
   "id": "1:6b",
   "book": 1,
-  "column": "6b",
-  "greek_head": "τινὸς γὰρ διπλάσιον λέγεται ὡσαύτως δὲ καὶ ὅσα ἄλλα τοιαῦτα ἔστι δὲ καὶ τὰ τοιαῦτα τῶν πρός τι οἷον ἕξις διάθεσις",
-  "english_head": "Similarly, the expression 'double' has this external reference, for it is the double of something else that is meant. So it is with everything else of this kind. There are, moreover, other relatives, e.g. habit, disposition, perception, knowledge, and attitude. The significance of all these is explained by a reference to something else and in no other way. Thus, a habit is a habit of something, knowledge is knowledge of something, attitude is the attitude of something. So it is with all other re"
+  "column": "6b"
  },
  {
   "id": "1:7a",
   "book": 1,
-  "column": "7a",
-  "greek_head": "πρῶτον ἀποδέδοται πτερὸν ὄρνιθος οὐ γὰρ ᾗ ὄρνις ταύτῃ τὸ πτερὸν αὐτῆς λέγεται ἀλλ' ᾗ πτερωτόν ἐστιν πολλῶν",
-  "english_head": "The reason is that the original statement was inaccurate, for the wing is not said to be relative to the bird qua bird, since many creatures besides birds have wings, but qua winged creature. If, then, the statement is made accurate, the connexion will be reciprocal, for we can speak of a wing, having reference necessarily to a winged creature, and of a winged creature as being such because of its wings. Occasionally, perhaps, it is necessary to coin words, if no word exists by which a correlati"
+  "column": "7a"
  },
  {
   "id": "1:7b",
   "book": 1,
-  "column": "7b",
-  "greek_head": "ἐὰν δέ γε μὴ οἰκείως ἀποδοθῇ πρὸς ὅ ποτε λέγεται περιαιρουμένων μὲν τῶν ἄλλων καταλειπομένου δὲ",
-  "english_head": "On the other hand, if, of two correlatives, one is not correctly termed, then, when all other attributes are removed and that alone is left in virtue of which it was stated to be correlative, the stated correlation will be found to have disappeared. For suppose the correlative of 'the slave' should be said to be 'the man', or the correlative of 'the wing\"the bird'; if the attribute 'master' be withdrawn from' the man', the correlation between 'the man' and 'the slave' will cease to exist, for if"
+  "column": "7b"
  },
  {
   "id": "1:8a",
   "book": 1,
-  "column": "8a",
-  "greek_head": "καὶ σῶμα τῶν γὰρ αἰσθητῶν καὶ τὸ σῶμα σώματος δὲ μὴ ὄντος ἀνῄρηται καὶ ἡ αἴσθησις ὥστε συναναιρεῖ",
-  "english_head": "For perception implies a body perceived and a body in which perception takes place. Now if that which is perceptible is annihilated, it follows that the body is annihilated, for the body is a perceptible thing; and if the body does not exist, it follows that perception also ceases to exist. Thus the annihilation of the perceptible involves that of perception. But the annihilation of perception does not involve that of the perceptible. For if the animal is annihilated, it follows that perception "
+  "column": "8a"
  },
  {
   "id": "1:8b",
   "book": 1,
-  "column": "8b",
-  "greek_head": "πρός τί πως ἔχειν κἀκεῖνο οἶδε πρὸς ὃ τοῦτό πως ἔχει εἰ γὰρ οὐκ οἶδεν ὅλως πρὸς ὃ τοῦτό πως ἔχει οὐδ' εἰ",
-  "english_head": "Indeed this is self-evident: for if a man knows that some particular thing is relative, assuming that we call that a relative in the case of which relation to something is a necessary condition of existence, he knows that also to which it is related. For if he does not know at all that to which it is related, he will not know whether or not it is relative. This is clear, moreover, in particular instances. If a man knows definitely that such and such a thing is 'double', he will also forthwith kn"
+  "column": "8b"
  },
  {
   "id": "1:9a",
   "book": 1,
-  "column": "9a",
-  "greek_head": "ὡσαύτως δὲ καὶ ἐπὶ τῶν ἄλλων εἰ μή τις καὶ αὐτῶν τούτων τυγχάνοι διὰ χρόνου πλῆθος ἤδη πεφυσιωμένη",
-  "english_head": "So it is with all other dispositions also, unless through lapse of time a disposition has itself become inveterate and almost impossible to dislodge: in which case we should perhaps go so far as to call it a habit. It is evident that men incline to call those conditions habits which are of a more or less permanent type and difficult to displace; for those who are not retentive of knowledge, but volatile, are not said to have such and such a 'habit' as regards knowledge, yet they are disposed, we"
+  "column": "9a"
  },
  {
   "id": "1:9b",
   "book": 1,
-  "column": "9b",
-  "greek_head": "πεπονθέναι τι οὔτε γὰρ τὸ μέλι τῷ πεπονθέναι τι λέγεται γλυκύ οὔτε τῶν ἄλλων τῶν τοιούτων οὐδέν ὁμοίως",
-  "english_head": "Similarly heat and cold are called affective qualities, not because those things which admit them are affected. What is meant is that these said qualities are capable of producing an 'affection' in the way of perception. For sweetness has the power of affecting the sense of taste; heat, that of touch; and so it is with the rest of these qualities. Whiteness and blackness, however, and the other colours, are not said to be affective qualities in this sense, but -because they themselves are the re"
+  "column": "9b"
  },
  {
   "id": "1:10a",
   "book": 1,
-  "column": "10a",
-  "greek_head": "ἔκστασις καὶ ἡ ὀργὴ καὶ τὰ τοιαῦτα ποιοὶ γὰρ κατὰ ταύτας λέγονται ὀργίλοι τε καὶ μανικοί ὁμοίως δὲ καὶ ὅσαι",
-  "english_head": "Those, however, which arise from causes easily rendered ineffective are called affections, not qualities. Suppose that a man is irritable when vexed: he is not even spoken of as a bad-tempered man, when in such circumstances he loses his temper somewhat, but rather is said to be affected. Such conditions are therefore termed, not qualities, but affections. The fourth sort of quality is figure and the shape that belongs to a thing; and besides this, straightness and curvedness and any other quali"
+  "column": "10a"
  },
  {
   "id": "1:10b",
   "book": 1,
-  "column": "10b",
-  "greek_head": "παρωνύμως λέγεται οὐ γὰρ κεῖται ὀνόματα ταῖς δυνάμεσι καθ' ἃς οὗτοι ποιοὶ λέγονται ὥσπερ καὶ ταῖς ἐπιστήμαις καθ'",
-  "english_head": "Such a science is classed as a disposition; it has a name, and is called 'boxing' or 'wrestling' as the case may be, and the name given to those disposed in this way is derived from that of the science. Sometimes, even though a name exists for the quality, that which takes its character from the quality has a name that is not a derivative. For instance, the upright man takes his character from the possession of the quality of integrity, but the name given him is not derived from the word 'integr"
+  "column": "10b"
  },
  {
   "id": "1:11a",
   "book": 1,
-  "column": "11a",
-  "greek_head": "ἧττον ἕτερον ἑτέρου ὡσαύτως δὲ καὶ γραμματικὴν καὶ τὰς ἄλλας διαθέσεις ἀλλ' οὖν τά γε κατὰ ταύτας λεγόμενα ἀναμφισβητήτως",
-  "english_head": "However that may be, it is an incontrovertible fact that the things which in virtue of these qualities are said to be what they are vary in the degree in which they possess them; for one man is said to be better versed in grammar, or more healthy or just, than another, and so on. The qualities expressed by the terms 'triangular' and 'quadrangular' do not appear to admit of variation of degree, nor indeed do any that have to do with figure. For those things to which the definition of the triangle"
+  "column": "11a"
  },
  {
   "id": "1:11b",
   "book": 1,
-  "column": "11b",
-  "greek_head": "Ἐπιδέχεται δὲ καὶ τὸ ποιεῖν καὶ πάσχειν ἐναντιότητα καὶ τὸ μᾶλλον καὶ τὸ ἧττον τὸ γὰρ θερμαίνειν",
-  "english_head": "Action and affection both admit of contraries and also of variation of degree. Heating is the contrary of cooling, being heated of being cooled, being glad of being vexed. Thus they admit of contraries. They also admit of variation of degree: for it is possible to heat in a greater or less degree; also to be heated in a greater or less degree. Thus action and affection also admit of variation of degree. So much, then, is stated with regard to these categories. We spoke, moreover, of the category"
+  "column": "11b"
  },
  {
   "id": "1:12a",
   "book": 1,
-  "column": "12a",
-  "greek_head": "ὥστε ἐν οἷς πέφυκε γίγνεσθαι ἢ ὧν κατηγορεῖται ἀναγκαῖον αὐτῶν θάτερον ὑπάρχειν τούτων οὐδέν ἐστιν ἀνὰ μέσον ὧν δέ",
-  "english_head": "Those contraries which are such that the subjects in which they are naturally present, or of which they are predicated, must necessarily contain either the one or the other of them, have no intermediate, but those in the case of which no such necessity obtains, always have an intermediate. Thus disease and health are naturally present in the body of an animal, and it is necessary that either the one or the other should be present in the body of an animal. Odd and even, again, are predicated of n"
+  "column": "12a"
  },
  {
   "id": "1:12b",
   "book": 1,
-  "column": "12b",
-  "greek_head": "δὲ ὁ ἄνθρωπος οὐδαμῶς λέγεται ἀντικεῖσθαι δὲ καὶ ταῦτα δοκεῖ τὸ ἐστερῆσθαι καὶ τὸ τὴν ἕξιν ἔχειν ὡς στέρησις καὶ",
-  "english_head": "To be in a state of 'possession' is, it appears, the opposite of being in a state of 'privation', just as 'positives' and 'privatives' themselves are opposite. There is the same type of antithesis in both cases; for just as blindness is opposed to sight, so is being blind opposed to having sight. That which is affirmed or denied is not itself affirmation or denial. By 'affirmation' we mean an affirmative proposition, by 'denial' a negative. Now, those facts which form the matter of the affirmati"
+  "column": "12b"
  },
  {
   "id": "1:13a",
   "book": 1,
-  "column": "13a",
-  "greek_head": "τῷ δεκτικῷ θάτερον αὐτῶν ὑπάρχειν ἀλλὰ μόνον οἷς φύσει τὸ ἓν ὑπάρχει καὶ τούτοις ἀφωρισμένως τὸ ἓν καὶ οὐχ",
-  "english_head": "In the case of 'positives' and 'privatives', on the other hand, neither of the aforesaid statements holds good. For it is not necessary that a subject receptive of the qualities should always have either the one or the other; that which has not yet advanced to the state when sight is natural is not said either to be blind or to see. Thus 'positives' and 'privatives' do not belong to that class of contraries which consists of those which have no intermediate. On the other hand, they do not belong"
+  "column": "13a"
  },
  {
   "id": "1:13b",
   "book": 1,
-  "column": "13b",
-  "greek_head": "ὅτι κατ' οὐδένα τῶν εἰρημένων τρόπων ἀντίκειται ἐπὶ μόνων γὰρ τούτων ἀναγκαῖον ἀεὶ τὸ μὲν ἀληθὲς τὸ δὲ",
-  "english_head": "The man who has become blind does not regain his sight; the man who has become bald does not regain his hair; the man who has lost his teeth does not grow his grow a new set. (iv) Statements opposed as affirmation and negation belong manifestly to a class which is distinct, for in this case, and in this case only, it is necessary for the one opposite to be true and the other false. Neither in the case of contraries, nor in the case of correlatives, nor in the case of 'positives' and 'privatives'"
+  "column": "13b"
  },
  {
   "id": "1:14a",
   "book": 1,
-  "column": "14a",
-  "greek_head": "ἀδικία καὶ ἀνδρείᾳ δειλία ὁμοίως δὲ καὶ ἐπὶ τῶν ἄλλων κακῷ δὲ ὁτὲ μὲν ἀγαθὸν ἐναντίον ἐστίν ὁτὲ δὲ κακόν τῇ γὰρ ἐνδείᾳ",
-  "english_head": "But the contrary of an evil is sometimes a good, sometimes an evil. For defect, which is an evil, has excess for its contrary, this also being an evil, and the mean. which is a good, is equally the contrary of the one and of the other. It is only in a few cases, however, that we see instances of this: in most, the contrary of an evil is a good. In the case of contraries, it is not always necessary that if one exists the other should also exist: for if all become healthy there will be health and "
+  "column": "14a"
  },
  {
   "id": "1:14b",
   "book": 1,
-  "column": "14b",
-  "greek_head": "διαγραμμάτων τῇ τάξει καὶ ἐπὶ τῆς γραμματικῆς τὰ στοιχεῖα πρότερα τῶν συλλαβῶν ἐπί τε τῶν λόγων ὁμοίως τὸ γὰρ",
-  "english_head": "For in sciences which use demonstration there is that which is prior and that which is posterior in order; in geometry, the elements are prior to the propositions; in reading and writing, the letters of the alphabet are prior to the syllables. Similarly, in the case of speeches, the exordium is prior in order to the narrative. Besides these senses of the word, there is a fourth. That which is better and more honourable is said to have a natural priority. In common parlance men speak of those who"
+  "column": "14b"
  },
  {
   "id": "1:15a",
   "book": 1,
-  "column": "15a",
-  "greek_head": "τοιαῦτα δοκεῖ εἶναι διαιρεθείη δ' ἂν καὶ ἕκαστον τούτων εἰς εἴδη πάλιν οἷον τὸ πεζὸν καὶ τὸ πτηνὸν καὶ τὸ",
-  "english_head": "Each of these also, the terrestrial, the winged, and the water species, can be divided again into subspecies. Those species, then, also will be 'simultaneous' point of nature, which, belonging to the same genus, are distinguished each from each by one and the same method of differentiation. But genera are prior to species, for the sequence of their being cannot be reversed. If there is the species 'water-animal', there will be the genus 'animal', but granted the being of the genus 'animal', it d"
+  "column": "15a"
  },
  {
   "id": "1:15b",
   "book": 1,
-  "column": "15b",
-  "greek_head": "Ἔστι δὲ ἁπλῶς μὲν κίνησις ἠρεμίᾳ ἐναντίον ταῖς δὲ καθ' ἕκαστα γενέσει μὲν φθορά αὐξήσει δὲ μείωσις",
-  "english_head": "Speaking generally, rest is the contrary of motion. But the different forms of motion have their own contraries in other forms; thus destruction is the contrary of generation, diminution of increase, rest in a place, of change of place. As for this last, change in the reverse direction would seem to be most truly its contrary; thus motion upwards is the contrary of motion downwards and vice versa. In the case of that sort of motion which yet remains, of those that have been enumerated, it is not"
+  "column": "15b"
  }
 ]
