@@ -81,6 +81,8 @@
   let engMode: SearchMode = 'all';
   let langOp: LangOp = 'and';
   let matchMode: MatchMode = 'lemma';
+  // English "any form": a word also finds its plurals and possessives.
+  let engForms = true;
   // Which works to search. Default: all. Selected in the collapsible panel below.
   let selectedWorks = new Set<string>(WORKS.map(w => w.id));
   let worksOpen = false;  // is the works "Refine" panel expanded?
@@ -184,10 +186,11 @@
   interface SearchCtx {
     grkQuery: string; engQuery: string; engTerms: string[]; grkAccentTerms: string[];
     engPhrase: boolean;   // the English terms are a phrase: mark the run, not each word
+    engForms: boolean;    // the English terms matched any form of each word
     langOp: LangOp;       // how the two queries were joined, for the translation filter
   }
   const emptyCtx = (): SearchCtx => ({
-    grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [], engPhrase: false, langOp: 'and',
+    grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [], engPhrase: false, engForms: false, langOp: 'and',
   });
   let searchCtx: SearchCtx = emptyCtx();
 
@@ -821,6 +824,7 @@
     if (ctx.grkQuery) qs.set('hlg', ctx.grkQuery);
     if (ctx.engQuery) qs.set('hle', ctx.engQuery);
     if (ctx.engQuery && ctx.engPhrase) qs.set('hlm', 'phrase');
+    if (ctx.engQuery && ctx.engForms) qs.set('hlf', 'any');
     const base = qs.toString();
     // A translation hit opens the reader in that translation, where the
     // highlighted words are; a Greek one leaves the reader's choice alone.
@@ -876,7 +880,7 @@
         for (const hit of hits) {
           const t = ts.find(x => x.id === hit.translation)
             ?? { id: hit.translation, slot: 'english' as const, short: hit.translation, name: hit.translation };
-          const place = englishPlace(seg, t, hit.positions, ctx.engTerms, ctx.engPhrase);
+          const place = englishPlace(seg, t, hit.positions, ctx.engTerms, ctx.engPhrase, ctx.engForms);
           if (!place) continue;
           const ch = (place.chapter !== null ? lookup.named(place.chapter) : undefined)
             ?? lookup.at(seg.column, place.chapter !== null ? place.line : seg.greek[0]?.n ?? place.line);
@@ -997,6 +1001,7 @@
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
         engPhrase: engMode === 'phrase',
+        engForms,
         langOp,
       };
       const { results, failedWorks: failed, approximateChapters: approximate, unsearchedTranslations } = comboActive
@@ -1008,8 +1013,8 @@
         // every headword that spelling can belong to — ἤν back to εἰμί and ὅς —
         // which is exactly what the picker exists to rule out.
         : soloLemmaActive
-          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'headword')
-          : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
+          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'headword', engForms)
+          : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode, engForms);
       failedWorks = failed;
       approximateChapters = approximate ?? [];
       unsearched = (unsearchedTranslations ?? []).map(({ work, translation }) =>
@@ -1475,6 +1480,11 @@
         {#each MODE_OPTS as opt}
           <label><input type="radio" name="engmode" value={opt.v} bind:group={engMode} /> {opt.l}</label>
         {/each}
+      </fieldset>
+      <fieldset class="mode-group" title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
+        <legend>Match</legend>
+        <label><input type="radio" name="engforms" value={true} bind:group={engForms} /> Any form of this word</label>
+        <label><input type="radio" name="engforms" value={false} bind:group={engForms} /> Only as I typed it</label>
       </fieldset>
     </div>
 

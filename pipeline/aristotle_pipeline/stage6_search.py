@@ -53,6 +53,7 @@ from __future__ import annotations
 import json
 import re
 import struct
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -75,6 +76,16 @@ _EN_APOSTROPHE = re.compile("[\u2019\u02bc]")
 # EN_SIDENOTE in shared/lib/search.ts.
 _EN_FOOTNOTE = re.compile(r"\[\^[0-9A-Za-z_.*\u2020]+\]")
 _EN_SIDENOTE = re.compile(r"\[\[(?:s|fig)[0-9]+\]\]")
+# Older translations print Latin letters the fold would otherwise split on:
+# "Lacedæmonians" was indexed as "laced" + "monians", "versâ" as "vers". The
+# ligatures become two letters and accents drop off, so the word is the one a
+# reader types. Mirrored by latinFold in shared/lib/search.ts.
+_EN_COMBINING = re.compile("[\u0300-\u036f]")
+
+
+def _latin_fold(text: str) -> str:
+    text = _EN_COMBINING.sub("", unicodedata.normalize("NFD", text))
+    return text.replace("\u00e6", "ae").replace("\u0153", "oe")
 
 
 def fold_lemma(beta_key: str) -> str:
@@ -89,9 +100,10 @@ def english_words(text: str) -> list[str]:
     that Aristotle’s elides with) and is not part of the word. Shared with
     stage8 so english.json and english-segments.json count the same words.
     Inline footnote, sidenote and figure markers are not words (see
-    _EN_FOOTNOTE)."""
+    _EN_FOOTNOTE). Ligatures and accented letters fold to plain ones (see
+    _latin_fold)."""
     text = _EN_SIDENOTE.sub(" ", _EN_FOOTNOTE.sub("", text))
-    words = _EN_WORD.findall(_EN_APOSTROPHE.sub("'", text).lower())
+    words = _EN_WORD.findall(_latin_fold(_EN_APOSTROPHE.sub("'", text).lower()))
     return [w for w in (raw.strip("'") for raw in words) if w]
 
 

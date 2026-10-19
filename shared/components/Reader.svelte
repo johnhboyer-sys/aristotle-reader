@@ -137,6 +137,7 @@
   let hlGrkFolds: string[] = [];
   let hlEngUnits: string[][] = [];
   let hlEngPhrase = false;
+  let hlEngForms = false;   // ?hlf=any: the search matched any form of each word
   // A search hit's exact Greek tokens (?hlt=<column>:<pos>,…), whatever kind
   // of search found them — a lemma, a grammatical form, words near each other.
   // Without it (an older link) the typed words are matched as before.
@@ -149,8 +150,8 @@
   // a call only when something named in it changes. Read from scope, the
   // marks appeared only when some other change (a new translation) happened
   // to re-render the column — never for a hit in the default translation.
-  type EngMarks = { units: string[][]; phrase: boolean };
-  $: engMarks = { units: hlEngUnits, phrase: hlEngPhrase } as EngMarks;
+  type EngMarks = { units: string[][]; phrase: boolean; forms: boolean };
+  $: engMarks = { units: hlEngUnits, phrase: hlEngPhrase, forms: hlEngForms } as EngMarks;
   let targetId: string | null = null;
 
   // Which translation fills the English column: a translation id from the
@@ -562,7 +563,7 @@
     // Sidenote [[sN]] and figure [[figN]] markers are rendered elsewhere (the
     // right rail / an inline figure), so strip them from the prose flow.
     text = text.replace(/\s*\[\[(?:s|fig)\d+\]\]\s*/g, ' ');
-    return markEnglishHtml(text, marks.units, marks.phrase);
+    return markEnglishHtml(text, marks.units, marks.phrase, marks.forms);
   }
   // §Phase-3 B5: the printed number is stored as `display`; identity is the
   // (scope, number) pair encoded in the label — continuous scope's label IS
@@ -968,6 +969,7 @@
       .map(t => greekFold(t.replace(/\*/g, ''))).filter(Boolean);
     hlEngUnits = englishQueryUnits(params.get('hle') ?? '');
     hlEngPhrase = params.get('hlm') === 'phrase';
+    hlEngForms = params.get('hlf') === 'any';
     const hlt = params.get('hlt');
     if (hlt) {
       const at = hlt.lastIndexOf(':');

@@ -234,8 +234,15 @@ function compilePattern(
 // with U+2018/U+2019 (‘change’): both become a straight apostrophe, and an
 // apostrophe at a word's edge is a quotation mark, not part of the word.
 const ENGLISH_QUOTES = /[\u2018\u2019\u02bc]/g;
+// Ligatures become two letters and accents drop off, so "Lacedæmonians" is
+// the word a reader types, not "laced" + "monians". Mirror of stage6's
+// _latin_fold. Takes lowercase input.
+function latinFold(input: string): string {
+  return input.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\u00e6/g, 'ae').replace(/\u0153/g, 'oe');
+}
 function englishFold(input: string): string {
-  return input.toLowerCase().replace(ENGLISH_QUOTES, "'").replace(/[^a-z']/g, '');
+  return latinFold(input.toLowerCase().replace(ENGLISH_QUOTES, "'")).replace(/[^a-z']/g, '');
 }
 function englishTerm(term: string): string {
   return term.replace(ENGLISH_QUOTES, "'").replace(/^'+|'+$/g, '');
@@ -262,14 +269,16 @@ export function englishWords(text: string): EnglishWord[] {
   const out: EnglishWord[] = [];
   let word = '';
   let offsets: number[] = [];
+  let ends: number[] = [];
   const close = () => {
     let a = 0;
     let b = word.length;
     while (a < b && word[a] === "'") a++;
     while (b > a && word[b - 1] === "'") b--;
-    if (a < b) out.push({ word: word.slice(a, b), start: offsets[a], end: offsets[b - 1] + 1 });
+    if (a < b) out.push({ word: word.slice(a, b), start: offsets[a], end: ends[b - 1] });
     word = '';
     offsets = [];
+    ends = [];
   };
   for (let i = 0; i < text.length;) {
     if (text[i] === '[') {
@@ -278,10 +287,15 @@ export function englishWords(text: string): EnglishWord[] {
       EN_SIDENOTE.lastIndex = i;
       if (EN_SIDENOTE.test(text)) { close(); i = EN_SIDENOTE.lastIndex; continue; }
     }
-    // Lowercased a character at a time, as Python lowercases the whole string:
-    // the result of one character is never more than one [a-z] letter here.
-    for (const ch of text[i].replace(INDEX_APOSTROPHE, "'").toLowerCase()) {
-      if ((ch >= 'a' && ch <= 'z') || ch === "'") { word += ch; offsets.push(i); }
+    // Lowercased and folded a character at a time, as Python does the whole
+    // string: æ gives two letters, both at this character, and a combining
+    // accent gives none, so it neither joins nor splits the word.
+    const folded = latinFold(text[i].replace(INDEX_APOSTROPHE, "'").toLowerCase());
+    // An accent written as its own character belongs to the letter before it,
+    // so the word's span runs through it: "cafe\u0301" is marked whole.
+    if (!folded && ends.length) ends[ends.length - 1] = i + 1;
+    for (const ch of folded) {
+      if ((ch >= 'a' && ch <= 'z') || ch === "'") { word += ch; offsets.push(i); ends.push(i + 1); }
       else close();
     }
     i++;
@@ -290,14 +304,90 @@ export function englishWords(text: string): EnglishWord[] {
   return out;
 }
 
+// "Any form" in English: a typed word also finds its plural and possessive
+// forms, and a plural or possessive its singular. Exact matching found
+// "virtue" 232 times in Rackham's Ethics and missed "virtues" 83 times; a
+// wildcard (virtue*) finds the plural but also every word that merely begins
+// the same way. Only forms the index holds are looked up (englishMatch), so a
+// rule's misfire ("virtu" from "virtues") costs nothing.
+//
+// A word under three letters is left alone, and no rule makes one: "a" would
+// otherwise find "as", and "is" or "us" would lose their s. A plural
+// possessive (virtues') is indexed as the plural, since the index strips an
+// apostrophe at a word's edge, so "-s'" needs no form of its own.
+const EN_IRREGULAR = new Map<string, string>([
+  ['child', 'children'], ['foot', 'feet'], ['tooth', 'teeth'], ['goose', 'geese'],
+  ['mouse', 'mice'], ['ox', 'oxen'], ['life', 'lives'], ['wife', 'wives'],
+  ['knife', 'knives'], ['half', 'halves'], ['self', 'selves'], ['leaf', 'leaves'],
+  ['wolf', 'wolves'], ['calf', 'calves'], ['thief', 'thieves'], ['genus', 'genera'],
+  ['phenomenon', 'phenomena'], ['criterion', 'criteria'], ['basis', 'bases'],
+  ['hypothesis', 'hypotheses'], ['analysis', 'analyses'], ['thesis', 'theses'],
+  ['crisis', 'crises'], ['axis', 'axes'],
+].flatMap(([one, many]) => [[one, many], [many, one]]));
+
+// Words in -s that are not the plural of the word without it: "news" is not
+// more than one "new", nor "politics" of "politic". "Means" is usually a word
+// of its own (a means to an end, a man's means) and almost never the plural of
+// the ethical mean. No rule makes one of these or takes its s away.
+const EN_NOT_PLURAL = new Set([
+  'news', 'means', 'politics', 'ethics', 'physics', 'mathematics', 'economics', 'species', 'series',
+]);
+
+// The singulars a word may be a plural of, itself included. Man/men,
+// woman/women and every -man compound (statesman, craftsman) go by rule.
+function englishSingulars(w: string): string[] {
+  const out = [w];
+  if (EN_NOT_PLURAL.has(w)) return out;
+  if (w.endsWith('ies')) out.push(`${w.slice(0, -3)}y`, w.slice(0, -1));
+  else if (/(?:s|x|z|ch|sh|o)es$/.test(w)) out.push(w.slice(0, -2), w.slice(0, -1));
+  // Not -ss, -us, -is: class, genus and basis are singulars.
+  else if (/[^siu']s$/.test(w)) out.push(w.slice(0, -1));
+  if (w.endsWith('men')) out.push(`${w.slice(0, -3)}man`);
+  const irregular = EN_IRREGULAR.get(w);
+  if (irregular) out.push(irregular);
+  return out.filter(s => s.length >= 3 || EN_IRREGULAR.has(s));
+}
+
+// A singular's own forms: itself and its possessive, its plurals, and the
+// possessive of each plural that does not end in s (men's).
+function englishPlurals(w: string): string[] {
+  const out: string[] = [];
+  if (/(?:s|x|z|ch|sh)$/.test(w)) out.push(`${w}es`);
+  else {
+    out.push(`${w}s`);
+    if (w.endsWith('o')) out.push(`${w}es`);
+    if (/[^aeiou]y$/.test(w)) out.push(`${w.slice(0, -1)}ies`);
+  }
+  if (w.endsWith('man')) out.push(`${w.slice(0, -3)}men`);
+  const irregular = EN_IRREGULAR.get(w);
+  if (irregular) out.push(irregular);
+  return [w, `${w}'s`, ...out
+    .filter(f => !EN_NOT_PLURAL.has(f))
+    .flatMap(f => (f.endsWith('s') ? [f] : [f, `${f}'s`]))];
+}
+
+/** Every form "any form" looks up for one word as the index keys it (folded,
+ * lowercase), the word itself first. A wildcard term is its own only form. */
+export function englishForms(word: string): string[] {
+  if (/[*?]/.test(word)) return [word];
+  const bare = word.endsWith("'s") ? word.slice(0, -2) : word;
+  if (bare.length < 3 && !EN_IRREGULAR.has(bare)) return [word];
+  const forms = new Set([word]);
+  for (const one of englishSingulars(bare)) for (const f of englishPlurals(one)) forms.add(f);
+  return [...forms];
+}
+
 /** True for a word (as englishWords() gives it) that the typed term matches,
- * by the same rule the index lookup uses. */
-export function englishTermMatcher(terms: string[]): (word: string) => boolean {
+ * by the same rule the index lookup uses; with `forms`, any form of it. */
+export function englishTermMatcher(terms: string[], forms = false): (word: string) => boolean {
   const tests = terms.map(t => {
     if (t === '*') return () => true;
     const pattern = compilePattern(englishTerm(t), englishFold);
     if (!pattern) return () => false;
-    return 'exact' in pattern ? (w: string) => w === pattern.exact : pattern.test;
+    if (!('exact' in pattern)) return pattern.test;
+    if (!forms) return (w: string) => w === pattern.exact;
+    const all = new Set(englishForms(pattern.exact));
+    return (w: string) => all.has(w);
   });
   return word => tests.some(test => test(word));
 }
@@ -309,7 +399,7 @@ export function englishTermMatcher(terms: string[]): (word: string) => boolean {
  * must stand together, in order. A wildcard stays inside its piece. */
 export function englishQueryUnits(query: string): string[][] {
   return query.trim().split(/\s+/).filter(Boolean)
-    .map(term => term.replace(ENGLISH_QUOTES, "'").toLowerCase().split(/[^a-z'*?]+/)
+    .map(term => latinFold(term.replace(ENGLISH_QUOTES, "'").toLowerCase()).split(/[^a-z'*?]+/)
       .map(w => w.replace(/^'+|'+$/g, ''))
       .filter(Boolean))
     .filter(unit => unit.length > 0);
@@ -449,7 +539,7 @@ export function compileEnglishPhrase(terms: string[]): (text: string) => boolean
   // and this check would then throw it away. A leading * asks for any start
   // ("*ness" — happiness, goodness), so that term takes no boundary on its left.
   const parts = terms.map(t => {
-    const raw = t.toLowerCase();
+    const raw = latinFold(t.toLowerCase());
     const body = [...raw.replace(/^\*+/, '')]
       .filter(ch => /[a-z'*?]/.test(ch))
       .join('');
@@ -468,7 +558,7 @@ export function compileEnglishPhrase(terms: string[]): (text: string) => boolean
   // apostrophes glued to the word; the index (stage6 english_words) strips
   // them at a word's edge, and so must the boundary here.
   return text => pattern.test(
-    text.toLowerCase()
+    latinFold(text.toLowerCase())
       .replace(ENGLISH_QUOTES, "'")
       .replace(/(^|[^a-z'])'+|'+(?=[^a-z']|$)/g, '$1'),
   );
@@ -603,19 +693,28 @@ function greekPositions(
 
 // Where one unit of an English query stands in an index: seg_idx -> the word
 // positions of every run of it. A one-word unit is any occurrence; a
-// hyphenated term's words must stand in a row. An index without positions
+// hyphenated term's words must stand in a row. With `forms`, each word may
+// stand as any of its forms this index holds. An index without positions
 // (built before 2026-09-07) can say only which segments, and checks a run
-// against english_head as it always has.
-function unitMatch(idx: EngIndex, meta: SegMeta[], unit: string[]): { segs: Set<number>; positions: Map<number, number[]> } {
+// against english_head as it always has, by the typed words alone.
+function unitMatch(
+  idx: EngIndex,
+  meta: SegMeta[],
+  unit: string[],
+  forms: boolean,
+): { segs: Set<number>; positions: Map<number, number[]> } {
   const positions = new Map<number, number[]>();
   // The bare *: every word matches it, so no word is the hit.
   if (unit.length === 1 && unit[0] === '*') return { segs: engPosting(idx, '*'), positions };
+  const alts = unit.map(t => (forms
+    ? englishForms(englishTerm(t)).filter((f, i) => i === 0 || f in idx)
+    : [englishTerm(t)]));
   if (!engHasPositions(idx)) {
-    let segs = unit.map(t => engPosting(idx, t)).reduce(intersect);
+    let segs = alts.map(a => a.map(t => engPosting(idx, t)).reduce(union)).reduce(intersect);
     if (unit.length > 1) segs = englishPhraseHits(idx, meta, segs, unit);
     return { segs, positions };
   }
-  for (const [si, starts] of phraseStarts(idx, unit.map(t => [englishTerm(t)]), englishFold)) {
+  for (const [si, starts] of phraseStarts(idx, alts, englishFold)) {
     positions.set(si, starts.flatMap(start => unit.map((_, j) => start + j)));
   }
   return { segs: new Set(positions.keys()), positions };
@@ -628,8 +727,9 @@ function englishMatch(
   meta: SegMeta[],
   units: string[][],
   engMode: SearchMode,
+  forms: boolean,
 ): { segs: Set<number>; positions: Map<number, number[]> } {
-  const matches = (engMode === 'phrase' ? [units.flat()] : units).map(u => unitMatch(idx, meta, u));
+  const matches = (engMode === 'phrase' ? [units.flat()] : units).map(u => unitMatch(idx, meta, u, forms));
   const segs = matches.map(m => m.segs).reduce(engMode === 'any' ? union : intersect);
   const positions = new Map<number, number[]>();
   for (const si of segs) {
@@ -651,6 +751,7 @@ async function searchWork(
   engMode: SearchMode,
   langOp: LangOp,
   matchMode: MatchMode,
+  engForms: boolean,
 ): Promise<WorkOutcome> {
   // Fetch only what this query needs: meta always; the lemma OR form Greek
   // index iff there are Greek terms; an English index per translation iff
@@ -704,7 +805,7 @@ async function searchWork(
     sources.forEach((t, i) => {
       const idx = engIdxs[i];
       if (!idx) return;
-      const { segs: hits, positions } = englishMatch(idx, meta, engUnits, engMode);
+      const { segs: hits, positions } = englishMatch(idx, meta, engUnits, engMode, engForms);
       for (const si of hits) {
         engHits!.add(si);
         const hit = { translation: t.id, positions: positions.get(si) ?? [] };
@@ -1452,7 +1553,8 @@ async function resolveHeadwords(terms: string[]): Promise<string[][]> {
 }
 
 // Unified search across one or more works. `matchMode` chooses the Greek index
-// (lemma = all forms of a headword, form = the exact inflected token).
+// (lemma = all forms of a headword, form = the exact inflected token);
+// `engForms` lets each English word match its plural and possessive forms.
 export async function search(
   grkQuery: string,
   engQuery: string,
@@ -1461,6 +1563,7 @@ export async function search(
   langOp: LangOp,
   works: string[],
   matchMode: MatchMode = 'lemma',
+  engForms = false,
 ): Promise<SearchOutcome> {
   if (!grkQuery.trim() && !engQuery.trim()) return { results: [], failedWorks: [] };
   if (!works.length) return { results: [], failedWorks: [] };
@@ -1479,7 +1582,7 @@ export async function search(
   const perWork = await pool(works, 8, async w => {
     try {
       const { results, unsearched } =
-        await searchWork(w, grkTerms, engUnits, grkMode, engMode, langOp, matchMode);
+        await searchWork(w, grkTerms, engUnits, grkMode, engMode, langOp, matchMode, engForms);
       for (const translation of unsearched) unsearchedTranslations.push({ work: w, translation });
       return results;
     } catch (err) {

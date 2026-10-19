@@ -97,6 +97,15 @@ describe('englishPlace', () => {
     expect(place.line).toBe(14);
   });
 
+  it('marks the form an any-form search found where the index says it stands', () => {
+    const text = seg.ross![1].text;
+    const pos = englishWords(seg.ross![0].text).length
+      + englishWords(text).findIndex((w) => w.word === 'goods');
+    expect(englishPlace(seg, ross, [pos], ['good'], false, true)!.html).toContain('<mark>goods</mark>');
+    // Exact, "goods" is not the word typed, so the position is not trusted.
+    expect(englishPlace(seg, ross, [pos], ['good'], false)!.html).not.toContain('<mark>goods</mark>');
+  });
+
   it('is null for a translation with no text in the segment', () => {
     expect(englishPlace(seg, peters, [0], ['virtue'], false)).toBeNull();
   });
@@ -114,8 +123,8 @@ describe('overlayPieces', () => {
 
 // The reader's highlight, by the search's own rule.
 describe('markEnglishHtml', () => {
-  const mark = (query: string, text: string, phrase = false) =>
-    markEnglishHtml(text, englishQueryUnits(query), phrase);
+  const mark = (query: string, text: string, phrase = false, forms = false) =>
+    markEnglishHtml(text, englishQueryUnits(query), phrase, forms);
 
   it('marks whole words, not every word a term begins', () => {
     expect(mark('end', 'the end, not the ending we endure'))
@@ -136,6 +145,18 @@ describe('markEnglishHtml', () => {
   it('marks a word with an apostrophe or across a footnote marker, and leaves the marker as text', () => {
     expect(mark('aristotle’s emotions', 'Aristotle’s emotions,[^1.9] his'))
       .toBe('<mark>Aristotle’s</mark> <mark>emotions</mark>,[^1.9] his');
+  });
+
+  it('marks every form of a word for an any-form search, and nothing that only begins like it', () => {
+    const text = 'the men’s virtues and a man’s virtue, not manly or virtuous';
+    expect(mark('man virtue', text, false, true))
+      .toBe('the <mark>men’s</mark> <mark>virtues</mark> and a <mark>man’s</mark> <mark>virtue</mark>, not manly or virtuous');
+    expect(mark('man virtue', text)).toBe('the men’s virtues and a man’s <mark>virtue</mark>, not manly or virtuous');
+  });
+
+  it('marks a word the page prints with a ligature or an accent', () => {
+    expect(mark('lacedaemonians', 'the Lacedæmonians')).toBe('the <mark>Lacedæmonians</mark>');
+    expect(mark('Lacedæmonians versa', 'vice versâ, Lacedæmonians')).toBe('vice <mark>versâ</mark>, <mark>Lacedæmonians</mark>');
   });
 
   it('marks nothing for no query, or the bare *', () => {
