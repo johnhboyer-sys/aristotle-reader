@@ -199,3 +199,54 @@ def test_chapter_bounds_gate_refuses_empty_chapter_data_the_manifest_declares(tm
     assert ("VAL", "chapters.json",
             "lists no chapters though the manifest declares them") in problems
     assert ("VAL", "search/offsets.json", "has no chapter_bounds list") in problems
+
+
+def _starts_case(tmp_path, chapter_bounds):
+    """The valid fixture's offsets.json with `chapter_bounds`, checked by the
+    shared-start gate alone."""
+    import json
+    import shutil
+
+    from aristotle_pipeline import preflight
+
+    case = tmp_path / "case"
+    shutil.copytree(FIXTURES / "valid", case)
+    offsets = case / "data" / "VAL" / "search" / "offsets.json"
+    offsets.write_text(json.dumps({"chapter_bounds": chapter_bounds}), encoding="utf-8")
+    manifests = [preflight.WorkManifest(work_id="VAL", path=Path("VAL.yaml"), data={})]
+    problems = []
+    examined = preflight._validate_shared_chapter_starts(case / "data", manifests, problems)
+    return examined, problems
+
+
+def test_chapter_bounds_at_distinct_starts_pass(tmp_path):
+    examined, problems = _starts_case(tmp_path, [
+        {"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"},
+        {"book": 1, "chapter": "2", "start": 9, "accuracy": "line-snapped"},
+    ])
+    assert (examined, problems) == (1, [])
+
+
+def test_chapter_bounds_sharing_a_start_are_reported(tmp_path):
+    """The pager gives every chapter but the last at a shared start no tokens:
+    De Mirabilibus once had 123/124, 148/149 and 153/154/155 so."""
+    examined, problems = _starts_case(tmp_path, [
+        {"book": 1, "chapter": "122", "start": 0, "accuracy": "exact"},
+        {"book": 1, "chapter": "153", "start": 8484, "accuracy": "exact"},
+        {"book": 1, "chapter": "154", "start": 8484, "accuracy": "line-snapped"},
+        {"book": 1, "chapter": "155", "start": 8484, "accuracy": "line-snapped"},
+    ])
+    assert examined == 1
+    assert problems == [("VAL", "search/offsets.json",
+                         "chapters '153', '154', '155' share start 8484: "
+                         "all but the last page with no text")]
+
+
+def test_chapter_starts_gate_says_when_it_examined_no_work(tmp_path):
+    from aristotle_pipeline import preflight
+
+    problems = []
+    assert preflight._validate_shared_chapter_starts(tmp_path, [], problems) == 0
+    assert problems == [("-", "search/offsets.json",
+                         "examined no work: no chapter starts were compared, "
+                         "so this check is not running")]

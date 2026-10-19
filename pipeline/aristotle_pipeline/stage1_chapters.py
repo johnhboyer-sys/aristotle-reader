@@ -105,6 +105,37 @@ def _find_word_run(joined: str, needle: str, after: int) -> int:
     return p
 
 
+def _step_back_match(joined: str, spine_words: list[str], ow: list[str],
+                     after: int, last: int | None = None):
+    """(word index, new cursor, word_anchor) for an opening found past its
+    leading words, or None. A single orthographic divergence in the opening
+    words otherwise drops the chapter, and it bites at different offsets: APr
+    I.4 diverges at word 4 (spine λέγωμεν vs TEI λέγομεν), so a 3-word prefix
+    saves it; Top VIII.13 diverges at word 2 (spine δὲ vs TEI δ᾿), so we must
+    skip leading particles and match a later window, then step back to the
+    inferred opening. Longer windows are tried first (more specific), and the
+    monotonic `after` pointer keeps a short window from matching before the
+    previous chapter. A stepped-back start past word `last` is not taken."""
+    for kk in (4, 3):
+        for start in (0, 1, 2, 3):
+            if len(ow) < start + kk:
+                continue
+            p = _find_word_run(joined, " ".join(ow[start:start + kk]), after)
+            if p < 0:
+                continue
+            w = joined[:p].count(" ")
+            widx = max(0, w - start)
+            if last is not None and widx > last:
+                continue
+            # The suffix match proves the stepped-back position only when the
+            # skipped normalized words are really present there. Keep the
+            # historical position either way, but never label an inference as
+            # word-exact.
+            anchor = w >= start and spine_words[w - start:w] == ow[:start]
+            return widx, p, anchor
+    return None
+
+
 def _div_opening(div, k_chars=400) -> str:
     """First ~k chars of text under a chapter div, dropping note/head subtrees
     and a leading single-letter book label."""
@@ -331,52 +362,41 @@ def extract_chapters_grc(spine: dict, grc_rel: str,
                 # This is authoritative but not a word-matched anchor.
                 widx = _first_word_at(owner, mcol, mline,
                                       bisect_left(wstart, after))
-                # Some First1KGreek chapter divs begin immediately after a page
-                # milestone, before their first line milestone.  The page is
-                # still authoritative; retain the division at the first word in
-                # that page following the previous chapter rather than dropping
-                # it solely because the line is implicit. This page-only
-                # position likewise was not matched to the opening words.
                 if widx is None and mline is None:
-                    widx = next(
-                        (i for i, (col, _, _) in enumerate(owner)
-                         if col == mcol and wstart[i] >= after),
-                        None,
-                    )
-                if widx is not None:
+                    # A page milestone cannot place a chapter within its page,
+                    # and the one a div carries may be the page that begins
+                    # INSIDE it. So a misspelled opening (Mirab 123's `Ἤλδι`)
+                    # is first sought past its typo, as below; the page bounds
+                    # that search, since the chapter starts on or before it.
+                    page_end = max((i for i, (col, _, _) in enumerate(owner)
+                                    if col == mcol), default=None)
+                    hit = (_step_back_match(joined, spine_words, ow, after, page_end)
+                           if page_end is not None else None)
+                    if hit:
+                        widx, after, word_anchor = hit
+                    else:
+                        # Some First1KGreek chapter divs begin immediately after
+                        # a page milestone, before their first line milestone.
+                        # The page is still authoritative; retain the division
+                        # at the first word in that page following the previous
+                        # chapter rather than dropping it solely because the
+                        # line is implicit. This page-only position likewise
+                        # was not matched to the opening words.
+                        widx = next(
+                            (i for i, (col, _, _) in enumerate(owner)
+                             if col == mcol and wstart[i] >= after),
+                            None,
+                        )
+                        if widx is not None:
+                            after = wstart[widx]
+                elif widx is not None:
                     after = wstart[widx]
             if widx is None and mcol is None:
                 # Last resort for grc TEIs with no Bekker milestones (no fallback
-                # above). A single orthographic divergence in the opening words
-                # otherwise drops the chapter, and it bites at different offsets:
-                # APr I.4 diverges at word 4 (spine λέγωμεν vs TEI λέγομεν), so a
-                # 3-word prefix saves it; Top VIII.13 diverges at word 2 (spine
-                # δὲ vs TEI δ᾿), so we must skip leading particles and match a
-                # later window, then step back to the inferred opening. Longer
-                # windows are tried first (more specific), and the monotonic
-                # `after` pointer keeps a short window from matching before the
-                # previous chapter.
-                for kk in (4, 3):
-                    for start in (0, 1, 2, 3):
-                        if len(ow) < start + kk:
-                            continue
-                        p = _find_word_run(
-                            joined, " ".join(ow[start:start + kk]), after)
-                        if p >= 0:
-                            w = joined[:p].count(" ")
-                            widx = max(0, w - start)
-                            after = wstart[w]
-                            # The suffix match proves the stepped-back position
-                            # only when the skipped normalized words are really
-                            # present there. Keep the historical position either
-                            # way, but never label an inference as word-exact.
-                            word_anchor = (
-                                w >= start
-                                and spine_words[w - start:w] == ow[:start]
-                            )
-                            break
-                    if widx is not None:
-                        break
+                # above).
+                hit = _step_back_match(joined, spine_words, ow, after)
+                if hit:
+                    widx, after, word_anchor = hit
             if widx is None:
                 continue  # unmatched chapter (surfaced by the caller as a gap)
         # A grc TEI may divide a book earlier than the spine does (Rhetoric's

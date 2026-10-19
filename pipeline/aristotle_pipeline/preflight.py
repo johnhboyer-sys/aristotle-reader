@@ -34,6 +34,7 @@ def validate(data_dir: Path, manifests_dir: Path) -> list[Problem]:
         _validate_work_data(data_dir, manifest, problems)
     _validate_search_shards(data_dir, manifests, problems)
     _validate_chapter_bounds(data_dir, manifests, problems)
+    _validate_shared_chapter_starts(data_dir, manifests, problems)
     return problems
 
 
@@ -459,6 +460,40 @@ def _validate_chapter_bounds(data_dir: Path, manifests: list[WorkManifest],
     if examined == 0:
         problems.append(("-", "search/offsets.json",
                          "examined no work: no chapter_bounds were compared, so this check is not running"))
+    return examined
+
+
+def _validate_shared_chapter_starts(data_dir: Path, manifests: list[WorkManifest],
+                                    problems: list[Problem]) -> int:
+    """No two chapter_bounds in a work share one start.
+
+    The pager ends a chapter where the next begins, so every chapter but the
+    last at a shared start pages with no text (De Mirabilibus once had three
+    such runs, from chapter openings the TEI misspells). Returns the number of
+    works examined; a missing or malformed offsets.json is
+    _validate_chapter_bounds' to report.
+    """
+    examined = 0
+    for manifest in manifests:
+        path = data_dir / manifest.work_id / "search" / "offsets.json"
+        try:
+            bounds = json.loads(path.read_text(encoding="utf-8"))["chapter_bounds"]
+        except Exception:
+            continue
+        if not isinstance(bounds, list):
+            continue
+        examined += 1
+        by_start: dict[Any, list[str]] = {}
+        for b in bounds:
+            by_start.setdefault(b.get("start"), []).append(str(b.get("chapter")))
+        for start, chapters in by_start.items():
+            if len(chapters) > 1:
+                problems.append((manifest.work_id, "search/offsets.json",
+                                 f"chapters {', '.join(repr(c) for c in chapters)} share start "
+                                 f"{start}: all but the last page with no text"))
+    if examined == 0:
+        problems.append(("-", "search/offsets.json",
+                         "examined no work: no chapter starts were compared, so this check is not running"))
     return examined
 
 
