@@ -40,6 +40,21 @@ describe('search URL', () => {
     expect(decodeSearchUrl(`?q=happiness&g=${encodeURIComponent('λόγος')}`, ALL))
       .toEqual(base({ grk: 'λόγος' }));
     expect(hasSearch(decodeSearchUrl('?q=%20', ALL))).toBe(false);
+    // Present but empty still outranks: the search is then empty.
+    for (const qs of ['?q=happiness&g=', '?q=happiness&e=', '?q=happiness&g=%20', '?q=happiness&e=%20']) {
+      expect(hasSearch(decodeSearchUrl(qs, ALL))).toBe(false);
+    }
+  });
+
+  it('sends ?q= to Greek only for Greek letters, not Greek punctuation or Coptic', () => {
+    // U+037E is the Greek question mark; U+0387 the ano teleia; U+03E2 Coptic shei.
+    expect(decodeSearchUrl('?q=virtue%CD%BE', ALL)).toEqual(base({ eng: 'virtue\u037e' }));
+    expect(decodeSearchUrl('?q=virtue%CE%87', ALL)).toEqual(base({ eng: 'virtue\u0387' }));
+    expect(decodeSearchUrl('?q=%CF%A2', ALL)).toEqual(base({ eng: '\u03e2' }));
+    // Monotonic, and decomposed polytonic, are still Greek.
+    expect(decodeSearchUrl(`?q=${encodeURIComponent('λόγος')}`, ALL)).toEqual(base({ grk: 'λόγος' }));
+    const nfd = 'εὐδαιμονία'.normalize('NFD');
+    expect(decodeSearchUrl(`?q=${encodeURIComponent(nfd)}`, ALL)).toEqual(base({ grk: nfd }));
   });
 
   it('round-trips every option of a plain search', () => {

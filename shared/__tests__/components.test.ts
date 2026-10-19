@@ -197,6 +197,23 @@ describe('Search.svelte in the address bar', () => {
     push.mockRestore();
   });
 
+  it('replaces a ?q= arrival when the same search runs again, so Back leaves the page', async () => {
+    const { search } = await import('../lib/search');
+    at('/search?q=happiness');
+    const push = vi.spyOn(window.history, 'pushState');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'and', expect.any(Array), 'lemma', true);
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(window.location.search).toBe('?e=happiness');
+    expect(push).not.toHaveBeenCalled();
+    expect(replace).toHaveBeenCalled();
+    push.mockRestore();
+    replace.mockRestore();
+  });
+
   it('follows the back button, and clears the page on a URL with no search', async () => {
     const { search } = await import('../lib/search');
     at('/search?g=logos');
