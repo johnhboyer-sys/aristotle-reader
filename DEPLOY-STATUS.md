@@ -13,6 +13,53 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-10-19 (evening) — DEPLOYED: word forms, search shards, chapter pages, searches in the address (PR #159)
+
+`gh-pages 84ddf0b8 → d73941fb`, source `origin/main` `5197f6fb3f` (the #159 merge). John ran
+`npm run deploy -- --dist=/Users/johnboyer/Developer/aristotle-worktrees/search-integration/app/dist --verify`
+from the main checkout: the merge's tree is identical to `claude/search-integration` `3c69e66f59`
+(0-line diff), so that worktree's full build was main's build and no second rebuild was needed.
+
+**What shipped:** #159 joins four branches written in parallel sessions (#158 closed into it).
+English "any form of this word" (default on; "means" never expanded, John's ruling) and Latin
+ligature/accent folding in both stage 6 and the browser; corpus stage 9 search shards
+(`build/dist/search-shards/`, by a word's first two letters) with the per-work fallback, `meta.json`
+cut to `{id, book, column}`, the no-positions English fallback removed; results page with per-word
+English counts, a works chip row, chapter-aligned pages (`search-pages.ts`), an aria-live status;
+the whole search in the address (`search-url.ts`, incl. `ef` and `wf`). Explainer:
+https://claude.ai/artifact/SSEFY1J3RjSyusGg2mZ2NH
+
+**Reviews:** Codex GPT-6.1-Sol on each branch, on #158 as it stood (constructor/inherited key,
+theses→these, stomach→stomachs: fixed), and on the joined diff (three late-result races: fixed, each
+with a test that failed first). Reviews in `~/.claude/reviews/review-158.md` and
+`review-search-integration-1.md`.
+
+**Build:** full `build:public` on the integration branch (Node 22.23.1): 41 works, stage2 PASS
+throughout, stage 9 (lemma 302 / form 378 / English 366 shards; English from 57 sources), preflight
+ok (now compares every shard posting with its per-work index), shared LSJ verified, 6,586 pages.
+Stage 8 took far longer than usual: the disk was nearly full (4.8 GB free) and shared with other
+sessions' builds. Tests: shared 624, pipeline 630, desktop 464 (21 skipped), app 89, scripts 83.
+
+**Gates:** link integrity **0 broken** (6,589 pages / 565,831 links / 434,070 anchors). Leak check at
+baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`);
+positive control "Aristotle" 1,621; gated shards carry only the public slots (Cat, Int: english,
+overlay-owen, secondary; Pol: english, secondary). New shard gate: 139 per-work indexes, 3,838,862
+postings compared. Translation-index gate: 117 book files, 16 translations beyond the primary.
+Dangling-reference gate: 8 removed bundles, 0 referenced; 8/8 added referenced.
+
+**Deploy diff:** 1,519 files — 1,053 A / 458 M / 5 D / 3 R. Added: 1,048 under
+`data/search-shards/` and 5 `_astro` bundles. Changed: every work's `search/` files (the fold and the
+cut `meta.json`), 119 `data/ngrams`, 5 `data/reports`, pages naming the new bundles. 0 deletions under
+`data/`, nothing to restore.
+
+**Live-verified:** the script's URL set as expected after about 2 minutes (new `Reader.BTnRD2JO.js`
+200; old bundles and `/bonitz/` 404). In a browser on live: `/search/?e=happiness&wf=EN` gives 349
+hits, Rackham 97 / Ostwald 92 / Peters 84 / Ross 76, fetched from `search-shards/index.json` and
+`english/ha.json` with no per-work English index; "coming-to-be" 894; "men" in the NE as typed
+(`ef=0`) 1,019; the reader link from a result (`hle=happiness&hlf=any`) marks 46 words in Book I;
+no console errors. Counts now go by matched word, so they run higher than this morning's (104 for
+"happiness" in the NE).
+
 ## 2026-10-19 — DEPLOYED: English search across every translation (PRs #156, #157)
 
 `gh-pages 3c5e21be → 84ddf0b8`, source `origin/main` `ee2489c9be` (the #157 merge; #156 is
