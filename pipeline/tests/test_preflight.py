@@ -118,9 +118,15 @@ def test_preflight_rejects_data_emitted_from_a_different_manifest(tmp_path):
     assert "Hugh Tredennick (Loeb, 1933)" in result.stdout
 
 
-def _bounds_case(tmp_path, chapter_bounds):
+_NO_FILE = object()
+
+
+def _bounds_case(tmp_path, chapter_bounds, chapters=_NO_FILE, declares_chapters=False,
+                 offsets_doc=_NO_FILE):
     """The valid fixture with a search/offsets.json carrying `chapter_bounds`
-    (None: no offsets.json at all), checked by the chapter-bounds gate alone."""
+    (None: no offsets.json at all), checked by the chapter-bounds gate alone.
+    `chapters` replaces chapters.json, `offsets_doc` the whole offsets.json,
+    and `declares_chapters` gives the manifest a chapters block."""
     import json
     import shutil
 
@@ -129,11 +135,16 @@ def _bounds_case(tmp_path, chapter_bounds):
     case = tmp_path / "case"
     shutil.copytree(FIXTURES / "valid", case)
     offsets = case / "data" / "VAL" / "search" / "offsets.json"
-    if chapter_bounds is None:
+    if offsets_doc is not _NO_FILE:
+        offsets.write_text(json.dumps(offsets_doc), encoding="utf-8")
+    elif chapter_bounds is None:
         offsets.unlink()
     else:
         offsets.write_text(json.dumps({"chapter_bounds": chapter_bounds}), encoding="utf-8")
-    manifests = [preflight.WorkManifest(work_id="VAL", path=Path("VAL.yaml"), data={})]
+    if chapters is not _NO_FILE:
+        (case / "data" / "VAL" / "chapters.json").write_text(json.dumps(chapters), encoding="utf-8")
+    data = {"chapters": {"source": "explicit"}} if declares_chapters else {}
+    manifests = [preflight.WorkManifest(work_id="VAL", path=Path("VAL.yaml"), data=data)]
     problems = []
     examined = preflight._validate_chapter_bounds(case / "data", manifests, problems)
     return examined, problems
@@ -169,3 +180,22 @@ def test_chapter_bounds_gate_says_when_it_examined_no_work(tmp_path):
     assert problems == [("-", "search/offsets.json",
                          "examined no work: no chapter_bounds were compared, "
                          "so this check is not running")]
+
+
+def test_chapter_bounds_gate_reports_a_malformed_chapters_json(tmp_path):
+    """chapters.json = null used to be skipped here and by _validate_chapters
+    alike, so the work went unchecked without a word."""
+    examined, problems = _bounds_case(
+        tmp_path, [{"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"}], chapters=None)
+    assert ("VAL", "chapters.json",
+            "malformed: expected an object of book -> list of chapter refs") in problems
+
+
+def test_chapter_bounds_gate_refuses_empty_chapter_data_the_manifest_declares(tmp_path):
+    """chapters.json = {} and offsets.json = {} agree at zero, but the manifest
+    declares chapters, so zero is a lost chapter list, not a match."""
+    examined, problems = _bounds_case(
+        tmp_path, None, chapters={}, declares_chapters=True, offsets_doc={})
+    assert ("VAL", "chapters.json",
+            "lists no chapters though the manifest declares them") in problems
+    assert ("VAL", "search/offsets.json", "has no chapter_bounds list") in problems

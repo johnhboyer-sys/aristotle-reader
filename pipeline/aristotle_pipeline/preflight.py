@@ -425,9 +425,17 @@ def _validate_chapter_bounds(data_dir: Path, manifests: list[WorkManifest],
         work_dir = data_dir / manifest.work_id
         try:
             chapters = json.loads((work_dir / "chapters.json").read_text(encoding="utf-8"))
+        except Exception:
+            continue  # _validate_work_data reports a missing or unparseable chapters.json
+        try:
             want = [(int(book), str(ref["chapter"])) for book, refs in chapters.items() for ref in refs]
         except Exception:
-            continue  # _validate_work_data reports a missing or malformed chapters.json
+            problems.append((manifest.work_id, "chapters.json",
+                             "malformed: expected an object of book -> list of chapter refs"))
+            continue
+        if not want and manifest.data.get("chapters"):
+            problems.append((manifest.work_id, "chapters.json",
+                             "lists no chapters though the manifest declares them"))
         try:
             offsets = json.loads((work_dir / "search" / "offsets.json").read_text(encoding="utf-8"))
         except FileNotFoundError:
@@ -436,8 +444,12 @@ def _validate_chapter_bounds(data_dir: Path, manifests: list[WorkManifest],
         except Exception as exc:
             problems.append((manifest.work_id, "search/offsets.json", f"unreadable: {exc}"))
             continue
+        bounds = offsets.get("chapter_bounds") if isinstance(offsets, dict) else None
+        if not isinstance(bounds, list):
+            problems.append((manifest.work_id, "search/offsets.json", "has no chapter_bounds list"))
+            continue
         examined += 1
-        have = {(b.get("book"), str(b.get("chapter"))) for b in offsets.get("chapter_bounds") or []}
+        have = {(b.get("book"), str(b.get("chapter"))) for b in bounds}
         missing = [key for key in want if key not in have]
         if len(have) != len(want) or missing:
             first = f"; first missing: book {missing[0][0]} chapter {missing[0][1]!r}" if missing else ""

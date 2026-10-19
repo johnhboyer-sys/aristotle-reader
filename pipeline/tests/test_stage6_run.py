@@ -226,6 +226,27 @@ def test_chapter_bound_on_a_line_with_no_greek_snaps_to_the_next_line(
         "book": 1, "chapter": "2", "start": 9, "accuracy": "line-snapped"}
 
 
+
+def test_chapter_bound_snapped_onto_another_chapters_start_is_refused(
+        tmp_path, monkeypatch):
+    """A start on a missing line (245a.19) snaps to the next line, 245a.20,
+    where chapter 3 also begins: both would share one token, and the pager
+    would give chapter 2 no text with neither check noticing. Stage 6 refuses
+    rather than emit a chapter with no range."""
+    import pytest
+
+    chapters = [
+        {"book": 1, "chapter": "1", "column": "244b", "line": "4",
+         "wordIndex": 0, "bookstart": True},
+        {"book": 1, "chapter": "2", "column": "245a", "line": "19",
+         "wordIndex": 0, "bookstart": False},
+        {"book": 1, "chapter": "3", "column": "245a", "line": "20",
+         "wordIndex": 0, "bookstart": False},
+    ]
+    with pytest.raises(ValueError, match="chapter '2'.*chapter '3'|chapter '3'.*chapter '2'"):
+        _build(tmp_path, monkeypatch, chapters)
+
+
 # -- English index and heads -------------------------------------------------
 
 def test_english_index_keeps_a_curly_possessive_as_one_word(tmp_path, monkeypatch):
