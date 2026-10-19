@@ -300,6 +300,36 @@ export function lineAtPosition(seg: Segment, pos: number): { n: number; sub?: st
   return { n: last?.n ?? 1, sub: last?.sub };
 }
 
+// The tokens a search hit names, as the very objects the page renders.
+// `positions` count a segment's tokens line by line, as the index does. A
+// table row's cells carry their own copies of the line's tokens, and need not
+// carry all of them (De Int 22a), so those are matched to the line's in
+// order, by surface form.
+export function hitTokens(segments: Segment[], column: string, positions: Iterable<number>): Set<Token> {
+  const out = new Set<Token>();
+  const seg = segments.find(s => s.column === column);
+  if (!seg) return out;
+  const want = new Set(positions);
+  let pos = 0;
+  for (const line of seg.greek) {
+    const hits = new Set<number>();
+    line.tokens.forEach((tok, i) => { if (want.has(pos + i)) { out.add(tok); hits.add(i); } });
+    if (line.cells && hits.size) {
+      let i = 0;
+      for (const cell of line.cells) {
+        for (const tok of cell.tokens) {
+          while (i < line.tokens.length && line.tokens[i].t !== tok.t) i++;
+          if (i >= line.tokens.length) break;
+          if (hits.has(i)) out.add(tok);
+          i++;
+        }
+      }
+    }
+    pos += line.tokens.length;
+  }
+  return out;
+}
+
 // The anchor a citation should land on when the exact line is not in the page.
 // Two rules, both learned from GA 775a (which prints 11a/11b/11c and no bare
 // 11): a lettered id is a candidate — matching only ids ending in a digit

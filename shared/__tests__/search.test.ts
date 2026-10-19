@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
-  ENGLISH_HEAD_LIMIT, engPhraseMatches, englishIndexFile, englishTermMatcher, englishWords,
+  ENGLISH_HEAD_LIMIT, engPhraseMatches, englishIndexFile, englishQueryUnits, englishTermMatcher, englishWords,
   greekFold, offsetRef, search, searchGrammar,
 } from '../lib/search';
 
@@ -593,5 +593,58 @@ describe('englishTermMatcher', () => {
     const m = englishTermMatcher(['virtue', 'hap*ness', "aristotle’s"]);
     expect(['virtue', 'virtues', 'happiness', 'hapness', "aristotle's", 'aristotle'].map(m))
       .toEqual([true, false, true, true, true, false]);
+  });
+});
+
+// A typed term splits where the index splits text, so a hyphenated word is
+// found as its parts standing in a row; and in English a leading * is a
+// wildcard, not Beta Code's capital marker.
+describe('English query terms as the index reads them', () => {
+  const hyMeta = [
+    { id: 'h1', book: 1, column: '1a', greek_head: '', english_head: '' },
+    { id: 'h2', book: 1, column: '1b', greek_head: '', english_head: '' },
+  ];
+  // h1: "the coming-to-be of happiness"; h2: "coming ... to be ... goodness",
+  // the same words, not in a row.
+  const hyIndex = {
+    the: [[0, 0]], coming: [[0, 1], [1, 0]], to: [[0, 2], [1, 3]], be: [[0, 3], [1, 4]],
+    of: [[0, 4]], happiness: [[0, 5]], goodness: [[1, 6]], ness: [[1, 9]],
+  };
+  beforeEach(() => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      const path = String(url);
+      if (path.endsWith('/meta.json')) return json(hyMeta);
+      if (path.endsWith('/english.json')) return json(hyIndex);
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
+    });
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it('splits a term where the index splits text', () => {
+    expect(englishQueryUnits('coming-to-be  Aristotle’s self–control *ness ‘end’ ---')).toEqual([
+      ['coming', 'to', 'be'], ["aristotle's"], ['self', 'control'], ['*ness'], ['end'],
+    ]);
+  });
+
+  it('finds a hyphenated word where its parts stand in a row, and only there', async () => {
+    const { results } = await search('', 'coming-to-be', 'all', 'all', 'and', ['THyphenAll']);
+    expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([['h1', [1, 2, 3]]]);
+  });
+
+  it('keeps a hyphenated unit whole beside other words', async () => {
+    const all = await search('', 'coming-to-be happiness', 'all', 'all', 'and', ['THyphenMixed']);
+    expect(all.results.map((r) => r.meta.id)).toEqual(['h1']);
+    const any = await search('', 'coming-to-be goodness', 'all', 'any', 'and', ['THyphenAny']);
+    expect(any.results.map((r) => r.meta.id)).toEqual(['h1', 'h2']);
+  });
+
+  it('reads a leading * in English as a wildcard', async () => {
+    const { results } = await search('', '*ness', 'all', 'all', 'and', ['TSuffix']);
+    expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([
+      ['h1', [5]],
+      ['h2', [6, 9]],
+    ]);
+    expect(englishTermMatcher(['*ness'])('happiness')).toBe(true);
+    expect(englishTermMatcher(['*ness'])('nest')).toBe(false);
   });
 });

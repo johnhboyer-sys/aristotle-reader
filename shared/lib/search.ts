@@ -192,7 +192,11 @@ function compilePattern(
   term: string,
   fold: (s: string) => string,
 ): { exact: string } | { test: (key: string) => boolean } | null {
-  const input = term.replace(/^\*+/, '');
+  // A leading * is Beta Code's capital marker, so a Greek pattern drops it.
+  // English has no such use for it, and there it is a wildcard like any
+  // other: *ness finds happiness and goodness. Dropping it there turned the
+  // query into the exact word "ness" and found nothing.
+  const input = fold === greekFold ? term.replace(/^\*+/, '') : term;
   let pattern = '';
   for (const ch of input) {
     pattern += ch === '*' || ch === '?' ? ch : fold(ch);
@@ -296,6 +300,19 @@ export function englishTermMatcher(terms: string[]): (word: string) => boolean {
     return 'exact' in pattern ? (w: string) => w === pattern.exact : pattern.test;
   });
   return word => tests.some(test => test(word));
+}
+
+/** An English query as units of words, each unit one typed term. The index
+ * splits text wherever englishWords() does, so "coming-to-be" is three
+ * indexed words; typed as one term it was looked up as "comingtobe" and found
+ * nothing. Here a term splits the same way, and its pieces become a unit that
+ * must stand together, in order. A wildcard stays inside its piece. */
+export function englishQueryUnits(query: string): string[][] {
+  return query.trim().split(/\s+/).filter(Boolean)
+    .map(term => term.replace(ENGLISH_QUOTES, "'").toLowerCase().split(/[^a-z'*?]+/)
+      .map(w => w.replace(/^'+|'+$/g, ''))
+      .filter(Boolean))
+    .filter(unit => unit.length > 0);
 }
 
 // Which index holds a translation's words: english.json for the primary, and
@@ -584,50 +601,43 @@ function greekPositions(
   return out;
 }
 
-// The segments one English index matches, by the mode's rule.
-function englishHits(
-  idx: EngIndex,
-  meta: SegMeta[],
-  engTerms: string[],
-  engMode: SearchMode,
-): Set<number> {
-  const postings = engTerms.map(t => engPosting(idx, t));
-  if (engMode === 'any') return postings.reduce(union);
-  const hits = postings.reduce(intersect);
-  return engMode === 'phrase' && engTerms.length > 1
-    ? englishPhraseHits(idx, meta, hits, engTerms)
-    : hits;
+// Where one unit of an English query stands in an index: seg_idx -> the word
+// positions of every run of it. A one-word unit is any occurrence; a
+// hyphenated term's words must stand in a row. An index without positions
+// (built before 2026-09-07) can say only which segments, and checks a run
+// against english_head as it always has.
+function unitMatch(idx: EngIndex, meta: SegMeta[], unit: string[]): { segs: Set<number>; positions: Map<number, number[]> } {
+  const positions = new Map<number, number[]>();
+  // The bare *: every word matches it, so no word is the hit.
+  if (unit.length === 1 && unit[0] === '*') return { segs: engPosting(idx, '*'), positions };
+  if (!engHasPositions(idx)) {
+    let segs = unit.map(t => engPosting(idx, t)).reduce(intersect);
+    if (unit.length > 1) segs = englishPhraseHits(idx, meta, segs, unit);
+    return { segs, positions };
+  }
+  for (const [si, starts] of phraseStarts(idx, unit.map(t => [englishTerm(t)]), englishFold)) {
+    positions.set(si, starts.flatMap(start => unit.map((_, j) => start + j)));
+  }
+  return { segs: new Set(positions.keys()), positions };
 }
 
-// Where in each hit segment the query matched: the words of every phrase run,
-// or every word a term matched. Nothing for an index without positions, nor
-// for the bare `*` (every word matches it, so no word is the hit).
-function englishPositions(
+// The segments one English index matches by the mode's rule, and where in
+// each the query's words stand. An exact phrase is all the units in a row.
+function englishMatch(
   idx: EngIndex,
-  engTerms: string[],
+  meta: SegMeta[],
+  units: string[][],
   engMode: SearchMode,
-  hits: Set<number>,
-): Map<number, number[]> {
-  const out = new Map<number, number[]>();
-  if (!engHasPositions(idx)) return out;
-  if (engMode === 'phrase' && engTerms.length > 1) {
-    for (const [si, starts] of phraseStarts(idx, engTerms.map(t => [englishTerm(t)]), englishFold)) {
-      if (!hits.has(si)) continue;
-      out.set(si, starts.flatMap(s => engTerms.map((_, j) => s + j)));
-    }
-    return out;
+): { segs: Set<number>; positions: Map<number, number[]> } {
+  const matches = (engMode === 'phrase' ? [units.flat()] : units).map(u => unitMatch(idx, meta, u));
+  const segs = matches.map(m => m.segs).reduce(engMode === 'any' ? union : intersect);
+  const positions = new Map<number, number[]>();
+  for (const si of segs) {
+    const ps = new Set<number>();
+    for (const m of matches) for (const p of m.positions.get(si) ?? []) ps.add(p);
+    if (ps.size) positions.set(si, [...ps].sort((a, b) => a - b));
   }
-  for (const t of engTerms) {
-    if (t === '*') continue;
-    for (const [si, ps] of termPositions(idx, englishTerm(t), englishFold)) {
-      if (!hits.has(si)) continue;
-      const arr = out.get(si);
-      if (arr) arr.push(...ps);
-      else out.set(si, [...ps]);
-    }
-  }
-  for (const [si, ps] of out) out.set(si, [...new Set(ps)].sort((a, b) => a - b));
-  return out;
+  return { segs, positions };
 }
 
 interface WorkOutcome { results: SearchResult[]; unsearched: string[] }
@@ -636,7 +646,7 @@ interface WorkOutcome { results: SearchResult[]; unsearched: string[] }
 async function searchWork(
   work: string,
   grkTerms: string[][],
-  engTerms: string[],
+  engUnits: string[][],
   grkMode: SearchMode,
   engMode: SearchMode,
   langOp: LangOp,
@@ -649,7 +659,7 @@ async function searchWork(
   const grkP: Promise<GrkIndex | null> = grkTerms.length
     ? loadIndex<GrkIndex>(work, matchMode === 'form' ? 'greek_form.json' : 'greek_lemma.json')
     : Promise.resolve(null);
-  const sources = engTerms.length ? englishSources(work) : [];
+  const sources = engUnits.length ? englishSources(work) : [];
   // The primary index failing fails the work, as it always has; any other
   // translation's only drops that translation, and says so.
   const unsearched: string[] = [];
@@ -689,13 +699,12 @@ async function searchWork(
 
   // seg_idx -> each translation's hit there, in registry order.
   const engBySeg = new Map<number, EngHit[]>();
-  if (engTerms.length > 0) {
+  if (engUnits.length > 0) {
     engHits = new Set();
     sources.forEach((t, i) => {
       const idx = engIdxs[i];
       if (!idx) return;
-      const hits = englishHits(idx, meta, engTerms, engMode);
-      const positions = englishPositions(idx, engTerms, engMode, hits);
+      const { segs: hits, positions } = englishMatch(idx, meta, engUnits, engMode);
       for (const si of hits) {
         engHits!.add(si);
         const hit = { translation: t.id, positions: positions.get(si) ?? [] };
@@ -1460,7 +1469,7 @@ export async function search(
   const grkTerms = matchMode === 'lemma'
     ? await resolveHeadwords(typedGrk)
     : typedGrk.map(t => [t]);
-  const engTerms = engQuery.trim().split(/\s+/).filter(Boolean);
+  const engUnits = englishQueryUnits(engQuery);
 
   // Bound how many works load at once, and let a single work's failed index
   // load drop just that work (logged + reported) instead of rejecting the whole
@@ -1470,7 +1479,7 @@ export async function search(
   const perWork = await pool(works, 8, async w => {
     try {
       const { results, unsearched } =
-        await searchWork(w, grkTerms, engTerms, grkMode, engMode, langOp, matchMode);
+        await searchWork(w, grkTerms, engUnits, grkMode, engMode, langOp, matchMode);
       for (const translation of unsearched) unsearchedTranslations.push({ work: w, translation });
       return results;
     } catch (err) {

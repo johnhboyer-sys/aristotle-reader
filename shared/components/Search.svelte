@@ -5,6 +5,7 @@
     searchCombo,
     searchPhraseVariants,
     greekFold,
+    englishQueryUnits,
     COMBO_WINDOW_DEFAULT,
     COMBO_WINDOW_MAX,
     type SearchMode,
@@ -819,12 +820,18 @@
     const qs = new URLSearchParams();
     if (ctx.grkQuery) qs.set('hlg', ctx.grkQuery);
     if (ctx.engQuery) qs.set('hle', ctx.engQuery);
+    if (ctx.engQuery && ctx.engPhrase) qs.set('hlm', 'phrase');
     const base = qs.toString();
     // A translation hit opens the reader in that translation, where the
     // highlighted words are; a Greek one leaves the reader's choice alone.
-    const jumpFor = (work: string, book: number, column: string, line: number, sub?: string, trans?: string) =>
+    // A Greek hit also names its exact tokens (hlt), so the reader marks the
+    // words the search found — every form a lemma search reached, the words
+    // of a grammatical or proximity search — not whatever begins like the
+    // typed text.
+    const jumpFor = (work: string, book: number, column: string, line: number, sub?: string, trans?: string, hits?: number[]) =>
       `${BASE_URL}${workPath(work, book)}?${base}${base ? '&' : ''}`
-      + `${trans ? `trans=${encodeURIComponent(trans)}&` : ''}loc=${column}:${lineRef(line, sub)}`;
+      + `${trans ? `trans=${encodeURIComponent(trans)}&` : ''}`
+      + `${hits?.length ? `hlt=${column}:${hits.join(',')}&` : ''}loc=${column}:${lineRef(line, sub)}`;
 
     for (const r of results) {
       const seg = segMap.get(`${r.work}:${r.meta.id}`);
@@ -837,10 +844,12 @@
         if (ctx.grkAccentTerms.length) {
           for (const line of seg.greek) for (const tok of line.tokens) toks.push(tok.t);
         }
+        const kept = r.grkPositions.filter(pos => !ctx.grkAccentTerms.length
+          || accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms));
+        const keep = new Set(kept);
         for (let i = 0; i < r.grkPositions.length; i++) {
           const pos = r.grkPositions[i];
-          if (ctx.grkAccentTerms.length
-            && !accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms)) continue;
+          if (!keep.has(pos)) continue;
           const { n: line, sub } = lineAtPosition(seg, pos);
           const ch = lookup.at(seg.column, line);
           // r.grammar runs parallel to grkPositions on a grammatical search.
@@ -852,7 +861,7 @@
                 .map(([cat, vals]) => `${cat} ${vals.join(' or ')}`)
                 .join(' · ')
             : undefined;
-          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${lineRef(line, sub)}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub), oneOf });
+          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${lineRef(line, sub)}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub, undefined, kept), oneOf });
         }
       }
       if (r.engMatch) {
@@ -980,7 +989,8 @@
         // post-filter to apply.
         grkQuery: comboActive ? '' : soloLemmaActive ? soloLemma.picked.join(' ') : grkQuery.trim(),
         engQuery: comboActive ? '' : engQuery.trim(),
-        engTerms: comboActive ? [] : engQuery.trim().split(/\s+/).filter(Boolean),
+        // The words as the index splits them: "coming-to-be" is three.
+        engTerms: comboActive ? [] : englishQueryUnits(engQuery).flat(),
         // A picked lemma is a fold key, not the reader's spelling, so there is
         // no typed accent pattern to post-filter against.
         grkAccentTerms: !comboActive && !soloLemmaActive && accentSensitive
@@ -1548,8 +1558,8 @@
       Type Greek in Greek letters or <button type="button" class="link-btn" on:click={openHelp}>Beta Code</button>
       (<code>texnh</code> = τέχνη). <code>*</code> matches any run of characters; <code>?</code> matches exactly one.
       <a class="guide-link" href={`${BASE_URL}/advanced#wildcards`} target="_blank" rel="noreferrer">What is this?</a>
-      Use either inside or at the end of a word, in Greek or English. At the start,
-      <code>*</code> is read as the Beta Code capital marker and ignored — there is no suffix wildcard.
+      Use either inside or at the end of a word. In English a <code>*</code> may also start a
+      word (<code>*ness</code>); in Greek it marks a Beta Code capital there, so Greek has no suffix wildcard.
     </p>
   </form>
 

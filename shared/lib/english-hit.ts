@@ -181,3 +181,33 @@ function primaryChapter(seg: Segment, offset: number): string | null {
   }
   return chapter;
 }
+
+/** A stretch of English as HTML with the query's words marked, by the rule
+ * the search used: whole words, a wildcard as the index reads it, a unit's
+ * words only where they stand in a row, and in an exact phrase only the run.
+ * The reader used to mark every word that merely began with a term, so "end"
+ * lit up "endure" and the phrase "the good" every "they" and "there".
+ * Footnote and sidenote markers pass through as text, escaped. */
+export function markEnglishHtml(text: string, units: string[][], phrase: boolean): string {
+  const runs = (phrase ? [units.flat()] : units)
+    .filter(run => run.length && !(run.length === 1 && run[0] === '*'));
+  if (!runs.length) return esc(text);
+  const words = englishWords(text);
+  const hit = new Set<number>();
+  for (const run of runs) {
+    const each = run.map(t => englishTermMatcher([t]));
+    for (let i = 0; i + run.length <= words.length; i++) {
+      if (run.every((_, j) => each[j](words[i + j].word))) {
+        for (let j = 0; j < run.length; j++) hit.add(i + j);
+      }
+    }
+  }
+  let html = '';
+  let at = 0;
+  words.forEach((w, i) => {
+    if (!hit.has(i)) return;
+    html += `${esc(text.slice(at, w.start))}<mark>${esc(text.slice(w.start, w.end))}</mark>`;
+    at = w.end;
+  });
+  return html + esc(text.slice(at));
+}

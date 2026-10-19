@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchAnalyses, fetchBekkerIndex, fetchBook, fetchColumns, fetchFootnotes, fetchLemmata, fetchLsjShard, invalidateBookCache, lineAnchor, lineRef, lookupWord, lsjShard, parseBekker, resolveBekker } from '../lib/data';
+import { hitTokens, fetchAnalyses, fetchBekkerIndex, fetchBook, fetchColumns, fetchFootnotes, fetchLemmata, fetchLsjShard, invalidateBookCache, lineAnchor, lineRef, lookupWord, lsjShard, parseBekker, resolveBekker } from '../lib/data';
 
 function mockFetch(map: Record<string, unknown>) {
   vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
@@ -174,5 +174,43 @@ describe("a lettered line's identity", () => {
   it('round-trips through parseBekker', () => {
     const ref = parseBekker('244b5a')!;
     expect(lineAnchor(ref.column, ref.line, ref.sub)).toBe('L244b-5a');
+  });
+});
+
+// A search hit names its tokens by position in the segment; the reader marks
+// those objects, including the copies a table row's cells carry.
+describe('hitTokens', () => {
+  const tok = (t: string, o = 0) => ({ t, o, k: t });
+  const line1 = { n: 1, text: 'a b', tokens: [tok('ἀγαθός'), tok('λόγος', 7)] };
+  // De Int 22a: the line has five tokens, its cells only four of them.
+  const row = {
+    n: 2,
+    text: 'δυνατὸν εἶναι οὐ δυνατὸν εἶναι',
+    tokens: ['δυνατὸν', 'εἶναι', 'οὐ', 'δυνατὸν', 'εἶναι'].map((t) => tok(t)),
+    cells: [
+      { text: 'δυνατὸν εἶναι', tokens: [tok('δυνατὸν'), tok('εἶναι')] },
+      { text: 'δυνατὸν εἶναι', tokens: [tok('δυνατὸν'), tok('εἶναι')] },
+    ],
+  };
+  const segs = [
+    { id: '1:22a', column: '22a', greek: [line1, row], english: null },
+    { id: '1:22b', column: '22b', greek: [{ n: 1, text: 'x', tokens: [tok('x')] }], english: null },
+  ];
+
+  it('counts positions line by line through the column', () => {
+    const hits = hitTokens(segs, '22a', [1, 5]);
+    expect(hits.has(line1.tokens[1])).toBe(true);
+    expect(hits.has(row.tokens[3])).toBe(true);
+    expect(hits.size).toBe(3);   // the line token and its cell copy, and λόγος
+  });
+
+  it('finds a cell’s copy past a token the cells leave out', () => {
+    const hits = hitTokens(segs, '22a', [5]);   // the second δυνατὸν
+    expect(hits.has(row.cells[1].tokens[0])).toBe(true);
+    expect(hits.has(row.cells[0].tokens[0])).toBe(false);
+  });
+
+  it('is empty for a column the book does not have', () => {
+    expect(hitTokens(segs, '99a', [0]).size).toBe(0);
   });
 });
