@@ -1,5 +1,5 @@
 {
-  "_comment": "How a translation's prose splits into indexed words. Read by pipeline/tests/test_translation_index.py (stage6 english_words) and shared/__tests__/search.test.ts (englishWords), so the index and the reader that maps a posting back to its place in the text cannot drift apart.",
+  "_comment": "How a translation's prose splits into indexed words. Read by pipeline/tests/test_translation_index.py (stage6 english_words) and shared/__tests__/search.test.ts (englishWords), so the index and the reader that maps a posting back to its place in the text cannot drift apart. A marker counts only as written: dropping a footnote never makes a sidenote of what is left, as the reader does not render one.",
   "cases": [
     {"text": "Aristotle’s ‘good’ isnʼt—well", "words": ["aristotle's", "good", "isn't", "well"]},
     {"text": "since he follows his emotions,[^1.9] his study", "words": ["since", "he", "follows", "his", "emotions", "his", "study"]},
@@ -12,6 +12,8 @@
     {"text": "a re\u0301sume\u0301 of na\u0308ive views", "words": ["a", "resume", "of", "naive", "views"]},
     {"text": "B÷ and Cæ[^1]neus", "words": ["b", "and", "caeneus"]},
     {"text": "[[s12]]", "words": []},
+    {"text": "[[s[^1]12]]", "words": ["s"]},
+    {"text": "the genus[[s[^1]12]]and", "words": ["the", "genus", "s", "and"]},
     {"text": "", "words": []}
   ]
 }
