@@ -672,21 +672,17 @@
 
   // A cut (Bekker tick, paragraph break, chapter start) must never land inside
   // a footnote [^label] or sidenote/figure [[sN]] marker: each half would miss
-  // the patterns that render or strip it and print as prose. A cut inside one
-  // moves to its END, and past any marker glued straight after it, because a
-  // marker annotates the word BEFORE it: moving to the start would part a
-  // footnote from its word and from renderThird's nowrap wrapper.
-  const MARKER_SRC = String.raw`\[\^[0-9A-Za-z_.*†]+\]|\[\[(?:s|fig)[0-9]+\]\]`;
-  const PROSE_MARKER = new RegExp(MARKER_SRC, 'g');
-  const GLUED_MARKERS = new RegExp(`(?:${MARKER_SRC})*`, 'y');
+  // the patterns that render or strip it and print as prose. A cut inside a
+  // run of glued markers ("[^1][^2]", taken as one unit, so cuts never cross)
+  // moves to the run's END, because a marker annotates the word BEFORE it:
+  // moving to the start would part a footnote from its word and from
+  // renderThird's nowrap wrapper.
+  const MARKER_RUN = /(?:\[\^[0-9A-Za-z_.*†]+\]|\[\[(?:s|fig)[0-9]+\]\])+/g;
   function snapPastMarker(text: string, off: number): number {
-    for (const m of text.matchAll(PROSE_MARKER)) {
+    for (const m of text.matchAll(MARKER_RUN)) {
       if (m.index >= off) break;
       const end = m.index + m[0].length;
-      if (off < end) {
-        GLUED_MARKERS.lastIndex = end;
-        return end + GLUED_MARKERS.exec(text)![0].length;
-      }
+      if (off < end) return end;
     }
     return off;
   }
@@ -793,12 +789,14 @@
     // Ross slot uses the same flow model.
     // Ticks and paragraph breaks snap against the whole text before they are
     // assigned to a slice, so one inside a marker that ends a slice goes with
-    // the next slice, as its marker-free offset would.
+    // the next slice, as its marker-free offset would. A tick snapped to the
+    // very end of the text has no next slice, so the last slice with text in
+    // it keeps it (not the empty one of a chapter that starts at the end).
     const flowFor = (a: number, b: number): FlowPart[] => {
       const slice = text.slice(a, b);
       const ticks = allTicks
         .map(t => ({ n: t.n, real: t.real, off: snapPastMarker(text, t.offset) }))
-        .filter(t => t.off >= a && t.off < b)
+        .filter(t => t.off >= a && (t.off < b || (b === text.length && a < b)))
         .map(t => ({ ...t, off: t.off - a }))
         .sort((x, y) => x.off - y.off);
       const paras = allParas

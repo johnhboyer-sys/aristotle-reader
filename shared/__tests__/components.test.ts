@@ -638,6 +638,75 @@ describe('Reader.svelte', () => {
     expect(cols[1]).toContain('beta gamma');
   });
 
+  it('keeps chapter starts in order when they fall inside glued markers', async () => {
+    // Codex review: a start inside [[s1]] once jumped past the [[s2]] glued to
+    // it while the next start, at the head of [[s2]], stayed put. The starts
+    // crossed, and [[s2]] fell in two chapters' slices.
+    const { fetchSidenotes } = await import('../lib/data');
+    vi.mocked(fetchSidenotes).mockResolvedValueOnce({ '1': 'Note one', '2': 'Note two' });
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].greek = [1, 2, 3].map(n => ({ n, text: 'λόγος', tokens: [{ t: 'λόγος', o: 0, k: 'logos' }] }));
+    book.segments[0].english = {
+      text: 'a[[s1]][[s2]]b gamma.',
+      notes: [],
+      markers: [],
+      bekker: [{ n: 1, offset: 0, real: true }],
+    };
+    book.segments[0].chapterStarts = [
+      { chapter: '1', beforeLine: 1, wordIndex: 0, engOffset: 0, bekker: '1094a' },
+      { chapter: '2', beforeLine: 2, wordIndex: 0, engOffset: 'a[['.length, bekker: '1094a' },
+      { chapter: '3', beforeLine: 3, wordIndex: 0, engOffset: 'a[[s1]]'.length, bekker: '1094a' },
+    ];
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/gamma/);
+    await vi.waitFor(() => expect(container.querySelector('.sidenote')).not.toBeNull());
+    expect([...container.querySelectorAll('.sidenote')].map(s => s.textContent)).toEqual(['Note one', 'Note two']);
+  });
+
+  it('keeps a tick that snaps to the very end of the text', async () => {
+    // Codex review: a tick inside a marker that ends the text snapped to
+    // text.length, and the last slice's `off < b` dropped it.
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].english = {
+      text: 'Alpha[[s1]]',
+      notes: [],
+      markers: [],
+      bekker: [{ n: 1, offset: 0, real: true }, { n: 2, offset: 'Alpha[[s'.length, real: true }],
+    };
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Alpha/);
+    expect([...container.querySelectorAll('.english-col .bk-num')].map(b => b.textContent)).toEqual(['1', '2']);
+  });
+
+  it('prints an end-of-text tick once when a chapter starts at the end', async () => {
+    // The chapter starting at text.length owns the empty slice [len, len);
+    // only the slice with text in it keeps the tick.
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].greek = [1, 2].map(n => ({ n, text: 'λόγος', tokens: [{ t: 'λόγος', o: 0, k: 'logos' }] }));
+    book.segments[0].english = {
+      text: 'Alpha[[s1]]',
+      notes: [],
+      markers: [],
+      bekker: [{ n: 1, offset: 0, real: true }, { n: 2, offset: 'Alpha[[s'.length, real: true }],
+    };
+    book.segments[0].chapterStarts = [
+      { chapter: '1', beforeLine: 1, wordIndex: 0, engOffset: 0, bekker: '1094a' },
+      { chapter: '2', beforeLine: 2, wordIndex: 0, engOffset: 'Alpha[[s1]]'.length, bekker: '1094a' },
+    ];
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Alpha/);
+    expect([...container.querySelectorAll('.english-col .bk-num')].map(b => b.textContent)).toEqual(['1', '2']);
+  });
+
   it('snaps ?loc= to the nearest Greek line when the cited line is not a line start', async () => {
     // LSJ cites its own editions' lineation, off by a line or two from ours
     // (docs/spec-lsj-citations.md decision 8), and the link gate lets those
