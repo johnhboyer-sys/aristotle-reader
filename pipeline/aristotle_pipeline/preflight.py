@@ -32,6 +32,7 @@ def validate(data_dir: Path, manifests_dir: Path) -> list[Problem]:
     for manifest in manifests:
         _validate_manifest_schema(manifest, problems)
         _validate_work_data(data_dir, manifest, problems)
+    _validate_search_shards(data_dir, manifests, problems)
     return problems
 
 
@@ -299,6 +300,114 @@ def _validate_translation_indexes(manifest: WorkManifest, work_dir: Path, loaded
             problems.append((manifest.work_id, f"search/{name}",
                              f"stale: {len(wrong)} segment(s) disagree with the book text, "
                              f"first {wrong[0]}"))
+
+
+def _compact(postings: Any) -> str:
+    return json.dumps(postings, separators=(",", ":"))
+
+
+def _validate_search_shards(data_dir: Path, manifests: list[WorkManifest],
+                            problems: list[Problem]) -> int:
+    """The corpus search shards hold exactly what the per-work indexes hold.
+
+    The reader matches on a shard's postings as it would on the work's own
+    index, so a shard built before a work was re-emitted names the wrong
+    passages, and one built before a public build dropped a private
+    translation still carries that translation's words in order. Every
+    posting in every shard is compared with the per-work file it was copied
+    from, and the hash index.json records for that file — the one the deploy
+    check recomputes — is checked too. Returns the number of postings read;
+    none at all is itself a problem, since a gate that read nothing has not
+    checked anything.
+    """
+    from .stage9_search_shards import SHARD_DIR, STREAMS, index_sources, shard_name, source_hash
+
+    expected: dict[str, dict[str, dict[str, str]]] = {s: {} for s in STREAMS}
+    hashes: dict[str, dict[str, str]] = {s: {} for s in STREAMS}
+    for manifest in manifests:
+        work_dir = data_dir / manifest.work_id
+        if not work_dir.is_dir():
+            continue  # _validate_work_data reports it
+        for stream, source, path in index_sources(work_dir):
+            if not path.exists():
+                problems.append((manifest.work_id, f"search/{path.name}", "per-work search index is missing"))
+                continue
+            try:
+                raw = path.read_bytes()
+                index = json.loads(raw)
+            except Exception as exc:
+                problems.append((manifest.work_id, f"search/{path.name}", f"unreadable index: {exc}"))
+                continue
+            hashes[stream][source] = source_hash(raw)
+            expected[stream][source] = {word: _compact(p) for word, p in index.items()}
+
+    root = data_dir / SHARD_DIR
+    try:
+        listing = json.loads((root / "index.json").read_text(encoding="utf-8"))["streams"]
+    except FileNotFoundError:
+        problems.append(("-", f"{SHARD_DIR}/index.json",
+                         "missing: the corpus search shards are not built "
+                         "(run `python -m aristotle_pipeline stage9`)"))
+        return 0
+    except Exception as exc:
+        problems.append(("-", f"{SHARD_DIR}/index.json", f"unreadable: {exc}"))
+        return 0
+
+    examined = 0
+    for stream in STREAMS:
+        entry = listing.get(stream) or {}
+        listed = set(entry.get("shards") or [])
+        listed_sources = entry.get("sources") or {}
+        stream_dir = root / stream
+        on_disk = {p.stem for p in stream_dir.glob("*.json")} if stream_dir.is_dir() else set()
+        for name in sorted(listed - on_disk):
+            problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json", "listed in index.json but missing"))
+        for name in sorted(on_disk - listed):
+            problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json",
+                             "not listed in index.json, so the reader never reads it"))
+
+        got: dict[str, dict[str, str]] = {}
+        for name in sorted(on_disk):
+            try:
+                shard = json.loads((stream_dir / f"{name}.json").read_text(encoding="utf-8"))
+            except Exception as exc:
+                problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json", f"unreadable: {exc}"))
+                continue
+            for word, by_source in shard.items():
+                if shard_name(word) != name:
+                    problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json",
+                                     f"{word!r} is filed in {name} but belongs in {shard_name(word)}"))
+                for source, plist in by_source.items():
+                    got.setdefault(source, {})[word] = _compact(plist)
+                    examined += len(plist)
+
+        for source in sorted(set(got) | set(expected[stream]) | set(listed_sources)):
+            work = source.split("/")[0]
+            where = f"{SHARD_DIR}/{stream}"
+            if source not in expected[stream]:
+                problems.append((work, where,
+                                 f"postings for {source}, which has no per-work index: a translation "
+                                 "the work does not serve, or a work no manifest lists"))
+                continue
+            if source not in listed_sources:
+                problems.append((work, where, f"{source} is not in the shards (run stage9)"))
+                continue
+            if listed_sources[source] != hashes[stream][source]:
+                problems.append((work, f"{where}/index.json",
+                                 f"{source}: recorded hash does not match its per-work index, "
+                                 "so the deploy check will refuse it"))
+            want = expected[stream][source]
+            have = got.get(source, {})
+            wrong = sorted(w for w in set(want) | set(have) if want.get(w) != have.get(w))
+            if wrong:
+                problems.append((work, where,
+                                 f"stale: {source} differs from its per-work index in "
+                                 f"{len(wrong)} word(s), first {wrong[0]!r}"))
+
+    if examined == 0:
+        problems.append(("-", SHARD_DIR,
+                         "examined no postings: the shards are empty, so this check is not running"))
+    return examined
 
 
 _FN_REF = re.compile(r"\[\^([\w.*†]+)\]")

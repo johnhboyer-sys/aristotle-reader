@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
-  ENGLISH_HEAD_LIMIT, engPhraseMatches, englishIndexFile, englishQueryUnits, englishTermMatcher, englishWords,
+  englishForms, englishIndexFile, englishQueryUnits, englishTermMatcher, englishWords,
   greekFold, offsetRef, search, searchGrammar,
 } from '../lib/search';
 
 const meta = [
-  { id: 's1', book: 1, column: '1094a', greek_head: 'λόγος ἀρετή', english_head: 'virtue is a habit of choice' },
-  { id: 's2', book: 1, column: '1094b', greek_head: 'ψυχή λόγος', english_head: 'happiness and virtue together' },
-  { id: 's3', book: 2, column: '1100a', greek_head: 'τέχνη', english_head: 'craft concerns making' },
+  { id: 's1', book: 1, column: '1094a' },
+  { id: 's2', book: 1, column: '1094b' },
+  { id: 's3', book: 2, column: '1100a' },
 ];
 
 const greekIndex = {
@@ -24,15 +24,17 @@ const greekIndex = {
   xlogos: [[2, 1]],
 } satisfies Record<string, [number, number][]>;
 
+// s1 "virtue is a habit of choice", s2 "happiness and virtue together", s3
+// "craft concerns making", as stage6 indexes them.
 const englishIndex = {
-  virtue: [0, 1],
-  habit: [0],
-  choice: [0],
-  happiness: [1],
-  and: [1],
-  craft: [2],
-  making: [2],
-} satisfies Record<string, number[]>;
+  virtue: [[0, 0], [1, 2]],
+  habit: [[0, 3]],
+  choice: [[0, 5]],
+  happiness: [[1, 0]],
+  and: [[1, 1]],
+  craft: [[2, 0]],
+  making: [[2, 2]],
+} satisfies Record<string, [number, number][]>;
 
 function json(data: unknown) {
   return Promise.resolve({ ok: true, json: () => Promise.resolve(data) } as Response);
@@ -345,45 +347,19 @@ describe('a phrase typed as it stands on the page, under the default lemma mode'
   });
 });
 
-describe('engPhraseMatches', () => {
-  it.each([
-    ['the good', 'the good life', true],
-    ['the good', 'breathe goodness', false],        // substrings are not words
-    ['the good', 'to breathe good air', false],
-    ['virtue is', 'virtue is a habit', true],
-    ['virtue is', 'virtue, is it a habit', false],  // punctuation breaks the phrase
-    ['virtue is', 'virtue\n  is a habit', true],    // any whitespace joins it
-    ["aristotle's view", 'in aristotle’s view', true],
-    ['hap* virtue', 'happiness, virtue', false],
-    ['hap* virtue', 'happy virtue', true],
-    ['*ness of', 'the goodness of it', true],
-    ['go?d', 'the good life', true],
-    ['go?d', 'the gold life', true],
-    ['go?d', 'the god life', false],
-    ['first change', 'the first ‘change’ is', true],   // quote marks are not part of the word
-    ["aristotle's", "‘aristotle’s’ view", true],
-  ])('%s in %j → %s', (phrase, text, expected) => {
-    expect(engPhraseMatches(text, phrase.split(' '))).toBe(expected);
-  });
-});
-
 describe('an English phrase is an adjacency test over word positions', () => {
-  // stage6 keeps only the first 500 characters of a segment's English in
-  // meta.json; the postings carry every word with its position.
-  const filler = 'lorem ipsum '.repeat(60).slice(0, ENGLISH_HEAD_LIMIT);
   const longMeta = [
-    { id: 'L1', book: 1, column: '1094a', greek_head: '', english_head: filler },
-    { id: 'L2', book: 1, column: '1094b', greek_head: '', english_head: 'virtue and a habit' },
-    { id: 'L3', book: 2, column: '1100a', greek_head: '', english_head: filler },
+    { id: 'L1', book: 1, column: '1094a' },
+    { id: 'L2', book: 1, column: '1094b' },
+    { id: 'L3', book: 2, column: '1100a' },
   ];
-  // L1: "virtue habit" adjacent past the cut. L2: "virtue and a habit" — not
-  // adjacent. L3: "virtue and habit" past the cut — not adjacent.
+  // L1: "virtue habit" adjacent far into the segment. L2: "virtue and a
+  // habit" — not adjacent. L3: "virtue and habit" — not adjacent.
   const positional = {
     virtue: [[0, 120], [1, 0], [2, 120]],
     habit: [[0, 121], [1, 3], [2, 122]],
     and: [[1, 1], [2, 121]],
   };
-  const legacy = { virtue: [0, 1, 2], habit: [0, 1, 2], and: [1, 2] };
   let books: string[];
   const mock = (english: unknown) => {
     books = [];
@@ -397,26 +373,17 @@ describe('an English phrase is an adjacency test over word positions', () => {
   };
   afterEach(() => vi.restoreAllMocks());
 
-  it('finds the phrase past the head from the postings, fetching no book', async () => {
+  it('finds the phrase from the postings, fetching no book', async () => {
     mock(positional);
     const { results } = await search('', 'virtue habit', 'all', 'phrase', 'and', ['TPosIndex']);
     expect(results.map((r) => r.meta.id)).toEqual(['L1']);
-    expect(books).toEqual([]);
-  });
-
-  it('on an older build without positions checks the head and fetches nothing', async () => {
-    // The phrase past the cut is missed on such a build — the older limit,
-    // kept rather than fetching every candidate's whole book.
-    mock(legacy);
-    const { results } = await search('', 'virtue habit', 'all', 'phrase', 'and', ['TLegacyIndex']);
-    expect(results).toEqual([]);
     expect(books).toEqual([]);
   });
 });
 
 describe('an English word typed or pasted from the page', () => {
   const quoteMeta = [
-    { id: 'Q1', book: 1, column: '1094a', greek_head: '', english_head: 'Aristotle’s first ‘change’ isn’t the last.' },
+    { id: 'Q1', book: 1, column: '1094a' },
   ];
   // Keyed as stage6's english_words() keys them.
   const index = { "aristotle's": [[0, 0]], first: [[0, 1]], change: [[0, 2]], "isn't": [[0, 3]], the: [[0, 4]], last: [[0, 5]] };
@@ -483,9 +450,9 @@ describe('offsetRef names the line a token stands on', () => {
 // the index memo is keyed by work and file, so it must not change under it.
 describe('English search across a work’s translations', () => {
   const enMeta = [
-    { id: '1:1094a', book: 1, column: '1094a', greek_head: '', english_head: '' },
-    { id: '1:1094b', book: 1, column: '1094b', greek_head: '', english_head: '' },
-    { id: '1:1095a', book: 1, column: '1095a', greek_head: '', english_head: '' },
+    { id: '1:1094a', book: 1, column: '1094a' },
+    { id: '1:1094b', book: 1, column: '1094b' },
+    { id: '1:1095a', book: 1, column: '1095a' },
   ];
   const files: Record<string, unknown> = {
     'meta.json': enMeta,
@@ -582,7 +549,8 @@ describe('englishWords', () => {
     // Each span covers its word on the page, markers inside it aside.
     for (const w of got) {
       const span = text.slice(w.start, w.end).replace(/\[\^[^\]]*\]/g, '')
-        .replace(/[’ʼ]/g, "'").toLowerCase();
+        .replace(/[’ʼ]/g, "'").toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/æ/g, 'ae').replace(/œ/g, 'oe');
       expect(span).toBe(w.word);
     }
   });
@@ -601,8 +569,8 @@ describe('englishTermMatcher', () => {
 // wildcard, not Beta Code's capital marker.
 describe('English query terms as the index reads them', () => {
   const hyMeta = [
-    { id: 'h1', book: 1, column: '1a', greek_head: '', english_head: '' },
-    { id: 'h2', book: 1, column: '1b', greek_head: '', english_head: '' },
+    { id: 'h1', book: 1, column: '1a' },
+    { id: 'h2', book: 1, column: '1b' },
   ];
   // h1: "the coming-to-be of happiness"; h2: "coming ... to be ... goodness",
   // the same words, not in a row.
@@ -646,5 +614,150 @@ describe('English query terms as the index reads them', () => {
     ]);
     expect(englishTermMatcher(['*ness'])('happiness')).toBe(true);
     expect(englishTermMatcher(['*ness'])('nest')).toBe(false);
+  });
+});
+
+// English "any form": a typed word also finds its plurals and possessives, and
+// a plural its singular, but only as words the index holds.
+describe('English any form', () => {
+  it('reaches plural and possessive forms, and back', () => {
+    expect(englishForms('virtue')).toEqual(expect.arrayContaining(['virtue', 'virtues', "virtue's"]));
+    expect(englishForms('virtues')).toEqual(expect.arrayContaining(['virtue', "virtue's"]));
+    expect(englishForms("aristotle's")).toEqual(expect.arrayContaining(['aristotle', "aristotle's"]));
+    expect(englishForms('body')).toEqual(expect.arrayContaining(['bodies', "body's"]));
+    expect(englishForms('bodies')).toContain('body');
+    expect(englishForms('class')).toContain('classes');
+    expect(englishForms('causes')).toContain('cause');
+    expect(englishForms('hero')).toContain('heroes');
+  });
+
+  it('knows the irregulars, and every -man compound', () => {
+    expect(englishForms('man')).toEqual(expect.arrayContaining(['men', "man's", "men's"]));
+    expect(englishForms('men')).toContain('man');
+    expect(englishForms('woman')).toContain('women');
+    expect(englishForms('statesmen')).toContain('statesman');
+    expect(englishForms('child')).toEqual(expect.arrayContaining(['children', "children's"]));
+    expect(englishForms('phenomena')).toContain('phenomenon');
+    expect(englishForms('ox')).toContain('oxen');
+  });
+
+  it('leaves short words and wildcards alone, and keeps a singular in -s whole', () => {
+    expect(englishForms('a')).toEqual(['a']);
+    expect(englishForms('is')).toEqual(['is']);
+    expect(englishForms('us')).toEqual(['us']);
+    expect(englishForms('virtue*')).toEqual(['virtue*']);
+    expect(englishForms('his')).not.toContain('hi');
+    expect(englishForms('his')).not.toContain('hiss');
+    expect(englishForms('genus')).not.toContain('genu');
+    expect(englishForms('this')).not.toContain('thi');
+  });
+
+  it('gives a singular in -s its possessive', () => {
+    expect(englishForms('class')).toContain("class's");
+    expect(englishForms('basis')).toContain("basis's");
+  });
+
+  it('does not take an -s word that is no plural for one', () => {
+    expect(englishForms('news')).not.toContain('new');
+    expect(englishForms('politics')).not.toContain('politic');
+    expect(englishForms('means')).not.toContain('mean');
+    expect(englishForms('mean')).not.toContain('means');
+    expect(englishForms('mean')).toContain("mean's");
+  });
+
+  it('does not take a determiner for the singular of a plural', () => {
+    expect(englishForms('theses')).not.toContain('these');
+    expect(englishForms('theses')).toContain('thesis');
+    expect(englishForms('these')).toEqual(['these']);
+  });
+
+  it('gives a word in -ch both plurals', () => {
+    expect(englishForms('stomach')).toEqual(expect.arrayContaining(['stomachs', 'stomaches']));
+    expect(englishForms('church')).toContain('churches');
+    expect(englishForms('epochs')).toContain('epoch');
+  });
+
+  it('matches a word by any form only when asked', () => {
+    expect(['virtue', 'virtues', "virtue's", 'virtuous'].map(englishTermMatcher(['virtue'], true)))
+      .toEqual([true, true, true, false]);
+    expect(englishTermMatcher(['virtue'])('virtues')).toBe(false);
+  });
+
+  describe('search', () => {
+    const formMeta = [
+      { id: 'f1', book: 1, column: '1a', greek_head: '', english_head: '' },
+      { id: 'f2', book: 1, column: '1b', greek_head: '', english_head: '' },
+      { id: 'f3', book: 1, column: '1c', greek_head: '', english_head: '' },
+    ];
+    // f1: "the virtues of men"; f2: "a man's virtue"; f3: "virtuous man".
+    const formIndex = {
+      the: [[0, 0]], virtues: [[0, 1]], of: [[0, 2]], men: [[0, 3]],
+      a: [[1, 0]], "man's": [[1, 1]], virtue: [[1, 2]],
+      virtuous: [[2, 0]], man: [[2, 1]],
+    };
+    beforeEach(() => {
+      vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+        const path = String(url);
+        if (path.endsWith('/meta.json')) return json(formMeta);
+        if (path.endsWith('/english.json')) return json(formIndex);
+        return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
+      });
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    it('finds every form of a word, and marks where each stands', async () => {
+      const { results } = await search('', 'virtue', 'all', 'all', 'and', ['TFormsOne'], 'lemma', true);
+      expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([['f1', [1]], ['f2', [2]]]);
+    });
+
+    it('finds exactly what was typed without it', async () => {
+      const { results } = await search('', 'virtue', 'all', 'all', 'and', ['TFormsOff'], 'lemma');
+      expect(results.map((r) => r.meta.id)).toEqual(['f2']);
+    });
+
+    it('lets each word of a phrase stand in any of its forms', async () => {
+      const { results } = await search('', 'virtue of man', 'all', 'phrase', 'and', ['TFormsPhrase'], 'lemma', true);
+      expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([['f1', [1, 2, 3]]]);
+    });
+
+    it('finds man as men and man\'s, and never a word that only begins the same way', async () => {
+      const { results } = await search('', 'man', 'all', 'all', 'and', ['TFormsMan'], 'lemma', true);
+      expect(results.map((r) => [r.meta.id, r.engHits![0].positions])).toEqual([
+        ['f1', [3]], ['f2', [1]], ['f3', [1]],
+      ]);
+    });
+
+    // A plain JSON index inherits Object.prototype, so "constructor" is a key
+    // of every one unless the lookup asks for its own keys only.
+    it('finds no word the index does not hold, even one an object inherits', async () => {
+      for (const [q, forms, work] of [
+        ['constructors', true, 'TFormsProtoA'], ['constructor', false, 'TFormsProtoB'],
+      ] as const) {
+        const out = await search('', q, 'all', 'all', 'and', [work], 'lemma', forms);
+        expect(out).toEqual({ results: [], failedWorks: [] });
+      }
+    });
+  });
+});
+
+// The index folds ligatures and accents (stage6 _latin_fold), so a query must
+// too, whether typed plain or pasted with the page's letters.
+describe('English accented Latin', () => {
+  it('folds a query as the index folds the text', () => {
+    expect(englishQueryUnits('Lacedæmonians versâ Œdipus')).toEqual([['lacedaemonians'], ['versa'], ['oedipus']]);
+    expect(englishTermMatcher(['Lacedæmonians'])('lacedaemonians')).toBe(true);
+    expect(englishTermMatcher(['lacedaemonians'])(englishWords('the Lacedæmonians')[1].word)).toBe(true);
+  });
+
+  it('gives a folded word the span of its letters on the page', () => {
+    const text = 'the Lacedæmonians';
+    const [, w] = englishWords(text);
+    expect(text.slice(w.start, w.end)).toBe('Lacedæmonians');
+  });
+
+  it('keeps a combining accent at the end of a word inside its span', () => {
+    const text = 'a cafe\u0301, then';
+    const [, w] = englishWords(text);
+    expect([w.word, text.slice(w.start, w.end)]).toEqual(['cafe', 'cafe\u0301']);
   });
 });

@@ -17,15 +17,10 @@ Emits these files under build/stage6/:
                  Lowercased English words as english_words() splits them,
                  with the word's position in its segment, so a phrase is an
                  adjacency test over postings exactly as it is for Greek.
-                 (Until 2026-09-07 the postings were bare seg_idxs and the
-                 reader verified a phrase against english_head, which holds
-                 only the first 500 characters; the reader still reads that
-                 shape from an older build.)
 
-  meta.json    — [{id, book, column, greek_head, english_head}]
-                 Ordered list of segment metadata, indexed by seg_idx.
-                 greek_head: first two lines of text (for result preview).
-                 english_head: first 500 chars of English chunk.
+  meta.json    — [{id, book, column}]
+                 Ordered list of segment metadata, indexed by seg_idx: the
+                 search names a hit's passage from it.
 
   offsets.json — the word-offset primitive: one running token number per work,
                  in document order, plus the structural coordinates beside it.
@@ -53,6 +48,7 @@ from __future__ import annotations
 import json
 import re
 import struct
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -63,9 +59,9 @@ _FOLD = re.compile(r"[^a-z']")  # keep only base letters and apostrophe
 _EN_WORD = re.compile(r"[a-z']+")
 # The archive translations print possessives and contractions with U+2019
 # (Aristotle’s, isn’t); U+02BC is the modifier-letter apostrophe. The reader
-# folds a typed straight apostrophe to itself (englishFold) and, in its phrase
-# check, folds the text's curly one to straight (engPhraseMatches) — so the
-# index must key "aristotle's" as one word or neither path can find it.
+# folds a typed straight apostrophe to itself (englishFold) and the text's
+# curly one to straight (englishWords) — so the index must key "aristotle's"
+# as one word or neither path can find it.
 _EN_APOSTROPHE = re.compile("[\u2019\u02bc]")
 # Apparatus a translation's prose carries inline, which the reader renders as
 # controls and not as words: a footnote marker [^1.9] is glued to the word
@@ -75,6 +71,16 @@ _EN_APOSTROPHE = re.compile("[\u2019\u02bc]")
 # EN_SIDENOTE in shared/lib/search.ts.
 _EN_FOOTNOTE = re.compile(r"\[\^[0-9A-Za-z_.*\u2020]+\]")
 _EN_SIDENOTE = re.compile(r"\[\[(?:s|fig)[0-9]+\]\]")
+# Older translations print Latin letters the fold would otherwise split on:
+# "Lacedæmonians" was indexed as "laced" + "monians", "versâ" as "vers". The
+# ligatures become two letters and accents drop off, so the word is the one a
+# reader types. Mirrored by latinFold in shared/lib/search.ts.
+_EN_COMBINING = re.compile("[\u0300-\u036f]")
+
+
+def _latin_fold(text: str) -> str:
+    text = _EN_COMBINING.sub("", unicodedata.normalize("NFD", text))
+    return text.replace("\u00e6", "ae").replace("\u0153", "oe")
 
 
 def fold_lemma(beta_key: str) -> str:
@@ -89,9 +95,10 @@ def english_words(text: str) -> list[str]:
     that Aristotle’s elides with) and is not part of the word. Shared with
     stage8 so english.json and english-segments.json count the same words.
     Inline footnote, sidenote and figure markers are not words (see
-    _EN_FOOTNOTE)."""
+    _EN_FOOTNOTE). Ligatures and accented letters fold to plain ones (see
+    _latin_fold)."""
     text = _EN_SIDENOTE.sub(" ", _EN_FOOTNOTE.sub("", text))
-    words = _EN_WORD.findall(_EN_APOSTROPHE.sub("'", text).lower())
+    words = _EN_WORD.findall(_latin_fold(_EN_APOSTROPHE.sub("'", text).lower()))
     return [w for w in (raw.strip("'") for raw in words) if w]
 
 
@@ -363,25 +370,7 @@ def run(manifest: Manifest) -> Path:
     english_idx = dict(eng_posts)
 
     # -- Segment metadata -----------------------------------------------------
-    meta = []
-    for seg in segments:
-        # Greek head: join first two lines of surface text
-        lines = seg["lines"]
-        greek_head = " ".join(
-            " ".join(t["t"] for t in l["tokens"])
-            for l in lines[:2]
-        )
-        eng = eng_by_id.get(seg["id"])
-        english_head = eng["text"][:500] if eng else ""
-        meta.append(
-            {
-                "id": seg["id"],
-                "book": seg["book"],
-                "column": seg["column"],
-                "greek_head": greek_head,
-                "english_head": english_head,
-            }
-        )
+    meta = [{"id": seg["id"], "book": seg["book"], "column": seg["column"]} for seg in segments]
 
     # -- Offset primitive ------------------------------------------------------
     # One running word number per work, assigned in the same document order the

@@ -1,0 +1,31 @@
+{
+ "streams": {
+  "lemma": {
+   "shards": [
+    "ag",
+    "lo"
+   ],
+   "sources": {
+    "VAL": "30d6cd496ff9aa07"
+   }
+  },
+  "form": {
+   "shards": [
+    "ag",
+    "lo"
+   ],
+   "sources": {
+    "VAL": "30d6cd496ff9aa07"
+   }
+  },
+  "english": {
+   "shards": [
+    "go",
+    "sp"
+   ],
+   "sources": {
+    "VAL/english": "84c135d47cf8ed34"
+   }
+  }
+ }
+}

@@ -59,13 +59,21 @@ for (const work of works) {
   });
 }
 
-// Stage 8 is the one corpus-wide stage: it merges every work's token stream
+// Stage 8 is a corpus-wide stage: it merges every work's token stream
 // from build/ngrams into the shared phrase browser. It takes no --work and so
 // is not part of 'all', and its output lives under build/dist, which this
 // script just cleaned — without this call a full rebuild emits a site whose
 // /phrases pages have no data behind them.
 console.log('\nBuilding the corpus-wide phrase index');
 run('uv', ['run', 'python', '-m', 'aristotle_pipeline', 'stage8'], {
+  cwd: join(ROOT, 'pipeline'),
+});
+
+// Stage 9 merges every work's search indexes into shards split by a word's
+// first two letters, which is what the reader's search fetches. Preflight
+// refuses a corpus without them.
+console.log('\nBuilding the corpus search shards');
+run('uv', ['run', 'python', '-m', 'aristotle_pipeline', 'stage9'], {
   cwd: join(ROOT, 'pipeline'),
 });
 

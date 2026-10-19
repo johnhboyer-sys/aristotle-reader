@@ -1,0 +1,23 @@
+{
+ "works": 1,
+ "streams": {
+  "lemma": {
+   "sources": 1,
+   "shards": 2,
+   "words": 2,
+   "postings": 3
+  },
+  "form": {
+   "sources": 1,
+   "shards": 2,
+   "words": 2,
+   "postings": 3
+  },
+  "english": {
+   "sources": 1,
+   "shards": 2,
+   "words": 2,
+   "postings": 2
+  }
+ }
+}

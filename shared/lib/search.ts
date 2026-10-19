@@ -28,14 +28,10 @@ export interface SegMeta {
   id: string;
   book: number;
   column: string;
-  greek_head: string;
-  english_head: string;
 }
 
 type GrkIndex = Record<string, [number, number][]>; // fold → [[seg_idx, pos], ...]
-// word → [[seg_idx, word_pos], ...] since 2026-09-07; an older build carries
-// bare seg_idxs, and the reader takes either (see englishPhraseHits).
-type EngIndex = Record<string, number[] | [number, number][]>;
+type EngIndex = Record<string, [number, number][]>; // word → [[seg_idx, word_pos], ...]
 
 // The word-offset primitive: one running token number per work, in document
 // order, with the structural coordinates beside it. Global offset of a posting
@@ -83,11 +79,11 @@ export type MatchMode = 'lemma' | 'form' | 'headword';
 // -- Per-work index loading (cached, lazy per file) -----------------------
 //
 // Each index file is fetched and cached on its own, and only when a query
-// actually needs it (a Greek-only query never loads english.json, and only the
-// lemma OR form index per its match mode). This keeps the request burst small:
-// a Greek search over all works loads ~2 files/work, not 4 — which matters on
+// actually needs it. This keeps the request burst small, which matters on
 // Safari/WebKit, where a large simultaneous fetch burst can drop a request with
-// "TypeError: Load failed" and (via Promise.all) sink the whole search.
+// "TypeError: Load failed" and (via Promise.all) sink the whole search. The
+// lexical search reads the corpus shards instead (see below) and falls back to
+// these files only for what the shards do not hold.
 
 // Each loader memoises through lib/memo.ts, which evicts a rejection so a
 // transient drop can be retried — a rejected promise must NOT stay cached
@@ -112,6 +108,11 @@ const _index = memoAsyncBy<string, unknown>(key =>
 
 function loadIndex<T>(work: string, file: string): Promise<T> {
   return _index(`${work}/${file}`) as Promise<T>;
+}
+
+// The results page reads chapter edges from here to lay out its pages.
+export function loadOffsets(work: string): Promise<Offsets> {
+  return loadIndex<Offsets>(work, 'offsets.json');
 }
 
 // Corpus-level indexes live beside the per-work ones rather than inside them,
@@ -188,10 +189,14 @@ export function greekFold(input: string): string {
 // Fold a pattern without losing its metacharacters. Folding one character at
 // a time keeps * and ? out of greekFold(), where they are deliberately ignored
 // with punctuation and diacritics.
+// A pattern's `prefix` is its literal text before the first metacharacter,
+// which is what decides the corpus shards it can match in.
+type CompiledPattern = { exact: string } | { test: (key: string) => boolean; prefix: string };
+
 function compilePattern(
   term: string,
   fold: (s: string) => string,
-): { exact: string } | { test: (key: string) => boolean } | null {
+): CompiledPattern | null {
   // A leading * is Beta Code's capital marker, so a Greek pattern drops it.
   // English has no such use for it, and there it is a wildcard like any
   // other: *ness finds happiness and goodness. Dropping it there turned the
@@ -213,7 +218,7 @@ function compilePattern(
     && !pattern.slice(0, -1).includes('*')
     && !pattern.includes('?')) {
     const prefix = pattern.slice(0, -1);
-    return { test: key => key.startsWith(prefix) };
+    return { test: key => key.startsWith(prefix), prefix };
   }
 
   // Index keys contain only fold letters and apostrophes. Build the expression
@@ -225,7 +230,7 @@ function compilePattern(
     else pieces.push(ch);
   }
   const regex = new RegExp(`^${pieces.join('')}$`);
-  return { test: key => regex.test(key) };
+  return { test: key => regex.test(key), prefix: pattern.slice(0, pattern.search(/[*?]/)) };
 }
 
 // The one statement of what an English word is, on the reader's side; stage6's
@@ -234,8 +239,15 @@ function compilePattern(
 // with U+2018/U+2019 (‘change’): both become a straight apostrophe, and an
 // apostrophe at a word's edge is a quotation mark, not part of the word.
 const ENGLISH_QUOTES = /[\u2018\u2019\u02bc]/g;
+// Ligatures become two letters and accents drop off, so "Lacedæmonians" is
+// the word a reader types, not "laced" + "monians". Mirror of stage6's
+// _latin_fold. Takes lowercase input.
+function latinFold(input: string): string {
+  return input.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\u00e6/g, 'ae').replace(/\u0153/g, 'oe');
+}
 function englishFold(input: string): string {
-  return input.toLowerCase().replace(ENGLISH_QUOTES, "'").replace(/[^a-z']/g, '');
+  return latinFold(input.toLowerCase().replace(ENGLISH_QUOTES, "'")).replace(/[^a-z']/g, '');
 }
 function englishTerm(term: string): string {
   return term.replace(ENGLISH_QUOTES, "'").replace(/^'+|'+$/g, '');
@@ -262,14 +274,16 @@ export function englishWords(text: string): EnglishWord[] {
   const out: EnglishWord[] = [];
   let word = '';
   let offsets: number[] = [];
+  let ends: number[] = [];
   const close = () => {
     let a = 0;
     let b = word.length;
     while (a < b && word[a] === "'") a++;
     while (b > a && word[b - 1] === "'") b--;
-    if (a < b) out.push({ word: word.slice(a, b), start: offsets[a], end: offsets[b - 1] + 1 });
+    if (a < b) out.push({ word: word.slice(a, b), start: offsets[a], end: ends[b - 1] });
     word = '';
     offsets = [];
+    ends = [];
   };
   for (let i = 0; i < text.length;) {
     if (text[i] === '[') {
@@ -278,10 +292,15 @@ export function englishWords(text: string): EnglishWord[] {
       EN_SIDENOTE.lastIndex = i;
       if (EN_SIDENOTE.test(text)) { close(); i = EN_SIDENOTE.lastIndex; continue; }
     }
-    // Lowercased a character at a time, as Python lowercases the whole string:
-    // the result of one character is never more than one [a-z] letter here.
-    for (const ch of text[i].replace(INDEX_APOSTROPHE, "'").toLowerCase()) {
-      if ((ch >= 'a' && ch <= 'z') || ch === "'") { word += ch; offsets.push(i); }
+    // Lowercased and folded a character at a time, as Python does the whole
+    // string: æ gives two letters, both at this character, and a combining
+    // accent gives none, so it neither joins nor splits the word.
+    const folded = latinFold(text[i].replace(INDEX_APOSTROPHE, "'").toLowerCase());
+    // An accent written as its own character belongs to the letter before it,
+    // so the word's span runs through it: "cafe\u0301" is marked whole.
+    if (!folded && ends.length) ends[ends.length - 1] = i + 1;
+    for (const ch of folded) {
+      if ((ch >= 'a' && ch <= 'z') || ch === "'") { word += ch; offsets.push(i); ends.push(i + 1); }
       else close();
     }
     i++;
@@ -290,14 +309,96 @@ export function englishWords(text: string): EnglishWord[] {
   return out;
 }
 
+// "Any form" in English: a typed word also finds its plural and possessive
+// forms, and a plural or possessive its singular. Exact matching found
+// "virtue" 232 times in Rackham's Ethics and missed "virtues" 83 times; a
+// wildcard (virtue*) finds the plural but also every word that merely begins
+// the same way. Only forms the index holds are looked up (englishMatch), so a
+// rule's misfire ("virtu" from "virtues") costs nothing.
+//
+// A word under three letters is left alone, and no rule makes one: "a" would
+// otherwise find "as", and "is" or "us" would lose their s. A plural
+// possessive (virtues') is indexed as the plural, since the index strips an
+// apostrophe at a word's edge, so "-s'" needs no form of its own.
+const EN_IRREGULAR = new Map<string, string>([
+  ['child', 'children'], ['foot', 'feet'], ['tooth', 'teeth'], ['goose', 'geese'],
+  ['mouse', 'mice'], ['ox', 'oxen'], ['life', 'lives'], ['wife', 'wives'],
+  ['knife', 'knives'], ['half', 'halves'], ['self', 'selves'], ['leaf', 'leaves'],
+  ['wolf', 'wolves'], ['calf', 'calves'], ['thief', 'thieves'], ['genus', 'genera'],
+  ['phenomenon', 'phenomena'], ['criterion', 'criteria'], ['basis', 'bases'],
+  ['hypothesis', 'hypotheses'], ['analysis', 'analyses'], ['thesis', 'theses'],
+  ['crisis', 'crises'], ['axis', 'axes'],
+].flatMap(([one, many]) => [[one, many], [many, one]]));
+
+// Words in -s that are not the plural of the word without it: "news" is not
+// more than one "new", nor "politics" of "politic". "Means" is usually a word
+// of its own (a means to an end, a man's means) and almost never the plural of
+// the ethical mean. No rule makes one of these or takes its s away.
+const EN_NOT_PLURAL = new Set([
+  'news', 'means', 'politics', 'ethics', 'physics', 'mathematics', 'economics', 'species', 'series',
+]);
+
+// Words that are no noun, though a rule would make one of a plural: "theses"
+// less its s is "these". No rule makes one of these, and none is expanded.
+const EN_NOT_NOUN = new Set(['these', 'those']);
+
+// The singulars a word may be a plural of, itself included. Man/men,
+// woman/women and every -man compound (statesman, craftsman) go by rule.
+function englishSingulars(w: string): string[] {
+  const out = [w];
+  if (EN_NOT_PLURAL.has(w)) return out;
+  if (w.endsWith('ies')) out.push(`${w.slice(0, -3)}y`, w.slice(0, -1));
+  else if (/(?:s|x|z|ch|sh|o)es$/.test(w)) out.push(w.slice(0, -2), w.slice(0, -1));
+  // Not -ss, -us, -is: class, genus and basis are singulars.
+  else if (/[^siu']s$/.test(w)) out.push(w.slice(0, -1));
+  if (w.endsWith('men')) out.push(`${w.slice(0, -3)}man`);
+  const irregular = EN_IRREGULAR.get(w);
+  if (irregular) out.push(irregular);
+  return out.filter(s => (s.length >= 3 || EN_IRREGULAR.has(s)) && !EN_NOT_NOUN.has(s));
+}
+
+// A singular's own forms: itself and its possessive, its plurals, and the
+// possessive of each plural that does not end in s (men's).
+function englishPlurals(w: string): string[] {
+  const out: string[] = [];
+  if (/(?:s|x|z|sh)$/.test(w)) out.push(`${w}es`);
+  // -ch takes either: churches, but stomachs and epochs.
+  else if (w.endsWith('ch')) out.push(`${w}es`, `${w}s`);
+  else {
+    out.push(`${w}s`);
+    if (w.endsWith('o')) out.push(`${w}es`);
+    if (/[^aeiou]y$/.test(w)) out.push(`${w.slice(0, -1)}ies`);
+  }
+  if (w.endsWith('man')) out.push(`${w.slice(0, -3)}men`);
+  const irregular = EN_IRREGULAR.get(w);
+  if (irregular) out.push(irregular);
+  return [w, `${w}'s`, ...out
+    .filter(f => !EN_NOT_PLURAL.has(f))
+    .flatMap(f => (f.endsWith('s') ? [f] : [f, `${f}'s`]))];
+}
+
+/** Every form "any form" looks up for one word as the index keys it (folded,
+ * lowercase), the word itself first. A wildcard term is its own only form. */
+export function englishForms(word: string): string[] {
+  if (/[*?]/.test(word)) return [word];
+  const bare = word.endsWith("'s") ? word.slice(0, -2) : word;
+  if ((bare.length < 3 && !EN_IRREGULAR.has(bare)) || EN_NOT_NOUN.has(bare)) return [word];
+  const forms = new Set([word]);
+  for (const one of englishSingulars(bare)) for (const f of englishPlurals(one)) forms.add(f);
+  return [...forms];
+}
+
 /** True for a word (as englishWords() gives it) that the typed term matches,
- * by the same rule the index lookup uses. */
-export function englishTermMatcher(terms: string[]): (word: string) => boolean {
+ * by the same rule the index lookup uses; with `forms`, any form of it. */
+export function englishTermMatcher(terms: string[], forms = false): (word: string) => boolean {
   const tests = terms.map(t => {
     if (t === '*') return () => true;
     const pattern = compilePattern(englishTerm(t), englishFold);
     if (!pattern) return () => false;
-    return 'exact' in pattern ? (w: string) => w === pattern.exact : pattern.test;
+    if (!('exact' in pattern)) return pattern.test;
+    if (!forms) return (w: string) => w === pattern.exact;
+    const all = new Set(englishForms(pattern.exact));
+    return (w: string) => all.has(w);
   });
   return word => tests.some(test => test(word));
 }
@@ -309,7 +410,7 @@ export function englishTermMatcher(terms: string[]): (word: string) => boolean {
  * must stand together, in order. A wildcard stays inside its piece. */
 export function englishQueryUnits(query: string): string[][] {
   return query.trim().split(/\s+/).filter(Boolean)
-    .map(term => term.replace(ENGLISH_QUOTES, "'").toLowerCase().split(/[^a-z'*?]+/)
+    .map(term => latinFold(term.replace(ENGLISH_QUOTES, "'").toLowerCase()).split(/[^a-z'*?]+/)
       .map(w => w.replace(/^'+|'+$/g, ''))
       .filter(Boolean))
     .filter(unit => unit.length > 0);
@@ -317,11 +418,14 @@ export function englishQueryUnits(query: string): string[][] {
 
 // Which index holds a translation's words: english.json for the primary, and
 // one english-<slot>.json for each translation beyond it (stage6
-// emit_translation_indexes names them the same way).
+// emit_translation_indexes names them the same way). The slot alone names the
+// translation's postings in the corpus shards, as "<work>/<slot>".
+function englishIndexSlot(t: Pick<TranslationRef, 'id' | 'slot'>): string {
+  return t.slot === 'overlay' ? `overlay-${t.id}` : t.slot;
+}
 export function englishIndexFile(t: Pick<TranslationRef, 'id' | 'slot'>): string {
-  if (t.slot === 'english') return 'english.json';
-  if (t.slot === 'overlay') return `english-overlay-${t.id}.json`;
-  return `english-${t.slot}.json`;
+  const slot = englishIndexSlot(t);
+  return slot === 'english' ? 'english.json' : `english-${slot}.json`;
 }
 
 // The translations an English query is asked of in one work. A work the
@@ -335,11 +439,17 @@ function englishSources(work: string): Pick<TranslationRef, 'id' | 'slot'>[] {
 
 // -- Posting-list helpers -------------------------------------------------
 
+// A word's postings, if the index holds it. A per-work index is plain JSON and
+// inherits Object.prototype, so idx['constructor'] is a function, not absent.
+function ownPostings<T>(idx: Record<string, T>, key: string): T | undefined {
+  return Object.hasOwn(idx, key) ? idx[key] : undefined;
+}
+
 function grkPosting(idx: GrkIndex, term: string): Set<number> {
   const pattern = compilePattern(term, greekFold);
   if (!pattern) return new Set();
   if ('exact' in pattern) {
-    return new Set((idx[pattern.exact] ?? []).map(([si]) => si));
+    return new Set((ownPostings(idx, pattern.exact) ?? []).map(([si]) => si));
   }
   const result = new Set<number>();
   for (const key of Object.keys(idx)) {
@@ -350,34 +460,11 @@ function grkPosting(idx: GrkIndex, term: string): Set<number> {
   return result;
 }
 
-const engSeg = (p: number | [number, number]): number => (typeof p === 'number' ? p : p[0]);
-
-function engPosting(idx: EngIndex, term: string): Set<number> {
+// Every segment the index holds a word in: what a bare * matches.
+function engEverySegment(idx: EngIndex): Set<number> {
   const result = new Set<number>();
-  if (term === '*') {
-    for (const ps of Object.values(idx)) for (const p of ps) result.add(engSeg(p));
-    return result;
-  }
-  const pattern = compilePattern(englishTerm(term), englishFold);
-  if (!pattern) return result;
-  if ('exact' in pattern) {
-    for (const p of idx[pattern.exact] ?? []) result.add(engSeg(p));
-    return result;
-  }
-  for (const key of Object.keys(idx)) {
-    if (pattern.test(key)) {
-      for (const p of idx[key]) result.add(engSeg(p));
-    }
-  }
+  for (const ps of Object.values(idx)) for (const [si] of ps) result.add(si);
   return result;
-}
-
-// True when the index carries word positions (a build since 2026-09-07).
-function engHasPositions(idx: EngIndex): idx is Record<string, [number, number][]> {
-  for (const ps of Object.values(idx)) {
-    if (ps.length) return typeof ps[0] !== 'number';
-  }
-  return false;
 }
 
 function intersect(a: Set<number>, b: Set<number>): Set<number> {
@@ -434,74 +521,6 @@ function phraseStarts(
   return out;
 }
 
-// English phrase against a TEXT, for an index built before word positions
-// were stored: do all terms appear in order, as whole words?
-//
-// Whole words, because the postings already guarantee every term occurs as a
-// word somewhere in the segment, so a bare substring test only ADDS false
-// positives: "the good" inside "breathe goodness". Whitespace between the
-// words, any amount; punctuation between them means the phrase is not there.
-// A typed straight apostrophe matches the text's curly one.
-export function compileEnglishPhrase(terms: string[]): (text: string) => boolean {
-  if (terms.length === 0) return () => true;
-  // Keep the wildcards. Folding them away here would leave `hap* virtue` looking
-  // for the literal string "hap virtue", so the postings would find the phrase
-  // and this check would then throw it away. A leading * asks for any start
-  // ("*ness" — happiness, goodness), so that term takes no boundary on its left.
-  const parts = terms.map(t => {
-    const raw = t.toLowerCase();
-    const body = [...raw.replace(/^\*+/, '')]
-      .filter(ch => /[a-z'*?]/.test(ch))
-      .join('');
-    return { open: raw.startsWith('*'), body };
-  });
-  if (parts.some(p => !p.body)) return () => false;
-  const pattern = new RegExp(parts
-    .map(p => {
-      const body = [...p.body].map(ch =>
-        ch === '*' ? "[a-z']*" : ch === '?' ? "[a-z']" : ch).join('');
-      return `${p.open ? '' : "(?<![a-z'])"}${body}(?![a-z'])`;
-    })
-    .join('\\s+'));
-  // A word wrapped in single quotes — ‘change’ — closes with the same U+2019
-  // that Aristotle’s elides with, so after the fold the quote marks are
-  // apostrophes glued to the word; the index (stage6 english_words) strips
-  // them at a word's edge, and so must the boundary here.
-  return text => pattern.test(
-    text.toLowerCase()
-      .replace(ENGLISH_QUOTES, "'")
-      .replace(/(^|[^a-z'])'+|'+(?=[^a-z']|$)/g, '$1'),
-  );
-}
-export function engPhraseMatches(text: string, terms: string[]): boolean {
-  return compileEnglishPhrase(terms)(text);
-}
-
-// An English phrase is an adjacency test over the postings, exactly as a Greek
-// one is, when the index carries word positions (builds since 2026-09-07).
-//
-// An older build's postings are bare seg_idxs, and the only text the reader
-// holds then is meta.json's `english_head` — stage6's first 500 characters of
-// the segment. A phrase that stands past that cut is missed on such a build;
-// the alternative, fetching every candidate's whole book, was measured to pull
-// most of the corpus for a phrase of common words, so the older shape keeps the
-// older limit until the corpus is rebuilt.
-export const ENGLISH_HEAD_LIMIT = 500;
-
-function englishPhraseHits(
-  idx: EngIndex,
-  meta: SegMeta[],
-  candidates: Set<number>,
-  engTerms: string[],
-): Set<number> {
-  if (engHasPositions(idx)) {
-    const starts = phraseStarts(idx, engTerms.map(t => [englishTerm(t)]), englishFold);
-    return new Set([...starts.keys()].filter(si => candidates.has(si)));
-  }
-  const matches = compileEnglishPhrase(engTerms);
-  return new Set([...candidates].filter(si => matches(meta[si].english_head)));
-}
-
 // -- Public search API ----------------------------------------------------
 
 export type SearchMode = 'all' | 'any' | 'phrase';
@@ -510,8 +529,7 @@ export type LangOp = 'and' | 'or';
 // One translation's English match in a segment: which translation (a
 // TranslationRef id) and the word positions the query matched there, counted
 // as englishWords() counts them through that translation's text for the
-// segment. Positions are empty only for an index built before word positions
-// were stored.
+// segment. Positions are empty only for a bare *, which no word answers.
 export interface EngHit { translation: string; positions: number[] }
 
 export interface SearchResult {
@@ -565,7 +583,7 @@ function termPositions(
   const pattern = compilePattern(term, fold);
   if (!pattern) return m;
   if ('exact' in pattern) {
-    add(idx[pattern.exact] ?? []);
+    add(ownPostings(idx, pattern.exact) ?? []);
   } else {
     for (const key of Object.keys(idx)) if (pattern.test(key)) add(idx[key]);
   }
@@ -603,19 +621,20 @@ function greekPositions(
 
 // Where one unit of an English query stands in an index: seg_idx -> the word
 // positions of every run of it. A one-word unit is any occurrence; a
-// hyphenated term's words must stand in a row. An index without positions
-// (built before 2026-09-07) can say only which segments, and checks a run
-// against english_head as it always has.
-function unitMatch(idx: EngIndex, meta: SegMeta[], unit: string[]): { segs: Set<number>; positions: Map<number, number[]> } {
+// hyphenated term's words must stand in a row. With `forms`, each word may
+// stand as any of its forms this index holds.
+function unitMatch(
+  idx: EngIndex,
+  unit: string[],
+  forms: boolean,
+): { segs: Set<number>; positions: Map<number, number[]> } {
   const positions = new Map<number, number[]>();
   // The bare *: every word matches it, so no word is the hit.
-  if (unit.length === 1 && unit[0] === '*') return { segs: engPosting(idx, '*'), positions };
-  if (!engHasPositions(idx)) {
-    let segs = unit.map(t => engPosting(idx, t)).reduce(intersect);
-    if (unit.length > 1) segs = englishPhraseHits(idx, meta, segs, unit);
-    return { segs, positions };
-  }
-  for (const [si, starts] of phraseStarts(idx, unit.map(t => [englishTerm(t)]), englishFold)) {
+  if (unit.length === 1 && unit[0] === '*') return { segs: engEverySegment(idx), positions };
+  const alts = unit.map(t => (forms
+    ? englishForms(englishTerm(t)).filter((f, i) => i === 0 || Object.hasOwn(idx, f))
+    : [englishTerm(t)]));
+  for (const [si, starts] of phraseStarts(idx, alts, englishFold)) {
     positions.set(si, starts.flatMap(start => unit.map((_, j) => start + j)));
   }
   return { segs: new Set(positions.keys()), positions };
@@ -625,11 +644,11 @@ function unitMatch(idx: EngIndex, meta: SegMeta[], unit: string[]): { segs: Set<
 // each the query's words stand. An exact phrase is all the units in a row.
 function englishMatch(
   idx: EngIndex,
-  meta: SegMeta[],
   units: string[][],
   engMode: SearchMode,
+  forms: boolean,
 ): { segs: Set<number>; positions: Map<number, number[]> } {
-  const matches = (engMode === 'phrase' ? [units.flat()] : units).map(u => unitMatch(idx, meta, u));
+  const matches = (engMode === 'phrase' ? [units.flat()] : units).map(u => unitMatch(idx, u, forms));
   const segs = matches.map(m => m.segs).reduce(engMode === 'any' ? union : intersect);
   const positions = new Map<number, number[]>();
   for (const si of segs) {
@@ -642,6 +661,98 @@ function englishMatch(
 
 interface WorkOutcome { results: SearchResult[]; unsearched: string[] }
 
+// -- Corpus search shards ---------------------------------------------------
+//
+// Stage 9 merges every work's lexical indexes into one set per stream, split
+// by a word's first two letters: {word: {source: postings}}. A query fetches
+// only the shards its words can fall in — "happiness" is one shard, where it
+// used to be every work's english.json — and the postings are the per-work
+// ones unchanged, so the matching here runs on them as it always did.
+// index.json lists each stream's shards and sources: the work for Greek,
+// "<work>/<slot>" for English. A source it does not list (a corpus built
+// before the shards, or a translation the desktop app imported) is read from
+// the work's own file, as is everything when the shards are absent.
+
+type Stream = 'lemma' | 'form' | 'english';
+interface ShardListing { streams: Partial<Record<Stream, { shards: string[]; sources: Record<string, string> }>> }
+type Shard = Record<string, Record<string, [number, number][]>>;
+// One query's part of a stream: every key its terms match -> source -> postings.
+type Slice = Map<string, Record<string, [number, number][]>>;
+
+/** The shard a word is filed under. Mirror of stage9's shard_name(); a shared
+ * fixture pins the two, since a word looked up under another name than it was
+ * filed under is simply not found. */
+export function shardName(word: string): string {
+  let out = '';
+  for (let i = 0; i < 2; i++) {
+    const c = word[i] ?? '';
+    out += c >= 'a' && c <= 'z' ? c : '_';
+  }
+  return out;
+}
+
+// The shards a pattern can match in. An exact word is in one; a pattern's
+// literal prefix fixes as many of the two letters as it has itself, so hap*
+// is one shard, h* every h-shard, and *ness all of them.
+function shardsFor(pattern: CompiledPattern, listed: string[]): string[] {
+  const literal = 'exact' in pattern ? pattern.exact : pattern.prefix;
+  const fixed = 'exact' in pattern ? 2 : Math.min(literal.length, 2);
+  const want = shardName(literal).slice(0, fixed);
+  return listed.filter(name => name.slice(0, fixed) === want);
+}
+
+async function shardSlice(stream: Stream, listed: string[], patterns: CompiledPattern[]): Promise<Slice> {
+  const names = [...new Set(patterns.flatMap(p => shardsFor(p, listed)))];
+  const shards = await pool(names, 8, name => loadShared<Shard>(`search-shards/${stream}/${name}.json`));
+  const slice: Slice = new Map();
+  for (const shard of shards) {
+    for (const key of Object.keys(shard)) {
+      if (patterns.some(p => ('exact' in p ? p.exact === key : p.test(key)))) slice.set(key, shard[key]);
+    }
+  }
+  return slice;
+}
+
+// Where one query's lexical indexes come from. Each per-work index it hands
+// out holds only the keys the query's terms match, which is all the matching
+// ever reads. The slice for a stream is cut once per query and shared by
+// every work.
+interface QueryIndexes {
+  greek(work: string): Promise<GrkIndex>;
+  english(work: string, t: Pick<TranslationRef, 'id' | 'slot'>): Promise<EngIndex>;
+}
+
+function queryIndexes(greekStream: 'lemma' | 'form', grkTerms: string[], engTerms: string[]): QueryIndexes {
+  // Without a listing every index is read from its work, exactly as before
+  // the shards existed.
+  const listing = loadShared<ShardListing>('search-shards/index.json').catch(() => null);
+  const slices = new Map<Stream, Promise<Slice>>();
+  const index = async (
+    stream: Stream, source: string, terms: string[], fold: (s: string) => string,
+    work: string, file: string,
+  ): Promise<Record<string, [number, number][]>> => {
+    const entry = (await listing)?.streams?.[stream];
+    if (!entry || !Object.hasOwn(entry.sources, source)) return loadIndex(work, file);
+    let slice = slices.get(stream);
+    if (!slice) {
+      const patterns = terms.map(t => compilePattern(t, fold)).filter(p => p !== null);
+      slice = shardSlice(stream, entry.shards, patterns);
+      slices.set(stream, slice);
+    }
+    const idx: Record<string, [number, number][]> = Object.create(null);
+    for (const [key, bySource] of await slice) {
+      if (Object.hasOwn(bySource, source)) idx[key] = bySource[source];
+    }
+    return idx;
+  };
+  return {
+    greek: work => index(greekStream, work, grkTerms, greekFold, work,
+      greekStream === 'form' ? 'greek_form.json' : 'greek_lemma.json'),
+    english: (work, t) => index('english', `${work}/${englishIndexSlot(t)}`,
+      engTerms.map(englishTerm), englishFold, work, englishIndexFile(t)),
+  };
+}
+
 // Search one work, returning hits tagged with that work.
 async function searchWork(
   work: string,
@@ -650,21 +761,19 @@ async function searchWork(
   grkMode: SearchMode,
   engMode: SearchMode,
   langOp: LangOp,
-  matchMode: MatchMode,
+  indexes: QueryIndexes,
+  engForms: boolean,
 ): Promise<WorkOutcome> {
-  // Fetch only what this query needs: meta always; the lemma OR form Greek
-  // index iff there are Greek terms; an English index per translation iff
-  // there are English terms. Kick them off together, then await.
-  const metaP = loadIndex<SegMeta[]>(work, 'meta.json');
-  const grkP: Promise<GrkIndex | null> = grkTerms.length
-    ? loadIndex<GrkIndex>(work, matchMode === 'form' ? 'greek_form.json' : 'greek_lemma.json')
-    : Promise.resolve(null);
+  // Fetch only what this query needs: the Greek index iff there are Greek
+  // terms; an English index per translation iff there are English terms.
+  // Kick them off together, then await.
+  const grkP: Promise<GrkIndex | null> = grkTerms.length ? indexes.greek(work) : Promise.resolve(null);
   const sources = engUnits.length ? englishSources(work) : [];
   // The primary index failing fails the work, as it always has; any other
   // translation's only drops that translation, and says so.
   const unsearched: string[] = [];
   const engP = sources.map(t => {
-    const p = loadIndex<EngIndex>(work, englishIndexFile(t));
+    const p = indexes.english(work, t);
     if (t.slot === 'english') return p;
     return p.catch(err => {
       console.warn(`search: ${work} ${t.id} not searched —`, err);
@@ -672,7 +781,6 @@ async function searchWork(
       return null;
     });
   });
-  const meta = await metaP;
   const grkIdx = await grkP;
   const engIdxs = await Promise.all(engP);
 
@@ -704,7 +812,7 @@ async function searchWork(
     sources.forEach((t, i) => {
       const idx = engIdxs[i];
       if (!idx) return;
-      const { segs: hits, positions } = englishMatch(idx, meta, engUnits, engMode);
+      const { segs: hits, positions } = englishMatch(idx, engUnits, engMode, engForms);
       for (const si of hits) {
         engHits!.add(si);
         const hit = { translation: t.id, positions: positions.get(si) ?? [] };
@@ -726,6 +834,9 @@ async function searchWork(
     ? greekPositions(grkIdx, grkTerms, grkMode, grkHits)
     : new Map<number, number[]>();
 
+  // Only a work with hits needs to name them.
+  if (!combined.size) return { results: [], unsearched };
+  const meta = await loadIndex<SegMeta[]>(work, 'meta.json');
   const results = [...combined]
     .sort((a, b) => a - b)
     .map(si => ({
@@ -923,7 +1034,7 @@ export async function lemmaOptions(folds: string[]): Promise<string[][] | null> 
     const letter = /^[a-z]/.test(fold) ? fold[0] : '_';
     try {
       const shard = await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
-      perTerm.push(shard[fold] ?? []);
+      perTerm.push(Object.hasOwn(shard, fold) ? shard[fold] : []);
     } catch {
       return null;
     }
@@ -972,12 +1083,10 @@ export async function searchPhraseVariants(
 
   const failedWorks: string[] = [];
   const productiveKeys = new Set<string>();
+  const indexes = queryIndexes('lemma', [...new Set(readings.flat())], []);
   const perWork = await pool(works, 8, async work => {
     try {
-      const [meta, idx] = await Promise.all([
-        loadIndex<SegMeta[]>(work, 'meta.json'),
-        loadIndex<GrkIndex>(work, 'greek_lemma.json'),
-      ]);
+      const idx = await indexes.greek(work);
       // seg_idx -> the token positions any reading matched. A Set because two
       // readings routinely land on the same token.
       const bySeg = new Map<number, Set<number>>();
@@ -992,6 +1101,8 @@ export async function searchPhraseVariants(
           }
         }
       }
+      if (!bySeg.size) return [] as SearchResult[];
+      const meta = await loadIndex<SegMeta[]>(work, 'meta.json');
       return [...bySeg.keys()].sort((a, b) => a - b).map(si => ({
         work,
         meta: meta[si],
@@ -1452,7 +1563,8 @@ async function resolveHeadwords(terms: string[]): Promise<string[][]> {
 }
 
 // Unified search across one or more works. `matchMode` chooses the Greek index
-// (lemma = all forms of a headword, form = the exact inflected token).
+// (lemma = all forms of a headword, form = the exact inflected token);
+// `engForms` lets each English word match its plural and possessive forms.
 export async function search(
   grkQuery: string,
   engQuery: string,
@@ -1461,6 +1573,7 @@ export async function search(
   langOp: LangOp,
   works: string[],
   matchMode: MatchMode = 'lemma',
+  engForms = false,
 ): Promise<SearchOutcome> {
   if (!grkQuery.trim() && !engQuery.trim()) return { results: [], failedWorks: [] };
   if (!works.length) return { results: [], failedWorks: [] };
@@ -1470,6 +1583,13 @@ export async function search(
     ? await resolveHeadwords(typedGrk)
     : typedGrk.map(t => [t]);
   const engUnits = englishQueryUnits(engQuery);
+  // "Any form" looks each word's forms up in the index it is handed, which on
+  // the shard path holds only the keys cut for these terms: so the forms are
+  // terms here, and may fall in other shards than the word ("men", "man").
+  const engTerms = engForms
+    ? engUnits.flat().flatMap(t => englishForms(englishTerm(t)))
+    : engUnits.flat();
+  const indexes = queryIndexes(matchMode === 'form' ? 'form' : 'lemma', grkTerms.flat(), engTerms);
 
   // Bound how many works load at once, and let a single work's failed index
   // load drop just that work (logged + reported) instead of rejecting the whole
@@ -1479,7 +1599,7 @@ export async function search(
   const perWork = await pool(works, 8, async w => {
     try {
       const { results, unsearched } =
-        await searchWork(w, grkTerms, engUnits, grkMode, engMode, langOp, matchMode);
+        await searchWork(w, grkTerms, engUnits, grkMode, engMode, langOp, indexes, engForms);
       for (const translation of unsearched) unsearchedTranslations.push({ work: w, translation });
       return results;
     } catch (err) {

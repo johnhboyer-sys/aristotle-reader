@@ -2,14 +2,13 @@
 
 shared/lib/search.ts consumes these files by POSITION, not by name: a posting
 is (seg_idx, token_pos), its global offset is seg_base_offset[seg_idx] + pos,
-and offsetRef() walks line_runs to name the Bekker line. meta.json's
-english_head is what the English phrase check reads first. Each test here
+and offsetRef() walks line_runs to name the Bekker line. meta.json names
+each seg_idx's passage, and nothing more. Each test here
 builds the smallest corpus that exercises one seam and reads the emitted
 files back the way the reader would.
 """
 
 import json
-import re
 import sys
 import unicodedata
 from pathlib import Path
@@ -49,7 +48,7 @@ _SPINE = {
     ],
 }
 
-_LONG_ENGLISH = ("The point and every division " * 30).strip()  # > 500 chars
+_LONG_ENGLISH = ("The point and every division " * 30).strip()
 
 
 def _english(chapters):
@@ -229,7 +228,7 @@ def test_english_index_keeps_a_curly_possessive_as_one_word(tmp_path, monkeypatc
 
 
 def test_english_words_matches_the_readers_fold():
-    """Mirror of englishFold()/engPhraseMatches() in shared/lib/search.ts:
+    """Mirror of englishFold()/englishWords() in shared/lib/search.ts:
     lowercase, U+2019 and U+02BC become ', anything outside [a-z'] splits."""
     from aristotle_pipeline.stage6_search import english_words
 
@@ -237,18 +236,17 @@ def test_english_words_matches_the_readers_fold():
         "aristotle's", "good", "isn't", "well"]
 
 
-def test_english_head_is_cut_at_the_readers_limit(tmp_path, monkeypatch):
-    """search.ts falls back to the book text only when the head is AT the cut
-    (head.length >= ENGLISH_HEAD_LIMIT). A shorter cut here would hide every
-    phrase past it; a longer one is merely wasted bytes. Pin both sides."""
+def test_meta_names_each_passage_and_carries_no_text(tmp_path, monkeypatch):
+    """The reader reads id, book and column from meta.json and nothing else.
+    The Greek and English heads it once carried were 0.7 MB of a search's
+    download (gzipped), and the English phrase check that read them went
+    with the last index built without word positions."""
     meta = _build(tmp_path, monkeypatch)["meta"]
-    head = meta[1]["english_head"]
-    assert len(head) == 500 and _LONG_ENGLISH.startswith(head)
-    assert meta[0]["english_head"] == "Aristotle’s first ‘change’ isn’t the last."
-    assert meta[2]["english_head"] == ""
-    search_ts = (ROOT / "shared" / "lib" / "search.ts").read_text(encoding="utf-8")
-    m = re.search(r"export const ENGLISH_HEAD_LIMIT = (\d+);", search_ts)
-    assert m and int(m.group(1)) == 500
+    assert meta == [
+        {"id": "1:244b", "book": 1, "column": "244b"},
+        {"id": "1:245a", "book": 1, "column": "245a"},
+        {"id": "2:245b", "book": 2, "column": "245b"},
+    ]
 
 
 # -- Greek index keys --------------------------------------------------------

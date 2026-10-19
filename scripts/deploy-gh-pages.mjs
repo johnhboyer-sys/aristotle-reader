@@ -12,6 +12,7 @@
 //
 // The pure functions are exported so scripts/__tests__/deploy-gh-pages.test.mjs
 // can exercise them without a clone, a dist or a network.
+import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -233,8 +234,29 @@ export function scanGatedSlots(files, { gated, baseline = GATED_SLOT_BASELINE } 
   const problems = [];
   const seen = new Map();          // work -> Set of slots found
   const indexes = new Map();       // work -> Set of english-<slot> index names
+  const shardSources = new Map();  // work -> Set of slots the search shards carry
   let gatedFilesScanned = 0;
+  // The corpus search shards (stage 9) hold every work's English index as
+  // "<work>/<slot>" — "english" for the primary — so they carry a gated
+  // translation's words as surely as its english-<slot>.json. Both the
+  // shards' listing and their postings are read: the listing is what the
+  // reader trusts, the postings are what is actually served.
+  const addShardSource = (source) => {
+    const at = source.indexOf('/');
+    const work = source.slice(0, at);
+    if (at > 0 && gated.has(work)) (shardSources.get(work) ?? shardSources.set(work, new Set()).get(work)).add(source.slice(at + 1));
+  };
   for (const { path: filePath, text } of files) {
+    if (filePath === 'data/search-shards/index.json' || /^data\/search-shards\/english\/[^/]+\.json$/.test(filePath)) {
+      let doc;
+      try { doc = JSON.parse(text); } catch { problems.push(`${filePath}: not JSON — cannot check which translations it carries`); continue; }
+      if (filePath.endsWith('/index.json')) {
+        for (const source of Object.keys(doc?.streams?.english?.sources ?? {})) addShardSource(source);
+      } else {
+        for (const bySource of Object.values(doc ?? {})) for (const source of Object.keys(bySource ?? {})) addShardSource(source);
+      }
+      continue;
+    }
     const ix = /^data\/([^/]+)\/search\/english-([^/]+)\.json$/.exec(filePath);
     if (ix) {
       if (gated.has(ix[1])) (indexes.get(ix[1]) ?? indexes.set(ix[1], new Set()).get(ix[1])).add(ix[2]);
@@ -272,6 +294,16 @@ export function scanGatedSlots(files, { gated, baseline = GATED_SLOT_BASELINE } 
       }
     }
   }
+  for (const [work, names] of shardSources) {
+    const allowed = new Set(baseline[work] ?? []);
+    for (const name of [...names].sort()) {
+      if (name === 'english') continue;   // the primary, which the public manifest chooses
+      const slots = indexedSlots(name);
+      if (!slots || !slots.some((slot) => allowed.has(slot))) {
+        problems.push(`search-shards carry ${work}/${name}, the search index of a translation GATED_SLOT_BASELINE does not list for ${work} — rebuild the shards (stage9) from the public corpus before deploying.`);
+      }
+    }
+  }
   // A check that examined nothing must not report clean — the lesson the
   // "Aristotle" control was added for on 2026-09-01.
   if (gatedFilesScanned === 0) {
@@ -282,6 +314,7 @@ export function scanGatedSlots(files, { gated, baseline = GATED_SLOT_BASELINE } 
     gatedFilesScanned,
     seen: Object.fromEntries([...seen].map(([w, s]) => [w, [...s].sort()])),
     indexes: Object.fromEntries([...indexes].map(([w, s]) => [w, [...s].sort()])),
+    shardSources: Object.fromEntries([...shardSources].map(([w, s]) => [w, [...s].sort()])),
     problems,
   };
 }
@@ -328,6 +361,101 @@ export function scanTranslationIndexes(files) {
     indexed: [...served.values()].reduce((n, s) => n + s.size, 0),
     problems,
   };
+}
+
+// The corpus search shards (stage 9) are every work's lexical indexes merged,
+// and the reader searches them in place of the per-work files. A work rebuilt
+// without re-running stage 9 leaves shards whose seg_idx numbers name the
+// wrong passages. Two checks: index.json's hash of each per-work index it was
+// built from is recomputed from the index being served, and every posting in
+// every listed shard is compared with that index, since the shard files, not
+// the listing, are what the reader reads. A shard file the listing does not
+// name is never read (a deploy restores one a rebuild dropped), so it is not
+// checked.
+const SHARDED_INDEX = /^data\/([^/]+)\/search\/(greek_lemma|greek_form|english(?:-[^/]+)?)\.json$/;
+const SHARD_FILE = /^data\/search-shards\/(lemma|form|english)\/([^/]+)\.json$/;
+
+/** The shard a word is filed under. Mirror of stage9's shard_name() and
+ * shardName() in shared/lib/search.ts; a shared fixture pins all three. */
+export function shardName(word) {
+  let out = '';
+  for (let i = 0; i < 2; i++) {
+    const c = word[i] ?? '';
+    out += c >= 'a' && c <= 'z' ? c : '_';
+  }
+  return out;
+}
+
+export function scanSearchShards(files) {
+  const problems = [];
+  const served = new Map();   // "<stream>\0<source>" -> { hash, words: Map word -> postings JSON }
+  const sharded = new Map();  // "<stream>\0<source>" -> Map word -> postings JSON
+  const shardFiles = new Map(); // "<stream>/<name>" -> shard text, parsed only if listed
+  let listing = null;
+  let postings = 0;
+  const compact = (p) => JSON.stringify(p);
+  for (const { path: filePath, text } of files) {
+    if (filePath === 'data/search-shards/index.json') {
+      try { listing = JSON.parse(text).streams ?? {}; } catch { problems.push(`${filePath}: not JSON`); }
+      continue;
+    }
+    const s = SHARD_FILE.exec(filePath);
+    if (s) {
+      shardFiles.set(`${s[1]}/${s[2]}`, text);
+      continue;
+    }
+    const m = SHARDED_INDEX.exec(filePath);
+    if (!m) continue;
+    const [, work, name] = m;
+    const stream = name === 'greek_lemma' ? 'lemma' : name === 'greek_form' ? 'form' : 'english';
+    const source = stream !== 'english' ? work : `${work}/${name === 'english' ? 'english' : name.slice('english-'.length)}`;
+    let words = new Map();
+    try { words = new Map(Object.entries(JSON.parse(text)).map(([w, p]) => [w, compact(p)])); } catch { problems.push(`${filePath}: not JSON`); }
+    served.set(`${stream}\0${source}`, { hash: createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 16), words });
+  }
+  if (!served.size) problems.push('no data/<Work>/search/*.json index was scanned — this check is not running.');
+  if (!listing) {
+    problems.push('no data/search-shards/index.json — run `uv run python -m aristotle_pipeline stage9` in pipeline/ (or rebuild); without the shards every search fetches every work\'s index.');
+    return { ok: false, sources: served.size, postings, problems };
+  }
+  for (const [stream, entry] of Object.entries(listing)) {
+    for (const name of entry?.shards ?? []) {
+      const text = shardFiles.get(`${stream}/${name}`);
+      if (text === undefined) { problems.push(`search-shards/${stream}/${name}.json is listed but missing — the reader fails every search that needs it.`); continue; }
+      let doc;
+      try { doc = JSON.parse(text); } catch { problems.push(`search-shards/${stream}/${name}.json: not JSON`); continue; }
+      for (const [word, bySource] of Object.entries(doc)) {
+        if (shardName(word) !== name) problems.push(`search-shards/${stream}/${name}.json files '${word}', which belongs in ${shardName(word)} — the reader will never find it.`);
+        for (const [source, p] of Object.entries(bySource ?? {})) {
+          const key = `${stream}\0${source}`;
+          (sharded.get(key) ?? sharded.set(key, new Map()).get(key)).set(word, compact(p));
+          postings += Array.isArray(p) ? p.length : 0;
+        }
+      }
+    }
+  }
+  if (!postings) problems.push('the listed search shards hold no postings — this check examined nothing.');
+  for (const key of sharded.keys()) {
+    if (!served.has(key)) {
+      const [stream, source] = key.split('\0');
+      problems.push(`search-shards carry ${stream} postings for ${source}, which no work serves an index for — rebuild the shards (stage9).`);
+    }
+  }
+  for (const [key, { hash, words }] of served) {
+    const [stream, source] = key.split('\0');
+    const sources = listing[stream]?.sources ?? {};
+    if (!Object.hasOwn(sources, source)) { problems.push(`search-shards does not hold the ${stream} index of ${source} — rebuild the shards (stage9).`); continue; }
+    if (sources[source] !== hash) problems.push(`search-shards hold an older ${stream} index of ${source} than the one served — rebuild the shards (stage9).`);
+    const have = sharded.get(key) ?? new Map();
+    const wrong = [...new Set([...words.keys(), ...have.keys()])].filter((w) => words.get(w) !== have.get(w)).sort();
+    if (wrong.length) problems.push(`search-shards disagree with the ${stream} index of ${source} in ${wrong.length} word(s), first '${wrong[0]}' — rebuild the shards (stage9).`);
+  }
+  for (const [stream, entry] of Object.entries(listing)) {
+    for (const source of Object.keys(entry?.sources ?? {})) {
+      if (!served.has(`${stream}\0${source}`)) problems.push(`search-shards hold a ${stream} index of ${source}, which no work serves — rebuild the shards (stage9).`);
+    }
+  }
+  return { ok: problems.length === 0, sources: served.size, postings, problems };
 }
 
 // A dist holding one empty index.html passed every default gate, and the rsync
@@ -745,7 +873,8 @@ async function main() {
     console.log(`  gated book files scanned: ${slots.gatedFilesScanned}`);
     for (const [work, found] of Object.entries(slots.seen)) {
       const idx = slots.indexes[work] ?? [];
-      console.log(`    ${work}: ${found.join(', ')}${idx.length ? ` · search indexes: ${idx.join(', ')}` : ''}`);
+      const shards = slots.shardSources[work] ?? [];
+      console.log(`    ${work}: ${found.join(', ')}${idx.length ? ` · search indexes: ${idx.join(', ')}` : ''}${shards.length ? ` · search shards: ${shards.join(', ')}` : ''}`);
     }
     if (!slots.ok) {
       for (const problem of slots.problems) console.log(`  !! ${problem}`);
@@ -760,6 +889,16 @@ async function main() {
     if (!indexes.ok) {
       for (const problem of indexes.problems) console.log(`  !! ${problem}`);
       fail('a served translation has no search index.');
+    }
+
+    heading('Search shards: built from the indexes being served');
+    const shards = scanSearchShards(
+      readAll(walk(dataDir, (name) => name.toLowerCase().endsWith('.json'), clone)),
+    );
+    console.log(`  per-work indexes checked against the shards: ${shards.sources}; shard postings compared: ${shards.postings}`);
+    if (!shards.ok) {
+      for (const problem of shards.problems) console.log(`  !! ${problem}`);
+      fail('the search shards do not match the indexes being served.');
     }
 
     // 6. Stage and read the deploy diff by category ------------------------
