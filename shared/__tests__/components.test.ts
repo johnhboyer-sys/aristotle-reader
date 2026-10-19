@@ -565,6 +565,26 @@ describe('Reader.svelte', () => {
     expect(anchors[2].querySelectorAll('.fn-marker')).toHaveLength(2);
   });
 
+  // The prose is escaped before the marker pass, so "&" arrives as "&amp;".
+  // The lead stopped at "&" and could start again after it, so the wrapper
+  // split the entity and "&amp;" printed as text.
+  it('never splits an entity in the text glued to a footnote', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'Smith &[^1] and A&B[^2] Co.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Co\./);
+    expect(container.textContent).not.toContain('amp;');
+    expect([...container.querySelectorAll('.fn-anchor')].map(a => a.textContent)).toEqual(['&1', 'A&B2']);
+  });
+
   // A Bekker tick or paragraph break whose offset lands inside a marker used
   // to cut the marker in two: neither half matched the sidenote strip, so
   // "[[s" and "1]]" printed as prose.

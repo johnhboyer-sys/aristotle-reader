@@ -599,8 +599,10 @@
     // cannot swallow the first marker into the second's lead; a "]" may stay,
     // so "[sic][^1]" still glues the note to "sic]". Markers in a row
     // ("one[^1][^2]") share one wrapper, so the second is glued to the first.
+    // The prose is escaped by now, so the lead takes an entity ("&amp;") whole
+    // and can never begin halfway through one.
     return highlightEng(text, marks).replace(
-      /([^\s<>&[]*)((?:\[\^[\w.*†]+\])+)/g,
+      /((?:[^\s<>&[]|&#?\w+;)*)((?:\[\^[\w.*†]+\])+)/g,
       (_m, lead: string, run: string) => {
         const buttons = [...run.matchAll(/\[\^([\w.*†]+)\]/g)].map(([, label]) => {
           const display = fnDisplay(label);
