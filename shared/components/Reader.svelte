@@ -595,11 +595,18 @@
     // never swallow a fragment of highlightEng's own markup; if a tag abuts
     // the marker the wrapper just holds the marker alone (no worse than
     // before).
+    // The lead never takes a "[", so a word with two notes ("a[^A]b[^B]")
+    // cannot swallow the first marker into the second's lead; a "]" may stay,
+    // so "[sic][^1]" still glues the note to "sic]". Markers in a row
+    // ("one[^1][^2]") share one wrapper, so the second is glued to the first.
     return highlightEng(text, marks).replace(
-      /([^\s<>&]*)\[\^([\w.*†]+)\]/g,
-      (_m, lead: string, label: string) => {
-        const display = fnDisplay(label);
-        return `<span class="fn-anchor">${lead}<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button></span>`;
+      /([^\s<>&[]*)((?:\[\^[\w.*†]+\])+)/g,
+      (_m, lead: string, run: string) => {
+        const buttons = [...run.matchAll(/\[\^([\w.*†]+)\]/g)].map(([, label]) => {
+          const display = fnDisplay(label);
+          return `<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button>`;
+        });
+        return `<span class="fn-anchor">${lead}${buttons.join('')}</span>`;
       },
     ).replace(
       // Ostwald italicizes a transliterated Greek word or a title (*ethos,*
@@ -663,6 +670,27 @@
     return { n: line.n, text, tokens: line.tokens.slice(fromW, toW), cont: fromW > 0 };
   }
 
+  // A cut (Bekker tick, paragraph break, chapter start) must never land inside
+  // a footnote [^label] or sidenote/figure [[sN]] marker: each half would miss
+  // the patterns that render or strip it and print as prose. A cut inside one
+  // moves to its END, and past any marker glued straight after it, because a
+  // marker annotates the word BEFORE it: moving to the start would part a
+  // footnote from its word and from renderThird's nowrap wrapper.
+  const MARKER_SRC = String.raw`\[\^[0-9A-Za-z_.*†]+\]|\[\[(?:s|fig)[0-9]+\]\]`;
+  const PROSE_MARKER = new RegExp(MARKER_SRC, 'g');
+  const GLUED_MARKERS = new RegExp(`(?:${MARKER_SRC})*`, 'y');
+  function snapPastMarker(text: string, off: number): number {
+    for (const m of text.matchAll(PROSE_MARKER)) {
+      if (m.index >= off) break;
+      const end = m.index + m[0].length;
+      if (off < end) {
+        GLUED_MARKERS.lastIndex = end;
+        return end + GLUED_MARKERS.exec(text)![0].length;
+      }
+    }
+    return off;
+  }
+
   // Flowing prose with Bekker numbers floated into the margin at their EXACT
   // offsets (no row break, no in-text number, no sentence-boundary snapping).
   // Used for precisely-placed translations like the gloss-aligned Ross.
@@ -681,7 +709,7 @@
       }
     };
     for (const t of ts) {
-      const off = Math.max(0, Math.min(t.off, text.length));
+      const off = snapPastMarker(text, Math.max(0, Math.min(t.off, text.length)));
       if (off > cur) { addText(text.slice(cur, off)); cur = off; }
       if (t.para) {
         parts.push({ text: null, n: null, real: false, para: true });
@@ -763,13 +791,18 @@
     // number renders where it actually falls instead of jumping to the next
     // sentence start (which the older snapped-row gutter did). The secondary
     // Ross slot uses the same flow model.
+    // Ticks and paragraph breaks snap against the whole text before they are
+    // assigned to a slice, so one inside a marker that ends a slice goes with
+    // the next slice, as its marker-free offset would.
     const flowFor = (a: number, b: number): FlowPart[] => {
       const slice = text.slice(a, b);
       const ticks = allTicks
-        .filter(t => t.offset >= a && t.offset < b)
-        .map(t => ({ n: t.n, real: t.real, off: t.offset - a }))
+        .map(t => ({ n: t.n, real: t.real, off: snapPastMarker(text, t.offset) }))
+        .filter(t => t.off >= a && t.off < b)
+        .map(t => ({ ...t, off: t.off - a }))
         .sort((x, y) => x.off - y.off);
       const paras = allParas
+        .map(off => snapPastMarker(text, off))
         .filter(off => off > a && off < b)
         .map(off => off - a);
       return flowParts(slice, ticks, paras);
@@ -814,9 +847,10 @@
       const i = greek.findIndex(l => l.n >= beforeLine);
       return i === -1 ? greek.length : i;
     };
-    // Each chapter boundary is a cut at (line index, word index within the line).
+    // Each chapter boundary is a cut at (line index, word index within the line),
+    // and in the English at an offset kept clear of any marker.
     const bounds = starts.map(s => ({
-      chapter: s.chapter, bekker: s.bekker, engOffset: s.engOffset,
+      chapter: s.chapter, bekker: s.bekker, engOffset: snapPastMarker(text, s.engOffset),
       idx: lineIdx(s.beforeLine), word: s.wordIndex || 0,
     }));
 
@@ -839,11 +873,11 @@
     const blocks: Block[] = [];
     const first = bounds[0];
     // Lines/English before the first chapter start continue the previous chapter.
-    if (first.idx > 0 || first.word > 0 || starts[0].engOffset > 0) {
+    if (first.idx > 0 || first.word > 0 || first.engOffset > 0) {
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        flow: flowFor(0, starts[0].engOffset), sidenotes: sidesIn(0, starts[0].engOffset), figs: figsIn(0, starts[0].engOffset), ...overlaysFor(null),
+        flow: flowFor(0, first.engOffset), sidenotes: sidesIn(0, first.engOffset), figs: figsIn(0, first.engOffset), ...overlaysFor(null),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
