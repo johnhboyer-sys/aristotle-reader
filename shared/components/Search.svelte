@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import {
     search,
     searchCombo,
@@ -37,6 +37,7 @@
     type LemmaCandidate,
   } from '../lib/data';
   import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
+  import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlSearch } from '../lib/search-url';
 
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -124,13 +125,20 @@
   $: lemmaDeadEnd = searched && !error && totalInstances === 0 && !variantsShown
     && matchMode === 'lemma' && canWiden && !engQuery.trim();
 
+  // Stepping through history can start a search while another is running;
+  // only the latest may write results.
+  let searchRun = 0;
+
   async function findVariants() {
+    // Counted with the searches: the back button must be able to retire it.
+    const run = ++searchRun;
     variantBusy = true;
     error = '';
     try {
       const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
       const query = searchCtx.grkQuery || grkQuery;
       const outcome = await searchPhraseVariants(query, works);
+      if (run !== searchRun) return;
       if (!outcome.results.length && !outcome.readings.length) {
         variantNote = 'No dictionary form is recorded for one of these words, so there is nothing to widen.';
         return;
@@ -159,9 +167,9 @@
         + (outcome.cappedFrom ? `, of ${outcome.cappedFrom} possible — the rest were not tried` : '')
         + ').';
     } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
+      if (run === searchRun) error = err instanceof Error ? err.message : String(err);
     } finally {
-      variantBusy = false;
+      if (run === searchRun) variantBusy = false;
     }
   }
   let showHelp = false;
@@ -274,6 +282,8 @@
 
   function setWorkFilter(id: string | null) {
     workFilter = workFilter === id ? null : id;
+    // A filter, not a new search, as the translator chip is.
+    if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter }, 'replace');
     showResults(allResults);
   }
 
@@ -313,6 +323,9 @@
 
   function setTransFilter(id: string | null) {
     transFilter = transFilter === id ? null : id;
+    // A filter, not a new search: it replaces the history entry rather than
+    // adding one.
+    if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter }, 'replace');
     showResults(allResults);
   }
 
@@ -1009,20 +1022,108 @@
     }
   }
 
-  // The command palette (and any external link) can hand off a query via
-  // ?g= (Greek) / ?e= (English): prefill and run it on mount.
+  // ── The search in the address bar ──────────────────────────────────────────
+  // Every search is written to the URL (see lib/search-url), so it can be
+  // shared, bookmarked, reloaded, and stepped back through. The widened
+  // "any inflection" results are not: they are a step taken from a search,
+  // and the URL keeps the search they were taken from.
+  const WORK_IDS = WORKS.map(w => w.id);
+  let lastSearch: UrlSearch | null = null;   // the submitted search, as written
+
+  function currentSearch(): UrlSearch {
+    return {
+      grk: grkQuery, eng: engQuery, grkMode, engMode, matchMode, accent: accentSensitive, langOp, engForms,
+      works: WORK_IDS.filter(id => selectedWorks.has(id)),
+      trans: null,
+      workFilter: null,
+      lemmas: [...soloLemma.picked],
+      combo: comboActive ? {
+        slots: comboEditors.filter(ed => comboSlot(ed, comboOrdered)).map(ed => ({
+          kind: ed.kind, relation: ed.relation, text: ed.text, picked: [...ed.picked], grammar: { ...ed.grammar },
+        })),
+        window: comboWindow, unit: comboUnit, ordered: comboOrdered, crossChapter: comboCrossChapter,
+      } : null,
+    };
+  }
+
+  function writeUrl(s: UrlSearch, how: 'push' | 'replace') {
+    const qs = encodeSearchUrl(s, WORK_IDS);
+    const search = qs ? `?${qs}` : '';
+    // Searching again for the same thing adds no history entry.
+    if (how === 'push' && search === window.location.search) return;
+    const url = `${window.location.pathname}${search}${window.location.hash}`;
+    if (how === 'push') window.history.pushState(null, '', url);
+    else window.history.replaceState(null, '', url);
+  }
+
+  // Sets every control from a URL, defaults included, so stepping back to a
+  // plain search clears what a later one set.
+  function applySearch(s: UrlSearch) {
+    grkQuery = s.grk;
+    engQuery = s.eng;
+    grkMode = s.grkMode;
+    engMode = s.engMode;
+    matchMode = s.matchMode;
+    accentSensitive = s.accent;
+    langOp = s.langOp;
+    engForms = s.engForms;
+    selectedWorks = new Set(s.works);
+    soloLemma = { ...newComboEditor('lemma'), picked: [...s.lemmas] };
+    const combo = s.combo;
+    comboEditors = combo
+      ? combo.slots.map(slot => ({ ...newComboEditor(slot.kind), relation: slot.relation, text: slot.text, picked: [...slot.picked], grammar: { ...slot.grammar } }))
+      : [newComboEditor('lemma'), newComboEditor('form')];
+    comboWindow = combo?.window ?? COMBO_WINDOW_DEFAULT;
+    comboUnit = combo?.unit ?? 'words';
+    comboOrdered = combo?.ordered ?? false;
+    comboCrossChapter = combo?.crossChapter ?? true;
+  }
+
+  // Runs whatever search the address bar holds; with none, clears the page.
+  async function searchFromUrl() {
+    const s = decodeSearchUrl(window.location.search, WORK_IDS);
+    applySearch(s);
+    // The reactive comboActive / soloLemmaActive that doSearch reads must
+    // catch up with the controls just set.
+    await tick();
+    if (hasSearch(s)) {
+      await doSearch(undefined, { history: 'none', trans: s.trans, work: s.workFilter });
+      return;
+    }
+    searchRun++;
+    lastSearch = null;
+    searched = false;
+    loading = false;
+    error = '';
+    allResults = [];
+    pages = [];
+    groups = [];
+    totalInstances = 0;
+    transFilter = null;
+    workFilter = null;
+    variantNote = '';
+    variantsShown = false;
+    variantBusy = false;
+  }
+
+  // The command palette hands off ?g= (Greek) / ?e= (English); those, and
+  // any search this page wrote, are run on load.
+  const onPopState = () => { searchFromUrl(); };
   onMount(() => {
-    const params = new URLSearchParams(window.location.search);
-    const g = params.get('g');
-    const en = params.get('e');
-    if (g) grkQuery = g;
-    if (en) engQuery = en;
-    if (g || en) doSearch();
+    window.addEventListener('popstate', onPopState);
+    const s = decodeSearchUrl(window.location.search, WORK_IDS);
+    if (hasSearch(s)) searchFromUrl();
+  });
+  onDestroy(() => {
+    if (typeof window !== 'undefined') window.removeEventListener('popstate', onPopState);
   });
 
-  async function doSearch(e?: Event) {
+  async function doSearch(e?: Event, opts: { history?: 'push' | 'none'; trans?: string | null; work?: string | null } = {}) {
     e?.preventDefault();
     if (!grkQuery.trim() && !engQuery.trim() && !comboActive && !soloLemmaActive) return;
+    const run = ++searchRun;
+    lastSearch = currentSearch();
+    if ((opts.history ?? 'push') === 'push') writeUrl(lastSearch, 'push');
     loading = true;
     error = '';
     failedWorks = [];
@@ -1064,21 +1165,29 @@
         : soloLemmaActive
           ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'headword', engForms)
           : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode, engForms);
+      if (run !== searchRun) return;
       failedWorks = failed;
       approximateChapters = approximate ?? [];
       unsearched = (unsearchedTranslations ?? []).map(({ work, translation }) =>
         `${translationRef(work, translation)?.short ?? translation} (${getWork(work)?.title ?? work})`);
       allResults = results;
-      transFilter = null;
+      // A translation named in the URL holds only if this search found it.
+      const trans = opts.trans ?? null;
+      transFilter = trans && results.some(r => r.engHits?.some(h => h.translation === trans)) ? trans : null;
+      lastSearch.trans = transFilter;
+      // So does a work, if it holds a hit.
+      const work = opts.work ?? null;
+      workFilter = work && results.some(r => r.work === work) ? work : null;
+      lastSearch.workFilter = workFilter;
+      if ((trans && !transFilter) || (work && !workFilter)) writeUrl(lastSearch, 'replace');
       transListOpen = false;
-      workFilter = null;
       workListOpen = false;
       searched = true;
       await showResults(results);
     } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
+      if (run === searchRun) error = err instanceof Error ? err.message : String(err);
     } finally {
-      loading = false;
+      if (run === searchRun) loading = false;
     }
   }
 
