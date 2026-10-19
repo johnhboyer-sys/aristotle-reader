@@ -597,7 +597,8 @@
     // before).
     // The lead never takes a "[" that opens a marker, so a word with two notes
     // ("a[^A]b[^B]") cannot swallow the first marker into the second's lead;
-    // any other bracket belongs to the word, so "[sic][^1]" glues "[sic]".
+    // any other bracket belongs to the word, so "[sic][^1]" glues "[sic]"
+    // (and "[^a-z][^1]" glues "[^a-z]": only a whole marker stops the lead).
     // Markers in a row ("one[^1][^2]") share one wrapper, so the second is
     // glued to the first. The prose is escaped by now, so the lead takes an
     // entity ("&amp;") whole. It starts only at a word boundary (text start,
@@ -605,7 +606,7 @@
     // halfway through an entity, and one scan covers each run of text, where
     // retrying from every start was quadratic on a long run.
     return highlightEng(text, marks).replace(
-      /(?<=^|[\s>]|\[\^[\w.*†]+\])((?:[^\s<>&[]|&#?\w+;|\[(?!\^))*)((?:\[\^[\w.*†]+\])+)/g,
+      /(?<=^|[\s>]|\[\^[\w.*†]+\])((?:[^\s<>&[]|&#?\w+;|\[(?!\^[\w.*†]+\]))*)((?:\[\^[\w.*†]+\])+)/g,
       (_m, lead: string, run: string) => {
         const buttons = [...run.matchAll(/\[\^([\w.*†]+)\]/g)].map(([, label]) => {
           const display = fnDisplay(label);

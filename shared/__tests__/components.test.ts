@@ -574,16 +574,34 @@ describe('Reader.svelte', () => {
     book.segments[0].third = [{
       chapter: '1',
       cont: false,
-      text: 'Smith &[^1] and A&B[^2] Co. [sic][^3] end.',
+      text: 'Smith &[^1] and A&B[^2] Co.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Co\./);
+    expect(container.textContent).not.toContain('amp;');
+    expect([...container.querySelectorAll('.fn-anchor')].map(a => a.textContent)).toEqual(['&1', 'A&B2']);
+  });
+
+  // A bracket that opens no footnote marker belongs to the word, even one that
+  // begins "[^" ("[^a-z]", Codex review); the marker after it still renders.
+  it('keeps a bracket that opens no marker with the word it is in', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'A [sic][^1] and [^a-z][^2] and [^]x[^3] end.',
       bekker: [{ n: 1, offset: 0, real: true }],
     }];
 
     const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
 
     await screen.findByText(/end\./);
-    expect(container.textContent).not.toContain('amp;');
-    // A bracket that opens no marker belongs to the word, so "[sic]" stays whole.
-    expect([...container.querySelectorAll('.fn-anchor')].map(a => a.textContent)).toEqual(['&1', 'A&B2', '[sic]3']);
+    expect([...container.querySelectorAll('.fn-marker')].map(b => b.getAttribute('data-fn'))).toEqual(['1', '2', '3']);
+    expect([...container.querySelectorAll('.fn-anchor')].map(a => a.textContent)).toEqual(['[sic]1', '[^a-z]2', '[^]x3']);
   });
 
   // Codex review: a lead that could cross entities, tried from every start,
