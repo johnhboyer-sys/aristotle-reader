@@ -43,7 +43,7 @@ def _work(tmp_path, segments, meta_ids=None):
     (work / "book-01.json").write_text(json.dumps({"book": 1, "segments": segments}))
     ids = meta_ids or [s["id"] for s in segments]
     (work / "search" / "meta.json").write_text(json.dumps(
-        [{"id": i, "book": 1, "column": i.split(":")[1], "greek_head": "", "english_head": ""}
+        [{"id": i, "book": 1, "column": i.split(":")[1]}
          for i in ids]))
     return work
 

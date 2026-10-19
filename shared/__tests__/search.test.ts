@@ -2,15 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
-  ENGLISH_HEAD_LIMIT, engPhraseMatches, englishForms, englishIndexFile, englishQueryUnits, englishTermMatcher,
-  englishWords,
+  englishForms, englishIndexFile, englishQueryUnits, englishTermMatcher, englishWords,
   greekFold, offsetRef, search, searchGrammar,
 } from '../lib/search';
 
 const meta = [
-  { id: 's1', book: 1, column: '1094a', greek_head: 'λόγος ἀρετή', english_head: 'virtue is a habit of choice' },
-  { id: 's2', book: 1, column: '1094b', greek_head: 'ψυχή λόγος', english_head: 'happiness and virtue together' },
-  { id: 's3', book: 2, column: '1100a', greek_head: 'τέχνη', english_head: 'craft concerns making' },
+  { id: 's1', book: 1, column: '1094a' },
+  { id: 's2', book: 1, column: '1094b' },
+  { id: 's3', book: 2, column: '1100a' },
 ];
 
 const greekIndex = {
@@ -25,15 +24,17 @@ const greekIndex = {
   xlogos: [[2, 1]],
 } satisfies Record<string, [number, number][]>;
 
+// s1 "virtue is a habit of choice", s2 "happiness and virtue together", s3
+// "craft concerns making", as stage6 indexes them.
 const englishIndex = {
-  virtue: [0, 1],
-  habit: [0],
-  choice: [0],
-  happiness: [1],
-  and: [1],
-  craft: [2],
-  making: [2],
-} satisfies Record<string, number[]>;
+  virtue: [[0, 0], [1, 2]],
+  habit: [[0, 3]],
+  choice: [[0, 5]],
+  happiness: [[1, 0]],
+  and: [[1, 1]],
+  craft: [[2, 0]],
+  making: [[2, 2]],
+} satisfies Record<string, [number, number][]>;
 
 function json(data: unknown) {
   return Promise.resolve({ ok: true, json: () => Promise.resolve(data) } as Response);
@@ -346,45 +347,19 @@ describe('a phrase typed as it stands on the page, under the default lemma mode'
   });
 });
 
-describe('engPhraseMatches', () => {
-  it.each([
-    ['the good', 'the good life', true],
-    ['the good', 'breathe goodness', false],        // substrings are not words
-    ['the good', 'to breathe good air', false],
-    ['virtue is', 'virtue is a habit', true],
-    ['virtue is', 'virtue, is it a habit', false],  // punctuation breaks the phrase
-    ['virtue is', 'virtue\n  is a habit', true],    // any whitespace joins it
-    ["aristotle's view", 'in aristotle’s view', true],
-    ['hap* virtue', 'happiness, virtue', false],
-    ['hap* virtue', 'happy virtue', true],
-    ['*ness of', 'the goodness of it', true],
-    ['go?d', 'the good life', true],
-    ['go?d', 'the gold life', true],
-    ['go?d', 'the god life', false],
-    ['first change', 'the first ‘change’ is', true],   // quote marks are not part of the word
-    ["aristotle's", "‘aristotle’s’ view", true],
-  ])('%s in %j → %s', (phrase, text, expected) => {
-    expect(engPhraseMatches(text, phrase.split(' '))).toBe(expected);
-  });
-});
-
 describe('an English phrase is an adjacency test over word positions', () => {
-  // stage6 keeps only the first 500 characters of a segment's English in
-  // meta.json; the postings carry every word with its position.
-  const filler = 'lorem ipsum '.repeat(60).slice(0, ENGLISH_HEAD_LIMIT);
   const longMeta = [
-    { id: 'L1', book: 1, column: '1094a', greek_head: '', english_head: filler },
-    { id: 'L2', book: 1, column: '1094b', greek_head: '', english_head: 'virtue and a habit' },
-    { id: 'L3', book: 2, column: '1100a', greek_head: '', english_head: filler },
+    { id: 'L1', book: 1, column: '1094a' },
+    { id: 'L2', book: 1, column: '1094b' },
+    { id: 'L3', book: 2, column: '1100a' },
   ];
-  // L1: "virtue habit" adjacent past the cut. L2: "virtue and a habit" — not
-  // adjacent. L3: "virtue and habit" past the cut — not adjacent.
+  // L1: "virtue habit" adjacent far into the segment. L2: "virtue and a
+  // habit" — not adjacent. L3: "virtue and habit" — not adjacent.
   const positional = {
     virtue: [[0, 120], [1, 0], [2, 120]],
     habit: [[0, 121], [1, 3], [2, 122]],
     and: [[1, 1], [2, 121]],
   };
-  const legacy = { virtue: [0, 1, 2], habit: [0, 1, 2], and: [1, 2] };
   let books: string[];
   const mock = (english: unknown) => {
     books = [];
@@ -398,26 +373,17 @@ describe('an English phrase is an adjacency test over word positions', () => {
   };
   afterEach(() => vi.restoreAllMocks());
 
-  it('finds the phrase past the head from the postings, fetching no book', async () => {
+  it('finds the phrase from the postings, fetching no book', async () => {
     mock(positional);
     const { results } = await search('', 'virtue habit', 'all', 'phrase', 'and', ['TPosIndex']);
     expect(results.map((r) => r.meta.id)).toEqual(['L1']);
-    expect(books).toEqual([]);
-  });
-
-  it('on an older build without positions checks the head and fetches nothing', async () => {
-    // The phrase past the cut is missed on such a build — the older limit,
-    // kept rather than fetching every candidate's whole book.
-    mock(legacy);
-    const { results } = await search('', 'virtue habit', 'all', 'phrase', 'and', ['TLegacyIndex']);
-    expect(results).toEqual([]);
     expect(books).toEqual([]);
   });
 });
 
 describe('an English word typed or pasted from the page', () => {
   const quoteMeta = [
-    { id: 'Q1', book: 1, column: '1094a', greek_head: '', english_head: 'Aristotle’s first ‘change’ isn’t the last.' },
+    { id: 'Q1', book: 1, column: '1094a' },
   ];
   // Keyed as stage6's english_words() keys them.
   const index = { "aristotle's": [[0, 0]], first: [[0, 1]], change: [[0, 2]], "isn't": [[0, 3]], the: [[0, 4]], last: [[0, 5]] };
@@ -484,9 +450,9 @@ describe('offsetRef names the line a token stands on', () => {
 // the index memo is keyed by work and file, so it must not change under it.
 describe('English search across a work’s translations', () => {
   const enMeta = [
-    { id: '1:1094a', book: 1, column: '1094a', greek_head: '', english_head: '' },
-    { id: '1:1094b', book: 1, column: '1094b', greek_head: '', english_head: '' },
-    { id: '1:1095a', book: 1, column: '1095a', greek_head: '', english_head: '' },
+    { id: '1:1094a', book: 1, column: '1094a' },
+    { id: '1:1094b', book: 1, column: '1094b' },
+    { id: '1:1095a', book: 1, column: '1095a' },
   ];
   const files: Record<string, unknown> = {
     'meta.json': enMeta,
@@ -603,8 +569,8 @@ describe('englishTermMatcher', () => {
 // wildcard, not Beta Code's capital marker.
 describe('English query terms as the index reads them', () => {
   const hyMeta = [
-    { id: 'h1', book: 1, column: '1a', greek_head: '', english_head: '' },
-    { id: 'h2', book: 1, column: '1b', greek_head: '', english_head: '' },
+    { id: 'h1', book: 1, column: '1a' },
+    { id: 'h2', book: 1, column: '1b' },
   ];
   // h1: "the coming-to-be of happiness"; h2: "coming ... to be ... goodness",
   // the same words, not in a row.

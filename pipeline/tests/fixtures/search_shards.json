@@ -1,0 +1,15 @@
+{
+  "about": "The shard a word is filed under. stage9_search_shards.shard_name() and shardName() in shared/lib/search.ts must agree on every case: a word filed under one name and looked up under another is simply not found.",
+  "cases": [
+    { "word": "happiness", "shard": "ha" },
+    { "word": "the", "shard": "th" },
+    { "word": "a", "shard": "a_" },
+    { "word": "i", "shard": "i_" },
+    { "word": "d'", "shard": "d_" },
+    { "word": "o'clock", "shard": "o_" },
+    { "word": "'n", "shard": "_n" },
+    { "word": "logos", "shard": "lo" },
+    { "word": "kai", "shard": "ka" },
+    { "word": "", "shard": "__" }
+  ]
+}
