@@ -1,6 +1,6 @@
 # CLAUDE.md — aristotle-reader
 
-Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to GitHub Pages at johnhboyer-sys.github.io/aristotle-reader. Deploy state and the full deploy recipe live in DEPLOY-STATUS.md — read it before any deploy.
+Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to GitHub Pages under the custom domain aristotle.johnhboyer.com (DNS on Cloudflare; the old johnhboyer-sys.github.io/aristotle-reader address redirects there). Deploy state and the full deploy recipe live in DEPLOY-STATUS.md — read it before any deploy.
 
 ## Layout
 

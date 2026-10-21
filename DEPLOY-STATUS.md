@@ -1,6 +1,13 @@
 # Deploy Status
 
-Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
+Live site: https://johnhboyer-sys.github.io/aristotle-reader/.
+
+**Moving to aristotle.johnhboyer.com (2026-10-21, not yet deployed).** The build now has `base: '/'`, `site: https://aristotle.johnhboyer.com` and an `app/public/CNAME`; `LIVE_BASE` in the deploy script, the desktop app's live link and `check-links.mjs` `BASE` (now `''`) follow. It replaces the earlier aristotle.lyceum.institute plan (Pages takes one custom domain). Order matters, because a root-based build served at github.io/aristotle-reader asks for `/_astro/…` on the Homer site's origin and breaks:
+1. Cloudflare DNS: CNAME `aristotle` → `johnhboyer-sys.github.io`, proxy **off** (grey cloud, "DNS only") so GitHub can issue the certificate.
+2. Deploy this build, then at once set the custom domain in the repo's Settings → Pages (the deployed `CNAME` file should already have set it) and tick Enforce HTTPS when the certificate is ready.
+3. `npm run deploy -- --verify` checks the new address. Also open an old deep link, e.g. `https://johnhboyer-sys.github.io/aristotle-reader/EN/book/1/?loc=1094a:5`, and confirm it lands on the same page and line at the new address (GitHub's redirect for a project site with a custom domain). Then rewrite the Live site line above.
+
+Readers' saved settings (theme, last book and line, recent works, translation and font choices) live in localStorage, which belongs to an origin, so they start fresh once at the new address.
 Deploy recipe: build `app/dist` (`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
 **The recipe is now `npm run deploy` (`scripts/deploy-gh-pages.mjs`); rehearse with `npm run deploy:dry`.**

@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const MANIFESTS = path.join(ROOT, 'manifests');
 
-export const LIVE_BASE = 'https://johnhboyer-sys.github.io/aristotle-reader';
+export const LIVE_BASE = 'https://aristotle.johnhboyer.com';
 export const BRANCH = 'gh-pages';
 
 // Deletions under data/. An app-only build does not emit everything the live
