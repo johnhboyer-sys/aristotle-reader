@@ -36,7 +36,9 @@ MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5", "opus": "c
 # $/MTok (input, output) at standard rates; the Batches API bills half.
 PRICE = {"haiku": (0.10, 0.50), "sonnet": (2.00, 10.00), "opus": (4.00, 20.00)}
 EFFORT = "high"
-WORKS = {"EN": ("Nicomachean Ethics", "H. Rackham"), "Rhet": ("Rhetoric", "J. H. Freese")}
+WORKS = {"EN": ("Nicomachean Ethics", "H. Rackham"), "Rhet": ("Rhetoric", "J. H. Freese"),
+         "ENo": ("Nicomachean Ethics", "Martin Ostwald")}
+MAX_LINE = 80   # longer than one printed Ostwald line: two lines merged in the transcription
 
 
 # ---- fixtures -------------------------------------------------------------
@@ -78,6 +80,114 @@ def prepare(work: str, book: int) -> None:
         encoding="utf-8")
     print(f"{name}: {len(chapters)} chapters (skipped {skipped}), {len(ticks)} tick windows, "
           f"{len(gold)} gold ticks, {len(scorable)} on a glossed tick")
+
+
+def prepare_ostwald(book: int) -> None:
+    """Gold from Ostwald's printed margin: the tick belongs in the printed line a
+    Bekker number labels. A right-margin number ends its line ("... capacity:
+    the 10"), so the line is [line start, number); a left-margin number opens
+    its line ("15 had better give up ..."), so it is [number, line end). Only
+    lines the transcription keeps whole (≤ MAX_LINE chars) qualify — after the
+    opening pages it runs paragraphs together and the line extents are lost.
+    Taken from the parser's raw marker offsets, NOT bekker_corrections.json
+    (those positions were placed by an Opus 4.8 reading pass)."""
+    from aristotle_pipeline import stage1_ostwald as so
+    from aristotle_pipeline.align.glossing import chapter_lines, tick_windows
+    from aristotle_pipeline.config import SOURCES_DIR
+    for name in ("greek_spine.json", "english_chunks.json"):
+        held = json.loads((REPO / "build/stage1" / name).read_text(encoding="utf-8")).get("work")
+        if held != "EN":
+            sys.exit(f"build/stage1/{name} holds {held!r}: run stage1 --work EN")
+    md = SOURCES_DIR / "ostwald" / "ostwald-ethics.md"
+    prose, align, *_ = so.parse_ostwald(md)
+    # (book, chapter, citation) -> ("right", words before the number on its
+    # printed line) or ("left", words after it, when it opens a whole line)
+    segs, bk, chap, page = {}, None, None, None
+    for raw in md.read_text(encoding="utf-8").splitlines():
+        line = so._strip_markup(raw)
+        if line == "## Footnotes" or so._FOOTNOTE_DEF.match(line):
+            break
+        if (mb := so._BOOK.match(line)):
+            bk, chap = so._roman_int(mb.group(1)), None
+            continue
+        if (mc := so._CHAPTER.match(line)):
+            chap = int(mc.group(1))
+            continue
+        if chap is None:
+            continue
+        words, toks = [], line.split()
+        for i, tok in enumerate(toks):
+            cit = None
+            if so._PAGE.match(tok) and so._PAGE_LO <= int(tok[:-1]) <= so._PAGE_HI:
+                page = tok
+                cit = f"{page}1"
+            elif (ml := so._LINE.match(tok)) and page is not None:
+                cit = f"{page}{ml.group(1)}"
+                if ml.group(2) and words:
+                    words[-1] += ml.group(2)
+            if cit is None:
+                words.append(tok)
+                continue
+            if words:
+                segs.setdefault((bk, chap, cit), []).append(("right", " ".join(words)))
+            elif i == 0 and len(line) <= MAX_LINE:
+                rest = []
+                for t in toks[1:]:
+                    if so._LINE.match(t) or so._PAGE.match(t):
+                        break
+                    rest.append(t)
+                segs.setdefault((bk, chap, cit), []).append(("left", " ".join(rest)))
+            else:
+                segs.setdefault((bk, chap, cit), []).append(("right", ""))
+            words = []       # what follows starts the next printed line
+    chapters, kept, dropped = [], 0, {"merged_or_empty": 0, "text_mismatch": 0, "duplicate": 0}
+    for ch in chapter_lines([book]):
+        text = prose.get((ch.book, ch.chapter), "")
+        windows = tick_windows(ch)
+        ticks = {w.tick for w in windows}
+        raw_off = {}
+        for a in align.get(f"{ch.book}:{ch.chapter}", {}).get("anchors", []):
+            raw_off.setdefault(a["citation"], []).append(a["offset"])
+        gold = []
+        for cit, offs in raw_off.items():
+            # the chapter's first line is pinned structurally, never placed
+            if cit not in ticks or cit == ch.lines[0].citation:
+                continue
+            seg_list = segs.get((ch.book, ch.chapter, cit), [])
+            if len(offs) != 1 or len(seg_list) != 1:
+                dropped["duplicate"] += 1
+                continue
+            side, seg = seg_list[0]
+            if not seg or len(seg) > MAX_LINE:
+                dropped["merged_or_empty"] += 1
+                continue
+            if side == "right":
+                end = offs[0]
+                start = end - 1 - len(seg) if end < len(text) else end - len(seg)
+            else:
+                start = offs[0]
+                end = start + len(seg)
+            if " ".join(text[start:start + len(seg)].split()) != seg:
+                dropped["text_mismatch"] += 1
+                continue
+            n = int(re.match(r"\d+[ab](\d+)", cit).group(1))
+            gold.append({"citation": cit, "start": start, "end": end,
+                         "tier": "column" if n == 1 else "five_line"})
+            kept += 1
+        chapters.append({
+            "book": ch.book, "chapter": ch.chapter,
+            "lines": [{"citation": ln.citation, "greek": ln.text} for ln in ch.lines],
+            "windows": [{"tick": w.tick, "is_column_start": w.is_column_start,
+                         "lines": [ln.citation for ln in w.lines]} for w in windows],
+            "text": text, "gold": gold})
+    if not kept:
+        sys.exit("no Ostwald gold interval survived: nothing could be scored")
+    d = FIX / "ostwald"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"ENo-{book}.json").write_text(json.dumps(
+        {"work": "ENo", "gloss_work": "EN", "book": book, "chapters": chapters},
+        ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"ENo-{book}: {len(chapters)} chapters, {kept} gold lines kept, dropped {dropped}")
 
 
 def fixtures() -> list[dict]:
@@ -168,10 +278,12 @@ def gloss_dir(source: str) -> Path:
 
 def load_gloss(source: str, fx: dict, ch: dict) -> dict:
     if source == "prod":   # the glosses the shipped EN alignment used (4.x era)
-        if fx["work"] != "EN":
+        if fx.get("gloss_work", fx["work"]) != "EN":
             return {}
         return load_json(REPO / f"build/align/glosses/EN/{ch['book']}-{ch['chapter']}.json")
-    return load_json(gloss_dir(source) / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
+    # glosses are of the Greek, so a second translation reuses its work's glosses
+    return load_json(gloss_dir(source) / fx.get("gloss_work", fx["work"])
+                     / f"{ch['book']}-{ch['chapter']}.json")
 
 
 # ---- scoring --------------------------------------------------------------
@@ -185,9 +297,42 @@ def snap(starts: list[int], off: int) -> int:
     return max((s for s in starts if s <= off), default=starts[0])
 
 
+def score_interval(placed: dict, fx_list: list[dict]) -> dict:
+    """Interval gold (Ostwald): a placement is right when it falls inside the
+    printed line the margin number labels, [start, end)."""
+    rows, missing = [], 0
+    for fx in fx_list:
+        for ch in fx["chapters"]:
+            ticks = {w["tick"] for w in ch["windows"]}
+            got = placed.get((fx["work"], ch["book"], ch["chapter"]), {})
+            for g in ch["gold"]:
+                if g["citation"] not in ticks:
+                    continue
+                if g["citation"] not in got:
+                    missing += 1
+                    continue
+                p = got[g["citation"]]
+                side = "early" if p < g["start"] else "late" if p >= g["end"] else "in"
+                dist = g["start"] - p if side == "early" else p - g["end"] + 1 if side == "late" else 0
+                rows.append({"side": side, "dist": dist, "len": g["end"] - g["start"]})
+    if not rows:
+        return {"n": 0, "missing": missing}
+    total = len(rows) + missing
+    pct = lambda k: round(100 * k / total, 1)  # noqa: E731
+    return {"n": len(rows), "missing": missing,
+            "in_line_pct": pct(sum(r["side"] == "in" for r in rows)),
+            "near_30_pct": pct(sum(r["dist"] <= 30 for r in rows)),
+            "early_pct": pct(sum(r["side"] == "early" for r in rows)),
+            "late_pct": pct(sum(r["side"] == "late" for r in rows)),
+            "median_dist": statistics.median(r["dist"] for r in rows),
+            "median_line_chars": statistics.median(r["len"] for r in rows)}
+
+
 def score(placed: dict, fx_list: list[dict]) -> dict:
     """placed: {(work, book, chapter): {citation: offset}}. Scores every gold tick
     that sits on a glossed tick; a gold tick with no placement counts as missing."""
+    if any("start" in g for fx in fx_list for ch in fx["chapters"] for g in ch["gold"]):
+        return score_interval(placed, fx_list)
     rows, missing, missing_col = [], 0, 0
     for fx in fx_list:
         for ch in fx["chapters"]:
@@ -490,6 +635,7 @@ def fetch(batch_id: str) -> None:
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument("--set", help="fixture set under fixtures/, e.g. ostwald (default: the Perseus set)")
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("prepare"); a.add_argument("work"); a.add_argument("book", type=int)
     a = sub.add_parser("submit"); a.add_argument("stage", choices=["gloss", "verify", "correct"])
@@ -500,8 +646,15 @@ def main():
     a = sub.add_parser("fetch"); a.add_argument("batch_id")
     a = sub.add_parser("score-gloss"); a.add_argument("--sources", default="prod,haiku,sonnet,opus")
     a = sub.add_parser("score-verify"); a.add_argument("--source", required=True)
+    a = sub.add_parser("prepare-ostwald"); a.add_argument("books", nargs="+", type=int)
     args = p.parse_args()
-    if args.cmd == "prepare":
+    if args.set:
+        global FIX
+        FIX = FIX / args.set
+    if args.cmd == "prepare-ostwald":
+        for b in args.books:
+            prepare_ostwald(b)
+    elif args.cmd == "prepare":
         prepare(args.work, args.book)
     elif args.cmd == "submit":
         if args.stage in ("verify", "correct") and not args.source:

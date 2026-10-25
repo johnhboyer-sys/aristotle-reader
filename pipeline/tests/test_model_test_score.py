@@ -66,3 +66,32 @@ def test_a_missing_column_tick_counts_against_the_column_score():
 def test_nothing_placed_reports_no_score():
     r = score({})
     assert r == {"n": 0, "missing": 3}
+
+
+# ---- interval gold (Ostwald: the printed line a margin number labels) -----
+LINE_TEXT = "first printed line here second printed line here third line"
+LSTART = LINE_TEXT.index("second")
+LEND = LINE_TEXT.index("third")
+IFX = [{"work": "I", "book": 1, "chapters": [{
+    "book": 1, "chapter": 1, "text": LINE_TEXT, "windows": [{"tick": "1a5"}],
+    "gold": [{"citation": "1a5", "start": LSTART, "end": LEND, "tier": "five_line"}]}]}]
+
+
+def iscore(p):
+    return mt.score({("I", 1, 1): {} if p is None else {"1a5": p}}, IFX)
+
+
+def test_inside_the_printed_line_is_right():
+    r = iscore(LSTART + 3)
+    assert (r["in_line_pct"], r["median_dist"]) == (100.0, 0)
+
+
+def test_before_the_line_is_early_and_its_end_is_late():
+    assert iscore(LSTART - 5)["early_pct"] == 100.0
+    assert iscore(LSTART - 5)["median_dist"] == 5
+    r = iscore(LEND)                       # the start of the NEXT printed line
+    assert (r["late_pct"], r["in_line_pct"], r["median_dist"]) == (100.0, 0.0, 1)
+
+
+def test_interval_missing_reports_no_score():
+    assert iscore(None) == {"n": 0, "missing": 1}
