@@ -55,6 +55,13 @@ def prev_verdicts(b: int, cp: int) -> dict:
     return {}
 
 _vid, ross = default_target(WORK)
+# Pass-2 placements: the §5b correction judge must see where the previous pass
+# PUT each tick, not the pass-1 guess it already judged. Without this the
+# correction pass was a second, independent judgment of pass 1.
+OVR_PATH = REPO / "build/align" / f"{WORK}_{_vid}_gloss_overrides.json"
+OVERRIDES = json.loads(OVR_PATH.read_text()) if V_FILTER and OVR_PATH.exists() else {}
+if V_FILTER and not OVERRIDES:
+    sys.exit(f"VERIFY_FILTER set but no {OVR_PATH.name}: fold the first pass before correcting")
 chapters = {(c.book, int(c.chapter)): c for c in load_gloss_chapters(ross, WORK, [BOOK])}
 
 # Greek line text + window citations per chapter (for the verifier's context).
@@ -75,7 +82,7 @@ for (b, cp), cr in sorted(chapters.items()):
     text = cr.ross_text
     vd = prev_verdicts(b, cp) if V_FILTER else {}   # hoisted: one read per chapter
     ticks = []
-    for a in align_chapter(cr, "lexical"):
+    for a in align_chapter(cr, "lexical", OVERRIDES.get(f"{b}:{cp}")):
         if a.tier not in ("column", "five_line"):
             continue
         if not ALL and a.confidence != "uncertain":
