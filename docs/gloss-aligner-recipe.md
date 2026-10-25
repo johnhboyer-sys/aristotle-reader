@@ -51,9 +51,8 @@ uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>
 > **Batch API alternative (2026-10-25).** `tools/batch_align.py` sends §2 and §4/§5b to the
 > Message Batches API instead of sub-agents and writes the same `glosses/` and `verify_out/`
 > files, so every other step is unchanged: `gloss <WORK>` (Haiku 5.5), `verify <WORK> <books>`
-> (Opus 5.5), `fetch <batch_id>`. Model choice: PR #168. `--correction` exists for §5b, but see
-> the measurement there; if you run it, delete `build/align/verify_tasks/<WORK>/` before the
-> gather — `verify_gather` leaves older task files in place, and the runner would resend them.
+> (Opus 5.5), `fetch <batch_id>`. Model choice: PR #168. It has no §5b mode: see the
+> measurement there.
 Run these agents on **Sonnet** (`model: sonnet`) — A/B on NE Bk1 vs Opus-tier baseline
 showed no accuracy loss (column tier improved), since the gloss only feeds a word-overlap
 matcher and the verifier backstops it. (Keep verification on Opus.)

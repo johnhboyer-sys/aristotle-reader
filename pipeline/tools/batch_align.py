@@ -1,17 +1,16 @@
 """Run the gloss aligner's two model steps through the Message Batches API.
 
-The recipe (docs/gloss-aligner-recipe.md) ran §2 (gloss) and §4/§5b (verify)
+The recipe (docs/gloss-aligner-recipe.md) ran §2 (gloss) and §4 (verify)
 as Claude Code sub-agents. This sends the same prompts by batch and writes the
 results where the recipe's own tools read them:
   gloss  -> build/align/glosses/<WORK>/<b>-<c>.json      ({citation: english})
   verify -> build/align/verify_out/<WORK>/<b>-<c>.json   ({chapter, ticks:[...]})
 Every other step (align, verify_gather, verify_to_offsets, persist_book, ...)
 is unchanged. Models follow the 2026-10-25 test (PR #168): Haiku glosses,
-Opus verifies.
+Opus verifies. No §5b correction pass: measured 2026-10-25, it gained nothing.
 
   uv run --with anthropic python tools/batch_align.py gloss Cael           # build/stage1 = Cael
   uv run --with anthropic python tools/batch_align.py verify Cael 1 2 3 4  # after verify_gather
-  uv run --with anthropic python tools/batch_align.py verify Cael 1 --correction
   uv run --with anthropic python tools/batch_align.py fetch <batch_id>
 """
 import argparse
@@ -45,16 +44,22 @@ def translator(work: str) -> str:
     sys.exit(f"{work}: no english slot has id {vid!r}")
 
 
-def sha(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+def task_sha(path: Path) -> str | None:
+    """Hash of a verify task's content (parsed, so formatting doesn't count)."""
+    if not path.exists():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return hashlib.sha256(json.dumps(data, sort_keys=True, ensure_ascii=False)
+                          .encode("utf-8")).hexdigest()
 
 
 def gloss_requests(work: str, model: str, books) -> tuple[list, dict]:
     from aristotle_pipeline.align.glossing import chapter_lines, tick_windows
     from aristotle_pipeline.config import Manifest
-    spine = json.loads((REPO / "build/stage1/greek_spine.json").read_text(encoding="utf-8"))
-    if spine.get("work") != work:
-        sys.exit(f"build/stage1 holds {spine.get('work')!r}, not {work}: run stage1 --work {work}")
+    for name in ("greek_spine.json", "english_chunks.json"):   # chapter_lines reads both
+        held = json.loads((REPO / "build/stage1" / name).read_text(encoding="utf-8")).get("work")
+        if held != work:
+            sys.exit(f"build/stage1/{name} holds {held!r}, not {work}: run stage1 --work {work}")
     title = Manifest.for_work(work).data["work"]["title"]
     reqs, receipt = [], {}
     for ch in chapter_lines(books):
@@ -73,7 +78,7 @@ def gloss_requests(work: str, model: str, books) -> tuple[list, dict]:
     return reqs, receipt
 
 
-def verify_requests(work: str, model: str, books, correction: bool) -> tuple[list, dict]:
+def verify_requests(work: str, model: str, books) -> tuple[list, dict]:
     name = translator(work)
     reqs, receipt = [], {}
     for b in books:
@@ -82,8 +87,7 @@ def verify_requests(work: str, model: str, books, correction: bool) -> tuple[lis
         if not files:
             sys.exit(f"no verify tasks for {work} book {b}: run verify_gather first")
         for f in files:
-            raw = f.read_text(encoding="utf-8")
-            task = json.loads(raw)
+            task = json.loads(f.read_text(encoding="utf-8"))
             if "text" not in task:
                 sys.exit(f"{f}: no chapter text — gather with VERIFY_ALL=1")
             cp = int(f.stem.split("-")[1])
@@ -91,7 +95,7 @@ def verify_requests(work: str, model: str, books, correction: bool) -> tuple[lis
             reqs.append((cid, verify_prompt(name, task), VERIFY_SCHEMA))
             # the task hash lets fetch refuse answers to a task that was re-gathered since
             receipt[cid] = {"kind": "verify", "work": work, "book": b, "chapter": cp,
-                            "model": model, "correction": correction, "task_sha": sha(raw)}
+                            "model": model, "task_sha": task_sha(f)}
     return reqs, receipt
 
 
@@ -111,12 +115,18 @@ def submit(reqs: list, receipt: dict, model: str) -> None:
     print(f"batch {batch.id}: {len(reqs)} requests")
 
 
-def merge_verify(path: Path, data: dict) -> dict:
-    """Correction pass: overwrite only the re-judged ticks (recipe §5b)."""
-    old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"ticks": []}
-    new = {t["citation"]: t for t in data["ticks"]}
-    ticks = [new.pop(t["citation"], t) for t in old.get("ticks", [])] + list(new.values())
-    return {"chapter": data.get("chapter", old.get("chapter")), "ticks": ticks}
+def out_path(meta: dict) -> Path:
+    sub = "glosses" if meta["kind"] == "gloss" else "verify_out"
+    return ALIGN / sub / meta["work"] / f"{meta['book']}-{meta['chapter']}.json"
+
+
+def current(meta: dict) -> bool:
+    """False for a verify answer whose task was re-gathered since submit: its
+    output slot now belongs to the newer task, so this batch must not touch it."""
+    if meta["kind"] != "verify":
+        return True
+    return task_sha(ALIGN / "verify_tasks" / meta["work"]
+                    / f"{meta['book']}-{meta['chapter']}.json") == meta["task_sha"]
 
 
 def fetch(batch_id: str) -> None:
@@ -131,35 +141,34 @@ def fetch(batch_id: str) -> None:
         print(f"{batch_id}: {b.processing_status} {b.request_counts}")
         return
     fails, usage, written = [], {}, 0
+    live = {cid for cid, meta in rec["requests"].items() if current(meta)}
+    # Clear every slot this batch owns first, so a failure — or a crash partway
+    # through the results — leaves the chapter missing, never an older answer.
+    for cid in live:
+        out_path(rec["requests"][cid]).unlink(missing_ok=True)
     for r in client.messages.batches.results(batch_id):
         meta = rec["requests"][r.custom_id]
-        work, bk, cp = meta["work"], meta["book"], meta["chapter"]
-        sub = "glosses" if meta["kind"] == "gloss" else "verify_out"
-        out = ALIGN / sub / work / f"{bk}-{cp}.json"
-        correction = meta.get("correction")
-        if not correction:
-            # a failure must leave the chapter missing, never an older answer
-            out.unlink(missing_ok=True)
-        if meta["kind"] == "verify":
-            task = ALIGN / "verify_tasks" / work / f"{bk}-{cp}.json"
-            if not task.exists() or sha(task.read_text(encoding="utf-8")) != meta["task_sha"]:
-                fails.append(f"{r.custom_id}: task re-gathered since submit, answer dropped")
-                continue
         if r.result.type != "succeeded":
             fails.append(f"{r.custom_id}: {r.result.type}")
             continue
         m = r.result.message
         u = usage.setdefault(meta["model"], {"input": 0, "output": 0})
-        u["input"] += m.usage.input_tokens
+        u["input"] += m.usage.input_tokens      # billed whether or not the answer is used
         u["output"] += m.usage.output_tokens
+        if r.custom_id not in live:
+            fails.append(f"{r.custom_id}: task re-gathered since submit, answer dropped")
+            continue
         if m.stop_reason != "end_turn":
             fails.append(f"{r.custom_id}: stop_reason {m.stop_reason}")
             continue
-        data = json.loads(next(blk.text for blk in m.content if blk.type == "text"))
-        if meta["kind"] == "gloss":
-            data = {ln["citation"]: ln["english"] for ln in data["lines"]}
-        elif correction:
-            data = merge_verify(out, data)
+        try:
+            data = json.loads(next(blk.text for blk in m.content if blk.type == "text"))
+            if meta["kind"] == "gloss":
+                data = {ln["citation"]: ln["english"] for ln in data["lines"]}
+        except (StopIteration, ValueError, KeyError, TypeError) as e:
+            fails.append(f"{r.custom_id}: unreadable answer ({type(e).__name__})")
+            continue
+        out = out_path(meta)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
         written += 1
@@ -178,7 +187,7 @@ def main():
     a = sub.add_parser("gloss"); a.add_argument("work")
     a.add_argument("--books", default=""); a.add_argument("--model", default="haiku")
     a = sub.add_parser("verify"); a.add_argument("work"); a.add_argument("books", nargs="+", type=int)
-    a.add_argument("--model", default="opus"); a.add_argument("--correction", action="store_true")
+    a.add_argument("--model", default="opus")
     a = sub.add_parser("fetch"); a.add_argument("batch_id")
     args = p.parse_args()
     if args.cmd == "gloss":
@@ -186,7 +195,7 @@ def main():
         reqs, receipt = gloss_requests(args.work, args.model, books)
         submit(reqs, receipt, args.model)
     elif args.cmd == "verify":
-        reqs, receipt = verify_requests(args.work, args.model, args.books, args.correction)
+        reqs, receipt = verify_requests(args.work, args.model, args.books)
         submit(reqs, receipt, args.model)
     else:
         fetch(args.batch_id)
