@@ -104,12 +104,11 @@ VERIFY_SCHEMA = {
                        "phrase": {"type": "string"}}}}}}
 
 
-def gloss_prompt(fx: dict, ch: dict) -> str:
+def gloss_prompt(title: str, ch: dict) -> str:
     greek = {ln["citation"]: ln["greek"] for ln in ch["lines"]}
     task = [{"tick": w["tick"], "is_column_start": w["is_column_start"],
              "lines": [{"citation": c, "greek": greek[c]} for c in w["lines"]]}
             for w in ch["windows"]]
-    title = WORKS[fx["work"]][0]
     return f"""Translate ancient Greek (Aristotle, {title}, Book {ch['book']}, ch {ch['chapter']}) for a Bekker-line alignment tool. Precise and faithful — a scholar with good Greek checks this.
 - The task below is a list of windows, each `lines` = {{citation, greek}} (line above the tick / tick line / line below; edge windows have 2). Use neighbours only to get a mid-sentence line's sense right.
 - Output ONE English line per Greek line, keyed by its citation — verse mode, on its own line even if longer. Each citation appears once; do not merge, reorder, annotate.
@@ -121,8 +120,7 @@ Task:
 {json.dumps(task, ensure_ascii=False, indent=1)}"""
 
 
-def verify_prompt(fx: dict, task: dict) -> str:
-    translator = WORKS[fx["work"]][1]
+def verify_prompt(translator: str, task: dict) -> str:
     return f"""Strict Greek-to-English alignment judge. Check Bekker line-marks in {translator}'s translation against the GREEK — the Greek is authoritative, the gloss is only a hint.
 - The task below has `text` (full chapter prose) + `ticks` in Bekker order, each with `greek_above`/`greek_tick`/`greek_below` (raw Greek of the line before / tick / after), `gloss` (hint), `current_placement` (translation now sitting at the tick).
 - For EACH tick, judge whether `current_placement` BEGINS exactly at the English of `greek_tick`'s FIRST word: `ok` = it does; `early` = begins on `greek_above` content (a line too high); `late` = a clause into `greek_tick` or onto `greek_below`; `unsure` = translation condenses/omits `greek_tick`.
@@ -363,7 +361,7 @@ def submit(stage: str, source: str | None, models: list[str],
             continue
         for ch in fx["chapters"]:
             if stage == "gloss":
-                prompt, schema = gloss_prompt(fx, ch), GLOSS_SCHEMA
+                prompt, schema = gloss_prompt(WORKS[fx["work"]][0], ch), GLOSS_SCHEMA
             else:
                 task = verify_task(source, fx, ch)
                 if task is None:
@@ -371,7 +369,7 @@ def submit(stage: str, source: str | None, models: list[str],
                     continue
                 sent_task = task
                 task = {k: v for k, v in task.items() if k != "_pass1"}
-                prompt, schema = verify_prompt(fx, task), VERIFY_SCHEMA
+                prompt, schema = verify_prompt(WORKS[fx["work"]][1], task), VERIFY_SCHEMA
             for tag in models:
                 cid = f"{stage[0]}-{tag}-{fx['work']}-{ch['book']}-{ch['chapter']}"
                 if only and cid not in only:

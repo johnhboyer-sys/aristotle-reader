@@ -9,6 +9,13 @@ from pathlib import Path
 WORK = sys.argv[1] if len(sys.argv) > 1 else "EN"
 VID = sys.argv[2] if len(sys.argv) > 2 else "ross"
 RES = Path(__file__).resolve().parents[2] / "alignment-results" / VID
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from aristotle_pipeline.config import Manifest  # noqa: E402
+
+_m = Manifest.for_work(WORK).data
+TITLE = _m["work"]["title"]
+_slots = [s for s in (_m.get("english") or {}).values() if isinstance(s, dict)]
+TRANSLATOR = next((s["name"] for s in _slots if s.get("id") == VID and s.get("name")), VID)
 rows = []
 tot = Counter()
 tot_chapters = 0
@@ -41,13 +48,13 @@ for b, ch, real, conf, unc, solid in rows:
     tr.append(f"<tr><td><a href='review/book-{b:02d}.html'>Book {b}</a></td><td>{ch}</td>"
               f"<td>{real}</td><td>{conf}</td><td>{unc}</td><td>{pct:.1f}%</td></tr>")
 totpct = 100 * T_solid / T_real if T_real else 0
-tr.append(f"<tr class='tot'><td>All 10 books</td><td>{tot_chapters}</td><td>{T_real}</td>"
+tr.append(f"<tr class='tot'><td>All {len(rows)} books</td><td>{tot_chapters}</td><td>{T_real}</td>"
           f"<td>{tot['confirmed']}</td><td>{tot['uncertain']}</td><td>{totpct:.1f}%</td></tr>")
-html = f"""<!doctype html><meta charset=utf-8><title>Ross NE — Bekker alignment</title><style>{css}</style>
-<h1>Ross, Nicomachean Ethics — Bekker alignment results</h1>
-<p class=sub>Real Bekker ticks placed on the unmarked Ross translation by the gloss aligner
+html = f"""<!doctype html><meta charset=utf-8><title>{TITLE} — Bekker alignment</title><style>{css}</style>
+<h1>{TRANSLATOR}, {TITLE} — Bekker alignment results</h1>
+<p class=sub>Real Bekker ticks placed on the unmarked translation by the gloss aligner
 (standard-terminology glosses → word-overlap match → direct-reading verifier on the uncertain
-ones). Each book's page shows every tick: the 3-line Greek-window gloss beside the Ross text it
+ones). Each book's page shows every tick: the 3-line Greek-window gloss beside the text it
 landed on. <b>Confirmed</b> = re-placed by the verifier; <b>uncertain</b> = shown as estimate.</p>
 <table><tr><th>Book</th><th>Chapters</th><th>Real ticks</th><th>Verifier-confirmed</th>
 <th>Uncertain</th><th>High-confidence</th></tr>{''.join(tr)}</table>

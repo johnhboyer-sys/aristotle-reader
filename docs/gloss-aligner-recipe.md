@@ -48,6 +48,12 @@ uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>
 → `build/align/gloss_tasks/<SLUG>/<book>-<chapter>.json`.
 
 ## 2. Gloss the windows (one sub-agent per *batch* of chapters, parallel)
+> **Batch API alternative (2026-10-25).** `tools/batch_align.py` sends §2 and §4/§5b to the
+> Message Batches API instead of sub-agents and writes the same `glosses/` and `verify_out/`
+> files, so every other step is unchanged: `gloss <WORK>` (Haiku 5.5), `verify <WORK> <books>`
+> (Opus 5.5; add `--correction` for §5b, which merges into `verify_out`), `fetch <batch_id>`.
+> Before the §5b gather, delete `build/align/verify_tasks/<WORK>/` — `verify_gather` leaves
+> older task files in place, and the runner would resend them. Model choice: PR #168.
 Run these agents on **Sonnet** (`model: sonnet`) — A/B on NE Bk1 vs Opus-tier baseline
 showed no accuracy loss (column tier improved), since the gloss only feeds a word-overlap
 matcher and the verifier backstops it. (Keep verification on Opus.)

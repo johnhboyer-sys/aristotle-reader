@@ -36,8 +36,16 @@ anchors are structural/interpolated and not counted.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
+| De Caelo (`Cael`) | J. L. Stocks (Oxford, 1922) — primary | 40 | 654 | 653 confirmed · 1 reliable | [index](../alignment-results/stocks/index.html) · Bk [1](../alignment-results/stocks/review/book-01.html) [2](../alignment-results/stocks/review/book-02.html) [3](../alignment-results/stocks/review/book-03.html) [4](../alignment-results/stocks/review/book-04.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
+- **Cael / Stocks** — aligned 2026-10-25, the pilot of the batch runner
+  (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5 verify ×1 + one scoped opus correction
+  pass, all by Message Batches; models chosen by the 2026-10-25 test, PR #168). $3.77 in all.
+  The correction pass re-judged 583 of 654 ticks (89% marked early/late) and moved 88, 17 by
+  >30 chars; whether that helped is unmeasured. Wired via `sources/cael-stocks/anchors.yaml`
+  (606 anchors, 2 unresolved `282b5`/`290a35`) + `anchors:` in `manifests/Cael.yaml`; stage2
+  PASS; 673 real vs 3 interpolated gutter ticks. Not deployed; no human pass.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
   *Note 2026-09-07:* the Categories work itself is live with Edghill as primary and a
