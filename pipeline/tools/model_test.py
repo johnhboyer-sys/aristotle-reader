@@ -190,7 +190,7 @@ def snap(starts: list[int], off: int) -> int:
 def score(placed: dict, fx_list: list[dict]) -> dict:
     """placed: {(work, book, chapter): {citation: offset}}. Scores every gold tick
     that sits on a glossed tick; a gold tick with no placement counts as missing."""
-    rows, missing = [], 0
+    rows, missing, missing_col = [], 0, 0
     for fx in fx_list:
         for ch in fx["chapters"]:
             ticks = {w["tick"] for w in ch["windows"]}
@@ -201,6 +201,7 @@ def score(placed: dict, fx_list: list[dict]) -> dict:
                     continue
                 if g["citation"] not in got:
                     missing += 1
+                    missing_col += g["tier"] == "column"
                     continue
                 p = got[g["citation"]]
                 gold = gold_sentence_start(ch["text"], starts, g["off"])
@@ -212,9 +213,10 @@ def score(placed: dict, fx_list: list[dict]) -> dict:
     total = len(rows) + missing
     raw = [r["raw"] for r in rows]
     col = [r for r in rows if r["tier"] == "column"]
+    col_total = len(col) + missing_col
     return {"n": len(rows), "missing": missing,
             "same_sentence_pct": round(100 * sum(r["same_sentence"] for r in rows) / total, 1),
-            "column_same_sentence_pct": round(100 * sum(r["same_sentence"] for r in col) / len(col), 1) if col else None,
+            "column_same_sentence_pct": round(100 * sum(r["same_sentence"] for r in col) / col_total, 1) if col_total else None,
             "within_30_pct": round(100 * sum(e <= 30 for e in raw) / total, 1),
             "median_chars": statistics.median(raw), "mean_chars": round(statistics.mean(raw), 1)}
 
@@ -320,12 +322,12 @@ def score_verify(source: str) -> None:
             task = verify_task(source, fx, ch)
             if task is None:
                 continue
-            sent = load_json(vdir / "tasks" / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
-            if sent != task:
-                sys.exit(f"{k}: the inputs changed since the verify batch was sent")
             base[k] = task["_pass1"]
             for tag in MODELS:
                 out = load_json(vdir / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
+                sent = load_json(vdir / "tasks" / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
+                if out and sent != task:
+                    sys.exit(f"{k}: {tag}'s answer has no matching snapshot of what it was sent")
                 st = stats.setdefault(tag, {"chapters_missing": 0, "unplaced": 0, "verdicts": {}})
                 if not out:
                     st["chapters_missing"] += 1
@@ -335,7 +337,9 @@ def score_verify(source: str) -> None:
                 ovr, unplaced = fold(ch["text"], task["_pass1"], out)
                 st["unplaced"] += unplaced
                 _cr, anchors = pass1(source, fx, ch, ovr)
-                by_model.setdefault(tag, {})[k] = {a.citation: a.offset for a in anchors}
+                # a tick the verifier did not place counts as missing, not as pass 1
+                by_model.setdefault(tag, {})[k] = {a.citation: a.offset for a in anchors
+                                                   if a.citation in ovr}
     print(f"pass1   ALL     {json.dumps(score(base, fx_list))}")
     for fx in fx_list:
         print(f"pass1   {fx['work']}-{fx['book']:<4} {json.dumps(score(base, [fx]))}")
@@ -365,17 +369,19 @@ def submit(stage: str, source: str | None, models: list[str],
                 if task is None:
                     print(f"  no {source} gloss for {fx['work']} {ch['book']}-{ch['chapter']}: skipped")
                     continue
-                # snapshot what the models see, so scoring can refuse changed inputs
-                snap_dir = OUT / "verify" / source / "tasks" / fx["work"]
-                snap_dir.mkdir(parents=True, exist_ok=True)
-                (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
-                    json.dumps(task, ensure_ascii=False, indent=1), encoding="utf-8")
+                sent_task = task
                 task = {k: v for k, v in task.items() if k != "_pass1"}
                 prompt, schema = verify_prompt(fx, task), VERIFY_SCHEMA
             for tag in models:
                 cid = f"{stage[0]}-{tag}-{fx['work']}-{ch['book']}-{ch['chapter']}"
                 if only and cid not in only:
                     continue
+                if stage == "verify":
+                    # snapshot what this model sees, so scoring can refuse changed inputs
+                    snap_dir = OUT / "verify" / source / "tasks" / tag / fx["work"]
+                    snap_dir.mkdir(parents=True, exist_ok=True)
+                    (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
+                        json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
                 receipt[cid] = {"stage": stage, "source": source, "model": tag,
                                 "work": fx["work"], "book": ch["book"], "chapter": ch["chapter"]}
                 reqs.append(Request(custom_id=cid, params=MessageCreateParamsNonStreaming(
