@@ -36,16 +36,17 @@ anchors are structural/interpolated and not counted.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
-| De Caelo (`Cael`) | J. L. Stocks (Oxford, 1922) — primary | 40 | 654 | 653 confirmed · 1 reliable | [index](../alignment-results/stocks/index.html) · Bk [1](../alignment-results/stocks/review/book-01.html) [2](../alignment-results/stocks/review/book-02.html) [3](../alignment-results/stocks/review/book-03.html) [4](../alignment-results/stocks/review/book-04.html) |
+| De Caelo (`Cael`) | J. L. Stocks (Oxford, 1922) — primary | 40 | 654 | 654 confirmed | [index](../alignment-results/stocks/review/Cael/index.html) · Bk [1](../alignment-results/stocks/review/Cael/book-01.html) [2](../alignment-results/stocks/review/Cael/book-02.html) [3](../alignment-results/stocks/review/Cael/book-03.html) [4](../alignment-results/stocks/review/Cael/book-04.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
 - **Cael / Stocks** — aligned 2026-10-25, the pilot of the batch runner
   (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5 verify ×1, by Message Batches; models
-  chosen by the 2026-10-25 test, PR #168). $2.02 for the shipped pass. A §5b correction pass
-  was also run ($1.75) but it was the buggy one (PR #170: it re-judged pass 1), and the fixed
-  pass measured no gain on NE gold, so the anchors are the first pass's. Wired via `sources/cael-stocks/anchors.yaml`
-  (606 anchors, 2 unresolved `282b5`/`290a35`) + `anchors:` in `manifests/Cael.yaml`; stage2
-  PASS; 673 real vs 3 interpolated gutter ticks. Not deployed; no human pass.
+  chosen by the 2026-10-25 test, PR #168). Verified first by the recipe's first-word prompt
+  ($2.02), then again by John's line-bulk rule ($2.00), which beat it on both golds; the
+  bulk pass ships. It moved 309 of 654 ticks, median 19 chars, 20 by more than 60. No §5b
+  pass (measured no gain on NE gold). Wired via `sources/cael-stocks/anchors.yaml` (606
+  anchors, 1 unresolved `282b5`) + `anchors:` in `manifests/Cael.yaml`; stage2 PASS; 673 real
+  vs 2 interpolated gutter ticks. Not deployed; no human pass.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
   *Note 2026-09-07:* the Categories work itself is live with Edghill as primary and a
