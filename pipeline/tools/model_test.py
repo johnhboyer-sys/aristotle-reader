@@ -230,7 +230,20 @@ Task:
 {json.dumps(task, ensure_ascii=False, indent=1)}"""
 
 
-def verify_prompt(translator: str, task: dict) -> str:
+BULK_RULE = """- For EACH tick, judge whether `current_placement` BEGINS where the translation renders the BULK of `greek_tick` — the clause or phrase that carries most of that Greek line's content — not merely its first word. When the translator keeps the Greek order these coincide. When they don't, follow the bulk: if the line opens with the last word or two of a sentence begun on `greek_above` and the rest of the line is a new clause, the tick goes at the start of that new clause; if the translator moves the line's main clause elsewhere in the sentence, the tick goes where that clause is rendered. `ok` = it does; `early` = begins on content belonging to `greek_above`, or before the start of `greek_tick`'s bulk; `late` = begins after the start of `greek_tick`'s bulk, or on `greek_below`; `unsure` = translation condenses/omits `greek_tick`.
+- ALWAYS return `phrase`: a 5–10 word verbatim substring copied EXACTLY from `text`, beginning precisely at the start (a word boundary) of the English that renders `greek_tick`'s bulk (an exact search must find it; for `ok` it matches `current_placement`'s start). It must NOT start as late as `greek_below`.
+- Judge by the GREEK, not by which reading sounds smoothest."""
+
+
+def verify_prompt(translator: str, task: dict, rule: str = "first") -> str:
+    if rule == "bulk":
+        head, sep, rest = _first_word_prompt(translator, task).partition("- For EACH tick")
+        tail = rest[rest.index("- Return every tick"):]
+        return head + BULK_RULE + "\n" + tail
+    return _first_word_prompt(translator, task)
+
+
+def _first_word_prompt(translator: str, task: dict) -> str:
     return f"""Strict Greek-to-English alignment judge. Check Bekker line-marks in {translator}'s translation against the GREEK — the Greek is authoritative, the gloss is only a hint.
 - The task below has `text` (full chapter prose) + `ticks` in Bekker order, each with `greek_above`/`greek_tick`/`greek_below` (raw Greek of the line before / tick / after), `gloss` (hint), `current_placement` (translation now sitting at the tick).
 - For EACH tick, judge whether `current_placement` BEGINS exactly at the English of `greek_tick`'s FIRST word: `ok` = it does; `early` = begins on `greek_above` content (a line too high); `late` = a clause into `greek_tick` or onto `greek_below`; `unsure` = translation condenses/omits `greek_tick`.
@@ -483,6 +496,7 @@ def score_verify(source: str) -> None:
     fx_list = fixtures()
     vdir = OUT / "verify" / source
     tags = list(MODELS) + [f"{t}+c" for t in MODELS if (vdir / "tasks" / f"{t}+c").exists()]
+    tags += sorted(d.name for d in (vdir / "tasks").glob("*@*") if d.is_dir())
     base, by_model = {}, {}
     stats = {}
     for fx in fx_list:
@@ -530,7 +544,7 @@ def score_verify(source: str) -> None:
 # ---- batches --------------------------------------------------------------
 def submit(stage: str, source: str | None, models: list[str],
            only: set | None = None, max_tokens: int = 32000,
-           names: set | None = None) -> None:
+           names: set | None = None, rule: str = "first") -> None:
     import anthropic
     from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
     from anthropic.types.messages.batch_create_params import Request
@@ -550,8 +564,9 @@ def submit(stage: str, source: str | None, models: list[str],
                     continue
                 sent_task = task
                 task = {k: v for k, v in task.items() if k != "_pass1"}
-                prompt, schema = verify_prompt(WORKS[fx["work"]][1], task), VERIFY_SCHEMA
+                prompt, schema = verify_prompt(WORKS[fx["work"]][1], task, rule), VERIFY_SCHEMA
             for tag in models:
+                variant = tag if rule == "first" else f"{tag}@{rule}"
                 cid = f"{stage[0]}-{tag}-{fx['work']}-{ch['book']}-{ch['chapter']}"
                 if only and cid not in only:
                     continue
@@ -566,11 +581,11 @@ def submit(stage: str, source: str | None, models: list[str],
                         json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
                 if stage == "verify":
                     # snapshot what this model sees, so scoring can refuse changed inputs
-                    snap_dir = OUT / "verify" / source / "tasks" / tag / fx["work"]
+                    snap_dir = OUT / "verify" / source / "tasks" / variant / fx["work"]
                     snap_dir.mkdir(parents=True, exist_ok=True)
                     (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
                         json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
-                receipt[cid] = {"stage": stage, "source": source, "model": tag,
+                receipt[cid] = {"stage": stage, "source": source, "model": tag, "variant": variant,
                                 "work": fx["work"], "book": ch["book"], "chapter": ch["chapter"]}
                 reqs.append(Request(custom_id=cid, params=MessageCreateParamsNonStreaming(
                     model=MODELS[tag], max_tokens=max_tokens,
@@ -602,7 +617,7 @@ def fetch(batch_id: str) -> None:
         elif meta["stage"] == "correct":
             dest = OUT / "verify" / meta["source"] / f"{tag}+c" / meta["work"]
         else:
-            dest = OUT / "verify" / meta["source"] / tag / meta["work"]
+            dest = OUT / "verify" / meta["source"] / meta.get("variant", tag) / meta["work"]
         out_file = dest / f"{meta['book']}-{meta['chapter']}.json"
         # a failure must not leave an earlier run's answer behind to be scored
         out_file.unlink(missing_ok=True)
@@ -643,6 +658,8 @@ def main():
     a.add_argument("--only", help="comma-separated custom_ids to resend")
     a.add_argument("--max-tokens", type=int, default=32000)
     a.add_argument("--fixtures", help="comma-separated fixture names, e.g. EN-2,EN-3")
+    a.add_argument("--rule", choices=["first", "bulk"], default="first",
+                   help="verify placement rule: first word (recipe) or bulk of the line (John)")
     a = sub.add_parser("fetch"); a.add_argument("batch_id")
     a = sub.add_parser("score-gloss"); a.add_argument("--sources", default="prod,haiku,sonnet,opus")
     a = sub.add_parser("score-verify"); a.add_argument("--source", required=True)
@@ -661,7 +678,7 @@ def main():
             sys.exit("verify needs --source (whose glosses give the first pass)")
         submit(args.stage, args.source, args.models.split(","),
                set(args.only.split(",")) if args.only else None, args.max_tokens,
-               set(args.fixtures.split(",")) if args.fixtures else None)
+               set(args.fixtures.split(",")) if args.fixtures else None, args.rule)
     elif args.cmd == "fetch":
         fetch(args.batch_id)
     elif args.cmd == "score-gloss":
