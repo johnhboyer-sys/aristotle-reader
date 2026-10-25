@@ -141,6 +141,14 @@ NO free-form `reason` field** (reasons are the single biggest token sink; omit t
 ```
 Judge-style verifier prompt:
 
+> **Superseded 2026-10-25: judge by the line's bulk, not its first word.** John's rule
+> (2026-07-31) is that a tick marks where the *bulk* of the Greek line's content is rendered;
+> the prompt below pegs it to the first word. Scored on Rackham/Freese milestones (428 ticks)
+> and Ostwald's printed margin (125 lines), the bulk prompt (`BULK_RULE` in
+> `tools/model_test.py`, used by `tools/batch_align.py`) beat it on both: right sentence
+> 88.6% → 91.6%, column starts 82.0% → 93.8%, Ostwald in-line 53.6% → 61.6%; 51 ticks fixed
+> vs 28 broken. The first-word text is kept below for the works it built.
+
 > Strict Greek-to-English alignment judge. Check Bekker line-marks in **<TRANSLATOR>**'s
 > translation against the GREEK — the Greek is authoritative, the gloss is only a hint.
 > - Read `build/align/verify_tasks/<SLUG>/<B>-<C>.json`: `text` (full chapter prose) +

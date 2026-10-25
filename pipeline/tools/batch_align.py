@@ -7,7 +7,10 @@ results where the recipe's own tools read them:
   verify -> build/align/verify_out/<WORK>/<b>-<c>.json   ({chapter, ticks:[...]})
 Every other step (align, verify_gather, verify_to_offsets, persist_book, ...)
 is unchanged. Models follow the 2026-10-25 test (PR #168): Haiku glosses,
-Opus verifies. No §5b correction pass: measured 2026-10-25, it gained nothing.
+Opus verifies, judging by John's line-bulk rule (`verify_prompt(..., "bulk")`:
+on two independent golds it beat the recipe's first-word prompt, 51 ticks
+fixed vs 28 broken). No §5b correction pass: measured 2026-10-25, it gained
+nothing.
 
   uv run --with anthropic python tools/batch_align.py gloss Cael           # build/stage1 = Cael
   uv run --with anthropic python tools/batch_align.py verify Cael 1 2 3 4  # after verify_gather
@@ -92,7 +95,7 @@ def verify_requests(work: str, model: str, books) -> tuple[list, dict]:
                 sys.exit(f"{f}: no chapter text — gather with VERIFY_ALL=1")
             cp = int(f.stem.split("-")[1])
             cid = f"v-{model}-{work}-{b}-{cp}"
-            reqs.append((cid, verify_prompt(name, task), VERIFY_SCHEMA))
+            reqs.append((cid, verify_prompt(name, task, "bulk"), VERIFY_SCHEMA))
             # the task hash lets fetch refuse answers to a task that was re-gathered since
             receipt[cid] = {"kind": "verify", "work": work, "book": b, "chapter": cp,
                             "model": model, "task_sha": task_sha(f), "hash": "json"}
