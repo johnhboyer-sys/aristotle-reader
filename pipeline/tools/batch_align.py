@@ -95,7 +95,7 @@ def verify_requests(work: str, model: str, books) -> tuple[list, dict]:
             reqs.append((cid, verify_prompt(name, task), VERIFY_SCHEMA))
             # the task hash lets fetch refuse answers to a task that was re-gathered since
             receipt[cid] = {"kind": "verify", "work": work, "book": b, "chapter": cp,
-                            "model": model, "task_sha": task_sha(f)}
+                            "model": model, "task_sha": task_sha(f), "hash": "json"}
     return reqs, receipt
 
 
@@ -125,6 +125,8 @@ def current(meta: dict) -> bool:
     output slot now belongs to the newer task, so this batch must not touch it."""
     if meta["kind"] != "verify":
         return True
+    if meta.get("hash") != "json":
+        sys.exit("receipt predates the parsed-JSON task hash: re-submit the batch")
     return task_sha(ALIGN / "verify_tasks" / meta["work"]
                     / f"{meta['book']}-{meta['chapter']}.json") == meta["task_sha"]
 
@@ -167,6 +169,9 @@ def fetch(batch_id: str) -> None:
                 data = {ln["citation"]: ln["english"] for ln in data["lines"]}
         except (StopIteration, ValueError, KeyError, TypeError) as e:
             fails.append(f"{r.custom_id}: unreadable answer ({type(e).__name__})")
+            continue
+        if not current(meta):   # re-gathered while this fetch was streaming
+            fails.append(f"{r.custom_id}: task re-gathered during fetch, answer dropped")
             continue
         out = out_path(meta)
         out.parent.mkdir(parents=True, exist_ok=True)
