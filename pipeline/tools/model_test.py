@@ -309,9 +309,35 @@ def fold(text: str, pass1_off: dict, out: dict) -> tuple[dict, int]:
     return overrides, unplaced
 
 
+def correct_task(source: str, fx: dict, ch: dict, tag: str) -> dict | None:
+    """Recipe §5b as fixed in PR #170: re-judge only the ticks `tag` marked
+    early/late, showing it the pass-2 placement its own answers produced.
+    None when there is nothing to re-judge."""
+    task = verify_task(source, fx, ch)
+    first = load_json(OUT / "verify" / source / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
+    if task is None or not first:
+        return None
+    ovr, _ = fold(ch["text"], task["_pass1"], first)
+    _cr, anchors = pass1(source, fx, ch, ovr)
+    pos = {a.citation: a.offset for a in anchors}
+    verdict = {t["citation"]: t.get("verdict") for t in first.get("ticks", [])}
+    ticks = [dict(t, current_placement=ch["text"][pos[t["citation"]]:pos[t["citation"]] + 90])
+             for t in task["ticks"] if verdict.get(t["citation"]) in ("early", "late")]
+    if not ticks:
+        return None
+    return {"chapter": task["chapter"], "ticks": ticks, "text": ch["text"]}
+
+
+def merge_ticks(first: dict, corr: dict) -> dict:
+    new = {t["citation"]: t for t in corr.get("ticks", [])}
+    return {"chapter": first.get("chapter"),
+            "ticks": [new.get(t["citation"], t) for t in first.get("ticks", [])]}
+
+
 def score_verify(source: str) -> None:
     fx_list = fixtures()
     vdir = OUT / "verify" / source
+    tags = list(MODELS) + [f"{t}+c" for t in MODELS if (vdir / "tasks" / f"{t}+c").exists()]
     base, by_model = {}, {}
     stats = {}
     for fx in fx_list:
@@ -321,11 +347,19 @@ def score_verify(source: str) -> None:
             if task is None:
                 continue
             base[k] = task["_pass1"]
-            for tag in MODELS:
-                out = load_json(vdir / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
-                sent = load_json(vdir / "tasks" / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
-                if out and sent != task:
-                    sys.exit(f"{k}: {tag}'s answer has no matching snapshot of what it was sent")
+            for tag in tags:
+                name = f"{ch['book']}-{ch['chapter']}.json"
+                sent = load_json(vdir / "tasks" / tag / fx["work"] / name)
+                if tag.endswith("+c"):
+                    ct = correct_task(source, fx, ch, tag[:-2])
+                    if (ct or {}) != sent:
+                        sys.exit(f"{k}: {tag}'s inputs changed since its batch was sent")
+                    # no early/late ticks -> nothing re-judged, the first pass stands
+                    out = load_json(vdir / (tag if ct else tag[:-2]) / fx["work"] / name)
+                else:
+                    out = load_json(vdir / tag / fx["work"] / name)
+                    if out and sent != task:
+                        sys.exit(f"{k}: {tag}'s answer has no matching snapshot of what it was sent")
                 st = stats.setdefault(tag, {"chapters_missing": 0, "unplaced": 0, "verdicts": {}})
                 if not out:
                     st["chapters_missing"] += 1
@@ -341,7 +375,7 @@ def score_verify(source: str) -> None:
     print(f"pass1   ALL     {json.dumps(score(base, fx_list))}")
     for fx in fx_list:
         print(f"pass1   {fx['work']}-{fx['book']:<4} {json.dumps(score(base, [fx]))}")
-    for tag in MODELS:
+    for tag in tags:
         placed = by_model.get(tag, {})
         print(f"{tag:7} ALL     {json.dumps(score(placed, fx_list))}  {json.dumps(stats[tag])}")
         for fx in fx_list:
@@ -362,6 +396,8 @@ def submit(stage: str, source: str | None, models: list[str],
         for ch in fx["chapters"]:
             if stage == "gloss":
                 prompt, schema = gloss_prompt(WORKS[fx["work"]][0], ch), GLOSS_SCHEMA
+            elif stage == "correct":
+                pass   # per model below: each corrects its own first pass
             else:
                 task = verify_task(source, fx, ch)
                 if task is None:
@@ -374,6 +410,15 @@ def submit(stage: str, source: str | None, models: list[str],
                 cid = f"{stage[0]}-{tag}-{fx['work']}-{ch['book']}-{ch['chapter']}"
                 if only and cid not in only:
                     continue
+                if stage == "correct":
+                    sent_task = correct_task(source, fx, ch, tag)
+                    if sent_task is None:
+                        continue
+                    prompt, schema = verify_prompt(WORKS[fx["work"]][1], sent_task), VERIFY_SCHEMA
+                    snap_dir = OUT / "verify" / source / "tasks" / f"{tag}+c" / fx["work"]
+                    snap_dir.mkdir(parents=True, exist_ok=True)
+                    (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
+                        json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
                 if stage == "verify":
                     # snapshot what this model sees, so scoring can refuse changed inputs
                     snap_dir = OUT / "verify" / source / "tasks" / tag / fx["work"]
@@ -409,6 +454,8 @@ def fetch(batch_id: str) -> None:
         tag = meta["model"]
         if meta["stage"] == "gloss":
             dest = gloss_dir(tag) / meta["work"]
+        elif meta["stage"] == "correct":
+            dest = OUT / "verify" / meta["source"] / f"{tag}+c" / meta["work"]
         else:
             dest = OUT / "verify" / meta["source"] / tag / meta["work"]
         out_file = dest / f"{meta['book']}-{meta['chapter']}.json"
@@ -427,6 +474,9 @@ def fetch(batch_id: str) -> None:
         data = json.loads(next(blk.text for blk in m.content if blk.type == "text"))
         if meta["stage"] == "gloss":
             data = {ln["citation"]: ln["english"] for ln in data["lines"]}
+        elif meta["stage"] == "correct":
+            data = merge_ticks(load_json(OUT / "verify" / meta["source"] / tag / meta["work"]
+                                         / out_file.name), data)
         dest.mkdir(parents=True, exist_ok=True)
         out_file.write_text(
             json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -442,7 +492,7 @@ def main():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("prepare"); a.add_argument("work"); a.add_argument("book", type=int)
-    a = sub.add_parser("submit"); a.add_argument("stage", choices=["gloss", "verify"])
+    a = sub.add_parser("submit"); a.add_argument("stage", choices=["gloss", "verify", "correct"])
     a.add_argument("--source"); a.add_argument("--models", default="haiku,sonnet,opus")
     a.add_argument("--only", help="comma-separated custom_ids to resend")
     a.add_argument("--max-tokens", type=int, default=32000)
@@ -454,7 +504,7 @@ def main():
     if args.cmd == "prepare":
         prepare(args.work, args.book)
     elif args.cmd == "submit":
-        if args.stage == "verify" and not args.source:
+        if args.stage in ("verify", "correct") and not args.source:
             sys.exit("verify needs --source (whose glosses give the first pass)")
         submit(args.stage, args.source, args.models.split(","),
                set(args.only.split(",")) if args.only else None, args.max_tokens,

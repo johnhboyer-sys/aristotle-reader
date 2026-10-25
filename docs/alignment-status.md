@@ -40,10 +40,10 @@ anchors are structural/interpolated and not counted.
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
 - **Cael / Stocks** — aligned 2026-10-25, the pilot of the batch runner
-  (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5 verify ×1 + one scoped opus correction
-  pass, all by Message Batches; models chosen by the 2026-10-25 test, PR #168). $3.77 in all.
-  The correction pass re-judged 583 of 654 ticks (89% marked early/late) and moved 88, 17 by
-  >30 chars; whether that helped is unmeasured. Wired via `sources/cael-stocks/anchors.yaml`
+  (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5 verify ×1, by Message Batches; models
+  chosen by the 2026-10-25 test, PR #168). $2.02 for the shipped pass. A §5b correction pass
+  was also run ($1.75) but it was the buggy one (PR #170: it re-judged pass 1), and the fixed
+  pass measured no gain on NE gold, so the anchors are the first pass's. Wired via `sources/cael-stocks/anchors.yaml`
   (606 anchors, 2 unresolved `282b5`/`290a35`) + `anchors:` in `manifests/Cael.yaml`; stage2
   PASS; 673 real vs 3 interpolated gutter ticks. Not deployed; no human pass.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no

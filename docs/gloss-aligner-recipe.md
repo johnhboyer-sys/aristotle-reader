@@ -51,9 +51,9 @@ uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>
 > **Batch API alternative (2026-10-25).** `tools/batch_align.py` sends §2 and §4/§5b to the
 > Message Batches API instead of sub-agents and writes the same `glosses/` and `verify_out/`
 > files, so every other step is unchanged: `gloss <WORK>` (Haiku 5.5), `verify <WORK> <books>`
-> (Opus 5.5; add `--correction` for §5b, which merges into `verify_out`), `fetch <batch_id>`.
-> Before the §5b gather, delete `build/align/verify_tasks/<WORK>/` — `verify_gather` leaves
-> older task files in place, and the runner would resend them. Model choice: PR #168.
+> (Opus 5.5), `fetch <batch_id>`. Model choice: PR #168. `--correction` exists for §5b, but see
+> the measurement there; if you run it, delete `build/align/verify_tasks/<WORK>/` before the
+> gather — `verify_gather` leaves older task files in place, and the runner would resend them.
 Run these agents on **Sonnet** (`model: sonnet`) — A/B on NE Bk1 vs Opus-tier baseline
 showed no accuracy loss (column tier improved), since the gloss only feeds a word-overlap
 matcher and the verifier backstops it. (Keep verification on Opus.)
@@ -173,6 +173,11 @@ around them. `persist_book` saves the per-book map, glosses, and a dark-mode
 3-line-window review HTML to the **tracked** `alignment-results/<vid>/`.
 
 ## 5b. One cheap correction pass (built in, run once — scoped to early/late)
+> **Measured 2026-10-25: skip it.** Until PR #170 this pass never saw the pass-2 placements
+> (`verify_gather` ignored the overrides), so every earlier "correction" was a second judgment
+> of pass 1. With that fixed, on 428 Rackham/Freese gold ticks, Opus confirmed 1,613 of the
+> 1,667 ticks it re-judged and the score did not move (right sentence 88.6% → 88.3%, within
+> 30 chars 82.5% → 82.5%, median 0 → 3 chars), for 45% more verify cost.
 **No single pass is clean** — measured against Rackham's real line numbers, even the
 judge-style §4 lands the *median* tick exactly but still misses some of the harder ticks
 by a sentence (and the gloss-eval gold is itself soft, so trust column-starts most). The
