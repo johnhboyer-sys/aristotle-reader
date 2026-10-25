@@ -1,5 +1,7 @@
-"""Build alignment-results/<vid>/index.html (dark-mode per-book summary) AND the
-combined gloss map the pipeline reads (alignment-results/<vid>/<work>_<vid>_gloss_map.json).
+"""Build alignment-results/<vid>/review/<work>/index.html (dark-mode per-book
+summary) AND the combined gloss map the pipeline reads
+(alignment-results/<vid>/<work>_<vid>_gloss_map.json), from the work's own
+per-book maps (maps/<work>/, written by persist_book).
 Usage: uv run python tools/make_index.py [work=EN] [vid=ross]"""
 import json
 import sys
@@ -20,7 +22,10 @@ rows = []
 tot = Counter()
 tot_chapters = 0
 combined: dict = {}
-for f in sorted((RES / "maps").glob("book-*.json")):
+books = sorted((RES / "maps" / WORK).glob("book-*.json"))
+if not books:
+    sys.exit(f"no per-book maps in {RES / 'maps' / WORK}: run persist_book first")
+for f in books:
     b = int(f.stem.split("-")[1])
     m = json.loads(f.read_text())
     combined.update(m)
@@ -45,7 +50,7 @@ th{color:#e6e9ef;border-bottom:2px solid #444b57}td:first-child,th:first-child{t
 tr = []
 for b, ch, real, conf, unc, solid in rows:
     pct = 100 * solid / real if real else 0
-    tr.append(f"<tr><td><a href='review/book-{b:02d}.html'>Book {b}</a></td><td>{ch}</td>"
+    tr.append(f"<tr><td><a href='book-{b:02d}.html'>Book {b}</a></td><td>{ch}</td>"
               f"<td>{real}</td><td>{conf}</td><td>{unc}</td><td>{pct:.1f}%</td></tr>")
 totpct = 100 * T_solid / T_real if T_real else 0
 tr.append(f"<tr class='tot'><td>All {len(rows)} books</td><td>{tot_chapters}</td><td>{T_real}</td>"
@@ -60,9 +65,11 @@ landed on. <b>Confirmed</b> = re-placed by the verifier; <b>uncertain</b> = show
 <th>Uncertain</th><th>High-confidence</th></tr>{''.join(tr)}</table>
 <p class=sub>Open any book to spot-check placement. Solid ticks are cited with confidence;
 the few uncertain ones are flagged as estimates.</p>"""
-(RES / "index.html").write_text(html, encoding="utf-8")
+index = RES / "review" / WORK / "index.html"
+index.parent.mkdir(parents=True, exist_ok=True)
+index.write_text(html, encoding="utf-8")
 # Combined map the pipeline (stage1_ross._load_align_map) reads at build time.
 cmap = RES / f"{WORK}_{VID}_gloss_map.json"
 cmap.write_text(json.dumps(combined, ensure_ascii=False, indent=1), encoding="utf-8")
-print(f"index -> {RES/'index.html'}  ({tot_chapters} chapters, {T_real} ticks, {totpct:.1f}% high-confidence)")
+print(f"index -> {index}  ({tot_chapters} chapters, {T_real} ticks, {totpct:.1f}% high-confidence)")
 print(f"combined map -> {cmap}")

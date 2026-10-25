@@ -14,6 +14,7 @@ the TLG and nothing hits the network.
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass, field
 
@@ -87,15 +88,20 @@ def default_target(work_id: str) -> tuple[str, dict[tuple[int, int], str]]:
     """(version_id, prose) for a work's unmarked translation to align. Prefers the
     manifest's `english.secondary` (NE-style: Bekker-milestoned primary + unmarked
     secondary); for primary-only works (no secondary — e.g. APr/Jenkinson,
-    Cat/Edghill) falls back to `english.primary`; finally to the NE Ross corpus."""
+    Cat/Edghill) falls back to `english.primary`; finally to the NE Ross corpus.
+    ALIGN_SLOT=primary skips the secondary, for a work whose main translation is
+    the unmarked primary (EE/Solomon, Top/Pickard-Cambridge); stage1 never sets it."""
     from ..config import SOURCES_DIR, Manifest
     from ..stage1_ross import parse_translation
+    slot = os.environ.get("ALIGN_SLOT", "")
+    if slot not in ("", "primary"):
+        raise ValueError(f"ALIGN_SLOT={slot!r}: the only value is 'primary'")
     try:
         eng = Manifest.for_work(work_id).data.get("english") or {}
     except (FileNotFoundError, OSError):
         eng = {}
     sec = eng.get("secondary")
-    if sec:
+    if sec and not slot:
         return sec.get("id", "sec"), parse_translation(
             SOURCES_DIR / sec["dir"], sec["books"], sec.get("marker", "number"),
             strip_quote_repeats=sec.get("strip_quote_repeats", False))
@@ -105,6 +111,8 @@ def default_target(work_id: str) -> tuple[str, dict[tuple[int, int], str]]:
         return prim.get("id", "prim"), parse_translation(
             SOURCES_DIR / prim["dir"], prim["books"], marker,
             strip_quote_repeats=prim.get("strip_quote_repeats", False))
+    if slot:
+        raise ValueError(f"ALIGN_SLOT=primary but {work_id} has no english.primary.dir")
     return "ross", parse_translation(SOURCES_DIR / "ross", 10, "number")
 
 

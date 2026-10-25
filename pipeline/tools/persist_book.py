@@ -19,25 +19,24 @@ BOOK = int(sys.argv[1])
 WORK = os.environ.get("WORK", "EN")
 vid, _ = default_target(WORK)
 RES = REPO / "alignment-results" / vid
+# Maps, glosses and review pages are namespaced PER WORK: works sharing a
+# translator vid (ross = EN + Meta + Juv + Long; forster = DM + Mech + Oec + Vent)
+# have colliding book numbers, so a flat dir lets the last-persisted work clobber
+# the others (this is the Juv-over-EN corruption).
 for sub in ("maps", "glosses", "review"):
-    (RES / sub).mkdir(parents=True, exist_ok=True)
+    (RES / sub / WORK).mkdir(parents=True, exist_ok=True)
 
 amap = json.loads((REPO / "build/align" / f"{WORK}_{vid}_gloss_map.json").read_text())
 book_map = {k: v for k, v in amap.items() if int(k.split(":")[0]) == BOOK}
-(RES / "maps" / f"book-{BOOK:02d}.json").write_text(
+(RES / "maps" / WORK / f"book-{BOOK:02d}.json").write_text(
     json.dumps(book_map, ensure_ascii=False, indent=1), encoding="utf-8")
 
-# Glosses are namespaced PER WORK: works sharing a translator vid (ross = EN +
-# Meta + Juv) have colliding book-chapter filenames (EN 1-1 vs Juv 1-1), so a
-# flat glosses/ dir lets the last-persisted work clobber the others (this is the
-# Juv-over-EN corruption). Keep each work's glosses under glosses/<WORK>/.
 gdir = RES / "glosses" / WORK
-gdir.mkdir(parents=True, exist_ok=True)
 for g in sorted((REPO / "build/align/glosses" / WORK).glob(f"{BOOK}-*.json")):
     shutil.copy(g, gdir / g.name)
 
 html = write_html(WORK, [BOOK])
-shutil.copy(html, RES / "review" / f"book-{BOOK:02d}.html")
+shutil.copy(html, RES / "review" / WORK / f"book-{BOOK:02d}.html")
 
 # stats
 from collections import Counter
@@ -51,4 +50,4 @@ for rec in book_map.values():
 real = sum(conf.values())
 print(f"book {BOOK:02d}: chapters={len(book_map)} tiers={dict(tiers)}")
 print(f"  real ticks (column+five_line)={real}  by confidence={dict(conf)}")
-print(f"  saved -> alignment-results/{vid}/{{maps,glosses,review}}/book-{BOOK:02d}.*")
+print(f"  saved -> alignment-results/{vid}/{{maps,glosses,review}}/{WORK}/book-{BOOK:02d}.*")
