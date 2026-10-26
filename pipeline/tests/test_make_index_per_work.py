@@ -61,3 +61,16 @@ def test_maps_missing_a_book_of_the_combined_map_fail_and_keep_it(tmp_path):
     r = make_index(tmp_path, "Pol", "jowett")
     assert r.returncode != 0
     assert json.loads(shipped.read_text()) == two_books
+
+
+def test_a_book_map_missing_a_chapter_of_the_combined_map_fails_and_keeps_it(tmp_path):
+    # Codex: every book file present, but book 1's lost chapter 1:2.
+    res = tmp_path / "alignment-results" / "jowett"
+    (res / "maps" / "Pol").mkdir(parents=True)
+    (res / "maps" / "Pol" / "book-01.json").write_text(json.dumps(book_map("1252a1")))
+    two_chapters = {**book_map("1252a1"), "1:2": book_map("1252b27")["1:1"]}
+    shipped = res / "Pol_jowett_gloss_map.json"
+    shipped.write_text(json.dumps(two_chapters))
+    r = make_index(tmp_path, "Pol", "jowett")
+    assert r.returncode != 0
+    assert json.loads(shipped.read_text()) == two_chapters

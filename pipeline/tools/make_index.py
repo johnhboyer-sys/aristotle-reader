@@ -26,11 +26,6 @@ books = sorted((RES / "maps" / WORK).glob("book-*.json"))
 if not books:
     sys.exit(f"no per-book maps in {RES / 'maps' / WORK}: run persist_book first")
 cmap = RES / f"{WORK}_{VID}_gloss_map.json"
-if cmap.exists():   # never cut the shipped map down to the books persisted so far
-    have = {int(f.stem.split("-")[1]) for f in books}
-    lost = sorted({int(k.split(":")[0]) for k in json.loads(cmap.read_text())} - have)
-    if lost:
-        sys.exit(f"{cmap.name} has books {lost} with no map in maps/{WORK}/: persist them first")
 for f in books:
     b = int(f.stem.split("-")[1])
     m = json.loads(f.read_text())
@@ -45,6 +40,11 @@ for f in books:
     rows.append((b, len(m), real, c["confirmed"], c["uncertain"], solid))
     tot.update(c)
     tot_chapters += len(m)
+
+if cmap.exists():   # never cut the shipped map down to the chapters persisted so far
+    lost = sorted(set(json.loads(cmap.read_text())) - set(combined))
+    if lost:
+        sys.exit(f"{cmap.name} has chapters {lost[:8]} that maps/{WORK}/ lacks: persist those books first")
 
 T_real = sum(tot.values())
 T_solid = tot["reliable"] + tot["confirmed"] + tot["certain"]
