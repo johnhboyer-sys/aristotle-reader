@@ -1,6 +1,6 @@
 # Deploy Status
 
-Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
+Live site: https://aristotle.johnhboyer.com/ (since 2026-10-21; DNS on Cloudflare, CNAME `aristotle` → `johnhboyer-sys.github.io`, proxy off). The old https://johnhboyer-sys.github.io/aristotle-reader/ redirects there, path and query kept, for as long as the custom domain stays set in Settings → Pages.
 Deploy recipe: build `app/dist` (`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
 **The recipe is now `npm run deploy` (`scripts/deploy-gh-pages.mjs`); rehearse with `npm run deploy:dry`.**
@@ -12,6 +12,35 @@ Flags: `--dry-run --remote=<url> --dist=<path> --allow-data-deletions[=<prefix>,
 The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden); `PUBLIC_HIDE_PRIVATE` is a stale name that appears in older entries below and sets nothing. `app/src/pages/bonitz.astro` was removed on 2026-09-03, so the build no longer emits `app/dist/bonitz` or `_astro/bonitz.*.css`; entries below that say "bonitz.astro moved aside" describe the old ritual. `/bonitz/` stays a 404 on live and the post-deploy check still asserts it.
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
+
+## 2026-10-21 — DEPLOYED: custom domain aristotle.johnhboyer.com (PR #167)
+
+`gh-pages ca588f1f → 100ed975`, source `origin/main` `a3bb66591d` (the #167 merge). Run from a
+cloud session (John said go): an app-only build whose `data/` was copied from the live `gh-pages`
+tree, so the data matched live file for file; `npm run deploy:dry`, then `npm run deploy` without
+`--verify` (the session could not reach either host). It replaces the aristotle.lyceum.institute
+plan: Pages takes one custom domain.
+
+**What shipped:** the site at the root of the new domain. `base: '/'`, `site` and `robots.txt` on
+the new origin, `app/public/CNAME`, `LIVE_BASE` and the desktop app's live link moved;
+`check-links.mjs` `BASE` is `''` and its require-the-base rule applies only when there is a base (a
+leftover `/aristotle-reader/` link fails as a missing target). Before the deploy: the Cloudflare
+CNAME (DNS only, so GitHub can issue the certificate) and `johnhboyer.com` verified as a Pages domain
+on John's GitHub account (TXT `_github-pages-challenge-johnhboyer-sys`).
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham
+2, `EN/footnotes.json`, `EN/manifest.json`; positive control 1,621). Shard gate: 139 indexes,
+3,838,862 postings. Dangling-reference gate: 15 removed bundles, 0 referenced.
+
+**Deploy diff:** 6,614 files — 9 A / 6,590 M / 8 D / 7 R. Every page (links lose the prefix), the
+bundles with `BASE_URL` baked in, `robots.txt`, the sitemaps, `sw.js`; added `CNAME`. 0 changes and
+0 deletions under `data/`.
+
+**Live-verified (by John, in a browser):** the reader at https://aristotle.johnhboyer.com/ over
+HTTPS, search returns hits, and the old deep link
+`johnhboyer-sys.github.io/aristotle-reader/EN/book/1/?loc=1094a:5` lands on the same page and line at
+the new address. Readers' saved settings (theme, last book and line, recent works, translation and
+font choices) live in localStorage, which belongs to an origin, so they start fresh once here.
 
 ## 2026-10-19 (night) — DEPLOYED: review follow-ups (PRs #160–#166)
 
