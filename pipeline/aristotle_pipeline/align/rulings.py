@@ -31,12 +31,27 @@ def load(work_id: str, version_id: str, root: Path = REPO_ROOT) -> dict:
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
 
 
-def locate(text: str, phrase: str, near: int) -> int | None:
-    """Offset of `phrase` in `text`, whitespace-insensitive (the review page
-    flattens line breaks); of several copies, the one nearest `near`."""
+def _hits(text: str, phrase: str) -> list[int]:
+    """Every offset of `phrase` in `text`, whitespace-insensitive (the review
+    page flattens line breaks)."""
     pattern = r"\s+".join(re.escape(w) for w in phrase.split())
-    hits = [m.start() for m in re.finditer(pattern, text)] if pattern else []
+    return [m.start() for m in re.finditer(pattern, text)] if pattern else []
+
+
+def locate(text: str, phrase: str, near: int) -> int | None:
+    """Offset of `phrase` in `text`; of several copies, the one nearest `near`."""
+    hits = _hits(text, phrase)
     return min(hits, key=lambda h: abs(h - near)) if hits else None
+
+
+def place_click(text: str, phrase: str, shown_from: int, shown_to: int) -> int:
+    """Where a clicked phrase starts: the export carries the text, not its
+    position, but the page showed only text[shown_from:shown_to], so the click
+    is the one copy starting there. None, or more than one, is refused."""
+    inside = [h for h in _hits(text, phrase) if shown_from <= h < shown_to]
+    if len(inside) != 1:
+        raise ValueError(f"clicked phrase found {len(inside)} times in the passage the page showed")
+    return inside[0]
 
 
 def offsets(rul: dict, prose: dict[tuple[int, int], str]) -> dict[str, dict[str, int]]:

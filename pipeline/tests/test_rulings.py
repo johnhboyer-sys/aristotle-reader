@@ -73,3 +73,16 @@ def test_nothing_moves_a_chapter_start_tick():
     for ovr, ruled in (({"1094a1": 40}, None), (None, {"1094a1": 40})):
         a = by_cit(align_chapter(chapter(), "lexical", ovr, ruled))["1094a1"]
         assert (a.offset, a.tier) == (0, "chapter")
+
+
+def test_a_click_is_placed_inside_the_passage_the_page_showed():
+    # The export carries the clicked text, not its position (Codex). The page
+    # shows a fixed window around the tick, so the click is the copy inside it;
+    # none there, or two, is refused rather than guessed.
+    text = "alpha beta. " * 3 + "the good is aimed at. " + "gamma delta. " * 40 + "the good is aimed at. "
+    first = text.index("the good")
+    assert rulings.place_click(text, "the good is aimed at.", 0, 300) == first
+    with pytest.raises(ValueError, match="0 times"):
+        rulings.place_click(text, "the good is aimed at.", 100, 300)
+    with pytest.raises(ValueError, match="2 times"):
+        rulings.place_click(text, "the good is aimed at.", 0, len(text))

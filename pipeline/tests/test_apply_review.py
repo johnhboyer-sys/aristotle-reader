@@ -65,3 +65,14 @@ def test_an_export_for_another_work_is_refused(tmp_path):
     export.write_text(json.dumps({"1094a5": {"verdict": "ok"}}))
     r = run(script, export)
     assert r.returncode != 0 and not rulings.exists()
+
+
+def test_a_click_outside_the_passage_the_page_showed_is_refused(tmp_path):
+    script, rulings = setup(tmp_path)
+    text = default_target("Long")[1][(1, 1)]
+    export = tmp_path / "review-Long-ross-book01.json"
+    # 464b20 sits at 70; its page showed text[0:620]. A phrase from the chapter's
+    # end cannot have been clicked there.
+    export.write_text(json.dumps({"464b20": {"verdict": "late", "phrase": text[-90:-10]}}))
+    r = run(script, export)
+    assert r.returncode != 0 and "464b20" in r.stderr and not rulings.exists()

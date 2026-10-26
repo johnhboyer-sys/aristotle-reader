@@ -22,6 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "pipeline"))
 
 from aristotle_pipeline.align import rulings
+from aristotle_pipeline.align.gloss_review import _AFTER, _BEFORE
 from aristotle_pipeline.align.reference import default_target
 
 if len(sys.argv) < 3:
@@ -57,9 +58,11 @@ for exp in EXPORTS:
         b, c = (int(x) for x in chap.split(":"))
         text = prose[(b, c)]
         if phrase:
-            near = rulings.locate(text, phrase, off)
-            if near is None:
-                errors.append(f"{cit}: clicked phrase not in the text")
+            shown = max(0, off - _BEFORE)        # the window gloss_review rendered
+            try:
+                near = rulings.place_click(text, phrase, shown, shown + _BEFORE + _AFTER)
+            except ValueError as e:              # page rendered from another map?
+                errors.append(f"{cit}: {e}")
                 continue
             ruling = {"phrase": phrase, "near": near}
         elif verdict == "ok":
