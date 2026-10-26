@@ -26,6 +26,7 @@ english:
     dir: "vent-forster"
     books: 1
     chapter_marker: part
+    anchors: "vent-forster/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 books:
   - { n: 1, start: "973a1", end: "973b25" }

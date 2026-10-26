@@ -1,0 +1,441 @@
+{
+ "1:1": {
+  "ross_len": 3430,
+  "anchors": [
+   {
+    "citation": "973a1",
+    "offset": 0,
+    "tier": "chapter",
+    "confidence": "certain",
+    "score": 0.4793,
+    "flags": [
+     "ratio_outlier:331.00"
+    ]
+   },
+   {
+    "citation": "973a2",
+    "offset": 87,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a3",
+    "offset": 161,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a4",
+    "offset": 246,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a5",
+    "offset": 331,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.5046,
+    "flags": [
+     "name?:Akania,Gaureus,Kaunias",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973a6",
+    "offset": 390,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a7",
+    "offset": 454,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a8",
+    "offset": 505,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a9",
+    "offset": 566,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a10",
+    "offset": 626,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.5649,
+    "flags": [
+     "name?:Elaiatic,Maloeis,Mitylenaeans",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973a11",
+    "offset": 694,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a12",
+    "offset": 765,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a13",
+    "offset": 840,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a14",
+    "offset": 901,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a15",
+    "offset": 981,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.5474,
+    "flags": [
+     "name?:Poseidonion",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973a16",
+    "offset": 1059,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a17",
+    "offset": 1119,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a18",
+    "offset": 1196,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a19",
+    "offset": 1271,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a20",
+    "offset": 1334,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.5525,
+    "flags": [
+     "name?:Marseus,Marsos,Taurosian",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973a21",
+    "offset": 1411,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a22",
+    "offset": 1467,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a23",
+    "offset": 1527,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a24",
+    "offset": 1591,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973a25",
+    "offset": 1641,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.3061,
+    "flags": [
+     "name?:Berekyntias,Kaikias,Katapormias",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973b1",
+    "offset": 1716,
+    "tier": "column",
+    "confidence": "confirmed",
+    "score": 0.2389,
+    "flags": [
+     "name?:Aigai,Kaikias,Katapormias",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973b2",
+    "offset": 1781,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b3",
+    "offset": 1842,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b4",
+    "offset": 1903,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b5",
+    "offset": 1970,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.338,
+    "flags": [
+     "name?:Karbanes,Karbas,Phoinikias",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973b6",
+    "offset": 2045,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b7",
+    "offset": 2111,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b8",
+    "offset": 2191,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b9",
+    "offset": 2281,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b10",
+    "offset": 2349,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.2437,
+    "flags": [
+     "name?:Katombros,Notos",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973b11",
+    "offset": 2425,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b12",
+    "offset": 2518,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b13",
+    "offset": 2606,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b14",
+    "offset": 2696,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b15",
+    "offset": 2777,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.287,
+    "flags": [
+     "name?:Pegaion,Phrygia,Skylantimos",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973b16",
+    "offset": 2842,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b17",
+    "offset": 2900,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b18",
+    "offset": 2938,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b19",
+    "offset": 3005,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b20",
+    "offset": 3064,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.414,
+    "flags": [
+     "name?:Circe,Skirronides",
+     "verified"
+    ]
+   },
+   {
+    "citation": "973b21",
+    "offset": 3127,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b22",
+    "offset": 3201,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b23",
+    "offset": 3252,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b24",
+    "offset": 3321,
+    "tier": "line",
+    "confidence": "interpolated",
+    "score": 0.0,
+    "flags": []
+   },
+   {
+    "citation": "973b25",
+    "offset": 3384,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": 0.4103,
+    "flags": [
+     "verified"
+    ]
+   }
+  ]
+ }
+}

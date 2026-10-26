@@ -31,6 +31,7 @@ english:
     dir: "ia-farquharson"
     books: 1
     chapter_marker: part
+    anchors: "ia-farquharson/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 books:
   - { n: 1, start: "704a4", end: "714b23" }

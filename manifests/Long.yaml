@@ -29,6 +29,7 @@ english:
     dir: "long-ross"
     books: 1
     chapter_marker: part
+    anchors: "long-ross/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 books:
   - { n: 1, start: "464b19", end: "467b9" }

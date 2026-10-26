@@ -33,6 +33,7 @@ english:
     dir: "dm-forster"
     books: 1
     chapter_marker: part
+    anchors: "dm-forster/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 books:
   - { n: 1, start: "391a1", end: "401b29" }
