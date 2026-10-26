@@ -25,6 +25,12 @@ combined: dict = {}
 books = sorted((RES / "maps" / WORK).glob("book-*.json"))
 if not books:
     sys.exit(f"no per-book maps in {RES / 'maps' / WORK}: run persist_book first")
+cmap = RES / f"{WORK}_{VID}_gloss_map.json"
+if cmap.exists():   # never cut the shipped map down to the books persisted so far
+    have = {int(f.stem.split("-")[1]) for f in books}
+    lost = sorted({int(k.split(":")[0]) for k in json.loads(cmap.read_text())} - have)
+    if lost:
+        sys.exit(f"{cmap.name} has books {lost} with no map in maps/{WORK}/: persist them first")
 for f in books:
     b = int(f.stem.split("-")[1])
     m = json.loads(f.read_text())
@@ -69,7 +75,6 @@ index = RES / "review" / WORK / "index.html"
 index.parent.mkdir(parents=True, exist_ok=True)
 index.write_text(html, encoding="utf-8")
 # Combined map the pipeline (stage1_ross._load_align_map) reads at build time.
-cmap = RES / f"{WORK}_{VID}_gloss_map.json"
 cmap.write_text(json.dumps(combined, ensure_ascii=False, indent=1), encoding="utf-8")
 print(f"index -> {index}  ({tot_chapters} chapters, {T_real} ticks, {totpct:.1f}% high-confidence)")
 print(f"combined map -> {cmap}")

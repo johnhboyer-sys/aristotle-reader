@@ -161,12 +161,7 @@ def prepare_ostwald(book: int) -> None:
             if not seg or len(seg) > MAX_LINE:
                 dropped["merged_or_empty"] += 1
                 continue
-            if side == "right":
-                end = offs[0]
-                start = end - 1 - len(seg) if end < len(text) else end - len(seg)
-            else:
-                start = offs[0]
-                end = start + len(seg)
+            start, end = line_interval(text, side, offs[0], seg)
             if " ".join(text[start:start + len(seg)].split()) != seg:
                 dropped["text_mismatch"] += 1
                 continue
@@ -188,6 +183,19 @@ def prepare_ostwald(book: int) -> None:
         {"work": "ENo", "gloss_work": "EN", "book": book, "chapters": chapters},
         ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"ENo-{book}: {len(chapters)} chapters, {kept} gold lines kept, dropped {dropped}")
+
+
+def line_interval(text: str, side: str, off: int, seg: str) -> tuple[int, int]:
+    """[start, end) of the printed line `seg` that a margin number labels. A left
+    number sits at the line's start. A right number's offset is where the NEXT
+    printed line begins, so the line ends at the whitespace before it: a space
+    mid-paragraph, a newline (or nothing) at a paragraph's end."""
+    if side == "left":
+        return off, off + len(seg)
+    e = off
+    while e > 0 and text[e - 1].isspace():
+        e -= 1
+    return e - len(seg), off
 
 
 def fixtures() -> list[dict]:
@@ -545,6 +553,8 @@ def score_verify(source: str) -> None:
 def submit(stage: str, source: str | None, models: list[str],
            only: set | None = None, max_tokens: int = 32000,
            names: set | None = None, rule: str = "first") -> None:
+    if stage == "correct" and rule != "first":
+        sys.exit("correction reads, prompts and snapshots first-word answers only")
     import anthropic
     from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
     from anthropic.types.messages.batch_create_params import Request

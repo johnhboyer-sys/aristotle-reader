@@ -47,3 +47,17 @@ def test_no_maps_for_the_work_fails_and_writes_nothing(tmp_path):
     r = make_index(tmp_path, "Mech", "forster")
     assert r.returncode != 0
     assert not (res / "Mech_forster_gloss_map.json").exists()
+
+
+def test_maps_missing_a_book_of_the_combined_map_fail_and_keep_it(tmp_path):
+    # Codex: persist one book of a work whose other books sit elsewhere, and
+    # make_index would cut the shipped combined map down to that one book.
+    res = tmp_path / "alignment-results" / "jowett"
+    (res / "maps" / "Pol").mkdir(parents=True)
+    (res / "maps" / "Pol" / "book-01.json").write_text(json.dumps(book_map("1252a1")))
+    two_books = {**book_map("1252a1"), "2:1": book_map("1260b27")["1:1"]}
+    shipped = res / "Pol_jowett_gloss_map.json"
+    shipped.write_text(json.dumps(two_books))
+    r = make_index(tmp_path, "Pol", "jowett")
+    assert r.returncode != 0
+    assert json.loads(shipped.read_text()) == two_books

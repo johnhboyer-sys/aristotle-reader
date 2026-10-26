@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from .config import BUILD_DIR, Manifest
@@ -294,6 +295,8 @@ def main(argv=None):
         help="use manifests/<work>-public.yaml when present",
     )
     args = parser.parse_args(argv)
+    if os.environ.get("ALIGN_SLOT"):
+        sys.exit("ALIGN_SLOT is set: it steers the aligner tools, not stage1; unset it")
     if args.stage in _CORPUS_STAGES:
         _CORPUS_STAGES[args.stage]()
         return

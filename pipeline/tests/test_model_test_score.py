@@ -4,6 +4,8 @@ that placed nothing must say so instead of scoring."""
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
 import model_test as mt  # noqa: E402
@@ -95,3 +97,32 @@ def test_before_the_line_is_early_and_its_end_is_late():
 
 def test_interval_missing_reports_no_score():
     assert iscore(None) == {"n": 0, "missing": 1}
+
+
+# ---- Ostwald gold extraction: the printed line a right-margin number labels --
+def test_a_right_margin_line_runs_up_to_the_next_printed_line():
+    text = "first line here then the labelled line next line"
+    off = text.index("next")
+    assert mt.line_interval(text, "right", off, "then the labelled line") == (
+        text.index("then"), off)
+
+
+def test_a_right_margin_line_ending_its_paragraph_keeps_its_first_letter():
+    # Codex: NE 1096a10 ends I.5 with a newline, not a space, before the margin
+    # number's offset; the old arithmetic started the line one character early.
+    text = "earlier text. we may dismiss them.\n"
+    off = len(text) - 1
+    start, _ = mt.line_interval(text, "right", off, "we may dismiss them.")
+    assert text[start:].startswith("we may")
+
+
+def test_a_left_margin_line_starts_at_its_number():
+    text = "before the number the line itself"
+    off = text.index("the line")
+    assert mt.line_interval(text, "left", off, "the line itself") == (off, len(text))
+
+
+def test_correction_refuses_the_bulk_rule():
+    # the correction stage reads, prompts and snapshots first-word answers only
+    with pytest.raises(SystemExit, match="first"):
+        mt.submit("correct", "haiku", ["opus"], rule="bulk")

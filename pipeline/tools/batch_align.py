@@ -98,7 +98,8 @@ def verify_requests(work: str, model: str, books) -> tuple[list, dict]:
             reqs.append((cid, verify_prompt(name, task, "bulk"), VERIFY_SCHEMA))
             # the task hash lets fetch refuse answers to a task that was re-gathered since
             receipt[cid] = {"kind": "verify", "work": work, "book": b, "chapter": cp,
-                            "model": model, "task_sha": task_sha(f), "hash": "json"}
+                            "model": model, "task_sha": task_sha(f), "hash": "json",
+                            "rule": "bulk"}
     return reqs, receipt
 
 
@@ -130,6 +131,8 @@ def current(meta: dict) -> bool:
         return True
     if meta.get("hash") != "json":
         sys.exit("receipt predates the parsed-JSON task hash: re-submit the batch")
+    if meta.get("rule") != "bulk":   # a first-word answer must not overwrite a bulk one
+        sys.exit("receipt predates the bulk rule: re-submit the batch")
     return task_sha(ALIGN / "verify_tasks" / meta["work"]
                     / f"{meta['book']}-{meta['chapter']}.json") == meta["task_sha"]
 
