@@ -19,8 +19,9 @@ anchors are structural/interpolated and not counted.
 > `*_review.json` files hold the aligner's own `confidence`/`score`/`flags`, not
 > reviewer marks, and cover only the flagged subset (EN/Ross: 138 rows, not 1293).
 >
-> The one alignment work with a committed human correction is **Poet / Fyfe**
-> (`63d41aa2`, 8 word-exact pins; since 2026-10-25 also in `alignment-results/fyfe/rulings/Poet.json`). Human passes claimed below for SE and HA Book 1
+> The alignment works with committed human corrections are **Poet / Fyfe** (`63d41aa2`,
+> 8 word-exact pins) and **Phys / Hardie** (`1f063da134`, 2 anchor texts, 184a20/184a25);
+> since 2026-10-25 both are also rulings (`alignment-results/{fyfe,hardie}/rulings/`). Human passes claimed below for SE and HA Book 1
 > have no surviving artifact either way. Treat every other "reviewed" as machine-only.
 >
 > Outside alignment, the real hand-verification lives in `bonitz/` — the adjudicated
