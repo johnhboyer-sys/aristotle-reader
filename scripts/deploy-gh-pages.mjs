@@ -125,12 +125,13 @@ export function parseRsyncItemized(text) {
       result.deleted.push(deleting[1].replace(/\/$/, ''));
       continue;
     }
-    const item = /^([<>ch.*])([fdLDS])(\S{9})\s(.+)$/.exec(line);
+    // GNU rsync prints 9 flag characters; macOS's openrsync prints 7.
+    const item = /^([<>ch.*])([fdLDS])(\S{9}|\S{7})\s(.+)$/.exec(line);
     if (!item) continue;
     const [, update, type, flags, itemPath] = item;
     if (type === 'd') continue; // directories carry no content of their own
     if (update === '.') { result.other.push(itemPath); continue; } // attributes only
-    if (flags === '+++++++++') result.added.push(itemPath);
+    if (/^\++$/.test(flags)) result.added.push(itemPath);
     else result.modified.push(itemPath);
   }
   return result;
