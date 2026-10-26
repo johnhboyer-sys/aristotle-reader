@@ -22,15 +22,18 @@ bekker_range:
 
 chapters:
   source: explicit
+  # Where Solomon's chapters begin (2026-10-25). The earlier list started six of
+  # the eight mid-sentence (e.g. 1250a5 "ἐστὶν ἀρετὴ…"), up to 24 lines off.
+  # Ch. 5 opens mid-line: 1250b12 "αἰδώς, εὐλάβεια. ἐγκρατείας δ' ἐστὶ…".
   list:
     - { n: 1, bekker: "1249a26" }
-    - { n: 2, bekker: "1249b26" }
-    - { n: 3, bekker: "1250a5" }
-    - { n: 4, bekker: "1250a33" }
-    - { n: 5, bekker: "1250b6" }
-    - { n: 6, bekker: "1250b19" }
-    - { n: 7, bekker: "1251a19" }
-    - { n: 8, bekker: "1251b26" }
+    - { n: 2, bekker: "1250a3" }    # Ἔστι δὲ φρόνησις μὲν ἀρετὴ τοῦ λογιστικοῦ
+    - { n: 3, bekker: "1250a16" }   # Ἀφροσύνη δ' ἐστὶ κακία τοῦ λογιστικοῦ
+    - { n: 4, bekker: "1250a30" }   # Τῆς δὲ φρονήσεώς ἐστι τὸ βουλεύσασθαι
+    - { n: 5, bekker: "1250b12" }   # ἐγκρατείας δ' ἐστὶ τὸ δύνασθαι κατασχεῖν
+    - { n: 6, bekker: "1250b43" }   # Ἀφροσύνης δ' ἐστὶ τὸ κρίνειν κακῶς
+    - { n: 7, bekker: "1251a30" }   # ἀδικίας δ' ἐστὶν εἴδη τρία
+    - { n: 8, bekker: "1251b26" }   # Καθόλου δὲ τῆς μὲν ἀρετῆς
 
 english:
   primary:
