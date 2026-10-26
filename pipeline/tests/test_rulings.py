@@ -86,3 +86,33 @@ def test_a_click_is_placed_inside_the_passage_the_page_showed():
         rulings.place_click(text, "the good is aimed at.", 100, 300)
     with pytest.raises(ValueError, match="2 times"):
         rulings.place_click(text, "the good is aimed at.", 0, len(text))
+
+
+def test_a_click_matches_whole_words_only():
+    # Grok: a short phrase from the window's end ("and") also matched inside
+    # "standard", and the click was refused as ambiguous.
+    text = "a standard view, and so on"
+    assert rulings.place_click(text, "and", 0, len(text)) == text.index(" and") + 1
+
+
+def test_a_click_with_its_position_is_checked_against_the_text():
+    text = "the same words. other. the same words."
+    second = text.rindex("the same")
+    assert rulings.place_click(text, "the same words.", 0, len(text), at=second) == second
+    with pytest.raises(ValueError):
+        rulings.place_click(text, "the same words.", 0, len(text), at=second + 1)
+
+
+def test_a_ruling_keeps_to_its_own_copy_when_the_text_shifts():
+    # Grok: "nearest to near" jumped to the other copy once text before it
+    # grew. The ruling's preceding words pick its copy instead.
+    text = ("Alpha one. Here the good. Beta two. "
+            "Gamma three, delta four, epsilon five. There the good. End.")
+    second = text.rindex("the good")
+    r = {"phrase": "the good.", "near": second, "before": rulings.context(text, second)}
+    shifted = text.replace("Beta two.", "Beta two, " + "and much more " * 80 + "two.")
+    assert rulings.offsets({"1:1": {"1094a5": r}}, {(1, 1): shifted})["1:1"]["1094a5"] == shifted.rindex("the good")
+    # an edit to the words that identify the copy: refused by name, not guessed
+    reworded = text.replace("epsilon five.", "zeta six.")
+    with pytest.raises(ValueError, match="1094a5"):
+        rulings.offsets({"1:1": {"1094a5": r}}, {(1, 1): reworded})

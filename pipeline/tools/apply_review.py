@@ -32,14 +32,12 @@ vid, prose = default_target(WORK)
 shipped = json.loads((REPO / "alignment-results" / vid / f"{WORK}_{vid}_gloss_map.json").read_text())
 
 ticks, starts = {}, set()       # citation -> (chapter, offset, tier); chapter-start citations
-order = {}                      # chapter -> real ticks in reading order
 for chap, rec in shipped.items():
     for a in rec["anchors"]:
         if a["tier"] == "chapter":
             starts.add(a["citation"])
         elif a["tier"] in ("column", "five_line"):
             ticks[a["citation"]] = (chap, a["offset"], a["tier"])
-            order.setdefault(chap, []).append(a["citation"])
 
 rul = rulings.load(WORK, vid, REPO)
 errors, unplaced, columns = [], [], []
@@ -59,14 +57,15 @@ for exp in EXPORTS:
         text = prose[(b, c)]
         if phrase:
             shown = max(0, off - _BEFORE)        # the window gloss_review rendered
+            at = r.get("at") if isinstance(r.get("at"), int) else None
             try:
-                near = rulings.place_click(text, phrase, shown, shown + _BEFORE + _AFTER)
+                near = rulings.place_click(text, phrase, shown, shown + _BEFORE + _AFTER, at)
             except ValueError as e:              # page rendered from another map?
                 errors.append(f"{cit}: {e}")
                 continue
-            ruling = {"phrase": phrase, "near": near}
+            ruling = {"phrase": phrase, "near": near, "before": rulings.context(text, near)}
         elif verdict == "ok":
-            ruling = {"phrase": text[off:off + 80], "near": off}
+            ruling = {"phrase": text[off:off + 80], "near": off, "before": rulings.context(text, off)}
         elif verdict in ("early", "late"):
             ruling = {}
             unplaced.append(f"{cit} ({verdict})")
@@ -78,10 +77,11 @@ for exp in EXPORTS:
         if tier == "column" and "phrase" in ruling:
             columns.append(cit)
 
-# Rulings must read in Bekker order with each other; machine ticks give way.
+# Rulings must read in Bekker order with each other (the order pass 2 checks);
+# machine ticks give way to them.
 pinned = rulings.offsets(rul, prose) if not errors else {}
 for chap, placed in pinned.items():
-    seq = [(cit, placed[cit]) for cit in order[chap] if cit in placed]
+    seq = sorted(placed.items(), key=lambda kv: rulings.bekker_key(kv[0]))
     errors += [f"{a} at {x} comes after {b} at {y}" for (a, x), (b, y) in zip(seq, seq[1:]) if y < x]
 if errors:
     sys.exit("nothing written:\n  " + "\n  ".join(errors))

@@ -69,3 +69,20 @@ def test_an_unmarked_file_is_kept_unless_the_map_writes_the_same(tmp_path):
     out.write_text(legacy.replace("Our subject", "My subject"))
     with pytest.raises(SystemExit, match="1447a10"):
         g.write(out, ENTRIES[:1], "map.json")
+
+
+
+def test_a_phrase_repeated_in_its_chapter_is_extended_until_unique():
+    # Grok: the reader takes the first copy of a phrase in its column, so a
+    # repeated `at` put the tick on the wrong copy (4 of 12,598 shipped anchors).
+    rep = "and so the argument returns to the same point once more, as was said before, "
+    text = "Opening words. " + rep + "first ending. " + rep + "second ending."
+    at = g._phrase(text, text.rindex("and so the"))
+    assert " ".join(text.split()).count(at) == 1 and "second ending" in at
+
+
+def test_the_refusal_points_to_rulings(tmp_path):
+    out = tmp_path / "anchors.yaml"
+    out.write_text('- bekker: "1447a10"\n  at: "My subject"\n')
+    with pytest.raises(SystemExit, match="rulings"):
+        g.write(out, ENTRIES[:1], "map.json")
