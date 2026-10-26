@@ -326,7 +326,7 @@ test('verificationTargets lists the live-verified pattern with /bonitz/ as 404',
   assert.equal(byPath['/_astro/global.a.css'], 200);
   assert.equal(byPath['/_astro/Reader.old.js'], 404);
   assert.equal(byPath['/bonitz/'], 404);
-  assert.ok(targets.every((t) => t.url.startsWith('https://johnhboyer-sys.github.io/aristotle-reader/')));
+  assert.ok(targets.every((t) => t.url.startsWith('https://aristotle.johnhboyer.com/')));
 });
 
 test('verifyLive polls until every target answers as expected', async () => {
