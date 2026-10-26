@@ -13,8 +13,8 @@ Overall: PASS
 - 6 pairs; unmatched segments: none; english-only: none
 
 ## Length ratios (english chars / greek chars)
-- mean 1.411, sd 0.639, 1 outliers > 1.5 SD
-  - 1:1249a: ratio 2.577 (grc 312, eng 804)
+- mean 1.09, sd 0.146, 1 outliers > 1.5 SD
+  - 1:1249b: ratio 0.819 (grc 320, eng 262)
 
 ## Proper names
 

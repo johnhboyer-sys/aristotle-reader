@@ -23,14 +23,14 @@
    "ok": true
   },
   "length_ratio": {
-   "mean": 1.411,
-   "sd": 0.639,
+   "mean": 1.09,
+   "sd": 0.146,
    "outliers": [
     {
-     "id": "1:1249a",
-     "ratio": 2.577,
-     "greek_chars": 312,
-     "english_chars": 804
+     "id": "1:1249b",
+     "ratio": 0.819,
+     "greek_chars": 320,
+     "english_chars": 262
     }
    ],
    "ok": true
