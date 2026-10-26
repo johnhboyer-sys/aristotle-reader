@@ -70,7 +70,8 @@ anchors are structural/interpolated and not counted.
   (Solomon, Pickard-Cambridge) with `ALIGN_SLOT=primary`; every other step as the recipe.
   Wired via `sources/<dir>/anchors.yaml` + `anchors:` under `english.primary` (EE in both
   `EE.yaml` and `EE-public.yaml`); stage2 PASS on each. Unresolved anchors: Top `106b35`; PA `687a5`, `687b5`, `696a5`; GA `720a35`, `727b5`; EE `1226b5`, `1249b5`; IA none; MA none; Long none; Mirab none; DM `392b35`; Mech none; Oec none; Vent none; Aud `803a5`, `803b5`.
-  Gutter real / interpolated: Top 1067 / 4; PA 940 / 4; GA 1205 / 2; EE 605 / 2; IA 159 / 0; MA 104 / 0; Long 44 / 0; Mirab 342 / 1; DM 167 / 1; Mech 208 / 0; Oec 168 / 0; Vent 12 / 0; Aud 83 / 2. Col, MXG, Phgn and VV first came out 14–35% stacked
+  Rendered gutter, real / interpolated (what the reader shows: chapter starts and placed
+  lines included, unresolved anchors dropped, so not the table's tick count): Top 1067 / 4; PA 940 / 4; GA 1205 / 2; EE 605 / 2; IA 159 / 0; MA 104 / 0; Long 44 / 0; Mirab 342 / 1; DM 167 / 1; Mech 208 / 0; Oec 168 / 0; Vent 12 / 0; Aud 83 / 2. Col, MXG, Phgn and VV first came out 14–35% stacked
   (ticks collapsed at chapter starts): their English and Greek chapter divisions
   disagreed. Loveday & Forster's OCR had each "Part N" at a page break, and VV's Greek
   chapter list was unsourced and started six of eight chapters mid-sentence. Both were moved to
@@ -78,7 +79,8 @@ anchors are structural/interpolated and not counted.
   MXG, Phgn, VV 0% stacked; Col 7.4%, all but two in ch. 6, where the **OCR has lost the
   passage rendering the chapter's opening** (Γίνεται δὲ καὶ τὰ τριχώματα…). Col needs a
   re-read of the scan. Unresolved: Col `797b5`–`797b25` (the lost passage); Phgn `812a5`,
-  `813b5`. Gutter real / interpolated: Col 110 / 0; MXG 105 / 1; Phgn 147 / 2; VV 44 / 0.
+  `813b5`. Rendered gutter, real / interpolated (what the reader shows: chapter starts and placed
+  lines included, unresolved anchors dropped, so not the table's tick count): Col 110 / 0; MXG 105 / 1; Phgn 147 / 2; VV 44 / 0.
   Not deployed; no human pass.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
