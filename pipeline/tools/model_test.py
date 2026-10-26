@@ -36,7 +36,9 @@ MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5", "opus": "c
 # $/MTok (input, output) at standard rates; the Batches API bills half.
 PRICE = {"haiku": (0.10, 0.50), "sonnet": (2.00, 10.00), "opus": (4.00, 20.00)}
 EFFORT = "high"
-WORKS = {"EN": ("Nicomachean Ethics", "H. Rackham"), "Rhet": ("Rhetoric", "J. H. Freese")}
+WORKS = {"EN": ("Nicomachean Ethics", "H. Rackham"), "Rhet": ("Rhetoric", "J. H. Freese"),
+         "ENo": ("Nicomachean Ethics", "Martin Ostwald")}
+MAX_LINE = 80   # longer than one printed Ostwald line: two lines merged in the transcription
 
 
 # ---- fixtures -------------------------------------------------------------
@@ -80,6 +82,122 @@ def prepare(work: str, book: int) -> None:
           f"{len(gold)} gold ticks, {len(scorable)} on a glossed tick")
 
 
+def prepare_ostwald(book: int) -> None:
+    """Gold from Ostwald's printed margin: the tick belongs in the printed line a
+    Bekker number labels. A right-margin number ends its line ("... capacity:
+    the 10"), so the line is [line start, number); a left-margin number opens
+    its line ("15 had better give up ..."), so it is [number, line end). Only
+    lines the transcription keeps whole (≤ MAX_LINE chars) qualify — after the
+    opening pages it runs paragraphs together and the line extents are lost.
+    Taken from the parser's raw marker offsets, NOT bekker_corrections.json
+    (those positions were placed by an Opus 4.8 reading pass)."""
+    from aristotle_pipeline import stage1_ostwald as so
+    from aristotle_pipeline.align.glossing import chapter_lines, tick_windows
+    from aristotle_pipeline.config import SOURCES_DIR
+    for name in ("greek_spine.json", "english_chunks.json"):
+        held = json.loads((REPO / "build/stage1" / name).read_text(encoding="utf-8")).get("work")
+        if held != "EN":
+            sys.exit(f"build/stage1/{name} holds {held!r}: run stage1 --work EN")
+    md = SOURCES_DIR / "ostwald" / "ostwald-ethics.md"
+    prose, align, *_ = so.parse_ostwald(md)
+    # (book, chapter, citation) -> ("right", words before the number on its
+    # printed line) or ("left", words after it, when it opens a whole line)
+    segs, bk, chap, page = {}, None, None, None
+    for raw in md.read_text(encoding="utf-8").splitlines():
+        line = so._strip_markup(raw)
+        if line == "## Footnotes" or so._FOOTNOTE_DEF.match(line):
+            break
+        if (mb := so._BOOK.match(line)):
+            bk, chap = so._roman_int(mb.group(1)), None
+            continue
+        if (mc := so._CHAPTER.match(line)):
+            chap = int(mc.group(1))
+            continue
+        if chap is None:
+            continue
+        words, toks = [], line.split()
+        for i, tok in enumerate(toks):
+            cit = None
+            if so._PAGE.match(tok) and so._PAGE_LO <= int(tok[:-1]) <= so._PAGE_HI:
+                page = tok
+                cit = f"{page}1"
+            elif (ml := so._LINE.match(tok)) and page is not None:
+                cit = f"{page}{ml.group(1)}"
+                if ml.group(2) and words:
+                    words[-1] += ml.group(2)
+            if cit is None:
+                words.append(tok)
+                continue
+            if words:
+                segs.setdefault((bk, chap, cit), []).append(("right", " ".join(words)))
+            elif i == 0 and len(line) <= MAX_LINE:
+                rest = []
+                for t in toks[1:]:
+                    if so._LINE.match(t) or so._PAGE.match(t):
+                        break
+                    rest.append(t)
+                segs.setdefault((bk, chap, cit), []).append(("left", " ".join(rest)))
+            else:
+                segs.setdefault((bk, chap, cit), []).append(("right", ""))
+            words = []       # what follows starts the next printed line
+    chapters, kept, dropped = [], 0, {"merged_or_empty": 0, "text_mismatch": 0, "duplicate": 0}
+    for ch in chapter_lines([book]):
+        text = prose.get((ch.book, ch.chapter), "")
+        windows = tick_windows(ch)
+        ticks = {w.tick for w in windows}
+        raw_off = {}
+        for a in align.get(f"{ch.book}:{ch.chapter}", {}).get("anchors", []):
+            raw_off.setdefault(a["citation"], []).append(a["offset"])
+        gold = []
+        for cit, offs in raw_off.items():
+            # the chapter's first line is pinned structurally, never placed
+            if cit not in ticks or cit == ch.lines[0].citation:
+                continue
+            seg_list = segs.get((ch.book, ch.chapter, cit), [])
+            if len(offs) != 1 or len(seg_list) != 1:
+                dropped["duplicate"] += 1
+                continue
+            side, seg = seg_list[0]
+            if not seg or len(seg) > MAX_LINE:
+                dropped["merged_or_empty"] += 1
+                continue
+            start, end = line_interval(text, side, offs[0], seg)
+            if " ".join(text[start:start + len(seg)].split()) != seg:
+                dropped["text_mismatch"] += 1
+                continue
+            n = int(re.match(r"\d+[ab](\d+)", cit).group(1))
+            gold.append({"citation": cit, "start": start, "end": end,
+                         "tier": "column" if n == 1 else "five_line"})
+            kept += 1
+        chapters.append({
+            "book": ch.book, "chapter": ch.chapter,
+            "lines": [{"citation": ln.citation, "greek": ln.text} for ln in ch.lines],
+            "windows": [{"tick": w.tick, "is_column_start": w.is_column_start,
+                         "lines": [ln.citation for ln in w.lines]} for w in windows],
+            "text": text, "gold": gold})
+    if not kept:
+        sys.exit("no Ostwald gold interval survived: nothing could be scored")
+    d = FIX / "ostwald"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"ENo-{book}.json").write_text(json.dumps(
+        {"work": "ENo", "gloss_work": "EN", "book": book, "chapters": chapters},
+        ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"ENo-{book}: {len(chapters)} chapters, {kept} gold lines kept, dropped {dropped}")
+
+
+def line_interval(text: str, side: str, off: int, seg: str) -> tuple[int, int]:
+    """[start, end) of the printed line `seg` that a margin number labels. A left
+    number sits at the line's start. A right number's offset is where the NEXT
+    printed line begins, so the line ends at the whitespace before it: a space
+    mid-paragraph, a newline (or nothing) at a paragraph's end."""
+    if side == "left":
+        return off, off + len(seg)
+    e = off
+    while e > 0 and text[e - 1].isspace():
+        e -= 1
+    return e - len(seg), off
+
+
 def fixtures() -> list[dict]:
     fx = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(FIX.glob("*.json"))]
     if not fx:
@@ -104,12 +222,11 @@ VERIFY_SCHEMA = {
                        "phrase": {"type": "string"}}}}}}
 
 
-def gloss_prompt(fx: dict, ch: dict) -> str:
+def gloss_prompt(title: str, ch: dict) -> str:
     greek = {ln["citation"]: ln["greek"] for ln in ch["lines"]}
     task = [{"tick": w["tick"], "is_column_start": w["is_column_start"],
              "lines": [{"citation": c, "greek": greek[c]} for c in w["lines"]]}
             for w in ch["windows"]]
-    title = WORKS[fx["work"]][0]
     return f"""Translate ancient Greek (Aristotle, {title}, Book {ch['book']}, ch {ch['chapter']}) for a Bekker-line alignment tool. Precise and faithful — a scholar with good Greek checks this.
 - The task below is a list of windows, each `lines` = {{citation, greek}} (line above the tick / tick line / line below; edge windows have 2). Use neighbours only to get a mid-sentence line's sense right.
 - Output ONE English line per Greek line, keyed by its citation — verse mode, on its own line even if longer. Each citation appears once; do not merge, reorder, annotate.
@@ -121,8 +238,20 @@ Task:
 {json.dumps(task, ensure_ascii=False, indent=1)}"""
 
 
-def verify_prompt(fx: dict, task: dict) -> str:
-    translator = WORKS[fx["work"]][1]
+BULK_RULE = """- For EACH tick, judge whether `current_placement` BEGINS where the translation renders the BULK of `greek_tick` — the clause or phrase that carries most of that Greek line's content — not merely its first word. When the translator keeps the Greek order these coincide. When they don't, follow the bulk: if the line opens with the last word or two of a sentence begun on `greek_above` and the rest of the line is a new clause, the tick goes at the start of that new clause; if the translator moves the line's main clause elsewhere in the sentence, the tick goes where that clause is rendered. `ok` = it does; `early` = begins on content belonging to `greek_above`, or before the start of `greek_tick`'s bulk; `late` = begins after the start of `greek_tick`'s bulk, or on `greek_below`; `unsure` = translation condenses/omits `greek_tick`.
+- ALWAYS return `phrase`: a 5–10 word verbatim substring copied EXACTLY from `text`, beginning precisely at the start (a word boundary) of the English that renders `greek_tick`'s bulk (an exact search must find it; for `ok` it matches `current_placement`'s start). It must NOT start as late as `greek_below`.
+- Judge by the GREEK, not by which reading sounds smoothest."""
+
+
+def verify_prompt(translator: str, task: dict, rule: str = "first") -> str:
+    if rule == "bulk":
+        head, sep, rest = _first_word_prompt(translator, task).partition("- For EACH tick")
+        tail = rest[rest.index("- Return every tick"):]
+        return head + BULK_RULE + "\n" + tail
+    return _first_word_prompt(translator, task)
+
+
+def _first_word_prompt(translator: str, task: dict) -> str:
     return f"""Strict Greek-to-English alignment judge. Check Bekker line-marks in {translator}'s translation against the GREEK — the Greek is authoritative, the gloss is only a hint.
 - The task below has `text` (full chapter prose) + `ticks` in Bekker order, each with `greek_above`/`greek_tick`/`greek_below` (raw Greek of the line before / tick / after), `gloss` (hint), `current_placement` (translation now sitting at the tick).
 - For EACH tick, judge whether `current_placement` BEGINS exactly at the English of `greek_tick`'s FIRST word: `ok` = it does; `early` = begins on `greek_above` content (a line too high); `late` = a clause into `greek_tick` or onto `greek_below`; `unsure` = translation condenses/omits `greek_tick`.
@@ -170,10 +299,12 @@ def gloss_dir(source: str) -> Path:
 
 def load_gloss(source: str, fx: dict, ch: dict) -> dict:
     if source == "prod":   # the glosses the shipped EN alignment used (4.x era)
-        if fx["work"] != "EN":
+        if fx.get("gloss_work", fx["work"]) != "EN":
             return {}
         return load_json(REPO / f"build/align/glosses/EN/{ch['book']}-{ch['chapter']}.json")
-    return load_json(gloss_dir(source) / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
+    # glosses are of the Greek, so a second translation reuses its work's glosses
+    return load_json(gloss_dir(source) / fx.get("gloss_work", fx["work"])
+                     / f"{ch['book']}-{ch['chapter']}.json")
 
 
 # ---- scoring --------------------------------------------------------------
@@ -187,9 +318,42 @@ def snap(starts: list[int], off: int) -> int:
     return max((s for s in starts if s <= off), default=starts[0])
 
 
+def score_interval(placed: dict, fx_list: list[dict]) -> dict:
+    """Interval gold (Ostwald): a placement is right when it falls inside the
+    printed line the margin number labels, [start, end)."""
+    rows, missing = [], 0
+    for fx in fx_list:
+        for ch in fx["chapters"]:
+            ticks = {w["tick"] for w in ch["windows"]}
+            got = placed.get((fx["work"], ch["book"], ch["chapter"]), {})
+            for g in ch["gold"]:
+                if g["citation"] not in ticks:
+                    continue
+                if g["citation"] not in got:
+                    missing += 1
+                    continue
+                p = got[g["citation"]]
+                side = "early" if p < g["start"] else "late" if p >= g["end"] else "in"
+                dist = g["start"] - p if side == "early" else p - g["end"] + 1 if side == "late" else 0
+                rows.append({"side": side, "dist": dist, "len": g["end"] - g["start"]})
+    if not rows:
+        return {"n": 0, "missing": missing}
+    total = len(rows) + missing
+    pct = lambda k: round(100 * k / total, 1)  # noqa: E731
+    return {"n": len(rows), "missing": missing,
+            "in_line_pct": pct(sum(r["side"] == "in" for r in rows)),
+            "near_30_pct": pct(sum(r["dist"] <= 30 for r in rows)),
+            "early_pct": pct(sum(r["side"] == "early" for r in rows)),
+            "late_pct": pct(sum(r["side"] == "late" for r in rows)),
+            "median_dist": statistics.median(r["dist"] for r in rows),
+            "median_line_chars": statistics.median(r["len"] for r in rows)}
+
+
 def score(placed: dict, fx_list: list[dict]) -> dict:
     """placed: {(work, book, chapter): {citation: offset}}. Scores every gold tick
     that sits on a glossed tick; a gold tick with no placement counts as missing."""
+    if any("start" in g for fx in fx_list for ch in fx["chapters"] for g in ch["gold"]):
+        return score_interval(placed, fx_list)
     rows, missing, missing_col = [], 0, 0
     for fx in fx_list:
         for ch in fx["chapters"]:
@@ -311,9 +475,36 @@ def fold(text: str, pass1_off: dict, out: dict) -> tuple[dict, int]:
     return overrides, unplaced
 
 
+def correct_task(source: str, fx: dict, ch: dict, tag: str) -> dict | None:
+    """Recipe §5b as fixed in PR #170: re-judge only the ticks `tag` marked
+    early/late, showing it the pass-2 placement its own answers produced.
+    None when there is nothing to re-judge."""
+    task = verify_task(source, fx, ch)
+    first = load_json(OUT / "verify" / source / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
+    if task is None or not first:
+        return None
+    ovr, _ = fold(ch["text"], task["_pass1"], first)
+    _cr, anchors = pass1(source, fx, ch, ovr)
+    pos = {a.citation: a.offset for a in anchors}
+    verdict = {t["citation"]: t.get("verdict") for t in first.get("ticks", [])}
+    ticks = [dict(t, current_placement=ch["text"][pos[t["citation"]]:pos[t["citation"]] + 90])
+             for t in task["ticks"] if verdict.get(t["citation"]) in ("early", "late")]
+    if not ticks:
+        return None
+    return {"chapter": task["chapter"], "ticks": ticks, "text": ch["text"]}
+
+
+def merge_ticks(first: dict, corr: dict) -> dict:
+    new = {t["citation"]: t for t in corr.get("ticks", [])}
+    return {"chapter": first.get("chapter"),
+            "ticks": [new.get(t["citation"], t) for t in first.get("ticks", [])]}
+
+
 def score_verify(source: str) -> None:
     fx_list = fixtures()
     vdir = OUT / "verify" / source
+    tags = list(MODELS) + [f"{t}+c" for t in MODELS if (vdir / "tasks" / f"{t}+c").exists()]
+    tags += sorted(d.name for d in (vdir / "tasks").glob("*@*") if d.is_dir())
     base, by_model = {}, {}
     stats = {}
     for fx in fx_list:
@@ -323,11 +514,19 @@ def score_verify(source: str) -> None:
             if task is None:
                 continue
             base[k] = task["_pass1"]
-            for tag in MODELS:
-                out = load_json(vdir / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
-                sent = load_json(vdir / "tasks" / tag / fx["work"] / f"{ch['book']}-{ch['chapter']}.json")
-                if out and sent != task:
-                    sys.exit(f"{k}: {tag}'s answer has no matching snapshot of what it was sent")
+            for tag in tags:
+                name = f"{ch['book']}-{ch['chapter']}.json"
+                sent = load_json(vdir / "tasks" / tag / fx["work"] / name)
+                if tag.endswith("+c"):
+                    ct = correct_task(source, fx, ch, tag[:-2])
+                    if (ct or {}) != sent:
+                        sys.exit(f"{k}: {tag}'s inputs changed since its batch was sent")
+                    # no early/late ticks -> nothing re-judged, the first pass stands
+                    out = load_json(vdir / (tag if ct else tag[:-2]) / fx["work"] / name)
+                else:
+                    out = load_json(vdir / tag / fx["work"] / name)
+                    if out and sent != task:
+                        sys.exit(f"{k}: {tag}'s answer has no matching snapshot of what it was sent")
                 st = stats.setdefault(tag, {"chapters_missing": 0, "unplaced": 0, "verdicts": {}})
                 if not out:
                     st["chapters_missing"] += 1
@@ -343,7 +542,7 @@ def score_verify(source: str) -> None:
     print(f"pass1   ALL     {json.dumps(score(base, fx_list))}")
     for fx in fx_list:
         print(f"pass1   {fx['work']}-{fx['book']:<4} {json.dumps(score(base, [fx]))}")
-    for tag in MODELS:
+    for tag in tags:
         placed = by_model.get(tag, {})
         print(f"{tag:7} ALL     {json.dumps(score(placed, fx_list))}  {json.dumps(stats[tag])}")
         for fx in fx_list:
@@ -353,7 +552,9 @@ def score_verify(source: str) -> None:
 # ---- batches --------------------------------------------------------------
 def submit(stage: str, source: str | None, models: list[str],
            only: set | None = None, max_tokens: int = 32000,
-           names: set | None = None) -> None:
+           names: set | None = None, rule: str = "first") -> None:
+    if stage == "correct" and rule != "first":
+        sys.exit("correction reads, prompts and snapshots first-word answers only")
     import anthropic
     from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
     from anthropic.types.messages.batch_create_params import Request
@@ -363,7 +564,9 @@ def submit(stage: str, source: str | None, models: list[str],
             continue
         for ch in fx["chapters"]:
             if stage == "gloss":
-                prompt, schema = gloss_prompt(fx, ch), GLOSS_SCHEMA
+                prompt, schema = gloss_prompt(WORKS[fx["work"]][0], ch), GLOSS_SCHEMA
+            elif stage == "correct":
+                pass   # per model below: each corrects its own first pass
             else:
                 task = verify_task(source, fx, ch)
                 if task is None:
@@ -371,18 +574,28 @@ def submit(stage: str, source: str | None, models: list[str],
                     continue
                 sent_task = task
                 task = {k: v for k, v in task.items() if k != "_pass1"}
-                prompt, schema = verify_prompt(fx, task), VERIFY_SCHEMA
+                prompt, schema = verify_prompt(WORKS[fx["work"]][1], task, rule), VERIFY_SCHEMA
             for tag in models:
+                variant = tag if rule == "first" else f"{tag}@{rule}"
                 cid = f"{stage[0]}-{tag}-{fx['work']}-{ch['book']}-{ch['chapter']}"
                 if only and cid not in only:
                     continue
-                if stage == "verify":
-                    # snapshot what this model sees, so scoring can refuse changed inputs
-                    snap_dir = OUT / "verify" / source / "tasks" / tag / fx["work"]
+                if stage == "correct":
+                    sent_task = correct_task(source, fx, ch, tag)
+                    if sent_task is None:
+                        continue
+                    prompt, schema = verify_prompt(WORKS[fx["work"]][1], sent_task), VERIFY_SCHEMA
+                    snap_dir = OUT / "verify" / source / "tasks" / f"{tag}+c" / fx["work"]
                     snap_dir.mkdir(parents=True, exist_ok=True)
                     (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
                         json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
-                receipt[cid] = {"stage": stage, "source": source, "model": tag,
+                if stage == "verify":
+                    # snapshot what this model sees, so scoring can refuse changed inputs
+                    snap_dir = OUT / "verify" / source / "tasks" / variant / fx["work"]
+                    snap_dir.mkdir(parents=True, exist_ok=True)
+                    (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
+                        json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
+                receipt[cid] = {"stage": stage, "source": source, "model": tag, "variant": variant,
                                 "work": fx["work"], "book": ch["book"], "chapter": ch["chapter"]}
                 reqs.append(Request(custom_id=cid, params=MessageCreateParamsNonStreaming(
                     model=MODELS[tag], max_tokens=max_tokens,
@@ -411,8 +624,10 @@ def fetch(batch_id: str) -> None:
         tag = meta["model"]
         if meta["stage"] == "gloss":
             dest = gloss_dir(tag) / meta["work"]
+        elif meta["stage"] == "correct":
+            dest = OUT / "verify" / meta["source"] / f"{tag}+c" / meta["work"]
         else:
-            dest = OUT / "verify" / meta["source"] / tag / meta["work"]
+            dest = OUT / "verify" / meta["source"] / meta.get("variant", tag) / meta["work"]
         out_file = dest / f"{meta['book']}-{meta['chapter']}.json"
         # a failure must not leave an earlier run's answer behind to be scored
         out_file.unlink(missing_ok=True)
@@ -429,6 +644,9 @@ def fetch(batch_id: str) -> None:
         data = json.loads(next(blk.text for blk in m.content if blk.type == "text"))
         if meta["stage"] == "gloss":
             data = {ln["citation"]: ln["english"] for ln in data["lines"]}
+        elif meta["stage"] == "correct":
+            data = merge_ticks(load_json(OUT / "verify" / meta["source"] / tag / meta["work"]
+                                         / out_file.name), data)
         dest.mkdir(parents=True, exist_ok=True)
         out_file.write_text(
             json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -442,25 +660,35 @@ def fetch(batch_id: str) -> None:
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument("--set", help="fixture set under fixtures/, e.g. ostwald (default: the Perseus set)")
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("prepare"); a.add_argument("work"); a.add_argument("book", type=int)
-    a = sub.add_parser("submit"); a.add_argument("stage", choices=["gloss", "verify"])
+    a = sub.add_parser("submit"); a.add_argument("stage", choices=["gloss", "verify", "correct"])
     a.add_argument("--source"); a.add_argument("--models", default="haiku,sonnet,opus")
     a.add_argument("--only", help="comma-separated custom_ids to resend")
     a.add_argument("--max-tokens", type=int, default=32000)
     a.add_argument("--fixtures", help="comma-separated fixture names, e.g. EN-2,EN-3")
+    a.add_argument("--rule", choices=["first", "bulk"], default="first",
+                   help="verify placement rule: first word (recipe) or bulk of the line (John)")
     a = sub.add_parser("fetch"); a.add_argument("batch_id")
     a = sub.add_parser("score-gloss"); a.add_argument("--sources", default="prod,haiku,sonnet,opus")
     a = sub.add_parser("score-verify"); a.add_argument("--source", required=True)
+    a = sub.add_parser("prepare-ostwald"); a.add_argument("books", nargs="+", type=int)
     args = p.parse_args()
-    if args.cmd == "prepare":
+    if args.set:
+        global FIX
+        FIX = FIX / args.set
+    if args.cmd == "prepare-ostwald":
+        for b in args.books:
+            prepare_ostwald(b)
+    elif args.cmd == "prepare":
         prepare(args.work, args.book)
     elif args.cmd == "submit":
-        if args.stage == "verify" and not args.source:
+        if args.stage in ("verify", "correct") and not args.source:
             sys.exit("verify needs --source (whose glosses give the first pass)")
         submit(args.stage, args.source, args.models.split(","),
                set(args.only.split(",")) if args.only else None, args.max_tokens,
-               set(args.fixtures.split(",")) if args.fixtures else None)
+               set(args.fixtures.split(",")) if args.fixtures else None, args.rule)
     elif args.cmd == "fetch":
         fetch(args.batch_id)
     elif args.cmd == "score-gloss":

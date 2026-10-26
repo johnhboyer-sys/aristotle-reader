@@ -48,6 +48,11 @@ uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>
 → `build/align/gloss_tasks/<SLUG>/<book>-<chapter>.json`.
 
 ## 2. Gloss the windows (one sub-agent per *batch* of chapters, parallel)
+> **Batch API alternative (2026-10-25).** `tools/batch_align.py` sends §2 and §4/§5b to the
+> Message Batches API instead of sub-agents and writes the same `glosses/` and `verify_out/`
+> files, so every other step is unchanged: `gloss <WORK>` (Haiku 5.5), `verify <WORK> <books>`
+> (Opus 5.5), `fetch <batch_id>`. Model choice: PR #168. It has no §5b mode: see the
+> measurement there.
 Run these agents on **Sonnet** (`model: sonnet`) — A/B on NE Bk1 vs Opus-tier baseline
 showed no accuracy loss (column tier improved), since the gloss only feeds a word-overlap
 matcher and the verifier backstops it. (Keep verification on Opus.)
@@ -136,6 +141,14 @@ NO free-form `reason` field** (reasons are the single biggest token sink; omit t
 ```
 Judge-style verifier prompt:
 
+> **Superseded 2026-10-25: judge by the line's bulk, not its first word.** John's rule
+> (2026-07-31) is that a tick marks where the *bulk* of the Greek line's content is rendered;
+> the prompt below pegs it to the first word. Scored on Rackham/Freese milestones (428 ticks)
+> and Ostwald's printed margin (126 lines), the bulk prompt (`BULK_RULE` in
+> `tools/model_test.py`, used by `tools/batch_align.py`) beat it on both: right sentence
+> 88.6% → 91.6%, column starts 82.0% → 93.8%, Ostwald in-line 53.2% → 61.1%; 51 ticks fixed
+> vs 28 broken. The first-word text is kept below for the works it built.
+
 > Strict Greek-to-English alignment judge. Check Bekker line-marks in **<TRANSLATOR>**'s
 > translation against the GREEK — the Greek is authoritative, the gloss is only a hint.
 > - Read `build/align/verify_tasks/<SLUG>/<B>-<C>.json`: `text` (full chapter prose) +
@@ -167,6 +180,11 @@ around them. `persist_book` saves the per-book map, glosses, and a dark-mode
 3-line-window review HTML to the **tracked** `alignment-results/<vid>/`.
 
 ## 5b. One cheap correction pass (built in, run once — scoped to early/late)
+> **Measured 2026-10-25: skip it.** Until PR #170 this pass never saw the pass-2 placements
+> (`verify_gather` ignored the overrides), so every earlier "correction" was a second judgment
+> of pass 1. With that fixed, on 428 Rackham/Freese gold ticks, Opus confirmed 1,613 of the
+> 1,667 ticks it re-judged and the score did not move (right sentence 88.6% → 88.3%, within
+> 30 chars 82.5% → 82.5%, median 0 → 3 chars), for 45% more verify cost.
 **No single pass is clean** — measured against Rackham's real line numbers, even the
 judge-style §4 lands the *median* tick exactly but still misses some of the harder ticks
 by a sentence (and the gloss-eval gold is itself soft, so trust column-starts most). The
