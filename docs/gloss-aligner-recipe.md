@@ -14,8 +14,13 @@ overrides), `eval.py` (`run_gloss_eval`), `gloss_review.py`.
 `verify_to_offsets.py`, `persist_book.py`, `make_index.py`, plus eval-only
 `verify_score.py` / `bakeoff.py`.
 
-The model steps (glossing, verifying) run as **Claude Code sub-agents on the Max
-plan** — no API key, nothing billed. Python only reads the JSON they write.
+The model steps (glossing, verifying) run one of two ways; Python only reads the JSON
+they write, so every other step is the same:
+- **`tools/batch_align.py`** (since 2026-10-25): the Message Batches API, **billed to the
+  API key**. Haiku 5.5 glosses, Opus 5.5 verifies by the line-bulk rule. 17 works, 5,101
+  ticks: $18.59.
+- **Claude Code sub-agents** on the subscription: no API charge, slower to drive. Use the
+  same prompts (`gloss_prompt`, `verify_prompt(..., "bulk")` in `tools/model_test.py`).
 
 > Two phases: **A. Produce the alignment** (§0–§6) and **B. Implement it into the
 > site** (§7). For a whole work, loop A per book, then do B once.
@@ -29,10 +34,18 @@ plan** — no API key, nothing billed. Python only reads the JSON they write.
    ```bash
    cd pipeline && uv run python -m aristotle_pipeline stage1 --work <SLUG>
    ```
-2. The unmarked translation is vendored under `sources/<dir>/` and declared as the
-   manifest's `english.secondary` (id, dir, books, marker: `number`|`part`|`part_roman`)
-   so `reference.default_target` finds it.
-3. Confirm the prose is clean (no stray numbers/footnotes):
+2. The unmarked translation is vendored under `sources/<dir>/` and declared in the
+   manifest. `reference.default_target` aligns `english.secondary` when there is one,
+   else `english.primary`. **When the translation to align is the primary of a work that
+   also has a secondary** (EE/Solomon, Top/Pickard-Cambridge), set `ALIGN_SLOT=primary`
+   on every aligner step (§1–§5, `batch_align.py`). Never on `stage1`/`all`: the pipeline
+   CLI refuses to start with it set.
+3. Every aligner tool names its work: `WORK=<SLUG>` for `verify_gather.py`,
+   `verify_to_offsets.py` and `persist_book.py` (they refuse to run without it; until
+   2026-10-25 they silently defaulted to EN).
+4. Confirm the prose is clean (no stray numbers/footnotes), and that its chapter
+   breaks fall where the Greek chapters open (a break mid-sentence is a page break, not
+   a chapter):
    ```bash
    uv run python -c "from aristotle_pipeline.stage1_ross import parse_translation; \
    from aristotle_pipeline.config import SOURCES_DIR; \
@@ -101,7 +114,7 @@ Reference = the glosses; fingerprint = the full 3-line window; matcher = **lexic
 The confidence gate alone misses flagged-but-reliable ticks that snapped to a
 sentence start, so verify **all** real ticks (not just `uncertain`):
 ```bash
-VERIFY_ALL=1 uv run python tools/verify_gather.py <book>          # per book
+WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py <book>          # per book
 ```
 → `build/align/verify_tasks/<SLUG>/<b>-<c>.json` (one file per chapter; carries the
 **full chapter text** + every tick's `{citation, greek_above, greek_tick, greek_below,
@@ -116,7 +129,8 @@ rather than produce one cold.
 > Why this matters (learned the hard way on Ross-EN **and** Pol-Jowett): anchoring on the
 > *gloss* drifts, because (a) the gloss sometimes starts a word off its Greek line, and
 > (b) lexical un-matches make the agent grab the nearest strong phrase. Anchoring on
-> `greek_tick`'s first word is the fix.
+> `greek_tick` is the fix (by the bulk of its content, not its first word: see the
+> 2026-10-25 note below).
 *(Cheaper option: omit `VERIFY_ALL=1` to gather only `uncertain` ticks. Optional args:
 `verify_gather.py <book> <PAD> <chapters>` to re-gather a few chapters.)*
 
@@ -170,23 +184,28 @@ Judge-style verifier prompt:
 
 ## 5. Fold + re-align + persist (per book)
 ```bash
-uv run python tools/verify_to_offsets.py <book>                              # phrases → overrides (monotonic)
+WORK=<SLUG> uv run python tools/verify_to_offsets.py <book>                  # phrases → overrides (monotonic)
 uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books <book>  # pass 2: applies overrides, re-interpolates
-uv run python tools/persist_book.py <book>                                   # → alignment-results/<vid>/{maps,glosses,review}/<SLUG>/book-NN.*
+WORK=<SLUG> uv run python tools/persist_book.py <book>                       # → alignment-results/<vid>/{maps,glosses,review}/<SLUG>/book-NN.*
 ```
-`verify_to_offsets` writes `build/align/<SLUG>_<vid>_gloss_overrides.json`; pass-2
+`verify_to_offsets` writes `build/align/<SLUG>_<vid>_gloss_overrides.json`, rebuilding
+each chapter's entries from that chapter's current answer only; a gathered chapter with
+no `verify_out` file is named and the run fails (its ticks stay at pass 1). Pass-2
 `align` upgrades verified ticks to `confirmed` and re-interpolates single lines
 around them. `persist_book` saves the per-book map, glosses, and a dark-mode
 3-line-window review HTML to the **tracked** `alignment-results/<vid>/`, each under a
 `<SLUG>/` subdirectory: works that share a translator (Forster's four, Ross's EN/Meta/Juv/Long)
 share `<vid>/`, and flat files let each work overwrite the last.
 
-## 5b. One cheap correction pass (built in, run once — scoped to early/late)
+## 5b. Correction pass — retired 2026-10-25 (kept for the record)
 > **Measured 2026-10-25: skip it.** Until PR #170 this pass never saw the pass-2 placements
 > (`verify_gather` ignored the overrides), so every earlier "correction" was a second judgment
 > of pass 1. With that fixed, on 428 Rackham/Freese gold ticks, Opus confirmed 1,613 of the
 > 1,667 ticks it re-judged and the score did not move (right sentence 88.6% → 88.3%, within
 > 30 chars 82.5% → 82.5%, median 0 → 3 chars), for 45% more verify cost.
+*The text below is how the pass ran until 2026-10-25. It is not part of the workflow;
+skip from §5 to §6.*
+
 **No single pass is clean** — measured against Rackham's real line numbers, even the
 judge-style §4 lands the *median* tick exactly but still misses some of the harder ticks
 by a sentence (and the gloss-eval gold is itself soft, so trust column-starts most). The
@@ -226,6 +245,12 @@ chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
 > scoping pass *2* (above), not gating pass 1.
 
 ## 6. Validate (optional)
+- **Stacked ticks** (free, no gold): in the gloss map, count `column`/`five_line` ticks
+  whose offset equals another tick's in the same chapter. Healthy works sit at 0–2%. A
+  pile at offset 0 means the English and Greek chapter divisions disagree (fix the
+  chapter breaks, then re-run §3–§5); a pile mid-chapter means placements collapsed.
+  Check before wiring: the dense gutter drops stacked ticks, so a stacked work's gutter
+  comes out sparser than the estimate it replaces.
 - **Numeric eval** (needs a Bekker-milestoned gold, e.g. Rackham): `--gloss-eval --work
   <SLUG> --books 1`. Gold is soft (its own mid-column ticks are approximate) — **trust
   the `column` tier over `five_line`**; a median error of 0 with a few sentence-sized
@@ -246,7 +271,16 @@ chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
    ```
    → `alignment-results/<vid>/<WORK>_<vid>_gloss_map.json` (tracked) + `review/<WORK>/index.html`,
    built from `maps/<WORK>/` only.
-2. **The pipeline auto-consumes it — no edits needed.** `stage1_ross._load_align_map`
+2. **A primary translation needs one more step** (most works: every archive primary,
+   and Ross in `Meta-public.yaml`). The archive path reads only `anchors:`, never the
+   gloss map:
+   ```bash
+   uv run python tools/gloss_map_to_anchors.py <WORK> <vid>   # → sources/<dir>/anchors.yaml
+   ```
+   then add `anchors: "<dir>/anchors.yaml"` under that slot in `manifests/<WORK>.yaml` **and
+   in `manifests/<WORK>-public.yaml` if there is one** (`test_aligned_slots_are_read`
+   fails on an aligned primary left without it).
+   **A secondary (or third) is consumed as is — no edits needed.** `stage1_ross._load_align_map`
    prefers `alignment-results/<vid>/<WORK>_<vid>_gloss_map.json`; `_REAL_CONF` already
    includes `confirmed`; `_real_ticks` upgrades **every** confident cadence tick to
    real. The reader renders the secondary translation as flowing prose with each
@@ -254,7 +288,7 @@ chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
    in `Reader.svelte`/`global.css`) — no line break, no in-text number.
 3. **Rebuild the data + app:**
    ```bash
-   uv run python -m aristotle_pipeline all --work <WORK>   # stage2 PASS, key_failures=0
+   uv run python -m aristotle_pipeline all --work <WORK>   # stage2 PASS, key_failures=0 (and --public)
    cd ../app && npm run build                              # Node 22
    ```
 4. **Verify** in the reader (`/<WORK>/book/<n>?view=english&trans=<vid>`): the gutter
@@ -277,25 +311,21 @@ from §3). Only the combined **map** is needed for the app build itself.
 - **Gloss style:** standard-terminology = robust default; translator-style = booster
   only for translations the model knows well (it reproduces their wording on famous
   lines — fine when that translation is the target, useless for obscure ones).
-- **Verify = Greek-anchored, judge-structured (the §4 rewrite).** The target is the raw
+- **Verify = Greek-anchored, judge-structured, by the line's bulk.** The target is the raw
   `greek_tick` line, not the gloss; the agent judges/corrects `current_placement` (the
   pass-1 offset) and returns a lean `{verdict, phrase}` under a schema. This replaced the
   old "gloss = target, free-form phrase" verifier that drifted ~40% (early, onto the line
   above) and forced the sprawling correction rounds on Ross-EN and Pol-Jowett.
-- **One correction pass, not N — scoped.** §4 run a second time (now confirming real
-  pass-2 placements) is the whole "audit", but re-gather only the pass-1 `early`/`late`
-  ticks (`VERIFY_FILTER=early,late`) — confirmed ticks don't move (0 clamp collateral on
-  Ross-EN). Fold once, ship; do not loop. A post-correction re-check may **sample** 1–2
-  chapters/book.
+- **No correction pass.** Measured 2026-10-25 on 428 gold ticks, the (fixed) §5b pass
+  gained nothing for 45% more verify cost; one verify pass, then ship.
 - **Pass 1 stays full (`VERIFY_ALL=1`).** Do not gate pass 1 by confidence or by
   offset-vs-linear residual — both drop bad-tick recall hard (see the archived note in
   §5b). The cheap win is scoping pass *2*, not skipping pass 1.
 - **Token rules:** schema-validated output everywhere; **no `reason` field** (the biggest
-  sink); keep `verdict` in `verify_out`; correction pass run once and scoped via
-  `VERIFY_FILTER`; sample the re-check.
+  sink); keep `verdict` in `verify_out`.
 - **No single pass is clean.** Measured against external (Rackham) gold, even the judge
-  pass lands the *median* tick exactly but misses ~1 in 5 hard ticks — the correction
-  pass and a human eye on `review/*.html` are load-bearing, not optional polish.
+  pass lands the *median* tick exactly but misses ~1 in 5 hard ticks — a human eye on
+  `review/<WORK>/*.html` is load-bearing, not optional polish.
 - **Soft gold:** a milestoned reference's own ~line-20 ticks are approximate, so the
   numeric eval *understates* `five_line` accuracy. Trust the `column` tier most.
 - **Honest estimates:** ticks the verifier can't place (translator condenses the
@@ -306,26 +336,22 @@ from §3). Only the combined **map** is needed for the app build itself.
 ## Quick reference — whole work, end to end
 ```bash
 cd pipeline
-uv run python -m aristotle_pipeline stage1 --work <SLUG>                       # 0
-uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>     # 1
-# 2: sub-agent per chapter → build/align/glosses/<SLUG>/<b>-<c>.json
+# ALIGN_SLOT=primary on the aligner lines only when the primary of a work with a secondary is aligned (§0)
+uv run python -m aristotle_pipeline stage1 --work <SLUG>                       # 0 (never with ALIGN_SLOT)
+uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>     # 1 (Greek for the review pages)
+uv run --with anthropic python tools/batch_align.py gloss <SLUG>               # 2 → fetch <batch_id> when ended
 for b in <books>; do
   uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 3 pass 1
-  WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b              # 4 gather (greek + current_placement)
-  # 4: judge-structured Workflow fan-out (schema {citation,verdict,phrase}, NO reason)
-  #    → write each agent record VERBATIM ({chapter,ticks:[...]}, keep verdict) to
-  #      build/align/verify_out/<SLUG>/<b>-<c>.json
+  WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b              # 4 gather
+done
+uv run --with anthropic python tools/batch_align.py verify <SLUG> <books>      # 4 → fetch <batch_id> when ended
+for b in <books>; do
   WORK=<SLUG> uv run python tools/verify_to_offsets.py $b                       # 5 fold
   uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 5 pass 2
-  uv run python tools/persist_book.py $b                                        # 5 persist
-  # 5b CORRECTION (scoped — re-gather ONLY pass-1 early/late ticks, before re-judging):
-  WORK=<SLUG> VERIFY_ALL=1 VERIFY_FILTER=early,late uv run python tools/verify_gather.py $b
-  #    judge Workflow again on the delta → overwrite those phrases → fold/pass2/persist once
-  WORK=<SLUG> uv run python tools/verify_to_offsets.py $b
-  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b
-  uv run python tools/persist_book.py $b
+  WORK=<SLUG> uv run python tools/persist_book.py $b                            # 5 persist
 done
 uv run python tools/make_index.py <SLUG> <vid>                                  # 7 combined map + index
-uv run python -m aristotle_pipeline all --work <SLUG>                           # 7 rebuild data
+uv run python tools/gloss_map_to_anchors.py <SLUG> <vid>                        # 7 primaries only, + anchors: in the manifest(s)
+uv run python -m aristotle_pipeline all --work <SLUG>                           # 7 rebuild data (and --public)
 cd ../app && npm run build                                                      # 7 build app
 ```
