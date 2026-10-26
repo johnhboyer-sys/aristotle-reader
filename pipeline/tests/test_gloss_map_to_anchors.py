@@ -24,3 +24,11 @@ def test_meta_anchors_are_phrases_of_the_stripped_text():
     real = {a["citation"] for e in gmap.values() for a in e["anchors"] if a["tier"] in g.REAL_TIERS}
     assert len(entries) == len(real)
     assert all(e["at"] in flat for e in entries)
+
+
+def test_the_slot_is_the_one_named_by_the_vid():
+    # Codex: Meta has only a secondary, so "primary or secondary" also passed the
+    # test above. Int has three dir-backed slots; each vid must find its own.
+    assert g._slot("Int", "edghill")["dir"] == "int-edghill"
+    assert g._slot("Int", "taylor")["dir"] == "int-taylor"
+    assert g._slot("Int", "ackrill")["dir"] == "int-ackrill"
