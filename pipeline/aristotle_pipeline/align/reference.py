@@ -103,7 +103,7 @@ def default_target(work_id: str) -> tuple[str, dict[tuple[int, int], str]]:
     sec = eng.get("secondary")
     if sec and not slot:
         return sec.get("id", "sec"), parse_translation(
-            SOURCES_DIR / sec["dir"], sec["books"], sec.get("marker", "number"),
+            SOURCES_DIR / sec["dir"], sec["books"], sec.get("chapter_marker", sec.get("marker", "number")),
             strip_quote_repeats=sec.get("strip_quote_repeats", False))
     prim = eng.get("primary")
     if prim and prim.get("dir"):
