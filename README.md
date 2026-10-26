@@ -2,7 +2,7 @@
 
 A static web application for reading and searching Aristotle's complete works with the Greek and English side by side, morphological analysis on every word, multiple translation comparison, and full-text search across both languages.
 
-Live at **[johnhboyer-sys.github.io/aristotle-reader/](https://johnhboyer-sys.github.io/aristotle-reader/)**
+Live at **[aristotle.johnhboyer.com](https://aristotle.johnhboyer.com/)**
 
 ---
 

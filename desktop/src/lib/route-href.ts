@@ -18,7 +18,7 @@ export type RouteAction =
   | { kind: 'search'; query: string }
   | { kind: 'external'; url: string };
 
-const LIVE_SITE = 'https://johnhboyer-sys.github.io/aristotle-reader';
+const LIVE_SITE = 'https://aristotle.johnhboyer.com';
 
 // decodeURIComponent throws on a malformed escape. The click interceptor
 // runs this parser BEFORE preventDefault, so a throw here would let the
