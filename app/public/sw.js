@@ -20,7 +20,7 @@
 // VERSION") avoids wiping a sibling app's offline data.
 const CACHE_PREFIX = 'aristotle-reader-';
 const VERSION = CACHE_PREFIX + 'v1';
-const SCOPE_PATH = new URL(self.registration.scope).pathname; // e.g. /aristotle-reader/
+const SCOPE_PATH = new URL(self.registration.scope).pathname; // '/' at the custom domain
 const OFFLINE_URL = SCOPE_PATH + 'offline.html';
 
 self.addEventListener('install', (event) => {

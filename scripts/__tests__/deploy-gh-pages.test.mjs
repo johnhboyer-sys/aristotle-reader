@@ -87,6 +87,25 @@ test('categorize files each path under the category DEPLOY-STATUS.md reads them 
   assert.equal(categorize('lemma/syzeo/'), 'lemma/');
 });
 
+// macOS ships openrsync, whose itemize flags are 7 characters, not GNU's 9. Read
+// with the GNU-only pattern, every add and change went uncounted: a dry run
+// reported "add 0, change 0" for a deploy that replaced 15 bundles.
+const OPENRSYNC_DRY_RUN = [
+  '*deleting gone.txt',
+  '>f+++++++ added.txt',
+  '>f..t.... touched.txt',
+  'cd+++++++ newdir/',
+  '>f+++++++ newdir/f.txt',
+  '>f.s..... sub/changed.txt',
+].join('\n');
+
+test('parseRsyncItemized reads openrsync\'s 7-character flags too', () => {
+  const r = parseRsyncItemized(OPENRSYNC_DRY_RUN);
+  assert.deepEqual(r.added, ['added.txt', 'newdir/f.txt']);
+  assert.deepEqual(r.modified, ['touched.txt', 'sub/changed.txt']);
+  assert.deepEqual(r.deleted, ['gone.txt']);
+});
+
 test('groupByCategory reports counts per category, never a bare total', () => {
   const groups = groupByCategory(parseRsyncItemized(RSYNC_DRY_RUN).deleted);
   assert.deepEqual([...groups.keys()], ['_astro', 'data/APo', 'data/Meta', 'data/reports', 'lemma/', 'pages/lemma']);
@@ -326,7 +345,7 @@ test('verificationTargets lists the live-verified pattern with /bonitz/ as 404',
   assert.equal(byPath['/_astro/global.a.css'], 200);
   assert.equal(byPath['/_astro/Reader.old.js'], 404);
   assert.equal(byPath['/bonitz/'], 404);
-  assert.ok(targets.every((t) => t.url.startsWith('https://johnhboyer-sys.github.io/aristotle-reader/')));
+  assert.ok(targets.every((t) => t.url.startsWith('https://aristotle.johnhboyer.com/')));
 });
 
 test('verifyLive polls until every target answers as expected', async () => {
