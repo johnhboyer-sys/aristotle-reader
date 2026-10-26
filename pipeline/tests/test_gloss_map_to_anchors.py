@@ -86,3 +86,9 @@ def test_the_refusal_points_to_rulings(tmp_path):
     out.write_text('- bekker: "1447a10"\n  at: "My subject"\n')
     with pytest.raises(SystemExit, match="rulings"):
         g.write(out, ENTRIES[:1], "map.json")
+
+
+def test_a_phrase_that_cannot_be_made_unique_is_reported(capsys):
+    text = "x " + "same words to the end " * 3
+    g._phrase(text, text.rindex("same words"), "9a5")
+    assert "9a5" in capsys.readouterr().err

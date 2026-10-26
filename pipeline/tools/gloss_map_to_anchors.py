@@ -49,7 +49,7 @@ def _clip(text: str, offset: int, n: int) -> str:
     return window.strip()
 
 
-def _phrase(text: str, offset: int) -> str:
+def _phrase(text: str, offset: int, citation: str = "") -> str:
     """A verbatim phrase of `text` starting at `offset`, whitespace-collapsed and
     trimmed to a trailing word boundary so an exact substring search finds it.
     The reader takes the first copy of a phrase in its column, so a phrase that
@@ -60,6 +60,9 @@ def _phrase(text: str, offset: int) -> str:
     while flat.count(window) > 1 and offset + n < len(text):
         n += 40
         window = _clip(text, offset, n)
+    if flat.count(window) > 1:
+        print(f"warn: {citation}: its phrase recurs to the chapter's end; the reader takes the first copy",
+              file=sys.stderr)
     return window
 
 
@@ -114,7 +117,7 @@ def build(work_id: str, vid: str) -> list[dict]:
             cit = a["citation"]
             if cit in seen:
                 continue
-            phrase = _phrase(text, a["offset"])
+            phrase = _phrase(text, a["offset"], cit)
             if not phrase:
                 continue
             seen.add(cit)

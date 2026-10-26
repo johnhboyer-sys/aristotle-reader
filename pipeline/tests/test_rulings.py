@@ -116,3 +116,16 @@ def test_a_ruling_keeps_to_its_own_copy_when_the_text_shifts():
     reworded = text.replace("epsilon five.", "zeta six.")
     with pytest.raises(ValueError, match="1094a5"):
         rulings.offsets({"1:1": {"1094a5": r}}, {(1, 1): reworded})
+
+
+def test_an_edit_to_a_shared_preamble_is_refused_not_moved_to_the_other_copy():
+    # Grok: two copies with the same 40-character lead-in; edit the ruled
+    # copy's lead-in and the other copy still matched it. The context is now
+    # lengthened at ruling time until it tells the copies apart.
+    shared = "and so, as was said, iota kappa lambda mu, "
+    text = "First start. " + shared + "the phrase repeats. Then second start. " + shared + "the phrase repeats. End."
+    second = text.rindex("the phrase")
+    before = rulings.context(text, second, "the phrase repeats.")
+    assert rulings.locate(text, "the phrase repeats.", second, before) == second
+    edited = text[:text.rindex(shared)] + shared.replace("kappa", "kapa") + text[second:]
+    assert rulings.locate(edited, "the phrase repeats.", second, before) is None

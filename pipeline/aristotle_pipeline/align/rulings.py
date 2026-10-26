@@ -43,10 +43,19 @@ def _hits(text: str, phrase: str, word_start: bool = False) -> list[int]:
     return [m.start() for m in pat.finditer(text)] if pat else []
 
 
-def context(text: str, off: int, n: int = 40) -> str:
-    """The words just before `off`, whitespace-collapsed: what tells a ruling's
-    copy of a repeated phrase from the others when text around it shifts."""
+def _tail(text: str, off: int, n: int) -> str:
     return " ".join(text[max(0, off - 3 * n):off].split())[-n:]
+
+
+def context(text: str, off: int, phrase: str | None = None, n: int = 40) -> str:
+    """The words just before `off`, whitespace-collapsed: what tells a ruling's
+    copy of a repeated phrase from the others when text around it shifts.
+    Lengthened until no other copy of `phrase` has the same lead-in, so an edit
+    to this copy's lead-in can only fail to match, never match another copy."""
+    others = [h for h in _hits(text, phrase) if h != off] if phrase else []
+    while n < off and any(_tail(text, h, n) == _tail(text, off, n) for h in others):
+        n += 40
+    return _tail(text, off, n)
 
 
 def locate(text: str, phrase: str, near: int, before: str | None = None) -> int | None:
