@@ -172,12 +172,14 @@ Judge-style verifier prompt:
 ```bash
 uv run python tools/verify_to_offsets.py <book>                              # phrases → overrides (monotonic)
 uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books <book>  # pass 2: applies overrides, re-interpolates
-uv run python tools/persist_book.py <book>                                   # → alignment-results/<vid>/{maps,glosses,review}/book-NN.*
+uv run python tools/persist_book.py <book>                                   # → alignment-results/<vid>/{maps,glosses,review}/<SLUG>/book-NN.*
 ```
 `verify_to_offsets` writes `build/align/<SLUG>_<vid>_gloss_overrides.json`; pass-2
 `align` upgrades verified ticks to `confirmed` and re-interpolates single lines
 around them. `persist_book` saves the per-book map, glosses, and a dark-mode
-3-line-window review HTML to the **tracked** `alignment-results/<vid>/`.
+3-line-window review HTML to the **tracked** `alignment-results/<vid>/`, each under a
+`<SLUG>/` subdirectory: works that share a translator (Forster's four, Ross's EN/Meta/Juv/Long)
+share `<vid>/`, and flat files let each work overwrite the last.
 
 ## 5b. One cheap correction pass (built in, run once — scoped to early/late)
 > **Measured 2026-10-25: skip it.** Until PR #170 this pass never saw the pass-2 placements
@@ -242,7 +244,8 @@ chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
    ```bash
    uv run python tools/make_index.py <WORK> <vid>      # e.g. EN ross
    ```
-   → `alignment-results/<vid>/<WORK>_<vid>_gloss_map.json` (tracked) + `index.html`.
+   → `alignment-results/<vid>/<WORK>_<vid>_gloss_map.json` (tracked) + `review/<WORK>/index.html`,
+   built from `maps/<WORK>/` only.
 2. **The pipeline auto-consumes it — no edits needed.** `stage1_ross._load_align_map`
    prefers `alignment-results/<vid>/<WORK>_<vid>_gloss_map.json`; `_REAL_CONF` already
    includes `confirmed`; `_real_ticks` upgrades **every** confident cadence tick to

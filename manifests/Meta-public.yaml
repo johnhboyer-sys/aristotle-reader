@@ -40,6 +40,7 @@ english:
     books: 14
     chapter_marker: part
     strip_quote_repeats: true
+    anchors: "meta-ross/anchors.yaml"   # gloss-aligned Bekker ticks (alignment-results/ross/Meta_ross_gloss_map.json)
 
 expected_line_gaps:
   - { column: "993a",  after: 27, next: 29 }

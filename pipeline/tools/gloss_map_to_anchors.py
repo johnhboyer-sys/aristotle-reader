@@ -56,11 +56,20 @@ def _column_key(citation: str) -> tuple:
     return (int(m.group(1)), m.group(2), int(m.group(3)))
 
 
-def build(work_id: str, vid: str) -> list[dict]:
+def _slot(work_id: str, vid: str) -> dict:
+    """The manifest's english slot the map was built on (its id is the vid)."""
     eng = Manifest.for_work(work_id).data["english"]
-    prim = eng.get("primary") or eng.get("secondary")
+    hits = [c for c in eng.values() if isinstance(c, dict) and c.get("id") == vid and c.get("dir")]
+    if len(hits) != 1:
+        raise SystemExit(f"{work_id}: {len(hits)} english slots with id {vid!r} and a dir")
+    return hits[0]
+
+
+def build(work_id: str, vid: str) -> list[dict]:
+    prim = _slot(work_id, vid)
     marker = prim.get("chapter_marker", prim.get("marker", "number"))
-    prose = parse_translation(SOURCES_DIR / prim["dir"], prim["books"], marker)
+    prose = parse_translation(SOURCES_DIR / prim["dir"], prim["books"], marker,
+                              strip_quote_repeats=prim.get("strip_quote_repeats", False))
 
     map_path = (SOURCES_DIR.parent / "alignment-results" / vid
                 / f"{work_id}_{vid}_gloss_map.json")
@@ -104,9 +113,7 @@ def main() -> None:
         raise SystemExit("usage: gloss_map_to_anchors.py <WORK> <vid>")
     work_id, vid = sys.argv[1], sys.argv[2]
     entries = build(work_id, vid)
-    prim = Manifest.for_work(work_id).data["english"]
-    prim = prim.get("primary") or prim.get("secondary")
-    out = SOURCES_DIR / prim["dir"] / "anchors.yaml"
+    out = SOURCES_DIR / _slot(work_id, vid)["dir"] / "anchors.yaml"
     # JSON double-quoted scalars are valid YAML and escape quotes/colons safely.
     lines = [f'- bekker: "{e["bekker"]}"\n  at: {json.dumps(e["at"], ensure_ascii=False)}'
              for e in entries]

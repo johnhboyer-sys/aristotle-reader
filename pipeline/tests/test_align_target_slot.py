@@ -31,3 +31,12 @@ def test_primary_slot_on_a_work_without_a_primary_source_raises(monkeypatch):
     monkeypatch.setenv("ALIGN_SLOT", "primary")
     with pytest.raises(ValueError):
         default_target("EN")
+
+
+def test_a_secondary_is_parsed_by_its_chapter_marker(monkeypatch):
+    # Owen marks chapters "Part N" (chapter_marker: part); read as the default
+    # "number" marker, every chapter came back empty.
+    monkeypatch.delenv("ALIGN_SLOT", raising=False)
+    vid, prose = default_target("Top")
+    assert vid == "owen"
+    assert len(prose) > 50 and all(t.strip() for t in prose.values())
