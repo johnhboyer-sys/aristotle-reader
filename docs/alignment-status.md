@@ -19,8 +19,9 @@ anchors are structural/interpolated and not counted.
 > `*_review.json` files hold the aligner's own `confidence`/`score`/`flags`, not
 > reviewer marks, and cover only the flagged subset (EN/Ross: 138 rows, not 1293).
 >
-> The one alignment work with a committed human correction is **Poet / Fyfe**
-> (`63d41aa2`, 8 word-exact pins). Human passes claimed below for SE and HA Book 1
+> The alignment works with committed human corrections are **Poet / Fyfe** (`63d41aa2`,
+> 8 word-exact pins) and **Phys / Hardie** (`1f063da134`, 2 anchor texts, 184a20/184a25);
+> since 2026-10-25 both are also rulings (`alignment-results/{fyfe,hardie}/rulings/`). Human passes claimed below for SE and HA Book 1
 > have no surviving artifact either way. Treat every other "reviewed" as machine-only.
 >
 > Outside alignment, the real hand-verification lives in `bonitz/` — the adjudicated
@@ -254,13 +255,21 @@ anchors are structural/interpolated and not counted.
 
 ## How to verify a work
 
-1. Open each `review/book-NN.html` in a browser.
-2. For each tick decide **Spot on** / **Early** (matching content is *after* the ▸) /
-   **Late** (it's *before* the ▸); add notes as needed. Verdicts auto-save in the browser.
-3. Click **Export JSON** to save the verdicts; the Early/Late ones drive a re-gather +
-   re-verify pass on those chapters (`tools/verify_gather.py <book> 4000 <chapters>`).
-4. **Commit the export.** Step 2's verdicts live in browser storage only — if the export
-   isn't saved into the repo, the pass leaves no trace and the work has to be redone. This
-   is why the SE and HA Book 1 passes can't be confirmed today: nothing was committed, so
-   there is no way to tell which ticks a human actually looked at.
-5. When clean, do Phase B wiring (see each work's note above) + commit/deploy.
+1. Open `alignment-results/<vid>/review/<WORK>/index.html` and each book page in a browser
+   (phone works). Every column and five-line tick shows its Greek, gloss and the translation
+   with ◀ at the placement. Chapter-start ticks are not shown: the Greek fixes them.
+2. For each tick: **Spot on**, **Early** or **Late**, and for a tick that is off, **click the
+   word where it belongs**. Verdicts and clicks save in the browser as you go.
+3. **Export JSON** (one file per book: `review-<WORK>-<vid>-bookNN.json`).
+4. Import it: `[ALIGN_SLOT=primary] uv run python tools/apply_review.py <WORK> <export.json>...`.
+   That writes your rulings to `alignment-results/<vid>/rulings/<WORK>.json` — **commit it**:
+   browser storage is not a record (the SE and HA Book 1 passes left none). A clicked word pins
+   the tick there word-exact; Spot on pins it where it sits; Early/Late without a click is
+   recorded and listed as still needing a place. Nothing is written if a ruling is on a
+   chapter-start tick, is not in the shipped map, or reads out of order with another.
+5. Apply: pass 2 for the books it names, `persist_book`, `make_index`, `gloss_map_to_anchors`
+   (primaries), `all --work` (the importer prints the commands). Every later pass 2 re-applies
+   the rulings, and a machine tick that would sit past one gives way to it, so no re-run can
+   undo them. `gloss_map_to_anchors` refuses to overwrite an `anchors.yaml` holding hand edits.
+6. Known gap: a primary translation's reader cuts columns by estimate, so a ruling on a
+   column's first line does not reach it yet (the importer says so).

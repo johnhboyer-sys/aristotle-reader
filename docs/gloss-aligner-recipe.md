@@ -255,6 +255,10 @@ chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
   <SLUG> --books 1`. Gold is soft (its own mid-column ticks are approximate) — **trust
   the `column` tier over `five_line`**; a median error of 0 with a few sentence-sized
   outliers is the expected shape, not a failure.
+- **Human review** (any translation): mark ticks and click the right word on
+  `review/<WORK>/book-NN.html`, export, then `tools/apply_review.py` (steps in
+  `docs/alignment-status.md`, "How to verify a work"). The rulings are committed per work and
+  applied by every pass 2, word-exact; a ruling never moves for a machine tick.
 - **Human spot-check** (any translation): open `review/<WORK>/book-NN.html`. Watch for
   **early drift** — a tick placed on the line *above* its Greek line. The §4 pass removes
   most; a residual few are normal. This is incremental — refine the prompts

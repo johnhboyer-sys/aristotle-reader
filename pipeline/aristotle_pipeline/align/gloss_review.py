@@ -50,12 +50,14 @@ def _load_greek(work_id: str, book: int, chap: int) -> dict[str, str]:
     return greek
 
 
-def _render_tw(text_window: str, tick_in_window: int) -> str:
+def _render_tw(text_window: str, tick_in_window: int, window_start: int = 0) -> str:
     """Render text_window as clickable word spans.
 
     Words before ◀ are grey; words at/after ◀ are normal. Click any word to
     set the corrected phrase. The ◀ marker shows the current tick placement.
-    Each word gets data-p with the verbatim 80-char phrase starting there.
+    Each word gets data-p with the verbatim 80-char phrase starting there, and
+    data-o with its offset in the chapter (exported as `at`, so a repeated
+    phrase is still placed on the copy that was clicked).
     """
     marker_placed = False
     parts: list[str] = []
@@ -70,7 +72,7 @@ def _render_tw(text_window: str, tick_in_window: int) -> str:
             phrase_attr = html.escape(
                 text_window[off: off + 80].replace("\n", " "), quote=True)
             parts.append(
-                f"<span class=\"tww {zone}\" data-p=\"{phrase_attr}\">"
+                f"<span class=\"tww {zone}\" data-p=\"{phrase_attr}\" data-o=\"{window_start + off}\">"
                 f"{html.escape(tok)}</span>")
         else:
             parts.append(html.escape(tok).replace("  ", " &nbsp;"))
@@ -110,7 +112,7 @@ def _rows(work_id: str, books=None):
                 "greek_window": [
                     {"text": (greek.get(c, "") or "").strip(), "tick": c == a["citation"]}
                     for c in cits],
-                "tw_html": _render_tw(text_window, tick_in_window),
+                "tw_html": _render_tw(text_window, tick_in_window, ws),
                 "excerpt": text[off: off + 80].replace("\n", " "),
             })
     return version_id, out
@@ -256,7 +258,7 @@ document.addEventListener('click', e => {{
   const row = e.target.closest('tr[data-cit]');
   if (!row) return;
   const cit = row.dataset.cit;
-  saved[cit] = Object.assign({{}}, saved[cit] || {{}}, {{phrase: w.dataset.p}});
+  saved[cit] = Object.assign({{}}, saved[cit] || {{}}, {{phrase: w.dataset.p, at: Number(w.dataset.o)}});
   localStorage.setItem(STORE_KEY, JSON.stringify(saved));
   applyState(cit, saved[cit]);
   updateStats();
