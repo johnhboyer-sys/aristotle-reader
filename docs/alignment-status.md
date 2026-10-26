@@ -37,6 +37,19 @@ anchors are structural/interpolated and not counted.
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
 | De Caelo (`Cael`) | J. L. Stocks (Oxford, 1922) — primary | 40 | 654 | 654 confirmed | [index](../alignment-results/stocks/review/Cael/index.html) · Bk [1](../alignment-results/stocks/review/Cael/book-01.html) [2](../alignment-results/stocks/review/Cael/book-02.html) [3](../alignment-results/stocks/review/Cael/book-03.html) [4](../alignment-results/stocks/review/Cael/book-04.html) |
+| Topics (`Top`) | W. A. Pickard-Cambridge (Oxford, 1928) — primary | 83 | 992 | 989 confirmed · 2 reliable · 1 uncertain | [index](../alignment-results/pickard/review/Top/index.html) |
+| Parts of Animals (`PA`) | William Ogle (Oxford, 1882) — primary | 51 | 894 | 894 confirmed | [index](../alignment-results/ogle/review/PA/index.html) |
+| Generation of Animals (`GA`) | Arthur Platt (Oxford, 1910) — primary | 60 | 1162 | 1162 confirmed | [index](../alignment-results/platt/review/GA/index.html) |
+| Eudemian Ethics (`EE`) | J. Solomon (Oxford, 1915) — primary | 41 | 576 | 568 confirmed · 5 reliable · 3 uncertain | [index](../alignment-results/solomon/review/EE/index.html) |
+| Progression of Animals (`IA`) | A. S. L. Farquharson (Oxford, 1912) — primary | 19 | 139 | 139 confirmed | [index](../alignment-results/farquharson/review/IA/index.html) |
+| Movement of Animals (`MA`) | A. S. L. Farquharson (Oxford, 1912) — primary | 11 | 93 | 93 confirmed | [index](../alignment-results/farquharson/review/MA/index.html) |
+| On Length and Shortness of Life (`Long`) | G. R. T. Ross (Oxford, 1908) — primary | 6 | 38 | 38 confirmed | [index](../alignment-results/ross/review/Long/index.html) |
+| De Mirabilibus Auscultationibus (`Mirab`) | L. D. Dowdall (Oxford, 1909) — primary | 147 | 204 | 204 confirmed | [index](../alignment-results/dowdall/review/Mirab/index.html) |
+| De Mundo (`DM`) | E. S. Forster (Oxford, 1914) — primary | 7 | 163 | 163 confirmed | [index](../alignment-results/forster/review/DM/index.html) |
+| Mechanica (`Mech`) | E. S. Forster (Oxford, 1913) — primary | 35 | 176 | 176 confirmed | [index](../alignment-results/forster/review/Mech/index.html) |
+| Oeconomica (`Oec`) | E. S. Forster (Oxford, 1920) — primary | 8 | 166 | 164 confirmed · 2 uncertain | [index](../alignment-results/forster/review/Oec/index.html) |
+| Ventorum Situs (`Vent`) | E. S. Forster (Oxford, 1913) — primary | 1 | 11 | 11 confirmed | [index](../alignment-results/forster/review/Vent/index.html) |
+| De Audibilibus (`Aud`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 1 | 85 | 85 confirmed | [index](../alignment-results/loveday_forster/review/Aud/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
 - **Cael / Stocks** — aligned 2026-10-25, the pilot of the batch runner
@@ -47,6 +60,15 @@ anchors are structural/interpolated and not counted.
   pass (measured no gain on NE gold). Wired via `sources/cael-stocks/anchors.yaml` (606
   anchors, 1 unresolved `282b5`) + `anchors:` in `manifests/Cael.yaml`; stage2 PASS; 673 real
   vs 2 interpolated gutter ticks. Not deployed; no human pass.
+- **Thirteen main translations, 2026-10-25** (Top, PA, GA, EE, IA, MA, Long, Mirab, DM,
+  Mech, Oec, Vent, Aud) — the first batch run (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5
+  verify by the line-bulk rule, no §5b), $16.11 in all. EE and Top align their primaries
+  (Solomon, Pickard-Cambridge) with `ALIGN_SLOT=primary`; every other step as the recipe.
+  Wired via `sources/<dir>/anchors.yaml` + `anchors:` under `english.primary` (EE in both
+  `EE.yaml` and `EE-public.yaml`); stage2 PASS on each. Unresolved anchors: Top `106b35`; PA `687a5`, `687b5`, `696a5`; GA `720a35`, `727b5`; EE `1226b5`, `1249b5`; IA none; MA none; Long none; Mirab none; DM `392b35`; Mech none; Oec none; Vent none; Aud `803a5`, `803b5`.
+  Gutter real / interpolated: Top 1067 / 4; PA 940 / 4; GA 1205 / 2; EE 605 / 2; IA 159 / 0; MA 104 / 0; Long 44 / 0; Mirab 342 / 1; DM 167 / 1; Mech 208 / 0; Oec 168 / 0; Vent 12 / 0; Aud 83 / 2. Col, MXG, Phgn and VV were aligned too but held back:
+  their English and Greek chapter divisions disagreed (see the chapter fix in this PR). Not
+  deployed; no human pass.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
   *Note 2026-09-07:* the Categories work itself is live with Edghill as primary and a
@@ -58,6 +80,11 @@ anchors are structural/interpolated and not counted.
   `Cat_edghill_gloss_map.json`. This row therefore stays as is.
 
 ## ✅ Shipped live (machine-verified unless noted)
+
+
+> Meta, Juv and the five Beare works (rows after HA) were missing from this table until
+> 2026-10-25. Each is wired in its manifest and was aligned in June (`0f54bd5bbd`,
+> `222531ef3d`); their deploy state was not re-checked when the rows were added.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
@@ -71,6 +98,13 @@ anchors are structural/interpolated and not counted.
 | Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/SE/book-01.html) · [index](../alignment-results/pickard/review/SE/index.html) |
 | De Anima (`DA`) | J. A. Smith (Oxford, 1931) | 30 | 460 | 454 confirmed · 6 reliable/uncertain | [Bk 1](../alignment-results/smith/review/DA/book-01.html) · [Bk 2](../alignment-results/smith/review/DA/book-02.html) · [Bk 3](../alignment-results/smith/review/DA/book-03.html) · [index](../alignment-results/smith/review/DA/index.html) |
 | History of Animals (`HA`) | D'Arcy W. Thompson (public primary) | 227 | 2067 | 2060 confirmed · 7 reliable | [index](../alignment-results/thompson/review/HA/index.html) · Bk [1](../alignment-results/thompson/review/HA/book-01.html) [2](../alignment-results/thompson/review/HA/book-02.html) [3](../alignment-results/thompson/review/HA/book-03.html) [4](../alignment-results/thompson/review/HA/book-04.html) [5](../alignment-results/thompson/review/HA/book-05.html) [6](../alignment-results/thompson/review/HA/book-06.html) [7](../alignment-results/thompson/review/HA/book-07.html) [8](../alignment-results/thompson/review/HA/book-08.html) [9](../alignment-results/thompson/review/HA/book-09.html) |
+| Metaphysics (`Meta`) | W. D. Ross (secondary; primary in the public build) | 142 | 1704 | 1704 confirmed | [index](../alignment-results/ross/review/Meta/index.html) — **the public build read none of the alignment until `anchors:` was added 2026-10-25 (not yet deployed)** |
+| On Youth, Old Age, Life and Death, and Respiration (`Juv`) | G. R. T. Ross (primary) | 27 | 182 | 182 confirmed | [index](../alignment-results/ross/review/Juv/index.html) |
+| Sense and Sensibilia (`Sens`) | J. I. Beare (primary) | 7 | 185 | 185 confirmed | [index](../alignment-results/beare/review/Sens/index.html) |
+| On Memory (`Mem`) | J. I. Beare (primary) | 2 | 58 | 58 confirmed | [index](../alignment-results/beare/review/Mem/index.html) |
+| On Sleep (`Somn`) | J. I. Beare (primary) | 3 | 68 | 67 confirmed · 1 uncertain | [index](../alignment-results/beare/review/Somn/index.html) |
+| On Dreams (`Insomn`) | J. I. Beare (primary) | 3 | 59 | 59 confirmed | [index](../alignment-results/beare/review/Insomn/index.html) |
+| On Divination in Sleep (`DivSomn`) | J. I. Beare (primary) | 2 | 29 | 29 confirmed | [index](../alignment-results/beare/review/DivSomn/index.html) |
 
 - **Mete / Webster** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 · **two-tier
   targeted correction**). 773 real ticks, all confirmed; wired via
