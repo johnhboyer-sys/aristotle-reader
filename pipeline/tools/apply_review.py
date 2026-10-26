@@ -63,10 +63,10 @@ for exp in EXPORTS:
             except ValueError as e:              # page rendered from another map?
                 errors.append(f"{cit}: {e}")
                 continue
-            ruling = {"phrase": phrase, "near": near, "before": rulings.context(text, near, phrase)}
+            ruling = {"phrase": phrase, "near": near, **rulings.ruling_context(text, near, phrase)}
         elif verdict == "ok":
             ruling = {"phrase": text[off:off + 80], "near": off,
-                      "before": rulings.context(text, off, text[off:off + 80])}
+                      **rulings.ruling_context(text, off, text[off:off + 80])}
         elif verdict in ("early", "late"):
             ruling = {}
             unplaced.append(f"{cit} ({verdict})")

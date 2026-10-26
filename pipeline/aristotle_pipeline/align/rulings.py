@@ -6,7 +6,8 @@ tools/apply_review.py from the review pages' JSON export):
     {"<book>:<chapter>": {"<citation>": {"verdict": "ok" | "early" | "late",
                                         "phrase": "<verbatim text the tick starts at>",
                                         "near": <offset when ruled>,
-                                        "before": "<the 40 characters before it>",
+                                        "before": "<the words before it>",
+                                        "from_start": <true if those reach the chapter start>,
                                         "export": "<export file it came from>"}}}
 
 A ruling with a phrase pins its tick there, word-exact, on every re-run; one
@@ -58,12 +59,24 @@ def context(text: str, off: int, phrase: str | None = None, n: int = 40) -> str:
     return _tail(text, off, n)
 
 
-def locate(text: str, phrase: str, near: int, before: str | None = None) -> int | None:
+def ruling_context(text: str, off: int, phrase: str) -> dict:
+    """{"before", "from_start"} for a ruling at `off`. A context that reaches the
+    chapter start is the whole prefix, which is also the tail of any later copy
+    sharing it; `from_start` makes locate require it exactly."""
+    before = context(text, off, phrase)
+    return {"before": before, "from_start": before == " ".join(text[:off].split())}
+
+
+def locate(text: str, phrase: str, near: int, before: str | None = None,
+           from_start: bool = False) -> int | None:
     """Offset of `phrase` in `text`. Of several copies, the one preceded by
-    `before`; failing that information, the one nearest `near`. Several copies
-    of which none is preceded by `before` is unresolvable: None."""
+    `before` (exactly the whole prefix, if `from_start`); failing that
+    information, the one nearest `near`. Several copies of which none is so
+    preceded is unresolvable: None."""
     hits = _hits(text, phrase)
-    if len(hits) > 1 and before:
+    if len(hits) > 1 and from_start:
+        hits = [h for h in hits if " ".join(text[:h].split()) == before]
+    elif len(hits) > 1 and before:
         hits = [h for h in hits if " ".join(text[max(0, h - 3 * len(before)):h].split()).endswith(before)]
     return min(hits, key=lambda h: abs(h - near)) if hits else None
 
@@ -102,7 +115,7 @@ def offsets(rul: dict, prose: dict[tuple[int, int], str]) -> dict[str, dict[str,
         for cit, r in ticks.items():
             if not r.get("phrase"):
                 continue
-            off = locate(text, r["phrase"], r.get("near", 0), r.get("before"))
+            off = locate(text, r["phrase"], r.get("near", 0), r.get("before"), r.get("from_start", False))
             if off is None:
                 lost.append(f"{chap} {cit}")
             else:

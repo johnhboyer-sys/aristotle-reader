@@ -129,3 +129,17 @@ def test_an_edit_to_a_shared_preamble_is_refused_not_moved_to_the_other_copy():
     assert rulings.locate(text, "the phrase repeats.", second, before) == second
     edited = text[:text.rindex(shared)] + shared.replace("kappa", "kapa") + text[second:]
     assert rulings.locate(edited, "the phrase repeats.", second, before) is None
+
+
+def test_ruling_the_earlier_copy_when_the_shared_lead_in_reaches_the_start():
+    # Grok, third pass: the earlier copy's whole prefix is also the tail of the
+    # later copy's lead-in, so no context length tells them apart by suffix. A
+    # context that reaches the chapter start must then match it exactly.
+    shared = "As was said, iota kappa, "
+    text = shared + "the phrase repeats. Then more words follow here. " + shared + "the phrase repeats. End."
+    first = text.index("the phrase")
+    r = rulings.ruling_context(text, first, "the phrase repeats.")
+    assert r["from_start"] is True
+    assert rulings.locate(text, "the phrase repeats.", first, r["before"], r["from_start"]) == first
+    edited = shared.replace("kappa", "kapa") + text[len(shared):]
+    assert rulings.locate(edited, "the phrase repeats.", first, r["before"], r["from_start"]) is None
