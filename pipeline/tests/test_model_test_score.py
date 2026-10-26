@@ -1,6 +1,7 @@
 """Mutation tests for tools/model_test.py's scorer: known placements, moved by
 known amounts, must move each metric the way it claims to measure — and a run
 that placed nothing must say so instead of scoring."""
+import json
 import sys
 from pathlib import Path
 
@@ -126,3 +127,15 @@ def test_correction_refuses_the_bulk_rule():
     # the correction stage reads, prompts and snapshots first-word answers only
     with pytest.raises(SystemExit, match="first"):
         mt.submit("correct", "haiku", ["opus"], rule="bulk")
+
+
+def test_resubmitting_drops_the_earlier_answer(tmp_path):
+    # Codex: submit replaced the snapshot but left the old answer beside it, so
+    # scoring checked the new inputs and scored the old answer without error.
+    snap = tmp_path / "tasks" / "opus" / "EN" / "1-1.json"
+    answer = tmp_path / "opus" / "EN" / "1-1.json"
+    answer.parent.mkdir(parents=True)
+    answer.write_text('{"chapter": "1:1", "ticks": []}')
+    mt.snapshot(snap, answer, {"book": 1, "chapter": 1})
+    assert not answer.exists()
+    assert json.loads(snap.read_text()) == {"book": 1, "chapter": 1}

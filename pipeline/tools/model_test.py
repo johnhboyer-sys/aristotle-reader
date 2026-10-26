@@ -550,6 +550,15 @@ def score_verify(source: str) -> None:
 
 
 # ---- batches --------------------------------------------------------------
+def snapshot(snap: Path, answer: Path, task: dict) -> None:
+    """Record what a request is sent, and drop any earlier answer in its slot:
+    scoring checks the answer against this snapshot, so an old answer left
+    beside a new snapshot would be scored as if it answered the new task."""
+    answer.unlink(missing_ok=True)
+    snap.parent.mkdir(parents=True, exist_ok=True)
+    snap.write_text(json.dumps(task, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def submit(stage: str, source: str | None, models: list[str],
            only: set | None = None, max_tokens: int = 32000,
            names: set | None = None, rule: str = "first") -> None:
@@ -585,16 +594,16 @@ def submit(stage: str, source: str | None, models: list[str],
                     if sent_task is None:
                         continue
                     prompt, schema = verify_prompt(WORKS[fx["work"]][1], sent_task), VERIFY_SCHEMA
-                    snap_dir = OUT / "verify" / source / "tasks" / f"{tag}+c" / fx["work"]
-                    snap_dir.mkdir(parents=True, exist_ok=True)
-                    (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
-                        json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
+                    name = f"{ch['book']}-{ch['chapter']}.json"
+                    vdir = OUT / "verify" / source
+                    snapshot(vdir / "tasks" / f"{tag}+c" / fx["work"] / name,
+                             vdir / f"{tag}+c" / fx["work"] / name, sent_task)
                 if stage == "verify":
                     # snapshot what this model sees, so scoring can refuse changed inputs
-                    snap_dir = OUT / "verify" / source / "tasks" / variant / fx["work"]
-                    snap_dir.mkdir(parents=True, exist_ok=True)
-                    (snap_dir / f"{ch['book']}-{ch['chapter']}.json").write_text(
-                        json.dumps(sent_task, ensure_ascii=False, indent=1), encoding="utf-8")
+                    name = f"{ch['book']}-{ch['chapter']}.json"
+                    vdir = OUT / "verify" / source
+                    snapshot(vdir / "tasks" / variant / fx["work"] / name,
+                             vdir / variant / fx["work"] / name, sent_task)
                 receipt[cid] = {"stage": stage, "source": source, "model": tag, "variant": variant,
                                 "work": fx["work"], "book": ch["book"], "chapter": ch["chapter"]}
                 reqs.append(Request(custom_id=cid, params=MessageCreateParamsNonStreaming(

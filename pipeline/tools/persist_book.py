@@ -1,5 +1,5 @@
 """Persist a finished book's alignment to the tracked results dir + render HTML.
-Usage: uv run python build/persist_book.py <book>
+Usage: WORK=<slug> uv run python tools/persist_book.py <book>
 Reads the current gloss map (single book), copies map+glosses, renders the
 3-line-window review HTML, and prints per-tier / confidence stats."""
 import json
@@ -16,7 +16,9 @@ from aristotle_pipeline.align.reference import default_target
 import os
 
 BOOK = int(sys.argv[1])
-WORK = os.environ.get("WORK", "EN")
+WORK = os.environ.get("WORK")
+if not WORK:   # no default: a forgotten WORK= used to act on EN
+    sys.exit("WORK is unset: run with WORK=<work slug>")
 vid, _ = default_target(WORK)
 RES = REPO / "alignment-results" / vid
 # Maps, glosses and review pages are namespaced PER WORK: works sharing a

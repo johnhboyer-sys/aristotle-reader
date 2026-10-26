@@ -1,7 +1,7 @@
 """Gather Method-A 'uncertain' ticks for the PRODUCTION target (the actual
 unmarked translation, e.g. Ross) so a verifier sub-agent can re-place them.
 
-Usage: uv run python build/verify_gather.py <book>
+Usage: WORK=<slug> [VERIFY_ALL=1] uv run python tools/verify_gather.py <book>
 Writes build/align/verify_tasks/EN/<book>-<chapter>.json (only chapters with
 uncertain ticks) and merges into build/align/verify_meta.json
 (key "book:chapter|citation" -> {a_offset, excerpt_lo}).
@@ -32,7 +32,9 @@ ALL = bool(os.environ.get("VERIFY_ALL"))
 # clamp moves 0 non-corrected real ticks, so confirmations don't shift. Reads the
 # existing verify_out, so run this BEFORE the correction judge overwrites it.
 V_FILTER = set(f.strip() for f in os.environ.get("VERIFY_FILTER", "").split(",") if f.strip())
-WORK = os.environ.get("WORK", "EN")
+WORK = os.environ.get("WORK")
+if not WORK:   # no default: a forgotten WORK= used to act on EN
+    sys.exit("WORK is unset: run with WORK=<work slug>")
 TASK_DIR = REPO / "build/align/verify_tasks" / WORK
 TASK_DIR.mkdir(parents=True, exist_ok=True)
 OUT_DIR = REPO / "build/align/verify_out" / WORK
