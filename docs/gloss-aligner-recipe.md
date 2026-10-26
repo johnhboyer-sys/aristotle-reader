@@ -255,9 +255,9 @@ chapters/book via the `<chapters>` arg) rather than re-judge the whole delta.
   <SLUG> --books 1`. Gold is soft (its own mid-column ticks are approximate) — **trust
   the `column` tier over `five_line`**; a median error of 0 with a few sentence-sized
   outliers is the expected shape, not a failure.
-- **Human spot-check** (any translation): open `review/book-NN.html`. Watch for
-  **early drift** — a tick placed on the line *above* its Greek line. The §4 + correction
-  pass removes most; a residual few are normal. This is incremental — refine the prompts
+- **Human spot-check** (any translation): open `review/<WORK>/book-NN.html`. Watch for
+  **early drift** — a tick placed on the line *above* its Greek line. The §4 pass removes
+  most; a residual few are normal. This is incremental — refine the prompts
   over successive works rather than chasing a perfect single run.
 
 ---
@@ -320,7 +320,7 @@ from §3). Only the combined **map** is needed for the app build itself.
   gained nothing for 45% more verify cost; one verify pass, then ship.
 - **Pass 1 stays full (`VERIFY_ALL=1`).** Do not gate pass 1 by confidence or by
   offset-vs-linear residual — both drop bad-tick recall hard (see the archived note in
-  §5b). The cheap win is scoping pass *2*, not skipping pass 1.
+  §5b).
 - **Token rules:** schema-validated output everywhere; **no `reason` field** (the biggest
   sink); keep `verdict` in `verify_out`.
 - **No single pass is clean.** Measured against external (Rackham) gold, even the judge
@@ -334,21 +334,26 @@ from §3). Only the combined **map** is needed for the app build itself.
   glosses.
 
 ## Quick reference — whole work, end to end
+Each loop stops at the first failing step (`|| break`), so a failed fold never reaches
+persist. `fetch` prints the batch's status while it runs; go on only when it prints the
+`written` summary with an empty `failures` list (it exits 1 on any failure).
 ```bash
 cd pipeline
 # ALIGN_SLOT=primary on the aligner lines only when the primary of a work with a secondary is aligned (§0)
 uv run python -m aristotle_pipeline stage1 --work <SLUG>                       # 0 (never with ALIGN_SLOT)
 uv run python -m aristotle_pipeline.align --emit-gloss-tasks --work <SLUG>     # 1 (Greek for the review pages)
-uv run --with anthropic python tools/batch_align.py gloss <SLUG>               # 2 → fetch <batch_id> when ended
+uv run --with anthropic python tools/batch_align.py gloss <SLUG>               # 2 → prints "batch <id>"
+uv run --with anthropic python tools/batch_align.py fetch <id>                 # 2 repeat until it prints `written`
 for b in <books>; do
-  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 3 pass 1
-  WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b              # 4 gather
+  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b &&  # 3 pass 1
+  WORK=<SLUG> VERIFY_ALL=1 uv run python tools/verify_gather.py $b || break     # 4 gather
 done
-uv run --with anthropic python tools/batch_align.py verify <SLUG> <books>      # 4 → fetch <batch_id> when ended
+uv run --with anthropic python tools/batch_align.py verify <SLUG> <books>      # 4 → prints "batch <id>"
+uv run --with anthropic python tools/batch_align.py fetch <id>                 # 4 repeat until it prints `written`
 for b in <books>; do
-  WORK=<SLUG> uv run python tools/verify_to_offsets.py $b                       # 5 fold
-  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b   # 5 pass 2
-  WORK=<SLUG> uv run python tools/persist_book.py $b                            # 5 persist
+  WORK=<SLUG> uv run python tools/verify_to_offsets.py $b &&                    # 5 fold (fails on a missing answer)
+  uv run python -m aristotle_pipeline.align --provider gloss --work <SLUG> --books $b &&  # 5 pass 2
+  WORK=<SLUG> uv run python tools/persist_book.py $b || break                   # 5 persist
 done
 uv run python tools/make_index.py <SLUG> <vid>                                  # 7 combined map + index
 uv run python tools/gloss_map_to_anchors.py <SLUG> <vid>                        # 7 primaries only, + anchors: in the manifest(s)

@@ -33,12 +33,15 @@ def test_a_chapter_without_an_answer_keeps_no_stale_overrides(tmp_path):
     (align / f"verify_meta_Long.json").write_text(json.dumps({
         "1:1|464b20": {"a_offset": 0}, "1:2|465a5": {"a_offset": 0}}))
     (align / f"Long_{vid}_gloss_overrides.json").write_text(json.dumps({
-        "1:1": {"464b20": 999999, "464b25": 888888}, "1:2": {"465a5": 12345}}))
+        "1:1": {"464b20": 999999, "464b25": 888888}, "1:2": {"465a5": 12345},
+        "1:3": {"465b1": 777},        # not in this gather's metadata (Codex, second pass)
+        "2:1": {"1a1": 5}}))          # another book: not this fold's business
     phrase = prose[(1, 1)][200:245]
     (align / "verify_out" / "Long" / "1-1.json").write_text(json.dumps(
         {"chapter": "1:1", "ticks": [{"citation": "464b20", "verdict": "ok", "phrase": phrase}]}))
     r = run_fold(tmp_path)
     ovr = json.loads((align / f"Long_{vid}_gloss_overrides.json").read_text())
     assert ovr["1:1"] == {"464b20": prose[(1, 1)].index(phrase)}   # stale 464b25 gone too
-    assert "1:2" not in ovr
+    assert "1:2" not in ovr and "1:3" not in ovr
+    assert ovr["2:1"] == {"1a1": 5}
     assert r.returncode != 0 and "1:2" in r.stderr

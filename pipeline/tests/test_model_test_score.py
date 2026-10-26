@@ -129,13 +129,44 @@ def test_correction_refuses_the_bulk_rule():
         mt.submit("correct", "haiku", ["opus"], rule="bulk")
 
 
-def test_resubmitting_drops_the_earlier_answer(tmp_path):
-    # Codex: submit replaced the snapshot but left the old answer beside it, so
-    # scoring checked the new inputs and scored the old answer without error.
-    snap = tmp_path / "tasks" / "opus" / "EN" / "1-1.json"
-    answer = tmp_path / "opus" / "EN" / "1-1.json"
-    answer.parent.mkdir(parents=True)
-    answer.write_text('{"chapter": "1:1", "ticks": []}')
-    mt.snapshot(snap, answer, {"book": 1, "chapter": 1})
-    assert not answer.exists()
-    assert json.loads(snap.read_text()) == {"book": 1, "chapter": 1}
+def _stub_anthropic(monkeypatch):
+    import types
+    client = types.SimpleNamespace(messages=types.SimpleNamespace(batches=types.SimpleNamespace(
+        create=lambda requests: types.SimpleNamespace(id="msgbatch_test"))))
+    mods = {"anthropic": types.ModuleType("anthropic"),
+            "anthropic.types": types.ModuleType("anthropic.types"),
+            "anthropic.types.message_create_params": types.ModuleType("m"),
+            "anthropic.types.messages": types.ModuleType("anthropic.types.messages"),
+            "anthropic.types.messages.batch_create_params": types.ModuleType("b")}
+    mods["anthropic"].Anthropic = lambda: client
+    mods["anthropic.types.message_create_params"].MessageCreateParamsNonStreaming = dict
+    mods["anthropic.types.messages.batch_create_params"].Request = dict
+    for name, mod in mods.items():
+        monkeypatch.setitem(sys.modules, name, mod)
+
+
+def test_resubmitting_drops_the_earlier_answer(tmp_path, monkeypatch):
+    # Codex: submit replaced a chapter's snapshot but left the old answer beside
+    # it, so scoring checked the new inputs and scored the old answer. Runs the
+    # real submit() (API stubbed), so the call sites are covered, not a helper.
+    _stub_anthropic(monkeypatch)
+    monkeypatch.setattr(mt, "OUT", tmp_path / "out")
+    monkeypatch.setattr(mt, "FIX", tmp_path / "fix")
+    lines = [{"citation": f"1094a{n}", "greek": f"λέξις{n} ἄλλη{n}"} for n in range(1, 8)]
+    text = "Every art and every inquiry aims at some good. " * 4
+    fx = {"work": "EN", "book": 1, "chapters": [{
+        "book": 1, "chapter": 1, "lines": lines, "text": text, "gold": [],
+        "windows": [{"tick": "1094a5", "is_column_start": False,
+                     "lines": ["1094a4", "1094a5", "1094a6"]}]}]}
+    mt.FIX.mkdir(parents=True)
+    (mt.FIX / "EN-1.json").write_text(json.dumps(fx))
+    gloss = mt.OUT / "gloss" / "haiku" / "EN" / "1-1.json"
+    gloss.parent.mkdir(parents=True)
+    gloss.write_text(json.dumps({c["citation"]: "every inquiry aims at good" for c in lines}))
+    for variant, rule in (("opus", "first"), ("opus@bulk", "bulk")):
+        answer = mt.OUT / "verify" / "haiku" / variant / "EN" / "1-1.json"
+        answer.parent.mkdir(parents=True)
+        answer.write_text('{"chapter": "1:1", "ticks": []}')
+        mt.submit("verify", "haiku", ["opus"], rule=rule)
+        assert not answer.exists(), variant
+        assert (mt.OUT / "verify" / "haiku" / "tasks" / variant / "EN" / "1-1.json").exists()

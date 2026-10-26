@@ -74,6 +74,22 @@ for ch in chapter_lines([BOOK]):
     wins[(ch.book, ch.chapter)] = {w.tick: [l.citation for l in w.lines] for w in tick_windows(ch)}
 
 meta = json.loads(META.read_text()) if META.exists() else {}
+
+
+def in_scope(cp: int) -> bool:
+    return not CHAP_FILTER or str(cp) in CHAP_FILTER
+
+
+# This run's scope replaces what earlier gathers left in it: a stale task file
+# would be submitted again, and a stale metadata entry would make the fold demand
+# an answer for a tick nobody was asked about. (A VERIFY_FILTER correction gather
+# keeps the other ticks' metadata: their answers still fold.)
+for f in TASK_DIR.glob(f"{BOOK}-*.json"):
+    if in_scope(int(f.stem.split("-")[1])):
+        f.unlink()
+if not V_FILTER:
+    meta = {k: v for k, v in meta.items() if not (
+        int(k.split(":")[0]) == BOOK and in_scope(int(k.split("|")[0].split(":")[1])))}
 n_tasks = n_unc = 0
 for (b, cp), cr in sorted(chapters.items()):
     if CHAP_FILTER and str(cp) not in CHAP_FILTER:

@@ -84,13 +84,16 @@ for key, m in META.items():
     if b == BOOK:
         by_chap[(b, cp)].append((cit, m["a_offset"]))
 
+# This book's overrides come from its current answers alone: an older run's
+# placements, for a chapter whose answer is missing or that this gather no
+# longer covers, must not reach pass 2 as "confirmed". Other books are kept.
+for key in [k for k in overrides if int(k.split(":")[0]) == BOOK]:
+    del overrides[key]
+
 placed = missing = 0
 unanswered = []
 for (b, cp), ticks in by_chap.items():
     text = ross.get((b, cp), "")
-    # A chapter's overrides come from its current answer alone: an older run's
-    # placements must not survive a missing or partial answer as "confirmed".
-    overrides.pop(f"{b}:{cp}", None)
     path = OUT / f"{b}-{cp}.json"
     if not path.exists():
         unanswered.append(f"{b}:{cp}")
