@@ -5,8 +5,8 @@ tools/apply_review.py from the review pages' JSON export):
 
     {"<book>:<chapter>": {"<citation>": {"verdict": "ok" | "early" | "late",
                                         "phrase": "<verbatim text the tick starts at>",
-                                        "near": <offset when ruled>,
-                                        "before": "<the words before it>",
+                                        "near": <offset when ruled; a record only>,
+                                        "before": "<the words before it, if the phrase recurs>",
                                         "from_start": <true if those reach the chapter start>,
                                         "export": "<export file it came from>"}}}
 
@@ -45,7 +45,14 @@ def _hits(text: str, phrase: str, word_start: bool = False) -> list[int]:
 
 
 def _tail(text: str, off: int, n: int) -> str:
-    return " ".join(text[max(0, off - 3 * n):off].split())[-n:]
+    """The last `n` characters of the whitespace-collapsed text before `off`,
+    reading back as far as it takes (a run of spaces collapses to one)."""
+    k = 3 * n
+    while True:
+        t = " ".join(text[max(0, off - k):off].split())
+        if len(t) > n or off - k <= 0:
+            return t[-n:]
+        k *= 2
 
 
 def context(text: str, off: int, phrase: str | None = None, n: int = 40) -> str:
@@ -60,25 +67,27 @@ def context(text: str, off: int, phrase: str | None = None, n: int = 40) -> str:
 
 
 def ruling_context(text: str, off: int, phrase: str) -> dict:
-    """{"before", "from_start"} for a ruling at `off`. A context that reaches the
-    chapter start is the whole prefix, which is also the tail of any later copy
-    sharing it; `from_start` makes locate require it exactly."""
+    """What a ruling at `off` must keep to find its own copy of `phrase` again:
+    nothing if the phrase occurs once, else {"before", "from_start"}. A context
+    that reaches the chapter start is the whole prefix, which is also the tail
+    of any later copy sharing it; `from_start` makes locate require it exactly."""
+    if not [h for h in _hits(text, phrase) if h != off]:
+        return {}
     before = context(text, off, phrase)
     return {"before": before, "from_start": before == " ".join(text[:off].split())}
 
 
-def locate(text: str, phrase: str, near: int, before: str | None = None,
-           from_start: bool = False) -> int | None:
-    """Offset of `phrase` in `text`. Of several copies, the one preceded by
-    `before` (exactly the whole prefix, if `from_start`); failing that
-    information, the one nearest `near`. Several copies of which none is so
-    preceded is unresolvable: None."""
+def locate(text: str, phrase: str, before: str | None = None, from_start: bool = False) -> int | None:
+    """Offset of the ruled copy of `phrase` in `text`: the one preceded by
+    `before` (exactly the whole prefix, if `from_start`), or the only copy if
+    the ruling needed no context. Anything but exactly one candidate is None:
+    a ruling is refused by name, never guessed onto another copy."""
     hits = _hits(text, phrase)
-    if len(hits) > 1 and from_start:
+    if before is not None and from_start:
         hits = [h for h in hits if " ".join(text[:h].split()) == before]
-    elif len(hits) > 1 and before:
-        hits = [h for h in hits if " ".join(text[max(0, h - 3 * len(before)):h].split()).endswith(before)]
-    return min(hits, key=lambda h: abs(h - near)) if hits else None
+    elif before is not None:
+        hits = [h for h in hits if _tail(text, h, len(before)) == before]
+    return hits[0] if len(hits) == 1 else None
 
 
 def place_click(text: str, phrase: str, shown_from: int, shown_to: int, at: int | None = None) -> int:
@@ -115,7 +124,7 @@ def offsets(rul: dict, prose: dict[tuple[int, int], str]) -> dict[str, dict[str,
         for cit, r in ticks.items():
             if not r.get("phrase"):
                 continue
-            off = locate(text, r["phrase"], r.get("near", 0), r.get("before"), r.get("from_start", False))
+            off = locate(text, r["phrase"], r.get("before"), r.get("from_start", False))
             if off is None:
                 lost.append(f"{chap} {cit}")
             else:

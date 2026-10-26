@@ -17,11 +17,14 @@ TEXT = ("First comes a sentence about art. Then one about inquiry and choice. "
         "A third concerns the good. A fourth concerns ends. A fifth concerns crafts.")
 
 
-def test_locate_matches_across_line_breaks_and_prefers_the_nearest_copy():
+def test_locate_matches_across_line_breaks_and_never_guesses_between_copies():
     text = "the good is aimed at.\nAnd again the good\nis aimed at."
-    assert rulings.locate(text, "the good is aimed at.", 0) == 0
-    assert rulings.locate(text, "the good is aimed at.", 30) == text.index("good\nis") - 4
-    assert rulings.locate(text, "nowhere in it", 0) is None
+    assert rulings.locate("One. the good\nis aimed at.", "the good is aimed at.") == 5
+    assert rulings.locate(text, "the good is aimed at.") is None       # two copies, no context
+    second = text.index("good\nis") - 4
+    ctx = rulings.ruling_context(text, second, "the good is aimed at.")
+    assert rulings.locate(text, "the good is aimed at.", **ctx) == second
+    assert rulings.locate(text, "nowhere in it") is None
 
 
 def test_a_ruling_whose_phrase_left_the_text_fails_by_name():
@@ -109,7 +112,7 @@ def test_a_ruling_keeps_to_its_own_copy_when_the_text_shifts():
     text = ("Alpha one. Here the good. Beta two. "
             "Gamma three, delta four, epsilon five. There the good. End.")
     second = text.rindex("the good")
-    r = {"phrase": "the good.", "near": second, "before": rulings.context(text, second)}
+    r = {"phrase": "the good.", "near": second, **rulings.ruling_context(text, second, "the good.")}
     shifted = text.replace("Beta two.", "Beta two, " + "and much more " * 80 + "two.")
     assert rulings.offsets({"1:1": {"1094a5": r}}, {(1, 1): shifted})["1:1"]["1094a5"] == shifted.rindex("the good")
     # an edit to the words that identify the copy: refused by name, not guessed
@@ -125,10 +128,10 @@ def test_an_edit_to_a_shared_preamble_is_refused_not_moved_to_the_other_copy():
     shared = "and so, as was said, iota kappa lambda mu, "
     text = "First start. " + shared + "the phrase repeats. Then second start. " + shared + "the phrase repeats. End."
     second = text.rindex("the phrase")
-    before = rulings.context(text, second, "the phrase repeats.")
-    assert rulings.locate(text, "the phrase repeats.", second, before) == second
+    ctx = rulings.ruling_context(text, second, "the phrase repeats.")
+    assert rulings.locate(text, "the phrase repeats.", **ctx) == second
     edited = text[:text.rindex(shared)] + shared.replace("kappa", "kapa") + text[second:]
-    assert rulings.locate(edited, "the phrase repeats.", second, before) is None
+    assert rulings.locate(edited, "the phrase repeats.", **ctx) is None
 
 
 def test_ruling_the_earlier_copy_when_the_shared_lead_in_reaches_the_start():
@@ -138,8 +141,31 @@ def test_ruling_the_earlier_copy_when_the_shared_lead_in_reaches_the_start():
     shared = "As was said, iota kappa, "
     text = shared + "the phrase repeats. Then more words follow here. " + shared + "the phrase repeats. End."
     first = text.index("the phrase")
-    r = rulings.ruling_context(text, first, "the phrase repeats.")
-    assert r["from_start"] is True
-    assert rulings.locate(text, "the phrase repeats.", first, r["before"], r["from_start"]) == first
+    ctx = rulings.ruling_context(text, first, "the phrase repeats.")
+    assert ctx["from_start"] is True
+    assert rulings.locate(text, "the phrase repeats.", **ctx) == first
     edited = shared.replace("kappa", "kapa") + text[len(shared):]
-    assert rulings.locate(edited, "the phrase repeats.", first, r["before"], r["from_start"]) is None
+    assert rulings.locate(edited, "the phrase repeats.", **ctx) is None
+
+
+
+def test_deleting_the_ruled_copy_does_not_move_the_tick_to_the_survivor():
+    # Grok, fourth pass: with one copy left, locate skipped the context check.
+    text = "PRE the phrase here. JUNK the phrase here."
+    ctx = rulings.ruling_context(text, text.index("the phrase"), "the phrase here.")
+    edited = text.replace("PRE the phrase here.", "PRE XXXX.")
+    assert rulings.locate(edited, "the phrase here.", **ctx) is None
+
+
+def test_a_unique_phrase_needs_no_context():
+    text = "Only once does the phrase occur here."
+    assert rulings.ruling_context(text, text.index("the phrase"), "the phrase occur") == {}
+
+
+def test_a_lead_in_full_of_spaces_still_identifies_its_copy():
+    # Grok: a 3*n raw window that collapses below n characters looked at too
+    # little text.
+    text = "Alpha beta gamma delta epsilon zeta eta" + " " * 400 + "the phrase. Theta iota kappa lambda mu nu xi" + " " * 400 + "the phrase."
+    for off in (text.index("the phrase"), text.rindex("the phrase")):
+        ctx = rulings.ruling_context(text, off, "the phrase.")
+        assert rulings.locate(text, "the phrase.", **ctx) == off
