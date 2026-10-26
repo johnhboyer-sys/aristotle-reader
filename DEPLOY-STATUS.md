@@ -13,6 +13,43 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-10-26 — DEPLOYED: Bekker alignment of 17 works, rulings (PRs #168–#175)
+
+`gh-pages 100ed975 → 17ab83bd`, source `origin/main` `c243c40b9b` (the #175 merge). John said
+"merge in that order" and then "deploy": #173, #174, #168, #169, #171, #172, #175, each updated from
+main and green before merging, the stacked ones retargeted to main by hand. #170 was closed: #169
+carried its one file unchanged. `npm run deploy:dry`, then `npm run deploy -- --verify`.
+
+**What shipped:** Bekker gutters for the 17 main translations that had none (Top, PA, GA, EE, IA,
+MA, Long, Mirab, DM, Mech, Oec, Vent, Aud, Col, MXG, Phgn, VV), by Message Batches (Haiku 5.5
+glosses, an Opus 5.5 check by John's line-bulk rule). The rest: De Caelo re-checked by that rule; Meta's public
+build now reads its anchors (all 14 books); VV's chapter list now follows Solomon's; the Col/MXG/Phgn
+"Part" markers moved to the paragraph that renders each Greek chapter's opening; the two live
+misplacements fixed (Phys 237b20 686 → 1645, now after 237b15 at 1173; APr 54b10 132 → 982).
+Committed rulings (`alignment-results/<vid>/rulings/`) carry Poet's eight pins and Phys's June
+fixes; Poet's data is unchanged.
+
+**Build:** full `build:public` from main (Node 22.23.1): 41 works, stage2 ok throughout, preflight
+ok, shared LSJ verified (63,261 keys), 6,586 pages. The first attempt died at its first step:
+Finder wrote a `.DS_Store` into `build/dist` while it was being removed (ENOTEMPTY); the re-run was
+clean.
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham
+2, `EN/footnotes.json`, `EN/manifest.json`; positive control 1,621; EE now among the 29 gated book
+files, clean). Shard gate: 139 indexes, 3,838,861 postings. Dangling-reference gate: 5 removed, 0
+referenced.
+
+**Deploy diff:** 1,124 files — 4 A / 1,115 M / 4 D / 1 R. Data: the book files of the works above,
+`VV/chapters.json`, the `search/` files of Col, MXG, Phgn and VV, 202 search shards, 118 ngrams,
+285 lemma pages, 2 reports. The five `_astro` bundles that changed differ only in Svelte's scoped
+class names (`svelte-1k6ope4` → `svelte-zaamrj` and so on, the same in JS and CSS): Svelte hashes the
+component's path, and the 10-21 build ran in a cloud checkout. 0 deletions under `data/`.
+
+**Live-verified:** the script's URL set (old bundles 404 after about 2 minutes; `/bonitz/` 404).
+Fetched from live: Phys book 6 segment 13 reads lines 1, 5, 10, 15, 20, 23 at 0, 205, 654, 1173,
+1645, 1974. Meta book 1 (public) has 189 ticks, 150 of the old 178 moved off the proportional
+cut; Top book 1 has 144, 116 of 133 moved.
+
 ## 2026-10-21 — DEPLOYED: custom domain aristotle.johnhboyer.com (PR #167)
 
 `gh-pages ca588f1f → 100ed975`, source `origin/main` `a3bb66591d` (the #167 merge). Run from a
