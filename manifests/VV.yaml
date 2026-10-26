@@ -43,6 +43,7 @@ english:
     dir: "dvv-solomon"
     books: 1
     chapter_marker: part
+    anchors: "dvv-solomon/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 books:
   - { n: 1, start: "1249a26", end: "1251b39" }

@@ -50,6 +50,10 @@ anchors are structural/interpolated and not counted.
 | Oeconomica (`Oec`) | E. S. Forster (Oxford, 1920) — primary | 8 | 166 | 164 confirmed · 2 uncertain | [index](../alignment-results/forster/review/Oec/index.html) |
 | Ventorum Situs (`Vent`) | E. S. Forster (Oxford, 1913) — primary | 1 | 11 | 11 confirmed | [index](../alignment-results/forster/review/Vent/index.html) |
 | De Audibilibus (`Aud`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 1 | 85 | 85 confirmed | [index](../alignment-results/loveday_forster/review/Aud/index.html) |
+| On Colours (`Col`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 6 | 121 | 121 confirmed | [index](../alignment-results/loveday_forster/review/Col/index.html) |
+| On Melissus, Xenophanes, and Gorgias (`MXG`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 6 | 100 | 100 confirmed | [index](../alignment-results/loveday_forster/review/MXG/index.html) |
+| Physiognomonics (`Phgn`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 6 | 145 | 145 confirmed | [index](../alignment-results/loveday_forster/review/Phgn/index.html) |
+| De Virtutibus et Vitiis (`VV`) | J. Solomon (Oxford, 1915) — primary | 8 | 36 | 36 confirmed | [index](../alignment-results/solomon/review/VV/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
 - **Cael / Stocks** — aligned 2026-10-25, the pilot of the batch runner
@@ -60,15 +64,22 @@ anchors are structural/interpolated and not counted.
   pass (measured no gain on NE gold). Wired via `sources/cael-stocks/anchors.yaml` (606
   anchors, 1 unresolved `282b5`) + `anchors:` in `manifests/Cael.yaml`; stage2 PASS; 673 real
   vs 2 interpolated gutter ticks. Not deployed; no human pass.
-- **Thirteen main translations, 2026-10-25** (Top, PA, GA, EE, IA, MA, Long, Mirab, DM,
-  Mech, Oec, Vent, Aud) — the first batch run (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5
-  verify by the line-bulk rule, no §5b), $16.11 in all. EE and Top align their primaries
+- **Seventeen main translations, 2026-10-25** (Top, PA, GA, EE, IA, MA, Long, Mirab, DM,
+  Mech, Oec, Vent, Aud, Col, MXG, Phgn, VV) — the first batch run (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5
+  verify by the line-bulk rule, no §5b), $18.59 in all. EE and Top align their primaries
   (Solomon, Pickard-Cambridge) with `ALIGN_SLOT=primary`; every other step as the recipe.
   Wired via `sources/<dir>/anchors.yaml` + `anchors:` under `english.primary` (EE in both
   `EE.yaml` and `EE-public.yaml`); stage2 PASS on each. Unresolved anchors: Top `106b35`; PA `687a5`, `687b5`, `696a5`; GA `720a35`, `727b5`; EE `1226b5`, `1249b5`; IA none; MA none; Long none; Mirab none; DM `392b35`; Mech none; Oec none; Vent none; Aud `803a5`, `803b5`.
-  Gutter real / interpolated: Top 1067 / 4; PA 940 / 4; GA 1205 / 2; EE 605 / 2; IA 159 / 0; MA 104 / 0; Long 44 / 0; Mirab 342 / 1; DM 167 / 1; Mech 208 / 0; Oec 168 / 0; Vent 12 / 0; Aud 83 / 2. Col, MXG, Phgn and VV were aligned too but held back:
-  their English and Greek chapter divisions disagreed (see the chapter fix in this PR). Not
-  deployed; no human pass.
+  Gutter real / interpolated: Top 1067 / 4; PA 940 / 4; GA 1205 / 2; EE 605 / 2; IA 159 / 0; MA 104 / 0; Long 44 / 0; Mirab 342 / 1; DM 167 / 1; Mech 208 / 0; Oec 168 / 0; Vent 12 / 0; Aud 83 / 2. Col, MXG, Phgn and VV first came out 14–35% stacked
+  (ticks collapsed at chapter starts): their English and Greek chapter divisions
+  disagreed. Loveday & Forster's OCR had each "Part N" at a page break, and VV's Greek
+  chapter list was unsourced and started six of eight chapters mid-sentence. Both were moved to
+  the true openings (Codex-checked against the Greek: 22 of 22 right) and the four re-run:
+  MXG, Phgn, VV 0% stacked; Col 7.4%, all but two in ch. 6, where the **OCR has lost the
+  passage rendering the chapter's opening** (Γίνεται δὲ καὶ τὰ τριχώματα…). Col needs a
+  re-read of the scan. Unresolved: Col `797b5`–`797b25` (the lost passage); Phgn `812a5`,
+  `813b5`. Gutter real / interpolated: Col 110 / 0; MXG 105 / 1; Phgn 147 / 2; VV 44 / 0.
+  Not deployed; no human pass.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
   *Note 2026-09-07:* the Categories work itself is live with Edghill as primary and a
