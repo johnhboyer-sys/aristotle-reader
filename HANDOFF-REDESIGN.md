@@ -58,6 +58,9 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
 - The menu marks the current page in the accent colour, in italic only where
   the style takes it (D).
 - A work page lists its translations once.
+- B's poster titles: a title on one line sits in the middle of the photograph,
+  top to bottom ("Center the text on the vertical access", on the titles
+  page). Every new setting does this; Now stays as round four set it.
 - D: Gentium Book Plus for Greek; the Aldine page does not stick on scroll; on a
   phone it is a banner cut from the top of the page.
 

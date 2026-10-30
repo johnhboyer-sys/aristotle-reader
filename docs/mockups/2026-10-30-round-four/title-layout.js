@@ -175,5 +175,11 @@
   // trailing letter space is taken back so a line ends at the edge.
   const html = (lines) => lines.map((x) => `<span style="display:block;white-space:pre;font-size:${x.f.toFixed(1)}px;line-height:${x.lh || 0.9};letter-spacing:${x.L.toFixed(2)}px;word-spacing:${x.S.toFixed(2)}px;margin-right:${(-x.L).toFixed(2)}px">${x.text}</span>`).join('');
 
-  root.TL = { BOX, OPTIONS, set, now, html, spreads: (opt) => opt.endsWith('-spread') };
+  // Where the lines sit, top to bottom. A title on one line sits in the
+  // middle of the photograph (John, on the titles page: "Center the text on
+  // the vertical access"); a spread runs two or more lines from the top of
+  // the photograph to the bottom; otherwise they start at the top.
+  const place = (opt, lines) => (opt === 'now' ? 'top' : lines.length === 1 ? 'middle' : opt.endsWith('-spread') ? 'spread' : 'top');
+
+  root.TL = { BOX, OPTIONS, set, now, html, place };
 })(typeof window !== 'undefined' ? window : globalThis);

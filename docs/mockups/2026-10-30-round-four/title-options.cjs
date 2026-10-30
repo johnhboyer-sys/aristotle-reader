@@ -31,11 +31,14 @@ const APPLY = (opt) => {
       t.textContent = t.dataset.orig;
       if (opt === 'now') continue;
       const { top, bottom } = window.TL.BOX[P.kind];
-      t.innerHTML = window.TL.html(window.TL.set(t.dataset.orig, P.kind, opt, w100));
+      const lines = window.TL.set(t.dataset.orig, P.kind, opt, w100);
+      t.innerHTML = window.TL.html(lines);
       t.style.textAlign = 'left';
       t.style.letterSpacing = '0';
-      // Spread: the lines run from the top of the photograph to the bottom.
-      if (window.TL.spreads(opt)) Object.assign(t.style, { top: '0', bottom: '0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingTop: `${top}px`, paddingBottom: `${bottom}px` });
+      // A spread runs the lines from the top of the photograph to the
+      // bottom; a title on one line sits in the middle.
+      const at = window.TL.place(opt, lines);
+      if (at !== 'top') Object.assign(t.style, { top: '0', bottom: '0', display: 'flex', flexDirection: 'column', justifyContent: at === 'middle' ? 'center' : 'space-between', paddingTop: `${top}px`, paddingBottom: `${bottom}px` });
     }
   }
 };

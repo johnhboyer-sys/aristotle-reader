@@ -102,9 +102,11 @@ block spread). Two things use it:
   saves pictures, which `title-sheets.py` lays out as the sheets sent in chat
   (in `title-options/`, gitignored).
 
-A spread needs two lines: a title on one line (*Politics*, *Physics*) stays at
-the top. John has not picked a setting yet; the open item is in
-`HANDOFF-REDESIGN.md` at the repo root.
+A title on one line (*Categories*, *Politics*) sits in the middle of the
+photograph, top to bottom, in every setting but Now. John, on the titles page:
+"Center the text on the vertical access." A spread needs two lines. John has
+not picked a setting yet; the open item is in `HANDOFF-REDESIGN.md` at the
+repo root.
 
 ## Rebuild
 

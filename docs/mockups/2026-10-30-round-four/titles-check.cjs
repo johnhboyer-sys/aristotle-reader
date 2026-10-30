@@ -153,11 +153,18 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
     // the right edge.
     x.lines.forEach((l, i) => { const m = x.model[i]; if (m && Math.abs(l.r - (x0 + m.right)) > 1.5) f.push(`${tag}: line ${i + 1} ends at ${l.r.toFixed(1)}, not ${(x0 + m.right).toFixed(1)}`); });
     if (BLOCK.includes(x.set)) x.lines.slice(0, -1).forEach((l, i) => { if (Math.abs(l.r - (x0 + B.W)) > 1.5) f.push(`${tag}: block line ${i + 1} ends at ${l.r.toFixed(1)}, not at the edge ${x0 + B.W}`); });
+    // Top to bottom: a title on one line sits in the middle of the room for
+    // it; a spread runs from the top of that room to the bottom; the rest
+    // start at the top.
     const first = x.lines[0].box.t;
     const last = x.lines[x.lines.length - 1].box.b;
-    if (Math.abs(first - B.top) > 1) f.push(`${tag}: title starts at ${first.toFixed(1)}, not ${B.top}`);
-    // A spread needs two lines; a title on one line stays at the top.
-    if (spreads(x.set) && x.lines.length > 1 && Math.abs(last - (B.h - B.bottom)) > 1) f.push(`${tag}: spread ends at ${last.toFixed(1)}, not ${B.h - B.bottom}`);
+    const mid = (B.top + B.h - B.bottom) / 2;
+    if (x.lines.length === 1) {
+      if (Math.abs((first + last) / 2 - mid) > 1) f.push(`${tag}: one line centred at ${((first + last) / 2).toFixed(1)}, not ${mid}`);
+    } else {
+      if (Math.abs(first - B.top) > 1) f.push(`${tag}: title starts at ${first.toFixed(1)}, not ${B.top}`);
+      if (spreads(x.set) && Math.abs(last - (B.h - B.bottom)) > 1) f.push(`${tag}: spread ends at ${last.toFixed(1)}, not ${B.h - B.bottom}`);
+    }
     // The words: whole in the whole-word settings; broken words keep three
     // letters a side.
     let s = texts[0] || '';
@@ -180,13 +187,15 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
   };
   await pick({ set: 'all', po: 'all', size: 'both' });
   // Planted: a block line spaced past the edge, a line in the wrong weight,
-  // a line with the wrong words, a poster scaled short of its box.
+  // a line with the wrong words, a poster scaled short of its box, a title
+  // on one line left at the top.
   await ev(() => {
     const s = document.querySelector('#block-big--EN .po.desk .po-t span');
     s.style.letterSpacing = `${parseFloat(s.style.letterSpacing) + 6}px`;
     document.querySelector('#stacked--Pol .po.phone .po-t span').style.fontWeight = '400';
     document.querySelector('#justified--home .po.desk .po-t span').textContent = 'THX';
     document.querySelector('#now--Cat .po.desk').style.transform = 'scale(.5)';
+    document.querySelector('#stacked--Cat .po.desk .po-t').classList.remove('middle');
   });
   const pl = (await titles()).map((x) => ({ id: `${x.id} ${x.kind}`, f: titleFaults(x).join('; ') }));
   const hit = (id, re) => re.test((pl.find((x) => x.id === id) || {}).f || '');
@@ -194,6 +203,7 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
   caught(hit('stacked--Pol phone', /in .* 400/), 'title font check');
   caught(hit('justified--home desktop', /lines .*not|spell|reads/), 'title words check');
   caught(hit('now--Cat desktop', /does not fill/), 'poster scale check');
+  caught(hit('stacked--Cat desktop', /one line centred/), 'one-line title check');
   await open();
   await pick({ set: 'all', po: 'all', size: 'both' });
   const all = await titles();

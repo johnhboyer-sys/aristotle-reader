@@ -80,8 +80,9 @@ button, select { font: inherit; color: inherit; }
 }
 .po.phone .po-t { left: 18px; right: 18px; padding-top: 18px; }
 .po-t.set { text-align: left; letter-spacing: 0; }
-.po-t.spread { bottom: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 26px; }
-.po.phone .po-t.spread { padding-bottom: 16px; }
+.po-t.spread, .po-t.middle { bottom: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 26px; }
+.po-t.middle { justify-content: center; }
+.po.phone .po-t.spread, .po.phone .po-t.middle { padding-bottom: 16px; }
 
 .foot { padding-block: 8px 44px; font: 400 14px/1.5 var(--sans); color: var(--mid); }
 .foot p { margin: 0; }
@@ -219,7 +220,8 @@ button, select { font: inherit; color: inherit; }
       const lines = TL.set(p.title, kind, s, w100);
       t.innerHTML = TL.html(lines);
       t.classList.add('set');
-      if (TL.spreads(s)) t.classList.add('spread');
+      const at = TL.place(s, lines);
+      if (at !== 'top') t.classList.add(at);
       const fs = lines.map((x) => Math.round(+x.f.toFixed(1)));
       const lo = Math.min(...fs);
       const hi = Math.max(...fs);
