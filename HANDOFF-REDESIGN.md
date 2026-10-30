@@ -43,9 +43,16 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
 John's answer (30 October): keep B and make its title legible, trying the
 ways not yet built. The titles page now has Own colour, Strips and Above on
 its Photo switch beside Pale, Gray and Dark (round four's README). Next: his
-pick of treatment and setting, then fonts if he wants them. A subagent is
-searching the Getty for CC0 gelatin silver prints (John: free of the brown
-tones that swallow the red), into `gelatin-candidates.json` (not committed).
+pick of treatment and setting, then fonts if he wants them.
+
+Gelatin silver prints (John: "generally free of brown tones"):
+`gelatin-candidates.json` in round four's folder lists 48 Getty CC0
+candidates for 26 works, each with its IIIF ids, size, a tone score and a
+caption (a Sonnet search, five spot-checked against the Getty records). None
+for Sens, Somn, Insomn, DivSomn, Aud, Col, VV, Pol, Rhet; no eclipse for
+the *Posterior Analytics*. Unchecked: several Bekker citations in the
+captions, and one Phgn candidate is a police mug shot of a named man.
+Not yet shown to John as pictures.
 
 ## Before that: was B still in the running?
 
